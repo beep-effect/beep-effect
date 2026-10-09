@@ -1,3 +1,5 @@
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as S from "effect/Schema";
 import * as Data from "effect/Data";
 import { dual } from "effect/Function";
 import type { ColorLevel } from "../../../env/index.ts";
@@ -8,6 +10,12 @@ import type * as Ink from "ink";
 import type React from "react";
 import type { ChalkLevel, InkChalk } from "./inkChalk.ts";
 import { inkChalk } from "./inkChalk.ts";
+
+const $I = $ScratchpadId.create("effected/cli/ui/internal/ink");
+
+class InkNotLoaded extends S.TaggedError<InkNotLoaded>($I`InkNotLoaded`)("InkNotLoaded", {
+	message: S.String,
+}) {}
 
 class TestError extends Data.TaggedError("TestError")<{ readonly message: string; readonly cause?: unknown }> {
 	override readonly name = "Error";
@@ -81,7 +89,7 @@ export const loadInk: Effect.Effect<InkModules> = Effect.suspend(() => {
  * @internal
  */
 export const inkModules = (): InkModules => {
-	if (modules === undefined) throw new Error(READ_BEFORE_LOAD);
+	if (modules === undefined) throw InkNotLoaded.make({ message: READ_BEFORE_LOAD });
 	return modules;
 };
 

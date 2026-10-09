@@ -1,3 +1,4 @@
+import * as Match from "effect/Match";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import type { Block, Document, Inline, LinkTarget } from "../Doc.ts";
@@ -48,8 +49,10 @@ export const targetText: {
 export const showsSuffix: {
 	(label: string, target: string): (suffix: boolean | undefined) => boolean;
 	(suffix: boolean | undefined, label: string, target: string): boolean;
-} = dual(3, (suffix: boolean | undefined, label: string, target: string): boolean =>
-	suffix ?? label !== target);
+} = dual(
+	3,
+	(suffix: boolean | undefined, label: string, target: string): boolean => suffix ?? label !== target,
+);
 
 /** Drop trailing spaces, and any span they empty, so a line never ends in padding. */
 export const trimLine = (line: Line): Line => {
@@ -126,9 +129,10 @@ const shrink = (widths: Array<number>, limit: number): void => {
 	const total = (): number => widths.reduce((sum, w) => sum + w, 0) + gaps;
 	while (total() > limit) {
 		let widest = 0;
-		for (let i = 1; i < widths.length; i++) if ((A.getUnsafe(widths, i)) > (A.getUnsafe(widths, widest))) widest = i;
+		for (let i = 1; i < widths.length; i++)
+			if (A.getUnsafe(widths, i) > A.getUnsafe(widths, widest)) widest = i;
 		if ((widths[widest] ?? 0) <= 1) return;
-		widths[widest] = (A.getUnsafe(widths, widest)) - 1;
+		widths[widest] = A.getUnsafe(widths, widest) - 1;
 	}
 };
 
@@ -184,16 +188,14 @@ const tableLines = (
 	if (columns === 0) return [];
 	const cap = capOf(block.cap);
 	const shown = cap === undefined ? block.rows : block.rows.slice(0, cap);
-	const header = Array.from({ length: columns }, (_, index) =>
-		toned(cellOf(walk, block.columns[index]?.header), "emphasis"),
-	);
-	const body = shown.map((row) => Array.from({ length: columns }, (_, index) => cellOf(walk, row[index])));
+	const header = A.makeBy(columns, (index) => toned(cellOf(walk, block.columns[index]?.header), "emphasis"));
+	const body = shown.map((row) => A.makeBy(columns, (index) => cellOf(walk, row[index])));
 	const showHeader = header.some((cell) => cell.length > 0);
 	const hidden = block.rows.length - shown.length;
 	// No header text and no row shown, such as a counts table over zero projects: nothing to draw but the overflow line.
 	if (!showHeader && body.length === 0) return hidden > 0 ? [overflowLine(walk, block.overflow, hidden)] : [];
 
-	const widths = Array.from({ length: columns }, (_, index) =>
+	const widths = A.makeBy(columns, (index) =>
 		Math.max(0, ...[...(showHeader ? [header] : []), ...body].map((row) => widthOf(row[index] ?? []))),
 	);
 	shrink(widths, width);
@@ -203,7 +205,8 @@ const tableLines = (
 			joinCells(
 				row.map((cell, index) => {
 					const columnWidth = A.getUnsafe(widths, index);
-					const cut = widthOf(cell) > columnWidth ? truncateSpans(cell, columnWidth, walk.ctx.glyphs.ellipsis) : cell;
+					const cut =
+						widthOf(cell) > columnWidth ? truncateSpans(cell, columnWidth, walk.ctx.glyphs.ellipsis) : cell;
 					return pad(cut, columnWidth, block.columns[index]?.align ?? "left");
 				}),
 				"  ",
@@ -218,19 +221,27 @@ const tableLines = (
 		// Istanbul's shape: each cell padded and joined with " | ", and a rule of dashes meeting at "|" above and
 		// below the header and at the end.
 		// The first column's rule has the cell and the space after it; every other has a space on each side.
-		const pipeRule: Line = [span(widths.map((w, index) => "-".repeat(w + (index === 0 ? 1 : 2))).join("|"), "muted")];
+		const pipeRule: Line = [
+			span(widths.map((w, index) => "-".repeat(w + (index === 0 ? 1 : 2))).join("|"), "muted"),
+		];
 		const pipeRow = (row: ReadonlyArray<Line>): Line =>
 			trimLine(
 				joinCells(
 					row.map((cell, index) => {
 						const columnWidth = A.getUnsafe(widths, index);
-						const cut = widthOf(cell) > columnWidth ? truncateSpans(cell, columnWidth, walk.ctx.glyphs.ellipsis) : cell;
+						const cut =
+							widthOf(cell) > columnWidth ? truncateSpans(cell, columnWidth, walk.ctx.glyphs.ellipsis) : cell;
 						return pad(cut, columnWidth, block.columns[index]?.align ?? "left");
 					}),
 					" | ",
 				),
 			);
-		const piped = [...(showHeader ? [pipeRule, pipeRow(header)] : []), pipeRule, ...body.map(pipeRow), pipeRule];
+		const piped = [
+			...(showHeader ? [pipeRule, pipeRow(header)] : []),
+			pipeRule,
+			...body.map(pipeRow),
+			pipeRule,
+		];
 		return hidden > 0 ? [...piped, overflowLine(walk, block.overflow, hidden)] : piped;
 	}
 	const lines = [...(showHeader ? [render(header), rule] : []), ...body.map(render)];
@@ -244,7 +255,10 @@ const treeLines = (walk: Walk, block: Extract<Block, { readonly _tag: "Tree" }>)
 		children.forEach((child, index) => {
 			const last = index === children.length - 1;
 			lines.push(
-				trimLine([span(prefix + (last ? glyphs.last : glyphs.branch), "muted"), ...oneLine(inline(walk, child.label))]),
+				trimLine([
+					span(prefix + (last ? glyphs.last : glyphs.branch), "muted"),
+					...oneLine(inline(walk, child.label)),
+				]),
 			);
 			visit(child.children, prefix + (last ? glyphs.blank : glyphs.pipe));
 		});
@@ -270,7 +284,10 @@ const diffSide = (
 };
 
 /** What a `Counts` block's `paint` keeps: every token, only a status glyph's, or none. */
-const keepPaint = (paint: "all" | "glyph" | "none" | undefined, lines: ReadonlyArray<Line>): ReadonlyArray<Line> => {
+const keepPaint = (
+	paint: "all" | "glyph" | "none" | undefined,
+	lines: ReadonlyArray<Line>,
+): ReadonlyArray<Line> => {
 	if (paint === undefined || paint === "all") return lines;
 	const unpainted = (s: Span): Span => {
 		const { token: _token, ...rest } = s;
@@ -285,11 +302,15 @@ export const isAnnotation = (block: Block): boolean => block._tag === "Annotatio
 const countsLines = (walk: Walk, block: Extract<Block, { readonly _tag: "Counts" }>): ReadonlyArray<Line> =>
 	keepPaint(block.paint, countsLayout(walk, block));
 
-const countsLayout = (walk: Walk, block: Extract<Block, { readonly _tag: "Counts" }>): ReadonlyArray<Line> => {
+const countsLayout = (
+	walk: Walk,
+	block: Extract<Block, { readonly _tag: "Counts" }>,
+): ReadonlyArray<Line> => {
 	const visible = visibleCountersOf(block);
 	const total = totalOf(block);
 	const label = block.label === undefined ? [] : toned(oneLine(inline(walk, block.label)), "emphasis");
-	const qualifier = block.qualifier === undefined ? [] : toned(oneLine(inline(walk, block.qualifier)), "muted");
+	const qualifier =
+		block.qualifier === undefined ? [] : toned(oneLine(inline(walk, block.qualifier)), "muted");
 	const duration = block.durationMs === undefined ? "" : Fmt.duration(block.durationMs);
 	const suffix = block.suffix === undefined ? [] : toned(oneLine(inline(walk, block.suffix)), "muted");
 	// A counter's label is one line, like the block's own label: a line break in it would start a line of its own.
@@ -306,7 +327,10 @@ const countsLayout = (walk: Walk, block: Extract<Block, { readonly _tag: "Counts
 	if (block.layout === "row") {
 		return [
 			trimLine(
-				joinChunks([label, ...counters, qualifier, duration === "" ? [] : [span(duration, "muted")], suffix], "  "),
+				joinChunks(
+					[label, ...counters, qualifier, duration === "" ? [] : [span(duration, "muted")], suffix],
+					"  ",
+				),
 			),
 		];
 	}
@@ -332,7 +356,12 @@ const countsLayout = (walk: Walk, block: Extract<Block, { readonly _tag: "Counts
 	return [
 		trimLine(
 			joinChunks(
-				[joinChunks([head, tally], " "), qualifier, duration === "" ? [] : [span(`(${duration})`, "muted")], suffix],
+				[
+					joinChunks([head, tally], " "),
+					qualifier,
+					duration === "" ? [] : [span(`(${duration})`, "muted")],
+					suffix,
+				],
 				" ",
 			),
 		),
@@ -343,88 +372,88 @@ const countsLayout = (walk: Walk, block: Extract<Block, { readonly _tag: "Counts
  * A block as lines. `compact` is set on a compact list's item: a section there joins its title and children with no
  * blank lines between them.
  */
-const blockLines = (walk: Walk, block: Block, width: number, compact = false): ReadonlyArray<Line> => {
-	switch (block._tag) {
-		case "Heading":
-			return [trimLine(toned(oneLine(inline(walk, block.content)), "emphasis"))];
-		case "Paragraph": {
+const blockLines = (walk: Walk, block: Block, width: number, compact = false): ReadonlyArray<Line> =>
+	Match.valueTags(block, {
+		Heading: (block): ReadonlyArray<Line> => [
+			trimLine(toned(oneLine(inline(walk, block.content)), "emphasis")),
+		],
+		Paragraph: (block): ReadonlyArray<Line> => {
 			const spans = inline(walk, block.content);
 			if (spans.length === 0) return [[]];
 			return wrapSpans(spans, width, { hardBreak: false }).map(trimLine);
-		}
-		case "List": {
+		},
+		List: (block): ReadonlyArray<Line> => {
 			const cap = capOf(block.cap);
 			const items = block.items.filter((item) => !isAnnotation(item));
 			const shown = cap === undefined ? items : items.slice(0, cap);
 			const compactItems = block.compact === true;
 			const lines = shown.flatMap((item) =>
-				hang(blockLines(walk, item, width - 2, compactItems), [span("- ")], [span("  ")]).map((line, index) =>
-					// A compact item has no separator lines, so a blank line is the content's own (a diff's): it keeps the
-					// indent, held against trimming, so the item stays one indented block.
-					compactItems && index > 0 && line.length === 0 ? [{ text: "  ", hold: true as const }] : line,
+				hang(blockLines(walk, item, width - 2, compactItems), [span("- ")], [span("  ")]).map(
+					(line, index) =>
+						// A compact item has no separator lines, so a blank line is the content's own (a diff's): it keeps the
+						// indent, held against trimming, so the item stays one indented block.
+						compactItems && index > 0 && line.length === 0 ? [{ text: "  ", hold: true as const }] : line,
 				),
 			);
 			const hidden = items.length - shown.length;
 			return hidden > 0 ? [...lines, overflowLine(walk, block.overflow, hidden)] : lines;
-		}
-		case "Table":
-			return tableLines(walk, block, width);
-		case "Tree":
-			return treeLines(walk, block);
-		case "Collapsible":
-			return [
-				trimLine(toned(oneLine(inline(walk, block.title)), "emphasis")),
-				...block.body
-					.flatMap((child) => blockLines(walk, child, width - 2))
-					.map((line) => trimLine([span("  "), ...line])),
-			];
-		case "Callout": {
+		},
+		Table: (block): ReadonlyArray<Line> => tableLines(walk, block, width),
+		Tree: (block): ReadonlyArray<Line> => treeLines(walk, block),
+		Collapsible: (block): ReadonlyArray<Line> => [
+			trimLine(toned(oneLine(inline(walk, block.title)), "emphasis")),
+			...block.body
+				.flatMap((child) => blockLines(walk, child, width - 2))
+				.map((line) => trimLine([span("  "), ...line])),
+		],
+		Callout: (block): ReadonlyArray<Line> => {
 			const label = `${block.kind.toUpperCase()}:`;
 			const hanging = label.length + 1;
 			const body = block.body.flatMap((child) => blockLines(walk, child, width - hanging));
 			const head = span(label, callouts[block.kind]);
 			return body.length === 0 ? [[head]] : hang(body, [head, span(" ")], [blank(hanging)]);
-		}
-		case "CodeBlock":
-			return textLines(block.text).map((line) => trimLine([span(`    ${line}`)]));
-		case "Diff": {
+		},
+		CodeBlock: (block): ReadonlyArray<Line> =>
+			textLines(block.text).map((line) => trimLine([span(`    ${line}`)])),
+		Diff: (block): ReadonlyArray<Line> => {
 			const cap = capOf(block.cap);
 			return [
 				...diffSide(walk, "-", "failure", block.expected, cap),
 				...diffSide(walk, "+", "success", block.received, cap),
 			];
-		}
-		case "Section": {
+		},
+		Section: (block): ReadonlyArray<Line> => {
 			const groups: Array<ReadonlyArray<Line>> = [
-				...(block.title === undefined ? [] : [[trimLine(toned(oneLine(inline(walk, block.title)), "emphasis"))]]),
-				...block.children.filter((child) => !isAnnotation(child)).map((child) => blockLines(walk, child, width)),
+				...(block.title === undefined
+					? []
+					: [[trimLine(toned(oneLine(inline(walk, block.title)), "emphasis"))]]),
+				...block.children
+					.filter((child) => !isAnnotation(child))
+					.map((child) => blockLines(walk, child, width)),
 			];
 			return groups.flatMap((group, index) => (index === 0 || compact ? group : [[], ...group]));
-		}
-		case "Counts":
-			return countsLines(walk, block);
-		case "Verbatim": {
+		},
+		Counts: (block): ReadonlyArray<Line> => countsLines(walk, block),
+		Verbatim: (block): ReadonlyArray<Line> => {
 			// Kept exactly: sanitized line by line, indented, and never wrapped or cut.
 			const indent = " ".repeat(Math.max(0, Math.floor(block.indent ?? 0)));
 			return textLines(block.text).map((line) => trimLine([span(`${indent}${line}`)]));
-		}
-		case "Annotation":
-			return [];
-		case "CountsTable":
-			return tableLines(walk, countsTableOf(block), width);
-		case "Lines":
-			return block.lines.flatMap((entry): ReadonlyArray<Line> => {
+		},
+		Annotation: (): ReadonlyArray<Line> => [],
+		CountsTable: (block): ReadonlyArray<Line> => tableLines(walk, countsTableOf(block), width),
+		Lines: (block): ReadonlyArray<Line> =>
+			block.lines.flatMap((entry): ReadonlyArray<Line> => {
 				const spans = inline(walk, entry);
 				return spans.length === 0 ? [[]] : wrapSpans(spans, width, { hardBreak: false }).map(trimLine);
-			});
-		case "Line": {
+			}),
+		Line: (block): ReadonlyArray<Line> => {
 			const spans = oneLine(inline(walk, block.content));
 			if (block.truncate === true) return [trimLine(truncateSpans(spans, width, walk.ctx.glyphs.ellipsis))];
 			// Kept atomic: one line whatever the width, so a finding stays greppable.
 			if (block.wrap === false) return [trimLine(spans)];
 			return spans.length === 0 ? [[]] : wrapSpans(spans, width, { hardBreak: false }).map(trimLine);
-		}
-		case "DiffText": {
+		},
+		DiffText: (block): ReadonlyArray<Line> => {
 			const cap = capOf(block.cap);
 			const lines = textLines(block.text);
 			const shown = cap === undefined ? lines : lines.slice(0, cap);
@@ -437,9 +466,8 @@ const blockLines = (walk: Walk, block: Block, width: number, compact = false): R
 				...shown.map((line) => trimLine(cut([span(line, tone(line))]))),
 				...(hidden > 0 ? [[span(`${walk.ctx.glyphs.ellipsis} ${hidden} more lines`, "muted")]] : []),
 			];
-		}
-	}
-};
+		},
+	});
 
 /**
  * Render a document to its finished lines in the given flavour: a block that draws nothing contributes no line, where
@@ -453,7 +481,9 @@ export const renderDocLines: {
 } = dual(3, (doc: Document, ctx: RenderContext, flavour: Flavour): ReadonlyArray<string> => {
 	const width = Number.isNaN(ctx.width) ? 80 : Math.max(1, ctx.width);
 	const walk: Walk = { ctx, flavour };
-	return doc.flatMap((block) => blockLines(walk, block, width)).map((line) => flavour.finish(trimLine(line), ctx));
+	return doc
+		.flatMap((block) => blockLines(walk, block, width))
+		.map((line) => flavour.finish(trimLine(line), ctx));
 });
 
 /**
@@ -465,4 +495,5 @@ export const renderDoc: {
 	(ctx: RenderContext, flavour: Flavour): (doc: Document) => string;
 	(doc: Document, ctx: RenderContext, flavour: Flavour): string;
 } = dual(3, (doc: Document, ctx: RenderContext, flavour: Flavour): string =>
-	renderDocLines(doc, ctx, flavour).join("\n"));
+	renderDocLines(doc, ctx, flavour).join("\n"),
+);

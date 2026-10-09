@@ -1,6 +1,14 @@
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as S from "effect/Schema";
 import type * as Cli from "../../index.ts";
 import type { Context as ReactContext } from "react";
 import { fromReact, inkModules } from "./ink.ts";
+
+const $I = $ScratchpadId.create("effected/cli/ui/internal/ScreenContext");
+
+class ScreenContextError extends S.TaggedError<ScreenContextError>($I`ScreenContextError`)("ScreenContextError", {
+	message: S.String,
+}) {}
 
 /**
  * What every kit widget reads from its screen.
@@ -51,7 +59,9 @@ const ignore = (): void => undefined;
 export const useScreenCancel = (): ((reason: "escape" | "interrupt") => void) => {
 	const screen = inkModules().react.useContext(screenContext());
 	if (screen === undefined)
-		throw new Error("@effected/cli/ui: a widget was used outside a screen mounted by CliUi.run or a UiProvider");
+		throw ScreenContextError.make({
+			message: "@effected/cli/ui: a widget was used outside a screen mounted by CliUi.run or a UiProvider",
+		});
 	return screen.cancel ?? ignore;
 };
 

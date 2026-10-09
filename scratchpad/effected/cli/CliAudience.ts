@@ -1,3 +1,5 @@
+import * as S from "effect/Schema";
+import { $ScratchpadId } from "@beep/identity/packages";
 import type { AudienceKind, AudienceShape } from "../env/index.ts";
 import { Audience, TerminalEnv } from "../env/index.ts";
 import type * as Terminal from "effect/Terminal";
@@ -11,6 +13,15 @@ import { canPrompt } from "./internal/canPrompt.ts";
 import { refreshFailureTarget } from "./internal/failureTarget.ts";
 import { scanAudience, tallyAudience } from "./internal/scanAudience.ts";
 import { WizardDropped } from "./internal/wizardGate.ts";
+
+const $I = $ScratchpadId.create("effected/cli/CliAudience");
+
+class AudienceConflictError extends S.TaggedError<AudienceConflictError>($I`AudienceConflictError`)(
+	"AudienceConflictError",
+	{
+		message: S.String,
+	},
+) {}
 
 const KINDS: ReadonlyArray<AudienceKind> = ["human", "agent", "ci"];
 
@@ -77,7 +88,12 @@ const resolve = (input: AudienceFlagInput): Effect.Effect<AudienceShape, CliErro
 	// The counting rule is shared with `scanAudience`, which reads argv before parsing, so the two cannot drift.
 	const { given: named, conflict } = tallyAudience(input);
 	if (conflict) {
-		return Effect.fail(CliError.UserError.make({ cause: new Error(CONFLICT), userMessage: CONFLICT }));
+		return Effect.fail(
+			CliError.UserError.make({
+				cause: AudienceConflictError.make({ message: CONFLICT }),
+				userMessage: CONFLICT,
+			}),
+		);
 	}
 	const [kind] = named;
 	// No flag: the ambient audience, the override variable or detection, is read and provided back unchanged.
@@ -161,7 +177,9 @@ export class CliAudience {
 			agent: maybeHide(
 				Flag.Boolean("agent").pipe(Flag.atLeast(0), Flag.withDescription("Shorthand for --audience agent")),
 			),
-			ci: maybeHide(Flag.Boolean("ci").pipe(Flag.atLeast(0), Flag.withDescription("Shorthand for --audience ci"))),
+			ci: maybeHide(
+				Flag.Boolean("ci").pipe(Flag.atLeast(0), Flag.withDescription("Shorthand for --audience ci")),
+			),
 		};
 	};
 
@@ -188,8 +206,9 @@ export class CliAudience {
 			// A flag decides interactivity for the handler too: the env layer decided it from the DETECTED audience,
 			// before the flag was read, so `--agent` on a terminal would otherwise stay interactive and `--human` under
 			// a detected agent would stay off. See `interactiveWhenFlagged`.
-			CommandModule.provideEffect(CliInteractive, (input: Input) =>
-				Effect.gen(function* () {
+			CommandModule.provideEffect(
+				CliInteractive,
+				Effect.fnUntraced(function* (input: Input) {
 					const current = yield* CliInteractive;
 					const [flagged] = tallyAudience(input).given;
 					return flagged === undefined ? current : yield* interactiveWhenFlagged(flagged, current);
@@ -227,37 +246,33 @@ export class CliAudience {
 			CliAudience.provide<Name, AudienceFlagInput & Input, ContextInput, E, R>(command),
 			config,
 		);
-		return (argv) => {
+		return Effect.fnUntraced(function* (argv) {
 			const run = core(argv);
 			const { given, conflict } = scanAudience(argv);
 			const [kind] = given;
-			if (kind === undefined) return run;
-			const withAudience = conflict
-				? run
-				: Effect.provideService(run, Audience, { kind, source: "flag" });
-			return Effect.gen(function* () {
-				const current = yield* CliInteractive;
-				const ambient = yield* CliConfig.CliConfig;
-				// The report of a failure is written outside this run, where the flag is not in force: record the audience
-				// the flag named, so `--agent` on a terminal gets the plain report and `--human` the painted one.
-				if (!conflict) yield* refreshFailureTarget({ kind, source: "flag" });
-				const interactive = !conflict && (yield* interactiveWhenFlagged(kind, current));
-				const decided = Effect.provideService(withAudience, CliInteractive, interactive);
-				// The wizard prompts, so it follows the decision: the environment gated it from the detected audience,
-				// before the flag was read. A non-interactive run drops it, and a run the flag has made interactive
-				// where the gate had dropped it gets it back.
-				const hasWizard = ambient.builtIns.includes(GlobalFlag.Wizard);
-				// Restored only into the config the gate produced: a consumer's own `builtIns` without it, whether it came from
-				// outside the gate or inside, is a different object and stays without it.
-				const restore = interactive && !hasWizard && (yield* WizardDropped) === ambient;
-				const drop = !interactive && hasWizard;
-				if (!restore && !drop) return yield* decided;
-				const builtIns = interactive
-					? [...ambient.builtIns, GlobalFlag.Wizard]
-					: ambient.builtIns.filter((flag) => flag !== GlobalFlag.Wizard);
-				return yield* Effect.provideService(decided, CliConfig.CliConfig, CliConfig.make({ builtIns }));
-			});
-		};
+			if (kind === undefined) return yield* run;
+			const withAudience = conflict ? run : Effect.provideService(run, Audience, { kind, source: "flag" });
+			const current = yield* CliInteractive;
+			const ambient = yield* CliConfig.CliConfig;
+			// The report of a failure is written outside this run, where the flag is not in force: record the audience
+			// the flag named, so `--agent` on a terminal gets the plain report and `--human` the painted one.
+			if (!conflict) yield* refreshFailureTarget({ kind, source: "flag" });
+			const interactive = !conflict && (yield* interactiveWhenFlagged(kind, current));
+			const decided = Effect.provideService(withAudience, CliInteractive, interactive);
+			// The wizard prompts, so it follows the decision: the environment gated it from the detected audience,
+			// before the flag was read. A non-interactive run drops it, and a run the flag has made interactive
+			// where the gate had dropped it gets it back.
+			const hasWizard = ambient.builtIns.includes(GlobalFlag.Wizard);
+			// Restored only into the config the gate produced: a consumer's own `builtIns` without it, whether it came from
+			// outside the gate or inside, is a different object and stays without it.
+			const restore = interactive && !hasWizard && (yield* WizardDropped) === ambient;
+			const drop = !interactive && hasWizard;
+			if (!restore && !drop) return yield* decided;
+			const builtIns = interactive
+				? [...ambient.builtIns, GlobalFlag.Wizard]
+				: ambient.builtIns.filter((flag) => flag !== GlobalFlag.Wizard);
+			return yield* Effect.provideService(decided, CliConfig.CliConfig, CliConfig.make({ builtIns }));
+		});
 	};
 
 	/**
@@ -274,5 +289,6 @@ export class CliAudience {
 		void,
 		Exclude<E | CliError.UserError, Terminal.QuitError> | CliError.CliError,
 		Exclude<R, Audience> | Audience | Command.Environment
-	> => Stdio.Stdio.use(({ args }) => Effect.flatMap(args, (argv) => CliAudience.runWith(command, config)(argv)));
+	> =>
+		Stdio.Stdio.use(({ args }) => Effect.flatMap(args, (argv) => CliAudience.runWith(command, config)(argv)));
 }

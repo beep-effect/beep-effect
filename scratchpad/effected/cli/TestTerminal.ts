@@ -1,3 +1,4 @@
+import * as A from "effect/Array";
 import type * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -45,7 +46,11 @@ export interface TestTerminalHandle {
 	 * subscription matters: on a real terminal merely subscribing attaches a reader to stdin, even when no key is
 	 * ever taken.
 	 */
-	readonly reads: Effect.Effect<{ readonly keys: number; readonly lines: number; readonly subscriptions: number }>;
+	readonly reads: Effect.Effect<{
+		readonly keys: number;
+		readonly lines: number;
+		readonly subscriptions: number;
+	}>;
 }
 
 /**
@@ -67,60 +72,64 @@ export class TestTerminal {
 	 *
 	 * @param options - the reported size; 80 by 24 by default
 	 */
-	static readonly make = (options?: {
+	static readonly make = Effect.fn("make")(function* (options?: {
 		readonly columns?: number | undefined;
 		readonly rows?: number | undefined;
-	}): Effect.Effect<TestTerminalHandle> =>
-		Effect.gen(function* () {
-			const queue = yield* Queue.unbounded<Terminal.UserInput, Cause.Done>();
-			const written: string[] = [];
-			let offered = 0;
-			let lines = 0;
-			let subscriptions = 0;
+	}): Effect.fn.Return<TestTerminalHandle> {
+		const queue = yield* Queue.unbounded<Terminal.UserInput, Cause.Done>();
+		const written: string[] = [];
+		let offered = 0;
+		let lines = 0;
+		let subscriptions = 0;
 
-			const offer = (inputs: ReadonlyArray<Terminal.UserInput>) =>
-				Effect.suspend(() => {
-					offered += inputs.length;
-					return Queue.offerAll(queue, inputs);
-				}).pipe(Effect.asVoid);
+		const offer = (inputs: ReadonlyArray<Terminal.UserInput>) =>
+			Effect.suspend(() => {
+				offered += inputs.length;
+				return Queue.offerAll(queue, inputs);
+			}).pipe(Effect.asVoid);
 
-			const terminal = Terminal.make({
-				columns: Effect.succeed(options?.columns ?? 80),
-				rows: Effect.succeed(options?.rows ?? 24),
-				readInput: Effect.sync(() => {
-					subscriptions++;
-					return queue;
+		const terminal = Terminal.make({
+			columns: Effect.succeed(options?.columns ?? 80),
+			rows: Effect.succeed(options?.rows ?? 24),
+			readInput: Effect.sync(() => {
+				subscriptions++;
+				return queue;
+			}),
+			readLine: Effect.suspend(() => {
+				lines++;
+				return Effect.fail(Terminal.QuitError.make({}));
+			}),
+			display: (text) =>
+				Effect.sync(() => {
+					written.push(text);
 				}),
-				readLine: Effect.suspend(() => {
-					lines++;
-					return Effect.fail(Terminal.QuitError.make({}));
-				}),
-				display: (text) =>
-					Effect.sync(() => {
-						written.push(text);
-					}),
-			});
-
-			return {
-				layer: Layer.succeed(Terminal.Terminal, terminal),
-				input: (keys) =>
-					offer(
-						keys.map((key) => ({
-							input: O.none<string>(),
-							key: { name: key.name, ctrl: key.ctrl ?? false, meta: key.meta ?? false, shift: key.shift ?? false },
-						})),
-					),
-				type: (text) =>
-					offer(
-						Array.from(text, (char) => ({
-							input: O.some(char),
-							key: { name: char, ctrl: false, meta: false, shift: false },
-						})),
-					),
-				end: Queue.end(queue).pipe(Effect.asVoid),
-				output: Effect.sync(() => written.join("")),
-				pending: Queue.size(queue),
-				reads: Effect.map(Queue.size(queue), (size) => ({ keys: offered - size, lines, subscriptions })),
-			} satisfies TestTerminalHandle;
 		});
+
+		return {
+			layer: Layer.succeed(Terminal.Terminal, terminal),
+			input: (keys) =>
+				offer(
+					keys.map((key) => ({
+						input: O.none<string>(),
+						key: {
+							name: key.name,
+							ctrl: key.ctrl ?? false,
+							meta: key.meta ?? false,
+							shift: key.shift ?? false,
+						},
+					})),
+				),
+			type: (text) =>
+				offer(
+					A.map(A.fromIterable(text), (char) => ({
+						input: O.some(char),
+						key: { name: char, ctrl: false, meta: false, shift: false },
+					})),
+				),
+			end: Queue.end(queue).pipe(Effect.asVoid),
+			output: Effect.sync(() => written.join("")),
+			pending: Queue.size(queue),
+			reads: Effect.map(Queue.size(queue), (size) => ({ keys: offered - size, lines, subscriptions })),
+		} satisfies TestTerminalHandle;
+	});
 }

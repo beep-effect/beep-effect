@@ -98,28 +98,27 @@ export class CliTest {
 	 * Each call mints a fresh temp directory; bind the result to a `const`
 	 * within one test rather than calling this more than once per assertion.
 	 */
-	static readonly sandbox = (options: {
+	static readonly sandbox = Effect.fn("sandbox")(function* (options: {
 		/**
 		 * The `PATH` the child sees, passed explicitly because nothing else is
 		 * inherited — `process.env.PATH` when the bin shells out to host tools,
 		 * a narrower list to prove it does not.
 		 */
 		readonly path: string;
-	}): Effect.Effect<Sandbox, PlatformError.PlatformError, FileSystem.FileSystem | Path.Path | Scope.Scope> =>
-		Effect.gen(function* () {
-			const fs = yield* FileSystem.FileSystem;
-			const path = yield* Path.Path;
-			const root = yield* fs.makeTempDirectoryScoped({ prefix: "effected-cli-test-" });
-			const home = path.join(root, "home");
-			const xdg = {
-				XDG_CONFIG_HOME: path.join(home, ".config"),
-				XDG_DATA_HOME: path.join(home, ".local", "share"),
-				XDG_STATE_HOME: path.join(home, ".local", "state"),
-				XDG_CACHE_HOME: path.join(home, ".cache"),
-			};
-			for (const dir of R.values(xdg)) yield* fs.makeDirectory(dir, { recursive: true });
-			return { root, home, env: { HOME: home, ...xdg, PATH: options.path, NO_COLOR: "1" } };
-		});
+	}): Effect.fn.Return<Sandbox, PlatformError.PlatformError, FileSystem.FileSystem | Path.Path | Scope.Scope> {
+		const fs = yield* FileSystem.FileSystem;
+		const path = yield* Path.Path;
+		const root = yield* fs.makeTempDirectoryScoped({ prefix: "effected-cli-test-" });
+		const home = path.join(root, "home");
+		const xdg = {
+			XDG_CONFIG_HOME: path.join(home, ".config"),
+			XDG_DATA_HOME: path.join(home, ".local", "share"),
+			XDG_STATE_HOME: path.join(home, ".local", "state"),
+			XDG_CACHE_HOME: path.join(home, ".cache"),
+		};
+		for (const dir of R.values(xdg)) yield* fs.makeDirectory(dir, { recursive: true });
+		return { root, home, env: { HOME: home, ...xdg, PATH: options.path, NO_COLOR: "1" } };
+	});
 
 	/**
 	 * Run `execPath bin ...args`; a non-zero exit is returned, never failed.

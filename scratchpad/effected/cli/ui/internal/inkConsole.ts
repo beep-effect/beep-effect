@@ -1,3 +1,8 @@
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import * as Clock from "effect/Clock";
 import type * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
@@ -7,6 +12,17 @@ import { UiStreams } from "../UiStreams.ts";
 import { inkModules } from "./ink.ts";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+
+const $I = $ScratchpadId.create("effected/cli/ui/internal/inkConsole");
+
+/** Captures the caller stack for console.trace. */
+class ConsoleTrace extends S.TaggedError<ConsoleTrace>($I`ConsoleTrace`)(
+	"ConsoleTrace",
+	{ message: S.String },
+	$I.annote("ConsoleTrace", { description: "The caller stack rendered by console.trace." }),
+) {
+	override readonly name = "Error";
+}
 
 /**
  * A `Console` that writes above a mounted Ink frame, the component that connects it, and the switch back to direct
@@ -48,10 +64,10 @@ const textOf = (args: ReadonlyArray<unknown>): string => args.map(shown).join(" 
 
 /** `console.table`'s rows, as a plain pipe table: an `(index)` column, then each key, then `Values` for scalars. */
 const tableOf = (data: unknown, properties?: ReadonlyArray<string>): string => {
-	if (data === null || typeof data !== "object") return textOf([data]);
+	if (!P.isObjectKeyword(data) || P.isFunction(data)) return textOf([data]);
 	const rows = R.toEntries(data);
-	const isRecord = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === "object";
-	const keys = properties ?? [...new Set(rows.flatMap(([, value]) => (isRecord(value) ? R.keys(value) : [])))];
+	const isRecord = (value: unknown): value is Record<string, unknown> => P.isObjectKeyword(value) && !P.isFunction(value);
+	const keys = properties ?? [...MutableHashSet.fromIterable(rows.flatMap(([, value]) => (isRecord(value) ? R.keys(value) : [])))];
 	const scalars = rows.some(([, value]) => !isRecord(value));
 	const header = ["(index)", ...keys, ...(scalars ? ["Values"] : [])];
 	const cell = (value: unknown): string =>
@@ -91,8 +107,8 @@ export const makeInkConsole: Effect.Effect<InkConsole> = Effect.gen(function* ()
 	const streams = yield* UiStreams;
 	let attached: { readonly out: Write; readonly err: Write } | undefined;
 	let indent = "";
-	const counts = new Map<string, number>();
-	const timers = new Map<string, number>();
+	const counts = MutableHashMap.empty<string, number>();
+	const timers = MutableHashMap.empty<string, number>();
 	const emit = (stream: "out" | "err", text: string): void => {
 		const data = `${text
 			.split("\n")
@@ -105,7 +121,7 @@ export const makeInkConsole: Effect.Effect<InkConsole> = Effect.gen(function* ()
 	const toOut = (...args: ReadonlyArray<unknown>): void => emit("out", textOf(args));
 	const toErr = (...args: ReadonlyArray<unknown>): void => emit("err", textOf(args));
 	const elapsed = (label: string, method: string, extra: ReadonlyArray<unknown>): void => {
-		const started = timers.get(label);
+		const started = O.getOrUndefined(MutableHashMap.get(timers, label));
 		if (started === undefined) {
 			emit("err", `Warning: No such label '${label}' for console.${method}()`);
 			return;
@@ -125,7 +141,9 @@ export const makeInkConsole: Effect.Effect<InkConsole> = Effect.gen(function* ()
 		error: toErr,
 		warn: toErr,
 		trace: (...args) => {
-			const stack = (new Error().stack ?? "").split("\n").slice(2).join("\n");
+			const trace = ConsoleTrace.make({ message: "" });
+			Error.captureStackTrace(trace, writer.trace);
+			const stack = (trace.stack ?? "").split("\n").slice(1).join("\n");
 			emit("err", `Trace${args.length === 0 ? "" : `: ${textOf(args)}`}${stack === "" ? "" : `\n${stack}`}`);
 		},
 		dir: (item) => toOut(item),
@@ -134,12 +152,12 @@ export const makeInkConsole: Effect.Effect<InkConsole> = Effect.gen(function* ()
 			if (!condition) emit("err", `Assertion failed${args.length === 0 ? "" : `: ${textOf(args)}`}`);
 		},
 		count: (label = "default") => {
-			const next = (counts.get(label) ?? 0) + 1;
-			counts.set(label, next);
+			const next = (O.getOrElse(MutableHashMap.get(counts, label), () => 0)) + 1;
+			MutableHashMap.set(counts, label, next);
 			emit("out", `${label}: ${next}`);
 		},
 		countReset: (label = "default") => {
-			counts.delete(label);
+			MutableHashMap.remove(counts, label);
 		},
 		group,
 		groupCollapsed: group,
@@ -147,12 +165,12 @@ export const makeInkConsole: Effect.Effect<InkConsole> = Effect.gen(function* ()
 			indent = indent.slice(2);
 		},
 		time: (label = "default") => {
-			timers.set(label, now());
+			MutableHashMap.set(timers, label, now());
 		},
 		timeLog: (label = "default", ...extra) => elapsed(label, "timeLog", extra),
 		timeEnd: (label = "default") => {
 			elapsed(label, "timeEnd", []);
-			timers.delete(label);
+			MutableHashMap.remove(timers, label);
 		},
 		// Erasing the screen would take the scrollback a live view keeps above its frame, and the frame with it.
 		clear: () => undefined,

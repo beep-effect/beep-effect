@@ -1,3 +1,5 @@
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as S from "effect/Schema";
 // Root types are named through the package's own name, so the emitted ui.d.ts imports them from "../index.ts"
 // (kept external by dtsExternals) instead of carrying copies a consumer's root layers cannot satisfy.
 import type * as Cli from "../index.ts";
@@ -30,6 +32,17 @@ import { uiProviders } from "./internal/UiProviders.ts";
 import { KeyTable, useKeys } from "./KeyTable.ts";
 import type { UiContextValue } from "./UiProvider.ts";
 import { UiStreams } from "./UiStreams.ts";
+
+const $I = $ScratchpadId.create("effected/cli/ui/CliUi");
+
+/** Ink exited before the screen produced an answer. */
+class ScreenExited extends S.TaggedError<ScreenExited>($I`ScreenExited`)(
+	"ScreenExited",
+	{ message: S.String },
+	$I.annote("ScreenExited", { description: "Ink exited without resolving or cancelling the screen." }),
+) {
+	override readonly name = "Error";
+}
 
 /**
  * How a screen ends: with a result, or cancelled for a reason.
@@ -126,92 +139,91 @@ interface CrashCell {
 	current: { readonly defect: unknown } | undefined;
 }
 
-const mount = <A>(
+const mount = Effect.fn("mount")(function* <A>(
 	screen: Screen<A>,
 	theme: Cli.StreamTheme,
 	clear: boolean,
 	crash: CrashCell,
 	neutralize: boolean,
-): Effect.Effect<A, Cli.Cancelled, Scope.Scope> =>
-	Effect.gen(function* () {
-		const overrides = yield* UiRenderOptions;
-		// The harness's bracket, around everything a run does, so a thunk that throws before Ink draws is a screen too.
-		// Released last: after Ink has exited and the colour level is restored, with the defect the run died of.
-		yield* Effect.acquireRelease(
-			Effect.sync(() => overrides.onMount?.("screen")),
-			(_, exit) =>
-				Effect.sync(() => {
-					const died = Exit.isFailure(exit) ? exit.cause.reasons.find(Cause.isDieReason) : undefined;
-					// An interrupt stays an interrupt, as `run` reports it: a crash recorded while it unmounts is not reported.
-					const interrupted = Exit.isFailure(exit) && Cause.hasInterruptsOnly(exit.cause);
-					overrides.onUnmount?.(died !== undefined ? { defect: died.defect } : interrupted ? undefined : crash.current);
-				}),
-		);
-		const { ink, react } = yield* loadInk;
-		const streams = yield* UiStreams;
-		yield* withInkColour(theme.color);
-		const result = yield* Deferred.make<A, Cli.Cancelled>();
-		const control: ScreenControl<A> = {
-			resolve: (value) => {
-				Deferred.doneUnsafe(result, Exit.succeed(value));
+): Effect.fn.Return<A, Cli.Cancelled, Scope.Scope> {
+	const overrides = yield* UiRenderOptions;
+	// The harness's bracket, around everything a run does, so a thunk that throws before Ink draws is a screen too.
+	// Released last: after Ink has exited and the colour level is restored, with the defect the run died of.
+	yield* Effect.acquireRelease(
+		Effect.sync(() => overrides.onMount?.("screen")),
+		(_, exit) =>
+			Effect.sync(() => {
+				const died = Exit.isFailure(exit) ? exit.cause.reasons.find(Cause.isDieReason) : undefined;
+				// An interrupt stays an interrupt, as `run` reports it: a crash recorded while it unmounts is not reported.
+				const interrupted = Exit.isFailure(exit) && Cause.hasInterruptsOnly(exit.cause);
+				overrides.onUnmount?.(died !== undefined ? { defect: died.defect } : interrupted ? undefined : crash.current);
+			}),
+	);
+	const { ink, react } = yield* loadInk;
+	const streams = yield* UiStreams;
+	yield* withInkColour(theme.color);
+	const result = yield* Deferred.make<A, Cli.Cancelled>();
+	const control: ScreenControl<A> = {
+		resolve: (value) => {
+			Deferred.doneUnsafe(result, Exit.succeed(value));
+		},
+		cancel: (reason) => {
+			Deferred.doneUnsafe(result, Exit.fail(Cancelled.make({ reason })));
+		},
+	};
+	const element = yield* Effect.promise(() => Promise.resolve(screen(control)));
+	const die = (error: unknown): void => {
+		// Recorded even when the result is already settled: a crash in the same tick as a cancel or a resolve wins.
+		if (crash.current === undefined) crash.current = { defect: error };
+		Deferred.doneUnsafe(result, Exit.die(error));
+	};
+	const tree = react.createElement(errorBoundary(), {
+		onError: die,
+		children: uiProviders(
+			{
+				cancel: control.cancel,
+				die,
+				theme,
+				glyphs: theme.glyphs,
+				...(neutralize ? { neutralizeWorkflowCommands: true } : {}),
 			},
-			cancel: (reason) => {
-				Deferred.doneUnsafe(result, Exit.fail(Cancelled.make({ reason })));
-			},
-		};
-		const element = yield* Effect.promise(() => Promise.resolve(screen(control)));
-		const die = (error: unknown): void => {
-			// Recorded even when the result is already settled: a crash in the same tick as a cancel or a resolve wins.
-			if (crash.current === undefined) crash.current = { defect: error };
-			Deferred.doneUnsafe(result, Exit.die(error));
-		};
-		const tree = react.createElement(errorBoundary(), {
-			onError: die,
-			children: uiProviders(
-				{
-					cancel: control.cancel,
-					die,
-					theme,
-					glyphs: theme.glyphs,
-					...(neutralize ? { neutralizeWorkflowCommands: true } : {}),
-				},
-				react.createElement(RootKeys, { cancel: control.cancel, children: element }),
-			),
-		});
-		const instance = yield* Effect.acquireRelease(
-			Effect.sync(() =>
-				ink.render(tree, {
-					stdin: streams.stdin,
-					stdout: streams.stdout,
-					stderr: streams.stderr,
-					interactive: true,
-					exitOnCtrlC: false,
-					patchConsole: false,
-					...(overrides.debug === true ? { debug: true } : {}),
-					...O.getSomesStruct({ onRender: O.fromUndefinedOr(overrides.onRender) }),
-					...O.getSomesStruct({ maxFps: O.fromUndefinedOr(overrides.maxFps) }),
-				}),
-			),
-			(instance) =>
-				Effect.promise(() => {
-					// Erases the last frame and marks it written, so the unmount's final render draws nothing over it.
-					if (clear) instance.clear();
-					// Taken before `unmount()`, which removes the `beforeExit` listener this registers; taken after, the listener
-					// would outlive the instance and hold it, one more per screen.
-					const exited = instance.waitUntilExit();
-					instance.unmount();
-					return exited.then(() => undefined, () => undefined);
-				}),
-		);
-		const exited: Effect.Effect<A, Cli.Cancelled> = Effect.promise(() => instance.waitUntilExit()).pipe(
-			Effect.flatMap(() =>
-				Effect.flatMap(Deferred.isDone(result), (done) =>
-					done ? Deferred.await(result) : Effect.die(new Error(SCREEN_EXITED)),
-				),
-			),
-		);
-		return yield* Effect.raceFirst(Deferred.await(result), exited);
+			react.createElement(RootKeys, { cancel: control.cancel, children: element }),
+		),
 	});
+	const instance = yield* Effect.acquireRelease(
+		Effect.sync(() =>
+			ink.render(tree, {
+				stdin: streams.stdin,
+				stdout: streams.stdout,
+				stderr: streams.stderr,
+				interactive: true,
+				exitOnCtrlC: false,
+				patchConsole: false,
+				...(overrides.debug === true ? { debug: true } : {}),
+				...O.getSomesStruct({ onRender: O.fromUndefinedOr(overrides.onRender) }),
+				...O.getSomesStruct({ maxFps: O.fromUndefinedOr(overrides.maxFps) }),
+			}),
+		),
+		(instance) =>
+			Effect.promise(() => {
+				// Erases the last frame and marks it written, so the unmount's final render draws nothing over it.
+				if (clear) instance.clear();
+				// Taken before `unmount()`, which removes the `beforeExit` listener this registers; taken after, the listener
+				// would outlive the instance and hold it, one more per screen.
+				const exited = instance.waitUntilExit();
+				instance.unmount();
+				return exited.then(() => undefined, () => undefined);
+			}),
+	);
+	const exited: Effect.Effect<A, Cli.Cancelled> = Effect.promise(() => instance.waitUntilExit()).pipe(
+		Effect.flatMap(() =>
+			Effect.flatMap(Deferred.isDone(result), (done) =>
+				done ? Deferred.await(result) : Effect.die(ScreenExited.make({ message: SCREEN_EXITED })),
+			),
+		),
+	);
+	return yield* Effect.raceFirst(Deferred.await(result), exited);
+});
 
 /**
  * Interactive screens drawn with Ink, mounted as scoped resources.
@@ -269,32 +281,31 @@ export class CliUi {
 	 * @param screen - builds the element to mount from its {@link ScreenControl}
 	 * @param options - whether to erase the last frame
 	 */
-	static readonly run = <A>(
+	static readonly run = Effect.fn("run")(function* <A>(
 		screen: Screen<A>,
 		options?: CliUiRunOptions,
-	): Effect.Effect<A, Cli.Cancelled | Cli.NotInteractive, Cli.CliTheme> =>
-		Effect.gen(function* () {
-			if (!(yield* CliInteractive)) return yield* NotInteractive.make();
-			const theme = yield* audienceTheme;
-			const neutralize = yield* underGithubActions;
-			const crash: CrashCell = { current: undefined };
-			const exit = yield* mount(screen, theme, options?.clear === true, crash, neutralize).pipe(
-				Effect.scoped,
-				Semaphore.withPermit(mountPermit),
-				Effect.exit,
-			);
-			// A tree that crashed is a defect however the screen ended: a cancel or a resolve in the same tick, which
-			// settled the result first, must not hide it. An interrupt stays an interrupt. The interrupt check is
-			// defensive: a fiber interrupted from outside stops before it gets here.
-			const crashed = crash.current;
-			const interrupted = Exit.isFailure(exit) && Cause.hasInterruptsOnly(exit.cause);
-			if (crashed === undefined || interrupted) return yield* exit;
-			const dies = Exit.isFailure(exit) ? exit.cause.reasons.filter(Cause.isDieReason) : [];
-			// A run that died of the crash keeps its whole cause, a failing finalizer's defect included.
-			if (dies.some((reason) => reason.defect === crashed.defect)) return yield* exit;
-			// Otherwise the crash replaces the end it beat, and any defect already there (a kit finalizer that failed)
-			// stays beside it.
-			return yield* Effect.failCause(Cause.fromReasons<never>([Cause.makeDieReason(crashed.defect), ...dies]));
+	): Effect.fn.Return<A, Cli.Cancelled | Cli.NotInteractive, Cli.CliTheme> {
+		if (!(yield* CliInteractive)) return yield* NotInteractive.make();
+		const theme = yield* audienceTheme;
+		const neutralize = yield* underGithubActions;
+		const crash: CrashCell = { current: undefined };
+		const exit = yield* mount(screen, theme, options?.clear === true, crash, neutralize).pipe(
+			Effect.scoped,
+			Semaphore.withPermit(mountPermit),
+			Effect.exit,
+		);
+		// A tree that crashed is a defect however the screen ended: a cancel or a resolve in the same tick, which
+		// settled the result first, must not hide it. An interrupt stays an interrupt. The interrupt check is
+		// defensive: a fiber interrupted from outside stops before it gets here.
+		const crashed = crash.current;
+		const interrupted = Exit.isFailure(exit) && Cause.hasInterruptsOnly(exit.cause);
+		if (crashed === undefined || interrupted) return yield* exit;
+		const dies = Exit.isFailure(exit) ? exit.cause.reasons.filter(Cause.isDieReason) : [];
+		// A run that died of the crash keeps its whole cause, a failing finalizer's defect included.
+		if (dies.some((reason) => reason.defect === crashed.defect)) return yield* exit;
+		// Otherwise the crash replaces the end it beat, and any defect already there (a kit finalizer that failed)
+		// stays beside it.
+		return yield* Effect.failCause(Cause.fromReasons<never>([Cause.makeDieReason(crashed.defect), ...dies]));
 		});
 
 	/**
@@ -479,7 +490,7 @@ export class CliUi {
 	static readonly fallback = <A>(screen: Screen<A>, options: CliUiFallbackOptions<A>): Param.FallbackPrompt<A> => {
 		// Said once per fallback: a parse that retries must not repeat it.
 		let explained = false;
-		return Effect.gen(function* () {
+		const fallback = Effect.fn("fallback")(function* () {
 			const theme = yield* Effect.serviceOption(CliTheme);
 			if (O.isNone(theme)) {
 				if (!explained && (yield* CliInteractive)) {
@@ -497,6 +508,7 @@ export class CliUi {
 				Effect.catchTags({ Cancelled: Effect.die, NotInteractive: () => answerWithoutPerson(options) }),
 			);
 		});
+		return fallback();
 	};
 
 	/**

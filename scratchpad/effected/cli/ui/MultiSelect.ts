@@ -1,3 +1,9 @@
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as Match from "effect/Match";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import type { ReactElement } from "react";
 import { Fmt } from "../Fmt.ts";
 import type { Screen } from "./CliUi.ts";
@@ -9,6 +15,17 @@ import { KeyTable, useKeys } from "./KeyTable.ts";
 import { Styled, useGlyphs, useTerminalSize } from "./UiTheme.ts";
 import type { ViewportMove, ViewportRow, ViewportState } from "./Viewport.ts";
 import { Viewport } from "./Viewport.ts";
+
+const $I = $ScratchpadId.create("effected/cli/ui/MultiSelect");
+
+/** Duplicate keys make a multi-select row ambiguous. */
+class DuplicateItemKey extends S.TaggedError<DuplicateItemKey>($I`DuplicateItemKey`)(
+	"DuplicateItemKey",
+	{ message: S.String },
+	$I.annote("DuplicateItemKey", { description: "Two multi-select items share a row key." }),
+) {
+	override readonly name = "Error";
+}
 
 /**
  * One item of a {@link MultiSelect} section.
@@ -109,12 +126,12 @@ const flatten = <A>(
 
 /** Throws when two items, in any sections, share a key: keys identify rows. */
 const assertUniqueKeys = <A>(sections: ReadonlyArray<MultiSelectSection<A>>): void => {
-	const seen = new Set<string>();
+	const seen = MutableHashSet.empty<string>();
 	for (const { item } of flatten(sections)) {
-		if (seen.has(item.key)) {
-			throw new Error(`@effected/cli/ui: MultiSelect item keys must be unique across sections; "${item.key}" repeats`);
+		if (MutableHashSet.has(seen, item.key)) {
+			throw DuplicateItemKey.make({ message: `@effected/cli/ui: MultiSelect item keys must be unique across sections; "${item.key}" repeats` });
 		}
-		seen.add(item.key);
+		MutableHashSet.add(seen, item.key);
 	}
 };
 
@@ -131,19 +148,17 @@ const init = <A>(
 const step = <A>(state: MultiSelectState<A>, action: MultiSelectAction): MultiSelectState<A> => {
 	const items = flatten(state.sections);
 	const cursor = state.viewport.cursor;
-	switch (action) {
-		case "cancel":
-			return state;
-		case "submit":
-			return { ...state, submitted: true };
-		case "toggle": {
+	return Match.value(action).pipe(
+		Match.when("cancel", () => state),
+		Match.when("submit", () => ({ ...state, submitted: true })),
+		Match.when("toggle", () => {
 			if (items.length === 0) return state;
 			const chosen = new Set(state.chosen);
 			if (chosen.has(cursor)) chosen.delete(cursor);
 			else chosen.add(cursor);
 			return { ...state, chosen };
-		}
-		case "toggleSection": {
+		}),
+		Match.when("toggleSection", () => {
 			const section = items[cursor]?.section;
 			if (section === undefined) return state;
 			const members = items.flatMap((entry, index) => (entry.section === section ? [index] : []));
@@ -155,10 +170,9 @@ const step = <A>(state: MultiSelectState<A>, action: MultiSelectAction): MultiSe
 				else chosen.delete(index);
 			}
 			return { ...state, chosen };
-		}
-		default:
-			return { ...state, viewport: Viewport.step(state.viewport, action) };
-	}
+		}),
+		Match.orElse((move) => ({ ...state, viewport: Viewport.step(state.viewport, move) })),
+	);
 };
 
 const selected = <A>(state: MultiSelectState<A>): ReadonlyArray<A> =>
@@ -280,7 +294,7 @@ export class MultiSelect {
 		});
 		const items = flatten(props.sections);
 		// Rows are keyed by the item's own key (unique, checked at init), which is also the React key of the row.
-		const numberOf = new Map(items.map((entry, index) => [entry.item.key, index] as const));
+		const numberOf = MutableHashMap.fromIterable(items.map((entry, index) => [entry.item.key, index] as const));
 		const rows: ReadonlyArray<ViewportRow> = props.sections.flatMap((section) => [
 			{ _tag: "Header" as const, label: section.title },
 			...section.items.map((item) => ({ _tag: "Item" as const, key: item.key })),
@@ -292,7 +306,7 @@ export class MultiSelect {
 		const renderRow = (row: ViewportRow, highlighted: boolean): ReactElement => {
 			if (row._tag === "Header")
 				return react.createElement(Styled, { token: "emphasis" }, Fmt.truncate(lineText(row.label), columns, ellipsis));
-			const index = numberOf.get(row.key) ?? -1;
+			const index = O.getOrElse(MutableHashMap.get(numberOf, row.key), () => -1);
 			const entry = items[index];
 			const text = Fmt.truncate(
 				`${highlighted ? glyphs.arrow : blank} ${state.chosen.has(index) ? on : off} ${lineText(entry?.item.label ?? "")}`,

@@ -63,19 +63,21 @@ export class CliPrompt {
 	 * @param prompt - the prompt to show
 	 * @param options - the parameter it stands in for, and the non-interactive default
 	 */
-	static readonly fallback = <A>(
+	static readonly fallback: <A>(
 		prompt: Prompt.Prompt<A>,
 		options: CliPromptFallbackOptions<A>,
-	): Param.FallbackPrompt<A> =>
-		Effect.gen(function* () {
-			if (yield* CliInteractive) {
-				const answer = yield* Prompt.run(prompt).pipe(
-					Effect.catchTag("QuitError", () => Effect.die(Cancelled.make({ reason: "interrupt" }))),
-				);
-				return Prompt.succeed(answer);
-			}
-			return yield* answerWithoutPerson(options);
-		});
+	) => Param.FallbackPrompt<A> = Effect.fn("fallback")(function* <A>(
+		prompt: Prompt.Prompt<A>,
+		options: CliPromptFallbackOptions<A>,
+	) {
+		if (yield* CliInteractive) {
+			const answer = yield* Prompt.run(prompt).pipe(
+				Effect.catchTag("QuitError", () => Effect.die(Cancelled.make({ reason: "interrupt" }))),
+			);
+			return Prompt.succeed(answer);
+		}
+		return yield* answerWithoutPerson(options);
+	});
 
 	/**
 	 * Gates core's `Terminal` on `CliInteractive`, so a run that is not interactive never touches the real one.

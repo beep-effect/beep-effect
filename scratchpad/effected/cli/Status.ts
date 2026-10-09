@@ -1,9 +1,20 @@
+import * as S from "effect/Schema";
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Arr from "effect/Array";
 import * as O from "effect/Option";
 import { sanitize } from "./Fmt.ts";
 import type { GlyphSet } from "./Glyphs.ts";
 import type { Style, TokenName } from "./Token.ts";
 import * as R from "effect/Record";
+
+const $I = $ScratchpadId.create("effected/cli/Status");
+
+class UnknownStatusError extends S.TaggedError<UnknownStatusError>($I`UnknownStatusError`)(
+	"UnknownStatusError",
+	{
+		message: S.String,
+	},
+) {}
 
 /**
  * How one status looks: a Unicode glyph, an ASCII fallback, a token and a rank.
@@ -85,7 +96,9 @@ export class Status<Names extends string> {
 	 *
 	 * @param extra - the statuses to add, by name
 	 */
-	extend<const Extra extends Record<string, StatusDef>>(extra: Extra): Status<Names | (keyof Extra & string)> {
+	extend<const Extra extends Record<string, StatusDef>>(
+		extra: Extra,
+	): Status<Names | (keyof Extra & string)> {
 		return new Status<Names | (keyof Extra & string)>({ ...this.defs, ...extra });
 	}
 
@@ -100,7 +113,9 @@ export class Status<Names extends string> {
 	 */
 	def(name: Names | CoreStatusName): StatusDef {
 		if (!R.has(this.defs, name)) {
-			throw new Error(`Unknown status "${name}"; this vocabulary has: ${R.keys(this.defs).join(", ")}`);
+			throw UnknownStatusError.make({
+				message: `Unknown status "${name}"; this vocabulary has: ${R.keys(this.defs).join(", ")}`,
+			});
 		}
 		return this.defs[name];
 	}

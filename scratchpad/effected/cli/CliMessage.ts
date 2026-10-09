@@ -51,32 +51,31 @@ export class CliMessage {
 	 * @param text - the text after the glyph
 	 * @param options - the stream override
 	 */
-	static readonly status = <N extends string>(
+	static readonly status = Effect.fn("status")(function* <N extends string>(
 		vocab: Status<N>,
 		name: N,
 		text: string,
 		options?: CliMessageOptions,
-	): Effect.Effect<void, never, CliTheme | Audience> =>
-		Effect.gen(function* () {
-			const theme = yield* CliTheme;
-			const audience = yield* Audience;
-			const def = vocab.def(name);
-			const message = sanitize(text);
+	): Effect.fn.Return<void, never, CliTheme | Audience> {
+		const theme = yield* CliTheme;
+		const audience = yield* Audience;
+		const def = vocab.def(name);
+		const message = sanitize(text);
 
-			// The stream first, then the line painted with THAT stream's colour: a redirected stderr is not coloured
-			// because stdout is.
-			const warning = vocab.def("warning").rank;
-			const stream = options?.stream ?? (def.rank >= warning ? "stderr" : "stdout");
-			const streamTheme = theme.forStream(stream);
+		// The stream first, then the line painted with THAT stream's colour: a redirected stderr is not coloured
+		// because stdout is.
+		const warning = vocab.def("warning").rank;
+		const stream = options?.stream ?? (def.rank >= warning ? "stderr" : "stdout");
+		const streamTheme = theme.forStream(stream);
 
-			let line: string;
-			// An agent sees the theme at colour none: the same line, its glyph sanitised and unpainted.
-			line = CliTheme.forAudience(streamTheme, audience.kind).status(vocab, name, message);
-			// The runner reads a log line as a command; this is the one place a message's text reaches it.
-			if (yield* underGithubActions) line = CommandNeutralizer.text(line);
+		let line: string;
+		// An agent sees the theme at colour none: the same line, its glyph sanitised and unpainted.
+		line = CliTheme.forAudience(streamTheme, audience.kind).status(vocab, name, message);
+		// The runner reads a log line as a command; this is the one place a message's text reaches it.
+		if (yield* underGithubActions) line = CommandNeutralizer.text(line);
 
-			yield* stream === "stderr" ? Console.error(line) : Console.log(line);
-		});
+		yield* stream === "stderr" ? Console.error(line) : Console.log(line);
+	});
 
 	/**
 	 * A success line, on stdout.

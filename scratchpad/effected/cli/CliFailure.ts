@@ -92,7 +92,7 @@ const MAX_DEPTH = 8;
 const MAX_SPANS = 32;
 
 const hasCliDoc = (value: unknown): value is CliDocSource =>
-	typeof value === "object" && value !== null && CliDoc in value && P.isFunction(value[CliDoc]);
+	P.isObjectKeyword(value) && !P.isFunction(value) && CliDoc in value && P.isFunction(value[CliDoc]);
 
 // String(value) can throw for an object with no prototype or a hostile toString, and says only "[object Object]" for
 // a plain failure value: such a value with a string message is that message.
@@ -100,7 +100,7 @@ const describe = (value: unknown): string => {
 	try {
 		const text = String(value);
 		if (text !== "[object Object]") return text;
-		const message = typeof value === "object" && value !== null && "message" in value ? value.message : undefined;
+		const message = P.isObjectKeyword(value) && !P.isFunction(value) && "message" in value ? value.message : undefined;
 		return P.isString(message) ? message : text;
 	} catch {
 		return "[unprintable value]";
@@ -110,7 +110,7 @@ const describe = (value: unknown): string => {
 const firstLine = (text: string): string => text.split(/\r\n|\r|\n/, 1)[0] ?? "";
 
 const tagOf = (value: unknown): string | undefined => {
-	if (typeof value !== "object" || value === null) return undefined;
+	if (!P.isObjectKeyword(value) || P.isFunction(value)) return undefined;
 	const tag = "_tag" in value ? value._tag : undefined;
 	return P.isString(tag) ? tag : undefined;
 };
@@ -124,7 +124,7 @@ const failureBlocks = (message: string): ReadonlyArray<Block> => {
 /** The issue of a schema failure: the value itself, or the `issue` an error carries. */
 const issueOf = (error: unknown): unknown => {
 	if (SchemaIssue.isIssue(error)) return error;
-	if (typeof error === "object" && error !== null && "issue" in error) {
+	if (P.isObjectKeyword(error) && !P.isFunction(error) && "issue" in error) {
 		const issue = error.issue;
 		if (SchemaIssue.isIssue(issue)) return issue;
 	}
@@ -135,7 +135,7 @@ const schemaBlocks = (error: unknown): ReadonlyArray<Block> | undefined => {
 	const entries = issueEntries(issueOf(error));
 	if (entries.length === 0) return undefined;
 	const header =
-		typeof error === "object" && error !== null && !SchemaIssue.isIssue(error) && "message" in error
+		P.isObjectKeyword(error) && !P.isFunction(error) && !SchemaIssue.isIssue(error) && "message" in error
 			? firstLine(describe(error.message ?? ""))
 			: "";
 	const label: Array<InlineOf<"Text"> | InlineOf<"StatusMark"> | string> = [

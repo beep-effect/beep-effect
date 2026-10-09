@@ -1,3 +1,6 @@
+import * as P from "effect/Predicate";
+import * as R from "effect/Record";
+
 /**
  * A named terminal colour: the eight ANSI colours and their bright variants.
  *
@@ -97,10 +100,10 @@ export class Token {
 	 * @param overrides - styles that replace the default of a token, as `CliThemeOptions.tokens` does
 	 */
 	static readonly resolve = (token: TokenName | Style, overrides?: Partial<Record<TokenName, Style>>): Style => {
-		if (typeof token !== "string") return token;
-		const own = overrides !== undefined && Object.hasOwn(overrides, token) ? overrides[token] : undefined;
+		if (!P.isString(token)) return token;
+		const own = overrides !== undefined && R.has<string, Style | undefined>(overrides, token) ? overrides[token] : undefined;
 		if (own !== undefined) return own;
-		return Object.hasOwn(DEFAULTS, token) ? DEFAULTS[token] : {};
+		return R.has(DEFAULTS, token) ? DEFAULTS[token] : {};
 	};
 
 	/**

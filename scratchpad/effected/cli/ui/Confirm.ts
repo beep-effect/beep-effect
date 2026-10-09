@@ -1,3 +1,8 @@
+import * as Match from "effect/Match";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
+import * as S from "effect/Schema";
+import { $ScratchpadId } from "@beep/identity/packages";
 import type { ReactElement } from "react";
 import { Fmt } from "../Fmt.ts";
 import type { Screen } from "./CliUi.ts";
@@ -11,6 +16,15 @@ import { Styled, useGlyphs, useTerminalSize } from "./UiTheme.ts";
 import type { ViewportRow } from "./Viewport.ts";
 import { Viewport } from "./Viewport.ts";
 import * as O from "@beep/utils/Option";
+
+const $I = $ScratchpadId.create("effected/cli/ui/Confirm");
+
+class DuplicateToggleKeyError extends S.TaggedError<DuplicateToggleKeyError>($I`DuplicateToggleKeyError`)(
+	"DuplicateToggleKeyError",
+	{
+		message: S.String,
+	},
+) {}
 
 /**
  * An extra on/off row a {@link Confirm} hosts beneath its yes/no answer.
@@ -97,12 +111,14 @@ export interface ConfirmViewProps<K extends string> extends ConfirmScreenOptions
 }
 
 const assertUniqueKeys = <K extends string>(toggles: ReadonlyArray<ConfirmToggle<K>>): void => {
-	const seen = new Set<string>();
+	const seen = MutableHashSet.empty<string>();
 	for (const toggle of toggles) {
-		if (seen.has(toggle.key)) {
-			throw new Error(`@effected/cli/ui: Confirm toggle keys must be unique; "${toggle.key}" repeats`);
+		if (MutableHashSet.has(seen, toggle.key)) {
+			throw DuplicateToggleKeyError.make({
+				message: `@effected/cli/ui: Confirm toggle keys must be unique; "${toggle.key}" repeats`,
+			});
 		}
-		seen.add(toggle.key);
+		MutableHashSet.add(seen, toggle.key);
 	}
 };
 
@@ -112,39 +128,43 @@ const init = <K extends string>(options: ConfirmInitOptions<K> = {}): ConfirmSta
 	return { confirmed: options.initial ?? false, row: 0, toggles, submitted: false };
 };
 
-const step = <K extends string>(state: ConfirmState<K>, action: ConfirmAction): ConfirmState<K> => {
-	switch (action) {
-		case "up":
-			return { ...state, row: Math.max(0, state.row - 1) };
-		case "down":
-			return { ...state, row: Math.min(state.toggles.length, state.row + 1) };
-		case "toggle":
-			// Space flips only a toggle row; on the yes/no row it changes nothing.
-			return state.row === 0
-				? state
-				: {
-						...state,
-						toggles: state.toggles.map((toggle, index) =>
-							index === state.row - 1 ? { ...toggle, value: !toggle.value } : toggle,
-						),
-					};
-		case "yes":
-			return { ...state, confirmed: true };
-		case "no":
-			return { ...state, confirmed: false };
-		case "flip":
-			return { ...state, confirmed: !state.confirmed };
-		case "submit":
-			return { ...state, submitted: true };
-		case "cancel":
-			return state;
-	}
-};
+const step = <K extends string>(state: ConfirmState<K>, action: ConfirmAction): ConfirmState<K> =>
+	Match.value(action).pipe(
+		Match.when("up", (): ConfirmState<K> => ({ ...state, row: Math.max(0, state.row - 1) })),
+		Match.when(
+			"down",
+			(): ConfirmState<K> => ({ ...state, row: Math.min(state.toggles.length, state.row + 1) }),
+		),
+		Match.when(
+			"toggle",
+			(): ConfirmState<K> =>
+				// Space flips only a toggle row; on the yes/no row it changes nothing.
+				state.row === 0
+					? state
+					: {
+							...state,
+							toggles: state.toggles.map((toggle, index) =>
+								index === state.row - 1 ? { ...toggle, value: !toggle.value } : toggle,
+							),
+						},
+		),
+		Match.when("yes", (): ConfirmState<K> => ({ ...state, confirmed: true })),
+		Match.when("no", (): ConfirmState<K> => ({ ...state, confirmed: false })),
+		Match.when("flip", (): ConfirmState<K> => ({ ...state, confirmed: !state.confirmed })),
+		Match.when("submit", (): ConfirmState<K> => ({ ...state, submitted: true })),
+		Match.when("cancel", (): ConfirmState<K> => state),
+		Match.exhaustive,
+	);
 
 const result = <K extends string>(state: ConfirmState<K>): ConfirmResult<K> => {
 	const toggles: Partial<Record<K, boolean>> = {};
 	for (const toggle of state.toggles) {
-		Object.defineProperty(toggles, toggle.key, { value: toggle.value, enumerable: true, configurable: true, writable: true });
+		Object.defineProperty(toggles, toggle.key, {
+			value: toggle.value,
+			enumerable: true,
+			configurable: true,
+			writable: true,
+		});
 	}
 	return { confirmed: state.confirmed, toggles };
 };
@@ -218,7 +238,8 @@ export class Confirm {
 	 * @param state - where the confirm is
 	 * @param action - the action
 	 */
-	static readonly step: <K extends string>(state: ConfirmState<K>, action: ConfirmAction) => ConfirmState<K> = step;
+	static readonly step: <K extends string>(state: ConfirmState<K>, action: ConfirmAction) => ConfirmState<K> =
+		step;
 
 	/**
 	 * The answer and every toggle's value by key.
@@ -261,8 +282,13 @@ export class Confirm {
 			if (action === "cancel") cancel("escape");
 			else setState((current) => step(current, action));
 		});
-		const toggleRows: ReadonlyArray<ViewportRow> = state.toggles.map((toggle) => ({ _tag: "Item", key: toggle.key }));
-		const numberOf: ReadonlyMap<string, number> = new Map(state.toggles.map((toggle, index) => [toggle.key, index]));
+		const toggleRows: ReadonlyArray<ViewportRow> = state.toggles.map((toggle) => ({
+			_tag: "Item",
+			key: toggle.key,
+		}));
+		const numberOf = MutableHashMap.fromIterable(
+			state.toggles.map((toggle, index) => [toggle.key, index] as const),
+		);
 		const ellipsis = { ellipsis: glyphs.ellipsis };
 		const lead = state.row === 0 ? glyphs.arrow : " ".repeat(Fmt.width(glyphs.arrow));
 		const answer = (label: string, chosen: boolean): ReactElement =>
@@ -272,7 +298,11 @@ export class Confirm {
 		return react.createElement(
 			ink.Box,
 			{ flexDirection: "column" },
-			react.createElement(Styled, { token: "emphasis" }, Fmt.truncate(lineText(props.message), columns, ellipsis)),
+			react.createElement(
+				Styled,
+				{ token: "emphasis" },
+				Fmt.truncate(lineText(props.message), columns, ellipsis),
+			),
 			react.createElement(
 				ink.Text,
 				null,
@@ -291,7 +321,8 @@ export class Confirm {
 						state: Viewport.init(state.toggles.length, state.toggles.length, Math.max(0, state.row - 1)),
 						reserved: RESERVED,
 						renderRow: (row: ViewportRow) => {
-							const index = row._tag === "Item" ? (numberOf.get(row.key) ?? 0) : 0;
+							const index =
+								row._tag === "Item" ? O.getOrElse(MutableHashMap.get(numberOf, row.key), () => 0) : 0;
 							const toggle = state.toggles[index];
 							return react.createElement(Toggle.View, {
 								label: toggle?.label ?? "",

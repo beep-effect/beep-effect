@@ -218,22 +218,21 @@ const LEVEL_STYLES: Readonly<Record<string, Style>> = {
 };
 
 /** The diagnostics level: the option when given, else the env var, and the raw text when that is not a level. */
-const readLevel = (
+const readLevel = Effect.fn("readLevel")(function* (
 	explicit: LogLevel.LogLevel | undefined,
 	envVar: string | undefined,
-): Effect.Effect<{ readonly level: LogLevel.LogLevel; readonly invalid: string | undefined }> =>
-	Effect.gen(function* () {
-		if (explicit !== undefined) return { level: explicit, invalid: undefined };
-		if (envVar === undefined) return { level: "None", invalid: undefined };
-		const raw = yield* Config.option(Config.String(envVar)).pipe(Effect.orElseSucceed(O.none<string>));
-		if (O.isNone(raw) || raw.value === "") return { level: "None", invalid: undefined };
-		const level = LEVELS[raw.value.toLowerCase()];
-		if (level !== undefined) return { level, invalid: undefined };
-		return {
-			level: "None",
-			invalid: `${envVar}=${raw.value} is not a log level (${R.keys(LEVELS).join("|")}); ignoring it`,
-		};
-	});
+): Effect.fn.Return<{ readonly level: LogLevel.LogLevel; readonly invalid: string | undefined }> {
+	if (explicit !== undefined) return { level: explicit, invalid: undefined };
+	if (envVar === undefined) return { level: "None", invalid: undefined };
+	const raw = yield* Config.option(Config.String(envVar)).pipe(Effect.orElseSucceed(O.none<string>));
+	if (O.isNone(raw) || raw.value === "") return { level: "None", invalid: undefined };
+	const level = LEVELS[raw.value.toLowerCase()];
+	if (level !== undefined) return { level, invalid: undefined };
+	return {
+		level: "None",
+		invalid: `${envVar}=${raw.value} is not a log level (${R.keys(LEVELS).join("|")}); ignoring it`,
+	};
+});
 
 /**
  * Whether a record's line is neutralized: the `neutralize` option when it is a boolean, else whether the logging
@@ -490,16 +489,17 @@ export class CliLog {
 
 				// An invalid level warns through the CliLogger only, never through the sink.
 				if (invalid !== undefined) {
-					yield* Effect.logWarning(invalid).pipe(
-						Effect.provideService(Logger.CurrentLoggers, new Set<Logger.Logger<unknown, unknown>>([cliLogger])),
+					yield* Effect.scopedWith((scope) =>
+						Effect.flatMap(Layer.buildWithScope(Logger.layer([cliLogger]), scope), (context) =>
+							Effect.provideContext(Effect.logWarning(invalid), context),
+						),
 					);
 				}
 
 				return Layer.mergeAll(
 					Layer.succeed(CliLog.Level, level),
 					isLowered ? Layer.succeed(References.MinimumLogLevel, lowered) : Layer.empty,
-					Layer.effect(
-						Logger.CurrentLoggers,
+					Layer.unwrap(
 						Effect.gen(function* () {
 							const loggers: Array<Logger.Logger<unknown, unknown>> = [
 								...(options.plainLogger === false ? [] : [cliLogger]),
@@ -518,7 +518,7 @@ export class CliLog {
 									loggers.push(yield* makeFileSink(location.resolve(target.value), lowered, underActionsIn));
 								}
 							}
-							return new Set(loggers);
+							return Logger.layer(loggers);
 						}),
 					),
 				);
@@ -560,26 +560,25 @@ export class CliLog {
 	 * @param text - the text after the glyph, sanitised
 	 * @param options - the level to log at, and the indent before the glyph
 	 */
-	static readonly status = <N extends string>(
+	static readonly status = Effect.fn("status")(function* <N extends string>(
 		vocab: Status<N>,
 		name: N,
 		text: string,
 		options?: CliLogStatusOptions,
-	): Effect.Effect<void, never, CliTheme> =>
-		Effect.gen(function* () {
-			const audience = yield* Effect.serviceOption(Audience);
-			const theme = CliTheme.forAudience(
-				(yield* CliTheme).forStream("stderr"),
-				O.isSome(audience) ? audience.value.kind : undefined,
-			);
-			const line = `${indentOf(options?.indent)}${theme.status(vocab, name, sanitize(text))}`;
-			const core = vocab;
-			const rank = vocab.def(name).rank;
-			const level: LogLevel.Severity =
-				options?.level ??
-				(rank >= core.def("failure").rank ? "Error" : rank >= core.def("warning").rank ? "Warn" : "Info");
-			yield* Effect.logWithLevel(level)(line).pipe(Effect.provideService(TrustedLine, true));
-		});
+	): Effect.fn.Return<void, never, CliTheme> {
+		const audience = yield* Effect.serviceOption(Audience);
+		const theme = CliTheme.forAudience(
+			(yield* CliTheme).forStream("stderr"),
+			O.isSome(audience) ? audience.value.kind : undefined,
+		);
+		const line = `${indentOf(options?.indent)}${theme.status(vocab, name, sanitize(text))}`;
+		const core = vocab;
+		const rank = vocab.def(name).rank;
+		const level: LogLevel.Severity =
+			options?.level ??
+			(rank >= core.def("failure").rank ? "Error" : rank >= core.def("warning").rank ? "Warn" : "Info");
+		yield* Effect.logWithLevel(level)(line).pipe(Effect.provideService(TrustedLine, true));
+	});
 
 	/**
 	 * Mark the log records an effect emits as coming from `name`.
@@ -613,25 +612,26 @@ const buildTimeAudience = (
 		(self) => Effect.scopedWith((scope) => Effect.flatMap(Layer.buildWithScope(Audience.layer(audienceEnvVar === undefined ? undefined : { envVar: audienceEnvVar }).pipe(
 				Layer.provide(Layer.succeed(CurrentRuntimeEnv, detected)),
 			), scope), (context) => Effect.provideContext(self, context))),
-		Effect.provideService(Logger.CurrentLoggers, new Set<Logger.Logger<unknown, unknown>>()),
+		(self) => Effect.scopedWith((scope) =>
+			Effect.flatMap(Layer.buildWithScope(Logger.layer([]), scope), (context) => Effect.provideContext(self, context)),
+		),
 	);
 };
 
 /** What the build-time loggers decide from, read once: the format and the runtime environment to neutralize by. */
-const buildTimeDecision = (
+const buildTimeDecision = Effect.fn("buildTimeDecision")(function* (
 	options: CliLogOptions | CliLogFileOptions,
 	audienceEnvVar: string | undefined,
-): Effect.Effect<{ readonly ndjson: boolean; readonly runtimeEnv: RuntimeEnv }> =>
-	Effect.gen(function* () {
-		// No CurrentRuntimeEnv exists while the platform builds: detect it here, from the environment alone, so the
-		// build-time lines are neutralized under GitHub Actions as the program's are; `runtimeEnv` wins when given.
-		const detected: RuntimeEnv = yield* Effect.scopedWith((scope) => Effect.flatMap(Layer.buildWithScope(CurrentRuntimeEnv.layer, scope), (context) => Effect.provideContext(CurrentRuntimeEnv, context)));
-		const format = options.format ?? "auto";
-		const ndjson =
-			format === "json" ||
-			(format === "auto" && (yield* buildTimeAudience(options.argv, audienceEnvVar, detected)) !== "human");
-		return { ndjson, runtimeEnv: options.runtimeEnv ?? detected };
-	});
+): Effect.fn.Return<{ readonly ndjson: boolean; readonly runtimeEnv: RuntimeEnv }> {
+	// No CurrentRuntimeEnv exists while the platform builds: detect it here, from the environment alone, so the
+	// build-time lines are neutralized under GitHub Actions as the program's are; `runtimeEnv` wins when given.
+	const detected: RuntimeEnv = yield* Effect.scopedWith((scope) => Effect.flatMap(Layer.buildWithScope(CurrentRuntimeEnv.layer, scope), (context) => Effect.provideContext(CurrentRuntimeEnv, context)));
+	const format = options.format ?? "auto";
+	const ndjson =
+		format === "json" ||
+		(format === "auto" && (yield* buildTimeAudience(options.argv, audienceEnvVar, detected)) !== "human");
+	return { ndjson, runtimeEnv: options.runtimeEnv ?? detected };
+});
 
 /**
  * The logger the platform is built under by `CliRuntime.main` with `env.log`: the log level and env var apply to
@@ -650,7 +650,7 @@ const buildTimeDecision = (
 export const platformLogLayer: {
 	(audienceEnvVar?: string | undefined): (options: CliLogOptions | CliLogFileOptions) => Layer.Layer<never>;
 	(options: CliLogOptions | CliLogFileOptions, audienceEnvVar?: string | undefined): Layer.Layer<never>;
-} = dual((args) => typeof args[0] === "object" && args[0] !== null, (
+} = dual((args) => P.isObjectKeyword(args[0]) && !P.isFunction(args[0]), (
 	options: CliLogOptions | CliLogFileOptions,
 	audienceEnvVar?: string | undefined,
 ): Layer.Layer<never> =>
@@ -696,7 +696,7 @@ export const platformLogLayer: {
 export const envBuildLogLayer: {
 	(audienceEnvVar?: string | undefined): (options: CliLogOptions | CliLogFileOptions) => Layer.Layer<never>;
 	(options: CliLogOptions | CliLogFileOptions, audienceEnvVar?: string | undefined): Layer.Layer<never>;
-} = dual((args) => typeof args[0] === "object" && args[0] !== null, (
+} = dual((args) => P.isObjectKeyword(args[0]) && !P.isFunction(args[0]), (
 	options: CliLogOptions | CliLogFileOptions,
 	audienceEnvVar?: string | undefined,
 ): Layer.Layer<never> =>

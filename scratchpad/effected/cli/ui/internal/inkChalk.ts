@@ -24,7 +24,7 @@ export interface InkChalk {
 }
 
 const isInkChalk = (value: unknown): value is InkChalk =>
-	(P.isFunction(value) || (typeof value === "object" && value !== null)) &&
+	P.isObjectKeyword(value) &&
 	"level" in value && P.isNumber(value.level);
 
 /** The runtime's `import.meta.resolve`, when it has one. */

@@ -1,3 +1,5 @@
+import * as S from "effect/Schema";
+import { $ScratchpadId } from "@beep/identity/packages";
 // Root types are named through the package's own name, so the emitted ui.d.ts imports them from "../index.ts".
 import type * as Cli from "../index.ts";
 import type { FunctionComponent, ReactElement } from "react";
@@ -6,6 +8,15 @@ import { fromReact, inkModules } from "./internal/ink.ts";
 import { screenContext } from "./internal/ScreenContext.ts";
 import { useTerminalSize } from "./UiTheme.ts";
 import * as A from "effect/Array";
+
+const $I = $ScratchpadId.create("effected/cli/ui/DocView");
+
+class MissingDocViewThemeError extends S.TaggedError<MissingDocViewThemeError>($I`MissingDocViewThemeError`)(
+	"MissingDocViewThemeError",
+	{
+		message: S.String,
+	},
+) {}
 
 /**
  * Props of {@link DocView}.
@@ -57,15 +68,12 @@ const docView: () => FunctionComponent<DocViewProps> = fromReact((react) => {
 		const given = props.ctx;
 		const theme = screen?.theme;
 		const neutralize = screen?.neutralizeWorkflowCommands === true;
-		if (given === undefined && theme === undefined) throw new Error(OUTSIDE);
-		const ctx = react.useMemo(
-			() => {
-				if (given !== undefined) return given;
-				if (theme === undefined) throw new Error(OUTSIDE);
-				return contextOf(theme, columns, neutralize);
-			},
-			[given, theme, columns, neutralize],
-		);
+		if (given === undefined && theme === undefined) throw MissingDocViewThemeError.make({ message: OUTSIDE });
+		const ctx = react.useMemo(() => {
+			if (given !== undefined) return given;
+			if (theme === undefined) throw MissingDocViewThemeError.make({ message: OUTSIDE });
+			return contextOf(theme, columns, neutralize);
+		}, [given, theme, columns, neutralize]);
 		// Laid out once per document and context: a live view's tick redraws with the same document.
 		const lines = react.useMemo(() => linesOf(props.doc, ctx), [props.doc, ctx]);
 		return react.createElement(
@@ -101,4 +109,5 @@ const docView: () => FunctionComponent<DocViewProps> = fromReact((react) => {
  *
  * @public
  */
-export const DocView = (props: DocViewProps): ReactElement => inkModules().react.createElement(docView(), props);
+export const DocView = (props: DocViewProps): ReactElement =>
+	inkModules().react.createElement(docView(), props);

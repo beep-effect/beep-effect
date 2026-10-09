@@ -1,3 +1,6 @@
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as O from "effect/Option";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as SchemaIssue from "effect/SchemaIssue";
 
 /**
@@ -67,13 +70,13 @@ export interface IssueEntry {
  */
 export const issueEntries = (issue: unknown): ReadonlyArray<IssueEntry> => {
 	if (!SchemaIssue.isIssue(issue)) return [];
-	const seen = new Set<string>();
+	const seen = MutableHashSet.empty<string>();
 	const entries: Array<IssueEntry> = [];
 	for (const entry of formatter(issue).issues) {
 		const path = (entry.path ?? []).map(String);
 		const key = path.length === 0 ? entry.message : `${entry.message} at ${path.join(".")}`;
-		if (seen.has(key)) continue;
-		seen.add(key);
+		if (MutableHashSet.has(seen, key)) continue;
+		MutableHashSet.add(seen, key);
 		entries.push({ message: entry.message, path });
 	}
 	return entries;
@@ -82,10 +85,10 @@ export const issueEntries = (issue: unknown): ReadonlyArray<IssueEntry> => {
 /** A node of the path trie an issue tree is drawn from. */
 interface PathNode {
 	readonly messages: Array<string>;
-	readonly children: Map<string, PathNode>;
+	readonly children: MutableHashMap.MutableHashMap<string, PathNode>;
 }
 
-const emptyNode = (): PathNode => ({ messages: [], children: new Map() });
+const emptyNode = (): PathNode => ({ messages: [], children: MutableHashMap.empty<string, PathNode>() });
 
 /**
  * The entries as the input of a `Doc.tree`: one node per path segment, so `groups.g.extra` is three nested nodes, and
@@ -99,18 +102,20 @@ export const issueTreeChildren = (entries: ReadonlyArray<IssueEntry>): ReadonlyA
 	for (const entry of entries) {
 		let node = root;
 		for (const segment of entry.path) {
-			let next = node.children.get(segment);
+			let next = O.getOrUndefined(MutableHashMap.get(node.children, segment));
 			if (next === undefined) {
 				next = emptyNode();
-				node.children.set(segment, next);
+				MutableHashMap.set(node.children, segment, next);
 			}
 			node = next;
 		}
 		node.messages.push(entry.message);
 	}
-	const leaves = (node: PathNode): ReadonlyArray<IssueTreeNode> => node.messages.map((message) => ({ label: message }));
+	const leaves = (node: PathNode): ReadonlyArray<IssueTreeNode> =>
+		node.messages.map((message) => ({ label: message }));
 	const named = (segment: string, node: PathNode): IssueTreeNode => {
-		if (node.children.size === 0 && node.messages.length === 1) return { label: `${segment}: ${node.messages[0]}` };
+		if (MutableHashMap.size(node.children) === 0 && node.messages.length === 1)
+			return { label: `${segment}: ${node.messages[0]}` };
 		return {
 			label: segment,
 			children: [...leaves(node), ...[...node.children].map(([name, child]) => named(name, child))],

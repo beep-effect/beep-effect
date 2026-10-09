@@ -1,3 +1,5 @@
+import * as S from "effect/Schema";
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as O from "@beep/utils/Option";
 import type { ReactElement } from "react";
 import { Fmt } from "../Fmt.ts";
@@ -10,6 +12,15 @@ import { KeyTable, useKeys } from "./KeyTable.ts";
 import { Styled, useGlyphs, useTerminalSize, useTheme } from "./UiTheme.ts";
 import type { ViewportMove, ViewportRow, ViewportState } from "./Viewport.ts";
 import { Viewport } from "./Viewport.ts";
+
+const $I = $ScratchpadId.create("effected/cli/ui/Select");
+
+class NoEnabledChoiceError extends S.TaggedError<NoEnabledChoiceError>($I`NoEnabledChoiceError`)(
+	"NoEnabledChoiceError",
+	{
+		message: S.String,
+	},
+) {}
 
 /**
  * One choice of a {@link Select}.
@@ -101,7 +112,11 @@ const enabled = <A>(choices: ReadonlyArray<SelectChoice<A>>, index: number): boo
 	index >= 0 && index < choices.length && choices[index]?.disabled !== true;
 
 /** The nearest enabled index from `from` in `direction`, or `undefined`. */
-const nearest = <A>(choices: ReadonlyArray<SelectChoice<A>>, from: number, direction: 1 | -1): number | undefined => {
+const nearest = <A>(
+	choices: ReadonlyArray<SelectChoice<A>>,
+	from: number,
+	direction: 1 | -1,
+): number | undefined => {
 	for (let index = from; index >= 0 && index < choices.length; index += direction) {
 		if (enabled(choices, index)) return index;
 	}
@@ -118,8 +133,12 @@ const moveTo = (viewport: ViewportState, index: number): ViewportState => {
 
 const NO_ENABLED_CHOICE = "@effected/cli/ui: Select needs at least one enabled choice";
 
-const init = <A>(choices: ReadonlyArray<SelectChoice<A>>, options: SelectInitOptions = {}): SelectState<A> => {
-	if (!choices.some((choice) => choice.disabled !== true)) throw new Error(NO_ENABLED_CHOICE);
+const init = <A>(
+	choices: ReadonlyArray<SelectChoice<A>>,
+	options: SelectInitOptions = {},
+): SelectState<A> => {
+	if (!choices.some((choice) => choice.disabled !== true))
+		throw NoEnabledChoiceError.make({ message: NO_ENABLED_CHOICE });
 	const height = options.height ?? 10;
 	const start = options.initial ?? 0;
 	const first = nearest(choices, start, 1) ?? nearest(choices, start, -1) ?? 0;
@@ -203,8 +222,10 @@ export class Select {
 	 * @param choices - the choices
 	 * @param options - the starting choice and the list height
 	 */
-	static readonly init: <A>(choices: ReadonlyArray<SelectChoice<A>>, options?: SelectInitOptions) => SelectState<A> =
-		init;
+	static readonly init: <A>(
+		choices: ReadonlyArray<SelectChoice<A>>,
+		options?: SelectInitOptions,
+	) => SelectState<A> = init;
 
 	/**
 	 * Apply an action: a move lands on the nearest enabled choice, never on a disabled one and never past either
@@ -268,7 +289,10 @@ export class Select {
 			if (action === "cancel") cancel("escape");
 			else setState((current) => step(current, action));
 		});
-		const rows: ReadonlyArray<ViewportRow> = props.choices.map((_, index) => ({ _tag: "Item", key: String(index) }));
+		const rows: ReadonlyArray<ViewportRow> = props.choices.map((_, index) => ({
+			_tag: "Item",
+			key: String(index),
+		}));
 		const blank = " ".repeat(Fmt.width(glyphs.arrow));
 		const renderRow = (row: ViewportRow, highlighted: boolean): ReactElement => {
 			const choice = row._tag === "Item" ? props.choices[Number(row.key)] : undefined;
@@ -312,7 +336,8 @@ export class Select {
 		<A>(options: SelectScreenOptions<A>): Screen<A> =>
 		(control) => {
 			// Checked before mounting, so a screen with nothing to choose dies rather than drawing an empty list.
-			if (!options.choices.some((choice) => choice.disabled !== true)) throw new Error(NO_ENABLED_CHOICE);
+			if (!options.choices.some((choice) => choice.disabled !== true))
+				throw NoEnabledChoiceError.make({ message: NO_ENABLED_CHOICE });
 			return inkModules().react.createElement(Select.View<A>, { ...options, onSubmit: control.resolve });
 		};
 }

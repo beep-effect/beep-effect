@@ -1,3 +1,4 @@
+import * as A from "effect/Array";
 // A short display-width implementation checked against `string-width` by a differential test. It embeds a hand-kept East Asian Width table that will drift from Unicode, and
 // `__test__/displayWidth.oracle.test.ts` is what catches the drift.
 
@@ -27,7 +28,10 @@ export const displayWidth = (input: string): number => {
 	let width = 0;
 	for (const { segment } of segmenter.segment(stripAnsi(input))) {
 		if (ZERO2.test(segment)) continue;
-		width += EMOJI.test(segment) || /^\p{RI}{2}/u.test(segment) || WIDE2.test(Array.from(segment)[0] ?? "") ? 2 : 1;
+		width +=
+			EMOJI.test(segment) || /^\p{RI}{2}/u.test(segment) || WIDE2.test(A.fromIterable(segment)[0] ?? "")
+				? 2
+				: 1;
 	}
 	return width;
 };
@@ -38,4 +42,4 @@ export const displayWidth = (input: string): number => {
  * @internal
  */
 export const graphemes = (input: string): ReadonlyArray<string> =>
-	Array.from(segmenter.segment(input), (s) => s.segment);
+	A.map(A.fromIterable(segmenter.segment(input)), (s) => s.segment);

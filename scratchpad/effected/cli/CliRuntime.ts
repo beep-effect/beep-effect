@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import { CommandNeutralizer } from "../github-commands/index.ts";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
@@ -37,6 +38,17 @@ import { isExitCode } from "./internal/isExitCode.ts";
 import { TrustedLine } from "./internal/logSafety.ts";
 import { NotInteractive } from "./NotInteractive.ts";
 import * as P from "effect/Predicate";
+
+const $I = $ScratchpadId.create("effected/cli/CliRuntime");
+
+/** A runtime invariant failure or a non-Error value wrapped for teardown. */
+class CliRuntimeError extends S.TaggedError<CliRuntimeError>($I`CliRuntimeError`)(
+	"CliRuntimeError",
+	{ message: S.String },
+	$I.annote("CliRuntimeError", { description: "A CLI runtime invariant failed or a non-Error failure was reported." }),
+) {
+	override readonly name = "Error";
+}
 
 const isShowHelp = (u: unknown): u is CliError.ShowHelp => CliError.isCliError(u) && u._tag === "ShowHelp";
 
@@ -253,7 +265,7 @@ const toLines = (rendered: string | ReadonlyArray<string>): ReadonlyArray<string
  * chose its code" distinct from "nothing chose".
  */
 const chooseExitCode = (error: unknown, fallback: number | undefined): number =>
-	typeof error === "object" && error !== null && Runtime.errorExitCode in error
+	P.isObjectKeyword(error) && !P.isFunction(error) && Runtime.errorExitCode in error
 		? Runtime.getErrorExitCode(error)
 		: (fallback ?? 1);
 
@@ -377,22 +389,22 @@ export class CliRuntime {
 		(options: ReportFailuresOptions = {}) =>
 		<A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, Error, R> =>
 			effect.pipe(
-				Effect.catchCause((cause: Cause.Cause<E>): Effect.Effect<A, Error> => {
+				Effect.catchCause(Effect.fnUntraced(function* (cause: Cause.Cause<E>): Effect.fn.Return<A, Error> {
 					// An interrupt is not a failure anyone wants rendered, and the default
 					// teardown already maps an interrupt-only cause to 130.
-					if (Cause.hasInterruptsOnly(cause)) return Effect.failCause(Cause.fromReasons(cause.reasons.filter(Cause.isInterruptReason)));
+					if (Cause.hasInterruptsOnly(cause)) return yield* Effect.failCause(Cause.fromReasons<Error>(cause.reasons.filter(Cause.isInterruptReason)));
 
 					const error = Cause.squash(cause);
 
 					// Already marked by CliRuntime.main; there is nothing to render.
-					if (error instanceof ExitRequested) return Effect.fail(error);
+					if (error instanceof ExitRequested) return yield* error;
 
 					// Command.runWith printed help (stdout) and any parse errors (stderr)
 					// BEFORE re-failing with ShowHelp. Rendering it again prints a stray
 					// "Help requested" line.
 					if (isShowHelp(error)) {
 						const code = error.errors.length > 0 ? (options.usageExitCode ?? 64) : 0;
-						return Effect.fail(CliRuntime.reported(error, code));
+						return yield* CliRuntime.reported(error, code);
 					}
 
 					// Command.runWith rendered a UserError through the CliOutput formatter
@@ -403,55 +415,53 @@ export class CliRuntime {
 					// runWith's `renderErrors: false` the mark stays true and it renders
 					// below.
 					if (isRenderedUserError(error)) {
-						return Effect.fail(CliRuntime.reported(error, chooseExitCode(error, options.usageExitCode ?? 64)));
+						return yield* CliRuntime.reported(error, chooseExitCode(error, options.usageExitCode ?? 64));
 					}
 
 					const render = options.render;
 
-					return Effect.gen(function* () {
-						// The failure's document in the renderer the audience gets: the report itself without a `render`, and
-						// `details.defaultLines` with one. If the document cannot be rendered for the audience, the plain path;
-						// if that dies too, the message alone, still sanitised and neutralized: the last resort keeps the policy.
-						// The target is built from the services in context when there is no cell: if that dies, the plain fallback.
-						const target = yield* currentTarget.pipe(Effect.catchCause(() => Effect.succeed(fallbackTarget)));
-						const reportLines = (status: boolean, spans?: "app" | "all" | "off"): ReadonlyArray<string> => {
+					// The failure's document in the renderer the audience gets: the report itself without a `render`, and
+					// `details.defaultLines` with one. If the document cannot be rendered for the audience, the plain path;
+					// if that dies too, the message alone, still sanitised and neutralized: the last resort keeps the policy.
+					// The target is built from the services in context when there is no cell: if that dies, the plain fallback.
+					const target = yield* currentTarget.pipe(Effect.catchCause(() => Effect.succeed(fallbackTarget)));
+					const reportLines = (status: boolean, spans?: "app" | "all" | "off"): ReadonlyArray<string> => {
+						try {
+							return linesOf(cause, target, status, spans ?? target.spans);
+						} catch {
 							try {
-								return linesOf(cause, target, status, spans ?? target.spans);
+								return plainFailureLines(cause, status, spans ?? target.spans);
 							} catch {
-								try {
-									return plainFailureLines(cause, status, spans ?? target.spans);
-								} catch {
-									return lastResort(error);
-								}
+								return lastResort(error);
 							}
-						};
-						const defaultLines = reportLines(true);
-						// Cause.squash prefers a Fail over a Die, so `error` is a defect exactly when there is no Fail.
-						const details: FailureDetails = {
-							cause,
-							isDefect: !Cause.hasFails(cause),
-							isCancelled: S.is(Cancelled)(error),
-							isNotInteractive: S.is(NotInteractive)(error),
-							defaultLines,
-							lines: (options) =>
-								options?.status === false || options?.spans !== undefined
-									? reportLines(options?.status !== false, options?.spans)
-									: defaultLines,
-						};
-						// Without a `render`, written through the logger, so `--log-level` and its routing apply.
-						const lines =
-							render === undefined
-								? defaultLines
-								: // A consumer's lines are text the kit did not build: neutralized under Actions, stripped for an agent.
-									yield* guardConsumerLines(toLines(render(error, details)));
-						for (const line of lines) {
-							// Rendered by the kit (or by the consumer's own `render`): not sanitised again by the logger.
-							yield* Effect.logError(line).pipe(Effect.provideService(TrustedLine, true));
 						}
+					};
+					const defaultLines = reportLines(true);
+					// Cause.squash prefers a Fail over a Die, so `error` is a defect exactly when there is no Fail.
+					const details: FailureDetails = {
+						cause,
+						isDefect: !Cause.hasFails(cause),
+						isCancelled: S.is(Cancelled)(error),
+						isNotInteractive: S.is(NotInteractive)(error),
+						defaultLines,
+						lines: (options) =>
+							options?.status === false || options?.spans !== undefined
+								? reportLines(options?.status !== false, options?.spans)
+								: defaultLines,
+					};
+					// Without a `render`, written through the logger, so `--log-level` and its routing apply.
+					const lines =
+						render === undefined
+							? defaultLines
+							: // A consumer's lines are text the kit did not build: neutralized under Actions, stripped for an agent.
+								yield* guardConsumerLines(toLines(render(error, details)));
+					for (const line of lines) {
+						// Rendered by the kit (or by the consumer's own `render`): not sanitised again by the logger.
+						yield* Effect.logError(line).pipe(Effect.provideService(TrustedLine, true));
+					}
 
-						return yield* Effect.fail(CliRuntime.reported(error, chooseExitCode(error, options.exitCode)));
-					});
-				}),
+					return yield* Effect.fail(CliRuntime.reported(error, chooseExitCode(error, options.exitCode)));
+				})),
 			);
 
 	/**
@@ -591,7 +601,7 @@ export class CliRuntime {
 			// process.exit.
 			if (!isExitCode(code)) {
 				return yield* Effect.die(
-					new Error(`CliRuntime.main: CliExit code must be an integer 0..255, received ${code}`),
+					CliRuntimeError.make({ message: `CliRuntime.main: CliExit code must be an integer 0..255, received ${code}` }),
 				);
 			}
 			if (code !== 0) return yield* new ExitRequested(code);
@@ -647,7 +657,7 @@ export class CliRuntime {
 	static reported<E extends Error>(error: E, exitCode?: number): E;
 	static reported(error: unknown, exitCode?: number): Error;
 	static reported(error: unknown, exitCode = 1): Error {
-		const marked = error instanceof Error ? error : new Error(String(error));
+		const marked = error instanceof Error ? error : CliRuntimeError.make({ message: String(error) });
 		// defineProperty, not assignment: a class may carry the exit code as a prototype getter, which a plain
 		// assignment cannot overwrite.
 		for (const [key, value] of [

@@ -1,8 +1,19 @@
+import * as MutableHashSet from "effect/MutableHashSet";
+import * as S from "effect/Schema";
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import type { ReactElement } from "react";
 import { inkModules } from "./internal/ink.ts";
 import { KeyTable } from "./KeyTable.ts";
 import { useTerminalSize } from "./UiTheme.ts";
+
+const $I = $ScratchpadId.create("effected/cli/ui/Viewport");
+
+class DuplicateViewportKeyError extends S.TaggedError<DuplicateViewportKeyError>(
+	$I`DuplicateViewportKeyError`,
+)("DuplicateViewportKeyError", {
+	message: S.String,
+}) {}
 
 /**
  * Where a viewport is: the selected item, the first item in view, how many items fit, and how many there are.
@@ -62,11 +73,14 @@ export interface ViewportViewProps {
  * `console.error`, which under a screen's unpatched console lands on the real stderr, over the frame.
  */
 const assertUniqueItemKeys = (rows: ReadonlyArray<ViewportRow>): void => {
-	const seen = new Set<string>();
+	const seen = MutableHashSet.empty<string>();
 	for (const row of rows) {
 		if (row._tag !== "Item") continue;
-		if (seen.has(row.key)) throw new Error(`@effected/cli/ui: Viewport item keys must be unique; "${row.key}" repeats`);
-		seen.add(row.key);
+		if (MutableHashSet.has(seen, row.key))
+			throw DuplicateViewportKeyError.make({
+				message: `@effected/cli/ui: Viewport item keys must be unique; "${row.key}" repeats`,
+			});
+		MutableHashSet.add(seen, row.key);
 	}
 };
 
@@ -116,7 +130,12 @@ const resize = (state: ViewportState, height: number): ViewportState => {
  * The rows to draw, as indexes into `rows`, for a window of `budget` lines starting at item `start`: the section
  * header of the first item first (re-emitted when it has scrolled off), then rows in order until the budget is spent.
  */
-const linesFrom = (rows: ReadonlyArray<ViewportRow>, items: ReadonlyArray<number>, start: number, budget: number) => {
+const linesFrom = (
+	rows: ReadonlyArray<ViewportRow>,
+	items: ReadonlyArray<number>,
+	start: number,
+	budget: number,
+) => {
 	const first = items[start] ?? 0;
 	const lines: Array<number> = [];
 	if (budget > 1) {
@@ -151,7 +170,8 @@ const slice = (
 	previous: number | undefined,
 ): Slice => {
 	const items = rows.flatMap((row, index) => (row._tag === "Item" ? [index] : []));
-	if (items.length === 0) return { lines: rows.slice(0, budget).map((_, index) => index), start: 0, selected: -1 };
+	if (items.length === 0)
+		return { lines: rows.slice(0, budget).map((_, index) => index), start: 0, selected: -1 };
 	const cursor = clamp(state.cursor, 0, items.length - 1);
 	const selected = items[cursor] ?? 0;
 	let start = clamp(previous ?? state.offset, 0, cursor);

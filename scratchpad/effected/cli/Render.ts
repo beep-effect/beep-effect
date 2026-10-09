@@ -175,35 +175,34 @@ export class Render {
 	 * @param stream - the stream the output is for
 	 * @param options - an explicit width and a path display function
 	 */
-	static readonly context = (
+	static readonly context = Effect.fn("context")(function* (
 		stream: "stdout" | "stderr",
 		options?: RenderContextOptions,
-	): Effect.Effect<RenderContext, never, CliTheme | TerminalEnv | Audience | CliLinks> =>
-		Effect.gen(function* () {
-			const terminal = yield* TerminalEnv;
-			const { kind } = yield* Audience;
-			const theme = (yield* CliTheme).forStream(stream);
-			const seen = CliTheme.forAudience(theme, kind);
-			const links = yield* CliLinks;
-			// Read if the environment has it, as `Doc.print` does: GitHub Actions makes every format unable to inject a
-			// workflow command, whoever the audience is.
-			const underActions = yield* underGithubActions;
-			return {
-				...(underActions ? { neutralizeWorkflowCommands: true } : {}),
-				// A pipe or a file has no width to honour: wrapping at a guessed 80 only splits a line someone greps.
-				width:
-					options?.width ??
-					(kind === "human" && terminal[stream].isTerminal ? terminal.width() : Number.POSITIVE_INFINITY),
-				audience: kind,
-				// An agent never gets an escape of any kind, so its context is colourless whatever the terminal says: every
-				// renderer, including an explicit `ansi`, then writes none (the linker already refuses its hyperlinks).
-				color: seen.color,
-				paint: seen.paint,
-				glyphs: theme.glyphs,
-				link: CliLinks.linker({ links, hyperlinks: terminal[stream].hyperlinks, audience: kind }),
-				displayPath: options?.displayPath ?? ((absolute: string) => absolute),
-			};
-		});
+	): Effect.fn.Return<RenderContext, never, CliTheme | TerminalEnv | Audience | CliLinks> {
+		const terminal = yield* TerminalEnv;
+		const { kind } = yield* Audience;
+		const theme = (yield* CliTheme).forStream(stream);
+		const seen = CliTheme.forAudience(theme, kind);
+		const links = yield* CliLinks;
+		// Read if the environment has it, as `Doc.print` does: GitHub Actions makes every format unable to inject a
+		// workflow command, whoever the audience is.
+		const underActions = yield* underGithubActions;
+		return {
+			...(underActions ? { neutralizeWorkflowCommands: true } : {}),
+			// A pipe or a file has no width to honour: wrapping at a guessed 80 only splits a line someone greps.
+			width:
+				options?.width ??
+				(kind === "human" && terminal[stream].isTerminal ? terminal.width() : Number.POSITIVE_INFINITY),
+			audience: kind,
+			// An agent never gets an escape of any kind, so its context is colourless whatever the terminal says: every
+			// renderer, including an explicit `ansi`, then writes none (the linker already refuses its hyperlinks).
+			color: seen.color,
+			paint: seen.paint,
+			glyphs: theme.glyphs,
+			link: CliLinks.linker({ links, hyperlinks: terminal[stream].hyperlinks, audience: kind }),
+			displayPath: options?.displayPath ?? ((absolute: string) => absolute),
+		};
+	});
 
 	/**
 	 * A {@link RenderContext} from plain options, for a caller outside Effect, such as a test reporter or an Ink tree.

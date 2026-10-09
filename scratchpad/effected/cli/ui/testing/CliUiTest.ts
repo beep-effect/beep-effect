@@ -1,3 +1,6 @@
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as S from "effect/Schema";
+import * as HashMap from "effect/HashMap";
 import * as R from "effect/Record";
 import * as Clock from "effect/Clock";
 import * as Duration from "effect/Duration";
@@ -32,6 +35,14 @@ import { UiStreams } from "../UiStreams.ts";
 import { makeFakeStreams } from "./fakeStreams.ts";
 import { screenAfter } from "./terminalModel.ts";
 import * as P from "effect/Predicate";
+
+const $I = $ScratchpadId.create("effected/cli/ui/testing/CliUiTest");
+
+class CliUiTestError extends S.TaggedError<CliUiTestError>($I`CliUiTestError`)(
+	"CliUiTestError",
+	{ message: S.String },
+	$I.annote("CliUiTestError", { description: "Invalid test interaction with a CLI screen." }),
+) {}
 
 /**
  * Options for {@link CliUiTest.render}, {@link CliUiTest.view} and {@link CliUiTest.session}, and the terminal's
@@ -334,7 +345,7 @@ const MARKER_STYLES: Record<TokenName, Style> = R.fromEntries(
 	TOKENS.map((token, index): [TokenName, Style] => [token, { fg: `#0000${(index + 1).toString(16).padStart(2, "0")}` }]),
 );
 
-const TOKEN_BY_BLUE = new Map(TOKENS.map((token, index) => [index + 1, token] as const));
+const TOKEN_BY_BLUE = HashMap.fromIterable(TOKENS.map((token, index) => [index + 1, token] as const));
 
 const NAMED = ["black", "red", "green", "yellow", "blue", "magenta", "cyan", "white"] as const;
 
@@ -387,7 +398,7 @@ const decodeSgr = (params: string, open: Array<{ readonly kind: Kind; readonly c
 	const colour = (kind: "fg" | "bg", codes: ReadonlyArray<number>, at: number): number => {
 		if (codes[at + 1] === 2) {
 			const [r, g, b] = [codes[at + 2] ?? 0, codes[at + 3] ?? 0, codes[at + 4] ?? 0];
-			const token = kind === "fg" && r === 0 && g === 0 ? TOKEN_BY_BLUE.get(b) : undefined;
+			const token = kind === "fg" && r === 0 && g === 0 ? O.getOrUndefined(HashMap.get(TOKEN_BY_BLUE, b)) : undefined;
 			if (token !== undefined) push(kind, `[${token}]`, `[/${token}]`);
 			else push(kind, `[${kind}:${hex(r, g, b)}]`, `[/${kind}]`);
 			return at + 4;
@@ -502,12 +513,12 @@ const NOT_A_KEY = (method: string, text: string): string =>
 /** The bytes of a named key or a `{ char }`; a bare string that names no key is a defect saying how to send text. */
 const bytesOf = (key: KeyName | { readonly char: string }, method: "press" | "chunk"): Effect.Effect<string> => {
 	if (!P.isString(key)) return Effect.succeed(key.char);
-	return R.has(KEY_BYTES, key) ? Effect.succeed(KEY_BYTES[key]) : Effect.die(new Error(NOT_A_KEY(method, key)));
+	return R.has(KEY_BYTES, key) ? Effect.succeed(KEY_BYTES[key]) : Effect.die(CliUiTestError.make({ message: NOT_A_KEY(method, key) }));
 };
 
 /** A `Cancelled` from the root entrypoint, matched by shape: this entry may carry its own copy of the class. */
 const cancelledReason = (value: unknown): "escape" | "interrupt" | undefined => {
-	if (typeof value !== "object" || value === null || !("_tag" in value) || !("reason" in value)) return undefined;
+	if (!P.isObjectKeyword(value) || P.isFunction(value) || !("_tag" in value) || !("reason" in value)) return undefined;
 	const { _tag, reason } = value;
 	return _tag === "Cancelled" && (reason === "escape" || reason === "interrupt") ? reason : undefined;
 };
@@ -669,7 +680,7 @@ const makeTerminal = (
 			Effect.suspend(() => {
 				// A key for an ended screen would land in whichever screen is mounted now: a test that does that has lost
 				// track of its screens, so it is a defect, not a key.
-				if (ended()) return Effect.die(new Error(SCREEN_ENDED));
+				if (ended()) return Effect.die(CliUiTestError.make({ message: SCREEN_ENDED }));
 				const before = raws().length;
 				fake.input(bytes);
 				const sent = Clock.Clock.defaultValue().currentTimeMillisUnsafe();
@@ -759,28 +770,27 @@ const mount = Effect.fn("mount")(function*<A> (screen: Screen<A>, options: CliUi
 		const mountedBy = Clock.Clock.defaultValue().currentTimeMillisUnsafe() + MOUNT_LIMIT_MS;
 		yield* realTime(() => raws().length > 0 || ended || Clock.Clock.defaultValue().currentTimeMillisUnsafe() >= mountedBy);
 		yield* after(0, Clock.Clock.defaultValue().currentTimeMillisUnsafe());
-		const swapTo = (next: Screen<A>): Effect.Effect<void> =>
-			Effect.gen(function* () {
-				// Bounded like the first frame: a handle queued behind another screen may never mount here.
-				const mountedBy = Clock.Clock.defaultValue().currentTimeMillisUnsafe() + MOUNT_LIMIT_MS;
-				yield* realTime(() => slot.isBound() || ended || Clock.Clock.defaultValue().currentTimeMillisUnsafe() >= mountedBy);
-				if (ended) return yield* Effect.die(new Error(RERENDER_AFTER_END));
-				if (!slot.isBound() || control === undefined) {
-					return yield* Effect.die(new Error(RERENDER_BEFORE_MOUNT));
-				}
-				const given = control;
-				const element = yield* Effect.promise(() => Promise.resolve(next(given)));
-				const before = raws().length;
-				const since = Clock.Clock.defaultValue().currentTimeMillisUnsafe();
-				// The screen ended while the element was built (unbound: it is unmounting). Wait for the end to be
-				// recorded, so a screen that crashed reports its crash rather than having ended.
-				if (ended || !slot.swap(element)) {
-					const endedBy = Clock.Clock.defaultValue().currentTimeMillisUnsafe() + MOUNT_LIMIT_MS;
-					yield* realTime(() => ended || Clock.Clock.defaultValue().currentTimeMillisUnsafe() >= endedBy);
-					return yield* surfaced(Effect.die(new Error(RERENDER_AFTER_END)));
-				}
-				yield* after(before, since);
-			});
+		const swapTo = Effect.fnUntraced(function* (next: Screen<A>): Effect.fn.Return<void> {
+			// Bounded like the first frame: a handle queued behind another screen may never mount here.
+			const mountedBy = Clock.Clock.defaultValue().currentTimeMillisUnsafe() + MOUNT_LIMIT_MS;
+			yield* realTime(() => slot.isBound() || ended || Clock.Clock.defaultValue().currentTimeMillisUnsafe() >= mountedBy);
+			if (ended) return yield* Effect.die(CliUiTestError.make({ message: RERENDER_AFTER_END }));
+			if (!slot.isBound() || control === undefined) {
+				return yield* Effect.die(CliUiTestError.make({ message: RERENDER_BEFORE_MOUNT }));
+			}
+			const given = control;
+			const element = yield* Effect.promise(() => Promise.resolve(next(given)));
+			const before = raws().length;
+			const since = Clock.Clock.defaultValue().currentTimeMillisUnsafe();
+			// The screen ended while the element was built (unbound: it is unmounting). Wait for the end to be
+			// recorded, so a screen that crashed reports its crash rather than having ended.
+			if (ended || !slot.swap(element)) {
+				const endedBy = Clock.Clock.defaultValue().currentTimeMillisUnsafe() + MOUNT_LIMIT_MS;
+				yield* realTime(() => ended || Clock.Clock.defaultValue().currentTimeMillisUnsafe() >= endedBy);
+				return yield* surfaced(Effect.die(CliUiTestError.make({ message: RERENDER_AFTER_END })));
+			}
+			yield* after(before, since);
+		});
 		// A rerender that crashes dies with the crash, never with "rerender after the screen ended".
 		const rerender = (next: Screen<A>): Effect.Effect<void> =>
 			surfaced(Effect.andThen(swapTo(next), surfaced(Effect.void)));
@@ -798,14 +808,13 @@ const capturingConsole = (ambient: Console.Console) => {
 			sink.push(`${args.map((arg) => Inspectable.toStringUnknown(arg, 0)).join(" ")}\n`);
 		};
 	// Over the ambient Console, so every method this does not keep still behaves as it did.
-	const writer: Console.Console = Object.assign(Object.create(ambient), {
-		log: line(out),
-		info: line(out),
-		debug: line(out),
-		error: line(err),
-		warn: line(err),
-		trace: line(err),
-	});
+	const writer: Console.Console = Object.create(ambient);
+	writer.log = line(out);
+	writer.info = line(out);
+	writer.debug = line(out);
+	writer.error = line(err);
+	writer.warn = line(err);
+	writer.trace = line(err);
 	return { writer, out, err };
 };
 
@@ -978,32 +987,31 @@ export class CliUiTest {
 			const terminal = makeTerminal(terminalOptions, { screens: renderPath ?? "debug" });
 			const output = capturingConsole(ambient);
 			let taken = 0;
-			const next = (nextOptions: CliUiTestNextOptions = {}): Effect.Effect<CliUiTestScreen> =>
-				Effect.gen(function* () {
-					const index = taken++;
-					const { contains } = nextOptions;
-					const capture = () => terminal.captures[index];
-					const { handle, raws, after, surfaced } = terminal.screen(capture, () => capture()?.ended ?? false);
-					const shows = (): boolean =>
-						contains === undefined
-							? raws().length > 0
-							: raws().some((raw) => raw.replace(ESCAPES, "").includes(contains));
-					const by = Clock.Clock.defaultValue().currentTimeMillisUnsafe() + MOUNT_LIMIT_MS;
-					yield* realTime(() => shows() || capture()?.ended === true || Clock.Clock.defaultValue().currentTimeMillisUnsafe() >= by);
-					// A screen that crashed dies with its crash, whatever `next` waited for.
-					yield* surfaced(Effect.void);
-					if (!shows()) {
-						const why =
-							capture() === undefined
-								? "none mounted within 2 s"
-								: capture()?.ended === true
-									? "it unmounted first"
-									: "it did not within 2 s";
-						return yield* Effect.die(new Error(NEXT_DIED(index, contains, terminal.captures.length, why)));
-					}
-					yield* after(0, Clock.Clock.defaultValue().currentTimeMillisUnsafe());
-					return handle;
-				});
+			const next = Effect.fnUntraced(function* (nextOptions: CliUiTestNextOptions = {}): Effect.fn.Return<CliUiTestScreen> {
+				const index = taken++;
+				const { contains } = nextOptions;
+				const capture = () => terminal.captures[index];
+				const { handle, raws, after, surfaced } = terminal.screen(capture, () => capture()?.ended ?? false);
+				const shows = (): boolean =>
+					contains === undefined
+						? raws().length > 0
+						: raws().some((raw) => raw.replace(ESCAPES, "").includes(contains));
+				const by = Clock.Clock.defaultValue().currentTimeMillisUnsafe() + MOUNT_LIMIT_MS;
+				yield* realTime(() => shows() || capture()?.ended === true || Clock.Clock.defaultValue().currentTimeMillisUnsafe() >= by);
+				// A screen that crashed dies with its crash, whatever `next` waited for.
+				yield* surfaced(Effect.void);
+				if (!shows()) {
+					const why =
+						capture() === undefined
+							? "none mounted within 2 s"
+							: capture()?.ended === true
+								? "it unmounted first"
+								: "it did not within 2 s";
+					return yield* Effect.die(CliUiTestError.make({ message: NEXT_DIED(index, contains, terminal.captures.length, why) }));
+				}
+				yield* after(0, Clock.Clock.defaultValue().currentTimeMillisUnsafe());
+				return handle;
+			});
 			return {
 				layer: Layer.merge(terminal.layer, Layer.succeed(Console.Console, output.writer)),
 				next,
@@ -1072,52 +1080,51 @@ export class CliUiTest {
 	 * @param options - the live view's options without `events`, and the terminal's size, colour, glyphs and
 	 * interactivity
 	 */
-	static readonly live = <E, S>(
+	static readonly live = Effect.fn("live")(function* <E, S>(
 		options: Omit<LiveOptions<E, S>, "events"> & CliUiTestOptions,
-	): Effect.Effect<CliUiTestLive<E, S>, never, Scope.Scope> =>
-		Effect.gen(function* () {
-			const { columns, rows, color, glyphs, interactive, ...view } = options;
-			const terminal = makeTerminal(
-				{
-					...O.getSomesStruct({ columns: O.fromUndefinedOr(columns) }),
-					...O.getSomesStruct({ rows: O.fromUndefinedOr(rows) }),
-					...O.getSomesStruct({ color: O.fromUndefinedOr(color) }),
-					...O.getSomesStruct({ glyphs: O.fromUndefinedOr(glyphs) }),
-					...O.getSomesStruct({ interactive: O.fromUndefinedOr(interactive) }),
-				},
-				{ screens: "production" },
-			);
-			const queue = yield* Queue.unbounded<E, Cause.Done>();
-			const handle = yield* CliUi.live<E, S>({ ...view, events: Stream.fromQueue(queue) }).pipe(
-				(self) => Effect.scopedWith((scope) => Effect.flatMap(Layer.buildWithScope(terminal.layer, scope), (context) => Effect.provideContext(self, context))),
-			);
-			const raws = (): ReadonlyArray<string> => terminal.captures.flatMap((capture) => capture.raws);
-			const settled = <X>(effect: Effect.Effect<X>): Effect.Effect<void> =>
-				Effect.suspend(() => {
-					const before = raws().length;
-					const since = Clock.Clock.defaultValue().currentTimeMillisUnsafe();
-					return Effect.andThen(
-						effect,
-						terminal.settle(raws, () => false, before, since),
-					);
-				});
-			const last = (): string => raws().at(-1) ?? "";
-			return {
-				publish: (event) => settled(Queue.offer(queue, event)),
-				end: Effect.andThen(Queue.end(queue), handle.done),
-				advance: (duration) => settled(TestClock.adjust(duration)),
-				resize: (nextColumns, nextRows) => settled(Effect.sync(() => terminal.fake.resize(nextColumns, nextRows))),
-				frame: Effect.sync(() => trimLines(styled(last()))),
-				rawFrame: Effect.sync(last),
-				plainFrame: Effect.sync(() => trimLines(last().replace(ESCAPES, ""))),
-				frames: Effect.sync(() => raws().map((raw) => trimLines(styled(raw)))),
-				transcript: Effect.sync(() =>
-					screenAfter(terminal.fake.written(), terminal.fake.streams.stdout.rows).join("\n"),
-				),
-				written: Effect.sync(() => terminal.fake.written()),
-				handle,
-			};
-		});
+	): Effect.fn.Return<CliUiTestLive<E, S>, never, Scope.Scope> {
+		const { columns, rows, color, glyphs, interactive, ...view } = options;
+		const terminal = makeTerminal(
+			{
+				...O.getSomesStruct({ columns: O.fromUndefinedOr(columns) }),
+				...O.getSomesStruct({ rows: O.fromUndefinedOr(rows) }),
+				...O.getSomesStruct({ color: O.fromUndefinedOr(color) }),
+				...O.getSomesStruct({ glyphs: O.fromUndefinedOr(glyphs) }),
+				...O.getSomesStruct({ interactive: O.fromUndefinedOr(interactive) }),
+			},
+			{ screens: "production" },
+		);
+		const queue = yield* Queue.unbounded<E, Cause.Done>();
+		const handle = yield* CliUi.live<E, S>({ ...view, events: Stream.fromQueue(queue) }).pipe(
+			(self) => Effect.scopedWith((scope) => Effect.flatMap(Layer.buildWithScope(terminal.layer, scope), (context) => Effect.provideContext(self, context))),
+		);
+		const raws = (): ReadonlyArray<string> => terminal.captures.flatMap((capture) => capture.raws);
+		const settled = <X>(effect: Effect.Effect<X>): Effect.Effect<void> =>
+			Effect.suspend(() => {
+				const before = raws().length;
+				const since = Clock.Clock.defaultValue().currentTimeMillisUnsafe();
+				return Effect.andThen(
+					effect,
+					terminal.settle(raws, () => false, before, since),
+				);
+			});
+		const last = (): string => raws().at(-1) ?? "";
+		return {
+			publish: (event) => settled(Queue.offer(queue, event)),
+			end: Effect.andThen(Queue.end(queue), handle.done),
+			advance: (duration) => settled(TestClock.adjust(duration)),
+			resize: (nextColumns, nextRows) => settled(Effect.sync(() => terminal.fake.resize(nextColumns, nextRows))),
+			frame: Effect.sync(() => trimLines(styled(last()))),
+			rawFrame: Effect.sync(last),
+			plainFrame: Effect.sync(() => trimLines(last().replace(ESCAPES, ""))),
+			frames: Effect.sync(() => raws().map((raw) => trimLines(styled(raw)))),
+			transcript: Effect.sync(() =>
+				screenAfter(terminal.fake.written(), terminal.fake.streams.stdout.rows).join("\n"),
+			),
+			written: Effect.sync(() => terminal.fake.written()),
+			handle,
+		};
+	});
 
 	/**
 	 * Why a screen or a program was cancelled, read from its `Exit` or `Cause`: `"escape"` or `"interrupt"` when it

@@ -1,8 +1,9 @@
 import * as A from "effect/Array";
+import * as HashSet from "effect/HashSet";
 import { sanitize } from "../Fmt.ts";
 
 /** The URL schemes a link may have, besides a relative URL. */
-const ALLOWED = new Set(["http", "https", "mailto", "file", "vscode", "vscode-insiders"]);
+const ALLOWED = HashSet.make("http", "https", "mailto", "file", "vscode", "vscode-insiders");
 
 /**
  * Whether a link may point at this URL: its scheme is one of `http`, `https`, `mailto`, `file`, `vscode` and
@@ -17,5 +18,5 @@ const ALLOWED = new Set(["http", "https", "mailto", "file", "vscode", "vscode-in
  */
 export const isAllowedLinkUrl = (url: string): boolean => {
 	const scheme = /^([a-z][a-z0-9+.-]*):/.exec(sanitize(url).replace(/\s/g, "").toLowerCase());
-	return scheme === null || ALLOWED.has(A.getUnsafe(scheme, 1));
+	return scheme === null || HashSet.has(ALLOWED, A.getUnsafe(scheme, 1));
 };

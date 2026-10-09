@@ -70,7 +70,11 @@ class MemoryInput extends MemorySocket implements NodeJS.ReadStream {
 		const length = this.readableLength;
 		this.receive(chunk);
 		// Like PassThrough, hold the write callback until the reader makes room for more input.
-		if (this.writableEnded || this.readableLength === length || this.readableLength < this.readableHighWaterMark) {
+		if (
+			this.writableEnded ||
+			this.readableLength === length ||
+			this.readableLength < this.readableHighWaterMark
+		) {
 			callback();
 		} else this.pendingWrite = callback;
 	}
@@ -210,8 +214,10 @@ export const makeFakeStreams = (options: FakeStreamsOptions = {}): FakeStreams =
 			stdin.write(data);
 		},
 		resize: (nextColumns, nextRows) => {
-			Object.assign(stdout.stream, { columns: nextColumns, rows: nextRows });
-			Object.assign(stderr.stream, { columns: nextColumns, rows: nextRows });
+			stdout.stream.columns = nextColumns;
+			stdout.stream.rows = nextRows;
+			stderr.stream.columns = nextColumns;
+			stderr.stream.rows = nextRows;
 			stdout.stream.emit("resize");
 		},
 	};

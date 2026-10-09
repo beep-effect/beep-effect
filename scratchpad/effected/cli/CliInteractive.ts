@@ -72,11 +72,9 @@ export class CliInteractive extends Context.Reference<boolean>($I`CliInteractive
 	 *
 	 * @param condition - `true` to switch prompting off for `self`
 	 */
-	static readonly unless =
-		(condition: boolean) =>
-		<A, E, R>(self: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>
-			Effect.gen(function* () {
-				const current = yield* CliInteractive;
-				return yield* Effect.provideService(self, CliInteractive, current && !condition);
-			});
+	static readonly unless = (condition: boolean) =>
+		Effect.fnUntraced(function* <A, E, R>(self: Effect.Effect<A, E, R>): Effect.fn.Return<A, E, R> {
+			const current = yield* CliInteractive;
+			return yield* Effect.provideService(self, CliInteractive, current && !condition);
+		});
 }

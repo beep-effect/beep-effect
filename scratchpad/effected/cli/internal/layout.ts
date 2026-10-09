@@ -1,4 +1,5 @@
 import * as A from "effect/Array";
+import * as Match from "effect/Match";
 import { dual } from "effect/Function";
 import type { Inline, LinkTarget } from "../Doc.ts";
 import { sanitize } from "../Fmt.ts";
@@ -52,37 +53,33 @@ const safeTargetText = (text: string): string => sanitize(text).replace(/[\r\n]/
 const safeTarget = (target: LinkTarget): LinkTarget =>
 	"url" in target ? { url: safeTargetText(target.url) } : { ...target, file: safeTargetText(target.file) };
 
-const spansOf = (inline: Inline, ctx: RenderContext): ReadonlyArray<Span> => {
-	switch (inline._tag) {
-		case "Text":
-			return [{ text: sanitize(inline.value), ...O.getSomesStruct({ token: O.fromUndefinedOr(inline.token) }) }];
-		case "Code":
-			return [{ text: sanitize(inline.value), code: true }];
-		case "Link": {
+const spansOf = (inline: Inline, ctx: RenderContext): ReadonlyArray<Span> =>
+	Match.valueTags(inline, {
+		Text: (inline) =>
+			[{ text: sanitize(inline.value), ...O.getSomesStruct({ token: O.fromUndefinedOr(inline.token) }) }],
+		Code: (inline): ReadonlyArray<Span> => [{ text: sanitize(inline.value), code: true }],
+		Link: (inline) => {
 			// Links do not nest: the outer target wins over one inside the label. The target is sanitized like content,
 			// since a control character in a URL ends an OSC 8 early; one copy is shared by every span of the link.
 			const link = safeTarget(inline.target);
 			const suffix = inline.suffix === undefined ? {} : { suffix: inline.suffix };
 			return inline.label.flatMap((part) => spansOf(part, ctx)).map((span) => ({ ...span, link, ...suffix }));
-		}
-		case "StatusMark":
-			return [
+		},
+		StatusMark: (inline): ReadonlyArray<Span> =>
+			[
 				{
 					text: sanitize(ctx.glyphs.kind === "ascii" ? inline.def.ascii : inline.def.glyph),
 					token: inline.def.token,
 					glyph: true,
 				},
-			];
-		case "Path":
-			return [{ text: inline.segments.map(sanitize).join(pathSeparator(ctx)) }];
-		case "Strong":
-			return inline.content.flatMap((part) => spansOf(part, ctx)).map((span) => ({ ...span, strong: true as const }));
-		case "Emphasis":
-			return inline.content.flatMap((part) => spansOf(part, ctx)).map((span) => ({ ...span, em: true as const }));
-		case "File":
-			return [{ text: safeTargetText(ctx.displayPath(inline.path)) }];
-	}
-};
+			],
+		Path: (inline) => [{ text: inline.segments.map(sanitize).join(pathSeparator(ctx)) }],
+		Strong: (inline) =>
+			inline.content.flatMap((part) => spansOf(part, ctx)).map((span) => ({ ...span, strong: true as const })),
+		Emphasis: (inline) =>
+			inline.content.flatMap((part) => spansOf(part, ctx)).map((span) => ({ ...span, em: true as const })),
+		File: (inline) => [{ text: safeTargetText(ctx.displayPath(inline.path)) }],
+	});
 
 /**
  * Flatten inline nodes into spans.

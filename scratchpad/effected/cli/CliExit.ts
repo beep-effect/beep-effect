@@ -1,3 +1,4 @@
+import * as S from "effect/Schema";
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -6,6 +7,13 @@ import * as MutableRef from "effect/MutableRef";
 import { isExitCode } from "./internal/isExitCode.ts";
 
 const $I = $ScratchpadId.create("effected/cli/CliExit");
+
+class InvalidExitCodeError extends S.TaggedError<InvalidExitCodeError>($I`InvalidExitCodeError`)(
+	"InvalidExitCodeError",
+	{
+		message: S.String,
+	},
+) {}
 
 /**
  * The shape behind {@link CliExit}.
@@ -51,7 +59,9 @@ export class CliExit extends Context.Service<CliExit, CliExitShape>()($I`CliExit
 	 * unrelated cell that `main` never reads back, so `CliExit.set` calls made
 	 * against it are silently discarded and the run exits `0`.
 	 */
-	static readonly layer: Layer.Layer<CliExit> = Layer.fresh(Layer.sync(this, () => ({ code: MutableRef.make(0) })));
+	static readonly layer: Layer.Layer<CliExit> = Layer.fresh(
+		Layer.sync(this, () => ({ code: MutableRef.make(0) })),
+	);
 
 	/**
 	 * Record an exit code; the highest code set during the run wins.
@@ -70,12 +80,15 @@ export class CliExit extends Context.Service<CliExit, CliExitShape>()($I`CliExit
 	 * findings: when the program fails, `CliRuntime.main` never reads this
 	 * cell, and the failure's own exit code (or the `exitCode` fallback) wins.
 	 */
-	static readonly set = (code: number): Effect.Effect<void, never, CliExit> =>
-		Effect.gen(function* () {
-			if (!isExitCode(code)) {
-				return yield* Effect.die(new Error(`CliExit.set: exit code must be an integer 0..255, received ${code}`));
-			}
-			const exit = yield* CliExit;
-			if (code > MutableRef.get(exit.code)) MutableRef.set(exit.code, code);
-		});
+	static readonly set = Effect.fn("set")(function* (code: number): Effect.fn.Return<void, never, CliExit> {
+		if (!isExitCode(code)) {
+			return yield* Effect.die(
+				InvalidExitCodeError.make({
+					message: `CliExit.set: exit code must be an integer 0..255, received ${code}`,
+				}),
+			);
+		}
+		const exit = yield* CliExit;
+		if (code > MutableRef.get(exit.code)) MutableRef.set(exit.code, code);
+	});
 }

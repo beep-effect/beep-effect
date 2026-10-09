@@ -80,7 +80,8 @@ const MAX_ASCENT = 64;
 
 const MODES: ReadonlyArray<EditorLinks> = ["auto", "vscode", "file", "off"];
 
-const parseSetting = (raw: string): EditorLinks | undefined => MODES.find((mode) => mode === raw.trim().toLowerCase());
+const parseSetting = (raw: string): EditorLinks | undefined =>
+	MODES.find((mode) => mode === raw.trim().toLowerCase());
 
 /** A URL with its control characters and line breaks removed: none is legal in one, and each could end an OSC 8 early. */
 const cleanUrl = (url: string): string => sanitize(url).replace(/[\r\n]/g, "");
@@ -99,7 +100,11 @@ const makeTarget =
 		if (path === undefined) return O.none();
 		if (mode === "file") return O.some(`file://${path}`);
 		const position =
-			target.line === undefined ? "" : target.col === undefined ? `:${target.line}` : `:${target.line}:${target.col}`;
+			target.line === undefined
+				? ""
+				: target.col === undefined
+					? `:${target.line}`
+					: `:${target.line}:${target.col}`;
 		return O.some(`vscode://file${path}${position}`);
 	};
 
@@ -123,8 +128,9 @@ const findRoot = (fs: FileSystem.FileSystem, path: Path.Path, cwd: string): Effe
 	Walker.ascend(cwd, { maxDepth: MAX_ASCENT + 1 }).pipe(
 		Effect.provideService(Path.Path, path),
 		Effect.flatMap((directories) =>
-			Walker.findRoot(directories, (directory) =>
-				Effect.gen(function* () {
+			Walker.findRoot(
+				directories,
+				Effect.fnUntraced(function* (directory) {
 					return (
 						(yield* exists(fs, path.join(directory, ".git"))) ||
 						(yield* exists(fs, path.join(directory, "pnpm-workspace.yaml")))
@@ -142,45 +148,47 @@ interface Ambient {
 	readonly path: O.Option<Path.Path>;
 }
 
-const build = (options: CliLinksOptions, ambient: Ambient): Effect.Effect<CliLinksShape, never, CurrentRuntimeEnv> =>
-	Effect.gen(function* () {
-		const runtime = yield* CurrentRuntimeEnv;
-		const raw =
-			options.envVar === undefined ? "" : O.getOrElse(yield* readOption(options.envVar), () => "").trim();
-		const fromEnv = parseSetting(raw);
-		// A value that is not a mode warns once, as the audience override does, and the option is used.
-		if (options.envVar !== undefined && raw !== "" && fromEnv === undefined) {
-			yield* Effect.logWarning(`${options.envVar}=${raw} is not one of ${MODES.join("|")}; ignoring it`);
-		}
-		const setting = fromEnv ?? options.editorLinks ?? "auto";
+const build = Effect.fn("build")(function* (
+	options: CliLinksOptions,
+	ambient: Ambient,
+): Effect.fn.Return<CliLinksShape, never, CurrentRuntimeEnv> {
+	const runtime = yield* CurrentRuntimeEnv;
+	const raw =
+		options.envVar === undefined ? "" : O.getOrElse(yield* readOption(options.envVar), () => "").trim();
+	const fromEnv = parseSetting(raw);
+	// A value that is not a mode warns once, as the audience override does, and the option is used.
+	if (options.envVar !== undefined && raw !== "" && fromEnv === undefined) {
+		yield* Effect.logWarning(`${options.envVar}=${raw} is not one of ${MODES.join("|")}; ignoring it`);
+	}
+	const setting = fromEnv ?? options.editorLinks ?? "auto";
 
-		// The working directory: the option, else PWD, else where the path service resolves ".".
-		const pwd = options.cwd === undefined ? yield* readOption("PWD") : O.none<string>();
-		const cwd =
-			options.cwd ??
-			O.getOrUndefined(pwd) ??
-			(O.isSome(ambient.path) ? ambient.path.value.resolve(".") : undefined);
-		const path = O.getOrUndefined(ambient.path);
-		const absolute = (file: string): string | undefined => {
-			// A UNC path is not on this machine: it must not be resolved against the working directory as a filename.
-			if (UNC.test(file)) return undefined;
-			if (DRIVE.test(file)) return file;
-			if (path === undefined) return file.startsWith("/") ? file : undefined;
-			if (path.isAbsolute(file)) return file;
-			return cwd === undefined ? undefined : path.resolve(cwd, file);
-		};
+	// The working directory: the option, else PWD, else where the path service resolves ".".
+	const pwd = options.cwd === undefined ? yield* readOption("PWD") : O.none<string>();
+	const cwd =
+		options.cwd ??
+		O.getOrUndefined(pwd) ??
+		(O.isSome(ambient.path) ? ambient.path.value.resolve(".") : undefined);
+	const path = O.getOrUndefined(ambient.path);
+	const absolute = (file: string): string | undefined => {
+		// A UNC path is not on this machine: it must not be resolved against the working directory as a filename.
+		if (UNC.test(file)) return undefined;
+		if (DRIVE.test(file)) return file;
+		if (path === undefined) return file.startsWith("/") ? file : undefined;
+		if (path.isAbsolute(file)) return file;
+		return cwd === undefined ? undefined : path.resolve(cwd, file);
+	};
 
-		let mode: "vscode" | "file" | "off";
-		if (setting !== "auto") mode = setting;
-		else if (O.exists(runtime.terminal, (terminal) => terminal.name === "vscode")) mode = "vscode";
-		else if (O.isNone(ambient.fs) || path === undefined || cwd === undefined) mode = "file";
-		else {
-			const root = yield* findRoot(ambient.fs.value, path, cwd);
-			const base = O.getOrElse(root, () => cwd);
-			mode = (yield* isDirectory(ambient.fs.value, path.join(base, ".vscode"))) ? "vscode" : "file";
-		}
-		return { mode, target: makeTarget(mode, absolute) };
-	});
+	let mode: "vscode" | "file" | "off";
+	if (setting !== "auto") mode = setting;
+	else if (O.exists(runtime.terminal, (terminal) => terminal.name === "vscode")) mode = "vscode";
+	else if (O.isNone(ambient.fs) || path === undefined || cwd === undefined) mode = "file";
+	else {
+		const root = yield* findRoot(ambient.fs.value, path, cwd);
+		const base = O.getOrElse(root, () => cwd);
+		mode = (yield* isDirectory(ambient.fs.value, path.join(base, ".vscode"))) ? "vscode" : "file";
+	}
+	return { mode, target: makeTarget(mode, absolute) };
+});
 
 /**
  * Editor-aware links for file targets: where a link to a file opens.
@@ -263,7 +271,9 @@ export class CliLinks extends Context.Service<CliLinks, CliLinksShape>()($I`CliL
  *
  * @internal
  */
-export const ambientLinksLayer = (options: CliLinksOptions = {}): LayerType.Layer<CliLinks, never, CurrentRuntimeEnv> =>
+export const ambientLinksLayer = (
+	options: CliLinksOptions = {},
+): LayerType.Layer<CliLinks, never, CurrentRuntimeEnv> =>
 	Layer.effect(
 		CliLinks,
 		Effect.gen(function* () {

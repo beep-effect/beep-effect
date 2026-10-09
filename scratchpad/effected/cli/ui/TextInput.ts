@@ -9,6 +9,7 @@ import { KeyTable } from "./KeyTable.ts";
 import { UiKey } from "./UiKey.ts";
 import { Styled, useGlyphs, useTerminalSize } from "./UiTheme.ts";
 import * as P from "effect/Predicate";
+import * as Match from "effect/Match";
 
 /**
  * Where a {@link TextInput} is: its value, the cursor within it, and whether enter was pressed.
@@ -153,31 +154,23 @@ const typedKeys = (input: string, key: Parameters<typeof UiKey.fromInk>[1]): Rea
 const step = (state: TextInputState, key: UiKey): TextInputState => {
 	if (key._tag === "Char") return insert(state, key.char);
 	const { value, cursor } = state;
-	switch (key.name) {
-		case "space":
-			return insert(state, " ");
-		case "backspace": {
+	return Match.value(key.name).pipe(
+		Match.when("space", () => insert(state, " ")),
+		Match.when("backspace", () => {
 			if (cursor === 0) return state;
 			const from = previous(value, cursor);
 			return { value: value.slice(0, from) + value.slice(cursor), cursor: from, submitted: false };
-		}
-		case "delete":
-			return cursor === value.length
+		}),
+		Match.when("delete", () => cursor === value.length
 				? state
-				: { value: value.slice(0, cursor) + value.slice(following(value, cursor)), cursor, submitted: false };
-		case "left":
-			return { ...state, cursor: previous(value, cursor), submitted: false };
-		case "right":
-			return { ...state, cursor: following(value, cursor), submitted: false };
-		case "home":
-			return { ...state, cursor: 0, submitted: false };
-		case "end":
-			return { ...state, cursor: value.length, submitted: false };
-		case "enter":
-			return { ...state, submitted: true };
-		default:
-			return state;
-	}
+				: { value: value.slice(0, cursor) + value.slice(following(value, cursor)), cursor, submitted: false }),
+		Match.when("left", () => ({ ...state, cursor: previous(value, cursor), submitted: false })),
+		Match.when("right", () => ({ ...state, cursor: following(value, cursor), submitted: false })),
+		Match.when("home", () => ({ ...state, cursor: 0, submitted: false })),
+		Match.when("end", () => ({ ...state, cursor: value.length, submitted: false })),
+		Match.when("enter", () => ({ ...state, submitted: true })),
+		Match.orElse(() => state),
+	);
 };
 
 /** Take code points from the end of `text` while they fit in `width` cells. */

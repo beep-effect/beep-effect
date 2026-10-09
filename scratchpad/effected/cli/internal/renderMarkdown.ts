@@ -1,3 +1,4 @@
+import * as Match from "effect/Match";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import type { Block, Document, Inline, LinkTarget } from "../Doc.ts";
@@ -38,7 +39,7 @@ const escapeLineStart = (line: string): string => {
 	if (/^[-+=]/.test(line)) return `\\${line}`;
 	if (/^#{1,6}(?:\s|$)/.test(line)) return `\\${line}`;
 	const ordered = /^(\d{1,9})([.)])(?:\s|$)/.exec(line);
-	if (ordered !== null) return `${ordered[1]}\\${line.slice((A.getUnsafe(ordered, 1)).length)}`;
+	if (ordered !== null) return `${ordered[1]}\\${line.slice(A.getUnsafe(ordered, 1).length)}`;
 	return line;
 };
 
@@ -134,8 +135,8 @@ const emphasized = (spans: ReadonlyArray<Span>, mode: Mode): string => {
 	let out = "";
 	let i = 0;
 	while (i < spans.length) {
-		const strong = (A.getUnsafe(spans, i)).strong === true;
-		const em = (A.getUnsafe(spans, i)).em === true;
+		const strong = A.getUnsafe(spans, i).strong === true;
+		const em = A.getUnsafe(spans, i).em === true;
 		let body = "";
 		do {
 			const span = A.getUnsafe(spans, i);
@@ -143,8 +144,8 @@ const emphasized = (spans: ReadonlyArray<Span>, mode: Mode): string => {
 			i++;
 		} while (
 			i < spans.length &&
-			((A.getUnsafe(spans, i)).strong === true) === strong &&
-			((A.getUnsafe(spans, i)).em === true) === em
+			(A.getUnsafe(spans, i).strong === true) === strong &&
+			(A.getUnsafe(spans, i).em === true) === em
 		);
 		const lead = /^\s*/.exec(body)?.[0] ?? "";
 		const core = body.slice(lead.length).trimEnd();
@@ -166,10 +167,10 @@ const inlineMd = (inlines: ReadonlyArray<Inline>, ctx: RenderContext, mode: Mode
 	let i = 0;
 	while (i < flat.length) {
 		// A run of spans sharing one link (or none): its label is marked up as a whole, so emphasis spans the run.
-		const link = (A.getUnsafe(flat, i)).link;
+		const link = A.getUnsafe(flat, i).link;
 		const start = i;
 		do i++;
-		while (i < flat.length && (A.getUnsafe(flat, i)).link === link);
+		while (i < flat.length && A.getUnsafe(flat, i).link === link);
 		const run = flat.slice(start, i);
 		const label = emphasized(run, mode);
 		if (link === undefined) {
@@ -180,7 +181,10 @@ const inlineMd = (inlines: ReadonlyArray<Inline>, ctx: RenderContext, mode: Mode
 		const url = linkUrl(link, ctx);
 		const target = targetText(link, ctx);
 		if (url !== undefined) out += `[${label}](${destination(url)})`;
-		else out += showsSuffix((A.getUnsafe(flat, i - 1)).suffix, raw, target) ? `${label} (${codeSpan(target, mode)})` : label;
+		else
+			out += showsSuffix(A.getUnsafe(flat, i - 1).suffix, raw, target)
+				? `${label} (${codeSpan(target, mode)})`
+				: label;
 	}
 	return out;
 };
@@ -196,7 +200,9 @@ const flowLines = (markdown: string): Lines => {
 };
 
 const joinBlocks = (blocks: ReadonlyArray<Lines>): Lines =>
-	blocks.filter((block) => block.length > 0).flatMap((block, index) => (index === 0 ? block : ["", ...block]));
+	blocks
+		.filter((block) => block.length > 0)
+		.flatMap((block, index) => (index === 0 ? block : ["", ...block]));
 
 /** A line a paragraph ends on: text, rather than a heading, fence, table, quote, list item or HTML. */
 const endsText = (line: string): boolean =>
@@ -211,14 +217,17 @@ const joinTight = (blocks: ReadonlyArray<Lines>): Lines => {
 	for (const block of blocks) {
 		if (block.length === 0) continue;
 		const last = joined[joined.length - 1];
-		if (last !== undefined && endsText(last) && endsText(block[0] ?? "")) joined[joined.length - 1] = `${last}\\`;
+		if (last !== undefined && endsText(last) && endsText(block[0] ?? ""))
+			joined[joined.length - 1] = `${last}\\`;
 		joined.push(...block);
 	}
 	return joined;
 };
 
 const hang = (lines: Lines, first: string, rest: string): Lines =>
-	lines.length === 0 ? [first.trimEnd()] : lines.map((line, index) => `${index === 0 ? first : rest}${line}`.trimEnd());
+	lines.length === 0
+		? [first.trimEnd()]
+		: lines.map((line, index) => `${index === 0 ? first : rest}${line}`.trimEnd());
 
 const overflowMd = (
 	overflow: ((hidden: number) => ReadonlyArray<Inline>) | undefined,
@@ -232,7 +241,10 @@ const overflowMd = (
 	);
 
 const fenced = (lines: Lines, info: string): Lines => {
-	const longest = Math.max(0, ...lines.flatMap((line) => [...line.matchAll(/`+/g)].map((run) => run[0].length)));
+	const longest = Math.max(
+		0,
+		...lines.flatMap((line) => [...line.matchAll(/`+/g)].map((run) => run[0].length)),
+	);
 	const fence = "`".repeat(Math.max(3, longest + 1));
 	return [`${fence}${info}`, ...lines, fence];
 };
@@ -360,22 +372,23 @@ const trimCellEdges = (text: string): string => {
 /** A block as markdown. `compact` is set on a compact list's item: a section there joins its parts with no blank lines. */
 const blockMd = (walk: Walk, block: Block, depth: number, compact = false): Lines => {
 	const { ctx } = walk;
-	switch (block._tag) {
-		case "Heading": {
-			return [`${"#".repeat(block.level)} ${headingText(inlineMd(block.content, ctx, "line"))}`.trimEnd()];
-		}
-		case "Paragraph":
-			return flowLines(inlineMd(block.content, ctx, "flow"));
-		case "List": {
+	return Match.valueTags(block, {
+		Heading: (block): Lines => [
+			`${"#".repeat(block.level)} ${headingText(inlineMd(block.content, ctx, "line"))}`.trimEnd(),
+		],
+		Paragraph: (block): Lines => flowLines(inlineMd(block.content, ctx, "flow")),
+		List: (block): Lines => {
 			const cap = capOf(block.cap);
 			// Annotations are skipped before the cap, so it counts what is shown, as in the other renderers.
 			const listed = block.items.filter((item) => !isAnnotation(item));
 			const shown = cap === undefined ? listed : listed.slice(0, cap);
-			const items = shown.flatMap((item) => hang(blockMd(walk, item, depth, block.compact === true), "- ", "  "));
+			const items = shown.flatMap((item) =>
+				hang(blockMd(walk, item, depth, block.compact === true), "- ", "  "),
+			);
 			const hidden = listed.length - shown.length;
 			return joinBlocks([items, hidden > 0 ? overflowMd(block.overflow, hidden, ctx) : []]);
-		}
-		case "Table": {
+		},
+		Table: (block): Lines => {
 			const columns = Math.max(block.columns.length, ...block.rows.map((row) => row.length));
 			if (columns === 0) return [];
 			const cap = capOf(block.cap);
@@ -383,17 +396,17 @@ const blockMd = (walk: Walk, block: Block, depth: number, compact = false): Line
 			// A line break at the edge of a cell is not content: the cell is its trimmed text.
 			const cell = (inlines: ReadonlyArray<Inline> | undefined): string =>
 				inlines === undefined ? "" : trimCellEdges(inlineMd(inlines, ctx, "cell"));
-			const header = Array.from({ length: columns }, (_, index) => cell(block.columns[index]?.header));
-			const aligns = Array.from({ length: columns }, (_, index) => block.columns[index]?.align);
-			const rows = shown.map((row) => Array.from({ length: columns }, (_, index) => cell(row[index])));
+			const header = A.makeBy(columns, (index) => cell(block.columns[index]?.header));
+			const aligns = A.makeBy(columns, (index) => block.columns[index]?.align);
+			const rows = shown.map((row) => A.makeBy(columns, (index) => cell(row[index])));
 			const hidden = block.rows.length - shown.length;
 			const overflow = hidden > 0 ? overflowMd(block.overflow, hidden, ctx) : [];
 			// No header text and no row shown, such as a counts table over zero projects: an empty table is noise, as in
 			// the text renderers, which draw nothing for it.
 			if (rows.length === 0 && header.every((text) => text === "")) return overflow;
 			return joinBlocks([tableMd(header, aligns, rows), overflow]);
-		}
-		case "Tree": {
+		},
+		Tree: (block): Lines => {
 			const lines: Array<string> = [];
 			const visit = (children: typeof block.root.children, indent: number): void => {
 				for (const child of children) {
@@ -404,8 +417,8 @@ const blockMd = (walk: Walk, block: Block, depth: number, compact = false): Line
 			};
 			visit(block.root.children, 0);
 			return joinBlocks([flowLines(inlineMd(block.root.label, ctx, "line")), lines]);
-		}
-		case "Collapsible": {
+		},
+		Collapsible: (block): Lines => {
 			const title = htmlEscape(
 				flatten(block.title, ctx)
 					.map((span) => span.text)
@@ -421,23 +434,23 @@ const blockMd = (walk: Walk, block: Block, depth: number, compact = false): Line
 				...(body.length === 0 ? [] : [...body, ""]),
 				"</details>",
 			];
-		}
-		case "Callout": {
+		},
+		Callout: (block): Lines => {
 			const body = joinBlocks(block.body.map((child) => blockMd(walk, child, depth)));
 			const first = block.body[0];
 			const separate = first !== undefined && first._tag !== "Paragraph";
 			const quoted = [`[!${block.kind.toUpperCase()}]`, ...(separate ? [""] : []), ...body];
 			return quoted.map((line) => (line === "" ? ">" : `> ${line}`));
-		}
-		case "CodeBlock": {
+		},
+		CodeBlock: (block): Lines => {
 			const info =
 				sanitize(block.lang ?? "")
 					.trim()
 					.split(/\s+/)[0]
 					?.replace(/`/g, "") ?? "";
 			return fenced(block.text === "" ? [] : textLines(block.text), info);
-		}
-		case "Diff": {
+		},
+		Diff: (block): Lines => {
 			const cap = capOf(block.cap);
 			const side = (marker: string, text: string): Lines => {
 				const lines = textLines(text);
@@ -449,8 +462,8 @@ const blockMd = (walk: Walk, block: Block, depth: number, compact = false): Line
 				];
 			};
 			return fenced([...side("-", block.expected), ...side("+", block.received)], "diff");
-		}
-		case "Section": {
+		},
+		Section: (block): Lines => {
 			const level = Math.min(2 + depth, 6);
 			const title =
 				block.title === undefined
@@ -458,19 +471,16 @@ const blockMd = (walk: Walk, block: Block, depth: number, compact = false): Line
 					: [`${"#".repeat(level)} ${headingText(inlineMd(block.title, ctx, "line"))}`.trimEnd()];
 			const parts = [title, ...block.children.map((child) => blockMd(walk, child, depth + 1))];
 			return compact ? joinTight(parts) : joinBlocks(parts);
-		}
-		case "Counts":
-			return joinBlocks(countsMd(walk, block));
-		case "Verbatim": {
+		},
+		Counts: (block): Lines => joinBlocks(countsMd(walk, block)),
+		Verbatim: (block): Lines => {
 			// Fenced, so the indentation survives: markdown would drop it from text, or read four spaces as code.
 			const indent = " ".repeat(Math.max(0, Math.floor(block.indent ?? 0)));
 			return fenced(block.text === "" ? [] : textLines(block.text).map((line) => `${indent}${line}`), "");
-		}
-		case "Annotation":
-			return [];
-		case "CountsTable":
-			return blockMd(walk, countsTableOf(block), depth);
-		case "Lines": {
+		},
+		Annotation: (): Lines => [],
+		CountsTable: (block): Lines => blockMd(walk, countsTableOf(block), depth),
+		Lines: (block): Lines => {
 			// One paragraph, the entries kept apart by hard breaks, so a reader never runs them together. An empty entry
 			// between two others is an empty line, a hard break of its own; at either end it has nothing to hold it.
 			const entries = block.lines.map((entry) => escapeLineStart(inlineMd(entry, ctx, "line").trim()));
@@ -480,17 +490,19 @@ const blockMd = (walk: Walk, block: Block, depth: number, compact = false): Line
 			while (last > first && entries[last - 1] === "") last--;
 			const kept = entries.slice(first, last);
 			return kept.map((line, index) => (index < kept.length - 1 ? `${line}\\` : line));
-		}
-		case "Line":
-			return flowLines(inlineMd(block.content, ctx, "line"));
-		case "DiffText": {
+		},
+		Line: (block): Lines => flowLines(inlineMd(block.content, ctx, "line")),
+		DiffText: (block): Lines => {
 			const cap = capOf(block.cap);
 			const lines = block.text === "" ? [] : textLines(block.text);
 			const shown = cap === undefined ? lines : lines.slice(0, cap);
 			const hidden = lines.length - shown.length;
-			return fenced([...shown, ...(hidden > 0 ? [`${ctx.glyphs.ellipsis} ${hidden} more lines`] : [])], "diff");
-		}
-	}
+			return fenced(
+				[...shown, ...(hidden > 0 ? [`${ctx.glyphs.ellipsis} ${hidden} more lines`] : [])],
+				"diff",
+			);
+		},
+	});
 };
 
 /**
@@ -502,4 +514,5 @@ export const renderMarkdown: {
 	(ctx: RenderContext): (doc: Document) => string;
 	(doc: Document, ctx: RenderContext): string;
 } = dual(2, (doc: Document, ctx: RenderContext): string =>
-	joinBlocks(doc.map((block) => blockMd({ ctx }, block, 0))).join("\n"));
+	joinBlocks(doc.map((block) => blockMd({ ctx }, block, 0))).join("\n"),
+);

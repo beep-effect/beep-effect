@@ -62,10 +62,9 @@ export interface FailureSettings {
  *
  * @internal
  */
-export const FailureTargetCell = Context.Reference<MutableRef.MutableRef<FailureTarget | undefined> | undefined>(
-	$I`FailureTargetCell`,
-	{ defaultValue: () => undefined },
-);
+export const FailureTargetCell = Context.Reference<
+	MutableRef.MutableRef<FailureTarget | undefined> | undefined
+>($I`FailureTargetCell`, { defaultValue: () => undefined });
 
 /** What a report is rendered with when nothing is known about the terminal: plain text, no limit, no escapes. */
 export const fallbackTarget: FailureTarget = {
@@ -92,31 +91,33 @@ export const fallbackTarget: FailureTarget = {
  * Each is read with `serviceOption`, so this never adds a requirement. `audience` overrides the one in context: an
  * audience flag is provided deeper than the environment layer, where the report cannot see it.
  */
-const build = (audience?: AudienceShape, settings: FailureSettings = {}): Effect.Effect<FailureTarget | undefined> =>
-	Effect.gen(function* () {
-		const theme = yield* Effect.serviceOption(CliTheme);
-		const terminal = yield* Effect.serviceOption(TerminalEnv);
-		const current = yield* Effect.serviceOption(Audience);
-		const links = yield* Effect.serviceOption(CliLinks);
-		if (O.isNone(theme) || O.isNone(terminal) || O.isNone(links)) return undefined;
-		const shape = audience ?? (O.isSome(current) ? current.value : undefined);
-		if (shape === undefined) return undefined;
-		const { displayPath, stackFrames, spans, appModule } = settings;
-		const ctx = yield* Render.context("stderr", displayPath === undefined ? undefined : { displayPath }).pipe(
-			Effect.provideService(CliTheme, theme.value),
-			Effect.provideService(TerminalEnv, terminal.value),
-			Effect.provideService(CliLinks, links.value),
-			Effect.provideService(Audience, shape),
-		);
-		const format = yield* autoFormat(ctx.audience);
-		return {
-			ctx,
-			format,
-			...O.getSomesStruct({ stackFrames: O.fromUndefinedOr(stackFrames) }),
-			...O.getSomesStruct({ spans: O.fromUndefinedOr(spans) }),
-			...O.getSomesStruct({ appModule: O.fromUndefinedOr(appModule) }),
-		};
-	});
+const build = Effect.fn("build")(function* (
+	audience?: AudienceShape,
+	settings: FailureSettings = {},
+): Effect.fn.Return<FailureTarget | undefined> {
+	const theme = yield* Effect.serviceOption(CliTheme);
+	const terminal = yield* Effect.serviceOption(TerminalEnv);
+	const current = yield* Effect.serviceOption(Audience);
+	const links = yield* Effect.serviceOption(CliLinks);
+	if (O.isNone(theme) || O.isNone(terminal) || O.isNone(links)) return undefined;
+	const shape = audience ?? (O.isSome(current) ? current.value : undefined);
+	if (shape === undefined) return undefined;
+	const { displayPath, stackFrames, spans, appModule } = settings;
+	const ctx = yield* Render.context("stderr", displayPath === undefined ? undefined : { displayPath }).pipe(
+		Effect.provideService(CliTheme, theme.value),
+		Effect.provideService(TerminalEnv, terminal.value),
+		Effect.provideService(CliLinks, links.value),
+		Effect.provideService(Audience, shape),
+	);
+	const format = yield* autoFormat(ctx.audience);
+	return {
+		ctx,
+		format,
+		...O.getSomesStruct({ stackFrames: O.fromUndefinedOr(stackFrames) }),
+		...O.getSomesStruct({ spans: O.fromUndefinedOr(spans) }),
+		...O.getSomesStruct({ appModule: O.fromUndefinedOr(appModule) }),
+	};
+});
 
 /**
  * Record the target for the services in context in the cell, if there is one. A no-op without a cell or services.
@@ -126,8 +127,9 @@ const build = (audience?: AudienceShape, settings: FailureSettings = {}): Effect
 export const refreshFailureTarget: {
 	(audience?: AudienceShape, settings?: FailureSettings): Effect.Effect<void>;
 	(settings?: FailureSettings): (audience?: AudienceShape) => Effect.Effect<void>;
-} = dual((args) => args.length === 0 || args.length >= 2 || args[0] === undefined || "kind" in args[0], (audience?: AudienceShape, settings?: FailureSettings): Effect.Effect<void> =>
-	Effect.gen(function* () {
+} = dual(
+	(args) => args.length === 0 || args.length >= 2 || args[0] === undefined || "kind" in args[0],
+	Effect.fnUntraced(function* (audience?: AudienceShape, settings?: FailureSettings) {
 		const cell = yield* FailureTargetCell;
 		if (cell === undefined) return;
 		// A rewrite for an audience flag keeps the settings the environment layer recorded.
@@ -142,7 +144,8 @@ export const refreshFailureTarget: {
 			},
 		);
 		if (target !== undefined) MutableRef.set(cell, target);
-	}));
+	}),
+);
 
 /**
  * The target a report is rendered with: the cell, else the services in context, else the plain fallback.
@@ -170,7 +173,8 @@ const dropStatus = (content: ReadonlyArray<Inline>): ReadonlyArray<Inline> => {
 const withoutStatus = (doc: Document): Document =>
 	doc.map((block): Block => {
 		if (block._tag === "Paragraph") return { ...block, content: dropStatus(block.content) };
-		if (block._tag === "Tree") return { ...block, root: { ...block.root, label: dropStatus(block.root.label) } };
+		if (block._tag === "Tree")
+			return { ...block, root: { ...block.root, label: dropStatus(block.root.label) } };
 		return block;
 	});
 
@@ -180,24 +184,36 @@ const withoutStatus = (doc: Document): Document =>
  * @internal
  */
 export const linesOf: {
-	(target: FailureTarget, status?: boolean, spans?: "app" | "all" | "off" | undefined): (cause: Cause.Cause<unknown>) => ReadonlyArray<string>;
-	(cause: Cause.Cause<unknown>, target: FailureTarget, status?: boolean, spans?: "app" | "all" | "off" | undefined): ReadonlyArray<string>;
-} = dual((args) => Cause.isCause(args[0]), (
-	cause: Cause.Cause<unknown>,
-	target: FailureTarget,
-	status: boolean = true,
-	spans: "app" | "all" | "off" | undefined = target.spans,
-): ReadonlyArray<string> => {
-	const full = CliFailure.toDoc(cause, {
-		displayPath: target.ctx.displayPath,
-		...O.getSomesStruct({ stackFrames: O.fromUndefinedOr(target.stackFrames) }),
-		...O.getSomesStruct({ spans: O.fromUndefinedOr(spans) }),
-		...O.getSomesStruct({ appModule: O.fromUndefinedOr(target.appModule) }),
-	});
-	const doc = status ? full : withoutStatus(full);
-	const text = Render[target.format](doc, target.ctx);
-	return text === "" ? [] : text.split("\n");
-});
+	(
+		target: FailureTarget,
+		status?: boolean,
+		spans?: "app" | "all" | "off" | undefined,
+	): (cause: Cause.Cause<unknown>) => ReadonlyArray<string>;
+	(
+		cause: Cause.Cause<unknown>,
+		target: FailureTarget,
+		status?: boolean,
+		spans?: "app" | "all" | "off" | undefined,
+	): ReadonlyArray<string>;
+} = dual(
+	(args) => Cause.isCause(args[0]),
+	(
+		cause: Cause.Cause<unknown>,
+		target: FailureTarget,
+		status: boolean = true,
+		spans: "app" | "all" | "off" | undefined = target.spans,
+	): ReadonlyArray<string> => {
+		const full = CliFailure.toDoc(cause, {
+			displayPath: target.ctx.displayPath,
+			...O.getSomesStruct({ stackFrames: O.fromUndefinedOr(target.stackFrames) }),
+			...O.getSomesStruct({ spans: O.fromUndefinedOr(spans) }),
+			...O.getSomesStruct({ appModule: O.fromUndefinedOr(target.appModule) }),
+		});
+		const doc = status ? full : withoutStatus(full);
+		const text = Render[target.format](doc, target.ctx);
+		return text === "" ? [] : text.split("\n");
+	},
+);
 
 /**
  * A consumer `render`'s lines, made safe: neutralized under GitHub Actions, and stripped of escapes for an agent.
@@ -216,7 +232,8 @@ export const guardConsumerLines = (lines: ReadonlyArray<string>): Effect.Effect<
 	Effect.map(currentTarget, (target) => {
 		// An agent or a CI gets no escape of any kind (the kit's own output for them is already escape-free); only a person
 		// keeps what the consumer wrote.
-		const noEscapes = target.assumed !== true && (target.ctx.audience === "agent" || target.ctx.audience === "ci");
+		const noEscapes =
+			target.assumed !== true && (target.ctx.audience === "agent" || target.ctx.audience === "ci");
 		const stripped = noEscapes ? lines.map(sanitize) : lines;
 		return target.ctx.neutralizeWorkflowCommands === true
 			? stripped.flatMap((line) => CommandNeutralizer.lines(line))
@@ -231,11 +248,11 @@ export const guardConsumerLines = (lines: ReadonlyArray<string>): Effect.Effect<
 export const plainFailureLines: {
 	(status?: boolean, spans?: "app" | "all" | "off"): (cause: Cause.Cause<unknown>) => ReadonlyArray<string>;
 	(cause: Cause.Cause<unknown>, status?: boolean, spans?: "app" | "all" | "off"): ReadonlyArray<string>;
-} = dual((args) => Cause.isCause(args[0]), (
-	cause: Cause.Cause<unknown>,
-	status = true,
-	spans?: "app" | "all" | "off",
-): ReadonlyArray<string> => linesOf(cause, fallbackTarget, status, spans));
+} = dual(
+	(args) => Cause.isCause(args[0]),
+	(cause: Cause.Cause<unknown>, status = true, spans?: "app" | "all" | "off"): ReadonlyArray<string> =>
+		linesOf(cause, fallbackTarget, status, spans),
+);
 
 const SPAN_SETTINGS: ReadonlyArray<"app" | "all" | "off"> = ["app", "all", "off"];
 
@@ -247,13 +264,24 @@ const SPAN_SETTINGS: ReadonlyArray<"app" | "all" | "off"> = ["app", "all", "off"
  * @internal
  */
 export const readSpans: {
-	(envVar: string | undefined): (explicit: "app" | "all" | "off" | undefined) => Effect.Effect<{ readonly spans: "app" | "all" | "off" | undefined; readonly invalid: string | undefined }>;
-	(explicit: "app" | "all" | "off" | undefined, envVar: string | undefined): Effect.Effect<{ readonly spans: "app" | "all" | "off" | undefined; readonly invalid: string | undefined }>;
-} = dual(2, (
-	explicit: "app" | "all" | "off" | undefined,
-	envVar: string | undefined,
-): Effect.Effect<{ readonly spans: "app" | "all" | "off" | undefined; readonly invalid: string | undefined }> =>
-	Effect.gen(function* () {
+	(
+		envVar: string | undefined,
+	): (
+		explicit: "app" | "all" | "off" | undefined,
+	) => Effect.Effect<{
+		readonly spans: "app" | "all" | "off" | undefined;
+		readonly invalid: string | undefined;
+	}>;
+	(
+		explicit: "app" | "all" | "off" | undefined,
+		envVar: string | undefined,
+	): Effect.Effect<{
+		readonly spans: "app" | "all" | "off" | undefined;
+		readonly invalid: string | undefined;
+	}>;
+} = dual(
+	2,
+	Effect.fnUntraced(function* (explicit: "app" | "all" | "off" | undefined, envVar: string | undefined) {
 		if (explicit !== undefined) return { spans: explicit, invalid: undefined };
 		if (envVar === undefined) return { spans: undefined, invalid: undefined };
 		const raw = yield* Config.option(Config.String(envVar)).pipe(Effect.orElseSucceed(O.none<string>));
@@ -265,4 +293,5 @@ export const readSpans: {
 			spans: undefined,
 			invalid: `${envVar}=${raw.value} is not a span setting (${SPAN_SETTINGS.join("|")}); ignoring it`,
 		};
-	}));
+	}),
+);

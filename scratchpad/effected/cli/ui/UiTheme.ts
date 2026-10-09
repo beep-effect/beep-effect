@@ -1,3 +1,6 @@
+import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
+import { $ScratchpadId } from "@beep/identity/packages";
 import { dual } from "effect/Function";
 import type * as Cli from "../index.ts";
 import type { ColorLevel } from "../../env/index.ts";
@@ -6,6 +9,15 @@ import { inkModules } from "./internal/ink.ts";
 import type { ScreenContextValue } from "./internal/ScreenContext.ts";
 import { screenContext } from "./internal/ScreenContext.ts";
 import * as O from "@beep/utils/Option";
+
+const $I = $ScratchpadId.create("effected/cli/ui/UiTheme");
+
+class MissingUiThemeError extends S.TaggedError<MissingUiThemeError>($I`MissingUiThemeError`)(
+	"MissingUiThemeError",
+	{
+		message: S.String,
+	},
+) {}
 
 /**
  * The styling props of an Ink `Text` that a {@link @effected/cli!Style} maps to.
@@ -49,11 +61,12 @@ export interface TerminalSize {
 	readonly rows: number;
 }
 
-const OUTSIDE = "@effected/cli/ui: a theme hook was used outside a screen mounted by CliUi.run or a UiProvider";
+const OUTSIDE =
+	"@effected/cli/ui: a theme hook was used outside a screen mounted by CliUi.run or a UiProvider";
 
 const useScreen = (): ScreenContextValue => {
 	const screen = inkModules().react.useContext(screenContext());
-	if (screen === undefined) throw new Error(OUTSIDE);
+	if (screen === undefined) throw MissingUiThemeError.make({ message: OUTSIDE });
 	return screen;
 };
 
@@ -75,16 +88,19 @@ const useScreen = (): ScreenContextValue => {
 export const inkProps: {
 	(color?: ColorLevel): (style: Cli.Style) => InkTextProps;
 	(style: Cli.Style, color?: ColorLevel): InkTextProps;
-} = dual((args) => typeof args[0] === "object" && args[0] !== null, (style: Cli.Style, color?: ColorLevel): InkTextProps =>
-	color === "none"
-		? {}
-		: {
-				...O.getSomesStruct({ color: O.fromUndefinedOr(style.fg) }),
-				...(style.bold === true ? { bold: true } : {}),
-				...(style.dim === true ? { dimColor: true } : {}),
-				...(style.italic === true ? { italic: true } : {}),
-				...(style.underline === true ? { underline: true } : {}),
-			});
+} = dual(
+	(args) => P.isObjectKeyword(args[0]) && !P.isFunction(args[0]),
+	(style: Cli.Style, color?: ColorLevel): InkTextProps =>
+		color === "none"
+			? {}
+			: {
+					...O.getSomesStruct({ color: O.fromUndefinedOr(style.fg) }),
+					...(style.bold === true ? { bold: true } : {}),
+					...(style.dim === true ? { dimColor: true } : {}),
+					...(style.italic === true ? { italic: true } : {}),
+					...(style.underline === true ? { underline: true } : {}),
+				},
+);
 
 /**
  * The theme of the stream the mounted screen draws on.

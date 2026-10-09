@@ -400,8 +400,8 @@ const overflowOf =
 		inlines(overflow(hidden));
 
 const overflowFields = (options: OverflowOptions | undefined) => ({
-	...(options?.cap === undefined ? {} : { cap: options.cap }),
-	...(options?.overflow === undefined ? {} : { overflow: overflowOf(options.overflow) }),
+	...O.getSomesStruct({ cap: O.fromUndefinedOr(options?.cap) }),
+	...O.getSomesStruct({ overflow: O.map(O.fromUndefinedOr(options?.overflow), overflowOf) }),
 });
 
 const treeNode = (input: TreeInput): TreeNode =>
@@ -510,7 +510,7 @@ export class Doc {
 			_tag: "Link",
 			target: freeze({ ...target }),
 			label: inlines(label ?? fallback),
-			...(options?.suffix === undefined ? {} : { suffix: options.suffix }),
+			...O.getSomesStruct({ suffix: O.fromUndefinedOr(options?.suffix) }),
 		});
 	}
 
@@ -594,7 +594,7 @@ export class Doc {
 			_tag: "List",
 			items: frozenArray(items),
 			...overflowFields(options),
-			...(options?.compact === undefined ? {} : { compact: options.compact }),
+			...O.getSomesStruct({ compact: O.fromUndefinedOr(options?.compact) }),
 		});
 	}
 
@@ -619,7 +619,7 @@ export class Doc {
 			),
 			rows: frozenArray(rows.map((row) => frozenArray(row.map(inlines)))),
 			...overflowFields(options),
-			...(options?.style === undefined ? {} : { style: options.style }),
+			...O.getSomesStruct({ style: O.fromUndefinedOr(options?.style) }),
 		});
 	}
 
@@ -648,7 +648,7 @@ export class Doc {
 			_tag: "Collapsible",
 			title: inlines(title),
 			body: frozenArray(body),
-			...(options?.open === undefined ? {} : { open: options.open }),
+			...O.getSomesStruct({ open: O.fromUndefinedOr(options?.open) }),
 		});
 	}
 
@@ -687,7 +687,7 @@ export class Doc {
 			_tag: "Diff",
 			expected,
 			received,
-			...(options?.cap === undefined ? {} : { cap: options.cap }),
+			...O.getSomesStruct({ cap: O.fromUndefinedOr(options?.cap) }),
 		});
 	}
 
@@ -705,7 +705,7 @@ export class Doc {
 	static section(title: InlineInput | undefined, children: ReadonlyArray<Block>): BlockOf<"Section"> {
 		return freeze({
 			_tag: "Section",
-			...(title === undefined ? {} : { title: inlines(title) }),
+			...O.getSomesStruct({ title: O.map(O.fromUndefinedOr(title), inlines) }),
 			children: frozenArray(children),
 		});
 	}
@@ -753,15 +753,15 @@ export class Doc {
 	static counts(options: CountsOptions): BlockOf<"Counts"> {
 		return freeze({
 			_tag: "Counts",
-			...(options.label === undefined ? {} : { label: inlines(options.label) }),
+			...O.getSomesStruct({ label: O.map(O.fromUndefinedOr(options.label), inlines) }),
 			counters: frozenArray(options.counters.map(counterOf)),
 			...O.getSomesStruct({ total: O.fromUndefinedOr(options.total) }),
-			...(options.qualifier === undefined ? {} : { qualifier: inlines(options.qualifier) }),
+			...O.getSomesStruct({ qualifier: O.map(O.fromUndefinedOr(options.qualifier), inlines) }),
 			...O.getSomesStruct({ durationMs: O.fromUndefinedOr(options.durationMs) }),
 			layout: options.layout,
 			...O.getSomesStruct({ share: O.fromUndefinedOr(options.share) }),
 			...O.getSomesStruct({ paint: O.fromUndefinedOr(options.paint) }),
-			...(options.suffix === undefined ? {} : { suffix: inlines(options.suffix) }),
+			...O.getSomesStruct({ suffix: O.map(O.fromUndefinedOr(options.suffix), inlines) }),
 		});
 	}
 
@@ -803,9 +803,9 @@ export class Doc {
 					}),
 				),
 			),
-			...(totalRow === undefined ? {} : { totalRow: P.isBoolean(totalRow) ? totalRow : inlines(totalRow) }),
-			...(options?.labelHeader === undefined ? {} : { labelHeader: inlines(options.labelHeader) }),
-			...(options?.durationHeader === undefined ? {} : { durationHeader: inlines(options.durationHeader) }),
+			...O.getSomesStruct({ totalRow: O.map(O.fromUndefinedOr(totalRow), (row) => P.isBoolean(row) ? row : inlines(row)) }),
+			...O.getSomesStruct({ labelHeader: O.map(O.fromUndefinedOr(options?.labelHeader), inlines) }),
+			...O.getSomesStruct({ durationHeader: O.map(O.fromUndefinedOr(options?.durationHeader), inlines) }),
 		});
 	}
 
@@ -839,8 +839,8 @@ export class Doc {
 		return freeze({
 			_tag: "Line",
 			content: inlines(content),
-			...(options?.truncate === undefined ? {} : { truncate: options.truncate }),
-			...(options?.wrap === undefined ? {} : { wrap: options.wrap }),
+			...O.getSomesStruct({ truncate: O.fromUndefinedOr(options?.truncate) }),
+			...O.getSomesStruct({ wrap: O.fromUndefinedOr(options?.wrap) }),
 		});
 	}
 
@@ -866,8 +866,8 @@ export class Doc {
 		return freeze({
 			_tag: "DiffText",
 			text: unified,
-			...(options?.cap === undefined ? {} : { cap: options.cap }),
-			...(options?.truncate === undefined ? {} : { truncate: options.truncate }),
+			...O.getSomesStruct({ cap: O.fromUndefinedOr(options?.cap) }),
+			...O.getSomesStruct({ truncate: O.fromUndefinedOr(options?.truncate) }),
 		});
 	}
 
@@ -884,7 +884,7 @@ export class Doc {
 	 * @param options - `indent`, the spaces in front of every line; none by default
 	 */
 	static verbatim(text: string, options?: { readonly indent?: number }): BlockOf<"Verbatim"> {
-		return freeze({ _tag: "Verbatim", text, ...(options?.indent === undefined ? {} : { indent: options.indent }) });
+		return freeze({ _tag: "Verbatim", text, ...O.getSomesStruct({ indent: O.fromUndefinedOr(options?.indent) }) });
 	}
 
 	/**
@@ -957,15 +957,15 @@ export class Doc {
 	 * @param doc - the document
 	 * @param options - the stream and the format
 	 */
-	static readonly print = (
+	static readonly print: (
 		doc: Document,
 		options?: DocPrintOptions,
-	): Effect.Effect<void, never, CliTheme | TerminalEnv | Audience | CliLinks> =>
-		Effect.gen(function* () {
+	) => Effect.Effect<void, never, CliTheme | TerminalEnv | Audience | CliLinks> =
+		Effect.fn("print")(function* (doc: Document, options?: DocPrintOptions) {
 			const stream = options?.stream ?? "stdout";
 			const ctx = yield* Render.context(stream, {
-				...(options?.displayPath === undefined ? {} : { displayPath: options.displayPath }),
-				...(options?.width === undefined ? {} : { width: options.width }),
+				...O.getSomesStruct({ displayPath: O.fromUndefinedOr(options?.displayPath) }),
+				...O.getSomesStruct({ width: O.fromUndefinedOr(options?.width) }),
 			});
 			const requested = options?.format ?? "auto";
 			const format = requested === "auto" ? yield* autoFormat(ctx.audience) : requested;

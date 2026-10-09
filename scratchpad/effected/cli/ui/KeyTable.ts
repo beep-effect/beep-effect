@@ -1,6 +1,7 @@
 import { dual } from "effect/Function";
 import type * as Cli from "../index.ts";
 import * as O from "effect/Option";
+import * as MutableHashSet from "effect/MutableHashSet";
 import { graphemes } from "../internal/displayWidth.ts";
 import { inkModules } from "./internal/ink.ts";
 import { useScreenGuard } from "./internal/ScreenContext.ts";
@@ -146,11 +147,11 @@ export class KeyTable<Action> {
 	 * @param glyphs - the glyph set the labels are drawn with
 	 */
 	readonly help = (glyphs: Cli.GlyphSet): ReadonlyArray<KeyHelpRow> => {
-		const taken = new Set<string>();
+		const taken = MutableHashSet.empty<string>();
 		const rows: Array<KeyHelpRow> = [];
 		for (const binding of this.bindings) {
-			const live = binding.keys.filter((key) => !taken.has(identity(key)));
-			for (const key of binding.keys) taken.add(identity(key));
+			const live = binding.keys.filter((key) => !MutableHashSet.has(taken, identity(key)));
+			for (const key of binding.keys) MutableHashSet.add(taken, identity(key));
 			if (binding.hidden === true || live.length === 0) continue;
 			rows.push({ label: live.map((key) => labelOf(key, glyphs)).join("/"), help: binding.help });
 		}

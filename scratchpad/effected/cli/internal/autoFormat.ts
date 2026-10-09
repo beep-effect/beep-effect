@@ -29,9 +29,10 @@ export const underGithubActions: Effect.Effect<boolean> = Effect.gen(function* (
  *
  * @internal
  */
-export const autoFormat = (audience: AudienceKind): Effect.Effect<"plain" | "ansi" | "githubLog"> =>
-	Effect.gen(function* () {
-		if (audience === "human") return "ansi";
-		if (audience === "agent") return "plain";
-		return (yield* underGithubActions) ? "githubLog" : "plain";
-	});
+export const autoFormat = Effect.fn("autoFormat")(function* (
+	audience: AudienceKind,
+): Effect.fn.Return<"plain" | "ansi" | "githubLog"> {
+	if (audience === "human") return "ansi";
+	if (audience === "agent") return "plain";
+	return (yield* underGithubActions) ? "githubLog" : "plain";
+});

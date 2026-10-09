@@ -13,7 +13,7 @@ import * as P from "effect/Predicate";
 export const counterLabel: {
 	(count?: number): (counter: Counter) => string;
 	(counter: Counter, count?: number): string;
-} = dual((args) => typeof args[0] === "object" && args[0] !== null, (counter: Counter, count: number = counter.n): string =>
+} = dual((args) => P.isObjectKeyword(args[0]) && !P.isFunction(args[0]), (counter: Counter, count: number = counter.n): string =>
 	P.isString(counter.label) ? counter.label : count === 1 ? counter.label.one : counter.label.other);
 
 /**
