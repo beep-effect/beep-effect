@@ -658,7 +658,7 @@ const enumerateSnapshotPaths = Effect.fn("AiMetrics.enumerateConfigSnapshotPaths
     });
     const local = pathApi.join(repoRoot, ".claude/settings.local.json");
     const existing = yield* Effect.filter(
-      A.map(selected, (relative) => pathApi.join(repoRoot, relative)),
+      A.map(selected, (relative) => pathApi.join(pathApi.resolve(repoRoot), relative)),
       (file) =>
         fs.stat(file).pipe(
           Effect.map((info) => info.type === "File"),

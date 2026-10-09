@@ -41,7 +41,7 @@ import { fileSizeBytes, modifiedAtMillis } from "./internal/file-info.ts";
 import { collectJsonlFiles, statOption } from "./internal/jsonl-discovery.ts";
 import { normalizedRelativePath, resolveTranscriptSourceRoots } from "./internal/transcript-utils.ts";
 import { AiMetricsDeployTarget, AiMetricsTranscriptSource } from "./models.ts";
-import { hashPrivateIdentifier, makeAiMetricsPrivacyCheckResult } from "./privacy.ts";
+import { AiMetricsEncodedSha256, hashPrivateIdentifier, makeAiMetricsPrivacyCheckResult } from "./privacy.ts";
 import { shellQuote } from "./shell.ts";
 
 const $I = $RepoAiMetricsId.create("forwarder");
@@ -71,6 +71,54 @@ const AiMetricsForwarderTimerCommand = AiMetricsForwarderTimerCommandBase.pipe(
     description: "Forwarder timer command argv with an absolute executable path.",
   })
 );
+
+class ProcessedForwarderSource extends S.Class<ProcessedForwarderSource>($I`ProcessedForwarderSource`)({
+  record: AiMetricsDerivedTranscriptRecord,
+  sessionIdentityHash: S.OptionFromOptionalKey(AiMetricsEncodedSha256),
+}) {}
+
+const SessionIdentityRow = S.fromJsonString(
+  S.Struct({
+    type: S.optionalKey(S.String),
+    sessionId: S.optionalKey(S.NonEmptyString),
+    payload: S.optionalKey(S.Struct({ id: S.optionalKey(S.NonEmptyString) })),
+  })
+);
+const decodeSessionIdentityRow = S.decodeResult(SessionIdentityRow);
+const readSessionIdentityHash = Effect.fnUntraced(function* (
+  content: string,
+  sourceKind: AiMetricsTranscriptSource,
+  hashSalt: O.Option<string>
+) {
+  let identities = HashSet.empty<string>();
+  let complete = true;
+  for (const line of A.filter(Str.split(content, "\n"), Str.isNonEmpty)) {
+    Result.match(decodeSessionIdentityRow(line), {
+      onFailure: () => {
+        complete = false;
+      },
+      onSuccess: (row) => {
+        const identity =
+          sourceKind === "claude"
+            ? O.fromUndefinedOr(row.sessionId)
+            : row.type === "session_meta"
+              ? O.fromUndefinedOr(row.payload?.id)
+              : O.none<string>();
+        O.match(identity, {
+          onNone: () => {},
+          onSome: (value) => {
+            identities = HashSet.add(identities, value);
+          },
+        });
+      },
+    });
+  }
+  const identity = complete && HashSet.size(identities) === 1 ? A.head(A.fromIterable(identities)) : O.none<string>();
+  return yield* O.match(identity, {
+    onNone: Effect.succeedNone,
+    onSome: (value) => hashPrivateIdentifier(value, hashSalt).pipe(Effect.asSome),
+  });
+});
 
 type SessionStampIndex = {
   readonly stamps: MutableHashMap.MutableHashMap<string, HashSet.HashSet<string>>;
@@ -998,7 +1046,13 @@ const processSourceFile = Effect.fn("AiMetrics.forwarder.processSourceFile")(
       summary,
     }).pipe(Effect.mapError((cause) => forwarderFailure("Failed to build AI metrics privacy projection.", cause)));
 
-    return AiMetricsDerivedTranscriptRecord.make({ archiveObject, privacy });
+    const sessionIdentityHash = yield* readSessionIdentityHash(content, sourceFile.sourceKind, input.hashSalt).pipe(
+      Effect.mapError((cause) => forwarderFailure("Failed to bind transcript session identity.", cause))
+    );
+    return ProcessedForwarderSource.make({
+      record: AiMetricsDerivedTranscriptRecord.make({ archiveObject, privacy }),
+      sessionIdentityHash,
+    });
   },
   (effect, _input, _rawArchiveDir, sourceFile) =>
     effect.pipe(
@@ -1039,7 +1093,6 @@ const processSourceFile = Effect.fn("AiMetrics.forwarder.processSourceFile")(
  * } from "@beep/repo-ai-metrics"
  * import { NodeServices } from "@effect/platform-node"
  * import * as Effect from "effect/Effect";
-import * as DateTime from "effect/DateTime";
  * import * as Option from "effect/Option";
  * import * as Redacted from "effect/Redacted";
  * const dataRoot = "/home/dev/.local/state/beep/ai-metrics"
@@ -1158,7 +1211,7 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
       }),
       { discard: true }
     );
-    const stampedRecords = A.map(records, (record) => {
+    const stampedRecords = A.map(records, ({ record, sessionIdentityHash }) => {
       const sanitized = record.privacy.sanitized;
       const kind = AiMetricsTranscriptSource.$match(sanitized.sourceKind, {
         claude: () => O.some("claude-code"),
@@ -1176,7 +1229,10 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
                 O.exists(MutableHashMap.get(freshStarts, key), (starts) => HashSet.has(starts, first))
               )
             ),
-            O.filter((values) => HashSet.size(values) === 1),
+            O.filter(
+              (values) =>
+                HashSet.size(values) === 1 && O.exists(sessionIdentityHash, (identity) => HashSet.has(values, identity))
+            ),
             O.flatMap(() => MutableHashMap.get(stamps, key)),
             O.filter((values) => HashSet.size(values) === 1 && !HashSet.has(values, "unknown")),
             O.flatMap((values) => A.head(A.fromIterable(values)))
@@ -1248,7 +1304,6 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
  *   forwarderRunResultToJson
  * } from "@beep/repo-ai-metrics"
  * import * as Effect from "effect/Effect";
-import * as DateTime from "effect/DateTime";
  * const result = AiMetricsForwarderRunResult.make({
  *   archiveObjectCount: 0,
  *   configSnapshotId: "config-1",
@@ -1294,7 +1349,6 @@ export const forwarderRunResultToJson: (
  * ```ts
  * import { AiMetricsForwarderTimerPlan, forwarderTimerPlanToJson } from "@beep/repo-ai-metrics"
  * import * as Effect from "effect/Effect";
-import * as DateTime from "effect/DateTime";
  * const json = Effect.runSync(
  *   forwarderTimerPlanToJson(
  *     AiMetricsForwarderTimerPlan.make({

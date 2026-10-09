@@ -74,20 +74,24 @@ fi
 
 # Keep our deadline below the harness deadline so timeout refusals survive.
 # Cursor owns its outer cap and marks the shared body as already bounded.
-if [ "${BEEP_HOOK_PULSE_BOUNDED:-0}" != "1" ]; then
+if [ "${1:-}" != "--bounded-body" ]; then
   if ! command -v timeout >/dev/null 2>&1; then
     refuse no-timeout
     exit 0
   fi
   result=0
-  BEEP_HOOK_PULSE_BOUNDED=1 timeout --kill-after=1s "${BEEP_HOOK_PULSE_WRITER_CAP:-3s}"     "${BASH_SOURCE[0]}" "$@" >/dev/null 2>&1 || result=$?
+  timeout --kill-after=1s "${BEEP_HOOK_PULSE_WRITER_CAP:-3s}" "${BASH_SOURCE[0]}" --bounded-body "$@" >/dev/null 2>&1 || result=$?
   case "${result}" in
+    # Timeout means the writer did not finish its deadline. A durable row may
+    # already exist if notification routing was interrupted after its append.
     124|137) refuse timeout ;;
     0) ;;
     *) refuse encode-failed ;;
   esac
   exit 0
 fi
+shift
+writer_started_ms="$(date +%s%3N)"
 
 # HARD REQUIREMENT: this script must never write to stdout. `PermissionRequest`
 # is a *decision* hook — the harness feeds hook stdout into the permission
@@ -422,6 +426,7 @@ esac
 # the lines carry `\001` as a stand-in and `tr` swaps in the NUL inside the pipe.
 # Paths are printable ASCII by then, so `\001` cannot collide with one.
 harness_config_hash() (
+  set -euo pipefail
   cd -- "$1" 2>/dev/null || exit 1
   for tool in find sort awk tr od sha256sum; do
     command -v "${tool}" >/dev/null 2>&1 || exit 1
@@ -505,23 +510,22 @@ END {
   done
 
   indexed=0
-  tracked=""
-  if tracked="$(git -c core.quotepath=false ls-files -- ':(glob)**/AGENTS.md' ':(glob)**/CLAUDE.md' .mcp.json .claude .codex .ai .aiassistant .cursor .agents .junie .grok 2>/dev/null)"; then
+  if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
     indexed=1
-    case "${tracked}" in *'"'*) exit 1 ;; esac
+    mapfile -d '' -t indexed_paths < <(git ls-files -z -- ':(glob)**/AGENTS.md' ':(glob)**/CLAUDE.md' .mcp.json .claude .codex .ai .aiassistant .cursor .agents .junie .grok)
+    wait "$!" || exit 1
+    [ ! -f .claude/settings.local.json ] || indexed_paths+=(.claude/settings.local.json)
   fi
 
   # One record per NUL-terminated line: `RG`/`CG` name a directory holding
   # `.git` in the root/config walk, `RF`/`CF` a collected file with its size.
   # Newlines inside names become `\001` so they fail the printable check.
   collect_program='
-NR == FNR { tracked[$0] = 1; next }
 ($1 == "RF" || $1 == "CF") {
-  if (NF != 3) { if (indexed) next; bad = 1; next }
+  if (NF != 3) { bad = 1; next }
   rel = $3; sub(/^\.\//, "", rel)
-  if (indexed && !(rel in tracked) && rel != ".claude/settings.local.json") next
 }
-/[^ -~\t]/ || index($0, "\\") { if (indexed && ($1 == "RG" || $1 == "CG")) next; bad = 1; next }
+/[^ -~\t]/ || index($0, "\\") { bad = 1; next }
 $1 == "RG" && NF == 2 { rg[$2] = 1; next }
 $1 == "CG" && NF == 2 { cg[$2] = 1; next }
 ($1 == "RF" || $1 == "CF") && NF == 3 { n++; kind[n] = $1; size[n] = $2; path[n] = $3; next }
@@ -547,9 +551,8 @@ END {
 '
   if [ "${indexed}" = "1" ]; then
     collected="$(
-      while IFS= read -r candidate; do
+      for candidate in "${indexed_paths[@]}"; do
         [ -n "${candidate}" ] || continue
-        case "${candidate}" in *[!\ -~]*|*\\*) exit 1 ;; esac
         IFS=/ read -r -a segments <<<"${candidate}"
         case "${segments[0]}" in
           .codex|.claude|.ai|.aiassistant|.cursor|.agents|.junie|.grok) limit=9 ;;
@@ -557,18 +560,20 @@ END {
         esac
         [ "${#segments[@]}" -le "${limit}" ] || continue
         skip=0; parent=""
-        for ((part=0; part<${#segments[@]}-1; part++)); do
+        for ((part=0; part<${#segments[@]}; part++)); do
           segment="${segments[part]}"
           case "${segment}" in
             .beep|.cache|.git|.idea|.next|.repos|.turbo|.venv|build|coverage|dist|ide|logs|node_modules|outputs|projects|shell-snapshots|statsig|target|todos) skip=1; break ;;
           esac
           parent="${parent:+${parent}/}${segment}"
-          if [ -e "${parent}/.git" ]; then skip=1; break; fi
+          if [ "${part}" -lt "$((${#segments[@]}-1))" ] && [ -e "${parent}/.git" ]; then skip=1; break; fi
         done
         [ "${skip}" = "0" ] || continue
+        case "${candidate}" in *[!\ -~]*|*\\*) exit 1 ;; esac
+        [ -e "${candidate}" ] || [ -L "${candidate}" ] || continue
         # Inspect only an indexed candidate, never its surrounding untracked tree.
         find -L "${candidate}" -maxdepth 0 -type f -printf '%p\t%s\n' 2>/dev/null || exit 1
-      done < <(printf '%s\n' "${tracked}"; [ ! -f .claude/settings.local.json ] || printf '%s\n' .claude/settings.local.json)
+      done
     )" || exit 1
   else
   collected="$(
@@ -583,7 +588,7 @@ END {
             \( "${excluded[@]}" \) -prune -o \
             -type f -printf 'CF\t%s\t%p\0'
         fi
-    } 2>/dev/null | tr '\n\000' '\001\n' | awk -F "${tab}" -v indexed="${indexed}" "${collect_program}" <(printf '%s\n' "${tracked}") -
+    } 2>/dev/null | tr '\n\000' '\001\n' | awk -F "${tab}" "${collect_program}"
   )" || exit 1
 
   fi
@@ -658,7 +663,14 @@ if [ "${raw_hook_event}" = "SessionStart" ]; then
   find_repo_root "${raw_cwd}"
   if [ -n "${found_repo_root}" ]; then
     export -f harness_config_hash
-    harness_hash="$(timeout --kill-after=0.2s "${BEEP_HOOK_PULSE_STAMP_CAP:-2s}" bash -c 'harness_config_hash "$1"' _ "${found_repo_root}")" || { harness_hash=""; refuse stamp-failed; }
+    remaining_ms=$((2200 - ($(date +%s%3N) - writer_started_ms)))
+    if [ "${remaining_ms}" -gt 0 ]; then
+      [ "${remaining_ms}" -le 2000 ] || remaining_ms=2000
+      printf -v stamp_cap '%d.%03ds' "$((remaining_ms / 1000))" "$((remaining_ms % 1000))"
+      harness_hash="$(timeout --kill-after=0.2s "${BEEP_HOOK_PULSE_STAMP_CAP:-${stamp_cap}}" bash -c 'harness_config_hash "$1"' _ "${found_repo_root}")" || { harness_hash=""; refuse stamp-failed; }
+    else
+      refuse stamp-failed
+    fi
   fi
 fi
 

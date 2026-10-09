@@ -16,16 +16,27 @@
 set -u
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 shared="${here}/../../.claude/hooks/hook-pulse.sh"
+answer_protocol() {
+  case "$1" in
+    preToolUse|beforeShellExecution|beforeMCPExecution|beforeReadFile|subagentStart) printf '{"permission":"allow"}\n' ;;
+    beforeSubmitPrompt) printf '{"continue":true}\n' ;;
+    *) printf '{}\n' ;;
+  esac
+}
+# Registered hooks pass the event as command metadata. Disarm can preserve the
+# exact protocol response without reading stdin or processing any payload.
+registered_event=""
+[ "${1:-}" != "--event" ] || registered_event="${2:-}"
+evidence_root="${BEEP_AGENT_EVIDENCE_ROOT:-${XDG_STATE_HOME:-${HOME:-/tmp}/.local/state}/beep/agent-evidence}"
+sentinel="${BEEP_HOOK_PULSE_DISARM_SENTINEL:-${evidence_root}/hook-pulse.disarmed}"
+if [ -e "${sentinel}" ]; then
+  answer_protocol "${registered_event}"
+  [ ! -x "${shared}" ] || BEEP_HOOK_PULSE_AGENT_KIND=cursor-cli "${shared}" < /dev/null >/dev/null 2>&1
+  exit 0
+fi
 input="$(cat)"
 event="$(printf '%s' "${input}" | jq -r '.hook_event_name // empty' 2>/dev/null || true)"
-case "${event}" in
-  preToolUse|beforeShellExecution|beforeMCPExecution|beforeReadFile|subagentStart)
-    printf '{"permission":"allow"}\n' ;;
-  beforeSubmitPrompt)
-    printf '{"continue":true}\n' ;;
-  *)
-    printf '{}\n' ;;
-esac
+answer_protocol "${registered_event:-${event}}"
 if [ -x "${shared}" ] && command -v jq >/dev/null 2>&1 && command -v timeout >/dev/null 2>&1; then
   result=0
   printf '%s' "${input}" | jq -c '
@@ -39,7 +50,7 @@ if [ -x "${shared}" ] && command -v jq >/dev/null 2>&1 && command -v timeout >/d
         "stop": "Stop",
         "beforeSubmitPrompt": "UserPromptSubmit"
       }[$e] // $e)' 2>/dev/null \
-    | BEEP_HOOK_PULSE_AGENT_KIND=cursor-cli BEEP_HOOK_PULSE_BOUNDED=1 timeout --kill-after=1s "${BEEP_CURSOR_HOOK_PULSE_WRITER_CAP:-3s}" "${shared}" >/dev/null 2>&1 || result=$?
+    | BEEP_HOOK_PULSE_AGENT_KIND=cursor-cli timeout --kill-after=1s "${BEEP_CURSOR_HOOK_PULSE_WRITER_CAP:-3s}" "${shared}" --bounded-body >/dev/null 2>&1 || result=$?
   if [ "${result}" -eq 124 ] || [ "${result}" -eq 137 ]; then
     BEEP_HOOK_PULSE_AGENT_KIND=cursor-cli "${shared}" --refuse timeout >/dev/null 2>&1
   elif [ "${result}" -ne 0 ]; then

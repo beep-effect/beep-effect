@@ -216,6 +216,7 @@ const runWriter = Effect.fnUntraced(function* (
     readonly writerPath?: string;
     readonly writerCap?: string;
     readonly stampCap?: string;
+    readonly registeredEvent?: string;
   } = {}
 ) {
   const fs = yield* FileSystem.FileSystem;
@@ -242,66 +243,70 @@ const runWriter = Effect.fnUntraced(function* (
   // and never the `coverage` one, so no local proof could reach it. The spawner behind
   // `ChildProcess` delivers stdin and closes it under both runtimes, and it is what the
   // repo's `nodeBuiltinImport` law names as the replacement for `node:child_process`.
-  const handle = yield* ChildProcess.make(options.writerPath ?? writerPath, [], {
-    cwd: repoRoot,
-    // Inherited, not restated. The writer shells out to `jq`, `sha256sum`, `date`, and
-    // `cat`, so it needs `PATH`, and without `extendEnv` a provided `env` *replaces* the
-    // child environment rather than extending it. Letting the spawner inherit also keeps
-    // a `process.env` read out of this file, which the repo's `processEnvInEffect` law
-    // forbids.
-    //
-    // Note for anyone debugging a future empty-store failure: an earlier revision here
-    // blamed a dropped `PATH` for exactly that symptom. That was wrong. `extendEnv` is
-    // implemented as `{ ...globalThis.process.env, ...options.env }`
-    // (`NodeChildProcessSpawner`) — the very spread the old comment accused — and it
-    // works. The real cause was that Bun's spawn never delivered stdin in this worker at
-    // all, so the writer parsed nothing and took its fail-open exit. Empty store means
-    // "the writer bailed"; it does not tell you which guard bailed. Instrument before
-    // concluding — a two-minute `cat`-echo probe settled it after two wrong theories.
-    extendEnv: true,
-    env: {
-      HOME: stateHome,
-      XDG_STATE_HOME: stateHome,
-      // The writer reads `$PWD` as its `fallbackCwd`, and `cwd` above does not rewrite
-      // the inherited `PWD` — bash would correct it at startup, but the correction is
-      // not this test's to assume now that the environment is inherited rather than
-      // rebuilt.
-      PWD: repoRoot,
-      // Empty values fall through to the writer's own `:-` defaults, so ambient
-      // developer configuration cannot change what this test asserts. Clearing
-      // BEEP_AGENT_EVIDENCE_ROOT exercises the XDG_STATE_HOME fallback rung of
-      // the precedence chain and must resolve to the same place.
-      BEEP_AGENT_EVIDENCE_ROOT: options.viaXdgFallback === true ? "" : evidenceRoot,
-      BEEP_HOOK_PULSE_DISARM_SENTINEL: "",
-      // The production fallback is now the post-baseline notifier revision.
-      // Legacy writer fixtures pin log-only explicitly so their assertion stays
-      // about projection semantics rather than the current intervention state.
-      BEEP_HOOK_PULSE_NOTIFIER_REV: "log-only-0",
-      BEEP_HOOK_PULSE_INSTRUMENT_CLASS: "",
-      // Cleared unless a case sets it, so an ambient adapter value cannot retag rows;
-      // empty falls through to the writer's `claude-code` default.
-      BEEP_HOOK_PULSE_AGENT_KIND: options.agentKind ?? "",
-      // The Cursor adapter caps the writer at 3 s. Measured 2026-09-16: at load average ~300
-      // the cap killed the writer and this suite saw no row, so the conformance run lifts it.
-      BEEP_CURSOR_HOOK_PULSE_WRITER_CAP: "60s",
-      BEEP_HOOK_PULSE_WRITER_CAP: options.writerCap ?? "60s",
-      BEEP_HOOK_PULSE_STAMP_CAP: options.stampCap ?? "60s",
-      // Both salt rungs are cleared unless a case sets one, so a developer who
-      // exports a real ai-metrics salt cannot change what these digests are.
-      // Cleared, they exercise the insecure-default fallback that keeps an
-      // unconfigured clone byte-identical to `hashPrivateIdentifier(value, O.none())`.
-      // The second rung is settable so the codec-parity cases can prove both
-      // halves walk the *same* chain rather than only its first link.
-      BEEP_HOOK_PULSE_HASH_SALT: options.hashSalt ?? "",
-      BEEP_AI_METRICS_HASH_SALT: options.aiMetricsHashSalt ?? "",
-    },
-    // `endOnDone` is stated rather than left to its `true` default: closing stdin once
-    // the payload is written is the whole reason this run terminates, so it is part of
-    // what the helper promises and not an incidental default someone may retune.
-    stdin: childStdin,
-    stdout: "pipe",
-    stderr: "pipe",
-  });
+  const handle = yield* ChildProcess.make(
+    options.writerPath ?? writerPath,
+    options.registeredEvent ? ["--event", options.registeredEvent] : [],
+    {
+      cwd: repoRoot,
+      // Inherited, not restated. The writer shells out to `jq`, `sha256sum`, `date`, and
+      // `cat`, so it needs `PATH`, and without `extendEnv` a provided `env` *replaces* the
+      // child environment rather than extending it. Letting the spawner inherit also keeps
+      // a `process.env` read out of this file, which the repo's `processEnvInEffect` law
+      // forbids.
+      //
+      // Note for anyone debugging a future empty-store failure: an earlier revision here
+      // blamed a dropped `PATH` for exactly that symptom. That was wrong. `extendEnv` is
+      // implemented as `{ ...globalThis.process.env, ...options.env }`
+      // (`NodeChildProcessSpawner`) — the very spread the old comment accused — and it
+      // works. The real cause was that Bun's spawn never delivered stdin in this worker at
+      // all, so the writer parsed nothing and took its fail-open exit. Empty store means
+      // "the writer bailed"; it does not tell you which guard bailed. Instrument before
+      // concluding — a two-minute `cat`-echo probe settled it after two wrong theories.
+      extendEnv: true,
+      env: {
+        HOME: stateHome,
+        XDG_STATE_HOME: stateHome,
+        // The writer reads `$PWD` as its `fallbackCwd`, and `cwd` above does not rewrite
+        // the inherited `PWD` — bash would correct it at startup, but the correction is
+        // not this test's to assume now that the environment is inherited rather than
+        // rebuilt.
+        PWD: repoRoot,
+        // Empty values fall through to the writer's own `:-` defaults, so ambient
+        // developer configuration cannot change what this test asserts. Clearing
+        // BEEP_AGENT_EVIDENCE_ROOT exercises the XDG_STATE_HOME fallback rung of
+        // the precedence chain and must resolve to the same place.
+        BEEP_AGENT_EVIDENCE_ROOT: options.viaXdgFallback === true ? "" : evidenceRoot,
+        BEEP_HOOK_PULSE_DISARM_SENTINEL: "",
+        // The production fallback is now the post-baseline notifier revision.
+        // Legacy writer fixtures pin log-only explicitly so their assertion stays
+        // about projection semantics rather than the current intervention state.
+        BEEP_HOOK_PULSE_NOTIFIER_REV: "log-only-0",
+        BEEP_HOOK_PULSE_INSTRUMENT_CLASS: "",
+        // Cleared unless a case sets it, so an ambient adapter value cannot retag rows;
+        // empty falls through to the writer's `claude-code` default.
+        BEEP_HOOK_PULSE_AGENT_KIND: options.agentKind ?? "",
+        // The Cursor adapter caps the writer at 3 s. Measured 2026-09-16: at load average ~300
+        // the cap killed the writer and this suite saw no row, so the conformance run lifts it.
+        BEEP_CURSOR_HOOK_PULSE_WRITER_CAP: "60s",
+        BEEP_HOOK_PULSE_WRITER_CAP: options.writerCap ?? "60s",
+        BEEP_HOOK_PULSE_STAMP_CAP: options.stampCap ?? "60s",
+        // Both salt rungs are cleared unless a case sets one, so a developer who
+        // exports a real ai-metrics salt cannot change what these digests are.
+        // Cleared, they exercise the insecure-default fallback that keeps an
+        // unconfigured clone byte-identical to `hashPrivateIdentifier(value, O.none())`.
+        // The second rung is settable so the codec-parity cases can prove both
+        // halves walk the *same* chain rather than only its first link.
+        BEEP_HOOK_PULSE_HASH_SALT: options.hashSalt ?? "",
+        BEEP_AI_METRICS_HASH_SALT: options.aiMetricsHashSalt ?? "",
+      },
+      // `endOnDone` is stated rather than left to its `true` default: closing stdin once
+      // the payload is written is the whole reason this run terminates, so it is part of
+      // what the helper promises and not an incidental default someone may retune.
+      stdin: childStdin,
+      stdout: "pipe",
+      stderr: "pipe",
+    }
+  );
 
   // Drained concurrently with the exit wait, never after it: a child that filled a pipe
   // buffer while the parent sat blocked on `exitCode` is the other shape of the same
@@ -1008,6 +1013,18 @@ it.layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
         (index) => fs.writeFileString(path.join(root, `.claude/scratch/noise-${index}.txt`), "ignored fixture\n"),
         { concurrency: 4, discard: true }
       );
+      yield* fs.makeDirectory(path.join(root, ".claude/node_modules"), { recursive: true });
+      yield* fs.writeFileString(path.join(root, '.claude/node_modules/bad"name.txt'), "excluded");
+      yield* fs.writeFileString(path.join(root, ".claude/logs"), "excluded filename");
+      yield* fs.makeDirectory(path.join(root, ".codex"), { recursive: true });
+      yield* fs.writeFileString(path.join(root, ".codex/deleted.toml"), "deleted indexed config");
+      const addExcluded = yield* ChildProcess.make(
+        "git",
+        ["add", "-f", ".claude/node_modules", ".claude/logs", ".codex/deleted.toml"],
+        { cwd: root }
+      );
+      expect(yield* addExcluded.exitCode).toBe(0);
+      yield* fs.remove(path.join(root, ".codex/deleted.toml"));
       const decoded = yield* decodeHookPulseRow(
         expectSingleRow(yield* runWriter(yield* encodeJson(sessionStartPayload(root))))
       );
@@ -1034,6 +1051,25 @@ it.layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
         S.decodeEffect(S.fromJsonString(HookPulseRefusal))
       );
       expect(refusal.reason).toBe("timeout");
+    })
+  );
+
+  it.effect("disarmed Cursor preserves protocol without reading its payload", () =>
+    Effect.gen(function* () {
+      for (const [registeredEvent, stdout] of [
+        ["preToolUse", '{"permission":"allow"}\n'],
+        ["beforeSubmitPrompt", '{"continue":true}\n'],
+        ["sessionStart", "{}\n"],
+      ]) {
+        const run = yield* runWriter("not JSON", {
+          writerPath: cursorWriterPath,
+          disarmSentinel: "disarmed",
+          registeredEvent,
+        });
+        expect(run.stdout).toBe(stdout);
+        expect(run.rows).toHaveLength(0);
+        expect(run.refusals).toHaveLength(1);
+      }
     })
   );
 

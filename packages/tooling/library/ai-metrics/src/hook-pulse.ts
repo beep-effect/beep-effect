@@ -530,6 +530,8 @@ export const HookPulseEvidenceTier = LiteralKit([
  */
 export type HookPulseEvidenceTier = typeof HookPulseEvidenceTier.Type;
 
+const HookPulseUtcTimestamp = S.String.check(S.makeFilter(flow(S.decodeOption(S.DateTimeUtcFromString), O.isSome)));
+
 /**
  * Current disarm state written by the hook-pulse operator switch.
  *
@@ -551,7 +553,7 @@ export type HookPulseEvidenceTier = typeof HookPulseEvidenceTier.Type;
  */
 export class HookPulseDisarmSentinel extends S.Class<HookPulseDisarmSentinel>($I`HookPulseDisarmSentinel`)(
   {
-    disarmedAt: S.String,
+    disarmedAt: HookPulseUtcTimestamp,
     evidenceTier: S.Literal(HookPulseEvidenceTier.Enum.unknown),
     reason: S.String,
   },
@@ -589,10 +591,10 @@ export class HookPulseDisarmSentinel extends S.Class<HookPulseDisarmSentinel>($I
  */
 export class HookPulseDisarmWindow extends S.Class<HookPulseDisarmWindow>($I`HookPulseDisarmWindow`)(
   {
-    disarmedAt: S.OptionFromNullOr(S.String),
+    disarmedAt: S.OptionFromNullOr(HookPulseUtcTimestamp),
     evidenceTier: S.Literal(HookPulseEvidenceTier.Enum.unknown),
     reason: S.OptionFromNullOr(S.String),
-    rearmedAt: S.String,
+    rearmedAt: HookPulseUtcTimestamp,
     schemaVersion: HookPulseDisarmWindowSchemaVersion,
   },
   $I.annote("HookPulseDisarmWindow", {

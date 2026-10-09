@@ -27,6 +27,7 @@ import { Sha256Hex } from "@beep/schema";
 import { A, pipe, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it, layer } from "@effect/vitest";
+import * as ConfigProvider from "effect/ConfigProvider";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -38,7 +39,19 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import type { HarnessLedgerPruneReport } from "@beep/repo-cli/commands/HarnessLedger";
 
-const TestLayer = HarnessLedgerServiceLive.pipe(Layer.provideMerge(NodeServices.layer));
+const TestLayer = HarnessLedgerServiceLive.pipe(
+  Layer.provideMerge(NodeServices.layer),
+  Layer.provideMerge(ConfigProvider.layer(ConfigProvider.fromUnknown({})))
+);
+
+const makeHookStateDir = Effect.fnUntraced(function* (prefix: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const root = yield* fs.makeTempDirectoryScoped({ prefix });
+  const directory = path.join(root, "hook-events");
+  yield* fs.makeDirectory(directory);
+  return directory;
+});
 
 const sessionA = Sha256Hex.make("a".repeat(64));
 const sessionB = Sha256Hex.make("b".repeat(64));
@@ -411,7 +424,7 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       const path = yield* Path.Path;
       const root = yield* makeRepo();
       const current = yield* repoHarnessHash(root);
-      const stateDir = yield* fs.makeTempDirectoryScoped({ prefix: "harness-ledger-state-" });
+      const stateDir = yield* makeHookStateDir("harness-ledger-state-");
       const alphaId = yield* contextSurfaceId("skill", "alpha");
       const betaId = yield* contextSurfaceId("skill", "beta");
       const notionId = yield* contextSurfaceId("mcp-server", "notion");
@@ -500,7 +513,7 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       const path = yield* Path.Path;
       const root = yield* makeRepo();
       const current = yield* repoHarnessHash(root);
-      const stateDir = yield* fs.makeTempDirectoryScoped({ prefix: "harness-unqualified-" });
+      const stateDir = yield* makeHookStateDir("harness-unqualified-");
       yield* writeShard(stateDir, "2026-10-09", sessionA, [
         yield* sessionStart(sessionA, "2026-10-09T10:00:00Z", current),
         yield* pulse(sessionA, "2026-10-09T10:01:00Z", O.none()),
@@ -526,7 +539,7 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       const path = yield* Path.Path;
       const root = yield* makeRepo();
       const current = yield* repoHarnessHash(root);
-      const stateDir = yield* fs.makeTempDirectoryScoped({ prefix: "harness-ledger-decided-" });
+      const stateDir = yield* makeHookStateDir("harness-ledger-decided-");
       const alphaId = yield* contextSurfaceId("skill", "alpha");
       yield* writeShard(stateDir, "2026-09-25", sessionA, [
         yield* sessionStart(sessionA, "2026-09-25T09:59:00.000Z", current),
@@ -610,7 +623,7 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       const path = yield* Path.Path;
       const root = yield* makeRepo();
       const proposedUnder = yield* repoHarnessHash(root);
-      const stateDir = yield* fs.makeTempDirectoryScoped({ prefix: "harness-ledger-decided-later-" });
+      const stateDir = yield* makeHookStateDir("harness-ledger-decided-later-");
       const alphaId = yield* contextSurfaceId("skill", "alpha");
       const betaId = yield* contextSurfaceId("skill", "beta");
       yield* writeShard(stateDir, "2026-09-25", sessionA, [
@@ -661,7 +674,7 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       const path = yield* Path.Path;
       const root = yield* makeRepo();
       const current = yield* repoHarnessHash(root);
-      const stateDir = yield* fs.makeTempDirectoryScoped({ prefix: "harness-ledger-legacy-decision-" });
+      const stateDir = yield* makeHookStateDir("harness-ledger-legacy-decision-");
       const alphaId = yield* contextSurfaceId("skill", "alpha");
       const betaId = yield* contextSurfaceId("skill", "beta");
       yield* writeShard(stateDir, "2026-09-25", sessionA, [
@@ -704,7 +717,7 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       const path = yield* Path.Path;
       const root = yield* makeRepo();
       const current = yield* repoHarnessHash(root);
-      const stateDir = yield* fs.makeTempDirectoryScoped({ prefix: "harness-ledger-baddate-" });
+      const stateDir = yield* makeHookStateDir("harness-ledger-baddate-");
       const alphaId = yield* contextSurfaceId("skill", "alpha");
       yield* fs.writeFileString(
         path.join(stateDir, `hook-pulse-2026-99-99-${sessionA}.ndjson`),
@@ -730,7 +743,7 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       const path = yield* Path.Path;
       const root = yield* makeRepo();
       const current = yield* repoHarnessHash(root);
-      const stateDir = yield* fs.makeTempDirectoryScoped({ prefix: "harness-ledger-reach-" });
+      const stateDir = yield* makeHookStateDir("harness-ledger-reach-");
       const betaId = yield* contextSurfaceId("skill", "beta");
       // The two newest sessions ran under another harness; the in-regime one is days older.
       yield* writeShard(stateDir, "2026-09-27", sessionC, [
@@ -779,10 +792,9 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
 
   it.effect("stamp-only sessions stay below the activity floor", () =>
     Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
       const root = yield* makeRepo();
       const current = yield* repoHarnessHash(root);
-      const stateDir = yield* fs.makeTempDirectoryScoped({ prefix: "harness-activity-" });
+      const stateDir = yield* makeHookStateDir("harness-activity-");
       yield* writeShard(stateDir, "2026-10-09", sessionA, [
         yield* sessionStart(sessionA, "2026-10-09T10:00:00Z", current),
       ]);
@@ -798,10 +810,9 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
 
   it.effect("a child with its own session identity cannot inflate the root window", () =>
     Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
       const root = yield* makeRepo();
       const current = yield* repoHarnessHash(root);
-      const stateDir = yield* fs.makeTempDirectoryScoped({ prefix: "harness-child-" });
+      const stateDir = yield* makeHookStateDir("harness-child-");
       yield* writeShard(stateDir, "2026-10-09", sessionA, [
         yield* sessionStart(sessionA, "2026-10-09T10:00:00Z", current),
         yield* pulse(sessionA, "2026-10-09T10:01:00Z", O.none()),
@@ -831,10 +842,9 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
 
   it.effect("unknown-role rows on the root transcript cannot supply activity", () =>
     Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
       const root = yield* makeRepo();
       const current = yield* repoHarnessHash(root);
-      const stateDir = yield* fs.makeTempDirectoryScoped({ prefix: "harness-unknown-role-" });
+      const stateDir = yield* makeHookStateDir("harness-unknown-role-");
       const unknown = yield* HookPulseV1.decodeJsonEffect(
         yield* pulseRow(sessionA, "2026-10-09T10:01:00Z", "PostToolUse", O.none(), O.none(), O.none())
       );
@@ -855,10 +865,9 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
 
   it.effect("unstamped children retain observed touches through a qualified parent", () =>
     Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
       const root = yield* makeRepo();
       const current = yield* repoHarnessHash(root);
-      const stateDir = yield* fs.makeTempDirectoryScoped({ prefix: "harness-child-touch-" });
+      const stateDir = yield* makeHookStateDir("harness-child-touch-");
       const alphaId = yield* contextSurfaceId("skill", "alpha");
       const child = yield* HookPulseV1.decodeJsonEffect(
         yield* pulseRow(sessionA, "2026-10-09T10:01:30Z", "PostToolUse", O.some(alphaId), O.none(), O.some("subagent"))
@@ -888,7 +897,7 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       yield* fs.makeDirectory(path.join(root, ".agents"));
       yield* fs.symlink("../.claude/skills", path.join(root, ".agents/skills"));
       const current = yield* repoHarnessHash(root);
-      const stateDir = yield* fs.makeTempDirectoryScoped({ prefix: "harness-clients-" });
+      const stateDir = yield* makeHookStateDir("harness-clients-");
       yield* writeShard(stateDir, "2026-10-09", sessionA, [
         yield* sessionStart(sessionA, "2026-10-09T10:00:00Z", current),
         yield* pulse(sessionA, "2026-10-09T10:01:00Z", O.none()),
@@ -952,12 +961,31 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
     }).pipe(Effect.scoped)
   );
 
-  it.effect("a resumed session without an observed fresh start cannot qualify", () =>
+  it.effect("two explicitly primary transcripts sharing an identity cannot qualify", () =>
     Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
       const root = yield* makeRepo();
       const current = yield* repoHarnessHash(root);
-      const stateDir = yield* fs.makeTempDirectoryScoped({ prefix: "harness-resume-" });
+      const stateDir = yield* makeHookStateDir("harness-primary-conflict-");
+      const start = yield* HookPulseV1.decodeJsonEffect(yield* sessionStart(sessionA, "2026-10-09T10:00:00Z", current));
+      const second = HookPulseV1.make({ ...start, transcriptPath: O.some(Sha256Hex.make("e".repeat(64))) });
+      yield* writeShard(stateDir, "2026-10-09", sessionA, [
+        yield* HookPulseV1.encodeJsonEffect(start),
+        yield* pulse(sessionA, "2026-10-09T10:01:00Z", O.none()),
+        yield* HookPulseV1.encodeJsonEffect(second),
+      ]);
+      const report = yield* (yield* HarnessLedgerService).pruneProposals(
+        HarnessLedgerPruneOptions.make({ repoRoot: root, stateDir, windowSessions: 1 })
+      );
+      expect(report.sessionsObserved).toBe(0);
+      expect(report.sessionsSkippedUnknownRestart).toBe(1);
+    }).pipe(Effect.scoped)
+  );
+
+  it.effect("a resumed session without an observed fresh start cannot qualify", () =>
+    Effect.gen(function* () {
+      const root = yield* makeRepo();
+      const current = yield* repoHarnessHash(root);
+      const stateDir = yield* makeHookStateDir("harness-resume-");
       const start = yield* HookPulseV1.decodeJsonEffect(
         yield* pulseRow(sessionA, "2026-10-09T10:00:00Z", "SessionStart", O.none(), O.some(current))
       );
@@ -1072,6 +1100,7 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       ]);
       const ledger = yield* HarnessLedgerService;
       yield* fs.symlink(transcriptDir, path.join(nested, "loop"));
+      yield* fs.symlink(path.join(transcriptDir, `${parent}.jsonl`), path.join(nested, "alias.jsonl"));
       yield* fs.symlink(path.join(root, "missing"), path.join(nested, "dangling.jsonl"));
       const report = yield* ledger.reconcile(stateDir, path.relative(".", transcriptDir), "claude-code");
       expect(report.transcriptToolEvents).toBe(2);
@@ -1082,11 +1111,32 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
     }).pipe(Effect.scoped)
   );
 
-  it.effect("prune-proposals proposes nothing when no session was observed", () =>
+  it.effect("mixed transcript identities remain unmatched instead of assigning all calls to the last session", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "harness-mixed-transcript-" });
+      const stateDir = yield* makeHookStateDir("harness-mixed-hooks-");
+      const encode = S.encodeEffect(S.fromJsonString(S.Unknown));
+      yield* fs.writeFileString(
+        path.join(root, "mixed.jsonl"),
+        [
+          yield* encode({ sessionId: "first", message: { content: [{ type: "tool_use" }] } }),
+          yield* encode({ sessionId: "second", message: { content: [{ type: "tool_use" }] } }),
+        ].join("\n")
+      );
+      const report = yield* (yield* HarnessLedgerService).reconcile(stateDir, root, "claude-code");
+      expect(report.transcriptToolEvents).toBe(2);
+      expect(report.sessionsWithoutHooks).toBe(1);
+      expect(report.undecodableLines).toBe(1);
+      expect(report.qualifiedForNonUse).toBe(false);
+    }).pipe(Effect.scoped)
+  );
+
+  it.effect("prune-proposals proposes nothing when no session was observed", () =>
+    Effect.gen(function* () {
       const root = yield* makeRepo();
-      const stateDir = yield* fs.makeTempDirectoryScoped({ prefix: "harness-ledger-empty-" });
+      const stateDir = yield* makeHookStateDir("harness-ledger-empty-");
       const ledger = yield* HarnessLedgerService;
       const report = yield* ledger.pruneProposals(
         HarnessLedgerPruneOptions.make({ repoRoot: root, stateDir, windowSessions: 30 })

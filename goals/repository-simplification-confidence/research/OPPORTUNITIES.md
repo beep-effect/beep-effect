@@ -256,3 +256,13 @@ new helper calls against the Effect reference and existing model surface before
 starting long package proofs. Independent review also found ignored-tree errors
 and stamp-deadline row loss: indexed candidates now avoid whole-tree traversal,
 and the fingerprint has its own shorter deadline that retains an unstamped row.
+
+### H3 conservative identity review
+
+Independent final review found lexical-path reuse, multiple-primary ambiguity,
+file symlink aliases, lost Bash `pipefail`, and Cursor disarm ordering. Current
+transcript identity is now required for a forwarder stamp; ambiguous primaries
+are excluded, observed positive touches are retained, aliases are deduplicated,
+and registered Cursor event metadata avoids reading disarmed payloads. Earlier
+proof output predates these fixes and is intermediate evidence only. A final
+frozen-source package/parity repeat follows the admitted current run.

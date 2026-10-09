@@ -18,6 +18,7 @@ import { flow, pipe } from "effect/Function";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { AiMetricsRawArchiveObject } from "./archive.ts";
+import { HarnessHash } from "./harness-ledger.ts";
 import { AiMetricsStorageLayout } from "./install.ts";
 import { AiMetricsDeployTarget, ConfigSnapshot } from "./models.ts";
 import { AiMetricsPrivacyCheckResult, hashPublicTextSha256 } from "./privacy.ts";
@@ -796,7 +797,7 @@ export class AiMetricsDerivedTranscriptRecord extends S.Class<AiMetricsDerivedTr
 )(
   {
     archiveObject: AiMetricsRawArchiveObject,
-    sessionHarnessHash: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    sessionHarnessHash: S.OptionFromOptionalKey(HarnessHash).pipe(S.withConstructorDefault(Effect.succeedNone)),
     privacy: AiMetricsPrivacyCheckResult,
   },
   $I.annote("AiMetricsDerivedTranscriptRecord", {

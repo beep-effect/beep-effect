@@ -10,43 +10,43 @@
     ],
     "preToolUse": [
       {
-        "command": ".cursor/hooks/hook-pulse.sh",
+        "command": ".cursor/hooks/hook-pulse.sh --event preToolUse",
         "timeout": 5
       }
     ],
     "postToolUse": [
       {
-        "command": ".cursor/hooks/hook-pulse.sh",
+        "command": ".cursor/hooks/hook-pulse.sh --event postToolUse",
         "timeout": 5
       }
     ],
     "postToolUseFailure": [
       {
-        "command": ".cursor/hooks/hook-pulse.sh",
+        "command": ".cursor/hooks/hook-pulse.sh --event postToolUseFailure",
         "timeout": 5
       }
     ],
     "beforeSubmitPrompt": [
       {
-        "command": ".cursor/hooks/hook-pulse.sh",
+        "command": ".cursor/hooks/hook-pulse.sh --event beforeSubmitPrompt",
         "timeout": 5
       }
     ],
     "stop": [
       {
-        "command": ".cursor/hooks/hook-pulse.sh",
+        "command": ".cursor/hooks/hook-pulse.sh --event stop",
         "timeout": 5
       }
     ],
     "sessionEnd": [
       {
-        "command": ".cursor/hooks/hook-pulse.sh",
+        "command": ".cursor/hooks/hook-pulse.sh --event sessionEnd",
         "timeout": 5
       }
     ],
     "sessionStart": [
       {
-        "command": ".cursor/hooks/hook-pulse.sh",
+        "command": ".cursor/hooks/hook-pulse.sh --event sessionStart",
         "timeout": 5
       }
     ]

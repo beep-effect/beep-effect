@@ -7,10 +7,12 @@
  * @since 0.0.0
  */
 
+import { $RepoCliId } from "@beep/identity/packages";
 import {
   contextSurfaceId,
   HookPulseAgentKind,
   HookPulseClientCoverage,
+  HookPulseDisarmSentinel,
   HookPulseDisarmWindow,
   HookPulseEvent,
   HookPulseRefusal,
@@ -43,6 +45,8 @@ import {
 } from "../HarnessLedger.schemas.ts";
 import { listDirectorySorted } from "./Fs.ts";
 import type { HarnessHash } from "@beep/repo-ai-metrics";
+
+const $I = $RepoCliId.create("commands/HarnessLedger/internal/PruneWindow");
 
 const McpConfig = S.fromJsonString(
   S.Struct({
@@ -158,6 +162,7 @@ type ShardScan = {
   shardsRead: number;
   readonly disarmWindows: ReadonlyArray<HookPulseDisarmWindow>;
   readonly openDisarm: boolean;
+  readonly openDisarmSince: O.Option<number>;
   readonly provenDisarmed: boolean;
   readonly writerRefusalsTotal: number;
   readonly refusalsByAgentKind: ObservedSessionWindow["refusalsByAgentKind"];
@@ -199,13 +204,10 @@ const foldPulse = (tallies: ShardScan["tallies"], pulse: HookPulseV1): void => {
     userTurns: tally.userTurns + countPrimaryEvent(pulse, HookPulseEvent.is.UserPromptSubmit),
     toolEvents: tally.toolEvents + countPrimaryEvent(pulse, isActivityToolEvent),
     maxTs: Math.max(tally.maxTs, ts),
-    surfaces: O.match(
-      O.filter(pulse.surface, () => O.isSome(pulse.sessionRole)),
-      {
-        onNone: () => tally.surfaces,
-        onSome: (surface) => HashSet.add(tally.surfaces, surface),
-      }
-    ),
+    surfaces: O.match(pulse.surface, {
+      onNone: () => tally.surfaces,
+      onSome: (surface) => HashSet.add(tally.surfaces, surface),
+    }),
     stamps: O.match(pulse.harnessHash, {
       onNone: () => tally.stamps,
       onSome: (stamp) => HashSet.add(tally.stamps, stamp),
@@ -255,12 +257,12 @@ const windowReport = (
   visited: ShardScan["tallies"],
   window: number,
   harnessHash: HarnessHash,
-  agentKind: HookPulseAgentKind,
-  shared: boolean
+  agentKind: HookPulseAgentKind
 ): ObservedSessionWindow => {
   const ranked = pipe(A.fromIterable(MutableHashMap.values(visited)), A.sort(byNewestFirst));
   const overlapsDisarm = (tally: SessionTally) =>
-    scan.openDisarm ||
+    (scan.openDisarm &&
+      O.match(scan.openDisarmSince, { onNone: () => true, onSome: (start) => tally.maxTs >= start })) ||
     A.some(
       scan.disarmWindows,
       (gap) =>
@@ -273,17 +275,14 @@ const windowReport = (
   // Group once: summaries and root selection never scan the complete history
   // from inside a per-transcript predicate.
   const groups = A.groupBy(ranked, (tally) => tally.parent);
-  const roots = R.map(groups, (group) =>
-    pipe(
-      A.filter(group, (tally) => tally.primary && !tally.child),
-      A.sort(Order.Struct({ minTs: Order.Number, key: Order.String })),
-      A.head
-    )
-  );
-  const isChild = (tally: SessionTally) =>
-    O.exists(O.flatten(R.get(roots, tally.parent)), (root) => root.key !== tally.key);
+  const roots = R.map(groups, (group) => {
+    const primary = A.filter(group, (tally) => tally.primary && !tally.child);
+    return A.length(primary) === 1 ? A.head(primary) : O.none<SessionTally>();
+  });
+  const isSelectedRoot = (tally: SessionTally) =>
+    O.exists(O.flatten(R.get(roots, tally.parent)), (root) => root.key === tally.key);
   const missingOpening = (tally: SessionTally) =>
-    tally.primary && !tally.child && !isChild(tally) && !HashSet.has(tally.freshStarts, tally.minTs);
+    tally.primary && (!isSelectedRoot(tally) || !HashSet.has(tally.freshStarts, tally.minTs));
   const summaries = R.map(groups, (group) =>
     A.reduce(
       group,
@@ -300,8 +299,8 @@ const windowReport = (
         ...acc,
         minTs: Math.min(acc.minTs, other.minTs),
         maxTs: Math.max(acc.maxTs, other.maxTs),
-        userTurns: acc.userTurns + (other.primary && !other.child && !isChild(other) ? other.userTurns : 0),
-        toolEvents: acc.toolEvents + (other.primary && !other.child && !isChild(other) ? other.toolEvents : 0),
+        userTurns: acc.userTurns + (isSelectedRoot(other) ? other.userTurns : 0),
+        toolEvents: acc.toolEvents + (isSelectedRoot(other) ? other.toolEvents : 0),
       })
     )
   );
@@ -309,7 +308,7 @@ const windowReport = (
   const parentRegime = (tally: SessionTally) => regimeOf(parentSummary(tally), harnessHash);
   const active = (tally: SessionTally) => {
     const summary = parentSummary(tally);
-    return tally.primary && !tally.child && summary.userTurns >= 1 && summary.toolEvents >= 1 && !isChild(tally);
+    return isSelectedRoot(tally) && summary.userTurns >= 1 && summary.toolEvents >= 1;
   };
   const qualifying = pipe(
     A.filter(
@@ -334,20 +333,7 @@ const windowReport = (
     A.filter(qualifying, (tally) => tally.agentKind === agentKind),
     window
   );
-  const rootsForTouches = shared
-    ? A.flatten(
-        R.values(
-          R.map(counts, (_count, kind) =>
-            A.take(
-              A.filter(qualifying, (tally) => tally.agentKind === kind),
-              window
-            )
-          )
-        )
-      )
-    : inRegime;
   const selectedGrouped = A.filter(R.values(summaries), (tally) => tally.agentKind === agentKind);
-  const touchParents = HashSet.fromIterable(A.map(rootsForTouches, (root) => root.parent));
   const oldest = A.length(inRegime) < window ? O.none<SessionTally>() : A.last(inRegime);
   return ObservedSessionWindow.make({
     harnessHash,
@@ -374,11 +360,7 @@ const windowReport = (
       A.head(inRegime),
       O.map((tally) => DateTime.makeUnsafe(tally.maxTs))
     ),
-    touched: A.reduce(
-      A.filter(ranked, (tally) => (tally.primary || tally.child) && HashSet.has(touchParents, tally.parent)),
-      HashSet.empty<string>(),
-      (acc, tally) => HashSet.union(acc, tally.surfaces)
-    ),
+    touched: A.reduce(ranked, HashSet.empty<string>(), (acc, tally) => HashSet.union(acc, tally.surfaces)),
     shardsRead: scan.shardsRead,
     undecodableLines: scan.undecodableLines,
   });
@@ -431,7 +413,7 @@ export const observeSessionWindow = Effect.fn("HarnessLedger.observeSessionWindo
   window: number,
   harnessHash: HarnessHash,
   agentKind: HookPulseAgentKind = "claude-code",
-  shared = false
+  _shared = false
 ) {
   const names = A.filter(yield* listDirectorySorted(stateDir), (name) => ANY_SHARD.test(name));
   const fs = yield* FileSystem.FileSystem;
@@ -453,11 +435,23 @@ export const observeSessionWindow = Effect.fn("HarnessLedger.observeSessionWindo
     Effect.mapError(HarnessLedgerIoError.wrap("Cannot resolve disarm sentinel."))
   );
   const sentinelPresent = yield* fs.exists(sentinel).pipe(Effect.asSome, Effect.orElseSucceed(O.none<boolean>));
-  const openDisarm =
-    O.getOrElse(sentinelPresent, () => true) ||
-    A.some(A.filter(Str.split(windowsText, "\n"), Str.isNonEmpty), (line) =>
-      Result.isFailure(HookPulseDisarmWindow.decodeJsonResult(line))
-    );
+  const malformedWindows = A.some(A.filter(Str.split(windowsText, "\n"), Str.isNonEmpty), (line) =>
+    Result.isFailure(HookPulseDisarmWindow.decodeJsonResult(line))
+  );
+  const openSentinel = O.contains(sentinelPresent, true)
+    ? yield* fs.readFileString(sentinel).pipe(
+        Effect.map(HookPulseDisarmSentinel.decodeJsonResult),
+        Effect.orElseSucceed(() => Result.fail("unreadable sentinel"))
+      )
+    : Result.fail("no sentinel");
+  const openDisarmSince = malformedWindows
+    ? O.none<number>()
+    : pipe(
+        openSentinel,
+        Result.map((value) => DateTime.toEpochMillis(DateTime.makeUnsafe(value.disarmedAt))),
+        Result.getSuccess
+      );
+  const openDisarm = O.getOrElse(sentinelPresent, () => true) || malformedWindows;
   const { refusalUndecodableLines, writerRefusalsTotal, refusalsByAgentKind } = yield* readRefusals(root);
   const scan: ShardScan = {
     stateDir,
@@ -466,12 +460,13 @@ export const observeSessionWindow = Effect.fn("HarnessLedger.observeSessionWindo
     shardsRead: 0,
     disarmWindows: windows,
     openDisarm,
+    openDisarmSince,
     provenDisarmed: O.getOrElse(sentinelPresent, () => false),
     writerRefusalsTotal,
     refusalsByAgentKind,
   };
   yield* Effect.forEach(names, (name) => readShard(scan, name), { discard: true });
-  return windowReport(scan, scan.tallies, window, harnessHash, agentKind, shared);
+  return windowReport(scan, scan.tallies, window, harnessHash, agentKind);
 });
 
 // Only structural metadata is decoded. Content strings never leave this reader.
@@ -489,13 +484,14 @@ const TranscriptRow = S.fromJsonString(
 const decodeTranscript = S.decodeUnknownResult(TranscriptRow);
 const decodeTool = S.decodeUnknownOption(TranscriptTool);
 
-class TranscriptTally extends S.Class<TranscriptTally>("HarnessLedger.TranscriptTally")({
+class TranscriptTally extends S.Class<TranscriptTally>($I`TranscriptTally`)({
   session: S.OptionFromOptionalKey(S.String),
+  identityConflict: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
   calls: S.Natural,
   undecodableLines: S.Natural,
 }) {}
 
-class TranscriptFileCounts extends S.Class<TranscriptFileCounts>("HarnessLedger.TranscriptFileCounts")({
+class TranscriptFileCounts extends S.Class<TranscriptFileCounts>($I`TranscriptFileCounts`)({
   sessionHash: Sha256Hex,
   pathHash: Sha256Hex,
   calls: S.Natural,
@@ -517,16 +513,18 @@ const transcriptToolCount = (row: typeof TranscriptRow.Type): number => {
 const foldTranscriptLine = (tally: TranscriptTally, line: string): TranscriptTally =>
   Result.match(decodeTranscript(line), {
     onFailure: () => TranscriptTally.make({ ...tally, undecodableLines: tally.undecodableLines + 1 }),
-    onSuccess: (row) =>
-      TranscriptTally.make({
+    onSuccess: (row) => {
+      const identity = O.orElse(O.fromUndefinedOr(row.sessionId), () =>
+        row.type === "session_meta" ? O.fromUndefinedOr(row.payload?.id) : O.none<string>()
+      );
+      return TranscriptTally.make({
         ...tally,
-        session: O.orElse(O.fromUndefinedOr(row.sessionId), () =>
-          row.type === "session_meta"
-            ? O.orElse(O.fromUndefinedOr(row.payload?.id), () => tally.session)
-            : tally.session
-        ),
+        session: O.orElse(tally.session, () => identity),
+        identityConflict:
+          tally.identityConflict || O.exists(identity, (value) => O.exists(tally.session, (prior) => prior !== value)),
         calls: tally.calls + transcriptToolCount(row),
-      }),
+      });
+    },
   });
 
 const foldReconciliationHook = (
@@ -585,7 +583,7 @@ const reconciliationTranscriptFiles = Effect.fn("HarnessLedger.reconciliationTra
     .pipe(Effect.mapError(HarnessLedgerIoError.wrap("Cannot resolve transcript directory.")));
   if (MutableHashSet.has(visited, canonical)) return A.empty<string>();
   MutableHashSet.add(visited, canonical);
-  const entries = yield* listDirectorySorted(canonical).pipe(
+  const entries = yield* listDirectorySorted(dir).pipe(
     Effect.matchEffect({
       onFailure: () => Ref.update(failures, (count) => count + 1).pipe(Effect.as(A.empty<string>())),
       onSuccess: Effect.succeed,
@@ -604,7 +602,16 @@ const reconciliationTranscriptFiles = Effect.fn("HarnessLedger.reconciliationTra
         );
         if (O.isNone(info)) return A.empty<string>();
         if (info.value.type === "Directory") return yield* reconciliationTranscriptFiles(file, failures, visited);
-        return info.value.type === "File" && Str.endsWith(".jsonl")(entry) ? A.of(file) : A.empty<string>();
+        if (info.value.type !== "File" || !Str.endsWith(".jsonl")(entry)) return A.empty<string>();
+        const canonicalFile = yield* fs.realPath(file).pipe(
+          Effect.matchEffect({
+            onFailure: () => Ref.update(failures, (count) => count + 1).pipe(Effect.as(O.none())),
+            onSuccess: Effect.succeedSome,
+          })
+        );
+        if (O.isNone(canonicalFile) || MutableHashSet.has(visited, canonicalFile.value)) return A.empty<string>();
+        MutableHashSet.add(visited, canonicalFile.value);
+        return A.of(file);
       }),
       { concurrency: 1 }
     )
@@ -638,7 +645,7 @@ const readTranscriptCounts = Effect.fn("HarnessLedger.readTranscriptCounts")(fun
     agentKind === "claude-code" && A.length(relative) > 1
       ? A.findFirst(relative, isParentSessionSegment)
       : O.none<string>();
-  const session = O.orElse(parent, () => tally.session);
+  const session = tally.identityConflict ? O.none<string>() : O.orElse(parent, () => tally.session);
   const sessionHash = yield* hashPrivateIdentifier(
     O.getOrElse(session, () => file),
     hashSalt
@@ -650,7 +657,7 @@ const readTranscriptCounts = Effect.fn("HarnessLedger.readTranscriptCounts")(fun
     sessionHash,
     pathHash,
     calls: tally.calls,
-    undecodableLines: tally.undecodableLines,
+    undecodableLines: tally.undecodableLines + (tally.identityConflict ? 1 : 0),
   });
 });
 
