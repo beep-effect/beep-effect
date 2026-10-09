@@ -299,8 +299,8 @@ const windowReport = (
         ...acc,
         minTs: Math.min(acc.minTs, other.minTs),
         maxTs: Math.max(acc.maxTs, other.maxTs),
-        userTurns: acc.userTurns + (other.primary && !other.child ? other.userTurns : 0),
-        toolEvents: acc.toolEvents + (other.primary && !other.child ? other.toolEvents : 0),
+        userTurns: acc.userTurns + (other.primary && !other.child && !isChild(other) ? other.userTurns : 0),
+        toolEvents: acc.toolEvents + (other.primary && !other.child && !isChild(other) ? other.toolEvents : 0),
       })
     )
   );
