@@ -109,7 +109,7 @@ They establish execution behavior and never fill the live window.
 
 | Workflow | Result | Boundary | UTC date |
 | --- | --- | --- | --- |
-| Claude primary and linked checkout | Each: 1 fresh startup, 1 prompt, 2 Pre, 2 Post, 1 Stop; one stamp and one skill surface | Native Opus workflow; identical indexed fixture heads produced equal stamps | 2026-10-09T20:49:39.102Z primary; 20:49:43.183Z linked |
+| Claude primary and linked checkout | Each: 1 fresh startup, 1 prompt, 2 Pre, 2 Post, 1 Stop; one stamp and one skill surface | Native Opus workflow; identical indexed fixture heads produced equal stamps | 2026-10-09T21:07:01.035Z primary; 21:07:06.366Z linked |
 | Claude project Skill, MCP and Read | 1 Skill, 1 MCP tool, 1 Read; 3 surface rows; one start stamp | Existing hook pipeline; local constant-response MCP fixture | 2026-10-09 |
 | Claude fan-out | 1 parent SessionStart; 2 Agent calls and 2 Bash posts; no extra qualifying roots | Both children pinned to Opus; parent payload namespace observed | 2026-10-09 |
 | Codex primary/linked, two sandbox modes | 4 tool workflows succeeded; zero native hook rows | Native collection remains unknown; no home trust state changed | 2026-10-09 |
@@ -161,3 +161,5 @@ no timer and performed no remote mutation.
 Graft queries saved approximately 217,311 source tokens across this lane's work.
 
 Current-source qualification repair (`5537f21e30`): corrupt hook evidence excludes non-use windows without erasing positive touches; shared capability counts require 30 sessions per loading harness independent of display window; canonical aliases retain all observed path hooks and conflicting identities remain unmatched. Forwarder stamps require valid ordered transcript bounds and durable terminal hooks to bound event-loss refusals. Snapshot budgets reserve root guidance/MCP files and exclude nested checkout paths before stat. Independent review and final admitted package proof remain pending; these statements are implementation evidence, not proof of a complete live window.
+
+The admitted intermediate census counted Claude 574,951 rows, 1,858 sessions and 230 startup stamps; Codex 447,640 rows, 1,559 sessions and no stamps; Cursor 2,411 rows and 36 sessions without startup stamps in the shared ledger. JSON syntax was valid, but 74 older rows did not satisfy the current row schema. Current conservative scans therefore report zero qualifying sessions for each client, incomplete shared coverage, and no writes. These are intermediate counts; final-head scans follow the terminal proof. Malformed, future-dated and invalid-calendar sentinels were armed in disposable fixtures: all three produced valid windows with unknown starts. No shared ledger was rewritten.

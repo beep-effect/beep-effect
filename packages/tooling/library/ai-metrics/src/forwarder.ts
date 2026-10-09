@@ -162,9 +162,8 @@ const readRefusalStampGaps = Effect.fnUntraced(function* (evidenceRoot: string) 
   );
   for (const name of A.filter(files, Str.startsWith("hook-pulse-refusals-"))) {
     const text = yield* fs.readFileString(path.join(evidenceRoot, name));
-    const refusals = yield* Effect.forEach(
-      A.filter(Str.split(text, "\n"), Str.isNonEmpty),
-      S.decodeEffect(S.fromJsonString(HookPulseRefusal))
+    const refusals = yield* Effect.forEach(A.filter(Str.split(text, "\n"), Str.isNonEmpty), (line) =>
+      S.decodeEffect(S.fromJsonString(HookPulseRefusal))(line)
     );
     for (const refusal of A.filter(refusals, (row) => row.reason !== HookPulseRefusalReason.Enum["stamp-failed"])) {
       const at = O.some(refusal.ts.pipe(DateTime.toEpochMillis));
