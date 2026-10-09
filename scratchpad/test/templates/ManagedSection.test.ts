@@ -5,7 +5,9 @@ import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { ManagedSection } from "../../effected/templates/index.ts";
+import { ManagedSectionTestError } from "../../effected/templates/ManagedSection.ts";
 import { block, id, lines, memoryFs, section } from "./fixtures.ts";
 
 const HOOK = ".husky/pre-commit";
@@ -303,8 +305,8 @@ describe("ManagedSection", () => {
 				assert.isFalse(Cause.hasFails(exit.cause), "must not be laundered into the error channel");
 				const die = exit.cause.reasons.find(Cause.isDieReason);
 				const defect = die?.defect;
-				if (!(defect instanceof Error)) {
-					assert.fail("expected the unstubbed member's defect to be an Error");
+				if (!S.is(ManagedSectionTestError)(defect)) {
+					assert.fail("expected the unstubbed member's defect to be a ManagedSectionTestError");
 				}
 				assert.include(String(defect.message), "read");
 			}).pipe(Effect.provide(ManagedSection.layerTest())),

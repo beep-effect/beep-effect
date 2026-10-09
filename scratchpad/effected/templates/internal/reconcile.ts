@@ -11,6 +11,9 @@
 // true even in a file a user reordered by hand.
 
 import * as Equal from "effect/Equal";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
+import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import type { PlacedSection, Section } from "../Section.ts";
 import type { Eol, SectionDialect } from "../SectionDialect.ts";
@@ -44,10 +47,10 @@ export const reconcile = (input: ReconcileInput): Result.Result<ReconcileOutput,
 	// Render EVERY declared section before touching the document, so a refusal
 	// never leaves a half-written file behind. Declaring one identity twice is
 	// two intentions for one block; refuse rather than pick.
-	const rendered = new Map<string, string>();
+	const rendered = MutableHashMap.empty<string, string>();
 	for (const section of declared) {
 		const identity = identityOf(section.key, section.commentStyle);
-		if (rendered.has(identity)) {
+		if (MutableHashMap.has(rendered, identity)) {
 			return Result.fail(SectionRenderError.make({ reason: "duplicateDeclaration", key: section.key }));
 		}
 		const result = dialect.render(section, eol);
@@ -56,23 +59,23 @@ export const reconcile = (input: ReconcileInput): Result.Result<ReconcileOutput,
 			// not `ReconcileOutput`, and a Failure does not narrow it.
 			return Result.fail(result.failure);
 		}
-		rendered.set(identity, result.success);
+		MutableHashMap.set(rendered, identity, result.success);
 	}
 
-	const onDisk = new Map<string, PlacedSection>();
+	const onDisk = MutableHashMap.empty<string, PlacedSection>();
 	for (const entry of placed) {
-		onDisk.set(identityOf(entry.section.key, entry.section.commentStyle), entry);
+		MutableHashMap.set(onDisk, identityOf(entry.section.key, entry.section.commentStyle), entry);
 	}
 
 	// One outcome per declared section, in declared order, decided by content.
 	const outcomes = declared.map((section): SyncOutcome => {
-		const current = onDisk.get(identityOf(section.key, section.commentStyle));
-		if (current === undefined) {
+		const current = MutableHashMap.get(onDisk, identityOf(section.key, section.commentStyle));
+		if (O.isNone(current)) {
 			return SyncOutcome.Created({ section });
 		}
-		return Equal.equals(current.section, section)
+		return Equal.equals(current.value.section, section)
 			? SyncOutcome.Unchanged({ section })
-			: SyncOutcome.Updated({ before: current.section, after: section });
+			: SyncOutcome.Updated({ before: current.value.section, after: section });
 	});
 
 	// Break the document into preserved spans and placeholders.
@@ -90,10 +93,10 @@ export const reconcile = (input: ReconcileInput): Result.Result<ReconcileOutput,
 	}
 	items.push({ kind: "text", value: text.slice(cursor) });
 
-	const targets = new Set(declared.map((section) => identityOf(section.key, section.commentStyle)));
+	const targets = MutableHashSet.fromIterable(declared.map((section) => identityOf(section.key, section.commentStyle)));
 	const slots: Array<number> = [];
 	items.forEach((item, index) => {
-		if (item.kind === "section" && targets.has(item.identity)) {
+		if (item.kind === "section" && MutableHashSet.has(targets, item.identity)) {
 			slots.push(index);
 		}
 	});
@@ -101,51 +104,51 @@ export const reconcile = (input: ReconcileInput): Result.Result<ReconcileOutput,
 	// Reassign the declared sections that already exist into the existing slots,
 	// declared order over document order. This updates content in place AND
 	// normalizes ordering around fixed text and foreign sections.
-	const itemIndexByDeclared = new Map<number, number>();
+	const itemIndexByDeclared = MutableHashMap.empty<number, number>();
 	let slotCursor = 0;
 	declared.forEach((section, declaredIndex) => {
 		const identity = identityOf(section.key, section.commentStyle);
-		if (!onDisk.has(identity) || slotCursor >= slots.length) {
+		if (!MutableHashMap.has(onDisk, identity) || slotCursor >= slots.length) {
 			return;
 		}
 		const itemIndex = slots[slotCursor] ?? 0;
 		const item = items[itemIndex];
 		if (item?.kind === "section") {
-			item.render = rendered.get(identity);
+			item.render = O.getOrUndefined(MutableHashMap.get(rendered, identity));
 		}
-		itemIndexByDeclared.set(declaredIndex, itemIndex);
+		MutableHashMap.set(itemIndexByDeclared, declaredIndex, itemIndex);
 		slotCursor += 1;
 	});
 
 	// Place the sections that are not in the document yet: before the nearest
 	// present successor sibling, else after the nearest present predecessor,
 	// else append at the end.
-	const beforeAnchor = new Map<number, Array<string>>();
-	const afterAnchor = new Map<number, Array<string>>();
+	const beforeAnchor = MutableHashMap.empty<number, Array<string>>();
+	const afterAnchor = MutableHashMap.empty<number, Array<string>>();
 	const appended: Array<string> = [];
-	const pushInto = (map: Map<number, Array<string>>, anchor: number, value: string) => {
-		const list = map.get(anchor) ?? [];
+	const pushInto = (map: MutableHashMap.MutableHashMap<number, Array<string>>, anchor: number, value: string) => {
+		const list = O.getOrElse(MutableHashMap.get(map, anchor), (): Array<string> => []);
 		list.push(value);
-		map.set(anchor, list);
+		MutableHashMap.set(map, anchor, list);
 	};
 
 	declared.forEach((section, declaredIndex) => {
 		const identity = identityOf(section.key, section.commentStyle);
-		if (onDisk.has(identity)) {
+		if (MutableHashMap.has(onDisk, identity)) {
 			return;
 		}
-		const block = rendered.get(identity) ?? "";
+		const block = O.getOrElse(MutableHashMap.get(rendered, identity), () => "");
 		for (let next = declaredIndex + 1; next < declared.length; next += 1) {
-			const anchor = itemIndexByDeclared.get(next);
-			if (anchor !== undefined) {
-				pushInto(beforeAnchor, anchor, block);
+			const anchor = MutableHashMap.get(itemIndexByDeclared, next);
+			if (O.isSome(anchor)) {
+				pushInto(beforeAnchor, anchor.value, block);
 				return;
 			}
 		}
 		for (let previous = declaredIndex - 1; previous >= 0; previous -= 1) {
-			const anchor = itemIndexByDeclared.get(previous);
-			if (anchor !== undefined) {
-				pushInto(afterAnchor, anchor, block);
+			const anchor = MutableHashMap.get(itemIndexByDeclared, previous);
+			if (O.isSome(anchor)) {
+				pushInto(afterAnchor, anchor.value, block);
 				return;
 			}
 		}
@@ -160,11 +163,11 @@ export const reconcile = (input: ReconcileInput): Result.Result<ReconcileOutput,
 			parts.push(item.value);
 			return;
 		}
-		for (const block of beforeAnchor.get(index) ?? []) {
+		for (const block of O.getOrElse(MutableHashMap.get(beforeAnchor, index), () => [])) {
 			parts.push(block, eol, eol);
 		}
 		parts.push(item.render ?? item.raw);
-		for (const block of afterAnchor.get(index) ?? []) {
+		for (const block of O.getOrElse(MutableHashMap.get(afterAnchor, index), () => [])) {
 			parts.push(eol, eol, block);
 		}
 	});

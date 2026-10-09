@@ -9,6 +9,8 @@
 // disk forever.
 
 import { dual } from "effect/Function";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
 import type { CommentStyle } from "../CommentStyle.ts";
 import { PlacedSection, Section } from "../Section.ts";
 import type { Eol, SectionDialect } from "../SectionDialect.ts";
@@ -102,13 +104,13 @@ export const identityOf: {
 
 const collectHits = (text: string, dialect: SectionDialect): ReadonlyArray<MarkerHit> => {
 	const hits: Array<MarkerHit> = [];
-	const seen = new Set<number>();
+	const seen = MutableHashSet.empty<number>();
 	for (const matcher of dialect.matchers()) {
 		for (const match of text.matchAll(matcher.regex)) {
 			const start = match.index;
 			// Two styles could in principle match one line; the first wins so a
 			// marker is never counted twice.
-			if (start === undefined || seen.has(start)) {
+			if (start === undefined || MutableHashSet.has(seen, start)) {
 				continue;
 			}
 			// The loosely-captured attribute run decides whether this line is a
@@ -128,7 +130,7 @@ const collectHits = (text: string, dialect: SectionDialect): ReadonlyArray<Marke
 					continue;
 				}
 			}
-			seen.add(start);
+			MutableHashSet.add(seen, start);
 			hits.push({
 				kind: match[1] === "BEGIN" ? "BEGIN" : "END",
 				key: match[2] ?? "",
@@ -157,7 +159,7 @@ export const scan: {
 } = dual(2, (text: string, dialect: SectionDialect): ScanResult => {
 	const starts = lineStarts(text);
 	const sections: Array<PlacedSection> = [];
-	const firstSeenAt = new Map<string, number>();
+	const firstSeenAt = MutableHashMap.empty<string, number>();
 	let open: MarkerHit | undefined;
 
 	for (const hit of collectHits(text, dialect)) {
@@ -177,10 +179,10 @@ export const scan: {
 		}
 
 		const identity = identityOf(open.key, open.style);
-		if (firstSeenAt.has(identity)) {
+		if (MutableHashMap.has(firstSeenAt, identity)) {
 			return { ok: false, failure: { reason: "duplicateSection", line: lineAt(starts, open.start), key: open.key } };
 		}
-		firstSeenAt.set(identity, open.start);
+		MutableHashMap.set(firstSeenAt, identity, open.start);
 
 		const inner = stripTrailingBreak(stripLeadingBreak(text.slice(open.end, hit.start)));
 		sections.push(

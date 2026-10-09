@@ -3,10 +3,10 @@
   "effectedCommit": "af7566a9da2eff169cb74955efcc5ede1e5de9f8",
   "startedAt": "2026-10-07T06:36:54.420Z",
   "lastCheckpoint": {
-    "module": "spdx",
+    "module": "templates",
     "stage": 1,
     "commit": null,
-    "at": "2026-10-09T11:20:14.303Z"
+    "at": "2026-10-09T11:20:15.976Z"
   },
   "rows": [
     {
@@ -2398,7 +2398,7 @@
       "module": "templates",
       "wave": 1,
       "position": 11,
-      "stage": 0,
+      "stage": 1,
       "status": "in-progress",
       "provisionalHome": "tooling/library",
       "upstreamPaths": {
@@ -2498,9 +2498,16 @@
       "deviations": [],
       "backlog": [],
       "reviewRounds": [],
-      "commits": [],
+      "commits": [
+        {
+          "stage": 0,
+          "sha": null
+        }
+      ],
       "blocked": null,
-      "notes": [],
+      "notes": [
+        "2026-10-09T11:20:15.976Z S1: green under tsgo, oxlint and the four beep laws; upstream tests pass; audit green (parity strict)"
+      ],
       "closedAt": null
     },
     {

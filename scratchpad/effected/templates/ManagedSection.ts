@@ -126,8 +126,8 @@ const notFound = (error: PlatformError.PlatformError): boolean => error.reason._
  */
 const decoder = new TextDecoder("utf-8", { ignoreBOM: true });
 
-const make = (options: ManagedSectionOptions = {}): Effect.Effect<ManagedSectionShape, never, FileSystem.FileSystem> =>
-	Effect.gen(function* () {
+const make: (options?: ManagedSectionOptions) => Effect.Effect<ManagedSectionShape, never, FileSystem.FileSystem> =
+	Effect.fn("ManagedSection.make")(function* (options: ManagedSectionOptions = {}) {
 		const fs = yield* FileSystem.FileSystem;
 		const dialect = options.dialect ?? SectionDialect.default;
 
@@ -231,8 +231,31 @@ const make = (options: ManagedSectionOptions = {}): Effect.Effect<ManagedSection
 		} satisfies ManagedSectionShape;
 	});
 
+/**
+ * A defect raised when a managed-section test double calls an unstubbed member.
+ *
+ * **Example** (Identifying an unstubbed member)
+ * ```ts
+ * import { ManagedSectionTestError } from "./ManagedSection.ts";
+ * import * as S from "effect/Schema";
+ *
+ * const error = ManagedSectionTestError.make({ message: "Unstubbed read" });
+ * const isUnstubbed = S.is(ManagedSectionTestError)(error);
+ * ```
+ *
+ * @category Errors
+ * @since 0.0.0
+ */
+export class ManagedSectionTestError extends S.TaggedError<ManagedSectionTestError>($I`ManagedSectionTestError`)(
+	"ManagedSectionTestError",
+	{ message: S.String },
+	$I.annote("ManagedSectionTestError", { description: "A defect raised when a managed-section test double calls an unstubbed member." }),
+) {}
+
 const unimplemented = (member: string): never => {
-	throw new Error(`ManagedSection.makeTest: ${member}() was called but not stubbed — pass a \`${member}\` override.`);
+	throw ManagedSectionTestError.make({
+		message: `ManagedSection.makeTest: ${member}() was called but not stubbed — pass a \`${member}\` override.`,
+	});
 };
 
 /**

@@ -1,5 +1,6 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as Equal from "effect/Equal";
+import * as Match from "effect/Match";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { CommentStyle } from "./CommentStyle.ts";
@@ -49,18 +50,17 @@ export class SectionRenderError extends S.TaggedError<SectionRenderError>($I`Sec
 	attribute: S.optionalKey(S.String).annotateKey({ description: "The offending attribute's name, when the refusal names one." }),
 }, $I.annote("SectionRenderError", { description: "Raised when a section cannot be turned into marker-delimited text." })) {
 	override get message(): string {
-		switch (this.reason) {
-			case "markerInContent":
-				return `Section "${this.key}" has content containing a managed-section marker`;
-			case "unknownCommentStyle":
-				return `Section "${this.key}" uses a comment style this dialect does not recognize`;
-			case "invalidAttribute":
-				return this.attribute === undefined
+		return Match.value(this.reason).pipe(
+			Match.when("markerInContent", () => `Section "${this.key}" has content containing a managed-section marker`),
+			Match.when("unknownCommentStyle", () => `Section "${this.key}" uses a comment style this dialect does not recognize`),
+			Match.when("invalidAttribute", () =>
+				this.attribute === undefined
 					? `Section "${this.key}" declares an attribute with an invalid name or value`
-					: `Section "${this.key}" declares attribute "${this.attribute}" with an invalid name or value`;
-			default:
-				return `Section "${this.key}" was declared twice in one call`;
-		}
+					: `Section "${this.key}" declares attribute "${this.attribute}" with an invalid name or value`,
+			),
+			Match.when("duplicateDeclaration", () => `Section "${this.key}" was declared twice in one call`),
+			Match.exhaustive,
+		);
 	}
 }
 
