@@ -267,3 +267,23 @@ dependent lanes, as the Quality Operator law requires. This lane does not
 refresh unrelated baselines, waive gates, or copy upstream repairs.
 The remaining owned parity batch was stopped after the hard publication
 blocker was attributed; its partial full-docgen replay is not a green proof.
+
+## Resume 5 — Nice decoder retains the old XML text-node key
+
+- Work: resume the M2 fixture/coverage gate after merging prerequisite PR #1594
+  from main and installing the frozen lockfile.
+- Evidence: scoped ontology coverage exited 1: 81 tests passed and one failed,
+  `loads Nice classes and goods/services basic terms`, with
+  `ClassificationError` / `source-parse` / `Invalid Nice class`. A bounded
+  reader diagnostic parsed the synthetic HeadingItem with an id attribute as
+  `{ HeadingItem: { "#text": "Synthetic goods class", id: "h1" } }`.
+- Attribution: the lane's new ClassificationXml TextNode still decodes `text`;
+  Nice heading/label values now arrive under `#text` and are silently discarded.
+  This is an introduced consumer compatibility defect, not a failure of the
+  landed shared reader. Literal `<text>` IPC fixtures now pass.
+- Response: stop as run-5 ruling step 2 explicitly requires for a fixture
+  failure on the text-node key; do not patch the shared schema reader or
+  publish an incomplete M2 wave. All owned commands finished.
+- Prevention: when resuming a dependent lane after an output-shape repair,
+  authorize that lane to adapt its own new consumer to the landed shape, and
+  test elements containing both attributes and text before full archive proof.
