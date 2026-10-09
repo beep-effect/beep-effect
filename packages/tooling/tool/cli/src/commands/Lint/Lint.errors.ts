@@ -382,7 +382,7 @@ export class EffectSchemaInventoryCatalogPinError extends S.TaggedError<EffectSc
  * ```ts
  * import { EffectSchemaInventoryReferenceMissingError } from "@beep/repo-cli/commands/Lint"
  *
- * const error = EffectSchemaInventoryReferenceMissingError.new("/repo/.repos/effect", "Run scripts/setup-effect-ref.sh.")
+ * const error = EffectSchemaInventoryReferenceMissingError.new("/repo/.repos/effect", "Run bun run beep refs provision.")
  * console.log(error.reference) // "/repo/.repos/effect"
  * ```
  *

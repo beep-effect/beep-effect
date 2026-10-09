@@ -111,6 +111,115 @@
   defects from wording findings up front, and a mechanical verbatim-section
   checker against the brief so copy drift is caught by a validator.
 
+## 2026-10-09: heavy admission needs the user-session bus environment
+
+- Doing: running retained-script fixtures through `beep-heavy`.
+- Evidence: wrapper exited 1 before admission: `XDG_RUNTIME_DIR` and
+  `DBUS_SESSION_BUS_ADDRESS` were not defined. No test ran.
+- Would have prevented it: documenting the user-session environment in lane
+  launchers. Retry sets the runtime directory and user bus address explicitly;
+  the admission wrapper and shared slot queue remain in use.
+
+## 2026-10-09: C inherited knowledge census red crosses another owner's boundary
+
+- Doing: running `bun run beep knowledge refs --check` before committing C's ports.
+- Evidence: HEAD's census reports two live gated observations: the public packet's
+  absolute-home policy example and the separately owned build-pipeline RESEARCH
+  document's home-relative admission-wrapper invocation.
+- Attribution: inherited at the imported packet head; no C source introduced either.
+  C rewords its packet example without changing the policy. The build-pipeline
+  document remains with its owner and is reported to the orchestrator.
+- Would have prevented it: stage-1 packet census validation and owner-qualified
+  prose that names the admission wrapper without a workstation location.
+
+
+## 2026-10-09: C crash recovery found terminal reds behind pending handoff
+
+- Doing: recovering C's operational-script wave after the workstation crash.
+- Evidence: committed handoff still said queued; local package audit/docgen had
+  terminal introduced schema and curried-error failures. Focused fixtures also
+  exposed Effect temporary-file parent-path reporting and a lexical-order mismatch.
+- Repair: inspect every lane result before trusting pending prose; fix source
+  contracts and preserve terminal passes rather than rerunning everything.
+- Would have prevented it: a gate runner that writes each exit/result immediately
+  into a compact lane index and updates the handoff before launching another gate.
+
+
+## 2026-10-09: packet squash creates add/add conflicts in pre-merge lanes
+
+- Doing: C's required merge of origin/main after the stage-1 packet squash.
+- Evidence: fourteen packet files conflict add/add despite importing the packet
+  branch earlier. Structural three-way resolution against the original packet
+  commit resolved every file cleanly and retained both sides' updates.
+- Would have prevented it: document the original packet-base SHA in each launch
+  brief so lanes can resolve squash-induced conflicts without re-deriving it.
+
+
+## 2026-10-09: shared heavy queue delays C's final qualification
+
+- Doing: queueing the final package audit rerun and draft publication after
+  repairing and checking all reported C regressions.
+- Evidence: both runner logs report all three slots busy; lock inventory confirms
+  other admitted jobs hold the slots. C keeps its 12 GB cap and at most two units.
+  The wrapper's slot files are empty because waiters open/truncate them before
+  acquiring a lock, so those files cannot establish owner identity.
+- Would have prevented it: FIFO admission and non-truncating owner metadata,
+  plus terminal status files that distinguish queue wait from active proof.
+- Boundary: no other owner's job, live lock, or workstation wrapper was changed.
+
+
+### C queue stopping boundary
+
+The two pending final-audit/publication units were verified still pre-admission
+and cancelled at the blocked handoff. No other owner's unit or lock was touched.
+Resume those commands after the cross-lane coordination and admission capacity
+are available. Cancellation is not a proof failure or a package pass.
+
+
+## 2026-10-09: relative checkout normalization escaped absolute-only fixtures
+
+- Doing: independent C script-port review before publication.
+- Evidence: Cache joined a relative checkout with `.env`, then the contained-file
+  guard resolved that joined path against the checkout again. Intended reads,
+  backups and writes could disagree. Absolute fixture roots hid the defect.
+- Repair: resolve the checkout once at the service boundary; add a relative-root
+  regression covering the intended edit, original backup and duplicate refusal.
+- Would have prevented it: exercise supported relative CLI paths alongside
+  absolute fixture paths before package qualification. The in-flight old audit
+  was stopped and resubmitted so its proof cannot precede the repair.
+
+
+## 2026-10-09: qualified C wave waits for publication admission
+
+- Doing: publish the qualified C wave as a draft for E workflow review and run
+  the unfinished local changed-scope policy check.
+- Evidence: `beep-heavy` reports all three slots busy; publication has waited
+  over 15 minutes before its command starts. A read-only `lslocks` check confirms
+  all three heavy-slot files remain held. No publish log, push or PR exists.
+- Boundary: full package verification already passes (audit 777.6s, docgen
+  25.2s), and the independent review has zero actionable findings. The delay
+  is admission, not a failed source proof. No other lane's process is stopped.
+- Would have prevented it: a serialized publication window or admission with
+  an observable fair queue and a bounded waiting receipt.
+
+
+## 2026-10-09: full policy proof exposes exception-admission gap
+
+- Doing: root-input changed-scope policy proof after package audit/docgen passed.
+- Evidence: medium policy reports 17 new Effect Vitest occurrences, two lossless
+  StructWithRest schema findings, one property advisory and four JSDoc spacing
+  warnings. The state phase also catches 12 inline schema compilation errors.
+- Repairs: canonical assertions/imports and hook timeouts, compiled schema hoists,
+  JSDoc spacing, and schema-derived synthetic identity/extension property coverage.
+- Boundary: Accounts must preserve arbitrary future wire fields; OS symlink,
+  permission, external process and installed-Graft fixtures require real runtime
+  boundaries. Existing reviewed exceptions establish the precedent. Both scanner
+  owner commands preserve existing exceptions but offer no operation to admit
+  newly reviewed reasons. Generated inventories cannot be hand-authored here.
+- Would have prevented it: reviewed-exception admission with exact current
+  occurrence identities and evidence, owned by B/V; root policy before relying
+  on package audit as comprehensive lint evidence.
+
 ### Lane V: missing Stage 1 prerequisite (2026-10-09)
 
 Step 0 fetched and merged `origin/main`, then fast-forwarded the packet branch to `3dbf109066`. The required `history/receipts/stage-1-ownership.md` is absent: `git ls-tree` shows only history placeholder files and the exact file-existence test exits 1. The lane brief requires stopping before preservation in this state. Landing the Stage 1 receipt before launching V would prevent the blocked start. See `history/handoffs/rsc-v-vitest-canon-2026-10-09.md`.
@@ -405,12 +514,271 @@ The final CLI package check remains queued for more than fifteen minutes while o
 - Prevention: help should distinguish the publish job ceiling from the
   automatically submitted monitor's lifetime, or expose a monitor ceiling.
 
+
+## 2026-10-09: C CI port qualification catches pinned/reference API drift
+
+- Doing: move the hosted operational CI group to Effect and preserve thin bootstrap adapters.
+- Evidence: typed proof rejects non-finite counter decoding, uncaptured Git-process dependencies,
+  JSON imports without attributes and the reference checkout's callable Crypto UUID API.
+  The installed Effect pin exposes UUID generation as an Effect value instead.
+- Repair: validate both the reference design and the installed pin, use finite codecs,
+  capture platform context inside the live layer, and preserve schema-owned JSON inputs.
+- Prevention: a reference-version compatibility receipt next to the provisioned checkout,
+  plus a focused compiled service contract before broad qualification.
+
+## 2026-10-09: independent C review catches signal and sampling evidence regressions
+
+- Doing: source review of the typed runner-resource port before publication.
+- Evidence: periodic sampler failure could be hidden by a recovered final sample;
+  Effect's child exitCode fails on signal termination rather than yielding shell status.
+- Repair: retain a failure flag and suppress resource evidence after a sampler failure;
+  use a tiny shell wait boundary around the measured command to preserve 128+signal.
+  Synthetic regressions cover recovered sampling failure and TERM/INT/KILL child status.
+- Prevention: make lost-sample and child-signal cases part of the initial port fixtures.
+
+- C Run 4 full package gate: 5,796 tests pass, three profile fixtures fail
+  with `Cannot find package 'desktop'`; `bunx --bun` substitutes Bun for Node
+  and eval argv indexing differs. The pre-runtime pattern reader now uses
+  scoped file/key environment inputs, which preserve the Node/Bun contract.
+  Docgen also rejects JSON import attributes with TS2823 under its CommonJS
+  example compiler; plain JSON imports retain the same owner data and compile
+  on both paths. An early dual-runtime shim fixture and docgen module-mode
+  compatibility check would have caught both before the 816.5s package audit.
+
+- C Run 4 follow-up: plain JSON imports pass CommonJS docgen but package
+  NodeNext emits TS1543. The compiler contracts conflict on import attributes.
+  Typed import assignments preserve the shared declarative owner and permit
+  each compiler to emit its own loader; both modes are now explicit gates
+  before the next full package audit. A package/docgen module-mode matrix
+  would have prevented the second failed preflight.
+
+- C Run 4 admission friction: normal `beep-heavy ... yeet publish` and the
+  dual-module package proof wait more than ten minutes while read-only lock
+  inspection observes ownership rotating to other live test jobs. No stale
+  owner is proven, so no other job is touched. A FIFO admission queue and a
+  bounded cheap-publication lane would prevent starvation without weakening
+  the three-slot resource limit. The wrapper and workstation are outside C's
+  ownership; this is a follow-up receipt, not an unreviewed scheduler change.
+
+- C Run 4 correction: the actual managed docgen compiler is ES2022 with
+  erasableSyntaxOnly, not CommonJS. Typed import assignment therefore fails
+  TS1202/TS1294. Inspecting its canonical owner before selecting syntax would
+  have prevented the failed rerun. C keeps that policy intact: the schema
+  module owns patterns, and a checked JSON projection serves pre-runtime
+  Node/Bun. Owner command: `beep ci patterns --write`; freshness fixture
+  protects the root-input gap instead of changing generated compiler policy.
+
+- C projection type proof passes docgen but catches preferSchemaOverJson and
+  unnecessaryFailYieldableError. The writer now uses the schema JSON encoder,
+  the fixture decodes the projection through its schema, and typed failures
+  are yielded directly. Reusing the installed schema codec before writing the
+  first projection would have avoided those introduced diagnostics.
+
+- C projection follow-up: test-tsgo requires decodeEffect for the filesystem
+  string, whose type already matches the JSON codec's encoded type. The
+  fixture now keeps compile-time input checking; the successful docgen result
+  is retained because this repair only touches a test decoder.
+
+- C queue provenance: beep-heavy loads the slot floor once. An old C publish
+  waiter still searches three slots after the owner's shared floor expands
+  new jobs to four. Its main process is only the queue wrapper with a sleep
+  child. C stops only that verified unadmitted waiter and resubmits through
+  the current canonical route, without changing a cap or another lane. Live
+  floor refresh or a queue notification would avoid this stale-admission wait.
+
+## G storage launch friction — 2026-10-09
+
+- At source revision `9914e98a86`, `bun run beep cache census --json`
+  emits `cache-executable-census/v1`, an executable-task census rather than
+  storage bytes. The G brief names it as the storage census. Preserve it as
+  task evidence and pair it with `du` and btrfs measurements; a documented
+  storage-specific census command would prevent this mismatch.
+- `beep-heavy true` initially could not connect to the user bus because
+  the launch omitted `XDG_RUNTIME_DIR` and `DBUS_SESSION_BUS_ADDRESS`.
+  Command-local user-session variables restored admission; all three slots
+  were occupied. The diagnostic queued unit was explicitly stopped, with
+  no workload left running. Forwarding the user bus variables in the lane
+  launcher would prevent this failure. No heavy proof bypassed admission.
+- The Connect `op run --env-file=<lane-private-refs> -- true >/dev/null`
+  failed with `Found 0 vaults with title` on the pre-existing read-only Turbo
+  token reference. `op-doctor` ran once and found a service-account identity
+  plus a user-bus environment limitation. No secret was printed and that
+  path stopped. An agent-visible read-only reference is the prerequisite
+  for the authenticated artifact probes; the write token is excluded.
+- The worker instruction confines writes to its lane; G mechanics require
+  a historical fixture in the sibling worktree root, a disposable second
+  clone in the home cache, and home configuration changes. These dependent
+  steps are deferred to the orchestrator with the scope conflict recorded.
+  Passing a consistent explicit path allowlist at launch would prevent this
+  contradiction.
+
+## G resume friction — 2026-10-09
+
+- The authorized default service-account retry failed with `"BEEP_CI" isn't a
+  vault in this account.` The exact operation was `env -u OP_AGENT_BACKEND op
+  run --env-file=<lane-private-refs> -- true >/dev/null`. `op-doctor` ran once;
+  no credential values were emitted. The remote fixture remains an unsupported
+  external condition under resume ruling 1. An agent-visible read-only reference
+  would allow the authenticated HEAD and cold-read probes.
+- Direct package `tsgo -p` produced missing dependency-output errors (`TS6305`)
+  and cascading diagnostics. This invocation does not establish source parity;
+  use the source-aware hosted-parity command and the admitted package verifier.
+  The raw log remains private.
+
+## G retention review and qualification — 2026-10-09
+
+- The separate Opus 5.5 medium review identified 15 actionable findings in the
+  first archive draft. Future-clock fixtures masked journal-directory writes
+  renewing checkout liveness, and a self-asserted sidecar did not bind its
+  terminal claim to tracked evidence. Fixes require real-clock regressions,
+  tracked schema-equal owner rulings, complete citation matching, nested
+  checkout protection, strict directory fsync, and recovery-row attribution.
+  A crash/clock/citation checklist before implementation would prevent this.
+- The first admitted package verifier reported introduced source diagnostics:
+  missing ancestry import, a pinned FileSystem API without `noFollow`, an
+  unavailable string join, lost function argument inference, and service
+  dependency leakage. Its audit/docgen inbox rows were acknowledged against
+  repair commit `4decfe96d3`; acknowledgement is not a successful rerun.
+  Use the pinned installed Effect types alongside the reference checkout and
+  capture service dependencies at construction. No suppression was added.
+
+### G shared-admission queue and second review
+
+The retention suite and package rerun remained queued for more than thirty
+minutes behind the three-slot machine-wide budget. The worker preserved the
+admission limit and used the wait for review fixes and synthetic configuration
+checks. A fair queued admission policy with visible queue age would prevent
+longer-running lanes from repeatedly winning slots while older jobs wait.
+
+The second independent implementation review confirmed the prior fifteen
+findings addressed, then found sibling mtime lockout, archive census growth,
+foreign-owner fleet destinations, Unicode citation listing, mistyped recovery
+side effects, loss of failure causes, and stale documentation. The corrective
+wave adds regressions and limits fleet archive apply to the owning checkout.
+The rerun and terminal review remain required; queued commands are not proof.
+
+### G admitted test command and signal contract
+
+The first admitted residue test command selected no tests because the package
+Vitest config was used from the repository root. The package-relative rerun
+executed 39 tests: 36 passed; one expected the old class domain, and two
+SIGKILL fixtures assumed an integer exit code. The Effect process adapter
+correctly represents signal termination as a typed error. The fixtures now
+accept that error and verify persisted plan/intent checkpoint state before
+recovery. Future test command guidance should give package cwd explicitly and
+use the installed process adapter's signal contract.
+
+The third review identified overwritten recovery proof, vendored operational
+state in the safety walk, literal evidence path validation, nested clone linked
+worktrees, foreign lock writes, directory-creation races, formatted draft
+emptiness, ambiguous move outcomes and missing regression coverage. The
+correction preserves immutable plan/outcome reports, writes separate recovery
+receipts, prunes embedded/dependency trees, validates literal canonical evidence,
+and adds nested/fence/sync/PID/symlink/recovery regression fixtures.
+
+### G fourth-review correction
+
+The fourth independent review found that opacity for sibling dependency trees
+could hide protected state inside the candidate itself. Opacity is now limited
+to siblings; candidate descendants receive the full capped safety scan. Resume
+preserves fenced-live intents for explicit restore, citation indexing skips
+non-regular tracked entries, and refusal reports retain typed skip causes.
+Additional fixtures cover embedded proof, fenced-live resume, tracked links and
+explicit foreign-owner classification. Earlier rounds are preserved privately;
+terminal zero-findings is still a required independent result.
+
+### G fifth-review correction and effective-path inventory
+
+The fifth review left four low findings: embedded ancestor opacity, Git probe
+index refreshes, a fixture that followed its dangling link during backdating,
+and report vocabulary/shape cleanup. Embedded ancestors are now protected,
+Git probes disable optional locks, fixture backdating uses no-follow touch,
+and recovery mode is explicit. Source-only review is not runtime proof.
+
+A read-only `turbo config` inventory at 262 known checkout roots, using the
+same G-inherited process environment and executable, succeeded at 261 roots;
+all successful probes observed `~/.cache/beep/turbo`. One root returned an
+error. This verifies that route only; other harness child environments and
+workstation-wide read-only remote posture remain separate acceptance claims.
+
+### G sixth-review correction
+
+The sixth independent source review confirmed prior safety fixes and left two
+low findings in outcome classification and documentation/style. Apply now maps
+writer fences to lock-held and identity refusals to path-changed, matching
+recovery. Opaque-leaf membership uses Effect HashSet rather than linear array
+lookups, failed ancestor probes name stat-failed, and restore/report wording
+names the actual operation. The next source review and admitted runtime gates
+remain required before final.
+
+### G publish-before-proof admission correction
+
+The package rerun waited almost fifty minutes in admission without starting
+its command (no result log, approximately one MiB unit memory). It was stopped
+before execution and replaced by Yeet publication under the same two-owned-job
+limit. The expanded test remains admitted. This follows the canonical rule
+that a queued full local proof must not hold publication; package verification
+and parity remain required before final handoff. No other lane unit was stopped.
+
+- 2026-10-09 G runtime/gate friction: source-only review missed the installed Effect comparison export and canonical-parent fsync path. The admitted retention suite reported 19 failures; Yeet cheap gates also reported the missing schema-derived property test, six complex functions, one duplicate parser and 27 new test-policy rows. Fixed the API/path/property errors at `d881c6e2e0`; ordered a diagnostic export and split traversal/recovery stages instead of suppressing findings. Preventive improvement: an admitted focused runtime gate before declaring source review closure. Proof remains pending until rerun.
+
+- 2026-10-09 G admission friction: corrected focused retention tests and the test-policy row export waited more than 14 minutes without starting after a prior package verification had waited almost 50 minutes. The installed wrapper tries nonblocking slot locks every five seconds, with no FIFO admission order. Preserve the machine-wide cap; a ticketed admission queue with queue age and bounded short-job service would make runtime qualification predictable. No other lane job was stopped and no budget was raised.
+
+- 2026-10-09 G ninth source review: the resource-wrapper migration left interruption cases outside the OS layer and briefly introduced a v3-only `it.scoped` name. Verified installed v4 declarations: `it.effect` already provides Scope, property options are `arbitrary`, and `Arbitrary.schema` is present. Corrected provider/API usage, census-error visibility, missing-parent recovery messages, and sync-fault phase assertions; added fixtures for each source contract. Preventive improvement: validate every changed harness API against installed declarations before requesting review.
+
+- 2026-10-09 G runtime friction: scoped coverage started and then held an idle worker for more than ten minutes without a completed test result (about 18 seconds aggregate CPU). Terminated only the verified owned Vitest processes so the admitted batch could continue census/cache work; coverage remains unproven. A verbose 30-second focused rerun is admitted through the wrapper. Preventive improvement: per-case progress and a native wall-clock watchdog even during the five-minute coverage timeout and layer teardown.
 - Final documentation verification remained queued across heavy-slot holder
   turnovers (`beep-heavy: all 3 slots busy, waiting`). The wrapper polls locks
   rather than keeping an ordered ticket queue, so closeout admission has
   unpredictable wait time. A fair queue with observable position would prevent
   this delay; this lane does not alter the workstation wrapper or other jobs.
 
+- C publication boundary: normal `beep yeet publish` at `bc176b61fa` exits 1
+  before push because collected cheap gates enforce schema-first / effect-vitest
+  exception candidates delegated to B, plus the H1-owned root ONNX declaration.
+  Resume ruling 3 and S11 permit those recorded reds, but the publisher has no
+  applied program admission for them. No PR is created. A narrow, explicit
+  owner-approved publication mechanism for attributed delegated reds would
+  prevent repeated qualification without weakening inventories or fabricating proof.
+
+## C Run 6: dependency field ambiguity
+
+Resume ruling 4 named the `^1.30.0` line as a root devDependency, but it is
+the catalog entry. Removing it made `bun install` refuse: `onnxruntime-node@catalog: is not in the catalog`.
+The catalog was restored and the actual root devDependency (`catalog:`) removed.
+A JSON property path in the ruling would have prevented the failed install;
+no baseline or package-owned dependency was changed.
+
+## C Run 6: notification prerequisite omitted from recovery ruling
+
+The publication recovery ruling authorizes a lockfile edit and push-only retry,
+but standing S5 requires confirmation that the effected-port session was notified.
+C's handoff reports the one-line lockfile delta; confirmation is absent from the
+brief and rulings at the recovery boundary. Including the notification receipt
+in the same recovery ruling would remove this additional handoff round.
+
+## C Run 7: user-manager environment missing
+
+The first canonical heavy-wrapper launch failed before admission with
+`$DBUS_SESSION_BUS_ADDRESS and $XDG_RUNTIME_DIR not defined`. Supplying the
+standard user-manager runtime and bus environment allowed the same wrapper
+to queue normally. Exporting these variables in the worker launcher would
+prevent this pre-admission failure; no gate pass or host change is claimed.
+
+## C Run 7: push-only recovery flag mismatch
+
+The orchestrator-prescribed `yeet publish --push-only` exits before pushing:
+`yeet publish --push-only requires --reuse-verified.` The preserved six-row
+qualification and dependency-policy reruns are not a reusable full-proof
+manifest. Resume ruling 4 supplies the explicit push/create fallback. Matching
+the recovery command to the current publisher contract would avoid another
+heavy-slot wait; no proof state is fabricated or gate weakened.
+
+- 2026-10-09 G focused runtime diagnosed the coverage stall: 53 of 55 cases passed, while both SIGKILL recovery cases timed out at the journal retry. Acquisition uses a timed retry after reclaiming the dead writer generation; the fixture test clock never advanced. Use `TestClock.withLive` on these OS interruption fixtures. The earlier source-only zero did not detect this runtime behavior. Preventive improvement: run a bounded verbose interruption fixture before full coverage, with per-case progress.
+
+- 2026-10-09T20:27Z G admission remains queued. Read-only `lslocks` and process cwd/cgroup checks found four live slot holders: two in `agent-runs.slice` and two in `app.slice` (including a shell with cwd `/tmp`). The slice cap therefore does not cover every live holder of the slot protocol. Foreign live holders were retained; no wrapper/cap change was made. Preventive improvement: bind admission receipts to live units and show queue order, holder age and whether each holder belongs to the budgeted slice. Raw process/unit identifiers stay private.
+
+- 2026-10-09T20:38Z G's `gh pr view` failed with "GraphQL: API rate limit already exceeded". A REST PR read remains available; its separate rate endpoint reports quota remaining. The lane treats review-thread state as unknown until an actual GraphQL read succeeds, rather than inferring it from the rate endpoint. Preventive improvement: make routing/quota provenance explicit and budget read-only readiness polling across simultaneous lanes. No credentials or account identifiers are recorded here.
 ### V Run 4 schema-property gate after preserved source qualification
 
 Direct capped Yeet publication completed cheap gates but refused the push:
@@ -462,6 +830,42 @@ Human review on PR #1568 identified that Repo Sanity's push-only hosted checks u
 
 While verifying the report push for #1568, both `gh pr view` and the complete review-thread query failed with `API rate limit already exceeded`. REST still verified the published head, ready state and existing comment history, but cannot establish thread-resolution state. Preserve unknown status and require a fresh complete GraphQL read at the orchestrator gate. A quota-aware final-read reservation would prevent publication verification from depending on an exhausted shared account budget.
 
+## C Run 8 integration proof admission
+
+The five required integration checks wait at `beep-heavy: all 4 slots busy, waiting`
+after resolving E's six main conflicts. No check has started and no pass is claimed.
+C keeps one queued unit, retains earlier terminal proof for unaffected surfaces,
+and changes no other lane's process or shared budget. A FIFO queue position and
+holder-age receipt would make the integration handoff time observable.
+
+### C Run 8 stale slot-count waiter
+
+Read-only lock inventory shows a fifth slot in use while C's older wrapper still
+waits on four. The installed orchestrator-owned override now supplies five slots.
+C verifies its waiter cwd and sole sleep child, stops only that unadmitted user
+unit and resubmits through the same canonical wrapper. No gate had started; no
+pass is lost. Reloading centrally supplied slot count while waiting would prevent
+new jobs overtaking old waiters after a budget change.
+
+### C Run 8 fixture environment policy
+
+The integration fixtures pass 29 cases, but `test-tsgo` rejects the new boot-failure
+fixture's direct PATH property read with `effect(processEnvInEffect)`. This is
+introduced by C. Replace that property read with `Config.String("PATH")`, preserving
+the synthetic transport and inherited environment spread. Rerun only the affected
+fixture/type/package checks; no policy suppression or inventory edit. A fixture
+review against the existing ambient-PATH example would have prevented the error.
+
+- 2026-10-09 G admitted compiler/docgen proof still found `unknown[]` in nested filter/flatMap refusal-warning collection, despite source-only review and an explicit RecoveryRow array. Replaced the nested expression with one typed-input flatMap; no schema, runtime warning order or refusal semantics changed. Preventive improvement: finish the actual compiler check before treating contextual inference repairs as complete.
+- 2026-10-09 G changed-input build returned success but restored only 23 rather than 28 outputs. Removing `dist` alone retained `node_modules/.tmp/tsconfig.tsbuildinfo`, so incremental compilation skipped unchanged declarations and the public index. Correct the owned clean-output fixture by resetting its incremental file too; compare a fresh cold build with the cached manifest. The inherited generated build-script/output coupling is a shared-owner follow-up, not a new cache-hit claim.
+
+- 2026-10-09T21:15Z G final publication did not start: the noninteractive shell
+  lacked the user-manager bus environment (`$DBUS_SESSION_BUS_ADDRESS and
+  $XDG_RUNTIME_DIR not defined`). The wrapper returned before admission or
+  cheap gates. Supply the canonical UID-1000 runtime directory and user bus
+  address only to the retry; no persistent configuration or caps change.
+  Preventive improvement: the admission wrapper should resolve the local
+  user-manager transport explicitly for noninteractive sessions.
 ### V Run 5 packet-check admission
 
 The merge-only refresh for #1575 needs knowledge-reference and packet checks,
@@ -479,3 +883,21 @@ stopped only its unadmitted request and requeued the same checks through the
 unchanged wrapper to observe the live budget. Dynamic configuration refresh
 while queued would prevent this stale-admission window. No running payload or
 peer service was stopped, and the worker changed no admission setting.
+
+## C Run 9 integration admission
+
+The merge-only refresh for #1583 waits at `beep-heavy: all 5 slots busy,
+waiting` before its payload starts. C retains one serial queued wrapper
+and all unaffected terminal proof; no peer job or admission setting is
+changed. A visible queue position and admission timestamp would prevent
+uncertain progress reporting while preserving the shared resource budget.
+
+### C Run 9 portable process policy
+
+The merged fixture's Node child_process import passed both runtime suites
+but test-tsgo rejected it with `effect(nodeBuiltinImport)`. This is C's
+introduced integration error. Replacing the native import with the local
+Effect v4 ChildProcessSpawner boundary preserves both runtimes and all
+assertions; rerun the affected fixtures, type and package checks. Checking
+the canonical process API before choosing the native boundary would have
+prevented this extra qualification wave. No suppression or inventory edit.

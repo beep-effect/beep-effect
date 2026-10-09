@@ -41,6 +41,7 @@ import {
 } from "./Worktree.schemas.ts";
 import {
   branchDeleteCommand,
+  installRegenerateMergeDriver,
   runWorktreeGitCapture,
   WorktreeRemovalService,
   WorktreeRemovalServiceLive,
@@ -755,6 +756,7 @@ const runWorktreeNew = Effect.fn("Worktree.runWorktreeNew")(function* (options: 
     "Failed to update submodules in the new worktree."
   );
   yield* runStreamingStep("bun", ["install"], targetPath, "Failed to run bun install in the new worktree.");
+  yield* installRegenerateMergeDriver(targetPath);
   const copies = yield* copyLocalFiles(context.mainCheckout, targetPath);
   const references = yield* linkReferences(context.currentRoot, targetPath);
   yield* renderCreationSummary(options.name, branch, targetPath, copies, references);
@@ -947,6 +949,18 @@ const runWorktreeDoctor = Effect.fn("Worktree.runWorktreeDoctor")(function* (): 
   const context = yield* resolveWorktreeContext();
   const report = yield* worktreeDoctorReportForContext(context);
   yield* renderDoctorReport(report);
+  const config = yield* runWorktreeGitCapture(
+    context.currentRoot,
+    ["config", "--local", "--list"],
+    "Cannot inspect local merge-driver config."
+  );
+  const driver = A.findFirst(Str.split(config, "\n"), Str.startsWith("merge.regenerate.driver="));
+  yield* Console.log(
+    O.match(driver, {
+      onNone: () => "  merge.regenerate: missing (run bun run beep worktree prepare)",
+      onSome: (value) => `  ${value}`,
+    })
+  );
 });
 
 const worktreeNewCommand = Command.make(
@@ -1073,6 +1087,14 @@ export const worktreeCommand = Command.make("worktree", {}, () =>
 ).pipe(
   Command.withDescription("Manage sibling git worktrees under the canonical worktrees root"),
   Command.withSubcommands([
+    Command.make(
+      "prepare",
+      {},
+      Effect.fn("Worktree.prepare")(function* () {
+        yield* installRegenerateMergeDriver(yield* findRepoRoot());
+        yield* Console.log("Installed merge.regenerate in clone-local Git config.");
+      })
+    ).pipe(Command.withDescription("Install the local fail-closed projection merge driver")),
     worktreeNewCommand,
     worktreeRemoveCommand,
     worktreeDoctorCommand,
