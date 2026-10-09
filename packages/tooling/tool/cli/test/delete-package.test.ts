@@ -317,6 +317,30 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 
+    it.effect("treats an absent private flag as publish-enabled during deletion", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          yield* fs.writeFileString("bun.lock", "");
+          yield* fs.writeFileString(
+            "package.json",
+            '{ "name": "fixture", "private": true, "workspaces": ["packages/drivers/courtlistener"] }\n'
+          );
+          yield* fs.makeDirectory(path.join("packages", "drivers", "courtlistener"), { recursive: true });
+          yield* fs.writeFileString(
+            path.join("packages", "drivers", "courtlistener", "package.json"),
+            '{ "name": "@beep/courtlistener", "version": "0.0.0" }\n'
+          );
+          const exit = yield* Effect.exit(runDeletePackage(["courtlistener", "--dry-run"]));
+          expectReportedExit(exit);
+          const errors = yield* TestConsole.errorLines;
+          expect(A.some(errors, (line) => P.isString(line) && Str.includes("published")(line))).toBe(true);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
     it.effect("refuses deleting a live package whose README carries a promotion record", () =>
       Effect.andThen(
         temporaryWorkingDirectory,
