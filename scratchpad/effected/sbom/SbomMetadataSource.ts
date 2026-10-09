@@ -15,10 +15,13 @@
 // Everything is total. Nothing reads an ambient clock or environment: a
 // timestamp is an argument, and so is the copyright year.
 
-import type { Package, Person } from "../package-json/index.ts";
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as O from "effect/Option";
-import type { ComponentType } from "./SbomDocument.ts";
-import { Component, Contact, ExternalReference, SbomMetadata, Supplier } from "./SbomDocument.ts";
+import * as S from "effect/Schema";
+import type { Package, Person } from "../package-json/index.ts";
+import { Component, ComponentType, Contact, ExternalReference, SbomMetadata, Supplier } from "./SbomDocument.ts";
+
+const $I = $ScratchpadId.create("effected/sbom/SbomMetadataSource");
 
 // ── Package URL ───────────────────────────────────────────────────────────
 //
@@ -60,57 +63,65 @@ const npmPurl = (name: string, version?: string): string => {
  *
  * @public
  */
-export interface SbomMetadataOptions {
+export const SbomMetadataOptions = S.Struct({
 	/** The supplying organization — NTIA minimum element 1. */
-	readonly supplier?: Supplier | undefined;
+	supplier: S.optional(Supplier).annotateKey({ description: "The supplying organization — NTIA minimum element 1." }),
 	/** Who assembled the BOM — NTIA minimum element 6. */
-	readonly authors?: ReadonlyArray<Contact> | undefined;
+	authors: Contact.pipe(S.Array, S.optional).annotateKey({ description: "Who assembled the BOM — NTIA minimum element 6." }),
 	/** When it was assembled — NTIA minimum element 7, as an ISO 8601 string. */
-	readonly timestamp?: string | undefined;
+	timestamp: S.optional(S.String).annotateKey({ description: "When it was assembled — NTIA minimum element 7, as an ISO 8601 string." }),
 	/** The publishing entity. Falls back to the supplier, then the manifest's author. */
-	readonly publisher?: string | undefined;
+	publisher: S.optional(S.String).annotateKey({ description: "The publishing entity. Falls back to the supplier, then the manifest's author." }),
 	/** A copyright statement; {@link SbomMetadataSource.formatCopyright} builds one. */
-	readonly copyright?: string | undefined;
+	copyright: S.optional(S.String).annotateKey({ description: "A copyright statement; SbomMetadataSource.formatCopyright builds one." }),
 	/** The documentation URL, winning over the manifest's `homepage`. */
-	readonly documentationUrl?: string | undefined;
+	documentationUrl: S.optional(S.String).annotateKey({ description: "The documentation URL, winning over the manifest's homepage." }),
 	/** The root component's type. Defaults to `library`. */
-	readonly type?: ComponentType | undefined;
-}
+	type: S.optional(ComponentType).annotateKey({ description: "The root component's type. Defaults to library." }),
+}).pipe($I.annoteSchema("SbomMetadataOptions", {
+	description: "What a manifest cannot supply, and the two places an explicit value wins.",
+}));
+
+export type SbomMetadataOptions = typeof SbomMetadataOptions.Type;
 
 /**
  * The fields a dependency contributes to its component entry.
  *
  * @public
  */
-export interface ComponentInput {
+export const ComponentInput = S.Struct({
 	/** The package name, scope included. */
-	readonly name: string;
+	name: S.String.annotateKey({ description: "The package name, scope included." }),
 	/**
 	 * Its resolved version. Absent produces a component with no version and no
 	 * purl version segment. Typed `string | undefined` so a caller forwarding a
 	 * statically optional version (e.g. `WorkspacePackage.version` from
 	 * `@effected/workspaces`) compiles under `exactOptionalPropertyTypes`.
 	 */
-	readonly version?: string | undefined;
+	version: S.optional(S.String).annotateKey({ description: "Its resolved version. Absent produces a component with no version and no purl version segment." }),
 	/** An SPDX identifier or expression. */
-	readonly license?: string | undefined;
+	license: S.optional(S.String).annotateKey({ description: "An SPDX identifier or expression." }),
 	/** A short description. */
-	readonly description?: string | undefined;
+	description: S.optional(S.String).annotateKey({ description: "A short description." }),
 	/** The component type. Defaults to `library`. */
-	readonly type?: ComponentType | undefined;
-}
+	type: S.optional(ComponentType).annotateKey({ description: "The component type. Defaults to library." }),
+}).pipe($I.annoteSchema("ComponentInput", { description: "The fields a dependency contributes to its component entry." }));
+
+export type ComponentInput = typeof ComponentInput.Type;
 
 /**
  * The years a copyright statement spans.
  *
  * @public
  */
-export interface CopyrightYears {
+export const CopyrightYears = S.Struct({
 	/** The first year of the range. Omit for a single-year statement. */
-	readonly startYear?: number | undefined;
+	startYear: S.optional(S.Finite).annotateKey({ description: "The first year of the range. Omit for a single-year statement." }),
 	/** The year the statement is current through, supplied by the caller. */
-	readonly year: number;
-}
+	year: S.Finite.annotateKey({ description: "The year the statement is current through, supplied by the caller." }),
+}).pipe($I.annoteSchema("CopyrightYears", { description: "The years a copyright statement spans." }));
+
+export type CopyrightYears = typeof CopyrightYears.Type;
 
 const contactOf = (person: Person): Contact =>
 	Contact.make({

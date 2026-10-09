@@ -91,6 +91,21 @@ const parseResult = (value: string): Result.Result<Sha256Digest, InvalidSha256Di
 		: Result.fail(InvalidSha256DigestError.make({ input: value }));
 };
 
+const sha256Digest = S.String.pipe(
+	// Put identity on the string AST, before the check, so JSON Schema retains
+	// its inline pattern while the base schema carries the canonical identity.
+	$I.annoteSchema("Sha256Digest", {
+		description: "A SHA-256 digest as 64 lowercase hexadecimal characters, without an algorithm prefix.",
+	}),
+	S.check(S.isPattern(SHA256_RE)),
+	S.brand("Sha256Digest"),
+);
+
+// Widen only Opaque's unused constructor to string members: TypeScript cannot
+// extend a primitive. The schema's Type and runtime values stay branded strings.
+const Sha256DigestBase: Omit<S.Opaque<Sha256Digest, typeof sha256Digest, {}>, never> &
+	(new (_: never) => Pick<Sha256Digest, keyof Sha256Digest>) = S.Opaque<Sha256Digest>()(sha256Digest);
+
 /**
  * A SHA-256 digest as 64 lowercase hexadecimal characters, without an
  * algorithm prefix.
@@ -103,8 +118,8 @@ const parseResult = (value: string): Result.Result<Sha256Digest, InvalidSha256Di
  *
  * @public
  */
-export const Sha256Digest = class extends S.String.pipe(S.check(S.isPattern(SHA256_RE)), S.brand("Sha256Digest")) {
-	static isValid = (value: string): boolean => SHA256_RE.test(normalizeDigest(value));
+export const Sha256Digest = class extends Sha256DigestBase {
+	static isValid = (value: string): boolean => S.is(Sha256Digest)(normalizeDigest(value));
 	static parseResult = parseResult;
 	static parse = Effect.fn("Sha256Digest.parse")((value: string) => Effect.fromResult(parseResult(value)));
 } satisfies Sha256DigestStatics;
@@ -157,14 +172,16 @@ export class InTotoSubject extends S.Class<InTotoSubject>($I`InTotoSubject`)({
  *
  * @public
  */
-export interface InTotoStatementInput {
+export const InTotoStatementInput = S.Struct({
 	/** The artifacts the statement is about. */
-	readonly subject: ReadonlyArray<InTotoSubject>;
+	subject: S.Array(InTotoSubject).annotateKey({ description: "The artifacts the statement is about." }),
 	/** What the statement asserts. */
-	readonly predicateType: PredicateType;
+	predicateType: S.String.annotateKey({ description: "What the statement asserts." }),
 	/** The assertion's body — a `SlsaProvenance`, a BOM, or a caller's own shape. */
-	readonly predicate: unknown;
-}
+	predicate: S.Unknown.annotateKey({ description: "The assertion's body — a SlsaProvenance, a BOM, or a caller's own shape." }),
+}).pipe($I.annoteSchema("InTotoStatementInput", { description: "Input to InTotoStatement.of." }));
+
+export type InTotoStatementInput = typeof InTotoStatementInput.Type;
 
 /**
  * Input to {@link (InTotoStatement:class).forSubject}.
@@ -176,16 +193,18 @@ export interface InTotoStatementInput {
  *
  * @public
  */
-export interface InTotoSubjectInput {
+export const InTotoSubjectInput = S.Struct({
 	/** How the single subject is identified. */
-	readonly name: string;
+	name: S.String.annotateKey({ description: "How the single subject is identified." }),
 	/** Its SHA-256 digest. */
-	readonly digest: Sha256Digest;
+	digest: Sha256Digest.annotateKey({ description: "Its SHA-256 digest." }),
 	/** What the statement asserts. */
-	readonly predicateType: PredicateType;
+	predicateType: S.String.annotateKey({ description: "What the statement asserts." }),
 	/** The assertion's body — a `SlsaProvenance`, a BOM, or a caller's own shape. */
-	readonly predicate: unknown;
-}
+	predicate: S.Unknown.annotateKey({ description: "The assertion's body — a SlsaProvenance, a BOM, or a caller's own shape." }),
+}).pipe($I.annoteSchema("InTotoSubjectInput", { description: "Input to InTotoStatement.forSubject." }));
+
+export type InTotoSubjectInput = typeof InTotoSubjectInput.Type;
 
 /**
  * An in-toto Statement v1.
@@ -251,15 +270,13 @@ export class InTotoStatement extends S.Class<InTotoStatement>($I`InTotoStatement
 	 * be read by a person.
 	 */
 	toJson(options?: { readonly space?: number | undefined }): string {
-		return JSON.stringify(
-			{
+		return Result.getOrThrow(
+			S.encodeResult(S.fromJsonString(S.Unknown, { space: options?.space ?? 0 }))({
 				_type: this._type,
 				subject: this.subject.map((subject) => ({ name: subject.name, digest: subject.digest })),
 				predicateType: this.predicateType,
 				predicate: this.predicate,
-			},
-			null,
-			options?.space ?? 0,
+			}),
 		);
 	}
 }

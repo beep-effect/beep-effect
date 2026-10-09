@@ -9,6 +9,7 @@
 // option.
 
 import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import { License, isValidExpression } from "../spdx/index.ts";
 import * as S from "effect/Schema";
 import * as R from "effect/Record";
@@ -31,7 +32,7 @@ export const SPEC_VERSION = "1.6" as const;
  *
  * @public
  */
-export const ComponentType = S.Literals(["library", "application", "framework"]).pipe($I.annoteSchema("ComponentType", { description: "The CycloneDX component types this package emits." }));
+export const ComponentType = LiteralKit(["library", "application", "framework"]).pipe($I.annoteSchema("ComponentType", { description: "The CycloneDX component types this package emits." }));
 
 /**
  * The decoded type of {@link (ComponentType:variable)}.
@@ -50,7 +51,7 @@ export type ComponentType = typeof ComponentType.Type;
  *
  * @public
  */
-export const ExternalReferenceType = S.Literals(["vcs", "issue-tracker", "website", "documentation"]).pipe($I.annoteSchema("ExternalReferenceType", { description: "An external reference's kind." }));
+export const ExternalReferenceType = LiteralKit(["vcs", "issue-tracker", "website", "documentation"]).pipe($I.annoteSchema("ExternalReferenceType", { description: "An external reference's kind." }));
 
 /**
  * The decoded type of {@link (ExternalReferenceType:variable)}.

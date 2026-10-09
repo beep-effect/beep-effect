@@ -5,11 +5,15 @@
 // Only `write` has an error channel, and it is the filesystem's.
 
 import { $ScratchpadId } from "@beep/identity/packages";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import { identity } from "effect/Function";
+import * as Order from "effect/Order";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import type { Component } from "./SbomDocument.ts";
-import { BOM_FORMAT, SPEC_VERSION, SbomDocument, SbomMetadata, documentJson } from "./SbomDocument.ts";
+import * as Str from "effect/String";
+import { BOM_FORMAT, Component, SPEC_VERSION, SbomDocument, SbomMetadata, documentJson } from "./SbomDocument.ts";
 
 const $I = $ScratchpadId.create("effected/sbom/Sbom");
 
@@ -18,24 +22,28 @@ const $I = $ScratchpadId.create("effected/sbom/Sbom");
  *
  * @public
  */
-export interface SbomInput {
+export const SbomInput = S.Struct({
 	/** The component the BOM is about. */
-	readonly root: Component;
+	root: Component.annotateKey({ description: "The component the BOM is about." }),
 	/** Its dependencies, in any order — the document sorts them. */
-	readonly components: ReadonlyArray<Component>;
+	components: S.Array(Component).annotateKey({ description: "Its dependencies, in any order — the document sorts them." }),
 	/** Document metadata. `root` is threaded onto it automatically. */
-	readonly metadata?: SbomMetadata | undefined;
-}
+	metadata: S.optional(SbomMetadata).annotateKey({ description: "Document metadata. `root` is threaded onto it automatically." }),
+}).pipe($I.annoteSchema("SbomInput", { description: "Input to Sbom.generate." }));
+
+export type SbomInput = typeof SbomInput.Type;
 
 /**
  * Options for {@link Sbom.toJson}.
  *
  * @public
  */
-export interface SbomJsonOptions {
+export const SbomJsonOptions = S.Struct({
 	/** `JSON.stringify` indentation. Defaults to `2`; `0` emits one line. */
-	readonly space?: number | undefined;
-}
+	space: S.optional(S.Finite).annotateKey({ description: "JSON.stringify indentation. Defaults to 2; 0 emits one line." }),
+}).pipe($I.annoteSchema("SbomJsonOptions", { description: "Options for Sbom.toJson." }));
+
+export type SbomJsonOptions = typeof SbomJsonOptions.Type;
 
 /**
  * Raised when a BOM cannot be written to disk.
@@ -64,7 +72,10 @@ const generate = (input: SbomInput): SbomDocument =>
 		specVersion: SPEC_VERSION,
 		version: 1,
 		metadata: metadataWithRoot(input),
-		components: [...input.components].sort((a, b) => a.name.localeCompare(b.name)),
+		components: A.sort(
+			input.components,
+			Order.mapInput(Order.make<string>((a, b) => Str.localeCompare(b)(a)), (component: Component) => component.name),
+		),
 	});
 
 /**
@@ -88,7 +99,10 @@ const metadataWithRoot = (input: SbomInput): SbomMetadata =>
 
 // Implementation of Sbom.toJson; the public contract lives on the static.
 const toJson = (document: SbomDocument, options?: SbomJsonOptions): string =>
-	JSON.stringify(documentJson(document), null, options?.space ?? 2);
+	Result.getOrThrowWith(
+		S.encodeResult(S.fromJsonString(S.Unknown, { space: options?.space ?? 2 }))(documentJson(document)),
+		identity,
+	);
 
 // Implementation of Sbom.write; the public contract lives on the static.
 const write = Effect.fn("Sbom.write")(function* (document: SbomDocument, path: string, options?: SbomJsonOptions) {

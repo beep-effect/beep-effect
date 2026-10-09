@@ -20,6 +20,7 @@ import { fileURLToPath } from "node:url";
 import { assert, describe, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as S from "effect/Schema";
+import * as Ts from "typescript";
 
 const SRC = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "effected", "sbom");
 
@@ -29,34 +30,29 @@ const Manifest = S.Struct({
 	peerDependencies: S.optionalKey(S.Record(S.String, S.String)),
 });
 
-/** Every `from "..."` specifier in a module, ignoring type-only imports. */
+/** Every runtime import or re-export, ignoring prose, string contents and type-only edges. */
 const runtimeSpecifiers = (source: string): ReadonlyArray<string> => {
-	// Doc comments carry `@example` blocks with real import statements in them,
-	// so comments come out first or the walker "finds" edges that exist only in
-	// prose — a trap the sibling suites hit for real.
-	//
-	// LINE comments must go FIRST, and that ordering is load-bearing rather than
-	// stylistic. This package's own prose contains the token `@sigstore/*`, whose
-	// `/*` opens a block comment as far as a regex is concerned; stripping blocks
-	// first therefore deleted everything from that word to the end of the next
-	// doc comment — imports included — and reported a module that imports
-	// `effect` as importing nothing at all. It failed SILENTLY in the safe
-	// direction, which is the worst direction for a confinement test.
-	const code = source.replace(/(^|\n)\s*\/\/.*/g, "$1").replace(/\/\*[\s\S]*?\*\//g, "");
-	const pattern = /(?:^|\n)\s*(?:import|export)\b([^;]*?)\bfrom\s*["']([^"']+)["']/g;
+	// Vendored siblings expose a larger graph than upstream's bare package edges.
+	// Parse declarations so an exported class's error message containing `from`
+	// cannot become a phantom dependency, and comment tokens cannot hide imports.
+	const file = Ts.createSourceFile("reachability.ts", source, Ts.ScriptTarget.Latest, true, Ts.ScriptKind.TS);
 	const specifiers: Array<string> = [];
-	for (const match of code.matchAll(pattern)) {
-		const clause = match[1] ?? "";
-		const specifier = match[2];
-		if (specifier === undefined) continue;
-		if (/^\s*type\b/.test(clause)) continue;
-		specifiers.push(specifier);
+	for (const statement of file.statements) {
+		if (!Ts.isImportDeclaration(statement) && !Ts.isExportDeclaration(statement)) continue;
+		const specifier = statement.moduleSpecifier;
+		if (specifier === undefined || !Ts.isStringLiteral(specifier)) continue;
+		if (Ts.isImportDeclaration(statement)) {
+			if (statement.importClause?.isTypeOnly === true) continue;
+		} else {
+			if (statement.isTypeOnly) continue;
+		}
+		specifiers.push(specifier.text);
 	}
 	return specifiers;
 };
 
-/** Every bare (non-relative) specifier reachable at runtime from `entry`. */
-const reachableBareImports = (entry: string): ReadonlySet<string> => {
+/** Runtime files and bare specifiers, including the lab's vendored sibling modules. */
+const reachableImports = (entry: string): { readonly files: ReadonlySet<string>; readonly bare: ReadonlySet<string> } => {
 	const seen = new Set<string>();
 	const bare = new Set<string>();
 	const queue = [resolve(SRC, entry)];
@@ -72,8 +68,11 @@ const reachableBareImports = (entry: string): ReadonlySet<string> => {
 			}
 		}
 	}
-	return bare;
+	return { files: seen, bare };
 };
+
+/** Every bare (non-relative) specifier reachable at runtime from `entry`. */
+const reachableBareImports = (entry: string): ReadonlySet<string> => reachableImports(entry).bare;
 
 const reachesSigstore = (entry: string): boolean =>
 	[...reachableBareImports(entry)].some((specifier) => specifier.startsWith("@sigstore/"));
@@ -108,6 +107,11 @@ describe("bundle reachability", () => {
 			"/** A real doc comment, whose close is the phantom comment's close. */",
 			'import { License } from "../../effected/spdx/index.ts";',
 			"export const x = [Schema, License];",
+			"export class ReadError {",
+			'  message = `Failed to read package.json from "${this.path}"`;',
+			"}",
+			'import type { Package } from "@effected/package-json";',
+			'export type { Person } from "@effected/package-json";',
 		].join("\n");
 		assert.deepStrictEqual([...runtimeSpecifiers(fixture)], ["effect", "../../effected/spdx/index.ts"]);
 	});
@@ -136,10 +140,29 @@ describe("bundle reachability", () => {
 	});
 
 	it("the SBOM half reaches only effect and the kit packages it derives from", () => {
-		assert.deepStrictEqual([...reachableBareImports("Sbom.ts")].sort(), ["@effected/spdx", "effect"]);
+		// D9: upstream's bare @effected/spdx edge is a relative edge in the lab.
+		// Check that sibling explicitly, alongside the complete external closure.
+		for (const entry of ["Sbom.ts", "SbomMetadataSource.ts"]) {
+			const { files } = reachableImports(entry);
+			assert.isTrue(files.has(resolve(SRC, "..", "spdx", "index.ts")), `${entry} derives from the lab SPDX module`);
+			assert.isFalse(
+				files.has(resolve(SRC, "..", "package-json", "index.ts")),
+				`${entry} must not drag package-json's runtime IO in`,
+			);
+		}
+		assert.deepStrictEqual([...reachableBareImports("Sbom.ts")].sort(), [
+			"@beep/identity/packages", "@beep/schema/LiteralKit", "effect/Array", "effect/Effect", "effect/FileSystem",
+			"effect/Function", "effect/HashMap", "effect/HashSet", "effect/Match", "effect/MutableHashSet", "effect/Option",
+			"effect/Order", "effect/Record", "effect/Result", "effect/Schema", "effect/SchemaIssue",
+			"effect/SchemaTransformation", "effect/String",
+		]);
 		assert.deepStrictEqual(
 			[...reachableBareImports("SbomMetadataSource.ts")].sort(),
-			["@effected/spdx", "effect"],
+			[
+				"@beep/identity/packages", "@beep/schema/LiteralKit", "effect/Array", "effect/Effect", "effect/HashMap",
+				"effect/HashSet", "effect/Match", "effect/MutableHashSet", "effect/Option", "effect/Record", "effect/Result",
+				"effect/Schema", "effect/SchemaIssue", "effect/SchemaTransformation",
+			],
 			"SbomMetadataSource reads `Package` as a TYPE only — a value import would drag package-json's IO in",
 		);
 	});
@@ -149,7 +172,9 @@ describe("bundle reachability", () => {
 		for (const entry of ["InTotoStatement.ts", "SlsaProvenance.ts", "NtiaReport.ts"]) {
 			const expected = entry === "InTotoStatement.ts"
 				? ["@beep/identity/packages", "effect/Effect", "effect/Result", "effect/Schema"]
-				: ["@beep/identity/packages", "effect/Schema"];
+				: entry === "NtiaReport.ts"
+					? ["@beep/identity/packages", "@beep/schema/LiteralKit", "effect/Schema", "effect/String"]
+					: ["@beep/identity/packages", "effect/Schema"];
 			assert.deepStrictEqual([...reachableBareImports(entry)].sort(), expected, entry);
 		}
 	});
@@ -166,14 +191,14 @@ describe("bundle reachability", () => {
 	it("the package declares itself side-effect free", () => {
 		// The other half of the mechanism: without this a bundler must assume
 		// evaluating an unreferenced module matters, and keeps it.
-		const manifest: unknown = JSON.parse(readFileSync(resolve(SRC, "..", "package.json"), "utf8"));
+		const manifest: unknown = JSON.parse(readFileSync(resolve(SRC, "package.json"), "utf8"));
 		assertTrue(S.is(Manifest)(manifest));
 		assert.strictEqual(manifest.sideEffects, false);
 	});
 
 	it("every runtime dependency is declared", () => {
 		// A package you import but do not declare is how a peer closure rots.
-		const manifest: unknown = JSON.parse(readFileSync(resolve(SRC, "..", "package.json"), "utf8"));
+		const manifest: unknown = JSON.parse(readFileSync(resolve(SRC, "package.json"), "utf8"));
 		assertTrue(S.is(Manifest)(manifest));
 		const declared = new Set([
 			...Object.keys(manifest.dependencies ?? {}),

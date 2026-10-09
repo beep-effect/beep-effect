@@ -15,7 +15,9 @@
 // @see https://www.ntia.gov/files/ntia/publications/sbom_minimum_elements_report.pdf
 
 import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import type { SbomDocument } from "./SbomDocument.ts";
 
 const $I = $ScratchpadId.create("effected/sbom/NtiaReport");
@@ -29,7 +31,7 @@ const $I = $ScratchpadId.create("effected/sbom/NtiaReport");
  *
  * @public
  */
-export const NtiaElementId = S.Literals([
+export const NtiaElementId = LiteralKit([
 	"supplierName",
 	"componentName",
 	"componentVersion",
@@ -67,11 +69,21 @@ const element = (id: NtiaElementId, value: string | undefined): NtiaElement =>
 		...(value !== undefined && { value }),
 	});
 
+const PresentText = S.String.check(S.isTrimmed(), S.isNonEmpty()).pipe(
+	$I.annoteSchema("PresentText", { description: "Trimmed, non-empty text satisfying an NTIA element." }),
+);
+const isPresentText = S.is(PresentText);
+
+const PackageIdentifier = PresentText.check(S.isStartingWith("pkg:")).pipe(
+	$I.annoteSchema("PackageIdentifier", { description: "Present NTIA identifier text with a package URL prefix." }),
+);
+const isPackageIdentifier = S.is(PackageIdentifier);
+
 /** A string that carries something, or nothing. */
 const present = (value: string | undefined): string | undefined => {
 	if (value === undefined) return undefined;
-	const trimmed = value.trim();
-	return trimmed === "" ? undefined : trimmed;
+	const trimmed = Str.trim(value);
+	return isPresentText(trimmed) ? trimmed : undefined;
 };
 
 /** Element 1: the entity that supplies the software. */
@@ -94,7 +106,7 @@ const componentVersion = (document: SbomDocument): NtiaElement =>
  */
 const uniqueIdentifier = (document: SbomDocument): NtiaElement => {
 	const purl = present(document.metadata?.component?.purl);
-	return element("uniqueIdentifier", purl?.startsWith("pkg:") === true ? purl : undefined);
+	return element("uniqueIdentifier", isPackageIdentifier(purl) ? purl : undefined);
 };
 
 /**

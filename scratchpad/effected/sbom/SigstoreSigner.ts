@@ -10,6 +10,7 @@
 // into a message string is needed.
 
 import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import { bundleToJSON } from "@sigstore/bundle";
 import type { IdentityProvider, Signer, Witness } from "@sigstore/sign";
 import { DSSEBundleBuilder, FulcioSigner, RekorWitness } from "@sigstore/sign";
@@ -44,7 +45,7 @@ export const SIGSTORE_OIDC_AUDIENCE = "sigstore" as const;
  *
  * @public
  */
-export const SigningErrorKind = S.Literals(["identity", "certificate", "transparencyLog", "bundle"]).pipe($I.annoteSchema("SigningErrorKind", { description: "Which step of signing failed." }));
+export const SigningErrorKind = LiteralKit(["identity", "certificate", "transparencyLog", "bundle"]).pipe($I.annoteSchema("SigningErrorKind", { description: "Which step of signing failed." }));
 
 /**
  * The decoded type of {@link (SigningErrorKind:variable)}.
@@ -176,7 +177,7 @@ const make = (identity: IdentityTokenShape, options: SigstoreSignerOptions): Sig
 /** Raised when a signer test double has no signing override. */
 class UnstubbedSigstoreSignerError extends S.TaggedError<UnstubbedSigstoreSignerError>($I`UnstubbedSigstoreSignerError`)(
 	"UnstubbedSigstoreSignerError",
-	{ message: S.String },
+	{ message: S.String.annotateKey({ description: "Explains why the signer test double requires an explicit signing override." }) },
 	$I.annote("UnstubbedSigstoreSignerError", { description: "Raised when a signer test double has no signing override." }),
 ) {}
 
@@ -242,7 +243,7 @@ export class SigstoreSigner extends Context.Service<SigstoreSigner, SigstoreSign
 	 * {@link (SigstoreSigner:class).layerWith}.
 	 */
 	static readonly makeTest = (overrides: Partial<SigstoreSignerShape> = {}): SigstoreSignerShape => ({
-		sign: overrides.sign ?? (() => unstubbed()),
+		sign: overrides.sign ?? unstubbed,
 	});
 
 	/** {@link (SigstoreSigner:class).makeTest} behind a `Layer`. */
