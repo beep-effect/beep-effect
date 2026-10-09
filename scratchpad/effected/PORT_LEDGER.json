@@ -1417,6 +1417,7 @@
     "2026-10-07 W0: effect-imports runs --candidate on a mirror under coverage/effected-laws/<target> because the law excludes scratchpad/ and promotes no family (OPPORTUNITIES.md).",
     "2026-10-07 W0: laws skip test files by scope; tsgo covers tests. doctest verify selects no scratchpad files; vitest doctest plugin runs runnable fences.",
     "2026-10-07 W0: missingPipeableSignature is error: exported fixed-arity functions with 2+ params need a dual data-last overload; Effect.fn exports are rest-typed and exempt.",
-    "2026-10-08 W0: the reference checkout is refreshed on a schedule and moved past the pin (af7566a9 -> 6893a055, jsonl redesigned upstream); the runner reads a git-archive export of the pinned commit under ~/.cache/beep/effected-port/upstream/<commit> whenever the checkout is off the pin, and the reviewer brief names that path."
+    "2026-10-08 W0: the reference checkout is refreshed on a schedule and moved past the pin (af7566a9 -> 6893a055, jsonl redesigned upstream); the runner reads a git-archive export of the pinned commit under ~/.cache/beep/effected-port/upstream/<commit> whenever the checkout is off the pin, and the reviewer brief names that path.",
+    "2026-10-08 operator revision: breadth first. Phase 1 copies every remaining module verbatim (S0); phase 2 brings them green (S1, then S2 and S3); reviews (S4) start only after that. jsonc round 3 and jsonl round 2 were stopped unmerged; their sol and fable reports are kept under .review/ as input for phase 3."
   ]
 }

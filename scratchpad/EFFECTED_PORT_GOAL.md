@@ -7,6 +7,21 @@ Launch, from a `claude` session in `~/YeeBois/projects/beep-effect` on branch
 /goal follow the instructions in scratchpad/EFFECTED_PORT_GOAL.md
 ```
 
+> **Operator revision, 2026-10-08. Where it conflicts with the text below, this wins.**
+>
+> Work breadth first, in three phases:
+>
+> 1. **Copy.** Run S0 (copy verbatim) for every remaining module, in ledger order, one commit
+>    each. No fixing, no crispening, no documentation work.
+> 2. **Green.** Then bring the copied modules up to the repo standards: check (tsgo), lint and the
+>    laws with upstream tests passing (S1), then documentation (S2) and coverage (S3).
+> 3. **Review.** Review rounds (S4, section 12) start only after everything passes those
+>    standards.
+>
+> No review round runs before phase 3. D18 (two modules in flight) and D19 (wave-0 confirmation
+> round) do not gate phases 1 and 2. The `jsonc` round-3 and `jsonl` round-2 reports already on
+> disk are input for phase 3, not work to do now. The end state (section 0.1) is unchanged.
+
 This file is the whole contract. The `/goal` evaluator only reads the
 transcript, so section 0 defines what you print and when. Everything else is
 the work. Decisions D1–D12 were grilled and locked with Benjamin on
