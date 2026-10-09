@@ -85,9 +85,13 @@ export const officeActionStructureFileStore = (filename: string) =>
         const text = yield* fs.readFileString(filename);
         if (text === "") return A.empty<OfficeActionStructureAttempt>();
         if (!Str.endsWith("\n")(text)) return yield* storageError("Incomplete attempt log.");
-        const rows = yield* Effect.forEach(Str.split(Str.slice(0, -1)(text), "\n"), S.decodeEffect(JsonAttempt), {
-          concurrency: 1,
-        });
+        const rows = yield* Effect.forEach(
+          Str.split(Str.slice(0, -1)(text), "\n"),
+          (line) => S.decodeEffect(JsonAttempt)(line),
+          {
+            concurrency: 1,
+          }
+        );
         return yield* validateHistory(rows);
       }).pipe(Effect.mapError(() => storageError("Cannot decode complete attempt history.")));
       const append = Effect.fn("OfficeActionStructureStore.append")(function* (attempt: OfficeActionStructureAttempt) {

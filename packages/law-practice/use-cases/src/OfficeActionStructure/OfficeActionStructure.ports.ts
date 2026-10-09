@@ -30,6 +30,20 @@ import type { OfficeActionStructureStorageError } from "./OfficeActionStructure.
 
 const $I = $LawPracticeUseCasesId.create("OfficeActionStructure/OfficeActionStructure.ports");
 const VerifiedSourceSchema: S.Codec<VerifiedSourceText> = VerifiedSourceText;
+const OfficeActionStructureInputStruct = S.Struct({
+  document: DocStructureDocument,
+  verifiedSource: VerifiedSourceSchema,
+  rule: DocStructureRuleFamily.pipe(S.withConstructorDefault(Effect.succeed(officeActionRuleV1))),
+  ocrPages: S.Array(PageOcrResult).pipe(S.withConstructorDefault(Effect.succeed([]))),
+});
+const OfficeActionStructureInputBase: S.Class<OfficeActionStructureInput, typeof OfficeActionStructureInputStruct, {}> =
+  S.Class<OfficeActionStructureInput>($I`OfficeActionStructureInput`)(
+    OfficeActionStructureInputStruct,
+    $I.annote("OfficeActionStructureInput", {
+      description:
+        "Verified raw source and declared qualification; any typed OCR page closes v1 regardless of declared modality or confidence.",
+    })
+  );
 /**
  * Requires opaque source verification and retains typed OCR diagnostics at the extraction boundary.
  *
@@ -44,18 +58,7 @@ const VerifiedSourceSchema: S.Codec<VerifiedSourceText> = VerifiedSourceText;
  * @category ports
  * @since 0.0.0
  */
-export class OfficeActionStructureInput extends S.Class<OfficeActionStructureInput>($I`OfficeActionStructureInput`)(
-  {
-    document: DocStructureDocument,
-    verifiedSource: VerifiedSourceSchema,
-    rule: DocStructureRuleFamily.pipe(S.withConstructorDefault(Effect.succeed(officeActionRuleV1))),
-    ocrPages: S.Array(PageOcrResult).pipe(S.withConstructorDefault(Effect.succeed([]))),
-  },
-  $I.annote("OfficeActionStructureInput", {
-    description:
-      "Verified raw source and declared qualification; any typed OCR page closes v1 regardless of declared modality or confidence.",
-  })
-) {}
+export class OfficeActionStructureInput extends OfficeActionStructureInputBase {}
 /**
  * Defines span-preserving extraction and adapter operations with typed anchor failures.
  * @category type-level

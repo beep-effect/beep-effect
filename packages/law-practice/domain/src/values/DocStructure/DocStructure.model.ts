@@ -251,6 +251,21 @@ const CandidateSourceCheck = S.makeFilter(
     message: "Candidate source differs from its verified anchor source.",
   }
 );
+const OfficeActionFinalityCandidateStruct = S.Struct({
+  ...CandidateFields,
+  _tag: S.tag("OfficeActionFinalityCandidate"),
+  finality: OfficeActionFinality,
+}).check(CandidateSourceCheck);
+const OfficeActionFinalityCandidateBase: S.Class<
+  OfficeActionFinalityCandidate,
+  typeof OfficeActionFinalityCandidateStruct,
+  {}
+> = S.Class<OfficeActionFinalityCandidate>($I`OfficeActionFinalityCandidate`)(
+  OfficeActionFinalityCandidateStruct,
+  $I.annote("OfficeActionFinalityCandidate", {
+    description: "Verified explicit finality evidence with non-calibrated prior; conveys no admission or approval.",
+  })
+);
 /**
  * Carries verified finality evidence as a candidate with a non-calibrated confidence prior.
  *
@@ -270,16 +285,22 @@ const CandidateSourceCheck = S.makeFilter(
  * @category models
  * @since 0.0.0
  */
-export class OfficeActionFinalityCandidate extends S.Class<OfficeActionFinalityCandidate>(
-  $I`OfficeActionFinalityCandidate`
-)(
-  S.Struct({ ...CandidateFields, _tag: S.tag("OfficeActionFinalityCandidate"), finality: OfficeActionFinality }).check(
-    CandidateSourceCheck
-  ),
-  $I.annote("OfficeActionFinalityCandidate", {
-    description: "Verified explicit finality evidence with non-calibrated prior; conveys no admission or approval.",
+export class OfficeActionFinalityCandidate extends OfficeActionFinalityCandidateBase {}
+const ShortenedStatutoryPeriodCandidateStruct = S.Struct({
+  ...CandidateFields,
+  _tag: S.tag("ShortenedStatutoryPeriodCandidate"),
+  months: S.Literal(3),
+}).check(CandidateSourceCheck);
+const ShortenedStatutoryPeriodCandidateBase: S.Class<
+  ShortenedStatutoryPeriodCandidate,
+  typeof ShortenedStatutoryPeriodCandidateStruct,
+  {}
+> = S.Class<ShortenedStatutoryPeriodCandidate>($I`ShortenedStatutoryPeriodCandidate`)(
+  ShortenedStatutoryPeriodCandidateStruct,
+  $I.annote("ShortenedStatutoryPeriodCandidate", {
+    description: "Verified three-month period declaration; not a computed deadline or admitted truth.",
   })
-) {}
+);
 /**
  * Carries a verified three-month period declaration without computing or approving a deadline.
  *
@@ -299,16 +320,7 @@ export class OfficeActionFinalityCandidate extends S.Class<OfficeActionFinalityC
  * @category models
  * @since 0.0.0
  */
-export class ShortenedStatutoryPeriodCandidate extends S.Class<ShortenedStatutoryPeriodCandidate>(
-  $I`ShortenedStatutoryPeriodCandidate`
-)(
-  S.Struct({ ...CandidateFields, _tag: S.tag("ShortenedStatutoryPeriodCandidate"), months: S.Literal(3) }).check(
-    CandidateSourceCheck
-  ),
-  $I.annote("ShortenedStatutoryPeriodCandidate", {
-    description: "Verified three-month period declaration; not a computed deadline or admitted truth.",
-  })
-) {}
+export class ShortenedStatutoryPeriodCandidate extends ShortenedStatutoryPeriodCandidateBase {}
 /**
  * Defines the two verified evidence variants accepted by the docketing seam.
  *

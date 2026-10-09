@@ -108,3 +108,14 @@
   unions with public named types. Runtime predicates and capability brands stay
   intact; there is no cast, suppression, substrate edit or structural substitute.
 - Prevention: name public opaque-proof schema types before declaration emission.
+
+## 2026-10-09 — Named opaque-proof class bases
+
+- Evidence: TS4094 persisted at candidate class declarations after codec and
+  tagged-union annotations; the server decoder also accepted an unintended index
+  as its optional parse-options argument.
+- Attribution: introduced declaration and callback boundaries.
+- Repair: reuse the named, explicitly typed schema-class base pattern already in
+  IrToLaw and VerifiedSpan; pass only the JSON line to the decoder. The opaque
+  capability predicate remains unchanged.
+- Prevention: verify declaration emission alongside runtime proof construction.
