@@ -1,3 +1,6 @@
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as O from "effect/Option";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 // The provenance state machine: every defined name records HOW it came
@@ -21,9 +24,16 @@ import type { TomlExpression, TomlKey, TomlKeyValue, TomlValueNode } from "../To
 import { TomlArray, TomlArrayTableHeader, TomlInlineTable, TomlTableHeader, TomlTrivia } from "../TomlNode.ts";
 import type { TomlSemanticErrorCodeRaw } from "./diagnostics.ts";
 import { RawTomlError } from "./diagnostics.ts";
-import * as Schema from "effect/Schema";
+import * as S from "effect/Schema";
 import * as A from "effect/Array";
 import * as R from "effect/Record";
+
+const $I = $ScratchpadId.create("effected/toml/internal/semantic");
+
+class TomlSemanticInvariantError extends S.TaggedError<TomlSemanticInvariantError>($I`TomlSemanticInvariantError`)(
+	"TomlSemanticInvariantError",
+	{ message: S.String },
+) {}
 
 /** Semantic-pass callbacks, fired in document order after each expression validates. */
 export interface SemanticVisitor {
@@ -48,14 +58,14 @@ type Provenance =
 /** One name in the provenance tree. `elements` is used by `array-tables` only; `sectionId` by `table-dotted` only. */
 interface SemNode {
 	kind: Provenance;
-	readonly table: Map<string, SemNode>;
+	readonly table: MutableHashMap.MutableHashMap<string, SemNode>;
 	readonly elements: Array<SemNode>;
 	readonly sectionId: number;
 }
 
 const makeNode = (kind: Provenance, sectionId = 0): SemNode => ({
 	kind,
-	table: new Map(),
+	table: MutableHashMap.empty<string, SemNode>(),
 	elements: [],
 	sectionId,
 });
@@ -80,34 +90,29 @@ const navigateHeaderPrefix = (root: SemNode, keyPath: ReadonlyArray<TomlKey>): S
 	for (let i = 0; i < keyPath.length - 1; i++) {
 		const key = keyPath[i];
 		if (key === undefined) {
-			throw new TypeError("missing TOML key");
+			throw TomlSemanticInvariantError.make({ message: "missing TOML key" });
 		}
-		const existing = current.table.get(key.value);
+		const existing = O.getOrUndefined(MutableHashMap.get(current.table, key.value));
 		if (existing === undefined) {
 			const child = makeNode("table-implicit");
-			current.table.set(key.value, child);
+			MutableHashMap.set(current.table, key.value, child);
 			current = child;
 			continue;
 		}
-		switch (existing.kind) {
-			case "table-explicit":
-			case "table-implicit":
-			case "table-dotted":
-				current = existing;
-				break;
-			case "array-tables":
-				const element = existing.elements[existing.elements.length - 1];
-				if (element === undefined) {
-					throw new TypeError("missing array-table element");
-				}
-				current = element;
-				break;
-			case "inline":
-				return raise("InlineTableExtended", `inline table "${key.value}" cannot be extended`, key);
-			case "static-array":
-				return raise("ArrayOfTablesConflict", `"${key.value}" is a static array, not an array of tables`, key);
-			case "value":
-				return raise("TableRedefined", `"${key.value}" is already defined as a value`, key);
+		if (existing.kind === "table-explicit" || existing.kind === "table-implicit" || existing.kind === "table-dotted") {
+			current = existing;
+		} else if (existing.kind === "array-tables") {
+			const element = existing.elements[existing.elements.length - 1];
+			if (element === undefined) {
+				throw TomlSemanticInvariantError.make({ message: "missing array-table element" });
+			}
+			current = element;
+		} else if (existing.kind === "inline") {
+			return raise("InlineTableExtended", `inline table "${key.value}" cannot be extended`, key);
+		} else if (existing.kind === "static-array") {
+			return raise("ArrayOfTablesConflict", `"${key.value}" is a static array, not an array of tables`, key);
+		} else if (existing.kind === "value") {
+			return raise("TableRedefined", `"${key.value}" is already defined as a value`, key);
 		}
 	}
 	return current;
@@ -118,12 +123,12 @@ const openTable = (root: SemNode, keyPath: ReadonlyArray<TomlKey>): SemNode => {
 	const parent = navigateHeaderPrefix(root, keyPath);
 	const key = keyPath[keyPath.length - 1];
 	if (key === undefined) {
-		throw new TypeError("missing TOML key");
+		throw TomlSemanticInvariantError.make({ message: "missing TOML key" });
 	}
-	const existing = parent.table.get(key.value);
+	const existing = O.getOrUndefined(MutableHashMap.get(parent.table, key.value));
 	if (existing === undefined) {
 		const node = makeNode("table-explicit");
-		parent.table.set(key.value, node);
+		MutableHashMap.set(parent.table, key.value, node);
 		return node;
 	}
 	if (existing.kind === "table-implicit") {
@@ -141,14 +146,14 @@ const openArrayTable = (
 	const parent = navigateHeaderPrefix(root, keyPath);
 	const key = keyPath[keyPath.length - 1];
 	if (key === undefined) {
-		throw new TypeError("missing TOML key");
+		throw TomlSemanticInvariantError.make({ message: "missing TOML key" });
 	}
-	const existing = parent.table.get(key.value);
+	const existing = O.getOrUndefined(MutableHashMap.get(parent.table, key.value));
 	if (existing === undefined) {
 		const array = makeNode("array-tables");
 		const element = makeNode("table-explicit");
 		array.elements.push(element);
-		parent.table.set(key.value, array);
+		MutableHashMap.set(parent.table, key.value, array);
 		return { element, index: 0 };
 	}
 	if (existing.kind === "array-tables") {
@@ -175,12 +180,12 @@ const assignEntry = (
 	for (let i = 0; i < keyPath.length - 1; i++) {
 		const key = keyPath[i];
 		if (key === undefined) {
-			throw new TypeError("missing TOML key");
+			throw TomlSemanticInvariantError.make({ message: "missing TOML key" });
 		}
-		const existing = current.table.get(key.value);
+		const existing = O.getOrUndefined(MutableHashMap.get(current.table, key.value));
 		if (existing === undefined) {
 			const child = makeNode("table-dotted", sectionId);
-			current.table.set(key.value, child);
+			MutableHashMap.set(current.table, key.value, child);
 			current = child;
 			continue;
 		}
@@ -195,20 +200,20 @@ const assignEntry = (
 	}
 	const key = keyPath[keyPath.length - 1];
 	if (key === undefined) {
-		throw new TypeError("missing TOML key");
+		throw TomlSemanticInvariantError.make({ message: "missing TOML key" });
 	}
-	if (current.table.has(key.value)) {
+	if (MutableHashMap.has(current.table, key.value)) {
 		raise("DuplicateKey", `duplicate key "${key.value}"`, key);
 	}
-	current.table.set(key.value, nodeForValue(value, context));
+	MutableHashMap.set(current.table, key.value, nodeForValue(value, context));
 };
 
 /** The provenance node for an assigned value; validates inline tables (arrays included) on the way. */
 const nodeForValue = (value: TomlValueNode, context: Context): SemNode => {
-	if (Schema.is(TomlInlineTable)(value)) {
+	if (S.is(TomlInlineTable)(value)) {
 		return inlineNode(value, context);
 	}
-	if (Schema.is(TomlArray)(value)) {
+	if (S.is(TomlArray)(value)) {
 		for (const item of value.items) {
 			checkArrayItem(item, context);
 		}
@@ -219,11 +224,11 @@ const nodeForValue = (value: TomlValueNode, context: Context): SemNode => {
 
 /** Inline tables hide anywhere inside a static array; validate them all. Depth is parser-capped. */
 const checkArrayItem = (item: TomlValueNode, context: Context): void => {
-	if (Schema.is(TomlInlineTable)(item)) {
+	if (S.is(TomlInlineTable)(item)) {
 		inlineNode(item, context);
 		return;
 	}
-	if (Schema.is(TomlArray)(item)) {
+	if (S.is(TomlArray)(item)) {
 		for (const inner of item.items) {
 			checkArrayItem(inner, context);
 		}
@@ -260,17 +265,17 @@ export const analyze: {
 	let currentPrefix: ReadonlyArray<string> = [];
 	visitor?.onTableStart?.([], undefined);
 	for (const expression of expressions) {
-		if (Schema.is(TomlTrivia)(expression)) {
+		if (S.is(TomlTrivia)(expression)) {
 			continue;
 		}
-		if (Schema.is(TomlTableHeader)(expression)) {
+		if (S.is(TomlTableHeader)(expression)) {
 			currentTable = openTable(root, expression.keyPath);
 			currentSectionId = context.nextId++;
 			currentPrefix = expression.keyPath.map((key) => key.value);
 			visitor?.onTableStart?.(currentPrefix, expression);
 			continue;
 		}
-		if (Schema.is(TomlArrayTableHeader)(expression)) {
+		if (S.is(TomlArrayTableHeader)(expression)) {
 			const { element, index } = openArrayTable(root, expression.keyPath);
 			currentTable = element;
 			currentSectionId = context.nextId++;
@@ -315,7 +320,7 @@ const navigateOutput = (target: Record<string, unknown>, path: ReadonlyArray<str
 			child = child[child.length - 1];
 		}
 		if (!P.isObject(child)) {
-			throw new TypeError("expected TOML output table");
+			throw TomlSemanticInvariantError.make({ message: "expected TOML output table" });
 		}
 		current = child;
 	}
@@ -324,10 +329,10 @@ const navigateOutput = (target: Record<string, unknown>, path: ReadonlyArray<str
 
 /** Materialize a CST value node into a plain value. Recursion is parser-depth-capped. */
 const materialize = (value: TomlValueNode): unknown => {
-	if (Schema.is(TomlArray)(value)) {
+	if (S.is(TomlArray)(value)) {
 		return value.items.map(materialize);
 	}
-	if (Schema.is(TomlInlineTable)(value)) {
+	if (S.is(TomlInlineTable)(value)) {
 		const output: Record<string, unknown> = {};
 		for (const entry of value.entries) {
 			const parent = navigateOutput(
@@ -336,7 +341,7 @@ const materialize = (value: TomlValueNode): unknown => {
 			);
 			const key = entry.keyPath[entry.keyPath.length - 1];
 			if (key === undefined) {
-				throw new TypeError("missing TOML key");
+				throw TomlSemanticInvariantError.make({ message: "missing TOML key" });
 			}
 			setOwnProperty(parent, key.value, materialize(entry.value));
 		}
@@ -362,7 +367,7 @@ export const buildValue = (expressions: ReadonlyArray<TomlExpression>): unknown 
 			const parent = navigateOutput(result, path.slice(0, -1));
 			const key = path[path.length - 1];
 			if (key === undefined) {
-				throw new TypeError("missing TOML key");
+				throw TomlSemanticInvariantError.make({ message: "missing TOML key" });
 			}
 			const existing = getOwnProperty(parent, key);
 			if (A.isArray(existing)) {
@@ -375,7 +380,7 @@ export const buildValue = (expressions: ReadonlyArray<TomlExpression>): unknown 
 			const parent = navigateOutput(result, path.slice(0, -1));
 			const key = path[path.length - 1];
 			if (key === undefined) {
-				throw new TypeError("missing TOML key");
+				throw TomlSemanticInvariantError.make({ message: "missing TOML key" });
 			}
 			setOwnProperty(parent, key, materialize(expr.value));
 		},

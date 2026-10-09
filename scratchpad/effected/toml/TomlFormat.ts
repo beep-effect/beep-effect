@@ -19,6 +19,8 @@ import { $ScratchpadId } from "@beep/identity/packages";
 import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as O from "effect/Option";
 import type { TomlErrorCodeRaw } from "./internal/diagnostics.ts";
 import { isRawTomlError } from "./internal/diagnostics.ts";
 import { MAX_NESTING_DEPTH, isGuardExceeded } from "./internal/limits.ts";
@@ -42,6 +44,11 @@ import {
 import * as P from "effect/Predicate";
 
 const $I = $ScratchpadId.create("effected/toml/TomlFormat");
+
+class TomlFormatInvariantError extends S.TaggedError<TomlFormatInvariantError>($I`TomlFormatInvariantError`)(
+	"TomlFormatInvariantError",
+	{ message: S.String },
+) {}
 
 /**
  * A range accepted at the `format`/`formatToString` call sites: either a
@@ -304,7 +311,7 @@ const normalizeNewlines = (
 const headerContentEnd = (source: string, expr: TomlTableHeader | TomlArrayTableHeader): number => {
 	const lastKey = expr.keyPath[expr.keyPath.length - 1];
 	if (lastKey === undefined) {
-		throw new TypeError("missing TOML element");
+		throw TomlFormatInvariantError.make({ message: "missing TOML element" });
 	}
 	const bracket = scanWs(source, lastKey.offset + lastKey.length, expr.offset + expr.length);
 	return bracket + (S.is(TomlArrayTableHeader)(expr) ? 2 : 1);
@@ -328,7 +335,7 @@ const computeFormatEdits = (source: string, options: TomlFormattingOptions | und
 			formatLeading(source, emit, expr);
 			const lastKey = expr.keyPath[expr.keyPath.length - 1];
 			if (lastKey === undefined) {
-				throw new TypeError("missing TOML element");
+				throw TomlFormatInvariantError.make({ message: "missing TOML element" });
 			}
 			const keyEnd = lastKey.offset + lastKey.length;
 			emit.push(expr, keyEnd, expr.value.offset - keyEnd, " = ");
@@ -350,7 +357,7 @@ const computeFormatEdits = (source: string, options: TomlFormattingOptions | und
 	if (expressions.length > 0 && source.charCodeAt(source.length - 1) !== LF) {
 		const last = expressions[expressions.length - 1];
 		if (last === undefined) {
-			throw new TypeError("missing TOML element");
+			throw TomlFormatInvariantError.make({ message: "missing TOML element" });
 		}
 		emit.push(last, source.length, 0, target ?? dominantNewline(source));
 	}
@@ -370,7 +377,7 @@ interface Section {
 interface ResTable {
 	readonly kind: "table";
 	origin: "root" | "explicit" | "implicit" | "dotted" | "element";
-	readonly entries: Map<string, ResNode>;
+	readonly entries: MutableHashMap.MutableHashMap<string, ResNode>;
 	sectionIndex: number;
 	/** Dotted tables only: the key path relative to the defining section's header. */
 	readonly relPath: ReadonlyArray<string>;
@@ -393,7 +400,7 @@ type ResNode = ResTable | ResArrayTables | ResValue;
 const mkTable = (origin: ResTable["origin"], sectionIndex = 0, relPath: ReadonlyArray<string> = []): ResTable => ({
 	kind: "table",
 	origin,
-	entries: new Map(),
+	entries: MutableHashMap.empty<string, ResNode>(),
 	sectionIndex,
 	relPath,
 });
@@ -403,7 +410,7 @@ const intoTable = (node: ResNode | undefined): ResTable => {
 	if (node !== undefined && node.kind === "array-tables") {
 		const element = node.elements[node.elements.length - 1];
 		if (element === undefined) {
-			throw new TypeError("missing TOML element");
+			throw TomlFormatInvariantError.make({ message: "missing TOML element" });
 		}
 		return element;
 	}
@@ -411,7 +418,7 @@ const intoTable = (node: ResNode | undefined): ResTable => {
 		return node;
 	}
 	// The semantic pass already validated every navigation; reaching a value here is an invariant violation.
-	throw new Error("invariant: semantic pass admitted a value where a table was navigated");
+	throw TomlFormatInvariantError.make({ message: "invariant: semantic pass admitted a value where a table was navigated" });
 };
 
 /**
@@ -431,7 +438,7 @@ const buildSemanticIndex = (
 		} else if (!(S.is(TomlTrivia)(expr))) {
 			const section = sections[sections.length - 1];
 			if (section === undefined) {
-				throw new TypeError("missing TOML element");
+				throw TomlFormatInvariantError.make({ message: "missing TOML element" });
 			}
 			section.insertAfter = expr.offset + expr.length;
 		}
@@ -443,12 +450,12 @@ const buildSemanticIndex = (
 		for (let i = 0; i < path.length - 1; i++) {
 			const name = path[i];
 			if (name === undefined) {
-				throw new TypeError("missing TOML element");
+				throw TomlFormatInvariantError.make({ message: "missing TOML element" });
 			}
-			let child = current.entries.get(name);
+			let child = O.getOrUndefined(MutableHashMap.get(current.entries, name));
 			if (child === undefined) {
 				child = mkTable("implicit");
-				current.entries.set(name, child);
+				MutableHashMap.set(current.entries, name, child);
 			}
 			current = intoTable(child);
 		}
@@ -463,14 +470,14 @@ const buildSemanticIndex = (
 			const parent = navigateHeaderPrefix(path);
 			const name = path[path.length - 1];
 			if (name === undefined) {
-				throw new TypeError("missing TOML element");
+				throw TomlFormatInvariantError.make({ message: "missing TOML element" });
 			}
-			const existing = parent.entries.get(name);
+			const existing = O.getOrUndefined(MutableHashMap.get(parent.entries, name));
 			if (existing !== undefined && existing.kind === "table") {
 				existing.origin = "explicit";
 				existing.sectionIndex = sectionCounter;
 			} else {
-				parent.entries.set(name, mkTable("explicit", sectionCounter));
+				MutableHashMap.set(parent.entries, name, mkTable("explicit", sectionCounter));
 			}
 		},
 		onArrayTableStart: (path, _index, _header) => {
@@ -478,13 +485,13 @@ const buildSemanticIndex = (
 			const parent = navigateHeaderPrefix(path);
 			const name = path[path.length - 1];
 			if (name === undefined) {
-				throw new TypeError("missing TOML element");
+				throw TomlFormatInvariantError.make({ message: "missing TOML element" });
 			}
-			const existing = parent.entries.get(name);
+			const existing = O.getOrUndefined(MutableHashMap.get(parent.entries, name));
 			if (existing !== undefined && existing.kind === "array-tables") {
 				existing.elements.push(mkTable("element", sectionCounter));
 			} else {
-				parent.entries.set(name, { kind: "array-tables", elements: [mkTable("element", sectionCounter)] });
+				MutableHashMap.set(parent.entries, name, { kind: "array-tables", elements: [mkTable("element", sectionCounter)] });
 			}
 		},
 		onKeyValue: (path, expr) => {
@@ -493,27 +500,27 @@ const buildSemanticIndex = (
 			for (let i = 0; i < path.length - names.length; i++) {
 				const name = path[i];
 				if (name === undefined) {
-					throw new TypeError("missing TOML element");
+					throw TomlFormatInvariantError.make({ message: "missing TOML element" });
 				}
-				current = intoTable(current.entries.get(name));
+				current = current.entries.pipe(MutableHashMap.get(name), O.getOrUndefined, intoTable);
 			}
 			for (let j = 0; j < names.length - 1; j++) {
 				const name = names[j];
 				if (name === undefined) {
-					throw new TypeError("missing TOML element");
+					throw TomlFormatInvariantError.make({ message: "missing TOML element" });
 				}
-				let child = current.entries.get(name);
+				let child = O.getOrUndefined(MutableHashMap.get(current.entries, name));
 				if (child === undefined) {
 					child = mkTable("dotted", sectionCounter, names.slice(0, j + 1));
-					current.entries.set(name, child);
+					MutableHashMap.set(current.entries, name, child);
 				}
 				current = intoTable(child);
 			}
 			const name = names[names.length - 1];
 			if (name === undefined) {
-				throw new TypeError("missing TOML element");
+				throw TomlFormatInvariantError.make({ message: "missing TOML element" });
 			}
-			current.entries.set(name, { kind: "value", node: expr.value, expr });
+			MutableHashMap.set(current.entries, name, { kind: "value", node: expr.value, expr });
 		},
 	});
 	return { root, sections };
@@ -591,7 +598,7 @@ const stepInline = (
 const step = (cur: Cursor, segment: TomlSegment): Cursor => {
 	if (cur.t === "table") {
 		const key = String(segment);
-		const child = cur.table.entries.get(key);
+		const child = O.getOrUndefined(MutableHashMap.get(cur.table.entries, key));
 		if (child === undefined) {
 			return failResolve(
 				"DottedKeyConflict",
@@ -613,7 +620,7 @@ const step = (cur: Cursor, segment: TomlSegment): Cursor => {
 		}
 		const table = cur.node.elements[idx];
 		if (table === undefined) {
-			throw new TypeError("missing TOML element");
+			throw TomlFormatInvariantError.make({ message: "missing TOML element" });
 		}
 		return { t: "table", table };
 	}
@@ -641,7 +648,7 @@ const step = (cur: Cursor, segment: TomlSegment): Cursor => {
 		}
 		const item = node.items[idx];
 		if (item === undefined) {
-			throw new TypeError("missing TOML element");
+			throw TomlFormatInvariantError.make({ message: "missing TOML element" });
 		}
 		return cstCursor(item, { kind: "array-item", array: node, index: idx });
 	}
@@ -670,18 +677,18 @@ const spliceArrayItem = (array: TomlArray, index: number): RawEdit => {
 	}
 	const current = items[index];
 	if (current === undefined) {
-		throw new TypeError("missing TOML element");
+		throw TomlFormatInvariantError.make({ message: "missing TOML element" });
 	}
 	if (index < items.length - 1) {
 		const next = items[index + 1];
 		if (next === undefined) {
-			throw new TypeError("missing TOML element");
+			throw TomlFormatInvariantError.make({ message: "missing TOML element" });
 		}
 		return { offset: current.offset, length: next.offset - current.offset, newText: "" };
 	}
 	const previous = items[index - 1];
 	if (previous === undefined) {
-		throw new TypeError("missing TOML element");
+		throw TomlFormatInvariantError.make({ message: "missing TOML element" });
 	}
 	const prevEnd = previous.offset + previous.length;
 	return { offset: prevEnd, length: current.offset + current.length - prevEnd, newText: "" };
@@ -695,18 +702,18 @@ const spliceInlineEntry = (table: TomlInlineTable, index: number): RawEdit => {
 	}
 	const current = entries[index];
 	if (current === undefined) {
-		throw new TypeError("missing TOML element");
+		throw TomlFormatInvariantError.make({ message: "missing TOML element" });
 	}
 	if (index < entries.length - 1) {
 		const next = entries[index + 1];
 		if (next === undefined) {
-			throw new TypeError("missing TOML element");
+			throw TomlFormatInvariantError.make({ message: "missing TOML element" });
 		}
 		return { offset: current.offset, length: next.offset - current.offset, newText: "" };
 	}
 	const previous = entries[index - 1];
 	if (previous === undefined) {
-		throw new TypeError("missing TOML element");
+		throw TomlFormatInvariantError.make({ message: "missing TOML element" });
 	}
 	const prevEnd = previous.offset + previous.length;
 	return { offset: prevEnd, length: current.offset + current.length - prevEnd, newText: "" };
@@ -727,13 +734,13 @@ const insertEdit = (table: ResTable, key: string, value: unknown, ctx: ModifyCon
 		const firstHeader = ctx.sections.length > 1 ? ctx.sections[1]?.header : undefined;
 		const section = ctx.sections[0];
 		if (section === undefined) {
-			throw new TypeError("missing TOML element");
+			throw TomlFormatInvariantError.make({ message: "missing TOML element" });
 		}
 		offset = section.insertAfter ?? firstHeader?.offset ?? 0;
 	} else {
 		const section = ctx.sections[table.sectionIndex];
 		if (section === undefined) {
-			throw new TypeError("missing TOML element");
+			throw TomlFormatInvariantError.make({ message: "missing TOML element" });
 		}
 		offset = section.insertAfter ?? 0;
 	}
@@ -745,7 +752,7 @@ const insertEdit = (table: ResTable, key: string, value: unknown, ctx: ModifyCon
 const terminal = (cur: Cursor, segment: TomlSegment, value: unknown, ctx: ModifyContext): Array<RawEdit> => {
 	if (cur.t === "table") {
 		const key = String(segment);
-		const existing = cur.table.entries.get(key);
+		const existing = O.getOrUndefined(MutableHashMap.get(cur.table.entries, key));
 		if (value === undefined) {
 			if (existing === undefined) {
 				return [];
@@ -829,7 +836,7 @@ const terminal = (cur: Cursor, segment: TomlSegment, value: unknown, ctx: Modify
 		}
 		const item = node.items[idx];
 		if (item === undefined) {
-			throw new TypeError("missing TOML element");
+			throw TomlFormatInvariantError.make({ message: "missing TOML element" });
 		}
 		return [{ offset: item.offset, length: item.length, newText: renderInlineValue(value) }];
 	}
@@ -964,13 +971,13 @@ export class TomlFormat {
 				for (let i = 0; i < path.length - 1; i++) {
 					const segment = path[i];
 					if (segment === undefined) {
-						throw new TypeError("missing TOML path segment");
+						throw TomlFormatInvariantError.make({ message: "missing TOML path segment" });
 					}
 					cursor = step(cursor, segment);
 				}
 				const segment = path[path.length - 1];
 				if (segment === undefined) {
-					throw new TypeError("missing TOML path segment");
+					throw TomlFormatInvariantError.make({ message: "missing TOML path segment" });
 				}
 				return terminal(cursor, segment, value, ctx);
 			},

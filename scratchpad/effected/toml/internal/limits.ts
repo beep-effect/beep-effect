@@ -1,7 +1,15 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Data from "effect/Data";
 import { dual } from "effect/Function";
+import * as S from "effect/Schema";
 // The zero-dependency leaf every guard imports — no import cycle is possible
 // through here (jsonc/yaml/glob precedent).
+
+const $I = $ScratchpadId.create("effected/toml/internal/limits");
+
+class TomlCapError extends S.TaggedError<TomlCapError>($I`TomlCapError`)("TomlCapError", {
+	message: S.String,
+}) {}
 
 /** House parity constant for depth guards (yaml/jsonc/glob precedent). */
 export const MAX_NESTING_DEPTH = 256;
@@ -38,7 +46,9 @@ export const assertCap: {
 	(value: number): (name: string) => number;
 } = dual(2, (name: string, value: number): number => {
 	if (!Number.isSafeInteger(value) || value < 1) {
-		throw new TypeError(`@effected/toml internal cap ${name} must be a positive integer, received ${value}`);
+		throw TomlCapError.make({
+			message: `@effected/toml internal cap ${name} must be a positive integer, received ${value}`,
+		});
 	}
 	return value;
 });

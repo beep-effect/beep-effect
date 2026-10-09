@@ -19,6 +19,7 @@
 // throws raw carriers (`RawTomlError`, `GuardExceeded`); this module builds
 // the typed `TomlParseError`, never letting a raw carrier escape as a defect.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";
 import * as Stream from "effect/Stream";
@@ -32,6 +33,13 @@ import { TomlParseError } from "./Toml.ts";
 import { TomlDiagnostic } from "./TomlDiagnostic.ts";
 import type { TomlArrayTableHeader, TomlTableHeader } from "./TomlNode.ts";
 import { TomlKeyValue, TomlTrivia } from "./TomlNode.ts";
+
+const $I = $ScratchpadId.create("effected/toml/TomlVisitor");
+
+class TomlVisitorInvariantError extends S.TaggedError<TomlVisitorInvariantError>($I`TomlVisitorInvariantError`)(
+	"TomlVisitorInvariantError",
+	{ message: S.String },
+) {}
 
 /**
  * The discriminated union of TOML visitor events, in document order.
@@ -85,7 +93,7 @@ const trailingCommentOffset = (
 	}
 	const lastKey = expression.keyPath[expression.keyPath.length - 1];
 	if (lastKey === undefined) {
-		throw new TypeError("missing TOML key");
+		throw TomlVisitorInvariantError.make({ message: "missing TOML key" });
 	}
 	return source.indexOf("#", lastKey.offset + lastKey.length);
 };

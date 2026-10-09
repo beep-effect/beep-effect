@@ -163,26 +163,24 @@ export const scanBareKey: {
 
 /** The decoded character for a simple escape code, or undefined. */
 const simpleEscape = (code: number): string | undefined => {
-	switch (code) {
-		case 0x62:
-			return "\b";
-		case 0x74:
-			return "\t";
-		case 0x6e:
-			return "\n";
-		case 0x66:
-			return "\f";
-		case 0x72:
-			return "\r";
-		case 0x65:
-			return "\u001b";
-		case QUOTE:
-			return '"';
-		case BACKSLASH:
-			return "\\";
-		default:
-			return undefined;
+	if (code === 0x62) {
+		return "\b";
+	} else if (code === 0x74) {
+		return "\t";
+	} else if (code === 0x6e) {
+		return "\n";
+	} else if (code === 0x66) {
+		return "\f";
+	} else if (code === 0x72) {
+		return "\r";
+	} else if (code === 0x65) {
+		return "\u001b";
+	} else if (code === QUOTE) {
+		return '"';
+	} else if (code === BACKSLASH) {
+		return "\\";
 	}
+	return undefined;
 };
 
 const HEX_DIGITS = /^[0-9A-Fa-f]+$/;

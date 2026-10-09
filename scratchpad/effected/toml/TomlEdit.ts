@@ -15,6 +15,11 @@ import * as S from "effect/Schema";
 
 const $I = $ScratchpadId.create("effected/toml/TomlEdit");
 
+class TomlEditInvariantError extends S.TaggedError<TomlEditInvariantError>($I`TomlEditInvariantError`)(
+	"TomlEditInvariantError",
+	{ message: S.String },
+) {}
+
 /**
  * A single path segment: a `string` for table keys or a `number` for array
  * and array-of-tables indices.
@@ -76,12 +81,12 @@ export class TomlEdit extends S.Class<TomlEdit>($I`TomlEdit`)({
 			const upper = sorted[i];
 			const lower = sorted[i + 1];
 			if (upper === undefined || lower === undefined) {
-				throw new TypeError("missing edit");
+				throw TomlEditInvariantError.make({ message: "missing edit" });
 			}
 			if (lower.offset + lower.length > upper.offset) {
-				throw new Error(
-					`TomlEdit.applyAll received overlapping edits at offsets ${lower.offset} and ${upper.offset} — overlapping edits are a programmer error`,
-				);
+				throw TomlEditInvariantError.make({
+					message: `TomlEdit.applyAll received overlapping edits at offsets ${lower.offset} and ${upper.offset} — overlapping edits are a programmer error`,
+				});
 			}
 		}
 		let result = text;

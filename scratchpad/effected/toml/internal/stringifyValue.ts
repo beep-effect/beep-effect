@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import { dual } from "effect/Function";
 import * as A from "effect/Array";
 // The canonical TOML document emitter over plain JavaScript values — the
@@ -16,9 +17,16 @@ import { TomlLocalDate, TomlLocalDateTime, TomlLocalTime, TomlOffsetDateTime } f
 import type { TomlStringifyErrorCodeRaw } from "./diagnostics.ts";
 import { RawTomlError } from "./diagnostics.ts";
 import { GuardExceeded, MAX_NESTING_DEPTH } from "./limits.ts";
-import * as Schema from "effect/Schema";
+import * as S from "effect/Schema";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+
+const $I = $ScratchpadId.create("effected/toml/internal/stringifyValue");
+
+class TomlStringifyInvariantError extends S.TaggedError<TomlStringifyInvariantError>($I`TomlStringifyInvariantError`)(
+	"TomlStringifyInvariantError",
+	{ message: S.String },
+) {}
 
 const INT64_MIN = -(2n ** 63n);
 const INT64_MAX = 2n ** 63n - 1n;
@@ -61,7 +69,7 @@ const jsTypeName = (value: unknown): string => {
 	if (value === null) {
 		return "null";
 	}
-	if (typeof value !== "object") {
+	if (!P.isObjectKeyword(value) || P.isFunction(value)) {
 		return typeof value;
 	}
 	const name = Object.getPrototypeOf(value)?.constructor?.name;
@@ -133,14 +141,14 @@ const renderNumber = (value: number): string => {
 const isTomlDateTime = (
 	value: unknown,
 ): value is TomlLocalDate | TomlLocalDateTime | TomlLocalTime | TomlOffsetDateTime =>
-	Schema.is(TomlOffsetDateTime)(value) ||
-	Schema.is(TomlLocalDateTime)(value) ||
-	Schema.is(TomlLocalDate)(value) ||
-	Schema.is(TomlLocalTime)(value);
+	S.is(TomlOffsetDateTime)(value) ||
+	S.is(TomlLocalDateTime)(value) ||
+	S.is(TomlLocalDate)(value) ||
+	S.is(TomlLocalTime)(value);
 
 /** Plain objects only (null-prototype included) — never arrays or class instances. */
 const isPlainObject = (value: unknown): value is Record<string, unknown> => {
-	if (typeof value !== "object" || value === null || A.isArray(value)) {
+	if (!P.isObjectKeyword(value) || P.isFunction(value) || A.isArray(value)) {
 		return false;
 	}
 	const proto = Object.getPrototypeOf(value);
@@ -149,26 +157,25 @@ const isPlainObject = (value: unknown): value is Record<string, unknown> => {
 
 /** Scalar rendering; `undefined` means "not a scalar" (arrays/objects/rejects). */
 const renderScalar = (value: unknown, path: Path): string | undefined => {
-	switch (typeof value) {
-		case "string":
-			return renderString(value);
-		case "boolean":
-			return value ? "true" : "false";
-		case "number":
-			return renderNumber(value);
-		case "bigint": {
-			if (value < INT64_MIN || value > INT64_MAX) {
-				raise("IntegerOutOfRange", `integer ${value} at ${renderPath(path)} is outside the 64-bit signed range`);
-			}
-			return value.toString();
-		}
-		default: {
-			if (isTomlDateTime(value)) {
-				return value.toString();
-			}
-			return undefined;
-		}
+	if (P.isString(value)) {
+		return renderString(value);
 	}
+	if (P.isBoolean(value)) {
+		return value ? "true" : "false";
+	}
+	if (P.isNumber(value)) {
+		return renderNumber(value);
+	}
+	if (P.isBigInt(value)) {
+		if (value < INT64_MIN || value > INT64_MAX) {
+			raise("IntegerOutOfRange", `integer ${value} at ${renderPath(path)} is outside the 64-bit signed range`);
+		}
+		return value.toString();
+	}
+	if (isTomlDateTime(value)) {
+		return value.toString();
+	}
+	return undefined;
 };
 
 const checkCircular = (value: object, ancestors: Set<object>, path: Path): void => {
@@ -295,7 +302,7 @@ const emitTable = (
 			pushHeader(lines, `[[${renderHeaderPath([...headerPath, key])}]]`);
 			const element = array[index];
 			if (element === undefined) {
-				throw new TypeError("missing array-table element");
+				throw TomlStringifyInvariantError.make({ message: "missing array-table element" });
 			}
 			emitTable(element, [...headerPath, key], [...errorPath, key, index], lines, depth + 1, ancestors);
 		}
