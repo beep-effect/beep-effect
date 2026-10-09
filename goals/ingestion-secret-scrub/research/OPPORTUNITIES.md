@@ -70,3 +70,12 @@ judgment route for new canonical platform tests would have prevented this detour
   behavior without a suppression.
 - Prevention: run compiler policy and fallow before interpreting focused runtime
   results as full package proof. Updated default proofs remain pending.
+
+## 2026-10-09 — synthetic model mock compiler policy
+
+- Work: documents-server default package audit.
+- Evidence: `SecretScrubGate.test.ts` raised `effect(effectFnOpportunity)` on the
+  generateText mock. Named Effect.fn preserves its prompt capture and call count.
+- Attribution: introduced; repair and retry the default audit.
+- Prevention: use Effect.fn for effectful test service implementations from the
+  first draft, even when focused runtime tests accept Effect.gen callbacks.

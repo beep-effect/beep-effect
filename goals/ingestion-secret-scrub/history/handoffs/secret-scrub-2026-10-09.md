@@ -158,3 +158,13 @@ parser retains the same complete, nested, unclosed and orphan masking behavior;
 all five canonical-bank tests pass. This addresses the introduced Fallow finding
 without suppressions or policy edits. Reversal: restore the prior transition
 block. Final compiler/package and Fallow proof remain required.
+
+### 2026-10-09 — documents-server audit repair
+
+Observability and ai-metrics default package-verify, test-tsgo and scoped coverage
+pass. Regenerated JSDoc ratchet and Fallow audit/health now pass, including the
+private-tag parser repair. Documents-server audit found an introduced Effect
+function-policy error in the synthetic model mock. It now uses named Effect.fn,
+with unchanged behavior. Reversal: restore the previous mock; compiler policy
+would reject it again. A signed fix acknowledges the new inbox row; its default
+package proof is being retried before the implementation push.

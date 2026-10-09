@@ -75,17 +75,16 @@ describe("FilingDecisionLlm secret scrub gate", () => {
     const model = Layer.effect(
       LanguageModel.LanguageModel,
       LanguageModel.make({
-        generateText: (options) =>
-          Effect.gen(function* () {
-            calls += 1;
-            prompts = A.append(prompts, yield* encodePrompt(options.prompt).pipe(Effect.orDie));
-            return [
-              Response.makePart("text", {
-                text: '{"confidence":0.91,"rationale":"Public complaint.","taxonomyConceptId":"pleadings"}',
-              }),
-              Response.makePart("finish", { reason: "stop", response: undefined, usage }),
-            ];
-          }),
+        generateText: Effect.fn("generateText")(function* (options) {
+          calls += 1;
+          prompts = A.append(prompts, yield* encodePrompt(options.prompt).pipe(Effect.orDie));
+          return [
+            Response.makePart("text", {
+              text: '{"confidence":0.91,"rationale":"Public complaint.","taxonomyConceptId":"pleadings"}',
+            }),
+            Response.makePart("finish", { reason: "stop", response: undefined, usage }),
+          ];
+        }),
         streamText: () => Stream.empty,
       })
     );
