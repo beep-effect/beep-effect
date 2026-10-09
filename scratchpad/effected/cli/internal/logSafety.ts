@@ -1,8 +1,11 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import { CurrentRuntimeEnv } from "../../env/index.ts";
 import type * as Fiber from "effect/Fiber";
 import * as Context from "effect/Context";
 import * as O from "effect/Option";
 import { sanitize } from "../Fmt.ts";
+
+const $I = $ScratchpadId.create("effected/cli/internal/logSafety");
 
 /**
  * Marks a log line the kit has already rendered, so the logger does not strip the escapes the kit painted into it.
@@ -14,7 +17,7 @@ import { sanitize } from "../Fmt.ts";
  *
  * @internal
  */
-export const TrustedLine = Context.Reference<boolean>("@effected/cli/TrustedLine", { defaultValue: () => false });
+export const TrustedLine = Context.Reference<boolean>($I`TrustedLine`, { defaultValue: () => false });
 
 /**
  * Whether the logging fiber runs under GitHub Actions: `CurrentRuntimeEnv`, read from the fiber's own context (a

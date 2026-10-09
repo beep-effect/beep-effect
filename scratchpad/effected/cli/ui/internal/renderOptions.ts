@@ -1,4 +1,7 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
+
+const $I = $ScratchpadId.create("effected/cli/ui/internal/renderOptions");
 
 /**
  * Overrides of Ink's render options that only the screen harness sets.
@@ -38,6 +41,6 @@ export interface UiRenderOverrides {
  *
  * @internal
  */
-export class UiRenderOptions extends Context.Reference<UiRenderOverrides>("@effected/cli/ui/UiRenderOptions", {
+export class UiRenderOptions extends Context.Reference<UiRenderOverrides>($I`UiRenderOptions`, {
 	defaultValue: () => ({}),
 }) {}

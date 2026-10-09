@@ -1,5 +1,8 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("effected/cli/Cancelled");
 
 /**
  * A person backed out of an interactive prompt: they pressed escape, or the
@@ -15,9 +18,9 @@ import * as S from "effect/Schema";
  *
  * @public
  */
-export class Cancelled extends S.TaggedError<Cancelled>()("Cancelled", {
-	reason: S.Literals(["escape", "interrupt"]),
-}) {
+export class Cancelled extends S.TaggedError<Cancelled>($I`Cancelled`)("Cancelled", {
+	reason: S.Literals(["escape", "interrupt"]).annotateKey({ description: "Whether the person pressed escape or the interactive prompt was interrupted" }),
+}, $I.annote("Cancelled", { description: "A person backed out of an interactive prompt: they pressed escape, or the prompt was interrupted." })) {
 	/**
 	 * The one line, `cancelled; nothing written`.
 	 *

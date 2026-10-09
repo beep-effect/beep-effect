@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import { dual } from "effect/Function";
 import type { AudienceKind, ColorLevel } from "../env/index.ts";
 import { TerminalEnv } from "../env/index.ts";
@@ -13,6 +14,8 @@ import { openSequence, paintStyle } from "./internal/ansi.ts";
 import type { Status } from "./Status.ts";
 import type { Style, TokenName } from "./Token.ts";
 import { Token } from "./Token.ts";
+
+const $I = $ScratchpadId.create("effected/cli/CliTheme");
 
 /**
  * The shape of the {@link CliTheme} service: a colour level, a glyph set and the functions that use them.
@@ -156,7 +159,7 @@ const ASCII_PROMPT_GLYPHS = {
  *
  * @public
  */
-export class CliTheme extends Context.Service<CliTheme, CliThemeShape>()("@beep/scratchpad/effected/cli/CliTheme") {
+export class CliTheme extends Context.Service<CliTheme, CliThemeShape>()($I`CliTheme`) {
 	/**
 	 * The theme for the terminal `TerminalEnv` describes.
 	 *

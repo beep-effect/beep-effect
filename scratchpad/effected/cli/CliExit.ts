@@ -1,8 +1,11 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as MutableRef from "effect/MutableRef";
 import { isExitCode } from "./internal/isExitCode.ts";
+
+const $I = $ScratchpadId.create("effected/cli/CliExit");
 
 /**
  * The shape behind {@link CliExit}.
@@ -32,7 +35,7 @@ export interface CliExitShape {
  *
  * @public
  */
-export class CliExit extends Context.Service<CliExit, CliExitShape>()("@beep/scratchpad/effected/cli/CliExit") {
+export class CliExit extends Context.Service<CliExit, CliExitShape>()($I`CliExit`) {
 	/**
 	 * A fresh cell at `0`; `CliRuntime.main` provides it, and tests provide it
 	 * directly.

@@ -1,5 +1,8 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
 import { processStreams } from "./internal/processStreams.ts";
+
+const $I = $ScratchpadId.create("effected/cli/ui/UiStreams");
 
 /**
  * The streams a screen mounts on: Node streams, because Ink's stream contract is Node's.
@@ -32,6 +35,6 @@ export interface UiStreamsShape {
  *
  * @public
  */
-export class UiStreams extends Context.Reference<UiStreamsShape>("@effected/cli/ui/UiStreams", {
+export class UiStreams extends Context.Reference<UiStreamsShape>($I`UiStreams`, {
 	defaultValue: () => processStreams(),
 }) {}

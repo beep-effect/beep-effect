@@ -1,8 +1,11 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import { dual } from "effect/Function";
 import * as Context from "effect/Context";
 import * as LogLevel from "effect/LogLevel";
 import * as Logger from "effect/Logger";
 import * as References from "effect/References";
+
+const $I = $ScratchpadId.create("effected/cli/internal/diagnostics");
 
 /**
  * The diagnostics threshold reference behind `CliLog.Level`. Lives here so the stderr sink and the file sink share
@@ -11,7 +14,7 @@ import * as References from "effect/References";
  * @internal
  */
 export const Level: Context.Reference<LogLevel.LogLevel> = Context.Reference<LogLevel.LogLevel>(
-	"@effected/cli/CliLog/Level",
+	$I`Level`,
 	{ defaultValue: () => "None" },
 );
 

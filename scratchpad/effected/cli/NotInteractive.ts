@@ -1,5 +1,8 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("effected/cli/NotInteractive");
 
 /**
  * A command needed to prompt, but there is no terminal to prompt on.
@@ -13,7 +16,7 @@ import * as S from "effect/Schema";
  *
  * @public
  */
-export class NotInteractive extends S.TaggedError<NotInteractive>()("NotInteractive", {}) {
+export class NotInteractive extends S.TaggedError<NotInteractive>($I`NotInteractive`)("NotInteractive", {}, $I.annote("NotInteractive", { description: "A command needed to prompt, but there is no terminal to prompt on." })) {
 	/**
 	 * The one line, `not interactive: run in a terminal or pass the flag`.
 	 *

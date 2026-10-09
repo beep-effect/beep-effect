@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import type { AudienceKind } from "../env/index.ts";
 import { CurrentRuntimeEnv } from "../env/index.ts";
 import { Walker } from "../walker/index.ts";
@@ -13,6 +14,8 @@ import type { LinkTarget } from "./Doc.ts";
 import { sanitize } from "./Fmt.ts";
 import { isAllowedLinkUrl } from "./internal/linkScheme.ts";
 import { DRIVE, UNC, encodeForOsc8, fileUrlPath } from "./internal/linkTarget.ts";
+
+const $I = $ScratchpadId.create("effected/cli/CliLinks");
 
 /**
  * Whether file links open in an editor.
@@ -193,7 +196,7 @@ const build = (options: CliLinksOptions, ambient: Ambient): Effect.Effect<CliLin
  *
  * @public
  */
-export class CliLinks extends Context.Service<CliLinks, CliLinksShape>()("@beep/scratchpad/effected/cli/CliLinks") {
+export class CliLinks extends Context.Service<CliLinks, CliLinksShape>()($I`CliLinks`) {
 	/**
 	 * The links for the working directory, reading the filesystem for a `.vscode/` directory.
 	 *

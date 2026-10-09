@@ -1,5 +1,8 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
 import type { CliConfig } from "effect/cli";
+
+const $I = $ScratchpadId.create("effected/cli/internal/wizardGate");
 
 /** The shape of the ambient config, as `CliConfig.make` returns it. */
 type Config = ReturnType<typeof CliConfig.make>;
@@ -15,6 +18,6 @@ type Config = ReturnType<typeof CliConfig.make>;
  *
  * @internal
  */
-export class WizardDropped extends Context.Reference<Config | undefined>("@effected/cli/WizardDropped", {
+export class WizardDropped extends Context.Reference<Config | undefined>($I`WizardDropped`, {
 	defaultValue: () => undefined,
 }) {}

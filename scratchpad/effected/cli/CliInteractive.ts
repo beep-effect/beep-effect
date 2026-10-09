@@ -1,8 +1,11 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import { Audience, TerminalEnv } from "../env/index.ts";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import { canPrompt } from "./internal/canPrompt.ts";
+
+const $I = $ScratchpadId.create("effected/cli/CliInteractive");
 
 /**
  * Whether this run may prompt a person: a human audience, with a terminal on
@@ -24,7 +27,7 @@ import { canPrompt } from "./internal/canPrompt.ts";
  *
  * @public
  */
-export class CliInteractive extends Context.Reference<boolean>("@effected/cli/CliInteractive", {
+export class CliInteractive extends Context.Reference<boolean>($I`CliInteractive`, {
 	defaultValue: () => false,
 }) {
 	/**

@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import { dual } from "effect/Function";
 import type { AudienceShape } from "../../env/index.ts";
 import { Audience, TerminalEnv } from "../../env/index.ts";
@@ -17,6 +18,8 @@ import { Glyphs } from "../Glyphs.ts";
 import type { RenderContext } from "../Render.ts";
 import { Render } from "../Render.ts";
 import { autoFormat } from "./autoFormat.ts";
+
+const $I = $ScratchpadId.create("effected/cli/internal/failureTarget");
 
 /**
  * Where a failure report is written to: the context the renderer lays out for, and which renderer.
@@ -60,7 +63,7 @@ export interface FailureSettings {
  * @internal
  */
 export const FailureTargetCell = Context.Reference<MutableRef.MutableRef<FailureTarget | undefined> | undefined>(
-	"@effected/cli/FailureTargetCell",
+	$I`FailureTargetCell`,
 	{ defaultValue: () => undefined },
 );
 
