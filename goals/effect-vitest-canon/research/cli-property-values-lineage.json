@@ -1,0 +1,1120 @@
+{
+  "status": "qualified-source-reconciliation",
+  "base": "64bff0e5b96368d1f756711344a2adbad9e23fb6",
+  "ledger": "goals/effect-vitest-canon/ops/inventory/property/beep_repo-cli.jsonl",
+  "sourceHashes": {
+    "packages/tooling/tool/cli/test/codex-findings-csv.test.ts": "7793a562fdc76075ceabdc09ac9efbe2304da627f1ebc1d07ae5d22b9122125d",
+    "packages/tooling/tool/cli/test/codex-findings-normalize.test.ts": "10f49c562aac018828fe67de623ec950350028393145f1dbcd58fe5a22b1efa3",
+    "packages/tooling/tool/cli/test/effect-vitest-contract.test.ts": "c9a95e7032048f12ef3d69f8fdac34914a0a1a160905d39bc98dce25f97468b7",
+    "packages/tooling/tool/cli/test/effect-vitest-store.test.ts": "a98843b0f9e577a3e84a1c363c1b3f7359bbc71439b03aca1f0932446526c05e",
+    "packages/tooling/tool/cli/test/qa-pure.test.ts": "f30b444a30676bbdfa4524adf6e5c08197b51e1d9bdee57fd7b3b455fe9456f7",
+    "packages/tooling/tool/cli/test/ratchet-diff.test.ts": "32650494d17f08fe59a12327f5273d7dca9221e1c4305ff374e710793642717b",
+    "packages/tooling/tool/cli/test/single-project-emit.test.ts": "330fd60bf82946bbb81d1b3ed1d7c0846da94f63747992c0a98571fe1b76f25d",
+    "packages/tooling/tool/cli/src/internal/ratchet/RatchetDiff.ts": "e52e1e688a1471146643c6633a5f19c7cc02c61107f8e1585c3c46b06f4fb6c4"
+  },
+  "findings": [
+    {
+      "historicalRow": {
+        "id": "L-PROP-04:packages/tooling/tool/cli/test/codex-findings-csv.test.ts:65",
+        "lens": "property",
+        "ruleId": "L-PROP-04",
+        "package": "@beep/repo-cli",
+        "file": "packages/tooling/tool/cli/test/codex-findings-csv.test.ts",
+        "line": 65,
+        "endLine": 87,
+        "class": "unobserved-csv-cell-preservation",
+        "evidence": "The doubled-quote title case checks only findings length 1; a corrupted title still passes. Multiline description likewise checks IDs/count without exact body recovery.",
+        "replacement": {
+          "primitive": "it.effect.prop",
+          "sketch": "Keep both registrations and all existing row-count/ID assertions. Add exact decoded title and raw report description equality for quoted/newline/comma cells. A parser/projection returning a nonempty corrupted title or body currently passes these two cases. A schema-derived generated cell round-trip may extend this with the native engine and existing floor helper, preserving rich valid CSV values and privacy negatives."
+        },
+        "severity": "minor",
+        "confidence": 1,
+        "mechanization": "judgment",
+        "status": "open"
+      },
+      "reason": "Exact decoded title and multiline raw-report body are required in both original cases; corrupted nonempty values fail the source-bound controls.",
+      "proposedStatus": "fixed",
+      "acceptedRow": {
+        "id": "L-PROP-04:packages/tooling/tool/cli/test/codex-findings-csv.test.ts:65",
+        "lens": "property",
+        "ruleId": "L-PROP-04",
+        "package": "@beep/repo-cli",
+        "file": "packages/tooling/tool/cli/test/codex-findings-csv.test.ts",
+        "line": 65,
+        "endLine": 87,
+        "class": "unobserved-csv-cell-preservation",
+        "evidence": "The doubled-quote title case checks only findings length 1; a corrupted title still passes. Multiline description likewise checks IDs/count without exact body recovery.",
+        "replacement": {
+          "primitive": "it.effect.prop",
+          "sketch": "Keep both registrations and all existing row-count/ID assertions. Add exact decoded title and raw report description equality for quoted/newline/comma cells. A parser/projection returning a nonempty corrupted title or body currently passes these two cases. A schema-derived generated cell round-trip may extend this with the native engine and existing floor helper, preserving rich valid CSV values and privacy negatives."
+        },
+        "severity": "minor",
+        "confidence": 1,
+        "mechanization": "judgment",
+        "status": "fixed",
+        "fixSha": "9d74894c3cceae3bccce7c1828889a8c5bb68f59",
+        "reason": "Source-fixed in 9d74894c3cceae3bccce7c1828889a8c5bb68f59. Exact decoded title and multiline raw-report body are required in both original cases; corrupted nonempty values fail the source-bound controls. Historical source and qualification: research/cli-property-values-lineage.json; research/cli-property-values-proof.md."
+      }
+    },
+    {
+      "historicalRow": {
+        "id": "L-PROP-04:packages/tooling/tool/cli/test/codex-findings-normalize.test.ts:271",
+        "lens": "property",
+        "ruleId": "L-PROP-04",
+        "package": "@beep/repo-cli",
+        "file": "packages/tooling/tool/cli/test/codex-findings-normalize.test.ts",
+        "line": 271,
+        "endLine": 280,
+        "class": "success-path-privacy-vacuity",
+        "evidence": "The short-read privacy case maps success to an empty string, so both negative checks pass on success. The preceding independent case does require the short-read reason.",
+        "replacement": {
+          "primitive": "it.effect",
+          "sketch": "Preserve both privacy negatives and the preceding independent short-read test. In this case assert the public operation actually failed with the short-read variant before inspecting its message; success currently becomes an empty string satisfying both checks. Keep synthetic values and do not expose real captures."
+        },
+        "severity": "minor",
+        "confidence": 1,
+        "mechanization": "judgment",
+        "status": "open"
+      },
+      "reason": "The same short-read privacy invocation must fail with CodexFindingsIngestError and short-read reason before both original privacy negatives; success no longer becomes an empty message.",
+      "proposedStatus": "fixed",
+      "acceptedRow": {
+        "id": "L-PROP-04:packages/tooling/tool/cli/test/codex-findings-normalize.test.ts:271",
+        "lens": "property",
+        "ruleId": "L-PROP-04",
+        "package": "@beep/repo-cli",
+        "file": "packages/tooling/tool/cli/test/codex-findings-normalize.test.ts",
+        "line": 271,
+        "endLine": 280,
+        "class": "success-path-privacy-vacuity",
+        "evidence": "The short-read privacy case maps success to an empty string, so both negative checks pass on success. The preceding independent case does require the short-read reason.",
+        "replacement": {
+          "primitive": "it.effect",
+          "sketch": "Preserve both privacy negatives and the preceding independent short-read test. In this case assert the public operation actually failed with the short-read variant before inspecting its message; success currently becomes an empty string satisfying both checks. Keep synthetic values and do not expose real captures."
+        },
+        "severity": "minor",
+        "confidence": 1,
+        "mechanization": "judgment",
+        "status": "fixed",
+        "fixSha": "9d74894c3cceae3bccce7c1828889a8c5bb68f59",
+        "reason": "Source-fixed in 9d74894c3cceae3bccce7c1828889a8c5bb68f59. The same short-read privacy invocation must fail with CodexFindingsIngestError and short-read reason before both original privacy negatives; success no longer becomes an empty message. Historical source and qualification: research/cli-property-values-lineage.json; research/cli-property-values-proof.md."
+      }
+    },
+    {
+      "historicalRow": {
+        "id": "L-PROP-04:packages/tooling/tool/cli/test/effect-vitest-contract.test.ts:632",
+        "lens": "property",
+        "ruleId": "L-PROP-04",
+        "package": "@beep/repo-cli",
+        "file": "packages/tooling/tool/cli/test/effect-vitest-contract.test.ts",
+        "line": 632,
+        "endLine": 654,
+        "class": "empty-hydration-subset-vacuity",
+        "evidence": "EV012 hydration uses every on a filtered list without asserting that list exists; dropping all EV012 findings satisfies that oracle and the detected/hydrated equality.",
+        "replacement": {
+          "primitive": "utils.assertTrue",
+          "sketch": "Keep the detected/hydrated equality, all three exact EV006 routes and the every predicate. First require the intended EV012 finding from this concrete vi.mock fixture to be present, then verify its real-service-key sketch. Losing EV012 from both collections currently leaves equality and every true. Separate detector tests already prove other EV012 positives; this is the integration oracle, not a claim the entire suite is vacuous."
+        },
+        "severity": "minor",
+        "confidence": 1,
+        "mechanization": "judgment",
+        "status": "open"
+      },
+      "reason": "The hydrated list must contain the exact concrete EV012 candidate and its identity before the preserved universal and detected/hydrated equality assertions.",
+      "proposedStatus": "fixed",
+      "acceptedRow": {
+        "id": "L-PROP-04:packages/tooling/tool/cli/test/effect-vitest-contract.test.ts:632",
+        "lens": "property",
+        "ruleId": "L-PROP-04",
+        "package": "@beep/repo-cli",
+        "file": "packages/tooling/tool/cli/test/effect-vitest-contract.test.ts",
+        "line": 632,
+        "endLine": 654,
+        "class": "empty-hydration-subset-vacuity",
+        "evidence": "EV012 hydration uses every on a filtered list without asserting that list exists; dropping all EV012 findings satisfies that oracle and the detected/hydrated equality.",
+        "replacement": {
+          "primitive": "utils.assertTrue",
+          "sketch": "Keep the detected/hydrated equality, all three exact EV006 routes and the every predicate. First require the intended EV012 finding from this concrete vi.mock fixture to be present, then verify its real-service-key sketch. Losing EV012 from both collections currently leaves equality and every true. Separate detector tests already prove other EV012 positives; this is the integration oracle, not a claim the entire suite is vacuous."
+        },
+        "severity": "minor",
+        "confidence": 1,
+        "mechanization": "judgment",
+        "status": "fixed",
+        "fixSha": "9d74894c3cceae3bccce7c1828889a8c5bb68f59",
+        "reason": "Source-fixed in 9d74894c3cceae3bccce7c1828889a8c5bb68f59. The hydrated list must contain the exact concrete EV012 candidate and its identity before the preserved universal and detected/hydrated equality assertions. Historical source and qualification: research/cli-property-values-lineage.json; research/cli-property-values-proof.md."
+      }
+    },
+    {
+      "historicalRow": {
+        "id": "L-PROP-04:packages/tooling/tool/cli/test/effect-vitest-store.test.ts:81",
+        "lens": "property",
+        "ruleId": "L-PROP-04",
+        "package": "@beep/repo-cli",
+        "file": "packages/tooling/tool/cli/test/effect-vitest-store.test.ts",
+        "line": 81,
+        "endLine": 95,
+        "class": "stable-wrong-row-passes-idempotence",
+        "evidence": "The first serialized row is compared only to the second write. A stable incorrect payload can satisfy this idempotence check and subsequent owned-file removal.",
+        "replacement": {
+          "primitive": "utils.deepStrictEqual",
+          "sketch": "Retain file discovery, byte-identical repeated writes, generated-file removal and both unrelated-file preservation assertions. Decode the first written JSONL through the strict public finding decoder and compare it to the input row, preserving every field. Stable but incorrect serialized content currently satisfies the idempotence oracle. Use the public schema boundary, not implementation internals or a relaxed codec."
+        },
+        "severity": "minor",
+        "confidence": 1,
+        "mechanization": "judgment",
+        "status": "open"
+      },
+      "reason": "The first emitted JSONL is decoded through the public finding schema and compared to the complete input row, in addition to retained byte-idempotence, removal and unrelated-file checks.",
+      "proposedStatus": "fixed",
+      "acceptedRow": {
+        "id": "L-PROP-04:packages/tooling/tool/cli/test/effect-vitest-store.test.ts:81",
+        "lens": "property",
+        "ruleId": "L-PROP-04",
+        "package": "@beep/repo-cli",
+        "file": "packages/tooling/tool/cli/test/effect-vitest-store.test.ts",
+        "line": 81,
+        "endLine": 95,
+        "class": "stable-wrong-row-passes-idempotence",
+        "evidence": "The first serialized row is compared only to the second write. A stable incorrect payload can satisfy this idempotence check and subsequent owned-file removal.",
+        "replacement": {
+          "primitive": "utils.deepStrictEqual",
+          "sketch": "Retain file discovery, byte-identical repeated writes, generated-file removal and both unrelated-file preservation assertions. Decode the first written JSONL through the strict public finding decoder and compare it to the input row, preserving every field. Stable but incorrect serialized content currently satisfies the idempotence oracle. Use the public schema boundary, not implementation internals or a relaxed codec."
+        },
+        "severity": "minor",
+        "confidence": 1,
+        "mechanization": "judgment",
+        "status": "fixed",
+        "fixSha": "9d74894c3cceae3bccce7c1828889a8c5bb68f59",
+        "reason": "Source-fixed in 9d74894c3cceae3bccce7c1828889a8c5bb68f59. The first emitted JSONL is decoded through the public finding schema and compared to the complete input row, in addition to retained byte-idempotence, removal and unrelated-file checks. Historical source and qualification: research/cli-property-values-lineage.json; research/cli-property-values-proof.md."
+      }
+    },
+    {
+      "historicalRow": {
+        "id": "L-PROP-04:packages/tooling/tool/cli/test/qa-pure.test.ts:285",
+        "lens": "property",
+        "ruleId": "L-PROP-04",
+        "package": "@beep/repo-cli",
+        "file": "packages/tooling/tool/cli/test/qa-pure.test.ts",
+        "line": 285,
+        "endLine": 295,
+        "class": "budget-roundtrip-value-unchecked",
+        "evidence": "The artifact-budget round trip writes maxTotalBytes 4096 but checks only Some. A reader returning a different default budget would satisfy the value assertion.",
+        "replacement": {
+          "primitive": "utils.assertSome",
+          "sketch": "Keep the existing Some and missing-plan assertions. Additionally assert the decoded maxTotalBytes is exactly 4096, or whole-budget schema equivalence. A reader returning Some(defaultBudget) with a changed byte budget passes today. No schema narrowing, assertion removal or runtime provider is needed."
+        },
+        "severity": "minor",
+        "confidence": 1,
+        "mechanization": "judgment",
+        "status": "open"
+      },
+      "reason": "The existing Some and missing-plan assertions remain, and the decoded maxTotalBytes must equal the supplied 4096.",
+      "proposedStatus": "fixed",
+      "acceptedRow": {
+        "id": "L-PROP-04:packages/tooling/tool/cli/test/qa-pure.test.ts:285",
+        "lens": "property",
+        "ruleId": "L-PROP-04",
+        "package": "@beep/repo-cli",
+        "file": "packages/tooling/tool/cli/test/qa-pure.test.ts",
+        "line": 285,
+        "endLine": 295,
+        "class": "budget-roundtrip-value-unchecked",
+        "evidence": "The artifact-budget round trip writes maxTotalBytes 4096 but checks only Some. A reader returning a different default budget would satisfy the value assertion.",
+        "replacement": {
+          "primitive": "utils.assertSome",
+          "sketch": "Keep the existing Some and missing-plan assertions. Additionally assert the decoded maxTotalBytes is exactly 4096, or whole-budget schema equivalence. A reader returning Some(defaultBudget) with a changed byte budget passes today. No schema narrowing, assertion removal or runtime provider is needed."
+        },
+        "severity": "minor",
+        "confidence": 1,
+        "mechanization": "judgment",
+        "status": "fixed",
+        "fixSha": "9d74894c3cceae3bccce7c1828889a8c5bb68f59",
+        "reason": "Source-fixed in 9d74894c3cceae3bccce7c1828889a8c5bb68f59. The existing Some and missing-plan assertions remain, and the decoded maxTotalBytes must equal the supplied 4096. Historical source and qualification: research/cli-property-values-lineage.json; research/cli-property-values-proof.md."
+      }
+    },
+    {
+      "historicalRow": {
+        "id": "L-PROP-04:packages/tooling/tool/cli/test/ratchet-diff.test.ts:67",
+        "lens": "property",
+        "ruleId": "L-PROP-04",
+        "package": "@beep/repo-cli",
+        "file": "packages/tooling/tool/cli/test/ratchet-diff.test.ts",
+        "line": 67,
+        "endLine": 75,
+        "class": "absent-baseline-not-exercised",
+        "evidence": "The absent-baseline test supplies fresh:0 rather than omitting fresh. Incorrect handling of a missing key could pass this named boundary test.",
+        "replacement": {
+          "primitive": "utils.assertEquals",
+          "sketch": "Retain the explicit-zero fixture and its exact delta assertion. Add the truly absent key case with baseline {} and the same fresh=4 expected tuple. The current named boundary cannot distinguish missing-key behavior. Also retain Success and assert the claimed ok/tighten lines through existing TestConsole in lines109-120; no production change or weaker operand is proposed."
+        },
+        "severity": "minor",
+        "confidence": 1,
+        "mechanization": "judgment",
+        "status": "open"
+      },
+      "reason": "The explicit-zero body and tuple are unchanged under an accurate title; truly absent and mixed tracked/untracked cases now prove the real baseline-selection policy, and successful console lines are exact. The historical replacement sketch proposing growth for an untracked key was disproved by the production caller and documented JSDoc contract, not applied. Original evidence and sketch remain historical.",
+      "proposedStatus": "fixed",
+      "acceptedRow": {
+        "id": "L-PROP-04:packages/tooling/tool/cli/test/ratchet-diff.test.ts:67",
+        "lens": "property",
+        "ruleId": "L-PROP-04",
+        "package": "@beep/repo-cli",
+        "file": "packages/tooling/tool/cli/test/ratchet-diff.test.ts",
+        "line": 67,
+        "endLine": 75,
+        "class": "absent-baseline-not-exercised",
+        "evidence": "The absent-baseline test supplies fresh:0 rather than omitting fresh. Incorrect handling of a missing key could pass this named boundary test.",
+        "replacement": {
+          "primitive": "utils.assertEquals",
+          "sketch": "Retain the explicit-zero fixture and its exact delta assertion. Add the truly absent key case with baseline {} and the same fresh=4 expected tuple. The current named boundary cannot distinguish missing-key behavior. Also retain Success and assert the claimed ok/tighten lines through existing TestConsole in lines109-120; no production change or weaker operand is proposed."
+        },
+        "severity": "minor",
+        "confidence": 1,
+        "mechanization": "judgment",
+        "status": "fixed",
+        "fixSha": "9d74894c3cceae3bccce7c1828889a8c5bb68f59",
+        "reason": "Source-fixed in 9d74894c3cceae3bccce7c1828889a8c5bb68f59. The explicit-zero body and tuple are unchanged under an accurate title; truly absent and mixed tracked/untracked cases now prove the real baseline-selection policy, and successful console lines are exact. The historical replacement sketch proposing growth for an untracked key was disproved by the production caller and documented JSDoc contract, not applied. Original evidence and sketch remain historical. Historical source and qualification: research/cli-property-values-lineage.json; research/cli-property-values-proof.md."
+      }
+    },
+    {
+      "historicalRow": {
+        "id": "L-PROP-04:packages/tooling/tool/cli/test/single-project-emit.test.ts:45",
+        "lens": "property",
+        "ruleId": "L-PROP-04",
+        "package": "@beep/repo-cli",
+        "file": "packages/tooling/tool/cli/test/single-project-emit.test.ts",
+        "line": 45,
+        "endLine": 55,
+        "class": "terminal-build-flag-escapes",
+        "evidence": "The subgraph detector requires spaces around -b. A terminal command such as tsc -b contains no trailing space and escapes the claimed build-law check.",
+        "replacement": {
+          "primitive": "utils.assertTrue",
+          "sketch": "Preserve the real manifest walk, >100 guard and empty-violations assertion. Add opposing command-string controls including terminal tsc -b and tsgo -b; use existing command parsing where appropriate so the last build flag is recognized without substring false positives. Source-derived counterexample only; no actual build was run."
+        },
+        "severity": "minor",
+        "confidence": 1,
+        "mechanization": "judgment",
+        "status": "open"
+      },
+      "reason": "Known prefixes produce Some compiler arguments or Some empty arguments for inert commands and launcher script operands; unknown prefixes produce None and retain the conservative compiler/build-token lexical tripwire, including nested shell strings. All original manifest assertions remain. Final 64 private controls retain eight R1 counterexamples and seven additional prior-positive commands (nice, command, yarn exec, nohup, timeout, corepack and custom wrapper), plus nested-shell controls. Known compiler flags respect end-of-options; unknown wrapper tripwires can conservatively flag inert text or compiler end-of-options. This is not full shell parsing or arbitrary wrapper evaluation. The R2 waiver was rejected; independent R3 closes the original launcher P1.",
+      "proposedStatus": "fixed",
+      "acceptedRow": {
+        "id": "L-PROP-04:packages/tooling/tool/cli/test/single-project-emit.test.ts:45",
+        "lens": "property",
+        "ruleId": "L-PROP-04",
+        "package": "@beep/repo-cli",
+        "file": "packages/tooling/tool/cli/test/single-project-emit.test.ts",
+        "line": 45,
+        "endLine": 55,
+        "class": "terminal-build-flag-escapes",
+        "evidence": "The subgraph detector requires spaces around -b. A terminal command such as tsc -b contains no trailing space and escapes the claimed build-law check.",
+        "replacement": {
+          "primitive": "utils.assertTrue",
+          "sketch": "Preserve the real manifest walk, >100 guard and empty-violations assertion. Add opposing command-string controls including terminal tsc -b and tsgo -b; use existing command parsing where appropriate so the last build flag is recognized without substring false positives. Source-derived counterexample only; no actual build was run."
+        },
+        "severity": "minor",
+        "confidence": 1,
+        "mechanization": "judgment",
+        "status": "fixed",
+        "fixSha": "9d74894c3cceae3bccce7c1828889a8c5bb68f59",
+        "reason": "Source-fixed in 9d74894c3cceae3bccce7c1828889a8c5bb68f59. Known prefixes produce Some compiler arguments or Some empty arguments for inert commands and launcher script operands; unknown prefixes produce None and retain the conservative compiler/build-token lexical tripwire, including nested shell strings. All original manifest assertions remain. Final 64 private controls retain eight R1 counterexamples and seven additional prior-positive commands (nice, command, yarn exec, nohup, timeout, corepack and custom wrapper), plus nested-shell controls. Known compiler flags respect end-of-options; unknown wrapper tripwires can conservatively flag inert text or compiler end-of-options. This is not full shell parsing or arbitrary wrapper evaluation. The R2 waiver was rejected; independent R3 closes the original launcher P1. Historical source and qualification: research/cli-property-values-lineage.json; research/cli-property-values-proof.md."
+      }
+    }
+  ],
+  "detector": "All six selected complete detector rows exactly match prior final; baseline and detector ledger unchanged.",
+  "reviewRound": 3,
+  "sourceCommit": "9d74894c3cceae3bccce7c1828889a8c5bb68f59",
+  "evidence": {
+    "packageReceipt": "parent-launcher-package-receipt.json",
+    "reviewFindings": "grok-findings-r3.jsonl",
+    "reviewReport": "grok-review-r3.md",
+    "nodeReceipt": "parent-launcher-final-node-receipt.json",
+    "bunReceipt": "parent-launcher-final-bun-receipt.json",
+    "detector": "live-rows-r3",
+    "priorDetector": "live-rows-final"
+  },
+  "schemaVersion": "effect-vitest-property-values-reconciliation/v1",
+  "summary": {
+    "selectedHistoricalPropertyRows": 7,
+    "fixed": 7,
+    "selectedCurrentDetectorRowsUnchanged": 6,
+    "baselineCount": 1883,
+    "baselineStatuses": {
+      "open": 662,
+      "exception": 1221
+    },
+    "cliLensCountsAfter": {
+      "detector": {
+        "rows": 3627,
+        "statuses": {
+          "fixed": 3133,
+          "open": 253,
+          "exception": 241
+        },
+        "coverageOnly": 0,
+        "openActionable": 253
+      },
+      "resource": {
+        "rows": 250,
+        "statuses": {
+          "open": 210,
+          "fixed": 39,
+          "exception": 1
+        },
+        "coverageOnly": 201,
+        "openActionable": 9
+      },
+      "property": {
+        "rows": 250,
+        "statuses": {
+          "open": 230,
+          "fixed": 20
+        },
+        "coverageOnly": 216,
+        "openActionable": 14
+      },
+      "flake": {
+        "rows": 251,
+        "statuses": {
+          "open": 243,
+          "fixed": 8
+        },
+        "coverageOnly": 238,
+        "openActionable": 5
+      },
+      "observability": {
+        "rows": 249,
+        "statuses": {
+          "open": 242,
+          "fixed": 7
+        },
+        "coverageOnly": 238,
+        "openActionable": 4
+      }
+    }
+  },
+  "qualification": {
+    "sourceHashesVerifiedAgainst": [
+      "current source",
+      "immutable R3 after snapshot",
+      "source commit 9d74894c3cceae3bccce7c1828889a8c5bb68f59",
+      "R3 package receipt"
+    ],
+    "runtimes": [
+      {
+        "file": "parent-launcher-final-node-receipt.json",
+        "sha256": "b19db126468ef18674efa65150e418d5b8360500c44f749722e400e85f44064d",
+        "exit": 0,
+        "elapsedSeconds": 17.00960612297058,
+        "recordedHead": "64bff0e5b96368d1f756711344a2adbad9e23fb6",
+        "hashesUnchanged": true,
+        "command": "~/.local/share/mise/installs/node/22.22.3/bin/node ~/YeeBois/projects/beep-effect2-worktrees/effect-vitest-canon-property-values/node_modules/vitest/vitest.mjs run test/codex-findings-csv.test.ts test/codex-findings-normalize.test.ts test/effect-vitest-contract.test.ts test/effect-vitest-store.test.ts test/qa-pure.test.ts test/ratchet-diff.test.ts test/single-project-emit.test.ts --reporter=json --outputFile=~/.cache/beep/effect-vitest-canon/property-values-20261006/parent-launcher-final-node.json",
+        "sourceQualification": "Actual proof bytes later committed in 9d74894c3cceae3bccce7c1828889a8c5bb68f59; recorded head remains historical, not rewritten."
+      },
+      {
+        "file": "parent-launcher-final-bun-receipt.json",
+        "sha256": "cdd69316c1ee6f236344409bd9d527121ab2af2b7e16c44674f18c0f61b2bffd",
+        "exit": 0,
+        "elapsedSeconds": 7.584728240966797,
+        "recordedHead": "64bff0e5b96368d1f756711344a2adbad9e23fb6",
+        "hashesUnchanged": true,
+        "command": "bun run test test/codex-findings-csv.test.ts test/codex-findings-normalize.test.ts test/effect-vitest-contract.test.ts test/effect-vitest-store.test.ts test/qa-pure.test.ts test/ratchet-diff.test.ts test/single-project-emit.test.ts --reporter=json --outputFile=~/.cache/beep/effect-vitest-canon/property-values-20261006/parent-launcher-final-bun.json",
+        "sourceQualification": "Actual proof bytes later committed in 9d74894c3cceae3bccce7c1828889a8c5bb68f59; recorded head remains historical, not rewritten."
+      }
+    ],
+    "package": {
+      "file": "parent-launcher-package-receipt.json",
+      "sha256": "18fb3f28c5c9f894476fca657808858135bf92f552497e67d1fee7ca2377af04",
+      "exit": 0,
+      "elapsedSeconds": 660.520676612854,
+      "recordedHead": "64bff0e5b96368d1f756711344a2adbad9e23fb6",
+      "hashesUnchanged": true,
+      "command": "bun run beep quality package-verify @beep/repo-cli",
+      "sourceQualification": "Actual proof bytes later committed in 9d74894c3cceae3bccce7c1828889a8c5bb68f59; recorded head remains historical, not rewritten.",
+      "auditSeconds": 637.5,
+      "docgenSeconds": 21.5
+    },
+    "compiler": {
+      "parentRetainedLog": "parent-launcher-types.log",
+      "parentLogBytes": 0,
+      "reconciliationDirectExit": 0,
+      "reconciliationDirectSeconds": 15.786230564117432,
+      "command": "node_modules/.bin/tsgo -p packages/tooling/tool/cli/test/tsconfig.json --rootDir packages/tooling/tool/cli --noEmit"
+    },
+    "detector": {
+      "log": "r3-detector.log",
+      "findings": 1883,
+      "scanSeconds": 10.0614,
+      "selectedComparison": {
+        "unchanged": true,
+        "selectedCount": 6,
+        "prior": [
+          {
+            "id": "EV010:packages/tooling/tool/cli/test/effect-vitest-contract.test.ts:31:@effect/platform-node@0#1",
+            "lens": "resource",
+            "ruleId": "EV010",
+            "package": "@beep/repo-cli",
+            "file": "packages/tooling/tool/cli/test/effect-vitest-contract.test.ts",
+            "line": 31,
+            "endLine": 31,
+            "symbol": "@effect/platform-node",
+            "occurrence": "v2:b2c038529d8f7ca88a1b124ef6d3595bc2da97b54930716415cd30b440c9733b",
+            "class": "platform-resource-provenance-review",
+            "evidence": "import { NodePath, NodeServices } from \"@effect/platform-node\";",
+            "replacement": {
+              "primitive": "it.layer",
+              "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+            },
+            "severity": "info",
+            "confidence": 0.55,
+            "mechanization": "judgment",
+            "status": "open"
+          },
+          {
+            "id": "EV010:packages/tooling/tool/cli/test/effect-vitest-store.test.ts:9:@effect/platform-node@0#1",
+            "lens": "resource",
+            "ruleId": "EV010",
+            "package": "@beep/repo-cli",
+            "file": "packages/tooling/tool/cli/test/effect-vitest-store.test.ts",
+            "line": 9,
+            "endLine": 9,
+            "symbol": "@effect/platform-node",
+            "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+            "class": "platform-resource-provenance-review",
+            "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+            "replacement": {
+              "primitive": "it.layer",
+              "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+            },
+            "severity": "info",
+            "confidence": 0.55,
+            "mechanization": "judgment",
+            "status": "open"
+          },
+          {
+            "id": "EV010:packages/tooling/tool/cli/test/qa-pure.test.ts:84:@effect/platform-node/NodeFileSystem@0#1",
+            "lens": "resource",
+            "ruleId": "EV010",
+            "package": "@beep/repo-cli",
+            "file": "packages/tooling/tool/cli/test/qa-pure.test.ts",
+            "line": 84,
+            "endLine": 84,
+            "symbol": "@effect/platform-node/NodeFileSystem",
+            "occurrence": "v2:1e14fe3983e1b10ec8ca10f275771b44fe07b6efae5f900877c3f472b89c0872",
+            "class": "platform-filesystem-candidate",
+            "evidence": "import * as NodeFileSystem from \"@effect/platform-node/NodeFileSystem\";",
+            "replacement": {
+              "primitive": "it.layer",
+              "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+            },
+            "severity": "info",
+            "confidence": 0.55,
+            "mechanization": "judgment",
+            "status": "open"
+          },
+          {
+            "id": "EV010:packages/tooling/tool/cli/test/single-project-emit.test.ts:4:@effect/platform-node@0#1",
+            "lens": "resource",
+            "ruleId": "EV010",
+            "package": "@beep/repo-cli",
+            "file": "packages/tooling/tool/cli/test/single-project-emit.test.ts",
+            "line": 4,
+            "endLine": 4,
+            "symbol": "@effect/platform-node",
+            "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+            "class": "platform-resource-provenance-review",
+            "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+            "replacement": {
+              "primitive": "it.layer",
+              "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+            },
+            "severity": "info",
+            "confidence": 0.55,
+            "mechanization": "judgment",
+            "status": "open"
+          },
+          {
+            "id": "EV014:packages/tooling/tool/cli/test/effect-vitest-contract.test.ts:556:it.layer@0#1",
+            "lens": "resource",
+            "ruleId": "EV014",
+            "package": "@beep/repo-cli",
+            "file": "packages/tooling/tool/cli/test/effect-vitest-contract.test.ts",
+            "line": 556,
+            "endLine": 556,
+            "symbol": "it.layer",
+            "occurrence": "v2:d4b0cc5efd6f2cfed13f69ef0c90671c9867c46fedf56e8e3c040b40ea459587",
+            "class": "resource-layer-without-hook-timeout",
+            "evidence": "it.layer(BunCrypto.layer)",
+            "replacement": {
+              "primitive": "it.layer.option.timeout",
+              "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."
+            },
+            "severity": "major",
+            "confidence": 0.55,
+            "mechanization": "judgment",
+            "status": "open"
+          },
+          {
+            "id": "EV014:packages/tooling/tool/cli/test/effect-vitest-contract.test.ts:747:it.layer@0#1",
+            "lens": "resource",
+            "ruleId": "EV014",
+            "package": "@beep/repo-cli",
+            "file": "packages/tooling/tool/cli/test/effect-vitest-contract.test.ts",
+            "line": 747,
+            "endLine": 747,
+            "symbol": "it.layer",
+            "occurrence": "v2:73942c1c47ad92d791739cf34bade54cfeba735ce35fd9c8c963b08e63e74bfb",
+            "class": "resource-layer-without-hook-timeout",
+            "evidence": "it.layer(NodeServices.layer)",
+            "replacement": {
+              "primitive": "it.layer.option.timeout",
+              "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."
+            },
+            "severity": "major",
+            "confidence": 0.55,
+            "mechanization": "judgment",
+            "status": "open"
+          }
+        ],
+        "r3": [
+          {
+            "id": "EV010:packages/tooling/tool/cli/test/effect-vitest-contract.test.ts:31:@effect/platform-node@0#1",
+            "lens": "resource",
+            "ruleId": "EV010",
+            "package": "@beep/repo-cli",
+            "file": "packages/tooling/tool/cli/test/effect-vitest-contract.test.ts",
+            "line": 31,
+            "endLine": 31,
+            "symbol": "@effect/platform-node",
+            "occurrence": "v2:b2c038529d8f7ca88a1b124ef6d3595bc2da97b54930716415cd30b440c9733b",
+            "class": "platform-resource-provenance-review",
+            "evidence": "import { NodePath, NodeServices } from \"@effect/platform-node\";",
+            "replacement": {
+              "primitive": "it.layer",
+              "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+            },
+            "severity": "info",
+            "confidence": 0.55,
+            "mechanization": "judgment",
+            "status": "open"
+          },
+          {
+            "id": "EV010:packages/tooling/tool/cli/test/effect-vitest-store.test.ts:9:@effect/platform-node@0#1",
+            "lens": "resource",
+            "ruleId": "EV010",
+            "package": "@beep/repo-cli",
+            "file": "packages/tooling/tool/cli/test/effect-vitest-store.test.ts",
+            "line": 9,
+            "endLine": 9,
+            "symbol": "@effect/platform-node",
+            "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+            "class": "platform-resource-provenance-review",
+            "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+            "replacement": {
+              "primitive": "it.layer",
+              "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+            },
+            "severity": "info",
+            "confidence": 0.55,
+            "mechanization": "judgment",
+            "status": "open"
+          },
+          {
+            "id": "EV010:packages/tooling/tool/cli/test/qa-pure.test.ts:84:@effect/platform-node/NodeFileSystem@0#1",
+            "lens": "resource",
+            "ruleId": "EV010",
+            "package": "@beep/repo-cli",
+            "file": "packages/tooling/tool/cli/test/qa-pure.test.ts",
+            "line": 84,
+            "endLine": 84,
+            "symbol": "@effect/platform-node/NodeFileSystem",
+            "occurrence": "v2:1e14fe3983e1b10ec8ca10f275771b44fe07b6efae5f900877c3f472b89c0872",
+            "class": "platform-filesystem-candidate",
+            "evidence": "import * as NodeFileSystem from \"@effect/platform-node/NodeFileSystem\";",
+            "replacement": {
+              "primitive": "it.layer",
+              "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+            },
+            "severity": "info",
+            "confidence": 0.55,
+            "mechanization": "judgment",
+            "status": "open"
+          },
+          {
+            "id": "EV010:packages/tooling/tool/cli/test/single-project-emit.test.ts:4:@effect/platform-node@0#1",
+            "lens": "resource",
+            "ruleId": "EV010",
+            "package": "@beep/repo-cli",
+            "file": "packages/tooling/tool/cli/test/single-project-emit.test.ts",
+            "line": 4,
+            "endLine": 4,
+            "symbol": "@effect/platform-node",
+            "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+            "class": "platform-resource-provenance-review",
+            "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+            "replacement": {
+              "primitive": "it.layer",
+              "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+            },
+            "severity": "info",
+            "confidence": 0.55,
+            "mechanization": "judgment",
+            "status": "open"
+          },
+          {
+            "id": "EV014:packages/tooling/tool/cli/test/effect-vitest-contract.test.ts:556:it.layer@0#1",
+            "lens": "resource",
+            "ruleId": "EV014",
+            "package": "@beep/repo-cli",
+            "file": "packages/tooling/tool/cli/test/effect-vitest-contract.test.ts",
+            "line": 556,
+            "endLine": 556,
+            "symbol": "it.layer",
+            "occurrence": "v2:d4b0cc5efd6f2cfed13f69ef0c90671c9867c46fedf56e8e3c040b40ea459587",
+            "class": "resource-layer-without-hook-timeout",
+            "evidence": "it.layer(BunCrypto.layer)",
+            "replacement": {
+              "primitive": "it.layer.option.timeout",
+              "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."
+            },
+            "severity": "major",
+            "confidence": 0.55,
+            "mechanization": "judgment",
+            "status": "open"
+          },
+          {
+            "id": "EV014:packages/tooling/tool/cli/test/effect-vitest-contract.test.ts:747:it.layer@0#1",
+            "lens": "resource",
+            "ruleId": "EV014",
+            "package": "@beep/repo-cli",
+            "file": "packages/tooling/tool/cli/test/effect-vitest-contract.test.ts",
+            "line": 747,
+            "endLine": 747,
+            "symbol": "it.layer",
+            "occurrence": "v2:73942c1c47ad92d791739cf34bade54cfeba735ce35fd9c8c963b08e63e74bfb",
+            "class": "resource-layer-without-hook-timeout",
+            "evidence": "it.layer(NodeServices.layer)",
+            "replacement": {
+              "primitive": "it.layer.option.timeout",
+              "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."
+            },
+            "severity": "major",
+            "confidence": 0.55,
+            "mechanization": "judgment",
+            "status": "open"
+          }
+        ]
+      },
+      "exitReceiptLimit": "Retained log has completed scan output; separate process exit receipt not present in this reconciliation input."
+    },
+    "baseline": {
+      "path": "standards/effect-vitest.inventory.jsonc",
+      "sha256": "5c1b321c49bab970177936639d5a907a40cd2aafdb8272cdc6c287e68790a7c7",
+      "count": 1883
+    },
+    "independentReviews": [
+      {
+        "round": 1,
+        "privateReportSha256": "c7982a2c9c1b580a9601fb8dd168db621f9e16edc8c3c8719a3b3b64820d4c1c",
+        "publishedReport": "research/2026-10-06-property-values-grok-r1.md",
+        "publishedReportSha256": "015ae4e07b07cc77fb021e0b59853629f4c7ef41597d32ff5cd85db791e0625f",
+        "findingsSha256": "a54438779a2cfa278c0eb204e77182495119050a7f1a339428651c6058a9c1a2",
+        "findingsCount": 1
+      },
+      {
+        "round": 2,
+        "privateReportSha256": "41f0ab0a1ee7ad0fec37a183d8b2179207a5efd2e2f8882e9f8475f0750fe190",
+        "publishedReport": "research/2026-10-06-property-values-grok-r2.md",
+        "publishedReportSha256": "dc5c3d1ee14b1dad14940c288a5684b6595feec7eb1ff0c7b3f95c3a24b91a63",
+        "findingsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "findingsCount": 0
+      },
+      {
+        "round": 3,
+        "privateReportSha256": "042546218adc50b22ef6a696b47ba8eb66160b1b73d7a8c84cd58412248a41fd",
+        "publishedReport": "research/2026-10-06-property-values-grok-r3.md",
+        "publishedReportSha256": "5280668432c1229e282172ef71c7b675c50b56300aa977acdd91bb06a3bc3b54",
+        "findingsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "findingsCount": 0
+      }
+    ],
+    "launcherControls": [
+      {
+        "runtime": "node",
+        "file": "parent-launcher-repair/r1-final-node-predicate-controls.json",
+        "sha256": "bf5df88e5165aea484ed2f9a1491fd0205f751d7fa60f15be989eace2c9c6086",
+        "sourceSha256": "330fd60bf82946bbb81d1b3ed1d7c0846da94f63747992c0a98571fe1b76f25d",
+        "passed": 64,
+        "failed": 0
+      },
+      {
+        "runtime": "bun",
+        "file": "parent-launcher-repair/r1-final-bun-predicate-controls.json",
+        "sha256": "4a5228e6bf99d5946f9f49e834ced51bad0da0d09d6df25f455cb389a3eafe52",
+        "sourceSha256": "330fd60bf82946bbb81d1b3ed1d7c0846da94f63747992c0a98571fe1b76f25d",
+        "passed": 64,
+        "failed": 0
+      }
+    ],
+    "runtimeRegistrationPreservation": {
+      "rename": {
+        "beforeFullName": "internal/ratchet/RatchetDiff diffTotals treats an absent baseline metric as zero when the current metric exists",
+        "afterFullName": "internal/ratchet/RatchetDiff diffTotals treats an explicit zero baseline metric as growth when the current metric increases",
+        "canonicalPrintedAstBodyUnchanged": true,
+        "beforeBody": "() => {\n    const diff = diffTotals({\n        current: { fresh: 4 },\n        baseline: { fresh: 0 },\n    });\n    expect(diff.increased.map((delta) => [delta.metric, delta.baseline, delta.current, delta.delta])).toEqual([\n        [\"fresh\", 0, 4, 4],\n    ]);\n}",
+        "afterBody": "() => {\n    const diff = diffTotals({\n        current: { fresh: 4 },\n        baseline: { fresh: 0 },\n    });\n    expect(diff.increased.map((delta) => [delta.metric, delta.baseline, delta.current, delta.delta])).toEqual([\n        [\"fresh\", 0, 4, 4],\n    ]);\n}"
+      },
+      "runtimes": {
+        "node": {
+          "originalCount": 131,
+          "currentCount": 137,
+          "missing": {},
+          "added": {
+            "internal/ratchet/RatchetDiff diffTotals counts an untracked current metric without producing tracked deltas or missing metrics": 1,
+            "internal/ratchet/RatchetDiff diffTotals enforces tracked growth, decreases, and missing metrics alongside untracked current totals": 1,
+            "single-project emit law detects compiler build flags at command boundaries and retains the emit deletion law": 1,
+            "single-project emit law ignores quoted command text, flag substrings, and unrelated command operands": 1,
+            "single-project emit law detects launched compiler build flags through environment prefixes, options, and executable paths": 1,
+            "single-project emit law keeps launcher operands, script names, and compiler end-of-options distinct": 1
+          },
+          "finalFullNames": {
+            "codex findings csv parser integration survives a description cell containing commas and newlines": 1,
+            "codex findings csv parser integration survives a title containing a doubled quote": 1,
+            "codex findings csv identity reads the identity from the canonical finding url": 1,
+            "codex findings csv identity refuses an identity from a foreign host": 1,
+            "codex findings csv identity refuses a non-hex trailing segment": 1,
+            "codex findings csv decoding maps lowercase wire severities and statuses onto the packet domain": 1,
+            "codex findings csv decoding drops every personal-data column at the parse boundary": 1,
+            "codex findings csv decoding carries the report body only in the raw-evidence half": 1,
+            "codex findings csv decoding reports the repository named by the export": 1,
+            "codex findings csv refusals refuses a signed-out html response as an expired session": 1,
+            "codex findings csv refusals refuses an export whose header drifted": 1,
+            "codex findings csv refusals refuses a truncated row rather than padding it": 1,
+            "codex findings csv refusals refuses an unknown severity rather than guessing a bucket": 1,
+            "codex findings csv refusals refuses a duplicated finding identity": 1,
+            "codex findings csv refusals accepts an export with no findings at all": 1,
+            "Security Cloud export migration preserves namespaced identities and summary evidence without inventing detail reports": 1,
+            "Security Cloud export migration refuses mixed repositories in both formats": 1,
+            "Security Cloud export migration refuses malformed identity, unsupported source, repository origin, and status": 1,
+            "codex findings identity assignment pads ordinals to three digits and grows beyond them": 1,
+            "codex findings identity assignment orders most severe first and breaks ties by Codex identity": 1,
+            "codex findings identity assignment produces an identical plan when the same payload arrives in a different row order": 1,
+            "codex findings identity is sticky across re-ingest keeps existing numbers when a more severe finding arrives later": 1,
+            "codex findings identity is sticky across re-ingest never reuses a number reserved by a finding that left the export": 1,
+            "codex findings identity is sticky across re-ingest assigns from capture order when there are no prior bindings": 1,
+            "codex findings severity tallies omits zero-count severities and keeps domain order": 1,
+            "codex findings payload rejection rejects a duplicate Codex identity instead of silently deduplicating": 1,
+            "codex findings payload rejection rejects a traversal-shaped Codex identity": 1,
+            "codex findings payload rejection rejects an abbreviated source commit": 1,
+            "codex findings payload rejection rejects a title carrying a bidirectional override": 1,
+            "codex findings payload rejection rejects an over-length title rather than truncating it": 1,
+            "codex findings payload rejection rejects an unknown severity": 1,
+            "codex findings payload rejection rejects an unknown payload contract version": 1,
+            "codex findings reconciliation refuses an expired session rather than bootstrapping an empty packet": 1,
+            "codex findings reconciliation refuses a short read against the dashboard's own reported total": 1,
+            "codex findings reconciliation names neither a local path nor a captured value in a short-read message": 1,
+            "codex findings ingest options rejects a traversal slug supplied on the command line": 1,
+            "codex findings ingest options rejects a traversal-shaped date override": 1,
+            "codex findings ingest options defaults every mode flag to false": 1,
+            "codex findings source identity consistency refuses a local identity declared as a cloud capture": 1,
+            "codex findings source identity consistency refuses a cloud identity declared as a sealed bundle capture": 1,
+            "codex findings source identity consistency plans a sealed bundle capture whose identities are all local": 1,
+            "codex findings source identity consistency preserves Security Cloud identities and rejects cross-source aliases": 1,
+            "codex findings source identity consistency reserves no ordinal for a prior binding that is not a CSF identity": 1,
+            "preserves every census row through its persisted JSON codec": 1,
+            "keeps symbol absence and literal ordinal suffixes distinct in canonical keys": 1,
+            "uses the P0a physical-line convention": 1,
+            "discovery filesystem persists the scanned inventory and census to their configured artifact paths": 1,
+            "discovery filesystem rejects newly detected membership when the baseline is absent": 1,
+            "discovery filesystem rejects a mismatched baseline pin even when discovery is empty": 1,
+            "discovery filesystem retains resource-wrapper definitions but filters test-only rules from support inputs": 1,
+            "discovery filesystem rejects missing, malformed and wrongly named installed package metadata before version comparison": 1,
+            "discovery filesystem passes the default membership ratchet for an empty discovered scope without writing artifacts": 1,
+            "discovery filesystem routes scanner identities through platform-relative paths and canonicalizes Windows separators": 1,
+            "discovery filesystem discovers the exact D9 fixture set through FsUtils before constructing the Project": 1,
+            "discovery filesystem rejects an installed Effect Vitest version outside the 4.0.1 pin": 1,
+            "accepts EV and lens rule identifiers at the shared finding boundary": 1,
+            "rejects unordered lines and exceptions without reasons": 1,
+            "keeps package test timing distinct from detector scan timing": 1,
+            "classifies baseline growth and resolution with the shared membership semantics": 1,
+            "reports introduced findings grouped by file in path order behind the stable count line": 1,
+            "keeps control-bearing filenames inside one prefixed report line": 1,
+            "preserves a justified exception on the matching live row": 1,
+            "ignores unrelated line shifts but distinguishes same-fingerprint occurrences": 1,
+            "keeps named occurrences stable across reordering and deletion without transferring exceptions": 1,
+            "refuses ambiguous duplicate exception inheritance even after the first duplicate disappears": 1,
+            "bridges only unique legacy fingerprints and keeps legacy duplicate migrations visible": 1,
+            "retains full token evidence beyond the display limit and significant literal whitespace": 1,
+            "validates optional occurrence anchors without rejecting legacy inventory rows": 1,
+            "requires re-review of a unique legacy exception when historical statement or context is unknowable": 1,
+            "preserves accepted full-token occurrence digests through iterative leaf traversal": 1,
+            "retains unmatched duplicate payloads and stable equal-id order in both membership directions": 1,
+            "keeps indexed legacy membership separate from anchored exception eligibility": 1,
+            "round 2 contextual graph routing retains primary assertion polarity and uncertainty after graph hydration": 1,
+            "round 2 contextual graph routing rejects an assertion route whose selected graph edge is absent": 1,
+            "decodes charter NONE coverage and numeric findings for each exact lens": 1,
+            "rejects misleading NONE/actionable relationships without weakening boundary checks": 1,
+            "preserves detector-origin resource judgments alongside human lens rules": 1,
+            "rows filesystem distinguishes a missing inventory from corrupt inventory bytes": 1,
+            "rows filesystem preserves empty and unreadable JSONL entries whose ownership cannot be established": 1,
+            "rows filesystem replaces the generated JSONL set while preserving unrelated files": 1,
+            "commands/Qa Qa.session pure helpers expands decoded app targets onto both portless host shapes": 1,
+            "commands/Qa Qa.session pure helpers stamps a session id from the round and start time": 1,
+            "commands/Qa Qa.session pure helpers prefers --url over --app and derives loopback origins": 1,
+            "commands/Qa Qa.session pure helpers falls back to the apps host for names that are not lab workspaces": 1,
+            "commands/Qa Qa.session pure helpers keeps the apps host for names that resolve under apps/": 1,
+            "commands/Qa Qa.session pure helpers expands --app to the labs host when the workspace lives under apps/labs": 1,
+            "commands/Qa Qa.session pure helpers resolves apps over labs when both directories exist": 1,
+            "commands/Qa Qa.session pure helpers fails when neither --url nor --app is supplied": 1,
+            "commands/Qa Qa.session pure helpers fails when the supplied --url is not absolute": 1,
+            "commands/Qa path helpers derives every round-relative artifact path from one layout": 1,
+            "commands/Qa Qa.session filesystem helpers returns an empty log when the events file is absent": 1,
+            "commands/Qa Qa.session filesystem helpers decodes valid witness lines and counts the rejected ones": 1,
+            "commands/Qa Qa.session filesystem helpers round-trips the record-start hint and reports none when absent": 1,
+            "commands/Qa Qa.session filesystem helpers round-trips the artifact budget and reports none for an absent plan": 1,
+            "commands/Qa Qa.session filesystem helpers discovers a recorded container and reports none for an empty video directory": 1,
+            "commands/Qa Qa.session filesystem helpers degrades commit provenance to unknown outside a git checkout": 1,
+            "commands/Qa Qa.session filesystem helpers reports no legacy manifest when the file is absent": 1,
+            "commands/Qa Qa.session filesystem helpers decodes a legacy screenshot manifest": 1,
+            "commands/Qa Qa.session filesystem helpers folds decoded legacy notes and failed assertions into the matching timeline section": 1,
+            "commands/Qa Doctor rendering classifies only required failures as blocking": 1,
+            "commands/Qa Doctor rendering lists every probe and names the blocking ones": 1,
+            "commands/Qa Doctor rendering reports all-present when nothing required failed": 1,
+            "commands/Qa Qa.render extraction plan table renders the window table, gif spec, budget line, and dropped rows": 1,
+            "commands/Qa Qa.render extraction plan table renders a dash when a window carries no gif": 1,
+            "commands/Qa Qa.render extraction plan table formats byte counts as mebibytes": 1,
+            "commands/Qa Qa.render extraction plan table recovers the source sequences of a planned window from its artifact label": 1,
+            "commands/Qa report warnings without a plan warns about the missing clock sync and missing video, and omits dirty": 1,
+            "commands/Qa JudgePack timeline rendering segments the timeline on scenario markers": 1,
+            "commands/Qa JudgePack timeline rendering falls back to a single section when no scenario marker exists": 1,
+            "commands/Qa JudgePack timeline rendering renders a detail line for every witness event kind": 1,
+            "commands/Qa evidence selection budget sacrifices green screenshots before frame strips": 1,
+            "commands/Qa evidence selection budget drops files above the per-file budget with that reason": 1,
+            "commands/Qa JudgeCheck citation collection deduplicates cited paths and event ids": 1,
+            "commands/Qa JudgeCheck citation collection renders a frame range and cited events onto each evidence line": 1,
+            "commands/Qa JudgeCheck citation collection passes a clean cross-check and fails a dirty one": 1,
+            "commands/Qa judge output parsing parses the last fenced block out of narrated judge output": 1,
+            "commands/Qa judge output parsing reports when the output carries no parseable JSON object": 1,
+            "commands/Qa judge output parsing preserves malformed-JSON and schema-rejection adapter messages": 1,
+            "commands/Qa extract --dry-run driver isolation persists the plan and returns before video discovery, probing, or correlation": 1,
+            "commands/Qa harness environment maps witness flags onto the harness contract variables": 1,
+            "internal/ratchet/RatchetDiff diffMembership classifies introduced and resolved findings against the baseline": 1,
+            "internal/ratchet/RatchetDiff diffMembership re-sorts both directions by the supplied order regardless of input order": 1,
+            "internal/ratchet/RatchetDiff diffMembership reports no regression when current is a subset of the baseline": 1,
+            "internal/ratchet/RatchetDiff diffTotals classifies increased, decreased, and missing metrics": 1,
+            "internal/ratchet/RatchetDiff diffTotals treats an explicit zero baseline metric as growth when the current metric increases": 1,
+            "internal/ratchet/RatchetDiff diffTotals counts an untracked current metric without producing tracked deltas or missing metrics": 1,
+            "internal/ratchet/RatchetDiff diffTotals enforces tracked growth, decreases, and missing metrics alongside untracked current totals": 1,
+            "internal/ratchet/RatchetDiff diffTotals is a decodable schema value": 1,
+            "internal/ratchet/RatchetLifecycle enforceRatchet fails with the first present regression's error": 1,
+            "internal/ratchet/RatchetLifecycle enforceRatchet succeeds and emits the ok line when no regression is present": 1,
+            "internal/artifacts/ArtifactIo renderTruncatedLines renders every item when within the limit": 1,
+            "internal/artifacts/ArtifactIo renderTruncatedLines appends a single '... N more' line when the list overflows": 1,
+            "single-project emit law detects compiler build flags at command boundaries and retains the emit deletion law": 1,
+            "single-project emit law ignores quoted command text, flag substrings, and unrelated command operands": 1,
+            "single-project emit law detects launched compiler build flags through environment prefixes, options, and executable paths": 1,
+            "single-project emit law keeps launcher operands, script names, and compiler end-of-options distinct": 1,
+            "single-project emit law no beep:build or beep:check script uses the subgraph builder or --force": 1
+          }
+        },
+        "bun": {
+          "originalCount": 131,
+          "currentCount": 137,
+          "missing": {},
+          "added": {
+            "internal/ratchet/RatchetDiff diffTotals counts an untracked current metric without producing tracked deltas or missing metrics": 1,
+            "internal/ratchet/RatchetDiff diffTotals enforces tracked growth, decreases, and missing metrics alongside untracked current totals": 1,
+            "single-project emit law detects compiler build flags at command boundaries and retains the emit deletion law": 1,
+            "single-project emit law ignores quoted command text, flag substrings, and unrelated command operands": 1,
+            "single-project emit law detects launched compiler build flags through environment prefixes, options, and executable paths": 1,
+            "single-project emit law keeps launcher operands, script names, and compiler end-of-options distinct": 1
+          },
+          "finalFullNames": {
+            "codex findings csv parser integration survives a description cell containing commas and newlines": 1,
+            "codex findings csv parser integration survives a title containing a doubled quote": 1,
+            "codex findings csv identity reads the identity from the canonical finding url": 1,
+            "codex findings csv identity refuses an identity from a foreign host": 1,
+            "codex findings csv identity refuses a non-hex trailing segment": 1,
+            "codex findings csv decoding maps lowercase wire severities and statuses onto the packet domain": 1,
+            "codex findings csv decoding drops every personal-data column at the parse boundary": 1,
+            "codex findings csv decoding carries the report body only in the raw-evidence half": 1,
+            "codex findings csv decoding reports the repository named by the export": 1,
+            "codex findings csv refusals refuses a signed-out html response as an expired session": 1,
+            "codex findings csv refusals refuses an export whose header drifted": 1,
+            "codex findings csv refusals refuses a truncated row rather than padding it": 1,
+            "codex findings csv refusals refuses an unknown severity rather than guessing a bucket": 1,
+            "codex findings csv refusals refuses a duplicated finding identity": 1,
+            "codex findings csv refusals accepts an export with no findings at all": 1,
+            "Security Cloud export migration preserves namespaced identities and summary evidence without inventing detail reports": 1,
+            "Security Cloud export migration refuses mixed repositories in both formats": 1,
+            "Security Cloud export migration refuses malformed identity, unsupported source, repository origin, and status": 1,
+            "codex findings identity assignment pads ordinals to three digits and grows beyond them": 1,
+            "codex findings identity assignment orders most severe first and breaks ties by Codex identity": 1,
+            "codex findings identity assignment produces an identical plan when the same payload arrives in a different row order": 1,
+            "codex findings identity is sticky across re-ingest keeps existing numbers when a more severe finding arrives later": 1,
+            "codex findings identity is sticky across re-ingest never reuses a number reserved by a finding that left the export": 1,
+            "codex findings identity is sticky across re-ingest assigns from capture order when there are no prior bindings": 1,
+            "codex findings severity tallies omits zero-count severities and keeps domain order": 1,
+            "codex findings payload rejection rejects a duplicate Codex identity instead of silently deduplicating": 1,
+            "codex findings payload rejection rejects a traversal-shaped Codex identity": 1,
+            "codex findings payload rejection rejects an abbreviated source commit": 1,
+            "codex findings payload rejection rejects a title carrying a bidirectional override": 1,
+            "codex findings payload rejection rejects an over-length title rather than truncating it": 1,
+            "codex findings payload rejection rejects an unknown severity": 1,
+            "codex findings payload rejection rejects an unknown payload contract version": 1,
+            "codex findings reconciliation refuses an expired session rather than bootstrapping an empty packet": 1,
+            "codex findings reconciliation refuses a short read against the dashboard's own reported total": 1,
+            "codex findings reconciliation names neither a local path nor a captured value in a short-read message": 1,
+            "codex findings ingest options rejects a traversal slug supplied on the command line": 1,
+            "codex findings ingest options rejects a traversal-shaped date override": 1,
+            "codex findings ingest options defaults every mode flag to false": 1,
+            "codex findings source identity consistency refuses a local identity declared as a cloud capture": 1,
+            "codex findings source identity consistency refuses a cloud identity declared as a sealed bundle capture": 1,
+            "codex findings source identity consistency plans a sealed bundle capture whose identities are all local": 1,
+            "codex findings source identity consistency preserves Security Cloud identities and rejects cross-source aliases": 1,
+            "codex findings source identity consistency reserves no ordinal for a prior binding that is not a CSF identity": 1,
+            "preserves every census row through its persisted JSON codec": 1,
+            "keeps symbol absence and literal ordinal suffixes distinct in canonical keys": 1,
+            "uses the P0a physical-line convention": 1,
+            "discovery filesystem persists the scanned inventory and census to their configured artifact paths": 1,
+            "discovery filesystem rejects newly detected membership when the baseline is absent": 1,
+            "discovery filesystem rejects a mismatched baseline pin even when discovery is empty": 1,
+            "discovery filesystem retains resource-wrapper definitions but filters test-only rules from support inputs": 1,
+            "discovery filesystem rejects missing, malformed and wrongly named installed package metadata before version comparison": 1,
+            "discovery filesystem passes the default membership ratchet for an empty discovered scope without writing artifacts": 1,
+            "discovery filesystem routes scanner identities through platform-relative paths and canonicalizes Windows separators": 1,
+            "discovery filesystem discovers the exact D9 fixture set through FsUtils before constructing the Project": 1,
+            "discovery filesystem rejects an installed Effect Vitest version outside the 4.0.1 pin": 1,
+            "accepts EV and lens rule identifiers at the shared finding boundary": 1,
+            "rejects unordered lines and exceptions without reasons": 1,
+            "keeps package test timing distinct from detector scan timing": 1,
+            "classifies baseline growth and resolution with the shared membership semantics": 1,
+            "reports introduced findings grouped by file in path order behind the stable count line": 1,
+            "keeps control-bearing filenames inside one prefixed report line": 1,
+            "preserves a justified exception on the matching live row": 1,
+            "ignores unrelated line shifts but distinguishes same-fingerprint occurrences": 1,
+            "keeps named occurrences stable across reordering and deletion without transferring exceptions": 1,
+            "refuses ambiguous duplicate exception inheritance even after the first duplicate disappears": 1,
+            "bridges only unique legacy fingerprints and keeps legacy duplicate migrations visible": 1,
+            "retains full token evidence beyond the display limit and significant literal whitespace": 1,
+            "validates optional occurrence anchors without rejecting legacy inventory rows": 1,
+            "requires re-review of a unique legacy exception when historical statement or context is unknowable": 1,
+            "preserves accepted full-token occurrence digests through iterative leaf traversal": 1,
+            "retains unmatched duplicate payloads and stable equal-id order in both membership directions": 1,
+            "keeps indexed legacy membership separate from anchored exception eligibility": 1,
+            "round 2 contextual graph routing retains primary assertion polarity and uncertainty after graph hydration": 1,
+            "round 2 contextual graph routing rejects an assertion route whose selected graph edge is absent": 1,
+            "decodes charter NONE coverage and numeric findings for each exact lens": 1,
+            "rejects misleading NONE/actionable relationships without weakening boundary checks": 1,
+            "preserves detector-origin resource judgments alongside human lens rules": 1,
+            "rows filesystem distinguishes a missing inventory from corrupt inventory bytes": 1,
+            "rows filesystem preserves empty and unreadable JSONL entries whose ownership cannot be established": 1,
+            "rows filesystem replaces the generated JSONL set while preserving unrelated files": 1,
+            "commands/Qa Qa.session pure helpers expands decoded app targets onto both portless host shapes": 1,
+            "commands/Qa Qa.session pure helpers stamps a session id from the round and start time": 1,
+            "commands/Qa Qa.session pure helpers prefers --url over --app and derives loopback origins": 1,
+            "commands/Qa Qa.session pure helpers falls back to the apps host for names that are not lab workspaces": 1,
+            "commands/Qa Qa.session pure helpers keeps the apps host for names that resolve under apps/": 1,
+            "commands/Qa Qa.session pure helpers expands --app to the labs host when the workspace lives under apps/labs": 1,
+            "commands/Qa Qa.session pure helpers resolves apps over labs when both directories exist": 1,
+            "commands/Qa Qa.session pure helpers fails when neither --url nor --app is supplied": 1,
+            "commands/Qa Qa.session pure helpers fails when the supplied --url is not absolute": 1,
+            "commands/Qa path helpers derives every round-relative artifact path from one layout": 1,
+            "commands/Qa Qa.session filesystem helpers returns an empty log when the events file is absent": 1,
+            "commands/Qa Qa.session filesystem helpers decodes valid witness lines and counts the rejected ones": 1,
+            "commands/Qa Qa.session filesystem helpers round-trips the record-start hint and reports none when absent": 1,
+            "commands/Qa Qa.session filesystem helpers round-trips the artifact budget and reports none for an absent plan": 1,
+            "commands/Qa Qa.session filesystem helpers discovers a recorded container and reports none for an empty video directory": 1,
+            "commands/Qa Qa.session filesystem helpers degrades commit provenance to unknown outside a git checkout": 1,
+            "commands/Qa Qa.session filesystem helpers reports no legacy manifest when the file is absent": 1,
+            "commands/Qa Qa.session filesystem helpers decodes a legacy screenshot manifest": 1,
+            "commands/Qa Qa.session filesystem helpers folds decoded legacy notes and failed assertions into the matching timeline section": 1,
+            "commands/Qa Doctor rendering classifies only required failures as blocking": 1,
+            "commands/Qa Doctor rendering lists every probe and names the blocking ones": 1,
+            "commands/Qa Doctor rendering reports all-present when nothing required failed": 1,
+            "commands/Qa Qa.render extraction plan table renders the window table, gif spec, budget line, and dropped rows": 1,
+            "commands/Qa Qa.render extraction plan table renders a dash when a window carries no gif": 1,
+            "commands/Qa Qa.render extraction plan table formats byte counts as mebibytes": 1,
+            "commands/Qa Qa.render extraction plan table recovers the source sequences of a planned window from its artifact label": 1,
+            "commands/Qa report warnings without a plan warns about the missing clock sync and missing video, and omits dirty": 1,
+            "commands/Qa JudgePack timeline rendering segments the timeline on scenario markers": 1,
+            "commands/Qa JudgePack timeline rendering falls back to a single section when no scenario marker exists": 1,
+            "commands/Qa JudgePack timeline rendering renders a detail line for every witness event kind": 1,
+            "commands/Qa evidence selection budget sacrifices green screenshots before frame strips": 1,
+            "commands/Qa evidence selection budget drops files above the per-file budget with that reason": 1,
+            "commands/Qa JudgeCheck citation collection deduplicates cited paths and event ids": 1,
+            "commands/Qa JudgeCheck citation collection renders a frame range and cited events onto each evidence line": 1,
+            "commands/Qa JudgeCheck citation collection passes a clean cross-check and fails a dirty one": 1,
+            "commands/Qa judge output parsing parses the last fenced block out of narrated judge output": 1,
+            "commands/Qa judge output parsing reports when the output carries no parseable JSON object": 1,
+            "commands/Qa judge output parsing preserves malformed-JSON and schema-rejection adapter messages": 1,
+            "commands/Qa extract --dry-run driver isolation persists the plan and returns before video discovery, probing, or correlation": 1,
+            "commands/Qa harness environment maps witness flags onto the harness contract variables": 1,
+            "internal/ratchet/RatchetDiff diffMembership classifies introduced and resolved findings against the baseline": 1,
+            "internal/ratchet/RatchetDiff diffMembership re-sorts both directions by the supplied order regardless of input order": 1,
+            "internal/ratchet/RatchetDiff diffMembership reports no regression when current is a subset of the baseline": 1,
+            "internal/ratchet/RatchetDiff diffTotals classifies increased, decreased, and missing metrics": 1,
+            "internal/ratchet/RatchetDiff diffTotals treats an explicit zero baseline metric as growth when the current metric increases": 1,
+            "internal/ratchet/RatchetDiff diffTotals counts an untracked current metric without producing tracked deltas or missing metrics": 1,
+            "internal/ratchet/RatchetDiff diffTotals enforces tracked growth, decreases, and missing metrics alongside untracked current totals": 1,
+            "internal/ratchet/RatchetDiff diffTotals is a decodable schema value": 1,
+            "internal/ratchet/RatchetLifecycle enforceRatchet fails with the first present regression's error": 1,
+            "internal/ratchet/RatchetLifecycle enforceRatchet succeeds and emits the ok line when no regression is present": 1,
+            "internal/artifacts/ArtifactIo renderTruncatedLines renders every item when within the limit": 1,
+            "internal/artifacts/ArtifactIo renderTruncatedLines appends a single '... N more' line when the list overflows": 1,
+            "single-project emit law detects compiler build flags at command boundaries and retains the emit deletion law": 1,
+            "single-project emit law ignores quoted command text, flag substrings, and unrelated command operands": 1,
+            "single-project emit law detects launched compiler build flags through environment prefixes, options, and executable paths": 1,
+            "single-project emit law keeps launcher operands, script names, and compiler end-of-options distinct": 1,
+            "single-project emit law no beep:build or beep:check script uses the subgraph builder or --force": 1
+          }
+        }
+      }
+    },
+    "wholeLedgerValidation": {
+      "strictPublicDecoder": true,
+      "onExcessProperty": "error",
+      "counts": {
+        "detector": 10861,
+        "resource": 1212,
+        "property": 1154,
+        "flake": 1136,
+        "observability": 1140
+      },
+      "totalRows": 15503,
+      "globalUniqueIds": 15503,
+      "errors": []
+    },
+    "privatePreservationReceipts": [
+      {
+        "file": "a/preservation.json",
+        "sha256": "84b2659cb8cfc0522bae6f4e476598d3d29a9c0a5315702b1da9dc5d38f1628f"
+      },
+      {
+        "file": "b/contract-ast-preservation.json",
+        "sha256": "ba0f91a39406093adba0bc86d46c799e82800d56bfd77deb9e7b2cfdcec6d5a0"
+      },
+      {
+        "file": "b/r1-assertion-registration-preservation.json",
+        "sha256": "b66542fdd2dd13c2cc39f4008c5e62b2b9104a45a07651ef115a97ed6b51b3a0"
+      },
+      {
+        "file": "a/r3-runtime-preservation.json",
+        "sha256": "ff9ca829a3958b01a7575ad15909000520518a1b7bd81527eddeffb48920cd7d"
+      },
+      {
+        "file": "a/r3-immutable-snapshot-verification.json",
+        "sha256": "e46d9b45234703dcdd6310aa5ef162e35b6917144a5429e4f20e22326bf32303"
+      }
+    ]
+  },
+  "limits": [
+    "Metadata-only local reconciliation, not goal acceptance or publication.",
+    "Historical evidence/sketch/IDs remain unchanged, including the disproved absent-key ratchet recommendation.",
+    "R2 package proof and the R2 launcher waiver are historical; the waiver was rejected and R3 separately qualified changed source.",
+    "Known-prefix Some semantics are distinct from conservative unknown-prefix None tripwires; no full shell parser or arbitrary shell evaluation claim.",
+    "Baseline and detector ledger remain byte-identical and nonempty. No global inventory or coverage completion claim.",
+    "Manifest lifecycle P1/P2/P3 is unchanged. Parent owns Git, independent acceptance and publication."
+  ]
+}

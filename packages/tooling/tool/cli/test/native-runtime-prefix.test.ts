@@ -1,21 +1,20 @@
 import { lawsCommand } from "@beep/repo-cli/commands/Laws";
 import { StepExec } from "@beep/repo-cli/test/PackageScripts";
 import { FsUtilsLive, findRepoRoot } from "@beep/repo-utils";
-import { provideScopedLayer } from "@beep/test-utils";
+import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as ConfigProvider from "effect/ConfigProvider";
 import { Command } from "effect/cli";
 import * as Effect from "effect/Effect";
-import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as Str from "effect/String";
 
-const providePlatform = provideScopedLayer(FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer)));
+const PlatformLayer = FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer));
 const write = Effect.fn("NativeRuntimePrefixTest.write")(function* (root: string, name: string, source: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -49,89 +48,96 @@ const run = Effect.fn("NativeRuntimePrefixTest.run")(function* (args: ReadonlyAr
     env: R.filter(process.env, (_, key) => !Str.startsWith("VITEST")(key)),
     extendEnv: false,
   });
-});
+}, Effect.scoped);
 
 const runInProcess = Command.runWith(lawsCommand, { version: "0.0.0" });
 
-describe("native-runtime prefix command", { concurrent: false }, () => {
-  it.effect(
-    "rejects an escaping prefix in-process before any scan starts",
-    Effect.fnUntraced(function* () {
-      const exit = yield* runInProcess(["native-runtime", "--check", "--include-prefix", "../outside"]).pipe(
-        Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({})),
-        Effect.exit
-      );
-      exit.pipe(Exit.isFailure, assertTrue);
-    }, providePlatform)
-  );
+it.layer(PlatformLayer, { timeout: "5 seconds" })((it) => {
+  describe("native-runtime prefix command", { concurrent: false }, () => {
+    it.effect(
+      "rejects an escaping prefix in-process before any scan starts",
+      Effect.fnUntraced(function* () {
+        const exit = yield* runInProcess(["native-runtime", "--check", "--include-prefix", "../outside"]).pipe(
+          Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({})),
+          Effect.exit
+        );
+        assertTrue(exit._tag === "Failure");
+      })
+    );
 
-  it.effect(
-    "reports only the requested prefix, excluding artifacts, declarations and sibling roots",
-    Effect.fnUntraced(function* () {
-      const result = yield* run(["--include-prefix", " scratchpad/probe/ , scratchpad/empty "]);
-      expect(result.exitCode, result.output).toBe(1);
-      expect(result.output).toContain("scanned_files=1");
-      expect(result.output).toContain("touched_files=1");
-      expect(result.output).toContain("scratchpad/probe/index.tsx:");
-      expect(result.output).not.toContain("packages/outside/");
-      expect(result.output).not.toContain("probe-neighbor/");
-    }, providePlatform),
-    300_000
-  );
+    it.effect(
+      "reports only the requested prefix, excluding artifacts, declarations and sibling roots",
+      Effect.fnUntraced(function* () {
+        const result = yield* run(["--include-prefix", " scratchpad/probe/ , scratchpad/empty "]);
+        expect(result.exitCode, result.output).toBe(1);
+        expect(result.output).toContain("scanned_files=1");
+        expect(result.output).toContain("touched_files=1");
+        expect(result.output).toContain("scratchpad/probe/index.tsx:");
+        expect(result.output).not.toContain("packages/outside/");
+        expect(result.output).not.toContain("probe-neighbor/");
+      }),
+      300_000
+    );
 
-  it.effect(
-    "unions prefixes with explicit files without double-reporting an overlap",
-    Effect.fnUntraced(function* () {
-      const result = yield* run([
-        "--include-prefix",
-        "scratchpad/probe",
-        "--include",
-        "scratchpad/probe/index.tsx,packages/outside/clean.ts,packages/outside/violation.ts",
-      ]);
-      expect(result.exitCode, result.output).toBe(1);
-      expect(result.output).toContain("scanned_files=3");
-      expect(result.output).toContain("touched_files=2");
-      expect(result.output).toContain("scratchpad/probe/index.tsx:");
-      expect(result.output).toContain("packages/outside/violation.ts:");
-      expect(result.output).not.toContain("probe-neighbor/");
-    }, providePlatform),
-    300_000
-  );
+    it.effect(
+      "unions prefixes with explicit files without double-reporting an overlap",
+      Effect.fnUntraced(function* () {
+        const result = yield* run([
+          "--include-prefix",
+          "scratchpad/probe",
+          "--include",
+          "scratchpad/probe/index.tsx,packages/outside/clean.ts,packages/outside/violation.ts",
+        ]);
+        expect(result.exitCode, result.output).toBe(1);
+        expect(result.output).toContain("scanned_files=3");
+        expect(result.output).toContain("touched_files=2");
+        expect(result.output).toContain("scratchpad/probe/index.tsx:");
+        expect(result.output).toContain("packages/outside/violation.ts:");
+        expect(result.output).not.toContain("probe-neighbor/");
+      }),
+      300_000
+    );
 
-  it.effect(
-    "rejects prefixes that escape the repository or carry glob characters",
-    Effect.fnUntraced(function* () {
-      for (const prefix of ["../outside", "/scratchpad", "packages/*", "scratchpad/../packages"]) {
-        const result = yield* run(["--include-prefix", prefix]);
-        expect(result.exitCode, result.output).not.toBe(0);
-        expect(result.output).toContain("--include-prefix must name repository-relative directories");
-        expect(result.output).toContain(prefix);
-      }
-    }, providePlatform),
-    300_000
-  );
+    it.effect(
+      "rejects prefixes that escape the repository or carry glob characters",
+      Effect.fnUntraced(function* () {
+        for (const prefix of ["../outside", "/scratchpad", "packages/*", "scratchpad/../packages"]) {
+          const result = yield* run(["--include-prefix", prefix]);
+          expect(result.exitCode, result.output).not.toBe(0);
+          expect(result.output).toContain("--include-prefix must name repository-relative directories");
+          expect(result.output).toContain(prefix);
+        }
+      }),
+      300_000
+    );
 
-  it.effect(
-    "scans nothing and exits successfully for an empty directory prefix",
-    Effect.fnUntraced(function* () {
-      const result = yield* run(["--include-prefix", "scratchpad/empty"]);
-      expect(result.exitCode, result.output).toBe(0);
-      expect(result.output).toContain("scanned_files=0");
-      expect(result.output).toContain("touched_files=0");
-    }, providePlatform),
-    300_000
-  );
+    it.effect(
+      "scans nothing and exits successfully for an empty directory prefix",
+      Effect.fnUntraced(function* () {
+        const result = yield* run(["--include-prefix", "scratchpad/empty"]);
+        expect(result.exitCode, result.output).toBe(0);
+        expect(result.output).toContain("scanned_files=0");
+        expect(result.output).toContain("touched_files=0");
+      }),
+      300_000
+    );
 
-  it.effect(
-    "preserves explicit-file scope and caller exclusions",
-    Effect.fnUntraced(function* () {
-      const files = yield* run(["--include", "packages/outside/clean.ts"]);
-      expect(files.exitCode, files.output).toBe(0);
-      expect(files.output).toContain("scanned_files=1");
-      const excluded = yield* run(["--include-prefix", "scratchpad/probe", "--exclude", "scratchpad/probe/index.tsx"]);
-      expect(excluded.exitCode, excluded.output).toBe(0);
-      expect(excluded.output).toContain("scanned_files=0");
-    }, providePlatform),
-    300_000
-  );
+    it.effect(
+      "preserves explicit-file scope and caller exclusions",
+      Effect.fnUntraced(function* () {
+        const files = yield* run(["--include", "packages/outside/clean.ts"]);
+        expect(files.exitCode, files.output).toBe(0);
+        expect(files.output).toContain("scanned_files=1");
+        const excluded = yield* run([
+          "--include-prefix",
+          "scratchpad/probe",
+          "--exclude",
+          "scratchpad/probe/index.tsx",
+        ]);
+        expect(excluded.exitCode, excluded.output).toBe(0);
+        expect(excluded.output).toContain("scanned_files=0");
+      }),
+      300_000
+    );
+  });
 });
