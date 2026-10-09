@@ -106,3 +106,13 @@ proof in the existing lane cgroup under the run-3 explicit fallback ruling.
 TURBO_CONCURRENCY remains 2; MemoryHigh 36G / MemoryMax 40G unchanged.
 Prevention: queue starvation diagnostics and bounded admission with a documented
 cgroup fallback; neither duplicate execution nor higher caps is required.
+
+## 2026-10-09 — Test Layer and clock boundary diagnostics diverge
+
+Action: qualify golden tests with compiler laws and Effect/Vitest syntax policy.
+Result: shared it.layer passes package tsgo but requires hook/clock ownership
+evidence. Moving Layer provide into an Effect.fn pipeline passes runtime tests
+but strictEffectProvide still rejects its placement. Scoped Layer.build plus
+Context provision in the existing helper passes both audits and full-scan lint.
+Prevention: document a canonical scoped test Context pattern that preserves
+per-test TestClock isolation and passes both compiler and syntax diagnostics.

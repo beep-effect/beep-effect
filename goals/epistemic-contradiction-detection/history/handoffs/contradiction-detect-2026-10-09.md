@@ -89,3 +89,11 @@ Reversals unchanged: option 1 can be superseded only by a future contract owner;
 class/polarity/default/proposal semantic changes version the detector; remove
 new concept/export/barrel and rerun config-sync to withdraw the additive API.
 Private notes are removed per #1566; policy is repo-wide, no lane reversal.
+
+Final test helper `29d4438941` builds the pure Layer within the test scope and
+provides its Context, retaining standard per-test TestClock ownership. The
+Layer-provide pipeline attempt was rejected by package tsgo and is superseded.
+Final full-scan lint, golden 20/20 twice and use-cases audit/docgen all pass.
+Source/alias trees and the domain proof tree remain unchanged. First publication
+retry committed closure content but pushed nothing; all cheap gates except
+the now-repaired test-layer findings passed.

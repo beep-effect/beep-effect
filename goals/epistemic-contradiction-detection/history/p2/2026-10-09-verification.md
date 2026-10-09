@@ -250,3 +250,26 @@ for zero counters; corrected to the owner rule before recording this pass.
 All local hosted-parity checks pass. Heavy parity and coverage units settled
 inactive/dead; the queued use-cases unit was stopped before its cgroup fallback.
 Hosted final-head checks remain authoritative and are recorded after publication.
+
+## Final test-clock scoping and publication retry
+
+Main integration `d61f149284` adds only domain-kernel packet documentation
+from base `78b77b1084`; qualified source/alias trees remain identical.
+First run-3 publish created closure commit `c8f12d9286` but pushed nothing: all
+cheap gates passed except two new test-layer findings (EV014 hook timeout,
+EV015 shared clock adjustment). A per-test Layer-provide pipeline in
+`e7fc3f4819` passed runtime vectors but was rejected by strictEffectProvide
+at each pipeline. That placement is superseded by `29d4438941`: the existing
+test helper builds the pure Layer in the test's scope and provides its Context.
+Each standard it.effect retains its own TestClock; no suppression or baseline
+refresh. Both new failure inbox rows are acknowledged with repair SHAs.
+
+Final source/test qualification at `29d4438941`:
+
+- Effect/Vitest full-scan lint: pass.
+- Golden single file: 20/20 pass twice with isolated per-test clocks.
+- Use-cases default package-verify: audit 7.3s and docgen 3.9s, pass.
+- Domain source/tests and all detector source/alias trees are unchanged from
+  their passing proof/coverage trees; only test Context construction changed.
+- Fresh coverage receipt remains 100% for all touched executable source files;
+  tests are outside source-counter scope. No coverage baseline change.

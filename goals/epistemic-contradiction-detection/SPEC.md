@@ -296,6 +296,15 @@ and its non-empty encoded tuple without casts. A typed wire regression checks
 both proposals survive and an empty assessment fails. Reversal: replace this
 codec only with an equivalent schema-derived non-empty representation.
 
+### 2026-10-09 — Scoped test Context and clock isolation
+
+Build the detector Layer in each test's existing scope and provide its Context
+from the existing detection helper. Standard it.effect owns the per-test
+TestClock, so purity vectors advance isolated clocks. Both package tsgo and
+Effect/Vitest full-scan lint pass, unlike Layer-provide function pipelines.
+Reversal: an equivalent scoped test entrypoint that passes both gates and
+preserves per-test clock ownership. Detection production semantics are unchanged.
+
 ## Acceptance Criteria
 
 - [ ] The conflict-class seat question above is answered on the record in
