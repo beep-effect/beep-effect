@@ -205,6 +205,12 @@ This spec binds to them without restating.
   and runtime code remain unchanged. Reversal: revert the ordering-only diff.
   Keep lifecycle active until grant/export/seeding evidence exists.
 
+- **2026-10-09 schema-hoisting follow-up:** move five JSON schema constructions
+  from repeated codec calls to private module bindings. Hosted lint identified
+  repeated parser compilation in the command, export and synthetic fixtures.
+  This preserves their wire and runtime behavior. Reversal: revert only the
+  schema-hoisting commit; no public model or permission change is involved.
+
 ## Acceptance Criteria
 
 - [x] Either auth lane injects into the unchanged REST service boundary in
