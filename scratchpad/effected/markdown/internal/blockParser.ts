@@ -384,7 +384,7 @@ class BlockParser implements BlockScanner {
 		// Match each open container against this line; bail at the first that
 		// fails, leaving `container` on the deepest one that matched.
 		let lastChild = container.children[container.children.length - 1];
-		while (lastChild?.open) {
+		while (lastChild !== undefined && lastChild.open) {
 			container = lastChild;
 			this.findNextNonspace();
 

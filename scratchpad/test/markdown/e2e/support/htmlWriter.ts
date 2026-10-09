@@ -13,6 +13,8 @@
 // commonmark.js is BSD-2-Clause, Copyright (c) 2014-2020 John MacFarlane.
 // mdurl is MIT, Copyright (c) 2015 Vitaly Puzrin, Alex Kocharin.
 
+import { dual } from "effect/Function";
+import { hasProperty } from "effect/Predicate";
 import type {
 	Blockquote,
 	Code,
@@ -456,7 +458,7 @@ class HtmlWriter {
 		// info string; `lang` IS that word after the parser's split.
 		if (node.lang !== undefined && node.lang.length > 0) {
 			let cls = escapeXml(node.lang);
-			if (!/^language-/.exec(cls)) {
+			if (/^language-/.exec(cls) === null) {
 				cls = `language-${cls}`;
 			}
 			attrs.push(["class", cls]);
@@ -775,5 +777,8 @@ export interface RenderHtmlOptions {
  * {@link FootnoteDefinition} nodes found anywhere in the tree, because the
  * parser emits them unresolved.
  */
-export const renderHtml = (root: Root, options?: RenderHtmlOptions): string =>
-	new HtmlWriter(collectDefinitions(root), collectFootnoteDefinitions(root), options?.gfm ?? false).render(root);
+export const renderHtml: {
+	(root: Root, options?: RenderHtmlOptions): string;
+	(options?: RenderHtmlOptions): (root: Root) => string;
+} = dual((args) => hasProperty(args[0], "type"), (root: Root, options?: RenderHtmlOptions): string =>
+	new HtmlWriter(collectDefinitions(root), collectFootnoteDefinitions(root), options?.gfm ?? false).render(root));

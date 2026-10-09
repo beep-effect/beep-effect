@@ -186,7 +186,10 @@ const walk = (
 	visit(node, parent, siblings, index);
 	const children = childrenOf(node);
 	for (let i = 0; i < children.length; i++) {
-		walk(children[i], node, children, i, visit);
+		const child = children[i];
+		if (child !== undefined) {
+			walk(child, node, children, i, visit);
+		}
 	}
 };
 
@@ -270,7 +273,10 @@ interface TaggedEdit {
 /** Accumulates format edits; drops no-op splices to keep format idempotent. */
 class FormatEmitter {
 	readonly edits: Array<TaggedEdit> = [];
-	constructor(private readonly source: string) {}
+	private readonly source: string;
+	constructor(source: string) {
+		this.source = source;
+	}
 
 	push(node: MarkdownNode, offset: number, length: number, content: string): void {
 		if (this.source.slice(offset, offset + length) !== content) {
@@ -303,8 +309,13 @@ const formatHeading = (source: string, emit: FormatEmitter, node: Heading, targe
 		return;
 	}
 	const { start, end } = spanOf(node);
-	const contentStart = node.children[0].position.start.offset;
-	const contentEnd = node.children[node.children.length - 1].position.end.offset;
+	const first = node.children[0];
+	const last = node.children[node.children.length - 1];
+	if (first === undefined || last === undefined) {
+		return;
+	}
+	const contentStart = first.position.start.offset;
+	const contentEnd = last.position.end.offset;
 	const content = source.slice(contentStart, contentEnd);
 	if (content.includes("\n") || content.includes("\r")) {
 		return;
@@ -366,7 +377,7 @@ const formatEmphasis = (
 	const { start, end } = spanOf(node);
 	if (
 		target === "_" &&
-		((start > 0 && ALPHANUMERIC.test(source[start - 1])) || (end < source.length && ALPHANUMERIC.test(source[end])))
+		((start > 0 && ALPHANUMERIC.test(source.charAt(start - 1))) || (end < source.length && ALPHANUMERIC.test(source.charAt(end))))
 	) {
 		return;
 	}
@@ -475,7 +486,7 @@ const formatCodeBlockStyle = (
 		return false;
 	}
 	const lines = value === "" ? [] : value.split("\n");
-	if (lines.length === 0 || BLANK_LINE.test(lines[0]) || BLANK_LINE.test(lines[lines.length - 1])) {
+	if (lines.length === 0 || BLANK_LINE.test(lines[0] ?? "") || BLANK_LINE.test(lines[lines.length - 1] ?? "")) {
 		return false;
 	}
 	if (lines.some((line) => line !== "" && BLANK_LINE.test(line))) {

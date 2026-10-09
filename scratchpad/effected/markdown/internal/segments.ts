@@ -10,6 +10,7 @@
 //
 // Leaf module: imports only the segment type.
 
+import { dual } from "effect/Function";
 import type { RawInlineSegment } from "./blockTypes.ts";
 
 /**
@@ -18,7 +19,10 @@ import type { RawInlineSegment } from "./blockTypes.ts";
  * An index that falls between segments resolves to the end of the segment
  * before it, which is the closest real source position there is.
  */
-export const sourceOffsetAt = (
+export const sourceOffsetAt: {
+	(segments: ReadonlyArray<RawInlineSegment>, textIndex: number, fallback: number): number;
+	(textIndex: number, fallback: number): (segments: ReadonlyArray<RawInlineSegment>) => number;
+} = dual(3, (
 	segments: ReadonlyArray<RawInlineSegment>,
 	textIndex: number,
 	fallback: number,
@@ -34,13 +38,16 @@ export const sourceOffsetAt = (
 		offset = segment.sourceOffset + segment.length;
 	}
 	return offset;
-};
+});
 
 /**
  * Cut `[from, to)` out of a segmented content run, keeping the provenance of
  * every character that survives.
  */
-export const sliceWithSegments = (
+export const sliceWithSegments: {
+	(segments: ReadonlyArray<RawInlineSegment>, from: number, to: number): ReadonlyArray<RawInlineSegment>;
+	(from: number, to: number): (segments: ReadonlyArray<RawInlineSegment>) => ReadonlyArray<RawInlineSegment>;
+} = dual(3, (
 	segments: ReadonlyArray<RawInlineSegment>,
 	from: number,
 	to: number,
@@ -58,4 +65,4 @@ export const sliceWithSegments = (
 		}
 	}
 	return sliced;
-};
+});

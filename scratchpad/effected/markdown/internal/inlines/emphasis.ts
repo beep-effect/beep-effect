@@ -11,6 +11,7 @@
 // deliberately not ported: the `smart` option is not offered, so those
 // two characters never reach the delimiter stack at all.
 
+import { dual } from "effect/Function";
 import type { EmphasisChar } from "../../MarkdownNode.ts";
 import type { InlineConstruct, InlineScanner } from "../inlineTypes.ts";
 
@@ -43,7 +44,10 @@ export interface DelimiterRun {
  * The `_` arm is the only character-specific rule here, so `~` (which follows
  * `*`'s rules) reuses this as it stands.
  */
-export const scanDelims = (scanner: InlineScanner, cc: number): DelimiterRun | undefined => {
+export const scanDelims: {
+	(scanner: InlineScanner, cc: number): DelimiterRun | undefined;
+	(cc: number): (scanner: InlineScanner) => DelimiterRun | undefined;
+} = dual(2, (scanner: InlineScanner, cc: number): DelimiterRun | undefined => {
 	const startpos = scanner.pos;
 	let numdelims = 0;
 
@@ -75,7 +79,7 @@ export const scanDelims = (scanner: InlineScanner, cc: number): DelimiterRun | u
 
 	scanner.pos = startpos;
 	return { numdelims, canOpen, canClose };
-};
+});
 
 const markerCharOf = (cc: number): EmphasisChar => (cc === C_UNDERSCORE ? "_" : "*");
 

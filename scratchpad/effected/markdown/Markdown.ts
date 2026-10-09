@@ -11,6 +11,8 @@
 // failure. The dependency edge runs facade -> engine only, so
 // `noImportCycles` stays satisfied.
 
+import { dual } from "effect/Function";
+import { isString } from "effect/Predicate";
 import { Effect, Result, Schema, SchemaIssue, SchemaTransformation } from "effect";
 import type { BlockPassResult } from "./internal/blockParser.ts";
 import { parseBlocks } from "./internal/blockParser.ts";
@@ -141,7 +143,10 @@ const frontmatterOf = (options?: MarkdownParseOptions): boolean => options?.fron
  *
  * @internal
  */
-export const parsePassResult = (
+export const parsePassResult: {
+	(text: string, options?: MarkdownParseOptions): Result.Result<BlockPassResult, MarkdownParseError>;
+	(options?: MarkdownParseOptions): (text: string) => Result.Result<BlockPassResult, MarkdownParseError>;
+} = dual((args) => isString(args[0]), (
 	text: string,
 	options?: MarkdownParseOptions,
 ): Result.Result<BlockPassResult, MarkdownParseError> => {
@@ -165,7 +170,7 @@ export const parsePassResult = (
 		}
 		throw caught;
 	}
-};
+});
 
 /**
  * The markdown facade: parse markdown source — GFM by default, CommonMark by

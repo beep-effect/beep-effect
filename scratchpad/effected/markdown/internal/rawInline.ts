@@ -5,6 +5,8 @@
 // with the source provenance attached (`segments.ts`), so the inline pass can
 // give every node it builds an absolute position in the original document.
 
+import { dual } from "effect/Function";
+import { isFunction } from "effect/Predicate";
 import type { Definition, PhrasingContent, Position } from "../MarkdownNode.ts";
 import type { BlockNode, PreparedInline, RawInlineSegment } from "./blockTypes.ts";
 import { parseInlines } from "./inlineParser.ts";
@@ -29,7 +31,10 @@ const reCmarkSpace = /[ \t\n\r]/;
  * Exported for the phrasing-level parse entry point (`phrasing.ts`), which
  * prepares content the same way a paragraph does.
  */
-export const trimWithSegments = (
+export const trimWithSegments: {
+	(text: string, segments: ReadonlyArray<RawInlineSegment>, whitespace: RegExp): { readonly text: string; readonly segments: ReadonlyArray<RawInlineSegment> };
+	(segments: ReadonlyArray<RawInlineSegment>, whitespace: RegExp): (text: string) => { readonly text: string; readonly segments: ReadonlyArray<RawInlineSegment> };
+} = dual(3, (
 	text: string,
 	segments: ReadonlyArray<RawInlineSegment>,
 	whitespace: RegExp,
@@ -61,13 +66,16 @@ export const trimWithSegments = (
 	}
 
 	return { text: text.slice(start, end), segments: trimmed };
-};
+});
 
 /**
  * Prepare a leaf block's accumulated content and run the inline pass over it:
  * trim it, keep its source provenance, and parse it into phrasing content.
  */
-export const prepareInline = (
+export const prepareInline: {
+	(block: BlockNode, position: PositionOf, refmap: ReadonlyMap<string, Definition>, dialect?: InlineDialectName, footnoteLabels?: ReadonlySet<string>): PreparedInline;
+	(position: PositionOf, refmap: ReadonlyMap<string, Definition>, dialect?: InlineDialectName, footnoteLabels?: ReadonlySet<string>): (block: BlockNode) => PreparedInline;
+} = dual((args) => !isFunction(args[0]), (
 	block: BlockNode,
 	position: PositionOf,
 	refmap: ReadonlyMap<string, Definition>,
@@ -88,4 +96,4 @@ export const prepareInline = (
 		text.length === 0 ? [] : parseInlines({ text, startOffset, segments }, refmap, position, dialect, footnoteLabels);
 
 	return { text, startOffset, endOffset, segments, children };
-};
+});

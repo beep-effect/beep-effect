@@ -24,6 +24,7 @@
 //
 // Registered under the `gfm` dialect only.
 
+import { dual } from "effect/Function";
 import type { InlineNode } from "../inlineNode.ts";
 import { appendChild, insertAfter, makeInlineNode, unlink } from "../inlineNode.ts";
 import type { Delimiter, InlineConstruct, InlineScanner } from "../inlineTypes.ts";
@@ -76,7 +77,10 @@ const handleTilde = (scanner: InlineScanner): boolean => {
  * captures as `closer->next` BEFORE it starts unlinking, so both the matched
  * and the mismatched path resume at the same place.
  */
-export const insertStrikethrough = (
+export const insertStrikethrough: {
+	(scanner: InlineScanner, opener: Delimiter, closer: Delimiter): Delimiter | undefined;
+	(opener: Delimiter, closer: Delimiter): (scanner: InlineScanner) => Delimiter | undefined;
+} = dual(3, (
 	scanner: InlineScanner,
 	opener: Delimiter,
 	closer: Delimiter,
@@ -119,7 +123,7 @@ export const insertStrikethrough = (
 	scanner.removeDelimiter(opener);
 
 	return resume;
-};
+});
 
 /** GFM strikethrough: `~foo~` and `~~foo~~`. */
 export const strikethroughConstruct: InlineConstruct = {

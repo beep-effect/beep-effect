@@ -80,7 +80,7 @@ export class MarkdownEdit extends Schema.Class<MarkdownEdit>("MarkdownEdit")({
 		for (let i = 0; i + 1 < sorted.length; i++) {
 			const upper = sorted[i];
 			const lower = sorted[i + 1];
-			if (lower.offset + lower.length > upper.offset) {
+			if (lower !== undefined && upper !== undefined && lower.offset + lower.length > upper.offset) {
 				throw new Error(
 					`MarkdownEdit.applyAll received overlapping edits at offsets ${lower.offset} and ${upper.offset} — overlapping edits are a programmer error`,
 				);

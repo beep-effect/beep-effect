@@ -16,6 +16,8 @@
 // `startOffset`/`endOffset`, and the `segments` that map accumulated string
 // content back to the source it was copied from.
 
+import { dual } from "effect/Function";
+import { isString } from "effect/Predicate";
 import type {
 	BulletChar,
 	FenceChar,
@@ -421,7 +423,10 @@ export interface BlockDialect {
 }
 
 /** Open a fresh {@link BlockNode}. */
-export const makeBlockNode = (type: BlockType, startOffset: number, startLine: number, depth = 0): BlockNode => ({
+export const makeBlockNode: {
+	(type: BlockType, startOffset: number, startLine: number, depth?: number): BlockNode;
+	(startOffset: number, startLine: number, depth?: number): (type: BlockType) => BlockNode;
+} = dual((args) => isString(args[0]), (type: BlockType, startOffset: number, startLine: number, depth = 0): BlockNode => ({
 	type,
 	depth,
 	parent: undefined,
@@ -434,4 +439,4 @@ export const makeBlockNode = (type: BlockType, startOffset: number, startLine: n
 	startLine,
 	endLine: startLine,
 	data: {},
-});
+}));

@@ -14,7 +14,7 @@ import { assert, describe, it } from "@effect/vitest";
 import { JsoncParseError } from "../../effected/jsonc/index.ts";
 import { TomlParseError } from "../../effected/toml/index.ts";
 import { YamlParseError } from "../../effected/yaml/index.ts";
-import { Effect } from "effect";
+import { Effect, Result } from "effect";
 import type { FrontmatterCodec } from "../../effected/markdown/Frontmatter.ts";
 import { FrontmatterDecodeError, FrontmatterFormatMismatchError } from "../../effected/markdown/Frontmatter.ts";
 import { JsonFrontmatter } from "../../effected/markdown/JsonFrontmatter.ts";
@@ -67,7 +67,9 @@ describe("frontmatter codecs", () => {
 
 		it.effect("fails typed on unparseable yaml, carrying the YamlParseError structurally", () =>
 			Effect.gen(function* () {
-				const error = yield* Effect.flip(YamlFrontmatter.decode(capture("yaml", "a: [1\n")));
+				const result = yield* Effect.result(YamlFrontmatter.decode(capture("yaml", "a: [1\n")));
+				if (Result.isSuccess(result)) assert.fail("expected frontmatter decoding to fail");
+				const error = result.failure;
 				assert.instanceOf(error, FrontmatterDecodeError);
 				assert.strictEqual(error.format, "yaml");
 				assert.instanceOf(error.cause, YamlParseError);
@@ -76,7 +78,9 @@ describe("frontmatter codecs", () => {
 
 		it.effect("fails typed on a format mismatch, before any parsing", () =>
 			Effect.gen(function* () {
-				const error = yield* Effect.flip(YamlFrontmatter.decode(capture("toml", "a = 1\n")));
+				const result = yield* Effect.result(YamlFrontmatter.decode(capture("toml", "a = 1\n")));
+				if (Result.isSuccess(result)) assert.fail("expected frontmatter decoding to fail");
+				const error = result.failure;
 				assert.instanceOf(error, FrontmatterFormatMismatchError);
 				assert.strictEqual(error.expected, "yaml");
 				assert.strictEqual(error.actual, "toml");
@@ -101,7 +105,9 @@ describe("frontmatter codecs", () => {
 
 		it.effect("fails typed on unparseable toml, carrying the TomlParseError structurally", () =>
 			Effect.gen(function* () {
-				const error = yield* Effect.flip(TomlFrontmatter.decode(capture("toml", "a = = 1\n")));
+				const result = yield* Effect.result(TomlFrontmatter.decode(capture("toml", "a = = 1\n")));
+				if (Result.isSuccess(result)) assert.fail("expected frontmatter decoding to fail");
+				const error = result.failure;
 				assert.instanceOf(error, FrontmatterDecodeError);
 				assert.strictEqual(error.format, "toml");
 				assert.instanceOf(error.cause, TomlParseError);
@@ -110,7 +116,9 @@ describe("frontmatter codecs", () => {
 
 		it.effect("fails typed on a format mismatch, before any parsing", () =>
 			Effect.gen(function* () {
-				const error = yield* Effect.flip(TomlFrontmatter.decode(capture("json", '{"a": 1}')));
+				const result = yield* Effect.result(TomlFrontmatter.decode(capture("json", '{"a": 1}')));
+				if (Result.isSuccess(result)) assert.fail("expected frontmatter decoding to fail");
+				const error = result.failure;
 				assert.instanceOf(error, FrontmatterFormatMismatchError);
 				assert.strictEqual(error.expected, "toml");
 				assert.strictEqual(error.actual, "json");
@@ -135,7 +143,9 @@ describe("frontmatter codecs", () => {
 
 		it.effect("fails typed on an empty capture: JSON has no empty document", () =>
 			Effect.gen(function* () {
-				const error = yield* Effect.flip(JsonFrontmatter.decode(capture("json", "")));
+				const result = yield* Effect.result(JsonFrontmatter.decode(capture("json", "")));
+				if (Result.isSuccess(result)) assert.fail("expected frontmatter decoding to fail");
+				const error = result.failure;
 				assert.instanceOf(error, FrontmatterDecodeError);
 				assert.strictEqual(error.format, "json");
 				assert.instanceOf(error.cause, JsoncParseError);
@@ -144,7 +154,9 @@ describe("frontmatter codecs", () => {
 
 		it.effect("fails typed on unparseable json, carrying the JsoncParseError structurally", () =>
 			Effect.gen(function* () {
-				const error = yield* Effect.flip(JsonFrontmatter.decode(capture("json", "{a: \n")));
+				const result = yield* Effect.result(JsonFrontmatter.decode(capture("json", "{a: \n")));
+				if (Result.isSuccess(result)) assert.fail("expected frontmatter decoding to fail");
+				const error = result.failure;
 				assert.instanceOf(error, FrontmatterDecodeError);
 				assert.strictEqual(error.format, "json");
 				assert.instanceOf(error.cause, JsoncParseError);
@@ -153,7 +165,9 @@ describe("frontmatter codecs", () => {
 
 		it.effect("fails typed on a format mismatch, before any parsing", () =>
 			Effect.gen(function* () {
-				const error = yield* Effect.flip(JsonFrontmatter.decode(capture("yaml", "a: 1\n")));
+				const result = yield* Effect.result(JsonFrontmatter.decode(capture("yaml", "a: 1\n")));
+				if (Result.isSuccess(result)) assert.fail("expected frontmatter decoding to fail");
+				const error = result.failure;
 				assert.instanceOf(error, FrontmatterFormatMismatchError);
 				assert.strictEqual(error.expected, "json");
 				assert.strictEqual(error.actual, "yaml");

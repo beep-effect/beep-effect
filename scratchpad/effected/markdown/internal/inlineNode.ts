@@ -15,6 +15,8 @@
 //
 // Leaf module: imports only node-shape types.
 
+import { dual } from "effect/Function";
+import { isString } from "effect/Predicate";
 import type { BreakStyle, EmphasisChar, ReferenceType } from "../MarkdownNode.ts";
 
 /** The node kinds the inline pass builds. */
@@ -60,7 +62,10 @@ export interface InlineNode {
 }
 
 /** Open a node with no links. */
-export const makeInlineNode = (type: InlineNodeType, start: number, end: number, value = ""): InlineNode => ({
+export const makeInlineNode: {
+	(type: InlineNodeType, start: number, end: number, value?: string): InlineNode;
+	(start: number, end: number, value?: string): (type: InlineNodeType) => InlineNode;
+} = dual((args) => isString(args[0]), (type: InlineNodeType, start: number, end: number, value = ""): InlineNode => ({
 	type,
 	value,
 	start,
@@ -71,10 +76,13 @@ export const makeInlineNode = (type: InlineNodeType, start: number, end: number,
 	parent: undefined,
 	firstChild: undefined,
 	lastChild: undefined,
-});
+}));
 
 /** Append `child` to `parent`'s children. */
-export const appendChild = (parent: InlineNode, child: InlineNode): void => {
+export const appendChild: {
+	(parent: InlineNode, child: InlineNode): void;
+	(child: InlineNode): (parent: InlineNode) => void;
+} = dual(2, (parent: InlineNode, child: InlineNode): void => {
 	unlink(child);
 	child.parent = parent;
 	child.prev = parent.lastChild;
@@ -85,10 +93,13 @@ export const appendChild = (parent: InlineNode, child: InlineNode): void => {
 		parent.lastChild.next = child;
 	}
 	parent.lastChild = child;
-};
+});
 
 /** Insert `sibling` immediately after `node`. */
-export const insertAfter = (node: InlineNode, sibling: InlineNode): void => {
+export const insertAfter: {
+	(node: InlineNode, sibling: InlineNode): void;
+	(sibling: InlineNode): (node: InlineNode) => void;
+} = dual(2, (node: InlineNode, sibling: InlineNode): void => {
 	unlink(sibling);
 	sibling.parent = node.parent;
 	sibling.prev = node;
@@ -101,7 +112,7 @@ export const insertAfter = (node: InlineNode, sibling: InlineNode): void => {
 		node.next.prev = sibling;
 	}
 	node.next = sibling;
-};
+});
 
 /** Detach `node` from its siblings and parent. */
 export const unlink = (node: InlineNode): void => {

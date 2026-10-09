@@ -10,6 +10,7 @@
 // The tag grammar lives in `htmlTags.ts`, shared with the inline pass, which
 // matches the full `HTMLTAG` union this file's type 7 is a subset of.
 
+import { dual } from "effect/Function";
 import { Html } from "../../MarkdownNode.ts";
 import type { BlockConstruct, BlockNode, BlockStart } from "../blockTypes.ts";
 import { CLOSETAG, OPENTAG } from "../htmlTags.ts";
@@ -36,13 +37,16 @@ const reHtmlBlockClose: ReadonlyArray<RegExp> = [/./, /<\/(?:script|pre|textarea
  * Whether `rest` closes `block` — only types 1 through 5 have a closing
  * pattern, and the line loop calls this after the line has been appended.
  */
-export const isHtmlBlockEnd = (block: BlockNode, rest: string): boolean => {
+export const isHtmlBlockEnd: {
+	(block: BlockNode, rest: string): boolean;
+	(rest: string): (block: BlockNode) => boolean;
+} = dual(2, (block: BlockNode, rest: string): boolean => {
 	const type = block.data.htmlBlockType;
 	if (type === undefined || type < 1 || type > 5) {
 		return false;
 	}
 	return reHtmlBlockClose[type]?.test(rest) ?? false;
-};
+});
 
 /** HTML block: absorbs lines verbatim, contains nothing. */
 export const htmlBlockConstruct: BlockConstruct = {

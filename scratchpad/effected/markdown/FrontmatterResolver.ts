@@ -369,7 +369,7 @@ export class SchemaResolver {
 			byName.set(declaration.name, entry);
 		}
 		return {
-			resolve: (declaration, _data) => {
+			resolve: Effect.fn("resolve")((declaration: SchemaDeclaration | undefined, _data: unknown): Effect.Effect<Schema.Top, FrontmatterResolveError> => {
 				if (declaration === undefined) {
 					return Effect.fail(SchemaDeclarationMissingError.make());
 				}
@@ -390,7 +390,7 @@ export class SchemaResolver {
 				return match === undefined
 					? Effect.fail(SchemaVersionUnresolvableError.make({ name: declaration.name, version: declaration.version }))
 					: Effect.succeed(match);
-			},
+			}),
 		};
 	}
 }

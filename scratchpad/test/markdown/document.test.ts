@@ -26,7 +26,6 @@ describe("MarkdownDocument.parseResult", () => {
 		const result = MarkdownDocument.parseResult(source);
 		if (Result.isFailure(result)) {
 			assert.fail("expected the document to parse");
-			return;
 		}
 		assert.instanceOf(result.success.root, Root);
 		assert.deepStrictEqual(
@@ -39,7 +38,6 @@ describe("MarkdownDocument.parseResult", () => {
 		const result = MarkdownDocument.parseResult(source);
 		if (Result.isFailure(result)) {
 			assert.fail("expected the document to parse");
-			return;
 		}
 		const { definitions } = result.success;
 		// A real Map, not an object: link labels are attacker-controlled, so
@@ -58,7 +56,6 @@ describe("MarkdownDocument.parseResult", () => {
 		const result = MarkdownDocument.parseResult(source);
 		if (Result.isFailure(result)) {
 			assert.fail("expected the document to parse");
-			return;
 		}
 		const inTree = result.success.root.children.filter((child) => child.type === "definition");
 		assert.strictEqual(inTree.length, 2);
@@ -74,7 +71,6 @@ describe("MarkdownDocument.parseResult", () => {
 		const result = MarkdownDocument.parseResult(source);
 		if (Result.isFailure(result)) {
 			assert.fail("expected the document to parse");
-			return;
 		}
 		assert.deepStrictEqual(result.success.diagnostics, []);
 	});
@@ -100,7 +96,6 @@ describe("MarkdownDocument.parseResult", () => {
 		const result = MarkdownDocument.parseResult('[__proto__]: /x "polluted"\n\n[__proto__]\n');
 		if (Result.isFailure(result)) {
 			assert.fail("expected the document to parse");
-			return;
 		}
 		assert.isUndefined(Object.getOwnPropertyDescriptor(Object.prototype, "polluted"));
 		assert.strictEqual(Object.prototype.constructor, Object);
@@ -119,7 +114,6 @@ describe("MarkdownDocument.parseResult", () => {
 		const result = MarkdownDocument.parseResult("");
 		if (Result.isFailure(result)) {
 			assert.fail("expected the empty document to parse");
-			return;
 		}
 		assert.strictEqual(result.success.source, "");
 		assert.deepStrictEqual(result.success.root.children, []);
@@ -134,7 +128,6 @@ describe("MarkdownDocument.parse", () => {
 			const viaResult = MarkdownDocument.parseResult(source);
 			if (Result.isFailure(viaResult)) {
 				assert.fail("expected the document to parse");
-				return;
 			}
 			assert.deepStrictEqual(viaEffect, viaResult.success);
 		}),
@@ -179,10 +172,9 @@ describe("MarkdownDocument schema", () => {
 		const result = MarkdownDocument.parseResult(source);
 		if (Result.isFailure(result)) {
 			assert.fail("expected the document to parse");
-			return;
 		}
-		const encoded = Schema.encodeUnknownSync(MarkdownDocument)(result.success);
-		const decoded = Schema.decodeSync(MarkdownDocument)(encoded);
+		const encoded = Result.getOrThrow(Schema.encodeUnknownResult(MarkdownDocument)(result.success));
+		const decoded = Result.getOrThrow(Schema.decodeResult(MarkdownDocument)(encoded));
 		assert.strictEqual(decoded.source, result.success.source);
 		assert.strictEqual(decoded.definitions.size, result.success.definitions.size);
 		assert.deepStrictEqual(
@@ -224,7 +216,6 @@ describe("MarkdownDocument navigation accessors", () => {
 		const result = MarkdownDocument.parseResult(navSource, { frontmatter: true });
 		if (Result.isFailure(result)) {
 			assert.fail("expected the navigation document to parse");
-			throw new Error("unreachable");
 		}
 		return result.success;
 	};
@@ -356,7 +347,6 @@ describe("MarkdownDocument navigation accessors", () => {
 		const result = MarkdownDocument.parseResult("");
 		if (Result.isFailure(result)) {
 			assert.fail("expected the empty document to parse");
-			return;
 		}
 		assert.deepStrictEqual(result.success.headings, []);
 		assert.deepStrictEqual(result.success.sections, []);
@@ -368,7 +358,6 @@ describe("MarkdownDocument navigation accessors", () => {
 		const result = MarkdownDocument.parseResult(source);
 		if (Result.isFailure(result)) {
 			assert.fail("expected the document to parse");
-			return;
 		}
 		const document = result.success;
 		assert.deepStrictEqual(

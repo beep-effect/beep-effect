@@ -38,6 +38,8 @@
 // Imports node classes from `../MarkdownNode.js` (the sanctioned exception to
 // the cycle firewall) and nothing else public.
 
+import { dual } from "effect/Function";
+import { isFunction } from "effect/Predicate";
 import type { Definition, PhrasingContent, Position } from "../MarkdownNode.ts";
 import {
 	Break,
@@ -659,11 +661,14 @@ class InlineParser implements InlineScanner {
  * eagerly resolved link. `position` comes from the block pass, which owns the
  * line index.
  */
-export const parseInlines = (
+export const parseInlines: {
+	(source: InlineSource, refmap: ReadonlyMap<string, Definition>, position: PositionOf, dialect?: InlineDialectName, footnoteLabels?: ReadonlySet<string>): ReadonlyArray<PhrasingContent>;
+	(refmap: ReadonlyMap<string, Definition>, position: PositionOf, dialect?: InlineDialectName, footnoteLabels?: ReadonlySet<string>): (source: InlineSource) => ReadonlyArray<PhrasingContent>;
+} = dual((args) => !isFunction(args[1]), (
 	source: InlineSource,
 	refmap: ReadonlyMap<string, Definition>,
 	position: PositionOf,
 	dialect: InlineDialectName = "commonmark",
 	footnoteLabels: ReadonlySet<string> = new Set(),
 ): ReadonlyArray<PhrasingContent> =>
-	new InlineParser(source, inlineDialect(dialect), position, refmap, footnoteLabels).parse();
+	new InlineParser(source, inlineDialect(dialect), position, refmap, footnoteLabels).parse());

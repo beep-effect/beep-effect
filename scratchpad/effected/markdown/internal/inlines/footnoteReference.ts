@@ -32,6 +32,7 @@
 // the RAW source span between the brackets, so any inline structure already
 // parsed inside an unmatched reference is discarded rather than kept.
 
+import { dual } from "effect/Function";
 import { insertAfter, makeInlineNode, unlink } from "../inlineNode.ts";
 import { normalizeLabelText } from "../references.ts";
 import type { LinkCloseFallback } from "./link.ts";
@@ -57,7 +58,10 @@ const looksLikeFootnote = (subject: string, openerIndex: number, bracketPos: num
  * cmark-gfm's footnote branch: form a reference, or leave the whole span as
  * the literal text upstream's post-pass would have rewritten it to.
  */
-export const footnoteReferenceFallback: LinkCloseFallback = (scanner, opener, bracketPos, afterBracket) => {
+export const footnoteReferenceFallback: {
+	(scanner: Parameters<LinkCloseFallback>[0], opener: Parameters<LinkCloseFallback>[1], bracketPos: number, afterBracket: number): boolean;
+	(opener: Parameters<LinkCloseFallback>[1], bracketPos: number, afterBracket: number): (scanner: Parameters<LinkCloseFallback>[0]) => boolean;
+} = dual(4, (scanner: Parameters<LinkCloseFallback>[0], opener: Parameters<LinkCloseFallback>[1], bracketPos: number, afterBracket: number): boolean => {
 	if (!looksLikeFootnote(scanner.subject, opener.index, bracketPos)) {
 		return false;
 	}
@@ -102,7 +106,7 @@ export const footnoteReferenceFallback: LinkCloseFallback = (scanner, opener, br
 	unlink(opener.node);
 
 	return true;
-};
+});
 
 /**
  * The `]` construct for the `gfm` dialect: CommonMark's, with the footnote

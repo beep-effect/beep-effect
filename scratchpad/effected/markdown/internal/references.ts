@@ -85,7 +85,10 @@ const C_CLOSE_PAREN = 0x29;
 export class ReferenceScanner {
 	pos = 0;
 
-	constructor(readonly subject: string) {}
+	readonly subject: string;
+	constructor(subject: string) {
+		this.subject = subject;
+	}
 
 	/** The char code at the cursor, or `-1` at the end of the subject. */
 	peek(): number {

@@ -12,6 +12,7 @@
 // Leaf module: imports nothing.
 
 /** Columns of indentation that open an indented code block. */
+import { dual } from "effect/Function";
 export const CODE_INDENT = 4;
 
 /** The tab stop width CommonMark fixes for indentation arithmetic. */
@@ -85,8 +86,11 @@ export const isBlankLine = (line: string): boolean => !reNonSpace.test(line);
 export const isSpaceOrTab = (code: number): boolean => code === 0x20 || code === 0x09;
 
 /** The char code at `position`, or `-1` past the end of `line`. */
-export const peekCode = (line: string, position: number): number =>
-	position >= 0 && position < line.length ? line.charCodeAt(position) : -1;
+export const peekCode: {
+	(line: string, position: number): number;
+	(position: number): (line: string) => number;
+} = dual(2, (line: string, position: number): number =>
+	position >= 0 && position < line.length ? line.charCodeAt(position) : -1);
 
 /**
  * Columns from `column` to the next tab stop — the width a `\t` expands to.

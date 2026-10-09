@@ -30,6 +30,7 @@
 //   behavior too, and it is not a diagnostic — an opening fence with no
 //   close IS a thematic break followed by content.
 
+import { dual } from "effect/Function";
 import type { FrontmatterFormat } from "../../MarkdownNode.ts";
 import type { SourceLine } from "../preprocess.ts";
 
@@ -69,7 +70,10 @@ export interface FrontmatterCapture {
  * Returns `null` when the document has no frontmatter — which is the common
  * case and never an error.
  */
-export const scanFrontmatter = (lines: ReadonlyArray<SourceLine>, text: string): FrontmatterCapture | null => {
+export const scanFrontmatter: {
+	(lines: ReadonlyArray<SourceLine>, text: string): FrontmatterCapture | null;
+	(text: string): (lines: ReadonlyArray<SourceLine>) => FrontmatterCapture | null;
+} = dual(2, (lines: ReadonlyArray<SourceLine>, text: string): FrontmatterCapture | null => {
 	const opening = lines[0];
 	if (opening === undefined || opening.start !== 0) {
 		return null;
@@ -107,7 +111,7 @@ export const scanFrontmatter = (lines: ReadonlyArray<SourceLine>, text: string):
 	}
 
 	return null;
-};
+});
 
 /** A raw line terminator spelling. */
 export type RawNewline = "\n" | "\r\n" | "\r";

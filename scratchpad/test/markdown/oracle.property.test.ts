@@ -187,7 +187,6 @@ describe("differential oracle: commonmark.js 0.31.2", () => {
 		const result = Markdown.parseResult(source);
 		if (Result.isFailure(result)) {
 			assert.fail("expected the document to parse");
-			return;
 		}
 		assert.deepStrictEqual(
 			result.success.children.map((child) => child.type),

@@ -35,7 +35,7 @@ const parseDoc = (source: string) => MarkdownDocument.parse(source, withFrontmat
 
 const Meta = Schema.Struct({
 	title: Schema.String,
-	count: Schema.Number,
+	count: Schema.Finite,
 });
 
 describe("codec encode", () => {

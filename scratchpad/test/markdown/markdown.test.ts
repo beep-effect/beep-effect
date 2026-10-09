@@ -106,7 +106,6 @@ describe("Markdown.parseResult", () => {
 		const result = Markdown.parseResult(nestingBomb);
 		if (Result.isSuccess(result)) {
 			assert.fail("expected the nesting bomb to fail");
-			return;
 		}
 		assert.include(result.failure.message, "NestingDepthExceeded");
 	});
@@ -115,7 +114,6 @@ describe("Markdown.parseResult", () => {
 		const result = Markdown.parseResult(`a\n\n${nestingBomb}`);
 		if (Result.isSuccess(result)) {
 			assert.fail("expected the nesting bomb to fail");
-			return;
 		}
 		const { line, character } = result.failure.diagnostic;
 		assert.strictEqual(line, 2);
@@ -214,7 +212,6 @@ describe("MarkdownParseOptions", () => {
 		assert.deepStrictEqual(firstChildTypes(implicit), ["delete"]);
 		if (Result.isFailure(implicit) || Result.isFailure(explicit) || Result.isFailure(empty)) {
 			assert.fail("expected every options form to parse");
-			return;
 		}
 		assert.deepStrictEqual(explicit.success, implicit.success);
 		assert.deepStrictEqual(empty.success, implicit.success);

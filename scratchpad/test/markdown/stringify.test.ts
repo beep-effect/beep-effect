@@ -533,7 +533,7 @@ describe("Markdown.stringify", () => {
 			const firstParagraph = reparsed.children[0];
 			assert.strictEqual(firstParagraph?.type, "paragraph");
 			assert.isTrue(
-				firstParagraph.type === "paragraph" &&
+				firstParagraph?.type === "paragraph" &&
 					firstParagraph.children.some((child) => child.type === "footnoteReference"),
 				`emitted: ${JSON.stringify(emitted)}`,
 			);

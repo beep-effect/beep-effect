@@ -30,7 +30,7 @@ const span = (): Position =>
 const fmt = (text: string, options: Parameters<typeof MarkdownFormattingOptions.make>[0]): string =>
 	MarkdownFormat.formatToString(text, undefined, MarkdownFormattingOptions.make(options));
 
-const parseDoc = (text: string): Effect.Effect<MarkdownDocument, unknown> => MarkdownDocument.parse(text);
+const parseDoc = (text: string) => MarkdownDocument.parse(text);
 
 /** Render-equivalence: the formatted text parses to the same HTML as the original. */
 const assertEquivalent = (original: string, formatted: string): void => {
@@ -302,7 +302,7 @@ describe("MarkdownFormat.format", () => {
 				MarkdownFormattingOptions.make({ thematicBreakChar: "-" }),
 			);
 			assert.strictEqual(edits.length, 1);
-			assert.strictEqual(edits[0].offset, 3);
+			assert.strictEqual(edits[0]?.offset, 3);
 		});
 
 		it("returns no edits when parsing trips a hardening guard", () => {
@@ -352,7 +352,11 @@ describe("MarkdownFormat.modify", () => {
 		Effect.gen(function* () {
 			const doc = yield* parseDoc("| h |\n| - |\n| x |\n");
 			const table = doc.root.children[0] as { children: ReadonlyArray<{ children: ReadonlyArray<MarkdownNode> }> };
-			const cell = table.children[1].children[0];
+			const row = table.children[1];
+			assert.isDefined(row);
+			if (row === undefined) assert.fail("expected a table row");
+			const cell = row.children[0];
+			if (cell === undefined) assert.fail("expected a table cell");
 			const out = yield* MarkdownFormat.modifyToString(doc, cell, "a|b");
 			const reparsed = yield* parseDoc(out);
 			assert.include(renderHtml(reparsed.root, { gfm: true }), "a|b");
@@ -384,6 +388,7 @@ describe("MarkdownFormat.modify", () => {
 			const doc = yield* parseDoc("- a\n");
 			const list = doc.root.children[0] as { children: ReadonlyArray<MarkdownNode> };
 			const item = list.children[0];
+			if (item === undefined) assert.fail("expected a list item");
 			const error = yield* Effect.flip(MarkdownFormat.modify(doc, item, "x"));
 			assert.instanceOf(error, MarkdownModificationError);
 			assert.strictEqual(error.code, "UnsupportedTarget");
@@ -395,6 +400,7 @@ describe("MarkdownFormat.modify", () => {
 			const doc = yield* parseDoc("> p\n");
 			const quote = doc.root.children[0] as { children: ReadonlyArray<MarkdownNode> };
 			const target = quote.children[0];
+			if (target === undefined) assert.fail("expected a blockquote child");
 			const fragment = Blockquote.make({
 				children: [
 					Paragraph.make({ children: [Text.make({ value: "a", position: span() })], position: span() }),
@@ -413,6 +419,7 @@ describe("MarkdownFormat.modify", () => {
 			const doc = yield* parseDoc("> p\n");
 			const quote = doc.root.children[0] as { children: ReadonlyArray<MarkdownNode> };
 			const target = quote.children[0];
+			if (target === undefined) assert.fail("expected a blockquote child");
 			const out = yield* MarkdownFormat.modifyToString(doc, target, "q");
 			assert.strictEqual(out, "> q\n");
 		}),

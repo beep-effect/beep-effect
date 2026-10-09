@@ -71,7 +71,7 @@ describe("block pass", () => {
 			const { root } = parseBlocks("\tfoo\n");
 			const [code] = root.children;
 			assert.strictEqual(code?.type, "code");
-			assert.strictEqual(code.type === "code" ? code.value : "", "foo\n");
+			assert.strictEqual(code?.type === "code" ? code.value : "", "foo\n");
 		});
 
 		it("reads a tab and four spaces as the same code indent", () => {
@@ -87,7 +87,7 @@ describe("block pass", () => {
 			const { root } = parseBlocks("#\tfoo\n");
 			const [heading] = root.children;
 			assert.strictEqual(heading?.type, "heading");
-			assert.strictEqual(heading.type === "heading" ? heading.depth : 0, 1);
+			assert.strictEqual(heading?.type === "heading" ? heading.depth : 0, 1);
 		});
 	});
 

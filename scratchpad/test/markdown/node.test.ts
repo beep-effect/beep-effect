@@ -1,5 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Schema } from "effect";
+import { Schema, Result } from "effect";
 import {
 	Blockquote,
 	Break,
@@ -199,7 +199,7 @@ describe("MarkdownNode", () => {
 	});
 
 	describe("decoding", () => {
-		const decodeRoot = Schema.decodeUnknownSync(Root);
+		const decodeRoot = (input: unknown) => Result.getOrThrow(Schema.decodeUnknownResult(Root)(input));
 
 		it("decodes a plain-object tree covering every node type", () => {
 			const tree = {
@@ -333,7 +333,7 @@ describe("MarkdownNode", () => {
 			};
 
 			const decoded = decodeRoot(tree);
-			const encoded = Schema.encodeUnknownSync(Root)(decoded);
+			const encoded = Result.getOrThrow(Schema.encodeUnknownResult(Root)(decoded));
 
 			// Compared as plain JSON: the encoded side is typed against Root's
 			// literal `type` fields, which the untyped fixture widens to `string`.
@@ -533,7 +533,7 @@ describe("MarkdownNode", () => {
 		});
 
 		describe("decoding", () => {
-			const decodeRoot = Schema.decodeUnknownSync(Root);
+			const decodeRoot = (input: unknown) => Result.getOrThrow(Schema.decodeUnknownResult(Root)(input));
 
 			it("decodes a plain-object tree through the GFM-widened flow and phrasing unions", () => {
 				const tree = {
@@ -665,7 +665,7 @@ describe("MarkdownNode", () => {
 				};
 
 				const decoded = decodeRoot(tree);
-				const encoded = Schema.encodeUnknownSync(Root)(decoded);
+				const encoded = Result.getOrThrow(Schema.encodeUnknownResult(Root)(decoded));
 
 				assert.deepStrictEqual<unknown>(encoded, tree);
 			});

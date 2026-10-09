@@ -65,8 +65,8 @@ describe("MarkdownEdit", () => {
 	it("does not mutate the input edits array", () => {
 		const edits = [edit(4, 1, "B"), edit(0, 1, "A")];
 		MarkdownEdit.applyAll("a b c", edits);
-		assert.strictEqual(edits[0].offset, 4);
-		assert.strictEqual(edits[1].offset, 0);
+		assert.strictEqual(edits[0]?.offset, 4);
+		assert.strictEqual(edits[1]?.offset, 0);
 	});
 
 	it("offsets are UTF-16 code units on astral content", () => {

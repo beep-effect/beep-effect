@@ -5,6 +5,8 @@
 // runs public modules -> engine only (toml src/internal/diagnostics.ts and
 // src/internal/limits.ts precedent, collapsed into one file).
 
+import { Data } from "effect";
+
 /**
  * The engine's error-code vocabulary: currently exactly one, the
  * hardening-guard trip. Widens as new parse-error kinds are added.
@@ -23,10 +25,13 @@ export interface RawDiagnostic {
 }
 
 /** The engine's carrier for a recoverable-turned-fatal parse condition. */
-export class RawMarkdownError extends Error {
-	readonly _tag = "RawMarkdownError";
-	constructor(readonly diagnostic: RawDiagnostic) {
-		super(diagnostic.message);
+export class RawMarkdownError extends Data.TaggedError("RawMarkdownError")<{
+	readonly diagnostic: RawDiagnostic;
+	readonly message: string;
+}> {
+	override readonly name = "Error";
+	constructor(diagnostic: RawDiagnostic) {
+		super({ diagnostic, message: diagnostic.message });
 	}
 }
 
@@ -42,15 +47,16 @@ export type GuardReason = "NestingDepthExceeded";
  * point as a defect — the facade catches it and materializes a typed
  * `MarkdownParseError` carrying a `NestingDepthExceeded` diagnostic.
  */
-export class GuardExceeded extends Error {
-	readonly _tag = "GuardExceeded";
-	constructor(
-		readonly reason: GuardReason,
-		readonly limit: number,
-		readonly actual: number,
-		readonly offset: number,
-	) {
-		super(`${reason}: limit ${limit}, actual ${actual}`);
+export class GuardExceeded extends Data.TaggedError("GuardExceeded")<{
+	readonly reason: GuardReason;
+	readonly limit: number;
+	readonly actual: number;
+	readonly offset: number;
+	readonly message: string;
+}> {
+	override readonly name = "Error";
+	constructor(reason: GuardReason, limit: number, actual: number, offset: number) {
+		super({ reason, limit, actual, offset, message: `${reason}: limit ${limit}, actual ${actual}` });
 	}
 }
 

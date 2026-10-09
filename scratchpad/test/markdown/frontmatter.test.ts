@@ -215,7 +215,7 @@ describe("frontmatter capture", () => {
 
 		it("a frontmatter head survives a Root decode round-trip", () => {
 			const root = parseOn("---\na: 1\n---\nrest\n");
-			const decoded = Schema.decodeSync(Root)(Schema.encodeUnknownSync(Root)(root));
+			const decoded = Result.getOrThrow(Schema.decodeResult(Root)(Result.getOrThrow(Schema.encodeUnknownResult(Root)(root))));
 			assert.deepStrictEqual(decoded, root);
 		});
 

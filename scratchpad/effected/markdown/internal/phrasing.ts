@@ -19,6 +19,7 @@
 // Throws the raw `GuardExceeded` carrier on a hardening trip (the inline
 // pass's delimiter/bracket stacks); the facade materializes the typed error.
 
+import { dual } from "effect/Function";
 import type { Definition, PhrasingContent, Position } from "../MarkdownNode.ts";
 import { Point, Position as PositionClass } from "../MarkdownNode.ts";
 import type { RawInlineSegment } from "./blockTypes.ts";
@@ -34,7 +35,10 @@ const EMPTY_FOOTNOTE_LABELS: ReadonlySet<string> = new Set();
 /**
  * Parse a text fragment as a single paragraph's inline content.
  */
-export const parsePhrasingText = (text: string, dialect: InlineDialectName): ReadonlyArray<PhrasingContent> => {
+export const parsePhrasingText: {
+	(text: string, dialect: InlineDialectName): ReadonlyArray<PhrasingContent>;
+	(dialect: InlineDialectName): (text: string) => ReadonlyArray<PhrasingContent>;
+} = dual(2, (text: string, dialect: InlineDialectName): ReadonlyArray<PhrasingContent> => {
 	const lines = preprocessLines(text);
 	const segments: RawInlineSegment[] = [];
 	let content = "";
@@ -74,4 +78,4 @@ export const parsePhrasingText = (text: string, dialect: InlineDialectName): Rea
 		dialect,
 		EMPTY_FOOTNOTE_LABELS,
 	);
-};
+});

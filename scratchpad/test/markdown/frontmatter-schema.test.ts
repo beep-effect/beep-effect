@@ -33,7 +33,7 @@ const withFrontmatter = MarkdownParseOptions.make({ frontmatter: true });
 
 const Meta = Schema.Struct({
 	title: Schema.String,
-	count: Schema.Number,
+	count: Schema.Finite,
 });
 
 const parseDoc = (source: string) => MarkdownDocument.parse(source, withFrontmatter);

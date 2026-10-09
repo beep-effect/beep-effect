@@ -25,10 +25,12 @@ export interface LineColumn {
  * before this index is ever built.
  */
 export class LineIndex {
-	private constructor(
-		private readonly text: string,
-		private readonly lineStarts: ReadonlyArray<number>,
-	) {}
+	private readonly text: string;
+	private readonly lineStarts: ReadonlyArray<number>;
+	private constructor(text: string, lineStarts: ReadonlyArray<number>) {
+		this.text = text;
+		this.lineStarts = lineStarts;
+	}
 
 	/**
 	 * Build a {@link LineIndex} over `text` with one forward scan.
