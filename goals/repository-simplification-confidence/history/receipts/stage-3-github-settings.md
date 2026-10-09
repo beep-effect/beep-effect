@@ -4499,3 +4499,14 @@ Names only for secrets and variables. Before each hosted write, export all scope
   }
 }
 ```
+
+## Ruleset recovery command
+
+The writable prior payload is committed at `stage-3-ruleset-prior.json`. Restore the pre-hardening state with:
+
+```sh
+gh api -X PUT repos/beep-effect/beep-effect/rulesets/10240248 \
+  --input goals/repository-simplification-confidence/history/receipts/stage-3-ruleset-prior.json
+```
+
+Before S3 removes Knip, capture again and derive the payload from the current ruleset, preserving any intervening settings edits. The lane's private `.beep/rsc-e/knip-ruleset-at-gate.json` is a prepared example, not an authorization to write a stale payload. Reversal of that gate restores the immediately preceding writable snapshot, reverts the Knip workflow/descriptor PR, then re-captures the context snapshot.

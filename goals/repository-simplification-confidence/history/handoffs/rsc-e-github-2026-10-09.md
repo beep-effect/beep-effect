@@ -27,3 +27,9 @@ Read-only live `ci settings --check`, `ci ruleset --capture`, `ci held-group`, a
 ## Additional main blocker
 
 Main Check 37944257965 at `d1e8350670` has failed Heavy / Lint Policy job 113897913572. Its exact log attributes the red to `knowledge:refs-check` (`broken-target` rows including `explorations/ATLAS.md`); it predates this lane. Route one shared repair through the orchestrator. R41's successful-main-writer gate is not satisfied, so repository `TURBO_TOKEN` has not been deleted.
+
+## Publication attempt and introduced repairs
+
+`yeet publish` created local implementation commit `8587a93592`, then its collected cheap gates failed; no branch push, PR, install preflight or hosted monitor started. Exact failures: inherited `lint:effect-imports` temporary-directory traversal, two introduced Effect-Vitest test findings, one introduced Fallow complexity finding, and aggregate Fallow health. Introduced callback/complexity repairs are prepared and must be re-proven; no baseline or suppression changed. Schema-first, Knip, dead-code and several other cheap gates passed at the initial commit, which does not establish final-head proof. The aggregate P0 inbox was acknowledged with an explicit ownership/handoff reason; it remains an acceptance blocker, not a waiver.
+
+The first publish invocation ran directly and its automatic cheap tier launched Turbo tasks. This was a mechanics deviation. Subsequent publish and proof attempts must use `beep-heavy`. No queued command may be bypassed to expedite this lane.

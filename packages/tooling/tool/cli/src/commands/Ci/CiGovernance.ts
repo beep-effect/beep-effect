@@ -135,6 +135,44 @@ const isMatrixWriter = (job: WorkflowJob, file: string, id: string): boolean =>
   Str.includes("matrix.uses_turbo == 'true'")(environmentName(job)) ||
   (file === "check.yml" && A.contains(["lint-shard", "test-unit-shard"], id));
 
+const writerEnvironmentAllowed = (job: WorkflowJob): boolean => {
+  const env = environmentName(job);
+  return (
+    env === "turbo-cache-write" ||
+    (Str.includes("github.event_name == 'push'")(env) && Str.includes("turbo-cache-write")(env))
+  );
+};
+const jobCredentialRecords = (job: WorkflowJob) => [
+  job.env ?? emptyRecord,
+  ...A.flatMap(job.steps ?? [], (step) => [step.with ?? emptyRecord, step.env ?? emptyRecord]),
+];
+const callerGuardDiagnostics = (id: string, step: WorkflowStep) =>
+  A.flatMap(R.values(step.with ?? emptyRecord), (value) =>
+    O.exists(
+      strings(value),
+      (text) => Str.includes("secrets.TURBO_TOKEN")(text) && !Str.includes("github.event_name == 'push'")(text)
+    )
+      ? [`${id}: writer input must stay guarded in the caller workflow`]
+      : []
+  );
+const artifactRetentionDiagnostics = (id: string, step: WorkflowStep) =>
+  Str.startsWith("actions/upload-artifact@")(step.uses ?? "") && step.with?.["retention-days"] === undefined
+    ? [`${id}: artifact retention-days missing`]
+    : [];
+const jobWorkflowDiagnostics = (file: string, id: string, job: WorkflowJob) => [
+  ...(A.some(jobCredentialRecords(job), hasWriteToken) &&
+  (!writerEnvironmentAllowed(job) || !isMatrixWriter(job, file, id))
+    ? [`${id}: write token requires the trusted Turbo writer environment`]
+    : []),
+  ...(file !== "cache-warm.yml" && hasWriteToken(job.env ?? emptyRecord)
+    ? [`${id}: job-level writer credential bypasses setup policy`]
+    : []),
+  ...A.flatMap(job.steps ?? [], (step) => [
+    ...callerGuardDiagnostics(id, step),
+    ...artifactRetentionDiagnostics(id, step),
+  ]),
+];
+
 /**
  * Check parsed workflow policy, including cache writer isolation and artifact lifetime.
  *
@@ -157,40 +195,7 @@ export const workflowPolicyDiagnostics = Effect.fn("CiGovernance.workflowPolicyD
   const workflow = yield* decodeYamlTextWith(S.decodeUnknownEffect(WorkflowDocument))(text).pipe(
     CiCommandError.mapError(`Cannot parse ${file}.`)
   );
-  const diagnostics = A.flatMap(jobsFor(workflow), ([id, job]) => {
-    const env = environmentName(job);
-    const records = [
-      job.env ?? emptyRecord,
-      ...A.flatMap(job.steps ?? [], (step) => [step.with ?? emptyRecord, step.env ?? emptyRecord]),
-    ];
-    const writer = A.some(records, hasWriteToken);
-    const guardedWriter =
-      env === "turbo-cache-write" ||
-      (Str.includes("github.event_name == 'push'")(env) && Str.includes("turbo-cache-write")(env));
-    return [
-      ...(writer && (!guardedWriter || !isMatrixWriter(job, file, id))
-        ? [`${id}: write token requires the trusted Turbo writer environment`]
-        : []),
-      ...(file !== "cache-warm.yml" && hasWriteToken(job.env ?? emptyRecord)
-        ? [`${id}: job-level writer credential bypasses setup policy`]
-        : []),
-      ...A.flatMap(job.steps ?? [], (step) =>
-        A.flatMap(R.values(step.with ?? emptyRecord), (value) =>
-          O.exists(
-            strings(value),
-            (text) => Str.includes("secrets.TURBO_TOKEN")(text) && !Str.includes("github.event_name == 'push'")(text)
-          )
-            ? [`${id}: writer input must stay guarded in the caller workflow`]
-            : []
-        )
-      ),
-      ...A.flatMap(job.steps ?? [], (step) =>
-        Str.startsWith("actions/upload-artifact@")(step.uses ?? "") && step.with?.["retention-days"] === undefined
-          ? [`${id}: artifact retention-days missing`]
-          : []
-      ),
-    ];
-  });
+  const diagnostics = A.flatMap(jobsFor(workflow), ([id, job]) => jobWorkflowDiagnostics(file, id, job));
   const triggers = O.getOrElse(recordOption(workflow.on), () => emptyRecord);
   const push = O.flatMap(O.fromUndefinedOr(triggers.push), recordOption);
   const branches = O.flatMap(push, (value) => S.decodeUnknownOption(S.Array(S.String))(value.branches));

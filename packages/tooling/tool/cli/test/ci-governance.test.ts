@@ -64,57 +64,67 @@ describe("CI governance policy", () => {
       expect(yield* setupCacheWriteDisabled("inputs: {}\n")).toBe(false);
     })
   );
-  it("keeps exactly one size label and preserves unrelated labels", () => {
-    expect(prSizeLabelDiff(25, ["size/S", "size/L", "bug"])).toEqual({
-      label: "size/L",
-      remove: ["size/S"],
-      add: false,
-    });
-    expect(prSizeLabelDiff(3, [])).toEqual({ label: "size/S", remove: [], add: true });
-    expect(A.map([10, 11, 20, 21, 50, 51], (count) => prSizeLabelDiff(count, []).label)).toEqual([
-      "size/S",
-      "size/M",
-      "size/M",
-      "size/L",
-      "size/L",
-      "size/XL",
-    ]);
-  });
-  it("requires a nonempty reviewer rule", () => {
-    expect(desktopEnvironmentApproved({ protection_rules: [] })).toBe(false);
-    expect(desktopEnvironmentApproved({ protection_rules: [{ type: "required_reviewers", reviewers: [] }] })).toBe(
-      false
-    );
-    expect(
-      desktopEnvironmentApproved({ protection_rules: [{ type: "required_reviewers", reviewers: [{ type: "User" }] }] })
-    ).toBe(true);
-  });
-  it("detects the old waiting main run and pending successor", () => {
-    const old = { id: 1, status: "waiting", created_at: "2026-10-09T12:00:00Z", head_branch: "main" };
-    const next = { id: 2, status: "pending", created_at: "2026-10-09T13:00:00Z", head_branch: "main" };
-    const now = 1791554400000;
-    expect(heldGroupRunIds([old, next], now)).toEqual([1]);
-    expect(heldGroupRunIds([next], now)).toEqual([]);
-    expect(heldGroupRunIds([{ ...old, status: "completed" }, next], now)).toEqual([]);
-    expect(heldGroupRunIds([old, next], 1791547200000)).toEqual([]);
-  });
-  it("holds forks even when docs-only until distinctly approved", () => {
-    const fork = HeavyAdmissionEvent.make({
-      eventName: "pull_request",
-      headRepository: "external/fork",
-      baseRepository: "beep-effect/beep-effect",
-      labels: ["ready-for-heavy"],
-      changedPaths: ["docs/a.md"],
-    });
-    expect(decideHeavyAdmission(fork).verdict).toBe("hold");
-    expect(
-      decideHeavyAdmission(HeavyAdmissionEvent.make({ ...fork, labels: ["ready-for-heavy", "ready-for-heavy-fork"] }))
-        .verdict
-    ).toBe("run");
-    expect(
-      decideHeavyAdmission(HeavyAdmissionEvent.make({ ...fork, headRepository: "beep-effect/beep-effect" })).verdict
-    ).toBe("run");
-  });
+  it.effect("keeps exactly one size label and preserves unrelated labels", () =>
+    Effect.sync(() => {
+      expect(prSizeLabelDiff(25, ["size/S", "size/L", "bug"])).toEqual({
+        label: "size/L",
+        remove: ["size/S"],
+        add: false,
+      });
+      expect(prSizeLabelDiff(3, [])).toEqual({ label: "size/S", remove: [], add: true });
+      expect(A.map([10, 11, 20, 21, 50, 51], (count) => prSizeLabelDiff(count, []).label)).toEqual([
+        "size/S",
+        "size/M",
+        "size/M",
+        "size/L",
+        "size/L",
+        "size/XL",
+      ]);
+    })
+  );
+  it.effect("requires a nonempty reviewer rule", () =>
+    Effect.sync(() => {
+      expect(desktopEnvironmentApproved({ protection_rules: [] })).toBe(false);
+      expect(desktopEnvironmentApproved({ protection_rules: [{ type: "required_reviewers", reviewers: [] }] })).toBe(
+        false
+      );
+      expect(
+        desktopEnvironmentApproved({
+          protection_rules: [{ type: "required_reviewers", reviewers: [{ type: "User" }] }],
+        })
+      ).toBe(true);
+    })
+  );
+  it.effect("detects the old waiting main run and pending successor", () =>
+    Effect.sync(() => {
+      const old = { id: 1, status: "waiting", created_at: "2026-10-09T12:00:00Z", head_branch: "main" };
+      const next = { id: 2, status: "pending", created_at: "2026-10-09T13:00:00Z", head_branch: "main" };
+      const now = 1791554400000;
+      expect(heldGroupRunIds([old, next], now)).toEqual([1]);
+      expect(heldGroupRunIds([next], now)).toEqual([]);
+      expect(heldGroupRunIds([{ ...old, status: "completed" }, next], now)).toEqual([]);
+      expect(heldGroupRunIds([old, next], 1791547200000)).toEqual([]);
+    })
+  );
+  it.effect("holds forks even when docs-only until distinctly approved", () =>
+    Effect.sync(() => {
+      const fork = HeavyAdmissionEvent.make({
+        eventName: "pull_request",
+        headRepository: "external/fork",
+        baseRepository: "beep-effect/beep-effect",
+        labels: ["ready-for-heavy"],
+        changedPaths: ["docs/a.md"],
+      });
+      expect(decideHeavyAdmission(fork).verdict).toBe("hold");
+      expect(
+        decideHeavyAdmission(HeavyAdmissionEvent.make({ ...fork, labels: ["ready-for-heavy", "ready-for-heavy-fork"] }))
+          .verdict
+      ).toBe("run");
+      expect(
+        decideHeavyAdmission(HeavyAdmissionEvent.make({ ...fork, headRepository: "beep-effect/beep-effect" })).verdict
+      ).toBe("run");
+    })
+  );
 });
 
 // The reusable Heavy workflow is trusted at main; static caller and scheduled
