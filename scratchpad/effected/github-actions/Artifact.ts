@@ -88,16 +88,19 @@ export class ArtifactError extends S.TaggedError<ArtifactError>($I`ArtifactError
  *
  * @public
  */
-export interface ArtifactItem {
+// A boundary struct preserves the backend's plain-record public representation.
+export const ArtifactItem = S.Struct({
 	/** The database id, which is what `download` takes. */
-	readonly id: number;
+	id: S.Finite.annotateKey({ description: "The database id, which is what download takes." }),
 	/** The name the artifact was uploaded under. */
-	readonly name: string;
+	name: S.String.annotateKey({ description: "The name the artifact was uploaded under." }),
 	/** The size of the stored zip, in bytes. */
-	readonly size: number;
+	size: S.Finite.annotateKey({ description: "The size of the stored zip, in bytes." }),
 	/** When it was created, ISO-8601, when the backend says. */
-	readonly createdAt?: string | undefined;
-}
+	createdAt: S.String.pipe(S.UndefinedOr, S.optionalKey).annotateKey({ description: "When it was created, ISO-8601, when the backend says." }),
+}).pipe($I.annoteSchema("ArtifactItem", { description: "One artifact, as the backend describes it." }));
+
+export type ArtifactItem = typeof ArtifactItem.Type;
 
 /**
  * How to pack an upload.
@@ -243,15 +246,15 @@ const azure: FileBlobTransfer = {
 };
 
 /** One row of a `ListArtifacts` answer, read under either field spelling. */
-const toItem = (row: unknown): ArtifactItem => {
+const toItem = Effect.fnUntraced(function* (row: unknown) {
 	const createdAt = stringField(row, "createdAt");
-	return {
+	return yield* S.decodeEffect(ArtifactItem)({
 		id: Number(stringField(row, "databaseId") ?? 0),
 		name: stringField(row, "name") ?? "",
 		size: Number(stringField(row, "size") ?? 0),
 		...O.getSomesStruct({ createdAt: O.fromUndefinedOr(createdAt) }),
-	};
-};
+	});
+});
 
 const make = Effect.fn("make")(function* (
 	transfer: FileBlobTransfer,
@@ -309,17 +312,21 @@ const make = Effect.fn("make")(function* (
 				}).pipe(Effect.mapError((failure) => ArtifactError.make({ ...twirpFailureFields(failure), artifact })));
 			});
 
-		const listAll = (artifact: string) =>
-			Effect.map(
-				call("ListArtifacts", () => ({}), artifact),
-				(answer): ReadonlyArray<ArtifactItem> => {
-					if (answer === CONFLICT) {
-						return [];
-					}
-					const rows = field(answer, "artifacts");
-					return A.isArray(rows) ? rows.map(toItem) : [];
-				},
-			);
+		const listAll = Effect.fnUntraced(function* (artifact: string) {
+			const answer = yield* call("ListArtifacts", () => ({}), artifact);
+			if (answer === CONFLICT) {
+				return [];
+			}
+			const rows = field(answer, "artifacts");
+			return A.isArray(rows)
+				? yield* Effect.forEach(rows, toItem).pipe(
+						Effect.mapError((cause) => ArtifactError.make({
+							...twirpFailureFields({ method: "ListArtifacts", kind: "malformed", cause }),
+							artifact,
+						})),
+					)
+				: [];
+		});
 
 		/** Run an archiving command ONCE (`internal/spawn.ts`), keeping its stderr. */
 		const archive = Effect.fn("archive")(function*(command: ChildProcess.Command, artifact: string) {
@@ -373,10 +380,11 @@ const make = Effect.fn("make")(function* (
 				// runner and fail on another.
 				const unrepresentable = relative.find((file) => file.includes("\n") || file.includes("\r"));
 				if (unrepresentable !== undefined) {
+					const quoted = yield* S.encodeEffect(Json)(unrepresentable).pipe(Effect.orDie);
 					return yield* ArtifactError.make({
 							reason: "invalidOptions",
 							artifact,
-							detail: `a file path may not contain a line break: ${Result.getOrThrowWith(S.encodeResult(Json)(unrepresentable), (error) => error)}`,
+							detail: `a file path may not contain a line break: ${quoted}`,
 						});
 				}
 				// Beside the archive inside the scratch directory, so `scratch`'s

@@ -70,6 +70,37 @@ describe("ActionEnvironment", () => {
 			),
 		);
 
+		it.effect("treats absent prototype names as missing strings", () =>
+			live(
+				Effect.gen(function* () {
+					const env = yield* ActionEnvironment;
+					for (const name of ["toString", "constructor", "__proto__"]) {
+						assert.isTrue(O.isNone(yield* env.getOptional(name)));
+						const error = yield* Effect.flip(env.get(name));
+						assert.strictEqual(error.reason, "missing");
+						assert.strictEqual(error.name, name);
+					}
+				}),
+				{},
+			),
+		);
+
+		it.effect("reads configured prototype names and honors scoped overrides and empty strings", () =>
+			live(
+				Effect.gen(function* () {
+					const env = yield* ActionEnvironment;
+					for (const name of ["toString", "constructor", "__proto__"]) {
+						assert.deepStrictEqual(yield* env.getOptional(name), O.some("configured"));
+						assert.strictEqual(yield* env.get(name), "configured");
+						assert.strictEqual(yield* env.withEnv({ [name]: "override" }, env.get(name)), "override");
+						assert.isTrue(O.isNone(yield* env.withEnv({ [name]: "" }, env.getOptional(name))));
+						assert.strictEqual(yield* env.get(name), "configured");
+					}
+				}),
+				{ toString: "configured", constructor: "configured", ["__proto__"]: "configured" },
+			),
+		);
+
 		it.effect("treats an empty variable as absent, as the runner does", () =>
 			live(
 				Effect.gen(function* () {

@@ -258,7 +258,7 @@ export class OidcTokenIssuer extends Context.Service<OidcTokenIssuer, OidcTokenI
 	 * structurally unreachable in a test.
 	 */
 	static readonly unsignedTokenFor = (claims: OidcClaims): Redacted.Redacted<string> =>
-		Redacted.make(unsignedJwt({ alg: "RS256", typ: "JWT" }, flow(S.encodeUnknownResult(OidcClaims), Result.getOrThrowWith((error) => error))(claims)));
+		Redacted.make(unsignedJwt({ alg: "RS256", typ: "JWT" }, flow(S.encodeUnknownResult(OidcClaims), Result.getOrThrow)(claims)));
 
 	/** A test double. Unstubbed members die rather than answering with a non-token. */
 	static readonly makeTest = (overrides: Partial<OidcTokenIssuerShape> = {}): OidcTokenIssuerShape => ({

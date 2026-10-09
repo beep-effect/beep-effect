@@ -15,7 +15,7 @@
 // builder emits. What it does prove is the part we control: no edge exists.
 
 import { readFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { dirname, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { assert, describe, it } from "@effect/vitest";
 import * as S from "effect/Schema";
@@ -29,7 +29,7 @@ const DependenciesManifestJson = S.fromJsonString(S.Struct({
 
 const SRC = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "effected", "github-actions");
 
-/** Every `from "..."` specifier in a module, ignoring type-only imports. */
+/** Every runtime import/export specifier and literal builtin load, ignoring type-only imports. */
 const runtimeSpecifiers = (source: string): ReadonlyArray<string> => {
 	// Doc comments carry `@example` blocks with real import statements in them,
 	// so comments come out first or the walker "finds" edges that exist only in
@@ -52,11 +52,16 @@ const runtimeSpecifiers = (source: string): ReadonlyArray<string> => {
 		if (/^\s*type\b/.test(clause)) continue;
 		specifiers.push(specifier);
 	}
+	const builtinPattern = /\bprocess\s*\.\s*getBuiltinModule\s*\(\s*["'](node:[^"']+)["']\s*\)/g;
+	for (const match of code.matchAll(builtinPattern)) {
+		const specifier = match[1];
+		if (specifier !== undefined) specifiers.push(specifier);
+	}
 	return specifiers;
 };
 
-/** Every bare (non-relative) specifier reachable at runtime from `entry`. */
-const reachableBareImports = (entry: string): ReadonlySet<string> => {
+/** Runtime edges reachable from `entry`, stopping at lab sibling-module boundaries. */
+const reachableRuntimeImports = (entry: string): ReadonlySet<string> => {
 	const seen = new Set<string>();
 	const bare = new Set<string>();
 	const queue = [resolve(SRC, entry)];
@@ -66,7 +71,15 @@ const reachableBareImports = (entry: string): ReadonlySet<string> => {
 		seen.add(file);
 		for (const specifier of runtimeSpecifiers(readFileSync(file, "utf8"))) {
 			if (specifier.startsWith(".")) {
-				queue.push(resolve(dirname(file), specifier.replace(/\.js$/, ".ts")));
+				const target = resolve(dirname(file), specifier.replace(/\.js$/, ".ts"));
+				const labRelative = relative(SRC, target);
+				if (labRelative.startsWith("../")) {
+					// Upstream stopped at bare @effected/* edges. The lab represents
+					// those same module boundaries with relative sibling entrypoints.
+					bare.add(labRelative);
+				} else {
+					queue.push(target);
+				}
 			} else {
 				bare.add(specifier);
 			}
@@ -76,7 +89,7 @@ const reachableBareImports = (entry: string): ReadonlySet<string> => {
 };
 
 const reachesAzure = (entry: string): boolean =>
-	[...reachableBareImports(entry)].some((specifier) => specifier.startsWith("@azure/"));
+	[...reachableRuntimeImports(entry)].some((specifier) => specifier.startsWith("@azure/"));
 
 /** The three modules the confinement rule permits, and only these three. */
 const AZURE_MODULES = ["ActionCache.ts", "Artifact.ts", "BlobStore.githubCache.ts"];
@@ -164,45 +177,115 @@ describe("bundle reachability", () => {
 		// Exact edge sets, so a stray value import fails here rather than in a
 		// consumer's bundle — and so a stripper that blinded the walker shows up as
 		// an empty set rather than as a pass.
-		assert.deepStrictEqual([...reachableBareImports("ActionOutputs.ts")].sort(), [
-			"@effected/github-commands",
-			"effect",
+		assert.deepStrictEqual([...reachableRuntimeImports("ActionOutputs.ts")].sort(), [
+			"../github-commands/index.ts",
+			"@beep/identity/packages",
+			"@beep/utils/Option",
+			"effect/Console",
+			"effect/Context",
+			"effect/Effect",
+			"effect/FileSystem",
+			"effect/Layer",
+			"effect/Option",
+			"effect/Record",
+			"effect/Schema",
 		]);
-		assert.deepStrictEqual([...reachableBareImports("BlobEnvelope.ts")].sort(), ["effect"]);
+		assert.deepStrictEqual([...reachableRuntimeImports("BlobEnvelope.ts")].sort(), [
+			"@beep/identity/packages",
+			"effect/Result",
+			"effect/Schema",
+		]);
 		// `node:crypto` is the sanctioned import, and it is here because core
 		// `Crypto` is RNG-only at beta.101 — no digest, no HMAC.
 		// `@effected/walker` is the file walker under `matchingFiles`; its own
 		// graph is `effect` and `@effected/glob`, both already here.
-		assert.deepStrictEqual([...reachableBareImports("CacheKey.ts")].sort(), [
-			"@effected/glob",
-			"@effected/walker",
-			"effect",
+		assert.deepStrictEqual([...reachableRuntimeImports("CacheKey.ts")].sort(), [
+			"../glob/index.ts",
+			"../walker/index.ts",
+			"@beep/identity/packages",
+			"effect/Array",
+			"effect/Effect",
+			"effect/FileSystem",
+			"effect/Function",
+			"effect/HashSet",
+			"effect/MutableHashSet",
+			"effect/Option",
+			"effect/Order",
+			"effect/Path",
+			"effect/Schema",
+			"effect/Stream",
+			"effect/String",
 			"effect/encoding/Hex",
+			"node:crypto",
 		]);
-		assert.deepStrictEqual([...reachableBareImports("BlobStore.ts")].sort(), [
-			"@effected/github-commands",
-			"effect",
+		assert.deepStrictEqual([...reachableRuntimeImports("BlobStore.ts")].sort(), [
+			"../github-commands/index.ts",
+			"@beep/identity/packages",
+			"@beep/utils/Option",
+			"effect/Array",
+			"effect/Config",
+			"effect/Console",
+			"effect/Context",
+			"effect/DateTime",
+			"effect/Effect",
+			"effect/FileSystem",
+			"effect/Function",
+			"effect/Layer",
+			"effect/Match",
+			"effect/MutableHashMap",
+			"effect/Option",
+			"effect/Order",
+			"effect/Record",
+			"effect/Redacted",
+			"effect/Result",
+			"effect/Schema",
+			"effect/Stream",
+			"effect/String",
 			"effect/encoding/Hex",
 			"effect/http",
+			"node:crypto",
 		]);
 		// The workflow-command protocol is not in this package any more: it lives in the pure
 		// `@effected/github-commands` (which imports nothing, not even `effect`), and this package takes it as a peer. The
 		// modules that write commands reach it as one bare import and nothing else.
 		assert.deepStrictEqual(
-			[...reachableBareImports("ActionLogger.ts")].filter((name) => name.startsWith("@effected/")),
-			["@effected/github-commands"],
+			[...reachableRuntimeImports("ActionLogger.ts")].filter((name) => name.startsWith("../")),
+			["../github-commands/index.ts"],
 		);
-		// Same posture for the child-env helper: a pure value builder for core's
-		// CommandOptions contract, importing nothing — not even `effect`.
-		assert.deepStrictEqual([...reachableBareImports("ChildEnv.ts")], []);
+		// The lab child-env helper uses Effect Record to build core's CommandOptions value.
+		assert.deepStrictEqual([...reachableRuntimeImports("ChildEnv.ts")], ["effect/Record"]);
 		// The default runtime does NOT reach Azure, and that is the reason the
 		// cache, artifact and blob services are left out of it: folding them in
 		// would put a blob-storage client in the bundle of every action that
 		// merely sets an output.
-		assert.deepStrictEqual([...reachableBareImports("Action.ts")].sort(), [
+		assert.deepStrictEqual([...reachableRuntimeImports("Action.ts")].sort(), [
+			"../github-commands/index.ts",
+			"@beep/identity/packages",
+			"@beep/utils/Option",
 			"@effect/platform-node",
-			"@effected/github-commands",
-			"effect",
+			"effect/Array",
+			"effect/Cause",
+			"effect/Config",
+			"effect/ConfigProvider",
+			"effect/Console",
+			"effect/Context",
+			"effect/Effect",
+			"effect/Exit",
+			"effect/FileSystem",
+			"effect/HashSet",
+			"effect/Inspectable",
+			"effect/Layer",
+			"effect/LogLevel",
+			"effect/Logger",
+			"effect/Match",
+			"effect/MutableHashMap",
+			"effect/Option",
+			"effect/Predicate",
+			"effect/Record",
+			"effect/References",
+			"effect/Result",
+			"effect/Schema",
+			"effect/SchemaIssue",
 			"effect/http",
 		]);
 	});
@@ -212,12 +295,12 @@ describe("bundle reachability", () => {
 		// reach, and only the fluent writer earns it. The control comes first:
 		// a blinded walker must fail here, not pass everything below.
 		assert.isTrue(
-			[...reachableBareImports("GitHubMarkdown.ts")].includes("@effected/markdown"),
+			[...reachableRuntimeImports("GitHubMarkdown.ts")].includes("../markdown/index.ts"),
 			"GitHubMarkdown does not reach the engine — the walker is blind",
 		);
 		for (const entry of LIGHT_MODULES.filter((module) => module !== "GitHubMarkdown.ts")) {
 			assert.isFalse(
-				[...reachableBareImports(entry)].includes("@effected/markdown"),
+				[...reachableRuntimeImports(entry)].includes("../markdown/index.ts"),
 				`${entry} reaches @effected/markdown — the writer confinement has leaked`,
 			);
 		}
@@ -225,10 +308,56 @@ describe("bundle reachability", () => {
 		// the vocabulary reaches nothing but effect (in particular NOT
 		// `@effected/github`, whose conclusion set it mirrors structurally), and
 		// the document modules reach the templates region engine and no more.
-		assert.deepStrictEqual([...reachableBareImports("CheckState.ts")].sort(), ["effect"]);
-		assert.deepStrictEqual([...reachableBareImports("ManagedDocument.ts")].sort(), ["@effected/templates", "effect"]);
-		assert.deepStrictEqual([...reachableBareImports("CheckDocument.ts")].sort(), ["@effected/templates", "effect"]);
-		assert.deepStrictEqual([...reachableBareImports("GitHubMarkdown.ts")].sort(), ["@effected/markdown", "effect"]);
+		assert.deepStrictEqual([...reachableRuntimeImports("CheckState.ts")].sort(), [
+			"@beep/identity/packages",
+			"@beep/schema/LiteralKit",
+			"effect/Match",
+			"effect/Schema",
+		]);
+		assert.deepStrictEqual([...reachableRuntimeImports("ManagedDocument.ts")].sort(), [
+			"../templates/index.ts",
+			"@beep/identity/packages",
+			"@beep/utils/Option",
+			"effect/Effect",
+			"effect/Result",
+			"effect/Schema",
+			"effect/String",
+		]);
+		assert.deepStrictEqual([...reachableRuntimeImports("CheckDocument.ts")].sort(), [
+			"../templates/index.ts",
+			"@beep/identity/packages",
+			"@beep/schema/LiteralKit",
+			"@beep/utils/Option",
+			"effect/Array",
+			"effect/BigInt",
+			"effect/Clock",
+			"effect/Context",
+			"effect/DateTime",
+			"effect/Duration",
+			"effect/Effect",
+			"effect/HashMap",
+			"effect/Latch",
+			"effect/Layer",
+			"effect/Match",
+			"effect/Number",
+			"effect/Option",
+			"effect/Predicate",
+			"effect/Ref",
+			"effect/Result",
+			"effect/Schema",
+			"effect/Semaphore",
+			"effect/String",
+		]);
+		assert.deepStrictEqual([...reachableRuntimeImports("GitHubMarkdown.ts")].sort(), [
+			"../markdown/index.ts",
+			"effect/Array",
+			"effect/Function",
+			"effect/Predicate",
+			"effect/Record",
+			"effect/Result",
+			"effect/Schema",
+			"effect/SchemaAST",
+		]);
 	});
 
 	it("the @effected/npm edge is confined to the installer, on Azure's terms", () => {
@@ -238,12 +367,12 @@ describe("bundle reachability", () => {
 		// the runtime or any light module's graph. The control comes first, so a
 		// blinded walker fails here rather than passing everything below.
 		assert.isTrue(
-			[...reachableBareImports("PackageManagerInstaller.ts")].includes("@effected/npm"),
+			[...reachableRuntimeImports("PackageManagerInstaller.ts")].includes("../npm/index.ts"),
 			"PackageManagerInstaller does not reach @effected/npm — the walker is blind",
 		);
 		for (const entry of LIGHT_MODULES.filter((module) => module !== "PackageManagerInstaller.ts")) {
 			assert.isFalse(
-				[...reachableBareImports(entry)].includes("@effected/npm"),
+				[...reachableRuntimeImports(entry)].includes("../npm/index.ts"),
 				`${entry} reaches @effected/npm — the installer confinement has leaked`,
 			);
 		}
@@ -251,13 +380,33 @@ describe("bundle reachability", () => {
 		// subprocess contracts, and the sanctioned node:crypto digest. In
 		// particular the DEFAULT RUNTIME stays clear: `Action.ts`'s exact edge set
 		// above is what pins `ActionRuntime.layer` never linking this module.
-		assert.deepStrictEqual([...reachableBareImports("PackageManagerInstaller.ts")].sort(), [
-			"@effected/npm",
-			"effect",
+		assert.deepStrictEqual([...reachableRuntimeImports("PackageManagerInstaller.ts")].sort(), [
+			"../npm/index.ts",
+			"@beep/identity/packages",
+			"@beep/utils/Option",
+			"effect/Config",
+			"effect/ConfigProvider",
+			"effect/Context",
+			"effect/Effect",
+			"effect/FileSystem",
+			"effect/Function",
+			"effect/HashSet",
+			"effect/Layer",
+			"effect/Match",
+			"effect/Option",
+			"effect/Path",
+			"effect/Predicate",
+			"effect/Record",
+			"effect/Result",
+			"effect/Schedule",
+			"effect/Schema",
+			"effect/Stream",
+			"effect/String",
 			"effect/encoding/Base64",
 			"effect/encoding/Hex",
 			"effect/http",
 			"effect/process",
+			"node:crypto",
 		]);
 	});
 
@@ -266,7 +415,7 @@ describe("bundle reachability", () => {
 		// heavy modules share a Twirp client and a results-backend reader, and
 		// hoisting their fifteen lines of Azure into either one would put the
 		// client on the graph of everything that speaks the protocol.
-		assert.deepStrictEqual([...reachableBareImports("internal/actionsResults.ts")].sort(), [
+		assert.deepStrictEqual([...reachableRuntimeImports("internal/actionsResults.ts")].sort(), [
 			"effect/Effect",
 			"effect/Function",
 			"effect/Option",
@@ -277,7 +426,7 @@ describe("bundle reachability", () => {
 			"effect/encoding/Base64Url",
 		]);
 		assert.deepStrictEqual(
-			[...reachableBareImports("internal/twirp.ts")].sort(),
+			[...reachableRuntimeImports("internal/twirp.ts")].sort(),
 			[
 			"@beep/utils/Option",
 			"effect/Effect",
@@ -291,7 +440,7 @@ describe("bundle reachability", () => {
 		// The cache-entry choreography shared by `ActionCache` and
 		// `BlobStore.githubCache` owns the three RPCs and NOT the Azure transfer
 		// between them — that is the whole point of it being an internal.
-		assert.deepStrictEqual([...reachableBareImports("internal/cacheService.ts")].sort(), [
+		assert.deepStrictEqual([...reachableRuntimeImports("internal/cacheService.ts")].sort(), [
 			"@beep/utils/Option",
 			"effect/Effect",
 			"effect/Function",
@@ -302,7 +451,7 @@ describe("bundle reachability", () => {
 		]);
 		// `effect/process` is a type-only import there: the spawner
 		// arrives as a value from the caller.
-		assert.deepStrictEqual([...reachableBareImports("internal/spawn.ts")].sort(), [
+		assert.deepStrictEqual([...reachableRuntimeImports("internal/spawn.ts")].sort(), [
 			"effect/Effect",
 			"effect/Function",
 			"effect/Stream",
@@ -311,27 +460,28 @@ describe("bundle reachability", () => {
 		// VALUE import there, and it is shared by `Artifact` (Azure) and
 		// `ToolInstaller` (light) — exactly the kind of helper that must never
 		// grow a heavier edge.
-		assert.deepStrictEqual([...reachableBareImports("internal/archiveCommands.ts")].sort(), ["effect/process"]);
-		assert.deepStrictEqual([...reachableBareImports("internal/digest.ts")].sort(), [
+		assert.deepStrictEqual([...reachableRuntimeImports("internal/archiveCommands.ts")].sort(), ["effect/process"]);
+		assert.deepStrictEqual([...reachableRuntimeImports("internal/digest.ts")].sort(), [
 			"effect/Effect",
 			"effect/Function",
 			"effect/Stream",
 			"effect/encoding/Hex",
+			"node:crypto",
 		]);
-		assert.deepStrictEqual([...reachableBareImports("internal/fsProbe.ts")].sort(), ["effect/Effect", "effect/Function", "effect/Predicate"]);
-		assert.deepStrictEqual([...reachableBareImports("internal/jwt.ts")].sort(), [
+		assert.deepStrictEqual([...reachableRuntimeImports("internal/fsProbe.ts")].sort(), ["effect/Effect", "effect/Function", "effect/Predicate"]);
+		assert.deepStrictEqual([...reachableRuntimeImports("internal/jwt.ts")].sort(), [
 			"effect/Function",
 			"effect/Result",
 			"effect/Schema",
 			"effect/encoding/Base64Url",
 		]);
-		assert.deepStrictEqual([...reachableBareImports("internal/runner.ts")].sort(), [
+		assert.deepStrictEqual([...reachableRuntimeImports("internal/runner.ts")].sort(), [
 			"effect/Effect",
 			"effect/Function",
 			"effect/Option",
 		]);
-		assert.deepStrictEqual([...reachableBareImports("internal/runnerFile.ts")], []);
-		assert.deepStrictEqual([...reachableBareImports("internal/unstubbed.ts")].sort(), ["@beep/identity/packages", "effect/Effect", "effect/Schema"]);
+		assert.deepStrictEqual([...reachableRuntimeImports("internal/runnerFile.ts")], []);
+		assert.deepStrictEqual([...reachableRuntimeImports("internal/unstubbed.ts")].sort(), ["@beep/identity/packages", "effect/Effect", "effect/Schema"]);
 	});
 
 	it("the entry point reaches Azure, and that is correct", () => {
@@ -370,7 +520,7 @@ describe("bundle reachability", () => {
 		// evaluating an unreferenced module matters, and keeps it.
 		const manifest = Result.getOrThrowWith(
 			S.decodeResult(SideEffectsManifestJson)(
-				readFileSync(resolve(SRC, "..", "package.json"), "utf8"),
+				readFileSync(resolve(SRC, "package.json"), "utf8"),
 			),
 			(error) => error,
 		);
@@ -380,16 +530,18 @@ describe("bundle reachability", () => {
 	it("every runtime dependency is declared", () => {
 		// A package you import but do not declare is how a peer closure rots.
 		const manifest = Result.getOrThrowWith(
-			S.decodeResult(DependenciesManifestJson)(readFileSync(resolve(SRC, "..", "package.json"), "utf8")),
+			S.decodeResult(DependenciesManifestJson)(readFileSync(resolve(SRC, "package.json"), "utf8")),
 			(error) => error,
 		);
 		const declared = new Set([
 			...Object.keys(manifest.dependencies ?? {}),
 			...Object.keys(manifest.peerDependencies ?? {}),
 		]);
-		for (const specifier of reachableBareImports("index.ts")) {
+		for (const specifier of reachableRuntimeImports("index.ts")) {
 			if (specifier.startsWith("node:")) continue;
-			const packageName = specifier.startsWith("@")
+			const packageName = specifier.startsWith("../")
+				? `@effected/${specifier.split("/")[1]}`
+				: specifier.startsWith("@")
 				? specifier.split("/").slice(0, 2).join("/")
 				: specifier.split("/")[0];
 			assert.isTrue(declared.has(packageName ?? specifier), `${specifier} is imported but not declared`);

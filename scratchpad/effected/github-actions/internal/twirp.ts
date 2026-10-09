@@ -166,7 +166,7 @@ export const field: {
 	(body: unknown, name: string): unknown;
 	(name: string): (body: unknown) => unknown;
 } = Function.dual(2, (body: unknown, name: string): unknown => {
-	if (!P.isObjectKeyword(body) || P.isFunction(body)) {
+	if (!P.isObjectOrArray(body)) {
 		return undefined;
 	}
 		const snake = name.replaceAll(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);

@@ -30,4 +30,4 @@ export const isErrno: {
 	(cause: unknown, code: string): boolean;
 	(code: string): (cause: unknown) => boolean;
 } = Function.dual(2, (cause: unknown, code: string): boolean =>
-	P.isObjectKeyword(cause) && !P.isFunction(cause) && "code" in cause && cause.code === code);
+	P.isObjectOrArray(cause) && "code" in cause && cause.code === code);

@@ -15,7 +15,7 @@ import {
 } from "../markdown/index.ts";
 import * as Result from "effect/Result";
 import * as P from "effect/Predicate";
-import * as Schema from "effect/Schema";
+import * as S from "effect/Schema";
 import * as SchemaAST from "effect/SchemaAST";
 import { flow } from "effect/Function";
 import * as R from "effect/Record";
@@ -39,12 +39,12 @@ export interface GitHubListOptions {
 
 /**
  * The row-schema constraint {@link GitHubMarkdown.tableFor} accepts: any
- * schema exposing a struct field map — `Schema.Struct` and `Schema.Class`
+ * schema exposing a struct field map — `S.Struct` and `S.Class`
  * both qualify.
  *
  * @public
  */
-export type GitHubRowSchema = Schema.Constraint & { readonly fields: Schema.Struct.Fields };
+export type GitHubRowSchema = S.Constraint & { readonly fields: S.Struct.Fields };
 
 /**
  * The field keys of a row schema whose column REQUIRES an explicit
@@ -54,7 +54,7 @@ export type GitHubRowSchema = Schema.Constraint & { readonly fields: Schema.Stru
  *
  * @public
  */
-export type GitHubSchemaTableFormatRequiredKeys<Fields extends Schema.Struct.Fields> = {
+export type GitHubSchemaTableFormatRequiredKeys<Fields extends S.Struct.Fields> = {
 	[K in keyof Fields]: [Fields[K]["Encoded"]] extends [string | undefined]
 		? [Fields[K]["EncodingServices"]] extends [never]
 			? never
@@ -98,7 +98,7 @@ export interface GitHubSchemaTableFormattedColumn<Value> extends GitHubSchemaTab
  *
  * @public
  */
-export type GitHubSchemaTableColumns<Fields extends Schema.Struct.Fields> = {
+export type GitHubSchemaTableColumns<Fields extends S.Struct.Fields> = {
 	readonly [K in GitHubSchemaTableFormatRequiredKeys<Fields>]: GitHubSchemaTableFormattedColumn<
 		Exclude<Fields[K]["Type"], undefined>
 	>;
@@ -116,7 +116,7 @@ export type GitHubSchemaTableColumns<Fields extends Schema.Struct.Fields> = {
  *
  * @public
  */
-export type GitHubSchemaTableOptions<Fields extends Schema.Struct.Fields> = [
+export type GitHubSchemaTableOptions<Fields extends S.Struct.Fields> = [
 	GitHubSchemaTableFormatRequiredKeys<Fields>,
 ] extends [never]
 	? { readonly columns?: GitHubSchemaTableColumns<Fields> | undefined }
@@ -308,12 +308,12 @@ export class GitHubMarkdown {
 	 * const body = checks.render([{ name: "build", outcome: "passed" }]);
 	 * ```
 	 */
-	static tableFor<S extends GitHubRowSchema>(
-		schema: S,
-		...options: [GitHubSchemaTableFormatRequiredKeys<S["fields"]>] extends [never]
-			? [options?: GitHubSchemaTableOptions<S["fields"]>]
-			: [options: GitHubSchemaTableOptions<S["fields"]>]
-	): GitHubSchemaTable<S["Type"]> {
+	static tableFor<RowSchema extends GitHubRowSchema>(
+		schema: RowSchema,
+		...options: [GitHubSchemaTableFormatRequiredKeys<RowSchema["fields"]>] extends [never]
+			? [options?: GitHubSchemaTableOptions<RowSchema["fields"]>]
+			: [options: GitHubSchemaTableOptions<RowSchema["fields"]>]
+	): GitHubSchemaTable<RowSchema["Type"]> {
 		const overrides: unknown = options[0]?.columns ?? {};
 		const columns: ReadonlyArray<ColumnRuntime> = R.toEntries(schema.fields).map(([key, field]) => {
 			const column = P.hasProperty(overrides, key) ? overrides[key] : undefined;
@@ -323,12 +323,12 @@ export class GitHubMarkdown {
 			// the cell (an encoder yielding nothing is an empty cell). Built once
 			// per column, not per cell — this is the one path that renders in a loop.
 			const encode = flow(
-				Schema.encodeUnknownResult(Schema.make<Schema.Codec<unknown, unknown>>(field.ast)),
-				Result.getOrThrowWith((error) => error),
+				S.encodeUnknownResult(S.make<S.Codec<unknown, unknown>>(field.ast)),
+				Result.getOrThrow,
 			);
 			const project = (value: unknown): string => {
 				const rendered: unknown = format === undefined ? encode(value) ?? "" : format(value);
-				return Result.getOrThrowWith(Schema.decodeUnknownResult(Schema.String)(rendered), (error) => error);
+				return Result.getOrThrow(S.decodeUnknownResult(S.String)(rendered));
 			};
 			return {
 				key,
@@ -338,7 +338,7 @@ export class GitHubMarkdown {
 		});
 		const headers = columns.map((column) => column.header);
 		return {
-			render: (rows: ReadonlyArray<S["Type"]>): string =>
+			render: (rows: ReadonlyArray<RowSchema["Type"]>): string =>
 				GitHubMarkdown.table(
 					headers,
 					rows.map((row) => columns.map((column) => column.cell(P.hasProperty(row, column.key) ? row[column.key] : undefined))),

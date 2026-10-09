@@ -5,6 +5,7 @@ import * as Effect from "effect/Effect";
 import * as O from "@beep/utils/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 const $I = $ScratchpadId.create("effected/github-actions/ManagedDocument");
 
@@ -382,9 +383,7 @@ export class ManagedDocument extends S.Class<ManagedDocument>($I`ManagedDocument
 		if (text.includes(this.sentinel)) {
 			return text;
 		}
-		if (text.trim() === "") {
-			return `${this.sentinel}${eol}`;
-		}
-		return `${text.replace(/(?:\r?\n)+$/, "")}${eol}${eol}${this.sentinel}${eol}`;
+		const separator = Str.isEmpty(text) || Str.endsWith("\n")(text) ? "" : eol;
+		return `${text}${separator}${this.sentinel}${eol}`;
 	}
 }

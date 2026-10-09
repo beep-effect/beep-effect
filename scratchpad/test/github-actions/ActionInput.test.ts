@@ -4,6 +4,7 @@ import * as Config from "effect/Config";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as Redacted from "effect/Redacted";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { ActionInput } from "../../effected/github-actions/index.ts";
 
@@ -280,6 +281,17 @@ describe("ActionInput", () => {
 			Effect.gen(function* () {
 				const value = yield* readOk(ActionInput.pairs("vars"), { INPUT_VARS: "a=1\nb = 2\n" });
 				assert.deepStrictEqual(value, { a: "1", b: "2" });
+			}),
+		);
+
+		it.effect("preserves an accepted __proto__ pair as an own property of the plain record", () =>
+			Effect.gen(function* () {
+				const value = yield* readOk(ActionInput.pairs("vars"), {
+					INPUT_VARS: "__proto__=first\nnormal=ok\n__proto__=value",
+				});
+				assert.isTrue(R.has(value, "__proto__"));
+				assert.strictEqual(value["__proto__"], "value");
+				assert.deepStrictEqual(value, { ["__proto__"]: "value", normal: "ok" });
 			}),
 		);
 

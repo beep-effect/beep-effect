@@ -239,6 +239,28 @@ describe("ManagedDocument", () => {
 	});
 
 	describe("sentinel", () => {
+		it.each([
+			["empty text", "", "", "\n"],
+			["unterminated human text", "human", "\n", "\n"],
+			["one trailing LF", "human\n", "", "\n"],
+			["three trailing LFs", "human\n\n\n", "", "\n"],
+			["one trailing CRLF", "human\r\n", "", "\r\n"],
+			["three trailing CRLFs", "human\r\n\r\n\r\n", "", "\r\n"],
+			["whitespace without a newline", " \t", "\n", "\n"],
+			["whitespace with LF", " \t\n", "", "\n"],
+			["whitespace with CRLF", " \t\r\n", "", "\r\n"],
+			["only LFs", "\n\n\n", "", "\n"],
+			["only CRLFs", "\r\n\r\n\r\n", "", "\r\n"],
+			["trailing whitespace after LF", "human\n \t", "\n", "\n"],
+			["trailing whitespace after CRLF", "human\r\n \t", "\r\n", "\r\n"],
+		])("adopting %s with no regions preserves every existing byte", (_label, human, separator, eol) => {
+			const doc = Result.getOrThrow(ManagedDocument.parseResult({ namespace: NS, key: KEY, text: human }));
+			const managed = apply(doc, []);
+			assert.strictEqual(managed.text, `${human}${separator}${doc.sentinel}${eol}`);
+			assert.deepStrictEqual(managed.regions, []);
+			assert.strictEqual(apply(managed, []).text, managed.text, "adoption is byte-identical on repeat");
+		});
+
 		it("matches the CommentMarker rendering for the same namespace and key", () => {
 			// PullRequestComment.upsert appends `<!-- namespace:key -->`; the
 			// document primitive must agree on the spelling, or the comment the

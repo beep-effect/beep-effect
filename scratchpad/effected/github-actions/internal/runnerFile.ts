@@ -15,11 +15,22 @@ const BASE_DELIMITER = "EFFECTED_EOF";
 
 /** A delimiter guaranteed absent from `value`. @internal */
 export const delimiterFor = (value: string): string => {
-	let delimiter = BASE_DELIMITER;
-	while (value.includes(delimiter)) {
-		delimiter = `${delimiter}_`;
+	let longestRun = -1;
+	let occurrence = value.indexOf(BASE_DELIMITER);
+	while (occurrence >= 0) {
+		const runStart = occurrence + BASE_DELIMITER.length;
+		let runEnd = runStart;
+		while (value[runEnd] === "_") {
+			runEnd++;
+		}
+		const runLength = runEnd - runStart;
+		if (runLength > longestRun) {
+			longestRun = runLength;
+		}
+		// No base delimiter can begin inside the underscore run just scanned.
+		occurrence = value.indexOf(BASE_DELIMITER, runEnd);
 	}
-	return delimiter;
+	return longestRun < 0 ? BASE_DELIMITER : `${BASE_DELIMITER}${"_".repeat(longestRun + 1)}`;
 };
 
 /**
@@ -48,7 +59,7 @@ export const delimiterFor = (value: string): string => {
  * @internal
  */
 export const isUsableName = (name: string): boolean =>
-	name !== "" && !/[\r\n]/.test(name) && !name.includes("=") && !name.includes("<<") && !name.endsWith("<");
+	name !== "" && /[\r\n=]|<<|<$/.test(name) === false;
 
 /**
  * One heredoc block, ready to append. The caller has checked the name with

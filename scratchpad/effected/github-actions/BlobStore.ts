@@ -1,3 +1,5 @@
+import * as A from "effect/Array";
+import * as Str from "effect/String";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as Match from "effect/Match";
 import { $ScratchpadId } from "@beep/identity/packages";
@@ -12,7 +14,7 @@ import { HttpClient, HttpClientRequest } from "effect/http";
 import type { ActionOutputs } from "./ActionOutputs.ts";
 import type { BlobEnvelopeError } from "./BlobEnvelope.ts";
 import { BlobEnvelope } from "./BlobEnvelope.ts";
-import { sign } from "./internal/sigv4.ts";
+import { sign, uriEncode } from "./internal/sigv4.ts";
 import { unstubbed } from "./internal/unstubbed.ts";
 import { Secret } from "./Secret.ts";
 
@@ -230,14 +232,12 @@ const makeS3 = Effect.fn("makeS3")(function* (config: S3Config) {
 		const sessionToken = config.sessionToken === undefined ? undefined : yield* Secret.forSigning(config.sessionToken);
 
 		const objectPath = (key: string): string =>
-			[config.bucket, ...(config.prefix === undefined ? [] : [config.prefix]), key]
-				.join("/")
-				.replaceAll(/\/{2,}/g, "/");
+			A.join([config.bucket, ...(config.prefix === undefined ? [] : [config.prefix]), key], "/");
 
-		const request = (method: string, key: string, body: Uint8Array) => {
+		const request = (method: string, key: string, body: Uint8Array, now: DateTime.Utc) => {
 			const path = objectPath(key);
 			const headers = sign(
-				{ method, path, host, headers: {}, body, now: DateTime.toDateUtc(DateTime.nowUnsafe()) },
+				{ method, path, host, headers: {}, body, now: DateTime.toDateUtc(now) },
 				{
 					accessKeyId: config.accessKeyId,
 					secretAccessKey,
@@ -246,18 +246,18 @@ const makeS3 = Effect.fn("makeS3")(function* (config: S3Config) {
 					service: "s3",
 				},
 			);
-			return { url: `${endpoint}/${path}`, headers };
+			return { url: `${endpoint}/${A.join(A.map(Str.split(path, "/"), uriEncode), "/")}`, headers };
 		};
 
-		const send = (method: "GET" | "PUT" | "HEAD", key: string, body: Uint8Array) =>
-			Effect.suspend(() => {
-				const { url, headers } = request(method, key, body);
-				const base = HttpClientRequest.make(method)(url, { headers });
-				const built = body.length === 0 ? base : HttpClientRequest.bodyUint8Array(base, body);
-				return http
-					.execute(built)
-					.pipe(Effect.mapError((cause) => BlobStoreError.make({ reason: "unreachable", key, cause })));
-			});
+		const send = Effect.fn("BlobStore.send")(function* (method: "GET" | "PUT" | "HEAD", key: string, body: Uint8Array) {
+			const now = yield* DateTime.now;
+			const { url, headers } = request(method, key, body, now);
+			const base = HttpClientRequest.make(method)(url, { headers });
+			const built = body.length === 0 ? base : HttpClientRequest.bodyUint8Array(base, body);
+			return yield* http
+				.execute(built)
+				.pipe(Effect.mapError((cause) => BlobStoreError.make({ reason: "unreachable", key, cause })));
+		});
 
 		/** Anything outside 2xx is the store refusing; a caller reads `404` first where a miss is an answer. */
 		const accepted = (key: string, status: number): Effect.Effect<void, BlobStoreError> =>

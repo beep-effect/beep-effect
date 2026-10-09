@@ -445,6 +445,32 @@ describe("CacheKey", () => {
 			),
 		);
 
+		it.effect("matches two-dot filenames consistently as literals and wildcards", () =>
+			walking(
+				(root) => Effect.gen(function* () {
+					const literal = yield* CacheKey.matchingFiles({ workspace: root, patterns: ["..lock"] });
+					const wildcard = yield* CacheKey.matchingFiles({ workspace: root, patterns: ["..*"] });
+					assert.deepStrictEqual(literal, ["/ws/..lock"]);
+					assert.deepStrictEqual(wildcard, literal);
+					const literalHash = yield* CacheKey.hashMatching({ workspace: root, patterns: ["..lock"] });
+					assert.isTrue(O.isSome(literalHash));
+					assert.deepStrictEqual(literalHash, yield* CacheKey.hashMatching({ workspace: root, patterns: ["..*"] }));
+				}),
+				{ "/ws/..lock": "two dots\n" },
+			),
+		);
+
+		it.effect("keeps deterministic code-unit order for mixed-case and Unicode matches", () =>
+			walking(
+				(root) => Effect.gen(function* () {
+					const matched = yield* CacheKey.matchingFiles({ workspace: root, patterns: ["*.order"] });
+					assert.deepStrictEqual(matched, ["/ws/Z.order", "/ws/a.order", "/ws/ä.order"]);
+					assert.deepStrictEqual(yield* CacheKey.hashFiles(matched), yield* CacheKey.hashFiles(["/ws/ä.order", "/ws/a.order", "/ws/Z.order"]));
+				}),
+				{ "/ws/ä.order": "last", "/ws/a.order": "middle", "/ws/Z.order": "first" },
+			),
+		);
+
 		it.effect("drops a literal that climbs above the workspace, even when the file exists", () =>
 			walking(
 				(root) =>

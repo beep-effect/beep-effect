@@ -66,14 +66,14 @@ const readAnnotations = (record: Readonly<Record<string, unknown>>): AnnotationP
 	const endLine = numericAnnotation(record, "endLine");
 	const startColumn = numericAnnotation(record, "startColumn");
 	const endColumn = numericAnnotation(record, "endColumn");
-	return {
-		...O.getSomesStruct({ title: O.fromUndefinedOr(title) }),
-		...O.getSomesStruct({ file: O.fromUndefinedOr(file) }),
-		...O.getSomesStruct({ startLine: O.fromUndefinedOr(startLine) }),
-		...O.getSomesStruct({ endLine: O.fromUndefinedOr(endLine) }),
-		...O.getSomesStruct({ startColumn: O.fromUndefinedOr(startColumn) }),
-		...O.getSomesStruct({ endColumn: O.fromUndefinedOr(endColumn) }),
-	};
+	return O.getSomesStruct({
+		title: O.fromUndefinedOr(title),
+		file: O.fromUndefinedOr(file),
+		startLine: O.fromUndefinedOr(startLine),
+		endLine: O.fromUndefinedOr(endLine),
+		startColumn: O.fromUndefinedOr(startColumn),
+		endColumn: O.fromUndefinedOr(endColumn),
+	});
 };
 
 /**
@@ -312,17 +312,21 @@ const make = Effect.gen(function* () {
 				state.entries.push(formatMessage(options.message));
 			});
 
-			return yield* effect.pipe(
-				// `All` so debug output is captured rather than dropped: the whole
-				// point of a buffer is that the verbose transcript exists if the step
-				// fails.
-				Effect.provideService(References.MinimumLogLevel, "All"),
-				Effect.provideService(Logger.CurrentLoggers, new Set([buffering])),
-				Effect.provideService(ActiveBuffer, state),
-				Effect.onExit((exit) =>
-					// Only a SUCCESS is ever discarded: a failure, a defect or an
-					// interruption is exactly the moment the transcript was kept for.
-					Exit.isSuccess(exit) && options?.onSuccess === "discard" ? discard(state) : flush(state),
+			return yield* Effect.scopedWith((scope) =>
+				Effect.flatMap(Layer.buildWithScope(Logger.layer([buffering]), scope), (context) =>
+					effect.pipe(
+						// `All` so debug output is captured rather than dropped: the whole
+						// point of a buffer is that the verbose transcript exists if the step
+						// fails.
+						Effect.provideService(References.MinimumLogLevel, "All"),
+						Effect.provideContext(context),
+						Effect.provideService(ActiveBuffer, state),
+						Effect.onExit((exit) =>
+							// Only a SUCCESS is ever discarded: a failure, a defect or an
+							// interruption is exactly the moment the transcript was kept for.
+							Exit.isSuccess(exit) && options?.onSuccess === "discard" ? discard(state) : flush(state),
+						),
+					),
 				),
 			);
 		});

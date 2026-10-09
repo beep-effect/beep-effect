@@ -64,6 +64,20 @@ describe("BlobEnvelope", () => {
 			result.success.body[0] = 99;
 			assert.deepStrictEqual([...frame], [...copy], "the frame must be unchanged");
 		});
+
+		it("copies the body of a Buffer frame without sharing ownership", () => {
+			const frame = Buffer.from(encoded({ tag: "t", durationMs: 1 }, bytes(1, 2, 3)));
+			const result = BlobEnvelope.decodeResult(frame, Meta);
+			if (!Result.isSuccess(result)) {
+				assert.fail("expected decode to succeed");
+			}
+			assert.deepStrictEqual([...result.success.body], [1, 2, 3]);
+			const copy = Uint8Array.from(frame);
+			result.success.body[0] = 99;
+			assert.deepStrictEqual([...frame], [...copy], "mutating the body must leave the Buffer frame unchanged");
+			frame[frame.length - 2] = 88;
+			assert.deepStrictEqual([...result.success.body], [99, 2, 3], "mutating the Buffer frame must leave the body unchanged");
+		});
 	});
 
 	describe("legacy and version handling", () => {

@@ -1,3 +1,6 @@
+import * as A from "effect/Array";
+import * as Order from "effect/Order";
+import * as Str from "effect/String";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as Function from "effect/Function";
 import { sha256Hex } from "./digest.ts";
@@ -55,7 +58,7 @@ export interface SigV4Credentials {
 /** One request to sign. */
 export interface SigV4Request {
 	readonly method: string;
-	/** The path, already split into segments; each is encoded here. */
+	/** The raw path; every segment is encoded here, preserving empty segments. */
 	readonly path: string;
 	readonly host: string;
 	/** Headers to sign, in any case and any order. */
@@ -123,17 +126,16 @@ export const canonicalize: {
 	// other order produces a valid-looking signature the server will reject with
 	// nothing more informative than `SignatureDoesNotMatch`.
 	const lowered = MutableHashMap.fromIterable(R.toEntries(headers).map(([name, value]) => [name.toLowerCase(), value] as const));
-	const canonicalNames = [...MutableHashMap.keys(lowered)].sort();
+	const canonicalNames = A.sort(MutableHashMap.keys(lowered), Order.String);
 	const canonicalHeaders = canonicalNames
 		.map((name) => `${name}:${(O.getOrElse(MutableHashMap.get(lowered, name), () => "")).trim().replace(/\s+/g, " ")}\n`)
 		.join("");
 	const signedHeaders = canonicalNames.join(";");
 
-	const canonicalPath = `/${request.path
-		.split("/")
-		.filter((segment) => segment !== "")
-		.map(uriEncode)
-		.join("/")}`;
+	const canonicalPath = A.join(
+		A.map(Str.split(Str.startsWith("/")(request.path) ? request.path : `/${request.path}`, "/"), uriEncode),
+		"/",
+	);
 
 	return {
 		headers,

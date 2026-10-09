@@ -6,7 +6,6 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Result from "effect/Result";
 import { ActionEnvironment } from "./ActionEnvironment.ts";
 import { ActionOutputs } from "./ActionOutputs.ts";
 import { heredocBlock, isUsableName } from "./internal/runnerFile.ts";
@@ -138,13 +137,9 @@ const make = Effect.gen(function* () {
 			// value (a bigint) fails HERE, naming the key, instead of one phase
 			// later as a `malformed` mystery. States are small; the round-trip is
 			// noise next to the file append.
-			const { parsed, serialized } = yield* Effect.try({
-				try: () => {
-					const serialized = Result.getOrThrowWith(S.encodeResult(Json)(encoded), (error) => error);
-					return { parsed: Result.getOrThrowWith(S.decodeResult(Json)(serialized), (error) => error), serialized };
-				},
-				catch: (cause) => ActionStateError.make({ reason: "notPlainJson", key, cause }),
-			});
+			const notPlainJson = (cause: unknown) => ActionStateError.make({ reason: "notPlainJson", key, cause });
+			const serialized = yield* S.encodeEffect(Json)(encoded).pipe(Effect.mapError(notPlainJson));
+			const parsed = yield* S.decodeEffect(Json)(serialized).pipe(Effect.mapError(notPlainJson));
 			yield* S.decodeUnknownEffect(schema)(parsed).pipe(
 				Effect.mapError((cause) => ActionStateError.make({ reason: "notPlainJson", key, cause })),
 			);
@@ -158,9 +153,14 @@ const make = Effect.gen(function* () {
 			Effect.flatMap(read(key, schema), (found) =>
 				Effect.fromOption(found, () => ActionStateError.make({ reason: "missing", key })),
 			),
-		saveSecret: (key: string, secret: string) =>
+		saveSecret: Effect.fnUntraced(function* (key: string, secret: string) {
 			// Mask first, then persist. The ordering is the guarantee.
-			Effect.flatMap(outputs.setSecret(secret), () => write(key, Result.getOrThrowWith(S.encodeResult(Json)(secret), (error) => error))),
+			yield* outputs.setSecret(secret);
+			const serialized = yield* S.encodeEffect(Json)(secret).pipe(
+				Effect.mapError((cause) => ActionStateError.make({ reason: "writeFailed", key, cause })),
+			);
+			yield* write(key, serialized);
+		}),
 	} satisfies ActionStateShape;
 });
 

@@ -6,6 +6,7 @@ import * as O from "effect/Option";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as DateTime from "effect/DateTime";
+import * as TestClock from "effect/testing/TestClock";
 import { FetchHttpClient } from "effect/http";
 import type { S3Config } from "../../effected/github-actions/index.ts";
 import { ActionOutputs, BlobStore, BlobStoreError, NotABlobEnvelopeError } from "../../effected/github-actions/index.ts";
@@ -168,6 +169,84 @@ describe("BlobStore", () => {
 					yield* (yield* BlobStore).has("k");
 				}).pipe(Effect.provide(s3(fake, { ...CONFIG, prefix: "ci" })));
 				assert.strictEqual(seen[0], "https://account.r2.cloudflarestorage.com/cache/ci/k");
+			}),
+		);
+
+		it.effect("encodes raw object segments once and signs the resource sent", () =>
+			Effect.gen(function* () {
+				yield* TestClock.setTime(1704067200000);
+				const keys = ["a#b", "a?b", "a%2Fb", "a//b", "folder/", "/leading//"];
+				const paths = ["a%23b", "a%3Fb", "a%252Fb", "a//b", "folder/", "/leading//"];
+				const seen: Array<{ url: string; authorization: string | null }> = [];
+				const fake: typeof globalThis.fetch = Object.assign(async (input: Parameters<typeof globalThis.fetch>[0], init: Parameters<typeof globalThis.fetch>[1]) => {
+					seen.push({ url: String(input), authorization: new Headers(init?.headers).get("authorization") });
+					return new Response(null, { status: 200 });
+				}, { preconnect: () => {} });
+				yield* Effect.gen(function* () {
+					const store = yield* BlobStore;
+					for (const key of keys) {
+						yield* store.has(key);
+					}
+				}).pipe(Effect.provide(s3(fake, { ...CONFIG, prefix: "ci?#%/" })));
+				assert.deepStrictEqual(seen.map((entry) => entry.url), paths.map((path) => `${CONFIG.endpoint}/cache/ci%3F%23%25//${path}`));
+				for (const [index, key] of keys.entries()) {
+					const expected = sign({ method: "HEAD", path: `cache/ci?#%//${key}`, host: "account.r2.cloudflarestorage.com", headers: {}, body: new Uint8Array(0), now: DateTime.toDateUtc(DateTime.makeUnsafe("2024-01-01T00:00:00Z")) }, { accessKeyId: CONFIG.accessKeyId, secretAccessKey: "secret-key", region: CONFIG.region, service: "s3" });
+					assert.strictEqual(seen[index]?.authorization, expected.authorization);
+				}
+			}),
+		);
+
+		it.effect("keeps repeated and trailing slash keys distinct in storage", () =>
+			Effect.gen(function* () {
+				const stored = new Map<string, Uint8Array>();
+				const fake: typeof globalThis.fetch = Object.assign(async (input: Parameters<typeof globalThis.fetch>[0], init: Parameters<typeof globalThis.fetch>[1]) => {
+					const url = String(input);
+					if (init?.method === "PUT") {
+						stored.set(url, new Uint8Array(await new Response(init.body).arrayBuffer()));
+						return new Response(null, { status: 200 });
+					}
+					const bytes = stored.get(url);
+					return bytes === undefined ? new Response(null, { status: 404 }) : new Response(bytes, { status: 200 });
+				}, { preconnect: () => {} });
+				const keys = ["a/b", "a//b", "folder", "folder/", "a#b", "a?b", "a%2Fb"];
+				yield* Effect.gen(function* () {
+					const store = yield* BlobStore;
+					for (const [index, key] of keys.entries()) {
+						yield* store.put(key, { metadata: Meta.make({ tag: key, durationMs: index }), body: new Uint8Array([index]) }, Meta);
+					}
+					for (const [index, key] of keys.entries()) {
+						const found = yield* store.get(key, Meta);
+						assert.isTrue(O.isSome(found));
+						if (O.isSome(found)) {
+							assert.strictEqual(found.value.metadata.tag, key);
+							assert.deepStrictEqual(found.value.body, new Uint8Array([index]));
+						}
+					}
+				}).pipe(Effect.provide(s3(fake)));
+				assert.strictEqual(stored.size, keys.length);
+			}),
+		);
+
+		it.effect("reads the signing instant from TestClock on every request", () =>
+			Effect.gen(function* () {
+				const seen: Array<{ date: string | null; authorization: string | null }> = [];
+				const fake: typeof globalThis.fetch = Object.assign(async (_input: Parameters<typeof globalThis.fetch>[0], init: Parameters<typeof globalThis.fetch>[1]) => {
+					const headers = new Headers(init?.headers);
+					seen.push({ date: headers.get("x-amz-date"), authorization: headers.get("authorization") });
+					return new Response(null, { status: 200 });
+				}, { preconnect: () => {} });
+				yield* Effect.gen(function* () {
+					const store = yield* BlobStore;
+					yield* TestClock.setTime(1704067200000);
+					yield* store.has("key");
+					yield* TestClock.setTime(1704153600000);
+					yield* store.has("key");
+				}).pipe(Effect.provide(s3(fake)));
+				assert.deepStrictEqual(seen.map((entry) => entry.date), ["20240101T000000Z", "20240102T000000Z"]);
+				for (const [index, instant] of ["2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z"].entries()) {
+					const expected = sign({ method: "HEAD", path: "cache/key", host: "account.r2.cloudflarestorage.com", headers: {}, body: new Uint8Array(0), now: DateTime.toDateUtc(DateTime.makeUnsafe(instant)) }, { accessKeyId: CONFIG.accessKeyId, secretAccessKey: "secret-key", region: CONFIG.region, service: "s3" });
+					assert.strictEqual(seen[index]?.authorization, expected.authorization);
+				}
 			}),
 		);
 

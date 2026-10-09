@@ -168,7 +168,7 @@ export const describeCause = (cause: Cause.Cause<unknown>): string => {
 
 /** The `[Tag]: message` half, over anything a failure or a defect can be. */
 const describeError = (error: unknown): string => {
-	if (P.isObjectKeyword(error) && !P.isFunction(error) && "_tag" in error) {
+	if (P.isObjectOrArray(error) && "_tag" in error) {
 		const tagged = error;
 		const detail =
 			P.hasProperty(tagged, "message") && P.isString(tagged.message) && tagged.message !== ""

@@ -1,5 +1,6 @@
 import * as Match from "effect/Match";
 import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as S from "effect/Schema";
 
 const $I = $ScratchpadId.create("effected/github-actions/CheckState");
@@ -27,7 +28,7 @@ export class UnhandledCheckStateError extends S.TaggedError<UnhandledCheckStateE
  *
  * @public
  */
-export const CheckState = S.Literals([
+export const CheckState = LiteralKit([
 	"running",
 	"pass",
 	"fail",
@@ -35,7 +36,7 @@ export const CheckState = S.Literals([
 	"user_interaction_required",
 	"skipped",
 	"timeout",
-]).pipe($I.annoteSchema("CheckState", { description: "The kit's check-state vocabulary." }));
+]).annotate($I.annote("CheckState", { description: "The kit's check-state vocabulary." }));
 
 /**
  * The type of `CheckState`.

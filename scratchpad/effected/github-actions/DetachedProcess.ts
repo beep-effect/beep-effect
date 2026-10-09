@@ -166,12 +166,18 @@ export const ProcessId = S.Number.pipe(
 	S.check(
 		S.makeFilter(
 			(value) => (Number.isInteger(value) && value > 0 ? undefined : "Expected a positive integer process id"),
-			undefined,
+			$I.annote("PositiveIntegerProcessId", {
+				title: "Positive integer process id",
+				description: "A positive integer identifying a process rather than a process group.",
+			}),
 			true,
 		),
 		S.isFinite(),
 	),
 	S.brand("ProcessId"),
+	$I.annoteSchema("ProcessId", {
+		description: "A validated positive integer process id persisted across action phases.",
+	}),
 );
 
 /**

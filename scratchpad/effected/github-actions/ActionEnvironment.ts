@@ -5,7 +5,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Result from "effect/Result";
+import * as R from "effect/Record";
 
 const $I = $ScratchpadId.create("effected/github-actions/ActionEnvironment");
 
@@ -196,7 +196,7 @@ const make = Effect.fn("make")(function* (base: Readonly<Record<string, string |
 
 		const lookup = (name: string): Effect.Effect<O.Option<string>> =>
 			Effect.map(EnvOverrides, (overrides) => {
-				const value = overrides[name] ?? base[name];
+				const value = O.getOrUndefined(R.get(overrides, name)) ?? O.getOrUndefined(R.get(base, name));
 				// The runner sets absent inputs to the empty string; treating "" as
 				// present would make every unset optional input look supplied.
 				return value === undefined || value === "" ? O.none() : O.some(value);
@@ -259,15 +259,15 @@ const make = Effect.fn("make")(function* (base: Readonly<Record<string, string |
 							}),
 					),
 				);
-				return yield* Effect.try({
-					try: () => Result.getOrThrowWith(S.decodeResult(Json)(raw), (error) => error),
-					catch: (cause) =>
+				return yield* S.decodeEffect(Json)(raw).pipe(
+					Effect.mapError((cause) =>
 						ActionEnvironmentError.make({
 							reason: "malformed",
 							name: "GITHUB_EVENT_PATH",
 							detail: `not valid JSON: ${String(cause)}`,
 						}),
-				});
+					),
+				);
 			}),
 
 			withEnv: (overrides, effect) =>

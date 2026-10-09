@@ -59,7 +59,7 @@ export {
 	RunnerFileUnavailableError,
 	RunnerFileWriteError,
 } from "./ActionOutputs.ts";
-export { ActionState, ActionStateError, type ActionStateShape } from "./ActionState.ts";
+export { ActionState, ActionStateError, type ActionStateShape, InvalidActionStateNameError } from "./ActionState.ts";
 export { ActionsIdentityToken } from "./ActionsIdentityToken.ts";
 export { ActionsProvenance } from "./ActionsProvenance.ts";
 export {
@@ -85,7 +85,7 @@ export {
 export { GitHubCacheBlobStore } from "./BlobStore.githubCache.ts";
 export { BlobStore, BlobStoreError, type BlobStoreShape, type S3Config, type StoredBlob } from "./BlobStore.ts";
 export { BlobTransferError, type DataBlobTransfer, type FileBlobTransfer } from "./BlobTransfer.ts";
-export { CacheKey, CacheKeyBadPatternError, type CacheKeyError, CacheKeyReadError } from "./CacheKey.ts";
+export { CacheKey, CacheKeyBadPatternError, type CacheKeyError, CacheKeyReadError, InvalidDigestLengthError } from "./CacheKey.ts";
 export {
 	CheckDocument,
 	CheckDocumentError,
@@ -101,6 +101,7 @@ export {
 	type CheckRunProjection,
 	CheckState,
 	projectCheckState,
+	UnhandledCheckStateError,
 } from "./CheckState.ts";
 export { ChildEnv, type PathPrependEnv, type PathPrependOptions } from "./ChildEnv.ts";
 export {
@@ -113,6 +114,7 @@ export {
 	DetachedSpawnFailedError,
 	type DetachedSpawnOptions,
 	InvalidPidError,
+	MissingProcessIdError,
 	ProcessId,
 	type ReadinessOptions,
 } from "./DetachedProcess.ts";
@@ -136,7 +138,7 @@ export {
 	type ProvisionOptions,
 	type ReadOptions,
 } from "./GitHubToken.ts";
-export { ManagedDocument, ManagedDocumentError, type ManagedDocumentSource } from "./ManagedDocument.ts";
+export { ManagedDocument, ManagedDocumentError, type ManagedDocumentSource, RejectedRegionDialectError } from "./ManagedDocument.ts";
 export { OidcClaims, OidcTokenError, OidcTokenIssuer, type OidcTokenIssuerShape } from "./OidcTokenIssuer.ts";
 export {
 	AmbientPackageManager,

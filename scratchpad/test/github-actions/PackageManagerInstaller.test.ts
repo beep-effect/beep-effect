@@ -1642,6 +1642,49 @@ describe("PackageManagerInstaller", () => {
 	});
 
 	describe("the error reasons that remain", () => {
+		it.live("rejects escaping bin names before writing any shim on installs and cache hits", () =>
+			Effect.gen(function* () {
+				for (const runnerOs of ["Linux", "Windows"]) {
+					for (const cached of [false, true]) {
+						for (const name of ["../../outside", "../package.json", "nested/cli", "nested\\cli", "/absolute", "C:\\absolute", "", ".", ".."]) {
+							const root = scratch();
+							yield* Effect.gen(function* () {
+								const extracted = join(root, "extracted", "package");
+								mkdirSync(join(extracted, "bin"), { recursive: true });
+								const manifest = Result.getOrThrowWith(S.encodeResult(Json)({
+									bin: { pnpm: "bin/pnpm.cjs", [name]: "bin/pnpm.cjs" },
+								}), (error) => error);
+								writeFileSync(join(extracted, "package.json"), manifest);
+								writeFileSync(join(extracted, "bin", "pnpm.cjs"), "console.log('pnpm')");
+								const outside = join(root, "extracted", "outside");
+								writeFileSync(outside, "untouched");
+								let cachedEntry = false;
+								const error = yield* Effect.flip(install("pnpm@2.0.7").pipe(Effect.provide(stubbed({
+									env: { RUNNER_OS: runnerOs },
+									installer: {
+										find: () => cached ? Effect.succeedSome(extracted) : Effect.succeedNone,
+										download: () => Effect.succeed(join(root, "unused-archive")),
+										extractTar: () => Effect.succeed(join(root, "extracted")),
+										cacheDir: () => Effect.sync(() => {
+											cachedEntry = true;
+											return extracted;
+										}),
+									},
+								}))));
+								assert.instanceOf(error, PackageManagerInstallerError);
+								assert.strictEqual(error.reason, "layoutUnexpected");
+								assert.include(error.subject ?? "", `bin ${name}`);
+								assert.isFalse(existsSync(join(extracted, ".bin")));
+								assert.isFalse(cachedEntry);
+								assert.strictEqual(readFileSync(outside, "utf8"), "untouched");
+								assert.strictEqual(readFileSync(join(extracted, "package.json"), "utf8"), manifest);
+							}).pipe(Effect.ensuring(Effect.sync(() => rmSync(root, { recursive: true, force: true }))));
+						}
+					}
+				}
+			}),
+		);
+
 		it.live("downloadFailed carries the ToolInstaller failure as cause", () =>
 			Effect.gen(function* () {
 				const root = scratch();

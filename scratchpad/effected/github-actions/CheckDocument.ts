@@ -1,18 +1,24 @@
-import * as MutableHashMap from "effect/MutableHashMap";
 import { $ScratchpadId } from "@beep/identity/packages";
+import * as A from "effect/Array";
+import * as BigInt from "effect/BigInt";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
 import * as Latch from "effect/Latch";
 import * as Layer from "effect/Layer";
+import * as Num from "effect/Number";
+import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
+import * as Str from "effect/String";
 import { CheckState } from "./CheckState.ts";
 import { unstubbed } from "./internal/unstubbed.ts";
 import { ManagedDocument } from "./ManagedDocument.ts";
-import * as P from "effect/Predicate";
 
 const $I = $ScratchpadId.create("effected/github-actions/CheckDocument");
 
@@ -41,6 +47,35 @@ export class CheckReport extends S.Class<CheckReport>($I`CheckReport`)({
 	/** Where the check's name should link. */
 	url: S.optionalKey(S.String).annotateKey({ description: "Where the check's name should link." }),
 }, $I.annote("CheckReport", { description: "What a run knows about one of its checks: the authoritative state, and the presentation facts a renderer projects into the document." })) {}
+
+/**
+ * An immutable registry snapshot with the order in which checks were first reported.
+ *
+ * **Details**
+ * HashMap iteration has no insertion-order guarantee. Renderers traverse `order`
+ * and look up entries in `checks`; replacing a check leaves its position intact.
+ *
+ * **Example** (Reading checks in first-report order)
+ * ```ts
+ * import * as A from "effect/Array";
+ * import * as HashMap from "effect/HashMap";
+ * import { CheckDocumentSnapshot, CheckReport } from "./CheckDocument.ts";
+ *
+ * const snapshot = CheckDocumentSnapshot.make({
+ *   checks: HashMap.make(["build", CheckReport.make({ state: "pass" })]),
+ *   order: ["build"],
+ * });
+ * const states = A.map(snapshot.order, (key) => HashMap.getUnsafe(snapshot.checks, key).state);
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ * @public
+ */
+export class CheckDocumentSnapshot extends S.Class<CheckDocumentSnapshot>($I`CheckDocumentSnapshot`)({
+	checks: S.HashMap(S.String, CheckReport).annotateKey({ description: "The latest report for each check." }),
+	order: S.Array(S.String).annotateKey({ description: "Check keys in first-report order." }),
+}, $I.annote("CheckDocumentSnapshot", { description: "An immutable check registry and its explicit first-report order." })) {}
 
 /** What each {@link CheckDocumentError} kind reads as. */
 const KIND_PROSE = {
@@ -78,12 +113,13 @@ export class CheckDocumentError extends S.TaggedError<CheckDocumentError>($I`Che
  * A run's identity for staleness ordering: when it started and which run it
  * is.
  *
- * @remarks
+ * **Details**
  * Two delayed workflows can race for one document — a re-run's stale pass
  * must not overwrite a newer run's regions. The ordering is **total**:
- * `at` compares first (as epoch milliseconds when both sides `Date.parse`
- * cleanly, lexically otherwise), `runId` breaks ties (numerically when both
- * parse to finite numbers, lexically otherwise), and two equal stamps compare
+ * `at` compares first (by DateTime order when both sides parse, treating
+ * zone-less timestamps as UTC, lexically otherwise), `runId` breaks ties
+ * (exactly for decimal integers, numerically for other finite spellings,
+ * lexically otherwise), and two equal stamps compare
  * as at-least-as-recent — a run may refine its own regions.
  *
  * @public
@@ -114,21 +150,27 @@ export class CheckDocumentStamp extends S.Class<CheckDocumentStamp>($I`CheckDocu
 	}
 }
 
-/** A total order over two comparable values. */
-const order = <T extends string | number>(left: T, right: T): number => (left === right ? 0 : left < right ? -1 : 1);
+/** Instant order when both sides parse as dates, lexical otherwise. */
+const compareAt = (left: string, right: string): number =>
+	O.getOrElse(
+		O.map(O.all([DateTime.make(left), DateTime.make(right)]), ([leftAt, rightAt]) => DateTime.Order(leftAt, rightAt)),
+		() => Str.Order(left, right),
+	);
 
-/** Epoch order when both sides parse as dates, lexical otherwise. */
-const compareAt = (left: string, right: string): number => {
-	const leftEpoch = Date.parse(left);
-	const rightEpoch = Date.parse(right);
-	return Number.isNaN(leftEpoch) || Number.isNaN(rightEpoch) ? order(left, right) : order(leftEpoch, rightEpoch);
-};
+/** Decimal integer spellings eligible for exact run-id ordering. */
+const DecimalRunId = S.String.check(S.isPattern(/^[+-]?\d+$/, {
+	identifier: "DecimalRunId",
+	title: "Decimal run identifier",
+	description: "A signed or unsigned decimal integer, without a fractional or exponent part.",
+})).annotate($I.annote("DecimalRunId", { description: "A decimal integer run identifier that can be compared without rounding." }));
+const parseDecimalRunId = S.decodeUnknownOption(DecimalRunId);
+const parseFiniteRunId = S.decodeUnknownOption(S.FiniteFromString);
 
 /**
- * Numeric order when both sides are non-blank finite numbers, lexical
- * otherwise.
+ * Exact order for decimal integers; numeric order for other non-blank finite
+ * number spellings; lexical otherwise.
  *
- * @remarks
+ * **Details**
  * The blank guard exists because `Number("")` and `Number("  ")` are both a
  * finite `0` — without it a blank `runId` (plausible when `GITHUB_RUN_ID` is
  * unset in a local or self-hosted run) would compare numerically equal to
@@ -136,14 +178,18 @@ const compareAt = (left: string, right: string): number => {
  * stays total and deterministic.
  */
 const compareRunId = (left: string, right: string): number => {
-	if (left.trim() !== "" && right.trim() !== "") {
-		const leftNumber = Number(left);
-		const rightNumber = Number(right);
-		if (Number.isFinite(leftNumber) && Number.isFinite(rightNumber)) {
-			return order(leftNumber, rightNumber);
-		}
-	}
-	return order(left, right);
+	const leftTrimmed = Str.trim(left);
+	const rightTrimmed = Str.trim(right);
+	const integers = O.all([
+		O.flatMap(parseDecimalRunId(leftTrimmed), BigInt.fromString),
+		O.flatMap(parseDecimalRunId(rightTrimmed), BigInt.fromString),
+	]);
+	return O.getOrElse(O.map(integers, ([leftId, rightId]) => BigInt.Order(leftId, rightId)), () => {
+		const numbers = Str.isEmpty(leftTrimmed) || Str.isEmpty(rightTrimmed)
+			? O.none()
+			: O.all([parseFiniteRunId(left), parseFiniteRunId(right)]);
+		return O.getOrElse(O.map(numbers, ([leftId, rightId]) => Num.Order(leftId, rightId)), () => Str.Order(left, right));
+	});
 };
 
 /** The stamp a document's own regions carry, when they carry one. */
@@ -240,7 +286,7 @@ export interface CheckDocumentOptions<E = unknown> {
 	 * produce the same entries, because byte-identical output is what
 	 * suppresses the write.
 	 */
-	readonly render: (checks: ReadonlyMap<string, CheckReport>) => ReadonlyArray<readonly [key: string, content: string]>;
+	readonly render: (snapshot: CheckDocumentSnapshot) => ReadonlyArray<readonly [key: string, content: string]>;
 	/** Where the rendered document goes. */
 	readonly sink: CheckDocumentSink<E>;
 	/**
@@ -302,8 +348,8 @@ export interface CheckDocumentShape {
 	 * `pass` followed by `fail` leaves `fail` even inside one debounce window.
 	 */
 	readonly report: (check: string, report: CheckReport) => Effect.Effect<void>;
-	/** The registry as of now, in first-report order. */
-	readonly checks: Effect.Effect<ReadonlyMap<string, CheckReport>>;
+	/** The registry as of now, with its explicit first-report order. */
+	readonly checks: Effect.Effect<CheckDocumentSnapshot>;
 	/**
 	 * Reconcile immediately, skipping the debounce.
 	 *
@@ -321,7 +367,7 @@ export interface CheckDocumentShape {
  * into, debounced onto a marker-delimited document, written through a narrow
  * sink.
  *
- * @remarks
+ * **Details**
  * **Push, not pull.** The run owns its checks and knows when they resolve;
  * nothing here polls GitHub. Consumers call `report` as states change, and a
  * background fiber projects the registry onto a {@link ManagedDocument} —
@@ -336,20 +382,25 @@ export interface CheckDocumentShape {
  * `layer` mints fresh state per call — one layer per document. Bind it to a
  * `const` if two parts of a program must share one registry.
  *
- * @example
+ * **Example** (Rendering a check status table)
  * ```ts
  * import { CheckDocument, CheckReport, GitHubMarkdown } from "./index.ts";
  * import * as Effect from "effect/Effect";
+ * import * as A from "effect/Array";
+ * import * as HashMap from "effect/HashMap";
  *
  * const layer = CheckDocument.layer({
  *   namespace: "my-action",
  *   key: "release-validation",
- *   render: (checks) => [
+ *   render: ({ checks, order }) => [
  *     [
  *       "header",
  *       GitHubMarkdown.table(
  *         ["Check", "Outcome"],
- *         [...checks].map(([key, check]) => [key, check.outcome ?? check.state]),
+ *         A.map(order, (key) => {
+ *           const check = HashMap.getUnsafe(checks, key);
+ *           return [key, check.outcome ?? check.state];
+ *         }),
  *       ),
  *     ],
  *   ],
@@ -385,7 +436,7 @@ export class CheckDocument extends Context.Service<CheckDocument, CheckDocumentS
 			Effect.gen(function* () {
 				const quietMillis = Duration.toMillis(options.debounce?.quiet ?? "500 millis");
 				const maxWaitMillis = Math.max(Duration.toMillis(options.debounce?.maxWait ?? "3 seconds"), quietMillis);
-				const checksRef = yield* Ref.make(MutableHashMap.empty<string, CheckReport>());
+				const checksRef = yield* Ref.make(CheckDocumentSnapshot.make({ checks: HashMap.empty(), order: [] }));
 				const writtenRef = yield* Ref.make(options.initial ?? "");
 				const versionRef = yield* Ref.make(0);
 				const signal = yield* Latch.make(false);
@@ -443,10 +494,10 @@ export class CheckDocument extends Context.Service<CheckDocument, CheckDocumentS
 						}
 						yield* Ref.set(staleLoggedRef, false);
 					}
-					const entries = options.render(checks.backing);
+					const entries = options.render(checks);
 					const next = yield* document
 						.withRegions(
-							stampMeta === undefined ? entries : entries.map(([key, content]) => [key, content, stampMeta] as const),
+							stampMeta === undefined ? entries : A.map(entries, ([key, content]) => [key, content, stampMeta] as const),
 						)
 						.pipe(Effect.mapError((cause) => CheckDocumentError.make({ kind: "render", cause })));
 					if (next.text === current) {
@@ -506,16 +557,15 @@ export class CheckDocument extends Context.Service<CheckDocument, CheckDocumentS
 				yield* Effect.forkScoped(daemon);
 
 				const report = Effect.fn("CheckDocument.report")(function* (check: string, entry: CheckReport) {
-					yield* Ref.update(checksRef, (current) => {
-						const next = MutableHashMap.fromIterable(current);
-						MutableHashMap.set(next, check, entry);
-						return next;
-					});
+					yield* Ref.update(checksRef, (current) => CheckDocumentSnapshot.make({
+						checks: HashMap.set(current.checks, check, entry),
+						order: HashMap.has(current.checks, check) ? current.order : A.append(current.order, check),
+					}));
 					yield* Ref.update(versionRef, (count) => count + 1);
 					yield* signal.open;
 				});
 
-				return { report, checks: Effect.map(Ref.get(checksRef), (checks) => checks.backing), flush } satisfies CheckDocumentShape;
+				return { report, checks: Ref.get(checksRef), flush } satisfies CheckDocumentShape;
 			}),
 		);
 	}

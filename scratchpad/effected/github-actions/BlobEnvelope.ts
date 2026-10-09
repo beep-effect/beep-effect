@@ -218,9 +218,9 @@ export class BlobEnvelope {
 		}
 		return Result.succeed({
 			metadata: decoded.success,
-			// `slice`, not `subarray`: the body must not alias the frame's buffer,
-			// or a caller mutating it would corrupt the envelope it came from.
-			body: bytes.slice(HEADER_BYTES + metaLength),
+			// Copy explicitly: Buffer.slice returns a view, so delegating to the
+			// input's slice could let a caller corrupt the frame through the body.
+			body: Uint8Array.from(bytes.subarray(HEADER_BYTES + metaLength)),
 		});
 	}
 }

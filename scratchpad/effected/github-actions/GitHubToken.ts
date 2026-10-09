@@ -214,8 +214,10 @@ export class GitHubToken {
 			app.token({
 				appId: options.appId,
 				privateKey: options.privateKey,
-				...O.getSomesStruct({ installationId: O.fromUndefinedOr(options.installationId) }),
-				...O.getSomesStruct({ owner: O.fromUndefinedOr(options.owner) }),
+				...O.getSomesStruct({
+					installationId: O.fromUndefinedOr(options.installationId),
+					owner: O.fromUndefinedOr(options.owner),
+				}),
 			}),
 			Effect.fnUntraced(function* (minted: InstallationToken) {
 					if (options.required !== undefined) {
@@ -289,10 +291,12 @@ export class GitHubToken {
 			Effect.map(GitHubToken.read(options), (token) =>
 				GitHubClient.layerFromToken({
 					token: token.token,
-					...O.getSomesStruct({ retry: O.fromUndefinedOr(options.retry) }),
-					...O.getSomesStruct({ baseUrl: O.fromUndefinedOr(options.baseUrl) }),
-					...O.getSomesStruct({ userAgent: O.fromUndefinedOr(options.userAgent) }),
-					...O.getSomesStruct({ fetch: O.fromUndefinedOr(options.fetch) }),
+					...O.getSomesStruct({
+						retry: O.fromUndefinedOr(options.retry),
+						baseUrl: O.fromUndefinedOr(options.baseUrl),
+						userAgent: O.fromUndefinedOr(options.userAgent),
+						fetch: O.fromUndefinedOr(options.fetch),
+					}),
 				}),
 			),
 		);

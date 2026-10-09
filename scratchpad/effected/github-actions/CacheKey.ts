@@ -1,3 +1,6 @@
+import * as A from "effect/Array";
+import * as Order from "effect/Order";
+import * as Str from "effect/String";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as HashSet from "effect/HashSet";
 import { $ScratchpadId } from "@beep/identity/packages";
@@ -389,7 +392,7 @@ export class CacheKey extends S.Class<CacheKey>($I`CacheKey`)(
 	 */
 	static readonly hashFiles = Effect.fn("CacheKey.hashFiles")(function* (files: ReadonlyArray<string>) {
 		const fs = yield* FileSystem.FileSystem;
-		const ordered = [...HashSet.fromIterable(files)].sort();
+		const ordered = A.sort(HashSet.fromIterable(files), Order.String);
 		if (ordered.length === 0) {
 			return O.none<string>();
 		}
@@ -483,7 +486,7 @@ export class CacheKey extends S.Class<CacheKey>($I`CacheKey`)(
 			// symlinked directory targeting outside the workspace is descended,
 			// matching `@actions/glob`'s out-of-tree link following.)
 			const relative = path.relative(workspace, target);
-			if (relative === "" || relative.startsWith("..") || path.isAbsolute(relative)) {
+			if (relative === "" || relative === ".." || Str.startsWith(`..${path.sep}`)(relative) || path.isAbsolute(relative)) {
 				continue;
 			}
 			// Absent is a miss; unreadable is not, because a key computed without a file the caller asked for
@@ -512,10 +515,10 @@ export class CacheKey extends S.Class<CacheKey>($I`CacheKey`)(
 				MutableHashSet.add(candidates, match);
 			}
 		}
-		return [...candidates]
-			.filter((candidate) => set.matches(candidate))
-			.sort()
-			.map((candidate) => path.join(workspace, candidate));
+		return A.map(
+			A.sort(A.filter(candidates, (candidate) => set.matches(candidate)), Order.String),
+			(candidate) => path.join(workspace, candidate),
+		);
 	});
 
 	/**

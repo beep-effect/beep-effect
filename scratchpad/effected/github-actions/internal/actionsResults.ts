@@ -92,7 +92,7 @@ export const backendIdsFrom = (token: string): Result.Result<BackendIds, string>
 		return Result.fail(`the runtime token is not a readable JWT: ${payload.failure.detail}`);
 	}
 	const claims = payload.success;
-	const scope = P.isObjectKeyword(claims) && !P.isFunction(claims) && "scp" in claims ? claims.scp : undefined;
+	const scope = P.isObjectOrArray(claims) && "scp" in claims ? claims.scp : undefined;
 	if (!P.isString(scope)) {
 		return Result.fail("the runtime token carries no `scp` claim");
 	}

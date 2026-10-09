@@ -333,15 +333,14 @@ export class ActionInput {
 					return Effect.succeed<ReadonlyArray<string>>([]);
 				}
 				if (trimmed.startsWith("[")) {
-					try {
-						const parsed: unknown = Result.getOrThrowWith(S.decodeResult(Json)(trimmed), (error) => error);
-						if (S.is(StringList)(parsed)) {
-							return Effect.succeed<ReadonlyArray<string>>(parsed);
-						}
-						return Effect.fail(configError(`Input "${name}" is a JSON array but not an array of strings`, raw));
-					} catch {
+					const parsed = S.decodeResult(Json)(trimmed);
+					if (Result.isFailure(parsed)) {
 						return Effect.fail(configError(`Input "${name}" looks like JSON but could not be parsed`, raw));
 					}
+					if (S.is(StringList)(parsed.success)) {
+						return Effect.succeed<ReadonlyArray<string>>(parsed.success);
+					}
+					return Effect.fail(configError(`Input "${name}" is a JSON array but not an array of strings`, raw));
 				}
 				const entries = trimmed
 					.split(/[\n,]/)
@@ -399,7 +398,7 @@ export class ActionInput {
 					if (requireValue && value === "") {
 						return Effect.fail(configError(`Input "${name}" has a line with an empty value: "${stripped}"`, raw));
 					}
-					result[key] = value;
+					R.assignProperty(result, key, value);
 				}
 				return Effect.succeed(result);
 			}),
@@ -424,14 +423,12 @@ export class ActionInput {
 	static schema<A, I>(name: string, schema: S.Codec<A, I>): Config.Config<A> {
 		return Config.String(inputVariable(name)).pipe(
 			Config.mapEffect((raw) => {
-				let parsed: unknown;
-				try {
-					parsed = Result.getOrThrowWith(S.decodeResult(Json)(raw), (error) => error);
-				} catch {
+				const parsed = S.decodeResult(Json)(raw);
+				if (Result.isFailure(parsed)) {
 					return Effect.fail(configError(`Input "${name}" is not valid JSON`, raw));
 				}
-				return S.decodeUnknownEffect(schema)(parsed).pipe(
-					Effect.mapError(() => configError(`Input "${name}" did not satisfy its schema`, parsed)),
+				return S.decodeUnknownEffect(schema)(parsed.success).pipe(
+					Effect.mapError(() => configError(`Input "${name}" did not satisfy its schema`, parsed.success)),
 				);
 			}),
 		);

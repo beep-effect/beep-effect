@@ -1,29 +1,39 @@
-// @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
+import * as A from "effect/Array";
 import type * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
+import * as HashMap from "effect/HashMap";
+import * as Layer from "effect/Layer";
 import * as Logger from "effect/Logger";
 import * as O from "effect/Option";
 import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as MutableRef from "effect/MutableRef";
 import { TestClock } from "effect/testing";
-import { CheckDocument, CheckDocumentError, CheckDocumentStamp, CheckReport } from "../../effected/github-actions/CheckDocument.ts";
+import { CheckDocument, CheckDocumentError, type CheckDocumentSnapshot, CheckDocumentStamp, CheckReport } from "../../effected/github-actions/CheckDocument.ts";
 import { ManagedDocument } from "../../effected/github-actions/ManagedDocument.ts";
 
 const NS = "savvy-web";
 const KEY = "release-validation";
 
+/** Build a layer inside the same scope that owns the test workflow. */
+const withLayer = <ROut, EIn, RIn>(layer: Layer.Layer<ROut, EIn, RIn>) =>
+	Effect.fn("CheckDocument.test.withLayer")(<A, E, R>(self: Effect.Effect<A, E, R>) =>
+		Effect.scopedWith((scope) =>
+			Effect.flatMap(Layer.buildWithScope(layer, scope), (context) => Effect.provideContext(self, context)),
+		),
+	);
+
 /** One region per check — the layout the reconciler is designed around. */
-const perCheck = (checks: ReadonlyMap<string, CheckReport>): ReadonlyArray<readonly [string, string]> =>
-	[...checks].map(([check, entry]) => [
-		`check-${check}`,
-		`${entry.state}${entry.outcome === undefined ? "" : ` — ${entry.outcome}`}`,
-	]);
+const perCheck = ({ checks, order }: CheckDocumentSnapshot): ReadonlyArray<readonly [string, string]> =>
+	A.map(order, (check) => {
+		const entry = HashMap.getUnsafe(checks, check);
+		return [`check-${check}`, `${entry.state}${entry.outcome === undefined ? "" : ` — ${entry.outcome}`}`];
+	});
 
 interface HarnessOptions {
-	readonly render?: (checks: ReadonlyMap<string, CheckReport>) => ReadonlyArray<readonly [string, string]>;
+	readonly render?: (snapshot: CheckDocumentSnapshot) => ReadonlyArray<readonly [string, string]>;
 	readonly sink?: (rendered: string) => Effect.Effect<unknown, unknown>;
 	readonly initial?: string;
 	readonly quiet?: Duration.Input;
@@ -63,7 +73,7 @@ describe("CheckDocument", () => {
 					const text = all[0] ?? "";
 					assert.include(text, "fail");
 					assert.notInclude(text, "pass");
-				}).pipe(Effect.provide(layer));
+				}).pipe(withLayer(layer));
 			}),
 		);
 
@@ -77,7 +87,7 @@ describe("CheckDocument", () => {
 					assert.deepStrictEqual(yield* Ref.get(writes), []);
 					yield* TestClock.adjust("1 millis");
 					assert.strictEqual((yield* Ref.get(writes)).length, 1);
-				}).pipe(Effect.provide(layer));
+				}).pipe(withLayer(layer));
 			}),
 		);
 
@@ -95,7 +105,7 @@ describe("CheckDocument", () => {
 					yield* TestClock.adjust("500 millis");
 					yield* doc.flush;
 					assert.strictEqual((yield* Ref.get(writes)).length, 1);
-				}).pipe(Effect.provide(layer));
+				}).pipe(withLayer(layer));
 			}),
 		);
 
@@ -112,7 +122,7 @@ describe("CheckDocument", () => {
 					const all = yield* Ref.get(writes);
 					assert.strictEqual(all.length, 1, "exactly one write, at the staleness bound");
 					assert.include(all[0] ?? "", "step 4", "and it carries the latest state, not the first");
-				}).pipe(Effect.provide(layer));
+				}).pipe(withLayer(layer));
 			}),
 		);
 	});
@@ -138,7 +148,7 @@ describe("CheckDocument", () => {
 					);
 					const parsed = Result.getOrThrow(ManagedDocument.parseResult({ namespace: NS, key: KEY, text: final }));
 					assert.deepStrictEqual(parsed.region("check-build"), O.some("fail"));
-				}).pipe(Effect.provide(layer));
+				}).pipe(withLayer(layer));
 			}),
 		);
 
@@ -156,7 +166,7 @@ describe("CheckDocument", () => {
 					for (const text of all) {
 						assert.include(text, human);
 					}
-				}).pipe(Effect.provide(layer));
+				}).pipe(withLayer(layer));
 			}),
 		);
 	});
@@ -169,7 +179,7 @@ describe("CheckDocument", () => {
 					const doc = yield* CheckDocument;
 					yield* doc.report("build", CheckReport.make({ state: "pass" }));
 					// No adjust, no flush: the scope closes mid-window.
-				}).pipe(Effect.provide(layer));
+				}).pipe(withLayer(layer));
 				const all = yield* Ref.get(writes);
 				assert.strictEqual(all.length, 1, "the finalizer flushed the last burst");
 				assert.include(all[0] ?? "", "pass");
@@ -203,23 +213,30 @@ describe("CheckDocument", () => {
 					const all = yield* Ref.get(writes);
 					assert.strictEqual(all.length, 1, "the daemon survived the failure and wrote the next state");
 					assert.include(all[0] ?? "", "pass");
-				}).pipe(Effect.provide(layer));
+				}).pipe(withLayer(layer));
 			}),
 		);
 
 		it.effect("checks reads back the registry in first-report order, last write winning", () =>
 			Effect.gen(function* () {
-				const { layer } = yield* harness();
+				const { writes, layer } = yield* harness();
 				yield* Effect.gen(function* () {
 					const doc = yield* CheckDocument;
 					yield* doc.report("alpha", CheckReport.make({ state: "running" }));
 					yield* doc.report("beta", CheckReport.make({ state: "running" }));
+					const before = yield* doc.checks;
 					yield* doc.report("alpha", CheckReport.make({ state: "fail", outcome: "boom" }));
-					const checks = yield* doc.checks;
-					assert.deepStrictEqual([...checks.keys()], ["alpha", "beta"]);
-					assert.strictEqual(checks.get("alpha")?.state, "fail");
-					assert.strictEqual(checks.get("alpha")?.outcome, "boom");
-				}).pipe(Effect.provide(layer));
+					const { checks, order } = yield* doc.checks;
+					assert.isTrue(HashMap.isHashMap(checks));
+					assert.deepStrictEqual(order, ["alpha", "beta"]);
+					assert.deepStrictEqual(O.map(HashMap.get(checks, "alpha"), (entry) => entry.state), O.some("fail"));
+					assert.deepStrictEqual(O.map(HashMap.get(checks, "alpha"), (entry) => entry.outcome), O.some("boom"));
+					assert.deepStrictEqual(O.map(HashMap.get(before.checks, "alpha"), (entry) => entry.state), O.some("running"));
+					assert.deepStrictEqual(before.order, ["alpha", "beta"]);
+					yield* doc.flush;
+					const document = Result.getOrThrow(ManagedDocument.parseResult({ namespace: NS, key: KEY, text: (yield* Ref.get(writes))[0] ?? "" }));
+					assert.deepStrictEqual(A.map(document.regions, (region) => region.key), ["check-alpha", "check-beta"]);
+				}).pipe(withLayer(layer));
 			}),
 		);
 	});
@@ -236,7 +253,7 @@ describe("CheckDocument", () => {
 					const failure = yield* Effect.flip(doc.flush);
 					assert.instanceOf(failure, CheckDocumentError);
 					assert.strictEqual(failure.kind, "render");
-				}).pipe(Effect.provide(layer));
+				}).pipe(withLayer(layer));
 			}),
 		);
 
@@ -248,7 +265,7 @@ describe("CheckDocument", () => {
 					yield* doc.report("build", CheckReport.make({ state: "pass" }));
 					const failure = yield* Effect.flip(doc.flush);
 					assert.strictEqual(failure.kind, "sink");
-				}).pipe(Effect.provide(layer));
+				}).pipe(withLayer(layer));
 			}),
 		);
 
@@ -275,7 +292,7 @@ describe("CheckDocument", () => {
 					const failure = yield* Fiber.join(flipped);
 					assert.instanceOf(failure, CheckDocumentError);
 					assert.strictEqual(failure.kind, "sink");
-				}).pipe(Effect.provide(layer));
+				}).pipe(withLayer(layer));
 			}),
 		);
 	});
@@ -315,6 +332,48 @@ describe("CheckDocument", () => {
 			// Lexically "10" < "9"; numerically 10 > 9. The numeric order must win.
 			assert.isTrue(CheckDocumentStamp.isAtLeastAsRecent(stamp(at, "10"), stamp(at, "9")));
 			assert.isFalse(CheckDocumentStamp.isAtLeastAsRecent(stamp(at, "9"), stamp(at, "10")));
+		});
+
+		it("orders adjacent decimal runIds beyond the safe-integer range in both directions", () => {
+			const at = "2024-01-01T00:00:00Z";
+			assert.isFalse(CheckDocumentStamp.isAtLeastAsRecent(stamp(at, "9007199254740992"), stamp(at, "9007199254740993")));
+			assert.isTrue(CheckDocumentStamp.isAtLeastAsRecent(stamp(at, "9007199254740993"), stamp(at, "9007199254740992")));
+			assert.isFalse(CheckDocumentStamp.isAtLeastAsRecent(stamp(at, "999999999999999999999999999999"), stamp(at, "1000000000000000000000000000000")));
+			assert.isTrue(CheckDocumentStamp.isAtLeastAsRecent(stamp(at, "1000000000000000000000000000000"), stamp(at, "999999999999999999999999999999")));
+		});
+
+		it("preserves decimal signs, leading zeros and whitespace without rounding", () => {
+			const at = "2024-01-01T00:00:00Z";
+			assert.isFalse(CheckDocumentStamp.isAtLeastAsRecent(stamp(at, "-9007199254740993"), stamp(at, "-9007199254740992")));
+			assert.isTrue(CheckDocumentStamp.isAtLeastAsRecent(stamp(at, "-9007199254740992"), stamp(at, "-9007199254740993")));
+			assert.isTrue(CheckDocumentStamp.isAtLeastAsRecent(stamp(at, " +0009007199254740993 "), stamp(at, "9007199254740993")));
+			assert.isTrue(CheckDocumentStamp.isAtLeastAsRecent(stamp(at, "-0"), stamp(at, "+000")));
+		});
+
+		it("preserves numeric fallback for non-decimal spellings and lexical fallback for non-finite values", () => {
+			const at = "2024-01-01T00:00:00Z";
+			assert.isTrue(CheckDocumentStamp.isAtLeastAsRecent(stamp(at, "1e1"), stamp(at, "9")));
+			assert.isFalse(CheckDocumentStamp.isAtLeastAsRecent(stamp(at, "9"), stamp(at, "1e1")));
+			assert.isTrue(CheckDocumentStamp.isAtLeastAsRecent(stamp(at, "0x10"), stamp(at, "15")));
+			assert.isFalse(CheckDocumentStamp.isAtLeastAsRecent(stamp(at, "15"), stamp(at, "0x10")));
+			assert.isTrue(CheckDocumentStamp.isAtLeastAsRecent(stamp(at, "9.5"), stamp(at, "9")));
+			assert.isFalse(CheckDocumentStamp.isAtLeastAsRecent(stamp(at, "9"), stamp(at, "9.5")));
+			assert.isTrue(CheckDocumentStamp.isAtLeastAsRecent(stamp(at, "Infinity"), stamp(at, "10")));
+			assert.isFalse(CheckDocumentStamp.isAtLeastAsRecent(stamp(at, "10"), stamp(at, "Infinity")));
+		});
+
+		it("interprets zone-less stamps as UTC and compares explicit offsets by instant", () => {
+			assert.isTrue(CheckDocumentStamp.isAtLeastAsRecent(stamp("2024-01-01T00:00:00", "2"), stamp("2024-01-01T00:00:00Z", "1")));
+			assert.isFalse(CheckDocumentStamp.isAtLeastAsRecent(stamp("2024-01-01T00:00:00", "1"), stamp("2024-01-01T00:00:00Z", "2")));
+			assert.isTrue(CheckDocumentStamp.isAtLeastAsRecent(stamp("2024-01-01T01:00:00+01:00", "2"), stamp("2024-01-01T00:00:00Z", "1")));
+			assert.isFalse(CheckDocumentStamp.isAtLeastAsRecent(stamp("2024-01-01T01:00:00+01:00", "1"), stamp("2024-01-01T00:00:00Z", "2")));
+		});
+
+		it("uses lexical at order when exactly one stamp is invalid, ignoring runId", () => {
+			assert.isTrue(CheckDocumentStamp.isAtLeastAsRecent(stamp("invalid", "1"), stamp("2024-01-01T00:00:00Z", "999")));
+			assert.isFalse(CheckDocumentStamp.isAtLeastAsRecent(stamp("2024-01-01T00:00:00Z", "999"), stamp("invalid", "1")));
+			assert.isTrue(CheckDocumentStamp.isAtLeastAsRecent(stamp("invalid", "2"), stamp("invalid", "1")));
+			assert.isFalse(CheckDocumentStamp.isAtLeastAsRecent(stamp("invalid", "1"), stamp("invalid", "2")));
 		});
 
 		it("falls back to lexical runId order when either side is not a number", () => {
@@ -380,7 +439,7 @@ describe("CheckDocument", () => {
 					const doc = yield* CheckDocument;
 					yield* doc.report("build", CheckReport.make({ state: "pass", outcome: "newer run" }));
 					assert.strictEqual(yield* doc.flush, "written");
-				}).pipe(Effect.provide(newer.layer));
+				}).pipe(withLayer(newer.layer));
 				const afterNewer = yield* Ref.get(remote);
 
 				// The delayed older run flushes against the live document.
@@ -388,7 +447,7 @@ describe("CheckDocument", () => {
 					const doc = yield* CheckDocument;
 					yield* doc.report("build", CheckReport.make({ state: "fail", outcome: "stale rerun" }));
 					assert.strictEqual(yield* doc.flush, "stale");
-				}).pipe(Effect.provide(older.layer));
+				}).pipe(withLayer(older.layer));
 
 				assert.deepStrictEqual(yield* Ref.get(older.writes), [], "the stale run must not write");
 				assert.strictEqual(yield* Ref.get(remote), afterNewer, "the newer run's document is intact");
@@ -413,7 +472,7 @@ describe("CheckDocument", () => {
 					const doc = yield* CheckDocument;
 					yield* doc.report("build", CheckReport.make({ state: "pass", outcome: "newer run" }));
 					assert.strictEqual(yield* doc.flush, "written");
-				}).pipe(Effect.provide(newer.layer));
+				}).pipe(withLayer(newer.layer));
 
 				// The stale run flushes twice — the report-driven pass plus an
 				// explicit flush is the pair the consumer observed logging twice.
@@ -422,7 +481,7 @@ describe("CheckDocument", () => {
 					yield* doc.report("build", CheckReport.make({ state: "fail", outcome: "stale rerun" }));
 					assert.strictEqual(yield* doc.flush, "stale");
 					assert.strictEqual(yield* doc.flush, "stale");
-				}).pipe(Effect.provide(older.layer), Effect.provide(Logger.layer([collector])));
+				}).pipe(withLayer(older.layer), withLayer(Logger.layer([collector])));
 
 				// The debug-level repeat is below the default minimum level, so the
 				// consumer-visible count across both stale passes is exactly one.
@@ -441,13 +500,13 @@ describe("CheckDocument", () => {
 					const doc = yield* CheckDocument;
 					yield* doc.report("build", CheckReport.make({ state: "running", outcome: "older run" }));
 					assert.strictEqual(yield* doc.flush, "written");
-				}).pipe(Effect.provide(older.layer));
+				}).pipe(withLayer(older.layer));
 
 				yield* Effect.gen(function* () {
 					const doc = yield* CheckDocument;
 					yield* doc.report("build", CheckReport.make({ state: "pass", outcome: "newer run" }));
 					assert.strictEqual(yield* doc.flush, "written");
-				}).pipe(Effect.provide(newer.layer));
+				}).pipe(withLayer(newer.layer));
 
 				const final = (yield* Ref.get(remote)) ?? "";
 				const parsed = Result.getOrThrow(ManagedDocument.parseResult({ namespace: NS, key: KEY, text: final }));
@@ -469,13 +528,13 @@ describe("CheckDocument", () => {
 					const doc = yield* CheckDocument;
 					yield* doc.report("build", CheckReport.make({ state: "running" }));
 					assert.strictEqual(yield* doc.flush, "written");
-				}).pipe(Effect.provide(first.layer));
+				}).pipe(withLayer(first.layer));
 
 				yield* Effect.gen(function* () {
 					const doc = yield* CheckDocument;
 					yield* doc.report("build", CheckReport.make({ state: "pass" }));
 					assert.strictEqual(yield* doc.flush, "written");
-				}).pipe(Effect.provide(second.layer));
+				}).pipe(withLayer(second.layer));
 
 				const final = (yield* Ref.get(remote)) ?? "";
 				assert.include(final, "pass");
@@ -493,13 +552,13 @@ describe("CheckDocument", () => {
 					const doc = yield* CheckDocument;
 					yield* doc.report("build", CheckReport.make({ state: "running" }));
 					assert.strictEqual(yield* doc.flush, "written");
-				}).pipe(Effect.provide(unstamped.layer));
+				}).pipe(withLayer(unstamped.layer));
 
 				yield* Effect.gen(function* () {
 					const doc = yield* CheckDocument;
 					yield* doc.report("build", CheckReport.make({ state: "pass" }));
 					assert.strictEqual(yield* doc.flush, "written", "no stamp on the document, so any stamped pass may write");
-				}).pipe(Effect.provide(stamped.layer));
+				}).pipe(withLayer(stamped.layer));
 			}),
 		);
 
@@ -514,7 +573,7 @@ describe("CheckDocument", () => {
 					// The same state, the same per-run stamp: byte-identical render.
 					assert.strictEqual(yield* doc.flush, "unchanged");
 					assert.strictEqual((yield* Ref.get(writes)).length, 1);
-				}).pipe(Effect.provide(layer));
+				}).pipe(withLayer(layer));
 			}),
 		);
 
@@ -533,7 +592,7 @@ describe("CheckDocument", () => {
 					const failure = yield* Effect.flip(doc.flush);
 					assert.instanceOf(failure, CheckDocumentError);
 					assert.strictEqual(failure.kind, "read");
-				}).pipe(Effect.provide(layer));
+				}).pipe(withLayer(layer));
 			}),
 		);
 
@@ -546,7 +605,7 @@ describe("CheckDocument", () => {
 					assert.strictEqual(yield* doc.flush, "written");
 					assert.strictEqual(yield* doc.flush, "unchanged");
 					assert.strictEqual((yield* Ref.get(writes)).length, 1);
-				}).pipe(Effect.provide(layer));
+				}).pipe(withLayer(layer));
 			}),
 		);
 	});
@@ -557,21 +616,21 @@ describe("CheckDocument", () => {
 				const doc = yield* CheckDocument;
 				const exit = yield* Effect.exit(doc.report("build", CheckReport.make({ state: "pass" })));
 				assert.isTrue(exit._tag === "Failure");
-			}).pipe(Effect.provide(CheckDocument.layerTest())),
+			}).pipe(withLayer(CheckDocument.layerTest())),
 		);
 
 		it.effect("layerTest serves a stubbed member", () =>
 			Effect.gen(function* () {
 				const doc = yield* CheckDocument;
 				yield* doc.report("build", CheckReport.make({ state: "pass" }));
-			}).pipe(Effect.provide(CheckDocument.layerTest({ report: () => Effect.void }))),
+			}).pipe(withLayer(CheckDocument.layerTest({ report: () => Effect.void }))),
 		);
 
 		it.effect("a stubbed flush carries the outcome type", () =>
 			Effect.gen(function* () {
 				const doc = yield* CheckDocument;
 				assert.strictEqual(yield* doc.flush, "unchanged");
-			}).pipe(Effect.provide(CheckDocument.layerTest({ flush: Effect.succeed("unchanged" as const) }))),
+			}).pipe(withLayer(CheckDocument.layerTest({ flush: Effect.succeed("unchanged" as const) }))),
 		);
 	});
 });

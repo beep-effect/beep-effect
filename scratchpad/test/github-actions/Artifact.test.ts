@@ -190,6 +190,35 @@ describe("Artifact", () => {
 		}),
 	);
 
+	for (const idField of ["databaseId", "database_id"]) {
+		for (const numericField of [idField, "size"]) {
+			for (const malformed of ["not-a-number", "Infinity", "1e309"]) {
+				it.effect(`rejects malformed ${numericField} ${malformed} in a ${idField} listing`, () =>
+					Effect.gen(function* () {
+						const { transfer } = fileTransfer();
+						const { calls, fetch } = twirpFetch({
+							ListArtifacts: () => json({
+								artifacts: [
+									{ [idField]: "1", name: "valid", size: "10" },
+									{ [idField]: "2", name: "broken", size: "20", [numericField]: malformed },
+								],
+							}),
+						});
+						const error = yield* Effect.flip(
+							Effect.flatMap(Artifact, (artifacts) => artifacts.list).pipe(Effect.provide(live(fetch, transfer))),
+						);
+						assert.instanceOf(error, ArtifactError);
+						assert.strictEqual(error.reason, "unreachable");
+						assert.strictEqual(error.artifact, "*");
+						assert.strictEqual(error.detail, "ListArtifacts did not answer with a Twirp body");
+						assert.instanceOf(error.cause, S.SchemaError);
+						assert.lengthOf(calls, 1);
+					}),
+				);
+			}
+		}
+	}
+
 	it.effect("finds one by name, and reports an absent one as nothing", () =>
 		Effect.gen(function* () {
 			const { transfer } = fileTransfer();

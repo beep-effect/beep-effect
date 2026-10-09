@@ -12,6 +12,7 @@ import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
+import * as Str from "effect/String";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import { ActionEnvironment } from "./ActionEnvironment.ts";
 import { digestFileHex } from "./internal/digest.ts";
@@ -25,6 +26,13 @@ import { ToolInstaller } from "./ToolInstaller.ts";
 const $I = $ScratchpadId.create("effected/github-actions/PackageManagerInstaller");
 
 const Json = S.fromJsonString(S.Unknown);
+
+const BinName = S.String.check(S.isPattern(/^(?!\.{1,2}$)[^/\\:\x00]+$/, {
+	identifier: "BinName",
+	title: "Package manager bin name",
+	description: "A nonempty filename component without path separators, drive prefixes or NUL bytes.",
+})).pipe($I.annoteSchema("BinName", { description: "A package manager command name confined to one shim filename." }));
+const isBinName = S.is(BinName);
 
 /**
  * Raised when a package manager cannot be provisioned on the runner.
@@ -505,6 +513,25 @@ const make = Effect.gen(function* () {
 		}
 	});
 
+	const validateShimDestinations = Effect.fnUntraced(function* (
+		pin: PackageManagerPin,
+		into: string,
+		bins: Record<string, string>,
+	): Effect.fn.Return<void, PackageManagerInstallerError> {
+		const shimDir = path.resolve(into, SHIM_DIR);
+		for (const name of R.keys(bins)) {
+			const shim = path.resolve(shimDir, shimFileName(name));
+			const containment = path.relative(shimDir, shim);
+			if (!isBinName(name) || containment === "" || containment === ".." ||
+				Str.startsWith(`..${path.sep}`)(containment) || path.isAbsolute(containment)) {
+				return yield* errorFor(pin)({
+					reason: "layoutUnexpected",
+					subject: `bin ${name} does not name a shim inside ${SHIM_DIR}`,
+				});
+			}
+		}
+	});
+
 	/**
 	 * What a package directory's own manifest says about its entry points: the
 	 * `bin` map, plus the `@pnpm/exe.*` optional dependencies that mark the
@@ -535,6 +562,7 @@ const make = Effect.gen(function* () {
 		if (bins === undefined) {
 			return yield* errorFor(pin)({ reason: "layoutUnexpected", subject: "package.json names no bin" });
 		}
+		yield* validateShimDestinations(pin, packageDir, bins);
 		for (const [name, relative] of R.toEntries(bins)) {
 			const target = path.join(packageDir, relative);
 			// The manifest is attacker-supplied bytes: a bin of "../../payload.js"
@@ -632,6 +660,9 @@ const make = Effect.gen(function* () {
 		options: { readonly skipExisting: boolean },
 	): Effect.fn.Return<void, PackageManagerInstallerError> {
 		const shimDir = path.join(into, SHIM_DIR);
+		// Preflight the whole map before creating the directory or writing even
+		// the first valid shim; a later hostile name must leave no partial shims.
+		yield* validateShimDestinations(pin, into, bins);
 		const cacheError = (subject: string) => (cause: unknown) =>
 			errorFor(pin)({ reason: "cacheFailed", subject, cause });
 		yield* fs.makeDirectory(shimDir, { recursive: true }).pipe(Effect.mapError(cacheError(shimDir)));

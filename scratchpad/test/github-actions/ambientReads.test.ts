@@ -3,7 +3,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { assert, describe, it } from "@effect/vitest";
-import { LanguageVariant, SyntaxKind, computeLineStarts, createScanner } from "typescript/unstable/ast";
+import { LanguageVariant, SyntaxKind, computeLineStarts, createScanner } from "@typescript/native/unstable/ast";
 
 /**
  * The package's rule that ambient process state is never read behind a
@@ -21,7 +21,7 @@ const RULE =
 	"read it through ActionEnvironment, or take it as an argument (see ChildEnv's class doc). " +
 	"A new sanctioned default must be added to the allowlist in __test__/ambientReads.test.ts WITH its reason.";
 
-const srcRoot = fileURLToPath(new URL("../src/", import.meta.url));
+const srcRoot = fileURLToPath(new URL("../../effected/github-actions/", import.meta.url));
 
 const AMBIENT_MEMBERS: ReadonlySet<string> = new Set(["env", "arch", "platform"]);
 
@@ -42,7 +42,8 @@ const AMBIENT_MEMBERS: ReadonlySet<string> = new Set(["env", "arch", "platform"]
  * template span, not code. Without that, a `}` inside a template resumes
  * scanning template text as identifiers.
  *
- * The scanner is TypeScript 7's, from `typescript/unstable/ast` — the
+ * The scanner is TypeScript 7's, installed under the lab's `@typescript/native`
+ * npm alias (`typescript/unstable/ast` upstream) — the
  * package's root export carries only `version` now that the compiler is
  * native, and the JS scanner moved there with a shorter signature (no
  * `ScriptTarget`) and `SyntaxKind.EndOfFile` in place of `EndOfFileToken`.
@@ -96,7 +97,7 @@ const scanAmbientReads = (text: string): ReadonlyArray<{ readonly line: number; 
 			AMBIENT_MEMBERS.has(scanner.getTokenValue()) &&
 			history[1]?.[0] === SyntaxKind.DotToken &&
 			history[0]?.[0] === SyntaxKind.Identifier &&
-			history[0][1] === "process"
+			history[0]?.[1] === "process"
 		) {
 			const line = lineOf(scanner.getTokenStart());
 			found.push({ line: line + 1, text: (lines[line] ?? "").trim() });
@@ -143,7 +144,7 @@ const ambientReadSites = (): ReadonlyArray<Site> => {
 const ALLOWED: ReadonlyArray<readonly [string, string, string]> = [
 	[
 		"ActionEnvironment.ts",
-		"Effect.sync(() => ({ ...process.env }) as Readonly<Record<string, string>>),",
+		"Effect.sync(() => ({ ...process.env })),",
 		"THE reader: seeds the environment once, at layer construction",
 	],
 	[
@@ -158,18 +159,13 @@ const ALLOWED: ReadonlyArray<readonly [string, string, string]> = [
 	],
 	[
 		"PackageManagerInstaller.ts",
-		"Option.match(found, { onNone: () => process.arch as string, onSome: archFromRunner }),",
+		"O.match(found, { onNone: (): string => process.arch, onSome: archFromRunner }),",
 		"the off-runner fallback for RUNNER_ARCH, selecting the native-binary target",
 	],
 	[
 		"ToolInstaller.ts",
 		"ToolInstaller.cachePath({ root, tool, version, arch: process.arch });",
 		"the tool-cache layout's arch segment is Node's spelling by contract with the runner",
-	],
-	[
-		"ToolInstaller.ts",
-		'const testRoot = (): string => process.env.RUNNER_TOOL_CACHE ?? "/tmp/runner-tool-cache";',
-		"makeTest's cachePath default root — test-double only, a double has no ActionEnvironment to ask",
 	],
 	[
 		"ToolInstaller.ts",
