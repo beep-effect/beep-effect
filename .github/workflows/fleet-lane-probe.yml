@@ -54,7 +54,7 @@ jobs:
         if: inputs.lane == 'lint'
         uses: taiki-e/install-action@91ddec75689c4c78665b598d188dc821c5a43e5c # v2.85.9
         with:
-          tool: typos-cli@1.44.0
+          tool: typos-cli@1.50.3
 
       - name: Run verification lane
         shell: bash

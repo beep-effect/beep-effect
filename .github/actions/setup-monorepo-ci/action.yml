@@ -9,7 +9,7 @@ inputs:
   cache-write:
     description: Save restored caches after install when cache misses occur.
     required: false
-    default: "true"
+    default: "false"
   turbo-cache-key-suffix:
     description: Stable suffix that isolates local Turbo caches for matrix lanes sharing one job id.
     required: false
@@ -274,16 +274,6 @@ runs:
         BEEP_CI_HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
       run: bun scripts/ci-job-env.mjs
 
-    - name: Restore Bun dependencies cache
-      if: ${{ steps.baked.outputs.hit != 'true' }}
-      id: bun-cache-restore
-      continue-on-error: true
-      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-      with:
-        path: ~/.bun/install/cache
-        key: bun-${{ runner.os }}-${{ startsWith(runner.name, 'beep-ci-') && 'fleet' || 'shared' }}-${{ hashFiles('bun.lock') }}
-        restore-keys: bun-${{ runner.os }}-${{ startsWith(runner.name, 'beep-ci-') && 'fleet' || 'shared' }}-
-
     - name: Restore Turbo cache (local fallback only)
       if: ${{ inputs.cache-turbo == 'true' && (env.TURBO_TOKEN == '' || env.TURBO_TEAM == '') }}
       id: turbo-cache-restore
@@ -321,14 +311,6 @@ runs:
         install_finished_at="$(date +%s)"
         echo "BEEP_SETUP_INSTALL_SECONDS=$((install_finished_at - install_started_at))" >> "$GITHUB_ENV"
 
-    - name: Save Bun dependencies cache
-      if: ${{ inputs.cache-write == 'true' && steps.baked.outputs.hit != 'true' && steps.bun-cache-restore.outputs.cache-hit != 'true' }}
-      continue-on-error: true
-      uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-      with:
-        path: ~/.bun/install/cache
-        key: bun-${{ runner.os }}-${{ startsWith(runner.name, 'beep-ci-') && 'fleet' || 'shared' }}-${{ hashFiles('bun.lock') }}
-
     - name: Save Turbo cache (local fallback only)
       if: ${{ inputs.cache-write == 'true' && inputs.cache-turbo == 'true' && (env.TURBO_TOKEN == '' || env.TURBO_TEAM == '') && steps.turbo-cache-restore.outputs.cache-hit != 'true' }}
       continue-on-error: true
@@ -350,7 +332,7 @@ runs:
         fi
 
         install_seconds="${BEEP_SETUP_INSTALL_SECONDS:-n/a}"
-        bun_cache_hit="${{ steps.bun-cache-restore.outputs.cache-hit }}"
+        bun_cache_hit="disabled"
         turbo_cache_hit="${{ steps.turbo-cache-restore.outputs.cache-hit }}"
         bun_cache_hit="${bun_cache_hit:-unknown}"
         turbo_cache_hit="${turbo_cache_hit:-skipped}"
@@ -374,7 +356,6 @@ runs:
           echo "| Install seconds | \`${install_seconds}\` |"
           echo "| Bun version | \`$(bun --version)\` |"
           echo "| Node version | \`${node_version}\` |"
-          echo "| Bun cache key | \`bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}\` |"
           echo "| Bun cache hit | \`${bun_cache_hit}\` |"
           echo "| Bun cache size | \`${bun_cache_size}\` |"
           echo "| Turbo cache enabled | \`${{ inputs.cache-turbo }}\` |"
