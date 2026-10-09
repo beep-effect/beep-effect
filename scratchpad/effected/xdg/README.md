@@ -1,41 +1,13 @@
 # xdg (lab port of @effected/xdg)
 
-[![npm](https://img.shields.io/npm/v/@effected%2Fxdg?label=npm&color=cb3837)](https://www.npmjs.com/package/@effected/xdg)
-[![License: MIT](https://img.shields.io/badge/License-MIT-4caf50.svg)](https://opensource.org/licenses/MIT)
-[![Node.js %3E%3D24.11.0](https://img.shields.io/badge/Node.js-%3E%3D24.11.0-5fa04e.svg)](https://nodejs.org/)
-[![TypeScript 7.0](https://img.shields.io/badge/TypeScript-7.0-3178c6.svg)](https://www.typescriptlang.org/)
 
 XDG Base Directory resolution for Effect. `Xdg` reads the environment — `$HOME`, the four `*_HOME` variables, `$XDG_RUNTIME_DIR`, and the `$XDG_CONFIG_DIRS` / `$XDG_DATA_DIRS` search paths — once, at layer construction. `AppDirs` turns that into the config, data, cache, state and runtime directories for one application namespace, with on-demand creation. `NativeDirs` supplies the macOS and Windows conventions for applications that want them, and `XdgConfig` plugs the whole thing into [`@effected/config-file`](../config-file) as a resolver chain and a save target.
-
-> **Pre-`1.0.0`.** This package is part of the `@effected/*` kit, built on stable
-> Effect v4 (`effect` `^4.0.0`) and still in `0.x` development. Stable Effect
-> makes a kit `1.0.0` possible, not automatic. To keep your `effect` and
-> `@effect/*` versions on the line the kit is built and tested against, install
-> [`@effected/pnpm-plugin-effect`](https://www.npmjs.com/package/@effected/pnpm-plugin-effect).
->
-> **Stability: unstable.** This package's API surface is not yet considered
-> complete and may change across `0.x` releases. Pin an exact version — even a
-> package marked *stable* before `1.0.0` can introduce a breaking change by
-> accident, and an exact pin turns that into a type-check error rather than a
-> runtime surprise. Full policy: [release strategy](https://github.com/spencerbeggs/effected#release-strategy).
 
 ## Why @effected/xdg
 
 Path resolution is not IO, and modeling it as IO poisons everything downstream. The environment is fixed for the life of a process, so this package reads it exactly once — when the layer is built — and the service's shape *is* the resolved value. `appDirs.dirs.config` is a `string`, not an `Effect<string, XdgEnvError>`. Reading a path cannot fail, cannot be observed to do IO and drops straight into config-file's `defaultPath` slot, which is typed `Effect<string, never, R>` and would otherwise need an `orDie` to satisfy.
 
 Two more things follow from taking the spec seriously. The system search paths are half of XDG and are usually skipped: a config lookup here probes the app's own config directory — whichever rung of the precedence below resolved it — *and then* each `$XDG_CONFIG_DIRS` entry, namespaced, and it absorbs failure per candidate — an unreadable `/etc/xdg` means "this candidate did not match", never "abort the search and hide the perfectly readable file below it". And the runtime directory has no fallback ladder, because there is no defensible one: it must be user-owned and mode 0700, so when `$XDG_RUNTIME_DIR` is unset the key is simply absent rather than pointing somewhere invented.
-
-## Install
-
-```bash
-npm install @effected/xdg effect @effect/platform-node
-```
-
-```bash
-pnpm add @effected/xdg effect @effect/platform-node
-```
-
-Requires Node.js >=24.11.0.
 
 All `@effected/*` packages are ESM-only: the exports maps publish only `import` conditions, so `require()` — including tools that resolve in CJS mode — fails with Node's `ERR_PACKAGE_PATH_NOT_EXPORTED` rather than loading a CJS build that does not exist. Import from an ES module.
 
@@ -48,9 +20,10 @@ Creating directories needs a `FileSystem` and a `Path` implementation, provided 
 Build `AppDirs` for your namespace, provide it the `Xdg` environment and the platform layers, and read the paths:
 
 ```ts
-import { AppDirs, Xdg } from "@effected/xdg";
+import { AppDirs, Xdg } from "@beep/scratchpad/effected/xdg/index";
 import { NodeFileSystem, NodePath } from "@effect/platform-node";
-import { Effect, Layer } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 
 const PlatformLive = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 
@@ -94,13 +67,13 @@ The platform is a `Context.Reference`, never a global read. Pin it in a test wit
 `XdgConfig` is the bridge into `@effected/config-file`. `resolver` searches the app's whole config search path, `nativeResolver` probes the OS-native directory, and `savePath` names the default write target:
 
 ```ts
-import { ConfigFile, JsonCodec, MergeStrategy } from "@effected/config-file";
-import { XdgConfig } from "@effected/xdg";
-import { Schema } from "effect";
+import { ConfigFile, JsonCodec, MergeStrategy } from "@beep/scratchpad/effected/config-file/index";
+import { XdgConfig } from "@beep/scratchpad/effected/xdg/index";
+import * as S from "effect/Schema";
 
-class AppShape extends Schema.Class<AppShape>("AppShape")({
-  port: Schema.Number,
-  host: Schema.String,
+class AppShape extends S.Class<AppShape>("AppShape")({
+  port: S.Number,
+  host: S.String,
 }) {}
 
 class AppConfig extends ConfigFile.Service<AppConfig, AppShape>()("myapp/Config") {}
@@ -133,9 +106,11 @@ A namespace that is empty, or contains a path separator, or is exactly `.` or `.
 `@effected/memfs` virtualizes the filesystem, not the platform. `AppDirs` and `XdgConfig` read the platform through the `CurrentPlatform` reference, which defaults to the host's `process.platform`, so a test that only swaps the filesystem still takes the host's darwin, linux or win32 branch. Pin the platform as well:
 
 ```ts
-import { MemoryFileSystem } from "@effected/memfs";
-import { AppDirs, CurrentPlatform, Xdg, XdgPaths } from "@effected/xdg";
-import { Effect, Layer, Path } from "effect";
+import { MemoryFileSystem } from "@beep/scratchpad/effected/memfs/index";
+import { AppDirs, CurrentPlatform, Xdg, XdgPaths } from "@beep/scratchpad/effected/xdg/index";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
 
 const TestEnv = Layer.mergeAll(
   Xdg.layerFrom(XdgPaths.make({ home: "/home/ada", configDirs: ["/etc/xdg"], dataDirs: ["/usr/share"] })),

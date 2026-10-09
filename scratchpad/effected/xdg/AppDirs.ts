@@ -24,10 +24,10 @@ const $I = $ScratchpadId.create("effected/xdg/AppDirs");
  * **Example** (Describe an invalid namespace)
  *
  * ```ts
- * import { AppDirsNamespaceError } from "./AppDirs.ts";
+ * import { AppDirsNamespaceError } from "@beep/scratchpad/effected/xdg/AppDirs";
  *
  * const error = AppDirsNamespaceError.make({ message: "AppDirs.layer: `namespace` must not be empty" });
- * console.log(error.message);
+ * console.log(error.message); // AppDirs.layer: `namespace` must not be empty
  * ```
  *
  * @category errors
@@ -42,7 +42,18 @@ export class AppDirsNamespaceError extends S.TaggedError<AppDirsNamespaceError>(
 /**
  * The four directory kinds XDG separates, plus the runtime directory.
  *
+ * **Example** (Validate directory kinds)
+ *
+ * ```ts
+ * import { AppDirKind } from "@beep/scratchpad/effected/xdg/AppDirs";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(AppDirKind)("runtime")); // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const AppDirKind = LiteralKit(["config", "data", "cache", "state", "runtime"]).annotate($I.annote("AppDirKind", { description: "The four directory kinds XDG separates, plus the runtime directory." }));
 
@@ -50,6 +61,8 @@ export const AppDirKind = LiteralKit(["config", "data", "cache", "state", "runti
  * The decoded form of {@link (AppDirKind:variable)}.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type AppDirKind = typeof AppDirKind.Type;
 
@@ -64,7 +77,18 @@ export type AppDirKind = typeof AppDirKind.Type;
  * which kind, `path` says where, and `cause` carries the underlying
  * `PlatformError` structurally.
  *
+ * **Example** (Inspect a directory creation failure)
+ *
+ * ```ts
+ * import { AppDirsError } from "@beep/scratchpad/effected/xdg/AppDirs";
+ *
+ * const error = AppDirsError.make({ directory: "config", path: "/app/config", cause: "permission denied" });
+ * console.log(error.message); // Failed to create the config directory at "/app/config"
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class AppDirsError extends S.TaggedError<AppDirsError>($I`AppDirsError`)("AppDirsError", {
 	/** Which directory kind failed. */
@@ -74,6 +98,20 @@ export class AppDirsError extends S.TaggedError<AppDirsError>($I`AppDirsError`)(
 	/** The underlying failure, preserved structurally. */
 	cause: S.Defect({ includeStack: true }).annotateKey({ description: "The underlying failure, preserved structurally." }),
 }, $I.annote("AppDirsError", { description: "Indicates that an application directory could not be created." })) {
+	/**
+	 * Describes the failed directory creation.
+	 *
+	 * **Example** (Read the failure message)
+	 *
+	 * ```ts
+	 * import { AppDirsError } from "@beep/scratchpad/effected/xdg/AppDirs";
+	 *
+	 * const error = AppDirsError.make({ directory: "config", path: "/app/config", cause: "permission denied" });
+	 * console.log(error.message); // Failed to create the config directory at "/app/config"
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return `Failed to create the ${this.directory} directory at "${this.path}"`;
 	}
@@ -82,7 +120,21 @@ export class AppDirsError extends S.TaggedError<AppDirsError>($I`AppDirsError`)(
 /**
  * The fully resolved, app-namespaced directories.
  *
+ * **Example** (Inspect ordered configuration candidates)
+ *
+ * ```ts
+ * import { ResolvedAppDirs } from "@beep/scratchpad/effected/xdg/AppDirs";
+ *
+ * const dirs = ResolvedAppDirs.make({
+ *   config: "/app/config", data: "/app/data", cache: "/app/cache", state: "/app/state",
+ *   configSearchPath: ["/app/config", "/etc/xdg/myapp"], dataSearchPath: ["/app/data"],
+ * });
+ * console.log(dirs.configSearchPath.join(":")); // /app/config:/etc/xdg/myapp
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class ResolvedAppDirs extends S.Class<ResolvedAppDirs>($I`ResolvedAppDirs`)({
 	/** The app's configuration directory. */
@@ -124,10 +176,11 @@ export class ResolvedAppDirs extends S.Class<ResolvedAppDirs>($I`ResolvedAppDirs
  * **Example** (Decode directory overrides)
  *
  * ```ts
+ * import { AppDirOverrides } from "@beep/scratchpad/effected/xdg/AppDirs";
  * import * as S from "effect/Schema";
- * import { AppDirOverrides } from "./AppDirs.ts";
  *
- * const overrides = S.decodeEffect(AppDirOverrides)({ config: "/app/config" });
+ * const decoded = S.decodeSync(AppDirOverrides)({ config: "/app/config" });
+ * console.log(decoded.config); // /app/config
  * ```
  *
  * @category schemas
@@ -166,10 +219,11 @@ export type AppDirOverrides = typeof AppDirOverrides.Type;
  * **Example** (Decode application directory options)
  *
  * ```ts
+ * import { AppDirsOptions } from "@beep/scratchpad/effected/xdg/AppDirs";
  * import * as S from "effect/Schema";
- * import { AppDirsOptions } from "./AppDirs.ts";
  *
- * const options = S.decodeEffect(AppDirsOptions)({ namespace: "myapp", native: true });
+ * const decoded = S.decodeSync(AppDirsOptions)({ namespace: "myapp", native: true });
+ * console.log(decoded.namespace); // myapp
  * ```
  *
  * @category schemas
@@ -227,6 +281,8 @@ export type AppDirsOptions = typeof AppDirsOptions.Type;
  * touch the filesystem, and they are the only fallible members.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface AppDirsShape {
 	/** The namespace these directories were resolved for. */
@@ -256,6 +312,8 @@ export interface AppDirsShape {
 
 /**
  * Resolve one directory kind through the five-level precedence.
+ *
+ * **Details**
  *
  * 1. an explicit `dirs.<kind>` override;
  * 2. the XDG environment variable, namespaced (`$XDG_CONFIG_HOME/<ns>`);
@@ -377,37 +435,52 @@ const badNamespace = (namespace: string): AppDirsNamespaceError | undefined => {
  * independent services. Bind its result to a const and provide that const, per
  * the layer memoization discipline.
  *
- * **Example** (Provide application directories and ensure the config directory)
+ * **Example** (Construct a directory creation program)
  *
  * ```ts
- * import { AppDirs, Xdg } from "./index.ts";
+ * import { AppDirs } from "@beep/scratchpad/effected/xdg/AppDirs";
+ * import { Xdg } from "@beep/scratchpad/effected/xdg/Xdg";
  * import * as Effect from "effect/Effect";
  * import * as Layer from "effect/Layer";
  *
- * // Bound once to a const, with the ambient `Xdg` environment provided and kept.
+ * // Bound once, with the ambient Xdg environment provided and kept.
  * const AppDirsLive = Layer.provideMerge(AppDirs.layer({ namespace: "myapp", native: true }), Xdg.layer);
- *
  * const program = Effect.gen(function* () {
- * 	const appDirs = yield* AppDirs;
- * 	const configDir = yield* appDirs.ensureConfig;
- * 	console.log(configDir);
+ *   const appDirs = yield* AppDirs;
+ *   return yield* appDirs.ensureConfig;
  * });
- * // Requires `FileSystem` and `Path` from the platform layer.
+ * // Running the program requires FileSystem and Path from the platform layer.
+ * console.log(Layer.isLayer(AppDirsLive), Effect.isEffect(program)); // true true
  * ```
  *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class AppDirs extends Context.Service<AppDirs, AppDirsShape>()($I`AppDirs`) {
 	/**
-  * Resolve the namespace's directories against the ambient {@link Xdg}
-  * environment and platform.
-  *
-  * **Details**
-  *
-  * The error channel is `never`. The one failure that could happen during
-  * resolution — an unset `HOME` — surfaces on {@link Xdg.layer} as an
-  * `XdgEnvError`, before an `AppDirs` exists at all.
-  */
+	 * Resolve the namespace's directories against the ambient {@link Xdg}
+	 * environment and platform.
+	 *
+	 * **Details**
+	 *
+	 * The error channel is `never`. The one failure that could happen during
+	 * resolution — an unset `HOME` — surfaces on {@link Xdg.layer} as an
+	 * `XdgEnvError`, before an `AppDirs` exists at all.
+	 *
+	 * **Example** (Construct an application directory layer)
+	 *
+	 * ```ts
+	 * import { AppDirs } from "@beep/scratchpad/effected/xdg/AppDirs";
+	 * import * as Layer from "effect/Layer";
+	 *
+	 * const live = AppDirs.layer({ namespace: "myapp" });
+	 * console.log(Layer.isLayer(live)); // true
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static layer(options: AppDirsOptions): Layer.Layer<AppDirs, never, Xdg | FileSystem.FileSystem | Path.Path> {
 		return Layer.effect(
 			AppDirs,

@@ -57,76 +57,108 @@ const savePath = Effect.fn("savePath")(function* (
 /**
  * The bridge from XDG directories into `@effected/config-file`.
  *
+ * **Example** (Construct a config discovery resolver)
+ *
+ * ```ts
+ * import { XdgConfig } from "@beep/scratchpad/effected/xdg/XdgConfig";
+ *
+ * const resolver = XdgConfig.resolver({ filename: "config.json" });
+ * console.log(resolver.name); // xdg
+ * ```
+ *
  * @public
+ * @category utilities
+ * @since 0.0.0
  */
-export class XdgConfig {
-	private constructor() {}
-
+export abstract class XdgConfig {
 	/**
-  * Search the app's XDG config search path for `filename`.
-  *
-  * **Details**
-  *
-  * Probes the app's own config directory first, then each `$XDG_CONFIG_DIRS`
-  * entry namespaced — `~/.config/myapp/rc`, then `/etc/xdg/myapp/rc`.
-  *
-  * The scan runs through `Walker.firstMatch`, so a failure on one candidate means
-  * "this candidate did not match" and the search continues to the next: an unreadable
-  * `/etc/xdg` never hides a readable `~/.config`. Not-found and cannot-look stay
-  * indistinguishable to the caller, which is the resolver contract —
-  * `resolve`'s error channel is `never`.
-  *
-  * Place it **before** {@link XdgConfig.nativeResolver} in a chain, so an
-  * existing `~/.config/<app>` still wins over the OS-native directory.
-  */
+	 * Search the app's XDG config search path for `filename`.
+	 *
+	 * **Details**
+	 *
+	 * Probes the app's own config directory first, then each `$XDG_CONFIG_DIRS`
+	 * entry namespaced — `~/.config/myapp/rc`, then `/etc/xdg/myapp/rc`.
+	 *
+	 * The scan runs through `Walker.firstMatch`, so a failure on one candidate means
+	 * "this candidate did not match" and the search continues to the next: an unreadable
+	 * `/etc/xdg` never hides a readable `~/.config`. Not-found and cannot-look stay
+	 * indistinguishable to the caller, which is the resolver contract —
+	 * `resolve`'s error channel is `never`.
+	 *
+	 * Place it **before** {@link XdgConfig.nativeResolver} in a chain, so an
+	 * existing `~/.config/<app>` still wins over the OS-native directory.
+	 *
+	 * **Example** (Construct an ordered XDG search)
+	 *
+	 * ```ts
+	 * import { XdgConfig } from "@beep/scratchpad/effected/xdg/XdgConfig";
+	 *
+	 * const resolver = XdgConfig.resolver({ filename: "config.json" });
+	 * console.log(resolver.name); // xdg
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	static readonly resolver = resolver;
 
 	/**
-  * Probe the OS-native config directory for `filename`.
-  *
-  * **Details**
-  *
-  * Resolves the native config directory for `namespace`
-  * (`~/Library/Application Support/<ns>` on macOS, `%APPDATA%\<ns>` on Windows)
-  * and checks whether `filename` is there. On Linux and everywhere else
-  * {@link NativeDirs.resolve} yields `Option.none()`, so this resolver returns
-  * `Option.none()` without probing at all — the XDG resolver already owns
-  * `~/.config` there.
-  *
-  * Takes `namespace` rather than reading it off {@link AppDirs}: the native
-  * directory is a property of the OS convention, not of however the app happened
-  * to configure its XDG directories, and a caller may well probe a *different*
-  * namespace than the one their `AppDirs` was built for.
-  */
+	 * Probe the OS-native config directory for `filename`.
+	 *
+	 * **Details**
+	 *
+	 * Resolves the native config directory for `namespace`
+	 * (`~/Library/Application Support/<ns>` on macOS, `%APPDATA%\<ns>` on Windows)
+	 * and checks whether `filename` is there. On Linux and everywhere else
+	 * {@link NativeDirs.resolve} yields `Option.none()`, so this resolver returns
+	 * `Option.none()` without probing at all — the XDG resolver already owns
+	 * `~/.config` there.
+	 *
+	 * Takes `namespace` rather than reading it off {@link AppDirs}: the native
+	 * directory is a property of the OS convention, not of however the app happened
+	 * to configure its XDG directories, and a caller may well probe a *different*
+	 * namespace than the one their `AppDirs` was built for.
+	 *
+	 * **Example** (Construct native configuration discovery)
+	 *
+	 * ```ts
+	 * import { XdgConfig } from "@beep/scratchpad/effected/xdg/XdgConfig";
+	 *
+	 * const resolver = XdgConfig.nativeResolver({ namespace: "myapp", filename: "config.json" });
+	 * console.log(resolver.name); // native
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	static readonly nativeResolver = nativeResolver;
 
 	/**
-  * The default save target for a config file: `<app config dir>/<filename>`.
-  *
-  * **Details**
-  *
-  * Drops straight into `ConfigFileOptions.defaultPath`, whose slot is typed
-  * `Effect<string, never, RR>`. That infallible channel is the whole reason
-  * {@link AppDirs} resolves at layer-construction time, so no `orDie` is needed
-  * to fit the slot.
-  *
-  * It does **not** create the directory — `ConfigFile.save` already `mkdir -p`s
-  * the parent of whatever path it is given.
-  *
-  * **Example** (Set the default config save path)
-  *
-  * ```ts
-  * import { XdgConfig } from "./index.ts";
-  * import { ConfigFile, JsonCodec, MergeStrategy } from "../config-file/index.ts";
-  *
-  * const layer = ConfigFile.layer(AppConfig, {
-  * 	schema: AppShape,
-  * 	codec: JsonCodec,
-  * 	strategy: MergeStrategy.firstMatch<AppShape>(),
-  * 	resolvers: [XdgConfig.resolver({ filename: "config.json" })],
-  * 	defaultPath: XdgConfig.savePath("config.json"),
-  * });
-  * ```
-  */
+	 * The default save target for a config file: `<app config dir>/<filename>`.
+	 *
+	 * **Details**
+	 *
+	 * Drops straight into `ConfigFileOptions.defaultPath`, whose slot is typed
+	 * `Effect<string, never, RR>`. That infallible channel is the whole reason
+	 * {@link AppDirs} resolves at layer-construction time, so no `orDie` is needed
+	 * to fit the slot.
+	 *
+	 * It does **not** create the directory — `ConfigFile.save` already `mkdir -p`s
+	 * the parent of whatever path it is given.
+	 *
+	 * **Example** (Construct the default config save path)
+	 *
+	 * ```ts
+	 * import { XdgConfig } from "@beep/scratchpad/effected/xdg/XdgConfig";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const defaultPath = XdgConfig.savePath("config.json");
+	 * // Supply this effect to ConfigFileOptions.defaultPath. Running it requires AppDirs and Path.
+	 * console.log(Effect.isEffect(defaultPath)); // true
+	 * ```
+	 *
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	static readonly savePath = savePath;
 }
