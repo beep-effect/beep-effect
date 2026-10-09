@@ -159,3 +159,15 @@
 - Prevention: issue a coherent resume instruction that permits the separate
   reader-fix lane and retains the explicit M4 routing boundary, or land the
   shared-reader repair through an already authorized owner.
+
+## Resume wrapper environment and help probe (2026-10-09)
+
+- Work: restore bounded heavy-command admission after the corrected resume ruling.
+- Evidence: `beep-heavy --help` first failed because the user-scope bus environment
+  was absent. With the runtime/bus environment supplied, the wrapper interpreted
+  `--help` as a command and queued a transient service instead of printing usage.
+- Response: stopped only the newly owned probe service before admission; inspected
+  the wrapper to establish its positional command contract. No proof ran and no
+  slot or memory configuration changed.
+- Prevention: document that the wrapper has no help flag and initialize the
+  user-systemd environment in headless lane launchers.
