@@ -587,3 +587,21 @@ after resolving E's six main conflicts. No check has started and no pass is clai
 C keeps one queued unit, retains earlier terminal proof for unaffected surfaces,
 and changes no other lane's process or shared budget. A FIFO queue position and
 holder-age receipt would make the integration handoff time observable.
+
+### C Run 8 stale slot-count waiter
+
+Read-only lock inventory shows a fifth slot in use while C's older wrapper still
+waits on four. The installed orchestrator-owned override now supplies five slots.
+C verifies its waiter cwd and sole sleep child, stops only that unadmitted user
+unit and resubmits through the same canonical wrapper. No gate had started; no
+pass is lost. Reloading centrally supplied slot count while waiting would prevent
+new jobs overtaking old waiters after a budget change.
+
+### C Run 8 fixture environment policy
+
+The integration fixtures pass 29 cases, but `test-tsgo` rejects the new boot-failure
+fixture's direct PATH property read with `effect(processEnvInEffect)`. This is
+introduced by C. Replace that property read with `Config.String("PATH")`, preserving
+the synthetic transport and inherited environment spread. Rerun only the affected
+fixture/type/package checks; no policy suppression or inventory edit. A fixture
+review against the existing ambient-PATH example would have prevented the error.

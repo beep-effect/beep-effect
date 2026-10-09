@@ -370,6 +370,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
   it.effect(
     "runs the lane once when the measurement CLI cannot boot",
     Effect.fnUntraced(function* () {
+      const ambientPath = yield* Config.String("PATH");
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const root = yield* findRepoRoot();
@@ -389,7 +390,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
           "fixture",
           receipt,
         ],
-        { env: { ...process.env, PATH: `${temp}:${process.env.PATH}` }, stderr: "pipe", stdout: "pipe" }
+        { env: { ...process.env, PATH: `${temp}:${ambientPath}` }, stderr: "pipe", stdout: "pipe" }
       );
       assert.strictEqual(result.exitCode, 7);
       assert.strictEqual(yield* fs.readFileString(receipt), "run");
