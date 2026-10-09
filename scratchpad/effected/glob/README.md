@@ -1,23 +1,6 @@
 # glob (lab port of @effected/glob)
 
-[![npm](https://img.shields.io/npm/v/@effected%2Fglob?label=npm&color=cb3837)](https://www.npmjs.com/package/@effected/glob)
-[![License: MIT](https://img.shields.io/badge/License-MIT-4caf50.svg)](https://opensource.org/licenses/MIT)
-[![Node.js %3E%3D24.11.0](https://img.shields.io/badge/Node.js-%3E%3D24.11.0-5fa04e.svg)](https://nodejs.org/)
-[![TypeScript 7.0](https://img.shields.io/badge/TypeScript-7.0-3178c6.svg)](https://www.typescriptlang.org/)
-
 Full-fidelity glob matching as Effect schemas. The complete minimatch dialect — extglobs, `{a,b}` braces and sequences, character classes including POSIX classes, true `**` globstar, negation — compiled to pure string predicates, hardened against hostile input, with zero runtime dependencies.
-
-> **Pre-`1.0.0`.** This package is part of the `@effected/*` kit, built on stable
-> Effect v4 (`effect` `^4.0.0`) and still in `0.x` development. Stable Effect
-> makes a kit `1.0.0` possible, not automatic. To keep your `effect` and
-> `@effect/*` versions on the line the kit is built and tested against, install
-> [`@effected/pnpm-plugin-effect`](https://www.npmjs.com/package/@effected/pnpm-plugin-effect).
->
-> **Stability: unstable.** This package's API surface is not yet considered
-> complete and may change across `0.x` releases. Pin an exact version — even a
-> package marked *stable* before `1.0.0` can introduce a breaking change by
-> accident, and an exact pin turns that into a type-check error rather than a
-> runtime surprise. Full policy: [release strategy](https://github.com/spencerbeggs/effected#release-strategy).
 
 ## Why @effected/glob
 
@@ -29,16 +12,6 @@ The dialect is not a subset. The engine is a ported-with-attribution vendoring o
 
 One deliberate deviation from upstream: no ambient environment detection. `platform` is an explicit option defaulting to `"posix"`, and `process.platform` is never read, so a pattern behaves identically on every machine. All win32 path handling stays behind the option, for the caller who knows they need it.
 
-## Install
-
-```bash
-npm install @effected/glob effect
-```
-
-```bash
-pnpm add @effected/glob effect
-```
-
 Requires Node.js >=24.11.0. `effect` v4 is a peer dependency; the package itself adds no other runtime dependencies.
 
 All `@effected/*` packages are ESM-only: the exports maps publish only `import` conditions, so `require()` — including tools that resolve in CJS mode — fails with Node's `ERR_PACKAGE_PATH_NOT_EXPORTED` rather than loading a CJS build that does not exist. Import from an ES module.
@@ -48,24 +21,21 @@ All `@effected/*` packages are ESM-only: the exports maps publish only `import` 
 Compile once, then match as many candidates as you like:
 
 ```ts
-import { GlobPattern, GlobSet } from "@effected/glob";
-import { Effect } from "effect";
+import { GlobPattern } from "@beep/scratchpad/effected/glob/GlobPattern";
+import { GlobSet } from "@beep/scratchpad/effected/glob/GlobSet";
+import * as Effect from "effect/Effect";
 
 const program = Effect.gen(function* () {
   const pattern = yield* GlobPattern.compile("packages/**");
-  console.log(pattern.matches("packages/a"));
-  // true
-  console.log(pattern.matches("packages/a/b/c"));
-  // true — ** really crosses segment boundaries
-  console.log(pattern.matches("src/a"));
-  // false
+  console.log(pattern.matches("packages/a")) // true
+  // ** really crosses segment boundaries.
+  console.log(pattern.matches("packages/a/b/c")) // true
+  console.log(pattern.matches("src/a")) // false
 
   // Include/exclude sets: a leading ! is an exclusion filter.
   const set = yield* GlobSet.compile(["packages/*", "!packages/internal"]);
-  console.log(set.matches("packages/core"));
-  // true
-  console.log(set.matches("packages/internal"));
-  // false
+  console.log(set.matches("packages/core")) // true
+  console.log(set.matches("packages/internal")) // false
 });
 
 Effect.runPromise(program);
@@ -74,13 +44,12 @@ Effect.runPromise(program);
 A compiled pattern also carries the metadata a directory enumerator needs, so you can skip walking trees that cannot match:
 
 ```ts
-import { GlobPattern } from "@effected/glob";
-import { Effect } from "effect";
+import { GlobPattern } from "@beep/scratchpad/effected/glob/GlobPattern";
+import * as Effect from "effect/Effect";
 
 const program = Effect.gen(function* () {
   const pattern = yield* GlobPattern.compile("packages/**");
-  console.log(pattern.hasMagic, pattern.enumerationPrefix, pattern.crossesSegments);
-  // true "packages/" true
+  console.log(pattern.hasMagic, pattern.enumerationPrefix, pattern.crossesSegments) // true packages/ true
 });
 
 Effect.runPromise(program);
@@ -89,14 +58,16 @@ Effect.runPromise(program);
 Embed patterns in config schemas with the `FromString` codec, which validates compilability at decode time:
 
 ```ts
-import { GlobPattern } from "@effected/glob";
-import { Schema } from "effect";
+import { GlobPattern } from "@beep/scratchpad/effected/glob/GlobPattern";
+import * as S from "effect/Schema";
 
-const Config = Schema.Struct({
-  include: Schema.Array(GlobPattern.FromString),
+const Config = S.Struct({
+  include: S.Array(GlobPattern.FromString),
 });
 // Decoding a config whose `include` holds an uncompilable pattern fails as a
 // schema issue, before your program ever sees a GlobPattern.
+const config = S.decodeUnknownSync(Config)({ include: ["src/*.ts"] });
+console.log(config.include[0]?.matches("src/index.ts")) // true
 ```
 
 ## Errors
@@ -110,12 +81,16 @@ Compilation is the only thing that fails, and it fails with one tagged error who
 | `NestingDepthExceeded` | Braces, extglobs or the AST nest past the depth cap. |
 
 ```ts
-import { GlobPattern } from "@effected/glob";
-import { Effect } from "effect";
+import { GlobPattern } from "@beep/scratchpad/effected/glob/GlobPattern";
+import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
 
-Effect.runPromise(Effect.result(GlobPattern.compile("a".repeat(70_000)))).then(console.log);
-// Failure with GlobPatternError:
-// { reason: "PatternTooLong", limit: 65536, actual: 70000, pattern: "aaaa…" }
+const result = Effect.runSync(Effect.result(GlobPattern.compile("a".repeat(70_000))));
+if (Result.isFailure(result)) {
+  console.log(result.failure.reason) // PatternTooLong
+  console.log(result.failure.limit) // 65536
+  console.log(result.failure.actual) // 70000
+}
 ```
 
 ## Features
@@ -142,7 +117,6 @@ Each ported file carries its notice, and the real minimatch is used as the test 
 ## License
 
 [MIT](LICENSE)
-
 
 ## Port notes
 

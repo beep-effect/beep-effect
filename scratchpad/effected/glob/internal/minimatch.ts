@@ -46,7 +46,21 @@ export { GLOBSTAR };
 
 const $I = $ScratchpadId.create("effected/glob/internal/minimatch");
 
-/** An invariant violation in the internal minimatch engine. */
+/**
+ * An invariant violation in the internal minimatch engine.
+ *
+ * **Example** (Describe an engine invariant violation)
+ *
+ * ```ts
+ * import { MinimatchError } from "@beep/scratchpad/effected/glob/internal/minimatch"
+ *
+ * const error = MinimatchError.make({ message: "Unexpected matching state" })
+ * console.log(error.message) // Unexpected matching state
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
 export class MinimatchError extends S.TaggedError<MinimatchError>($I`MinimatchError`)("MinimatchError", {
 	message: S.String.annotateKey({ description: "Describes the internal matching invariant that was violated." }),
 }, $I.annote("MinimatchError", {
@@ -130,6 +144,25 @@ const twoStarNoDot = "(?:(?!(?:\\/|^)\\.).)*?";
 // Invalid sets are not expanded.
 // a{2..}b -> a{2..}b
 // a{b}c -> a{b}c
+/**
+ * Expands brace alternatives and numeric ranges into concrete glob patterns.
+ *
+ * **Details**
+ *
+ * Invalid brace sets remain unexpanded. With `nobrace`, the original pattern is returned
+ * as the only result. Expansion budgets are passed to the guarded brace expander.
+ *
+ * **Example** (Expand file extensions)
+ *
+ * ```ts
+ * import { braceExpand } from "@beep/scratchpad/effected/glob/internal/minimatch"
+ *
+ * console.log(braceExpand("file.{ts,js}").join(",")) // file.ts,file.js
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const braceExpand: {
 	(options?: EngineOptions): (pattern: string) => Array<string>;
 	(pattern: string, options?: EngineOptions): Array<string>;
@@ -151,28 +184,334 @@ export const braceExpand: {
 const globMagic = /[?*]|[+@!]\(.*?\)|\[|]/;
 const regExpEscape = (s: string): string => s.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
 
+/**
+ * Compiles a glob pattern once for repeated path matching and pattern inspection.
+ *
+ * **Details**
+ *
+ * The platform defaults explicitly to `posix`; Windows path handling requires `platform: "win32"`.
+ * The globstar recursion cap bounds matching work; reaching it yields a false negative
+ * instead of throwing, preserving the upstream security tradeoff.
+ *
+ * **Example** (Match a nested TypeScript path)
+ *
+ * ```ts
+ * import { Minimatch } from "@beep/scratchpad/effected/glob/internal/minimatch"
+ *
+ * const matcher = new Minimatch(["src", "**", "*.ts"].join("/"))
+ * console.log(matcher.match("src/internal/parser.ts")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export class Minimatch {
+	/**
+	 * The engine options supplied when this matcher was constructed.
+	 *
+	 * **Example** (Inspect options)
+	 *
+	 * ```ts
+	 * import { Minimatch } from "@beep/scratchpad/effected/glob/internal/minimatch"
+	 *
+	 * const matcher = new Minimatch("*.ts", { dot: true })
+	 * console.log(matcher.options.dot) // true
+	 * ```
+	 *
+	 * @category configuration
+	 * @since 0.0.0
+	 */
 	options: EngineOptions;
+	/**
+	 * The compiled segment alternatives retained after parsing and validation.
+	 *
+	 * **Example** (Inspect set)
+	 *
+	 * ```ts
+	 * import { Minimatch } from "@beep/scratchpad/effected/glob/internal/minimatch"
+	 *
+	 * const matcher = new Minimatch("*.ts", {})
+	 * console.log(matcher.set.length) // 1
+	 * ```
+	 *
+	 * @category models
+	 * @since 0.0.0
+	 */
 	set: Array<Array<ParseReturnFiltered>>;
+	/**
+	 * The working pattern after path normalization and leading-negation parsing.
+	 *
+	 * **Example** (Inspect pattern)
+	 *
+	 * ```ts
+	 * import { Minimatch } from "@beep/scratchpad/effected/glob/internal/minimatch"
+	 *
+	 * const matcher = new Minimatch("!file.ts", {})
+	 * console.log(matcher.pattern) // file.ts
+	 * ```
+	 *
+	 * @category models
+	 * @since 0.0.0
+	 */
 	pattern: string;
 
+	/**
+	 * Whether backslashes in the input pattern are treated as path separators.
+	 *
+	 * **Example** (Inspect windowsPathsNoEscape)
+	 *
+	 * ```ts
+	 * import { Minimatch } from "@beep/scratchpad/effected/glob/internal/minimatch"
+	 *
+	 * const matcher = new Minimatch("file.ts", { windowsPathsNoEscape: true })
+	 * console.log(matcher.windowsPathsNoEscape) // true
+	 * ```
+	 *
+	 * @category configuration
+	 * @since 0.0.0
+	 */
 	windowsPathsNoEscape: boolean;
+	/**
+	 * Whether leading negation markers remain literal pattern content.
+	 *
+	 * **Example** (Inspect nonegate)
+	 *
+	 * ```ts
+	 * import { Minimatch } from "@beep/scratchpad/effected/glob/internal/minimatch"
+	 *
+	 * const matcher = new Minimatch("file.ts", { nonegate: true })
+	 * console.log(matcher.nonegate) // true
+	 * ```
+	 *
+	 * @category configuration
+	 * @since 0.0.0
+	 */
 	nonegate: boolean;
+	/**
+	 * Whether the parsed pattern has an odd number of leading negation markers.
+	 *
+	 * **Example** (Inspect negate)
+	 *
+	 * ```ts
+	 * import { Minimatch } from "@beep/scratchpad/effected/glob/internal/minimatch"
+	 *
+	 * const matcher = new Minimatch("!file.ts", {})
+	 * console.log(matcher.negate) // true
+	 * ```
+	 *
+	 * @category models
+	 * @since 0.0.0
+	 */
 	negate: boolean;
+	/**
+	 * Whether the pattern was recognized as a comment rather than a matching pattern.
+	 *
+	 * **Example** (Inspect comment)
+	 *
+	 * ```ts
+	 * import { Minimatch } from "@beep/scratchpad/effected/glob/internal/minimatch"
+	 *
+	 * const matcher = new Minimatch("#comment", {})
+	 * console.log(matcher.comment) // true
+	 * ```
+	 *
+	 * @category models
+	 * @since 0.0.0
+	 */
 	comment: boolean;
+	/**
+	 * Whether the matcher was initialized with an empty pattern.
+	 *
+	 * **Example** (Inspect empty)
+	 *
+	 * ```ts
+	 * import { Minimatch } from "@beep/scratchpad/effected/glob/internal/minimatch"
+	 *
+	 * const matcher = new Minimatch("", {})
+	 * console.log(matcher.empty) // true
+	 * ```
+	 *
+	 * @category models
+	 * @since 0.0.0
+	 */
 	empty: boolean;
+	/**
+	 * Whether splitting and optimization preserve repeated path separators.
+	 *
+	 * **Example** (Inspect preserveMultipleSlashes)
+	 *
+	 * ```ts
+	 * import { Minimatch } from "@beep/scratchpad/effected/glob/internal/minimatch"
+	 *
+	 * const matcher = new Minimatch("file.ts", { preserveMultipleSlashes: true })
+	 * console.log(matcher.preserveMultipleSlashes) // true
+	 * ```
+	 *
+	 * @category configuration
+	 * @since 0.0.0
+	 */
 	preserveMultipleSlashes: boolean;
+	/**
+	 * The default prefix-matching mode used by path matching.
+	 *
+	 * **Example** (Inspect partial)
+	 *
+	 * ```ts
+	 * import { Minimatch } from "@beep/scratchpad/effected/glob/internal/minimatch"
+	 *
+	 * const matcher = new Minimatch("file.ts", { partial: true })
+	 * console.log(matcher.partial) // true
+	 * ```
+	 *
+	 * @category configuration
+	 * @since 0.0.0
+	 */
 	partial: boolean;
+	/**
+	 * The deduplicated brace-expanded patterns before segment preprocessing.
+	 *
+	 * **Example** (Inspect globSet)
+	 *
+	 * ```ts
+	 * import { Minimatch } from "@beep/scratchpad/effected/glob/internal/minimatch"
+	 *
+	 * const matcher = new Minimatch("file.{ts,js}", {})
+	 * console.log(matcher.globSet.join(",")) // file.ts,file.js
+	 * ```
+	 *
+	 * @category models
+	 * @since 0.0.0
+	 */
 	globSet: Array<string>;
+	/**
+	 * The preprocessed path-segment alternatives used to build the compiled set.
+	 *
+	 * **Example** (Inspect globParts)
+	 *
+	 * ```ts
+	 * import { Minimatch } from "@beep/scratchpad/effected/glob/internal/minimatch"
+	 *
+	 * const matcher = new Minimatch("src/file.ts", {})
+	 * console.log(matcher.globParts[0]?.join("/")) // src/file.ts
+	 * ```
+	 *
+	 * @category models
+	 * @since 0.0.0
+	 */
 	globParts: Array<Array<string>>;
+	/**
+	 * Whether pattern compilation uses case-insensitive matching.
+	 *
+	 * **Example** (Inspect nocase)
+	 *
+	 * ```ts
+	 * import { Minimatch } from "@beep/scratchpad/effected/glob/internal/minimatch"
+	 *
+	 * const matcher = new Minimatch("file.ts", { nocase: true })
+	 * console.log(matcher.nocase) // true
+	 * ```
+	 *
+	 * @category configuration
+	 * @since 0.0.0
+	 */
 	nocase: boolean;
 
+	/**
+	 * Whether the explicitly selected platform enables Windows path handling.
+	 *
+	 * **Example** (Inspect isWindows)
+	 *
+	 * ```ts
+	 * import { Minimatch } from "@beep/scratchpad/effected/glob/internal/minimatch"
+	 *
+	 * const matcher = new Minimatch("file.ts", { platform: "win32" })
+	 * console.log(matcher.isWindows) // true
+	 * ```
+	 *
+	 * @category configuration
+	 * @since 0.0.0
+	 */
 	isWindows: boolean;
+	/**
+	 * The explicit path platform, defaulting to POSIX without ambient detection.
+	 *
+	 * **Example** (Inspect platform)
+	 *
+	 * ```ts
+	 * import { Minimatch } from "@beep/scratchpad/effected/glob/internal/minimatch"
+	 *
+	 * const matcher = new Minimatch("file.ts", {})
+	 * console.log(matcher.platform) // posix
+	 * ```
+	 *
+	 * @category configuration
+	 * @since 0.0.0
+	 */
 	platform: Platform;
+	/**
+	 * Whether Windows drive and UNC roots are kept literal during pattern compilation.
+	 *
+	 * **Example** (Inspect windowsNoMagicRoot)
+	 *
+	 * ```ts
+	 * import { Minimatch } from "@beep/scratchpad/effected/glob/internal/minimatch"
+	 *
+	 * const matcher = new Minimatch("file.ts", { platform: "win32", nocase: true })
+	 * console.log(matcher.windowsNoMagicRoot) // true
+	 * ```
+	 *
+	 * @category configuration
+	 * @since 0.0.0
+	 */
 	windowsNoMagicRoot: boolean;
+	/**
+	 * The validated recursion cap used when matching globstar body sections.
+	 *
+	 * **Example** (Inspect maxGlobstarRecursion)
+	 *
+	 * ```ts
+	 * import { Minimatch } from "@beep/scratchpad/effected/glob/internal/minimatch"
+	 *
+	 * const matcher = new Minimatch("file.ts", { maxGlobstarRecursion: 5 })
+	 * console.log(matcher.maxGlobstarRecursion) // 5
+	 * ```
+	 *
+	 * @category configuration
+	 * @since 0.0.0
+	 */
 	maxGlobstarRecursion: number;
 
+	/**
+	 * The cached whole-pattern regular expression, initially null and false when compilation fails.
+	 *
+	 * **Example** (Inspect regexp)
+	 *
+	 * ```ts
+	 * import { Minimatch } from "@beep/scratchpad/effected/glob/internal/minimatch"
+	 *
+	 * const matcher = new Minimatch("file.ts", {})
+	 * console.log(matcher.regexp) // null
+	 * ```
+	 *
+	 * @category models
+	 * @since 0.0.0
+	 */
 	regexp: false | null | MMRegExp;
+	/**
+	 * Validates and compiles a pattern using explicit engine options.
+	 *
+	 * **Example** (Construct a case-insensitive matcher)
+	 *
+	 * ```ts
+	 * import { Minimatch } from "@beep/scratchpad/effected/glob/internal/minimatch"
+	 *
+	 * const matcher = new Minimatch("*.TS", { nocase: true })
+	 * console.log(matcher.match("file.ts")) // true
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	constructor(pattern: string, options: EngineOptions = {}) {
 		assertValidPattern(pattern);
 
@@ -207,6 +546,25 @@ export class Minimatch {
 		this.make();
 	}
 
+	/**
+	 * Detects whether compiled path segments contain glob syntax.
+	 *
+	 * **Details**
+	 *
+	 * Brace alternatives count as magic only when `magicalBraces` is enabled.
+	 *
+	 * **Example** (Distinguish a literal path from a glob)
+	 *
+	 * ```ts
+	 * import { Minimatch } from "@beep/scratchpad/effected/glob/internal/minimatch"
+	 *
+	 * console.log(new Minimatch("file.ts").hasMagic()) // false
+	 * console.log(new Minimatch("*.ts").hasMagic()) // true
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
+	 */
 	hasMagic(): boolean {
 		if (this.options.magicalBraces === true && this.set.length > 1) {
 			return true;
@@ -219,11 +577,47 @@ export class Minimatch {
 		return false;
 	}
 
+	/**
+	 * Accepts engine diagnostic calls without producing output.
+	 *
+	 * **Details**
+	 *
+	 * The upstream debug option and console wiring are dropped; call sites remain for fidelity.
+	 *
+	 * **Example** (Observe the no-op diagnostic return)
+	 *
+	 * ```ts
+	 * import { Minimatch } from "@beep/scratchpad/effected/glob/internal/minimatch"
+	 *
+	 * const matcher = new Minimatch("*.ts")
+	 * console.log(matcher.debug("inspection")) // undefined
+	 * ```
+	 *
+	 * @category diagnostics
+	 * @since 0.0.0
+	 */
 	debug(..._args: Array<unknown>) {
 		// no-op: the upstream debug option and its console.error wiring are
 		// dropped; call sites are kept for diffability against upstream.
 	}
 
+	/**
+	 * Builds the compiled alternatives and path segments used by this matcher.
+	 *
+	 * **Example** (Compile a replacement pattern)
+	 *
+	 * ```ts
+	 * import { Minimatch } from "@beep/scratchpad/effected/glob/internal/minimatch"
+	 *
+	 * const matcher = new Minimatch("*.ts")
+	 * matcher.pattern = "*.js"
+	 * matcher.make()
+	 * console.log(matcher.match("file.js")) // true
+	 * ```
+	 *
+	 * @category parsing
+	 * @since 0.0.0
+	 */
 	make() {
 		const pattern = this.pattern;
 		const options = this.options;
@@ -312,6 +706,27 @@ export class Minimatch {
 	// eliminate what we can, and push all ** patterns as far
 	// to the right as possible, even if it increases the number
 	// of patterns that we have to process.
+	/**
+	 * Simplifies split pattern alternatives using the configured optimization level.
+	 *
+	 * **Details**
+	 *
+	 * The transformations prepare patterns for faster filesystem walking. Some passes mutate
+	 * the supplied segment arrays, and `noglobstar` replaces globstars with single stars.
+	 *
+	 * **Example** (Collapse adjacent globstars during preprocessing)
+	 *
+	 * ```ts
+	 * import { Minimatch } from "@beep/scratchpad/effected/glob/internal/minimatch"
+	 *
+	 * const matcher = new Minimatch("*", { optimizationLevel: 0 })
+	 * const parts = matcher.preprocess([["src", "**", "**", "file.ts"]])
+	 * console.log(JSON.stringify(parts[0])) // ["src","**","file.ts"]
+	 * ```
+	 *
+	 * @category normalization
+	 * @since 0.0.0
+	 */
 	preprocess(globPartsInput: Array<Array<string>>) {
 		let globParts = globPartsInput;
 		// if we're not in globstar mode, then turn ** into *
@@ -343,6 +758,26 @@ export class Minimatch {
 	}
 
 	// just get rid of adjascent ** portions
+	/**
+	 * Collapses consecutive globstar segments in each pattern alternative.
+	 *
+	 * **Details**
+	 *
+	 * Segment arrays are edited in place. The method name preserves the upstream spelling.
+	 *
+	 * **Example** (Collapse repeated globstars)
+	 *
+	 * ```ts
+	 * import { Minimatch } from "@beep/scratchpad/effected/glob/internal/minimatch"
+	 *
+	 * const matcher = new Minimatch("*")
+	 * const parts = matcher.adjascentGlobstarOptimize([["**", "**", "file.ts"]])
+	 * console.log(JSON.stringify(parts[0])) // ["**","file.ts"]
+	 * ```
+	 *
+	 * @category normalization
+	 * @since 0.0.0
+	 */
 	adjascentGlobstarOptimize(globParts: Array<Array<string>>) {
 		return globParts.map((parts) => {
 			let gs = parts.indexOf("**");
@@ -361,6 +796,22 @@ export class Minimatch {
 	}
 
 	// get rid of adjascent ** and resolve .. portions
+	/**
+	 * Collapses adjacent globstars and resolves reducible parent-directory segments.
+	 *
+	 * **Example** (Resolve a parent segment)
+	 *
+	 * ```ts
+	 * import { Minimatch } from "@beep/scratchpad/effected/glob/internal/minimatch"
+	 *
+	 * const matcher = new Minimatch("*")
+	 * const parts = matcher.levelOneOptimize([["src", "internal", "..", "file.ts"]])
+	 * console.log(parts[0]?.join("/")) // src/file.ts
+	 * ```
+	 *
+	 * @category normalization
+	 * @since 0.0.0
+	 */
 	levelOneOptimize(globParts: Array<Array<string>>) {
 		return globParts.map((partsInput) => {
 			const parts = partsInput.reduce((set: Array<string>, part) => {
@@ -381,6 +832,26 @@ export class Minimatch {
 		});
 	}
 
+	/**
+	 * Normalizes candidate path segments for level-two matching.
+	 *
+	 * **Details**
+	 *
+	 * Array inputs are mutated. UNC roots and Windows drive roots are preserved;
+	 * `preserveMultipleSlashes` disables removal of interior empty and dot segments.
+	 *
+	 * **Example** (Normalize a candidate path)
+	 *
+	 * ```ts
+	 * import { Minimatch } from "@beep/scratchpad/effected/glob/internal/minimatch"
+	 *
+	 * const matcher = new Minimatch("*")
+	 * console.log(matcher.levelTwoFileOptimize("src/./internal/../file.ts").join("/")) // src/file.ts
+	 * ```
+	 *
+	 * @category normalization
+	 * @since 0.0.0
+	 */
 	levelTwoFileOptimize(partsInput: string | Array<string>) {
 		const parts = A.isArray(partsInput) ? partsInput : this.slashSplit(partsInput);
 		let didSomething = false;
@@ -438,6 +909,26 @@ export class Minimatch {
 	//
 	// **/*/<rest> -> */**/<rest> <== not valid because ** doesn't follow
 	// this WOULD be allowed if ** did follow symlinks, or * didn't
+	/**
+	 * Simplifies individual pattern alternatives for aggressive filesystem-walk optimization.
+	 *
+	 * **Details**
+	 *
+	 * This pass mutates its input and can append alternatives while reducing globstar-parent combinations.
+	 *
+	 * **Example** (Simplify an individual pattern)
+	 *
+	 * ```ts
+	 * import { Minimatch } from "@beep/scratchpad/effected/glob/internal/minimatch"
+	 *
+	 * const matcher = new Minimatch("*")
+	 * const parts = matcher.firstPhasePreProcess([["src", ".", "file.ts"]])
+	 * console.log(parts[0]?.join("/")) // src/file.ts
+	 * ```
+	 *
+	 * @category normalization
+	 * @since 0.0.0
+	 */
 	firstPhasePreProcess(globParts: Array<Array<string>>) {
 		let didSomething = false;
 		do {
@@ -523,6 +1014,26 @@ export class Minimatch {
 	//
 	// {<pre>/**/<rest>,<pre>/**/<p>/<rest>} -> <pre>/**/<rest>
 	// ^-- not valid because ** doens't follow symlinks
+	/**
+	 * Merges redundant pattern alternatives after individual-pattern simplification.
+	 *
+	 * **Details**
+	 *
+	 * The input alternatives are edited before the retained alternatives are returned.
+	 *
+	 * **Example** (Deduplicate pattern alternatives)
+	 *
+	 * ```ts
+	 * import { Minimatch } from "@beep/scratchpad/effected/glob/internal/minimatch"
+	 *
+	 * const matcher = new Minimatch("*")
+	 * const parts = matcher.secondPhasePreProcess([["src", "file.ts"], ["src", "file.ts"]])
+	 * console.log(parts.length) // 1
+	 * ```
+	 *
+	 * @category normalization
+	 * @since 0.0.0
+	 */
 	secondPhasePreProcess(globParts: Array<Array<string>>): Array<Array<string>> {
 		for (let i = 0; i < globParts.length - 1; i++) {
 			for (let j = i + 1; j < globParts.length; j++) {
@@ -540,6 +1051,27 @@ export class Minimatch {
 		return globParts.filter((gs) => gs.length);
 	}
 
+	/**
+	 * Finds a shared pattern that covers two compatible segment arrays.
+	 *
+	 * **Details**
+	 *
+	 * Incompatible alternatives return `false`. Empty globstar matches are considered only
+	 * when `emptyGSMatch` is enabled, and the final alternatives must have equal lengths.
+	 *
+	 * **Example** (Cover a literal with a wildcard pattern)
+	 *
+	 * ```ts
+	 * import { Minimatch } from "@beep/scratchpad/effected/glob/internal/minimatch"
+	 *
+	 * const matcher = new Minimatch("*")
+	 * const parts = matcher.partsMatch(["src", "*"], ["src", "file.ts"])
+	 * console.log(parts === false ? "incompatible" : parts.join("/")) // src/*
+	 * ```
+	 *
+	 * @category normalization
+	 * @since 0.0.0
+	 */
 	partsMatch(a: Array<string>, b: Array<string>, emptyGSMatch = false): false | Array<string> {
 		let ai = 0;
 		let bi = 0;
@@ -580,6 +1112,28 @@ export class Minimatch {
 		return a.length === b.length && result;
 	}
 
+	/**
+	 * Consumes leading negation markers and records their parity.
+	 *
+	 * **Details**
+	 *
+	 * With `nonegate`, the pattern is left untouched. Otherwise the consumed markers
+	 * are removed from `pattern`; each marker toggles the negation flag.
+	 *
+	 * **Example** (Parse a replacement negated pattern)
+	 *
+	 * ```ts
+	 * import { Minimatch } from "@beep/scratchpad/effected/glob/internal/minimatch"
+	 *
+	 * const matcher = new Minimatch("file.ts")
+	 * matcher.pattern = "!file.js"
+	 * matcher.parseNegate()
+	 * console.log(matcher.negate) // true
+	 * ```
+	 *
+	 * @category parsing
+	 * @since 0.0.0
+	 */
 	parseNegate() {
 		if (this.nonegate) return;
 
@@ -601,6 +1155,26 @@ export class Minimatch {
 	// Partial means, if you run out of file before you run
 	// out of pattern, then that's fine, as long as all
 	// the parts match.
+	/**
+	 * Matches candidate path segments against one compiled pattern alternative.
+	 *
+	 * **Details**
+	 *
+	 * Partial matching accepts an exhausted candidate when all its segments matched,
+	 * even if the pattern still has segments remaining.
+	 *
+	 * **Example** (Match literal path segments)
+	 *
+	 * ```ts
+	 * import { Minimatch } from "@beep/scratchpad/effected/glob/internal/minimatch"
+	 *
+	 * const matcher = new Minimatch("src/file.ts")
+	 * console.log(matcher.matchOne(["src", "file.ts"], ["src", "file.ts"])) // true
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
+	 */
 	matchOne(fileInput: Array<string>, pattern: Array<ParseReturn>, partial = false) {
 		let file = fileInput;
 		let fileStartIndex = 0;
@@ -658,6 +1232,21 @@ export class Minimatch {
 		return this.#matchOne(file, pattern, partial, fileStartIndex, patternStartIndex);
 	}
 
+	/**
+	 * Matches globstar-delimited head, body, and tail sections against candidate segments.
+	 *
+	 * **Example** (Match a globstar between literal segments)
+	 *
+	 * ```ts
+	 * import { Minimatch } from "@beep/scratchpad/effected/glob/internal/minimatch"
+	 *
+	 * const matcher = new Minimatch(["src", "**", "file.ts"].join("/"))
+	 * console.log(matcher.match("src/internal/file.ts")) // true
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
+	 */
 	#matchGlobstar(
 		file: Array<string>,
 		pattern: Array<ParseReturn>,
@@ -769,6 +1358,21 @@ export class Minimatch {
 
 	// return false for "nope, not matching"
 	// return null for "not matching, cannot keep trying"
+	/**
+	 * Searches ordered globstar body sections within their remaining candidate bounds.
+	 *
+	 * **Example** (Match multiple globstar body sections)
+	 *
+	 * ```ts
+	 * import { Minimatch } from "@beep/scratchpad/effected/glob/internal/minimatch"
+	 *
+	 * const matcher = new Minimatch(["src", "**", "lib", "**", "file.ts"].join("/"))
+	 * console.log(matcher.match("src/internal/lib/nested/file.ts")) // true
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
+	 */
 	#matchGlobStarBodySections(
 		file: Array<string>,
 		// pattern section, last possible position for it
@@ -836,6 +1440,21 @@ export class Minimatch {
 		return partial || null;
 	}
 
+	/**
+	 * Compares non-globstar segments from the supplied file and pattern offsets.
+	 *
+	 * **Example** (Match a literal segment sequence)
+	 *
+	 * ```ts
+	 * import { Minimatch } from "@beep/scratchpad/effected/glob/internal/minimatch"
+	 *
+	 * const matcher = new Minimatch(["src", "file.ts"].join("/"))
+	 * console.log(matcher.match("src/file.ts")) // true
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
+	 */
 	#matchOne(
 		file: Array<string>,
 		pattern: Array<ParseReturn>,
@@ -911,10 +1530,45 @@ export class Minimatch {
 		throw MinimatchError.make({ message: "wtf?" });
 	}
 
+	/**
+	 * Expands brace alternatives using this matcher’s current pattern and options.
+	 *
+	 * **Example** (Expand the matcher pattern)
+	 *
+	 * ```ts
+	 * import { Minimatch } from "@beep/scratchpad/effected/glob/internal/minimatch"
+	 *
+	 * const matcher = new Minimatch("file.{ts,js}")
+	 * console.log(matcher.braceExpand().join(",")) // file.ts,file.js
+	 * ```
+	 *
+	 * @category parsing
+	 * @since 0.0.0
+	 */
 	braceExpand() {
 		return braceExpand(this.pattern, this.options);
 	}
 
+	/**
+	 * Compiles one path segment into a literal, regular expression, or globstar marker.
+	 *
+	 * **Details**
+	 *
+	 * Common star and question-mark patterns receive optimized test functions.
+	 * An invalid compiled segment can return `false`.
+	 *
+	 * **Example** (Identify a globstar segment)
+	 *
+	 * ```ts
+	 * import { GLOBSTAR, Minimatch } from "@beep/scratchpad/effected/glob/internal/minimatch"
+	 *
+	 * const matcher = new Minimatch("*")
+	 * console.log(matcher.parse("**") === GLOBSTAR) // true
+	 * ```
+	 *
+	 * @category parsing
+	 * @since 0.0.0
+	 */
 	parse(pattern: string): ParseReturn {
 		assertValidPattern(pattern);
 
@@ -968,6 +1622,28 @@ export class Minimatch {
 		return re;
 	}
 
+	/**
+	 * Builds and caches a regular expression for the compiled alternatives.
+	 *
+	 * **Details**
+	 *
+	 * Prefer `match` for path matching; this method is convenient when a regular
+	 * expression is needed. It returns `false` when there are no compiled alternatives
+	 * or regular-expression construction fails.
+	 *
+	 * **Example** (Test a compiled regular expression)
+	 *
+	 * ```ts
+	 * import { Minimatch } from "@beep/scratchpad/effected/glob/internal/minimatch"
+	 *
+	 * const matcher = new Minimatch("*.ts")
+	 * const regexp = matcher.makeRe()
+	 * console.log(regexp === false ? false : regexp.test("file.ts")) // true
+	 * ```
+	 *
+	 * @category parsing
+	 * @since 0.0.0
+	 */
 	makeRe() {
 		if (this.regexp !== null) return this.regexp;
 
@@ -1062,6 +1738,26 @@ export class Minimatch {
 		return this.regexp;
 	}
 
+	/**
+	 * Splits a path into segments while respecting slash-preservation and Windows roots.
+	 *
+	 * **Details**
+	 *
+	 * Windows UNC paths keep their leading double slash. Other repeated slashes are
+	 * coalesced unless `preserveMultipleSlashes` is enabled.
+	 *
+	 * **Example** (Coalesce repeated path separators)
+	 *
+	 * ```ts
+	 * import { Minimatch } from "@beep/scratchpad/effected/glob/internal/minimatch"
+	 *
+	 * const matcher = new Minimatch("*")
+	 * console.log(matcher.slashSplit("src//file.ts").join("/")) // src/file.ts
+	 * ```
+	 *
+	 * @category parsing
+	 * @since 0.0.0
+	 */
 	slashSplit(p: string) {
 		// if p starts with // on windows, we preserve that
 		// so that UNC paths aren't broken.  Otherwise, any number of
@@ -1077,6 +1773,28 @@ export class Minimatch {
 		return p.split(/\/+/);
 	}
 
+	/**
+	 * Tests a candidate path against the compiled alternatives and negation options.
+	 *
+	 * **Details**
+	 *
+	 * Comment patterns reject candidates; empty patterns match only an empty candidate.
+	 * Windows candidates normalize backslashes. With `matchBase`, a single-segment
+	 * pattern is tested against the candidate basename; partial matching permits prefixes.
+	 *
+	 * **Example** (Match a TypeScript file)
+	 *
+	 * ```ts
+	 * import { Minimatch } from "@beep/scratchpad/effected/glob/internal/minimatch"
+	 *
+	 * const matcher = new Minimatch("*.ts")
+	 * console.log(matcher.match("file.ts")) // true
+	 * console.log(matcher.match("file.js")) // false
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
+	 */
 	match(fInput: string, partial = this.partial) {
 		this.debug("match", fInput, this.pattern);
 		// short-circuit in the case of busted things.

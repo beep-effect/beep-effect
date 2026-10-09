@@ -109,6 +109,17 @@ const parseCommaParts = (str: string, depth: number): Array<string> => {
 	return parts;
 };
 
+/**
+ * Configures the maximum number of alternatives produced by brace expansion.
+ *
+ * **Gotchas**
+ *
+ * An invalid `max` raises a `TypeError`; exhausting a valid budget raises
+ * {@link GuardExceeded} rather than silently truncating the alternatives.
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
 export interface BraceExpansionOptions {
 	readonly max?: number;
 }
@@ -116,9 +127,23 @@ export interface BraceExpansionOptions {
 /**
  * Expand a brace pattern into its alternatives, Bash 4.3 style.
  *
+ * **Gotchas**
+ *
  * Guard behavior (see the port notes above): over-deep nesting and budget
  * exhaustion throw {@link GuardExceeded}; an invalid `max` dies as a
  * `TypeError` defect.
+ *
+ * **Example** (Expand alternatives and a padded sequence)
+ *
+ * ```ts
+ * import { expand } from "@beep/scratchpad/effected/glob/internal/braceExpansion"
+ *
+ * console.log(expand("file.{ts,js}").join(",")) // file.ts,file.js
+ * console.log(expand("part{01..03}").join(",")) // part01,part02,part03
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const expand: {
 	(options?: BraceExpansionOptions): (str: string) => Array<string>;

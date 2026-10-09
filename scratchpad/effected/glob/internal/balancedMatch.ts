@@ -25,7 +25,17 @@
 
 import { dual } from "effect/Function";
 
-/** The balanced section found by {@link balanced}. */
+/**
+ * Describes the balanced section found by {@link balanced}.
+ *
+ * **Details**
+ *
+ * Delimiter offsets identify the opening and closing delimiters; `pre`, `body`,
+ * and `post` contain the text before, inside, and after the section.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export interface BalancedResult {
 	readonly start: number;
 	readonly end: number;
@@ -40,8 +50,25 @@ const maybeMatch = (reg: RegExp, str: string): string | null => {
 };
 
 /**
- * The first balanced `a ... b` section of `str`: its delimiter offsets and the
- * text before, inside and after it. `false` when no balanced pair exists.
+ * Finds the first balanced `a ... b` section of `str`, including its delimiter
+ * offsets and the text before, inside and after it.
+ *
+ * **Details**
+ *
+ * Returns `false` when no balanced pair exists.
+ *
+ * **Example** (Extract a nested brace body)
+ *
+ * ```ts
+ * import { balanced } from "@beep/scratchpad/effected/glob/internal/balancedMatch"
+ *
+ * const result = balanced("{", "}", "pre{a{b}c}post")
+ * console.log(result === false ? false : result.body) // a{b}c
+ * console.log(balanced("{", "}", "plain")) // false
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const balanced: {
 	(b: string | RegExp, str: string): (a: string | RegExp) => BalancedResult | false;
@@ -63,7 +90,25 @@ export const balanced: {
 	};
 });
 
-/** Offsets of the first balanced `a ... b` pair in `str`, or `undefined`. */
+/**
+ * Locates the delimiter offsets of the first balanced `a ... b` pair in `str`.
+ *
+ * **Details**
+ *
+ * Returns `undefined` when no balanced pair exists.
+ *
+ * **Example** (Locate opening and closing braces)
+ *
+ * ```ts
+ * import { range } from "@beep/scratchpad/effected/glob/internal/balancedMatch"
+ *
+ * console.log(range("{", "}", "a{b}c")?.join(",")) // 1,3
+ * console.log(range("{", "}", "plain")) // undefined
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const range: {
 	(b: string, str: string): (a: string) => undefined | [number, number];
 	(a: string, b: string, str: string): undefined | [number, number];

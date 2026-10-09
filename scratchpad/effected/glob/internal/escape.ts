@@ -12,6 +12,8 @@ import type { EngineOptions } from "./types.ts";
 /**
  * Escape all magic characters in a glob pattern.
  *
+ * **Details**
+ *
  * If the `windowsPathsNoEscape` option is used, then characters are escaped
  * by wrapping in `[]`, because a magic character wrapped in a character class
  * can only be satisfied by that exact character. In this mode, `\` is _not_
@@ -20,6 +22,19 @@ import type { EngineOptions } from "./types.ts";
  *
  * If the `magicalBraces` option is used, then braces (`{` and `}`) will be
  * escaped.
+ *
+ * **Example** (Escape wildcard characters in both path modes)
+ *
+ * ```ts
+ * import { escape } from "@beep/scratchpad/effected/glob/internal/escape"
+ *
+ * console.log(escape("*.ts")) // \*.ts
+ * console.log(escape("*.ts", { windowsPathsNoEscape: true })) // [*].ts
+ * console.log(escape("{a,b}", { magicalBraces: true, windowsPathsNoEscape: true })) // [{]a,b[}]
+ * ```
+ *
+ * @category encoding
+ * @since 0.0.0
  */
 const escapePattern: {
 	(options?: Pick<EngineOptions, "windowsPathsNoEscape" | "magicalBraces">): (s: string) => string;

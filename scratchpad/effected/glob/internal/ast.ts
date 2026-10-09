@@ -39,7 +39,21 @@ import { unescape as unescapePattern } from "./unescape.ts";
 
 const $I = $ScratchpadId.create("effected/glob/internal/ast");
 
-/** An invariant violation in the internal extglob syntax tree. */
+/**
+ * An invariant violation in the internal extglob syntax tree.
+ *
+ * **Example** (Inspect an invariant violation)
+ *
+ * ```ts
+ * import { ASTError } from "@beep/scratchpad/effected/glob/internal/ast"
+ *
+ * const error = ASTError.make({ message: "Invalid extglob child" })
+ * console.log(error.message) // Invalid extglob child
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
 export class ASTError extends S.TaggedError<ASTError>($I`ASTError`)("ASTError", {
 	message: S.String.annotateKey({ description: "The violated invariant in the extglob syntax tree." }),
 }, $I.annote("ASTError", {
@@ -83,11 +97,38 @@ export class ASTError extends S.TaggedError<ASTError>($I`ASTError`)("ASTError", 
 // ['^a', '(?:i|w(?:(?!(?:x|y).*zb$).*)z|j)', 'b$']
 // ['^a(?:i|w(?:(?!(?:x|y).*zb$).*)z|j)b$']
 
-/** The five operators that introduce an extended glob expression. */
+/**
+ * The five operators that introduce an extended glob expression.
+ *
+ * **Details**
+ *
+ * The operators represent negation, optional matching, one-or-more repetitions,
+ * zero-or-more repetitions, and exactly one alternative, respectively.
+ *
+ * **Example** (Recognize an extglob operator)
+ *
+ * ```ts
+ * import { ExtglobType } from "@beep/scratchpad/effected/glob/internal/ast"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ExtglobType)("@")) // true
+ * console.log(S.is(ExtglobType)("x")) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const ExtglobType = LiteralKit(["!", "?", "+", "*", "@"]).annotate($I.annote("ExtglobType", {
 	title: "Extended glob operator",
 	description: "The negation, optional, one-or-more, zero-or-more and exactly-one extglob operators.",
 }));
+/**
+ * An operator accepted by the extended-glob syntax tree.
+ *
+ * @see {@link ExtglobType} for the runtime operator schema.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ExtglobType = typeof ExtglobType.Type;
 const isExtglobType = S.is(ExtglobType);
 const isExtglobAST = (c: AST): c is AST & { type: ExtglobType } => isExtglobType(c.type);
@@ -198,30 +239,291 @@ const guardDepth = (depth: number): void => {
 };
 
 let ID = 0;
+/**
+ * Represents a glob path portion as literal pieces and nested extended-glob alternatives.
+ *
+ * **Details**
+ *
+ * Parsing builds a syntax tree before regular-expression generation.
+ * Negative extglobs incorporate the following pieces of their enclosing patterns
+ * so that regular-expression lookaheads preserve glob negation semantics.
+ *
+ * **Example** (Compile an extended glob)
+ *
+ * ```ts
+ * import { AST } from "@beep/scratchpad/effected/glob/internal/ast"
+ *
+ * const tree = AST.fromGlob("@(cat|dog)")
+ * const pattern = tree.toMMPattern()
+ * console.log(pattern instanceof RegExp && pattern.test("cat")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export class AST {
+	/**
+	 * Identifies the extglob operator, with `null` for a sequence of pattern pieces.
+	 *
+	 * **Example** (Inspect a sequence node)
+	 *
+	 * ```ts
+	 * import { AST } from "@beep/scratchpad/effected/glob/internal/ast"
+	 *
+	 * console.log(AST.fromGlob("cat").type) // null
+	 * ```
+	 *
+	 * @category models
+	 * @since 0.0.0
+	 */
 	type: ExtglobType | null;
+	/**
+	 * References the root that owns shared options and negation bookkeeping.
+	 *
+	 * **Example** (Read options inherited from the root)
+	 *
+	 * ```ts
+	 * import { AST } from "@beep/scratchpad/effected/glob/internal/ast"
+	 *
+	 * const root = new AST(null, undefined, { dot: true })
+	 * const child = new AST("@", root)
+	 * console.log(child.options === root.options) // true
+	 * ```
+	 *
+	 * @category models
+	 * @since 0.0.0
+	 */
 	readonly #root: AST;
 
 	// #hasMagic and #toString are assigned undefined to reset them, so they are
 	// declared `| undefined` rather than optional (exactOptionalPropertyTypes).
+	/**
+	 * Caches whether this node requires glob-aware regular-expression matching.
+	 *
+	 * **Example** (Resolve the cached magic state)
+	 *
+	 * ```ts
+	 * import { AST } from "@beep/scratchpad/effected/glob/internal/ast"
+	 *
+	 * const tree = AST.fromGlob("*")
+	 * tree.toRegExpSource()
+	 * console.log(tree.hasMagic) // true
+	 * ```
+	 *
+	 * @category models
+	 * @since 0.0.0
+	 */
 	#hasMagic: boolean | undefined;
+	/**
+	 * Tracks whether generated character-class source requires the Unicode flag.
+	 *
+	 * **Example** (Inspect the Unicode requirement of a literal)
+	 *
+	 * ```ts
+	 * import { AST } from "@beep/scratchpad/effected/glob/internal/ast"
+	 *
+	 * console.log(AST.fromGlob("cat").toRegExpSource()[3]) // false
+	 * ```
+	 *
+	 * @category models
+	 * @since 0.0.0
+	 */
 	#uflag = false;
+	/**
+	 * Stores literal sequence pieces or the alternative nodes of an extglob.
+	 *
+	 * **Example** (Append a sequence piece)
+	 *
+	 * ```ts
+	 * import { AST } from "@beep/scratchpad/effected/glob/internal/ast"
+	 *
+	 * const tree = new AST(null)
+	 * tree.push("cat")
+	 * console.log(tree.toString()) // cat
+	 * ```
+	 *
+	 * @category models
+	 * @since 0.0.0
+	 */
 	#parts: Array<string | AST> = [];
+	/**
+	 * References the enclosing node, or remains undefined for a root.
+	 *
+	 * **Example** (Measure distance to an enclosing root)
+	 *
+	 * ```ts
+	 * import { AST } from "@beep/scratchpad/effected/glob/internal/ast"
+	 *
+	 * const root = new AST(null)
+	 * console.log(new AST("@", root).depth) // 1
+	 * ```
+	 *
+	 * @category models
+	 * @since 0.0.0
+	 */
 	#parent: AST | undefined;
+	/**
+	 * Records the insertion position within the enclosing node for boundary and negation handling.
+	 *
+	 * **Example** (Inspect a leading child boundary)
+	 *
+	 * ```ts
+	 * import { AST } from "@beep/scratchpad/effected/glob/internal/ast"
+	 *
+	 * const root = new AST(null)
+	 * const child = new AST("@", root)
+	 * root.push(child)
+	 * console.log(child.isStart()) // true
+	 * ```
+	 *
+	 * @category models
+	 * @since 0.0.0
+	 */
 	#parentIndex: number;
+	/**
+	 * Shares the root registry of negative extglobs awaiting tail completion.
+	 *
+	 * **Example** (Compile a registered negative extglob)
+	 *
+	 * ```ts
+	 * import { AST } from "@beep/scratchpad/effected/glob/internal/ast"
+	 *
+	 * const pattern = AST.fromGlob("!(cat)").toMMPattern()
+	 * console.log(pattern instanceof RegExp && pattern.test("dog")) // true
+	 * ```
+	 *
+	 * @category models
+	 * @since 0.0.0
+	 */
 	#negs: Array<AST>;
+	/**
+	 * Records whether the root has completed its negative-extglob tails.
+	 *
+	 * **Example** (Generate negation source twice)
+	 *
+	 * ```ts
+	 * import { AST } from "@beep/scratchpad/effected/glob/internal/ast"
+	 *
+	 * const tree = AST.fromGlob("!(cat)")
+	 * const first = tree.toRegExpSource()[0]
+	 * console.log(tree.toRegExpSource()[0] === first) // true
+	 * ```
+	 *
+	 * @category models
+	 * @since 0.0.0
+	 */
 	#filledNegs = false;
+	/**
+	 * Stores the options object shared with the root and all sibling nodes.
+	 *
+	 * **Example** (Read root matching options)
+	 *
+	 * ```ts
+	 * import { AST } from "@beep/scratchpad/effected/glob/internal/ast"
+	 *
+	 * console.log(AST.fromGlob("*", { dot: true }).options.dot) // true
+	 * ```
+	 *
+	 * @category configuration
+	 * @since 0.0.0
+	 */
 	#options: EngineOptions;
+	/**
+	 * Caches the reconstructed pattern until a structural transformation clears it.
+	 *
+	 * **Example** (Read the reconstructed pattern twice)
+	 *
+	 * ```ts
+	 * import { AST } from "@beep/scratchpad/effected/glob/internal/ast"
+	 *
+	 * const tree = AST.fromGlob("@(cat|dog)")
+	 * console.log(tree.toString() === tree.toString()) // true
+	 * ```
+	 *
+	 * @category models
+	 * @since 0.0.0
+	 */
 	#toString: string | undefined;
 	// set to true if it's an extglob with no children
 	// (which really means one child of '')
+	/**
+	 * Marks an extglob with no children, representing one empty alternative.
+	 *
+	 * **Example** (Compile an empty negative extglob)
+	 *
+	 * ```ts
+	 * import { AST } from "@beep/scratchpad/effected/glob/internal/ast"
+	 *
+	 * const pattern = AST.fromGlob("!()").toMMPattern()
+	 * console.log(pattern instanceof RegExp && pattern.test("x")) // true
+	 * ```
+	 *
+	 * @category models
+	 * @since 0.0.0
+	 */
 	#emptyExt = false;
+	/**
+	 * Identifies this node in the internal inspection output.
+	 *
+	 * **Details**
+	 *
+	 * Each constructed node receives the next identifier from the module counter.
+	 *
+	 * **Example** (Compare node identities)
+	 *
+	 * ```ts
+	 * import { AST } from "@beep/scratchpad/effected/glob/internal/ast"
+	 *
+	 * const first = new AST(null)
+	 * const second = new AST(null)
+	 * console.log(second.id > first.id) // true
+	 * ```
+	 *
+	 * @category identifiers
+	 * @since 0.0.0
+	 */
 	id = ++ID;
 
+	/**
+	 * Reports how many parent edges separate this node from its root.
+	 *
+	 * **Details**
+	 *
+	 * A root node has depth zero.
+	 *
+	 * **Example** (Measure a child depth)
+	 *
+	 * ```ts
+	 * import { AST } from "@beep/scratchpad/effected/glob/internal/ast"
+	 *
+	 * const root = new AST(null)
+	 * const child = new AST("@", root)
+	 * console.log(child.depth) // 1
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	get depth(): number {
 		return (this.#parent?.depth ?? -1) + 1;
 	}
 
+	/**
+	 * Provides structural metadata for Node.js custom inspection of a syntax-tree node.
+	 *
+	 * **Example** (Inspect a root with Node utilities)
+	 *
+	 * ```ts
+	 * import { AST } from "@beep/scratchpad/effected/glob/internal/ast"
+	 * import { inspect } from "node:util"
+	 *
+	 * const rendered = inspect(AST.fromGlob("cat"))
+	 * console.log(rendered.includes("partsLength: 1")) // true
+	 * ```
+	 *
+	 * @category diagnostics
+	 * @since 0.0.0
+	 */
 	[Symbol.for("nodejs.util.inspect.custom")]() {
 		return {
 			"@@type": "AST",
@@ -235,6 +537,27 @@ export class AST {
 		};
 	}
 
+	/**
+	 * Creates an empty sequence or extglob node attached to an optional parent.
+	 *
+	 * **Details**
+	 *
+	 * Children share the root options and its registry of negative extglobs.
+	 * A non-null operator marks the node as magical immediately.
+	 *
+	 * **Example** (Construct a child operator)
+	 *
+	 * ```ts
+	 * import { AST } from "@beep/scratchpad/effected/glob/internal/ast"
+	 *
+	 * const root = new AST(null, undefined, { dot: true })
+	 * const child = new AST("@", root)
+	 * console.log(child.options.dot) // true
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	constructor(type: ExtglobType | null, parent?: AST, options: EngineOptions = {}) {
 		this.type = type;
 		// extglobs are inherently magical
@@ -247,6 +570,28 @@ export class AST {
 		this.#parentIndex = this.#parent !== undefined ? this.#parent.#parts.length : 0;
 	}
 
+	/**
+	 * Reports known glob magic in this node or its nested extglobs.
+	 *
+	 * **Gotchas**
+	 *
+	 * Literal-piece wildcard detection is deferred until regular-expression source
+	 * is generated, so the result can be undefined before that step.
+	 *
+	 * **Example** (Observe deferred wildcard detection)
+	 *
+	 * ```ts
+	 * import { AST } from "@beep/scratchpad/effected/glob/internal/ast"
+	 *
+	 * const tree = AST.fromGlob("*")
+	 * console.log(tree.hasMagic) // undefined
+	 * tree.toRegExpSource()
+	 * console.log(tree.hasMagic) // true
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	get hasMagic(): boolean | undefined {
 		if (this.#hasMagic !== undefined) return this.#hasMagic;
 		for (const p of this.#parts) {
@@ -261,6 +606,25 @@ export class AST {
 	}
 
 	// reconstructs the pattern
+	/**
+	 * Reconstructs the glob pattern represented by this node.
+	 *
+	 * **Details**
+	 *
+	 * Sequence pieces are concatenated; extglob alternatives are joined with a pipe
+	 * and enclosed by their operator and parentheses. The result is cached.
+	 *
+	 * **Example** (Reconstruct an alternative pattern)
+	 *
+	 * ```ts
+	 * import { AST } from "@beep/scratchpad/effected/glob/internal/ast"
+	 *
+	 * console.log(AST.fromGlob("@(cat|dog)").toString()) // @(cat|dog)
+	 * ```
+	 *
+	 * @category formatting
+	 * @since 0.0.0
+	 */
 	toString(): string {
 		if (this.#toString !== undefined) return this.#toString;
 		if (this.type === null) {
@@ -271,6 +635,26 @@ export class AST {
 		return this.#toString;
 	}
 
+	/**
+	 * Completes negative-extglob alternatives with the following pieces of enclosing sequences.
+	 *
+	 * **Details**
+	 *
+	 * Only the root may perform this step; calling it on a child throws ASTError.
+	 * Completion is performed once, after caching the original pattern string.
+	 *
+	 * **Example** (Preserve a suffix after negation)
+	 *
+	 * ```ts
+	 * import { AST } from "@beep/scratchpad/effected/glob/internal/ast"
+	 *
+	 * const pattern = AST.fromGlob("!(cat)z").toMMPattern()
+	 * console.log(pattern instanceof RegExp && pattern.test("dogz")) // true
+	 * ```
+	 *
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	#fillNegs() {
 		if (this !== this.#root) throw ASTError.make({ message: "should only call on root" });
 		if (this.#filledNegs) return this;
@@ -305,6 +689,28 @@ export class AST {
 		return this;
 	}
 
+	/**
+	 * Appends non-empty literal pieces or children belonging to this node.
+	 *
+	 * **Gotchas**
+	 *
+	 * An AST child must have this node as its parent; otherwise an ASTError is thrown.
+	 * Appending does not clear an already cached string representation, so append
+	 * before calling toString.
+	 *
+	 * **Example** (Append a literal piece)
+	 *
+	 * ```ts
+	 * import { AST } from "@beep/scratchpad/effected/glob/internal/ast"
+	 *
+	 * const tree = new AST(null)
+	 * tree.push("cat", "")
+	 * console.log(tree.toString()) // cat
+	 * ```
+	 *
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	push(...parts: Array<string | AST>) {
 		for (const p of parts) {
 			if (p === "") continue;
@@ -315,6 +721,26 @@ export class AST {
 		}
 	}
 
+	/**
+	 * Serializes node pieces and extglob operators into nested arrays with boundary markers.
+	 *
+	 * **Details**
+	 *
+	 * Sequence starts receive an empty-array marker. Pattern ends receive an
+	 * empty-object marker; negation tails also receive that marker after they are filled.
+	 * Extglob nodes begin their array with their operator.
+	 *
+	 * **Example** (Serialize a literal root)
+	 *
+	 * ```ts
+	 * import { AST } from "@beep/scratchpad/effected/glob/internal/ast"
+	 *
+	 * console.log(JSON.stringify(AST.fromGlob("cat").toJSON())) // [[],"cat",{}]
+	 * ```
+	 *
+	 * @category serialization
+	 * @since 0.0.0
+	 */
 	toJSON() {
 		const ret: Array<unknown> =
 			this.type === null
@@ -330,6 +756,25 @@ export class AST {
 		return ret;
 	}
 
+	/**
+	 * Checks whether this node can occupy the beginning of its enclosing pattern.
+	 *
+	 * **Details**
+	 *
+	 * A root is always a start. A child can also be a start when all preceding
+	 * siblings are negative extglobs and its parent is a start.
+	 *
+	 * **Example** (Identify a root start)
+	 *
+	 * ```ts
+	 * import { AST } from "@beep/scratchpad/effected/glob/internal/ast"
+	 *
+	 * console.log(AST.fromGlob("cat").isStart()) // true
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
+	 */
 	isStart(): boolean {
 		if (this.#root === this) return true;
 		if (this.#parent?.isStart() !== true) return false;
@@ -345,6 +790,25 @@ export class AST {
 		return true;
 	}
 
+	/**
+	 * Checks whether this node reaches the end of its enclosing pattern.
+	 *
+	 * **Details**
+	 *
+	 * A root and a direct child of a negative extglob count as ends. Other nodes
+	 * depend on their parent boundary and, for extglobs, their position among siblings.
+	 *
+	 * **Example** (Identify a root end)
+	 *
+	 * ```ts
+	 * import { AST } from "@beep/scratchpad/effected/glob/internal/ast"
+	 *
+	 * console.log(AST.fromGlob("cat").isEnd()) // true
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
+	 */
 	isEnd(): boolean {
 		if (this.#root === this) return true;
 		if (this.#parent?.type === "!") return true;
@@ -355,12 +819,55 @@ export class AST {
 		return this.#parentIndex === pl - 1;
 	}
 
+	/**
+	 * Copies a literal piece or clones a subtree into this node.
+	 *
+	 * **Details**
+	 *
+	 * Subtrees are cloned with this node as their parent. Recursive copying is
+	 * guarded by the structural nesting-depth limit.
+	 *
+	 * **Example** (Copy a subtree into a sequence)
+	 *
+	 * ```ts
+	 * import { AST } from "@beep/scratchpad/effected/glob/internal/ast"
+	 *
+	 * const target = new AST(null)
+	 * target.copyIn(AST.fromGlob("cat"))
+	 * console.log(target.toString()) // cat
+	 * ```
+	 *
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	copyIn(part: AST | string, depth = 0) {
 		guardDepth(depth);
 		if (P.isString(part)) this.push(part);
 		else this.push(part.clone(this, depth + 1));
 	}
 
+	/**
+	 * Copies this node and its descendants under a supplied parent.
+	 *
+	 * **Details**
+	 *
+	 * The clone inherits its new root options. Recursive cloning and copying are
+	 * guarded by the structural nesting-depth limit.
+	 *
+	 * **Example** (Clone beneath a new root)
+	 *
+	 * ```ts
+	 * import { AST } from "@beep/scratchpad/effected/glob/internal/ast"
+	 *
+	 * const parent = new AST(null)
+	 * const cloned = AST.fromGlob("cat").clone(parent)
+	 * parent.push(cloned)
+	 * console.log(parent.toString()) // cat
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	clone(parent: AST, depth = 0): AST {
 		guardDepth(depth);
 		const c = new AST(this.type, parent);
@@ -370,6 +877,20 @@ export class AST {
 		return c;
 	}
 
+	/**
+	 * Accumulates literal pieces and nested extglobs while tracking structural and operator depth.
+	 *
+	 * **Example** (Parse nested alternatives)
+	 *
+	 * ```ts
+	 * import { AST } from "@beep/scratchpad/effected/glob/internal/ast"
+	 *
+	 * console.log(AST.fromGlob("@(cat|@(dog|fox))").toString()) // @(cat|@(dog|fox))
+	 * ```
+	 *
+	 * @category parsing
+	 * @since 0.0.0
+	 */
 	static #parseAST(
 		str: string,
 		ast: AST,
@@ -510,12 +1031,42 @@ export class AST {
 		return i;
 	}
 
+	/**
+	 * Checks whether a nested extglob can be flattened by adding an empty alternative.
+	 *
+	 * **Example** (Compile optional alternatives under repetition)
+	 *
+	 * ```ts
+	 * import { AST } from "@beep/scratchpad/effected/glob/internal/ast"
+	 *
+	 * const pattern = AST.fromGlob("+(?(cat))").toMMPattern()
+	 * console.log(pattern instanceof RegExp && pattern.test("cat")) // true
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
+	 */
 	#canAdoptWithSpace(child?: AST | string): child is AST & {
 		type: null;
 	} {
 		return this.#canAdopt(child, adoptionWithSpaceMap);
 	}
 
+	/**
+	 * Checks whether a sole nested extglob has an operator that this node can absorb.
+	 *
+	 * **Example** (Compile compatible nested operators)
+	 *
+	 * ```ts
+	 * import { AST } from "@beep/scratchpad/effected/glob/internal/ast"
+	 *
+	 * const pattern = AST.fromGlob("+(+(cat|dog))").toMMPattern()
+	 * console.log(pattern instanceof RegExp && pattern.test("catdog")) // true
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
+	 */
 	#canAdopt(
 		child?: AST | string,
 		map: HashMap.HashMap<ExtglobType, Array<ExtglobType>> = adoptionMap,
@@ -532,10 +1083,40 @@ export class AST {
 		return this.#canAdoptType(gc.type, map);
 	}
 
+	/**
+	 * Checks whether an operator is compatible with this node under an adoption map.
+	 *
+	 * **Example** (Compile exactly-one alternatives under repetition)
+	 *
+	 * ```ts
+	 * import { AST } from "@beep/scratchpad/effected/glob/internal/ast"
+	 *
+	 * const pattern = AST.fromGlob("+(@(cat|dog))").toMMPattern()
+	 * console.log(pattern instanceof RegExp && pattern.test("catdog")) // true
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
+	 */
 	#canAdoptType(c: string, map: HashMap.HashMap<ExtglobType, Array<ExtglobType>> = adoptionAnyMap): c is ExtglobType {
 		return this.type !== null && isExtglobType(c) && O.exists(HashMap.get(map, this.type), (types) => types.includes(c));
 	}
 
+	/**
+	 * Adds an empty alternative to a nested operator before adopting its alternatives.
+	 *
+	 * **Example** (Retain optional alternatives during flattening)
+	 *
+	 * ```ts
+	 * import { AST } from "@beep/scratchpad/effected/glob/internal/ast"
+	 *
+	 * const pattern = AST.fromGlob("@(?(cat)|dog)").toMMPattern()
+	 * console.log(pattern instanceof RegExp && pattern.test("dog")) // true
+	 * ```
+	 *
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	#adoptWithSpace(
 		child: AST & {
 			type: null;
@@ -550,6 +1131,26 @@ export class AST {
 		this.#adopt(child, index);
 	}
 
+	/**
+	 * Replaces a nested sequence wrapper with its extglob alternatives and reparents them.
+	 *
+	 * **Details**
+	 *
+	 * Adoption clears the cached string representation and updates child parents.
+	 *
+	 * **Example** (Flatten repeated nested alternatives)
+	 *
+	 * ```ts
+	 * import { AST } from "@beep/scratchpad/effected/glob/internal/ast"
+	 *
+	 * const tree = AST.fromGlob("+(+(cat|dog)|fox)")
+	 * tree.toRegExpSource()
+	 * console.log(tree.toString()) // +(cat|dog|fox)
+	 * ```
+	 *
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	#adopt(
 		child: AST & {
 			type: null;
@@ -565,10 +1166,40 @@ export class AST {
 		this.#toString = undefined;
 	}
 
+	/**
+	 * Checks whether a sole nested operator can replace this node according to the usurp map.
+	 *
+	 * **Example** (Compile nested optional repetition)
+	 *
+	 * ```ts
+	 * import { AST } from "@beep/scratchpad/effected/glob/internal/ast"
+	 *
+	 * const pattern = AST.fromGlob("?(+(cat))").toMMPattern()
+	 * console.log(pattern instanceof RegExp && pattern.test("catcat")) // true
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
+	 */
 	#canUsurpType(c: string): boolean {
 		return this.type !== null && isExtglobType(c) && O.exists(HashMap.get(usurpMap, this.type), (types) => HashMap.has(types, c));
 	}
 
+	/**
+	 * Checks whether a sole sequence child wraps an operator that can replace this node.
+	 *
+	 * **Example** (Compile a sole nested alternative)
+	 *
+	 * ```ts
+	 * import { AST } from "@beep/scratchpad/effected/glob/internal/ast"
+	 *
+	 * const pattern = AST.fromGlob("@(*(cat))").toMMPattern()
+	 * console.log(pattern instanceof RegExp && pattern.test("catcat")) // true
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
+	 */
 	#canUsurp(child?: AST | string): child is AST & {
 		type: null;
 	} {
@@ -589,6 +1220,26 @@ export class AST {
 		return this.#canUsurpType(gc.type);
 	}
 
+	/**
+	 * Replaces this node operator and alternatives with those of a compatible sole descendant.
+	 *
+	 * **Details**
+	 *
+	 * Replacement clears the cached string representation and empty-extglob marker.
+	 *
+	 * **Example** (Collapse optional repetition)
+	 *
+	 * ```ts
+	 * import { AST } from "@beep/scratchpad/effected/glob/internal/ast"
+	 *
+	 * const tree = AST.fromGlob("?(+(cat))")
+	 * tree.toRegExpSource()
+	 * console.log(tree.toString()) // *(cat)
+	 * ```
+	 *
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	#usurp(child: AST & { type: null }) {
 		if (this.type === null) return;
 		const m = HashMap.get(usurpMap, this.type);
@@ -607,6 +1258,32 @@ export class AST {
 		this.#emptyExt = false;
 	}
 
+	/**
+	 * Parses a glob path portion into a root syntax tree.
+	 *
+	 * **Details**
+	 *
+	 * Compatible nested extglobs can be coalesced during parsing. An unfinished
+	 * extglob is retained as literal text.
+	 *
+	 * **Gotchas**
+	 *
+	 * A supplied maxExtglobRecursion must be a valid non-negative integer cap.
+	 * Exceeding that cap degrades further non-coalescible extglobs to literal text.
+	 * The independent structural nesting-depth guard throws GuardExceeded for
+	 * excessive nesting, including nesting that could otherwise be coalesced.
+	 *
+	 * **Example** (Parse an extended-glob alternative)
+	 *
+	 * ```ts
+	 * import { AST } from "@beep/scratchpad/effected/glob/internal/ast"
+	 *
+	 * console.log(AST.fromGlob("@(cat|dog)").toString()) // @(cat|dog)
+	 * ```
+	 *
+	 * @category parsing
+	 * @since 0.0.0
+	 */
 	static fromGlob(pattern: string, options: EngineOptions = {}): AST {
 		if (options.maxExtglobRecursion !== undefined) {
 			assertCap("maxExtglobRecursion", options.maxExtglobRecursion);
@@ -618,6 +1295,29 @@ export class AST {
 
 	// returns the regular expression if there's magic, or the unescaped
 	// string if not.
+	/**
+	 * Produces a regular expression for magic patterns or an unescaped literal for plain patterns.
+	 *
+	 * **Details**
+	 *
+	 * Calling this method on a child delegates to its root. Regular expressions are
+	 * anchored and carry the original glob and generated source in metadata.
+	 * Case-insensitive matching can require a regular expression even without glob
+	 * magic, unless nocaseMagicOnly restricts that behavior.
+	 *
+	 * **Example** (Compile both literal and wildcard patterns)
+	 *
+	 * ```ts
+	 * import { AST } from "@beep/scratchpad/effected/glob/internal/ast"
+	 *
+	 * console.log(AST.fromGlob("cat").toMMPattern()) // cat
+	 * const pattern = AST.fromGlob("c*").toMMPattern()
+	 * console.log(pattern instanceof RegExp && pattern.test("cat")) // true
+	 * ```
+	 *
+	 * @category parsing
+	 * @since 0.0.0
+	 */
 	toMMPattern(): MMRegExp | string {
 		// should only be called on root
 		if (this !== this.#root) return this.#root.toMMPattern();
@@ -641,6 +1341,26 @@ export class AST {
 		return pattern;
 	}
 
+	/**
+	 * Exposes the root options shared by every node in this tree.
+	 *
+	 * **Details**
+	 *
+	 * The returned options object is the same object supplied to the root; it is
+	 * not copied.
+	 *
+	 * **Example** (Read shared dot matching options)
+	 *
+	 * ```ts
+	 * import { AST } from "@beep/scratchpad/effected/glob/internal/ast"
+	 *
+	 * const tree = AST.fromGlob("*", { dot: true })
+	 * console.log(tree.options.dot) // true
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	get options(): EngineOptions {
 		return this.#options;
 	}
@@ -648,6 +1368,34 @@ export class AST {
 	// returns the string match, the regexp source, whether there's magic
 	// in the regexp (so a regular expression is required) and whether or
 	// not the uflag is needed for the regular expression (for posix classes)
+	/**
+	 * Generates regular-expression source and matching metadata for this node.
+	 *
+	 * **Details**
+	 *
+	 * The tuple contains regular-expression source, the unescaped body, whether
+	 * glob magic requires a regular expression, and whether POSIX character classes
+	 * require the Unicode flag. allowDot overrides the root dot option.
+	 * Root generation flattens compatible extglobs and fills negative-extglob tails
+	 * before assembling source.
+	 *
+	 * **Gotchas**
+	 *
+	 * Source generation can mutate the tree through flattening and negation-tail
+	 * completion. Recursive generation is guarded by the structural nesting-depth limit.
+	 *
+	 * **Example** (Inspect literal source metadata)
+	 *
+	 * ```ts
+	 * import { AST } from "@beep/scratchpad/effected/glob/internal/ast"
+	 *
+	 * const [source, body, hasMagic, unicode] = AST.fromGlob("cat").toRegExpSource()
+	 * console.log(JSON.stringify([source, body, hasMagic, unicode])) // ["cat","cat",false,false]
+	 * ```
+	 *
+	 * @category parsing
+	 * @since 0.0.0
+	 */
 	toRegExpSource(allowDot?: boolean, depth = 0): [re: string, body: string, hasMagic: boolean, uflag: boolean] {
 		// Port note 2: depth guard on the toRegExpSource <-> #partsToRegExp
 		// mutual recursion.
@@ -763,6 +1511,27 @@ export class AST {
 		return [final, unescapePattern(body), this.#hasMagic, this.#uflag];
 	}
 
+	/**
+	 * Flattens compatible nested operators through adoption and replacement passes.
+	 *
+	 * **Details**
+	 *
+	 * Each operator is flattened for at most ten passes. Recursive traversal
+	 * is guarded by the structural nesting-depth limit.
+	 *
+	 * **Example** (Flatten nested exactly-one alternatives)
+	 *
+	 * ```ts
+	 * import { AST } from "@beep/scratchpad/effected/glob/internal/ast"
+	 *
+	 * const tree = AST.fromGlob("@(cat|@(dog|fox))")
+	 * tree.toRegExpSource()
+	 * console.log(tree.toString()) // @(cat|dog|fox)
+	 * ```
+	 *
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	#flatten(depth = 0) {
 		// Port note 3: tree-depth guard alongside the kept 10-pass width cap.
 		guardDepth(depth);
@@ -799,6 +1568,26 @@ export class AST {
 		this.#toString = undefined;
 	}
 
+	/**
+	 * Joins extglob alternatives into regular-expression source while collecting Unicode requirements.
+	 *
+	 * **Details**
+	 *
+	 * Alternatives must be AST nodes; a string alternative throws ASTError.
+	 * Empty alternatives are filtered when this node spans the entire pattern.
+	 *
+	 * **Example** (Match an extglob alternative)
+	 *
+	 * ```ts
+	 * import { AST } from "@beep/scratchpad/effected/glob/internal/ast"
+	 *
+	 * const pattern = AST.fromGlob("@(cat|dog)").toMMPattern()
+	 * console.log(pattern instanceof RegExp && pattern.test("dog")) // true
+	 * ```
+	 *
+	 * @category parsing
+	 * @since 0.0.0
+	 */
 	#partsToRegExp(dot: boolean, depth: number) {
 		return this.#parts
 			.map((p) => {
@@ -815,6 +1604,27 @@ export class AST {
 			.join("|");
 	}
 
+	/**
+	 * Converts literal glob pieces, wildcards and character classes into regular-expression source.
+	 *
+	 * **Details**
+	 *
+	 * Consecutive stars coalesce into one wildcard. A wildcard covering an entire
+	 * path portion can be required to match at least one character. Escapes and
+	 * POSIX character classes are handled while the magic and Unicode flags are collected.
+	 *
+	 * **Example** (Compile a wildcard piece)
+	 *
+	 * ```ts
+	 * import { AST } from "@beep/scratchpad/effected/glob/internal/ast"
+	 *
+	 * const pattern = AST.fromGlob("c?t").toMMPattern()
+	 * console.log(pattern instanceof RegExp && pattern.test("cat")) // true
+	 * ```
+	 *
+	 * @category parsing
+	 * @since 0.0.0
+	 */
 	static #parseGlob(
 		glob: string,
 		hasMagicInput: boolean | undefined,

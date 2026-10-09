@@ -51,11 +51,13 @@ interface Classified {
 
 /**
  * A compiled multi-pattern include/exclude set: `matches(candidate)` is true
- * when some include accepts it and no exclude does. One encoded field,
- * `patterns` — the source text of every member, preserved verbatim; the
- * classified indexes live in a private field the schema never encodes.
+ * when some include accepts it and no exclude does.
  *
  * **Details**
+ *
+ * One encoded field, `patterns` — the source text of every member, preserved
+ * verbatim; the classified indexes live in a private field the schema never
+ * encodes.
  *
  * A member starting with `!` is an exclusion, applied after positive matching.
  * This is set-level exclusion, distinct from a single {@link GlobPattern}'s
@@ -70,17 +72,19 @@ interface Classified {
  * **Example** (Match packages while excluding a legacy package)
  *
  * ```ts
- * import { GlobSet } from "./index.ts";
+ * import { GlobSet } from "@beep/scratchpad/effected/glob/GlobSet";
  * import * as Result from "effect/Result";
  *
  * const compiled = GlobSet.compileResult(["packages/*", "!packages/legacy"]);
  * if (Result.isSuccess(compiled)) {
- * 	compiled.success.matches("packages/app"); // => true
- * 	compiled.success.matches("packages/legacy"); // => false
+ * 	console.log(compiled.success.matches("packages/app")); // true
+ * 	console.log(compiled.success.matches("packages/legacy")); // false
  * }
  * ```
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class GlobSet extends S.Class<GlobSet>($I`GlobSet`)(
 	S.Struct({ patterns: S.Array(S.String).annotateKey({ description: "The ordered include and exclusion pattern sources, preserved verbatim." }) }).check(
@@ -90,6 +94,20 @@ export class GlobSet extends S.Class<GlobSet>($I`GlobSet`)(
 		})),
 	), $I.annote("GlobSet", { description: "A compiled multi-pattern include/exclude set: `matches(candidate)` is true when some include accepts it and no exclude does. One encoded field, `patterns` — the source text of every member, preserved verbatim; the classified indexes live in a private field the schema never encodes." }),
 ) {
+	/**
+	 * Caches the classified include and exclusion indexes after their first use.
+	 *
+	 * **Example** (Observe stable classification through repeated access)
+	 *
+	 * ```ts
+	 * import { GlobSet } from "@beep/scratchpad/effected/glob/GlobSet";
+	 *
+	 * const set = GlobSet.make({ patterns: ["tools/cli", "packages/*"] });
+	 * console.log(set.literals === set.literals); // true
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
 	#classified: Classified | undefined;
 
 	// Lazy: the schema check guarantees every member is defaults-compilable, so
@@ -103,6 +121,21 @@ export class GlobSet extends S.Class<GlobSet>($I`GlobSet`)(
 	// match its member pattern accepts. Comments match nothing and contribute
 	// nothing; anything else an exact-string key cannot represent (negation, a
 	// row the engine did not reduce to plain strings) is engine-matched instead.
+	/**
+	 * Lazily classifies expanded include alternatives and exclusion patterns into cached indexes.
+	 *
+	 * **Example** (Observe literal and wildcard classification)
+	 *
+	 * ```ts
+	 * import { GlobSet } from "@beep/scratchpad/effected/glob/GlobSet";
+	 *
+	 * const set = GlobSet.make({ patterns: ["{tools/cli,packages/*}"] });
+	 * console.log(set.literals[0]); // tools/cli
+	 * console.log(set.wildcards.length); // 1
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
 	#classify(): Classified {
 		if (this.#classified !== undefined) return this.#classified;
 		const literals: Array<string> = [];
@@ -138,29 +171,56 @@ export class GlobSet extends S.Class<GlobSet>($I`GlobSet`)(
 		return this.#classified;
 	}
 
+	/**
+	 * Retrieves the cached literal hash set used for exact-match lookups.
+	 *
+	 * **Example** (Match a literal through the cached lookup)
+	 *
+	 * ```ts
+	 * import { GlobSet } from "@beep/scratchpad/effected/glob/GlobSet";
+	 *
+	 * const set = GlobSet.make({ patterns: ["tools/cli"] });
+	 * console.log(set.matches("tools/cli")); // true
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
 	#literals(): MutableHashSet.MutableHashSet<string> {
 		return this.#classify().literalSet;
 	}
 
 	/**
-  * Compile a pattern set, synchronously — the primitive form, mirroring
-  * {@link GlobPattern.compileResult}. Set compilation is pure
-  * string→predicate work with no IO and no async step, so the sync form is
-  * the real primitive and {@link GlobSet.compile} is derived from it.
-  *
-  * **Details**
-  *
-  * Total: never throws for pattern input. Fails on the FIRST uncompilable
-  * member, coming back as a `Result` failure whose {@link GlobPatternError}
-  * names the offending source pattern in `pattern` (bang included for
-  * exclusions).
-  *
-  * For synchronous call sites that cannot host an Effect — a lint-staged
-  * handler, a config predicate — this removes the
-  * `Effect.runSync(Effect.result(...))` escape hatch: pair it with
-  * `Result.isSuccess` and read `.success` directly. Effect call sites should
-  * prefer {@link GlobSet.compile}, which carries the tracing span.
-  */
+	 * Compile a pattern set, synchronously — the primitive form, mirroring
+	 * {@link GlobPattern.compileResult}. Set compilation is pure
+	 * string→predicate work with no IO and no async step, so the sync form is
+	 * the real primitive and {@link GlobSet.compile} is derived from it.
+	 *
+	 * **Details**
+	 *
+	 * Total: never throws for pattern input. Fails on the FIRST uncompilable
+	 * member, coming back as a `Result` failure whose {@link GlobPatternError}
+	 * names the offending source pattern in `pattern` (bang included for
+	 * exclusions).
+	 *
+	 * For synchronous call sites that cannot host an Effect — a lint-staged
+	 * handler, a config predicate — this removes the
+	 * `Effect.runSync(Effect.result(...))` escape hatch: pair it with
+	 * `Result.isSuccess` and read `.success` directly. Effect call sites should
+	 * prefer {@link GlobSet.compile}, which carries the tracing span.
+	 *
+	 * **Example** (Compile a set without running an Effect)
+	 *
+	 * ```ts
+	 * import { GlobSet } from "@beep/scratchpad/effected/glob/GlobSet";
+	 * import * as Result from "effect/Result";
+	 *
+	 * const compiled = GlobSet.compileResult(["packages/*", "!packages/legacy"]);
+	 * console.log(Result.isSuccess(compiled)); // true
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	static compileResult(patterns: ReadonlyArray<string>): Result.Result<GlobSet, GlobPatternError> {
 		for (const pattern of patterns) {
 			const target = exclusionTarget(pattern) ?? pattern;
@@ -183,9 +243,24 @@ export class GlobSet extends S.Class<GlobSet>($I`GlobSet`)(
 	 * `pattern` field naming the offending source pattern (bang included for
 	 * exclusions).
 	 *
+	 * **Details**
+	 *
 	 * Defined in terms of {@link GlobSet.compileResult} — synchronous callers
 	 * can use that variant directly. Same semantics, same errors; this form
 	 * adds only the `GlobSet.compile` tracing span.
+	 *
+	 * **Example** (Compile and match a set in an Effect)
+	 *
+	 * ```ts
+	 * import { GlobSet } from "@beep/scratchpad/effected/glob/GlobSet";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const set = Effect.runSync(GlobSet.compile(["packages/*"]));
+	 * console.log(set.matches("packages/app")); // true
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
 	 */
 	static readonly compile = Effect.fn("GlobSet.compile")(function* (patterns: ReadonlyArray<string>) {
 		return yield* Effect.fromResult(GlobSet.compileResult(patterns));
@@ -194,6 +269,19 @@ export class GlobSet extends S.Class<GlobSet>($I`GlobSet`)(
 	/**
 	 * Whether `candidate` matches the set: some include accepts it (literal
 	 * exact-match fast path, then wildcards) and no exclude does. Total.
+	 *
+	 * **Example** (Apply include and exclusion filters)
+	 *
+	 * ```ts
+	 * import { GlobSet } from "@beep/scratchpad/effected/glob/GlobSet";
+	 *
+	 * const set = GlobSet.make({ patterns: ["packages/*", "!packages/legacy"] });
+	 * console.log(set.matches("packages/app")); // true
+	 * console.log(set.matches("packages/legacy")); // false
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
 	 */
 	matches(candidate: string): boolean {
 		const { wildcards, excludes } = this.#classify();
@@ -202,12 +290,41 @@ export class GlobSet extends S.Class<GlobSet>($I`GlobSet`)(
 		return !excludes.some((e) => e.matches(candidate));
 	}
 
-	/** Whether `candidate` is caught by the exclusion filter, independently of inclusion. */
+	/**
+	 * Whether `candidate` is caught by the exclusion filter, independently of inclusion.
+	 *
+	 * **Example** (Check exclusion independently of inclusion)
+	 *
+	 * ```ts
+	 * import { GlobSet } from "@beep/scratchpad/effected/glob/GlobSet";
+	 *
+	 * const set = GlobSet.make({ patterns: ["!packages/legacy"] });
+	 * console.log(set.isExcluded("packages/legacy")); // true
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
+	 */
 	isExcluded(candidate: string): boolean {
 		return this.#classify().excludes.some((e) => e.matches(candidate));
 	}
 
-	/** The deduped effective literal include paths (unescaped), in first-seen order. */
+	/**
+	 * The deduped effective literal include paths (unescaped), in first-seen order.
+	 *
+	 * **Example** (Inspect deduplicated literal includes)
+	 *
+	 * ```ts
+	 * import { GlobSet } from "@beep/scratchpad/effected/glob/GlobSet";
+	 *
+	 * const set = GlobSet.make({ patterns: ["tools/cli", "tools/cli", "packages/*"] });
+	 * console.log(set.literals.length); // 1
+	 * console.log(set.literals[0]); // tools/cli
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	get literals(): ReadonlyArray<string> {
 		return this.#classify().literals;
 	}
@@ -216,12 +333,40 @@ export class GlobSet extends S.Class<GlobSet>($I`GlobSet`)(
 	 * The include alternatives the engine must match, compiled: every magic
 	 * alternative, plus the rare non-magic shapes an exact-string key cannot
 	 * represent (whole-pattern negation from a brace alternative).
+	 *
+	 * **Example** (Inspect compiled wildcard alternatives)
+	 *
+	 * ```ts
+	 * import { GlobSet } from "@beep/scratchpad/effected/glob/GlobSet";
+	 *
+	 * const set = GlobSet.make({ patterns: ["{tools/cli,packages/*}"] });
+	 * console.log(set.wildcards.length); // 1
+	 * console.log(set.wildcards[0]?.matches("packages/app")); // true
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
 	 */
 	get wildcards(): ReadonlyArray<GlobPattern> {
 		return this.#classify().wildcards;
 	}
 
-	/** The exclusion patterns (leading bang stripped), compiled. */
+	/**
+	 * The exclusion patterns (leading bang stripped), compiled.
+	 *
+	 * **Example** (Inspect exclusion patterns without the set marker)
+	 *
+	 * ```ts
+	 * import { GlobSet } from "@beep/scratchpad/effected/glob/GlobSet";
+	 *
+	 * const set = GlobSet.make({ patterns: ["packages/*", "!packages/legacy"] });
+	 * console.log(set.excludes.length); // 1
+	 * console.log(set.excludes[0]?.source); // packages/legacy
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	get excludes(): ReadonlyArray<GlobPattern> {
 		return this.#classify().excludes;
 	}

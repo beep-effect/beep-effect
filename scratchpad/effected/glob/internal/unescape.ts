@@ -12,6 +12,8 @@ import type { EngineOptions } from "./types.ts";
 /**
  * Un-escape a string that has been escaped with `escape`.
  *
+ * **Details**
+ *
  * If the `windowsPathsNoEscape` option is used, then square-bracket escapes
  * are removed, but not backslash escapes. For example, it will turn the
  * string `'[*]'` into `*`, but it will not turn `'\\*'` into `'*'`, because
@@ -20,11 +22,37 @@ import type { EngineOptions } from "./types.ts";
  * When `windowsPathsNoEscape` is not set, then both square-bracket escapes
  * and backslash escapes are removed.
  *
+ * **Gotchas**
+ *
  * Slashes (and backslashes in `windowsPathsNoEscape` mode) cannot be escaped
  * or unescaped.
  *
  * When `magicalBraces` is not set, escapes of braces (`{` and `}`) will not
  * be unescaped.
+ * Here, disabling `magicalBraces` means passing `false`; omitting the option
+ * uses its default of `true`.
+ *
+ * **Example** (Remove bracket and backslash escapes)
+ *
+ * ```ts
+ * import { unescape } from "@beep/scratchpad/effected/glob/internal/unescape"
+ *
+ * console.log(unescape("[*]")) // *
+ * console.log(unescape("\\*")) // *
+ * console.log(unescape({ magicalBraces: false })("[{]")) // [{]
+ * ```
+ *
+ * **Example** (Preserve Windows path separators)
+ *
+ * ```ts
+ * import { unescape } from "@beep/scratchpad/effected/glob/internal/unescape"
+ *
+ * console.log(unescape("[*]", { windowsPathsNoEscape: true })) // *
+ * console.log(unescape("\\*", { windowsPathsNoEscape: true })) // \*
+ * ```
+ *
+ * @category formatting
+ * @since 0.0.0
  */
 const unescapePattern: {
 	(options?: Pick<EngineOptions, "windowsPathsNoEscape" | "magicalBraces">): (s: string) => string;

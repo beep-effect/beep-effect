@@ -12,7 +12,26 @@ import * as R from "effect/Record";
 
 const $I = $ScratchpadId.create("effected/glob/internal/braceExpressions");
 
-/** Programmer error raised by this internal glob boundary. */
+/**
+ * Reports a programmer error raised by this internal glob boundary.
+ *
+ * **Details**
+ *
+ * The character-class parser raises this error when the supplied position does
+ * not begin a brace expression.
+ *
+ * **Example** (Describe an invalid parser invocation)
+ *
+ * ```ts
+ * import { BraceExpressionError } from "@beep/scratchpad/effected/glob/internal/braceExpressions"
+ *
+ * const error = BraceExpressionError.make({ message: "not in a brace expression" })
+ * console.log(error.message) // not in a brace expression
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
 export class BraceExpressionError extends S.TaggedError<BraceExpressionError>($I`BraceExpressionError`)("BraceExpressionError", {
 	message: S.String.annotateKey({ description: "Explains why character-class parsing was called outside a brace expression." }),
 }, $I.annote("BraceExpressionError", {
@@ -50,6 +69,13 @@ const regexpEscape = (s: string): string => s.replace(/[-[\]{}()*+?.,\\^$|#\s]/g
 // everything has already been escaped, we just have to join
 const rangesToString = (ranges: Array<string>): string => ranges.join("");
 
+/**
+ * Describes a parsed character class through its regular-expression source,
+ * Unicode-flag requirement, consumed character count, and magic-pattern status.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type ParseClassResult = [src: string, uFlag: boolean, consumed: number, hasMagic: boolean];
 
 // takes a glob string at a posix brace expression, and returns
@@ -58,6 +84,37 @@ export type ParseClassResult = [src: string, uFlag: boolean, consumed: number, h
 // consumed to parse the character class.
 // This also removes out of order ranges, and returns ($.) if the
 // entire class just no good.
+/**
+ * Parses a glob character class at the supplied position into equivalent
+ * regular-expression source.
+ *
+ * **Details**
+ *
+ * The result indicates whether the `/u` flag needs to be applied and the number
+ * of characters consumed to parse the character class. This also removes
+ * out-of-order ranges and returns `($.)` if the entire class is no good.
+ * The source in that case is `$.`, which cannot match.
+ * An unterminated class returns empty source, consumes zero characters, and
+ * has no magic; a class containing one literal character also has no magic.
+ *
+ * **Gotchas**
+ *
+ * The supplied position must point to `[`; otherwise the parser raises
+ * {@link BraceExpressionError}.
+ *
+ * **Example** (Inspect a character range)
+ *
+ * ```ts
+ * import { parseClass } from "@beep/scratchpad/effected/glob/internal/braceExpressions"
+ *
+ * const [source, unicode, consumed, hasMagic] = parseClass("[a-c]", 0)
+ * console.log(source) // [a-c]
+ * console.log([unicode, consumed, hasMagic].join(",")) // false,5,true
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const parseClass: {
 	(position: number): (glob: string) => ParseClassResult;
 	(glob: string, position: number): ParseClassResult;

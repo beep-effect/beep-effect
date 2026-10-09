@@ -3,10 +3,10 @@
   "effectedCommit": "af7566a9da2eff169cb74955efcc5ede1e5de9f8",
   "startedAt": "2026-10-07T06:36:54.420Z",
   "lastCheckpoint": {
-    "module": "toml",
+    "module": "glob",
     "stage": 2,
     "commit": null,
-    "at": "2026-10-09T16:17:43.109Z"
+    "at": "2026-10-09T16:17:52.953Z"
   },
   "rows": [
     {
@@ -2225,7 +2225,7 @@
       "module": "glob",
       "wave": 1,
       "position": 4,
-      "stage": 1,
+      "stage": 2,
       "status": "in-progress",
       "provisionalHome": "foundation/modeling",
       "upstreamPaths": {
@@ -2405,12 +2405,17 @@
       "commits": [
         {
           "stage": 0,
+          "sha": "962345e414faf08715eb5d38364a8feb86973c10"
+        },
+        {
+          "stage": 1,
           "sha": null
         }
       ],
       "blocked": null,
       "notes": [
-        "2026-10-09T11:20:02.635Z S1: green under tsgo, oxlint and the four beep laws; upstream tests pass; audit green (parity strict)"
+        "2026-10-09T11:20:02.635Z S1: green under tsgo, oxlint and the four beep laws; upstream tests pass; audit green (parity strict)",
+        "2026-10-09T16:17:52.953Z S2: S2 green: docgen with all enforcement flags and the JSDoc law; carriers converted; README adapted (section 10.3)"
       ],
       "closedAt": null
     },
