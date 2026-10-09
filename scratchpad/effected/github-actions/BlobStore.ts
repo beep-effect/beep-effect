@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import type * as Redacted from "effect/Redacted";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -13,27 +14,29 @@ import { sign } from "./internal/sigv4.ts";
 import { unstubbed } from "./internal/unstubbed.ts";
 import { Secret } from "./Secret.ts";
 
+const $I = $ScratchpadId.create("effected/github-actions/BlobStore");
+
 /**
  * Raised when a blob cannot be stored or retrieved.
  *
  * @public
  */
-export class BlobStoreError extends S.TaggedError<BlobStoreError>()("BlobStoreError", {
+export class BlobStoreError extends S.TaggedError<BlobStoreError>($I`BlobStoreError`)("BlobStoreError", {
 	/**
 	 * `unreachable` — the store could not be contacted. `refused` — it answered,
 	 * unhappily; `status` says how. `misconfigured` — the layer was built with
 	 * settings the store cannot use.
 	 */
-	reason: S.Literals(["unreachable", "refused", "misconfigured"]),
+	reason: S.Literals(["unreachable", "refused", "misconfigured"]).annotateKey({ description: "`unreachable` — the store could not be contacted. `refused` — it answered, unhappily; `status` says how. `misconfigured` — the layer was built with settings the store cannot use." }),
 	/** The key involved. A stable identifier, never a value. */
-	key: S.optionalKey(S.String),
+	key: S.optionalKey(S.String).annotateKey({ description: "The key involved. A stable identifier, never a value." }),
 	/** The HTTP status, when the store answered. */
-	status: S.optionalKey(S.Finite),
+	status: S.optionalKey(S.Finite).annotateKey({ description: "The HTTP status, when the store answered." }),
 	/** What is wrong, when the reason alone does not say. */
-	detail: S.optionalKey(S.String),
+	detail: S.optionalKey(S.String).annotateKey({ description: "What is wrong, when the reason alone does not say." }),
 	/** The underlying failure, preserved structurally. */
-	cause: S.optionalKey(S.Defect()),
-}) {
+	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying failure, preserved structurally." }),
+}, $I.annote("BlobStoreError", { description: "Raised when a blob cannot be stored or retrieved." })) {
 	override get message(): string {
 		switch (this.reason) {
 			case "unreachable":
@@ -149,7 +152,7 @@ export interface S3Config {
  *
  * @public
  */
-export class BlobStore extends Context.Service<BlobStore, BlobStoreShape>()("@beep/scratchpad/effected/github-actions/BlobStore") {
+export class BlobStore extends Context.Service<BlobStore, BlobStoreShape>()($I`BlobStore`) {
 	/**
 	 * An S3-compatible backend, signed with SigV4.
 	 *

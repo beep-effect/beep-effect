@@ -1,8 +1,11 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Config from "effect/Config";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import { ActionInput } from "./ActionInput.ts";
+
+const $I = $ScratchpadId.create("effected/github-actions/DryRun");
 
 /**
  * The {@link DryRun} service shape.
@@ -60,7 +63,7 @@ const make = (enabled: boolean): DryRunShape => ({
  *
  * @public
  */
-export class DryRun extends Context.Service<DryRun, DryRunShape>()("@beep/scratchpad/effected/github-actions/DryRun") {
+export class DryRun extends Context.Service<DryRun, DryRunShape>()($I`DryRun`) {
 	/**
 	 * Driven by a named input.
 	 *

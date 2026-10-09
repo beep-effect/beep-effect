@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import type { IntegrityHashBrand } from "../npm/index.ts";
 import { CorepackIntegrityHash, DEFAULT_REGISTRY, PackageManagerPin, PackageManagerPinName } from "../npm/index.ts";
 import * as Context from "effect/Context";
@@ -19,6 +20,8 @@ import { unstubbed } from "./internal/unstubbed.ts";
 import type { ToolInstallerError } from "./ToolInstaller.ts";
 import { ToolInstaller } from "./ToolInstaller.ts";
 
+const $I = $ScratchpadId.create("effected/github-actions/PackageManagerInstaller");
+
 const Json = S.fromJsonString(S.Unknown);
 
 /**
@@ -26,7 +29,7 @@ const Json = S.fromJsonString(S.Unknown);
  *
  * @public
  */
-export class PackageManagerInstallerError extends S.TaggedError<PackageManagerInstallerError>()(
+export class PackageManagerInstallerError extends S.TaggedError<PackageManagerInstallerError>($I`PackageManagerInstallerError`)(
 	"PackageManagerInstallerError",
 	{
 		/**
@@ -58,20 +61,20 @@ export class PackageManagerInstallerError extends S.TaggedError<PackageManagerIn
 			"unsupportedPlatform",
 			"layoutUnexpected",
 			"cacheFailed",
-		]),
+		]).annotateKey({ description: "`downloadFailed`, `extractFailed` and `cacheFailed` mirror the ToolInstallerError that caused them, preserved on `cause` (`cacheFailed` also covers a shim that could not be written into the entry). `integrityMismatch` — the downloaded artifact does not hash to what the pin or the `integrity` option (or, for pnpm 12's native binary, the registry or the caller's `nativeIntegrity`) declares; nothing was cached. Also raised before anything runs when the `integrity` option is malformed or disagrees with the pin (see PackageManagerInstallOptions.integrity). `integrityMissing` — neither the pin nor the `integrity` option carries integrity and the caller asked for `requireIntegrity`, or — with `subject` naming the package — the caller supplied `nativeIntegrity` without an entry for the host's `@pnpm/exe.*` package. `unsupportedPlatform` — no build exists for this runner's OS/architecture pair: bun publishes none, or pnpm 12 ships no `@pnpm/exe.*` native binary for it. `layoutUnexpected` — the artifact extracted, but its contents are not shaped like the package manager it claims to be." }),
 		/** The package manager being installed. */
-		name: PackageManagerPinName,
+		name: PackageManagerPinName.annotateKey({ description: "The package manager being installed." }),
 		/** The exact version being installed, in string form. */
-		version: S.String,
+		version: S.String.annotateKey({ description: "The exact version being installed, in string form." }),
 		/** What was being worked on — a url, a path, or an OS/arch pair. */
-		subject: S.optionalKey(S.String),
+		subject: S.optionalKey(S.String).annotateKey({ description: "What was being worked on — a url, a path, or an OS/arch pair." }),
 		/** The integrity the pin declares (`<algo>.<hex>`), on a mismatch. */
-		expected: S.optionalKey(S.String),
+		expected: S.optionalKey(S.String).annotateKey({ description: "The integrity the pin declares (`<algo>.<hex>`), on a mismatch." }),
 		/** The integrity the artifact actually hashed to, on a mismatch. */
-		actual: S.optionalKey(S.String),
+		actual: S.optionalKey(S.String).annotateKey({ description: "The integrity the artifact actually hashed to, on a mismatch." }),
 		/** The underlying failure, preserved structurally. */
-		cause: S.optionalKey(S.Defect()),
-	},
+		cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying failure, preserved structurally." }),
+	}, $I.annote("PackageManagerInstallerError", { description: "Raised when a package manager cannot be provisioned on the runner." }),
 ) {
 	override get message(): string {
 		const pin = `${this.name}@${this.version}`;
@@ -205,16 +208,16 @@ export interface PackageManagerInstallOptions {
  *
  * @public
  */
-export class AmbientPackageManager extends S.Class<AmbientPackageManager>("AmbientPackageManager")({
+export class AmbientPackageManager extends S.Class<AmbientPackageManager>($I`AmbientPackageManager`)({
 	/** The discriminant: the runner's own toolchain answered. */
-	source: S.tag("ambient"),
+	source: S.tag("ambient").annotateKey({ description: "The discriminant: the runner's own toolchain answered." }),
 	/** The package-manager name (`npm`, `pnpm`, `yarn` or `bun`). */
-	name: PackageManagerPinName,
+	name: PackageManagerPinName.annotateKey({ description: "The package-manager name (`npm`, `pnpm`, `yarn` or `bun`)." }),
 	/** The exact installed version, in string form. */
-	version: S.String,
+	version: S.String.annotateKey({ description: "The exact installed version, in string form." }),
 	/** Bin name → the ambient command name that invokes it. */
-	bins: S.Record(S.String, S.String),
-}) {}
+	bins: S.Record(S.String, S.String).annotateKey({ description: "Bin name → the ambient command name that invokes it." }),
+}, $I.annote("AmbientPackageManager", { description: "A package manager the runner's own toolchain already had: nothing was downloaded and nothing was cached, so there is no directory to publish." })) {}
 
 /**
  * A package manager living in the runner's tool cache — found there, or
@@ -239,20 +242,20 @@ export class AmbientPackageManager extends S.Class<AmbientPackageManager>("Ambie
  *
  * @public
  */
-export class CachedPackageManager extends S.Class<CachedPackageManager>("CachedPackageManager")({
+export class CachedPackageManager extends S.Class<CachedPackageManager>($I`CachedPackageManager`)({
 	/** The discriminant: the manager lives in the tool cache. */
-	source: S.tag("tool-cache"),
+	source: S.tag("tool-cache").annotateKey({ description: "The discriminant: the manager lives in the tool cache." }),
 	/** The package-manager name (`npm`, `pnpm`, `yarn` or `bun`). */
-	name: PackageManagerPinName,
+	name: PackageManagerPinName.annotateKey({ description: "The package-manager name (`npm`, `pnpm`, `yarn` or `bun`)." }),
 	/** The exact installed version, in string form. */
-	version: S.String,
+	version: S.String.annotateKey({ description: "The exact installed version, in string form." }),
 	/** The cached entry: `<tool-cache>/<name>/<version>/<arch>`. */
-	directory: S.String,
+	directory: S.String.annotateKey({ description: "The cached entry: `<tool-cache>/<name>/<version>/<arch>`." }),
 	/** The directory to `addPath` — executable shims, or bun's own directory. */
-	binDir: S.String,
+	binDir: S.String.annotateKey({ description: "The directory to `addPath` — executable shims, or bun's own directory." }),
 	/** Bin name → the absolute path of the underlying entry point. */
-	bins: S.Record(S.String, S.String),
-}) {}
+	bins: S.Record(S.String, S.String).annotateKey({ description: "Bin name → the absolute path of the underlying entry point." }),
+}, $I.annote("CachedPackageManager", { description: "A package manager living in the runner's tool cache — found there, or installed into it by this call." })) {}
 
 /**
  * An installed package manager, discriminated by `source`: `ambient` carries
@@ -272,7 +275,7 @@ export class CachedPackageManager extends S.Class<CachedPackageManager>("CachedP
  *
  * @public
  */
-export const InstalledPackageManager = S.Union([AmbientPackageManager, CachedPackageManager]);
+export const InstalledPackageManager = S.Union([AmbientPackageManager, CachedPackageManager]).pipe($I.annoteSchema("InstalledPackageManager", { description: "An installed package manager, discriminated by `source`: `ambient` carries no directory, `tool-cache` carries the cached `directory` and the `addPath`-able `binDir`. The union is a `Schema`, so the record round-trips through `ActionState` for a later phase to read back." }));
 
 /**
  * The decoded type of {@link (InstalledPackageManager:variable)}:
@@ -1120,7 +1123,7 @@ const dies = unstubbed("PackageManagerInstaller.makeTest");
  * @public
  */
 export class PackageManagerInstaller extends Context.Service<PackageManagerInstaller, PackageManagerInstallerShape>()(
-	"@beep/scratchpad/effected/github-actions/PackageManagerInstaller",
+	$I`PackageManagerInstaller`,
 ) {
 	/**
 	 * The live installer, caching through {@link ToolInstaller}.

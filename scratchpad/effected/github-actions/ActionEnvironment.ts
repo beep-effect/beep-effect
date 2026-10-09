@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -5,6 +6,8 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Result from "effect/Result";
+
+const $I = $ScratchpadId.create("effected/github-actions/ActionEnvironment");
 
 const Json = S.fromJsonString(S.Unknown);
 
@@ -20,14 +23,14 @@ const Json = S.fromJsonString(S.Unknown);
  *
  * @public
  */
-export class ActionEnvironmentError extends S.TaggedError<ActionEnvironmentError>()("ActionEnvironmentError", {
+export class ActionEnvironmentError extends S.TaggedError<ActionEnvironmentError>($I`ActionEnvironmentError`)("ActionEnvironmentError", {
 	/** `missing` — absent or empty; `malformed` — present but unusable. */
-	reason: S.Literals(["missing", "malformed"]),
+	reason: S.Literals(["missing", "malformed"]).annotateKey({ description: "`missing` — absent or empty; `malformed` — present but unusable." }),
 	/** The environment variable involved. */
-	name: S.String,
+	name: S.String.annotateKey({ description: "The environment variable involved." }),
 	/** What was wrong, when the reason is `malformed`. */
-	detail: S.optionalKey(S.String),
-}) {
+	detail: S.optionalKey(S.String).annotateKey({ description: "What was wrong, when the reason is `malformed`." }),
+}, $I.annote("ActionEnvironmentError", { description: "Raised when the runner environment does not say what an action needs." })) {
 	override get message(): string {
 		return this.reason === "missing"
 			? `Required environment variable "${this.name}" is not set`
@@ -40,15 +43,15 @@ export class ActionEnvironmentError extends S.TaggedError<ActionEnvironmentError
  *
  * @public
  */
-export class GitHubContext extends S.Class<GitHubContext>("GitHubContext")({
+export class GitHubContext extends S.Class<GitHubContext>($I`GitHubContext`)({
 	/** `owner/repo`. */
-	repository: S.String,
+	repository: S.String.annotateKey({ description: "`owner/repo`." }),
 	/** The repository owner's login. */
-	repositoryOwner: S.String,
+	repositoryOwner: S.String.annotateKey({ description: "The repository owner's login." }),
 	/** The full ref, e.g. `refs/heads/main`. */
-	ref: S.String,
+	ref: S.String.annotateKey({ description: "The full ref, e.g. `refs/heads/main`." }),
 	/** The short ref, e.g. `main`. */
-	refName: S.String,
+	refName: S.String.annotateKey({ description: "The short ref, e.g. `main`." }),
 	/**
 	 * The source branch of the pull request, when the event has one.
 	 *
@@ -64,30 +67,30 @@ export class GitHubContext extends S.Class<GitHubContext>("GitHubContext")({
 	 * The encoded form is `string | null` rather than a serialized `Option`, so
 	 * an encoded context stays plain JSON.
 	 */
-	headRef: S.OptionFromNullOr(S.String),
+	headRef: S.OptionFromNullOr(S.String).annotateKey({ description: "The source branch of the pull request, when the event has one." }),
 	/** The commit SHA that triggered the workflow. */
-	sha: S.String,
+	sha: S.String.annotateKey({ description: "The commit SHA that triggered the workflow." }),
 	/** The workflow's name. */
-	workflow: S.String,
+	workflow: S.String.annotateKey({ description: "The workflow's name." }),
 	/** The current job's id. */
-	job: S.String,
+	job: S.String.annotateKey({ description: "The current job's id." }),
 	/** The run's unique number, decoded from `GITHUB_RUN_ID`. */
-	runId: S.Finite,
+	runId: S.Finite.annotateKey({ description: "The run's unique number, decoded from `GITHUB_RUN_ID`." }),
 	/** The attempt number of this run, starting at 1. */
-	runAttempt: S.Finite,
+	runAttempt: S.Finite.annotateKey({ description: "The attempt number of this run, starting at 1." }),
 	/** The name of the event that triggered the workflow, e.g. `push`. */
-	eventName: S.String,
+	eventName: S.String.annotateKey({ description: "The name of the event that triggered the workflow, e.g. `push`." }),
 	/** The login of the user that triggered the run. */
-	actor: S.String,
+	actor: S.String.annotateKey({ description: "The login of the user that triggered the run." }),
 	/** The GitHub server URL, e.g. `https://github.com`. */
-	serverUrl: S.String,
+	serverUrl: S.String.annotateKey({ description: "The GitHub server URL, e.g. `https://github.com`." }),
 	/** The REST API URL, e.g. `https://api.github.com`. */
-	apiUrl: S.String,
+	apiUrl: S.String.annotateKey({ description: "The REST API URL, e.g. `https://api.github.com`." }),
 	/** The GraphQL API URL. */
-	graphqlUrl: S.String,
+	graphqlUrl: S.String.annotateKey({ description: "The GraphQL API URL." }),
 	/** The default working directory on the runner for steps. */
-	workspace: S.String,
-}) {
+	workspace: S.String.annotateKey({ description: "The default working directory on the runner for steps." }),
+}, $I.annote("GitHubContext", { description: "The workflow's GitHub context, projected from the `GITHUB_*` variables." })) {
 	/**
 	 * The branch a human means: `headRef` when present (a pull request, where
 	 * `refName` is the useless `123/merge`), otherwise `refName`.
@@ -109,18 +112,18 @@ export class GitHubContext extends S.Class<GitHubContext>("GitHubContext")({
  *
  * @public
  */
-export class RunnerContext extends S.Class<RunnerContext>("RunnerContext")({
+export class RunnerContext extends S.Class<RunnerContext>($I`RunnerContext`)({
 	/** The runner's operating system: `Linux`, `Windows` or `macOS`. */
-	os: S.String,
+	os: S.String.annotateKey({ description: "The runner's operating system: `Linux`, `Windows` or `macOS`." }),
 	/** The runner's architecture, e.g. `X64` or `ARM64`. */
-	arch: S.String,
+	arch: S.String.annotateKey({ description: "The runner's architecture, e.g. `X64` or `ARM64`." }),
 	/** The runner's name. */
-	name: S.String,
+	name: S.String.annotateKey({ description: "The runner's name." }),
 	/** A scratch directory emptied between jobs. */
-	temp: S.String,
+	temp: S.String.annotateKey({ description: "A scratch directory emptied between jobs." }),
 	/** Where `ToolInstaller` caches toolchains. */
-	toolCache: S.String,
-}) {}
+	toolCache: S.String.annotateKey({ description: "Where `ToolInstaller` caches toolchains." }),
+}, $I.annote("RunnerContext", { description: "The runner's own context, projected from the `RUNNER_*` variables." })) {}
 
 /**
  * Environment overrides layered on top of the seeded snapshot.
@@ -133,7 +136,7 @@ export class RunnerContext extends S.Class<RunnerContext>("RunnerContext")({
  *
  * @internal
  */
-const EnvOverrides = Context.Reference<Readonly<Record<string, string>>>("@effected/github-actions/EnvOverrides", {
+const EnvOverrides = Context.Reference<Readonly<Record<string, string>>>($I`EnvOverrides`, {
 	defaultValue: () => ({}),
 });
 
@@ -325,7 +328,7 @@ const TEST_DEFAULTS: Readonly<Record<string, string>> = {
  * @public
  */
 export class ActionEnvironment extends Context.Service<ActionEnvironment, ActionEnvironmentShape>()(
-	"@beep/scratchpad/effected/github-actions/ActionEnvironment",
+	$I`ActionEnvironment`,
 ) {
 	/** Seeded from `process.env`, once, at layer construction. */
 	static readonly layer: Layer.Layer<ActionEnvironment, never, FileSystem.FileSystem> = Layer.effect(

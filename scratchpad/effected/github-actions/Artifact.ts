@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import { BlobClient, BlockBlobClient } from "@azure/storage-blob";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -24,6 +25,8 @@ import { spawnOnce } from "./internal/spawn.ts";
 import { CONFLICT, field, isOk, stringField, twirpCall, twirpFailureFields } from "./internal/twirp.ts";
 import { unstubbed } from "./internal/unstubbed.ts";
 
+const $I = $ScratchpadId.create("effected/github-actions/Artifact");
+
 const Json = S.fromJsonString(S.Unknown);
 
 /**
@@ -31,7 +34,7 @@ const Json = S.fromJsonString(S.Unknown);
  *
  * @public
  */
-export class ArtifactError extends S.TaggedError<ArtifactError>()("ArtifactError", {
+export class ArtifactError extends S.TaggedError<ArtifactError>($I`ArtifactError`)("ArtifactError", {
 	/**
 	 * `misconfigured` — the results backend is not reachable from here (see
 	 * {@link Artifact}). `unreachable` — it could not be contacted, or answered
@@ -50,18 +53,18 @@ export class ArtifactError extends S.TaggedError<ArtifactError>()("ArtifactError
 		"archiveFailed",
 		"transferFailed",
 		"invalidOptions",
-	]),
+	]).annotateKey({ description: "`misconfigured` — the results backend is not reachable from here (see Artifact). `unreachable` — it could not be contacted, or answered with something that is not a Twirp body. `refused` — it answered, unhappily; re-uploading a name that already exists in the run is the common case. `notFound` — no artifact by that name or id exists in this run. `archiveFailed` — `zip` would not pack or unpack the files. `transferFailed` — the archive itself did not move. `invalidOptions` — the call cannot be made as asked." }),
 	/** The artifact's name or id. A stable identifier, never a value. */
-	artifact: S.optionalKey(S.String),
+	artifact: S.optionalKey(S.String).annotateKey({ description: "The artifact's name or id. A stable identifier, never a value." }),
 	/** The HTTP status, when the backend answered. */
-	status: S.optionalKey(S.Finite),
+	status: S.optionalKey(S.Finite).annotateKey({ description: "The HTTP status, when the backend answered." }),
 	/** What went wrong, when the reason alone does not say. */
-	detail: S.optionalKey(S.String),
+	detail: S.optionalKey(S.String).annotateKey({ description: "What went wrong, when the reason alone does not say." }),
 	/** `zip`'s own complaint, which is the only useful part of an archive failure. */
-	stderr: S.optionalKey(S.String),
+	stderr: S.optionalKey(S.String).annotateKey({ description: "`zip`'s own complaint, which is the only useful part of an archive failure." }),
 	/** The underlying failure, preserved structurally. */
-	cause: S.optionalKey(S.Defect()),
-}) {
+	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying failure, preserved structurally." }),
+}, $I.annote("ArtifactError", { description: "Raised when an artifact cannot be uploaded, listed, downloaded or deleted." })) {
 	override get message(): string {
 		const about = this.artifact === undefined ? "" : ` "${this.artifact}"`;
 		const detail = this.detail === undefined ? "" : `: ${this.detail}`;
@@ -582,7 +585,7 @@ const dies = unstubbed("Artifact.makeTest");
  *
  * @public
  */
-export class Artifact extends Context.Service<Artifact, ArtifactShape>()("@beep/scratchpad/effected/github-actions/Artifact") {
+export class Artifact extends Context.Service<Artifact, ArtifactShape>()($I`Artifact`) {
 	/** The service, over the real Azure client and the real `zip`. */
 	static readonly layer: Layer.Layer<
 		Artifact,

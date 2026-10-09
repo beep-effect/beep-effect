@@ -1,4 +1,7 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("effected/github-actions/CheckState");
 
 /**
  * The kit's check-state vocabulary.
@@ -26,7 +29,7 @@ export const CheckState = S.Literals([
 	"user_interaction_required",
 	"skipped",
 	"timeout",
-]);
+]).pipe($I.annoteSchema("CheckState", { description: "The kit's check-state vocabulary." }));
 
 /**
  * The type of `CheckState`.

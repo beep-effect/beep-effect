@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
@@ -10,6 +11,8 @@ import * as Semaphore from "effect/Semaphore";
 import { CheckState } from "./CheckState.ts";
 import { unstubbed } from "./internal/unstubbed.ts";
 import { ManagedDocument } from "./ManagedDocument.ts";
+
+const $I = $ScratchpadId.create("effected/github-actions/CheckDocument");
 
 /**
  * What a run knows about one of its checks: the authoritative state, and the
@@ -24,18 +27,18 @@ import { ManagedDocument } from "./ManagedDocument.ts";
  *
  * @public
  */
-export class CheckReport extends S.Class<CheckReport>("CheckReport")({
+export class CheckReport extends S.Class<CheckReport>($I`CheckReport`)({
 	/** Where the check is now. The last reported state is the authoritative one. */
-	state: CheckState,
+	state: CheckState.annotateKey({ description: "Where the check is now. The last reported state is the authoritative one." }),
 	/** Display name, when it differs from the registry key. */
-	title: S.optionalKey(S.String),
+	title: S.optionalKey(S.String).annotateKey({ description: "Display name, when it differs from the registry key." }),
 	/** A one-line verdict, e.g. `in progress...` or `3 packages ready`. */
-	outcome: S.optionalKey(S.String),
+	outcome: S.optionalKey(S.String).annotateKey({ description: "A one-line verdict, e.g. `in progress...` or `3 packages ready`." }),
 	/** A pre-rendered markdown block of per-check detail. */
-	detail: S.optionalKey(S.String),
+	detail: S.optionalKey(S.String).annotateKey({ description: "A pre-rendered markdown block of per-check detail." }),
 	/** Where the check's name should link. */
-	url: S.optionalKey(S.String),
-}) {}
+	url: S.optionalKey(S.String).annotateKey({ description: "Where the check's name should link." }),
+}, $I.annote("CheckReport", { description: "What a run knows about one of its checks: the authoritative state, and the presentation facts a renderer projects into the document." })) {}
 
 /** What each {@link CheckDocumentError} kind reads as. */
 const KIND_PROSE = {
@@ -58,12 +61,12 @@ const KIND_PROSE = {
  *
  * @public
  */
-export class CheckDocumentError extends S.TaggedError<CheckDocumentError>()("CheckDocumentError", {
+export class CheckDocumentError extends S.TaggedError<CheckDocumentError>($I`CheckDocumentError`)("CheckDocumentError", {
 	/** Which phase failed: regenerating the document, reading it back, or writing it. */
-	kind: S.Literals(["render", "read", "sink"]),
+	kind: S.Literals(["render", "read", "sink"]).annotateKey({ description: "Which phase failed: regenerating the document, reading it back, or writing it." }),
 	/** The underlying failure. */
-	cause: S.optionalKey(S.Defect()),
-}) {
+	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying failure." }),
+}, $I.annote("CheckDocumentError", { description: "Raised when the check document cannot be regenerated, read back or written." })) {
 	override get message(): string {
 		return KIND_PROSE[this.kind];
 	}
@@ -83,12 +86,12 @@ export class CheckDocumentError extends S.TaggedError<CheckDocumentError>()("Che
  *
  * @public
  */
-export class CheckDocumentStamp extends S.Class<CheckDocumentStamp>("CheckDocumentStamp")({
+export class CheckDocumentStamp extends S.Class<CheckDocumentStamp>($I`CheckDocumentStamp`)({
 	/** When the run started — ideally an ISO-8601 instant. */
-	at: S.String,
+	at: S.String.annotateKey({ description: "When the run started — ideally an ISO-8601 instant." }),
 	/** The run's identifier — on GitHub, `GITHUB_RUN_ID`. */
-	runId: S.String,
-}) {
+	runId: S.String.annotateKey({ description: "The run's identifier — on GitHub, `GITHUB_RUN_ID`." }),
+}, $I.annote("CheckDocumentStamp", { description: "A run's identity for staleness ordering: when it started and which run it is." })) {
 	/**
 	 * Is `incoming` allowed to overwrite regions stamped `existing`?
 	 *
@@ -362,7 +365,7 @@ export interface CheckDocumentShape {
  * @public
  */
 export class CheckDocument extends Context.Service<CheckDocument, CheckDocumentShape>()(
-	"@beep/scratchpad/effected/github-actions/CheckDocument",
+	$I`CheckDocument`,
 ) {
 	/**
 	 * The reconciler over one document.

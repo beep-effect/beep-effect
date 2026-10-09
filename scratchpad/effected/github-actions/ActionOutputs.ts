@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import { CommandNeutralizer, WorkflowCommand } from "../github-commands/index.ts";
 import * as Console from "effect/Console";
 import * as Context from "effect/Context";
@@ -9,19 +10,21 @@ import { ActionEnvironment } from "./ActionEnvironment.ts";
 import { heredocBlock, isUsableName } from "./internal/runnerFile.ts";
 import { unstubbed } from "./internal/unstubbed.ts";
 
+const $I = $ScratchpadId.create("effected/github-actions/ActionOutputs");
+
 /**
  * Raised when an action cannot publish an output.
  *
  * @public
  */
-export class RunnerFileUnavailableError extends S.TaggedError<RunnerFileUnavailableError>()(
+export class RunnerFileUnavailableError extends S.TaggedError<RunnerFileUnavailableError>($I`RunnerFileUnavailableError`)(
 	"RunnerFileUnavailableError",
 	{
 		/** The runner file involved, by environment variable name. */
-		file: S.String,
+		file: S.String.annotateKey({ description: "The runner file involved, by environment variable name." }),
 		/** The underlying failure, preserved structurally. */
-		cause: S.optionalKey(S.Defect()),
-	},
+		cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying failure, preserved structurally." }),
+	}, $I.annote("RunnerFileUnavailableError", { description: "Raised when an action cannot publish an output." }),
 ) {
 	override get message(): string {
 		return `Runner file "${this.file}" is not available; is this running on a GitHub runner?`;
@@ -33,12 +36,12 @@ export class RunnerFileUnavailableError extends S.TaggedError<RunnerFileUnavaila
  *
  * @public
  */
-export class RunnerFileWriteError extends S.TaggedError<RunnerFileWriteError>()("RunnerFileWriteError", {
+export class RunnerFileWriteError extends S.TaggedError<RunnerFileWriteError>($I`RunnerFileWriteError`)("RunnerFileWriteError", {
 	/** The runner file involved, by environment variable name. */
-	file: S.String,
+	file: S.String.annotateKey({ description: "The runner file involved, by environment variable name." }),
 	/** The underlying failure, preserved structurally. */
-	cause: S.optionalKey(S.Defect()),
-}) {
+	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying failure, preserved structurally." }),
+}, $I.annote("RunnerFileWriteError", { description: "Raised when a runner file exists but could not be appended to." })) {
 	override get message(): string {
 		return `Failed to write to runner file "${this.file}"`;
 	}
@@ -49,14 +52,14 @@ export class RunnerFileWriteError extends S.TaggedError<RunnerFileWriteError>()(
  *
  * @public
  */
-export class InvalidOutputNameError extends S.TaggedError<InvalidOutputNameError>()("InvalidOutputNameError", {
+export class InvalidOutputNameError extends S.TaggedError<InvalidOutputNameError>($I`InvalidOutputNameError`)("InvalidOutputNameError", {
 	/** The offending name. */
-	name: S.String,
+	name: S.String.annotateKey({ description: "The offending name." }),
 	/** The runner file involved, by environment variable name. */
-	file: S.optionalKey(S.String),
+	file: S.optionalKey(S.String).annotateKey({ description: "The runner file involved, by environment variable name." }),
 	/** The underlying failure, preserved structurally. */
-	cause: S.optionalKey(S.Defect()),
-}) {
+	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying failure, preserved structurally." }),
+}, $I.annote("InvalidOutputNameError", { description: "Raised when a name would corrupt the runner file's block structure." })) {
 	override get message(): string {
 		return `"${this.name}" is not a usable output name`;
 	}
@@ -67,12 +70,12 @@ export class InvalidOutputNameError extends S.TaggedError<InvalidOutputNameError
  *
  * @public
  */
-export class OutputEncodeError extends S.TaggedError<OutputEncodeError>()("OutputEncodeError", {
+export class OutputEncodeError extends S.TaggedError<OutputEncodeError>($I`OutputEncodeError`)("OutputEncodeError", {
 	/** The output or variable name whose value would not encode. */
-	name: S.String,
+	name: S.String.annotateKey({ description: "The output or variable name whose value would not encode." }),
 	/** The underlying failure, preserved structurally. */
-	cause: S.optionalKey(S.Defect()),
-}) {
+	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying failure, preserved structurally." }),
+}, $I.annote("OutputEncodeError", { description: "Raised when a value did not satisfy its schema." })) {
 	override get message(): string {
 		return `Failed to encode the value for "${this.name}"`;
 	}
@@ -84,14 +87,14 @@ export class OutputEncodeError extends S.TaggedError<OutputEncodeError>()("Outpu
  *
  * @public
  */
-export class DetachedOutputError extends S.TaggedError<DetachedOutputError>()("DetachedOutputError", {
+export class DetachedOutputError extends S.TaggedError<DetachedOutputError>($I`DetachedOutputError`)("DetachedOutputError", {
 	/** The runner file involved, by environment variable name. */
-	file: S.String,
+	file: S.String.annotateKey({ description: "The runner file involved, by environment variable name." }),
 	/** The output or variable name, when one is involved. */
-	name: S.optionalKey(S.String),
+	name: S.optionalKey(S.String).annotateKey({ description: "The output or variable name, when one is involved." }),
 	/** The underlying failure, preserved structurally. */
-	cause: S.optionalKey(S.Defect()),
-}) {
+	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying failure, preserved structurally." }),
+}, $I.annote("DetachedOutputError", { description: "Raised when an output member was called under ActionOutputs.layerDetached." })) {
 	override get message(): string {
 		return `Runner file "${this.file}" cannot be reached from a detached worker — it configures the parent job's later steps, and a worker has none and may outlive the job. Publish this from the parent process instead.`;
 	}
@@ -167,14 +170,14 @@ const encodeJson = <A, I>(
  *
  * @public
  */
-export class RecordedOutput extends S.Class<RecordedOutput>("RecordedOutput")({
+export class RecordedOutput extends S.Class<RecordedOutput>($I`RecordedOutput`)({
 	/** Which {@link ActionOutputsShape} member was called. */
-	member: S.Literals(["set", "setJson", "summary", "exportVariable", "addPath", "setFailed", "setSecret"]),
+	member: S.Literals(["set", "setJson", "summary", "exportVariable", "addPath", "setFailed", "setSecret"]).annotateKey({ description: "Which ActionOutputsShape member was called." }),
 	/** The output or variable name, for the members that take one. */
-	name: S.optionalKey(S.String),
+	name: S.optionalKey(S.String).annotateKey({ description: "The output or variable name, for the members that take one." }),
 	/** What was published — value, message, path, content or secret — as the runner would have read it. */
-	value: S.String,
-}) {}
+	value: S.String.annotateKey({ description: "What was published — value, message, path, content or secret — as the runner would have read it." }),
+}, $I.annote("RecordedOutput", { description: "One call an ActionOutputs.recording double observed." })) {}
 
 /**
  * The member names a {@link RecordedOutput} can carry.
@@ -295,7 +298,7 @@ const dies = unstubbed("ActionOutputs.makeTest");
  * @public
  */
 export class ActionOutputs extends Context.Service<ActionOutputs, ActionOutputsShape>()(
-	"@beep/scratchpad/effected/github-actions/ActionOutputs",
+	$I`ActionOutputs`,
 ) {
 	/**
 	 * The live service, appending to the runner's `GITHUB_OUTPUT`, `GITHUB_ENV`,

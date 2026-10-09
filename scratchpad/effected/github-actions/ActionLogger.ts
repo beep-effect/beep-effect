@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import type { AnnotationProperties } from "../github-commands/index.ts";
 import { CommandNeutralizer, WorkflowCommand } from "../github-commands/index.ts";
 import * as Console from "effect/Console";
@@ -10,6 +11,8 @@ import * as LogLevel from "effect/LogLevel";
 import * as Logger from "effect/Logger";
 import * as References from "effect/References";
 import { ActionEnvironment } from "./ActionEnvironment.ts";
+
+const $I = $ScratchpadId.create("effected/github-actions/ActionLogger");
 
 /**
  * Render a log message, which arrives as an array of the values passed to
@@ -130,7 +133,7 @@ interface BufferState {
  *
  * @internal
  */
-const ActiveBuffer = Context.Reference<BufferState | null>("@effected/github-actions/ActiveBuffer", {
+const ActiveBuffer = Context.Reference<BufferState | null>($I`ActiveBuffer`, {
 	defaultValue: () => null,
 });
 
@@ -382,7 +385,7 @@ const make = Effect.gen(function* () {
  * @public
  */
 export class ActionLogger extends Context.Service<ActionLogger, ActionLoggerShape>()(
-	"@beep/scratchpad/effected/github-actions/ActionLogger",
+	$I`ActionLogger`,
 ) {
 	/**
 	 * The service: groups, the buffered step renderer, notices and annotations.

@@ -1,17 +1,20 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import type * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("effected/github-actions/BlobTransfer");
 
 /**
  * Raised when bytes could not be moved to or from a signed blob url.
  *
  * @public
  */
-export class BlobTransferError extends S.TaggedError<BlobTransferError>()("BlobTransferError", {
+export class BlobTransferError extends S.TaggedError<BlobTransferError>($I`BlobTransferError`)("BlobTransferError", {
 	/** Which direction failed. */
-	reason: S.Literals(["uploadFailed", "downloadFailed"]),
+	reason: S.Literals(["uploadFailed", "downloadFailed"]).annotateKey({ description: "Which direction failed." }),
 	/** The underlying failure, preserved structurally. */
-	cause: S.optionalKey(S.Defect()),
-}) {
+	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying failure, preserved structurally." }),
+}, $I.annote("BlobTransferError", { description: "Raised when bytes could not be moved to or from a signed blob url." })) {
 	override get message(): string {
 		return this.reason === "uploadFailed"
 			? "Could not upload to the signed blob url"

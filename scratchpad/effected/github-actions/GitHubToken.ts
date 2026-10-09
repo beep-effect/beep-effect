@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import type { BotIdentity, GitHubAppShape, PermissionLevel, RetryPolicy } from "../github/index.ts";
 import { GitHubApp, GitHubClient, InstallationToken, TokenPermissions } from "../github/index.ts";
 import type * as Redacted from "effect/Redacted";
@@ -13,21 +14,23 @@ import type { ActionStateError } from "./ActionState.ts";
 import { ActionState } from "./ActionState.ts";
 import { Secret } from "./Secret.ts";
 
+const $I = $ScratchpadId.create("effected/github-actions/GitHubToken");
+
 /**
  * Raised when the token an earlier phase persisted cannot be used.
  *
  * @public
  */
-export class GitHubTokenError extends S.TaggedError<GitHubTokenError>()("GitHubTokenError", {
+export class GitHubTokenError extends S.TaggedError<GitHubTokenError>($I`GitHubTokenError`)("GitHubTokenError", {
 	/**
 	 * One reason, deliberately: everything else that can go wrong here already
 	 * has an owner — persistence is an `ActionStateError`, minting is a
 	 * `GitHubAppError`, and scope verification is a `TokenPermissionError`.
 	 */
-	reason: S.Literals(["expired"]),
+	reason: S.Literals(["expired"]).annotateKey({ description: "One reason, deliberately: everything else that can go wrong here already has an owner — persistence is an `ActionStateError`, minting is a `GitHubAppError`, and scope verification is a `TokenPermissionError`." }),
 	/** When GitHub stopped accepting it, ISO-8601. */
-	expiresAt: S.String,
-}) {
+	expiresAt: S.String.annotateKey({ description: "When GitHub stopped accepting it, ISO-8601." }),
+}, $I.annote("GitHubTokenError", { description: "Raised when the token an earlier phase persisted cannot be used." })) {
 	override get message(): string {
 		return `The installation token persisted by an earlier phase expired at ${this.expiresAt}. An installation token lives about an hour and no later phase can re-mint one, so a long-running phase must provision its own.`;
 	}

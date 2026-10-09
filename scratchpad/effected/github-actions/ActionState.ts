@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -10,6 +11,8 @@ import { ActionOutputs } from "./ActionOutputs.ts";
 import { heredocBlock, isUsableName } from "./internal/runnerFile.ts";
 import { unstubbed } from "./internal/unstubbed.ts";
 
+const $I = $ScratchpadId.create("effected/github-actions/ActionState");
+
 const Json = S.fromJsonString(S.Unknown);
 
 /**
@@ -18,7 +21,7 @@ const Json = S.fromJsonString(S.Unknown);
  *
  * @public
  */
-export class ActionStateError extends S.TaggedError<ActionStateError>()("ActionStateError", {
+export class ActionStateError extends S.TaggedError<ActionStateError>($I`ActionStateError`)("ActionStateError", {
 	/**
 	 * `missing` — no value was saved under this key in an earlier phase.
 	 * `malformed` — a value is there but is not JSON, or does not satisfy the
@@ -28,12 +31,12 @@ export class ActionStateError extends S.TaggedError<ActionStateError>()("ActionS
 	 * no pointer to the cause. `writeFailed` — the state file could not be
 	 * appended to.
 	 */
-	reason: S.Literals(["missing", "malformed", "notPlainJson", "writeFailed"]),
+	reason: S.Literals(["missing", "malformed", "notPlainJson", "writeFailed"]).annotateKey({ description: "`missing` — no value was saved under this key in an earlier phase. `malformed` — a value is there but is not JSON, or does not satisfy the schema it was read with. `notPlainJson` — caught at SAVE time: the schema's encoded form does not survive `JSON.stringify`/`JSON.parse`, so persisting it would present one phase later as a `malformed` mystery with no pointer to the cause. `writeFailed` — the state file could not be appended to." }),
 	/** The state key that was being saved or read. */
-	key: S.String,
+	key: S.String.annotateKey({ description: "The state key that was being saved or read." }),
 	/** The underlying failure, preserved structurally. */
-	cause: S.optionalKey(S.Defect()),
-}) {
+	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying failure, preserved structurally." }),
+}, $I.annote("ActionStateError", { description: "Raised when action state cannot be saved, read or decoded across the phase boundary." })) {
 	override get message(): string {
 		switch (this.reason) {
 			case "missing":
@@ -195,7 +198,7 @@ const dies = unstubbed("ActionState.makeTest");
  * @public
  */
 export class ActionState extends Context.Service<ActionState, ActionStateShape>()(
-	"@beep/scratchpad/effected/github-actions/ActionState",
+	$I`ActionState`,
 ) {
 	/**
 	 * The live service, writing to the runner's `GITHUB_STATE` file and reading

@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import type * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Schedule from "effect/Schedule";
@@ -8,6 +9,8 @@ import { isErrno } from "./internal/fsProbe.ts";
 import { IeeeNumber } from "./internal/ieeeNumber.ts";
 import { unstubbed } from "./internal/unstubbed.ts";
 
+const $I = $ScratchpadId.create("effected/github-actions/DetachedProcess");
+
 // Effect ChildProcess cannot route detached output to native file descriptors.
 const { spawn: spawnChild } = process.getBuiltinModule("node:child_process");
 const { closeSync, openSync } = process.getBuiltinModule("node:fs");
@@ -17,14 +20,14 @@ const { closeSync, openSync } = process.getBuiltinModule("node:fs");
  *
  * @public
  */
-export class DetachedLogUnavailableError extends S.TaggedError<DetachedLogUnavailableError>()(
+export class DetachedLogUnavailableError extends S.TaggedError<DetachedLogUnavailableError>($I`DetachedLogUnavailableError`)(
 	"DetachedLogUnavailableError",
 	{
 		/** The log file that could not be opened. */
-		path: S.String,
+		path: S.String.annotateKey({ description: "The log file that could not be opened." }),
 		/** The underlying failure, preserved structurally. */
-		cause: S.optionalKey(S.Defect()),
-	},
+		cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying failure, preserved structurally." }),
+	}, $I.annote("DetachedLogUnavailableError", { description: "Raised when the log file for a detached child's output cannot be opened." }),
 ) {
 	override get message(): string {
 		return `Could not open the detached log file "${this.path}"`;
@@ -36,12 +39,12 @@ export class DetachedLogUnavailableError extends S.TaggedError<DetachedLogUnavai
  *
  * @public
  */
-export class DetachedSpawnFailedError extends S.TaggedError<DetachedSpawnFailedError>()(
+export class DetachedSpawnFailedError extends S.TaggedError<DetachedSpawnFailedError>($I`DetachedSpawnFailedError`)(
 	"DetachedSpawnFailedError",
 	{
 		/** The underlying failure, preserved structurally. */
-		cause: S.optionalKey(S.Defect()),
-	},
+		cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying failure, preserved structurally." }),
+	}, $I.annote("DetachedSpawnFailedError", { description: "Raised when the detached child did not start." }),
 ) {
 	override get message(): string {
 		return "The detached child did not start";
@@ -57,12 +60,12 @@ export class DetachedSpawnFailedError extends S.TaggedError<DetachedSpawnFailedE
  *
  * @public
  */
-export class InvalidPidError extends S.TaggedError<InvalidPidError>()("InvalidPidError", {
+export class InvalidPidError extends S.TaggedError<InvalidPidError>($I`InvalidPidError`)("InvalidPidError", {
 	/** The pid that was refused. */
-	pid: IeeeNumber,
+	pid: IeeeNumber.annotateKey({ description: "The pid that was refused." }),
 	/** The underlying failure, preserved structurally. */
-	cause: S.optionalKey(S.Defect()),
-}) {
+	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying failure, preserved structurally." }),
+}, $I.annote("InvalidPidError", { description: "Raised when a non-positive pid was handed to DetachedProcess.reap." })) {
 	override get message(): string {
 		return `Refusing to signal pid ${this.pid}: a non-positive pid targets a process group, not a process`;
 	}
@@ -73,14 +76,14 @@ export class InvalidPidError extends S.TaggedError<InvalidPidError>()("InvalidPi
  *
  * @public
  */
-export class DetachedSignalFailedError extends S.TaggedError<DetachedSignalFailedError>()(
+export class DetachedSignalFailedError extends S.TaggedError<DetachedSignalFailedError>($I`DetachedSignalFailedError`)(
 	"DetachedSignalFailedError",
 	{
 		/** The pid that could not be signalled. */
-		pid: S.Finite,
+		pid: S.Finite.annotateKey({ description: "The pid that could not be signalled." }),
 		/** The underlying failure, preserved structurally. */
-		cause: S.optionalKey(S.Defect()),
-	},
+		cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying failure, preserved structurally." }),
+	}, $I.annote("DetachedSignalFailedError", { description: "Raised when a signal was refused, e.g. the process belongs to another user." }),
 ) {
 	override get message(): string {
 		return `Could not signal pid ${this.pid}`;
@@ -92,10 +95,10 @@ export class DetachedSignalFailedError extends S.TaggedError<DetachedSignalFaile
  *
  * @public
  */
-export class DetachedNotReadyError extends S.TaggedError<DetachedNotReadyError>()("DetachedNotReadyError", {
+export class DetachedNotReadyError extends S.TaggedError<DetachedNotReadyError>($I`DetachedNotReadyError`)("DetachedNotReadyError", {
 	/** The underlying failure, preserved structurally. */
-	cause: S.optionalKey(S.Defect()),
-}) {
+	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying failure, preserved structurally." }),
+}, $I.annote("DetachedNotReadyError", { description: "Raised when the readiness probe never held." })) {
 	override get message(): string {
 		return "The detached child never became ready";
 	}

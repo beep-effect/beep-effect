@@ -1,15 +1,18 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("effected/github-actions/BlobEnvelope");
 
 /**
  * Raised when bytes cannot be read as an envelope.
  *
  * @public
  */
-export class NotABlobEnvelopeError extends S.TaggedError<NotABlobEnvelopeError>()("NotABlobEnvelopeError", {
+export class NotABlobEnvelopeError extends S.TaggedError<NotABlobEnvelopeError>($I`NotABlobEnvelopeError`)("NotABlobEnvelopeError", {
 	/** The underlying failure, preserved structurally. */
-	cause: S.optionalKey(S.Defect()),
-}) {
+	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying failure, preserved structurally." }),
+}, $I.annote("NotABlobEnvelopeError", { description: "Raised when bytes cannot be read as an envelope." })) {
 	override get message(): string {
 		return "Bytes are not an @effected/github-actions blob envelope";
 	}
@@ -20,12 +23,12 @@ export class NotABlobEnvelopeError extends S.TaggedError<NotABlobEnvelopeError>(
  *
  * @public
  */
-export class TruncatedBlobEnvelopeError extends S.TaggedError<TruncatedBlobEnvelopeError>()(
+export class TruncatedBlobEnvelopeError extends S.TaggedError<TruncatedBlobEnvelopeError>($I`TruncatedBlobEnvelopeError`)(
 	"TruncatedBlobEnvelopeError",
 	{
 		/** The underlying failure, preserved structurally. */
-		cause: S.optionalKey(S.Defect()),
-	},
+		cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying failure, preserved structurally." }),
+	}, $I.annote("TruncatedBlobEnvelopeError", { description: "Raised when the frame ends mid-header or mid-metadata." }),
 ) {
 	override get message(): string {
 		return "Blob envelope is truncated";
@@ -37,14 +40,14 @@ export class TruncatedBlobEnvelopeError extends S.TaggedError<TruncatedBlobEnvel
  *
  * @public
  */
-export class UnsupportedBlobEnvelopeVersionError extends S.TaggedError<UnsupportedBlobEnvelopeVersionError>()(
+export class UnsupportedBlobEnvelopeVersionError extends S.TaggedError<UnsupportedBlobEnvelopeVersionError>($I`UnsupportedBlobEnvelopeVersionError`)(
 	"UnsupportedBlobEnvelopeVersionError",
 	{
 		/** The envelope version found. */
-		version: S.Finite,
+		version: S.Finite.annotateKey({ description: "The envelope version found." }),
 		/** The underlying failure, preserved structurally. */
-		cause: S.optionalKey(S.Defect()),
-	},
+		cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying failure, preserved structurally." }),
+	}, $I.annote("UnsupportedBlobEnvelopeVersionError", { description: "Raised when the envelope came from a newer revision of the format." }),
 ) {
 	override get message(): string {
 		return `Blob envelope version ${this.version} is not supported`;
@@ -56,10 +59,10 @@ export class UnsupportedBlobEnvelopeVersionError extends S.TaggedError<Unsupport
  *
  * @public
  */
-export class BlobMetadataDecodeError extends S.TaggedError<BlobMetadataDecodeError>()("BlobMetadataDecodeError", {
+export class BlobMetadataDecodeError extends S.TaggedError<BlobMetadataDecodeError>($I`BlobMetadataDecodeError`)("BlobMetadataDecodeError", {
 	/** The underlying failure, preserved structurally. */
-	cause: S.optionalKey(S.Defect()),
-}) {
+	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying failure, preserved structurally." }),
+}, $I.annote("BlobMetadataDecodeError", { description: "Raised when well-framed metadata does not satisfy the caller's schema." })) {
 	override get message(): string {
 		return "Blob envelope metadata did not satisfy the schema";
 	}
@@ -70,10 +73,10 @@ export class BlobMetadataDecodeError extends S.TaggedError<BlobMetadataDecodeErr
  *
  * @public
  */
-export class BlobMetadataEncodeError extends S.TaggedError<BlobMetadataEncodeError>()("BlobMetadataEncodeError", {
+export class BlobMetadataEncodeError extends S.TaggedError<BlobMetadataEncodeError>($I`BlobMetadataEncodeError`)("BlobMetadataEncodeError", {
 	/** The underlying failure, preserved structurally. */
-	cause: S.optionalKey(S.Defect()),
-}) {
+	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying failure, preserved structurally." }),
+}, $I.annote("BlobMetadataEncodeError", { description: "Raised when the value being stored does not satisfy its schema." })) {
 	override get message(): string {
 		return "Blob metadata could not be encoded";
 	}

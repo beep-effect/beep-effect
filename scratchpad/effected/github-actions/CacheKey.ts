@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import { GlobSet } from "../glob/index.ts";
 import { descend } from "../walker/index.ts";
 import * as Effect from "effect/Effect";
@@ -7,18 +8,20 @@ import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { sha256, sha256Hex } from "./internal/digest.ts";
 
+const $I = $ScratchpadId.create("effected/github-actions/CacheKey");
+
 /**
  * Raised when a file or directory that was going to be hashed could not be
  * read.
  *
  * @public
  */
-export class CacheKeyReadError extends S.TaggedError<CacheKeyReadError>()("CacheKeyReadError", {
+export class CacheKeyReadError extends S.TaggedError<CacheKeyReadError>($I`CacheKeyReadError`)("CacheKeyReadError", {
 	/** The path being read when it went wrong. */
-	path: S.String,
+	path: S.String.annotateKey({ description: "The path being read when it went wrong." }),
 	/** The underlying failure, preserved structurally. */
-	cause: S.optionalKey(S.Defect()),
-}) {
+	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying failure, preserved structurally." }),
+}, $I.annote("CacheKeyReadError", { description: "Raised when a file or directory that was going to be hashed could not be read." })) {
 	override get message(): string {
 		return `Could not read "${this.path}" while deriving a cache key`;
 	}
@@ -29,12 +32,12 @@ export class CacheKeyReadError extends S.TaggedError<CacheKeyReadError>()("Cache
  *
  * @public
  */
-export class CacheKeyBadPatternError extends S.TaggedError<CacheKeyBadPatternError>()("CacheKeyBadPatternError", {
+export class CacheKeyBadPatternError extends S.TaggedError<CacheKeyBadPatternError>($I`CacheKeyBadPatternError`)("CacheKeyBadPatternError", {
 	/** The pattern that would not compile. */
-	pattern: S.String,
+	pattern: S.String.annotateKey({ description: "The pattern that would not compile." }),
 	/** The underlying failure, preserved structurally. */
-	cause: S.optionalKey(S.Defect()),
-}) {
+	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying failure, preserved structurally." }),
+}, $I.annote("CacheKeyBadPatternError", { description: "Raised when a glob pattern would not compile." })) {
 	override get message(): string {
 		return `"${this.pattern}" is not a usable glob pattern`;
 	}
@@ -128,7 +131,7 @@ const RestoreDepths = S.Array(RestoreDepth);
  *
  * @public
  */
-export class CacheKey extends S.Class<CacheKey>("CacheKey")(
+export class CacheKey extends S.Class<CacheKey>($I`CacheKey`)(
 	S.Struct({
 		/** The components, most general first. */
 		segments: Segments,
@@ -146,7 +149,7 @@ export class CacheKey extends S.Class<CacheKey>("CacheKey")(
 				? undefined
 				: "every restore depth must be between 1 and segments.length - 1 — a rung keeping every segment would just repeat the primary key",
 		),
-	),
+	), $I.annote("CacheKey", { description: "A GitHub Actions cache key and the restore-key ladder that goes with it." }),
 ) {
 	/** The primary key: every segment, joined. */
 	get key(): string {

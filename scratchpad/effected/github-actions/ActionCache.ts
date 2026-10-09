@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import { BlobClient, BlockBlobClient } from "@azure/storage-blob";
 import { GlobPattern, GlobSet } from "../glob/index.ts";
 import * as Context from "effect/Context";
@@ -22,12 +23,14 @@ import { spawnOnce } from "./internal/spawn.ts";
 import { twirpCall, twirpFailureFields } from "./internal/twirp.ts";
 import { unstubbed } from "./internal/unstubbed.ts";
 
+const $I = $ScratchpadId.create("effected/github-actions/ActionCache");
+
 /**
  * Raised when the runner's cache cannot be read or written.
  *
  * @public
  */
-export class ActionCacheError extends S.TaggedError<ActionCacheError>()("ActionCacheError", {
+export class ActionCacheError extends S.TaggedError<ActionCacheError>($I`ActionCacheError`)("ActionCacheError", {
 	/**
 	 * `misconfigured` — the results backend is not reachable from here (see
 	 * {@link ActionCache}). `unreachable` — it could not be contacted, or
@@ -35,18 +38,18 @@ export class ActionCacheError extends S.TaggedError<ActionCacheError>()("ActionC
 	 * unhappily. `archiveFailed` — `tar` would not pack or unpack the paths.
 	 * `transferFailed` — the archive itself did not move.
 	 */
-	reason: S.Literals(["misconfigured", "unreachable", "refused", "archiveFailed", "transferFailed"]),
+	reason: S.Literals(["misconfigured", "unreachable", "refused", "archiveFailed", "transferFailed"]).annotateKey({ description: "`misconfigured` — the results backend is not reachable from here (see ActionCache). `unreachable` — it could not be contacted, or answered with something that is not a Twirp body. `refused` — it answered, unhappily. `archiveFailed` — `tar` would not pack or unpack the paths. `transferFailed` — the archive itself did not move." }),
 	/** The cache key involved. A stable identifier, never a value. */
-	key: S.optionalKey(S.String),
+	key: S.optionalKey(S.String).annotateKey({ description: "The cache key involved. A stable identifier, never a value." }),
 	/** The HTTP status, when the backend answered. */
-	status: S.optionalKey(S.Finite),
+	status: S.optionalKey(S.Finite).annotateKey({ description: "The HTTP status, when the backend answered." }),
 	/** What went wrong, when the reason alone does not say. */
-	detail: S.optionalKey(S.String),
+	detail: S.optionalKey(S.String).annotateKey({ description: "What went wrong, when the reason alone does not say." }),
 	/** `tar`'s own complaint, which is the only useful part of an archive failure. */
-	stderr: S.optionalKey(S.String),
+	stderr: S.optionalKey(S.String).annotateKey({ description: "`tar`'s own complaint, which is the only useful part of an archive failure." }),
 	/** The underlying failure, preserved structurally. */
-	cause: S.optionalKey(S.Defect()),
-}) {
+	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying failure, preserved structurally." }),
+}, $I.annote("ActionCacheError", { description: "Raised when the runner's cache cannot be read or written." })) {
 	override get message(): string {
 		const about = this.key === undefined ? "" : ` for "${this.key}"`;
 		const detail = this.detail === undefined ? "" : `: ${this.detail}`;
@@ -513,7 +516,7 @@ const dies = unstubbed("ActionCache.makeTest");
  * @public
  */
 export class ActionCache extends Context.Service<ActionCache, ActionCacheShape>()(
-	"@beep/scratchpad/effected/github-actions/ActionCache",
+	$I`ActionCache`,
 ) {
 	/** The cache, over the real Azure client and the real `tar`. */
 	static readonly layer: Layer.Layer<

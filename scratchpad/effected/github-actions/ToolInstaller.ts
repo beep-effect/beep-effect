@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import type * as Duration from "effect/Duration";
 import type * as PlatformError from "effect/PlatformError";
 import * as Config from "effect/Config";
@@ -21,27 +22,29 @@ import { isWindowsRunner, toolCacheRoot } from "./internal/runner.ts";
 import { spawnOnce } from "./internal/spawn.ts";
 import { unstubbed } from "./internal/unstubbed.ts";
 
+const $I = $ScratchpadId.create("effected/github-actions/ToolInstaller");
+
 /**
  * Raised when a tool cannot be downloaded, extracted or cached.
  *
  * @public
  */
-export class ToolInstallerError extends S.TaggedError<ToolInstallerError>()("ToolInstallerError", {
+export class ToolInstallerError extends S.TaggedError<ToolInstallerError>($I`ToolInstallerError`)("ToolInstallerError", {
 	/**
 	 * `downloadFailed` — the archive could not be fetched. `extractFailed` — the
 	 * extraction tool refused the archive or is not installed. `cacheFailed` —
 	 * the tool could not be written into the runner's tool cache.
 	 */
-	reason: S.Literals(["downloadFailed", "extractFailed", "cacheFailed"]),
+	reason: S.Literals(["downloadFailed", "extractFailed", "cacheFailed"]).annotateKey({ description: "`downloadFailed` — the archive could not be fetched. `extractFailed` — the extraction tool refused the archive or is not installed. `cacheFailed` — the tool could not be written into the runner's tool cache." }),
 	/** The HTTP status, when there was one. Drives the retry decision. */
-	status: S.optionalKey(S.Finite),
+	status: S.optionalKey(S.Finite).annotateKey({ description: "The HTTP status, when there was one. Drives the retry decision." }),
 	/** What was being worked on — a url, an archive path, or a tool name. */
-	subject: S.String,
+	subject: S.String.annotateKey({ description: "What was being worked on — a url, an archive path, or a tool name." }),
 	/** The extraction tool's own complaint, which is the only useful part of a tar failure. */
-	stderr: S.optionalKey(S.String),
+	stderr: S.optionalKey(S.String).annotateKey({ description: "The extraction tool's own complaint, which is the only useful part of a tar failure." }),
 	/** The underlying failure, preserved structurally. */
-	cause: S.optionalKey(S.Defect()),
-}) {
+	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying failure, preserved structurally." }),
+}, $I.annote("ToolInstallerError", { description: "Raised when a tool cannot be downloaded, extracted or cached." })) {
 	override get message(): string {
 		switch (this.reason) {
 			case "downloadFailed":
@@ -545,7 +548,7 @@ const testRoot = (): string => Effect.runSync(
  * @public
  */
 export class ToolInstaller extends Context.Service<ToolInstaller, ToolInstallerShape>()(
-	"@beep/scratchpad/effected/github-actions/ToolInstaller",
+	$I`ToolInstaller`,
 ) {
 	/**
 	 * The live installer, over the runner's tool cache, `HttpClient` and `tar`.

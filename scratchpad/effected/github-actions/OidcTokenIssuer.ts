@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -11,12 +12,14 @@ import { ActionEnvironment } from "./ActionEnvironment.ts";
 import { payloadOf, unsignedJwt } from "./internal/jwt.ts";
 import { unstubbed } from "./internal/unstubbed.ts";
 
+const $I = $ScratchpadId.create("effected/github-actions/OidcTokenIssuer");
+
 /**
  * Raised when an OIDC token cannot be issued or read.
  *
  * @public
  */
-export class OidcTokenError extends S.TaggedError<OidcTokenError>()("OidcTokenError", {
+export class OidcTokenError extends S.TaggedError<OidcTokenError>($I`OidcTokenError`)("OidcTokenError", {
 	/**
 	 * `unavailable` — the runner did not publish the token-service variables,
 	 * which almost always means the workflow is missing `permissions: id-token:
@@ -26,14 +29,14 @@ export class OidcTokenError extends S.TaggedError<OidcTokenError>()("OidcTokenEr
 	 * `missingClaims` — it decoded, but without the claims a provenance statement
 	 * needs.
 	 */
-	reason: S.Literals(["unavailable", "requestFailed", "malformedResponse", "malformedToken", "missingClaims"]),
+	reason: S.Literals(["unavailable", "requestFailed", "malformedResponse", "malformedToken", "missingClaims"]).annotateKey({ description: "`unavailable` — the runner did not publish the token-service variables, which almost always means the workflow is missing `permissions: id-token: write`. `requestFailed` — the token service could not be reached or refused the request. `malformedResponse` — it answered with something that is not a token envelope. `malformedToken` — the token is not a decodable JWT. `missingClaims` — it decoded, but without the claims a provenance statement needs." }),
 	/** What was wrong, in one line. */
-	detail: S.optionalKey(S.String),
+	detail: S.optionalKey(S.String).annotateKey({ description: "What was wrong, in one line." }),
 	/** The HTTP status, when the token service answered. */
-	status: S.optionalKey(S.Finite),
+	status: S.optionalKey(S.Finite).annotateKey({ description: "The HTTP status, when the token service answered." }),
 	/** The underlying failure, preserved structurally. */
-	cause: S.optionalKey(S.Defect()),
-}) {
+	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying failure, preserved structurally." }),
+}, $I.annote("OidcTokenError", { description: "Raised when an OIDC token cannot be issued or read." })) {
 	override get message(): string {
 		switch (this.reason) {
 			case "unavailable":
@@ -62,32 +65,32 @@ export class OidcTokenError extends S.TaggedError<OidcTokenError>()("OidcTokenEr
  *
  * @public
  */
-export class OidcClaims extends S.Class<OidcClaims>("OidcClaims")({
+export class OidcClaims extends S.Class<OidcClaims>($I`OidcClaims`)({
 	/** The issuer, e.g. `https://token.actions.githubusercontent.com`. */
-	iss: S.String,
+	iss: S.String.annotateKey({ description: "The issuer, e.g. `https://token.actions.githubusercontent.com`." }),
 	/** The full ref the workflow ran on. */
-	ref: S.String,
+	ref: S.String.annotateKey({ description: "The full ref the workflow ran on." }),
 	/** The commit. */
-	sha: S.String,
+	sha: S.String.annotateKey({ description: "The commit." }),
 	/** `owner/repo`. */
-	repository: S.String,
+	repository: S.String.annotateKey({ description: "`owner/repo`." }),
 	/** The event that triggered the run. */
-	event_name: S.String,
+	event_name: S.String.annotateKey({ description: "The event that triggered the run." }),
 	/** The reusable-workflow ref, which is what a verifier pins against. */
-	job_workflow_ref: S.String,
+	job_workflow_ref: S.String.annotateKey({ description: "The reusable-workflow ref, which is what a verifier pins against." }),
 	/** The calling workflow's ref. */
-	workflow_ref: S.String,
+	workflow_ref: S.String.annotateKey({ description: "The calling workflow's ref." }),
 	/** The numeric repository id, as a string. */
-	repository_id: S.String,
+	repository_id: S.String.annotateKey({ description: "The numeric repository id, as a string." }),
 	/** The numeric owner id, as a string. */
-	repository_owner_id: S.String,
+	repository_owner_id: S.String.annotateKey({ description: "The numeric owner id, as a string." }),
 	/** `github-hosted` or `self-hosted`. */
-	runner_environment: S.String,
+	runner_environment: S.String.annotateKey({ description: "`github-hosted` or `self-hosted`." }),
 	/** The run id, as a string. */
-	run_id: S.String,
+	run_id: S.String.annotateKey({ description: "The run id, as a string." }),
 	/** The run attempt, as a string. */
-	run_attempt: S.String,
-}) {}
+	run_attempt: S.String.annotateKey({ description: "The run attempt, as a string." }),
+}, $I.annote("OidcClaims", { description: "The claims a GitHub Actions OIDC token carries about the workflow that ran." })) {}
 
 /** The token envelope the runner's token service answers with. */
 const TokenEnvelope = S.Struct({
@@ -236,7 +239,7 @@ const dies = unstubbed("OidcTokenIssuer.makeTest");
  * @public
  */
 export class OidcTokenIssuer extends Context.Service<OidcTokenIssuer, OidcTokenIssuerShape>()(
-	"@beep/scratchpad/effected/github-actions/OidcTokenIssuer",
+	$I`OidcTokenIssuer`,
 ) {
 	/**
 	 * The live issuer, requesting tokens from the runner's token service.

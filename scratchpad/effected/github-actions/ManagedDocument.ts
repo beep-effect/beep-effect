@@ -1,9 +1,12 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import type { SectionParseError } from "../templates/index.ts";
 import { CommentStyle, SectionDialect, SectionDocument, SectionId } from "../templates/index.ts";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("effected/github-actions/ManagedDocument");
 
 /**
  * The grammar shared by a document's `namespace`, its `key` and every region
@@ -47,7 +50,7 @@ const REGION_DIALECT: SectionDialect = SectionDialect.make({
  *
  * @public
  */
-export class ManagedDocumentError extends S.TaggedError<ManagedDocumentError>()("ManagedDocumentError", {
+export class ManagedDocumentError extends S.TaggedError<ManagedDocumentError>($I`ManagedDocumentError`)("ManagedDocumentError", {
 	/** Which ambiguity or refusal was found. */
 	kind: S.Literals([
 		"unterminatedRegion",
@@ -57,14 +60,14 @@ export class ManagedDocumentError extends S.TaggedError<ManagedDocumentError>()(
 		"markerInContent",
 		"duplicateDeclaration",
 		"invalidAttribute",
-	]),
+	]).annotateKey({ description: "Which ambiguity or refusal was found." }),
 	/** 1-based line of the offending marker, for the structural kinds. */
-	line: S.optionalKey(S.Finite),
+	line: S.optionalKey(S.Finite).annotateKey({ description: "1-based line of the offending marker, for the structural kinds." }),
 	/** The region key involved, when the failure names one. */
-	key: S.optionalKey(S.String),
+	key: S.optionalKey(S.String).annotateKey({ description: "The region key involved, when the failure names one." }),
 	/** The offending metadata attribute's name, for `invalidAttribute`. */
-	attribute: S.optionalKey(S.String),
-}) {
+	attribute: S.optionalKey(S.String).annotateKey({ description: "The offending metadata attribute's name, for `invalidAttribute`." }),
+}, $I.annote("ManagedDocumentError", { description: "Raised when a managed document cannot be read or regenerated without guessing." })) {
 	override get message(): string {
 		const which = this.key === undefined ? "" : ` for region "${this.key}"`;
 		const named = this.attribute === undefined ? "" : ` (attribute "${this.attribute}")`;
@@ -159,14 +162,14 @@ export interface ManagedDocumentSource {
  *
  * @public
  */
-export class ManagedDocument extends S.Class<ManagedDocument>("ManagedDocument")({
+export class ManagedDocument extends S.Class<ManagedDocument>($I`ManagedDocument`)({
 	/** Whose document this is. */
-	namespace: NamePart,
+	namespace: NamePart.annotateKey({ description: "Whose document this is." }),
 	/** Which document, within that namespace. */
-	key: NamePart,
+	key: NamePart.annotateKey({ description: "Which document, within that namespace." }),
 	/** The document's full text, sentinel and regions included. */
-	text: S.String,
-}) {
+	text: S.String.annotateKey({ description: "The document's full text, sentinel and regions included." }),
+}, $I.annote("ManagedDocument", { description: "A marker-delimited document: named regions a tool owns, inside text a human may also edit." })) {
 	/**
 	 * Read a document out of existing text, or begin a fresh one.
 	 *

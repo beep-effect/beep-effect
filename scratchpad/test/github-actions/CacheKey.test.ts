@@ -555,7 +555,7 @@ describe("CacheKey", () => {
 			const document = S.toJsonSchemaDocument(CacheKey);
 			assert.nestedPropertyVal(
 				document,
-				"definitions.CacheKeyEncoded.properties.segments.items.pattern",
+				"definitions.@beep/scratchpad/effected/github-actions/CacheKey/CacheKeyEncoded.properties.segments.items.pattern",
 				String.raw`^[^,\n\r]+$`,
 			);
 		});

@@ -286,7 +286,7 @@ describe("ManagedDocument", () => {
 			for (const field of ["namespace", "key"]) {
 				assert.nestedPropertyVal(
 					document,
-					`definitions.ManagedDocumentEncoded.properties.${field}.pattern`,
+					`definitions.@beep/scratchpad/effected/github-actions/ManagedDocument/ManagedDocumentEncoded.properties.${field}.pattern`,
 					"^[A-Za-z0-9][A-Za-z0-9_-]*$",
 				);
 			}
