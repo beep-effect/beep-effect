@@ -10,6 +10,7 @@
 
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { GlobPattern, GlobPatternError } from "./GlobPattern.ts";
@@ -43,7 +44,7 @@ const allCompileUnderDefaults = (patterns: ReadonlyArray<string>): true | string
 
 interface Classified {
 	readonly literals: ReadonlyArray<string>;
-	readonly literalSet: ReadonlySet<string>;
+	readonly literalSet: MutableHashSet.MutableHashSet<string>;
 	readonly wildcards: ReadonlyArray<GlobPattern>;
 	readonly excludes: ReadonlyArray<GlobPattern>;
 }
@@ -100,7 +101,7 @@ export class GlobSet extends S.Class<GlobSet>($I`GlobSet`)(
 	#classify(): Classified {
 		if (this.#classified !== undefined) return this.#classified;
 		const literals: Array<string> = [];
-		const seenLiterals = new Set<string>();
+		const seenLiterals = MutableHashSet.empty<string>();
 		const wildcards: Array<GlobPattern> = [];
 		const excludes: Array<GlobPattern> = [];
 		for (const pattern of this.patterns) {
@@ -122,8 +123,8 @@ export class GlobSet extends S.Class<GlobSet>($I`GlobSet`)(
 					continue;
 				}
 				const key = row.join("/");
-				if (!seenLiterals.has(key)) {
-					seenLiterals.add(key);
+				if (!MutableHashSet.has(seenLiterals, key)) {
+					MutableHashSet.add(seenLiterals, key);
 					literals.push(key);
 				}
 			}
@@ -132,7 +133,7 @@ export class GlobSet extends S.Class<GlobSet>($I`GlobSet`)(
 		return this.#classified;
 	}
 
-	#literals(): ReadonlySet<string> {
+	#literals(): MutableHashSet.MutableHashSet<string> {
 		return this.#classify().literalSet;
 	}
 
@@ -190,7 +191,7 @@ export class GlobSet extends S.Class<GlobSet>($I`GlobSet`)(
 	 */
 	matches(candidate: string): boolean {
 		const { wildcards, excludes } = this.#classify();
-		const included = this.#literals().has(candidate) || wildcards.some((w) => w.matches(candidate));
+		const included = MutableHashSet.has(this.#literals(), candidate) || wildcards.some((w) => w.matches(candidate));
 		if (!included) return false;
 		return !excludes.some((e) => e.matches(candidate));
 	}

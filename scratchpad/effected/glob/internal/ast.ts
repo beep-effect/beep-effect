@@ -20,16 +20,28 @@
 // 4. clone/copyIn thread a depth counter (they run during #fillNegs for `!`
 //    extglobs), guarded at MAX_NESTING_DEPTH.
 // 5. maxExtglobRecursion is validated by assertCap at fromGlob — a NaN or
-//    non-integer cap is a wiring bug and dies as a TypeError defect.
+//    non-integer cap is a wiring bug and dies as an InvalidCap defect.
 // The shared option types come from the extracted types leaf (upstream let
 // ast.ts and index.ts import each other circularly; noImportCycles forbids
 // it here). The debug/inspect id plumbing is kept for diffability.
 
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import { parseClass } from "./braceExpressions.ts";
 import { GuardExceeded, MAX_EXTGLOB_RECURSION, MAX_NESTING_DEPTH, assertCap } from "./limits.ts";
 import type { EngineOptions, MMRegExp } from "./types.ts";
 import { unescape as unescapePattern } from "./unescape.ts";
+
+const $I = $ScratchpadId.create("effected/glob/internal/ast");
+
+/** An invariant violation in the internal extglob syntax tree. */
+export class ASTError extends S.TaggedError<ASTError>($I`ASTError`)("ASTError", {
+	message: S.String,
+}) {}
 
 // classes [] are handled by the parseClass method
 // for positive extglobs, we sub-parse the contents, and combine,
@@ -68,8 +80,8 @@ import { unescape as unescapePattern } from "./unescape.ts";
 // ['^a(?:i|w(?:(?!(?:x|y).*zb$).*)z|j)b$']
 
 export type ExtglobType = "!" | "?" | "+" | "*" | "@";
-const types = new Set<string>(["!", "?", "+", "*", "@"]);
-const isExtglobType = (c: string | null): c is ExtglobType => c !== null && types.has(c);
+const types = HashSet.fromIterable<string>(["!", "?", "+", "*", "@"]);
+const isExtglobType = (c: string | null): c is ExtglobType => c !== null && HashSet.has(types, c);
 const isExtglobAST = (c: AST): c is AST & { type: ExtglobType } => isExtglobType(c.type);
 
 // Map of which extglob types can adopt the children of a nested extglob
@@ -89,7 +101,7 @@ const isExtglobAST = (c: AST): c is AST & { type: ExtglobType } => isExtglobType
 // ! CANNOT adopt ! (nothing else can either)
 // ! can adopt @
 // ! CANNOT adopt *, +, or ?
-const adoptionMap = new Map<ExtglobType, Array<ExtglobType>>([
+const adoptionMap = HashMap.fromIterable<ExtglobType, Array<ExtglobType>>([
 	["!", ["@"]],
 	["?", ["?", "@"]],
 	["@", ["@"]],
@@ -99,14 +111,14 @@ const adoptionMap = new Map<ExtglobType, Array<ExtglobType>>([
 
 // nested extglobs that can be adopted in, but with the addition of
 // a blank '' element.
-const adoptionWithSpaceMap = new Map<ExtglobType, Array<ExtglobType>>([
+const adoptionWithSpaceMap = HashMap.fromIterable<ExtglobType, Array<ExtglobType>>([
 	["!", ["?"]],
 	["@", ["?"]],
 	["+", ["?", "*"]],
 ]);
 
 // union of the previous two maps
-const adoptionAnyMap = new Map<ExtglobType, Array<ExtglobType>>([
+const adoptionAnyMap = HashMap.fromIterable<ExtglobType, Array<ExtglobType>>([
 	["!", ["?", "@"]],
 	["?", ["?", "@"]],
 	["@", ["?", "@"]],
@@ -118,18 +130,18 @@ const adoptionAnyMap = new Map<ExtglobType, Array<ExtglobType>>([
 // the key is parent, value maps child to resulting extglob parent type
 // '@' is omitted because it's a special case. An `@` extglob with a single
 // member can always be usurped by that subpattern.
-const usurpMap = new Map<ExtglobType, Map<ExtglobType | null, ExtglobType | null>>([
-	["!", new Map([["!", "@"]])],
+const usurpMap = HashMap.fromIterable<ExtglobType, HashMap.HashMap<ExtglobType | null, ExtglobType | null>>([
+	["!", HashMap.fromIterable<ExtglobType | null, ExtglobType | null>([["!", "@"]])],
 	[
 		"?",
-		new Map([
+		HashMap.fromIterable<ExtglobType | null, ExtglobType | null>([
 			["*", "*"],
 			["+", "*"],
 		]),
 	],
 	[
 		"@",
-		new Map([
+		HashMap.fromIterable<ExtglobType | null, ExtglobType | null>([
 			["!", "!"],
 			["?", "?"],
 			["@", "@"],
@@ -139,7 +151,7 @@ const usurpMap = new Map<ExtglobType, Map<ExtglobType | null, ExtglobType | null
 	],
 	[
 		"+",
-		new Map([
+		HashMap.fromIterable<ExtglobType | null, ExtglobType | null>([
 			["?", "*"],
 			["*", "*"],
 		]),
@@ -156,10 +168,10 @@ const startNoDot = "(?!\\.)";
 // characters that indicate a start of pattern needs the "no dots" bit,
 // because a dot *might* be matched. ( is not in the list, because in
 // the case of a child extglob, it will handle the prevention itself.
-const addPatternStart = new Set(["[", "."]);
+const addPatternStart = HashSet.make("[", ".");
 // cases where traversal is A-OK, no dot prevention needed
-const justDots = new Set(["..", "."]);
-const reSpecials = new Set("().*{}+?[]^$\\!");
+const justDots = HashSet.make("..", ".");
+const reSpecials = HashSet.fromIterable("().*{}+?[]^$\\!");
 const regExpEscape = (s: string): string => s.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
 
 // any single thing other than /
@@ -252,7 +264,7 @@ export class AST {
 	}
 
 	#fillNegs() {
-		if (this !== this.#root) throw new Error("should only call on root");
+		if (this !== this.#root) throw ASTError.make({ message: "should only call on root" });
 		if (this.#filledNegs) return this;
 
 		// call toString() once to fill this out
@@ -271,7 +283,7 @@ export class AST {
 				for (let i = p.#parentIndex + 1; pp.type === null && i < pp.#parts.length; i++) {
 					for (const part of n.#parts) {
 						if (P.isString(part)) {
-							throw new Error("string part in extglob AST??");
+							throw ASTError.make({ message: "string part in extglob AST??" });
 						}
 						const source = pp.#parts[i];
 						if (source !== undefined) part.copyIn(source);
@@ -289,7 +301,7 @@ export class AST {
 		for (const p of parts) {
 			if (p === "") continue;
 			if (!P.isString(p) && !(p instanceof AST && p.#parent === this)) {
-				throw new Error(`invalid part: ${p}`);
+				throw ASTError.make({ message: `invalid part: ${p}` });
 			}
 			this.#parts.push(p);
 		}
@@ -300,7 +312,7 @@ export class AST {
 			this.type === null
 				? this.#parts.slice().map((p) => (P.isString(p) ? p : p.toJSON()))
 				: [this.type, ...this.#parts.map((p) => {
-					if (P.isString(p)) throw new TypeError("p.toJSON is not a function");
+					if (P.isString(p)) throw ASTError.make({ message: "p.toJSON is not a function" });
 					return p.toJSON();
 				})];
 		if (this.isStart() && this.type === null) ret.unshift([]);
@@ -498,22 +510,22 @@ export class AST {
 
 	#canAdopt(
 		child?: AST | string,
-		map: Map<ExtglobType, Array<ExtglobType>> = adoptionMap,
+		map: HashMap.HashMap<ExtglobType, Array<ExtglobType>> = adoptionMap,
 	): child is AST & {
 		type: null;
 	} {
-		if ((child === undefined || child === "") || typeof child !== "object" || child.type !== null || child.#parts.length !== 1 || this.type === null) {
+		if ((child === undefined || child === "") || !P.isObjectKeyword(child) || P.isFunction(child) || child.type !== null || child.#parts.length !== 1 || this.type === null) {
 			return false;
 		}
 		const gc = child.#parts[0];
-		if ((gc === undefined || gc === "") || typeof gc !== "object" || gc.type === null) {
+		if ((gc === undefined || gc === "") || !P.isObjectKeyword(gc) || P.isFunction(gc) || gc.type === null) {
 			return false;
 		}
 		return this.#canAdoptType(gc.type, map);
 	}
 
-	#canAdoptType(c: string, map: Map<ExtglobType, Array<ExtglobType>> = adoptionAnyMap): c is ExtglobType {
-		return this.type !== null && isExtglobType(c) && map.get(this.type)?.includes(c) === true;
+	#canAdoptType(c: string, map: HashMap.HashMap<ExtglobType, Array<ExtglobType>> = adoptionAnyMap): c is ExtglobType {
+		return this.type !== null && isExtglobType(c) && O.exists(HashMap.get(map, this.type), (types) => types.includes(c));
 	}
 
 	#adoptWithSpace(
@@ -540,13 +552,13 @@ export class AST {
 		if (!(gc instanceof AST) || !isExtglobAST(gc)) return;
 		this.#parts.splice(index, 1, ...gc.#parts);
 		for (const p of gc.#parts) {
-			if (typeof p === "object") p.#parent = this;
+			if (P.isObjectKeyword(p) && !P.isFunction(p)) p.#parent = this;
 		}
 		this.#toString = undefined;
 	}
 
 	#canUsurpType(c: string): boolean {
-		return this.type !== null && isExtglobType(c) && usurpMap.get(this.type)?.has(c) === true;
+		return this.type !== null && isExtglobType(c) && O.exists(HashMap.get(usurpMap, this.type), (types) => HashMap.has(types, c));
 	}
 
 	#canUsurp(child?: AST | string): child is AST & {
@@ -554,7 +566,7 @@ export class AST {
 	} {
 		if (
 			(child === undefined || child === "") ||
-			typeof child !== "object" ||
+			!P.isObjectKeyword(child) || P.isFunction(child) ||
 			child.type !== null ||
 			child.#parts.length !== 1 ||
 			this.type === null ||
@@ -563,7 +575,7 @@ export class AST {
 			return false;
 		}
 		const gc = child.#parts[0];
-		if ((gc === undefined || gc === "") || typeof gc !== "object" || gc.type === null) {
+		if ((gc === undefined || gc === "") || !P.isObjectKeyword(gc) || P.isFunction(gc) || gc.type === null) {
 			return false;
 		}
 		return this.#canUsurpType(gc.type);
@@ -571,14 +583,14 @@ export class AST {
 
 	#usurp(child: AST & { type: null }) {
 		if (this.type === null) return;
-		const m = usurpMap.get(this.type);
+		const m = HashMap.get(usurpMap, this.type);
 		const gc = child.#parts[0];
 		if (!(gc instanceof AST) || !isExtglobAST(gc)) return;
-		const nt = m?.get(gc.type);
+		const nt = O.getOrUndefined(O.flatMap(m, (types) => HashMap.get(types, gc.type)));
 		if (nt === undefined || nt === null) return;
 		this.#parts = gc.#parts;
 		for (const p of this.#parts) {
-			if (typeof p === "object") {
+			if (P.isObjectKeyword(p) && !P.isFunction(p)) {
 				p.#parent = this;
 			}
 		}
@@ -615,10 +627,10 @@ export class AST {
 		}
 
 		const flags = (this.#options.nocase === true ? "i" : "") + (uflag ? "u" : "");
-		return Object.assign(new RegExp(`^${re}$`, flags), {
-			_src: re,
-			_glob: glob,
-		});
+		const pattern: MMRegExp = new RegExp(`^${re}$`, flags);
+		pattern._src = re;
+		pattern._glob = glob;
+		return pattern;
 	}
 
 	get options(): EngineOptions {
@@ -657,21 +669,22 @@ export class AST {
 
 					// '.' and '..' cannot match unless the pattern is that exactly,
 					// even if it starts with . or dot:true is set.
-					const dotTravAllowed = this.#parts.length === 1 && justDots.has(this.#parts[0]);
+					const firstPart = this.#parts[0];
+					const dotTravAllowed = this.#parts.length === 1 && P.isString(firstPart) && HashSet.has(justDots, firstPart);
 					if (!dotTravAllowed) {
 						const aps = addPatternStart;
 						// check if we have a possibility of matching . or ..,
 						// and prevent that.
 						const needNoTrav =
 							// dots are allowed, and the pattern starts with [ or .
-							(dot && aps.has(src.charAt(0))) ||
+							(dot && HashSet.has(aps, src.charAt(0))) ||
 							// the pattern starts with \., and then [ or .
-							(src.startsWith("\\.") && aps.has(src.charAt(2))) ||
+							(src.startsWith("\\.") && HashSet.has(aps, src.charAt(2))) ||
 							// the pattern starts with \.\., and then [ or .
-							(src.startsWith("\\.\\.") && aps.has(src.charAt(4)));
+							(src.startsWith("\\.\\.") && HashSet.has(aps, src.charAt(4)));
 						// no need to prevent dots if it can't match a dot, or if a
 						// sub-pattern will be preventing it anyway.
-						const needNoDot = !dot && allowDot !== true && aps.has(src.charAt(0));
+						const needNoDot = !dot && allowDot !== true && HashSet.has(aps, src.charAt(0));
 
 						start = needNoTrav ? startNoTraversal : needNoDot ? startNoDot : "";
 					}
@@ -747,7 +760,7 @@ export class AST {
 		guardDepth(depth);
 		if (this.type === null) {
 			for (const p of this.#parts) {
-				if (typeof p === "object") {
+				if (P.isObjectKeyword(p) && !P.isFunction(p)) {
 					p.#flatten(depth + 1);
 				}
 			}
@@ -759,7 +772,7 @@ export class AST {
 				done = true;
 				for (let i = 0; i < this.#parts.length; i++) {
 					const c = this.#parts[i];
-					if (typeof c === "object") {
+					if (P.isObjectKeyword(c) && !P.isFunction(c)) {
 						c.#flatten(depth + 1);
 						if (this.#canAdopt(c)) {
 							done = false;
@@ -783,7 +796,7 @@ export class AST {
 			.map((p) => {
 				// extglob ASTs should only contain parent ASTs
 				if (P.isString(p)) {
-					throw new Error("string type in extglob ast??");
+					throw ASTError.make({ message: "string type in extglob ast??" });
 				}
 				// can ignore hasMagic, because extglobs are already always magic
 				const [re, _, _hasMagic, uflag] = p.toRegExpSource(dot, depth + 1);
@@ -809,7 +822,7 @@ export class AST {
 			const c = glob.charAt(i);
 			if (escaping) {
 				escaping = false;
-				re += (reSpecials.has(c) ? "\\" : "") + c;
+				re += (HashSet.has(reSpecials, c) ? "\\" : "") + c;
 				continue;
 			}
 			if (c === "*") {

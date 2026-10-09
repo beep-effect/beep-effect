@@ -4,7 +4,7 @@
 import { assert, describe, it } from "@effect/vitest";
 import { balanced } from "../../effected/glob/internal/balancedMatch.ts";
 import { expand } from "../../effected/glob/internal/braceExpansion.ts";
-import { GuardExceeded } from "../../effected/glob/internal/limits.ts";
+import { GuardExceeded, InvalidCap } from "../../effected/glob/internal/limits.ts";
 
 const reasonOf = (fn: () => unknown): string => {
 	try {
@@ -226,9 +226,9 @@ describe("braceExpansion hardening", () => {
 	});
 
 	it("dies on a NaN or non-integer max, programmer error rather than input error", () => {
-		assert.throws(() => expand("x{a,b}", { max: Number.NaN }), TypeError);
-		assert.throws(() => expand("x{a,b}", { max: 1.5 }), TypeError);
-		assert.throws(() => expand("x{a,b}", { max: 0 }), TypeError);
+		assert.throws(() => expand("x{a,b}", { max: Number.NaN }), InvalidCap);
+		assert.throws(() => expand("x{a,b}", { max: 1.5 }), InvalidCap);
+		assert.throws(() => expand("x{a,b}", { max: 0 }), InvalidCap);
 	});
 
 	it("stays fast and exact just under the budget", () => {

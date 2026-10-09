@@ -1,8 +1,17 @@
-// The zero-dependency leaf every guard imports — no import cycle is possible
-// through here (jsonc/yaml precedent).
+// Shared guard leaf; it never imports the glob engine or facades.
+
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as S from "effect/Schema";
 
 import * as Data from "effect/Data";
 import { dual } from "effect/Function";
+
+const $I = $ScratchpadId.create("effected/glob/internal/limits");
+
+/** Programmer error raised by this internal glob boundary. */
+export class InvalidCap extends S.TaggedError<InvalidCap>($I`InvalidCap`)("InvalidCap", {
+	message: S.String,
+}) {}
 
 /** Hard cap on pattern length. Upstream minimatch's MAX_PATTERN_LENGTH (64KB). */
 export const MAX_PATTERN_LENGTH = 1024 * 64;
@@ -52,7 +61,7 @@ export const assertCap: {
 	(name: string, value: number): number;
 } = dual(2, (name: string, value: number): number => {
 	if (!Number.isSafeInteger(value) || value < 1) {
-		throw new TypeError(`@effected/glob internal cap ${name} must be a positive integer, received ${value}`);
+		throw InvalidCap.make({ message: `@effected/glob internal cap ${name} must be a positive integer, received ${value}` });
 	}
 	return value;
 });

@@ -13,7 +13,7 @@
 //   and its call sites are kept so the bodies diff cleanly against
 //   upstream), and the deprecated allowWindowsEscape.
 // - maxGlobstarRecursion is validated by assertCap (a NaN or non-integer cap
-//   is a wiring bug and dies as a TypeError defect). The
+//   is a wiring bug and dies as an InvalidCap defect). The
 //   #matchGlobStarBodySections limit check is kept verbatim: exceeding it is
 //   upstream's intentional false negative — an acceptable break in
 //   correctness for security — and must never throw; match() stays total.
@@ -26,7 +26,10 @@
 //   firstPhasePreProcess, secondPhasePreProcess, partsMatch) are kept
 //   unchanged behind optimizationLevel.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import { dual } from "effect/Function";
+import * as MutableHashSet from "effect/MutableHashSet";
+import * as S from "effect/Schema";
 import * as P from "effect/Predicate";
 import { assertValidPattern } from "./assertValidPattern.ts";
 import { AST } from "./ast.ts";
@@ -40,6 +43,13 @@ export { escape } from "./escape.ts";
 export type { EngineOptions, MMRegExp, ParseReturn, ParseReturnFiltered, Platform } from "./types.ts";
 export { unescape } from "./unescape.ts";
 export { GLOBSTAR };
+
+const $I = $ScratchpadId.create("effected/glob/internal/minimatch");
+
+/** An invariant violation in the internal minimatch engine. */
+export class MinimatchError extends S.TaggedError<MinimatchError>($I`MinimatchError`)("MinimatchError", {
+	message: S.String,
+}) {}
 
 // Optimized checking for the most common glob patterns.
 const starDotExtRE = /^\*+([^+@!?*[(]*)$/;
@@ -230,7 +240,7 @@ export class Minimatch {
 		this.parseNegate();
 
 		// step 2: expand braces
-		this.globSet = [...new Set(this.braceExpand())];
+		this.globSet = A.dedupe(this.braceExpand());
 
 		this.debug(this.pattern, this.globSet);
 
@@ -895,7 +905,7 @@ export class Minimatch {
 		}
 
 		// should be unreachable.
-		throw new Error("wtf?");
+		throw MinimatchError.make({ message: "wtf?" });
 	}
 
 	braceExpand() {
@@ -948,7 +958,7 @@ export class Minimatch {
 		}
 
 		const re = AST.fromGlob(pattern, this.options).toMMPattern();
-		if (fastTest !== null && typeof re === "object") {
+		if (fastTest !== null && P.isObjectKeyword(re) && !P.isFunction(re)) {
 			// Avoids overriding in frozen environments
 			Reflect.defineProperty(re, "test", { value: fastTest });
 		}
@@ -973,7 +983,7 @@ export class Minimatch {
 		const options = this.options;
 
 		const twoStar = options.noglobstar === true ? star : options.dot === true ? twoStarDot : twoStarNoDot;
-		const flags = new Set(options.nocase === true ? ["i"] : []);
+		const flags = MutableHashSet.fromIterable(options.nocase === true ? ["i"] : []);
 
 		// regexpify non-globstar patterns
 		// if ** is only item, then we just do one twoStar
@@ -985,7 +995,7 @@ export class Minimatch {
 			.map((pattern) => {
 				const pp: Array<string | typeof GLOBSTAR | undefined> = pattern.map((p) => {
 					if (p instanceof RegExp) {
-						for (const f of p.flags.split("")) flags.add(f);
+						for (const f of p.flags.split("")) MutableHashSet.add(flags, f);
 					}
 					return P.isString(p) ? regExpEscape(p) : p === GLOBSTAR ? GLOBSTAR : p._src;
 				});

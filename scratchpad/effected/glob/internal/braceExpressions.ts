@@ -5,8 +5,17 @@
 // locals). Position-bounded iteration over one [...] class — no recursion, no
 // guard.
 
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as S from "effect/Schema";
 import { dual } from "effect/Function";
 import * as R from "effect/Record";
+
+const $I = $ScratchpadId.create("effected/glob/internal/braceExpressions");
+
+/** Programmer error raised by this internal glob boundary. */
+export class BraceExpressionError extends S.TaggedError<BraceExpressionError>($I`BraceExpressionError`)("BraceExpressionError", {
+	message: S.String,
+}) {}
 
 // translate the various posix character classes into unicode properties
 // this works across all unicode locales
@@ -52,7 +61,7 @@ export const parseClass: {
 } = dual(2, (glob: string, position: number): ParseClassResult => {
 	const pos = position;
 	if (glob.charAt(pos) !== "[") {
-		throw new Error("not in a brace expression");
+		throw BraceExpressionError.make({ message: "not in a brace expression" });
 	}
 	const ranges: Array<string> = [];
 	const negs: Array<string> = [];

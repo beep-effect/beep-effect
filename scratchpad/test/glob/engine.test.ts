@@ -4,9 +4,9 @@
 
 import { assert, describe, it } from "@effect/vitest";
 import { minimatch as oracle } from "minimatch";
-import { assertValidPattern } from "../../effected/glob/internal/assertValidPattern.ts";
+import { assertValidPattern, InvalidPattern } from "../../effected/glob/internal/assertValidPattern.ts";
 import { escape as escapePattern } from "../../effected/glob/internal/escape.ts";
-import { GuardExceeded } from "../../effected/glob/internal/limits.ts";
+import { GuardExceeded, InvalidCap } from "../../effected/glob/internal/limits.ts";
 import { Minimatch } from "../../effected/glob/internal/minimatch.ts";
 import { unescape as unescapePattern } from "../../effected/glob/internal/unescape.ts";
 
@@ -102,7 +102,7 @@ describe("assertValidPattern", () => {
 	});
 
 	it("dies on a non-string, programmer error", () => {
-		assert.throws(() => assertValidPattern(42), TypeError);
+		assert.throws(() => assertValidPattern(42), InvalidPattern);
 	});
 });
 
@@ -137,8 +137,8 @@ describe("Minimatch smoke", () => {
 	});
 
 	it("dies on a NaN globstar cap, programmer error", () => {
-		assert.throws(() => new Minimatch("a/**/b", { maxGlobstarRecursion: Number.NaN }), TypeError);
-		assert.throws(() => new Minimatch("a/**/b", { maxGlobstarRecursion: 1.5 }), TypeError);
+		assert.throws(() => new Minimatch("a/**/b", { maxGlobstarRecursion: Number.NaN }), InvalidCap);
+		assert.throws(() => new Minimatch("a/**/b", { maxGlobstarRecursion: 1.5 }), InvalidCap);
 	});
 });
 

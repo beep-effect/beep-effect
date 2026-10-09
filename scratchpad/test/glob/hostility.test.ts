@@ -6,7 +6,7 @@
 import { assert, describe, it } from "@effect/vitest";
 import { assertInstanceOf } from "@effect/vitest/utils";
 import { expand } from "../../effected/glob/internal/braceExpansion.ts";
-import { GuardExceeded } from "../../effected/glob/internal/limits.ts";
+import { GuardExceeded, InvalidCap } from "../../effected/glob/internal/limits.ts";
 import { Minimatch, braceExpand } from "../../effected/glob/internal/minimatch.ts";
 
 const reasonOf = (fn: () => unknown): string => {
@@ -125,10 +125,10 @@ describe("hostility: globstar backtracking", () => {
 
 describe("hostility: internal cap wiring", () => {
 	it("dies on NaN or non-integer caps everywhere they are accepted", () => {
-		assert.throws(() => new Minimatch("a", { maxGlobstarRecursion: Number.NaN }), TypeError);
-		assert.throws(() => new Minimatch("a", { maxGlobstarRecursion: 1.5 }), TypeError);
-		assert.throws(() => new Minimatch("{a,b}", { braceExpandMax: Number.NaN }), TypeError);
-		assert.throws(() => new Minimatch("{a,b}", { braceExpandMax: 0 }), TypeError);
-		assert.throws(() => new Minimatch("+(a)", { maxExtglobRecursion: Number.NaN }), TypeError);
+		assert.throws(() => new Minimatch("a", { maxGlobstarRecursion: Number.NaN }), InvalidCap);
+		assert.throws(() => new Minimatch("a", { maxGlobstarRecursion: 1.5 }), InvalidCap);
+		assert.throws(() => new Minimatch("{a,b}", { braceExpandMax: Number.NaN }), InvalidCap);
+		assert.throws(() => new Minimatch("{a,b}", { braceExpandMax: 0 }), InvalidCap);
+		assert.throws(() => new Minimatch("+(a)", { maxExtglobRecursion: Number.NaN }), InvalidCap);
 	});
 });
