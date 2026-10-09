@@ -101,8 +101,9 @@ dead-code has zero findings, and audit retains one nonblocking inherited
 complexity observation. PR #1583 is published and ready for review via the explicitly authorized
 push/create fallback after the push-only refusal. B owns the
 occurrence-specific judgments after V. E co-signs the workflow ordering on #1583;
-Run 8 integrates E main and repairs the resource-adapter P2. The five scoped
-integration checks and updated-head hosted evidence remain pending. No inventory is edited.
+Run 8 integrates E main and repairs the resource-adapter P2. All five scoped
+integration checks pass after the fixture Config repair; all 29 runner-security
+cases pass. Updated-head hosted evidence and the orchestrator gate remain pending. No inventory is edited.
 Evidence:
 [`history/handoffs/rsc-c-scripts-2026-10-09.md`](history/handoffs/rsc-c-scripts-2026-10-09.md),
 [`history/receipts/stage-5-acceptance.md`](history/receipts/stage-5-acceptance.md).

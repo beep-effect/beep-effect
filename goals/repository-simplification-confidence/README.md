@@ -87,7 +87,8 @@ findings; audit retains one nonblocking inherited complexity observation.
 [PR #1583](https://github.com/beep-effect/beep-effect/pull/1583) is published
 and ready for review through the authorized push/create fallback. E's workflow co-sign
 is received; Run 8 integrates its main policy and repairs the resource-adapter P2.
-Scoped integration checks, B/V judgment admission and updated-head hosted evidence remain open. C edits no inventory or allowlist
+All five scoped integration checks and 29 runner-security fixtures pass after the
+Config fixture repair. B/V judgment admission and updated-head hosted evidence remain open. C edits no inventory or allowlist
 and does not close program acceptance.
 
 ## Notes

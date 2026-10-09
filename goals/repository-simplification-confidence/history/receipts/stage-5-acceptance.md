@@ -219,3 +219,18 @@ terminates at its configured two-minute limit without a readiness verdict;
 its terminal row is acknowledged observed. Hosted proof, E co-sign, B/V
 admission, review-window completion and orchestrator merge remain open.
 No C-owned command or unit remains running; no acceptance row is closed.
+
+## C Run 8 integration proof
+
+E's workflow co-sign on #1583 is received and its merged hosted policy is preserved
+through the Ci ports. Local integration proof passes: test-tsgo (335 files), all
+29 runner-security fixtures, repo-cli package-verify --quick, Fallow audit (zero
+introduced) and Knip (41 current / 41 baseline / zero introduced). The resource
+adapter's CLI-boot fallback is restored with private launch-receipt / exactly-once
+fixtures; existing stdin, shutdown and measurement-failure proof survives. The
+introduced fixture PATH-read policy red is repaired with Config and all affected
+checks rerun successfully. E's Security job-token/governance guards, fork/caller
+policy and Bun-cache retirement survive; install precedes typed export, then Turbo
+restore. Full receipts and root-input accounting remain in the C handoff. Updated
+hosted proof and B/V's named judgments remain open; this does not close program
+Script ports or Sensitive scripts acceptance.

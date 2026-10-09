@@ -899,3 +899,59 @@ without a new tracked profile diff. `.beep/rsc-c-run8-gates.sh` queues only the
 five required integration checks through `beep-heavy` with Turbo concurrency 2.
 Terminal evidence will be appended before the single push. Previous terminal
 passes remain the verification of record for unaffected surfaces.
+
+### Run 8 terminal integration evidence
+
+Qualified source head: `8c00e572755d85d92c48fe5cfeb44b93fbb4b7f2`.
+The first batch's typecheck red is introduced: the new boot-failure fixture read
+PATH directly inside Effect. Its repair uses `Config.String("PATH")`; no
+suppression or policy inventory changed. Retained runtime successes and the
+three affected reruns together establish the integration proof:
+
+| Command | Terminal result / evidence |
+| --- | --- |
+| `beep quality test-tsgo` | pass, 335 files; `.beep/rsc-c-run8-repair-result.txt` |
+| CI runner-security Vitest suite | pass, all 29 cases; `.beep/rsc-c-run8-repair-fixtures.log` |
+| `beep quality package-verify @beep/repo-cli --quick` | pass, lint 3.8s / check 7.3s; `.beep/rsc-c-run8-repair-package.log` |
+| `beep quality fallow audit --check --base origin/main` | pass, introduced 0, one nonblocking inherited-adjacent complexity observation; `.beep/rsc-c-run8-fallow.log` |
+| `turbo run knip:check --cache=local:rw --summarize` | pass, current 41 / baseline 41 / introduced 0, fingerprint current; `.beep/rsc-c-run8-knip.log` |
+
+All wrappers are terminal. The original unadmitted four-slot waiter was stopped
+only after cwd/sleep-child verification because the orchestrator's live floor
+changed to five; its replacement and the repair batch both finish with exit 0.
+The complete result files are `.beep/rsc-c-run8-result.txt` (initial type red)
+and `.beep/rsc-c-run8-repair-result.txt` (three rows zero). Earlier Run 4 full
+package/docgen/parity and Run 7 policy receipts remain proof for unaffected work.
+No passed unaffected gate is repeated.
+
+Scoped coverage baseline read includes `Ci.command.ts`: lines 83.33, statements
+84.78, branches 51.35, functions 80.76. HeavyAdmission and the new CiOperational
+sources have no existing row in the current root baseline. No floor changes;
+this read is not a new full-suite coverage result.
+
+E's co-sign is addressed: descriptions corrected, merged hosted guards retained.
+The P2 resource-fallback review is answered and resolved through `beep yeet reply`;
+`.beep/yeet/reply-report.json` records `resolved` at 2026-10-09T21:15:48Z.
+The single integration publication wave uses `git push`, explicitly authorized
+by resume ruling 6 instead of rerunning Yeet's B-owned judgment fence. The final
+response supplies the receipt-only successor SHA and live GitHub mergeability.
+Hosted green, elapsed review window and generic merge readiness are not claimed.
+The orchestrator owns the gate and retirement; C never merges the PR.
+
+### Run 8 report
+
+lane: rsc-c-scripts · head: 8c00e572755d85d92c48fe5cfeb44b93fbb4b7f2
+(qualified source; receipt-only successor follows in this single push wave)
+· PR: #1583 (wave 1, ready for review)
+· package-verify: @beep/repo-cli pass (Run 8 --quick; retained Run 4 full audit/docgen)
+· hosted-parity: test-tsgo pass (335 files); docgen local pass (retained);
+jsdoc-ratchet pass (retained); knowledge refs --check pass (retained);
+fallow audit+health pass (Run 8 audit / retained health); coverage read complete,
+no floors changed. CI fixtures 29/29 and Knip zero introduced pass. These are local
+hosted-parity receipts; updated-head hosted checks remain pending.
+· handoff: history/handoffs/rsc-c-scripts-2026-10-09.md
+· open: B admission after V for the two wire-schema and twelve test judgment rows;
+updated-head hosted evidence, review window, orchestrator merge gate and retirement.
+E co-sign and the resource P2 are resolved. All C-owned units are terminal.
+
+Graft saved approximately 31,041 tokens in one retrieval this run.
