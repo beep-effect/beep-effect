@@ -29,17 +29,30 @@ ledger records the exact drops. New main was integrated and both package
 verifiers passed again before publication. The final-head parity replay and
 PR state are recorded in the orchestrator report.
 
-Publication is blocked before push. After base `cb64e0484f` was integrated,
+Run-1 publication was blocked before push. After base `cb64e0484f` was integrated,
 full schema verification passed (audit 11.4s, docgen 4.2s), and full CLI
 verification passed (audit 883.8s, docgen 26.5s). Test-tsgo passed again.
 Yeet cheap gates failed on inherited Accounts schema inventory/candidates
 and 13 Effect Vitest findings in seven unchanged upstream files. No PR was
 created; the source and handoff remain committed locally. The cheap-gate P0
 is acknowledged as out of this lane's repair scope, without a gate waiver.
-The orchestrator must land the inherited repair on main, then resume this
-lane by merging main and retrying Yeet. No S13 final marker is emitted.
+Run 1 emitted no S13 final marker. The run-2 ruling below supersedes its
+publication hold while preserving the attributed proof limitations.
 The original full docgen, JSDoc ratchet, knowledge refs, Fallow audit/health,
 and schema coverage passed; initial CLI coverage passed all tests but had
 unrelated floor drops recorded in the ledger. Post-integration full docgen
 was stopped, and subsequent parity commands were not run. Nothing is merged
 or retired. Semantic-m2m3 owns the IPC fixture rerun after integration.
+
+Run-2 publication ruling (2026-10-09T23:12Z): the orchestrator explicitly
+ordered an immediate push under the inherited-fence ruling. The branch was
+pushed at `2721382e05` and draft PR #1594 opened with `ready-for-heavy`.
+The canonical refusal was `github-checks:cheap-gates: failed 2 step(s)`:
+`lint:schema-first` and `lint:effect-vitest`, followed by `nothing was pushed`.
+The authorized fallback is direct branch push plus `gh pr create`; it does
+not claim those inherited gates passed. This note corrects the prior hold.
+At content-final the worker runs `yeet ready`, starts the detached 40-minute
+readiness monitor, acknowledges observed rows, and emits the S13 gate marker.
+Exact final head, monitor id, readiness result, and remaining hosted work are
+recorded in the orchestrator gate report. The orchestrator owns merge;
+semantic-m2m3 can fetch the branch immediately and owns the IPC fixture rerun.
