@@ -61,6 +61,12 @@ nothing was adopted or discarded. P0 Research is complete.
 
 Lane V preservation and integration work: [Stage 4 reconciliation](./history/receipts/stage-4-vitest-reconciliation.md). All 46 source worktrees remain unchanged. Final-source inventory is 1,853 / 716 open / 1,137 exceptions; CLI code review returned terminal zero. Full local CLI qualification passed. Publication is blocked on heavy admission; the inherited knowledge-reference row and unqualified R105 repair preview are separately recorded in the V handoff.
 
+H1 OSV wave [PR #1562](https://github.com/beep-effect/beep-effect/pull/1562) ready for review;
+Run 4 integrates main repairs #1564/#1565, corrects the stored-response cache proof
+and repairs the census table; saved terminal parity remains attributed to its proof heads;
+local parity has an inherited knowledge-reference blocker: [catalog receipt](./history/receipts/stage-4-h1-catalog.md#osv-exceptions)
+and [lane handoff](./history/handoffs/rsc-h1-catalog-2026-10-09.md).
+
 [`research/baseline-2026-10-09.md`](./research/baseline-2026-10-09.md)
 (implementation head `e62411d63f`, 2026-10-09);
 [`research/sweeps/2026-10-09/README.md`](./research/sweeps/2026-10-09/README.md)
@@ -82,3 +88,11 @@ Lane V preservation and integration work: [Stage 4 reconciliation](./history/rec
 - Program review exception: every in-scope actionable finding is resolved,
   including P2 and below; the round-2 review cap does not apply (SPEC.md
   Exception Ledger).
+
+D latest evidence: [release policy and census](history/receipts/stage-2-policy.md)
+and [Run 2 lane handoff](history/handoffs/rsc-d-release-2026-10-09.md).
+The census preceded the committed 939-note reset. Crash resumption merged the
+owner's inherited repairs; independent source/scope review has zero actionable
+findings. Local package/parity proof passes; PR #1566 is ready for the orchestrator gate.
+Hosted success is pending. E owns desktop
+verification; GitHub Packages census remains externally blocked on token scope.
