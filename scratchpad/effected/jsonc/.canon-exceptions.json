@@ -1,0 +1,6 @@
+[
+  {
+    "id": "EV009:scratchpad/test/jsonc/Jsonc.test.ts:391:it.live@6#1",
+    "reason": "the linear-scaling regression (review round 1, R2) measures real elapsed time (best of several runs, 16x input, 48x bound versus 256x for the quadratic regression); the TestClock would freeze the measurement"
+  }
+]

@@ -47,7 +47,7 @@ class Iso4217CurrencyNameWithMetadata extends S.Class<Iso4217CurrencyNameWithMet
   $I`Iso4217CurrencyNameWithMetadata`
 )(
   {
-    text: S.String,
+    "#text": S.String,
     IsFund: S.optionalKey(S.String),
   },
   $I.annote("Iso4217CurrencyNameWithMetadata", {
@@ -130,7 +130,7 @@ const normalizeCountryName = flow(normalizeWhitespace, Str.toLocaleLowerCase("en
 );
 
 const extractCurrencyName = (value: typeof Iso4217CurrencyName.Type): string =>
-  isIso4217CurrencyNameWithMetadata(value) ? value.text : value;
+  isIso4217CurrencyNameWithMetadata(value) ? value["#text"] : value;
 
 const parseMinorUnits = (value: string, code: string): Effect.Effect<number, SyncDataToTsError> =>
   value === "N.A."

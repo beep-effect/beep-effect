@@ -1,0 +1,59 @@
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: false
+  excludeLinksFromLockfile: false
+
+overrides:
+  react: link:packages/fakereact
+
+importers:
+
+  .: {}
+
+  packages/fakereact: {}
+
+  packages/host:
+    dependencies:
+      react:
+        specifier: link:../fakereact
+        version: link:../fakereact
+      react-redux:
+        specifier: 9.2.0
+        version: 9.2.0(react@packages+fakereact)
+
+packages:
+
+  '@types/use-sync-external-store@0.0.6':
+    resolution: {integrity: sha512-zFDAD+tlpf2r4asuHEj0XH6pY6i0g5NeAHPn+15wk3BV6JA69eERFXC1gyGThDkVa1zCyKr5jox1+2LbV/AMLg==}
+
+  react-redux@9.2.0:
+    resolution: {integrity: sha512-ROY9fvHhwOD9ySfrF0wmvu//bKCQ6AeZZq1nJNtbDC+kk5DuSuNX/n6YWYF/SYy7bSba4D4FSz8DJeKY/S/r+g==}
+    peerDependencies:
+      '@types/react': ^18.2.25 || ^19
+      react: ^18.0 || ^19
+      redux: ^5.0.0
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      redux:
+        optional: true
+
+  use-sync-external-store@1.6.0:
+    resolution: {integrity: sha512-Pp6GSwGP/NrPIrxVFAIkOQeyw8lFenOHijQWkUTrDvrF4ALqylP2C/KCkeS9dpUM3KvYRQhna5vt7IL95+ZQ9w==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
+snapshots:
+
+  '@types/use-sync-external-store@0.0.6': {}
+
+  react-redux@9.2.0(react@packages+fakereact):
+    dependencies:
+      '@types/use-sync-external-store': 0.0.6
+      react: link:packages/fakereact
+      use-sync-external-store: 1.6.0(react@packages+fakereact)
+
+  use-sync-external-store@1.6.0(react@packages+fakereact):
+    dependencies:
+      react: link:packages/fakereact

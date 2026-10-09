@@ -1,0 +1,27 @@
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: false
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    dependencies:
+      js-tokens:
+        specifier: 4.0.0
+        version: 4.0.0
+      probe-a:
+        specifier: workspace:*
+        version: link:packages/a
+
+  packages/a: {}
+
+packages:
+
+  js-tokens@4.0.0:
+    resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
+
+snapshots:
+
+  js-tokens@4.0.0: {}

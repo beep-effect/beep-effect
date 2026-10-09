@@ -1,0 +1,1171 @@
+import { $ScratchpadId } from "@beep/identity/packages";
+import type * as Duration from "effect/Duration";
+import type * as Redacted from "effect/Redacted";
+import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as Fn from "effect/Function";
+import * as PlatformError from "effect/PlatformError";
+import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
+import * as Stdio from "effect/Stdio";
+import * as Stream from "effect/Stream";
+import * as ChildProcess from "effect/process/ChildProcess";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import { OutputTooLarge, collectBounded } from "./internal/capture.ts";
+import { REDACTED, Redaction } from "./Redaction.ts";
+
+const $I = $ScratchpadId.create("effected/commands/Run");
+
+/** Captured stdout contained no candidate JSON line. */
+class EmptyJsonLineError extends S.TaggedError<EmptyJsonLineError>($I`EmptyJsonLineError`)(
+	"EmptyJsonLineError",
+	{ message: S.String },
+	$I.annote("EmptyJsonLineError", { description: "Captured stdout contained no non-empty line to decode as JSON." }),
+) {}
+
+/**
+ * Default ceiling on captured bytes per stream (16 MiB).
+ *
+ * **Gotchas**
+ *
+ * Collecting a child's output without a bound is a memory-exhaustion vector.
+ * Output genuinely larger than this belongs on {@link Run.stream}, which never
+ * accumulates.
+ *
+ * **Example** (Inspect the default capture budget)
+ *
+ * ```ts
+ * import { DEFAULT_MAX_OUTPUT_BYTES } from "@beep/scratchpad/effected/commands/Run";
+ *
+ * console.log(DEFAULT_MAX_OUTPUT_BYTES) // 16777216
+ * ```
+ *
+ * @public
+ * @category constants
+ * @since 0.0.0
+ */
+export const DEFAULT_MAX_OUTPUT_BYTES = 16 * 1024 * 1024;
+
+/** Characters shown from the tail of captured output in an error message. */
+const MAX_MESSAGE_CHARS = 2000;
+
+const JsonOutput = S.fromJsonString(S.Unknown);
+
+/** Numeric policy inputs preserve the upstream number domain, including infinity. */
+const PolicyNumber = S.declare(P.isNumber).pipe($I.annoteSchema("PolicyNumber", { description: "An upstream numeric policy value without additional refinement." }));
+
+/** All input representations accepted by Effect Duration, without normalization. */
+const DurationInput = S.Union([
+ S.Duration,
+ PolicyNumber,
+ S.BigInt,
+ S.Tuple([PolicyNumber, PolicyNumber]),
+ S.TemplateLiteral([S.Finite, " ", S.Literals(["nano", "nanos", "micro", "micros", "milli", "millis", "second", "seconds", "minute", "minutes", "hour", "hours", "day", "days", "week", "weeks"])]),
+ S.Literals(["Infinity", "-Infinity"]),
+ S.Struct({
+  weeks: S.optional(PolicyNumber), days: S.optional(PolicyNumber), hours: S.optional(PolicyNumber),
+  minutes: S.optional(PolicyNumber), seconds: S.optional(PolicyNumber), milliseconds: S.optional(PolicyNumber),
+  microseconds: S.optional(PolicyNumber), nanoseconds: S.optional(PolicyNumber),
+ }),
+]).pipe(S.is, S.declare<Duration.Input>, $I.annoteSchema("DurationInput", { description: "Opaque Effect duration input preserving its original representation." }));
+
+/** Integer process status reused by output and both errors. */
+const ExitCode = S.Int.pipe($I.annoteSchema("ExitCode", { description: "An integer process exit code." }));
+
+/**
+ * Policy for one run.
+ *
+ * **Details**
+ *
+ * Deliberately narrow. Working directory, environment, stdin, shell mode and
+ * kill signals are all `ChildProcess.CommandOptions` fields with core
+ * combinators (`ChildProcess.setCwd`, `ChildProcess.setEnv`) — this package
+ * consumes core's command vocabulary rather than re-declaring it. What remains
+ * here is what a `Command` value cannot express. One caveat on that routing:
+ * bare `ChildProcess.setEnv` replaces the child's WHOLE environment (it never
+ * sets `extendEnv`, so the child loses `PATH` and `HOME`) — to add variables on
+ * top of the parent environment, use `Run.extendEnv`.
+ *
+ * **Example** (Decode a timeout policy)
+ *
+ * ```ts
+ * import { RunOptions } from "@beep/scratchpad/effected/commands/Run";
+ * import * as S from "effect/Schema";
+ *
+ * const options = S.decodeUnknownSync(RunOptions)({ timeout: "10 seconds" });
+ * console.log(options.timeout) // 10 seconds
+ * ```
+ *
+ * @public
+ * @category schemas
+ * @since 0.0.0
+ */
+export const RunOptions = S.Struct({
+	/**
+  * Ceiling for the whole run.
+  *
+  * **Details**
+  *
+  * **There is no default.** A package-manager install and a `git rev-parse`
+  * cannot share one, so an unset `timeout` means no ceiling. When set, expiry
+  * closes the run's scope (killing the child) and fails with
+  * {@link CommandFailedError} of kind `"timeout"` rather than core's
+  * `TimeoutError`, so a caller's error channel stays this package's taxonomy.
+  */
+	timeout: S.optional(DurationInput).annotateKey({ description: "Optional ceiling for the whole run." }),
+	/**
+  * Values scrubbed from captured output and from any error this run raises.
+  *
+  * **Details**
+  *
+  * Matching is by exact value, so a secret is removed wherever it appears —
+  * whichever flag carried it, and inside a larger string. The flag heuristic
+  * in {@link Redaction.scrubArgs} runs in addition, never instead.
+  */
+	redact: S.String.pipe(S.Redacted, S.Array, S.optional).annotateKey({ description: "Secret values scrubbed from output and errors." }),
+	/** Per-stream captured-byte ceiling. Defaults to {@link DEFAULT_MAX_OUTPUT_BYTES}. */
+	maxOutputBytes: S.optional(PolicyNumber).annotateKey({ description: "Optional per-stream byte ceiling." }),
+}).pipe($I.annoteSchema("RunOptions", { description: "Timeout, redaction and byte-budget policy for a run." }));
+/**
+ * Decoded run policy accepted by the running helpers.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type RunOptions = typeof RunOptions.Type;
+
+/**
+ * What one completed run produced.
+ *
+ * **Example** (Check a completed run)
+ *
+ * ```ts
+ * import { CommandOutput } from "@beep/scratchpad/effected/commands/Run";
+ *
+ * const output = CommandOutput.make({ stdout: "ready\n", stderr: "", exitCode: 0 });
+ * console.log(output.succeeded) // true
+ * ```
+ *
+ * @public
+ * @category models
+ * @since 0.0.0
+ */
+export class CommandOutput extends S.Class<CommandOutput>($I`CommandOutput`)({
+	/** Captured standard output, redacted. */
+	stdout: S.String.annotateKey({ description: "Captured standard output, redacted." }),
+	/** Captured standard error, redacted. */
+	stderr: S.String.annotateKey({ description: "Captured standard error, redacted." }),
+	/** The process exit code. A non-zero value is NOT an error at this level. */
+	exitCode: ExitCode.annotateKey({ description: "The process exit code. A non-zero value is NOT an error at this level." }),
+}, $I.annote("CommandOutput", { description: "What one completed run produced." })) {
+	/**
+	 * Whether the process exited zero.
+	 *
+	 * **Example** (Check a completed run)
+	 *
+	 * ```ts
+	 * import { CommandOutput } from "@beep/scratchpad/effected/commands/Run";
+	 *
+	 * const output = CommandOutput.make({ stdout: "ready\n", stderr: "", exitCode: 0 });
+	 * console.log(output.succeeded) // true
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
+	 */
+	get succeeded(): boolean {
+		return this.exitCode === 0;
+	}
+}
+
+/** The executable and argv an error should report for `command`. */
+const describeCommand = (command: ChildProcess.Command): { command: string; args: ReadonlyArray<string> } => {
+	if (ChildProcess.isStandardCommand(command)) {
+		return { command: command.command, args: command.args };
+	}
+	const left = describeCommand(command.left);
+	const right = describeCommand(command.right);
+	// A pipeline has no single argv; report the shape so the message still names
+	// what ran, with both sides' arguments dropped rather than merged.
+	return { command: `${left.command} | ${right.command}`, args: [] };
+};
+
+/** argv as an error should store it: declared secrets removed, then the flag heuristic. */
+const safeArgs = (
+	args: ReadonlyArray<string>,
+	secrets: ReadonlyArray<Redacted.Redacted<string>> | undefined,
+): ReadonlyArray<string> => Redaction.scrubArgs(Redaction.applyArgs(args, secrets ?? []));
+
+/** Captured text as an error should store it. */
+const safeText = (text: string, secrets: ReadonlyArray<Redacted.Redacted<string>> | undefined): string =>
+	Redaction.apply(text, secrets ?? []);
+
+/** Tail-bounded rendering: tools write warnings first and the real error last. */
+const tail = (text: string): string => {
+	const trimmed = text.trim();
+	if (trimmed.length <= MAX_MESSAGE_CHARS) return trimmed;
+	return `...[${trimmed.length - MAX_MESSAGE_CHARS} chars truncated from head]...\n${trimmed.slice(-MAX_MESSAGE_CHARS)}`;
+};
+
+/**
+ * A command that could not be run, or that ran and failed.
+ *
+ * **Details**
+ *
+ * `kind` is the routing surface, never the message: `"nonZero"` (the process
+ * ran and exited non-zero), `"spawn"` (it never started — the executable is
+ * missing, or the platform refused), `"timeout"` (a caller-supplied ceiling
+ * elapsed). Composed retry and fallback logic branches on `kind`; nothing in
+ * this package asks a caller to match on prose.
+ *
+ * `args` is **always** stored redacted.
+ *
+ * **Example** (Classify a nonzero exit)
+ *
+ * ```ts
+ * import { CommandFailedError, CommandOutput } from "@beep/scratchpad/effected/commands/Run";
+ * import * as ChildProcess from "effect/process/ChildProcess";
+ *
+ * const command = ChildProcess.make("tool");
+ * const output = CommandOutput.make({ stdout: "", stderr: "", exitCode: 2 });
+ * const error = CommandFailedError.nonZero(command, output);
+ * console.log(error.kind) // nonZero
+ * ```
+ *
+ * @public
+ * @category errors
+ * @since 0.0.0
+ */
+export class CommandFailedError extends S.TaggedError<CommandFailedError>($I`CommandFailedError`)("CommandFailedError", {
+	/** Why it failed. */
+	kind: S.Literals(["nonZero", "spawn", "timeout"]).annotateKey({ description: "Why it failed." }),
+	/** The executable (or `"a | b"` for a pipeline). */
+	command: S.String.annotateKey({ description: "The executable (or `\"a | b\"` for a pipeline)." }),
+	/** argv, redacted. */
+	args: S.Array(S.String).annotateKey({ description: "argv, redacted." }),
+	/** The exit code, when the process ran. */
+	exitCode: S.optionalKey(ExitCode).annotateKey({ description: "The exit code, when the process ran." }),
+	/** Captured standard error, redacted, when the process ran. */
+	stderr: S.optionalKey(S.String).annotateKey({ description: "Captured standard error, redacted, when the process ran." }),
+	/** Captured standard output, redacted, when the process ran. */
+	stdout: S.optionalKey(S.String).annotateKey({ description: "Captured standard output, redacted, when the process ran." }),
+	/** The absorbed platform failure, for `"spawn"`. */
+	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The absorbed platform failure, for `\"spawn\"`." }),
+}, $I.annote("CommandFailedError", { description: "A command that could not be run, or that ran and failed." })) {
+	/**
+	 * The process ran and exited non-zero.
+	 *
+	 * **Example** (Build a nonzero exit failure)
+	 *
+	 * ```ts
+	 * import { CommandFailedError, CommandOutput } from "@beep/scratchpad/effected/commands/Run";
+	 * import * as ChildProcess from "effect/process/ChildProcess";
+	 *
+	 * const command = ChildProcess.make("tool");
+	 * const output = CommandOutput.make({ stdout: "", stderr: "", exitCode: 2 });
+	 * const error = CommandFailedError.nonZero(command, output);
+	 * console.log(error.kind) // nonZero
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
+	 */
+	static readonly nonZero = (
+		command: ChildProcess.Command,
+		output: CommandOutput,
+		secrets?: ReadonlyArray<Redacted.Redacted<string>> | undefined,
+	): CommandFailedError => {
+		const described = describeCommand(command);
+		return CommandFailedError.make({
+			kind: "nonZero",
+			command: described.command,
+			args: safeArgs(described.args, secrets),
+			exitCode: output.exitCode,
+			stderr: output.stderr,
+			stdout: output.stdout,
+		});
+	};
+
+	/**
+	 * The process never started.
+	 *
+	 * **Example** (Identify an absent executable)
+	 *
+	 * ```ts
+	 * import { CommandFailedError } from "@beep/scratchpad/effected/commands/Run";
+	 * import { ScriptedSpawner } from "@beep/scratchpad/effected/commands/ScriptedSpawner";
+	 * import * as ChildProcess from "effect/process/ChildProcess";
+	 *
+	 * const error = CommandFailedError.spawn(ChildProcess.make("missing"), ScriptedSpawner.notFound("missing"));
+	 * console.log(error.notFound) // true
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
+	 */
+	static readonly spawn = (
+		command: ChildProcess.Command,
+		cause: PlatformError.PlatformError,
+		secrets?: ReadonlyArray<Redacted.Redacted<string>> | undefined,
+	): CommandFailedError => {
+		const described = describeCommand(command);
+		return CommandFailedError.make({
+			kind: "spawn",
+			command: described.command,
+			args: safeArgs(described.args, secrets),
+			cause,
+		});
+	};
+
+	/**
+	 * A caller-supplied ceiling elapsed; the child was killed with its scope.
+	 *
+	 * **Example** (Build a timeout failure)
+	 *
+	 * ```ts
+	 * import { CommandFailedError } from "@beep/scratchpad/effected/commands/Run";
+	 * import * as ChildProcess from "effect/process/ChildProcess";
+	 *
+	 * const error = CommandFailedError.timedOut(ChildProcess.make("tool"));
+	 * console.log(error.kind) // timeout
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
+	 */
+	static readonly timedOut = (
+		command: ChildProcess.Command,
+		secrets?: ReadonlyArray<Redacted.Redacted<string>> | undefined,
+	): CommandFailedError => {
+		const described = describeCommand(command);
+		return CommandFailedError.make({
+			kind: "timeout",
+			command: described.command,
+			args: safeArgs(described.args, secrets),
+		});
+	};
+
+	/**
+	 * Whether this is a spawn failure caused by the executable not existing —
+	 * the structural "tool is not installed" signal.
+	 *
+	 * **Example** (Identify an absent executable)
+	 *
+	 * ```ts
+	 * import { CommandFailedError } from "@beep/scratchpad/effected/commands/Run";
+	 * import { ScriptedSpawner } from "@beep/scratchpad/effected/commands/ScriptedSpawner";
+	 * import * as ChildProcess from "effect/process/ChildProcess";
+	 *
+	 * const error = CommandFailedError.spawn(ChildProcess.make("missing"), ScriptedSpawner.notFound("missing"));
+	 * console.log(error.notFound) // true
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
+	 */
+	get notFound(): boolean {
+		return (
+			this.kind === "spawn" &&
+			this.cause instanceof PlatformError.PlatformError &&
+			this.cause.reason._tag === "NotFound"
+		);
+	}
+
+	/**
+	 * Names the command and surfaces the tail of whichever stream carries the cause.
+	 *
+	 * **Example** (Render a nonzero exit failure)
+	 *
+	 * ```ts
+	 * import { CommandFailedError, CommandOutput } from "@beep/scratchpad/effected/commands/Run";
+	 * import * as ChildProcess from "effect/process/ChildProcess";
+	 *
+	 * const command = ChildProcess.make("tool");
+	 * const output = CommandOutput.make({ stdout: "", stderr: "", exitCode: 2 });
+	 * const error = CommandFailedError.nonZero(command, output);
+	 * console.log(error.message) // Command "tool" failed (exit 2)
+	 * ```
+	 *
+	 * @category formatting
+	 * @since 0.0.0
+	 */
+	override get message(): string {
+		const rendered = this.args.length > 0 ? `${this.command} ${this.args.join(" ")}` : this.command;
+		const parts = [`Command "${rendered}" failed`];
+		if (this.kind === "timeout") parts.push("(timed out)");
+		if (this.exitCode !== undefined) parts.push(`(exit ${this.exitCode})`);
+		// Prefer stderr; fall back to stdout, because npm and friends route real
+		// errors there often enough that dropping it hides causes.
+		const stderr = this.stderr?.trim();
+		const stream = stderr !== undefined && stderr !== ""
+			? this.stderr
+			: (this.stdout?.trim() ?? "") !== "" ? this.stdout : undefined;
+		if (stream !== undefined) parts.push(`:\n${tail(stream)}`);
+		return parts.join(" ");
+	}
+}
+
+/**
+ * A command ran, but its output could not be used.
+ *
+ * **Details**
+ *
+ * Separate from {@link CommandFailedError} because the process itself
+ * succeeded: `"notJson"` (stdout is not JSON), `"schema"` (it is JSON but does
+ * not decode), `"tooLarge"` (capture exceeded its byte budget). Keeping the two
+ * distinguishable is the point — a schema drift and a crashed tool call for
+ * different responses.
+ *
+ * The context fields (`exitCode`, `stderr`, `stdout`) are populated by
+ * {@link Run.jsonLine}, whose payload framing parses regardless of exit code —
+ * when no payload arrives, the exit code and captured streams are the only
+ * evidence of what actually went wrong. Both streams are **always** stored
+ * redacted.
+ *
+ * **Example** (Classify unusable JSON output)
+ *
+ * ```ts
+ * import { CommandOutputError } from "@beep/scratchpad/effected/commands/Run";
+ *
+ * const error = CommandOutputError.make({ kind: "notJson", command: "tool" });
+ * console.log(error.kind) // notJson
+ * ```
+ *
+ * @public
+ * @category errors
+ * @since 0.0.0
+ */
+export class CommandOutputError extends S.TaggedError<CommandOutputError>($I`CommandOutputError`)("CommandOutputError", {
+	/** Which way the output was unusable. */
+	kind: S.Literals(["notJson", "schema", "tooLarge"]).annotateKey({ description: "Which way the output was unusable." }),
+	/** The executable that produced it. */
+	command: S.String.annotateKey({ description: "The executable that produced it." }),
+	/** The underlying parse or decode failure. */
+	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying parse or decode failure." }),
+	/** The exit code, when the combinator parses independently of it. */
+	exitCode: S.optionalKey(ExitCode).annotateKey({ description: "The exit code, when the combinator parses independently of it." }),
+	/** Captured standard error, redacted, when the process ran. */
+	stderr: S.optionalKey(S.String).annotateKey({ description: "Captured standard error, redacted, when the process ran." }),
+	/** Captured standard output, redacted, when the process ran. */
+	stdout: S.optionalKey(S.String).annotateKey({ description: "Captured standard output, redacted, when the process ran." }),
+}, $I.annote("CommandOutputError", { description: "A command ran, but its output could not be used." })) {
+	/**
+	 * Explains the output failure and includes available exit and stderr context.
+	 *
+	 * **Example** (Render unusable JSON output)
+	 *
+	 * ```ts
+	 * import { CommandOutputError } from "@beep/scratchpad/effected/commands/Run";
+	 *
+	 * const error = CommandOutputError.make({ kind: "notJson", command: "tool" });
+	 * console.log(error.message) // Command "tool" did not produce JSON
+	 * ```
+	 *
+	 * @category formatting
+	 * @since 0.0.0
+	 */
+	override get message(): string {
+		const parts: Array<string> = [];
+		if (this.kind === "notJson") {
+			parts.push(`Command "${this.command}" did not produce JSON`);
+		} else if (this.kind === "schema") {
+			parts.push(`Command "${this.command}" produced JSON that did not match the expected schema`);
+		} else {
+			parts.push(`Command "${this.command}" produced more output than the configured limit`);
+		}
+		if (this.exitCode !== undefined) parts.push(`(exit ${this.exitCode})`);
+		if (this.stderr !== undefined && this.stderr.trim().length > 0) parts.push(`:\n${tail(this.stderr)}`);
+		return parts.join(" ");
+	}
+}
+
+/** Spawns, collects both streams concurrently, and awaits exit. */
+const collectRaw = (
+	command: ChildProcess.Command,
+	options: RunOptions | undefined,
+	tee: Stdio.Stdio | undefined,
+): Effect.Effect<
+	CommandOutput,
+	PlatformError.PlatformError | OutputTooLarge,
+	ChildProcessSpawner.ChildProcessSpawner
+> =>
+	Effect.scoped(
+		Effect.gen(function* () {
+			const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+			const handle = yield* spawner.spawn(command);
+			const limit = options?.maxOutputBytes ?? DEFAULT_MAX_OUTPUT_BYTES;
+			const out = tee === undefined ? handle.stdout : Stream.tapSink(handle.stdout, tee.stdout());
+			const err = tee === undefined ? handle.stderr : Stream.tapSink(handle.stderr, tee.stderr());
+			// { concurrency: "unbounded" } is load-bearing, not a style choice:
+			// reading these sequentially deadlocks the moment either OS pipe
+			// buffer fills — the child blocks writing to a full pipe while the
+			// reader that would drain it is still waiting on the other stream.
+			const [stdout, stderr, exitCode] = yield* Effect.all(
+				[collectBounded(out, limit), collectBounded(err, limit), handle.exitCode],
+				{ concurrency: "unbounded" },
+			);
+			const secrets = options?.redact;
+			return CommandOutput.make({
+				stdout: safeText(stdout, secrets),
+				stderr: safeText(stderr, secrets),
+				exitCode: Number(exitCode),
+			});
+		}),
+	);
+
+/** Maps the raw failure modes onto this package's taxonomy, and applies any ceiling. */
+const collectClassified = (
+	command: ChildProcess.Command,
+	options: RunOptions | undefined,
+	tee: Stdio.Stdio | undefined,
+): Effect.Effect<CommandOutput, CommandFailedError | CommandOutputError, ChildProcessSpawner.ChildProcessSpawner> => {
+	const described = describeCommand(command);
+	const classified = collectRaw(command, options, tee).pipe(
+		Effect.mapError((error) =>
+			S.is(OutputTooLarge)(error)
+				? CommandOutputError.make({ kind: "tooLarge", command: described.command, cause: error })
+				: CommandFailedError.spawn(command, error, options?.redact),
+		),
+	);
+	return options?.timeout === undefined
+		? classified
+		: Effect.timeoutOrElse(classified, {
+				duration: options.timeout,
+				orElse: () => Effect.fail(CommandFailedError.timedOut(command, options.redact)),
+			});
+};
+
+/** Fails a run whose process exited non-zero. */
+const requireZero = (
+	command: ChildProcess.Command,
+	output: CommandOutput,
+	options: RunOptions | undefined,
+): Effect.Effect<CommandOutput, CommandFailedError> =>
+	output.succeeded ? Effect.succeed(output) : Effect.fail(CommandFailedError.nonZero(command, output, options?.redact));
+
+/** Span attributes: what ran and how many arguments — never the arguments. */
+const annotate = (command: ChildProcess.Command): Effect.Effect<void> => {
+	const described = describeCommand(command);
+	return Effect.annotateCurrentSpan({ command: described.command, argc: described.args.length });
+};
+
+// Implementation of Run.collect; the public contract lives on the static.
+const collect = Effect.fn("Run.collect")(function* (command: ChildProcess.Command, options?: RunOptions) {
+	yield* annotate(command);
+	return yield* collectClassified(command, options, undefined);
+});
+
+// Implementation of Run.collectTee; the public contract lives on the static.
+const collectTee = Effect.fn("Run.collectTee")(function* (command: ChildProcess.Command, options?: RunOptions) {
+	yield* annotate(command);
+	const stdio = yield* Stdio.Stdio;
+	return yield* collectClassified(command, options, stdio);
+});
+
+// Implementation of Run.text; the public contract lives on the static.
+const text = Effect.fn("Run.text")(function* (command: ChildProcess.Command, options?: RunOptions) {
+	yield* annotate(command);
+	const output = yield* collectClassified(command, options, undefined);
+	const checked = yield* requireZero(command, output, options);
+	return checked.stdout.trim();
+});
+
+// Implementation of Run.lines; the public contract lives on the static.
+const lines = Effect.fn("Run.lines")(function* (command: ChildProcess.Command, options?: RunOptions) {
+	yield* annotate(command);
+	const output = yield* collectClassified(command, options, undefined);
+	const checked = yield* requireZero(command, output, options);
+	return checked.stdout
+		.split(/\r?\n/)
+		.map((line) => line.trim())
+		.filter((line) => line.length > 0);
+});
+
+// Implementation of Run.json; the public contract lives on the static.
+const json = Effect.fn("Run.json")(function* <A, I>(
+	command: ChildProcess.Command,
+	schema: S.Codec<A, I>,
+	options?: RunOptions,
+) {
+	yield* annotate(command);
+	const described = describeCommand(command);
+	const output = yield* collectClassified(command, options, undefined);
+	const checked = yield* requireZero(command, output, options);
+	const parsed = yield* S.decodeEffect(JsonOutput)(checked.stdout).pipe(
+		Effect.mapError((cause) => CommandOutputError.make({ kind: "notJson", command: described.command, cause })),
+	);
+	return yield* S.decodeUnknownEffect(schema)(parsed).pipe(
+		Effect.mapError((cause) => CommandOutputError.make({ kind: "schema", command: described.command, cause })),
+	);
+});
+
+// Implementation of Run.jsonLine; the public contract lives on the static.
+const jsonLine = Effect.fn("Run.jsonLine")(function* <A, I>(
+	command: ChildProcess.Command,
+	schema: S.Codec<A, I>,
+	options?: RunOptions,
+) {
+	yield* annotate(command);
+	const described = describeCommand(command);
+	const output = yield* collectClassified(command, options, undefined);
+	// The run's context travels on every output error: when the payload line is
+	// missing or unusable, the exit code and captured streams (already redacted
+	// by collectClassified) are the only evidence of what actually went wrong.
+	const context = { exitCode: output.exitCode, stderr: output.stderr, stdout: output.stdout };
+	const candidates = output.stdout.split(/\r?\n/).filter((candidate) => candidate.trim().length > 0);
+	if (candidates.length === 0) {
+		return yield* CommandOutputError.make({
+				kind: "notJson",
+				command: described.command,
+				cause: EmptyJsonLineError.make({ message: "stdout carried no non-empty line" }),
+				...context,
+			});
+	}
+	// Scan from the END: the first candidate that both JSON-parses and decodes
+	// under the schema is the payload. The near-miss diagnostics below record
+	// the FIRST failure of each kind encountered by the scan — i.e. the LAST
+	// non-empty line's parse error and the LAST parseable line's decode issue —
+	// because the line nearest the end is the most probable intended payload.
+	let notJsonCause: unknown;
+	let schemaCause: unknown;
+	for (let index = candidates.length - 1; index >= 0; index--) {
+		const candidate = A.getUnsafe(candidates, index);
+		const parsed = yield* Effect.result(S.decodeEffect(JsonOutput)(candidate));
+		if (Result.isFailure(parsed)) {
+			notJsonCause ??= parsed.failure;
+			continue;
+		}
+		const decoded = yield* Effect.result(S.decodeUnknownEffect(schema)(parsed.success));
+		if (Result.isSuccess(decoded)) return decoded.success;
+		schemaCause ??= decoded.failure;
+	}
+	// Nothing decoded anywhere. When at least one line parsed as JSON, the
+	// near-miss is a schema drift — report kind "schema" with the last
+	// parseable line's decode failure; otherwise nothing was JSON at all.
+	return yield* schemaCause !== undefined
+			? CommandOutputError.make({ kind: "schema", command: described.command, cause: schemaCause, ...context })
+			: CommandOutputError.make({ kind: "notJson", command: described.command, cause: notJsonCause, ...context });
+});
+
+// Implementation of Run.exitCode; the public contract lives on the static.
+const exitCode = Effect.fn("Run.exitCode")(function* (command: ChildProcess.Command, options?: RunOptions) {
+	yield* annotate(command);
+	const output = yield* collectClassified(command, options, undefined);
+	return output.exitCode;
+});
+
+// Implementation of Run.succeeds; the public contract lives on the static.
+const succeeds = Effect.fn("Run.succeeds")(function* (command: ChildProcess.Command, options?: RunOptions) {
+	yield* annotate(command);
+	return yield* collectClassified(command, options, undefined).pipe(
+		Effect.map((output) => output.succeeded),
+		Effect.orElseSucceed(() => false),
+	);
+});
+
+// Implementation of Run.detach; the public contract lives on the static.
+const detach = Effect.fn("Run.detach")(function* (command: ChildProcess.Command) {
+	yield* annotate(command);
+	return yield* Effect.scoped(
+		Effect.gen(function* () {
+			const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+			const handle = yield* spawner.spawn(command);
+			// Order is the whole point of this helper: the Node backend's release
+			// checks an `isReferenced` flag and does NOT kill an unref'd child, so
+			// unref must run BEFORE this scope closes. Reversed, the child dies
+			// with the scope and nothing outlives the process.
+				yield* Effect.asVoid(handle.unref);
+			return handle.pid;
+		}),
+	).pipe(Effect.mapError((error) => CommandFailedError.spawn(command, error)));
+});
+
+// Implementation of Run.stream; the public contract lives on the static.
+const stream = (
+	command: ChildProcess.Command,
+	options?: { readonly includeStderr?: boolean | undefined },
+): Stream.Stream<string, CommandFailedError, ChildProcessSpawner.ChildProcessSpawner> =>
+	Stream.unwrap(
+		Effect.map(ChildProcessSpawner.ChildProcessSpawner, (spawner) =>
+			spawner.streamLines(command, { includeStderr: options?.includeStderr ?? false }),
+		),
+	).pipe(Stream.mapError((error) => CommandFailedError.spawn(command, error)));
+
+// Implementation of Run.extendEnv; the public contract lives on the static.
+const extendEnv: {
+	(env: Record<string, string>): (self: ChildProcess.Command) => ChildProcess.Command;
+	(self: ChildProcess.Command, env: Record<string, string>): ChildProcess.Command;
+} = Fn.dual(2, (self: ChildProcess.Command, env: Record<string, string>): ChildProcess.Command => {
+	if (ChildProcess.isStandardCommand(self)) {
+		const merged = self.options.env === undefined ? env : { ...self.options.env, ...env };
+		return ChildProcess.make(self.command, self.args, { ...self.options, env: merged, extendEnv: true });
+	}
+	return ChildProcess.pipeTo(extendEnv(self.left, env), extendEnv(self.right, env), self.options);
+});
+
+/**
+ * Structured running of core `ChildProcess.Command` values.
+ *
+ * **Details**
+ *
+ * These are free functions over core's contract, **not** a service: core's
+ * `ChildProcessSpawner` already is the subprocess service, and wrapping it in a
+ * second one is the re-declaration this package exists not to repeat. Tests
+ * script the spawner with {@link ScriptedSpawner}, not these.
+ *
+ * A non-zero exit is a *result* for {@link Run.collect}, {@link Run.exitCode},
+ * {@link Run.succeeds} and {@link Run.jsonLine}, and a typed *failure* for
+ * {@link Run.text}, {@link Run.lines} and {@link Run.json} — the split is
+ * deliberate, matching core (where a non-zero exit is a success) at the
+ * reporting level while giving the interpreting helpers the ergonomics callers
+ * actually want.
+ *
+ * The interpreting helpers also **trim**: {@link Run.text} strips leading and
+ * trailing whitespace from the whole result — not just a trailing newline —
+ * and {@link Run.lines} trims each line. Fixed-column output whose first
+ * column can be whitespace (`git status --porcelain`) silently loses that
+ * column through either, producing plausible wrong values rather than an
+ * error. Parse that kind of output from the untrimmed `stdout` of
+ * {@link Run.collect}'s {@link CommandOutput} instead.
+ *
+ * **Example** (Read the Git revision and check for changes)
+ *
+ * ```ts
+ * import { Run } from "@beep/scratchpad/effected/commands/Run";
+ * import { ScriptedSpawner } from "@beep/scratchpad/effected/commands/ScriptedSpawner";
+ * import * as ChildProcess from "effect/process/ChildProcess";
+ * import * as Effect from "effect/Effect";
+ *
+ * const spawner = ScriptedSpawner.make((_command, args) =>
+ *   args[0] === "rev-parse" ? { stdout: "abc123\n" } : {},
+ * );
+ * const program = Effect.gen(function* () {
+ *   const sha = yield* Run.text(ChildProcess.make("git", ["rev-parse", "HEAD"]), { timeout: "10 seconds" });
+ *   const clean = yield* Run.succeeds(ChildProcess.make("git", ["diff", "--quiet"]));
+ *   return { sha, clean };
+ * }).pipe(Effect.provide(spawner.layer));
+ * const result = await Effect.runPromise(program);
+ * console.log(`${result.sha} ${result.clean}`) // abc123 true
+ * ```
+ *
+ * @public
+ * @category utilities
+ * @since 0.0.0
+ */
+export class Run {
+	private constructor() {}
+
+	/**
+	 * Spawns `command`, collects stdout and stderr concurrently, and resolves
+	 * with the {@link CommandOutput} once the process exits.
+	 *
+	 * **Details**
+	 *
+	 * A non-zero exit is a *result* here, not a failure — see {@link Run}'s
+	 * remarks for the split against {@link Run.text}, {@link Run.lines} and
+	 * {@link Run.json}.
+	 *
+	 * The error union is honest but wider than any one configuration can fire:
+	 * which arms are reachable depends on the options passed. For a call with
+	 * no options, exactly two failure modes exist —
+	 *
+	 * - {@link CommandFailedError} of kind `"spawn"`: the process never started
+	 *   (executable missing, platform refused), **or** the platform failed while
+	 *   reading a stream or awaiting the exit — this arm absorbs every
+	 *   `PlatformError`, not only spawn-time ones.
+	 * - {@link CommandOutputError} of kind `"tooLarge"`: captured output
+	 *   exceeded {@link RunOptions.maxOutputBytes} (default
+	 *   {@link DEFAULT_MAX_OUTPUT_BYTES}).
+	 *
+	 * Setting {@link RunOptions.timeout} adds a third arm: kind `"timeout"`.
+	 * No configuration makes this combinator fail with kind `"nonZero"` — a
+	 * non-zero exit is a result — and kinds `"notJson"` / `"schema"` are
+	 * exclusive to {@link Run.json} and {@link Run.jsonLine}. A catch written
+	 * against an unconfigured call therefore needs only the two arms above;
+	 * handling the full union there is defensive, not required.
+	 *
+	 * **Example** (Collect output from a nonzero exit)
+	 *
+	 * ```ts
+	 * import { Run } from "@beep/scratchpad/effected/commands/Run";
+	 * import { ScriptedSpawner } from "@beep/scratchpad/effected/commands/ScriptedSpawner";
+	 * import * as ChildProcess from "effect/process/ChildProcess";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 *
+	 * const spawner = ScriptedSpawner.make(() => ({ stdout: "ready\n", exit: 2 }));
+	 * const program = Run.collect(ChildProcess.make("git", ["rev-parse", "HEAD"])).pipe(Effect.provide(spawner.layer));
+	 * const result = await Effect.runPromise(program);
+	 * console.log(`${result.exitCode} ${result.stdout.trim()}`) // 2 ready
+	 * ```
+	 *
+	 * @category processes
+	 * @since 0.0.0
+	 */
+	static readonly collect = collect;
+
+	/**
+	 * Like {@link Run.collect}, but also tees each stream to the `Stdio` in `R`
+	 * as it arrives, for a caller that wants live output alongside the captured
+	 * {@link CommandOutput}.
+	 *
+	 * **Gotchas**
+	 *
+	 * Reachability of the error arms is exactly {@link Run.collect}'s, but the
+	 * tee adds a second *source* for kind `"spawn"`: a failing `Stdio` sink
+	 * (EPIPE when the host's own stdout is a closed pipe) is classified there
+	 * too, even though the child started and ran.
+	 *
+	 * **Example** (Construct a run with live output)
+	 *
+	 * ```ts
+	 * import { Run } from "@beep/scratchpad/effected/commands/Run";
+	 * import * as ChildProcess from "effect/process/ChildProcess";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = Run.collectTee(ChildProcess.make("tool"));
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @category processes
+	 * @since 0.0.0
+	 */
+	static readonly collectTee = collectTee;
+
+	/**
+	 * Runs `command` and resolves with trimmed stdout on a zero exit.
+	 *
+	 * **Gotchas**
+	 *
+	 * A non-zero exit is a typed failure here — {@link CommandFailedError} —
+	 * unlike {@link Run.collect}, {@link Run.exitCode} and {@link Run.succeeds},
+	 * which treat it as a result.
+	 *
+	 * The trim strips **leading and trailing whitespace**, not just the trailing
+	 * newline. For parse-sensitive output where leading whitespace is data
+	 * (`git status --porcelain`, whose first entry's status column it would
+	 * silently eat), use {@link Run.collect} and read its {@link CommandOutput}'s
+	 * untrimmed `stdout` instead.
+	 *
+	 * **Example** (Read trimmed stdout)
+	 *
+	 * ```ts
+	 * import { Run } from "@beep/scratchpad/effected/commands/Run";
+	 * import { ScriptedSpawner } from "@beep/scratchpad/effected/commands/ScriptedSpawner";
+	 * import * as ChildProcess from "effect/process/ChildProcess";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 *
+	 * const spawner = ScriptedSpawner.make(() => ({ stdout: " abc123\n" }));
+	 * const program = Run.text(ChildProcess.make("git", ["rev-parse", "HEAD"])).pipe(Effect.provide(spawner.layer));
+	 * const result = await Effect.runPromise(program);
+	 * console.log(result) // abc123
+	 * ```
+	 *
+	 * @category processes
+	 * @since 0.0.0
+	 */
+	static readonly text = text;
+
+	/**
+	 * Runs `command` and resolves with stdout split into trimmed, non-empty
+	 * lines on a zero exit.
+	 *
+	 * **Details**
+	 *
+	 * A non-zero exit is a typed failure here — {@link CommandFailedError} —
+	 * matching {@link Run.text} and {@link Run.json}.
+	 *
+	 * **Example** (Read nonempty trimmed lines)
+	 *
+	 * ```ts
+	 * import { Run } from "@beep/scratchpad/effected/commands/Run";
+	 * import { ScriptedSpawner } from "@beep/scratchpad/effected/commands/ScriptedSpawner";
+	 * import * as ChildProcess from "effect/process/ChildProcess";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 *
+	 * const spawner = ScriptedSpawner.make(() => ({ stdout: " first\n\nsecond \n" }));
+	 * const program = Run.lines(ChildProcess.make("git", ["rev-parse", "HEAD"])).pipe(Effect.provide(spawner.layer));
+	 * const result = await Effect.runPromise(program);
+	 * console.log(result.join(",")) // first,second
+	 * ```
+	 *
+	 * @category processes
+	 * @since 0.0.0
+	 */
+	static readonly lines = lines;
+
+	/**
+	 * Runs `command`, parses stdout as JSON and decodes it against `schema` on
+	 * a zero exit.
+	 *
+	 * **Details**
+	 *
+	 * Fails with {@link CommandOutputError} when stdout is not JSON or does not
+	 * decode; a non-zero exit fails with {@link CommandFailedError}, matching
+	 * {@link Run.text} and {@link Run.lines}.
+	 *
+	 * This parses the **whole** of stdout and requires a zero exit. For a
+	 * protocol payload located by scanning stdout lines from the end — tolerant
+	 * of noise around it and of a non-zero exit — use {@link Run.jsonLine}
+	 * instead.
+	 *
+	 * **Example** (Decode a whole JSON document)
+	 *
+	 * ```ts
+	 * import { Run } from "@beep/scratchpad/effected/commands/Run";
+	 * import { ScriptedSpawner } from "@beep/scratchpad/effected/commands/ScriptedSpawner";
+	 * import * as ChildProcess from "effect/process/ChildProcess";
+	 * import * as Effect from "effect/Effect";
+	 * import * as S from "effect/Schema";
+	 *
+	 * const spawner = ScriptedSpawner.make(() => ({ stdout: '{"ok":true}' }));
+	 * const program = Run.json(ChildProcess.make("tool"), S.Struct({ ok: S.Boolean })).pipe(Effect.provide(spawner.layer));
+	 * const result = await Effect.runPromise(program);
+	 * console.log(result.ok) // true
+	 * ```
+	 *
+	 * @category parsing
+	 * @since 0.0.0
+	 */
+	static readonly json = json;
+
+	/**
+	 * Runs `command` and, **scanning stdout lines from the end**, resolves with
+	 * the first line that both parses as JSON and decodes against `schema` —
+	 * the framing variant of {@link Run.json}, for a child that reports through
+	 * a single JSON protocol payload near the end of its output.
+	 *
+	 * **Details**
+	 *
+	 * The framing tolerates noise on **both sides** of the payload: noise before
+	 * it (a subprocess-loaded hook's own `console.log`, a tool's warnings) and
+	 * noise after it (a hook logging from `process.on("exit", ...)` fires after
+	 * the payload has flushed). Lines are split on
+	 * `\r?\n`, whitespace-only lines are dropped, and the scan runs from the last
+	 * line backwards until one decodes. The tolerance is positional, not
+	 * volumetric: the whole of stdout is still captured under
+	 * {@link RunOptions.maxOutputBytes} (default
+	 * {@link DEFAULT_MAX_OUTPUT_BYTES}, 16 MiB), so a child whose noise exceeds
+	 * the ceiling fails typed as `"tooLarge"` before any line is examined —
+	 * raise the ceiling for a child known to be loud in volume.
+	 *
+	 * The scan's consequence: when **multiple** lines decode under `schema`, the
+	 * **last** one wins. A child must therefore never emit two schema-valid
+	 * lines, and a consumer schema should be shaped so an accidental log line
+	 * cannot satisfy it — a discriminated envelope with a required literal field
+	 * (`ok: true | false`, the shape `@effected/workspaces`' `ReplayPayload`
+	 * uses) rather than a permissive record a stray `console.log(someObject)`
+	 * might match.
+	 *
+	 * Unlike {@link Run.json}, this parses **regardless of the exit code** — a
+	 * deliberate posture, not an oversight. A protocol payload discriminates
+	 * success in-band (its own `ok` field, its own error shape), so the payload
+	 * outranks the exit code: a child that crashes *after* flushing its payload
+	 * still reported, and a caller that wants exit-code semantics has
+	 * {@link Run.json}. When no line decodes anywhere, the typed
+	 * {@link CommandOutputError} carries the exit code and both captured streams
+	 * (redacted) as context, so the failure is diagnosable without re-running.
+	 * Its `kind` preserves the near-miss diagnostic: `"schema"` when at least
+	 * one line parsed as JSON but none decoded — with the **last parseable
+	 * line's** decode failure as `cause`, that line being the most probable
+	 * intended payload — and `"notJson"` only when no non-empty line was JSON at
+	 * all (carrying the last non-empty line's parse error). A spawn failure or
+	 * an opted-in timeout still fails with {@link CommandFailedError}.
+	 *
+	 * **Example** (Decode a payload surrounded by noise)
+	 *
+	 * ```ts
+	 * import { Run } from "@beep/scratchpad/effected/commands/Run";
+	 * import { ScriptedSpawner } from "@beep/scratchpad/effected/commands/ScriptedSpawner";
+	 * import * as ChildProcess from "effect/process/ChildProcess";
+	 * import * as Effect from "effect/Effect";
+	 * import * as S from "effect/Schema";
+	 *
+	 * const spawner = ScriptedSpawner.make(() => ({ stdout: 'warning\n{"ok":true}\nshutdown log\n', exit: 2 }));
+	 * const program = Run.jsonLine(ChildProcess.make("tool"), S.Struct({ ok: S.Boolean })).pipe(Effect.provide(spawner.layer));
+	 * const result = await Effect.runPromise(program);
+	 * console.log(result.ok) // true
+	 * ```
+	 *
+	 * @category parsing
+	 * @since 0.0.0
+	 */
+	static readonly jsonLine = jsonLine;
+
+	/**
+	 * Runs `command` and resolves with its exit code alone.
+	 *
+	 * **Details**
+	 *
+	 * A non-zero exit is a *result* here, not a failure — see {@link Run}'s
+	 * remarks for the split against {@link Run.text}, {@link Run.lines} and
+	 * {@link Run.json}.
+	 *
+	 * **Example** (Inspect a nonzero exit code)
+	 *
+	 * ```ts
+	 * import { Run } from "@beep/scratchpad/effected/commands/Run";
+	 * import { ScriptedSpawner } from "@beep/scratchpad/effected/commands/ScriptedSpawner";
+	 * import * as ChildProcess from "effect/process/ChildProcess";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 *
+	 * const spawner = ScriptedSpawner.make(() => ({ exit: 7 }));
+	 * const program = Run.exitCode(ChildProcess.make("git", ["rev-parse", "HEAD"])).pipe(Effect.provide(spawner.layer));
+	 * const result = await Effect.runPromise(program);
+	 * console.log(result) // 7
+	 * ```
+	 *
+	 * @category processes
+	 * @since 0.0.0
+	 */
+	static readonly exitCode = exitCode;
+
+	/**
+	 * Runs `command` and resolves with whether it exited zero, collapsing a
+	 * spawn or other classified failure to `false` rather than propagating it.
+	 *
+	 * **Example** (Test a nonzero exit)
+	 *
+	 * ```ts
+	 * import { Run } from "@beep/scratchpad/effected/commands/Run";
+	 * import { ScriptedSpawner } from "@beep/scratchpad/effected/commands/ScriptedSpawner";
+	 * import * as ChildProcess from "effect/process/ChildProcess";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 *
+	 * const spawner = ScriptedSpawner.make(() => ({ exit: 7 }));
+	 * const program = Run.succeeds(ChildProcess.make("git", ["rev-parse", "HEAD"])).pipe(Effect.provide(spawner.layer));
+	 * const result = await Effect.runPromise(program);
+	 * console.log(result) // false
+	 * ```
+	 *
+	 * @category processes
+	 * @since 0.0.0
+	 */
+	static readonly succeeds = succeeds;
+
+	/**
+	 * Decoded stdout lines as they arrive, for output too large or too long-lived to collect.
+	 *
+	 * **Example** (Construct a stdout line stream)
+	 *
+	 * ```ts
+	 * import { Run } from "@beep/scratchpad/effected/commands/Run";
+	 * import * as ChildProcess from "effect/process/ChildProcess";
+	 * import * as Stream from "effect/Stream";
+	 *
+	 * const lines = Run.stream(ChildProcess.make("tool"));
+	 * console.log(Stream.isStream(lines)) // true
+	 * ```
+	 *
+	 * @category streams
+	 * @since 0.0.0
+	 */
+	static readonly stream = stream;
+
+	/**
+	 * Spawns `command` and resolves with its pid without waiting for exit.
+	 *
+	 * **Gotchas**
+	 *
+	 * Unrefs the child **before** this scope closes, so it survives the
+	 * caller's scope closing — the Node backend's release skips the kill for an
+	 * unref'd child, and reversing that order kills it with the scope instead.
+	 * Fails with {@link CommandFailedError} if the process never starts.
+	 *
+	 * **Example** (Detach a scripted child)
+	 *
+	 * ```ts
+	 * import { Run } from "@beep/scratchpad/effected/commands/Run";
+	 * import { ScriptedSpawner } from "@beep/scratchpad/effected/commands/ScriptedSpawner";
+	 * import * as ChildProcess from "effect/process/ChildProcess";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 *
+	 * const spawner = ScriptedSpawner.make(() => ({}));
+	 * const program = Run.detach(ChildProcess.make("git", ["rev-parse", "HEAD"])).pipe(Effect.provide(spawner.layer));
+	 * const result = await Effect.runPromise(program);
+	 * console.log(result) // 4242
+	 * ```
+	 *
+	 * @category processes
+	 * @since 0.0.0
+	 */
+	static readonly detach = detach;
+
+	/**
+	 * Adds environment variables to a command WITHOUT losing the parent
+	 * environment: merges `env` over any existing command environment (new values
+	 * win, matching core's `ChildProcess.setEnv`) and sets `extendEnv: true`.
+	 *
+	 * **Gotchas**
+	 *
+	 * This combinator exists because of a core trap: `ChildProcess.setEnv` merges
+	 * into `options.env` but never sets `extendEnv`, and the Node spawner resolves
+	 * the child environment as `extendEnv ? { ...process.env, ...env } : env` — so
+	 * a command built with bare `setEnv({ SOME_VAR: x })` spawns a child whose
+	 * ENTIRE environment is that one variable: no `PATH`, no `HOME`. The failure is
+	 * silent at the type level and surfaces as "spawned tool cannot find its own
+	 * binary" at runtime.
+	 *
+	 * Deliberately forces `extendEnv: true` even where construction set it `false`
+	 * — inheriting the parent environment is this combinator's entire purpose. A
+	 * caller who wants a hermetic environment uses core's `setEnv` or construction
+	 * options (`ChildProcess.make(cmd, args, { env, extendEnv: false })`) directly.
+	 *
+	 * For a pipeline, applies to every command in the pipeline (mirroring core's
+	 * `setEnv`), preserving the pipe's own options. Composes core's public
+	 * vocabulary (`ChildProcess.make`, `ChildProcess.pipeTo`) — it re-declares
+	 * nothing.
+	 *
+	 * **Example** (Add an inherited environment variable)
+	 *
+	 * ```ts
+	 * import { Run } from "@beep/scratchpad/effected/commands/Run";
+	 * import * as ChildProcess from "effect/process/ChildProcess";
+	 *
+	 * const command = Run.extendEnv(ChildProcess.make("tool"), { MODE: "test" });
+	 * console.log(ChildProcess.isStandardCommand(command) && command.options.extendEnv) // true
+	 * ```
+	 *
+	 * @category combinators
+	 * @since 0.0.0
+	 */
+	static readonly extendEnv = extendEnv;
+
+	/**
+	 * Default ceiling on captured bytes per stream. See {@link DEFAULT_MAX_OUTPUT_BYTES}.
+	 *
+	 * **Example** (Inspect the capture ceiling)
+	 *
+	 * ```ts
+	 * import { Run } from "@beep/scratchpad/effected/commands/Run";
+	 *
+	 * console.log(Run.DEFAULT_MAX_OUTPUT_BYTES) // 16777216
+	 * ```
+	 *
+	 * @category constants
+	 * @since 0.0.0
+	 */
+	static readonly DEFAULT_MAX_OUTPUT_BYTES = DEFAULT_MAX_OUTPUT_BYTES;
+
+	/**
+	 * The placeholder written in place of a redacted secret. See {@link REDACTED}.
+	 *
+	 * **Example** (Inspect the redaction placeholder)
+	 *
+	 * ```ts
+	 * import { Run } from "@beep/scratchpad/effected/commands/Run";
+	 *
+	 * console.log(Run.REDACTED) // ***
+	 * ```
+	 *
+	 * @category constants
+	 * @since 0.0.0
+	 */
+	static readonly REDACTED = REDACTED;
+}

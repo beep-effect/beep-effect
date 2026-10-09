@@ -1,0 +1,336 @@
+import { GroundedExtraction } from "@beep/langextract/Extraction";
+import { DocStructureAbstention, DocStructureDocument, DocStructureRuleFamily } from "@beep/law-practice-domain";
+import {
+  OfficeActionDocketIntakeLive,
+  officeActionStructureFileStore,
+} from "@beep/law-practice-server/OfficeActionStructure";
+import {
+  OfficeActionAttemptRequest,
+  OfficeActionDocketIntake,
+  OfficeActionEvidenceConsumer,
+  OfficeActionStoredOutcome,
+  OfficeActionStructureAttempt,
+  OfficeActionStructureStore,
+} from "@beep/law-practice-use-cases/OfficeActionStructure";
+import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
+import { VerifySourceTextIdentityInput } from "@beep/provenance/VerifiedTextAnchor";
+import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
+import { expect, it } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
+import * as A from "effect/Array";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as PlatformError from "effect/PlatformError";
+import * as Ref from "effect/Ref";
+import * as S from "effect/Schema";
+import * as Str from "effect/String";
+import { fixtureOcrPage, fixtureSource, fixtureText, TestCrypto } from "./officeActionFixtures.ts";
+
+const document = DocStructureDocument.make({
+  documentId: "fixture",
+  sourceVersion: "1",
+  modality: "public-form-language",
+});
+const filename = "/history/attempts.jsonl";
+class TestState extends Context.Service<
+  TestState,
+  {
+    readonly delivered: Ref.Ref<number>;
+    readonly verification: VerifySourceTextIdentityInput;
+    readonly text: string;
+    readonly originalBytes: Ref.Ref<string>;
+  }
+>()("@beep/law-practice-server/test/OfficeActionStructure.test/TestState") {}
+const StateLive = Layer.effect(
+  TestState,
+  Effect.gen(function* () {
+    const text = fixtureText;
+    const { verification } = yield* fixtureSource(text);
+    return { text, verification, delivered: yield* Ref.make(0), originalBytes: yield* Ref.make("") };
+  })
+).pipe(Layer.provideMerge(Layer.mergeAll(MemoryFileSystem.layer, Path.layer, TestCrypto)));
+const ConsumerLive = Layer.effect(
+  OfficeActionEvidenceConsumer,
+  Effect.gen(function* () {
+    const state = yield* TestState;
+    return OfficeActionEvidenceConsumer.of({
+      receive: Effect.fnUntraced(function* (pair) {
+        expect(pair.candidates).toHaveLength(2);
+        expect("approval" in pair).toBe(false);
+        expect("admitted" in pair).toBe(false);
+        yield* Ref.update(state.delivered, (n) => n + 1);
+      }),
+    });
+  })
+).pipe(Layer.provideMerge(StateLive));
+const composition = () =>
+  OfficeActionDocketIntakeLive.pipe(Layer.provideMerge(officeActionStructureFileStore(filename)));
+it.layer(ConsumerLive, { timeout: "10 seconds", concurrent: false })("office-action durable evidence intake", (it) => {
+  it.layer(composition(), { timeout: "10 seconds", concurrent: false })("initial writer", (it) => {
+    it.effect("persists an atomic evidence pair with no admission state", () =>
+      Effect.gen(function* () {
+        const state = yield* TestState;
+        const intake = yield* OfficeActionDocketIntake;
+        const fs = yield* FileSystem.FileSystem;
+        const outcome = yield* intake.record(
+          OfficeActionAttemptRequest.make({ attemptId: "a-1", document, verification: state.verification })
+        );
+        yield* intake.deliver(outcome);
+        yield* Ref.set(state.originalBytes, yield* fs.readFileString(filename));
+        expect(yield* Ref.get(state.delivered)).toBe(1);
+      })
+    );
+  });
+  it.layer(composition(), { timeout: "10 seconds", concurrent: false })("restarted reader and writer", (it) => {
+    it.effect("reverifies serialized receipts, retains v1 and appends failure and re-anchor history", () =>
+      Effect.gen(function* () {
+        const state = yield* TestState;
+        const intake = yield* OfficeActionDocketIntake;
+        const store = yield* OfficeActionStructureStore;
+        const fs = yield* FileSystem.FileSystem;
+        const initial = yield* store.read;
+        const first = yield* Effect.fromOption(A.head(initial), () => "missing first attempt");
+        const encoded = yield* S.encodeEffect(S.fromJsonString(OfficeActionStructureAttempt))(first);
+        const decoded = yield* S.decodeEffect(S.fromJsonString(OfficeActionStructureAttempt))(encoded);
+        expect(decoded).toEqual(first);
+        const contradicted = OfficeActionStructureAttempt.make({
+          ...first,
+          outcome: OfficeActionStoredOutcome.cases.abstained.make({ code: "absent", rule: first.rule }),
+        });
+        expect((yield* intake.replay(contradicted, state.verification).pipe(Effect.flip))._tag).toBe(
+          "OfficeActionStructureStorageError"
+        );
+        const failedReceipt = OfficeActionStructureAttempt.make({
+          ...first,
+          outcome: OfficeActionStoredOutcome.cases.failed.make({ reason: "invalid-anchor" }),
+        });
+        expect((yield* intake.replay(failedReceipt, state.verification).pipe(Effect.flip))._tag).toBe(
+          "VerifiedTextAnchorError"
+        );
+        const wrongPrevious = OfficeActionStructureAttempt.make({
+          ...first,
+          attemptId: "bad-link",
+          previousAttemptId: O.some("missing"),
+        });
+        expect((yield* store.append(wrongPrevious).pipe(Effect.flip)).message).toContain("predecessor");
+
+        const replayed = yield* intake.replay(decoded, state.verification);
+        yield* intake.deliver(replayed);
+
+        const changed = yield* fixtureSource(`prefix ${state.text}`);
+        const unauthorized = OfficeActionStructureAttempt.make({ ...first, expectedSource: changed.source });
+        const unauthorizedReplay = yield* intake.replay(unauthorized, state.verification).pipe(Effect.flip);
+        expect(unauthorizedReplay._tag).toBe("VerifiedTextAnchorError");
+        const firstExtraction = yield* Effect.fromOption(
+          A.head(first.extractions),
+          () => "missing retained extraction"
+        );
+        if (!GroundedExtraction.guards.match_exact(firstExtraction))
+          return yield* Effect.die("Expected retained exact extraction.");
+        const badQuote = Str.repeat(Str.length(firstExtraction.matchedText))("x");
+        const tamperedExtractions = OfficeActionStructureAttempt.make({
+          ...first,
+          extractions: [
+            GroundedExtraction.cases.match_exact.make({
+              label: firstExtraction.label,
+              text: badQuote,
+              matchedText: badQuote,
+              span: firstExtraction.span,
+            }),
+            ...A.drop(first.extractions, 1),
+          ],
+        });
+        const invalidReplay = yield* intake.replay(tamperedExtractions, state.verification).pipe(Effect.flip);
+        expect(invalidReplay._tag).toBe("VerifiedTextAnchorError");
+        if (invalidReplay._tag === "VerifiedTextAnchorError") expect(invalidReplay.reason).toBe("quote-mismatch");
+        const staleReplay = yield* intake.replay(first, changed.verification).pipe(Effect.flip);
+        expect(staleReplay._tag).toBe("VerifiedTextAnchorError");
+        const second = yield* intake.record(
+          OfficeActionAttemptRequest.make({
+            attemptId: "a-2",
+            previousAttemptId: O.some("a-1"),
+            document,
+            verification: state.verification,
+            rule: DocStructureRuleFamily.make({ id: "uspto-oa-finality-ssp", version: 2 }),
+          })
+        );
+        expect(second).toMatchObject({ status: "abstained", code: "rule-not-covered" });
+        yield* intake.deliver(second);
+        const duplicate = yield* store.append(first).pipe(Effect.flip);
+        expect(duplicate.message).toContain("unique");
+        const failure = yield* intake
+          .record(
+            OfficeActionAttemptRequest.make({
+              attemptId: "a-3",
+              previousAttemptId: O.some("a-2"),
+              document,
+              verification: VerifySourceTextIdentityInput.make({
+                expectedSource: state.verification.expectedSource,
+                source: changed.source,
+                sourceText: `prefix ${state.text}`,
+              }),
+            })
+          )
+          .pipe(Effect.flip);
+        expect(failure._tag).toBe("VerifiedTextAnchorError");
+        const reanchored = yield* intake.record(
+          OfficeActionAttemptRequest.make({
+            attemptId: "a-4",
+            previousAttemptId: O.some("a-3"),
+            document: DocStructureDocument.make({ ...document, sourceVersion: "2" }),
+            verification: changed.verification,
+          })
+        );
+        expect(reanchored.status).toBe("recognized");
+        const finalHistory = yield* store.read;
+        expect(finalHistory).toHaveLength(4);
+        expect(finalHistory[0]).toEqual(first);
+        expect(finalHistory[2]?.outcome).toMatchObject({ status: "failed", reason: "stale-source" });
+        const fourth = yield* Effect.fromOption(A.get(finalHistory, 3), () => "missing fourth attempt");
+        assertSome(fourth.previousAttemptId, "a-3");
+        expect((yield* intake.replay(first, state.verification)).status).toBe("recognized");
+        expect(yield* store.find(first.source, first.rule)).toHaveLength(1);
+        const bytes = yield* fs.readFileString(filename);
+        expect(Str.startsWith(yield* Ref.get(state.originalBytes))(bytes)).toBe(true);
+        expect(yield* Ref.get(state.delivered)).toBe(2);
+        const page = yield* fixtureOcrPage(state.text);
+        const lowQuality = yield* intake.record(
+          OfficeActionAttemptRequest.make({
+            attemptId: "a-5",
+            previousAttemptId: O.some("a-4"),
+            document,
+            verification: state.verification,
+            ocrPages: [page],
+          })
+        );
+        expect(lowQuality).toMatchObject({ status: "abstained", code: "low-quality-source" });
+        const final = yield* store.read;
+        const ocrAttempt = yield* Effect.fromOption(A.last(final), () => "missing OCR attempt");
+        expect(ocrAttempt.ocrPages).toHaveLength(1);
+        expect(yield* intake.replay(ocrAttempt, state.verification)).toMatchObject({
+          status: "abstained",
+          code: "low-quality-source",
+        });
+        yield* intake.deliver(lowQuality);
+        expect(yield* Ref.get(state.delivered)).toBe(2);
+        const foreignSource = SourceTextIdentity.make({ ...state.verification.source, scopeRef: "matter:foreign" });
+        const foreignVerification = VerifySourceTextIdentityInput.make({
+          expectedSource: state.verification.expectedSource,
+          source: foreignSource,
+          sourceText: state.text,
+        });
+        const crossScopeFailure = yield* intake
+          .record(
+            OfficeActionAttemptRequest.make({
+              attemptId: "a-6",
+              previousAttemptId: O.some("a-5"),
+              document,
+              verification: foreignVerification,
+            })
+          )
+          .pipe(Effect.flip);
+        expect(crossScopeFailure._tag).toBe("VerifiedTextAnchorError");
+        if (crossScopeFailure._tag === "VerifiedTextAnchorError") expect(crossScopeFailure.reason).toBe("cross-scope");
+        const crossScopeHistory = yield* store.read;
+        expect(crossScopeHistory).toHaveLength(6);
+        const failedAttempt = yield* Effect.fromOption(A.last(crossScopeHistory), () => "missing cross-scope failure");
+        expect(failedAttempt.outcome).toMatchObject({ status: "failed", reason: "cross-scope" });
+        assertSome(failedAttempt.previousAttemptId, "a-5");
+        const restored = yield* intake.record(
+          OfficeActionAttemptRequest.make({
+            attemptId: "a-7",
+            previousAttemptId: O.some("a-6"),
+            document,
+            verification: state.verification,
+          })
+        );
+        expect(restored.status).toBe("recognized");
+        expect(yield* store.read).toHaveLength(7);
+      })
+    );
+    it.effect("rejects partial lines and a tampered predecessor chain", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const store = yield* OfficeActionStructureStore;
+        const rows = yield* store.read;
+        const original = yield* fs.readFileString(filename);
+        yield* fs.writeFileString(filename, Str.slice(0, -1)(original));
+        expect((yield* store.read.pipe(Effect.flip))._tag).toBe("OfficeActionStructureStorageError");
+        const first = yield* Effect.fromOption(A.head(rows), () => "missing first");
+        const corrupt = OfficeActionStructureAttempt.make({ ...first, previousAttemptId: O.some("missing") });
+        yield* fs.writeFileString(
+          filename,
+          `${yield* S.encodeEffect(S.fromJsonString(OfficeActionStructureAttempt))(corrupt)}\n`
+        );
+        expect((yield* store.read.pipe(Effect.flip))._tag).toBe("OfficeActionStructureStorageError");
+
+        const firstLine = `${yield* S.encodeEffect(S.fromJsonString(OfficeActionStructureAttempt))(first)}\n`;
+        yield* fs.writeFileString(filename, firstLine + firstLine);
+        expect((yield* store.read.pipe(Effect.flip))._tag).toBe("OfficeActionStructureStorageError");
+        yield* fs.writeFileString(filename, "");
+        expect(yield* store.read).toHaveLength(0);
+        yield* fs.writeFileString(filename, original);
+      })
+    );
+  });
+});
+
+it.layer(StateLive, { timeout: "10 seconds" })("storage failures remain typed", (it) => {
+  it.effect("rejects initialization, writer-lock and append failures", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const state = yield* TestState;
+      const failure = PlatformError.systemError({
+        _tag: "PermissionDenied",
+        module: "FileSystem",
+        method: "writeFileString",
+      });
+      const attempt = OfficeActionStructureAttempt.make({
+        schemaVersion: "1",
+        attemptId: "storage-failure",
+        document,
+        expectedSource: state.verification.expectedSource,
+        source: state.verification.source,
+        rule: DocStructureRuleFamily.make({ id: "uspto-oa-finality-ssp", version: 1 }),
+        extractions: [],
+        outcome: OfficeActionStoredOutcome.cases.failed.make({ reason: "invalid-anchor" }),
+      });
+      const run = Effect.fn("OfficeActionStructureTest.storageFault")(function* (patched: FileSystem.FileSystem) {
+        const context = yield* Layer.build(
+          officeActionStructureFileStore("/failures/attempts.jsonl").pipe(
+            Layer.provide(Layer.succeed(FileSystem.FileSystem, patched))
+          )
+        );
+        return yield* Context.get(context, OfficeActionStructureStore).append(attempt);
+      });
+      const initialization = yield* run({ ...fs, makeDirectory: () => Effect.fail(failure) }).pipe(Effect.flip);
+      expect(initialization.message).toContain("initialize");
+      const locked = yield* run({ ...fs, writeFileString: () => Effect.fail(failure) }).pipe(Effect.flip);
+      expect(locked.message).toContain("lock");
+      const append = yield* run({
+        ...fs,
+        writeFileString: (path, text, options) =>
+          options?.flag === "a" ? Effect.fail(failure) : fs.writeFileString(path, text, options),
+      }).pipe(Effect.flip);
+      expect(append.message).toContain("append");
+    })
+  );
+});
+
+it.effect.prop(
+  "preserves every closed receipt and positive rule version across JSON",
+  { closed: Arbitrary.schema(DocStructureAbstention) },
+  ({ closed }) =>
+    Effect.gen(function* () {
+      const codec = S.fromJsonString(DocStructureAbstention);
+      const restored = yield* S.decodeEffect(codec)(yield* S.encodeEffect(codec)(closed));
+      expect(S.toEquivalence(DocStructureAbstention)(closed, restored)).toBe(true);
+      expect(restored.status).toBe("abstained");
+      expect("candidates" in restored).toBe(false);
+    })
+);

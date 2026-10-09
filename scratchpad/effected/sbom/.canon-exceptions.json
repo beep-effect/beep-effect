@@ -1,0 +1,38 @@
+[
+  {
+    "id": "EV002:scratchpad/test/sbom/IdentityToken.test.ts:23:provide@10#1",
+    "reason": "IdentityToken.layerStatic constructs a pure Layer.succeed stub; per-test provision is permitted by D14. Left unchanged."
+  },
+  {
+    "id": "EV002:scratchpad/test/sbom/IdentityToken.test.ts:33:provide@10#1",
+    "reason": "IdentityToken.layerStatic constructs a pure Layer.succeed stub; per-test provision is permitted by D14. Left unchanged."
+  },
+  {
+    "id": "EV002:scratchpad/test/sbom/IdentityToken.test.ts:45:provide@10#1",
+    "reason": "IdentityToken.layerStatic constructs a pure Layer.succeed stub; per-test provision is permitted by D14. Left unchanged."
+  },
+  {
+    "id": "EV002:scratchpad/test/sbom/IdentityToken.test.ts:53:provide@10#1",
+    "reason": "IdentityToken.layerStatic constructs a pure Layer.succeed stub; per-test provision is permitted by D14. Left unchanged."
+  },
+  {
+    "id": "EV002:scratchpad/test/sbom/IdentityToken.test.ts:64:provide@10#1",
+    "reason": "IdentityToken.layerStatic constructs a pure Layer.succeed stub; per-test provision is permitted by D14. Left unchanged."
+  },
+  {
+    "id": "EV002:scratchpad/test/sbom/IdentityToken.test.ts:74:provide@3#1",
+    "reason": "IdentityToken.layerTest constructs a pure Layer.succeed stub; its token method's failure does not make layer acquisition effectful. Left unchanged."
+  },
+  {
+    "id": "EV010:scratchpad/test/sbom/SlsaProvenance.test.ts:10:node:fs@0#1",
+    "reason": "Reads the actual checked-in @actions/attest compatibility oracle during fixture construction; the pure subject consumes no FileSystem service. Left unchanged."
+  },
+  {
+    "id": "EV010:scratchpad/test/sbom/conformance.test.ts:17:node:fs@0#1",
+    "reason": "Reads the actual vendored CycloneDX schema and derives assertions from that independent oracle; a seeded filesystem would change the oracle boundary. Left unchanged."
+  },
+  {
+    "id": "EV010:scratchpad/test/sbom/reachability.test.ts:17:node:fs@0#1",
+    "reason": "Inspects the actual on-disk source import graph and package manifest; substituting seeded files would stop verifying the current module's confinement and dependency declarations. Left unchanged."
+  }
+]

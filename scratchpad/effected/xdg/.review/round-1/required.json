@@ -1,0 +1,77 @@
+{
+  "module": "xdg",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/xdg/AppDirs.ts",
+        "scratchpad/effected/xdg/Xdg.ts"
+      ],
+      "tests": [
+        "scratchpad/test/xdg/AppDirs.test.ts",
+        "scratchpad/test/xdg/Xdg.test.ts",
+        "scratchpad/test/xdg/XdgConfig.test.ts"
+      ],
+      "findings": [
+        "grok-1-1",
+        "fable-1-1",
+        "grok-1-4",
+        "fable-1-4",
+        "fable-1-2",
+        "fable-1-3",
+        "fable-1-10",
+        "fable-1-9-field"
+      ]
+    }
+  ],
+  "findings": {
+    "grok-1-1": {
+      "file": "scratchpad/effected/xdg/Xdg.ts",
+      "class": "bug",
+      "summary": "Empty environment bases produce relative application directories",
+      "fix": "Normalize only environment-loaded empty optional directory strings to absence in read; reject empty HOME with the existing XdgEnvError. Add individual empty-value cases to Xdg.test.ts and an application-resolution regression to AppDirs.test.ts. Preserve the existing absent-key resolution ladder, the defect/error channels, and explicit layerFrom inputs; do not insert new ~/.config defaults into Xdg.layer. This is a spec-supported upstream-bug deviation; its receipt is produced centrally, outside this group."
+    },
+    "fable-1-1": {
+      "file": "scratchpad/effected/xdg/Xdg.ts",
+      "class": "schema",
+      "summary": "Named literal domains must use LiteralKit",
+      "fix": "Replace both constructors with LiteralKit from @beep/schema/LiteralKit. Retain every literal, export name, derived type, identity annotation and whole-domain guard; use an annotation form that preserves the kit statics, and do not add as const to inline arrays. Add kit-surface checks in the corresponding Xdg/AppDirs tests while retaining upstream behavior cases."
+    },
+    "grok-1-4": {
+      "file": "scratchpad/effected/xdg/Xdg.ts",
+      "class": "schema",
+      "summary": "Cause schemas drop stack traces during encoding",
+      "fix": "Use S.Defect({ includeStack: true }) for both cause fields. Add encode/decode checks with explicit cause-stack fixtures in Xdg.test.ts and AppDirs.test.ts; preserve tags, messages and live-cause behavior. Any law-forced wire-shape receipt is handled centrally."
+    },
+    "fable-1-4": {
+      "file": "scratchpad/effected/xdg/AppDirs.ts",
+      "class": "schema",
+      "summary": "Application namespace constraints need schema-derived guards",
+      "fix": "Introduce private identity-annotated schemas/checks for non-empty and single-component strings, with identifier/title/description on reusable checks, and derive guards through S.is. Preserve the exact rejection set, both existing message strings, the Effect.die channel and the plain-string public input. Keep every upstream namespace assertion; extend only if a schema-boundary regression needs a pin."
+    },
+    "fable-1-2": {
+      "file": "scratchpad/test/xdg/AppDirs.test.ts",
+      "class": "tsgo",
+      "summary": "File-wide directives hide strictEffectProvide diagnostics",
+      "fix": "Remove the three directives and clear the exposed diagnostics within those tests. Build effectful graphs with Effect.scopedWith plus Layer.buildWithScope and provide the acquired Context via Effect.provideContext (or an equivalent correctly scoped Layer.build); use Effect.provideService for platform-only stubs where appropriate. Preserve all upstream cases, assertions and ordering. Do not modify tsconfig, the runner or any repository configuration. The separate it.layer canon migration remains backlog for S3."
+    },
+    "fable-1-3": {
+      "file": "scratchpad/effected/xdg/AppDirs.ts",
+      "class": "schema",
+      "summary": "Public pure-data options need schema-owned definitions",
+      "fix": "Define exported identity-annotated S.Struct values for AppDirOverrides and AppDirsOptions, preserving optional-key semantics and field descriptions, and derive the same-named types from them. Keep the public namespace field unbranded, plain object calls accepted, and namespace rejection in its existing defect channel. Leave AppDirsShape as a service interface. Add focused input-schema checks in AppDirs.test.ts; central bookkeeping records the new value exports."
+    },
+    "fable-1-10": {
+      "file": "scratchpad/effected/xdg/AppDirs.ts",
+      "class": "effect-idiom",
+      "summary": "Use Bool.match for the native-directory Boolean branch",
+      "fix": "Import effect/Boolean as Bool and replace the ternary with Bool.match(options.native ?? false, { onTrue: () => NativeDirs.resolve(the same arguments), onFalse: () => O.none<NativeDirs>() }). Preserve true-only activation and all existing native/non-native test behavior."
+    },
+    "fable-1-9-field": {
+      "file": "scratchpad/effected/xdg/AppDirs.ts",
+      "class": "schema",
+      "summary": "Annotate the namespace-error message field",
+      "fix": "Add a meaningful description through S.String.annotateKey on AppDirsNamespaceError.message. Preserve the field type, both rejection messages, tag and defect channel. Do not require an annoteError migration to satisfy this finding."
+    }
+  }
+}

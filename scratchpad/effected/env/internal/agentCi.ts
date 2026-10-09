@@ -1,0 +1,168 @@
+// Agent and CI detection from a pure env record. The agent table is transcribed, in order, from std-env 4.3.0
+// (dist/index.mjs); CI detection is deliberately narrower than std-env's provider table.
+import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as A from "effect/Array";
+import * as O from "effect/Option";
+import type { Env } from "./types.ts";
+import * as P from "effect/Predicate";
+
+const $I = $ScratchpadId.create("effected/env/internal/agentCi");
+
+const CiNameBase = LiteralKit(["github-actions", "generic"]);
+
+/**
+ * Names the CI providers recognized by the environment detector.
+ *
+ * **Example** (Validate a CI provider name)
+ *
+ * ```ts
+ * import { CiName } from "@beep/scratchpad/effected/env/internal/agentCi";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(CiName)("github-actions")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CiName = CiNameBase.annotate({
+	...$I.annote("CiName", { description: "GitHub Actions for its explicit provider signal, or generic for any other CI signal." }),
+	message: `Expected ${A.join(A.map(CiNameBase.literals, (name) => `"${name}"`), " | ")}`,
+});
+
+/**
+ * CI provider name accepted by the {@link CiName} schema.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type CiName = typeof CiName.Type;
+
+type AgentRule =
+	| readonly [name: string, keys: ReadonlyArray<string>]
+	| readonly [name: string, test: (env: Env) => boolean];
+
+const matches = (value: string | undefined, pattern: RegExp): boolean => value !== undefined && value !== "" && pattern.test(value);
+
+// std-env's order decides between two matching rows. `pi` and `devin` match a pattern on a variable every
+// shell sets, so they test the value rather than its presence.
+//
+// `kiro` (TERM_PROGRAM=kiro) is omitted: std-env gates it on a non-TTY stdout, and this detector is Config-only
+// and never touches a stream.
+const AGENT_RULES: ReadonlyArray<AgentRule> = [
+	["claude", ["CLAUDECODE", "CLAUDE_CODE"]],
+	["replit", ["REPL_ID"]],
+	["gemini", ["GEMINI_CLI"]],
+	["codex", ["CODEX_SANDBOX", "CODEX_THREAD_ID"]],
+	["opencode", ["OPENCODE"]],
+	["pi", (env) => matches(env.PATH, /\.pi[\\/]agent/)],
+	["auggie", ["AUGMENT_AGENT"]],
+	["goose", ["GOOSE_PROVIDER"]],
+	["junie", ["JUNIE_DATA", "JUNIE_SHIM_PATH"]],
+	["copilot", ["COPILOT_AGENT", "COPILOT_CLI"]],
+	["devin", (env) => matches(env.EDITOR, /devin/)],
+	["cursor", ["CURSOR_AGENT"]],
+];
+
+// The family names a free-form AI_AGENT value is folded into: every table row, plus `kiro`, which the table
+// omits (see above) but which an agent can still announce through AI_AGENT.
+const AGENT_FAMILIES: ReadonlyArray<string> = [...AGENT_RULES.map(([name]) => name), "kiro"];
+
+/** The family a lower-cased `AI_AGENT` value belongs to: equal to it, or starting with it then `-` or `_`. */
+const familyOf = (value: string): string =>
+	AGENT_FAMILIES.find(
+		(family) => value === family || value.startsWith(`${family}-`) || value.startsWith(`${family}_`),
+	) ?? value;
+
+/**
+ * The name of the AI agent running this process, if any, as its family: `claude`, not the
+ * `claude-code_2-1-285_agent` Claude Code puts in `AI_AGENT`.
+ *
+ * **Details**
+ *
+ * `AI_AGENT` wins over every table row. It is lower-cased, the two `github_copilot_*` names collapse to
+ * `copilot`, and a value that is a known family or starts with one followed by `-` or `_` becomes that family.
+ * An unrecognized value is returned as it was lower-cased.
+ *
+ * **Example** (Normalize an explicit agent family)
+ *
+ * ```ts
+ * import { detectAgent } from "@beep/scratchpad/effected/env/internal/agentCi";
+ * import * as O from "effect/Option";
+ *
+ * console.log(O.getOrNull(detectAgent({ AI_AGENT: "CLAUDE-code_2-1-285_agent" }))) // claude
+ * ```
+ *
+ * @internal
+ * @category parsing
+ * @since 0.0.0
+ */
+export const detectAgent = (env: Env): O.Option<string> => {
+	if (env.AI_AGENT !== undefined && env.AI_AGENT !== "") {
+		const name = env.AI_AGENT.toLowerCase();
+		return O.some(
+			name === "github_copilot_vscode_agent" || name === "github_copilot_cloud_agent" ? "copilot" : familyOf(name),
+		);
+	}
+	for (const [name, rule] of AGENT_RULES) {
+		if (P.isFunction(rule) ? rule(env) : rule.some((key) => {
+			const value = env[key];
+			return value !== undefined && value !== "";
+		})) return O.some(name);
+	}
+	return O.none();
+};
+
+// "" is falsy, as in detectAgent and std-env: an empty variable is an unset one.
+const isFalsy = (value: string | undefined): boolean =>
+	value === undefined || value === "" || value.toLowerCase() === "false" || value === "0";
+
+/**
+ * The CI this process runs in: `github-actions` when `GITHUB_ACTIONS` is truthy (even under `CI=false`, since the
+ * provider signal is explicit), else `generic` when `CI` or `CONTINUOUS_INTEGRATION` is truthy.
+ *
+ * **Example** (Prefer an explicit CI provider signal)
+ *
+ * ```ts
+ * import { detectCi } from "@beep/scratchpad/effected/env/internal/agentCi";
+ * import * as O from "effect/Option";
+ *
+ * console.log(O.getOrNull(detectCi({ GITHUB_ACTIONS: "true", CI: "false" }))) // github-actions
+ * ```
+ *
+ * @internal
+ * @category parsing
+ * @since 0.0.0
+ */
+export const detectCi = (env: Env): O.Option<CiName> => {
+	if (!isFalsy(env.GITHUB_ACTIONS)) return O.some("github-actions");
+	if (!isFalsy(env.CI) || !isFalsy(env.CONTINUOUS_INTEGRATION)) return O.some("generic");
+	return O.none();
+};
+
+/**
+ * Every environment variable name the detectors read.
+ *
+ * **Example** (Locate the explicit agent override key)
+ *
+ * ```ts
+ * import { agentCiKeys } from "@beep/scratchpad/effected/env/internal/agentCi";
+ * import * as A from "effect/Array";
+ *
+ * console.log(A.contains(agentCiKeys, "AI_AGENT")) // true
+ * ```
+ *
+ * @internal
+ * @category constants
+ * @since 0.0.0
+ */
+export const agentCiKeys: ReadonlyArray<string> = [
+	"AI_AGENT",
+	...AGENT_RULES.flatMap(([, rule]) => (P.isFunction(rule) ? [] : rule)),
+	"PATH",
+	"EDITOR",
+	"GITHUB_ACTIONS",
+	"CI",
+	"CONTINUOUS_INTEGRATION",
+];

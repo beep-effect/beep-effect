@@ -41,6 +41,12 @@ export * as PageOcr from "./PageOcr/index.ts";
  */
 export * as PathSafety from "./PathSafety/index.ts";
 /**
+ * Credential/private-tag scrub and bounded non-secret prompt-admission proof.
+ * @category services
+ * @since 0.0.0
+ */
+export * as SecretScrub from "./SecretScrub/index.ts";
+/**
  * Runtime-neutral Effect service contracts.
  *
  * @category services

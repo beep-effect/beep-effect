@@ -145,8 +145,8 @@ const isScoped = (window: UsageWindow): boolean => window.kind === "weekly-scope
 const windowsOf = (row: AccountRanking): ReadonlyArray<UsageWindow> =>
   AccountUsageOutcome.match(row.usage.outcome, {
     Ok: ({ windows }) => windows,
-    NeedsLogin: () => A.empty<UsageWindow>(),
-    Failed: () => A.empty<UsageWindow>(),
+    NeedsLogin: A.empty<UsageWindow>,
+    Failed: A.empty<UsageWindow>,
   });
 
 const hoursUntil = (from: DateTime.Utc, at: DateTime.Utc): number =>
@@ -161,8 +161,8 @@ const hoursUntilAvailable = (row: AccountRanking, now: DateTime.Utc): O.Option<n
     "session-capped": () =>
       O.flatMap(sessionWindow(row), (window) => O.map(window.resetsAt, (at) => hoursUntil(now, at))),
     "weekly-exhausted": () => row.hoursUntilWeeklyReset,
-    ready: () => O.none<number>(),
-    unavailable: () => O.none<number>(),
+    ready: O.none<number>,
+    unavailable: O.none<number>,
   });
 
 const labelOf = (section: AccountSection, row: AccountRanking): string =>
@@ -249,7 +249,7 @@ const otherWindowDetails = (row: AccountRanking): ReadonlyArray<string> => {
 
 const ageDetail = (row: AccountRanking, palette: Palette): ReadonlyArray<string> =>
   O.match(row.dataAgeHours, {
-    onNone: () => A.empty<string>(),
+    onNone: A.empty<string>,
     onSome: (hours) => [
       (hours >= STALE_HOURS ? palette.warn : palette.dim)(`as of ${renderHours(hours)} ago`),
       ...(row.estimated ? [palette.dim("a limit reset since then")] : A.empty<string>()),

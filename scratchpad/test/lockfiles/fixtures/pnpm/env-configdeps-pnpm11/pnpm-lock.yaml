@@ -1,0 +1,46 @@
+---
+lockfileVersion: '9.0'
+
+importers:
+
+  .:
+    configDependencies:
+      '@effected/pnpm-plugin-effect':
+        specifier: 0.11.1
+        version: 0.11.1
+
+packages:
+
+  '@effected/pnpm-plugin-effect@0.11.1':
+    resolution: {integrity: sha512-m35mtvgU4nbE8ZHd4EFqKu5jJeQY0gPUYHzKTno57JT/QeHzM9RRLNQsIcG0npsFYBxJfJ1tC/NH4zEWc2gdxQ==}
+
+snapshots:
+
+  '@effected/pnpm-plugin-effect@0.11.1': {}
+
+---
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+pnpmfileChecksum: sha256-jyfavN1TzM/uM8VX1tQMKiT6eIRbZG8h4nRPGH2ck9w=
+
+importers:
+
+  .:
+    dependencies:
+      is-number:
+        specifier: 7.0.0
+        version: 7.0.0
+
+packages:
+
+  is-number@7.0.0:
+    resolution: {integrity: sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng==}
+    engines: {node: '>=0.12.0'}
+
+snapshots:
+
+  is-number@7.0.0: {}

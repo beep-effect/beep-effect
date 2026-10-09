@@ -1,0 +1,256 @@
+# OA slice friction receipts
+
+## 2026-10-09 — Heavy launcher user bus
+
+- Task: prerequisite dependency build from the lane launcher.
+- Evidence: `beep-heavy` exited 1: `Failed to connect to user scope bus`;
+  `XDG_RUNTIME_DIR` and `DBUS_SESSION_BUS_ADDRESS` were undefined.
+- Attribution: environment-only, before any build started.
+- Recovery: explicit existing user-session bus variables; job queued normally.
+- Prevention: export the user bus variables in the lane unit environment.
+
+## 2026-10-09 — Official OA images supply no qualified text
+
+- Task: build the non-client positive corpus through the existing USPTO driver.
+- Evidence: 16 downloads succeeded; each `pdffonts` result contained zero fonts;
+  `pdftotext -layout` emitted only page separators (6–29 characters).
+- Outcome: zero eligible real-OA positives. The brief's public-form-language
+  fallback is used; no OCR engine or guessed selected checkbox was introduced.
+- Prevention: a public born-digital sample catalog with explicit text lineage.
+
+## 2026-10-09 — Blind-label report and freeze ordering
+
+- Task: audit blind labels and freeze label A before reading B.
+- Evidence: B line 28 has a malformed JSON string. The A freeze script also
+  failed on an incorrectly named local module; a subsequent batched read exposed
+  the discarded B output before A was saved.
+- Outcome: first run void. Preserve its audit, rerun once in a fresh blind directory,
+  and freeze A before opening the second result. The provisional A judgments were
+  authored before either B result was opened, and their source remains private.
+- Prevention: make dependent audit/freeze/read steps sequential and fail closed
+  between steps; never batch a dependent labels read with its prerequisite.
+
+## 2026-10-09 — Second blind run unavailable
+
+- Evidence: fresh B report also fails JSON parsing (`Unterminated string`).
+- Outcome: both runs void; no B labels used. Per brief step 4, label A remains
+  the sole available text judgment and every fixture goes on the attorney sheet.
+  Do not repair malformed B output and treat it as a valid independent result.
+- Prevention: a model-output schema boundary with generation-time validation.
+
+## 2026-10-09 — Package handoff gate admission latency
+
+- Task: package-verify the fixture-owning use-cases package before handoff.
+- Evidence: the owned `beep-heavy` result log continued to report all three slots
+  busy for at least ten minutes; the package command had not begun.
+- Outcome: retained the queued gate and polled without changing other workers.
+- Prevention: a visible fair admission queue with estimated start time would
+  distinguish capacity latency from package verification time.
+
+## 2026-10-09 — P0 publication gate
+
+- Evidence: wave 1 cheap gates stopped before any push: missing use-cases
+  changeset and one new effect-vitest finding in OfficeActionFixtures.test.ts.
+- Attribution: introduced fixture-package changes and legacy test-runner import.
+- Repair: patch changeset and direct canonical @effect/vitest import; no baseline
+  refresh or policy suppression.
+- Prevention: use direct Effect Vitest imports for new tests, and include fixture
+  packages in changeset admission even when production exports are unchanged.
+
+## 2026-10-09 — Fixture audit API repair
+
+- Evidence: package audit rejected a Node filesystem import, an untyped JSON
+  decoder, and two String.includes calls with the wrong argument order.
+- Attribution: introduced fixture test only.
+- Repair: Effect FileSystem with the Bun platform layer, decodeEffect for JSON
+  strings, and the curried String helper. Platform test dependency and lockfile
+  regenerated through bun install.
+- Prevention: check the Effect v4 declarations before adapting native helpers.
+
+## 2026-10-09 — Fixture input lifetime
+
+- Evidence: effect-vitest rejected platform-filesystem import and per-test
+  resource provision introduced by the fixture audit repair.
+- Attribution: introduced test only; the detector baseline stays unchanged.
+- Repair: import immutable fixture payloads as raw test data, decode JSON strings
+  with Schema, and remove the unnecessary platform test dependency.
+- Prevention: distinguish fixture data from a filesystem subject before choosing
+  the canonical test layer and resource lifetime.
+
+## 2026-10-09 — Private-package changeset gate conflict
+
+- Evidence: publication cheap gates require a changeset naming the changed
+  private product workspace; hosted Repo Sanity rejects that exact changeset
+  because private workspace release notes are forbidden (PR #1573).
+- Attribution: the lane note triggers an inherited contradiction between the
+  changeset-status and changeset-graph contracts.
+- Outcome: retain the admission-required notes and route the tooling policy
+  repair to the orchestrator consolidated red fix under ruling S11. Changing
+  package privacy or the out-of-scope gate would exceed this slice.
+- Prevention: both gates should share the same private-workspace policy.
+
+## 2026-10-09 — Restart proof scheduling
+
+- Evidence: the shared Vitest configuration runs suites concurrently; the
+  restart reader raced the initial writer and found no retained attempt.
+- Attribution: introduced ordered integration test, not a persistence failure.
+- Repair: explicitly sequential canonical layer blocks with a ten-second hook
+  budget; use assertSome for the linked predecessor.
+- Prevention: state the ordering requirement where a restart test shares bytes.
+
+## 2026-10-09 — Opaque proof declaration emission
+
+- Evidence: declaration/docgen compiler TS4094 named private verified-source
+  and verified-anchor capability fields in inferred exported schema types.
+- Attribution: introduced inferred boundary schema types, not a runtime proof
+  failure or a reason to weaken provenance.
+- Repair: explicitly annotate the consumed proof codecs and exported tagged
+  unions with public named types. Runtime predicates and capability brands stay
+  intact; there is no cast, suppression, substrate edit or structural substitute.
+- Prevention: name public opaque-proof schema types before declaration emission.
+
+## 2026-10-09 — Named opaque-proof class bases
+
+- Evidence: TS4094 persisted at candidate class declarations after codec and
+  tagged-union annotations; the server decoder also accepted an unintended index
+  as its optional parse-options argument.
+- Attribution: introduced declaration and callback boundaries.
+- Repair: reuse the named, explicitly typed schema-class base pattern already in
+  IrToLaw and VerifiedSpan; pass only the JSON line to the decoder. The opaque
+  capability predicate remains unchanged.
+- Prevention: verify declaration emission alongside runtime proof construction.
+
+## 2026-10-09 — Failed cross-scope attempt history
+
+- Evidence: the store originally keyed the chain by the presented source scope,
+  which would reject a cross-scope failure’s authorized predecessor.
+- Attribution: introduced persistence identity choice found during review.
+- Repair: group chains by expected source scope and document id; retain the
+  actual mismatched identity on the failed attempt. Add a cross-scope failure
+  and recovery test without weakening verification.
+- Prevention: mirror the substrate’s authorized-matter history semantics.
+
+## 2026-10-09 — Explicit opaque-proof field schemas
+
+- Evidence: TS4094 moved from exported classes to inferred Struct declarations
+  after the named-base repair. Runtime and source-floor tests continued to pass.
+- Attribution: introduced declaration inference.
+- Repair: give each opaque-proof Struct a named field type and explicit schema
+  annotation, completing the existing named-base pattern without a type cast.
+- Prevention: include field-schema annotations in the opaque-proof example.
+
+## 2026-10-09 — Effect array schema type name
+
+- Evidence: TS2724 reports that Schema’s array type is `$Array`; its constructor
+  is `Array`. The wrong annotation propagated unresolved services into server
+  declarations.
+- Attribution: introduced field-schema annotation, not an inherited API failure.
+- Repair: use the live Effect v4 `$Array` interface for the OCR page schema.
+- Prevention: check constructor and interface names independently in declarations.
+
+## 2026-10-09 — Typed test decoder inputs
+
+- Evidence: package test typecheck rejected an encoded extraction union spread
+  with a span and an iterator index passed as decoder parse options. Runtime
+  focused tests alone had not exposed either type error.
+- Attribution: introduced tests and fixture helper.
+- Repair: state the exact-alignment discriminator on the deliberately inverted
+  decoder input; pass only the JSON line to the fixture decoder.
+- Prevention: retain package test typechecking alongside the focused runtime loop.
+
+## 2026-10-09 — Cross-package fixture declaration context
+
+- Evidence: the server test config includes its own src/test only, while its
+  restart proof imports the immutable use-case fixture helper and raw payloads.
+- Attribution: introduced shared test fixture type boundary found during review.
+- Repair: explicitly reference the adjacent raw-module declarations from the
+  fixture registry, so consumers retain the same immutable payload types.
+- Prevention: make shared test fixture declarations travel with their registry.
+
+## 2026-10-09 — Effect diagnostic parity for persistence
+
+- Evidence: the server audit rejects synchronous Schema encoding and identifies
+  reusable Effect function opportunities around locked store methods.
+- Attribution: introduced persistence helpers.
+- Repair: encode the history key through Effect and name locked/unlocked method
+  functions; preserve the lock and typed storage-error boundary.
+- Prevention: run the package’s Effect diagnostic compiler before calling proof final.
+
+## 2026-10-09 — Package-local test compilation boundary
+
+- Evidence: TS6059 rejects importing another package’s TypeScript test helpers
+  outside server rootDir; deterministicKeys also names the canonical TestState key.
+- Attribution: introduced integration-test boundary.
+- Repair: keep server test builders inside its rootDir, share only the immutable
+  raw-text fixture, and use the reported canonical service key. No compiler
+  configuration or cross-package source boundary is weakened.
+- Prevention: share runtime test support through an owned test-utils API when
+  such a helper exists; broad test infrastructure consolidation is outside this lane.
+
+- Storage error-path testing passed at runtime but package audit rejected nested
+  `Effect.provide` with `strictEffectProvide`. Build the fault-injection Layer
+  under an explicit scope and retrieve its service context; preserve release
+  boundaries while testing initialization failures. A documented storage-test
+  boundary pattern would prevent the audit/runtime mismatch.
+
+- The installed Effect v4 Vitest runner scopes `it.effect` directly; the old
+  `it.scoped` member is incompatible. Package test typecheck caught the runtime
+  callable mismatch. Validate runner members against installed declarations
+  before changing test scope, and use `Effect.fn` for reusable generators.
+
+- `docgen:local` selected the three edited packages but refused execution because
+  `bun.lock` and `tsconfig.json` changed relative to main: “full docgen proof
+  required”. Package docgen passes individually. Run the owner command with
+  `--full` through heavy admission, and distinguish this global-input preflight
+  refusal from a documentation compilation failure. A scoped dependency-aware
+  global-input proof would avoid unnecessary full-repository generation.
+
+- Hosted-parity Fallow identified two introduced complexity findings: the raw
+  recognizer and combined fixture verification callback. Use the array predicate
+  for duplicate span counts and give oracle and candidate verification separate
+  named test responsibilities. Preserve every assertion and measured denominator;
+  do not alter Fallow budgets or its estimated-coverage model.
+
+- Wave-2 publication refused a stale base after main added a domain export to
+  generated root TypeScript/Vitest projections. Commit the complete packet wave,
+  merge main, and resolve projections only with `beep tsconfig-sync`: both branch
+  aliases survive. An installed owner-regeneration merge driver would avoid
+  manual conflict setup; do not bypass publication’s stale-base gate.
+
+- Publication exposed the server’s new dependency edges as reviewed cache
+  configuration drift. The owner `cache baseline --request` records only that
+  subject with a content-addressed packet review; no qualification or cache
+  permissions are granted. Surface this dependency effect during package verify
+  to avoid finding it at publication.
+- Schema-first required property coverage after adding multiple JSON assertions
+  to the server golden test. Added schema-derived closed-receipt round trips and
+  colocated fixture JSON decoding with its schema. Neither inventory was relaxed.
+- Newly merged main #1572 introduces EV015 at the contradiction golden test’s
+  shared `TestClock.adjust` (line 126). The lane’s test canon had zero introduced
+  findings before that merge. Own source is unchanged in that package; route the
+  inherited red to the S11 main repair without copying or suppressing it here.
+
+- Passing the exported schema decoder directly to `Effect.forEach` exposed its
+  optional ParseOptions argument to the numeric callback index, and violated
+  the pipeable-signature check. Export a unary `Effect.fn` decoding boundary
+  beside the schema. It drops the unrelated callback index deliberately while
+  retaining the exact fixture codec; keep API checks in package verification.
+
+## 2026-10-09 — hosted Heavy bootstrap lacks Node
+
+While closing PR #1573 wave 2, all seven Heavy jobs failed before executing
+package commands: `scripts/ci-change-profile.sh: line 27: node: command not found`.
+The script and workflow match main; this lane changes neither. Read each completed
+job log immediately via `gh api --allow-escape-sequences .../actions/jobs/<id>/logs`.
+A setup-order prerequisite or schema-owned change-profile reader available before
+profile evaluation would prevent the failure. S11 owns consolidated repair;
+local package proof is retained without presenting it as a hosted execution.
+
+## 2026-10-09 — inherited gate expansion during final queue
+
+After a roughly 19-minute shared queue, PR #1573's final publication gate
+passed 14/16 lanes but inherited three schema-first and 13 test-canon findings
+from newer main tooling work. All named files match main; the lane owns none.
+The explicit inherited-only publication fallback applies. A consolidated owner
+preflight before main merges would prevent replicated lane refusals and retries.
+Retain the exact global reds separately from passing owned package proofs.

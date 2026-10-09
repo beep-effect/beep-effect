@@ -1,0 +1,260 @@
+import { assert, describe, it } from "@effect/vitest";
+import * as Console from "effect/Console";
+import * as Context from "effect/Context";
+import * as Deferred from "effect/Deferred";
+import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
+import * as Layer from "effect/Layer";
+import * as PubSub from "effect/PubSub";
+import { CliUi, Select, UiStreams } from "../../../effected/cli/ui.ts";
+import { CliUiTest, type CliUiTestSession, type CliUiTestSessionOptions } from "../../../effected/cli/ui-testing.ts";
+import type { Ev } from "../helpers/live.ts";
+import { End, Start, optionsOf, tick } from "../helpers/live.ts";
+
+class TestSession extends Context.Service<TestSession, CliUiTestSession>()(
+	"@beep/scratchpad/test/cli/ui/CliUiTest.session.transcript.test/TestSession",
+) {}
+
+const sessionLayer = (options: CliUiTestSessionOptions = {}) =>
+	Layer.unwrap(
+		Effect.map(CliUiTest.session(options), (session) =>
+			Layer.merge(session.layer, Layer.succeed(TestSession, session)),
+		),
+	);
+
+const ESC = String.fromCharCode(0x1b);
+
+const linkSessions = Effect.forEach(["\u0007", `${ESC}\\`], (terminator) =>
+	Effect.gen(function* () {
+		const session = yield* CliUiTest.session();
+		const context = yield* Layer.build(session.layer);
+		return { terminator, session, context };
+	}),
+);
+class LinkSessions extends Context.Service<LinkSessions, Effect.Success<typeof linkSessions>>()(
+	"@beep/scratchpad/test/cli/ui/CliUiTest.session.transcript.test/LinkSessions",
+) {}
+const linkSessionsLayer = Layer.effect(LinkSessions, linkSessions);
+
+/**
+ * A handler that draws a live view and reports through its `logConsole`, as reposets' sync does: the report lines
+ * belong above the frame, on the terminal, not in the program's own `Console` output.
+ */
+const syncing = (gate: Deferred.Deferred<void>) =>
+	Effect.scoped(
+		Effect.gen(function* () {
+			const pubsub = yield* PubSub.unbounded<Ev>();
+			const subscription = yield* PubSub.subscribe(pubsub);
+			const handle = yield* CliUi.live(optionsOf(subscription));
+			yield* PubSub.publish(pubsub, Start);
+			yield* Deferred.await(gate);
+			const report = Effect.gen(function* () {
+				yield* Console.log("✓ synced acme/web");
+				yield* Console.error("✗ acme/api: 404");
+			});
+			yield* report.pipe(Effect.provideService(Console.Console, handle.logConsole));
+			yield* PubSub.publish(pubsub, tick(1));
+			yield* PubSub.publish(pubsub, End);
+			yield* handle.close;
+			yield* Console.log("done");
+		}),
+	);
+
+describe("CliUiTest.session: transcript and written", () => {
+	it.layer(sessionLayer({ color: "none" }), { timeout: "30 seconds" })((it) => {
+		it.effect("hold the lines a live view writes above its frame through logConsole, in order, above the frame", () =>
+			Effect.gen(function* () {
+				const session = yield* TestSession;
+				const gate = yield* Deferred.make<void>();
+				const fiber = yield* gate.pipe(syncing, Effect.forkScoped);
+				const view = yield* session.next({ contains: "RUN 1" });
+				assert.include(yield* view.plainFrame, "started");
+				yield* Deferred.succeed(gate, undefined);
+				yield* Fiber.join(fiber);
+				const transcript = (yield* session.transcript).split("\n");
+				const synced = transcript.indexOf("✓ synced acme/web");
+				const failed = transcript.indexOf("✗ acme/api: 404");
+				const frame = transcript.lastIndexOf("RUN 1");
+				assert.isAtLeast(synced, 0, `the stdout report line is on the terminal: ${transcript.join(" | ")}`);
+				assert.isAbove(failed, synced, "and the stderr one after it: one terminal, as on a real one");
+				assert.isAbove(frame, failed, "the committed frame stays below the lines logged above it");
+				assert.strictEqual(transcript.at(-1), "ended", "the run's final frame is what is left at the bottom");
+				assert.include(yield* session.written, "synced acme/web");
+				// Each stream alone: the report's stdout line on stdout only, its stderr line on stderr only.
+				const out = yield* session.stdoutWritten;
+				const err = yield* session.stderrWritten;
+				assert.include(out, "✓ synced acme/web");
+				assert.notInclude(out, "✗ acme/api: 404", "the stderr line is not on stdout");
+				assert.include(err, "✗ acme/api: 404");
+				assert.notInclude(err, "synced acme/web", "the stdout line is not on stderr");
+				assert.include(out, "RUN 1", "the frame is drawn on stdout");
+				// The program's own Console output is the session's stdout, and the logConsole lines are not.
+				assert.strictEqual(yield* session.stdout, "done\n");
+				assert.strictEqual(yield* session.stderr, "");
+			}),
+		);
+	});
+
+	it.layer(sessionLayer(), { timeout: "30 seconds" })((it) => {
+		it.effect("an empty terminal transcript before anything is drawn", () =>
+			Effect.gen(function* () {
+				const session = yield* TestSession;
+				assert.strictEqual(yield* session.transcript, "");
+				assert.strictEqual(yield* session.written, "");
+				assert.strictEqual(yield* session.stdoutWritten, "");
+				assert.strictEqual(yield* session.stderrWritten, "");
+			}),
+		);
+	});
+});
+
+const paint = (code: number, text: string) => `${ESC}[${code}m${text}${ESC}[39m`;
+
+/** A live view whose logConsole prints a painted counter on stdout (paint breaking it mid-line) and a painted line on stderr. */
+const counting = (gate: Deferred.Deferred<void>) =>
+	Effect.scoped(
+		Effect.gen(function* () {
+			const pubsub = yield* PubSub.unbounded<Ev>();
+			const subscription = yield* PubSub.subscribe(pubsub);
+			const handle = yield* CliUi.live(optionsOf(subscription));
+			yield* PubSub.publish(pubsub, Start);
+			yield* Deferred.await(gate);
+			const report = Effect.gen(function* () {
+				yield* Console.log(`Dry run ${paint(32, "0")}/2 ${paint(90, "repos")}`);
+				yield* Console.error(paint(31, "✗ acme/api: 404"));
+			});
+			yield* report.pipe(Effect.provideService(Console.Console, handle.logConsole));
+			yield* PubSub.publish(pubsub, End);
+			yield* handle.close;
+		}),
+	);
+
+describe("CliUiTest.session: per-stream transcripts", () => {
+	it.layer(linkSessionsLayer, { timeout: "30 seconds" })((it) => {
+		it.effect("OSC 8 hyperlinks terminated by BEL or ST leave only their labels on every transcript", () =>
+			Effect.gen(function* () {
+				for (const { terminator, session, context } of yield* LinkSessions) {
+					const link = `${ESC}]8;;https://example.com${terminator}label${ESC}]8;;${terminator}\n`;
+					yield* Effect.provideContext(
+						Effect.flatMap(UiStreams, (streams) =>
+							Effect.sync(() => {
+								streams.stdout.write(link);
+								streams.stderr.write(link);
+							}),
+						),
+						context,
+					);
+					assert.strictEqual(yield* session.stdoutWritten, link);
+					assert.strictEqual(yield* session.stderrWritten, link);
+					assert.strictEqual(yield* session.stdoutTranscript, "label");
+					assert.strictEqual(yield* session.stderrTranscript, "label");
+					assert.strictEqual(yield* session.transcript, "label\nlabel");
+				}
+			}),
+		);
+	});
+
+	it.layer(sessionLayer({ color: "none" }), { timeout: "30 seconds" })((it) => {
+		it.effect("read each stream as unpainted text, a painted counter as one contiguous string", () =>
+			Effect.gen(function* () {
+				const session = yield* TestSession;
+				const gate = yield* Deferred.make<void>();
+				const fiber = yield* gate.pipe(counting, Effect.forkScoped);
+				yield* session.next({ contains: "RUN 1" });
+				yield* Deferred.succeed(gate, undefined);
+				yield* Fiber.join(fiber);
+				const out = yield* session.stdoutTranscript;
+				const err = yield* session.stderrTranscript;
+				assert.include(yield* session.stdoutWritten, paint(32, "0"), "control: the raw bytes are painted and split");
+				assert.notInclude(yield* session.stdoutWritten, "Dry run 0/2 repos", "control: raw bytes break the counter");
+				assert.notInclude(out, ESC, "stdoutTranscript carries no escape sequences");
+				assert.notInclude(err, ESC, "stderrTranscript carries no escape sequences");
+				assert.include(out, "Dry run 0/2 repos");
+				assert.notInclude(out, "acme/api", "stdout holds none of stderr's text");
+				assert.strictEqual(err, "✗ acme/api: 404");
+			}),
+		);
+	});
+
+	it.layer(sessionLayer(), { timeout: "30 seconds" })((it) => {
+		it.effect("an empty transcript for each stream before anything is drawn", () =>
+			Effect.gen(function* () {
+				const session = yield* TestSession;
+				assert.strictEqual(yield* session.stdoutTranscript, "");
+				assert.strictEqual(yield* session.stderrTranscript, "");
+			}),
+		);
+	});
+});
+
+const profile = Select.screen({
+	message: "Profile",
+	choices: [
+		{ label: "software-project", value: "software-project" },
+		{ label: "library", value: "library" },
+	],
+});
+
+const pick = Effect.fn("pick")(function* (clear: boolean) {
+	const chosen = yield* CliUi.run(profile, clear ? { clear: true } : undefined);
+	yield* Console.log(chosen);
+});
+
+describe("CliUiTest.session with renderPath: production", () => {
+	const answered = Effect.fn("answered")(function* (clear: boolean) {
+		const session = yield* TestSession;
+		const fiber = yield* Effect.forkScoped(pick(clear));
+		const screen = yield* session.next({ contains: "Profile" });
+		assert.include(yield* screen.plainFrame, "software-project", "next and frames read a production screen");
+		yield* screen.press("down", "enter");
+		yield* Fiber.join(fiber);
+		assert.strictEqual(yield* session.stdout, "library\n");
+		return { transcript: yield* session.transcript, written: yield* session.written };
+	});
+
+	it.layer(sessionLayer({ renderPath: "production", color: "none" }), { timeout: "30 seconds" })((it) => {
+		it.effect("a screen run with clear: true leaves nothing on the terminal", () =>
+			Effect.gen(function* () {
+				const { transcript, written } = yield* answered(true);
+				assert.notInclude(transcript, "Profile");
+				assert.include(written, "Profile", "it was drawn: the clear erased it");
+				assert.include(written, `${ESC}[`, "with Ink's erase moves");
+			}),
+		);
+	});
+
+	it.layer(sessionLayer({ renderPath: "production", color: "none" }), { timeout: "30 seconds" })((it) => {
+		it.effect("a cleared frame is absent from stdoutTranscript and present in stdoutWritten", () =>
+			Effect.gen(function* () {
+				const session = yield* TestSession;
+				const fiber = yield* Effect.forkScoped(pick(true));
+				yield* (yield* session.next({ contains: "Profile" })).press("down", "enter");
+				yield* Fiber.join(fiber);
+				assert.notInclude(yield* session.stdoutTranscript, "Profile");
+				assert.include(yield* session.stdoutWritten, "Profile");
+			}),
+		);
+	});
+
+	it.layer(sessionLayer({ renderPath: "production", color: "none" }), { timeout: "30 seconds" })((it) => {
+		it.effect("control: without clear the answered frame stays on the terminal", () =>
+			Effect.gen(function* () {
+				const { transcript } = yield* answered(false);
+				assert.include(transcript, "Profile");
+				assert.include(transcript, "library");
+			}),
+		);
+	});
+
+	it.layer(sessionLayer({ color: "none" }), { timeout: "30 seconds" })((it) => {
+		it.effect("control: on the default debug path, clear is not observable", () =>
+			Effect.gen(function* () {
+				const session = yield* TestSession;
+				const fiber = yield* Effect.forkScoped(pick(true));
+				yield* (yield* session.next({ contains: "Profile" })).press("enter");
+				yield* Fiber.join(fiber);
+				assert.include(yield* session.transcript, "Profile");
+			}),
+		);
+	});
+});

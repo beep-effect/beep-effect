@@ -1,0 +1,364 @@
+// Signing, without keys, without OIDC and without a network.
+//
+// `@sigstore/sign` is built for this: `DSSEBundleBuilder` takes its `Signer`
+// and `Witness` by interface, so a test supplies stubs for those two and the
+// code under test is the REAL builder — genuine DSSE pre-authentication
+// encoding, genuine envelope assembly, genuine protobuf serialization. Nothing
+// about the bundle path is mocked away; only the certificate authority and the
+// transparency log are.
+
+import { assert, describe, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { BUNDLE_V03_MEDIA_TYPE } from "@sigstore/bundle";
+import type { Signer, Witness } from "@sigstore/sign";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as P from "effect/Predicate";
+import * as Redacted from "effect/Redacted";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
+import {
+	IN_TOTO_PAYLOAD_TYPE,
+	IdentityToken,
+	IdentityTokenError,
+	InTotoStatement,
+	SIGSTORE_BUNDLE_V0_3_MEDIA_TYPE,
+	Sha256Digest,
+	SigningError,
+	SigstoreBundle,
+	SigstoreSigner,
+} from "../../effected/sbom/index.ts";
+
+const HEX = "6a13657ec19f43b1d7b95c2f0a1c1e5b8d4f7a206a13657ec19f43b1d7b95c2f";
+
+const statement = InTotoStatement.forSubject({
+	name: "pkg:npm/%40effected/sbom@0.1.0",
+	digest: Result.getOrThrowWith(Sha256Digest.parseResult(HEX), (error) => error),
+	predicateType: "https://example.test/predicate/v1",
+	predicate: { built: true },
+});
+
+/**
+ * A PEM whose body is arbitrary base64. `pem.toDER` strips the armour and
+ * base64-decodes; nothing in the bundle path parses X.509, so a real
+ * certificate would prove nothing this does not.
+ */
+const CERTIFICATE = ["-----BEGIN CERTIFICATE-----", "c3RhbmQtaW4tY2VydGlmaWNhdGU=", "-----END CERTIFICATE-----"].join(
+	"\n",
+);
+
+const stubSigner = (onSign?: (data: Buffer) => void): Signer => ({
+	sign: (data: Buffer) => {
+		onSign?.(data);
+		return Promise.resolve({
+			signature: Buffer.from("stub-signature"),
+			key: { $case: "x509Certificate", certificate: CERTIFICATE },
+		});
+	},
+});
+
+const failingSigner = (error: unknown): Signer => ({
+	sign: () => Promise.reject(error),
+});
+
+const stubWitness = (): Witness => ({
+	testify: () =>
+		Promise.resolve({
+			tlogEntries: [
+				{
+					logIndex: "1",
+					logId: { keyId: Buffer.from("stub-log") },
+					kindVersion: { kind: "dsse", version: "0.0.1" },
+					integratedTime: "1753401600",
+					inclusionPromise: { signedEntryTimestamp: Buffer.from("stub-set") },
+					inclusionProof: undefined,
+					canonicalizedBody: Buffer.from("stub-body"),
+				},
+			],
+		}),
+});
+
+const failingWitness = (error: unknown): Witness => ({
+	testify: () => Promise.reject(error),
+});
+
+const CANNED_BUNDLE = SigstoreBundle.make({
+	mediaType: SIGSTORE_BUNDLE_V0_3_MEDIA_TYPE,
+	verificationMaterial: {},
+	dsseEnvelope: {},
+});
+
+const Envelope = S.Struct({
+	payload: S.String,
+	payloadType: S.String,
+	signatures: S.Array(S.Struct({ sig: S.String })),
+});
+
+const WitnessedMaterial = S.Struct({ tlogEntries: S.Array(S.Struct({ logIndex: S.String })) });
+
+describe("the media type constant", () => {
+	it("matches the one @sigstore/bundle publishes", () => {
+		// `SigstoreBundle.ts` must not import `@sigstore/*` — that is the whole
+		// confinement claim — so the constant is written out there and checked
+		// against the real package HERE, where importing it is allowed.
+		assert.strictEqual(SIGSTORE_BUNDLE_V0_3_MEDIA_TYPE, BUNDLE_V03_MEDIA_TYPE);
+	});
+});
+
+describe("SigstoreSigner.sign — the real DSSE builder", () => {
+	{
+		it.layer(
+			SigstoreSigner.layerWith({ signer: stubSigner(), witnesses: [stubWitness()] }).pipe(
+				Layer.provide(IdentityToken.layerTest()),
+			),
+			{ timeout: "30 seconds" },
+		)((it) => {
+			it.effect("produces a bundle carrying the statement as its DSSE payload", () =>
+				Effect.gen(function* () {
+					const bundle = yield* (yield* SigstoreSigner).sign(statement);
+					assert.instanceOf(bundle, SigstoreBundle);
+					assert.strictEqual(bundle.mediaType, SIGSTORE_BUNDLE_V0_3_MEDIA_TYPE);
+
+					const envelope = bundle.dsseEnvelope;
+					assertTrue(S.is(Envelope)(envelope));
+					assert.strictEqual(envelope.payloadType, IN_TOTO_PAYLOAD_TYPE);
+					assert.strictEqual(Buffer.from(envelope.payload, "base64").toString("utf8"), statement.toJson());
+					assert.strictEqual(
+						Buffer.from(envelope.signatures[0]?.sig ?? "", "base64").toString("utf8"),
+						"stub-signature",
+					);
+				}),
+			);
+		});
+	}
+
+	{
+		// The discriminating assertion that the REAL builder ran: DSSE signs
+		// `DSSEv1 <len(type)> <type> <len(body)> <body>`, never the payload
+		// alone. A hand-rolled fake would sign the JSON.
+		const signed: Array<string> = [];
+		it.layer(
+			SigstoreSigner.layerWith({
+				signer: stubSigner((data) => signed.push(data.toString("utf8"))),
+				witnesses: [],
+			}).pipe(Layer.provide(IdentityToken.layerTest())),
+			{ timeout: "30 seconds" },
+		)((it) => {
+			it.effect("signs the DSSE pre-authentication encoding, not the raw statement", () =>
+				Effect.gen(function* () {
+					yield* (yield* SigstoreSigner).sign(statement);
+					assert.lengthOf(signed, 1);
+					const blob = signed[0] ?? "";
+					assert.isTrue(
+						blob.startsWith(`DSSEv1 ${IN_TOTO_PAYLOAD_TYPE.length} ${IN_TOTO_PAYLOAD_TYPE} `),
+						blob.slice(0, 60),
+					);
+					assert.include(blob, statement.toJson());
+				}),
+			);
+		});
+	}
+
+	{
+		// The #664 widening, applied here: a Fulcio/Rekor URL read out of config
+		// arrives as `string | undefined` and must forward without a spread. The
+		// stub signer and witnesses keep the builder off the network.
+		const config: { fulcioBaseUrl: string | undefined; rekorBaseUrl: string | undefined } = {
+			fulcioBaseUrl: undefined,
+			rekorBaseUrl: undefined,
+		};
+		it.layer(
+			SigstoreSigner.layerWith({ ...config, signer: stubSigner(), witnesses: [stubWitness()] }).pipe(
+				Layer.provide(IdentityToken.layerTest()),
+			),
+			{ timeout: "30 seconds" },
+		)((it) => {
+			it.effect("accepts statically-undefined options under exactOptionalPropertyTypes", () =>
+				Effect.gen(function* () {
+					const bundle = yield* (yield* SigstoreSigner).sign(statement);
+					assert.instanceOf(bundle, SigstoreBundle);
+				}),
+			);
+		});
+	}
+
+	{
+		it.layer(
+			SigstoreSigner.layerWith({ signer: stubSigner(), witnesses: [stubWitness()] }).pipe(
+				Layer.provide(IdentityToken.layerTest()),
+			),
+			{ timeout: "30 seconds" },
+		)((it) => {
+			it.effect("carries the witness's transparency-log entries into the verification material", () =>
+				Effect.gen(function* () {
+					const bundle = yield* (yield* SigstoreSigner).sign(statement);
+					const material = bundle.verificationMaterial;
+					assertTrue(S.is(WitnessedMaterial)(material));
+					assert.lengthOf(material.tlogEntries, 1);
+					assert.strictEqual(material.tlogEntries[0]?.logIndex, "1");
+				}),
+			);
+		});
+	}
+
+	{
+		// Worth pinning rather than assuming: protobuf JSON omits empty repeated
+		// fields, so an unwitnessed bundle has NO `tlogEntries` key at all — not
+		// an empty array. A consumer that reads `.tlogEntries.length` blindly
+		// would throw on a legitimately unwitnessed bundle.
+		it.layer(
+			SigstoreSigner.layerWith({ signer: stubSigner(), witnesses: [] }).pipe(Layer.provide(IdentityToken.layerTest())),
+			{ timeout: "30 seconds" },
+		)((it) => {
+			it.effect("signs without a transparency log when there are no witnesses", () =>
+				Effect.gen(function* () {
+					const bundle = yield* (yield* SigstoreSigner).sign(statement);
+					const material = bundle.verificationMaterial;
+					assertTrue(P.isObject(material));
+					assert.isUndefined(material.tlogEntries);
+					assert.property(material, "certificate");
+				}),
+			);
+		});
+	}
+
+	{
+		// The audience constant belongs to the signing protocol, so `sign` takes
+		// only a statement and asks for the token itself. This is the assertion
+		// that keeps that promise honest.
+		const audiences: Array<string> = [];
+		const recording = IdentityToken.layerTest({
+			// Suspended: a stub that records eagerly logs calls that were only
+			// DESCRIBED, never run.
+			token: (audience) =>
+				Effect.suspend(() => {
+					audiences.push(audience);
+					return Effect.succeed(Redacted.make("test-identity-token"));
+				}),
+		});
+		it.layer(SigstoreSigner.layerWith({ signer: stubSigner(), witnesses: [] }).pipe(Layer.provide(recording)), {
+			timeout: "30 seconds",
+		})((it) => {
+			it.effect("asks the identity contract for a token with Sigstore's audience", () =>
+				Effect.gen(function* () {
+					yield* (yield* SigstoreSigner).sign(statement);
+					assert.deepStrictEqual(audiences, ["sigstore"]);
+				}),
+			);
+		});
+	}
+});
+
+describe("SigstoreSigner.sign — failures, attributed", () => {
+	{
+		const failing = IdentityToken.layerTest({
+			token: (audience) => Effect.fail(IdentityTokenError.make({ audience, cause: new Error("no token service") })),
+		});
+		it.layer(SigstoreSigner.layerWith({ signer: stubSigner(), witnesses: [] }).pipe(Layer.provide(failing)), {
+			timeout: "30 seconds",
+		})((it) => {
+			it.effect("an identity failure is kind `identity`", () =>
+				Effect.gen(function* () {
+					const error = yield* Effect.flip((yield* SigstoreSigner).sign(statement));
+					assert.instanceOf(error, SigningError);
+					assert.strictEqual(error.kind, "identity");
+					assert.instanceOf(error.cause, IdentityTokenError);
+				}),
+			);
+		});
+	}
+
+	{
+		// `@sigstore/sign` codes its own failures; reading `code` is what lets
+		// the predecessor's 30-line message-scraping cause walker be deleted.
+		const cause = Object.assign(new Error("error creating signing certificate"), {
+			code: "CA_CREATE_SIGNING_CERTIFICATE_ERROR",
+		});
+		it.layer(
+			SigstoreSigner.layerWith({ signer: failingSigner(cause), witnesses: [] }).pipe(
+				Layer.provide(IdentityToken.layerTest()),
+			),
+			{ timeout: "30 seconds" },
+		)((it) => {
+			it.effect("a certificate-authority failure is kind `certificate`", () =>
+				Effect.gen(function* () {
+					const error = yield* Effect.flip((yield* SigstoreSigner).sign(statement));
+					assert.strictEqual(error.kind, "certificate");
+					assert.strictEqual(error.cause, cause);
+				}),
+			);
+		});
+	}
+
+	{
+		const cause = Object.assign(new Error("error creating tlog entry"), { code: "TLOG_CREATE_ENTRY_ERROR" });
+		it.layer(
+			SigstoreSigner.layerWith({ signer: stubSigner(), witnesses: [failingWitness(cause)] }).pipe(
+				Layer.provide(IdentityToken.layerTest()),
+			),
+			{ timeout: "30 seconds" },
+		)((it) => {
+			it.effect("a transparency-log failure is kind `transparencyLog`", () =>
+				Effect.gen(function* () {
+					const error = yield* Effect.flip((yield* SigstoreSigner).sign(statement));
+					assert.strictEqual(error.kind, "transparencyLog");
+				}),
+			);
+		});
+	}
+
+	{
+		it.layer(
+			SigstoreSigner.layerWith({ signer: failingSigner(new Error("something else entirely")) }).pipe(
+				Layer.provide(IdentityToken.layerTest()),
+			),
+			{ timeout: "30 seconds" },
+		)((it) => {
+			it.effect("an unattributable failure is kind `bundle`, not a guess", () =>
+				Effect.gen(function* () {
+					const error = yield* Effect.flip((yield* SigstoreSigner).sign(statement));
+					assert.strictEqual(error.kind, "bundle");
+				}),
+			);
+		});
+	}
+
+	{
+		const cause = Object.assign(new Error("fulcio said no"), {
+			code: "CA_CREATE_SIGNING_CERTIFICATE_ERROR",
+			statusCode: 403,
+		});
+		it.layer(
+			SigstoreSigner.layerWith({ signer: failingSigner(cause), witnesses: [] }).pipe(
+				Layer.provide(IdentityToken.layerTest()),
+			),
+			{ timeout: "30 seconds" },
+		)((it) => {
+			it.effect("keeps the original failure structurally rather than as a message", () =>
+				Effect.gen(function* () {
+					const error = yield* Effect.flip((yield* SigstoreSigner).sign(statement));
+					// The predecessor flattened this into a string and lost the status code.
+					assertTrue(P.hasProperty(error.cause, "statusCode"));
+					assert.strictEqual(error.cause.statusCode, 403);
+				}),
+			);
+		});
+	}
+});
+
+describe("SigstoreSigner doubles", () => {
+	it("makeTest dies loudly rather than fabricating a bundle", () => {
+		// A bundle that looks signed and is not is exactly the failure an
+		// attestation exists to prevent, so no honest default answer exists.
+		assert.throws(() => SigstoreSigner.makeTest().sign(statement), /not stubbed/);
+	});
+
+	it.layer(SigstoreSigner.layerTest({ sign: () => Effect.succeed(CANNED_BUNDLE) }), { timeout: "30 seconds" })((it) => {
+		it.effect("layerTest answers with whatever a test stubs", () =>
+			Effect.gen(function* () {
+				const signer = yield* SigstoreSigner;
+				assert.strictEqual(yield* signer.sign(statement), CANNED_BUNDLE);
+			}),
+		);
+	});
+});

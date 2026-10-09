@@ -66,6 +66,7 @@
     "./values/PatentDocument": "./src/values/PatentDocument/index.ts",
     "./values/PatentDocumentTriplet": "./src/values/PatentDocumentTriplet/index.ts",
     "./values/PatentNumber": "./src/values/PatentNumber/index.ts",
+    "./values/DocStructure": "./src/values/DocStructure/index.ts",
     "./package.json": "./package.json"
   },
   "files": [

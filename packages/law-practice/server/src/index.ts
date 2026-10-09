@@ -29,6 +29,8 @@ export const VERSION = "0.0.0" as const;
  * @since 0.0.0
  */
 export * from "./Layer.ts";
+/** Atomic office-action evidence exports. @category services @since 0.0.0 */
+export * as OfficeActionStructure from "./OfficeActionStructure/index.ts";
 /**
  * @category use-cases
  * @since 0.0.0

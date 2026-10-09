@@ -1,0 +1,36 @@
+{
+  "lockfileVersion": 1,
+  "configVersion": 1,
+  "workspaces": {
+    "": {
+      "name": "test-bun-monorepo",
+    },
+    "packages/core": {
+      "name": "@test-monorepo/core",
+      "version": "1.0.0",
+      "dependencies": {
+        "@test-monorepo/utils": "workspace:*",
+        "react": "catalog:",
+      },
+    },
+    "packages/utils": {
+      "name": "@test-monorepo/utils",
+      "version": "1.0.0",
+      "devDependencies": {
+        "typescript": "^5.3.0",
+      },
+    },
+  },
+  "catalog": {
+    "react": "^19.1.0",
+  },
+  "packages": {
+    "@test-monorepo/core": ["@test-monorepo/core@workspace:packages/core"],
+
+    "@test-monorepo/utils": ["@test-monorepo/utils@workspace:packages/utils"],
+
+    "react": ["react@19.2.4", "", {}, "sha512-9nfp2hYpCwOjAN+8TZFGhtWEwgvWHXqESH8qT89AT/lWklpLON22Lc8pEtnpsZz7VmawabSU0gCjnj8aC0euHQ=="],
+
+    "typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
+  }
+}

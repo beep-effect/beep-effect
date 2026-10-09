@@ -1,0 +1,26 @@
+import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
+import { assert, it } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
+import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
+import { globalOf, stickyOf } from "../../../effected/markdown/internal/patterns.ts";
+const runs = { arbitrary: fcRuns(100) };
+it.effect.prop("cloning is idempotent and matching preserves cursor semantics without mutating the original pattern", [Arbitrary.schema(S.String)], ([prefix]) => Effect.sync(() => {
+  const original = /^word/igy;
+  original.lastIndex = 7;
+  const sticky = stickyOf(original);
+  const again = stickyOf(sticky);
+  assert.strictEqual(again.source, sticky.source);
+  assert.strictEqual(again.flags, sticky.flags);
+  sticky.lastIndex = prefix.length;
+  assert.strictEqual(sticky.exec(`${prefix}WORD`)?.[0], "WORD");
+  assert.strictEqual(sticky.lastIndex, prefix.length + 4);
+  assert.strictEqual(again.lastIndex, 0);
+  assert.strictEqual(original.lastIndex, 7);
+  const global = globalOf(/word/iy);
+  const clonedGlobal = globalOf(global);
+  assert.strictEqual(clonedGlobal.source, global.source);
+  assert.strictEqual(clonedGlobal.flags, global.flags);
+  global.lastIndex = prefix.length;
+  assert.strictEqual(global.exec(`${prefix}---WORD`)?.index, prefix.length + 3);
+}), runs);

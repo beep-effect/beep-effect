@@ -1,0 +1,21 @@
+---
+lockfileVersion: '9.0'
+
+importers:
+
+  .:
+    configDependencies:
+      '@effected/pnpm-plugin-effect':
+        specifier: 0.11.1
+        version: 0.11.1
+
+packages:
+
+  '@effected/pnpm-plugin-effect@0.11.1':
+    resolution: {integrity: sha512-m35mtvgU4nbE8ZHd4EFqKu5jJeQY0gPUYHzKTno57JT/QeHzM9RRLNQsIcG0npsFYBxJfJ1tC/NH4zEWc2gdxQ==}
+
+snapshots:
+
+  '@effected/pnpm-plugin-effect@0.11.1': {}
+
+---

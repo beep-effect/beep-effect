@@ -1,0 +1,87 @@
+// @effect-diagnostics nodeBuiltinImport:skip-file
+import { existsSync, readFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { assert, describe, it } from "@effect/vitest";
+import * as A from "effect/Array";
+import * as Result from "effect/Result";
+import * as TS from "typescript";
+
+const SRC = resolve(dirname(fileURLToPath(import.meta.url)), "../../effected/engine");
+const BUILT = resolve(SRC, "dist", "dev", "pkg");
+
+/**
+ * Every static RUNTIME import specifier in a module: `import type` and
+ * `export type` declarations are erased at build time and skipped, a dynamic
+ * `import()` is not a static import, and a bare package counts.
+ */
+const runtimeImportsOf = (file: string): ReadonlyArray<string> => {
+	const source = TS.createSourceFile(file, readFileSync(file, "utf8"), TS.ScriptTarget.Latest);
+	return A.filterMap(source.statements, (statement) => {
+		if (
+			TS.isImportDeclaration(statement) &&
+			statement.importClause?.isTypeOnly !== true &&
+			TS.isStringLiteral(statement.moduleSpecifier)
+		) {
+			return Result.succeed(statement.moduleSpecifier.text);
+		}
+		if (
+			TS.isExportDeclaration(statement) &&
+			statement.isTypeOnly === false &&
+			statement.moduleSpecifier !== undefined &&
+			TS.isStringLiteral(statement.moduleSpecifier)
+		) {
+			return Result.succeed(statement.moduleSpecifier.text);
+		}
+		return Result.failVoid;
+	});
+};
+
+/** Every module reachable from an entrypoint through static runtime imports, with the bare packages it loads. */
+const runtimeGraphOf = (entry: string, extension: ".ts" | ".js") => {
+	const modules = new Set<string>();
+	const packages = new Set<string>();
+	const queue = [entry];
+	while (queue.length > 0) {
+		const file = queue.pop();
+		if (file === undefined || modules.has(file)) continue;
+		modules.add(file);
+		for (const specifier of runtimeImportsOf(file)) {
+			if (specifier.startsWith(".")) queue.push(resolve(dirname(file), specifier.replace(/\.js$/, extension)));
+			else packages.add(specifier);
+		}
+	}
+	return { modules, packages };
+};
+
+const relative = (root: string, modules: ReadonlySet<string>) =>
+	[...modules].map((file) => file.slice(root.length + 1)).sort();
+
+describe("./guard reaches only its local modules and effect/* before its guards listen", () => {
+	it("./guard statically reaches only ProcessGuard, and only effect/* packages", () => {
+		const { modules, packages } = runtimeGraphOf(resolve(SRC, "guard.ts"), ".ts");
+		assert.deepStrictEqual(relative(SRC, modules), ["ProcessGuard.ts", "guard.ts"]);
+		assert.include([...packages], "effect/Schema");
+		for (const specifier of packages) assert.isTrue(specifier.startsWith("effect/"), specifier);
+	});
+
+	it("the built ./guard reaches only ProcessGuard.js, and only effect/* packages", () => {
+		const entry = resolve(BUILT, "guard.js");
+		assert.isTrue(existsSync(entry), "build:dev must have emitted dist/dev/pkg/guard.js");
+		const { modules, packages } = runtimeGraphOf(entry, ".js");
+		assert.deepStrictEqual(relative(BUILT, modules), ["ProcessGuard.js", "guard.js"]);
+		assert.include([...packages], "effect/Schema");
+		for (const specifier of packages) assert.isTrue(specifier.startsWith("effect/"), specifier);
+	});
+
+	it("positive control: the walker sees the main entry's runtime import of effect", () => {
+		const { modules, packages } = runtimeGraphOf(resolve(SRC, "index.ts"), ".ts");
+		assert.isTrue([...modules].some((file) => file.endsWith("Distribution.ts")));
+		assert.include([...packages], "effect/Schema");
+	});
+
+	it("the main entry never reaches the guard (it stays a subpath of its own)", () => {
+		const { modules } = runtimeGraphOf(resolve(SRC, "index.ts"), ".ts");
+		assert.isFalse([...modules].some((file) => file.endsWith("ProcessGuard.ts")));
+	});
+});

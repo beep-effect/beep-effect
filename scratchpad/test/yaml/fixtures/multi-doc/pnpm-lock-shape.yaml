@@ -1,0 +1,19 @@
+configDependencies:
+  '@example/pnpm-plugin-shape': 1.2.3+sha512-c2ludGhldGljLWZpeHR1cmUtbm90LXRoZS1yZWFsLWxvY2tmaWxl
+---
+lockfileVersion: '11.0'
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+importers:
+  .:
+    dependencies:
+      left-pad:
+        specifier: 1.3.0
+        version: 1.3.0
+packages:
+  left-pad@1.3.0:
+    resolution:
+      integrity: sha512-c3ludGhldGljLWludGVncml0eS1oYXNo
+    engines:
+      node: '>=0.10.0'

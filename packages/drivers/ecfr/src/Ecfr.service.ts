@@ -14,12 +14,14 @@
 
 import { ApiAuth, makeApiTransport } from "@beep/api-transport";
 import { $EcfrId } from "@beep/identity";
-import { LiteralKit, SchemaUtils, URLStr } from "@beep/schema";
-import { O } from "@beep/utils";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
+import { URLStr } from "@beep/schema/URL";
+import * as O from "@beep/utils/Option";
 import * as Config from "effect/Config";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
-import { FetchHttpClient } from "effect/http";
+import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as HttpApiClient from "effect/http-api/HttpApiClient";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
@@ -377,7 +379,13 @@ const mapHttpClientError = (cause: HttpClientError.HttpClientError): EcfrError =
   O.match(readStatus(cause), {
     onNone: () => EcfrError.of("transport", EcfrErrorOptions.make({ cause: O.some(cause) })),
     onSome: (status) =>
-      EcfrError.of("response status", EcfrErrorOptions.make({ cause: O.some(cause), status: O.some(status) })),
+      EcfrError.of(
+        "response status",
+        EcfrErrorOptions.make({
+          cause: O.some(cause),
+          status: O.some(status),
+        })
+      ),
   });
 
 const mapClientError = Match.type<HttpClientError.HttpClientError | S.SchemaError>().pipe(
@@ -426,7 +434,15 @@ const makeFromResolved = Effect.fnUntraced(function* (config: ResolvedConfig) {
     }),
     getStructure: Effect.fn("Ecfr.getStructure")(function* (params) {
       const decoded = yield* validateRequest(EcfrDatedTitleParams, params);
-      return yield* call(client.getStructure({ params: { date: decoded.date, title: decoded.title }, query: {} }));
+      return yield* call(
+        client.getStructure({
+          params: {
+            date: decoded.date,
+            title: decoded.title,
+          },
+          query: {},
+        })
+      );
     }),
     listAgencies: call(client.listAgencies({})),
     listCorrections: Effect.fn("Ecfr.listCorrections")(function* (params = EcfrCorrectionsParams.make({})) {

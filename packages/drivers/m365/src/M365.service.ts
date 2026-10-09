@@ -45,6 +45,9 @@ import {
   GraphBodyContentType,
   GraphCategoryColor,
   GraphCollection,
+  GraphContact,
+  GraphContactFolder,
+  GraphContactProperty,
   GraphDrive,
   GraphDriveItem,
   GraphDriveItemVersion,
@@ -89,8 +92,12 @@ const decodeScopesCsv = flow(Str.split(","), A.map(Str.trim), A.filter(Str.isNon
 const encodeScopesCsv = (scopes: ReadonlyArray<string>): string => A.join(scopes, ",");
 
 const M365ScopesFromCsv = S.String.pipe(
-  S.decodeTo(S.Array(S.NonEmptyString), {
-    decode: SchemaGetter.transform(decodeScopesCsv),
+  S.decodeTo(M365ConfigInput.fields.scopes, {
+    decode: SchemaGetter.transformEffect((value) =>
+      S.decodeUnknownEffect(M365ConfigInput.fields.scopes)(decodeScopesCsv(value)).pipe(
+        Effect.mapError((error) => error.issue)
+      )
+    ),
     encode: SchemaGetter.transform(encodeScopesCsv),
   }),
   $I.annoteSchema("M365ScopesFromCsv", {
@@ -1923,6 +1930,228 @@ export const M365DriveItemDownload = S.Union([M365DownloadedContent, M365Skipped
 export type M365DriveItemDownload = typeof M365DriveItemDownload.Type;
 
 /**
+ * A contact create body; no mailbox contact update is provided.
+ *
+ * **Example** (Construct M365ContactDraft)
+ *
+ * ```ts
+ * import { M365ContactDraft } from "@beep/m365"
+ * console.log(M365ContactDraft.make({ displayName: "Fixture", emailAddresses: [], businessPhones: [], categories: [], singleValueExtendedProperties: [] }))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class M365ContactDraft extends S.Class<M365ContactDraft>($I`M365ContactDraft`)(
+  {
+    displayName: S.NonEmptyString,
+    givenName: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    surname: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    companyName: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    emailAddresses: S.Array(S.Struct({ address: S.NonEmptyString, name: S.String })),
+    businessPhones: S.Array(S.String),
+    categories: S.Array(S.NonEmptyString),
+    singleValueExtendedProperties: S.Array(GraphContactProperty),
+  },
+  $I.annote("M365ContactDraft", { description: "A contact create body; no mailbox contact update is provided." })
+) {}
+
+/**
+ * Create a contact in the default or an explicit folder.
+ *
+ * **Example** (Construct M365CreateContactRequest)
+ *
+ * ```ts
+ * import { M365CreateContactRequest, M365ContactDraft } from "@beep/m365"
+ * console.log(M365CreateContactRequest.make({ contact: M365ContactDraft.make({ displayName: "Fixture", emailAddresses: [], businessPhones: [], categories: [], singleValueExtendedProperties: [] }) }))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class M365CreateContactRequest extends S.Class<M365CreateContactRequest>($I`M365CreateContactRequest`)(
+  {
+    contact: M365ContactDraft,
+    folderId: S.OptionFromOptionalKey(GraphPathSegment).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    userId: S.OptionFromOptionalKey(GraphPathSegment).pipe(S.withConstructorDefault(Effect.succeedNone)),
+  },
+  $I.annote("M365CreateContactRequest", { description: "Create a contact in the default or an explicit folder." })
+) {}
+
+/**
+ * List a page of personal contacts with optional marker expansion.
+ *
+ * **Example** (Construct M365ListContactsRequest)
+ *
+ * ```ts
+ * import { M365ListContactsRequest } from "@beep/m365"
+ * console.log(M365ListContactsRequest.make({}))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class M365ListContactsRequest extends S.Class<M365ListContactsRequest>($I`M365ListContactsRequest`)(
+  {
+    folderId: S.OptionFromOptionalKey(GraphPathSegment).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    userId: S.OptionFromOptionalKey(GraphPathSegment).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    nextLink: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    expandMarker: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
+  },
+  $I.annote("M365ListContactsRequest", {
+    description: "List a page of personal contacts with optional marker expansion.",
+  })
+) {}
+
+/**
+ * Create a dedicated contact folder.
+ *
+ * **Example** (Construct M365CreateContactFolderRequest)
+ *
+ * ```ts
+ * import { M365CreateContactFolderRequest } from "@beep/m365"
+ * console.log(M365CreateContactFolderRequest.make({ displayName: "Fixture" }))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class M365CreateContactFolderRequest extends S.Class<M365CreateContactFolderRequest>(
+  $I`M365CreateContactFolderRequest`
+)(
+  {
+    displayName: S.NonEmptyString,
+    userId: S.OptionFromOptionalKey(GraphPathSegment).pipe(S.withConstructorDefault(Effect.succeedNone)),
+  },
+  $I.annote("M365CreateContactFolderRequest", { description: "Create a dedicated contact folder." })
+) {}
+
+/**
+ * List root folders or one folder’s children, with pagination.
+ *
+ * **Example** (Construct M365ListContactFoldersRequest)
+ *
+ * ```ts
+ * import { M365ListContactFoldersRequest } from "@beep/m365"
+ * console.log(M365ListContactFoldersRequest.make({}))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class M365ListContactFoldersRequest extends S.Class<M365ListContactFoldersRequest>(
+  $I`M365ListContactFoldersRequest`
+)(
+  {
+    parentFolderId: S.OptionFromOptionalKey(GraphPathSegment).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    userId: S.OptionFromOptionalKey(GraphPathSegment).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    nextLink: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+  },
+  $I.annote("M365ListContactFoldersRequest", {
+    description: "List root folders or one folder’s children, with pagination.",
+  })
+) {}
+
+/**
+ * Delete a contact, optionally conditional on its change key.
+ *
+ * **Example** (Construct M365DeleteContactRequest)
+ *
+ * ```ts
+ * import { M365DeleteContactRequest } from "@beep/m365"
+ * console.log(M365DeleteContactRequest.make({ contactId: "fixture-contact" }))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class M365DeleteContactRequest extends S.Class<M365DeleteContactRequest>($I`M365DeleteContactRequest`)(
+  {
+    folderId: S.OptionFromOptionalKey(GraphPathSegment).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    contactId: GraphPathSegment,
+    userId: S.OptionFromOptionalKey(GraphPathSegment).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    changeKey: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+  },
+  $I.annote("M365DeleteContactRequest", { description: "Delete a contact, optionally conditional on its change key." })
+) {}
+
+/**
+ * Remove a journal-owned folder after the job proves it empty.
+ *
+ * **Example** (Construct M365DeleteContactFolderRequest)
+ *
+ * ```ts
+ * import { M365DeleteContactFolderRequest } from "@beep/m365"
+ * console.log(M365DeleteContactFolderRequest.make({ folderId: "fixture-folder" }))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class M365DeleteContactFolderRequest extends S.Class<M365DeleteContactFolderRequest>(
+  $I`M365DeleteContactFolderRequest`
+)(
+  {
+    folderId: GraphPathSegment,
+    userId: S.OptionFromOptionalKey(GraphPathSegment).pipe(S.withConstructorDefault(Effect.succeedNone)),
+  },
+  $I.annote("M365DeleteContactFolderRequest", {
+    description: "Remove a journal-owned folder after the job proves it empty.",
+  })
+) {}
+
+/** A page of GraphContact records.
+ * **Example** (Inspect the collection codec)
+ * ```ts
+ * import { M365ContactCollection } from "@beep/m365"
+ * console.log(M365ContactCollection.fields.value)
+ * ```
+ * @category schemas
+ * @since 0.0.0
+ */
+export const M365ContactCollection = GraphCollection(GraphContact).pipe(
+  $I.annoteSchema("M365ContactCollection", { description: "Paged GraphContact records." })
+);
+/**
+ * A decoded contact page with its optional Graph continuation link.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type M365ContactCollection = typeof M365ContactCollection.Type;
+
+/** A page of GraphContactFolder records.
+ * **Example** (Inspect the collection codec)
+ * ```ts
+ * import { M365ContactFolderCollection } from "@beep/m365"
+ * console.log(M365ContactFolderCollection.fields.value)
+ * ```
+ * @category schemas
+ * @since 0.0.0
+ */
+export const M365ContactFolderCollection = GraphCollection(GraphContactFolder).pipe(
+  $I.annoteSchema("M365ContactFolderCollection", { description: "Paged GraphContactFolder records." })
+);
+/**
+ * A decoded contact-folder page with its optional Graph continuation link.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type M365ContactFolderCollection = typeof M365ContactFolderCollection.Type;
+
+/** Fixed extended-property identifier for contact seeding runs.
+ * **Example** (Inspect the marker name)
+ * ```ts
+ * import { M365_CONTACT_SEED_PROPERTY_ID } from "@beep/m365"
+ * console.log(M365_CONTACT_SEED_PROPERTY_ID)
+ * ```
+ * @category constants
+ * @since 0.0.0
+ */
+export const M365_CONTACT_SEED_PROPERTY_ID = "String {5e778cb1-783b-4dd6-a042-b85a873a1f18} Name beepSeedRun";
+
+/**
  * Public Microsoft 365 driver service shape.
  *
  * **Example** (Keyof service method names)
@@ -1939,6 +2168,17 @@ export type M365DriveItemDownload = typeof M365DriveItemDownload.Type;
  * @since 0.0.0
  */
 export type M365Shape = {
+  readonly createContact: (request: M365CreateContactRequest) => Effect.Effect<GraphContact, M365Error>;
+  readonly createContactFolder: (
+    request: M365CreateContactFolderRequest
+  ) => Effect.Effect<GraphContactFolder, M365Error>;
+  readonly listContacts: (request: M365ListContactsRequest) => Effect.Effect<M365ContactCollection, M365Error>;
+  readonly listContactFolders: (
+    request: M365ListContactFoldersRequest
+  ) => Effect.Effect<M365ContactFolderCollection, M365Error>;
+  readonly deleteContact: (request: M365DeleteContactRequest) => Effect.Effect<void, M365Error>;
+  readonly deleteContactFolder: (request: M365DeleteContactFolderRequest) => Effect.Effect<void, M365Error>;
+
   readonly addMessageAttachment: (
     request: M365AddMessageAttachmentRequest
   ) => Effect.Effect<GraphAttachment, M365Error>;
@@ -2583,7 +2823,7 @@ const loadEnvConfig = Effect.fn("M365.loadEnvConfig")(function* () {
   const scopes = yield* pipe(
     scopesText,
     O.match({
-      onNone: () => Effect.succeed(O.none<ReadonlyArray<string>>()),
+      onNone: () => Effect.succeed(O.none<M365ConfigInput["scopes"]>()),
       onSome: (value) =>
         decodeM365ScopesFromCsv(value).pipe(
           Effect.asSome,
@@ -2649,7 +2889,146 @@ const createMasterCategoryUnlessPresent = (
     )
   );
 
+// Preserve Graph's complete wire object for the private pre-seed backup.
+const ContactFromWire = S.Record(S.String, S.Unknown).pipe(
+  S.decodeTo(S.toType(GraphContact), {
+    decode: SchemaGetter.transformEffect((wire) =>
+      S.decodeUnknownEffect(GraphContact)(wire).pipe(
+        Effect.map((contact) => GraphContact.make({ ...contact, rawJson: O.some(wire) })),
+        Effect.mapError((error) => error.issue)
+      )
+    ),
+    encode: SchemaGetter.transformEffect((contact) =>
+      O.match(contact.rawJson, {
+        onSome: Effect.succeed,
+        onNone: () => S.encodeEffect(GraphContact)(contact).pipe(Effect.mapError((error) => error.issue)),
+      })
+    ),
+  }),
+  $I.annoteSchema("ContactFromWire", {
+    description: "Full-fidelity private contact export paired with the typed read model.",
+  })
+);
+const ContactPageFromWire = GraphCollection(ContactFromWire);
+
+const contactSuffix = (folderId: O.Option<string>): string =>
+  O.match(folderId, {
+    onNone: () => "contacts",
+    onSome: (id) => `contactFolders/${id}/contacts`,
+  });
+
+// Follow only this mailbox collection's continuation, including on the delegated lane.
+const contactPageUrl = Effect.fnUntraced(function* (
+  runtime: M365Runtime,
+  userId: O.Option<string>,
+  suffix: string,
+  nextLink: O.Option<string>,
+  params: ReadonlyArray<QueryParam> = []
+) {
+  const base = yield* mailboxUrl(runtime.config, userId, suffix, "contacts", params);
+  if (O.isNone(nextLink)) return base;
+  const link = yield* trustedGraphLink(runtime.config, nextLink.value, "contacts");
+  const allowed = yield* Effect.try({
+    try: () => {
+      const candidate = new URL(link);
+      const expected = new URL(base);
+      return (
+        decodeURIComponent(candidate.pathname) === decodeURIComponent(expected.pathname) &&
+        candidate.username === "" &&
+        candidate.password === ""
+      );
+    },
+    catch: () => M365Error.fromReason("request encoding", { resource: "contacts" }),
+  });
+  return yield* allowed
+    ? Effect.succeed(link)
+    : M365Error.failEffectFromReason("request encoding", { resource: "contacts" });
+});
+
+// Contact POSTs have zero replay budget, including explicit 429 responses.
+const createContactResource = Effect.fnUntraced(function* <Sch extends S.Top>(
+  runtime: M365Runtime,
+  url: string,
+  body: unknown,
+  schema: Sch
+): Effect.fn.Return<Sch["Type"], M365Error, Sch["DecodingServices"]> {
+  const noReplay = M365Runtime.make({
+    ...runtime,
+    config: M365ServiceConfig.make({ ...runtime.config, maxRetries: S.Natural.make(0) }),
+  });
+  return yield* executeJsonWrite(
+    noReplay,
+    M365WriteCall.make({ body: O.some(body), headers: NO_HEADERS, method: "POST", resource: "contacts", url }),
+    schema
+  ).pipe(
+    Effect.mapError((error) =>
+      error.reason === "response decoding" ? M365Error.fromReason("ambiguous write", { resource: "contacts" }) : error
+    )
+  );
+});
+
 const makeService = (runtime: M365Runtime): M365Shape => ({
+  createContact: Effect.fn("M365.createContact")(function* (rawRequest) {
+    const request = yield* decodeRequest(M365CreateContactRequest, "contacts")(rawRequest);
+    const url = yield* mailboxUrl(runtime.config, request.userId, contactSuffix(request.folderId), "contacts");
+    const body = yield* encodeWriteBody(M365ContactDraft, "contacts")(request.contact);
+    return yield* createContactResource(runtime, url, body, ContactFromWire);
+  }),
+  createContactFolder: Effect.fn("M365.createContactFolder")(function* (rawRequest) {
+    const request = yield* decodeRequest(M365CreateContactFolderRequest, "contactFolders")(rawRequest);
+    const url = yield* mailboxUrl(runtime.config, request.userId, "contactFolders", "contactFolders");
+    return yield* createContactResource(runtime, url, { displayName: request.displayName }, GraphContactFolder);
+  }),
+  listContacts: Effect.fn("M365.listContacts")(function* (rawRequest) {
+    const request = yield* decodeRequest(M365ListContactsRequest, "contacts")(rawRequest);
+    const url = yield* contactPageUrl(runtime, request.userId, contactSuffix(request.folderId), request.nextLink, [
+      [
+        "$expand",
+        request.expandMarker
+          ? O.some(`singleValueExtendedProperties($filter=id eq '${M365_CONTACT_SEED_PROPERTY_ID}')`)
+          : O.none(),
+      ],
+    ]);
+    return yield* executeJson(runtime, url, ContactPageFromWire, "contacts");
+  }),
+  listContactFolders: Effect.fn("M365.listContactFolders")(function* (rawRequest) {
+    const request = yield* decodeRequest(M365ListContactFoldersRequest, "contactFolders")(rawRequest);
+    const suffix = O.match(request.parentFolderId, {
+      onNone: () => "contactFolders",
+      onSome: (id) => `contactFolders/${id}/childFolders`,
+    });
+    const url = yield* contactPageUrl(runtime, request.userId, suffix, request.nextLink);
+    return yield* executeJson(runtime, url, M365ContactFolderCollection, "contactFolders");
+  }),
+  deleteContact: Effect.fn("M365.deleteContact")(function* (rawRequest) {
+    const request = yield* decodeRequest(M365DeleteContactRequest, "contacts")(rawRequest);
+    const url = yield* mailboxUrl(
+      runtime.config,
+      request.userId,
+      `${contactSuffix(request.folderId)}/${request.contactId}`,
+      "contacts"
+    );
+    yield* executeWrite(
+      runtime,
+      M365WriteCall.make({
+        body: O.none(),
+        headers: changeKeyHeaders(request.changeKey),
+        method: "DELETE",
+        resource: "contacts",
+        url,
+      })
+    );
+  }),
+  deleteContactFolder: Effect.fn("M365.deleteContactFolder")(function* (rawRequest) {
+    const request = yield* decodeRequest(M365DeleteContactFolderRequest, "contactFolders")(rawRequest);
+    const url = yield* mailboxUrl(
+      runtime.config,
+      request.userId,
+      `contactFolders/${request.folderId}`,
+      "contactFolders"
+    );
+    yield* executeBodilessWrite(runtime, "DELETE", "contactFolders", url);
+  }),
   addMessageAttachment: Effect.fn("M365.addMessageAttachment")(function* (rawRequest) {
     const request = yield* decodeRequest(M365AddMessageAttachmentRequest, "attachments")(rawRequest);
     const size = request.content.byteLength;
@@ -2966,6 +3345,53 @@ const makeService = (runtime: M365Runtime): M365Shape => ({
  * @since 0.0.0
  */
 export class M365 extends Context.Service<M365, M365Shape>()($I`M365`) {
+  /**
+   * Construct an injected implementation while retaining older read/write test doubles.
+   * Missing contact capabilities fail explicitly; live layers supply every verb.
+   *
+   * **Example** (Inspect the implementation constructor)
+   * ```ts
+   * import { M365 } from "@beep/m365"
+   * console.log(M365.of)
+   * ```
+   * @category constructors
+   * @since 0.0.0
+   */
+  static override of(
+    this: void,
+    self: Omit<
+      M365Shape,
+      | "createContact"
+      | "createContactFolder"
+      | "listContacts"
+      | "listContactFolders"
+      | "deleteContact"
+      | "deleteContactFolder"
+    > &
+      Partial<
+        Pick<
+          M365Shape,
+          | "createContact"
+          | "createContactFolder"
+          | "listContacts"
+          | "listContactFolders"
+          | "deleteContact"
+          | "deleteContactFolder"
+        >
+      >
+  ): M365Shape {
+    const unavailable = () => M365Error.failEffectFromReason("request encoding", { resource: "contacts" });
+    return {
+      createContact: unavailable,
+      createContactFolder: unavailable,
+      listContacts: unavailable,
+      listContactFolders: unavailable,
+      deleteContact: unavailable,
+      deleteContactFolder: unavailable,
+      ...self,
+    };
+  }
+
   /**
    * Build a testable Microsoft Graph service layer from explicit configuration.
    *

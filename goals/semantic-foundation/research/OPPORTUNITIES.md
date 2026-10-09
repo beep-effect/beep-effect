@@ -68,3 +68,57 @@
 - **Disposition:** cover the fail-closed parse-error path and retain the existing
   baseline; the comparator correctly ignores a percentage-only denominator
   change when uncovered debt does not increase.
+
+## 2026-10-09 — XML repair brief carries stale publication metadata
+
+The schema-xml-text-node brief requested a patch changeset for `@beep/schema`,
+calling it published. On current main `4e82f6d942`, its manifest and the CLI
+consumer manifest both have `private: true`. After staging the requested
+changeset, `bun run beep quality changeset-graph` exited 1 with
+`private workspace changesets are forbidden`. Removed the changeset under
+the brief's private-workspace exemption; no release policy was changed.
+Generate package publication facts from the lane's refreshed base when
+writing briefs so workers do not prepare release notes the gate rejects.
+
+## 2026-10-09 — XML builder declarations disagree with runtime exports
+
+The XML round-trip regression initially used `XMLBuilder` from
+`fast-xml-parser`; the schema audit's Biome gate rejected its deprecated
+re-export. The maintained `fast-xml-builder@1.3.1` declarations expose a
+named `Builder` export, but its ESM source exports only the default
+constructor. The focused test and schema package audit exposed
+`undefined is not a constructor`; using the default import repaired it.
+Prefer the runtime-supported default import and verify runtime exports when
+following this package's declarations. Adding the explicit test dependency
+also made bounded docgen require the canonical full proof because the root
+catalog and lockfile changed.
+
+## 2026-10-09 — Scoped CLI coverage reports unrelated baseline drops
+
+`bun run beep ci lane coverage --filter @beep/repo-cli` passed 291 files
+and 5,834 tests (5 skipped), then failed committed coverage floors on
+`Accounts.command.ts` (branches 75 < 100), `EffectImports.ts`
+(functions 89.34 < 90.17, lines 92.36 < 92.52, statements 92.02 < 92.13),
+and `Yeet/internal/TurboQuery.ts` (functions 73.91 < 78.26,
+lines/statements 86.66 < 88.33). All three files are unchanged by this lane
+relative to its base `4e82f6d942`; the baseline is also unchanged on current
+main. This lane does not lower their floors or repair their unrelated code.
+Main advanced during the proof, including global inputs. Integrate the newer
+base and replay with PR-base framing before attributing the final-head gate.
+
+## 2026-10-09 — New main inherits cheap-gate reds that block XML publication
+
+After integrating `cb64e0484f` and re-running both package verifiers green,
+`bun run beep yeet publish --message "fix(schema): use a reserved text-node key in the XML reader"`
+created local commit `0b96e712b7` but exited 1 before any push.
+`lint:schema-first` reported three missing inventory entries: exported
+`AccountsSecretField` and `AccountsSecretsItem` structs, plus the
+`ci-runner-security.test.ts` schema-codec advisory. `lint:effect-vitest`
+reported 13 new findings across seven upstream files. None of these files
+is changed by this lane relative to integrated base `cb64e0484f`.
+The root packet identifies `schema-first-policy`; the full cheap-gate log
+contains both red lanes. Fix these once on main and merge that fix into the
+dependent lanes, as the Quality Operator law requires. This lane does not
+refresh unrelated baselines, waive gates, or copy upstream repairs.
+The remaining owned parity batch was stopped after the hard publication
+blocker was attributed; its partial full-docgen replay is not a green proof.

@@ -1,0 +1,24 @@
+import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
+import { assert, it } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as DateTime from "effect/DateTime";
+import * as S from "effect/Schema";
+import { formatNdjson } from "../../../effected/cli/internal/diagnostics.ts";
+const date = DateTime.toDateUtc(DateTime.makeUnsafe("2026-01-01T00:00:00Z"));
+const runs = { arbitrary: fcRuns(100) };
+const json = S.fromJsonString(S.Json);
+const messageJson = S.fromJsonString(S.Struct({ message: S.String, level: S.String }));
+it.effect.prop("NDJSON preserves message and level; JSON normalization is idempotent and faithful", [Arbitrary.schema(S.String)], ([message]) => Effect.withFiber(fiber => Effect.gen(function* () {
+  const record = { message, logLevel: "Info" as const, cause: Cause.empty, fiber, date };
+  const text = formatNdjson(record);
+  const fields = yield* S.decodeEffect(messageJson)(text);
+  assert.strictEqual(fields.message, message);
+  assert.strictEqual(fields.level, "INFO");
+  const parsed = yield* S.decodeEffect(json)(text);
+  const normalized = yield* S.encodeEffect(json)(parsed);
+  assert.deepStrictEqual(yield* S.decodeEffect(json)(normalized), parsed);
+  assert.strictEqual(yield* S.encodeEffect(json)(yield* S.decodeEffect(json)(normalized)), normalized);
+  assert.strictEqual(formatNdjson(record), text);
+})), runs);

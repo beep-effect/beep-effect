@@ -1,0 +1,258 @@
+// TOML's four date-time types: an offset date-time, a local date-time, a
+// local date and a local time. Effect's DateTime module models none of the
+// local-only variants (no offset, no time zone), so all four land here as
+// Schema.Class value objects with calendar validity, canonical `toString`
+// and structural equality.
+//
+// Leaf module: imports only `effect`. The scanner constructs these, value
+// stringify prints them, and the corpus harness compares them.
+
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("effected/toml/TomlDateTime");
+
+/** Zero-pad `value` to `width` digits (never truncates a wider value). */
+function pad(value: number, width: number): string {
+	return String(value).padStart(width, "0");
+}
+
+/** Whether `year` is a Gregorian leap year (div-4, except centuries unless div-400). */
+function isLeapYear(year: number): boolean {
+	return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+}
+
+const MONTH_LENGTHS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+/** The number of days in `month` (1-12) of `year`, accounting for leap years. */
+function daysInMonth(year: number, month: number): number {
+	if (month === 2 && isLeapYear(year)) {
+		return 29;
+	}
+	return MONTH_LENGTHS[month - 1] ?? 31;
+}
+
+/** Class-level filter shared by every class carrying a `{ year, month, day }` triple. */
+const isRealCalendarDate = S.makeFilter(
+	({ year, month, day }: { readonly year: number; readonly month: number; readonly day: number }) => {
+		const max = daysInMonth(year, month);
+		return day <= max || `day ${day} does not exist in ${pad(year, 4)}-${pad(month, 2)} (month has ${max} days)`;
+	},
+	{
+		identifier: $I`isRealCalendarDate`,
+		title: "a real calendar date",
+		description: "The day must exist in the given Gregorian month and year, accounting for leap years.",
+	},
+);
+
+const dateFields = {
+	year: S.Int.check(S.isBetween({ minimum: 0, maximum: 9999 })).annotateKey({ description: "Gregorian calendar year from 0000 through 9999." }),
+	month: S.Int.check(S.isBetween({ minimum: 1, maximum: 12 })).annotateKey({ description: "Gregorian calendar month from 1 (January) through 12 (December)." }),
+	day: S.Int.check(S.isBetween({ minimum: 1, maximum: 31 })).annotateKey({ description: "Day of the month from 1 through 31, additionally validated against the month and year." }),
+};
+
+const timeFields = {
+	hour: S.Int.check(S.isBetween({ minimum: 0, maximum: 23 })).annotateKey({ description: "Hour of the local time from 0 through 23." }),
+	minute: S.Int.check(S.isBetween({ minimum: 0, maximum: 59 })).annotateKey({ description: "Minute of the local time from 0 through 59." }),
+	// 60 tolerates the RFC 3339 leap second; TOML does not itself validate it.
+	second: S.Int.check(S.isBetween({ minimum: 0, maximum: 60 })).annotateKey({ description: "Second of the local time from 0 through 60, tolerating the RFC 3339 leap second." }),
+	nanosecond: S.Int.check(S.isBetween({ minimum: 0, maximum: 999_999_999 })).annotateKey({ description: "Fractional second expressed as nanoseconds from 0 through 999999999." }),
+};
+
+/** `YYYY-MM-DD`. */
+function formatDate(date: { readonly year: number; readonly month: number; readonly day: number }): string {
+	return `${pad(date.year, 4)}-${pad(date.month, 2)}-${pad(date.day, 2)}`;
+}
+
+/**
+ * `HH:MM:SS[.fraction]` — the fractional part is present only when
+ * `nanosecond > 0`, trimmed to the shortest exact representation.
+ */
+function formatTime(time: {
+	readonly hour: number;
+	readonly minute: number;
+	readonly second: number;
+	readonly nanosecond: number;
+}): string {
+	const base = `${pad(time.hour, 2)}:${pad(time.minute, 2)}:${pad(time.second, 2)}`;
+	if (time.nanosecond === 0) {
+		return base;
+	}
+	const fraction = pad(time.nanosecond, 9).replace(/0+$/, "");
+	return `${base}.${fraction}`;
+}
+
+/** `Z` for a zero offset, else `+hh:mm` / `-hh:mm`. */
+function formatOffset(offsetMinutes: number): string {
+	if (offsetMinutes === 0) {
+		return "Z";
+	}
+	const sign = offsetMinutes < 0 ? "-" : "+";
+	const magnitude = Math.abs(offsetMinutes);
+	const hh = Math.trunc(magnitude / 60);
+	const mm = magnitude % 60;
+	return `${sign}${pad(hh, 2)}:${pad(mm, 2)}`;
+}
+
+/**
+ * A TOML local date: `year`-`month`-`day` with no time-of-day or offset,
+ * validated against the real Gregorian calendar.
+ *
+ * **Example** (Format a leap-day date)
+ *
+ * ```ts
+ * import { TomlLocalDate } from "@beep/scratchpad/effected/toml/TomlDateTime";
+ *
+ * const value = TomlLocalDate.make({ year: 2024, month: 2, day: 29 });
+ * console.log(value.toString()); // 2024-02-29
+ * ```
+ *
+ * @public
+ * @category value-objects
+ * @since 0.0.0
+ */
+export class TomlLocalDate extends S.Class<TomlLocalDate>($I`TomlLocalDate`)(
+	S.Struct(dateFields).check(isRealCalendarDate), $I.annote("TomlLocalDate", { description: "A TOML local date: `year`-`month`-`day` with no time-of-day or offset, validated against the real Gregorian calendar." }),
+) {
+	/**
+	 * Formats this calendar date as `YYYY-MM-DD`.
+	 *
+	 * **Example** (Format a leap-day date)
+	 *
+	 * ```ts
+	 * import { TomlLocalDate } from "@beep/scratchpad/effected/toml/TomlDateTime";
+	 *
+	 * const value = TomlLocalDate.make({ year: 2024, month: 2, day: 29 });
+	 * console.log(value.toString()); // 2024-02-29
+	 * ```
+	 *
+	 * @category formatting
+	 * @since 0.0.0
+	 */
+	override toString(): string {
+		return formatDate(this);
+	}
+}
+
+/**
+ * A TOML local time: `hour`:`minute`:`second`[.`nanosecond`] with no date or
+ * offset. `second` tolerates the RFC 3339 leap second (0-60).
+ *
+ * **Example** (Format fractional local seconds)
+ *
+ * ```ts
+ * import { TomlLocalTime } from "@beep/scratchpad/effected/toml/TomlDateTime";
+ *
+ * const value = TomlLocalTime.make({ hour: 7, minute: 32, second: 0, nanosecond: 120_000_000 });
+ * console.log(value.toString()); // 07:32:00.12
+ * ```
+ *
+ * @public
+ * @category value-objects
+ * @since 0.0.0
+ */
+export class TomlLocalTime extends S.Class<TomlLocalTime>($I`TomlLocalTime`)(timeFields, $I.annote("TomlLocalTime", { description: "A TOML local time: `hour`:`minute`:`second`[.`nanosecond`] with no date or offset. `second` tolerates the RFC 3339 leap second (0-60)." })) {
+	/**
+	 * Formats this time with seconds and an optional fraction trimmed to the shortest exact representation.
+	 *
+	 * **Example** (Format fractional local seconds)
+	 *
+	 * ```ts
+	 * import { TomlLocalTime } from "@beep/scratchpad/effected/toml/TomlDateTime";
+	 *
+	 * const value = TomlLocalTime.make({ hour: 7, minute: 32, second: 0, nanosecond: 120_000_000 });
+	 * console.log(value.toString()); // 07:32:00.12
+	 * ```
+	 *
+	 * @category formatting
+	 * @since 0.0.0
+	 */
+	override toString(): string {
+		return formatTime(this);
+	}
+}
+
+/**
+ * A TOML local date-time: a {@link TomlLocalDate} and a {@link TomlLocalTime}
+ * combined, with no offset.
+ *
+ * **Example** (Format a date-time without an offset)
+ *
+ * ```ts
+ * import { TomlLocalDateTime } from "@beep/scratchpad/effected/toml/TomlDateTime";
+ *
+ * const value = TomlLocalDateTime.make({ year: 1979, month: 5, day: 27, hour: 7, minute: 32, second: 0, nanosecond: 0 });
+ * console.log(value.toString()); // 1979-05-27T07:32:00
+ * ```
+ *
+ * @public
+ * @category value-objects
+ * @since 0.0.0
+ */
+export class TomlLocalDateTime extends S.Class<TomlLocalDateTime>($I`TomlLocalDateTime`)(
+	S.Struct({ ...dateFields, ...timeFields }).check(isRealCalendarDate), $I.annote("TomlLocalDateTime", { description: "A TOML local date-time: a TomlLocalDate and a TomlLocalTime combined, with no offset." }),
+) {
+	/**
+	 * Formats this local date-time with a `T` separator and no offset.
+	 *
+	 * **Example** (Format a date-time without an offset)
+	 *
+	 * ```ts
+	 * import { TomlLocalDateTime } from "@beep/scratchpad/effected/toml/TomlDateTime";
+	 *
+	 * const value = TomlLocalDateTime.make({ year: 1979, month: 5, day: 27, hour: 7, minute: 32, second: 0, nanosecond: 0 });
+	 * console.log(value.toString()); // 1979-05-27T07:32:00
+	 * ```
+	 *
+	 * @category formatting
+	 * @since 0.0.0
+	 */
+	override toString(): string {
+		return `${formatDate(this)}T${formatTime(this)}`;
+	}
+}
+
+/**
+ * A TOML offset date-time: a {@link TomlLocalDateTime} plus `offsetMinutes`
+ * (-1439-1439). Parsing enforces `hh <= 23` / `mm <= 59` before construction;
+ * this class only bounds the combined minute count.
+ *
+ * **Example** (Format a negative UTC offset)
+ *
+ * ```ts
+ * import { TomlOffsetDateTime } from "@beep/scratchpad/effected/toml/TomlDateTime";
+ *
+ * const value = TomlOffsetDateTime.make({ year: 1979, month: 5, day: 27, hour: 7, minute: 32, second: 0, nanosecond: 0, offsetMinutes: -420 });
+ * console.log(value.toString()); // 1979-05-27T07:32:00-07:00
+ * ```
+ *
+ * @public
+ * @category value-objects
+ * @since 0.0.0
+ */
+export class TomlOffsetDateTime extends S.Class<TomlOffsetDateTime>($I`TomlOffsetDateTime`)(
+	S.Struct({
+		...dateFields,
+		...timeFields,
+		offsetMinutes: S.Int.check(S.isBetween({ minimum: -1439, maximum: 1439 })),
+	}).check(isRealCalendarDate), $I.annote("TomlOffsetDateTime", { description: "A TOML offset date-time: a TomlLocalDateTime plus `offsetMinutes` (-1439-1439). Parsing enforces `hh <= 23` / `mm <= 59` before construction; this class only bounds the combined minute count." }),
+) {
+	/**
+	 * Formats this date-time with `Z` for a zero offset or a signed `hh:mm` offset.
+	 *
+	 * **Example** (Format a negative UTC offset)
+	 *
+	 * ```ts
+	 * import { TomlOffsetDateTime } from "@beep/scratchpad/effected/toml/TomlDateTime";
+	 *
+	 * const value = TomlOffsetDateTime.make({ year: 1979, month: 5, day: 27, hour: 7, minute: 32, second: 0, nanosecond: 0, offsetMinutes: -420 });
+	 * console.log(value.toString()); // 1979-05-27T07:32:00-07:00
+	 * ```
+	 *
+	 * @category formatting
+	 * @since 0.0.0
+	 */
+	override toString(): string {
+		return `${formatDate(this)}T${formatTime(this)}${formatOffset(this.offsetMinutes)}`;
+	}
+}

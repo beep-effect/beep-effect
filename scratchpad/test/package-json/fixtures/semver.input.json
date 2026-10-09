@@ -1,0 +1,55 @@
+{
+	"name": "@effected/semver",
+	"version": "0.1.0",
+	"private": true,
+	"description": "Strict SemVer 2.0.0 versions, ranges and comparators as Effect schemas.",
+	"keywords": ["semver", "semantic-versioning", "effect", "schema", "range", "version", "effected"],
+	"homepage": "https://github.com/spencerbeggs/effected/tree/main/packages/semver#readme",
+	"bugs": {
+		"url": "https://github.com/spencerbeggs/effected/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/spencerbeggs/effected.git",
+		"directory": "packages/semver"
+	},
+	"license": "MIT",
+	"author": {
+		"name": "C. Spencer Beggs",
+		"email": "spencer@beggs.codes",
+		"url": "https://spencerbeg.gs"
+	},
+	"sideEffects": false,
+	"type": "module",
+	"exports": {
+		".": "./src/index.ts",
+		"./package.json": "./package.json"
+	},
+	"scripts": {
+		"build:dev": "node savvy.build.ts --target dev",
+		"build:prod": "node savvy.build.ts --target prod",
+		"prepare": "turbo run build:dev",
+		"types:check": "tsc --noEmit"
+	},
+	"devDependencies": {
+		"@effect/vitest": "catalog:effect",
+		"@savvy-web/bundler": "^2.0.0",
+		"@types/node": "catalog:silk",
+		"effect": "catalog:effect",
+		"typescript": "catalog:silk"
+	},
+	"peerDependencies": {
+		"effect": "catalog:effect"
+	},
+	"engines": {
+		"node": ">=24.11.0"
+	},
+	"publishConfig": {
+		"access": "public",
+		"directory": "dist/dev/pkg",
+		"linkDirectory": true,
+		"targets": {
+			"npm": true
+		}
+	}
+}
