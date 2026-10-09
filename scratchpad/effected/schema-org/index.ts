@@ -13,7 +13,7 @@
  * **Example** (Serialize linked source code and documentation nodes)
  *
  * ```ts
- * import { JsonLdDocument, NodeRef, SoftwareSourceCode, TechArticle } from "./index.ts";
+ * import { JsonLdDocument, NodeRef, SoftwareSourceCode, TechArticle } from "@beep/scratchpad/effected/schema-org/index";
  * import * as Result from "effect/Result";
  *
  * const built = JsonLdDocument.buildResult([

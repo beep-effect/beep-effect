@@ -1,23 +1,6 @@
 # schema-org (lab port of @effected/schema-org)
 
-[![npm](https://img.shields.io/npm/v/@effected%2Fschema-org?label=npm&color=cb3837)](https://www.npmjs.com/package/@effected/schema-org)
-[![License: MIT](https://img.shields.io/badge/License-MIT-4caf50.svg)](https://opensource.org/licenses/MIT)
-[![Node.js %3E%3D24.11.0](https://img.shields.io/badge/Node.js-%3E%3D24.11.0-5fa04e.svg)](https://nodejs.org/)
-[![TypeScript 7.0](https://img.shields.io/badge/TypeScript-7.0-3178c6.svg)](https://www.typescriptlang.org/)
-
 schema.org as Effect Schema classes: build a JSON-LD graph, serialize it safely into a `<script>` element, and check it against schema.org's own vocabulary offline. `effect` is the only peer dependency and there are no runtime dependencies at all — the vocabulary is vendored as generated TypeScript, so nothing here reaches the network.
-
-> **Pre-`1.0.0`.** This package is part of the `@effected/*` kit, built on stable
-> Effect v4 (`effect` `^4.0.0`) and still in `0.x` development. Stable Effect
-> makes a kit `1.0.0` possible, not automatic. To keep your `effect` and
-> `@effect/*` versions on the line the kit is built and tested against, install
-> [`@effected/pnpm-plugin-effect`](https://www.npmjs.com/package/@effected/pnpm-plugin-effect).
->
-> **Stability: unstable.** This package's API surface is not yet considered
-> complete and may change across `0.x` releases. Pin an exact version — even a
-> package marked *stable* before `1.0.0` can introduce a breaking change by
-> accident, and an exact pin turns that into a type-check error rather than a
-> runtime surprise. Full policy: [release strategy](https://github.com/spencerbeggs/effected#release-strategy).
 
 ## Why @effected/schema-org
 
@@ -25,27 +8,13 @@ Structured data is usually assembled as an object literal and dropped into a tem
 
 This package fixes both at their source. `toScriptBody()` is the only text serializer and it is the escaped one, so the injection case cannot be reached by choosing the wrong function. The vocabulary ships vendored, so a build step can reject a misplaced property offline, in CI, with no network call and no crawler round trip.
 
-## Install
-
-```bash
-npm install @effected/schema-org effect
-```
-
-```bash
-pnpm add @effected/schema-org effect
-```
-
-Requires Node.js >=24.11.0.
-
-All `@effected/*` packages are ESM-only: the exports maps publish only `import` conditions, so `require()` — including tools that resolve in CJS mode — fails with Node's `ERR_PACKAGE_PATH_NOT_EXPORTED` rather than loading a CJS build that does not exist. Import from an ES module.
-
 ## Quick start
 
 Assemble nodes into a graph, then serialize it:
 
 ```ts
-import { JsonLdDocument, NodeRef, SoftwareSourceCode, TechArticle } from "@effected/schema-org";
-import { Result } from "effect";
+import { JsonLdDocument, NodeRef, SoftwareSourceCode, TechArticle } from "@beep/scratchpad/effected/schema-org/index";
+import * as Result from "effect/Result";
 
 const built = JsonLdDocument.buildResult([
   SoftwareSourceCode.make({ "@id": "https://example.com/pkg#source", name: "example", version: "1.2.3" }),
@@ -57,7 +26,7 @@ const built = JsonLdDocument.buildResult([
 ]);
 
 console.log(Result.getOrThrow(built).toScriptBody());
-// {"@context":"https://schema.org","@graph":[{"@id":"https://example.com/pkg#source","@type":"SoftwareSourceCode","name":"example","version":"1.2.3"},{"@id":"https://example.com/pkg/docs#intro","@type":"TechArticle","isPartOf":[{"@id":"https://example.com/pkg#source"}],"headline":"Getting started </script>"}]}
+// {"@context":"https://schema.org","@graph":[{"@id":"https://example.com/pkg#source","@type":"SoftwareSourceCode","name":"example","version":"1.2.3"},{"@id":"https://example.com/pkg/docs#intro","@type":"TechArticle","isPartOf":[{"@id":"https://example.com/pkg#source"}],"headline":"Getting started \u003c/script\u003e"}]}
 ```
 
 Then embed the body verbatim:
@@ -83,15 +52,23 @@ Every string in your graph comes from prose someone wrote. A description contain
 ## Validate offline
 
 ```ts
-import { Conformance, Vocabulary } from "@effected/schema-org/validate";
+import { Conformance, Vocabulary } from "@beep/scratchpad/effected/schema-org/conformance-entry";
+import { JsonLdDocument, SoftwareSourceCode } from "@beep/scratchpad/effected/schema-org/index";
+import * as Result from "effect/Result";
 
-console.log(Vocabulary.version);
-// 30.0
+const doc = Result.getOrThrow(JsonLdDocument.buildResult([
+  SoftwareSourceCode.make({
+    "@id": "https://example.com/pkg#source",
+    additional: { softwareVersion: "1.2.3" },
+  }),
+]));
+
+console.log(Vocabulary.version); // 30.0
 
 for (const issue of Conformance.check(doc)) {
-  console.error(issue._tag, issue.message);
+  console.log(issue._tag, issue.message);
+  // PropertyNotOnType https://example.com/pkg#source: schema.org does not define "softwareVersion" on SoftwareSourceCode
 }
-// PropertyNotOnType https://example.com/pkg#source: schema.org does not define "softwareVersion" on SoftwareSourceCode
 ```
 
 `Conformance.check` is total — it never fails and never throws, because reporting is not a failure mode. `Conformance.validateResult` is the gate built on top of it, returning the graph back or a `NonConformantGraphError` carrying every issue, and `Conformance.validate` is its `Effect` twin. By default only the structural kinds close the gate; `ConformanceOptions` widens it to deprecations and dangling references.
@@ -100,7 +77,7 @@ The vocabulary is vendored, so the gate runs offline and in CI with no network c
 
 Legality is resolved through the full `rdfs:subClassOf` ancestor closure, so inherited properties are accepted — `license` is declared only on `CreativeWork`, and it is legal on `SoftwareSourceCode` because of that chain.
 
-**Import it from the `./validate` subpath.** The vocabulary table is the whole of what a graph-only consumer avoids: importing `@effected/schema-org` loads the node classes and the serializer and nothing else. `./validate` re-exports the node classes **type-only**, for annotating a signature — reaching for a value through it, such as `NodeRef.to`, fails with "only refers to a type". Import values from the root.
+**Import it from `@beep/scratchpad/effected/schema-org/conformance-entry`.** The vocabulary table is the whole of what a graph-only consumer avoids: importing `@beep/scratchpad/effected/schema-org/index` loads the node classes and the serializer and nothing else. `conformance-entry` re-exports the node classes **type-only**, for annotating a signature — reaching for a value through it, such as `NodeRef.to`, fails with "only refers to a type". Import node values from `@beep/scratchpad/effected/schema-org/index`.
 
 **Conformance is not Google rich-results eligibility.** Google requires properties schema.org does not, and changes its policy on its own schedule. This tells you schema.org defines the term; it does not promise you a rich result.
 
@@ -124,7 +101,6 @@ Legality is resolved through the full `rdfs:subClassOf` ancestor closure, so inh
 ## License
 
 [MIT](LICENSE)
-
 
 ## Port notes
 

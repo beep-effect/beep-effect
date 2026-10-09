@@ -19,7 +19,18 @@ const $I = $ScratchpadId.create("effected/schema-org/Conformance");
 /**
  * Which kind of term a {@link UnknownTerm} issue is about.
  *
+ * **Example** (Decode a property term kind)
+ *
+ * ```ts
+ * import { TermKind } from "@beep/scratchpad/effected/schema-org/Conformance";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.decodeUnknownSync(TermKind)("property")); // property
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const TermKind = LiteralKit(["type", "property"]).pipe($I.annoteSchema("TermKind", { description: "Which kind of term a UnknownTerm issue is about." }));
 
@@ -27,11 +38,15 @@ export const TermKind = LiteralKit(["type", "property"]).pipe($I.annoteSchema("T
  * Which kind of term a {@link UnknownTerm} issue is about.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type TermKind = typeof TermKind.Type;
 
 /**
  * A term the vendored schema.org vocabulary does not define at all.
+ *
+ * **Details**
  *
  * This is a typo or an invention, and it is **always reported, never silently
  * passed** — a gate that shrugs at a term it does not recognize is
@@ -43,7 +58,18 @@ export type TermKind = typeof TermKind.Type;
  * scoped subset "unknown" would be irreducibly ambiguous between *you
  * misspelled it* and *that part was not shipped*.
  *
+ * **Example** (Construct UnknownTerm issue)
+ *
+ * ```ts
+ * import { UnknownTerm } from "@beep/scratchpad/effected/schema-org/Conformance";
+ *
+ * const issue = UnknownTerm.make({ nodeId: "#source", nodeType: "SoftwareSourceCode", term: "typo", kind: "property" });
+ * console.log(issue._tag); // UnknownTerm
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class UnknownTerm extends S.TaggedClass<UnknownTerm>($I`UnknownTerm`)("UnknownTerm", {
 	/** The `@id` of the node carrying the term. */
@@ -55,7 +81,22 @@ export class UnknownTerm extends S.TaggedClass<UnknownTerm>($I`UnknownTerm`)("Un
 	/** Whether the term was used as a type or as a property. */
 	kind: TermKind.annotateKey({ description: "Whether the term was used as a type or as a property." }),
 }, $I.annote("UnknownTerm", { description: "A term the vendored schema.org vocabulary does not define at all." })) {
-	/** A one-line description of the issue. */
+	/**
+	 * A one-line description of the issue.
+	 *
+	 * **Example** (Read the UnknownTerm message)
+	 *
+	 * ```ts
+	 * import { UnknownTerm } from "@beep/scratchpad/effected/schema-org/Conformance";
+	 * import { Vocabulary } from "@beep/scratchpad/effected/schema-org/Vocabulary";
+	 *
+	 * const issue = UnknownTerm.make({ nodeId: "#source", nodeType: "SoftwareSourceCode", term: "typo", kind: "property" });
+	 * console.log(issue.message === `#source: schema.org ${Vocabulary.version} defines no property "typo"`); // true
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	get message(): string {
 		return `${this.nodeId}: schema.org ${Vocabulary.version} defines no ${this.kind} ${JSON.stringify(this.term)}`;
 	}
@@ -63,6 +104,8 @@ export class UnknownTerm extends S.TaggedClass<UnknownTerm>($I`UnknownTerm`)("Un
 
 /**
  * A property schema.org defines, used on a type it is not legal on.
+ *
+ * **Details**
  *
  * This is the issue that pays for the package. The authentic example is
  * `softwareVersion` on a `SoftwareSourceCode`: it is a real term, defined on
@@ -73,7 +116,18 @@ export class UnknownTerm extends S.TaggedClass<UnknownTerm>($I`UnknownTerm`)("Un
  * set intersected with the node type's ancestor closure — so an inherited
  * property like `license` on a `SoftwareSourceCode` never produces this issue.
  *
+ * **Example** (Construct PropertyNotOnType issue)
+ *
+ * ```ts
+ * import { PropertyNotOnType } from "@beep/scratchpad/effected/schema-org/Conformance";
+ *
+ * const issue = PropertyNotOnType.make({ nodeId: "#source", nodeType: "SoftwareSourceCode", property: "softwareVersion" });
+ * console.log(issue._tag); // PropertyNotOnType
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class PropertyNotOnType extends S.TaggedClass<PropertyNotOnType>($I`PropertyNotOnType`)("PropertyNotOnType", {
 	/** The `@id` of the node carrying the property. */
@@ -83,7 +137,21 @@ export class PropertyNotOnType extends S.TaggedClass<PropertyNotOnType>($I`Prope
 	/** The property that is not legal on that type. */
 	property: S.String.annotateKey({ description: "The property that is not legal on that type." }),
 }, $I.annote("PropertyNotOnType", { description: "A property schema.org defines, used on a type it is not legal on." })) {
-	/** A one-line description of the issue. */
+	/**
+	 * A one-line description of the issue.
+	 *
+	 * **Example** (Read the PropertyNotOnType message)
+	 *
+	 * ```ts
+	 * import { PropertyNotOnType } from "@beep/scratchpad/effected/schema-org/Conformance";
+	 *
+	 * const issue = PropertyNotOnType.make({ nodeId: "#source", nodeType: "SoftwareSourceCode", property: "softwareVersion" });
+	 * console.log(issue.message); // #source: schema.org does not define "softwareVersion" on SoftwareSourceCode
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	get message(): string {
 		return `${this.nodeId}: schema.org does not define ${JSON.stringify(this.property)} on ${this.nodeType}`;
 	}
@@ -92,10 +160,23 @@ export class PropertyNotOnType extends S.TaggedClass<PropertyNotOnType>($I`Prope
 /**
  * A node whose `@type` schema.org has deprecated.
  *
+ * **Details**
+ *
  * Deprecated terms are **valid but flagged, never rejected**. The default gate
  * does not fail on this.
  *
+ * **Example** (Construct DeprecatedType issue)
+ *
+ * ```ts
+ * import { DeprecatedType } from "@beep/scratchpad/effected/schema-org/Conformance";
+ *
+ * const issue = DeprecatedType.make({ nodeId: "#page", nodeType: "UserInteraction", supersededBy: "InteractionCounter" });
+ * console.log(issue._tag); // DeprecatedType
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class DeprecatedType extends S.TaggedClass<DeprecatedType>($I`DeprecatedType`)("DeprecatedType", {
 	/** The `@id` of the node. */
@@ -105,7 +186,21 @@ export class DeprecatedType extends S.TaggedClass<DeprecatedType>($I`DeprecatedT
 	/** The type schema.org replaced it with. */
 	supersededBy: S.String.annotateKey({ description: "The type schema.org replaced it with." }),
 }, $I.annote("DeprecatedType", { description: "A node whose `@type` schema.org has deprecated." })) {
-	/** A one-line description of the issue. */
+	/**
+	 * A one-line description of the issue.
+	 *
+	 * **Example** (Read the DeprecatedType message)
+	 *
+	 * ```ts
+	 * import { DeprecatedType } from "@beep/scratchpad/effected/schema-org/Conformance";
+	 *
+	 * const issue = DeprecatedType.make({ nodeId: "#page", nodeType: "UserInteraction", supersededBy: "InteractionCounter" });
+	 * console.log(issue.message); // #page: UserInteraction is superseded by InteractionCounter
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	get message(): string {
 		return `${this.nodeId}: ${this.nodeType} is superseded by ${this.supersededBy}`;
 	}
@@ -115,7 +210,18 @@ export class DeprecatedType extends S.TaggedClass<DeprecatedType>($I`DeprecatedT
  * A property schema.org has deprecated. Valid but flagged, exactly as
  * {@link DeprecatedType} is.
  *
+ * **Example** (Construct DeprecatedProperty issue)
+ *
+ * ```ts
+ * import { DeprecatedProperty } from "@beep/scratchpad/effected/schema-org/Conformance";
+ *
+ * const issue = DeprecatedProperty.make({ nodeId: "#person", nodeType: "Person", property: "actors", supersededBy: "actor" });
+ * console.log(issue._tag); // DeprecatedProperty
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class DeprecatedProperty extends S.TaggedClass<DeprecatedProperty>($I`DeprecatedProperty`)("DeprecatedProperty", {
 	/** The `@id` of the node carrying the property. */
@@ -127,7 +233,21 @@ export class DeprecatedProperty extends S.TaggedClass<DeprecatedProperty>($I`Dep
 	/** The property schema.org replaced it with. */
 	supersededBy: S.String.annotateKey({ description: "The property schema.org replaced it with." }),
 }, $I.annote("DeprecatedProperty", { description: "A property schema.org has deprecated. Valid but flagged, exactly as DeprecatedType is." })) {
-	/** A one-line description of the issue. */
+	/**
+	 * A one-line description of the issue.
+	 *
+	 * **Example** (Read the DeprecatedProperty message)
+	 *
+	 * ```ts
+	 * import { DeprecatedProperty } from "@beep/scratchpad/effected/schema-org/Conformance";
+	 *
+	 * const issue = DeprecatedProperty.make({ nodeId: "#person", nodeType: "Person", property: "actors", supersededBy: "actor" });
+	 * console.log(issue.message); // #person: actors is superseded by actor
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	get message(): string {
 		return `${this.nodeId}: ${this.property} is superseded by ${this.supersededBy}`;
 	}
@@ -136,11 +256,24 @@ export class DeprecatedProperty extends S.TaggedClass<DeprecatedProperty>($I`Dep
 /**
  * A reference to an `@id` no node in the graph defines.
  *
+ * **Details**
+ *
  * Not an error, and reported rather than failed by default: pointing at an
  * organization described on another page is legal, common and often correct.
  * A consumer whose graph is meant to be closed opts into gating on it.
  *
+ * **Example** (Construct DanglingReference issue)
+ *
+ * ```ts
+ * import { DanglingReference } from "@beep/scratchpad/effected/schema-org/Conformance";
+ *
+ * const issue = DanglingReference.make({ nodeId: "#source", nodeType: "SoftwareSourceCode", property: "author", reference: "#author" });
+ * console.log(issue._tag); // DanglingReference
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class DanglingReference extends S.TaggedClass<DanglingReference>($I`DanglingReference`)("DanglingReference", {
 	/** The `@id` of the node holding the reference. */
@@ -152,7 +285,21 @@ export class DanglingReference extends S.TaggedClass<DanglingReference>($I`Dangl
 	/** The `@id` that no node in this graph defines. */
 	reference: S.String.annotateKey({ description: "The `@id` that no node in this graph defines." }),
 }, $I.annote("DanglingReference", { description: "A reference to an `@id` no node in the graph defines." })) {
-	/** A one-line description of the issue. */
+	/**
+	 * A one-line description of the issue.
+	 *
+	 * **Example** (Read the DanglingReference message)
+	 *
+	 * ```ts
+	 * import { DanglingReference } from "@beep/scratchpad/effected/schema-org/Conformance";
+	 *
+	 * const issue = DanglingReference.make({ nodeId: "#source", nodeType: "SoftwareSourceCode", property: "author", reference: "#author" });
+	 * console.log(issue.message); // #source: author references "#author", which this graph does not define
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	get message(): string {
 		return `${this.nodeId}: ${this.property} references ${JSON.stringify(this.reference)}, which this graph does not define`;
 	}
@@ -161,12 +308,26 @@ export class DanglingReference extends S.TaggedClass<DanglingReference>($I`Dangl
 /**
  * Anything {@link Conformance.check} can report.
  *
+ * **Details**
+ *
  * Issues carry **no severity field**. Severity is the consumer's policy, not a
  * fact about the graph — a dangling reference is a build failure in a closed
  * graph and correct in an open one — so the gate's options decide which kinds
  * fail, and a lint host is free to render them however it likes.
  *
+ * **Example** (Recognize an unknown term issue)
+ *
+ * ```ts
+ * import { ConformanceIssue, UnknownTerm } from "@beep/scratchpad/effected/schema-org/Conformance";
+ * import * as S from "effect/Schema";
+ *
+ * const issue = UnknownTerm.make({ nodeId: "#source", nodeType: "SoftwareSourceCode", term: "typo", kind: "property" });
+ * console.log(S.is(ConformanceIssue)(issue)); // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const ConformanceIssue = S.Union([
 	UnknownTerm,
@@ -180,6 +341,8 @@ export const ConformanceIssue = S.Union([
  * Anything {@link Conformance.check} can report.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type ConformanceIssue = typeof ConformanceIssue.Type;
 
@@ -187,16 +350,45 @@ export type ConformanceIssue = typeof ConformanceIssue.Type;
  * Indicates that a graph carries at least one conformance issue of a kind the
  * gate was configured to fail on.
  *
+ * **Details**
+ *
  * The error carries **every** issue the check found, not only the failing
  * ones, so a caller rendering it never has to run the check a second time to
  * see the rest.
  *
+ * **Example** (Construct a graph conformance error)
+ *
+ * ```ts
+ * import { NonConformantGraphError } from "@beep/scratchpad/effected/schema-org/Conformance";
+ *
+ * const issue = NonConformantGraphError.make({ issues: [] });
+ * console.log(issue._tag); // NonConformantGraphError
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class NonConformantGraphError extends S.TaggedError<NonConformantGraphError>($I`NonConformantGraphError`)("NonConformantGraphError", {
 	/** Every issue found in the graph, failing or not. */
 	issues: S.Array(ConformanceIssue).annotateKey({ description: "Every issue found in the graph, failing or not." }),
 }, $I.annote("NonConformantGraphError", { description: "Indicates that a graph carries at least one conformance issue of a kind the gate was configured to fail on." })) {
+	/**
+	 * Summarizes graph nonconformance with the vocabulary version, the first issue and the count of remaining issues.
+	 *
+	 * **Example** (Read the NonConformantGraphError message)
+	 *
+	 * ```ts
+	 * import { NonConformantGraphError } from "@beep/scratchpad/effected/schema-org/Conformance";
+	 * import { Vocabulary } from "@beep/scratchpad/effected/schema-org/Vocabulary";
+	 *
+	 * const issue = NonConformantGraphError.make({ issues: [] });
+	 * console.log(issue.message === `JsonLdDocument is not conformant with schema.org ${Vocabulary.version}: no detail`); // true
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		const first = this.issues[0];
 		const rest = this.issues.length - 1;
@@ -218,10 +410,24 @@ const DanglingReferencePolicy = LiteralKit(["ignore", "report"]).pipe(
 /**
  * Which issue kinds fail {@link Conformance.validateResult}.
  *
+ * **Details**
+ *
  * Every kind is always *reported* by {@link Conformance.check}; these options
  * only decide which ones close the gate.
  *
+ * **Example** (Decode the default gate policies)
+ *
+ * ```ts
+ * import { ConformanceOptions } from "@beep/scratchpad/effected/schema-org/Conformance";
+ * import * as S from "effect/Schema";
+ *
+ * const options = S.decodeUnknownSync(ConformanceOptions)({});
+ * console.log(options.unknownTerms, options.deprecations, options.danglingReferences); // report ignore ignore
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const ConformanceOptions = S.Struct({
 	/**
@@ -249,7 +455,12 @@ export const ConformanceOptions = S.Struct({
 	).annotateKey({ description: "Graph-closure gate policy; defaults to ignore." }),
 }).pipe($I.annoteSchema("ConformanceOptions", { description: "Optional gate policies with safe defaults when decoded." }));
 
-/** Plain-object policy input, including omitted and explicitly undefined fields. */
+/**
+ * Plain-object policy input, including omitted and explicitly undefined fields.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ConformanceOptions = typeof ConformanceOptions.Encoded;
 
 /** The `@context` prefix for schema.org's own terms. */
@@ -258,6 +469,8 @@ const SCHEMA_PREFIX = "schema:";
 /**
  * Resolve a written term to the schema.org term it asserts, or `Option.none()`
  * when it belongs to a vocabulary this package does not police.
+ *
+ * **Details**
  *
  * Four cases, and the two middle ones are each a way to get this silently
  * wrong:
@@ -316,6 +529,8 @@ function assertedTerms(node: JsonLdNode): ReadonlyArray<string> {
  * `Vocabulary.version`, so the same graph gets the same answer on every
  * machine, forever, with no network.
  *
+ * **Gotchas**
+ *
  * **This is not a Google rich-results checker.** Google requires properties
  * schema.org does not, forbids nothing schema.org allows, and changes its
  * policy on its own schedule. A clean graph here says schema.org defines your
@@ -324,8 +539,9 @@ function assertedTerms(node: JsonLdNode): ReadonlyArray<string> {
  * **Example** (Report an illegal source code property)
  *
  * ```ts
- * import { JsonLdDocument, SoftwareSourceCode } from "./index.ts";
- * import { Conformance } from "./conformance-entry.ts";
+ * import { JsonLdDocument } from "@beep/scratchpad/effected/schema-org/JsonLdDocument";
+ * import { SoftwareSourceCode } from "@beep/scratchpad/effected/schema-org/SoftwareSourceCode";
+ * import { Conformance } from "@beep/scratchpad/effected/schema-org/Conformance";
  * import * as Result from "effect/Result";
  *
  * const graph = Result.getOrThrow(
@@ -338,16 +554,19 @@ function assertedTerms(node: JsonLdNode): ReadonlyArray<string> {
  * 	]),
  * );
  *
- * for (const issue of Conformance.check(graph)) console.log(issue.message);
- * // => https://example.com/pkg#source: schema.org does not define "softwareVersion" on SoftwareSourceCode
+ * console.log(Conformance.check(graph)[0]?.message); // https://example.com/pkg#source: schema.org does not define "softwareVersion" on SoftwareSourceCode
  * ```
  *
  * @public
+ * @category validation
+ * @since 0.0.0
  */
 export class Conformance {
 	/**
 	 * Every conformance issue in `graph`, in node order. **Total: it never
 	 * fails and never throws.**
+	 *
+	 * **Details**
 	 *
 	 * Reporting is not a failure mode — a caller that wants every problem at
 	 * once wants a list, and a lint host wants a function it can simply call.
@@ -364,6 +583,20 @@ export class Conformance {
 	 *   domain legality** — there is no type to check them against, and
 	 *   reporting every property as misplaced would bury the one issue that
 	 *   matters. Unrecognized property terms are still reported.
+	 *
+	 * **Example** (Check an empty graph)
+	 *
+	 * ```ts
+	 * import { Conformance } from "@beep/scratchpad/effected/schema-org/Conformance";
+	 * import { JsonLdDocument } from "@beep/scratchpad/effected/schema-org/JsonLdDocument";
+	 * import * as Result from "effect/Result";
+	 *
+	 * const graph = Result.getOrThrow(JsonLdDocument.buildResult([]));
+	 * console.log(Conformance.check(graph).length); // 0
+	 * ```
+	 *
+	 * @category validation
+	 * @since 0.0.0
 	 */
 	static check(graph: JsonLdDocument): ReadonlyArray<ConformanceIssue> {
 		const issues: Array<ConformanceIssue> = [];
@@ -419,6 +652,8 @@ export class Conformance {
 	 * The gate: the graph back when it conforms, or
 	 * {@link NonConformantGraphError} carrying every issue when it does not.
 	 *
+	 * **Details**
+	 *
 	 * This is the synchronous primitive, and it is defined in terms of {@link Conformance.check} — the list and
 	 * the gate cannot disagree about what is wrong with a graph.
 	 *
@@ -426,6 +661,20 @@ export class Conformance {
 	 * {@link PropertyNotOnType} fails, an {@link UnknownTerm} is reported,
 	 * and deprecations and dangling references are left to the caller's policy.
 	 * {@link ConformanceOptions} widens it.
+	 *
+	 * **Example** (Validate an empty graph synchronously)
+	 *
+	 * ```ts
+	 * import { Conformance } from "@beep/scratchpad/effected/schema-org/Conformance";
+	 * import { JsonLdDocument } from "@beep/scratchpad/effected/schema-org/JsonLdDocument";
+	 * import * as Result from "effect/Result";
+	 *
+	 * const graph = Result.getOrThrow(JsonLdDocument.buildResult([]));
+	 * console.log(Result.isSuccess(Conformance.validateResult(graph))); // true
+	 * ```
+	 *
+	 * @category validation
+	 * @since 0.0.0
 	 */
 	static validateResult(
 		graph: JsonLdDocument,
@@ -449,8 +698,27 @@ export class Conformance {
 
 	/**
 	 * The `Effect` twin of {@link Conformance.validateResult}, derived from it
-	 * so the two cannot drift. Nothing here is asynchronous and nothing does
-	 * IO, so the `Effect` carries only the span and the error channel.
+	 * so the two cannot drift.
+	 *
+	 * **Details**
+	 *
+	 * Nothing here is asynchronous and nothing does IO, so the `Effect` carries
+	 * only the span and the error channel.
+	 *
+	 * **Example** (Run the Effect conformance gate)
+	 *
+	 * ```ts
+	 * import { Conformance } from "@beep/scratchpad/effected/schema-org/Conformance";
+	 * import { JsonLdDocument } from "@beep/scratchpad/effected/schema-org/JsonLdDocument";
+	 * import * as Result from "effect/Result";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const graph = Result.getOrThrow(JsonLdDocument.buildResult([]));
+	 * console.log(Effect.runSync(Conformance.validate(graph)) === graph); // true
+	 * ```
+	 *
+	 * @category validation
+	 * @since 0.0.0
 	 */
 	static readonly validate = Effect.fn("Conformance.validate")((graph: JsonLdDocument, options?: ConformanceOptions) =>
 		Effect.fromResult(Conformance.validateResult(graph, options)),

@@ -17,23 +17,39 @@ const $I = $ScratchpadId.create("effected/schema-org/Organization");
  * **Example** (Create an organization with a legal name)
  *
  * ```ts
- * import { Organization } from "./index.ts";
+ * import { Organization } from "@beep/scratchpad/effected/schema-org/Organization";
  *
  * const org = Organization.make({
  * 	"@id": "https://example.com/#org",
  * 	name: "Example Inc",
  * 	legalName: "Example, Incorporated",
  * });
+ *
+ * console.log(org.legalName) // Example, Incorporated
  * ```
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class Organization extends S.Class<Organization>($I`Organization`)({
 	...ThingFields,
-	/** The JSON-LD type discriminator, populated automatically. */
+	/**
+	 * The JSON-LD type discriminator, populated automatically.
+	 *
+	 * @since 0.0.0
+	 */
 	"@type": S.tag("Organization").annotateKey({ description: "The JSON-LD type discriminator, populated automatically." }),
-	/** The organization's registered legal name. Single-valued. */
+	/**
+	 * The organization's registered legal name. Single-valued.
+	 *
+	 * @since 0.0.0
+	 */
 	legalName: S.optional(S.String).annotateKey({ description: "The organization's registered legal name. Single-valued." }),
-	/** A URL for the organization's logo. Single-valued. */
+	/**
+	 * A URL for the organization's logo. Single-valued.
+	 *
+	 * @since 0.0.0
+	 */
 	logo: S.optional(S.String).annotateKey({ description: "A URL for the organization's logo. Single-valued." }),
 }, $I.annote("Organization", { description: "A schema.org `Organization` — a company, project or team that authors or publishes a work." })) {}

@@ -20,6 +20,8 @@ import {
  * Strict ancestors of a type index: every supertype reachable through
  * `rdfs:subClassOf`, excluding the type itself.
  *
+ * **Details**
+ *
  * The walk is a cycle-guarded set union rather than a parent chain, because
  * the hierarchy is a DAG — 57 classes have more than one parent, and following
  * only the first silently truncates the closure into false rejections that are
@@ -111,56 +113,128 @@ function propertyMembershipIndices(index: number): HashSet.HashSet<number> {
  * **Example** (Check inherited property legality)
  *
  * ```ts
- * import { Vocabulary } from "./conformance-entry.ts";
+ * import { Vocabulary } from "@beep/scratchpad/effected/schema-org/Vocabulary";
  *
  * // `license` names only CreativeWork in its domainIncludes; this is legal
  * // through SoftwareSourceCode -> CreativeWork.
- * console.log(Vocabulary.isPropertyOn("license", "SoftwareSourceCode"));
- * // => true
- * console.log(Vocabulary.isPropertyOn("softwareVersion", "SoftwareSourceCode"));
- * // => false
+ * console.log(Vocabulary.isPropertyOn("license", "SoftwareSourceCode")); // true
+ * console.log(Vocabulary.isPropertyOn("softwareVersion", "SoftwareSourceCode")); // false
  * ```
  *
  * @see {@link https://schema.org/docs/schemas.html | schema.org vocabulary} for the schema.org vocabulary documentation
  * @public
+ * @category utilities
+ * @since 0.0.0
  */
 export class Vocabulary {
 	/**
 	 * The schema.org release the compiled-in vocabulary was generated from, as
 	 * upstream spells it (`"30.0"`).
 	 *
+	 * **Details**
+	 *
 	 * Surfaced at runtime so a consumer's CI can report which vocabulary its
 	 * gate ran against: a later disagreement about whether a term is legal
 	 * cannot be attributed without it.
+	 *
+	 * **Example** (Report the vocabulary release)
+	 *
+	 * ```ts
+	 * import { Vocabulary } from "@beep/scratchpad/effected/schema-org/Vocabulary";
+	 *
+	 * console.log(Vocabulary.version); // 30.0
+	 * ```
+	 *
+	 * @category constants
+	 * @since 0.0.0
 	 */
 	static readonly version: string = VOCABULARY_VERSION;
 
-	/** Whether `name` is a class schema.org defines — for example `"TechArticle"`. */
+	/**
+	 * Whether `name` is a class schema.org defines — for example `"TechArticle"`.
+	 *
+	 * **Example** (Recognize a schema.org class)
+	 *
+	 * ```ts
+	 * import { Vocabulary } from "@beep/scratchpad/effected/schema-org/Vocabulary";
+	 *
+	 * console.log(Vocabulary.hasType("TechArticle")); // true
+	 * console.log(Vocabulary.hasType("UnknownType")); // false
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
+	 */
 	static hasType(name: string): boolean {
 		return MutableHashMap.has(TYPE_INDEX, name);
 	}
 
-	/** Whether `name` is a property schema.org defines — for example `"codeRepository"`. */
+	/**
+	 * Whether `name` is a property schema.org defines — for example `"codeRepository"`.
+	 *
+	 * **Example** (Recognize a schema.org property)
+	 *
+	 * ```ts
+	 * import { Vocabulary } from "@beep/scratchpad/effected/schema-org/Vocabulary";
+	 *
+	 * console.log(Vocabulary.hasProperty("codeRepository")); // true
+	 * console.log(Vocabulary.hasProperty("unknownProperty")); // false
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
+	 */
 	static hasProperty(name: string): boolean {
 		return MutableHashMap.has(PROPERTY_INDEX, name);
 	}
 
 	/**
-  * Every supertype of `type`, transitively, **excluding `type` itself**.
-  * Empty for an unknown type and for `Thing`, which has no supertype.
-  *
-  * **Details**
-  *
-  * The hierarchy is a DAG, not a tree, so this is a set rather than a chain:
-  * `HowToStep` is simultaneously a `ListItem`, a `CreativeWork` and an
-  * `ItemList`, and all three arms are present here along with everything
-  * above them.
-  */
+	 * Every supertype of `type`, transitively, **excluding `type` itself**.
+	 * Empty for an unknown type and for `Thing`, which has no supertype.
+	 *
+	 * **Details**
+	 *
+	 * The hierarchy is a DAG, not a tree, so this is a set rather than a chain:
+	 * `HowToStep` is simultaneously a `ListItem`, a `CreativeWork` and an
+	 * `ItemList`, and all three arms are present here along with everything
+	 * above them.
+	 *
+	 * **Example** (Inspect inherited supertypes)
+	 *
+	 * ```ts
+	 * import { Vocabulary } from "@beep/scratchpad/effected/schema-org/Vocabulary";
+	 * import * as HashSet from "effect/HashSet";
+	 *
+	 * const ancestors = Vocabulary.ancestorsOf("HowToStep");
+	 * console.log(HashSet.has(ancestors, "ListItem")); // true
+	 * console.log(HashSet.has(ancestors, "CreativeWork")); // true
+	 * console.log(HashSet.has(ancestors, "ItemList")); // true
+	 * console.log(HashSet.has(ancestors, "HowToStep")); // false
+	 * console.log(HashSet.size(Vocabulary.ancestorsOf("Thing"))); // 0
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	static ancestorsOf(type: string): HashSet.HashSet<string> {
 		return HashSet.fromIterable(Vocabulary.ancestorsInOrder(type));
 	}
 
-	/** Strict ancestors in the original depth-first discovery order. */
+	/**
+	 * Strict ancestors in the original depth-first discovery order.
+	 *
+	 * **Example** (Inspect the ancestor discovery sequence)
+	 *
+	 * ```ts
+	 * import { Vocabulary } from "@beep/scratchpad/effected/schema-org/Vocabulary";
+	 *
+	 * console.log(Vocabulary.ancestorsInOrder("SoftwareSourceCode").join(", ")); // CreativeWork, Thing
+	 * console.log(Vocabulary.ancestorsInOrder("UnknownType").length); // 0
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	static ancestorsInOrder(type: string): ReadonlyArray<string> {
 		return O.match(MutableHashMap.get(TYPE_INDEX, type), {
 			onNone: () => [],
@@ -169,20 +243,52 @@ export class Vocabulary {
 	}
 
 	/**
-  * Every property legal on `type`, **including inherited ones**. Empty for an
-  * unknown type.
-  *
-  * **Details**
-  *
-  * Inheritance is the whole content of this answer: `SoftwareSourceCode`
-  * declares none of `license`, `name` or `description` in its own
-  * `domainIncludes` — they arrive from `CreativeWork` and `Thing`.
-  */
+	 * Every property legal on `type`, **including inherited ones**. Empty for an
+	 * unknown type.
+	 *
+	 * **Details**
+	 *
+	 * Inheritance is the whole content of this answer: `SoftwareSourceCode`
+	 * declares none of `license`, `name` or `description` in its own
+	 * `domainIncludes` — they arrive from `CreativeWork` and `Thing`.
+	 *
+	 * **Example** (Inspect inherited legal properties)
+	 *
+	 * ```ts
+	 * import { Vocabulary } from "@beep/scratchpad/effected/schema-org/Vocabulary";
+	 * import * as HashSet from "effect/HashSet";
+	 *
+	 * const properties = Vocabulary.propertiesOf("SoftwareSourceCode");
+	 * console.log(HashSet.has(properties, "license")); // true
+	 * console.log(HashSet.has(properties, "name")); // true
+	 * console.log(HashSet.has(properties, "description")); // true
+	 * console.log(HashSet.size(Vocabulary.propertiesOf("UnknownType"))); // 0
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	static propertiesOf(type: string): HashSet.HashSet<string> {
 		return HashSet.fromIterable(Vocabulary.propertiesInOrder(type));
 	}
 
-	/** Legal properties in direct-domain then ancestor discovery order. */
+	/**
+	 * Legal properties in direct-domain then ancestor discovery order.
+	 *
+	 * **Example** (Inspect properties in discovery order)
+	 *
+	 * ```ts
+	 * import { Vocabulary } from "@beep/scratchpad/effected/schema-org/Vocabulary";
+	 * import * as A from "effect/Array";
+	 *
+	 * const properties = Vocabulary.propertiesInOrder("SoftwareSourceCode");
+	 * console.log(A.contains(properties, "license")); // true
+	 * console.log(Vocabulary.propertiesInOrder("UnknownType").length); // 0
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	static propertiesInOrder(type: string): ReadonlyArray<string> {
 		return O.match(MutableHashMap.get(TYPE_INDEX, type), {
 			onNone: () => [],
@@ -191,22 +297,35 @@ export class Vocabulary {
 	}
 
 	/**
-  * Whether `property` is legal on `type`: is any of the property's
-  * `domainIncludes` entries anywhere in the type's ancestor closure?
-  *
-  * **Gotchas**
-  *
-  * Two traps live in that one sentence, and a check that misses either
-  * rejects correct graphs. Legality is **inherited** — `license` carries
-  * exactly one `domainIncludes` entry, `CreativeWork`, and is legal on
-  * `SoftwareSourceCode` only through it. And a property may name **many**
-  * domains — 392 of the 1,521 do, up to 12 — so this is set intersection,
-  * never equality against the first entry.
-  *
-  * `false` when either term is unknown; ask {@link Vocabulary.hasType} or
-  * {@link Vocabulary.hasProperty} to tell those two answers apart, which is
-  * exactly what `Conformance` does.
-  */
+	 * Whether `property` is legal on `type`: is any of the property's
+	 * `domainIncludes` entries anywhere in the type's ancestor closure?
+	 *
+	 * **Gotchas**
+	 *
+	 * Two traps live in that one sentence, and a check that misses either
+	 * rejects correct graphs. Legality is **inherited** — `license` carries
+	 * exactly one `domainIncludes` entry, `CreativeWork`, and is legal on
+	 * `SoftwareSourceCode` only through it. And a property may name **many**
+	 * domains — 392 of the 1,521 do, up to 12 — so this is set intersection,
+	 * never equality against the first entry.
+	 *
+	 * `false` when either term is unknown; ask {@link Vocabulary.hasType} or
+	 * {@link Vocabulary.hasProperty} to tell those two answers apart, which is
+	 * exactly what `Conformance` does.
+	 *
+	 * **Example** (Check inherited and unknown property domains)
+	 *
+	 * ```ts
+	 * import { Vocabulary } from "@beep/scratchpad/effected/schema-org/Vocabulary";
+	 *
+	 * console.log(Vocabulary.isPropertyOn("license", "SoftwareSourceCode")); // true
+	 * console.log(Vocabulary.isPropertyOn("softwareVersion", "SoftwareSourceCode")); // false
+	 * console.log(Vocabulary.isPropertyOn("unknownProperty", "SoftwareSourceCode")); // false
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
+	 */
 	static isPropertyOn(property: string, type: string): boolean {
 		return O.match(O.all([
 			MutableHashMap.get(TYPE_INDEX, type),
@@ -218,20 +337,34 @@ export class Vocabulary {
 	}
 
 	/**
-  * The term that supersedes `term`, when schema.org has deprecated it —
-  * `Vocabulary.supersededBy("episodes")` is `Option.some("episode")`.
-  * `Option.none()` for a current term and for an unknown one.
-  *
-  * **Details**
-  *
-  * Deprecated terms are kept in the table and are **valid but flagged**,
-  * never reported unknown and never rejected by default, exactly as
-  * `@effected/spdx` treats a deprecated license id.
-  *
-  * One lookup covers classes and properties because the two namespaces are
-  * disjoint in release 30.0 — every class name begins uppercase and every property
-  * name lowercase,, and no name appears in both tables.
-  */
+	 * The term that supersedes `term`, when schema.org has deprecated it —
+	 * `Vocabulary.supersededBy("episodes")` is `Option.some("episode")`.
+	 * `Option.none()` for a current term and for an unknown one.
+	 *
+	 * **Details**
+	 *
+	 * Deprecated terms are kept in the table and are **valid but flagged**,
+	 * never reported unknown and never rejected by default, exactly as
+	 * `@effected/spdx` treats a deprecated license id.
+	 *
+	 * One lookup covers classes and properties because the two namespaces are
+	 * disjoint in release 30.0 — every class name begins uppercase and every property
+	 * name lowercase, and no name appears in both tables.
+	 *
+	 * **Example** (Resolve a deprecated property replacement)
+	 *
+	 * ```ts
+	 * import { Vocabulary } from "@beep/scratchpad/effected/schema-org/Vocabulary";
+	 * import * as O from "effect/Option";
+	 *
+	 * console.log(O.getOrElse(Vocabulary.supersededBy("episodes"), () => "none")); // episode
+	 * console.log(O.isNone(Vocabulary.supersededBy("name"))); // true
+	 * console.log(O.isNone(Vocabulary.supersededBy("unknownProperty"))); // true
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	static supersededBy(term: string): O.Option<string> {
 		return O.match(MutableHashMap.get(TYPE_INDEX, term), {
 			onSome: (index) => MutableHashMap.get(SUPERSEDED_TYPE_MAP, index).pipe(

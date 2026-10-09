@@ -10,6 +10,8 @@ const $I = $ScratchpadId.create("effected/schema-org/CreativeWork");
  * spread into `CreativeWork`, `SoftwareSourceCode`, `TechArticle` and
  * `APIReference`.
  *
+ * **Details**
+ *
  * Arity is fixed per property and is always the wire shape: a repeatable
  * property is a `ReadonlyArray` and is always emitted as an array, a
  * single-valued property is a scalar and always emitted as one. In the JSON-LD
@@ -21,12 +23,31 @@ const $I = $ScratchpadId.create("effected/schema-org/CreativeWork");
  * brackets at a call site is small next to the breaking change of widening a
  * scalar later.
  *
+
+ * **Example** (Compose a schema from shared work fields)
+ *
+ * ```ts
+ * import { CreativeWorkFields } from "@beep/scratchpad/effected/schema-org/CreativeWork";
+ * import * as S from "effect/Schema";
+ *
+ * const WorkFields = S.Struct(CreativeWorkFields);
+ * const work = S.decodeUnknownSync(WorkFields)({
+ *   "@id": "https://example.com/#guide",
+ *   license: ["https://spdx.org/licenses/MIT"],
+ * });
+ * console.log(work.license?.[0]); // https://spdx.org/licenses/MIT
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const CreativeWorkFields = {
 	...ThingFields,
 	/**
 	 * The license(s) the work is offered under, as URLs.
+	 *
+	 * **Details**
 	 *
 	 * Repeatable, and this is the property where collapsing would be provably
 	 * wrong: `MIT AND Apache-2.0` is a real dual-license. A consumer holding
@@ -48,6 +69,8 @@ export const CreativeWorkFields = {
 	/**
 	 * The primary entity described by the work, by reference.
 	 *
+	 * **Details**
+	 *
 	 * Single-valued, because schema.org defines `mainEntity` as *the primary*
 	 * entity.
 	 */
@@ -64,6 +87,8 @@ export const CreativeWorkFields = {
 	inLanguage: S.optional(S.String),
 	/**
 	 * The version of the work. Single-valued.
+	 *
+	 * **Details**
 	 *
 	 * A plain string: schema.org's `version` range is `Number | Text`, so
 	 * requiring SemVer here would reject a legal `"2024-11"`.
@@ -84,16 +109,19 @@ export const CreativeWorkFields = {
  * **Example** (Create a licensed creative work)
  *
  * ```ts
- * import { CreativeWork } from "./index.ts";
+ * import { CreativeWork } from "@beep/scratchpad/effected/schema-org/CreativeWork";
  *
  * const work = CreativeWork.make({
  * 	"@id": "https://example.com/#guide",
  * 	name: "Guide",
  * 	license: ["https://spdx.org/licenses/MIT"],
  * });
+ * console.log(work["@type"]); // CreativeWork
  * ```
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class CreativeWork extends S.Class<CreativeWork>($I`CreativeWork`)({
 	...CreativeWorkFields,

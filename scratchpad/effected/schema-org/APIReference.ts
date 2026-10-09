@@ -15,7 +15,7 @@ const $I = $ScratchpadId.create("effected/schema-org/APIReference");
  * **Example** (Create an API reference with version metadata)
  *
  * ```ts
- * import { APIReference } from "./index.ts";
+ * import { APIReference } from "@beep/scratchpad/effected/schema-org/APIReference";
  *
  * const api = APIReference.make({
  * 	"@id": "https://example.com/api#v2",
@@ -23,9 +23,13 @@ const $I = $ScratchpadId.create("effected/schema-org/APIReference");
  * 	assemblyVersion: "2.0.0",
  * 	programmingModel: "ESM",
  * });
+ *
+ * console.log(api.assemblyVersion); // 2.0.0
  * ```
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class APIReference extends S.Class<APIReference>($I`APIReference`)({
 	...TechArticleFields,

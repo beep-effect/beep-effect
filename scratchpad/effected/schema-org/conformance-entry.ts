@@ -19,7 +19,13 @@
  * **Example** (Read the vocabulary version and check graph conformance)
  *
  * ```ts
- * import { Conformance, Vocabulary } from "./conformance-entry.ts";
+ * import { Conformance, Vocabulary } from "@beep/scratchpad/effected/schema-org/conformance-entry";
+ * import { JsonLdDocument, SoftwareSourceCode } from "@beep/scratchpad/effected/schema-org/index";
+ * import * as Result from "effect/Result";
+ *
+ * const graph = Result.getOrThrow(
+ *   JsonLdDocument.buildResult([SoftwareSourceCode.make({ "@id": "https://example.com/pkg#source", name: "example" })]),
+ * );
  *
  * console.log(Vocabulary.version); // => "30.0"
  * for (const issue of Conformance.check(graph)) console.log(issue.message);

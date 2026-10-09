@@ -30,10 +30,42 @@ import * as Str from "effect/String";
 // - 1 property is legal nowhere, because the document gives no resolvable domain: interactionCount. That is the document's answer, not a generator bug.
 // schemaorg:notes:end
 
-/** The schema.org release these literals were generated from. @internal */
+/**
+ * The schema.org release these literals were generated from.
+ *
+ * **Example** (Identify the vocabulary release)
+ *
+ * ```ts
+ * import { VOCABULARY_VERSION } from "@beep/scratchpad/effected/schema-org/internal/vocabulary"
+ *
+ * console.log(VOCABULARY_VERSION) // 30.0
+ * ```
+ *
+ * @internal
+ * @category constants
+ * @since 0.0.0
+ */
 export const VOCABULARY_VERSION = "30.0";
 
-/** Every schema-native class name, sorted by code point. Index into this table is a type index. @internal */
+/**
+ * Every schema-native class name, sorted by code point.
+ *
+ * **Details**
+ *
+ * Index into this table is a type index.
+ *
+ * **Example** (Resolve a type index to its name)
+ *
+ * ```ts
+ * import { TYPE_NAMES } from "@beep/scratchpad/effected/schema-org/internal/vocabulary"
+ *
+ * console.log(TYPE_NAMES[0]) // 3DModel
+ * ```
+ *
+ * @internal
+ * @category constants
+ * @since 0.0.0
+ */
 export const TYPE_NAMES: readonly string[] = [
 	// schemaorg:types:start
 	"3DModel",
@@ -972,7 +1004,25 @@ export const TYPE_NAMES: readonly string[] = [
 	// schemaorg:types:end
 ];
 
-/** Every schema-native property name, sorted by code point. Index into this table is a property index. @internal */
+/**
+ * Every schema-native property name, sorted by code point.
+ *
+ * **Details**
+ *
+ * Index into this table is a property index.
+ *
+ * **Example** (Resolve a property index to its name)
+ *
+ * ```ts
+ * import { PROPERTY_NAMES } from "@beep/scratchpad/effected/schema-org/internal/vocabulary"
+ *
+ * console.log(PROPERTY_NAMES[0]) // about
+ * ```
+ *
+ * @internal
+ * @category constants
+ * @since 0.0.0
+ */
 export const PROPERTY_NAMES: readonly string[] = [
 	// schemaorg:properties:start
 	"about",
@@ -2500,11 +2550,25 @@ export const PROPERTY_NAMES: readonly string[] = [
 ];
 
 /**
- * Per type index, the immediate native supertypes as comma-joined type
- * indices. Foreign parents are dropped here (the walk could not follow them);
+ * Per type index, the immediate native supertypes as comma-joined type indices.
+ *
+ * **Details**
+ *
+ * Foreign parents are dropped here (the walk could not follow them);
  * the header note records how many and on which classes.
  *
+ * **Example** (Decode immediate supertypes of 3DModel)
+ *
+ * ```ts
+ * import { SUB_CLASS_OF, TYPE_NAMES, decodeRow } from "@beep/scratchpad/effected/schema-org/internal/vocabulary"
+ *
+ * const parents = decodeRow(SUB_CLASS_OF[0]).map((index) => TYPE_NAMES[index])
+ * console.log(JSON.stringify(parents)) // ["MediaObject"]
+ * ```
+ *
  * @internal
+ * @category constants
+ * @since 0.0.0
  */
 export const SUB_CLASS_OF: readonly string[] = [
 	// schemaorg:subClassOf:start
@@ -3445,13 +3509,27 @@ export const SUB_CLASS_OF: readonly string[] = [
 ];
 
 /**
- * Per type index, the properties whose `domainIncludes` names that type
- * DIRECTLY, as comma-joined property indices. Inherited legality is not
+ * Per type index, the properties whose `domainIncludes` names that type DIRECTLY, as comma-joined property indices.
+ *
+ * **Details**
+ *
+ * Inherited legality is not
  * materialized here — it is the ancestor closure's union, resolved at query
  * time, which is what keeps the table linear in the vocabulary rather than in
  * the hierarchy.
  *
+ * **Example** (Decode directly declared properties of 3DModel)
+ *
+ * ```ts
+ * import { DOMAIN_PROPERTIES, PROPERTY_NAMES, decodeRow } from "@beep/scratchpad/effected/schema-org/internal/vocabulary"
+ *
+ * const properties = decodeRow(DOMAIN_PROPERTIES[0]).map((index) => PROPERTY_NAMES[index])
+ * console.log(JSON.stringify(properties)) // ["isResizable"]
+ * ```
+ *
  * @internal
+ * @category constants
+ * @since 0.0.0
  */
 export const DOMAIN_PROPERTIES: readonly string[] = [
 	// schemaorg:domainProperties:start
@@ -4391,7 +4469,22 @@ export const DOMAIN_PROPERTIES: readonly string[] = [
 	// schemaorg:domainProperties:end
 ];
 
-/** Deprecated classes as `"<typeIndex>,<supersedingTypeIndex>"`. @internal */
+/**
+ * Deprecated classes as `"<typeIndex>,<supersedingTypeIndex>"`.
+ *
+ * **Example** (Resolve a deprecated class and its replacement)
+ *
+ * ```ts
+ * import { SUPERSEDED_TYPES, TYPE_NAMES, decodeRow } from "@beep/scratchpad/effected/schema-org/internal/vocabulary"
+ *
+ * const names = decodeRow(SUPERSEDED_TYPES[0]).map((index) => TYPE_NAMES[index])
+ * console.log(JSON.stringify(names)) // ["Code","SoftwareSourceCode"]
+ * ```
+ *
+ * @internal
+ * @category constants
+ * @since 0.0.0
+ */
 export const SUPERSEDED_TYPES: readonly string[] = [
 	// schemaorg:supersededTypes:start
 	"150,793",
@@ -4411,7 +4504,22 @@ export const SUPERSEDED_TYPES: readonly string[] = [
 	// schemaorg:supersededTypes:end
 ];
 
-/** Deprecated properties as `"<propertyIndex>,<supersedingPropertyIndex>"`. @internal */
+/**
+ * Deprecated properties as `"<propertyIndex>,<supersedingPropertyIndex>"`.
+ *
+ * **Example** (Resolve a deprecated property and its replacement)
+ *
+ * ```ts
+ * import { SUPERSEDED_PROPERTIES, PROPERTY_NAMES, decodeRow } from "@beep/scratchpad/effected/schema-org/internal/vocabulary"
+ *
+ * const names = decodeRow(SUPERSEDED_PROPERTIES[0]).map((index) => PROPERTY_NAMES[index])
+ * console.log(JSON.stringify(names)) // ["actors","actor"]
+ * ```
+ *
+ * @internal
+ * @category constants
+ * @since 0.0.0
+ */
 export const SUPERSEDED_PROPERTIES: readonly string[] = [
 	// schemaorg:supersededProperties:start
 	"36,35",
@@ -4485,8 +4593,9 @@ export const SUPERSEDED_PROPERTIES: readonly string[] = [
 ];
 
 /**
- * Every namespace prefix the source document's own `@context` declares, other
- * than `schema` itself, sorted by code point.
+ * Every namespace prefix the source document's own `@context` declares, other than `schema` itself, sorted by code point.
+ *
+ * **Details**
  *
  * Shipped because the validator needs to tell a term in a vocabulary
  * schema.org actually aligns with (`gs1:telephone` — skip it, not ours to
@@ -4495,7 +4604,18 @@ export const SUPERSEDED_PROPERTIES: readonly string[] = [
  * Deriving the set from the document rather than hard-coding it means a new
  * alignment vocabulary becomes recognized exactly when schema.org declares it.
  *
+ * **Example** (Inspect declared alignment prefixes)
+ *
+ * ```ts
+ * import { FOREIGN_PREFIXES } from "@beep/scratchpad/effected/schema-org/internal/vocabulary"
+ *
+ * console.log(FOREIGN_PREFIXES.includes("gs1")) // true
+ * console.log(FOREIGN_PREFIXES.includes("bogus")) // false
+ * ```
+ *
  * @internal
+ * @category constants
+ * @since 0.0.0
  */
 export const FOREIGN_PREFIXES: readonly string[] = [
 	// schemaorg:foreignPrefixes:start
@@ -4577,16 +4697,86 @@ export const FOREIGN_PREFIXES: readonly string[] = [
 // ── Derived lookups ─────────────────────────────────────────────────────
 // Hand-authored; the generator never rewrites below this line.
 
-/** Every prefix the source document declares, for O(1) membership. @internal */
+/**
+ * Every prefix the source document declares, for O(1) membership.
+ *
+ * **Example** (Check declared foreign-prefix membership)
+ *
+ * ```ts
+ * import { FOREIGN_PREFIX_SET } from "@beep/scratchpad/effected/schema-org/internal/vocabulary"
+ * import * as MutableHashSet from "effect/MutableHashSet"
+ *
+ * console.log(MutableHashSet.has(FOREIGN_PREFIX_SET, "gs1")) // true
+ * console.log(MutableHashSet.has(FOREIGN_PREFIX_SET, "bogus")) // false
+ * ```
+ *
+ * @internal
+ * @category constants
+ * @since 0.0.0
+ */
 export const FOREIGN_PREFIX_SET = MutableHashSet.fromIterable(FOREIGN_PREFIXES);
 
-/** Type name → type index. @internal */
+/**
+ * Maps each type name to its type index.
+ *
+ * **Example** (Look up the first class index)
+ *
+ * ```ts
+ * import { TYPE_INDEX } from "@beep/scratchpad/effected/schema-org/internal/vocabulary"
+ * import * as MutableHashMap from "effect/MutableHashMap"
+ * import * as O from "effect/Option"
+ *
+ * const index = MutableHashMap.get(TYPE_INDEX, "3DModel")
+ * console.log(O.getOrUndefined(index)) // 0
+ * ```
+ *
+ * @internal
+ * @category constants
+ * @since 0.0.0
+ */
 export const TYPE_INDEX = MutableHashMap.fromIterable(TYPE_NAMES.map((name, index) => [name, index] as const));
 
-/** Property name → property index. @internal */
+/**
+ * Maps each property name to its property index.
+ *
+ * **Example** (Look up the first property index)
+ *
+ * ```ts
+ * import { PROPERTY_INDEX } from "@beep/scratchpad/effected/schema-org/internal/vocabulary"
+ * import * as MutableHashMap from "effect/MutableHashMap"
+ * import * as O from "effect/Option"
+ *
+ * const index = MutableHashMap.get(PROPERTY_INDEX, "about")
+ * console.log(O.getOrUndefined(index)) // 0
+ * ```
+ *
+ * @internal
+ * @category constants
+ * @since 0.0.0
+ */
 export const PROPERTY_INDEX = MutableHashMap.fromIterable(PROPERTY_NAMES.map((name, index) => [name, index] as const));
 
-/** Decode one comma-joined index row. An empty row is an empty list, not a `[NaN]`. @internal */
+/**
+ * Decodes one comma-joined index row.
+ *
+ * **Details**
+ *
+ * An empty row is an empty list, not a `[NaN]`.
+ *
+ * **Example** (Decode populated and empty index rows)
+ *
+ * ```ts
+ * import { decodeRow } from "@beep/scratchpad/effected/schema-org/internal/vocabulary"
+ *
+ * console.log(JSON.stringify(decodeRow("1,2,3"))) // [1,2,3]
+ * console.log(JSON.stringify(decodeRow(""))) // []
+ * console.log(JSON.stringify(decodeRow(undefined))) // []
+ * ```
+ *
+ * @internal
+ * @category decoding
+ * @since 0.0.0
+ */
 export function decodeRow(row: string | undefined): readonly number[] {
 	if (row === undefined || row === "") return [];
 	const out: number[] = [];
@@ -4604,8 +4794,42 @@ function decodePairs(rows: readonly string[]): MutableHashMap.MutableHashMap<num
 	return map;
 }
 
-/** Deprecated class index → the class index that supersedes it. @internal */
+/**
+ * Maps each deprecated class index to the class index that supersedes it.
+ *
+ * **Example** (Look up the replacement for Code)
+ *
+ * ```ts
+ * import { SUPERSEDED_TYPE_MAP, TYPE_NAMES } from "@beep/scratchpad/effected/schema-org/internal/vocabulary"
+ * import * as MutableHashMap from "effect/MutableHashMap"
+ * import * as O from "effect/Option"
+ *
+ * const replacement = MutableHashMap.get(SUPERSEDED_TYPE_MAP, 150)
+ * console.log(O.getOrUndefined(O.map(replacement, (index) => TYPE_NAMES[index]))) // SoftwareSourceCode
+ * ```
+ *
+ * @internal
+ * @category constants
+ * @since 0.0.0
+ */
 export const SUPERSEDED_TYPE_MAP = decodePairs(SUPERSEDED_TYPES);
 
-/** Deprecated property index → the property index that supersedes it. @internal */
+/**
+ * Maps each deprecated property index to the property index that supersedes it.
+ *
+ * **Example** (Look up the replacement for actors)
+ *
+ * ```ts
+ * import { SUPERSEDED_PROPERTY_MAP, PROPERTY_NAMES } from "@beep/scratchpad/effected/schema-org/internal/vocabulary"
+ * import * as MutableHashMap from "effect/MutableHashMap"
+ * import * as O from "effect/Option"
+ *
+ * const replacement = MutableHashMap.get(SUPERSEDED_PROPERTY_MAP, 36)
+ * console.log(O.getOrUndefined(O.map(replacement, (index) => PROPERTY_NAMES[index]))) // actor
+ * ```
+ *
+ * @internal
+ * @category constants
+ * @since 0.0.0
+ */
 export const SUPERSEDED_PROPERTY_MAP = decodePairs(SUPERSEDED_PROPERTIES);

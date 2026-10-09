@@ -19,16 +19,44 @@ const $I = $ScratchpadId.create("effected/schema-org/JsonLdDocument");
 /**
  * Indicates that two nodes in one graph claim the same `@id`.
  *
+ * **Gotchas**
+ *
  * This is caller error rather than a reportable issue: JSON-LD would silently
  * merge the two nodes, so a graph that contains it does not mean what its
  * author thinks it means.
  *
+
+ * **Example** (Report a duplicate node identifier)
+ *
+ * ```ts
+ * import { DuplicateNodeIdError } from "@beep/scratchpad/effected/schema-org/JsonLdDocument";
+ *
+ * const error = DuplicateNodeIdError.make({ id: "https://example.com/#work" });
+ * console.log(error.message); // Two nodes claim the same @id: "https://example.com/#work"
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class DuplicateNodeIdError extends S.TaggedError<DuplicateNodeIdError>($I`DuplicateNodeIdError`)("DuplicateNodeIdError", {
 	/** The `@id` claimed by more than one node. */
 	id: S.String.annotateKey({ description: "The `@id` claimed by more than one node." }),
 }, $I.annote("DuplicateNodeIdError", { description: "Indicates that two nodes in one graph claim the same `@id`." })) {
+	/**
+	 * Formats the duplicate identifier for an error report.
+	 *
+	 * **Example** (Report a duplicate node identifier)
+	 *
+	 * ```ts
+	 * import { DuplicateNodeIdError } from "@beep/scratchpad/effected/schema-org/JsonLdDocument";
+	 *
+	 * const error = DuplicateNodeIdError.make({ id: "https://example.com/#work" });
+	 * console.log(error.message); // Two nodes claim the same @id: "https://example.com/#work"
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return `Two nodes claim the same @id: ${JSON.stringify(this.id)}`;
 	}
@@ -38,10 +66,24 @@ export class DuplicateNodeIdError extends S.TaggedError<DuplicateNodeIdError>($I
  * Indicates that a key in a node's `additional` catch-all collides with a
  * typed field on that node, or with `@id` or `@type`.
  *
+ * **Gotchas**
+ *
  * Unambiguous caller error: the flattened output would carry one term twice
  * with one of the two silently winning.
  *
+
+ * **Example** (Report a colliding catch-all term)
+ *
+ * ```ts
+ * import { ConflictingTermError } from "@beep/scratchpad/effected/schema-org/JsonLdDocument";
+ *
+ * const error = ConflictingTermError.make({ nodeId: "https://example.com/#work", term: "name" });
+ * console.log(error.message); // Node "https://example.com/#work" sets "name" in both a typed field and `additional`
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class ConflictingTermError extends S.TaggedError<ConflictingTermError>($I`ConflictingTermError`)("ConflictingTermError", {
 	/** The `@id` of the node carrying the collision. */
@@ -49,6 +91,20 @@ export class ConflictingTermError extends S.TaggedError<ConflictingTermError>($I
 	/** The colliding term. */
 	term: S.String.annotateKey({ description: "The colliding term." }),
 }, $I.annote("ConflictingTermError", { description: "Indicates that a key in a node's `additional` catch-all collides with a typed field on that node, or with `@id` or `@type`." })) {
+	/**
+	 * Formats the node identifier and colliding term for an error report.
+	 *
+	 * **Example** (Report a colliding catch-all term)
+	 *
+	 * ```ts
+	 * import { ConflictingTermError } from "@beep/scratchpad/effected/schema-org/JsonLdDocument";
+	 *
+	 * const error = ConflictingTermError.make({ nodeId: "https://example.com/#work", term: "name" });
+	 * console.log(error.message); // Node "https://example.com/#work" sets "name" in both a typed field and `additional`
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return `Node ${JSON.stringify(this.nodeId)} sets ${JSON.stringify(this.term)} in both a typed field and \`additional\``;
 	}
@@ -57,7 +113,21 @@ export class ConflictingTermError extends S.TaggedError<ConflictingTermError>($I
 /**
  * Any node this package can place in a graph.
  *
+
+ * **Example** (Validate a supported graph node)
+ *
+ * ```ts
+ * import { JsonLdNode } from "@beep/scratchpad/effected/schema-org/JsonLdDocument";
+ * import { CreativeWork } from "@beep/scratchpad/effected/schema-org/CreativeWork";
+ * import * as S from "effect/Schema";
+ *
+ * const work = CreativeWork.make({ "@id": "https://example.com/#work" });
+ * console.log(S.is(JsonLdNode)(work)); // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const JsonLdNode = S.Union([
 	SoftwareSourceCode,
@@ -72,6 +142,8 @@ export const JsonLdNode = S.Union([
  * Any node this package can place in a graph.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type JsonLdNode = typeof JsonLdNode.Type;
 
@@ -100,7 +172,26 @@ const WireNodeRef = S.StructWithRest(S.Struct({ "@id": S.String.annotateKey({ de
 )).pipe($I.annoteSchema("WireNodeRef", { description: "A catch-all JSON-LD reference containing only a string @id." }));
 const isWireNodeRef = S.is(WireNodeRef);
 
-/** Node references in typed fields and catch-all fields, in property and array order. */
+/**
+ * Collects node references in typed fields and catch-all fields, in property and array order.
+ *
+ * **Example** (Find a work’s author reference)
+ *
+ * ```ts
+ * import { referencesOf } from "@beep/scratchpad/effected/schema-org/JsonLdDocument";
+ * import { CreativeWork } from "@beep/scratchpad/effected/schema-org/CreativeWork";
+ * import { NodeRef } from "@beep/scratchpad/effected/schema-org/NodeRef";
+ *
+ * const work = CreativeWork.make({
+ *   "@id": "https://example.com/#work",
+ *   author: [NodeRef.to("https://example.com/#author")],
+ * });
+ * console.log(referencesOf(work)[0]?.[1]); // https://example.com/#author
+ * ```
+ *
+ * @category getters
+ * @since 0.0.0
+ */
 export const referencesOf = (node: JsonLdNode): ReadonlyArray<readonly [property: string, id: string]> => {
 	const out: Array<readonly [string, string]> = [];
 	const { additional, ...typed } = node;
@@ -121,6 +212,8 @@ export const referencesOf = (node: JsonLdNode): ReadonlyArray<readonly [property
 
 /**
  * The three characters escaped by {@link JsonLdDocument.toScriptBody}.
+ *
+ * **Details**
  *
  * In a JSON document these can occur only inside string literals — no other
  * JSON token contains them — so a blanket post-`stringify` replacement cannot
@@ -155,6 +248,8 @@ const withoutUndefined = (value: Record<string, S.Json | undefined>): Record<str
  * `toJsonLd` is the documented output; the schema's own encode is not a
  * publishable JSON-LD document.
  *
+ * **Gotchas**
+ *
  * **Do not rely on decoding.** Decoding a JSON-LD document back into typed
  * nodes would have to re-gather every unrecognized key into `additional`, and
  * this schema does not: decoding `toJsonLd()` output succeeds but silently
@@ -164,7 +259,10 @@ const withoutUndefined = (value: Record<string, S.Json | undefined>): Record<str
  * **Example** (Build and serialize a graph of linked nodes)
  *
  * ```ts
- * import { JsonLdDocument, NodeRef, SoftwareSourceCode, TechArticle } from "./index.ts";
+ * import { JsonLdDocument } from "@beep/scratchpad/effected/schema-org/JsonLdDocument";
+ * import { NodeRef } from "@beep/scratchpad/effected/schema-org/NodeRef";
+ * import { SoftwareSourceCode } from "@beep/scratchpad/effected/schema-org/SoftwareSourceCode";
+ * import { TechArticle } from "@beep/scratchpad/effected/schema-org/TechArticle";
  * import * as Result from "effect/Result";
  *
  * const built = JsonLdDocument.buildResult([
@@ -177,11 +275,13 @@ const withoutUndefined = (value: Record<string, S.Json | undefined>): Record<str
  * ]);
  *
  * if (Result.isSuccess(built)) {
- * 	console.log(built.success.toScriptBody());
+ * 	console.log(built.success.toScriptBody().includes("Getting started")); // true
  * }
  * ```
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class JsonLdDocument extends S.Class<JsonLdDocument>($I`JsonLdDocument`)({
 	/** The JSON-LD context, fixed at `https://schema.org` and populated automatically. */
@@ -191,6 +291,8 @@ export class JsonLdDocument extends S.Class<JsonLdDocument>($I`JsonLdDocument`)(
 }, $I.annote("JsonLdDocument", { description: "A JSON-LD document: `@context` plus a flat `@graph` of nodes that reference each other by `@id`." })) {
 	/**
 	 * Assembles nodes into a graph, checking identity.
+	 *
+	 * **Details**
 	 *
 	 * This is the synchronous primitive; {@link JsonLdDocument.build} is its
 	 * `Effect` twin. Note that
@@ -207,6 +309,19 @@ export class JsonLdDocument extends S.Class<JsonLdDocument>($I`JsonLdDocument`)(
 	 * on another page is legal, common and often correct; refusing it would
 	 * make this package wrong. Read {@link JsonLdDocument.danglingReferences} to gate on
 	 * closure if your graph is meant to be closed.
+	 *
+	 * **Example** (Check duplicate graph identities)
+	 *
+	 * ```ts
+	 * import { JsonLdDocument } from "@beep/scratchpad/effected/schema-org/JsonLdDocument";
+	 * import { CreativeWork } from "@beep/scratchpad/effected/schema-org/CreativeWork";
+	 * import * as Result from "effect/Result";
+	 *
+	 * const work = CreativeWork.make({ "@id": "https://example.com/#work" });
+	 * console.log(Result.isFailure(JsonLdDocument.buildResult([work, work]))); // true
+	 * ```
+	 *
+	 * @since 0.0.0
 	 */
 	static buildResult(
 		nodes: ReadonlyArray<JsonLdNode>,
@@ -234,17 +349,69 @@ export class JsonLdDocument extends S.Class<JsonLdDocument>($I`JsonLdDocument`)(
 	 * The `Effect` twin of {@link JsonLdDocument.buildResult}, derived from it so the
 	 * two cannot drift. Nothing here is asynchronous and nothing does IO, so
 	 * the `Effect` carries only the span and the error channel.
+	 *
+	 * **Example** (Build a graph synchronously through Effect)
+	 *
+	 * ```ts
+	 * import { JsonLdDocument } from "@beep/scratchpad/effected/schema-org/JsonLdDocument";
+	 * import { CreativeWork } from "@beep/scratchpad/effected/schema-org/CreativeWork";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const graph = Effect.runSync(JsonLdDocument.build([
+	 *   CreativeWork.make({ "@id": "https://example.com/#work", name: "Guide" }),
+	 * ]));
+	 * console.log(graph["@context"]); // https://schema.org
+	 * ```
+	 *
+	 * @since 0.0.0
 	 */
 	static readonly build = Effect.fn("JsonLdDocument.build")((nodes: ReadonlyArray<JsonLdNode>) =>
 		Effect.fromResult(JsonLdDocument.buildResult(nodes)),
 	);
 
-	/** The `@id` of every node in the graph. */
+	/**
+	 * The `@id` of every node in the graph.
+	 *
+	 *
+	 * **Example** (Test whether a graph defines an identifier)
+	 *
+	 * ```ts
+	 * import { JsonLdDocument } from "@beep/scratchpad/effected/schema-org/JsonLdDocument";
+	 * import { CreativeWork } from "@beep/scratchpad/effected/schema-org/CreativeWork";
+	 * import * as HashSet from "effect/HashSet";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const graph = Effect.runSync(JsonLdDocument.build([
+	 *   CreativeWork.make({ "@id": "https://example.com/#work", name: "Guide" }),
+	 * ]));
+	 * console.log(HashSet.has(graph.nodeIds, "https://example.com/#work")); // true
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
 	get nodeIds(): HashSet.HashSet<string> {
 		return HashSet.fromIterable(this.nodeIdsInOrder);
 	}
 
-	/** Node identifiers in graph insertion order, with duplicates removed. */
+	/**
+	 * Node identifiers in graph insertion order, with duplicates removed.
+	 *
+	 *
+	 * **Example** (Read the first inserted node identifier)
+	 *
+	 * ```ts
+	 * import { JsonLdDocument } from "@beep/scratchpad/effected/schema-org/JsonLdDocument";
+	 * import { CreativeWork } from "@beep/scratchpad/effected/schema-org/CreativeWork";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const graph = Effect.runSync(JsonLdDocument.build([
+	 *   CreativeWork.make({ "@id": "https://example.com/#work", name: "Guide" }),
+	 * ]));
+	 * console.log(graph.nodeIdsInOrder[0]); // https://example.com/#work
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
 	get nodeIdsInOrder(): ReadonlyArray<string> {
 		return A.dedupe(A.map(this["@graph"], (node) => node["@id"]));
 	}
@@ -253,10 +420,31 @@ export class JsonLdDocument extends S.Class<JsonLdDocument>($I`JsonLdDocument`)(
 	 * Every `@id` referenced by a node in this graph that no node in this graph
 	 * defines, deduplicated.
 	 *
+	 * **Details**
+	 *
 	 * Not an error: a reference to an organization described on another page is
 	 * correct JSON-LD. This accessor exists so a consumer whose graph is
 	 * supposed to be closed can gate on it, and one whose graph is deliberately
 	 * open can ignore it. The package refuses to decide which you are.
+	 *
+	 * **Example** (Inspect a reference to an external node)
+	 *
+	 * ```ts
+	 * import { JsonLdDocument } from "@beep/scratchpad/effected/schema-org/JsonLdDocument";
+	 * import { CreativeWork } from "@beep/scratchpad/effected/schema-org/CreativeWork";
+	 * import { NodeRef } from "@beep/scratchpad/effected/schema-org/NodeRef";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const graph = Effect.runSync(JsonLdDocument.build([
+	 *   CreativeWork.make({
+	 *     "@id": "https://example.com/#work",
+	 *     author: [NodeRef.to("https://example.com/#author")],
+	 *   }),
+	 * ]));
+	 * console.log(graph.danglingReferences[0]); // https://example.com/#author
+	 * ```
+	 *
+	 * @since 0.0.0
 	 */
 	get danglingReferences(): ReadonlyArray<string> {
 		const defined = this.nodeIds;
@@ -277,6 +465,15 @@ export class JsonLdDocument extends S.Class<JsonLdDocument>($I`JsonLdDocument`)(
 	 * catch-all flattened into the node object, and every `undefined`-valued
 	 * key dropped.
 	 *
+	 * **Details**
+	 *
+	 * This accessor exists because the encoded value is reachable through
+	 * `Schema.encodeSync` whatever this package does, so naming it is the only way
+	 * to attach that warning to it. Its legitimate use is handing an object to
+	 * a framework that serializes JSON-LD itself.
+	 *
+	 * **Gotchas**
+	 *
 	 * **If you are producing text, use {@link JsonLdDocument.toScriptBody}. Never
 	 * `JSON.stringify` this value into an HTML page.** `JSON.stringify` does
 	 * not escape `<`, so a description containing the literal `</script>`
@@ -284,10 +481,21 @@ export class JsonLdDocument extends S.Class<JsonLdDocument>($I`JsonLdDocument`)(
 	 * is the failure this package exists to prevent, and it is reintroduced the
 	 * moment this value is serialized by hand.
 	 *
-	 * This accessor exists because the encoded value is reachable through
-	 * `Schema.encodeSync` whatever this package does, so naming it is the only way
-	 * to attach that warning to it. Its legitimate use is handing an object to
-	 * a framework that serializes JSON-LD itself.
+	 *
+	 * **Example** (Produce a plain JSON-LD value for a framework)
+	 *
+	 * ```ts
+	 * import { JsonLdDocument } from "@beep/scratchpad/effected/schema-org/JsonLdDocument";
+	 * import { CreativeWork } from "@beep/scratchpad/effected/schema-org/CreativeWork";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const graph = Effect.runSync(JsonLdDocument.build([
+	 *   CreativeWork.make({ "@id": "https://example.com/#work", name: "Guide" }),
+	 * ]));
+	 * console.log(typeof graph.toJsonLd()); // object
+	 * ```
+	 *
+	 * @since 0.0.0
 	 */
 	toJsonLd(): S.Json {
 		const encoded = Result.getOrThrow(S.encodeResult(JsonLdDocument)(this));
@@ -311,6 +519,8 @@ export class JsonLdDocument extends S.Class<JsonLdDocument>($I`JsonLdDocument`)(
 	/**
 	 * The graph serialized as a JSON-LD body that is safe to place inside a
 	 * `<script type="application/ld+json">` element.
+	 *
+	 * **Details**
 	 *
 	 * **This is the only text serializer in this package, and it is the escaped
 	 * one.** There is deliberately no unescaped twin: the escaped output is not
@@ -338,9 +548,22 @@ export class JsonLdDocument extends S.Class<JsonLdDocument>($I`JsonLdDocument`)(
 	 *
 	 * The return value is the element's **body**, not the element. Wrap it:
 	 *
-	 * ```html
-	 * <script type="application/ld+json">BODY</script>
+	 * `<script type="application/ld+json">BODY</script>`
+	 *
+	 * **Example** (Escape script-closing text in a work name)
+	 *
+	 * ```ts
+	 * import { JsonLdDocument } from "@beep/scratchpad/effected/schema-org/JsonLdDocument";
+	 * import { CreativeWork } from "@beep/scratchpad/effected/schema-org/CreativeWork";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const graph = Effect.runSync(JsonLdDocument.build([
+	 *   CreativeWork.make({ "@id": "https://example.com/#work", name: "</script> & guide" }),
+	 * ]));
+	 * console.log(graph.toScriptBody().includes("\\u003c/script\\u003e")); // true
 	 * ```
+	 *
+	 * @since 0.0.0
 	 */
 	toScriptBody(): string {
 		return JSON.stringify(this.toJsonLd()).replace(/[<>&]/g, (char) => SCRIPT_ESCAPES[char] ?? char);
