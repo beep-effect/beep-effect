@@ -141,7 +141,7 @@ Design order: schema, then service contract, then implementation. Every change s
    - `.claude/skills/yeet/SKILL.md:1008-1013` and l.443.
    - `IssueClassification.ts:337` remediation text.
    - `standards/architecture/15-lab-apps.md:54`.
-   - `standards/architecture/14-ecosystem-packages.md:118-129`: the "release lane" no longer exists. Activation requires deliberately re-establishing a release workflow, version policy, and the changeset requirement, all of which the `private: false` flip triggers.
+   - `standards/architecture/14-ecosystem-packages.md:118-129`: the "release lane" no longer exists. Activation requires deliberately re-establishing a release workflow and version policy. The `private: false` flip re-engages only the changeset requirement (step 2); the operator adds the release workflow and version policy separately (step 11).
    - `docs/runbooks/lab-promotion.md:39,55,76`.
    - A new `standards/architecture/DECISIONS.md` entry.
    - Also correct the `release-desktop.yml:10-11` comment about npm/changeset tags.
