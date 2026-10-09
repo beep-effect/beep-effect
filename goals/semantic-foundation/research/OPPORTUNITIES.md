@@ -79,3 +79,29 @@ changeset, `bun run beep quality changeset-graph` exited 1 with
 the brief's private-workspace exemption; no release policy was changed.
 Generate package publication facts from the lane's refreshed base when
 writing briefs so workers do not prepare release notes the gate rejects.
+
+## 2026-10-09 — XML builder declarations disagree with runtime exports
+
+The XML round-trip regression initially used `XMLBuilder` from
+`fast-xml-parser`; the schema audit's Biome gate rejected its deprecated
+re-export. The maintained `fast-xml-builder@1.3.1` declarations expose a
+named `Builder` export, but its ESM source exports only the default
+constructor. The focused test and schema package audit exposed
+`undefined is not a constructor`; using the default import repaired it.
+Prefer the runtime-supported default import and verify runtime exports when
+following this package's declarations. Adding the explicit test dependency
+also made bounded docgen require the canonical full proof because the root
+catalog and lockfile changed.
+
+## 2026-10-09 — Scoped CLI coverage reports unrelated baseline drops
+
+`bun run beep ci lane coverage --filter @beep/repo-cli` passed 291 files
+and 5,834 tests (5 skipped), then failed committed coverage floors on
+`Accounts.command.ts` (branches 75 < 100), `EffectImports.ts`
+(functions 89.34 < 90.17, lines 92.36 < 92.52, statements 92.02 < 92.13),
+and `Yeet/internal/TurboQuery.ts` (functions 73.91 < 78.26,
+lines/statements 86.66 < 88.33). All three files are unchanged by this lane
+relative to its base `4e82f6d942`; the baseline is also unchanged on current
+main. This lane does not lower their floors or repair their unrelated code.
+Main advanced during the proof, including global inputs. Integrate the newer
+base and replay with PR-base framing before attributing the final-head gate.
