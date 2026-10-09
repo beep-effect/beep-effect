@@ -47,3 +47,18 @@
   publish unit before admission, amend the evidence, rerun packet checks and
   resubmit. No push or scanner run occurred; no push budget consumed.
 - Prevention: mark historical change records with their commit from the outset.
+
+## 2026-10-09 — private-package release policy contradicts the lane brief
+
+- Doing: prepare PR 2 after publishing activation PR #1577.
+- Evidence: brief step 5.5 requires a changeset for every changed versioned
+  package, major when outside-kernel sites change. Main #1566 (`2eefbb64af`)
+  now forbids notes for live private workspaces; ChangesetGraph.ts lines 600-621
+  enforces it. Shared-domain, db-admin, desktop and workspace-tables are private.
+- Attribution: inherited release-policy change, introduced after the brief's
+  `7febc0287b` source snapshot; not an implementation failure.
+- Action: stop before package implementation under the manifest's materially
+  contradictory sources condition. Preserve the P0 plan and ready activation PR.
+- Prevention: reconcile the lane's changeset requirement with the current
+  manifest-aware policy before resuming P1. Do not change package privacy or
+  weaken the guard from this lane.

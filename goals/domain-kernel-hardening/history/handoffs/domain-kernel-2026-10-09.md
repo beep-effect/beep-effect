@@ -114,3 +114,43 @@ unchanged. The release-policy baseline removed the housekeeping changeset note;
 SOURCES/SPEC now cite its verified local Git blob at #720. The own publish unit
 was stopped while still queued: no scanner run and no push occurred, so no push
 budget was used. Evidence amendment and packet re-verification precede resubmit.
+
+## PR 1 ready; PR 2 blocked before implementation
+
+Published PR #1577 at exact head
+`dd8bbccba6eecdc665e89548af0259285c0863e3`, then marked ready for review.
+Publication passed cheap gates and head-install preflight; its one publish push
+is used. No review-round or conflict-only push has occurred. R4 gate receipt was
+written with this head and push time `2026-10-09T20:02:39Z`. The worker did not
+merge. PR 2 branch `feat/domain-kernel-hardening-p1` was created from that head.
+
+Main #1566 (`2eefbb64af`) materially contradicts brief step 5.5: the brief requires
+changesets naming every changed versioned package (major for the measured forced
+outside-kernel fixture/converter edits); `.changeset/README.md` lines 3-6 and
+`ChangesetGraph.ts` lines 600-621 forbid notes naming live private workspaces.
+Manifest reads confirm shared-domain 0.0.2, db-admin 0.0.2, professional-desktop
+0.0.3 and workspace-tables 0.0.2 are all private. Scope excludes changing privacy,
+CI or release policy. D9 records the stop and reversal: resume with a reconciled
+brief, leaving release policy intact. P1-P3 remain pending; no implementation,
+mechanical fixes, migration, bundle or reflection has been applied.
+
+The own readiness monitor was cancelled through its owner command on this
+blocked stop; status is terminated. Its proof inbox row was acknowledged
+observed. Three Vercel deployment rows were acknowledged environment-only: each
+URL reports build-rate-limit. No purchase or plan change was made. All own heavy
+jobs are terminal. The external R4 merge-gate receipt remains for the orchestrator;
+only the orchestrator disarms that gate. No readiness-monitor success is claimed.
+
+Graft context estimate: approximately 116,260 tokens saved across source queries.
+
+The report below describes the exact published PR 1 head; the local PR 2 branch
+only appends the blocked receipt to packet prose. It is not an implementation PR.
+
+lane: domain-kernel
+head: dd8bbccba6eecdc665e89548af0259285c0863e3 (exact published PR 1 head; blocked receipt follows locally)
+PR(s): PR 1 #1577 open, content-final and ready | PR 2 none (blocked before implementation; local branch exists)
+package-verify: not run (no package edits retained; P0 prototypes reverted)
+hosted-parity: test-tsgo: not run (P1 blocked) | docgen local: not run (P1 blocked) | jsdoc-ratchet: not run (P1 blocked) | knowledge refs: not run (P1 blocked) | fallow audit+health: not run (P1 blocked; publish cheap fallow audit/dead-code passed) | scoped coverage: not run (P1 blocked)
+handoff: goals/domain-kernel-hardening/history/handoffs/domain-kernel-2026-10-09.md
+open items: reconcile brief step 5.5 with main #1566 private-package changeset prohibition; then implement the measured 36 mechanical sites in 12 files, generate the 52 nullable columns in 26 tables, verify and close P1-P3. D1-D8 and reversals are above; D9 hold reverses on a reconciled brief. Orchestrator owns stale docs/ROADMAP.md platform re-entry bullet (~349), Parked packets row (~383), and cohort prose (~406). R1 completed-retained stream/superset checks are not applicable yet. PR 1 is not merged and no readiness success is claimed.
+blocked: brief step 5.5 requires private-package changesets that main #1566 now forbids
