@@ -1,7 +1,10 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import type * as Path from "effect/Path";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import type { XdgPaths, XdgPlatform } from "./Xdg.ts";
+
+const $I = $ScratchpadId.create("effected/xdg/NativeDirs");
 
 /**
  * The OS-native application directories for one namespace.
@@ -13,16 +16,16 @@ import type { XdgPaths, XdgPlatform } from "./Xdg.ts";
  *
  * @public
  */
-export class NativeDirs extends S.Class<NativeDirs>("NativeDirs")({
+export class NativeDirs extends S.Class<NativeDirs>($I`NativeDirs`)({
 	/** Where configuration lives. */
-	config: S.String,
+	config: S.String.annotateKey({ description: "Where configuration lives." }),
 	/** Where application data lives. */
-	data: S.String,
+	data: S.String.annotateKey({ description: "Where application data lives." }),
 	/** Where discardable cached data lives. */
-	cache: S.String,
+	cache: S.String.annotateKey({ description: "Where discardable cached data lives." }),
 	/** Where persistent-but-regenerable state lives. */
-	state: S.String,
-}) {
+	state: S.String.annotateKey({ description: "Where persistent-but-regenerable state lives." }),
+}, $I.annote("NativeDirs", { description: "The OS-native application directories for one namespace." })) {
 	/**
 	 * Map a platform and an environment onto the native directories for a namespace.
 	 *

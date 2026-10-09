@@ -1,9 +1,12 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Config from "effect/Config";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("effected/xdg/Xdg");
 
 /**
  * The operating system the path decisions are taken against.
@@ -27,7 +30,7 @@ export const XdgPlatform = S.Literals([
 	"win32",
 	"cygwin",
 	"netbsd",
-]);
+]).pipe($I.annoteSchema("XdgPlatform", { description: "The operating system the path decisions are taken against." }));
 
 /**
  * The decoded form of {@link (XdgPlatform:variable)}.
@@ -56,7 +59,7 @@ const detectPlatform = (): XdgPlatform => {
  * @public
  */
 export const CurrentPlatform: Context.Reference<XdgPlatform> = Context.Reference<XdgPlatform>(
-	"@effected/xdg/CurrentPlatform",
+	$I`CurrentPlatform`,
 	{ defaultValue: detectPlatform },
 );
 
@@ -70,12 +73,12 @@ export const CurrentPlatform: Context.Reference<XdgPlatform> = Context.Reference
  *
  * @public
  */
-export class XdgEnvError extends S.TaggedError<XdgEnvError>()("XdgEnvError", {
+export class XdgEnvError extends S.TaggedError<XdgEnvError>($I`XdgEnvError`)("XdgEnvError", {
 	/** The environment variable that was required and not found. */
-	variable: S.String,
+	variable: S.String.annotateKey({ description: "The environment variable that was required and not found." }),
 	/** The underlying failure, preserved structurally. */
-	cause: S.Defect(),
-}) {
+	cause: S.Defect().annotateKey({ description: "The underlying failure, preserved structurally." }),
+}, $I.annote("XdgEnvError", { description: "Indicates that the environment cannot satisfy XDG directory resolution." })) {
 	override get message(): string {
 		return `The ${this.variable} environment variable is not set`;
 	}
@@ -96,28 +99,28 @@ export class XdgEnvError extends S.TaggedError<XdgEnvError>()("XdgEnvError", {
  *
  * @public
  */
-export class XdgPaths extends S.Class<XdgPaths>("XdgPaths")({
+export class XdgPaths extends S.Class<XdgPaths>($I`XdgPaths`)({
 	/** `$HOME`. The one variable that must be set. */
-	home: S.String,
+	home: S.String.annotateKey({ description: "`$HOME`. The one variable that must be set." }),
 	/** `$XDG_CONFIG_HOME`. */
-	configHome: S.optionalKey(S.String),
+	configHome: S.optionalKey(S.String).annotateKey({ description: "`$XDG_CONFIG_HOME`." }),
 	/** `$XDG_DATA_HOME`. */
-	dataHome: S.optionalKey(S.String),
+	dataHome: S.optionalKey(S.String).annotateKey({ description: "`$XDG_DATA_HOME`." }),
 	/** `$XDG_CACHE_HOME`. */
-	cacheHome: S.optionalKey(S.String),
+	cacheHome: S.optionalKey(S.String).annotateKey({ description: "`$XDG_CACHE_HOME`." }),
 	/** `$XDG_STATE_HOME`. */
-	stateHome: S.optionalKey(S.String),
+	stateHome: S.optionalKey(S.String).annotateKey({ description: "`$XDG_STATE_HOME`." }),
 	/** `$XDG_RUNTIME_DIR`. Absent on most non-Linux systems. */
-	runtimeDir: S.optionalKey(S.String),
+	runtimeDir: S.optionalKey(S.String).annotateKey({ description: "`$XDG_RUNTIME_DIR`. Absent on most non-Linux systems." }),
 	/** `%APPDATA%`, on Windows. */
-	appData: S.optionalKey(S.String),
+	appData: S.optionalKey(S.String).annotateKey({ description: "`%APPDATA%`, on Windows." }),
 	/** `%LOCALAPPDATA%`, on Windows. */
-	localAppData: S.optionalKey(S.String),
+	localAppData: S.optionalKey(S.String).annotateKey({ description: "`%LOCALAPPDATA%`, on Windows." }),
 	/** `$XDG_CONFIG_DIRS`, split on `:`. Defaults to `["/etc/xdg"]`. */
-	configDirs: S.Array(S.String),
+	configDirs: S.Array(S.String).annotateKey({ description: "`$XDG_CONFIG_DIRS`, split on `:`. Defaults to `[\"/etc/xdg\"]`." }),
 	/** `$XDG_DATA_DIRS`, split on `:`. Defaults to `["/usr/local/share", "/usr/share"]`. */
-	dataDirs: S.Array(S.String),
-}) {}
+	dataDirs: S.Array(S.String).annotateKey({ description: "`$XDG_DATA_DIRS`, split on `:`. Defaults to `[\"/usr/local/share\", \"/usr/share\"]`." }),
+}, $I.annote("XdgPaths", { description: "The XDG Base Directory environment, resolved." })) {}
 
 /**
  * Split a `PATH`-style variable, dropping empty entries.
@@ -143,7 +146,7 @@ const splitDirs = (raw: string | undefined, fallback: ReadonlyArray<string>): Re
  *
  * @public
  */
-export class Xdg extends Context.Service<Xdg, XdgPaths>()("@beep/scratchpad/effected/xdg/Xdg") {
+export class Xdg extends Context.Service<Xdg, XdgPaths>()($I`Xdg`) {
 	/**
 	 * Read the XDG environment through Effect's `Config`.
 	 *

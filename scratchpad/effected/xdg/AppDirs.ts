@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -9,12 +10,14 @@ import { NativeDirs } from "./NativeDirs.ts";
 import type { XdgPaths, XdgPlatform } from "./Xdg.ts";
 import { CurrentPlatform, Xdg } from "./Xdg.ts";
 
+const $I = $ScratchpadId.create("effected/xdg/AppDirs");
+
 /**
  * The four directory kinds XDG separates, plus the runtime directory.
  *
  * @public
  */
-export const AppDirKind = S.Literals(["config", "data", "cache", "state", "runtime"]);
+export const AppDirKind = S.Literals(["config", "data", "cache", "state", "runtime"]).pipe($I.annoteSchema("AppDirKind", { description: "The four directory kinds XDG separates, plus the runtime directory." }));
 
 /**
  * The decoded form of {@link (AppDirKind:variable)}.
@@ -35,14 +38,14 @@ export type AppDirKind = typeof AppDirKind.Type;
  *
  * @public
  */
-export class AppDirsError extends S.TaggedError<AppDirsError>()("AppDirsError", {
+export class AppDirsError extends S.TaggedError<AppDirsError>($I`AppDirsError`)("AppDirsError", {
 	/** Which directory kind failed. */
-	directory: AppDirKind,
+	directory: AppDirKind.annotateKey({ description: "Which directory kind failed." }),
 	/** The path that could not be created. */
-	path: S.String,
+	path: S.String.annotateKey({ description: "The path that could not be created." }),
 	/** The underlying failure, preserved structurally. */
-	cause: S.Defect(),
-}) {
+	cause: S.Defect().annotateKey({ description: "The underlying failure, preserved structurally." }),
+}, $I.annote("AppDirsError", { description: "Indicates that an application directory could not be created." })) {
 	override get message(): string {
 		return `Failed to create the ${this.directory} directory at "${this.path}"`;
 	}
@@ -53,15 +56,15 @@ export class AppDirsError extends S.TaggedError<AppDirsError>()("AppDirsError", 
  *
  * @public
  */
-export class ResolvedAppDirs extends S.Class<ResolvedAppDirs>("ResolvedAppDirs")({
+export class ResolvedAppDirs extends S.Class<ResolvedAppDirs>($I`ResolvedAppDirs`)({
 	/** The app's configuration directory. */
-	config: S.String,
+	config: S.String.annotateKey({ description: "The app's configuration directory." }),
 	/** The app's data directory. */
-	data: S.String,
+	data: S.String.annotateKey({ description: "The app's data directory." }),
 	/** The app's cache directory. */
-	cache: S.String,
+	cache: S.String.annotateKey({ description: "The app's cache directory." }),
 	/** The app's state directory. */
-	state: S.String,
+	state: S.String.annotateKey({ description: "The app's state directory." }),
 	/**
 	 * The app's runtime directory.
 	 *
@@ -71,7 +74,7 @@ export class ResolvedAppDirs extends S.Class<ResolvedAppDirs>("ResolvedAppDirs")
 	 * user-owned, mode 0700 and cleaned on logout — so inventing one would be a
 	 * lie, and the key is simply absent.
 	 */
-	runtime: S.optionalKey(S.String),
+	runtime: S.optionalKey(S.String).annotateKey({ description: "The app's runtime directory." }),
 	/**
 	 * Where to **look** for configuration, in priority order.
 	 *
@@ -80,10 +83,10 @@ export class ResolvedAppDirs extends S.Class<ResolvedAppDirs>("ResolvedAppDirs")
 	 * namespaced. It is what makes {@link XdgConfig.resolver} a real search
 	 * rather than a single stat.
 	 */
-	configSearchPath: S.Array(S.String),
+	configSearchPath: S.Array(S.String).annotateKey({ description: "Where to **look** for configuration, in priority order." }),
 	/** Where to look for data files, in priority order. */
-	dataSearchPath: S.Array(S.String),
-}) {}
+	dataSearchPath: S.Array(S.String).annotateKey({ description: "Where to look for data files, in priority order." }),
+}, $I.annote("ResolvedAppDirs", { description: "The fully resolved, app-namespaced directories." })) {}
 
 /**
  * Per-kind absolute directory overrides. Each wins outright over every other rung.
@@ -296,7 +299,7 @@ const badNamespace = (namespace: string): Error | undefined => {
  *
  * @public
  */
-export class AppDirs extends Context.Service<AppDirs, AppDirsShape>()("@beep/scratchpad/effected/xdg/AppDirs") {
+export class AppDirs extends Context.Service<AppDirs, AppDirsShape>()($I`AppDirs`) {
 	/**
 	 * Resolve the namespace's directories against the ambient {@link Xdg}
 	 * environment and platform.
