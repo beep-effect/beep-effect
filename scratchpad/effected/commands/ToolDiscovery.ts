@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Cache from "effect/Cache";
 import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
@@ -14,6 +15,8 @@ import { Run } from "./Run.ts";
 import type { Tool } from "./Tool.ts";
 import { VersionProbe } from "./Tool.ts";
 
+const $I = $ScratchpadId.create("effected/commands/ToolDiscovery");
+
 /** How many tools' probe evidence to remember. */
 const CACHE_CAPACITY = 256;
 
@@ -25,7 +28,7 @@ const DEFAULT_VERSION_PATTERN = /(\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?)/;
  *
  * @public
  */
-export const ResolvedSource = S.Literals(["global", "local"]);
+export const ResolvedSource = S.Literals(["global", "local"]).pipe($I.annoteSchema("ResolvedSource", { description: "Where a tool was resolved from." }));
 
 /**
  * The decoded type of {@link (ResolvedSource:variable)}.
@@ -39,22 +42,22 @@ export type ResolvedSource = typeof ResolvedSource.Type;
  *
  * @public
  */
-export class ResolvedTool extends S.Class<ResolvedTool>("ResolvedTool")({
+export class ResolvedTool extends S.Class<ResolvedTool>($I`ResolvedTool`)({
 	/** The executable name. */
-	name: S.String,
+	name: S.String.annotateKey({ description: "The executable name." }),
 	/** Which copy this resolution selected. */
-	source: ResolvedSource,
+	source: ResolvedSource.annotateKey({ description: "Which copy this resolution selected." }),
 	/** The selected copy's version, when one could be read. */
-	version: S.Option(S.String),
+	version: S.Option(S.String).annotateKey({ description: "The selected copy's version, when one could be read." }),
 	/** The global copy's version, when it exists and reports one. */
-	globalVersion: S.Option(S.String),
+	globalVersion: S.Option(S.String).annotateKey({ description: "The global copy's version, when it exists and reports one." }),
 	/** The project-local copy's version, when it exists and reports one. */
-	localVersion: S.Option(S.String),
+	localVersion: S.Option(S.String).annotateKey({ description: "The project-local copy's version, when it exists and reports one." }),
 	/** Whether the two copies reported different versions. */
-	mismatch: S.Boolean,
+	mismatch: S.Boolean.annotateKey({ description: "Whether the two copies reported different versions." }),
 	/** The project-local execution context, when {@link ResolvedTool.source} is `"local"`. */
-	context: S.optionalKey(ExecContext),
-}) {
+	context: S.optionalKey(ExecContext).annotateKey({ description: "The project-local execution context, when ResolvedTool.source is `\"local\"`." }),
+}, $I.annote("ResolvedTool", { description: "A tool that was found, with everything discovery learned about it." })) {
 	/**
 	 * A core `Command` that runs this tool — bare for a global resolution,
 	 * launcher-prefixed and directory-scoped for a local one.
@@ -81,12 +84,12 @@ export class ResolvedTool extends S.Class<ResolvedTool>("ResolvedTool")({
  *
  * @public
  */
-export class ToolNotFoundError extends S.TaggedError<ToolNotFoundError>()("ToolNotFoundError", {
+export class ToolNotFoundError extends S.TaggedError<ToolNotFoundError>($I`ToolNotFoundError`)("ToolNotFoundError", {
 	/** The tool that was looked for. */
-	tool: S.String,
+	tool: S.String.annotateKey({ description: "The tool that was looked for." }),
 	/** The locations its `source` requirement demanded. */
-	searched: S.Array(ResolvedSource),
-}) {
+	searched: S.Array(ResolvedSource).annotateKey({ description: "The locations its `source` requirement demanded." }),
+}, $I.annote("ToolNotFoundError", { description: "A tool could not be found where it was required." })) {
 	override get message(): string {
 		return `Tool not found: ${this.tool} (required ${this.searched.join(" and ")})`;
 	}
@@ -98,16 +101,16 @@ export class ToolNotFoundError extends S.TaggedError<ToolNotFoundError>()("ToolN
  *
  * @public
  */
-export class ToolVersionMismatchError extends S.TaggedError<ToolVersionMismatchError>()(
+export class ToolVersionMismatchError extends S.TaggedError<ToolVersionMismatchError>($I`ToolVersionMismatchError`)(
 	"ToolVersionMismatchError",
 	{
 		/** The tool. */
-		tool: S.String,
+		tool: S.String.annotateKey({ description: "The tool." }),
 		/** The global copy's version. */
-		globalVersion: S.String,
+		globalVersion: S.String.annotateKey({ description: "The global copy's version." }),
 		/** The project-local copy's version. */
-		localVersion: S.String,
-	},
+		localVersion: S.String.annotateKey({ description: "The project-local copy's version." }),
+	}, $I.annote("ToolVersionMismatchError", { description: "The global and project-local copies disagree, and the tool's policy is `\"fail\"`." }),
 ) {
 	override get message(): string {
 		return `Version mismatch for ${this.tool}: global ${this.globalVersion} vs local ${this.localVersion}`;
@@ -126,10 +129,10 @@ export class ToolVersionMismatchError extends S.TaggedError<ToolVersionMismatchE
  *
  * @public
  */
-export class ToolRefusedError extends S.TaggedError<ToolRefusedError>()("ToolRefusedError", {
+export class ToolRefusedError extends S.TaggedError<ToolRefusedError>($I`ToolRefusedError`)("ToolRefusedError", {
 	/** The refused name. */
-	tool: S.String,
-}) {
+	tool: S.String.annotateKey({ description: "The refused name." }),
+}, $I.annote("ToolRefusedError", { description: "A tool name that cannot safely be spawned was refused before any process started." })) {
 	override get message(): string {
 		return this.tool === ""
 			? "Refused an empty tool name"
@@ -167,10 +170,10 @@ interface Evidence {
  * lookup needs no side table. Policy fields are deliberately absent: they are
  * applied to the evidence per call.
  */
-class EvidenceKey extends S.Class<EvidenceKey>("EvidenceKey")({
-	name: S.String,
-	probe: VersionProbe,
-}) {}
+class EvidenceKey extends S.Class<EvidenceKey>($I`EvidenceKey`)({
+	name: S.String.annotateKey({ description: "The executable being probed globally and project-locally, used to identify cached discovery evidence" }),
+	probe: VersionProbe.annotateKey({ description: "How the tool is asked for its version and how its output is interpreted, distinguishing cached discovery evidence" }),
+}, $I.annote("EvidenceKey", { description: "The cache key: everything the probe outcome depends on, and nothing else." })) {}
 
 /** argv for a version probe: the flag string split on whitespace. */
 const probeArgs = (probe: VersionProbe): ReadonlyArray<string> =>
@@ -418,7 +421,7 @@ const notStubbed = (method: string) => () =>
  * @public
  */
 export class ToolDiscovery extends Context.Service<ToolDiscovery, ToolDiscoveryShape>()(
-	"@beep/scratchpad/effected/commands/ToolDiscovery",
+	$I`ToolDiscovery`,
 ) {
 	/** Resolves its dependencies once at construction, so every method's `R` is `never`. */
 	static readonly layer: Layer.Layer<ToolDiscovery, never, ChildProcessSpawner.ChildProcessSpawner | LocalExec> =

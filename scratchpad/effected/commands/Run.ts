@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import type * as Duration from "effect/Duration";
 import type * as Redacted from "effect/Redacted";
 import * as Effect from "effect/Effect";
@@ -10,6 +11,8 @@ import * as Stream from "effect/Stream";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import { OutputTooLarge, collectBounded } from "./internal/capture.ts";
 import { REDACTED, Redaction } from "./Redaction.ts";
+
+const $I = $ScratchpadId.create("effected/commands/Run");
 
 /**
  * Default ceiling on captured bytes per stream (16 MiB).
@@ -73,14 +76,14 @@ export interface RunOptions {
  *
  * @public
  */
-export class CommandOutput extends S.Class<CommandOutput>("CommandOutput")({
+export class CommandOutput extends S.Class<CommandOutput>($I`CommandOutput`)({
 	/** Captured standard output, redacted. */
-	stdout: S.String,
+	stdout: S.String.annotateKey({ description: "Captured standard output, redacted." }),
 	/** Captured standard error, redacted. */
-	stderr: S.String,
+	stderr: S.String.annotateKey({ description: "Captured standard error, redacted." }),
 	/** The process exit code. A non-zero value is NOT an error at this level. */
-	exitCode: S.Finite,
-}) {
+	exitCode: S.Finite.annotateKey({ description: "The process exit code. A non-zero value is NOT an error at this level." }),
+}, $I.annote("CommandOutput", { description: "What one completed run produced." })) {
 	/** Whether the process exited zero. */
 	get succeeded(): boolean {
 		return this.exitCode === 0;
@@ -130,22 +133,22 @@ const tail = (text: string): string => {
  *
  * @public
  */
-export class CommandFailedError extends S.TaggedError<CommandFailedError>()("CommandFailedError", {
+export class CommandFailedError extends S.TaggedError<CommandFailedError>($I`CommandFailedError`)("CommandFailedError", {
 	/** Why it failed. */
-	kind: S.Literals(["nonZero", "spawn", "timeout"]),
+	kind: S.Literals(["nonZero", "spawn", "timeout"]).annotateKey({ description: "Why it failed." }),
 	/** The executable (or `"a | b"` for a pipeline). */
-	command: S.String,
+	command: S.String.annotateKey({ description: "The executable (or `\"a | b\"` for a pipeline)." }),
 	/** argv, redacted. */
-	args: S.Array(S.String),
+	args: S.Array(S.String).annotateKey({ description: "argv, redacted." }),
 	/** The exit code, when the process ran. */
-	exitCode: S.optionalKey(S.Finite),
+	exitCode: S.optionalKey(S.Finite).annotateKey({ description: "The exit code, when the process ran." }),
 	/** Captured standard error, redacted, when the process ran. */
-	stderr: S.optionalKey(S.String),
+	stderr: S.optionalKey(S.String).annotateKey({ description: "Captured standard error, redacted, when the process ran." }),
 	/** Captured standard output, redacted, when the process ran. */
-	stdout: S.optionalKey(S.String),
+	stdout: S.optionalKey(S.String).annotateKey({ description: "Captured standard output, redacted, when the process ran." }),
 	/** The absorbed platform failure, for `"spawn"`. */
-	cause: S.optionalKey(S.Defect()),
-}) {
+	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The absorbed platform failure, for `\"spawn\"`." }),
+}, $I.annote("CommandFailedError", { description: "A command that could not be run, or that ran and failed." })) {
 	/** The process ran and exited non-zero. */
 	static readonly nonZero = (
 		command: ChildProcess.Command,
@@ -238,20 +241,20 @@ export class CommandFailedError extends S.TaggedError<CommandFailedError>()("Com
  *
  * @public
  */
-export class CommandOutputError extends S.TaggedError<CommandOutputError>()("CommandOutputError", {
+export class CommandOutputError extends S.TaggedError<CommandOutputError>($I`CommandOutputError`)("CommandOutputError", {
 	/** Which way the output was unusable. */
-	kind: S.Literals(["notJson", "schema", "tooLarge"]),
+	kind: S.Literals(["notJson", "schema", "tooLarge"]).annotateKey({ description: "Which way the output was unusable." }),
 	/** The executable that produced it. */
-	command: S.String,
+	command: S.String.annotateKey({ description: "The executable that produced it." }),
 	/** The underlying parse or decode failure. */
-	cause: S.optionalKey(S.Defect()),
+	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying parse or decode failure." }),
 	/** The exit code, when the combinator parses independently of it. */
-	exitCode: S.optionalKey(S.Finite),
+	exitCode: S.optionalKey(S.Finite).annotateKey({ description: "The exit code, when the combinator parses independently of it." }),
 	/** Captured standard error, redacted, when the process ran. */
-	stderr: S.optionalKey(S.String),
+	stderr: S.optionalKey(S.String).annotateKey({ description: "Captured standard error, redacted, when the process ran." }),
 	/** Captured standard output, redacted, when the process ran. */
-	stdout: S.optionalKey(S.String),
-}) {
+	stdout: S.optionalKey(S.String).annotateKey({ description: "Captured standard output, redacted, when the process ran." }),
+}, $I.annote("CommandOutputError", { description: "A command ran, but its output could not be used." })) {
 	override get message(): string {
 		const parts: Array<string> = [];
 		if (this.kind === "notJson") {

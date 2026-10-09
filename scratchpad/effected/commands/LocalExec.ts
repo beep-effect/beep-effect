@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import type * as Effect from "effect/Effect";
 import * as Context from "effect/Context";
 import * as Eff from "effect/Effect";
@@ -5,6 +6,8 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { ChildProcess } from "effect/process";
+
+const $I = $ScratchpadId.create("effected/commands/LocalExec");
 
 /**
  * The package managers whose project-local exec argv this package knows.
@@ -18,7 +21,7 @@ import { ChildProcess } from "effect/process";
  *
  * @public
  */
-export const Launcher = S.Literals(["npm", "pnpm", "yarn", "bun"]);
+export const Launcher = S.Literals(["npm", "pnpm", "yarn", "bun"]).pipe($I.annoteSchema("Launcher", { description: "The package managers whose project-local exec argv this package knows." }));
 
 /**
  * The decoded type of {@link (Launcher:variable)}.
@@ -71,18 +74,18 @@ const PREFIXES: Readonly<Record<Launcher, LauncherPrefixes>> = {
  *
  * @public
  */
-export class ExecContext extends S.Class<ExecContext>("ExecContext")({
+export class ExecContext extends S.Class<ExecContext>($I`ExecContext`)({
 	/** Human label of the launcher, e.g. `"pnpm"`. Reporting only. */
-	label: S.String,
+	label: S.String.annotateKey({ description: "Human label of the launcher, e.g. `\"pnpm\"`. Reporting only." }),
 	/** argv prefix that runs a project-local binary, e.g. `["pnpm", "exec"]`. */
-	prefix: S.Array(S.String),
+	prefix: S.Array(S.String).annotateKey({ description: "argv prefix that runs a project-local binary, e.g. `[\"pnpm\", \"exec\"]`." }),
 	/** argv prefix that fetch-and-runs a package binary, e.g. `["pnpm", "dlx"]`. */
-	dlxPrefix: S.Array(S.String),
+	dlxPrefix: S.Array(S.String).annotateKey({ description: "argv prefix that fetch-and-runs a package binary, e.g. `[\"pnpm\", \"dlx\"]`." }),
 	/** argv prefix that runs a `package.json` script, e.g. `["pnpm", "run"]`. */
-	scriptPrefix: S.Array(S.String),
+	scriptPrefix: S.Array(S.String).annotateKey({ description: "argv prefix that runs a `package.json` script, e.g. `[\"pnpm\", \"run\"]`." }),
 	/** Directory the prefix must run in. Omitted means "wherever the caller is". */
-	directory: S.optionalKey(S.String),
-}) {
+	directory: S.optionalKey(S.String).annotateKey({ description: "Directory the prefix must run in. Omitted means \"wherever the caller is\"." }),
+}, $I.annote("ExecContext", { description: "How to run a project-local binary here." })) {
 	/** Prefixes `command` with `prefix` and applies `directory`, returning a core `Command`. */
 	apply(command: ChildProcess.StandardCommand): ChildProcess.Command {
 		return this.withPrefix(command, this.prefix);
@@ -129,12 +132,12 @@ export class ExecContext extends S.Class<ExecContext>("ExecContext")({
  *
  * @public
  */
-export class LocalExecError extends S.TaggedError<LocalExecError>()("LocalExecError", {
+export class LocalExecError extends S.TaggedError<LocalExecError>($I`LocalExecError`)("LocalExecError", {
 	/** The directory whose context could not be determined, when one is known. */
-	directory: S.optionalKey(S.String),
+	directory: S.optionalKey(S.String).annotateKey({ description: "The directory whose context could not be determined, when one is known." }),
 	/** The underlying failure. */
-	cause: S.optionalKey(S.Defect()),
-}) {
+	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying failure." }),
+}, $I.annote("LocalExecError", { description: "The project-local execution context could not be determined." })) {
 	override get message(): string {
 		return this.directory === undefined
 			? "Could not determine the project-local execution context"
@@ -181,7 +184,7 @@ export interface LocalExecShape {
  *
  * @public
  */
-export class LocalExec extends Context.Service<LocalExec, LocalExecShape>()("@beep/scratchpad/effected/commands/LocalExec") {
+export class LocalExec extends Context.Service<LocalExec, LocalExecShape>()($I`LocalExec`) {
 	/** The exec, dlx and script-runner argv prefixes for a launcher — the single home of that knowledge. */
 	static readonly prefixes = (launcher: Launcher): LauncherPrefixes => PREFIXES[launcher];
 
