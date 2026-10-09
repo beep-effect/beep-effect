@@ -749,6 +749,7 @@ const VALIDATION_REQUIREMENTS_BY_FINDING_KIND: Readonly<
   "active-missing-goal-md": [],
   "schema-version-upgrade": [],
   "completion-gate-unsatisfied": [],
+  "completion-gate-unknown": [],
   "superseded-without-pointer": [],
   "exploration-backlink-missing": [],
   "packet-status-drift": [],

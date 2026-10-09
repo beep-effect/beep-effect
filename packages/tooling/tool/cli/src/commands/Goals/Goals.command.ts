@@ -13,6 +13,7 @@ import { Command } from "effect/cli";
 import { printLines } from "../../internal/cli/Printer.ts";
 import { goalsAdoptCommand } from "./Adopt.ts";
 import { goalsBootstrapCommand } from "./Bootstrap.ts";
+import { goalsCompletionCommand } from "./Completion.ts";
 import { goalsDoctorCommand } from "./Doctor.ts";
 import { goalsMigrateConventionsCommand, goalsRepairForkCommand } from "./Migration/Migration.command.ts";
 import { goalsIndexCommand } from "./PortfolioIndex.ts";
@@ -36,7 +37,8 @@ import { goalsSetStatusCommand } from "./SetStatus.ts";
 export const goalsCommand = Command.make("goals", {}, () =>
   printLines([
     "Goals commands:",
-    "- bun run beep goals doctor [--write-baseline]",
+    "- bun run beep goals doctor [--online] [--write-baseline]",
+    "- bun run beep goals completion refresh [--slug <slug>]",
     "- bun run beep goals index [--write | --check]",
     "- bun run beep goals set-status <slug> <status>",
     "- bun run beep goals set-status --migrate [--write]",
@@ -52,6 +54,7 @@ export const goalsCommand = Command.make("goals", {}, () =>
   ),
   Command.withSubcommands([
     goalsDoctorCommand,
+    goalsCompletionCommand,
     goalsIndexCommand,
     goalsSetStatusCommand,
     goalsSetRiskTierCommand,

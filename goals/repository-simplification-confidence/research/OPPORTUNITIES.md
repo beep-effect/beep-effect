@@ -110,3 +110,16 @@
 - Would have prevented it: a review-lens contract that separates material
   defects from wording findings up front, and a mechanical verbatim-section
   checker against the brief so copy drift is caught by a validator.
+
+## H2: heavy proof entrypoint and read-only command cycle (2026-10-09)
+
+- Work: qualify structured goal completion in `rsc-h2-completion`.
+- Evidence: initial `beep-heavy bunx tsgo --noEmit -p packages/tooling/tool/cli/tsconfig.json`
+  could not connect to the user bus; setting the real user-session runtime/bus variables
+  restored admission. The direct package config then reported TS6305 for unbuilt
+  workspace declarations. Use package-verify's owning build/config path for proof.
+- Evidence: the first doctor smoke reported `Cannot access GOALS_DOCTOR_BASELINE_PATH
+  before initialization` after its completion adapter imported Yeet readers. Doctor
+  now loads the IO adapter at execution; normalization remains in goal schemas.
+- Prevention: document the bus environment at the admission entrypoint and retain a
+  CLI smoke fixture for command-family import cycles. No gate bypass or baseline write.

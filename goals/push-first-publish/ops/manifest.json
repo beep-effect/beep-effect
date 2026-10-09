@@ -15,6 +15,7 @@
   "executionCapable": true,
   "reflectionRequired": true,
   "completionGate": {
+    "pullRequests": [{ "number": 1427, "role": "final" }],
     "operator": "yeet",
     "requiresPullRequest": true,
     "requiresMergeable": true,

@@ -38,7 +38,7 @@ import { diffMembership } from "../../internal/ratchet/RatchetDiff.ts";
 import { runGitOutput } from "../../internal/repo-run/index.ts";
 import { reflectionFileNameIsArtifact, reflectionFrontmatterIsValid } from "../Lint/ReflectionArtifact.ts";
 import { GoalsGitError } from "./Goals.errors.ts";
-import { decodeGoalManifest, GoalPhaseStatus, GoalStatus } from "./Goals.schemas.ts";
+import { decodeGoalManifest, GoalPhaseStatus, GoalStatus, goalPullRequestRefs } from "./Goals.schemas.ts";
 import {
   goalManifestPhases,
   isJsonRecord,
@@ -113,6 +113,7 @@ export const GoalDoctorFindingKind = LiteralKit([
   "active-missing-goal-md",
   "schema-version-upgrade",
   "completion-gate-unsatisfied",
+  "completion-gate-unknown",
   "superseded-without-pointer",
   "exploration-backlink-missing",
   "packet-stream-fork",
@@ -701,6 +702,7 @@ const completionGateAdvisories = (
     if (!GoalStatus.is["completed-retained"](manifest.initiative.status) || manifest.completionGate.grandfathered) {
       continue;
     }
+    if (A.some(goalPullRequestRefs(manifest), (ref) => ref.role === "final")) continue;
     if (!citedAnywhere(packet, subjectsText)) {
       findings = A.append(
         findings,
@@ -708,7 +710,7 @@ const completionGateAdvisories = (
           packet.record.slug,
           "completion-gate-unsatisfied",
           "advisory",
-          "completed-retained but no merge/squash commit cites the packet (completionGate not grandfathered)."
+          "Legacy completion declaration has no PR reference or packet citation in the scanned commit subjects; declare a final PR to verify structured evidence."
         )
       );
     }
@@ -881,6 +883,7 @@ const printNonFatalFindings = Effect.fn("Goals.printNonFatalFindings")(function*
  */
 export const runGoalsDoctor = Effect.fn("Goals.runGoalsDoctor")(function* (options: {
   readonly writeBaseline: boolean;
+  readonly online?: boolean;
 }) {
   const records = yield* listGoalPackets();
 
@@ -896,7 +899,39 @@ export const runGoalsDoctor = Effect.fn("Goals.runGoalsDoctor")(function* (optio
   }
 
   const advisoriesFromGit = yield* gitAdvisories(packets);
-  const allFindings = [...A.flatMap(packets, (packet) => packet.findings), ...advisoriesFromGit.findings];
+  const { observeGoalCompletion, storedGoalCompletion } = yield* Effect.promise(() => import("./Completion.ts"));
+  const root = yield* findRepoRoot();
+  let completionFindings = A.empty<GoalDoctorFinding>();
+  for (const packet of packets) {
+    if (O.isNone(packet.manifest)) continue;
+    const manifest = packet.manifest.value;
+    if (!GoalStatus.is["completed-retained"](manifest.initiative.status) || manifest.completionGate.grandfathered)
+      continue;
+    const final = A.findFirst(goalPullRequestRefs(manifest), (ref) => ref.role === "final");
+    if (O.isNone(final)) continue;
+    const receipt =
+      options.online === true
+        ? O.some(yield* observeGoalCompletion(root, packet.record.slug, manifest, final.value))
+        : yield* storedGoalCompletion(root, packet.record.slug, manifest, final.value).pipe(
+            Effect.orElseSucceed(O.none)
+          );
+    const outcome = O.isSome(receipt) ? receipt.value.outcome : "unknown";
+    if (outcome !== "verified")
+      completionFindings = A.append(
+        completionFindings,
+        finding(
+          packet.record.slug,
+          outcome === "unknown" ? "completion-gate-unknown" : "completion-gate-unsatisfied",
+          "advisory",
+          `Final PR #${final.value.number}: ${outcome}. ${O.isNone(receipt) ? "No matching clone receipt; use doctor --online (read-only) or completion refresh (explicit writer)." : "See head-bound completion evidence; lifecycle is unchanged."}`
+        )
+      );
+  }
+  const allFindings = [
+    ...A.flatMap(packets, (packet) => packet.findings),
+    ...advisoriesFromGit.findings,
+    ...completionFindings,
+  ];
   const blocking = A.filter(allFindings, (item) => item.severity === "blocking");
   const advisories = A.filter(allFindings, (item) => item.severity === "advisory");
 
@@ -944,8 +979,14 @@ const writeBaselineFlag = Flag.Boolean("write-baseline").pipe(
  */
 export const goalsDoctorCommand = Command.make(
   "doctor",
-  { writeBaseline: writeBaselineFlag },
-  Effect.fn(function* ({ writeBaseline }) {
-    yield* runGoalsDoctor({ writeBaseline });
+  {
+    writeBaseline: writeBaselineFlag,
+    online: Flag.Boolean("online").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Observe typed final PRs on GitHub without writing receipts")
+    ),
+  },
+  Effect.fn("Goals.doctorCommand")(function* ({ writeBaseline, online }) {
+    yield* runGoalsDoctor({ writeBaseline, online });
   })
 ).pipe(Command.withDescription("Diff goal-packet manifest claims against git/filesystem evidence (baseline ratchet)"));

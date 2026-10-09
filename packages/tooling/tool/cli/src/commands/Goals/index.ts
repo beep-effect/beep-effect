@@ -26,6 +26,7 @@ export * from "./Bootstrap.schemas.ts";
  * @since 0.0.0
  */
 export * from "./Bootstrap.ts";
+export * from "./Completion.ts";
 /**
  * Doctor command and baseline-ratchet exports.
  *
