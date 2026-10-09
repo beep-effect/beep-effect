@@ -6,7 +6,15 @@
 
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import type { YamlToken, YamlTokenKind } from "./token.ts";
+
+/** YAML's single-character escape substitutions; other escapes require scanning. */
+const simpleEscapes: Readonly<Record<string, string>> = {
+	"\\": "\\", '"': '"', "/": "/", b: "\b", f: "\f", n: "\n", r: "\r",
+	"\t": "\t", t: "\t", "0": "\0", a: "\x07", e: "\x1B", v: "\x0B",
+	" ": " ", N: "\u0085", _: "\u00A0", L: "\u2028", P: "\u2029",
+};
 
 // ---------------------------------------------------------------------------
 // Scanner (mutable, imperative)
@@ -94,9 +102,10 @@ export function createScanner(text: string): YamlScanner {
 	function advance(count = 1): void {
 		for (let i = 0; i < count; i++) {
 			if (pos < text.length) {
-				if (text[pos] === "\n") {
-					line++;
+				if (text[pos] === "\r" || text[pos] === "\n") {
+					if (text[pos] === "\r" || text[pos - 1] !== "\r") line++;
 					col = 0;
+					lineIndent = 0;
 					lineIndentLocked = false;
 				} else {
 					col++;
@@ -385,6 +394,8 @@ export function createScanner(text: string): YamlScanner {
 			end--;
 		}
 
+		col -= pos - end;
+		pos = end;
 		const value = text.slice(start, end);
 		return makeToken("scalar", value, start, sLine, sCol);
 	}
@@ -445,56 +456,9 @@ export function createScanner(text: string): YamlScanner {
 			if (ch === "\\") {
 				advance(); // skip backslash
 				const esc = peek();
-				if (esc === "\\") {
-					value += "\\";
-					advance();
-				} else if (esc === '"') {
-					value += '"';
-					advance();
-				} else if (esc === "/") {
-					value += "/";
-					advance();
-				} else if (esc === "b") {
-					value += "\b";
-					advance();
-				} else if (esc === "f") {
-					value += "\f";
-					advance();
-				} else if (esc === "n") {
-					value += "\n";
-					advance();
-				} else if (esc === "r") {
-					value += "\r";
-					advance();
-				} else if (esc === "\t" || esc === "t") {
-					value += "\t";
-					advance();
-				} else if (esc === "0") {
-					value += "\0";
-					advance();
-				} else if (esc === "a") {
-					value += "\x07";
-					advance();
-				} else if (esc === "e") {
-					value += "\x1B";
-					advance();
-				} else if (esc === "v") {
-					value += "\x0B";
-					advance();
-				} else if (esc === " ") {
-					value += " ";
-					advance();
-				} else if (esc === "N") {
-					value += "\u0085";
-					advance();
-				} else if (esc === "_") {
-					value += "\u00A0";
-					advance();
-				} else if (esc === "L") {
-					value += "\u2028";
-					advance();
-				} else if (esc === "P") {
-					value += "\u2029";
+				const simple = R.get(simpleEscapes, esc);
+				if (O.isSome(simple)) {
+					value += simple.value;
 					advance();
 				} else if (esc === "x") {
 					advance(); // skip 'x'
@@ -1448,8 +1412,8 @@ export function createScanner(text: string): YamlScanner {
 			line = 0;
 			col = 0;
 			while (pos < newPos && pos < text.length) {
-				if (text[pos] === "\n") {
-					line++;
+				if (text[pos] === "\r" || text[pos] === "\n") {
+					if (text[pos] === "\r" || text[pos - 1] !== "\r") line++;
 					col = 0;
 				} else if (text[pos] !== "\uFEFF") {
 					// A BOM occupies no column — the same convention as `scanNext`.

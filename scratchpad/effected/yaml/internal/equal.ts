@@ -2,7 +2,6 @@
 // behind the facade's semantic `equals`/`equalsValue` statics.
 
 import * as P from "effect/Predicate";
-import { dual } from "effect/Function";
 import * as A from "effect/Array";
 import * as R from "effect/Record";
 
@@ -17,10 +16,7 @@ import * as R from "effect/Record";
  * of keys and recursively compares values by key, matching YAML's semantics
  * where mapping key order is not significant.
  */
-export const deepEqual: {
-	(a: unknown, b: unknown): boolean;
-	(b: unknown): (a: unknown) => boolean;
-} = dual(2, (a: unknown, b: unknown): boolean => {
+export function deepEqual(a: unknown, ...[b]: [b: unknown]): boolean {
 	if (a === b) return true;
 
 	// Handle NaN (NaN !== NaN but should be considered equal)
@@ -29,7 +25,6 @@ export const deepEqual: {
 	}
 
 	if (a === null || b === null) return false;
-	if (typeof a !== typeof b) return false;
 
 	if (A.isArray(a)) {
 		if (!A.isArray(b)) return false;
@@ -55,4 +50,4 @@ export const deepEqual: {
 	}
 
 	return false;
-});
+}

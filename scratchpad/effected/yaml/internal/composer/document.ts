@@ -1,3 +1,5 @@
+import { dual } from "effect/Function";
+import * as P from "effect/Predicate";
 // Document-level composition: the per-CST-document compose walk, directive
 // validation (per-document and cross-document), the sourceMultiline
 // decoration post-pass, and the two engine entry points the facade and the
@@ -29,15 +31,19 @@ import {
 	resolveScalar,
 } from "./scalars.ts";
 import type { ComposerState, FlowComposers, NodeMeta } from "./state.ts";
-import { clearMeta, commentProps, createState, hasMeta, sameLine } from "./state.ts";
+import { clearMeta, createState, hasMeta, sameLine } from "./state.ts";
 import { parseDirective, validateTagHandlesInDocument } from "./tags.ts";
-import * as Schema from "effect/Schema";
-import { dual } from "effect/Function";
-import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "@beep/utils/Option";
 
 /** The flow-composer dispatch wired into every state this module creates. */
 const FLOW: FlowComposers = { composeFlowMap, composeFlowSeq };
+
+const isYamlAlias = S.is(YamlAlias);
+const isYamlMap = S.is(YamlMap);
+const isYamlScalar = S.is(YamlScalar);
+const isYamlSeq = S.is(YamlSeq);
 
 // ---------------------------------------------------------------------------
 // Document-level validation helpers
@@ -125,7 +131,7 @@ function checkDocumentMarkerSameLine(
 		}
 
 		// For "..." at end of document, check first content of next document
-		if (!found && (nextDocChildren !== undefined)) {
+		if (!found && nextDocChildren !== undefined) {
 			for (const next of nextDocChildren) {
 				if (next === undefined) continue;
 				if (next.type === "newline") break;
@@ -209,9 +215,9 @@ function checkTrailingContentAfterDocValue(
 // ---------------------------------------------------------------------------
 
 export const composeDocument: {
-	(cst: CstNode, state: ComposerState, hasSubsequentDocuments?: boolean, nextDocCst?: CstNode): RawYamlDocument;
 	(state: ComposerState, hasSubsequentDocuments?: boolean, nextDocCst?: CstNode): (cst: CstNode) => RawYamlDocument;
-} = dual((args) => args[0] !== undefined && "type" in args[0], (cst: CstNode, state: ComposerState, hasSubsequentDocuments = false, nextDocCst?: CstNode): RawYamlDocument => {
+	(cst: CstNode, state: ComposerState, hasSubsequentDocuments?: boolean, nextDocCst?: CstNode): RawYamlDocument;
+} = dual((args) => P.hasProperty(args[0], "source"), (cst: CstNode, state: ComposerState, hasSubsequentDocuments = false, nextDocCst?: CstNode): RawYamlDocument => {
 	// Hardening: unescaped C0 control characters (other than tab/LF/CR) are
 	// not c-printable (YAML 1.2 §5.1) and are invalid anywhere in the stream.
 	// Escaped forms in double-quoted scalars never appear raw in the source,
@@ -285,14 +291,14 @@ export const composeDocument: {
 		// Directives
 		if (child.type === "directive") {
 			const directive = parseDirective(child.source);
-			if ((directive !== null)) {
+			if (directive !== null) {
 				directives.push(directive);
 				// Populate tag map from %TAG directives
-				if (directive.name === "TAG" && directive.parameters.length >= 2) {
+				if (directive.name === "TAG" && directive.parameters.length === 2) {
 					const handle = directive.parameters[0];
 					const prefix = directive.parameters[1];
-					if ((handle !== undefined && handle !== "") && (prefix !== undefined && prefix !== "")) {
-						state.tagMap.set(handle, prefix);
+					if (handle !== undefined && handle !== "" && prefix !== undefined && prefix !== "") {
+						MutableHashMap.set(state.tagMap, handle, prefix);
 					}
 				}
 			}
@@ -398,13 +404,13 @@ export const composeDocument: {
 		if (child.type === "flow-scalar" || child.type === "block-scalar") {
 			// Check if next meaningful child is a block-map (this scalar is a key)
 			const nextContent = findNextContentChild(children, i + 1);
-			if ((nextContent !== null) && nextContent.type === "block-map") {
+			if (nextContent !== null && nextContent.type === "block-map") {
 				// A mapping cannot start on the `---` line. The `---` directive end
 				// is followed by a single value (or anchor+value), but a mapping
 				// pattern (key:) on the same line as `---` is malformed (9KBC, CXX2).
 				if (hasDocStart) {
 					const docStartChild = children.find((c) => c.type === "whitespace" && c.source === "---");
-					if ((docStartChild !== undefined) && sameLine(state.text, docStartChild.offset, child.offset)) {
+					if (docStartChild !== undefined && sameLine(state.text, docStartChild.offset, child.offset)) {
 						state.errors.push({
 							code: "UnexpectedToken",
 							message: "Mapping cannot start on document-start (---) line",
@@ -470,7 +476,7 @@ export const composeDocument: {
 				const combined: NodeMeta = { ...outerMeta };
 				if (meta.tag !== undefined) combined.tag = meta.tag;
 				if (meta.anchor !== undefined) combined.anchor = meta.anchor;
-				const resolved = resolveScalar(value, "plain", combined.tag, state);
+				const resolved = resolveScalar(value, ["plain", combined.tag, state]);
 				// Span the full source range when multi-line plain folding merged
 				// multiple children — `endOffset` is the end of the last consumed
 				// fragment, including directives and other non-scalar
@@ -481,10 +487,10 @@ export const composeDocument: {
 					style: "plain",
 					offset: child.offset,
 					length: scalarLength,
-					...O.getSomesStruct({ tag: O.fromUndefinedOr(combined.tag) }),
-					...O.getSomesStruct({ anchor: O.fromUndefinedOr(combined.anchor) }),
+					...O.getSomesStruct({ tag: O.fromUndefinedOr(combined.tag), anchor: O.fromUndefinedOr(combined.anchor) }),
 				});
-				if ((combined.anchor !== undefined && combined.anchor !== "")) registerAnchor(contents, combined.anchor, state, child.offset);
+				if (combined.anchor !== undefined && combined.anchor !== "")
+					registerAnchor(contents, combined.anchor, state, child.offset);
 				clearMeta(meta);
 				clearMeta(outerMeta);
 				sawNewlineSinceMeta = false;
@@ -492,7 +498,7 @@ export const composeDocument: {
 				// content forms a mapping, that mapping is trailing garbage (2CMS).
 				if (partsCount > 1) {
 					const nextContent2 = findNextContentChild(children, nextIdx);
-					if ((nextContent2 !== null)) {
+					if (nextContent2 !== null) {
 						const isTrailing =
 							(nextContent2.type === "flow-scalar" &&
 								hasValueSepAfter(children, indexOfChild(children, nextContent2) + 1)) ||
@@ -585,7 +591,7 @@ export const composeDocument: {
 			clearMeta(outerMeta);
 			sawNewlineSinceMeta = false;
 			i++;
-			if (flowIsKey && (nextAfterFlowMap0 !== null)) {
+			if (flowIsKey && nextAfterFlowMap0 !== null) {
 				const map = composeBlockMap(nextAfterFlowMap0, state, flowMap, mapMeta);
 				contents = map;
 				while (i < children.length && children[i] !== nextAfterFlowMap0) i++;
@@ -618,7 +624,7 @@ export const composeDocument: {
 			i++;
 			// Check if flow collection is a mapping key (followed by block-map with ":")
 			const nextAfterFlowSeq = findNextContentChild(children, i);
-			if ((nextAfterFlowSeq !== null) && nextAfterFlowSeq.type === "block-map") {
+			if (nextAfterFlowSeq !== null && nextAfterFlowSeq.type === "block-map") {
 				// Flow seq is a key — compose the block-map with this as the first key
 				const map = composeBlockMap(nextAfterFlowSeq, state, flowSeq, mapMeta);
 				contents = map;
@@ -658,7 +664,7 @@ export const composeDocument: {
 	let hasDocStartTab = false;
 	for (let ci = 0; ci < children.length; ci++) {
 		const c = children[ci];
-		if ((c !== undefined) && c.type === "whitespace" && c.source === "---") {
+		if (c !== undefined && c.type === "whitespace" && c.source === "---") {
 			const after = state.text[c.offset + c.length];
 			if (after === "\t") hasDocStartTab = true;
 			break;
@@ -693,7 +699,7 @@ export const composeDocument: {
 	if (documentCommentAfter === undefined && contents !== null && contents.comment !== undefined) {
 		// BLOCK style only: a flow collection's terminal comment sits INSIDE its
 		// brackets, so it has nowhere to escape to and stays on the collection.
-		if ((Schema.is(YamlMap)(contents) || Schema.is(YamlSeq)(contents)) && contents.style !== "flow") {
+		if ((isYamlMap(contents) || isYamlSeq(contents)) && contents.style !== "flow") {
 			documentCommentAfter = contents.comment;
 			contents = stripOwnComment(contents);
 		}
@@ -738,8 +744,10 @@ export const composeDocument: {
 		hasDocumentStart: hasDocStart,
 		hasDocumentEnd: hasDocEnd,
 		hasDocumentStartTab: hasDocStartTab,
-		...O.getSomesStruct({ commentBefore: O.fromUndefinedOr(headerForDocument) }),
-		...O.getSomesStruct({ comment: O.fromUndefinedOr(documentCommentAfter) }),
+		...O.getSomesStruct({
+			commentBefore: O.fromUndefinedOr(headerForDocument),
+			comment: O.fromUndefinedOr(documentCommentAfter),
+		}),
 	};
 });
 
@@ -784,7 +792,8 @@ function validateDirectives(
 	for (const child of children) {
 		if (child.type !== "directive") continue;
 		const src = child.source.trim();
-		if (!src.startsWith("%YAML")) continue;
+		const directiveName = src.split(/\s+/, 1)[0];
+		if (directiveName !== "%YAML" && directiveName !== "%TAG") continue;
 
 		// Check for comment without preceding whitespace (e.g., %YAML 1.1#...)
 		// The lexer consumes the entire line, so we check the raw source
@@ -807,13 +816,27 @@ function validateDirectives(
 		const parts = withoutComment.slice(1).split(/\s+/);
 		// parts[0] = "YAML", rest are parameters
 		const params = parts.slice(1);
-		if (params.length !== 1) {
+		if (directiveName === "%TAG" && params.length !== 2) {
+			state.errors.push({
+				code: "InvalidDirective",
+				message: "%TAG directive requires exactly two parameters",
+				offset: child.offset,
+				length: child.length,
+			});
+		} else if (directiveName === "%YAML" && params.length !== 1) {
 			state.errors.push({
 				code: "InvalidDirective",
 				message:
 					params.length === 0
 						? "%YAML directive requires a version parameter"
 						: `%YAML directive has extra parameters: ${params.slice(1).join(" ")}`,
+				offset: child.offset,
+				length: child.length,
+			});
+		} else if (directiveName === "%YAML" && !/^\d+\.\d+$/.test(params[0] ?? "")) {
+			state.errors.push({
+				code: "InvalidDirective",
+				message: "%YAML version must contain decimal major and minor numbers",
 				offset: child.offset,
 				length: child.length,
 			});
@@ -876,9 +899,9 @@ function validateDirectives(
 				});
 			}
 			// Recursively check for directives inside content nodes (e.g. block-map)
-			if (hasContent && (child.children !== undefined)) {
+			if (hasContent && child.children !== undefined) {
 				const nested = findNestedDirective(child);
-				if ((nested !== null)) {
+				if (nested !== null) {
 					state.errors.push({
 						code: "InvalidDirective",
 						message: "Directive after content requires a document-end marker (...) first",
@@ -894,10 +917,10 @@ function validateDirectives(
 /** Recursively find the first directive node within a CST subtree. */
 function findNestedDirective(node: CstNode): CstNode | null {
 	if (node.type === "directive") return node;
-	if ((node.children !== undefined)) {
+	if (node.children !== undefined) {
 		for (const child of node.children) {
 			const found = findNestedDirective(child);
-			if ((found !== null)) return found;
+			if (found !== null) return found;
 		}
 	}
 	return null;
@@ -912,8 +935,8 @@ function findNestedDirective(node: CstNode): CstNode | null {
  * preceding document must have ended with `...`.
  */
 export const validateCrossDocumentDirectives: {
-	(cstNodes: readonly CstNode[], state: ComposerState): void;
 	(state: ComposerState): (cstNodes: readonly CstNode[]) => void;
+	(cstNodes: readonly CstNode[], state: ComposerState): void;
 } = dual(2, (cstNodes: readonly CstNode[], state: ComposerState): void => {
 	for (let docIdx = 1; docIdx < cstNodes.length; docIdx++) {
 		const cst = cstNodes[docIdx];
@@ -988,52 +1011,66 @@ function isSourceMultiline(text: string, offset: number, length: number): boolea
 }
 
 function decorateSourceMultiline(node: YamlNode | null, text: string): YamlNode | null {
-	if (node === null || Schema.is(YamlAlias)(node)) return node;
-	if (Schema.is(YamlScalar)(node)) {
+	if (node === null || isYamlAlias(node)) return node;
+	if (isYamlScalar(node)) {
 		if (!isSourceMultiline(text, node.offset, node.length)) return node;
 		return YamlScalar.make({
 			value: node.value,
 			style: node.style,
-			...O.getSomesStruct({ tag: O.fromUndefinedOr(node.tag) }),
-			...O.getSomesStruct({ anchor: O.fromUndefinedOr(node.anchor) }),
-			...commentProps(node),
-			...O.getSomesStruct({ chomp: O.fromUndefinedOr(node.chomp) }),
-			...O.getSomesStruct({ blockIndent: O.fromUndefinedOr(node.blockIndent) }),
-			...O.getSomesStruct({ raw: O.fromUndefinedOr(node.raw) }),
+			...O.getSomesStruct({
+				tag: O.fromUndefinedOr(node.tag),
+				anchor: O.fromUndefinedOr(node.anchor),
+				commentBefore: O.fromUndefinedOr(node.commentBefore),
+				comment: O.fromUndefinedOr(node.comment),
+				spaceBefore: O.fromUndefinedOr(node.spaceBefore),
+				chomp: O.fromUndefinedOr(node.chomp),
+				blockIndent: O.fromUndefinedOr(node.blockIndent),
+				raw: O.fromUndefinedOr(node.raw),
+			}),
+
 			sourceMultiline: true,
 			offset: node.offset,
 			length: node.length,
 		});
 	}
-	if (Schema.is(YamlMap)(node)) {
-		const newItems = node.items.map(
-			(pair) =>
-				YamlPair.make({
-					key: decorateSourceMultiline(pair.key, text) ?? pair.key,
-					value: pair.value === null ? null : decorateSourceMultiline(pair.value, text),
-				}),
+	if (isYamlMap(node)) {
+		const newItems = node.items.map((pair) =>
+			YamlPair.make({
+				key: decorateSourceMultiline(pair.key, text) ?? pair.key,
+				value: pair.value === null ? null : decorateSourceMultiline(pair.value, text),
+			}),
 		);
 		const multiline = isSourceMultiline(text, node.offset, node.length);
 		return YamlMap.make({
 			items: newItems,
 			style: node.style,
-			...O.getSomesStruct({ tag: O.fromUndefinedOr(node.tag) }),
-			...O.getSomesStruct({ anchor: O.fromUndefinedOr(node.anchor) }),
-			...commentProps(node),
+			...O.getSomesStruct({
+				tag: O.fromUndefinedOr(node.tag),
+				anchor: O.fromUndefinedOr(node.anchor),
+				commentBefore: O.fromUndefinedOr(node.commentBefore),
+				comment: O.fromUndefinedOr(node.comment),
+				spaceBefore: O.fromUndefinedOr(node.spaceBefore),
+			}),
+
 			...(multiline ? { sourceMultiline: true } : {}),
 			offset: node.offset,
 			length: node.length,
 		});
 	}
-	if (Schema.is(YamlSeq)(node)) {
+	if (isYamlSeq(node)) {
 		const newItems = node.items.map((item) => decorateSourceMultiline(item, text) ?? item);
 		const multiline = isSourceMultiline(text, node.offset, node.length);
 		return YamlSeq.make({
 			items: newItems,
 			style: node.style,
-			...O.getSomesStruct({ tag: O.fromUndefinedOr(node.tag) }),
-			...O.getSomesStruct({ anchor: O.fromUndefinedOr(node.anchor) }),
-			...commentProps(node),
+			...O.getSomesStruct({
+				tag: O.fromUndefinedOr(node.tag),
+				anchor: O.fromUndefinedOr(node.anchor),
+				commentBefore: O.fromUndefinedOr(node.commentBefore),
+				comment: O.fromUndefinedOr(node.comment),
+				spaceBefore: O.fromUndefinedOr(node.spaceBefore),
+			}),
+
 			...(multiline ? { sourceMultiline: true } : {}),
 			offset: node.offset,
 			length: node.length,
@@ -1050,8 +1087,11 @@ function decorateDocumentSourceMultiline(doc: RawYamlDocument, text: string): Ra
 		errors: doc.errors,
 		warnings: doc.warnings,
 		directives: doc.directives,
-		...O.getSomesStruct({ commentBefore: O.fromUndefinedOr(doc.commentBefore) }),
-		...O.getSomesStruct({ comment: O.fromUndefinedOr(doc.comment) }),
+		...O.getSomesStruct({
+			commentBefore: O.fromUndefinedOr(doc.commentBefore),
+			comment: O.fromUndefinedOr(doc.comment),
+		}),
+
 		hasDocumentStart: doc.hasDocumentStart,
 		hasDocumentEnd: doc.hasDocumentEnd,
 		hasDocumentStartTab: doc.hasDocumentStartTab,
@@ -1080,8 +1120,8 @@ export const EMPTY_DOCUMENT: RawYamlDocument = {
  * state and therefore appear in the returned document's `errors`.
  */
 export const composeFirstDocument: {
-	(text: string, options?: ParseOptionsInput): RawYamlDocument;
 	(options?: ParseOptionsInput): (text: string) => RawYamlDocument;
+	(text: string, options?: ParseOptionsInput): RawYamlDocument;
 } = dual((args) => P.isString(args[0]), (text: string, options?: ParseOptionsInput): RawYamlDocument => composeFirstDocumentCounted(text, options).document);
 
 /**
@@ -1093,8 +1133,8 @@ export const composeFirstDocument: {
  * contract) read `documentCount` instead of re-parsing.
  */
 export const composeFirstDocumentCounted: {
-	(text: string, options?: ParseOptionsInput): { readonly document: RawYamlDocument; readonly documentCount: number };
 	(options?: ParseOptionsInput): (text: string) => { readonly document: RawYamlDocument; readonly documentCount: number };
+	(text: string, options?: ParseOptionsInput): { readonly document: RawYamlDocument; readonly documentCount: number };
 } = dual((args) => P.isString(args[0]), (text: string, options?: ParseOptionsInput): { readonly document: RawYamlDocument; readonly documentCount: number } => {
 	const cstNodes = parseCSTAll(text);
 	const state = createState(text, FLOW, options);
@@ -1118,8 +1158,8 @@ export const composeFirstDocumentCounted: {
  * are returned unfiltered as `streamErrors` (the facade applies its filter).
  */
 export const composeAllDocuments: {
-	(text: string, options?: ParseOptionsInput): { readonly documents: ReadonlyArray<RawYamlDocument>; readonly streamErrors: ReadonlyArray<RawDiagnostic> };
 	(options?: ParseOptionsInput): (text: string) => { readonly documents: ReadonlyArray<RawYamlDocument>; readonly streamErrors: ReadonlyArray<RawDiagnostic> };
+	(text: string, options?: ParseOptionsInput): { readonly documents: ReadonlyArray<RawYamlDocument>; readonly streamErrors: ReadonlyArray<RawDiagnostic> };
 } = dual((args) => P.isString(args[0]), (text: string, options?: ParseOptionsInput): { readonly documents: ReadonlyArray<RawYamlDocument>; readonly streamErrors: ReadonlyArray<RawDiagnostic> } => {
 	const cstNodes = parseCSTAll(text);
 	const documents: RawYamlDocument[] = [];
@@ -1147,7 +1187,7 @@ export const composeAllDocuments: {
  * like any other.
  */
 function attachHeaderToFirstEntry(contents: YamlNode, header: string): YamlNode {
-	if (Schema.is(YamlMap)(contents) && contents.items.length > 0) {
+	if (isYamlMap(contents) && contents.items.length > 0) {
 		const first = contents.items[0];
 		if (first === undefined) return contents;
 		const items = [...contents.items];
@@ -1155,17 +1195,20 @@ function attachHeaderToFirstEntry(contents: YamlNode, header: string): YamlNode 
 		return YamlMap.make({
 			items,
 			style: contents.style,
-			...O.getSomesStruct({ tag: O.fromUndefinedOr(contents.tag) }),
-			...O.getSomesStruct({ anchor: O.fromUndefinedOr(contents.anchor) }),
-			...O.getSomesStruct({ commentBefore: O.fromUndefinedOr(contents.commentBefore) }),
-			...O.getSomesStruct({ comment: O.fromUndefinedOr(contents.comment) }),
-			...O.getSomesStruct({ spaceBefore: O.fromUndefinedOr(contents.spaceBefore) }),
-			...O.getSomesStruct({ sourceMultiline: O.fromUndefinedOr(contents.sourceMultiline) }),
+			...O.getSomesStruct({
+				tag: O.fromUndefinedOr(contents.tag),
+				anchor: O.fromUndefinedOr(contents.anchor),
+				commentBefore: O.fromUndefinedOr(contents.commentBefore),
+				comment: O.fromUndefinedOr(contents.comment),
+				spaceBefore: O.fromUndefinedOr(contents.spaceBefore),
+				sourceMultiline: O.fromUndefinedOr(contents.sourceMultiline),
+			}),
+
 			offset: contents.offset,
 			length: contents.length,
 		});
 	}
-	if (Schema.is(YamlSeq)(contents) && contents.items.length > 0) {
+	if (isYamlSeq(contents) && contents.items.length > 0) {
 		const items = [...contents.items];
 		const first = items[0];
 		if (first === undefined) return contents;
@@ -1173,12 +1216,15 @@ function attachHeaderToFirstEntry(contents: YamlNode, header: string): YamlNode 
 		return YamlSeq.make({
 			items,
 			style: contents.style,
-			...O.getSomesStruct({ tag: O.fromUndefinedOr(contents.tag) }),
-			...O.getSomesStruct({ anchor: O.fromUndefinedOr(contents.anchor) }),
-			...O.getSomesStruct({ commentBefore: O.fromUndefinedOr(contents.commentBefore) }),
-			...O.getSomesStruct({ comment: O.fromUndefinedOr(contents.comment) }),
-			...O.getSomesStruct({ spaceBefore: O.fromUndefinedOr(contents.spaceBefore) }),
-			...O.getSomesStruct({ sourceMultiline: O.fromUndefinedOr(contents.sourceMultiline) }),
+			...O.getSomesStruct({
+				tag: O.fromUndefinedOr(contents.tag),
+				anchor: O.fromUndefinedOr(contents.anchor),
+				commentBefore: O.fromUndefinedOr(contents.commentBefore),
+				comment: O.fromUndefinedOr(contents.comment),
+				spaceBefore: O.fromUndefinedOr(contents.spaceBefore),
+				sourceMultiline: O.fromUndefinedOr(contents.sourceMultiline),
+			}),
+
 			offset: contents.offset,
 			length: contents.length,
 		});
@@ -1190,15 +1236,18 @@ function attachHeaderToFirstEntry(contents: YamlNode, header: string): YamlNode 
 function stripOwnComment(node: YamlMap | YamlSeq): YamlNode {
 	const shared = {
 		style: node.style,
-		...O.getSomesStruct({ tag: O.fromUndefinedOr(node.tag) }),
-		...O.getSomesStruct({ anchor: O.fromUndefinedOr(node.anchor) }),
-		...O.getSomesStruct({ commentBefore: O.fromUndefinedOr(node.commentBefore) }),
-		...O.getSomesStruct({ spaceBefore: O.fromUndefinedOr(node.spaceBefore) }),
-		...O.getSomesStruct({ sourceMultiline: O.fromUndefinedOr(node.sourceMultiline) }),
+		...O.getSomesStruct({
+			tag: O.fromUndefinedOr(node.tag),
+			anchor: O.fromUndefinedOr(node.anchor),
+			commentBefore: O.fromUndefinedOr(node.commentBefore),
+			spaceBefore: O.fromUndefinedOr(node.spaceBefore),
+			sourceMultiline: O.fromUndefinedOr(node.sourceMultiline),
+		}),
+
 		offset: node.offset,
 		length: node.length,
 	};
-	return Schema.is(YamlMap)(node)
+	return isYamlMap(node)
 		? YamlMap.make({ items: node.items, ...shared })
 		: YamlSeq.make({ items: node.items, ...shared });
 }

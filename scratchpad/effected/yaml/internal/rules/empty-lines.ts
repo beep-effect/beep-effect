@@ -5,6 +5,7 @@
 
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
+import * as P from "effect/Predicate";
 import { YamlEdit } from "../../YamlEdit.ts";
 import type { LintContext, YamlRule } from "../../YamlLintRule.ts";
 import { StyleFloor, YamlLintDiagnostic, YamlLintSeverity } from "../../YamlLintRule.ts";
@@ -18,20 +19,41 @@ const $I = $ScratchpadId.create("effected/yaml/internal/rules/empty-lines");
  * (both default 0).
  */
 export const emptyLinesOptions = S.Struct({
-	severity: S.optionalKey(YamlLintSeverity).annotateKey({ description: "Reporting level for excessive blank-line findings, defaulting to `error`" }),
-	max: S.optionalKey(nonNegativeIntegerOption).annotateKey({ description: "Maximum consecutive blank lines in the document body outside scalar content, defaulting to 2" }),
-	maxStart: S.optionalKey(nonNegativeIntegerOption).annotateKey({ description: "Maximum consecutive blank lines at the start of the input, defaulting to 0" }),
-	maxEnd: S.optionalKey(nonNegativeIntegerOption).annotateKey({ description: "Maximum consecutive blank lines at the end of the input outside scalar content, defaulting to 0" }),
-}).pipe($I.annoteSchema("emptyLinesOptions", { description: "Options for `empty-lines`: `max` consecutive blank lines in the body (default 2), `maxStart` at the document start and `maxEnd` at the end (both default 0)." }));
+	severity: S.optionalKey(YamlLintSeverity).annotateKey({
+		description: "Reporting level for excessive blank-line findings, defaulting to `error`",
+	}),
+	max: S.optionalKey(nonNegativeIntegerOption).annotateKey({
+		description: "Maximum consecutive blank lines in the document body outside scalar content, defaulting to 2",
+	}),
+	maxStart: S.optionalKey(nonNegativeIntegerOption).annotateKey({
+		description: "Maximum consecutive blank lines at the start of the input, defaulting to 0",
+	}),
+	maxEnd: S.optionalKey(nonNegativeIntegerOption).annotateKey({
+		description: "Maximum consecutive blank lines at the end of the input outside scalar content, defaulting to 0",
+	}),
+}).pipe(
+	$I.annoteSchema("emptyLinesOptions", {
+		description:
+			"Options for `empty-lines`: `max` consecutive blank lines in the body (default 2), `maxStart` at the document start and `maxEnd` at the end (both default 0).",
+	}),
+);
+
+export type emptyLinesOptions = typeof emptyLinesOptions.Type;
 
 /** Runs of blank lines beyond the configured caps, with a deleting fix. */
 export const emptyLines: YamlRule = {
 	id: "empty-lines",
 	check: (ctx: LintContext, options) => {
-		const opts = S.is(emptyLinesOptions)(options) ? options : {};
-		const max = opts.max ?? 2;
-		const maxStart = opts.maxStart ?? 0;
-		const maxEnd = opts.maxEnd ?? 0;
+		const max =
+			P.hasProperty(options, "max") && S.is(emptyLinesOptions.fields.max.schema)(options.max) ? options.max : 2;
+		const maxStart =
+			P.hasProperty(options, "maxStart") && S.is(emptyLinesOptions.fields.maxStart.schema)(options.maxStart)
+				? options.maxStart
+				: 0;
+		const maxEnd =
+			P.hasProperty(options, "maxEnd") && S.is(emptyLinesOptions.fields.maxEnd.schema)(options.maxEnd)
+				? options.maxEnd
+				: 0;
 		const out: Array<YamlLintDiagnostic> = [];
 		const lines = ctx.lines;
 		// Line text excludes the terminator whole (a CRLF blank line is `""`),

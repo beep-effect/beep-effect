@@ -18,6 +18,7 @@ const $I = $ScratchpadId.create("effected/yaml/internal/rules/parse-validity");
  * any attempt to set a severity or `"off"` on this rule.
  */
 export const parseValidityOptions = S.Struct({}).pipe($I.annoteSchema("parseValidityOptions", { description: "parse-validity accepts no options; the config layer additionally rejects any attempt to set a severity or `\"off\"` on this rule." }));
+export type parseValidityOptions = typeof parseValidityOptions.Type;
 
 /** The always-on parse-validity rule. */
 export const parseValidity: YamlRule = {

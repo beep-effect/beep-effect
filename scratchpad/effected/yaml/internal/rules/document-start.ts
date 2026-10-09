@@ -9,6 +9,7 @@
 
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as HashSet from "effect/HashSet";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { YamlEdit } from "../../YamlEdit.ts";
 import type { LintContext, YamlRule } from "../../YamlLintRule.ts";
@@ -23,6 +24,9 @@ export const documentStartOptions = S.Struct({
 	present: S.optionalKey(S.Boolean).annotateKey({ description: "Whether the stream's initial `---` marker is required (`true`, default) or forbidden (`false`)" }),
 }).pipe($I.annoteSchema("documentStartOptions", { description: "Options for `document-start`: require (`true`, default) or forbid the marker." }));
 
+/** Decoded options for the stream's document start marker. */
+export type documentStartOptions = typeof documentStartOptions.Type;
+
 const TRIVIA = HashSet.fromIterable(["newline", "whitespace", "comment", "byte-order-mark", "directive"]);
 
 /** True when the stream carries `%YAML`/`%TAG` directives — which REQUIRE `---`. */
@@ -35,8 +39,8 @@ const headToken = (ctx: LintContext): YamlToken | undefined => ctx.tokens.find((
 export const documentStart: YamlRule = {
 	id: "document-start",
 	check: (ctx, options) => {
-		const opts = S.is(documentStartOptions)(options) ? options : {};
-		const present = opts.present ?? true;
+		const opts = P.isObject(options) ? options : {};
+		const present = S.is(S.Boolean)(opts.present) ? opts.present : true;
 		// The first non-trivia token decides: is the stream headed by `---`?
 		const directives = hasDirectives(ctx);
 		const first = headToken(ctx);

@@ -27,10 +27,25 @@ const $I = $ScratchpadId.create("effected/yaml/internal/rules/quoted-strings");
  * at all (default `false` — only already-quoted scalars are policed).
  */
 export const quotedStringsOptions = S.Struct({
-	severity: S.optionalKey(YamlLintSeverity).annotateKey({ description: "Reporting level for string-quoting findings, defaulting to `error`" }),
-	quoteType: S.optionalKey(S.Literals(["single", "double"])).annotateKey({ description: "Required quote style for quoted string values and sequence items, excluding mapping keys and defaulting to `double`" }),
-	required: S.optionalKey(S.Boolean).annotateKey({ description: "Whether plain string values and sequence items must be quoted, excluding mapping keys and defaulting to `false`" }),
-}).pipe($I.annoteSchema("quotedStringsOptions", { description: "Options for `quoted-strings`: the preferred `quoteType` (default `\"double\"`) and whether plain string scalars are `required` to be quoted at all (default `false` — only already-quoted scalars are policed)." }));
+	severity: S.optionalKey(YamlLintSeverity).annotateKey({
+		description: "Reporting level for string-quoting findings, defaulting to `error`",
+	}),
+	quoteType: S.optionalKey(S.Literals(["single", "double"])).annotateKey({
+		description:
+			"Required quote style for quoted string values and sequence items, excluding mapping keys and defaulting to `double`",
+	}),
+	required: S.optionalKey(S.Boolean).annotateKey({
+		description:
+			"Whether plain string values and sequence items must be quoted, excluding mapping keys and defaulting to `false`",
+	}),
+}).pipe(
+	$I.annoteSchema("quotedStringsOptions", {
+		description:
+			'Options for `quoted-strings`: the preferred `quoteType` (default `"double"`) and whether plain string scalars are `required` to be quoted at all (default `false` — only already-quoted scalars are policed).',
+	}),
+);
+
+export type quotedStringsOptions = typeof quotedStringsOptions.Type;
 
 /**
  * A value-preserving requote/wrap edit, or undefined when none is safe.
@@ -48,9 +63,14 @@ const safeQuoteFix = (ctx: LintContext, scalar: YamlScalar, quote: '"' | "'"): Y
 export const quotedStrings: YamlRule = {
 	id: "quoted-strings",
 	check: (ctx, options) => {
-		const opts = S.is(quotedStringsOptions)(options) ? options : {};
-		const quoteType = opts.quoteType ?? "double";
-		const required = opts.required ?? false;
+		const quoteType =
+			P.hasProperty(options, "quoteType") && S.is(quotedStringsOptions.fields.quoteType.schema)(options.quoteType)
+				? options.quoteType
+				: "double";
+		const required =
+			P.hasProperty(options, "required") && S.is(quotedStringsOptions.fields.required.schema)(options.required)
+				? options.required
+				: false;
 		const quote = quoteType === "double" ? '"' : "'";
 		const wrongStyle = quoteType === "double" ? "single-quoted" : "double-quoted";
 		const out: Array<YamlLintDiagnostic> = [];

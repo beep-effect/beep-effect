@@ -9,6 +9,7 @@
 //
 // This is the AST-level visitor only — the CST layer stays internal.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Data from "effect/Data";
 import * as Stream from "effect/Stream";
 import * as S from "effect/Schema";
@@ -17,10 +18,63 @@ import type { RawYamlDocument } from "./internal/raw-document.ts";
 import type { YamlParseOptions } from "./Yaml.ts";
 import { YamlDiagnostic } from "./YamlDiagnostic.ts";
 import type { YamlPath } from "./YamlEdit.ts";
-import type { CollectionStyle, ScalarStyle, YamlNode, YamlPair } from "./YamlNode.ts";
+import { CollectionStyle, ScalarStyle, type YamlNode, type YamlPair } from "./YamlNode.ts";
 import { YamlAlias, YamlMap, YamlScalar, YamlSeq } from "./YamlNode.ts";
 import * as P from "effect/Predicate";
 import * as O from "@beep/utils/Option";
+
+const $I = $ScratchpadId.create("effected/yaml/YamlVisitor");
+
+const eventContext = {
+	path: S.Array(S.Union([S.String, S.Finite])).annotateKey({ description: "Ordered mapping keys and sequence indices from the document root." }),
+	depth: S.Finite.annotateKey({ description: "Zero-based nesting depth of the visited construct." }),
+};
+const eventProperties = {
+	tag: S.optionalKey(S.String).annotateKey({ description: "Explicit YAML tag attached to the construct, when present." }),
+	anchor: S.optionalKey(S.String).annotateKey({ description: "Anchor name attached to the construct, when present." }),
+};
+const collectionContext = {
+	...eventContext,
+	...eventProperties,
+	style: CollectionStyle.annotateKey({ description: "Block or flow presentation of the collection." }),
+};
+const visitorEvent = S.TaggedUnion({
+	DocumentStart: {
+		...eventContext,
+		directives: S.Array(S.Struct({
+			name: S.String.annotateKey({ description: "Directive name without its percent indicator." }),
+			parameters: S.Array(S.String).annotateKey({ description: "Ordered directive parameters." }),
+		}).annotate($I.annote("VisitorDirective", { description: "A directive attached to a visited document." }))).annotateKey({ description: "Directives applying to the document in source order." }),
+	},
+	DocumentEnd: eventContext,
+	MapStart: collectionContext,
+	MapEnd: eventContext,
+	SeqStart: collectionContext,
+	SeqEnd: eventContext,
+	Pair: {
+		...eventContext,
+		key: S.Unknown.annotateKey({ description: "Resolved scalar key, or null for a complex key." }),
+		value: S.Unknown.annotateKey({ description: "Resolved scalar value, or null for a collection or omitted value." }),
+	},
+	Scalar: {
+		...eventContext,
+		...eventProperties,
+		value: S.Unknown.annotateKey({ description: "Resolved YAML scalar value." }),
+		style: ScalarStyle.annotateKey({ description: "Scalar presentation style in the source." }),
+	},
+	Alias: { ...eventContext, name: S.String.annotateKey({ description: "Referenced anchor name." }) },
+	Comment: {
+		...eventContext,
+		text: S.String.annotateKey({ description: "Comment text attached to the visited construct." }),
+		placement: S.Literals(["leading", "trailing"]).annotateKey({ description: "Own-line comment before the construct or same-line comment after it." }),
+	},
+	Directive: {
+		...eventContext,
+		name: S.String.annotateKey({ description: "Directive name without its percent indicator." }),
+		parameters: S.String.annotateKey({ description: "Directive parameters joined with spaces." }),
+	},
+	Error: { ...eventContext, diagnostic: YamlDiagnostic.annotateKey({ description: "Positioned diagnostic recorded while composing the document." }) },
+}).annotate($I.annote("YamlVisitorEvent", { description: "Concrete YAML AST visitor events with shared path and nesting context." }));
 
 /**
  * The discriminated union of YAML AST visitor events. Every variant carries
@@ -31,49 +85,7 @@ import * as O from "@beep/utils/Option";
  *
  * @public
  */
-export type YamlVisitorEvent = Data.TaggedEnum<{
-	DocumentStart: {
-		readonly path: YamlPath;
-		readonly depth: number;
-		readonly directives: ReadonlyArray<{ readonly name: string; readonly parameters: ReadonlyArray<string> }>;
-	};
-	DocumentEnd: { readonly path: YamlPath; readonly depth: number };
-	MapStart: {
-		readonly path: YamlPath;
-		readonly depth: number;
-		readonly style: CollectionStyle;
-		readonly tag?: string;
-		readonly anchor?: string;
-	};
-	MapEnd: { readonly path: YamlPath; readonly depth: number };
-	SeqStart: {
-		readonly path: YamlPath;
-		readonly depth: number;
-		readonly style: CollectionStyle;
-		readonly tag?: string;
-		readonly anchor?: string;
-	};
-	SeqEnd: { readonly path: YamlPath; readonly depth: number };
-	Pair: { readonly path: YamlPath; readonly depth: number; readonly key: unknown; readonly value: unknown };
-	Scalar: {
-		readonly path: YamlPath;
-		readonly depth: number;
-		readonly value: unknown;
-		readonly style: ScalarStyle;
-		readonly tag?: string;
-		readonly anchor?: string;
-	};
-	Alias: { readonly path: YamlPath; readonly depth: number; readonly name: string };
-	Comment: {
-		readonly path: YamlPath;
-		readonly depth: number;
-		readonly text: string;
-		/** Where the comment sits relative to its construct: own-line above (`"leading"`) or same-line after (`"trailing"`). */
-		readonly placement: "leading" | "trailing";
-	};
-	Directive: { readonly path: YamlPath; readonly depth: number; readonly name: string; readonly parameters: string };
-	Error: { readonly path: YamlPath; readonly depth: number; readonly diagnostic: YamlDiagnostic };
-}>;
+export type YamlVisitorEvent = typeof visitorEvent.Type;
 
 /**
  * Constructors and matchers for the `YamlVisitorEvent` union (e.g.

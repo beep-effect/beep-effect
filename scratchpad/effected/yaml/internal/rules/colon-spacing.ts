@@ -26,6 +26,9 @@ export const colonSpacingOptions = S.Struct({
 	maxSpacesAfter: S.optionalKey(positiveIntegerOption).annotateKey({ description: "Maximum spaces between a block-mapping `:` and its same-line value, at least 1 and defaulting to 1" }),
 }).pipe($I.annoteSchema("colonSpacingOptions", { description: "Options for `colon-spacing`: `maxSpacesBefore` (default 0) and `maxSpacesAfter` (default 1) around the `:` indicator. `maxSpacesBefore: 0` is legal (`key:` needs no space before the colon), but at least one separation space must FOLLOW it — `0` would make the fix emit `a:val`, a plain scalar, not a mapping entry." }));
 
+/** Decoded options for block-mapping colon spacing. */
+export type colonSpacingOptions = typeof colonSpacingOptions.Type;
+
 /** Spacing around the block-mapping `:` indicator. */
 export const colonSpacing: YamlRule = {
 	id: "colon-spacing",

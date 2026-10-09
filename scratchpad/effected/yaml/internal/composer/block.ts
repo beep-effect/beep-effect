@@ -1,3 +1,6 @@
+import * as A from "effect/Array";
+import { dual } from "effect/Function";
+import { $ScratchpadId } from "@beep/identity/packages";
 // Block-collection composition: block mappings (with the sibling-first-key
 // CST shape), block sequences, flat block maps, and the shared pair-building
 // machinery (`SemanticItem`, `buildPairs`) that flow composition also uses.
@@ -5,7 +8,7 @@
 // Cross-seam recursion into flow composition goes through `state.flow` (see
 // `FlowComposers` in `state.ts`) so this module never imports `flow.ts`.
 
-import type { YamlNode } from "../../YamlNode.ts";
+import { YamlNode } from "../../YamlNode.ts";
 import { YamlAlias, YamlMap, YamlPair, YamlScalar, YamlSeq } from "../../YamlNode.ts";
 import type { CstNode } from "../cst.ts";
 import { checkAnchorOnAlias, getAnchorName, makeAlias, registerAnchor } from "./anchors.ts";
@@ -49,18 +52,21 @@ import {
 	lineIndentColumn,
 	sameLine,
 } from "./state.ts";
-import * as Schema from "effect/Schema";
-import { dual } from "effect/Function";
+import * as S from "effect/Schema";
 import * as O from "@beep/utils/Option";
-import * as A from "effect/Array";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Match from "effect/Match";
 import * as MutableHashSet from "effect/MutableHashSet";
 
+const isYamlAlias = S.is(YamlAlias);
+const isYamlScalar = S.is(YamlScalar);
+
 // ---------------------------------------------------------------------------
 // Compose block map
 // ---------------------------------------------------------------------------
+
+const $I = $ScratchpadId.create("effected/yaml/internal/composer/block");
 
 /**
  * Compose a block map from its CST children, with an optional external first key.
@@ -72,9 +78,9 @@ import * as MutableHashSet from "effect/MutableHashSet";
  * Subsequent keys are inside the block-map children.
  */
 export const composeBlockMap: {
-	(blockMapCst: CstNode, state: ComposerState, externalFirstKey?: YamlNode, meta?: NodeMeta): YamlMap;
 	(state: ComposerState, externalFirstKey?: YamlNode, meta?: NodeMeta): (blockMapCst: CstNode) => YamlMap;
-} = dual((args) => args[0] !== undefined && "type" in args[0], (blockMapCst: CstNode, state: ComposerState, externalFirstKey?: YamlNode, meta?: NodeMeta): YamlMap => {
+	(blockMapCst: CstNode, state: ComposerState, externalFirstKey?: YamlNode, meta?: NodeMeta): YamlMap;
+} = dual((args) => P.hasProperty(args[0], "source"), (blockMapCst: CstNode, state: ComposerState, externalFirstKey?: YamlNode, meta?: NodeMeta): YamlMap => {
 	// Nesting-depth guard: unbounded recursion is a stack-overflow DoS vector.
 	if (!enterNesting(state, blockMapCst)) {
 		return YamlMap.make({ items: [], style: "block", offset: blockMapCst.offset, length: blockMapCst.length });
@@ -102,12 +108,12 @@ function composeBlockMapInner(
 	// larger column, but the property column is what matters for validating
 	// continuation-line indentation.
 	const extKeyOffset =
-		(externalFirstKey !== undefined) && "offset" in externalFirstKey ? externalFirstKey.offset : undefined;
+		externalFirstKey !== undefined && "offset" in externalFirstKey ? externalFirstKey.offset : undefined;
 	const extKeyCol = extKeyOffset !== undefined ? lineIndentColumn(state.text, extKeyOffset) : undefined;
 	const items = flattenBlockMapChildren(children, state, extKeyCol, extKeyOffset);
 
 	// If there's an external first key, prepend it
-	if ((externalFirstKey !== undefined)) {
+	if (externalFirstKey !== undefined) {
 		items.unshift({ kind: "key", node: externalFirstKey });
 	}
 
@@ -117,11 +123,12 @@ function composeBlockMapInner(
 	if (state.options.uniqueKeys) checkDuplicateKeys(pairs, state);
 	checkMultilineImplicitKeys(pairs, state);
 
-	const offset = (externalFirstKey !== undefined)
-		? "offset" in externalFirstKey
-			? externalFirstKey.offset
-			: blockMapCst.offset
-		: blockMapCst.offset;
+	const offset =
+		externalFirstKey !== undefined
+			? "offset" in externalFirstKey
+				? externalFirstKey.offset
+				: blockMapCst.offset
+			: blockMapCst.offset;
 	const end = trimDisownedTrailingComments(
 		state.text,
 		offset,
@@ -146,7 +153,7 @@ function composeBlockMapInner(
 		...O.getSomesStruct({ comment: O.fromUndefinedOr(mapComment) }),
 	});
 
-	if ((meta?.anchor !== undefined && meta?.anchor !== "")) registerAnchor(map, meta.anchor, state, offset);
+	if (meta?.anchor !== undefined && meta?.anchor !== "") registerAnchor(map, meta.anchor, state, offset);
 	return map;
 }
 
@@ -201,16 +208,54 @@ function trimDisownedTrailingComments(
 	return cut;
 }
 
-export interface SemanticItem {
-	kind: "key" | "value-sep" | "node" | "comment";
-	node?: YamlNode;
-	comment?: string;
-	offset?: number;
-}
+export const SemanticItem = S.Union([
+	S.Struct({
+		kind: S.Literal("key")
+			.pipe(S.mutableKey)
+			.annotate($I.annote("SemanticItem.Key.kind", { description: "Explicit or external key marker." })),
+		node: YamlNode.pipe(S.optionalKey, S.mutableKey).annotate(
+			$I.annote("SemanticItem.Key.node", { description: "Optional key node; an explicit-key marker may be empty." }),
+		),
+	}).annotate($I.annote("SemanticItem.Key", { description: "Explicit or external key." })),
+	S.Struct({
+		kind: S.Literal("value-sep")
+			.pipe(S.mutableKey)
+			.annotate($I.annote("SemanticItem.ValueSep.kind", { description: "Mapping value separator." })),
+		offset: S.Finite.pipe(S.mutableKey).annotate(
+			$I.annote("SemanticItem.ValueSep.offset", { description: "Source offset of the structural colon." }),
+		),
+	}).annotate($I.annote("SemanticItem.ValueSep", { description: "Mapping value separator." })),
+	S.Struct({
+		kind: S.Literal("node")
+			.pipe(S.mutableKey)
+			.annotate($I.annote("SemanticItem.Node.kind", { description: "Composed content node." })),
+		node: YamlNode.pipe(S.mutableKey).annotate(
+			$I.annote("SemanticItem.Node.node", { description: "Composed YAML node." }),
+		),
+	}).annotate($I.annote("SemanticItem.Node", { description: "Composed content node." })),
+	S.Struct({
+		kind: S.Literal("comment")
+			.pipe(S.mutableKey)
+			.annotate($I.annote("SemanticItem.Comment.kind", { description: "Comment awaiting attribution." })),
+		comment: S.String.pipe(S.mutableKey).annotate(
+			$I.annote("SemanticItem.Comment.comment", { description: "Raw post-indicator comment text." }),
+		),
+		offset: S.Finite.pipe(S.mutableKey).annotate(
+			$I.annote("SemanticItem.Comment.offset", { description: "Source offset of the comment." }),
+		),
+	}).annotate($I.annote("SemanticItem.Comment", { description: "Comment awaiting attribution." })),
+])
+	.pipe(S.toTaggedUnion("kind"))
+	.annotate(
+		$I.annote("SemanticItem", {
+			description: "Composition tokens with kind-specific payloads; explicit keys may be node-less.",
+		}),
+	);
+export type SemanticItem = typeof SemanticItem.Type;
 
 export const flattenBlockMapChildren: {
-	(children: readonly CstNode[], state: ComposerState, externalKeyColumn?: number, externalKeyOffset?: number): SemanticItem[];
 	(state: ComposerState, externalKeyColumn?: number, externalKeyOffset?: number): (children: readonly CstNode[]) => SemanticItem[];
+	(children: readonly CstNode[], state: ComposerState, externalKeyColumn?: number, externalKeyOffset?: number): SemanticItem[];
 } = dual((args) => A.isArray(args[0]), (children: readonly CstNode[], state: ComposerState, externalKeyColumn?: number, externalKeyOffset?: number): SemanticItem[] => {
 	const items: SemanticItem[] = [];
 	let pendingMeta: NodeMeta = {};
@@ -339,8 +384,8 @@ export const flattenBlockMapChildren: {
 					const innerTrailing = buildPairs(innerItems, innerPairs, state.text);
 					const firstC = findFirstContent(sliceChildren);
 					const lastC = findLastContent(sliceChildren);
-					const innerOffset = (firstC !== undefined) ? firstC.offset : child.offset;
-					const innerEnd = (lastC !== undefined) ? lastC.offset + lastC.length : child.offset + child.length;
+					const innerOffset = firstC !== undefined ? firstC.offset : child.offset;
+					const innerEnd = lastC !== undefined ? lastC.offset + lastC.length : child.offset + child.length;
 					const innerMap = YamlMap.make({
 						items: innerPairs,
 						style: "block",
@@ -364,7 +409,7 @@ export const flattenBlockMapChildren: {
 				// represented (otherwise outer-context anchors would be lost).
 				const flushMeta = combinedPending();
 				if (hasMeta(flushMeta)) {
-					const value = resolveScalar("", "plain", flushMeta.tag, state);
+					const value = resolveScalar("", ["plain", flushMeta.tag, state]);
 					const scalar = YamlScalar.make({
 						value,
 						style: "plain",
@@ -373,7 +418,8 @@ export const flattenBlockMapChildren: {
 						...O.getSomesStruct({ tag: O.fromUndefinedOr(flushMeta.tag) }),
 						...O.getSomesStruct({ anchor: O.fromUndefinedOr(flushMeta.anchor) }),
 					});
-					if ((flushMeta.anchor !== undefined && flushMeta.anchor !== "")) registerAnchor(scalar, flushMeta.anchor, state, child.offset);
+					if (flushMeta.anchor !== undefined && flushMeta.anchor !== "")
+						registerAnchor(scalar, flushMeta.anchor, state, child.offset);
 					resetAllMeta();
 					pushNode(scalar);
 				}
@@ -466,7 +512,7 @@ export const flattenBlockMapChildren: {
 			if (afterValueSep && sepOnSameLine) {
 				const flushMeta = combinedPending();
 				if (hasMeta(flushMeta)) {
-					const value = resolveScalar("", "plain", flushMeta.tag, state);
+					const value = resolveScalar("", ["plain", flushMeta.tag, state]);
 					const scalar = YamlScalar.make({
 						value,
 						style: "plain",
@@ -475,7 +521,8 @@ export const flattenBlockMapChildren: {
 						...O.getSomesStruct({ tag: O.fromUndefinedOr(flushMeta.tag) }),
 						...O.getSomesStruct({ anchor: O.fromUndefinedOr(flushMeta.anchor) }),
 					});
-					if ((flushMeta.anchor !== undefined && flushMeta.anchor !== "")) registerAnchor(scalar, flushMeta.anchor, state, child.offset);
+					if (flushMeta.anchor !== undefined && flushMeta.anchor !== "")
+						registerAnchor(scalar, flushMeta.anchor, state, child.offset);
 					resetAllMeta();
 					pushNode(scalar);
 				}
@@ -584,7 +631,7 @@ export const flattenBlockMapChildren: {
 				if (isExplicitKey) {
 					const { value: keyValue, nextIdx: keyNextIdx } = collectMultilineKey(children, i);
 					const keyMeta = combinedPending();
-					const resolved = resolveScalar(keyValue, "plain", keyMeta.tag, state);
+					const resolved = resolveScalar(keyValue, ["plain", keyMeta.tag, state]);
 					const scalar = YamlScalar.make({
 						value: resolved,
 						style: "plain",
@@ -593,7 +640,8 @@ export const flattenBlockMapChildren: {
 						...O.getSomesStruct({ tag: O.fromUndefinedOr(keyMeta.tag) }),
 						...O.getSomesStruct({ anchor: O.fromUndefinedOr(keyMeta.anchor) }),
 					});
-					if ((keyMeta.anchor !== undefined && keyMeta.anchor !== "")) registerAnchor(scalar, keyMeta.anchor, state, child.offset);
+					if (keyMeta.anchor !== undefined && keyMeta.anchor !== "")
+						registerAnchor(scalar, keyMeta.anchor, state, child.offset);
 					resetAllMeta();
 					pushNode(scalar, child.offset);
 					i = keyNextIdx - 1;
@@ -663,7 +711,7 @@ export const flattenBlockMapChildren: {
 					minContCol !== undefined ? state.text : undefined,
 				);
 				const plainMeta = combinedPending();
-				const resolved = resolveScalar(value, "plain", plainMeta.tag, state);
+				const resolved = resolveScalar(value, ["plain", plainMeta.tag, state]);
 				const needsRaw = !P.isString(resolved) && resolved !== undefined && shouldPreserveRaw(value, resolved);
 				const scalar = YamlScalar.make({
 					value: resolved,
@@ -677,7 +725,8 @@ export const flattenBlockMapChildren: {
 					...O.getSomesStruct({ anchor: O.fromUndefinedOr(plainMeta.anchor) }),
 					...(needsRaw ? { raw: value } : {}),
 				});
-				if ((plainMeta.anchor !== undefined && plainMeta.anchor !== "")) registerAnchor(scalar, plainMeta.anchor, state, child.offset);
+				if (plainMeta.anchor !== undefined && plainMeta.anchor !== "")
+					registerAnchor(scalar, plainMeta.anchor, state, child.offset);
 				resetAllMeta();
 				pushNode(scalar, child.offset);
 				// After a truly MULTILINE plain scalar in value position (partsCount > 1
@@ -687,7 +736,7 @@ export const flattenBlockMapChildren: {
 				// at the parent mapping level (valid, e.g. 4CQQ).
 				if (isValuePosition && partsCount > 1) {
 					const stoppedAtContent = findNextContentInList(children, nextIdx);
-					if ((stoppedAtContent !== null)) {
+					if (stoppedAtContent !== null) {
 						const sn = stoppedAtContent.node;
 						const valueCol = lineCol(state.text, child.offset).column;
 						const nextCol = lineCol(state.text, sn.offset).column;
@@ -781,7 +830,8 @@ export const flattenBlockMapChildren: {
 					...O.getSomesStruct({ tag: O.fromUndefinedOr(pendingMeta.tag) }),
 					...O.getSomesStruct({ anchor: O.fromUndefinedOr(pendingMeta.anchor) }),
 				});
-				if ((pendingMeta.anchor !== undefined && pendingMeta.anchor !== "")) registerAnchor(emptyKey, pendingMeta.anchor, state, child.offset);
+				if (pendingMeta.anchor !== undefined && pendingMeta.anchor !== "")
+					registerAnchor(emptyKey, pendingMeta.anchor, state, child.offset);
 				const outerOnlyMeta = hasMeta(outerMeta) ? outerMeta : undefined;
 				const map = composeBlockMap(child, state, emptyKey, outerOnlyMeta);
 				resetAllMeta();
@@ -847,7 +897,7 @@ export const flattenBlockMapChildren: {
 	// Flush trailing pending tag/anchor as empty scalar
 	const trailingMeta = combinedPending();
 	if (hasMeta(trailingMeta)) {
-		const value = resolveScalar("", "plain", trailingMeta.tag, state);
+		const value = resolveScalar("", ["plain", trailingMeta.tag, state]);
 		const scalar = YamlScalar.make({
 			value,
 			style: "plain",
@@ -856,7 +906,8 @@ export const flattenBlockMapChildren: {
 			...O.getSomesStruct({ tag: O.fromUndefinedOr(trailingMeta.tag) }),
 			...O.getSomesStruct({ anchor: O.fromUndefinedOr(trailingMeta.anchor) }),
 		});
-		if ((trailingMeta.anchor !== undefined && trailingMeta.anchor !== "")) registerAnchor(scalar, trailingMeta.anchor, state, 0);
+		if (trailingMeta.anchor !== undefined && trailingMeta.anchor !== "")
+			registerAnchor(scalar, trailingMeta.anchor, state, 0);
 		items.push({ kind: "node", node: scalar });
 	}
 	return items;
@@ -877,8 +928,8 @@ export const flattenBlockMapChildren: {
  * containing collection's trailing `comment`.
  */
 export const buildPairs: {
-	(items: SemanticItem[], pairs: YamlPair[], text: string, escaped?: Array<EscapedComment>): string | undefined;
 	(pairs: YamlPair[], text: string, escaped?: Array<EscapedComment>): (items: SemanticItem[]) => string | undefined;
+	(items: SemanticItem[], pairs: YamlPair[], text: string, escaped?: Array<EscapedComment>): string | undefined;
 } = dual((args) => A.isArray(args[1]), (items: SemanticItem[], pairs: YamlPair[], text: string, escaped?: Array<EscapedComment>): string | undefined => {
 	let i = 0;
 	// Forward-attribution state: own-line comment parts and blank-line flag
@@ -986,7 +1037,7 @@ export const buildPairs: {
 				// to the node that owns that line — the value when there is one,
 				// otherwise the key (divergence 1 in comments.ts).
 				const last = pairs[pairs.length - 1];
-				if ((last !== undefined)) {
+				if (last !== undefined) {
 					pairs[pairs.length - 1] = withTrailingComment(last, cText);
 				}
 			} else {
@@ -1025,10 +1076,10 @@ export const buildPairs: {
 				offset: valueSepOffset,
 				length: 0,
 			});
-			if ((valueNode !== null)) {
+			if (valueNode !== null) {
 				pairs.push(pushPair(YamlPair.make({ key: nullKey, value: valueNode.node ?? null }), pendingFields, undefined));
 				i = valueNode.nextIdx;
-				lastEnd = (valueNode.node !== null) ? nodeEnd(valueNode.node) : valueSepOffset + 1;
+				lastEnd = valueNode.node !== null ? nodeEnd(valueNode.node) : valueSepOffset + 1;
 				lastNode = valueNode.node ?? undefined;
 			} else {
 				pairs.push(pushPair(YamlPair.make({ key: nullKey, value: null }), pendingFields, undefined));
@@ -1044,18 +1095,20 @@ export const buildPairs: {
 			if (item.kind === "key" && keyNode === undefined) {
 				while (i < items.length && items[i]?.kind === "comment") i++;
 				if (i < items.length && items[i]?.kind === "node") {
-					keyNode = items[i]?.node;
+					const next = items[i];
+					keyNode = next?.kind === "node" ? next.node : undefined;
 					i++;
 				}
 			}
-			if ((keyNode !== undefined)) noteContentColumn(keyNode.offset);
-			const pendingFields = takePendingFields((keyNode !== undefined) ? keyNode.offset : -1);
+			if (keyNode !== undefined) noteContentColumn(keyNode.offset);
+			const pendingFields = takePendingFields(keyNode !== undefined ? keyNode.offset : -1);
 			// Comments between key and value-sep (e.g., ? key # comment\n: value)
 			// attach to the pair's trailing comment — they have no own construct
 			// in the pair model.
 			let pairTrailing: string | undefined;
 			while (i < items.length && items[i]?.kind === "comment") {
-				const c = items[i]?.comment;
+				const commentItem = items[i];
+				const c = commentItem?.kind === "comment" ? commentItem.comment : undefined;
 				if (c !== undefined) pairTrailing = joinComments(pairTrailing, c);
 				i++;
 			}
@@ -1063,10 +1116,12 @@ export const buildPairs: {
 				keyNode ?? YamlScalar.make({ value: null, style: "plain", offset: 0, length: 0 });
 			// Look for value-sep
 			if (i < items.length && items[i]?.kind === "value-sep") {
-				const sepOffset = items[i]?.offset ?? ((keyNode !== undefined) ? nodeEnd(keyNode) : 0);
+				const separator = items[i];
+				const sepOffset =
+					separator?.kind === "value-sep" ? separator.offset : keyNode !== undefined ? nodeEnd(keyNode) : 0;
 				i++; // skip value-sep
 				const valueResult = consumeValueNode(items, i, text, sepOffset);
-				if ((valueResult !== null)) {
+				if (valueResult !== null) {
 					// Comments between the `:` and the value: same-line comments
 					// are the pair's trailing comment; own-line comments lead the
 					// value node.
@@ -1089,7 +1144,7 @@ export const buildPairs: {
 						),
 					);
 					i = valueResult.nextIdx;
-					lastEnd = (valNode !== null) ? nodeEnd(valNode) : sepOffset + 1;
+					lastEnd = valNode !== null ? nodeEnd(valNode) : sepOffset + 1;
 					lastNode = valNode ?? undefined;
 				} else {
 					pairs.push(pushPair(YamlPair.make({ key: keyOrNull(), value: null }), pendingFields, pairTrailing));
@@ -1099,8 +1154,8 @@ export const buildPairs: {
 			} else {
 				// Key with no value
 				pairs.push(pushPair(YamlPair.make({ key: keyOrNull(), value: null }), pendingFields, pairTrailing));
-				lastEnd = (keyNode !== undefined) ? nodeEnd(keyNode) : lastEnd;
-				if ((keyNode !== undefined)) lastNode = keyNode;
+				lastEnd = keyNode !== undefined ? nodeEnd(keyNode) : lastEnd;
+				if (keyNode !== undefined) lastNode = keyNode;
 			}
 			continue;
 		}
@@ -1148,8 +1203,8 @@ export const buildPairs: {
 function keyIsSimple(keyNode: YamlNode | undefined): boolean {
 	// An alias key emits in implicit form (`*x : value`), so it owns its line
 	// exactly as a plain scalar key does and can carry a trailing comment.
-	if (Schema.is(YamlAlias)(keyNode)) return true;
-	if (!(Schema.is(YamlScalar)(keyNode))) return false;
+	if (isYamlAlias(keyNode)) return true;
+	if (!isYamlScalar(keyNode)) return false;
 	if (P.isString(keyNode.value) && keyNode.value.includes("\n")) return false;
 	return keyNode.style !== "block-literal" && keyNode.style !== "block-folded";
 }
@@ -1268,7 +1323,7 @@ function consumeValueNodeForNullKey(
 			if (i + 1 < items.length && items[i + 1]?.kind === "value-sep") {
 				// Check if the candidate node is on a different line from the
 				// null key's value-sep. Only refuse to consume cross-line nodes.
-				const nodeOffset = (item.node !== undefined) && "offset" in item.node ? item.node.offset : 0;
+				const nodeOffset = item.node !== undefined && "offset" in item.node ? item.node.offset : 0;
 				const hasNewline = text.slice(valueSepOffset, nodeOffset).includes("\n");
 				if (hasNewline) {
 					// Cross-line: this node is a key for the next pair, not our value.
@@ -1295,8 +1350,8 @@ function consumeValueNodeForNullKey(
  * `"1"` (string) or `true`.
  */
 export const keyIdentity: {
-	(key: YamlScalar, text: string): string;
 	(text: string): (key: YamlScalar) => string;
+	(key: YamlScalar, text: string): string;
 } = dual(2, (key: YamlScalar, text: string): string => {
 	const v = key.value;
 	if (v === null) return "null";
@@ -1318,12 +1373,12 @@ export const keyIdentity: {
 });
 
 export const checkDuplicateKeys: {
-	(pairs: YamlPair[], state: ComposerState): void;
 	(state: ComposerState): (pairs: YamlPair[]) => void;
+	(pairs: YamlPair[], state: ComposerState): void;
 } = dual(2, (pairs: YamlPair[], state: ComposerState): void => {
 	const seen = MutableHashSet.empty<string>();
 	for (const pair of pairs) {
-		if (Schema.is(YamlScalar)(pair.key)) {
+		if (isYamlScalar(pair.key)) {
 			const id = keyIdentity(pair.key, state.text);
 			if (MutableHashSet.has(seen, id)) {
 				state.warnings.push({
@@ -1357,7 +1412,7 @@ function scanExplicitKeyShape(
 	text: string,
 ): { kind: "terminated"; matchIdx: number } | { kind: "inline-implicit-map"; endIdx: number } | { kind: "simple" } {
 	const qChild = children[qIdx];
-	const qLine = (qChild !== undefined) ? lineCol(text, qChild.offset).line : -1;
+	const qLine = qChild !== undefined ? lineCol(text, qChild.offset).line : -1;
 	let inlineColonOnQLine = false;
 	let endIdx = children.length;
 	for (let j = qIdx + 1; j < children.length; j++) {
@@ -1424,8 +1479,8 @@ function wasIntroducedByExplicitKeyIndicator(text: string, offset: number): bool
  * YAML 1.2 §7.4.2 requires implicit keys to fit on a single line.
  */
 export const checkMultilineImplicitKeys: {
-	(pairs: readonly YamlPair[], state: ComposerState, items?: readonly SemanticItem[]): void;
 	(state: ComposerState, items?: readonly SemanticItem[]): (pairs: readonly YamlPair[]) => void;
+	(pairs: readonly YamlPair[], state: ComposerState, items?: readonly SemanticItem[]): void;
 } = dual((args) => A.isArray(args[0]), (pairs: readonly YamlPair[], state: ComposerState, items?: readonly SemanticItem[]): void => {
 	// Check quoted scalar keys for newlines — quoted scalars (single/double)
 	// have CST spans that include the newline when they span multiple lines.
@@ -1501,8 +1556,8 @@ export const checkMultilineImplicitKeys: {
  * this node is actually a key, not a value.
  */
 export const checkTrailingContentOnSameLine: {
-	(children: readonly CstNode[], startIdx: number, valueNode: CstNode, state: ComposerState): void;
 	(startIdx: number, valueNode: CstNode, state: ComposerState): (children: readonly CstNode[]) => void;
+	(children: readonly CstNode[], startIdx: number, valueNode: CstNode, state: ComposerState): void;
 } = dual(4, (children: readonly CstNode[], startIdx: number, valueNode: CstNode, state: ComposerState): void => {
 	const valueEnd = valueNode.offset + valueNode.length;
 	for (let j = startIdx; j < children.length; j++) {
@@ -1691,9 +1746,9 @@ function validatePropertyContinuationColumn(
 // ---------------------------------------------------------------------------
 
 export const composeBlockSeq: {
-	(cst: CstNode, state: ComposerState, meta?: NodeMeta): YamlSeq;
 	(state: ComposerState, meta?: NodeMeta): (cst: CstNode) => YamlSeq;
-} = dual((args) => args[0] !== undefined && "type" in args[0], (cst: CstNode, state: ComposerState, meta?: NodeMeta): YamlSeq => {
+	(cst: CstNode, state: ComposerState, meta?: NodeMeta): YamlSeq;
+} = dual((args) => P.hasProperty(args[0], "source"), (cst: CstNode, state: ComposerState, meta?: NodeMeta): YamlSeq => {
 	// Nesting-depth guard: unbounded recursion is a stack-overflow DoS vector.
 	if (!enterNesting(state, cst)) {
 		return YamlSeq.make({ items: [], style: "block", offset: cst.offset, length: cst.length });
@@ -1799,7 +1854,7 @@ function composeBlockSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMet
 			const cText = rawCommentText(child.source);
 			if (rawItems.length > 0 && !isOwnLineAt(state.text, child.offset)) {
 				const prev = rawItems[rawItems.length - 1];
-				if ((prev !== undefined)) rawItems[rawItems.length - 1] = withCommentFields(prev, { comment: cText });
+				if (prev !== undefined) rawItems[rawItems.length - 1] = withCommentFields(prev, { comment: cText });
 			} else {
 				acceptOwnLineComment(cText, child.offset);
 			}
@@ -1820,7 +1875,8 @@ function composeBlockSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMet
 						...O.getSomesStruct({ tag: O.fromUndefinedOr(pendingMeta.tag) }),
 						...O.getSomesStruct({ anchor: O.fromUndefinedOr(pendingMeta.anchor) }),
 					});
-					if ((pendingMeta.anchor !== undefined && pendingMeta.anchor !== "")) registerAnchor(emptyScalar, pendingMeta.anchor, state, child.offset);
+					if (pendingMeta.anchor !== undefined && pendingMeta.anchor !== "")
+						registerAnchor(emptyScalar, pendingMeta.anchor, state, child.offset);
 					pendingMeta = {};
 					items.push(emptyScalar);
 				}
@@ -1850,7 +1906,7 @@ function composeBlockSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMet
 			// the first key of an implicit mapping (e.g., "- name: value")
 			const nextSig = findNextSignificantChild(children, ci + 1, true);
 			const nextSigChild = nextSig !== null ? children[nextSig] : undefined;
-			if (nextSig !== null && (nextSigChild !== undefined) && nextSigChild.type === "block-map") {
+			if (nextSig !== null && nextSigChild !== undefined && nextSigChild.type === "block-map") {
 				// When pending meta is separated from the implicit-map's first key
 				// by a newline, the meta applies to the OUTER collection (the map),
 				// not to the inner key. Example: `- !!map\n  key: value` — `!!map`
@@ -1881,7 +1937,7 @@ function composeBlockSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMet
 					endOffset,
 				} = collectMultilinePlainScalar(children, ci, undefined, state.text);
 				if (partsCount > 1) {
-					const resolved = resolveScalar(merged, "plain", pendingMeta.tag, state);
+					const resolved = resolveScalar(merged, ["plain", pendingMeta.tag, state]);
 					const scalar = YamlScalar.make({
 						value: resolved,
 						style: "plain",
@@ -1892,7 +1948,8 @@ function composeBlockSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMet
 						...O.getSomesStruct({ tag: O.fromUndefinedOr(pendingMeta.tag) }),
 						...O.getSomesStruct({ anchor: O.fromUndefinedOr(pendingMeta.anchor) }),
 					});
-					if ((pendingMeta.anchor !== undefined && pendingMeta.anchor !== "")) registerAnchor(scalar, pendingMeta.anchor, state, child.offset);
+					if (pendingMeta.anchor !== undefined && pendingMeta.anchor !== "")
+						registerAnchor(scalar, pendingMeta.anchor, state, child.offset);
 					pendingMeta = {};
 					sawEntry = false;
 					items.push(scalar);
@@ -1929,7 +1986,8 @@ function composeBlockSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMet
 					...O.getSomesStruct({ tag: O.fromUndefinedOr(pendingMeta.tag) }),
 					...O.getSomesStruct({ anchor: O.fromUndefinedOr(pendingMeta.anchor) }),
 				});
-				if ((pendingMeta.anchor !== undefined && pendingMeta.anchor !== "")) registerAnchor(emptyKey, pendingMeta.anchor, state, child.offset);
+				if (pendingMeta.anchor !== undefined && pendingMeta.anchor !== "")
+					registerAnchor(emptyKey, pendingMeta.anchor, state, child.offset);
 				pendingMeta = {};
 				sawNewlineSincePending = false;
 				const map = composeBlockMap(child, state, emptyKey, undefined);
@@ -1983,7 +2041,7 @@ function composeBlockSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMet
 	}
 	// Flush trailing pending tag/anchor as empty scalar (e.g., - !!str)
 	if (hasMeta(pendingMeta)) {
-		const value = resolveScalar("", "plain", pendingMeta.tag, state);
+		const value = resolveScalar("", ["plain", pendingMeta.tag, state]);
 		const scalar = YamlScalar.make({
 			value,
 			style: "plain",
@@ -1992,7 +2050,8 @@ function composeBlockSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMet
 			...O.getSomesStruct({ tag: O.fromUndefinedOr(pendingMeta.tag) }),
 			...O.getSomesStruct({ anchor: O.fromUndefinedOr(pendingMeta.anchor) }),
 		});
-		if ((pendingMeta.anchor !== undefined && pendingMeta.anchor !== "")) registerAnchor(scalar, pendingMeta.anchor, state, 0);
+		if (pendingMeta.anchor !== undefined && pendingMeta.anchor !== "")
+			registerAnchor(scalar, pendingMeta.anchor, state, 0);
 		items.push(scalar);
 	}
 
@@ -2046,7 +2105,7 @@ function composeBlockSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMet
 		...O.getSomesStruct({ comment: O.fromUndefinedOr(seqComment) }),
 	});
 
-	if ((meta?.anchor !== undefined && meta?.anchor !== "")) registerAnchor(seq, meta.anchor, state, cst.offset);
+	if (meta?.anchor !== undefined && meta?.anchor !== "") registerAnchor(seq, meta.anchor, state, cst.offset);
 	return seq;
 }
 
@@ -2059,8 +2118,8 @@ function composeBlockSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMet
  * This happens in multi-document scenarios where the parser doesn't create a block-map node.
  */
 export const composeFlatBlockMap: {
-	(children: readonly CstNode[], startIdx: number, parentCst: CstNode, state: ComposerState, externalFirstKey: YamlNode, meta?: NodeMeta): YamlMap;
 	(startIdx: number, parentCst: CstNode, state: ComposerState, externalFirstKey: YamlNode, meta?: NodeMeta): (children: readonly CstNode[]) => YamlMap;
+	(children: readonly CstNode[], startIdx: number, parentCst: CstNode, state: ComposerState, externalFirstKey: YamlNode, meta?: NodeMeta): YamlMap;
 } = dual((args) => A.isArray(args[0]), (children: readonly CstNode[], startIdx: number, parentCst: CstNode, state: ComposerState, externalFirstKey: YamlNode, meta?: NodeMeta): YamlMap => {
 	// Collect the remaining children into semantic items
 	const remainingChildren = children.slice(startIdx);
@@ -2097,6 +2156,6 @@ export const composeFlatBlockMap: {
 		...O.getSomesStruct({ comment: O.fromUndefinedOr(mapComment) }),
 	});
 
-	if ((meta?.anchor !== undefined && meta?.anchor !== "")) registerAnchor(map, meta.anchor, state, offset);
+	if (meta?.anchor !== undefined && meta?.anchor !== "") registerAnchor(map, meta.anchor, state, offset);
 	return map;
 });

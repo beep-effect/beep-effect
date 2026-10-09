@@ -8,6 +8,7 @@
 // (config + facade) imports both. Nothing imports this module back.
 
 import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as S from "effect/Schema";
 import type { YamlDocument } from "./YamlDocument.ts";
 import { YamlEdit } from "./YamlEdit.ts";
@@ -21,7 +22,7 @@ const $I = $ScratchpadId.create("effected/yaml/YamlLintRule");
  *
  * @public
  */
-export const YamlLintSeverity = S.Literals(["error", "warning"]).pipe($I.annoteSchema("YamlLintSeverity", { description: "Lint diagnostic severities. `\"off\"` is a config-level disable only and never reaches a diagnostic — a rule set to `\"off\"` is not run." }));
+export const YamlLintSeverity = LiteralKit(["error", "warning"]).pipe($I.annoteSchema("YamlLintSeverity", { description: "Lint diagnostic severities. `\"off\"` is a config-level disable only and never reaches a diagnostic — a rule set to `\"off\"` is not run." }));
 
 /**
  * The union of lint severity string literals.

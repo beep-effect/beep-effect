@@ -8,7 +8,8 @@
 // types are handled with `Schema.suspend`.
 
 import { $ScratchpadId } from "@beep/identity/packages";
-import * as Data from "effect/Data";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import type { YamlPath } from "./YamlEdit.ts";
@@ -22,7 +23,7 @@ const $I = $ScratchpadId.create("effected/yaml/YamlNode");
  *
  * @public
  */
-export const ScalarStyle = S.Literals([
+export const ScalarStyle = LiteralKit([
 	"plain",
 	"single-quoted",
 	"double-quoted",
@@ -42,7 +43,7 @@ export type ScalarStyle = typeof ScalarStyle.Type;
  *
  * @public
  */
-export const CollectionStyle = S.Literals(["block", "flow"]).pipe($I.annoteSchema("CollectionStyle", { description: "YAML collection presentation styles." }));
+export const CollectionStyle = LiteralKit(["block", "flow"]).pipe($I.annoteSchema("CollectionStyle", { description: "YAML collection presentation styles." }));
 
 /**
  * The union of all collection style string literals.
@@ -60,7 +61,7 @@ export type CollectionStyle = typeof CollectionStyle.Type;
  *
  * @public
  */
-export const QuoteStyle = S.Literals(["single", "double"]).pipe($I.annoteSchema("QuoteStyle", { description: "Quote characters available to the stringifier's plain-scalar fallback: the style a `plain`-styled scalar is rendered in when it turns out to require quoting. Referenced by the `quoteStyle` field of `YamlStringifyOptions`; unlike `ScalarStyle` it is a stringify-option vocabulary, never a property of a composed node." }));
+export const QuoteStyle = LiteralKit(["single", "double"]).pipe($I.annoteSchema("QuoteStyle", { description: "Quote characters available to the stringifier's plain-scalar fallback: the style a `plain`-styled scalar is rendered in when it turns out to require quoting. Referenced by the `quoteStyle` field of `YamlStringifyOptions`; unlike `ScalarStyle` it is a stringify-option vocabulary, never a property of a composed node." }));
 
 /**
  * The union of all fallback quote style string literals.
@@ -83,7 +84,7 @@ export type QuoteStyle = typeof QuoteStyle.Type;
  *
  * @public
  */
-export const QuoteCompat = S.Literals(["yaml-1.1"]).pipe($I.annoteSchema("QuoteCompat", { description: "Foreign resolution dialects the stringifier's plain-scalar fallback can defend against: setting the `quoteCompat` field of `YamlStringifyOptions` to `\"yaml-1.1\"` additionally quotes every plain scalar a YAML 1.1 parser (js-yaml, PyYAML, libyaml, and the `yaml` npm package's YAML 1.1 schema, whose lenient resolvers set the outer bound) would implicitly resolve to a non-string — `yes`/`no`/`on`/`off` booleans, ISO 8601 and space-separated timestamps, sexagesimal `1:30`, underscored `1_000` and base-2/8/16 numbers. Like `QuoteStyle` it is a stringify-option vocabulary, never a property of a composed node." }));
+export const QuoteCompat = LiteralKit(["yaml-1.1"]).pipe($I.annoteSchema("QuoteCompat", { description: "Foreign resolution dialects the stringifier's plain-scalar fallback can defend against: setting the `quoteCompat` field of `YamlStringifyOptions` to `\"yaml-1.1\"` additionally quotes every plain scalar a YAML 1.1 parser (js-yaml, PyYAML, libyaml, and the `yaml` npm package's YAML 1.1 schema, whose lenient resolvers set the outer bound) would implicitly resolve to a non-string — `yes`/`no`/`on`/`off` booleans, ISO 8601 and space-separated timestamps, sexagesimal `1:30`, underscored `1_000` and base-2/8/16 numbers. Like `QuoteStyle` it is a stringify-option vocabulary, never a property of a composed node." }));
 
 /**
  * The union of all quote-compat dialect string literals.
@@ -98,7 +99,7 @@ export type QuoteCompat = typeof QuoteCompat.Type;
  *
  * @public
  */
-export const ScalarChomp = S.Literals(["strip", "clip", "keep"]).pipe($I.annoteSchema("ScalarChomp", { description: "Block-scalar chomping indicators (`-` strip, default clip, `+` keep). Referenced by the YamlScalar `chomp` field schema." }));
+export const ScalarChomp = LiteralKit(["strip", "clip", "keep"]).pipe($I.annoteSchema("ScalarChomp", { description: "Block-scalar chomping indicators (`-` strip, default clip, `+` keep). Referenced by the YamlScalar `chomp` field schema." }));
 
 /**
  * The union of all block-scalar chomping indicator string literals.
@@ -182,7 +183,7 @@ export class YamlScalar extends S.TaggedClass<YamlScalar>($I`YamlScalar`)("YamlS
 	 * incrementally, so an alias sees the most recent definition at its point
 	 * of use); unresolvable aliases yield `null`. Pure and total.
 	 */
-	toValue(anchors?: Map<string, YamlNode>): unknown {
+	toValue(anchors?: MutableHashMap.MutableHashMap<string, YamlNode>): unknown {
 		return nodeToValue(this, anchors, defaultBudget());
 	}
 }
@@ -221,7 +222,7 @@ export class YamlAlias extends S.TaggedClass<YamlAlias>($I`YamlAlias`)("YamlAlia
 	}
 
 	/** See `YamlScalar.toValue`. Pure and total. */
-	toValue(anchors?: Map<string, YamlNode>): unknown {
+	toValue(anchors?: MutableHashMap.MutableHashMap<string, YamlNode>): unknown {
 		return nodeToValue(this, anchors, defaultBudget());
 	}
 }
@@ -276,7 +277,9 @@ export interface YamlAliasEncoded extends S.Codec.Encoded<typeof YamlAlias> {}
 export const YamlNode: S.Codec<
 	YamlScalar | YamlMap | YamlSeq | YamlAlias,
 	YamlScalarEncoded | YamlMapEncoded | YamlSeqEncoded | YamlAliasEncoded
-> = S.suspend(() => S.Union([YamlScalar, YamlMap, YamlSeq, YamlAlias]));
+> = S.suspend(() => S.Union([YamlScalar, YamlMap, YamlSeq, YamlAlias])).pipe(
+	$I.annoteSchema("YamlNode", { description: "Recursive union of YAML scalar, mapping, sequence and alias value nodes." }),
+);
 
 /**
  * The union of all YAML AST value node types.
@@ -346,7 +349,7 @@ export class YamlMap extends S.TaggedClass<YamlMap>($I`YamlMap`)("YamlMap", {
 	}
 
 	/** See `YamlScalar.toValue`. Pure and total. */
-	toValue(anchors?: Map<string, YamlNode>): unknown {
+	toValue(anchors?: MutableHashMap.MutableHashMap<string, YamlNode>): unknown {
 		return nodeToValue(this, anchors, defaultBudget());
 	}
 }
@@ -391,10 +394,15 @@ export class YamlSeq extends S.TaggedClass<YamlSeq>($I`YamlSeq`)("YamlSeq", {
 	}
 
 	/** See `YamlScalar.toValue`. Pure and total. */
-	toValue(anchors?: Map<string, YamlNode>): unknown {
+	toValue(anchors?: MutableHashMap.MutableHashMap<string, YamlNode>): unknown {
 		return nodeToValue(this, anchors, defaultBudget());
 	}
 }
+
+const isScalar = S.is(YamlScalar);
+const isMap = S.is(YamlMap);
+const isSeq = S.is(YamlSeq);
+const isAlias = S.is(YamlAlias);
 
 // ── Shared method implementations ───────────────────────────────────────────
 // Module-level so the four union classes share one body each. Declared after
@@ -410,11 +418,11 @@ function findByPath(root: YamlNode, path: YamlPath): O.Option<YamlNode> {
 
 		if (P.isString(segment)) {
 			// Navigate by key — requires a YamlMap
-			if (!(S.is(YamlMap)(current))) {
+			if (!isMap(current)) {
 				return O.none();
 			}
 			const pair: YamlPair | undefined = current.items.find(
-				(p: YamlPair) => S.is(YamlScalar)(p.key) && P.isString(p.key.value) && p.key.value === segment,
+				(p: YamlPair) => isScalar(p.key) && P.isString(p.key.value) && p.key.value === segment,
 			);
 			if (pair === undefined || pair.value === null) {
 				return O.none();
@@ -422,7 +430,7 @@ function findByPath(root: YamlNode, path: YamlPath): O.Option<YamlNode> {
 			current = pair.value;
 		} else {
 			// Navigate by index — requires a YamlSeq
-			if (!(S.is(YamlSeq)(current))) {
+			if (!isSeq(current)) {
 				return O.none();
 			}
 			const item: YamlNode | undefined = current.items[segment];
@@ -449,7 +457,7 @@ function findDeepestAtOffset(node: YamlNode, offset: number): O.Option<YamlNode>
 		return O.none();
 	}
 
-	if (S.is(YamlMap)(node)) {
+	if (isMap(node)) {
 		for (const pair of node.items) {
 			const keyResult = findDeepestAtOffset(pair.key, offset);
 			if (O.isSome(keyResult)) return keyResult;
@@ -460,7 +468,7 @@ function findDeepestAtOffset(node: YamlNode, offset: number): O.Option<YamlNode>
 		}
 	}
 
-	if (S.is(YamlSeq)(node)) {
+	if (isSeq(node)) {
 		for (const item of node.items) {
 			const itemResult = findDeepestAtOffset(item, offset);
 			if (O.isSome(itemResult)) return itemResult;
@@ -487,9 +495,9 @@ function descendToNode(node: YamlNode, target: YamlNode, path: Array<string | nu
 		return true;
 	}
 
-	if (S.is(YamlMap)(node)) {
+	if (isMap(node)) {
 		for (const pair of node.items) {
-			if (S.is(YamlScalar)(pair.key) && P.isString(pair.key.value)) {
+			if (isScalar(pair.key) && P.isString(pair.key.value)) {
 				if (pair.key === target) {
 					path.push(pair.key.value);
 					return true;
@@ -505,7 +513,7 @@ function descendToNode(node: YamlNode, target: YamlNode, path: Array<string | nu
 		}
 	}
 
-	if (S.is(YamlSeq)(node)) {
+	if (isSeq(node)) {
 		for (const [i, item] of node.items.entries()) {
 			path.push(i);
 			if (descendToNode(item, target, path)) {
@@ -541,11 +549,10 @@ function setOwnProperty(obj: Record<string, unknown>, key: string, value: unknow
  * catches it and materializes a fatal `AliasCountExceeded` `YamlParseError`
  * (or, for `Yaml.equals`, treats the input as malformed).
  */
-export class AliasExpansionBudgetExceeded extends Data.TaggedError("AliasExpansionBudgetExceeded")<{ readonly message: string }> {
-	constructor(limit: number) {
-		super({ message: `Alias expansion exceeded budget of ${limit} nodes` });
-		this.name = "AliasExpansionBudgetExceeded";
-	}
+export class AliasExpansionBudgetExceeded extends S.TaggedError<AliasExpansionBudgetExceeded>($I`AliasExpansionBudgetExceeded`)("AliasExpansionBudgetExceeded", {
+	message: S.String.annotateKey({ description: "Alias expansion budget failure message, including the output-node limit." }),
+}, $I.annote("AliasExpansionBudgetExceeded", { description: "Value extraction exceeded its alias-expanded output-node budget." })) {
+	override readonly name = "AliasExpansionBudgetExceeded";
 }
 
 /**
@@ -585,15 +592,15 @@ function defaultBudget(): ExpansionBudget {
  * re-exported from the package entry point.
  */
 export const nodeToJsValue: {
-	(node: YamlNode | null, anchors: Map<string, YamlNode>, maxAliasCount: number): unknown;
-	(anchors: Map<string, YamlNode>, maxAliasCount: number): (node: YamlNode | null) => unknown;
-} = dual(3, (node: YamlNode | null, anchors: Map<string, YamlNode>, maxAliasCount: number): unknown =>
+	(node: YamlNode | null, anchors: MutableHashMap.MutableHashMap<string, YamlNode>, maxAliasCount: number): unknown;
+	(anchors: MutableHashMap.MutableHashMap<string, YamlNode>, maxAliasCount: number): (node: YamlNode | null) => unknown;
+} = dual(3, (node: YamlNode | null, anchors: MutableHashMap.MutableHashMap<string, YamlNode>, maxAliasCount: number): unknown =>
 	nodeToValue(node, anchors, { count: 0, limit: aliasExpansionLimit(maxAliasCount) }),
 );
 
 function nodeToValue(
 	node: YamlNode | null,
-	anchors?: Map<string, YamlNode>,
+	anchors?: MutableHashMap.MutableHashMap<string, YamlNode>,
 	budget?: ExpansionBudget,
 	counting = false,
 ): unknown {
@@ -605,28 +612,28 @@ function nodeToValue(
 	if (counting && budget !== undefined) {
 		budget.count++;
 		if (budget.count > budget.limit) {
-			throw new AliasExpansionBudgetExceeded(budget.limit);
+			throw AliasExpansionBudgetExceeded.make({ message: `Alias expansion exceeded budget of ${budget.limit} nodes` });
 		}
 	}
 	// Register this node's anchor incrementally so aliases resolve to the most
 	// recent anchor at the point of reference (not the last definition in the
 	// entire document).
-	if (anchors !== undefined && !(S.is(YamlAlias)(node)) && node.anchor !== undefined) {
-		anchors.set(node.anchor, node);
+	if (anchors !== undefined && !isAlias(node) && node.anchor !== undefined) {
+		MutableHashMap.set(anchors, node.anchor, node);
 	}
-	if (S.is(YamlScalar)(node)) return node.value;
-	if (S.is(YamlMap)(node)) {
+	if (isScalar(node)) return node.value;
+	if (isMap(node)) {
 		const result: Record<string, unknown> = {};
 		for (const pair of node.items) {
 			let key: string;
-			if (S.is(YamlScalar)(pair.key)) {
+			if (isScalar(pair.key)) {
 				// Register key anchor before resolving value
 				if (anchors !== undefined && pair.key.anchor !== undefined) {
-					anchors.set(pair.key.anchor, pair.key);
+					MutableHashMap.set(anchors, pair.key.anchor, pair.key);
 				}
 				key = String(pair.key.value ?? "");
-			} else if (S.is(YamlAlias)(pair.key)) {
-				const resolved = anchors?.get(pair.key.name);
+			} else if (isAlias(pair.key)) {
+				const resolved = anchors === undefined ? undefined : O.getOrUndefined(MutableHashMap.get(anchors, pair.key.name));
 				// Resolving an alias key enters alias expansion → count its subtree.
 				key = resolved !== undefined ? String(nodeToValue(resolved, anchors, budget, true) ?? "") : "";
 			} else {
@@ -636,9 +643,9 @@ function nodeToValue(
 		}
 		return result;
 	}
-	if (S.is(YamlSeq)(node)) return node.items.map((item) => nodeToValue(item, anchors, budget, counting));
-	if (S.is(YamlAlias)(node)) {
-		const resolved = anchors?.get(node.name);
+	if (isSeq(node)) return node.items.map((item) => nodeToValue(item, anchors, budget, counting));
+	if (isAlias(node)) {
+		const resolved = anchors === undefined ? undefined : O.getOrUndefined(MutableHashMap.get(anchors, node.name));
 		// Resolving an alias enters alias expansion → count the resolved subtree.
 		return resolved !== undefined ? nodeToValue(resolved, anchors, budget, true) : null;
 	}

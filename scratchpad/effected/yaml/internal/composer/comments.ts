@@ -1,3 +1,5 @@
+import { dual } from "effect/Function";
+import { $ScratchpadId } from "@beep/identity/packages";
 // Comment-fidelity helpers shared by the block and flow composers: blank-line
 // detection between source spans, and immutable node rebuilds that merge the
 // comment field triple (`commentBefore` / `comment` / `spaceBefore`) onto an
@@ -45,16 +47,27 @@
 
 import type { YamlNode } from "../../YamlNode.ts";
 import { YamlAlias, YamlMap, YamlScalar, YamlSeq } from "../../YamlNode.ts";
-import * as Schema from "effect/Schema";
-import { dual } from "effect/Function";
+import * as S from "effect/Schema";
 import * as O from "@beep/utils/Option";
 
+const isYamlMap = S.is(YamlMap);
+const isYamlScalar = S.is(YamlScalar);
+const isYamlSeq = S.is(YamlSeq);
+const $I = $ScratchpadId.create("effected/yaml/internal/composer/comments");
+
 /** The comment field triple accepted by {@link withCommentFields}. */
-export interface CommentFields {
-	commentBefore?: string;
-	comment?: string;
-	spaceBefore?: boolean;
-}
+export const CommentFields = S.Struct({
+	commentBefore: S.String.pipe(S.optionalKey, S.mutableKey).annotate(
+		$I.annote("CommentFields.commentBefore", { description: "Own-line comments leading the node." }),
+	),
+	comment: S.String.pipe(S.optionalKey, S.mutableKey).annotate(
+		$I.annote("CommentFields.comment", { description: "Comments trailing the node." }),
+	),
+	spaceBefore: S.Boolean.pipe(S.optionalKey, S.mutableKey).annotate(
+		$I.annote("CommentFields.spaceBefore", { description: "A stylistic blank line preceding the node." }),
+	),
+}).annotate($I.annote("CommentFields", { description: "Optional node comment fields merged during composition." }));
+export type CommentFields = typeof CommentFields.Type;
 
 /**
  * True when the source text between `start` (exclusive of its line) and `end`
@@ -62,8 +75,8 @@ export interface CommentFields {
  * horizontal whitespace, by another newline).
  */
 export const hasBlankLineBetween: {
-	(text: string, start: number, end: number): boolean;
 	(start: number, end: number): (text: string) => boolean;
+	(text: string, start: number, end: number): boolean;
 } = dual(3, (text: string, start: number, end: number): boolean => {
 	if (start < 0) return false;
 	const gap = text.slice(Math.max(0, start), Math.max(0, end));
@@ -72,8 +85,8 @@ export const hasBlankLineBetween: {
 
 /** True when there is no line break between `start` and `end` in `text`. */
 export const sameLineSpan: {
-	(text: string, start: number, end: number): boolean;
 	(start: number, end: number): (text: string) => boolean;
+	(text: string, start: number, end: number): boolean;
 } = dual(3, (text: string, start: number, end: number): boolean => {
 	if (start < 0) return false;
 	return !text.slice(Math.max(0, start), Math.max(0, end)).includes("\n");
@@ -85,8 +98,8 @@ export const sameLineSpan: {
  * correct even when a preceding node's span over-extends past line ends.
  */
 export const isOwnLineAt: {
-	(text: string, offset: number): boolean;
 	(offset: number): (text: string) => boolean;
+	(text: string, offset: number): boolean;
 } = dual(2, (text: string, offset: number): boolean => {
 	let i = offset - 1;
 	while (i >= 0) {
@@ -108,8 +121,8 @@ export const isOwnLineAt: {
  * comment look like a trailing comment on the previous entry.
  */
 export const isAfterIndicatorOnly: {
-	(text: string, offset: number): boolean;
 	(offset: number): (text: string) => boolean;
+	(text: string, offset: number): boolean;
 } = dual(2, (text: string, offset: number): boolean => {
 	let i = offset - 1;
 	let sawIndicator = false;
@@ -135,8 +148,8 @@ export const isAfterIndicatorOnly: {
  * {@link isOwnLineAt} for why span-based gap checks are not used.
  */
 export const hasBlankLineAbove: {
-	(text: string, offset: number): boolean;
 	(offset: number): (text: string) => boolean;
+	(text: string, offset: number): boolean;
 } = dual(2, (text: string, offset: number): boolean => blankLineAboveStart(text, offset) >= 0);
 
 /**
@@ -146,8 +159,8 @@ export const hasBlankLineAbove: {
  * (e.g. to test whether it falls inside a preceding scalar token's span).
  */
 export const blankLineAboveStart: {
-	(text: string, offset: number): number;
 	(offset: number): (text: string) => number;
+	(text: string, offset: number): number;
 } = dual(2, (text: string, offset: number): number => {
 	const lineBreak = text.lastIndexOf("\n", Math.max(0, offset - 1));
 	if (lineBreak < 0) return -1;
@@ -164,14 +177,14 @@ export const blankLineAboveStart: {
 function deepestTrailingScalar(node: YamlNode): YamlScalar | undefined {
 	let current: YamlNode = node;
 	for (;;) {
-		if (Schema.is(YamlScalar)(current)) return current;
-		if (Schema.is(YamlMap)(current)) {
+		if (isYamlScalar(current)) return current;
+		if (isYamlMap(current)) {
 			const last = current.items[current.items.length - 1];
 			if (last === undefined) return undefined;
 			current = last.value ?? last.key;
 			continue;
 		}
-		if (Schema.is(YamlSeq)(current)) {
+		if (isYamlSeq(current)) {
 			const last = current.items[current.items.length - 1];
 			if (last === undefined) return undefined;
 			current = last;
@@ -197,8 +210,8 @@ function deepestTrailingScalar(node: YamlNode): YamlScalar | undefined {
  * blank line to start inside that scalar's token span.
  */
 export const blankAboveIsKeepChompContent: {
-	(text: string, offset: number, prev: YamlNode | undefined): boolean;
 	(offset: number, prev: YamlNode | undefined): (text: string) => boolean;
+	(text: string, offset: number, prev: YamlNode | undefined): boolean;
 } = dual(3, (text: string, offset: number, prev: YamlNode | undefined): boolean => {
 	if (prev === undefined) return false;
 	const scalar = deepestTrailingScalar(prev);
@@ -216,8 +229,8 @@ export const blankAboveIsKeepChompContent: {
  * comment string.
  */
 export const hasBlankLineBelow: {
-	(text: string, offset: number): boolean;
 	(offset: number): (text: string) => boolean;
+	(text: string, offset: number): boolean;
 } = dual(2, (text: string, offset: number): boolean => {
 	const lineEnd = text.indexOf("\n", Math.max(0, offset));
 	if (lineEnd < 0) return false;
@@ -246,8 +259,8 @@ export function rawCommentText(source: string): string {
 
 /** Join two optional comment blocks with a newline. */
 export const joinComments: {
-	(a: string | undefined, b: string): string;
 	(b: string): (a: string | undefined) => string;
+	(a: string | undefined, b: string): string;
 } = dual(2, (a: string | undefined, b: string): string => a === undefined ? b : `${a}\n${b}`);
 
 /**
@@ -257,8 +270,8 @@ export const joinComments: {
  * terminal own-line comment is not mistaken for one escaping a nested map.
  */
 export const columnAt: {
-	(text: string, offset: number): number;
 	(offset: number): (text: string) => number;
+	(text: string, offset: number): number;
 } = dual(2, (text: string, offset: number): number => {
 	if (offset <= 0) return 0;
 	const lineStart = text.lastIndexOf("\n", offset - 1) + 1;
@@ -274,10 +287,13 @@ export const columnAt: {
  * block). Escaped comments ride `ComposerState` up one level, where the
  * enclosing composer re-injects them into its own item stream.
  */
-export interface EscapedComment {
-	readonly text: string;
-	readonly offset: number;
-}
+export const EscapedComment = S.Struct({
+	text: S.String.annotate($I.annote("EscapedComment.text", { description: "Raw post-indicator comment text." })),
+	offset: S.Finite.annotate(
+		$I.annote("EscapedComment.offset", { description: "Source offset of the disowned comment." }),
+	),
+}).annotate($I.annote("EscapedComment", { description: "Comment disowned by a collection for its enclosing scope." }));
+export type EscapedComment = typeof EscapedComment.Type;
 
 /**
  * Rebuild `node` with the given comment fields merged in (existing fields are
@@ -286,57 +302,66 @@ export interface EscapedComment {
  * included.
  */
 export const withCommentFields: {
-	(node: YamlNode, fields: CommentFields): YamlNode;
 	(fields: CommentFields): (node: YamlNode) => YamlNode;
+	(node: YamlNode, fields: CommentFields): YamlNode;
 } = dual(2, (node: YamlNode, fields: CommentFields): YamlNode => {
-	if (Schema.is(YamlScalar)(node)) {
+	if (isYamlScalar(node)) {
 		return YamlScalar.make({
 			value: node.value,
 			style: node.style,
-			...O.getSomesStruct({ tag: O.fromUndefinedOr(node.tag) }),
-			...O.getSomesStruct({ anchor: O.fromUndefinedOr(node.anchor) }),
-			...mergedCommentFields(node, fields),
-			...O.getSomesStruct({ chomp: O.fromUndefinedOr(node.chomp) }),
-			...O.getSomesStruct({ blockIndent: O.fromUndefinedOr(node.blockIndent) }),
-			...O.getSomesStruct({ raw: O.fromUndefinedOr(node.raw) }),
-			...O.getSomesStruct({ sourceMultiline: O.fromUndefinedOr(node.sourceMultiline) }),
+			...O.getSomesStruct({
+				tag: O.fromUndefinedOr(node.tag),
+				anchor: O.fromUndefinedOr(node.anchor),
+				...mergedCommentFields(node, fields),
+				chomp: O.fromUndefinedOr(node.chomp),
+				blockIndent: O.fromUndefinedOr(node.blockIndent),
+				raw: O.fromUndefinedOr(node.raw),
+				sourceMultiline: O.fromUndefinedOr(node.sourceMultiline),
+			}),
+
 			offset: node.offset,
 			length: node.length,
 		});
 	}
-	if (Schema.is(YamlMap)(node)) {
+	if (isYamlMap(node)) {
 		return YamlMap.make({
 			items: node.items,
 			style: node.style,
-			...O.getSomesStruct({ tag: O.fromUndefinedOr(node.tag) }),
-			...O.getSomesStruct({ anchor: O.fromUndefinedOr(node.anchor) }),
-			...mergedCommentFields(node, fields),
-			...O.getSomesStruct({ sourceMultiline: O.fromUndefinedOr(node.sourceMultiline) }),
+			...O.getSomesStruct({
+				tag: O.fromUndefinedOr(node.tag),
+				anchor: O.fromUndefinedOr(node.anchor),
+				...mergedCommentFields(node, fields),
+				sourceMultiline: O.fromUndefinedOr(node.sourceMultiline),
+			}),
+
 			offset: node.offset,
 			length: node.length,
 		});
 	}
-	if (Schema.is(YamlSeq)(node)) {
+	if (isYamlSeq(node)) {
 		return YamlSeq.make({
 			items: node.items,
 			style: node.style,
-			...O.getSomesStruct({ tag: O.fromUndefinedOr(node.tag) }),
-			...O.getSomesStruct({ anchor: O.fromUndefinedOr(node.anchor) }),
-			...mergedCommentFields(node, fields),
-			...O.getSomesStruct({ sourceMultiline: O.fromUndefinedOr(node.sourceMultiline) }),
+			...O.getSomesStruct({
+				tag: O.fromUndefinedOr(node.tag),
+				anchor: O.fromUndefinedOr(node.anchor),
+				...mergedCommentFields(node, fields),
+				sourceMultiline: O.fromUndefinedOr(node.sourceMultiline),
+			}),
+
 			offset: node.offset,
 			length: node.length,
 		});
 	}
 	return YamlAlias.make({
 		name: node.name,
-		...mergedCommentFields(node, fields),
+		...O.getSomesStruct(mergedCommentFields(node, fields)),
 		offset: node.offset,
 		length: node.length,
 	});
 });
 
-function mergedCommentFields(existing: CommentFields, incoming: CommentFields): CommentFields {
+function mergedCommentFields(existing: CommentFields, incoming: CommentFields) {
 	const commentBefore =
 		incoming.commentBefore !== undefined
 			? existing.commentBefore !== undefined
@@ -351,8 +376,8 @@ function mergedCommentFields(existing: CommentFields, incoming: CommentFields): 
 			: existing.comment;
 	const spaceBefore = incoming.spaceBefore ?? existing.spaceBefore;
 	return {
-		...O.getSomesStruct({ commentBefore: O.fromUndefinedOr(commentBefore) }),
-		...O.getSomesStruct({ comment: O.fromUndefinedOr(comment) }),
-		...O.getSomesStruct({ spaceBefore: O.fromUndefinedOr(spaceBefore) }),
+		commentBefore: O.fromUndefinedOr(commentBefore),
+		comment: O.fromUndefinedOr(comment),
+		spaceBefore: O.fromUndefinedOr(spaceBefore),
 	};
 }

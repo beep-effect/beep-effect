@@ -666,6 +666,38 @@ describe("YamlFormat", () => {
 			}),
 		);
 
+		it.effect("lowers distinct structurally equal replacement objects and arrays", () =>
+			Effect.gen(function* () {
+				const out = yield* YamlFormat.modifyToString("old: 1\n", [], {
+					objects: [{ value: 1 }, { value: 1 }],
+					arrays: [[1, 2], [1, 2]],
+				});
+				assert.deepStrictEqual(yield* Yaml.parse(out), {
+					objects: [{ value: 1 }, { value: 1 }],
+					arrays: [[1, 2], [1, 2]],
+				});
+			}),
+		);
+
+		it.effect("unwinds replacement array ancestors before revisiting shared descendants", () =>
+			Effect.gen(function* () {
+				const shared = [1, 2];
+				const out = yield* YamlFormat.modifyToString("old: 1\n", [], [shared, { nested: shared }, shared]);
+				assert.deepStrictEqual(yield* Yaml.parse(out), [[1, 2], { nested: [1, 2] }, [1, 2]]);
+			}),
+		);
+
+		it.effect("catches an indirect object-array replacement cycle by reference", () =>
+			Effect.gen(function* () {
+				const cyclic: { children: Array<unknown> } = { children: [] };
+				cyclic.children.push(cyclic);
+				const code = yield* YamlFormat.modify("old: 1\n", [], cyclic).pipe(
+					Effect.catchTag("YamlModificationError", (error) => Effect.succeed(error.diagnostics[0]?.code)),
+				);
+				assert.strictEqual(code, "CircularReference");
+			}),
+		);
+
 		it.effect("fails typed on a circular replacement value rather than hanging", () =>
 			Effect.gen(function* () {
 				const cyclic: { a: number; self?: unknown } = { a: 1 };
@@ -754,6 +786,47 @@ describe("YamlFormat", () => {
 				const error = yield* Effect.flip(YamlFormat.modify("xs:\n  - 1\n", ["xs", 5, "k"], 2));
 				assert.instanceOf(error, YamlModificationError);
 				assert.strictEqual(error.diagnostics[0]?.code, "InvalidIndex");
+			}),
+		);
+
+		for (const [index, kind, spelling] of [
+			[NaN, "NaN", "NaN"],
+			[Infinity, "PositiveInfinity", "Infinity"],
+			[-Infinity, "NegativeInfinity", "-Infinity"],
+		] as const) {
+			for (const [source, code] of [
+				["xs: [1]\n", "InvalidIndex"],
+				["xs: [1]\n---\nxs: [2]\n", "MultiDocumentStream"],
+				["xs: *undefined_alias\n", "UndefinedAlias"],
+				["%YAML 1.2\n---\nxs: [1]\n", "DirectiveCarryingDocument"],
+			] as const) {
+				it.effect(`echoes ${spelling} as a tagged index and catches ${code}`, () =>
+					Effect.gen(function* () {
+						const path = ["xs", index, "k"];
+						const operation = YamlFormat.modify(source, path, 2);
+						const error = yield* Effect.flip(operation);
+						assert.instanceOf(error, YamlModificationError);
+						assert.strictEqual(error.diagnostics[0]?.code, code);
+						assert.strictEqual(error.path[0], "xs");
+						assert.strictEqual(error.path[2], "k");
+						const echoed = error.path[1];
+						if (!P.isTagged(echoed, "NonFiniteIndex")) assert.fail("Expected a tagged non-finite index");
+						assert.strictEqual(echoed.kind, kind);
+						assert.include(error.message, `Modification failed at path [xs, ${spelling}, k]:`);
+						assert.deepStrictEqual(path, ["xs", index, "k"]);
+						const caughtCode = yield* operation.pipe(
+							Effect.catchTag("YamlModificationError", (failure) => Effect.succeed(failure.diagnostics[0]?.code)),
+						);
+						assert.strictEqual(caughtCode, code);
+					}),
+				);
+			}
+		}
+
+		it.effect("preserves positive infinity's existing final-index append behavior", () =>
+			Effect.gen(function* () {
+				const out = yield* YamlFormat.modifyToString("xs: [1]\n", ["xs", Infinity], 2);
+				assert.deepStrictEqual(yield* Yaml.parse(out), { xs: [1, 2] });
 			}),
 		);
 

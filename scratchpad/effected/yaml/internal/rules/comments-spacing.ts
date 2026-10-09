@@ -6,6 +6,7 @@
 // exempt.
 
 import { $ScratchpadId } from "@beep/identity/packages";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { YamlEdit } from "../../YamlEdit.ts";
 import type { LintContext, YamlRule } from "../../YamlLintRule.ts";
@@ -26,6 +27,9 @@ export const commentsSpacingOptions = S.Struct({
 	requireSpaceAfter: S.optionalKey(S.Boolean).annotateKey({ description: "Whether nonempty comments require a space or tab after `#`, defaulting to `true` and exempting an initial shebang" }),
 }).pipe($I.annoteSchema("commentsSpacingOptions", { description: "Options for `comments-spacing`: `minSpacesBefore` between content and a trailing `#` (default 1 — the kit's own emission spelling) and `requireSpaceAfter` the `#` (default `true`)." }));
 
+/** Decoded options for comment spacing. */
+export type commentsSpacingOptions = typeof commentsSpacingOptions.Type;
+
 /**
  * The horizontal whitespace run directly before a comment token, and whether
  * line content precedes it (a TRAILING comment) — shared by the check and
@@ -41,7 +45,10 @@ const spacingBefore = (
 		spaces++;
 		i--;
 	}
-	return { spaces, hasContentBefore: i >= 0 && ctx.text[i] !== "\n" && ctx.text[i] !== "\r" };
+	return {
+		spaces,
+		hasContentBefore: i >= 0 && ctx.text[i] !== "\n" && ctx.text[i] !== "\r" && !(i === 0 && ctx.text[i] === "\uFEFF"),
+	};
 };
 
 /** Shebang exemption: `#!` at the very start of the stream. */
@@ -51,9 +58,9 @@ const isShebang = (token: YamlToken): boolean => token.offset === 0 && token.tex
 export const commentsSpacing: YamlRule = {
 	id: "comments-spacing",
 	check: (ctx, options) => {
-		const opts = S.is(commentsSpacingOptions)(options) ? options : {};
-		const minBefore = opts.minSpacesBefore ?? 1;
-		const requireAfter = opts.requireSpaceAfter ?? true;
+		const opts = P.isObject(options) ? options : {};
+		const minBefore = P.isNumber(opts.minSpacesBefore) ? opts.minSpacesBefore : 1;
+		const requireAfter = S.is(S.Boolean)(opts.requireSpaceAfter) ? opts.requireSpaceAfter : true;
 		const out: Array<YamlLintDiagnostic> = [];
 		for (const token of ctx.tokens) {
 			if (token.kind !== "comment") continue;

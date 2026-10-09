@@ -18,8 +18,8 @@
 //
 // The visitor detects this "scalar → block-map" sibling pattern and emits the
 // scalar as a `CstKeyEvent`. Inside a block-map, the first non-trivia scalar
-// is always a value; scalars then alternate as key/value pairs for subsequent
-// entries.
+// is a value when the first key is external. Compact mappings in sequences
+// contain their first key; indicators also delimit omitted values.
 
 import type { CstNode } from "./cst.ts";
 import { parseCSTAll } from "./cst-parser.ts";
@@ -276,9 +276,8 @@ function* walkSiblings(nodes: ReadonlyArray<CstNode>, path: Path, depth: number)
 		if (isMapCstNode(node)) {
 			yield { _tag: "CstMapStartEvent", path, depth, source: node.source };
 			if (node.type === "block-map") {
-				// Block-map children: first scalar is the value for the key
-				// that appeared as the previous sibling. Subsequent scalars
-				// alternate as key, value, key, value...
+				// The walker derives whether the first key was a sibling or is
+				// included in this compact mapping's children.
 				yield* walkBlockMapChildren(node.children ?? [], path, depth + 1);
 			} else {
 				// flow-map: key/value alternation starting with key
@@ -318,6 +317,17 @@ function findNextContent(nodes: ReadonlyArray<CstNode>, startIdx: number): CstNo
 	return undefined;
 }
 
+/** Find content or a mapping indicator, preserving entry-boundary punctuation. */
+function findMapContent(nodes: ReadonlyArray<CstNode>, startIdx: number): CstNode | undefined {
+	for (let i = startIdx; i < nodes.length; i++) {
+		const node = nodes[i];
+		if (node === undefined || node.type === "comment") continue;
+		if (node.type === "whitespace" && (node.source === ":" || node.source === "?")) return node;
+		if (!isTriviaCstNode(node)) return node;
+	}
+	return undefined;
+}
+
 // ---------------------------------------------------------------------------
 // walkBlockMapChildren — the block-map's own children
 // ---------------------------------------------------------------------------
@@ -325,31 +335,21 @@ function findNextContent(nodes: ReadonlyArray<CstNode>, startIdx: number): CstNo
 /**
  * Walk children of a `block-map` node.
  *
- * Because the first key is emitted as a sibling before the block-map node,
- * the block-map's children start with the `:` indicator (whitespace) and then
- * the first value. After the first value, scalars alternate as key/value
- * pairs for remaining entries.
- *
- * State machine:
- * - `expectingKey = false` initially (first non-trivia scalar is a value)
- * - After each value scalar or collection value, toggle to expecting a key
- * - After each key scalar, toggle to expecting a value
- *
- * The `expectingKey` flag starts as `false` because the first key has already
- * been consumed by the parent {@link walkSiblings} call and emitted as a
- * CstKeyEvent. Nested block-maps are handled recursively; after a nested
- * map is fully walked, the state resets to expecting a key for the next
- * entry. The look-ahead for "scalar → block-map" applies here too, to
- * detect nested mapping keys within the same block-map.
+ * A leading ':' means the first key was emitted by the parent as a sibling;
+ * compact sequence mappings include that key in their children instead.
+ * Mapping indicators and the separator after a scalar identify entry roles,
+ * so omitted values do not shift subsequent key/value events. The sibling
+ * scalar → block-map pattern still identifies nested mappings.
  */
 function* walkBlockMapChildren(
 	children: ReadonlyArray<CstNode>,
 	path: Path,
 	depth: number,
 ): Generator<CstVisitorEvent> {
-	// Start expecting a value, because the key was consumed as a sibling of
-	// the block-map node (outside the block-map).
-	let expectingKey = false;
+	// A leading ':' continues a sibling key. Compact sequence mappings
+	// instead contain their first key, so start by expecting that key.
+	const firstKeyExternal = findMapContent(children, 0)?.source === ":";
+	let expectingKey = !firstKeyExternal;
 
 	for (let i = 0; i < children.length; i++) {
 		const child = children[i];
@@ -360,6 +360,10 @@ function* walkBlockMapChildren(
 			yield { _tag: "CstCommentEvent", path, depth, source: child.source };
 			continue;
 		}
+
+		// Entry indicators determine state even when the preceding value was omitted.
+		if (child.type === "whitespace" && child.source === ":") expectingKey = false;
+		if (child.type === "whitespace" && child.source === "?") expectingKey = true;
 
 		// Skip trivia
 		if (isTriviaCstNode(child)) {
@@ -377,6 +381,9 @@ function* walkBlockMapChildren(
 		}
 
 		if (isScalarCstNode(child)) {
+			// A separator after this scalar identifies the next entry's key even
+			// when the previous entry had no value to toggle the state.
+			if (findMapContent(children, i + 1)?.source === ":") expectingKey = true;
 			// Look ahead to detect if this scalar is followed by a block-map
 			// (meaning it is a key for a nested mapping).
 			const nextContent = findNextContent(children, i + 1);
@@ -461,6 +468,11 @@ function* walkFlowMapChildren(children: ReadonlyArray<CstNode>, path: Path, dept
 			yield { _tag: "CstCommentEvent", path, depth, source: child.source };
 			continue;
 		}
+
+		// Separators delimit entries, including entries with omitted values.
+		if (child.type === "whitespace" && child.source === ",") expectingKey = true;
+		if (child.type === "whitespace" && child.source === ":") expectingKey = false;
+		if (child.type === "whitespace" && child.source === "?") expectingKey = true;
 
 		// Skip trivia (includes structural whitespace like "{", "}", ":", ",")
 		if (isTriviaCstNode(child)) {

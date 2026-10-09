@@ -8,9 +8,12 @@
 // string out. The runner is someone else's tier.
 
 import { $ScratchpadId } from "@beep/identity/packages";
+import * as A from "effect/Array";
+import * as HashMap from "effect/HashMap";
 import * as Result from "effect/Result";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { composeFirstDocument } from "./internal/composer/document.ts";
@@ -57,22 +60,22 @@ const validateRulesMap = (rules: { readonly [id: string]: YamlLintRuleSetting })
 			if (entry === "off" || entry === "warning") {
 				return `Rule "parse-validity" is always-on and cannot be set to "${entry}"`;
 			}
-			if (P.isObjectKeyword(entry) && !P.isFunction(entry)) {
+			if (P.isObjectOrArray(entry)) {
 				return `Rule "parse-validity" accepts no options`;
 			}
 			continue;
 		}
-		if (P.isObjectKeyword(entry) && !P.isFunction(entry)) {
-			const optionsSchema = builtinOptionsSchemas.get(id);
+		if (P.isObjectOrArray(entry)) {
+			const optionsSchema = HashMap.get(builtinOptionsSchemas, id);
 			// Custom rule ids carry opaque options the custom rule validates
 			// itself; built-in options are validated against the rule's own
 			// exported schema so a typo'd option fails here, typed, instead of
 			// travelling as `unknown` into the rule.
-			if (optionsSchema !== undefined) {
+			if (O.isSome(optionsSchema)) {
 				// onExcessProperty: "error" — a typo'd option KEY fails loudly with
 				// an UnexpectedKey issue naming the key, instead of decoding to {}
 				// (v4 Structs strip unknown keys by default).
-				const decoded = S.decodeResult(optionsSchema, {
+				const decoded = S.decodeResult(optionsSchema.value, {
 					onExcessProperty: "error",
 				})(entry);
 				if (Result.isFailure(decoded)) {
@@ -195,6 +198,12 @@ const buildContext = (text: string): LintContext => {
 
 // ── Style evidence ───────────────────────────────────────────────────
 
+const StyleCandidateValue = S.Union([S.String, S.Finite, S.Boolean]).pipe(
+	$I.annoteSchema("StyleCandidateValue", { description: "String, finite-number, or boolean option choice observed by a lint rule" }),
+);
+
+const encodeStyleCandidateJson = S.encodeResult(S.fromJsonString(StyleCandidateValue));
+
 /**
  * An accumulated tally of one {@link StyleVote} spelling: how many times a
  * `value` was voted for a `(rule, dimension)` pair, and the position of the
@@ -206,7 +215,7 @@ const buildContext = (text: string): LintContext => {
 export class StyleVoteTally extends S.Class<StyleVoteTally>($I`StyleVoteTally`)({
 	rule: S.String.annotateKey({ description: "Identifier of the lint rule that supplied the accumulated style observations" }),
 	dimension: S.String.annotateKey({ description: "Rule option key whose observed choices are being tallied" }),
-	value: S.Union([S.String, S.Finite, S.Boolean]).annotateKey({ description: "Observed option choice shared by the occurrences counted in this tally" }),
+	value: StyleCandidateValue.annotateKey({ description: "Observed option choice shared by the occurrences counted in this tally" }),
 	count: S.Finite.annotateKey({ description: "Number of observations supporting this option choice for the rule and dimension" }),
 	offset: S.Finite.annotateKey({ description: "Zero-based UTF-16 source offset of the first occurrence supporting this option choice" }),
 	length: S.Finite.annotateKey({ description: "Source span length in UTF-16 code units of the first occurrence supporting this option choice" }),
@@ -231,25 +240,16 @@ export class StyleFloorTally extends S.Class<StyleFloorTally>($I`StyleFloorTally
 /** Canonical histogram key for a vote value — type-discriminating (`"2"` ≠ `2`, `"true"` ≠ `true`). */
 const valueKey = (value: string | number | boolean): string => `${typeof value}:${String(value)}`;
 
-const byTallyOrder = (
-	a: { readonly rule: string; readonly dimension: string },
-	b: { readonly rule: string; readonly dimension: string },
-	aKey: string,
-	bKey: string,
-): number =>
-	a.rule < b.rule
-		? -1
-		: a.rule > b.rule
-			? 1
-			: a.dimension < b.dimension
-				? -1
-				: a.dimension > b.dimension
-					? 1
-					: aKey < bKey
-						? -1
-						: aKey > bKey
-							? 1
-							: 0;
+const byTallyOrder = Order.make<{ readonly rule: string; readonly dimension: string }>(
+	(a, b) => Order.String(a.rule, b.rule) || Order.String(a.dimension, b.dimension),
+);
+
+const byVoteOrder = Order.combine(
+	byTallyOrder,
+	Order.mapInput(Order.String, (tally: StyleVoteTally) => valueKey(tally.value)),
+);
+
+const byDescendingCount = Order.mapInput(Order.flip(Order.Number), (tally: StyleVoteTally) => tally.count);
 
 /**
  * Per-dimension style evidence: what the observed sources say about
@@ -293,8 +293,8 @@ export class StyleEvidence extends S.Class<StyleEvidence>($I`StyleEvidence`)({
 			MutableHashMap.set(floors, key, seen === undefined || floor.value > seen.value ? floor : seen);
 		}
 		return StyleEvidence.make({
-			votes: [...MutableHashMap.values(votes)].sort((x, y) => byTallyOrder(x, y, valueKey(x.value), valueKey(y.value))),
-			floors: [...MutableHashMap.values(floors)].sort((x, y) => byTallyOrder(x, y, "", "")),
+			votes: A.sort(MutableHashMap.values(votes), byVoteOrder),
+			floors: A.sort(MutableHashMap.values(floors), byTallyOrder),
 		});
 	}
 
@@ -376,7 +376,7 @@ export class YamlStyleConflictError extends S.TaggedError<YamlStyleConflictError
 			.map(
 				(conflict) =>
 					`Conflicting style for ${conflict.rule}.${conflict.dimension}: ${conflict.candidates
-						.map((c) => `${JSON.stringify(c.value)} (${c.count}×, first at ${c.line + 1}:${c.character + 1})`)
+						.map((c) => `${Result.getOrElse(encodeStyleCandidateJson(c.value), () => "<invalid style value>")} (${c.count}×, first at ${c.line + 1}:${c.character + 1})`)
 						.join(" vs ")}`,
 			)
 			.join("; ");
@@ -410,7 +410,7 @@ const overlayConfig = (
 	for (const [ruleId, dims] of picks) {
 		const entry = rules[ruleId];
 		if (entry === "off") continue;
-		const merged: Record<string, unknown> = P.isObjectKeyword(entry) && !P.isFunction(entry) ? { ...entry } : {};
+		const merged: Record<string, unknown> = P.isObjectOrArray(entry) ? { ...entry } : {};
 		if (entry === "warning") merged.severity = "warning";
 		for (const [dimension, value] of dims) merged[dimension] = value;
 		rules[ruleId] = merged;
@@ -441,7 +441,7 @@ const resolveStrictEvidence = (
 					StyleConflict.make({
 						rule: ruleId,
 						dimension,
-						candidates: [...tallies].sort((a, b) => b.count - a.count),
+						candidates: A.sort(tallies, byDescendingCount),
 					}),
 				);
 				continue;
@@ -493,14 +493,15 @@ export interface YamlLintInference {
 /** Resolve the effective severity of a configured entry. */
 const resolveSeverity = (entry: YamlLintRuleSetting): YamlLintSeverity => {
 	if (entry === "error" || entry === "warning") return entry;
-	if (P.isObjectKeyword(entry) && !P.isFunction(entry) && (entry.severity === "error" || entry.severity === "warning")) {
+	if (P.isObjectOrArray(entry) && (entry.severity === "error" || entry.severity === "warning")) {
 		return entry.severity;
 	}
 	return "error";
 };
 
-const byPosition = (a: YamlLintDiagnostic, b: YamlLintDiagnostic): number =>
-	a.offset - b.offset || a.length - b.length || (a.rule < b.rule ? -1 : a.rule > b.rule ? 1 : 0);
+const byPosition = Order.make<YamlLintDiagnostic>(
+	(a, b) => Order.Number(a.offset, b.offset) || Order.Number(a.length, b.length) || Order.String(a.rule, b.rule),
+);
 
 /**
  * The rule loop shared by `run` and `fix` over one already-built context —
@@ -517,14 +518,14 @@ const runRules = (
 		const entry = alwaysOn ? "error" : config.rules[rule.id];
 		if (entry === undefined || entry === "off") continue;
 		const severity = resolveSeverity(entry);
-		const options = P.isObjectKeyword(entry) && !P.isFunction(entry) ? entry : undefined;
+		const options = P.isObjectOrArray(entry) ? entry : undefined;
 		for (const diagnostic of rule.check(ctx, options)) {
 			out.push(
 				alwaysOn || diagnostic.severity === severity ? diagnostic : YamlLintDiagnostic.make({ ...diagnostic, severity }),
 			);
 		}
 	}
-	return out.sort(byPosition);
+	return A.sort(out, byPosition);
 };
 
 /**

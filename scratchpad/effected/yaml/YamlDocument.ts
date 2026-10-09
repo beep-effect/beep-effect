@@ -22,6 +22,10 @@ import type { YamlNode as YamlNodeType } from "./YamlNode.ts";
 import { YamlNode } from "./YamlNode.ts";
 import { dual } from "effect/Function";
 import * as O from "@beep/utils/Option";
+import * as MutableHashMap from "effect/MutableHashMap";
+
+const isStringifyFailure = S.is(StringifyFailure);
+const isStringifyDepthExceeded = S.is(StringifyDepthExceeded);
 
 const $I = $ScratchpadId.create("effected/yaml/YamlDocument");
 
@@ -185,7 +189,7 @@ export class YamlDocument extends S.Class<YamlDocument>($I`YamlDocument`)({
 		return Effect.try({
 			try: () => stringifyDocument(toRawDocument(this), toStringifyInput(options)),
 			catch: (defect) => {
-				if (defect instanceof StringifyFailure) {
+				if (isStringifyFailure(defect)) {
 					return YamlStringifyError.make({
 						diagnostics: [
 							YamlDiagnostic.make({
@@ -203,7 +207,7 @@ export class YamlDocument extends S.Class<YamlDocument>($I`YamlDocument`)({
 				// A synthetic AST nested deeper than the stringifier's cap overflowed
 				// the node-path recursion — surface it typed, not as a stack-overflow
 				// defect.
-				if (defect instanceof StringifyDepthExceeded) {
+				if (isStringifyDepthExceeded(defect)) {
 					return YamlStringifyError.make({
 						diagnostics: [
 							YamlDiagnostic.make({
@@ -230,7 +234,7 @@ export class YamlDocument extends S.Class<YamlDocument>($I`YamlDocument`)({
 	 */
 	toValue(): unknown {
 		if (this.contents === null) return null;
-		const anchors = new Map<string, YamlNodeType>();
+		const anchors = MutableHashMap.empty<string, YamlNodeType>();
 		return this.contents.toValue(anchors);
 	}
 }

@@ -1,3 +1,7 @@
+import { dual } from "effect/Function";
+import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
+import { $ScratchpadId } from "@beep/identity/packages";
 // Flow-collection composition: flow mappings, flow sequences, and the
 // flow-children flattening walk. Imports the shared pair-building machinery
 // from `block.ts`; block composition reaches these composers through
@@ -28,8 +32,22 @@ import {
 } from "./scalars.ts";
 import type { ComposerState, NodeMeta } from "./state.ts";
 import { enterNesting, exitNesting, hasMeta } from "./state.ts";
-import { dual } from "effect/Function";
 import * as O from "@beep/utils/Option";
+
+const $I = $ScratchpadId.create("effected/yaml/internal/composer/flow");
+
+const PendingFlowComment = S.Struct({
+	text: S.mutableKey(S.String).annotate(
+		$I.annote("PendingFlowComment.text", { description: "Raw comment text awaiting attribution." }),
+	),
+	offset: S.mutableKey(S.Finite).annotate(
+		$I.annote("PendingFlowComment.offset", { description: "Source offset of the pending comment." }),
+	),
+	blankAbove: S.mutableKey(S.Boolean).annotate(
+		$I.annote("PendingFlowComment.blankAbove", { description: "Whether a blank line precedes this comment." }),
+	),
+}).annotate($I.annote("PendingFlowComment", { description: "Own-line flow comment awaiting its following item." }));
+type PendingFlowComment = typeof PendingFlowComment.Type;
 
 /**
  * Validate that flow collection entries are separated by commas.
@@ -50,18 +68,14 @@ function validateFlowSeparators(
 	let colonCount = 0; // number of colons seen since last comma
 	let contentAfterColon = 0; // content tokens after the most recent colon
 
-	for (const child of children) {
+	for (let i = 0; i < children.length; i++) {
+		const child = children[i];
+		if (child === undefined) continue;
 		if (child.type === "whitespace" && (child.source === openBracket || child.source === closeBracket)) continue;
 		if (child.type === "newline") continue;
-		if (child.type === "comment") {
-			// A comment between content tokens in a flow collection breaks
-			// plain scalar continuation — if content follows, it needs a comma.
-			if (contentAfterColon > 0) {
-				colonCount = 1;
-				contentAfterColon = 1;
-			}
-			continue;
-		}
+		// The scalar collector stops at a comment, so following content is
+		// counted separately without changing whether this entry has a colon.
+		if (child.type === "comment") continue;
 		if (child.type === "whitespace" && child.source.trim() === "") continue;
 
 		if (child.type === "whitespace" && child.source === ",") {
@@ -70,6 +84,14 @@ function validateFlowSeparators(
 			continue;
 		}
 		if (child.type === "whitespace" && child.source === ":") {
+			if (colonCount > 0 && contentAfterColon > 0) {
+				state.errors.push({
+					code: "MalformedFlowCollection",
+					message: "Missing comma between flow collection entries",
+					offset: child.offset,
+					length: child.length,
+				});
+			}
 			colonCount++;
 			contentAfterColon = 0;
 			continue;
@@ -83,6 +105,21 @@ function validateFlowSeparators(
 			child.type === "alias";
 
 		if (isContent) {
+			if (child.type === "flow-scalar" && getScalarStyle(child) === "plain") {
+				// Match the flattening walk's scalar boundaries within this entry.
+				// Nested collections are single CST children and remain opaque here.
+				let end = i + 1;
+				while (end < children.length) {
+					const next = children[end];
+					if (next?.type === "whitespace" && (next.source === "," || next.source === closeBracket)) break;
+					end++;
+				}
+				const entry = children.slice(i, end);
+				const collected = hasValueSepThroughPlainScalars(entry, 1)
+					? collectMultilineKey(entry, 0)
+					: collectMultilinePlainScalar(entry, 0, undefined, state.text);
+				i += collected.nextIdx - 1;
+			}
 			contentAfterColon++;
 			// Error: we've seen at least one colon, a value after it, and now
 			// another content token without a comma. This means something like
@@ -172,9 +209,9 @@ function isClosersOnly(text: string, start: number, end: number): boolean {
 // ---------------------------------------------------------------------------
 
 export const composeFlowMap: {
-	(cst: CstNode, state: ComposerState, meta?: NodeMeta, parentBlockColumn?: number): YamlMap;
 	(state: ComposerState, meta?: NodeMeta, parentBlockColumn?: number): (cst: CstNode) => YamlMap;
-} = dual((args) => args[0] !== undefined && "type" in args[0], (cst: CstNode, state: ComposerState, meta?: NodeMeta, parentBlockColumn?: number): YamlMap => {
+	(cst: CstNode, state: ComposerState, meta?: NodeMeta, parentBlockColumn?: number): YamlMap;
+} = dual((args) => P.hasProperty(args[0], "source"), (cst: CstNode, state: ComposerState, meta?: NodeMeta, parentBlockColumn?: number): YamlMap => {
 	// Nesting-depth guard: unbounded recursion is a stack-overflow DoS vector.
 	if (!enterNesting(state, cst)) {
 		return YamlMap.make({ items: [], style: "flow", offset: cst.offset, length: cst.length });
@@ -233,18 +270,20 @@ function composeFlowMapInner(cst: CstNode, state: ComposerState, meta?: NodeMeta
 		style: "flow",
 		offset: cst.offset,
 		length: cst.length,
-		...O.getSomesStruct({ tag: O.fromUndefinedOr(meta?.tag) }),
-		...O.getSomesStruct({ anchor: O.fromUndefinedOr(meta?.anchor) }),
-		...O.getSomesStruct({ comment: O.fromUndefinedOr(mapComment) }),
+		...O.getSomesStruct({
+			tag: O.fromUndefinedOr(meta?.tag),
+			anchor: O.fromUndefinedOr(meta?.anchor),
+			comment: O.fromUndefinedOr(mapComment),
+		}),
 	});
 
-	if ((meta?.anchor !== undefined && meta?.anchor !== "")) registerAnchor(map, meta.anchor, state, cst.offset);
+	if (meta?.anchor !== undefined && meta?.anchor !== "") registerAnchor(map, meta.anchor, state, cst.offset);
 	return map;
 }
 
 export const flattenFlowChildren: {
-	(children: readonly CstNode[], state: ComposerState): SemanticItem[];
 	(state: ComposerState): (children: readonly CstNode[]) => SemanticItem[];
+	(children: readonly CstNode[], state: ComposerState): SemanticItem[];
 } = dual(2, (children: readonly CstNode[], state: ComposerState): SemanticItem[] => {
 	const items: SemanticItem[] = [];
 	let pendingMeta: NodeMeta = {};
@@ -259,17 +298,31 @@ export const flattenFlowChildren: {
 			// `!!str` belongs to the value of `foo`), flush it as an empty
 			// scalar so it doesn't bleed into the next item.
 			if (child.source === ",") {
+				// A node-less explicit key ends at the comma. Materialize its
+				// null key before the following entry can supply a node to it.
+				let keyIndex = items.length - 1;
+				while (keyIndex >= 0 && items[keyIndex]?.kind === "comment") keyIndex--;
+				const last = items[keyIndex];
+				if (last?.kind === "key" && last.node === undefined) {
+					items[keyIndex] = {
+						kind: "key",
+						node: YamlScalar.make({ value: null, style: "plain", offset: 0, length: 0 }),
+					};
+				}
 				if (hasMeta(pendingMeta)) {
-					const value = resolveScalar("", "plain", pendingMeta.tag, state);
+					const value = resolveScalar("", ["plain", pendingMeta.tag, state]);
 					const scalar = YamlScalar.make({
 						value,
 						style: "plain",
 						offset: child.offset,
 						length: 0,
-						...O.getSomesStruct({ tag: O.fromUndefinedOr(pendingMeta.tag) }),
-						...O.getSomesStruct({ anchor: O.fromUndefinedOr(pendingMeta.anchor) }),
+						...O.getSomesStruct({
+							tag: O.fromUndefinedOr(pendingMeta.tag),
+							anchor: O.fromUndefinedOr(pendingMeta.anchor),
+						}),
 					});
-					if ((pendingMeta.anchor !== undefined && pendingMeta.anchor !== "")) registerAnchor(scalar, pendingMeta.anchor, state, child.offset);
+					if (pendingMeta.anchor !== undefined && pendingMeta.anchor !== "")
+						registerAnchor(scalar, pendingMeta.anchor, state, child.offset);
 					pendingMeta = {};
 					items.push({ kind: "node", node: scalar });
 				}
@@ -278,16 +331,19 @@ export const flattenFlowChildren: {
 			if (child.source === ":") {
 				// Flush pending tag/anchor as empty scalar before value-sep
 				if (hasMeta(pendingMeta)) {
-					const value = resolveScalar("", "plain", pendingMeta.tag, state);
+					const value = resolveScalar("", ["plain", pendingMeta.tag, state]);
 					const scalar = YamlScalar.make({
 						value,
 						style: "plain",
 						offset: child.offset,
 						length: 0,
-						...O.getSomesStruct({ tag: O.fromUndefinedOr(pendingMeta.tag) }),
-						...O.getSomesStruct({ anchor: O.fromUndefinedOr(pendingMeta.anchor) }),
+						...O.getSomesStruct({
+							tag: O.fromUndefinedOr(pendingMeta.tag),
+							anchor: O.fromUndefinedOr(pendingMeta.anchor),
+						}),
 					});
-					if ((pendingMeta.anchor !== undefined && pendingMeta.anchor !== "")) registerAnchor(scalar, pendingMeta.anchor, state, child.offset);
+					if (pendingMeta.anchor !== undefined && pendingMeta.anchor !== "")
+						registerAnchor(scalar, pendingMeta.anchor, state, child.offset);
 					pendingMeta = {};
 					items.push({ kind: "node", node: scalar });
 				}
@@ -368,16 +424,19 @@ export const flattenFlowChildren: {
 					// Plain scalar eventually followed by ":" (possibly through
 					// continuation plain scalars) — merge as multi-line key
 					const { value, nextIdx } = collectMultilineKey(children, i);
-					const resolved = resolveScalar(value, "plain", pendingMeta.tag, state);
+					const resolved = resolveScalar(value, ["plain", pendingMeta.tag, state]);
 					const scalar = YamlScalar.make({
 						value: resolved,
 						style: "plain",
 						offset: child.offset,
 						length: child.length,
-						...O.getSomesStruct({ tag: O.fromUndefinedOr(pendingMeta.tag) }),
-						...O.getSomesStruct({ anchor: O.fromUndefinedOr(pendingMeta.anchor) }),
+						...O.getSomesStruct({
+							tag: O.fromUndefinedOr(pendingMeta.tag),
+							anchor: O.fromUndefinedOr(pendingMeta.anchor),
+						}),
 					});
-					if ((pendingMeta.anchor !== undefined && pendingMeta.anchor !== "")) registerAnchor(scalar, pendingMeta.anchor, state, child.offset);
+					if (pendingMeta.anchor !== undefined && pendingMeta.anchor !== "")
+						registerAnchor(scalar, pendingMeta.anchor, state, child.offset);
 					pendingMeta = {};
 					items.push({ kind: "node", node: scalar });
 					i = nextIdx - 1;
@@ -390,7 +449,7 @@ export const flattenFlowChildren: {
 					undefined,
 					state.text,
 				);
-				const resolved = resolveScalar(value, "plain", pendingMeta.tag, state);
+				const resolved = resolveScalar(value, ["plain", pendingMeta.tag, state]);
 				const scalar = YamlScalar.make({
 					value: resolved,
 					style: "plain",
@@ -399,10 +458,13 @@ export const flattenFlowChildren: {
 					// so findAtOffset covers continuation lines and the
 					// sourceMultiline decoration pass sees the real extent.
 					length: partsCount > 1 ? endOffset - child.offset : child.length,
-					...O.getSomesStruct({ tag: O.fromUndefinedOr(pendingMeta.tag) }),
-					...O.getSomesStruct({ anchor: O.fromUndefinedOr(pendingMeta.anchor) }),
+					...O.getSomesStruct({
+						tag: O.fromUndefinedOr(pendingMeta.tag),
+						anchor: O.fromUndefinedOr(pendingMeta.anchor),
+					}),
 				});
-				if ((pendingMeta.anchor !== undefined && pendingMeta.anchor !== "")) registerAnchor(scalar, pendingMeta.anchor, state, child.offset);
+				if (pendingMeta.anchor !== undefined && pendingMeta.anchor !== "")
+					registerAnchor(scalar, pendingMeta.anchor, state, child.offset);
 				pendingMeta = {};
 				items.push({ kind: "node", node: scalar });
 				i = nextIdx - 1;
@@ -434,16 +496,16 @@ export const flattenFlowChildren: {
 	}
 	// Flush trailing pending tag/anchor as empty scalar (e.g., !!str at end of flow)
 	if (hasMeta(pendingMeta)) {
-		const value = resolveScalar("", "plain", pendingMeta.tag, state);
+		const value = resolveScalar("", ["plain", pendingMeta.tag, state]);
 		const scalar = YamlScalar.make({
 			value,
 			style: "plain",
 			offset: 0,
 			length: 0,
-			...O.getSomesStruct({ tag: O.fromUndefinedOr(pendingMeta.tag) }),
-			...O.getSomesStruct({ anchor: O.fromUndefinedOr(pendingMeta.anchor) }),
+			...O.getSomesStruct({ tag: O.fromUndefinedOr(pendingMeta.tag), anchor: O.fromUndefinedOr(pendingMeta.anchor) }),
 		});
-		if ((pendingMeta.anchor !== undefined && pendingMeta.anchor !== "")) registerAnchor(scalar, pendingMeta.anchor, state, 0);
+		if (pendingMeta.anchor !== undefined && pendingMeta.anchor !== "")
+			registerAnchor(scalar, pendingMeta.anchor, state, 0);
 		items.push({ kind: "node", node: scalar });
 	}
 	return items;
@@ -454,9 +516,9 @@ export const flattenFlowChildren: {
 // ---------------------------------------------------------------------------
 
 export const composeFlowSeq: {
-	(cst: CstNode, state: ComposerState, meta?: NodeMeta, parentBlockColumn?: number): YamlSeq;
 	(state: ComposerState, meta?: NodeMeta, parentBlockColumn?: number): (cst: CstNode) => YamlSeq;
-} = dual((args) => args[0] !== undefined && "type" in args[0], (cst: CstNode, state: ComposerState, meta?: NodeMeta, parentBlockColumn?: number): YamlSeq => {
+	(cst: CstNode, state: ComposerState, meta?: NodeMeta, parentBlockColumn?: number): YamlSeq;
+} = dual((args) => P.hasProperty(args[0], "source"), (cst: CstNode, state: ComposerState, meta?: NodeMeta, parentBlockColumn?: number): YamlSeq => {
 	// Nesting-depth guard: unbounded recursion is a stack-overflow DoS vector.
 	if (!enterNesting(state, cst)) {
 		return YamlSeq.make({ items: [], style: "flow", offset: cst.offset, length: cst.length });
@@ -543,11 +605,7 @@ function composeFlowSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMeta
 	// a comment-free item — sets `spaceBefore`; a blank WITHIN a run embeds
 	// as an empty line in the joined string; a blank BETWEEN the run and its
 	// item embeds as a trailing empty line.
-	interface PendingFlowComment {
-		text: string;
-		offset: number;
-		blankAbove: boolean;
-	}
+
 	let pending: PendingFlowComment[] = [];
 	let pendingSpace = false;
 	let lastItemEnd = -1;
@@ -615,7 +673,7 @@ function composeFlowSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMeta
 				checkMultilineImplicitKeys(pairs, state, semItems);
 			}
 			const firstPair = pairs[0];
-			if ((firstPair !== undefined)) {
+			if (firstPair !== undefined) {
 				// Anchor the blank-above check at the segment's first token
 				// (comment or key) — the analog of buildPairs anchoring at the
 				// key it is about to construct. Comments INSIDE the segment
@@ -654,13 +712,13 @@ function composeFlowSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMeta
 					const ownLine = si.offset === undefined ? true : isOwnLineAt(state.text, si.offset);
 					if (!ownLine && pushedIdx >= 0) {
 						const prev = items[pushedIdx];
-						if ((prev !== undefined)) items[pushedIdx] = withCommentFields(prev, { comment: cText });
+						if (prev !== undefined) items[pushedIdx] = withCommentFields(prev, { comment: cText });
 					} else {
 						acceptOwnLineComment(cText, si.offset ?? -1);
 					}
 					continue;
 				}
-				if (si.kind === "node" && (si.node !== undefined)) {
+				if (si.kind === "node" && si.node !== undefined) {
 					const fields = takePendingFields(si.node.length > 0 ? si.node.offset : -1);
 					const node = hasPendingFields(fields) ? withCommentFields(si.node, fields) : si.node;
 					items.push(node);
@@ -699,11 +757,13 @@ function composeFlowSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMeta
 		style: "flow",
 		offset: cst.offset,
 		length: cst.length,
-		...O.getSomesStruct({ tag: O.fromUndefinedOr(meta?.tag) }),
-		...O.getSomesStruct({ anchor: O.fromUndefinedOr(meta?.anchor) }),
-		...O.getSomesStruct({ comment: O.fromUndefinedOr(seqComment) }),
+		...O.getSomesStruct({
+			tag: O.fromUndefinedOr(meta?.tag),
+			anchor: O.fromUndefinedOr(meta?.anchor),
+			comment: O.fromUndefinedOr(seqComment),
+		}),
 	});
 
-	if ((meta?.anchor !== undefined && meta?.anchor !== "")) registerAnchor(seq, meta.anchor, state, cst.offset);
+	if (meta?.anchor !== undefined && meta?.anchor !== "") registerAnchor(seq, meta.anchor, state, cst.offset);
 	return seq;
 }

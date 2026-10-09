@@ -1,3 +1,4 @@
+import { dual } from "effect/Function";
 // The shared per-rule fixture harness (#129): one harness, N rule fixture
 // sets, each fixture a triple — input → expected diagnostics → expected
 // fixed output where a fix exists. Uniform structure is the point: a
@@ -14,7 +15,6 @@ import { assert, describe, it } from "@effect/vitest";
 import * as Result from "effect/Result";
 import type { YamlLintRuleSetting, YamlRule } from "../../../effected/yaml/index.ts";
 import { StyleEvidence, YamlLint, YamlLintConfig, YamlLintDiagnostic } from "../../../effected/yaml/index.ts";
-import { dual } from "effect/Function";
 
 /** Positional subset-match expectation for one diagnostic. */
 export interface ExpectedDiagnostic {
@@ -66,13 +66,10 @@ const ruleFindings = (rule: YamlRule, fixture: RuleFixture, impl: YamlRule = rul
 	YamlLint.run(fixture.input, [impl], configFor(rule, fixture.setting)).filter((d) => d.rule === rule.id);
 
 /** Register the uniform fixture suite (and mutation proofs) for one rule. */
-export function testRule(rule: YamlRule, fixtures: ReadonlyArray<RuleFixture>): void;
-export function testRule(fixtures: ReadonlyArray<RuleFixture>): (rule: YamlRule) => void;
-export function testRule(...args: [rule: YamlRule, fixtures: ReadonlyArray<RuleFixture>] | [fixtures: ReadonlyArray<RuleFixture>]): void | ((rule: YamlRule) => void) {
-	return dual<
-		(...args: [rule: YamlRule, fixtures: ReadonlyArray<RuleFixture>] | [fixtures: ReadonlyArray<RuleFixture>]) => void | ((rule: YamlRule) => void),
-		(rule: YamlRule, fixtures: ReadonlyArray<RuleFixture>) => void
-	>(2, function testRule(rule: YamlRule, fixtures: ReadonlyArray<RuleFixture>): void {
+export const testRule: {
+	(fixtures: ReadonlyArray<RuleFixture>): (rule: YamlRule) => void;
+	(rule: YamlRule, fixtures: ReadonlyArray<RuleFixture>): void;
+} = dual(2, (rule: YamlRule, fixtures: ReadonlyArray<RuleFixture>): void => {
 	describe(`rule ${rule.id}`, () => {
 		for (const fixture of fixtures) {
 			it(fixture.name, () => {
@@ -159,8 +156,7 @@ export function testRule(...args: [rule: YamlRule, fixtures: ReadonlyArray<RuleF
 			});
 		}
 	});
-})(...args);
-}
+});
 
 // ── Inference harness (#345) ────────────────────────────────────────────────
 
@@ -196,13 +192,10 @@ const evidenceFor = (impl: YamlRule, inputs: ReadonlyArray<string>): StyleEviden
  * proof) for one rule — the inference analog of {@link testRule}, so the
  * inferable rules cannot drift into bespoke dialects of "tested" either.
  */
-export function testRuleInference(rule: YamlRule, fixtures: ReadonlyArray<InferenceFixture>): void;
-export function testRuleInference(fixtures: ReadonlyArray<InferenceFixture>): (rule: YamlRule) => void;
-export function testRuleInference(...args: [rule: YamlRule, fixtures: ReadonlyArray<InferenceFixture>] | [fixtures: ReadonlyArray<InferenceFixture>]): void | ((rule: YamlRule) => void) {
-	return dual<
-		(...args: [rule: YamlRule, fixtures: ReadonlyArray<InferenceFixture>] | [fixtures: ReadonlyArray<InferenceFixture>]) => void | ((rule: YamlRule) => void),
-		(rule: YamlRule, fixtures: ReadonlyArray<InferenceFixture>) => void
-	>(2, function testRuleInference(rule: YamlRule, fixtures: ReadonlyArray<InferenceFixture>): void {
+export const testRuleInference: {
+	(fixtures: ReadonlyArray<InferenceFixture>): (rule: YamlRule) => void;
+	(rule: YamlRule, fixtures: ReadonlyArray<InferenceFixture>): void;
+} = dual(2, (rule: YamlRule, fixtures: ReadonlyArray<InferenceFixture>): void => {
 	describe(`rule ${rule.id} inference`, () => {
 		for (const fixture of fixtures) {
 			it(fixture.name, () => {
@@ -287,5 +280,4 @@ export function testRuleInference(...args: [rule: YamlRule, fixtures: ReadonlyAr
 			);
 		});
 	});
-})(...args);
-}
+});

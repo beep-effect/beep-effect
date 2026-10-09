@@ -1,5 +1,6 @@
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
 import * as Stream from "effect/Stream";
 import { Yaml, YamlParseOptions } from "../../effected/yaml/Yaml.ts";
 import { YamlVisitor, YamlVisitorEvent } from "../../effected/yaml/YamlVisitor.ts";
@@ -119,5 +120,28 @@ describe("YamlVisitor", () => {
 				assert.deepStrictEqual(yield* Yaml.parse("name: x\nage: 1\n"), { name: "x", age: 1 });
 			}),
 		);
+	});
+});
+
+
+describe("schema-derived visitor constructor compatibility", () => {
+	it("retains structural equality and optional metadata with Data constructors", () => {
+		const fields = { path: ["a", 0], depth: 2, value: 42, style: "plain" } as const;
+		const first = YamlVisitorEvent.Scalar(fields);
+		const second = YamlVisitorEvent.Scalar({ ...fields, path: ["a", 0] });
+		assert.isTrue(Equal.equals(first, second));
+		assert.isTrue(YamlVisitorEvent.$is("Scalar")(first));
+		assert.strictEqual(YamlVisitorEvent.$match(first, {
+			Scalar: (event) => event.value, Alias: () => null, Comment: () => null,
+			Directive: () => null, DocumentEnd: () => null, DocumentStart: () => null,
+			Error: () => null, MapEnd: () => null, MapStart: () => null, Pair: () => null,
+			SeqEnd: () => null, SeqStart: () => null,
+		}), 42);
+		assert.notProperty(first, "tag");
+		assert.notProperty(first, "anchor");
+		const tagged = YamlVisitorEvent.Scalar({ ...fields, tag: "tag:yaml.org,2002:int", anchor: "x" });
+		assert.strictEqual(tagged.tag, "tag:yaml.org,2002:int");
+		assert.strictEqual(tagged.anchor, "x");
+		assert.isFalse(Equal.equals(first, tagged));
 	});
 });

@@ -6,14 +6,16 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
 
-import { dual } from "effect/Function";
-
 const $I = $ScratchpadId.create("effected/yaml/internal/fold");
 
 /** A defect raised when a YAML helper invariant is violated. */
-class FoldFailure extends S.TaggedError<FoldFailure>($I`FoldFailure`)("FoldFailure", {
-	message: S.String,
-}) {}
+class FoldFailure extends S.TaggedError<FoldFailure>($I`FoldFailure`)(
+	"FoldFailure",
+	{
+		message: S.String.annotateKey({ description: "The violated scalar-folding invariant." }),
+	},
+	$I.annote("FoldFailure", { description: "A violated invariant while rendering a YAML scalar." }),
+) {}
 
 /**
  * Column-based line folding for a single logical scalar line (YAML 1.2 flow
@@ -35,10 +37,10 @@ class FoldFailure extends S.TaggedError<FoldFailure>($I`FoldFailure`)("FoldFailu
  * width folding is a best-effort presentation concern, never a correctness one.
  * A non-positive `lineWidth` (the default) returns the text unchanged.
  */
-export const foldScalarLine: {
-	(text: string, indent: string, lineWidth: number, indentAtStart: number): string;
-	(indent: string, lineWidth: number, indentAtStart: number): (text: string) => string;
-} = dual(4, (text: string, indent: string, lineWidth: number, indentAtStart: number): string => {
+export function foldScalarLine(
+	text: string,
+	...[indent, lineWidth, indentAtStart]: [indent: string, lineWidth: number, indentAtStart: number]
+): string {
 	if (lineWidth <= 0) return text;
 	// Chars a continuation line can hold before reaching the width column. Guard
 	// against a pathological indent >= lineWidth (nothing would fit) by never
@@ -73,7 +75,7 @@ export const foldScalarLine: {
 		result += `\n${indent}${text.slice(fold + 1, sliceEnd)}`;
 	}
 	return result;
-});
+}
 
 /**
  * Apply {@link foldScalarLine} to an already-rendered scalar according to its
@@ -92,10 +94,10 @@ export const foldScalarLine: {
  * `indent` is one indentation level (the continuation prefix); `lineWidth` is
  * the target column. A non-positive `lineWidth` returns the text unchanged.
  */
-export const foldRenderedScalar: {
-	(rendered: string, indent: string, lineWidth: number): string;
-	(indent: string, lineWidth: number): (rendered: string) => string;
-} = dual(3, (rendered: string, indent: string, lineWidth: number): string => {
+export function foldRenderedScalar(
+	rendered: string,
+	...[indent, lineWidth]: [indent: string, lineWidth: number]
+): string {
 	if (lineWidth <= 0 || rendered.length === 0) return rendered;
 	const first = rendered[0];
 	// Block-literal and single-quoted are never width-folded.
@@ -132,7 +134,7 @@ export const foldRenderedScalar: {
 	}
 	// Plain scalar.
 	return foldScalarLine(rendered, indent, lineWidth, indent.length);
-});
+}
 
 /**
  * C0 control characters (except TAB) that must be escaped in double-quoted scalars.
@@ -203,10 +205,7 @@ export function hasNewlineSpacesTab(s: string): boolean {
  * Returns null if the content cannot safely be represented as single-quoted
  * (carriage returns or non-tab control characters).
  */
-export const renderSingleQuotedMultiline: {
-	(s: string, indent: string): string | null;
-	(indent: string): (s: string) => string | null;
-} = dual(2, (s: string, indent: string): string | null => {
+export function renderSingleQuotedMultiline(s: string, ...[indent]: [indent: string]): string | null {
 	// CR or non-tab control chars cannot be represented in single-quoted
 	for (let i = 0; i < s.length; i++) {
 		const code = s.charCodeAt(i);
@@ -237,7 +236,7 @@ export const renderSingleQuotedMultiline: {
 		i = nlEnd;
 	}
 	return `'${result}'`;
-});
+}
 
 /**
  * Renders a string scalar using block literal style (pipe `|`).
@@ -251,29 +250,15 @@ export const renderSingleQuotedMultiline: {
  * @param explicitIndent - Explicit indentation-indicator digit from the AST,
  * re-emitted only when it matches the rendered indent (fidelity path).
  */
-export const renderBlockLiteral: {
-	(
-		s: string,
-		indent: string,
-		explicitChomp: "strip" | "clip" | "keep" | undefined,
-		parentPosition: "block-map-value" | "block-seq-item" | undefined,
-		preserveKeep: boolean,
-		explicitIndent: number | undefined,
-	): string;
-	(
-		indent: string,
-		explicitChomp: "strip" | "clip" | "keep" | undefined,
-		parentPosition: "block-map-value" | "block-seq-item" | undefined,
-		preserveKeep: boolean,
-		explicitIndent: number | undefined,
-	): (s: string) => string;
-} = dual(6, function renderBlockLiteral(
+export function renderBlockLiteral(
 	s: string,
-	indent: string,
-	explicitChomp?: "strip" | "clip" | "keep",
-	parentPosition?: "block-map-value" | "block-seq-item",
-	preserveKeep: boolean = false,
-	explicitIndent?: number,
+	...[indent, explicitChomp, parentPosition, preserveKeep = false, explicitIndent]: [
+		indent: string,
+		explicitChomp?: "strip" | "clip" | "keep",
+		parentPosition?: "block-map-value" | "block-seq-item",
+		preserveKeep?: boolean,
+		explicitIndent?: number,
+	]
 ): string {
 	// Compute chomp indicator from the value's trailing-newline structure.
 	// `+` (keep) is required when the value retains more than one trailing
@@ -309,7 +294,7 @@ export const renderBlockLiteral: {
 	let indentIndicator = "";
 	const firstContent = lines.find((l) => l !== "");
 	const hasContent = firstContent !== undefined;
-	if (((value) => value === true)(firstContent?.startsWith(" ")) || (lines.length > 0 && lines[0] === "" && hasContent)) {
+	if (firstContent?.startsWith(" ") === true || (lines.length > 0 && lines[0] === "" && hasContent)) {
 		indentIndicator = String(indent.length);
 	} else if (!hasContent && chomp === "+" && parentPosition === "block-map-value" && indent.length > 0) {
 		indentIndicator = String(indent.length);
@@ -320,7 +305,7 @@ export const renderBlockLiteral: {
 		indentIndicator = String(explicitIndent);
 	}
 	return `|${indentIndicator}${chomp}\n${lines.map((l) => (l === "" ? "" : `${indent}${l}`)).join("\n")}`;
-});
+}
 
 /**
  * Renders a string scalar using block folded style (greater-than `>`).
@@ -330,14 +315,13 @@ export const renderBlockLiteral: {
  * the output must contain an empty line (double newline). Each empty line
  * in the value already produces the correct number of blank lines.
  */
-export const renderBlockFolded: {
-	(s: string, indent: string, explicitChomp: "strip" | "clip" | "keep" | undefined, explicitIndent: number | undefined): string;
-	(indent: string, explicitChomp: "strip" | "clip" | "keep" | undefined, explicitIndent: number | undefined): (s: string) => string;
-} = dual(4, function renderBlockFolded(
+export function renderBlockFolded(
 	s: string,
-	indent: string,
-	explicitChomp?: "strip" | "clip" | "keep",
-	explicitIndent?: number,
+	...[indent, explicitChomp, explicitIndent]: [
+		indent: string,
+		explicitChomp?: "strip" | "clip" | "keep",
+		explicitIndent?: number,
+	]
 ): string {
 	// Chomp derivation mirrors renderBlockLiteral; `explicitChomp` /
 	// `explicitIndent` are fidelity-path header preservation (a redundant
@@ -373,7 +357,7 @@ export const renderBlockFolded: {
 	let indentIndicator = "";
 	const firstContent = valueLines.find((l) => l !== "");
 	if (
-		((value) => value === true)(firstContent?.startsWith(" ")) ||
+		firstContent?.startsWith(" ") === true ||
 		(valueLines.length >= 2 && valueLines[0] === "" && valueLines[1] === "" && firstContent !== undefined)
 	) {
 		indentIndicator = String(indent.length);
@@ -441,7 +425,7 @@ export const renderBlockFolded: {
 				}
 				pendingCompensation = false;
 			}
-			if (prevNonEmpty && !isMoreIndented) {
+			if (prevNonEmpty && !prevMoreIndented && !isMoreIndented) {
 				// Fold break: insert empty line between consecutive content lines
 				outputLines.push("");
 			}
@@ -452,4 +436,4 @@ export const renderBlockFolded: {
 	}
 
 	return `>${indentIndicator}${chomp}\n${outputLines.join("\n")}`;
-});
+}

@@ -7,10 +7,12 @@ import type { CstNode } from "../cst.ts";
 import type { RawDiagnostic } from "../diagnostics.ts";
 import type { ParseOptionsInput } from "../options.ts";
 import type { EscapedComment } from "./comments.ts";
-import { dual } from "effect/Function";
-import * as P from "effect/Predicate";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "@beep/utils/Option";
+import * as S from "effect/Schema";
+import { $ScratchpadId } from "@beep/identity/packages";
+
+const $I = $ScratchpadId.create("effected/yaml/internal/composer/state");
 
 // ---------------------------------------------------------------------------
 // Line/column computation
@@ -39,10 +41,7 @@ export function getLineStarts(text: string): ReadonlyArray<number> {
  * occupies no column, matching the lexer and `columnAt`, so a
  * diagnostic's `character` behind a BOM equals the BOM-less document's.
  */
-export const lineCol: {
-	(text: string, offset: number): { line: number; column: number };
-	(offset: number): (text: string) => { line: number; column: number };
-} = dual(2, (text: string, offset: number): { line: number; column: number } => {
+export function lineCol(...[text, offset]: [text: string, offset: number]): { line: number; column: number } {
 	const starts = getLineStarts(text);
 	const pos = Math.min(Math.max(offset, 0), text.length);
 	// Binary search for the greatest line start <= pos.
@@ -60,35 +59,29 @@ export const lineCol: {
 	const lineStart = starts[lo] ?? 0;
 	const bom = text[lineStart] === "\uFEFF" && pos > lineStart ? 1 : 0;
 	return { line: lo, column: pos - lineStart - bom };
-});
+}
 
 /**
  * Returns true if offsetA and offsetB are on the same source line (no newline between them).
  */
-export const sameLine: {
-	(text: string, offsetA: number, offsetB: number): boolean;
-	(offsetA: number, offsetB: number): (text: string) => boolean;
-} = dual(3, (text: string, offsetA: number, offsetB: number): boolean => {
+export function sameLine(...[text, offsetA, offsetB]: [text: string, offsetA: number, offsetB: number]): boolean {
 	const lo = Math.min(offsetA, offsetB);
 	const hi = Math.max(offsetA, offsetB);
 	for (let i = lo; i < hi && i < text.length; i++) {
 		if (text[i] === "\n") return false;
 	}
 	return true;
-});
+}
 
 /** Returns true if there is non-whitespace content before `offset` on the same line. */
-export const hasNonWhitespaceBeforeOnLine: {
-	(text: string, offset: number): boolean;
-	(offset: number): (text: string) => boolean;
-} = dual(2, (text: string, offset: number): boolean => {
+export function hasNonWhitespaceBeforeOnLine(...[text, offset]: [text: string, offset: number]): boolean {
 	for (let i = offset - 1; i >= 0; i--) {
 		const ch = text[i];
 		if (ch === "\n" || ch === "\r") return false;
 		if (ch !== " " && ch !== "\t") return true;
 	}
 	return false; // start of string
-});
+}
 
 /**
  * Returns the column of the first non-whitespace character on the line
@@ -96,26 +89,24 @@ export const hasNonWhitespaceBeforeOnLine: {
  * line when properties (tag/anchor) precede the actual content scalar —
  * the indent is the leftmost column on the line, not the scalar's column.
  */
-export const lineIndentColumn: {
-	(text: string, offset: number): number;
-	(offset: number): (text: string) => number;
-} = dual(2, (text: string, offset: number): number => {
+export function lineIndentColumn(...[text, offset]: [text: string, offset: number]): number {
 	let lineStart = offset;
 	while (lineStart > 0 && text[lineStart - 1] !== "\n") lineStart--;
 	let i = lineStart;
 	while (i < text.length && (text[i] === " " || text[i] === "\t")) i++;
 	return i - lineStart;
-});
+}
 
 // ---------------------------------------------------------------------------
 // Metadata for anchors/tags/comments attached to nodes
 // ---------------------------------------------------------------------------
 
-export interface NodeMeta {
-	anchor?: string;
-	tag?: string;
-	comment?: string;
-}
+export const NodeMeta = S.Struct({
+	anchor: S.String.pipe(S.optionalKey, S.mutableKey).annotateKey({ description: "Pending anchor name to attach to the next node." }),
+	tag: S.String.pipe(S.optionalKey, S.mutableKey).annotateKey({ description: "Pending explicit tag to attach to the next node." }),
+	comment: S.String.pipe(S.optionalKey, S.mutableKey).annotateKey({ description: "Pending comment text to attach to the next node." }),
+}).pipe($I.annoteSchema("NodeMeta", { description: "Writable pending composer metadata with absent keys omitted." }));
+export type NodeMeta = typeof NodeMeta.Type;
 
 export function hasMeta(m: NodeMeta): boolean {
 	return m.anchor !== undefined || m.tag !== undefined || m.comment !== undefined;
@@ -138,11 +129,11 @@ export function commentProps(n: { commentBefore?: string; comment?: string; spac
 	comment?: string;
 	spaceBefore?: boolean;
 } {
-	return {
-		...O.getSomesStruct({ commentBefore: O.fromUndefinedOr(n.commentBefore) }),
-		...O.getSomesStruct({ comment: O.fromUndefinedOr(n.comment) }),
-		...O.getSomesStruct({ spaceBefore: O.fromUndefinedOr(n.spaceBefore) }),
-	};
+	return O.getSomesStruct({
+		commentBefore: O.fromUndefinedOr(n.commentBefore),
+		comment: O.fromUndefinedOr(n.comment),
+		spaceBefore: O.fromUndefinedOr(n.spaceBefore),
+	});
 }
 
 // ---------------------------------------------------------------------------
@@ -164,7 +155,7 @@ export interface FlowComposers {
 
 export interface ComposerState {
 	readonly text: string;
-	readonly anchors: Map<string, YamlNode>;
+	readonly anchors: MutableHashMap.MutableHashMap<string, YamlNode>;
 	aliasCount: number;
 	readonly errors: RawDiagnostic[];
 	readonly warnings: RawDiagnostic[];
@@ -174,7 +165,7 @@ export interface ComposerState {
 		readonly uniqueKeys: boolean;
 	};
 	/** Tag handle to prefix map from %TAG directives (e.g. "!!" maps to "tag:yaml.org,2002:") */
-	tagMap: Map<string, string>;
+	tagMap: MutableHashMap.MutableHashMap<string, string>;
 	/** Flow-composer dispatch — see {@link FlowComposers}. */
 	readonly flow: FlowComposers;
 	/** Current collection-nesting depth — see {@link enterNesting}. */
@@ -188,27 +179,24 @@ export interface ComposerState {
 	readonly escapedComments: Array<EscapedComment>;
 }
 
-export const createState: {
-	(text: string, flow: FlowComposers, options?: ParseOptionsInput): ComposerState;
-	(flow: FlowComposers, options?: ParseOptionsInput): (text: string) => ComposerState;
-} = dual((args) => P.isString(args[0]), (text: string, flow: FlowComposers, options?: ParseOptionsInput): ComposerState => ({
-	text,
-	// Composer consumers share the native Map boundary; string keys retain
-	// the same equality and insertion order in the Effect backing map.
-	anchors: MutableHashMap.empty<string, YamlNode>().backing,
-	aliasCount: 0,
-	errors: [],
-	warnings: [],
-	options: {
-		strict: options?.strict ?? true,
-		maxAliasCount: options?.maxAliasCount ?? 100,
-		uniqueKeys: options?.uniqueKeys ?? true,
-	},
-	tagMap: MutableHashMap.empty<string, string>().backing,
-	flow,
-	depth: 0,
-	escapedComments: [],
-}));
+export function createState(...[text, flow, options]: [text: string, flow: FlowComposers, options?: ParseOptionsInput]): ComposerState {
+	return {
+		text,
+		anchors: MutableHashMap.empty<string, YamlNode>(),
+		aliasCount: 0,
+		errors: [],
+		warnings: [],
+		options: {
+			strict: options?.strict ?? true,
+			maxAliasCount: options?.maxAliasCount ?? 100,
+			uniqueKeys: options?.uniqueKeys ?? true,
+		},
+		tagMap: MutableHashMap.empty<string, string>(),
+		flow,
+		depth: 0,
+		escapedComments: [],
+	};
+}
 
 /**
  * Maximum collection-nesting depth the composer will recurse into. The
@@ -226,10 +214,7 @@ export const MAX_NESTING_DEPTH = 256;
  * exhausted; the caller must then return a leaf placeholder instead of
  * recursing. Balance every `true` return with {@link exitNesting}.
  */
-export const enterNesting: {
-	(state: ComposerState, cst: CstNode): boolean;
-	(cst: CstNode): (state: ComposerState) => boolean;
-} = dual(2, (state: ComposerState, cst: CstNode): boolean => {
+export function enterNesting(...[state, cst]: [state: ComposerState, cst: CstNode]): boolean {
 	if (state.depth >= MAX_NESTING_DEPTH) {
 		if (!state.errors.some((e) => e.code === "NestingDepthExceeded")) {
 			state.errors.push({
@@ -243,7 +228,7 @@ export const enterNesting: {
 	}
 	state.depth++;
 	return true;
-});
+}
 
 /** Leave one collection-nesting level. */
 export function exitNesting(state: ComposerState): void {

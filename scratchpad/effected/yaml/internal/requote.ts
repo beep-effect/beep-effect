@@ -31,7 +31,6 @@
 import type { ScalarStyle } from "../YamlNode.ts";
 import { isControlChar } from "./fold.ts";
 import { renderDoubleQuoted, renderSingleQuoted } from "./stringifier.ts";
-import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 
 /**
@@ -73,10 +72,10 @@ function isSingleQuotable(value: string): boolean {
  * `undefined` when no value-preserving replacement exists under `mode`
  * (skipping is always correct; corrupting never is).
  */
-export const requoteScalarText: {
-	(text: string, scalar: RequoteScalarInput, quote: '"' | "'", mode: RequoteMode): string | undefined;
-	(scalar: RequoteScalarInput, quote: '"' | "'", mode: RequoteMode): (text: string) => string | undefined;
-} = dual(4, (text: string, scalar: RequoteScalarInput, quote: '"' | "'", mode: RequoteMode): string | undefined => {
+export function requoteScalarText(
+	text: string,
+	...[scalar, quote, mode]: [scalar: RequoteScalarInput, quote: '\"' | "'", mode: RequoteMode]
+): string | undefined {
 	if (scalar.tag !== undefined || scalar.anchor !== undefined) return undefined;
 	if (!P.isString(scalar.value)) return undefined;
 	const raw = text.slice(scalar.offset, scalar.offset + scalar.length);
@@ -107,4 +106,4 @@ export const requoteScalarText: {
 	if (scalar.style !== "double-quoted") return undefined;
 	if (!isSingleQuotable(scalar.value)) return undefined;
 	return renderSingleQuoted(scalar.value);
-});
+}

@@ -7,7 +7,9 @@ import type { CstNode } from "../cst.ts";
 import type { RawDirective } from "../raw-document.ts";
 import type { ComposerState } from "./state.ts";
 import * as MutableHashSet from "effect/MutableHashSet";
-import { dual } from "effect/Function";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as O from "effect/Option";
+import { lexAll } from "../lexer.ts";
 
 /**
  * Resolve a tag shorthand using the document's %TAG directives.
@@ -16,22 +18,19 @@ import { dual } from "effect/Function";
  *
  * Returns the resolved tag URI, or the original tag if no directive matches.
  */
-export const resolveTagHandle: {
-	(tag: string, state: ComposerState): string;
-	(state: ComposerState): (tag: string) => string;
-} = dual(2, (tag: string, state: ComposerState): string => {
+export function resolveTagHandle(...[tag, state]: [tag: string, state: ComposerState]): string {
 	// Verbatim tags: !<...> — return the content as-is
 	if (tag.startsWith("!<") && tag.endsWith(">")) {
 		return tag.slice(2, -1);
 	}
 	// Secondary tag handle: !!suffix
 	if (tag.startsWith("!!")) {
-		const prefix = state.tagMap.get("!!");
+		const prefix = O.getOrUndefined(MutableHashMap.get(state.tagMap, "!!"));
 		if ((prefix !== undefined && prefix !== "")) {
-			return prefix + tag.slice(2);
+			return prefix + decodeTagSuffix(tag.slice(2), tag, state);
 		}
 		// Default secondary tag handle: tag:yaml.org,2002:
-		return `tag:yaml.org,2002:${tag.slice(2)}`;
+		return `tag:yaml.org,2002:${decodeTagSuffix(tag.slice(2), tag, state)}`;
 	}
 	// Named tag handle: !name!suffix
 	const namedMatch = tag.match(/^(![\w-]*!)(.*)$/);
@@ -39,24 +38,46 @@ export const resolveTagHandle: {
 		const handle = namedMatch[1];
 		const suffix = namedMatch[2];
 		if ((handle !== undefined && handle !== "")) {
-			const prefix = state.tagMap.get(handle);
+			const prefix = O.getOrUndefined(MutableHashMap.get(state.tagMap, handle));
 			if ((prefix !== undefined && prefix !== "")) {
-				return prefix + (suffix ?? "");
+				return prefix + decodeTagSuffix(suffix ?? "", tag, state);
 			}
 		}
 	}
 	// Primary tag handle: !suffix (non-empty suffix)
 	if (tag.startsWith("!") && tag.length > 1 && !tag.startsWith("!!")) {
-		const prefix = state.tagMap.get("!");
+		const prefix = O.getOrUndefined(MutableHashMap.get(state.tagMap, "!"));
 		if ((prefix !== undefined && prefix !== "")) {
-			return prefix + tag.slice(1);
+			return prefix + decodeTagSuffix(tag.slice(1), tag, state);
 		}
 		// Default primary: local tag
-		return tag;
+		return `!${decodeTagSuffix(tag.slice(1), tag, state)}`;
 	}
 	// Non-specific tag: ! alone
 	return tag;
-});
+}
+
+function decodeTagSuffix(suffix: string, tag: string, state: ComposerState): string {
+	try {
+		return decodeURIComponent(suffix);
+	} catch {
+		// Resolution receives the spelling, not its CST span. Locate the next
+		// matching lexical tag, excluding positions already diagnosed, so
+		// repeated malformed tags retain their own source positions.
+		for (const token of lexAll(state.text)) {
+			if (token.kind !== "tag" || token.value !== tag) continue;
+			if (state.errors.some((e) => e.offset === token.offset && e.code === "UnresolvedTag")) continue;
+			state.errors.push({
+				code: "UnresolvedTag",
+				message: `Malformed percent encoding in tag ${tag}`,
+				offset: token.offset,
+				length: token.length,
+			});
+			break;
+		}
+		return suffix;
+	}
+}
 
 export function parseDirective(source: string): RawDirective | null {
 	const trimmed = source.trim();
@@ -79,10 +100,7 @@ export function parseDirective(source: string): RawDirective | null {
  * are local to a single document and do not leak across `---` boundaries.
  * The `!!` shorthand and the primary `!` handle are always available.
  */
-export const validateTagHandlesInDocument: {
-	(docCst: CstNode, state: ComposerState): void;
-	(state: ComposerState): (docCst: CstNode) => void;
-} = dual(2, (docCst: CstNode, state: ComposerState): void => {
+export function validateTagHandlesInDocument(...[docCst, state]: [docCst: CstNode, state: ComposerState]): void {
 	const children = docCst.children ?? [];
 	// Build local tagMap from %TAG directives in this doc.
 	const localHandles = MutableHashSet.empty<string>();
@@ -101,6 +119,20 @@ export const validateTagHandlesInDocument: {
 		if (node === undefined) continue;
 		if (node.type === "tag") {
 			const src = node.source;
+			if (!src.startsWith("!<")) {
+				const named = src.match(/^(![\w-]*!)(.*)$/);
+				const suffix = src.startsWith("!!") ? src.slice(2) : named !== null ? named[2] ?? "" : src.slice(1);
+				try {
+					decodeURIComponent(suffix);
+				} catch {
+					state.errors.push({
+						code: "UnresolvedTag",
+						message: `Malformed percent encoding in tag ${src}`,
+						offset: node.offset,
+						length: node.length,
+					});
+				}
+			}
 			// Verbatim tags `!<...>` and `!!`-prefixed (default secondary handle)
 			// and bare `!` are always valid.
 			if (src.startsWith("!<") || src.startsWith("!!") || src === "!") continue;
@@ -121,4 +153,4 @@ export const validateTagHandlesInDocument: {
 			for (const c of node.children) stack.push(c);
 		}
 	}
-});
+}

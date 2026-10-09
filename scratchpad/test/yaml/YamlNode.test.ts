@@ -4,6 +4,7 @@ import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as S from "effect/Schema";
 import * as O from "effect/Option";
+import * as MutableHashMap from "effect/MutableHashMap";
 import { Yaml, YamlAlias, YamlMap, YamlPair, YamlScalar, YamlSeq } from "../../effected/yaml/index.ts";
 
 const scalar = (value: unknown, offset: number, length: number) =>
@@ -112,7 +113,7 @@ describe("YamlNode", () => {
 				offset: 0,
 				length: 16,
 			});
-			assert.deepStrictEqual(map.toValue(new Map()), { base: 1, ref: 1 });
+			assert.deepStrictEqual(map.toValue(MutableHashMap.empty()), { base: 1, ref: 1 });
 			// Without an anchor map, aliases are unresolvable and yield null.
 			assert.deepStrictEqual(map.toValue(), { base: 1, ref: null });
 		});

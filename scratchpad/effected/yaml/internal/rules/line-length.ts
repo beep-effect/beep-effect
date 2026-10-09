@@ -4,6 +4,7 @@
 
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
+import * as P from "effect/Predicate";
 import type { YamlRule } from "../../YamlLintRule.ts";
 import { StyleFloor, YamlLintDiagnostic, YamlLintSeverity } from "../../YamlLintRule.ts";
 import { nonNegativeIntegerOption } from "./util.ts";
@@ -16,9 +17,20 @@ const $I = $ScratchpadId.create("effected/yaml/internal/rules/line-length");
  * are ours).
  */
 export const lineLengthOptions = S.Struct({
-	severity: S.optionalKey(YamlLintSeverity).annotateKey({ description: "Reporting level for excessive line-length findings, defaulting to `error`" }),
-	max: S.optionalKey(nonNegativeIntegerOption).annotateKey({ description: "Maximum line length in UTF-16 code units, excluding the line terminator, defaulting to 120" }),
-}).pipe($I.annoteSchema("lineLengthOptions", { description: "Options for `line-length`. `max` defaults to 120 — the kit-native line width (the yamllint id is recognizable; the option surface and defaults are ours)." }));
+	severity: S.optionalKey(YamlLintSeverity).annotateKey({
+		description: "Reporting level for excessive line-length findings, defaulting to `error`",
+	}),
+	max: S.optionalKey(nonNegativeIntegerOption).annotateKey({
+		description: "Maximum line length in UTF-16 code units, excluding the line terminator, defaulting to 120",
+	}),
+}).pipe(
+	$I.annoteSchema("lineLengthOptions", {
+		description:
+			"Options for `line-length`. `max` defaults to 120 — the kit-native line width (the yamllint id is recognizable; the option surface and defaults are ours).",
+	}),
+);
+
+export type lineLengthOptions = typeof lineLengthOptions.Type;
 
 const DEFAULT_MAX = 120;
 
@@ -26,8 +38,10 @@ const DEFAULT_MAX = 120;
 export const lineLength: YamlRule = {
 	id: "line-length",
 	check: (ctx, options) => {
-		const opts = S.is(lineLengthOptions)(options) ? options : {};
-		const max = opts.max ?? DEFAULT_MAX;
+		const max =
+			P.hasProperty(options, "max") && S.is(lineLengthOptions.fields.max.schema)(options.max)
+				? options.max
+				: DEFAULT_MAX;
 		const out: Array<YamlLintDiagnostic> = [];
 		for (const line of ctx.lines) {
 			if (line.text.length > max) {

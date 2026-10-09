@@ -23,6 +23,9 @@ export const hyphenSpacingOptions = S.Struct({
 	maxSpacesAfter: S.optionalKey(positiveIntegerOption).annotateKey({ description: "Maximum spaces between a block-sequence `-` and its same-line item, at least 1 and defaulting to 1" }),
 }).pipe($I.annoteSchema("hyphenSpacingOptions", { description: "Options for `hyphen-spacing`: `maxSpacesAfter` (default 1) after the `-`. At least one separation space must follow the indicator — `0` would make the fix emit `-item`, a plain scalar, not a sequence entry." }));
 
+/** Decoded options for block-sequence hyphen spacing. */
+export type hyphenSpacingOptions = typeof hyphenSpacingOptions.Type;
+
 /** Spacing after the block-sequence `-` indicator. */
 export const hyphenSpacing: YamlRule = {
 	id: "hyphen-spacing",
@@ -32,8 +35,9 @@ export const hyphenSpacing: YamlRule = {
 		// delete the separation space.
 		const maxAfter = Math.max(1, P.isNumber(opts.maxSpacesAfter) ? opts.maxSpacesAfter : 1);
 		const out: Array<YamlLintDiagnostic> = [];
-		for (const token of ctx.tokens) {
-			if (token.kind !== "block-seq-entry") continue;
+		for (let tokenIndex = 0; tokenIndex < ctx.tokens.length; tokenIndex++) {
+			const token = ctx.tokens[tokenIndex];
+			if (token === undefined || token.kind !== "block-seq-entry") continue;
 			let j = token.offset + token.length;
 			let after = 0;
 			while (j < ctx.text.length && ctx.text[j] === " ") {
@@ -43,6 +47,32 @@ export const hyphenSpacing: YamlRule = {
 			const next = ctx.text[j];
 			if (next === undefined || next === "\n" || next === "\r" || next === "#") continue;
 			if (after > maxAfter) {
+				// Moving a compact block collection's first entry without its
+				// continuation entries changes their relative indentation. Flow
+				// collections' colons do not introduce a compact block mapping.
+				let compact = false;
+				let flowDepth = 0;
+				let relocatesCollection = false;
+				for (let followingIndex = tokenIndex + 1; followingIndex < ctx.tokens.length; followingIndex++) {
+					const following = ctx.tokens[followingIndex];
+					if (following === undefined) break;
+					if (following.offset < j) continue;
+					if (following.line > token.line) {
+						if (following.kind === "whitespace" || following.kind === "newline" || following.kind === "comment") continue;
+						relocatesCollection = compact && following.character > token.character;
+						break;
+					}
+					if (following.kind === "flow-map-start" || following.kind === "flow-seq-start") {
+						flowDepth++;
+					} else if (following.kind === "flow-map-end" || following.kind === "flow-seq-end") {
+						flowDepth--;
+					} else if (
+						flowDepth === 0 &&
+						(following.kind === "block-seq-entry" || following.kind === "block-map-key" || following.kind === "block-map-value")
+					) {
+						compact = true;
+					}
+				}
 				out.push(
 					YamlLintDiagnostic.make({
 						rule: "hyphen-spacing",
@@ -52,11 +82,15 @@ export const hyphenSpacing: YamlRule = {
 						length: after,
 						line: token.line,
 						character: token.character + token.length,
-						fix: YamlEdit.make({
-							offset: token.offset + token.length,
-							length: after - maxAfter,
-							content: "",
-						}),
+						...(relocatesCollection
+							? {}
+							: {
+								fix: YamlEdit.make({
+									offset: token.offset + token.length,
+									length: after - maxAfter,
+									content: "",
+								}),
+							}),
 					}),
 				);
 			}

@@ -29,6 +29,17 @@ describe("YamlEdit", () => {
 			assert.strictEqual(YamlEdit.applyAll(text, edits), "Xb-cdYZ");
 		});
 
+		it("preserves stable ties and leaves an unsorted input array unchanged", () => {
+			const edits = [
+				YamlEdit.make({ offset: 0, length: 0, content: "L" }),
+				YamlEdit.make({ offset: 1, length: 0, content: "A" }),
+				YamlEdit.make({ offset: 1, length: 0, content: "B" }),
+			];
+			const snapshot = [...edits];
+			assert.strictEqual(YamlEdit.applyAll("xy", edits), "LxBAy");
+			assert.deepStrictEqual(edits, snapshot);
+		});
+
 		it("inserts with length 0 and deletes with empty content", () => {
 			assert.strictEqual(
 				YamlEdit.applyAll("a: 1\n", [YamlEdit.make({ offset: 5, length: 0, content: "b: 2\n" })]),

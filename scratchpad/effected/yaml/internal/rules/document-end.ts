@@ -8,6 +8,7 @@
 
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as HashSet from "effect/HashSet";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { YamlEdit } from "../../YamlEdit.ts";
 import type { LintContext, YamlRule } from "../../YamlLintRule.ts";
@@ -21,6 +22,9 @@ export const documentEndOptions = S.Struct({
 	severity: S.optionalKey(YamlLintSeverity).annotateKey({ description: "Reporting level for document-end marker findings, defaulting to `error`" }),
 	present: S.optionalKey(S.Boolean).annotateKey({ description: "Whether the stream's final `...` marker is required (`true`, default) or forbidden (`false`)" }),
 }).pipe($I.annoteSchema("documentEndOptions", { description: "Options for `document-end`: require (`true`, default) or forbid the marker." }));
+
+/** Decoded options for the stream's document end marker. */
+export type documentEndOptions = typeof documentEndOptions.Type;
 
 const TRIVIA = HashSet.fromIterable(["newline", "whitespace", "comment", "byte-order-mark"]);
 
@@ -52,8 +56,8 @@ const endOfStreamPosition = (
 export const documentEnd: YamlRule = {
 	id: "document-end",
 	check: (ctx, options) => {
-		const opts = S.is(documentEndOptions)(options) ? options : {};
-		const present = opts.present ?? true;
+		const opts = P.isObject(options) ? options : {};
+		const present = S.is(S.Boolean)(opts.present) ? opts.present : true;
 		// The last non-trivia token decides: does the stream end with `...`?
 		const tail = tailToken(ctx);
 		const ended = tail?.kind === "document-end";

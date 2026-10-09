@@ -7,7 +7,6 @@
 // design doc).
 
 import * as HashMap from "effect/HashMap";
-import * as O from "effect/Option";
 import type * as S from "effect/Schema";
 import type { YamlRule } from "../../YamlLintRule.ts";
 import { colonSpacing, colonSpacingOptions } from "./colon-spacing.ts";
@@ -49,31 +48,8 @@ const catalog: ReadonlyArray<readonly [YamlRule, S.Codec<unknown, unknown>]> = [
 /** The built-in rules, in catalog order (parse-validity is rule `#1`). */
 export const builtinRules: ReadonlyArray<YamlRule> = catalog.map(([rule]) => rule);
 
-const optionsEntries: Array<[string, S.Codec<unknown, unknown>]> = catalog.map(([rule, options]) => [rule.id, options]);
-const optionsById = HashMap.fromIterable(optionsEntries);
+/** Per-rule options schemas in catalog order, matching {@link builtinRules}. */
+export const builtinOptionsEntries: ReadonlyArray<readonly [string, S.Codec<unknown, unknown>]> = catalog.map(([rule, options]) => [rule.id, options]);
 
 /** Per-rule options schemas — the rule-aware half of config validation. */
-export const builtinOptionsSchemas: ReadonlyMap<string, S.Codec<unknown, unknown>> = {
-	size: HashMap.size(optionsById),
-	get: (id) => O.getOrUndefined(HashMap.get(optionsById, id)),
-	has: (id) => HashMap.has(optionsById, id),
-	// Retain catalog order for the existing ReadonlyMap iteration contract.
-	*entries(): Generator<[string, S.Codec<unknown, unknown>], undefined> {
-		for (const [id, options] of optionsEntries) yield [id, options];
-		return undefined;
-	},
-	*keys(): Generator<string, undefined> {
-		for (const [id] of optionsEntries) yield id;
-		return undefined;
-	},
-	*values(): Generator<S.Codec<unknown, unknown>, undefined> {
-		for (const [, options] of optionsEntries) yield options;
-		return undefined;
-	},
-	[Symbol.iterator]() {
-		return this.entries();
-	},
-	forEach(callbackfn, thisArg) {
-		for (const [id, options] of optionsEntries) callbackfn.call(thisArg, options, id, this);
-	},
-};
+export const builtinOptionsSchemas = HashMap.fromIterable(builtinOptionsEntries);

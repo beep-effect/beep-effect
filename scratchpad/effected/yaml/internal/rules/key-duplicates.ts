@@ -21,6 +21,7 @@ const $I = $ScratchpadId.create("effected/yaml/internal/rules/key-duplicates");
 export const keyDuplicatesOptions = S.Struct({
 	severity: S.optionalKey(YamlLintSeverity).annotateKey({ description: "Reporting level for duplicate mapping-key findings, defaulting to `error`" }),
 }).pipe($I.annoteSchema("keyDuplicatesOptions", { description: "Options for `key-duplicates` (severity only — duplicates are duplicates)." }));
+export type keyDuplicatesOptions = typeof keyDuplicatesOptions.Type;
 
 const walk = (node: YamlNode | null, text: string, out: Array<YamlLintDiagnostic>, ctx: LintContext): void => {
 	if (node === null) return;

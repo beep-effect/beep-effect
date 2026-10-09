@@ -16,6 +16,7 @@ const $I = $ScratchpadId.create("effected/yaml/internal/rules/trailing-spaces");
 export const trailingSpacesOptions = S.Struct({
 	severity: S.optionalKey(YamlLintSeverity).annotateKey({ description: "Reporting level for trailing-whitespace findings, defaulting to `error`" }),
 }).pipe($I.annoteSchema("trailingSpacesOptions", { description: "Options for `trailing-spaces` (severity only — nothing to tune)." }));
+export type trailingSpacesOptions = typeof trailingSpacesOptions.Type;
 
 /** Trailing spaces or tabs at the end of a line, with a deleting fix. */
 export const trailingSpaces: YamlRule = {

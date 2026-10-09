@@ -13,6 +13,7 @@ const $I = $ScratchpadId.create("effected/yaml/internal/rules/eof-newline");
 export const eofNewlineOptions = S.Struct({
 	severity: S.optionalKey(YamlLintSeverity).annotateKey({ description: "Reporting level for missing final-newline findings, defaulting to `error`" }),
 }).pipe($I.annoteSchema("eofNewlineOptions", { description: "Options for `eof-newline` (severity only — nothing to tune)." }));
+export type eofNewlineOptions = typeof eofNewlineOptions.Type;
 
 /** A missing final newline, with an inserting fix. */
 export const eofNewline: YamlRule = {

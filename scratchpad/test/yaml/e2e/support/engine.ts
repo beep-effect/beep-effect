@@ -1,6 +1,7 @@
 // This engine adapter is an internal test helper with a direct-call contract.
-// @effect-diagnostics missingPipeableSignature:skip-file
 import * as Effect from "effect/Effect";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as P from "effect/Predicate";
 import { buildAnchorMap, getNodeValue } from "../../../../effected/yaml/internal/composer/anchors.ts";
 import { composeAllDocuments, composeFirstDocument } from "../../../../effected/yaml/internal/composer/document.ts";
 import type { RawDiagnostic } from "../../../../effected/yaml/internal/diagnostics.ts";
@@ -25,7 +26,7 @@ export function parseDocument(...args: [text: string, options?: ParseOptionsInpu
 	return dual<
 		(...args: [text: string, options?: ParseOptionsInput | undefined] | [options?: ParseOptionsInput | undefined]) => Effect.Effect<RawYamlDocument, RawParseFailure> | ((text: string) => Effect.Effect<RawYamlDocument, RawParseFailure>),
 		(text: string, options?: ParseOptionsInput) => Effect.Effect<RawYamlDocument, RawParseFailure>
-	>((args) => typeof args[0] === "string", function parseDocument(text: string, options?: ParseOptionsInput): Effect.Effect<RawYamlDocument, RawParseFailure> {
+	>((args) => P.isString(args[0]), function parseDocument(text: string, options?: ParseOptionsInput): Effect.Effect<RawYamlDocument, RawParseFailure> {
 	return Effect.suspend(() => {
 		const doc = composeFirstDocument(text, options);
 		const fatal = doc.errors.filter((e) => isFatalCode(e.code));
@@ -41,7 +42,7 @@ export function parseAllDocuments(...args: [text: string, options?: ParseOptions
 	return dual<
 		(...args: [text: string, options?: ParseOptionsInput | undefined] | [options?: ParseOptionsInput | undefined]) => Effect.Effect<ReadonlyArray<RawYamlDocument>, RawParseFailure> | ((text: string) => Effect.Effect<ReadonlyArray<RawYamlDocument>, RawParseFailure>),
 		(text: string, options?: ParseOptionsInput) => Effect.Effect<ReadonlyArray<RawYamlDocument>, RawParseFailure>
-	>((args) => typeof args[0] === "string", function parseAllDocuments(text: string, options?: ParseOptionsInput): Effect.Effect<ReadonlyArray<RawYamlDocument>, RawParseFailure> {
+	>((args) => P.isString(args[0]), function parseAllDocuments(text: string, options?: ParseOptionsInput): Effect.Effect<ReadonlyArray<RawYamlDocument>, RawParseFailure> {
 	return Effect.suspend(() => {
 		const { documents, streamErrors } = composeAllDocuments(text, options);
 		const fatal = [
@@ -60,7 +61,7 @@ export function parse(...args: [text: string, options?: ParseOptionsInput | unde
 	return dual<
 		(...args: [text: string, options?: ParseOptionsInput | undefined] | [options?: ParseOptionsInput | undefined]) => Effect.Effect<unknown, RawParseFailure> | ((text: string) => Effect.Effect<unknown, RawParseFailure>),
 		(text: string, options?: ParseOptionsInput) => Effect.Effect<unknown, RawParseFailure>
-	>((args) => typeof args[0] === "string", function parse(text: string, options?: ParseOptionsInput): Effect.Effect<unknown, RawParseFailure> {
+	>((args) => P.isString(args[0]), function parse(text: string, options?: ParseOptionsInput): Effect.Effect<unknown, RawParseFailure> {
 	const uniqueKeys = options?.uniqueKeys ?? true;
 	return parseDocument(text, options).pipe(
 		Effect.flatMap((doc) => {
@@ -72,7 +73,7 @@ export function parse(...args: [text: string, options?: ParseOptionsInput | unde
 			}
 			// Use an empty map so getNodeValue registers anchors incrementally,
 			// ensuring aliases resolve to the most recent anchor at the point of use.
-			const anchors = new Map<string, YamlNode>();
+			const anchors = MutableHashMap.empty<string, YamlNode>();
 			return Effect.succeed(getNodeValue(doc.contents, anchors));
 		}),
 	);
@@ -80,7 +81,7 @@ export function parse(...args: [text: string, options?: ParseOptionsInput | unde
 }
 
 /** Sync stringify of a plain value (engine `stringifyValue`). */
-export function stringify(value: unknown, options?: StringifyOptionsInput): string {
+export function stringify(...[value, options]: [value: unknown, options?: StringifyOptionsInput]): string {
 	return stringifyValue(value, options);
 }
 

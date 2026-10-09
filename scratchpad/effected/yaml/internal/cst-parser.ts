@@ -9,14 +9,14 @@ import * as S from "effect/Schema";
 
 import type { CstNode, CstNodeType } from "./cst.ts";
 import { lexAll } from "./lexer.ts";
-import type { YamlToken } from "./token.ts";
+import type { YamlToken, YamlTokenKind } from "./token.ts";
 
 const $I = $ScratchpadId.create("effected/yaml/internal/cst-parser");
 
 /** A defect raised when a YAML helper invariant is violated. */
 class CstParserFailure extends S.TaggedError<CstParserFailure>($I`CstParserFailure`)("CstParserFailure", {
-	message: S.String,
-}) {}
+	message: S.String.annotateKey({ description: "The violated CST parser invariant." }),
+}, $I.annote("CstParserFailure", { description: "A thrown defect identifying a violated CST parser invariant." })) {}
 
 // ---------------------------------------------------------------------------
 // Internal parser state
@@ -138,6 +138,31 @@ function consumeTrivia(state: ParserState): CstNode[] {
 	return nodes;
 }
 
+/** Exhaustive leaf dispatch, preserving each token's raw source span. */
+const leafNodeTypes: Readonly<Record<YamlTokenKind, CstNodeType>> = {
+	whitespace: "whitespace", newline: "newline", comment: "comment", scalar: "flow-scalar",
+	anchor: "anchor", alias: "alias", tag: "tag", directive: "directive",
+	// Commas are structural punctuation; typed as "whitespace" since
+	// CstNodeType has no dedicated delimiter type. The raw "," is
+	// preserved in the node's source field.
+	"flow-separator": "whitespace",
+	// Structural indicators (":", "?", "-") are typed as "whitespace"
+	// when consumed as generic leaf tokens (e.g. inside flow contexts).
+	"block-map-value": "whitespace", "block-map-key": "whitespace", "block-seq-entry": "whitespace",
+	// Document markers ("---", "...") consumed as leaf tokens.
+	"document-start": "whitespace", "document-end": "whitespace",
+	// Flow brackets consumed as leaf tokens outside their normal
+	// parse path — treat as structural whitespace.
+	"flow-map-start": "whitespace", "flow-map-end": "whitespace",
+	"flow-seq-start": "whitespace", "flow-seq-end": "whitespace",
+	// Zero-width start markers from the lexer — skip gracefully.
+	"block-map-start": "whitespace", "block-seq-start": "whitespace",
+	// BOM is structural metadata, not visible content. Mapping it to
+	// "whitespace" is intentional — it keeps source fidelity without
+	// needing a dedicated CstNodeType variant.
+	"byte-order-mark": "whitespace", error: "error",
+};
+
 /**
  * Consume a single trivia-or-content token and return it as a CST node.
  * Used for tokens that don't form higher-level structures.
@@ -147,51 +172,7 @@ function consumeLeafToken(state: ParserState): CstNode | undefined {
 	if (token === undefined) return undefined;
 	advance(state);
 
-	if (token.kind === "whitespace") {
-		return makeLeafNode("whitespace", token, state.text);
-	} else if (token.kind === "newline") {
-		return makeLeafNode("newline", token, state.text);
-	} else if (token.kind === "comment") {
-		return makeLeafNode("comment", token, state.text);
-	} else if (token.kind === "scalar") {
-		return makeLeafNode("flow-scalar", token, state.text);
-	} else if (token.kind === "anchor") {
-		return makeLeafNode("anchor", token, state.text);
-	} else if (token.kind === "alias") {
-		return makeLeafNode("alias", token, state.text);
-	} else if (token.kind === "tag") {
-		return makeLeafNode("tag", token, state.text);
-	} else if (token.kind === "directive") {
-		return makeLeafNode("directive", token, state.text);
-	} else if (token.kind === "flow-separator") {
-		// Commas are structural punctuation; typed as "whitespace" since
-		// CstNodeType has no dedicated delimiter type. The raw "," is
-		// preserved in the node's source field.
-		return makeLeafNode("whitespace", token, state.text);
-	} else if (token.kind === "block-map-value" || token.kind === "block-map-key" || token.kind === "block-seq-entry") {
-		// Structural indicators (":", "?", "-") are typed as "whitespace"
-		// when consumed as generic leaf tokens (e.g. inside flow contexts).
-		return makeLeafNode("whitespace", token, state.text);
-	} else if (token.kind === "document-start" || token.kind === "document-end") {
-		// Document markers ("---", "...") consumed as leaf tokens.
-		return makeLeafNode("whitespace", token, state.text);
-	} else if (token.kind === "flow-map-start" || token.kind === "flow-map-end" || token.kind === "flow-seq-start" || token.kind === "flow-seq-end") {
-		// Flow brackets consumed as leaf tokens outside their normal
-		// parse path — treat as structural whitespace.
-		return makeLeafNode("whitespace", token, state.text);
-	} else if (token.kind === "block-map-start" || token.kind === "block-seq-start") {
-		// Zero-width start markers from the lexer — skip gracefully.
-		return makeLeafNode("whitespace", token, state.text);
-	} else if (token.kind === "byte-order-mark") {
-		// BOM is structural metadata, not visible content. Mapping it to
-		// "whitespace" is intentional — it keeps source fidelity without
-		// needing a dedicated CstNodeType variant.
-		return makeLeafNode("whitespace", token, state.text);
-	} else if (token.kind === "error") {
-		return makeLeafNode("error", token, state.text);
-	} else {
-		return makeLeafNode("error", token, state.text);
-	}
+	return makeLeafNode(leafNodeTypes[token.kind], token, state.text);
 }
 
 /**

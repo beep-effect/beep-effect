@@ -1,3 +1,5 @@
+import * as A from "effect/Array";
+import { dual } from "effect/Function";
 // Scalar resolution and decoding: YAML 1.2 Core Schema type resolution
 // (spec chapter 10.3.2), flow/block scalar decoding, multi-line plain-scalar
 // collection, and the CST-scanning helpers those routines share with the
@@ -12,8 +14,6 @@ import { rawCommentText } from "./comments.ts";
 import type { ComposerState, NodeMeta } from "./state.ts";
 import { lineCol } from "./state.ts";
 import { resolveTagHandle } from "./tags.ts";
-import { dual } from "effect/Function";
-import * as A from "effect/Array";
 import * as P from "effect/Predicate";
 import * as Match from "effect/Match";
 import * as O from "@beep/utils/Option";
@@ -100,12 +100,14 @@ function resolveTaggedScalar(rawValue: string, tag: string): unknown {
 	);
 }
 
+type ResolveScalarContext = readonly [style: ScalarStyle, tag?: string | undefined, state?: ComposerState | undefined];
+
 export const resolveScalar: {
-	(rawValue: string, style: ScalarStyle, tag: string | undefined, state: ComposerState | undefined): unknown;
-	(style: ScalarStyle, tag: string | undefined, state: ComposerState | undefined): (rawValue: string) => unknown;
-} = dual(4, function resolveScalar(rawValue: string, style: ScalarStyle, tag?: string, state?: ComposerState): unknown {
-	if ((tag !== undefined && tag !== "")) {
-		const resolvedTag = (state !== undefined) ? resolveTagHandle(tag, state) : tag;
+	([style, tag, state]: ResolveScalarContext): (rawValue: string) => unknown;
+	(rawValue: string, [style, tag, state]: ResolveScalarContext): unknown;
+} = dual(2, (rawValue: string, [style, tag, state]: ResolveScalarContext): unknown => {
+	if (tag !== undefined && tag !== "") {
+		const resolvedTag = state !== undefined ? resolveTagHandle(tag, state) : tag;
 		return resolveTaggedScalar(rawValue, resolvedTag);
 	}
 	if (style !== "plain") return rawValue;
@@ -179,9 +181,9 @@ function blockScalarHeaderComment(cst: CstNode): string | undefined {
 }
 
 export const getScalarValue: {
-	(node: CstNode, fullText?: string): string;
 	(fullText?: string): (node: CstNode) => string;
-} = dual((args) => args.length >= 2 || (P.isObjectKeyword(args[0]) && !P.isFunction(args[0]) && "type" in args[0]), (node: CstNode, fullText?: string): string => {
+	(node: CstNode, fullText?: string): string;
+} = dual((args) => P.hasProperty(args[0], "source"), (node: CstNode, fullText?: string): string => {
 	if (node.type === "block-scalar") return decodeBlockScalar(node.source, fullText, node.offset);
 	const style = getScalarStyle(node);
 	if (style === "single-quoted") return decodeSingleQuoted(node.source);
@@ -373,8 +375,8 @@ export function foldFlowLines(text: string): string {
  * Returns the folded key text and the index after the last consumed child.
  */
 export const collectMultilineKey: {
-	(children: readonly CstNode[], startIdx: number): { value: string; nextIdx: number };
 	(startIdx: number): (children: readonly CstNode[]) => { value: string; nextIdx: number };
+	(children: readonly CstNode[], startIdx: number): { value: string; nextIdx: number };
 } = dual(2, (children: readonly CstNode[], startIdx: number): { value: string; nextIdx: number } => {
 	const first = children[startIdx];
 	if (first?.type !== "flow-scalar") {
@@ -468,8 +470,8 @@ function skipChildrenOnLine(children: readonly CstNode[], startIdx: number, line
  * sourceMultiline decoration pass then stamps it from the span).
  */
 export const collectMultilinePlainScalar: {
-	(children: readonly CstNode[], startIdx: number, minContinuationColumn?: number, sourceText?: string): { value: string; nextIdx: number; partsCount: number; endOffset: number };
 	(startIdx: number, minContinuationColumn?: number, sourceText?: string): (children: readonly CstNode[]) => { value: string; nextIdx: number; partsCount: number; endOffset: number };
+	(children: readonly CstNode[], startIdx: number, minContinuationColumn?: number, sourceText?: string): { value: string; nextIdx: number; partsCount: number; endOffset: number };
 } = dual((args) => A.isArray(args[0]), (children: readonly CstNode[], startIdx: number, minContinuationColumn?: number, sourceText?: string): { value: string; nextIdx: number; partsCount: number; endOffset: number } => {
 	const first = children[startIdx];
 	if (first?.type !== "flow-scalar") {
@@ -530,7 +532,7 @@ export const collectMultilinePlainScalar: {
 			// Don't merge scalars below the minimum continuation indent (236B).
 			// This prevents merging e.g. "bar" (col 2) with "invalid" (col 0)
 			// when the block mapping key is at col 0.
-			if (minContinuationColumn !== undefined && (sourceText !== undefined && sourceText !== "")) {
+			if (minContinuationColumn !== undefined && sourceText !== undefined && sourceText !== "") {
 				const childColumn = lineCol(sourceText, child.offset).column;
 				if (childColumn < minContinuationColumn) break;
 			}
@@ -559,7 +561,13 @@ export const collectMultilinePlainScalar: {
 		// Exclude flow-scalar and block-scalar nodes — the lexer correctly
 		// identifies these (e.g., quoted scalars like '' should not be merged
 		// as plain scalar continuation text).
-		if (sawNewline && (sourceText !== undefined && sourceText !== "") && child.type !== "flow-scalar" && child.type !== "block-scalar") {
+		if (
+			sawNewline &&
+			sourceText !== undefined &&
+			sourceText !== "" &&
+			child.type !== "flow-scalar" &&
+			child.type !== "block-scalar"
+		) {
 			const childCol = lineCol(sourceText, child.offset).column;
 			const isDirectiveContinuation = child.type === "directive";
 			// Apply minContinuationColumn check for non-directive nodes — when
@@ -619,8 +627,8 @@ export const collectMultilinePlainScalar: {
  * any significant child (used to avoid merging across sequence entry boundaries).
  */
 export const findNextSignificantChild: {
-	(children: readonly CstNode[], startIdx: number, stopAtDash?: boolean): number | null;
 	(startIdx: number, stopAtDash?: boolean): (children: readonly CstNode[]) => number | null;
+	(children: readonly CstNode[], startIdx: number, stopAtDash?: boolean): number | null;
 } = dual((args) => A.isArray(args[0]), (children: readonly CstNode[], startIdx: number, stopAtDash: boolean = false): number | null => {
 	for (let j = startIdx; j < children.length; j++) {
 		const c = children[j];
@@ -640,8 +648,8 @@ export const findNextSignificantChild: {
  * skipping whitespace and newlines.
  */
 export const hasValueSepAfterInList: {
-	(children: readonly CstNode[], startIdx: number): boolean;
 	(startIdx: number): (children: readonly CstNode[]) => boolean;
+	(children: readonly CstNode[], startIdx: number): boolean;
 } = dual(2, (children: readonly CstNode[], startIdx: number): boolean => findValueSepOffset(children, startIdx) >= 0);
 
 /**
@@ -651,8 +659,8 @@ export const hasValueSepAfterInList: {
  * the scalar is a key at the current level (not a nested mapping start).
  */
 export const hasBlockMapAfterInList: {
-	(children: readonly CstNode[], startIdx: number): boolean;
 	(startIdx: number): (children: readonly CstNode[]) => boolean;
+	(children: readonly CstNode[], startIdx: number): boolean;
 } = dual(2, (children: readonly CstNode[], startIdx: number): boolean => {
 	for (let j = startIdx; j < children.length; j++) {
 		const c = children[j];
@@ -669,8 +677,8 @@ export const hasBlockMapAfterInList: {
 
 /** Find the offset of the next ":" value separator in a CST children list, or -1 if none. */
 export const findValueSepOffset: {
-	(children: readonly CstNode[], startIdx: number): number;
 	(startIdx: number): (children: readonly CstNode[]) => number;
+	(children: readonly CstNode[], startIdx: number): number;
 } = dual(2, (children: readonly CstNode[], startIdx: number): number => {
 	for (let j = startIdx; j < children.length; j++) {
 		const c = children[j];
@@ -687,8 +695,8 @@ export const findValueSepOffset: {
 
 /** Check if a ":" value-sep exists between startIdx (inclusive) and endIdx (exclusive). */
 export const hasValueSepBetween: {
-	(children: readonly CstNode[], startIdx: number, endIdx: number): boolean;
 	(startIdx: number, endIdx: number): (children: readonly CstNode[]) => boolean;
+	(children: readonly CstNode[], startIdx: number, endIdx: number): boolean;
 } = dual(3, (children: readonly CstNode[], startIdx: number, endIdx: number): boolean => {
 	for (let j = startIdx; j < endIdx; j++) {
 		const c = children[j];
@@ -726,8 +734,8 @@ export function blockMapStartsWithValueSep(blockMap: CstNode): boolean {
  * preventing false matches across comma-delimited entries on the same line.
  */
 export const hasValueSepThroughPlainScalars: {
-	(children: readonly CstNode[], startIdx: number): boolean;
 	(startIdx: number): (children: readonly CstNode[]) => boolean;
+	(children: readonly CstNode[], startIdx: number): boolean;
 } = dual(2, (children: readonly CstNode[], startIdx: number): boolean => {
 	let sawNewline = false;
 	for (let j = startIdx; j < children.length; j++) {
@@ -753,8 +761,8 @@ export const hasValueSepThroughPlainScalars: {
 
 /** Find the next non-trivia CST child in a list, returning the node and its index. */
 export const findNextContentInList: {
-	(children: readonly CstNode[], startIdx: number): { node: CstNode; idx: number } | null;
 	(startIdx: number): (children: readonly CstNode[]) => { node: CstNode; idx: number } | null;
+	(children: readonly CstNode[], startIdx: number): { node: CstNode; idx: number } | null;
 } = dual(2, (children: readonly CstNode[], startIdx: number): { node: CstNode; idx: number } | null => {
 	for (let j = startIdx; j < children.length; j++) {
 		const c = children[j];
@@ -791,8 +799,8 @@ export function findLastContent(children: readonly CstNode[]): CstNode | undefin
  * or null. Used at the document level where properties precede content.
  */
 export const findNextContentChild: {
-	(children: readonly CstNode[], startIdx: number): CstNode | null;
 	(startIdx: number): (children: readonly CstNode[]) => CstNode | null;
+	(children: readonly CstNode[], startIdx: number): CstNode | null;
 } = dual(2, (children: readonly CstNode[], startIdx: number): CstNode | null => {
 	for (let i = startIdx; i < children.length; i++) {
 		const c = children[i];
@@ -811,8 +819,8 @@ export const findNextContentChild: {
 });
 
 export const indexOfChild: {
-	(children: readonly CstNode[], target: CstNode): number;
 	(target: CstNode): (children: readonly CstNode[]) => number;
+	(children: readonly CstNode[], target: CstNode): number;
 } = dual(2, (children: readonly CstNode[], target: CstNode): number => {
 	for (let i = 0; i < children.length; i++) {
 		if (children[i] === target) return i;
@@ -822,8 +830,8 @@ export const indexOfChild: {
 
 /** Check if there's a value separator ":" after startIdx (skipping only whitespace). */
 export const hasValueSepAfter: {
-	(children: readonly CstNode[], startIdx: number): boolean;
 	(startIdx: number): (children: readonly CstNode[]) => boolean;
+	(children: readonly CstNode[], startIdx: number): boolean;
 } = dual(2, (children: readonly CstNode[], startIdx: number): boolean => {
 	for (let j = startIdx; j < children.length; j++) {
 		const c = children[j];
@@ -850,38 +858,23 @@ export const hasValueSepAfter: {
  */
 function findParentIndent(fullText: string, indicatorOffset: number): number {
 	let scanBack = indicatorOffset - 1;
-	// Skip whitespace on the same line
-	while (scanBack >= 0 && (fullText[scanBack] === " " || fullText[scanBack] === "\t")) {
-		scanBack--;
-	}
-	// If we hit ":" or "-" on the same line, handle directly
-	if (scanBack >= 0 && fullText[scanBack] === ":") {
-		return findKeyIndent(fullText, scanBack);
-	}
-	if (scanBack >= 0 && fullText[scanBack] === "-") {
-		return findColOnLine(fullText, scanBack);
-	}
-	// Block scalar is on its own line (after tag, anchor, or newline).
-	// Scan backward across lines to find the ":" or "-" that introduces
-	// this block scalar as a value.
 	while (scanBack >= 0) {
 		const ch = fullText[scanBack];
-		if (ch === ":") {
-			return findKeyIndent(fullText, scanBack);
+		if (ch === " " || ch === "\t" || ch === "\n" || ch === "\r") {
+			scanBack--;
+			continue;
 		}
-		if (ch === "-") {
-			// Check if this is a seq entry indicator (followed by space/newline)
-			const afterDash = scanBack + 1;
-			if (
-				afterDash >= fullText.length ||
-				fullText[afterDash] === " " ||
-				fullText[afterDash] === "\t" ||
-				fullText[afterDash] === "\n" ||
-				fullText[afterDash] === "\r"
-			) {
-				return findColOnLine(fullText, scanBack);
-			}
+		// Properties are opaque tokens: URI punctuation is never structure.
+		let tokenStart = scanBack;
+		while (tokenStart > 0 && !/[ \t\r\n]/.test(fullText[tokenStart - 1] ?? "")) tokenStart--;
+		if (fullText[tokenStart] === "!" || fullText[tokenStart] === "&") {
+			scanBack = tokenStart - 1;
+			continue;
 		}
+		const after = fullText[scanBack + 1];
+		const isSeparated = after === undefined || /[ \t\r\n]/.test(after);
+		if (ch === ":" && isSeparated) return findKeyIndent(fullText, scanBack);
+		if (ch === "-" && isSeparated && scanBack === tokenStart) return findColOnLine(fullText, scanBack);
 		scanBack--;
 	}
 	return 0;
@@ -1188,9 +1181,9 @@ function validateBlockScalarLeadingEmpties(cst: CstNode, state: ComposerState): 
 }
 
 export const makeScalar: {
-	(cst: CstNode, state: ComposerState, meta?: NodeMeta): YamlScalar;
 	(state: ComposerState, meta?: NodeMeta): (cst: CstNode) => YamlScalar;
-} = dual((args) => args[0] !== undefined && "type" in args[0], (cst: CstNode, state: ComposerState, meta?: NodeMeta): YamlScalar => {
+	(cst: CstNode, state: ComposerState, meta?: NodeMeta): YamlScalar;
+} = dual((args) => P.hasProperty(args[0], "source"), (cst: CstNode, state: ComposerState, meta?: NodeMeta): YamlScalar => {
 	const style = getScalarStyle(cst);
 	if (style === "block-literal" || style === "block-folded") {
 		// 5LLU, S98Z, W9L4: leading empty lines in a block scalar must not be
@@ -1198,7 +1191,7 @@ export const makeScalar: {
 		validateBlockScalarLeadingEmpties(cst, state);
 	}
 	const rawValue = getScalarValue(cst, state.text);
-	const value = resolveScalar(rawValue, style, meta?.tag, state);
+	const value = resolveScalar(rawValue, [style, meta?.tag, state]);
 	const chomp = getBlockChomp(cst);
 	const blockIndent = getBlockIndent(cst);
 	// A block scalar's header-line comment (`| # c`) lives inside the
@@ -1211,21 +1204,23 @@ export const makeScalar: {
 	// (number/bool/null) and the source form is not the canonical JS output —
 	// e.g. `0xFFEEBB` resolves to 16772795 but should round-trip as hex,
 	// `450.00` resolves to 450 but should keep the trailing zeros.
-	const needsRaw =
-		style === "plain" && !P.isString(value) && value !== undefined && shouldPreserveRaw(rawValue, value);
+	const needsRaw = style === "plain" && !P.isString(value) && value !== undefined && shouldPreserveRaw(rawValue, value);
 	const scalar = YamlScalar.make({
 		value,
 		style,
 		offset: cst.offset,
 		length: cst.length,
-		...O.getSomesStruct({ tag: O.fromUndefinedOr(meta?.tag) }),
-		...O.getSomesStruct({ anchor: O.fromUndefinedOr(meta?.anchor) }),
-		...O.getSomesStruct({ comment: O.fromUndefinedOr(comment) }),
-		...O.getSomesStruct({ chomp: O.fromUndefinedOr(chomp) }),
-		...O.getSomesStruct({ blockIndent: O.fromUndefinedOr(blockIndent) }),
+		...O.getSomesStruct({
+			tag: O.fromUndefinedOr(meta?.tag),
+			anchor: O.fromUndefinedOr(meta?.anchor),
+			comment: O.fromUndefinedOr(comment),
+			chomp: O.fromUndefinedOr(chomp),
+			blockIndent: O.fromUndefinedOr(blockIndent),
+		}),
+
 		...(needsRaw ? { raw: rawValue } : {}),
 	});
-	if ((meta?.anchor !== undefined && meta?.anchor !== "")) registerAnchor(scalar, meta.anchor, state, cst.offset);
+	if (meta?.anchor !== undefined && meta?.anchor !== "") registerAnchor(scalar, meta.anchor, state, cst.offset);
 	return scalar;
 });
 
@@ -1240,8 +1235,8 @@ export const makeScalar: {
  * preserve.
  */
 export const shouldPreserveRaw: {
-	(rawValue: string, value: unknown): boolean;
 	(value: unknown): (rawValue: string) => boolean;
+	(rawValue: string, value: unknown): boolean;
 } = dual(2, (rawValue: string, value: unknown): boolean => {
 	if (P.isNumber(value)) {
 		if (Number.isNaN(value) || !Number.isFinite(value)) return false;

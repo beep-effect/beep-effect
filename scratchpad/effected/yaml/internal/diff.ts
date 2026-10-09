@@ -2,8 +2,6 @@
 // (original, modified) into minimal raw edit records. The facade
 // materializes public `YamlEdit` instances from these.
 
-import { dual } from "effect/Function";
-
 /** A raw text-edit record: replace `[offset, offset + length)` with `content`. */
 export interface RawEdit {
 	readonly offset: number;
@@ -26,10 +24,7 @@ export interface RawEdit {
  * structural skeleton (they were produced from the same AST); a simple
  * prefix/suffix match is sufficient and a full Myers diff is unnecessary.
  */
-export const computeEdits: {
-	(original: string, modified: string): ReadonlyArray<RawEdit>;
-	(modified: string): (original: string) => ReadonlyArray<RawEdit>;
-} = dual(2, (original: string, modified: string): ReadonlyArray<RawEdit> => {
+export function computeEdits(original: string, ...[modified]: [modified: string]): ReadonlyArray<RawEdit> {
 	if (original === modified) return [];
 
 	// Find common prefix
@@ -94,4 +89,4 @@ export const computeEdits: {
 			content: modified.substring(modStart, modEnd),
 		},
 	];
-});
+}

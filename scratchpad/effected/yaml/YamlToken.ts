@@ -13,7 +13,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import { lexAll } from "./internal/lexer.ts";
-import type { YamlToken as InternalToken } from "./internal/token.ts";
+import { YamlTokenKind as InternalTokenKind, type YamlToken as InternalToken } from "./internal/token.ts";
 import type { YamlParseError } from "./Yaml.ts";
 
 const $I = $ScratchpadId.create("effected/yaml/YamlToken");
@@ -23,30 +23,7 @@ const $I = $ScratchpadId.create("effected/yaml/YamlToken");
  *
  * @public
  */
-export const YamlTokenKind = S.Literals([
-	"document-start",
-	"document-end",
-	"directive",
-	"tag",
-	"anchor",
-	"alias",
-	"scalar",
-	"block-map-start",
-	"block-map-key",
-	"block-map-value",
-	"block-seq-start",
-	"block-seq-entry",
-	"flow-map-start",
-	"flow-map-end",
-	"flow-seq-start",
-	"flow-seq-end",
-	"flow-separator",
-	"newline",
-	"whitespace",
-	"comment",
-	"byte-order-mark",
-	"error",
-]).pipe($I.annoteSchema("YamlTokenKind", { description: "The 22 lexical token kinds produced by the YAML tokenizer." }));
+export const YamlTokenKind = InternalTokenKind;
 
 /**
  * The union of all lexical token kind string literals.
@@ -92,7 +69,10 @@ export class YamlToken extends S.Class<YamlToken>($I`YamlToken`)({
 const promoteAll = (text: string, tokens: ReadonlyArray<InternalToken>): ReadonlyArray<YamlToken> => {
 	const lineStarts = [0];
 	for (let i = 0; i < text.length; i++) {
-		if (text[i] === "\n") lineStarts.push(i + 1);
+		if (text[i] === "\r") {
+			if (text[i + 1] === "\n") i++;
+			lineStarts.push(i + 1);
+		} else if (text[i] === "\n") lineStarts.push(i + 1);
 	}
 	// Tokens arrive in offset order, so a monotone cursor resolves positions
 	// in one pass.

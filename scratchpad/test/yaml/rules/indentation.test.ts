@@ -2,7 +2,7 @@
 // on the twelve mechanical rules. Style only: structural legality is
 // parse-validity's business.
 
-import { builtin, testRule } from "./harness.ts";
+import { builtin, testRule, testRuleInference } from "./harness.ts";
 
 testRule(builtin("indentation"), [
 	{
@@ -78,5 +78,93 @@ testRule(builtin("indentation"), [
 		name: "a -leading plain scalar value does not train the sequence policy (unindented first)",
 		input: "key1:\n- a\n- b\nkey2:\n  -5\n",
 		expected: [],
+	},
+]);
+
+// Round-1 regressions: real marker tokens, quoted comments, and compact levels.
+testRule(builtin("indentation"), [
+	{
+		name: "---key retains its block indentation level",
+		input: "outer:\n  ---key:\n    child: 1\n",
+		setting: { spaces: 2 },
+		expected: [],
+	},
+	{
+		name: "...key retains its block indentation level",
+		input: "outer:\n  ...key:\n    child: 1\n",
+		setting: { spaces: 2 },
+		expected: [],
+	},
+	{
+		name: "a quoted hash key still opens a sequence with a trailing comment",
+		input: '"a # b": # real comment\n  - x\n',
+		setting: { indentSequences: false },
+		expected: [{ line: 1, character: 0, messageIncludes: "should not be indented" }],
+	},
+	{
+		name: "a quoted hash key still opens a sequence without a trailing comment",
+		input: "'a # b':\n  - x\n",
+		setting: { indentSequences: false },
+		expected: [{ line: 1, character: 0, messageIncludes: "should not be indented" }],
+	},
+	{
+		name: "a flow mapping after a sequence entry opens no block level",
+		input: "- {a: 1}\n- {b: 2}\n",
+		setting: { spaces: 4 },
+		expected: [],
+	},
+	{
+		name: "compact mapping nesting advances from the key column",
+		input: "outer:\n  - two:\n      child: 1\n",
+		setting: { spaces: 2 },
+		expected: [],
+	},
+	{
+		name: "expanded mapping nesting uses the same indentation unit",
+		input: "outer:\n  -\n    two:\n      child: 1\n",
+		setting: { spaces: 2 },
+		expected: [],
+	},
+	{
+		name: "a sequence under a compact key is compared with the key column",
+		input: "outer:\n  - two:\n      - child\n",
+		setting: { spaces: 2, indentSequences: false },
+		expected: [
+			{ line: 1, messageIncludes: "should not be indented" },
+			{ line: 2, messageIncludes: "should not be indented" },
+		],
+	},
+]);
+
+testRuleInference(builtin("indentation"), [
+	{
+		name: "---key contributes the intermediate two-space level",
+		inputs: ["outer:\n  ---key:\n    child: 1\n"],
+		strict: { kind: "options", options: { spaces: 2 } },
+	},
+	{
+		name: "...key contributes the intermediate two-space level",
+		inputs: ["outer:\n  ...key:\n    child: 1\n"],
+		strict: { kind: "options", options: { spaces: 2 } },
+	},
+	{
+		name: "a quoted hash key with a real comment votes sequence indentation",
+		inputs: ['"a # b": # real comment\n  - x\n'],
+		strict: { kind: "options", options: { spaces: 2, indentSequences: true } },
+	},
+	{
+		name: "a quoted hash key without a comment votes sequence indentation",
+		inputs: ["'a # b':\n  - x\n"],
+		strict: { kind: "options", options: { spaces: 2, indentSequences: true } },
+	},
+	{
+		name: "flow mappings after sequence entries do not vote block spaces",
+		inputs: ["- {a: 1}\n- {b: 2}\n"],
+		strict: { kind: "none" },
+	},
+	{
+		name: "equivalent compact and expanded mappings infer one spaces unit",
+		inputs: ["outer:\n  - two:\n      child: 1\n", "outer:\n  -\n    two:\n      child: 1\n"],
+		strict: { kind: "options", options: { spaces: 2, indentSequences: true } },
 	},
 ]);

@@ -17,7 +17,8 @@
 // defect.
 
 import { $ScratchpadId } from "@beep/identity/packages";
-import * as Data from "effect/Data";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as Match from "effect/Match";
 import * as Effect from "effect/Effect";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -45,6 +46,11 @@ import * as A from "effect/Array";
 import * as R from "effect/Record";
 
 const $I = $ScratchpadId.create("effected/yaml/YamlFormat");
+
+const isYamlScalar = S.is(YamlScalar);
+const isYamlMap = S.is(YamlMap);
+const isYamlSeq = S.is(YamlSeq);
+const isFiniteIndex = S.is(S.Finite);
 
 /** A defect raised when a YAML helper invariant is violated. */
 class YamlFormatInvariantFailure extends S.TaggedError<YamlFormatInvariantFailure>($I`YamlFormatInvariantFailure`)("YamlFormatInvariantFailure", {
@@ -108,6 +114,36 @@ export class YamlFormattingOptions extends S.Class<YamlFormattingOptions>($I`Yam
 	requoteScalars: S.optionalKey(S.Boolean).annotateKey({ description: "Whether formatting applies `quoteStyle` to eligible already-quoted scalars when their parsed values remain unchanged; defaults to false" }),
 }, $I.annote("YamlFormattingOptions", { description: "Options controlling formatting behavior: every YamlStringifyOptions field (derived, not hand-duplicated — including `indentSequences`, `quoteStyle` and `quoteCompat`) plus `preserveComments` (default `true`), `range` (restrict edits to a region; the positional `range` argument of YamlFormat.format takes precedence over this field) and `requoteScalars` (default `false`)." })) {}
 
+const NonFiniteIndexKind = LiteralKit(["NaN", "PositiveInfinity", "NegativeInfinity"]).annotate(
+	$I.annote("NonFiniteIndexKind", { description: "Distinguishes non-finite numeric indices without admitting non-finite schema numbers." }),
+);
+
+/** A schema-safe echo of a non-finite path segment; navigation still receives the original number. */
+class NonFiniteIndex extends S.TaggedClass<NonFiniteIndex>($I`NonFiniteIndex`)("NonFiniteIndex", {
+	kind: NonFiniteIndexKind.annotateKey({ description: "The original non-finite numeric index's IEEE kind" }),
+}, $I.annote("NonFiniteIndex", { description: "Tagged representation of NaN or signed infinity in a failed modification's echoed path." })) {
+	override toString(): string {
+		return NonFiniteIndexKind.$match(this.kind, {
+			NaN: () => "NaN",
+			PositiveInfinity: () => "Infinity",
+			NegativeInfinity: () => "-Infinity",
+		});
+	}
+}
+
+const nonFiniteIndexKind = Match.type<number>().pipe(
+	Match.when(Infinity, () => NonFiniteIndexKind.Enum.PositiveInfinity),
+	Match.when(-Infinity, () => NonFiniteIndexKind.Enum.NegativeInfinity),
+	Match.orElse(() => NonFiniteIndexKind.Enum.NaN),
+);
+
+/** Normalize only failure payloads, preserving the caller's path and navigation semantics. */
+const echoErrorPath = (path: YamlPath) => A.map(path, (segment) =>
+	P.isNumber(segment) && !isFiniteIndex(segment)
+		? NonFiniteIndex.make({ kind: nonFiniteIndexKind(segment) })
+		: segment,
+);
+
 /**
  * Raised when `YamlFormat.modify` cannot navigate the requested path against
  * the composed AST (a structural mismatch), the source fails to parse, the
@@ -124,7 +160,7 @@ export class YamlFormattingOptions extends S.Class<YamlFormattingOptions>($I`Yam
  * @public
  */
 export class YamlModificationError extends S.TaggedError<YamlModificationError>($I`YamlModificationError`)("YamlModificationError", {
-	path: S.Array(S.Union([S.String, S.Finite])).annotateKey({ description: "Requested modification location, expressed as mapping keys and sequence indices" }),
+	path: S.Array(S.Union([S.String, S.Finite, NonFiniteIndex])).annotateKey({ description: "Requested modification location, expressed as mapping keys, finite sequence indices, or tagged non-finite indices" }),
 	diagnostics: S.Array(YamlDiagnostic).annotateKey({ description: "Structured failure details explaining why modification failed; the first diagnostic identifies the primary failure" }),
 }, $I.annote("YamlModificationError", { description: "Raised when `YamlFormat.modify` cannot navigate the requested path against the composed AST (a structural mismatch), the source fails to parse, the source is a multi-document stream (`MultiDocumentStream` — a path names no particular document of a stream, so modify refuses rather than guessing), or the document carries `%YAML`/`%TAG` directives (`DirectiveCarryingDocument` — modify does not re-emit directive lines, and dropping a `%TAG` would orphan the shorthand tags that depend on it). Carries structured YamlDiagnostic entries — never a collapsed `reason` string (the structure-preserving-errors house rule). The error itself has no `code` field: read the code from the diagnostics — `error.diagnostics[0].code` is the primary failure." })) {
 	override get message(): string {
@@ -135,27 +171,23 @@ export class YamlModificationError extends S.TaggedError<YamlModificationError>(
 
 // ── Internal: navigation failure ────────────────────────────────────────────
 
+/** Categories raised by AST navigation and replacement conversion. */
+const ModifyFailureCode = LiteralKit([
+	"EmptyDocument", "PathNotFound", "InvalidIndex", "NotNavigable", "CircularReference", "NestingDepthExceeded",
+]).annotate($I.annote("ModifyFailureCode", { description: "Failures raised while navigating the YAML AST or converting a replacement value." }));
+
 /**
  * Thrown by the pure AST-navigation helpers on a structural mismatch.
  * `modify` catches this and materializes {@link YamlModificationError}.
  */
-class ModifyFailure extends Data.TaggedError("ModifyFailure")<{
-	readonly code:
-		| "EmptyDocument"
-		| "PathNotFound"
-		| "InvalidIndex"
-		| "NotNavigable"
-		| "CircularReference"
-		| "NestingDepthExceeded";
-	readonly message: string;
-	readonly offset: number;
-	readonly length: number;
-}> {
-	constructor(code: ModifyFailure["code"], message: string, offset: number, length: number) {
-		super({ code, message, offset, length });
-		this.name = "ModifyFailure";
-	}
-}
+class ModifyFailure extends S.TaggedError<ModifyFailure>($I`ModifyFailure`)("ModifyFailure", {
+	code: ModifyFailureCode.annotateKey({ description: "The structural or replacement-value failure category" }),
+	message: S.String.annotateKey({ description: "The original navigation or replacement-value failure explanation" }),
+	offset: S.Finite.annotateKey({ description: "Zero-based UTF-16 offset of the affected node, or zero for replacement values" }),
+	length: S.Finite.annotateKey({ description: "UTF-16 extent of the affected node, or zero for replacement values" }),
+}, $I.annote("ModifyFailure", { description: "Internal typed navigation failure converted into a public YamlModificationError with source diagnostics." })) {}
+
+const isModifyFailure = S.is(ModifyFailure);
 
 // ── Internal: options bridging ──────────────────────────────────────────────
 
@@ -207,7 +239,7 @@ function definedFields<T extends Record<string, unknown>>(fields: T): Partial<T>
  * the surrounding diff keeps the edit surgical per scalar span.
  */
 function requoteNode(node: YamlNode, text: string, quote: '"' | "'"): YamlNode {
-	if (S.is(YamlScalar)(node)) {
+	if (isYamlScalar(node)) {
 		if (requoteScalarText(text, node, quote, "escaping") === undefined) return node;
 		return YamlScalar.make({
 			value: node.value,
@@ -223,7 +255,7 @@ function requoteNode(node: YamlNode, text: string, quote: '"' | "'"): YamlNode {
 			length: node.length,
 		});
 	}
-	if (S.is(YamlMap)(node)) {
+	if (isYamlMap(node)) {
 		return rebuildMap(
 			node,
 			node.items.map((pair) =>
@@ -234,7 +266,7 @@ function requoteNode(node: YamlNode, text: string, quote: '"' | "'"): YamlNode {
 			),
 		);
 	}
-	if (S.is(YamlSeq)(node)) {
+	if (isYamlSeq(node)) {
 		return rebuildSeq(
 			node,
 			node.items.map((item) => requoteNode(item, text, quote)),
@@ -373,29 +405,34 @@ function formatStream(
  *
  * The two conditions with no finite rendering fail typed rather than hanging
  * or overflowing the stack: a cycle raises `CircularReference` and a graph
- * deeper than `MAX_NESTING_DEPTH` raises `NestingDepthExceeded`. `seen` holds
+ * deeper than `MAX_NESTING_DEPTH` raises `NestingDepthExceeded`. `ancestors` holds
  * the ancestors of the value being lowered, so a value repeated across
  * siblings (a shared, acyclic sub-object) is lowered twice rather than
  * rejected.
  */
-function jsValueToNode(value: unknown, seen: Set<object>, depth: number): YamlNode {
+function jsValueToNode(value: unknown, ancestors: Array<object>, depth: number): YamlNode {
 	if (depth > MAX_NESTING_DEPTH) {
-		throw new ModifyFailure(
-			"NestingDepthExceeded",
-			`Replacement value nests deeper than the maximum of ${MAX_NESTING_DEPTH}`,
-			0,
-			0,
-		);
+		throw ModifyFailure.make({
+			code: "NestingDepthExceeded",
+			message: `Replacement value nests deeper than the maximum of ${MAX_NESTING_DEPTH}`,
+			offset: 0,
+			length: 0,
+		});
 	}
 	if (A.isArray(value) || P.isObject(value)) {
-		if (seen.has(value)) {
-			throw new ModifyFailure("CircularReference", "Replacement value contains a circular reference", 0, 0);
+		if (A.some(ancestors, (ancestor) => ancestor === value)) {
+			throw ModifyFailure.make({
+				code: "CircularReference",
+				message: "Replacement value contains a circular reference",
+				offset: 0,
+				length: 0,
+			});
 		}
-		seen.add(value);
+		ancestors.push(value);
 		try {
 			if (A.isArray(value)) {
 				return YamlSeq.make({
-					items: value.map((item) => jsValueToNode(item, seen, depth + 1)),
+					items: value.map((item) => jsValueToNode(item, ancestors, depth + 1)),
 					style: "block",
 					offset: 0,
 					length: 0,
@@ -405,7 +442,7 @@ function jsValueToNode(value: unknown, seen: Set<object>, depth: number): YamlNo
 				items: R.keys(value).map((key) =>
 					YamlPair.make({
 						key: YamlScalar.make({ value: key, style: "plain", offset: 0, length: 0 }),
-						value: jsValueToNode(value[key], seen, depth + 1),
+						value: jsValueToNode(value[key], ancestors, depth + 1),
 					}),
 				),
 				style: "block",
@@ -413,15 +450,15 @@ function jsValueToNode(value: unknown, seen: Set<object>, depth: number): YamlNo
 				length: 0,
 			});
 		} finally {
-			seen.delete(value);
+			ancestors.pop();
 		}
 	}
 	return YamlScalar.make({ value, style: "plain", offset: 0, length: 0 });
 }
 
-/** Entry point for {@link jsValueToNode}: one `seen` set per lowering. */
+/** Entry point for {@link jsValueToNode}: one ancestor stack per lowering. */
 function lowerValue(value: unknown): YamlNode {
-	return jsValueToNode(value, new Set<object>(), 0);
+	return jsValueToNode(value, [], 0);
 }
 
 function modifyDocument(doc: RawYamlDocument, path: YamlPath, value: unknown): YamlNode | null {
@@ -429,7 +466,12 @@ function modifyDocument(doc: RawYamlDocument, path: YamlPath, value: unknown): Y
 		return value === undefined ? null : lowerValue(value);
 	}
 	if (doc.contents === null) {
-		throw new ModifyFailure("EmptyDocument", "Cannot navigate path in empty document", 0, 0);
+		throw ModifyFailure.make({
+			code: "EmptyDocument",
+			message: "Cannot navigate path in empty document",
+			offset: 0,
+			length: 0,
+		});
 	}
 	return modifyNode(doc.contents, path, 0, value);
 }
@@ -438,8 +480,8 @@ function modifyNode(node: YamlNode, path: YamlPath, depth: number, value: unknow
 	const segment = path[depth];
 	const isLast = depth === path.length - 1;
 
-	if (S.is(YamlMap)(node)) {
-		const pairIndex = node.items.findIndex((pair) => S.is(YamlScalar)(pair.key) && pair.key.value === segment);
+	if (isYamlMap(node)) {
+		const pairIndex = node.items.findIndex((pair) => isYamlScalar(pair.key) && pair.key.value === segment);
 
 		if (isLast) {
 			if (value === undefined) {
@@ -469,17 +511,22 @@ function modifyNode(node: YamlNode, path: YamlPath, depth: number, value: unknow
 
 		// Navigate deeper.
 		if (pairIndex < 0) {
-			throw new ModifyFailure(
-				"PathNotFound",
-				`Key "${String(segment)}" not found in mapping`,
-				node.offset,
-				node.length,
-			);
+			throw ModifyFailure.make({
+				code: "PathNotFound",
+				message: `Key "${String(segment)}" not found in mapping`,
+				offset: node.offset,
+				length: node.length,
+			});
 		}
 		const pair = node.items[pairIndex];
 		if (pair === undefined) throw YamlFormatInvariantFailure.make({ message: "Cannot read properties of undefined (reading 'value')" });
 		if (pair.value === null) {
-			throw new ModifyFailure("PathNotFound", `Value at key "${String(segment)}" is null`, node.offset, node.length);
+			throw ModifyFailure.make({
+				code: "PathNotFound",
+				message: `Value at key "${String(segment)}" is null`,
+				offset: node.offset,
+				length: node.length,
+			});
 		}
 		const newValue = modifyNode(pair.value, path, depth + 1, value);
 		const newItems = [...node.items];
@@ -487,10 +534,15 @@ function modifyNode(node: YamlNode, path: YamlPath, depth: number, value: unknow
 		return rebuildMap(node, newItems);
 	}
 
-	if (S.is(YamlSeq)(node)) {
+	if (isYamlSeq(node)) {
 		const idx = P.isNumber(segment) ? segment : Number(segment);
 		if (Number.isNaN(idx) || idx < 0) {
-			throw new ModifyFailure("InvalidIndex", `Invalid sequence index: ${String(segment)}`, node.offset, node.length);
+			throw ModifyFailure.make({
+				code: "InvalidIndex",
+				message: `Invalid sequence index: ${String(segment)}`,
+				offset: node.offset,
+				length: node.length,
+			});
 		}
 
 		if (isLast) {
@@ -506,7 +558,12 @@ function modifyNode(node: YamlNode, path: YamlPath, depth: number, value: unknow
 		}
 
 		if (idx >= node.items.length) {
-			throw new ModifyFailure("InvalidIndex", `Index ${idx} out of bounds`, node.offset, node.length);
+			throw ModifyFailure.make({
+				code: "InvalidIndex",
+				message: `Index ${idx} out of bounds`,
+				offset: node.offset,
+				length: node.length,
+			});
 		}
 		const child = node.items[idx];
 		if (child === undefined) throw YamlFormatInvariantFailure.make({ message: "Cannot read properties of undefined (reading '_tag')" });
@@ -516,12 +573,12 @@ function modifyNode(node: YamlNode, path: YamlPath, depth: number, value: unknow
 		return rebuildSeq(node, newItems);
 	}
 
-	throw new ModifyFailure(
-		"NotNavigable",
-		`Cannot navigate through ${node._tag} at segment "${String(segment)}"`,
-		node.offset,
-		node.length,
-	);
+	throw ModifyFailure.make({
+		code: "NotNavigable",
+		message: `Cannot navigate through ${node._tag} at segment "${String(segment)}"`,
+		offset: node.offset,
+		length: node.length,
+	});
 }
 
 function rebuildMap(node: YamlMap, items: ReadonlyArray<YamlPair>): YamlMap {
@@ -594,13 +651,13 @@ function findExistingTarget(
 	for (let depth = 0; depth < path.length; depth++) {
 		const segment = path[depth];
 		const isLast = depth === path.length - 1;
-		if (S.is(YamlMap)(current)) {
-			const pair = current.items.find((p) => S.is(YamlScalar)(p.key) && p.key.value === segment);
+		if (isYamlMap(current)) {
+			const pair = current.items.find((p) => isYamlScalar(p.key) && p.key.value === segment);
 			if (pair === undefined) return undefined;
 			if (isLast) return { node: pair.value, inFlow: current.style === "flow" };
 			if (pair.value === null) return undefined;
 			current = pair.value;
-		} else if (S.is(YamlSeq)(current)) {
+		} else if (isYamlSeq(current)) {
 			const idx = P.isNumber(segment) ? segment : Number(segment);
 			if (Number.isNaN(idx) || idx < 0 || idx >= current.items.length) return undefined;
 			const child = current.items[idx];
@@ -662,14 +719,14 @@ function regionalRenderPreservesValue(rendered: string, value: string | number |
 	const { document: probeDoc } = composeFirstDocumentCounted(probeText, {});
 	if (probeDoc.errors.some((e) => isFatalCode(e.code))) return false;
 	const contents = probeDoc.contents;
-	if (!(S.is(YamlMap)(contents))) return false;
-	const pair = contents.items.find((p) => S.is(YamlScalar)(p.key) && p.key.value === "k");
+	if (!(isYamlMap(contents))) return false;
+	const pair = contents.items.find((p) => isYamlScalar(p.key) && p.key.value === "k");
 	let node = pair?.value;
 	if (inFlow) {
-		if (!(S.is(YamlSeq)(node)) || node.items.length !== 1) return false;
+		if (!(isYamlSeq(node)) || node.items.length !== 1) return false;
 		node = node.items[0];
 	}
-	if (!(S.is(YamlScalar)(node))) return false;
+	if (!(isYamlScalar(node))) return false;
 	return Object.is(node.value, value);
 }
 
@@ -712,7 +769,7 @@ function tryRegionalScalarEdit(
 	const found = findExistingTarget(doc.contents, path);
 	if (found === undefined) return undefined;
 	const { node: target, inFlow } = found;
-	if (!(S.is(YamlScalar)(target))) return undefined;
+	if (!(isYamlScalar(target))) return undefined;
 	// A synthesised empty span (`key:` with no value) is an insertion site,
 	// not a replaceable range.
 	if (target.length <= 0) return undefined;
@@ -949,7 +1006,7 @@ export class YamlFormat {
 		const { document: doc, documentCount } = composeFirstDocumentCounted(text, {});
 		if (documentCount > 1) {
 			return yield* YamlModificationError.make({
-				path,
+				path: echoErrorPath(path),
 				diagnostics: [
 					YamlDiagnostic.fromRaw(
 						{
@@ -966,13 +1023,13 @@ export class YamlFormat {
 		const fatal = doc.errors.filter((e) => isFatalCode(e.code));
 		if (fatal.length > 0) {
 			return yield* YamlModificationError.make({
-				path,
+				path: echoErrorPath(path),
 				diagnostics: fatal.map((e) => YamlDiagnostic.fromRaw(e, text)),
 			});
 		}
 		if (doc.directives.length > 0) {
 			return yield* YamlModificationError.make({
-				path,
+				path: echoErrorPath(path),
 				diagnostics: [
 					YamlDiagnostic.fromRaw(
 						{
@@ -1001,9 +1058,9 @@ export class YamlFormat {
 		const newContents = yield* Effect.try({
 			try: () => modifyDocument(doc, path, value),
 			catch: (err) => {
-				if (!(err instanceof ModifyFailure)) throw err;
+				if (!isModifyFailure(err)) throw err;
 				return YamlModificationError.make({
-					path,
+					path: echoErrorPath(path),
 					diagnostics: [
 						YamlDiagnostic.fromRaw(
 							{ code: err.code, message: err.message, offset: err.offset, length: err.length },

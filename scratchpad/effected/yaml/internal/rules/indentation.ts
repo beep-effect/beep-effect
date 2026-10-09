@@ -28,15 +28,32 @@ const $I = $ScratchpadId.create("effected/yaml/internal/rules/indentation");
  * default "consistent").
  */
 export const indentationOptions = S.Struct({
-	severity: S.optionalKey(YamlLintSeverity).annotateKey({ description: "Reporting level for block-indentation style findings, defaulting to `error`" }),
-	spaces: S.optionalKey(S.Union([nonNegativeIntegerOption, S.Literals(["consistent"])])).annotateKey({ description: "Spaces per block-indentation level, or `consistent` to use the first observed increase; defaults to `consistent`" }),
-	indentSequences: S.optionalKey(S.Union([S.Boolean, S.Literals(["consistent"])])).annotateKey({ description: "Whether sequences indent beneath mapping keys, or `consistent` to follow the first observed placement; defaults to `consistent`" }),
-}).pipe($I.annoteSchema("indentationOptions", { description: "Options for `indentation`: `spaces` per level (number or \"consistent\", default \"consistent\") and `indentSequences` (boolean or \"consistent\", default \"consistent\")." }));
+	severity: S.optionalKey(YamlLintSeverity).annotateKey({
+		description: "Reporting level for block-indentation style findings, defaulting to `error`",
+	}),
+	spaces: S.optionalKey(S.Union([nonNegativeIntegerOption, S.Literals(["consistent"])])).annotateKey({
+		description:
+			"Spaces per block-indentation level, or `consistent` to use the first observed increase; defaults to `consistent`",
+	}),
+	indentSequences: S.optionalKey(S.Union([S.Boolean, S.Literals(["consistent"])])).annotateKey({
+		description:
+			"Whether sequences indent beneath mapping keys, or `consistent` to follow the first observed placement; defaults to `consistent`",
+	}),
+}).pipe(
+	$I.annoteSchema("indentationOptions", {
+		description:
+			'Options for `indentation`: `spaces` per level (number or "consistent", default "consistent") and `indentSequences` (boolean or "consistent", default "consistent").',
+	}),
+);
+
+export type indentationOptions = typeof indentationOptions.Type;
 
 interface ContentLine {
 	readonly line: LintLine;
 	readonly indent: number;
 	readonly firstChar: string;
+	readonly indents: ReadonlyArray<number>;
+	readonly opensKey: boolean;
 }
 
 /** Flow-collection depth at each line start, from the token stream. */
@@ -67,6 +84,7 @@ const flowDepthAtLineStarts = (ctx: LintContext): ReadonlyArray<number> => {
 const contentLines = (ctx: LintContext): ReadonlyArray<ContentLine> => {
 	const flowDepths = flowDepthAtLineStarts(ctx);
 	const content: Array<ContentLine> = [];
+	let tokenIdx = 0;
 	for (const line of ctx.lines) {
 		const indent = line.text.length - line.text.trimStart().length;
 		const firstChar = line.text[indent];
@@ -76,8 +94,34 @@ const contentLines = (ctx: LintContext): ReadonlyArray<ContentLine> => {
 		if (line.text.slice(0, indent).includes("\t")) continue; // tab indent is the parser's error
 		if ((flowDepths[line.number] ?? 0) > 0) continue; // inside a flow collection
 		if (isScalarContinuationLine(ctx.tokens, line.offset, line.offset + indent)) continue; // scalar content
-		if (line.text.slice(indent).startsWith("---") || line.text.slice(indent).startsWith("...")) continue;
-		content.push({ line, indent, firstChar });
+		const firstToken = coveringToken(ctx.tokens, line.offset + indent);
+		if (firstToken?.kind === "document-start" || firstToken?.kind === "document-end") continue;
+		// Read significant tokens, rather than treating quoted ` # ` as a comment.
+		while (tokenIdx < ctx.tokens.length && (ctx.tokens[tokenIdx]?.offset ?? 0) < line.offset) tokenIdx++;
+		const indents = [indent];
+		let lastKind: string | undefined;
+		let afterEntry = false;
+		let compactKeyIndent: number | undefined;
+		let inlineFlowDepth = 0;
+		while (tokenIdx < ctx.tokens.length) {
+			const token = ctx.tokens[tokenIdx];
+			if (token === undefined || token.offset >= line.offset + line.text.length) break;
+			tokenIdx++;
+			if (token.length === 0 || token.kind === "whitespace" || token.kind === "comment") continue;
+			if (token.kind === "flow-map-start" || token.kind === "flow-seq-start") inlineFlowDepth++;
+			if (token.kind === "flow-map-end" || token.kind === "flow-seq-end") inlineFlowDepth--;
+			if (afterEntry) {
+				if (token.kind === "block-seq-entry") indents.push(token.character);
+				else compactKeyIndent = token.character;
+			}
+			if (token.kind === "block-map-value" && inlineFlowDepth === 0 && compactKeyIndent !== undefined) {
+				indents.push(compactKeyIndent);
+				compactKeyIndent = undefined;
+			}
+			afterEntry = token.kind === "block-seq-entry";
+			lastKind = token.kind;
+		}
+		content.push({ line, indent, firstChar, indents, opensKey: lastKind === "block-map-value" });
 	}
 	return content;
 };
@@ -98,20 +142,24 @@ const isKeyThenSeqEntry = (
 	// are plain scalars (YAML 1.2 §7.1). The lexer already knows — only a
 	// line whose first content token is `block-seq-entry` is one.
 	if (coveringToken(ctx.tokens, curr.line.offset + curr.indent)?.kind !== "block-seq-entry") return false;
-	// The previous content line must open a mapping key (ends with `:`
-	// after stripping a trailing comment).
-	const prevText = prev.line.text.replace(/ #.*$/, "").trimEnd();
-	if (!prevText.endsWith(":")) return false;
-	return curr.indent === prev.indent || curr.indent === prev.indent + (unit ?? curr.indent - prev.indent);
+	if (!prev.opensKey) return false;
+	const keyIndent = prev.indents[prev.indents.length - 1] ?? prev.indent;
+	return curr.indent === keyIndent || curr.indent === keyIndent + (unit ?? curr.indent - keyIndent);
 };
 
 /** Block-structure indent style. */
 export const indentation: YamlRule = {
 	id: "indentation",
 	check: (ctx, options) => {
-		const opts = S.is(indentationOptions)(options) ? options : {};
-		const spacesOpt = opts.spaces ?? "consistent";
-		const seqOpt = opts.indentSequences ?? "consistent";
+		const spacesOpt =
+			P.hasProperty(options, "spaces") && S.is(indentationOptions.fields.spaces.schema)(options.spaces)
+				? options.spaces
+				: "consistent";
+		const seqOpt =
+			P.hasProperty(options, "indentSequences") &&
+			S.is(indentationOptions.fields.indentSequences.schema)(options.indentSequences)
+				? options.indentSequences
+				: "consistent";
 		const out: Array<YamlLintDiagnostic> = [];
 
 		// The content lines this rule speaks about.
@@ -120,30 +168,32 @@ export const indentation: YamlRule = {
 		// Check 1: every new level indents by one consistent unit.
 		let unit = P.isNumber(spacesOpt) ? spacesOpt : undefined;
 		const stack: Array<number> = [0];
-		for (const { line, indent } of content) {
-			const top = stack[stack.length - 1] ?? 0;
-			if (indent > top) {
-				const delta = indent - top;
-				if (unit === undefined) {
-					unit = delta;
-				} else if (delta !== unit) {
-					out.push(
-						YamlLintDiagnostic.make({
-							rule: "indentation",
-							severity: "error",
-							message: `Indent of ${delta} spaces, expected ${unit}`,
-							offset: line.offset,
-							length: indent,
-							line: line.number,
-							character: 0,
-						}),
-					);
+		for (const { line, indents } of content) {
+			for (const indent of indents) {
+				const top = stack[stack.length - 1] ?? 0;
+				if (indent > top) {
+					const delta = indent - top;
+					if (unit === undefined) {
+						unit = delta;
+					} else if (delta !== unit) {
+						out.push(
+							YamlLintDiagnostic.make({
+								rule: "indentation",
+								severity: "error",
+								message: `Indent of ${delta} spaces, expected ${unit}`,
+								offset: line.offset,
+								length: indent,
+								line: line.number,
+								character: 0,
+							}),
+						);
+					}
+					stack.push(indent);
+				} else if (indent < top) {
+					while (stack.length > 1 && (stack[stack.length - 1] ?? 0) > indent) stack.pop();
+					// A dedent to an unknown level is a parse error — parse-validity's
+					// business, not style.
 				}
-				stack.push(indent);
-			} else if (indent < top) {
-				while (stack.length > 1 && (stack[stack.length - 1] ?? 0) > indent) stack.pop();
-				// A dedent to an unknown level is a parse error — parse-validity's
-				// business, not style.
 			}
 		}
 
@@ -155,7 +205,7 @@ export const indentation: YamlRule = {
 			const curr = content[i];
 			if (prev === undefined || curr === undefined) continue;
 			if (!isKeyThenSeqEntry(ctx, prev, curr, unit)) continue;
-			const indented = curr.indent > prev.indent;
+			const indented = curr.indent > (prev.indents[prev.indents.length - 1] ?? prev.indent);
 			if (seqIndented === undefined) {
 				seqIndented = indented;
 			} else if (indented !== seqIndented) {
@@ -187,23 +237,25 @@ export const indentation: YamlRule = {
 
 		let unit: number | undefined;
 		const stack: Array<number> = [0];
-		for (const { line, indent } of content) {
-			const top = stack[stack.length - 1] ?? 0;
-			if (indent > top) {
-				out.push(
-					StyleVote.make({
-						dimension: "spaces",
-						value: indent - top,
-						offset: line.offset,
-						length: indent,
-						line: line.number,
-						character: 0,
-					}),
-				);
-				if (unit === undefined) unit = indent - top;
-				stack.push(indent);
-			} else if (indent < top) {
-				while (stack.length > 1 && (stack[stack.length - 1] ?? 0) > indent) stack.pop();
+		for (const { line, indents } of content) {
+			for (const indent of indents) {
+				const top = stack[stack.length - 1] ?? 0;
+				if (indent > top) {
+					out.push(
+						StyleVote.make({
+							dimension: "spaces",
+							value: indent - top,
+							offset: line.offset,
+							length: indent,
+							line: line.number,
+							character: 0,
+						}),
+					);
+					if (unit === undefined) unit = indent - top;
+					stack.push(indent);
+				} else if (indent < top) {
+					while (stack.length > 1 && (stack[stack.length - 1] ?? 0) > indent) stack.pop();
+				}
 			}
 		}
 
@@ -215,7 +267,7 @@ export const indentation: YamlRule = {
 			out.push(
 				StyleVote.make({
 					dimension: "indentSequences",
-					value: curr.indent > prev.indent,
+					value: curr.indent > (prev.indents[prev.indents.length - 1] ?? prev.indent),
 					offset: curr.line.offset,
 					length: curr.indent,
 					line: curr.line.number,

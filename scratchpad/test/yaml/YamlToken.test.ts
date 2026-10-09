@@ -95,3 +95,22 @@ describe("YamlTokens", () => {
 		});
 	});
 });
+
+
+describe("public token CR positions", () => {
+	for (const newline of ["\r", "\r\n", "\n"]) {
+		it(`uses one line break for ${JSON.stringify(newline)}`, () => {
+			const source = `a: 1${newline}  b: 2${newline}c: 3${newline}`;
+			const keys = tokensOf(source).filter((token) => ["a", "b", "c"].includes(token.text));
+			assert.deepStrictEqual(keys.map((token) => [token.text, token.line, token.character]), [
+				["a", 0, 0], ["b", 1, 2], ["c", 2, 0],
+			]);
+			assert.strictEqual(tokensOf(source).filter((token) => token.kind === "newline").length, 3);
+		});
+	}
+	it("indexes adjacent lone CR and CRLF breaks separately", () => {
+		const key = tokensOf("a: 1\r\r\nb: 2").find((token) => token.text === "b");
+		assert.strictEqual(key?.line, 2);
+		assert.strictEqual(key?.character, 0);
+	});
+});

@@ -1390,9 +1390,402 @@
       "exportsAdded": [],
       "newDeps": [],
       "fixturesBytes": 510945,
-      "deviations": [],
-      "backlog": [],
-      "reviewRounds": [],
+      "deviations": [
+        {
+          "test": "scratchpad/test/yaml/YamlNode.test.ts:116; scratchpad/test/yaml/core-regressions.test.ts:77; scratchpad/test/yaml/stringifier-regressions.test.ts:174; module suite scratchpad/test/yaml/**",
+          "upstreamBehaviour": "Yaml node extraction, composer anchors/tags, lexer state, lint evidence/catalogs and duplicate/trivia/truthy sets use native Map/Set; equality and rendering use Object helpers, typeof, native sort and switches.",
+          "labBehaviour": "YamlNode/anchors/state/Yaml/YamlDocument and stringifier tag maps use MutableHashMap; catalog uses HashMap plus ordered builtinOptionsEntries; lexer and rules use Effect hash collections. YamlEdit, YamlLint and stringifier use Array/Order sorting, Record/Predicate helpers and typed dispatch; indicator membership uses String.includes.",
+          "reason": "native-runtime: Native collection/runtime laws and the 2026-10-09 grilling ruling require Effect replacements and public YAML anchors as MutableHashMap; fix-yaml-g1.md:43, g3.md:41-43 and g5.md:9 confirm the final representations."
+        },
+        {
+          "test": "scratchpad/test/yaml/YamlFormat.test.ts:669; scratchpad/test/yaml/YamlFormat.test.ts:682; scratchpad/test/yaml/YamlFormat.test.ts:690; scratchpad/test/yaml/stringifier-regressions.test.ts:134",
+          "upstreamBehaviour": "YamlFormat.jsValueToNode and stringifier traversal track active object identities with native Set<object>, accepting shared references while rejecting ancestor cycles.",
+          "labBehaviour": "Each traversal keeps its own ancestor array, tests references with ===, and pushes/pops in try/finally. Distinct structurally equal objects and shared siblings remain accepted without modifying Effect equality.",
+          "reason": "identity-keys: The 2026-10-09 identity-key ruling requires ancestor stacks per structure and rejects global byReferenceUnsafe marking; fix-yaml-g2.md:16 and fix-yaml-g3.md:40 ground both migrations."
+        },
+        {
+          "test": "scratchpad/test/yaml/core-regressions.test.ts:98; scratchpad/test/yaml/core-regressions.test.ts:114; scratchpad/test/yaml/stringifier-regressions.test.ts:142; scratchpad/test/yaml/stringifier-regressions.test.ts:159; scratchpad/test/yaml/YamlEdit.test.ts",
+          "upstreamBehaviour": "AliasExpansionBudgetExceeded, ModifyFailure, StringifyFailure and StringifyDepthExceeded are native Error subclasses with positional constructors; overlap and invariant failures throw native Error.",
+          "labBehaviour": "These failures and YamlEdit/YamlFormat/fold/CST/stringifier invariant failures use schema-backed tagged errors. Construction uses make or static new helpers and catches use schema guards; existing public budget, reason and diagnostic messages remain, while new schema tags identify former native errors.",
+          "reason": "tagged-errors: Typed-error law 7 and D5 require schema errors; newSchemaClass/overriddenSchemaConstructor require lawful construction. fix-yaml-g1.md:44, g2.md:15, g3.md:37 and INVENTORY.md codemod-tagged-errors cover the changed sites."
+        },
+        {
+          "test": "scratchpad/test/yaml/core-regressions.test.ts:138; scratchpad/test/yaml/core-regressions.test.ts:149; scratchpad/test/yaml/composer-regressions.test.ts:91; scratchpad/test/yaml/YamlVisitor.test.ts:128; scratchpad/test/yaml/rules/util.test.ts; module suite scratchpad/test/yaml/**",
+          "upstreamBehaviour": "Named style/error/severity schemas use S.Literals; raw tokens, ScalarRole, NodeMeta, comment/flow payloads and SemanticItem are handwritten types. Visitor events derive from Data.taggedEnum; lint conflict values render with JSON.stringify and node checks use instanceof.",
+          "labBehaviour": "LiteralKit owns named domains; annotated Struct/TaggedUnion schemas derive raw token, metadata, comment/flow, SemanticItem and visitor types. The visitor retains Data constructors. Hoisted schema guards replace node instanceof checks; lint uses a fromJsonString Result codec with invalid-value fallback; option schemas gain decoded type companions.",
+          "reason": "schema-first: D5 and schema-first laws require models, named domains, guards and schema JSON codecs; fix-yaml-g1.md:46-48, g4.md:30-32, g5.md:10, g6.md:30 and g8.md:49-55 ground the additions. The central-notes.md LiteralKit subpath rewrite is included."
+        },
+        {
+          "test": "scratchpad/test/yaml/YamlFormat.test.ts:792; scratchpad/test/yaml/YamlFormat.test.ts:826; scratchpad/test/yaml/rules/util.test.ts:22; module suite scratchpad/test/yaml/**",
+          "upstreamBehaviour": "Yaml parse/stringify options, node spans/blockIndent, diagnostic/edit/token coordinates and lint style values/counts use unrestricted S.Number. Modification error paths echo raw numbers, including NaN and infinities; rule integer predicates accept integers outside the safe range.",
+          "labBehaviour": "These schema numbers become S.Finite, including raw token coordinates; failed modification paths encode non-finite indices as NonFiniteIndex kinds while retaining message spelling and navigation semantics. Integer option predicates retain their wider integer domain and add a finite check rather than safe-integer narrowing.",
+          "reason": "numeric-domains: @effect/tsgo schemaNumber and the finite-number ruling require numeric refinements without escape schemas; fix-yaml-g2.md:14 and INVENTORY.md codemod-finite ground the change. fix-yaml-g8.md:1 preserves integer messages and out-of-safe-range acceptance."
+        },
+        {
+          "test": "scratchpad/test/yaml/rules/option-isolation.test.ts:17; scratchpad/test/yaml/rules/spacing-regressions.test.ts:52; scratchpad/test/yaml/rules/spacing-regressions.test.ts:69; scratchpad/test/yaml/deliberatelyInvalid.ts; module suite scratchpad/test/yaml/**",
+          "upstreamBehaviour": "Source and tests assert indexed values/types with casts; direct rule calls cast unknown options and may apply JavaScript coercion/truthiness to invalid fields. Wrong-input constructor tests use inline assertions.",
+          "labBehaviour": "Explicit narrowing, defined-value assertions and typed iteration replace casts. Direct rule fields are narrowed independently, preserving valid siblings while defaulting invalid fields; wrong-input tests use the operator-sanctioned deliberatelyInvalid helper. Invariant failures replace unsafe indexed access.",
+          "reason": "type-safety: D15 forbids unsafe assertions except the single deliberate wrong-input helper authorized on 2026-10-09; fix-yaml-g8.md:41-45 and g9.md:19-22 pin residual invalid-field defaults. The final diff preserves valid sibling settings rather than whole-option rejection."
+        },
+        {
+          "test": "scratchpad/test/yaml/composer-regressions.test.ts:20; scratchpad/test/yaml/composer-regressions.test.ts:26; scratchpad/test/yaml/composer-regressions.test.ts:34; scratchpad/test/yaml/fold.test.ts:15; module suite scratchpad/test/yaml/**",
+          "upstreamBehaviour": "Composer/CST/rule/test helpers expose fixed positional data-first declarations, and resolveScalar takes rawValue, style, tag?, state?. Schema instances are constructed with new.",
+          "labBehaviour": "Diagnostic-bound composer, rule and harness helpers expose dual overloads with optional-argument dispatch; resolveScalar takes a context tuple. Anchors/state/tags, fold/diff/equal/requote and stringify helpers retain direct calls via typed rest signatures, changing Function.length. Schema construction uses make and checks use schema guards.",
+          "reason": "tsgo-diagnostics: Installed missingPipeableSignature/newSchemaClass/instanceOfSchema diagnostics outrank the unforced-shape restoration ruling; repair-yaml.md:81-88 records final dual forms, fix-yaml-g1.md:45 and g3.md:32-36 record forced rest signatures. Restored intermediate forms are omitted."
+        },
+        {
+          "test": "module suite scratchpad/test/yaml/**",
+          "upstreamBehaviour": "Yaml.allFromString builds its encoder with a callback returning Effect.gen; composer/rendering code uses conditional dispatch and separate optional-property spreads.",
+          "labBehaviour": "The encoder uses Effect.fn(\"encode\"); Match/typed dispatch and Effect-native Array/Order/Record/Predicate helpers handle branch and collection work. Composer metadata reconstruction uses consolidated getSomesStruct calls while preserving omitted fields, empty strings and false values.",
+          "reason": "effect-first: D5, effectFnOpportunity and the Effect-first/terse-helper laws require these forms; the actual Yaml.ts encoder diff and fix-yaml-g1.md:11, g3.md:3, g4.md:8 ground the substitutions without claiming a new service or layer."
+        },
+        {
+          "test": "module suite scratchpad/test/yaml/**",
+          "upstreamBehaviour": "Yaml source and tests import Effect modules from the root effect barrel.",
+          "labBehaviour": "Source and tests import each Effect module from effect/<Module>, with dual/pipe from effect/Function; effect imports in the port no longer depend on the root barrel.",
+          "reason": "effect-imports: Code law and step 3 require per-module Effect imports; the S0-to-working-tree diff shows these replacements throughout yaml. fix-yaml-g1.md:50 and repair-yaml.md:91 report the import law check."
+        },
+        {
+          "test": "scratchpad/test/yaml/core-regressions.test.ts:138; scratchpad/test/yaml/stringifier-regressions.test.ts:159; scratchpad/test/yaml/rules/util.test.ts:10; module suite scratchpad/test/yaml/**",
+          "upstreamBehaviour": "Schema classes use short string identities; public unions, literal domains and fields lack composer-derived identifiers and descriptive metadata.",
+          "labBehaviour": "$ScratchpadId.create supplies file identities, class identifiers and annote/annoteSchema/annotateKey metadata for public options, nodes, documents, diagnostics, edits, tokens, lint evidence, recursive YamlNode and newly modeled internal payloads/errors/checks.",
+          "reason": "identity-annotations: Step 4 and D5 require @beep/identity metadata on schemas/errors and their fields; fix-yaml-g1.md:48, g3.md:38-39, g8.md:40 and INVENTORY.md codemod-identities ground this class. No nonexistent identity-keyed cache migration is inferred."
+        },
+        {
+          "test": "scratchpad/test/yaml/YamlLint.test.ts:298",
+          "upstreamBehaviour": "The lint structural pin reads ../src/ beside upstream __test__ to verify that the facade and rules do not import YamlFormat.",
+          "labBehaviour": "The same structural import assertion reads ../../effected/yaml/ from scratchpad/test/yaml so it inspects the lab source layout.",
+          "reason": "test-environment: D9 and the 2026-10-09 environment/layout ruling permit path retargeting while retaining the assertion; the actual YamlLint.test.ts srcDir diff grounds this entry. No yaml env report or bundle/reachability-list rewrite was found."
+        },
+        {
+          "test": "scratchpad/test/yaml/core-regressions.test.ts:43",
+          "upstreamBehaviour": "Yaml.stripComments removes hash-prefixed content inside literal/folded block scalars as though it were a comment.",
+          "labBehaviour": "Only lexical comment spans and separately lexed header comments are stripped; block scalar content remains intact.",
+          "reason": "upstream-bug: fix-yaml-g1.md:41 and INVENTORY.md yaml-comments reproduce scalar-content loss against pinned-equivalent upstream files; the block-scalar cases assert output and semantic equality."
+        },
+        {
+          "test": "scratchpad/test/yaml/core-regressions.test.ts:52",
+          "upstreamBehaviour": "An apostrophe in an unquoted scalar such as bob's enters quote state and prevents a following real comment from being stripped.",
+          "labBehaviour": "Lexer spans remove the trailing comment after plain apostrophes while preserving hashes within plain or quoted scalar data.",
+          "reason": "upstream-bug: fix-yaml-g1.md:41 and INVENTORY.md yaml-comments reproduce the upstream bob's scanner error; the plain-apostrophe regression pins the corrected boundary."
+        },
+        {
+          "test": "scratchpad/test/yaml/core-regressions.test.ts:58",
+          "upstreamBehaviour": "While stripping a comment in CRLF input, the character scanner treats the CR as comment text, so replacement mode overwrites the CR before LF.",
+          "labBehaviour": "Lexical span replacement preserves CRLF bytes, scalar content and source length, replacing only the actual comment span.",
+          "reason": "upstream-bug: fix-yaml-g1.md:27,41 cites the pinned-equivalent scanner and CRLF replacement regression; the S0 scanner processes all characters until LF, including CR, whereas the final lexer spans exclude it."
+        },
+        {
+          "test": "scratchpad/test/yaml/core-regressions.test.ts:187",
+          "upstreamBehaviour": "Encoded tag suffixes remain encoded: !e!%69nt 123 resolves as string although !e!int resolves as number.",
+          "labBehaviour": "Primary, secondary and named suffixes are percent-decoded before tag resolution, including UTF-8 local suffixes.",
+          "reason": "upstream-bug: fix-yaml-g1.md:42 and INVENTORY.md tag-percent-decoding reproduce the upstream string/number discrepancy against the pinned oracle and independent yaml parser; tags.ts now decodes suffixes."
+        },
+        {
+          "test": "scratchpad/test/yaml/core-regressions.test.ts:196; scratchpad/test/yaml/core-regressions.test.ts:209",
+          "upstreamBehaviour": "Malformed percent encodings are retained literally and lack the positioned UnresolvedTag diagnostics now emitted during suffix resolution/CST validation.",
+          "labBehaviour": "Scalar tag resolution and explicit document CST validation report malformed hex/UTF-8 suffixes at each offending span; this entry does not claim first-document collection parsing is repaired.",
+          "reason": "upstream-bug: fix-yaml-g1.md:38-39,42 records malformed suffix regressions; the actual tags.ts diff adds decodeURIComponent failures and positioned diagnostics. Its line 14 explicitly limits the integration claim for first-document collection tags."
+        },
+        {
+          "test": "scratchpad/test/yaml/fold.test.ts:45; scratchpad/test/yaml/fold.test.ts:50; scratchpad/test/yaml/e2e/format-properties.e2e.test.ts:74",
+          "upstreamBehaviour": "Folded rendering inserts an extra compensation blank after a more-indented line, changing \" a\\nb\" to \" a\\n\\nb\" on parse.",
+          "labBehaviour": "No compensation blank is inserted after a more-indented line; scalar content round-trips and corpus cases F6MC/R4YG leave the meaning-change ratchet.",
+          "reason": "upstream-bug: fix-yaml-g3.md:44 and fold.test.ts:41-43 reproduce the defect in pinned af7566a9 and the independent yaml parser; repair-yaml.md:75 records the exact corpus-ratchet correction."
+        },
+        {
+          "test": "scratchpad/test/yaml/stringifier-regressions.test.ts:59; scratchpad/test/yaml/stringifier-regressions.test.ts:76; scratchpad/test/yaml/stringifier-regressions.test.ts:89",
+          "upstreamBehaviour": "AST stringify quotes bigint values such as 9007199254740993, changing a parsed integer to string at roots and inside maps/sequences.",
+          "labBehaviour": "Bigint AST nodes emit unquoted numeric text, retaining available decimal/hex/octal raw spelling in normal and canonical rendering.",
+          "reason": "upstream-bug: fix-yaml-g3.md:45 and INVENTORY.md stringifier-bigint reproduce the quoted upstream output; independent-parser and lab round-trip tests pin the added bigint branch."
+        },
+        {
+          "test": "scratchpad/test/yaml/stringifier-regressions.test.ts:96; scratchpad/test/yaml/stringifier-regressions.test.ts:115",
+          "upstreamBehaviour": "Canonical comment stripping recurses without a depth limit and raises RangeError on a 50,000-deep AST, although normal rendering raises StringifyDepthExceeded.",
+          "labBehaviour": "Canonical preprocessing checks depth before descending through sequences and mapping keys/values and throws StringifyDepthExceeded with the existing limit message.",
+          "reason": "upstream-bug: fix-yaml-g3.md:46 and INVENTORY.md stringifier-depth reproduce the upstream canonical RangeError; boundary and 50,000-deep tests pin the new guarded stripNodeComments traversal."
+        },
+        {
+          "test": "scratchpad/test/yaml/composer-regressions.test.ts:50",
+          "upstreamBehaviour": "A separately placed verbatim tag URI contains a colon that backward parent-indent search mistakes for a mapping delimiter, yielding empty block content.",
+          "labBehaviour": "Backward indentation search skips tag/anchor property spans and recognizes separated structural indicators, preserving hello newline beneath |2.",
+          "reason": "upstream-bug: fix-yaml-g4.md:33 and INVENTORY.md composer-verbatim-indent reproduce empty content in pinned upstream versus hello newline in the independent yaml parser; scalars.ts fixes the structural scan."
+        },
+        {
+          "test": "scratchpad/test/yaml/composer-regressions.test.ts:56",
+          "upstreamBehaviour": "A populated flow entry with another structural colon, such as {foo: 1 bar: 2}, is accepted and invents an empty key.",
+          "labBehaviour": "A second structural colon before a comma produces a positioned MalformedFlowCollection diagnostic; nested and quoted/plain scalar colons remain valid.",
+          "reason": "upstream-bug: fix-yaml-g4.md:34 and INVENTORY.md flow-missing-comma reproduce upstream acceptance while the yaml reference rejects it; flow.ts now checks the second colon before resetting entry state."
+        },
+        {
+          "test": "scratchpad/test/yaml/composer-regressions.test.ts:69; scratchpad/test/yaml/composer-regressions.test.ts:75",
+          "upstreamBehaviour": "Plain scalar continuation fragments in flow mappings and implicit flow-sequence mappings are counted as separate entries and rejected for a missing comma.",
+          "labBehaviour": "Scalar collector boundaries count each folded multiline value once, yielding multi line in both flow forms while rejecting separate unseparated quoted values.",
+          "reason": "upstream-bug: fix-yaml-g4.md:35 and INVENTORY.md flow-continuations reproduce both failures in upstream and acceptance in the independent yaml parser; collector-aware separator validation is present in the diff."
+        },
+        {
+          "test": "scratchpad/test/yaml/composer-regressions.test.ts:91",
+          "upstreamBehaviour": "A node-less explicit flow key before a comma consumes the next entry, losing the null key in {? , empty: }.",
+          "labBehaviour": "The comma boundary materializes a null key before the next entry; both the explicit null entry and the empty mapping value remain present.",
+          "reason": "upstream-bug: fix-yaml-g4.md:37 confirms the loss against pinned upstream and the independent yaml reference; flow.ts now materializes node-less keys at commas and the semantic-model test pins both entries."
+        },
+        {
+          "test": "scratchpad/test/yaml/composer-regressions.test.ts:107",
+          "upstreamBehaviour": "A one-parameter YAML directive such as %YAML nope passes validation without a decimal major.minor version token.",
+          "labBehaviour": "Malformed YAML version tokens produce a positioned fatal InvalidDirective and parse failure.",
+          "reason": "upstream-bug: fix-yaml-g4.md:36 and INVENTORY.md directive-validation reproduce upstream acceptance and independent-parser rejection; document.ts now checks the decimal version grammar."
+        },
+        {
+          "test": "scratchpad/test/yaml/composer-regressions.test.ts:107",
+          "upstreamBehaviour": "TAG directives with a missing parameter or an extra parameter are accepted rather than rejected for invalid arity.",
+          "labBehaviour": "TAG directives require exactly two parameters and otherwise produce a positioned fatal InvalidDirective; registration also requires exact arity.",
+          "reason": "upstream-bug: fix-yaml-g4.md:36 and INVENTORY.md directive-validation reproduce %TAG !! and extra-parameter acceptance in upstream; the regression matrix and document.ts arity checks pin both boundaries."
+        },
+        {
+          "test": "scratchpad/test/yaml/lexer.test.ts:58; scratchpad/test/yaml/YamlToken.test.ts:102; scratchpad/test/yaml/YamlToken.test.ts:111",
+          "upstreamBehaviour": "Lone CR tokens do not advance scanner/public token lines; later tokens retain stale columns and indentation state, unlike diagnostic positions.",
+          "labBehaviour": "Scanner advance/reset and public line-start indexing count CR, LF and CRLF consistently, reset indentation and count CRLF once.",
+          "reason": "upstream-bug: fix-yaml-g6.md:31 and INVENTORY.md token-cr-positions reproduce b on line 0 after lone CR in pinned upstream; scanner-reset and public-coordinate regressions pin the corrected newline convention."
+        },
+        {
+          "test": "scratchpad/test/yaml/lexer.test.ts:85; scratchpad/test/yaml/e2e/token-fidelity.e2e.test.ts:86",
+          "upstreamBehaviour": "Plain scalar scanning consumes trailing whitespace but emits only the trimmed scalar span, dropping EOF spaces from token/CST coverage.",
+          "labBehaviour": "The scanner rewinds position/column after trimming and emits whitespace separately, so token spans tile the source and CST document spans include EOF whitespace.",
+          "reason": "upstream-bug: fix-yaml-g6.md:32 and INVENTORY.md lexer-trailing-whitespace reproduce parseCSTAll(\"hello  \") losing two spaces in upstream; source reconstruction and full-span tests pin the rewind."
+        },
+        {
+          "test": "scratchpad/test/yaml/cst-visitor.test.ts:24",
+          "upstreamBehaviour": "CST walking assumes a block mapping first key is external; compact sequence mappings emit their first key as a value and its value as a key.",
+          "labBehaviour": "The leading mapping indicator determines whether the first key is external, so compact mappings project keys a,b and values 1,2.",
+          "reason": "upstream-bug: fix-yaml-g6.md:33 and INVENTORY.md cst-compact-events reproduce reversed upstream projections; regression projections compare CST events with independent and lab AST events."
+        },
+        {
+          "test": "scratchpad/test/yaml/cst-visitor.test.ts:26; scratchpad/test/yaml/cst-visitor.test.ts:27; scratchpad/test/yaml/cst-visitor.test.ts:28; scratchpad/test/yaml/cst-visitor.test.ts:29",
+          "upstreamBehaviour": "Omitted block/flow values leave alternating walker state unchanged, so the following key is emitted as a value and its value as a key.",
+          "labBehaviour": "Entry indicators, following colons and flow commas update roles before trivia is skipped, preserving subsequent key/value events after omitted values.",
+          "reason": "upstream-bug: fix-yaml-g6.md:34 and INVENTORY.md cst-empty-values reproduce upstream misclassification for a: followed by b: 2 and {a: , b: 2}; independent AST projection tests pin corrected boundaries."
+        },
+        {
+          "test": "scratchpad/test/yaml/YamlDiagnostic.test.ts:24",
+          "upstreamBehaviour": "YamlDiagnostic.fromRaw on CRLF at offset 1 advances lookahead beyond the requested scan limit and yields character -1.",
+          "labBehaviour": "CRLF lookahead is bounded by the requested offset, yielding line 1, character 0 while preserving offset and length.",
+          "reason": "upstream-bug: fix-yaml-g7.md:6 and INVENTORY.md diagnostic-crlf reproduce the upstream negative column; the actual limit-bound lookahead diff and interior-CRLF test pin the correction."
+        },
+        {
+          "test": "scratchpad/test/yaml/rules/indentation.test.ts:87; scratchpad/test/yaml/rules/indentation.test.ts:93; scratchpad/test/yaml/rules/indentation.test.ts:141; scratchpad/test/yaml/rules/indentation.test.ts:146",
+          "upstreamBehaviour": "Indentation contentLines discards ordinary keys beginning --- or ..., causing false indentation diagnostics and incorrect four-space inference votes.",
+          "labBehaviour": "Only actual document-start/document-end tokens are skipped; ordinary prefixed keys retain their intermediate indentation and two-space inference.",
+          "reason": "upstream-bug: fix-yaml-g8.md:46 and INVENTORY.md indent-markers reproduce the same upstream check/infer failures; the final token-kind gate and paired check/inference fixtures ground the correction."
+        },
+        {
+          "test": "scratchpad/test/yaml/rules/indentation.test.ts:99; scratchpad/test/yaml/rules/indentation.test.ts:105; scratchpad/test/yaml/rules/indentation.test.ts:151; scratchpad/test/yaml/rules/indentation.test.ts:156",
+          "upstreamBehaviour": "A quoted hash in a mapping key is stripped as a comment when identifying an opening key, suppressing indentSequences:false diagnostics and inference votes.",
+          "labBehaviour": "The last significant token determines whether the key opens a sequence, preserving quoted hash content with or without a real trailing comment.",
+          "reason": "upstream-bug: fix-yaml-g8.md:47 and INVENTORY.md indent-quoted-comment reproduce the missing upstream diagnosis/vote; significant-token detection and paired fixtures pin the correction."
+        },
+        {
+          "test": "scratchpad/test/yaml/rules/indentation.test.ts:117; scratchpad/test/yaml/rules/indentation.test.ts:123; scratchpad/test/yaml/rules/indentation.test.ts:129; scratchpad/test/yaml/rules/indentation.test.ts:166",
+          "upstreamBehaviour": "Compact mapping columns after sequence indicators are omitted from indentation stacks, producing false diagnostics and conflicting two/four-space inference versus expanded equivalents.",
+          "labBehaviour": "Compact key columns participate in indentation progression and sequence comparisons, so compact/expanded nesting infers the same unit; inline flow separators open no block levels.",
+          "reason": "upstream-bug: fix-yaml-g8.md:48 and INVENTORY.md indent-compact-level reproduce upstream compact/expanded disagreement; structural-column tracking and paired check/infer regressions pin the fix."
+        },
+        {
+          "test": "scratchpad/test/yaml/rules/spacing-regressions.test.ts:19; scratchpad/test/yaml/rules/spacing-regressions.test.ts:26; scratchpad/test/yaml/rules/spacing-regressions.test.ts:38",
+          "upstreamBehaviour": "A stream-leading BOM is counted as content before an own-line comment, causing a false before-spacing diagnostic, insertion fix and inference vote.",
+          "labBehaviour": "Only the leading BOM is excluded from preceding content; after-hash spacing remains checked and inline BOM content retains trailing-comment behavior.",
+          "reason": "upstream-bug: fix-yaml-g9.md:17 and INVENTORY.md bom-comment-spacing reproduce the upstream false diagnostic and insertion at offset 1; BOM header, tight-header and inline-control regressions pin the correction."
+        },
+        {
+          "test": "scratchpad/test/yaml/rules/spacing-regressions.test.ts:109; scratchpad/test/yaml/rules/spacing-regressions.test.ts:128",
+          "upstreamBehaviour": "Hyphen spacing offers separator-shortening fixes for compact block collections with continuation entries, changing parsed sequence/mapping values.",
+          "labBehaviour": "Diagnostics remain but fixes are omitted when they would relocate a continued compact collection; scalar, flow and single-line compact fixes remain available and preserve parsed values.",
+          "reason": "upstream-bug: fix-yaml-g9.md:18 and INVENTORY.md hyphen-fix-fidelity reproduce upstream nested-sequence/map corruption; value-fidelity and safe-fix regressions pin the selective omission."
+        }
+      ],
+      "backlog": [
+        {
+          "seat": "grok",
+          "round": 1,
+          "finding": "docs-public — docs public (scratchpad/effected/yaml/YamlToken.ts:138)",
+          "reason": "jsdoc: During S2 retain upstream bodies, convert carriers, add canonical metadata and compiling titled examples."
+        },
+        {
+          "seat": "grok",
+          "round": 1,
+          "finding": "docs-visitor-internals — docs visitor internals (scratchpad/effected/yaml/YamlVisitor.ts:92)",
+          "reason": "jsdoc: In S2 convert legacy carriers, retain prose/examples and add metadata and meaningful titled examples to owning exports; re-export edges stay edges."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "docs-stringifier-block — docs stringifier block (scratchpad/effected/yaml/internal/composer/anchors.ts:36)",
+          "reason": "jsdoc: Document owning exports in the four focused files during S2, preserving upstream prose and adding compilable examples."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "docs-composer-rules-a — docs composer rules a (scratchpad/effected/yaml/internal/composer/comments.ts:64)",
+          "reason": "jsdoc: During S2 preserve prose and supply canonical metadata and observable examples to value exports, useful prose to type exports."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "docs-rules-b — docs rules b (scratchpad/effected/yaml/internal/rules/util.ts:16)",
+          "reason": "jsdoc: Add required metadata and compiling examples during S2; do not drop carried prose or examples."
+        },
+        {
+          "seat": "grok",
+          "round": 1,
+          "finding": "token-hotpath-comment — token hotpath comment (scratchpad/effected/yaml/YamlToken.ts:109)",
+          "reason": "docs: Remove the false validation-free claim and accurately explain the measured parity and lawful make construction during S2."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "test-container-canon — test container canon (scratchpad/test/yaml/YamlDocument.test.ts:97)",
+          "reason": "test: In S3 use the canonical Result/Option/Exit assertions while retaining upstream payload assertions."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "schema-property-floor — schema property floor (scratchpad/test/yaml/YamlToken.test.ts:90)",
+          "reason": "test: In S3 add schema-derived round-trip properties for public models and all rule/numeric schemas using fcRuns(n); retain examples/oracles."
+        },
+        {
+          "seat": "grok",
+          "round": 1,
+          "finding": "fractional-modify-indices — fractional modify indices (scratchpad/effected/yaml/YamlFormat.ts:492,605)",
+          "reason": "bug: If the upstream-bug correction is admitted later, reject non-integer indices with ModifyFailure before splice/assignment in modifyNode/findExistingTarget and pin direct/deeper cases; keep current oracle behavior until then."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "encode-span-name — encode span name (scratchpad/effected/yaml/Yaml.ts:816)",
+          "reason": "effect-idiom: Use Yaml.allFromString.encode or fnUntraced in a later observability pass, preserving codec behavior."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "lint-single-use-filter — lint single use filter (scratchpad/effected/yaml/YamlLint.ts:105)",
+          "reason": "schema: Optionally name/annotate the filter without changing issue messages."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "visitor-guard-cost — visitor guard cost (scratchpad/effected/yaml/YamlVisitor.ts:188)",
+          "reason": "perf: Measure the visitor against pinned upstream; if confirmed, hoist local schema guards while retaining event order."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "visitor-optional-spreads — visitor optional spreads (scratchpad/effected/yaml/YamlVisitor.ts:200,222,240)",
+          "reason": "effect-idiom: Combine tag/anchor into one getSomesStruct call per event in a later cleanup."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "parenthesis-residue — parenthesis residue (scratchpad/effected/yaml/internal/cst-parser.ts:216)",
+          "reason": "effect-idiom: Drop redundant parentheses and simplify equivalent string predicates without changing truthiness."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "unreachable-guard-coverage — unreachable guard coverage (scratchpad/effected/yaml/internal/fold.ts:70)",
+          "reason": "test: In S3 establish the invariants, then use total iteration/paired arrays/non-empty structures to remove truly unreachable branches; no ignore markers, casts or reduced assertions. Error metadata portions are required elsewhere."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "fatal-code-model — fatal code model (scratchpad/effected/yaml/internal/diagnostics.ts:128)",
+          "reason": "schema: Optionally derive an annotated LiteralKit fatal-code subset and its guard, retaining the code list and fatality behavior."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "lexer-removal-iteration — lexer removal iteration (scratchpad/effected/yaml/internal/lexer.ts:117)",
+          "reason": "bug: Snapshot keys before dedent removals if a future Effect upgrade requires it; pin token behavior."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "readme-attribution-residue — readme attribution residue (scratchpad/effected/yaml/README.md:244)",
+          "reason": "docs: Remove only the stray attribution bullet during S2; Port-notes deviation/exports bookkeeping remains central."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "block-minor-costs — block minor costs (scratchpad/effected/yaml/internal/composer/block.ts:1303)",
+          "reason": "perf: Measure the keyIdentity path separately before simplifying dispatch; retain the required Effect hash collection."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "block-stringifier-optional-lifts — block stringifier optional lifts (scratchpad/effected/yaml/internal/composer/block.ts:144)",
+          "reason": "effect-idiom: If touched later, consolidate fields into one getSomesStruct per construction and preserve optional-field omission; do not invent a new shared helper without reuse discovery."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "block-leading-emptiness — block leading emptiness (scratchpad/effected/yaml/internal/composer/block.ts:926)",
+          "reason": "effect-idiom: Check the two known optional fields directly or use the derived schema predicate in a later cleanup."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "scalar-escape-table — scalar escape table (scratchpad/effected/yaml/internal/composer/scalars.ts:250)",
+          "reason": "effect-idiom: Optionally hoist simple escape substitutions and keep multi-character/error logic explicit."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "tagged-scalar-matcher — tagged scalar matcher (scratchpad/effected/yaml/internal/composer/scalars.ts:79)",
+          "reason": "perf: Measure tagged-input corpora; if warranted build the matcher once at module scope and retain resolution."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "last-significant-token — last significant token (scratchpad/effected/yaml/internal/rules/document-end.ts:29)",
+          "reason": "effect-idiom: Use A.findLast and explicit Option handling in a later cleanup, retaining trivia semantics."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "numeric-check-comment — numeric check comment (scratchpad/effected/yaml/internal/rules/util.ts:18)",
+          "reason": "docs: Document the schema-number reason and keep current acceptance/messages; any future built-in substitution must preserve ordinary integers outside the safe range."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "optional-rule-fixes — optional rule fixes (scratchpad/effected/yaml/internal/rules/quoted-strings.ts:41)",
+          "reason": "effect-idiom: Optionally return Option<YamlEdit> directly from safeQuoteFix/builders while keeping fix omission behavior."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "allowlist-retirement — allowlist retirement (standards/effect-laws.allowlist.jsonc:517)",
+          "reason": "law: Have the central owner remove the four exact YAML entries after source fixes; required allow-1..allow-4 assign only module/test changes."
+        }
+      ],
+      "reviewRounds": [
+        {
+          "round": 1,
+          "commit": "3fa5876691901fccf3d1cd29e9324564df134b56",
+          "seats": {
+            "grok": {
+              "required": 3,
+              "backlog": 6
+            },
+            "sol": {
+              "required": 41,
+              "backlog": 8
+            },
+            "fable": {
+              "required": 30,
+              "backlog": 30
+            }
+          }
+        }
+      ],
       "commits": [
         {
           "stage": 0,

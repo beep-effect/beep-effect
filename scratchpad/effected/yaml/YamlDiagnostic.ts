@@ -12,6 +12,7 @@
 // parity convention; `message` is yaml's additive extra.
 
 import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as S from "effect/Schema";
 import {
 	YAML_COMPOSE_ERROR_CODES,
@@ -29,7 +30,7 @@ const $I = $ScratchpadId.create("effected/yaml/YamlDiagnostic");
  *
  * @public
  */
-export const YamlLexErrorCode = S.Literals(YAML_LEX_ERROR_CODES).pipe($I.annoteSchema("YamlLexErrorCode", { description: "Error codes emitted by the lexer stage." }));
+export const YamlLexErrorCode = LiteralKit(YAML_LEX_ERROR_CODES).pipe($I.annoteSchema("YamlLexErrorCode", { description: "Error codes emitted by the lexer stage." }));
 
 /**
  * The union of all lexer-stage error code string literals.
@@ -43,7 +44,7 @@ export type YamlLexErrorCode = typeof YamlLexErrorCode.Type;
  *
  * @public
  */
-export const YamlParseErrorCode = S.Literals(YAML_PARSE_ERROR_CODES).pipe($I.annoteSchema("YamlParseErrorCode", { description: "Error codes emitted by the CST-parser stage." }));
+export const YamlParseErrorCode = LiteralKit(YAML_PARSE_ERROR_CODES).pipe($I.annoteSchema("YamlParseErrorCode", { description: "Error codes emitted by the CST-parser stage." }));
 
 /**
  * The union of all parser-stage error code string literals.
@@ -57,7 +58,7 @@ export type YamlParseErrorCode = typeof YamlParseErrorCode.Type;
  *
  * @public
  */
-export const YamlComposerErrorCode = S.Literals(YAML_COMPOSE_ERROR_CODES).pipe($I.annoteSchema("YamlComposerErrorCode", { description: "Error codes emitted by the composer stage." }));
+export const YamlComposerErrorCode = LiteralKit(YAML_COMPOSE_ERROR_CODES).pipe($I.annoteSchema("YamlComposerErrorCode", { description: "Error codes emitted by the composer stage." }));
 
 /**
  * The union of all composer-stage error code string literals.
@@ -71,7 +72,7 @@ export type YamlComposerErrorCode = typeof YamlComposerErrorCode.Type;
  *
  * @public
  */
-export const YamlStringifyErrorCode = S.Literals(YAML_STRINGIFY_ERROR_CODES).pipe($I.annoteSchema("YamlStringifyErrorCode", { description: "Error codes emitted by the stringifier (the circular-reference guard)." }));
+export const YamlStringifyErrorCode = LiteralKit(YAML_STRINGIFY_ERROR_CODES).pipe($I.annoteSchema("YamlStringifyErrorCode", { description: "Error codes emitted by the stringifier (the circular-reference guard)." }));
 
 /**
  * The union of all stringifier-stage error code string literals.
@@ -86,7 +87,7 @@ export type YamlStringifyErrorCode = typeof YamlStringifyErrorCode.Type;
  *
  * @public
  */
-export const YamlModifyErrorCode = S.Literals(YAML_MODIFY_ERROR_CODES).pipe($I.annoteSchema("YamlModifyErrorCode", { description: "Error codes emitted by `YamlFormat.modify`'s path navigation against an already-composed AST — not raised by the parser/composer/stringifier." }));
+export const YamlModifyErrorCode = LiteralKit(YAML_MODIFY_ERROR_CODES).pipe($I.annoteSchema("YamlModifyErrorCode", { description: "Error codes emitted by `YamlFormat.modify`'s path navigation against an already-composed AST — not raised by the parser/composer/stringifier." }));
 
 /**
  * The union of all modify-stage error code string literals.
@@ -189,7 +190,7 @@ function lineChar(text: string, offset: number): { line: number; character: numb
 			line++;
 			lineStart = i + 1;
 		} else if (ch === 0x0d) {
-			if (i + 1 < text.length && text.charCodeAt(i + 1) === 0x0a) {
+			if (i + 1 < limit && text.charCodeAt(i + 1) === 0x0a) {
 				i++;
 			}
 			line++;

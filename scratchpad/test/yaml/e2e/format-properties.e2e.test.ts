@@ -70,7 +70,8 @@ function deepEqual(a: unknown, b: unknown): boolean {
 // a SINGLE pass. Both fixed; ids removed from this ledger.
 const KNOWN_NON_IDEMPOTENT: ReadonlyArray<string> = ["M2N8/00", "M2N8/01", "T26H", "T4YY", "WZ62"];
 
-const KNOWN_MEANING_CHANGES: ReadonlyArray<string> = ["F6MC", "R4YG", "T26H", "T4YY", "WZ62", "X38W", "ZWK4"];
+// F6MC and R4YG now preserve meaning; keep them outside the defect ratchet.
+const KNOWN_MEANING_CHANGES: ReadonlyArray<string> = [ "T26H", "T4YY", "WZ62", "X38W", "ZWK4"];
 
 describe("format properties over the yaml-test-suite corpus", () => {
 	it("format is idempotent on every corpus input (modulo the pinned ledger)", () => {

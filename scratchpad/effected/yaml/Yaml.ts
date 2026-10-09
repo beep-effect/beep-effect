@@ -39,6 +39,14 @@ import {
 } from "./YamlNode.ts";
 import * as A from "effect/Array";
 import * as R from "effect/Record";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as Str from "effect/String";
+import { lexAll } from "./internal/lexer.ts";
+
+const isAliasExpansionBudgetExceeded = S.is(AliasExpansionBudgetExceeded);
+
+const isStringifyFailure = S.is(StringifyFailure);
+const isStringifyDepthExceeded = S.is(StringifyDepthExceeded);
 
 const $I = $ScratchpadId.create("effected/yaml/Yaml");
 
@@ -278,7 +286,7 @@ const aliasCountExceededError = (message: string, text: string): YamlParseError 
  * hardening guards (circular reference, nesting-depth cap) identically.
  */
 const stringifyDefectToError = (defect: unknown, value: unknown): YamlStringifyError | undefined => {
-	if (defect instanceof StringifyFailure) {
+	if (isStringifyFailure(defect)) {
 		return YamlStringifyError.make({
 			diagnostics: [
 				YamlDiagnostic.make({
@@ -295,7 +303,7 @@ const stringifyDefectToError = (defect: unknown, value: unknown): YamlStringifyE
 	}
 	// Deeply-nested acyclic value overflowed the stringifier's recursion budget —
 	// surface it as a fatal stringify error, not a stack-overflow defect.
-	if (defect instanceof StringifyDepthExceeded) {
+	if (isStringifyDepthExceeded(defect)) {
 		return YamlStringifyError.make({
 			diagnostics: [
 				YamlDiagnostic.make({
@@ -328,11 +336,11 @@ const parseResultImpl = (text: string, options?: YamlParseOptions): Result.Resul
 	}
 	// An empty map lets nodeToJsValue register anchors incrementally, so aliases
 	// resolve to the most recent anchor at the point of use.
-	const anchors = new Map<string, YamlNode>();
+	const anchors = MutableHashMap.empty<string, YamlNode>();
 	try {
 		return Result.succeed(nodeToJsValue(doc.contents, anchors, options?.maxAliasCount ?? 100));
 	} catch (defect) {
-		if (defect instanceof AliasExpansionBudgetExceeded) {
+		if (isAliasExpansionBudgetExceeded(defect)) {
 			return Result.fail(aliasCountExceededError(defect.message, text));
 		}
 		throw defect;
@@ -371,11 +379,11 @@ const parseAllResultImpl = (
 		// like parseResultImpl — a pre-built map would resolve aliases that
 		// extraction never re-registers (e.g. an anchor on a complex mapping
 		// key), diverging from the single-document result.
-		const anchors = new Map<string, YamlNode>();
+		const anchors = MutableHashMap.empty<string, YamlNode>();
 		try {
 			values.push(nodeToJsValue(d.contents, anchors, maxAliasCount));
 		} catch (defect) {
-			if (defect instanceof AliasExpansionBudgetExceeded) {
+			if (isAliasExpansionBudgetExceeded(defect)) {
 				return Result.fail(aliasCountExceededError(defect.message, text));
 			}
 			throw defect;
@@ -671,61 +679,27 @@ export class Yaml {
 	 */
 	static stripComments(text: string, replaceCh?: string): string {
 		let result = "";
-		let i = 0;
-		let inComment = false;
-		let inSingleQuote = false;
-		let inDoubleQuote = false;
-
-		while (i < text.length) {
-			const ch = text.charAt(i);
-
-			if (inComment) {
-				if (ch === "\n") {
-					inComment = false;
-					result += ch;
-				} else if (replaceCh !== undefined) {
-					result += replaceCh;
-				}
-			} else if (inDoubleQuote) {
-				result += ch;
-				if (ch === "\\" && i + 1 < text.length) {
-					i++;
-					result += text[i];
-				} else if (ch === '"') {
-					inDoubleQuote = false;
-				}
-			} else if (inSingleQuote) {
-				result += ch;
-				if (ch === "'" && i + 1 < text.length && text[i + 1] === "'") {
-					i++;
-					result += text[i];
-				} else if (ch === "'") {
-					inSingleQuote = false;
-				}
-			} else if (ch === '"') {
-				inDoubleQuote = true;
-				result += ch;
-			} else if (ch === "'") {
-				inSingleQuote = true;
-				result += ch;
-			} else if (ch === "#") {
-				const prev = i > 0 ? text[i - 1] : "\n";
-				if (prev === " " || prev === "\t" || prev === "\n" || i === 0) {
-					inComment = true;
-					if (replaceCh !== undefined) {
-						result += replaceCh;
+		let end = 0;
+		for (const token of lexAll(text)) {
+			const spans = token.kind === "comment" ? [token] : [];
+			// A block scalar token also owns its header. Lex the header after
+			// its indicator separately, so its comment gets an actual token span.
+			if (token.kind === "scalar" && (text[token.offset] === "|" || text[token.offset] === ">")) {
+				const raw = Str.slice(token.offset + 1, token.offset + token.length)(text);
+				const header = A.head(Str.split(/\r|\n/)(raw));
+				if (header._tag === "Some") {
+					for (const part of lexAll(header.value)) {
+						if (part.kind === "comment") spans.push({ ...part, offset: token.offset + 1 + part.offset });
 					}
-				} else {
-					result += ch;
 				}
-			} else {
-				result += ch;
 			}
-
-			i++;
+			for (const span of spans) {
+				result += Str.slice(end, span.offset)(text);
+				if (replaceCh !== undefined) result += Str.repeat(span.length)(replaceCh);
+				end = span.offset + span.length;
+			}
 		}
-
-		return result;
+		return result + Str.slice(end)(text);
 	}
 
 	/**
@@ -909,14 +883,14 @@ function parseForEquality(text: string): { readonly malformed: boolean; readonly
 	if (doc.errors.length > 0 || doc.warnings.some((w) => w.code === "DuplicateKey")) {
 		return { malformed: true, value: undefined };
 	}
-	const anchors = new Map<string, YamlNode>();
+	const anchors = MutableHashMap.empty<string, YamlNode>();
 	try {
 		return { malformed: false, value: nodeToJsValue(doc.contents, anchors, 100) };
 	} catch (err) {
 		// A "billion laughs" alias bomb parses clean but blows up on expansion;
 		// treat it as malformed (never equal to anything) rather than letting the
 		// budget guard escape as a defect.
-		if (err instanceof AliasExpansionBudgetExceeded) {
+		if (isAliasExpansionBudgetExceeded(err)) {
 			return { malformed: true, value: undefined };
 		}
 		throw err;
@@ -933,7 +907,6 @@ function deepEqualValues(a: unknown, b: unknown): boolean {
 		return true;
 	}
 	if (a === null || b === null) return false;
-	if (typeof a !== typeof b) return false;
 
 	if (A.isArray(a)) {
 		if (!A.isArray(b) || a.length !== b.length) return false;

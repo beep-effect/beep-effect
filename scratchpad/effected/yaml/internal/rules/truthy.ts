@@ -27,10 +27,24 @@ const $I = $ScratchpadId.create("effected/yaml/internal/rules/truthy");
  * default `true` — the workflow `on:` key is the point).
  */
 export const truthyOptions = S.Struct({
-	severity: S.optionalKey(YamlLintSeverity).annotateKey({ description: "Reporting level for disallowed boolean-spelling findings, defaulting to `error`" }),
-	allowed: S.String.pipe(S.Array, S.optionalKey).annotateKey({ description: "Case-sensitive spellings exempted from YAML 1.1 boolean-family checks, defaulting to `true` and `false`" }),
-	checkKeys: S.optionalKey(S.Boolean).annotateKey({ description: "Whether mapping keys are checked for disallowed YAML 1.1 boolean spellings, defaulting to `true`" }),
-}).pipe($I.annoteSchema("truthyOptions", { description: "Options for `truthy`: the `allowed` boolean spellings (default `[\"true\", \"false\"]`) and whether mapping keys are checked (`checkKeys`, default `true` — the workflow `on:` key is the point)." }));
+	severity: S.optionalKey(YamlLintSeverity).annotateKey({
+		description: "Reporting level for disallowed boolean-spelling findings, defaulting to `error`",
+	}),
+	allowed: S.String.pipe(S.Array, S.optionalKey).annotateKey({
+		description:
+			"Case-sensitive spellings exempted from YAML 1.1 boolean-family checks, defaulting to `true` and `false`",
+	}),
+	checkKeys: S.optionalKey(S.Boolean).annotateKey({
+		description: "Whether mapping keys are checked for disallowed YAML 1.1 boolean spellings, defaulting to `true`",
+	}),
+}).pipe(
+	$I.annoteSchema("truthyOptions", {
+		description:
+			'Options for `truthy`: the `allowed` boolean spellings (default `["true", "false"]`) and whether mapping keys are checked (`checkKeys`, default `true` — the workflow `on:` key is the point).',
+	}),
+);
+
+export type truthyOptions = typeof truthyOptions.Type;
 
 /** The YAML 1.1 boolean family, per spelling case the 1.1 grammar admits. */
 const TRUTHY = HashSet.fromIterable([
@@ -60,9 +74,15 @@ const TRUE_SET = HashSet.fromIterable(["yes", "on", "true"]);
 export const truthy: YamlRule = {
 	id: "truthy",
 	check: (ctx: LintContext, options) => {
-		const opts = S.is(truthyOptions)(options) ? options : {};
-		const allowed = HashSet.fromIterable(opts.allowed ?? ["true", "false"]);
-		const checkKeys = opts.checkKeys ?? true;
+		const allowed = HashSet.fromIterable(
+			P.hasProperty(options, "allowed") && S.is(truthyOptions.fields.allowed.schema)(options.allowed)
+				? options.allowed
+				: ["true", "false"],
+		);
+		const checkKeys =
+			P.hasProperty(options, "checkKeys") && S.is(truthyOptions.fields.checkKeys.schema)(options.checkKeys)
+				? options.checkKeys
+				: true;
 		const out: Array<YamlLintDiagnostic> = [];
 		walkScalars(ctx.document.contents, "root", (scalar, role) => {
 			if (role === "key" && !checkKeys) return;

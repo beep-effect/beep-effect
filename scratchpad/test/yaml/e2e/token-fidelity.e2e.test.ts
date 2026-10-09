@@ -16,6 +16,7 @@
 import { assert, describe, it } from "@effect/vitest";
 import * as Result from "effect/Result";
 import { YamlTokens } from "../../../effected/yaml/index.ts";
+import { parseCSTAll } from "../../../effected/yaml/internal/cst-parser.ts";
 import { loadAllTestCases } from "./support/suite.ts";
 
 const allCases = loadAllTestCases();
@@ -77,4 +78,25 @@ describe("token position fidelity (yaml-test-suite corpus)", () => {
 		// an accidentally-empty walk, not an exact count.)
 		assert.isAbove(tokensChecked, 5_000, "corpus walk must actually check tokens");
 	});
+});
+
+
+describe("EOF source fidelity regressions", () => {
+	for (const source of ["hello  ", "a: hello \t", "- hello  ", "hello  # comment", "a: hello  \r\nb: world  "]) {
+		it(`tiles token and CST spans through EOF for ${JSON.stringify(source)}`, () => {
+			const tokens = Result.getOrThrow(YamlTokens.tokenize(source));
+			let cursor = 0;
+			for (const token of tokens) {
+				assert.strictEqual(token.offset, cursor);
+				assert.strictEqual(token.text, source.slice(token.offset, token.offset + token.length));
+				cursor += token.length;
+			}
+			assert.strictEqual(cursor, source.length);
+			assert.strictEqual(tokens.map((token) => token.text).join(""), source);
+			const documents = parseCSTAll(source);
+			assert.strictEqual(documents.map((document) => document.source).join(""), source);
+			assert.strictEqual(documents[0]?.offset, 0);
+			assert.strictEqual(documents[0]?.length, source.length);
+		});
+	}
 });

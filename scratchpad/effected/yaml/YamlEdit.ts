@@ -12,6 +12,8 @@
 // consumer code can be written once over "a document codec's Edit/Range/Path".
 
 import { $ScratchpadId } from "@beep/identity/packages";
+import * as A from "effect/Array";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 
 const $I = $ScratchpadId.create("effected/yaml/YamlEdit");
@@ -77,7 +79,7 @@ export class YamlEdit extends S.Class<YamlEdit>($I`YamlEdit`)({
 	 * @returns The edited text.
 	 */
 	static applyAll(text: string, edits: ReadonlyArray<YamlEdit>): string {
-		const sorted = [...edits].sort((a, b) => b.offset - a.offset);
+		const sorted = A.sort(edits, Order.flip(Order.mapInput(Order.Number, (edit: YamlEdit) => edit.offset)));
 		for (let i = 0; i + 1 < sorted.length; i++) {
 			const upper = sorted[i];
 			if (upper === undefined) throw YamlEditFailure.make({ message: "Missing upper" });

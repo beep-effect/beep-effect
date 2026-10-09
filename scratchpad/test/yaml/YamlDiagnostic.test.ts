@@ -21,6 +21,14 @@ describe("YamlDiagnostic", () => {
 			assert.strictEqual(d.character, 3);
 		});
 
+		it("keeps the character nonnegative for an offset inside CRLF", () => {
+			const d = YamlDiagnostic.fromRaw({ code: "UnexpectedToken", message: "m", offset: 1, length: 1 }, "\r\n");
+			assert.strictEqual(d.offset, 1);
+			assert.strictEqual(d.length, 1);
+			assert.strictEqual(d.line, 1);
+			assert.strictEqual(d.character, 0);
+		});
+
 		it("counts LS/PS as line breaks (position parity with jsonc)", () => {
 			const text = `a${"\u2028"}b: 2`;
 			const d = YamlDiagnostic.fromRaw({ code: "MissingKey", message: "m", offset: 3, length: 1 }, text);
