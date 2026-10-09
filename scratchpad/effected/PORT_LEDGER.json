@@ -9957,9 +9957,174 @@
         }
       ],
       "fixturesBytes": 267129,
-      "deviations": [],
-      "backlog": [],
-      "reviewRounds": [],
+      "deviations": [
+        {
+          "test": "scratchpad/test/sbom/Sbom.test.ts:83; scratchpad/test/sbom/NtiaReport.test.ts:134; scratchpad/test/sbom/InTotoStatement.test.ts:68; scratchpad/test/sbom/SigstoreSigner.test.ts:261",
+          "upstreamBehaviour": "SbomDocument.compact uses Object.entries; NtiaReport.timestamp uses Date.parse; Sha256Digest attaches statics with Object.assign; the unstubbed signer throws native Error.",
+          "labBehaviour": "SbomDocument.compact uses Record.toEntries; timestamps use a Schema.DateFromString Result decoder; Sha256Digest uses an S.Opaque class with static members; the unstubbed signer throws a schema-tagged error.",
+          "reason": "native-runtime: Effect modules replace native Object.*, Date.* and Error under the native-runtime law; the later 2026-10-09 grilling ruling requires schema statics on S.Opaque."
+        },
+        {
+          "test": "scratchpad/test/sbom/IdentityToken.test.ts:18; scratchpad/test/sbom/SigstoreSigner.test.ts:267; scratchpad/test/sbom/reachability.test.ts:132",
+          "upstreamBehaviour": "IdentityToken and SigstoreSigner register Context.Service keys as @effected/sbom/IdentityToken and @effected/sbom/SigstoreSigner.",
+          "labBehaviour": "Each Context.Service registers with its module-local $ScratchpadId composer key, $I`IdentityToken` or $I`SigstoreSigner`; callers use the corresponding lab services.",
+          "reason": "identity-keys: operator step 4 and D5 mandate IdentityComposer service identities; round-1 INVENTORY c1 explicitly requests this class. Schema and error annotation sites are consolidated under identity-annotations."
+        },
+        {
+          "test": "scratchpad/test/sbom/SigstoreSigner.test.ts:261",
+          "upstreamBehaviour": "SigstoreSigner.makeTest without a sign override throws native Error containing the not-stubbed explanation.",
+          "labBehaviour": "The same path throws UnstubbedSigstoreSignerError, an identity-annotated S.TaggedError with a message field and _tag; the explanatory message and synchronous throw remain.",
+          "reason": "tagged-errors: native-runtime law 7 requires a schema-tagged error in SigstoreSigner.unstubbed; round-1 INVENTORY c3 retains the replacement and the upstream message assertion."
+        },
+        {
+          "test": "scratchpad/test/sbom/InTotoStatement.test.ts:68; scratchpad/test/sbom/InTotoStatement.test.ts:136; scratchpad/test/sbom/Sbom.test.ts:117; scratchpad/test/sbom/NtiaReport.test.ts:76; module suite scratchpad/test/sbom/**",
+          "upstreamBehaviour": "Eight input/configuration types are interfaces; four named domains use Schema.Literals; digest statics use Object.assign and regex guards; NTIA constraints use manual predicates; both serializers call JSON.stringify.",
+          "labBehaviour": "Sbom.ts, InTotoStatement.ts, SbomMetadataSource.ts and SlsaProvenance.ts expose eight S.Struct schemas and derived types; ComponentType, ExternalReferenceType, NtiaElementId and SigningErrorKind use LiteralKit; Sha256Digest uses S.Opaque and S.is; NTIA uses schema guards; both serializers use S.fromJsonString Result codecs, preserving successful bytes but throwing SchemaError on serialization failure.",
+          "reason": "schema-first: D5, architecture schema-source-of-truth, laws 17/19, EF-19 and the grilling S.Opaque ruling force models, LiteralKit, derived guards and JSON codecs; input boundaries remain unvalidated and explicit-undefined option semantics remain."
+        },
+        {
+          "test": "module suite scratchpad/test/sbom/**",
+          "upstreamBehaviour": "SbomDocument.version uses Schema.Number and accepts NaN and infinities; SbomJsonOptions.space and CopyrightYears.year/startYear are number-only interface fields without runtime schemas.",
+          "labBehaviour": "SbomDocument.version uses S.Finite and rejects NaN and both infinities; newly exposed SbomJsonOptions.space and CopyrightYears.year/startYear schemas use S.Finite, without adding validation to their existing function boundaries.",
+          "reason": "numeric-domains: schemaNumber forces S.Finite instead of unrestricted Schema.Number; INVENTORY c2 and sol-1-7 document the upstream Success versus lab Failure probe for non-finite revisions; no non-finite regression assertion was added."
+        },
+        {
+          "test": "scratchpad/test/sbom/InTotoStatement.test.ts:161; scratchpad/test/sbom/Sbom.test.ts:74; scratchpad/test/sbom/SigstoreSigner.test.ts:115; scratchpad/test/sbom/conformance.test.ts:116; scratchpad/test/sbom/reachability.test.ts:191",
+          "upstreamBehaviour": "Digest parsing casts a string to its brand; signer code casts cause and bundle shapes; tests cast parsed JSON, DSSE envelopes, witnesses, conformance definitions and manifests.",
+          "labBehaviour": "Digest parsing narrows with S.is; SigstoreSigner.kindOf uses Predicate.hasProperty and bundleToJSON infers its result; tests use schema-derived guards, assertTrue and property guards instead of unsafe casts, including a parsed digest fixture.",
+          "reason": "type-safety: D15 prohibits unsafe assertions; the step-2 cast-removal wave replaces source and test assertions with typed inference and guards while retaining the oracle assertions."
+        },
+        {
+          "test": "scratchpad/test/sbom/IdentityToken.test.ts:18; scratchpad/test/sbom/IdentityToken.test.ts:84; scratchpad/test/sbom/InTotoStatement.test.ts:73; scratchpad/test/sbom/SigstoreSigner.test.ts:206; module suite scratchpad/test/sbom/**",
+          "upstreamBehaviour": "IdentityToken.layerStatic supplies token as a plain Effect-returning callback; schema error values use new constructors; SbomDocument.version uses Schema.Number.",
+          "labBehaviour": "IdentityToken.token is wrapped in named Effect.fn; existing IdentityTokenError, InvalidSha256DigestError, SbomWriteError and SigningError values use .make; SbomDocument.version is S.Finite. Entry-point tests retain scoped diagnostic skip-file headers for provider, async, Node and environment rules.",
+          "reason": "tsgo-diagnostics: step 2 clears @effect/tsgo rules through effectFnOpportunity, newSchemaClass and schemaNumber shapes; the initial diagnostic pass also scopes test-only entry-point exceptions. Numeric acceptance is detailed under numeric-domains."
+        },
+        {
+          "test": "scratchpad/test/sbom/IdentityToken.test.ts:18; scratchpad/test/sbom/Sbom.test.ts:56; scratchpad/test/sbom/SigstoreSigner.test.ts:261",
+          "upstreamBehaviour": "IdentityToken.token is a plain callback using typeof; component ordering copies then calls native sort/localeCompare; signer code uses typeof and a wrapper around unstubbed.",
+          "labBehaviour": "IdentityToken.token uses named Effect.fn and Predicate.isString; Sbom.generate uses Array.sort with Order.mapInput and String.localeCompare, retaining stable locale ordering and input contents; signer code uses Predicate.isString and the direct unstubbed thunk.",
+          "reason": "effect-first: D5, Effect helper preference, native-sort law 10/EF-38 and terse-helper law 21 require named Effect functions, Effect-native helpers and direct helper references; INVENTORY r1/r9 and fix-sbom-g2/g1 ground the replacements."
+        },
+        {
+          "test": "module suite scratchpad/test/sbom/**; scratchpad/test/sbom/reachability.test.ts:132; scratchpad/test/sbom/reachability.test.ts:170",
+          "upstreamBehaviour": "Module source, tests and source JSDoc samples import runtime or type namespaces from the root effect barrel.",
+          "labBehaviour": "IdentityToken, InTotoStatement, NtiaReport, Sbom, SbomDocument, SbomMetadataSource, SigstoreBundle, SigstoreSigner and SlsaProvenance, their tests and source examples use dedicated effect/* paths.",
+          "reason": "effect-imports: operator step 3 and the per-module import law replace root-barrel imports; exact reachability expectations now enumerate the corresponding Effect module paths."
+        },
+        {
+          "test": "module suite scratchpad/test/sbom/**; scratchpad/test/sbom/InTotoStatement.test.ts:192; scratchpad/test/sbom/reachability.test.ts:170",
+          "upstreamBehaviour": "Schema classes and errors use local string identifiers without Beep identity metadata; literal domains, digest and nested provenance fields lack canonical schema annotations.",
+          "labBehaviour": "All nine changed source modules derive $I from $ScratchpadId; schemas/errors use composer identifiers and schema/field descriptions. Sha256Digest gains canonical identity/title/description before its pattern check; SlsaProvenance nested fields and UnstubbedSigstoreSignerError.message carry annotateKey metadata.",
+          "reason": "identity-annotations: operator step 4 and D5 require @beep/identity identifiers plus annotations on fields and schemas; INVENTORY r3/r4/r8 and fix-sbom-g2/g1 close the missing digest, provenance and error metadata."
+        },
+        {
+          "test": "scratchpad/test/sbom/reachability.test.ts:191; scratchpad/test/sbom/reachability.test.ts:199; scratchpad/test/sbom/reachability.test.ts:231",
+          "upstreamBehaviour": "Reachability tests assume a test-adjacent src directory, a parent package.json and a SigstoreSigner.js output path; the S0 copy has no sbom-local manifest.",
+          "labBehaviour": "SRC points to scratchpad/effected/sbom; manifest cases read the new module-local package.json with upstream sideEffects:false/type:module, a lab ./index.ts export and Beep dependencies; the direct signer exclusion checks SigstoreSigner.ts.",
+          "reason": "test-environment: D9 and the later 2026-10-09 environment ruling require lab fixture/path and per-module manifest repairs; env-sbom.md:22 and central-notes.md ground the module-data manifest retarget."
+        },
+        {
+          "test": "scratchpad/test/sbom/reachability.test.ts:132; scratchpad/test/sbom/reachability.test.ts:142; scratchpad/test/sbom/reachability.test.ts:170; scratchpad/test/sbom/reachability.test.ts:199",
+          "upstreamBehaviour": "Reachability assertions expect effect and bare @effected/spdx package edges, with signer transport confined to SigstoreSigner and the entrypoint.",
+          "labBehaviour": "Assertions enumerate effect/* and Beep identity/LiteralKit edges, traverse vendored siblings, require scratchpad/effected/spdx/index.ts and exclude package-json runtime IO from both SBOM entrypoints; Sigstore confinement remains.",
+          "reason": "reachability: D9, per-module imports, identity/LiteralKit laws and the later 2026-10-09 sibling-import ruling force lab graph retargets; fix-sbom-g1.md:14-16 and env-sbom.md:10/20 document them."
+        },
+        {
+          "test": "scratchpad/test/sbom/reachability.test.ts:93; scratchpad/test/sbom/reachability.test.ts:110; scratchpad/test/sbom/reachability.test.ts:116",
+          "upstreamBehaviour": "The regex runtimeSpecifiers walker reads from text in an exported class message as a runtime import, producing the phantom specifier ${this.path}.",
+          "labBehaviour": "The TypeScript declaration parser ignores message contents and records actual runtime imports/re-exports; the expanded fixture asserts only effect and the relative lab SPDX edge while ignoring type-only edges.",
+          "reason": "upstream-bug: env-sbom.md:24 reports the false-positive dependency; a read-only probe of the S0 walker on the exported ReadError fixture returned [${this.path}, effect/Schema], whereas the lab parser returned [effect/Schema]; the regression fixture pins the correction."
+        }
+      ],
+      "backlog": [
+        {
+          "seat": "grok",
+          "round": 1,
+          "finding": "b1 — Canonical export JSDoc (scratchpad/effected/sbom/IdentityToken.ts:29)",
+          "reason": "jsdoc: During S2 preserve prose, use titled Example and Details/Gotchas sections, add categories and @since 0.0.0, and compilable value-export examples."
+        },
+        {
+          "seat": "grok",
+          "round": 1,
+          "finding": "b2 — Attribution and Sigstore dependency backlog (scratchpad/effected/sbom/README.md:199)",
+          "reason": "docs: Central S2 tooling should correct spurious attribution hits, record Sigstore dependencies/replacement candidates, and fix the notice scanner outside module-lane ownership."
+        },
+        {
+          "seat": "grok",
+          "round": 1,
+          "finding": "b3 — Lab README and per-module samples (scratchpad/effected/sbom/README.md:3)",
+          "reason": "docs: During S2 remove release/install boilerplate and adapt examples to the lab entry and effect/* paths while preserving Why/API/fidelity prose."
+        },
+        {
+          "seat": "grok",
+          "round": 1,
+          "finding": "b4 — Schema and normalization property floor (scratchpad/test/sbom/InTotoStatement.test.ts:34)",
+          "reason": "test: During S3 add Arbitrary.schema round trips and parser/formatter normalization, idempotence and fidelity properties using fcRuns; retain oracle assertions."
+        },
+        {
+          "seat": "grok",
+          "round": 1,
+          "finding": "b5 — General test-canon migration (scratchpad/test/sbom/Sbom.test.ts:44)",
+          "reason": "test: During S3 use it.effect for Effect bodies, canonical Option/Result assertion helpers and fixture IO; retain every assertion."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "b6 — Runner-owned signer layer fixtures (scratchpad/test/sbom/SigstoreSigner.test.ts:96)",
+          "reason": "test: During S3 use isolated it.layer blocks for signer/witness/identity scenarios and consume the runner-owned service without losing isolation."
+        },
+        {
+          "seat": "grok",
+          "round": 1,
+          "finding": "b7 — Effect collections and sorting in tests (scratchpad/test/sbom/reachability.test.ts:178)",
+          "reason": "test: During S3 replace native test Sets with HashSet.fromIterable/has and sorts with Array.sort plus Order.String; preserve assertions."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "b8 — Result success helper for timestamps (scratchpad/effected/sbom/NtiaReport.ts:143)",
+          "reason": "effect-idiom: When touching this path, use Result.isSuccess(parseTimestamp(stamped)) while preserving undefined handling."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "b9 — Identity helper in digest fixture (scratchpad/test/sbom/SigstoreSigner.test.ts:37)",
+          "reason": "test: During S3 use identity from effect/Function as the Result error mapper, preserving fixture behavior."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "b10 — Option composition for repository lookup (scratchpad/effected/sbom/SbomMetadataSource.ts:137)",
+          "reason": "effect-idiom: When touching the lookup, use Option.fromNullable(pkg.repository).pipe(Option.flatMap(repository => repository.browseUrl)), retaining absence and order."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "central — Promote the module-data manifest (scratchpad/effected/sbom/package.json)",
+          "reason": "test-environment: At promotion, make the retained upstream package.json the real package manifest and drop its temporary module-data role; central-notes.md Backlog lists sbom with github and github-actions."
+        }
+      ],
+      "reviewRounds": [
+        {
+          "round": 1,
+          "commit": "3fa5876691901fccf3d1cd29e9324564df134b56",
+          "seats": {
+            "grok": {
+              "required": 3,
+              "backlog": 4
+            },
+            "sol": {
+              "required": 7,
+              "backlog": 3
+            },
+            "fable": {
+              "required": 5,
+              "backlog": 7
+            }
+          }
+        }
+      ],
       "commits": [
         {
           "stage": 0,
