@@ -172,3 +172,11 @@
   `oom-kill` before Yeet could persist the latest verdict. The retry stays in
   beep-heavy admission with a 24 GiB cap; no slot bypass or machine-wide limit
   change. Memory-aware sizing of the parallel cheap tier would prevent this.
+
+- Yeet's four-way cheap-gate wave also exceeded a 24 GiB unit cap while running
+  the full-workspace Effect-import and schema-first Turbo lanes concurrently.
+  Cache-policy itself passed after the evidence repair. Run the identical two
+  task families at Turbo concurrency 1 to complete their task proofs, then retry
+  the canonical publisher against those caches. This preserves every gate and
+  needs no code/policy change. Resource-aware cheap-wave scheduling would
+  prevent a second OOM.
