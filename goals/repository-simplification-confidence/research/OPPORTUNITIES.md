@@ -901,3 +901,40 @@ Effect v4 ChildProcessSpawner boundary preserves both runtimes and all
 assertions; rerun the affected fixtures, type and package checks. Checking
 the canonical process API before choosing the native boundary would have
 prevented this extra qualification wave. No suppression or inventory edit.
+
+## 2026-10-09: burn-down qualification waits behind the shared heavy slots
+
+- Doing: running the inherited-red attribution scan, full docgen, and focused
+  EffectImports regressions in the burn-down lane.
+- Evidence: each admitted wrapper reports `all 5 slots busy, waiting` before
+  execution. The lane remains within its required memory limits; no peer job
+  or slot lock was stopped or modified.
+- Would have prevented it: reserving a short attribution/repair slot for the
+  inherited-red owner while dependent lanes queue their long package proofs.
+
+## 2026-10-09: base moved again between integration and burn-down publication
+
+- Doing: publishing the scoped inherited-red repair after integrating #1580.
+- Evidence: Yeet refused the stale base after #1583 landed, naming the workflow
+  and both shared packet ledgers. No commit or push occurred on this attempt.
+- Would have prevented it: a coordinated publication window for the inherited
+  repair owner, avoiding repeated admission and requalification of moving bases.
+
+## 2026-10-09: new inherited admissions block the scoped burn-down repair
+
+- Doing: requalifying after #1583 integration for the inherited-red repair.
+- Evidence: `lint:effect-vitest` reports 12 new findings in six #1583 test
+  files; the golden detector and deletion regression are absent from that list.
+  The red ledger assigns these judgments to the admission lane, while this
+  repair brief permits exactly one inventory occurrence.
+- Would have prevented it: landing the owned admissions before dependent
+  publication, or coordinating the repair owner with the incoming red wave.
+
+## 2026-10-09: base integration invalidated an in-flight package proof
+
+- Doing: integrating #1583 while a second full package audit was still running.
+- Evidence: the audit retained old module behavior while tests expected newly
+  ported APIs. Its 14 suite failures and five test failures are quarantined;
+  a fresh stable-source replay passed all 106 tests across five relevant files.
+- Would have prevented it: keeping the checkout fixed for the entire admitted
+  proof and integrating the next base only after its process has exited.

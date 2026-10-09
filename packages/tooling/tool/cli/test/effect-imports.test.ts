@@ -124,6 +124,49 @@ const demoSource = A.join(
 it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
   describe("effect import laws", () => {
     it.effect(
+      "tolerates a directory removed between discovery and source reads",
+      Effect.fnUntraced(
+        function* () {
+          yield* temporaryWorkingDirectory;
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          yield* writeTsconfig;
+          yield* writeProjectFile("docs/guide.md", '```ts\nimport { Effect } from "effect";\n```\n');
+          yield* writeProjectFile(
+            "beep-biome-json-race/transient.md",
+            '```ts\nimport { Effect } from "effect";\n```\n'
+          );
+          const directory = path.join(process.cwd(), "beep-biome-json-race");
+          const transientFile = path.join(directory, "transient.md");
+          let removed = false;
+          const racingFs: FileSystem.FileSystem = {
+            ...fs,
+            readFileString: (filePath, encoding) =>
+              filePath === transientFile
+                ? fs.remove(directory, { recursive: true }).pipe(
+                    Effect.tap(() =>
+                      Effect.sync(() => {
+                        removed = true;
+                      })
+                    ),
+                    Effect.andThen(fs.readFileString(filePath, encoding))
+                  )
+                : fs.readFileString(filePath, encoding),
+          };
+          const summary = yield* runEffectImportRules(
+            EffectImportRulesOptions.make({ mode: "markdown", effectOnly: true, excludePaths: [] })
+          ).pipe(Effect.provideService(FileSystem.FileSystem, racingFs));
+          expect(removed).toBe(true);
+          expect(yield* fs.exists(directory)).toBe(false);
+          expect(summary.scannedFiles).toBe(1);
+          expect(summary.changedFiles).toEqual(["docs/guide.md"]);
+          expect(summary.rootImportsRewritten).toBe(1);
+        },
+        Effect.provideServiceEffect(Console.Console, TestConsole.make)
+      )
+    );
+
+    it.effect(
       "prunes reference symlink loops and still reports a real root import",
       Effect.fnUntraced(
         function* () {
@@ -156,12 +199,13 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
           expect(summary.strictFailure).toBe(true);
 
           yield* writeProjectFile("docs/guide.md", '```ts\nimport { Effect } from "effect";\n```\n');
+          yield* writeProjectFile(".hidden/guide.md", '```ts\nimport { Effect } from "effect";\n```\n');
           const markdown = yield* runEffectImportRules(
             EffectImportRulesOptions.make({ mode: "markdown", effectOnly: true, excludePaths: [] })
           );
-          expect(markdown.scannedFiles).toBe(1);
-          expect(markdown.changedFiles).toEqual(["docs/guide.md"]);
-          expect(markdown.rootImportsRewritten).toBe(1);
+          expect(markdown.scannedFiles).toBe(2);
+          expect(markdown.changedFiles).toEqual([".hidden/guide.md", "docs/guide.md"]);
+          expect(markdown.rootImportsRewritten).toBe(2);
         },
         Effect.provideServiceEffect(Console.Console, TestConsole.make)
       )

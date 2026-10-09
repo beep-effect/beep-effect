@@ -39176,6 +39176,28 @@
       "reason": "The request signals Deferred readiness before its500ms Effect delay. TestClock waits for supervised fibers to suspend before the5ms advance, arming response delay and operation deadline. Removing the advance fails by the unchanged test deadline; a zero-delay response fails the timeout oracle. Native HTTP integration retains live clocks."
     },
     {
+      "id": "EV015:packages/epistemic/use-cases/test/ContradictionDetection.golden.test.ts:126:TestClock.adjust@17#1",
+      "lens": "resource",
+      "ruleId": "EV015",
+      "package": "@beep/epistemic-use-cases",
+      "file": "packages/epistemic/use-cases/test/ContradictionDetection.golden.test.ts",
+      "line": 126,
+      "endLine": 126,
+      "symbol": "TestClock.adjust",
+      "occurrence": "v2:53143781e1c5305639fc65642b3964725a5f580dd0215b9a2df8e6015a1c00db",
+      "class": "shared-test-clock-adjustment",
+      "evidence": "TestClock.adjust(\"1 hour\")",
+      "replacement": {
+        "primitive": "TestClock.adjust",
+        "sketch": "it.layer.option.excludeTestServices: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) only when the block intentionally needs live default Clock and Console and supplies any required test services explicitly. TestClock.adjust: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) to review ownership of a shared deterministic clock and forked work before advancing it. Preserve deterministic timeout subjects; prove serial ownership or isolate test services before considering a reset."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Owner: epistemic-contradiction-detection. Serial, fork-free TestClock advancement proves detector clock independence; no forked work or other test shares the advancement. Reconsider when the Effect/Vitest canon offers a serial-clock helper."
+    },
+    {
       "id": "EV015:packages/foundation/capability/langextract/test/Service.test.ts:180:TestClock.adjust@15#1",
       "lens": "resource",
       "ruleId": "EV015",
