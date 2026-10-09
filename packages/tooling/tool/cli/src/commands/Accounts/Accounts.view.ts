@@ -306,11 +306,18 @@ interface Columns {
   readonly label: number;
 }
 
+// Every column of a row except the label and the bar: marker, separators,
+// status, percent, and reset.
+const ROW_FIXED_WIDTH = 2 + 1 + 1 + STATUS_WIDTH + 1 + 1 + PERCENT_WIDTH + 1 + RESET_WIDTH;
+const MIN_LABEL_WIDTH = 10;
+
+// The label column shrinks before the bar would push a row past the frame;
+// `fit` truncates the labels it then cannot hold.
 const columnsFor = (width: number, labels: ReadonlyArray<string>): Columns => {
   const inner = width - 4;
-  const label = Math.min(Math.max(...A.map(labels, Str.length), 8) + 2, MAX_LABEL_WIDTH);
-  const fixed = 2 + 1 + label + 1 + STATUS_WIDTH + 1 + 1 + PERCENT_WIDTH + 1 + RESET_WIDTH;
-  return { inner, label, bar: Math.max(inner - fixed, MIN_BAR_WIDTH) };
+  const wanted = Math.min(Math.max(...A.map(labels, Str.length), 8) + 2, MAX_LABEL_WIDTH);
+  const label = Math.max(Math.min(wanted, inner - ROW_FIXED_WIDTH - MIN_BAR_WIDTH), MIN_LABEL_WIDTH);
+  return { inner, label, bar: Math.max(inner - ROW_FIXED_WIDTH - label, MIN_BAR_WIDTH) };
 };
 
 const framed = (content: string, columns: Columns, palette: Palette): string =>
@@ -443,10 +450,15 @@ export const renderAccountsBoard: {
 } = dual(2, (report: AccountsStatusReport, layout: AccountsBoardLayout): string => {
   const palette = makePalette(layout.color);
   const width = Math.min(Math.max(layout.width, MIN_WIDTH), MAX_WIDTH);
-  const heading = `${palette.title(" Accounts")}${Str.isEmpty(layout.status) ? "" : `  ${palette.dim(layout.status)}`}`;
-  const legend = palette.dim(
-    ` ${palette.accent("▶")} use next   ${palette.accent("●")} signed in to the CLI   bars: weekly or billing-cycle quota left`
-  );
+  const status = fit(layout.status, Math.max(width - 11, 0)).trimEnd();
+  const heading = `${palette.title(" Accounts")}${Str.isEmpty(status) ? "" : `  ${palette.dim(status)}`}`;
+  // The long legend needs 80 columns; narrower boards get the short one.
+  const legend =
+    width >= 80
+      ? palette.dim(
+          ` ${palette.accent("▶")} use next   ${palette.accent("●")} signed in to the CLI   bars: weekly or billing-cycle quota left`
+        )
+      : palette.dim(` ${palette.accent("▶")} use next   ${palette.accent("●")} CLI login   bars: quota left`);
   if (!A.isReadonlyArrayNonEmpty(report.groups)) {
     return A.join(
       [

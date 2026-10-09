@@ -637,7 +637,9 @@ export const pollAccounts = Effect.gen(function* () {
  * A failed poll (a timeout, a rate limit, a network blip) would otherwise
  * blank the account's row until the next poll. The previous reading stays
  * instead, stamped with the time it was taken so the row shows its age; a
- * reading that was already old keeps its original stamp.
+ * reading that was already old keeps its original stamp. Only a `Failed`
+ * outcome falls back: a rejected login (`NeedsLogin`) is a definite answer and
+ * shows at once, so a revoked login is never advertised as ready.
  *
  * **Example** (Nothing to keep)
  *
@@ -673,7 +675,7 @@ export const retainLastGood: {
     previousAt: DateTime.Utc
   ): ReadonlyArray<AccountUsage> =>
     A.map(next, (usage) =>
-      isOk(usage)
+      usage.outcome._tag !== "Failed"
         ? usage
         : O.match(
             A.findFirst(previous, (other) => sameAccount(usage, other) && isOk(other)),

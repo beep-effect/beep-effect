@@ -404,6 +404,15 @@ describe("last good reading", () => {
     expect(A.map(kept, (usage) => usage.account.label)).toEqual(["me", "other"]);
   });
 
+  it("shows a rejected login at once instead of an older ready reading", () => {
+    const rejected = AccountUsage.make({
+      account: account("me"),
+      outcome: AccountUsageOutcome.cases.NeedsLogin.make({ detail: "the provider rejected the stored login" }),
+    });
+    const kept = retainLastGood([rejected], [ok("me", [weekly(20, inHours(5))])], previousAt);
+    expect(A.map(kept, (usage) => usage.outcome._tag)).toEqual(["NeedsLogin"]);
+  });
+
   it("keeps an older stamp, and leaves a failure with no earlier reading as it is", () => {
     const older = DateTime.makeUnsafe("2026-01-04T20:00:00.000Z");
     const kept = retainLastGood([ok("x", [])], previousAt)([failed("me"), failed("new")]);
@@ -552,6 +561,28 @@ describe("accounts board rendering", () => {
     expect(board).toContain(
       "$247 of $250 cloud session credits (expire Nov 5) · 62287 credits · 2 limit resets unused · plan pro"
     );
+  });
+
+  it("keeps every line inside the board at the minimum width with a long label", () => {
+    const board = plainBoard(
+      reportOf(
+        [
+          ok("abcdefghijklmnopqrstuvwxyz@example.com", [session(10), weekly(30, inHours(20))]),
+          ok("short@example.com", [weekly(10, inHours(5))]),
+        ],
+        [SignedInLogin.make({ provider: "claude", label: "abcdefghijklmnopqrstuvwxyz@example.com" })]
+      ),
+      64
+    );
+    const lines = linesOf(board);
+    expect(A.every(lines, (line) => line.length <= 64)).toBe(true);
+    expect(
+      A.every(
+        A.filter(lines, (line) => /^[╭│╰]/.test(line)),
+        (line) => line.length === 64
+      )
+    ).toBe(true);
+    expect(board).toContain("abcdefghijklmnopqr… ●");
   });
 
   it("prints a hint when no account is registered, and colors on request", () => {
@@ -915,6 +946,7 @@ describe("live accounts screen", () => {
         { input: O.none(), key: { name: "c", ctrl: true, meta: false, shift: false } },
       ]);
       expect(output).toContain("polling every account");
+      expect(output).toContain("poll failed: disk gone (showing the last reading)");
       expect(output.endsWith("\u001b[?1049l")).toBe(true);
     })
   );

@@ -8,6 +8,8 @@
  * quits. The board is redrawn every second, which keeps the countdown current
  * and follows terminal resizes; the accounts are polled once per interval.
  * When standard output is not a terminal, the board is printed once instead.
+ * A poll that fails leaves the last reading on screen and names the failure in
+ * the status line until a poll succeeds again.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -36,6 +38,8 @@ const PLAIN_WIDTH = 100;
 const MIN_INTERVAL = Duration.seconds(15);
 
 interface WatchState {
+  // Why the last poll failed, until a poll succeeds again.
+  readonly lastError: O.Option<string>;
   readonly nextPollAt: DateTime.Utc;
   readonly polling: boolean;
   readonly report: O.Option<AccountsStatusReport>;
@@ -50,6 +54,7 @@ const secondsUntil = (now: DateTime.Utc, at: DateTime.Utc): number =>
 const statusLine = (state: WatchState, now: DateTime.Utc): string =>
   A.join(
     [
+      ...O.toArray(O.map(state.lastError, (message) => `poll failed: ${message} (showing the last reading)`)),
       ...O.toArray(O.map(state.report, (report) => `updated ${clock(report.generatedAt)}`)),
       state.polling ? "polling…" : `next poll in ${secondsUntil(now, state.nextPollAt)}s`,
       "r refresh",
@@ -107,6 +112,7 @@ export const watchAccounts = Effect.fn("Accounts.watch")(function* (interval: Du
   const every = Duration.max(interval, MIN_INTERVAL);
   const state = yield* Ref.make<WatchState>({
     report: O.none(),
+    lastError: O.none(),
     polling: false,
     nextPollAt: yield* DateTime.now,
   });
@@ -127,12 +133,14 @@ export const watchAccounts = Effect.fn("Accounts.watch")(function* (interval: Du
     yield* Ref.update(state, (current) => ({ ...current, polling: true }));
     yield* draw;
     const previous = (yield* Ref.get(state)).report;
-    const report = yield* loadAccountsReport(previous).pipe(
-      Effect.asSome,
-      Effect.orElseSucceed(() => previous)
+    const [report, lastError] = yield* loadAccountsReport(previous).pipe(
+      Effect.match({
+        onFailure: (error) => [previous, O.some(error.message)] as const,
+        onSuccess: (next) => [O.some(next), O.none<string>()] as const,
+      })
     );
     const now = yield* DateTime.now;
-    yield* Ref.set(state, { report, polling: false, nextPollAt: DateTime.addDuration(now, every) });
+    yield* Ref.set(state, { report, lastError, polling: false, nextPollAt: DateTime.addDuration(now, every) });
     yield* draw;
   });
 
