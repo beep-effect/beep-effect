@@ -33,7 +33,7 @@
  * @since 0.0.0
  */
 import { $ObservabilityId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { CredentialPatternBank as Bank, LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
@@ -46,6 +46,8 @@ import { CauseClassification, summarizeCause } from "./CauseDiagnostics.ts";
 import type { CauseSummary } from "./CauseDiagnostics.ts";
 
 const decodeNonNegativeIntResult = S.decodeResult(S.Natural);
+
+const { maskCredentialCategory, replaceCredentialCategory } = Bank;
 
 const $I = $ObservabilityId.create("CauseRedaction");
 
@@ -151,28 +153,15 @@ export const RedactionChannel = LiteralKit(["client", "diagnostic"]).pipe(
  */
 export type RedactionChannel = typeof RedactionChannel.Type;
 
-// These global regexes are reused across calls. `replaceAll` restarts each
-// string operation from index 0 even with the `g` flag, so the shared lastIndex
-// is never observed and the helpers remain safe for concurrent use. Each
-// pattern uses a lookbehind so only the sensitive value is matched and replaced
-// with the placeholder, leaving the surrounding key, scheme, or path root intact.
-const SECRET_ASSIGNMENT_PATTERN =
-  /(?<=\b[A-Za-z0-9_-]*(?:api[_-]?key|key|token|secret|password|passwd|pwd|auth|credential|session)[A-Za-z0-9_-]*\s*[=:]\s*)("[^"]*"|'[^']*'|[^\s;,&|]+)/giu;
-const AUTH_HEADER_PATTERN = /(?<=\b(?:authorization|proxy-authorization|cookie|set-cookie)\s*:\s*)[^\s\n\r][^\n\r]*/giu;
-const BEARER_PATTERN = /(?<=\b(?:Bearer|Basic)\s+)[A-Za-z0-9._~+/=-]{8,}/giu;
-const OPENAI_KEY_PATTERN = /\bsk-[A-Za-z0-9_-]{8,}\b/gu;
-const JWT_PATTERN = /\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\b/gu;
-const POSIX_HOME_PATTERN = /(?<=\/(?:home|Users)\/)[^/\s:]+/gu;
-const WINDOWS_HOME_PATTERN = /(?<=[A-Za-z]:\\Users\\)[^\\\s:]+/gu;
-
+// Matching semantics come exclusively from the canonical versioned bank.
+// Rendering, category selection and whitespace policy remain owned by this consumer.
 const redactionSteps: ReadonlyArray<(input: string) => string> = A.make(
-  Str.replaceAll(SECRET_ASSIGNMENT_PATTERN, REDACTION_PLACEHOLDER),
-  Str.replaceAll(AUTH_HEADER_PATTERN, REDACTION_PLACEHOLDER),
-  Str.replaceAll(BEARER_PATTERN, REDACTION_PLACEHOLDER),
-  Str.replaceAll(OPENAI_KEY_PATTERN, REDACTION_PLACEHOLDER),
-  Str.replaceAll(JWT_PATTERN, REDACTION_PLACEHOLDER),
-  Str.replaceAll(POSIX_HOME_PATTERN, REDACTION_PLACEHOLDER),
-  Str.replaceAll(WINDOWS_HOME_PATTERN, REDACTION_PLACEHOLDER)
+  maskCredentialCategory("secret-assignment"),
+  replaceCredentialCategory("auth-header", `$1$2${REDACTION_PLACEHOLDER}`),
+  replaceCredentialCategory("bearer-token", `$1$2${REDACTION_PLACEHOLDER}`),
+  replaceCredentialCategory("provider-key", REDACTION_PLACEHOLDER),
+  replaceCredentialCategory("jwt", REDACTION_PLACEHOLDER),
+  replaceCredentialCategory("home-path", `$1$3${REDACTION_PLACEHOLDER}`)
 );
 
 const applyRedactionSteps = (input: string): string => A.reduce(redactionSteps, input, (acc, step) => step(acc));
