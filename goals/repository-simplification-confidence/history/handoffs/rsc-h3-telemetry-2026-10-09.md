@@ -1,7 +1,7 @@
 lane: rsc-h3-telemetry
-head: a52f1be02fc0082b34427e26d074f22e4c7e1b8d (source; final proof batch queued)
+head: 6010bb9b2c0833f17077c0b4f61f459165d56d25 (source final review and proof queued; draft publication wave)
 pr: none (publication pending; not called final)
-package-verify: @beep/repo-ai-metrics fail (opening-source conformance allowlist repaired; final rerun queued); @beep/repo-cli pass on preceding source, final rerun pending
+package-verify: @beep/repo-ai-metrics fail (introduced conformance omission repaired, final rerun queued); @beep/repo-cli fail (introduced chronology fixture and Effect API name repaired, final rerun queued)
 hosted-parity: test-tsgo pass on preceding source; docgen local pass on preceding source; jsdoc-ratchet pass; knowledge refs fail inherited SPEC.md host-path literal; fallow audit/health introduced activity-folding complexity repaired, final rerun queued; coverage read pass baseline-only, 10 touched files
 receipt: goals/repository-simplification-confidence/history/receipts/stage-4-h3-telemetry.md
 handoff: goals/repository-simplification-confidence/history/handoffs/rsc-h3-telemetry-2026-10-09.md

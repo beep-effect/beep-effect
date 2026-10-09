@@ -24,7 +24,8 @@ The session stamp uses the versioned `harness-hash-v2` preimage. Git checkouts
 include indexed configuration and `.claude/settings.local.json`; non-git
 fixtures use the bounded filesystem walk. Added roots: `.cursor`, `.agents`,
 `.junie`, `.grok`; `.mcp.json` is session configuration. Ignored state is excluded.
-Model/effort overrides are session attributes; model defaults in configuration
+An indexed Git parity fixture covers nested guidance, symlinked CLAUDE.md,
+all existing config roots, and unrelated quoted names. Model/effort overrides are session attributes; model defaults in configuration
 remain fingerprint inputs. Global projection is separately owned by F and is
 not silently inferred from this repository snapshot.
 
@@ -95,7 +96,7 @@ restored export is not claimed.
 `bun run beep harness-ledger reconcile --state-dir <hook-events> --transcript-dir
 <transcripts> --agent-kind <kind>` reads structural transcript metadata and emits
 counts only. It includes nested children, resolves relative roots, and prevents
-symlink-directory revisits. Non-production hooks are excluded. Aggregate ratios
+symlink-directory revisits. Unreadable entries are counted and skipped. Non-production hooks are excluded. Aggregate ratios
 remain advisory and `qualifiedForNonUse` stays false; genuine non-use still needs
 at least 0.98 collection coverage for the affected harness plus per-tool and
 surface attribution. Codex exec wrappers are reported as failed-or-interrupted;
