@@ -128,11 +128,23 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       dataResourceSurfaceOf(labTargetWithoutSchema).pipe(assertNone);
     });
 
-    it("keeps non-labs targets on the flat identity segment and the empty deletion note", () => {
+    it("retains the empty deletion note for a publish-enabled non-labs target", () => {
+      const target = RegistrationTarget.make({
+        packageName: "@beep/published",
+        packagePath: PosixPath.make("packages/drivers/published"),
+        private: false,
+      });
+      expect(O.getOrThrow(pendingSurfaceOf(target)).deletionNotePolicy).toBe("emit-empty-note");
+      expect(O.getOrThrow(operationById(target, "pending-changesets")).detail).toContain(
+        "emit an empty deletion changeset"
+      );
+    });
+
+    it("keeps private non-labs targets on the flat identity segment without a deletion note", () => {
       const identity = O.getOrThrow(identitySurfaceOf(productTarget));
       identity.generatedGroup.pipe(assertNone);
       const pending = O.getOrThrow(pendingSurfaceOf(productTarget));
-      expect(pending.deletionNotePolicy).toBe("emit-empty-note");
+      expect(pending.deletionNotePolicy).toBe("private-exempt");
       dataResourceSurfaceOf(productTarget).pipe(assertNone);
     });
   });
@@ -166,6 +178,20 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           expect(multi).toContain("@beep/other");
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("private-exempt prunes pending changesets without emitting a deletion note", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const repoRoot = yield* fs.makeTempDirectoryScoped();
+        yield* seedChangesets(repoRoot);
+        yield* rewritePendingChangesets(repoRoot, "@beep/probe", "private-exempt");
+        expect(yield* fs.exists(path.join(repoRoot, ".changeset", "orphan-probe.md"))).toBe(false);
+        expect(yield* fs.exists(path.join(repoRoot, ".changeset", "delete-probe.md"))).toBe(false);
+        const remaining = yield* fs.readFileString(path.join(repoRoot, ".changeset", "multi.md"));
+        expect(remaining).not.toContain('"@beep/probe"');
+      })
     );
 
     it.effect("emit-empty-note still writes the canonical deletion note byte-identically", () =>

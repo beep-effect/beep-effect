@@ -2105,3 +2105,26 @@ Areas the doctrine does not yet cover and which the authors expect to revise as 
 - **Promotion record enforcement.** Records are required by doctrine; lint enforcement (`lint:promotion-records`) is planned but not yet implemented.
 
 Pull requests revising these areas should append entries here documenting the decision and removing the corresponding "planned" line.
+
+## 2026-10-09 — Private release-note reset
+
+Private internal workspaces do not require or accumulate pending changesets.
+The status gate reads `private`; versioned publish-enabled product workspaces
+retain in-branch note requirements and existing explicit ignore exemptions.
+The graph guard rejects notes naming live private workspaces. Root/unowned paths
+have no independent note obligation; release impact is represented by the
+changed publish-enabled workspace. Private deletion emits no empty note.
+
+The external-contract census precedes retirement in
+`goals/repository-simplification-confidence/history/receipts/stage-2-policy.md`.
+`standards/changesets.reset-baseline.json` records the parent and original tree
+for recovery. Versions and package changelogs remain historical records.
+The live `@beep/ontology` workspace is removed from the retired-name registry;
+other entries guard name reuse, independently of pending release notes.
+
+Publication stays dormant with its config, dependencies and changelog adapter
+retained. Activation establishes release/versioning policy, audits external
+contracts, flips `private: false`, reconciles ignore exemptions and restores
+appropriate note requirements and publication workflow/hosted allowlist wiring.
+Desktop manual versioning and `professional-desktop-v*` releases stay separate.
+Reverse the reset with the baseline recovery commands and revert its policy PR.

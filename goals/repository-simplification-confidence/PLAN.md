@@ -213,7 +213,7 @@ produces them.
 | Script ports | `rsc-c-scripts` | `history/receipts/stage-5-acceptance.md#script-ports` |
 | Sensitive scripts | `rsc-c-scripts` | `history/receipts/stage-5-acceptance.md#sensitive-scripts` |
 | Retained patches | `rsc-a-retire` | `history/receipts/stage-5-acceptance.md#retained-patches` |
-| Release policy | `rsc-d-release` | `history/receipts/stage-2-policy.md` (including `#external-contracts`) |
+| Release policy | `rsc-d-release` | `history/receipts/stage-2-policy.md` (`#external-contracts`, baseline, `#desktop-release` pending E-09); `history/handoffs/rsc-d-release-2026-10-09.md` (gates) |
 | GitHub workflows and hosted configuration (brief 2.E) | `rsc-e-github` | `history/receipts/stage-4-github-audit.md` |
 | Completion receipts | `rsc-h2-completion` | `history/receipts/stage-4-completion-receipts.md` |
 | Catalog and holds (H1) | `rsc-h1-catalog` | `history/receipts/stage-4-h1-catalog.md` |
@@ -288,3 +288,10 @@ bun run beep goals index --write
 bun run beep lint reflection-artifacts
 bun run beep quality package-verify <@beep/package>
 ```
+
+### D lane progress (2026-10-09)
+
+Census committed before retirement at `da1a85157d`. D reset implementation and
+one-commit note retirement are in progress, with gate evidence tracked in
+`history/handoffs/rsc-d-release-2026-10-09.md`. GitHub Packages is externally
+blocked by read:packages; desktop verification is E-owned and pending E-09.

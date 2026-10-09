@@ -33,9 +33,12 @@ desktop versioning is separate and this reset preserves every version.
 
 ## Baseline and recovery
 
-The retirement commit will add `standards/changesets.reset-baseline.json` with
-its exact parent SHA, original changeset tree oid, counts by kind/month, and
-recovery commands. The orchestrator records the post-merge SHA here (R34).
+`standards/changesets.reset-baseline.json` records parent
+`da1a85157d7c8cc6b72fe43f12d01389db811ce9`, original changeset tree
+`d839776128c29c6c4cc7c2937329942d873b973c`, and all 939 retired notes:
+784 package notes, 148 `{}` notes, 7 empty-frontmatter notes. Counts by first-add
+month and bump kind are retained with recovery commands. Gate, policy and
+retirement land together in one reset commit; no `changeset version` was run. The orchestrator records the post-merge SHA here (R34).
 
 ## Validation
 

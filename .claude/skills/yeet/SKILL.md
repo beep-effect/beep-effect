@@ -440,7 +440,7 @@ authoritative proof, and `bun run beep yeet verify` (full tier) is an
 on-demand tool for iterating on a red hosted lane locally, never an automatic
 publish step. The full tier's first step still runs the cheap-gates tier. This tier runs 12 deterministic gates in
 one collected wave, including config sync, tsgo rule parity, Effect imports,
-schema-first, goals checks, Knip, Fallow, changeset status, and the JSDoc
+schema-first, goals checks, Knip, Fallow, publish-enabled changeset status, and the JSDoc
 ratchet against the committed inventory. It reports every failure before any
 build, lint, check, test, or docgen lane starts. `yeet repair` applies its
 deterministic fixers, runs the same collected tier, and stops before heavy
@@ -1007,10 +1007,14 @@ turbo work, so they are cheap to run mid-loop.
   toward the enforcement bar (ruling 80's flip condition) and prints the bound.
 - The cheap-gates tier includes `beep quality changeset-status --since
   origin/main` (parity with hosted Repo Sanity). It enforces in-process: every
-  changed, versioned, non-ignored product workspace must be named by a
+  changed, versioned, publish-enabled (`private !== true`), non-ignored product
+  workspace must be named by a
   changeset **added in-branch** (the base backlog never counts, and empty
   changesets satisfy nothing). Write real `"@pkg": patch` frontmatter for each
-  changed package; lab-only change sets are ceremony-exempt.
+  changed publish-enabled package; private workspaces and lab-only change sets
+  are ceremony-exempt. The graph guard rejects notes naming private workspaces.
+  Publication activation must deliberately establish release/versioning policy,
+  audit external contracts, and restore appropriate changeset requirements.
 
 ## Failure Handling
 

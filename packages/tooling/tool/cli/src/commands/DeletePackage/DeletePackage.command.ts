@@ -359,14 +359,14 @@ const pruneChangesetFile = Effect.fn("DeletePackage.pruneChangesetFile")(functio
 
 /**
  * Prune pending changesets naming the package, then emit the canonical `{}`
- * deletion note — or skip the note entirely under the labs-exempt policy.
+ * deletion note — or skip the note entirely under the private-exempt or labs-exempt policy.
  *
  * **Details**
  *
  * The prune loop is policy-independent: every other pending changeset naming
  * the package is deleted (single-package) or key-stripped (multi-package)
  * even for labs targets. Only the dedicated `delete-<slug>.md` deletion note
- * is gated by {@link DeletionNotePolicy}: labs deletions are ceremony-exempt
+ * is gated by {@link DeletionNotePolicy}: private and labs deletions are ceremony-exempt
  * and emit no changeset.
  *
  * **Example** (Build a labs-exempt rewrite effect)
@@ -402,6 +402,7 @@ export const rewritePendingChangesets = Effect.fn("DeletePackage.rewritePendingC
   yield* DeletionNotePolicy.$match(deletionNotePolicy, {
     "emit-empty-note": () => fs.writeFileString(deletionNote, renderCanonicalDeletionChangeset(packageName)),
     "labs-exempt": () => Effect.void,
+    "private-exempt": () => Effect.void,
   });
 });
 

@@ -78,3 +78,7 @@ state are recorded; stage 1 closes when every lane owner and recovery path in
 - Program review exception: every in-scope actionable finding is resolved,
   including P2 and below; the round-2 review cap does not apply (SPEC.md
   Exception Ledger).
+
+D latest evidence: [external-contract census and reset policy](history/receipts/stage-2-policy.md)
+and [release lane handoff](history/handoffs/rsc-d-release-2026-10-09.md).
+The census precedes note retirement; final gates and E-09 remain pending.

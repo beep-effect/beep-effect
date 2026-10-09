@@ -1,0 +1,29 @@
+{
+  "parent": "da1a85157d7c8cc6b72fe43f12d01389db811ce9",
+  "changesetTree": "d839776128c29c6c4cc7c2937329942d873b973c",
+  "total": 939,
+  "byKind": {
+    "empty": 7,
+    "empty-object": 148,
+    "package": 784
+  },
+  "byMonth": {
+    "2026-05": 1,
+    "2026-06": 59,
+    "2026-07": 222,
+    "2026-08": 255,
+    "2026-09": 299,
+    "2026-10": 103
+  },
+  "frontmatterBumps": {
+    "major": 10,
+    "minor": 279,
+    "patch": 4277
+  },
+  "versions": "preserved",
+  "recovery": [
+    "git ls-tree --name-only d839776128c29c6c4cc7c2937329942d873b973c",
+    "git show da1a85157d7c8cc6b72fe43f12d01389db811ce9:.changeset/<name>.md",
+    "git checkout da1a85157d7c8cc6b72fe43f12d01389db811ce9 -- .changeset"
+  ]
+}
