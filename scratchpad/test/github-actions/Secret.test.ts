@@ -182,7 +182,7 @@ describe("Secret", () => {
 	});
 
 	describe("the declassification invariant", () => {
-		const srcRoot = fileURLToPath(new URL("../src/", import.meta.url));
+		const srcRoot = fileURLToPath(new URL("../../effected/github-actions/", import.meta.url));
 
 		/**
 		 * Strip comments before scanning.

@@ -5,7 +5,7 @@ import { assert, describe, layer } from "@effect/vitest";
 import { SourceBoundary } from "../../effected/workspaces/testing.ts";
 import { Effect } from "effect";
 
-const SRC = join(dirname(fileURLToPath(import.meta.url)), "..", "src");
+const SRC = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "effected", "engine");
 
 describe("engine purity", () => {
 	layer(NodeServices.layer)((it) => {

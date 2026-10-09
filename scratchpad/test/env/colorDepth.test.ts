@@ -172,7 +172,7 @@ describe("colorDepth", () => {
 	});
 
 	it("colorKeys lists every env key the detector reads", () => {
-		const dir = fileURLToPath(new URL("../src/internal/", import.meta.url));
+		const dir = fileURLToPath(new URL("../../effected/env/internal/", import.meta.url));
 		const source = readFileSync(`${dir}colorDepth.ts`, "utf8");
 		const read = new Set(
 			[...source.matchAll(/(?<![\w./])env(?:\.([A-Z][A-Za-z_]+)|\[\s*"([A-Za-z_]+)"\s*\])/g)].flatMap((m) => {

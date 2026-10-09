@@ -110,15 +110,15 @@ describe("SourceBoundary.importSpecifiers", () => {
 			'import h = require("./h.ts");',
 		].join("\n");
 		assert.deepStrictEqual(SourceBoundary.importSpecifiers(text), [
-			"./a.js",
-			"./side-effect.js",
-			"./b.js",
-			"./c.js",
-			"./d.js",
-			"./e.js",
+			"./a.ts",
+			"./side-effect.ts",
+			"./b.ts",
+			"./c.ts",
+			"./d.ts",
+			"./e.ts",
 			"./f.js",
-			"./g.js",
-			"./h.js",
+			"./g.ts",
+			"./h.ts",
 		]);
 	});
 
@@ -330,7 +330,7 @@ describe("SourceBoundary on the real tree", () => {
 	// ConfigDependencyHooks.ts embeds a node program (REPLAY_SCRIPT) as template
 	// text: it reads process.argv, writes process.stdout and calls import(url),
 	// all as TEXT that this module never executes.
-	const file = resolve(dirname(fileURLToPath(import.meta.url)), "../src/ConfigDependencyHooks.ts");
+	const file = resolve(dirname(fileURLToPath(import.meta.url)), "../../effected/workspaces/ConfigDependencyHooks.ts");
 	const text = readFileSync(file, "utf8");
 	const open = text.indexOf("const REPLAY_SCRIPT = `");
 	const script = text.slice(text.indexOf("`", open) + 1, text.indexOf("\n`;", open));

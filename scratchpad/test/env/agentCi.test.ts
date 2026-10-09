@@ -89,7 +89,7 @@ describe("detectCi", () => {
 
 // Added beyond the brief: the key list and the detector cannot drift.
 describe("agentCiKeys", () => {
-	const dir = fileURLToPath(new URL("../src/internal/", import.meta.url));
+	const dir = fileURLToPath(new URL("../../effected/env/internal/", import.meta.url));
 	const source = readFileSync(`${dir}agentCi.ts`, "utf8");
 	const direct = new Set(
 		[...source.matchAll(/(?<![\w./])env(?:\.([A-Z][A-Za-z_]+)|\[\s*"([A-Za-z_]+)"\s*\])/g)].flatMap((m) => {

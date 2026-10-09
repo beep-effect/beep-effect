@@ -6,7 +6,7 @@ import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { assert, describe, it } from "@effect/vitest";
 
-const SRC = join(dirname(fileURLToPath(import.meta.url)), "..", "src");
+const SRC = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "effected", "cli");
 
 const sources = (dir: string): ReadonlyArray<string> =>
 	readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {

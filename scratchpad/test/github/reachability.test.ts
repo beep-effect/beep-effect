@@ -24,7 +24,7 @@ import { assert, describe, it } from "@effect/vitest";
  * control: no edge exists.
  */
 
-const SRC = resolve(dirname(fileURLToPath(import.meta.url)), "..", "src");
+const SRC = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "effected", "github");
 
 /** Every `from "..."` specifier in a module, ignoring type-only imports. */
 const runtimeSpecifiers = (source: string): ReadonlyArray<string> => {
@@ -208,7 +208,7 @@ describe("bundle reachability", () => {
 			.map((name) => name.replace(/\.ts$/, ""))
 			.sort();
 		const entry = readFileSync(resolve(SRC, "index.ts"), "utf8");
-		const unreachable = modules.filter((name) => !entry.includes(`"./${name}.js"`));
+		const unreachable = modules.filter((name) => !entry.includes(`"./${name}.ts"`));
 		assert.deepStrictEqual(unreachable, [], "module(s) in src/ that the entrypoint never re-exports");
 	});
 

@@ -7,7 +7,7 @@ import type { Offence } from "../../effected/workspaces/testing.ts";
 import { SourceBoundary } from "../../effected/workspaces/testing.ts";
 import { Effect } from "effect";
 
-const SRC = join(dirname(fileURLToPath(import.meta.url)), "..", "src");
+const SRC = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "effected", "cli");
 
 /** Reads a module's source text; the real tree reads the disk, the mutation control reads a map. */
 type Read = (file: string) => string;

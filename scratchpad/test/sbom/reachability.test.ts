@@ -18,7 +18,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { assert, describe, it } from "@effect/vitest";
 
-const SRC = resolve(dirname(fileURLToPath(import.meta.url)), "..", "src");
+const SRC = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "effected", "sbom");
 
 /** Every `from "..."` specifier in a module, ignoring type-only imports. */
 const runtimeSpecifiers = (source: string): ReadonlyArray<string> => {
@@ -100,7 +100,7 @@ describe("bundle reachability", () => {
 			'import { License } from "../../effected/spdx/index.ts";',
 			"export const x = [Schema, License];",
 		].join("\n");
-		assert.deepStrictEqual([...runtimeSpecifiers(fixture)], ["effect", "@effected/spdx"]);
+		assert.deepStrictEqual([...runtimeSpecifiers(fixture)], ["effect", "../../effected/spdx/index.ts"]);
 	});
 
 	it("the signer DOES reach @sigstore/*", () => {
@@ -195,7 +195,7 @@ describe("bundle reachability", () => {
 		// delete those on the assumption this one subsumes them.
 		for (const entry of PURE_MODULES) {
 			const source = readFileSync(resolve(SRC, entry), "utf8");
-			assert.notInclude(source, "./SigstoreSigner.js", `${entry} imports the signer module`);
+			assert.notInclude(source, "./SigstoreSigner.ts", `${entry} imports the signer module`);
 		}
 	});
 });

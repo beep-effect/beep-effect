@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { assert, describe, it } from "@effect/vitest";
 import { SourceBoundary } from "../../effected/workspaces/testing.ts";
 
-const SRC = resolve(dirname(fileURLToPath(import.meta.url)), "../src");
+const SRC = resolve(dirname(fileURLToPath(import.meta.url)), "../../effected/workspaces");
 
 /** Every relative import of a module, resolved to its source path. */
 const importsOf = (file: string): ReadonlyArray<string> =>
@@ -26,7 +26,7 @@ const reachableFrom = (entry: string): ReadonlySet<string> => {
 };
 
 const TESTING_ONLY =
-	/src\/(testing|SourceBoundary|LayerPolicy|WorkspaceLayering|PackedInstall|internal\/sourceText|internal\/packedInstallPlan)\.ts$/;
+	/effected\/workspaces\/(testing|SourceBoundary|LayerPolicy|WorkspaceLayering|PackedInstall|internal\/sourceText|internal\/packedInstallPlan)\.ts$/;
 
 describe("entrypoint boundary", () => {
 	it("nothing reachable from `.` belongs to ./testing", () => {
@@ -35,7 +35,7 @@ describe("entrypoint boundary", () => {
 	});
 
 	it("nothing reachable from `.` is ./node-sync", () => {
-		const offenders = [...reachableFrom(resolve(SRC, "index.ts"))].filter((file) => /src\/node-sync\.ts$/.test(file));
+		const offenders = [...reachableFrom(resolve(SRC, "index.ts"))].filter((file) => /effected\/workspaces\/node-sync\.ts$/.test(file));
 		assert.deepStrictEqual(offenders, []);
 	});
 
@@ -51,7 +51,7 @@ describe("entrypoint boundary", () => {
 			"internal/packedInstallPlan",
 		]) {
 			assert.isTrue(
-				reachable.some((file) => file.endsWith(`src/${module}.ts`)),
+				reachable.some((file) => file.endsWith(`effected/workspaces/${module}.ts`)),
 				module,
 			);
 		}
@@ -59,7 +59,7 @@ describe("entrypoint boundary", () => {
 
 	it("the walker resolves the main entry's modules, or it proves nothing", () => {
 		assert.isTrue(
-			[...reachableFrom(resolve(SRC, "index.ts"))].some((file) => /src\/WorkspaceDiscovery\.ts$/.test(file)),
+			[...reachableFrom(resolve(SRC, "index.ts"))].some((file) => /effected\/workspaces\/WorkspaceDiscovery\.ts$/.test(file)),
 		);
 	});
 });

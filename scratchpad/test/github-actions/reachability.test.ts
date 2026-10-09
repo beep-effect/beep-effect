@@ -18,7 +18,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { assert, describe, it } from "@effect/vitest";
 
-const SRC = resolve(dirname(fileURLToPath(import.meta.url)), "..", "src");
+const SRC = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "effected", "github-actions");
 
 /** Every `from "..."` specifier in a module, ignoring type-only imports. */
 const runtimeSpecifiers = (source: string): ReadonlyArray<string> => {
@@ -141,7 +141,7 @@ describe("bundle reachability", () => {
 			'import { Effect } from "effect";',
 			'export { thing } from "./thing.ts";',
 		].join("\n");
-		assert.deepStrictEqual([...runtimeSpecifiers(source)], ["effect", "./thing.js"]);
+		assert.deepStrictEqual([...runtimeSpecifiers(source)], ["effect", "./thing.ts"]);
 	});
 
 	it("the stripper survives prose that opens a block comment", () => {
@@ -321,7 +321,7 @@ describe("bundle reachability", () => {
 		// above — do not delete that test on the assumption this one subsumes it.
 		for (const entry of LIGHT_MODULES) {
 			const source = readFileSync(resolve(SRC, entry), "utf8");
-			for (const heavy of ["./ActionCache.js", "./Artifact.js", "./BlobStore.githubCache.js"]) {
+			for (const heavy of ["./ActionCache.ts", "./Artifact.ts", "./BlobStore.githubCache.ts"]) {
 				assert.notInclude(source, heavy, `${entry} imports ${heavy}`);
 			}
 		}

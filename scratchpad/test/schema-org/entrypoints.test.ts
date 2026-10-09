@@ -3,7 +3,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { assert, describe, it } from "@effect/vitest";
 
-const SRC = resolve(dirname(fileURLToPath(import.meta.url)), "../src");
+const SRC = resolve(dirname(fileURLToPath(import.meta.url)), "../../effected/schema-org");
 
 /** Every relative import specifier in a module, resolved to a source path. */
 const importsOf = (file: string): ReadonlyArray<string> => {
@@ -47,7 +47,7 @@ describe("entrypoint boundary", () => {
 	it("nothing reachable from `.` imports Vocabulary or Conformance either", () => {
 		const reachable = reachableFrom(resolve(SRC, "index.ts"));
 
-		const offenders = [...reachable].filter((file) => /src\/(Vocabulary|Conformance)\.ts$/.test(file));
+		const offenders = [...reachable].filter((file) => /effected\/schema-org\/(Vocabulary|Conformance)\.ts$/.test(file));
 
 		assert.deepStrictEqual(offenders, [], "the validator and its data belong behind `./conformance`");
 	});
@@ -62,7 +62,7 @@ describe("entrypoint boundary", () => {
 
 		assert.isAbove(reachable.size, 1, "the walker must actually resolve imports");
 		assert.isTrue(
-			[...reachable].some((file) => /src\/Vocabulary\.ts$/.test(file)),
+			[...reachable].some((file) => /effected\/schema-org\/Vocabulary\.ts$/.test(file)),
 			"if this fails the walker is broken and the assertions above prove nothing",
 		);
 	});

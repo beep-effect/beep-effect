@@ -3,7 +3,7 @@ import { dirname, join, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { assert, describe, it } from "@effect/vitest";
 
-const SRC = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "src");
+const SRC = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "effected", "cli");
 
 /** The public names a source entrypoint re-exports, aliases resolved. */
 const entryExports = (file: string): ReadonlyArray<string> =>

@@ -9,7 +9,7 @@ import { assert, describe, layer } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import { SourceBoundary } from "../../../effected/workspaces/testing.ts";
 
-const SRC = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "src");
+const SRC = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "effected", "workspaces");
 const Platform = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 const TESTING_MODULES = new Set([
 	"testing.ts",

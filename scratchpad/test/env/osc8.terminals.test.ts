@@ -193,7 +193,7 @@ describe("lookupTerminal", () => {
 // Added by the port (not in std-osc8): the key list and the detectors cannot drift.
 describe("terminalKeys", () => {
 	it("lists every env key the ported detectors read", () => {
-		const dir = fileURLToPath(new URL("../src/internal/osc8/", import.meta.url));
+		const dir = fileURLToPath(new URL("../../effected/env/internal/osc8/", import.meta.url));
 		const sources = ["env", "semver", "wrappers", "terminals", "detect"].map((f) =>
 			readFileSync(`${dir}${f}.ts`, "utf8"),
 		);

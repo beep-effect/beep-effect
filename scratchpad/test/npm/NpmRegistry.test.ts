@@ -208,7 +208,7 @@ describe("NpmRegistry — the registry dimension", () => {
 		// become an anonymous one — 401, read as "not published", republish.
 		// Typed `never`, the same spread is a compile error. Asserted on the
 		// source because the guarantee IS the type, which erases at runtime.
-		const source = readFileSync(new URL("../src/NpmRegistry.ts", import.meta.url), "utf-8");
+		const source = readFileSync(new URL("../../effected/npm/NpmRegistry.ts", import.meta.url), "utf-8");
 		assert.include(source, "readonly token?: never;");
 		assert.include(source, "@deprecated");
 	});

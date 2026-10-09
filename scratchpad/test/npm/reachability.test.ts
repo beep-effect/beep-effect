@@ -19,7 +19,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { assert, describe, it } from "@effect/vitest";
 
-const SRC = fileURLToPath(new URL("../src/", import.meta.url));
+const SRC = fileURLToPath(new URL("../../effected/npm/", import.meta.url));
 
 /** The modules a contracts-only consumer imports. */
 const VOCABULARY = [
@@ -36,7 +36,7 @@ const VOCABULARY = [
 ];
 
 /** Modules that reach IO, directly or transitively. */
-const IO_MODULES = ["./NpmRegistry.js", "./PackagePublish.js", "./NpmExecutor.js", "@effected/commands"];
+const IO_MODULES = ["./NpmRegistry.ts", "./PackagePublish.ts", "./NpmExecutor.ts", "../commands/index.ts"];
 
 const read = (file: string): string => readFileSync(join(SRC, file), "utf8");
 

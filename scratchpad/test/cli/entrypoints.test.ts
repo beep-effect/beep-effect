@@ -3,7 +3,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { assert, describe, it } from "@effect/vitest";
 
-const SRC = resolve(dirname(fileURLToPath(import.meta.url)), "../src");
+const SRC = resolve(dirname(fileURLToPath(import.meta.url)), "../../effected/cli");
 
 /** Every relative import specifier in a module, resolved to a source path. */
 const importsOf = (file: string): ReadonlyArray<string> => {
@@ -28,19 +28,19 @@ const reachableFrom = (entry: string): ReadonlySet<string> => {
 describe("entrypoint boundary", () => {
 	it("nothing reachable from `.` imports CliTest", () => {
 		const reachable = reachableFrom(resolve(SRC, "index.ts"));
-		const offenders = [...reachable].filter((file) => /src\/(CliTest|testing|TestTerminal)\.ts$/.test(file));
+		const offenders = [...reachable].filter((file) => /effected\/cli\/(CliTest|testing|TestTerminal)\.ts$/.test(file));
 		assert.deepStrictEqual(offenders, [], "test utilities belong behind ./testing");
 	});
 
 	it("positive control: ./testing DOES reach CliTest", () => {
 		const reachable = reachableFrom(resolve(SRC, "testing.ts"));
 		assert.isAbove(reachable.size, 1, "the walker must actually resolve imports");
-		assert.isTrue([...reachable].some((file) => /src\/CliTest\.ts$/.test(file)));
+		assert.isTrue([...reachable].some((file) => /effected\/cli\/CliTest\.ts$/.test(file)));
 	});
 
 	it("the walker resolves the main entry's modules, or it proves nothing", () => {
 		const reachable = reachableFrom(resolve(SRC, "index.ts"));
-		assert.isTrue([...reachable].some((file) => /src\/CliRuntime\.ts$/.test(file)));
+		assert.isTrue([...reachable].some((file) => /effected\/cli\/CliRuntime\.ts$/.test(file)));
 	});
 
 	it("the main entry exports the whole presentation layer, and only testing exports the test doubles", async () => {

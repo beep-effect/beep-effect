@@ -293,7 +293,7 @@ const importSpecifiers = (source: string): ReadonlyArray<string> => {
 
 describe("fix routes only through YamlEdit.applyAll — structural pin", () => {
 	it("neither the facade nor any rule imports YamlFormat", () => {
-		const srcDir = new URL("../src/", import.meta.url);
+		const srcDir = new URL("../../effected/yaml/", import.meta.url);
 		const files = [
 			"YamlLint.ts",
 			"YamlLintRule.ts",

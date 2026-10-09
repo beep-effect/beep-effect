@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { assert, describe, it } from "@effect/vitest";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const SRC = resolve(ROOT, "src");
+const SRC = resolve(dirname(fileURLToPath(import.meta.url)), "../../effected/engine");
 const BUILT = resolve(ROOT, "dist", "dev", "pkg");
 
 /**

@@ -59,7 +59,7 @@ describe("the generated vocabulary table", () => {
 		// rather than `./conformance`; the ceiling is the number that decision
 		// turns on. Measured 74,834 B at v30.0 — a regeneration that doubles it
 		// is a design change, not a data refresh.
-		const bytes = readFileSync(fileURLToPath(new URL("../src/internal/vocabulary.ts", import.meta.url))).length;
+		const bytes = readFileSync(fileURLToPath(new URL("../../effected/schema-org/internal/vocabulary.ts", import.meta.url))).length;
 		assert.isBelow(bytes, 80_000, `vocabulary table is ${bytes} B`);
 		assert.isAbove(bytes, 60_000, `vocabulary table is ${bytes} B — suspiciously small, did generation half-run?`);
 	});
