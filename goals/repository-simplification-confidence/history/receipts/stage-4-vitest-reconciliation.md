@@ -258,3 +258,13 @@ context blank lines do not become whitespace violations in authored files.
 The two quoted patch SHA256 values identify decompressed bytes, which are
 unchanged. Replay with gzip -dc into git apply; the original source exports
 and their digests remain untouched.
+
+### Run 4 final-main regeneration
+
+Main merge `ed3c1a478e` includes D release and H1 packet evidence. The owning
+`beep lint effect-vitest --write` scan after that merge again finds 1,853 rows
+across 1,348 files (716 open / 1,137 exceptions), with twelve re-anchored entries
+and no count change. This supersedes the prior generated projection for the
+serialized integration PR. Source proof results remain attributed to their
+recorded heads; main's one-line changeset-remedy assertion updates yeet.test.ts.
+The 20:30Z ruling authorizes direct capped Yeet publication for this wave.

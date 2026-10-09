@@ -178,3 +178,18 @@ CLI source gates. If main advances, merge it and regenerate shared projections;
 requalify only affected surfaces. First command needing heavy admission is
 `beep-heavy bun run beep yeet publish --message "test(cli): integrate preserved vitest canon work"`.
 Do not bypass the queue, change its caps, stop peers, or retire legacy sources.
+
+## Run 4 — direct publication ruling, 2026-10-09
+
+The 20:30Z resume ruling supersedes the Run 3 queue blocker. Main merged at
+`ed3c1a478e`; both packet-document conflicts retained each lane's evidence.
+The scan was regenerated because main moved the shared inventory. Counts
+remain 1,853 / 716 open / 1,137 exceptions; twelve anchors changed, with no
+finding added or removed. Main D release work changes one of the 37 reviewed
+files, `yeet.test.ts`, solely to assert the new private-exempt changeset remedy.
+The other 36 source digests match terminal-zero review R7. Recorded CLI gates
+remain qualified at their recorded heads; no exact-current-head package pass
+is inferred. The lane cgroup readback is MemoryHigh 36 GiB / MemoryMax 40 GiB.
+Publication runs directly with TURBO_CONCURRENCY=2 under the explicit ruling;
+no peer job or source worktree is changed. R105 remains a follow-up after the
+integration PR merges. Final publication/ready/remote review evidence follows.
