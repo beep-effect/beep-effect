@@ -4,7 +4,7 @@
 
 Lifecycle: `active`
 
-Latest E evidence: [GitHub audit](./history/receipts/stage-4-github-audit.md), [settings snapshots](./history/receipts/stage-3-github-settings.md), and [lane handoff](./history/handoffs/rsc-e-github-2026-10-09.md). The workflow wave is published as ready PR #1568. Recovery fixtures, test compiler, local docgen, JSDoc Ratchet, Fallow audit/health and the desktop package gate pass. Both edited package gates pass. A review repair wave and final post-integration proof are in progress. Dependency review executed and the single size label is verified; inherited knowledge-reference/coverage repairs, remaining hosted behavior and cross-lane gates remain open.
+Latest E evidence: [GitHub audit](./history/receipts/stage-4-github-audit.md), [settings snapshots](./history/receipts/stage-3-github-settings.md), and [lane handoff](./history/handoffs/rsc-e-github-2026-10-09.md). The workflow wave is published as ready PR #1568. Recovery fixtures, test compiler, local docgen, JSDoc Ratchet, Fallow audit/health and the desktop package gate pass. Earlier full package gates passed; the CLI gate for the review repair head is still running. A review repair wave and final post-integration proof are in progress. Dependency review executed and the single size label is verified; inherited knowledge-reference/coverage repairs, remaining hosted behavior and cross-lane gates remain open.
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
