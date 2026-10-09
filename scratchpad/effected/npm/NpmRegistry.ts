@@ -338,7 +338,7 @@ const make = Effect.fnUntraced(function* () {
 		yield* Effect.annotateCurrentSpan({ package: name, registry: target?.registry ?? DEFAULT_REGISTRY });
 		const document = yield* packument(name, target);
 		return O.match(document, {
-			onNone: () => [] as ReadonlyArray<string>,
+			onNone: (): ReadonlyArray<string> => [],
 			onSome: (found) => Object.keys(found.versions ?? {}),
 		});
 	});
@@ -347,7 +347,7 @@ const make = Effect.fnUntraced(function* () {
 		yield* Effect.annotateCurrentSpan({ package: name, registry: target?.registry ?? DEFAULT_REGISTRY });
 		const document = yield* packument(name, target);
 		return O.match(document, {
-			onNone: () => ({}) as Record<string, string>,
+			onNone: (): Record<string, string> => ({}),
 			onSome: (found) => ({ ...(found["dist-tags"] ?? {}) }),
 		});
 	});
@@ -356,7 +356,7 @@ const make = Effect.fnUntraced(function* () {
 		yield* Effect.annotateCurrentSpan({ package: name, registry: target?.registry ?? DEFAULT_REGISTRY });
 		const document = yield* packument(name, target);
 		return O.match(document, {
-			onNone: () => [] as ReadonlyArray<PublishTime>,
+			onNone: (): ReadonlyArray<PublishTime> => [],
 			onSome: (found) => {
 				const entries: Array<PublishTime> = [];
 				for (const [key, value] of Object.entries(found.time ?? {})) {

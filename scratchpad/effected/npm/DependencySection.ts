@@ -56,9 +56,12 @@ const KIND_TO_FIELD = {
 } as const satisfies Record<DependencyKind, DependencyField>;
 
 // Inverse, derived from KIND_TO_FIELD so the mapping is written once.
-const FIELD_TO_KIND = Object.fromEntries(
-	Object.entries(KIND_TO_FIELD).map(([kind, field]) => [field, kind] as const),
-) as Record<DependencyField, DependencyKind>;
+const FIELD_TO_KIND = {
+	[KIND_TO_FIELD.prod]: "prod",
+	[KIND_TO_FIELD.dev]: "dev",
+	[KIND_TO_FIELD.peer]: "peer",
+	[KIND_TO_FIELD.optional]: "optional",
+} satisfies Record<DependencyField, DependencyKind>;
 
 /**
  * The dependency-section vocabulary: the two literal schemas

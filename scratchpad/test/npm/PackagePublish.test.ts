@@ -8,6 +8,7 @@ import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
 import * as PlatformError from "effect/PlatformError";
 import * as Redacted from "effect/Redacted";
+import * as S from "effect/Schema";
 import { NpmExecutor } from "../../effected/npm/NpmExecutor.ts";
 import { PackagePublish, PackedTarball } from "../../effected/npm/PackagePublish.ts";
 import { PublishError } from "../../effected/npm/PublishError.ts";
@@ -257,7 +258,8 @@ describe("PackagePublish.setupAuth", () => {
 			assert.isTrue(error !== undefined && error._tag === "Some");
 			if (error !== undefined && error._tag === "Some") {
 				assert.instanceOf(error.value, PublishError);
-				assert.strictEqual((error.value as PublishError).kind, "auth");
+				assert.isTrue(S.is(PublishError)(error.value));
+				assert.strictEqual(error.value.kind, "auth");
 			}
 			assert.strictEqual(h.fs.volume.text(NPMRC), prior);
 		}),
@@ -277,9 +279,10 @@ describe("PackagePublish.setupAuth", () => {
 			const error = Exit.isFailure(exit) ? Exit.findErrorOption(exit) : undefined;
 			assert.isTrue(error !== undefined && error._tag === "Some");
 			if (error !== undefined && error._tag === "Some") {
-				assert.strictEqual((error.value as PublishError).kind, "auth");
+				assert.isTrue(S.is(PublishError)(error.value));
+				assert.strictEqual(error.value.kind, "auth");
 				// Only the READ failure names the npmrc; a failed write carries no subject.
-				assert.strictEqual((error.value as PublishError).subject, NPMRC);
+				assert.strictEqual(error.value.subject, NPMRC);
 			}
 		}),
 	);

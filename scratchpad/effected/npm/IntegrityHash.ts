@@ -47,6 +47,8 @@ import * as SchemaTransformation from "effect/SchemaTransformation";
  */
 export type IntegrityAlgorithm = "sha1" | "sha224" | "sha256" | "sha384" | "sha512";
 
+const isIntegrityAlgorithm = S.is(S.Literals(["sha1", "sha224", "sha256", "sha384", "sha512"]));
+
 // SRI: `<algo>-<base64>` (optional `=` padding). No sha224 — the SRI spec
 // does not include it.
 const SRI_RE = /^(sha1|sha256|sha384|sha512)-[A-Za-z0-9+/]+={0,2}$/;
@@ -73,9 +75,12 @@ export const isValidIntegrityHash = (value: string): boolean =>
 // The algorithm is the prefix before the first `-` (SRI) or `.` (corepack). The
 // yarn form does not name its algorithm, so it has none to read.
 const algorithmOf = (value: string): O.Option<IntegrityAlgorithm> => {
-	if (isSri(value)) return O.some(value.slice(0, value.indexOf("-")) as IntegrityAlgorithm);
-	if (isCorepack(value)) return O.some(value.slice(0, value.indexOf(".")) as IntegrityAlgorithm);
-	return O.none();
+	const prefix = isSri(value)
+		? value.slice(0, value.indexOf("-"))
+		: isCorepack(value)
+			? value.slice(0, value.indexOf("."))
+			: undefined;
+	return O.liftPredicate(isIntegrityAlgorithm)(prefix);
 };
 
 /**

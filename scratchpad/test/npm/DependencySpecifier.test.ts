@@ -12,6 +12,9 @@ import {
 	WorkspaceSpecifier,
 } from "../../effected/npm/index.ts";
 
+const isCatalogSpecifier = S.is(CatalogSpecifier);
+const isWorkspaceSpecifier = S.is(WorkspaceSpecifier);
+
 describe("DependencySpecifier schema", () => {
 	const valid = [
 		"^1.0.0",
@@ -124,8 +127,9 @@ describe("DependencySpecifier.catalogNameOf", () => {
 			for (const specifier of ["catalog:", "catalog:react18"]) {
 				const classified = yield* decode(specifier);
 				assert.instanceOf(classified, CatalogSpecifier, specifier);
+				assert.isTrue(isCatalogSpecifier(classified));
 				assert.deepStrictEqual(
-					(classified as CatalogSpecifier).name,
+					classified.name,
 					DependencySpecifier.catalogNameOf(specifier),
 					specifier,
 				);
@@ -207,7 +211,8 @@ describe("WorkspaceSpecifier#resolve", () => {
 			for (const [specifier, expected] of cases) {
 				const classified = yield* decode(specifier);
 				assert.instanceOf(classified, WorkspaceSpecifier, specifier);
-				assert.strictEqual((classified as WorkspaceSpecifier).resolve("1.2.3"), expected, specifier);
+				assert.isTrue(isWorkspaceSpecifier(classified));
+				assert.strictEqual(classified.resolve("1.2.3"), expected, specifier);
 				// The static and the instance method share one projection.
 				assert.strictEqual(DependencySpecifier.resolveWorkspace(specifier, "1.2.3"), expected, specifier);
 			}
@@ -239,16 +244,20 @@ describe("DependencySpecifier.FromString", () => {
 
 			const defaultCatalog = yield* decode("catalog:");
 			assert.instanceOf(defaultCatalog, CatalogSpecifier);
+			assert.isTrue(isCatalogSpecifier(defaultCatalog));
 			assert.strictEqual(defaultCatalog._tag, "catalog");
-			assert.isTrue(O.isNone((defaultCatalog as CatalogSpecifier).name));
+			assert.isTrue(O.isNone(defaultCatalog.name));
 			assert.strictEqual(defaultCatalog.raw, "catalog:");
 
 			const namedCatalog = yield* decode("catalog:react18");
-			assert.deepStrictEqual((namedCatalog as CatalogSpecifier).name, O.some("react18"));
+			assert.isTrue(isCatalogSpecifier(namedCatalog));
+			if (!isCatalogSpecifier(namedCatalog)) assert.fail("expected a CatalogSpecifier");
+			assert.deepStrictEqual(namedCatalog.name, O.some("react18"));
 
 			const ws = yield* decode("workspace:^1.2.3");
 			assert.instanceOf(ws, WorkspaceSpecifier);
-			assert.strictEqual((ws as WorkspaceSpecifier).range, "^1.2.3");
+			assert.isTrue(isWorkspaceSpecifier(ws));
+			assert.strictEqual(ws.range, "^1.2.3");
 
 			const range = yield* decode("^1.0.0");
 			assert.instanceOf(range, RangeSpecifier);

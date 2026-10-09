@@ -69,7 +69,8 @@ describe("WorkspaceResolver", () => {
 
 			assert.strictEqual(error.cause, cause);
 			assert.isTrue(error.cause instanceof Error);
-			assert.strictEqual((error.cause as Error).message, "catalog not found");
+			if (!(error.cause instanceof Error)) assert.fail("expected an Error cause");
+			assert.strictEqual(error.cause.message, "catalog not found");
 		});
 
 		it.effect("fails an effect through the typed error channel", () =>
@@ -105,7 +106,14 @@ describe("WorkspaceResolver", () => {
 
 		it("rejects a reason outside the literal union", () => {
 			assert.throws(() =>
-				DependencyResolutionError.make({ specifier: "workspace:x", reason: "bogus" as never, cause: undefined }),
+				Result.getOrThrow(
+					S.decodeUnknownResult(DependencyResolutionError)({
+						_tag: "DependencyResolutionError",
+						specifier: "workspace:x",
+						reason: "bogus",
+						cause: undefined,
+					}),
+				),
 			);
 		});
 

@@ -87,13 +87,15 @@ const DEPENDENCY_FIELDS: ReadonlySet<string> = new Set(DependencyField.literals)
 // carries a literal `rest` key. Mirrors `@effected/package-json`'s wire
 // transform at a smaller scale, without taking the dependency.
 const makeWire = (
-	// biome-ignore lint/suspicious/noExplicitAny: invariant Encoded slot — a concrete type is rejected by the class-factory generics
-	Class: S.Codec<Manifest, any, any, any>,
+	Class: S.Codec<Manifest, Record<string, unknown> & { readonly rest?: Record<string, unknown> }>,
 ): S.Codec<Manifest, { readonly [k: string]: unknown }> => {
 	const wire = RawManifest.pipe(
 		S.decodeTo(
 			Class,
-			SchemaTransformation.transform({
+			SchemaTransformation.transform<
+				Record<string, unknown> & { readonly rest?: Record<string, unknown> },
+				typeof RawManifest.Type
+			>({
 				decode: (raw: { readonly [k: string]: unknown }) => {
 					const known: Record<string, unknown> = {};
 					const rest: Record<string, unknown> = {};
@@ -103,8 +105,8 @@ const makeWire = (
 					}
 					return { ...known, rest };
 				},
-				encode: (encoded: Record<string, unknown>) => {
-					const { rest, ...known } = encoded as Record<string, unknown> & { rest?: Record<string, unknown> };
+				encode: (encoded: Record<string, unknown> & { readonly rest?: Record<string, unknown> }) => {
+					const { rest, ...known } = encoded;
 					// Typed fields win on a key collision: a hand-built Manifest whose
 					// `rest` smuggles a dependency-field key must not shadow the typed
 					// member on the wire.
@@ -113,7 +115,7 @@ const makeWire = (
 			}),
 		),
 	);
-	return wire as unknown as S.Codec<Manifest, { readonly [k: string]: unknown }>;
+	return wire;
 };
 
 /**
