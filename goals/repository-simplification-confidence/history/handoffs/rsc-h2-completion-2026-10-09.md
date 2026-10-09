@@ -5,14 +5,14 @@ the final delivery metadata; the worker's final dispatch names that exact tip.
 
 ```text
 lane: rsc-h2-completion
-head: 9e05651ae0237b10ffed2da4d3574909715dd74d (qualified code; delivery is PR tip)   PR: #1574
-package-verify @beep/repo-cli: pass (full audit 989.2s, docgen 27.3s; delivery head f28278cc12)
-hosted-parity: test-tsgo=pass docgen=pass jsdoc-ratchet=pass knowledge-refs=pass fallow=pass (zero introduced) coverage=pass (258 tests; existing touched baseline rows met/improved)
-doctor before/after: before 3 unsatisfied; offline after 3 unknown without clone receipts, no blocking findings; online target PR-merge parts verified (fleet 19 older unknown advisories)
-advisories: #1429=verified (draft-ready/window verified; verdict unknown) #1462=verified (window sub-claim unsatisfied, 7s; verdict unknown) #1427=verified (draft-ready/window 44m33s verified; verdict unknown)
-post-merge refresh: pending merge
+head: 04b80fa13783617f3f26ce7423b8fd6e90a93bbf (qualified integration; report-only commit follows)   PR: #1574 (published head 9e05651ae0237b10ffed2da4d3574909715dd74d, draft)
+package-verify @beep/repo-cli: pass (beep-heavy; full audit 989.2s, docgen 27.3s on delivery head f28278cc12)
+hosted-parity: test-tsgo=pass docgen=pass jsdoc-ratchet=pass knowledge-refs=pass fallow=pass coverage=pass (prior qualified H2 source 9e05651ae0; 258 scoped tests, baseline rows met/improved; integrated cheap JSDoc/Fallow/doctor also pass)
+doctor before/after: before 3 unsatisfied; offline after 3 unknown without clone receipts, zero blocking findings; online three PR-merge parts verified
+advisories: #1429=verified (draft-ready/window verified, verdict unknown) #1462=verified (window sub-claim unsatisfied, 7s; verdict unknown) #1427=verified (draft-ready/window 44m33s verified, merge-ready verdict unknown)
+post-merge refresh: pending merge; orchestrator owns the three-packet refresh
 handoff: goals/repository-simplification-confidence/history/handoffs/rsc-h2-completion-2026-10-09.md
-open items: orchestrator merge/refresh/retirement; historical follow-ups in stage 4; final publication state is recorded in the dispatch
+open items: publication blocked by inherited main Effect-Vitest finding in ContradictionDetection.golden.test.ts from #1572; orchestrator repairs once on main, then H2 merges/retries publication and ready; current review-read passed with zero actionable threads/follow-ups, repeat at eventual published tip; no owned gate or monitor remains running; orchestrator merge/refresh/retirement; historical follow-ups in stage 4
 ```
 
 Implementation, scope, commands, coverage rows, historical check contexts and
@@ -51,3 +51,26 @@ not the current review result. Publication and content-final readiness follow
 in one wave; the final dispatch identifies the exact published tip and fresh
 thread observation. The orchestrator owns merge, post-merge three-packet refresh
 and retirement instructions. H2 never merges this PR.
+
+## Publication blocker after completed package qualification
+
+Latest main `7336224f34` was integrated in `04b80fa137`, preserving H2, E and V
+packet evidence. The resumed publication ran under standing S12 amendment 2's
+permitted lane-cgroup path after admission waits invalidated the previous base.
+Its collected cheap tier passed 15 lanes and failed only `lint:effect-vitest`:
+one new finding in `packages/epistemic/use-cases/test/ContradictionDetection.golden.test.ts`.
+That file is byte-identical to origin/main and last changed in main PR #1572.
+No H2 source was changed, no inventory was refreshed, no waiver was added,
+and nothing was pushed by these attempts. The local P0 row
+`local-shard-1dc626f4eda7` is acknowledged `wontfix` with inherited attribution
+and single-main-repair ownership; that acknowledgement is not a passing gate.
+
+Commands and logs: `.beep/h2/resume-publish.log` (unstaged preflight),
+`.beep/h2/resume-publish-retry.log` (stale-base rejection),
+`.beep/h2/resume-publish-final.log` (collected cheap gate failure).
+All three invocation processes are terminal. No H2 monitor was started by
+these failed publications, and no H2 heavy command remains running.
+PR #1574 remains draft at `9e05651ae0`; ready was not attempted because the
+new delivery content has not published. The fresh successful Yeet closeout
+snapshot at that published head has zero actionable threads and follow-ups.
+The delivery report is blocked, not a content-final dispatch to the merge gate.

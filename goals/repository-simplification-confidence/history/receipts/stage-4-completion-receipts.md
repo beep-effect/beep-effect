@@ -209,3 +209,13 @@ lanes' append-only friction records without changing H2 source. The resumed
 GraphQL-backed Yeet closeout read succeeded with zero actionable threads and
 zero unanswered follow-ups. Earlier queue cancellation and quota failure are
 historical observations; neither substitutes for this completed proof or read.
+
+## Resumed publication inherited red
+
+The collected cheap gates at integrated `04b80fa137` passed 15 lanes and failed
+only Effect-Vitest: one row in `ContradictionDetection.golden.test.ts`, inherited
+from main #1572 (file identical to origin/main). Doctor, committed JSDoc ratchet,
+schema-first and Fallow audit/health passed. No publication push, ready transition
+or new monitor occurred. The orchestrator owns one main repair; H2 merges that
+repair and retries its existing delivery wave. The full package pass remains
+recorded at its actual delivery head, rather than inferred for later main source.

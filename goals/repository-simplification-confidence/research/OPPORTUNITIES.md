@@ -647,3 +647,15 @@ peer service was stopped, and the worker changed no admission setting.
   remains admission-wrapped and already passed. No peer job or global limit changes.
 - Prevention: stage-preflight before admission and a publication reservation that
   avoids repeated packet integration invalidation during an unordered queue wait.
+
+## 2026-10-09 — H2 publication inherits the new main test-policy red
+
+- Work: publish the package-qualified H2 delivery update after integrating main.
+- Evidence: collected cheap gates passed 15 lanes but Effect-Vitest reported one
+  new finding in `packages/epistemic/use-cases/test/ContradictionDetection.golden.test.ts`.
+  The file is identical to origin/main and last changed in #1572.
+- Recovery: acknowledge the local P0 with inherited attribution, route one repair
+  to main through the orchestrator, then integrate and retry publication. No H2
+  baseline refresh, copied repair, suppression, waiver or push occurred.
+- Prevention: shared-main policy proof at the merge gate and a fast inherited-red
+  routing path distinguish lane delivery failures from new program integration reds.
