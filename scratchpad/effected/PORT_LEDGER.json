@@ -7751,15 +7751,678 @@
       "wave": 5,
       "position": 1,
       "stage": 0,
-      "status": "pending",
+      "status": "in-progress",
       "provisionalHome": "drivers",
       "upstreamPaths": {
         "src": "packages/github-actions/src",
         "test": "packages/github-actions/__test__"
       },
-      "exportsExpected": [],
+      "exportsExpected": [
+        {
+          "name": "Action",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ActionCache",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ActionCacheError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ActionCacheShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ActionEnvironment",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ActionEnvironmentError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ActionEnvironmentShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ActionInput",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ActionLogger",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ActionLoggerShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ActionOutputError",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ActionOutputs",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ActionOutputsShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ActionRunOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ActionRuntime",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ActionServices",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ActionState",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ActionStateError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ActionStateShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ActionsIdentityToken",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ActionsProvenance",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "AmbientPackageManager",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "AnnotationProperties",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "Artifact",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ArtifactError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ArtifactItem",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ArtifactRef",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ArtifactShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "BlobEnvelope",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "BlobEnvelopeError",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "BlobMetadataDecodeError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "BlobMetadataEncodeError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "BlobStore",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "BlobStoreError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "BlobStoreShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "BlobTransferError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "CacheKey",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "CacheKeyBadPatternError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "CacheKeyError",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "CacheKeyReadError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "CachedPackageManager",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "CheckDocument",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "CheckDocumentError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "CheckDocumentOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "CheckDocumentShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "CheckDocumentSink",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "CheckDocumentStamp",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "CheckFlushOutcome",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "CheckReport",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "CheckRunConclusion",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "CheckRunProjection",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "CheckState",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ChildEnv",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ClientLayerOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "DataBlobTransfer",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "DetachedLogUnavailableError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "DetachedNotReadyError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "DetachedOutputError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "DetachedProcess",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "DetachedProcessError",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "DetachedProcessOps",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "DetachedSignalFailedError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "DetachedSpawnFailedError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "DetachedSpawnOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "DownloadOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "DownloadResult",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "DryRun",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "DryRunShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ExtractOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "FileBlobTransfer",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "GitHubCacheBlobStore",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "GitHubContext",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "GitHubHeadingDepth",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "GitHubListOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "GitHubMarkdown",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "GitHubRowSchema",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "GitHubSchemaTable",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "GitHubSchemaTableColumn",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "GitHubSchemaTableColumns",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "GitHubSchemaTableFormatRequiredKeys",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "GitHubSchemaTableFormattedColumn",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "GitHubSchemaTableOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "GitHubToken",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "GitHubTokenError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "InstalledPackageManager",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "InvalidOutputNameError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "InvalidPidError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ManagedDocument",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ManagedDocumentError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ManagedDocumentSource",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "NotABlobEnvelopeError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "OidcClaims",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "OidcTokenError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "OidcTokenIssuer",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "OidcTokenIssuerShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "OutputEncodeError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "PackageManagerInstallOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "PackageManagerInstaller",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "PackageManagerInstallerError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "PackageManagerInstallerShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "PairsOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "PathPrependEnv",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "PathPrependOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ProcessId",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "ProvisionFileOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ProvisionOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ProvisionedFile",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ReadOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ReadinessOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "RecordedOutput",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "RecordedOutputMember",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "RecordingOutputs",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "RunnerContext",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "RunnerFileUnavailableError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "RunnerFileWriteError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "S3Config",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "Secret",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "StoredBlob",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ToolDownloadOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ToolInstaller",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ToolInstallerError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ToolInstallerShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "TruncatedBlobEnvelopeError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "UnsupportedBlobEnvelopeVersionError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "UploadOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "UploadResult",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "WithBufferOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "WithStepOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "WorkflowCommand",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "describeCause",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "projectCheckState",
+          "kind": "value",
+          "entry": "."
+        }
+      ],
       "exportsAdded": [],
-      "newDeps": [],
+      "newDeps": [
+        {
+          "name": "@azure/storage-blob",
+          "kind": "runtime",
+          "spec": "^12.33.0",
+          "replacement": null
+        }
+      ],
       "fixturesBytes": 0,
       "deviations": [],
       "backlog": [],
