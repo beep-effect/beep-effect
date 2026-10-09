@@ -421,7 +421,6 @@ const outcomeLine = (report: HarnessLedgerPruneReport, write: boolean): string =
     written: report.written,
     write,
     full: report.windowFull,
-    sharedFull: report.sharedHarnessWindowFull,
     qualified: report.nonUseQualified,
     empty: A.isReadonlyArrayEmpty(report.proposals),
   }).pipe(
@@ -434,10 +433,6 @@ const outcomeLine = (report: HarnessLedgerPruneReport, write: boolean): string =
     Match.when(
       { write: true, full: true, qualified: false },
       () => "nothing written: transcript and surface coverage are unqualified."
-    ),
-    Match.when(
-      { write: true, sharedFull: false },
-      () => "nothing written: shared surfaces require complete windows for every loading client."
     ),
     Match.when(
       { full: false },

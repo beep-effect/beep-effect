@@ -983,6 +983,7 @@ it.layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
       const relativePaths = A.map(oracle.snapshot.files, (file) => file.relativePath);
 
       expect(decoded.hookEvent).toBe(HookPulseEvent.Enum.SessionStart);
+      assertSome(decoded.sessionStartSource, "startup");
       expect(decoded.waitReason).toBe(HookPulseWaitReason.Enum.none);
       assertSome(decoded.harnessHash, oracle.harnessHash);
       expect(row).not.toContain(CANARY);

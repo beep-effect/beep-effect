@@ -126,10 +126,10 @@ type SessionTally = {
   readonly key: string;
   readonly userTurns: number;
   readonly toolEvents: number;
-  readonly disarmed: boolean;
   readonly primary: boolean;
   readonly child: boolean;
   readonly unknownStart: boolean;
+  readonly freshStarts: HashSet.HashSet<number>;
   readonly surfaces: HashSet.HashSet<string>;
   readonly stamps: HashSet.HashSet<string>;
 };
@@ -162,8 +162,7 @@ type ShardScan = {
   readonly refusalsByAgentKind: ObservedSessionWindow["refusalsByAgentKind"];
 };
 
-// Split shard names into those indexed by session and date and those read
-// eagerly because their name does not follow the naming scheme.
+// Fold production rows into client/session/transcript tallies across all shards.
 const foldPulse = (tallies: ShardScan["tallies"], pulse: HookPulseV1): void => {
   if (pulse.instrumentClass !== "production") return;
   const ts = DateTime.toEpochMillis(pulse.ts);
@@ -177,10 +176,10 @@ const foldPulse = (tallies: ShardScan["tallies"], pulse: HookPulseV1): void => {
     key,
     userTurns: 0,
     toolEvents: 0,
-    disarmed: false,
     primary: false,
     child: false,
     unknownStart: false,
+    freshStarts: HashSet.empty<number>(),
     surfaces: HashSet.empty<string>(),
     stamps: HashSet.empty<string>(),
   }));
@@ -189,6 +188,9 @@ const foldPulse = (tallies: ShardScan["tallies"], pulse: HookPulseV1): void => {
     primary: tally.primary || O.contains(pulse.sessionRole, "primary"),
     child: tally.child || O.contains(pulse.sessionRole, "subagent"),
     unknownStart: tally.unknownStart || isUnknownStart(pulse),
+    freshStarts: O.contains(pulse.sessionStartSource, "startup")
+      ? HashSet.add(tally.freshStarts, ts)
+      : tally.freshStarts,
     minTs: Math.min(tally.minTs, ts),
     userTurns:
       tally.userTurns + (O.contains(pulse.sessionRole, "primary") && pulse.hookEvent === "UserPromptSubmit" ? 1 : 0),
@@ -283,7 +285,7 @@ const windowReport = (
         stamps: parentStamps(tally),
         primary: A.some(group, (other) => other.primary && !other.child),
         child: A.every(group, (other) => other.child),
-        unknownStart: A.some(group, (other) => other.unknownStart),
+        unknownStart: A.some(group, (other) => other.unknownStart || missingOpening(other)),
         userTurns: 0,
         toolEvents: 0,
       },
@@ -306,6 +308,8 @@ const windowReport = (
         !other.child &&
         (other.minTs < tally.minTs || (other.minTs === tally.minTs && other.key < tally.key))
     );
+  const missingOpening = (tally: SessionTally) =>
+    tally.primary && !tally.child && !isChild(tally) && !HashSet.has(tally.freshStarts, tally.minTs);
   const active = (tally: SessionTally) => {
     const activity = A.filter(ranked, (other) => other.parent === tally.parent && other.primary && !other.child);
     return (
@@ -469,6 +473,7 @@ export const observeSessionWindow = Effect.fn("HarnessLedger.observeSessionWindo
   const windows = A.filterMap(Str.split(windowsText, "\n"), (line) => HookPulseDisarmWindow.decodeJsonResult(line));
   const sentinel = yield* Config.String("BEEP_HOOK_PULSE_DISARM_SENTINEL").pipe(
     Config.withDefault(path.join(root, "hook-pulse.disarmed")),
+    Effect.map((value) => (value === "" ? path.join(root, "hook-pulse.disarmed") : value)),
     Effect.mapError(HarnessLedgerIoError.wrap("Cannot resolve disarm sentinel."))
   );
   const sentinelPresent = yield* fs.exists(sentinel).pipe(Effect.asSome, Effect.orElseSucceed(O.none<boolean>));
@@ -608,7 +613,7 @@ const reconciliationTranscriptFiles = Effect.fn("HarnessLedger.reconciliationTra
     yield* Effect.forEach(
       entries,
       Effect.fnUntraced(function* (entry) {
-        const file = path.join(canonical, entry);
+        const file = path.join(dir, entry);
         const info = yield* fs
           .stat(file)
           .pipe(Effect.mapError(HarnessLedgerIoError.wrap("Cannot inspect transcript file.")));

@@ -1079,10 +1079,12 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
     const fs = yield* FileSystem.FileSystem;
     const stateHome = yield* Config.String("XDG_STATE_HOME").pipe(
       Config.withDefault(pathApi.join(input.homeDir, ".local/state")),
+      Effect.map((value) => (value === "" ? pathApi.join(input.homeDir, ".local/state") : value)),
       Effect.mapError((cause) => forwarderFailure("Cannot resolve XDG state home.", cause))
     );
     const evidenceRoot = yield* Config.String("BEEP_AGENT_EVIDENCE_ROOT").pipe(
       Config.withDefault(pathApi.join(stateHome, "beep/agent-evidence")),
+      Effect.map((value) => (value === "" ? pathApi.join(stateHome, "beep/agent-evidence") : value)),
       Effect.mapError((cause) => forwarderFailure("Cannot resolve hook evidence root.", cause))
     );
     const hookDir = pathApi.join(evidenceRoot, "hook-events");

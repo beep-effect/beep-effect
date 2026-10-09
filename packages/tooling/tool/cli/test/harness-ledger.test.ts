@@ -89,6 +89,7 @@ const pulseRow = (
       sessionId,
       agentKind: "claude-code",
       sessionRole,
+      sessionStartSource: hookEvent === "SessionStart" ? O.some("startup") : O.none(),
       hookEvent,
       cwd: cwdHash,
       notifierRev: "test",
@@ -948,6 +949,29 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
         "cursor-cli": O.none(),
       });
       expect(report.nonUseQualified).toBe(false);
+    }).pipe(Effect.scoped)
+  );
+
+  it.effect("a resumed session without an observed fresh start cannot qualify", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* makeRepo();
+      const current = yield* repoHarnessHash(root);
+      const stateDir = yield* fs.makeTempDirectoryScoped({ prefix: "harness-resume-" });
+      const start = yield* HookPulseV1.decodeJsonEffect(
+        yield* pulseRow(sessionA, "2026-10-09T10:00:00Z", "SessionStart", O.none(), O.some(current))
+      );
+      yield* writeShard(stateDir, "2026-10-09", sessionA, [
+        yield* HookPulseV1.encodeJsonEffect(HookPulseV1.make({ ...start, sessionStartSource: O.some("resume") })),
+        yield* pulseRow(sessionA, "2026-10-09T10:00:30Z", "UserPromptSubmit", O.none(), O.none()),
+        yield* pulse(sessionA, "2026-10-09T10:01:00Z", O.none()),
+      ]);
+      const ledger = yield* HarnessLedgerService;
+      const report = yield* ledger.pruneProposals(
+        HarnessLedgerPruneOptions.make({ repoRoot: root, stateDir, windowSessions: 1 })
+      );
+      expect(report.sessionsObserved).toBe(0);
+      expect(report.sessionsSkippedUnknownRestart).toBe(1);
     }).pipe(Effect.scoped)
   );
 

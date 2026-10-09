@@ -674,7 +674,7 @@ const enumerateSnapshotPaths = Effect.fn("AiMetrics.enumerateConfigSnapshotPaths
       excludedNestedRootPaths: A.empty<string>(),
       paths: A.take(paths, budget.maxFiles),
       truncationReason:
-        A.length(paths) >= budget.maxFiles
+        A.length(paths) > budget.maxFiles
           ? O.some(AiMetricsConfigSnapshotTruncationReason.Enum["max-files"])
           : O.none(),
     };
@@ -759,17 +759,9 @@ const enumerateSnapshotPaths = Effect.fn("AiMetrics.enumerateConfigSnapshotPaths
 
   yield* walk(pathApi.join(repoRoot, ".mcp.json"), 0, () => true);
   const walked = yield* Ref.get(pathsRef);
-  const selected = O.match(tracked, {
-    onNone: () => walked,
-    onSome: (names) =>
-      A.filter(walked, (file) => {
-        const relative = normalizeRepoPath(pathApi, repoRoot, file);
-        return relative === ".claude/settings.local.json" || A.contains(names, relative);
-      }),
-  });
   return {
     excludedNestedRootPaths: pipe(yield* Ref.get(excludedRef), A.dedupe, A.sort(Order.String)),
-    paths: pipe(selected, A.dedupe, A.sort(Order.String)),
+    paths: pipe(walked, A.dedupe, A.sort(Order.String)),
     truncationReason: yield* Ref.get(truncationRef),
   };
 });

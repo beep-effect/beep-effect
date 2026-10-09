@@ -819,6 +819,7 @@ export class HookPulseRawEvent extends S.Class<HookPulseRawEvent>($I`HookPulseRa
     tool_use_id: S.OptionFromOptionalKey(S.String),
     prompt_id: S.OptionFromOptionalKey(S.String),
     transcript_path: S.String,
+    source: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     permission_mode: S.OptionFromOptionalKey(S.String),
     notification_type: S.OptionFromOptionalKey(S.String),
     duration_ms: S.OptionFromOptionalKey(S.Finite.check(S.isGreaterThanOrEqualTo(0))),
@@ -1166,12 +1167,16 @@ const hookPulsePrivateReferences = Effect.fnUntraced(function* (input: {
 // `tool_name` but no `tool_use_id`, while `PreToolUse` and `PostToolUse` carry
 // both — so binding them to an event would reject legitimate future rows, and
 // rejecting rows costs real telemetry.
+const NativeSessionStartSource = LiteralKit(["startup", "resume", "clear", "compact"]);
+const decodeSessionStartSource = S.decodeUnknownOption(NativeSessionStartSource);
+
 const HookPulseEventOwnedField = LiteralKit([
   "notificationType",
   "sessionEndReason",
   "isInterrupt",
   "surface",
   "harnessHash",
+  "sessionStartSource",
 ]).pipe(
   $I.annoteSchema("HookPulseEventOwnedField", {
     description: "Canonical hook-pulse fields whose meaning is owned by exactly one hook event.",
@@ -1189,6 +1194,7 @@ const hookPulseEventOwningField = HookPulseEventOwnedField.$match({
   // The harness a session runs under is decided when it starts; a mid-session
   // stamp would describe a regime the session did not start in.
   harnessHash: F.constant(HookPulseEvent.Enum.SessionStart),
+  sessionStartSource: F.constant(HookPulseEvent.Enum.SessionStart),
 });
 
 const doesHookPulseEventOwnField = (field: HookPulseEventOwnedField, hookEvent: HookPulseEvent): boolean =>
@@ -1340,6 +1346,9 @@ export class HookPulseV1 extends S.Class<HookPulseV1>($I`HookPulseV1`)(
     // `deriveHarnessHash`), stamped by the writer on SessionStart only. Rows
     // written before the stamp existed simply lack it.
     harnessHash: S.OptionFromOptionalKey(Sha256Hex),
+    sessionStartSource: S.OptionFromOptionalKey(NativeSessionStartSource).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
     sessionRole: S.OptionFromOptionalKey(AiMetricsSourceRole).pipe(S.withConstructorDefault(Effect.succeedNone)),
   }).check(
     S.makeFilterGroup(
@@ -1430,6 +1439,11 @@ export const HookPulseV1Arbitrary = Arbitrary.schema(S.Struct(HookPulseV1.fields
       isInterrupt: filterHookPulseEventOwnedField("isInterrupt", value.hookEvent, value.isInterrupt),
       surface: filterHookPulseEventOwnedField("surface", value.hookEvent, value.surface),
       harnessHash: filterHookPulseEventOwnedField("harnessHash", value.hookEvent, value.harnessHash),
+      sessionStartSource: filterHookPulseEventOwnedField(
+        "sessionStartSource",
+        value.hookEvent,
+        value.sessionStartSource
+      ),
       waitReason: deriveWaitReason(value.hookEvent, value.toolName, notificationType),
     });
   })
@@ -1663,6 +1677,11 @@ export const HookPulseV1FromRawEvent = HookPulseRawEventInput.pipe(
                 input.event.is_interrupt
               ),
               surface,
+              sessionStartSource: filterHookPulseEventOwnedField(
+                "sessionStartSource",
+                input.event.hook_event_name,
+                O.flatMap(input.event.source, decodeSessionStartSource)
+              ),
               sessionRole: O.orElse(input.sessionRole, () => deriveSessionRole(O.some(input.event.transcript_path))),
               harnessHash: filterHookPulseEventOwnedField(
                 HookPulseEventOwnedField.Enum.harnessHash,
@@ -1691,6 +1710,7 @@ export const HookPulseV1FromRawEvent = HookPulseRawEventInput.pipe(
               tool_use_id: O.fromUndefinedOr(input.toolUseId),
               prompt_id: O.fromUndefinedOr(input.promptId),
               transcript_path: transcriptPath,
+              source: O.fromUndefinedOr(input.sessionStartSource),
               permission_mode: O.fromUndefinedOr(input.permissionMode),
               notification_type: filterHookPulseEventOwnedField(
                 HookPulseEventOwnedField.Enum.notificationType,
