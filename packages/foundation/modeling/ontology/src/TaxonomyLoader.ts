@@ -81,6 +81,33 @@ export const VendorLoadStatus = LiteralKit(["VETTED", "UNVETTED"]).pipe(
   $I.annoteSchema("VendorLoadStatus", { description: "Explicit implementation-loading verdict for a vendor slice." })
 );
 
+/**
+ * Runtime loading routes admitted by the shared vendor manifest boundary.
+ *
+ * **Example** (Identify a classification route)
+ *
+ * ```ts import.meta.vitest name="Identify a classification route"
+ * import { VendorLoadKind } from "@beep/ontology/TaxonomyLoader"
+ * VendorLoadKind.is["classification-scheme"]("classification-scheme") // => true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const VendorLoadKind = LiteralKit(["concept-alignment", "classification-scheme"]).pipe(
+  $I.annoteSchema("VendorLoadKind", {
+    description: "Discriminator separating vendor alignments from classification schemes.",
+  })
+);
+
+/**
+ * Decoded vendor loading route derived from its schema.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type VendorLoadKind = typeof VendorLoadKind.Type;
+
 const HttpsIriReference = IRIReference.check(
   S.makeFilter(Str.startsWith("https://"), {
     identifier: $I`HttpsIriReferenceCheck`,
@@ -483,7 +510,7 @@ class VendorAssetManifestRow extends S.Class<VendorAssetManifestRow>($I`VendorAs
   {
     format: S.NonEmptyString,
     id: S.NonEmptyString,
-    loadKind: S.OptionFromOptionalKey(S.Literal("concept-alignment")),
+    loadKind: S.OptionFromOptionalKey(VendorLoadKind),
     loadStatus: S.OptionFromOptionalKey(VendorLoadStatus),
   },
   $I.annote("VendorAssetManifestRow", {
@@ -524,19 +551,41 @@ const alignmentEquivalence = S.toEquivalence(ConceptAlignment);
 
 const manifestParseError = (path: string, line: number) => TaxonomyManifestParseError.make({ line, path });
 
-const decodeLoadManifestEntry = Effect.fn("TaxonomyLoader.decodeLoadManifestEntry")(function* (
+/**
+ * Decode one asset-pack row into its M1 load directive without reading vendor bytes.
+ *
+ * **Details**
+ *
+ * Classification rows and research references return None. Unknown kinds fail
+ * closed; a loadStatus-only row retains the legacy taxonomy-seed contract.
+ *
+ * **Example** (Skip a classification row)
+ *
+ * ```ts
+ * import { decodeLoadManifestEntry } from "@beep/ontology/TaxonomyLoader"
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
+ * const row = '{"id":"ipc","format":"xml","loadKind":"classification-scheme"}'
+ * console.log(O.isNone(await Effect.runPromise(decodeLoadManifestEntry("manifest.jsonl", row, 0))))
+ * ```
+ *
+ * @category decoding
+ * @since 0.0.0
+ */
+export const decodeLoadManifestEntry = Effect.fn("TaxonomyLoader.decodeLoadManifestEntry")(function* (
   path: string,
   line: string,
   index: number
 ): Effect.fn.Return<O.Option<VendorLoadManifestEntry>, TaxonomyManifestParseError> {
   const row = yield* decodeAssetManifestRow(line).pipe(Effect.mapError(() => manifestParseError(path, index + 1)));
-  return yield* Match.value({ hasLoadKind: O.isSome(row.loadKind), hasLoadStatus: O.isSome(row.loadStatus) }).pipe(
-    Match.when({ hasLoadKind: true }, () =>
+  return yield* Match.value({ loadKind: O.getOrUndefined(row.loadKind), hasLoadStatus: O.isSome(row.loadStatus) }).pipe(
+    Match.when({ loadKind: "concept-alignment" }, () =>
       decodeAlignmentManifestEntry(line).pipe(
         Effect.asSome,
         Effect.mapError(() => manifestParseError(path, index + 1))
       )
     ),
+    Match.when({ loadKind: "classification-scheme" }, () => Effect.succeedNone),
     Match.when({ hasLoadStatus: true }, () =>
       decodeManifestEntry(line).pipe(
         Effect.asSome,

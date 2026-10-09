@@ -187,6 +187,16 @@ starts after M2 tests and the real-artifact proof pass. M4 remains gated.
 | 2026-10-09 | Repo-quality proof for M2/M3 is hosted CI on the PR. | AGENTS.md Quality Operator requires push-first publication; hosted CI is authoritative and `bun run beep yeet verify` is on demand. | Restore `bun run beep yeet verify` in the SPEC Verification Matrix, manifest verificationCommands and PLAN verification block; run `beep-heavy bun run beep yeet verify` before completion. |
 | 2026-10-09 | R5 changes both stop-condition surfaces from "The implementation would exceed M1 or pull M2-M4 work forward without the named gate." to "The implementation would exceed M1-M3 or pull M4 work forward without the named gate." | The named product pull admits M2 and M3 while retaining the M4 gate. | Restore the old text in SPEC and manifest together in one commit. |
 
+| 2026-10-09 | Pin IPC 2026.01, CPC 2026.08 and Nice 13-2026 (texts revision 20260715). | Official WIPO configuration marks 20260101 current; CPC bulk page lists 202608. Future IPC 20270101 is not current. | Add a new separately pinned edition after fetching and proving it; keep existing identities. |
+| 2026-10-09 | Edition-scoped scheme and concept IRIs use `$SemanticFoundationId`; IPC and CPC have distinct spaces. | Shared notation is not shared identity. External IRIs never carry identity. | Introduce a versioned contract migration; deprecate old IRIs without re-pointing them. |
+| 2026-10-09 | External IRIs are only exactMatch metadata backed by VETTED rows; otherwise omit them. | Prevent label-based identity and unadmitted external mappings. | Add explicit vetted mapping rows with evidence and tests. |
+| 2026-10-09 | Full editions load only from vendor files; tracked fixtures are synthetic and metadata is bounded. | No tracked third-party payload; avoid unbounded package seeds. | Amend scope with redistribution evidence and a bounded data plan. |
+| 2026-10-09 | Locarno and Vienna stay deferred. | P2 limits this pull to IPC/CPC/Nice. | Record a new product pull and amend scope. |
+| 2026-10-09 | IPC and Nice reuse gate accepts WIPO CC BY 4.0 with attribution and conversion notice. | Terms page and edition download templates returned HTTP 200; templates link master files and show no service-specific override. | Mark sources UNVETTED and stop loading if an overriding term appears. |
+| 2026-10-09 | CPC loads identifiers only: symbols, parent hierarchy and titles (R2). | EPO linked-open-data page returned HTTP 200 and names CC BY 4.0 for Linked open EP data, but does not name scheme XML or bulk zips. No definitions, notes, references or warnings are admitted. | Broaden only with explicit XML reuse evidence, a new ledger row and parser tests. |
+
+| 2026-10-09 | R3 adds the VendorLoadKind LiteralKit domain and M1 classification skip route, with an exported row decoder. | Every M1 real-manifest load must survive the new classification rows; tests must share production decoding. | Revert this loader commit and M2 rows together; never revert the loader alone while rows remain. |
+
 ## Exception Ledger
 
 | Exception | Scope | Owner | Rationale | Removal condition |

@@ -68,3 +68,14 @@
 - **Disposition:** cover the fail-closed parse-error path and retain the existing
   baseline; the comparator correctly ignores a percentage-only denominator
   change when uncovered debt does not increase.
+
+## 2026-10-09 — Heavy wrapper needs the user-session bus in tool shells
+
+- **What happened:** the initial wrapper probe could not connect to the user bus;
+  the tool shell did not inherit the lane launcher's session environment.
+- **Evidence:** `beep-heavy --help` exited with `XDG_RUNTIME_DIR not defined`.
+  A read-only probe with explicit user-session bus variables found
+  `agent-runs.slice` active. No heavy unit started on the failed probe.
+- **What would have prevented it:** the lane harness should carry the user-bus
+  variables into every tool shell, alongside its memory and concurrency pins.
+- **Disposition:** supply command-local bus variables and the unchanged 32G cap.
