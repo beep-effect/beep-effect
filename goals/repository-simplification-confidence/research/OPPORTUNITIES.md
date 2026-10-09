@@ -172,3 +172,14 @@
 - Hosted attribution: latest Lint Policy job 113919634320 still reports the
   same two host-path and three packet semantic findings; the shared repair
   remains with the orchestrator/lane C. No H1 suppression or duplicate fix.
+
+## 2026-10-09 — H1 packet squash conflicts on final main merge
+
+- Task: merge the landed packet #1560 before H1 publication.
+- Evidence: main `83d8967a03` produced fourteen add/add packet conflicts;
+  the imported packet had diverged after the shared original `3dbf109066`.
+- Resolution: three-way merge against that original packet; preserve main's
+  stage-1 closure and reviewer-routing updates and H1's OSV evidence/status.
+  Only PLAN needed a manual combination of the status and main table.
+- Prevention: a squash of a previously imported packet needs this explicit
+  comparison base; identical-addition assumptions no longer hold after edits.

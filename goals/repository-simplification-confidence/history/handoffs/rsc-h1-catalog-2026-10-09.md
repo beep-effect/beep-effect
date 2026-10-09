@@ -115,3 +115,10 @@ open items: OSV holds renewed through 2026-10-30 with documented fixed-release/r
   new inbox rows must be read and acknowledged before yielding.
 - Later waves remain open in the existing blocker list. Reversal remains
   revert of #1562; worker does not merge or retire.
+
+Main advanced during Run 2: packet #1560 landed as `83d8967a03`. Its fourteen
+add/add conflicts were resolved using original packet `3dbf109066` as the
+comparison base; main's stage-1 and reviewer-routing updates and all H1
+evidence are retained. This removes the packet-base semantic-delta condition
+after fresh proof; the separate inherited host-path repair remains pending.
+The merge commit is the repair for inbox `base-conflict-356cda027626`.
