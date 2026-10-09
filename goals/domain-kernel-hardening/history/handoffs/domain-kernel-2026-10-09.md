@@ -516,3 +516,12 @@ three unrelated packets listed above). Explore-check has no packet finding for
 this slug and prints the active revision-2 summary above. Fresh origin/main has
 no later change that repairs the KG production DDL. Yeet inbox has zero unacked
 rows. No merge conflict or own running unit remains. P1 stays in-progress.
+
+lane: domain-kernel
+head: b455ac7fb4dc08997ef622afe2633b756cbd2143 (exact qualified blocked-state head; this report receipt follows locally)
+PR(s): PR 1 #1577 merged | PR 2 none (P1 qualification requires production KG changes outside lane ownership)
+package-verify: @beep/shared-domain: pass; @beep/agents-tables: pass; @beep/architecture-lab-tables: pass; @beep/documents-tables: pass; @beep/epistemic-tables: pass; @beep/workspace-tables: pass; @beep/db-admin: pass; @beep/professional-desktop: pass; @beep/repo-cli: pass; @beep/agents-server: pass
+hosted-parity: test-tsgo: not run (queued batch cancelled after D15 scope stop) | docgen local: not run (D15 scope stop) | jsdoc-ratchet: not run (D15 scope stop) | knowledge refs: not run (D15 scope stop) | fallow audit+health: not run (D15 scope stop) | scoped coverage: not run (D15 scope stop)
+handoff: goals/domain-kernel-hardening/history/handoffs/domain-kernel-2026-10-09.md
+open items: Reconcile ownership of PracticeKg.claims.ts production DDL and carry projections, or land the KG-owner fix on main, then rerun law-practice tests and hosted parity before publishing P1. Retained mechanical count 71; 137/137 dependent checks pass; 64 explicit in-process migration-replay tests pass; the exact six-server gate still has one introduced law-practice schema-column failure. P1 in-progress, P2/P3 pending, lifecycle active; no P1 push and no own running unit. D13/D14 reverse mechanical repairs with kernel rollback; D15 hold reverses on reconciled scope or owner fix; D10 reverses amendment/implementation without changing privacy; D11 reverses proof entries with migration removal and bundle regeneration. Orchestrator owns stale docs/ROADMAP.md platform re-entry bullet (~349), Parked packets row (~383), and cohort prose (~406). Follow-ups: stale DomainModel.make detector and desktop migration rollout. Graft saved approximately 167,761 tokens across six successful queries.
+blocked: Production KG bundle DDL/carry repair exceeds the lane's converter and test-fixture ownership
