@@ -3,15 +3,16 @@
   "initiative": {
     "id": "spar-document-annotation-wire",
     "title": "SPAR Document Annotation Wire",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-08-13",
     "updated": "2026-10-09",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/spar-document-annotation-wire",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Generate pinned SPAR terms and ship typed OA/PROV document annotations plus the Md-to-DOCO section fold.",
-  "statusNote": "P3 resumed under D16: owner-command dependency snapshot synchronization and prepared-SDK docgen proof are underway before publication.",
+  "statusNote": "Content-final closeout in PR #1588 under S11; local package and parity proofs pass. Hosted readiness and merge remain with the orchestrator.",
+  "mergedPullRequest": 1588,
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -74,12 +75,12 @@
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [

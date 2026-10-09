@@ -41,11 +41,11 @@ MAP/SOURCES, this SPEC, PLAN, then GOAL.
 
 ## Acceptance Criteria
 
-- [ ] Four terms modules generate from pinned attributed inputs with drift proof.
-- [ ] Exports and notices are complete.
-- [ ] Typed annotations encode/decode OA target plus SPAR/PROV body.
-- [ ] A flat Md heading fixture folds deterministically into a section tree.
-- [ ] Patent claim meaning and runtime reasoning remain absent.
+- [x] Four terms modules generate from pinned attributed inputs with drift proof.
+- [x] Exports and notices are complete.
+- [x] Typed annotations encode/decode OA target plus SPAR/PROV body.
+- [x] A flat Md heading fixture folds deterministically into a section tree.
+- [x] Patent claim meaning and runtime reasoning remain absent.
 
 ## Decision Log
 

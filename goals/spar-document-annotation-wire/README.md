@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -19,10 +19,11 @@ annotation wire shape, including the Md-to-DOCO section fold.
 
 ## Current Phase
 
-P3 resumed under D16: synchronize the dependency-derived boundaries and cache
-policy through their owners, then publish. Package audits and fixtures passed
-in run 1; run 2 full docgen passes after the existing SDK preparation step,
-matching main's passing hosted setup. See the lane handoff.
+P4 complete in PR [#1588](https://github.com/beep-effect/beep-effect/pull/1588).
+Pinned generation, focused codec/fold fixtures, identity/RDF/CLI package
+verification and hosted-parity commands pass. Prepared-SDK full docgen passes.
+The reflection and lifecycle closeout travel in the same PR; hosted readiness
+and merge remain with the orchestrator under S11. See the lane handoff.
 
 ## Read This First
 
