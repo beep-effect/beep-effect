@@ -13,7 +13,6 @@ import {
 } from "@beep/repo-cli/test/Goals";
 import { YeetCommandError } from "@beep/repo-cli/test/Yeet";
 import { it } from "@beep/test-runner";
-import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -28,7 +27,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Arbitrary from "effect/testing/Arbitrary";
-import { temporaryWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
+import { NodeTestLayer, temporaryWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
 
 const encode = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 const Scenario = S.Struct({
@@ -177,7 +176,7 @@ const observe = Effect.fn("CompletionTest.observe")(function* (scenario: typeof 
   );
 });
 
-it.layer(NodeServices.layer, { timeout: "30 seconds" })("goal completion observations and storage", (it) => {
+it.layer(NodeTestLayer, { timeout: "30 seconds" })("goal completion observations and storage", (it) => {
   it.effect.prop(
     "preserves declaration digests across arbitrary PR-reference codec round trips",
     [Arbitrary.schema(GoalPullRequestRef)],
