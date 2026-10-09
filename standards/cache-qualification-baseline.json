@@ -682,10 +682,10 @@
       }
     },
     "@beep/occt": {
-      "reviewer": "design-figure-generation slice 1 implementer",
-      "reason": "Record the new @beep/occt and @beep/pdf-tools driver packages and the new @beep/technical-drawing foundation capability (their build, check, docgen, lint, lint:deprecated-apis, lint:jsdoc, lint:laws and test tasks are new projection nodes) and for @beep/repo-cli, whose tasks gain those three workspace dependencies and the @beep/m365 dependency for drawings sign. Task inputs, outputs and cache policy are otherwise unchanged; profile, epoch, scope and the qualification ledger are preserved. @beep/pdf-tools also gains the test:integration:parallel task node so the hosted integration lane runs its live test.",
+      "reviewer": "rsc-d-release policy worker",
+      "reason": "Preserve the exact original design-figure driver review evidence outside the retired pending-note directory. Only these four review references move; projection, task/cache policy, profile, epoch, scope and qualification ledger remain unchanged. The archived evidence retains its original SHA-256. No cache qualification is granted.",
       "basis": {
-        "path": ".changeset/design-figure-drivers.md",
+        "path": "goals/repository-simplification-confidence/history/receipts/d-cache-review-evidence.md",
         "sha256": "9b642414a6d87a7ed68955eed76fb5c9468dfe344cffe17e95167931723e510a"
       }
     },
@@ -810,10 +810,10 @@
       }
     },
     "@beep/pdf-tools": {
-      "reviewer": "design-figure-generation slice 1 implementer",
-      "reason": "Record the new @beep/occt and @beep/pdf-tools driver packages and the new @beep/technical-drawing foundation capability (their build, check, docgen, lint, lint:deprecated-apis, lint:jsdoc, lint:laws and test tasks are new projection nodes) and for @beep/repo-cli, whose tasks gain those three workspace dependencies and the @beep/m365 dependency for drawings sign. Task inputs, outputs and cache policy are otherwise unchanged; profile, epoch, scope and the qualification ledger are preserved. @beep/pdf-tools also gains the test:integration:parallel task node so the hosted integration lane runs its live test.",
+      "reviewer": "rsc-d-release policy worker",
+      "reason": "Preserve the exact original design-figure driver review evidence outside the retired pending-note directory. Only these four review references move; projection, task/cache policy, profile, epoch, scope and qualification ledger remain unchanged. The archived evidence retains its original SHA-256. No cache qualification is granted.",
       "basis": {
-        "path": ".changeset/design-figure-drivers.md",
+        "path": "goals/repository-simplification-confidence/history/receipts/d-cache-review-evidence.md",
         "sha256": "9b642414a6d87a7ed68955eed76fb5c9468dfe344cffe17e95167931723e510a"
       }
     },
@@ -930,10 +930,10 @@
       }
     },
     "@beep/repo-cli": {
-      "reviewer": "design-figure-generation slice 1 implementer",
-      "reason": "Record the new @beep/occt and @beep/pdf-tools driver packages and the new @beep/technical-drawing foundation capability (their build, check, docgen, lint, lint:deprecated-apis, lint:jsdoc, lint:laws and test tasks are new projection nodes) and for @beep/repo-cli, whose tasks gain those three workspace dependencies and the @beep/m365 dependency for drawings sign. Task inputs, outputs and cache policy are otherwise unchanged; profile, epoch, scope and the qualification ledger are preserved. @beep/pdf-tools also gains the test:integration:parallel task node so the hosted integration lane runs its live test.",
+      "reviewer": "rsc-d-release policy worker",
+      "reason": "Preserve the exact original design-figure driver review evidence outside the retired pending-note directory. Only these four review references move; projection, task/cache policy, profile, epoch, scope and qualification ledger remain unchanged. The archived evidence retains its original SHA-256. No cache qualification is granted.",
       "basis": {
-        "path": ".changeset/design-figure-drivers.md",
+        "path": "goals/repository-simplification-confidence/history/receipts/d-cache-review-evidence.md",
         "sha256": "9b642414a6d87a7ed68955eed76fb5c9468dfe344cffe17e95167931723e510a"
       }
     },
@@ -1066,10 +1066,10 @@
       }
     },
     "@beep/technical-drawing": {
-      "reviewer": "design-figure-generation slice 1 implementer",
-      "reason": "Record the new @beep/occt and @beep/pdf-tools driver packages and the new @beep/technical-drawing foundation capability (their build, check, docgen, lint, lint:deprecated-apis, lint:jsdoc, lint:laws and test tasks are new projection nodes) and for @beep/repo-cli, whose tasks gain those three workspace dependencies and the @beep/m365 dependency for drawings sign. Task inputs, outputs and cache policy are otherwise unchanged; profile, epoch, scope and the qualification ledger are preserved. @beep/pdf-tools also gains the test:integration:parallel task node so the hosted integration lane runs its live test.",
+      "reviewer": "rsc-d-release policy worker",
+      "reason": "Preserve the exact original design-figure driver review evidence outside the retired pending-note directory. Only these four review references move; projection, task/cache policy, profile, epoch, scope and qualification ledger remain unchanged. The archived evidence retains its original SHA-256. No cache qualification is granted.",
       "basis": {
-        "path": ".changeset/design-figure-drivers.md",
+        "path": "goals/repository-simplification-confidence/history/receipts/d-cache-review-evidence.md",
         "sha256": "9b642414a6d87a7ed68955eed76fb5c9468dfe344cffe17e95167931723e510a"
       }
     },
