@@ -309,3 +309,13 @@ Explicit scoped docgen has a terminal pass (27.2 seconds, 2,324 examples) before
 this one-line path repair. Owner commands report 152 manifests, zero drift and
 zero writes; cache profile regeneration produced no tracked changes. CI=true
 knowledge refs at `dc4bb81597` exits 0 with zero live gated observations.
+
+### Run 3 independent review
+
+Pinned independent Codex review returned terminal zero actionable findings at
+`c43d86e953177c0fae7a10ec7329ca499490d370`, after the initial P2 was repaired.
+It covers the implementation review at `dc4bb81597` plus the relative-path
+repair and fixture. Read-only review did not run tests or mutate files.
+Test-tsgo passed all 334 selected files after the path repair; the first runtime
+fixture invocation selected no tests because its cwd was wrong. That invocation
+is recorded as a command failure, with the corrected package-cwd rerun pending.
