@@ -1091,6 +1091,7 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
     const shards = yield* fs.readDirectory(hookDir).pipe(Effect.orElseSucceed(A.empty<string>));
     const stamps = MutableHashMap.empty<string, HashSet.HashSet<string>>();
     const sessions = MutableHashMap.empty<string, HashSet.HashSet<string>>();
+    const freshStarts = MutableHashMap.empty<string, true>();
     yield* Effect.forEach(
       A.filter(shards, Str.endsWith(".ndjson")),
       Effect.fnUntraced(function* (name) {
@@ -1109,6 +1110,7 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
               HashSet.add(O.getOrElse(MutableHashMap.get(sessions, key), HashSet.empty<string>), row.success.sessionId)
             );
             if (row.success.hookEvent !== "SessionStart") continue;
+            if (O.contains(row.success.sessionStartSource, "startup")) MutableHashMap.set(freshStarts, key, true);
             MutableHashMap.set(
               stamps,
               key,
@@ -1133,6 +1135,7 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
         const key = `${agentKind}:${sanitized.sourcePathHash}`;
         return pipe(
           MutableHashMap.get(sessions, key),
+          O.filter(() => MutableHashMap.has(freshStarts, key)),
           O.filter((values) => HashSet.size(values) === 1),
           O.flatMap(() => MutableHashMap.get(stamps, key)),
           O.filter((values) => HashSet.size(values) === 1 && !HashSet.has(values, "unknown")),

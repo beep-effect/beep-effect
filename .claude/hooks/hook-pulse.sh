@@ -810,6 +810,10 @@ if [ "${notifier_rev}" != "log-only-0" ]; then
       # exec`) inherits its launcher's IDs; it receives that host as an
       # explicitly labeled "parent" route instead of borrowing it as its own.
       notification_uri="${BEEP_SEQUENCE_BREAK_OPEN_URI:-}"
+      if [ "${agent_kind}" = "codex-cli" ] && [ -n "${notification_uri}" ] &&
+        [ "${notification_uri}" != "codex://threads/${raw_session_id}" ]; then
+        notification_uri=""
+      fi
       notification_relation="self"
       codex_desktop_thread=""
       if [ "${CODEX_INTERNAL_ORIGINATOR_OVERRIDE:-}" = "Codex Desktop" ]; then
