@@ -2198,4 +2198,97 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("retention fences", (it)
       removeTempDirectory
     )
   );
+
+  it.effect("reports an existing wrong-shaped scoped container and an unreadable checkout census", () =>
+    Effect.acquireUseRelease(
+      makeTempDirectory,
+      (root) =>
+        retentionFixture(root).pipe(
+          Effect.flatMap((fixture) =>
+            Effect.gen(function* () {
+              const fs = yield* FileSystem.FileSystem;
+              const path = yield* Path.Path;
+              const beep = path.join(fixture.repoRoot, ".beep");
+              const qa = path.join(beep, "qa");
+              yield* fs.writeFileString(qa, "wrong shape; preserve me");
+              const scoped = yield* runResidueReap({ ...fixture, classes: ["checkout-qa"] });
+              expect(candidateByPath(scoped, qa).skipReason).toBe("census-failed");
+              const blocked = FileSystem.makeNoop({
+                ...fs,
+                readDirectory: (target) =>
+                  Str.Equivalence(target, beep)
+                    ? Effect.fail(
+                        PlatformError.badArgument({
+                          module: "FileSystem",
+                          method: "readDirectory",
+                          description: "synthetic listing refusal",
+                        })
+                      )
+                    : fs.readDirectory(target),
+              });
+              const unread = yield* runResidueReap(fixture).pipe(Effect.provideService(FileSystem.FileSystem, blocked));
+              expect(candidateByPath(unread, beep).skipReason).toBe("census-failed");
+              expect(yield* fs.readFileString(qa)).toBe("wrong shape; preserve me");
+            })
+          )
+        ),
+      removeTempDirectory
+    )
+  );
+
+  it.effect("retains unjournaled skip rows after their source parent disappears", () =>
+    Effect.acquireUseRelease(
+      makeTempDirectory,
+      (root) =>
+        retentionFixture(root).pipe(
+          Effect.flatMap((fixture) =>
+            Effect.gen(function* () {
+              const fs = yield* FileSystem.FileSystem;
+              const path = yield* Path.Path;
+              yield* fs.remove(path.join(fixture.repoRoot, ".beep", "retention", "checkout-generated.json"));
+              const plan = yield* runResidueReap(fixture);
+              expect(candidateByPath(plan, fixture.target).skipReason).toBe("owner-ruling-required");
+              yield* fs.remove(path.dirname(fixture.target), { recursive: true });
+              const resumed = yield* runResidueReap({
+                ...fixture,
+                resume: O.getOrThrow(O.fromUndefinedOr(plan.runId)),
+              });
+              expect(resumed.warnings).toEqual([]);
+              expect(candidateByPath(resumed, fixture.target).action).toBe("skip");
+            })
+          )
+        ),
+      removeTempDirectory
+    )
+  );
+
+  it.effect("preserves an archive and names an unavailable source parent until it is recreated", () =>
+    Effect.acquireUseRelease(
+      makeTempDirectory,
+      (root) =>
+        retentionFixture(root).pipe(
+          Effect.flatMap((fixture) =>
+            Effect.gen(function* () {
+              const fs = yield* FileSystem.FileSystem;
+              const path = yield* Path.Path;
+              const applied = yield* runResidueReap({ ...fixture, apply: true });
+              expect(applied.reapedCount).toBe(1);
+              const id = O.getOrThrow(O.fromUndefinedOr(applied.runId));
+              const destination = O.getOrThrow(
+                O.fromUndefinedOr(candidateByPath(applied, fixture.target).recoveryDestination)
+              );
+              yield* fs.remove(path.dirname(fixture.target));
+              const refused = yield* runResidueReap({ ...fixture, restore: id }).pipe(Effect.flip);
+              expect(refused.message).toContain("Source parent");
+              expect(refused.message).toContain("is unavailable");
+              expect(yield* fs.readFileString(path.join(destination, "payload.txt"))).toBe("preserve these bytes");
+              yield* fs.makeDirectory(path.dirname(fixture.target));
+              yield* runResidueReap({ ...fixture, restore: id });
+              expect(yield* fs.readFileString(path.join(fixture.target, "payload.txt"))).toBe("preserve these bytes");
+            })
+          )
+        ),
+      removeTempDirectory
+    )
+  );
 });
