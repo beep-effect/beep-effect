@@ -15,25 +15,77 @@ const $I = $ScratchpadId.create("effected/package-json/License");
 /**
  * Indicates that a string is not a valid SPDX license identifier or expression.
  *
+ * **Details**
+ *
  * Raised by {@link Package.setLicense} and the decode direction of
  * `SpdxLicense`. The offending string is preserved on `input`.
  *
+ * **Example** (Inspect an invalid license error)
+ *
+ * ```ts
+ * import { InvalidSpdxLicenseError } from "@beep/scratchpad/effected/package-json/License";
+ *
+ * const error = new InvalidSpdxLicenseError({ input: "not-a-license" });
+ * console.log(error.input); // not-a-license
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class InvalidSpdxLicenseError extends S.TaggedError<InvalidSpdxLicenseError>($I`InvalidSpdxLicenseError`)("InvalidSpdxLicenseError", {
-	/** The raw input string that failed validation. */
+	/**
+	 * The raw input string that failed validation.
+	 *
+	 * **Example** (Recover the rejected input)
+	 *
+	 * ```ts
+	 * import { InvalidSpdxLicenseError } from "@beep/scratchpad/effected/package-json/License";
+	 *
+	 * console.log(new InvalidSpdxLicenseError({ input: "unknown" }).input); // unknown
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
 	input: S.String.annotateKey({ description: "The raw input string that failed validation." }),
 }, $I.annote("InvalidSpdxLicenseError", { description: "Indicates that a string is not a valid SPDX license identifier or expression." })) {
+	/**
+	 * Explains the validation failure and includes the rejected license string.
+	 *
+	 * **Example** (Read the license validation message)
+	 *
+	 * ```ts
+	 * import { InvalidSpdxLicenseError } from "@beep/scratchpad/effected/package-json/License";
+	 *
+	 * const error = new InvalidSpdxLicenseError({ input: "unknown" });
+	 * console.log(error.message); // Invalid SPDX license "unknown": not a recognized identifier or expression
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return `Invalid SPDX license "${this.input}": not a recognized identifier or expression`;
 	}
 }
 
 /**
- * Whether a string is a valid SPDX license identifier or expression, or one of
+ * Checks whether a string is a valid SPDX license identifier or expression, or one of
  * the npm special cases `UNLICENSED` / `SEE LICENSE IN <file>`.
  *
+ * **Example** (Validate expressions and npm license placeholders)
+ *
+ * ```ts
+ * import { isValidSpdx } from "@beep/scratchpad/effected/package-json/License";
+ *
+ * console.log(isValidSpdx("MIT OR Apache-2.0")); // true
+ * console.log(isValidSpdx("UNLICENSED")); // true
+ * console.log(isValidSpdx("SEE LICENSE IN LICENSE.txt")); // true
+ * console.log(isValidSpdx("not-a-license")); // false
+ * ```
+ *
  * @public
+ * @category predicates
+ * @since 0.0.0
  */
 export const isValidSpdx = (value: string): boolean => {
 	if (value === "UNLICENSED") return true;
@@ -42,8 +94,8 @@ export const isValidSpdx = (value: string): boolean => {
 };
 
 /**
- * A valid SPDX license identifier, expression, `UNLICENSED`, or
- * `SEE LICENSE IN <file>`.
+ * Validates and brands a manifest license string: a valid SPDX license identifier,
+ * expression, `UNLICENSED`, or `SEE LICENSE IN <file>`.
  *
  * **Gotchas**
  *
@@ -57,7 +109,21 @@ export const isValidSpdx = (value: string): boolean => {
  * and yields `Option.none()` for a spelling that is not one. Reach for
  * {@link isValidSpdx} when the question is instead "may a manifest carry this".
  *
+ * **Example** (Decode manifest license strings)
+ *
+ * ```ts
+ * import { SpdxLicense } from "@beep/scratchpad/effected/package-json/License";
+ * import * as S from "effect/Schema";
+ *
+ * const decode = S.decodeUnknownSync(SpdxLicense);
+ * console.log(decode("MIT")); // MIT
+ * console.log(decode("UNLICENSED")); // UNLICENSED
+ * console.log(decode("SEE LICENSE IN LICENSE.txt")); // SEE LICENSE IN LICENSE.txt
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const SpdxLicense = S.String.pipe(
 	S.check(
@@ -76,6 +142,8 @@ export const SpdxLicense = S.String.pipe(
  * A branded SPDX license string.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type SpdxLicense = string & Brand.Brand<"SpdxLicense">;
 
@@ -100,20 +168,22 @@ export type SpdxLicense = string & Brand.Brand<"SpdxLicense">;
  * **Example** (Distinguish SPDX expressions from npm license placeholders)
  *
  * ```ts
- * import { SpdxLicense, licenseExpressionOf } from "./index.ts";
+ * import { SpdxLicense, licenseExpressionOf } from "@beep/scratchpad/effected/package-json/License";
  * import * as O from "effect/Option";
  * import * as S from "effect/Schema";
  *
  * const decode = S.decodeUnknownSync(SpdxLicense);
  *
- * O.isSome(licenseExpressionOf(decode("MIT"))); // => true
- * O.isSome(licenseExpressionOf(decode("UNLICENSED"))); // => false
- * O.isSome(licenseExpressionOf(decode("SEE LICENSE IN LICENSE.txt"))); // => false
+ * console.log(O.isSome(licenseExpressionOf(decode("MIT")))); // true
+ * console.log(O.isSome(licenseExpressionOf(decode("UNLICENSED")))); // false
+ * console.log(O.isSome(licenseExpressionOf(decode("SEE LICENSE IN LICENSE.txt")))); // false
  * ```
  *
  * @param license - a branded manifest license value
  * @returns the parsed expression, or none for a spelling that is not one
  * @public
+ * @category parsing
+ * @since 0.0.0
  */
 export const licenseExpressionOf = (license: SpdxLicense): O.Option<SpdxExpression> =>
 	// No explicit screen for npm's two spellings: the grammar already declines

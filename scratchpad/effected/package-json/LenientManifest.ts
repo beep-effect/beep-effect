@@ -38,22 +38,24 @@ const $I = $ScratchpadId.create("effected/package-json/LenientManifest");
  * shape, and the raw `value` found there (also preserved verbatim under
  * `LenientManifest.rest[field]`).
  *
+ * **Details**
+ *
  * A value, not an error — the decode still succeeds; issues exist so callers
  * can report what degraded.
  *
  * **Example** (Constructing a field issue)
  *
  * ```ts
- * import { LenientFieldIssue } from "./index.ts";
+ * import { LenientFieldIssue } from "@beep/scratchpad/effected/package-json/LenientManifest";
  * import * as S from "effect/Schema";
  *
  * const issue: LenientFieldIssue = { field: "name", expected: "a string", value: 42 };
- * S.is(LenientFieldIssue)(issue); // => true
+ * console.log(S.is(LenientFieldIssue)(issue)) // true
  * ```
  *
+ * @public
  * @category schemas
  * @since 0.0.0
- * @public
  */
 export const LenientFieldIssue = S.Struct({
 	field: S.String.annotateKey({ description: "The top-level field name that degraded." }),
@@ -61,7 +63,12 @@ export const LenientFieldIssue = S.Struct({
 	value: S.Unknown.annotateKey({ description: "The raw value found on the wire, preserved for reporting." }),
 }).annotate($I.annote("LenientFieldIssue", { description: "A field whose raw value did not match its permissive manifest shape." }));
 
-/** A plain-object field degradation described by {@link LenientFieldIssue}. */
+/**
+ * A plain-object field degradation described by {@link LenientFieldIssue}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type LenientFieldIssue = typeof LenientFieldIssue.Type;
 
 // ── Permissive field shapes ─────────────────────────────────────────────────
@@ -176,8 +183,8 @@ const decodeJson = S.decodeUnknownResult(S.fromJsonString(S.Unknown));
  *
  * **This is the discovery tier, not a validation bypass.** Every field shares
  * its name with the strict `Package` model, but is typed as its plain permissive JSON
- * shape: `name` and `version` are any string (a legacy uppercase name or a
- * non-semver `"1.0"` is recovered, not rejected), `license` is any string (no
+ * shape: `name` and `version` are unrestricted strings (a legacy uppercase name or a
+ * non-semver `"1.0"` is recovered, not rejected), `license` is an unrestricted string (no
  * SPDX check), the dependency maps and `scripts` are plain string→string
  * records rather than `HashMap`s. A present field that is not even that shape
  * **degrades to absence** rather than failing the document: the raw value is
@@ -203,18 +210,24 @@ const decodeJson = S.decodeUnknownResult(S.fromJsonString(S.Unknown));
  * **Example** (Recover malformed manifest fields with diagnostic issues)
  *
  * ```ts
- * import { LenientManifest } from "./index.ts";
+ * import { LenientManifest } from "@beep/scratchpad/effected/package-json/LenientManifest";
  * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   const sniffed = yield* LenientManifest.decode({ name: "JSONStream", version: "1.0", license: 42 });
- *   console.log(sniffed.name, sniffed.version); // "JSONStream" "1.0"
- *   console.log(sniffed.issues); // [{ field: "license", expected: "a string", value: 42 }]
- *   console.log(sniffed.rest?.license); // 42 — degraded, preserved verbatim
+ *   console.log(sniffed.name, sniffed.version); // JSONStream 1.0
+ *   console.log(sniffed.issues[0]?.field); // license
+ *   console.log(sniffed.issues[0]?.expected); // a string
+ *   // Degraded, preserved verbatim.
+ *   console.log(sniffed.rest?.license); // 42
  * });
+ * Effect.runSync(program);
+ * console.log(Effect.isEffect(program)) // true
  * ```
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class LenientManifest extends S.Class<LenientManifest>($I`LenientManifest`)({
 	name: S.optionalKey(S.String).annotateKey({ description: "The package identifier from the manifest, preserved without npm name validation" }),
@@ -257,10 +270,22 @@ export class LenientManifest extends S.Class<LenientManifest>($I`LenientManifest
 	 * of failing the document. The sync primitive backing
 	 * {@link LenientManifest.decode}.
 	 *
+	 * **Example** (Recover a malformed license synchronously)
+	 *
+	 * ```ts
+	 * import { LenientManifest } from "@beep/scratchpad/effected/package-json/LenientManifest";
+	 * import * as Result from "effect/Result";
+	 *
+	 * const manifest = Result.getOrThrow(LenientManifest.decodeResult({ license: 42 }));
+	 * console.log(manifest.issues[0]?.field) // license
+	 * ```
+	 *
 	 * @param input - the parsed package.json JSON value (e.g. from `JSON.parse`)
 	 * @returns the lenient manifest, or a {@link PackageDecodeError} when
 	 * `input` is not a JSON object at all (`null`, an array or a scalar) — the
 	 * one failure leniency does not cover
+	 * @category decoding
+	 * @since 0.0.0
 	 */
 	static decodeResult(input: unknown): Result.Result<LenientManifest, PackageDecodeError> {
 		const exit = decodeRecord(input);
@@ -275,9 +300,21 @@ export class LenientManifest extends S.Class<LenientManifest>($I`LenientManifest
 	 * of failing the document. The `Effect` form of
 	 * {@link LenientManifest.decodeResult}, adding the tracing span.
 	 *
+	 * **Example** (Decode a discovery manifest with an effect)
+	 *
+	 * ```ts
+	 * import { LenientManifest } from "@beep/scratchpad/effected/package-json/LenientManifest";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const manifest = Effect.runSync(LenientManifest.decode({ name: "JSONStream" }));
+	 * console.log(manifest.name) // JSONStream
+	 * ```
+	 *
 	 * @param input - the parsed package.json JSON value (e.g. from `JSON.parse`)
 	 * @returns an Effect resolving to the decoded {@link LenientManifest},
 	 * failing with {@link PackageDecodeError} when `input` is not a JSON object
+	 * @category decoding
+	 * @since 0.0.0
 	 */
 	static readonly decode = Effect.fn("LenientManifest.decode")((input: unknown) =>
 		Effect.fromResult(LenientManifest.decodeResult(input)),
@@ -287,11 +324,24 @@ export class LenientManifest extends S.Class<LenientManifest>($I`LenientManifest
 	 * Parse package.json text and decode it leniently. The sync primitive
 	 * backing {@link LenientManifest.parse}.
 	 *
+	 * **Example** (Distinguish invalid JSON from field degradation)
+	 *
+	 * ```ts
+	 * import { LenientManifest } from "@beep/scratchpad/effected/package-json/LenientManifest";
+	 * import * as Result from "effect/Result";
+	 *
+	 * console.log(Result.isFailure(LenientManifest.parseResult("{"))) // true
+	 * const manifest = Result.getOrThrow(LenientManifest.parseResult('{"license":42}'));
+	 * console.log(manifest.rest?.license) // 42
+	 * ```
+	 *
 	 * @param text - the package.json source text
 	 * @returns the lenient manifest, or a {@link PackageJsonSyntaxError} when
 	 * the text is not valid JSON (`"invalid-json"`) or parses to something
 	 * other than a JSON object (`"not-an-object"`) — leniency is per-field,
 	 * never per-syntax
+	 * @category parsing
+	 * @since 0.0.0
 	 */
 	static parseResult(text: string): Result.Result<LenientManifest, PackageJsonSyntaxError> {
 		const decoded = decodeJson(text);
@@ -309,21 +359,63 @@ export class LenientManifest extends S.Class<LenientManifest>($I`LenientManifest
 	 * Parse package.json text and decode it leniently. The `Effect` form of
 	 * {@link LenientManifest.parseResult}, adding the tracing span.
 	 *
+	 * **Example** (Parse a discovery manifest with an effect)
+	 *
+	 * ```ts
+	 * import { LenientManifest } from "@beep/scratchpad/effected/package-json/LenientManifest";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const manifest = Effect.runSync(LenientManifest.parse('{"name":"JSONStream"}'));
+	 * console.log(manifest.name) // JSONStream
+	 * ```
+	 *
 	 * @param text - the package.json source text
 	 * @returns an Effect resolving to the decoded {@link LenientManifest},
 	 * failing with {@link PackageJsonSyntaxError} when the text is not valid JSON
 	 * or is not a JSON object
+	 * @category parsing
+	 * @since 0.0.0
 	 */
 	static readonly parse = Effect.fn("LenientManifest.parse")((text: string) =>
 		Effect.fromResult(LenientManifest.parseResult(text)),
 	);
 
-	/** Whether the manifest is marked private. */
+	/**
+	 *  Whether the manifest is marked private.
+	 *
+	 * **Example** (Read the default privacy flag)
+	 *
+	 * ```ts
+	 * import { LenientManifest } from "@beep/scratchpad/effected/package-json/LenientManifest";
+	 * import * as Result from "effect/Result";
+	 *
+	 * const manifest = Result.getOrThrow(LenientManifest.decodeResult({}));
+	 * console.log(manifest.isPrivate) // false
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	get isPrivate(): boolean {
 		return this.private ?? false;
 	}
 
-	/** Whether the manifest declares ESM (`"type": "module"`, exact comparison). */
+	/**
+	 *  Whether the manifest declares ESM (`"type": "module"`, exact comparison).
+	 *
+	 * **Example** (Recognize the exact module type)
+	 *
+	 * ```ts
+	 * import { LenientManifest } from "@beep/scratchpad/effected/package-json/LenientManifest";
+	 * import * as Result from "effect/Result";
+	 *
+	 * const manifest = Result.getOrThrow(LenientManifest.decodeResult({ type: "module" }));
+	 * console.log(manifest.isESM) // true
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	get isESM(): boolean {
 		return this.type === "module";
 	}

@@ -28,14 +28,48 @@ const Json = S.fromJsonString(S.Unknown);
  * Indicates that a package.json file could not be read from the filesystem
  * (a filesystem error other than not-found).
  *
+ * **Example** (Inspect PackageJsonReadError details)
+ *
+ * ```ts
+ * import { PackageJsonReadError } from "@beep/scratchpad/effected/package-json/PackageJsonFile";
+ *
+ * const error = PackageJsonReadError.make({ path: "package.json", cause: new Error("permission denied") });
+ * console.log(error.message) // Failed to read package.json from "package.json"
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class PackageJsonReadError extends S.TaggedError<PackageJsonReadError>($I`PackageJsonReadError`)("PackageJsonReadError", {
-	/** The path that could not be read. */
+	/**
+	 * The path that could not be read.
+	 *
+	 * @since 0.0.0
+	 */
 	path: S.String.annotateKey({ description: "The path that could not be read." }),
-	/** The underlying failure, preserved structurally. */
+	/**
+	 * The underlying failure, preserved structurally.
+	 *
+	 * @since 0.0.0
+	 */
 	cause: S.Defect().annotateKey({ description: "The underlying failure, preserved structurally." }),
 }, $I.annote("PackageJsonReadError", { description: "Indicates that a package.json file could not be read from the filesystem (a filesystem error other than not-found)." })) {
+	/**
+	 * Formats a diagnostic message identifying the failed file path.
+	 *
+	 * **Example** (Inspect PackageJsonReadError details)
+	 *
+	 * ```ts
+	 * import { PackageJsonReadError } from "@beep/scratchpad/effected/package-json/PackageJsonFile";
+	 *
+	 * const error = PackageJsonReadError.make({ path: "package.json", cause: new Error("permission denied") });
+	 * console.log(error.message) // Failed to read package.json from "package.json"
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return `Failed to read package.json from "${this.path}"`;
 	}
@@ -45,15 +79,45 @@ export class PackageJsonReadError extends S.TaggedError<PackageJsonReadError>($I
  * Indicates that no package.json file exists at the expected path. Carries its
  * own tag for `catchTag` routing.
  *
+ * **Example** (Inspect PackageJsonNotFoundError details)
+ *
+ * ```ts
+ * import { PackageJsonNotFoundError } from "@beep/scratchpad/effected/package-json/PackageJsonFile";
+ *
+ * const error = PackageJsonNotFoundError.make({ path: "package.json" });
+ * console.log(error.message) // package.json not found at "package.json"
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class PackageJsonNotFoundError extends S.TaggedError<PackageJsonNotFoundError>($I`PackageJsonNotFoundError`)(
 	"PackageJsonNotFoundError",
 	{
-		/** The path where package.json was expected. */
+		/**
+		 * The path where package.json was expected.
+		 *
+		 * @since 0.0.0
+		 */
 		path: S.String.annotateKey({ description: "The path where package.json was expected." }),
 	}, $I.annote("PackageJsonNotFoundError", { description: "Indicates that no package.json file exists at the expected path. Carries its own tag for `catchTag` routing." }),
 ) {
+	/**
+	 * Formats a diagnostic message identifying the failed file path.
+	 *
+	 * **Example** (Inspect PackageJsonNotFoundError details)
+	 *
+	 * ```ts
+	 * import { PackageJsonNotFoundError } from "@beep/scratchpad/effected/package-json/PackageJsonFile";
+	 *
+	 * const error = PackageJsonNotFoundError.make({ path: "package.json" });
+	 * console.log(error.message) // package.json not found at "package.json"
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return `package.json not found at "${this.path}"`;
 	}
@@ -62,14 +126,48 @@ export class PackageJsonNotFoundError extends S.TaggedError<PackageJsonNotFoundE
 /**
  * Indicates that a package.json file's contents are not valid JSON.
  *
+ * **Example** (Inspect PackageJsonParseError details)
+ *
+ * ```ts
+ * import { PackageJsonParseError } from "@beep/scratchpad/effected/package-json/PackageJsonFile";
+ *
+ * const error = PackageJsonParseError.make({ path: "package.json", cause: new Error("invalid JSON") });
+ * console.log(error.message) // Failed to parse package.json at "package.json"
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class PackageJsonParseError extends S.TaggedError<PackageJsonParseError>($I`PackageJsonParseError`)("PackageJsonParseError", {
-	/** The path whose contents failed to parse as JSON. */
+	/**
+	 * The path whose contents failed to parse as JSON.
+	 *
+	 * @since 0.0.0
+	 */
 	path: S.String.annotateKey({ description: "The path whose contents failed to parse as JSON." }),
-	/** The schema decoding error, preserved structurally. */
+	/**
+	 * The schema decoding error, preserved structurally.
+	 *
+	 * @since 0.0.0
+	 */
 	cause: S.Defect().annotateKey({ description: "The schema decoding error, preserved structurally." }),
 }, $I.annote("PackageJsonParseError", { description: "Indicates that a package.json file's contents are not valid JSON." })) {
+	/**
+	 * Formats a diagnostic message identifying the failed file path.
+	 *
+	 * **Example** (Inspect PackageJsonParseError details)
+	 *
+	 * ```ts
+	 * import { PackageJsonParseError } from "@beep/scratchpad/effected/package-json/PackageJsonFile";
+	 *
+	 * const error = PackageJsonParseError.make({ path: "package.json", cause: new Error("invalid JSON") });
+	 * console.log(error.message) // Failed to parse package.json at "package.json"
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return `Failed to parse package.json at "${this.path}"`;
 	}
@@ -80,14 +178,48 @@ export class PackageJsonParseError extends S.TaggedError<PackageJsonParseError>(
  * Narrowed to the filesystem-write failure only — never a resolution or encode
  * error.
  *
+ * **Example** (Inspect PackageJsonWriteError details)
+ *
+ * ```ts
+ * import { PackageJsonWriteError } from "@beep/scratchpad/effected/package-json/PackageJsonFile";
+ *
+ * const error = PackageJsonWriteError.make({ path: "package.json", cause: new Error("read-only filesystem") });
+ * console.log(error.message) // Failed to write package.json to "package.json"
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class PackageJsonWriteError extends S.TaggedError<PackageJsonWriteError>($I`PackageJsonWriteError`)("PackageJsonWriteError", {
-	/** The path that could not be written. */
+	/**
+	 * The path that could not be written.
+	 *
+	 * @since 0.0.0
+	 */
 	path: S.String.annotateKey({ description: "The path that could not be written." }),
-	/** The underlying filesystem failure, preserved structurally. Narrowed to the write failure only. */
+	/**
+	 * The underlying filesystem failure, preserved structurally. Narrowed to the write failure only.
+	 *
+	 * @since 0.0.0
+	 */
 	cause: S.Defect().annotateKey({ description: "The underlying filesystem failure, preserved structurally. Narrowed to the write failure only." }),
 }, $I.annote("PackageJsonWriteError", { description: "Indicates that a package.json file could not be written to the filesystem. Narrowed to the filesystem-write failure only — never a resolution or encode error." })) {
+	/**
+	 * Formats a diagnostic message identifying the failed file path.
+	 *
+	 * **Example** (Inspect PackageJsonWriteError details)
+	 *
+	 * ```ts
+	 * import { PackageJsonWriteError } from "@beep/scratchpad/effected/package-json/PackageJsonFile";
+	 *
+	 * const error = PackageJsonWriteError.make({ path: "package.json", cause: new Error("read-only filesystem") });
+	 * console.log(error.message) // Failed to write package.json to "package.json"
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return `Failed to write package.json to "${this.path}"`;
 	}
@@ -100,11 +232,21 @@ export class PackageJsonWriteError extends S.TaggedError<PackageJsonWriteError>(
  * with an explicit `value: undefined`, so it is always deliberate).
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface PackageFieldEdit {
-	/** The field path, e.g. `["packageManager"]` or `["devEngines", "runtime", "version"]`. */
+	/**
+	 * The field path, e.g. `["packageManager"]` or `["devEngines", "runtime", "version"]`.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly path: JsoncPath;
-	/** The plain JSON value to write, or `undefined` to delete the target key. */
+	/**
+	 * The plain JSON value to write, or `undefined` to delete the target key.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly value: unknown;
 }
 
@@ -113,12 +255,16 @@ export interface PackageFieldEdit {
  * {@link PackageJsonFile.make} and carried by its layer.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface PackageJsonFileShape {
 	/**
 	 * Read and decode a package.json file. Fails with `PackageJsonNotFoundError`
 	 * (ENOENT), `PackageJsonReadError` (other fs errors), `PackageJsonParseError`
 	 * (invalid JSON) or `PackageDecodeError` (schema decode).
+	 *
+	 * @since 0.0.0
 	 */
 	readonly read: (
 		path: string,
@@ -131,6 +277,8 @@ export interface PackageJsonFileShape {
 	 * `PackageJsonWriteError`. With `indent: "preserve"` and no explicit
 	 * `sourceText`, the existing file at `path` (when readable) supplies the
 	 * source text whose indentation is preserved.
+	 *
+	 * @since 0.0.0
 	 */
 	readonly write: (
 		path: string,
@@ -143,6 +291,8 @@ export interface PackageJsonFileShape {
 	 * workspace-root shape (`{ "private": true, "packageManager": ... }`)
 	 * `read` rejects. Same error channel as `read`; a present field that does
 	 * not satisfy its codec still fails as `PackageDecodeError`.
+	 *
+	 * @since 0.0.0
 	 */
 	readonly readManifest: (
 		path: string,
@@ -155,6 +305,8 @@ export interface PackageJsonFileShape {
 	 * `PackageJsonWriteError`. Shares `write`'s `indent: "preserve"` behavior:
 	 * with no explicit `sourceText`, the existing file at `path` (when
 	 * readable) supplies the source text whose indentation is preserved.
+	 *
+	 * @since 0.0.0
 	 */
 	readonly writeManifest: (
 		path: string,
@@ -170,9 +322,13 @@ export interface PackageJsonFileShape {
 	 * which is what keeps a one-field change reviewable in someone else's
 	 * repository. Succeeds with the file's final text.
 	 *
+	 * **Details**
+	 *
 	 * Invalid JSON at `path` fails as `PackageJsonParseError` — the same tag
 	 * `read` uses for it — and an unnavigable edit path as
 	 * `PackageJsonModifyError`.
+	 *
+	 * @since 0.0.0
 	 */
 	readonly modify: (
 		path: string,
@@ -197,23 +353,40 @@ export interface PackageJsonFileShape {
  * **Example** (Read a package file with Node filesystem services)
  *
  * ```ts
- * import { PackageJsonFile } from "./index.ts";
+ * import { PackageJsonFile } from "@beep/scratchpad/effected/package-json/PackageJsonFile";
  * import { NodeFileSystem, NodePath } from "@effect/platform-node";
  * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   const files = yield* PackageJsonFile;
- *   const pkg = yield* files.read("./package.json");
- *   console.log(pkg.name);
+ *   return yield* files.read("./package.json");
  * }).pipe(Effect.provide(PackageJsonFile.layer), Effect.provide(NodeFileSystem.layer), Effect.provide(NodePath.layer));
+ *
+ * console.log(Effect.isEffect(program)) // true
  * ```
  *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class PackageJsonFile extends Context.Service<PackageJsonFile, PackageJsonFileShape>()(
 	$I`PackageJsonFile`,
 ) {
-	/** Build the service implementation from `FileSystem` / `Path` in context; use {@link PackageJsonFile.layer} to provide it. */
+	/**
+	 * Build the service implementation from `FileSystem` / `Path` in context; use {@link PackageJsonFile.layer} to provide it.
+	 *
+	 * **Example** (Construct the filesystem-backed service effect)
+	 *
+	 * ```ts
+	 * import { PackageJsonFile } from "@beep/scratchpad/effected/package-json/PackageJsonFile";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * console.log(Effect.isEffect(PackageJsonFile.make)) // true
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	static readonly make: Effect.Effect<PackageJsonFileShape, never, FileSystem.FileSystem | Path.Path> = Effect.gen(
 		function* () {
 			const fs = yield* FileSystem.FileSystem;
@@ -318,6 +491,23 @@ export class PackageJsonFile extends Context.Service<PackageJsonFile, PackageJso
 	/**
 	 * The live layer. Requires core `FileSystem` / `Path`, provided by the
 	 * consumer's platform implementation at the edge.
+	 *
+	 * **Example** (Provide the package file service layer)
+	 *
+	 * ```ts
+	 * import { PackageJsonFile } from "@beep/scratchpad/effected/package-json/PackageJsonFile";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = Effect.gen(function* () {
+	 *   const files = yield* PackageJsonFile;
+	 *   return yield* files.read("package.json");
+	 * }).pipe(Effect.provide(PackageJsonFile.layer));
+	 *
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
 	 */
 	static readonly layer: Layer.Layer<PackageJsonFile, never, FileSystem.FileSystem | Path.Path> = Layer.effect(
 		PackageJsonFile,

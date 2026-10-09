@@ -135,18 +135,20 @@ const encodePersonObject = (person: Person): { readonly [k: string]: unknown } =
  * A structured person object with `name`, optional `email` / `url`, and a
  * `rest` catch-all preserving any additional keys across a read/write cycle.
  *
- * @example
+ * **Example** (Round-trip an author shorthand)
  * ```ts
- * import { Person } from "./index.ts";
+ * import { Person } from "@beep/scratchpad/effected/package-json/Person";
  * import * as S from "effect/Schema";
  *
  * const ann = S.decodeUnknownSync(Person.FromValue)("Ann <ann@example.com> (https://example.com)");
- * ann.name; // => "Ann"
- * ann.email; // => "ann@example.com"
- * S.encodeSync(Person.FromValue)(ann); // => "Ann <ann@example.com> (https://example.com)"
+ * console.log(ann.name); // Ann
+ * console.log(ann.email); // ann@example.com
+ * console.log(S.encodeSync(Person.FromValue)(ann)); // Ann <ann@example.com> (https://example.com)
  * ```
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class Person extends S.Class<Person>($I`Person`)({
 	/** The person's name. */
@@ -158,14 +160,60 @@ export class Person extends S.Class<Person>($I`Person`)({
 	/** Any additional keys, preserved verbatim and flattened back on encode. */
 	rest: S.optionalKey(S.Record(S.String, S.Unknown)).annotateKey({ description: "Any additional keys, preserved verbatim and flattened back on encode." }),
 }, $I.annote("Person", { description: "A structured person object with `name`, optional `email` / `url`, and a `rest` catch-all preserving any additional keys across a read/write cycle." })) {
+	/**
+	 * Retains the original wire spelling on this instance without exposing it as schema data.
+	 *
+	 * **Example** (Keep person provenance out of enumerable data)
+	 *
+	 * ```ts
+	 * import { Person } from "@beep/scratchpad/effected/package-json/Person";
+	 * import * as S from "effect/Schema";
+	 *
+	 * const value = S.decodeUnknownSync(Person.FromValue)("Ann");
+	 * console.log(Object.keys(value).includes("#wire")); // false
+	 * ```
+	 *
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	#wire: PersonWire | undefined = undefined;
 
-	/** Instance-owned wire provenance, excluded from schema data and object spreads. */
+	/**
+	 * Instance-owned wire provenance, excluded from schema data and object spreads.
+	 *
+	 * **Example** (Inspect instance wire provenance)
+	 *
+	 * ```ts
+	 * import { Person } from "@beep/scratchpad/effected/package-json/Person";
+	 * import * as S from "effect/Schema";
+	 *
+	 * const person = S.decodeUnknownSync(Person.FromString)("Ann <ann@example.com>");
+	 * console.log(Person.wireOf(person)); // Ann <ann@example.com>
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	static wireOf(person: Person): PersonWire | undefined {
 		return person.#wire;
 	}
 
-	/** Remember the spelling read by a wire codec. */
+	/**
+	 * Remember the spelling read by a wire codec.
+	 *
+	 * **Example** (Remember the author spelling)
+	 *
+	 * ```ts
+	 * import { Person } from "@beep/scratchpad/effected/package-json/Person";
+	 *
+	 * const person = Person.make({ name: "Ann" });
+	 * Person.rememberWire(person, "Ann");
+	 * console.log(Person.wireOf(person)); // Ann
+	 * ```
+	 *
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	static rememberWire(person: Person, wire: PersonWire): void {
 		person.#wire = wire;
 	}
@@ -174,6 +222,19 @@ export class Person extends S.Class<Person>($I`Person`)({
 	 * The object wire codec: an open JSON object ↔ a {@link Person}, partitioning
 	 * unknown keys into `rest` and flattening them back on encode so the on-disk
 	 * shape never carries a literal `rest` key.
+	 *
+	 * **Example** (Flatten unknown person keys)
+	 *
+	 * ```ts
+	 * import { Person } from "@beep/scratchpad/effected/package-json/Person";
+	 * import * as S from "effect/Schema";
+	 *
+	 * const person = S.decodeUnknownSync(Person.schema)({ name: "Ann", team: "docs" });
+	 * console.log(S.encodeSync(Person.schema)(person).team); // docs
+	 * ```
+	 *
+	 * @category schemas
+	 * @since 0.0.0
 	 */
 	static readonly schema: S.Codec<Person, { readonly [k: string]: unknown }> = S.Record(
 		S.String,
@@ -205,6 +266,19 @@ export class Person extends S.Class<Person>($I`Person`)({
 	 * Schema transformation between the `"Name <email> (url)"` shorthand string
 	 * and a {@link Person}. Decoding remembers the input text so that encoding
 	 * reproduces it verbatim; see {@link Person.wireStringOf}.
+	 *
+	 * **Example** (Preserve shorthand spacing)
+	 *
+	 * ```ts
+	 * import { Person } from "@beep/scratchpad/effected/package-json/Person";
+	 * import * as S from "effect/Schema";
+	 *
+	 * const person = S.decodeUnknownSync(Person.FromString)("Ann  <ann@example.com>");
+	 * console.log(S.encodeSync(Person.FromString)(person)); // Ann  <ann@example.com>
+	 * ```
+	 *
+	 * @category schemas
+	 * @since 0.0.0
 	 */
 	static readonly FromString: S.Codec<Person, string> = S.String.pipe(
 		S.decodeTo(
@@ -223,6 +297,8 @@ export class Person extends S.Class<Person>($I`Person`)({
 	 * The `author` / `contributors` value: either the shorthand string or the
 	 * structured object, always decoded to a {@link Person}.
 	 *
+	 * **Details**
+	 *
 	 * The wire form is preserved across a round trip — a person read from the
 	 * shorthand string encodes back to that string, byte for byte, and one read
 	 * from an object encodes back to an object with its unknown keys intact.
@@ -233,6 +309,19 @@ export class Person extends S.Class<Person>($I`Person`)({
 	 * than carried through unchanged) has none and encodes in the canonical
 	 * object form. Editing an unrelated field of the surrounding `Package`
 	 * carries the same person instance through and preserves its encoding.
+	 *
+	 * **Example** (Retain an object author field)
+	 *
+	 * ```ts
+	 * import { Person } from "@beep/scratchpad/effected/package-json/Person";
+	 * import * as S from "effect/Schema";
+	 *
+	 * const person = S.decodeUnknownSync(Person.FromValue)({ name: "Ann", team: "docs" });
+	 * console.log(JSON.stringify(S.encodeSync(Person.FromValue)(person))); // {"name":"Ann","team":"docs"}
+	 * ```
+	 *
+	 * @category schemas
+	 * @since 0.0.0
 	 */
 	static readonly FromValue: S.Codec<Person, string | { readonly [k: string]: unknown }> = S.Union([
 		Person.schema,
@@ -269,11 +358,27 @@ export class Person extends S.Class<Person>($I`Person`)({
 	 * the string form and still matches its fields; `None` for a person built
 	 * from an object or by hand.
 	 *
+	 * **Details**
+	 *
 	 * Exposed so callers can tell which encoding a manifest used without
 	 * re-reading the file.
 	 *
+	 * **Example** (Distinguish shorthand from a constructed person)
+	 *
+	 * ```ts
+	 * import { Person } from "@beep/scratchpad/effected/package-json/Person";
+	 * import * as S from "effect/Schema";
+	 * import * as O from "effect/Option";
+	 *
+	 * const person = S.decodeUnknownSync(Person.FromString)("Ann");
+	 * console.log(O.getOrUndefined(Person.wireStringOf(person))); // Ann
+	 * console.log(O.isNone(Person.wireStringOf(Person.make({ name: "Ann" })))); // true
+	 * ```
+	 *
 	 * @param person - the person to inspect
 	 * @returns the original shorthand text, or `None`
+	 * @category getters
+	 * @since 0.0.0
 	 */
 	static wireStringOf(person: Person): O.Option<string> {
 		const wire = Person.wireOf(person);

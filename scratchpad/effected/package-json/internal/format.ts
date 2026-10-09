@@ -182,6 +182,17 @@ const isPlainObject = (value: unknown): value is Record<string, unknown> =>
  * Order top-level keys canonically (known keys by {@link KEY_ORDER}, then
  * unknown public keys alphabetically, then unknown `_`-prefixed keys
  * alphabetically) and alphabetize the {@link SORTED_MAP_KEYS} map entries.
+ *
+ * **Example** (Order known and unknown package keys)
+ *
+ * ```ts
+ * import { sortKeys } from "@beep/scratchpad/effected/package-json/internal/format";
+ *
+ * console.log(Object.keys(sortKeys({ z: 1, version: "1.0.0", name: "p", _a: 2 })).join(",")); // name,version,z,_a
+ * ```
+ *
+ * @category formatting
+ * @since 0.0.0
  */
 export const sortKeys = (obj: Record<string, unknown>): Record<string, unknown> => {
 	const known: Array<[string, unknown, number]> = [];
@@ -213,7 +224,20 @@ const STRIP_EMPTY_KEYS: ReadonlyArray<string> = [
 	"scripts",
 ];
 
-/** Remove map keys whose value is an empty object. */
+/**
+ * Remove map keys whose value is an empty object.
+ *
+ * **Example** (Remove empty defaulted maps)
+ *
+ * ```ts
+ * import { stripEmptyDependencyMaps } from "@beep/scratchpad/effected/package-json/internal/format";
+ *
+ * console.log(JSON.stringify(stripEmptyDependencyMaps({ name: "p", scripts: {}, dependencies: {} }))); // {"name":"p"}
+ * ```
+ *
+ * @category formatting
+ * @since 0.0.0
+ */
 export const stripEmptyDependencyMaps = (raw: Record<string, unknown>): Record<string, unknown> => {
 	const result = { ...raw };
 	for (const key of STRIP_EMPTY_KEYS) {
@@ -231,6 +255,17 @@ const DEFAULT_INDENT = 2;
  * Detect the indentation of a JSON source text from its first indented line:
  * `"\t"` for tab indentation, otherwise the leading run of spaces. Returns
  * `undefined` when no line is indented.
+ *
+ * **Example** (Inspect a four-space indent)
+ *
+ * ```ts
+ * import { detectIndent } from "@beep/scratchpad/effected/package-json/internal/format";
+ *
+ * console.log(detectIndent('{\n    "name": "p"\n}')?.length); // 4
+ * ```
+ *
+ * @category formatting
+ * @since 0.0.0
  */
 export const detectIndent = (source: string): string | undefined => {
 	for (const line of Str.split(source, "\n")) {
@@ -248,6 +283,18 @@ export const detectIndent = (source: string): string | undefined => {
  * argument: `"tab"` becomes a real tab, `"preserve"` reuses the indentation
  * detected from `sourceText` (falling back to the two-space default when no
  * source text or no indented line is available), and a number passes through.
+ *
+ * **Example** (Preserve indent or use the default)
+ *
+ * ```ts
+ * import { resolveIndent } from "@beep/scratchpad/effected/package-json/internal/format";
+ *
+ * console.log(String(resolveIndent("preserve", '{\n    "name": "p"\n}')).length); // 4
+ * console.log(resolveIndent("preserve", undefined)); // 2
+ * ```
+ *
+ * @category formatting
+ * @since 0.0.0
  */
 export const resolveIndent: {
 	(sourceText: string | undefined): (indent: number | "tab" | "preserve" | undefined) => string | number;
@@ -268,6 +315,17 @@ export const resolveIndent: {
  * this module cannot import `Package.ts` without closing a cycle) to the
  * concrete {@link renderJson} options. Shared by `Package.toJsonString` and
  * `PackageManifest.toJsonString` so the two serializers cannot drift.
+ *
+ * **Example** (Resolve default formatting options)
+ *
+ * ```ts
+ * import { resolveFormatOptions } from "@beep/scratchpad/effected/package-json/internal/format";
+ *
+ * console.log(JSON.stringify(resolveFormatOptions())); // {"indent":2,"sort":true,"stripEmpty":true,"newline":true}
+ * ```
+ *
+ * @category formatting
+ * @since 0.0.0
  */
 export const resolveFormatOptions = (options?: {
 	readonly indent?: number | "tab" | "preserve";
@@ -291,6 +349,18 @@ export const resolveFormatOptions = (options?: {
  * Render an already-encoded package.json record to a JSON string, applying the
  * empty-map strip, canonical key ordering and a trailing newline unless the
  * corresponding options opt out.
+ *
+ * **Example** (Render sorted compact package text)
+ *
+ * ```ts
+ * import { renderJson, resolveFormatOptions } from "@beep/scratchpad/effected/package-json/internal/format";
+ *
+ * const text = renderJson({ version: "1.0.0", name: "p", scripts: {} }, resolveFormatOptions({ indent: 0, newline: false }));
+ * console.log(text); // {"name":"p","version":"1.0.0"}
+ * ```
+ *
+ * @category formatting
+ * @since 0.0.0
  */
 export const renderJson: {
 	(options: ReturnType<typeof resolveFormatOptions>): (raw: Record<string, unknown>) => string;

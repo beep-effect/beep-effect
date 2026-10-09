@@ -68,16 +68,16 @@ const $I = $ScratchpadId.create("effected/package-json/PackageManifest");
  * **Example** (Decode a private workspace root with a package manager range)
  *
  * ```ts
- * import { PackageManifest } from "./index.ts";
+ * import { PackageManifest } from "@beep/scratchpad/effected/package-json/PackageManifest";
  * import * as Effect from "effect/Effect";
  *
- * const program = Effect.gen(function* () {
- *   const root = yield* PackageManifest.decode({ private: true, packageManager: "pnpm@^11.20.0" });
- *   console.log(root.isPrivate); // => true
- * });
+ * const root = Effect.runSync(PackageManifest.decode({ private: true, packageManager: "pnpm@^11.20.0" }));
+ * console.log(root.isPrivate) // true
  * ```
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class PackageManifest extends S.Class<PackageManifest>($I`PackageManifest`)({
 	...Package.fields,
@@ -89,6 +89,21 @@ export class PackageManifest extends S.Class<PackageManifest>($I`PackageManifest
 	 * The wire codec: an open JSON object ↔ a {@link PackageManifest} instance,
 	 * partitioning unknown keys into `rest` and flattening them back on encode —
 	 * the same transform {@link Package.schema} uses, over this class's fields.
+	 *
+	 * **Example** (Preserve unknown manifest keys)
+	 *
+	 * ```ts
+	 * import { PackageManifest } from "@beep/scratchpad/effected/package-json/PackageManifest";
+	 * import * as Effect from "effect/Effect";
+	 * import * as S from "effect/Schema";
+	 *
+	 * const root = Effect.runSync(S.decodeUnknownEffect(PackageManifest.schema)({ private: true, custom: "kept" }));
+	 * const encoded = Effect.runSync(S.encodeEffect(PackageManifest.schema)(root));
+	 * console.log(encoded.custom) // kept
+	 * ```
+	 *
+	 * @category codecs
+	 * @since 0.0.0
 	 */
 	static readonly schema: S.Codec<PackageManifest, { readonly [k: string]: unknown }> = makeWire(PackageManifest);
 
@@ -96,9 +111,21 @@ export class PackageManifest extends S.Class<PackageManifest>($I`PackageManifest
 	 * Decode an unknown JSON value into a {@link PackageManifest}, normalizing
 	 * any `SchemaError` to a typed {@link PackageDecodeError} at the boundary.
 	 *
+	 * **Example** (Decode a manifest without publishable identifiers)
+	 *
+	 * ```ts
+	 * import { PackageManifest } from "@beep/scratchpad/effected/package-json/PackageManifest";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const root = Effect.runSync(PackageManifest.decode({ private: true }));
+	 * console.log(root.name, root.version) // undefined undefined
+	 * ```
+	 *
 	 * @param input - the parsed package.json JSON value (e.g. from `JSON.parse`)
 	 * @returns an Effect resolving to the decoded `PackageManifest`, failing with
 	 * {@link PackageDecodeError} when a present field does not satisfy its codec
+	 * @category decoding
+	 * @since 0.0.0
 	 */
 	static readonly decode = Effect.fn("PackageManifest.decode")(function* (input: unknown) {
 		return yield* S.decodeUnknownEffect(PackageManifest.schema)(input).pipe(
@@ -106,7 +133,22 @@ export class PackageManifest extends S.Class<PackageManifest>($I`PackageManifest
 		);
 	});
 
-	/** Whether the manifest is marked private. */
+	/**
+	 * Whether the manifest is marked private.
+	 *
+	 * **Example** (Default an absent private flag)
+	 *
+	 * ```ts
+	 * import { PackageManifest } from "@beep/scratchpad/effected/package-json/PackageManifest";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const root = Effect.runSync(PackageManifest.decode({}));
+	 * console.log(root.isPrivate) // false
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
+	 */
 	get isPrivate(): boolean {
 		return this.private ?? false;
 	}
@@ -117,6 +159,19 @@ export class PackageManifest extends S.Class<PackageManifest>($I`PackageManifest
 	 * sorting and empty-map stripping unless the options opt out. Pure, and
 	 * shared with `Package.toJsonString` down to the same internal renderer.
 	 * Absent `name` / `version` keys stay absent — nothing is invented.
+	 *
+	 * **Example** (Serialize a private workspace root)
+	 *
+	 * ```ts
+	 * import { PackageManifest } from "@beep/scratchpad/effected/package-json/PackageManifest";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const root = Effect.runSync(PackageManifest.decode({ private: true }));
+	 * console.log(JSON.stringify(root.toJsonString())) // "{\n  \"private\": true\n}\n"
+	 * ```
+	 *
+	 * @category serialization
+	 * @since 0.0.0
 	 */
 	toJsonString(options?: PackageFormatOptions): string {
 		const raw = Result.getOrThrowWith(S.encodeUnknownResult(PackageManifest.schema)(this), (error) => error);

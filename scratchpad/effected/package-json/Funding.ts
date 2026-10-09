@@ -131,7 +131,7 @@ const FieldValue = S.Union([EntryValue, S.Array(EntryValue)]);
  * **Example** (Decode a funding URL into an entry array)
  *
  * ```ts
- * import { Funding } from "./index.ts";
+ * import { Funding } from "@beep/scratchpad/effected/package-json/Funding";
  * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema";
  *
@@ -140,9 +140,13 @@ const FieldValue = S.Union([EntryValue, S.Array(EntryValue)]);
  *   const entries = yield* S.decodeUnknownEffect(Funding.FromField)("https://example.com/sponsor");
  *   console.log(entries[0]?.url); // "https://example.com/sponsor"
  * });
+ * Effect.runSync(program);
+ * console.log(Effect.isEffect(program)) // true
  * ```
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class Funding extends S.Class<Funding>($I`Funding`)({
 	/** The funding platform, when the object form carried one (`"github"`, …). */
@@ -152,39 +156,144 @@ export class Funding extends S.Class<Funding>($I`Funding`)({
 	/** Keys outside the documented set, preserved so encoding does not drop them. */
 	rest: S.optionalKey(S.Record(S.String, S.Unknown)).annotateKey({ description: "Keys outside the documented set, preserved so encoding does not drop them." }),
 }, $I.annote("Funding", { description: "Where to send money for a package: one funding entry." })) {
+	/**
+	 * Stores the original single-entry wire spelling outside schema data and object spreads.
+	 *
+	 * **Example** (Read wire provenance through its accessor)
+	 *
+	 * ```ts
+	 * import { Funding } from "@beep/scratchpad/effected/package-json/Funding";
+	 * import * as S from "effect/Schema";
+	 *
+	 * const entry = S.decodeUnknownSync(Funding.FromValue)("https://example.com/sponsor");
+	 * console.log(Funding.wireOf(entry)) // https://example.com/sponsor
+	 * ```
+	 *
+	 * @category models
+	 * @since 0.0.0
+	 */
 	#wire: EntryWire | undefined = undefined;
+	/**
+	 * Remembers whether an entry represented the entire bare funding field.
+	 *
+	 * **Example** (Inspect bare-field provenance through its accessor)
+	 *
+	 * ```ts
+	 * import { Funding } from "@beep/scratchpad/effected/package-json/Funding";
+	 * import * as S from "effect/Schema";
+	 * import * as A from "effect/Array";
+	 *
+	 * const entries = S.decodeUnknownSync(Funding.FromField)("https://example.com/sponsor");
+	 * console.log(A.some(entries, Funding.isBareField)) // true
+	 * ```
+	 *
+	 * @category models
+	 * @since 0.0.0
+	 */
 	#bareField = false;
 
-	/** Instance-owned wire provenance, excluded from schema data and object spreads. */
+	/**
+	 *  Instance-owned wire provenance, excluded from schema data and object spreads.
+	 *
+	 * **Example** (Read the remembered wire spelling)
+	 *
+	 * ```ts
+	 * import { Funding } from "@beep/scratchpad/effected/package-json/Funding";
+	 * import * as S from "effect/Schema";
+	 *
+	 * const entry = S.decodeUnknownSync(Funding.FromValue)("https://example.com/sponsor");
+	 * console.log(Funding.wireOf(entry)) // https://example.com/sponsor
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	static wireOf(funding: Funding): EntryWire | undefined {
 		return funding.#wire;
 	}
 
-	/** Remember the spelling read by a wire codec. */
+	/**
+	 *  Remember the spelling read by a wire codec.
+	 *
+	 * **Example** (Remember an entry URL spelling)
+	 *
+	 * ```ts
+	 * import { Funding } from "@beep/scratchpad/effected/package-json/Funding";
+	 *
+	 * const entry = Funding.make({ url: "https://example.com/sponsor" });
+	 * Funding.rememberWire(entry, entry.url);
+	 * console.log(Funding.wireOf(entry)) // https://example.com/sponsor
+	 * ```
+	 *
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	static rememberWire(funding: Funding, wire: EntryWire): void {
 		funding.#wire = wire;
 	}
 
-	/** Whether this entry was decoded as the entire bare field. */
+	/**
+	 *  Whether this entry was decoded as the entire bare field.
+	 *
+	 * **Example** (Inspect a hand-built entry arity)
+	 *
+	 * ```ts
+	 * import { Funding } from "@beep/scratchpad/effected/package-json/Funding";
+	 *
+	 * const entry = Funding.make({ url: "https://example.com/sponsor" });
+	 * console.log(Funding.isBareField(entry)) // false
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
+	 */
 	static isBareField(funding: Funding): boolean {
 		return funding.#bareField;
 	}
 
-	/** Arity belongs to the entry because Schema.Array rebuilds its containing array. */
+	/**
+	 *  Arity belongs to the entry because Schema.Array rebuilds its containing array.
+	 *
+	 * **Example** (Mark an entry as the entire bare field)
+	 *
+	 * ```ts
+	 * import { Funding } from "@beep/scratchpad/effected/package-json/Funding";
+	 *
+	 * const entry = Funding.make({ url: "https://example.com/sponsor" });
+	 * Funding.rememberBareField(entry);
+	 * console.log(Funding.isBareField(entry)) // true
+	 * ```
+	 *
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	static rememberBareField(funding: Funding): void {
 		funding.#bareField = true;
 	}
 
 	/**
-  * A single `funding` entry: the bare URL string or the object form, always
-  * decoded to a {@link Funding} and always re-encoded in the form it was read
-  * from.
-  *
-  * **Details**
-  *
-  * Provenance belongs to the instance, so an entry that is *rebuilt* rather
-  * than carried through has none and encodes in the canonical object form.
-  */
+	 * A single `funding` entry: the bare URL string or the object form, always
+	 * decoded to a {@link Funding} and always re-encoded in the form it was read
+	 * from.
+	 *
+	 * **Details**
+	 *
+	 * Provenance belongs to the instance, so an entry that is *rebuilt* rather
+	 * than carried through has none and encodes in the canonical object form.
+	 *
+	 * **Example** (Round-trip a single URL spelling)
+	 *
+	 * ```ts
+	 * import { Funding } from "@beep/scratchpad/effected/package-json/Funding";
+	 * import * as S from "effect/Schema";
+	 *
+	 * const entry = S.decodeUnknownSync(Funding.FromValue)("https://example.com/sponsor");
+	 * console.log(S.encodeSync(Funding.FromValue)(entry)) // https://example.com/sponsor
+	 * ```
+	 *
+	 * @category schemas
+	 * @since 0.0.0
+	 */
 	static readonly FromValue: S.Codec<Funding, string | { readonly [k: string]: unknown }> = EntryValue.pipe(
 		S.decodeTo(
 			S.instanceOf(Funding),
@@ -200,19 +309,33 @@ export class Funding extends S.Class<Funding>($I`Funding`)({
 	);
 
 	/**
-  * The `funding` field: a lone entry or an array of them, **always** decoded
-  * to an array so a consumer never branches on arity.
-  *
-  * **Details**
-  *
-  * The normalization is one-directional. A field written bare re-encodes
-  * bare, not as a one-element array — the arity is remembered against the
-  * single entry that WAS the field, and the replay is guarded on that entry
-  * still being alone, so pushing a second entry into the decoded array in
-  * place upgrades the field to the array form instead of silently dropping
-  * the addition. An entry built by hand has no provenance, so an array of
-  * such entries encodes as an array.
-  */
+	 * The `funding` field: a lone entry or an array of them, **always** decoded
+	 * to an array so a consumer never branches on arity.
+	 *
+	 * **Details**
+	 *
+	 * The normalization is one-directional. A field written bare re-encodes
+	 * bare, not as a one-element array — the arity is remembered against the
+	 * single entry that WAS the field, and the replay is guarded on that entry
+	 * still being alone, so pushing a second entry into the decoded array in
+	 * place upgrades the field to the array form instead of silently dropping
+	 * the addition. An entry built by hand has no provenance, so an array of
+	 * such entries encodes as an array.
+	 *
+	 * **Example** (Normalize a bare field and preserve its wire arity)
+	 *
+	 * ```ts
+	 * import { Funding } from "@beep/scratchpad/effected/package-json/Funding";
+	 * import * as S from "effect/Schema";
+	 *
+	 * const entries = S.decodeUnknownSync(Funding.FromField)("https://example.com/sponsor");
+	 * console.log(entries.length) // 1
+	 * console.log(S.encodeSync(Funding.FromField)(entries)) // https://example.com/sponsor
+	 * ```
+	 *
+	 * @category schemas
+	 * @since 0.0.0
+	 */
 	static readonly FromField: S.Codec<
 		ReadonlyArray<Funding>,
 		string | { readonly [k: string]: unknown } | ReadonlyArray<string | { readonly [k: string]: unknown }>

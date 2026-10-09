@@ -10,21 +10,87 @@ const $I = $ScratchpadId.create("effected/package-json/DevEngines");
 /**
  * A single `devEngines` constraint with a name and optional `version` / `onFail`.
  *
+ * **Example** (Construct a runtime constraint)
+ *
+ * ```ts
+ * import { DevEngine } from "@beep/scratchpad/effected/package-json/DevEngines";
+ *
+ * const engine = DevEngine.make({ name: "node", version: ">=24", onFail: "error" });
+ * console.log(engine.onFail) // "error"
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class DevEngine extends S.Class<DevEngine>($I`DevEngine`)({
-	/** The engine name (e.g. `node`, `pnpm`). */
+	/**
+	 * The engine name (e.g. `node`, `pnpm`).
+	 *
+	 * **Example** (Read the required engine name)
+	 *
+	 * ```ts
+	 * import { DevEngine } from "@beep/scratchpad/effected/package-json/DevEngines";
+	 *
+	 * const engine = DevEngine.make({ name: "node" });
+	 * console.log(engine.name) // "node"
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	name: S.String.annotateKey({ description: "The engine name (e.g. `node`, `pnpm`)." }),
-	/** The optional version constraint. */
+	/**
+	 * The optional version constraint.
+	 *
+	 * **Example** (Read an engine version constraint)
+	 *
+	 * ```ts
+	 * import { DevEngine } from "@beep/scratchpad/effected/package-json/DevEngines";
+	 *
+	 * const engine = DevEngine.make({ name: "node", version: ">=24" });
+	 * console.log(engine.version) // ">=24"
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	version: S.optionalKey(S.String).annotateKey({ description: "The optional version constraint." }),
-	/** The optional behavior when the constraint is unmet. */
+	/**
+	 * The optional behavior when the constraint is unmet.
+	 *
+	 * **Example** (Read the failure policy)
+	 *
+	 * ```ts
+	 * import { DevEngine } from "@beep/scratchpad/effected/package-json/DevEngines";
+	 *
+	 * const engine = DevEngine.make({ name: "node", onFail: "warn" });
+	 * console.log(engine.onFail) // "warn"
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	onFail: S.optionalKey(S.Literals(["warn", "error", "ignore"])).annotateKey({ description: "The optional behavior when the constraint is unmet." }),
 }, $I.annote("DevEngine", { description: "A single `devEngines` constraint with a name and optional `version` / `onFail`." })) {}
 
 /**
  * A `devEngines` constraint slot: a single {@link DevEngine} or an array of them.
  *
+ * **Example** (Decode single and multiple engine constraints)
+ *
+ * ```ts
+ * import { DevEngineOrArray } from "@beep/scratchpad/effected/package-json/DevEngines";
+ * import * as S from "effect/Schema";
+ *
+ * const decode = S.decodeUnknownSync(DevEngineOrArray);
+ * console.log(S.is(DevEngineOrArray)(decode({ name: "node" }))) // true
+ * console.log(S.is(DevEngineOrArray)(decode([{ name: "node" }, { name: "bun" }]))) // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const DevEngineOrArray: S.Union<[typeof DevEngine, S.$Array<typeof DevEngine>]> = S.Union<
 	[typeof DevEngine, S.$Array<typeof DevEngine>]
@@ -37,7 +103,20 @@ export const DevEngineOrArray: S.Union<[typeof DevEngine, S.$Array<typeof DevEng
  * The `devEngines` field schema, modeling runtime and package-manager
  * constraints as optional {@link DevEngine} slots.
  *
+ * **Example** (Decode development engine slots)
+ *
+ * ```ts
+ * import { DevEnginesSchema } from "@beep/scratchpad/effected/package-json/DevEngines";
+ * import * as S from "effect/Schema";
+ *
+ * const engines = S.decodeUnknownSync(DevEnginesSchema)({ runtime: { name: "node", version: ">=24" } });
+ * console.log(S.is(DevEnginesSchema)(engines)) // true
+ * console.log(engines.runtime === undefined) // false
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const DevEnginesSchema: S.Struct<{
 	readonly packageManager: S.optionalKey<typeof DevEngineOrArray>;
@@ -57,5 +136,7 @@ export const DevEnginesSchema: S.Struct<{
  * The decoded `devEngines` field type.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type DevEngines = typeof DevEnginesSchema.Type;

@@ -1,6 +1,8 @@
 /**
  * package.json parsing, editing, validation and file IO as Effect schemas.
  *
+ * **Details**
+ *
  * The {@link Package} class is the schema: typed known fields plus a `rest`
  * catch-all for round-trip fidelity, computed getters, dual-signature mutation
  * statics, and {@link Package.resolve} over the `@effected/npm` resolver

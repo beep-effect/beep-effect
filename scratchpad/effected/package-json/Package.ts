@@ -46,7 +46,19 @@ const toHashMap = SchemaTransformation.transform({
  * defaulting to an empty map when the key is absent. Backs the four dependency
  * maps and `scripts`. Not meant to be referenced directly.
  *
+ * **Example** (Decode a dependency map)
+ *
+ * ```ts
+ * import { DependencyMapField } from "@beep/scratchpad/effected/package-json/Package";
+ * import * as S from "effect/Schema";
+ * import * as HashMap from "effect/HashMap";
+ *
+ * console.log(HashMap.size(S.decodeUnknownSync(DependencyMapField)({ effect: "^4.0.0" }))); // 1
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const DependencyMapField = S.Record(S.String, S.String).pipe(
 	S.withDecodingDefaultKey(Effect.succeed<{ readonly [x: string]: string }>({})),
@@ -59,7 +71,19 @@ export const DependencyMapField = S.Record(S.String, S.String).pipe(
  * with no default (an absent key stays absent). Backs `engines`. Not meant to
  * be referenced directly.
  *
+ * **Example** (Decode engine constraints)
+ *
+ * ```ts
+ * import { StringMapField } from "@beep/scratchpad/effected/package-json/Package";
+ * import * as S from "effect/Schema";
+ * import * as HashMap from "effect/HashMap";
+ *
+ * console.log(HashMap.size(S.decodeUnknownSync(StringMapField)({ node: ">=22" }))); // 1
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const StringMapField = S.Record(S.String, S.String).pipe(
 	S.decodeTo(S.HashMap(S.String, S.String), toHashMap),
@@ -70,7 +94,18 @@ export const StringMapField = S.Record(S.String, S.String).pipe(
  * The `bin` field: a single string path or a name→path map. Not meant to be
  * referenced directly.
  *
+ * **Example** (Decode a single executable path)
+ *
+ * ```ts
+ * import { BinField } from "@beep/scratchpad/effected/package-json/Package";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.decodeUnknownSync(BinField)("./cli.js")); // ./cli.js
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const BinField = S.Union([S.String, StringMapField]).pipe($I.annoteSchema("BinField", { description: "The `bin` field: a single string path or a name→path map. Not meant to be referenced directly." }));
 
@@ -78,7 +113,18 @@ export const BinField = S.Union([S.String, StringMapField]).pipe($I.annoteSchema
  * The `exports` field: a single string entry point or an open object of
  * conditional exports. Not meant to be referenced directly.
  *
+ * **Example** (Decode a root entry point)
+ *
+ * ```ts
+ * import { ExportsField } from "@beep/scratchpad/effected/package-json/Package";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.decodeUnknownSync(ExportsField)("./index.js")); // ./index.js
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const ExportsField = S.Union([S.String, S.Record(S.String, S.Unknown)]).pipe($I.annoteSchema("ExportsField", { description: "The `exports` field: a single string entry point or an open object of conditional exports. Not meant to be referenced directly." }));
 
@@ -87,7 +133,18 @@ export const ExportsField = S.Union([S.String, S.Record(S.String, S.Unknown)]).p
  * (`access`, `directory`, ...) plus extensions like `targets`. Not meant to be
  * referenced directly.
  *
+ * **Example** (Keep a publication setting)
+ *
+ * ```ts
+ * import { PublishConfigField } from "@beep/scratchpad/effected/package-json/Package";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.decodeUnknownSync(PublishConfigField)({ access: "public" }).access); // public
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const PublishConfigField = S.Record(S.String, S.Unknown).pipe(
 	$I.annoteSchema("PublishConfigField", { description: "An open publishConfig record preserving npm keys and extensions." }),
@@ -97,7 +154,18 @@ export const PublishConfigField = S.Record(S.String, S.Unknown).pipe(
  * The `peerDependenciesMeta` field: a map of package name to `{ optional? }`.
  * Not meant to be referenced directly.
  *
+ * **Example** (Decode optional peer metadata)
+ *
+ * ```ts
+ * import { PeerDependenciesMetaField } from "@beep/scratchpad/effected/package-json/Package";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.decodeUnknownSync(PeerDependenciesMetaField)({ effect: { optional: true } }).effect?.optional); // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const PeerDependenciesMetaField = S.Record(
 	S.String,
@@ -109,12 +177,22 @@ export const PeerDependenciesMetaField = S.Record(
 /**
  * The `repository` field's raw wire shape: a shorthand string or an object.
  *
+ * **Example** (Decode a repository shorthand)
+ *
+ * ```ts
+ * import { RepositoryField } from "@beep/scratchpad/effected/package-json/Package";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.decodeUnknownSync(RepositoryField)("github:owner/repo")); // github:owner/repo
+ * ```
+ *
  * @deprecated Superseded by {@link Repository.FromValue}, which decodes both
  * encodings into a typed {@link Repository} with normalization getters and
  * round-trips the original form. Retained only as a name for the raw union;
  * `Package.repository` is a {@link Repository}.
- *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const RepositoryField = S.Union([S.String, S.Record(S.String, S.Unknown)]).pipe($I.annoteSchema("RepositoryField", { description: "The `repository` field's raw wire shape: a shorthand string or an object." }));
 
@@ -123,16 +201,44 @@ export const RepositoryField = S.Union([S.String, S.Record(S.String, S.Unknown)]
 /**
  * Indicates that a JSON value could not be decoded into a valid {@link Package}.
  *
+ * **Details**
+ *
  * Raised by {@link Package.decode}. The underlying `SchemaError` is preserved on
  * the structured `cause` field (never stringified), so callers keep the issue
  * tree for diagnostics.
  *
+ * **Example** (Inspect a decode failure)
+ *
+ * ```ts
+ * import { PackageDecodeError } from "@beep/scratchpad/effected/package-json/Package";
+ *
+ * const error = PackageDecodeError.make({ cause: new Error("Invalid input") });
+ * console.log(error.message); // Failed to decode package.json
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class PackageDecodeError extends S.TaggedError<PackageDecodeError>($I`PackageDecodeError`)("PackageDecodeError", {
 	/** The underlying `SchemaError`, preserved structurally rather than stringified. */
 	cause: S.Defect().annotateKey({ description: "The underlying `SchemaError`, preserved structurally rather than stringified." }),
 }, $I.annote("PackageDecodeError", { description: "Indicates that a JSON value could not be decoded into a valid Package." })) {
+	/**
+	 * Provides the diagnostic summary for a failed package.json decode.
+	 *
+	 * **Example** (Read the decode error summary)
+	 *
+	 * ```ts
+	 * import { PackageDecodeError } from "@beep/scratchpad/effected/package-json/Package";
+	 *
+	 * const error = PackageDecodeError.make({ cause: new Error("Invalid input") });
+	 * console.log(error.message); // Failed to decode package.json
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return "Failed to decode package.json";
 	}
@@ -147,6 +253,8 @@ export class PackageDecodeError extends S.TaggedError<PackageDecodeError>($I`Pac
  * source text is available).
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type PackageIndent = number | "tab" | "preserve";
 
@@ -154,6 +262,8 @@ export type PackageIndent = number | "tab" | "preserve";
  * Options for {@link Package.toJsonString} and `PackageJsonFile.write`.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface PackageFormatOptions {
 	/** Indentation: a spaces count, `"tab"`, or `"preserve"` (default `2`). */
@@ -181,6 +291,8 @@ export interface PackageFormatOptions {
  * derived from the schema so it never drifts from the model.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type PackagePatch = Partial<{
 	readonly [K in keyof (typeof Package)["fields"]]: (typeof Package)["fields"][K]["Type"];
@@ -194,17 +306,20 @@ export type PackagePatch = Partial<{
  * **Example** (Update a package version and serialize the result)
  *
  * ```ts
- * import { Package } from "./index.ts";
+ * import { Package } from "@beep/scratchpad/effected/package-json/Package";
  * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   const pkg = yield* Package.decode({ name: "my-pkg", version: "1.0.0" });
  *   const next = yield* Package.setVersion(pkg, "1.1.0");
- *   console.log(next.toJsonString());
+ *   return next.toJsonString();
  * });
+ * console.log(Effect.runSync(program).includes('"version": "1.1.0"')); // true
  * ```
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class Package extends S.Class<Package>($I`Package`)({
 	name: PackageName.annotateKey({ description: "Package identifier satisfying npm naming rules, with an optional `@scope/` prefix" }),
@@ -241,6 +356,23 @@ export class Package extends S.Class<Package>($I`Package`)({
 	// overload block makes `pkg.pipe(Package.setVersion(v))` work alongside the
 	// dual statics' data-first and curried call styles.
 
+	/**
+	 * Passes this package through transformations, including curried immutable mutation statics.
+	 *
+	 * **Example** (Pipe a package through a dependency update)
+	 *
+	 * ```ts
+	 * import { Package } from "@beep/scratchpad/effected/package-json/Package";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const pkg = Effect.runSync(Package.decode({ name: "my-pkg", version: "1.0.0" }));
+	 * const next = pkg.pipe(Package.addDependency("effect", "^4.0.0"));
+	 * console.log(next.hasDependency("effect")); // true
+	 * ```
+	 *
+	 * @category combinators
+	 * @since 0.0.0
+	 */
 	pipe<A>(this: A): A;
 	pipe<A, B>(this: A, ab: (_: A) => B): B;
 	pipe<A, B, C>(this: A, ab: (_: A) => B, bc: (_: B) => C): C;
@@ -256,6 +388,19 @@ export class Package extends S.Class<Package>($I`Package`)({
 	/**
 	 * The default wire codec: an open JSON object ↔ a {@link Package} instance,
 	 * partitioning unknown keys into `rest` and flattening them back on encode.
+	 *
+	 * **Example** (Round-trip an unknown manifest field)
+	 *
+	 * ```ts
+	 * import { Package } from "@beep/scratchpad/effected/package-json/Package";
+	 * import * as S from "effect/Schema";
+	 *
+	 * const pkg = S.decodeUnknownSync(Package.schema)({ name: "my-pkg", version: "1.0.0", custom: true });
+	 * console.log(S.encodeSync(Package.schema)(pkg).custom); // true
+	 * ```
+	 *
+	 * @category codecs
+	 * @since 0.0.0
 	 */
 	static readonly schema: S.Codec<Package, { readonly [k: string]: unknown }> = makeWire(Package);
 
@@ -263,8 +408,22 @@ export class Package extends S.Class<Package>($I`Package`)({
 	 * Build the wire codec for a `.extend()`ed subclass, so its custom fields
 	 * decode as typed members and are excluded from `rest`.
 	 *
+	 * **Example** (Decode an extended manifest)
+	 *
+	 * ```ts
+	 * import { Package } from "@beep/scratchpad/effected/package-json/Package";
+	 * import * as S from "effect/Schema";
+	 *
+	 * class ExtendedPackage extends Package.extend<ExtendedPackage>("ExtendedPackage")({ custom: S.String }) {}
+	 * const codec = Package.wireFor(ExtendedPackage);
+	 * const pkg = S.decodeUnknownSync(codec)({ name: "my-pkg", version: "1.0.0", custom: "kept" });
+	 * console.log(pkg.custom); // kept
+	 * ```
+	 *
 	 * @param Class - the extended `Schema.Class`, carrying its own `fields`
 	 * @returns a codec between an open JSON object and `Class` instances
+	 * @category codecs
+	 * @since 0.0.0
 	 */
 	static wireFor<Self extends Package, RD = never, RE = never>(
 		Class: S.Codec<Self, unknown, RD, RE> & { readonly fields: Record<string, unknown> },
@@ -275,12 +434,27 @@ export class Package extends S.Class<Package>($I`Package`)({
 	// ── Construction ──────────────────────────────────────────────────────
 
 	/**
-	 * Decode an unknown JSON value into a {@link Package}, normalizing any
-	 * `SchemaError` to a typed {@link PackageDecodeError} at the boundary.
+	 * Decode an unknown JSON value into a {@link Package}, normalizing schema
+	 * failures to a typed {@link PackageDecodeError} at the boundary.
 	 *
-	 * @param input - the parsed package.json JSON value (e.g. from `JSON.parse`)
-	 * @returns an Effect resolving to the decoded `Package`, failing with
-	 * {@link PackageDecodeError} when `input` does not satisfy the schema
+	 * **Details**
+	 *
+	 * The input is the parsed package.json JSON value (e.g. from `JSON.parse`).
+	 * The Effect resolves to the decoded `Package`, failing with
+	 * {@link PackageDecodeError} when the input does not satisfy the schema.
+	 *
+	 * **Example** (Decode a manifest name)
+	 *
+	 * ```ts
+	 * import { Package } from "@beep/scratchpad/effected/package-json/Package";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const pkg = Effect.runSync(Package.decode({ name: "my-pkg", version: "1.0.0" }));
+	 * console.log(pkg.name); // my-pkg
+	 * ```
+	 *
+	 * @category decoding
+	 * @since 0.0.0
 	 */
 	static readonly decode = Effect.fn("Package.decode")(function* (input: unknown) {
 		return yield* S.decodeUnknownEffect(Package.schema)(input).pipe(
@@ -290,22 +464,82 @@ export class Package extends S.Class<Package>($I`Package`)({
 
 	// ── Computed getters ──────────────────────────────────────────────────
 
-	/** Whether the package is marked private. */
+	/**
+	 * Whether the package is marked private.
+	 *
+	 * **Example** (Inspect isPrivate)
+	 *
+	 * ```ts
+	 * import { Package } from "@beep/scratchpad/effected/package-json/Package";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const pkg = Effect.runSync(Package.decode({ name: "my-pkg", version: "1.0.0" }));
+	 * console.log(pkg.isPrivate); // false
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
+	 */
 	get isPrivate(): boolean {
 		return this.private ?? false;
 	}
 
-	/** Whether the package name is scoped (`@scope/name`). */
+	/**
+	 * Whether the package name is scoped (`@scope/name`).
+	 *
+	 * **Example** (Inspect isScoped)
+	 *
+	 * ```ts
+	 * import { Package } from "@beep/scratchpad/effected/package-json/Package";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const pkg = Effect.runSync(Package.decode({ name: "my-pkg", version: "1.0.0" }));
+	 * console.log(pkg.isScoped); // false
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
+	 */
 	get isScoped(): boolean {
 		return PackageName.isScoped(this.name);
 	}
 
-	/** Whether the package is ESM (`"type": "module"`). */
+	/**
+	 * Whether the package is ESM (`"type": "module"`).
+	 *
+	 * **Example** (Inspect isESM)
+	 *
+	 * ```ts
+	 * import { Package } from "@beep/scratchpad/effected/package-json/Package";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const pkg = Effect.runSync(Package.decode({ name: "my-pkg", version: "1.0.0" }));
+	 * console.log(pkg.isESM); // false
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
+	 */
 	get isESM(): boolean {
 		return this.type === "module";
 	}
 
-	/** Whether any dependency map contains `name`. */
+	/**
+	 * Whether any dependency map contains `name`.
+	 *
+	 * **Example** (Inspect hasDependency)
+	 *
+	 * ```ts
+	 * import { Package } from "@beep/scratchpad/effected/package-json/Package";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const pkg = Effect.runSync(Package.decode({ name: "my-pkg", version: "1.0.0" }));
+	 * console.log(pkg.hasDependency("effect")); // false
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
+	 */
 	hasDependency(name: string): boolean {
 		return (
 			HashMap.has(this.dependencies, name) ||
@@ -315,17 +549,65 @@ export class Package extends S.Class<Package>($I`Package`)({
 		);
 	}
 
-	/** The `dependencies` map as {@link Dependency} instances (`kind: "prod"`). */
+	/**
+	 * The `dependencies` map as {@link Dependency} instances (`kind: "prod"`).
+	 *
+	 * **Example** (Read prod dependency entries)
+	 *
+	 * ```ts
+	 * import { Package } from "@beep/scratchpad/effected/package-json/Package";
+	 * import * as Effect from "effect/Effect";
+	 * import * as HashMap from "effect/HashMap";
+	 *
+	 * const pkg = Effect.runSync(Package.decode({ name: "my-pkg", version: "1.0.0", dependencies: { effect: "^4.0.0" } }));
+	 * console.log(HashMap.size(pkg.getDependencies())); // 1
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	getDependencies(): HashMap.HashMap<string, Dependency> {
 		return HashMap.map(this.dependencies, (specifier, name) => Dependency.make({ name, specifier, kind: "prod" }));
 	}
 
-	/** The `devDependencies` map as {@link Dependency} instances (`kind: "dev"`). */
+	/**
+	 * The `devDependencies` map as {@link Dependency} instances (`kind: "dev"`).
+	 *
+	 * **Example** (Read dev dependency entries)
+	 *
+	 * ```ts
+	 * import { Package } from "@beep/scratchpad/effected/package-json/Package";
+	 * import * as Effect from "effect/Effect";
+	 * import * as HashMap from "effect/HashMap";
+	 *
+	 * const pkg = Effect.runSync(Package.decode({ name: "my-pkg", version: "1.0.0", devDependencies: { effect: "^4.0.0" } }));
+	 * console.log(HashMap.size(pkg.getDevDependencies())); // 1
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	getDevDependencies(): HashMap.HashMap<string, Dependency> {
 		return HashMap.map(this.devDependencies, (specifier, name) => Dependency.make({ name, specifier, kind: "dev" }));
 	}
 
-	/** The `peerDependencies` map as {@link Dependency} instances (`kind: "peer"`), carrying `isOptional` from `peerDependenciesMeta`. */
+	/**
+	 * The `peerDependencies` map as {@link Dependency} instances (`kind: "peer"`), carrying `isOptional` from `peerDependenciesMeta`.
+	 *
+	 * **Example** (Read peer dependency entries)
+	 *
+	 * ```ts
+	 * import { Package } from "@beep/scratchpad/effected/package-json/Package";
+	 * import * as Effect from "effect/Effect";
+	 * import * as HashMap from "effect/HashMap";
+	 *
+	 * const pkg = Effect.runSync(Package.decode({ name: "my-pkg", version: "1.0.0", peerDependencies: { effect: "^4.0.0" } }));
+	 * console.log(HashMap.size(pkg.getPeerDependencies())); // 1
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	getPeerDependencies(): HashMap.HashMap<string, Dependency> {
 		const meta = this.peerDependenciesMeta;
 		return HashMap.map(this.peerDependencies, (specifier, name) =>
@@ -333,7 +615,23 @@ export class Package extends S.Class<Package>($I`Package`)({
 		);
 	}
 
-	/** The `optionalDependencies` map as {@link Dependency} instances (`kind: "optional"`). */
+	/**
+	 * The `optionalDependencies` map as {@link Dependency} instances (`kind: "optional"`).
+	 *
+	 * **Example** (Read optional dependency entries)
+	 *
+	 * ```ts
+	 * import { Package } from "@beep/scratchpad/effected/package-json/Package";
+	 * import * as Effect from "effect/Effect";
+	 * import * as HashMap from "effect/HashMap";
+	 *
+	 * const pkg = Effect.runSync(Package.decode({ name: "my-pkg", version: "1.0.0", optionalDependencies: { effect: "^4.0.0" } }));
+	 * console.log(HashMap.size(pkg.getOptionalDependencies())); // 1
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	getOptionalDependencies(): HashMap.HashMap<string, Dependency> {
 		return HashMap.map(this.optionalDependencies, (specifier, name) =>
 			Dependency.make({ name, specifier, kind: "optional" }),
@@ -342,12 +640,44 @@ export class Package extends S.Class<Package>($I`Package`)({
 
 	// ── Immutable mutation ────────────────────────────────────────────────
 
-	/** Return a new {@link Package} with the given fields replaced. */
+	/**
+	 * Return a new {@link Package} with the given fields replaced.
+	 *
+	 * **Example** (Copy a package with a description)
+	 *
+	 * ```ts
+	 * import { Package } from "@beep/scratchpad/effected/package-json/Package";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const pkg = Effect.runSync(Package.decode({ name: "my-pkg", version: "1.0.0" }));
+	 * const next = pkg.copyWith({ description: "Updated" });
+	 * console.log(next.description); // Updated
+	 * ```
+	 *
+	 * @category combinators
+	 * @since 0.0.0
+	 */
 	copyWith(patch: PackagePatch): Package {
 		return Package.make({ ...this, ...patch });
 	}
 
-	/** Set the version from a string. Fails with `InvalidVersionError`. Dual API. */
+	/**
+	 * Set the version from a string. Fails with `InvalidVersionError`. Dual API.
+	 *
+	 * **Example** (Apply setVersion in curried form)
+	 *
+	 * ```ts
+	 * import { Package } from "@beep/scratchpad/effected/package-json/Package";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const pkg = Effect.runSync(Package.decode({ name: "my-pkg", version: "1.0.0" }));
+	 * const next = Effect.runSync(pkg.pipe(Package.setVersion("1.1.0")));
+	 * console.log(next.toJsonString().includes('"version": "1.1.0"')); // true
+	 * ```
+	 *
+	 * @category setters
+	 * @since 0.0.0
+	 */
 	static readonly setVersion: {
 		(version: string): (pkg: Package) => Effect.Effect<Package, InvalidVersionError>;
 		(pkg: Package, version: string): Effect.Effect<Package, InvalidVersionError>;
@@ -359,7 +689,23 @@ export class Package extends S.Class<Package>($I`Package`)({
 		}),
 	);
 
-	/** Set the package name. Fails with `InvalidPackageNameError`. Dual API. */
+	/**
+	 * Set the package name. Fails with `InvalidPackageNameError`. Dual API.
+	 *
+	 * **Example** (Apply setName in curried form)
+	 *
+	 * ```ts
+	 * import { Package } from "@beep/scratchpad/effected/package-json/Package";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const pkg = Effect.runSync(Package.decode({ name: "my-pkg", version: "1.0.0" }));
+	 * const next = Effect.runSync(pkg.pipe(Package.setName("new-name")));
+	 * console.log(next.name); // new-name
+	 * ```
+	 *
+	 * @category setters
+	 * @since 0.0.0
+	 */
 	static readonly setName: {
 		(name: string): (pkg: Package) => Effect.Effect<Package, InvalidPackageNameError>;
 		(pkg: Package, name: string): Effect.Effect<Package, InvalidPackageNameError>;
@@ -373,7 +719,23 @@ export class Package extends S.Class<Package>($I`Package`)({
 		}),
 	);
 
-	/** Set the license from an SPDX string. Fails with `InvalidSpdxLicenseError`. Dual API. */
+	/**
+	 * Set the license from an SPDX string. Fails with `InvalidSpdxLicenseError`. Dual API.
+	 *
+	 * **Example** (Apply setLicense in curried form)
+	 *
+	 * ```ts
+	 * import { Package } from "@beep/scratchpad/effected/package-json/Package";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const pkg = Effect.runSync(Package.decode({ name: "my-pkg", version: "1.0.0" }));
+	 * const next = Effect.runSync(pkg.pipe(Package.setLicense("MIT")));
+	 * console.log(next.license); // MIT
+	 * ```
+	 *
+	 * @category setters
+	 * @since 0.0.0
+	 */
 	static readonly setLicense: {
 		(license: string): (pkg: Package) => Effect.Effect<Package, InvalidSpdxLicenseError>;
 		(pkg: Package, license: string): Effect.Effect<Package, InvalidSpdxLicenseError>;
@@ -387,7 +749,24 @@ export class Package extends S.Class<Package>($I`Package`)({
 		}),
 	);
 
-	/** Add or replace a `dependencies` entry. Dual API. */
+	/**
+	 * Add or replace a `dependencies` entry. Dual API.
+	 *
+	 * **Example** (Add a dependencies entry)
+	 *
+	 * ```ts
+	 * import { Package } from "@beep/scratchpad/effected/package-json/Package";
+	 * import * as Effect from "effect/Effect";
+	 * import * as HashMap from "effect/HashMap";
+	 *
+	 * const pkg = Effect.runSync(Package.decode({ name: "my-pkg", version: "1.0.0" }));
+	 * const next = pkg.pipe(Package.addDependency("effect", "^4.0.0"));
+	 * console.log(HashMap.has(next.dependencies, "effect")); // true
+	 * ```
+	 *
+	 * @category setters
+	 * @since 0.0.0
+	 */
 	static readonly addDependency: {
 		(name: string, specifier: string): (pkg: Package) => Package;
 		(pkg: Package, name: string, specifier: string): Package;
@@ -395,7 +774,25 @@ export class Package extends S.Class<Package>($I`Package`)({
 		pkg.copyWith({ dependencies: HashMap.set(pkg.dependencies, name, specifier) }),
 	);
 
-	/** Remove a `dependencies` entry. Dual API. */
+	/**
+	 * Remove a `dependencies` entry. Dual API.
+	 *
+	 * **Example** (Remove a dependencies entry)
+	 *
+	 * ```ts
+	 * import { Package } from "@beep/scratchpad/effected/package-json/Package";
+	 * import * as Effect from "effect/Effect";
+	 * import * as HashMap from "effect/HashMap";
+	 *
+	 * const pkg = Effect.runSync(Package.decode({ name: "my-pkg", version: "1.0.0" }));
+	 * const populated = Package.addDependency(pkg, "effect", "^4.0.0");
+	 * const next = populated.pipe(Package.removeDependency("effect"));
+	 * console.log(HashMap.has(next.dependencies, "effect")); // false
+	 * ```
+	 *
+	 * @category setters
+	 * @since 0.0.0
+	 */
 	static readonly removeDependency: {
 		(name: string): (pkg: Package) => Package;
 		(pkg: Package, name: string): Package;
@@ -403,7 +800,24 @@ export class Package extends S.Class<Package>($I`Package`)({
 		pkg.copyWith({ dependencies: HashMap.remove(pkg.dependencies, name) }),
 	);
 
-	/** Add or replace a `devDependencies` entry. Dual API. */
+	/**
+	 * Add or replace a `devDependencies` entry. Dual API.
+	 *
+	 * **Example** (Add a devDependencies entry)
+	 *
+	 * ```ts
+	 * import { Package } from "@beep/scratchpad/effected/package-json/Package";
+	 * import * as Effect from "effect/Effect";
+	 * import * as HashMap from "effect/HashMap";
+	 *
+	 * const pkg = Effect.runSync(Package.decode({ name: "my-pkg", version: "1.0.0" }));
+	 * const next = pkg.pipe(Package.addDevDependency("effect", "^4.0.0"));
+	 * console.log(HashMap.has(next.devDependencies, "effect")); // true
+	 * ```
+	 *
+	 * @category setters
+	 * @since 0.0.0
+	 */
 	static readonly addDevDependency: {
 		(name: string, specifier: string): (pkg: Package) => Package;
 		(pkg: Package, name: string, specifier: string): Package;
@@ -411,7 +825,25 @@ export class Package extends S.Class<Package>($I`Package`)({
 		pkg.copyWith({ devDependencies: HashMap.set(pkg.devDependencies, name, specifier) }),
 	);
 
-	/** Remove a `devDependencies` entry. Dual API. */
+	/**
+	 * Remove a `devDependencies` entry. Dual API.
+	 *
+	 * **Example** (Remove a devDependencies entry)
+	 *
+	 * ```ts
+	 * import { Package } from "@beep/scratchpad/effected/package-json/Package";
+	 * import * as Effect from "effect/Effect";
+	 * import * as HashMap from "effect/HashMap";
+	 *
+	 * const pkg = Effect.runSync(Package.decode({ name: "my-pkg", version: "1.0.0" }));
+	 * const populated = Package.addDevDependency(pkg, "effect", "^4.0.0");
+	 * const next = populated.pipe(Package.removeDevDependency("effect"));
+	 * console.log(HashMap.has(next.devDependencies, "effect")); // false
+	 * ```
+	 *
+	 * @category setters
+	 * @since 0.0.0
+	 */
 	static readonly removeDevDependency: {
 		(name: string): (pkg: Package) => Package;
 		(pkg: Package, name: string): Package;
@@ -419,7 +851,24 @@ export class Package extends S.Class<Package>($I`Package`)({
 		pkg.copyWith({ devDependencies: HashMap.remove(pkg.devDependencies, name) }),
 	);
 
-	/** Add or replace a `peerDependencies` entry. Dual API. */
+	/**
+	 * Add or replace a `peerDependencies` entry. Dual API.
+	 *
+	 * **Example** (Add a peerDependencies entry)
+	 *
+	 * ```ts
+	 * import { Package } from "@beep/scratchpad/effected/package-json/Package";
+	 * import * as Effect from "effect/Effect";
+	 * import * as HashMap from "effect/HashMap";
+	 *
+	 * const pkg = Effect.runSync(Package.decode({ name: "my-pkg", version: "1.0.0" }));
+	 * const next = pkg.pipe(Package.addPeerDependency("effect", "^4.0.0"));
+	 * console.log(HashMap.has(next.peerDependencies, "effect")); // true
+	 * ```
+	 *
+	 * @category setters
+	 * @since 0.0.0
+	 */
 	static readonly addPeerDependency: {
 		(name: string, specifier: string): (pkg: Package) => Package;
 		(pkg: Package, name: string, specifier: string): Package;
@@ -427,7 +876,25 @@ export class Package extends S.Class<Package>($I`Package`)({
 		pkg.copyWith({ peerDependencies: HashMap.set(pkg.peerDependencies, name, specifier) }),
 	);
 
-	/** Remove a `peerDependencies` entry. Dual API. */
+	/**
+	 * Remove a `peerDependencies` entry. Dual API.
+	 *
+	 * **Example** (Remove a peerDependencies entry)
+	 *
+	 * ```ts
+	 * import { Package } from "@beep/scratchpad/effected/package-json/Package";
+	 * import * as Effect from "effect/Effect";
+	 * import * as HashMap from "effect/HashMap";
+	 *
+	 * const pkg = Effect.runSync(Package.decode({ name: "my-pkg", version: "1.0.0" }));
+	 * const populated = Package.addPeerDependency(pkg, "effect", "^4.0.0");
+	 * const next = populated.pipe(Package.removePeerDependency("effect"));
+	 * console.log(HashMap.has(next.peerDependencies, "effect")); // false
+	 * ```
+	 *
+	 * @category setters
+	 * @since 0.0.0
+	 */
 	static readonly removePeerDependency: {
 		(name: string): (pkg: Package) => Package;
 		(pkg: Package, name: string): Package;
@@ -435,7 +902,24 @@ export class Package extends S.Class<Package>($I`Package`)({
 		pkg.copyWith({ peerDependencies: HashMap.remove(pkg.peerDependencies, name) }),
 	);
 
-	/** Add or replace an `optionalDependencies` entry. Dual API. */
+	/**
+	 * Add or replace an `optionalDependencies` entry. Dual API.
+	 *
+	 * **Example** (Add a optionalDependencies entry)
+	 *
+	 * ```ts
+	 * import { Package } from "@beep/scratchpad/effected/package-json/Package";
+	 * import * as Effect from "effect/Effect";
+	 * import * as HashMap from "effect/HashMap";
+	 *
+	 * const pkg = Effect.runSync(Package.decode({ name: "my-pkg", version: "1.0.0" }));
+	 * const next = pkg.pipe(Package.addOptionalDependency("effect", "^4.0.0"));
+	 * console.log(HashMap.has(next.optionalDependencies, "effect")); // true
+	 * ```
+	 *
+	 * @category setters
+	 * @since 0.0.0
+	 */
 	static readonly addOptionalDependency: {
 		(name: string, specifier: string): (pkg: Package) => Package;
 		(pkg: Package, name: string, specifier: string): Package;
@@ -443,7 +927,25 @@ export class Package extends S.Class<Package>($I`Package`)({
 		pkg.copyWith({ optionalDependencies: HashMap.set(pkg.optionalDependencies, name, specifier) }),
 	);
 
-	/** Remove an `optionalDependencies` entry. Dual API. */
+	/**
+	 * Remove an `optionalDependencies` entry. Dual API.
+	 *
+	 * **Example** (Remove a optionalDependencies entry)
+	 *
+	 * ```ts
+	 * import { Package } from "@beep/scratchpad/effected/package-json/Package";
+	 * import * as Effect from "effect/Effect";
+	 * import * as HashMap from "effect/HashMap";
+	 *
+	 * const pkg = Effect.runSync(Package.decode({ name: "my-pkg", version: "1.0.0" }));
+	 * const populated = Package.addOptionalDependency(pkg, "effect", "^4.0.0");
+	 * const next = populated.pipe(Package.removeOptionalDependency("effect"));
+	 * console.log(HashMap.has(next.optionalDependencies, "effect")); // false
+	 * ```
+	 *
+	 * @category setters
+	 * @since 0.0.0
+	 */
 	static readonly removeOptionalDependency: {
 		(name: string): (pkg: Package) => Package;
 		(pkg: Package, name: string): Package;
@@ -451,7 +953,24 @@ export class Package extends S.Class<Package>($I`Package`)({
 		pkg.copyWith({ optionalDependencies: HashMap.remove(pkg.optionalDependencies, name) }),
 	);
 
-	/** Add or replace a `scripts` entry. Dual API. */
+	/**
+	 * Add or replace a `scripts` entry. Dual API.
+	 *
+	 * **Example** (Update the test script)
+	 *
+	 * ```ts
+	 * import { Package } from "@beep/scratchpad/effected/package-json/Package";
+	 * import * as Effect from "effect/Effect";
+	 * import * as HashMap from "effect/HashMap";
+	 *
+	 * const pkg = Effect.runSync(Package.decode({ name: "my-pkg", version: "1.0.0" }));
+	 * const populated = Package.setScript(pkg, "test", "vitest run");
+	 * console.log(HashMap.has(populated.scripts, "test")); // true
+	 * ```
+	 *
+	 * @category setters
+	 * @since 0.0.0
+	 */
 	static readonly setScript: {
 		(name: string, command: string): (pkg: Package) => Package;
 		(pkg: Package, name: string, command: string): Package;
@@ -459,7 +978,25 @@ export class Package extends S.Class<Package>($I`Package`)({
 		pkg.copyWith({ scripts: HashMap.set(pkg.scripts, name, command) }),
 	);
 
-	/** Remove a `scripts` entry. Dual API. */
+	/**
+	 * Remove a `scripts` entry. Dual API.
+	 *
+	 * **Example** (Remove the test script)
+	 *
+	 * ```ts
+	 * import { Package } from "@beep/scratchpad/effected/package-json/Package";
+	 * import * as Effect from "effect/Effect";
+	 * import * as HashMap from "effect/HashMap";
+	 *
+	 * const pkg = Effect.runSync(Package.decode({ name: "my-pkg", version: "1.0.0" }));
+	 * const populated = Package.setScript(pkg, "test", "vitest run");
+	 * const next = populated.pipe(Package.removeScript("test"));
+	 * console.log(HashMap.has(next.scripts, "test")); // false
+	 * ```
+	 *
+	 * @category setters
+	 * @since 0.0.0
+	 */
 	static readonly removeScript: {
 		(name: string): (pkg: Package) => Package;
 		(pkg: Package, name: string): Package;
@@ -468,44 +1005,50 @@ export class Package extends S.Class<Package>($I`Package`)({
 	// ── Resolution ────────────────────────────────────────────────────────
 
 	/**
-  * Resolve `catalog:` and `workspace:` specifiers across all four dependency
-  * maps using the `CatalogResolver` and `WorkspaceResolver` from context,
-  * returning a new `Package`. This is the explicit resolution step —
-  * `PackageJsonFile.write` never resolves.
-  *
-  * **Details**
-  *
-  * Classification and projection go through `@effected/npm`'s
-  * `DependencySpecifier` statics: `workspace:` uses the pnpm publish-time
-  * projection, and the alias form `workspace:<name>@<range>` resolves the
-  * TARGET package's version and becomes the published `npm:<name>@<range>`
-  * alias. Specifiers the resolvers answer `Option.none()` for are left
-  * unchanged — resolution still succeeds. Fails with `@effected/npm`'s
-  * `CatalogAssemblyError` when catalog assembly failed, or
-  * `DependencyResolutionError` when a resolver's mechanism failed; requires
-  * `CatalogResolver` and `WorkspaceResolver` in `R`. For fail-typed
-  * resolution over the tolerant model, see `@effected/npm`'s
-  * `Manifest#resolve`.
-  *
-  * **Example** (Resolve catalog dependencies with no-op resolvers)
-  *
-  * ```ts
-  * import { Default } from "../npm/index.ts";
-  * import { Package } from "./index.ts";
-  * import * as Effect from "effect/Effect";
-  *
-  * const program = Effect.gen(function* () {
-  *   const pkg = yield* Package.decode({
-  *     name: "my-pkg",
-  *     version: "1.0.0",
-  *     dependencies: { effect: "catalog:" },
-  *   });
-  *   return yield* Package.resolve(pkg);
-  * }).pipe(Effect.provide(Default)); // the no-op resolvers leave `catalog:` unchanged
-  * ```
-  *
-  * @param pkg - the package whose specifiers to resolve
-  */
+	 * Resolve `catalog:` and `workspace:` specifiers across all four dependency
+	 * maps using the `CatalogResolver` and `WorkspaceResolver` from context,
+	 * returning a new `Package`. This is the explicit resolution step —
+	 * `PackageJsonFile.write` never resolves.
+	 *
+	 * **Details**
+	 *
+	 * Classification and projection go through `@effected/npm`'s
+	 * `DependencySpecifier` statics: `workspace:` uses the pnpm publish-time
+	 * projection, and the alias form `workspace:<name>@<range>` resolves the
+	 * TARGET package's version and becomes the published `npm:<name>@<range>`
+	 * alias. Specifiers the resolvers answer `Option.none()` for are left
+	 * unchanged — resolution still succeeds. Fails with `@effected/npm`'s
+	 * `CatalogAssemblyError` when catalog assembly failed, or
+	 * `DependencyResolutionError` when a resolver's mechanism failed; requires
+	 * `CatalogResolver` and `WorkspaceResolver` in `R`. For fail-typed
+	 * resolution over the tolerant model, see `@effected/npm`'s
+	 * `Manifest#resolve`.
+	 *
+	 * **Example** (Resolve catalog dependencies with no-op resolvers)
+	 *
+	 * ```ts
+	 * import { Default } from "@beep/scratchpad/effected/npm/index";
+	 * import { Package } from "@beep/scratchpad/effected/package-json/Package";
+	 * import * as Effect from "effect/Effect";
+	 * import * as HashMap from "effect/HashMap";
+	 * import * as O from "effect/Option";
+	 *
+	 * const program = Effect.gen(function* () {
+	 *   const pkg = yield* Package.decode({
+	 *     name: "my-pkg",
+	 *     version: "1.0.0",
+	 *     dependencies: { effect: "catalog:" },
+	 *   });
+	 *   return yield* Package.resolve(pkg);
+	 * }).pipe(Effect.provide(Default)); // the no-op resolvers leave `catalog:` unchanged
+	 * const resolved = Effect.runSync(program);
+	 * console.log(O.getOrElse(HashMap.get(resolved.dependencies, "effect"), () => "missing")); // catalog:
+	 * ```
+	 *
+	 * @param pkg - the package whose specifiers to resolve
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	static readonly resolve = Effect.fn("Package.resolve")(function* (pkg: Package) {
 		const workspace = yield* WorkspaceResolver;
 		const catalog = yield* CatalogResolver;
@@ -545,6 +1088,19 @@ export class Package extends S.Class<Package>($I`Package`)({
 	 * Serialize to a formatted package.json string: encode through the wire
 	 * codec (flattening `rest`), then apply the canonical key order, dependency
 	 * sorting and empty-map stripping unless the options opt out. Pure.
+	 *
+	 * **Example** (Serialize a package name)
+	 *
+	 * ```ts
+	 * import { Package } from "@beep/scratchpad/effected/package-json/Package";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const pkg = Effect.runSync(Package.decode({ name: "my-pkg", version: "1.0.0" }));
+	 * console.log(pkg.toJsonString().includes('"name": "my-pkg"')); // true
+	 * ```
+	 *
+	 * @category serialization
+	 * @since 0.0.0
 	 */
 	toJsonString(options?: PackageFormatOptions): string {
 		const raw = Result.getOrThrowWith(S.encodeUnknownResult(Package.schema)(this), (error) => error);

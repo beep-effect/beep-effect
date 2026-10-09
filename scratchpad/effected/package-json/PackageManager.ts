@@ -78,19 +78,25 @@ const invalid = (input: string, message: string) => Effect.fail(new SchemaIssue.
  * **Example** (Decode a package manager pin with integrity)
  *
  * ```ts
- * import { PackageManager } from "./index.ts";
+ * import { PackageManager } from "@beep/scratchpad/effected/package-json/PackageManager";
  * import * as S from "effect/Schema";
  *
  * const pm = S.decodeUnknownSync(PackageManager.FromString)("pnpm@10.33.0+sha512.abc");
- * pm.name; // => "pnpm"
- * pm.version; // => "10.33.0"
- * pm.hasIntegrity; // => true
+ * console.log(pm.name) // pnpm
+ * console.log(pm.version) // 10.33.0
+ * console.log(pm.hasIntegrity) // true
  * ```
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class PackageManager extends S.Class<PackageManager>($I`PackageManager`)({
-	/** The package-manager name (e.g. `pnpm`). Any lowercase name — see the class remarks. */
+	/**
+	 * The package-manager name (e.g. `pnpm`). Any lowercase name — see the class remarks.
+	 *
+	 * @since 0.0.0
+	 */
 	name: S.String.annotateKey({ description: "The package-manager name (e.g. `pnpm`). Any lowercase name — see the class remarks." }),
 	/**
 	 * The version (e.g. `10.33.0`): `@effected/semver`'s
@@ -100,29 +106,46 @@ export class PackageManager extends S.Class<PackageManager>($I`PackageManager`)(
 	 * leading-zero components and padded values are not, and a version
 	 * carrying build metadata is rejected at construction because the grammar
 	 * cannot express it.
+	 *
+	 * @since 0.0.0
 	 */
 	version: SemVer.PinnableVersionString,
 	/**
 	 * The optional integrity hash (e.g. `sha512.abc`): `@effected/npm`'s
 	 * `CorepackIntegrityHash`, the shared restriction of the `IntegrityHash`
 	 * brand to the corepack `<algo>.<hex>` form.
+	 *
+	 * @since 0.0.0
 	 */
 	integrity: S.Option(CorepackIntegrityHash).annotateKey({ description: "The optional integrity hash (e.g. `sha512.abc`): `@effected/npm`'s `CorepackIntegrityHash`, the shared restriction of the `IntegrityHash` brand to the corepack `<algo>.<hex>` form." }),
 }, $I.annote("PackageManager", { description: "A structured `packageManager` value with `name`, `version` and an optional `integrity` hash." })) {
 	/**
-  * Schema transformation between the `"name@version+integrity"` string and a
-  * {@link PackageManager}.
-  *
-  * **Details**
-  *
-  * Decoding splits on the first `@`, then on the first `+` — which always
-  * begins the integrity, never semver build metadata — and validates each
-  * component: the name against the lowercase grammar, the version through
-  * `@effected/semver`'s strict parse, the integrity through
-  * `CorepackIntegrityHash`. Every failure is a typed decode failure naming
-  * the component that failed. Encoding prints the canonical string, which is
-  * byte-identical to any input this codec accepts.
-  */
+	 * Schema transformation between the `"name@version+integrity"` string and a
+	 * {@link PackageManager}.
+	 *
+	 * **Details**
+	 *
+	 * Decoding splits on the first `@`, then on the first `+` — which always
+	 * begins the integrity, never semver build metadata — and validates each
+	 * component: the name against the lowercase grammar, the version through
+	 * `@effected/semver`'s strict parse, the integrity through
+	 * `CorepackIntegrityHash`. Every failure is a typed decode failure naming
+	 * the component that failed. Encoding prints the canonical string, which is
+	 * byte-identical to any input this codec accepts.
+	 *
+	 * **Example** (Round-trip a package manager string)
+	 *
+	 * ```ts
+	 * import { PackageManager } from "@beep/scratchpad/effected/package-json/PackageManager";
+	 * import * as S from "effect/Schema";
+	 *
+	 * const pm = S.decodeUnknownSync(PackageManager.FromString)("pnpm@10.33.0");
+	 * console.log(S.encodeSync(PackageManager.FromString)(pm)) // pnpm@10.33.0
+	 * ```
+	 *
+	 * @category schemas
+	 * @since 0.0.0
+	 */
 	static readonly FromString: S.Codec<PackageManager, string> = S.String.pipe(
 		S.decodeTo(
 			S.instanceOf(PackageManager),
@@ -175,7 +198,22 @@ export class PackageManager extends S.Class<PackageManager>($I`PackageManager`)(
 		),
 	);
 
-	/** Whether an integrity hash is present. */
+	/**
+	 * Whether an integrity hash is present.
+	 *
+	 * **Example** (Detect a pin without an integrity hash)
+	 *
+	 * ```ts
+	 * import { PackageManager } from "@beep/scratchpad/effected/package-json/PackageManager";
+	 * import * as S from "effect/Schema";
+	 *
+	 * const pm = S.decodeUnknownSync(PackageManager.FromString)("pnpm@10.33.0");
+	 * console.log(pm.hasIntegrity) // false
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
+	 */
 	get hasIntegrity(): boolean {
 		return O.isSome(this.integrity);
 	}

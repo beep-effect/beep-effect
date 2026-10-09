@@ -62,6 +62,8 @@ const stripGitSuffix = (value: string): string => (value.endsWith(".git") ? valu
  * The browsable `https://host/path` form of a repository reference, or none
  * when the value is not one this model recognizes.
  *
+ * **Details**
+ *
  * Total by construction: `repository` is caller data, and a value that cannot
  * be interpreted is a missing answer rather than a failure.
  */
@@ -180,16 +182,19 @@ const isFaithfulBugs = (wire: { readonly [k: string]: unknown }, bugs: Bugs): bo
  * **Example** (Derive a browse URL from repository shorthand)
  *
  * ```ts
- * import { Repository } from "./index.ts";
+ * import { Repository } from "@beep/scratchpad/effected/package-json/Repository";
  * import * as S from "effect/Schema";
+ * import * as O from "effect/Option";
  *
  * const repo = S.decodeUnknownSync(Repository.FromValue)("effected/kit");
- * repo.url; // => "effected/kit"
- * repo.browseUrl; // => Option.some("https://github.com/effected/kit")
+ * console.log(repo.url); // effected/kit
+ * console.log(O.getOrUndefined(repo.browseUrl)); // https://github.com/effected/kit
  * // "git@github.com:effected/kit.git" browses to the same URL
  * ```
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class Repository extends S.Class<Repository>($I`Repository`)({
 	/** The `type` field, when the object form carried one (`"git"`, …). */
@@ -202,17 +207,61 @@ export class Repository extends S.Class<Repository>($I`Repository`)({
 	rest: S.optionalKey(S.Record(S.String, S.Unknown)).annotateKey({ description: "Keys outside the documented set, preserved so encoding does not drop them." }),
 }, $I.annote("Repository", { description: "Where a package's source lives." })) {
 	// Private instance provenance never enters schema data, equality or object spreads.
+	/**
+	 * Retains the original wire spelling on this instance without exposing it as schema data.
+	 *
+	 * **Example** (Keep repository provenance out of enumerable data)
+	 *
+	 * ```ts
+	 * import { Repository } from "@beep/scratchpad/effected/package-json/Repository";
+	 * import * as S from "effect/Schema";
+	 *
+	 * const value = S.decodeUnknownSync(Repository.FromValue)("effected/kit");
+	 * console.log(Object.keys(value).includes("#wire")); // false
+	 * ```
+	 *
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	#wire: FieldWire | undefined = undefined;
 
 	/**
 	 * The browsable `https://` URL, or `Option.none()` when `url` is not a form
 	 * this model recognizes.
+	 *
+	 * **Example** (Browse a shorthand repository)
+	 *
+	 * ```ts
+	 * import { Repository } from "@beep/scratchpad/effected/package-json/Repository";
+	 * import * as O from "effect/Option";
+	 *
+	 * const repository = Repository.make({ url: "effected/kit" });
+	 * console.log(O.getOrUndefined(repository.browseUrl)); // https://github.com/effected/kit
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
 	 */
 	get browseUrl(): O.Option<string> {
 		return browseUrlOf(this.url);
 	}
 
-	/** The canonical https clone URL, or none when it cannot be derived. */
+	/**
+	 * The canonical https clone URL, or none when it cannot be derived.
+	 *
+	 * **Example** (Derive an HTTPS clone URL)
+	 *
+	 * ```ts
+	 * import { Repository } from "@beep/scratchpad/effected/package-json/Repository";
+	 * import * as O from "effect/Option";
+	 *
+	 * const repository = Repository.make({ url: "effected/kit" });
+	 * console.log(O.getOrUndefined(repository.gitUrl)); // https://github.com/effected/kit.git
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	get gitUrl(): O.Option<string> {
 		return O.map(this.browseUrl, (url) => `${url}.git`);
 	}
@@ -256,16 +305,19 @@ export class Repository extends S.Class<Repository>($I`Repository`)({
   * **Example** (Browse a package directory within a monorepo)
   *
   * ```ts
-  * import { Repository } from "./index.ts";
+  * import { Repository } from "@beep/scratchpad/effected/package-json/Repository";
   * import * as S from "effect/Schema";
+  * import * as O from "effect/Option";
   *
   * const repo = S.decodeUnknownSync(Repository.FromValue)({
   *   url: "effected/kit",
   *   directory: "packages/spdx",
   * });
-  * repo.directoryUrl;
-  * // => Option.some("https://github.com/effected/kit/tree/HEAD/packages/spdx")
+  * console.log(O.getOrUndefined(repo.directoryUrl)); // https://github.com/effected/kit/tree/HEAD/packages/spdx
   * ```
+  *
+  * @category getters
+  * @since 0.0.0
   */
 	get directoryUrl(): O.Option<string> {
 		const directory = this.directory;
@@ -292,6 +344,19 @@ export class Repository extends S.Class<Repository>($I`Repository`)({
 	 * The `repository` field: the shorthand string or the object form, always
 	 * decoded to a {@link Repository}, and always re-encoded in the form it was
 	 * read from.
+	 *
+	 * **Example** (Round-trip a repository shorthand)
+	 *
+	 * ```ts
+	 * import { Repository } from "@beep/scratchpad/effected/package-json/Repository";
+	 * import * as S from "effect/Schema";
+	 *
+	 * const repository = S.decodeUnknownSync(Repository.FromValue)("effected/kit");
+	 * console.log(S.encodeSync(Repository.FromValue)(repository)); // effected/kit
+	 * ```
+	 *
+	 * @category schemas
+	 * @since 0.0.0
 	 */
 	static readonly FromValue: S.Codec<Repository, string | { readonly [k: string]: unknown }> = S.Union([
 		S.Record(S.String, S.Unknown),
@@ -346,7 +411,19 @@ export class Repository extends S.Class<Repository>($I`Repository`)({
  * npm permits a bare URL string, or an object with `url`, `email`, or both —
  * an email-only entry is legal, which is why `url` is optional.
  *
+ * **Example** (Accept an email-only issue contact)
+ *
+ * ```ts
+ * import { Bugs } from "@beep/scratchpad/effected/package-json/Repository";
+ * import * as S from "effect/Schema";
+ *
+ * const contact = S.decodeUnknownSync(Bugs.FromValue)({ email: "bugs@example.com" });
+ * console.log(contact.email); // bugs@example.com
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class Bugs extends S.Class<Bugs>($I`Bugs`)({
 	/** The issue-tracker URL. */
@@ -357,9 +434,40 @@ export class Bugs extends S.Class<Bugs>($I`Bugs`)({
 	rest: S.optionalKey(S.Record(S.String, S.Unknown)).annotateKey({ description: "Keys outside the documented set, preserved so encoding does not drop them." }),
 }, $I.annote("Bugs", { description: "Where to report problems with a package." })) {
 	// Private instance provenance never enters schema data, equality or object spreads.
+	/**
+	 * Retains the original wire spelling on this instance without exposing it as schema data.
+	 *
+	 * **Example** (Keep bugs provenance out of enumerable data)
+	 *
+	 * ```ts
+	 * import { Bugs } from "@beep/scratchpad/effected/package-json/Repository";
+	 * import * as S from "effect/Schema";
+	 *
+	 * const value = S.decodeUnknownSync(Bugs.FromValue)("https://example.com/issues");
+	 * console.log(Object.keys(value).includes("#wire")); // false
+	 * ```
+	 *
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	#wire: FieldWire | undefined = undefined;
 
-	/** The `bugs` field: a URL string or the object form. */
+	/**
+	 * The `bugs` field: a URL string or the object form.
+	 *
+	 * **Example** (Round-trip an issue tracker URL)
+	 *
+	 * ```ts
+	 * import { Bugs } from "@beep/scratchpad/effected/package-json/Repository";
+	 * import * as S from "effect/Schema";
+	 *
+	 * const contact = S.decodeUnknownSync(Bugs.FromValue)("https://example.com/issues");
+	 * console.log(S.encodeSync(Bugs.FromValue)(contact)); // https://example.com/issues
+	 * ```
+	 *
+	 * @category schemas
+	 * @since 0.0.0
+	 */
 	static readonly FromValue: S.Codec<Bugs, string | { readonly [k: string]: unknown }> = S.Union([
 		S.Record(S.String, S.Unknown),
 		S.String,

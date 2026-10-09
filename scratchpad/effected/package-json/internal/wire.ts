@@ -20,6 +20,25 @@ const RawJson = S.Record(S.String, S.Unknown);
  * `rest` catch-all field. Generic over the class so `Package`, its
  * `.extend()`ed subclasses and `PackageManifest` all share the one
  * implementation and cannot drift.
+ *
+ * **Example** (Flatten custom class metadata)
+ *
+ * ```ts
+ * import { makeWire } from "@beep/scratchpad/effected/package-json/internal/wire";
+ * import * as S from "effect/Schema";
+ *
+ * class Manifest extends S.Class<Manifest>("Manifest")({
+ *   name: S.String,
+ *   rest: S.Record(S.String, S.Unknown),
+ * }) {}
+ *
+ * const wire = makeWire(Manifest);
+ * const manifest = S.decodeUnknownSync(wire)({ name: "p", custom: true });
+ * console.log(JSON.stringify(S.encodeSync(wire)(manifest))); // {"custom":true,"name":"p"}
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
 export const makeWire = <Self, RD = never, RE = never>(
 	Class: S.Codec<Self, unknown, RD, RE> & { readonly fields: Record<string, unknown> },

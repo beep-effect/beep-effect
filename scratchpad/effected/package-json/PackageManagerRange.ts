@@ -44,6 +44,8 @@ const $I = $ScratchpadId.create("effected/package-json/PackageManagerRange");
  * disk are accepted.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface DevEnginePackageManagerEntry {
 	/** The package-manager name (e.g. `pnpm`). */
@@ -91,6 +93,8 @@ const SemVerRangeString: S.String = S.String.pipe(
  * Indicates that a `packageManager` value, or a `devEngines.packageManager`
  * entry, could not be read as a {@link PackageManagerRange}.
  *
+ * **Details**
+ *
  * Raised by {@link PackageManagerRange.parse},
  * {@link PackageManagerRange.parseResult},
  * {@link PackageManagerRange.fromDevEngine} and
@@ -98,7 +102,18 @@ const SemVerRangeString: S.String = S.String.pipe(
  * {@link PackageManagerRange.FromString} reports the same failure through a
  * generic `Schema` parse error carrying the same message.
  *
+ * **Example** (Identify the invalid component)
+ *
+ * ```ts
+ * import { InvalidPackageManagerRangeError } from "@beep/scratchpad/effected/package-json/PackageManagerRange";
+ *
+ * const error = InvalidPackageManagerRangeError.make({ input: "pnpm", reason: "format" });
+ * console.log(error.reason) // format
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class InvalidPackageManagerRangeError extends S.TaggedError<InvalidPackageManagerRangeError>($I`InvalidPackageManagerRangeError`)(
 	"InvalidPackageManagerRangeError",
@@ -118,6 +133,21 @@ export class InvalidPackageManagerRangeError extends S.TaggedError<InvalidPackag
 		reason: S.Literals(["format", "name", "range", "integrity"]).annotateKey({ description: "Which component failed: `format` (a `packageManager` string with no `@`), `name` (not a lowercase name), `range` (absent, empty, or not a semver range) or `integrity` (the tail after the first `+` is not a corepack `<algo>.<hex>` hash)." }),
 	}, $I.annote("InvalidPackageManagerRangeError", { description: "Indicates that a `packageManager` value, or a `devEngines.packageManager` entry, could not be read as a PackageManagerRange." }),
 ) {
+	/**
+	 * Describes the invalid component and its expected grammar using the offending input.
+	 *
+	 * **Example** (Read the format failure message)
+	 *
+	 * ```ts
+	 * import { InvalidPackageManagerRangeError } from "@beep/scratchpad/effected/package-json/PackageManagerRange";
+	 *
+	 * const error = InvalidPackageManagerRangeError.make({ input: "pnpm", reason: "format" });
+	 * console.log(error.message) // Invalid packageManager format: "pnpm": expected <name>@<range>[+<integrity>]
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return this.reason === "format"
 			? `Invalid packageManager format: "${this.input}": expected <name>@<range>[+<integrity>]`
@@ -192,17 +222,17 @@ const fromParts = (
  * **Example** (Decode a package manager semver range)
  *
  * ```ts
- * import { PackageManagerRange } from "./index.ts";
+ * import { PackageManagerRange } from "@beep/scratchpad/effected/package-json/PackageManagerRange";
  * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema";
  *
- * const program = Effect.gen(function* () {
- *   const pm = yield* S.decodeUnknownEffect(PackageManagerRange.FromString)("pnpm@^11.20.0");
- *   console.log(pm.name, pm.range, pm.isExact); // "pnpm" "^11.20.0" false
- * });
+ * const pm = Effect.runSync(S.decodeUnknownEffect(PackageManagerRange.FromString)("pnpm@^11.20.0"));
+ * console.log(pm.name, pm.range, pm.isExact) // pnpm ^11.20.0 false
  * ```
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class PackageManagerRange extends S.Class<PackageManagerRange>($I`PackageManagerRange`)({
 	/** The package-manager name (e.g. `pnpm`). Any lowercase name — the same latitude as {@link PackageManager}, for the same evidence. */
@@ -223,16 +253,30 @@ export class PackageManagerRange extends S.Class<PackageManagerRange>($I`Package
 	integrity: S.Option(CorepackIntegrityHash).annotateKey({ description: "The optional integrity hash (e.g. `sha512.abc`): `@effected/npm`'s `CorepackIntegrityHash`. Meaningful only alongside an exact range — an integrity pins one artifact — but carried whenever the manifest carries it, because fidelity outranks plausibility in a field model." }),
 }, $I.annote("PackageManagerRange", { description: "A structured `packageManager` value whose version position is a semver **range**, carried verbatim: `name`, `range` and an optional `integrity` hash." })) {
 	/**
-  * Schema transformation between the `"name@range[+integrity]"` string and a
-  * {@link PackageManagerRange}.
-  *
-  * **Details**
-  *
-  * Decoding parses via {@link PackageManagerRange.parseResult}, so every
-  * failure is a typed decode failure naming the component that failed.
-  * Encoding prints `toString()`, reconstructed from the verbatim parts, so
-  * it is byte-identical to any input this codec accepts.
-  */
+	 * Schema transformation between the `"name@range[+integrity]"` string and a
+	 * {@link PackageManagerRange}.
+	 *
+	 * **Details**
+	 *
+	 * Decoding parses via {@link PackageManagerRange.parseResult}, so every
+	 * failure is a typed decode failure naming the component that failed.
+	 * Encoding prints `toString()`, reconstructed from the verbatim parts, so
+	 * it is byte-identical to any input this codec accepts.
+	 *
+	 * **Example** (Round-trip a range string)
+	 *
+	 * ```ts
+	 * import { PackageManagerRange } from "@beep/scratchpad/effected/package-json/PackageManagerRange";
+	 * import * as Effect from "effect/Effect";
+	 * import * as S from "effect/Schema";
+	 *
+	 * const pm = Effect.runSync(S.decodeUnknownEffect(PackageManagerRange.FromString)("pnpm@^12.6.0"));
+	 * console.log(Effect.runSync(S.encodeEffect(PackageManagerRange.FromString)(pm))) // pnpm@^12.6.0
+	 * ```
+	 *
+	 * @category codecs
+	 * @since 0.0.0
+	 */
 	static readonly FromString: S.Codec<PackageManagerRange, string> = S.String.pipe(
 		S.decodeTo(
 			S.instanceOf(PackageManagerRange),
@@ -249,23 +293,35 @@ export class PackageManagerRange extends S.Class<PackageManagerRange>($I`Package
 	);
 
 	/**
-  * Parse a `packageManager` string (`name@range[+integrity]`), synchronously,
-  * returning a `Result` instead of an `Effect`.
-  *
-  * **Details**
-  *
-  * Splits on the first `@`, then on the first `+` — which always begins the
-  * integrity, never semver build metadata — and validates each component:
-  * the name against the lowercase grammar, the range through
-  * `@effected/semver`'s `Range.parseResult`, the integrity through
-  * `CorepackIntegrityHash`. {@link PackageManagerRange.parse} is defined in
-  * terms of this function.
-  *
-  * @param input - the `packageManager` value to parse
-  * @returns a `Result` succeeding with the parsed {@link PackageManagerRange},
-  * or failing with {@link InvalidPackageManagerRangeError} naming the
-  * component that failed.
-  */
+	 * Parse a `packageManager` string (`name@range[+integrity]`), synchronously,
+	 * returning a `Result` instead of an `Effect`.
+	 *
+	 * **Details**
+	 *
+	 * Splits on the first `@`, then on the first `+` — which always begins the
+	 * integrity, never semver build metadata — and validates each component:
+	 * the name against the lowercase grammar, the range through
+	 * `@effected/semver`'s `Range.parseResult`, the integrity through
+	 * `CorepackIntegrityHash`. {@link PackageManagerRange.parse} is defined in
+	 * terms of this function.
+	 *
+	 * **Example** (Inspect a missing separator failure)
+	 *
+	 * ```ts
+	 * import { PackageManagerRange } from "@beep/scratchpad/effected/package-json/PackageManagerRange";
+	 * import * as Result from "effect/Result";
+	 *
+	 * const parsed = PackageManagerRange.parseResult("pnpm");
+	 * console.log(Result.isFailure(parsed)) // true
+	 * ```
+	 *
+	 * @param input - the `packageManager` value to parse
+	 * @returns a `Result` succeeding with the parsed {@link PackageManagerRange},
+	 * or failing with {@link InvalidPackageManagerRangeError} naming the
+	 * component that failed.
+	 * @category parsing
+	 * @since 0.0.0
+	 */
 	static parseResult(input: string): Result.Result<PackageManagerRange, InvalidPackageManagerRangeError> {
 		const at = input.indexOf("@");
 		return at === -1
@@ -277,37 +333,61 @@ export class PackageManagerRange extends S.Class<PackageManagerRange>($I`Package
 	 * Parse a `packageManager` string. Defined in terms of
 	 * {@link PackageManagerRange.parseResult}.
 	 *
+	 * **Example** (Parse a caret range)
+	 *
+	 * ```ts
+	 * import { PackageManagerRange } from "@beep/scratchpad/effected/package-json/PackageManagerRange";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const pm = Effect.runSync(PackageManagerRange.parse("pnpm@^12.6.0"));
+	 * console.log(pm.range) // ^12.6.0
+	 * ```
+	 *
 	 * @param input - the `packageManager` value to parse
 	 * @returns the parsed {@link PackageManagerRange}. Fails with
 	 * {@link InvalidPackageManagerRangeError} when `input` is malformed.
+	 * @category parsing
+	 * @since 0.0.0
 	 */
 	static readonly parse = Effect.fn("PackageManagerRange.parse")((input: string) =>
 		Effect.fromResult(PackageManagerRange.parseResult(input)),
 	);
 
 	/**
-  * Read a `devEngines.packageManager` entry onto this model, synchronously,
-  * returning a `Result`.
-  *
-  * **Details**
-  *
-  * The entry's `name` is the package-manager name and its `version` is the
-  * same `<range>[+<integrity>]` tail the `packageManager` field carries after
-  * its `@` — `^12.6.0`, `12.6.0`, or `12.6.0+sha512.<hex>`. Both are validated exactly as
-  * {@link PackageManagerRange.parseResult} validates them. The `version`
-  * slot is optional on a {@link DevEngine}, but an entry without one names
-  * no range, so it fails with `reason: "range"`; `onFail` is ignored. The
-  * parameter is the encoded {@link DevEnginePackageManagerEntry} shape, so a
-  * plain object read off disk needs no `DevEngine` construction first.
-  *
-  * To write the entry back without its integrity (the bare form pnpm 11+
-  * writes), use `range` — the verbatim range with its operator kept and the
-  * integrity dropped.
-  *
-  * @param engine - the `devEngines.packageManager` entry to read
-  * @returns a `Result` succeeding with the {@link PackageManagerRange}, or
-  * failing with {@link InvalidPackageManagerRangeError}.
-  */
+	 * Read a `devEngines.packageManager` entry onto this model, synchronously,
+	 * returning a `Result`.
+	 *
+	 * **Details**
+	 *
+	 * The entry's `name` is the package-manager name and its `version` is the
+	 * same `<range>[+<integrity>]` tail the `packageManager` field carries after
+	 * its `@` — `^12.6.0`, `12.6.0`, or `12.6.0+sha512.<hex>`. Both are validated exactly as
+	 * {@link PackageManagerRange.parseResult} validates them. The `version`
+	 * slot is optional on a {@link DevEngine}, but an entry without one names
+	 * no range, so it fails with `reason: "range"`; `onFail` is ignored. The
+	 * parameter is the encoded {@link DevEnginePackageManagerEntry} shape, so a
+	 * plain object read off disk needs no `DevEngine` construction first.
+	 *
+	 * To write the entry back without its integrity (the bare form pnpm 11+
+	 * writes), use `range` — the verbatim range with its operator kept and the
+	 * integrity dropped.
+	 *
+	 * **Example** (Reject an entry without a version)
+	 *
+	 * ```ts
+	 * import { PackageManagerRange } from "@beep/scratchpad/effected/package-json/PackageManagerRange";
+	 * import * as Result from "effect/Result";
+	 *
+	 * const parsed = PackageManagerRange.fromDevEngineResult({ name: "pnpm" });
+	 * console.log(Result.isFailure(parsed)) // true
+	 * ```
+	 *
+	 * @param engine - the `devEngines.packageManager` entry to read
+	 * @returns a `Result` succeeding with the {@link PackageManagerRange}, or
+	 * failing with {@link InvalidPackageManagerRangeError}.
+	 * @category parsing
+	 * @since 0.0.0
+	 */
 	static fromDevEngineResult(
 		engine: DevEnginePackageManagerEntry,
 	): Result.Result<PackageManagerRange, InvalidPackageManagerRangeError> {
@@ -321,10 +401,22 @@ export class PackageManagerRange extends S.Class<PackageManagerRange>($I`Package
 	 * Read a `devEngines.packageManager` entry onto this model. Defined in
 	 * terms of {@link PackageManagerRange.fromDevEngineResult}.
 	 *
+	 * **Example** (Read a development engine range)
+	 *
+	 * ```ts
+	 * import { PackageManagerRange } from "@beep/scratchpad/effected/package-json/PackageManagerRange";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const pm = Effect.runSync(PackageManagerRange.fromDevEngine({ name: "pnpm", version: "^12.6.0" }));
+	 * console.log(pm.bare) // pnpm@^12.6.0
+	 * ```
+	 *
 	 * @param engine - the `devEngines.packageManager` entry to read
 	 * @returns the {@link PackageManagerRange}. Fails with
 	 * {@link InvalidPackageManagerRangeError} when the name, range or integrity
 	 * is malformed, or the entry has no `version`.
+	 * @category parsing
+	 * @since 0.0.0
 	 */
 	static readonly fromDevEngine = Effect.fn("PackageManagerRange.fromDevEngine")(
 		(engine: DevEnginePackageManagerEntry) => Effect.fromResult(PackageManagerRange.fromDevEngineResult(engine)),
@@ -334,6 +426,19 @@ export class PackageManagerRange extends S.Class<PackageManagerRange>($I`Package
 	 * The `packageManager` value without its integrity: `<name>@<range>`, range
 	 * operator kept (`pnpm@^12.6.0+sha512.<hex>` → `pnpm@^12.6.0`). The
 	 * `devEngines` counterpart is `range` itself.
+	 *
+	 * **Example** (Drop integrity from the field spelling)
+	 *
+	 * ```ts
+	 * import { PackageManagerRange } from "@beep/scratchpad/effected/package-json/PackageManagerRange";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const pm = Effect.runSync(PackageManagerRange.parse("pnpm@^12.6.0+sha512.abcdef"));
+	 * console.log(pm.bare) // pnpm@^12.6.0
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
 	 */
 	get bare(): string {
 		return `${this.name}@${this.range}`;
@@ -343,6 +448,19 @@ export class PackageManagerRange extends S.Class<PackageManagerRange>($I`Package
 	 * The value as parsed: `<name>@<range>` or `<name>@<range>+<integrity>`.
 	 * The encode direction of {@link PackageManagerRange.FromString} prints
 	 * exactly this.
+	 *
+	 * **Example** (Retain the integrity spelling)
+	 *
+	 * ```ts
+	 * import { PackageManagerRange } from "@beep/scratchpad/effected/package-json/PackageManagerRange";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const pm = Effect.runSync(PackageManagerRange.parse("pnpm@12.6.0+sha512.abcdef"));
+	 * console.log(pm.toString()) // pnpm@12.6.0+sha512.abcdef
+	 * ```
+	 *
+	 * @category formatting
+	 * @since 0.0.0
 	 */
 	override toString(): string {
 		return O.match(this.integrity, {
@@ -357,6 +475,19 @@ export class PackageManagerRange extends S.Class<PackageManagerRange>($I`Package
 	 * verbatim text, so `=11.2.0` and other range spellings of a single
 	 * version report `false`. This is the exactness a consumer tracks when it
 	 * must re-emit the same spelling it read.
+	 *
+	 * **Example** (Distinguish an exact version from a range)
+	 *
+	 * ```ts
+	 * import { PackageManagerRange } from "@beep/scratchpad/effected/package-json/PackageManagerRange";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const pm = Effect.runSync(PackageManagerRange.parse("pnpm@^12.6.0"));
+	 * console.log(pm.isExact) // false
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
 	 */
 	get isExact(): boolean {
 		return SemVer.isPinnable(this.range);
@@ -368,6 +499,20 @@ export class PackageManagerRange extends S.Class<PackageManagerRange>($I`Package
 	 * `~12.6.0`. `Option.none()` for anything else (`>=12 <13`, `12.x`,
 	 * `=12.6.0`, `^12`), whose operator cannot be carried onto a new version
 	 * unambiguously.
+	 *
+	 * **Example** (Read the caret operator)
+	 *
+	 * ```ts
+	 * import { PackageManagerRange } from "@beep/scratchpad/effected/package-json/PackageManagerRange";
+	 * import * as Effect from "effect/Effect";
+	 * import * as O from "effect/Option";
+	 *
+	 * const pm = Effect.runSync(PackageManagerRange.parse("pnpm@^12.6.0"));
+	 * console.log(O.getOrElse(pm.operator, () => "unsupported")) // ^
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
 	 */
 	get operator(): O.Option<"" | "^" | "~"> {
 		return O.map(singleComparator(this.range), (parts) => parts.operator);
@@ -377,28 +522,55 @@ export class PackageManagerRange extends S.Class<PackageManagerRange>($I`Package
 	 * The version a single exact, caret or tilde comparator is anchored on
 	 * (`^12.6.0` → `12.6.0`); `Option.none()` exactly when
 	 * {@link PackageManagerRange.operator} is.
+	 *
+	 * **Example** (Read the comparator anchor)
+	 *
+	 * ```ts
+	 * import { PackageManagerRange } from "@beep/scratchpad/effected/package-json/PackageManagerRange";
+	 * import * as Effect from "effect/Effect";
+	 * import * as O from "effect/Option";
+	 *
+	 * const pm = Effect.runSync(PackageManagerRange.parse("pnpm@^12.6.0"));
+	 * console.log(O.getOrElse(pm.baseVersion, () => "unsupported")) // 12.6.0
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
 	 */
 	get baseVersion(): O.Option<string> {
 		return O.map(singleComparator(this.range), (parts) => parts.version);
 	}
 
 	/**
-  * The same range re-anchored on `version`, operator kept and integrity
-  * dropped (`^12.6.0+sha512.<hex>` with `12.8.1` → `^12.8.1`), synchronously,
-  * returning a `Result`.
-  *
-  * **Gotchas**
-  *
-  * Only a single exact, caret or tilde comparator can be re-anchored (see
-  * {@link PackageManagerRange.operator}); any other range, or a `version`
-  * that is not a pinnable semver version, fails with `reason: "range"`. The
-  * integrity is dropped because it named the old version's artifact.
-  *
-  * @param version - the pinnable version to anchor the range on
-  * @returns a `Result` succeeding with the re-anchored
-  * {@link PackageManagerRange}, or failing with
-  * {@link InvalidPackageManagerRangeError}.
-  */
+	 * The same range re-anchored on `version`, operator kept and integrity
+	 * dropped (`^12.6.0+sha512.<hex>` with `12.8.1` → `^12.8.1`), synchronously,
+	 * returning a `Result`.
+	 *
+	 * **Gotchas**
+	 *
+	 * Only a single exact, caret or tilde comparator can be re-anchored (see
+	 * {@link PackageManagerRange.operator}); any other range, or a `version`
+	 * that is not a pinnable semver version, fails with `reason: "range"`. The
+	 * integrity is dropped because it named the old version's artifact.
+	 *
+	 * **Example** (Reject re-anchoring a comparator set)
+	 *
+	 * ```ts
+	 * import { PackageManagerRange } from "@beep/scratchpad/effected/package-json/PackageManagerRange";
+	 * import * as Effect from "effect/Effect";
+	 * import * as Result from "effect/Result";
+	 *
+	 * const pm = Effect.runSync(PackageManagerRange.parse("pnpm@>=12 <13"));
+	 * console.log(Result.isFailure(pm.withVersionResult("12.8.1"))) // true
+	 * ```
+	 *
+	 * @param version - the pinnable version to anchor the range on
+	 * @returns a `Result` succeeding with the re-anchored
+	 * {@link PackageManagerRange}, or failing with
+	 * {@link InvalidPackageManagerRangeError}.
+	 * @category mapping
+	 * @since 0.0.0
+	 */
 	withVersionResult(version: string): Result.Result<PackageManagerRange, InvalidPackageManagerRangeError> {
 		const parts = singleComparator(this.range);
 		if (O.isNone(parts) || !SemVer.isPinnable(version)) {
@@ -419,16 +591,44 @@ export class PackageManagerRange extends S.Class<PackageManagerRange>($I`Package
 	 * The same range re-anchored on `version`. Defined in terms of
 	 * {@link PackageManagerRange.withVersionResult}.
 	 *
+	 * **Example** (Re-anchor a caret range)
+	 *
+	 * ```ts
+	 * import { PackageManagerRange } from "@beep/scratchpad/effected/package-json/PackageManagerRange";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const pm = Effect.runSync(PackageManagerRange.parse("pnpm@^12.6.0"));
+	 * const updated = Effect.runSync(pm.withVersion("12.8.1"));
+	 * console.log(updated.toString()) // pnpm@^12.8.1
+	 * ```
+	 *
 	 * @param version - the pinnable version to anchor the range on
 	 * @returns the re-anchored {@link PackageManagerRange}. Fails with
 	 * {@link InvalidPackageManagerRangeError} when the range is not a single
 	 * exact, caret or tilde comparator, or `version` is not pinnable.
+	 * @category mapping
+	 * @since 0.0.0
 	 */
 	withVersion(version: string): Effect.Effect<PackageManagerRange, InvalidPackageManagerRangeError> {
 		return Effect.fromResult(this.withVersionResult(version));
 	}
 
-	/** Whether an integrity hash is present. */
+	/**
+	 * Whether an integrity hash is present.
+	 *
+	 * **Example** (Check for an integrity hash)
+	 *
+	 * ```ts
+	 * import { PackageManagerRange } from "@beep/scratchpad/effected/package-json/PackageManagerRange";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const pm = Effect.runSync(PackageManagerRange.parse("pnpm@12.6.0+sha512.abcdef"));
+	 * console.log(pm.hasIntegrity) // true
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
+	 */
 	get hasIntegrity(): boolean {
 		return O.isSome(this.integrity);
 	}

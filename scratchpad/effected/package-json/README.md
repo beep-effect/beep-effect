@@ -1,41 +1,12 @@
 # package-json (lab port of @effected/package-json)
 
-[![npm](https://img.shields.io/npm/v/@effected%2Fpackage-json?label=npm&color=cb3837)](https://www.npmjs.com/package/@effected/package-json)
-[![License: MIT](https://img.shields.io/badge/License-MIT-4caf50.svg)](https://opensource.org/licenses/MIT)
-[![Node.js %3E%3D24.11.0](https://img.shields.io/badge/Node.js-%3E%3D24.11.0-5fa04e.svg)](https://nodejs.org/)
-[![TypeScript 7.0](https://img.shields.io/badge/TypeScript-7.0-3178c6.svg)](https://www.typescriptlang.org/)
-
 package.json parsing, editing, validation and file IO as Effect schemas. `Package` is a `Schema.Class` with the manifest's known fields typed — `name` is a branded npm name, `version` is a real `SemVer`, `packageManager` decodes into `{ name, version, integrity }` — and a `rest` catch-all that carries every unknown top-level key through a read, edit and write cycle without losing it. Editing is immutable and dual-signature, validation is a rule set you can replace, and `catalog:` / `workspace:` specifiers expand through the `@effected/npm` resolver contracts as an explicit step you opt into.
-
-> **Pre-`1.0.0`.** This package is part of the `@effected/*` kit, built on stable
-> Effect v4 (`effect` `^4.0.0`) and still in `0.x` development. Stable Effect
-> makes a kit `1.0.0` possible, not automatic. To keep your `effect` and
-> `@effect/*` versions on the line the kit is built and tested against, install
-> [`@effected/pnpm-plugin-effect`](https://www.npmjs.com/package/@effected/pnpm-plugin-effect).
->
-> **Stability: unstable.** This package's API surface is not yet considered
-> complete and may change across `0.x` releases. Pin an exact version — even a
-> package marked *stable* before `1.0.0` can introduce a breaking change by
-> accident, and an exact pin turns that into a type-check error rather than a
-> runtime surprise. Full policy: [release strategy](https://github.com/spencerbeggs/effected#release-strategy).
 
 ## Why @effected/package-json
 
 Tools that rewrite a package.json usually treat it as a `Record<string, unknown>`: read it, mutate a key, `JSON.stringify` it back. That works right up until it does not. Unknown keys survive by accident rather than by design, `version` is a string you compare with `<`, and the day someone's manifest has a field your types never modeled is the day you find out whether your write path preserved it. The alternative — a strict schema over the *known* fields — usually solves the typing by deleting everyone's data.
 
 This package refuses both. Known fields are typed and validated; everything else lands in `rest` and is flattened back to top-level keys on encode, so the on-disk shape never grows a literal `rest` key and never loses your `customTool` block. Serialization applies the canonical `sort-package-json` key order, alphabetizes dependency maps and strips empty ones, deterministically and locale-independently. `PackageJsonFile.write` does not silently resolve your `workspace:` specifiers on the way out, because a write that quietly rewrites your dependency values is not a write, it is a policy — so `Package.resolve` is a step you compose in deliberately. And every distinct failure has its own tag: a missing file, an unreadable file, invalid JSON and a document that does not satisfy the schema are four different problems with four different recoveries.
-
-## Install
-
-```bash
-npm install @effected/package-json effect @effect/platform-node
-```
-
-```bash
-pnpm add @effected/package-json effect @effect/platform-node
-```
-
-Requires Node.js >=24.11.0.
 
 All `@effected/*` packages are ESM-only: the exports maps publish only `import` conditions, so `require()` — including tools that resolve in CJS mode — fails with Node's `ERR_PACKAGE_PATH_NOT_EXPORTED` rather than loading a CJS build that does not exist. Import from an ES module.
 
@@ -48,13 +19,13 @@ Reading and writing files needs a `FileSystem` and a `Path` implementation, prov
 Decode a manifest, edit it, read the computed properties back:
 
 ```ts
-import { Package } from "@effected/package-json";
-import { Effect } from "effect";
+import { Package } from "@beep/scratchpad/effected/package-json/Package";
+import * as Effect from "effect/Effect";
 
 const program = Effect.gen(function* () {
   const pkg = yield* Package.decode({ name: "@acme/widget", version: "1.0.0", private: true });
   const next = yield* Package.setVersion(pkg, "1.1.0");
-  return [next.name, next.version.toString(), next.isScoped, next.isPrivate] as const;
+  return [next.name, next.version.toString(), next.isScoped, next.isPrivate];
 });
 
 console.log(Effect.runSync(program));
@@ -70,8 +41,8 @@ Editing returns a new `Package`. The mutation statics are dual, so `Package.addD
 Unknown keys round-trip. `toJsonString` encodes through the wire codec, flattens `rest` back to the top level, and applies the canonical key order:
 
 ```ts
-import { Package } from "@effected/package-json";
-import { Effect } from "effect";
+import { Package } from "@beep/scratchpad/effected/package-json/Package";
+import * as Effect from "effect/Effect";
 
 const program = Effect.gen(function* () {
   const pkg = yield* Package.decode({
@@ -108,9 +79,11 @@ Alongside `Package` the leaf concepts are usable on their own. `PackageName` cla
 `PackageJsonFile` is the only IO in the package: one service, two methods, over core `FileSystem` and `Path`.
 
 ```ts
-import { Package, PackageJsonFile } from "@effected/package-json";
-import { NodeFileSystem, NodePath } from "@effect/platform-node";
-import { Effect, Layer } from "effect";
+import { PackageJsonFile } from "@beep/scratchpad/effected/package-json/PackageJsonFile";
+import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
+import * as NodePath from "@effect/platform-node/NodePath";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 
 const bumpMinor = Effect.gen(function* () {
   const files = yield* PackageJsonFile;
@@ -121,7 +94,8 @@ const bumpMinor = Effect.gen(function* () {
 
 const PlatformLive = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 
-Effect.runPromise(bumpMinor.pipe(Effect.provide(PackageJsonFile.layer), Effect.provide(PlatformLive)));
+const program = bumpMinor.pipe(Effect.provide(PackageJsonFile.layer), Effect.provide(PlatformLive));
+console.log(Effect.isEffect(program)) // true
 ```
 
 `read` fails four different ways and says which: `PackageJsonNotFoundError` when the file is not there, `PackageJsonReadError` for any other filesystem failure, `PackageJsonParseError` when the bytes are not JSON, and `PackageDecodeError` when the JSON is not a package.json. There is no `exists` pre-check, so a file deleted between the check and the read cannot be misreported as an IO error.
@@ -131,8 +105,9 @@ Effect.runPromise(bumpMinor.pipe(Effect.provide(PackageJsonFile.layer), Effect.p
 `PackageValidator` runs a rule set over a decoded `Package` and aggregates *every* failure into one `PackageValidationError`, rather than stopping at the first.
 
 ```ts
-import { Package, PackageValidator } from "@effected/package-json";
-import { Effect } from "effect";
+import { Package } from "@beep/scratchpad/effected/package-json/Package";
+import { PackageValidator } from "@beep/scratchpad/effected/package-json/PackageValidator";
+import * as Effect from "effect/Effect";
 
 const program = Effect.gen(function* () {
   const pkg = yield* Package.decode({ name: "widget", version: "1.0.0" });
@@ -156,13 +131,16 @@ console.log(Effect.runSync(program));
 Specifiers the resolvers answer `None` for are left exactly as they were.
 
 ```ts
-import { CatalogResolver, WorkspaceResolver } from "@effected/npm";
-import { Package } from "@effected/package-json";
-import { Effect, HashMap, Layer, Option } from "effect";
+import { CatalogResolver, WorkspaceResolver } from "@beep/scratchpad/effected/npm/index";
+import { Package } from "@beep/scratchpad/effected/package-json/Package";
+import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 
 const Resolvers = Layer.mergeAll(
-  Layer.succeed(CatalogResolver, { rangeOf: () => Effect.succeed(Option.some("^4.0.0")) }),
-  Layer.succeed(WorkspaceResolver, { versionOf: () => Effect.succeed(Option.some("1.4.0")) }),
+  Layer.succeed(CatalogResolver, { rangeOf: () => Effect.succeed(O.some("^4.0.0")) }),
+  Layer.succeed(WorkspaceResolver, { versionOf: () => Effect.succeed(O.some("1.4.0")) }),
 );
 
 const program = Effect.gen(function* () {
@@ -173,9 +151,9 @@ const program = Effect.gen(function* () {
   });
   const resolved = yield* Package.resolve(pkg);
   return [
-    Option.getOrElse(HashMap.get(resolved.dependencies, "effect"), () => "unresolved"),
-    Option.getOrElse(HashMap.get(resolved.dependencies, "@acme/core"), () => "unresolved"),
-  ] as const;
+    O.getOrElse(HashMap.get(resolved.dependencies, "effect"), () => "unresolved"),
+    O.getOrElse(HashMap.get(resolved.dependencies, "@acme/core"), () => "unresolved"),
+  ];
 }).pipe(Effect.provide(Resolvers));
 
 console.log(Effect.runSync(program));
@@ -189,12 +167,12 @@ The `workspace:` range modifier is honored: `workspace:*` takes the bare version
 `Package.decode` and `PackageManifest` are strict: a malformed field fails the whole document. That is the right behavior for a manifest you are about to write or publish, and the wrong one for a manifest you are only sniffing — a fetched tarball, a `node_modules` walk, a registry response — where the document is someone else's data and one bad field should not sink the read. `LenientManifest` is that discovery tier: every `Package` field decodes to its plain permissive JSON shape (`name` and `version` accept any string, not the branded npm grammar; `license` accepts any string, no SPDX check; the dependency maps are plain records, not `HashMap`s). A field present but not even that shape degrades to absence instead of failing the document, its raw value is preserved verbatim in `rest` (a malformed known field is treated exactly like an unknown one), and the degradation is reported on `issues`:
 
 ```ts
-import { LenientManifest } from "@effected/package-json";
-import { Effect } from "effect";
+import { LenientManifest } from "@beep/scratchpad/effected/package-json/LenientManifest";
+import * as Effect from "effect/Effect";
 
 const program = Effect.gen(function* () {
   const sniffed = yield* LenientManifest.decode({ name: "JSONStream", version: "1.0", license: 42 });
-  return [sniffed.name, sniffed.version, sniffed.issues, sniffed.rest?.license] as const;
+  return [sniffed.name, sniffed.version, sniffed.issues, sniffed.rest?.license];
 });
 
 console.log(Effect.runSync(program));
@@ -215,19 +193,21 @@ An empty `issues` array is not a validity guarantee — the permissive shapes ch
 `resolveEntryPoint` answers one question about a manifest — which file is the package's `"."` entry — and it is pure, IO-free and `Result`-returning, so it works against a plain object with no package on disk:
 
 ```ts
-import { resolveEntryPoint } from "@effected/package-json";
+import { resolveEntryPoint } from "@beep/scratchpad/effected/package-json/EntryPoint";
+import * as Result from "effect/Result";
 
-resolveEntryPoint({ exports: { import: "./esm.js", require: "./cjs.js" } });
-// Result.succeed("./esm.js")
+console.log(Result.getOrThrow(resolveEntryPoint({ exports: { import: "./esm.js", require: "./cjs.js" } }))) // "./esm.js"
 
-resolveEntryPoint({ exports: { require: "./cjs.js" } }, { conditions: ["require"] });
-// Result.succeed("./cjs.js")
+console.log(Result.getOrThrow(resolveEntryPoint({ exports: { require: "./cjs.js" } }, { conditions: ["require"] }))) // "./cjs.js"
 
-resolveEntryPoint({ main: "./legacy.js" });
-// Result.succeed("./legacy.js") — no exports field, so main applies
+// No exports field, so main applies.
+console.log(Result.getOrThrow(resolveEntryPoint({ main: "./legacy.js" }))) // "./legacy.js"
 
-resolveEntryPoint({ exports: { require: "./cjs.js" }, main: "./legacy.js" });
-// Result.fail(UnresolvedEntryPointError { reason: "noConditionMatched" })
+const unmatched = resolveEntryPoint({ exports: { require: "./cjs.js" }, main: "./legacy.js" });
+console.log(Result.isFailure(unmatched)) // true
+if (Result.isFailure(unmatched)) {
+  console.log(unmatched.failure.reason) // "noConditionMatched"
+}
 ```
 
 All three legal `exports` spellings are honored — the string shorthand, a subpath map, and conditions at the root with no `"."` key — and conditions default to `["import", "default"]`, in priority order.
@@ -274,7 +254,6 @@ Every failure is a `Schema.TaggedError` routed with `Effect.catchTag`. Causes ar
 ## License
 
 [MIT](LICENSE)
-
 
 ## Port notes
 
