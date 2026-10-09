@@ -3,15 +3,16 @@
   "initiative": {
     "id": "spar-document-annotation-wire",
     "title": "SPAR Document Annotation Wire",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-08-13",
-    "updated": "2026-08-13",
+    "updated": "2026-10-09",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/spar-document-annotation-wire",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Generate pinned SPAR terms and ship typed OA/PROV document annotations plus the Md-to-DOCO section fold.",
-  "statusNote": "Graduated third from document-structure-ontologies.",
+  "statusNote": "Content-final closeout in PR #1588 under S11; local package and parity proofs pass. Hosted readiness and merge remain with the orchestrator.",
+  "mergedPullRequest": 1588,
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -22,7 +23,7 @@
     "goals/patent-document-schema",
     "goals/document-ast-pattern-classification"
   ],
-  "blockedBy": ["goals/document-ast-pattern-classification"],
+  "blockedBy": [],
   "completionGate": {
     "operator": "yeet",
     "requiresPullRequest": true,
@@ -56,11 +57,31 @@
     }
   ],
   "phases": [
-    { "id": "P0", "name": "Research", "status": "pending" },
-    { "id": "P1", "name": "Implement", "status": "pending" },
-    { "id": "P2", "name": "Verify", "status": "pending" },
-    { "id": "P3", "name": "Yeet: PR to mergeable", "status": "pending" },
-    { "id": "P4", "name": "Close", "status": "pending" }
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "complete"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "complete"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "complete"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "complete"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "complete"
+    }
   ],
   "verificationCommands": [
     "test \"$(wc -m < goals/spar-document-annotation-wire/GOAL.md)\" -le 4000",

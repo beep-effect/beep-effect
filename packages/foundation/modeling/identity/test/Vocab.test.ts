@@ -1,5 +1,5 @@
 import { fcRuns } from "@beep/fc-runs";
-import { CoreVocab, mergeVocab, SemanticFoundationVocab, VocabRegistry } from "@beep/identity";
+import { CoreVocab, mergeVocab, SemanticFoundationVocab, SparVocab, VocabRegistry } from "@beep/identity";
 import { it } from "@beep/test-runner";
 import { describe, expect, expectTypeOf } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
@@ -97,5 +97,17 @@ describe("CoreVocab runtime invariants", () => {
 
   it("accepts CoreVocab through the runtime registry schema", () => {
     decodeVocabRegistryOption(CoreVocab).pipe(O.isSome, assertTrue);
+  });
+});
+
+describe("pinned SPAR vocabulary", () => {
+  it("derives curated SPAR CURIEs and exact expanded IRIs", () => {
+    expectTypeOf<"doco:Section" extends Curie<typeof SparVocab> ? true : false>().toEqualTypeOf<true>();
+    expectTypeOf<"cito:citesAsEvidence" extends Curie<typeof SparVocab> ? true : false>().toEqualTypeOf<true>();
+    expectTypeOf<"cito:unknown" extends Curie<typeof SparVocab> ? true : false>().toEqualTypeOf<false>();
+    expectTypeOf<Expand<"fabio:Report", typeof SparVocab>>().toEqualTypeOf<"http://purl.org/spar/fabio/Report">();
+    expect(SparVocab.doco.iri).toBe("http://purl.org/spar/doco/");
+    expect(SparVocab.deo.terms).toEqual(["Introduction", "Methods"]);
+    expect(SparVocab.cito.terms).toEqual(["cites", "citesAsEvidence"]);
   });
 });
