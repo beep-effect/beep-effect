@@ -108,8 +108,8 @@ const SCRIPT_ESCAPES: Readonly<Record<string, string>> = {
 };
 
 /** Drops keys whose value is `undefined`; JSON-LD has no undefined and no meaningful null. */
-const withoutUndefined = (value: Record<string, unknown>): Record<string, unknown> => {
-	const out: Record<string, unknown> = {};
+const withoutUndefined = (value: Record<string, S.Json | undefined>): Record<string, S.Json> => {
+	const out: Record<string, S.Json> = {};
 	for (const [key, entry] of Object.entries(value)) if (entry !== undefined) out[key] = entry;
 	return out;
 };
@@ -251,10 +251,7 @@ export class JsonLdDocument extends S.Class<JsonLdDocument>("JsonLdDocument")({
 	 * a framework that serializes JSON-LD itself.
 	 */
 	toJsonLd(): S.Json {
-		const encoded = Result.getOrThrow(S.encodeResult(JsonLdDocument)(this)) as {
-			readonly "@context": string;
-			readonly "@graph": ReadonlyArray<Record<string, unknown>>;
-		};
+		const encoded = Result.getOrThrow(S.encodeResult(JsonLdDocument)(this));
 		return {
 			"@context": encoded["@context"],
 			"@graph": encoded["@graph"].map((node) => {
@@ -265,9 +262,9 @@ export class JsonLdDocument extends S.Class<JsonLdDocument>("JsonLdDocument")({
 					"@id": id,
 					"@type": type,
 					...withoutUndefined(rest),
-					...(additional as Record<string, unknown> | undefined),
+					...additional,
 				};
-				return flattened as S.Json;
+				return flattened;
 			}),
 		};
 	}

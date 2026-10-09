@@ -15,6 +15,11 @@ const DOC = "https://example.com/docs#intro";
 const API = "https://example.com/api#v2";
 const ALICE = "https://example.com/#alice";
 
+const WireDocument = S.Struct({
+	"@context": S.String,
+	"@graph": S.Array(S.JsonObject),
+});
+
 describe("JsonLdDocument.buildResult — identity", () => {
 	it("assembles the consumer's canonical three-node graph", () => {
 		const built = JsonLdDocument.buildResult([
@@ -53,7 +58,8 @@ describe("JsonLdDocument.buildResult — identity", () => {
 		assert.isTrue(Result.isFailure(built));
 		const error = Result.getFailure(built).pipe((option) => (option._tag === "Some" ? option.value : undefined));
 		assert.instanceOf(error, DuplicateNodeIdError);
-		assert.strictEqual((error as DuplicateNodeIdError).id, ALICE);
+		if (!S.is(DuplicateNodeIdError)(error)) assert.fail("expected DuplicateNodeIdError");
+		assert.strictEqual(error.id, ALICE);
 	});
 
 	it("rejects a catch-all key that collides with a typed field", () => {
@@ -66,7 +72,8 @@ describe("JsonLdDocument.buildResult — identity", () => {
 		assert.isTrue(Result.isFailure(built));
 		const error = Result.getFailure(built).pipe((option) => (option._tag === "Some" ? option.value : undefined));
 		assert.instanceOf(error, ConflictingTermError);
-		assert.strictEqual((error as ConflictingTermError).term, "about");
+		if (!S.is(ConflictingTermError)(error)) assert.fail("expected ConflictingTermError");
+		assert.strictEqual(error.term, "about");
 	});
 
 	it("rejects a catch-all key colliding with @id or @type", () => {
@@ -171,10 +178,8 @@ describe("JsonLdDocument.toJsonLd — the wire form", () => {
 	it("fixes @context and leads each node with @id and @type", () => {
 		const graph = Result.getOrThrow(JsonLdDocument.buildResult([Person.make({ "@id": ALICE, name: "Alice" })]));
 
-		const wire = graph.toJsonLd() as {
-			readonly "@context": string;
-			readonly "@graph": ReadonlyArray<Record<string, unknown>>;
-		};
+		const wire = graph.toJsonLd();
+		if (!S.is(WireDocument)(wire)) assert.fail("expected a JSON-LD wire document");
 
 		assert.strictEqual(wire["@context"], "https://schema.org");
 		assert.deepStrictEqual(Object.keys(wire["@graph"][0] ?? {}), ["@id", "@type", "name"]);
@@ -185,7 +190,9 @@ describe("JsonLdDocument.toJsonLd — the wire form", () => {
 			JsonLdDocument.buildResult([SoftwareSourceCode.make({ "@id": PKG, additional: { alternateName: "ex" } })]),
 		);
 
-		const node = (graph.toJsonLd() as { readonly "@graph": ReadonlyArray<Record<string, unknown>> })["@graph"][0];
+		const wire = graph.toJsonLd();
+		if (!S.is(WireDocument)(wire)) assert.fail("expected a JSON-LD wire document");
+		const node = wire["@graph"][0];
 
 		assert.strictEqual(node?.alternateName, "ex", "a catch-all term must be a sibling term, not a nested object");
 		assert.notProperty(node, "additional", "`additional` is this package's word, not a schema.org term");
@@ -196,7 +203,9 @@ describe("JsonLdDocument.toJsonLd — the wire form", () => {
 			JsonLdDocument.buildResult([Person.make({ "@id": ALICE, name: "Alice", email: undefined, url: undefined })]),
 		);
 
-		const node = (graph.toJsonLd() as { readonly "@graph": ReadonlyArray<Record<string, unknown>> })["@graph"][0];
+		const wire = graph.toJsonLd();
+		if (!S.is(WireDocument)(wire)) assert.fail("expected a JSON-LD wire document");
+		const node = wire["@graph"][0];
 
 		assert.deepStrictEqual(
 			Object.keys(node ?? {}),
@@ -216,7 +225,9 @@ describe("JsonLdDocument.toJsonLd — the wire form", () => {
 			]),
 		);
 
-		const node = (graph.toJsonLd() as { readonly "@graph": ReadonlyArray<Record<string, unknown>> })["@graph"][0];
+		const wire = graph.toJsonLd();
+		if (!S.is(WireDocument)(wire)) assert.fail("expected a JSON-LD wire document");
+		const node = wire["@graph"][0];
 
 		assert.deepStrictEqual(
 			node?.license,
@@ -231,7 +242,9 @@ describe("JsonLdDocument.toJsonLd — the wire form", () => {
 			JsonLdDocument.buildResult([TechArticle.make({ "@id": DOC, mainEntity: NodeRef.to(API), headline: "H" })]),
 		);
 
-		const node = (graph.toJsonLd() as { readonly "@graph": ReadonlyArray<Record<string, unknown>> })["@graph"][0];
+		const wire = graph.toJsonLd();
+		if (!S.is(WireDocument)(wire)) assert.fail("expected a JSON-LD wire document");
+		const node = wire["@graph"][0];
 
 		assert.deepStrictEqual(node?.mainEntity, { "@id": API }, "mainEntity is singular by schema.org's own definition");
 		assert.strictEqual(node?.headline, "H");
@@ -281,9 +294,9 @@ describe("JsonLdDocument — the decode direction is unimplemented, and the asym
 			JsonLdDocument.buildResult([SoftwareSourceCode.make({ "@id": PKG, additional: { alternateName: "ex" } })]),
 		);
 
-		assert.notDeepEqual(
-			graph.toJsonLd() as unknown,
-			Result.getOrThrow(S.encodeResult(JsonLdDocument)(graph)) as unknown,
+		assert.notDeepEqual<unknown>(
+			graph.toJsonLd(),
+			Result.getOrThrow(S.encodeResult(JsonLdDocument)(graph)),
 			"the wire form flattens; the structural form nests",
 		);
 	});

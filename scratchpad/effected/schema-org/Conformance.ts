@@ -262,7 +262,7 @@ function nativeTerm(term: string): string | undefined {
 
 /** The terms a node actually asserts: its typed fields plus its flattened catch-all, minus the JSON-LD keywords. */
 function assertedTerms(node: JsonLdNode): ReadonlyArray<string> {
-	const { additional, ...typed } = node as JsonLdNode & { readonly additional?: Record<string, unknown> };
+	const { additional, ...typed } = node;
 	const terms: Array<string> = [];
 	for (const [term, value] of Object.entries(typed)) {
 		if (term === "@id" || term === "@type" || value === undefined) continue;

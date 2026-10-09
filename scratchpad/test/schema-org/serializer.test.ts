@@ -1,5 +1,6 @@
 import { assert, describe, it } from "@effect/vitest";
 import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { JsonLdDocument } from "../../effected/schema-org/JsonLdDocument.ts";
 import { NodeRef } from "../../effected/schema-org/NodeRef.ts";
 import { Person } from "../../effected/schema-org/Person.ts";
@@ -14,10 +15,13 @@ import { TechArticle } from "../../effected/schema-org/TechArticle.ts";
 const HOSTILE_DESCRIPTION =
 	"A summary containing </script><img src=x onerror=alert(1)> and a `<T>` generic, A &amp; B, and Foo & Bar";
 
+const ScriptDocument = S.Struct({ "@graph": S.Array(S.JsonObject) });
+
 const buildOrThrow = (nodes: Parameters<typeof JsonLdDocument.buildResult>[0]): JsonLdDocument => {
 	const built = JsonLdDocument.buildResult(nodes);
 	assert.isTrue(Result.isSuccess(built), "fixture graph should build");
-	return (built as Extract<typeof built, { readonly _tag: "Success" }>).success;
+	if (Result.isFailure(built)) assert.fail("fixture graph should build");
+	return built.success;
 };
 
 /**
@@ -87,7 +91,8 @@ describe("script embedding", () => {
 
 	it("is lossless: the escaped body parses back to the original string", () => {
 		const body = hostileGraph().toScriptBody();
-		const parsed = JSON.parse(body) as { readonly "@graph": ReadonlyArray<{ readonly description: string }> };
+		const parsed: unknown = JSON.parse(body);
+		if (!S.is(ScriptDocument)(parsed)) assert.fail("expected a JSON-LD script document");
 
 		assert.strictEqual(
 			parsed["@graph"][0]?.description,
@@ -137,13 +142,8 @@ describe("script embedding", () => {
 		const body = graph.toScriptBody();
 
 		assert.notInclude(body, "<", "a typed scalar, an array member and a catch-all value must all be escaped");
-		const parsed = JSON.parse(body) as {
-			readonly "@graph": ReadonlyArray<{
-				readonly name: string;
-				readonly keywords: ReadonlyArray<string>;
-				readonly alternateName: string;
-			}>;
-		};
+		const parsed: unknown = JSON.parse(body);
+		if (!S.is(ScriptDocument)(parsed)) assert.fail("expected a JSON-LD script document");
 		const node = parsed["@graph"][0];
 		assert.strictEqual(node?.name, "</script>");
 		assert.deepStrictEqual(node?.keywords, ["</script>", "safe"]);
@@ -204,7 +204,8 @@ describe("script embedding — idempotence, which a consumer now depends on", ()
 	it("layering the consumer's pass still round-trips to the original value", () => {
 		const doubled = consumerEscape(hostileGraph().toScriptBody());
 
-		const parsed = JSON.parse(doubled) as { readonly "@graph": ReadonlyArray<{ readonly description: string }> };
+		const parsed: unknown = JSON.parse(doubled);
+		if (!S.is(ScriptDocument)(parsed)) assert.fail("expected a JSON-LD script document");
 		assert.strictEqual(parsed["@graph"][0]?.description, HOSTILE_DESCRIPTION, "a layered pass must not corrupt values");
 	});
 });
@@ -218,7 +219,8 @@ describe("script embedding — property", () => {
 			const body = graph.toScriptBody();
 
 			assert.match(body, /^[^<>&]*$/u, `body must carry no < > & for seed ${seed}`);
-			const parsed = JSON.parse(body) as { readonly "@graph": ReadonlyArray<{ readonly description: string }> };
+			const parsed: unknown = JSON.parse(body);
+			if (!S.is(ScriptDocument)(parsed)) assert.fail("expected a JSON-LD script document");
 			assert.strictEqual(parsed["@graph"][0]?.description, description, `must round-trip for seed ${seed}`);
 		}
 	});
