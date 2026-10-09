@@ -11,6 +11,7 @@ import {
   OfficeActionStructureAttempt,
   OfficeActionStructureStore,
 } from "@beep/law-practice-use-cases/OfficeActionStructure";
+import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { VerifySourceTextIdentityInput } from "@beep/provenance/VerifiedTextAnchor";
 import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import { expect, it } from "@effect/vitest";
@@ -193,6 +194,39 @@ it.layer(ConsumerLive, { timeout: "10 seconds", concurrent: false })("office-act
         });
         yield* intake.deliver(lowQuality);
         expect(yield* Ref.get(state.delivered)).toBe(2);
+        const foreignSource = SourceTextIdentity.make({ ...state.verification.source, scopeRef: "matter:foreign" });
+        const foreignVerification = VerifySourceTextIdentityInput.make({
+          expectedSource: state.verification.expectedSource,
+          source: foreignSource,
+          sourceText: state.text,
+        });
+        const crossScopeFailure = yield* intake
+          .record(
+            OfficeActionAttemptRequest.make({
+              attemptId: "a-6",
+              previousAttemptId: O.some("a-5"),
+              document,
+              verification: foreignVerification,
+            })
+          )
+          .pipe(Effect.flip);
+        expect(crossScopeFailure._tag).toBe("VerifiedTextAnchorError");
+        if (crossScopeFailure._tag === "VerifiedTextAnchorError") expect(crossScopeFailure.reason).toBe("cross-scope");
+        const crossScopeHistory = yield* store.read;
+        expect(crossScopeHistory).toHaveLength(6);
+        const failedAttempt = yield* Effect.fromOption(A.last(crossScopeHistory), () => "missing cross-scope failure");
+        expect(failedAttempt.outcome).toMatchObject({ status: "failed", reason: "cross-scope" });
+        assertSome(failedAttempt.previousAttemptId, "a-5");
+        const restored = yield* intake.record(
+          OfficeActionAttemptRequest.make({
+            attemptId: "a-7",
+            previousAttemptId: O.some("a-6"),
+            document,
+            verification: state.verification,
+          })
+        );
+        expect(restored.status).toBe("recognized");
+        expect(yield* store.read).toHaveLength(7);
       })
     );
     it.effect("rejects partial lines and a tampered predecessor chain", () =>

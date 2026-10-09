@@ -26,7 +26,7 @@ const storageError = (message: string) => OfficeActionStructureStorageError.make
 const JsonAttempt = S.fromJsonString(OfficeActionStructureAttempt);
 const DocumentKey = S.fromJsonString(S.Struct({ scope: S.String, document: S.String }));
 const documentKey = (row: OfficeActionStructureAttempt) =>
-  S.encodeSync(DocumentKey)({ scope: row.source.scopeRef, document: row.document.documentId });
+  S.encodeSync(DocumentKey)({ scope: row.expectedSource.scopeRef, document: row.document.documentId });
 const validateHistory = Effect.fn("OfficeActionStructureStore.validateHistory")(function* (
   rows: ReadonlyArray<OfficeActionStructureAttempt>
 ) {
@@ -98,7 +98,8 @@ export const officeActionStructureFileStore = (filename: string) =>
           A.filter(
             rows,
             (row) =>
-              row.document.documentId === attempt.document.documentId && row.source.scopeRef === attempt.source.scopeRef
+              row.document.documentId === attempt.document.documentId &&
+              row.expectedSource.scopeRef === attempt.expectedSource.scopeRef
           )
         );
         const expected = O.map(preceding, (row) => row.attemptId);

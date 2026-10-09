@@ -119,3 +119,13 @@
   IrToLaw and VerifiedSpan; pass only the JSON line to the decoder. The opaque
   capability predicate remains unchanged.
 - Prevention: verify declaration emission alongside runtime proof construction.
+
+## 2026-10-09 — Failed cross-scope attempt history
+
+- Evidence: the store originally keyed the chain by the presented source scope,
+  which would reject a cross-scope failure’s authorized predecessor.
+- Attribution: introduced persistence identity choice found during review.
+- Repair: group chains by expected source scope and document id; retain the
+  actual mismatched identity on the failed attempt. Add a cross-scope failure
+  and recovery test without weakening verification.
+- Prevention: mirror the substrate’s authorized-matter history semantics.
