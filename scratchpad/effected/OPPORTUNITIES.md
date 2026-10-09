@@ -70,3 +70,18 @@ Paths use `~`; no secrets, no machine ids.
   `--deny "Write(**)" --deny "Edit(**)"` and `--always-approve`; the runner's
   post-seat `git status` scope check stays the backstop. A seat report without a
   `REQUIRED:` line counts as unavailable, never as zero findings.
+
+## 2026-10-07 — concurrent review rounds trip each other's scope guard
+
+- **What:** jsonc round 2 reported "OUT-OF-SCOPE CHANGE scratchpad/effected/jsonl/.review/"
+  and exited red, because jsonl round 1 started while jsonc's seats ran.
+- **Evidence:** `bun run --cwd scratchpad audit:effected -- review jsonc 2 --seats` output.
+- **Prevention:** the guard should exempt every `scratchpad/effected/*/.review/` path, not
+  only the current round's directory. Same run: the Grok seat exited 1 with an 823-byte
+  report and no REQUIRED line; rerun once, else record it unavailable (section 12.2).
+- **Follow-up (jsonl round 1):** the Grok seat exited 1 again (509-byte report, no REQUIRED
+  line), so it is failing systematically with the allowlist launch; diagnose its exit
+  (stderr is redirected into grok.md only partly) before the next round. The same run flagged
+  "cratchpad/effected/OPPORTUNITIES.md": `capture` trims the whole `git status --porcelain`
+  output, so the first line loses its leading status space and `Str.slice(3)` eats the path's
+  first letter; parse porcelain lines with a regex instead of a fixed slice.
