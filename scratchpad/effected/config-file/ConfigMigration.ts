@@ -1,5 +1,7 @@
 import * as Effect from "effect/Effect";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import type { ConfigCodec, ConfigCodecError } from "./ConfigCodec.ts";
 
 /**
@@ -63,13 +65,13 @@ class VersionAccessError extends S.TaggedError<VersionAccessError>()("VersionAcc
 
 const defaultVersionAccess = {
 	get: (raw: unknown) => {
-		if (typeof raw !== "object" || raw === null) return Effect.fail(VersionAccessError.make({ message: "config is not an object" }));
-		const version = (raw as Record<string, unknown>).version;
-		return typeof version === "number"
+		if (!P.isObjectOrArray(raw)) return Effect.fail(VersionAccessError.make({ message: "config is not an object" }));
+		const version = P.hasProperty(raw, "version") ? raw.version : undefined;
+		return P.isNumber(version)
 			? Effect.succeed(version)
 			: Effect.fail(VersionAccessError.make({ message: "version field is missing or not a number" }));
 	},
-	set: (raw: unknown, version: number) => Effect.succeed({ ...(raw as Record<string, unknown>), version }),
+	set: (raw: unknown, version: number) => Effect.succeed({ ...(P.isObjectKeyword(raw) ? raw : P.isString(raw) ? Str.split(raw, "") : {}), version }),
 };
 
 /** Reads and writes a top-level `version` field. @public */
@@ -137,16 +139,17 @@ export class ConfigMigration {
 	/**
 	 * Wrap a codec so that parsed content is brought up to the latest version.
 	 *
-	 * @remarks
+	 * **Details**
 	 * The returned codec's error channel **widens** to include
 	 * {@link ConfigMigrationError} rather than flattening migration failures into
 	 * the inner codec's error — the reason the {@link (ConfigCodec:interface)} seam is generic
 	 * in its error type.
 	 *
-	 * @example
+	 * **Example** (Migrate a hostname field)
 	 * ```ts
 	 * import { ConfigMigration, JsonCodec } from "./index.ts";
-	 * import { Effect } from "effect";
+	 * import * as Effect from "effect/Effect";
+	 * import * as S from "effect/Schema";
 	 *
 	 * const codec = ConfigMigration.make({
 	 * 	codec: JsonCodec,
@@ -154,7 +157,10 @@ export class ConfigMigration {
 	 * 		{
 	 * 			version: 2,
 	 * 			name: "rename-host",
-	 * 			up: (raw) => Effect.succeed({ ...(raw as object), host: (raw as { hostname?: string }).hostname }),
+	 * 			up: (raw) =>
+	 * 				S.decodeUnknownEffect(S.Record(S.String, S.Unknown))(raw).pipe(
+	 * 					Effect.map((doc) => ({ ...doc, host: doc.hostname })),
+	 * 				),
 	 * 		},
 	 * 	],
 	 * });

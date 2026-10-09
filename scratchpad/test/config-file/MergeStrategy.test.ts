@@ -1,6 +1,7 @@
 import { assert, describe, it } from "@effect/vitest";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Result from "effect/Result";
 import type { ConfigSource } from "../../effected/config-file/MergeStrategy.ts";
@@ -62,16 +63,18 @@ describe("MergeStrategy.layeredMerge", () => {
 	it.effect("ignores inherited and __proto__ keys", () =>
 		Effect.gen(function* () {
 			const strategy = MergeStrategy.layeredMerge<Record<string, unknown>>();
-			const malicious = Result.getOrThrow(S.decodeResult(JsonValue)(`{"__proto__":{"polluted":true}}`)) as Record<string, unknown>;
+			const malicious = Result.getOrThrow(S.decodeResult(JsonValue)(`{"__proto__":{"polluted":true}}`));
+			if (!P.isObject(malicious)) return assert.fail("expected a JSON object");
 			const value = yield* strategy.resolve([src("/a", "walk", { ok: 1 }), src("/etc", "system", malicious)]);
 			// Assert on the merged value's own prototype chain, not a fresh `{}` —
 			// the attack repoints the merged object's own [[Prototype]], it does
 			// not touch the shared Object.prototype, so a fresh literal can never
 			// observe it.
 			assert.strictEqual(Object.getPrototypeOf(value), Object.prototype);
-			assert.isUndefined((value as Record<string, unknown>).polluted);
+			assert.isUndefined(value.polluted);
 			// Defense in depth: the shared prototype really is untouched too.
-			assert.isUndefined(({} as Record<string, unknown>).polluted);
+			const empty: Record<string, unknown> = {};
+			assert.isUndefined(empty.polluted);
 		}),
 	);
 });
@@ -98,37 +101,37 @@ describe("MergeStrategy.layeredMerge — value identity", () => {
 
 	it.effect("a nested Date is atomic — higher priority wins it whole, never spread", () =>
 		Effect.gen(function* () {
-			const strategy = MergeStrategy.layeredMerge<Record<string, unknown>>();
+			const strategy = MergeStrategy.layeredMerge<{ at: Date }>();
 			const hi = DateTime.toDateUtc(DateTime.makeUnsafe("2020-01-01T00:00:00.000Z"));
 			const lo = DateTime.toDateUtc(DateTime.makeUnsafe("2021-01-01T00:00:00.000Z"));
 			const value = yield* strategy.resolve([src("/a", "walk", { at: hi }), src("/etc", "system", { at: lo })]);
 			assert.instanceOf(value.at, Date);
-			assert.strictEqual((value.at as Date).toISOString(), "2020-01-01T00:00:00.000Z");
+			assert.strictEqual(value.at.toISOString(), "2020-01-01T00:00:00.000Z");
 		}),
 	);
 
 	it.effect("a nested class instance is atomic — higher priority wins it whole", () =>
 		Effect.gen(function* () {
 			class Section extends S.Class<Section>("Section")({ a: S.Finite, b: S.Finite }) {}
-			const strategy = MergeStrategy.layeredMerge<Record<string, unknown>>();
+			const strategy = MergeStrategy.layeredMerge<{ db: Section }>();
 			const value = yield* strategy.resolve([
 				src("/a", "walk", { db: Section.make({ a: 1, b: 1 }) }),
 				src("/etc", "system", { db: Section.make({ a: 9, b: 9 }) }),
 			]);
 			assert.instanceOf(value.db, Section);
-			assert.deepStrictEqual({ a: (value.db as Section).a, b: (value.db as Section).b }, { a: 1, b: 1 });
+			assert.deepStrictEqual({ a: value.db.a, b: value.db.b }, { a: 1, b: 1 });
 		}),
 	);
 
 	it.effect("a nested Map is atomic", () =>
 		Effect.gen(function* () {
-			const strategy = MergeStrategy.layeredMerge<Record<string, unknown>>();
+			const strategy = MergeStrategy.layeredMerge<{ m: Map<string, number> }>();
 			const value = yield* strategy.resolve([
 				src("/a", "walk", { m: new Map([["k", 1]]) }),
 				src("/etc", "system", { m: new Map([["k", 2]]) }),
 			]);
 			assert.instanceOf(value.m, Map);
-			assert.strictEqual((value.m as Map<string, number>).get("k"), 1);
+			assert.strictEqual(value.m.get("k"), 1);
 		}),
 	);
 });
@@ -138,13 +141,15 @@ describe("MergeStrategy.layeredMerge — prototype pollution via the higher-prio
 		Effect.gen(function* () {
 			const strategy = MergeStrategy.layeredMerge<Record<string, unknown>>();
 			// `deepMerge(higher, merged)` passes the highest-priority document as `target`.
-			const hostile = Result.getOrThrow(S.decodeResult(JsonValue)(`{"ok":1,"__proto__":{"polluted":true}}`)) as Record<string, unknown>;
+			const hostile = Result.getOrThrow(S.decodeResult(JsonValue)(`{"ok":1,"__proto__":{"polluted":true}}`));
+			if (!P.isObject(hostile)) return assert.fail("expected a JSON object");
 			const value = yield* strategy.resolve([src("/a", "walk", hostile), src("/etc", "system", { other: 2 })]);
 
-			const proto = Object.getPrototypeOf(value) as Record<string, unknown> | null;
+			const proto: unknown = Object.getPrototypeOf(value);
 			assert.strictEqual(proto, Object.prototype, "the result's prototype must not be attacker-controlled");
-			assert.isUndefined((value as { polluted?: unknown }).polluted);
-			assert.isUndefined(({} as Record<string, unknown>).polluted);
+			assert.isUndefined(value.polluted);
+			const empty: Record<string, unknown> = {};
+			assert.isUndefined(empty.polluted);
 		}),
 	);
 
@@ -152,13 +157,16 @@ describe("MergeStrategy.layeredMerge — prototype pollution via the higher-prio
 		Effect.gen(function* () {
 			const strategy = MergeStrategy.layeredMerge<Record<string, unknown>>();
 			// `section` exists only on the lower-priority source, so it is copied wholesale.
-			const lower = Result.getOrThrow(S.decodeResult(JsonValue)(`{"section":{"__proto__":{"polluted":true}}}`)) as Record<string, unknown>;
+			const lower = Result.getOrThrow(S.decodeResult(JsonValue)(`{"section":{"__proto__":{"polluted":true}}}`));
+			if (!P.isObject(lower)) return assert.fail("expected a JSON object");
 			const value = yield* strategy.resolve([src("/a", "walk", { ok: 1 }), src("/etc", "system", lower)]);
 
-			const section = value.section as Record<string, unknown>;
+			const section = value.section;
+			if (!P.isObject(section)) return assert.fail("expected a section object");
 			assert.strictEqual(Object.getPrototypeOf(section), Object.prototype);
-			assert.isUndefined((section as { polluted?: unknown }).polluted);
-			assert.isUndefined(({} as Record<string, unknown>).polluted);
+			assert.isUndefined(section.polluted);
+			const empty: Record<string, unknown> = {};
+			assert.isUndefined(empty.polluted);
 		}),
 	);
 });

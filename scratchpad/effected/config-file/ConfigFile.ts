@@ -1,4 +1,5 @@
 import type * as SchemaAST from "effect/SchemaAST";
+import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -371,18 +372,17 @@ const Service =
  * only be filled in here, where the resolved target is in scope. An error that
  * already carries a path is left alone — a decorator codec that knew better
  * wins — and anything that is not a `ConfigCodecError` passes through
- * untouched, which is why the cast is sound: the returned value is either the
- * argument itself or a `ConfigCodecError`, and the only way a `ConfigCodecError`
- * reaches here is if `E` admits one.
+ * untouched. The return type admits both the original error and the path-bearing
+ * codec error constructed here.
  */
-const withCodecPath = <E>(error: E, target: string): E =>
+const withCodecPath = <E>(error: E, target: string): E | ConfigCodecError =>
 	Schema.is(ConfigCodecError)(error) && error.path === undefined
-		? (ConfigCodecError.make({
+		? ConfigCodecError.make({
 				codec: error.codec,
 				operation: error.operation,
 				cause: error.cause,
 				path: target,
-			}) as E)
+			})
 		: error;
 
 /**
@@ -526,22 +526,20 @@ const makeImpl = <A, I, RR>(
 
 	const load = Effect.fn("ConfigFile.load")(function* () {
 		const { sources, candidates } = yield* discover();
-		if (sources.length === 0) {
+		if (!A.isArrayNonEmpty(sources)) {
 			yield* emit({ _tag: "NotFound" });
 			return yield* ConfigFileNotFoundError.make({ searched, candidates });
 		}
-		// Guarded by the check above; TypeScript cannot narrow Array<T> to [T, ...T[]].
-		return yield* mergeAndEmit(sources as unknown as NonEmptySources<A>);
+		return yield* mergeAndEmit(sources);
 	});
 
 	const loadOrDefault = Effect.fn("ConfigFile.loadOrDefault")(function* (defaultValue: A) {
 		const { sources } = yield* discover();
-		if (sources.length === 0) {
+		if (!A.isArrayNonEmpty(sources)) {
 			yield* emit({ _tag: "NotFound" });
 			return defaultValue;
 		}
-		// Guarded by the check above; TypeScript cannot narrow Array<T> to [T, ...T[]].
-		return yield* mergeAndEmit(sources as unknown as NonEmptySources<A>);
+		return yield* mergeAndEmit(sources);
 	});
 
 	const validate = Effect.fn("ConfigFile.validate")(function* (value: unknown) {

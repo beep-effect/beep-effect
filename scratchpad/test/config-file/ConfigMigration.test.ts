@@ -3,6 +3,7 @@ import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import type { VersionAccess } from "../../effected/config-file/ConfigMigration.ts";
 import { ConfigMigration, ConfigMigrationError } from "../../effected/config-file/ConfigMigration.ts";
@@ -11,7 +12,10 @@ import { JsonCodec } from "../../effected/config-file/JsonCodec.ts";
 const bump = (version: number, name: string, fn: (raw: Record<string, unknown>) => Record<string, unknown>) => ({
 	version,
 	name,
-	up: (raw: unknown) => Effect.succeed(fn(raw as Record<string, unknown>)),
+	up: (raw: unknown) => {
+		if (!P.isObject(raw)) return assert.fail("expected a migration document");
+		return Effect.succeed(fn(raw));
+	},
 });
 
 describe("ConfigMigration.make", () => {
@@ -46,12 +50,13 @@ describe("ConfigMigration.make", () => {
 			});
 			const error = yield* codec.parse(`{"version":1}`).pipe(Effect.asVoid, Effect.flip);
 			assert.instanceOf(error, ConfigMigrationError);
+			assert.isTrue(S.is(ConfigMigrationError)(error));
 			assert.strictEqual(error._tag, "ConfigMigrationError");
-			assert.strictEqual((error as ConfigMigrationError).name, "add-b");
-			assert.strictEqual((error as ConfigMigrationError).version, 2);
-			assert.strictEqual((error as ConfigMigrationError).phase, "apply");
+			assert.strictEqual(error.name, "add-b");
+			assert.strictEqual(error.version, 2);
+			assert.strictEqual(error.phase, "apply");
 			// identity preserved — not String(e), not e.message, not a reason string.
-			assert.strictEqual((error as ConfigMigrationError).cause, boom);
+			assert.strictEqual(error.cause, boom);
 		}),
 	);
 
@@ -72,10 +77,10 @@ describe("ConfigMigration.make", () => {
 			const codec = ConfigMigration.make({ codec: JsonCodec, migrations: [bump(2, "x", (r) => r)] });
 			const error = yield* codec.parse("{ not json").pipe(Effect.asVoid, Effect.flip);
 			assert.strictEqual(error._tag, "ConfigCodecError");
-			// The SyntaxError JSON.parse threw must survive structurally through the
+			// The SchemaError from JSON decoding must survive structurally through the
 			// decorator. Asserting the tag alone would still pass if a regression
 			// stringified the cause, which is the one thing this error model forbids.
-			assert.instanceOf(error.cause, SyntaxError);
+			assert.instanceOf(error.cause, S.SchemaError);
 		}),
 	);
 
@@ -144,14 +149,17 @@ class VersionAccessError extends S.TaggedError<VersionAccessError>()("VersionAcc
 /** Reads and writes the version at `meta.schemaVersion` instead of the default top-level `version`. */
 const metaAccess: VersionAccess<VersionAccessError> = {
 	get: (raw) => {
-		const meta = (raw as { readonly meta?: { readonly schemaVersion?: unknown } }).meta;
-		return typeof meta?.schemaVersion === "number"
-			? Effect.succeed(meta.schemaVersion)
+		const meta = P.hasProperty(raw, "meta") ? raw.meta : undefined;
+		const version = P.hasProperty(meta, "schemaVersion") ? meta.schemaVersion : undefined;
+		return P.isNumber(version)
+			? Effect.succeed(version)
 			: Effect.fail(VersionAccessError.make({ message: "meta.schemaVersion is missing or not a number" }));
 	},
 	set: (raw, version) => {
-		const doc = raw as Record<string, unknown>;
-		return Effect.succeed({ ...doc, meta: { ...(doc.meta as Record<string, unknown>), schemaVersion: version } });
+		if (!P.isObject(raw)) return assert.fail("expected a migration document");
+		const meta = raw.meta;
+		if (!P.isObject(meta)) return assert.fail("expected version metadata");
+		return Effect.succeed({ ...raw, meta: { ...meta, schemaVersion: version } });
 	},
 };
 
@@ -191,7 +199,8 @@ describe("ConfigMigration.make with a custom versionAccess", () => {
 						name: "add-c",
 						up: (raw) => {
 							seenByUp.push(raw);
-							return Effect.succeed({ ...(raw as Record<string, unknown>), c: 3 });
+							if (!P.isObject(raw)) return assert.fail("expected a migration document");
+							return Effect.succeed({ ...raw, c: 3 });
 						},
 					},
 				],
@@ -219,12 +228,14 @@ describe("ConfigMigration.make with a custom versionAccess", () => {
 			// custom one — the failure proves the custom get was the one consulted.
 			const error = yield* codec.parse(`{"version":1,"a":1}`).pipe(Effect.asVoid, Effect.flip);
 			assert.instanceOf(error, ConfigMigrationError);
-			assert.strictEqual((error as ConfigMigrationError).phase, "read-version");
-			assert.strictEqual((error as ConfigMigrationError).version, 0);
-			assert.strictEqual((error as ConfigMigrationError).name, "");
-			assert.instanceOf((error as ConfigMigrationError).cause, Error);
+			assert.isTrue(S.is(ConfigMigrationError)(error));
+			assert.strictEqual(error.phase, "read-version");
+			assert.strictEqual(error.version, 0);
+			assert.strictEqual(error.name, "");
+			assert.instanceOf(error.cause, Error);
+			assert.isTrue(error.cause instanceof Error);
 			assert.strictEqual(
-				((error as ConfigMigrationError).cause as Error).message,
+				error.cause.message,
 				"meta.schemaVersion is missing or not a number",
 			);
 		}),
@@ -239,7 +250,8 @@ describe("ConfigMigration.make with a custom versionAccess", () => {
 			});
 			const error = yield* codec.parse(`{"meta":{"schemaVersion":"two"}}`).pipe(Effect.asVoid, Effect.flip);
 			assert.instanceOf(error, ConfigMigrationError);
-			assert.strictEqual((error as ConfigMigrationError).phase, "read-version");
+			assert.isTrue(S.is(ConfigMigrationError)(error));
+			assert.strictEqual(error.phase, "read-version");
 		}),
 	);
 
@@ -253,10 +265,11 @@ describe("ConfigMigration.make with a custom versionAccess", () => {
 			});
 			const error = yield* codec.parse(`{"meta":{"schemaVersion":1}}`).pipe(Effect.asVoid, Effect.flip);
 			assert.instanceOf(error, ConfigMigrationError);
-			assert.strictEqual((error as ConfigMigrationError).phase, "write-version");
-			assert.strictEqual((error as ConfigMigrationError).version, 2);
-			assert.strictEqual((error as ConfigMigrationError).name, "add-b");
-			assert.strictEqual((error as ConfigMigrationError).cause, boom);
+			assert.isTrue(S.is(ConfigMigrationError)(error));
+			assert.strictEqual(error.phase, "write-version");
+			assert.strictEqual(error.version, 2);
+			assert.strictEqual(error.name, "add-b");
+			assert.strictEqual(error.cause, boom);
 		}),
 	);
 

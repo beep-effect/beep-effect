@@ -57,12 +57,15 @@ const FORBIDDEN = new Set(["__proto__", "constructor", "prototype"]);
  * getter on `target` never shadows a real key on `source`.
  */
 export const deepMerge: {
-	(source: Record<string, unknown>): (target: Record<string, unknown>) => Record<string, unknown>;
-	(target: Record<string, unknown>, source: Record<string, unknown>): Record<string, unknown>;
-} = dual(2, (
+	(source: Record<string, unknown>): <T extends Record<string, unknown>>(target: T) => T;
+	<T extends Record<string, unknown>>(target: T, source: Record<string, unknown>): T;
+} = dual(2, mergeRecords);
+
+function mergeRecords<T extends Record<string, unknown>>(target: T, source: Record<string, unknown>): T;
+function mergeRecords(
 	target: Record<string, unknown>,
 	source: Record<string, unknown>,
-): Record<string, unknown> => {
+): Record<string, unknown> {
 	const result: Record<string, unknown> = Object.create(Object.getPrototypeOf(target));
 	// `target`'s keys must be filtered too, and copied as data properties. A bare
 	// assignment uses [[Set]] semantics, so an own `__proto__` key on the
@@ -85,7 +88,7 @@ export const deepMerge: {
 		}
 	}
 	return result;
-});
+}
 
 /** Create an own data property, never invoking a setter inherited from the prototype chain. */
 const define = (target: Record<string, unknown>, key: string, value: unknown): void => {

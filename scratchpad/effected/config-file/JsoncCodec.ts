@@ -7,11 +7,11 @@ import { ConfigCodecError } from "./ConfigCodec.ts";
  * A `ConfigCodec` backed by `@effected/jsonc`: JSON with comments and
  * trailing commas.
  *
- * @remarks
- * `@effected/jsonc` does not expose a `stringify` — its schema layer's encode
- * direction is `JSON.stringify` (comments never survive a round-trip encode;
- * see `Jsonc.fromString`'s remarks), so `stringify` here calls `JSON.stringify`
- * directly and wraps a thrown defect the same way `JsonCodec` does.
+ * **Details**
+ *
+ * Both directions use the module's own parse and stringify operations;
+ * comments never survive a round-trip encode. Stringify uses two-space
+ * indentation, matching `JsonCodec`.
  * Both directions preserve the underlying failure structurally in `cause` —
  * never stringified.
  *
@@ -24,10 +24,7 @@ export const JsoncCodec: ConfigCodec = {
 			Effect.mapError((cause) => ConfigCodecError.make({ codec: "jsonc", operation: "parse", cause })),
 		),
 	stringify: (value) =>
-		Effect.try({
-			// The codec preserves native TypeError causes and JSON.stringify returning undefined; Schema encoding changes both.
-			// @effect-diagnostics-next-line preferSchemaOverJson:off
-			try: () => JSON.stringify(value, null, 2),
-			catch: (cause) => ConfigCodecError.make({ codec: "jsonc", operation: "stringify", cause }),
-		}),
+		Jsonc.stringify(value).pipe(
+			Effect.mapError((cause) => ConfigCodecError.make({ codec: "jsonc", operation: "stringify", cause })),
+		),
 };

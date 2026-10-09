@@ -1,33 +1,32 @@
 import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
 import type { ConfigCodec } from "./ConfigCodec.ts";
 import { ConfigCodecError } from "./ConfigCodec.ts";
 
+const decodeJson = S.decodeEffect(S.fromJsonString(S.Unknown));
+const encodeJson = S.encodeEffect(S.fromJsonString(S.Unknown, { space: 2 }));
+
 /**
- * A `ConfigCodec` backed by the host `JSON` global: plain JSON as
+ * A `ConfigCodec` backed by the Schema JSON codec: plain JSON as
  * configuration file content.
  *
- * @remarks
+ * **Details**
+ *
  * The only codec that reaches no parsing engine at all — it is why this
  * package can be depended on for JSON config alone without pulling a parser
  * into the bundle. Both directions preserve the underlying failure
- * structurally in `cause` — never stringified.
+ * structurally as a `SchemaError` in `cause` — never stringified.
  *
  * @public
  */
 export const JsonCodec: ConfigCodec = {
 	name: "json",
 	parse: (raw) =>
-		Effect.try({
-			// The codec preserves the original SyntaxError in cause; Schema JSON decoding discards that throwable.
-			// @effect-diagnostics-next-line preferSchemaOverJson:off
-			try: () => JSON.parse(raw) as unknown,
-			catch: (cause) => ConfigCodecError.make({ codec: "json", operation: "parse", cause }),
-		}),
+		decodeJson(raw).pipe(
+			Effect.mapError((cause) => ConfigCodecError.make({ codec: "json", operation: "parse", cause })),
+		),
 	stringify: (value) =>
-		Effect.try({
-			// The codec preserves native TypeError causes and JSON.stringify returning undefined; Schema encoding changes both.
-			// @effect-diagnostics-next-line preferSchemaOverJson:off
-			try: () => JSON.stringify(value, null, 2),
-			catch: (cause) => ConfigCodecError.make({ codec: "json", operation: "stringify", cause }),
-		}),
+		encodeJson(value).pipe(
+			Effect.mapError((cause) => ConfigCodecError.make({ codec: "json", operation: "stringify", cause })),
+		),
 };

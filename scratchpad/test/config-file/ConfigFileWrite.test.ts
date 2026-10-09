@@ -6,6 +6,7 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Result from "effect/Result";
 import type { ConfigCodec as ConfigCodecShape } from "../../effected/config-file/ConfigCodec.ts";
@@ -42,7 +43,9 @@ describe("ConfigFile.write", () => {
 				yield* cfg.write(AppShape.make({ port: 9090 }), "/explicit/.apprc");
 			}).pipe(Effect.provide(layerFor(host)));
 
-			assert.deepStrictEqual(Result.getOrThrow(S.decodeResult(JsonValue)(host.volume.text("/explicit/.apprc") as string)), { port: 9090 });
+			const text = host.volume.text("/explicit/.apprc");
+			if (!P.isString(text)) return assert.fail("expected written file text");
+			assert.deepStrictEqual(Result.getOrThrow(S.decodeResult(JsonValue)(text)), { port: 9090 });
 			// `write` never mkdirs — the documented distinction from `save`.
 			assert.deepStrictEqual(host.mkdirs, []);
 		}),
@@ -56,9 +59,10 @@ describe("ConfigFile.write", () => {
 			}).pipe(Effect.provide(layerFor(hostileFs())));
 
 			assert.instanceOf(error, ConfigFileWriteError);
-			assert.strictEqual((error as ConfigFileWriteError).path, "/ro/.apprc");
+			assert.isTrue(S.is(ConfigFileWriteError)(error));
+			assert.strictEqual(error.path, "/ro/.apprc");
 			// The filesystem failure survives structurally; v3 flattened it to String(e).
-			const cause = (error as ConfigFileWriteError).cause;
+			const cause = error.cause;
 			if (cause instanceof PlatformError.PlatformError && cause.reason._tag !== "BadArgument") {
 				assert.strictEqual(cause.reason._tag, "Unknown");
 				assert.strictEqual(cause.reason.pathOrDescriptor, "/ro/.apprc");
@@ -102,7 +106,9 @@ describe("ConfigFile.save", () => {
 
 			assert.strictEqual(written, "/home/u/.config/app/.apprc");
 			assert.deepStrictEqual(host.mkdirs, ["/home/u/.config/app"]);
-			assert.deepStrictEqual(Result.getOrThrow(S.decodeResult(JsonValue)(host.volume.text("/home/u/.config/app/.apprc") as string)), { port: 7070 });
+			const text = host.volume.text("/home/u/.config/app/.apprc");
+			if (!P.isString(text)) return assert.fail("expected written file text");
+			assert.deepStrictEqual(Result.getOrThrow(S.decodeResult(JsonValue)(text)), { port: 7070 });
 		}),
 	);
 
@@ -154,7 +160,9 @@ describe("ConfigFile.update", () => {
 			}).pipe(Effect.provide(layerFor(host, "/app/.apprc")));
 
 			assert.strictEqual(updated.port, 2);
-			assert.deepStrictEqual(Result.getOrThrow(S.decodeResult(JsonValue)(host.volume.text("/app/.apprc") as string)), { port: 2 });
+			const text = host.volume.text("/app/.apprc");
+			if (!P.isString(text)) return assert.fail("expected written file text");
+			assert.deepStrictEqual(Result.getOrThrow(S.decodeResult(JsonValue)(text)), { port: 2 });
 		}),
 	);
 
@@ -167,7 +175,9 @@ describe("ConfigFile.update", () => {
 			}).pipe(Effect.provide(layerFor(host, "/app/.apprc")));
 
 			assert.strictEqual(updated.port, 11);
-			assert.deepStrictEqual(Result.getOrThrow(S.decodeResult(JsonValue)(host.volume.text("/app/.apprc") as string)), { port: 11 });
+			const text = host.volume.text("/app/.apprc");
+			if (!P.isString(text)) return assert.fail("expected written file text");
+			assert.deepStrictEqual(Result.getOrThrow(S.decodeResult(JsonValue)(text)), { port: 11 });
 		}),
 	);
 
@@ -238,7 +248,9 @@ describe("ConfigFile.layer with an empty resolver chain", () => {
 
 			assert.strictEqual(written, "/write-only/.apprc");
 			assert.deepStrictEqual(host.mkdirs, ["/write-only"]);
-			assert.deepStrictEqual(Result.getOrThrow(S.decodeResult(JsonValue)(host.volume.text("/write-only/.apprc") as string)), { port: 42 });
+			const text = host.volume.text("/write-only/.apprc");
+			if (!P.isString(text)) return assert.fail("expected written file text");
+			assert.deepStrictEqual(Result.getOrThrow(S.decodeResult(JsonValue)(text)), { port: 42 });
 		}),
 	);
 });
@@ -283,7 +295,10 @@ describe("ConfigFile.update — concurrency", () => {
 				yield* Effect.all([bump, bump], { concurrency: 2 });
 			}).pipe(Effect.provide(layer));
 
-			const final = Result.getOrThrow(S.decodeResult(JsonValue)(host.volume.text("/app/.apprc") as string)) as { port: number };
+			const text = host.volume.text("/app/.apprc");
+			if (!P.isString(text)) return assert.fail("expected written file text");
+			const final = Result.getOrThrow(S.decodeResult(JsonValue)(text));
+			if (!P.hasProperty(final, "port")) return assert.fail("expected a port field");
 			assert.strictEqual(final.port, 2, "both increments must survive");
 		}),
 	);

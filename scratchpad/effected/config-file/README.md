@@ -191,7 +191,8 @@ Codecs compose. `EncryptedCodec` wraps any codec with AES-GCM, and `ConfigMigrat
 
 ```ts
 import { ConfigMigration, EncryptedCodec, EncryptedCodecKey, JsonCodec } from "@effected/config-file";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
 
 const migrating = ConfigMigration.make({
   codec: JsonCodec,
@@ -199,7 +200,10 @@ const migrating = ConfigMigration.make({
     {
       version: 2,
       name: "add-port",
-      up: (raw) => Effect.succeed({ ...(raw as Record<string, unknown>), port: 8080 }),
+      up: (raw) =>
+        S.decodeUnknownEffect(S.Record(S.String, S.Unknown))(raw).pipe(
+          Effect.map((doc) => ({ ...doc, port: 8080 })),
+        ),
     },
   ],
 });

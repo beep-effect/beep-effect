@@ -3,6 +3,8 @@ import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import type { ConfigCodec } from "../../effected/config-file/ConfigCodec.ts";
 import { ConfigEncryptionError, EncryptedCodec, EncryptedCodecKey } from "../../effected/config-file/EncryptedCodec.ts";
 import { JsonCodec } from "../../effected/config-file/JsonCodec.ts";
@@ -19,8 +21,11 @@ const generateKeyForTest = (): Effect.Effect<CryptoKey, ConfigEncryptionError> =
 /** A codec that hands its input straight through, so we can encrypt bytes the json codec would reject. */
 const passthrough: ConfigCodec<never> = {
 	name: "raw",
-	parse: (raw) => Effect.succeed(raw as unknown),
-	stringify: (value) => Effect.succeed(value as string),
+	parse: (raw) => Effect.succeed(raw),
+	stringify: (value) => {
+		if (!P.isString(value)) return assert.fail("expected raw text to encrypt");
+		return Effect.succeed(value);
+	},
 };
 
 afterEach(() => {
@@ -69,8 +74,9 @@ describe("EncryptedCodec", () => {
 			const codec = EncryptedCodec(JsonCodec, key());
 			const error = yield* codec.parse(btoa("short")).pipe(Effect.asVoid, Effect.flip);
 			assert.instanceOf(error, ConfigEncryptionError);
+			assert.isTrue(S.is(ConfigEncryptionError)(error));
 			assert.strictEqual(error._tag, "ConfigEncryptionError");
-			assert.strictEqual((error as ConfigEncryptionError).phase, "decrypt");
+			assert.strictEqual(error.phase, "decrypt");
 		}),
 	);
 
@@ -93,9 +99,10 @@ describe("EncryptedCodec", () => {
 			const codec = EncryptedCodec(JsonCodec, key());
 			const error = yield* codec.parse("!!! not base64 !!!").pipe(Effect.asVoid, Effect.flip);
 			assert.instanceOf(error, ConfigEncryptionError);
-			assert.strictEqual((error as ConfigEncryptionError).phase, "encoding");
+			assert.isTrue(S.is(ConfigEncryptionError)(error));
+			assert.strictEqual(error.phase, "encoding");
 			// The caught host failure rides along structurally — never String(e).
-			assert.notStrictEqual(typeof (error as ConfigEncryptionError).cause, "string");
+			assert.notStrictEqual(typeof error.cause, "string");
 		}),
 	);
 
@@ -105,7 +112,8 @@ describe("EncryptedCodec", () => {
 			const wrong = EncryptedCodec(JsonCodec, EncryptedCodecKey.fromPassphrase("wrong", salt));
 			const error = yield* wrong.parse(ciphertext).pipe(Effect.asVoid, Effect.flip);
 			assert.instanceOf(error, ConfigEncryptionError);
-			assert.strictEqual((error as ConfigEncryptionError).phase, "decrypt");
+			assert.isTrue(S.is(ConfigEncryptionError)(error));
+			assert.strictEqual(error.phase, "decrypt");
 		}),
 	);
 
@@ -132,10 +140,10 @@ describe("EncryptedCodec", () => {
 			// The inner codec's error, widened not flattened.
 			assert.strictEqual(error._tag, "ConfigCodecError");
 			assert.notInstanceOf(error, ConfigEncryptionError);
-			// Decryption succeeded and JSON.parse then failed, so the SyntaxError it
-			// threw must reach the caller intact. Without this, a regression that
+			// Decryption succeeded and JSON decoding then failed, so its SchemaError
+			// must reach the caller intact. Without this, a regression that
 			// replaced `cause` with its string form would still pass.
-			assert.instanceOf(error.cause, SyntaxError);
+			assert.instanceOf(error.cause, S.SchemaError);
 		}),
 	);
 

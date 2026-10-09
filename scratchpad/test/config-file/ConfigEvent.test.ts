@@ -6,6 +6,7 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as PubSub from "effect/PubSub";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import type { ConfigEvent } from "../../effected/config-file/ConfigEvent.ts";
 import { ConfigEventPayload, ConfigEvents } from "../../effected/config-file/ConfigEvent.ts";
@@ -230,7 +231,8 @@ describe("ConfigEvent failure variants carry structured errors", () => {
 			}
 
 			assert.isNotString(parseFailed.error);
-			assert.strictEqual((parseFailed.error as { _tag: unknown })._tag, "ConfigCodecError");
+			if (!P.hasProperty(parseFailed.error, "_tag")) return assert.fail("expected a tagged error");
+			assert.strictEqual(parseFailed.error._tag, "ConfigCodecError");
 		}).pipe(Effect.scoped, Effect.provide(readLayer({ "/app/.apprc": "{ not json" }))),
 	);
 
@@ -248,7 +250,8 @@ describe("ConfigEvent failure variants carry structured errors", () => {
 			}
 
 			assert.isNotString(validationFailed.error);
-			assert.strictEqual((validationFailed.error as { _tag: unknown })._tag, "ConfigValidationError");
+			if (!P.hasProperty(validationFailed.error, "_tag")) return assert.fail("expected a tagged error");
+			assert.strictEqual(validationFailed.error._tag, "ConfigValidationError");
 		}).pipe(
 			Effect.scoped,
 			// `port` must be a number; a string fails the schema, which is what

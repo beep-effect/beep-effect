@@ -4,6 +4,7 @@ import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { ConfigCodecError } from "../../effected/config-file/ConfigCodec.ts";
 import { TomlCodec } from "../../effected/config-file/TomlCodec.ts";
 
@@ -46,7 +47,8 @@ describe("TomlCodec", () => {
 			assert.strictEqual(error.codec, "toml");
 			assert.strictEqual(error.operation, "stringify");
 			assert.instanceOf(error.cause, TomlStringifyError);
-			const cause = error.cause as TomlStringifyError;
+			const cause = error.cause;
+			if (!S.is(TomlStringifyError)(cause)) return assert.fail("expected TomlStringifyError");
 			assert.strictEqual(cause.diagnostic.code, "UnsupportedValue");
 		}),
 	);
@@ -75,7 +77,8 @@ describe("TomlCodec", () => {
 			// syntax failure.
 			const error = yield* TomlCodec.parse(hostile).pipe(Effect.asVoid, Effect.flip);
 			assert.instanceOf(error.cause, TomlParseError);
-			const cause = error.cause as TomlParseError;
+			const cause = error.cause;
+			if (!S.is(TomlParseError)(cause)) return assert.fail("expected TomlParseError");
 			assert.isTrue(cause.diagnostics.some((d) => d.code === "NestingDepthExceeded"));
 		}),
 	);

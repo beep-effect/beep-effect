@@ -1,5 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
-import { JsoncParseError } from "../../effected/jsonc/index.ts";
+import { JsoncParseError, JsoncStringifyError } from "../../effected/jsonc/index.ts";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -64,8 +64,8 @@ describe("JsoncCodec", () => {
 			assert.instanceOf(error, ConfigCodecError);
 			assert.strictEqual(error.codec, "jsonc");
 			assert.strictEqual(error.operation, "stringify");
-			// Structural, never stringified: a string has no prototype chain to TypeError.
-			assert.instanceOf(error.cause, TypeError);
+			// Structural, never stringified: a string has no prototype chain to JsoncStringifyError.
+			assert.instanceOf(error.cause, JsoncStringifyError);
 		}),
 	);
 });

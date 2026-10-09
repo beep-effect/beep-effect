@@ -105,7 +105,8 @@ describe("ConfigFile.encode", () => {
 			const bogus = { name: "svc", port: "not-a-number" } as unknown as Doc;
 			const error = yield* Effect.flip(cfg.encode(bogus));
 			assert.instanceOf(error, ConfigValidationError);
-			assert.isTrue(O.isNone((error as ConfigValidationError).path));
+			assert.isTrue(S.is(ConfigValidationError)(error));
+			assert.isTrue(O.isNone(error.path));
 		}).pipe(Effect.provide(layerFor(JsonCodec))),
 	);
 
@@ -126,9 +127,11 @@ describe("ConfigFile.encode", () => {
 			const { fromEncode, fromWrite } = yield* program.pipe(Effect.provide(layerFor(broken)));
 
 			assert.instanceOf(fromEncode, ConfigCodecError);
-			assert.strictEqual((fromEncode as ConfigCodecError).path, undefined);
+			assert.isTrue(S.is(ConfigCodecError)(fromEncode));
+			assert.strictEqual(fromEncode.path, undefined);
 			assert.instanceOf(fromWrite, ConfigCodecError);
-			assert.strictEqual((fromWrite as ConfigCodecError).path, "/x/config.json");
+			assert.isTrue(S.is(ConfigCodecError)(fromWrite));
+			assert.strictEqual(fromWrite.path, "/x/config.json");
 		}),
 	);
 

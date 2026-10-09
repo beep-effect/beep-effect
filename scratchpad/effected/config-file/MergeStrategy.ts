@@ -1,4 +1,6 @@
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as P from "effect/Predicate";
 import type { ConfigMatch } from "./ConfigResolver.ts";
 import { canMerge, deepMerge } from "./internal/deepMerge.ts";
 
@@ -76,14 +78,15 @@ const layeredMerge = <A>(): MergeStrategy<A> => ({
 	name: "layered-merge",
 	resolve: (sources) => {
 		// Fold from lowest priority upward so higher-priority keys overwrite.
-		let merged: unknown = sources[sources.length - 1]?.value;
-		for (let i = sources.length - 2; i >= 0; i--) {
-			const higher = sources[i]?.value;
-			merged = canMerge(merged, higher)
-				? deepMerge(higher as Record<string, unknown>, merged as Record<string, unknown>)
+		const [lowest, ...higherSources] = A.reverse(sources);
+		let merged = lowest.value;
+		for (const source of higherSources) {
+			const higher = source.value;
+			merged = canMerge(merged, higher) && P.isObject(higher) && P.isObject(merged)
+				? deepMerge(higher, merged)
 				: higher;
 		}
-		return Effect.succeed(merged as A);
+		return Effect.succeed(merged);
 	},
 });
 

@@ -6,6 +6,7 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { ConfigCodecError } from "../../effected/config-file/ConfigCodec.ts";
 import type { ConfigLoadError, ConfigReadError } from "../../effected/config-file/ConfigFile.ts";
@@ -45,11 +46,12 @@ describe("ConfigFile.load", () => {
 			const cfg = yield* AppConfig;
 			const error = yield* Effect.flip(cfg.load);
 			assert.instanceOf(error, ConfigFileNotFoundError);
+			assert.isTrue(S.is(ConfigFileNotFoundError)(error));
 			assert.strictEqual(error._tag, "ConfigFileNotFoundError");
 			// It reports which tiers were probed — v3's mega-error could not.
-			assert.include((error as ConfigFileNotFoundError).searched, "explicit");
+			assert.include(error.searched, "explicit");
 			// ...and which paths those tiers checked — one name can hide N candidates.
-			assert.deepStrictEqual((error as ConfigFileNotFoundError).candidates, ["/app/.apprc"]);
+			assert.deepStrictEqual(error.candidates, ["/app/.apprc"]);
 		}).pipe(Effect.provide(layerFor({}))),
 	);
 
@@ -118,12 +120,14 @@ describe("ConfigFile.load", () => {
 			const cfg = yield* AppConfig;
 			const error = yield* Effect.flip(cfg.load);
 			assert.instanceOf(error, ConfigValidationError);
+			assert.isTrue(S.is(ConfigValidationError)(error));
 			assert.strictEqual(error._tag, "ConfigValidationError");
-			const { issue } = error as ConfigValidationError;
+			const { issue } = error;
 			assert.notStrictEqual(typeof issue, "string");
 			// The structured schema issue tree survives, rather than String(ParseError).
 			assert.strictEqual(typeof issue, "object");
-			assert.property(issue as object, "_tag");
+			assert.isTrue(P.isObjectKeyword(issue));
+			assert.property(issue, "_tag");
 		}).pipe(Effect.provide(layerFor({ "/app/.apprc": `{"port":"nope"}` }))),
 	);
 
@@ -132,7 +136,8 @@ describe("ConfigFile.load", () => {
 			const cfg = yield* AppConfig;
 			const error = yield* Effect.flip(cfg.load);
 			assert.instanceOf(error, ConfigValidationError);
-			assert.deepStrictEqual((error as ConfigValidationError).path, O.some("/app/.apprc"));
+			assert.isTrue(S.is(ConfigValidationError)(error));
+			assert.deepStrictEqual(error.path, O.some("/app/.apprc"));
 		}).pipe(Effect.provide(layerFor({ "/app/.apprc": `{"port":"nope"}` }))),
 	);
 
@@ -141,10 +146,12 @@ describe("ConfigFile.load", () => {
 			const cfg = yield* AppConfig;
 			const error = yield* Effect.flip(cfg.loadFrom("/nope/.apprc"));
 			assert.instanceOf(error, ConfigFileReadError);
+			assert.isTrue(S.is(ConfigFileReadError)(error));
 			// v3 collapsed this to `reason: String(e)`; the host's typed PlatformError survives.
-			const cause = (error as ConfigFileReadError).cause;
+			const cause = error.cause;
 			assert.instanceOf(cause, PlatformError.PlatformError);
-			assert.strictEqual((cause as PlatformError.PlatformError).reason._tag, "NotFound");
+			assert.isTrue(PlatformError.isPlatformError(cause));
+			assert.strictEqual(cause.reason._tag, "NotFound");
 		}).pipe(Effect.provide(layerFor({}))),
 	);
 
@@ -180,6 +187,7 @@ describe("ConfigFile bare non-object documents", () => {
 				const cfg = yield* AppConfig;
 				const error = yield* Effect.flip(cfg.load);
 				assert.instanceOf(error, ConfigValidationError);
+				assert.isTrue(S.is(ConfigValidationError)(error));
 				assert.strictEqual(error._tag, "ConfigValidationError");
 			}).pipe(Effect.provide(layerFor({ "/app/.apprc": raw }))),
 		);
@@ -229,7 +237,8 @@ describe("ConfigFile.loadFrom / validate", () => {
 			const cfg = yield* AppConfig;
 			const error = yield* Effect.flip(cfg.loadFrom("/nope/.apprc"));
 			assert.instanceOf(error, ConfigFileReadError);
-			assert.strictEqual((error as ConfigFileReadError).path, "/nope/.apprc");
+			assert.isTrue(S.is(ConfigFileReadError)(error));
+			assert.strictEqual(error.path, "/nope/.apprc");
 		}).pipe(Effect.provide(layerFor({}))),
 	);
 
@@ -246,6 +255,7 @@ describe("ConfigFile.loadFrom / validate", () => {
 			const cfg = yield* AppConfig;
 			const error = yield* Effect.flip(cfg.validate({ port: "nope" }));
 			assert.instanceOf(error, ConfigValidationError);
+			assert.isTrue(S.is(ConfigValidationError)(error));
 			assert.isTrue(O.isNone(error.path));
 		}).pipe(Effect.provide(layerFor({}))),
 	);
@@ -262,6 +272,7 @@ describe("ConfigFile options.validate", () => {
 			const cfg = yield* AppConfig;
 			const error = yield* Effect.flip(cfg.load);
 			assert.instanceOf(error, ConfigValidationError);
+			assert.isTrue(S.is(ConfigValidationError)(error));
 			assert.strictEqual(error._tag, "ConfigValidationError");
 		}).pipe(Effect.provide(layerFor({ "/app/.apprc": `{"port":0}` }, undefined, rejectPort0))),
 	);
@@ -279,6 +290,7 @@ describe("ConfigFile options.validate", () => {
 			const cfg = yield* AppConfig;
 			const error = yield* Effect.flip(cfg.validate({ port: 0 }));
 			assert.instanceOf(error, ConfigValidationError);
+			assert.isTrue(S.is(ConfigValidationError)(error));
 		}).pipe(Effect.provide(layerFor({}, undefined, rejectPort0))),
 	);
 

@@ -164,7 +164,7 @@ describe("ConfigFile.read", () => {
 				// admitted — the excess pass does not run at all for a struct that
 				// owns an index signature. Measured rather than assumed: the shape
 				// suggests a rest exempts only what it covers, and it does not.
-				assert.strictEqual((value as Record<string, unknown>).anything, "goes");
+				assert.strictEqual(value.anything, "goes");
 			}).pipe(Effect.provide(platform({ "/app/.apprc": `{"port":8080,"anything":"goes"}` }))),
 		);
 	});

@@ -4,6 +4,7 @@ import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { ConfigCodecError } from "../../effected/config-file/ConfigCodec.ts";
 import { YamlCodec } from "../../effected/config-file/YamlCodec.ts";
 
@@ -59,7 +60,8 @@ describe("YamlCodec", () => {
 			// syntax failure.
 			const error = yield* YamlCodec.parse(hostile).pipe(Effect.asVoid, Effect.flip);
 			assert.instanceOf(error.cause, YamlParseError);
-			const cause = error.cause as YamlParseError;
+			const cause = error.cause;
+			if (!S.is(YamlParseError)(cause)) return assert.fail("expected YamlParseError");
 			assert.isTrue(cause.diagnostics.some((d) => d.code === "NestingDepthExceeded"));
 		}),
 	);
@@ -106,7 +108,8 @@ describe("YamlCodec", () => {
 			// "count exceeded maximum". This confirms the expansion budget fired,
 			// not the (here, unreachable at 60 raw alias tokens) raw-count guard.
 			assert.instanceOf(error.cause, YamlParseError);
-			const cause = error.cause as YamlParseError;
+			const cause = error.cause;
+			if (!S.is(YamlParseError)(cause)) return assert.fail("expected YamlParseError");
 			assert.isTrue(cause.diagnostics.some((d) => d.code === "AliasCountExceeded"));
 			assert.isTrue(cause.diagnostics.some((d) => d.message.includes("expansion exceeded budget")));
 		}),

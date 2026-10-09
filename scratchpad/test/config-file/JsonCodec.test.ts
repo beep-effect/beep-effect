@@ -32,8 +32,8 @@ describe("JsonCodec", () => {
 			assert.strictEqual(error._tag, "ConfigCodecError");
 			assert.strictEqual(error.codec, "json");
 			assert.strictEqual(error.operation, "parse");
-			// The underlying SyntaxError survives structurally.
-			assert.instanceOf(error.cause, SyntaxError);
+			// The underlying SchemaError survives structurally.
+			assert.instanceOf(error.cause, S.SchemaError);
 		}),
 	);
 
@@ -43,7 +43,7 @@ describe("JsonCodec", () => {
 			circular.self = circular;
 			const error = yield* Effect.flip(JsonCodec.stringify(circular));
 			assert.strictEqual(error.operation, "stringify");
-			assert.instanceOf(error.cause, TypeError);
+			assert.instanceOf(error.cause, S.SchemaError);
 		}),
 	);
 
