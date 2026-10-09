@@ -111,9 +111,14 @@ const compilerArguments = (words: ReadonlyArray<string>): O.Option<ReadonlyArray
           ...(launcher === "npm" ? ["--workspace", "-w"] : []),
         ]);
         const subcommand = words[start];
-        return subcommand === "exec" || (launcher === "pnpm" && subcommand === "dlx")
-          ? O.some(skipLauncherOptions(words, start + 1, packageOptions))
-          : O.some(words.length);
+        if (
+          subcommand === "exec" ||
+          (launcher === "pnpm" && subcommand === "dlx") ||
+          (launcher === "npm" && subcommand === "x")
+        ) {
+          return O.some(skipLauncherOptions(words, start + 1, packageOptions));
+        }
+        return launcher === "pnpm" && subcommand !== "run" ? O.some(start) : O.some(words.length);
       }),
       Match.when(Match.is("echo", "printf"), () => O.some(words.length)),
       // Unknown prefixes remain subject to the conservative lexical tripwire.
@@ -263,6 +268,8 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
         "bunx tsc --force",
         "npx --no-install tsc -b packages/foo",
         "pnpm exec tsc -b .",
+        "pnpm tsc -b .",
+        "npm x tsc -b",
         "bunx --bun --no-install tsgo --build",
         "bunx --package typescript tsc -b",
         "bunx -p typescript tsc --force",

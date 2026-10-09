@@ -144,3 +144,12 @@ terminal result and stayed in nested test execution for over 40 minutes.
 Stopped only its owned service and retained its log under `.beep/rsc-v/`.
 A bounded outer timeout with a durable exit/duration row would make this
 recovery deterministic. The partial log is not package qualification.
+
+### Packet squash creates add/add conflicts after the authorized early merge
+
+`git merge origin/main` after #1560 produced add/add conflicts in thirteen
+packet documents. Resolve with the saved pre-squash packet tree as the
+three-way base: retain main's updates, then retain the lane-specific status,
+decision and friction deltas. A documented packet-squash reconciliation
+command would prevent this predictable recovery cost. No code or preservation
+export was discarded.
