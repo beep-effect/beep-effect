@@ -1,6 +1,9 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("effected/schema-org/NodeRef");
 
 /**
  * Indicates that a string is not usable as a JSON-LD node identifier: it is
@@ -18,10 +21,10 @@ import * as S from "effect/Schema";
  *
  * @public
  */
-export class InvalidNodeIdError extends S.TaggedError<InvalidNodeIdError>()("InvalidNodeIdError", {
+export class InvalidNodeIdError extends S.TaggedError<InvalidNodeIdError>($I`InvalidNodeIdError`)("InvalidNodeIdError", {
 	/** The string that could not be used as an `@id`. */
-	input: S.String,
-}) {
+	input: S.String.annotateKey({ description: "The string that could not be used as an `@id`." }),
+}, $I.annote("InvalidNodeIdError", { description: "Indicates that a string is not usable as a JSON-LD node identifier: it is empty, contains whitespace, or contains a control character." })) {
 	override get message(): string {
 		return `Invalid JSON-LD node id: ${JSON.stringify(this.input)}`;
 	}
@@ -93,10 +96,10 @@ export interface HasNodeId {
  *
  * @public
  */
-export class NodeRef extends S.Class<NodeRef>("NodeRef")({
+export class NodeRef extends S.Class<NodeRef>($I`NodeRef`)({
 	/** The identifier of the referenced node. */
-	"@id": S.String,
-}) {
+	"@id": S.String.annotateKey({ description: "The identifier of the referenced node." }),
+}, $I.annote("NodeRef", { description: "A reference from one node to another: the `{\"@id\": \"…\"}` form." })) {
 	/**
 	 * Builds a reference to a node you are already holding, or to a bare
 	 * identifier string.

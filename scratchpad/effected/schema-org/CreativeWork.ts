@@ -1,6 +1,9 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
 import { NodeRef } from "./NodeRef.ts";
 import { ThingFields } from "./Thing.ts";
+
+const $I = $ScratchpadId.create("effected/schema-org/CreativeWork");
 
 /**
  * The fields shared by every `CreativeWork` descendant this package models,
@@ -89,8 +92,8 @@ export const CreativeWorkFields = {
  *
  * @public
  */
-export class CreativeWork extends S.Class<CreativeWork>("CreativeWork")({
+export class CreativeWork extends S.Class<CreativeWork>($I`CreativeWork`)({
 	...CreativeWorkFields,
 	/** The JSON-LD type discriminator, populated automatically. */
-	"@type": S.tag("CreativeWork"),
-}) {}
+	"@type": S.tag("CreativeWork").annotateKey({ description: "The JSON-LD type discriminator, populated automatically." }),
+}, $I.annote("CreativeWork", { description: "A schema.org `CreativeWork` — the general node for a created work, and the base vocabulary the more specific nodes in this package extend." })) {}

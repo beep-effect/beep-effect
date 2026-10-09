@@ -1,5 +1,8 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
 import { CreativeWorkFields } from "./CreativeWork.ts";
+
+const $I = $ScratchpadId.create("effected/schema-org/TechArticle");
 
 /**
  * The fields shared by `TechArticle` and its descendant `APIReference`.
@@ -38,8 +41,8 @@ export const TechArticleFields = {
  *
  * @public
  */
-export class TechArticle extends S.Class<TechArticle>("TechArticle")({
+export class TechArticle extends S.Class<TechArticle>($I`TechArticle`)({
 	...TechArticleFields,
 	/** The JSON-LD type discriminator, populated automatically. */
-	"@type": S.tag("TechArticle"),
-}) {}
+	"@type": S.tag("TechArticle").annotateKey({ description: "The JSON-LD type discriminator, populated automatically." }),
+}, $I.annote("TechArticle", { description: "A schema.org `TechArticle` — a piece of technical documentation." })) {}

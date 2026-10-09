@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
@@ -7,12 +8,14 @@ import type { JsonLdDocument, JsonLdNode } from "./JsonLdDocument.ts";
 import { NodeRef } from "./NodeRef.ts";
 import { Vocabulary } from "./Vocabulary.ts";
 
+const $I = $ScratchpadId.create("effected/schema-org/Conformance");
+
 /**
  * Which kind of term a {@link UnknownTerm} issue is about.
  *
  * @public
  */
-export const TermKind = S.Literals(["type", "property"]);
+export const TermKind = S.Literals(["type", "property"]).pipe($I.annoteSchema("TermKind", { description: "Which kind of term a UnknownTerm issue is about." }));
 
 /**
  * Which kind of term a {@link UnknownTerm} issue is about.
@@ -36,16 +39,16 @@ export type TermKind = typeof TermKind.Type;
  *
  * @public
  */
-export class UnknownTerm extends S.TaggedClass<UnknownTerm>()("UnknownTerm", {
+export class UnknownTerm extends S.TaggedClass<UnknownTerm>($I`UnknownTerm`)("UnknownTerm", {
 	/** The `@id` of the node carrying the term. */
-	nodeId: S.String,
+	nodeId: S.String.annotateKey({ description: "The `@id` of the node carrying the term." }),
 	/** The `@type` of the node carrying the term. */
-	nodeType: S.String,
+	nodeType: S.String.annotateKey({ description: "The `@type` of the node carrying the term." }),
 	/** The unrecognized term. */
-	term: S.String,
+	term: S.String.annotateKey({ description: "The unrecognized term." }),
 	/** Whether the term was used as a type or as a property. */
-	kind: TermKind,
-}) {
+	kind: TermKind.annotateKey({ description: "Whether the term was used as a type or as a property." }),
+}, $I.annote("UnknownTerm", { description: "A term the vendored schema.org vocabulary does not define at all." })) {
 	/** A one-line description of the issue. */
 	get message(): string {
 		return `${this.nodeId}: schema.org ${Vocabulary.version} defines no ${this.kind} ${JSON.stringify(this.term)}`;
@@ -66,14 +69,14 @@ export class UnknownTerm extends S.TaggedClass<UnknownTerm>()("UnknownTerm", {
  *
  * @public
  */
-export class PropertyNotOnType extends S.TaggedClass<PropertyNotOnType>()("PropertyNotOnType", {
+export class PropertyNotOnType extends S.TaggedClass<PropertyNotOnType>($I`PropertyNotOnType`)("PropertyNotOnType", {
 	/** The `@id` of the node carrying the property. */
-	nodeId: S.String,
+	nodeId: S.String.annotateKey({ description: "The `@id` of the node carrying the property." }),
 	/** The `@type` of the node carrying the property. */
-	nodeType: S.String,
+	nodeType: S.String.annotateKey({ description: "The `@type` of the node carrying the property." }),
 	/** The property that is not legal on that type. */
-	property: S.String,
-}) {
+	property: S.String.annotateKey({ description: "The property that is not legal on that type." }),
+}, $I.annote("PropertyNotOnType", { description: "A property schema.org defines, used on a type it is not legal on." })) {
 	/** A one-line description of the issue. */
 	get message(): string {
 		return `${this.nodeId}: schema.org does not define ${JSON.stringify(this.property)} on ${this.nodeType}`;
@@ -88,14 +91,14 @@ export class PropertyNotOnType extends S.TaggedClass<PropertyNotOnType>()("Prope
  *
  * @public
  */
-export class DeprecatedType extends S.TaggedClass<DeprecatedType>()("DeprecatedType", {
+export class DeprecatedType extends S.TaggedClass<DeprecatedType>($I`DeprecatedType`)("DeprecatedType", {
 	/** The `@id` of the node. */
-	nodeId: S.String,
+	nodeId: S.String.annotateKey({ description: "The `@id` of the node." }),
 	/** The deprecated `@type`. */
-	nodeType: S.String,
+	nodeType: S.String.annotateKey({ description: "The deprecated `@type`." }),
 	/** The type schema.org replaced it with. */
-	supersededBy: S.String,
-}) {
+	supersededBy: S.String.annotateKey({ description: "The type schema.org replaced it with." }),
+}, $I.annote("DeprecatedType", { description: "A node whose `@type` schema.org has deprecated." })) {
 	/** A one-line description of the issue. */
 	get message(): string {
 		return `${this.nodeId}: ${this.nodeType} is superseded by ${this.supersededBy}`;
@@ -108,16 +111,16 @@ export class DeprecatedType extends S.TaggedClass<DeprecatedType>()("DeprecatedT
  *
  * @public
  */
-export class DeprecatedProperty extends S.TaggedClass<DeprecatedProperty>()("DeprecatedProperty", {
+export class DeprecatedProperty extends S.TaggedClass<DeprecatedProperty>($I`DeprecatedProperty`)("DeprecatedProperty", {
 	/** The `@id` of the node carrying the property. */
-	nodeId: S.String,
+	nodeId: S.String.annotateKey({ description: "The `@id` of the node carrying the property." }),
 	/** The `@type` of the node carrying the property. */
-	nodeType: S.String,
+	nodeType: S.String.annotateKey({ description: "The `@type` of the node carrying the property." }),
 	/** The deprecated property. */
-	property: S.String,
+	property: S.String.annotateKey({ description: "The deprecated property." }),
 	/** The property schema.org replaced it with. */
-	supersededBy: S.String,
-}) {
+	supersededBy: S.String.annotateKey({ description: "The property schema.org replaced it with." }),
+}, $I.annote("DeprecatedProperty", { description: "A property schema.org has deprecated. Valid but flagged, exactly as DeprecatedType is." })) {
 	/** A one-line description of the issue. */
 	get message(): string {
 		return `${this.nodeId}: ${this.property} is superseded by ${this.supersededBy}`;
@@ -133,16 +136,16 @@ export class DeprecatedProperty extends S.TaggedClass<DeprecatedProperty>()("Dep
  *
  * @public
  */
-export class DanglingReference extends S.TaggedClass<DanglingReference>()("DanglingReference", {
+export class DanglingReference extends S.TaggedClass<DanglingReference>($I`DanglingReference`)("DanglingReference", {
 	/** The `@id` of the node holding the reference. */
-	nodeId: S.String,
+	nodeId: S.String.annotateKey({ description: "The `@id` of the node holding the reference." }),
 	/** The `@type` of the node holding the reference. */
-	nodeType: S.String,
+	nodeType: S.String.annotateKey({ description: "The `@type` of the node holding the reference." }),
 	/** The property the reference sits in. */
-	property: S.String,
+	property: S.String.annotateKey({ description: "The property the reference sits in." }),
 	/** The `@id` that no node in this graph defines. */
-	reference: S.String,
-}) {
+	reference: S.String.annotateKey({ description: "The `@id` that no node in this graph defines." }),
+}, $I.annote("DanglingReference", { description: "A reference to an `@id` no node in the graph defines." })) {
 	/** A one-line description of the issue. */
 	get message(): string {
 		return `${this.nodeId}: ${this.property} references ${JSON.stringify(this.reference)}, which this graph does not define`;
@@ -165,7 +168,7 @@ export const ConformanceIssue = S.Union([
 	DeprecatedType,
 	DeprecatedProperty,
 	DanglingReference,
-]);
+]).pipe($I.annoteSchema("ConformanceIssue", { description: "Anything Conformance.check can report." }));
 
 /**
  * Anything {@link Conformance.check} can report.
@@ -184,10 +187,10 @@ export type ConformanceIssue = typeof ConformanceIssue.Type;
  *
  * @public
  */
-export class NonConformantGraphError extends S.TaggedError<NonConformantGraphError>()("NonConformantGraphError", {
+export class NonConformantGraphError extends S.TaggedError<NonConformantGraphError>($I`NonConformantGraphError`)("NonConformantGraphError", {
 	/** Every issue found in the graph, failing or not. */
-	issues: S.Array(ConformanceIssue),
-}) {
+	issues: S.Array(ConformanceIssue).annotateKey({ description: "Every issue found in the graph, failing or not." }),
+}, $I.annote("NonConformantGraphError", { description: "Indicates that a graph carries at least one conformance issue of a kind the gate was configured to fail on." })) {
 	override get message(): string {
 		const first = this.issues[0];
 		const rest = this.issues.length - 1;

@@ -1,6 +1,9 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
 import { NodeRef } from "./NodeRef.ts";
 import { ThingFields } from "./Thing.ts";
+
+const $I = $ScratchpadId.create("effected/schema-org/Person");
 
 /**
  * A schema.org `Person` — an author, maintainer or contributor.
@@ -23,12 +26,12 @@ import { ThingFields } from "./Thing.ts";
  *
  * @public
  */
-export class Person extends S.Class<Person>("Person")({
+export class Person extends S.Class<Person>($I`Person`)({
 	...ThingFields,
 	/** The JSON-LD type discriminator, populated automatically. */
-	"@type": S.tag("Person"),
+	"@type": S.tag("Person").annotateKey({ description: "The JSON-LD type discriminator, populated automatically." }),
 	/** An email address for the person. Single-valued. */
-	email: S.optional(S.String),
+	email: S.optional(S.String).annotateKey({ description: "An email address for the person. Single-valued." }),
 	/** Organizations the person is affiliated with, by reference. Repeatable. */
-	affiliation: NodeRef.pipe(S.Array, S.optional),
-}) {}
+	affiliation: NodeRef.pipe(S.Array, S.optional).annotateKey({ description: "Organizations the person is affiliated with, by reference. Repeatable." }),
+}, $I.annote("Person", { description: "A schema.org `Person` — an author, maintainer or contributor." })) {}

@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -9,6 +10,8 @@ import { Person } from "./Person.ts";
 import { SoftwareSourceCode } from "./SoftwareSourceCode.ts";
 import { TechArticle } from "./TechArticle.ts";
 
+const $I = $ScratchpadId.create("effected/schema-org/JsonLdDocument");
+
 /**
  * Indicates that two nodes in one graph claim the same `@id`.
  *
@@ -18,10 +21,10 @@ import { TechArticle } from "./TechArticle.ts";
  *
  * @public
  */
-export class DuplicateNodeIdError extends S.TaggedError<DuplicateNodeIdError>()("DuplicateNodeIdError", {
+export class DuplicateNodeIdError extends S.TaggedError<DuplicateNodeIdError>($I`DuplicateNodeIdError`)("DuplicateNodeIdError", {
 	/** The `@id` claimed by more than one node. */
-	id: S.String,
-}) {
+	id: S.String.annotateKey({ description: "The `@id` claimed by more than one node." }),
+}, $I.annote("DuplicateNodeIdError", { description: "Indicates that two nodes in one graph claim the same `@id`." })) {
 	override get message(): string {
 		return `Two nodes claim the same @id: ${JSON.stringify(this.id)}`;
 	}
@@ -36,12 +39,12 @@ export class DuplicateNodeIdError extends S.TaggedError<DuplicateNodeIdError>()(
  *
  * @public
  */
-export class ConflictingTermError extends S.TaggedError<ConflictingTermError>()("ConflictingTermError", {
+export class ConflictingTermError extends S.TaggedError<ConflictingTermError>($I`ConflictingTermError`)("ConflictingTermError", {
 	/** The `@id` of the node carrying the collision. */
-	nodeId: S.String,
+	nodeId: S.String.annotateKey({ description: "The `@id` of the node carrying the collision." }),
 	/** The colliding term. */
-	term: S.String,
-}) {
+	term: S.String.annotateKey({ description: "The colliding term." }),
+}, $I.annote("ConflictingTermError", { description: "Indicates that a key in a node's `additional` catch-all collides with a typed field on that node, or with `@id` or `@type`." })) {
 	override get message(): string {
 		return `Node ${JSON.stringify(this.nodeId)} sets ${JSON.stringify(this.term)} in both a typed field and \`additional\``;
 	}
@@ -59,7 +62,7 @@ export const JsonLdNode = S.Union([
 	Person,
 	Organization,
 	CreativeWork,
-]);
+]).pipe($I.annoteSchema("JsonLdNode", { description: "Any node this package can place in a graph." }));
 
 /**
  * Any node this package can place in a graph.
@@ -154,12 +157,12 @@ const withoutUndefined = (value: Record<string, S.Json | undefined>): Record<str
  *
  * @public
  */
-export class JsonLdDocument extends S.Class<JsonLdDocument>("JsonLdDocument")({
+export class JsonLdDocument extends S.Class<JsonLdDocument>($I`JsonLdDocument`)({
 	/** The JSON-LD context, fixed at `https://schema.org` and populated automatically. */
-	"@context": S.tag("https://schema.org"),
+	"@context": S.tag("https://schema.org").annotateKey({ description: "The JSON-LD context, fixed at `https://schema.org` and populated automatically." }),
 	/** The nodes in the document. */
-	"@graph": S.Array(JsonLdNode),
-}) {
+	"@graph": S.Array(JsonLdNode).annotateKey({ description: "The nodes in the document." }),
+}, $I.annote("JsonLdDocument", { description: "A JSON-LD document: `@context` plus a flat `@graph` of nodes that reference each other by `@id`." })) {
 	/**
 	 * Assembles nodes into a graph, checking identity.
 	 *
