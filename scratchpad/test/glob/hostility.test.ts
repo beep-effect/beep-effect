@@ -4,6 +4,7 @@
 // hostile input must never surface as a stack overflow, an OOM, or a hang.
 
 import { assert, describe, it } from "@effect/vitest";
+import { assertInstanceOf } from "@effect/vitest/utils";
 import { expand } from "../../effected/glob/internal/braceExpansion.ts";
 import { GuardExceeded } from "../../effected/glob/internal/limits.ts";
 import { Minimatch, braceExpand } from "../../effected/glob/internal/minimatch.ts";
@@ -24,8 +25,8 @@ describe("hostility: pattern length", () => {
 			new Minimatch("a".repeat(65_537));
 			assert.fail("expected a GuardExceeded throw");
 		} catch (e) {
-			assert.instanceOf(e, GuardExceeded);
-			const g = e as GuardExceeded;
+			assertInstanceOf(e, GuardExceeded);
+			const g = e;
 			assert.strictEqual(g.reason, "PatternTooLong");
 			assert.strictEqual(g.limit, 65_536);
 			assert.strictEqual(g.actual, 65_537);

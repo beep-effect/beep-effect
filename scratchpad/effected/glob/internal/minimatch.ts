@@ -27,6 +27,7 @@
 //   unchanged behind optimizationLevel.
 
 import { dual } from "effect/Function";
+import * as P from "effect/Predicate";
 import { assertValidPattern } from "./assertValidPattern.ts";
 import { AST } from "./ast.ts";
 import { expand } from "./braceExpansion.ts";
@@ -255,12 +256,13 @@ export class Minimatch {
 					(s[2] === "?" || (s[2] !== undefined && !globMagic.test(s[2]))) &&
 					s[3] !== undefined &&
 					!globMagic.test(s[3]);
-				const isDrive = s[0] !== undefined && /^[a-z]:/i.test(s[0]);
+				const root = s[0];
+				const isDrive = root !== undefined && /^[a-z]:/i.test(root);
 				if (isUNC) {
 					return [...s.slice(0, 4), ...s.slice(4).map((ss) => this.parse(ss))];
 				}
 				if (isDrive) {
-					return [s[0] as ParseReturn, ...s.slice(1).map((ss) => this.parse(ss))];
+					return [root, ...s.slice(1).map((ss) => this.parse(ss))];
 				}
 			}
 			return s.map((ss) => this.parse(ss));
@@ -269,7 +271,7 @@ export class Minimatch {
 		this.debug(this.pattern, set);
 
 		// filter out everything that didn't compile properly.
-		this.set = set.filter((s) => s.indexOf(false) === -1) as Array<Array<ParseReturnFiltered>>;
+		this.set = set.filter((s): s is Array<ParseReturnFiltered> => s.every((p) => p !== false));
 
 		// do not treat the ? in UNC paths as magic
 		if (this.isWindows) {
@@ -530,8 +532,9 @@ export class Minimatch {
 		const result: Array<string> = [];
 		let which = "";
 		while (ai < a.length && bi < b.length) {
-			const av = a[ai] as string;
-			const bv = b[bi] as string;
+			const av = a[ai];
+			const bv = b[bi];
+			if (av === undefined || bv === undefined) return false;
 			if (av === bv) {
 				result.push(which === "b" ? bv : av);
 				ai++;
@@ -616,9 +619,10 @@ export class Minimatch {
 			const fdi = fileUNC ? 3 : fileDrive ? 0 : undefined;
 			const pdi = patternUNC ? 3 : patternDrive ? 0 : undefined;
 			if (typeof fdi === "number" && typeof pdi === "number") {
-				const [fd, pd]: [string, string] = [file[fdi] as string, pattern[pdi] as string];
+				const fd = file[fdi];
+				const pd = pattern[pdi];
 				// start matching at the drive letter index of each
-				if (fd.toLowerCase() === pd.toLowerCase()) {
+				if (P.isString(fd) && P.isString(pd) && fd.toLowerCase() === pd.toLowerCase()) {
 					pattern[pdi] = fd;
 					patternStartIndex = pdi;
 					fileStartIndex = fdi;
@@ -724,8 +728,8 @@ export class Minimatch {
 		// split the body up into sections, and note the minimum index it can
 		// be found at (start with the length of all previous segments)
 		// [section, before, after]
-		const bodySegments: Array<[Array<ParseReturn>, number]> = [[[], 0]];
-		let currentBody: [Array<ParseReturn>, number] = bodySegments[0] as [Array<ParseReturn>, number];
+		let currentBody: [Array<ParseReturn>, number] = [[], 0];
+		const bodySegments: Array<[Array<ParseReturn>, number]> = [currentBody];
 		let nonGsParts = 0;
 		const nonGsPartsSums: Array<number> = [0];
 		for (const b of body) {
@@ -741,7 +745,9 @@ export class Minimatch {
 		let i = bodySegments.length - 1;
 		const fileLength = file.length - fileTailMatch;
 		for (const b of bodySegments) {
-			b[1] = fileLength - ((nonGsPartsSums[i--] as number) + b[0].length);
+			const before = nonGsPartsSums[i--];
+			if (before === undefined) return false;
+			b[1] = fileLength - (before + b[0].length);
 		}
 
 		return this.#matchGlobStarBodySections(file, bodySegments, fileIndex, 0, partial, 0, (fileTailMatch !== 0 && !Number.isNaN(fileTailMatch))) === true;
@@ -775,7 +781,8 @@ export class Minimatch {
 			// just make sure that there's no bad dots
 			for (let i = fileIndex; i < file.length; i++) {
 				sawTail = true;
-				const f = file[i] as string;
+				const f = file[i];
+				if (f === undefined) return false;
 				if (f === "." || f === ".." || (this.options.dot !== true && f.startsWith("."))) {
 					return false;
 				}
@@ -828,8 +835,9 @@ export class Minimatch {
 		let fl: number;
 		for (fi = fileIndex, pi = patternIndex, fl = file.length, pl = pattern.length; fi < fl && pi < pl; fi++, pi++) {
 			this.debug("matchOne loop");
-			const p = pattern[pi] as ParseReturn;
-			const f = file[fi] as string;
+			const p = pattern[pi];
+			const f = file[fi];
+			if (p === undefined || f === undefined) return false;
 
 			this.debug(pattern, p, f);
 
@@ -912,7 +920,7 @@ export class Minimatch {
 		const mDotStar = mStar !== null || mStarDotExt !== null || mQmarks !== null || mStarDotStar !== null ? null : pattern.match(dotStarRE);
 		if (mStar !== null) {
 			fastTest = options.dot === true ? starTestDot : starTest;
-		} else if (mStarDotExt !== null) {
+		} else if (mStarDotExt !== null && mStarDotExt[1] !== undefined) {
 			fastTest = (
 				options.nocase === true
 					? options.dot === true
@@ -921,7 +929,7 @@ export class Minimatch {
 					: options.dot === true
 						? starDotExtTestDot
 						: starDotExtTest
-			)(mStarDotExt[1] as string);
+			)(mStarDotExt[1]);
 		} else if (mQmarks !== null) {
 			fastTest = (
 				options.nocase === true
@@ -974,11 +982,11 @@ export class Minimatch {
 		// then filter out GLOBSTAR symbols
 		let re = set
 			.map((pattern) => {
-				const pp: Array<string | typeof GLOBSTAR> = pattern.map((p) => {
+				const pp: Array<string | typeof GLOBSTAR | undefined> = pattern.map((p) => {
 					if (p instanceof RegExp) {
 						for (const f of p.flags.split("")) flags.add(f);
 					}
-					return typeof p === "string" ? regExpEscape(p) : p === GLOBSTAR ? GLOBSTAR : (p._src as string);
+					return typeof p === "string" ? regExpEscape(p) : p === GLOBSTAR ? GLOBSTAR : p._src;
 				});
 				pp.forEach((p, i) => {
 					const next = pp[i + 1];
@@ -999,7 +1007,7 @@ export class Minimatch {
 						pp[i + 1] = GLOBSTAR;
 					}
 				});
-				const filtered = pp.filter((p) => p !== GLOBSTAR) as Array<string>;
+				const filtered = pp.filter((p) => p !== GLOBSTAR);
 
 				// For partial matches, we need to make the pattern match
 				// any prefix of the full path. We do this by generating

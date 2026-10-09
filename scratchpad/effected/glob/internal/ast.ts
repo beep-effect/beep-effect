@@ -25,6 +25,7 @@
 // ast.ts and index.ts import each other circularly; noImportCycles forbids
 // it here). The debug/inspect id plumbing is kept for diffability.
 
+import * as P from "effect/Predicate";
 import { parseClass } from "./braceExpressions.ts";
 import { GuardExceeded, MAX_EXTGLOB_RECURSION, MAX_NESTING_DEPTH, assertCap } from "./limits.ts";
 import type { EngineOptions, MMRegExp } from "./types.ts";
@@ -67,8 +68,8 @@ import { unescape as unescapePattern } from "./unescape.ts";
 // ['^a(?:i|w(?:(?!(?:x|y).*zb$).*)z|j)b$']
 
 export type ExtglobType = "!" | "?" | "+" | "*" | "@";
-const types = new Set<ExtglobType>(["!", "?", "+", "*", "@"]);
-const isExtglobType = (c: string | null): c is ExtglobType => types.has(c as ExtglobType);
+const types = new Set<string>(["!", "?", "+", "*", "@"]);
+const isExtglobType = (c: string | null): c is ExtglobType => c !== null && types.has(c);
 const isExtglobAST = (c: AST): c is AST & { type: ExtglobType } => isExtglobType(c.type);
 
 // Map of which extglob types can adopt the children of a nested extglob
@@ -298,7 +299,10 @@ export class AST {
 		const ret: Array<unknown> =
 			this.type === null
 				? this.#parts.slice().map((p) => (typeof p === "string" ? p : p.toJSON()))
-				: [this.type, ...this.#parts.map((p) => (p as AST).toJSON())];
+				: [this.type, ...this.#parts.map((p) => {
+					if (P.isString(p)) throw new TypeError("p.toJSON is not a function");
+					return p.toJSON();
+				})];
 		if (this.isStart() && this.type === null) ret.unshift([]);
 		if (this.isEnd() && (this === this.#root || (this.#root.#filledNegs && this.#parent?.type === "!"))) {
 			ret.push({});
@@ -488,7 +492,6 @@ export class AST {
 
 	#canAdoptWithSpace(child?: AST | string): child is AST & {
 		type: null;
-		parts: [AST & { type: ExtglobType }];
 	} {
 		return this.#canAdopt(child, adoptionWithSpaceMap);
 	}
@@ -498,7 +501,6 @@ export class AST {
 		map: Map<ExtglobType, Array<ExtglobType>> = adoptionMap,
 	): child is AST & {
 		type: null;
-		parts: [AST & { type: ExtglobType }];
 	} {
 		if ((child === undefined || child === "") || typeof child !== "object" || child.type !== null || child.#parts.length !== 1 || this.type === null) {
 			return false;
@@ -507,21 +509,21 @@ export class AST {
 		if ((gc === undefined || gc === "") || typeof gc !== "object" || gc.type === null) {
 			return false;
 		}
-		return (this as AST & { type: ExtglobType }).#canAdoptType(gc.type, map);
+		return this.#canAdoptType(gc.type, map);
 	}
 
 	#canAdoptType(c: string, map: Map<ExtglobType, Array<ExtglobType>> = adoptionAnyMap): c is ExtglobType {
-		return map.get(this.type as ExtglobType)?.includes(c as ExtglobType) === true;
+		return this.type !== null && isExtglobType(c) && map.get(this.type)?.includes(c) === true;
 	}
 
 	#adoptWithSpace(
-		this: AST & { type: ExtglobType },
 		child: AST & {
 			type: null;
 		},
 		index: number,
 	) {
-		const gc = child.#parts[0] as AST & { type: ExtglobType };
+		const gc = child.#parts[0];
+		if (!(gc instanceof AST) || !isExtglobAST(gc)) return;
 		const blank = new AST(null, gc, this.options);
 		blank.#parts.push("");
 		gc.push(blank);
@@ -534,7 +536,8 @@ export class AST {
 		},
 		index: number,
 	) {
-		const gc = child.#parts[0] as AST & { type: ExtglobType };
+		const gc = child.#parts[0];
+		if (!(gc instanceof AST) || !isExtglobAST(gc)) return;
 		this.#parts.splice(index, 1, ...gc.#parts);
 		for (const p of gc.#parts) {
 			if (typeof p === "object") p.#parent = this;
@@ -543,13 +546,11 @@ export class AST {
 	}
 
 	#canUsurpType(c: string): boolean {
-		const m = usurpMap.get(this.type as ExtglobType);
-		return m?.has(c as ExtglobType) === true;
+		return this.type !== null && isExtglobType(c) && usurpMap.get(this.type)?.has(c) === true;
 	}
 
 	#canUsurp(child?: AST | string): child is AST & {
 		type: null;
-		parts: [AST & { type: ExtglobType }];
 	} {
 		if (
 			(child === undefined || child === "") ||
@@ -565,12 +566,14 @@ export class AST {
 		if ((gc === undefined || gc === "") || typeof gc !== "object" || gc.type === null) {
 			return false;
 		}
-		return (this as AST & { type: ExtglobType }).#canUsurpType(gc.type);
+		return this.#canUsurpType(gc.type);
 	}
 
-	#usurp(this: AST & { type: ExtglobType }, child: AST & { type: null }) {
-		const m = usurpMap.get(this.type as ExtglobType);
-		const gc = child.#parts[0] as AST & { type: ExtglobType };
+	#usurp(child: AST & { type: null }) {
+		if (this.type === null) return;
+		const m = usurpMap.get(this.type);
+		const gc = child.#parts[0];
+		if (!(gc instanceof AST) || !isExtglobAST(gc)) return;
 		const nt = m?.get(gc.type);
 		if (nt === undefined || nt === null) return;
 		this.#parts = gc.#parts;
@@ -579,7 +582,7 @@ export class AST {
 				p.#parent = this;
 			}
 		}
-		(this as AST).type = nt;
+		this.type = nt;
 		this.#toString = undefined;
 		this.#emptyExt = false;
 	}
@@ -634,7 +637,7 @@ export class AST {
 			this.#flatten();
 			this.#fillNegs();
 		}
-		if (!isExtglobAST(this)) {
+		if (this.type === null) {
 			const noEmpty = this.isStart() && this.isEnd() && !this.#parts.some((s) => typeof s !== "string");
 			const src = this.#parts
 				.map((p) => {
@@ -692,23 +695,22 @@ export class AST {
 		const repeated = this.type === "*" || this.type === "+";
 		// some kind of extglob
 		const start = this.type === "!" ? "(?:(?!(?:" : "(?:";
-		let body = (this as AST & { type: ExtglobType }).#partsToRegExp(dot, depth);
+		let body = this.#partsToRegExp(dot, depth);
 
 		if (this.isStart() && this.isEnd() && body === "" && this.type !== "!") {
 			// invalid extglob, has to at least be *something* present, if it's
 			// the entire path portion.
 			const s = this.toString();
-			const me = this as AST;
-			me.#parts = [s];
-			me.type = null;
-			me.#hasMagic = undefined;
+			this.#parts = [s];
+			this.type = null;
+			this.#hasMagic = undefined;
 			return [s, unescapePattern(this.toString()), false, false];
 		}
 
 		let bodyDotAllowed =
 			!repeated || allowDot === true || dot
 				? ""
-				: (this as AST & { type: ExtglobType }).#partsToRegExp(true, depth);
+				: this.#partsToRegExp(true, depth);
 		if (bodyDotAllowed === body) {
 			bodyDotAllowed = "";
 		}
@@ -743,7 +745,7 @@ export class AST {
 	#flatten(depth = 0) {
 		// Port note 3: tree-depth guard alongside the kept 10-pass width cap.
 		guardDepth(depth);
-		if (!isExtglobAST(this)) {
+		if (this.type === null) {
 			for (const p of this.#parts) {
 				if (typeof p === "object") {
 					p.#flatten(depth + 1);
@@ -764,10 +766,10 @@ export class AST {
 							this.#adopt(c, i);
 						} else if (this.#canAdoptWithSpace(c)) {
 							done = false;
-							(this as AST & { type: ExtglobType }).#adoptWithSpace(c, i);
+							this.#adoptWithSpace(c, i);
 						} else if (this.#canUsurp(c)) {
 							done = false;
-							(this as AST & { type: ExtglobType }).#usurp(c);
+							this.#usurp(c);
 						}
 					}
 				}
@@ -776,7 +778,7 @@ export class AST {
 		this.#toString = undefined;
 	}
 
-	#partsToRegExp(this: AST & { type: ExtglobType }, dot: boolean, depth: number) {
+	#partsToRegExp(dot: boolean, depth: number) {
 		return this.#parts
 			.map((p) => {
 				// extglob ASTs should only contain parent ASTs

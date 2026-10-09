@@ -39,6 +39,7 @@ const allCompileUnderDefaults = (patterns: ReadonlyArray<string>): true | string
 
 interface Classified {
 	readonly literals: ReadonlyArray<string>;
+	readonly literalSet: ReadonlySet<string>;
 	readonly wildcards: ReadonlyArray<GlobPattern>;
 	readonly excludes: ReadonlyArray<GlobPattern>;
 }
@@ -80,7 +81,6 @@ export class GlobSet extends S.Class<GlobSet>("GlobSet")(
 	),
 ) {
 	#classified: Classified | undefined;
-	#literalSet: ReadonlySet<string> | undefined;
 
 	// Lazy: the schema check guarantees every member is defaults-compilable, so
 	// classification cannot fail for constructed instances. Classification is
@@ -124,14 +124,12 @@ export class GlobSet extends S.Class<GlobSet>("GlobSet")(
 				}
 			}
 		}
-		this.#classified = { literals, wildcards, excludes };
-		this.#literalSet = seenLiterals;
+		this.#classified = { literals, literalSet: seenLiterals, wildcards, excludes };
 		return this.#classified;
 	}
 
 	#literals(): ReadonlySet<string> {
-		if (this.#literalSet === undefined) this.#classify();
-		return this.#literalSet as ReadonlySet<string>;
+		return this.#classify().literalSet;
 	}
 
 	/**

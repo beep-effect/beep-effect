@@ -102,7 +102,7 @@ describe("assertValidPattern", () => {
 	});
 
 	it("dies on a non-string, programmer error", () => {
-		assert.throws(() => assertValidPattern(42 as unknown as string), TypeError);
+		assert.throws(() => assertValidPattern(42), TypeError);
 	});
 });
 

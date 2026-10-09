@@ -210,11 +210,11 @@ describe("GlobPattern construction and schema", () => {
 
 describe("GlobPatternOptions", () => {
 	it("rejects an explicit undefined for an optionalKey field", () => {
-		assert.throws(() => GlobPatternOptions.make({ dot: undefined as unknown as boolean }));
+		assert.throws(() => Result.getOrThrow(S.decodeUnknownResult(GlobPatternOptions)({ dot: undefined })));
 	});
 
 	it("rejects an unknown platform", () => {
-		assert.throws(() => GlobPatternOptions.make({ platform: "vms" as unknown as "posix" }));
+		assert.throws(() => Result.getOrThrow(S.decodeUnknownResult(GlobPatternOptions)({ platform: "vms" })));
 	});
 
 	it("rejects out-of-range or non-integer caps as wiring defects", () => {

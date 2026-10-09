@@ -28,8 +28,10 @@ type Row = readonly [pattern: string, candidate: string, expected: boolean, opti
 // ambient-detection fallback the port deletes). "linux" is behaviorally
 // identical (non-win32) and keeps the oracle pinned regardless of the machine
 // the suite runs on.
-const oracleOpts = (opts: EngineOptions): MinimatchOptions =>
-	({ ...opts, platform: opts.platform === "posix" ? "linux" : opts.platform }) as MinimatchOptions;
+const oracleOpts = (opts: EngineOptions): MinimatchOptions => {
+	const { platform, ...options } = opts;
+	return platform === undefined ? options : { ...options, platform: platform === "posix" ? "linux" : platform };
+};
 
 const table: ReadonlyArray<Row> = [
 	// ── star / qmark segment scoping ──────────────────────────────────────
