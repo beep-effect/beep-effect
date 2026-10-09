@@ -157,7 +157,7 @@ it.layer(ContradictionDetectionLive)("Contradiction detection golden vectors", (
       const third = {
         ...A.getUnsafe(original.beliefs, 1),
         ref: { edgeVersionId: 3, logicalKey: Str.repeat(64)("3"), version: 1 },
-        evidenceIds: [3],
+        evidenceIds: Tuple.make(3),
       };
       const snapshot = yield* S.decodeEffect(ContradictionDetectionSnapshot)({
         ...original,
