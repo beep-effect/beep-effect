@@ -582,7 +582,7 @@ layer(platform(gitlinkTree))("descend, prune is directory-only", (it) => {
 describe("descend — overload resolution", () => {
 	it("resolves each options shape to the right return type", () => {
 		type SuccessOf<T> = T extends Effect.Effect<infer A, unknown, unknown> ? A : never;
-		const pattern = GlobPattern.compile("**/*", GlobPatternOptions.make({})) as unknown as GlobPattern;
+		const pattern = Effect.runSync(GlobPattern.compile("**/*", GlobPatternOptions.make({})));
 
 		// An inline literal carrying "record" selects the DescendResult overload.
 		const inline = descend(pattern, { cwd: "/x", onUnreadable: "record" });

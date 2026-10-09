@@ -96,7 +96,8 @@ layer(platform(tree))("compileAndExpand, compile failure", (it) => {
 			const error = yield* Effect.flip(compileAndExpand("{a,b}".repeat(17), { cwd: "/proj", glob: defaults }));
 			assert.strictEqual(error.pattern, "{a,b}".repeat(17));
 			assert.instanceOf(error, Error);
-			assert.strictEqual(error.cause, (error as Error).cause);
+			const nativeError: Error = error;
+			assert.strictEqual(error.cause, nativeError.cause);
 			assert.include(error.message, "compile");
 		}),
 	);
