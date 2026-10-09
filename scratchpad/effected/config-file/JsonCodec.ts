@@ -18,11 +18,15 @@ export const JsonCodec: ConfigCodec = {
 	name: "json",
 	parse: (raw) =>
 		Effect.try({
+			// The codec preserves the original SyntaxError in cause; Schema JSON decoding discards that throwable.
+			// @effect-diagnostics-next-line preferSchemaOverJson:off
 			try: () => JSON.parse(raw) as unknown,
 			catch: (cause) => ConfigCodecError.make({ codec: "json", operation: "parse", cause }),
 		}),
 	stringify: (value) =>
 		Effect.try({
+			// The codec preserves native TypeError causes and JSON.stringify returning undefined; Schema encoding changes both.
+			// @effect-diagnostics-next-line preferSchemaOverJson:off
 			try: () => JSON.stringify(value, null, 2),
 			catch: (cause) => ConfigCodecError.make({ codec: "json", operation: "stringify", cause }),
 		}),

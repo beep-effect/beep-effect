@@ -34,7 +34,7 @@ export interface DeploymentEnvironmentShape {
 	readonly upsert: (name: string, config?: Record<string, unknown>) => Effect.Effect<void, GitHubError, Repo>;
 
 	/** The repository's deployment environments. */
-	readonly list: () => Effect.Effect<ReadonlyArray<DeploymentEnvironmentInfo>, GitHubError, Repo>;
+	readonly list: Effect.Effect<ReadonlyArray<DeploymentEnvironmentInfo>, GitHubError, Repo>;
 
 	/**
 	 * Remove one deployment environment.
@@ -63,7 +63,7 @@ export interface DeploymentEnvironmentShape {
  * const program = Effect.gen(function* () {
  *   const environments = yield* DeploymentEnvironment;
  *   yield* environments.upsert("production", { wait_timer: 10 });
- *   return yield* environments.list();
+ *   return yield* environments.list;
  * });
  * ```
  *
@@ -88,7 +88,7 @@ export class DeploymentEnvironment extends Context.Service<DeploymentEnvironment
 	/** An in-memory double; unstubbed members die naming themselves. */
 	static readonly makeTest = (overrides: Partial<DeploymentEnvironmentShape> = {}): DeploymentEnvironmentShape => ({
 		upsert: overrides.upsert ?? (() => unstubbed("upsert")),
-		list: overrides.list ?? (() => unstubbed("list")),
+		list: overrides.list ?? (Effect.suspend(() => unstubbed("list"))),
 		delete: overrides.delete ?? (() => unstubbed("delete")),
 	});
 
@@ -126,7 +126,7 @@ const make = (client: GitHubClient["Service"]): DeploymentEnvironmentShape => {
 		} as Rest.Params<"PUT /repos/{owner}/{repo}/environments/{environment_name}">);
 	});
 
-	const list = Effect.fn("DeploymentEnvironment.list")(function* () {
+	const list = Effect.suspend(Effect.fn("DeploymentEnvironment.list")(function* () {
 		const { owner, repo } = yield* Repo;
 		yield* Effect.annotateCurrentSpan({ owner, repo });
 
@@ -135,7 +135,7 @@ const make = (client: GitHubClient["Service"]): DeploymentEnvironmentShape => {
 		// the envelope, including the case where a repository with none answers
 		// without the key at all.
 		return environments.map((environment): DeploymentEnvironmentInfo => ({ name: environment.name }));
-	});
+	}));
 
 	const delete_ = Effect.fn("DeploymentEnvironment.delete")(function* (name: string) {
 		const { owner, repo } = yield* Repo;

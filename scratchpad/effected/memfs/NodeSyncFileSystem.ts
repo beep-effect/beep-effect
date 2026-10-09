@@ -1,3 +1,5 @@
+// This adapter preserves synchronous Node filesystem throws and errno metadata; Effect FileSystem is asynchronous.
+// @effect-diagnostics nodeBuiltinImport:skip-file
 /**
  * A read-only, synchronous `FileSystem` over `node:fs`'s sync API, for
  * programs that must run under `Effect.runSync` — a config loader called from

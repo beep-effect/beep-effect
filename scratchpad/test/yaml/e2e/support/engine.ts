@@ -1,3 +1,5 @@
+// This engine adapter is an internal test helper with a direct-call contract.
+// @effect-diagnostics missingPipeableSignature:skip-file
 /**
  * Facade-shaped adapter over the internal engine, used by the compliance
  * harness while the public `Yaml` facade is being built. Reproduces the v3

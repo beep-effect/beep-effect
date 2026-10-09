@@ -83,7 +83,7 @@ interface Edges {
  *
  * const program = Effect.gen(function* () {
  *   const discovery = yield* WorkspaceDiscovery;
- *   const graph = DependencyGraph.make({ packages: yield* discovery.listPackages() });
+ *   const graph = DependencyGraph.make({ packages: yield* discovery.listPackages });
  *   return yield* graph.levels();
  * });
  * ```

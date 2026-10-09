@@ -366,7 +366,7 @@ export class Workspaces {
 	 * **bundled** consumer. The in-process replay's computed dynamic `import()`
 	 * is compiled by bundlers (rspack among them) into a context module that
 	 * throws `Cannot find module 'file:///…'` at runtime, which makes
-	 * `WorkspaceCatalogs.releaseAgeGate()` unreachable from any bundled GitHub
+	 * `WorkspaceCatalogs.releaseAgeGate` unreachable from any bundled GitHub
 	 * Action. Here the computed import runs inside a `node` child process whose
 	 * program text is a static string handed over argv, so nothing computed
 	 * enters the bundle graph.

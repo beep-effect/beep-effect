@@ -52,7 +52,7 @@ describe("the effected repository, discovered by the package that lives in it", 
 		it.effect("finds the workspace root and its pnpm packages patterns", () =>
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
-				const info = yield* discovery.info();
+				const info = yield* discovery.info;
 				assert.isTrue(cwd.startsWith(info.root), "the root must be an ancestor of this package");
 				assert.isAbove(info.patterns.length, 0);
 			}),
@@ -61,7 +61,7 @@ describe("the effected repository, discovered by the package that lives in it", 
 		it.effect("discovers itself, and its siblings", () =>
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
-				const names = (yield* discovery.listPackages()).map((pkg) => pkg.name);
+				const names = (yield* discovery.listPackages).map((pkg) => pkg.name);
 				assert.include(names, "@effected/workspaces");
 				assert.include(names, "@effected/lockfiles");
 				assert.include(names, "@effected/glob");
@@ -82,7 +82,7 @@ describe("the effected repository, discovered by the package that lives in it", 
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
 				const detector = yield* PackageManagerDetector;
-				const info = yield* discovery.info();
+				const info = yield* discovery.info;
 				const detected = yield* detector.detect(info.root);
 				assert.strictEqual(detected.name, "pnpm");
 			}),
@@ -91,7 +91,7 @@ describe("the effected repository, discovered by the package that lives in it", 
 		it.effect("builds an acyclic graph and orders workspaces before their dependents", () =>
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
-				const graph = DependencyGraph.make({ packages: yield* discovery.listPackages() });
+				const graph = DependencyGraph.make({ packages: yield* discovery.listPackages });
 				assert.isFalse(graph.hasCycle, "the @effected graph must stay acyclic");
 
 				const order = yield* graph.sort();
@@ -107,7 +107,7 @@ describe("the effected repository, discovered by the package that lives in it", 
 		it.effect("resolves the repo's own effect catalog entry", () =>
 			Effect.gen(function* () {
 				const catalogs = yield* WorkspaceCatalogs;
-				const set = yield* catalogs.set();
+				const set = yield* catalogs.set;
 				// This repo pins `effect` in a named `effect` catalog, and every
 				// package depends on `catalog:effect`.
 				const range = set.rangeOf("effect", Option.some("effect"));
@@ -119,7 +119,7 @@ describe("the effected repository, discovered by the package that lives in it", 
 		it.effect("reads the real pnpm-lock.yaml with importer paths resolved to real names", () =>
 			Effect.gen(function* () {
 				const reader = yield* LockfileReader;
-				const lockfile = yield* reader.read();
+				const lockfile = yield* reader.read;
 				assert.strictEqual(lockfile.format, "pnpm");
 
 				const workspaceNames = lockfile.packages.filter((pkg) => pkg.isWorkspace).map((pkg) => pkg.name);
@@ -137,7 +137,7 @@ describe("the sync escape hatch agrees with the Effect surface", () => {
 		it.effect("findWorkspaceRootSync finds the same root", () =>
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
-				const info = yield* discovery.info();
+				const info = yield* discovery.info;
 				assert.strictEqual(findWorkspaceRootSync(cwd, syncOps), info.root);
 			}),
 		);
@@ -145,8 +145,8 @@ describe("the sync escape hatch agrees with the Effect surface", () => {
 		it.effect("getWorkspacePackagesSync finds the same packages", () =>
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
-				const info = yield* discovery.info();
-				const async = (yield* discovery.listPackages()).map((pkg) => pkg.name).sort();
+				const info = yield* discovery.info;
+				const async = (yield* discovery.listPackages).map((pkg) => pkg.name).sort();
 				const sync = getWorkspacePackagesSync(info.root, syncOps)
 					.map((pkg) => pkg.name)
 					.sort();
@@ -159,7 +159,7 @@ describe("the sync escape hatch agrees with the Effect surface", () => {
 		it.effect("getWorkspacePackagesSync agrees on the dependency maps too", () =>
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
-				const info = yield* discovery.info();
+				const info = yield* discovery.info;
 				const async = yield* discovery.getPackage("@effected/workspaces");
 				const sync = getWorkspacePackagesSync(info.root, syncOps).find((pkg) => pkg.name === "@effected/workspaces");
 				assert.isDefined(sync);

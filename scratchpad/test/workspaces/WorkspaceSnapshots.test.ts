@@ -184,7 +184,7 @@ describe("WorkspaceSnapshots — at('HEAD') and worktree() parity on a clean tre
 			Effect.gen(function* () {
 				const snapshots = yield* WorkspaceSnapshots;
 				const atHead = yield* snapshots.at("HEAD");
-				const worktree = yield* snapshots.worktree();
+				const worktree = yield* snapshots.worktree;
 				assert.deepStrictEqual(projected(atHead), projected(worktree));
 				// And that resolution is non-trivial: the catalog and workspace
 				// indirections actually resolved.
@@ -223,7 +223,7 @@ describe("WorkspaceSnapshots — bun inline catalogs at a ref with NO bun.lock (
 			Effect.gen(function* () {
 				const snapshots = yield* WorkspaceSnapshots;
 				const atHead = yield* snapshots.at("HEAD");
-				const worktree = yield* snapshots.worktree();
+				const worktree = yield* snapshots.worktree;
 				// The two catalog sets must agree — the gated code returned an EMPTY set
 				// from at('HEAD') while worktree() carried `effect: ^4.0.0`.
 				assert.deepStrictEqual(atHead.catalogs.entries, worktree.catalogs.entries);
@@ -391,7 +391,7 @@ describe("WorkspaceSnapshots — version-less manifests at a ref and in the work
 			Effect.gen(function* () {
 				const snapshots = yield* WorkspaceSnapshots;
 				const atHead = yield* snapshots.at("HEAD");
-				const worktree = yield* snapshots.worktree();
+				const worktree = yield* snapshots.worktree;
 				for (const snapshot of [atHead, worktree]) {
 					const bare = Option.getOrThrow(snapshot.package("@x/bare"));
 					const root = Option.getOrThrow(snapshot.package("root"));
@@ -488,7 +488,7 @@ describe("WorkspaceSnapshots — hook-injected catalog symmetry", () => {
 			Effect.gen(function* () {
 				const snapshots = yield* WorkspaceSnapshots;
 				const atRef = yield* snapshots.at("HEAD");
-				const live = yield* snapshots.worktree();
+				const live = yield* snapshots.worktree;
 
 				const fromRef = atRef.resolve("effect", "catalog:effect:peers");
 				const fromLive = live.resolve("effect", "catalog:effect:peers");
@@ -503,7 +503,7 @@ describe("WorkspaceSnapshots — hook-injected catalog symmetry", () => {
 			Effect.gen(function* () {
 				const snapshots = yield* WorkspaceSnapshots;
 				const atRef = yield* snapshots.at("HEAD");
-				const live = yield* snapshots.worktree();
+				const live = yield* snapshots.worktree;
 				assert.strictEqual(atRef.importerVersions?.["."]?.effect, "4.0.0-beta.101");
 				assert.strictEqual(live.importerVersions?.["."]?.effect, "4.0.0-beta.101");
 			}),
@@ -563,7 +563,7 @@ describe("WorkspaceSnapshots — seedCatalogs", () => {
 			Effect.gen(function* () {
 				const snapshots = yield* WorkspaceSnapshots;
 				const atRef = yield* snapshots.at("HEAD");
-				const live = yield* snapshots.worktree();
+				const live = yield* snapshots.worktree;
 				// Asymmetry here is the bogus-row bug in the other direction: a seeded
 				// `at` diffed against an unseeded `worktree` reports the hook-injected
 				// catalog as newly removed on every run.

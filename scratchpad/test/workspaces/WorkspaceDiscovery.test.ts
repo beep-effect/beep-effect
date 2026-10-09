@@ -51,7 +51,7 @@ describe("WorkspaceDiscovery — one-level patterns", () => {
 		it.effect("discovers the root package first, then members sorted by relative path", () =>
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
-				const packages = yield* discovery.listPackages();
+				const packages = yield* discovery.listPackages;
 				assert.deepStrictEqual(
 					packages.map((pkg) => pkg.name),
 					["root", "@x/web", "@x/alpha", "@x/beta"],
@@ -66,7 +66,7 @@ describe("WorkspaceDiscovery — one-level patterns", () => {
 		it.effect("carries the as-read manifest record on every member", () =>
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
-				const packages = yield* discovery.listPackages();
+				const packages = yield* discovery.listPackages;
 				const beta = packages.find((pkg) => pkg.name === "@x/beta");
 				// The whole parsed record, not the typed slice: dependency fields AND
 				// everything discovery never modeled ride along from the one read.
@@ -81,7 +81,7 @@ describe("WorkspaceDiscovery — one-level patterns", () => {
 		it.effect("a directory without a package.json is not a workspace package", () =>
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
-				const packages = yield* discovery.listPackages();
+				const packages = yield* discovery.listPackages;
 				assert.isFalse(packages.some((pkg) => pkg.relativePath === "packages/no-manifest"));
 			}),
 		);
@@ -89,7 +89,7 @@ describe("WorkspaceDiscovery — one-level patterns", () => {
 		it.effect("importerMap keys on the root-relative path", () =>
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
-				const importers = yield* discovery.importerMap();
+				const importers = yield* discovery.importerMap;
 				assert.strictEqual(importers.get("packages/alpha")?.name, "@x/alpha");
 				assert.strictEqual(importers.get(".")?.name, "root");
 			}),
@@ -154,7 +154,7 @@ describe("WorkspaceDiscovery — packages/** crosses segments (workspaces #62)",
 		it.effect("finds a package TWO levels below the prefix, not just one", () =>
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
-				const packages = yield* discovery.listPackages();
+				const packages = yield* discovery.listPackages;
 				const names = packages.map((pkg) => pkg.name);
 				// v3 silently rewrote `packages/**` to `packages/*`, so it found alpha
 				// and nothing else. Every name below is a package v3 could not see.
@@ -167,7 +167,7 @@ describe("WorkspaceDiscovery — packages/** crosses segments (workspaces #62)",
 		it.effect("reads the packages list from pnpm-workspace.yaml via @effected/yaml", () =>
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
-				const info = yield* discovery.info();
+				const info = yield* discovery.info;
 				assert.deepStrictEqual(info.patterns, ["packages/**"]);
 				assert.strictEqual(info.root, "/repo");
 			}),
@@ -196,7 +196,7 @@ describe("WorkspaceDiscovery — pruning and exclusion", () => {
 		it.effect("never descends into node_modules", () =>
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
-				const packages = yield* discovery.listPackages();
+				const packages = yield* discovery.listPackages;
 				assert.isFalse(packages.some((pkg) => pkg.name === "evil"));
 			}),
 		);
@@ -204,7 +204,7 @@ describe("WorkspaceDiscovery — pruning and exclusion", () => {
 		it.effect("never descends into .git", () =>
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
-				const packages = yield* discovery.listPackages();
+				const packages = yield* discovery.listPackages;
 				assert.isFalse(packages.some((pkg) => pkg.name === "git-junk"));
 			}),
 		);
@@ -212,7 +212,7 @@ describe("WorkspaceDiscovery — pruning and exclusion", () => {
 		it.effect("a leading-bang pattern excludes a package the includes matched", () =>
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
-				const packages = yield* discovery.listPackages();
+				const packages = yield* discovery.listPackages;
 				assert.isTrue(packages.some((pkg) => pkg.name === "@x/alpha"));
 				assert.isFalse(packages.some((pkg) => pkg.name === "@x/private"));
 			}),
@@ -221,7 +221,7 @@ describe("WorkspaceDiscovery — pruning and exclusion", () => {
 		it.effect("an excluded directory is still DESCENDED — a package under it stays discovered", () =>
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
-				const packages = yield* discovery.listPackages();
+				const packages = yield* discovery.listPackages;
 				// Excluding `packages/private-*` says nothing about what lives BELOW
 				// it. Turning the acceptance gate into a descent gate — skipping
 				// `traversal.push` for an excluded directory — would drop this member
@@ -239,7 +239,7 @@ describe("WorkspaceDiscovery — the descent is bounded", () => {
 		it.effect("fails typed when a segment-crossing pattern descends past maxDepth", () =>
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
-				const error = yield* Effect.flip(discovery.listPackages());
+				const error = yield* Effect.flip(discovery.listPackages);
 				assert.instanceOf(error, WorkspacePatternError);
 				assert.strictEqual(error.kind, "depthExceeded");
 				assert.strictEqual(error.pattern, "packages/**");
@@ -253,7 +253,7 @@ describe("WorkspaceDiscovery — a fractional maxDepth is a DEFECT, not a typed 
 		it.effect("dies rather than silently enumerating a truncated tree", () =>
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
-				const exit = yield* Effect.exit(discovery.listPackages());
+				const exit = yield* Effect.exit(discovery.listPackages);
 				assert.isTrue(Exit.isFailure(exit));
 				if (Exit.isFailure(exit)) {
 					// A bare `depth < maxDepth` guard would admit 2.5 AND NaN; the
@@ -271,7 +271,7 @@ describe("WorkspaceDiscovery — NaN maxDepth is a DEFECT", () => {
 		it.effect("dies rather than returning an empty package list", () =>
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
-				const exit = yield* Effect.exit(discovery.listPackages());
+				const exit = yield* Effect.exit(discovery.listPackages);
 				assert.isTrue(Exit.isFailure(exit));
 				if (Exit.isFailure(exit)) {
 					assert.isFalse(exit.cause.reasons.some(Cause.isFailReason));
@@ -294,7 +294,7 @@ describe("WorkspaceDiscovery — a pattern naming a missing directory fails type
 		it.effect("names the offending pattern, so a typo is obvious", () =>
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
-				const error = yield* Effect.flip(discovery.listPackages());
+				const error = yield* Effect.flip(discovery.listPackages);
 				assert.instanceOf(error, WorkspacePatternError);
 				assert.strictEqual(error.kind, "missingBaseDir");
 				assert.strictEqual(error.pattern, "apps/*");
@@ -313,9 +313,9 @@ describe("WorkspaceDiscovery — malformed input fails typed, never as a defect"
 		it.effect("an unparseable member package.json is a typed WorkspaceDiscoveryError", () =>
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
-				const result = yield* Effect.result(discovery.listPackages());
+				const result = yield* Effect.result(discovery.listPackages);
 				assert.strictEqual(result._tag, "Failure");
-				const error = yield* Effect.flip(discovery.listPackages());
+				const error = yield* Effect.flip(discovery.listPackages);
 				assert.instanceOf(error, WorkspaceDiscoveryError);
 				assert.strictEqual(error.kind, "invalidJson");
 				assert.strictEqual(error.path, "/repo/packages/bad/package.json");
@@ -334,7 +334,7 @@ describe("WorkspaceDiscovery — a member without a name", () => {
 		it.effect("fails with the missingName discriminant", () =>
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
-				const error = yield* Effect.flip(discovery.listPackages());
+				const error = yield* Effect.flip(discovery.listPackages);
 				assert.instanceOf(error, WorkspaceDiscoveryError);
 				assert.strictEqual(error.kind, "missingName");
 			}),
@@ -356,7 +356,7 @@ describe("WorkspaceDiscovery — a manifest without a version is discovered (#47
 		it.effect("a version-less ROOT manifest is discovered, root first, with `version` absent", () =>
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
-				const packages = yield* discovery.listPackages();
+				const packages = yield* discovery.listPackages;
 				assert.deepStrictEqual(
 					packages.map((pkg) => pkg.name),
 					["root", "@x/bare", "@x/versioned"],
@@ -420,7 +420,7 @@ describe("WorkspaceDiscovery — a version that is PRESENT but EMPTY", () => {
 		it.effect("fails with the invalidShape discriminant, naming the file", () =>
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
-				const error = yield* Effect.flip(discovery.listPackages());
+				const error = yield* Effect.flip(discovery.listPackages);
 				assert.instanceOf(error, WorkspaceDiscoveryError);
 				assert.strictEqual(error.kind, "invalidShape");
 				assert.strictEqual(error.path, "/repo/packages/empty/package.json");
@@ -460,7 +460,7 @@ describe("WorkspaceDiscovery — a version that is PRESENT but not a string", ()
 		it.effect("fails with the invalidShape discriminant, naming the file", () =>
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
-				const error = yield* Effect.flip(discovery.listPackages());
+				const error = yield* Effect.flip(discovery.listPackages);
 				assert.instanceOf(error, WorkspaceDiscoveryError);
 				assert.strictEqual(error.kind, "invalidShape");
 				assert.strictEqual(error.path, "/repo/packages/bad/package.json");
@@ -529,9 +529,9 @@ describe("WorkspaceDiscovery — no stopAt adopts an enclosing workspace", () =>
 		it.effect("resolves the OUTER root and its members (the unbounded default, pinned)", () =>
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
-				const info = yield* discovery.info();
+				const info = yield* discovery.info;
 				assert.strictEqual(info.root, "/outer");
-				const packages = yield* discovery.listPackages();
+				const packages = yield* discovery.listPackages;
 				assert.deepStrictEqual(
 					packages.map((pkg) => `${pkg.name}@${pkg.relativePath}`),
 					["outer-root@.", "other@pkgs/other"],
@@ -546,7 +546,7 @@ describe("WorkspaceDiscovery — stopAt: cwd refuses the enclosing workspace", (
 		it.effect("fails WorkspaceRootNotFoundError carrying the ceiling", () =>
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
-				const error = yield* Effect.flip(discovery.listPackages());
+				const error = yield* Effect.flip(discovery.listPackages);
 				assert.instanceOf(error, WorkspaceRootNotFoundError);
 				assert.strictEqual(error.searchPath, "/outer/checkout");
 				assert.strictEqual(error.stopAt, "/outer/checkout");
@@ -573,9 +573,9 @@ describe("WorkspaceDiscovery — stopAt: cwd refuses the enclosing workspace", (
 		it.effect("still resolves a checkout that is itself a workspace root (the ceiling is inclusive)", () =>
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
-				const info = yield* discovery.info();
+				const info = yield* discovery.info;
 				assert.strictEqual(info.root, "/outer/checkout");
-				const packages = yield* discovery.listPackages();
+				const packages = yield* discovery.listPackages;
 				assert.deepStrictEqual(
 					packages.map((pkg) => `${pkg.name}@${pkg.relativePath}`),
 					["checkout@.", "inner@packages/inner"],
@@ -626,7 +626,7 @@ describe("WorkspaceDiscovery — a member package.json that is `null`", () => {
 		it.effect("fails TYPED, never as a defect", () =>
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
-				const exit = yield* Effect.exit(discovery.listPackages());
+				const exit = yield* Effect.exit(discovery.listPackages);
 				assert.isTrue(Exit.isFailure(exit));
 				if (Exit.isFailure(exit)) {
 					// The discriminating assertion: no Die reason. An implementation that
@@ -635,7 +635,7 @@ describe("WorkspaceDiscovery — a member package.json that is `null`", () => {
 					assert.isTrue(exit.cause.reasons.some(Cause.isFailReason));
 				}
 
-				const error = yield* Effect.flip(discovery.listPackages());
+				const error = yield* Effect.flip(discovery.listPackages);
 				assert.instanceOf(error, WorkspaceDiscoveryError);
 				// `null` is VALID JSON — the text parses. What is wrong is its shape, so
 				// this is invalidShape, not invalidJson. Asserting invalidJson here is
@@ -664,7 +664,7 @@ describe("WorkspaceDiscovery — a manifest whose shape the schema rejects", () 
 		it.effect("is invalidShape, distinct from a JSON syntax error", () =>
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
-				const error = yield* Effect.flip(discovery.listPackages());
+				const error = yield* Effect.flip(discovery.listPackages);
 				assert.instanceOf(error, WorkspaceDiscoveryError);
 				// The SchemaError path. Previously reported as invalidJson, which told a
 				// consumer the file was not JSON when in fact it parsed perfectly.
@@ -692,7 +692,7 @@ describe("WorkspaceDiscovery — a directory that cannot be read", () => {
 				// root package alone and look like a legitimately empty workspace — the
 				// same silent-degradation shape as the trailing-`/**` bug. A permission
 				// error is a WRONG ANSWER, not an empty one.
-				const error = yield* Effect.flip(discovery.listPackages());
+				const error = yield* Effect.flip(discovery.listPackages);
 				assert.instanceOf(error, WorkspacePatternError);
 				assert.strictEqual(error.kind, "unreadableDirectory");
 			}),
@@ -717,7 +717,7 @@ describe("WorkspaceDiscovery — an unreadable pnpm-workspace.yaml", () => {
 				// EMPTY file produce identical results — the failure was invisible by
 				// construction. A permission error here would silently yield a workspace
 				// with zero members and look exactly like a legitimately empty one.
-				const error = yield* Effect.flip(discovery.listPackages());
+				const error = yield* Effect.flip(discovery.listPackages);
 				assert.instanceOf(error, WorkspaceDiscoveryError);
 				assert.strictEqual(error.kind, "read");
 				assert.strictEqual(error.path, "/repo/pnpm-workspace.yaml");
@@ -755,7 +755,7 @@ const nestedPackage = WorkspacePackage.make({
 // Bound to a const: layerTest is a parameterized layer factory and layers
 // memoize by reference.
 const StubbedDiscovery = WorkspaceDiscovery.layerTest({
-	listPackages: () => Effect.succeed([utilsPackage, nestedPackage]),
+	listPackages: Effect.suspend(() => Effect.succeed([utilsPackage, nestedPackage])),
 });
 
 describe("WorkspaceDiscovery.layerTest — one stubbed method", () => {
@@ -763,7 +763,7 @@ describe("WorkspaceDiscovery.layerTest — one stubbed method", () => {
 		it.effect("listPackages returns the stub", () =>
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
-				const packages = yield* discovery.listPackages();
+				const packages = yield* discovery.listPackages;
 				assert.deepStrictEqual(
 					packages.map((pkg) => pkg.name),
 					["@x/utils", "@x/utils-extra"],
@@ -786,7 +786,7 @@ describe("WorkspaceDiscovery.layerTest — one stubbed method", () => {
 		it.effect("importerMap derives from the stubbed list", () =>
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
-				const map = yield* discovery.importerMap();
+				const map = yield* discovery.importerMap;
 				assert.strictEqual(map.get("packages/utils")?.name, "@x/utils");
 				assert.strictEqual(map.size, 2);
 			}),
@@ -829,11 +829,11 @@ describe("WorkspaceDiscovery.makeTest — the empty-workspace defaults", () => {
 		it.effect("list-shaped methods succeed empty and refresh is a no-op", () =>
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
-				assert.deepStrictEqual(yield* discovery.listPackages(), []);
-				assert.strictEqual((yield* discovery.importerMap()).size, 0);
+				assert.deepStrictEqual(yield* discovery.listPackages, []);
+				assert.strictEqual((yield* discovery.importerMap).size, 0);
 				assert.deepStrictEqual(yield* discovery.resolveFiles(["/repo/a.ts"]), []);
 				assert.isTrue(Option.isNone(yield* discovery.resolveFile("/repo/a.ts")));
-				yield* discovery.refresh();
+				yield* discovery.refresh;
 			}),
 		);
 
@@ -852,7 +852,7 @@ describe("WorkspaceDiscovery.makeTest — the empty-workspace defaults", () => {
 				// No honest default WorkspaceInfo exists (a fabricated root would leak
 				// into consumer path logic), so the default is a defect, not a typed
 				// failure a test could accidentally swallow.
-				const exit = yield* Effect.exit(discovery.info());
+				const exit = yield* Effect.exit(discovery.info);
 				assert.isTrue(Exit.isFailure(exit));
 				assert.isTrue(Exit.isFailure(exit) && Cause.hasDies(exit.cause));
 			}),
@@ -865,11 +865,11 @@ describe("WorkspaceDiscovery.makeTest — overrides win over derivation", () => 
 		Effect.gen(function* () {
 			// The shape value directly — no layer needed to use a double inline.
 			const double = WorkspaceDiscovery.makeTest({
-				info: () => Effect.succeed(WorkspaceInfo.make({ root: "/repo", patterns: ["packages/*"] })),
+				info: Effect.suspend(() => Effect.succeed(WorkspaceInfo.make({ root: "/repo", patterns: ["packages/*"] }))),
 			});
-			const info = yield* double.info();
+			const info = yield* double.info;
 			assert.strictEqual(info.root, "/repo");
-			assert.deepStrictEqual(yield* double.listPackages(), []);
+			assert.deepStrictEqual(yield* double.listPackages, []);
 		}),
 	);
 });

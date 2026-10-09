@@ -53,7 +53,7 @@ export class UnsatisfiedRangeError extends Schema.TaggedError<UnsatisfiedRangeEr
 /**
  * Operations of the {@link VersionCache} service.
  *
- * Every query is a thunk; queries over the whole cache (`versions`,
+ * Queries are lazy Effects; queries over the whole cache (`versions`,
  * `filter`) never fail and return `[]` when nothing matches, while
  * extremum and navigation operations fail typed. `next`/`prev` layer two
  * different absences deliberately: the error channel means "the pivot
@@ -70,11 +70,11 @@ export interface VersionCacheShape {
 	/** Remove a single version from the cache. */
 	readonly remove: (version: SemVer) => Effect.Effect<void>;
 	/** All cached versions in ascending order; `[]` when empty. */
-	readonly versions: () => Effect.Effect<ReadonlyArray<SemVer>>;
+	readonly versions: Effect.Effect<ReadonlyArray<SemVer>>;
 	/** The highest cached version. Fails with {@link EmptyCacheError} when empty. */
-	readonly latest: () => Effect.Effect<SemVer, EmptyCacheError>;
+	readonly latest: Effect.Effect<SemVer, EmptyCacheError>;
 	/** The lowest cached version. Fails with {@link EmptyCacheError} when empty. */
-	readonly oldest: () => Effect.Effect<SemVer, EmptyCacheError>;
+	readonly oldest: Effect.Effect<SemVer, EmptyCacheError>;
 	/** The highest cached version satisfying a range. Fails with {@link UnsatisfiedRangeError} when none match. */
 	readonly resolve: (range: Range) => Effect.Effect<SemVer, UnsatisfiedRangeError>;
 	/**
@@ -130,7 +130,7 @@ const dedupeSorted = (versions: ReadonlyArray<SemVer>): ReadonlyArray<SemVer> =>
  * const program = Effect.gen(function* () {
  *   const cache = yield* VersionCache;
  *   yield* cache.load([SemVer.of(1, 0, 0), SemVer.of(2, 0, 0)]);
- *   const latest = yield* cache.latest();
+ *   const latest = yield* cache.latest;
  *   return latest.toString();
  * }).pipe(Effect.provide(VersionCache.layer));
  *
@@ -192,17 +192,17 @@ export class VersionCache extends Context.Service<VersionCache, VersionCacheShap
 						return [...arr.slice(0, result.index), ...arr.slice(result.index + 1)];
 					}),
 
-				versions: () => Ref.get(ref),
+				versions: Effect.suspend(() => Ref.get(ref)),
 
-				latest: Effect.fn("VersionCache.latest")(function* () {
+				latest: Effect.suspend(Effect.fn("VersionCache.latest")(function* () {
 					const arr = yield* requireNonEmpty;
 					return Arr.lastNonEmpty(arr);
-				}),
+				})),
 
-				oldest: Effect.fn("VersionCache.oldest")(function* () {
+				oldest: Effect.suspend(Effect.fn("VersionCache.oldest")(function* () {
 					const arr = yield* requireNonEmpty;
 					return arr[0];
-				}),
+				})),
 
 				resolve,
 

@@ -17,7 +17,7 @@ const Live = Workspaces.layer({ cwd: REPO }).pipe(
 
 const facts = Effect.gen(function* () {
 	const policy = yield* LayerPolicy.load(join(REPO, "lib", "configs", "layers.json"));
-	const packages = yield* (yield* WorkspaceDiscovery).listPackages();
+	const packages = yield* (yield* WorkspaceDiscovery).listPackages;
 	const graph: LayeringGraph = { names: packages.map((pkg) => pkg.name), edges: WorkspaceLayering.edgesOf(packages) };
 	return { policy, packages, graph };
 });

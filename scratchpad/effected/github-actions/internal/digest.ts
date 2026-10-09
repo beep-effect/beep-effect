@@ -1,3 +1,5 @@
+// The synchronous and streaming digests require incremental hashing, which Effect Crypto does not expose.
+// @effect-diagnostics nodeBuiltinImport:skip-file
 // The sanctioned `node:crypto` digests, spelled once.
 //
 // Core `Crypto` offers one-shot SHA digests over bytes already in memory, but

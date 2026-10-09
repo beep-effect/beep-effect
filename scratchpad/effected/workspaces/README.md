@@ -58,7 +58,7 @@ const WorkspacesLayer = Workspaces.layer().pipe(Layer.provide(Platform));
 const program = Effect.gen(function* () {
   const discovery = yield* WorkspaceDiscovery;
 
-  const packages = yield* discovery.listPackages();
+  const packages = yield* discovery.listPackages;
   const graph = DependencyGraph.make({ packages });
 
   // Parallel build tiers: level 0 depends on nothing in the workspace,
@@ -171,12 +171,12 @@ const program = Effect.gen(function* () {
   const catalogs = yield* WorkspaceCatalogs;
   const discovery = yield* WorkspaceDiscovery;
 
-  const lockfile = yield* reader.read();
+  const lockfile = yield* reader.read;
   // Presence of each key is the assertion — see below.
   const report = PeerCheck.run(lockfile, {
-    peerDependencyRules: yield* catalogs.peerDependencyRules(),
-    workspacePackages: yield* discovery.listPackages(),
-    catalogs: yield* catalogs.set(),
+    peerDependencyRules: yield* catalogs.peerDependencyRules,
+    workspacePackages: yield* discovery.listPackages,
+    catalogs: yield* catalogs.set,
   });
 
   return {
@@ -202,7 +202,7 @@ const program = Effect.gen(function* () {
   - `"peerVersionUnresolved"` — a peer resolved to a non-workspace provider whose version is a protocol specifier rather than a version: a `file:` directory or tarball, directly or through a `file:` override, which the lockfile records as `file:vendor/x` with no version for a directory, and a git or remote-tarball provider, which pnpm keys by its URL (`https://codeload.github.com/…`). The comparison never runs, so the peer is neither reported nor passed as satisfied; for a `file:` directory `pnpm peers check` reports it as a `bad` row even when the directory's manifest satisfies the range. It applies to peers declared by lockfile rows and by joined manifests alike.
 - `required` is the getter for the rows a gate should act on — the non-optional ones. An unsatisfied *optional* peer is normal, so `optional` travels with the row rather than being filtered out at the source.
 
-`WorkspaceCatalogs.peerDependencyRules()` returns the workspace's effective merged pnpm suppression rules, which the lockfile records nowhere; without them a checker reports findings pnpm itself calls clean. **Presence of the `peerDependencyRules` option key is the assertion, not its contents.** Passing `NoPeerDependencyRules` asserts the workspace has none, so the report carries no `"peerRulesNotApplied"` — though it can still be unverified for another reason, or unsupported; omitting the key says nobody looked, and always yields `"peerRulesNotApplied"`. **All three axes of the supplied rules are applied**, with pnpm's measured semantics. `allowedVersions` hides a row whose resolved version a matching key's range permits, in all three key spellings pnpm accepts: `parent@version>peer` (what `pnpm:export` writes; the parent version is ignored, as pnpm ignores it), `parent>peer` (what a config-dependency plugin injects) and a bare `peer`, which pnpm applies to every parent that declares it. `ignoreMissing` hides a required peer nothing resolved for, and `allowAny` hides a peer that resolved outside its range; both are `@pnpm/matcher` patterns over the PEER name (`*` wildcard, leading `!` negates), never `parent>peer` keys, and the two never cross.
+`WorkspaceCatalogs.peerDependencyRules` returns the workspace's effective merged pnpm suppression rules, which the lockfile records nowhere; without them a checker reports findings pnpm itself calls clean. **Presence of the `peerDependencyRules` option key is the assertion, not its contents.** Passing `NoPeerDependencyRules` asserts the workspace has none, so the report carries no `"peerRulesNotApplied"` — though it can still be unverified for another reason, or unsupported; omitting the key says nobody looked, and always yields `"peerRulesNotApplied"`. **All three axes of the supplied rules are applied**, with pnpm's measured semantics. `allowedVersions` hides a row whose resolved version a matching key's range permits, in all three key spellings pnpm accepts: `parent@version>peer` (what `pnpm:export` writes; the parent version is ignored, as pnpm ignores it), `parent>peer` (what a config-dependency plugin injects) and a bare `peer`, which pnpm applies to every parent that declares it. `ignoreMissing` hides a required peer nothing resolved for, and `allowAny` hides a peer that resolved outside its range; both are `@pnpm/matcher` patterns over the PEER name (`*` wildcard, leading `!` negates), never `parent>peer` keys, and the two never cross.
 
 The `workspacePackages` option takes the packages `WorkspaceDiscovery` already returned, and supplying it is what turns a `link:`-resolved parent from a refusal into an answer: the matched manifest's declared peers join the walk, named from the manifest (`probe-a@1.0.0`, not the row's `packages/a@0.0.0`) and judged against the **importer's own** dependency set, which is where pnpm resolves them from. Measured one variable at a time on the probe workspace, against pnpm 12.5.1 and 12.6.0: a consumer's own `react@18.3.1` satisfies the linked parent's `^18.0.0` peer, the same version installed only by a sibling importer does not, and a consumer's own `react@17.0.2` is a `bad` row carrying `foundVersion`. A target the set does not cover — every target, when the key is omitted — keeps `"unresolvedEdge"`, so the option answers only for what it covers and says so about the rest. A covered target the walk cannot reach — one the lockfile records no workspace row for — keeps the marker too; the root importer's linked targets are walked and judged against the root's own dependencies, as pnpm does.
 
@@ -506,7 +506,7 @@ import { Effect } from "effect";
 
 const program = Effect.gen(function* () {
   const discovery = yield* WorkspaceDiscovery;
-  return yield* discovery.listPackages();
+  return yield* discovery.listPackages;
 }).pipe(
   Effect.catchTag("WorkspacePatternError", (error: WorkspacePatternError) =>
     // kind: "missingBaseDir" | "uncompilable" | "depthExceeded" | "budgetExceeded"
@@ -527,7 +527,7 @@ import { Effect } from "effect";
 
 // Bind to a const — layers memoize by reference.
 const TestDiscovery = WorkspaceDiscovery.layerTest({
-  listPackages: () =>
+  listPackages:
     Effect.succeed([
       WorkspacePackage.make({
         name: "@my-org/utils",
@@ -557,7 +557,7 @@ A name miss in the derived `getPackage` fails with the service's own typed `Pack
 - `WorkspaceCatalogs` — pnpm catalog assembly and `catalog:` resolution, on pnpm's own catalog packages; `releaseAgeGate()` assembles the effective `@effected/npm` `ReleaseAgeGate` from inline `pnpm-workspace.yaml` release-age keys and replayed hook contributions, strictest-wins, in the same pass as the catalogs.
 - `LockfileReader` — locate and parse the workspace's lockfile through `@effected/lockfiles`.
 - `PeerCheck` — unsatisfied peer-dependency detection as a pure, total value over a parsed lockfile, with `UnsatisfiedPeer` and `PeerParent` as the report's rows. Read `supported`, `unresolvedImporters` and `unverified` alongside `unsatisfied`: an empty finding list is a clean bill of health only when those three say so.
-- `NoPeerDependencyRules` / `PeerDependencyRules` — the effective pnpm suppression policy `WorkspaceCatalogs.peerDependencyRules()` assembles, and the "I assert none apply" value for callers that have checked.
+- `NoPeerDependencyRules` / `PeerDependencyRules` — the effective pnpm suppression policy `WorkspaceCatalogs.peerDependencyRules` assembles, and the "I assert none apply" value for callers that have checked.
 - `ChangeDetector` — git-range change detection over `@effected/git`'s `Git` service; swap the layer to mock it with no repository.
 - `PublishabilityDetector` — whether a package publishes and to where, as a `PublishTarget` (registry, directory, access, provenance). No composite provides one: pick `PublishabilityDetector.layerNpm` (standard npm semantics) or `.layerNone` (nothing publishes) and provide it explicitly.
 - `ReleaseTag` / `TrackingTag` — release-tag formatting (`ReleaseTag.single` / `.scoped`, strict SemVer by default with no `v` prefix) and the floating major/minor alias derivation GitHub Actions-style consumers expect (`v1`, `v1.2`), plus `classifyTag` to tell a release tag from a tracking alias.

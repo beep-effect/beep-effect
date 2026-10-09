@@ -196,6 +196,8 @@ describe("MemoryFileSystem.layerFaulty", () => {
 	it("type-enforces genuine PlatformError faults and confines failTimes to the Effect-returning methods", () => {
 		const rejectsBareError = MemoryFileSystem.layerFaulty({
 			// @ts-expect-error -- a bare Error is not a PlatformError
+			// This negative type test deliberately supplies a bare Error failure to prove the fault API rejects it.
+			// @effect-diagnostics-next-line missingEffectError:off globalErrorInEffectFailure:off
 			readFileString: () => Effect.fail(new Error("nope")),
 		});
 		const rejectsTransientOnLazy = MemoryFileSystem.layerFaulty({

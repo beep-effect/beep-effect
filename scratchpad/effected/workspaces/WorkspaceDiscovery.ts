@@ -187,11 +187,11 @@ export interface WorkspaceDiscoveryOptions {
  */
 export interface WorkspaceDiscoveryShape {
 	/** Facts about the resolved workspace. */
-	readonly info: () => Effect.Effect<WorkspaceInfo, WorkspaceDiscoveryFailure>;
+	readonly info: Effect.Effect<WorkspaceInfo, WorkspaceDiscoveryFailure>;
 	/** Every workspace package, root first, then the rest sorted by relative path. */
-	readonly listPackages: () => Effect.Effect<ReadonlyArray<WorkspacePackage>, WorkspaceDiscoveryFailure>;
+	readonly listPackages: Effect.Effect<ReadonlyArray<WorkspacePackage>, WorkspaceDiscoveryFailure>;
 	/** The discovered packages keyed by their root-relative importer path. */
-	readonly importerMap: () => Effect.Effect<ReadonlyMap<string, WorkspacePackage>, WorkspaceDiscoveryFailure>;
+	readonly importerMap: Effect.Effect<ReadonlyMap<string, WorkspacePackage>, WorkspaceDiscoveryFailure>;
 	/** A single package by name. */
 	readonly getPackage: (name: string) => Effect.Effect<WorkspacePackage, WorkspaceLookupFailure>;
 	/** The package owning an absolute file path, by longest-prefix match. */
@@ -240,7 +240,7 @@ export interface WorkspaceDiscoveryShape {
 	 * Drop every memoized discovery — the layer-bound one and each per-root memo
 	 * — so the next call re-reads the filesystem.
 	 */
-	readonly refresh: () => Effect.Effect<void>;
+	readonly refresh: Effect.Effect<void>;
 	/**
 	 * Drop only the memo for the workspace containing `directory`, leaving the
 	 * layer-bound memo and every other root's untouched.
@@ -283,7 +283,7 @@ export interface WorkspaceDiscoveryShape {
  *
  * const program = Effect.gen(function* () {
  *   const discovery = yield* WorkspaceDiscovery;
- *   const packages = yield* discovery.listPackages();
+ *   const packages = yield* discovery.listPackages;
  *   return packages.map((p) => p.name);
  * });
  * ```
@@ -594,19 +594,19 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 			};
 
 			return {
-				info: Effect.fn("WorkspaceDiscovery.info")(function* () {
+				info: Effect.suspend(Effect.fn("WorkspaceDiscovery.info")(function* () {
 					const state = yield* memo;
 					return state.info;
-				}),
+				})),
 
-				listPackages: Effect.fn("WorkspaceDiscovery.listPackages")(function* () {
+				listPackages: Effect.suspend(Effect.fn("WorkspaceDiscovery.listPackages")(function* () {
 					return yield* packages;
-				}),
+				})),
 
-				importerMap: Effect.fn("WorkspaceDiscovery.importerMap")(function* () {
+				importerMap: Effect.suspend(Effect.fn("WorkspaceDiscovery.importerMap")(function* () {
 					const all = yield* packages;
 					return new Map(all.map((pkg) => [pkg.relativePath, pkg]));
-				}),
+				})),
 
 				getPackage: Effect.fn("WorkspaceDiscovery.getPackage")(function* (name: string) {
 					const all = yield* packages;
@@ -653,14 +653,14 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 					rootMemos.delete(root);
 				}),
 
-				refresh: () =>
+				refresh: Effect.suspend(() =>
 					Effect.flatMap(
 						Effect.forEach([...rootMemos.values()], (cell) => cell.invalidate, { discard: true }),
 						() => {
 							rootMemos.clear();
 							return invalidate;
 						},
-					),
+					)),
 			};
 		});
 
@@ -712,7 +712,7 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 	 * import { Effect } from "effect";
 	 *
 	 * const double = WorkspaceDiscovery.makeTest({
-	 *   listPackages: () =>
+	 *   listPackages:
 	 *     Effect.succeed([
 	 *       WorkspacePackage.make({
 	 *         name: "@my-org/utils",
@@ -728,7 +728,7 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 	 * ```
 	 */
 	static readonly makeTest = (overrides: Partial<WorkspaceDiscoveryShape> = {}): WorkspaceDiscoveryShape => {
-		const listPackages = overrides.listPackages ?? (() => Effect.succeed([]));
+		const listPackages = overrides.listPackages ?? Effect.succeed([]);
 
 		// POSIX-terminated longest-prefix ownership, mirroring the live
 		// `resolveFile` semantics minus the platform `Path` service.
@@ -747,23 +747,23 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 
 		return {
 			listPackages,
-			info: () =>
+			info: Effect.suspend(() =>
 				Effect.die(
 					new Error(
 						"WorkspaceDiscovery.makeTest: info() was called but not stubbed — no honest default WorkspaceInfo exists for a test double; pass an `info` override.",
 					),
-				),
-			importerMap: () => Effect.map(listPackages(), (all) => new Map(all.map((pkg) => [pkg.relativePath, pkg]))),
+				)),
+			importerMap: Effect.suspend(() => Effect.map(listPackages, (all) => new Map(all.map((pkg) => [pkg.relativePath, pkg])))),
 			getPackage: (name: string) =>
-				Effect.flatMap(listPackages(), (all) => {
+				Effect.flatMap(listPackages, (all) => {
 					const found = all.find((pkg) => pkg.name === name);
 					return found !== undefined
 						? Effect.succeed(found)
 						: Effect.fail(PackageNotFoundError.make({ name, available: all.map((pkg) => pkg.name) }));
 				}),
-			resolveFile: (filePath: string) => Effect.map(listPackages(), (all) => ownerOf(filePath, all)),
+			resolveFile: (filePath: string) => Effect.map(listPackages, (all) => ownerOf(filePath, all)),
 			resolveFiles: (filePaths: ReadonlyArray<string>) =>
-				Effect.map(listPackages(), (all) => {
+				Effect.map(listPackages, (all) => {
 					const seen = new Map<string, WorkspacePackage>();
 					for (const filePath of filePaths) {
 						const owner = ownerOf(filePath, all);
@@ -789,7 +789,7 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 						"WorkspaceDiscovery.makeTest: listPackagesIn() was called but not stubbed — deriving it from `listPackages` would model every root as identical, which is the bug this method exists to prevent; pass a `listPackagesIn` override.",
 					),
 				),
-			refresh: () => Effect.void,
+			refresh: Effect.suspend(() => Effect.void),
 			// Nothing is memoized in a double, so dropping one root's memo is honestly
 			// a no-op — unlike the two reads above, which have no honest default.
 			refreshIn: () => Effect.void,
@@ -812,7 +812,7 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 	 * import { Effect } from "effect";
 	 *
 	 * const TestDiscovery = WorkspaceDiscovery.layerTest({
-	 *   listPackages: () => Effect.succeed([]),
+	 *   listPackages: Effect.succeed([]),
 	 * });
 	 * // program.pipe(Effect.provide(TestDiscovery))
 	 * ```
@@ -870,7 +870,7 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 			return {
 				versionOf: Effect.fn("WorkspaceResolver.versionOf")((packageName: string) => {
 					const specifier = `workspace:${packageName}`;
-					return discovery.listPackages().pipe(
+					return discovery.listPackages.pipe(
 						Effect.mapError((cause) => DependencyResolutionError.make({ specifier, cause })),
 						Effect.flatMap((all) => {
 							const index = versionsByName(all);

@@ -215,7 +215,7 @@ export class WorkspaceLayering {
 	/** Discover the workspace and check it against `policy`. */
 	static readonly checkWorkspace = Effect.fn("WorkspaceLayering.checkWorkspace")(function* (policy: LayerPolicy) {
 		const discovery = yield* WorkspaceDiscovery;
-		const packages = yield* discovery.listPackages();
+		const packages = yield* discovery.listPackages;
 		return WorkspaceLayering.check(
 			{ names: packages.map((pkg) => pkg.name), edges: WorkspaceLayering.edgesOf(packages) },
 			policy,

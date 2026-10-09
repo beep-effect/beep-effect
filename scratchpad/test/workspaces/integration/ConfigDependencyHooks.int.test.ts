@@ -257,7 +257,7 @@ describe("Workspaces.layer default — provably never executes a config dependen
 		const defaultLayer = Workspaces.layer({ cwd: root }).pipe(Layer.provideMerge(platform(tree)));
 		return Effect.gen(function* () {
 			const catalogs = yield* WorkspaceCatalogs;
-			const set = yield* catalogs.set();
+			const set = yield* catalogs.set;
 			// The inline catalog assembled — proof the default catalog path actually ran.
 			assert.deepStrictEqual(set.rangeOf("effect", Option.none()), Option.some("^4.0.0"));
 			// ...and the config dependency's real pnpmfile never executed.
@@ -314,7 +314,7 @@ describe("Workspaces.layerWithGitAndConfigDependencies", () => {
 		);
 		return Effect.gen(function* () {
 			const catalogs = yield* WorkspaceCatalogs;
-			const set = yield* catalogs.set();
+			const set = yield* catalogs.set;
 			// The inline catalog — the control proving assembly ran at all.
 			assert.deepStrictEqual(set.rangeOf("effect", Option.none()), Option.some("^4.0.0"));
 			// The hook-injected one — proof the REPLAYING catalogs layer is wired,
@@ -336,7 +336,7 @@ describe("Workspaces.layerWithGitAndConfigDependencies", () => {
 		);
 		return Effect.gen(function* () {
 			const catalogs = yield* WorkspaceCatalogs;
-			const set = yield* catalogs.set();
+			const set = yield* catalogs.set;
 			assert.deepStrictEqual(set.rangeOf("effect", Option.none()), Option.some("^4.0.0"));
 			// The default composite executes no config-dependency code, and this is
 			// the assertion that keeps it that way.
@@ -355,7 +355,7 @@ describe("Workspaces.layerWithGitAndConfigDependencies", () => {
 		);
 		return Effect.gen(function* () {
 			const snapshots = yield* WorkspaceSnapshots;
-			const live = yield* snapshots.worktree();
+			const live = yield* snapshots.worktree;
 			assert.deepStrictEqual(live.resolve("seeded-dep", "catalog:"), Option.some("^1.0.0"));
 		}).pipe(Effect.provide(appLayer));
 	});
@@ -467,7 +467,7 @@ describe("WorkspaceCatalogs.releaseAgeGate — combines inline + hook sources st
 		const appLayer = Workspaces.layerWithConfigDependencies({ cwd: root }).pipe(Layer.provideMerge(platform(tree)));
 		return Effect.gen(function* () {
 			const catalogs = yield* WorkspaceCatalogs;
-			const gate = yield* catalogs.releaseAgeGate();
+			const gate = yield* catalogs.releaseAgeGate;
 			// Inline 1440 vs hook 4320 → max is the hook's 4320.
 			assert.strictEqual(gate.ageMinutes, 4320);
 			// Excludes union: the inline pattern plus the hook's two, deduped.
@@ -480,7 +480,7 @@ describe("WorkspaceCatalogs.releaseAgeGate — combines inline + hook sources st
 		const appLayer = Workspaces.layerWithConfigDependencies({ cwd: root }).pipe(Layer.provideMerge(platform(tree)));
 		return Effect.gen(function* () {
 			const catalogs = yield* WorkspaceCatalogs;
-			const gate = yield* catalogs.releaseAgeGate();
+			const gate = yield* catalogs.releaseAgeGate;
 			// Inline 10000 vs hook 1440 → max is the inline 10000.
 			assert.strictEqual(gate.ageMinutes, 10_000);
 			// Only the hook set an exclude here.
@@ -516,7 +516,7 @@ describe("WorkspaceCatalogs.peerDependencyRules — the injected rules reach the
 		const appLayer = Workspaces.layerWithConfigDependencies({ cwd: root }).pipe(Layer.provideMerge(platform(tree())));
 		return Effect.gen(function* () {
 			const catalogs = yield* WorkspaceCatalogs;
-			const rules = yield* catalogs.peerDependencyRules();
+			const rules = yield* catalogs.peerDependencyRules;
 
 			// The hook's contribution — the assertion that fails if the call site
 			// stops reading `injection.peerDependencyRules`, and only then.
@@ -532,7 +532,7 @@ describe("WorkspaceCatalogs.peerDependencyRules — the injected rules reach the
 	it.effect("the unconsumed axes arrive empty rather than absent", () => {
 		const appLayer = Workspaces.layerWithConfigDependencies({ cwd: root }).pipe(Layer.provideMerge(platform(tree())));
 		return Effect.gen(function* () {
-			const rules = yield* (yield* WorkspaceCatalogs).peerDependencyRules();
+			const rules = yield* (yield* WorkspaceCatalogs).peerDependencyRules;
 			assert.deepStrictEqual(rules.ignoreMissing, []);
 			assert.deepStrictEqual(rules.allowAny, []);
 		}).pipe(Effect.provide(appLayer));

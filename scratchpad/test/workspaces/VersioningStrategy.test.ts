@@ -176,7 +176,7 @@ describe("VersioningStrategy.detect — independent", () => {
 	layer(
 		Layer.mergeAll(
 			WorkspaceDiscovery.layerTest({
-				listPackages: () => Effect.succeed([pkg("a"), pkg("b"), pkg("internal")]),
+				listPackages: Effect.suspend(() => Effect.succeed([pkg("a"), pkg("b"), pkg("internal")])),
 			}),
 			publishes("a", "b"),
 		),
@@ -197,7 +197,7 @@ describe("VersioningStrategy.detect — independent", () => {
 describe("VersioningStrategy.detect — fixed groups supplied by the caller", () => {
 	layer(
 		Layer.mergeAll(
-			WorkspaceDiscovery.layerTest({ listPackages: () => Effect.succeed([pkg("a"), pkg("b")]) }),
+			WorkspaceDiscovery.layerTest({ listPackages: Effect.suspend(() => Effect.succeed([pkg("a"), pkg("b")])) }),
 			publishes("a", "b"),
 		),
 	)((it) => {
@@ -222,7 +222,7 @@ describe("VersioningStrategy.detect — fixed groups supplied by the caller", ()
 describe("VersioningStrategy.detect — nothing publishes", () => {
 	layer(
 		Layer.mergeAll(
-			WorkspaceDiscovery.layerTest({ listPackages: () => Effect.succeed([pkg("a"), pkg("b")]) }),
+			WorkspaceDiscovery.layerTest({ listPackages: Effect.suspend(() => Effect.succeed([pkg("a"), pkg("b")])) }),
 			publishes(),
 		),
 	)((it) => {
@@ -265,7 +265,7 @@ describe("VersioningStrategy.detect — concurrency", () => {
 				Effect.provide(
 					Layer.mergeAll(
 						WorkspaceDiscovery.layerTest({
-							listPackages: () => Effect.succeed([pkg("d"), pkg("b"), pkg("a"), pkg("c")]),
+							listPackages: Effect.suspend(() => Effect.succeed([pkg("d"), pkg("b"), pkg("a"), pkg("c")])),
 						}),
 						publishingDetector,
 					),

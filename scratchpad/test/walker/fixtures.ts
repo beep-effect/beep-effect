@@ -1,3 +1,5 @@
+// These platform factories are internal test helpers with direct-call contracts.
+// @effect-diagnostics missingPipeableSignature:skip-file
 // In-memory filesystem fixtures for the descend suite.
 //
 // The volume is `@effected/memfs` — a real virtual POSIX filesystem — rather

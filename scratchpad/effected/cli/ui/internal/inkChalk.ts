@@ -1,3 +1,5 @@
+// Ink shares its Chalk instance by Node realpath and module resolution; resolving another copy changes colours.
+// @effect-diagnostics nodeBuiltinImport:skip-file
 import { realpathSync } from "node:fs";
 import { createRequire } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";

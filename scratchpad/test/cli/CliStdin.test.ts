@@ -28,7 +28,7 @@ const run = (args: ReadonlyArray<string>, stdin: string) =>
 				{ env: { PATH: process.env.PATH ?? "", NO_COLOR: "1" }, stdin: Stream.make(new TextEncoder().encode(stdin)) },
 			);
 			const handle = yield* spawner.spawn(command);
-			const text = (stream: Stream.Stream<Uint8Array, unknown>) => Stream.mkString(Stream.decodeText(stream));
+			const text = <E>(stream: Stream.Stream<Uint8Array, E>) => Stream.mkString(Stream.decodeText(stream));
 			const [stdout, stderr, exitCode] = yield* Effect.all(
 				[text(handle.stdout), text(handle.stderr), handle.exitCode],
 				{

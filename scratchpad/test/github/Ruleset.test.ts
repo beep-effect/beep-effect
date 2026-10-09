@@ -113,7 +113,7 @@ describe("Ruleset.list and delete", () => {
 	it.effect("list carries source_type, so a caller can tell inherited from own", () =>
 		Effect.gen(function* () {
 			const { value } = yield* run(
-				Effect.flatMap(Ruleset, (r) => r.list()),
+				Effect.flatMap(Ruleset, (r) => r.list),
 				{},
 				{
 					"GET /repos/{owner}/{repo}/rulesets": [

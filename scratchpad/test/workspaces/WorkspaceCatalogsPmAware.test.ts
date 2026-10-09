@@ -138,9 +138,9 @@ describe("WorkspaceCatalogs.set — the double-default rejection through the sta
 		it.effect("the default catalog declared twice fails set() typed", () =>
 			Effect.gen(function* () {
 				const catalogs = yield* WorkspaceCatalogs;
-				const result = yield* Effect.result(catalogs.set());
+				const result = yield* Effect.result(catalogs.set);
 				assert.strictEqual(result._tag, "Failure");
-				const error = yield* Effect.flip(catalogs.set());
+				const error = yield* Effect.flip(catalogs.set);
 				assert.instanceOf(error, CatalogAssemblyError);
 				assert.strictEqual(error.path, "default");
 			}),
@@ -162,7 +162,7 @@ describe("WorkspaceCatalogs.set — a malformed workspaces shape through the sta
 		it.effect("a malformed workspaces.catalog fails set() typed", () =>
 			Effect.gen(function* () {
 				const catalogs = yield* WorkspaceCatalogs;
-				const error = yield* Effect.flip(catalogs.set());
+				const error = yield* Effect.flip(catalogs.set);
 				assert.instanceOf(error, CatalogAssemblyError);
 				assert.strictEqual(error.source, "catalog");
 			}),
@@ -199,7 +199,7 @@ describe("WorkspaceCatalogs.set — a bun workspace with no pnpm-workspace.yaml"
 		it.effect("reads inline catalogs from the package.json workspaces block", () =>
 			Effect.gen(function* () {
 				const catalogs = yield* WorkspaceCatalogs;
-				const set = yield* catalogs.set();
+				const set = yield* catalogs.set;
 				assert.deepStrictEqual(set.rangeOf("effect", Option.none()), Option.some("^4.0.0"));
 			}),
 		);
@@ -207,7 +207,7 @@ describe("WorkspaceCatalogs.set — a bun workspace with no pnpm-workspace.yaml"
 		it.effect("assembles the bun lockfile's BunExtension catalogs", () =>
 			Effect.gen(function* () {
 				const catalogs = yield* WorkspaceCatalogs;
-				const set = yield* catalogs.set();
+				const set = yield* catalogs.set;
 				// react comes only from bun.lock — proof the BunExtension is assembled.
 				assert.deepStrictEqual(set.rangeOf("react", Option.none()), Option.some("^18.0.0"));
 			}),
@@ -216,7 +216,7 @@ describe("WorkspaceCatalogs.set — a bun workspace with no pnpm-workspace.yaml"
 		it.effect("the inline block beats the lockfile within a named catalog", () =>
 			Effect.gen(function* () {
 				const catalogs = yield* WorkspaceCatalogs;
-				const set = yield* catalogs.set();
+				const set = yield* catalogs.set;
 				assert.deepStrictEqual(set.rangeOf("typescript", Option.some("build")), Option.some("^6.0.0"));
 			}),
 		);

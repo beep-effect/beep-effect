@@ -129,7 +129,7 @@ describe("Workspaces.layerWithGitAndConfigDependencies — at(ref) replays the r
 		return Effect.gen(function* () {
 			const snapshots = yield* WorkspaceSnapshots;
 			const head = yield* snapshots.at("HEAD");
-			const live = yield* snapshots.worktree();
+			const live = yield* snapshots.worktree;
 			assert.deepStrictEqual(live.resolve("hooked-dep", "catalog:"), head.resolve("hooked-dep", "catalog:"));
 			assert.deepStrictEqual(live.resolve("hooked-dep", "catalog:"), Option.some("^2.0.0"));
 			// worktree() carries the record too, off WorkspaceCatalogs' one memo.
@@ -161,7 +161,7 @@ describe("Workspaces.layerWithGitAndHooks — the hermetic seam reaches at(ref) 
 			assert.deepStrictEqual(before.hookReplays, { [NAME]: "1.0.0" });
 			assert.deepStrictEqual(after.hookReplays, { [NAME]: "2.0.0" });
 			// And worktree() runs through the same supplied map as at(HEAD).
-			const live = yield* snapshots.worktree();
+			const live = yield* snapshots.worktree;
 			assert.deepStrictEqual(live.resolve("hooked-dep", "catalog:"), Option.some("^1.0.0"));
 		}).pipe(Effect.provide(Live));
 	});
@@ -175,7 +175,7 @@ describe("Workspaces.layerWithGit — the default composite executes no config-d
 			const snapshots = yield* WorkspaceSnapshots;
 			const before = yield* snapshots.at("before");
 			const after = yield* snapshots.at("after");
-			const live = yield* snapshots.worktree();
+			const live = yield* snapshots.worktree;
 			// Assembly ran — the committed catalog is there on every side.
 			assert.deepStrictEqual(before.resolve("effect", "catalog:"), Option.some("^4.0.0"));
 			// ...and no pnpmfile executed on any side: the ref reads, or the live one.

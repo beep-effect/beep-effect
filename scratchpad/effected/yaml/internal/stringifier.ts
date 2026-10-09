@@ -1943,6 +1943,8 @@ function stringifySeqNodeLines(node: YamlSeq, ctx: StringifyContext, depth: numb
  * (`Infinity`, `-Infinity`, `NaN`) are rendered as `.inf`, `-.inf`, and
  * `.nan` respectively. Circular references throw {@link StringifyFailure}.
  */
+// The value accepts every options object too, so a single object cannot distinguish the two call forms.
+// @effect-diagnostics-next-line missingPipeableSignature:off
 export function stringifyValue(value: unknown, options?: StringifyOptionsInput): string {
 	const ctx = createContext(options);
 	const result = stringifyLines(value, ctx, 0).join("\n");

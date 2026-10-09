@@ -665,6 +665,8 @@ class BlockParser implements BlockScanner {
 // `dialectOf`. The facade always passes its resolved dialect explicitly, so
 // this default only ever serves engine-level callers (tests, mostly) that
 // mean "the substrate".
+// A dialect string can also be input text, so optional arguments make the two call forms ambiguous.
+// @effect-diagnostics-next-line missingPipeableSignature:off
 export const parseBlocks = (
 	text: string,
 	dialect: MarkdownDialect = "commonmark",

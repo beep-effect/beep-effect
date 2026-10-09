@@ -79,6 +79,9 @@ export class RepoRef extends Schema.Class<RepoRef>("RepoRef")({
  * });
  * ```
  *
+ * Repo is resolved per operation so Repo.provide can redirect an already built resource service.
+ * @effect-leakable-service
+ *
  * @public
  */
 export class Repo extends Context.Service<Repo, RepoRef>()("@beep/scratchpad/effected/github/Repo") {

@@ -174,6 +174,8 @@ const resolveConditions = (
  *
  * @public
  */
+// Manifest and options are both optional-field objects, so even an empty object makes the call forms ambiguous.
+// @effect-diagnostics-next-line missingPipeableSignature:off
 export const resolveEntryPoint = (
 	manifest: EntryPointManifest,
 	options?: ResolveEntryPointOptions,

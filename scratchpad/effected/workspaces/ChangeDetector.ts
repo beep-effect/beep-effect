@@ -187,7 +187,7 @@ export class ChangeDetector extends Context.Service<ChangeDetector, ChangeDetect
 		 * larger repository is legitimate.
 		 */
 		const rootOf = (): Effect.Effect<string, WorkspaceDiscoveryFailure> =>
-			discovery.info().pipe(Effect.map((info) => info.root));
+			discovery.info.pipe(Effect.map((info) => info.root));
 
 		const packagesOf = (
 			options: ChangeDetectionOptions,
@@ -219,7 +219,7 @@ export class ChangeDetector extends Context.Service<ChangeDetector, ChangeDetect
 
 			affectedPackages: Effect.fn("ChangeDetector.affectedPackages")(function* (options?: ChangeDetectionOptions) {
 				const changed = yield* packagesOf(options ?? ChangeDetectionOptions.make({}));
-				const all = yield* discovery.listPackages();
+				const all = yield* discovery.listPackages;
 				const graph = DependencyGraph.make({ packages: all });
 				const names = yield* graph.affectedBy(changed.map((pkg) => pkg.name));
 				const byName = new Map(all.map((pkg) => [pkg.name, pkg]));

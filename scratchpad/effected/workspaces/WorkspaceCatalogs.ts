@@ -40,7 +40,7 @@ const JsonValue = Schema.fromJsonString(Schema.Unknown);
 
 /**
  * Each importer's dependency-name → resolved-version map, keyed by importer path
- * (`"."` for the root package — the same keys `WorkspaceDiscovery.importerMap()`
+ * (`"."` for the root package — the same keys `WorkspaceDiscovery.importerMap`
  * uses, and the same value `PackageStateSnapshot.relativePath` carries).
  *
  * @remarks
@@ -458,7 +458,7 @@ export const injectFromDocument: {
  */
 export interface WorkspaceCatalogsShape {
 	/** The assembled catalog set for the workspace. Memoized after the first call. */
-	readonly set: () => Effect.Effect<CatalogSet, CatalogAssemblyFailure>;
+	readonly set: Effect.Effect<CatalogSet, CatalogAssemblyFailure>;
 	/** Resolve one `catalog:` specifier; `Option.none()` when it names nothing. */
 	readonly resolveSpecifier: (
 		dependency: string,
@@ -477,7 +477,7 @@ export interface WorkspaceCatalogsShape {
 	 * contribute too. A workspace with no pnpm-workspace.yaml (a bun/npm
 	 * workspace) has no release-age keys, so the gate is the inert zero gate.
 	 */
-	readonly releaseAgeGate: () => Effect.Effect<ReleaseAgeGate, CatalogAssemblyFailure>;
+	readonly releaseAgeGate: Effect.Effect<ReleaseAgeGate, CatalogAssemblyFailure>;
 	/**
 	 * The workspace's **effective** `peerDependencyRules` — pnpm's post-hoc
 	 * suppression policy, which the lockfile does not record at all.
@@ -495,7 +495,7 @@ export interface WorkspaceCatalogsShape {
 	 * so a checker without them reports findings pnpm calls clean. `PeerCheck`
 	 * applies all three axes.
 	 */
-	readonly peerDependencyRules: () => Effect.Effect<PeerDependencyRules, CatalogAssemblyFailure>;
+	readonly peerDependencyRules: Effect.Effect<PeerDependencyRules, CatalogAssemblyFailure>;
 	/**
 	 * Each importer's dependency-name → resolved-version map, as the manager's
 	 * lockfile records it. Read from the same single lockfile read as `set`, and
@@ -508,7 +508,7 @@ export interface WorkspaceCatalogsShape {
 	 * yields an empty index, and an absent or unreadable lockfile contributes
 	 * nothing rather than failing.
 	 */
-	readonly importerVersions: () => Effect.Effect<ImporterVersions, CatalogAssemblyFailure>;
+	readonly importerVersions: Effect.Effect<ImporterVersions, CatalogAssemblyFailure>;
 	/**
 	 * Which version each declared config dependency was replayed from, keyed
 	 * by name — off the same single memoized assemble pass as `set()`.
@@ -520,7 +520,7 @@ export interface WorkspaceCatalogsShape {
 	 * feature, so the bun / `package.json` path yields `{}` too, exactly as
 	 * `importerVersions` does.
 	 */
-	readonly hookReplays: () => Effect.Effect<Readonly<Record<string, HookReplay>>, CatalogAssemblyFailure>;
+	readonly hookReplays: Effect.Effect<Readonly<Record<string, HookReplay>>, CatalogAssemblyFailure>;
 	/**
 	 * Discard the memoized assembly so the **next** read re-assembles — the same
 	 * single read and hook replay as the first, over the workspace as it stands
@@ -540,7 +540,7 @@ export interface WorkspaceCatalogsShape {
 	 * discard a *successful* assembly that mutation has made stale. Calling it
 	 * before any read is harmless.
 	 */
-	readonly refresh: () => Effect.Effect<void>;
+	readonly refresh: Effect.Effect<void>;
 }
 
 /**
@@ -652,7 +652,7 @@ export class WorkspaceCatalogs extends Context.Service<WorkspaceCatalogs, Worksp
 				// PM-aware: whichever extension (pnpm or bun) the lockfile carries.
 				// Both catalog and importer-version outputs come off this ONE read, the
 				// same "one pass, several outputs" discipline `releaseAgeGate` follows.
-				const lockfileOutputs = yield* lockfiles.read().pipe(
+				const lockfileOutputs = yield* lockfiles.read.pipe(
 					Effect.map((lockfile) => ({
 						catalogs: CatalogSet.fromLockfile(lockfile),
 						importerVersions: importerVersionsOf(lockfile),
@@ -772,30 +772,30 @@ export class WorkspaceCatalogs extends Context.Service<WorkspaceCatalogs, Worksp
 			const memo = Effect.onExit(resolveOnce, (exit) => (Exit.isSuccess(exit) ? Effect.void : invalidate));
 
 			return {
-				set: Effect.fn("WorkspaceCatalogs.set")(function* () {
+				set: Effect.suspend(Effect.fn("WorkspaceCatalogs.set")(function* () {
 					return (yield* memo).catalogs;
-				}),
+				})),
 				resolveSpecifier: Effect.fn("WorkspaceCatalogs.resolveSpecifier")(function* (
 					dependency: string,
 					specifier: string,
 				) {
 					return (yield* memo).catalogs.resolveSpecifier(dependency, specifier);
 				}),
-				peerDependencyRules: Effect.fn("WorkspaceCatalogs.peerDependencyRules")(function* () {
+				peerDependencyRules: Effect.suspend(Effect.fn("WorkspaceCatalogs.peerDependencyRules")(function* () {
 					return (yield* memo).peerDependencyRules;
-				}),
-				releaseAgeGate: Effect.fn("WorkspaceCatalogs.releaseAgeGate")(function* () {
+				})),
+				releaseAgeGate: Effect.suspend(Effect.fn("WorkspaceCatalogs.releaseAgeGate")(function* () {
 					return (yield* memo).releaseAgeGate;
-				}),
-				importerVersions: Effect.fn("WorkspaceCatalogs.importerVersions")(function* () {
+				})),
+				importerVersions: Effect.suspend(Effect.fn("WorkspaceCatalogs.importerVersions")(function* () {
 					return (yield* memo).importerVersions;
-				}),
-				hookReplays: Effect.fn("WorkspaceCatalogs.hookReplays")(function* () {
+				})),
+				hookReplays: Effect.suspend(Effect.fn("WorkspaceCatalogs.hookReplays")(function* () {
 					return (yield* memo).hookReplays;
-				}),
+				})),
 				// Infallible bookkeeping, not a fallible boundary — no span. The next
 				// read after this runs the full assembly again.
-				refresh: () => invalidate,
+				refresh: Effect.suspend(() => invalidate),
 			};
 		});
 
@@ -913,7 +913,7 @@ export class WorkspaceCatalogs extends Context.Service<WorkspaceCatalogs, Worksp
 	 * import { Effect } from "effect";
 	 *
 	 * const double = WorkspaceCatalogs.makeTest({
-	 *   set: () => Effect.succeed(CatalogSet.fromCatalogs({ default: { effect: "4.0.0" } })),
+	 *   set: Effect.succeed(CatalogSet.fromCatalogs({ default: { effect: "4.0.0" } })),
 	 * });
 	 * // `resolveSpecifier` now answers consistently from that set.
 	 * ```
@@ -921,17 +921,17 @@ export class WorkspaceCatalogs extends Context.Service<WorkspaceCatalogs, Worksp
 	static readonly makeTest = (overrides: Partial<WorkspaceCatalogsShape> = {}): WorkspaceCatalogsShape => {
 		const set = overrides.set;
 		return {
-			set: () => unstubbed("set"),
+			set: Effect.suspend(() => unstubbed("set")),
 			resolveSpecifier:
 				set !== undefined
 					? (dependency: string, specifier: string) =>
-							Effect.map(set(), (catalogs) => catalogs.resolveSpecifier(dependency, specifier))
+							Effect.map(set, (catalogs) => catalogs.resolveSpecifier(dependency, specifier))
 					: () => unstubbed("resolveSpecifier"),
-			peerDependencyRules: () => unstubbed("peerDependencyRules"),
-			releaseAgeGate: () => unstubbed("releaseAgeGate"),
-			importerVersions: () => unstubbed("importerVersions"),
-			hookReplays: () => unstubbed("hookReplays"),
-			refresh: () => Effect.void,
+			peerDependencyRules: Effect.suspend(() => unstubbed("peerDependencyRules")),
+			releaseAgeGate: Effect.suspend(() => unstubbed("releaseAgeGate")),
+			importerVersions: Effect.suspend(() => unstubbed("importerVersions")),
+			hookReplays: Effect.suspend(() => unstubbed("hookReplays")),
+			refresh: Effect.suspend(() => Effect.void),
 			...overrides,
 		};
 	};
@@ -951,7 +951,7 @@ export class WorkspaceCatalogs extends Context.Service<WorkspaceCatalogs, Worksp
 	 * import { Effect } from "effect";
 	 *
 	 * const TestCatalogs = WorkspaceCatalogs.layerTest({
-	 *   set: () => Effect.succeed(CatalogSet.empty()),
+	 *   set: Effect.succeed(CatalogSet.empty()),
 	 * });
 	 * // program.pipe(Effect.provide(TestCatalogs))
 	 * ```
@@ -976,7 +976,7 @@ export class WorkspaceCatalogs extends Context.Service<WorkspaceCatalogs, Worksp
 		Effect.gen(function* () {
 			const catalogs = yield* WorkspaceCatalogs;
 			return {
-				rangeOf: Effect.fn("CatalogResolver.rangeOf")((packageName: string, catalog: Option.Option<string>) => catalogs.set().pipe(
+				rangeOf: Effect.fn("CatalogResolver.rangeOf")((packageName: string, catalog: Option.Option<string>) => catalogs.set.pipe(
 						Effect.map((set) => set.rangeOf(packageName, catalog)),
 						Effect.catchTag("WorkspaceRootNotFoundError", (cause) =>
 							Effect.fail(

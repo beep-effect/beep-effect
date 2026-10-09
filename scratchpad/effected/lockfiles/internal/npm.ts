@@ -146,6 +146,8 @@ const entrySections = (entry: NpmPackageEntryType | undefined) =>
 export const parseNpm = (content: string): Effect.Effect<LockfileFields, ParseFailure> =>
 	Effect.gen(function* () {
 		const raw = yield* Effect.try({
+			// Syntax failures retain the original native throwable; Schema JSON decoding discards its identity and details.
+			// @effect-diagnostics-next-line preferSchemaOverJson:off
 			try: () => JSON.parse(content) as unknown,
 			catch: syntaxFailure,
 		});

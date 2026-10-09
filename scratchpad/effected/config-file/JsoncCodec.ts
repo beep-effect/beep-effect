@@ -25,6 +25,8 @@ export const JsoncCodec: ConfigCodec = {
 		),
 	stringify: (value) =>
 		Effect.try({
+			// The codec preserves native TypeError causes and JSON.stringify returning undefined; Schema encoding changes both.
+			// @effect-diagnostics-next-line preferSchemaOverJson:off
 			try: () => JSON.stringify(value, null, 2),
 			catch: (cause) => ConfigCodecError.make({ codec: "jsonc", operation: "stringify", cause }),
 		}),

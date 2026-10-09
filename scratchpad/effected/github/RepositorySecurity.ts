@@ -12,17 +12,17 @@ import { Repo } from "./Repo.ts";
  */
 export interface RepositorySecurityShape {
   /** Whether Dependabot vulnerability alerts are on. */
-  readonly vulnerabilityAlerts: () => Effect.Effect<boolean, GitHubError, Repo>;
+  readonly vulnerabilityAlerts: Effect.Effect<boolean, GitHubError, Repo>;
   /** Turn Dependabot vulnerability alerts on or off. */
   readonly setVulnerabilityAlerts: (enabled: boolean) => Effect.Effect<void, GitHubError, Repo>;
 
   /** Whether Dependabot security pull requests are on. */
-  readonly automatedSecurityFixes: () => Effect.Effect<boolean, GitHubError, Repo>;
+  readonly automatedSecurityFixes: Effect.Effect<boolean, GitHubError, Repo>;
   /** Turn Dependabot security pull requests on or off. */
   readonly setAutomatedSecurityFixes: (enabled: boolean) => Effect.Effect<void, GitHubError, Repo>;
 
   /** Whether the private vulnerability reporting inbox is on. */
-  readonly privateVulnerabilityReporting: () => Effect.Effect<boolean, GitHubError, Repo>;
+  readonly privateVulnerabilityReporting: Effect.Effect<boolean, GitHubError, Repo>;
   /** Turn the private vulnerability reporting inbox on or off. */
   readonly setPrivateVulnerabilityReporting: (enabled: boolean) => Effect.Effect<void, GitHubError, Repo>;
 }
@@ -69,7 +69,7 @@ interface EnabledFlag {
  *   const security = yield* RepositorySecurity;
  *   yield* security.setVulnerabilityAlerts(true);
  *   yield* security.setPrivateVulnerabilityReporting(true);
- *   return yield* security.vulnerabilityAlerts(); // true
+ *   return yield* security.vulnerabilityAlerts; // true
  * });
  * ```
  *
@@ -93,12 +93,12 @@ export class RepositorySecurity extends Context.Service<RepositorySecurity, Repo
 
   /** An in-memory double; unstubbed members die naming themselves. */
   static readonly makeTest = (overrides: Partial<RepositorySecurityShape> = {}): RepositorySecurityShape => ({
-    vulnerabilityAlerts: overrides.vulnerabilityAlerts ?? (() => unstubbed("vulnerabilityAlerts")),
+    vulnerabilityAlerts: overrides.vulnerabilityAlerts ?? (Effect.suspend(() => unstubbed("vulnerabilityAlerts"))),
     setVulnerabilityAlerts: overrides.setVulnerabilityAlerts ?? (() => unstubbed("setVulnerabilityAlerts")),
-    automatedSecurityFixes: overrides.automatedSecurityFixes ?? (() => unstubbed("automatedSecurityFixes")),
+    automatedSecurityFixes: overrides.automatedSecurityFixes ?? (Effect.suspend(() => unstubbed("automatedSecurityFixes"))),
     setAutomatedSecurityFixes: overrides.setAutomatedSecurityFixes ?? (() => unstubbed("setAutomatedSecurityFixes")),
     privateVulnerabilityReporting:
-      overrides.privateVulnerabilityReporting ?? (() => unstubbed("privateVulnerabilityReporting")),
+      overrides.privateVulnerabilityReporting ?? (Effect.suspend(() => unstubbed("privateVulnerabilityReporting"))),
     setPrivateVulnerabilityReporting:
       overrides.setPrivateVulnerabilityReporting ?? (() => unstubbed("setPrivateVulnerabilityReporting")),
   });
@@ -113,7 +113,7 @@ const unstubbed = (member: string): never => {
 };
 
 const make = (client: GitHubClient["Service"]): RepositorySecurityShape => {
-  const vulnerabilityAlerts = Effect.fn("RepositorySecurity.vulnerabilityAlerts")(function* () {
+  const vulnerabilityAlerts = Effect.suspend(Effect.fn("RepositorySecurity.vulnerabilityAlerts")(function* () {
     const { owner, repo } = yield* Repo;
     yield* Effect.annotateCurrentSpan({ owner, repo });
 
@@ -130,7 +130,7 @@ const make = (client: GitHubClient["Service"]): RepositorySecurityShape => {
         () => Effect.succeed(false),
       ),
     );
-  });
+  }));
 
   const setVulnerabilityAlerts = Effect.fn("RepositorySecurity.setVulnerabilityAlerts")(function* (enabled: boolean) {
     const { owner, repo } = yield* Repo;
@@ -145,7 +145,7 @@ const make = (client: GitHubClient["Service"]): RepositorySecurityShape => {
     });
   });
 
-  const automatedSecurityFixes = Effect.fn("RepositorySecurity.automatedSecurityFixes")(function* () {
+  const automatedSecurityFixes = Effect.suspend(Effect.fn("RepositorySecurity.automatedSecurityFixes")(function* () {
     const { owner, repo } = yield* Repo;
     yield* Effect.annotateCurrentSpan({ owner, repo });
 
@@ -154,7 +154,7 @@ const make = (client: GitHubClient["Service"]): RepositorySecurityShape => {
       repo,
     });
     return Boolean((data as EnabledFlag).enabled);
-  });
+  }));
 
   const setAutomatedSecurityFixes = Effect.fn("RepositorySecurity.setAutomatedSecurityFixes")(function* (
     enabled: boolean,
@@ -171,7 +171,7 @@ const make = (client: GitHubClient["Service"]): RepositorySecurityShape => {
     });
   });
 
-  const privateVulnerabilityReporting = Effect.fn("RepositorySecurity.privateVulnerabilityReporting")(function* () {
+  const privateVulnerabilityReporting = Effect.suspend(Effect.fn("RepositorySecurity.privateVulnerabilityReporting")(function* () {
     const { owner, repo } = yield* Repo;
     yield* Effect.annotateCurrentSpan({ owner, repo });
 
@@ -180,7 +180,7 @@ const make = (client: GitHubClient["Service"]): RepositorySecurityShape => {
       repo,
     });
     return Boolean((data as EnabledFlag).enabled);
-  });
+  }));
 
   const setPrivateVulnerabilityReporting = Effect.fn("RepositorySecurity.setPrivateVulnerabilityReporting")(function* (
     enabled: boolean,

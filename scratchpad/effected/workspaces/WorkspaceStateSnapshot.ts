@@ -68,7 +68,7 @@ export class PackageStateSnapshot extends Schema.Class<PackageStateSnapshot>("Pa
 	 * @remarks
 	 * Optional exactly as `WorkspacePackage.version` is: a version-less member is
 	 * an ordinary pnpm shape. Both capture paths — `WorkspaceSnapshots.at(ref)`
-	 * and `WorkspaceSnapshots.worktree()` — omit the key for such a member, so
+	 * and `WorkspaceSnapshots.worktree` — omit the key for such a member, so
 	 * the two sides of a diff agree without a placeholder. Never `""`: `make`
 	 * rejects it, and a stored `""` decodes to the absent key.
 	 *
@@ -381,7 +381,7 @@ export class WorkspaceStateSnapshot extends Schema.Class<WorkspaceStateSnapshot>
 	 *   const catalogs = yield* WorkspaceCatalogs;
 	 *   // The live set includes hook-injected catalogs under a config-dependency
 	 *   // layer; the ref's own set never can.
-	 *   const live = yield* catalogs.set();
+	 *   const live = yield* catalogs.set;
 	 *   const before = (yield* snapshots.at("origin/main")).withSeededCatalogs(live);
 	 *   return before.resolve("effect", "catalog:");
 	 * });
@@ -451,7 +451,7 @@ export class WorkspaceStateSnapshot extends Schema.Class<WorkspaceStateSnapshot>
 	 *   const snapshots = yield* WorkspaceSnapshots;
 	 *   const [before, after] = WorkspaceStateSnapshot.crossSeed(
 	 *     yield* snapshots.at("origin/main"),
-	 *     yield* snapshots.worktree(),
+	 *     yield* snapshots.worktree,
 	 *   );
 	 *   return { before: before.resolve("effect", "catalog:"), after: after.resolve("effect", "catalog:") };
 	 * });

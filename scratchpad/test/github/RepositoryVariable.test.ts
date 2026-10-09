@@ -96,7 +96,7 @@ describe("RepositoryVariable.list and delete", () => {
 	it.effect("list carries the VALUE, not just the name", () =>
 		Effect.gen(function* () {
 			const { value } = yield* run(
-				Effect.flatMap(RepositoryVariable, (v) => v.list()),
+				Effect.flatMap(RepositoryVariable, (v) => v.list),
 				{},
 				{
 					"GET /repos/{owner}/{repo}/actions/variables": [
@@ -139,7 +139,7 @@ describe("RepositoryVariable pagination", () => {
 			// 30-item page is a genuine two-page read.
 			const many = Array.from({ length: 60 }, (_, i) => ({ name: `VAR_${i}`, value: String(i) }));
 			const { value } = yield* run(
-				Effect.flatMap(RepositoryVariable, (v) => v.list()),
+				Effect.flatMap(RepositoryVariable, (v) => v.list),
 				{},
 				{ "GET /repos/{owner}/{repo}/actions/variables": many },
 			);

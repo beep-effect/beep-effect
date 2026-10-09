@@ -788,7 +788,7 @@ const planClosure = Effect.fn("planClosure")(function* (carrier: string, options
 		const path = yield* Path.Path;
 		const discovery = yield* WorkspaceDiscovery;
 		const discoveryFailed = (cause: unknown) => failure("Discovery", "workspace discovery failed", { cause });
-		const packages = yield* discovery.listPackages().pipe(Effect.mapError(discoveryFailed));
+		const packages = yield* discovery.listPackages.pipe(Effect.mapError(discoveryFailed));
 		const closure = closureOf(packages, carrier, options.closure ?? "auto");
 		if (Result.isFailure(closure)) {
 			return yield* failure("UnknownPackage", `${closure.failure} is not a package of this workspace`, {
@@ -801,7 +801,7 @@ const planClosure = Effect.fn("planClosure")(function* (carrier: string, options
 		);
 		// The root is read only when something needs it: a double that answers only listPackages still plans.
 		const needsRoot = options.workspaceOverrides === true || requested.some(([, spec]) => !path.isAbsolute(spec));
-		const root = needsRoot ? (yield* discovery.info().pipe(Effect.mapError(discoveryFailed))).root : "/";
+		const root = needsRoot ? (yield* discovery.info.pipe(Effect.mapError(discoveryFailed))).root : "/";
 		const wanted = new Map<string, string>();
 		if (options.workspaceOverrides === true) {
 			const file = path.join(root, "pnpm-workspace.yaml");

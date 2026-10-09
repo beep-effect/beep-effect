@@ -16,6 +16,8 @@ const DEFAULT_FALSY = new Set(["0", "false", "off", "no"]);
  * @param value - The env-var value (commonly `process.env.SOMETHING`).
  * @param spec - Which semantics to apply. Default: "default".
  */
+// A single string can be the env value or the optional spec, so the two call forms are ambiguous.
+// @effect-diagnostics-next-line missingPipeableSignature:off
 export const envIsTruthy = (value: string | undefined, spec: TruthySpec = "default"): boolean => {
 	if (value === undefined || value === "") return false;
 	if (spec === "no-color") return true;

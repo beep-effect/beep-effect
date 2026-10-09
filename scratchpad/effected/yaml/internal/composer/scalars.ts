@@ -104,6 +104,8 @@ function resolveTaggedScalar(rawValue: string, tag: string): unknown {
 	}
 }
 
+// Scalar styles and raw values are strings, so optional tag and state make the two call forms ambiguous.
+// @effect-diagnostics-next-line missingPipeableSignature:off
 export function resolveScalar(rawValue: string, style: ScalarStyle, tag?: string, state?: ComposerState): unknown {
 	if ((tag !== undefined && tag !== "")) {
 		const resolvedTag = (state !== undefined) ? resolveTagHandle(tag, state) : tag;

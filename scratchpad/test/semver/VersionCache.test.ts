@@ -22,7 +22,7 @@ layer(VersionCache.layer)("VersionCache", (it) => {
 					SemVer.of(1, 5, 0),
 					SemVer.of(1, 5, 0, [], ["build"]),
 				]);
-				const versions = yield* cache.versions();
+				const versions = yield* cache.versions;
 				assert.deepStrictEqual(versions.map(String), ["1.0.0", "1.5.0", "2.0.0"]);
 			}),
 		);
@@ -33,7 +33,7 @@ layer(VersionCache.layer)("VersionCache", (it) => {
 				yield* cache.load([SemVer.of(1, 0, 0), SemVer.of(2, 0, 0)]);
 				yield* cache.add(SemVer.of(1, 5, 0));
 				yield* cache.add(SemVer.of(1, 5, 0, [], ["other"]));
-				assert.deepStrictEqual((yield* cache.versions()).map(String), ["1.0.0", "1.5.0", "2.0.0"]);
+				assert.deepStrictEqual((yield* cache.versions).map(String), ["1.0.0", "1.5.0", "2.0.0"]);
 			}),
 		);
 
@@ -42,7 +42,7 @@ layer(VersionCache.layer)("VersionCache", (it) => {
 				const cache = yield* VersionCache;
 				yield* cache.load([SemVer.of(1, 0, 0), SemVer.of(1, 5, 0)]);
 				yield* cache.remove(SemVer.of(1, 5, 0, [], ["build"]));
-				assert.deepStrictEqual((yield* cache.versions()).map(String), ["1.0.0"]);
+				assert.deepStrictEqual((yield* cache.versions).map(String), ["1.0.0"]);
 			}),
 		);
 
@@ -50,7 +50,7 @@ layer(VersionCache.layer)("VersionCache", (it) => {
 			Effect.gen(function* () {
 				const cache = yield* VersionCache;
 				yield* cache.load([]);
-				assert.deepStrictEqual(yield* cache.versions(), []);
+				assert.deepStrictEqual(yield* cache.versions, []);
 			}),
 		);
 
@@ -58,10 +58,10 @@ layer(VersionCache.layer)("VersionCache", (it) => {
 			Effect.gen(function* () {
 				const cache = yield* VersionCache;
 				yield* cache.load([]);
-				const error = yield* Effect.flip(cache.latest());
+				const error = yield* Effect.flip(cache.latest);
 				assert.instanceOf(error, EmptyCacheError);
 				assert.strictEqual(error.message, "Version cache is empty");
-				const error2 = yield* Effect.flip(cache.oldest());
+				const error2 = yield* Effect.flip(cache.oldest);
 				assert.strictEqual(error2._tag, "EmptyCacheError");
 			}),
 		);
@@ -70,8 +70,8 @@ layer(VersionCache.layer)("VersionCache", (it) => {
 			Effect.gen(function* () {
 				const cache = yield* VersionCache;
 				yield* cache.load([SemVer.of(1, 0, 0), SemVer.of(3, 0, 0), SemVer.of(2, 0, 0)]);
-				assert.strictEqual(String(yield* cache.latest()), "3.0.0");
-				assert.strictEqual(String(yield* cache.oldest()), "1.0.0");
+				assert.strictEqual(String(yield* cache.latest), "3.0.0");
+				assert.strictEqual(String(yield* cache.oldest), "1.0.0");
 			}),
 		);
 	});

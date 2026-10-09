@@ -1,3 +1,5 @@
+// Ink requires Node stream events, raw-mode methods and write-callback barriers in these terminal fakes.
+// @effect-diagnostics nodeBuiltinImport:skip-file
 import { PassThrough, Writable } from "node:stream";
 import type { UiStreamsShape } from "../UiStreams.ts";
 

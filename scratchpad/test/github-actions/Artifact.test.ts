@@ -134,7 +134,7 @@ describe("Artifact", () => {
 		Effect.gen(function* () {
 			const { transfer } = fileTransfer();
 			const { calls, fetch } = twirpFetch({ ListArtifacts: () => json({ artifacts: [] }) });
-			yield* Effect.flatMap(Artifact, (artifacts) => artifacts.list()).pipe(Effect.provide(live(fetch, transfer)));
+			yield* Effect.flatMap(Artifact, (artifacts) => artifacts.list).pipe(Effect.provide(live(fetch, transfer)));
 			// Unscoped, the backend answers about a different job — or refuses. The
 			// ids are not configuration: they are inside the credential.
 			assert.strictEqual(calls[0]?.body.workflowRunBackendId, "run-1");
@@ -147,7 +147,7 @@ describe("Artifact", () => {
 			const { transfer } = fileTransfer();
 			const { calls, fetch } = twirpFetch({});
 			const error = yield* Effect.flip(
-				Effect.flatMap(Artifact, (artifacts) => artifacts.list()).pipe(
+				Effect.flatMap(Artifact, (artifacts) => artifacts.list).pipe(
 					Effect.provide(live(fetch, transfer, { ACTIONS_RUNTIME_TOKEN: runtimeToken("Actions.Uploads:x") })),
 				),
 			);
@@ -170,7 +170,7 @@ describe("Artifact", () => {
 						],
 					}),
 			});
-			const items = yield* Effect.flatMap(Artifact, (artifacts) => artifacts.list()).pipe(
+			const items = yield* Effect.flatMap(Artifact, (artifacts) => artifacts.list).pipe(
 				Effect.provide(live(fetch, transfer)),
 			);
 			assert.deepStrictEqual(
@@ -424,7 +424,7 @@ describe("Artifact", () => {
 			const { transfer } = fileTransfer();
 			const { fetch } = twirpFetch({});
 			const error = yield* Effect.flip(
-				Effect.flatMap(Artifact, (artifacts) => artifacts.list()).pipe(
+				Effect.flatMap(Artifact, (artifacts) => artifacts.list).pipe(
 					Effect.provide(live(fetch, transfer, { ACTIONS_RESULTS_URL: "" })),
 				),
 			);
@@ -436,7 +436,7 @@ describe("Artifact", () => {
 	describe("test double", () => {
 		it.effect("an unstubbed member dies rather than reporting an empty run", () =>
 			Effect.gen(function* () {
-				const exit = yield* Effect.exit(Effect.flatMap(Artifact, (artifacts) => artifacts.list()));
+				const exit = yield* Effect.exit(Effect.flatMap(Artifact, (artifacts) => artifacts.list));
 				assert.strictEqual(exit._tag, "Failure");
 			}).pipe(Effect.provide(Artifact.layerTest())),
 		);

@@ -1,3 +1,5 @@
+// This synchronous Node binding preserves native filesystem exceptions and the running platform path semantics.
+// @effect-diagnostics nodeBuiltinImport:skip-file
 /**
  * The Node.js binding for the sync entry points — ready-made `SyncFileSystem`
  * and `SyncPath` operations over `node:fs` / `node:path`, so adopting

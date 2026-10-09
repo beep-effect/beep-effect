@@ -90,15 +90,18 @@ export const lazyView = <S>(
 	return Object.assign(render, { [LOAD]: ensure });
 };
 
+/** A typed boundary around the loader's original rejection, retained for rendering unchanged. */
+class LazyViewLoadError extends Data.TaggedError("LazyViewLoadError")<{ readonly cause: unknown }> {}
+
 /**
  * Load a lazy view's module before its render is first called; nothing for a render that is not lazy. Fails with what
  * the import failed with.
  *
  * @internal
  */
-export const loadView = (render: unknown): Effect.Effect<void, unknown> => {
+export const loadView = (render: unknown): Effect.Effect<void, LazyViewLoadError> => {
 	const ensure = (render as Lazy)[LOAD];
 	return ensure === undefined
 		? Effect.void
-		: Effect.asVoid(Effect.tryPromise({ try: ensure, catch: (error) => error }));
+		: Effect.asVoid(Effect.tryPromise({ try: ensure, catch: (cause) => new LazyViewLoadError({ cause }) }));
 };

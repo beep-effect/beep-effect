@@ -145,7 +145,7 @@ export interface WorkspaceSnapshotsShape {
 	 */
 	readonly at: (ref: string) => Effect.Effect<WorkspaceStateSnapshot, WorkspaceSnapshotAtFailure>;
 	/** The live workspace state, over discovery and catalog assembly. Uncached. */
-	readonly worktree: () => Effect.Effect<WorkspaceStateSnapshot, WorkspaceSnapshotWorktreeFailure>;
+	readonly worktree: Effect.Effect<WorkspaceStateSnapshot, WorkspaceSnapshotWorktreeFailure>;
 }
 
 /**
@@ -264,7 +264,7 @@ const unstubbed = (method: string): Effect.Effect<never> =>
  * const program = Effect.gen(function* () {
  *   const snapshots = yield* WorkspaceSnapshots;
  *   const before = yield* snapshots.at("origin/main");
- *   const after = yield* snapshots.worktree();
+ *   const after = yield* snapshots.worktree;
  *   return { before: before.versions, after: after.versions };
  * });
  * ```
@@ -501,18 +501,18 @@ export class WorkspaceSnapshots extends Context.Service<WorkspaceSnapshots, Work
 				return yield* memo;
 			});
 
-			const worktree = Effect.fn("WorkspaceSnapshots.worktree")(function* () {
+			const worktree = Effect.suspend(Effect.fn("WorkspaceSnapshots.worktree")(function* () {
 				// The ONE shared read path: discovery's memo and the catalog memo, no
 				// second manifest/lockfile read.
-				const packages = yield* discovery.listPackages();
-				const catalogs = yield* catalogsService.set();
+				const packages = yield* discovery.listPackages;
+				const catalogs = yield* catalogsService.set;
 				// Off the SAME memoized assemble pass as `set()` — no second lockfile
 				// read. Symmetry with `at(ref)` is the point: both sides of a diff must
 				// answer an unresolvable `catalog:` specifier the same way, or the
 				// fallback would manufacture a bogus row on every run.
-				const importerVersions = yield* catalogsService.importerVersions();
+				const importerVersions = yield* catalogsService.importerVersions;
 				// Same memo again: which version each config dependency replayed from.
-				const hookReplays = yield* catalogsService.hookReplays();
+				const hookReplays = yield* catalogsService.hookReplays;
 				const snapshotPackages = packages.map((pkg) =>
 					PackageStateSnapshot.make({
 						name: pkg.name,
@@ -535,7 +535,7 @@ export class WorkspaceSnapshots extends Context.Service<WorkspaceSnapshots, Work
 						hookReplays: hookVersionsOf(hookReplays),
 					}),
 				);
-			});
+			}));
 
 			return { at, worktree };
 		});
@@ -592,13 +592,13 @@ export class WorkspaceSnapshots extends Context.Service<WorkspaceSnapshots, Work
 	 * });
 	 * const double = WorkspaceSnapshots.makeTest({
 	 *   at: () => Effect.succeed(empty),
-	 *   worktree: () => Effect.succeed(empty),
+	 *   worktree: Effect.succeed(empty),
 	 * });
 	 * ```
 	 */
 	static readonly makeTest = (overrides: Partial<WorkspaceSnapshotsShape> = {}): WorkspaceSnapshotsShape => ({
 		at: () => unstubbed("at"),
-		worktree: () => unstubbed("worktree"),
+		worktree: Effect.suspend(() => unstubbed("worktree")),
 		...overrides,
 	});
 
@@ -617,7 +617,7 @@ export class WorkspaceSnapshots extends Context.Service<WorkspaceSnapshots, Work
 	 * import { Effect } from "effect";
 	 *
 	 * const TestSnapshots = WorkspaceSnapshots.layerTest({
-	 *   worktree: () =>
+	 *   worktree:
 	 *     Effect.succeed(
 	 *       WorkspaceStateSnapshot.make({ packages: [], catalogs: CatalogSet.empty(), importerVersions: {} }),
 	 *     ),

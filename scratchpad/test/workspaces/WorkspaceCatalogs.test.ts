@@ -167,7 +167,7 @@ describe("WorkspaceCatalogs — assembly precedence", () => {
 		it.effect("the inline pnpm-workspace.yaml catalog beats the lockfile's record", () =>
 			Effect.gen(function* () {
 				const catalogs = yield* WorkspaceCatalogs;
-				const set = yield* catalogs.set();
+				const set = yield* catalogs.set;
 				assert.deepStrictEqual(set.rangeOf("effect", Option.none()), Option.some("^4.0.0"));
 			}),
 		);
@@ -175,7 +175,7 @@ describe("WorkspaceCatalogs — assembly precedence", () => {
 		it.effect("a lockfile-only entry survives the merge", () =>
 			Effect.gen(function* () {
 				const catalogs = yield* WorkspaceCatalogs;
-				const set = yield* catalogs.set();
+				const set = yield* catalogs.set;
 				assert.deepStrictEqual(set.rangeOf("react", Option.none()), Option.some("^18.0.0"));
 			}),
 		);
@@ -183,7 +183,7 @@ describe("WorkspaceCatalogs — assembly precedence", () => {
 		it.effect("named inline catalogs assemble alongside the default one", () =>
 			Effect.gen(function* () {
 				const catalogs = yield* WorkspaceCatalogs;
-				const set = yield* catalogs.set();
+				const set = yield* catalogs.set;
 				assert.deepStrictEqual(set.rangeOf("typescript", Option.some("build")), Option.some("^6.0.0"));
 			}),
 		);
@@ -276,7 +276,7 @@ describe("WorkspaceCatalogs — a workspace with no pnpm-workspace.yaml", () => 
 		it.effect("assembles to the empty set rather than failing", () =>
 			Effect.gen(function* () {
 				const catalogs = yield* WorkspaceCatalogs;
-				const set = yield* catalogs.set();
+				const set = yield* catalogs.set;
 				assert.isTrue(set.isEmpty);
 			}),
 		);
@@ -293,7 +293,7 @@ describe("WorkspaceCatalogs — a workspace with no pnpm-workspace.yaml", () => 
 		it.effect("reads the npm lockfile through @effected/lockfiles", () =>
 			Effect.gen(function* () {
 				const reader = yield* LockfileReader;
-				const lockfile = yield* reader.read();
+				const lockfile = yield* reader.read;
 				assert.strictEqual(lockfile.format, "npm");
 			}),
 		);
@@ -301,7 +301,7 @@ describe("WorkspaceCatalogs — a workspace with no pnpm-workspace.yaml", () => 
 		it.effect("discovery still works without any catalogs", () =>
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
-				const packages = yield* discovery.listPackages();
+				const packages = yield* discovery.listPackages;
 				assert.deepStrictEqual(
 					packages.map((pkg) => pkg.name),
 					["root", "@x/a"],
@@ -335,7 +335,7 @@ describe("WorkspaceCatalogs — a presence-probe failure is not silent absence",
 		it.effect("a PermissionDenied on the presence probe fails typed as CatalogAssemblyError", () =>
 			Effect.gen(function* () {
 				const catalogs = yield* WorkspaceCatalogs;
-				const error = yield* Effect.flip(catalogs.set());
+				const error = yield* Effect.flip(catalogs.set);
 				assert.instanceOf(error, CatalogAssemblyError);
 				assert.strictEqual(error.source, "manifest");
 			}),
@@ -367,14 +367,14 @@ describe("WorkspaceCatalogs — a bun/package.json presence-probe failure is not
 		Layer.provide(Layer.succeed(WorkspaceRoot, { find: Effect.fn("WorkspaceRoot.find")(() => Effect.succeed("/repo")) })),
 		Layer.provide(
 			Layer.mock(LockfileReader, {
-				read: () =>
+				read: Effect.suspend(() =>
 					Effect.fail(
 						LockfileReadError.make({
 							lockfilePath: "/repo/pnpm-lock.yaml",
 							format: "pnpm",
 							cause: new Error("no lockfile"),
 						}),
-					),
+					)),
 			}),
 		),
 		Layer.provideMerge(platform(bunProbeFailTree, { unreadableExists: new Set(["/repo/package.json"]) })),
@@ -383,7 +383,7 @@ describe("WorkspaceCatalogs — a bun/package.json presence-probe failure is not
 		it.effect("a PermissionDenied on the package.json presence probe fails typed as CatalogAssemblyError", () =>
 			Effect.gen(function* () {
 				const catalogs = yield* WorkspaceCatalogs;
-				const error = yield* Effect.flip(catalogs.set());
+				const error = yield* Effect.flip(catalogs.set);
 				assert.instanceOf(error, CatalogAssemblyError);
 				assert.strictEqual(error.source, "manifest");
 				assert.strictEqual(error.path, "/repo/package.json");
@@ -420,7 +420,7 @@ describe("WorkspaceCatalogs — the pnpm inline path hard-fails, like the bun pa
 		it.effect("the default catalog declared twice (top-level catalog + catalogs.default) fails typed", () =>
 			Effect.gen(function* () {
 				const catalogs = yield* WorkspaceCatalogs;
-				const error = yield* Effect.flip(catalogs.set());
+				const error = yield* Effect.flip(catalogs.set);
 				assert.instanceOf(error, CatalogAssemblyError);
 				assert.strictEqual(error.source, "catalog");
 				assert.strictEqual(error.path, "default");
@@ -432,7 +432,7 @@ describe("WorkspaceCatalogs — the pnpm inline path hard-fails, like the bun pa
 		it.effect("a malformed catalog block (a non-string entry) fails typed rather than reading as empty", () =>
 			Effect.gen(function* () {
 				const catalogs = yield* WorkspaceCatalogs;
-				const error = yield* Effect.flip(catalogs.set());
+				const error = yield* Effect.flip(catalogs.set);
 				assert.instanceOf(error, CatalogAssemblyError);
 				assert.strictEqual(error.source, "catalog");
 				assert.strictEqual(error.path, "catalog");
@@ -469,7 +469,7 @@ describe("WorkspaceCatalogs.releaseAgeGate — the inline pnpm-workspace.yaml so
 		it.effect("surfaces the inline minimumReleaseAge and minimumReleaseAgeExclude", () =>
 			Effect.gen(function* () {
 				const catalogs = yield* WorkspaceCatalogs;
-				const gate = yield* catalogs.releaseAgeGate();
+				const gate = yield* catalogs.releaseAgeGate;
 				assert.strictEqual(gate.ageMinutes, 1440);
 				assert.deepStrictEqual([...gate.exclude], ["@x/*", "typescript"]);
 			}),
@@ -480,7 +480,7 @@ describe("WorkspaceCatalogs.releaseAgeGate — the inline pnpm-workspace.yaml so
 		it.effect("is the inert zero gate when no release-age keys are declared", () =>
 			Effect.gen(function* () {
 				const catalogs = yield* WorkspaceCatalogs;
-				const gate = yield* catalogs.releaseAgeGate();
+				const gate = yield* catalogs.releaseAgeGate;
 				assert.strictEqual(gate.ageMinutes, 0);
 				assert.deepStrictEqual([...gate.exclude], []);
 			}),
@@ -491,7 +491,7 @@ describe("WorkspaceCatalogs.releaseAgeGate — the inline pnpm-workspace.yaml so
 		it.effect("is the inert zero gate for a workspace with no pnpm-workspace.yaml", () =>
 			Effect.gen(function* () {
 				const catalogs = yield* WorkspaceCatalogs;
-				const gate = yield* catalogs.releaseAgeGate();
+				const gate = yield* catalogs.releaseAgeGate;
 				assert.strictEqual(gate.ageMinutes, 0);
 				assert.deepStrictEqual([...gate.exclude], []);
 			}),
@@ -502,7 +502,7 @@ describe("WorkspaceCatalogs.releaseAgeGate — the inline pnpm-workspace.yaml so
 		it.effect("a malformed inline minimumReleaseAge fails typed as CatalogAssemblyError", () =>
 			Effect.gen(function* () {
 				const catalogs = yield* WorkspaceCatalogs;
-				const error = yield* Effect.flip(catalogs.releaseAgeGate());
+				const error = yield* Effect.flip(catalogs.releaseAgeGate);
 				assert.instanceOf(error, CatalogAssemblyError);
 				assert.strictEqual(error.source, "manifest");
 				assert.strictEqual(error.path, "pnpm-workspace.yaml");
@@ -544,7 +544,7 @@ describe("WorkspaceCatalogs.refresh — the explicit memoization boundary", () =
 				const catalogs = yield* WorkspaceCatalogs;
 				const fs = yield* FileSystem.FileSystem;
 
-				const before = yield* catalogs.peerDependencyRules();
+				const before = yield* catalogs.peerDependencyRules;
 				assert.deepStrictEqual(before.allowedVersions, { "@x/before>effect": "^4.0.0" });
 
 				// The mid-run mutation: what a config-dependency bump rewrites.
@@ -552,14 +552,14 @@ describe("WorkspaceCatalogs.refresh — the explicit memoization boundary", () =
 
 				// Pins the memo: the pre-mutation assembly is STILL served — this is
 				// the assertion that fails if the memo is ever quietly dropped.
-				const pinned = yield* catalogs.peerDependencyRules();
+				const pinned = yield* catalogs.peerDependencyRules;
 				assert.deepStrictEqual(pinned.allowedVersions, { "@x/before>effect": "^4.0.0" });
 
-				yield* catalogs.refresh();
+				yield* catalogs.refresh;
 
 				// The next read re-assembles: same single read + hook replay, now
 				// over the post-mutation workspace.
-				const after = yield* catalogs.peerDependencyRules();
+				const after = yield* catalogs.peerDependencyRules;
 				assert.deepStrictEqual(after.allowedVersions, { "@x/after>effect": "^4.0.0" });
 			}),
 		);
@@ -570,8 +570,8 @@ describe("WorkspaceCatalogs.refresh — the explicit memoization boundary", () =
 		it.effect("refresh() before any read is harmless", () =>
 			Effect.gen(function* () {
 				const catalogs = yield* WorkspaceCatalogs;
-				yield* catalogs.refresh();
-				const rules = yield* catalogs.peerDependencyRules();
+				yield* catalogs.refresh;
+				const rules = yield* catalogs.peerDependencyRules;
 				assert.deepStrictEqual(rules.allowedVersions, { "@x/before>effect": "^4.0.0" });
 			}),
 		);

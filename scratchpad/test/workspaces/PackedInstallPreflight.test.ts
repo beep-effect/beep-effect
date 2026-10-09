@@ -24,7 +24,7 @@ const lib = WorkspacePackage.make({
 	relativePath: "packages/lib",
 	workspaceRoot: "/repo",
 });
-const Discovery = WorkspaceDiscovery.layerTest({ listPackages: () => Effect.succeed([carrier, lib]) });
+const Discovery = WorkspaceDiscovery.layerTest({ listPackages: Effect.suspend(() => Effect.succeed([carrier, lib])) });
 const PROD = "dist/prod/npm/pkg";
 const options = { carrier: "@x/carrier", closure: "auto" } as const;
 

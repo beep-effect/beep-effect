@@ -1,3 +1,5 @@
+// Detached children must outlive the Effect scope and inherit native log descriptors before unref.
+// @effect-diagnostics nodeBuiltinImport:skip-file
 import { spawn as spawnChild } from "node:child_process";
 import { closeSync, openSync } from "node:fs";
 import type { Duration } from "effect";

@@ -63,7 +63,7 @@ export interface CodeScanningShape {
 	 * language list down to what the repository actually contains — GitHub
 	 * rejects a default-setup call naming a language it does not detect.
 	 */
-	readonly languages: () => Effect.Effect<ReadonlyArray<string>, GitHubError, Repo>;
+	readonly languages: Effect.Effect<ReadonlyArray<string>, GitHubError, Repo>;
 }
 
 /**
@@ -95,7 +95,7 @@ export class CodeScanning extends Context.Service<CodeScanning, CodeScanningShap
 	/** An in-memory double; unstubbed members die naming themselves. */
 	static readonly makeTest = (overrides: Partial<CodeScanningShape> = {}): CodeScanningShape => ({
 		configure: overrides.configure ?? (() => unstubbed("configure")),
-		languages: overrides.languages ?? (() => unstubbed("languages")),
+		languages: overrides.languages ?? (Effect.suspend(() => unstubbed("languages"))),
 	});
 
 	/** {@link CodeScanning.makeTest} behind a `Layer`. */
@@ -152,13 +152,13 @@ const make = (client: GitHubClient["Service"]): CodeScanningShape => {
 		} as Rest.Params<"PATCH /repos/{owner}/{repo}/code-scanning/default-setup">);
 	});
 
-	const languages = Effect.fn("CodeScanning.languages")(function* () {
+	const languages = Effect.suspend(Effect.fn("CodeScanning.languages")(function* () {
 		const { owner, repo } = yield* Repo;
 		yield* Effect.annotateCurrentSpan({ owner, repo });
 
 		const detected = yield* client.request("GET /repos/{owner}/{repo}/languages", { owner, repo });
 		return Object.keys(detected);
-	});
+	}));
 
 	return { configure, languages };
 };

@@ -1,3 +1,5 @@
+// Config-dependency replay reads the real Node module store even when the supplied FileSystem is virtual.
+// @effect-diagnostics nodeBuiltinImport:skip-file
 import { dual } from "effect/Function";
 // What the config-dependency ladder (`configDependencyResolution.ts`) and its
 // fetch rung (`configDependencyFetch.ts`) share: the typed `hooks` failure,
@@ -18,6 +20,8 @@ import type { HookReplayContext } from "../ConfigDependencyHooks.ts";
 const JsonValue = Schema.fromJsonString(Schema.Unknown);
 
 /** The typed `hooks`-source failure every rung of the ladder reports through. */
+// A string cause overlaps the path argument, so optional reason makes the two call forms ambiguous.
+// @effect-diagnostics-next-line missingPipeableSignature:off
 export const hooksError = (
 	path: string,
 	cause: unknown,

@@ -1,3 +1,5 @@
+// Config-dependency replay reads the real Node module store even when the supplied FileSystem is virtual.
+// @effect-diagnostics nodeBuiltinImport:skip-file
 import { dual } from "effect/Function";
 // The fetch rung of the config-dependency ladder: when neither
 // `node_modules/.pnpm-config` nor any discovered store holds the version a

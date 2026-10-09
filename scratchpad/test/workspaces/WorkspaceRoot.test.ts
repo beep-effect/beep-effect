@@ -127,8 +127,8 @@ describe("WorkspacePackage.workspaceRoot — carried by discovery", () => {
 		it.effect("every discovered package carries the root the ascent found", () =>
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
-				const packages = yield* discovery.listPackages();
-				const info = yield* discovery.info();
+				const packages = yield* discovery.listPackages;
+				const info = yield* discovery.info;
 
 				// Root package plus three members — a bare loop over an empty array
 				// would pass vacuously.
@@ -142,7 +142,7 @@ describe("WorkspacePackage.workspaceRoot — carried by discovery", () => {
 		it.effect("the root package carries a root equal to its own path", () =>
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
-				const packages = yield* discovery.listPackages();
+				const packages = yield* discovery.listPackages;
 				const root = packages.find((pkg) => pkg.isRootWorkspace);
 				assert.isDefined(root);
 				assert.strictEqual(root?.workspaceRoot, root?.path);

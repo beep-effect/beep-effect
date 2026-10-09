@@ -26,7 +26,7 @@ const lib = WorkspacePackage.make({
 	relativePath: "packages/lib",
 	workspaceRoot: "/repo",
 });
-const Discovery = WorkspaceDiscovery.layerTest({ listPackages: () => Effect.succeed([carrier, lib]) });
+const Discovery = WorkspaceDiscovery.layerTest({ listPackages: Effect.suspend(() => Effect.succeed([carrier, lib])) });
 const ENV = {
 	PATH: "/usr/bin",
 	HOME: "/home/u",
@@ -597,8 +597,8 @@ describe("PackedInstall.run past the pack", () => {
 		});
 	const WithRoot = (root: string) =>
 		WorkspaceDiscovery.layerTest({
-			listPackages: () => Effect.succeed([carrier, lib]),
-			info: () => Effect.succeed(WorkspaceInfo.make({ root, patterns: ["packages/*"] })),
+			listPackages: Effect.suspend(() => Effect.succeed([carrier, lib])),
+			info: Effect.suspend(() => Effect.succeed(WorkspaceInfo.make({ root, patterns: ["packages/*"] }))),
 		});
 	const rootedSuite = (spawner: ScriptedSpawner, seed: MemoryFileSystemSeed, root = "/repo") =>
 		layer(

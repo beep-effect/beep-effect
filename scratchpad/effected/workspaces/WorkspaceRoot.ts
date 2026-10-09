@@ -307,7 +307,7 @@ export class WorkspaceRoot extends Context.Service<WorkspaceRoot, WorkspaceRootS
 	 *
 	 * const TestRoot = WorkspaceRoot.layerTest("/repo");
 	 * const TestDiscovery = WorkspaceDiscovery.layerTest({
-	 *   listPackages: () => Effect.succeed([]),
+	 *   listPackages: Effect.succeed([]),
 	 * });
 	 * // program.pipe(Effect.provide(TestRoot), Effect.provide(TestDiscovery))
 	 * ```

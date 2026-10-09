@@ -355,12 +355,12 @@ describe("Workspaces.layerWithConfigDependenciesSubprocess — releaseAgeGate re
 		);
 		return Effect.gen(function* () {
 			const catalogs = yield* WorkspaceCatalogs;
-			const gate = yield* catalogs.releaseAgeGate();
+			const gate = yield* catalogs.releaseAgeGate;
 			// Inline 720 vs the hook's 1440 → strictest (max) wins: 1440.
 			assert.strictEqual(gate.ageMinutes, 1440);
 			assert.deepStrictEqual([...gate.exclude], ["@scope/b"]);
 			// The inline catalog still assembled through the same pass.
-			const set = yield* catalogs.set();
+			const set = yield* catalogs.set;
 			assert.strictEqual(set.entries.default?.effect, "^4.0.0");
 		}).pipe(Effect.provide(appLayer));
 	});

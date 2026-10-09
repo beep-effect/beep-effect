@@ -177,7 +177,7 @@ describe("WorkspaceLayering.checkWorkspace", () => {
 		pkg("core"),
 		pkg("side", { dependencies: { app: "workspace:^" } }),
 	];
-	layer(WorkspaceDiscovery.layerTest({ listPackages: () => Effect.succeed(PACKAGES) }))((it) => {
+	layer(WorkspaceDiscovery.layerTest({ listPackages: Effect.suspend(() => Effect.succeed(PACKAGES)) }))((it) => {
 		it.effect("checks the discovered packages", () =>
 			Effect.gen(function* () {
 				const policy = LayerPolicy.make({ layers: [["app", "side"], ["core"]], tooling: [], unconstrained: [] });
@@ -209,7 +209,7 @@ describe("WorkspaceLayering: what a policy entry matches", () => {
 		at("@okfit/engine", "packages/engine"),
 		at("@okfit/tool", "tools/tool"),
 	];
-	layer(WorkspaceDiscovery.layerTest({ listPackages: () => Effect.succeed(PACKAGES) }))((it) => {
+	layer(WorkspaceDiscovery.layerTest({ listPackages: Effect.suspend(() => Effect.succeed(PACKAGES)) }))((it) => {
 		it.effect("layers, tooling and unconstrained all classify by name, so the root is matched as okfit", () =>
 			Effect.gen(function* () {
 				const report = yield* WorkspaceLayering.checkWorkspace(

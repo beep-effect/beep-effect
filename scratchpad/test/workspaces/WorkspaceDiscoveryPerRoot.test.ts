@@ -47,7 +47,7 @@ describe("WorkspaceDiscovery.listPackagesIn — a root the layer was not bound t
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
 
-				const primary = yield* discovery.listPackages();
+				const primary = yield* discovery.listPackages;
 				assert.deepStrictEqual(names(primary), ["@x/alpha", "@x/beta", "root"]);
 
 				const worktree = yield* discovery.listPackagesIn("/worktree");
@@ -86,9 +86,9 @@ describe("WorkspaceDiscovery.listPackagesIn — a root the layer was not bound t
 				yield* discovery.listPackagesIn("/worktree");
 				// A per-call root that leaked into the shared memo would make the
 				// host's own workspace change under it between calls.
-				const info = yield* discovery.info();
+				const info = yield* discovery.info;
 				assert.strictEqual(info.root, "/primary");
-				assert.deepStrictEqual(names(yield* discovery.listPackages()), ["@x/alpha", "@x/beta", "root"]);
+				assert.deepStrictEqual(names(yield* discovery.listPackages), ["@x/alpha", "@x/beta", "root"]);
 			}),
 		);
 
@@ -160,7 +160,7 @@ describe("WorkspaceDiscovery.refresh — with per-root memos live", () => {
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
 				const before = yield* discovery.listPackagesIn("/worktree");
-				yield* discovery.refresh();
+				yield* discovery.refresh;
 				const after = yield* discovery.listPackagesIn("/worktree");
 				// A refresh that cleared only the layer-bound memo would leave a
 				// long-lived host serving stale worktree state with no way to reset it.
@@ -201,10 +201,10 @@ describe("WorkspaceDiscovery.refreshIn", () => {
 		it.effect("leaves the layer-bound memo alone", () =>
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
-				const before = yield* discovery.listPackages();
+				const before = yield* discovery.listPackages;
 				yield* discovery.listPackagesIn("/worktree");
 				yield* discovery.refreshIn("/worktree");
-				assert.strictEqual(yield* discovery.listPackages(), before);
+				assert.strictEqual(yield* discovery.listPackages, before);
 			}),
 		);
 
@@ -215,7 +215,7 @@ describe("WorkspaceDiscovery.refreshIn", () => {
 				// ONE service for the whole block, so without this the test only holds
 				// because a sibling happened to end with a refresh — and a reorder or
 				// an inserted test would make it pass vacuously.
-				yield* discovery.refresh();
+				yield* discovery.refresh;
 				// Never discovered, so there is nothing to drop — an ordinary fact,
 				// not an error.
 				yield* discovery.refreshIn("/worktree");
@@ -237,7 +237,7 @@ describe("WorkspaceDiscovery.makeTest — the per-root methods", () => {
 	it.effect("dies unstubbed rather than deriving from listPackages", () =>
 		Effect.gen(function* () {
 			const double = WorkspaceDiscovery.makeTest({
-				listPackages: () => Effect.succeed([]),
+				listPackages: Effect.suspend(() => Effect.succeed([])),
 			});
 			// Deriving would model every root as identical — the exact confusion
 			// `listPackagesIn` exists to remove — so a test that forgets to stub it

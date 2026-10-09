@@ -1,6 +1,6 @@
 import { NodeServices } from "@effect/platform-node";
 import { WorkflowCommand } from "../github-commands/index.ts";
-import { Cause, Console, Effect, Exit, Layer, LogLevel, Option, References, Result } from "effect";
+import { Cause, Console, Context, Effect, Exit, Layer, LogLevel, Option, References, Result } from "effect";
 import type { HttpClient } from "effect/http";
 import { FetchHttpClient } from "effect/http";
 import { ActionEnvironment } from "./ActionEnvironment.ts";
@@ -236,16 +236,17 @@ export class Action {
 		const composed =
 			extra === undefined
 				? ActionRuntime.layer
-				: // Both halves name the same layer value, so the build memoizes it and
-					// the environment snapshot is taken once rather than twice.
-					Layer.mergeAll(ActionRuntime.layer, Layer.provide(extra, ActionRuntime.layer));
+				: Layer.mergeAll(ActionRuntime.layer, Layer.provide(extra, ActionRuntime.layer));
 
 		// Inside the provide, so the level read is the one the composed runtime —
 		// including a caller's `layer` — actually installed.
 		const leveled = options.stepDebugLogLevel === false ? program : withStepDebugLogLevel(program);
 
 		const runnable = Effect.scopedWith((scope) =>
-			Effect.flatMap(Layer.buildWithScope(composed, scope), (context) => Effect.provideContext(leveled, context)),
+			Effect.flatMap(Layer.buildWithScope(composed, scope), (context) =>
+				// This entry point trusts the caller's layer for R; an omitted service still defects at use.
+				Effect.provideContext(leveled, Context.makeUnsafe<ActionServices | R>(context.mapUnsafe)),
+			),
 		).pipe(
 			Effect.exit,
 			Effect.flatMap((exit) =>

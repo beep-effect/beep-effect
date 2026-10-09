@@ -69,7 +69,7 @@ describe("CodeScanning", () => {
 	it.effect("languages returns the names, in GitHub's order", () =>
 		Effect.gen(function* () {
 			const { value, requested } = yield* run(
-				Effect.flatMap(CodeScanning, (cs) => cs.languages()),
+				Effect.flatMap(CodeScanning, (cs) => cs.languages),
 				{ "GET /repos/{owner}/{repo}/languages": { TypeScript: 12000, Go: 300 } },
 			);
 
@@ -83,10 +83,10 @@ describe("CodeScanning", () => {
 			const requested: RecordedCall[] = [];
 			yield* Effect.gen(function* () {
 				const cs = yield* CodeScanning;
-				yield* cs.languages();
+				yield* cs.languages;
 				// The whole reason the coordinate is not captured at layer
 				// construction: this must reach a DIFFERENT repository.
-				yield* cs.languages().pipe(Repo.provide(RepoRef.make({ owner: "other", repo: "thing" })));
+				yield* cs.languages.pipe(Repo.provide(RepoRef.make({ owner: "other", repo: "thing" })));
 			}).pipe(
 				Effect.provide(CodeScanning.layer),
 				Effect.provide(

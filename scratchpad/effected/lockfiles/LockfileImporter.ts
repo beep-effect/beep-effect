@@ -7,7 +7,7 @@ import { ImporterDependency } from "./ImporterDependency.ts";
  * @remarks
  * - `path` — the importer path relative to the workspace root, `"."` for the
  *   root package (never empty — a `NonEmptyString`) — the same keys as
- *   `WorkspaceDiscovery.importerMap()` in
+ *   `WorkspaceDiscovery.importerMap` in
  *   `@effected/workspaces`. This is the stable join key: `Lockfile#importer`
  *   looks importers up by it, and `Lockfile#withImporterNames` deliberately
  *   leaves importers untouched because the path — not a package name — keys

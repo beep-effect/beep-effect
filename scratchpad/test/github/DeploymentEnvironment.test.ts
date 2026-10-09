@@ -76,7 +76,7 @@ describe("DeploymentEnvironment.list", () => {
 	it.effect("maps the names", () =>
 		Effect.gen(function* () {
 			const { value, requested } = yield* run(
-				Effect.flatMap(DeploymentEnvironment, (e) => e.list()),
+				Effect.flatMap(DeploymentEnvironment, (e) => e.list),
 				{},
 				{ "GET /repos/{owner}/{repo}/environments": [{ name: "prod" }, { name: "staging" }] },
 			);
@@ -89,7 +89,7 @@ describe("DeploymentEnvironment.list", () => {
 	it.effect("tolerates a response with no environments key at all", () =>
 		Effect.gen(function* () {
 			const { value } = yield* run(
-				Effect.flatMap(DeploymentEnvironment, (e) => e.list()),
+				Effect.flatMap(DeploymentEnvironment, (e) => e.list),
 				// A repository with none. The read is paginated, so "no environments"
 				// arrives as an empty page rather than as a response missing the key —
 				// octokit's paginator normalises the envelope before this code sees

@@ -167,7 +167,7 @@ describe("every published @effected package declares its full peer closure", () 
 	layer(Live)((it) => {
 		it.effect("none is missing a peer that a dependency or peer of it requires", () =>
 			Effect.gen(function* () {
-				const packages = yield* (yield* WorkspaceDiscovery).listPackages();
+				const packages = yield* (yield* WorkspaceDiscovery).listPackages;
 				const manifests: ReadonlyArray<Manifest> = packages
 					.filter((pkg) => pkg.name.startsWith("@effected/"))
 					.map((pkg) => {

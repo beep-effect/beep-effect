@@ -6,7 +6,7 @@
 import { join } from "node:path";
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Stream } from "effect";
+import { Clock, Effect, Stream } from "effect";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 
 const FIXTURES = join(import.meta.dirname, "..", "fixtures");
@@ -24,14 +24,14 @@ describe("CliUi.live in a real process: the tick never holds it open", () => {
 						{ env: { PATH: process.env.PATH ?? "", NODE_ENV: "production" } },
 					);
 					const handle = yield* spawner.spawn(command);
-					const text = (stream: Stream.Stream<Uint8Array, unknown>) => Stream.mkString(Stream.decodeText(stream));
+					const text = <E>(stream: Stream.Stream<Uint8Array, E>) => Stream.mkString(Stream.decodeText(stream));
 					const [stdout, stderr, exitCode] = yield* Effect.all(
 						[text(handle.stdout), text(handle.stderr), handle.exitCode],
 						{
 							concurrency: "unbounded",
 						},
 					);
-					const exitedAt = Date.now();
+					const exitedAt = yield* Clock.currentTimeMillis;
 					assert.strictEqual(Number(exitCode), 0, stderr);
 					const match = /closed (\d+) frames (\d+)/.exec(stdout);
 					assert.isNotNull(match, `the fixture reported: ${stdout} ${stderr}`);

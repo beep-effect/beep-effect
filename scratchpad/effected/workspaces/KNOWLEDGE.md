@@ -1010,7 +1010,7 @@ code runs exactly once. Present-but-malformed inline values hard-fail, the
 same posture as a malformed inline catalog block. There is deliberately no
 top-level convenience wrapper for it — the service method is the surface.
 
-`WorkspaceCatalogs.peerDependencyRules()` returns the merged
+`WorkspaceCatalogs.peerDependencyRules` returns the merged
 peer-suppression rule set — the `pnpm-workspace.yaml` block seeded through
 the hook replay — which is the input
 [`PeerCheck`](workspaces-peer-check.md) needs to reproduce pnpm's
@@ -1178,7 +1178,7 @@ The replay returns a structured injection, `HookInjection`, carrying four
 slices: `catalogs`, `releaseAge`, `peerDependencyRules`, and `replays` —
 the version and resolution rung (`HookReplaySource`) each declared
 dependency was replayed from, recorded even for one that ships no pnpmfile
-and exposed by `WorkspaceCatalogs.hookReplays()` off the same memo, empty
+and exposed by `WorkspaceCatalogs.hookReplays` off the same memo, empty
 where config dependencies do not exist. The rung is live, machine-local
 provenance; a snapshot keeps only the version. A sibling
 method computing any one slice separately would re-execute
@@ -1306,7 +1306,7 @@ attributed to the importer that pulls it in, with the chain carried in
 `PeerCheck.run(lockfile, options?)` is a total static returning the value
 class itself. Its options are three keys, each supplied from what the caller
 already has: `peerDependencyRules` (from
-`WorkspaceCatalogs.peerDependencyRules()`), `workspacePackages` (from
+`WorkspaceCatalogs.peerDependencyRules`), `workspacePackages` (from
 `WorkspaceDiscovery`) and `catalogs` (from `WorkspaceCatalogs.set()`). The
 report carries `supported`, `unsatisfied`, `unresolvedImporters`,
 and `unverified`, plus a `required` getter narrowing `unsatisfied` to the

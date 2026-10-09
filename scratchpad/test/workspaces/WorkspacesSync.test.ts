@@ -144,7 +144,7 @@ const treeOfDepth = (depth: number) => {
 const listPackagesOver = (handle: MemoryFileSystemHandle, options: { readonly maxDepth?: number } = {}) =>
 	Effect.gen(function* () {
 		const discovery = yield* WorkspaceDiscovery;
-		return yield* discovery.listPackages();
+		return yield* discovery.listPackages;
 	}).pipe(
 		Effect.provide(
 			WorkspaceDiscovery.layer({ cwd: "/repo", ...options }).pipe(

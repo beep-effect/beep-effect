@@ -52,7 +52,7 @@ describe("RepositorySecurity.vulnerabilityAlerts", () => {
 	it.effect("reports true when the read succeeds", () =>
 		Effect.gen(function* () {
 			const { value, requested } = yield* run(
-				Effect.flatMap(RepositorySecurity, (s) => s.vulnerabilityAlerts()),
+				Effect.flatMap(RepositorySecurity, (s) => s.vulnerabilityAlerts),
 				{ "GET /repos/{owner}/{repo}/vulnerability-alerts": {} },
 			);
 
@@ -65,7 +65,7 @@ describe("RepositorySecurity.vulnerabilityAlerts", () => {
 	it.effect("reports false on 404, because that is how GitHub says disabled", () =>
 		Effect.gen(function* () {
 			const { value } = yield* run(
-				Effect.flatMap(RepositorySecurity, (s) => s.vulnerabilityAlerts()),
+				Effect.flatMap(RepositorySecurity, (s) => s.vulnerabilityAlerts),
 				{
 					"GET /repos/{owner}/{repo}/vulnerability-alerts": GitHubError.notFound("test", "vulnerability alerts"),
 				},
@@ -78,7 +78,7 @@ describe("RepositorySecurity.vulnerabilityAlerts", () => {
 	it.effect("does NOT absorb any other failure", () =>
 		Effect.gen(function* () {
 			const error = yield* run(
-				Effect.flatMap(RepositorySecurity, (s) => s.vulnerabilityAlerts()),
+				Effect.flatMap(RepositorySecurity, (s) => s.vulnerabilityAlerts),
 				{
 					// A mis-scoped token is not "disabled". A blanket catch here would
 					// report a permissions problem as a feature being off, and the sync
@@ -114,20 +114,20 @@ describe("RepositorySecurity flag reads", () => {
 				// vulnerability-alerts, and the reason the 404 mapping is not applied
 				// uniformly.
 				const on = yield* run(
-					Effect.flatMap(RepositorySecurity, (s) => s[method]()),
+					Effect.flatMap(RepositorySecurity, (s) => s[method]),
 					{ [`GET /repos/{owner}/{repo}/${segment}`]: { enabled: true } },
 				);
 				assert.strictEqual(on.value, true);
 
 				const off = yield* run(
-					Effect.flatMap(RepositorySecurity, (s) => s[method]()),
+					Effect.flatMap(RepositorySecurity, (s) => s[method]),
 					{ [`GET /repos/{owner}/{repo}/${segment}`]: { enabled: false } },
 				);
 				assert.strictEqual(off.value, false);
 
 				// A response with no flag at all is not "enabled".
 				const missing = yield* run(
-					Effect.flatMap(RepositorySecurity, (s) => s[method]()),
+					Effect.flatMap(RepositorySecurity, (s) => s[method]),
 					{ [`GET /repos/{owner}/{repo}/${segment}`]: {} },
 				);
 				assert.strictEqual(missing.value, false);

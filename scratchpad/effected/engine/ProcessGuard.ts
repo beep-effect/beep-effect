@@ -1,3 +1,5 @@
+// These process guards install and inject native crashes before Effect loads, preserving host uncaught-error timing.
+// @effect-diagnostics asyncFunction:skip-file newPromise:skip-file globalTimers:skip-file
 // No imports at all: this module is evaluated before anything a crash guard
 // protects, so it must not load `effect` or any other package at runtime.
 

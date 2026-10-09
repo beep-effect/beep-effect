@@ -50,7 +50,7 @@ describe("LockfileReader — a multi-document pnpm lockfile", () => {
 		it.effect("selects the REAL lockfile, not the configDependencies preamble", () =>
 			Effect.gen(function* () {
 				const reader = yield* LockfileReader;
-				const lockfile = yield* reader.read();
+				const lockfile = yield* reader.read;
 				const workspaces = lockfile.packages.filter((pkg) => pkg.isWorkspace);
 				// The preamble document has zero workspace importers. Taking it would
 				// look like an empty workspace rather than a failure.
@@ -61,7 +61,7 @@ describe("LockfileReader — a multi-document pnpm lockfile", () => {
 		it.effect("resolves pnpm importer paths to real package names", () =>
 			Effect.gen(function* () {
 				const reader = yield* LockfileReader;
-				const lockfile = yield* reader.read();
+				const lockfile = yield* reader.read;
 				const names = lockfile.packages.filter((pkg) => pkg.isWorkspace).map((pkg) => pkg.name);
 				assert.include(names, "@x/a");
 				assert.include(names, "@x/b");
@@ -87,7 +87,7 @@ describe("LockfileReader — a multi-document pnpm lockfile", () => {
 		it.effect("integrity compares the lockfile against the discovered manifests", () =>
 			Effect.gen(function* () {
 				const reader = yield* LockfileReader;
-				const report = yield* reader.integrity();
+				const report = yield* reader.integrity;
 				// No workspace declares a dependency on another, so nothing is missing.
 				assert.deepStrictEqual(report.unsatisfiedConstraints, []);
 			}),
@@ -100,11 +100,11 @@ describe("LockfileReader — a multi-document pnpm lockfile", () => {
 				// The root importer is not a workspace *package* in the lockfile model
 				// (`@effected/lockfiles` emits only the non-root importers), so the
 				// comparison is against discovery's non-root members.
-				const discovered = (yield* discovery.listPackages())
+				const discovered = (yield* discovery.listPackages)
 					.filter((pkg) => !pkg.isRootWorkspace)
 					.map((pkg) => pkg.name)
 					.sort();
-				const locked = (yield* reader.read()).packages
+				const locked = (yield* reader.read).packages
 					.filter((pkg) => pkg.isWorkspace)
 					.map((pkg) => pkg.name)
 					.sort();
@@ -167,7 +167,7 @@ describe("LockfileReader — a config-dependency-only workspace (no root package
 		it.effect("reads the preamble-plus-empty-main stream as an empty lockfile", () =>
 			Effect.gen(function* () {
 				const reader = yield* LockfileReader;
-				const lockfile = yield* reader.read();
+				const lockfile = yield* reader.read;
 				assert.strictEqual(lockfile.format, "pnpm");
 				assert.strictEqual(lockfile.lockfileVersion, "9.0");
 				assert.deepStrictEqual(lockfile.packages, []);
@@ -184,7 +184,7 @@ describe("LockfileReader — the same bytes under a root package.json (an interr
 		it.effect("fails typed with 'noLockfileDocument', never an empty lockfile", () =>
 			Effect.gen(function* () {
 				const reader = yield* LockfileReader;
-				const error = yield* Effect.flip(reader.read());
+				const error = yield* Effect.flip(reader.read);
 				assert.strictEqual(error._tag, "LockfileFramingError");
 				if (error._tag !== "LockfileFramingError") return;
 				assert.strictEqual(error.reason, "noLockfileDocument");
@@ -205,7 +205,7 @@ describe("LockfileReader — the root package.json probe itself fails", () => {
 		it.effect("does not assert configOnly: the ambiguous stream fails 'noLockfileDocument'", () =>
 			Effect.gen(function* () {
 				const reader = yield* LockfileReader;
-				const error = yield* Effect.flip(reader.read());
+				const error = yield* Effect.flip(reader.read);
 				assert.strictEqual(error._tag, "LockfileFramingError");
 				if (error._tag !== "LockfileFramingError") return;
 				assert.strictEqual(error.reason, "noLockfileDocument");
@@ -227,9 +227,9 @@ describe("LockfileReader — no lockfile on disk", () => {
 		it.effect("fails typed with the path it could not read", () =>
 			Effect.gen(function* () {
 				const reader = yield* LockfileReader;
-				const result = yield* Effect.result(reader.read());
+				const result = yield* Effect.result(reader.read);
 				assert.strictEqual(result._tag, "Failure");
-				const error = yield* Effect.flip(reader.read());
+				const error = yield* Effect.flip(reader.read);
 				assert.instanceOf(error, LockfileReadError);
 				assert.strictEqual(error.lockfilePath, "/repo/pnpm-lock.yaml");
 				assert.strictEqual(error.format, "pnpm");
@@ -239,7 +239,7 @@ describe("LockfileReader — no lockfile on disk", () => {
 		it.effect("discovery is unaffected — a missing lockfile is not a missing workspace", () =>
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
-				const names = (yield* discovery.listPackages()).map((pkg) => pkg.name);
+				const names = (yield* discovery.listPackages).map((pkg) => pkg.name);
 				assert.include(names, "@x/a");
 			}),
 		);
@@ -258,9 +258,9 @@ describe("LockfileReader — a malformed lockfile", () => {
 		it.effect("fails typed through @effected/lockfiles, never as a defect", () =>
 			Effect.gen(function* () {
 				const reader = yield* LockfileReader;
-				const result = yield* Effect.result(reader.read());
+				const result = yield* Effect.result(reader.read);
 				assert.strictEqual(result._tag, "Failure");
-				const error = yield* Effect.flip(reader.read());
+				const error = yield* Effect.flip(reader.read);
 				// The parse error belongs to @effected/lockfiles and is NOT redefined here.
 				assert.strictEqual(error._tag, "LockfileParseError");
 			}),

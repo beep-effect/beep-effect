@@ -102,14 +102,14 @@ describe("stopAt — the unbounded controls resolve the OUTER workspace", () => 
 	layer(Layer.mergeAll(unboundedCore, snapshots).pipe(Layer.provideMerge(platform(nestedCheckout))))((it) => {
 		it.effect("discovery, lockfile, catalogs and snapshots all answer from /outer", () =>
 			Effect.gen(function* () {
-				const info = yield* (yield* WorkspaceDiscovery).info();
+				const info = yield* (yield* WorkspaceDiscovery).info;
 				assert.strictEqual(info.root, "/outer");
-				const lockfile = yield* (yield* LockfileReader).read();
+				const lockfile = yield* (yield* LockfileReader).read;
 				assert.include(
 					lockfile.importers.map((importer) => importer.path),
 					"pkgs/other",
 				);
-				const catalogs = yield* (yield* WorkspaceCatalogs).set();
+				const catalogs = yield* (yield* WorkspaceCatalogs).set;
 				assert.strictEqual(catalogs.entries.default?.effect, "^4.0.0");
 				const snapshot = yield* (yield* WorkspaceSnapshots).at("HEAD");
 				assert.isTrue(snapshot.versions.has("other"));
@@ -123,7 +123,7 @@ describe("stopAt — LockfileReader honours its own ceiling", () => {
 	layer(lockfiles.pipe(Layer.provideMerge(platform(nestedCheckout))))((it) => {
 		it.effect("read() refuses the enclosing workspace", () =>
 			Effect.gen(function* () {
-				yield* refusesOuter((yield* LockfileReader).read());
+				yield* refusesOuter((yield* LockfileReader).read);
 			}),
 		);
 	});
@@ -134,7 +134,7 @@ describe("stopAt — WorkspaceCatalogs honours its own ceiling", () => {
 	layer(catalogs.pipe(Layer.provideMerge(platform(nestedCheckout))))((it) => {
 		it.effect("set() refuses the enclosing workspace", () =>
 			Effect.gen(function* () {
-				yield* refusesOuter((yield* WorkspaceCatalogs).set());
+				yield* refusesOuter((yield* WorkspaceCatalogs).set);
 			}),
 		);
 	});
@@ -159,9 +159,9 @@ describe("stopAt — WorkspaceSnapshots honours its own ceiling", () => {
 
 /** Every root-resolving read the git-free composite provides, each refusing the outer root. */
 const coreRefuses = Effect.gen(function* () {
-	yield* refusesOuter((yield* WorkspaceDiscovery).listPackages());
-	yield* refusesOuter((yield* LockfileReader).read());
-	yield* refusesOuter((yield* WorkspaceCatalogs).set());
+	yield* refusesOuter((yield* WorkspaceDiscovery).listPackages);
+	yield* refusesOuter((yield* LockfileReader).read);
+	yield* refusesOuter((yield* WorkspaceCatalogs).set);
 });
 
 const bounded = { cwd: CWD, stopAt: CWD } as const;
@@ -265,7 +265,7 @@ describe("stopAt — a relative ceiling resolves against the process cwd", () =>
 	it.effect("WorkspaceDiscovery.layer({ stopAt: '.' }) refuses the enclosing workspace like the absolute ceiling", () =>
 		inCheckout(
 			Effect.gen(function* () {
-				yield* refusesOuter((yield* WorkspaceDiscovery).listPackages());
+				yield* refusesOuter((yield* WorkspaceDiscovery).listPackages);
 			}).pipe(
 				Effect.provide(
 					WorkspaceDiscovery.layer(relative).pipe(

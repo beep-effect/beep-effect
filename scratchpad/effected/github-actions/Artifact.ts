@@ -183,7 +183,7 @@ export interface ArtifactShape {
 		options?: UploadOptions,
 	) => Effect.Effect<UploadResult, ArtifactError>;
 	/** Every artifact in the current run. */
-	readonly list: () => Effect.Effect<ReadonlyArray<ArtifactItem>, ArtifactError>;
+	readonly list: Effect.Effect<ReadonlyArray<ArtifactItem>, ArtifactError>;
 	/** One artifact by name, or nothing — absent is not a failure. */
 	readonly get: (name: string) => Effect.Effect<Option.Option<ArtifactItem>, ArtifactError>;
 	/** Download an artifact by id and unzip it. Answers with where it landed. */
@@ -471,9 +471,9 @@ const make = (
 				);
 			}),
 
-			list: Effect.fn("Artifact.list")(function* () {
+			list: Effect.suspend(Effect.fn("Artifact.list")(function* () {
 				return yield* listAll("*");
-			}),
+			})),
 
 			get: Effect.fn("Artifact.get")(function* (name: string) {
 				yield* Effect.annotateCurrentSpan({ name });
@@ -612,7 +612,7 @@ export class Artifact extends Context.Service<Artifact, ArtifactShape>()("@beep/
 	/** A test double. Unstubbed members die rather than reporting an empty run. */
 	static readonly makeTest = (overrides: Partial<ArtifactShape> = {}): ArtifactShape => ({
 		upload: () => dies("upload"),
-		list: () => dies("list"),
+		list: Effect.suspend(() => dies("list")),
 		get: () => dies("get"),
 		download: () => dies("download"),
 		delete: () => dies("delete"),

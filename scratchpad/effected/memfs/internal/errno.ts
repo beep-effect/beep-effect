@@ -105,6 +105,8 @@ export class ErrnoException extends Data.TaggedError("ErrnoException")<{ readonl
 	}
 }
 
+// String paths overlap method strings, and the optional description makes the two call forms ambiguous.
+// @effect-diagnostics-next-line missingPipeableSignature:off
 export const errnoError = (
 	method: string,
 	pathOrDescriptor: string | number,

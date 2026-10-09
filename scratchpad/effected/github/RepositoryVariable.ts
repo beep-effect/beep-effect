@@ -56,7 +56,7 @@ export interface RepositoryVariableShape {
    */
   readonly set: (name: string, value: string) => Effect.Effect<void, GitHubError, Repo>;
   /** The repository's variables, with their values. */
-  readonly list: () => Effect.Effect<ReadonlyArray<VariableInfo>, GitHubError, Repo>;
+  readonly list: Effect.Effect<ReadonlyArray<VariableInfo>, GitHubError, Repo>;
   /** Remove one repository variable. */
   readonly delete: (name: string) => Effect.Effect<void, GitHubError, Repo>;
 
@@ -93,7 +93,7 @@ export interface RepositoryVariableShape {
  * const program = Effect.gen(function* () {
  *   const variables = yield* RepositoryVariable;
  *   yield* variables.set("DEPLOY_REGION", "eu-west-1"); // creates or updates
- *   return yield* variables.list();
+ *   return yield* variables.list;
  * });
  * ```
  *
@@ -118,7 +118,7 @@ export class RepositoryVariable extends Context.Service<RepositoryVariable, Repo
   /** An in-memory double; unstubbed members die naming themselves. */
   static readonly makeTest = (overrides: Partial<RepositoryVariableShape> = {}): RepositoryVariableShape => ({
     set: overrides.set ?? (() => unstubbed("set")),
-    list: overrides.list ?? (() => unstubbed("list")),
+    list: overrides.list ?? (Effect.suspend(() => unstubbed("list"))),
     delete: overrides.delete ?? (() => unstubbed("delete")),
     setForEnvironment: overrides.setForEnvironment ?? (() => unstubbed("setForEnvironment")),
     listForEnvironment: overrides.listForEnvironment ?? (() => unstubbed("listForEnvironment")),
@@ -180,7 +180,7 @@ const make = (client: GitHubClient["Service"]): RepositoryVariableShape => {
     });
   });
 
-  const list = Effect.fn("RepositoryVariable.list")(function* () {
+  const list = Effect.suspend(Effect.fn("RepositoryVariable.list")(function* () {
     const { owner, repo } = yield* Repo;
     yield* Effect.annotateCurrentSpan({ owner, repo });
 
@@ -192,7 +192,7 @@ const make = (client: GitHubClient["Service"]): RepositoryVariableShape => {
       name: variable.name,
       value: variable.value,
     }));
-  });
+  }));
 
   const delete_ = Effect.fn("RepositoryVariable.delete")(function* (name: string) {
     const { owner, repo } = yield* Repo;

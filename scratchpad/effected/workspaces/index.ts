@@ -20,7 +20,7 @@
  *
  * const program = Effect.gen(function* () {
  *   const discovery = yield* WorkspaceDiscovery;
- *   const packages = yield* discovery.listPackages();
+ *   const packages = yield* discovery.listPackages;
  *   return packages.map((pkg) => pkg.name);
  * }).pipe(Effect.provide(WorkspacesLayer));
  * ```

@@ -1,4 +1,5 @@
-// @effect-diagnostics asyncFunction:skip-file
+// This response factory is an internal test helper with a direct-call contract.
+// @effect-diagnostics asyncFunction:skip-file missingPipeableSignature:skip-file
 // Shared fixtures for the three services that speak the Actions results
 // backend: the cache, the artifact protocol and the GitHub-cache blob store.
 //

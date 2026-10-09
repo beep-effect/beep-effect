@@ -147,7 +147,7 @@ import { Effect } from "effect";
 const program = Effect.gen(function* () {
   const cache = yield* VersionCache;
   yield* cache.load([SemVer.of(1, 0, 0), SemVer.of(1, 4, 2), SemVer.of(2, 0, 0)]);
-  const latest = yield* cache.latest();
+  const latest = yield* cache.latest;
   const resolved = yield* cache.resolveString("^1.0.0");
   return [latest.toString(), resolved.toString()] as const;
 }).pipe(Effect.provide(VersionCache.layer));

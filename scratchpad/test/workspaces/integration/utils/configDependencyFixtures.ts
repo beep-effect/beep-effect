@@ -1,4 +1,5 @@
-// @effect-diagnostics nodeBuiltinImport:skip-file
+// These test fixtures are internal helpers and preserve their direct-call contract.
+// @effect-diagnostics nodeBuiltinImport:skip-file missingPipeableSignature:skip-file
 import { dual } from "effect/Function";
 // On-disk fixtures for the config-dependency resolution ladder: a fake
 // `node_modules/.pnpm-config/<name>` install, a fake pnpm store `links/` tree,

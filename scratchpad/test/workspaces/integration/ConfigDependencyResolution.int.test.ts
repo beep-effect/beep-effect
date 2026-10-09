@@ -550,7 +550,7 @@ describe("ConfigDependencyHooks.layerFrom — replays caller-supplied files, res
 		// core's no-op one.
 		const appLayer = Layer.mergeAll(core, catalogs).pipe(Layer.provideMerge(platform(tree)));
 		return Effect.gen(function* () {
-			const set = yield* (yield* WorkspaceCatalogs).set();
+			const set = yield* (yield* WorkspaceCatalogs).set;
 			assert.deepStrictEqual(set.rangeOf("effect", Option.none()), Option.some("^4.0.0"));
 			assert.deepStrictEqual(set.rangeOf("hooked-dep", Option.none()), Option.some("^9.9.9"));
 		}).pipe(Effect.provide(appLayer));

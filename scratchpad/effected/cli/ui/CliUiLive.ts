@@ -367,7 +367,7 @@ export const live = <E, S>(
 		const printFrame = (current: Run<S>): Effect.Effect<void> =>
 			Effect.gen(function* () {
 				const viewLoaded = yield* Effect.exit(loadView(options.render));
-				if (Exit.isFailure(viewLoaded)) return yield* warnOnce(current, Cause.squash(viewLoaded.cause));
+				if (Exit.isFailure(viewLoaded)) return yield* warnOnce(current, Cause.squash(Cause.map(viewLoaded.cause, (error) => error.cause)));
 				const { ink, react } = yield* loadInk;
 				const frame = yield* frameOf;
 				const reported = streams.stdout.columns;
@@ -445,7 +445,7 @@ export const live = <E, S>(
 					);
 					const { ink, react } = yield* loadInk;
 					// A lazy view's module, before the first element is built; a failed import degrades the run.
-					yield* Effect.orDie(loadView(options.render));
+					yield* Effect.catch(loadView(options.render), (error) => Effect.die(error.cause));
 					yield* withInkColour(colour);
 					const frame = yield* frameOf;
 					const initial = elementOf(state, frame);

@@ -72,7 +72,7 @@ export type LockfileReadFailure =
  */
 export interface LockfileReaderShape {
 	/** The parsed lockfile, with pnpm importer paths already resolved to real names. */
-	readonly read: () => Effect.Effect<Lockfile, LockfileReadFailure>;
+	readonly read: Effect.Effect<Lockfile, LockfileReadFailure>;
 	/**
 	 * The lockfile's record of a package, when it records one.
 	 *
@@ -88,9 +88,9 @@ export interface LockfileReaderShape {
 	 * Whether the lockfile agrees with the workspace manifests on disk — the
 	 * pure `LockfileIntegrity.compare`, fed the manifests this package reads.
 	 */
-	readonly integrity: () => Effect.Effect<LockfileIntegrity, LockfileReadFailure | WorkspaceDiscoveryFailure>;
+	readonly integrity: Effect.Effect<LockfileIntegrity, LockfileReadFailure | WorkspaceDiscoveryFailure>;
 	/** Drop the memoized read so the next call re-reads the lockfile. */
-	readonly refresh: () => Effect.Effect<void>;
+	readonly refresh: Effect.Effect<void>;
 }
 
 /**
@@ -143,7 +143,7 @@ const unstubbed = (method: string): Effect.Effect<never> =>
  *
  * const program = Effect.gen(function* () {
  *   const reader = yield* LockfileReader;
- *   const lockfile = yield* reader.read();
+ *   const lockfile = yield* reader.read;
  *   return lockfile.packages.length;
  * });
  * ```
@@ -247,9 +247,9 @@ export class LockfileReader extends Context.Service<LockfileReader, LockfileRead
 			const memo = Effect.onExit(resolveOnce, (exit) => (Exit.isSuccess(exit) ? Effect.void : invalidate));
 
 			return {
-				read: Effect.fn("LockfileReader.read")(function* () {
+				read: Effect.suspend(Effect.fn("LockfileReader.read")(function* () {
 					return yield* memo;
-				}),
+				})),
 
 				resolvedVersion: Effect.fn("LockfileReader.resolvedVersion")(function* (packageName: string) {
 					const lockfile = yield* memo;
@@ -257,16 +257,16 @@ export class LockfileReader extends Context.Service<LockfileReader, LockfileRead
 					return Option.fromUndefinedOr(matches[0]);
 				}),
 
-				integrity: Effect.fn("LockfileReader.integrity")(function* () {
+				integrity: Effect.suspend(Effect.fn("LockfileReader.integrity")(function* () {
 					const lockfile = yield* memo;
-					const packages = yield* discovery.listPackages();
+					const packages = yield* discovery.listPackages;
 					return LockfileIntegrity.compare(
 						lockfile,
 						packages.map((pkg) => pkg.toWorkspaceManifest()),
 					);
-				}),
+				})),
 
-				refresh: () => invalidate,
+				refresh: Effect.suspend(() => invalidate),
 			};
 		});
 
@@ -320,7 +320,7 @@ export class LockfileReader extends Context.Service<LockfileReader, LockfileRead
 	 * import { Effect } from "effect";
 	 *
 	 * const double = LockfileReader.makeTest({
-	 *   read: () =>
+	 *   read:
 	 *     Effect.succeed(
 	 *       Lockfile.make({ format: "pnpm", lockfileVersion: "9.0", packages: [], workspaceDependencies: [] }),
 	 *     ),
@@ -331,14 +331,14 @@ export class LockfileReader extends Context.Service<LockfileReader, LockfileRead
 	static readonly makeTest = (overrides: Partial<LockfileReaderShape> = {}): LockfileReaderShape => {
 		const read = overrides.read;
 		return {
-			read: () => unstubbed("read"),
+			read: Effect.suspend(() => unstubbed("read")),
 			resolvedVersion:
 				read !== undefined
 					? (packageName: string) =>
-							Effect.map(read(), (lockfile) => Option.fromUndefinedOr(lockfile.packagesNamed(packageName)[0]))
+							Effect.map(read, (lockfile) => Option.fromUndefinedOr(lockfile.packagesNamed(packageName)[0]))
 					: () => unstubbed("resolvedVersion"),
-			integrity: () => unstubbed("integrity"),
-			refresh: () => Effect.void,
+			integrity: Effect.suspend(() => unstubbed("integrity")),
+			refresh: Effect.suspend(() => Effect.void),
 			...overrides,
 		};
 	};

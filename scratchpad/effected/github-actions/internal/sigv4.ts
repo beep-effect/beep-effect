@@ -1,3 +1,5 @@
+// SigV4 requires synchronous HMAC, which Effect Crypto does not expose.
+// @effect-diagnostics nodeBuiltinImport:skip-file
 import { Function } from "effect";
 import { createHmac } from "node:crypto";
 import { sha256Hex } from "./digest.ts";

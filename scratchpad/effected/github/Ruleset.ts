@@ -67,7 +67,7 @@ export interface RulesetShape {
    */
   readonly upsert: (payload: RulesetPayload) => Effect.Effect<void, GitHubError, Repo>;
   /** Every ruleset the repository sees, its own and the organization's. */
-  readonly list: () => Effect.Effect<ReadonlyArray<RulesetInfo>, GitHubError, Repo>;
+  readonly list: Effect.Effect<ReadonlyArray<RulesetInfo>, GitHubError, Repo>;
   /** Remove one ruleset by id. */
   readonly delete: (rulesetId: number) => Effect.Effect<void, GitHubError, Repo>;
 
@@ -147,7 +147,7 @@ export class Ruleset extends Context.Service<Ruleset, RulesetShape>()("@beep/scr
   /** An in-memory double; unstubbed members die naming themselves. */
   static readonly makeTest = (overrides: Partial<RulesetShape> = {}): RulesetShape => ({
     upsert: overrides.upsert ?? (() => unstubbed("upsert")),
-    list: overrides.list ?? (() => unstubbed("list")),
+    list: overrides.list ?? (Effect.suspend(() => unstubbed("list"))),
     delete: overrides.delete ?? (() => unstubbed("delete")),
     teamId: overrides.teamId ?? (() => unstubbed("teamId")),
     roleId: overrides.roleId ?? (() => unstubbed("roleId")),
@@ -213,7 +213,7 @@ const make = (client: GitHubClient["Service"]): RulesetShape => {
     } as Rest.Params<"POST /repos/{owner}/{repo}/rulesets">);
   });
 
-  const list = Effect.fn("Ruleset.list")(function* () {
+  const list = Effect.suspend(Effect.fn("Ruleset.list")(function* () {
     const { owner, repo } = yield* Repo;
     yield* Effect.annotateCurrentSpan({ owner, repo });
 
@@ -228,7 +228,7 @@ const make = (client: GitHubClient["Service"]): RulesetShape => {
         source_type: ruleset.source_type,
       }),
     );
-  });
+  }));
 
   const delete_ = Effect.fn("Ruleset.delete")(function* (rulesetId: number) {
     const { owner, repo } = yield* Repo;
