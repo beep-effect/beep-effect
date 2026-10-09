@@ -47,7 +47,7 @@ import { fcRuns } from "@beep/test-utils";
 import { A, O, Str } from "@beep/utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Cause from "effect/Cause";
 import * as ConfigProvider from "effect/ConfigProvider";
@@ -63,7 +63,8 @@ import * as HttpClient from "effect/http/HttpClient";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as Path from "effect/Path";
-import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as ChildProcess from "effect/process/ChildProcess";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Ref from "effect/Ref";
 import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
@@ -141,7 +142,7 @@ const rangeRejectingSpawner = (spawned: Array<string>) =>
   );
 
 const expectReportedExit = (exit: Exit.Exit<unknown, unknown>, exitCode = 1) => {
-  exit.pipe(Exit.isFailure, assertTrue);
+  assertTrue(exit._tag === "Failure");
   if (Exit.isFailure(exit)) {
     const error = Cause.squash(exit.cause);
     expect(Runtime.getErrorExitCode(error)).toBe(exitCode);
@@ -922,7 +923,7 @@ export const ProofFixture = 1;
         }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, rangeRejectingSpawner(spawned)))
       );
 
-      exit.pipe(Exit.isFailure, assertTrue);
+      assertTrue(exit._tag === "Failure");
       expect(A.some(spawned, Str.includes("git diff --no-renames --name-only origin/main...HEAD"))).toBe(true);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make));
   });
@@ -1077,7 +1078,7 @@ export const ProofFixture = 1;
         }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, recordingSpawner(spawned)))
       );
 
-      exit.pipe(Exit.isFailure, assertTrue);
+      assertTrue(exit._tag === "Failure");
       if (Exit.isFailure(exit)) {
         expect(Cause.squash(exit.cause)).toMatchObject({
           _tag: "DomainError",
@@ -1609,7 +1610,7 @@ export const ProofFixture = 1;
       const aggregatedPath = path.join(tmpDir, "docs", "generated", "foundation", "modeling", "schema");
       const aggregatedExists = yield* fs.exists(aggregatedPath);
 
-      exit.pipe(Exit.isFailure, assertTrue);
+      assertTrue(exit._tag === "Failure");
       expect(aggregatedExists).toBe(false);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
@@ -2115,6 +2116,13 @@ export const formatValue = (value: string): string => \`value: \${value}\`;
         const subject = O.getOrUndefined(A.findFirst(report.subjects, (entry) => entry.exportName === exportName));
         return O.getOrUndefined(A.findFirst(report.reviews, (entry) => entry.subjectId === subject?.stableIdentity));
       };
+
+      for (const exportName of ["parseValue", "formatValue"]) {
+        const subject = qualitySubject(report, exportName);
+        assertSome(subject, O.getOrThrow(subject));
+        const review = qualityReview(report, subject);
+        assertSome(review, O.getOrThrow(review));
+      }
 
       const parseFindingCodes = A.map(reviewFor("parseValue")?.findings ?? [], (finding) => finding.code);
       const formatFindingCodes = A.map(reviewFor("formatValue")?.findings ?? [], (finding) => finding.code);
@@ -3702,7 +3710,7 @@ export const parseValue = (value: string): string => value.trim();
         Effect.exit
       );
 
-      exit.pipe(Exit.isFailure, assertTrue);
+      assertTrue(exit._tag === "Failure");
       expect(yield* Ref.get(stoppedPodIds)).toEqual(["pod-recovered"]);
       expect(yield* Ref.get(deletedPodIds)).toEqual(["pod-recovered"]);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
@@ -3849,7 +3857,7 @@ export const parseValue = (value: string): string => value.trim();
 
       const exit = yield* analyzePackageDocumentation(target!).pipe(Effect.exit);
 
-      exit.pipe(Exit.isFailure, assertTrue);
+      assertTrue(exit._tag === "Failure");
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 

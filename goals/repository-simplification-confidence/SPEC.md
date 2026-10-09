@@ -722,12 +722,23 @@ without claiming completion.
 
 | 2026-10-09 | H2 hands off capacity-blocked after its repaired-head full package command remains unstarted through canonical admission and a retry; only its own queued command and readiness monitor are cancelled. | All parity lanes and scoped tests pass, but they cannot replace the required full package gate. Stop without leaving an owned gate running or claiming a package pass. | Resume through `beep-heavy`, run the full package gate, publish the committed delivery evidence through Yeet, mark ready and restart bounded readiness monitoring before orchestrator merge. |
 
+| 2026-10-09 | Resume canon through completed-retained (R102), first integrating CLI-only unpublished work and regeneration, then separate RDF/Pacer ports (R105), then bounded remaining open-row waves. | Continuation's 16 later commits were not in #1506. Main already covers Box WIP and RDF property cohorts; stronger RDF failure assertions and Pacer logout teardown witness remain useful. Preserve all source state and exports, keep tooling/tool alone under D13, and qualify each new head. | Revert each PR independently; restore generated inventory by its owner command and replay the SHA256-qualified patches. Historical IDs and original proof receipts remain retained. |
+
+| 2026-10-09 | Preserve the legacy compiler guard with whole-script conservative handling of shell syntax and attached command-bearing option bodies; retain operand-aware simple launcher parsing. | Independent reviews reproduced valid compiler invocations hidden by substitutions, redirects, npm/env aliases and attached call options. Keep all existing assertion and inert-operand tables, add opposing regression witnesses, and do not claim complete shell evaluation. | Revert the guard repair and its new witnesses only with a replacement preserving every established compiler catch and inert-operand control; rerun the five guard tests on Node/Bun and the package gates. |
+| 2026-10-09 | Link fresh V detector IDs to immutable historical occurrences and retain inherited-red attribution through publication under S11. | The 4.0.2 scan changes anchors and candidate shapes; absence alone cannot close historical human rows. The remaining packet path example fails knowledge refs on main, so V records it for the orchestrator consolidated fix rather than copying a shared repair. | Revert the V reconciliation artifact and regenerate from source; historical ledgers are untouched. The orchestrator can restore strict hosted-green gating. |
+| 2026-10-09 | Hand back V as blocked on heavy admission after full source qualification; retain both original R105 patch and its repair preview. | Canonical publication waited over 45 minutes with all slots occupied and new entrants taking released slots. The capped queue services contained only waiters, not payloads. Preserve every terminal proof and stop only those owned waiters rather than bypass admission or stop peers. R105's source duplication finding is repaired in a preview but remains unqualified. | Resume canonical publication through beep-heavy when capacity is available; reapply and qualify the separately preserved R105 preview. Reopen the V session note without modifying legacy sources. |
+
 ## Exception Ledger
 
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
 | Review-loop cap override | Every PR of this program | Program orchestrator | Brief section 1 item 7: resolve every in-scope actionable finding, including lower severity; do not defer one merely to stop a review loop. Overrides AGENTS.md "Autonomy" round-2 rule for this program only. | Program closeout (packet reaches `completed-retained`). |
 | Three-model panel IDs | Workstream F final review | Program orchestrator | `gpt-6-astra`, `claude-fable-5-1`, and `grok-4.7` at xhigh are named by the brief; AGENTS.md otherwise forbids substituting non-default models silently. This is an explicit, recorded use. | Terminal zero-actionable-findings verdicts from all three reviewers are recorded in `history/receipts/stage-5-panel.md` on the final workstream F revision and configuration fingerprints, and no F configuration change follows them; any later change keeps the exception for the re-review. |
+
+| 2026-10-09 | V archives its pre-D private repo-cli changeset and removes the release note. | D policy landed on merged main; hosted Repo Sanity job 113997596244 rejects private-workspace notes. The brief's patch-note obligation explicitly ends when D lands. Exact bytes survive in `history/receipts/rsc-v-retired-private-changeset.md`. | Restore the archived note when reversing D private policy. |
+
+| 2026-10-09 | V completes its CLI integration publication under the 20:30Z direct-cgroup ruling; goal remains active for R105 and R102. | PR #1575 is ready, full repo-cli proof and local parity pass, inventory is regenerated after final main merge, and source hashes remain unchanged. Merge and retirement belong to the fleet orchestrator. | Revert #1575; preserve archived source patches and regenerate the inventory. |
+| 2026-10-09 | V retains separately qualified scenario fault harnesses after assessing the advisory consolidation suggestion. | The four harnesses have different fault methods, body-failure populations, target/options checks and explicit local cause oracles; no failing behavior or quality gate was identified. Evidence and re-evaluation boundary are in the Stage 4 hosted-review disposition. | Consolidate when those R102 resource cohorts are next touched, retaining every distinct oracle and rerunning Node/Bun, full package and independent review. |
 
 ### 2026-10-09 — E/C pre-runtime credential ordering
 
@@ -761,3 +772,13 @@ After D's release-policy PR #1566 lands, remove the unused `changesets/action@*`
 ### 2026-10-09 — E hosted governance job-token proof
 
 Move live ruleset, desktop settings and held-main reads from the contents-only verification matrix to the existing Security job, adding only `actions: read` there. Keep pure workflow lint in Repo Sanity. Reason: human review found the push-only Actions API calls unproven under GITHUB_TOKEN, despite successful personal-token probes. Run the hosted reads on PRs too, after dependency review, to establish that exact job-token path before merge. A held-main failure is repository-state evidence and must be attributed accordingly. Reverse the workflow/test change together; no writer credential, environment attachment or other job permission is broadened.
+
+### 2026-10-09 — H2 resumed publication follows S12 amendment 2
+
+Publish the resumed delivery update within the existing lane cgroup using
+`TURBO_CONCURRENCY=2`, as standing S12 amendment 2 allows for immediate delivery.
+Reason: the full admission-wrapped package gate passed, but publication queue
+contention let other packet PRs advance main and invalidate the integrated base
+before publication. Integrate main and preserve every lane's packet evidence
+first. Reversal: let this invocation exit and return publication to `beep-heavy`;
+no global cap, wrapper, peer job, source baseline or acceptance rule changes.
