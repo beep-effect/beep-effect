@@ -76,3 +76,35 @@
   with Schema, and remove the unnecessary platform test dependency.
 - Prevention: distinguish fixture data from a filesystem subject before choosing
   the canonical test layer and resource lifetime.
+
+## 2026-10-09 — Private-package changeset gate conflict
+
+- Evidence: publication cheap gates require a changeset naming the changed
+  private product workspace; hosted Repo Sanity rejects that exact changeset
+  because private workspace release notes are forbidden (PR #1573).
+- Attribution: the lane note triggers an inherited contradiction between the
+  changeset-status and changeset-graph contracts.
+- Outcome: retain the admission-required notes and route the tooling policy
+  repair to the orchestrator consolidated red fix under ruling S11. Changing
+  package privacy or the out-of-scope gate would exceed this slice.
+- Prevention: both gates should share the same private-workspace policy.
+
+## 2026-10-09 — Restart proof scheduling
+
+- Evidence: the shared Vitest configuration runs suites concurrently; the
+  restart reader raced the initial writer and found no retained attempt.
+- Attribution: introduced ordered integration test, not a persistence failure.
+- Repair: explicitly sequential canonical layer blocks with a ten-second hook
+  budget; use assertSome for the linked predecessor.
+- Prevention: state the ordering requirement where a restart test shares bytes.
+
+## 2026-10-09 — Opaque proof declaration emission
+
+- Evidence: declaration/docgen compiler TS4094 named private verified-source
+  and verified-anchor capability fields in inferred exported schema types.
+- Attribution: introduced inferred boundary schema types, not a runtime proof
+  failure or a reason to weaken provenance.
+- Repair: explicitly annotate the consumed proof codecs and exported tagged
+  unions with public named types. Runtime predicates and capability brands stay
+  intact; there is no cast, suppression, substrate edit or structural substitute.
+- Prevention: name public opaque-proof schema types before declaration emission.

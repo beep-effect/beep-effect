@@ -2071,6 +2071,15 @@
       ],
       "@beep/law-practice-use-cases/DocumentIdentification": [
         "./packages/law-practice/use-cases/src/DocumentIdentification/index.ts"
+      ],
+      "@beep/law-practice-domain/values/DocStructure": [
+        "./packages/law-practice/domain/src/values/DocStructure/index.ts"
+      ],
+      "@beep/law-practice-server/OfficeActionStructure": [
+        "./packages/law-practice/server/src/OfficeActionStructure/index.ts"
+      ],
+      "@beep/law-practice-use-cases/OfficeActionStructure": [
+        "./packages/law-practice/use-cases/src/OfficeActionStructure/index.ts"
       ]
     }
   }

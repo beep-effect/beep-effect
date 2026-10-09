@@ -236,6 +236,8 @@ export * from "./DocketCitation/index.ts";
  * @since 0.0.0
  */
 export * from "./DocketDeadline/index.ts";
+/** Atomic office-action evidence exports. @category services @since 0.0.0 */
+export * from "./DocStructure/index.ts";
 /**
  * Durable-locator value-object exports.
  *

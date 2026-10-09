@@ -57,6 +57,9 @@
       "path": "../../foundation/modeling/nlp/tsconfig.json"
     },
     {
+      "path": "../../foundation/modeling/provenance/tsconfig.json"
+    },
+    {
       "path": "../../foundation/modeling/schema/tsconfig.json"
     },
     {

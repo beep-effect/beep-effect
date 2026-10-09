@@ -2757,6 +2757,7 @@
         "@beep/m365": "workspace:^",
         "@beep/mcp-kit": "workspace:^",
         "@beep/postgres": "workspace:^",
+        "@beep/provenance": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/shared-use-cases": "workspace:^",
         "@beep/tika": "workspace:^",

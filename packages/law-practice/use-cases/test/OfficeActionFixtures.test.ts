@@ -3,31 +3,9 @@ import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { Fixture } from "./fixtures/office-action-structure/Fixture.schema.ts";
 import { fixtureTexts } from "./fixtures/office-action-structure/texts.ts";
 
-const Outcome = S.Union([
-  S.Struct({
-    status: S.Literal("recognized"),
-    finality: S.Literals(["FINAL", "NON-FINAL"]),
-    finalityQuote: S.NonEmptyString,
-    periodQuote: S.NonEmptyString,
-  }),
-  S.Struct({
-    status: S.Literal("abstained"),
-    code: S.Literals(["absent", "ambiguous", "unsupported", "low-quality-source", "rule-not-covered"]),
-  }),
-]);
-const Fixture = S.Struct({
-  id: S.NonEmptyString,
-  modality: S.Literals(["public-form-language", "ocr-derived", "layout-derived"]),
-  family: S.NonEmptyString,
-  evaluationLane: S.Literals(["oracle-upstream", "full-pipeline"]),
-  heldOut: S.Boolean,
-  provenanceRow: S.NonEmptyString,
-  diagnostic: S.Literals(["correct", "miss", "false-alarm", "split", "merge", "many-to-many"]),
-  relationships: S.Array(S.Literals(["same-paragraph", "sibling", "continuation", "reading-order"])),
-  outcome: Outcome,
-});
 const read = (name: string) => Effect.fromOption(HashMap.get(fixtureTexts, name), () => `Missing fixture: ${name}`);
 
 describe("office-action fixture truth", () => {
