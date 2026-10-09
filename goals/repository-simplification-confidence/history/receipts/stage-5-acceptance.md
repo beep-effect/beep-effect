@@ -62,3 +62,37 @@ The latest storage dry run has 2,765 rows across 259 roots, all deferred, with
 fresh clone, and shared route. Changed-input execution recorded a new task
 hash and MISS, then failed because the linked fixture lacked `tsc`; the
 frozen-install repair and successful execution proof are pending.
+
+
+## G current source qualification at 59e5cf879f
+
+The following measurements supersede the earlier queued runtime checkpoint.
+At `2026-10-09T20:47:07Z`–`20:47:28Z`, the admitted focused suite passed
+**55/55**, including both SIGKILL windows using the live test clock. The
+one-pass recovery warning selection at `59e5cf879f1796dfec00d14ba6545e5c79154eeb`
+then received independent source review round 16: zero High, Medium and Low.
+This verdict covers the supplied retention source, schemas and directory
+handle; it does not review main's incoming CI modules or prove runtime gates.
+
+At that source revision, `CI=true bun run beep knowledge refs --check` exited 0
+(`20:53:37Z`–`20:54:09Z`), `bun run beep quality fallow audit` exited 0
+(`20:54:09Z`–`20:54:20Z`) and `bun run beep quality fallow health` exited 0
+(`20:54:20Z`–`20:54:25Z`). `bun run beep ci lane jsdoc-ratchet` exited 0
+(`20:48:34Z`–`20:53:37Z`) at `9373232640`; exported documentation did not
+change in the subsequent warning-selection compiler repair. No baseline was
+refreshed. All heavy commands used the admission wrapper.
+
+Scoped V8 coverage passed all 55 tests at the current source revision
+(`20:54:25Z`–`20:54:49Z`). [The measured rows](./stage-5-g-coverage.json)
+compare both files with the existing coverage baseline. Schemas remain 100%
+on all four metrics. Implementation lines/statements/branches/functions are
+91.01/88.30/78.60/87.66%, above baseline 86.85/85.07/76.92/84.52%.
+Absolute uncovered counts increased with the added implementation:
+103/147/132/38 versus 41/50/42/13. This is a scoped coverage read, not a claim
+that the full repository coverage ratchet passed. The baseline stays intact.
+
+The earlier `test-tsgo` and docgen failures at `9373232640` were introduced:
+nested `A.filter`/`A.flatMap` contextual inference treated the row as unknown.
+The direct, single-pass `A.flatMap(rows, ...)` repair preserves warning order
+and selection. Compiler/docgen reruns and the default full package audit remain
+pending; their actual terminal results will be appended below.

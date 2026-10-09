@@ -172,3 +172,23 @@ launch restrictions and pending claims above are historical and superseded
 by resume ruling 1 and these completed fixtures. Remote auth remains the
 approved unsupported external condition; workstation-wide harness posture,
 home writes and retiring legacy local caches remain owner dependencies.
+
+
+## Output-health attribution and clean cache rerun
+
+The frozen-install R2 fixture at `2026-10-09T20:47:28Z`–`20:47:42Z`, execution
+revision `9373232640`, restored all five normal 28-file manifests with LOCAL
+HIT. Changed-input hash `793c738517d0e311` correctly missed and exited 0, but
+produced only 23 files: its fixture had removed `dist` while retaining
+`node_modules/.tmp/tsconfig.tsbuildinfo`. The unchanged public index and type
+declarations were omitted by incremental compilation. Exit 0 alone therefore
+does not establish complete changed-input output health.
+
+The incomplete artifact was moved into a private quarantine; bytes remain
+available for diagnosis. A new empty cache fixture clears both outputs and
+incremental state in the owned linked worktree and fresh clone. It requires
+public `FastCheckRuns.d.ts`, `index.js` and `index.d.ts`, compares cold/warm/
+linked output SHA-256 manifests, and executes the same changed-input MISS.
+Its terminal result remains pending. This fixture correction changes no
+shared generated package scripts. Shared owns the broader inherited build
+script/incremental-output coupling follow-up.
