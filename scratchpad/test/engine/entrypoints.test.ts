@@ -58,7 +58,7 @@ describe("./guard loads nothing before its guards listen", () => {
 	it("positive control: the walker sees the main entry's runtime import of effect", () => {
 		const { modules, packages } = runtimeGraphOf(resolve(SRC, "index.ts"), ".ts");
 		assert.isTrue([...modules].some((file) => file.endsWith("Distribution.ts")));
-		assert.include([...packages], "effect");
+		assert.include([...packages], "effect/Schema");
 	});
 
 	it("the main entry never reaches the guard (it stays a subpath of its own)", () => {

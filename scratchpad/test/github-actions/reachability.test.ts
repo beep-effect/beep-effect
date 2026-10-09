@@ -262,39 +262,67 @@ describe("bundle reachability", () => {
 		// hoisting their fifteen lines of Azure into either one would put the
 		// client on the graph of everything that speaks the protocol.
 		assert.deepStrictEqual([...reachableBareImports("internal/actionsResults.ts")].sort(), [
-			"effect",
+			"effect/Effect",
+			"effect/Function",
+			"effect/Option",
+			"effect/Redacted",
+			"effect/Result",
+			"effect/Schema",
 			"effect/encoding/Base64Url",
 		]);
 		assert.deepStrictEqual(
 			[...reachableBareImports("internal/twirp.ts")].sort(),
-			["effect", "effect/http"],
+			[
+			"effect/Effect",
+			"effect/Function",
+			"effect/Schedule",
+			"effect/http",
+		],
 			"the Twirp client speaks HTTP and nothing heavier",
 		);
 		// The cache-entry choreography shared by `ActionCache` and
 		// `BlobStore.githubCache` owns the three RPCs and NOT the Azure transfer
 		// between them — that is the whole point of it being an internal.
-		assert.deepStrictEqual([...reachableBareImports("internal/cacheService.ts")].sort(), ["effect", "effect/http"]);
+		assert.deepStrictEqual([...reachableBareImports("internal/cacheService.ts")].sort(), [
+			"effect/Effect",
+			"effect/Function",
+			"effect/Option",
+			"effect/Schedule",
+			"effect/http",
+		]);
 		// `effect/process` is a type-only import there: the spawner
 		// arrives as a value from the caller.
-		assert.deepStrictEqual([...reachableBareImports("internal/spawn.ts")].sort(), ["effect"]);
+		assert.deepStrictEqual([...reachableBareImports("internal/spawn.ts")].sort(), [
+			"effect/Effect",
+			"effect/Function",
+			"effect/Stream",
+		]);
 		// The command-line half of every archiver call: `ChildProcess.make` is a
 		// VALUE import there, and it is shared by `Artifact` (Azure) and
 		// `ToolInstaller` (light) — exactly the kind of helper that must never
 		// grow a heavier edge.
 		assert.deepStrictEqual([...reachableBareImports("internal/archiveCommands.ts")].sort(), ["effect/process"]);
 		assert.deepStrictEqual([...reachableBareImports("internal/digest.ts")].sort(), [
-			"effect",
+			"effect/Effect",
+			"effect/Function",
+			"effect/Stream",
 			"effect/encoding/Hex",
 			"node:crypto",
 		]);
-		assert.deepStrictEqual([...reachableBareImports("internal/fsProbe.ts")].sort(), ["effect"]);
+		assert.deepStrictEqual([...reachableBareImports("internal/fsProbe.ts")].sort(), ["effect/Effect", "effect/Function"]);
 		assert.deepStrictEqual([...reachableBareImports("internal/jwt.ts")].sort(), [
-			"effect",
+			"effect/Function",
+			"effect/Result",
+			"effect/Schema",
 			"effect/encoding/Base64Url",
 		]);
-		assert.deepStrictEqual([...reachableBareImports("internal/runner.ts")].sort(), ["effect"]);
+		assert.deepStrictEqual([...reachableBareImports("internal/runner.ts")].sort(), [
+			"effect/Effect",
+			"effect/Function",
+			"effect/Option",
+		]);
 		assert.deepStrictEqual([...reachableBareImports("internal/runnerFile.ts")], []);
-		assert.deepStrictEqual([...reachableBareImports("internal/unstubbed.ts")].sort(), ["effect"]);
+		assert.deepStrictEqual([...reachableBareImports("internal/unstubbed.ts")].sort(), ["effect/Effect"]);
 	});
 
 	it("the entry point reaches Azure, and that is correct", () => {
