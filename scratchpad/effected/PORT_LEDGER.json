@@ -3907,16 +3907,759 @@
       "wave": 2,
       "position": 4,
       "stage": 0,
-      "status": "pending",
+      "status": "in-progress",
       "provisionalHome": "drivers",
       "upstreamPaths": {
         "src": "packages/github/src",
         "test": "packages/github/__test__"
       },
-      "exportsExpected": [],
+      "exportsExpected": [
+        {
+          "name": "Annotation",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "AnnotationLevel",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "AppCredentials",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "AppIdentity",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "AppliedSettings",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ArtifactMetadata",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ArtifactMetadataShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "Attestation",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "AttestationListEntry",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "AttestationRecord",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "AttestationShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "BareLineReference",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "BotIdentity",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "BranchOutcome",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "CLOSING_KEYWORDS",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "CheckConclusion",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "CheckRun",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "CheckRunOutput",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "CheckRunRef",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "CheckRunShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ClosingKeyword",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "CodeScanning",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "CodeScanningSetup",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "CodeScanningShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "CommentMarker",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "CommentOnceResult",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "CommentRecord",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "CommitComparison",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "CommitFile",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "CommitRef",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "CommitSummary",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ConcludeCheckRun",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "DeploymentEnvironment",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "DeploymentEnvironmentInfo",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "DeploymentEnvironmentShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ExtraPermission",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "FileChange",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "FileContent",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "FileDeletion",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "FileMode",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "FileStatus",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "GRAPHQL_ONLY_SETTINGS",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "GitBranch",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "GitBranchShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "GitCommit",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "GitCommitShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "GitHubApp",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "GitHubAppError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "GitHubAppOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "GitHubAppShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "GitHubClient",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "GitHubClientOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "GitHubClientShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "GitHubCommit",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "GitHubCommitShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "GitHubContent",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "GitHubContentShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "GitHubError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "GitHubErrorKind",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "GitHubFixtures",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "GitHubGraphQLError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "GitHubIssue",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "GitHubIssueShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "GitHubRelease",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "GitHubReleaseShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "GitHubRepository",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "GitHubRepositoryShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "GitHubValidationCode",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "GitHubValidationEntry",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "GitTag",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "GitTagShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "GraphQLDocument",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "GraphQLErrorEntry",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "Installation",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "InstallationToken",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "InvalidRepoRefError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "IssueInfo",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "IssueReference",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "LatestSemverOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "LinkedIssue",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "MergeMethod",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "OwnerType",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "PageOptions",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "PermissionGap",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "PermissionLevel",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "PermissionResult",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "PollOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "PullRequest",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "PullRequestComment",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "PullRequestCommentShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "PullRequestInfo",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "PullRequestShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "RateLimitSnapshot",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "RecordedCall",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ReleaseAsset",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ReleaseInfo",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "Repo",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "RepoRef",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "RepositoryPatch",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "RepositoryPatchDraft",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "RepositorySecret",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "RepositorySecretShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "RepositorySecurity",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "RepositorySecurityShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "RepositorySettings",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "RepositoryVariable",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "RepositoryVariableShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "RestData",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "RestExtras",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "RestItem",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "RestPaginatingRoute",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "RestParams",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "RestResponse",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "RestRoute",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "RetryPolicy",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "RetryableFailure",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "Ruleset",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "RulesetInfo",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "RulesetPayload",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "RulesetShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "SECURITY_ANALYSIS_STATUS_FIELDS",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "SecretInfo",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "SecretScope",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "SemverTag",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "StorageRecordInput",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TagRef",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TokenPermissionError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TokenPermissions",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TokenRequest",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "UpsertedPullRequest",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "VariableInfo",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "VersionFromTag",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "WorkflowDispatch",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "WorkflowDispatchShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "WorkflowInfo",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "WorkflowRunStatus",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "harvestIssueReferences",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "parseBareLineReference",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "repositoryPatch",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "transformSecurityAndAnalysis",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "versionFromTag",
+          "kind": "value",
+          "entry": "."
+        }
+      ],
       "exportsAdded": [],
-      "newDeps": [],
-      "fixturesBytes": 0,
+      "newDeps": [
+        {
+          "name": "@octokit/core",
+          "kind": "runtime",
+          "spec": "^7.0.6",
+          "replacement": null
+        },
+        {
+          "name": "@octokit/plugin-paginate-rest",
+          "kind": "runtime",
+          "spec": "^16.0.0",
+          "replacement": null
+        },
+        {
+          "name": "@octokit/types",
+          "kind": "runtime",
+          "spec": "^18.0.0",
+          "replacement": null
+        },
+        {
+          "name": "blakejs",
+          "kind": "runtime",
+          "spec": "1.2.1",
+          "replacement": null
+        },
+        {
+          "name": "tweetnacl",
+          "kind": "runtime",
+          "spec": "1.0.3",
+          "replacement": null
+        },
+        {
+          "name": "universal-github-app-jwt",
+          "kind": "runtime",
+          "spec": "^2.2.2",
+          "replacement": null
+        }
+      ],
+      "fixturesBytes": 3905,
       "deviations": [],
       "backlog": [],
       "reviewRounds": [],

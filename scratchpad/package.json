@@ -54,8 +54,12 @@
     "@effect/platform-bun": "catalog:",
     "@google-cloud/pubsub": "catalog:",
     "@google-cloud/storage": "catalog:",
+    "@octokit/core": "^7.0.6",
+    "@octokit/plugin-paginate-rest": "^16.0.0",
+    "@octokit/types": "^18.0.0",
     "@xenova/transformers": "catalog:",
     "@zip.js/zip.js": "catalog:",
+    "blakejs": "1.2.1",
     "drizzle-orm": "catalog:",
     "effect": "catalog:",
     "exifreader": "catalog:",
@@ -66,7 +70,9 @@
     "music-metadata": "catalog:",
     "n3": "catalog:",
     "officeparser": "catalog:",
-    "pdfjs-dist": "catalog:"
+    "pdfjs-dist": "catalog:",
+    "tweetnacl": "1.0.3",
+    "universal-github-app-jwt": "^2.2.2"
   },
   "devDependencies": {
     "@beep/fc-runs": "workspace:^",
