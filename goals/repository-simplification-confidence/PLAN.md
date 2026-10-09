@@ -88,16 +88,17 @@ dated successor receipt) when it opens.
 
 ### C lane status — 2026-10-09
 
-`rsc-c-scripts`: wave 1 includes all command-family ports and the coordinated Ci
-pre-runtime shim / install-export-restore ordering under resume ruling 3.
-R24 owner audit is resolved. Exact reviewed-exception candidates are recorded
-for B after V without generated-inventory edits. Main is merged at `c5787ba017`;
-independent source review has zero actionable findings at `e51f6ff5c3`.
-JSDoc ratchet, knowledge census, refreshed CI fixtures, test-tsgo and Fallow
-audit/health pass. The introduced bootstrap/docgen compatibility findings are
-repaired; full package/docgen qualification is queued through heavy admission.
-E's workflow co-sign will occur on the draft PR. Publication/hosted proof remain
-open. Evidence:
+`rsc-c-scripts`: wave 1 implements all command-family ports and the coordinated
+Ci pre-runtime shim / install-export-restore ordering under resume ruling 3.
+R24 owner audit is resolved. Main includes D's #1566 release policy through
+`17a04eb0e5`; shared owners regenerate without tracked diff. Full package
+verification passes (audit 811.4s, docgen 28.8s), alongside 25 CI fixtures,
+test-tsgo, JSDoc ratchet and knowledge census. Fallow health has zero findings;
+ordinary audit exits 0 with attributed ONNX/unchanged complexity observations.
+Normal publication at `bc176b61fa` fails before push on occurrence-specific
+B/V policy admission and H1's root ONNX declaration. No PR is created; E's
+workflow co-sign and hosted evidence remain open. No inventory is edited.
+Evidence:
 [`history/handoffs/rsc-c-scripts-2026-10-09.md`](history/handoffs/rsc-c-scripts-2026-10-09.md),
 [`history/receipts/stage-5-acceptance.md`](history/receipts/stage-5-acceptance.md).
 This status does not mark Script ports or Sensitive scripts accepted.

@@ -466,3 +466,11 @@ are available. Cancellation is not a proof failure or a package pass.
   rather than keeping an ordered ticket queue, so closeout admission has
   unpredictable wait time. A fair queue with observable position would prevent
   this delay; this lane does not alter the workstation wrapper or other jobs.
+
+- C publication boundary: normal `beep yeet publish` at `bc176b61fa` exits 1
+  before push because collected cheap gates enforce schema-first / effect-vitest
+  exception candidates delegated to B, plus the H1-owned root ONNX declaration.
+  Resume ruling 3 and S11 permit those recorded reds, but the publisher has no
+  applied program admission for them. No PR is created. A narrow, explicit
+  owner-approved publication mechanism for attributed delegated reds would
+  prevent repeated qualification without weakening inventories or fabricating proof.

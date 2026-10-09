@@ -167,3 +167,21 @@ invocation, type, docgen and complexity findings are repaired and awaiting their
 necessary reruns. The unused root ONNX declaration remains under H1 ownership
 as explicitly ruled. No real vault, apt directory, installed unit or model endpoint
 was changed. E's workflow co-sign, publication and hosted evidence remain open.
+
+### C Run 4 terminal local evidence and publication blocker
+
+Full `beep quality package-verify @beep/repo-cli` exits 0: audit 811.4s and
+docgen 28.8s. Terminal local parity: test-tsgo=0 (334 files), 25 CI
+runner-security fixtures pass under the package's Bun runtime, owner pattern
+freshness=0, JSDoc ratchet=0 and merged-main knowledge census=0. Ordinary
+Fallow audit/health exit 0; audit retains H1's root ONNX declaration and unchanged
+Ci summary complexity, while health has zero findings. Scoped coverage read is
+recorded in the handoff; floors are unchanged. Runtime source is independently
+reviewed with zero actionable findings at `e51f6ff5c3`; D's main integration
+introduces no C runtime edit.
+
+Publication at `bc176b61fa` collects five cheap-gate reds and exits before push:
+B-owned schema/fixture judgment rows, and Knip/Fallow's H1-owned root ONNX row.
+The exact candidate identities, attribution and terminal logs are in the handoff.
+No PR, E co-sign, hosted proof or accepted program row is claimed from these
+local results. Both C-owned heavy commands have ended.

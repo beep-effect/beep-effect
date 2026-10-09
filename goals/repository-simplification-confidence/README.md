@@ -74,13 +74,15 @@ and [lane handoff](./history/handoffs/rsc-h1-catalog-2026-10-09.md).
 C implementation evidence (partial, 2026-10-09):
 [`history/handoffs/rsc-c-scripts-2026-10-09.md`](history/handoffs/rsc-c-scripts-2026-10-09.md)
 and [`history/receipts/stage-5-acceptance.md`](history/receipts/stage-5-acceptance.md).
-C now includes the coordinated Ci group and pre-runtime adapters. Independent
-source review has zero actionable findings at `e51f6ff5c3`; JSDoc ratchet and
-knowledge census, refreshed CI fixtures, type proof and Fallow audit/health
-pass. Current full package/docgen qualification, E's workflow co-sign,
-publication and hosted proof remain open. B receives the occurrence-specific
-reviewed-exception table after V; no inventory is hand-edited and no acceptance
-row is closed.
+C includes the coordinated Ci group and pre-runtime adapters. Full
+`@beep/repo-cli` package verification passes (audit 811.4s, docgen 28.8s),
+with 25 CI fixtures, test-tsgo, JSDoc ratchet and knowledge census passing.
+Ordinary Fallow audit exits 0 with attributed ONNX/unchanged complexity
+observations; health has zero findings. Normal Yeet publication at `bc176b61fa`
+stops before push on B-owned exception candidates and the H1-owned root ONNX
+regression. No PR or hosted proof exists. E's workflow co-sign remains open.
+Exact candidate rows and publication logs are in the handoff; C edits no
+inventory or allowlist and does not close program acceptance.
 
 ## Notes
 

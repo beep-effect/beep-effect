@@ -628,3 +628,70 @@ D's manifest-aware release policy now applies: C removes its private package
 changeset note instead of introducing a post-baseline private note. Shared
 package-scripts, cache profile, goals index, tsconfig and fingerprint owners
 regenerate with no tracked diff. Publication will retry from this clean base.
+
+### Run 4 terminal publication attribution
+
+Normal `beep-heavy bun run beep yeet publish --message
+'refactor(tooling): port operational scripts into Effect commands'` at
+`bc176b61face008a1e7e04f48a1b1c525f978f35` exits 1 after collecting all cheap
+lanes. Nothing is pushed and no PR is created. Verdict and exact logs are
+`.beep/yeet/runs/chore_rsc-c-scripts-809cba90d29d/verdict.json` and
+`.beep/yeet/logs/full_00-cheap-gates.log`. P0 `local-shard-3e29990ae7bb` is
+acknowledged `--wontfix` with the exact B-owner/delegated-red publication reason;
+this acknowledgment is not proof that the gate passed.
+
+| Red lane | Exact attribution / owning resolution |
+| --- | --- |
+| `lint:schema-first` | Two Accounts lossless wire candidates already enumerated for B; also the occurrence-specific golden CI projection advisory below. No inventory edit. |
+| `lint:effect-vitest` | 12 new rows across six files, all fixture-layer/scope/platform judgments. Existing table plus retained Graft fixture below; B after V owns admission. |
+| `quality:knip` | Sole regression `package.json#onnxruntime-node`; root declaration explicitly assigned to H1 in resume ruling 2. C must leave it. |
+| `fallow:audit` | Root ONNX declaration introduced by root-script deletion, owned by H1; unchanged `renderTurboSummary` complexity is inherited-adjacent. |
+| `fallow:dead-code` | Same sole root ONNX declaration; raw scanner status is 0/warn but the policy envelope enforces its baseline row and exits 1. |
+
+Additional occurrence-specific candidates for B (not broad census acceptance):
+
+| File:line | Rule / review class | Justification |
+| --- | --- | --- |
+| `packages/tooling/tool/cli/test/fixtures/graft/crux-batches.test.js:5` | EV010 / platform-filesystem-candidate | Retained external Graft adapter uses physical `realpathSync` to select installed-tool fixtures; relocated unchanged Node regression, not a new Effect-owned runtime. |
+| `packages/tooling/tool/cli/test/ci-runner-security.test.ts:64` | SFV4-arbitrary-tests / schema-policy-advisory | Golden event/credential, subprocess/signal and generated-pattern projection regressions use schema codecs at the boundary; random schema values cannot replace the exact bootstrap/action scenarios. |
+
+Passed cheap lanes: changeset-status (D's private policy), cache policy (zero
+blocking findings), goals index/doctor, atlas, config-sync, both code/Markdown
+Effect import audits, allowlist, JSDoc ratchet (zero legacy findings), and Fallow
+health (zero findings). The ordinary Fallow audit run exits 0 with two attributed
+observations; the publish `--check` variant is red as above. Local parity is
+qualified separately from hosted evidence, which cannot exist before publication.
+
+### Run 4 completed local qualification
+
+`.beep/rsc-c-run4-qualified-result.txt` is terminal with all six rows zero:
+patterns, test-tsgo, CI fixtures, Fallow audit, Fallow health, package-verify.
+Full `@beep/repo-cli` audit takes 811.4s; full package docgen takes 28.8s.
+The source repair is unchanged since `e51f6ff5c3`; D's integrated policy and
+shared-owner regeneration are preserved. Merged-main knowledge check exits 0.
+The publisher's current JSDoc ratchet passes with zero legacy findings. All
+previous compiler/shim failed experiments remain explicitly superseded above.
+No extra passing gate is rerun merely for a report-only edit.
+
+C-owned Graft reported estimates total approximately 323,583 tokens saved
+across four successful queries; independent reviewer usage is separate.
+Both owned heavy sessions have terminal status (qualification 0, publication 1).
+No job started by this worker remains running. E's co-sign, hosted proof,
+B/V exception admission and H1 root ONNX resolution remain open. The concrete
+blocker is normal Yeet's cheap-gate publication fence, not a failing runtime port.
+
+### Run 4 blocked final report
+
+lane: rsc-c-scripts · head: bc176b61face008a1e7e04f48a1b1c525f978f35
+(qualified work head; report-only commit follows) · PR: none (wave 1 normal
+Yeet publish failed before push) · package-verify: @beep/repo-cli pass
+(audit 811.4s, docgen 28.8s) · hosted-parity: test-tsgo pass (334 files);
+docgen local pass and full package docgen pass; jsdoc-ratchet pass;
+knowledge refs --check pass after main integration; fallow audit+health
+ordinary runs pass, audit retains two attributed findings and publish
+--check is red on H1 root ONNX; coverage read complete, no floor changes
+· handoff: history/handoffs/rsc-c-scripts-2026-10-09.md · open: publication
+blocked by B/V occurrence-specific policy admission and H1 root ONNX reds;
+E workflow co-sign and all hosted evidence await a PR; orchestrator must
+resolve the explicit delegated-red publication fence. No PR was pushed,
+readied or merged; no C-owned heavy command remains running.

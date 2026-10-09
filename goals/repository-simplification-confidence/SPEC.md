@@ -732,6 +732,8 @@ without claiming completion.
 
 | 2026-10-09 | C restarts only its unadmitted publish waiter through the current canonical wrapper after the shared slot floor changes. | The wrapper loads slot count once; the old waiter sees three slots while new jobs see four. Read-only process checks prove the C waiter has only its queue sleep child; no publication or other lane is stopped, and C changes no cap. | Resubmit the same reviewed command through beep-heavy; shared configuration remains with its owner. |
 
+| 2026-10-09 | C records a blocked normal publication rather than bypassing cheap gates or editing B/H1-owned ratchets. | Yeet at `bc176b61fa` enforces five attributed reds despite S11: lossless-wire/platform/golden-regression candidates pending B after V, and root ONNX assigned to H1. Full CLI package and required local parity pass; exact occurrence additions and logs are in C's handoff. | Owners admit or repair the named findings, or the orchestrator supplies an explicit program publication mechanism; retry Yeet from a fresh merged base. No gate result is manufactured. |
+
 ## Exception Ledger
 
 | Exception | Scope | Owner | Rationale | Removal condition |
