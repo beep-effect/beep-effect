@@ -109,7 +109,7 @@ They establish execution behavior and never fill the live window.
 
 | Workflow | Result | Boundary | UTC date |
 | --- | --- | --- | --- |
-| Claude primary and linked checkout | Each: 1 fresh startup, 1 prompt, 2 Pre, 2 Post, 1 Stop; one stamp and one skill surface | Native Opus workflow; identical indexed fixture heads produced equal stamps | 2026-10-09T20:49:39.102Z primary; 20:11:45.702Z linked |
+| Claude primary and linked checkout | Each: 1 fresh startup, 1 prompt, 2 Pre, 2 Post, 1 Stop; one stamp and one skill surface | Native Opus workflow; identical indexed fixture heads produced equal stamps | 2026-10-09T20:49:39.102Z primary; 20:49:43.183Z linked |
 | Claude project Skill, MCP and Read | 1 Skill, 1 MCP tool, 1 Read; 3 surface rows; one start stamp | Existing hook pipeline; local constant-response MCP fixture | 2026-10-09 |
 | Claude fan-out | 1 parent SessionStart; 2 Agent calls and 2 Bash posts; no extra qualifying roots | Both children pinned to Opus; parent payload namespace observed | 2026-10-09 |
 | Codex primary/linked, two sandbox modes | 4 tool workflows succeeded; zero native hook rows | Native collection remains unknown; no home trust state changed | 2026-10-09 |

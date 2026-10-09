@@ -723,7 +723,7 @@ const enumerateSnapshotPaths = Effect.fn("AiMetrics.enumerateConfigSnapshotPaths
     );
     const sessionPaths = A.filter(existing, (file) => {
       const relative = normalizeRepoPath(pathApi, repoRoot, file);
-      return relative === "AGENTS.md" || relative === "CLAUDE.md" || relative === ".mcp.json";
+      return isSessionScopePath(relative);
     });
     const paths = pipe(existing, A.dedupe, A.sort(Order.String));
     const prioritized = A.appendAll(
@@ -869,8 +869,15 @@ const readSnapshotFiles = Effect.fn("AiMetrics.readConfigSnapshotFiles")(functio
     }),
     { concurrency: 16 }
   );
+  const sessionCandidates = A.filter(candidates, (candidate) =>
+    isSessionScopePath(normalizeRepoPath(pathApi, repoRoot, candidate.filePath))
+  );
+  const prioritized = A.appendAll(
+    sessionCandidates,
+    A.filter(candidates, (candidate) => !isSessionScopePath(normalizeRepoPath(pathApi, repoRoot, candidate.filePath)))
+  );
   const selected = A.reduce(
-    candidates,
+    prioritized,
     {
       included: A.empty<{ readonly filePath: string; readonly sizeBytes: number }>(),
       skippedOversizeFileCount: 0,
