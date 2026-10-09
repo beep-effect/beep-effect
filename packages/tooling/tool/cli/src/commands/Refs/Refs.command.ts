@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { findRepoRoot } from "@beep/repo-utils";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
 import * as Console from "effect/Console";
@@ -37,6 +38,26 @@ const planCommand = Command.make(
   })
 ).pipe(
   Command.withDescription("Print the clone, link, and build plan without writing"),
+  Command.provide(ReferenceWorkspaceLive)
+);
+
+const provisionCommand = Command.make(
+  "provision",
+  { root: rootFlag, checkout: Flag.String("checkout").pipe(Flag.optional) },
+  Effect.fn("Refs.provision")(function* ({ root, checkout }) {
+    const home = yield* homeConfig;
+    const workspace = yield* ReferenceWorkspace;
+    const resolved = yield* workspace.resolveRoot(home, root);
+    const owner = yield* findRepoRoot();
+    const path = yield* Path.Path;
+    const target = O.match(checkout, {
+      onNone: () => owner,
+      onSome: (value) => resolveOperatorPath(value, home, path.resolve),
+    });
+    yield* Console.log(A.join(yield* workspace.provision(home, target, resolved), "\n"));
+  })
+).pipe(
+  Command.withDescription("Clone missing members, preserve existing checkouts, and link references"),
   Command.provide(ReferenceWorkspaceLive)
 );
 
@@ -127,8 +148,8 @@ const timerCommand = Command.make(
  * @since 0.0.0
  */
 export const refsCommand = Command.make("refs", {}, () =>
-  Console.log("Reference commands: plan, refresh, install-timer")
+  Console.log("Reference commands: plan, provision, refresh, install-timer")
 ).pipe(
   Command.withDescription("Manage the manifest-defined reference workspace"),
-  Command.withSubcommands([planCommand, refreshCommand, timerCommand])
+  Command.withSubcommands([planCommand, provisionCommand, refreshCommand, timerCommand])
 );

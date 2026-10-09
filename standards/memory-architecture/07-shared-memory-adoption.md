@@ -3,7 +3,7 @@
 > **SUPERSEDED (2026-08-29) — do not follow.** The adoption recorded here was
 > reversed: basic-memory and codegraph are removed, and the setup-agent-memory
 > bootstrap script no longer exists (the Effect reference half lives on as
-> `scripts/setup-effect-ref.sh`). See the 2026-08-29 entry in
+> `bun run beep refs provision`). See the 2026-08-29 entry in
 > [`04-decision-log.md`](./04-decision-log.md). History only.
 
 Status: retired (2026-08-29; was: adopted pilot).

@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -19,8 +19,11 @@ annotation wire shape, including the Md-to-DOCO section fold.
 
 ## Current Phase
 
-P0 Research: pin exact artifacts/licenses/terms and freeze the annotation and
-section-fold fixtures.
+P4 complete in PR [#1588](https://github.com/beep-effect/beep-effect/pull/1588).
+Pinned generation, focused codec/fold fixtures, identity/RDF/CLI package
+verification and hosted-parity commands pass. Prepared-SDK full docgen passes.
+The reflection and lifecycle closeout travel in the same PR; hosted readiness
+and merge remain with the orchestrator under S11. See the lane handoff.
 
 ## Read This First
 

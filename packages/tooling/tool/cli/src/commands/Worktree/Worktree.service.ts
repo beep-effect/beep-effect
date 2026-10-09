@@ -34,6 +34,7 @@ import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as Path from "effect/Path";
+import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { ghOutput } from "../../internal/github/index.ts";
@@ -1485,6 +1486,47 @@ const makeWorktreeRemovalService = Effect.fn("WorktreeRemovalService.make")(func
     ),
   });
 });
+
+/**
+ * Installs the fail-closed projection driver in this clone's local Git config.
+ *
+ * **Details**
+ * The driver path is relative to each merge checkout, so retiring a lane cannot
+ * strand the common config on an absolute path into that lane.
+ *
+ * **Example** (Prepare local Git configuration)
+ * ```ts
+ * import { installRegenerateMergeDriver } from "@beep/repo-cli/commands/Worktree"
+ * import * as Effect from "effect/Effect"
+ * Effect.isEffect(installRegenerateMergeDriver("/checkout")) // => true
+ * ```
+ *
+ * @category commands
+ * @since 0.0.0
+ */
+export const installRegenerateMergeDriver = Effect.fn("Worktree.installRegenerateMergeDriver")(
+  function* (checkout: string) {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    if (!(yield* fs.exists(path.join(checkout, "scripts", "regenerate-merge-driver.sh"))))
+      return yield* WorktreeCommandError.make({
+        message: "Projection merge-driver adapter is missing.",
+        cause: undefined,
+      });
+    for (const [key, value] of R.toEntries({
+      name: "Regenerate pure repository projections",
+      driver: "bash scripts/regenerate-merge-driver.sh %O %A %B %P",
+      recursive: "binary",
+    })) {
+      yield* runWorktreeGitCapture(
+        checkout,
+        ["config", "--local", `merge.regenerate.${key}`, value],
+        "Cannot install projection merge driver."
+      );
+    }
+  },
+  Effect.mapError(WorktreeCommandError.new("Cannot install projection merge driver."))
+);
 
 /**
  * Removal layer that still requires a {@link WorktreeMergedPullRequestProbe}.

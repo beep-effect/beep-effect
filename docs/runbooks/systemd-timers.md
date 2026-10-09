@@ -11,7 +11,7 @@ Three repo CLI commands render systemd **user** units into
 
 The refs timer refreshes every manifest member under
 `$HOME/YeeBois/references/effect`, provisioned from `scripts/references.json` by
-`scripts/setup-effect-ref.sh` (`BEEP_REFERENCES_ROOT` overrides the root).
+`bun run beep refs provision` (`BEEP_REFERENCES_ROOT` overrides the root).
 Its deep tier uses `claude-opus-5` through CLIProxyAPI and reuses
 `$HOME/.config/beep-graft/env`; see [graft recovery](graft-local-recovery.md)
 for the shared provider environment.
@@ -43,7 +43,7 @@ back and removing its manifest entry reverses the migration.
 Run the setup script from the checkout containing the updated manifest:
 
 ```sh
-bash scripts/setup-effect-ref.sh
+bun run beep refs provision
 bun run beep refs plan
 ```
 

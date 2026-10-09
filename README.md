@@ -278,7 +278,7 @@ First-party work lives under `packages/`, `apps/`, `infra/`, `goals/`,
 `explorations/`, `standards/`, and the authored `docs/` tree.
 
 The reference workspace lives at `$HOME/YeeBois/references/effect`, with `effect`
-and `effect-tsgo` child clones. `scripts/setup-effect-ref.sh` provisions it from
+and `effect-tsgo` child clones. `bun run beep refs provision` provisions it from
 `scripts/references.json`; `BEEP_REFERENCES_ROOT` overrides the workspace root.
 The gitignored `.repos/effect` link still points to the
 [Effect-TS/effect](https://github.com/Effect-TS/effect) child, whose `main` is

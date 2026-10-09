@@ -12,8 +12,9 @@ CPUAccounting=yes
 MemoryAccounting=yes
 IOAccounting=yes
 TasksAccounting=yes
-# Throttle (not kill) the slice once admitted work exceeds this. Sized from observed single-proof
-# peaks of 25-30 GiB (#888 follow-up): two concurrent heavy proofs fit before reclaim pressure,
-# while >=60 GiB stays free for the desktop session on a 125 GiB workstation. Sustained pressure
-# beyond throttling is handled by systemd-oomd via agent-runs.slice.d/50-oomd.conf.
-MemoryHigh=64G
+# Preserve the workstation's heavy budget adopted from the operator-built
+# 50-heavy-budget.conf drop-in. Re-rendering these sources changes no live unit;
+# the owner re-syncs installed units separately after merge.
+MemoryHigh=48G
+MemoryMax=60G
+MemorySwapMax=8G

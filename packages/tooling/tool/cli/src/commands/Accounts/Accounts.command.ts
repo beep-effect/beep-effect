@@ -17,6 +17,7 @@ import { AccountsError } from "./Accounts.errors.ts";
 import { AccountsStatusReportJson } from "./Accounts.schemas.ts";
 import { watchAccounts } from "./Accounts.tui.ts";
 import { AccountsBoardLayout, renderAccountsBoard } from "./Accounts.view.ts";
+import { AccountsSecretsLayout, AccountsSecretsLayoutLive } from "./AccountsSecretsLayout.service.ts";
 import { layerAccountsUsageLive, loadAccountsReport } from "./AccountsUsage.service.ts";
 
 // Width used when the board is printed to something that is not a terminal.
@@ -81,6 +82,18 @@ export const accountsStatusCommand = Command.make(
   Command.provide(layerAccountsUsageLive)
 );
 
+const secretsLayoutCommand = Command.make(
+  "secrets-layout",
+  { apply: Flag.Boolean("apply").pipe(Flag.withDefault(false)) },
+  Effect.fn("Accounts.secretsLayout")(function* ({ apply }) {
+    const service = yield* AccountsSecretsLayout;
+    for (const line of yield* service.run(apply)) yield* Console.log(line);
+  })
+).pipe(
+  Command.withDescription("Preview vault sections; --apply requires the operator's op-human route"),
+  Command.provide(AccountsSecretsLayoutLive)
+);
+
 /**
  * `beep accounts`: the live accounts screen, and the `status` subcommand.
  *
@@ -106,5 +119,5 @@ export const accountsCommand = Command.make(
     "Live screen of every Claude, Codex, SuperGrok, and Muse account: which one to use next, per provider"
   ),
   Command.provide(layerAccountsUsageLive),
-  Command.withSubcommands([accountsStatusCommand])
+  Command.withSubcommands([accountsStatusCommand, secretsLayoutCommand])
 );
