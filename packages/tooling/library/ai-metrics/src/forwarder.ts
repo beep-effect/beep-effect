@@ -190,9 +190,10 @@ const readStampGaps = Effect.fnUntraced(function* (evidenceRoot: string) {
   const sentinelExists = yield* fs.exists(sentinelPath);
   if (sentinelExists) {
     const sentinel = yield* HookPulseDisarmSentinel.decodeJsonEffect(yield* fs.readFileString(sentinelPath));
+    const observedNow = yield* Clock.currentTimeMillis;
     gaps.push(
       SessionStampGap.make({
-        start: timestampEpoch(sentinel.disarmedAt),
+        start: O.filter(timestampEpoch(sentinel.disarmedAt), (start) => start <= observedNow),
         end: O.none(),
         client: O.none(),
         eventLoss: false,

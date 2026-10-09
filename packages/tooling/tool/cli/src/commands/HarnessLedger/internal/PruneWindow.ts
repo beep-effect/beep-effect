@@ -23,6 +23,7 @@ import {
 } from "@beep/repo-ai-metrics";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
 import { A, O, pipe, Str } from "@beep/utils";
+import * as Clock from "effect/Clock";
 import * as Config from "effect/Config";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -480,11 +481,13 @@ export const observeSessionWindow = Effect.fn("HarnessLedger.observeSessionWindo
           Effect.orElseSucceed(O.none<HookPulseDisarmSentinel>)
         )
     : O.none<HookPulseDisarmSentinel>();
+  const observedNow = yield* Clock.currentTimeMillis;
   const openDisarmSince = malformedWindows
     ? O.none<number>()
     : pipe(
         openSentinel,
-        O.map((value) => DateTime.toEpochMillis(DateTime.makeUnsafe(value.disarmedAt)))
+        O.map((value) => DateTime.toEpochMillis(DateTime.makeUnsafe(value.disarmedAt))),
+        O.filter((start) => start <= observedNow)
       );
   const openDisarm = O.getOrElse(sentinelPresent, () => true) || malformedWindows;
   const { refusalUndecodableLines, writerRefusalsTotal, refusalsByAgentKind, refusalRows } = yield* readRefusals(root);

@@ -515,6 +515,16 @@ END {
 
   indexed=0
   if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    git_top="$(git rev-parse --show-toplevel && printf '.')"
+    git_top="${git_top%.}"; git_top="${git_top%$'\n'}"
+    indexed_probe="$(pwd -P && printf '.')"
+    indexed_probe="${indexed_probe%.}"; indexed_probe="${indexed_probe%$'\n'}"
+    while [ "${indexed_probe}" != "${git_top}" ]; do
+      [ ! -e "${indexed_probe}/.git" ] && [ ! -L "${indexed_probe}/.git" ] || exit 1
+      [ "${indexed_probe}" != / ] || exit 1
+      indexed_probe="${indexed_probe%/*}"
+      [ -n "${indexed_probe}" ] || indexed_probe=/
+    done
     indexed=1
     mapfile -d '' -t indexed_paths < <(git ls-files -z -- ':(glob)**/AGENTS.md' ':(glob)**/CLAUDE.md' .mcp.json .claude .codex .ai .aiassistant .cursor .agents .junie .grok)
     wait "$!" || exit 1

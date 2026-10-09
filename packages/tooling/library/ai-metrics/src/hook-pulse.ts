@@ -532,7 +532,12 @@ export const HookPulseEvidenceTier = LiteralKit([
 export type HookPulseEvidenceTier = typeof HookPulseEvidenceTier.Type;
 
 const HookPulseUtcTimestamp = S.String.check(
-  S.makeFilter((input) => O.isSome(S.decodeOption(S.DateTimeUtcFromString)(input)))
+  S.makeFilter((input) =>
+    O.exists(
+      S.decodeOption(S.DateTimeUtcFromString)(input),
+      (date) => Str.endsWith("Z")(input) && Str.slice(0, 19)(DateTime.formatIso(date)) === Str.slice(0, 19)(input)
+    )
+  )
 );
 
 /**

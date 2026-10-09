@@ -632,6 +632,50 @@ const readTrackedSnapshotPaths = Effect.fn("AiMetrics.readTrackedSnapshotPaths")
   return O.some<ReadonlyArray<string>>(pipe(text, Str.split("\0"), A.filter(Str.isNonEmpty)));
 });
 
+const hasGitMetadata = Effect.fnUntraced(function* (directory: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const metadata = path.join(directory, ".git");
+  return yield* fs.stat(metadata).pipe(
+    Effect.as(true),
+    Effect.catchIf(
+      (cause) => cause.reason._tag === "NotFound",
+      () =>
+        fs.readLink(metadata).pipe(
+          Effect.as(true),
+          Effect.catchIf(
+            (cause) => cause.reason._tag === "NotFound",
+            () => Effect.succeed(false)
+          )
+        )
+    ),
+    Effect.mapError((cause) => configSnapshotFailure("Cannot inspect Git snapshot metadata.", cause))
+  );
+});
+
+const assertIndexedGitBoundary = Effect.fnUntraced(function* (repoRoot: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+  const top = yield* spawner
+    .string(ChildProcess.make("git", ["rev-parse", "--show-toplevel"], { cwd: repoRoot, stderr: "ignore" }))
+    .pipe(Effect.mapError((cause) => configSnapshotFailure("Cannot resolve indexed checkout root.", cause)));
+  const physicalTop = yield* fs
+    .realPath(Str.replace(/\r?\n$/u, "")(top))
+    .pipe(Effect.mapError((cause) => configSnapshotFailure("Cannot resolve physical checkout root.", cause)));
+  let directory = yield* fs
+    .realPath(path.resolve(repoRoot))
+    .pipe(Effect.mapError((cause) => configSnapshotFailure("Cannot resolve indexed scan root.", cause)));
+  while (directory !== physicalTop) {
+    if (yield* hasGitMetadata(directory))
+      return yield* configSnapshotFailure("Git skipped unresolved nested metadata.", undefined);
+    const parent = path.dirname(directory);
+    if (parent === directory)
+      return yield* configSnapshotFailure("Git checkout root does not contain the scan root.", undefined);
+    directory = parent;
+  }
+});
+
 const hasAncestorGitMetadata = Effect.fnUntraced(function* (repoRoot: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -639,10 +683,7 @@ const hasAncestorGitMetadata = Effect.fnUntraced(function* (repoRoot: string) {
     .realPath(path.resolve(repoRoot))
     .pipe(Effect.mapError((cause) => configSnapshotFailure("Cannot resolve Git snapshot ancestry.", cause)));
   while (true) {
-    const entries = yield* fs
-      .readDirectory(directory)
-      .pipe(Effect.mapError((cause) => configSnapshotFailure("Cannot inspect Git snapshot ancestry.", cause)));
-    if (A.contains(entries, ".git")) return true;
+    if (yield* hasGitMetadata(directory)) return true;
     const parent = path.dirname(directory);
     if (parent === directory) return false;
     directory = parent;
@@ -678,6 +719,7 @@ const enumerateSnapshotPaths = Effect.fn("AiMetrics.enumerateConfigSnapshotPaths
     .pipe(Effect.orElseSucceed(() => 1));
   if (gitCode !== 0 && (yield* hasAncestorGitMetadata(repoRoot)))
     return yield* configSnapshotFailure("Git metadata exists but cannot be resolved.", gitCode);
+  if (gitCode === 0) yield* assertIndexedGitBoundary(repoRoot);
   const tracked = yield* gitCode === 0
     ? Effect.scoped(readTrackedSnapshotPaths(repoRoot))
     : Effect.succeed(O.none<ReadonlyArray<string>>());
