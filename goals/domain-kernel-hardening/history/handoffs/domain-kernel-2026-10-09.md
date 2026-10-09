@@ -241,3 +241,106 @@ Mechanical fixture files:
 - packages/documents/tables/test/SyncOperationTable.test.ts
 - packages/epistemic/tables/test/EpistemicTables.test.ts
 - packages/workspace/tables/test/WorkspaceTables.test.ts
+
+## Run 2 qualification stop — full blast radius exceeds the bound
+
+PR 1 #1577 is MERGED (verified through REST). Superset checks passed:
+`git merge-base --is-ancestor dd8bbccba6eecdc665e89548af0259285c0863e3 HEAD`
+and `git diff --quiet dd8bbccba6eecdc665e89548af0259285c0863e3 origin/main -- goals/domain-kernel-hardening`.
+Implementation commit: `9e0e485d86`. Main merged at `6dfe584327`, with the expected
+packet conflicts in PLAN, SPEC, the handoff and OPPORTUNITIES. R1 resolution took
+the P1 side after both superset checks passed; no other conflicts. The local
+index was owner-command regenerated. No push occurred on the P1 branch.
+
+R1 stream outcome (exact matched summary, no packet findings anywhere):
+
+```text
+- goals/domain-kernel-hardening: revision=2 tip=2@97ceca70c0e7 status=active furthest=P0 resume=P0
+```
+
+The resumed ruling separates P1/P2/P3 waves, so this is an active P1 stream,
+not a completed-retained closeout proof. P3 has not run. Doctor reports zero
+blocking findings and only three unrelated completion-gate advisories:
+document-ast-pattern-classification, practice-box-onboarding, push-first-publish.
+GOAL size, manifest jq, whitespace and reflection lint pass.
+
+### Verification results
+
+| Command / subject | Result |
+| --- | --- |
+| Kernel gate: turbo check test docgen lint, shared-domain + schema | Pass |
+| @beep/shared-domain package-verify (default audit + docgen) | Pass |
+| Five table-package tests | Fail: five introduced epistemic exact-column assertions; agents, architecture-lab, documents and workspace tests pass |
+| @beep/agents-tables package-verify | Fail: introduced docgen selected-row fixtures |
+| @beep/architecture-lab-tables package-verify | Fail: introduced docgen insert-to-select fixtures |
+| @beep/documents-tables package-verify | Fail: introduced docgen selected-row fixtures |
+| @beep/epistemic-tables package-verify | Fail: introduced exact-column assertions and docgen selected-row fixtures |
+| @beep/workspace-tables package-verify | Fail: introduced docgen selected-row fixtures |
+| Db-admin turbo check test, including migrations:check | Pass |
+| Architecture operation-plan test (with generated migration inventory) | Pass |
+| Desktop codegen:check | Pass |
+| Final dependent check | Cancelled after scope stop; 120/129 successful tasks when stopped, no terminal success claimed |
+| PGlite server replay lanes | Not run: scope stop before this stage |
+| @beep/db-admin, @beep/professional-desktop, @beep/repo-cli package-verify | Not run: remaining batch stopped at scope bound |
+| Schema-first / schema-topology | Pass |
+| Hosted parity: test-tsgo, docgen local, jsdoc-ratchet, knowledge refs, fallow, scoped coverage | Not run: scope stop before this stage |
+
+The first dependent check's one introduced test pipe diagnostic was repaired
+before the green kernel/default shared-domain verification. The expected migration
+drift is resolved by the generated folder; db-admin check/test now passes.
+
+### Expanded mechanical blast radius
+
+The existing 37 sites are listed above (32 fixture projections, four converter
+projections, one exact-column assertion). Full default package verification finds
+31 additional distinct docgen example subjects:
+
+| Package | Additional docgen fixture subjects | Owning source surface |
+| --- | --- | --- |
+| @beep/agents-tables | 2 | ProviderInstance.converters.ts from-row and to-insert examples |
+| @beep/architecture-lab-tables | 2 | Worker.table.ts from-row and WorkerRow examples |
+| @beep/documents-tables | 8 | SyncConflict, SyncCursor, SyncItem, SyncOperation converters, from-row and to-insert examples |
+| @beep/epistemic-tables | 15 | CandidateClaim, ClaimDisposition, EdgeVersion, Evidence, UsageRecord converters: from-row, to-insert and Row examples |
+| @beep/workspace-tables | 4 | Message, Thread, Turn, Workspace converters: from-row examples |
+
+Two more exact-column fixture definitions are required in EpistemicTables.test.ts
+(base column map, covering four failures) and EvidenceVerificationTables.test.ts
+(sidecar map, covering one failure). Thus the conservative measured total is at
+least **70 mechanical sites**, exceeding the brief's 40-edit stop condition.
+No further consumer edits were made after attribution. No slice model/behavior
+file was touched. D12 records the hold and reversal.
+
+Both encoding options remain documented in P0: FieldOption had 33 diagnostics
+in nine files, including a production fixture; GeneratedByApp had 32 diagnostics
+in eight table tests and four explicit converter projections. GeneratedByApp
+preserves constructors, missing-key decoding and JSON-write exclusions. Its full
+qualification reveals the additional surface above. FieldOption's dependent
+full docgen/test blast radius was not measured; no claim that it avoids this stop.
+A scope reconciliation or a newly measured compatible encoding is required before
+resuming. Editing shared test utilities or public row types to evade the count
+would exceed this lane's authorized surfaces.
+
+### Job and inbox closeout
+
+The kernel/table qualification batch completed. The integration batch passed
+its db and architecture stages, then was stopped through its own user unit during
+the final dependent check after the scope stop; no later stage started. Both tool
+sessions are terminal. No own unit, heavy gate or readiness monitor remains
+running. Six local P0 rows were acknowledged `--wontfix` with the explicit scope
+stop and handoff reason; none was represented as fixed or environment-only.
+The orchestrator's PR 1 merge gate is external to this worker and was not changed.
+
+No PR 2 is published. P1 remains in-progress; P2/P3 remain pending; lifecycle
+remains active. D10 release-policy and D11 proof-inventory decisions are retained
+with their reversals above. D12 reverses on a reconciled brief, or by reverting
+implementation and its generated outputs. ROADMAP platform re-entry bullet (~349),
+Parked packets row (~383), and cohort prose (~406) remain orchestrator-owned.
+
+lane: domain-kernel
+head: 6dfe5843272efabfe9fb21eaab4bdbebb226fe47 (implementation and main-merge head; this blocked receipt follows locally)
+PR(s): PR 1 #1577 merged | PR 2 none (full qualification exceeds mechanical scope bound)
+package-verify: @beep/shared-domain: pass; @beep/agents-tables: fail; @beep/architecture-lab-tables: fail; @beep/documents-tables: fail; @beep/epistemic-tables: fail; @beep/workspace-tables: fail; @beep/db-admin: pending (not run: scope stop); @beep/professional-desktop: pending (not run: scope stop); @beep/repo-cli: pending (not run: scope stop)
+hosted-parity: test-tsgo: not run (scope stop) | docgen local: not run (scope stop) | jsdoc-ratchet: not run (scope stop) | knowledge refs: not run (scope stop) | fallow audit+health: not run (scope stop) | scoped coverage: not run (scope stop)
+handoff: goals/domain-kernel-hardening/history/handoffs/domain-kernel-2026-10-09.md
+open items: reconcile at least 70 mechanical sites with the 40-edit stop threshold; no P1 publication or P2/P3 completion. D10 private-workspace release policy reverses by reverting amendment/implementation without changing privacy; D11 migration proof entries reverse with migration removal and bundle regeneration; D12 hold reverses on reconciled scope or measured compatible encoding. Orchestrator owns stale docs/ROADMAP.md platform re-entry bullet (~349), Parked packets row (~383), and cohort prose (~406). Follow-ups: stale DomainModel.make detector; desktop release migration rollout.
+blocked: full qualification requires at least 70 mechanical converter/fixture sites, exceeding the brief's 40-edit bound

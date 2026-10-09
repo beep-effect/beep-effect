@@ -73,3 +73,18 @@
 - Action: preserve caps, use at most two own jobs, and poll their logs while
   preparing the exact measured fixture repairs. No other lane is interrupted.
 - Prevention: show queue position and payload start time in the wrapper receipt.
+
+## 2026-10-09 — compiler-only blast radius missed docgen and exact-column fixtures
+
+- Doing: full package qualification of the measured soft-delete encoding.
+- Evidence: kernel gate and shared-domain package verification pass; five table
+  package docgen runs fail on 31 distinct example subjects missing the new
+  selected-row column pair. Epistemic table tests fail five exact-column checks
+  backed by two shared fixture definitions.
+- Attribution: introduced by the new kit columns, not inherited failures.
+- Action: stop at the brief's 40-mechanical-edit bound. Existing work is 37 sites;
+  the additional 31 docgen fixtures and two column-map definitions raise the
+  conservative total to at least 70. No further consumer edits or publish.
+- Prevention: P0 compatibility measurements must include dependent docgen and
+  exact-column tests, not only dependent typecheck. Measure both candidate
+  encodings across that full surface before declaring a bounded migration.
