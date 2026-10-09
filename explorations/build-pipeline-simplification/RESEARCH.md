@@ -191,7 +191,7 @@ Brief ranges: A 1.14 to 1.38 s, B 0.65 to 0.88 s, C 1.34 s, D 0.64 to 0.70 s.
 3. **Babel is the only pure-annotation source.** No Rust bundler inserts annotations; Experiment 2 counts 1,808 markers from Babel and 0 otherwise. [bundle Q4][bundle-q4]
 4. **tsdown dts via tsgo runs `--noCheck`.** It also writes the package's composite tsbuildinfo as a side effect. Effect diagnostics would need a separate pass. [Experiment 2](./research/experiments/schema-build-timings.md)
 5. **Bun has no dts.** A Bun library build still needs `tsc --emitDeclarationOnly`, which costs a full type-check. [bun Q1][bun-q1]
-6. **beep-heavy gotchas.** `beep-heavy -- <cmd>` execs `--` as the command. Inside the Nix devshell `env bash` lacks `compgen`, so env forwarding fails. Call `/usr/bin/bash ~/.local/bin/beep-heavy <cmd>`. [Experiment 2](./research/experiments/schema-build-timings.md)
+6. **beep-heavy gotchas.** `beep-heavy -- <cmd>` execs `--` as the command. Inside the Nix devshell `env bash` lacks `compgen`, so env forwarding fails. Call the user-local `beep-heavy` script through `/usr/bin/bash` explicitly instead of relying on `env bash`. [Experiment 2](./research/experiments/schema-build-timings.md)
 7. **Coherence is the documented pain.** Non-build-mode `tsc -p` never checks its outputs exist; stale tsbuildinfo skipped emit on Vercel. [REPORT pipeline][report-pipeline]
 
 ## 2026-10-09: Open questions carried to align
