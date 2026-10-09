@@ -271,6 +271,7 @@ const runWriter = Effect.fnUntraced(function* (
       // The Cursor adapter caps the writer at 3 s. Measured 2026-09-16: at load average ~300
       // the cap killed the writer and this suite saw no row, so the conformance run lifts it.
       BEEP_CURSOR_HOOK_PULSE_WRITER_CAP: "60s",
+      BEEP_HOOK_PULSE_WRITER_CAP: "60s",
       // Both salt rungs are cleared unless a case sets one, so a developer who
       // exports a real ai-metrics salt cannot change what these digests are.
       // Cleared, they exercise the insecure-default fallback that keeps an
@@ -996,6 +997,13 @@ it.layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
         const command = yield* ChildProcess.make("git", args, { cwd: root, stdout: "ignore", stderr: "ignore" });
         expect(yield* command.exitCode).toBe(0);
       }
+      yield* fs.makeDirectory(path.join(root, ".claude/scratch"), { recursive: true });
+      yield* fs.writeFileString(path.join(root, ".claude/scratch/naïve.md"), "ignored fixture\n");
+      yield* Effect.forEach(
+        A.range(0, 1000),
+        (index) => fs.writeFileString(path.join(root, `.claude/scratch/noise-${index}.txt`), "ignored fixture\n"),
+        { concurrency: 4, discard: true }
+      );
       const decoded = yield* decodeHookPulseRow(
         expectSingleRow(yield* runWriter(yield* encodeJson(sessionStartPayload(root))))
       );

@@ -72,6 +72,23 @@ if [ -e "${BEEP_HOOK_PULSE_DISARM_SENTINEL}" ]; then
   exit 0
 fi
 
+# Keep our deadline below the harness deadline so timeout refusals survive.
+# Cursor owns its outer cap and marks the shared body as already bounded.
+if [ "${BEEP_HOOK_PULSE_BOUNDED:-0}" != "1" ]; then
+  if ! command -v timeout >/dev/null 2>&1; then
+    refuse no-timeout
+    exit 0
+  fi
+  result=0
+  BEEP_HOOK_PULSE_BOUNDED=1 timeout --kill-after=1s "${BEEP_HOOK_PULSE_WRITER_CAP:-3s}"     "${BASH_SOURCE[0]}" "$@" >/dev/null 2>&1 || result=$?
+  case "${result}" in
+    124|137) refuse timeout ;;
+    0) ;;
+    *) refuse encode-failed ;;
+  esac
+  exit 0
+fi
+
 # HARD REQUIREMENT: this script must never write to stdout. `PermissionRequest`
 # is a *decision* hook — the harness feeds hook stdout into the permission
 # outcome, and a hook returning
@@ -495,11 +512,24 @@ END {
     [ -e "${config_root}" ] && config_roots+=("${config_root}")
   done
 
+  indexed=0
+  tracked=""
+  if tracked="$(git -c core.quotepath=false ls-files -- ':(glob)**/AGENTS.md' ':(glob)**/CLAUDE.md' .mcp.json .claude .codex .ai .aiassistant .cursor .agents .junie .grok 2>/dev/null)"; then
+    indexed=1
+    case "${tracked}" in *'"'*) exit 1 ;; esac
+  fi
+
   # One record per NUL-terminated line: `RG`/`CG` name a directory holding
   # `.git` in the root/config walk, `RF`/`CF` a collected file with its size.
   # Newlines inside names become `\001` so they fail the printable check.
   collect_program='
-/[^ -~\t]/ || index($0, "\\") { bad = 1; next }
+NR == FNR { tracked[$0] = 1; next }
+($1 == "RF" || $1 == "CF") {
+  if (NF != 3) { if (indexed) next; bad = 1; next }
+  rel = $3; sub(/^\.\//, "", rel)
+  if (indexed && !(rel in tracked) && rel != ".claude/settings.local.json") next
+}
+/[^ -~\t]/ || index($0, "\\") { if (indexed && ($1 == "RG" || $1 == "CG")) next; bad = 1; next }
 $1 == "RG" && NF == 2 { rg[$2] = 1; next }
 $1 == "CG" && NF == 2 { cg[$2] = 1; next }
 ($1 == "RF" || $1 == "CF") && NF == 3 { n++; kind[n] = $1; size[n] = $2; path[n] = $3; next }
@@ -521,7 +551,6 @@ END {
     sub(/^\.\//, "", rel)
     print rel "\t" size[i]
   }
-  if (kept >= 1000) exit 1
 }
 '
   collected="$(
@@ -536,18 +565,9 @@ END {
             \( "${excluded[@]}" \) -prune -o \
             -type f -printf 'CF\t%s\t%p\0'
         fi
-    } 2>/dev/null | tr '\n\000' '\001\n' | awk -F "${tab}" "${collect_program}"
+    } 2>/dev/null | tr '\n\000' '\001\n' | awk -F "${tab}" -v indexed="${indexed}" "${collect_program}" <(printf '%s\n' "${tracked}") -
   )" || exit 1
 
-  # Keep indexed configuration plus settings.local.json. Non-git fixtures
-  # use the same bounded fallback as the TypeScript snapshot.
-  if tracked="$(git -c core.quotepath=false ls-files -- ':(glob)**/AGENTS.md' ':(glob)**/CLAUDE.md' .mcp.json .claude .codex .ai .aiassistant .cursor .agents .junie .grok 2>/dev/null)"; then
-    case "${tracked}" in *'"'*) return 1 ;; esac
-    collected="$(awk -F "${tab}" -v OFS="${tab}" 'NR == FNR { tracked[$0] = 1; next }
-      { sub(/^\.\//, "", $1) }
-      ($1 in tracked) || $1 == ".claude/settings.local.json" { print }' \
-      <(printf '%s\n' "${tracked}") <(printf '%s\n' "${collected}"))" || exit 1
-  fi
   if [ -f .mcp.json ]; then
     if ! git rev-parse --git-dir >/dev/null 2>&1 || git ls-files --error-unmatch .mcp.json >/dev/null 2>&1; then
       collected+=$'\n'".mcp.json${tab}$(wc -c < .mcp.json)"
@@ -558,7 +578,10 @@ END {
   # oversize files skipped, and the byte budget enforced over what remains.
   included="$(
     printf '%s\n' "${collected}" | sort -t "${tab}" -k1,1 -u | awk -F "${tab}" '
-NF == 2 && $2 <= 524288 { total += $2; print $1 }
+NF == 2 {
+  count++; if (count > 1000) exit 1
+  if ($2 <= 524288) { total += $2; print $1 }
+}
 END { if (total > 8388608) exit 1 }
 '
   )" || exit 1

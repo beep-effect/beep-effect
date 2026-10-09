@@ -39,7 +39,7 @@ if [ -x "${shared}" ] && command -v jq >/dev/null 2>&1 && command -v timeout >/d
         "stop": "Stop",
         "beforeSubmitPrompt": "UserPromptSubmit"
       }[$e] // $e)' 2>/dev/null \
-    | BEEP_HOOK_PULSE_AGENT_KIND=cursor-cli timeout "${BEEP_CURSOR_HOOK_PULSE_WRITER_CAP:-3s}" "${shared}" >/dev/null 2>&1 || result=$?
+    | BEEP_HOOK_PULSE_AGENT_KIND=cursor-cli BEEP_HOOK_PULSE_BOUNDED=1 timeout "${BEEP_CURSOR_HOOK_PULSE_WRITER_CAP:-3s}" "${shared}" >/dev/null 2>&1 || result=$?
   if [ "${result}" -eq 124 ]; then
     BEEP_HOOK_PULSE_AGENT_KIND=cursor-cli "${shared}" --refuse timeout >/dev/null 2>&1
   elif [ "${result}" -ne 0 ]; then
