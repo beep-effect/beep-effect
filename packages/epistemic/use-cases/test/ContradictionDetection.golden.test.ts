@@ -17,7 +17,7 @@ import {
 } from "@beep/epistemic-use-cases/server";
 import { it } from "@beep/test-runner";
 import { productEntityFixtureInput, systemPrincipal } from "@beep/test-utils";
-import { describe, expect } from "@effect/vitest";
+import { expect } from "@effect/vitest";
 import { assertSuccess, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -33,9 +33,7 @@ import golden from "./fixtures/contradiction-detection/expected.json" with { typ
 import vectors from "./fixtures/contradiction-detection/snapshots.json" with { type: "json" };
 
 const detect = (snapshot: ContradictionDetectionSnapshot) =>
-  ContradictionDetectionService.use((service) => service.detect(snapshot)).pipe(
-    Effect.provide(ContradictionDetectionLive)
-  );
+  ContradictionDetectionService.use((service) => service.detect(snapshot));
 const encodedOutput = Effect.fnUntraced(function* (candidates: ReadonlyArray<DetectedContradiction>) {
   return canonicalDetectionJson(yield* S.encodeEffect(S.Array(DetectedContradiction))(candidates));
 });
@@ -49,10 +47,10 @@ const conformance = Effect.fnUntraced(function* (record: DetectedContradiction, 
   const candidate = Result.getOrThrow(decodedEntity);
   assertSuccess(decodedEntity, candidate);
   assertSuccess(hasValidSeals(candidate), true);
-  const content = yield* S.decodeUnknownEffect(ContradictionCandidateContent)(wire);
+  const content = yield* S.decodeEffect(ContradictionCandidateContent)(wire);
   expect(record.candidateKey).toBe(contradictionCandidateKey(content.pair, content.matchBasis));
   assertSuccess(contradictionCandidateDigest(content), record.candidateDigest);
-  const submitted = S.decodeUnknownResult(SubmitContradictionCandidate)({
+  const submitted = S.decodeResult(SubmitContradictionCandidate)({
     ...wire,
     orgId: 1,
     receiptKey: Str.repeat(64)("a"),
@@ -76,7 +74,7 @@ const conformance = Effect.fnUntraced(function* (record: DetectedContradiction, 
   }
 });
 
-describe("Contradiction detection golden vectors", () => {
+it.layer(ContradictionDetectionLive)("Contradiction detection golden vectors", (it) => {
   it.effect(
     "encodes both proposals through the shipped non-empty assessment field",
     Effect.fnUntraced(function* () {
@@ -91,7 +89,7 @@ describe("Contradiction detection golden vectors", () => {
       expect(A.map(assessment.proposals, (proposal) => proposal.proposalId)).toEqual(
         A.map(record.assessment.proposals, (proposal) => proposal.proposalId)
       );
-      assertTrue(Result.isFailure(S.decodeUnknownResult(ContradictionAssessment)({ ...wire, proposals: [] })));
+      S.decodeUnknownResult(ContradictionAssessment)({ ...wire, proposals: [] }).pipe(Result.isFailure, assertTrue);
     })
   );
   for (const [vector, index] of A.map(vectors, (vector, index) => Tuple.make(vector, index))) {
@@ -153,7 +151,9 @@ describe("Contradiction detection golden vectors", () => {
   it.effect(
     "groups and sorts multiple candidates independently of input order",
     Effect.fnUntraced(function* () {
-      const original = A.getUnsafe(vectors, 0).snapshot;
+      const original = yield* S.encodeEffect(ContradictionDetectionSnapshot)(
+        yield* S.decodeUnknownEffect(ContradictionDetectionSnapshot)(A.getUnsafe(vectors, 0).snapshot)
+      );
       const third = {
         ...A.getUnsafe(original.beliefs, 1),
         ref: { edgeVersionId: 3, logicalKey: Str.repeat(64)("3"), version: 1 },
@@ -197,14 +197,14 @@ describe("Contradiction detection golden vectors", () => {
         { disableChecks: true }
       );
       const exit = yield* Effect.exit(detect(invalid));
-      assertTrue(Exit.isFailure(exit));
-      expect(O.getOrThrow(Exit.findErrorOption(exit))._tag).toBe("ContradictionDetectionError");
+      exit.pipe(Exit.isFailure, assertTrue);
+      expect(exit.pipe(Exit.findErrorOption, O.getOrThrow)._tag).toBe("ContradictionDetectionError");
     })
   );
   it("rejects oversized assertion facts before proposing", () => {
     const input = A.getUnsafe(vectors, 0).snapshot;
     const beliefs = A.map(input.beliefs, (belief) => ({ ...belief, value: Str.repeat(65536)("x") }));
     const decoded = S.decodeUnknownResult(ContradictionDetectionSnapshot)({ ...input, beliefs });
-    assertTrue(Result.isFailure(decoded));
+    decoded.pipe(Result.isFailure, assertTrue);
   });
 });
