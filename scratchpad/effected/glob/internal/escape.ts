@@ -4,6 +4,7 @@
 // Port notes: verbatim except the options type now comes from the extracted
 // types leaf.
 
+import { dual } from "effect/Function";
 import type { EngineOptions } from "./types.ts";
 
 /**
@@ -18,7 +19,10 @@ import type { EngineOptions } from "./types.ts";
  * If the `magicalBraces` option is used, then braces (`{` and `}`) will be
  * escaped.
  */
-const escapePattern = (
+const escapePattern: {
+	(options?: Pick<EngineOptions, "windowsPathsNoEscape" | "magicalBraces">): (s: string) => string;
+	(s: string, options?: Pick<EngineOptions, "windowsPathsNoEscape" | "magicalBraces">): string;
+} = dual((args) => args.length >= 2 || typeof args[0] === "string", (
 	s: string,
 	{
 		windowsPathsNoEscape = false,
@@ -32,7 +36,7 @@ const escapePattern = (
 		return windowsPathsNoEscape ? s.replace(/[?*()[\]{}]/g, "[$&]") : s.replace(/[?*()[\]\\{}]/g, "\\$&");
 	}
 	return windowsPathsNoEscape ? s.replace(/[?*()[\]]/g, "[$&]") : s.replace(/[?*()[\]\\]/g, "\\$&");
-};
+});
 
 // Exported under the upstream name; the internal binding avoids shadowing the
 // deprecated global escape().

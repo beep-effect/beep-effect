@@ -23,6 +23,8 @@
 // single-variable declarations). Fully ITERATIVE — this module has NO recursion
 // surface and therefore NO depth guard. Do not add one.
 
+import { dual } from "effect/Function";
+
 /** The balanced section found by {@link balanced}. */
 export interface BalancedResult {
 	readonly start: number;
@@ -34,14 +36,17 @@ export interface BalancedResult {
 
 const maybeMatch = (reg: RegExp, str: string): string | null => {
 	const m = str.match(reg);
-	return m ? m[0] : null;
+	return m !== null ? m[0] : null;
 };
 
 /**
  * The first balanced `a ... b` section of `str`: its delimiter offsets and the
  * text before, inside and after it. `false` when no balanced pair exists.
  */
-export const balanced = (a: string | RegExp, b: string | RegExp, str: string): BalancedResult | false => {
+export const balanced: {
+	(b: string | RegExp, str: string): (a: string | RegExp) => BalancedResult | false;
+	(a: string | RegExp, b: string | RegExp, str: string): BalancedResult | false;
+} = dual(3, (a: string | RegExp, b: string | RegExp, str: string): BalancedResult | false => {
 	const ma = a instanceof RegExp ? maybeMatch(a, str) : a;
 	const mb = b instanceof RegExp ? maybeMatch(b, str) : b;
 
@@ -56,10 +61,13 @@ export const balanced = (a: string | RegExp, b: string | RegExp, str: string): B
 		body: str.slice(r[0] + ma.length, r[1]),
 		post: str.slice(r[1] + mb.length),
 	};
-};
+});
 
 /** Offsets of the first balanced `a ... b` pair in `str`, or `undefined`. */
-export const range = (a: string, b: string, str: string): undefined | [number, number] => {
+export const range: {
+	(b: string, str: string): (a: string) => undefined | [number, number];
+	(a: string, b: string, str: string): undefined | [number, number];
+} = dual(3, (a: string, b: string, str: string): undefined | [number, number] => {
 	let beg: number | undefined;
 	let left: number;
 	let right: number | undefined;
@@ -75,7 +83,7 @@ export const range = (a: string, b: string, str: string): undefined | [number, n
 		const begs: Array<number> = [];
 		left = str.length;
 
-		while (i >= 0 && !result) {
+		while (i >= 0 && result === undefined) {
 			if (i === ai) {
 				begs.push(i);
 				ai = str.indexOf(a, i + 1);
@@ -95,10 +103,10 @@ export const range = (a: string, b: string, str: string): undefined | [number, n
 			i = ai < bi && ai >= 0 ? ai : bi;
 		}
 
-		if (begs.length && right !== undefined) {
+		if (begs.length !== 0 && right !== undefined) {
 			result = [left, right];
 		}
 	}
 
 	return result;
-};
+});

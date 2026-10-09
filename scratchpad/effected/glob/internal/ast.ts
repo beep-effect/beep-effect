@@ -217,20 +217,20 @@ export class AST {
 	constructor(type: ExtglobType | null, parent?: AST, options: EngineOptions = {}) {
 		this.type = type;
 		// extglobs are inherently magical
-		if (type) this.#hasMagic = true;
+		if (type !== null) this.#hasMagic = true;
 		this.#parent = parent;
-		this.#root = this.#parent ? this.#parent.#root : this;
+		this.#root = this.#parent !== undefined ? this.#parent.#root : this;
 		this.#options = this.#root === this ? options : this.#root.#options;
 		this.#negs = this.#root === this ? [] : this.#root.#negs;
 		if (type === "!" && !this.#root.#filledNegs) this.#negs.push(this);
-		this.#parentIndex = this.#parent ? this.#parent.#parts.length : 0;
+		this.#parentIndex = this.#parent !== undefined ? this.#parent.#parts.length : 0;
 	}
 
 	get hasMagic(): boolean | undefined {
 		if (this.#hasMagic !== undefined) return this.#hasMagic;
 		for (const p of this.#parts) {
 			if (typeof p === "string") continue;
-			if (p.type || p.hasMagic) {
+			if (p.type !== null || p.hasMagic === true) {
 				this.#hasMagic = true;
 				return this.#hasMagic;
 			}
@@ -242,7 +242,7 @@ export class AST {
 	// reconstructs the pattern
 	toString(): string {
 		if (this.#toString !== undefined) return this.#toString;
-		if (!this.type) {
+		if (this.type === null) {
 			this.#toString = this.#parts.map((p) => String(p)).join("");
 		} else {
 			this.#toString = `${this.type}(${this.#parts.map((p) => String(p)).join("|")})`;
@@ -266,8 +266,8 @@ export class AST {
 			// walk up the tree, appending everthing that comes AFTER parentIndex
 			let p: AST | undefined = n;
 			let pp = p.#parent;
-			while (pp) {
-				for (let i = p.#parentIndex + 1; !pp.type && i < pp.#parts.length; i++) {
+			while (pp !== undefined) {
+				for (let i = p.#parentIndex + 1; pp.type === null && i < pp.#parts.length; i++) {
 					for (const part of n.#parts) {
 						if (typeof part === "string") {
 							throw new Error("string part in extglob AST??");
@@ -299,7 +299,7 @@ export class AST {
 			this.type === null
 				? this.#parts.slice().map((p) => (typeof p === "string" ? p : p.toJSON()))
 				: [this.type, ...this.#parts.map((p) => (p as AST).toJSON())];
-		if (this.isStart() && !this.type) ret.unshift([]);
+		if (this.isStart() && this.type === null) ret.unshift([]);
 		if (this.isEnd() && (this === this.#root || (this.#root.#filledNegs && this.#parent?.type === "!"))) {
 			ret.push({});
 		}
@@ -308,7 +308,7 @@ export class AST {
 
 	isStart(): boolean {
 		if (this.#root === this) return true;
-		if (!this.#parent?.isStart()) return false;
+		if (this.#parent?.isStart() !== true) return false;
 		if (this.#parentIndex === 0) return true;
 		// if everything AHEAD of this is a negation, then it's still the "start"
 		const p = this.#parent;
@@ -324,10 +324,10 @@ export class AST {
 	isEnd(): boolean {
 		if (this.#root === this) return true;
 		if (this.#parent?.type === "!") return true;
-		if (!this.#parent?.isEnd()) return false;
-		if (!this.type) return this.#parent?.isEnd();
+		if (this.#parent?.isEnd() !== true) return false;
+		if (this.type === null) return this.#parent?.isEnd();
 		// if not root, it'll always have a parent
-		const pl = this.#parent ? this.#parent.#parts.length : 0;
+		const pl = this.#parent !== undefined ? this.#parent.#parts.length : 0;
 		return this.#parentIndex === pl - 1;
 	}
 
@@ -397,7 +397,7 @@ export class AST {
 
 				// we don't have to check for adoption here, because that's
 				// done at the other recursion point.
-				const doRecurse = !opt.noext && isExtglobType(c) && str.charAt(i) === "(" && extDepth <= maxDepth;
+				const doRecurse = opt.noext !== true && isExtglobType(c) && str.charAt(i) === "(" && extDepth <= maxDepth;
 				if (doRecurse) {
 					ast.push(acc);
 					acc = "";
@@ -448,7 +448,7 @@ export class AST {
 			}
 
 			const doRecurse =
-				!opt.noext && isExtglobType(c) && str.charAt(i) === "(" && (extDepth <= maxDepth || ast.#canAdoptType(c));
+				opt.noext !== true && isExtglobType(c) && str.charAt(i) === "(" && (extDepth <= maxDepth || ast.#canAdoptType(c));
 			if (doRecurse) {
 				const depthAdd = ast.#canAdoptType(c) ? 0 : 1;
 				part.push(acc);
@@ -500,18 +500,18 @@ export class AST {
 		type: null;
 		parts: [AST & { type: ExtglobType }];
 	} {
-		if (!child || typeof child !== "object" || child.type !== null || child.#parts.length !== 1 || this.type === null) {
+		if ((child === undefined || child === "") || typeof child !== "object" || child.type !== null || child.#parts.length !== 1 || this.type === null) {
 			return false;
 		}
 		const gc = child.#parts[0];
-		if (!gc || typeof gc !== "object" || gc.type === null) {
+		if ((gc === undefined || gc === "") || typeof gc !== "object" || gc.type === null) {
 			return false;
 		}
 		return (this as AST & { type: ExtglobType }).#canAdoptType(gc.type, map);
 	}
 
 	#canAdoptType(c: string, map: Map<ExtglobType, Array<ExtglobType>> = adoptionAnyMap): c is ExtglobType {
-		return !!map.get(this.type as ExtglobType)?.includes(c as ExtglobType);
+		return map.get(this.type as ExtglobType)?.includes(c as ExtglobType) === true;
 	}
 
 	#adoptWithSpace(
@@ -544,7 +544,7 @@ export class AST {
 
 	#canUsurpType(c: string): boolean {
 		const m = usurpMap.get(this.type as ExtglobType);
-		return !!m?.has(c as ExtglobType);
+		return m?.has(c as ExtglobType) === true;
 	}
 
 	#canUsurp(child?: AST | string): child is AST & {
@@ -552,7 +552,7 @@ export class AST {
 		parts: [AST & { type: ExtglobType }];
 	} {
 		if (
-			!child ||
+			(child === undefined || child === "") ||
 			typeof child !== "object" ||
 			child.type !== null ||
 			child.#parts.length !== 1 ||
@@ -562,7 +562,7 @@ export class AST {
 			return false;
 		}
 		const gc = child.#parts[0];
-		if (!gc || typeof gc !== "object" || gc.type === null) {
+		if ((gc === undefined || gc === "") || typeof gc !== "object" || gc.type === null) {
 			return false;
 		}
 		return (this as AST & { type: ExtglobType }).#canUsurpType(gc.type);
@@ -572,7 +572,7 @@ export class AST {
 		const m = usurpMap.get(this.type as ExtglobType);
 		const gc = child.#parts[0] as AST & { type: ExtglobType };
 		const nt = m?.get(gc.type);
-		if (!nt) return;
+		if (nt === undefined || nt === null) return;
 		this.#parts = gc.#parts;
 		for (const p of this.#parts) {
 			if (typeof p === "object") {
@@ -606,12 +606,12 @@ export class AST {
 		const anyMagic =
 			hasMagic ||
 			this.#hasMagic ||
-			(this.#options.nocase && !this.#options.nocaseMagicOnly && glob.toUpperCase() !== glob.toLowerCase());
-		if (!anyMagic) {
+			(this.#options.nocase === true && this.#options.nocaseMagicOnly !== true && glob.toUpperCase() !== glob.toLowerCase());
+		if (anyMagic !== true) {
 			return body;
 		}
 
-		const flags = (this.#options.nocase ? "i" : "") + (uflag ? "u" : "");
+		const flags = (this.#options.nocase === true ? "i" : "") + (uflag ? "u" : "");
 		return Object.assign(new RegExp(`^${re}$`, flags), {
 			_src: re,
 			_glob: glob,
@@ -629,7 +629,7 @@ export class AST {
 		// Port note 2: depth guard on the toRegExpSource <-> #partsToRegExp
 		// mutual recursion.
 		guardDepth(depth);
-		const dot = allowDot ?? !!this.#options.dot;
+		const dot = allowDot ?? (this.#options.dot === true);
 		if (this.#root === this) {
 			this.#flatten();
 			this.#fillNegs();
@@ -668,7 +668,7 @@ export class AST {
 							(src.startsWith("\\.\\.") && aps.has(src.charAt(4)));
 						// no need to prevent dots if it can't match a dot, or if a
 						// sub-pattern will be preventing it anyway.
-						const needNoDot = !dot && !allowDot && aps.has(src.charAt(0));
+						const needNoDot = !dot && allowDot !== true && aps.has(src.charAt(0));
 
 						start = needNoTrav ? startNoTraversal : needNoDot ? startNoDot : "";
 					}
@@ -681,7 +681,7 @@ export class AST {
 				end = "(?:$|\\/)";
 			}
 			const final = start + src + end;
-			this.#hasMagic = !!this.#hasMagic;
+			this.#hasMagic = this.#hasMagic === true;
 			return [final, unescapePattern(src), this.#hasMagic, this.#uflag];
 		}
 
@@ -694,7 +694,7 @@ export class AST {
 		const start = this.type === "!" ? "(?:(?!(?:" : "(?:";
 		let body = (this as AST & { type: ExtglobType }).#partsToRegExp(dot, depth);
 
-		if (this.isStart() && this.isEnd() && !body && this.type !== "!") {
+		if (this.isStart() && this.isEnd() && body === "" && this.type !== "!") {
 			// invalid extglob, has to at least be *something* present, if it's
 			// the entire path portion.
 			const s = this.toString();
@@ -706,13 +706,13 @@ export class AST {
 		}
 
 		let bodyDotAllowed =
-			!repeated || allowDot || dot || !startNoDot
+			!repeated || allowDot === true || dot
 				? ""
 				: (this as AST & { type: ExtglobType }).#partsToRegExp(true, depth);
 		if (bodyDotAllowed === body) {
 			bodyDotAllowed = "";
 		}
-		if (bodyDotAllowed) {
+		if (bodyDotAllowed !== "") {
 			body = `(?:${body})(?:${bodyDotAllowed})*?`;
 		}
 
@@ -724,19 +724,19 @@ export class AST {
 			const close =
 				this.type === "!"
 					? // !() must match something,but !(x) can match ''
-						`))${this.isStart() && !dot && !allowDot ? startNoDot : ""}${star})`
+						`))${this.isStart() && !dot && allowDot !== true ? startNoDot : ""}${star})`
 					: this.type === "@"
 						? ")"
 						: this.type === "?"
 							? ")?"
-							: this.type === "+" && bodyDotAllowed
+							: this.type === "+" && bodyDotAllowed !== ""
 								? ")"
-								: this.type === "*" && bodyDotAllowed
+								: this.type === "*" && bodyDotAllowed !== ""
 									? ")?"
 									: `)${this.type}`;
 			final = start + body + close;
 		}
-		this.#hasMagic = !!this.#hasMagic;
+		this.#hasMagic = this.#hasMagic === true;
 		return [final, unescapePattern(body), this.#hasMagic, this.#uflag];
 	}
 
@@ -788,7 +788,7 @@ export class AST {
 				this.#uflag = this.#uflag || uflag;
 				return re;
 			})
-			.filter((p) => !(this.isStart() && this.isEnd()) || !!p)
+			.filter((p) => !(this.isStart() && this.isEnd()) || p !== "")
 			.join("|");
 	}
 
@@ -828,7 +828,7 @@ export class AST {
 			}
 			if (c === "[") {
 				const [src, needUflag, consumed, magic] = parseClass(glob, i);
-				if (consumed) {
+				if (consumed !== 0 && !Number.isNaN(consumed)) {
 					re += src;
 					uflag = uflag || needUflag;
 					i += consumed - 1;
@@ -843,6 +843,6 @@ export class AST {
 			}
 			re += regExpEscape(c);
 		}
-		return [re, unescapePattern(glob), !!hasMagic, uflag];
+		return [re, unescapePattern(glob), hasMagic === true, uflag];
 	}
 }

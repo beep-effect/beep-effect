@@ -10,11 +10,14 @@
 // are tested separately and excluded from oracle comparison.
 
 import { assert, describe, it } from "@effect/vitest";
-import { Arbitrary, Effect, Schema } from "effect";
+import { Arbitrary, Effect, Result, Schema } from "effect";
 import type { MinimatchOptions } from "minimatch";
 import { Minimatch as OracleMinimatch, minimatch as oracle } from "minimatch";
 import type { EngineOptions } from "../../effected/glob/internal/minimatch.ts";
 import { Minimatch, escape as escapePattern } from "../../effected/glob/internal/minimatch.ts";
+
+const JsonOptions = Schema.fromJsonString(Schema.Unknown);
+const JsonString = Schema.fromJsonString(Schema.String);
 
 type Row = readonly [pattern: string, candidate: string, expected: boolean, options?: EngineOptions];
 
@@ -299,7 +302,7 @@ describe("engine compliance: oracle properties", () => {
 				assert.strictEqual(
 					new Minimatch(pattern, opts).match(candidate),
 					oracle(candidate, pattern, oracleOpts(opts)),
-					`${pattern} vs ${candidate} (${JSON.stringify(options)})`,
+					`${pattern} vs ${candidate} (${Result.getOrThrow(Schema.encodeResult(JsonOptions)(options))})`,
 				);
 			}),
 		{ arbitrary: { runs: 500 } },
@@ -317,7 +320,7 @@ describe("engine compliance: oracle properties", () => {
 				// oracle-confirmed upstream semantics.
 				const opts: EngineOptions = { platform: "posix", nocomment: true, nonegate: true };
 				const m = new Minimatch(escapePattern(s, { magicalBraces: true }), opts);
-				assert.isTrue(m.match(s), `escape(${JSON.stringify(s)}) must match its own literal`);
+				assert.isTrue(m.match(s), `escape(${Result.getOrThrow(Schema.encodeResult(JsonString)(s))}) must match its own literal`);
 				assert.strictEqual(m.match(s), oracle(s, oracle.escape(s, { magicalBraces: true }), oracleOpts(opts)));
 			}),
 		{ arbitrary: { runs: 300 } },

@@ -8,6 +8,8 @@ import { assert, describe, it } from "@effect/vitest";
 import { Effect, Result, Schema } from "effect";
 import { GlobPattern, GlobPatternError, GlobSet } from "../../effected/glob/index.ts";
 
+const JsonString = Schema.fromJsonString(Schema.String);
+
 describe("GlobSet: the workspaces contract (inherited glob-core table)", () => {
 	it.effect("1. classifies literals and wildcards", () =>
 		Effect.gen(function* () {
@@ -276,7 +278,7 @@ describe("GlobSet: literals key on the effective unescaped path", () => {
 				assert.strictEqual(
 					set.matches(candidate),
 					members.some((m) => m.matches(candidate)),
-					`candidate ${JSON.stringify(candidate)}`,
+					`candidate ${yield* Schema.encodeEffect(JsonString)(candidate)}`,
 				);
 			}
 		}),

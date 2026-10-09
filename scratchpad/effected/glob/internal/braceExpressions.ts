@@ -5,6 +5,8 @@
 // locals). Position-bounded iteration over one [...] class — no recursion, no
 // guard.
 
+import { dual } from "effect/Function";
+
 // translate the various posix character classes into unicode properties
 // this works across all unicode locales
 
@@ -43,7 +45,10 @@ export type ParseClassResult = [src: string, uFlag: boolean, consumed: number, h
 // consumed to parse the character class.
 // This also removes out of order ranges, and returns ($.) if the
 // entire class just no good.
-export const parseClass = (glob: string, position: number): ParseClassResult => {
+export const parseClass: {
+	(position: number): (glob: string) => ParseClassResult;
+	(glob: string, position: number): ParseClassResult;
+} = dual(2, (glob: string, position: number): ParseClassResult => {
 	const pos = position;
 	if (glob.charAt(pos) !== "[") {
 		throw new Error("not in a brace expression");
@@ -85,11 +90,11 @@ export const parseClass = (glob: string, position: number): ParseClassResult => 
 			for (const [cls, [unip, u, neg]] of Object.entries(posixClasses)) {
 				if (glob.startsWith(cls, i)) {
 					// invalid, [a-[] is fine, but not [a-[:alpha]]
-					if (rangeStart) {
+					if (rangeStart !== "") {
 						return ["$.", false, glob.length - pos, true];
 					}
 					i += cls.length;
-					if (neg) negs.push(unip);
+					if (neg === true) negs.push(unip);
 					else ranges.push(unip);
 					uflag = uflag || u;
 					continue WHILE;
@@ -99,7 +104,7 @@ export const parseClass = (glob: string, position: number): ParseClassResult => 
 
 		// now it's just a normal character, effectively
 		escaping = false;
-		if (rangeStart) {
+		if (rangeStart !== "") {
 			// throw this range away if it's not valid, but others
 			// can still match.
 			if (c > rangeStart) {
@@ -138,7 +143,7 @@ export const parseClass = (glob: string, position: number): ParseClassResult => 
 
 	// if we got no ranges and no negates, then we have a range that
 	// cannot possibly match anything, and that poisons the whole glob
-	if (!ranges.length && !negs.length) {
+	if (ranges.length === 0 && negs.length === 0) {
 		return ["$.", false, glob.length - pos, true];
 	}
 
@@ -154,7 +159,7 @@ export const parseClass = (glob: string, position: number): ParseClassResult => 
 
 	const sranges = `[${negate ? "^" : ""}${rangesToString(ranges)}]`;
 	const snegs = `[${negate ? "" : "^"}${rangesToString(negs)}]`;
-	const comb = ranges.length && negs.length ? `(${sranges}|${snegs})` : ranges.length ? sranges : snegs;
+	const comb = ranges.length !== 0 && negs.length !== 0 ? `(${sranges}|${snegs})` : ranges.length !== 0 ? sranges : snegs;
 
 	return [comb, uflag, endPos - pos, true];
-};
+});

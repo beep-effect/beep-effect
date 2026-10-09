@@ -26,6 +26,7 @@
 //   firstPhasePreProcess, secondPhasePreProcess, partsMatch) are kept
 //   unchanged behind optimizationLevel.
 
+import { dual } from "effect/Function";
 import { assertValidPattern } from "./assertValidPattern.ts";
 import { AST } from "./ast.ts";
 import { expand } from "./braceExpansion.ts";
@@ -61,23 +62,23 @@ const starTestDot = (f: string) => f.length !== 0 && f !== "." && f !== "..";
 const qmarksRE = /^\?+([^+@!?*[(]*)?$/;
 const qmarksTestNocase = ([$0, ext = ""]: RegExpMatchArray) => {
 	const noext = qmarksTestNoExt([$0]);
-	if (!ext) return noext;
+	if (ext === "") return noext;
 	const lower = ext.toLowerCase();
 	return (f: string) => noext(f) && f.toLowerCase().endsWith(lower);
 };
 const qmarksTestNocaseDot = ([$0, ext = ""]: RegExpMatchArray) => {
 	const noext = qmarksTestNoExtDot([$0]);
-	if (!ext) return noext;
+	if (ext === "") return noext;
 	const lower = ext.toLowerCase();
 	return (f: string) => noext(f) && f.toLowerCase().endsWith(lower);
 };
 const qmarksTestDot = ([$0, ext = ""]: RegExpMatchArray) => {
 	const noext = qmarksTestNoExtDot([$0]);
-	return !ext ? noext : (f: string) => noext(f) && f.endsWith(ext);
+	return ext === "" ? noext : (f: string) => noext(f) && f.endsWith(ext);
 };
 const qmarksTest = ([$0, ext = ""]: RegExpMatchArray) => {
 	const noext = qmarksTestNoExt([$0]);
-	return !ext ? noext : (f: string) => noext(f) && f.endsWith(ext);
+	return ext === "" ? noext : (f: string) => noext(f) && f.endsWith(ext);
 };
 const qmarksTestNoExt = ([$0]: [string]) => {
 	const len = $0.length;
@@ -114,19 +115,22 @@ const twoStarNoDot = "(?:(?!(?:\\/|^)\\.).)*?";
 // Invalid sets are not expanded.
 // a{2..}b -> a{2..}b
 // a{b}c -> a{b}c
-export const braceExpand = (pattern: string, options: EngineOptions = {}): Array<string> => {
+export const braceExpand: {
+	(options?: EngineOptions): (pattern: string) => Array<string>;
+	(pattern: string, options?: EngineOptions): Array<string>;
+} = dual((args) => args.length >= 2 || typeof args[0] === "string", (pattern: string, options: EngineOptions = {}): Array<string> => {
 	assertValidPattern(pattern);
 
 	// Thanks to Yeting Li <https://github.com/yetingli> for
 	// improving this regexp to avoid a ReDOS vulnerability.
-	if (options.nobrace || !/\{(?:(?!\{).)*\}/.test(pattern)) {
+	if (options.nobrace === true || !/\{(?:(?!\{).)*\}/.test(pattern)) {
 		// shortcut. no need to expand.
 		return [pattern];
 	}
 
 	const opts = options.braceExpandMax === undefined ? {} : { max: options.braceExpandMax };
 	return expand(pattern, opts);
-};
+});
 
 // replace stuff like \* with *
 const globMagic = /[?*]|[+@!]\(.*?\)|\[|\]/;
@@ -165,18 +169,18 @@ export class Minimatch {
 		this.pattern = pattern;
 		this.platform = options.platform ?? "posix";
 		this.isWindows = this.platform === "win32";
-		this.windowsPathsNoEscape = !!options.windowsPathsNoEscape;
+		this.windowsPathsNoEscape = options.windowsPathsNoEscape === true;
 		if (this.windowsPathsNoEscape) {
 			this.pattern = this.pattern.replace(/\\/g, "/");
 		}
-		this.preserveMultipleSlashes = !!options.preserveMultipleSlashes;
+		this.preserveMultipleSlashes = options.preserveMultipleSlashes === true;
 		this.regexp = null;
 		this.negate = false;
-		this.nonegate = !!options.nonegate;
+		this.nonegate = options.nonegate === true;
 		this.comment = false;
 		this.empty = false;
-		this.partial = !!options.partial;
-		this.nocase = !!this.options.nocase;
+		this.partial = options.partial === true;
+		this.nocase = this.options.nocase === true;
 		this.windowsNoMagicRoot =
 			options.windowsNoMagicRoot !== undefined ? options.windowsNoMagicRoot : !!(this.isWindows && this.nocase);
 
@@ -189,7 +193,7 @@ export class Minimatch {
 	}
 
 	hasMagic(): boolean {
-		if (this.options.magicalBraces && this.set.length > 1) {
+		if (this.options.magicalBraces === true && this.set.length > 1) {
 			return true;
 		}
 		for (const pattern of this.set) {
@@ -210,12 +214,12 @@ export class Minimatch {
 		const options = this.options;
 
 		// empty patterns and comments match nothing.
-		if (!options.nocomment && pattern.charAt(0) === "#") {
+		if (options.nocomment !== true && pattern.charAt(0) === "#") {
 			this.comment = true;
 			return;
 		}
 
-		if (!pattern) {
+		if (pattern === "") {
 			this.empty = true;
 			return;
 		}
@@ -295,7 +299,7 @@ export class Minimatch {
 	preprocess(globPartsInput: Array<Array<string>>) {
 		let globParts = globPartsInput;
 		// if we're not in globstar mode, then turn ** into *
-		if (this.options.noglobstar) {
+		if (this.options.noglobstar === true) {
 			for (const partset of globParts) {
 				for (let j = 0; j < partset.length; j++) {
 					if (partset[j] === "**") {
@@ -349,7 +353,7 @@ export class Minimatch {
 					return set;
 				}
 				if (part === "..") {
-					if (prev && prev !== ".." && prev !== "." && prev !== "**") {
+					if (prev !== undefined && prev !== "" && prev !== ".." && prev !== "." && prev !== "**") {
 						set.pop();
 						return set;
 					}
@@ -389,7 +393,7 @@ export class Minimatch {
 			let dd = parts.indexOf("..", 1);
 			while (dd !== -1) {
 				const p = parts[dd - 1];
-				if (p && p !== "." && p !== ".." && p !== "**" && !(this.isWindows && /^[a-z]:$/i.test(p))) {
+				if (p !== undefined && p !== "" && p !== "." && p !== ".." && p !== "**" && !(this.isWindows && /^[a-z]:$/i.test(p))) {
 					didSomething = true;
 					parts.splice(dd - 1, 2);
 					dd -= 2;
@@ -444,7 +448,7 @@ export class Minimatch {
 						gs = parts.indexOf("**", gs + 1);
 						continue;
 					}
-					if (!p || p === "." || p === ".." || !p2 || p2 === "." || p2 === "..") {
+					if ((p === undefined || p === "") || p === "." || p === ".." || (p2 === undefined || p2 === "") || p2 === "." || p2 === "..") {
 						gs = parts.indexOf("**", gs + 1);
 						continue;
 					}
@@ -480,7 +484,7 @@ export class Minimatch {
 				let dd = parts.indexOf("..", 1);
 				while (dd !== -1) {
 					const p = parts[dd - 1];
-					if (p && p !== "." && p !== ".." && p !== "**") {
+					if (p !== undefined && p !== "" && p !== "." && p !== ".." && p !== "**") {
 						didSomething = true;
 						const needDot = dd === 1 && parts[dd + 1] === "**";
 						const splin = needDot ? ["."] : [];
@@ -510,7 +514,7 @@ export class Minimatch {
 				const b = globParts[j];
 				if (a === undefined || b === undefined) continue;
 				const matched = this.partsMatch(a, b, !this.preserveMultipleSlashes);
-				if (matched) {
+				if (matched !== false) {
 					globParts[i] = [];
 					globParts[j] = matched;
 					break;
@@ -538,13 +542,13 @@ export class Minimatch {
 			} else if (emptyGSMatch && bv === "**" && av === b[bi + 1]) {
 				result.push(bv);
 				bi++;
-			} else if (av === "*" && bv && (this.options.dot || !bv.startsWith(".")) && bv !== "**") {
+			} else if (av === "*" && bv !== "" && (this.options.dot === true || !bv.startsWith(".")) && bv !== "**") {
 				if (which === "b") return false;
 				which = "a";
 				result.push(av);
 				ai++;
 				bi++;
-			} else if (bv === "*" && av && (this.options.dot || !av.startsWith(".")) && av !== "**") {
+			} else if (bv === "*" && av !== "" && (this.options.dot === true || !av.startsWith(".")) && av !== "**") {
 				if (which === "a") return false;
 				which = "b";
 				result.push(bv);
@@ -571,7 +575,7 @@ export class Minimatch {
 			negateOffset++;
 		}
 
-		if (negateOffset) this.pattern = pattern.slice(negateOffset);
+		if (negateOffset !== 0) this.pattern = pattern.slice(negateOffset);
 		this.negate = negate;
 	}
 
@@ -657,7 +661,7 @@ export class Minimatch {
 			: [pattern.slice(patternIndex, firstgs), pattern.slice(firstgs + 1, lastgs), pattern.slice(lastgs + 1)];
 
 		// check the head, from the current file/pattern index.
-		if (head.length) {
+		if (head.length !== 0) {
 			const fileHead = file.slice(fileIndex, fileIndex + head.length);
 			if (!this.#matchOne(fileHead, head, partial, 0, 0)) {
 				return false;
@@ -670,7 +674,7 @@ export class Minimatch {
 		// if the last portion is not empty, it MUST match the end
 		// check the tail
 		let fileTailMatch = 0;
-		if (tail.length) {
+		if (tail.length !== 0) {
 			// if head + tail > file, then we cannot possibly match
 			if (tail.length + fileIndex > file.length) return false;
 
@@ -701,12 +705,12 @@ export class Minimatch {
 		// if it's empty, it means a/**/b, just verify we have no bad dots
 		// if there's no tail, so it ends on /**, then we must have *something*
 		// after the head, or it's not a matc
-		if (!body.length) {
-			let sawSome = !!fileTailMatch;
+		if (body.length === 0) {
+			let sawSome = (fileTailMatch !== 0 && !Number.isNaN(fileTailMatch));
 			for (let i = fileIndex; i < file.length - fileTailMatch; i++) {
 				const f = String(file[i]);
 				sawSome = true;
-				if (f === "." || f === ".." || (!this.options.dot && f.startsWith("."))) {
+				if (f === "." || f === ".." || (this.options.dot !== true && f.startsWith("."))) {
 					return false;
 				}
 			}
@@ -740,7 +744,7 @@ export class Minimatch {
 			b[1] = fileLength - ((nonGsPartsSums[i--] as number) + b[0].length);
 		}
 
-		return !!this.#matchGlobStarBodySections(file, bodySegments, fileIndex, 0, partial, 0, !!fileTailMatch);
+		return this.#matchGlobStarBodySections(file, bodySegments, fileIndex, 0, partial, 0, (fileTailMatch !== 0 && !Number.isNaN(fileTailMatch))) === true;
 	}
 
 	// return false for "nope, not matching"
@@ -767,12 +771,12 @@ export class Minimatch {
 		// than previous implementations, because we never test something that
 		// can't possibly be a valid matching condition.
 		const bs = bodySegments[bodyIndex];
-		if (!bs) {
+		if (bs === undefined) {
 			// just make sure that there's no bad dots
 			for (let i = fileIndex; i < file.length; i++) {
 				sawTail = true;
 				const f = file[i] as string;
-				if (f === "." || f === ".." || (!this.options.dot && f.startsWith("."))) {
+				if (f === "." || f === ".." || (this.options.dot !== true && f.startsWith("."))) {
 					return false;
 				}
 			}
@@ -801,7 +805,7 @@ export class Minimatch {
 				}
 			}
 			const f = file[fileIndex];
-			if (f === "." || f === ".." || (f !== undefined && !this.options.dot && f.startsWith("."))) {
+			if (f === "." || f === ".." || (f !== undefined && this.options.dot !== true && f.startsWith("."))) {
 				return false;
 			}
 
@@ -902,40 +906,40 @@ export class Minimatch {
 		// *, *.*, and *.<ext>  Add a fast check method for those.
 		let fastTest: null | ((f: string) => boolean) = null;
 		const mStar = pattern.match(starRE);
-		const mStarDotExt = mStar ? null : pattern.match(starDotExtRE);
-		const mQmarks = mStar || mStarDotExt ? null : pattern.match(qmarksRE);
-		const mStarDotStar = mStar || mStarDotExt || mQmarks ? null : pattern.match(starDotStarRE);
-		const mDotStar = mStar || mStarDotExt || mQmarks || mStarDotStar ? null : pattern.match(dotStarRE);
-		if (mStar) {
-			fastTest = options.dot ? starTestDot : starTest;
-		} else if (mStarDotExt) {
+		const mStarDotExt = mStar !== null ? null : pattern.match(starDotExtRE);
+		const mQmarks = mStar !== null || mStarDotExt !== null ? null : pattern.match(qmarksRE);
+		const mStarDotStar = mStar !== null || mStarDotExt !== null || mQmarks !== null ? null : pattern.match(starDotStarRE);
+		const mDotStar = mStar !== null || mStarDotExt !== null || mQmarks !== null || mStarDotStar !== null ? null : pattern.match(dotStarRE);
+		if (mStar !== null) {
+			fastTest = options.dot === true ? starTestDot : starTest;
+		} else if (mStarDotExt !== null) {
 			fastTest = (
-				options.nocase
-					? options.dot
+				options.nocase === true
+					? options.dot === true
 						? starDotExtTestNocaseDot
 						: starDotExtTestNocase
-					: options.dot
+					: options.dot === true
 						? starDotExtTestDot
 						: starDotExtTest
 			)(mStarDotExt[1] as string);
-		} else if (mQmarks) {
+		} else if (mQmarks !== null) {
 			fastTest = (
-				options.nocase
-					? options.dot
+				options.nocase === true
+					? options.dot === true
 						? qmarksTestNocaseDot
 						: qmarksTestNocase
-					: options.dot
+					: options.dot === true
 						? qmarksTestDot
 						: qmarksTest
 			)(mQmarks);
-		} else if (mStarDotStar) {
-			fastTest = options.dot ? starDotStarTestDot : starDotStarTest;
-		} else if (mDotStar) {
+		} else if (mStarDotStar !== null) {
+			fastTest = options.dot === true ? starDotStarTestDot : starDotStarTest;
+		} else if (mDotStar !== null) {
 			fastTest = dotStarTest;
 		}
 
 		const re = AST.fromGlob(pattern, this.options).toMMPattern();
-		if (fastTest && typeof re === "object") {
+		if (fastTest !== null && typeof re === "object") {
 			// Avoids overriding in frozen environments
 			Reflect.defineProperty(re, "test", { value: fastTest });
 		}
@@ -943,7 +947,7 @@ export class Minimatch {
 	}
 
 	makeRe() {
-		if (this.regexp || this.regexp === false) return this.regexp;
+		if (this.regexp !== null) return this.regexp;
 
 		// at this point, this.set is a 2d array of partial
 		// pattern strings, or "**".
@@ -953,14 +957,14 @@ export class Minimatch {
 		// when you just want to work with a regex.
 		const set = this.set;
 
-		if (!set.length) {
+		if (set.length === 0) {
 			this.regexp = false;
 			return this.regexp;
 		}
 		const options = this.options;
 
-		const twoStar = options.noglobstar ? star : options.dot ? twoStarDot : twoStarNoDot;
-		const flags = new Set(options.nocase ? ["i"] : []);
+		const twoStar = options.noglobstar === true ? star : options.dot === true ? twoStarDot : twoStarNoDot;
+		const flags = new Set(options.nocase === true ? ["i"] : []);
 
 		// regexpify non-globstar patterns
 		// if ** is only item, then we just do one twoStar
@@ -1088,20 +1092,20 @@ export class Minimatch {
 
 		// Find the basename of the path by looking for the last non-empty segment
 		let filename = ff[ff.length - 1] ?? "";
-		if (!filename) {
-			for (let i = ff.length - 2; !filename && i >= 0; i--) {
+		if (filename === "") {
+			for (let i = ff.length - 2; filename === "" && i >= 0; i--) {
 				filename = ff[i] ?? "";
 			}
 		}
 
 		for (const pattern of set) {
 			let file = ff;
-			if (options.matchBase && pattern.length === 1) {
+			if (options.matchBase === true && pattern.length === 1) {
 				file = [filename];
 			}
 			const hit = this.matchOne(file, pattern, partial);
 			if (hit) {
-				if (options.flipNegate) {
+				if (options.flipNegate === true) {
 					return true;
 				}
 				return !this.negate;
@@ -1110,7 +1114,7 @@ export class Minimatch {
 
 		// didn't get any hits.  this is success if it's a negative
 		// pattern, failure otherwise.
-		if (options.flipNegate) {
+		if (options.flipNegate === true) {
 			return false;
 		}
 		return this.negate;

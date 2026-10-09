@@ -1,6 +1,9 @@
 // The zero-dependency leaf every guard imports — no import cycle is possible
 // through here (jsonc/yaml precedent).
 
+import { Data } from "effect";
+import { dual } from "effect/Function";
+
 /** Hard cap on pattern length. Upstream minimatch's MAX_PATTERN_LENGTH (64KB). */
 export const MAX_PATTERN_LENGTH = 1024 * 64;
 
@@ -25,14 +28,15 @@ export type GuardReason = "PatternTooLong" | "ExpansionBudgetExceeded" | "Nestin
  * typed GlobPatternError. Match-time code paths never throw it — matches() is
  * total.
  */
-export class GuardExceeded extends Error {
-	readonly _tag = "GuardExceeded";
-	constructor(
-		readonly reason: GuardReason,
-		readonly limit: number,
-		readonly actual: number,
-	) {
-		super(`${reason}: limit ${limit}, actual ${actual}`);
+export class GuardExceeded extends Data.TaggedError("GuardExceeded")<{
+	readonly reason: GuardReason;
+	readonly limit: number;
+	readonly actual: number;
+}> {
+	constructor(reason: GuardReason, limit: number, actual: number) {
+		const fields = { reason, limit, actual, message: `${reason}: limit ${limit}, actual ${actual}` };
+		super(fields);
+		this.name = "Error";
 	}
 }
 
@@ -43,9 +47,12 @@ export const isGuardExceeded = (u: unknown): u is GuardExceeded => u instanceof 
  * can only come from code, is a wiring bug, and dies as a defect (walker
  * maxDepth rule) — it must never be coerced or clamped.
  */
-export const assertCap = (name: string, value: number): number => {
+export const assertCap: {
+	(value: number): (name: string) => number;
+	(name: string, value: number): number;
+} = dual(2, (name: string, value: number): number => {
 	if (!Number.isSafeInteger(value) || value < 1) {
 		throw new TypeError(`@effected/glob internal cap ${name} must be a positive integer, received ${value}`);
 	}
 	return value;
-};
+});
