@@ -36,7 +36,7 @@ export class SectionFileError extends S.TaggedError<SectionFileError>($I`Section
 	/** Which half of the read-modify-write failed. */
 	operation: S.Literals(["read", "write"]).annotateKey({ description: "Which half of the read-modify-write failed." }),
 	/** The underlying failure, preserved structurally. */
-	cause: S.Defect().annotateKey({ description: "The underlying failure, preserved structurally." }),
+	cause: S.Defect({ includeStack: true }).annotateKey({ description: "The underlying failure, preserved structurally." }),
 }, $I.annote("SectionFileError", { description: "Raised when the file behind a managed-section operation could not be read or written." })) {
 	override get message(): string {
 		return `Failed to ${this.operation} managed sections in "${this.path}"`;

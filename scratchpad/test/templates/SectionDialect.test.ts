@@ -1,8 +1,13 @@
 import { assert, describe, it } from "@effect/vitest";
+import * as Equal from "effect/Equal";
+import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import type { SectionRenderError } from "../../effected/templates/index.ts";
-import { CommentStyle, SectionDialect, SectionId } from "../../effected/templates/index.ts";
+import { CommentStyle, SectionDialect, SectionDocument, SectionId } from "../../effected/templates/index.ts";
+
+import { Eol } from "../../effected/templates/SectionDialect.ts";
+import { ATTRIBUTE_NAME_PATTERN, AttributeName, AttributeValue } from "../../effected/templates/internal/attributes.ts";
 
 const hashId = SectionId.make({ key: "example-tool", commentStyle: CommentStyle.hash });
 const htmlId = SectionId.make({ key: "example-tool", commentStyle: CommentStyle.html });
@@ -151,5 +156,75 @@ describe("SectionDialect", () => {
 				"^[A-Za-z0-9][A-Za-z0-9 _]*$",
 			);
 		});
+	});
+});
+
+describe("SectionDialect review regressions", () => {
+	it("normalizes CRLF content before emitting either supported EOL", () => {
+		const section = hashId.section("a\r\nb\nc\r\n");
+		for (const eol of Eol.literals) {
+			const text = expectSuccess(SectionDialect.default.render(section, eol));
+			assert.strictEqual(text, [SectionDialect.default.beginMarker(hashId), "a", "b", "c", "", SectionDialect.default.endMarker(hashId)].join(eol));
+			assert.isFalse(text.includes("\r\r\n"));
+			const parsed = SectionDocument.parseResult(text);
+			if (!Result.isSuccess(parsed)) assert.fail("rendered content must parse");
+			assert.strictEqual(parsed.success.check(section)._tag, "UpToDate");
+		}
+	});
+
+	it("accepts exactly LF and CRLF through the Eol schema", () => {
+		assert.deepStrictEqual(Eol.literals, ["\n", "\r\n"]);
+		for (const eol of Eol.literals) assert.isTrue(S.is(Eol)(eol));
+		for (const eol of ["", "\r", "\n\n", "LF"]) assert.isFalse(S.is(Eol)(eol));
+	});
+
+	it("owns reusable matchers separately for equal dialect instances", () => {
+		const left = SectionDialect.make({ phrase: "MANAGED SECTION", styles: CommentStyle.presets });
+		const right = SectionDialect.make({ phrase: "MANAGED SECTION", styles: CommentStyle.presets });
+		assert.isTrue(Equal.equals(left, right));
+		assert.strictEqual(left.matchers(), left.matchers());
+		assert.notStrictEqual(left.matchers(), right.matchers());
+		for (const [index, matcher] of left.matchers().entries()) {
+			assert.notStrictEqual(matcher.regex, right.matchers()[index]?.regex);
+			assert.strictEqual(matcher.style, left.styles[index]);
+		}
+		const text = expectSuccess(left.render(hashId.section("body")));
+		for (let count = 0; count < 3; count += 1) {
+			assert.isTrue(left.containsMarker(text));
+			const parsed = SectionDocument.parseResult(text, left);
+			if (!Result.isSuccess(parsed)) assert.fail("repeated scans must succeed");
+			assert.lengthOf(parsed.success.sections, 1);
+			for (const matcher of left.matchers()) assert.strictEqual(matcher.regex.lastIndex, 0);
+		}
+		const narrow = SectionDialect.make({ phrase: "CUSTOM BLOCK", styles: [CommentStyle.slash] });
+		assert.isFalse(narrow.containsMarker(text));
+	});
+
+	it.effect("keeps owned matcher state out of the encoded dialect", () => Effect.gen(function*() {
+		const dialect = SectionDialect.make({ phrase: "MANAGED SECTION", styles: [CommentStyle.hash] });
+		dialect.matchers();
+		const encoded = yield* S.encodeEffect(SectionDialect)(dialect);
+		assert.deepStrictEqual(encoded, { phrase: "MANAGED SECTION", styles: [{ prefix: "#" }] });
+		assert.deepStrictEqual(Object.keys(dialect), ["phrase", "styles"]);
+	}));
+
+	it("derives attribute refusal from schemas while retaining dollar-anchor behavior", () => {
+		for (const name of ["a", "A0_-", "a\n", "a\r", "a\r\n", "a\u2028", "a\u2029", "a\n\n", "", "0a", "_a", "a b"]) {
+			const accepted = ATTRIBUTE_NAME_PATTERN.test(name);
+			assert.strictEqual(S.is(AttributeName)(name), accepted, JSON.stringify(name));
+			const result = SectionDialect.default.render(hashId.section("body", { [name]: "value" }));
+			assert.strictEqual(Result.isSuccess(result), accepted, JSON.stringify(name));
+			if (Result.isFailure(result)) {
+				assert.strictEqual(result.failure.reason, "invalidAttribute");
+				assert.strictEqual(result.failure.attribute, name);
+			}
+		}
+		for (const value of ["", "hello", "\u2028", "\u2029", 'a"b', "a\n", "a\r", "a\r\n"]) {
+			const accepted = !value.includes('"') && !value.includes("\n") && !value.includes("\r");
+			assert.strictEqual(S.is(AttributeValue)(value), accepted);
+			const result = SectionDialect.default.render(hashId.section("body", { name: value }));
+			assert.strictEqual(Result.isSuccess(result), accepted);
+			if (Result.isFailure(result)) assert.strictEqual(result.failure.reason, "invalidAttribute");
+		}
 	});
 });

@@ -7,8 +7,10 @@ import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { ManagedSection } from "../../effected/templates/index.ts";
-import { ManagedSectionTestError } from "../../effected/templates/ManagedSection.ts";
+import { ManagedSectionTestError, SectionFileError } from "../../effected/templates/ManagedSection.ts";
 import { block, id, lines, memoryFs, section } from "./fixtures.ts";
+
+const isErrorInstance = S.is(S.ErrorInstance());
 
 const HOOK = ".husky/pre-commit";
 
@@ -216,6 +218,30 @@ describe("ManagedSection", () => {
 	});
 
 	describe("errors", () => {
+		it.effect("preserves the cause stack when encoding and decoding a file error", () =>
+			Effect.gen(function* () {
+				const cause = new Error("failed");
+				cause.stack = "Error: failed\n    at readManagedSection (managed-section.ts:1:1)";
+				const error = SectionFileError.make({ path: HOOK, operation: "read", cause });
+				const encoded = yield* S.encodeEffect(SectionFileError)(error);
+				assert.deepStrictEqual(encoded.cause, {
+					name: "Error",
+					message: cause.message,
+					stack: cause.stack,
+				});
+				const decoded = yield* S.decodeEffect(SectionFileError)(encoded);
+				assert.strictEqual(decoded._tag, "SectionFileError");
+				assert.strictEqual(decoded.path, HOOK);
+				assert.strictEqual(decoded.operation, "read");
+				if (!isErrorInstance(decoded.cause)) {
+					assert.fail("expected the decoded cause to be an Error");
+				}
+				assert.strictEqual(decoded.cause.name, cause.name);
+				assert.strictEqual(decoded.cause.message, cause.message);
+				assert.strictEqual(decoded.cause.stack, cause.stack);
+			}),
+		);
+
 		it.effect("attributes a parse failure to the file it came from", () => {
 			const fs = memoryFs({ [HOOK]: lines("#!/bin/sh", "# --- BEGIN example-tool MANAGED SECTION ---", "body", "") });
 			return withFs(

@@ -1,4 +1,3 @@
-import * as R from "effect/Record";
 // The marker attribute grammar, shared by the renderer and the scanner so the
 // two can never disagree about what an attribute run is.
 //
@@ -9,12 +8,32 @@ import * as R from "effect/Record";
 // every value this package refuses is one it could not have read back
 // verbatim.
 
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as R from "effect/Record";
+import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("effected/templates/internal/attributes");
+
 /** The attribute name grammar. No leading digit, underscore or dash. */
 export const ATTRIBUTE_NAME_PATTERN = /^[A-Za-z][A-Za-z0-9_-]*$/;
 
+/** Attribute names retain the original JavaScript dollar-anchor semantics. */
+export const AttributeName = S.String.check(S.isPattern(ATTRIBUTE_NAME_PATTERN)).annotate(
+	$I.annote("AttributeName", { description: "An attribute name accepted by the existing marker renderer grammar." }),
+);
+export type AttributeName = typeof AttributeName.Type;
+
+/** Values may contain neither a double quote nor CR or LF, with no escaping. */
+export const AttributeValue = S.String.check(S.isPattern(/^(?![\s\S]*["\r\n])/)).annotate(
+	$I.annote("AttributeValue", { description: "An attribute value that can be rendered verbatim inside double quotes." }),
+);
+export type AttributeValue = typeof AttributeValue.Type;
+
+/** True when a name satisfies the renderer's original grammar. */
+export const isValidAttributeName = S.is(AttributeName);
+
 /** True when a value can appear inside an attribute's double quotes verbatim. */
-export const isValidAttributeValue = (value: string): boolean =>
-	!value.includes('"') && !value.includes("\n") && !value.includes("\r");
+export const isValidAttributeValue = S.is(AttributeValue);
 
 const isNameStart = (code: number): boolean => (code >= 65 && code <= 90) || (code >= 97 && code <= 122); // A-Z a-z
 

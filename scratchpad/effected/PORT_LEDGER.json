@@ -4118,9 +4118,168 @@
       "exportsAdded": [],
       "newDeps": [],
       "fixturesBytes": 4645,
-      "deviations": [],
-      "backlog": [],
-      "reviewRounds": [],
+      "deviations": [
+        {
+          "test": "scratchpad/test/templates/SectionDocument.test.ts:43,129; scratchpad/test/templates/SectionDocument.reconcile.test.ts:186,201,217; scratchpad/test/templates/SectionAttributes.test.ts:49,249; scratchpad/test/templates/ManagedSection.test.ts:323; scratchpad/test/templates/SectionDialect.test.ts:181,203",
+          "upstreamBehaviour": "internal/reconcile.ts uses Map/Set for rendered, onDisk, targets and anchor tables; internal/scan.ts uses Map/Set and mutating hits.sort; SectionDialect.ts uses WeakMap and Object.entries; internal/attributes.ts uses Object.hasOwn; ManagedSection.ts throws native Error.",
+          "labBehaviour": "Reconcile and scan use MutableHashMap/MutableHashSet; hits use Array.sort with Order.Number; dialect matchers live in a private owner field; Record.toEntries/has replace Object helpers; unstubbed members throw ManagedSectionTestError. Ordering and parser/refusal semantics are retained.",
+          "reason": "native-runtime: Beep native-runtime laws require Effect collections, helpers and tagged defects; the 2026-10-09 grilling ruling removes the WeakMap exception and requires owner-local caches (round-1 allow-1, fable-1-1; fix-templates-g1.md:9-10,40)."
+        },
+        {
+          "test": "scratchpad/test/templates/SectionDialect.test.ts:181,203",
+          "upstreamBehaviour": "SectionDialect.ts keeps compiled matcher arrays in an external WeakMap keyed by each dialect object, compiling lazily on first use.",
+          "labBehaviour": "Each dialect eagerly computes its own private compiled matcher array; repeated calls reuse it, equal but distinct dialects keep separate regexes, and encoded/enumerable schema fields exclude the cache.",
+          "reason": "identity-keys: The 2026-10-09 identity-keyed-cache ruling requires per-structure owner fields, without global by-reference equality marks; round-1 allow-1 and fix-templates-g1.md:10,15-16,40 ground this replacement."
+        },
+        {
+          "test": "scratchpad/test/templates/ManagedSection.test.ts:221,323",
+          "upstreamBehaviour": "ManagedSection.unimplemented throws native Error in the Die channel with an unstubbed-member message; SectionFileError.cause uses Schema.Defect() and its encoded Error cause omits stack.",
+          "labBehaviour": "Unstubbed members die with the schema-tagged ManagedSectionTestError and the same message; SectionFileError.cause uses S.Defect({ includeStack: true }), preserving name, message and stack through encode/decode.",
+          "reason": "tagged-errors: Law 7 forbids native production Error; the Effect-first typed-error standard requires explicit cause-stack preservation. Round-1 codemod-1 and sol-1-9, plus fix-templates-g3.md:4,6, require these law-forced defect/codec changes."
+        },
+        {
+          "test": "scratchpad/test/templates/SectionDialect.test.ts:175,211; scratchpad/test/templates/SectionDocument.test.ts:309,333,354; scratchpad/test/templates/SectionDocument.reconcile.test.ts:229; scratchpad/test/templates/SectionAttributes.test.ts:358,366,374; scratchpad/test/templates/Section.test.ts:28; scratchpad/test/templates/CommentStyle.test.ts",
+          "upstreamBehaviour": "SyncOutcome/CheckOutcome are Data.taggedEnum constructor objects; reconciliation/scan shapes are interfaces or type unions; Eol and ScanFailureReason are type-only/tuple domains; attribute validation is regex/manual predicates; key/delimiter checks use default diagnostics.",
+          "labBehaviour": "SectionOutcome.ts adds S.TaggedUnion authorities and S.Opaque compatibility statics retaining Data constructors/equality/$is/$match. SectionReconciliation shares ReconcileOutput; ReconcileInput/ScanFailure/ScanResult gain structural schemas. Eol/ScanFailureReason use LiteralKit; AttributeName/Value derive S.is guards; SectionKey/Delimiter gain named check metadata and user-facing messages without changing grammar.",
+          "reason": "schema-first: EF-33/EF-7 and schema-first laws 17-19 require runtime authorities, LiteralKit domains and derived guards; the 2026-10-09 ruling requires S.Opaque statics. Round-1 sol-1-4/5 and fable-1-5 through fable-1-9; fix-templates-g1.md:41-46 and g2.md:9-10."
+        },
+        {
+          "test": "scratchpad/test/templates/SectionDocument.test.ts:30,38,333 (valid offsets, lines and scan schema)",
+          "upstreamBehaviour": "Section.ts PlacedSection.start/end/line and SectionDocument.ts SectionParseError.line use Schema.Number, accepting NaN and infinities; ScanFailure.line exists only as a number type.",
+          "labBehaviour": "PlacedSection.start/end/line, SectionParseError.line and the new internal/scan.ts ScanFailure.line schema use S.Finite; nonfinite constructor/codec inputs are rejected while scanner-produced offsets and lines remain unchanged.",
+          "reason": "numeric-domains: The schemaNumber diagnostic requires finite domain numbers; the 2026-10-09 systemic-class ruling retains and records S.Finite. Round-1 sol-1-14 reports the oracle nonfinite-input probe; codemod-4 and fix-templates-g1.md:47 cover all sites."
+        },
+        {
+          "test": "scratchpad/test/templates/ManagedSection.test.ts:67,323; scratchpad/test/templates/SectionAttributes.test.ts:336; module suite scratchpad/test/templates/**",
+          "upstreamBehaviour": "ManagedSection.sync casts outcomes[0] to SyncOutcome; its unstubbed-defect test casts the defect to Error; attribute properties cast Object.fromEntries output to Record<string, string>; generated style lookup uses a widened array.",
+          "labBehaviour": "ManagedSection.sync checks nonemptiness and calls Array.headNonEmpty; the defect test narrows with S.is(ManagedSectionTestError); Object.fromEntries relies on inference; property styles use an as const tuple so generated indices select a known style.",
+          "reason": "type-safety: D15 bans unsafe assertions; round-1 backlog-5 explicitly attributes the sync guard to D15 and codemod-1 pins the defect narrowing. Step-2 commits a8bd60176f and 49bb28ad76 remove casts/refine tuple typing; retained test runner pragmas are not claimed removed."
+        },
+        {
+          "test": "module suite scratchpad/test/templates/**",
+          "upstreamBehaviour": "internal/scan.ts identityOf/scan and test fixtures.ts section/block/parse/parseFailure expose direct-call functions only; ManagedSection.make wraps a generator in Effect.gen; schema errors are instantiated with new.",
+          "labBehaviour": "identityOf/scan and fixture helpers gain dual direct/pipeable overloads, with predicate dispatch for optional dialects; ManagedSection.make uses named Effect.fn; SectionRenderError and SectionFileError construction uses .make. Direct-call results remain the same.",
+          "reason": "tsgo-diagnostics: Step-2 @effect/tsgo missingPipeableSignature, effectFnOpportunity and newSchemaClass shapes; commit 49bb28ad76 identifies the diagnostics pass and its dual rewrites. The S0-to-working-tree diff retains these forms; finite-number changes are grouped separately."
+        },
+        {
+          "test": "scratchpad/test/templates/ManagedSection.test.ts:25,67,264,282; scratchpad/test/templates/SectionAttributes.test.ts:374; module suite scratchpad/test/templates/**",
+          "upstreamBehaviour": "ManagedSection.make is an arrow returning Effect.gen; SectionRenderError.message uses switch/default; optional attributes and error keys use conditional object spreads; map lookups return undefined.",
+          "labBehaviour": "ManagedSection.make uses named Effect.fn; SectionRenderError.message uses exhaustive Match with the same messages; Section.ts, SectionDocument.ts and internal/scan.ts use Option.getSomesStruct for omitted fields; Effect collection lookups use Option helpers.",
+          "reason": "effect-first: Effect-first generator, exhaustive match and Effect-native-helper laws force these shapes; the S0 diff and round-1 backlog-6 preserve error messages, while fix-templates-g1.md:8,36 pins refusal ordering and optional/required compatibility."
+        },
+        {
+          "test": "module suite scratchpad/test/templates/**",
+          "upstreamBehaviour": "Source and tests import runtime/types from the root effect barrel; ManagedSection and SectionDocument JSDoc examples also import from effect.",
+          "labBehaviour": "CommentStyle.ts, ManagedSection.ts, Section.ts, SectionDialect.ts, SectionDocument.ts, SectionOutcome.ts, internal helpers and test files use dedicated effect/Module imports; omission helpers use @beep/utils/Option. Examples use effect/Effect and effect/Result.",
+          "reason": "effect-imports: The effect-imports law forbids the root effect barrel in source, tests and examples; step-3 commit e8f7588108 and fix-templates-g1.md:12,19,28,33 show the import-only adaptations."
+        },
+        {
+          "test": "scratchpad/test/templates/Section.test.ts:87; scratchpad/test/templates/SectionDialect.test.ts:152; module suite scratchpad/test/templates/**",
+          "upstreamBehaviour": "Schema classes/errors use bare names, ManagedSection has the @effected/templates/ManagedSection service key, and SectionKey/Delimiter patterns are inline; JSON Schema definitions use bare class names.",
+          "labBehaviour": "File-local $ScratchpadId composers identify schemas, checks, fields and ManagedSection across all source files. JSON Schema definitions use @beep/scratchpad/effected/templates/... keys; SectionKey and Delimiter are referenced named definitions, with matching test-path retargets.",
+          "reason": "identity-annotations: D5 and step 4 require @beep/identity annotations. Round-1 codemod-3 plus fix-templates-g2.md:4-8 require recording the JSON Schema key changes; normalized here from the reports identity-keys label because these are composer-derived schema names."
+        },
+        {
+          "test": "scratchpad/test/templates/SectionDocument.test.ts:264,283,289",
+          "upstreamBehaviour": "A BEGIN immediately after a document-leading BOM does not match the upstream marker regex, but END does, so parseResult returns orphanedEnd and the section cannot be read or checked.",
+          "labBehaviour": "SectionDialect.compileMatchers recognizes markers after the document-leading BOM with a zero-width alternative; the span starts at offset 1, line 1, and reconciliation preserves the BOM and surrounding bytes. Interior BOMs retain the old rejection.",
+          "reason": "upstream-bug: Round-1 sol-1-1 reproduced orphanedEnd with the same BOM-prefixed block in both the lab and pinned upstream oracle; fix-templates-g1.md:1,20-22,38 and the new parse/read/reconciliation tests pin the repair."
+        },
+        {
+          "test": "scratchpad/test/templates/SectionDialect.test.ts:163; scratchpad/test/templates/SectionDocument.test.ts:294",
+          "upstreamBehaviour": "Rendering content a CRLF b with CRLF output replaces every LF directly, producing doubled carriage returns; parsing then checking the rendered section returns Drifted.",
+          "labBehaviour": "SectionDialect.render normalizes CRLF content to LF before converting to either requested EOL; output contains no doubled CR, reads back normalized content, checks UpToDate and reconciles without rewriting.",
+          "reason": "upstream-bug: Round-1 sol-1-2 probed section(\"a\\r\\nb\") with CRLF output in both lab and pinned upstream: each emitted a\\r\\r\\nb and Drifted. Fix-templates-g1.md:2,13,23,39 and render/parse/check regressions verify the fix."
+        },
+        {
+          "test": "scratchpad/test/templates/SectionDocument.reconcile.test.ts:201,217",
+          "upstreamBehaviour": "For n new declarations without existing anchors, internal/reconcile.ts searches forward and backward from each missing section, performing exactly n(n-1) unsuccessful anchor lookups.",
+          "labBehaviour": "Nearest existing predecessor/successor indices are precomputed in two passes, then missing sections are placed in declaration order; successor preference, predecessor fallback, foreign spans and bytes remain unchanged. Anchor search is linear; no whole-algorithm claim is made.",
+          "reason": "upstream-bug: Round-1 sol-1-3 proves the inherited quadratic search from the oracle loops under D11; S0 diff confirms both loops are replaced. Fix-templates-g1.md:3,29-30 and mixed/no-anchor regressions pin output compatibility; these tests do not measure runtime or count lookups."
+        }
+      ],
+      "backlog": [
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "backlog-1 — Canonical public JSDoc (scratchpad/effected/templates/SectionDocument.ts:103)",
+          "reason": "jsdoc: During S2 convert prose to titled sections, make examples self-contained, remove @public, add canonical categories/since and preserve upstream documentation."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "backlog-2 — Effectful it.layer setup (scratchpad/test/templates/ManagedSection.test.ts:19)",
+          "reason": "test: During S3 move effectful setup into it.layer using ported memfs, preserving fresh filesystem state and oracle assertions; remove redundant suppressions."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "backlog-3 — Canonical Option assertions (scratchpad/test/templates/ManagedSection.test.ts:30)",
+          "reason": "test: During S3 use assertSome/assertNone and appropriate Result/Exit assertion helpers from @effect/vitest/utils without changing case meanings."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "backlog-4 — Schema properties and run floors (scratchpad/test/templates/SectionDocument.prop.test.ts:67)",
+          "reason": "test: During S3 retain oracle properties, configure fcRuns(n), and add Arbitrary.schema-derived exported-schema round trips plus fidelity/idempotence properties."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "backlog-5 — Unreachable sync defect branch (scratchpad/effected/templates/ManagedSection.ts:203)",
+          "reason": "test: During S3 carry nonempty inputs/outputs through internal syncMany/reconcile and use A.headNonEmpty; preserve syncAll ReadonlyArray wrapper and behavior."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "backlog-6 — Optional render-reason LiteralKit (scratchpad/effected/templates/SectionDialect.ts:46)",
+          "reason": "effect-idiom: Optionally define annotated SectionRenderReason LiteralKit and use $match, preserving values, error ordering and message strings."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "backlog-7 — Adapt upstream README (scratchpad/effected/templates/README.md:3)",
+          "reason": "docs: During S2 remove release/install boilerplate, adapt the Why heading and use lab imports in examples while preserving substantive prose."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "backlog-8 — Collection identity prose (scratchpad/effected/templates/CommentStyle.ts:88)",
+          "reason": "docs: During S2 describe the stable string identity as keying Effect hash collections; record the collection change in the native-runtime deviation."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "backlog-9 — Explanatory header placement (scratchpad/effected/templates/internal/attributes.ts:1)",
+          "reason": "docs: During the documentation pass move the import below the explanatory file header."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "backlog-10 — Optional test-error barrel export (scratchpad/effected/templates/index.ts:11)",
+          "reason": "effect-idiom: Optionally re-export ManagedSectionTestError from index.ts when a barrel consumer needs it; record the existing source export separately."
+        }
+      ],
+      "reviewRounds": [
+        {
+          "round": 1,
+          "commit": "3fa5876691901fccf3d1cd29e9324564df134b56",
+          "seats": {
+            "grok": {
+              "required": 1,
+              "backlog": 0
+            },
+            "sol": {
+              "required": 9,
+              "backlog": 5
+            },
+            "fable": {
+              "required": 9,
+              "backlog": 8
+            }
+          }
+        }
+      ],
       "commits": [
         {
           "stage": 0,

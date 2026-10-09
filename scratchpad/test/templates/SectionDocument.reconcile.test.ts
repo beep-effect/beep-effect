@@ -1,8 +1,12 @@
 import { assert, describe, it } from "@effect/vitest";
+import * as S from "effect/Schema";
 import * as Result from "effect/Result";
 import type { Section, SectionDialect, SectionReconciliation, SectionRenderError } from "../../effected/templates/index.ts";
 import { CommentStyle, SectionDialect as Dialect, SectionId } from "../../effected/templates/index.ts";
 import { block, crlf, lines, parse, section } from "./fixtures.ts";
+
+import { ReconcileInput, ReconcileOutput, reconcile as reconcileCore } from "../../effected/templates/internal/reconcile.ts";
+import { SectionReconciliation as Reconciliation } from "../../effected/templates/SectionDocument.ts";
 
 const run = (
 	text: string,
@@ -190,5 +194,48 @@ describe("SectionDocument.reconcile", () => {
 			const error = runFailure(lines("header", ""), [A, hostile]);
 			assert.strictEqual(error.key, "beta");
 		});
+	});
+});
+
+describe("reconciliation anchor review regressions", () => {
+	it("prefers successors through mixed anchors and preserves foreign spans and text", () => {
+		const declarations = ["first", "alpha", "between1", "between2", "beta", "last1", "last2"].map((key) => section(key, key));
+		const foreign = '<!-- --- BEGIN foreign MANAGED SECTION --- -->\nuntouched  \n<!-- --- END foreign MANAGED SECTION --- -->';
+		const source = lines("header  ", block("beta", "beta"), "middle text", foreign, "more text", block("alpha", "alpha"), "footer", "");
+		const result = run(source, declarations);
+		assert.strictEqual(result.text, lines(
+			"header  ", block("first", "first"), "", block("alpha", "alpha"), "middle text", foreign, "more text",
+			block("between1", "between1"), "", block("between2", "between2"), "", block("beta", "beta"), "",
+			block("last1", "last1"), "", block("last2", "last2"), "footer", "",
+		));
+		assert.deepStrictEqual(tags(result), ["Created", "Unchanged", "Created", "Created", "Unchanged", "Created", "Created"]);
+		const repeated = run(result.text, declarations);
+		assert.strictEqual(repeated.text, result.text);
+		assert.isFalse(repeated.changed);
+	});
+
+	it("appends all unanchored declarations in order after exact preserved spans", () => {
+		const declarations = ["one", "two", "three", "four"].map((key) => section(key, key));
+		const foreign = block("foreign", "  unchanged  ");
+		for (const source of ["", lines("header  ", foreign, "footer", "")]) {
+			const expected = declarations.map((value) => block(value.key, value.content)).join("\n\n") + "\n";
+			const result = run(source, declarations);
+			assert.strictEqual(result.text, source === "" ? expected : lines("header  ", foreign, "footer", "", expected));
+			assert.deepStrictEqual(tags(result), ["Created", "Created", "Created", "Created"]);
+			assert.strictEqual(run(result.text, declarations).text, result.text);
+		}
+	});
+
+	it("validates core contracts with the same schema as public plain outputs", () => {
+		const doc = parse(block("alpha", "a-body"));
+		const input = { text: doc.text, placed: doc.sections, declared: [A, B], dialect: doc.dialect, eol: doc.eol };
+		assert.isTrue(S.is(ReconcileInput)(input));
+		const result = reconcileCore(input);
+		if (!Result.isSuccess(result)) assert.fail("valid core input must reconcile");
+		assert.strictEqual(ReconcileOutput, Reconciliation);
+		assert.isTrue(S.is(ReconcileOutput)(result.success));
+		assert.strictEqual(Object.getPrototypeOf(result.success), Object.prototype);
+		assert.deepStrictEqual(Object.keys(result.success), ["text", "outcomes", "changed"]);
+		assert.isFalse(S.is(ReconcileOutput)({ ...result.success, outcomes: [{ _tag: "Created" }] }));
 	});
 });

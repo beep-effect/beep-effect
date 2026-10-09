@@ -18,7 +18,14 @@ const $I = $ScratchpadId.create("effected/templates/CommentStyle");
  * The pattern is a negated character class with a single quantifier, so it
  * cannot backtrack on hostile input.
  */
-const Delimiter = S.String.check(S.isPattern(/^\P{Cc}+$/u));
+const Delimiter = S.String.check(
+	S.isPattern(/^\P{Cc}+$/u, {
+		identifier: $I`DelimiterCheck`,
+		title: "Comment delimiter grammar",
+		description: "A comment delimiter is non-empty and contains no control characters.",
+		message: "Expected a non-empty comment delimiter without control characters.",
+	}),
+).annotate($I.annote("Delimiter", { description: "A non-empty comment delimiter free of control characters." }));
 
 /**
  * How a managed section's markers are commented out in a given file format.

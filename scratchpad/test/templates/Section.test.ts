@@ -86,10 +86,14 @@ describe("Section", () => {
 describe("SectionKey JSON Schema export", () => {
 	it("exports its key pattern, standalone and inside SectionId", () => {
 		const pattern = "^[A-Za-z0-9][A-Za-z0-9._-]*$";
-		assert.nestedPropertyVal(S.toJsonSchemaDocument(SectionKey), "schema.pattern", pattern);
+		assert.nestedPropertyVal(
+			S.toJsonSchemaDocument(SectionKey),
+			"definitions.@beep/scratchpad/effected/templates/Section/SectionKey.pattern",
+			pattern,
+		);
 		assert.nestedPropertyVal(
 			S.toJsonSchemaDocument(SectionId),
-			"definitions.@beep/scratchpad/effected/templates/Section/SectionIdEncoded.properties.key.pattern",
+			"definitions.@beep/scratchpad/effected/templates/Section/SectionKey.pattern",
 			pattern,
 		);
 	});

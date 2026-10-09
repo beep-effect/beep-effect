@@ -2,39 +2,45 @@
 // document that already has some of them, in some order, mixed with text and
 // foreign sections that must survive byte-for-byte.
 //
-// The shape is a bounded linear pass over spans and placeholders — no
-// recursion, nothing that can overflow a stack on hostile input.
+// Missing-section anchor preprocessing uses two linear passes. Other work,
+// including rendering and constructing output strings, is accounted for separately.
 //
 // Ordering normalization is a CONTRACT, not a side effect: declared sections
 // come back in declared order. That is what lets a consumer say "the preamble
 // must precede the tool block" by listing them in that order and have it be
 // true even in a file a user reordered by hand.
 
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as S from "effect/Schema";
 import * as Equal from "effect/Equal";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
-import type { PlacedSection, Section } from "../Section.ts";
-import type { Eol, SectionDialect } from "../SectionDialect.ts";
-import { SectionRenderError } from "../SectionDialect.ts";
+import { PlacedSection, Section } from "../Section.ts";
+import { Eol, SectionDialect, SectionRenderError } from "../SectionDialect.ts";
 import { SyncOutcome } from "../SectionOutcome.ts";
 import { identityOf } from "./scan.ts";
 
-export interface ReconcileInput {
-	readonly text: string;
-	readonly placed: ReadonlyArray<PlacedSection>;
-	/** Declared sections, already line-ending normalized. */
-	readonly declared: ReadonlyArray<Section>;
-	readonly dialect: SectionDialect;
-	readonly eol: Eol;
-}
+const $I = $ScratchpadId.create("effected/templates/internal/reconcile");
 
-export interface ReconcileOutput {
-	readonly text: string;
-	readonly outcomes: ReadonlyArray<SyncOutcome>;
-	readonly changed: boolean;
-}
+/** Plain input to the pure reconciliation core; every field remains required. */
+export const ReconcileInput = S.Struct({
+	text: S.String.annotateKey({ description: "The exact source document." }),
+	placed: S.Array(S.suspend(() => PlacedSection)).annotateKey({ description: "Sections with their source spans." }),
+	declared: S.Array(S.suspend(() => Section)).annotateKey({ description: "Declared sections, already line-ending normalized." }),
+	dialect: S.suspend(() => SectionDialect).annotateKey({ description: "The marker vocabulary to render with." }),
+	eol: Eol.annotateKey({ description: "The document line ending." }),
+}).annotate($I.annote("ReconcileInput", { description: "The complete input to managed-section reconciliation." }));
+export type ReconcileInput = typeof ReconcileInput.Type;
+
+/** Shared plain output authority for public and internal reconciliation results. */
+export const ReconcileOutput = S.Struct({
+	text: S.String.annotateKey({ description: "The document as it should now read." }),
+	outcomes: S.Array(S.suspend(() => SyncOutcome)).annotateKey({ description: "One outcome per declared section, in declaration order." }),
+	changed: S.Boolean.annotateKey({ description: "Whether output text differs from the source." }),
+}).annotate($I.annote("ReconcileOutput", { description: "The resulting text, per-section outcomes and byte-change indicator." }));
+export type ReconcileOutput = typeof ReconcileOutput.Type;
 
 /** A document broken into preserved text spans and section placeholders. */
 type Item =
@@ -120,6 +126,21 @@ export const reconcile = (input: ReconcileInput): Result.Result<ReconcileOutput,
 		slotCursor += 1;
 	});
 
+	// Cache strictly preceding and succeeding existing anchors. Each declaration
+	// needs one map lookup per pass, including declarations without any anchor.
+	const predecessor: Array<number | undefined> = [];
+	const successor: Array<number | undefined> = [];
+	let previousAnchor: number | undefined;
+	for (let index = 0; index < declared.length; index += 1) {
+		predecessor[index] = previousAnchor;
+		previousAnchor = O.getOrUndefined(MutableHashMap.get(itemIndexByDeclared, index)) ?? previousAnchor;
+	}
+	let nextAnchor: number | undefined;
+	for (let index = declared.length - 1; index >= 0; index -= 1) {
+		successor[index] = nextAnchor;
+		nextAnchor = O.getOrUndefined(MutableHashMap.get(itemIndexByDeclared, index)) ?? nextAnchor;
+	}
+
 	// Place the sections that are not in the document yet: before the nearest
 	// present successor sibling, else after the nearest present predecessor,
 	// else append at the end.
@@ -138,19 +159,15 @@ export const reconcile = (input: ReconcileInput): Result.Result<ReconcileOutput,
 			return;
 		}
 		const block = O.getOrElse(MutableHashMap.get(rendered, identity), () => "");
-		for (let next = declaredIndex + 1; next < declared.length; next += 1) {
-			const anchor = MutableHashMap.get(itemIndexByDeclared, next);
-			if (O.isSome(anchor)) {
-				pushInto(beforeAnchor, anchor.value, block);
-				return;
-			}
+		const next = successor[declaredIndex];
+		if (next !== undefined) {
+			pushInto(beforeAnchor, next, block);
+			return;
 		}
-		for (let previous = declaredIndex - 1; previous >= 0; previous -= 1) {
-			const anchor = MutableHashMap.get(itemIndexByDeclared, previous);
-			if (O.isSome(anchor)) {
-				pushInto(afterAnchor, anchor.value, block);
-				return;
-			}
+		const previous = predecessor[declaredIndex];
+		if (previous !== undefined) {
+			pushInto(afterAnchor, previous, block);
+			return;
 		}
 		appended.push(block);
 	});

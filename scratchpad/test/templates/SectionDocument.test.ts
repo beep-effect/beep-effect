@@ -1,8 +1,16 @@
 import { assert, describe, it } from "@effect/vitest";
+import * as Data from "effect/Data";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as O from "effect/Option";
 import { CommentStyle, SectionDialect, SectionDocument, SectionId } from "../../effected/templates/index.ts";
+import { CheckOutcome, SyncOutcome } from "../../effected/templates/SectionOutcome.ts";
+import { SectionReconciliation, SectionParseError } from "../../effected/templates/SectionDocument.ts";
+import { Eol } from "../../effected/templates/SectionDialect.ts";
+import { ReconcileInput, ReconcileOutput } from "../../effected/templates/internal/reconcile.ts";
+import { SCAN_FAILURE_REASONS, ScanFailureReason, ScanFailure, ScanResult, scan } from "../../effected/templates/internal/scan.ts";
 import { begin, block, crlf, end, id, lines, parse, parseFailure, section } from "./fixtures.ts";
 
 describe("SectionDocument.parseResult", () => {
@@ -249,5 +257,140 @@ describe("SectionDocument.parseResult", () => {
 			const next = O.getOrThrow(doc.remove(id("example-tool")));
 			assert.strictEqual(next, crlf(lines("header", "", "footer", "")));
 		});
+	});
+});
+
+describe("SectionDocument review regressions", () => {
+	it("reads a first-line BEGIN after the BOM and preserves its bytes on reconciliation", () => {
+		for (const eol of Eol.literals) {
+			const text = "\uFEFF" + [begin("tool"), "old", end("tool"), "footer", ""].join(eol);
+			const doc = parse(text);
+			assert.strictEqual(doc.text, text);
+			assert.strictEqual(doc.eol, eol);
+			assert.strictEqual(doc.sections[0]?.start, 1);
+			assert.strictEqual(doc.sections[0]?.line, 1);
+			assert.strictEqual(O.getOrThrow(doc.read(id("tool"))).content, "old");
+			const same = doc.reconcile([section("tool", "old")]);
+			if (!Result.isSuccess(same)) assert.fail("BOM document must reconcile");
+			assert.strictEqual(same.success.text, text);
+			assert.isFalse(same.success.changed);
+			const updated = doc.reconcile([section("tool", "new")]);
+			if (!Result.isSuccess(updated)) assert.fail("BOM document must update");
+			assert.strictEqual(updated.success.text, "\uFEFF" + [begin("tool"), "new", end("tool"), "footer", ""].join(eol));
+		}
+	});
+
+	it.effect("parses a BOM-prefixed section through the Effect primitive", () => Effect.gen(function*() {
+		const doc = yield* SectionDocument.parse("\uFEFF" + block("tool", "body"));
+		assert.strictEqual(O.getOrThrow(doc.read(id("tool"))).content, "body");
+		assert.strictEqual(doc.check(section("tool", "body"))._tag, "UpToDate");
+	}));
+
+	it("does not treat an interior BOM as a first-line BOM", () => {
+		const error = parseFailure("header\n\uFEFF" + block("tool", "body"));
+		assert.strictEqual(error.reason, "orphanedEnd");
+	});
+
+	it("checks CRLF declarations against their render without immediate drift", () => {
+		const expected = section("tool", "a\r\nb");
+		for (const eol of Eol.literals) {
+			const rendered = SectionDialect.default.render(expected, eol);
+			if (!Result.isSuccess(rendered)) assert.fail("CRLF content must render");
+			const doc = parse(rendered.success);
+			assert.strictEqual(O.getOrThrow(doc.read(expected.id)).content, "a\nb");
+			assert.strictEqual(doc.check(expected)._tag, "UpToDate");
+			const reconciled = doc.reconcile([expected]);
+			if (!Result.isSuccess(reconciled)) assert.fail("rendered document must reconcile");
+			assert.strictEqual(reconciled.success.text, rendered.success);
+			assert.isFalse(reconciled.success.changed);
+		}
+	});
+
+	it("shares reconciliation schema authority and retains plain required fields", () => {
+		assert.strictEqual(SectionReconciliation, ReconcileOutput);
+		const doc = parse(block("tool", "body"));
+		const input = { text: doc.text, placed: doc.sections, declared: [section("tool", "body")], dialect: doc.dialect, eol: doc.eol };
+		assert.isTrue(S.is(ReconcileInput)(input));
+		for (const key of Object.keys(input)) {
+			const incomplete = Object.fromEntries(Object.entries(input).filter(([name]) => name !== key));
+			assert.isFalse(S.is(ReconcileInput)(incomplete));
+		}
+		assert.isFalse(S.is(ReconcileInput)({ ...input, eol: "\r" }));
+		const result = doc.reconcile(input.declared);
+		if (!Result.isSuccess(result)) assert.fail("valid input must reconcile");
+		assert.strictEqual(Object.getPrototypeOf(result.success), Object.prototype);
+		assert.isTrue(S.is(SectionReconciliation)(result.success));
+		for (const value of [{ text: "", outcomes: [] }, { text: "", changed: false }, { outcomes: [], changed: false }]) {
+			assert.isFalse(S.is(SectionReconciliation)(value));
+		}
+		for (const eol of Eol.literals) {
+			assert.isTrue(S.is(SectionDocument)(SectionDocument.make({ ...doc, eol })));
+			assert.isTrue(Result.isSuccess(S.decodeResult(SectionDocument)({ ...doc, eol })));
+		}
+		assert.isTrue(Result.isFailure(S.decodeUnknownResult(SectionDocument)({ ...doc, eol: "\r" })));
+	});
+
+	it("retains scan result discriminants and the required undefined-capable failure key", () => {
+		assert.strictEqual(SCAN_FAILURE_REASONS, ScanFailureReason.literals);
+		for (const reason of SCAN_FAILURE_REASONS) {
+			const failure = { reason, line: 1, key: undefined };
+			assert.isTrue(S.is(ScanFailure)(failure));
+			assert.isTrue(S.is(ScanResult)({ ok: false, failure }));
+			assert.isTrue(S.is(SectionParseError.fields.reason)(reason));
+			assert.isFalse(S.is(ScanFailure)({ reason, line: 1 }));
+		}
+		assert.isFalse(S.is(ScanFailureReason)("unknown"));
+		assert.isFalse(S.is(ScanResult)({ ok: true }));
+		assert.isFalse(S.is(ScanResult)({ ok: false }));
+		assert.isFalse(S.is(ScanResult)({ ok: "true", sections: [] }));
+		for (const text of ["", block("tool", "body"), begin("tool"), end("tool")]) {
+			const result = scan(text, SectionDialect.default);
+			assert.strictEqual(Object.getPrototypeOf(result), Object.prototype);
+			assert.isTrue(S.is(ScanResult)(result));
+			if (!result.ok) assert.strictEqual(Object.getPrototypeOf(result.failure), Object.prototype);
+		}
+	});
+
+	it("preserves all outcome Data constructors, payloads, equality and matcher APIs", () => {
+		const before = section("tool", "old");
+		const after = section("tool", "new");
+		const syncOracle = Data.taggedEnum<SyncOutcome>();
+		const checkOracle = Data.taggedEnum<CheckOutcome>();
+		const syncPairs = [
+			[SyncOutcome.Created({ section: after }), syncOracle.Created({ section: after })],
+			[SyncOutcome.Updated({ before, after }), syncOracle.Updated({ before, after })],
+			[SyncOutcome.Unchanged({ section: after }), syncOracle.Unchanged({ section: after })],
+		] as const;
+		const checkPairs = [
+			[CheckOutcome.Absent({ id: before.id }), checkOracle.Absent({ id: before.id })],
+			[CheckOutcome.UpToDate({ section: after }), checkOracle.UpToDate({ section: after })],
+			[CheckOutcome.Drifted({ onDisk: before, expected: after }), checkOracle.Drifted({ onDisk: before, expected: after })],
+		] as const;
+		assert.isTrue(S.isSchema(SyncOutcome));
+		assert.isTrue(S.isSchema(CheckOutcome));
+		for (const [actual, oracle] of syncPairs) {
+			assert.deepStrictEqual(actual, oracle);
+			assert.strictEqual(Object.getPrototypeOf(actual), Object.getPrototypeOf(oracle));
+			assert.isTrue(Equal.equals(actual, oracle));
+			assert.isTrue(S.is(SyncOutcome)(actual));
+			assert.isTrue(SyncOutcome.$is(actual._tag)(actual));
+			const cases = { Created: (value: Extract<SyncOutcome, { _tag: "Created" }>) => value.section, Updated: (value: Extract<SyncOutcome, { _tag: "Updated" }>) => value.after, Unchanged: (value: Extract<SyncOutcome, { _tag: "Unchanged" }>) => value.section };
+			assert.strictEqual(SyncOutcome.$match(actual, cases), after);
+			assert.strictEqual(SyncOutcome.$match(cases)(actual), after);
+		}
+		for (const [actual, oracle] of checkPairs) {
+			assert.deepStrictEqual(actual, oracle);
+			assert.strictEqual(Object.getPrototypeOf(actual), Object.getPrototypeOf(oracle));
+			assert.isTrue(Equal.equals(actual, oracle));
+			assert.isTrue(S.is(CheckOutcome)(actual));
+			assert.isTrue(CheckOutcome.$is(actual._tag)(actual));
+			const cases = { Absent: (value: Extract<CheckOutcome, { _tag: "Absent" }>) => value.id.key, UpToDate: (value: Extract<CheckOutcome, { _tag: "UpToDate" }>) => value.section.key, Drifted: (value: Extract<CheckOutcome, { _tag: "Drifted" }>) => value.expected.key };
+			assert.strictEqual(CheckOutcome.$match(actual, cases), "tool");
+			assert.strictEqual(CheckOutcome.$match(cases)(actual), "tool");
+		}
+		assert.isFalse(SyncOutcome.$is("Updated")(syncPairs[0][0]));
+		assert.isFalse(CheckOutcome.$is("Drifted")(checkPairs[0][0]));
+		assert.isFalse(S.is(SyncOutcome)({ _tag: "Updated", before }));
+		assert.isFalse(S.is(CheckOutcome)({ _tag: "Drifted", onDisk: before }));
 	});
 });

@@ -123,7 +123,21 @@ None.
 
 ### Deviations
 
-None.
+One entry per class of change (law- or ruling-forced) and one per behavioural divergence; the full test, upstream behaviour, lab behaviour and reason are on the module's ledger row.
+
+- **native-runtime** — Lab uses Effect hash collections, Record and Array helpers, owner-local matchers and a tagged defect where upstream uses native collections, Object helpers, sort and Error. (scratchpad/test/templates/SectionDocument.test.ts:43,129; scratchpad/test/templates/SectionDocument.reconcile.test.ts:186,201,217; scratchpad/test/templates/SectionAttributes.test.ts:49,249; scratchpad/test/templates/ManagedSection.test.ts:323; scratchpad/test/templates/SectionDialect.test.ts:181,203)
+- **identity-keys** — Lab eagerly stores compiled matchers in each dialect owner while upstream lazily stores them in an identity-keyed WeakMap. (scratchpad/test/templates/SectionDialect.test.ts:181,203)
+- **tagged-errors** — Lab uses ManagedSectionTestError for unstubbed defects and preserves encoded cause stacks where upstream throws native Error and omits those stacks. (scratchpad/test/templates/ManagedSection.test.ts:221,323)
+- **schema-first** — Lab adds schema authorities, LiteralKit domains, derived guards and named validation messages while upstream has constructor-only outcomes, type-only models and manual validation. (scratchpad/test/templates/SectionDialect.test.ts:175,211; scratchpad/test/templates/SectionDocument.test.ts:309,333,354; scratchpad/test/templates/SectionDocument.reconcile.test.ts:229; scratchpad/test/templates/SectionAttributes.test.ts:358,366,374; scratchpad/test/templates/Section.test.ts:28; scratchpad/test/templates/CommentStyle.test.ts)
+- **numeric-domains** — Lab validates offsets and error lines with S.Finite where upstream uses unrestricted Schema.Number or a type-only number. (scratchpad/test/templates/SectionDocument.test.ts:30,38,333 (valid offsets, lines and scan schema))
+- **type-safety** — Lab uses narrowing, a nonempty-array helper and inferred record/tuple types where upstream relies on unsafe casts and widened indexing. (scratchpad/test/templates/ManagedSection.test.ts:67,323; scratchpad/test/templates/SectionAttributes.test.ts:336; module suite scratchpad/test/templates/**)
+- **tsgo-diagnostics** — Lab adds dual pipeable signatures, named Effect.fn and schema .make construction where upstream has direct-only helpers, Effect.gen and new schema errors. (module suite scratchpad/test/templates/**)
+- **effect-first** — Lab uses named Effect.fn, exhaustive Match and Option helpers where upstream uses a generator wrapper, switch and conditional omission spreads. (scratchpad/test/templates/ManagedSection.test.ts:25,67,264,282; scratchpad/test/templates/SectionAttributes.test.ts:374; module suite scratchpad/test/templates/**)
+- **effect-imports** — Lab uses dedicated effect/Module imports in source, tests and examples where upstream imports from the effect barrel. (module suite scratchpad/test/templates/**)
+- **identity-annotations** — Lab supplies @beep/identity annotations and composer-named JSON Schema definitions and service keys where upstream uses bare names and inline patterns. (scratchpad/test/templates/Section.test.ts:87; scratchpad/test/templates/SectionDialect.test.ts:152; module suite scratchpad/test/templates/**)
+- **upstream-bug** — Lab reads and reconciles a block immediately after a leading BOM while upstream rejects it as orphanedEnd. (scratchpad/test/templates/SectionDocument.test.ts:264,283,289)
+- **upstream-bug** — Lab normalizes CRLF content before EOL conversion and checks its render UpToDate while upstream doubles carriage returns and reports Drifted. (scratchpad/test/templates/SectionDialect.test.ts:163; scratchpad/test/templates/SectionDocument.test.ts:294)
+- **upstream-bug** — Lab precomputes missing-section anchors in linear passes while upstream repeatedly searches them quadratically, preserving the insertion and byte contracts. (scratchpad/test/templates/SectionDocument.reconcile.test.ts:201,217)
 
 ### Dependency backlog
 

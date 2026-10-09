@@ -8,6 +8,11 @@
 // means every sync updates the first copy while the stale second lives on
 // disk forever.
 
+import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as A from "effect/Array";
+import * as Order from "effect/Order";
+import * as S from "effect/Schema";
 import { dual } from "effect/Function";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as MutableHashSet from "effect/MutableHashSet";
@@ -17,25 +22,37 @@ import type { Eol, SectionDialect } from "../SectionDialect.ts";
 import { parseAttributeRun } from "./attributes.ts";
 import * as O from "@beep/utils/Option";
 
+const $I = $ScratchpadId.create("effected/templates/internal/scan");
+
 /** The ways a document can be structurally unreadable. */
-export const SCAN_FAILURE_REASONS = [
-	"unterminatedSection",
-	"orphanedEnd",
-	"overlappingSections",
-	"duplicateSection",
-] as const;
+export const ScanFailureReason = LiteralKit([
+	"unterminatedSection", "orphanedEnd", "overlappingSections", "duplicateSection",
+]).annotate($I.annote("ScanFailureReason", { description: "The ambiguities refused by the managed-section scanner." }));
+export type ScanFailureReason = typeof ScanFailureReason.Type;
 
-export type ScanFailureReason = (typeof SCAN_FAILURE_REASONS)[number];
+/** The existing ordered list of scanner failure reasons. */
+export const SCAN_FAILURE_REASONS = ScanFailureReason.literals;
 
-export interface ScanFailure {
-	readonly reason: ScanFailureReason;
-	readonly line: number;
-	readonly key: string | undefined;
-}
+/** A scanner failure retains its required, explicitly undefined-capable key. */
+export const ScanFailure = S.Struct({
+	reason: ScanFailureReason.annotateKey({ description: "The first structural ambiguity found." }),
+	line: S.Finite.annotateKey({ description: "The one-based line of the offending marker." }),
+	key: S.UndefinedOr(S.String).annotateKey({ description: "The section key, explicitly undefined when unknown." }),
+}).annotate($I.annote("ScanFailure", { description: "A plain scanner failure with its reason and marker location." }));
+export type ScanFailure = typeof ScanFailure.Type;
 
-export type ScanResult =
-	| { readonly ok: true; readonly sections: ReadonlyArray<PlacedSection> }
-	| { readonly ok: false; readonly failure: ScanFailure };
+/** Plain scan results keep the boolean ok discriminant and variant-specific fields. */
+export const ScanResult = S.Union([
+	S.Struct({
+		ok: S.Literal(true).annotateKey({ description: "The scan succeeded." }),
+		sections: S.Array(S.suspend(() => PlacedSection)).annotateKey({ description: "Located sections in source order." }),
+	}),
+	S.Struct({
+		ok: S.Literal(false).annotateKey({ description: "The scan failed." }),
+		failure: ScanFailure.annotateKey({ description: "The first structural failure." }),
+	}),
+]).annotate($I.annote("ScanResult", { description: "Either located sections or the first ambiguity, in plain-object form." }));
+export type ScanResult = typeof ScanResult.Type;
 
 /** A document's dominant line ending. Any CRLF makes the document CRLF. */
 export const detectEol = (text: string): Eol => (text.includes("\r\n") ? "\r\n" : "\n");
@@ -142,7 +159,7 @@ const collectHits = (text: string, dialect: SectionDialect): ReadonlyArray<Marke
 			});
 		}
 	}
-	return hits.sort((left, right) => left.start - right.start);
+	return A.sort(hits, Order.mapInput(Order.Number, (hit: MarkerHit) => hit.start));
 };
 
 /**

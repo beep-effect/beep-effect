@@ -1,10 +1,11 @@
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as Equal from "effect/Equal";
 import * as Match from "effect/Match";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { CommentStyle } from "./CommentStyle.ts";
-import { ATTRIBUTE_NAME_PATTERN, isValidAttributeValue, parseAttributeRun } from "./internal/attributes.ts";
+import { isValidAttributeName, isValidAttributeValue, parseAttributeRun } from "./internal/attributes.ts";
 import type { Section, SectionId } from "./Section.ts";
 import * as R from "effect/Record";
 
@@ -13,9 +14,20 @@ const $I = $ScratchpadId.create("effected/templates/SectionDialect");
 /**
  * The line ending a document uses.
  *
+ * **Example** (Accepted line endings)
+ * ```ts
+ * import { Eol } from "./SectionDialect.ts";
+ * console.log(Eol.literals);
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
  * @public
  */
-export type Eol = "\n" | "\r\n";
+export const Eol = LiteralKit(["\n", "\r\n"]).annotate(
+	$I.annote("Eol", { description: "The LF or CRLF line ending used by a document." }),
+);
+export type Eol = typeof Eol.Type;
 
 /**
  * Raised when a section cannot be turned into marker-delimited text.
@@ -73,15 +85,6 @@ const escapeRegex = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]
 const GAP = "[ \\t]+";
 
 /**
- * Compiled matchers are cached per dialect instance. A `WeakMap` rather than
- * a field keeps `SectionDialect` a pure schema class.
- */
-const matcherCache = new WeakMap<
-	SectionDialect,
-	ReadonlyArray<{ readonly style: CommentStyle; readonly regex: RegExp }>
->();
-
-/**
  * The marker vocabulary: what phrase delimits a managed section, and which
  * comment styles a document is scanned for.
  *
@@ -110,6 +113,9 @@ export class SectionDialect extends S.Class<SectionDialect>($I`SectionDialect`)(
 	/** Which comment styles the document scanner recognizes. At least one. */
 	styles: S.Array(CommentStyle).check(S.isMinLength(1)).annotateKey({ description: "Which comment styles the document scanner recognizes. At least one." }),
 }, $I.annote("SectionDialect", { description: "The marker vocabulary: what phrase delimits a managed section, and which comment styles a document is scanned for." })) {
+	// Runtime-only state belongs to its dialect; private fields never enter the wire form.
+	readonly #compiledMatchers = this.compileMatchers();
+
 	/**
 	 * The zero-configuration dialect: the phrase `MANAGED SECTION` and every
 	 * preset comment style.
@@ -151,14 +157,15 @@ export class SectionDialect extends S.Class<SectionDialect>($I`SectionDialect`)(
 			// typed failure here rather than a defect at construction. Either kind
 			// of violation would emit a marker the scanner reads differently — or
 			// not at all — so both are refused before anything is written.
-			if (!ATTRIBUTE_NAME_PATTERN.test(name) || !isValidAttributeValue(value)) {
+			if (!isValidAttributeName(name) || !isValidAttributeValue(value)) {
 				return Result.fail(SectionRenderError.make({ reason: "invalidAttribute", key: section.key, attribute: name }));
 			}
 		}
 		if (this.containsMarker(section.content)) {
 			return Result.fail(SectionRenderError.make({ reason: "markerInContent", key: section.key }));
 		}
-		const body = eol === "\n" ? section.content : section.content.replace(/\n/g, eol);
+		const normalized = section.content.replace(/\r\n/g, "\n");
+		const body = eol === "\n" ? normalized : normalized.replace(/\n/g, eol);
 		const begin = this.marker("BEGIN", section.id, section.attributes);
 		return Result.succeed(`${begin}${eol}${body}${eol}${this.endMarker(section.id)}`);
 	}
@@ -202,10 +209,10 @@ export class SectionDialect extends S.Class<SectionDialect>($I`SectionDialect`)(
 	 * @internal
 	 */
 	matchers(): ReadonlyArray<{ readonly style: CommentStyle; readonly regex: RegExp }> {
-		const cached = matcherCache.get(this);
-		if (cached !== undefined) {
-			return cached;
-		}
+		return this.#compiledMatchers;
+	}
+
+	private compileMatchers(): ReadonlyArray<{ readonly style: CommentStyle; readonly regex: RegExp }> {
 		// A phrase's internal spaces read as "some whitespace" so a hand-edited
 		// file with a double space still matches.
 		const phrase = escapeRegex(this.phrase).replace(/ +/g, GAP);
@@ -213,7 +220,9 @@ export class SectionDialect extends S.Class<SectionDialect>($I`SectionDialect`)(
 			const tail = style.suffix === undefined ? "" : `${GAP}${escapeRegex(style.suffix)}`;
 			return {
 				style,
-				// Three subtleties, the first two load-bearing for CRLF documents.
+				// The zero-width BOM alternative only matches after a BOM at absolute
+				// offset zero; the marker span starts after that preserved byte.
+				// Three further subtleties, the first two load-bearing for CRLF documents.
 				//
 				// The `\r?` is what makes them match at all: under `m`, `$` matches
 				// before the LF and leaves the CR sitting in the line.
@@ -233,12 +242,11 @@ export class SectionDialect extends S.Class<SectionDialect>($I`SectionDialect`)(
 				// by the line. The lazy interior is also what lets a quoted value
 				// contain `---` without being mistaken for the closing rule.
 				regex: new RegExp(
-					`^${escapeRegex(style.prefix)}${GAP}---${GAP}(BEGIN|END)${GAP}${KEY_CAPTURE}${GAP}${phrase}(?:${GAP}([^ \\t\\r\\n][^\\r\\n]*?))?${GAP}---${tail}[ \\t]*(?=\r?$)`,
+					`(?:^|(?<=(?<![\\s\\S])\\uFEFF))${escapeRegex(style.prefix)}${GAP}---${GAP}(BEGIN|END)${GAP}${KEY_CAPTURE}${GAP}${phrase}(?:${GAP}([^ \\t\\r\\n][^\\r\\n]*?))?${GAP}---${tail}[ \\t]*(?=\r?$)`,
 					"gm",
 				),
 			};
 		});
-		matcherCache.set(this, compiled);
 		return compiled;
 	}
 

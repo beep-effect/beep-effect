@@ -4,13 +4,12 @@ import * as Equal from "effect/Equal";
 import * as O from "@beep/utils/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { reconcile } from "./internal/reconcile.ts";
-import { SCAN_FAILURE_REASONS, detectEol, identityOf, normalizeEol, scan } from "./internal/scan.ts";
+import { ReconcileOutput, reconcile } from "./internal/reconcile.ts";
+import { ScanFailureReason, detectEol, identityOf, normalizeEol, scan } from "./internal/scan.ts";
 import type { Section, SectionId } from "./Section.ts";
 import { PlacedSection } from "./Section.ts";
-import type { Eol, SectionRenderError } from "./SectionDialect.ts";
-import { SectionDialect } from "./SectionDialect.ts";
-import type { SyncOutcome } from "./SectionOutcome.ts";
+import type { SectionRenderError } from "./SectionDialect.ts";
+import { Eol, SectionDialect } from "./SectionDialect.ts";
 import { CheckOutcome } from "./SectionOutcome.ts";
 
 const $I = $ScratchpadId.create("effected/templates/SectionDocument");
@@ -31,7 +30,7 @@ const $I = $ScratchpadId.create("effected/templates/SectionDocument");
  */
 export class SectionParseError extends S.TaggedError<SectionParseError>($I`SectionParseError`)("SectionParseError", {
 	/** Which ambiguity was found. */
-	reason: S.Literals(SCAN_FAILURE_REASONS).annotateKey({ description: "Which ambiguity was found." }),
+	reason: ScanFailureReason.annotateKey({ description: "Which ambiguity was found." }),
 	/** 1-based line of the offending marker. */
 	line: S.Finite.annotateKey({ description: "1-based line of the offending marker." }),
 	/** The section key involved, when the failure names one. */
@@ -63,31 +62,16 @@ export class SectionParseError extends S.TaggedError<SectionParseError>($I`Secti
 	}
 }
 
-const REASON_PROSE: Record<(typeof SCAN_FAILURE_REASONS)[number], string> = {
+const REASON_PROSE: Record<ScanFailureReason, string> = {
 	unterminatedSection: "Managed section is never closed",
 	orphanedEnd: "End marker closes no open section",
 	overlappingSections: "Managed section opens inside another",
 	duplicateSection: "Managed section appears twice",
 };
 
-/**
- * The result of reconciling a declared set of sections against a document.
- *
- * @remarks
- * A plain interface rather than a `Schema.Class`: `outcomes` holds
- * `SyncOutcome` values, which are a `Data.TaggedEnum` and therefore not
- * a schema, so the class form would be schema-shaped in name only.
- *
- * @public
- */
-export interface SectionReconciliation {
-	/** The document as it should now read. */
-	readonly text: string;
-	/** One outcome per declared section, in declared order. */
-	readonly outcomes: ReadonlyArray<SyncOutcome>;
-	/** Whether `text` differs from the document it was reconciled against. */
-	readonly changed: boolean;
-}
+/** The plain reconciliation result, sharing its schema with the pure core. */
+export const SectionReconciliation = ReconcileOutput;
+export type SectionReconciliation = typeof SectionReconciliation.Type;
 
 /**
  * A parsed document: its text, the dialect it was read with, and every
@@ -122,7 +106,7 @@ export class SectionDocument extends S.Class<SectionDocument>($I`SectionDocument
 	/** Every managed section found, in document order. */
 	sections: S.Array(PlacedSection).annotateKey({ description: "Every managed section found, in document order." }),
 	/** The document's dominant line ending. */
-	eol: S.Literals(["\n", "\r\n"]).annotateKey({ description: "The document's dominant line ending." }),
+	eol: Eol.annotateKey({ description: "The document's dominant line ending." }),
 }, $I.annote("SectionDocument", { description: "A parsed document: its text, the dialect it was read with, and every managed section found in it." })) {
 	/**
 	 * Parse a document. The synchronous primitive.

@@ -26,7 +26,22 @@ const $I = $ScratchpadId.create("effected/templates/Section");
  *
  * @public
  */
-export const SectionKey = S.String.check(S.isPattern(/^[A-Za-z0-9][A-Za-z0-9._-]*$/u));
+export const SectionKey = S.String.check(
+	S.isPattern(/^[A-Za-z0-9][A-Za-z0-9._-]*$/u, {
+		identifier: $I`SectionKeyCheck`,
+		title: "Section key grammar",
+		description: "A section key starts with an ASCII letter or digit and continues with letters, digits, dots, underscores, or hyphens.",
+		message: "Expected a section key starting with a letter or digit and containing only letters, digits, '.', '_', or '-'.",
+	}),
+).annotate($I.annote("SectionKey", { description: "The case-sensitive name of a managed section, rendered verbatim in its markers." }));
+
+/**
+ * The unbranded string type validated by {@link SectionKey}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type SectionKey = typeof SectionKey.Type;
 
 /**
  * What identifies a managed section inside a document: its key and the

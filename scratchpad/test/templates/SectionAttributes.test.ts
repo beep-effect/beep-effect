@@ -14,6 +14,8 @@ import type { Section, SectionDocument, SectionRenderError } from "../../effecte
 import { CommentStyle, ManagedSection, SectionDialect, SectionId } from "../../effected/templates/index.ts";
 import { begin, block, end, id, lines, memoryFs, parse, parseFailure, section } from "./fixtures.ts";
 
+import { ATTRIBUTE_NAME_PATTERN, AttributeName, AttributeValue, isValidAttributeName, isValidAttributeValue, parseAttributeRun } from "../../effected/templates/internal/attributes.ts";
+
 /** A `#`-style BEGIN marker carrying a raw attribute run. */
 const beginWith = (key: string, run: string) => `# --- BEGIN ${key} MANAGED SECTION ${run} ---`;
 
@@ -349,5 +351,36 @@ describe("marker attributes", () => {
 				return true;
 			},
 		);
+	});
+});
+
+describe("attribute constraint review regressions", () => {
+	it("matches the original name regex including its final-line-terminator acceptance", () => {
+		for (const name of ["name", "A0_-", "a\n", "a\r", "a\r\n", "a\u2028", "a\u2029", "a\n\n", "", "0name", "_name", "name ", "a\tb", "é"]) {
+			const expected = ATTRIBUTE_NAME_PATTERN.test(name);
+			assert.strictEqual(S.is(AttributeName)(name), expected, JSON.stringify(name));
+			assert.strictEqual(isValidAttributeName(name), expected, JSON.stringify(name));
+		}
+	});
+
+	it("matches the original value guard without accidentally admitting a trailing CR or LF", () => {
+		for (const value of ["", "plain", "---", "\t", "\u2028", "\u2029", '"', 'a"b', "a\n", "a\r", "a\r\n", "\nstart"]) {
+			const expected = !value.includes('"') && !value.includes("\n") && !value.includes("\r");
+			assert.strictEqual(S.is(AttributeValue)(value), expected, JSON.stringify(value));
+			assert.strictEqual(isValidAttributeValue(value), expected, JSON.stringify(value));
+		}
+	});
+
+	it("keeps the single-pass parser and renderer refusal order", () => {
+		assert.deepStrictEqual(parseAttributeRun('name="one"\tother="two"'), { name: "one", other: "two" });
+		for (const run of ['name="one" name="two"', 'name="bad\nvalue"', 'name="one" ', 'name\n="value"']) {
+			assert.isUndefined(parseAttributeRun(run));
+		}
+		const hostile = id("tool").section(end("tool"), { "0bad": "value" });
+		const error = expectRenderFailure(SectionDialect.default.render(hostile));
+		assert.strictEqual(error.reason, "invalidAttribute");
+		assert.strictEqual(error.attribute, "0bad");
+		const narrow = SectionDialect.make({ phrase: "MANAGED SECTION", styles: [CommentStyle.slash] });
+		assert.strictEqual(expectRenderFailure(narrow.render(hostile)).reason, "unknownCommentStyle");
 	});
 });
