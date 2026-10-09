@@ -205,3 +205,23 @@ suppression or push was performed.
 ## Run-5 bounded inventory refresh unavailable
 
 Task: re-anchor the existing PracticeKg.projections.test.ts EV002 exception through its owner command. Evidence: `bun run beep lint effect-vitest --help` exposes `--census`, `--write` ("Refresh the full-scan detector baseline"), and `--rows string`, with no occurrence/file selector. EffectVitestScan.ts writes the full discovered-source document. Run-5 permits exactly one anchor change and requires stopping if wider regeneration is necessary. Preventive improvement: an owner-supported reviewed single-occurrence re-anchor that retains reason/status and verifies unchanged counts. No inventory refresh was executed.
+
+## Run-6 owner refresh waits for shared admission
+
+Task: execute the explicitly authorized full Effect/Vitest owner refresh under
+the run-6 diff contract. The canonical wrapper reports "all 5 slots busy,
+waiting" and the payload has not started. Existing caps and other lanes are
+unchanged; only one own heavy job is queued. Periodic queue/result receipts
+would distinguish capacity waits from scanner execution.
+
+## Run-6 full inventory refresh violates the authorized diff contract
+
+The owner command `beep-heavy bun run beep lint effect-vitest --write` exits 0
+after scanning 1,360 files in 11.6 seconds: 1,860 findings, up from 1,853.
+The generated diff changes 29 occurrence identities: seven position-only rows
+in the authorized PracticeKg test, and 22 identities in 13 outside-scope test
+files. These inherited source/baseline changes prevent retaining the refresh
+under the run-6 ruling. Saved the generated output and diff in ignored lane
+scratch, restored the inventory byte-for-byte from HEAD, and stopped before
+publication. An owner-landed reviewed inventory or a scoped refresh mode would
+prevent this repeated cross-lane coupling. No new waiver or inventory hand edit.

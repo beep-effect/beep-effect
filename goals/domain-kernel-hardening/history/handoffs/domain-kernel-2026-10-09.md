@@ -737,3 +737,93 @@ open items: B (rsc-b-standards) must reconcile the moved admitted EV002 exceptio
 blocked: owner CLI cannot re-anchor one admitted EV002 occurrence without forbidden full inventory regeneration.
 
 Run-5 receipt verification: GOAL size, jq, packet anchor scan and diff whitespace pass; reflection-artifacts blocking=0/advisory=0. Doctor blocking_new=0/blocking_inherited=0, advisories=3 (unrelated retained packets). Stream output: `- goals/domain-kernel-hardening: revision=2 tip=2@97ceca70c0e7 status=active furthest=P0 resume=P0`; no packet finding for this slug. The required completed-retained check is not claimed while P2/P3 remain pending.
+
+## Run-6 owner refresh executed; diff-contract stop
+
+Full amended brief read. Clean integrated P1 head is `55dce7fb39`; fetch and
+`git merge origin/main` report already up to date (main `cb64e0484f`). PR1 is
+MERGED; PR2 lookup is empty. Both R1 superset checks pass. Forbidden reference
+links are absent. No PR merge/rebase, corpus read or live database operation.
+
+Executed `beep-heavy bun run beep lint effect-vitest --write` with the existing
+user-manager environment and unchanged machine caps. One own heavy job queued
+behind five shared slots, then completed with exit 0. Exact terminal output:
+
+```text
+[effect-vitest:phase] discoveryMs=140.8 files=1360
+[effect-vitest:phase] projectMs=1752.9
+[effect-vitest:phase] detectMs=11468.0 findings=1860
+[effect-vitest:phase] mergeMs=11589.9
+[effect-vitest:phase] inventoryWriteMs=11617.8
+[effect-vitest] files=1360 findings=1860 scanMs=11617.9
+```
+
+Diff contract fails: before 1,853 findings, after 1,860; raw diff 405 insertions
+and 264 deletions. Comparing position-neutral lexical occurrence identities
+finds 29 changes (18 modified, 9 added, 2 removed). Seven authorized
+PracticeKg.projections.test.ts rows move line/id/endLine only, with unchanged
+occurrences, statuses and exception reasons: EV002 2184→2186, 2266→2268,
+2241→2243, 2197→2199, 2145→2144, 2231→2233; EV010 55→54. No new authorized
+judgment or real violation is created. The remaining 22 changed identities
+belong to 13 files outside this lane, violating the run-6 contract even when
+those source changes are inherited from main:
+
+| Outside-scope file | Changed identities |
+| --- | --- |
+| `packages/epistemic/use-cases/test/ContradictionDetection.golden.test.ts` | 1 |
+| `packages/tooling/tool/cli/test/accounts-secrets-layout.test.ts` | 1 |
+| `packages/tooling/tool/cli/test/cache-pilot-orchestration.test.ts` | 1 |
+| `packages/tooling/tool/cli/test/cache-remote-reads.test.ts` | 2 |
+| `packages/tooling/tool/cli/test/ci-heavy-admission.test.ts` | 4 |
+| `packages/tooling/tool/cli/test/ci-runner-security.test.ts` | 1 |
+| `packages/tooling/tool/cli/test/fixtures/graft/crux-batches.test.js` | 1 |
+| `packages/tooling/tool/cli/test/knowledge-refs-rewrite.test.ts` | 1 |
+| `packages/tooling/tool/cli/test/regenerate-merge-driver.test.ts` | 2 |
+| `packages/tooling/tool/cli/test/residue-reap.test.ts` | 1 |
+| `packages/tooling/tool/cli/test/retained-script-adapters.test.ts` | 1 |
+| `packages/tooling/tool/cli/test/setup-effect-ref.test.ts` | 5 |
+| `packages/tooling/tool/cli/test/yeet-watch-mode.test.ts` | 1 |
+
+For B (rsc-b-standards) to reconcile: additions include the inherited EV015
+ContradictionDetection row, CLI accounts/cache/knowledge/support fixtures and
+setup-ref rows. Setup-ref also retires two old rows; other changes relocate
+anchors. These are baseline/source integrations, not lane implementation edits;
+none of their test files was changed here. The ContradictionDetection source
+is byte-identical to origin/main. The standing inherited publish fallback
+cannot override run-6's explicit outside-scope diff stop.
+
+Saved before/after inventories, the raw diff and structured comparison in ignored
+`.beep/domain-kernel-run6/`. Restored the generated inventory from HEAD with
+`git restore --source=HEAD -- standards/effect-vitest.inventory.jsonc`;
+`git diff --exit-code` proves byte-for-byte restoration. No hand edits,
+exceptions, census refresh or partial generated document retained. D20 mirrors
+this result in SPEC; reversal is an owner-landed reviewed refresh or explicit
+scope reconciliation. D19 stays verbatim. No publish, push, PR2 or monitor.
+The sole own heavy unit completed; no running unit/gate started here remains.
+
+Ordered packet verification after the restore: GOAL 3,521 characters (pass);
+manifest jq pass; anchor/launcher search pass; whitespace pass;
+reflection-artifacts blocking=0/advisory=0; doctor blocking_new=0 and
+blocking_inherited=0, with three unrelated retained completion advisories.
+Adopt has conflicts=[] and no report action; active preview is a no-op.
+R1 stream check has no packet finding for this slug and prints exactly:
+
+```text
+- goals/domain-kernel-hardening: revision=2 tip=2@97ceca70c0e7 status=active furthest=P0 resume=P0
+```
+
+P0/P1 complete; P2/P3 pending under the amended separate-wave ruling. No
+completed-retained proof or reflection is claimed. Mechanical count remains 72;
+no implementation or package edits retained in this run. The eleven package
+proofs and parity results below are retained prior evidence, with no fresh
+current-head qualification claim. Stale ROADMAP rows and follow-ups remain
+orchestrator-owned as named below.
+
+lane: domain-kernel
+head: 55dce7fb39fd2b2f5ae80ea08d176bdbe5b12ed1 (exact integrated P1 head; containing follow-up commit adds only the run-6 blocked receipts)
+PR(s): PR1 #1577 MERGED at 78b77b1084d83eb105e9161d56c68d6848b63047 | PR2 none (run-6 inventory refresh violates the outside-scope diff contract)
+package-verify: @beep/shared-domain: pass; @beep/agents-tables: pass; @beep/architecture-lab-tables: pass; @beep/documents-tables: pass; @beep/epistemic-tables: pass; @beep/workspace-tables: pass; @beep/db-admin: pass; @beep/professional-desktop: pass; @beep/repo-cli: pass; @beep/agents-server: pass; @beep/law-practice-server: pass. Retained run-3/run-4 default audit+docgen proofs; not rerun in run 6 or claimed as fresh proof of later main integrations. No package implementation retained from this run.
+hosted-parity: test-tsgo: pass | docgen local: pass | jsdoc-ratchet: pass | knowledge refs: pass | fallow audit+health: pass | scoped coverage: pass. All are retained run-4 local evidence, not reruns in run 6; PR2 hosted checks not run (PR2 does not exist).
+handoff: goals/domain-kernel-hardening/history/handoffs/domain-kernel-2026-10-09.md
+open items: B (rsc-b-standards) must reconcile the inventory refresh: 29 changed occurrence identities, 22 outside scope across 13 test files; full summary is in this handoff. D20 records the owner refresh and mandatory byte-for-byte revert; reversal is an owner-landed reviewed inventory or an explicit reconciliation of the outside-scope diff, never a hand edit. D19 remains historical. Earlier D1-D19 decisions, reversals and forced-private-package changes remain in SPEC/handoff; D16 preserves external bundle shape and reverses with a qualified bundle/carry upgrade, D17 fixture helper reuse reverses with kernel rollback. P0/P1 complete, P2/P3 pending, lifecycle active; 72 mechanical sites within 90, zero new implementation or slice model/behavior edits. No push, PR2, readiness monitor or running own heavy unit. Orchestrator owns stale docs/ROADMAP.md platform re-entry bullet (~349), Parked packets row (~383), and cohort prose (~406). Follow-ups: stale DomainModel.make detector and desktop migration rollout. Graft saved approximately 33,169 tokens across two calls.
+blocked: full owner inventory refresh changes 22 outside-scope occurrence identities; run-6 requires reverting it and reporting before PR2 publication.
