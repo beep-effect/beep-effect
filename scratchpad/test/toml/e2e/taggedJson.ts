@@ -1,3 +1,4 @@
+import { dual } from "effect/Function";
 // The tagged-JSON comparator for the toml-test corpus. Expected files encode
 // leaves as `{"type": T, "value": string}` with T one of the eight tags;
 // containers are plain JSON objects/arrays. `assertMatchesTagged` recurses
@@ -131,7 +132,20 @@ function assertLeaf(actual: unknown, expected: TaggedLeaf, path: string): void {
  * tagged-JSON expectation). Containers recurse with exact key sets / lengths;
  * leaves dispatch on the tag. Throws assert failures carrying `path`.
  */
-export function assertMatchesTagged(actual: unknown, expected: unknown, path: string): void {
+export function assertMatchesTagged(actual: unknown, expected: unknown, path: string): void;
+export function assertMatchesTagged(expected: unknown, path: string): (actual: unknown) => void;
+export function assertMatchesTagged(
+	...args: [actual: unknown, expected: unknown, path: string] | [expected: unknown, path: string]
+): void | ((actual: unknown) => void) {
+	return args.length === 3
+		? assertMatchesTaggedDual(args[0], args[1], args[2])
+		: assertMatchesTaggedDual(args[0], args[1]);
+}
+
+const assertMatchesTaggedDual: {
+	(actual: unknown, expected: unknown, path: string): void;
+	(expected: unknown, path: string): (actual: unknown) => void;
+} = dual(3, function assertMatchesTagged(actual: unknown, expected: unknown, path: string): void {
 	if (isTaggedLeaf(expected)) {
 		assertLeaf(actual, expected, path);
 		return;
@@ -161,4 +175,4 @@ export function assertMatchesTagged(actual: unknown, expected: unknown, path: st
 	for (const key of expectedKeys) {
 		assertMatchesTagged(actualRecord[key], expectedRecord[key], `${path}.${key}`);
 	}
-}
+});

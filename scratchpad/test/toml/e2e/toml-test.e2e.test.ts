@@ -12,9 +12,11 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { assert, describe, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { Effect, Result, Schema } from "effect";
 import { Toml, TomlParseError } from "../../../effected/toml/Toml.ts";
 import { assertMatchesTagged } from "./taggedJson.ts";
+
+const TaggedJson = Schema.fromJsonString(Schema.Unknown);
 
 const CORPUS_DIR = resolve(import.meta.dirname, "../fixtures/toml-test");
 
@@ -44,7 +46,7 @@ describe("toml-test compliance", () => {
 			it.effect(relPath, () =>
 				Effect.gen(function* () {
 					const source = readFileSync(join(CORPUS_DIR, "valid", relPath), "utf8");
-					const expected: unknown = JSON.parse(
+					const expected = yield* Schema.decodeEffect(TaggedJson)(
 						readFileSync(join(CORPUS_DIR, "valid", relPath.replace(/\.toml$/, ".json")), "utf8"),
 					);
 					const actual = yield* Toml.parse(source);
@@ -59,7 +61,7 @@ describe("toml-test compliance", () => {
 			it.effect(relPath, () =>
 				Effect.gen(function* () {
 					const source = readFileSync(join(CORPUS_DIR, "invalid", relPath), "utf8");
-					const error = yield* Effect.flip(Toml.parse(source));
+					const error = yield* Effect.result(Toml.parse(source)).pipe(Effect.map((result) => Result.getOrThrow(Result.flip(result))));
 					assert.instanceOf(error, TomlParseError);
 				}),
 			);

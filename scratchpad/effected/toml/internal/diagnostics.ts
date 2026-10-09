@@ -1,3 +1,4 @@
+import { Data } from "effect";
 // The engine's raw diagnostic vocabulary. Public modules materialize these
 // into TomlDiagnostic (adding line/character); the engine never imports
 // public modules. See src/TomlDiagnostic.ts for the public side of the
@@ -66,10 +67,10 @@ export interface RawDiagnostic {
 }
 
 /** The engine's only throw carrier besides GuardExceeded. */
-export class RawTomlError extends Error {
-	readonly _tag = "RawTomlError";
-	constructor(readonly diagnostic: RawDiagnostic) {
-		super(diagnostic.message);
+export class RawTomlError extends Data.TaggedError("RawTomlError")<{ readonly diagnostic: RawDiagnostic; readonly message: string }> {
+	constructor(diagnostic: RawDiagnostic) {
+		super({ diagnostic, message: diagnostic.message });
+		this.name = "Error";
 	}
 }
 

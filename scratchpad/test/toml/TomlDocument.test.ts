@@ -8,7 +8,7 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Schema } from "effect";
+import { Effect, Schema, Result } from "effect";
 import { Toml, TomlParseError } from "../../effected/toml/Toml.ts";
 import { TomlDocument } from "../../effected/toml/TomlDocument.ts";
 import { TomlInteger, TomlKey, TomlKeyValue } from "../../effected/toml/TomlNode.ts";
@@ -69,7 +69,7 @@ describe("TomlDocument", () => {
 				// The document is still lossless and editable.
 				assert.strictEqual(doc.stringify(), "a=1\na=2\n");
 				// toValue refuses: it fails with the stored diagnostics.
-				const error = yield* Effect.flip(doc.toValue());
+				const error = yield* Effect.result(doc.toValue()).pipe(Effect.map((result) => Result.getOrThrow(Result.flip(result))));
 				assert.instanceOf(error, TomlParseError);
 				assert.deepStrictEqual(error.diagnostics, doc.diagnostics);
 			}),

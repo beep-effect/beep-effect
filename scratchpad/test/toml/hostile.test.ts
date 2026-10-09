@@ -21,7 +21,7 @@
 //   proves Object.prototype stays unpolluted).
 
 import { assert, describe, it } from "@effect/vitest";
-import { Cause, Effect, Exit, Schema } from "effect";
+import { Cause, Effect, Exit, Schema, Result } from "effect";
 import { Toml, TomlParseError, TomlStringifyError } from "../../effected/toml/Toml.ts";
 import { TomlDocument } from "../../effected/toml/TomlDocument.ts";
 import { TomlFormat, TomlModificationError } from "../../effected/toml/TomlFormat.ts";
@@ -37,9 +37,8 @@ import { TomlFormat, TomlModificationError } from "../../effected/toml/TomlForma
 const ELAPSED_BOUND_MS = 30_000;
 
 /** Flip a failing parse and hand back the typed error. */
-const parseError = (text: string) =>
-	Effect.gen(function* () {
-		const error = yield* Effect.flip(Toml.parse(text));
+const parseError = Effect.fn("parseError")(function* (text: string) {
+		const error = yield* Effect.result(Toml.parse(text)).pipe(Effect.map((result) => Result.getOrThrow(Result.flip(result))));
 		assert.instanceOf(error, TomlParseError);
 		return error;
 	});
@@ -229,7 +228,7 @@ describe("hostile input", () => {
 
 		it.effect("the TomlFromString schema surfaces the bomb as a SchemaError, never a defect", () =>
 			Effect.gen(function* () {
-				const error = yield* Effect.flip(Schema.decodeEffect(Toml.TomlFromString)(bomb));
+				const error = yield* Effect.result(Schema.decodeEffect(Toml.TomlFromString)(bomb)).pipe(Effect.map((result) => Result.getOrThrow(Result.flip(result))));
 				assert.strictEqual(error._tag, "SchemaError");
 				assert.include(String(error), "NestingDepthExceeded");
 			}),
@@ -336,8 +335,10 @@ describe("hostile input", () => {
 				const array = Object.getOwnPropertyDescriptor(value, "__proto__")?.value as Array<Record<string, unknown>>;
 				assert.isTrue(Array.isArray(array));
 				assert.strictEqual(array.length, 1);
-				assert.isTrue(Object.hasOwn(array[0], "x"));
-				assert.strictEqual(array[0].x, 1);
+				const first = array[0];
+				assert.isDefined(first);
+				assert.isTrue(Object.hasOwn(first, "x"));
+				assert.strictEqual(first.x, 1);
 				assertPrototypeUnpolluted();
 			}),
 		);

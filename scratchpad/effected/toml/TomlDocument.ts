@@ -98,14 +98,17 @@ export class TomlDocument extends Schema.Class<TomlDocument>("TomlDocument")({
 			catch: (defect) => materializeError(text, defect),
 		});
 		const diagnostics: Array<TomlDiagnostic> = [];
-		try {
-			analyze(expressions);
-		} catch (defect) {
-			if (!isRawTomlError(defect)) {
-				throw defect;
-			}
-			diagnostics.push(TomlDiagnostic.fromRaw(text, defect.diagnostic));
-		}
+		yield* Effect.try({
+			try: () => analyze(expressions),
+			catch: (defect) => {
+				if (!isRawTomlError(defect)) {
+					throw defect;
+				}
+				return TomlDiagnostic.fromRaw(text, defect.diagnostic);
+			},
+		}).pipe(Effect.catch((diagnostic) => Effect.sync(() => {
+			diagnostics.push(diagnostic);
+		})));
 		return TomlDocument.make({ source: text, expressions, diagnostics });
 	});
 

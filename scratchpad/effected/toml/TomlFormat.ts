@@ -15,7 +15,7 @@
 // tagged TomlModificationError. The dependency edge runs facade → engine
 // only.
 
-import { Effect, Schema } from "effect";
+import { Data, Effect, Schema } from "effect";
 import type { TomlErrorCodeRaw } from "./internal/diagnostics.ts";
 import { isRawTomlError } from "./internal/diagnostics.ts";
 import { MAX_NESTING_DEPTH, isGuardExceeded } from "./internal/limits.ts";
@@ -154,7 +154,10 @@ const collectMultilineSpans = (node: TomlValueNode, out: Array<readonly [number,
 /** Accumulates format edits for one document; drops no-op splices to keep format idempotent. */
 class FormatEmitter {
 	readonly edits: Array<TaggedEdit> = [];
-	constructor(private readonly source: string) {}
+	private readonly source: string;
+	constructor(source: string) {
+		this.source = source;
+	}
 
 	push(expr: TomlExpression, offset: number, length: number, newText: string): void {
 		if (this.source.slice(offset, offset + length) !== newText) {
@@ -265,11 +268,13 @@ const normalizeNewlines = (
 	let p = 0;
 	let i = expr.offset;
 	while (i < end) {
-		while (p < protectedSpans.length && protectedSpans[p][1] <= i) {
+		let protectedSpan = protectedSpans[p];
+		while (protectedSpan !== undefined && protectedSpan[1] <= i) {
 			p++;
+			protectedSpan = protectedSpans[p];
 		}
-		if (p < protectedSpans.length && i >= protectedSpans[p][0]) {
-			i = protectedSpans[p][1];
+		if (protectedSpan !== undefined && i >= protectedSpan[0]) {
+			i = protectedSpan[1];
 			continue;
 		}
 		const code = source.charCodeAt(i);
@@ -292,6 +297,9 @@ const normalizeNewlines = (
 /** The position just past a header's closing bracket(s). */
 const headerContentEnd = (source: string, expr: TomlTableHeader | TomlArrayTableHeader): number => {
 	const lastKey = expr.keyPath[expr.keyPath.length - 1];
+	if (lastKey === undefined) {
+		throw new TypeError("missing TOML element");
+	}
 	const bracket = scanWs(source, lastKey.offset + lastKey.length, expr.offset + expr.length);
 	return bracket + (Schema.is(TomlArrayTableHeader)(expr) ? 2 : 1);
 };
@@ -313,6 +321,9 @@ const computeFormatEdits = (source: string, options: TomlFormattingOptions | und
 		} else if (Schema.is(TomlKeyValue)(expr)) {
 			formatLeading(source, emit, expr);
 			const lastKey = expr.keyPath[expr.keyPath.length - 1];
+			if (lastKey === undefined) {
+				throw new TypeError("missing TOML element");
+			}
 			const keyEnd = lastKey.offset + lastKey.length;
 			emit.push(expr, keyEnd, expr.value.offset - keyEnd, " = ");
 			formatTail(source, emit, expr, expr.value.offset + expr.value.length);
@@ -332,6 +343,9 @@ const computeFormatEdits = (source: string, options: TomlFormattingOptions | und
 	// Rule 5: a single final newline.
 	if (expressions.length > 0 && source.charCodeAt(source.length - 1) !== LF) {
 		const last = expressions[expressions.length - 1];
+		if (last === undefined) {
+			throw new TypeError("missing TOML element");
+		}
 		emit.push(last, source.length, 0, target ?? dominantNewline(source));
 	}
 	return emit.edits;
@@ -381,7 +395,11 @@ const mkTable = (origin: ResTable["origin"], sectionIndex = 0, relPath: Readonly
 /** Descend into a navigable node: tables pass through, array-of-tables yield their last element. */
 const intoTable = (node: ResNode | undefined): ResTable => {
 	if (node !== undefined && node.kind === "array-tables") {
-		return node.elements[node.elements.length - 1];
+		const element = node.elements[node.elements.length - 1];
+		if (element === undefined) {
+			throw new TypeError("missing TOML element");
+		}
+		return element;
 	}
 	if (node !== undefined && node.kind === "table") {
 		return node;
@@ -405,7 +423,11 @@ const buildSemanticIndex = (
 		if (Schema.is(TomlTableHeader)(expr) || Schema.is(TomlArrayTableHeader)(expr)) {
 			sections.push({ header: expr, insertAfter: expr.offset + expr.length });
 		} else if (!(Schema.is(TomlTrivia)(expr))) {
-			sections[sections.length - 1].insertAfter = expr.offset + expr.length;
+			const section = sections[sections.length - 1];
+			if (section === undefined) {
+				throw new TypeError("missing TOML element");
+			}
+			section.insertAfter = expr.offset + expr.length;
 		}
 	}
 	const root = mkTable("root");
@@ -413,10 +435,14 @@ const buildSemanticIndex = (
 	const navigateHeaderPrefix = (path: ReadonlyArray<string>): ResTable => {
 		let current = root;
 		for (let i = 0; i < path.length - 1; i++) {
-			let child = current.entries.get(path[i]);
+			const name = path[i];
+			if (name === undefined) {
+				throw new TypeError("missing TOML element");
+			}
+			let child = current.entries.get(name);
 			if (child === undefined) {
 				child = mkTable("implicit");
-				current.entries.set(path[i], child);
+				current.entries.set(name, child);
 			}
 			current = intoTable(child);
 		}
@@ -430,6 +456,9 @@ const buildSemanticIndex = (
 			sectionCounter += 1;
 			const parent = navigateHeaderPrefix(path);
 			const name = path[path.length - 1];
+			if (name === undefined) {
+				throw new TypeError("missing TOML element");
+			}
 			const existing = parent.entries.get(name);
 			if (existing !== undefined && existing.kind === "table") {
 				existing.origin = "explicit";
@@ -442,6 +471,9 @@ const buildSemanticIndex = (
 			sectionCounter += 1;
 			const parent = navigateHeaderPrefix(path);
 			const name = path[path.length - 1];
+			if (name === undefined) {
+				throw new TypeError("missing TOML element");
+			}
 			const existing = parent.entries.get(name);
 			if (existing !== undefined && existing.kind === "array-tables") {
 				existing.elements.push(mkTable("element", sectionCounter));
@@ -453,17 +485,29 @@ const buildSemanticIndex = (
 			const names = expr.keyPath.map((key) => key.value);
 			let current = root;
 			for (let i = 0; i < path.length - names.length; i++) {
-				current = intoTable(current.entries.get(path[i]));
+				const name = path[i];
+				if (name === undefined) {
+					throw new TypeError("missing TOML element");
+				}
+				current = intoTable(current.entries.get(name));
 			}
 			for (let j = 0; j < names.length - 1; j++) {
-				let child = current.entries.get(names[j]);
+				const name = names[j];
+				if (name === undefined) {
+					throw new TypeError("missing TOML element");
+				}
+				let child = current.entries.get(name);
 				if (child === undefined) {
 					child = mkTable("dotted", sectionCounter, names.slice(0, j + 1));
-					current.entries.set(names[j], child);
+					current.entries.set(name, child);
 				}
 				current = intoTable(child);
 			}
-			current.entries.set(names[names.length - 1], { kind: "value", node: expr.value, expr });
+			const name = names[names.length - 1];
+			if (name === undefined) {
+				throw new TypeError("missing TOML element");
+			}
+			current.entries.set(name, { kind: "value", node: expr.value, expr });
 		},
 	});
 	return { root, sections };
@@ -472,14 +516,14 @@ const buildSemanticIndex = (
 // ── Internal: modify — path resolution ──────────────────────────────────────
 
 /** Thrown by the pure resolution helpers; `modify` materializes {@link TomlModificationError}. */
-class ModifyFailure extends Error {
-	constructor(
-		readonly code: TomlErrorCodeRaw,
-		message: string,
-		readonly offset: number,
-		readonly len: number,
-	) {
-		super(message);
+class ModifyFailure extends Data.TaggedError("ModifyFailure")<{
+	readonly code: TomlErrorCodeRaw;
+	readonly message: string;
+	readonly offset: number;
+	readonly len: number;
+}> {
+	constructor(code: TomlErrorCodeRaw, message: string, offset: number, len: number) {
+		super({ code, message, offset, len });
 		this.name = "ModifyFailure";
 	}
 }
@@ -531,8 +575,9 @@ const stepInline = (
 	cur: Extract<Cursor, { t: "inline" }>,
 	key: string,
 ): { readonly matches: ReadonlyArray<Candidate>; readonly full: Candidate | undefined } => {
-	const matches = cur.candidates.filter((candidate) => candidate.entry.keyPath[cur.depth].value === key);
-	const full = matches.length === 1 && matches[0].entry.keyPath.length === cur.depth + 1 ? matches[0] : undefined;
+	const matches = cur.candidates.filter((candidate) => candidate.entry.keyPath[cur.depth]?.value === key);
+	const first = matches[0];
+	const full = matches.length === 1 && first !== undefined && first.entry.keyPath.length === cur.depth + 1 ? first : undefined;
 	return { matches, full };
 };
 
@@ -560,7 +605,11 @@ const step = (cur: Cursor, segment: TomlSegment): Cursor => {
 		if (idx >= cur.node.elements.length) {
 			return failResolve("DottedKeyConflict", `array-of-tables index ${idx} is out of bounds`);
 		}
-		return { t: "table", table: cur.node.elements[idx] };
+		const table = cur.node.elements[idx];
+		if (table === undefined) {
+			throw new TypeError("missing TOML element");
+		}
+		return { t: "table", table };
 	}
 	if (cur.t === "inline") {
 		const key = String(segment);
@@ -584,7 +633,11 @@ const step = (cur: Cursor, segment: TomlSegment): Cursor => {
 		if (idx >= node.items.length) {
 			return failResolve("DottedKeyConflict", `array index ${idx} is out of bounds`, node.offset, node.length);
 		}
-		return cstCursor(node.items[idx], { kind: "array-item", array: node, index: idx });
+		const item = node.items[idx];
+		if (item === undefined) {
+			throw new TypeError("missing TOML element");
+		}
+		return cstCursor(item, { kind: "array-item", array: node, index: idx });
 	}
 	return failResolve("DottedKeyConflict", "cannot navigate through a scalar value", node.offset, node.length);
 };
@@ -609,11 +662,23 @@ const spliceArrayItem = (array: TomlArray, index: number): RawEdit => {
 	if (items.length === 1) {
 		return { offset: array.offset + 1, length: array.length - 2, newText: "" };
 	}
-	if (index < items.length - 1) {
-		return { offset: items[index].offset, length: items[index + 1].offset - items[index].offset, newText: "" };
+	const current = items[index];
+	if (current === undefined) {
+		throw new TypeError("missing TOML element");
 	}
-	const prevEnd = items[index - 1].offset + items[index - 1].length;
-	return { offset: prevEnd, length: items[index].offset + items[index].length - prevEnd, newText: "" };
+	if (index < items.length - 1) {
+		const next = items[index + 1];
+		if (next === undefined) {
+			throw new TypeError("missing TOML element");
+		}
+		return { offset: current.offset, length: next.offset - current.offset, newText: "" };
+	}
+	const previous = items[index - 1];
+	if (previous === undefined) {
+		throw new TypeError("missing TOML element");
+	}
+	const prevEnd = previous.offset + previous.length;
+	return { offset: prevEnd, length: current.offset + current.length - prevEnd, newText: "" };
 };
 
 /** Delete one inline-table entry with the same separator-splicing rule. */
@@ -622,11 +687,23 @@ const spliceInlineEntry = (table: TomlInlineTable, index: number): RawEdit => {
 	if (entries.length === 1) {
 		return { offset: table.offset + 1, length: table.length - 2, newText: "" };
 	}
-	if (index < entries.length - 1) {
-		return { offset: entries[index].offset, length: entries[index + 1].offset - entries[index].offset, newText: "" };
+	const current = entries[index];
+	if (current === undefined) {
+		throw new TypeError("missing TOML element");
 	}
-	const prevEnd = entries[index - 1].offset + entries[index - 1].length;
-	return { offset: prevEnd, length: entries[index].offset + entries[index].length - prevEnd, newText: "" };
+	if (index < entries.length - 1) {
+		const next = entries[index + 1];
+		if (next === undefined) {
+			throw new TypeError("missing TOML element");
+		}
+		return { offset: current.offset, length: next.offset - current.offset, newText: "" };
+	}
+	const previous = entries[index - 1];
+	if (previous === undefined) {
+		throw new TypeError("missing TOML element");
+	}
+	const prevEnd = previous.offset + previous.length;
+	return { offset: prevEnd, length: current.offset + current.length - prevEnd, newText: "" };
 };
 
 /** The pinned insertion-placement rules: where a new `key = value` line lands and how its key renders. */
@@ -641,10 +718,17 @@ const insertEdit = (table: ResTable, key: string, value: unknown, ctx: ModifyCon
 	const line = `${keyPath.map(renderKey).join(".")} = ${renderInlineValue(value)}`;
 	let offset: number;
 	if (table.sectionIndex === 0) {
-		const firstHeader = ctx.sections.length > 1 ? ctx.sections[1].header : undefined;
-		offset = ctx.sections[0].insertAfter ?? firstHeader?.offset ?? 0;
+		const firstHeader = ctx.sections.length > 1 ? ctx.sections[1]?.header : undefined;
+		const section = ctx.sections[0];
+		if (section === undefined) {
+			throw new TypeError("missing TOML element");
+		}
+		offset = section.insertAfter ?? firstHeader?.offset ?? 0;
 	} else {
 		const section = ctx.sections[table.sectionIndex];
+		if (section === undefined) {
+			throw new TypeError("missing TOML element");
+		}
 		offset = section.insertAfter ?? 0;
 	}
 	const needLeading = offset > 0 && ctx.source.charCodeAt(offset - 1) !== LF;
@@ -737,7 +821,11 @@ const terminal = (cur: Cursor, segment: TomlSegment, value: unknown, ctx: Modify
 				node.length,
 			);
 		}
-		return [{ offset: node.items[idx].offset, length: node.items[idx].length, newText: renderInlineValue(value) }];
+		const item = node.items[idx];
+		if (item === undefined) {
+			throw new TypeError("missing TOML element");
+		}
+		return [{ offset: item.offset, length: item.length, newText: renderInlineValue(value) }];
 	}
 	return failResolve("DottedKeyConflict", "cannot address a key beneath a scalar value", node.offset, node.length);
 };
@@ -858,30 +946,41 @@ export class TomlFormat {
 			return yield* failWith("NestingDepthExceeded", `path depth ${path.length} exceeds the ${MAX_NESTING_DEPTH} cap`);
 		}
 		const doc = yield* TomlDocument.parse(text);
-		if (doc.diagnostics.length > 0) {
-			return yield* TomlModificationError.make({ diagnostic: doc.diagnostics[0] });
+		const diagnostic = doc.diagnostics[0];
+		if (diagnostic !== undefined) {
+			return yield* TomlModificationError.make({ diagnostic });
 		}
 		const { root, sections } = buildSemanticIndex(doc.expressions);
 		const ctx: ModifyContext = { source: text, sections, nl: options?.newline ?? dominantNewline(text) };
-		let raw: Array<RawEdit>;
-		try {
-			let cursor: Cursor = { t: "table", table: root };
-			for (let i = 0; i < path.length - 1; i++) {
-				cursor = step(cursor, path[i]);
-			}
-			raw = terminal(cursor, path[path.length - 1], value, ctx);
-		} catch (defect) {
-			if (defect instanceof ModifyFailure) {
-				return yield* failWith(defect.code, defect.message, defect.offset, defect.len);
-			}
-			if (isRawTomlError(defect)) {
-				return yield* TomlModificationError.make({ diagnostic: TomlDiagnostic.fromRaw(text, defect.diagnostic) });
-			}
-			if (isGuardExceeded(defect)) {
-				return yield* failWith("NestingDepthExceeded", defect.message, defect.offset);
-			}
-			throw defect;
-		}
+		const raw = yield* Effect.try({
+			try: () => {
+				let cursor: Cursor = { t: "table", table: root };
+				for (let i = 0; i < path.length - 1; i++) {
+					const segment = path[i];
+					if (segment === undefined) {
+						throw new TypeError("missing TOML path segment");
+					}
+					cursor = step(cursor, segment);
+				}
+				const segment = path[path.length - 1];
+				if (segment === undefined) {
+					throw new TypeError("missing TOML path segment");
+				}
+				return terminal(cursor, segment, value, ctx);
+			},
+			catch: (defect) => {
+				if (defect instanceof ModifyFailure) {
+					return failWith(defect.code, defect.message, defect.offset, defect.len);
+				}
+				if (isRawTomlError(defect)) {
+					return TomlModificationError.make({ diagnostic: TomlDiagnostic.fromRaw(text, defect.diagnostic) });
+				}
+				if (isGuardExceeded(defect)) {
+					return failWith("NestingDepthExceeded", defect.message, defect.offset);
+				}
+				throw defect;
+			},
+		});
 		return raw.map((edit) =>
 			TomlEdit.make({ offset: edit.offset, length: edit.length, content: edit.newText }),
 		) as ReadonlyArray<TomlEdit>;

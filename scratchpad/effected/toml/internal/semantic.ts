@@ -1,3 +1,4 @@
+import { dual } from "effect/Function";
 // The provenance state machine: every defined name records HOW it came
 // to exist (value, inline, static-array, table-explicit, table-implicit,
 // table-dotted, array-tables) and — for dotted-created tables — WHICH
@@ -75,6 +76,9 @@ const navigateHeaderPrefix = (root: SemNode, keyPath: ReadonlyArray<TomlKey>): S
 	let current = root;
 	for (let i = 0; i < keyPath.length - 1; i++) {
 		const key = keyPath[i];
+		if (key === undefined) {
+			throw new TypeError("missing TOML key");
+		}
 		const existing = current.table.get(key.value);
 		if (existing === undefined) {
 			const child = makeNode("table-implicit");
@@ -89,7 +93,11 @@ const navigateHeaderPrefix = (root: SemNode, keyPath: ReadonlyArray<TomlKey>): S
 				current = existing;
 				break;
 			case "array-tables":
-				current = existing.elements[existing.elements.length - 1];
+				const element = existing.elements[existing.elements.length - 1];
+				if (element === undefined) {
+					throw new TypeError("missing array-table element");
+				}
+				current = element;
 				break;
 			case "inline":
 				return raise("InlineTableExtended", `inline table "${key.value}" cannot be extended`, key);
@@ -106,6 +114,9 @@ const navigateHeaderPrefix = (root: SemNode, keyPath: ReadonlyArray<TomlKey>): S
 const openTable = (root: SemNode, keyPath: ReadonlyArray<TomlKey>): SemNode => {
 	const parent = navigateHeaderPrefix(root, keyPath);
 	const key = keyPath[keyPath.length - 1];
+	if (key === undefined) {
+		throw new TypeError("missing TOML key");
+	}
 	const existing = parent.table.get(key.value);
 	if (existing === undefined) {
 		const node = makeNode("table-explicit");
@@ -126,6 +137,9 @@ const openArrayTable = (
 ): { readonly element: SemNode; readonly index: number } => {
 	const parent = navigateHeaderPrefix(root, keyPath);
 	const key = keyPath[keyPath.length - 1];
+	if (key === undefined) {
+		throw new TypeError("missing TOML key");
+	}
 	const existing = parent.table.get(key.value);
 	if (existing === undefined) {
 		const array = makeNode("array-tables");
@@ -157,6 +171,9 @@ const assignEntry = (
 	let current = table;
 	for (let i = 0; i < keyPath.length - 1; i++) {
 		const key = keyPath[i];
+		if (key === undefined) {
+			throw new TypeError("missing TOML key");
+		}
 		const existing = current.table.get(key.value);
 		if (existing === undefined) {
 			const child = makeNode("table-dotted", sectionId);
@@ -174,6 +191,9 @@ const assignEntry = (
 		raise("DottedKeyConflict", `dotted key cannot extend "${key.value}"`, key);
 	}
 	const key = keyPath[keyPath.length - 1];
+	if (key === undefined) {
+		throw new TypeError("missing TOML key");
+	}
 	if (current.table.has(key.value)) {
 		raise("DuplicateKey", `duplicate key "${key.value}"`, key);
 	}
@@ -226,7 +246,10 @@ const inlineNode = (node: TomlInlineTable, context: Context): SemNode => {
  * Walk the expressions through the provenance state machine, firing the visitor after
  * each expression validates; throws `RawTomlError` at the first violation.
  */
-export const analyze = (expressions: ReadonlyArray<TomlExpression>, visitor?: SemanticVisitor): void => {
+export const analyze: {
+	(expressions: ReadonlyArray<TomlExpression>, visitor?: SemanticVisitor): void;
+	(visitor?: SemanticVisitor): (expressions: ReadonlyArray<TomlExpression>) => void;
+} = dual((args) => Array.isArray(args[0]), (expressions: ReadonlyArray<TomlExpression>, visitor?: SemanticVisitor): void => {
 	const root = makeNode("table-explicit");
 	const context: Context = { nextId: 1 };
 	let currentTable = root;
@@ -255,7 +278,7 @@ export const analyze = (expressions: ReadonlyArray<TomlExpression>, visitor?: Se
 		assignEntry(currentTable, currentSectionId, expression.keyPath, expression.value, context);
 		visitor?.onKeyValue?.([...currentPrefix, ...expression.keyPath.map((key) => key.value)], expression);
 	}
-};
+});
 
 /** Set a key as an own data property — `__proto__` included (yaml/jsonc precedent). */
 const setOwnProperty = (target: Record<string, unknown>, key: string, value: unknown): void => {
@@ -305,7 +328,11 @@ const materialize = (value: TomlValueNode): unknown => {
 				output,
 				entry.keyPath.slice(0, -1).map((key) => key.value),
 			);
-			setOwnProperty(parent, entry.keyPath[entry.keyPath.length - 1].value, materialize(entry.value));
+			const key = entry.keyPath[entry.keyPath.length - 1];
+			if (key === undefined) {
+				throw new TypeError("missing TOML key");
+			}
+			setOwnProperty(parent, key.value, materialize(entry.value));
 		}
 		return output;
 	}
@@ -328,6 +355,9 @@ export const buildValue = (expressions: ReadonlyArray<TomlExpression>): unknown 
 		onArrayTableStart: (path, _index, _header) => {
 			const parent = navigateOutput(result, path.slice(0, -1));
 			const key = path[path.length - 1];
+			if (key === undefined) {
+				throw new TypeError("missing TOML key");
+			}
 			const existing = getOwnProperty(parent, key);
 			if (Array.isArray(existing)) {
 				existing.push({});
@@ -337,7 +367,11 @@ export const buildValue = (expressions: ReadonlyArray<TomlExpression>): unknown 
 		},
 		onKeyValue: (path, expr) => {
 			const parent = navigateOutput(result, path.slice(0, -1));
-			setOwnProperty(parent, path[path.length - 1], materialize(expr.value));
+			const key = path[path.length - 1];
+			if (key === undefined) {
+				throw new TypeError("missing TOML key");
+			}
+			setOwnProperty(parent, key, materialize(expr.value));
 		},
 	});
 	return result;

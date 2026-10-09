@@ -96,7 +96,7 @@ function formatOffset(offsetMinutes: number): string {
 export class TomlLocalDate extends Schema.Class<TomlLocalDate>("TomlLocalDate")(
 	Schema.Struct(dateFields).check(isRealCalendarDate),
 ) {
-	toString(): string {
+	override toString(): string {
 		return formatDate(this);
 	}
 }
@@ -108,7 +108,7 @@ export class TomlLocalDate extends Schema.Class<TomlLocalDate>("TomlLocalDate")(
  * @public
  */
 export class TomlLocalTime extends Schema.Class<TomlLocalTime>("TomlLocalTime")(timeFields) {
-	toString(): string {
+	override toString(): string {
 		return formatTime(this);
 	}
 }
@@ -122,7 +122,7 @@ export class TomlLocalTime extends Schema.Class<TomlLocalTime>("TomlLocalTime")(
 export class TomlLocalDateTime extends Schema.Class<TomlLocalDateTime>("TomlLocalDateTime")(
 	Schema.Struct({ ...dateFields, ...timeFields }).check(isRealCalendarDate),
 ) {
-	toString(): string {
+	override toString(): string {
 		return `${formatDate(this)}T${formatTime(this)}`;
 	}
 }
@@ -141,7 +141,7 @@ export class TomlOffsetDateTime extends Schema.Class<TomlOffsetDateTime>("TomlOf
 		offsetMinutes: Schema.Int.check(Schema.isBetween({ minimum: -1439, maximum: 1439 })),
 	}).check(isRealCalendarDate),
 ) {
-	toString(): string {
+	override toString(): string {
 		return `${formatDate(this)}T${formatTime(this)}${formatOffset(this.offsetMinutes)}`;
 	}
 }

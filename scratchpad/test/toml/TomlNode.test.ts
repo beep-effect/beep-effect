@@ -1,5 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Equal, Schema } from "effect";
+import { Equal, Result, Schema } from "effect";
 import { TomlLocalDate } from "../../effected/toml/TomlDateTime.ts";
 import {
 	TomlArray,
@@ -157,8 +157,8 @@ describe("TomlNode", () => {
 				offset: 4,
 				length: 23,
 			});
-			const encoded = Schema.encodeSync(TomlArray)(array);
-			const decoded = Schema.decodeSync(TomlArray)(encoded);
+			const encoded = Result.getOrThrow(Schema.encodeResult(TomlArray)(array));
+			const decoded = Result.getOrThrow(Schema.decodeResult(TomlArray)(encoded));
 			assert.isTrue(Schema.is(TomlArray)(decoded));
 			assert.isTrue(Schema.is(TomlArray)(decoded.items[1]));
 			assert.isTrue(Schema.is(TomlInlineTable)(decoded.items[2]));
@@ -166,9 +166,9 @@ describe("TomlNode", () => {
 		});
 		it("decodes each expression variant through the TomlExpression union", () => {
 			const trivia = TomlTrivia.make({ text: "\n", offset: 0, length: 1 });
-			const decoded = Schema.decodeSync(TomlExpression)(Schema.encodeSync(TomlExpression)(trivia));
+			const decoded = Result.getOrThrow(Schema.decodeResult(TomlExpression)(Result.getOrThrow(Schema.encodeResult(TomlExpression)(trivia))));
 			assert.isTrue(Schema.is(TomlTrivia)(decoded));
-			const kv = Schema.decodeSync(TomlExpression)(Schema.encodeSync(TomlExpression)(sampleKeyValue()));
+			const kv = Result.getOrThrow(Schema.decodeResult(TomlExpression)(Result.getOrThrow(Schema.encodeResult(TomlExpression)(sampleKeyValue()))));
 			assert.isTrue(Schema.is(TomlKeyValue)(kv));
 		});
 	});

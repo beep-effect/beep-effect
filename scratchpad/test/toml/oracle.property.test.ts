@@ -38,7 +38,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { isDeepStrictEqual } from "node:util";
 import { assert, describe, it } from "@effect/vitest";
-import { Arbitrary, Effect, Schema } from "effect";
+import { Arbitrary, Effect, Schema, Result } from "effect";
 import { parse as oracleParse, stringify as oracleStringify } from "smol-toml";
 import { Toml } from "../../effected/toml/Toml.ts";
 import { TomlLocalDate, TomlLocalDateTime, TomlLocalTime, TomlOffsetDateTime } from "../../effected/toml/TomlDateTime.ts";
@@ -257,6 +257,8 @@ const bigintArb = Arbitrary.schema(
 );
 
 /** Finite-or-infinite doubles — NaN stays out of the equality properties. */
+// TOML float round-trip properties must include infinities, as the scalar tests require.
+// @effect-diagnostics-next-line schemaNumber:off
 const floatArb = Arbitrary.schema(Schema.Number.check(Schema.makeFilter((n) => !Number.isNaN(n))));
 
 const leafArb: Arbitrary.Arbitrary<unknown> = weighted<unknown>(
@@ -369,14 +371,13 @@ describe("corpus differential", () => {
 			Effect.gen(function* () {
 				const source = readFileSync(join(CORPUS_DIR, relPath), "utf8");
 				const ours = yield* Toml.parse(source);
-				let theirs: unknown;
-				try {
-					theirs = oracle(source);
-				} catch (error) {
-					divergences.push({ file: relPath, detail: `oracle rejected: ${String(error).split("\n")[0]}` });
+				const oracleResult = Result.try(() => oracle(source));
+				if (Result.isFailure(oracleResult)) {
+					divergences.push({ file: relPath, detail: `oracle rejected: ${String(oracleResult.failure).split("\n")[0]}` });
 					assertOursAgainstCorpus(ours, relPath);
 					return;
 				}
+				const theirs = oracleResult.success;
 				if (isDeepStrictEqual(canon(ours), canon(theirs))) {
 					return;
 				}

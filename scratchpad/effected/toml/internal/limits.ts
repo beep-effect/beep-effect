@@ -1,3 +1,5 @@
+import { Data } from "effect";
+import { dual } from "effect/Function";
 // The zero-dependency leaf every guard imports — no import cycle is possible
 // through here (jsonc/yaml/glob precedent).
 
@@ -12,15 +14,16 @@ export type GuardReason = "NestingDepthExceeded";
  * it and materialize the typed error. It must never escape a public entry
  * point as a defect.
  */
-export class GuardExceeded extends Error {
-	readonly _tag = "GuardExceeded";
-	constructor(
-		readonly reason: GuardReason,
-		readonly limit: number,
-		readonly actual: number,
-		readonly offset: number,
-	) {
-		super(`${reason}: limit ${limit}, actual ${actual}`);
+export class GuardExceeded extends Data.TaggedError("GuardExceeded")<{
+	readonly message: string;
+	readonly reason: GuardReason;
+	readonly limit: number;
+	readonly actual: number;
+	readonly offset: number;
+}> {
+	constructor(reason: GuardReason, limit: number, actual: number, offset: number) {
+		super({ reason, limit, actual, offset, message: `${reason}: limit ${limit}, actual ${actual}` });
+		this.name = "Error";
 	}
 }
 
@@ -30,9 +33,12 @@ export const isGuardExceeded = (u: unknown): u is GuardExceeded => u instanceof 
  * Internal caps are programmer-supplied. A NaN or non-integer reaching a guard
  * is a wiring bug and dies as a defect (walker maxDepth rule) — never coerced.
  */
-export const assertCap = (name: string, value: number): number => {
+export const assertCap: {
+	(name: string, value: number): number;
+	(value: number): (name: string) => number;
+} = dual(2, (name: string, value: number): number => {
 	if (!Number.isSafeInteger(value) || value < 1) {
 		throw new TypeError(`@effected/toml internal cap ${name} must be a positive integer, received ${value}`);
 	}
 	return value;
-};
+});

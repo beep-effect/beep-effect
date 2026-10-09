@@ -1,3 +1,4 @@
+import { dual } from "effect/Function";
 // The canonical TOML document emitter over plain JavaScript values — the
 // encode side of the value pipeline. Layout contract: within a table,
 // non-table pairs emit first (document order), then sub-tables as
@@ -282,7 +283,11 @@ const emitTable = (
 		ancestors.add(array);
 		for (let index = 0; index < array.length; index++) {
 			pushHeader(lines, `[[${renderHeaderPath([...headerPath, key])}]]`);
-			emitTable(array[index], [...headerPath, key], [...errorPath, key, index], lines, depth + 1, ancestors);
+			const element = array[index];
+			if (element === undefined) {
+				throw new TypeError("missing array-table element");
+			}
+			emitTable(element, [...headerPath, key], [...errorPath, key, index], lines, depth + 1, ancestors);
 		}
 		ancestors.delete(array);
 	}
@@ -294,7 +299,10 @@ const emitTable = (
  * plain object (a TOML document is a table); an empty root emits the empty
  * string, anything else ends with `newline`.
  */
-export const stringifyValue = (value: unknown, newline: string): string => {
+export const stringifyValue: {
+	(value: unknown, newline: string): string;
+	(newline: string): (value: unknown) => string;
+} = dual(2, (value: unknown, newline: string): string => {
 	if (!isPlainObject(value)) {
 		return raise(
 			"UnsupportedValue",
@@ -304,4 +312,4 @@ export const stringifyValue = (value: unknown, newline: string): string => {
 	const lines: Array<string> = [];
 	emitTable(value, [], [], lines, 0, new Set());
 	return lines.length === 0 ? "" : `${lines.join(newline)}${newline}`;
-};
+});

@@ -1,3 +1,4 @@
+import { dual } from "effect/Function";
 // The character-level heart of the engine: position-based scan functions over
 // the source string, plus value-token classification. Every scan function is
 // pure and stateless — `(source, pos)` in, `ScanResult` out — and every
@@ -90,7 +91,10 @@ export const assertValidUnicode = (source: string): void => {
 };
 
 /** Skip spaces and tabs; returns the position of the first other character. */
-export const scanWhitespace = (source: string, pos: number): number => {
+export const scanWhitespace: {
+	(source: string, pos: number): number;
+	(pos: number): (source: string) => number;
+} = dual(2, (source: string, pos: number): number => {
 	let i = pos;
 	while (i < source.length) {
 		const code = source.charCodeAt(i);
@@ -100,13 +104,16 @@ export const scanWhitespace = (source: string, pos: number): number => {
 		i += 1;
 	}
 	return i;
-};
+});
 
 /**
  * Consume one `\n` or `\r\n` newline. A lone `\r` throws BareCarriageReturn;
  * no newline at `pos` returns `pos` unchanged.
  */
-export const scanNewline = (source: string, pos: number): number => {
+export const scanNewline: {
+	(source: string, pos: number): number;
+	(pos: number): (source: string) => number;
+} = dual(2, (source: string, pos: number): number => {
 	const code = source.charCodeAt(pos);
 	if (code === LF) {
 		return pos + 1;
@@ -118,13 +125,16 @@ export const scanNewline = (source: string, pos: number): number => {
 		return raise("BareCarriageReturn", "carriage return not followed by a line feed", pos, 1);
 	}
 	return pos;
-};
+});
 
 /**
  * Scan a comment starting at `#` through end of line or EOF. The value
  * excludes the `#`; control characters other than tab are rejected.
  */
-export const scanComment = (source: string, pos: number): ScanResult<string> => {
+export const scanComment: {
+	(source: string, pos: number): ScanResult<string>;
+	(pos: number): (source: string) => ScanResult<string>;
+} = dual(2, (source: string, pos: number): ScanResult<string> => {
 	let i = pos + 1;
 	while (i < source.length) {
 		const code = source.charCodeAt(i);
@@ -137,16 +147,19 @@ export const scanComment = (source: string, pos: number): ScanResult<string> => 
 		i += 1;
 	}
 	return { value: source.slice(pos + 1, i), end: i };
-};
+});
 
 /** Scan a run of bare-key characters; the value may be empty. */
-export const scanBareKey = (source: string, pos: number): ScanResult<string> => {
+export const scanBareKey: {
+	(source: string, pos: number): ScanResult<string>;
+	(pos: number): (source: string) => ScanResult<string>;
+} = dual(2, (source: string, pos: number): ScanResult<string> => {
 	let i = pos;
 	while (i < source.length && isBareKeyChar(source.charCodeAt(i))) {
 		i += 1;
 	}
 	return { value: source.slice(pos, i), end: i };
-};
+});
 
 /** The decoded character for a simple escape code, or undefined. */
 const simpleEscape = (code: number): string | undefined => {
@@ -210,7 +223,10 @@ const unicodeEscapeWidth = (code: number): 2 | 4 | 8 | undefined =>
 	code === LOWER_X ? 2 : code === LOWER_U ? 4 : code === UPPER_U ? 8 : undefined;
 
 /** Scan a single-line basic string starting at the opening `"`. */
-export const scanBasicString = (source: string, pos: number): ScanResult<string> => {
+export const scanBasicString: {
+	(source: string, pos: number): ScanResult<string>;
+	(pos: number): (source: string) => ScanResult<string>;
+} = dual(2, (source: string, pos: number): ScanResult<string> => {
 	let out = "";
 	let chunkStart = pos + 1;
 	let i = pos + 1;
@@ -252,10 +268,13 @@ export const scanBasicString = (source: string, pos: number): ScanResult<string>
 		i += 1;
 	}
 	return raise("UnterminatedString", "unterminated basic string", pos, source.length - pos);
-};
+});
 
 /** Scan a single-line literal string starting at the opening `'`. */
-export const scanLiteralString = (source: string, pos: number): ScanResult<string> => {
+export const scanLiteralString: {
+	(source: string, pos: number): ScanResult<string>;
+	(pos: number): (source: string) => ScanResult<string>;
+} = dual(2, (source: string, pos: number): ScanResult<string> => {
 	let i = pos + 1;
 	while (i < source.length) {
 		const code = source.charCodeAt(i);
@@ -274,7 +293,7 @@ export const scanLiteralString = (source: string, pos: number): ScanResult<strin
 		i += 1;
 	}
 	return raise("UnterminatedString", "unterminated literal string", pos, source.length - pos);
-};
+});
 
 /** Skip a newline immediately after a multiline opening delimiter. */
 const skipLeadingNewline = (source: string, pos: number): number => {
@@ -309,7 +328,10 @@ const skipLineEndingTrim = (source: string, pos: number): number => {
 };
 
 /** Scan a multiline basic string starting at the opening `"""`. */
-export const scanMultilineBasicString = (source: string, pos: number): ScanResult<string> => {
+export const scanMultilineBasicString: {
+	(source: string, pos: number): ScanResult<string>;
+	(pos: number): (source: string) => ScanResult<string>;
+} = dual(2, (source: string, pos: number): ScanResult<string> => {
 	let i = skipLeadingNewline(source, pos + 3);
 	let out = "";
 	let chunkStart = i;
@@ -385,10 +407,13 @@ export const scanMultilineBasicString = (source: string, pos: number): ScanResul
 		i += 1;
 	}
 	return raise("UnterminatedString", "unterminated multiline basic string", pos, source.length - pos);
-};
+});
 
 /** Scan a multiline literal string starting at the opening `'''`. */
-export const scanMultilineLiteralString = (source: string, pos: number): ScanResult<string> => {
+export const scanMultilineLiteralString: {
+	(source: string, pos: number): ScanResult<string>;
+	(pos: number): (source: string) => ScanResult<string>;
+} = dual(2, (source: string, pos: number): ScanResult<string> => {
 	const contentStart = skipLeadingNewline(source, pos + 3);
 	let i = contentStart;
 	while (i < source.length) {
@@ -428,7 +453,7 @@ export const scanMultilineLiteralString = (source: string, pos: number): ScanRes
 		i += 1;
 	}
 	return raise("UnterminatedString", "unterminated multiline literal string", pos, source.length - pos);
-};
+});
 
 /** Scan one raw token span; NUL anywhere is a lex error. */
 const scanTokenSpan = (source: string, pos: number): number => {
@@ -472,7 +497,10 @@ const LOCAL_TIME = /^([0-9]{2}):([0-9]{2})(?::([0-9]{2})(?:\.([0-9]+))?)?$/;
  * date followed by a single space and a digit continues through the time
  * part, so `1979-05-27 07:32:00Z` is one token.
  */
-export const scanValueToken = (source: string, pos: number): ScanResult<string> => {
+export const scanValueToken: {
+	(source: string, pos: number): ScanResult<string>;
+	(pos: number): (source: string) => ScanResult<string>;
+} = dual(2, (source: string, pos: number): ScanResult<string> => {
 	let end = scanTokenSpan(source, pos);
 	if (
 		LOCAL_DATE.test(source.slice(pos, end)) &&
@@ -482,7 +510,7 @@ export const scanValueToken = (source: string, pos: number): ScanResult<string> 
 		end = scanTokenSpan(source, end + 1);
 	}
 	return { value: source.slice(pos, end), end };
-};
+});
 
 // Classification regexes (anchored, copied verbatim from the TOML ABNF).
 const INTEGER_DEC = /^[+-]?(?:0|[1-9](?:_?[0-9])*)$/;
@@ -575,7 +603,10 @@ const decodeOffsetMinutes = (text: string, offset: number, length: number): numb
  * construction), integers across four radixes with int64 range checking and
  * number/bigint narrowing, and floats including the special spellings.
  */
-export const classifyValueToken = (token: string, offset: number): ScalarValue => {
+export const classifyValueToken: {
+	(token: string, offset: number): ScalarValue;
+	(offset: number): (token: string) => ScalarValue;
+} = dual(2, (token: string, offset: number): ScalarValue => {
 	if (token === "true") {
 		return true;
 	}
@@ -657,4 +688,4 @@ export const classifyValueToken = (token: string, offset: number): ScalarValue =
 		return raise("InvalidNumber", `${token} is not a valid TOML number or date-time`, offset, length);
 	}
 	return raise("InvalidValue", `${token} is not a valid TOML value`, offset, length);
-};
+});

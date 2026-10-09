@@ -36,8 +36,12 @@ describe("TomlEdit", () => {
 		it("does not mutate the input edits array", () => {
 			const edits = [edit(0, 1, "x"), edit(3, 1, "y")];
 			TomlEdit.applyAll("abcdef", edits);
-			assert.strictEqual(edits[0].offset, 0);
-			assert.strictEqual(edits[1].offset, 3);
+			const first = edits[0];
+			const second = edits[1];
+			assert.isDefined(first);
+			assert.isDefined(second);
+			assert.strictEqual(first.offset, 0);
+			assert.strictEqual(second.offset, 3);
 		});
 	});
 });

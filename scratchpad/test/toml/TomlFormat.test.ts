@@ -14,16 +14,14 @@ const CRLF = TomlFormattingOptions.make({ newline: "\r\n" });
 const LF = TomlFormattingOptions.make({ newline: "\n" });
 
 /** Modify, apply, and prove the invariant: every modified document reparses cleanly. */
-const modified = (text: string, path: TomlPath, value: unknown) =>
-	Effect.gen(function* () {
+const modified = Effect.fn("modified")(function* (text: string, path: TomlPath, value: unknown) {
 		const out = yield* TomlFormat.modifyToString(text, path, value);
 		yield* Toml.parse(out);
 		return out;
 	});
 
 /** Flip a failing modify and assert the failure is the typed modification error. */
-const modifyError = (text: string, path: TomlPath, value: unknown) =>
-	Effect.gen(function* () {
+const modifyError = Effect.fn("modifyError")(function* (text: string, path: TomlPath, value: unknown) {
 		const error = yield* Effect.flip(TomlFormat.modify(text, path, value));
 		assert.instanceOf(error, TomlModificationError);
 		return error as TomlModificationError;

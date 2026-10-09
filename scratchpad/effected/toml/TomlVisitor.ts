@@ -81,6 +81,9 @@ const trailingCommentOffset = (
 		return source.indexOf("#", expression.value.offset + expression.value.length);
 	}
 	const lastKey = expression.keyPath[expression.keyPath.length - 1];
+	if (lastKey === undefined) {
+		throw new TypeError("missing TOML key");
+	}
 	return source.indexOf("#", lastKey.offset + lastKey.length);
 };
 

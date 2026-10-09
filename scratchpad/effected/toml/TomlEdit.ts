@@ -72,6 +72,9 @@ export class TomlEdit extends Schema.Class<TomlEdit>("TomlEdit")({
 		for (let i = 0; i + 1 < sorted.length; i++) {
 			const upper = sorted[i];
 			const lower = sorted[i + 1];
+			if (upper === undefined || lower === undefined) {
+				throw new TypeError("missing edit");
+			}
 			if (lower.offset + lower.length > upper.offset) {
 				throw new Error(
 					`TomlEdit.applyAll received overlapping edits at offsets ${lower.offset} and ${upper.offset} — overlapping edits are a programmer error`,
