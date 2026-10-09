@@ -1,5 +1,8 @@
-import type { ReferenceKeyword } from "./ClosingList.ts";
-import type { ClosingKeyword } from "./IssueReferences.ts";
+import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import type { ListKeyword } from "./ClosingList.ts";
+
+const $I = $ScratchpadId.create("effected/github-references/KeywordFamily");
 
 // The keyword-family projection: every keyword's tense-collapsed stem.
 //
@@ -16,14 +19,18 @@ import type { ClosingKeyword } from "./IssueReferences.ts";
  *
  * @public
  */
-export type KeywordFamily = "close" | "fix" | "resolve" | "ref";
+export const KeywordFamily = LiteralKit(["close", "fix", "resolve", "ref"]).annotate(
+	$I.annote("KeywordFamily", { description: "The tense-collapsed stem of a closing or reference keyword." }),
+);
+
+export type KeywordFamily = typeof KeywordFamily.Type;
 
 /**
  * The projection table IS the totality proof: `Record` over the union of
  * both keyword types makes a keyword added to either constant without an
  * entry here fail to compile.
  */
-const FAMILIES: Record<ClosingKeyword | ReferenceKeyword, KeywordFamily> = {
+const FAMILIES: Record<ListKeyword, KeywordFamily> = {
 	close: "close",
 	closes: "close",
 	closed: "close",
@@ -58,4 +65,4 @@ const FAMILIES: Record<ClosingKeyword | ReferenceKeyword, KeywordFamily> = {
  *
  * @public
  */
-export const keywordFamily = (keyword: ClosingKeyword | ReferenceKeyword): KeywordFamily => FAMILIES[keyword];
+export const keywordFamily = (keyword: ListKeyword): KeywordFamily => FAMILIES[keyword];

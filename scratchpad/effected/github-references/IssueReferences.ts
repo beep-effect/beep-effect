@@ -1,5 +1,12 @@
+import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import { flow } from "effect/Function";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
+
+const $I = $ScratchpadId.create("effected/github-references/IssueReferences");
 
 // GitHub's closing-keyword issue-reference grammar, as pure functions.
 //
@@ -27,11 +34,11 @@ import * as S from "effect/Schema";
 // guessing at their shape here would freeze an API nobody has driven.
 
 /**
- * The nine closing keywords GitHub documents, lowercased.
+ * One of the nine documented closing keywords, in canonical lowercase form.
  *
  * @public
  */
-export const CLOSING_KEYWORDS = [
+export const ClosingKeyword = LiteralKit([
 	"close",
 	"closes",
 	"closed",
@@ -41,32 +48,34 @@ export const CLOSING_KEYWORDS = [
 	"resolve",
 	"resolves",
 	"resolved",
-] as const;
+]).annotate($I.annote("ClosingKeyword", { description: "A documented GitHub closing keyword in canonical lowercase form." }));
+
+export type ClosingKeyword = typeof ClosingKeyword.Type;
 
 /**
- * One of the nine documented closing keywords, in canonical lowercase form.
+ * The nine closing keywords GitHub documents, lowercased.
  *
  * @public
  */
-export type ClosingKeyword = (typeof CLOSING_KEYWORDS)[number];
-
-const isClosingKeyword = S.is(S.Literals(CLOSING_KEYWORDS));
+export const CLOSING_KEYWORDS = ClosingKeyword.literals;
 
 /**
  * One closing reference found in prose by {@link harvestIssueReferences}.
  *
  * @public
  */
-export interface IssueReference {
+export const IssueReference = S.Struct({
 	/** The referenced issue number. */
-	readonly issueNumber: number;
+	issueNumber: S.Int.annotate($I.annote("IssueReference.issueNumber", { description: "The referenced safe integer issue number." })),
 	/** The matched keyword, lowercased to its canonical form. */
-	readonly keyword: ClosingKeyword;
+	keyword: ClosingKeyword.annotate($I.annote("IssueReference.keyword", { description: "The matched closing keyword in canonical lowercase form." })),
 	/** Offset of the first character of the whole match (`keyword` through digits). */
-	readonly start: number;
+	start: S.Int.annotate($I.annote("IssueReference.start", { description: "The offset of the first character of the whole match." })),
 	/** Offset one past the last character of the whole match. */
-	readonly end: number;
-}
+	end: S.Int.annotate($I.annote("IssueReference.end", { description: "The offset one past the last character of the whole match." })),
+}).annotate($I.annote("IssueReference", { description: "A closing issue reference harvested from prose with its match offsets." }));
+
+export type IssueReference = typeof IssueReference.Type;
 
 /**
  * The closing reference a bare line carries, per {@link parseBareLineReference}.
@@ -77,12 +86,14 @@ export interface IssueReference {
  *
  * @public
  */
-export interface BareLineReference {
+export const BareLineReference = S.Struct({
 	/** The referenced issue number. */
-	readonly issueNumber: number;
+	issueNumber: S.Int.annotate($I.annote("BareLineReference.issueNumber", { description: "The referenced safe integer issue number." })),
 	/** The matched keyword, lowercased to its canonical form. */
-	readonly keyword: ClosingKeyword;
-}
+	keyword: ClosingKeyword.annotate($I.annote("BareLineReference.keyword", { description: "The matched closing keyword in canonical lowercase form." })),
+}).annotate($I.annote("BareLineReference", { description: "The closing issue reference carried by a whole bare line." }));
+
+export type BareLineReference = typeof BareLineReference.Type;
 
 /**
  * Both patterns derive from {@link CLOSING_KEYWORDS} so the constant and the
@@ -103,14 +114,11 @@ const INLINE_PATTERN = new RegExp(`\\b(${KEYWORDS})\\s+#(\\d+)`, "gi");
 const BARE_LINE_PATTERN = new RegExp(`^(${KEYWORDS}):?[ \\t]+#(\\d+)$`, "i");
 
 /**
- * `#<digits>` parsed to a number — or `undefined` when the digits exceed
+ * `#<digits>` parsed to a number — or `None` when the digits exceed
  * `Number.MAX_SAFE_INTEGER`, because a silently rounded issue number is worse
  * than a skipped match. Callers skip such matches; they do not fail.
  */
-const safeIssueNumber = (digits: string): number | undefined => {
-	const value = Number(digits);
-	return Number.isSafeInteger(value) ? value : undefined;
-};
+const safeIssueNumber: (digits: string) => O.Option<number> = flow(Number, O.liftPredicate(Number.isSafeInteger));
 
 /**
  * Every inline closing reference in `text`, in document order.
@@ -143,12 +151,12 @@ export const harvestIssueReferences = (text: string): ReadonlyArray<IssueReferen
 	const references: Array<IssueReference> = [];
 	for (const match of text.matchAll(INLINE_PATTERN)) {
 		const issueNumber = safeIssueNumber(match[2] ?? "");
-		if (issueNumber === undefined) continue;
-		const keyword = (match[1] ?? "").toLowerCase();
-		if (!isClosingKeyword(keyword)) continue;
+		if (O.isNone(issueNumber)) continue;
+		const keyword = R.get<string, ClosingKeyword>(ClosingKeyword.Enum, Str.toLowerCase(match[1] ?? ""));
+		if (O.isNone(keyword)) continue;
 		references.push({
-			issueNumber,
-			keyword,
+			issueNumber: issueNumber.value,
+			keyword: keyword.value,
 			start: match.index,
 			end: match.index + match[0].length,
 		});
@@ -178,13 +186,12 @@ export const harvestIssueReferences = (text: string): ReadonlyArray<IssueReferen
  * @public
  */
 export const parseBareLineReference = (line: string): O.Option<BareLineReference> => {
-	const match = BARE_LINE_PATTERN.exec(line.trim());
+	const match = BARE_LINE_PATTERN.exec(Str.trim(line));
 	if (match === null) return O.none();
 	const issueNumber = safeIssueNumber(match[2] ?? "");
-	if (issueNumber === undefined) return O.none();
-	const keyword = (match[1] ?? "").toLowerCase();
-	if (!isClosingKeyword(keyword)) return O.none();
-	return O.some({ issueNumber, keyword });
+	return O.flatMap(issueNumber, (issueNumber) =>
+		O.map(R.get<string, ClosingKeyword>(ClosingKeyword.Enum, Str.toLowerCase(match[1] ?? "")), (keyword) => ({ issueNumber, keyword })),
+	);
 };
 
 /**
@@ -203,7 +210,7 @@ export const parseBareLineReference = (line: string): O.Option<BareLineReference
  */
 export const parseBareLines = (text: string): ReadonlyArray<BareLineReference> => {
 	const references: Array<BareLineReference> = [];
-	for (const line of text.split("\n")) {
+	for (const line of Str.split(text, "\n")) {
 		const parsed = parseBareLineReference(line);
 		if (O.isSome(parsed)) references.push(parsed.value);
 	}

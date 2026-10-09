@@ -214,11 +214,21 @@ The grammar used to live in `@effected/github`, which still re-exports exactly t
 
 ### Added exports
 
-None.
+| Export | Facets | Why |
+| --- | --- | --- |
+| `ListKeyword` | value, type | Added by review round 1; see the deviations below. |
 
 ### Deviations
 
-None.
+One entry per class of change (law- or ruling-forced) and one per behavioural divergence; the full test, upstream behaviour, lab behaviour and reason are on the module's ledger row.
+
+- **native-runtime** — Lab uses typed Enum record lookups and closing flags where upstream used two native keyword Sets (scratchpad/test/github-references/ClosingList.test.ts:139; scratchpad/test/github-references/ClosingList.test.ts:176).
+- **schema-first** — Lab exports four LiteralKit domains and five Struct models with derived types where upstream supplied tuples, a union and interfaces, retaining plain parser outputs (scratchpad/test/github-references/IssueReferences.test.ts:92,101; scratchpad/test/github-references/ClosingList.test.ts:139,151; scratchpad/test/github-references/KeywordFamily.test.ts:13).
+- **numeric-domains** — Lab adds safe integer runtime model constraints where upstream interfaces declared number fields, retaining upstream scanner rejection (scratchpad/test/github-references/IssueReferences.test.ts:101; scratchpad/test/github-references/ClosingList.test.ts:151).
+- **type-safety** — Lab obtains checked typed keywords through Enum lookups where upstream cast parsed keywords and closing-only projections (scratchpad/test/github-references/IssueReferences.test.ts:117; scratchpad/test/github-references/ClosingList.test.ts:176).
+- **effect-first** — Lab uses Option absence and Effect string/flow helpers where upstream used undefined sentinels and native line-processing methods, retaining parser semantics (scratchpad/test/github-references/IssueReferences.test.ts:126,137; scratchpad/test/github-references/ClosingList.test.ts:188,209).
+- **effect-imports** — Lab uses dedicated effect/<Module> imports in source, tests and the example where upstream imported the root effect barrel (module suite scratchpad/test/github-references/**).
+- **identity-annotations** — Lab annotates domains, models and fields through three $ScratchpadId composers where upstream had no identity annotations (module suite scratchpad/test/github-references/**).
 
 ### Dependency backlog
 

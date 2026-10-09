@@ -1,11 +1,18 @@
 import { assert, describe, it } from "@effect/vitest";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
+import * as S from "effect/Schema";
 import {
+	BareLineReference,
 	CLOSING_KEYWORDS,
+	ClosingKeyword,
+	IssueReference,
 	harvestIssueReferences,
 	parseBareLineReference,
 	parseBareLines,
 } from "../../effected/github-references/IssueReferences.ts";
+
+const isIssueReferences = S.is(S.Array(IssueReference));
 
 // Pure classes get pure tests, with no layer at all.
 
@@ -78,6 +85,67 @@ describe("IssueReferences.harvestIssueReferences", () => {
 			harvestIssueReferences(`fixes #${Number.MAX_SAFE_INTEGER}`)[0]?.issueNumber,
 			Number.MAX_SAFE_INTEGER,
 		);
+	});
+});
+
+describe("IssueReferences.review regressions", () => {
+	it("keeps the closing kit, tuple and Enum in the same literal order", () => {
+		assert.strictEqual(CLOSING_KEYWORDS, ClosingKeyword.literals);
+		assert.deepStrictEqual(R.values(ClosingKeyword.Enum), [...CLOSING_KEYWORDS]);
+		for (const keyword of CLOSING_KEYWORDS) {
+			assert.isTrue(S.is(ClosingKeyword)(keyword));
+			assert.deepStrictEqual(R.get<string, ClosingKeyword>(ClosingKeyword.Enum, keyword), O.some(keyword));
+		}
+	});
+
+	it("validates the unchanged plain parser results with integer fields", () => {
+		const inline = harvestIssueReferences("Fixes #12");
+		assert.deepStrictEqual(inline, [{ issueNumber: 12, keyword: "fixes", start: 0, end: 9 }]);
+		assert.isTrue(isIssueReferences(inline));
+		const bare = O.getOrThrow(parseBareLineReference("Closes: #7"));
+		assert.deepStrictEqual(bare, { issueNumber: 7, keyword: "closes" });
+		assert.isTrue(S.is(BareLineReference)(bare));
+		for (const issueNumber of [0.5, Number.NaN, Number.POSITIVE_INFINITY, Number.MAX_SAFE_INTEGER + 1]) {
+			assert.isFalse(S.is(BareLineReference)({ ...bare, issueNumber }));
+			assert.isFalse(S.is(IssueReference)({ issueNumber, keyword: "fixes", start: 0, end: 9 }));
+		}
+		assert.isFalse(S.is(IssueReference)({ issueNumber: 12, keyword: "fixes", start: 0.5, end: 9 }));
+		assert.isFalse(S.is(IssueReference)({ issueNumber: 12, keyword: "fixes", start: 0, end: Number.POSITIVE_INFINITY }));
+		assert.isFalse(S.is(BareLineReference)({ ...bare, keyword: "refs" }));
+	});
+
+	it("rejects invalid keywords and prototype names in both parser dialects", () => {
+		for (const keyword of ["nope", "xfixes", "reference", "refs", "constructor", "toString", "hasOwnProperty", "__proto__", "valueOf"]) {
+			assert.isFalse(S.is(ClosingKeyword)(keyword), keyword);
+			assert.deepStrictEqual(R.get<string, ClosingKeyword>(ClosingKeyword.Enum, keyword), O.none(), keyword);
+			assert.deepStrictEqual(harvestIssueReferences(`${keyword} #1`), [], keyword);
+			assert.deepStrictEqual(parseBareLineReference(`${keyword}: #1`), O.none(), keyword);
+		}
+	});
+
+	it("continues after malformed and unsafe candidates without rounding or losing offsets", () => {
+		const text = "fixes #oops closes #9007199254740993 resolves #4";
+		const start = text.indexOf("resolves #4");
+		assert.deepStrictEqual(harvestIssueReferences(text), [
+			{ issueNumber: 4, keyword: "resolves", start, end: text.length },
+		]);
+		assert.deepStrictEqual(parseBareLines("fixes #oops\ncloses #9007199254740993\nReSoLvEs #0004"), [
+			{ issueNumber: 4, keyword: "resolves" },
+		]);
+	});
+
+	it("preserves mixed case, CRLF and Unicode whitespace in each dialect", () => {
+		const text = "\u00a0cLoSeS:\t#12\u2003\r\n\u2003FiXeD #13\u00a0\r\nReSoLvEs\u00a0#14\r\n";
+		assert.deepStrictEqual(parseBareLines(text), [
+			{ issueNumber: 12, keyword: "closes" },
+			{ issueNumber: 13, keyword: "fixed" },
+		]);
+		const fixedStart = text.indexOf("FiXeD");
+		const resolvesStart = text.indexOf("ReSoLvEs");
+		assert.deepStrictEqual(harvestIssueReferences(text), [
+			{ issueNumber: 13, keyword: "fixed", start: fixedStart, end: fixedStart + "FiXeD #13".length },
+			{ issueNumber: 14, keyword: "resolves", start: resolvesStart, end: resolvesStart + "ReSoLvEs\u00a0#14".length },
+		]);
 	});
 });
 

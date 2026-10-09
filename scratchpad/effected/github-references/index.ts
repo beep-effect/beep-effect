@@ -32,11 +32,12 @@
  */
 
 export {
-	type ClosingList,
-	type HarvestedReferenceList,
+	ClosingList,
+	HarvestedReferenceList,
+	ListKeyword,
 	REFERENCE_KEYWORDS,
-	type ReferenceKeyword,
-	type ReferenceList,
+	ReferenceKeyword,
+	ReferenceList,
 	collectReferenceLists,
 	harvestReferenceLists,
 	parseClosingList,
@@ -45,12 +46,12 @@ export {
 	parseReferenceLists,
 } from "./ClosingList.ts";
 export {
-	type BareLineReference,
+	BareLineReference,
 	CLOSING_KEYWORDS,
-	type ClosingKeyword,
-	type IssueReference,
+	ClosingKeyword,
+	IssueReference,
 	harvestIssueReferences,
 	parseBareLineReference,
 	parseBareLines,
 } from "./IssueReferences.ts";
-export { type KeywordFamily, keywordFamily } from "./KeywordFamily.ts";
+export { KeywordFamily, keywordFamily } from "./KeywordFamily.ts";

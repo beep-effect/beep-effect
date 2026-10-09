@@ -1,7 +1,12 @@
+import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import type { ClosingKeyword } from "./IssueReferences.ts";
-import { CLOSING_KEYWORDS } from "./IssueReferences.ts";
+import * as Str from "effect/String";
+import { ClosingKeyword } from "./IssueReferences.ts";
+
+const $I = $ScratchpadId.create("effected/github-references/ClosingList");
 
 // The closing-list dialect: one whole line naming several issues at once.
 //
@@ -50,49 +55,54 @@ import { CLOSING_KEYWORDS } from "./IssueReferences.ts";
  *
  * @public
  */
-export const REFERENCE_KEYWORDS = ["ref", "refs", "references"] as const;
+export const ReferenceKeyword = LiteralKit(["ref", "refs", "references"]).annotate(
+	$I.annote("ReferenceKeyword", { description: "A non-closing reference keyword in canonical lowercase form." }),
+);
+
+export type ReferenceKeyword = typeof ReferenceKeyword.Type;
+
+export const REFERENCE_KEYWORDS = ReferenceKeyword.literals;
 
 /**
- * One of the non-closing reference keywords, in canonical lowercase form.
+ * Any closing or non-closing keyword accepted by the list dialect.
  *
  * @public
  */
-export type ReferenceKeyword = (typeof REFERENCE_KEYWORDS)[number];
+export const ListKeyword = LiteralKit([...ClosingKeyword.literals, ...ReferenceKeyword.literals]).annotate(
+	$I.annote("ListKeyword", { description: "A closing or non-closing keyword accepted by the list dialect." }),
+);
+
+export type ListKeyword = typeof ListKeyword.Type;
 
 /**
  * The issues a closing-list line names, per {@link parseClosingList}.
  *
  * @public
  */
-export interface ClosingList {
+export const ClosingList = S.Struct({
 	/** The matched closing keyword, lowercased to its canonical form. */
-	readonly keyword: ClosingKeyword;
+	keyword: ClosingKeyword.annotate($I.annote("ClosingList.keyword", { description: "The matched closing keyword in canonical lowercase form." })),
 	/** The referenced issue numbers, duplicates preserved, in line order. */
-	readonly issueNumbers: ReadonlyArray<number>;
-}
+	issueNumbers: S.Array(S.Int).annotate($I.annote("ClosingList.issueNumbers", { description: "The safe integer issue numbers in line order, including duplicates." })),
+}).annotate($I.annote("ClosingList", { description: "The issues named by a whole closing-list line." }));
+
+export type ClosingList = typeof ClosingList.Type;
 
 /**
  * The issues a reference-list line names, per {@link parseReferenceList}.
  *
  * @public
  */
-export interface ReferenceList {
+export const ReferenceList = S.Struct({
 	/** The matched keyword, lowercased to its canonical form. */
-	readonly keyword: ClosingKeyword | ReferenceKeyword;
+	keyword: ListKeyword.annotate($I.annote("ReferenceList.keyword", { description: "The matched list keyword in canonical lowercase form." })),
 	/** Whether the keyword is one of the nine closing keywords. */
-	readonly closing: boolean;
+	closing: S.Boolean.annotate($I.annote("ReferenceList.closing", { description: "Whether the keyword is a closing keyword." })),
 	/** The referenced issue numbers, duplicates preserved, in line order. */
-	readonly issueNumbers: ReadonlyArray<number>;
-}
+	issueNumbers: S.Array(S.Int).annotate($I.annote("ReferenceList.issueNumbers", { description: "The safe integer issue numbers in line order, including duplicates." })),
+}).annotate($I.annote("ReferenceList", { description: "The issues named by a whole reference-list line with its closing flag." }));
 
-/**
- * Both keyword tables ARE the exported constants — membership guards built from
- * them once — so the constants and the grammar cannot drift.
- */
-const isReferenceKeyword = S.is(S.Literals([...CLOSING_KEYWORDS, ...REFERENCE_KEYWORDS]));
-
-/** Membership test for reporting `closing` and narrowing closing-only results. */
-const isClosingKeyword = S.is(S.Literals(CLOSING_KEYWORDS));
+export type ReferenceList = typeof ReferenceList.Type;
 
 const HASH = 0x23; // #
 const COLON = 0x3a; // :
@@ -119,22 +129,22 @@ const skipSpaceTab = (line: string, from: number): number => {
  * run so a caller can skip the item's extent; the whole-line parsers reject
  * on it and {@link harvestReferenceLists} abandons the entire candidate —
  * a list never yields a partial reading.
- * Anything that is not `#<digits>` at all is `undefined`.
+ * Anything that is not `#<digits>` at all is `None`.
  */
 const readItem = (
 	line: string,
 	from: number,
-):
+): O.Option<
 	| { readonly kind: "item"; readonly value: number; readonly next: number }
 	| { readonly kind: "unsafe"; readonly next: number }
-	| undefined => {
-	if (line.charCodeAt(from) !== HASH) return undefined;
+> => {
+	if (line.charCodeAt(from) !== HASH) return O.none();
 	const start = from + 1;
 	let index = start;
 	while (index < line.length && isDigit(line.charCodeAt(index))) index += 1;
-	if (index === start) return undefined;
+	if (index === start) return O.none();
 	const value = Number(line.slice(start, index));
-	return Number.isSafeInteger(value) ? { kind: "item", value, next: index } : { kind: "unsafe", next: index };
+	return O.some(Number.isSafeInteger(value) ? { kind: "item", value, next: index } : { kind: "unsafe", next: index });
 };
 
 /**
@@ -142,44 +152,44 @@ const readItem = (
  * and an optional Oxford `and` (consumed only when its own trailing `[ \t]+`
  * is present), or a bare `and` requiring `[ \t]+` on both sides. `and` is
  * lowercase-only — the keyword head is case-insensitive, the separator is
- * not. Returns the index where the next item must start, or `undefined` when
+ * not. Returns the index where the next item must start, or `None` when
  * no separator is present.
  */
-const scanSeparator = (line: string, from: number): number | undefined => {
+const scanSeparator = (line: string, from: number): O.Option<number> => {
 	const afterLeading = skipSpaceTab(line, from);
 	if (line.charCodeAt(afterLeading) === COMMA) {
 		const afterComma = skipSpaceTab(line, afterLeading + 1);
 		if (line.startsWith("and", afterComma)) {
 			const afterAnd = skipSpaceTab(line, afterComma + 3);
-			if (afterAnd > afterComma + 3) return afterAnd;
+			if (afterAnd > afterComma + 3) return O.some(afterAnd);
 		}
-		return afterComma;
+		return O.some(afterComma);
 	}
 	if (afterLeading > from && line.startsWith("and", afterLeading)) {
 		const afterAnd = skipSpaceTab(line, afterLeading + 3);
-		if (afterAnd > afterLeading + 3) return afterAnd;
+		if (afterAnd > afterLeading + 3) return O.some(afterAnd);
 	}
-	return undefined;
+	return O.none();
 };
 
 /**
  * The scan walk: item, then separator, then item, until the cursor stands
  * exactly at the end of the string. Anything else — a malformed item, an
  * unknown separator, trailing content, an unsafe issue number — is
- * `undefined`, and the caller rejects the whole line.
+ * `None`, and the caller rejects the whole line.
  */
-const parseItems = (line: string, from: number): ReadonlyArray<number> | undefined => {
+const parseItems = (line: string, from: number): O.Option<ReadonlyArray<number>> => {
 	const issueNumbers: Array<number> = [];
 	let cursor = from;
 	for (;;) {
 		const item = readItem(line, cursor);
-		if (item === undefined || item.kind === "unsafe") return undefined;
-		issueNumbers.push(item.value);
-		cursor = item.next;
-		if (cursor === line.length) return issueNumbers;
+		if (O.isNone(item) || item.value.kind === "unsafe") return O.none();
+		issueNumbers.push(item.value.value);
+		cursor = item.value.next;
+		if (cursor === line.length) return O.some(issueNumbers);
 		const next = scanSeparator(line, cursor);
-		if (next === undefined) return undefined;
-		cursor = next;
+		if (O.isNone(next)) return O.none();
+		cursor = next.value;
 	}
 };
 
@@ -220,23 +230,22 @@ const parseItems = (line: string, from: number): ReadonlyArray<number> | undefin
  * @public
  */
 export const parseReferenceList = (line: string): O.Option<ReferenceList> => {
-	const trimmed = line.trim();
+	const trimmed = Str.trim(line);
 	let letters = 0;
 	while (letters < trimmed.length && isAsciiLetter(trimmed.charCodeAt(letters))) letters += 1;
 	if (letters === 0) return O.none();
-	const keyword = trimmed.slice(0, letters).toLowerCase();
-	if (!isReferenceKeyword(keyword)) return O.none();
+	const keyword = R.get<string, ListKeyword>(ListKeyword.Enum, Str.toLowerCase(trimmed.slice(0, letters)));
+	if (O.isNone(keyword)) return O.none();
 	let cursor = letters;
 	if (trimmed.charCodeAt(cursor) === COLON) cursor += 1;
 	const afterWhitespace = skipSpaceTab(trimmed, cursor);
 	if (afterWhitespace === cursor) return O.none();
 	const issueNumbers = parseItems(trimmed, afterWhitespace);
-	if (issueNumbers === undefined) return O.none();
-	return O.some({
-		keyword,
-		closing: isClosingKeyword(keyword),
+	return O.map(issueNumbers, (issueNumbers) => ({
+		keyword: keyword.value,
+		closing: R.has<string, ClosingKeyword>(ClosingKeyword.Enum, keyword.value),
 		issueNumbers,
-	});
+	}));
 };
 
 /**
@@ -260,7 +269,7 @@ export const parseReferenceList = (line: string): O.Option<ReferenceList> => {
  */
 export const collectReferenceLists = (text: string): ReadonlyArray<ReferenceList> => {
 	const lists: Array<ReferenceList> = [];
-	for (const line of text.split("\n")) {
+	for (const line of Str.split(text, "\n")) {
 		const whole = parseReferenceList(line);
 		if (O.isSome(whole)) {
 			lists.push(whole.value);
@@ -286,9 +295,7 @@ export const collectReferenceLists = (text: string): ReadonlyArray<ReferenceList
  */
 export const parseClosingList = (line: string): O.Option<ClosingList> =>
 	O.flatMap(parseReferenceList(line), (list) =>
-		isClosingKeyword(list.keyword)
-			? O.some({ keyword: list.keyword, issueNumbers: list.issueNumbers })
-			: O.none(),
+		O.map(R.get<string, ClosingKeyword>(ClosingKeyword.Enum, list.keyword), (keyword) => ({ keyword, issueNumbers: list.issueNumbers })),
 	);
 
 /**
@@ -306,7 +313,7 @@ export const parseClosingList = (line: string): O.Option<ClosingList> =>
  */
 export const parseReferenceLists = (text: string): ReadonlyArray<ReferenceList> => {
 	const lists: Array<ReferenceList> = [];
-	for (const line of text.split("\n")) {
+	for (const line of Str.split(text, "\n")) {
 		const parsed = parseReferenceList(line);
 		if (O.isSome(parsed)) lists.push(parsed.value);
 	}
@@ -326,7 +333,7 @@ export const parseReferenceLists = (text: string): ReadonlyArray<ReferenceList> 
  */
 export const parseClosingLists = (text: string): ReadonlyArray<ClosingList> => {
 	const lists: Array<ClosingList> = [];
-	for (const line of text.split("\n")) {
+	for (const line of Str.split(text, "\n")) {
 		const parsed = parseClosingList(line);
 		if (O.isSome(parsed)) lists.push(parsed.value);
 	}
@@ -362,12 +369,15 @@ const isAnyWhitespace = (code: number): boolean =>
  *
  * @public
  */
-export interface HarvestedReferenceList extends ReferenceList {
+export const HarvestedReferenceList = S.Struct({
+	...ReferenceList.fields,
 	/** Offset of the first character of the matched keyword. */
-	readonly start: number;
+	start: S.Int.annotate($I.annote("HarvestedReferenceList.start", { description: "The offset of the first character of the matched keyword." })),
 	/** Offset one past the last digit of the last item. */
-	readonly end: number;
-}
+	end: S.Int.annotate($I.annote("HarvestedReferenceList.end", { description: "The offset one past the last digit of the last item." })),
+}).annotate($I.annote("HarvestedReferenceList", { description: "A reference list harvested from prose with its match offsets." }));
+
+export type HarvestedReferenceList = typeof HarvestedReferenceList.Type;
 
 /**
  * Every reference list found inline in `text`, in document order.
@@ -426,50 +436,50 @@ export const harvestReferenceLists = (text: string): ReadonlyArray<HarvestedRefe
 			index = runEnd;
 			continue;
 		}
-		const keyword = text.slice(runStart, runEnd).toLowerCase();
-		if (!isReferenceKeyword(keyword)) {
+		const keyword = R.get<string, ListKeyword>(ListKeyword.Enum, Str.toLowerCase(text.slice(runStart, runEnd)));
+		if (O.isNone(keyword)) {
 			index = runEnd;
 			continue;
 		}
 		let cursor = runEnd;
 		while (cursor < text.length && isAnyWhitespace(text.charCodeAt(cursor))) cursor += 1;
-		const first = cursor === runEnd ? undefined : readItem(text, cursor);
-		if (first === undefined) {
+		const first = cursor === runEnd ? O.none() : readItem(text, cursor);
+		if (O.isNone(first)) {
 			// No valid first item: resume right after the keyword run.
 			index = runEnd;
 			continue;
 		}
-		if (first.kind === "unsafe") {
-			index = first.next;
+		if (first.value.kind === "unsafe") {
+			index = first.value.next;
 			continue;
 		}
-		const issueNumbers: Array<number> = [first.value];
-		let end = first.next;
-		let unsafeNext: number | undefined;
+		const issueNumbers: Array<number> = [first.value.value];
+		let end = first.value.next;
+		let unsafeNext: O.Option<number> = O.none();
 		for (;;) {
 			const next = scanSeparator(text, end);
-			if (next === undefined) break;
-			const item = readItem(text, next);
+			if (O.isNone(next)) break;
+			const item = readItem(text, next.value);
 			// A separator not followed by an item is prose, not grammar: the
 			// list already ended at its last item and the separator stays
 			// unconsumed for the outer scan.
-			if (item === undefined) break;
-			if (item.kind === "unsafe") {
-				unsafeNext = item.next;
+			if (O.isNone(item)) break;
+			if (item.value.kind === "unsafe") {
+				unsafeNext = O.some(item.value.next);
 				break;
 			}
-			issueNumbers.push(item.value);
-			end = item.next;
+			issueNumbers.push(item.value.value);
+			end = item.value.next;
 		}
-		if (unsafeNext !== undefined) {
+		if (O.isSome(unsafeNext)) {
 			// One unsafe item poisons the whole candidate — never a partial
 			// list — and scanning resumes after the candidate's extent.
-			index = unsafeNext;
+			index = unsafeNext.value;
 			continue;
 		}
 		lists.push({
-			keyword,
-			closing: isClosingKeyword(keyword),
+			keyword: keyword.value,
+			closing: R.has<string, ClosingKeyword>(ClosingKeyword.Enum, keyword.value),
 			issueNumbers,
 			start: runStart,
 			end,

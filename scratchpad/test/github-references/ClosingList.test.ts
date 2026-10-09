@@ -1,7 +1,14 @@
 import { assert, describe, it } from "@effect/vitest";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
+import * as S from "effect/Schema";
 import {
+	ClosingList,
+	HarvestedReferenceList,
+	ListKeyword,
 	REFERENCE_KEYWORDS,
+	ReferenceKeyword,
+	ReferenceList,
 	collectReferenceLists,
 	harvestReferenceLists,
 	parseClosingList,
@@ -10,6 +17,8 @@ import {
 	parseReferenceLists,
 } from "../../effected/github-references/ClosingList.ts";
 import { CLOSING_KEYWORDS } from "../../effected/github-references/IssueReferences.ts";
+
+const isHarvestedReferenceLists = S.is(S.Array(HarvestedReferenceList));
 
 // Pure functions get pure tests, with no layer at all.
 
@@ -123,6 +132,98 @@ describe("ClosingList.parseClosingList", () => {
 		const list = O.getOrThrow(parseClosingList(wide));
 		assert.strictEqual(list.issueNumbers.length, 5_000);
 		assert.strictEqual(list.issueNumbers[4_999], 5_000);
+	});
+});
+
+describe("ClosingList.review regressions", () => {
+	it("keeps the reference and combined kits in tuple order", () => {
+		assert.strictEqual(REFERENCE_KEYWORDS, ReferenceKeyword.literals);
+		assert.deepStrictEqual(R.values(ReferenceKeyword.Enum), [...REFERENCE_KEYWORDS]);
+		assert.deepStrictEqual(ListKeyword.literals, [...CLOSING_KEYWORDS, ...REFERENCE_KEYWORDS]);
+		assert.deepStrictEqual(R.values(ListKeyword.Enum), [...ListKeyword.literals]);
+		for (const keyword of ListKeyword.literals) {
+			assert.isTrue(S.is(ListKeyword)(keyword));
+			assert.deepStrictEqual(R.get<string, ListKeyword>(ListKeyword.Enum, keyword), O.some(keyword));
+			assert.strictEqual(S.is(ReferenceKeyword)(keyword), R.has<string, ReferenceKeyword>(ReferenceKeyword.Enum, keyword));
+		}
+	});
+
+	it("validates the unchanged plain list results with shared fields and safe integers", () => {
+		const closing = O.getOrThrow(parseClosingList("Closes #1, #1 and #2"));
+		assert.deepStrictEqual(closing, { keyword: "closes", issueNumbers: [1, 1, 2] });
+		assert.isTrue(S.is(ClosingList)(closing));
+		const reference = O.getOrThrow(parseReferenceList("Refs: #7, #8"));
+		assert.deepStrictEqual(reference, { keyword: "refs", closing: false, issueNumbers: [7, 8] });
+		assert.isTrue(S.is(ReferenceList)(reference));
+		const harvested = harvestReferenceLists("see refs #7, #8");
+		assert.deepStrictEqual(harvested, [{ keyword: "refs", closing: false, issueNumbers: [7, 8], start: 4, end: 15 }]);
+		assert.isTrue(isHarvestedReferenceLists(harvested));
+		assert.strictEqual(HarvestedReferenceList.fields.keyword, ReferenceList.fields.keyword);
+		assert.strictEqual(HarvestedReferenceList.fields.closing, ReferenceList.fields.closing);
+		assert.strictEqual(HarvestedReferenceList.fields.issueNumbers, ReferenceList.fields.issueNumbers);
+		for (const issueNumber of [0.5, Number.NaN, Number.POSITIVE_INFINITY, Number.MAX_SAFE_INTEGER + 1]) {
+			assert.isFalse(S.is(ClosingList)({ ...closing, issueNumbers: [issueNumber] }));
+			assert.isFalse(S.is(ReferenceList)({ ...reference, issueNumbers: [issueNumber] }));
+			assert.isFalse(S.is(HarvestedReferenceList)({ ...reference, issueNumbers: [issueNumber], start: 4, end: 15 }));
+		}
+		assert.isFalse(S.is(ClosingList)({ ...closing, keyword: "refs" }));
+		assert.isFalse(S.is(ReferenceList)({ ...reference, keyword: "reference" }));
+		assert.isFalse(S.is(ReferenceList)({ ...reference, closing: "false" }));
+		assert.isFalse(S.is(HarvestedReferenceList)({ ...reference, start: 0.5, end: 15 }));
+		assert.isFalse(S.is(HarvestedReferenceList)({ ...reference, start: 4, end: Number.POSITIVE_INFINITY }));
+	});
+
+	it("rejects invalid keywords and prototype names without harvesting them", () => {
+		for (const keyword of ["nope", "xfixes", "reference", "constructor", "toString", "hasOwnProperty", "__proto__", "valueOf"]) {
+			assert.isFalse(S.is(ListKeyword)(keyword), keyword);
+			assert.isFalse(S.is(ReferenceKeyword)(keyword), keyword);
+			assert.deepStrictEqual(R.get<string, ListKeyword>(ListKeyword.Enum, keyword), O.none(), keyword);
+			assert.deepStrictEqual(R.get<string, ReferenceKeyword>(ReferenceKeyword.Enum, keyword), O.none(), keyword);
+			assert.deepStrictEqual(parseReferenceList(`${keyword}: #1, #2`), O.none(), keyword);
+			assert.deepStrictEqual(parseClosingList(`${keyword} #1, #2`), O.none(), keyword);
+			assert.deepStrictEqual(harvestReferenceLists(`${keyword} #1, #2`), [], keyword);
+		}
+	});
+
+	it("resumes after malformed and unsafe candidates at the previous scan boundaries", () => {
+		const cases: ReadonlyArray<readonly [string, Array<[string, Array<number>, string]>]> = [
+			["closes #oops and refs #2", [["refs", [2], "refs #2"]]],
+			["closes #1, #oops and refs #2", [["closes", [1], "closes #1"], ["refs", [2], "refs #2"]]],
+			["closes #9007199254740993 and refs #2", [["refs", [2], "refs #2"]]],
+			["closes #1, #9007199254740993, #8 and fixes #3", [["fixes", [3], "fixes #3"]]],
+		];
+		for (const [text, expected] of cases) {
+			assert.deepStrictEqual(parseReferenceList(text), O.none(), text);
+			assert.deepStrictEqual(parseClosingList(text), O.none(), text);
+			assert.deepStrictEqual(
+				harvestReferenceLists(text).map((list) => [list.keyword, [...list.issueNumbers], text.slice(list.start, list.end)]),
+				expected,
+				text,
+			);
+		}
+		assert.deepStrictEqual(parseReferenceLists("closes #oops\nrefs #1, #9007199254740993\nFiXeS #0003"), [
+			{ keyword: "fixes", closing: true, issueNumbers: [3] },
+		]);
+	});
+
+	it("preserves mixed case, CRLF and Unicode whitespace across line and inline postures", () => {
+		const text = "\u00a0cLoSeS:\t#1,\t#2\u2003\r\n\u2003ReFs #3\u00a0\r\nFiXeS\u00a0#4\r\n";
+		assert.deepStrictEqual(parseReferenceLists(text), [
+			{ keyword: "closes", closing: true, issueNumbers: [1, 2] },
+			{ keyword: "refs", closing: false, issueNumbers: [3] },
+		]);
+		assert.deepStrictEqual(parseClosingLists(text), [{ keyword: "closes", issueNumbers: [1, 2] }]);
+		assert.deepStrictEqual(collectReferenceLists(text), [
+			{ keyword: "closes", closing: true, issueNumbers: [1, 2] },
+			{ keyword: "refs", closing: false, issueNumbers: [3] },
+			{ keyword: "fixes", closing: true, issueNumbers: [4] },
+		]);
+		const refsStart = text.indexOf("ReFs");
+		const fixesStart = text.indexOf("FiXeS");
+		assert.deepStrictEqual(harvestReferenceLists(text), [
+			{ keyword: "refs", closing: false, issueNumbers: [3], start: refsStart, end: refsStart + "ReFs #3".length },
+			{ keyword: "fixes", closing: true, issueNumbers: [4], start: fixesStart, end: fixesStart + "FiXeS\u00a0#4".length },
+		]);
 	});
 });
 

@@ -3412,12 +3412,111 @@
           "entry": "."
         }
       ],
-      "exportsAdded": [],
+      "exportsAdded": [
+        {
+          "name": "ListKeyword",
+          "kind": "both",
+          "entry": "."
+        }
+      ],
       "newDeps": [],
       "fixturesBytes": 0,
-      "deviations": [],
-      "backlog": [],
-      "reviewRounds": [],
+      "deviations": [
+        {
+          "test": "scratchpad/test/github-references/ClosingList.test.ts:139; scratchpad/test/github-references/ClosingList.test.ts:176",
+          "upstreamBehaviour": "ClosingList.ts builds native ALL_KEYWORDS and CLOSING_SET Sets from the keyword tuples; membership and closing flags use Set.has.",
+          "labBehaviour": "ClosingList.ts uses typed effect/Record.get on ListKeyword.Enum and ClosingKeyword.Enum, plus Record.has for closing flags; both native Sets are removed while keyword membership and parser results are preserved.",
+          "reason": "native-runtime: native Set is forbidden by the beep native-runtime law; schema-owned Enum records provide membership without a native collection. The 2026-10-09 grilling ruling requires no remaining scratchpad allowlist entries."
+        },
+        {
+          "test": "scratchpad/test/github-references/IssueReferences.test.ts:92,101; scratchpad/test/github-references/ClosingList.test.ts:139,151; scratchpad/test/github-references/KeywordFamily.test.ts:13",
+          "upstreamBehaviour": "ClosingKeyword and ReferenceKeyword derive from tuples, KeywordFamily is a handwritten union, and IssueReference, BareLineReference, ClosingList, ReferenceList and HarvestedReferenceList are interfaces with no runtime schemas.",
+          "labBehaviour": "IssueReferences.ts, ClosingList.ts and KeywordFamily.ts define four named LiteralKit domains and five Struct models with derived types; HarvestedReferenceList shares ReferenceList.fields. index.ts exports the runtime schemas and new ListKeyword domain; parser outputs remain plain objects.",
+          "reason": "schema-first: D5 and the schema-first law require named literal domains and schemas owning pure data; round-1 required records grok-1-1/2/3 and sol-1-1 demand these models and shared fields. The fix report records nine added runtime exports."
+        },
+        {
+          "test": "scratchpad/test/github-references/IssueReferences.test.ts:101; scratchpad/test/github-references/ClosingList.test.ts:151",
+          "upstreamBehaviour": "The five parser-result interfaces expose issue numbers and offsets as number, with no runtime model validation; scanners already reject unsafe issue numbers using Number.isSafeInteger.",
+          "labBehaviour": "IssueReferences.ts and ClosingList.ts constrain issueNumber, start and end with S.Int and issueNumbers with S.Array(S.Int). New schema tests reject fractional, non-finite and unsafe fields while preserving scanner acceptance and plain outputs.",
+          "reason": "numeric-domains: schema-first numeric refinements and round-1 required sol-1-1 require safe integer fields in all five parser-result models; existing unsafe-number parser rejection remains unchanged."
+        },
+        {
+          "test": "scratchpad/test/github-references/IssueReferences.test.ts:117; scratchpad/test/github-references/ClosingList.test.ts:176",
+          "upstreamBehaviour": "IssueReferences.ts casts normalized regex captures to ClosingKeyword; ClosingList.ts casts parsed and harvested keywords to ClosingKeyword | ReferenceKeyword and casts the closing-only projection to ClosingKeyword.",
+          "labBehaviour": "Both parsers obtain canonical typed keywords through Record.get on the relevant LiteralKit.Enum; parseClosingList maps the closing-keyword lookup. All five keyword casts disappear without changing the grammar, offsets, order or closing-only behavior.",
+          "reason": "type-safety: D15 forbids unsafe assertions; step-2 narrowing and round-1 fable-1-5 replace the upstream casts with checked typed membership. Prototype-name and invalid-keyword tests pin rejection."
+        },
+        {
+          "test": "scratchpad/test/github-references/IssueReferences.test.ts:126,137; scratchpad/test/github-references/ClosingList.test.ts:188,209",
+          "upstreamBehaviour": "safeIssueNumber, readItem, scanSeparator and parseItems return undefined for absence; harvestReferenceLists uses an undefined unsafeNext sentinel. Line splitting, trimming and lowercasing use native string methods.",
+          "labBehaviour": "IssueReferences.ts uses flow and Option.liftPredicate for safeIssueNumber; ClosingList.ts uses Options for item, separator, list and unsafeNext absence. Both files use effect/String split, trim and toLowerCase; malformed/unsafe continuation and whitespace semantics stay intact.",
+          "reason": "effect-first: EF-2 represents absence with Option, EF-5 and AGENTS.md prefer Effect helpers, and terse-effect favors flow. Required grok-1-5 and fable-1-12 enforce these changes; fable-1-5 requires efficient Record lookups rather than full schema parsing in hot paths."
+        },
+        {
+          "test": "module suite scratchpad/test/github-references/**",
+          "upstreamBehaviour": "IssueReferences.ts, ClosingList.ts and their test files import Option from the root effect barrel; the ClosingList parseReferenceList documentation example also imports from effect.",
+          "labBehaviour": "Source, tests and the documentation example import Option from effect/Option. Added Record, Schema, String and Function helpers use their effect/<Module> paths; no root effect import remains in the module.",
+          "reason": "effect-imports: operator step 3 and the beep effect-imports law require one dedicated effect/<Module> import per module, including JSDoc examples; the mechanical beep-law commit also retargeted the example."
+        },
+        {
+          "test": "module suite scratchpad/test/github-references/**",
+          "upstreamBehaviour": "IssueReferences.ts, ClosingList.ts and KeywordFamily.ts have no @beep/identity composer or schema/field identity annotations.",
+          "labBehaviour": "Each of those three files creates $I with $ScratchpadId.create(\"effected/github-references/<file>\"). All four literal kits and five Struct models receive $I.annote descriptions; model fields are annotated and harvested fields inherit ReferenceList annotations.",
+          "reason": "identity-annotations: operator step 4 and D5 require @beep/identity identities on schemas and fields; round-1 grok-1-1/2/3 and sol-1-1 require canonical annotations for the newly modeled domains and parser results."
+        }
+      ],
+      "backlog": [
+        {
+          "seat": "grok",
+          "round": 1,
+          "finding": "grok-1-6 — Deferred JSDoc carrier, metadata, and example conversion (scratchpad/effected/github-references/IssueReferences.ts:118)",
+          "reason": "jsdoc: In S2 convert legacy carriers to titled Example and Details/Gotchas sections; add categories, since 0.0.0, missing runtime examples and canonical barrel documentation while retaining upstream prose."
+        },
+        {
+          "seat": "grok",
+          "round": 1,
+          "finding": "grok-1-7 — README examples and boilerplate still target the published package (scratchpad/effected/github-references/README.md:3,10,28,49,180)",
+          "reason": "docs: In S2 remove publishing-only boilerplate and obsolete compatibility advice; use lab-barrel imports while preserving grammar/API/Features prose and central added-export bookkeeping."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "sol-1-5 — Deferred canonical Option assertions (scratchpad/test/github-references/ClosingList.test.ts:27)",
+          "reason": "test: In S3 use assertSome/assertNone from @effect/vitest/utils instead of boolean container checks and extraction, preserving all upstream cases and payload assertions."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "sol-1-6 — Deferred schema/parser property floor (scratchpad/test/github-references/IssueReferences.test.ts:14)",
+          "reason": "test: In S3 add generated schema round trips, parser fidelity/idempotence and offset/order properties, plus pinned-oracle differential checks with fcRuns; retain all upstream example cases."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "fable-1-6 — Deferred unreachable-branch coverage investigation (scratchpad/effected/github-references/IssueReferences.ts:148,186)",
+          "reason": "test: In S3 reassess unreachable keyword-guard branches after membership fixes; avoid coverage ignores and vacuous tests. Any capture broadening needs a coverage-law cause, oracle equivalence and central deviation recording."
+        }
+      ],
+      "reviewRounds": [
+        {
+          "round": 1,
+          "commit": "3fa5876691901fccf3d1cd29e9324564df134b56",
+          "seats": {
+            "grok": {
+              "required": 3,
+              "backlog": 4
+            },
+            "sol": {
+              "required": 2,
+              "backlog": 4
+            },
+            "fable": {
+              "required": 5,
+              "backlog": 7
+            }
+          }
+        }
+      ],
       "commits": [
         {
           "stage": 0,
