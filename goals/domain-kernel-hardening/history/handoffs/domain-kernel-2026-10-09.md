@@ -663,3 +663,26 @@ publish. No conflict and no extra push; both main merges ride the initial
 publish push. No additional migration generation or desktop codegen required.
 The post-merge stream still matches the active packet with no packet finding;
 ordered packet verification and doctor are rerun below before publication.
+
+### Run-4 publication hold and final report
+
+Yeet publish completed with exit 1. No remote branch or PR2 was created;
+all other cheap lanes passed. A read-only schema-validated rows export
+attributed the two Effect-Vitest findings. The own EV002 anchor reflects the
+changed assertion context, not a new layer call; the baseline exception reason
+still describes its body-derived native bundle and shorter read-back scope.
+No generated inventory was rewritten. D18 records the exact scope boundary.
+PR1 state and absence of PR2 were re-read from GitHub. All own result files are
+terminal; the publish tool session returned exit 1. Inbox acknowledgement is a
+scope hold, not a claim that the gate is green. The report below describes the
+qualified implementation head; the containing commit changes packet receipts
+only. Ordered packet checks and doctor are run before committing this append.
+
+lane: domain-kernel
+head: 2676bc83fc626dd741e837e998c2fd602e3dfc09 (exact qualified P1 implementation head; this append is a receipt-only follow-up)
+PR(s): PR1 #1577 MERGED at 78b77b1084d83eb105e9161d56c68d6848b63047 | PR2 none (Yeet publish refused lint:effect-vitest before push)
+package-verify: @beep/shared-domain: pass; @beep/agents-tables: pass; @beep/architecture-lab-tables: pass; @beep/documents-tables: pass; @beep/epistemic-tables: pass; @beep/workspace-tables: pass; @beep/db-admin: pass; @beep/professional-desktop: pass; @beep/repo-cli: pass; @beep/agents-server: pass; @beep/law-practice-server: pass. All default audit+docgen proofs; law-practice, epistemic and repo-cli refreshed in run 4. Repo-cli proof precedes the final unrelated #1580 base merge; no #1580 storage-suite rerun is claimed.
+hosted-parity: test-tsgo: pass (current-base rerun); docgen local: pass (39 package tasks, 38 aggregations); jsdoc-ratchet: pass; knowledge refs: pass (zero live gated observations); fallow audit+health: pass (also dead-code, zero blocking findings after D17); scoped coverage: pass (120 tests, all existing entity baseline rows meet baseline, zero uncovered executable units). These are local parity proofs; no PR2 hosted run exists. Six-server gate: pass, including native bundle parity/load/serve/carry; law-practice 284 pass, 1 skip. Prior 64 explicit PGlite migration-replay tests pass; unchanged migration has 52 nullable ADD COLUMN statements across 26 tables.
+handoff: goals/domain-kernel-hardening/history/handoffs/domain-kernel-2026-10-09.md
+open items: Own EV002 read-back occurrence changed from v2:5ff83823f70e330d42bed4c97e89515ed5d9565d2fca4b8e0778bff03712bdbb to v2:3e723c79fb07329dc90e60e8639c2c984fdb59774bba572b66b5d3b0b89da64b at PracticeKg.projections.test.ts:2169 after the authorized parity assertion edit. Evidence and shorter PGlite lifetime are unchanged; the scanner requires explicit exception re-review. Repair needs owner regeneration of standards/effect-vitest.inventory.jsonc, outside allowed generated outputs. Inherited EV015 ContradictionDetection.golden.test.ts:126 matches origin/main byte-for-byte; the standing inherited-only publish fallback does not cover the own EV002 anchor. P0 local-shard-2d356a6720ac acknowledged --wontfix with the exact scoped reason; inbox empty. No waiver, baseline edit, push, PR2, readiness monitor or running owned unit. P1 complete locally; P2/P3 pending; lifecycle active, not completed-retained. D16 preserves external bundle schema (reverse only with qualified bundle/carry upgrade and legacy compatibility proof); D17 reuses existing nullable fixture helper (reverse with kernel rollback); D18 records this scope hold (resume with inventory ownership or owner-landed reviewed inventory). 72 mechanical sites within 90, zero slice model/behavior edits. Retained earlier decision reversals and private-workspace release table remain in SPEC/handoff. Orchestrator owns stale docs/ROADMAP.md platform re-entry bullet (~349), Parked packets row (~383), cohort prose (~406). Follow-ups: stale DomainModel.make detector and desktop migration rollout. Graft estimate: 90,578 tokens saved across four retrieval calls.
+blocked: PR2 publication requires reviewed Effect-Vitest inventory regeneration outside this lane's generated-file ownership.

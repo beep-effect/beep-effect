@@ -186,3 +186,18 @@ no behavior, assertion or slice model changed. A mechanical fixture recipe that
 uses existing nullable-row helpers would have prevented this introduced red.
 Reversal: restore inline defaults with kernel rollback. No suppression or
 baseline edit was made.
+
+## Run 4: external-schema parity changes a justified inventory anchor
+
+Yeet publish refused at lint:effect-vitest with two new findings. The inherited
+EV015 TestClock.adjust row in ContradictionDetection.golden.test.ts matches
+origin/main. The authorized two-table parity assertion changes the statement
+context of the existing EV002 scoped PGlite read-back exception in
+PracticeKg.projections.test.ts: evidence and layer lifetime are unchanged, but
+the v2 occurrence anchor changes and the scanner correctly requires re-review.
+The standing inherited publish fallback cannot cover this own changed anchor.
+Repair requires owner regeneration and reviewed exception retention in
+standards/effect-vitest.inventory.jsonc, outside this brief's allowed generated
+outputs. A lane-specific inventory ownership grant or owner-landed reviewed
+inventory would prevent the scope hold. No inventory refresh, layer rewrite,
+suppression or push was performed.
