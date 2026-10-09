@@ -1,6 +1,7 @@
 import { lintCommand } from "@beep/repo-cli";
 import {
   classifyGoalDoctorFindings,
+  GoalCompletionIo,
   GoalDoctorFinding,
   goalsCommand,
   PacketEventStoreLive,
@@ -17,12 +18,14 @@ import { Command } from "effect/cli";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
 import { flow } from "effect/Function";
 import * as Layer from "effect/Layer";
 import { ChildProcess } from "effect/process";
 import * as Result from "effect/Result";
 import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { temporaryWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
 
 const runGoalsCommand = Command.runWith(goalsCommand, { version: "0.0.0" });
@@ -121,6 +124,52 @@ const writeBaseline = (keys: ReadonlyArray<string>) =>
   );
 
 it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", (it) => {
+  it.effect("offline legacy citations remain the fallback while typed declarations are unknown", () =>
+    Effect.gen(function* () {
+      yield* temporaryWorkingDirectory;
+      yield* runGit(["init", "-b", "main"]);
+      yield* runGit(["config", "user.name", "Fixture"]);
+      yield* runGit(["config", "user.email", "fixture@example.invalid"]);
+      for (const slug of ["legacy", "typed"]) {
+        yield* writeProjectFile(
+          `goals/${slug}/ops/manifest.json`,
+          `${encodeJson({
+            initiative: { id: slug, status: "completed-retained" },
+            lifecycle: "completed-retained",
+            completionGate: {
+              ...COMPLETION_GATE,
+              ...(slug === "typed" ? { pullRequests: [{ number: 7, role: "final" }] } : {}),
+            },
+            ...(slug === "legacy" ? { mergedPullRequest: 7 } : {}),
+          })}\n`
+        );
+        yield* writeProjectFile(`goals/${slug}/README.md`, `# ${slug}\n\nLifecycle: \`completed-retained\`\n`);
+      }
+      yield* writeBaseline([]);
+      yield* runGit(["add", "."]);
+      yield* runGit(["commit", "-m", "chore: seed fixtures"]);
+      let networkReads = 0;
+      const output = yield* captureOutput(
+        runGoalsCommand(["doctor"]).pipe(
+          Effect.provideService(
+            GoalCompletionIo,
+            GoalCompletionIo.of({
+              git: Effect.fn("GoalsDoctorTest.offlineGit")(() => Effect.succeed("git@github.com:example/repo.git")),
+              github: Effect.fn("GoalsDoctorTest.offlineGitHub")(() =>
+                Effect.sync(() => {
+                  networkReads += 1;
+                }).pipe(Effect.andThen(Effect.die("offline network read")))
+              ),
+            })
+          )
+        )
+      );
+      expect(networkReads).toBe(0);
+      expect(output).toContain("legacy [completion-gate-unsatisfied]");
+      expect(output).not.toContain("legacy [completion-gate-unknown]");
+      expect(output).toContain("typed [completion-gate-unknown]");
+    })
+  );
   it.effect(
     "ignores hidden editor directories under goals",
     () =>
@@ -128,8 +177,21 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
         yield* temporaryWorkingDirectory;
         yield* writeProjectFile("goals/.idea/workspace.xml", "<project />\n");
         yield* writeBaseline([]);
-        const exit = yield* Effect.exit(runGoalsCommand(["doctor"]));
+        const fs = yield* FileSystem.FileSystem;
+        let rootMarkerReads = 0;
+        const observedFs = FileSystem.FileSystem.of({
+          ...fs,
+          exists: Effect.fn("GoalsDoctorTest.observeRootMarkers")((path: string) => {
+            if (Str.endsWith("/.git")(path) || Str.endsWith("/bun.lock")(path)) rootMarkerReads += 1;
+            return fs.exists(path);
+          }),
+        });
+        const exit = yield* runGoalsCommand(["doctor"]).pipe(
+          Effect.provideService(FileSystem.FileSystem, observedFs),
+          Effect.exit
+        );
         exit.pipe(Exit.isSuccess, assertTrue);
+        expect(rootMarkerReads).toBe(0);
       }),
     20_000
   );

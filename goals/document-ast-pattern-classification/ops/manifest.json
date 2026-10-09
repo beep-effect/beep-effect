@@ -21,6 +21,7 @@
   "dependencies": ["goals/patent-document-schema"],
   "blockedBy": [],
   "completionGate": {
+    "pullRequests": [{ "number": 1429, "role": "final" }],
     "operator": "yeet",
     "requiresPullRequest": true,
     "requiresMergeable": true,

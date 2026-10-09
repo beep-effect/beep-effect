@@ -111,6 +111,81 @@
   defects from wording findings up front, and a mechanical verbatim-section
   checker against the brief so copy drift is caught by a validator.
 
+## H2: heavy proof entrypoint and read-only command cycle (2026-10-09)
+
+- Work: qualify structured goal completion in `rsc-h2-completion`.
+- Evidence: initial `beep-heavy bunx tsgo --noEmit -p packages/tooling/tool/cli/tsconfig.json`
+  could not connect to the user bus; setting the real user-session runtime/bus variables
+  restored admission. The direct package config then reported TS6305 for unbuilt
+  workspace declarations. Use package-verify's owning build/config path for proof.
+- Evidence: the first doctor smoke reported `Cannot access GOALS_DOCTOR_BASELINE_PATH
+  before initialization` after its completion adapter imported Yeet readers. Doctor
+  initially loaded the IO adapter at execution; the later schema-only extraction
+  below supersedes that runtime workaround. Normalization remains in goal schemas.
+- Prevention: document the bus environment at the admission entrypoint and retain a
+  CLI smoke fixture for command-family import cycles. No gate bypass or baseline write.
+
+## 2026-10-09: H2 historical coverage log is incomplete
+
+- Doing: comparing #1429 non-required coverage failures with the nearest completed
+  main ancestor before its merge-base, walking past cancelled runs.
+- Evidence: main run `37385597353`, job `112020340159`, completed at
+  `2026-10-06T00:05:53Z`; its fetched log ends during tests at `23:44:18Z`
+  and contains no terminal coverage-ratchet rows.
+- Disposition: full-lane coverage attribution is unknown; the new PatternOntology
+  row can be identified independently, but missing baseline rows cannot prove equality.
+- Would have prevented it: retained complete job logs or a separate immutable
+  coverage-row artifact linked to the job.
+
+## 2026-10-09: source qualification does not cover test Effect diagnostics
+
+- Doing: qualifying H2 completion fixtures after the source compiler passed.
+- Evidence: `beep quality test-tsgo` found 11 introduced test diagnostics:
+  `preferTypedSchemaDecoder`, `effectFnOpportunity`, and `missedPipeableOpportunity`.
+- Disposition: use typed decoders for typed fixture input and reusable Effect.fn
+  helpers; repeat the test compiler before publication. No suppression was added.
+- Would have prevented it: running the dedicated test compiler immediately after
+  authoring fixtures, alongside their runtime assertions.
+
+## 2026-10-09: H2 parity exposes static graph and packet-literal failures
+
+- Doing: the required Fallow audit/health and CI knowledge-reference qualification.
+- Evidence: Fallow identifies a six-file cycle from Completion through MergeGate,
+  Handler, Status and GateStaleness back to Doctor, plus eight introduced complexity
+  findings. Runtime lazy import avoided initialization failure but retained the
+  static cycle. The existing shared check-run schema is moved into a schema-only
+  role, preserving its identifier and re-export. Observation and refresh boundaries
+  are separated without suppressions.
+- Additional evidence: knowledge refs reports the inherited literal home-directory
+  prefix in SPEC's path-policy sentence (line 374), identical on origin/main.
+  It is a statement about prohibited paths, not a client location. Main owns its
+  single repair; H2 records the inherited red rather than copying a lane-local fix.
+- Would have prevented it: early static graph qualification after adding cross-command
+  schema reuse, and audit-pattern classification for path-policy literals.
+
+## 2026-10-09: H2 requalification waits behind the program's heavy admissions
+
+- Doing: repeating Fallow and the stable-head qualification bundle after remediation.
+- Evidence: both wrapper logs remain at `beep-heavy: all 3 slots busy, waiting`
+  for more than ten minutes. The later fixture-law repeat remained queued from
+  18:38Z through 19:03Z while a read-only lock check observed slot ownership change.
+  The wrapper polls available locks without FIFO ordering. The lane respects its
+  two-admission limit and does not stop another lane's work.
+- Would have prevented it: FIFO admission or program scheduling that reserves a
+  short remediation slot, or shared immutable proof reuse where inputs match. The
+  admission cap itself is retained; no bypass is used.
+
+## 2026-10-09: publish runtime flag is not the default monitor's runtime flag
+
+- Doing: publishing H2 with a bounded readiness monitor.
+- Evidence: `yeet publish --job-max-runtime` exits before publication with
+  `--job-max-runtime requires --detach`, although ordinary publish submits a
+  detached readiness monitor itself.
+- Disposition: use the canonical publish invocation and manage the resulting
+  monitor job explicitly; no branch push occurred during the rejected invocation.
+- Would have prevented it: command help distinguishing the detached publication
+  runner's runtime from the readiness monitor that ordinary publish submits.
+
 ### Lane V: missing Stage 1 prerequisite (2026-10-09)
 
 Step 0 fetched and merged `origin/main`, then fast-forwarded the packet branch to `3dbf109066`. The required `history/receipts/stage-1-ownership.md` is absent: `git ls-tree` shows only history placeholder files and the exact file-existence test exits 1. The lane brief requires stopping before preservation in this state. Landing the Stage 1 receipt before launching V would prevent the blocked start. See `history/handoffs/rsc-v-vitest-canon-2026-10-09.md`.
@@ -405,12 +480,92 @@ The final CLI package check remains queued for more than fifteen minutes while o
 - Prevention: help should distinguish the publish job ceiling from the
   automatically submitted monitor's lifetime, or expose a monitor ceiling.
 
+## 2026-10-09 — D final documentation verification
+
 - Final documentation verification remained queued across heavy-slot holder
   turnovers (`beep-heavy: all 3 slots busy, waiting`). The wrapper polls locks
   rather than keeping an ordered ticket queue, so closeout admission has
   unpredictable wait time. A fair queue with observable position would prevent
   this delay; this lane does not alter the workstation wrapper or other jobs.
 
+## 2026-10-09 — H2 test-law discovery during publication
+
+- Task: publish structured completion evidence after compiler, docgen and focused tests passed.
+- Evidence: cheap gates rejected two new fixture files with 15 Effect Vitest findings and
+  two schema-codec property-coverage advisories; publication stopped before push.
+- Recovery: preserve fixture assertions with canonical Option helpers, bound the platform
+  test layer, and add schema-derived declaration properties; rerun the affected checks.
+- Prevention: run schema-first and Effect Vitest laws with new schema fixture files before
+  the final publication admission, alongside test-tsgo. No baseline refresh is needed.
+
+## 2026-10-09 — H2 isolates concurrent fixture verification cache
+
+- Task: run full package audit and scoped completion coverage in the two allowed admissions.
+- Evidence: D's merged friction receipt records an `ENOTEMPTY` collision in the shared
+  package `.vitest-cache`; the installed Vitest help provides `--fsModuleCachePath`.
+- Recovery: give the scoped run its own ignored lane-local module-cache path before
+  admission; the test set, instrumentation and coverage baseline stay unchanged.
+- Prevention: verification commands should allocate separate module-cache directories
+  when the full package audit and scoped coverage can overlap.
+
+## 2026-10-09 — H2 property-generator import provenance
+
+- Task: qualify the added schema-derived fixture properties after publication.
+- Evidence: test-tsgo rejects `effect/testing/Arbitrary` in both new fixture files.
+  The pinned Effect source and existing goal properties import `effect/Arbitrary`.
+  A separate review missed the invalid module path; its API assurance does not replace
+  the compiler result.
+- Recovery: correct both imports and repeat test-tsgo and scoped fixtures before the
+  addressed publication wave. No suppression or baseline update.
+- Prevention: inspect the import line in the reference example, not only the generator
+  call, and require the dedicated test compiler alongside schema-property review.
+
+## 2026-10-09 — H2 hosted markerless doctor regression
+
+- Task: read the first published head's completed red jobs immediately.
+- Evidence: Property Laws fails only the invalid Arbitrary imports; Test Unit
+  additionally fails the existing hidden-editor and inherited-baseline doctor fixtures.
+  H2 had added unconditional root discovery even when no completion evidence is eligible.
+- Recovery: move discovery into the eligible evidence reader, preserve markerless
+  read-only fallback, and assert that the hidden-editor fixture performs no root probes.
+  Retain the existing baseline and success assertions. Repeat local and hosted proof.
+- Prevention: test fixtures should observe optional evidence dependencies explicitly;
+  local temporary directories can inherit a repository marker from an ancestor and
+  hide a CI-only root-discovery regression.
+
+## 2026-10-09 — H2 restarts its unstarted package admission
+
+- Task: complete the required full package handoff gate.
+- Evidence: the lane-owned package wrapper stayed queued for over an hour, with
+  no package log or command start; other lock holders changed during the wait.
+- Recovery: verify the queued wrapper's lane and process, stop only that unstarted
+  unit, and resubmit the same command through the canonical wrapper. H2 retains
+  its two-admission limit and changes no other unit, slot count or wrapper.
+- Prevention: ordered admission with observable queue position; restarting is a
+  retry, not a proven remedy for lock-poll scheduling.
+
+## 2026-10-09 — H2 hands off an unstarted full package gate
+
+- Task: complete the required full package gate after repairing hosted fixture failures.
+- Evidence: canonical admission remained full after an hour-long wait and a retry;
+  the repaired-head package command produced neither a log nor an exit file.
+  Read-only lock observations showed turnover among other active jobs.
+- Recovery: commit completed parity and historical evidence, stop only the owned
+  unstarted command, cancel the owned readiness monitor, and mark the handoff
+  capacity-blocked. Resume the full gate through the same wrapper, then publish
+  delivery metadata and restart bounded readiness monitoring. No other job,
+  wrapper, slot count, baseline or suppression changed.
+- Prevention: ordered admission and visible queue position, with a bounded wait
+  disposition distinct from a completed gate. A stopped wrapper is not proof.
+
+## 2026-10-09 — H2 final GraphQL quota block
+
+- Task: update the PR description and re-read review-thread state for handoff.
+- Evidence: GitHub GraphQL returned `API rate limit already exceeded`.
+- Recovery: REST updated the PR body and confirmed its published head/draft state.
+  Keep current review-thread state unknown; the last successful snapshot had zero
+  threads. Re-read through GraphQL after quota recovers before merge.
+- Prevention: shared API-budget admission and observable reset times across lanes.
 ### V Run 4 schema-property gate after preserved source qualification
 
 Direct capped Yeet publication completed cheap gates but refused the push:
@@ -479,3 +634,28 @@ stopped only its unadmitted request and requeued the same checks through the
 unchanged wrapper to observe the live budget. Dynamic configuration refresh
 while queued would prevent this stale-admission window. No running payload or
 peer service was stopped, and the worker changed no admission setting.
+
+## 2026-10-09 — H2 publication queue invalidates packet integration
+
+- Work: publish the resumed package-qualified H2 delivery wave.
+- Evidence: the first invocation rejected unstaged delivery records; the staged
+  retry acquired admission only after main advanced and rejected overlapping
+  packet files as a stale base. Both attempts stopped before pushing.
+- Recovery: stage reviewed records, integrate main while retaining both lanes'
+  append-only evidence, and use standing S12 amendment 2's permitted publication
+  path in the existing lane cgroup with `TURBO_CONCURRENCY=2`. Package verification
+  remains admission-wrapped and already passed. No peer job or global limit changes.
+- Prevention: stage-preflight before admission and a publication reservation that
+  avoids repeated packet integration invalidation during an unordered queue wait.
+
+## 2026-10-09 — H2 publication inherits the new main test-policy red
+
+- Work: publish the package-qualified H2 delivery update after integrating main.
+- Evidence: collected cheap gates passed 15 lanes but Effect-Vitest reported one
+  new finding in `packages/epistemic/use-cases/test/ContradictionDetection.golden.test.ts`.
+  The file is identical to origin/main and last changed in #1572.
+- Recovery: acknowledge the local P0 with inherited attribution, route one repair
+  to main through the orchestrator, then integrate and retry publication. No H2
+  baseline refresh, copied repair, suppression, waiver or push occurred.
+- Prevention: shared-main policy proof at the merge gate and a fast inherited-red
+  routing path distinguish lane delivery failures from new program integration reds.
