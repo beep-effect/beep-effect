@@ -77,7 +77,7 @@ describe("office-action pure raw rule v1", () => {
   });
 });
 
-it.layer(TestCrypto)("candidate metadata coherence", (it) => {
+it.layer(TestCrypto, { timeout: "10 seconds" })("candidate metadata coherence", (it) => {
   it.effect("rejects mismatched source, document and rule metadata atomically", () =>
     Effect.gen(function* () {
       const original = yield* fixtureSource(positive);

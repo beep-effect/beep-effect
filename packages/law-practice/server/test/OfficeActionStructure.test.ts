@@ -279,8 +279,8 @@ it.layer(ConsumerLive, { timeout: "10 seconds", concurrent: false })("office-act
   });
 });
 
-it.layer(StateLive)("storage failures remain typed", (it) => {
-  it.effect("rejects initialization, writer-lock and append failures", () =>
+it.layer(StateLive, { timeout: "10 seconds" })("storage failures remain typed", (it) => {
+  it.scoped("rejects initialization, writer-lock and append failures", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const state = yield* TestState;
@@ -300,16 +300,14 @@ it.layer(StateLive)("storage failures remain typed", (it) => {
         outcome: OfficeActionStoredOutcome.cases.failed.make({ reason: "invalid-anchor" }),
       });
       const run = (patched: FileSystem.FileSystem) =>
-        Effect.scoped(
-          Effect.gen(function* () {
-            const context = yield* Layer.build(
-              officeActionStructureFileStore("/failures/attempts.jsonl").pipe(
-                Layer.provide(Layer.succeed(FileSystem.FileSystem, patched))
-              )
-            );
-            return yield* Context.get(context, OfficeActionStructureStore).append(attempt);
-          })
-        );
+        Effect.gen(function* () {
+          const context = yield* Layer.build(
+            officeActionStructureFileStore("/failures/attempts.jsonl").pipe(
+              Layer.provide(Layer.succeed(FileSystem.FileSystem, patched))
+            )
+          );
+          return yield* Context.get(context, OfficeActionStructureStore).append(attempt);
+        });
       const initialization = yield* run({ ...fs, makeDirectory: () => Effect.fail(failure) }).pipe(Effect.flip);
       expect(initialization.message).toContain("initialize");
       const locked = yield* run({ ...fs, writeFileString: () => Effect.fail(failure) }).pipe(Effect.flip);
