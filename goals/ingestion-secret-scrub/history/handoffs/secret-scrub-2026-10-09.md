@@ -44,3 +44,12 @@ All current source/evidence scan counts remain 0. The queued multi-file route wa
 unnecessary for a single-file test and was canceled before it ran. The quick package
 proof remains queued; P1 will run required default package verification on final code.
 P0 is complete; P1-P3 remain. No PR is yet claimed at this pre-publish append.
+
+## P0 first publication gate repair
+
+Post-commit gitleaks: 1 commit scanned, no leaks, pass. Yeet blocked before push on
+one introduced `EV010` fixture-test filesystem finding; other 15 cheap gates pass.
+Repair uses the existing Bun filesystem layer and canonical `it.layer` registration.
+No inventory suppression or dependency change. A proof-row observed acknowledgement
+was rejected because local-shard failures require a fix receipt; acknowledge with
+the signed repair commit instead. No PR has been created by the failed publication.
