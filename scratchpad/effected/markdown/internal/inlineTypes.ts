@@ -11,6 +11,7 @@
 // is what lets the GFM constructs (autolink literals, strikethrough) register
 // without touching the parser.
 
+import type * as HashSet from "effect/HashSet";
 import type { Definition } from "../MarkdownNode.ts";
 import type { RawInlineSegment } from "./blockTypes.ts";
 import type { InlineNode } from "./inlineNode.ts";
@@ -88,7 +89,7 @@ export interface InlineScanner {
 	 * not exist yet (`blockParser.collectReferences` carries the full reason).
 	 * Empty under `commonmark`, which never forms a footnote reference.
 	 */
-	readonly footnoteLabels: ReadonlySet<string>;
+	readonly footnoteLabels: HashSet.HashSet<string>;
 	/** The delimiter stack top. */
 	delimiters: Delimiter | undefined;
 	/** The bracket stack top. */

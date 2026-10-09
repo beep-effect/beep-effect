@@ -6,6 +6,7 @@
 // give every node it builds an absolute position in the original document.
 
 import { dual } from "effect/Function";
+import type * as HashSet from "effect/HashSet";
 import { isFunction } from "effect/Predicate";
 import type { Definition, PhrasingContent, Position } from "../MarkdownNode.ts";
 import type { BlockNode, PreparedInline, RawInlineSegment } from "./blockTypes.ts";
@@ -73,14 +74,14 @@ export const trimWithSegments: {
  * trim it, keep its source provenance, and parse it into phrasing content.
  */
 export const prepareInline: {
-	(block: BlockNode, position: PositionOf, refmap: ReadonlyMap<string, Definition>, dialect?: InlineDialectName, footnoteLabels?: ReadonlySet<string>): PreparedInline;
-	(position: PositionOf, refmap: ReadonlyMap<string, Definition>, dialect?: InlineDialectName, footnoteLabels?: ReadonlySet<string>): (block: BlockNode) => PreparedInline;
+	(block: BlockNode, position: PositionOf, refmap: ReadonlyMap<string, Definition>, dialect?: InlineDialectName, footnoteLabels?: HashSet.HashSet<string>): PreparedInline;
+	(position: PositionOf, refmap: ReadonlyMap<string, Definition>, dialect?: InlineDialectName, footnoteLabels?: HashSet.HashSet<string>): (block: BlockNode) => PreparedInline;
 } = dual((args) => !isFunction(args[0]), (
 	block: BlockNode,
 	position: PositionOf,
 	refmap: ReadonlyMap<string, Definition>,
 	dialect: InlineDialectName = "commonmark",
-	footnoteLabels: ReadonlySet<string> = new Set(),
+	footnoteLabels?: HashSet.HashSet<string>,
 ): PreparedInline => {
 	const { text, segments } = trimWithSegments(
 		block.stringContent,

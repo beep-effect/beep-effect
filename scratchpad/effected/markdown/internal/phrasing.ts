@@ -20,6 +20,8 @@
 // pass's delimiter/bracket stacks); the facade materializes the typed error.
 
 import { dual } from "effect/Function";
+import * as HashMap from "effect/HashMap";
+import * as O from "effect/Option";
 import type { Definition, PhrasingContent, Position } from "../MarkdownNode.ts";
 import { Point, Position as PositionClass } from "../MarkdownNode.ts";
 import type { RawInlineSegment } from "./blockTypes.ts";
@@ -29,8 +31,19 @@ import { LineIndex } from "./lineIndex.ts";
 import { preprocessLines } from "./preprocess.ts";
 import { trimWithSegments } from "./rawInline.ts";
 
-const EMPTY_REFMAP: ReadonlyMap<string, Definition> = new Map();
-const EMPTY_FOOTNOTE_LABELS: ReadonlySet<string> = new Set();
+const emptyDefinitions = HashMap.empty<string, Definition>();
+const EMPTY_REFMAP: ReadonlyMap<string, Definition> = {
+	size: HashMap.size(emptyDefinitions),
+	get: (key) => O.getOrUndefined(HashMap.get(emptyDefinitions, key)),
+	has: (key) => HashMap.has(emptyDefinitions, key),
+	*keys() { yield* HashMap.keys(emptyDefinitions); return undefined; },
+	*values() { yield* HashMap.values(emptyDefinitions); return undefined; },
+	*entries() { yield* HashMap.entries(emptyDefinitions); return undefined; },
+	[Symbol.iterator]() { return this.entries(); },
+	forEach(callback, thisArg) {
+		HashMap.forEach(emptyDefinitions, (value, key) => callback.call(thisArg, value, key, this));
+	},
+};
 
 /**
  * Parse a text fragment as a single paragraph's inline content.
@@ -76,6 +89,5 @@ export const parsePhrasingText: {
 		EMPTY_REFMAP,
 		positionOf,
 		dialect,
-		EMPTY_FOOTNOTE_LABELS,
 	);
 });

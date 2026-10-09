@@ -17,8 +17,19 @@ import * as S from "effect/Schema";
 import * as A from "effect/Array";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as O from "effect/Option";
 
 const $I = $ScratchpadId.create("effected/markdown/FrontmatterResolver");
+
+/** Invalid or conflicting registry configuration. */
+class SchemaRegistryError extends S.TaggedError<SchemaRegistryError>($I`SchemaRegistryError`)(
+	"SchemaRegistryError",
+	{
+		message: S.String,
+	},
+	$I.annote("SchemaRegistryError", { description: "Invalid or conflicting registry configuration." }),
+) {}
 
 /**
  * A `$schema` declaration referencing a schema by URL — any string containing
@@ -234,7 +245,7 @@ const parseVersionSegments = (version: string): ReadonlyArray<number> | undefine
 };
 
 const isMapping = (value: unknown): value is Record<string, unknown> =>
-	typeof value === "object" && value !== null && !A.isArray(value);
+	P.isObjectKeyword(value) && !P.isFunction(value) && !A.isArray(value);
 
 /**
  * The `$schema` declaration classifier and the package's one built-in
@@ -346,59 +357,74 @@ export class SchemaResolver {
 	 * @returns The registry-backed resolver.
 	 */
 	static fromRegistry(registrations: Readonly<Record<string, S.Top>>): FrontmatterSchemaResolver {
-		// A real Map keyed by name: registration names are configuration, not
-		// attacker data, but the prototype-pollution guard costs nothing here.
-		const byName = new Map<string, { versionless?: S.Top; versions: Map<string, S.Top> }>();
+		// Hash keys keep registration names independent of object prototypes.
+		const byName = MutableHashMap.empty<
+			string,
+			{ versionless?: S.Top; versions: MutableHashMap.MutableHashMap<string, S.Top> }
+		>();
 		for (const [key, schema] of R.toEntries(registrations)) {
 			const classified = SchemaResolver.classify(key);
-			if (Result.isFailure(classified) || !(S.is(SchemaDeclarationByName)(classified.success))) {
-				throw new Error(`SchemaResolver.fromRegistry: registration key "${key}" is outside the name[@version] grammar`);
+			if (Result.isFailure(classified) || !S.is(SchemaDeclarationByName)(classified.success)) {
+				throw SchemaRegistryError.make({
+					message: `SchemaResolver.fromRegistry: registration key "${key}" is outside the name[@version] grammar`,
+				});
 			}
 			const declaration = classified.success;
-			const entry = byName.get(declaration.name) ?? { versions: new Map<string, S.Top>() };
+			const entry = O.getOrUndefined(MutableHashMap.get(byName, declaration.name)) ?? {
+				versions: MutableHashMap.empty<string, S.Top>(),
+			};
 			if (declaration.version === undefined) {
 				if (entry.versionless !== undefined) {
-					throw new Error(`SchemaResolver.fromRegistry: duplicate versionless registration for "${declaration.name}"`);
+					throw SchemaRegistryError.make({
+						message: `SchemaResolver.fromRegistry: duplicate versionless registration for "${declaration.name}"`,
+					});
 				}
 				entry.versionless = schema;
 			} else {
 				const segments = parseVersionSegments(declaration.version);
 				if (segments === undefined) {
-					throw new Error(`SchemaResolver.fromRegistry: registration key "${key}" carries an illegal version`);
+					throw SchemaRegistryError.make({
+						message: `SchemaResolver.fromRegistry: registration key "${key}" carries an illegal version`,
+					});
 				}
 				const canonical = segments.join(".");
-				if (entry.versions.has(canonical)) {
-					throw new Error(
-						`SchemaResolver.fromRegistry: registrations for "${declaration.name}" collide on version ${canonical}`,
-					);
+				if (MutableHashMap.has(entry.versions, canonical)) {
+					throw SchemaRegistryError.make({
+						message: `SchemaResolver.fromRegistry: registrations for "${declaration.name}" collide on version ${canonical}`,
+					});
 				}
-				entry.versions.set(canonical, schema);
+				MutableHashMap.set(entry.versions, canonical, schema);
 			}
-			byName.set(declaration.name, entry);
+			MutableHashMap.set(byName, declaration.name, entry);
 		}
 		return {
-			resolve: Effect.fn("resolve")((declaration: SchemaDeclaration | undefined, _data: unknown): Effect.Effect<S.Top, FrontmatterResolveError> => {
-				if (declaration === undefined) {
-					return Effect.fail(SchemaDeclarationMissingError.make());
-				}
-				if (!(S.is(SchemaDeclarationByName)(declaration))) {
-					return Effect.fail(SchemaNameUnknownError.make({ declaration }));
-				}
-				const entry = byName.get(declaration.name);
-				if (entry === undefined) {
-					return Effect.fail(SchemaNameUnknownError.make({ declaration }));
-				}
-				if (declaration.version === undefined) {
-					return entry.versionless === undefined
-						? Effect.fail(SchemaVersionUnresolvableError.make({ name: declaration.name }))
-						: Effect.succeed(entry.versionless);
-				}
-				const segments = parseVersionSegments(declaration.version);
-				const match = segments === undefined ? undefined : entry.versions.get(segments.join("."));
-				return match === undefined
-					? Effect.fail(SchemaVersionUnresolvableError.make({ name: declaration.name, version: declaration.version }))
-					: Effect.succeed(match);
-			}),
+			resolve: Effect.fn("resolve")(
+				(declaration: SchemaDeclaration | undefined, _data: unknown): Effect.Effect<S.Top, FrontmatterResolveError> => {
+					if (declaration === undefined) {
+						return Effect.fail(SchemaDeclarationMissingError.make());
+					}
+					if (!S.is(SchemaDeclarationByName)(declaration)) {
+						return Effect.fail(SchemaNameUnknownError.make({ declaration }));
+					}
+					const entry = O.getOrUndefined(MutableHashMap.get(byName, declaration.name));
+					if (entry === undefined) {
+						return Effect.fail(SchemaNameUnknownError.make({ declaration }));
+					}
+					if (declaration.version === undefined) {
+						return entry.versionless === undefined
+							? Effect.fail(SchemaVersionUnresolvableError.make({ name: declaration.name }))
+							: Effect.succeed(entry.versionless);
+					}
+					const segments = parseVersionSegments(declaration.version);
+					const match =
+						segments === undefined
+							? undefined
+							: O.getOrUndefined(MutableHashMap.get(entry.versions, segments.join(".")));
+					return match === undefined
+						? Effect.fail(SchemaVersionUnresolvableError.make({ name: declaration.name, version: declaration.version }))
+						: Effect.succeed(match);
+				},
+			),
 		};
 	}
 }

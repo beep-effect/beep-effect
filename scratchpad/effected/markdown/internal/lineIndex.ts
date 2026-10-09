@@ -1,9 +1,17 @@
 // An offset -> unist Point (1-based line/column) index. Built once per parse
 // from the source text, iteratively (a single forward scan, no recursion),
 // then queried by binary search — MarkdownNode.ts's Point construction is the
-// consumer. Imports nothing; this module never participates in the cycle
-// firewall (src/internal/ never imports public modules, and this file
-// imports nothing at all).
+// consumer. Imports no public markdown modules, keeping the cycle firewall.
+
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("effected/markdown/internal/lineIndex");
+
+/** A malformed line table supplied to the source-position index. */
+export class InvalidLineTableError extends S.TaggedError<InvalidLineTableError>($I`InvalidLineTableError`)("InvalidLineTableError", {
+	message: S.String,
+}) {}
 
 /** A 1-based line/column pair, unist's `Point` shape minus the `offset` field. */
 export interface LineColumn {
@@ -66,7 +74,7 @@ export class LineIndex {
 	 */
 	static fromLineStarts(text: string, starts: ReadonlyArray<number>): LineIndex {
 		if (starts.length === 0 || starts[0] !== 0) {
-			throw new TypeError("line index: a line table must be non-empty and start at offset 0");
+			throw InvalidLineTableError.make({ message: "line index: a line table must be non-empty and start at offset 0" });
 		}
 		return new LineIndex(text, starts);
 	}

@@ -59,6 +59,9 @@
 // `MAX_NESTING_DEPTH` cap applies (a decoded hostile tree must trip a typed
 // guard, never a RangeError). Blocks and inlines share one counter.
 
+import * as Match from "effect/Match";
+import * as HashSet from "effect/HashSet";
+import * as A from "effect/Array";
 import type {
 	Code,
 	Definition,
@@ -97,7 +100,7 @@ const HEADING_CONTEXT: InlineContext = { singleLine: true, inTable: false, inHea
 const CELL_CONTEXT: InlineContext = { singleLine: true, inTable: true, inHeading: false };
 
 /** Characters escaped wherever they appear in inline text. */
-const ALWAYS_ESCAPE = new Set(["\\", "`", "*", "[", "]", "<", "~", "|"]);
+const ALWAYS_ESCAPE = HashSet.fromIterable<string>(["\\", "`", "*", "[", "]", "<", "~", "|"]);
 
 /** A character reference at the head of the string: the engine's own grammar. */
 const reEntityAhead = new RegExp(`^${ENTITY}`, "i");
@@ -105,9 +108,9 @@ const reEntityAhead = new RegExp(`^${ENTITY}`, "i");
 const reAlphanumeric = /[\p{L}\p{N}]/u;
 
 /** Line-start characters that could open a block construct. */
-const LINE_START_ESCAPE = new Set(["#", ">", "+", "-", "=", "~", "`"]);
+const LINE_START_ESCAPE = HashSet.fromIterable<string>(["#", ">", "+", "-", "=", "~", "`"]);
 
-const SCHEME_WORDS = new Set(["http", "https", "ftp", "mailto", "xmpp"]);
+const SCHEME_WORDS = HashSet.fromIterable<string>(["http", "https", "ftp", "mailto", "xmpp"]);
 
 const ORDERED_MARKER = /^\d{1,9}[.)]/;
 
@@ -155,7 +158,7 @@ const isWwwDot = (value: string, index: number): boolean => {
 const isSchemeColon = (value: string, index: number): boolean => {
 	let start = index;
 	while (start > 0 && /[a-zA-Z]/.test(value.charAt(start - 1))) start -= 1;
-	return SCHEME_WORDS.has(value.slice(start, index).toLowerCase());
+	return HashSet.has(SCHEME_WORDS, value.slice(start, index).toLowerCase());
 };
 
 /** Whether `value[index]` is a Unicode letter or number (`undefined` is not). */
@@ -257,14 +260,14 @@ const escapeText = (
 				lineStart = false;
 				continue;
 			}
-			if (LINE_START_ESCAPE.has(char)) {
+			if (HashSet.has(LINE_START_ESCAPE, char)) {
 				out += `\\${char}`;
 				lineStart = false;
 				continue;
 			}
 		}
 		lineStart = false;
-		if (ALWAYS_ESCAPE.has(char)) {
+		if (HashSet.has(ALWAYS_ESCAPE, char)) {
 			out += `\\${char}`;
 			continue;
 		}
@@ -345,42 +348,29 @@ const reDelimiterRowShaped = /^[-:| \t\v\f]+$/;
  */
 const literalLineOpensBlock = (line: string, open: boolean): boolean => {
 	const char = line[0];
-	switch (char) {
-		// A blockquote always opens; an HTML block, a link reference or footnote
-		// definition, and a GFM table row are escaped conservatively.
-		case ">":
-		case "<":
-		case "[":
-		case "|":
-		case ":":
-			return true;
-		case "#": {
-			const run = /^#{1,6}/.exec(line)?.[0] ?? "";
-			return run.length > 0 && (run.length === line.length || isSpaceOrTab(line[run.length]));
-		}
-		case "`":
-		case "~":
-			// A fence is 3+ of either; an open line of only 1-2 could be completed.
-			return line.startsWith(char.repeat(3)) || (open && [...line].every((each) => each === char));
-		case "=":
-			// A setext underline, kept escaped even on a paragraph's first line.
-			return /^=+[ \t]*$/.test(line);
-		case "+":
-		case "-":
-		case "*":
-		case "_": {
-			const bullet = char !== "_" && (line.length === 1 || isSpaceOrTab(line[1]));
-			const breakRun = char !== "+" && isRunOf(line, char);
-			const thematic = breakRun && (open || [...line].filter((each) => each === char).length >= 3);
-			// `---`/`+++` open frontmatter at the document head (`---json`
-			// too). A dash line may be a setext underline or a delimiter row;
-			// the delimiter-row shape covers both.
-			const frontmatter = (char === "-" || char === "+") && line.startsWith(char.repeat(3));
-			const dashLine = char === "-" && reDelimiterRowShaped.test(line);
-			return bullet || thematic || frontmatter || dashLine;
-		}
-		default:
-			return false;
+	if (char === ">" || char === "<" || char === "[" || char === "|" || char === ":") {
+		return true;
+	} else if (char === "#") {
+		const run = /^#{1,6}/.exec(line)?.[0] ?? "";
+		return run.length > 0 && (run.length === line.length || isSpaceOrTab(line[run.length]));
+	} else if (char === "`" || char === "~") {
+		// A fence is 3+ of either; an open line of only 1-2 could be completed.
+		return line.startsWith(char.repeat(3)) || (open && [...line].every((each) => each === char));
+	} else if (char === "=") {
+		// A setext underline, kept escaped even on a paragraph's first line.
+		return /^=+[ \t]*$/.test(line);
+	} else if (char === "+" || char === "-" || char === "*" || char === "_") {
+		const bullet = char !== "_" && (line.length === 1 || isSpaceOrTab(line[1]));
+		const breakRun = char !== "+" && isRunOf(line, char);
+		const thematic = breakRun && (open || [...line].filter((each) => each === char).length >= 3);
+		// `---`/`+++` open frontmatter at the document head (`---json`
+		// too). A dash line may be a setext underline or a delimiter row;
+		// the delimiter-row shape covers both.
+		const frontmatter = (char === "-" || char === "+") && line.startsWith(char.repeat(3));
+		const dashLine = char === "-" && reDelimiterRowShaped.test(line);
+		return bullet || thematic || frontmatter || dashLine;
+	} else {
+		return false;
 	}
 };
 
@@ -506,12 +496,19 @@ const forcesPointy = (char: string): boolean => {
 	const codePoint = char.codePointAt(0);
 	// Controls and space (a bare destination allows neither), plus the
 	// bracket/backslash set whose bare spelling is ambiguous.
-	return (codePoint !== undefined && codePoint <= 0x20) || char === "<" || char === ">" || char === "[" || char === "]" || char === "\\";
+	return (
+		(codePoint !== undefined && codePoint <= 0x20) ||
+		char === "<" ||
+		char === ">" ||
+		char === "[" ||
+		char === "]" ||
+		char === "\\"
+	);
 };
 
 /** Wrap a link/image destination, pointy-bracketed when it needs it. */
 const destination = (url: string): string => {
-	if (url === "" || Array.from(url).some(forcesPointy) || !balancedParens(url)) {
+	if (url === "" || A.some([...url], forcesPointy) || !balancedParens(url)) {
 		return `<${url.replace(/[<>\\]/g, (char) => `\\${char}`)}>`;
 	}
 	return url;
@@ -608,8 +605,8 @@ const serializeInlines = (
 				out = `${out.slice(0, -1)}\\!`;
 			}
 		};
-		switch (child.type) {
-			case "text": {
+		Match.value(child).pipe(
+			Match.discriminator("type")("text", (child) => {
 				let followingText = "";
 				let next = index + 1;
 				while (next < children.length) {
@@ -628,17 +625,16 @@ const serializeInlines = (
 				);
 				out += escaped.text;
 				atLineStart = escaped.atLineStart;
-				break;
-			}
-			case "inlineCode":
+			}),
+			Match.discriminator("type")("inlineCode", (child) => {
 				out += inlineCode(child.value);
 				atLineStart = false;
-				break;
-			case "html":
+			}),
+			Match.discriminator("type")("html", (child) => {
 				out += child.value;
 				atLineStart = false;
-				break;
-			case "break":
+			}),
+			Match.discriminator("type")("break", (child) => {
 				if (context.singleLine) {
 					out += " ";
 					atLineStart = false;
@@ -646,9 +642,8 @@ const serializeInlines = (
 					out += child.breakStyle === "spaces" ? "  \n" : "\\\n";
 					atLineStart = true;
 				}
-				break;
-			case "emphasis":
-			case "strong": {
+			}),
+			Match.discriminator("type")("emphasis", "strong", (child) => {
 				const kind = child.type;
 				let marker: "*" | "_";
 				if (atEdge && junctionGuard !== undefined) {
@@ -665,24 +660,22 @@ const serializeInlines = (
 				const inner = serializeInlines(child.children, context, state, false, { parent: kind, marker });
 				out += `${run}${inner}${run}`;
 				atLineStart = false;
-				break;
-			}
-			case "delete":
+			}),
+			Match.discriminator("type")("delete", (child) => {
 				out += `~~${serializeInlines(child.children, context, state, false)}~~`;
 				atLineStart = false;
-				break;
-			case "link":
+			}),
+			Match.discriminator("type")("link", (child) => {
 				bangGuard();
 				out += `[${serializeInlines(child.children, context, state, false)}](${destination(child.url)}${titleSuffix(child.title)})`;
 				atLineStart = false;
-				break;
-			case "image": {
+			}),
+			Match.discriminator("type")("image", (child) => {
 				const alt = (child.alt ?? "").replace(/[\\[\]]/g, (char) => `\\${char}`);
 				out += `![${alt}](${destination(child.url)}${titleSuffix(child.title)})`;
 				atLineStart = false;
-				break;
-			}
-			case "linkReference": {
+			}),
+			Match.discriminator("type")("linkReference", (child) => {
 				// The bracket of a shortcut or collapsed reference IS its
 				// label; only a full reference carries free content. Labels go
 				// through escapeLabel so definitions agree — see escapeLabel.
@@ -697,9 +690,8 @@ const serializeInlines = (
 					out += `[${label}]`;
 				}
 				atLineStart = false;
-				break;
-			}
-			case "imageReference": {
+			}),
+			Match.discriminator("type")("imageReference", (child) => {
 				const label = escapeLabel(child.label ?? child.identifier);
 				if (child.referenceType === "full") {
 					const alt = (child.alt ?? "").replace(/[\\[\]]/g, (char) => `\\${char}`);
@@ -710,21 +702,21 @@ const serializeInlines = (
 					out += `![${label}]`;
 				}
 				atLineStart = false;
-				break;
-			}
-			case "footnoteReference":
+			}),
+			Match.discriminator("type")("footnoteReference", (child) => {
 				out += `[^${escapeLabel(child.label ?? child.identifier)}]`;
 				atLineStart = false;
-				break;
-			case "mdxJsxTextElement":
+			}),
+			Match.discriminator("type")("mdxJsxTextElement", (child) => {
 				out += serializeMdxJsxText(child, context, state);
 				atLineStart = false;
-				break;
-			case "mdxTextExpression":
+			}),
+			Match.discriminator("type")("mdxTextExpression", (child) => {
 				out += mdxExpression(child.value);
 				atLineStart = false;
-				break;
-		}
+			}),
+			Match.exhaustive,
+		);
 		index += 1;
 		unguard(state);
 	}
@@ -744,7 +736,7 @@ const serializeInlines = (
 // inside it is canonical.
 
 /** The tag string of every MDX node type. */
-const MDX_NODE_TYPES: ReadonlySet<string> = new Set([
+const MDX_NODE_TYPES = HashSet.fromIterable<string>([
 	"mdxJsxFlowElement",
 	"mdxJsxTextElement",
 	"mdxFlowExpression",
@@ -764,7 +756,7 @@ const treeContainsMdx = (root: WalkableNode): boolean => {
 	while (stack.length > 0) {
 		const node = stack.pop();
 		if (node === undefined) break;
-		if (MDX_NODE_TYPES.has(node.type)) {
+		if (HashSet.has(MDX_NODE_TYPES, node.type)) {
 			return true;
 		}
 		if (node.children !== undefined) {
@@ -986,18 +978,13 @@ const serializeFootnoteDefinition = (node: FootnoteDefinition, state: StringifyS
 		.join("\n");
 };
 
-const alignCell = (align: "left" | "right" | "center" | null | undefined): string => {
-	switch (align) {
-		case "left":
-			return ":--";
-		case "right":
-			return "--:";
-		case "center":
-			return ":-:";
-		default:
-			return "---";
-	}
-};
+const alignCell = (align: "left" | "right" | "center" | null | undefined): string =>
+	Match.value(align).pipe(
+		Match.when("left", (_) => ":--"),
+		Match.when("right", (_) => "--:"),
+		Match.when("center", (_) => ":-:"),
+		Match.orElse(() => "---"),
+	);
 
 /**
  * Escape every cell pipe the GFM cell splitter would read as a column
@@ -1035,9 +1022,9 @@ const serializeTable = (table: Table, state: StringifyState): string => {
 		while (cells.length < columnCount) cells.push("");
 		return `| ${cells.join(" | ")} |`;
 	});
-	const alignRow = `| ${Array.from({ length: columnCount }, (_, column) => alignCell(table.align?.[column])).join(" | ")} |`;
+	const alignRow = `| ${A.makeBy(columnCount, (column) => alignCell(table.align?.[column])).join(" | ")} |`;
 	const [header, ...body] = rows;
-	return [header ?? `| ${Array.from({ length: columnCount }, () => "").join(" | ")} |`, alignRow, ...body].join("\n");
+	return [header ?? `| ${A.makeBy(columnCount, () => "").join(" | ")} |`, alignRow, ...body].join("\n");
 };
 
 /** The marker actually used by a list, for adjacency comparison. */
@@ -1084,56 +1071,38 @@ const serializeList = (list: List, state: StringifyState, flipped: boolean): str
 type Block = FlowContent | Frontmatter | MdxjsEsm | Paragraph;
 
 /** Whether `next` interrupts a paragraph without a blank line before it. */
-const interruptsParagraph = (next: Block): boolean => {
-	switch (next.type) {
-		case "list":
-			// Only a list starting at 1 (or a bullet list) interrupts.
-			return next.ordered !== true || (next.start ?? 1) === 1;
-		case "blockquote":
-		case "thematicBreak":
-			return true;
-		case "heading":
-			// A setext underline under a paragraph would ATTACH to it.
-			return next.headingStyle !== "setext";
-		case "code":
-			// Only a fence interrupts; an indent reads as continuation.
-			return next.fenceChar !== undefined || next.lang !== undefined;
-		default:
-			return false;
-	}
-};
+const interruptsParagraph = (next: Block): boolean =>
+	Match.value(next).pipe(
+		Match.discriminator("type")("list", (next) => next.ordered !== true || (next.start ?? 1) === 1),
+		Match.discriminator("type")("blockquote", "thematicBreak", () => true),
+		Match.discriminator("type")("heading", (next) => next.headingStyle !== "setext"),
+		Match.discriminator("type")("code", (next) => next.fenceChar !== undefined || next.lang !== undefined),
+		Match.orElse(() => false),
+	);
 
 /**
  * Whether `prev` and `next` may sit on adjacent lines with no blank line
  * between them without either absorbing the other on re-parse. Drives tight
  * list items; anything not provably safe takes the blank line.
  */
-const canJoinWithoutBlank = (prev: Block, next: Block): boolean => {
-	switch (prev.type) {
-		case "heading":
-			// ATX self-terminates; a setext underline consumed its paragraph.
-			return true;
-		case "thematicBreak":
-			return true;
-		case "code":
+const canJoinWithoutBlank = (prev: Block, next: Block): boolean =>
+	Match.value(prev).pipe(
+		Match.discriminator("type")("heading", () => true),
+		Match.discriminator("type")("thematicBreak", () => true),
+		Match.discriminator("type")("code", (prev) => {
 			// A closed fence self-terminates. Indented code ends at the first
 			// insufficiently indented line — but another indented block would
 			// merge into it.
 			if (prev.fenceChar !== undefined || prev.lang !== undefined) return true;
 			return !(next.type === "code" && next.fenceChar === undefined && next.lang === undefined);
-		case "paragraph":
-			return interruptsParagraph(next);
-		case "blockquote":
-			// The quote's paragraph continues lazily into plain text, and an
-			// adjacent quote merges; interrupting constructs close it.
-			return next.type !== "blockquote" && next.type !== "paragraph" && interruptsParagraph(next);
-		default:
-			// Lists, HTML, definitions, footnote definitions and tables keep
-			// the blank line — their termination is either type-dependent or
-			// continuation-hungry.
-			return false;
-	}
-};
+		}),
+		Match.discriminator("type")("paragraph", () => interruptsParagraph(next)),
+		Match.discriminator("type")(
+			"blockquote",
+			() => next.type !== "blockquote" && next.type !== "paragraph" && interruptsParagraph(next),
+		),
+		Match.orElse(() => false),
+	);
 
 /**
  * Serialize a sequence of flow blocks, handling sibling adjacency. With
@@ -1146,30 +1115,30 @@ const serializeBlocks = (children: ReadonlyArray<Block>, state: StringifyState, 
 	let previousListMarker: string | undefined;
 	for (const child of children) {
 		guard(state, child);
-		switch (child.type) {
-			case "paragraph":
+		Match.value(child).pipe(
+			Match.discriminator("type")("paragraph", (child) => {
 				parts.push(serializeInlines(child.children, FLOW_CONTEXT, state, true));
 				previousListMarker = undefined;
-				break;
-			case "heading":
+			}),
+			Match.discriminator("type")("heading", (child) => {
 				parts.push(serializeHeading(child, state));
 				previousListMarker = undefined;
-				break;
-			case "thematicBreak":
+			}),
+			Match.discriminator("type")("thematicBreak", (child) => {
 				parts.push((child.markerChar ?? "*").repeat(3));
 				previousListMarker = undefined;
-				break;
-			case "code":
+			}),
+			Match.discriminator("type")("code", (child) => {
 				// An indented block right after a list would be absorbed into
 				// its last item on re-parse; force a fence there.
 				parts.push(serializeCode(child, previous?.type === "list"));
 				previousListMarker = undefined;
-				break;
-			case "html":
+			}),
+			Match.discriminator("type")("html", (child) => {
 				parts.push(child.value);
 				previousListMarker = undefined;
-				break;
-			case "blockquote": {
+			}),
+			Match.discriminator("type")("blockquote", (child) => {
 				// A blockquote's `> ` prefix owns indentation from here in, so
 				// the JSX indent counter restarts (the oracle's inferDepth
 				// break at blockquote/listItem).
@@ -1179,48 +1148,46 @@ const serializeBlocks = (children: ReadonlyArray<Block>, state: StringifyState, 
 				state.jsxDepth = savedJsxDepth;
 				parts.push(prefixLines(inner, "> ", ">"));
 				previousListMarker = undefined;
-				break;
-			}
-			case "list": {
+			}),
+			Match.discriminator("type")("list", (child) => {
 				const flipped = previousListMarker !== undefined && previousListMarker === effectiveListMarker(child, false);
 				parts.push(serializeList(child, state, flipped));
 				previousListMarker = effectiveListMarker(child, flipped);
-				break;
-			}
-			case "definition":
+			}),
+			Match.discriminator("type")("definition", (child) => {
 				parts.push(serializeDefinition(child));
 				previousListMarker = undefined;
-				break;
-			case "footnoteDefinition":
+			}),
+			Match.discriminator("type")("footnoteDefinition", (child) => {
 				parts.push(serializeFootnoteDefinition(child, state));
 				previousListMarker = undefined;
-				break;
-			case "table":
+			}),
+			Match.discriminator("type")("table", (child) => {
 				parts.push(serializeTable(child, state));
 				previousListMarker = undefined;
-				break;
-			case "frontmatter": {
+			}),
+			Match.discriminator("type")("frontmatter", (child) => {
 				const open = child.format === "toml" ? "+++" : child.format === "json" ? "---json" : "---";
 				const close = child.format === "toml" ? "+++" : "---";
 				parts.push(child.value === "" ? `${open}\n${close}` : `${open}\n${child.value}\n${close}`);
 				previousListMarker = undefined;
-				break;
-			}
-			case "mdxJsxFlowElement":
+			}),
+			Match.discriminator("type")("mdxJsxFlowElement", (child) => {
 				parts.push(serializeMdxJsxFlow(child, state));
 				previousListMarker = undefined;
-				break;
-			case "mdxFlowExpression":
+			}),
+			Match.discriminator("type")("mdxFlowExpression", (child) => {
 				parts.push(mdxExpression(child.value));
 				previousListMarker = undefined;
-				break;
-			case "mdxjsEsm":
+			}),
+			Match.discriminator("type")("mdxjsEsm", (child) => {
 				// Verbatim, the oracle's handler: the value IS the emitted
 				// block, statement terminators included as written.
 				parts.push(child.value);
 				previousListMarker = undefined;
-				break;
-		}
+			}),
+			Match.exhaustive,
+		);
 		previous = child;
 		nodes.push(child);
 		unguard(state);

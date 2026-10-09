@@ -29,6 +29,11 @@
 // the cycle firewall) and nothing else public.
 
 import { dual } from "effect/Function";
+import * as HashSet from "effect/HashSet";
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as S from "effect/Schema";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import type { Definition } from "../MarkdownNode.ts";
 import { Frontmatter, Point, Position, Root } from "../MarkdownNode.ts";
@@ -57,6 +62,17 @@ import { LineIndex } from "./lineIndex.ts";
 import type { SourceLine } from "./preprocess.ts";
 import { columnsToNextTabStop, preprocessLines } from "./preprocess.ts";
 import { prepareInline } from "./rawInline.ts";
+
+const $I = $ScratchpadId.create("effected/markdown/internal/blockParser");
+
+/** A block-parser invariant was violated. */
+class BlockParserError extends S.TaggedError<BlockParserError>($I`BlockParserError`)(
+	"BlockParserError",
+	{
+		message: S.String,
+	},
+	$I.annote("BlockParserError", { description: "A block-parser invariant was violated." }),
+) {}
 
 /** Upstream's cheap pre-filter: a line that cannot start any block. */
 const reMaybeSpecial = /^[#`~*+_=<>0-9-]/;
@@ -91,7 +107,7 @@ export interface BlockPassResult {
 	 *
 	 * Always empty under the `commonmark` dialect, which has no such construct.
 	 */
-	readonly footnoteLabels: ReadonlySet<string>;
+	readonly footnoteLabels: HashSet.HashSet<string>;
 }
 
 class BlockParser implements BlockScanner {
@@ -161,7 +177,7 @@ class BlockParser implements BlockScanner {
 	get tip(): BlockNode {
 		const tip = this.tipNode;
 		if (tip === undefined) {
-			throw new TypeError("block parser: the tip was read after the document was finalized");
+			throw BlockParserError.make({ message: "block parser: the tip was read after the document was finalized" });
 		}
 		return tip;
 	}
@@ -169,7 +185,7 @@ class BlockParser implements BlockScanner {
 	private constructOf(type: BlockType): BlockConstruct {
 		const construct = this.dialect.constructs.get(type);
 		if (construct === undefined) {
-			throw new TypeError(`block parser: no construct registered for block type ${type}`);
+			throw BlockParserError.make({ message: `block parser: no construct registered for block type ${type}` });
 		}
 		return construct;
 	}
@@ -523,7 +539,7 @@ class BlockParser implements BlockScanner {
 	private materializeBlock(
 		block: BlockNode,
 		context: MaterializeContext,
-		definitions: ReadonlyMap<BlockNode, Definition>,
+		definitions: MutableHashMap.MutableHashMap<number, Definition>,
 	): MaterializedBlock | undefined {
 		const children: MaterializedBlock[] = [];
 		for (const child of block.children) {
@@ -535,7 +551,10 @@ class BlockParser implements BlockScanner {
 
 		// A definition was already built by the refmap pre-pass; reusing that
 		// node is what keeps the tree and the refmap pointing at one object.
-		const definition = definitions.get(block);
+		// Definition source offsets are unique; containers can share an offset,
+		// so only a definition block consults this primitive-keyed index.
+		const definition =
+			block.type === "definition" ? O.getOrUndefined(MutableHashMap.get(definitions, block.startOffset)) : undefined;
 		if (definition !== undefined) {
 			return definition;
 		}
@@ -565,32 +584,33 @@ class BlockParser implements BlockScanner {
 	private collectReferences(
 		block: BlockNode,
 		context: MaterializeContext,
-		nodes: Map<BlockNode, Definition>,
+		nodes: MutableHashMap.MutableHashMap<number, Definition>,
 		refmap: Map<string, Definition>,
-		footnoteLabels: Set<string>,
-	): void {
+		footnoteLabels: HashSet.HashSet<string>,
+	): HashSet.HashSet<string> {
 		if (block.type === "definition") {
 			const materialized = this.constructOf(block.type).materialize(block, [], context);
 			const key = block.data.definition?.key;
 			if (materialized?.type === "definition" && key !== undefined) {
-				nodes.set(block, materialized);
+				MutableHashMap.set(nodes, block.startOffset, materialized);
 				// First definition wins, which is CommonMark's rule and the
 				// order this walk visits in.
 				if (!refmap.has(key)) {
 					refmap.set(key, materialized);
 				}
 			}
-			return;
+			return footnoteLabels;
 		}
 
 		const footnoteKey = block.data.footnote?.key;
 		if (footnoteKey !== undefined) {
-			footnoteLabels.add(footnoteKey);
+			footnoteLabels = HashSet.add(footnoteLabels, footnoteKey);
 		}
 
 		for (const child of block.children) {
-			this.collectReferences(child, context, nodes, refmap, footnoteLabels);
+			footnoteLabels = this.collectReferences(child, context, nodes, refmap, footnoteLabels);
 		}
+		return footnoteLabels;
 	}
 
 	parse(): BlockPassResult {
@@ -618,14 +638,11 @@ class BlockParser implements BlockScanner {
 		// only the document node.
 		this.doc.endOffset = this.sourceLength;
 
-		// A real Map: link labels are attacker-controlled, so a `__proto__`
-		// label must be a key and not a prototype write.
+		// The document's S.ReadonlyMap field requires a native Map at this
+		// boundary. Keep label insertion order and Definition object identity.
 		const refmap = new Map<string, Definition>();
-		// A real Set for the same reason the refmap is a real Map: footnote
-		// labels are attacker-controlled, so `__proto__` must be a member and
-		// not a prototype write.
-		const footnoteLabels = new Set<string>();
-		const definitionNodes = new Map<BlockNode, Definition>();
+		let footnoteLabels = HashSet.empty<string>();
+		const definitionNodes = MutableHashMap.empty<number, Definition>();
 		const rawInlines: RawInlineSlice[] = [];
 
 		const context: MaterializeContext = {
@@ -642,11 +659,11 @@ class BlockParser implements BlockScanner {
 			},
 		};
 
-		this.collectReferences(this.doc, context, definitionNodes, refmap, footnoteLabels);
+		footnoteLabels = this.collectReferences(this.doc, context, definitionNodes, refmap, footnoteLabels);
 
 		const materialized = this.materializeBlock(this.doc, context, definitionNodes);
 		if (materialized === undefined || materialized.type !== "root") {
-			throw new TypeError("block parser: the document construct did not materialize a root");
+			throw BlockParserError.make({ message: "block parser: the document construct did not materialize a root" });
 		}
 
 		const root = this.withFrontmatter(materialized);

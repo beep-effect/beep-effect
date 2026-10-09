@@ -11,6 +11,11 @@
 // no registered construct falls through to the text fallback — whose pattern
 // excludes it — and ends up as a literal single character.
 
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as HashMap from "effect/HashMap";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { autolinkConstruct } from "./inlines/autolink.ts";
 import { linkifyEmails, urlAutolinkConstruct, wwwAutolinkConstruct } from "./inlines/autolinkLiteral.ts";
 import { codeSpanConstruct } from "./inlines/codeSpan.ts";
@@ -25,25 +30,45 @@ import { strikethroughConstruct } from "./inlines/strikethrough.ts";
 import { gfmTextConstruct, textConstruct } from "./inlines/text.ts";
 import type { InlineConstruct, InlineDialect } from "./inlineTypes.ts";
 
+const $I = $ScratchpadId.create("effected/markdown/internal/inlineRegistry");
+
+class UnknownInlineDialectError extends S.TaggedError<UnknownInlineDialectError>($I`UnknownInlineDialectError`)("UnknownInlineDialectError", {
+	message: S.String,
+}) {}
+
 /** The dialects the inline pass can be keyed by. */
 export type InlineDialectName = "commonmark" | "gfm";
 
 const triggerTable = (
 	constructs: ReadonlyArray<InlineConstruct>,
 ): ReadonlyMap<number, ReadonlyArray<InlineConstruct>> => {
-	// A real Map keyed by char code — the house rule for every lookup table.
-	const table = new Map<number, InlineConstruct[]>();
+	const table = MutableHashMap.empty<number, InlineConstruct[]>();
+	const entries: Array<[number, InlineConstruct[]]> = [];
 	for (const construct of constructs) {
 		for (const trigger of construct.triggers) {
-			const bucket = table.get(trigger);
+			const bucket = O.getOrUndefined(MutableHashMap.get(table, trigger));
 			if (bucket === undefined) {
-				table.set(trigger, [construct]);
+				const made = [construct];
+				MutableHashMap.set(table, trigger, made);
+				entries.push([trigger, made]);
 			} else {
 				bucket.push(construct);
 			}
 		}
 	}
-	return table;
+	// Keep the scanner's ReadonlyMap boundary and trigger insertion order.
+	return {
+		size: MutableHashMap.size(table),
+		get: (key) => O.getOrUndefined(MutableHashMap.get(table, key)),
+		has: (key) => MutableHashMap.has(table, key),
+		*keys() { for (const [key] of entries) yield key; return undefined; },
+		*values() { for (const [, value] of entries) yield value; return undefined; },
+		*entries() { for (const [key, value] of entries) yield [key, value]; return undefined; },
+		[Symbol.iterator]() { return this.entries(); },
+		forEach(callback, thisArg) {
+			for (const [key, value] of entries) callback.call(thisArg, value, key, this);
+		},
+	};
 };
 
 /** The CommonMark construct set, which every dialect starts from. */
@@ -102,7 +127,7 @@ const gfmDialect: InlineDialect = {
 	postprocess: [linkifyEmails],
 };
 
-const dialects: ReadonlyMap<InlineDialectName, InlineDialect> = new Map([
+const dialects = HashMap.fromIterable<InlineDialectName, InlineDialect>([
 	["commonmark", commonmarkDialect],
 	["gfm", gfmDialect],
 ]);
@@ -114,9 +139,9 @@ const dialects: ReadonlyMap<InlineDialectName, InlineDialect> = new Map([
  * so it is programmer error and dies as a defect.
  */
 export const inlineDialect = (dialect: InlineDialectName): InlineDialect => {
-	const found = dialects.get(dialect);
+	const found = O.getOrUndefined(HashMap.get(dialects, dialect));
 	if (found === undefined) {
-		throw new TypeError(`unknown markdown dialect: ${String(dialect)}`);
+		throw UnknownInlineDialectError.make({ message: `unknown markdown dialect: ${String(dialect)}` });
 	}
 	return found;
 };

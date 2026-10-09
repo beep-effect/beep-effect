@@ -29,6 +29,8 @@
 // parseResult`/`Markdown.stringifyResult`) and the node classes; it never
 // imports the engine.
 
+import * as HashSet from "effect/HashSet";
+import * as O from "@beep/utils/Option";
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
@@ -180,8 +182,7 @@ export class MarkdownModificationError extends S.TaggedError<MarkdownModificatio
 
 // ── Internal: tree walking ──────────────────────────────────────────────────
 
-const childrenOf = (node: MarkdownNode): ReadonlyArray<MarkdownNode> =>
-	"children" in node ? node.children : [];
+const childrenOf = (node: MarkdownNode): ReadonlyArray<MarkdownNode> => ("children" in node ? node.children : []);
 
 /** Walk the tree, invoking `visit` with each node, its parent and its siblings. */
 const walk = (
@@ -522,7 +523,7 @@ const formatCodeBlockStyle = (
 
 // ── Internal: modify support ────────────────────────────────────────────────
 
-const FLOW_TYPES: ReadonlySet<string> = new Set([
+const FLOW_TYPES = HashSet.fromIterable<string>([
 	"blockquote",
 	"code",
 	"definition",
@@ -535,7 +536,7 @@ const FLOW_TYPES: ReadonlySet<string> = new Set([
 	"thematicBreak",
 ]);
 
-const PHRASING_TYPES: ReadonlySet<string> = new Set([
+const PHRASING_TYPES = HashSet.fromIterable<string>([
 	"break",
 	"delete",
 	"emphasis",
@@ -550,15 +551,15 @@ const PHRASING_TYPES: ReadonlySet<string> = new Set([
 	"text",
 ]);
 
-const isFlowReplacement = (node: MarkdownNode): node is FlowContent => FLOW_TYPES.has(node.type);
+const isFlowReplacement = (node: MarkdownNode): node is FlowContent => HashSet.has(FLOW_TYPES, node.type);
 
-const isPhrasingReplacement = (node: MarkdownNode): node is PhrasingContent => PHRASING_TYPES.has(node.type);
+const isPhrasingReplacement = (node: MarkdownNode): node is PhrasingContent => HashSet.has(PHRASING_TYPES, node.type);
 
 /** Parent types whose child slot holds flow content. */
-const FLOW_PARENTS: ReadonlySet<string> = new Set(["root", "blockquote", "listItem", "footnoteDefinition"]);
+const FLOW_PARENTS = HashSet.fromIterable<string>(["root", "blockquote", "listItem", "footnoteDefinition"]);
 
 /** Parent types whose child slot holds phrasing content. */
-const PHRASING_PARENTS: ReadonlySet<string> = new Set([
+const PHRASING_PARENTS = HashSet.fromIterable<string>([
 	"paragraph",
 	"heading",
 	"emphasis",
@@ -570,7 +571,7 @@ const PHRASING_PARENTS: ReadonlySet<string> = new Set([
 ]);
 
 /** Ancestor types whose continuation lines carry a prefix (or forbid newlines outright). */
-const NO_MULTILINE_ANCESTORS: ReadonlySet<string> = new Set([
+const NO_MULTILINE_ANCESTORS = HashSet.fromIterable<string>([
 	"blockquote",
 	"list",
 	"listItem",
@@ -670,8 +671,10 @@ export class MarkdownFormat {
 		const parsed = Markdown.parseResult(
 			text,
 			MarkdownParseOptions.make({
-				...(options?.dialect !== undefined ? { dialect: options.dialect } : {}),
-				...(options?.frontmatter !== undefined ? { frontmatter: options.frontmatter } : {}),
+				...O.getSomesStruct({
+					dialect: O.fromUndefinedOr(options?.dialect),
+					frontmatter: O.fromUndefinedOr(options?.frontmatter),
+				}),
 			}),
 		);
 		if (Result.isFailure(parsed)) {
@@ -696,16 +699,7 @@ export class MarkdownFormat {
 				// not also splice inside a span the conversion replaced.
 				const converted =
 					options?.codeBlockStyle !== undefined &&
-					formatCodeBlockStyle(
-						text,
-						emit,
-						node,
-						parent,
-						siblings,
-						index,
-						options.codeBlockStyle,
-						options.fenceChar,
-					);
+					formatCodeBlockStyle(text, emit, node, parent, siblings, index, options.codeBlockStyle, options.fenceChar);
 				if (!converted && options?.fenceChar !== undefined) {
 					formatFence(text, emit, node, options.fenceChar);
 				}
@@ -776,9 +770,9 @@ export class MarkdownFormat {
 		let slot: "flow" | "phrasing" | "cell";
 		if (target.type === "tableCell" && parent.type === "tableRow") {
 			slot = "cell";
-		} else if (FLOW_PARENTS.has(parent.type)) {
+		} else if (HashSet.has(FLOW_PARENTS, parent.type)) {
 			slot = "flow";
-		} else if (PHRASING_PARENTS.has(parent.type)) {
+		} else if (HashSet.has(PHRASING_PARENTS, parent.type)) {
 			slot = "phrasing";
 		} else {
 			return yield* fail("UnsupportedTarget", `a ${target.type} node inside a ${parent.type} cannot be replaced`);
@@ -813,7 +807,7 @@ export class MarkdownFormat {
 			return yield* fail("FragmentUnrenderable", rendered.failure.message);
 		}
 		const content = rendered.success.replace(/\n+$/, "");
-		if (content.includes("\n") && ancestry.some((ancestor) => NO_MULTILINE_ANCESTORS.has(ancestor.type))) {
+		if (content.includes("\n") && ancestry.some((ancestor) => HashSet.has(NO_MULTILINE_ANCESTORS, ancestor.type))) {
 			return yield* fail(
 				"UnsupportedTarget",
 				"a multi-line replacement cannot be spliced inside a container whose continuation lines carry a prefix",

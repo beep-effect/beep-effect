@@ -6,6 +6,7 @@
 // bare-tree entry points agree exactly on what is a typed failure and what is
 // a defect.
 
+import * as Match from "effect/Match";
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
@@ -36,6 +37,15 @@ import { Definition, Root } from "./MarkdownNode.ts";
 import * as P from "effect/Predicate";
 
 const $I = $ScratchpadId.create("effected/markdown/MarkdownDocument");
+
+/** The document navigation depth guard was exceeded. */
+class DocumentNavigationError extends S.TaggedError<DocumentNavigationError>($I`DocumentNavigationError`)(
+	"DocumentNavigationError",
+	{
+		message: S.String,
+	},
+	$I.annote("DocumentNavigationError", { description: "The document navigation depth guard was exceeded." }),
+) {}
 
 /**
  * A heading entry from {@link MarkdownDocument.headings}: the {@link Heading}
@@ -205,7 +215,9 @@ type NavigationNode = Frontmatter | MarkdownNode;
 
 const walkTree = (node: NavigationNode, depth: number, visit: (node: NavigationNode) => void): void => {
 	if (depth > MAX_NESTING_DEPTH) {
-		throw new Error(`NestingDepthExceeded: limit ${MAX_NESTING_DEPTH} exceeded while walking the document tree`);
+		throw DocumentNavigationError.make({
+			message: `NestingDepthExceeded: limit ${MAX_NESTING_DEPTH} exceeded while walking the document tree`,
+		});
 	}
 	visit(node);
 	if ("children" in node) {
@@ -224,7 +236,9 @@ const findInTree = (
 	predicate: (node: MarkdownNode) => boolean,
 ): MarkdownNode | undefined => {
 	if (depth > MAX_NESTING_DEPTH) {
-		throw new Error(`NestingDepthExceeded: limit ${MAX_NESTING_DEPTH} exceeded while walking the document tree`);
+		throw DocumentNavigationError.make({
+			message: `NestingDepthExceeded: limit ${MAX_NESTING_DEPTH} exceeded while walking the document tree`,
+		});
 	}
 	if (predicate(node)) {
 		return node;
@@ -254,32 +268,30 @@ const selectorPredicate = (
 const phrasingText = (nodes: ReadonlyArray<PhrasingContent>): string => {
 	let out = "";
 	for (const node of nodes) {
-		switch (node.type) {
-			case "text":
-			case "inlineCode":
+		Match.value(node).pipe(
+			Match.discriminator("type")("text", "inlineCode", (node) => {
 				out += node.value;
-				break;
-			case "break":
+			}),
+			Match.discriminator("type")("break", () => {
 				out += " ";
-				break;
-			case "image":
-			case "imageReference":
+			}),
+			Match.discriminator("type")("image", "imageReference", (node) => {
 				out += node.alt ?? "";
-				break;
-			case "emphasis":
-			case "strong":
-			case "delete":
-			case "link":
-			case "linkReference":
-			case "mdxJsxTextElement":
-				out += phrasingText(node.children);
-				break;
-			case "mdxTextExpression":
-				// Deliberately no text — see the policy note above.
-				break;
-			default:
-				break;
-		}
+			}),
+			Match.discriminator("type")(
+				"emphasis",
+				"strong",
+				"delete",
+				"link",
+				"linkReference",
+				"mdxJsxTextElement",
+				(node) => {
+					out += phrasingText(node.children);
+				},
+			),
+			Match.discriminator("type")("mdxTextExpression", () => {}),
+			Match.orElse(() => {}),
+		);
 	}
 	return out;
 };
@@ -541,21 +553,16 @@ export class MarkdownDocument extends S.Class<MarkdownDocument>($I`MarkdownDocum
 		const entries: Array<DocumentLink> = [];
 		for (const child of this.root.children) {
 			walkTree(child, 1, (node) => {
-				switch (node.type) {
-					case "link":
-					case "image":
-					case "definition":
+				Match.value(node).pipe(
+					Match.discriminator("type")("link", "image", "definition", (node) => {
 						entries.push({ node, url: node.url });
-						break;
-					case "linkReference":
-					case "imageReference": {
+					}),
+					Match.discriminator("type")("linkReference", "imageReference", (node) => {
 						const definition = this.definitions.get(normalizeLabelText(node.identifier));
 						entries.push(definition === undefined ? { node } : { node, url: definition.url });
-						break;
-					}
-					default:
-						break;
-				}
+					}),
+					Match.orElse(() => {}),
+				);
 			});
 		}
 		return entries;

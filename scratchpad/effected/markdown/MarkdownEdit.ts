@@ -23,6 +23,10 @@ import * as S from "effect/Schema";
 
 const $I = $ScratchpadId.create("effected/markdown/MarkdownEdit");
 
+class OverlappingMarkdownEditsError extends S.TaggedError<OverlappingMarkdownEditsError>($I`OverlappingMarkdownEditsError`)("OverlappingMarkdownEditsError", {
+	message: S.String,
+}) {}
+
 /**
  * A single path segment: a `number` for child indices in the node tree, or a
  * `string` for named addressing (reserved, e.g. for definition identifiers).
@@ -84,9 +88,9 @@ export class MarkdownEdit extends S.Class<MarkdownEdit>($I`MarkdownEdit`)({
 			const upper = sorted[i];
 			const lower = sorted[i + 1];
 			if (lower !== undefined && upper !== undefined && lower.offset + lower.length > upper.offset) {
-				throw new Error(
-					`MarkdownEdit.applyAll received overlapping edits at offsets ${lower.offset} and ${upper.offset} — overlapping edits are a programmer error`,
-				);
+				throw OverlappingMarkdownEditsError.make({
+					message: `MarkdownEdit.applyAll received overlapping edits at offsets ${lower.offset} and ${upper.offset} — overlapping edits are a programmer error`,
+				});
 			}
 		}
 		let result = text;

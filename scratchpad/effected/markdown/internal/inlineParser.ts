@@ -39,6 +39,8 @@
 // the cycle firewall) and nothing else public.
 
 import { dual } from "effect/Function";
+import * as HashSet from "effect/HashSet";
+import * as MutableHashMap from "effect/MutableHashMap";
 import { isFunction } from "effect/Predicate";
 import type { Definition, PhrasingContent, Position } from "../MarkdownNode.ts";
 import {
@@ -80,8 +82,8 @@ const C_BACKTICK = 0x60;
  * One forward scan, so a code span's search for its closing run is a binary
  * search rather than a walk over every run in between.
  */
-const indexBacktickRuns = (subject: string): Map<number, number[]> => {
-	const runs = new Map<number, number[]>();
+const indexBacktickRuns = (subject: string): MutableHashMap.MutableHashMap<number, number[]> => {
+	const runs = MutableHashMap.empty<number, number[]>();
 	let index = 0;
 	while (index < subject.length) {
 		if (subject.charCodeAt(index) !== C_BACKTICK) {
@@ -93,9 +95,9 @@ const indexBacktickRuns = (subject: string): Map<number, number[]> => {
 			index += 1;
 		}
 		const length = index - start;
-		const starts = runs.get(length);
+		const starts = O.getOrUndefined(MutableHashMap.get(runs, length));
 		if (starts === undefined) {
-			runs.set(length, [start]);
+			MutableHashMap.set(runs, length, [start]);
 		} else {
 			starts.push(start);
 		}
@@ -114,16 +116,16 @@ class InlineParser implements InlineScanner {
 	readonly subject: string;
 	pos = 0;
 	readonly refmap: ReadonlyMap<string, Definition>;
-	readonly footnoteLabels: ReadonlySet<string>;
+	readonly footnoteLabels: HashSet.HashSet<string>;
 	delimiters: Delimiter | undefined;
 	brackets: Bracket | undefined;
 
 	/** How many link openers on the stack are still active (see `deactivateLinkOpeners`). */
 	private activeLinkOpeners = 0;
 	/** Per-needle memo of the offset from which it no longer occurs. */
-	private readonly absentAfter = new Map<string, number>();
+	private readonly absentAfter = MutableHashMap.empty<string, number>();
 	/** Backtick run starts, by run length; built on first use. */
-	private backtickRuns: Map<number, number[]> | undefined;
+	private backtickRuns: MutableHashMap.MutableHashMap<number, number[]> | undefined;
 
 	private readonly source: InlineSource;
 	private readonly dialect: InlineDialect;
@@ -136,7 +138,7 @@ class InlineParser implements InlineScanner {
 		dialect: InlineDialect,
 		positionOf: PositionOf,
 		refmap: ReadonlyMap<string, Definition>,
-		footnoteLabels: ReadonlySet<string>,
+		footnoteLabels: HashSet.HashSet<string>,
 	) {
 		this.source = source;
 		this.subject = source.text;
@@ -184,14 +186,14 @@ class InlineParser implements InlineScanner {
 	}
 
 	hasAhead(needle: string): boolean {
-		const known = this.absentAfter.get(needle);
+		const known = O.getOrUndefined(MutableHashMap.get(this.absentAfter, needle));
 		if (known !== undefined && this.pos >= known) {
 			return false;
 		}
 		if (this.subject.indexOf(needle, this.pos) !== -1) {
 			return true;
 		}
-		this.absentAfter.set(needle, Math.min(known ?? this.pos, this.pos));
+		MutableHashMap.set(this.absentAfter, needle, Math.min(known ?? this.pos, this.pos));
 		return false;
 	}
 
@@ -199,7 +201,7 @@ class InlineParser implements InlineScanner {
 		if (this.backtickRuns === undefined) {
 			this.backtickRuns = indexBacktickRuns(this.subject);
 		}
-		const starts = this.backtickRuns.get(length);
+		const starts = O.getOrUndefined(MutableHashMap.get(this.backtickRuns, length));
 		if (starts === undefined) {
 			return undefined;
 		}
@@ -540,70 +542,69 @@ class InlineParser implements InlineScanner {
 		const position = this.position(node.start, node.end);
 		const { url, title, identifier, label, referenceType, markerChar, breakStyle } = node.data;
 
-		switch (node.type) {
-			case "inlineCode":
-				return InlineCode.make({ value: node.value, position });
-			case "html":
-				return Html.make({ value: node.value, position });
-			case "break":
-				return Break.make({ position, ...O.getSomesStruct({ breakStyle: O.fromUndefinedOr(breakStyle) }) });
-			case "emphasis":
-				return Emphasis.make({
-					children: this.materialize(node, depth + 1),
-					position,
-					...O.getSomesStruct({ markerChar: O.fromUndefinedOr(markerChar) }),
-				});
-			case "delete":
-				return Delete.make({ children: this.materialize(node, depth + 1), position });
-			case "strong":
-				return Strong.make({
-					children: this.materialize(node, depth + 1),
-					position,
-					...O.getSomesStruct({ markerChar: O.fromUndefinedOr(markerChar) }),
-				});
-			case "link":
-				return Link.make({
-					url: url ?? "",
-					children: this.materialize(node, depth + 1),
-					position,
-					...O.getSomesStruct({ title: O.fromUndefinedOr(title) }),
-				});
-			case "image":
-				return Image.make({
-					url: url ?? "",
-					position,
-					...O.getSomesStruct({ title: O.fromUndefinedOr(title) }),
-					...(node.value === "" ? {} : { alt: node.value }),
-				});
-			case "linkReference":
-				return LinkReference.make({
-					identifier: identifier ?? "",
-					referenceType: referenceType ?? "shortcut",
-					children: this.materialize(node, depth + 1),
-					position,
-					...O.getSomesStruct({ label: O.fromUndefinedOr(label) }),
-				});
-			case "footnoteReference":
-				// The GFM counterpart of `linkReference`, and unresolved for the
-				// same reason: which definition it points at is the consumer's
-				// business, not the parser's.
-				return FootnoteReference.make({
-					identifier: identifier ?? "",
-					position,
-					...O.getSomesStruct({ label: O.fromUndefinedOr(label) }),
-				});
-			case "imageReference":
-				return ImageReference.make({
-					identifier: identifier ?? "",
-					referenceType: referenceType ?? "shortcut",
-					position,
-					...O.getSomesStruct({ label: O.fromUndefinedOr(label) }),
-					...(node.value === "" ? {} : { alt: node.value }),
-				});
-			default:
-				// A bare text node never reaches here — `materialize` coalesces
-				// those before dispatching.
-				return undefined;
+		if (node.type === "inlineCode") {
+			return InlineCode.make({ value: node.value, position });
+		} else if (node.type === "html") {
+			return Html.make({ value: node.value, position });
+		} else if (node.type === "break") {
+			return Break.make({ position, ...O.getSomesStruct({ breakStyle: O.fromUndefinedOr(breakStyle) }) });
+		} else if (node.type === "emphasis") {
+			return Emphasis.make({
+				children: this.materialize(node, depth + 1),
+				position,
+				...O.getSomesStruct({ markerChar: O.fromUndefinedOr(markerChar) }),
+			});
+		} else if (node.type === "delete") {
+			return Delete.make({ children: this.materialize(node, depth + 1), position });
+		} else if (node.type === "strong") {
+			return Strong.make({
+				children: this.materialize(node, depth + 1),
+				position,
+				...O.getSomesStruct({ markerChar: O.fromUndefinedOr(markerChar) }),
+			});
+		} else if (node.type === "link") {
+			return Link.make({
+				url: url ?? "",
+				children: this.materialize(node, depth + 1),
+				position,
+				...O.getSomesStruct({ title: O.fromUndefinedOr(title) }),
+			});
+		} else if (node.type === "image") {
+			return Image.make({
+				url: url ?? "",
+				position,
+				...O.getSomesStruct({ title: O.fromUndefinedOr(title) }),
+				...(node.value === "" ? {} : { alt: node.value }),
+			});
+		} else if (node.type === "linkReference") {
+			return LinkReference.make({
+				identifier: identifier ?? "",
+				referenceType: referenceType ?? "shortcut",
+				children: this.materialize(node, depth + 1),
+				position,
+				...O.getSomesStruct({ label: O.fromUndefinedOr(label) }),
+			});
+		} else if (node.type === "footnoteReference") {
+			// The GFM counterpart of `linkReference`, and unresolved for the
+			// same reason: which definition it points at is the consumer's
+			// business, not the parser's.
+			return FootnoteReference.make({
+				identifier: identifier ?? "",
+				position,
+				...O.getSomesStruct({ label: O.fromUndefinedOr(label) }),
+			});
+		} else if (node.type === "imageReference") {
+			return ImageReference.make({
+				identifier: identifier ?? "",
+				referenceType: referenceType ?? "shortcut",
+				position,
+				...O.getSomesStruct({ label: O.fromUndefinedOr(label) }),
+				...(node.value === "" ? {} : { alt: node.value }),
+			});
+		} else {
+			// A bare text node never reaches here — `materialize` coalesces
+			// those before dispatching.
+			return undefined;
 		}
 	}
 
@@ -663,13 +664,13 @@ class InlineParser implements InlineScanner {
  * line index.
  */
 export const parseInlines: {
-	(source: InlineSource, refmap: ReadonlyMap<string, Definition>, position: PositionOf, dialect?: InlineDialectName, footnoteLabels?: ReadonlySet<string>): ReadonlyArray<PhrasingContent>;
-	(refmap: ReadonlyMap<string, Definition>, position: PositionOf, dialect?: InlineDialectName, footnoteLabels?: ReadonlySet<string>): (source: InlineSource) => ReadonlyArray<PhrasingContent>;
+	(source: InlineSource, refmap: ReadonlyMap<string, Definition>, position: PositionOf, dialect?: InlineDialectName, footnoteLabels?: HashSet.HashSet<string>): ReadonlyArray<PhrasingContent>;
+	(refmap: ReadonlyMap<string, Definition>, position: PositionOf, dialect?: InlineDialectName, footnoteLabels?: HashSet.HashSet<string>): (source: InlineSource) => ReadonlyArray<PhrasingContent>;
 } = dual((args) => !isFunction(args[1]), (
 	source: InlineSource,
 	refmap: ReadonlyMap<string, Definition>,
 	position: PositionOf,
 	dialect: InlineDialectName = "commonmark",
-	footnoteLabels: ReadonlySet<string> = new Set(),
+	footnoteLabels: HashSet.HashSet<string> = HashSet.empty(),
 ): ReadonlyArray<PhrasingContent> =>
 	new InlineParser(source, inlineDialect(dialect), position, refmap, footnoteLabels).parse());

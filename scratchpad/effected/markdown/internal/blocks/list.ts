@@ -168,8 +168,10 @@ export const listConstruct: BlockConstruct = {
 			children: listItemChildren(children),
 			position: context.position(block.startOffset, block.endOffset),
 			...(ordered && listData?.start !== undefined ? { start: listData.start } : {}),
-			...(listData?.bulletChar === undefined ? {} : { bulletChar: listData.bulletChar }),
-			...(listData?.delimiter === undefined ? {} : { delimiter: listData.delimiter }),
+			...O.getSomesStruct({
+				bulletChar: O.fromUndefinedOr(listData?.bulletChar),
+				delimiter: O.fromUndefinedOr(listData?.delimiter),
+			}),
 		});
 	},
 };

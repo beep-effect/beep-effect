@@ -58,7 +58,7 @@ import { assert, describe, it } from "@effect/vitest";
 import { parseBlocks } from "../../effected/markdown/internal/blockParser.ts";
 import { GuardExceeded, isGuardExceeded } from "../../effected/markdown/internal/carriers.ts";
 import { MAX_NESTING_DEPTH } from "../../effected/markdown/internal/limits.ts";
-import { LineIndex } from "../../effected/markdown/internal/lineIndex.ts";
+import { InvalidLineTableError, LineIndex } from "../../effected/markdown/internal/lineIndex.ts";
 import { preprocessLines } from "../../effected/markdown/internal/preprocess.ts";
 import { renderHtml } from "./e2e/support/htmlWriter.ts";
 
@@ -190,8 +190,8 @@ describe("the line index", () => {
 	});
 
 	it("refuses a line table that does not start at zero", () => {
-		assert.throws(() => LineIndex.fromLineStarts("abc", [1, 2]), TypeError);
-		assert.throws(() => LineIndex.fromLineStarts("abc", []), TypeError);
+		assert.throws(() => LineIndex.fromLineStarts("abc", [1, 2]), InvalidLineTableError);
+		assert.throws(() => LineIndex.fromLineStarts("abc", []), InvalidLineTableError);
 	});
 });
 

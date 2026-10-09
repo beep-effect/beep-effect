@@ -33,6 +33,7 @@
 // parsed inside an unmatched reference is discarded rather than kept.
 
 import { dual } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import { insertAfter, makeInlineNode, unlink } from "../inlineNode.ts";
 import { normalizeLabelText } from "../references.ts";
 import type { LinkCloseFallback } from "./link.ts";
@@ -75,7 +76,7 @@ export const footnoteReferenceFallback: {
 	// the text of the nodes parsed inside, which upstream throws away.
 	const rawLabel = scanner.subject.slice(opener.index + 2, bracketPos);
 	const key = normalizeLabelText(rawLabel);
-	const matched = key !== "" && scanner.footnoteLabels.has(key);
+	const matched = key !== "" && HashSet.has(scanner.footnoteLabels, key);
 
 	// Emphasis inside the brackets is spent before the span closes either way,
 	// so its delimiters cannot pair with anything outside it. Upstream calls

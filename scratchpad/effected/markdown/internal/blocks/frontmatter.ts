@@ -31,6 +31,8 @@
 //   close IS a thematic break followed by content.
 
 import { dual } from "effect/Function";
+import * as HashMap from "effect/HashMap";
+import * as O from "effect/Option";
 import type { FrontmatterFormat } from "../../MarkdownNode.ts";
 import type { SourceLine } from "../preprocess.ts";
 
@@ -40,7 +42,7 @@ interface FenceRule {
 	readonly close: string;
 }
 
-const FENCES: ReadonlyMap<string, FenceRule> = new Map([
+const FENCES = HashMap.fromIterable<string, FenceRule>([
 	["---", { format: "yaml", close: "---" }],
 	["+++", { format: "toml", close: "+++" }],
 	["---json", { format: "json", close: "---" }],
@@ -78,7 +80,7 @@ export const scanFrontmatter: {
 	if (opening === undefined || opening.start !== 0) {
 		return null;
 	}
-	const rule = FENCES.get(opening.text);
+	const rule = O.getOrUndefined(HashMap.get(FENCES, opening.text));
 	if (rule === undefined) {
 		return null;
 	}
@@ -175,7 +177,7 @@ export const scanRawFrontmatter = (source: string): RawFrontmatterCapture | null
 		index += 1;
 	}
 	const openNewline = index < source.length ? terminatorAt(source, index) : null;
-	const rule = FENCES.get(source.slice(0, index));
+	const rule = O.getOrUndefined(HashMap.get(FENCES, source.slice(0, index)));
 	if (rule === undefined || openNewline === null) {
 		return null;
 	}

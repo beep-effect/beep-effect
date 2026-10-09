@@ -12,6 +12,8 @@
 // Map literal costs several times this in source size, and the parse is a
 // one-off. Leaf module: imports only Effect codecs.
 
+import * as HashMap from "effect/HashMap";
+import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
@@ -20,5 +22,19 @@ const DATA =
 
 const decodeEntities = S.Tuple([S.String, S.String]).pipe(S.Array, S.fromJsonString, S.decodeResult);
 
+const entries = Result.getOrThrow(decodeEntities(DATA));
+const entities = HashMap.fromIterable(entries);
+
 /** The HTML5 named character references, keyed without `&` or `;`. */
-export const ENTITY_MAP: ReadonlyMap<string, string> = new Map(Result.getOrThrow(decodeEntities(DATA)));
+export const ENTITY_MAP: ReadonlyMap<string, string> = {
+	size: HashMap.size(entities),
+	get: (key) => O.getOrUndefined(HashMap.get(entities, key)),
+	has: (key) => HashMap.has(entities, key),
+	*keys() { for (const [key] of entries) yield key; return undefined; },
+	*values() { for (const [, value] of entries) yield value; return undefined; },
+	*entries() { for (const [key, value] of entries) yield [key, value]; return undefined; },
+	[Symbol.iterator]() { return this.entries(); },
+	forEach(callback, thisArg) {
+		for (const [key, value] of entries) callback.call(thisArg, value, key, this);
+	},
+};

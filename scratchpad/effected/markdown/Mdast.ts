@@ -2,6 +2,8 @@
 // node classes and plain mdast JSON. The emission conventions are documented on
 // the exported `Mdast` class.
 
+import * as Match from "effect/Match";
+import * as HashMap from "effect/HashMap";
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
@@ -112,132 +114,133 @@ const listSpread = (node: List): boolean => {
 // emission for readability of test diffs; deep equality does not depend on it.
 const projectNode = (node: AnyNode): MdastNode => {
 	const position = projectPosition(node.position);
-	switch (node.type) {
-		case "root":
-			return { type: "root", children: projectChildren(node.children), position };
-		case "paragraph":
-		case "blockquote":
-		case "emphasis":
-		case "strong":
-		case "delete":
-		case "tableRow":
-		case "tableCell":
-			return { type: node.type, children: projectChildren(node.children), position };
-		case "heading":
-			return { type: "heading", depth: node.depth, children: projectChildren(node.children), position };
-		case "text":
-			return {
+	return Match.value(node)
+		.pipe(
+			Match.discriminator("type")("root", (node) => ({
+				type: "root",
+				children: projectChildren(node.children),
+				position,
+			})),
+			Match.discriminator("type")(
+				"paragraph",
+				"blockquote",
+				"emphasis",
+				"strong",
+				"delete",
+				"tableRow",
+				"tableCell",
+				(node) => ({ type: node.type, children: projectChildren(node.children), position }),
+			),
+			Match.discriminator("type")("heading", (node) => ({
+				type: "heading",
+				depth: node.depth,
+				children: projectChildren(node.children),
+				position,
+			})),
+			Match.discriminator("type")("text", (node) => ({
 				type: "text",
 				value: node.value,
 				...O.getSomesStruct({ escapeStyle: O.fromUndefinedOr(node.escapeStyle) }),
 				position,
-			};
-		case "html":
-		case "inlineCode":
-			return { type: node.type, value: node.value, position };
-		case "break":
-		case "thematicBreak":
-			return { type: node.type, position };
-		case "code":
-			return {
+			})),
+			Match.discriminator("type")("html", "inlineCode", (node) => ({ type: node.type, value: node.value, position })),
+			Match.discriminator("type")("break", "thematicBreak", (node) => ({ type: node.type, position })),
+			Match.discriminator("type")("code", (node) => ({
 				type: "code",
 				lang: node.lang ?? null,
 				meta: node.meta ?? null,
 				value: stripFinalLineEnding(node.value),
 				position,
-			};
-		case "link":
-			return {
+			})),
+			Match.discriminator("type")("link", (node) => ({
 				type: "link",
 				title: node.title ?? null,
 				url: node.url,
 				children: projectChildren(node.children),
 				position,
-			};
-		case "image":
-			return { type: "image", title: node.title ?? null, url: node.url, alt: node.alt ?? "", position };
-		case "linkReference":
-			return {
+			})),
+			Match.discriminator("type")("image", (node) => ({
+				type: "image",
+				title: node.title ?? null,
+				url: node.url,
+				alt: node.alt ?? "",
+				position,
+			})),
+			Match.discriminator("type")("linkReference", (node) => ({
 				type: "linkReference",
 				children: projectChildren(node.children),
 				position,
 				...projectLabel(node.label),
 				identifier: node.identifier,
 				referenceType: node.referenceType,
-			};
-		case "imageReference":
-			return {
+			})),
+		)
+		.pipe(
+			Match.discriminator("type")("imageReference", (node) => ({
 				type: "imageReference",
 				alt: node.alt ?? "",
 				position,
 				...projectLabel(node.label),
 				identifier: node.identifier,
 				referenceType: node.referenceType,
-			};
-		case "definition":
-			return {
+			})),
+			Match.discriminator("type")("definition", (node) => ({
 				type: "definition",
 				identifier: node.identifier,
 				...projectLabel(node.label),
 				title: node.title ?? null,
 				url: node.url,
 				position,
-			};
-		case "footnoteReference":
-			return {
+			})),
+			Match.discriminator("type")("footnoteReference", (node) => ({
 				type: "footnoteReference",
 				identifier: node.identifier,
 				...projectLabel(node.label),
 				position,
-			};
-		case "footnoteDefinition":
-			return {
+			})),
+			Match.discriminator("type")("footnoteDefinition", (node) => ({
 				type: "footnoteDefinition",
 				identifier: node.identifier,
 				...projectLabel(node.label),
 				children: projectChildren(node.children),
 				position,
-			};
-		case "list":
-			return {
+			})),
+			Match.discriminator("type")("list", (node) => ({
 				type: "list",
 				ordered: node.ordered ?? false,
 				start: node.start ?? null,
 				spread: listSpread(node),
 				children: projectChildren(node.children),
 				position,
-			};
-		case "listItem":
-			return {
+			})),
+			Match.discriminator("type")("listItem", (node) => ({
 				type: "listItem",
 				spread: node.spread ?? false,
 				checked: node.checked ?? null,
 				children: projectChildren(node.children),
 				position,
-			};
-		case "table":
-			return {
+			})),
+			Match.discriminator("type")("table", (node) => ({
 				type: "table",
 				align: node.align === undefined ? null : [...node.align],
 				children: projectChildren(node.children),
 				position,
-			};
-		case "frontmatter":
-			return { type: node.format, value: node.value, position };
-		case "mdxJsxFlowElement":
-		case "mdxJsxTextElement":
-			return {
+			})),
+			Match.discriminator("type")("frontmatter", (node) => ({ type: node.format, value: node.value, position })),
+			Match.discriminator("type")("mdxJsxFlowElement", "mdxJsxTextElement", (node) => ({
 				type: node.type,
 				name: node.name,
 				attributes: node.attributes.map((attribute) => projectMdxAttribute(attribute)),
 				children: projectChildren(node.children),
 				position,
-			};
-		case "mdxFlowExpression":
-		case "mdxTextExpression":
-		case "mdxjsEsm":
-			return { type: node.type, value: node.value, position };
-	}
+			})),
+			Match.discriminator("type")("mdxFlowExpression", "mdxTextExpression", "mdxjsEsm", (node) => ({
+				type: node.type,
+				value: node.value,
+				position,
+			})),
+			Match.exhaustive,
+		);
 };
 
 // mdast-util-mdx spells a bare attribute's value as explicit `null` (its
@@ -267,7 +270,7 @@ const projectMdxAttribute = (attribute: MdxJsxAttributeContent): Record<string, 
 };
 
 /** The frontmatter literal node types foreign mdast spells per format. */
-const frontmatterTypes: ReadonlyMap<string, FrontmatterFormat> = new Map([
+const frontmatterTypes = HashMap.fromIterable<string, FrontmatterFormat>([
 	["yaml", "yaml"],
 	["toml", "toml"],
 	["json", "json"],
@@ -315,7 +318,7 @@ const admittedFields: Readonly<Record<string, ReadonlyArray<string>>> = {
 };
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
-	typeof value === "object" && value !== null && !A.isArray(value);
+	P.isObjectKeyword(value) && !P.isFunction(value) && !A.isArray(value);
 
 const completePoint = (
 	value: unknown,
@@ -347,7 +350,7 @@ const normalizeNode = (value: unknown): unknown => {
 		return value;
 	}
 	const type = value.type;
-	const format = frontmatterTypes.get(type);
+	const format = O.getOrUndefined(HashMap.get(frontmatterTypes, type));
 	if (format !== undefined) {
 		return {
 			type: "frontmatter",

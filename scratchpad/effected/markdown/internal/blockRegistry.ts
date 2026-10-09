@@ -10,6 +10,10 @@
 //
 // THE ORDER OF `starts` IS THE ALGORITHM, and it is upstream's order exactly.
 
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as HashMap from "effect/HashMap";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { atxHeadingStart, headingConstruct } from "./blocks/atxHeading.ts";
 import { blockquoteConstruct, blockquoteStart } from "./blocks/blockquote.ts";
 import { codeConstruct } from "./blocks/code.ts";
@@ -33,6 +37,12 @@ import { taskListItemStart } from "./blocks/taskListItem.ts";
 import { thematicBreakConstruct, thematicBreakStart } from "./blocks/thematicBreak.ts";
 import type { BlockConstruct, BlockDialect, BlockType } from "./blockTypes.ts";
 
+const $I = $ScratchpadId.create("effected/markdown/internal/blockRegistry");
+
+class UnknownBlockDialectError extends S.TaggedError<UnknownBlockDialectError>($I`UnknownBlockDialectError`)("UnknownBlockDialectError", {
+	message: S.String,
+}) {}
+
 /**
  * The dialects the block pass can be keyed by.
  *
@@ -41,11 +51,23 @@ import type { BlockConstruct, BlockDialect, BlockType } from "./blockTypes.ts";
  */
 export type MarkdownDialect = "commonmark" | "gfm";
 
-const constructTable = (constructs: ReadonlyArray<BlockConstruct>): ReadonlyMap<BlockType, BlockConstruct> =>
-	// A real Map, not an object literal: construct names are engine-controlled
-	// here, but the house rule is that no lookup table keyed by parsed content
-	// is ever a bare object, and keeping every table a Map removes the question.
-	new Map(constructs.map((construct) => [construct.type, construct]));
+const constructTable = (constructs: ReadonlyArray<BlockConstruct>): ReadonlyMap<BlockType, BlockConstruct> => {
+	const entries = constructs.map((construct): [BlockType, BlockConstruct] => [construct.type, construct]);
+	const table = HashMap.fromIterable(entries);
+	// Keep the scanner's ReadonlyMap boundary and registry insertion order.
+	return {
+		size: HashMap.size(table),
+		get: (key) => O.getOrUndefined(HashMap.get(table, key)),
+		has: (key) => HashMap.has(table, key),
+		*keys() { for (const [key] of entries) yield key; return undefined; },
+		*values() { for (const [, value] of entries) yield value; return undefined; },
+		*entries() { for (const [key, value] of entries) yield [key, value]; return undefined; },
+		[Symbol.iterator]() { return this.entries(); },
+		forEach(callback, thisArg) {
+			for (const [key, value] of entries) callback.call(thisArg, value, key, this);
+		},
+	};
+};
 
 const commonmarkDialect: BlockDialect = {
 	constructs: constructTable([
@@ -128,7 +150,7 @@ const gfmDialect: BlockDialect = {
 		container.type === "table" || rest.startsWith("[") || rest.startsWith("|") || rest.startsWith(":"),
 };
 
-const dialects: ReadonlyMap<MarkdownDialect, BlockDialect> = new Map([
+const dialects = HashMap.fromIterable<MarkdownDialect, BlockDialect>([
 	["commonmark", commonmarkDialect],
 	["gfm", gfmDialect],
 ]);
@@ -140,9 +162,9 @@ const dialects: ReadonlyMap<MarkdownDialect, BlockDialect> = new Map([
  * so it is programmer error and dies as a defect.
  */
 export const blockDialect = (dialect: MarkdownDialect): BlockDialect => {
-	const found = dialects.get(dialect);
+	const found = O.getOrUndefined(HashMap.get(dialects, dialect));
 	if (found === undefined) {
-		throw new TypeError(`unknown markdown dialect: ${String(dialect)}`);
+		throw UnknownBlockDialectError.make({ message: `unknown markdown dialect: ${String(dialect)}` });
 	}
 	return found;
 };
