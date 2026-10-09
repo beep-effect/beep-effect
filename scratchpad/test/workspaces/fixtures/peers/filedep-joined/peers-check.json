@@ -1,0 +1,29 @@
+{
+  "packages/a": {
+    "bad": {},
+    "missing": {},
+    "conflicts": [],
+    "intersections": {}
+  },
+  "packages/b": {
+    "bad": {
+      "react": [
+        {
+          "parents": [
+            {
+              "name": "probe-a",
+              "version": "1.0.0"
+            }
+          ],
+          "optional": false,
+          "wantedRange": "^18.0.0",
+          "foundVersion": "17.0.2",
+          "resolvedFrom": []
+        }
+      ]
+    },
+    "missing": {},
+    "conflicts": [],
+    "intersections": {}
+  }
+}

@@ -1,0 +1,62 @@
+{
+  ".": {
+    "bad": {},
+    "missing": {},
+    "conflicts": [],
+    "intersections": {}
+  },
+  "packages/missing": {
+    "bad": {},
+    "missing": {},
+    "conflicts": [],
+    "intersections": {}
+  },
+  "packages/ok": {
+    "bad": {},
+    "missing": {},
+    "conflicts": [],
+    "intersections": {}
+  },
+  "packages/optional": {
+    "bad": {
+      "redux": [
+        {
+          "parents": [
+            {
+              "name": "react-redux",
+              "version": "9.2.0"
+            }
+          ],
+          "optional": true,
+          "wantedRange": "^5.0.0",
+          "foundVersion": "4.2.1",
+          "resolvedFrom": []
+        }
+      ]
+    },
+    "missing": {},
+    "conflicts": [],
+    "intersections": {}
+  },
+  "packages/unmet": {
+    "bad": {
+      "react": [
+        {
+          "parents": [
+            {
+              "name": "react-dom",
+              "version": "18.3.1"
+            }
+          ],
+          "optional": false,
+          "wantedRange": "^18.3.1",
+          "foundVersion": "17.0.2",
+          "resolvedFrom": []
+        }
+      ]
+    },
+    "missing": {},
+    "conflicts": [],
+    "intersections": {}
+  }
+}

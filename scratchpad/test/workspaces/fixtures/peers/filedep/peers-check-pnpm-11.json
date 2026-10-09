@@ -1,0 +1,8 @@
+{
+  "packages/host": {
+    "bad": {},
+    "missing": {},
+    "conflicts": [],
+    "intersections": {}
+  }
+}

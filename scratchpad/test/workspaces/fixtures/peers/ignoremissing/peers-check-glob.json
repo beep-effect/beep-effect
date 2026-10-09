@@ -1,0 +1,14 @@
+{
+  ".": {
+    "bad": {},
+    "missing": {},
+    "conflicts": [],
+    "intersections": {}
+  },
+  "packages/lone": {
+    "bad": {},
+    "missing": {},
+    "conflicts": [],
+    "intersections": {}
+  }
+}

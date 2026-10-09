@@ -6007,16 +6007,807 @@
       "wave": 4,
       "position": 3,
       "stage": 0,
-      "status": "pending",
+      "status": "in-progress",
       "provisionalHome": "tooling/library",
       "upstreamPaths": {
         "src": "packages/workspaces/src",
         "test": "packages/workspaces/__test__"
       },
-      "exportsExpected": [],
+      "exportsExpected": [
+        {
+          "name": "CatalogAssemblyFailure",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "CatalogSet",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ChangeDetectionError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ChangeDetectionFailure",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ChangeDetectionOptions",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ChangeDetector",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ChangeDetectorShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ClassifyOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ConfigDependencyHooks",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ConfigDependencyHooksShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ConfigDependencySpec",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "CyclicDependencyError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "DependencyDiff",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "DependencyGraph",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "Dependent",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "DetectedPackageManager",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "DuplicateCheck",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "DuplicateCheckOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "DuplicateInstance",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "DuplicatedPackage",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "DuplicatedVersion",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "FindWorkspaceRootOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "FindWorkspaceRootSyncOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "GetWorkspacePackagesSyncOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "HookInjection",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "HookReplay",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "HookReplayContext",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "HookReplaySource",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ImporterVersions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "InvalidConfigDependencySpecError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "LockfileReadError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "LockfileReadFailure",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "LockfileReader",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "LockfileReaderOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "LockfileReaderShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "NoPeerDependencyRules",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "PackageManagerDetectionError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "PackageManagerDetectionFailure",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "PackageManagerDetector",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "PackageManagerDetectorShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "PackageManagerEvidence",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "PackageManagerName",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "PackageNotFoundError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "PackageRelease",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "PackageStateSnapshot",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "PeerCheck",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "PeerCheckOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "PeerDependencyRules",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "PeerParent",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "PublishConfig",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "PublishTarget",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "PublishabilityDetector",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "PublishabilityDetectorShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ReleaseTag",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "SyncDirectoryEntry",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "SyncFileSystem",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "SyncPath",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "TagClassification",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "TagFormatOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "TagStyle",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TrackingTag",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TrackingTagOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "UnsatisfiedPeer",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "UnverifiedReason",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "VersioningDetectOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "VersioningStrategy",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "VersioningStrategyType",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "WORKSPACE_MARKERS",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "WorkspaceCatalogs",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "WorkspaceCatalogsOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "WorkspaceCatalogsShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "WorkspaceDiscovery",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "WorkspaceDiscoveryError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "WorkspaceDiscoveryFailure",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "WorkspaceDiscoveryOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "WorkspaceDiscoveryShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "WorkspaceDiscoverySkip",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "WorkspaceDiscoverySkipKind",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "WorkspaceInfo",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "WorkspaceLookupFailure",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "WorkspaceManifestError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "WorkspacePackage",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "WorkspacePatternError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "WorkspaceRoot",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "WorkspaceRootNotFoundError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "WorkspaceRootShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "WorkspaceSnapshotAtFailure",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "WorkspaceSnapshotWorktreeFailure",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "WorkspaceSnapshots",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "WorkspaceSnapshotsOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "WorkspaceSnapshotsShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "WorkspaceStateSnapshot",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "Workspaces",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "WorkspacesGitOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "WorkspacesOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "WorkspacesServices",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "WorkspacesSyncOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "classifyTag",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "findWorkspaceRootSync",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "getWorkspacePackagesSync",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "SyncDirectoryEntry",
+          "kind": "type",
+          "entry": "./node-sync"
+        },
+        {
+          "name": "SyncFileSystem",
+          "kind": "type",
+          "entry": "./node-sync"
+        },
+        {
+          "name": "SyncPath",
+          "kind": "type",
+          "entry": "./node-sync"
+        },
+        {
+          "name": "WorkspacesSyncOptions",
+          "kind": "type",
+          "entry": "./node-sync"
+        },
+        {
+          "name": "nodeFileSystem",
+          "kind": "value",
+          "entry": "./node-sync"
+        },
+        {
+          "name": "nodePath",
+          "kind": "value",
+          "entry": "./node-sync"
+        },
+        {
+          "name": "nodeSyncOps",
+          "kind": "value",
+          "entry": "./node-sync"
+        },
+        {
+          "name": "BinCommandOptions",
+          "kind": "type",
+          "entry": "./testing"
+        },
+        {
+          "name": "BinProvenance",
+          "kind": "type",
+          "entry": "./testing"
+        },
+        {
+          "name": "BoundaryFixture",
+          "kind": "type",
+          "entry": "./testing"
+        },
+        {
+          "name": "BoundaryRule",
+          "kind": "type",
+          "entry": "./testing"
+        },
+        {
+          "name": "DependencyDiff",
+          "kind": "type",
+          "entry": "./testing"
+        },
+        {
+          "name": "FindWorkspaceRootOptions",
+          "kind": "type",
+          "entry": "./testing"
+        },
+        {
+          "name": "InstalledConsumer",
+          "kind": "both",
+          "entry": "./testing"
+        },
+        {
+          "name": "LayerEdge",
+          "kind": "both",
+          "entry": "./testing"
+        },
+        {
+          "name": "LayerPolicy",
+          "kind": "both",
+          "entry": "./testing"
+        },
+        {
+          "name": "LayerPolicyError",
+          "kind": "both",
+          "entry": "./testing"
+        },
+        {
+          "name": "LayeringGraph",
+          "kind": "type",
+          "entry": "./testing"
+        },
+        {
+          "name": "LayeringReport",
+          "kind": "both",
+          "entry": "./testing"
+        },
+        {
+          "name": "Offence",
+          "kind": "both",
+          "entry": "./testing"
+        },
+        {
+          "name": "OffenceRule",
+          "kind": "type",
+          "entry": "./testing"
+        },
+        {
+          "name": "PackSource",
+          "kind": "type",
+          "entry": "./testing"
+        },
+        {
+          "name": "PackageManagerName",
+          "kind": "both",
+          "entry": "./testing"
+        },
+        {
+          "name": "PackageNotFoundError",
+          "kind": "both",
+          "entry": "./testing"
+        },
+        {
+          "name": "PackedInstall",
+          "kind": "both",
+          "entry": "./testing"
+        },
+        {
+          "name": "PackedInstallBudget",
+          "kind": "type",
+          "entry": "./testing"
+        },
+        {
+          "name": "PackedInstallClosureOptions",
+          "kind": "type",
+          "entry": "./testing"
+        },
+        {
+          "name": "PackedInstallError",
+          "kind": "both",
+          "entry": "./testing"
+        },
+        {
+          "name": "PackedInstallGate",
+          "kind": "type",
+          "entry": "./testing"
+        },
+        {
+          "name": "PackedInstallOptions",
+          "kind": "type",
+          "entry": "./testing"
+        },
+        {
+          "name": "PackedInstallPreflight",
+          "kind": "type",
+          "entry": "./testing"
+        },
+        {
+          "name": "PackedInstallPreflightOptions",
+          "kind": "type",
+          "entry": "./testing"
+        },
+        {
+          "name": "PackedInstallResult",
+          "kind": "both",
+          "entry": "./testing"
+        },
+        {
+          "name": "PublishConfig",
+          "kind": "both",
+          "entry": "./testing"
+        },
+        {
+          "name": "ReferenceOptions",
+          "kind": "type",
+          "entry": "./testing"
+        },
+        {
+          "name": "RunBinOptions",
+          "kind": "type",
+          "entry": "./testing"
+        },
+        {
+          "name": "ScanOptions",
+          "kind": "type",
+          "entry": "./testing"
+        },
+        {
+          "name": "SourceBoundary",
+          "kind": "both",
+          "entry": "./testing"
+        },
+        {
+          "name": "SourceScan",
+          "kind": "both",
+          "entry": "./testing"
+        },
+        {
+          "name": "WorkspaceDiscovery",
+          "kind": "both",
+          "entry": "./testing"
+        },
+        {
+          "name": "WorkspaceDiscoveryError",
+          "kind": "both",
+          "entry": "./testing"
+        },
+        {
+          "name": "WorkspaceDiscoveryFailure",
+          "kind": "type",
+          "entry": "./testing"
+        },
+        {
+          "name": "WorkspaceDiscoveryOptions",
+          "kind": "type",
+          "entry": "./testing"
+        },
+        {
+          "name": "WorkspaceDiscoveryShape",
+          "kind": "type",
+          "entry": "./testing"
+        },
+        {
+          "name": "WorkspaceInfo",
+          "kind": "both",
+          "entry": "./testing"
+        },
+        {
+          "name": "WorkspaceLayering",
+          "kind": "both",
+          "entry": "./testing"
+        },
+        {
+          "name": "WorkspaceLookupFailure",
+          "kind": "type",
+          "entry": "./testing"
+        },
+        {
+          "name": "WorkspaceManifestError",
+          "kind": "both",
+          "entry": "./testing"
+        },
+        {
+          "name": "WorkspacePackage",
+          "kind": "both",
+          "entry": "./testing"
+        },
+        {
+          "name": "WorkspacePatternError",
+          "kind": "both",
+          "entry": "./testing"
+        },
+        {
+          "name": "WorkspaceRoot",
+          "kind": "both",
+          "entry": "./testing"
+        },
+        {
+          "name": "WorkspaceRootNotFoundError",
+          "kind": "both",
+          "entry": "./testing"
+        },
+        {
+          "name": "WorkspaceRootShape",
+          "kind": "type",
+          "entry": "./testing"
+        }
+      ],
       "exportsAdded": [],
-      "newDeps": [],
-      "fixturesBytes": 0,
+      "newDeps": [
+        {
+          "name": "@pnpm/catalogs.config",
+          "kind": "runtime",
+          "spec": "^1100.0.5",
+          "replacement": null
+        },
+        {
+          "name": "@pnpm/catalogs.protocol-parser",
+          "kind": "runtime",
+          "spec": "^1100.0.0",
+          "replacement": null
+        },
+        {
+          "name": "@pnpm/catalogs.resolver",
+          "kind": "runtime",
+          "spec": "^1100.0.0",
+          "replacement": null
+        },
+        {
+          "name": "@pnpm/catalogs.types",
+          "kind": "runtime",
+          "spec": "^1100.0.0",
+          "replacement": null
+        }
+      ],
+      "fixturesBytes": 114660,
       "deviations": [],
       "backlog": [],
       "reviewRounds": [],
