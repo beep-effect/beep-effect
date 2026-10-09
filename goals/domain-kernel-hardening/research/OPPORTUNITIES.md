@@ -132,3 +132,16 @@
   runs. Agents' isolated ProviderInstance fixture runs in the default suite;
   law-practice's default script includes its integration files.
 - Prevention: name the integration task and verify test counts/skips in the brief.
+
+## 2026-10-09 — production KG bundle DDL bypasses canonical table metadata
+
+- Doing: repeat the exact six-server gate after the ProviderInstance fixture repair.
+- Evidence: PracticeKg.projections.test.ts:2163 reports missing deleted_at and
+  deleted_by_principal in the physical candidate-claim table. PracticeKg.claims.ts
+  has independent CREATE TABLE definitions at lines 101 and 120, plus carry SQL.
+- Attribution: introduced by the canonical audit-column additions; the production
+  KG source is unchanged from main. Four explicit migration-replay suites pass.
+- Action: stop under ownership boundaries; no production KG edit or weakened
+  assertion. Cancel only the own still-queued parity unit; no payload result.
+- Prevention: census independent production DDL and carry contracts during P0;
+  use canonical metadata or owner-generated migration replay where appropriate.

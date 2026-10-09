@@ -438,3 +438,81 @@ D14 reversal removes the two fixture columns with the kernel rollback.
 
 The exact six-server command and default agents-server package-verify will
 re-run after repair. No repaired-fixture success is claimed yet.
+
+## Run 3 qualification stop — production KG DDL lies outside lane ownership
+
+The repaired ProviderInstance suite passes (27 tests, including all four PGlite
+integration cases), and default agents-server package verification passes
+(audit 15.1s, docgen 7.0s). This is the tenth edited private workspace; all ten
+default package proofs now pass. Final retained mechanical count is **71**.
+No slice model/behavior file was edited. No live database was touched.
+
+The exact six-server command was rerun. Five tasks passed. Law-practice has
+283 tests passing, one failing and one skipped. Its introduced failure is
+`PracticeKg.projections.test.ts:2163`: actual physical candidate-claim columns
+omit `deleted_at` and `deleted_by_principal` while current Drizzle metadata
+includes them. The assertion correctly detects the schema mismatch.
+
+Source attribution: `PracticeKg.claims.ts:101-135` independently creates
+`epistemic_candidate_claim` and `epistemic_evidence` without either field. Its
+insert and carry projections at lines 139-155 and 691-722 also enumerate the
+old shape. `git diff origin/main -- packages/law-practice/server/src/PracticeKg.claims.ts`
+is empty. The failure is introduced by the inherited audit columns, not an
+unrelated main red. A fix belongs to the production KG bundle owner or requires
+an explicitly reconciled lane scope; converter/test-fixture scope does not
+authorize changing production KG DDL and carry semantics. No assertion was
+weakened, no production KG source was changed. D15 records the hold.
+
+### Actual migration-replay proof (owner integration scripts)
+
+The brief's default test commands exclude test/integration in several packages.
+Executed `beep:test:integration` explicitly for these four packages, excluding
+`**/*.pg.test.ts` and clearing external DB URL/driver overrides:
+
+| Package | PGlite migration-replay result |
+| --- | --- |
+| architecture-lab-server | 3 tests pass, 1 file |
+| documents-server | 9 tests pass, 1 file |
+| epistemic-server | 49 tests pass, 6 files; external Postgres files excluded |
+| workspace-server | 3 tests pass, 1 file |
+
+All **64** tests replay the generated db-admin migration chain successfully.
+These are actual in-process runs; the default unit suites are reported separately.
+The migration remains exactly 52 nullable ADD COLUMN statements in 26 tables;
+no backfill, CHECK, drop, rename or recreate. Desktop bundle proof remains green.
+
+### Run-3 final job state and remaining work
+
+Original queued table unit was stopped during externally changed slot-floor
+refresh, and its replacement finished successfully. Integration and repair
+batches are terminal. Hosted-parity batch remained queued with no test-tsgo
+payload log or result; cancelled its own unit after D15 attribution. Its tool
+session is terminal. No own heavy unit, gate or readiness monitor remains running.
+No hosted-parity result is claimed. No P1 publish push or PR 2 occurred.
+
+P1 remains in-progress; P2/P3 pending; lifecycle active. Both PR-1 superset
+checks passed before the clean main merge. R1 active stream proof is recorded
+above; completed-retained is reserved for P3 under the separate-wave ruling.
+Packet verification is rerun before this blocked receipt is committed.
+
+D13/D14 authorize 71 mechanical sites and reverse with the kernel rollback.
+D15 reverses on an explicit scope reconciliation or a KG-owner fix on main;
+then repeat law-practice tests, affected package proofs and hosted parity before
+publication. D10 private-package policy and D11 migration-proof inventory remain
+unchanged, with reversals above. No changeset was authored for private workspaces.
+
+Orchestrator owns stale docs/ROADMAP.md platform re-entry bullet (~349), Parked
+packets row (~383), and cohort prose (~406). Follow-ups remain the stale
+DomainModel.make detector and desktop release rollout of the generated migration.
+Graft retrieval estimate for this turn: 167,761 tokens across six successful calls;
+one unsuccessful scope query had no saving estimate.
+
+### Blocked-state packet verification
+
+Ordered packet set passes before commit: GOAL size remains 3,521 characters;
+manifest jq, packet anchors, diff whitespace and reflection-artifacts pass.
+Doctor reports blocking_new=0, blocking_inherited=0, advisories=3 (the same
+three unrelated packets listed above). Explore-check has no packet finding for
+this slug and prints the active revision-2 summary above. Fresh origin/main has
+no later change that repairs the KG production DDL. Yeet inbox has zero unacked
+rows. No merge conflict or own running unit remains. P1 stays in-progress.
