@@ -161,3 +161,14 @@
   same workspace. This is a concurrent verification-cache collision, not a
   source-test failure. Serialize the scoped rerun after package verification;
   separate per-command cache directories would prevent this collision.
+
+- Yeet cheap gates found an introduced retirement dependency: four cache-baseline
+  reviews referenced `.changeset/design-figure-drivers.md`. Preserved its exact
+  bytes as `history/receipts/d-cache-review-evidence.md` and moved just those
+  review references through `beep cache baseline --request`; all non-review
+  baseline fields are unchanged. A pre-retirement reference inventory would
+  prevent retiring evidence that an independent gate still requires.
+- The publication proof unit hit its 16 GiB cgroup limit and terminated with
+  `oom-kill` before Yeet could persist the latest verdict. The retry stays in
+  beep-heavy admission with a 24 GiB cap; no slot bypass or machine-wide limit
+  change. Memory-aware sizing of the parallel cheap tier would prevent this.

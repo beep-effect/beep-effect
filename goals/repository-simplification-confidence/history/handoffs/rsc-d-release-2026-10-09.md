@@ -1,10 +1,10 @@
 lane: rsc-d-release
 head: 3897314253436345cfd578c5a7735884b1992c81 (Run 2 source-review snapshot)   PR: pending publication
 retired: 939 notes; parent da1a85157d7c8cc6b72fe43f12d01389db811ce9; tree d839776128c29c6c4cc7c2937329942d873b973c
-package-verify: @beep/repo-cli running; Run 2 terminal result pending
-hosted-parity: test-tsgo pass / docgen local pass / jsdoc-ratchet pass / knowledge refs pass / fallow audit+health pass / coverage startup cache collision; serial rerun pending
+package-verify: @beep/repo-cli pass; Run 2 terminal exit=0 (audit 740.7s, docgen 24.5s)
+hosted-parity: test-tsgo pass / docgen local pass / jsdoc-ratchet pass / knowledge refs pass / fallow audit+health pass / coverage pass (serial 316/316 tests)
 handoff: goals/repository-simplification-confidence/history/handoffs/rsc-d-release-2026-10-09.md
-open: GitHub Packages lacks read:packages; local consumer census negative, remote mirrors/deploys not establishable; E-09 pending E-owned citation (R35); AGENTS.md exact replacement awaits rsc-shared (R33); package/serial coverage and publication in progress
+open: GitHub Packages lacks read:packages; local consumer census negative, remote mirrors/deploys not establishable; E-09 pending E-owned citation (R35); AGENTS.md exact replacement awaits rsc-shared (R33); publication retry follows repaired evidence reference and unit OOM
 
 ## Run 1 report (historical; superseded by Run 2)
 
@@ -159,3 +159,19 @@ Coverage stopped before tests with a shared `.vitest-cache` ENOTEMPTY startup
 collision; rerun is serialized after package audit, not counted as a test red.
 Independent source/scope review at `3897314253`: zero actionable P0–P3 findings;
 receipt updated. Both main merges preserved the single retirement commit.
+
+Run 2 terminal package proof: `.beep/rsc-d-run2-package-result.txt` exit 0
+(audit 740.7s, docgen 24.5s). Serial coverage:
+`.beep/rsc-d-run2-serial-coverage-result.txt` exit 0, 316/316 tests.
+Normalized scoped metrics replace the historical snapshot; the narrower
+IssueClassification cohort is explicitly below three broader baseline metrics,
+with no executable D behavior change in that file. All other measured rows
+meet every recorded metric. Full repository coverage floors are not claimed.
+
+Publication attempt was terminated at the 16 GiB unit cap; journal records
+oom-kill and 16 GiB peak. It also exposed an introduced cache-policy evidence
+reference to a retired note. Exact original bytes/digest were preserved in
+`history/receipts/d-cache-review-evidence.md`; the owner command regenerated
+only four baseline reviews, keeping every non-review payload field identical.
+This shared baseline hunk also needs rsc-shared review. Retrying publication
+through admission at a 24 GiB cap; no machine-wide capacity or slot change.

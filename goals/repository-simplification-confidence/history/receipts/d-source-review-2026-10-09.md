@@ -67,3 +67,14 @@ excluded from D scope. No unrelated D production refactor or formatting churn.
 This source/scope review does not attest to execution of package/parity gates.
 The root refreshes their evidence separately; earlier blocked validation prose
 is superseded by the Run 2 records.
+
+## Incremental cache-evidence repair review
+
+At base `ea71d45b542c8a120960289a47688cff229fe125`, separate Codex reviewer
+returned **zero actionable P0–P3 findings** for the archived evidence and
+generated cache-baseline review relocation. It verified byte identity and
+SHA-256 against the original parent note, exactly four changed review entries,
+and equality of every non-review field and all remaining reviews. The request
+names exactly those four subjects and grants no qualification. Full PR revert
+restores references and notes together; isolated reversal requires the old
+evidence file too. No writes or heavy commands were performed by the reviewer.

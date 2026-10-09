@@ -49,16 +49,29 @@ notes match its enumeration and tree. The D-only manifest diff is empty; the
 reset-parent manifest diff contains only the inherited #1564 tinyglobby
 dependency addition in repo-cli, not a version change.
 
-Run 2 (after crash) merged current main and the authorized #1565 knowledge
-repair branch. The inherited knowledge row is repaired by its owner; D made
-no local correction to that file. Required package and parity gates are
-rerunning through beep-heavy with explicit terminal result records. Earlier
-passes remain historical evidence, not the final resumed proof.
+Run 2 (after crash): package-verify @beep/repo-cli passed (audit 740.7s,
+docgen 24.5s, terminal exit 0). Hosted-parity local commands all pass:
+`beep quality test-tsgo`, `beep docgen local --base origin/main`,
+`beep ci lane jsdoc-ratchet`, `CI=true beep knowledge refs --check`,
+Fallow audit/health, and the serial 316-test scoped coverage run.
+Knowledge has zero live gated observations; Fallow has zero introduced
+findings, one inherited-adjacent audit advisory, and zero health findings.
+The earlier coverage startup collision is superseded by the serial exit 0.
+[Scoped coverage](d-coverage-snapshot.json) records all touched baseline rows
+and the narrower IssueClassification cohort limitation.
 
-Independent source/scope review at `3897314253`: zero actionable P0–P3 findings.
-No unrelated D production refactor or formatting churn. The reviewer excluded
-the inherited #1564 EffectImports repair. See the
-[review receipt](d-source-review-2026-10-09.md) and
+These results cover unchanged source/test content through `ea71d45b54`;
+subsequent evidence/report edits change no execution paths. Independent
+source/scope review at `3897314253`: zero actionable P0–P3 findings.
+The owner-authored #1564/#1565 inherited repairs are merged from main.
+
+Yeet exposed four cache-baseline review references to a retired note.
+[Historical evidence](d-cache-review-evidence.md) preserves the original bytes
+and digest; `beep cache baseline --request` moved only the four reviews,
+with every non-review field unchanged and no qualification granted.
+The publication retry follows the evidence repair and an environment-only
+16 GiB unit OOM; hosted run/PR evidence is collected after publication.
+See the [source review](d-source-review-2026-10-09.md) and
 [lane handoff](../handoffs/rsc-d-release-2026-10-09.md).
 
 Full-directory recovery restores historical config and README as well as notes.
