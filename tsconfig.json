@@ -2071,6 +2071,9 @@
       ],
       "@beep/law-practice-use-cases/DocumentIdentification": [
         "./packages/law-practice/use-cases/src/DocumentIdentification/index.ts"
+      ],
+      "@beep/repo-cli/commands/AgentMessage": [
+        "./packages/tooling/tool/cli/src/commands/AgentMessage/index.ts"
       ]
     }
   }

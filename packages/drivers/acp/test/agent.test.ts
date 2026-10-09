@@ -279,3 +279,32 @@ it.layer(Layer.fresh(agentFixtureLayer), { timeout: "10 seconds" })((it) => {
     })
   );
 });
+
+it.layer(Layer.fresh(agentFixtureLayer), { timeout: "10 seconds" })((it) => {
+  it.effect(
+    "dispatches session/set_mode through the public agent handler",
+    Effect.fnUntraced(function* () {
+      const { input, output } = yield* AgentTransport;
+      const agent = yield* AcpAgent.AcpAgent;
+      const received = yield* Deferred.make<string>();
+      yield* agent.handleSetSessionMode((request) => Deferred.succeed(received, request.modeId).pipe(Effect.as({})));
+      const request = jsonRpcRequest("session/set_mode", AcpSchema.SetSessionModeRequest);
+      yield* Queue.offer(
+        input,
+        yield* encodeJsonl(request, {
+          jsonrpc: "2.0",
+          headers: [],
+          id: 91,
+          method: "session/set_mode",
+          params: { sessionId: "synthetic-session", modeId: "plan" },
+        })
+      );
+      assert.equal(yield* Deferred.await(received), "plan");
+      const responseSchema = jsonRpcResponse(AcpSchema.SetSessionModeResponse);
+      const jsonSchema = Schema.fromJsonString(responseSchema);
+      const reply = yield* Schema.decodeEffect(jsonSchema)(yield* Queue.take(output));
+      assert.equal(reply.id, 91);
+      assert.deepEqual(reply.result, {});
+    })
+  );
+});

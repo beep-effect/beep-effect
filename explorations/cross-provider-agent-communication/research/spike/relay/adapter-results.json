@@ -1,0 +1,87 @@
+{
+  "registry": [
+    {
+      "name": "claude",
+      "rollout": "experimental",
+      "lifecycle": {
+        "activeInput": true,
+        "toolApprovals": true,
+        "compact": true,
+        "continueTurn": true,
+        "suspendTurn": true,
+        "detach": true,
+        "stop": true,
+        "destroy": true,
+        "stopPreservesConversation": true
+      }
+    },
+    {
+      "name": "codex",
+      "rollout": "experimental",
+      "lifecycle": {
+        "activeInput": true,
+        "toolApprovals": true,
+        "compact": true,
+        "continueTurn": true,
+        "suspendTurn": true,
+        "detach": true,
+        "stop": true,
+        "destroy": true,
+        "stopPreservesConversation": true
+      }
+    },
+    {
+      "name": "opencode",
+      "rollout": "experimental",
+      "lifecycle": {
+        "activeInput": true,
+        "toolApprovals": true,
+        "compact": true,
+        "continueTurn": true,
+        "suspendTurn": true,
+        "detach": true,
+        "stop": true,
+        "destroy": true,
+        "stopPreservesConversation": true
+      }
+    },
+    {
+      "name": "pi",
+      "rollout": "experimental",
+      "lifecycle": {
+        "activeInput": true,
+        "toolApprovals": true,
+        "compact": true,
+        "continueTurn": true,
+        "suspendTurn": true,
+        "detach": true,
+        "stop": true,
+        "destroy": true,
+        "stopPreservesConversation": true
+      }
+    },
+    {
+      "name": "deepagents",
+      "rollout": "experimental",
+      "lifecycle": {
+        "activeInput": true,
+        "toolApprovals": true,
+        "compact": false,
+        "continueTurn": true,
+        "suspendTurn": true,
+        "detach": true,
+        "stop": true,
+        "destroy": true,
+        "stopPreservesConversation": false
+      }
+    }
+  ],
+  "codex": {
+    "model": "gpt-6.1-sol",
+    "reasoningEffort": "medium"
+  },
+  "claude": {
+    "model": "claude-opus-5-5"
+  },
+  "provider_models": 0
+}

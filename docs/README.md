@@ -30,6 +30,8 @@ registration for the docket intake service, scoped to one mailbox: [docket intak
 operator-attended first live run of the docket intake service, with its undo: [docket intake first run](runbooks/docket-intake-first-run.md). The operator-attended Entra
 registration for the agent outbox (mail with attachments, drafts, calendar writes): [agent outbox registration](runbooks/m365-agent-outbox-registration.md). First run, counts, undo, and failure modes of the
 mail-tagging job: [practice mail tagging](runbooks/practice-mail-tagging.md).
+Owned provider sessions, scoped peer tools, durable receipts and ambiguity recovery:
+[local agent messaging](runbooks/agent-messaging.md).
 
 ## Rules
 

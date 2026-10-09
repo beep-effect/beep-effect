@@ -1,0 +1,64 @@
+{
+  "date": "2026-10-09",
+  "surface": "Claude web conversation in Chrome",
+  "enrollment": "new disposable app chat, enrolled before managed peer delivery",
+  "transport": "controller-mediated visible browser UI plus managed Grok ACP",
+  "nativeAppControl": false,
+  "autonomousReplyTool": false,
+  "modelSelectionEvidence": {
+    "before": "Opus 5.5 Medium",
+    "after": "Opus 5.5 Medium",
+    "source": "visible model button",
+    "underlyingModelIdInspected": false
+  },
+  "permissions": {
+    "visibleModeBefore": "Manual",
+    "visibleModeAfter": "Manual",
+    "newPermissionPromptObserved": false,
+    "localSandboxFingerprintAvailable": false,
+    "equivalenceToCliPermissionsProven": false
+  },
+  "appMessages": {
+    "baselineAssistantAck": true,
+    "actualAssistantReplyContainsPeerNonce": true,
+    "actualAssistantReplyValue": "CLAUDE_ACK",
+    "grokAcknowledgedExactReply": true,
+    "actualAssistantRoundtripComplete": true,
+    "sameUrlThroughout": true,
+    "reloadSameUrlAndTranscript": true,
+    "assistantMessageScopedExtraction": true,
+    "finalAccessibleMessageCount": 10,
+    "modelTurns": 5,
+    "closeoutAssistantAck": true
+  },
+  "normalization": {
+    "renderedSmartQuotesNormalized": true,
+    "nonceAndReplyFieldsUnchanged": true,
+    "accessibleHeadingDropsUnderscores": true,
+    "renderedAssistantBodyUsed": true
+  },
+  "busyAttempt": {
+    "streamObservedBeforeAttempt": true,
+    "composerAllowedDraft": true,
+    "sendButtonVisibleEnabled": true,
+    "sendOperation": "browser operation timeout after 3000ms",
+    "result": "not proved; draft remained unsent after original response finished",
+    "nonceInTranscript": false,
+    "retriedBlindly": false,
+    "unsentDraftReplacedForCloseout": true
+  },
+  "observations": {
+    "screenshotsCapturedInToolEvidence": 2,
+    "screenshotFilesCommitted": false,
+    "appBuildVersionAvailable": false,
+    "latencyBenchmark": false
+  },
+  "cleanup": {
+    "grokChildStopped": true,
+    "unrelatedSessionsContacted": false,
+    "globalConfigurationChanged": false,
+    "newBillingRoute": false,
+    "disposableAppChatRetainedForReview": true
+  },
+  "outcome": "idle visible-app roundtrip and reload passed; busy and native attachment unqualified"
+}

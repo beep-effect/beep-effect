@@ -1,0 +1,109 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "agent-message-router",
+    "title": "Agent Message Router",
+    "status": "active",
+    "created": "2026-10-09",
+    "updated": "2026-10-09",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/agent-message-router",
+  "lifecycle": "active",
+  "mission": "Implement a local durable agent-message contract, transactional delivery store and routing service with per-session capabilities, policy fingerprints and explicit ambiguous recovery.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/cross-provider-agent-communication",
+    "graduated": "2026-10-09"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until acceptance and verification pass and the implementation PR is driven through Yeet to mergeable under exact-head hosted checks/review/window rules, with final closeout reflection and lifecycle updates landed; merge and retire through the existing gate.",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/agent-message-router/README.md",
+    "goals/agent-message-router/SPEC.md",
+    "goals/agent-message-router/PLAN.md",
+    "goals/agent-message-router/GOAL.md",
+    "goals/agent-message-router/research/SOURCES.md",
+    "explorations/cross-provider-agent-communication/BRIEF.md",
+    "explorations/cross-provider-agent-communication/DECISIONS.md",
+    "explorations/cross-provider-agent-communication/MAP.md",
+    "explorations/cross-provider-agent-communication/research/ARCHITECTURE.md",
+    "explorations/cross-provider-agent-communication/research/spike/README.md",
+    "goals/agent-message-router/research/IMPLEMENTATION.md",
+    "goals/agent-message-router/research/PROGRESS.md",
+    "goals/agent-message-router/research/STORAGE-REVERSAL.md",
+    "goals/agent-message-router/research/ACCEPTANCE-AUDIT.md",
+    "goals/agent-message-router/research/FOLLOW-UPS.md",
+    "goals/agent-session-bridges/research/GROK-MANAGED-ROUNDTRIP.json",
+    "goals/agent-message-router/history/reflections/2026-10-09-codex.md",
+    "goals/agent-session-bridges/research/CLAUDE-MANAGED-ROUNDTRIP.json",
+    "goals/agent-session-bridges/research/CLAUDE-PATCH-REVIEW.md"
+  ],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/PROGRESS.md",
+    "research/STORAGE-REVERSAL.md",
+    "research/ACCEPTANCE-AUDIT.md",
+    "research/FOLLOW-UPS.md",
+    "../agent-session-bridges/research/CLAUDE-PATCH-REVIEW.md"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/agent-message-router/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "complete"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "complete"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "in-progress"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/agent-message-router/GOAL.md)\" -le 4000",
+    "jq . goals/agent-message-router/ops/manifest.json",
+    "git diff --check -- goals/agent-message-router",
+    "bun run beep goals doctor",
+    "bun run beep explore --check",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "New money, paid services/endpoints, quota top-ups or plan changes require the operator.",
+    "Permission/model or session ownership mismatch fences the affected route before inference.",
+    "The same external blocker persists after bounded investigation; preserve evidence and continue independent work."
+  ],
+  "dependsOn": [],
+  "statusNote": "Active on 2026-10-09. P1 implementation complete; P2 final verification ongoing and P3 publication pending, with no PR yet. Router 44 tests pass and independent extraction retains one pre-existing deferred P2 (R1). Native 19 tests and corrected provider full audit/docgen pass; final Claude patch review reports zero actionable introduced findings. Owned autonomous Codex-Grok and Codex-Claude proofs passed in 39.91 and 56.2 seconds total respectively; Claude additionally passed a distinct two-message queued-busy exercise. All required message ACKs/settled dispatches, grant use, unchanged digests and cleanup passed. CLI full package/cheap gates, hosted review and final reflection/closeout remain pending."
+}

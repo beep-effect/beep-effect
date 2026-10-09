@@ -9,6 +9,7 @@
 import { Command } from "effect/cli";
 import { accountsCommand } from "./Accounts/index.ts";
 import { agentEffectivenessCommand } from "./AgentEffectiveness/index.ts";
+import { agentMessageCommand } from "./AgentMessage/index.ts";
 import { aiMetricsCommand } from "./AIMetrics/index.ts";
 import { architectureCommand } from "./Architecture/index.ts";
 import { cacheCommand } from "./Cache/index.ts";
@@ -77,6 +78,7 @@ export const rootCommand = Command.make("beep-cli").pipe(
   Command.withSubcommands([
     topoSortCommand,
     agentEffectivenessCommand,
+    agentMessageCommand,
     aiMetricsCommand,
     architectureCommand,
     cacheCommand,

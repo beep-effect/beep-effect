@@ -1,0 +1,24 @@
+{
+  "stage": "initialize",
+  "response_error": null,
+  "protocolVersion": 1,
+  "agentInfo": null,
+  "agentCapabilities": {
+    "loadSession": true,
+    "mcpCapabilities": {
+      "http": true,
+      "sse": true
+    },
+    "promptCapabilities": {
+      "audio": false,
+      "embeddedContext": false,
+      "image": true
+    },
+    "sessionCapabilities": {
+      "list": {}
+    }
+  },
+  "auth_method_ids": ["cursor_login"],
+  "reverse_methods": [],
+  "model_turns": 0
+}

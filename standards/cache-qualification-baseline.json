@@ -10,11 +10,11 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "Claude Fable 5.1 (perf/lint-turbo-cache)",
-      "reason": "Record the cached //#jsdoc:inventory:check posture and the four new cached root computations (lint:tsconfig-overlay, lint:package-test-typecheck, lint:effect-vitest, jsdoc:ratchet:check), and attribute the shared root scripts-digest change to their four added root scripts; no other command, input, output, env, dependency edge or cache flag changes, and no qualification is granted. Wave 2: effect-vitest, jsdoc:ratchet:check and jsdoc:inventory:check inputs now follow their scanners exactly (review round 1).",
+      "reviewer": "GPT-6.1-Sol medium (agent messaging baseline review)",
+      "reason": "Record only the intentional ACP/provider/MCP dependency edges and six added policy-fingerprint inputs; preserve cache settings, scope, profile, epoch and qualification ledger without granting reuse qualification.",
       "basis": {
-        "path": "goals/turborepo-task-qualification/research/lint-root-plan-baseline-review.md",
-        "sha256": "67711858d2c620d3cd4fee15a45812395ca2d9370c2354b8c44d328d3b0131db"
+        "path": "standards/cache-qualification-agent-message-review.md",
+        "sha256": "985119841e6c59a9c6c44c42ad767a5a5a237b9f6e3bf30cccf693bff1a6287a"
       }
     },
     "@beep/acp": {
@@ -66,11 +66,11 @@
       }
     },
     "@beep/ai-provider-cli": {
-      "reviewer": "Claude Fable 5.1 (cache baseline merge-friendly lane, fix/cache-baseline-merge-friendly)",
-      "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
+      "reviewer": "GPT-6.1-Sol medium (agent messaging baseline review)",
+      "reason": "Record only the intentional ACP/provider/MCP dependency edges and six added policy-fingerprint inputs; preserve cache settings, scope, profile, epoch and qualification ledger without granting reuse qualification.",
       "basis": {
-        "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
+        "path": "standards/cache-qualification-agent-message-review.md",
+        "sha256": "985119841e6c59a9c6c44c42ad767a5a5a237b9f6e3bf30cccf693bff1a6287a"
       }
     },
     "@beep/ai-sync": {
@@ -930,11 +930,11 @@
       }
     },
     "@beep/repo-cli": {
-      "reviewer": "design-figure-generation slice 1 implementer",
-      "reason": "Record the new @beep/occt and @beep/pdf-tools driver packages and the new @beep/technical-drawing foundation capability (their build, check, docgen, lint, lint:deprecated-apis, lint:jsdoc, lint:laws and test tasks are new projection nodes) and for @beep/repo-cli, whose tasks gain those three workspace dependencies and the @beep/m365 dependency for drawings sign. Task inputs, outputs and cache policy are otherwise unchanged; profile, epoch, scope and the qualification ledger are preserved. @beep/pdf-tools also gains the test:integration:parallel task node so the hosted integration lane runs its live test.",
+      "reviewer": "GPT-6.1-Sol medium (agent messaging baseline review)",
+      "reason": "Record only the intentional ACP/provider/MCP dependency edges and six added policy-fingerprint inputs; preserve cache settings, scope, profile, epoch and qualification ledger without granting reuse qualification.",
       "basis": {
-        "path": ".changeset/design-figure-drivers.md",
-        "sha256": "9b642414a6d87a7ed68955eed76fb5c9468dfe344cffe17e95167931723e510a"
+        "path": "standards/cache-qualification-agent-message-review.md",
+        "sha256": "985119841e6c59a9c6c44c42ad767a5a5a237b9f6e3bf30cccf693bff1a6287a"
       }
     },
     "@beep/repo-configs": {
@@ -2592,6 +2592,10 @@
             "eslint.config.mjs",
             "knip.jsonc",
             "package.json",
+            "packages/drivers/acp/package.json",
+            "packages/drivers/acp/src/**",
+            "packages/drivers/ai-provider-cli/package.json",
+            "packages/drivers/ai-provider-cli/src/**",
             "packages/drivers/duckdb/package.json",
             "packages/drivers/duckdb/src/**",
             "packages/drivers/exiftool/package.json",
@@ -2630,6 +2634,8 @@
             "packages/foundation/capability/colors/src/**",
             "packages/foundation/capability/file-processing/package.json",
             "packages/foundation/capability/file-processing/src/**",
+            "packages/foundation/capability/mcp-kit/package.json",
+            "packages/foundation/capability/mcp-kit/src/**",
             "packages/foundation/capability/observability/package.json",
             "packages/foundation/capability/observability/src/**",
             "packages/foundation/capability/technical-drawing/package.json",
@@ -7396,6 +7402,7 @@
         "command": "bun run --if-present beep:audit",
         "commandDigest": "85e5680644697e5658eb9e48b0c9fc5c2f7f3640487e84f689654eb3c8f202da",
         "dependencies": [
+          "@beep/acp#audit",
           "@beep/identity#audit",
           "@beep/schema#audit",
           "@beep/test-runner#audit",
@@ -7461,6 +7468,7 @@
         "command": "bun run beep:build",
         "commandDigest": "85e5680644697e5658eb9e48b0c9fc5c2f7f3640487e84f689654eb3c8f202da",
         "dependencies": [
+          "@beep/acp#build",
           "@beep/identity#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
@@ -7513,6 +7521,7 @@
         "command": "bun run beep:check",
         "commandDigest": "85e5680644697e5658eb9e48b0c9fc5c2f7f3640487e84f689654eb3c8f202da",
         "dependencies": [
+          "@beep/acp#build",
           "@beep/identity#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
@@ -7552,6 +7561,7 @@
         "command": "bunx vitest run --coverage --exclude=test/integration/**",
         "commandDigest": "85e5680644697e5658eb9e48b0c9fc5c2f7f3640487e84f689654eb3c8f202da",
         "dependencies": [
+          "@beep/acp#build",
           "@beep/identity#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
@@ -7678,6 +7688,7 @@
         "commandDigest": "85e5680644697e5658eb9e48b0c9fc5c2f7f3640487e84f689654eb3c8f202da",
         "dependencies": [
           "//#lint:policy-fingerprint",
+          "@beep/acp#transit",
           "@beep/identity#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
@@ -7888,6 +7899,7 @@
         "command": "beep-cli quality test-tsgo-package",
         "commandDigest": "85e5680644697e5658eb9e48b0c9fc5c2f7f3640487e84f689654eb3c8f202da",
         "dependencies": [
+          "@beep/acp#transit",
           "@beep/identity#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
@@ -7933,6 +7945,7 @@
         "command": "bun run beep:test",
         "commandDigest": "85e5680644697e5658eb9e48b0c9fc5c2f7f3640487e84f689654eb3c8f202da",
         "dependencies": [
+          "@beep/acp#transit",
           "@beep/identity#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
@@ -7981,6 +7994,7 @@
         "command": "bun run beep:test:integration",
         "commandDigest": "85e5680644697e5658eb9e48b0c9fc5c2f7f3640487e84f689654eb3c8f202da",
         "dependencies": [
+          "@beep/acp#build",
           "@beep/identity#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
@@ -8025,6 +8039,7 @@
         "command": "bun run beep:test",
         "commandDigest": "85e5680644697e5658eb9e48b0c9fc5c2f7f3640487e84f689654eb3c8f202da",
         "dependencies": [
+          "@beep/acp#transit",
           "@beep/identity#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
@@ -80259,6 +80274,7 @@
         "command": "bun run --if-present beep:audit",
         "commandDigest": "149d0c503d33528e1a0389778596a8c91b0876f8a7c70d3a44155133bd4449ea",
         "dependencies": [
+          "@beep/ai-provider-cli#audit",
           "@beep/chalk#audit",
           "@beep/colors#audit",
           "@beep/duckdb#audit",
@@ -80271,6 +80287,7 @@
           "@beep/identity#audit",
           "@beep/libpff#audit",
           "@beep/m365#audit",
+          "@beep/mcp-kit#audit",
           "@beep/md#audit",
           "@beep/obs#audit",
           "@beep/observability#audit",
@@ -80353,6 +80370,7 @@
         "command": "bun run beep:build",
         "commandDigest": "149d0c503d33528e1a0389778596a8c91b0876f8a7c70d3a44155133bd4449ea",
         "dependencies": [
+          "@beep/ai-provider-cli#build",
           "@beep/chalk#build",
           "@beep/colors#build",
           "@beep/duckdb#build",
@@ -80365,6 +80383,7 @@
           "@beep/identity#build",
           "@beep/libpff#build",
           "@beep/m365#build",
+          "@beep/mcp-kit#build",
           "@beep/md#build",
           "@beep/obs#build",
           "@beep/observability#build",
@@ -80434,6 +80453,7 @@
         "command": "bun run beep:check",
         "commandDigest": "149d0c503d33528e1a0389778596a8c91b0876f8a7c70d3a44155133bd4449ea",
         "dependencies": [
+          "@beep/ai-provider-cli#build",
           "@beep/chalk#build",
           "@beep/colors#build",
           "@beep/duckdb#build",
@@ -80446,6 +80466,7 @@
           "@beep/identity#build",
           "@beep/libpff#build",
           "@beep/m365#build",
+          "@beep/mcp-kit#build",
           "@beep/md#build",
           "@beep/obs#build",
           "@beep/observability#build",
@@ -80502,6 +80523,7 @@
         "command": "bunx vitest run --coverage",
         "commandDigest": "149d0c503d33528e1a0389778596a8c91b0876f8a7c70d3a44155133bd4449ea",
         "dependencies": [
+          "@beep/ai-provider-cli#build",
           "@beep/chalk#build",
           "@beep/colors#build",
           "@beep/duckdb#build",
@@ -80514,6 +80536,7 @@
           "@beep/identity#build",
           "@beep/libpff#build",
           "@beep/m365#build",
+          "@beep/mcp-kit#build",
           "@beep/md#build",
           "@beep/obs#build",
           "@beep/observability#build",
@@ -80621,6 +80644,7 @@
         "command": "bun run beep:doctest",
         "commandDigest": "149d0c503d33528e1a0389778596a8c91b0876f8a7c70d3a44155133bd4449ea",
         "dependencies": [
+          "@beep/ai-provider-cli#transit",
           "@beep/chalk#transit",
           "@beep/colors#transit",
           "@beep/duckdb#transit",
@@ -80633,6 +80657,7 @@
           "@beep/identity#transit",
           "@beep/libpff#transit",
           "@beep/m365#transit",
+          "@beep/mcp-kit#transit",
           "@beep/md#transit",
           "@beep/obs#transit",
           "@beep/observability#transit",
@@ -80736,6 +80761,7 @@
         "commandDigest": "149d0c503d33528e1a0389778596a8c91b0876f8a7c70d3a44155133bd4449ea",
         "dependencies": [
           "//#lint:policy-fingerprint",
+          "@beep/ai-provider-cli#transit",
           "@beep/chalk#transit",
           "@beep/colors#transit",
           "@beep/duckdb#transit",
@@ -80748,6 +80774,7 @@
           "@beep/identity#transit",
           "@beep/libpff#transit",
           "@beep/m365#transit",
+          "@beep/mcp-kit#transit",
           "@beep/md#transit",
           "@beep/obs#transit",
           "@beep/observability#transit",
@@ -80975,6 +81002,7 @@
         "command": "beep-cli quality test-tsgo-package",
         "commandDigest": "149d0c503d33528e1a0389778596a8c91b0876f8a7c70d3a44155133bd4449ea",
         "dependencies": [
+          "@beep/ai-provider-cli#transit",
           "@beep/chalk#transit",
           "@beep/colors#transit",
           "@beep/duckdb#transit",
@@ -80987,6 +81015,7 @@
           "@beep/identity#transit",
           "@beep/libpff#transit",
           "@beep/m365#transit",
+          "@beep/mcp-kit#transit",
           "@beep/md#transit",
           "@beep/obs#transit",
           "@beep/observability#transit",
@@ -81049,6 +81078,7 @@
         "command": "bun run beep:test",
         "commandDigest": "149d0c503d33528e1a0389778596a8c91b0876f8a7c70d3a44155133bd4449ea",
         "dependencies": [
+          "@beep/ai-provider-cli#transit",
           "@beep/chalk#transit",
           "@beep/colors#transit",
           "@beep/duckdb#transit",
@@ -81061,6 +81091,7 @@
           "@beep/identity#transit",
           "@beep/libpff#transit",
           "@beep/m365#transit",
+          "@beep/mcp-kit#transit",
           "@beep/md#transit",
           "@beep/obs#transit",
           "@beep/observability#transit",
@@ -81129,6 +81160,7 @@
         "command": "bun run beep:test",
         "commandDigest": "149d0c503d33528e1a0389778596a8c91b0876f8a7c70d3a44155133bd4449ea",
         "dependencies": [
+          "@beep/ai-provider-cli#transit",
           "@beep/chalk#transit",
           "@beep/colors#transit",
           "@beep/duckdb#transit",
@@ -81141,6 +81173,7 @@
           "@beep/identity#transit",
           "@beep/libpff#transit",
           "@beep/m365#transit",
+          "@beep/mcp-kit#transit",
           "@beep/md#transit",
           "@beep/obs#transit",
           "@beep/observability#transit",
@@ -104185,7 +104218,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "5ad25a9e98a0b47744c24e0701da73cd62b831407083063f8127bbbb76bde1e5"
+        "sha256": "0ad4e71dbd8c45b4d6f35fbcc1095af0add73ee01c89cf73574d810187adc8cf"
       }
     ]
   }

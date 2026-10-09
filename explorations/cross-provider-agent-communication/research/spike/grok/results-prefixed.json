@@ -1,0 +1,137 @@
+[
+  {
+    "case": "idle",
+    "sample": 1,
+    "extensionResponse": {
+      "result": {
+        "status": "queued"
+      }
+    },
+    "received": true,
+    "latencySeconds": 1.705
+  },
+  {
+    "case": "idle",
+    "sample": 2,
+    "extensionResponse": {
+      "result": {
+        "status": "queued"
+      }
+    },
+    "received": true,
+    "latencySeconds": 1.304
+  },
+  {
+    "case": "idle",
+    "sample": 3,
+    "extensionResponse": {
+      "result": {
+        "status": "queued"
+      }
+    },
+    "received": true,
+    "latencySeconds": 1.704
+  },
+  {
+    "case": "idle",
+    "sample": 4,
+    "extensionResponse": {
+      "result": {
+        "status": "queued"
+      }
+    },
+    "received": true,
+    "latencySeconds": 1.203
+  },
+  {
+    "case": "idle",
+    "sample": 5,
+    "extensionResponse": {
+      "result": {
+        "status": "queued"
+      }
+    },
+    "received": true,
+    "latencySeconds": 1.304
+  },
+  {
+    "case": "busy",
+    "sample": 1,
+    "promptPendingAtSend": true,
+    "extensionResponse": {
+      "result": {
+        "status": "queued"
+      }
+    },
+    "promptStopReason": "end_turn",
+    "nonceBeforePromptCompletion": false,
+    "received": true,
+    "latencySeconds": 8.589,
+    "classification": "queued-follow-up-context-received"
+  },
+  {
+    "case": "busy",
+    "sample": 2,
+    "promptPendingAtSend": true,
+    "extensionResponse": {
+      "result": {
+        "status": "queued"
+      }
+    },
+    "promptStopReason": "end_turn",
+    "nonceBeforePromptCompletion": false,
+    "received": true,
+    "latencySeconds": 5.336,
+    "classification": "queued-follow-up-context-received"
+  },
+  {
+    "case": "busy",
+    "sample": 3,
+    "promptPendingAtSend": true,
+    "extensionResponse": {
+      "result": {
+        "status": "queued"
+      }
+    },
+    "promptStopReason": "end_turn",
+    "nonceBeforePromptCompletion": false,
+    "received": true,
+    "latencySeconds": 6.332,
+    "classification": "queued-follow-up-context-received"
+  },
+  {
+    "case": "busy",
+    "sample": 4,
+    "promptPendingAtSend": true,
+    "extensionResponse": {
+      "result": {
+        "status": "queued"
+      }
+    },
+    "promptStopReason": "end_turn",
+    "nonceBeforePromptCompletion": false,
+    "received": true,
+    "latencySeconds": 4.542,
+    "classification": "queued-follow-up-context-received"
+  },
+  {
+    "case": "busy",
+    "sample": 5,
+    "promptPendingAtSend": true,
+    "extensionResponse": {
+      "result": {
+        "status": "queued"
+      }
+    },
+    "promptStopReason": "end_turn",
+    "nonceBeforePromptCompletion": false,
+    "received": true,
+    "latencySeconds": 7.161,
+    "classification": "queued-follow-up-context-received"
+  },
+  {
+    "case": "cancel",
+    "stopReason": "cancelled",
+    "durationSeconds": 0.31
+  }
+]

@@ -74,7 +74,8 @@
     "./test/*": "./src/test/*.test-kit.ts",
     "./test/DeletePackage": "./src/test/DeletePackage.test-kit.ts",
     "./test/Labs": "./src/test/Labs.test-kit.ts",
-    "./bin": null
+    "./bin": null,
+    "./commands/AgentMessage": "./src/commands/AgentMessage/index.ts"
   },
   "files": [
     "src/**/*.ts",
@@ -149,7 +150,8 @@
       "./test/*": null,
       "./test/DeletePackage": null,
       "./test/Labs": null,
-      "./bin": null
+      "./bin": null,
+      "./commands/AgentMessage": "./dist/commands/AgentMessage/index.js"
     }
   },
   "scripts": {
@@ -181,6 +183,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@beep/ai-provider-cli": "workspace:^",
     "@beep/chalk": "workspace:^",
     "@beep/colors": "workspace:^",
     "@beep/duckdb": "workspace:^",
@@ -192,6 +195,7 @@
     "@beep/identity": "workspace:^",
     "@beep/libpff": "workspace:^",
     "@beep/m365": "workspace:^",
+    "@beep/mcp-kit": "workspace:^",
     "@beep/md": "workspace:^",
     "@beep/obs": "workspace:^",
     "@beep/observability": "workspace:^",
@@ -216,6 +220,7 @@
     "@effect/doctest": "catalog:",
     "@effect/platform-bun": "catalog:",
     "@effect/platform-node": "catalog:",
+    "@effect/sql-sqlite-bun": "catalog:",
     "@effected/github": "catalog:",
     "@noble/hashes": "catalog:",
     "@openai/codex-sdk": "catalog:",

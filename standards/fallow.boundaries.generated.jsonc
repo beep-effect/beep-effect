@@ -1078,6 +1078,7 @@
       {
         "from": "@beep/ai-provider-cli",
         "allow": [
+          "@beep/acp",
           "@beep/ai-provider-cli",
           "@beep/identity",
           "@beep/schema",
@@ -1086,6 +1087,7 @@
           "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/acp",
           "@beep/ai-provider-cli",
           "@beep/identity",
           "@beep/schema",
@@ -3550,6 +3552,7 @@
       {
         "from": "@beep/repo-cli",
         "allow": [
+          "@beep/ai-provider-cli",
           "@beep/chalk",
           "@beep/colors",
           "@beep/duckdb",
@@ -3562,6 +3565,7 @@
           "@beep/identity",
           "@beep/libpff",
           "@beep/m365",
+          "@beep/mcp-kit",
           "@beep/md",
           "@beep/obs",
           "@beep/observability",
@@ -3587,6 +3591,7 @@
           "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/ai-provider-cli",
           "@beep/chalk",
           "@beep/colors",
           "@beep/duckdb",
@@ -3599,6 +3604,7 @@
           "@beep/identity",
           "@beep/libpff",
           "@beep/m365",
+          "@beep/mcp-kit",
           "@beep/md",
           "@beep/obs",
           "@beep/observability",

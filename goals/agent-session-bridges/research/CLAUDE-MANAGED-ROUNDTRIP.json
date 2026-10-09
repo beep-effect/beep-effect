@@ -1,0 +1,556 @@
+{
+  "allNativeDispatchesSettled": true,
+  "autonomousExchangeLogicalMessages": 3,
+  "builtInToolDenialVerified": false,
+  "bunVersion": "1.4.2",
+  "busyPeerExercise": {
+    "acceptedDuringActiveAcknowledgedTurn": true,
+    "bothAcknowledged": true,
+    "bothNativeDispatchesSettled": true,
+    "logicalMessages": 2,
+    "mode": "controller-submitted-queue-during-active-native-turn",
+    "outboundGrantUsageUnchanged": true,
+    "passed": true,
+    "requested": true
+  },
+  "controllerRelaysPeerReplies": false,
+  "effort": "medium",
+  "elapsedSeconds": 56.2,
+  "enrolledProviders": ["codex", "claude"],
+  "enrollmentPinsMatched": true,
+  "executableChanged": false,
+  "executableDigests": {
+    "bun": "a83d263767d839e4d2649ca8e35d07159c7afc99afdc96d731ced29e056dda0c",
+    "bwrap": "0b4005e5e12887a22fa9e8d64a41962d8a0015ed4836f2791c560eb9246c890a",
+    "claude": "4503bfe11a6c7fcc1e0b39b5e0d347c04248f750b03b0977b3ad6b531fe6f358",
+    "codex": "50ed828f357c655a3c82054d346cab8434f24901f14ec19b8267571bdd008b38"
+  },
+  "existingApplicationEnrollment": false,
+  "finalExecutableDigests": {
+    "bun": "a83d263767d839e4d2649ca8e35d07159c7afc99afdc96d731ced29e056dda0c",
+    "bwrap": "0b4005e5e12887a22fa9e8d64a41962d8a0015ed4836f2791c560eb9246c890a",
+    "claude": "4503bfe11a6c7fcc1e0b39b5e0d347c04248f750b03b0977b3ad6b531fe6f358",
+    "codex": "50ed828f357c655a3c82054d346cab8434f24901f14ec19b8267571bdd008b38"
+  },
+  "finalRunnerSha256": "9a7dccea01940eb184aa0ba6cb5d9c4c6c97df1388a56177c887a5144f4cf896",
+  "finalSourceDigests": [
+    {
+      "file": "bun.lock",
+      "sha256": "09dd2e7c0f7516ccf943b4b2fb40aaf5bdff6e72e2aaa2862548a1d90dcf8ae7"
+    },
+    {
+      "file": "package.json",
+      "sha256": "d4520cc970f23bf8a6163004dbb2f78f1b62acdd37d3e60f0f209d2cdd43929e"
+    },
+    {
+      "file": "packages/drivers/acp/package.json",
+      "sha256": "b80dac9186ad998e4f1efb3d1aaab2b8dd151d7aa59ef7f77efd55048d4d645e"
+    },
+    {
+      "file": "packages/drivers/acp/src/Acp.errors.ts",
+      "sha256": "729aec20d59388492bbae4b4b0c6dce7955973d27de19a5b27f58e833c5f7fd1"
+    },
+    {
+      "file": "packages/drivers/acp/src/Acp.models.ts",
+      "sha256": "ad57df30cbfe8f4397055e98450e19d7b8ae41ebe097df56c696dbd40613301e"
+    },
+    {
+      "file": "packages/drivers/acp/src/AcpAgent.service.ts",
+      "sha256": "32e2bafcfc29f43690f120cd75c19af7ad623204e67bb505b190487b56dcd823"
+    },
+    {
+      "file": "packages/drivers/acp/src/AcpClient.service.ts",
+      "sha256": "eb001dd3cbf8dcd7dff2fbec7728d0e55cfa7cae9576f34e5f3ab2bb1f837fcb"
+    },
+    {
+      "file": "packages/drivers/acp/src/AcpJson.codec.ts",
+      "sha256": "380a44020d7b95819c5e22a037da1c9305e7fde4c5d18f63c3216ab9dc6c8865"
+    },
+    {
+      "file": "packages/drivers/acp/src/AcpProtocol.service.ts",
+      "sha256": "2f6a06ee4f3037d7763dae9c65e8bcad26034bd388c5c2780f950ec716d9417f"
+    },
+    {
+      "file": "packages/drivers/acp/src/AcpRpc.models.ts",
+      "sha256": "feb145a04ea8f4012bde7b6b243385105bd5d7d549be71d107e1cbc500648f82"
+    },
+    {
+      "file": "packages/drivers/acp/src/AcpTerminal.models.ts",
+      "sha256": "5ce37354b78326d1df67fdb6ada024124a17b2e497926fc9830fa176f753b41f"
+    },
+    {
+      "file": "packages/drivers/acp/src/_generated/meta.gen.ts",
+      "sha256": "f76025e0ebd1bea3016f7df3eca8f2cd675aa20413f2c30ba9d3a5fe41f71091"
+    },
+    {
+      "file": "packages/drivers/acp/src/_generated/schema.gen.ts",
+      "sha256": "636b173345c7e0fe22a96c5e97783e00bd7a21e260b208b1d4b1201395920d0b"
+    },
+    {
+      "file": "packages/drivers/acp/src/index.ts",
+      "sha256": "0f17886f7c0f693a41a05402b28ecd42c5ab1c0fa361d92b2f0f6628299a0c9f"
+    },
+    {
+      "file": "packages/drivers/acp/src/internal/jsonrpc.ts",
+      "sha256": "1347914b0de859a369c25f8d5eca72bfb96cbe3baeeff6eca37dfc31d54d7a8e"
+    },
+    {
+      "file": "packages/drivers/acp/src/internal/shared.ts",
+      "sha256": "2977b96f094820dc82e750ffbfdb0f2df3e06519e55d26608bb196aa21fce0dd"
+    },
+    {
+      "file": "packages/drivers/acp/src/internal/stdio.ts",
+      "sha256": "69826ee36b23dd89f34a1a2013c94f2b24815d30a039c39483b5bdd947a095db"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/package.json",
+      "sha256": "f492ce4513e33e2058d7130954124ca33dc03d2c94a8cd2da8cf5ed2bfc96311"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCli.errors.ts",
+      "sha256": "4fec3d7c7c74a099564871334d96c73d6a2ffbe7be4e6580a4ff3f7e972c4448"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCli.models.ts",
+      "sha256": "be48a11a90b06c1c4d286eb9f4fede3c94de4ac1fe36b1f43aeb09c4be062b88"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCli.service.ts",
+      "sha256": "6aec2d8781ca970482f11f7366a13f987d654b3c78c05aa5f9dc21060fa050e5"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCliHome.errors.ts",
+      "sha256": "3c45b9d7360758b995de8114b912284355cd81ef5fe0fe030e2758926bb2c7a1"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCliHome.models.ts",
+      "sha256": "faaa510899d008b4305f08b2b6b80518468679d58aab38b69f1be73c71791bc4"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCliHome.service.ts",
+      "sha256": "c78ef442adbd5784127b0b137c85b45da3271e5f1e9b3ffb58c747b53b8d5a6e"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCliSession.claude.service.ts",
+      "sha256": "2e1936ed378002361b9c2a10b3a9c0fac46743b415149b419587410b409ce1f7"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCliSession.codex.service.ts",
+      "sha256": "ab7643e0a3ed66e70421552d5dcb0d2571d710c4a69454640bcb043ed288d6bc"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCliSession.cursor.service.ts",
+      "sha256": "da1e40a36420904f05ae4cf4d62fee563cfbb9fe6be56e2f0908396fe772d97c"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCliSession.errors.ts",
+      "sha256": "4914031e015a81b90bd474cddc13d0cfa0d6f14c96e705965554f42183a608d5"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCliSession.grok.service.ts",
+      "sha256": "7094ce665f13fa0b74ff8c41660b3c6c379457eb12932ab35db8c9c05d55110a"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCliSession.models.ts",
+      "sha256": "7cb742df8886adec8fe6570466868178943352e29bfca6696e3e9ab8b83155fe"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCliSession.profile.service.ts",
+      "sha256": "fe122c9a84a822b448eb0a0a892ea0dafb02da5ddb98cd40c00ef48c4f477e33"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCliSession.service.ts",
+      "sha256": "d2df26ad0c90a715f4825662892f5a82ad770a31f9fde59bb05980aec8ebb0dc"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCliSession.stdio.service.ts",
+      "sha256": "c42cc32d193c119112b7cd3a62d725d893e8b80458fc21b5a84bf19fbe467021"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCliSession.wire.models.ts",
+      "sha256": "b9453178f81b4bc258ae904874d96ca080621a6f84fcf712732c8bfdc69749fc"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/index.ts",
+      "sha256": "393c5ad2b06669667ce2cdb07e1af149b98e776b660d2e9489fa75802fd021b7"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/package.json",
+      "sha256": "3966914d2ec18015b941678cd913c5717f14620a557a98aae0a9ed5c4dd45f7c"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/ApiKeyRequired.ts",
+      "sha256": "3db5256b9539da9aec1182b2cdddcfd3d69faf2fccdc3515db5d8f6b8b2bb80e"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/FieldTier.ts",
+      "sha256": "a8b6b27e6a98e6833a7ba0bc2c6ea4b4d289606138072215cc8ba74e4b0a8fbe"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/McpCaller.ts",
+      "sha256": "2bd1f9a810613343f6807fffaea5338b00efee592169a923a4e8778eed29aa09"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/SanitizedSpan.ts",
+      "sha256": "93373984a9aa4a95735546596ba60162636405b2580b68d239936d87b9827396"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/SourceAuth.ts",
+      "sha256": "1fc5fbec75ec16acf25c51f15c20ff7b791fc11dfcb2e8359d9d1a1f57738a78"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/TierGate.ts",
+      "sha256": "e196fff3989f88b55b006654d2963aa8a141f82581f6e52ed4de410be8113923"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/ToolAnnotations.ts",
+      "sha256": "4bf0d3cc67eb0cd79cc893814646f207a10efeeac650f31b5fb0951c73a09a70"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/ToolkitComposition.ts",
+      "sha256": "e9e7adaf582123982137d779d6804cc74c245fb7115316c34a65b2f6ab83902e"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/Version.ts",
+      "sha256": "bb2b14cd4bd4a3a5f3baeb2aff7861593c8ca4c85346fdaf9a6cfe71108a0417"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/client.node.ts",
+      "sha256": "f96711e738d5a13bc1864d1cc10b5297c5b7f085648df1655604a651d804b218"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/client.ts",
+      "sha256": "3362189155c8efe9f134fa10bdfb5cd4fefa8dea3ccc8c921fc97b9696ea0988"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/index.ts",
+      "sha256": "4dd36e8c85e9d0768d6dff8f31bae5ca923dacc6608ed0ac3eb604184e235bd5"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/test/Conformance.test-kit.ts",
+      "sha256": "a3f66ade1dc29b66becfdf75fbac3f728e8934c0e29c4a17393ffef54c0142f3"
+    },
+    {
+      "file": "packages/tooling/tool/cli/package.json",
+      "sha256": "f0e41e9bfedc7f3789bdfe3fa9bd7ce8b7c133a8e4f24fbfd58d6c00cd5e33c1"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/bin.ts",
+      "sha256": "d00684cb007afd1aca747d285ecc7af14aa1669a2dab4bad1fcdcf3bb9ffc284"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.command.ts",
+      "sha256": "c9f24d55d2a54f6ed71f9058c3e491130a075170ddd91d920c186417002fde2b"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.layer.ts",
+      "sha256": "83d50177eb533faa54ddcdf1d604cd59ba3ecff3d22e77d12a73c3dac131de94"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.models.ts",
+      "sha256": "209a8880a9800447504101b78e1bab9c181a64198244dcd75238403758c7dfe0"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.runtime.ts",
+      "sha256": "abaefc01bad5e5b7f20424833f23c799759225df077e02e2adff1db49db77b0a"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.service.ts",
+      "sha256": "c4b53a4cf2e4bae030d0101a76bf46d999aad7f78515ff335bc5fb84e41f8616"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.store.ts",
+      "sha256": "b8ef0633b663c0c8d3a8c59b0cdc86c6c5f5ee6984d239ab1bdd4ce55060feac"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.tools.ts",
+      "sha256": "630878b529df27db1ac22b5496eb021deaa65652bed96e22c9963a5d2a9209ac"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AgentMessage/index.ts",
+      "sha256": "0e0a696f8a9c1799352729788db8e312a3316b13868b1d426208b75dfdc4707c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/tsconfig.json",
+      "sha256": "86928ae9bc459b7e0fa4ce79fb1588ab83120642c672eaeec41805dc06b3a488"
+    },
+    {
+      "file": "tsconfig.base.json",
+      "sha256": "0b47d76facca9e990652172170d66dee8ca66c021fe97dd6b665e27c2d8044bf"
+    },
+    {
+      "file": "tsconfig.json",
+      "sha256": "1571d17b1b080642b5da5b2d09080547705deb9a5a31b2caf586a00685be6ddc"
+    }
+  ],
+  "grantUsageByProvider": {
+    "claude": 1,
+    "codex": 1
+  },
+  "logicalMessages": 5,
+  "mode": "native-managed-autonomous-tools",
+  "models": {
+    "claude": "claude-opus-5-5",
+    "codex": "gpt-6.1-sol"
+  },
+  "ownedLeadersStopped": true,
+  "ownedProcessGroupsStopped": true,
+  "passed": true,
+  "providers": ["codex", "claude"],
+  "replyAcknowledged": true,
+  "requestAcknowledged": true,
+  "runnerSha256": "9a7dccea01940eb184aa0ba6cb5d9c4c6c97df1388a56177c887a5144f4cf896",
+  "schemaVersion": "agent-message-live-proof/v1",
+  "seedAcknowledged": true,
+  "sourceChanged": false,
+  "sourceDigests": [
+    {
+      "file": "bun.lock",
+      "sha256": "09dd2e7c0f7516ccf943b4b2fb40aaf5bdff6e72e2aaa2862548a1d90dcf8ae7"
+    },
+    {
+      "file": "package.json",
+      "sha256": "d4520cc970f23bf8a6163004dbb2f78f1b62acdd37d3e60f0f209d2cdd43929e"
+    },
+    {
+      "file": "packages/drivers/acp/package.json",
+      "sha256": "b80dac9186ad998e4f1efb3d1aaab2b8dd151d7aa59ef7f77efd55048d4d645e"
+    },
+    {
+      "file": "packages/drivers/acp/src/Acp.errors.ts",
+      "sha256": "729aec20d59388492bbae4b4b0c6dce7955973d27de19a5b27f58e833c5f7fd1"
+    },
+    {
+      "file": "packages/drivers/acp/src/Acp.models.ts",
+      "sha256": "ad57df30cbfe8f4397055e98450e19d7b8ae41ebe097df56c696dbd40613301e"
+    },
+    {
+      "file": "packages/drivers/acp/src/AcpAgent.service.ts",
+      "sha256": "32e2bafcfc29f43690f120cd75c19af7ad623204e67bb505b190487b56dcd823"
+    },
+    {
+      "file": "packages/drivers/acp/src/AcpClient.service.ts",
+      "sha256": "eb001dd3cbf8dcd7dff2fbec7728d0e55cfa7cae9576f34e5f3ab2bb1f837fcb"
+    },
+    {
+      "file": "packages/drivers/acp/src/AcpJson.codec.ts",
+      "sha256": "380a44020d7b95819c5e22a037da1c9305e7fde4c5d18f63c3216ab9dc6c8865"
+    },
+    {
+      "file": "packages/drivers/acp/src/AcpProtocol.service.ts",
+      "sha256": "2f6a06ee4f3037d7763dae9c65e8bcad26034bd388c5c2780f950ec716d9417f"
+    },
+    {
+      "file": "packages/drivers/acp/src/AcpRpc.models.ts",
+      "sha256": "feb145a04ea8f4012bde7b6b243385105bd5d7d549be71d107e1cbc500648f82"
+    },
+    {
+      "file": "packages/drivers/acp/src/AcpTerminal.models.ts",
+      "sha256": "5ce37354b78326d1df67fdb6ada024124a17b2e497926fc9830fa176f753b41f"
+    },
+    {
+      "file": "packages/drivers/acp/src/_generated/meta.gen.ts",
+      "sha256": "f76025e0ebd1bea3016f7df3eca8f2cd675aa20413f2c30ba9d3a5fe41f71091"
+    },
+    {
+      "file": "packages/drivers/acp/src/_generated/schema.gen.ts",
+      "sha256": "636b173345c7e0fe22a96c5e97783e00bd7a21e260b208b1d4b1201395920d0b"
+    },
+    {
+      "file": "packages/drivers/acp/src/index.ts",
+      "sha256": "0f17886f7c0f693a41a05402b28ecd42c5ab1c0fa361d92b2f0f6628299a0c9f"
+    },
+    {
+      "file": "packages/drivers/acp/src/internal/jsonrpc.ts",
+      "sha256": "1347914b0de859a369c25f8d5eca72bfb96cbe3baeeff6eca37dfc31d54d7a8e"
+    },
+    {
+      "file": "packages/drivers/acp/src/internal/shared.ts",
+      "sha256": "2977b96f094820dc82e750ffbfdb0f2df3e06519e55d26608bb196aa21fce0dd"
+    },
+    {
+      "file": "packages/drivers/acp/src/internal/stdio.ts",
+      "sha256": "69826ee36b23dd89f34a1a2013c94f2b24815d30a039c39483b5bdd947a095db"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/package.json",
+      "sha256": "f492ce4513e33e2058d7130954124ca33dc03d2c94a8cd2da8cf5ed2bfc96311"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCli.errors.ts",
+      "sha256": "4fec3d7c7c74a099564871334d96c73d6a2ffbe7be4e6580a4ff3f7e972c4448"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCli.models.ts",
+      "sha256": "be48a11a90b06c1c4d286eb9f4fede3c94de4ac1fe36b1f43aeb09c4be062b88"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCli.service.ts",
+      "sha256": "6aec2d8781ca970482f11f7366a13f987d654b3c78c05aa5f9dc21060fa050e5"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCliHome.errors.ts",
+      "sha256": "3c45b9d7360758b995de8114b912284355cd81ef5fe0fe030e2758926bb2c7a1"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCliHome.models.ts",
+      "sha256": "faaa510899d008b4305f08b2b6b80518468679d58aab38b69f1be73c71791bc4"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCliHome.service.ts",
+      "sha256": "c78ef442adbd5784127b0b137c85b45da3271e5f1e9b3ffb58c747b53b8d5a6e"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCliSession.claude.service.ts",
+      "sha256": "2e1936ed378002361b9c2a10b3a9c0fac46743b415149b419587410b409ce1f7"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCliSession.codex.service.ts",
+      "sha256": "ab7643e0a3ed66e70421552d5dcb0d2571d710c4a69454640bcb043ed288d6bc"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCliSession.cursor.service.ts",
+      "sha256": "da1e40a36420904f05ae4cf4d62fee563cfbb9fe6be56e2f0908396fe772d97c"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCliSession.errors.ts",
+      "sha256": "4914031e015a81b90bd474cddc13d0cfa0d6f14c96e705965554f42183a608d5"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCliSession.grok.service.ts",
+      "sha256": "7094ce665f13fa0b74ff8c41660b3c6c379457eb12932ab35db8c9c05d55110a"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCliSession.models.ts",
+      "sha256": "7cb742df8886adec8fe6570466868178943352e29bfca6696e3e9ab8b83155fe"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCliSession.profile.service.ts",
+      "sha256": "fe122c9a84a822b448eb0a0a892ea0dafb02da5ddb98cd40c00ef48c4f477e33"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCliSession.service.ts",
+      "sha256": "d2df26ad0c90a715f4825662892f5a82ad770a31f9fde59bb05980aec8ebb0dc"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCliSession.stdio.service.ts",
+      "sha256": "c42cc32d193c119112b7cd3a62d725d893e8b80458fc21b5a84bf19fbe467021"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCliSession.wire.models.ts",
+      "sha256": "b9453178f81b4bc258ae904874d96ca080621a6f84fcf712732c8bfdc69749fc"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/index.ts",
+      "sha256": "393c5ad2b06669667ce2cdb07e1af149b98e776b660d2e9489fa75802fd021b7"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/package.json",
+      "sha256": "3966914d2ec18015b941678cd913c5717f14620a557a98aae0a9ed5c4dd45f7c"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/ApiKeyRequired.ts",
+      "sha256": "3db5256b9539da9aec1182b2cdddcfd3d69faf2fccdc3515db5d8f6b8b2bb80e"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/FieldTier.ts",
+      "sha256": "a8b6b27e6a98e6833a7ba0bc2c6ea4b4d289606138072215cc8ba74e4b0a8fbe"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/McpCaller.ts",
+      "sha256": "2bd1f9a810613343f6807fffaea5338b00efee592169a923a4e8778eed29aa09"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/SanitizedSpan.ts",
+      "sha256": "93373984a9aa4a95735546596ba60162636405b2580b68d239936d87b9827396"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/SourceAuth.ts",
+      "sha256": "1fc5fbec75ec16acf25c51f15c20ff7b791fc11dfcb2e8359d9d1a1f57738a78"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/TierGate.ts",
+      "sha256": "e196fff3989f88b55b006654d2963aa8a141f82581f6e52ed4de410be8113923"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/ToolAnnotations.ts",
+      "sha256": "4bf0d3cc67eb0cd79cc893814646f207a10efeeac650f31b5fb0951c73a09a70"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/ToolkitComposition.ts",
+      "sha256": "e9e7adaf582123982137d779d6804cc74c245fb7115316c34a65b2f6ab83902e"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/Version.ts",
+      "sha256": "bb2b14cd4bd4a3a5f3baeb2aff7861593c8ca4c85346fdaf9a6cfe71108a0417"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/client.node.ts",
+      "sha256": "f96711e738d5a13bc1864d1cc10b5297c5b7f085648df1655604a651d804b218"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/client.ts",
+      "sha256": "3362189155c8efe9f134fa10bdfb5cd4fefa8dea3ccc8c921fc97b9696ea0988"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/index.ts",
+      "sha256": "4dd36e8c85e9d0768d6dff8f31bae5ca923dacc6608ed0ac3eb604184e235bd5"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/test/Conformance.test-kit.ts",
+      "sha256": "a3f66ade1dc29b66becfdf75fbac3f728e8934c0e29c4a17393ffef54c0142f3"
+    },
+    {
+      "file": "packages/tooling/tool/cli/package.json",
+      "sha256": "f0e41e9bfedc7f3789bdfe3fa9bd7ce8b7c133a8e4f24fbfd58d6c00cd5e33c1"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/bin.ts",
+      "sha256": "d00684cb007afd1aca747d285ecc7af14aa1669a2dab4bad1fcdcf3bb9ffc284"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.command.ts",
+      "sha256": "c9f24d55d2a54f6ed71f9058c3e491130a075170ddd91d920c186417002fde2b"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.layer.ts",
+      "sha256": "83d50177eb533faa54ddcdf1d604cd59ba3ecff3d22e77d12a73c3dac131de94"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.models.ts",
+      "sha256": "209a8880a9800447504101b78e1bab9c181a64198244dcd75238403758c7dfe0"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.runtime.ts",
+      "sha256": "abaefc01bad5e5b7f20424833f23c799759225df077e02e2adff1db49db77b0a"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.service.ts",
+      "sha256": "c4b53a4cf2e4bae030d0101a76bf46d999aad7f78515ff335bc5fb84e41f8616"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.store.ts",
+      "sha256": "b8ef0633b663c0c8d3a8c59b0cdc86c6c5f5ee6984d239ab1bdd4ce55060feac"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.tools.ts",
+      "sha256": "630878b529df27db1ac22b5496eb021deaa65652bed96e22c9963a5d2a9209ac"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AgentMessage/index.ts",
+      "sha256": "0e0a696f8a9c1799352729788db8e312a3316b13868b1d426208b75dfdc4707c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/tsconfig.json",
+      "sha256": "86928ae9bc459b7e0fa4ce79fb1588ab83120642c672eaeec41805dc06b3a488"
+    },
+    {
+      "file": "tsconfig.base.json",
+      "sha256": "0b47d76facca9e990652172170d66dee8ca66c021fe97dd6b665e27c2d8044bf"
+    },
+    {
+      "file": "tsconfig.json",
+      "sha256": "1571d17b1b080642b5da5b2d09080547705deb9a5a31b2caf586a00685be6ddc"
+    }
+  ]
+}

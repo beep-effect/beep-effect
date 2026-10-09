@@ -1,0 +1,21 @@
+{
+  "mode": "controller-mediated browser bridge",
+  "autonomousReplyTool": false,
+  "provider": "grok",
+  "model": "grok-4.7",
+  "effort": "medium",
+  "configurationCounts": {
+    "hooks": 0,
+    "skills": 0,
+    "plugins": 0,
+    "mcpServers": 0,
+    "projectInstructions": 0
+  },
+  "outcome": "passed",
+  "sameGrokSessionThroughout": true,
+  "nonceReplyReceived": true,
+  "exactReplyAcknowledged": true,
+  "stopReason": "end_turn",
+  "reverseToolRequests": 0,
+  "ownedProcessStopped": true
+}

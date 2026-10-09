@@ -157,6 +157,13 @@ export interface AcpClientShape extends AcpProtocol.AcpExtensionRegistrars {
       payload: AcpSchema.CloseSessionRequest
     ) => Effect.Effect<AcpSchema.CloseSessionResponse, AcpError.AcpError>;
     /**
+     * Selects the active mode for a session.
+     * @see https://agentclientprotocol.com/protocol/schema#session/set_mode
+     */
+    readonly setSessionMode: (
+      payload: AcpSchema.SetSessionModeRequest
+    ) => Effect.Effect<AcpSchema.SetSessionModeResponse, AcpError.AcpError>;
+    /**
      * Selects the active model for a session.
      * @see https://agentclientprotocol.com/protocol/schema#session/set_model
      */
@@ -655,6 +662,7 @@ export const make = Effect.fn($I`AcpClient_make`)(function* (
       forkSession: flow(rpc[AGENT_METHODS.session_fork], callRpc),
       resumeSession: flow(rpc[AGENT_METHODS.session_resume], callRpc),
       closeSession: flow(rpc[AGENT_METHODS.session_close], callRpc),
+      setSessionMode: flow(rpc[AGENT_METHODS.session_set_mode], callRpc),
       setSessionModel: flow(rpc[AGENT_METHODS.session_set_model], callRpc),
       setSessionConfigOption: flow(rpc[AGENT_METHODS.session_set_config_option], callRpc),
       prompt: flow(rpc[AGENT_METHODS.session_prompt], callRpc),

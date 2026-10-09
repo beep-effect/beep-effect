@@ -1,0 +1,75 @@
+import { mkdir, realpath, writeFile } from "node:fs/promises";
+import { homedir } from "node:os";
+import { isAbsolute, relative, resolve } from "node:path";
+import { RelayHarnessSession } from "@agent-relay/harnesses";
+
+const requestedRoot = process.env.BEEP_SPIKE_ROOT;
+if (!requestedRoot) throw new Error("BEEP_SPIKE_ROOT must identify a fresh owned cache directory");
+const cache = await realpath(resolve(homedir(), ".cache/beep"));
+const root = await realpath(resolve(requestedRoot));
+const beneathCache = relative(cache, root);
+if (!beneathCache || beneathCache.startsWith("..") || isAbsolute(beneathCache)) {
+  throw new Error("BEEP_SPIKE_ROOT must be strictly below ~/.cache/beep");
+}
+if (root === resolve(cache, "agent-comms-spike/relay")) {
+  throw new Error("Refusing to overwrite the original captured spike directory");
+}
+const phase = process.argv[2];
+const queue = `${root}/session-store`;
+await mkdir(queue, { recursive: true });
+const calls = [];
+const events = [];
+const host = {
+  hasActiveTurn: phase === "write",
+  sessionId: "synthetic-stable-session",
+  onEvent() {
+    return () => {};
+  },
+  async submitUserMessage(text) {
+    calls.push({ operation: "submitUserMessage", synthetic: text.includes("SYNTHETIC") });
+  },
+  async startTurn(text, id) {
+    calls.push({ operation: "startTurn", synthetic: text.includes("SYNTHETIC") });
+  },
+  async destroy() {},
+};
+const session = new RelayHarnessSession({
+  identity: { id: "fixture", name: "fixture", handle: "fixture" },
+  host,
+  deferredQueuePath: queue,
+});
+session.onEvent((e) => events.push(e.type));
+const msg = {
+  id: "synthetic-message",
+  from: { id: "synthetic-sender", name: "synthetic-sender" },
+  target: { kind: "agent", agentName: "fixture" },
+  text: "SYNTHETIC_ONLY",
+  kind: "dm",
+};
+const ctx = { id: "synthetic-delivery", idempotencyKey: "synthetic-on-idle", mode: "on-idle", reason: "dm" };
+const result = { phase, provider_models: 0, capabilities: session.capabilities };
+if (phase === "write") {
+  result.deferred = await session.receiveMessage(msg, ctx);
+  result.duplicate_busy = await session.receiveMessage(msg, ctx);
+  result.host_calls = calls;
+  result.events = events;
+} else {
+  await session.restoreDeferredMessages();
+  result.restored_duplicate = await session.receiveMessage(msg, ctx);
+  result.host_calls_after_restore = calls.length;
+  result.immediate = await session.receiveMessage(
+    { ...msg, id: "synthetic-immediate" },
+    { ...ctx, id: "synthetic-immediate-delivery", idempotencyKey: "synthetic-immediate", mode: "immediate" }
+  );
+  result.host_calls = calls;
+  result.events = events;
+}
+await writeFile(`${root}/session-${phase}-results.json`, JSON.stringify(result, null, 2), { mode: 0o600 });
+console.log(
+  JSON.stringify({
+    phase,
+    receipt: phase === "write" ? result.deferred : result.restored_duplicate,
+    host_calls: calls.length,
+    event_kinds: events,
+  })
+);

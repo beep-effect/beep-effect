@@ -152,6 +152,16 @@
       "reason": "Terminal constructor contract intentionally binds schema-modeled ACP identifiers to live request Effects."
     },
     {
+      "file": "packages/drivers/ai-provider-cli/test/fixtures/managed-claude-peer.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 12,
+      "owner": "@beep/ai-provider-cli",
+      "reason": "Executable synthetic NDJSON peer used by AiProviderCliSession.test.ts for deterministic launch-policy, persistent-session, and oversized-frame regressions. Its codecs validate fixed startup flags/settings and transport envelopes; this file defines no standalone schema-law test. Arbitrary generation would not exercise those process behaviors. Revisit if reusable domain schemas or schema-law assertions move into this fixture."
+    },
+    {
       "file": "packages/drivers/freshbooks/src/Freshbooks.models.ts",
       "symbol": "FreshbooksClient.email",
       "kind": "schema-policy-advisory",

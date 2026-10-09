@@ -1,0 +1,135 @@
+{
+  "scope": "synthetic SQLite contract model, not implemented Beep service or provider evidence",
+  "tests": [
+    {
+      "test": "duplicate acceptance gives one logical message",
+      "passed": true
+    },
+    {
+      "test": "same ID different payload refused",
+      "passed": true
+    },
+    {
+      "test": "concurrent dispatch claim single winner",
+      "passed": true
+    },
+    {
+      "test": "crash accept_before",
+      "passed": true,
+      "child_exit": 74
+    },
+    {
+      "test": "retry after accept_before",
+      "passed": true
+    },
+    {
+      "test": "crash accept_after",
+      "passed": true,
+      "child_exit": 75
+    },
+    {
+      "test": "retry after accept_after",
+      "passed": true
+    },
+    {
+      "test": "unknown consumption held rather than redispatched",
+      "passed": true
+    },
+    {
+      "test": "non-reconcilable route retains ambiguous state",
+      "passed": true
+    },
+    {
+      "test": "reconciled receipt without duplicate external action",
+      "passed": true
+    },
+    {
+      "test": "no dual authority at before_intent_commit",
+      "passed": true,
+      "child_exit": 70
+    },
+    {
+      "test": "handoff recovered before_intent_commit",
+      "passed": true
+    },
+    {
+      "test": "role/direct address separation before_intent_commit",
+      "passed": true
+    },
+    {
+      "test": "no dual authority at after_intent_commit",
+      "passed": true,
+      "child_exit": 71
+    },
+    {
+      "test": "mismatch held at after_intent_commit",
+      "passed": true
+    },
+    {
+      "test": "handoff recovered after_intent_commit",
+      "passed": true
+    },
+    {
+      "test": "role/direct address separation after_intent_commit",
+      "passed": true
+    },
+    {
+      "test": "no dual authority at after_ledger_write",
+      "passed": true,
+      "child_exit": 72
+    },
+    {
+      "test": "mismatch held at after_ledger_write",
+      "passed": true
+    },
+    {
+      "test": "handoff recovered after_ledger_write",
+      "passed": true
+    },
+    {
+      "test": "role/direct address separation after_ledger_write",
+      "passed": true
+    },
+    {
+      "test": "no dual authority at after_activation",
+      "passed": true,
+      "child_exit": 73
+    },
+    {
+      "test": "handoff recovered after_activation",
+      "passed": true
+    },
+    {
+      "test": "role/direct address separation after_activation",
+      "passed": true
+    },
+    {
+      "test": "handoff waits for accepted in-flight action",
+      "passed": true
+    },
+    {
+      "test": "handoff completes after action outcome",
+      "passed": true
+    },
+    {
+      "test": "stale predecessor action refused",
+      "passed": true
+    },
+    {
+      "test": "competing handoff claims one accepted",
+      "passed": true
+    },
+    {
+      "test": "100 durable local accepts",
+      "passed": true
+    }
+  ],
+  "passed": 29,
+  "failed": 0,
+  "latency": {
+    "n": 100,
+    "p95_ms": 5.943,
+    "max_ms": 58.081,
+    "scope": "this local SQLite FULL-sync fixture only"
+  }
+}

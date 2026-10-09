@@ -916,6 +916,7 @@
       "name": "@beep/ai-provider-cli",
       "version": "0.0.1",
       "dependencies": {
+        "@beep/acp": "workspace:^",
         "@beep/identity": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/utils": "workspace:^",
@@ -924,6 +925,7 @@
       "devDependencies": {
         "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
+        "@effect/platform-node": "catalog:",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
         "bun-types": "catalog:",
@@ -3223,6 +3225,7 @@
         "beep-cli": "./src/bin.ts",
       },
       "dependencies": {
+        "@beep/ai-provider-cli": "workspace:^",
         "@beep/chalk": "workspace:^",
         "@beep/colors": "workspace:^",
         "@beep/duckdb": "workspace:^",
@@ -3234,6 +3237,7 @@
         "@beep/identity": "workspace:^",
         "@beep/libpff": "workspace:^",
         "@beep/m365": "workspace:^",
+        "@beep/mcp-kit": "workspace:^",
         "@beep/md": "workspace:^",
         "@beep/obs": "workspace:^",
         "@beep/observability": "workspace:^",
@@ -3258,6 +3262,7 @@
         "@effect/doctest": "catalog:",
         "@effect/platform-bun": "catalog:",
         "@effect/platform-node": "catalog:",
+        "@effect/sql-sqlite-bun": "catalog:",
         "@effected/github": "catalog:",
         "@noble/hashes": "catalog:",
         "@openai/codex-sdk": "catalog:",

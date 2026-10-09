@@ -1,0 +1,199 @@
+{
+  "packages": "13.2.0",
+  "launch_mode": "local-only",
+  "provider_models_launched": 0,
+  "steps": [
+    {
+      "name": "health",
+      "ok": true,
+      "value": {
+        "agentCount": 0,
+        "deadLetterCount": 1,
+        "defaultWorkspaceId": null,
+        "degraded": {
+          "capabilities": {
+            "cross_machine_routing": false,
+            "local_attach": true,
+            "local_queue": true,
+            "local_spawn": true,
+            "relaycast_tools": false,
+            "remote_attach": false,
+            "remote_delivery": false,
+            "worker_presence": false
+          },
+          "mode": "local_only",
+          "reconciliation": {
+            "configured": false,
+            "connected": false,
+            "delivery_semantics": "audit_only_at_least_once",
+            "pending_records": 1
+          },
+          "status": "degraded"
+        },
+        "memberships": [],
+        "memoryMb": 0,
+        "mode": "local_only",
+        "nodeConnected": false,
+        "nodeDelivery": {
+          "connected": false,
+          "tokenPresent": false
+        },
+        "pendingDeliveryCount": 0,
+        "relaycastConnected": false,
+        "service": "agent-relay-listen",
+        "status": "degraded",
+        "uptimeMs": 0,
+        "version": "13.2.0",
+        "workspaceId": "ws_unknown",
+        "wsConnections": 0
+      }
+    },
+    {
+      "name": "session",
+      "ok": true,
+      "value": {
+        "broker_version": "13.2.0",
+        "mode": "persist",
+        "protocol_version": 2,
+        "has_workspace_key": false,
+        "has_relay_base_url": false
+      }
+    },
+    {
+      "name": "send_to_absent_local",
+      "ok": false,
+      "error": {
+        "name": "HarnessDriverProtocolError",
+        "code": "http_502",
+        "message": "DEGRADED: only agents running on this broker can receive local deliveries"
+      }
+    },
+    {
+      "name": "spawn_native_fixture",
+      "ok": true,
+      "value": {
+        "name": "synthetic-fixture",
+        "runtime": "headless"
+      }
+    },
+    {
+      "name": "native_control",
+      "ok": true,
+      "value": {
+        "accepted": true,
+        "active_turn": false,
+        "idempotency_key": "synthetic-control-1",
+        "protocol_version": 1,
+        "request_id": "<opaque>"
+      }
+    },
+    {
+      "name": "manual_delivery_mode",
+      "ok": false,
+      "error": {
+        "name": "HarnessDriverProtocolError",
+        "code": "capability_disabled",
+        "message": "DEGRADED: manual flush is unavailable in local-only mode; local deliveries use the durable automatic queue"
+      }
+    },
+    {
+      "name": "send_to_present_local",
+      "ok": true,
+      "value": {
+        "delivery_id": "<opaque>",
+        "delivery_status": "queued_local",
+        "event_id": "<opaque>",
+        "local": true,
+        "mode": "local_only",
+        "reconciliation_pending": true,
+        "relaycast_published": false,
+        "success": true,
+        "workspace_id": "local",
+        "targets": []
+      }
+    },
+    {
+      "name": "health_after_local_send",
+      "ok": true,
+      "value": {
+        "agentCount": 1,
+        "deadLetterCount": 1,
+        "defaultWorkspaceId": null,
+        "degraded": {
+          "capabilities": {
+            "cross_machine_routing": false,
+            "local_attach": true,
+            "local_queue": true,
+            "local_spawn": true,
+            "relaycast_tools": false,
+            "remote_attach": false,
+            "remote_delivery": false,
+            "worker_presence": false
+          },
+          "mode": "local_only",
+          "reconciliation": {
+            "configured": false,
+            "connected": false,
+            "delivery_semantics": "audit_only_at_least_once",
+            "pending_records": 2
+          },
+          "status": "degraded"
+        },
+        "memberships": [],
+        "memoryMb": 0,
+        "mode": "local_only",
+        "nodeConnected": false,
+        "nodeDelivery": {
+          "connected": false,
+          "tokenPresent": false
+        },
+        "pendingDeliveryCount": 0,
+        "relaycastConnected": false,
+        "service": "agent-relay-listen",
+        "status": "degraded",
+        "uptimeMs": 0,
+        "version": "13.2.0",
+        "workspaceId": "ws_unknown",
+        "wsConnections": 0
+      }
+    },
+    {
+      "name": "pending",
+      "ok": true,
+      "value": []
+    },
+    {
+      "name": "flush",
+      "ok": true,
+      "value": {
+        "flushed": 0,
+        "deadLettered": 0,
+        "held": 0
+      }
+    },
+    {
+      "name": "agent_events",
+      "ok": true,
+      "value": {
+        "event_kinds": [
+          "session.started",
+          "synthetic.command_received",
+          "delivery.accepted"
+        ],
+        "high_water": 3,
+        "gap": false
+      }
+    },
+    {
+      "name": "release_fixture",
+      "ok": true,
+      "value": {
+        "identity": "retained",
+        "name": "synthetic-fixture",
+        "process": "stopped",
+        "success": true
+      }
+    }
+  ],
+  "owned_broker_stopped": true
+}

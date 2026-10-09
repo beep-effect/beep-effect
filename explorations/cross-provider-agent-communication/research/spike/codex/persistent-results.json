@@ -1,0 +1,55 @@
+{
+  "provider": "codex",
+  "test": "owned persistent session reconnect and permission continuity",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "samples": [],
+  "before": {
+    "model": "gpt-6.1-sol",
+    "reasoningEffort": "medium",
+    "approvalPolicy": "never",
+    "sandbox": {
+      "type": "readOnly",
+      "networkAccess": false
+    },
+    "permissions": null
+  },
+  "initial_nonce": true,
+  "client_reconnect": {
+    "accepted": true,
+    "same_thread": true,
+    "permission_equal": true,
+    "model_equal": true,
+    "after": {
+      "model": "gpt-6.1-sol",
+      "reasoningEffort": "medium",
+      "approvalPolicy": "never",
+      "sandbox": {
+        "type": "readOnly",
+        "networkAccess": false
+      },
+      "permissions": null
+    },
+    "nonce": true
+  },
+  "server_restart": {
+    "accepted": true,
+    "same_thread": true,
+    "permission_equal": false,
+    "model_equal": true,
+    "after": {
+      "model": "gpt-6.1-sol",
+      "reasoningEffort": "medium",
+      "approvalPolicy": "never",
+      "sandbox": {
+        "type": "dangerFullAccess"
+      },
+      "permissions": null
+    }
+  },
+  "outcome": "failed",
+  "error_type": "RuntimeError",
+  "error": "Permission continuity failure after server restart; no further inference",
+  "owned_thread_archived": true,
+  "process_exit": 0
+}

@@ -221,6 +221,27 @@ export const PromptRpc = Rpc.make(AGENT_METHODS.session_prompt, {
 });
 
 /**
+ * RPC definition for `SetSessionModeRpc`.
+ *
+ * **Example** (Log SetSessionModeRpc method key)
+ *
+ * ```ts
+ * import { SetSessionModeRpc } from "@beep/acp/rpc"
+ *
+ * const method = SetSessionModeRpc.key
+ * console.log(method)
+ * ```
+ *
+ * @category protocols
+ * @since 0.0.0
+ */
+export const SetSessionModeRpc = Rpc.make(AGENT_METHODS.session_set_mode, {
+  payload: AcpSchema.SetSessionModeRequest,
+  success: AcpSchema.SetSessionModeResponse,
+  error: AcpSchema.Error,
+});
+
+/**
  * RPC definition for `SetSessionModelRpc`.
  *
  * **Example** (Log SetSessionModelRpc method key)
@@ -477,6 +498,7 @@ export const AgentRpcs = RpcGroup.make(
   ResumeSessionRpc,
   CloseSessionRpc,
   PromptRpc,
+  SetSessionModeRpc,
   SetSessionModelRpc,
   SetSessionConfigOptionRpc
 );

@@ -1,0 +1,113 @@
+{
+  "requestedModel": "claude-opus-5-5",
+  "requestedEffort": "medium",
+  "authRoute": "existing first-party claude.ai Max subscription",
+  "cliVersion": "2.1.295",
+  "existingAppAttachment": "not probed",
+  "channels": "unverified; flag absent in installed help",
+  "receipts": [
+    {
+      "case": "idle",
+      "index": 1,
+      "nonceEcho": true,
+      "elapsedMs": 1279,
+      "sameSession": true
+    },
+    {
+      "case": "idle",
+      "index": 2,
+      "nonceEcho": true,
+      "elapsedMs": 1413,
+      "sameSession": true
+    },
+    {
+      "case": "idle",
+      "index": 3,
+      "nonceEcho": true,
+      "elapsedMs": 1338,
+      "sameSession": true
+    },
+    {
+      "case": "idle",
+      "index": 4,
+      "nonceEcho": true,
+      "elapsedMs": 1253,
+      "sameSession": true
+    },
+    {
+      "case": "idle",
+      "index": 5,
+      "nonceEcho": true,
+      "elapsedMs": 1209,
+      "sameSession": true
+    },
+    {
+      "case": "busy-followup",
+      "index": 1,
+      "sentDuringObservedStream": true,
+      "nonceEcho": true,
+      "resultCount": 2,
+      "elapsedMs": 7687,
+      "sameSession": true,
+      "deliveryMode": "queued followup; active steering not claimed"
+    },
+    {
+      "case": "busy-followup",
+      "index": 2,
+      "sentDuringObservedStream": true,
+      "nonceEcho": true,
+      "resultCount": 2,
+      "elapsedMs": 8190,
+      "sameSession": true,
+      "deliveryMode": "queued followup; active steering not claimed"
+    },
+    {
+      "case": "busy-followup",
+      "index": 3,
+      "sentDuringObservedStream": true,
+      "nonceEcho": true,
+      "resultCount": 2,
+      "elapsedMs": 8038,
+      "sameSession": true,
+      "deliveryMode": "queued followup; active steering not claimed"
+    },
+    {
+      "case": "busy-followup",
+      "index": 4,
+      "sentDuringObservedStream": true,
+      "nonceEcho": true,
+      "resultCount": 2,
+      "elapsedMs": 7506,
+      "sameSession": true,
+      "deliveryMode": "queued followup; active steering not claimed"
+    },
+    {
+      "case": "busy-followup",
+      "index": 5,
+      "sentDuringObservedStream": true,
+      "nonceEcho": true,
+      "resultCount": 2,
+      "elapsedMs": 7064,
+      "sameSession": true,
+      "deliveryMode": "queued followup; active steering not claimed"
+    },
+    {
+      "case": "interrupt",
+      "sentDuringObservedStream": true,
+      "controlResponse": "success",
+      "resultSubtype": "error_during_execution"
+    }
+  ],
+  "effectiveStartup": {
+    "model": "claude-opus-5-5",
+    "permissionMode": "dontAsk",
+    "toolsCount": 0,
+    "mcpServerCount": 0,
+    "pluginCount": 3,
+    "skillCount": 0
+  },
+  "distinctSessionCount": 1,
+  "elapsedSeconds": 51.95,
+  "ownedProcessStopped": true,
+  "result": "completed"
+}

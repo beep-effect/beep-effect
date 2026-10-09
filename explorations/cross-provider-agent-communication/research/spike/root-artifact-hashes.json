@@ -1,0 +1,46 @@
+[
+  {
+    "path": "codex/persistent-results.json",
+    "sha256": "2d38f6806d5808f07e4991c6f5cc7d3cad2d653f8a532e303d722de25db215ea"
+  },
+  {
+    "path": "codex/persistent_probe.py",
+    "sha256": "af0083056a3e9b8a599317e8885b8d070bd9fd93e62bc73ca42af5774e04d8e4"
+  },
+  {
+    "path": "codex/probe.py",
+    "sha256": "b119cdcff67a8c9bf3c955154ad2dbff6767e3d1acddc64934258306e9cdcded"
+  },
+  {
+    "path": "codex/results.json",
+    "sha256": "5bfd0362666c3528969822978a7fb84e07b24ed58874952fcaa1f61f6016c6fa"
+  },
+  {
+    "path": "contract/probe.py",
+    "sha256": "0e606f7ac8e743efd787652b7fa05159a831c9aeed670f99d261d0abb6f48468"
+  },
+  {
+    "path": "contract/results.json",
+    "sha256": "7af0e64b28d7942656c6a1c57a4c7e1d88eda62b367af5ca68dd1adcd8967e31"
+  },
+  {
+    "path": "claude/REPORT.md",
+    "sha256": "ee7f32a95bc311fcce79597882bfc9209e3d1992ade2ee6ea23cd33370abd570"
+  },
+  {
+    "path": "claude/handshake-receipt.json",
+    "sha256": "5b8cec0d7eed898e2218e38c2ce5b644eae40795a9d436c598e833d42a4e9faa"
+  },
+  {
+    "path": "claude/handshake.py",
+    "sha256": "db3368d800cb75662c59a0d6bee2bcc58ff8e038e978a858570859562de7b112"
+  },
+  {
+    "path": "claude/probe.py",
+    "sha256": "5ff41f4f195d750c01520187238c68c5480a33a389800a154018288f734da66f"
+  },
+  {
+    "path": "claude/receipts.json",
+    "sha256": "b60112eee6bc9c9fa5434b6a69b51e4014a65ab39031a46a7ead08690c8c7ba7"
+  }
+]

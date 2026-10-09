@@ -1,0 +1,167 @@
+{
+  "phase": "read",
+  "provider_models": 0,
+  "capabilities": {
+    "messaging": {
+      "receive": true
+    },
+    "delivery": {
+      "modes": ["immediate", "next-message", "next-tool-call", "on-idle"],
+      "queue": true
+    },
+    "events": {
+      "emits": [
+        "activity.changed",
+        "observability.capabilities",
+        "message.received",
+        "delivery.accepted",
+        "delivery.failed",
+        "session.starting",
+        "session.started",
+        "session.resumed",
+        "session.suspended",
+        "session.detached",
+        "session.stopped",
+        "session.destroyed",
+        "session.failed",
+        "turn.started",
+        "step.finished",
+        "turn.finished",
+        "turn.settled",
+        "text.started",
+        "text.delta",
+        "text.finished",
+        "reasoning.started",
+        "reasoning.delta",
+        "reasoning.finished",
+        "tool.called",
+        "tool.completed",
+        "tool.failed",
+        "tool.approval.requested",
+        "tool.approval.resolved",
+        "file.changed",
+        "context.compacted",
+        "model.resolved",
+        "warning",
+        "usage.updated",
+        "diagnostic",
+        "error"
+      ]
+    },
+    "lifecycle": {
+      "release": true
+    },
+    "observability": {
+      "activities": {
+        "starting": {
+          "available": true,
+          "fidelities": ["exact"]
+        },
+        "thinking": {
+          "available": true,
+          "fidelities": ["exact", "inferred"]
+        },
+        "typing": {
+          "available": true,
+          "fidelities": ["exact"]
+        },
+        "using_tool": {
+          "available": true,
+          "fidelities": ["exact"]
+        },
+        "waiting": {
+          "available": true,
+          "fidelities": ["exact"]
+        },
+        "idle": {
+          "available": true,
+          "fidelities": ["exact"]
+        },
+        "error": {
+          "available": true,
+          "fidelities": ["exact"]
+        }
+      },
+      "events": {
+        "lifecycle": {
+          "available": true,
+          "fidelities": ["exact"]
+        },
+        "turns": {
+          "available": true,
+          "fidelities": ["exact"]
+        },
+        "text": {
+          "available": true,
+          "fidelities": ["exact"]
+        },
+        "reasoning": {
+          "available": true,
+          "fidelities": ["exact"]
+        },
+        "tools": {
+          "available": true,
+          "fidelities": ["exact"]
+        },
+        "tool_approvals": {
+          "available": true,
+          "fidelities": ["exact"]
+        },
+        "files": {
+          "available": true,
+          "fidelities": ["exact"]
+        },
+        "compaction": {
+          "available": true,
+          "fidelities": ["exact"]
+        },
+        "model": {
+          "available": true,
+          "fidelities": ["exact"]
+        },
+        "warnings": {
+          "available": true,
+          "fidelities": ["exact"]
+        },
+        "usage": {
+          "available": true,
+          "fidelities": ["exact"]
+        },
+        "diagnostics": {
+          "available": true,
+          "fidelities": ["exact"]
+        },
+        "errors": {
+          "available": true,
+          "fidelities": ["exact"]
+        }
+      }
+    }
+  },
+  "restored_duplicate": {
+    "status": "accepted",
+    "deliveryId": "synthetic-delivery"
+  },
+  "host_calls_after_restore": 1,
+  "immediate": {
+    "status": "accepted",
+    "deliveryId": "synthetic-immediate-delivery"
+  },
+  "host_calls": [
+    {
+      "operation": "startTurn",
+      "synthetic": true
+    },
+    {
+      "operation": "startTurn",
+      "synthetic": true
+    }
+  ],
+  "events": [
+    "observability.capabilities",
+    "message.received",
+    "delivery.accepted",
+    "message.received",
+    "delivery.accepted"
+  ]
+}
