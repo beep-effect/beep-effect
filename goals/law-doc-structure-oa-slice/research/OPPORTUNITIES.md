@@ -245,3 +245,12 @@ job log immediately via `gh api --allow-escape-sequences .../actions/jobs/<id>/l
 A setup-order prerequisite or schema-owned change-profile reader available before
 profile evaluation would prevent the failure. S11 owns consolidated repair;
 local package proof is retained without presenting it as a hosted execution.
+
+## 2026-10-09 — inherited gate expansion during final queue
+
+After a roughly 19-minute shared queue, PR #1573's final publication gate
+passed 14/16 lanes but inherited three schema-first and 13 test-canon findings
+from newer main tooling work. All named files match main; the lane owns none.
+The explicit inherited-only publication fallback applies. A consolidated owner
+preflight before main merges would prevent replicated lane refusals and retries.
+Retain the exact global reds separately from passing owned package proofs.
