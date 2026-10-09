@@ -51,8 +51,9 @@ Derived configuration is rebuilt by its owning writer. A lab is not added to
 the root TypeScript solution reference list; its package-local check and the
 labs lane own typechecking. Identity composers remain real package composers
 and live in a mechanically generated labs segment of the identity registry.
-Changeset status excludes lab-owned diffs by resolved workspace path, not by a
-growing ignore-name list.
+Changeset status exempts private workspaces by manifest and lab-owned diffs by
+resolved workspace path. Promotion to a private destination needs no note;
+publish-enabled destinations follow the release gate.
 
 No lab publishes a public `@beep/*` API. Framework-local imports use the app's
 local alias. A component that earns reusable consumers must promote into its
