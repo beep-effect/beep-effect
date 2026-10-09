@@ -1743,15 +1743,228 @@
       "wave": 1,
       "position": 7,
       "stage": 0,
-      "status": "pending",
+      "status": "in-progress",
       "provisionalHome": "foundation/modeling",
       "upstreamPaths": {
         "src": "packages/schema-org/src",
         "test": "packages/schema-org/__test__"
       },
-      "exportsExpected": [],
+      "exportsExpected": [
+        {
+          "name": "APIReference",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ConflictingTermError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "CreativeWork",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "CreativeWorkFields",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "DuplicateNodeIdError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "HasNodeId",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "InvalidNodeIdError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "JsonLdDocument",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "JsonLdNode",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "NodeId",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "NodeRef",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "Organization",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "Person",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "SoftwareSourceCode",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TechArticle",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TechArticleFields",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "ThingFields",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "APIReference",
+          "kind": "type",
+          "entry": "./validate"
+        },
+        {
+          "name": "ConflictingTermError",
+          "kind": "type",
+          "entry": "./validate"
+        },
+        {
+          "name": "Conformance",
+          "kind": "both",
+          "entry": "./validate"
+        },
+        {
+          "name": "ConformanceIssue",
+          "kind": "both",
+          "entry": "./validate"
+        },
+        {
+          "name": "ConformanceOptions",
+          "kind": "type",
+          "entry": "./validate"
+        },
+        {
+          "name": "CreativeWork",
+          "kind": "type",
+          "entry": "./validate"
+        },
+        {
+          "name": "DanglingReference",
+          "kind": "both",
+          "entry": "./validate"
+        },
+        {
+          "name": "DeprecatedProperty",
+          "kind": "both",
+          "entry": "./validate"
+        },
+        {
+          "name": "DeprecatedType",
+          "kind": "both",
+          "entry": "./validate"
+        },
+        {
+          "name": "DuplicateNodeIdError",
+          "kind": "type",
+          "entry": "./validate"
+        },
+        {
+          "name": "HasNodeId",
+          "kind": "type",
+          "entry": "./validate"
+        },
+        {
+          "name": "InvalidNodeIdError",
+          "kind": "type",
+          "entry": "./validate"
+        },
+        {
+          "name": "JsonLdDocument",
+          "kind": "both",
+          "entry": "./validate"
+        },
+        {
+          "name": "JsonLdNode",
+          "kind": "type",
+          "entry": "./validate"
+        },
+        {
+          "name": "NodeRef",
+          "kind": "type",
+          "entry": "./validate"
+        },
+        {
+          "name": "NonConformantGraphError",
+          "kind": "both",
+          "entry": "./validate"
+        },
+        {
+          "name": "Organization",
+          "kind": "type",
+          "entry": "./validate"
+        },
+        {
+          "name": "Person",
+          "kind": "type",
+          "entry": "./validate"
+        },
+        {
+          "name": "PropertyNotOnType",
+          "kind": "both",
+          "entry": "./validate"
+        },
+        {
+          "name": "SoftwareSourceCode",
+          "kind": "type",
+          "entry": "./validate"
+        },
+        {
+          "name": "TechArticle",
+          "kind": "type",
+          "entry": "./validate"
+        },
+        {
+          "name": "TermKind",
+          "kind": "both",
+          "entry": "./validate"
+        },
+        {
+          "name": "UnknownTerm",
+          "kind": "both",
+          "entry": "./validate"
+        },
+        {
+          "name": "Vocabulary",
+          "kind": "both",
+          "entry": "./validate"
+        }
+      ],
       "exportsAdded": [],
-      "newDeps": [],
+      "newDeps": [
+        {
+          "name": "oxc-parser",
+          "kind": "dev",
+          "spec": "^0.152.0",
+          "replacement": null
+        }
+      ],
       "fixturesBytes": 0,
       "deviations": [],
       "backlog": [],
