@@ -695,6 +695,24 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("@beep/repo-ai-metrics",
       const stamp = Sha256Hex.make("b".repeat(64));
       const otherStamp = Sha256Hex.make("c".repeat(64));
       const decodePulse = S.decodeEffect(HookPulseV1FromRawEvent);
+      const writeScenarioSentinel = Effect.fnUntraced(function* (
+        scenario: typeof ForwarderStampScenario.Type,
+        hookRoot: string
+      ) {
+        if (scenario === "empty-sentinel") yield* writeText(path.join(hookRoot, "hook-pulse.disarmed"), "");
+        if (scenario === "custom-sentinel") yield* writeText(path.join(hookRoot, "custom.disarmed"), "");
+        if (scenario === "future-sentinel")
+          yield* writeText(
+            path.join(hookRoot, "hook-pulse.disarmed"),
+            yield* HookPulseDisarmSentinel.encodeJsonEffect(
+              HookPulseDisarmSentinel.make({
+                disarmedAt: "2099-01-01T00:00:00Z",
+                reason: "fixture",
+                evidenceTier: "unknown",
+              })
+            )
+          );
+      });
       const writeScenarioGaps = Effect.fnUntraced(function* (
         scenario: typeof ForwarderStampScenario.Type,
         hookRoot: string,
@@ -726,19 +744,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("@beep/repo-ai-metrics",
               })
             )
           );
-        if (scenario === "empty-sentinel") yield* writeText(path.join(hookRoot, "hook-pulse.disarmed"), "");
-        if (scenario === "custom-sentinel") yield* writeText(path.join(hookRoot, "custom.disarmed"), "");
-        if (scenario === "future-sentinel")
-          yield* writeText(
-            path.join(hookRoot, "hook-pulse.disarmed"),
-            yield* HookPulseDisarmSentinel.encodeJsonEffect(
-              HookPulseDisarmSentinel.make({
-                disarmedAt: "2099-01-01T00:00:00Z",
-                reason: "fixture",
-                evidenceTier: "unknown",
-              })
-            )
-          );
+        yield* writeScenarioSentinel(scenario, hookRoot);
       });
       for (const scenario of ForwarderStampScenario.literals) {
         const homeDir = path.join(tmpDir, scenario, "home");
