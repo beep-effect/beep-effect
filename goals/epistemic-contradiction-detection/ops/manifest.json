@@ -3,14 +3,14 @@
   "initiative": {
     "id": "epistemic-contradiction-detection",
     "title": "Epistemic Contradiction Detection",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-08-06",
     "updated": "2026-10-09",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/epistemic-contradiction-detection",
-  "lifecycle": "active",
-  "statusNote": "Blocked at repeated Effect/Vitest publication gate: scoped test Context helper passes package audit/docgen and runtime but has ten EV002 and one EV003 new findings. Both run-3 publication attempts stopped before push. PR #1572 remains draft at a7271fb15e; lifecycle active, final readiness outstanding. Orchestrator owns any merge under S11.",
+  "lifecycle": "completed-retained",
+  "statusNote": "Both deterministic conflict classes and closeout reflection are content-final in PR #1572. Canonical harness retains one EV015 serial-clock judgment pending B admission under the run-4 ruling. Fresh qualification and hosted monitoring are recorded in P2 evidence. Merge belongs to the orchestrator under S11; this lane never merges.",
   "mission": "Produce ContradictionCandidate records for typed direct-conflict classes as a pure, model-free function of a belief-view snapshot, against the contract epistemic-contradiction-triage already ships.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -66,19 +66,19 @@
     {
       "id": "P2",
       "name": "Verify",
-      "status": "in-progress",
+      "status": "complete",
       "exit": "Golden vectors (positive and negative) plus the purity proof are green, every emitted candidate decodes against the shipped ContradictionCandidate schema, and bun run beep yeet verify reports SUCCESS. Any determinism-tier declaration ships in this same PR."
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "in-progress",
+      "status": "complete",
       "exit": "PR published via bun run beep yeet publish --pr and driven to mergeable with hosted required checks green and zero unresolved review threads."
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending",
+      "status": "complete",
       "exit": "Closeout reflection passes bun run beep lint reflection-artifacts and the packet-state flip (manifest + README) lands in the same PR as the final work."
     }
   ],

@@ -298,3 +298,37 @@ P2/P3 in-progress, P4 pending. Reflection retained as attempted artifact.
 No new readiness monitor was started. All six owned heavy units are inactive/
 dead with MainPID 0; the queued use-cases unit was stopped before fallback.
 No suppression, lint baseline refresh, PR merge or lane retirement occurred.
+
+## Run 4 — canonical harness and publication
+
+Main integrated with `git fetch origin` and `git merge --no-edit origin/main`
+at `40482bc15f`. Canonical harness commit `b245bda5c7` uses `it.layer` with a
+10-second Layer timeout; the pure detect helper performs no Context build or
+resource provision. Single-file Vitest goldens pass 20/20 twice.
+
+Enforcing `bun run beep lint effect-vitest` reports one new EV015 judgment at
+test line 126, replacing ten EV002 and one EV003. The schema-validated row
+export is evidence of classification, not an enforcing pass. Serial, fork-free
+TestClock advancement is required to falsify clock dependence, so the row is
+pending B admission under the run-4 ruling. No suppression or inventory edit.
+
+`yeet publish --message` refused its cheap gate only on that judgment; every
+other cheap lane passed. Inbox `local-shard-e28223895bf8` is acknowledged
+wontfix with the ruling and admission rationale. Direct `git push origin HEAD`
+published `b245bda5c7` to #1572 as authorized; PR remains draft pending final
+closure content. Remote read reports zero unresolved review threads.
+
+Two beep-heavy jobs refresh package proofs and full parity/coverage at 32G /
+concurrency 2. Initial start lacked the user bus environment and started no
+unit; retry supplied the standard runtime and bus variables. Queue progress
+and settled results are recorded below before any final qualification claim.
+
+Light parity refresh: JSDoc ratchet passes (zero legacy findings), knowledge
+refs reports zero live gated observations, config-sync reports no drift, and
+packet adoption reports no conflicts. Reflection lint has zero blocking and
+advisory findings; GOAL launcher budget, manifest JSON, whitespace and goals
+index checks pass. The lifecycle owner command writes completed-retained;
+manifest/PLAN phases P0-P4 are complete in the final closeout wave. Fresh heavy
+refresh and hosted checks remain separately recorded after they settle;
+completion metadata does not assert hosted CI is green. S11 merge remains
+orchestrator-owned, with the EV015 judgment explicitly pending B admission.

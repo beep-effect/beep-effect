@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `in-progress`
+Status: `complete`
 
 Appetite: **small** — one short PR ladder (schema → service contract → first
 slice). If the work sprawls past that, cut to the first slice rather than
@@ -16,9 +16,9 @@ does not re-earn it.
 | --- | --- | --- | --- |
 | P0 Research | complete | Confirm the shipped contract surface and settle the conflict-class seat. | The `SPEC.md` Open Contract Question is answered on the record; every `file:line` in `SPEC.md` re-verified against the live tree. |
 | P1 Implement | complete | Schema → `Context.Service` contract → implementation, in that order. | Conflict-class `LiteralKit` + snapshot input schema, then the detection service contract, then the pure implementation; the shipped `Contradiction` surfaces are unmodified. |
-| P2 Verify | in-progress | Golden vectors and fixtures prove purity and contract conformance. | Golden-vector lane green, run twice with an advanced clock producing identical output; every emitted candidate decodes against `ContradictionCandidate`; `bun run beep yeet verify` SUCCESS. |
-| P3 Yeet: PR to mergeable | in-progress | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
-| P4 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
+| P2 Verify | complete | Golden vectors and fixtures prove purity and contract conformance. | Golden-vector lane green, run twice with an advanced clock producing identical output; every emitted candidate decodes against `ContradictionCandidate`; `bun run beep yeet verify` SUCCESS. |
+| P3 Yeet: PR to mergeable | complete | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
+| P4 Close | complete | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
 
 ## P0 Research — mostly already paid
 
@@ -85,8 +85,10 @@ the follow-up PR. Both classes in one PR is the target, not the requirement.
 
 ## P3 Yeet — PR to mergeable
 
-`bun run beep yeet repair` → `... verify` → `... publish --pr` →
-`... monitor` until `merge-ready: yes`. Unresolved review threads are a hard
+`bun run beep yeet publish --message "...epistemic-contradiction-detection..."`
+→ `... ready` at content-final → `... monitor --until-ready --detach` and job
+wait. Hosted checks provide authoritative proof; local verify is on-demand.
+The run-4 ruling authorizes direct push after the documented EV015 refusal. Unresolved review threads are a hard
 merge gate; answer and resolve every one via `bun run beep yeet reply`.
 
 ## P4 Closeout Checklist
@@ -108,16 +110,14 @@ Before marking the packet closed (and `status` → `completed-retained`):
 
 ## Current Blockers
 
-Repeated publication gate blocker: the current scoped test Context helper has
-ten EV002 call-site findings and one EV003 wrapper finding in plain Effect/Vitest
-lint. The successful `--rows` command exports findings; it does not establish a
-lint pass. Both run-3 publish attempts stopped before pushing. Package audits,
-docgen, runtime goldens and the requested parity/coverage receipts pass, but the
-brief requires a stop after this repeated gate. PR #1572 remains draft at
-`a7271fb15e`; publish, ready and readiness monitoring remain outstanding.
-P0/P1 remain complete, P2/P3 in progress, P4 pending. Retained reflection is an
-attempted closeout artifact. A fresh ruling must resolve the canonical test
-Layer/clock syntax before resuming publication. Merge remains with the
+No implementation blocker remains. Run-4 canonical `it.layer` provision clears
+all ten EV002 findings and the EV003 wrapper. One EV015 judgment (serial,
+fork-free shared-clock advancement to falsify detector clock dependence) is
+pending B admission under the explicit resume ruling; publication is authorized
+with this documented judgment. The implementation/harness wave is pushed to
+PR #1572 at `b245bda5c7`. Closeout reflection and completed-retained state are in the final wave.
+Fresh package/parity receipts and hosted monitoring are recorded in P2;
+the orchestrator applies the S11 merge gate. Merge belongs to the
 orchestrator under S11.
 
 Dependency status: Belief-view revision graduated on 2026-08-17 to `goals/belief-view-engine`,

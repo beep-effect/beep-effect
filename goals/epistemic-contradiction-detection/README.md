@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -41,12 +41,13 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0/P1 complete; P2/P3 in progress; P4 pending. Local package audits/docgen,
-goldens and requested parity/coverage pass. Plain Effect/Vitest lint still
-rejects the scoped test helper with eleven new findings. Both publication
-attempts stopped before push; the brief's repeated-blocker stop applies.
-PR #1572 remains draft at `a7271fb15e`. Lifecycle is active; publication and
-readiness are outstanding. The orchestrator owns merge under S11.
+P0-P4 complete; both conflict classes, conformance vectors and reflection are
+content-final in PR #1572.
+Canonical test-layer provision clears the original eleven policy findings;
+one serial shared-clock EV015 judgment is pending B admission under the
+run-4 resume ruling. The implementation wave is pushed to PR #1572 at
+`b245bda5c7`; fresh qualification and hosted monitoring receipts are in P2. The orchestrator owns merge
+under S11.
 
 ## Provenance
 
@@ -72,9 +73,9 @@ Back-links, not copies:
 
 P0: [`contract evidence`](./history/p0/2026-10-09-contract.md).
 P1: [`implementation and alias diff`](./history/p1/2026-10-09-implementation.md).
-P2: [`verification and run-3 qualification`](./history/p2/2026-10-09-verification.md).
-Attempted closeout: [`reflection`](./history/reflections/2026-10-09-codex.md);
-artifact lint passes, completion gate remains unmet.
+P2: [`verification and run-4 qualification`](./history/p2/2026-10-09-verification.md).
+Closeout: [`reflection`](./history/reflections/2026-10-09-codex.md);
+artifact lint passes; lifecycle is completed-retained, merge belongs to S11.
 Handoff: [`contradiction-detect`](./history/handoffs/contradiction-detect-2026-10-09.md).
 
 ## Notes
