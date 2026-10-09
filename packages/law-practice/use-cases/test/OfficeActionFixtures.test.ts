@@ -1,6 +1,5 @@
 import { readFile } from "node:fs/promises";
-import { it } from "@beep/test-runner";
-import { describe, expect } from "@effect/vitest";
+import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";

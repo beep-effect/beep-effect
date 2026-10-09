@@ -46,3 +46,13 @@
 - Outcome: retained the queued gate and polled without changing other workers.
 - Prevention: a visible fair admission queue with estimated start time would
   distinguish capacity latency from package verification time.
+
+## 2026-10-09 — P0 publication gate
+
+- Evidence: wave 1 cheap gates stopped before any push: missing use-cases
+  changeset and one new effect-vitest finding in OfficeActionFixtures.test.ts.
+- Attribution: introduced fixture-package changes and legacy test-runner import.
+- Repair: patch changeset and direct canonical @effect/vitest import; no baseline
+  refresh or policy suppression.
+- Prevention: use direct Effect Vitest imports for new tests, and include fixture
+  packages in changeset admission even when production exports are unchanged.
