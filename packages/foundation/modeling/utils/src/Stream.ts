@@ -4,10 +4,10 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { Effect, flow, Stream } from "effect";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { dual, flow } from "effect/Function";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 
 /**
  * Splits a text stream into lines, decodes each line as JSON with `schema`,
@@ -25,7 +25,8 @@ import * as S from "effect/Schema";
  * **Example** (Filter JSON lines stream)
  *
  * ```ts
- * import { Effect, Stream } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Stream from "effect/Stream";
  * import * as S from "effect/Schema"
  * import { streamFilterJson } from "@beep/utils/Stream"
  *

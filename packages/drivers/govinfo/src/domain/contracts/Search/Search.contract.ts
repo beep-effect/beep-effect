@@ -6,7 +6,7 @@
  */
 import { $GovinfoId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as HttpStatus from "effect/http/HttpStatus";
 import { HttpApiSchema } from "effect/http-api";
 import * as S from "effect/Schema";

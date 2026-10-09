@@ -16,11 +16,16 @@ import { ApiAuth, makeApiTransport } from "@beep/api-transport";
 import { $EcfrId } from "@beep/identity";
 import { LiteralKit, SchemaUtils, URLStr } from "@beep/schema";
 import { O } from "@beep/utils";
-import { Config, Context, Effect, Layer, Match, Stream } from "effect";
+import * as Config from "effect/Config";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
 import { FetchHttpClient } from "effect/http";
 import * as HttpApiClient from "effect/http-api/HttpApiClient";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as RateLimiter from "effect/persistence/RateLimiter";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import * as G from "./_generated/Ecfr.gen.ts";
 import { ECFR_API_URL, ECFR_RATE_LIMIT, ECFR_RATE_LIMIT_WINDOW, EcfrConfigInput } from "./Ecfr.config.ts";
 import { EcfrError, EcfrErrorOptions } from "./Ecfr.errors.ts";
@@ -271,7 +276,7 @@ export type SearchResult = G.SearchResultsResponse["results"][number];
  * **Example** (Stub listTitles on EcfrShape)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import type { EcfrShape } from "@beep/ecfr"
  *
  * const shape: Pick<EcfrShape, "listTitles"> = {
@@ -511,7 +516,7 @@ const makeFromEnvironment = Effect.fnUntraced(function* () {
  * **Example** (Access Ecfr via Effect.gen)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { Ecfr } from "@beep/ecfr"
  *
  * const program = Effect.gen(function* () {

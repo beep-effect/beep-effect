@@ -17,29 +17,27 @@ import { NodeServices } from "@effect/platform-node";
 import * as NodeHttpServer from "@effect/platform-node/NodeHttpServer";
 import { expect } from "@effect/vitest";
 import { assertSome, assertTrue } from "@effect/vitest/utils";
-import {
-  Cause,
-  ConfigProvider,
-  Console,
-  Context,
-  Duration,
-  Effect,
-  Exit,
-  FileSystem,
-  Layer,
-  Path,
-  pipe,
-  Result,
-  Schedule,
-} from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Cause from "effect/Cause";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Console from "effect/Console";
+import * as Context from "effect/Context";
 import { Command } from "effect/cli";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as Base64 from "effect/encoding/Base64";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
 import * as HttpServer from "effect/http/HttpServer";
 import * as HttpServerRequest from "effect/http/HttpServerRequest";
 import * as HttpServerResponse from "effect/http/HttpServerResponse";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
+import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
@@ -87,7 +85,7 @@ const expectAiMetricsCommandFailure = Effect.fn("AIMetricsCommandTest.expectAiMe
   args: ReadonlyArray<string>
 ) {
   const exit = yield* Effect.exit(runAiMetricsCommand(args));
-  assertTrue(Exit.isFailure(exit));
+  exit.pipe(Exit.isFailure, assertTrue);
 
   if (Exit.isFailure(exit)) {
     const error = Cause.squash(exit.cause);
@@ -731,7 +729,7 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "10 seconds" })("ai-met
         );
 
         const doctor = yield* decodeInstallDoctor(yield* lastLoggedLine());
-        assertTrue(Exit.isFailure(exit));
+        exit.pipe(Exit.isFailure, assertTrue);
         expect(doctor.status).toBe("failed");
         expect(doctor.availableSourceCount).toBe(0);
       })

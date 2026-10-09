@@ -8,9 +8,12 @@
 import { $M365Id } from "@beep/identity";
 import { URLStr } from "@beep/schema";
 import { O } from "@beep/utils";
-import { Effect, HashSet, pipe, SchemaGetter } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as S from "effect/Schema";
+import * as SchemaGetter from "effect/SchemaGetter";
 import * as Str from "effect/String";
 
 const $I = $M365Id.create("M365.config");
@@ -348,8 +351,7 @@ export const resolveM365Config = (input: M365ConfigInput): ResolvedM365Config =>
  *
  * ```ts
  * import { M365CertificateCredential } from "@beep/m365"
- * import { Redacted } from "effect"
- *
+ * import * as Redacted from "effect/Redacted";
  * const credential = M365CertificateCredential.make({
  *   privateKey: Redacted.make("pem-private-key-from-a-protected-store"),
  *   thumbprintSha256: "AB12"
@@ -387,8 +389,7 @@ export class M365CertificateCredential extends S.TaggedClass<M365CertificateCred
  *
  * ```ts
  * import { M365ClientSecretCredential } from "@beep/m365"
- * import { Redacted } from "effect"
- *
+ * import * as Redacted from "effect/Redacted";
  * const credential = M365ClientSecretCredential.make({ clientSecret: Redacted.make("dev-secret") })
  * console.log(credential._tag) // "M365ClientSecretCredential"
  * ```
@@ -463,8 +464,7 @@ export type M365AppOnlyCredential = typeof M365AppOnlyCredential.Type;
  *
  * ```ts
  * import { M365AppOnlyConfigInput, M365CertificateCredential } from "@beep/m365"
- * import { Redacted } from "effect"
- *
+ * import * as Redacted from "effect/Redacted";
  * const config = M365AppOnlyConfigInput.make({
  *   clientId: "00000000-0000-0000-0000-000000000000",
  *   credential: M365CertificateCredential.make({
@@ -519,8 +519,7 @@ export class M365AppOnlyConfigInput extends S.Class<M365AppOnlyConfigInput>($I`M
  *
  * ```ts
  * import { M365AppOnlyConfigInput, M365ClientSecretCredential, resolveM365AppOnlyAuthority } from "@beep/m365"
- * import { Redacted } from "effect"
- *
+ * import * as Redacted from "effect/Redacted";
  * const authority = resolveM365AppOnlyAuthority(
  *   M365AppOnlyConfigInput.make({
  *     clientId: "client-id",

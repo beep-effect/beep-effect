@@ -15,8 +15,13 @@
 import { $DuckdbId } from "@beep/identity/packages";
 import { A, O } from "@beep/utils";
 import { DuckDBInstance, quotedIdentifier, quotedString } from "@duckdb/node-api";
-import { Context, Effect, Exit, Layer, Scope, Semaphore } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
+import * as Scope from "effect/Scope";
+import * as Semaphore from "effect/Semaphore";
 import { DuckDbError } from "./DuckDb.errors.ts";
 import { DuckDbRows } from "./DuckDb.models.ts";
 import { ignoreNativeClose, releaseNativeConnection } from "./DuckDbNative.ts";
@@ -61,8 +66,7 @@ export type DuckDbQueryParameters = Array<DuckDBValue> | Record<string, DuckDBVa
  *
  * ```ts
  * import type { DuckDbClient, DuckDbRows } from "@beep/duckdb"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const client: DuckDbClient = {
  *   copyTableToParquet: () => Effect.void,
  *   query: (statement) => Effect.succeed([{ statement }] satisfies DuckDbRows),
@@ -158,8 +162,7 @@ export interface DuckDbClient {
  *
  * ```ts
  * import type { DuckDbRows, DuckDbShape } from "@beep/duckdb"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const service: DuckDbShape = {
  *   copyTableToParquet: () => Effect.void,
  *   query: () => Effect.succeed([{ count: 1 }] satisfies DuckDbRows),
@@ -470,8 +473,7 @@ const makeNodeLayer = (options: DuckDbConnectionOptions): Layer.Layer<DuckDb> =>
  *
  * ```ts
  * import { DuckDb, type DuckDbClient, type DuckDbRows } from "@beep/duckdb"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const client: DuckDbClient = {
  *   copyTableToParquet: () => Effect.void,
  *   query: () => Effect.succeed([{ ok: true }] satisfies DuckDbRows),
@@ -505,8 +507,7 @@ export class DuckDb extends Context.Service<DuckDb, DuckDbShape>()($I`DuckDb`) {
    *
    * ```ts
    * import { DuckDb, type DuckDbClient, type DuckDbRows } from "@beep/duckdb"
-   * import { Effect } from "effect"
-   *
+   * import * as Effect from "effect/Effect";
    * const client: DuckDbClient = {
    *   copyTableToParquet: () => Effect.void,
    *   query: () => Effect.succeed([{ id: "run-1" }] satisfies DuckDbRows),
@@ -542,8 +543,7 @@ export class DuckDb extends Context.Service<DuckDb, DuckDbShape>()($I`DuckDb`) {
    *
    * ```ts
    * import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb"
-   * import { Effect } from "effect"
-   *
+   * import * as Effect from "effect/Effect";
    * const client = DuckDb.makeNodeClient(DuckDbConnectionOptions.make({
    *   databasePath: ":memory:"
    * }))
@@ -575,8 +575,7 @@ export class DuckDb extends Context.Service<DuckDb, DuckDbShape>()($I`DuckDb`) {
    *
    * ```ts
    * import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb"
-   * import { Effect } from "effect"
-   *
+   * import * as Effect from "effect/Effect";
    * const layer = DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({
    *   databasePath: ":memory:"
    * }))

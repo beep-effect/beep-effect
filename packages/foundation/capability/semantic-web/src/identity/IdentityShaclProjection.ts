@@ -8,9 +8,10 @@
 import { $SemanticWebId } from "@beep/identity/packages";
 import { makeLiteral } from "@beep/rdf/Rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
-import { Effect, HashSet, pipe } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -110,8 +111,7 @@ export class IdentityShapePolicy extends S.Class<IdentityShapePolicy>($I`Identit
  *   IdentityShapePolicy,
  *   projectShapes
  * } from "@beep/semantic-web"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const shapes = await Effect.runPromise(
  *   projectShapes(
  *     DefaultIdentityRdfBinding,

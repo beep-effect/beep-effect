@@ -1,9 +1,18 @@
 import * as NLPService from "@beep/nlp-processing/NLPService";
 import { SourceTextExtractor } from "@beep/provenance";
 import { WinkBackendLive, WinkEngineLive } from "@beep/wink";
-import { Clock, Console, Crypto, DateTime, Effect, FileSystem, Layer, Number as N, Order, Path } from "effect";
 import * as A from "effect/Array";
+import * as Clock from "effect/Clock";
+import * as Console from "effect/Console";
+import * as Crypto from "effect/Crypto";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as N from "effect/Number";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { writeJsonArtifact } from "@/canary/Artifact";
 import { CorpusPaperId } from "@/corpus/Manifest";
@@ -42,8 +51,8 @@ import { HostedExtractor, PatternExtractor } from "@/services/Extractor";
 import { Ledger } from "@/services/Ledger";
 import { Parser } from "@/services/Parser";
 import { ProviderCache } from "@/services/ProviderCache";
-import type { Config } from "effect";
 import type * as LanguageModel from "effect/ai/LanguageModel";
+import type * as Config from "effect/Config";
 import type { CanaryOptions } from "@/canary/Command";
 import type { F1FixtureId } from "@/fixtures/F1";
 import type { SourceDocument } from "@/schema/Document";
@@ -287,75 +296,75 @@ const makeCanaryC0 = Effect.fn("CanaryC0.make")(function* (
       LedgerLive({ ledgerRoot: config.ledgerRoot, mode, runId: run.id }).pipe(Layer.provide(support))
     );
 
-    const execution = yield* Effect.scoped(
-      Layer.build(executionLayer).pipe(
-        Effect.mapError(() => executionFailed("The selected C0 execution layers could not be acquired.")),
-        Effect.flatMap((context) =>
-          Effect.gen(function* () {
-            const layersReadyMillis = yield* Clock.currentTimeMillis;
-            const hostedExtractor = yield* HostedExtractor;
-            const patternExtractor = yield* PatternExtractor;
-            const ledger = yield* Ledger;
-            const evaluatorService = yield* Evaluator;
-            const results = yield* Effect.forEach(
-              documents,
-              Effect.fnUntraced(function* (document) {
-                const documentStarted = yield* Clock.currentTimeMillis;
-                const bytes = yield* documentSource.read(document);
-                const outcome = yield* parser.parse(document, bytes);
-                const ingested = yield* ProvenanceEvent.makeEffect({
-                  body: EventBody.cases.Ingested.make({ document: document.id, kind: "Ingested" }),
-                  id: document.acquired,
-                  prev: O.none(),
-                }).pipe(Effect.mapError(() => executionFailed("The document acquisition event id is not canonical.")));
-                const parsed = yield* makeEvent(parsedEventBody(document, outcome), O.some(ingested.id));
-                if (outcome.outcome === "Degraded") {
-                  yield* ledger.appendDocument(document, outcome, O.none(), [], [ingested, parsed]);
-                  return {
-                    outcomes: [] as ReadonlyArray<ExtractOutcomeValue>,
-                    timing: (yield* Clock.currentTimeMillis) - documentStarted,
-                  };
-                }
-                const canonical = yield* canonicalizer.identify(document, outcome);
-                const chunks = yield* chunker.chunk(canonical).pipe(Effect.provideService(Crypto.Crypto, crypto));
-                const chunked = yield* makeEvent(
-                  EventBody.cases.Chunked.make({
-                    chunks: A.map(chunks, (chunk) => chunk.id),
-                    document: document.id,
-                    kind: "Chunked",
-                  }),
-                  O.some(parsed.id)
-                );
-                yield* ledger.appendDocument(document, outcome, O.some(canonical), chunks, [ingested, parsed, chunked]);
-                const extractionOutcomes = yield* Effect.all(
-                  [hostedExtractor.extract(canonical, chunks), patternExtractor.extract(canonical, chunks)],
-                  { concurrency: 2 }
-                ).pipe(Effect.provideService(Crypto.Crypto, crypto));
-                yield* Effect.forEach(
-                  extractionOutcomes,
-                  Effect.fnUntraced(function* (extraction) {
-                    yield* ledger.appendBatch(extraction, yield* batchEvents(extraction, chunked));
-                  }),
-                  { concurrency: 1, discard: true }
-                );
-                return { outcomes: extractionOutcomes, timing: (yield* Clock.currentTimeMillis) - documentStarted };
-              }),
-              { concurrency: 1 }
-            );
-            const outcomes = A.flatMap(results, (result) => result.outcomes);
-            const snapshot = yield* ledger.read(run.id);
-            const report = yield* evaluatorService
-              .score(run, snapshot, outcomes)
-              .pipe(Effect.provideService(Crypto.Crypto, crypto));
-            return {
-              coldStartMs: N.max(0, layersReadyMillis - startedMillis),
-              report,
-              snapshot,
-              timings: A.map(results, (result) => result.timing),
-            };
-          }).pipe(Effect.provide(context))
-        )
-      )
+    const execution = yield* executionLayer.pipe(
+      Layer.build,
+      Effect.mapError(() => executionFailed("The selected C0 execution layers could not be acquired.")),
+      Effect.flatMap((context) =>
+        Effect.gen(function* () {
+          const layersReadyMillis = yield* Clock.currentTimeMillis;
+          const hostedExtractor = yield* HostedExtractor;
+          const patternExtractor = yield* PatternExtractor;
+          const ledger = yield* Ledger;
+          const evaluatorService = yield* Evaluator;
+          const results = yield* Effect.forEach(
+            documents,
+            Effect.fnUntraced(function* (document) {
+              const documentStarted = yield* Clock.currentTimeMillis;
+              const bytes = yield* documentSource.read(document);
+              const outcome = yield* parser.parse(document, bytes);
+              const ingested = yield* ProvenanceEvent.makeEffect({
+                body: EventBody.cases.Ingested.make({ document: document.id, kind: "Ingested" }),
+                id: document.acquired,
+                prev: O.none(),
+              }).pipe(Effect.mapError(() => executionFailed("The document acquisition event id is not canonical.")));
+              const parsed = yield* makeEvent(parsedEventBody(document, outcome), O.some(ingested.id));
+              if (outcome.outcome === "Degraded") {
+                yield* ledger.appendDocument(document, outcome, O.none(), [], [ingested, parsed]);
+                return {
+                  outcomes: [] as ReadonlyArray<ExtractOutcomeValue>,
+                  timing: (yield* Clock.currentTimeMillis) - documentStarted,
+                };
+              }
+              const canonical = yield* canonicalizer.identify(document, outcome);
+              const chunks = yield* chunker.chunk(canonical).pipe(Effect.provideService(Crypto.Crypto, crypto));
+              const chunked = yield* makeEvent(
+                EventBody.cases.Chunked.make({
+                  chunks: A.map(chunks, (chunk) => chunk.id),
+                  document: document.id,
+                  kind: "Chunked",
+                }),
+                O.some(parsed.id)
+              );
+              yield* ledger.appendDocument(document, outcome, O.some(canonical), chunks, [ingested, parsed, chunked]);
+              const extractionOutcomes = yield* Effect.all(
+                [hostedExtractor.extract(canonical, chunks), patternExtractor.extract(canonical, chunks)],
+                { concurrency: 2 }
+              ).pipe(Effect.provideService(Crypto.Crypto, crypto));
+              yield* Effect.forEach(
+                extractionOutcomes,
+                Effect.fnUntraced(function* (extraction) {
+                  yield* ledger.appendBatch(extraction, yield* batchEvents(extraction, chunked));
+                }),
+                { concurrency: 1, discard: true }
+              );
+              return { outcomes: extractionOutcomes, timing: (yield* Clock.currentTimeMillis) - documentStarted };
+            }),
+            { concurrency: 1 }
+          );
+          const outcomes = A.flatMap(results, (result) => result.outcomes);
+          const snapshot = yield* ledger.read(run.id);
+          const report = yield* evaluatorService
+            .score(run, snapshot, outcomes)
+            .pipe(Effect.provideService(Crypto.Crypto, crypto));
+          return {
+            coldStartMs: N.max(0, layersReadyMillis - startedMillis),
+            report,
+            snapshot,
+            timings: A.map(results, (result) => result.timing),
+          };
+        }).pipe(Effect.provide(context))
+      ),
+      Effect.scoped
     );
 
     const endedMillis = yield* Clock.currentTimeMillis;

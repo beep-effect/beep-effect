@@ -8,7 +8,8 @@
 import { $OntologyUseCasesId } from "@beep/identity/packages";
 import { Dataset, PrefixMap } from "@beep/rdf/Rdf";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import { Context, Effect } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 const $I = $OntologyUseCasesId.create("aggregates/Session/Session.ports");
@@ -311,8 +312,7 @@ interface TurtleCodecShape {
  *
  * ```ts
  * import { TurtleCodec } from "@beep/ontology-use-cases/aggregates/Session"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const codec = yield* TurtleCodec
  *   return codec
@@ -497,8 +497,7 @@ export class WriteOntologyFileRequest extends S.Class<WriteOntologyFileRequest>(
  * ```ts
  * import { ReadOntologyFileResult } from "@beep/ontology-use-cases/aggregates/Session"
  * import type { OntologyFileStoreShape } from "@beep/ontology-use-cases/aggregates/Session"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const fileStore: OntologyFileStoreShape = {
  *   read: (request) =>
  *     Effect.succeed(
@@ -528,8 +527,7 @@ export interface OntologyFileStoreShape {
  *
  * ```ts
  * import { OntologyFileStore } from "@beep/ontology-use-cases/aggregates/Session"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const fileStore = yield* OntologyFileStore
  *   return fileStore

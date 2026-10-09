@@ -11,7 +11,16 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { Clock, Context, DateTime, Duration, Effect, Inspectable, Layer, Queue, Ref, Stream } from "effect";
+import * as Clock from "effect/Clock";
+import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Inspectable from "effect/Inspectable";
+import * as Layer from "effect/Layer";
+import * as Queue from "effect/Queue";
+import * as Ref from "effect/Ref";
+import * as Stream from "effect/Stream";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -38,7 +47,7 @@ const $I = $ScratchpadId.create("effect-ontology/Service/EventBus");
  * **Example** (Attach queue metadata)
  *
  * ```ts
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import * as S from "effect/Schema"
  * import { OntologyName } from "@effect-ontology/Identity"
  * import { BackgroundJobId, PromptCacheJob } from "@effect-ontology/Schema/JobSchema"
@@ -81,7 +90,7 @@ export class JobWithMetadata extends S.Class<JobWithMetadata>($I`JobWithMetadata
  * **Example** (Decode a ClaimCorrected journal row)
  *
  * ```ts
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  * import { OntologyEventEntry } from "@effect-ontology/Schema/EventSchema"
@@ -212,7 +221,7 @@ export interface EventBusServiceMethods {
  * **Example** (Read pending jobs from memory)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { EventBusService, EventBusServiceMemory } from "@effect-ontology/Service/EventBus"
  *
  * const count = Effect.runSync(
@@ -317,7 +326,7 @@ const decodeEventPayload = Effect.fn("EventBus.decodeEventPayload")(function* (e
  * **Example** (Inspect event bus service memory)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { EventBusService, EventBusServiceMemory } from "@effect-ontology/Service/EventBus"
  *
  * const count = Effect.runSync(
@@ -548,7 +557,7 @@ const JOBS_QUEUE_NAME = "ontology_jobs";
  * **Example** (Compose SQL persistence)
  *
  * ```ts
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer";
  * import { EventBusServiceSql, EventBusServiceSqlLayers } from "@effect-ontology/Service/EventBus"
  *
  * const layer = Layer.provide(EventBusServiceSql, EventBusServiceSqlLayers)
@@ -762,7 +771,7 @@ export const EventBusServiceSql = Layer.effect(
  * **Example** (Provide SQL journal layers)
  *
  * ```ts
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer";
  * import { EventBusServiceSql, EventBusServiceSqlLayers } from "@effect-ontology/Service/EventBus"
  *
  * const layer = Layer.provide(EventBusServiceSql, EventBusServiceSqlLayers)
@@ -796,7 +805,7 @@ export const EventBusServiceSqlLayers = Layer.mergeAll(
  * **Example** (Compose the SQL live layer)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { EventBusService, EventBusServiceSqlLive } from "@effect-ontology/Service/EventBus"
  *
  * const program = Effect.gen(function* () {
@@ -822,7 +831,7 @@ export const EventBusServiceSqlLive = EventBusServiceSql.pipe(Layer.provide(Even
  * **Example** (Use the default memory bus)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { EventBusService, EventBusServiceDefault } from "@effect-ontology/Service/EventBus"
  *
  * const count = Effect.runSync(

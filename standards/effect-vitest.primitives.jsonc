@@ -101,7 +101,7 @@
       "whenToUse": "No detector replacement: prefer the it.effect member in ordinary suites; use this export when a standalone tester value is required.",
       "whenNotToUse": "Do not use for live service dependencies.",
       "replaces": [],
-      "example": "import { effect } from \"@effect/vitest\"\nimport { Effect } from \"effect\"\neffect(\"effect export\", () => Effect.void)",
+      "example": "import { effect } from \"@effect/vitest\"\nimport * as Effect from \"effect/Effect\"\neffect(\"effect export\", () => Effect.void)",
       "gotchas": [
         "The callback must return an Effect.",
         "This tester installs a fresh TestEnv and Scope per test."
@@ -119,7 +119,7 @@
       "whenToUse": "No detector replacement: use this standalone tester only for an actual live Clock or Console requirement, including OS or network work that specifically depends on unmanaged wall-clock behavior.",
       "whenNotToUse": "Do not use for ordinary filesystem, OS, or network I/O, for Effect.log alone, or to bypass deterministic TestClock control; provide platform services explicitly.",
       "replaces": [],
-      "example": "import { live } from \"@effect/vitest\"\nimport { Effect } from \"effect\"\nlive(\"live export\", () => Effect.void)",
+      "example": "import { live } from \"@effect/vitest\"\nimport * as Effect from \"effect/Effect\"\nlive(\"live export\", () => Effect.void)",
       "gotchas": [
         "The tester provides Scope but no TestEnv or platform services.",
         "TestClock.withLive requires an installed TestClock; this tester omits one by default, but explicit provision can satisfy the requirement."
@@ -137,7 +137,7 @@
       "whenToUse": "No detector replacement: use for an explicit top-level shared suite that acquires its Layer once per block; the separate timeout option carries EV014 remediation.",
       "whenNotToUse": "Do not share pure values or per-test resources; keep short-lived acquisition in each test body's inner Scope.",
       "replaces": [],
-      "example": "import { layer } from \"@effect/vitest\"\nimport { Effect, Layer } from \"effect\"\nlayer(Layer.empty)(\"shared layer\", (it) => {\n  it.effect(\"uses layer\", () => Effect.void)\n})",
+      "example": "import { layer } from \"@effect/vitest\"\nimport * as Effect from \"effect/Effect\"\nimport * as Layer from \"effect/Layer\"\nlayer(Layer.empty)(\"shared layer\", (it) => {\n  it.effect(\"uses layer\", () => Effect.void)\n})",
       "gotchas": [
         "Named blocks acquire through beforeAll and release through afterAll; hook timeout is separate from test timeout.",
         "Anonymous blocks collect their own non-skipped tasks, acquire through filtered beforeEach, register onTestFinished for last-task release, and retain afterAll cleanup fallback.",
@@ -159,7 +159,7 @@
       "whenToUse": "No detector replacement: use as a first-class retry Effect only after root-cause analysis proves external nondeterminism and a reason/follow-up are recorded.",
       "whenNotToUse": "Do not hide deterministic, TestClock, scope, or event-wait failures.",
       "replaces": [],
-      "example": "import { flakyTest } from \"@effect/vitest\"\nimport { Effect } from \"effect\"\nconst retried = flakyTest(Effect.void, \"1 second\")\nvoid retried",
+      "example": "import { flakyTest } from \"@effect/vitest\"\nimport * as Effect from \"effect/Effect\"\nconst retried = flakyTest(Effect.void, \"1 second\")\nvoid retried",
       "gotchas": [
         "Scopes and sandboxes each attempt; Schedule.recurs(10) bounds recurrences (initial attempt plus up to ten retries).",
         "The default duration is 30 seconds; elapsed duration is tested at retry boundaries. This is not a hard deadline that interrupts a hung current attempt.",
@@ -200,7 +200,7 @@
       "whenToUse": "No detector replacement: import this facade for all standard Effect Vitest suites.",
       "whenNotToUse": "Do not shadow it with a layer callback when referring to an outer harness.",
       "replaces": [],
-      "example": "import { it } from \"@effect/vitest\"\nimport { Effect } from \"effect\"\nit.effect(\"default facade\", () => Effect.void)",
+      "example": "import { it } from \"@effect/vitest\"\nimport * as Effect from \"effect/Effect\"\nit.effect(\"default facade\", () => Effect.void)",
       "gotchas": [
         "Members differ between live Methods and layer-scoped MethodsNonLive."
       ]
@@ -352,7 +352,7 @@
       "whenToUse": "No detector replacement: use for a temporarily disabled Effect test whose reason and re-enable condition are tracked.",
       "whenNotToUse": "Do not use as a permanent substitute for fixing deterministic failures or unsupported environments.",
       "replaces": [],
-      "example": "import { it } from \"@effect/vitest\"\nimport { Effect } from \"effect\"\nit.effect.skip(\"skipped\", () => Effect.void)",
+      "example": "import { it } from \"@effect/vitest\"\nimport * as Effect from \"effect/Effect\"\nit.effect.skip(\"skipped\", () => Effect.void)",
       "gotchas": [
         "The body is registered but not executed.",
         "Compile this graph example without executing it as migration proof."
@@ -370,7 +370,7 @@
       "whenToUse": "No detector replacement: use when a registration-time capability or platform condition makes an Effect test inapplicable.",
       "whenNotToUse": "Do not use a nondeterministic runtime condition or hide an intermittent failure.",
       "replaces": [],
-      "example": "import { it } from \"@effect/vitest\"\nimport { Effect } from \"effect\"\nit.effect.skipIf(true)(\"conditional skip\", () => Effect.void)",
+      "example": "import { it } from \"@effect/vitest\"\nimport * as Effect from \"effect/Effect\"\nit.effect.skipIf(true)(\"conditional skip\", () => Effect.void)",
       "gotchas": [
         "The condition is evaluated while registering the test.",
         "A true condition skips the body entirely."
@@ -388,7 +388,7 @@
       "whenToUse": "No detector replacement: use when an Effect test is valid only under a known registration-time capability or platform condition.",
       "whenNotToUse": "Do not use as a retry, flake mask, or assertion inside the body.",
       "replaces": [],
-      "example": "import { it } from \"@effect/vitest\"\nimport { Effect } from \"effect\"\nit.effect.runIf(true)(\"conditional run\", () => Effect.void)",
+      "example": "import { it } from \"@effect/vitest\"\nimport * as Effect from \"effect/Effect\"\nit.effect.runIf(true)(\"conditional run\", () => Effect.void)",
       "gotchas": [
         "A false condition suppresses the body.",
         "Keep the condition stable for the complete test run."
@@ -406,7 +406,7 @@
       "whenToUse": "No detector replacement: use only during local diagnosis to focus one Effect test.",
       "whenNotToUse": "Do not commit an exclusive test because it prevents sibling tests from running.",
       "replaces": [],
-      "example": "import { it } from \"@effect/vitest\"\nimport { Effect } from \"effect\"\nit.effect.only(\"exclusive\", () => Effect.void)",
+      "example": "import { it } from \"@effect/vitest\"\nimport * as Effect from \"effect/Effect\"\nit.effect.only(\"exclusive\", () => Effect.void)",
       "gotchas": [
         "Compile the graph example without executing it.",
         "Repository review should reject lingering only registrations."
@@ -424,7 +424,7 @@
       "whenToUse": "No detector replacement: use for table-driven Effect cases that share one Effect-returning body.",
       "whenNotToUse": "Do not spread a case tuple into separate callback arguments; the first argument is the whole case.",
       "replaces": [],
-      "example": "import { it } from \"@effect/vitest\"\nimport { Effect } from \"effect\"\nit.effect.each([1, 2])(\"case %s\", (value) => Effect.succeed(value))",
+      "example": "import { it } from \"@effect/vitest\"\nimport * as Effect from \"effect/Effect\"\nit.effect.each([1, 2])(\"case %s\", (value) => Effect.succeed(value))",
       "gotchas": [
         "Implementation delegates to it.for(cases) and invokes the Effect callback with the selected case followed by TestContext (plus fixtures from an extended API).",
         "Since rc.118 the callback shape is (case, ctx); rc.117 passed only the case."
@@ -442,7 +442,7 @@
       "whenToUse": "No detector replacement: use for a known failing Effect assertion that must stay executable until its tracked repair lands.",
       "whenNotToUse": "Do not use for nondeterminism, retries, or a failure that should be asserted as Result or Exit.",
       "replaces": [],
-      "example": "import { it } from \"@effect/vitest\"\nimport { Effect } from \"effect\"\nit.effect.fails(\"expected failure\", () => Effect.fail(\"expected\"))",
+      "example": "import { it } from \"@effect/vitest\"\nimport * as Effect from \"effect/Effect\"\nit.effect.fails(\"expected failure\", () => Effect.fail(\"expected\"))",
       "gotchas": [
         "Compile the graph example without executing it as a migration test.",
         "Remove fails when the defect is repaired."
@@ -481,7 +481,7 @@
       "whenToUse": "Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test).",
       "whenNotToUse": "Do not use for callbacks that are entirely synchronous or require intentional live services.",
       "replaces": ["EV001", "EV009"],
-      "example": "import { it } from \"@effect/vitest\"\nimport { Effect } from \"effect\"\nit.effect(\"effect test\", () => Effect.succeed(1))",
+      "example": "import { it } from \"@effect/vitest\"\nimport * as Effect from \"effect/Effect\"\nit.effect(\"effect test\", () => Effect.succeed(1))",
       "gotchas": [
         "Return the Effect; do not execute it with runSync or runPromise inside the callback."
       ]
@@ -498,7 +498,7 @@
       "whenToUse": "Use for retry-loop-candidate judgments (EV013, candidate class retry-loop-candidate) only after TestClock, event-driven waits, and scope ownership are ruled out; record external nondeterminism, a reason row, and a follow-up.",
       "whenNotToUse": "Do not mask a deterministic fault or treat a longer timeout as a fix.",
       "replaces": ["EV013"],
-      "example": "import { it } from \"@effect/vitest\"\nimport { Effect } from \"effect\"\nit.effect(\"bounded retry\", () => it.flakyTest(Effect.void, \"1 second\"))",
+      "example": "import { it } from \"@effect/vitest\"\nimport * as Effect from \"effect/Effect\"\nit.effect(\"bounded retry\", () => it.flakyTest(Effect.void, \"1 second\"))",
       "gotchas": [
         "Scopes and sandboxes each attempt; Schedule.recurs(10) bounds recurrences (initial attempt plus up to ten retries).",
         "The default duration is 30 seconds; elapsed duration is tested at retry boundaries. This is not a hard deadline that interrupts a hung current attempt.",
@@ -518,7 +518,7 @@
       "whenToUse": "No detector replacement: use to add a child resource layer once per nested block while reusing parent memoized allocations.",
       "whenNotToUse": "Do not expect memoMap or excludeTestServices options here; the nested signature accepts timeout only.",
       "replaces": [],
-      "example": "import { layer } from \"@effect/vitest\"\nimport { Effect, Layer } from \"effect\"\nlayer(Layer.empty)((it) => {\n  it.layer(Layer.empty)((nested) => nested.effect(\"nested\", () => Effect.void))\n})",
+      "example": "import { layer } from \"@effect/vitest\"\nimport * as Effect from \"effect/Effect\"\nimport * as Layer from \"effect/Layer\"\nlayer(Layer.empty)((it) => {\n  it.layer(Layer.empty)((nested) => nested.effect(\"nested\", () => Effect.void))\n})",
       "gotchas": [
         "Named blocks acquire through beforeAll and release through afterAll; hook timeout is separate from test timeout.",
         "Anonymous blocks collect their own non-skipped tasks, acquire through filtered beforeEach, register onTestFinished for last-task release, and retain afterAll cleanup fallback.",
@@ -561,7 +561,7 @@
       "whenToUse": "No detector replacement: use when the test genuinely requires the live Clock or Console, including OS or network work whose behavior depends on unmanaged wall-clock time.",
       "whenNotToUse": "Do not switch to live for ordinary filesystem, OS, or network I/O, merely for Effect.log output, or to make a deterministic TestClock sleep finish; provide platform services separately.",
       "replaces": [],
-      "example": "import { it } from \"@effect/vitest\"\nimport { Clock } from \"effect\"\nit.live(\"live environment\", () => Clock.currentTimeMillis)",
+      "example": "import { it } from \"@effect/vitest\"\nimport * as Clock from \"effect/Clock\"\nit.live(\"live environment\", () => Clock.currentTimeMillis)",
       "gotchas": [
         "live provides a fresh Scope but no TestEnv, TestClock, TestConsole, or platform services.",
         "TestClock.withLive needs an installed TestClock; live omits one by default, though explicit provision can add it, and ordinary live sleep already uses wall-clock time."
@@ -579,7 +579,7 @@
       "whenToUse": "Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate).",
       "whenNotToUse": "Do not replace Context provision or pure non-resource data transforms with a layer suite.",
       "replaces": ["EV002", "EV003", "EV010"],
-      "example": "import { it } from \"@effect/vitest\"\nimport { Effect, Layer } from \"effect\"\nit.layer(Layer.empty, { timeout: \"30 seconds\" })(\"shared\", (layerIt) => {\n  layerIt.effect(\"uses layer\", () => Effect.void)\n})",
+      "example": "import { it } from \"@effect/vitest\"\nimport * as Effect from \"effect/Effect\"\nimport * as Layer from \"effect/Layer\"\nit.layer(Layer.empty, { timeout: \"30 seconds\" })(\"shared\", (layerIt) => {\n  layerIt.effect(\"uses layer\", () => Effect.void)\n})",
       "gotchas": [
         "Named blocks acquire through beforeAll and release through afterAll; hook timeout is separate from test timeout.",
         "Anonymous blocks collect their own non-skipped tasks, acquire through filtered beforeEach, register onTestFinished for last-task release, and retain afterAll cleanup fallback.",
@@ -619,7 +619,7 @@
       "whenToUse": "No detector replacement: supply a MemoMap only when this block must reuse allocations already observed by an outer owner.",
       "whenNotToUse": "Do not share one root MemoMap across unrelated suites or use it for per-test resources.",
       "replaces": [],
-      "example": "import type { Vitest } from \"@effect/vitest\"\nimport type { Layer } from \"effect\"\ndeclare const memoMap: Layer.MemoMap\nconst options: Parameters<Vitest.Methods[\"layer\"]>[1] = { memoMap }\nvoid options",
+      "example": "import type { Vitest } from \"@effect/vitest\"\nimport type * as Layer from \"effect/Layer\"\ndeclare const memoMap: Layer.MemoMap\nconst options: Parameters<Vitest.Methods[\"layer\"]>[1] = { memoMap }\nvoid options",
       "gotchas": [
         "Nested it.layer creates its own fork automatically.",
         "Memo reuse extends allocation observation until every owning scope closes."
@@ -675,7 +675,7 @@
       "whenToUse": "No detector replacement: supply a MemoMap to the standalone layer helper only when a known outer owner must share memoized allocations.",
       "whenNotToUse": "Do not use a shared root map across unrelated suites.",
       "replaces": [],
-      "example": "import { layer } from \"@effect/vitest\"\nimport type { Layer } from \"effect\"\ntype Options = Parameters<typeof layer>[1]\ndeclare const memoMap: Layer.MemoMap\nconst options: Options = { memoMap }\nvoid options",
+      "example": "import { layer } from \"@effect/vitest\"\nimport type * as Layer from \"effect/Layer\"\ntype Options = Parameters<typeof layer>[1]\ndeclare const memoMap: Layer.MemoMap\nconst options: Options = { memoMap }\nvoid options",
       "gotchas": [
         "Nested layer helpers fork memo maps automatically.",
         "Observer scopes control when reused allocations finalize."
@@ -963,7 +963,7 @@
       "whenToUse": "Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be None. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion.",
       "whenNotToUse": "Do not use for Some, Result, Exit, or plain undefined.",
       "replaces": ["EV006"],
-      "example": "import { assertNone } from \"@effect/vitest/utils\"\nimport { Option } from \"effect\"\nassertNone(Option.none())",
+      "example": "import { assertNone } from \"@effect/vitest/utils\"\nimport * as Option from \"effect/Option\"\nassertNone(Option.none())",
       "gotchas": [
         "It compares with Option.none using the canonical representation.",
         "Use assertSome when a value is expected."
@@ -1017,7 +1017,7 @@
       "whenToUse": "Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be Some with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion.",
       "whenNotToUse": "Do not use for None, Result, Exit, or a value whose payload is not known.",
       "replaces": ["EV006"],
-      "example": "import { assertSome } from \"@effect/vitest/utils\"\nimport { Option } from \"effect\"\nassertSome(Option.some(1), 1)",
+      "example": "import { assertSome } from \"@effect/vitest/utils\"\nimport * as Option from \"effect/Option\"\nassertSome(Option.some(1), 1)",
       "gotchas": [
         "It asserts both the Some tag and payload.",
         "Use assertNone for the empty case."
@@ -1035,7 +1035,7 @@
       "whenToUse": "Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion.",
       "whenNotToUse": "Do not use for Result failure, Exit, or Effect success before calling Effect.result.",
       "replaces": ["EV006"],
-      "example": "import { assertSuccess } from \"@effect/vitest/utils\"\nimport { Result } from \"effect\"\nassertSuccess(Result.succeed(1), 1)",
+      "example": "import { assertSuccess } from \"@effect/vitest/utils\"\nimport * as Result from \"effect/Result\"\nassertSuccess(Result.succeed(1), 1)",
       "gotchas": [
         "It asserts the Result Success tag and payload.",
         "Use assertFailure for the error branch."
@@ -1053,7 +1053,7 @@
       "whenToUse": "Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must fail with an expected error. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion.",
       "whenNotToUse": "Do not use for Result success, Exit failure causes, or an Effect not captured with Effect.result.",
       "replaces": ["EV006"],
-      "example": "import { assertFailure } from \"@effect/vitest/utils\"\nimport { Result } from \"effect\"\nassertFailure(Result.fail(\"failure\"), \"failure\")",
+      "example": "import { assertFailure } from \"@effect/vitest/utils\"\nimport * as Result from \"effect/Result\"\nassertFailure(Result.fail(\"failure\"), \"failure\")",
       "gotchas": [
         "It asserts the Result Failure tag and error.",
         "Use assertSuccess for the value branch."
@@ -1071,7 +1071,7 @@
       "whenToUse": "Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion.",
       "whenNotToUse": "Do not pass a bare error; construct or obtain the expected Cause.",
       "replaces": ["EV005", "EV006"],
-      "example": "import { assertExitFailure } from \"@effect/vitest/utils\"\nimport { Cause, Exit } from \"effect\"\nassertExitFailure(Exit.fail(\"failure\"), Cause.fail(\"failure\"))",
+      "example": "import { assertExitFailure } from \"@effect/vitest/utils\"\nimport * as Cause from \"effect/Cause\"\nimport * as Exit from \"effect/Exit\"\nassertExitFailure(Exit.fail(\"failure\"), Cause.fail(\"failure\"))",
       "gotchas": [
         "The expected argument is Cause, not the failure value.",
         "Use assertExitSuccess for successful exits."
@@ -1089,7 +1089,7 @@
       "whenToUse": "Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion.",
       "whenNotToUse": "Do not use for Result success or Exit failure.",
       "replaces": ["EV005", "EV006"],
-      "example": "import { assertExitSuccess } from \"@effect/vitest/utils\"\nimport { Exit } from \"effect\"\nassertExitSuccess(Exit.succeed(1), 1)",
+      "example": "import { assertExitSuccess } from \"@effect/vitest/utils\"\nimport * as Exit from \"effect/Exit\"\nassertExitSuccess(Exit.succeed(1), 1)",
       "gotchas": [
         "It asserts the Exit Success tag and payload.",
         "Use assertExitFailure with an expected Cause for failures."
@@ -1199,7 +1199,7 @@
       "whenToUse": "No detector replacement: use this section for the canonical returned-Effect callback, fresh Scope, TestClock, and TestConsole behavior.",
       "whenNotToUse": "Do not execute the Effect with runSync or runPromise inside a plain callback.",
       "replaces": [],
-      "example": "import { it } from \"@effect/vitest\"\nimport { Effect } from \"effect\"\nit.effect(\"example\", () => Effect.void)",
+      "example": "import { it } from \"@effect/vitest\"\nimport * as Effect from \"effect/Effect\"\nit.effect(\"example\", () => Effect.void)",
       "gotchas": [
         "The runner supplies a fresh TestEnv per effect test.",
         "Plain-value expect assertions remain legal; Option, Result, and Exit use utils helpers."
@@ -1211,13 +1211,13 @@
       "kind": "readme-section",
       "file": "packages/vitest/README.md",
       "startLine": 99,
-      "endLine": 124,
+      "endLine": 123,
       "signature": "Testing Successful Operations",
       "description": "Assertions inside the returned Effect program",
       "whenToUse": "No detector replacement: use this section to keep assertions inside the returned Effect program after yielding the operation result.",
       "whenNotToUse": "Do not infer a blanket ban on expect for plain values.",
       "replaces": [],
-      "example": "import { expect, it } from \"@effect/vitest\"\nimport { Effect } from \"effect\"\nit.effect(\"success\", () => Effect.succeed(2).pipe(Effect.tap((value) => Effect.sync(() => expect(value).toBe(2)))))",
+      "example": "import { expect, it } from \"@effect/vitest\"\nimport * as Effect from \"effect/Effect\"\nit.effect(\"success\", () => Effect.succeed(2).pipe(Effect.tap((value) => Effect.sync(() => expect(value).toBe(2)))))",
       "gotchas": [
         "D5 reserves canonical utils helpers for Option, Result, and Exit while ordinary values may use expect."
       ]
@@ -1227,14 +1227,14 @@
       "name": "README:Testing Successes and Failures as `Exit`",
       "kind": "readme-section",
       "file": "packages/vitest/README.md",
-      "startLine": 125,
-      "endLine": 156,
+      "startLine": 124,
+      "endLine": 155,
       "signature": "Testing Successes and Failures as `Exit`",
       "description": "Capturing both Effect success and failure as Exit",
       "whenToUse": "Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) with unresolved, mixed or assertion-only outcomes. Review Effect.result to Effect.exit migration while preserving matcher polarity and existing operands: Result failure holds an error, whereas Exit failure holds a Cause. Select a specific Exit helper only when its expected value or Cause is established; never invent one from a Boolean predicate or partial error field.",
       "whenNotToUse": "Do not hand-compare Exit tags or use Result helpers on an Exit.",
       "replaces": ["EV005"],
-      "example": "import { assertExitSuccess } from \"@effect/vitest/utils\"\nimport { Effect } from \"effect\"\nconst program = Effect.exit(Effect.succeed(2)).pipe(Effect.tap((exit) => Effect.sync(() => assertExitSuccess(exit, 2))))\nvoid program",
+      "example": "import { assertExitSuccess } from \"@effect/vitest/utils\"\nimport * as Effect from \"effect/Effect\"\nconst program = Effect.exit(Effect.succeed(2)).pipe(Effect.tap((exit) => Effect.sync(() => assertExitSuccess(exit, 2))))\nvoid program",
       "gotchas": [
         "The README predates the repository D5 helper rule; use assertExitSuccess or assertExitFailure."
       ]
@@ -1244,7 +1244,7 @@
       "name": "README:Using the TestClock",
       "kind": "readme-section",
       "file": "packages/vitest/README.md",
-      "startLine": 157,
+      "startLine": 156,
       "endLine": 203,
       "signature": "Using the TestClock",
       "description": "Deterministic time control with TestClock adjustment",
@@ -1264,13 +1264,13 @@
       "kind": "readme-section",
       "file": "packages/vitest/README.md",
       "startLine": 204,
-      "endLine": 227,
+      "endLine": 228,
       "signature": "Skipping Tests",
       "description": "Temporarily registering skipped Effect tests",
       "whenToUse": "No detector replacement: use this section for temporary it.effect.skip registration with a tracked re-enable condition.",
       "whenNotToUse": "Do not skip a deterministic failure instead of fixing or explicitly asserting it.",
       "replaces": [],
-      "example": "import { it } from \"@effect/vitest\"\nimport { Effect } from \"effect\"\nit.effect.skip(\"skipped\", () => Effect.void)",
+      "example": "import { it } from \"@effect/vitest\"\nimport * as Effect from \"effect/Effect\"\nit.effect.skip(\"skipped\", () => Effect.void)",
       "gotchas": [
         "Skipped examples compile but are not executed as migration tests."
       ]
@@ -1280,14 +1280,14 @@
       "name": "README:Running a Single Test",
       "kind": "readme-section",
       "file": "packages/vitest/README.md",
-      "startLine": 228,
-      "endLine": 251,
+      "startLine": 229,
+      "endLine": 253,
       "signature": "Running a Single Test",
       "description": "Exclusive Effect-test registration during local debugging",
       "whenToUse": "No detector replacement: use this section only for local focused diagnosis with it.effect.only.",
       "whenNotToUse": "Do not commit only because it prevents the rest of the suite from running.",
       "replaces": [],
-      "example": "import { it } from \"@effect/vitest\"\nimport { Effect } from \"effect\"\nit.effect.only(\"only\", () => Effect.void)",
+      "example": "import { it } from \"@effect/vitest\"\nimport * as Effect from \"effect/Effect\"\nit.effect.only(\"only\", () => Effect.void)",
       "gotchas": [
         "Exclusive examples compile but are not executed by graph validation."
       ]
@@ -1297,14 +1297,14 @@
       "name": "README:Expecting Tests to Fail",
       "kind": "readme-section",
       "file": "packages/vitest/README.md",
-      "startLine": 252,
-      "endLine": 274,
+      "startLine": 254,
+      "endLine": 277,
       "signature": "Expecting Tests to Fail",
       "description": "Registering a test whose current behavior is expected to fail",
       "whenToUse": "No detector replacement: use this section for a tracked test that must currently fail yet remain executable.",
       "whenNotToUse": "Do not use fails for flaky behavior or as a permanent exception.",
       "replaces": [],
-      "example": "import { it } from \"@effect/vitest\"\nimport { Effect } from \"effect\"\nit.effect.fails(\"fails\", () => Effect.fail(\"expected\"))",
+      "example": "import { it } from \"@effect/vitest\"\nimport * as Effect from \"effect/Effect\"\nit.effect.fails(\"fails\", () => Effect.fail(\"expected\"))",
       "gotchas": [
         "Expected-failure examples compile but are not executed by graph validation."
       ]
@@ -1314,14 +1314,14 @@
       "name": "README:Logging",
       "kind": "readme-section",
       "file": "packages/vitest/README.md",
-      "startLine": 275,
-      "endLine": 305,
+      "startLine": 278,
+      "endLine": 308,
       "signature": "Logging",
       "description": "README logging guidance; prefer explicit Logger provision and inspect source for actual defaults.",
       "whenToUse": "No detector replacement: use this section to provide Logger.layer for intentional output while retaining deterministic effect tests.",
       "whenNotToUse": "Do not convert to live solely for logging; D7 instrumentation composes from public APIs in a later phase.",
       "replaces": [],
-      "example": "import { it } from \"@effect/vitest\"\nimport { Effect, Logger } from \"effect\"\nit.effect(\"logging\", () => Effect.log(\"visible\").pipe(Effect.provide(Logger.layer([Logger.consolePretty()]))))",
+      "example": "import { it } from \"@effect/vitest\"\nimport * as Effect from \"effect/Effect\"\nimport * as Logger from \"effect/Logger\"\nit.effect(\"logging\", () => Effect.log(\"visible\").pipe(Effect.provide(Logger.layer([Logger.consolePretty()]))))",
       "gotchas": [
         "README claims default log suppression, but internal TestEnv only merges TestClock and TestConsole; there is no Logger override in that harness layer. Do not treat prose as a source-level suppression guarantee.",
         "Live changes Clock/TestEnv and is not a logging toggle."
@@ -1332,14 +1332,14 @@
       "name": "README:Resource Safety and Scope",
       "kind": "readme-section",
       "file": "packages/vitest/README.md",
-      "startLine": 306,
-      "endLine": 328,
+      "startLine": 309,
+      "endLine": 331,
       "signature": "Resource Safety and Scope",
       "description": "Runner-managed scopes and direct use of scoped resources",
       "whenToUse": "Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes.",
       "whenNotToUse": "Do not remove a nested scope whose early finalization is part of the test.",
       "replaces": ["EV004"],
-      "example": "import { it } from \"@effect/vitest\"\nimport { Effect } from \"effect\"\nconst resource = Effect.acquireRelease(Effect.succeed(\"resource\"), () => Effect.void)\nit.effect(\"resource\", () => Effect.asVoid(resource))",
+      "example": "import { it } from \"@effect/vitest\"\nimport * as Effect from \"effect/Effect\"\nconst resource = Effect.acquireRelease(Effect.succeed(\"resource\"), () => Effect.void)\nit.effect(\"resource\", () => Effect.asVoid(resource))",
       "gotchas": [
         "Both effect and live already wrap each body in a fresh inner Scope.",
         "A deliberately nested Effect.scoped remains valid when cleanup must happen before the test ends.",
@@ -1351,14 +1351,14 @@
       "name": "README:Using Vitest Fixtures",
       "kind": "readme-section",
       "file": "packages/vitest/README.md",
-      "startLine": 329,
-      "endLine": 356,
+      "startLine": 332,
+      "endLine": 358,
       "signature": "Using Vitest Fixtures",
       "description": "Effect tests over a test.extend fixture API through makeMethods (added in rc118).",
       "whenToUse": "No detector replacement: use when an Effect test needs a Vitest fixture; build the helpers with makeMethods(test.extend(...)) and destructure the fixtures each test uses.",
       "whenNotToUse": "Do not build makeMethods from the test a describe callback receives, and do not use fixtures to replace a shared Layer that it.layer already manages.",
       "replaces": [],
-      "example": "import { makeMethods, test } from \"@effect/vitest\"\nimport { Effect } from \"effect\"\nconst it = makeMethods(test.extend(\"config\", { scope: \"file\" }, () => ({ port: 3000 })))\nit.effect(\"reads the config fixture\", ({ config }) => Effect.sync(() => config.port))",
+      "example": "import { makeMethods, test } from \"@effect/vitest\"\nimport * as Effect from \"effect/Effect\"\nconst it = makeMethods(test.extend(\"config\", { scope: \"file\" }, () => ({ port: 3000 })))\nit.effect(\"reads the config fixture\", ({ config }) => Effect.sync(() => config.port))",
       "gotchas": [
         "Vitest reads destructured names to decide which fixtures to set up; once any fixture is defined, a test taking the whole context as (ctx) => fails.",
         "it.effect.each passes the context after the test case; property tests receive only the base context and cannot request fixtures, but auto fixtures still run.",
@@ -1370,14 +1370,14 @@
       "name": "README:Writing Tests with `it.flakyTest`",
       "kind": "readme-section",
       "file": "packages/vitest/README.md",
-      "startLine": 357,
-      "endLine": 388,
+      "startLine": 359,
+      "endLine": 390,
       "signature": "Writing Tests with `it.flakyTest`",
       "description": "Retry helper bounded by recurrence count and elapsed-duration checks between attempts.",
       "whenToUse": "No detector replacement: consult this section only after root-cause analysis identifies external nondeterminism; then record a reason row and follow-up.",
       "whenNotToUse": "Do not use flakyTest for TestClock, event-wait, scope, or deterministic assertion defects, and never treat a longer timeout as the fix.",
       "replaces": [],
-      "example": "import { it } from \"@effect/vitest\"\nimport { Effect } from \"effect\"\nit.effect(\"retry\", () => it.flakyTest(Effect.void, \"1 second\"))",
+      "example": "import { it } from \"@effect/vitest\"\nimport * as Effect from \"effect/Effect\"\nit.effect(\"retry\", () => it.flakyTest(Effect.void, \"1 second\"))",
       "gotchas": [
         "Scopes and sandboxes each attempt; Schedule.recurs(10) bounds recurrences (initial attempt plus up to ten retries).",
         "The default duration is 30 seconds; elapsed duration is tested at retry boundaries. This is not a hard deadline that interrupts a hung current attempt.",
@@ -1397,7 +1397,7 @@
       "whenToUse": "No detector replacement: use for explicit timeout fallback semantics in tests or production Effects.",
       "whenNotToUse": "Do not confuse fallback-on-timeout with a hook timeout.",
       "replaces": [],
-      "example": "import { Effect } from \"effect\"\nconst program = Effect.timeoutOrElse(Effect.never, {\n  duration: \"1 second\",\n  orElse: () => Effect.succeed(\"timeout\")\n})\nvoid program",
+      "example": "import * as Effect from \"effect/Effect\"\nconst program = Effect.timeoutOrElse(Effect.never, {\n  duration: \"1 second\",\n  orElse: () => Effect.succeed(\"timeout\")\n})\nvoid program",
       "gotchas": [
         "The fallback is lazy and may add error or service requirements."
       ]
@@ -1414,7 +1414,7 @@
       "whenToUse": "No detector replacement: use when the first completion, rather than first success, is required.",
       "whenNotToUse": "Do not use as an unbounded retry substitute.",
       "replaces": [],
-      "example": "import { Effect } from \"effect\"\nconst winner = Effect.raceFirst(Effect.succeed(1), Effect.succeed(2))\nvoid winner",
+      "example": "import * as Effect from \"effect/Effect\"\nconst winner = Effect.raceFirst(Effect.succeed(1), Effect.succeed(2))\nvoid winner",
       "gotchas": ["The losing fiber is interrupted after the winner completes."]
     },
     {
@@ -1429,7 +1429,7 @@
       "whenToUse": "No detector replacement: use when code must register or pass the concrete Scope explicitly.",
       "whenNotToUse": "Do not wrap an entire it.effect body merely to recreate its runner-managed scope.",
       "replaces": [],
-      "example": "import { Effect } from \"effect\"\nconst program = Effect.scopedWith((scope) => Effect.succeed(scope))\nvoid program",
+      "example": "import * as Effect from \"effect/Effect\"\nconst program = Effect.scopedWith((scope) => Effect.succeed(scope))\nvoid program",
       "gotchas": ["The returned Effect manages the created scope boundary."]
     },
     {
@@ -1444,7 +1444,7 @@
       "whenToUse": "No detector replacement: use for small hot-path or test callbacks where trace capture is intentionally unnecessary.",
       "whenNotToUse": "Do not use to obscure useful traces in operational code.",
       "replaces": [],
-      "example": "import { Effect } from \"effect\"\nconst increment = Effect.fnUntraced(function*(value: number) {\n  return value + 1\n})\nvoid increment",
+      "example": "import * as Effect from \"effect/Effect\"\nconst increment = Effect.fnUntraced(function*(value: number) {\n  return value + 1\n})\nvoid increment",
       "gotchas": [
         "The generator body is evaluated when the returned function is called."
       ]
@@ -1461,7 +1461,7 @@
       "whenToUse": "No detector replacement: use when test or production logs need structured context.",
       "whenNotToUse": "Do not use annotations as an assertion mechanism.",
       "replaces": [],
-      "example": "import { Effect } from \"effect\"\nconst program = Effect.annotateLogs(Effect.log(\"message\"), { test: \"example\" })\nvoid program",
+      "example": "import * as Effect from \"effect/Effect\"\nconst program = Effect.annotateLogs(Effect.log(\"message\"), { test: \"example\" })\nvoid program",
       "gotchas": ["Annotations apply within the wrapped Effect."]
     },
     {
@@ -1476,7 +1476,7 @@
       "whenToUse": "No detector replacement: use with Logger.layer when an effect test intentionally asserts or displays logs.",
       "whenNotToUse": "Do not switch the whole test to it.live solely for Effect.log output.",
       "replaces": [],
-      "example": "import { Logger } from \"effect\"\nconst logger = Logger.consolePretty({ colors: false })\nvoid logger",
+      "example": "import * as Logger from \"effect/Logger\"\nconst logger = Logger.consolePretty({ colors: false })\nvoid logger",
       "gotchas": [
         "Console output can be nondeterministic in formatting across environments."
       ]
@@ -1493,7 +1493,7 @@
       "whenToUse": "No detector replacement: provide a logger layer when logging is the intended behavior under test.",
       "whenNotToUse": "Do not treat logger provision as a reason for live clock or OS services.",
       "replaces": [],
-      "example": "import { Effect, Logger } from \"effect\"\nconst program = Effect.log(\"message\").pipe(\n  Effect.provide(Logger.layer([Logger.consolePretty({ colors: false })]))\n)\nvoid program",
+      "example": "import * as Effect from \"effect/Effect\"\nimport * as Logger from \"effect/Logger\"\nconst program = Effect.log(\"message\").pipe(\n  Effect.provide(Logger.layer([Logger.consolePretty({ colors: false })]))\n)\nvoid program",
       "gotchas": [
         "Set mergeWithExisting only when retaining current loggers is intended."
       ]
@@ -1510,7 +1510,7 @@
       "whenToUse": "Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) to review ownership of a shared deterministic clock and forked work before advancing it. Preserve deterministic timeout subjects; prove serial ownership or isolate test services before considering a reset.",
       "whenNotToUse": "Do not use under live or treat shared setTime/reset as isolation: it mutates the shared clock and may wake other tests' sleepers. A beforeEach reset is not an unconditional repair, and single-test or nested layer blocks are not exempt from parent clock ownership review.",
       "replaces": ["EV015"],
-      "example": "import { Effect } from \"effect\"\nimport * as TestClock from \"effect/testing/TestClock\"\n// Review shared clock ownership first; this work requires isolated test services\n// or proved serial ownership. Shared setTime/reset is mutation, not isolation.\nconst program = Effect.gen(function* () {\n  const fiber = yield* Effect.sleep(\"1 second\").pipe(Effect.forkChild)\n  yield* TestClock.adjust(\"1 second\")\n  return fiber\n})\nvoid program",
+      "example": "import * as Effect from \"effect/Effect\"\nimport * as TestClock from \"effect/testing/TestClock\"\n// Review shared clock ownership first; this work requires isolated test services\n// or proved serial ownership. Shared setTime/reset is mutation, not isolation.\nconst program = Effect.gen(function* () {\n  const fiber = yield* Effect.sleep(\"1 second\").pipe(Effect.forkChild)\n  yield* TestClock.adjust(\"1 second\")\n  return fiber\n})\nvoid program",
       "gotchas": [
         "it.effect gets a fresh TestClock, while default it.layer shares one across the block.",
         "Adjust can wake every due sleep registered on that shared clock."
@@ -1528,7 +1528,7 @@
       "whenToUse": "Use for test-clock-stall-risk findings (EV008, candidate class test-clock-stall-risk) only when a bounded external-system wait actually requires live time. Wrap that wait, including its timeout, with TestClock.withLive while retaining the surrounding test clock. Effect and default layer testers install TestClock; explicit provision can supply one elsewhere. Diagnose the wait's root cause first (D6).",
       "whenNotToUse": "Do not use live time to evade driving deterministic virtual work, hide a stall, or enlarge timeouts without diagnosis. A sibling withLive does not drive an unrelated virtual wait. Do not call when TestClock is absent, as by default under live or excludeTestServices, or use it as an unconditional watchdog across tester modes.",
       "replaces": ["EV008"],
-      "example": "import { Effect, Schedule } from \"effect\"\nimport * as TestClock from \"effect/testing/TestClock\"\nconst waitForExternal = (poll: Effect.Effect<boolean>) => poll.pipe(\n  Effect.repeat({ until: (ready) => ready, schedule: Schedule.spaced(\"10 millis\") }),\n  Effect.timeout(\"1 second\"),\n  TestClock.withLive\n)\nvoid waitForExternal",
+      "example": "import * as Effect from \"effect/Effect\"\nimport * as Schedule from \"effect/Schedule\"\nimport * as TestClock from \"effect/testing/TestClock\"\nconst waitForExternal = (poll: Effect.Effect<boolean>) => poll.pipe(\n  Effect.repeat({ until: (ready) => ready, schedule: Schedule.spaced(\"10 millis\") }),\n  Effect.timeout(\"1 second\"),\n  TestClock.withLive\n)\nvoid waitForExternal",
       "gotchas": [
         "The implementation casts the current Clock to TestClock.",
         "It does not advance shared test time.",
@@ -1547,7 +1547,7 @@
       "whenToUse": "Use for effect-service-mock-candidate judgments (EV012, candidate class effect-service-mock-candidate) when an Effect service is the actual dependency.",
       "whenNotToUse": "Do not replace subject-level module mocks or non-Effect APIs mechanically.",
       "replaces": ["EV012"],
-      "example": "import { Context, Effect, Layer } from \"effect\"\nclass Service extends Context.Service<Service, {\n  readonly value: Effect.Effect<string>\n}>()(\"Service\") {}\nconst mock = Layer.mock(Service, { value: Effect.succeed(\"test\") })\nvoid mock",
+      "example": "import * as Context from \"effect/Context\"\nimport * as Effect from \"effect/Effect\"\nimport * as Layer from \"effect/Layer\"\nclass Service extends Context.Service<Service, {\n  readonly value: Effect.Effect<string>\n}>()(\"Service\") {}\nconst mock = Layer.mock(Service, { value: Effect.succeed(\"test\") })\nvoid mock",
       "gotchas": [
         "Non-Effect properties remain required; omitted effectful members fail when invoked."
       ]

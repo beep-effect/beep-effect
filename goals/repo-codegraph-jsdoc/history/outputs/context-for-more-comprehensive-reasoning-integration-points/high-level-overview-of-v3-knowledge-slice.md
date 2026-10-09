@@ -73,8 +73,7 @@ ValidationReport + Turtle
 ```typescript
 import { ExtractionWorkflow, ExtractionWorkflowLive } from "@effect-ontology/core-v2"
 import type { RunConfig } from "@effect-ontology/core-v2/Domain/Model/ExtractionRun"
-import { Effect } from "effect"
-
+import * as Effect from "effect/Effect";
 const text = "Alice is a person who knows Bob. Bob works for Acme Corp."
 const config: RunConfig = {
   ontologyPath: "./ontologies/foaf.ttl",

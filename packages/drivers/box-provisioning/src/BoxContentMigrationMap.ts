@@ -7,9 +7,10 @@
 
 import { $BoxProvisioningId } from "@beep/identity";
 import { Sha256Hex } from "@beep/schema";
-import { Effect, MutableHashSet } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { BoxContentMigrationMapError, BoxProvisioningSchemaError } from "./BoxProvisioningErrors.ts";

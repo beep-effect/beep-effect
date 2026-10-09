@@ -13,8 +13,8 @@
  * @since 0.0.0
  */
 
-import { Effect } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -156,8 +156,7 @@ export const PACER_MOCK_TOTAL_CASES = 3;
  *
  * ```ts
  * import { defaultCasePages } from "@beep/pacer"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const pages = defaultCasePages()
  * console.log(pages.every(Effect.isEffect))
  * ```
@@ -178,8 +177,7 @@ export const defaultCasePages = (): ReadonlyArray<Effect.Effect<unknown, S.Schem
  *
  * ```ts
  * import { loopingCaseReportBody } from "@beep/pacer"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(loopingCaseReportBody(0)))
  * ```
  *
@@ -197,8 +195,7 @@ export const loopingCaseReportBody = (pageNumber: number): Effect.Effect<unknown
  *
  * ```ts
  * import { defaultPartyBody } from "@beep/pacer"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(defaultPartyBody))
  * ```
  *
@@ -215,8 +212,7 @@ export const defaultPartyBody: Effect.Effect<unknown, S.SchemaError> = partyRepo
  *
  * ```ts
  * import { authSuccessBody } from "@beep/pacer"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(authSuccessBody))
  * ```
  *
@@ -239,8 +235,7 @@ export const authSuccessBody: Effect.Effect<unknown, S.SchemaError> = S.encodeUn
  *
  * ```ts
  * import { authInvalidBody } from "@beep/pacer"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(authInvalidBody))
  * ```
  *
@@ -263,8 +258,7 @@ export const authInvalidBody: Effect.Effect<unknown, S.SchemaError> = S.encodeUn
  *
  * ```ts
  * import { logoutBody } from "@beep/pacer"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(logoutBody))
  * ```
  *
@@ -287,8 +281,7 @@ export const logoutBody: Effect.Effect<unknown, S.SchemaError> = S.encodeUnknown
  *
  * ```ts
  * import { logoutInvalidBody } from "@beep/pacer"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(logoutInvalidBody))
  * ```
  *
@@ -365,8 +358,7 @@ export const PACER_MOCK_DOWNLOAD_CASES = 2;
  *
  * ```ts
  * import { reportInfoBody } from "@beep/pacer"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(reportInfoBody(1078, "COMPLETED")))
  * ```
  *
@@ -400,8 +392,7 @@ export const reportInfoBody: {
  *
  * ```ts
  * import { downloadResultsBody } from "@beep/pacer"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(downloadResultsBody))
  * ```
  *

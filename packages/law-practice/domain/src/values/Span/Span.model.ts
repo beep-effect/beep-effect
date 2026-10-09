@@ -5,8 +5,8 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import { HashMap } from "effect";
 import { dual } from "effect/Function";
+import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { SegmentMap } from "../SegmentMap/index.ts";

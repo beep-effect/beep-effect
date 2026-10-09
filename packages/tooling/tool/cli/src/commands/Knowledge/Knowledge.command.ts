@@ -5,11 +5,15 @@
  * @since 0.0.0
  */
 
-import { Console, Effect, HashMap, Match, Order, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
 import { Command, Flag } from "effect/cli";
-import { dual, flow } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { dual, flow, pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -475,8 +479,7 @@ export const renderKnowledgeRefsCheckSection = (report: KnowledgeRefsReport): st
  * ```ts
  * import { applyKnowledgeRefsCheck } from "@beep/repo-cli/commands/Knowledge/Knowledge.command"
  * import { KnowledgeRefsReport } from "@beep/repo-cli/commands/Knowledge/Knowledge.refs"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const report = KnowledgeRefsReport.make({
  *   treeish: "HEAD",
  *   commit: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4",

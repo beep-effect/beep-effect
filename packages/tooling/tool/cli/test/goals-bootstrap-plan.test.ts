@@ -26,10 +26,15 @@ import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertExitSuccess, assertTrue, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
-import { Console, Effect, Exit, FileSystem, Layer, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
 import { Command } from "effect/cli";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
@@ -597,7 +602,7 @@ it.layer(commandTestLayer, { concurrent: false, timeout: "60 seconds" })((it) =>
                 "--json",
               ])
             );
-            assertTrue(Exit.isSuccess(happy));
+            happy.pipe(Exit.isSuccess, assertTrue);
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
       30_000
@@ -625,12 +630,12 @@ it.layer(commandTestLayer, { concurrent: false, timeout: "60 seconds" })((it) =>
             expectReportedExit(missingPlan);
 
             const happy = yield* Effect.exit(runGoalsCommand(["adopt", "fixture-packet", "--plan", "--json"]));
-            assertTrue(Exit.isSuccess(happy));
+            happy.pipe(Exit.isSuccess, assertTrue);
 
             const human = yield* Effect.exit(
               runGoalsCommand(["adopt", "fixture-packet", "--plan", "--toward", "standard-delivery"])
             );
-            assertTrue(Exit.isSuccess(human));
+            human.pipe(Exit.isSuccess, assertTrue);
 
             const notFound = yield* Effect.exit(runGoalsCommand(["adopt", "missing-packet", "--plan"]));
             expectReportedExit(notFound);

@@ -8,10 +8,14 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Config, Effect, flow, MutableHashMap, Order, pipe, Redacted } from "effect";
-import { constant } from "effect/Function";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
+import { constant, flow, pipe } from "effect/Function";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import {
   fetchSource,
@@ -537,7 +541,7 @@ const readRequiredRedactedConfig = (key: string): Effect.Effect<Redacted.Redacte
       })
     ),
     Effect.filterOrFail(
-      (value) => Str.isNonEmpty(normalizeWhitespace(Redacted.value(value))),
+      (value) => Str.isNonEmpty(value.pipe(Redacted.value, normalizeWhitespace)),
       constant(
         SyncDataToTsError.make({
           message: `${key} is required for the authenticated ISO 3166 sync target.`,
@@ -574,7 +578,7 @@ const authHeadersFromConfig = Effect.fn("SyncDataToTs.Iso3166.authHeadersFromCon
 
   return pipe(
     authHeader,
-    O.flatMap((value) => parseAuthHeader(Redacted.value(value))),
+    O.flatMap((value) => value.pipe(Redacted.value, parseAuthHeader)),
     O.map(([name, value]) => ({ [name]: value })),
     O.getOrElse((): Readonly<Record<string, string>> => ({}))
   );

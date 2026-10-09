@@ -3,10 +3,10 @@ import { fcRuns } from "@beep/test-utils";
 import { AdapterEffectDateTime } from "@beep/ui/components/effect-date-time-picker";
 import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
-import { pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
+import { pipe } from "effect/Function";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 

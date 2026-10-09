@@ -7,9 +7,9 @@
  */
 
 import { $ArchitectureLabUseCasesId } from "@beep/identity/packages";
-import { Context } from "effect";
+import * as Context from "effect/Context";
 import type * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem";
-import type { Effect } from "effect";
+import type * as Effect from "effect/Effect";
 import type {
   ArchiveWorkItemCommand,
   AssignWorkItemCommand,
@@ -34,8 +34,7 @@ const $I = $ArchitectureLabUseCasesId.create("aggregates/WorkItem/WorkItem.use-c
  *   WorkItemActionFailed,
  *   type WorkItemUseCasesShape
  * } from "@beep/architecture-lab-use-cases/aggregates/WorkItem"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const unavailable = WorkItemActionFailed.make({ reason: "offline" })
  * const useCases: WorkItemUseCasesShape = {
  *   archive: () => Effect.fail(unavailable),
@@ -82,8 +81,7 @@ export interface WorkItemUseCasesShape {
  *   WorkItemUseCases,
  *   type WorkItemUseCasesShape
  * } from "@beep/architecture-lab-use-cases/aggregates/WorkItem"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const unavailable = WorkItemActionFailed.make({ reason: "offline" })
  * const useCases: WorkItemUseCasesShape = {
  *   archive: () => Effect.fail(unavailable),

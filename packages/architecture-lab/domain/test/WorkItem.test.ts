@@ -6,7 +6,7 @@ import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";

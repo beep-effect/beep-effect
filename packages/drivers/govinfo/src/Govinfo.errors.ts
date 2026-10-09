@@ -8,7 +8,7 @@
 import { $GovinfoId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { O } from "@beep/utils";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 const $I = $GovinfoId.create("Govinfo.errors");

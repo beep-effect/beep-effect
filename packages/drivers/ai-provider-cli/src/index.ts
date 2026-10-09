@@ -62,7 +62,7 @@ export * from "./AiProviderCli.models.ts";
  * **Example** (Probe auth with mock runner)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { AiProviderCli, AiProviderCliProcessResult, type AiProviderCliRunner } from "@beep/ai-provider-cli"
  *
  * const runner: AiProviderCliRunner = (request) =>
@@ -133,7 +133,7 @@ export * from "./AiProviderCliHome.models.ts";
  * **Example** (Resolve Claude home path)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * import { AiProviderCliHome } from "@beep/ai-provider-cli"
  *

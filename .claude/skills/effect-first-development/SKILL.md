@@ -40,7 +40,7 @@ Additional checks with no law counterpart below:
    - `effect/Predicate` as `P`
    - `effect/Record` as `R`
    - `effect/Schema` as `S`
-2. For other stable helper/data modules, prefer dedicated namespace imports (`effect/String` as `Str`, `effect/Equal` as `Eq`, `effect/Boolean` as `Bool`, etc.); reserve root `effect` imports for core combinators/types such as `Effect`, `Match`, `pipe`, and `flow`.
+2. Import every Effect module from its dedicated path (`effect/Effect`, `effect/Match`, `effect/String` as `Str`, etc.). Import `pipe`, `flow`, and `identity` from `effect/Function`. The root `effect` barrel is not used, including in JSDoc and Markdown examples.
 3. No `any`, type assertions, `@ts-ignore`, or non-null assertions.
 4. No plain `throw`, `new Error`, or untyped error channels in production logic.
 5. No nullish leak in domain logic; convert nullish to `Option` at boundaries.

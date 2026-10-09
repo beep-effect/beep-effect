@@ -7,7 +7,7 @@
  */
 
 import { CandidateClaim } from "@beep/epistemic-domain/entities/CandidateClaim";
-import { Result } from "effect";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { CandidateClaimConverterError } from "./CandidateClaim.errors.ts";
 import type { Table } from "./CandidateClaim.table.ts";

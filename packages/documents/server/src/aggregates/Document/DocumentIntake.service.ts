@@ -18,7 +18,11 @@ import { writeFileWithinRootAtomically } from "@beep/file-processing/PathSafety"
 import { $DocumentsServerId } from "@beep/identity/packages";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
-import { Effect, FileSystem, Layer, Path, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { FilingDecisionHeuristicLayer } from "./FilingDecisionHeuristic.ts";
 import { FilingDecisionLlmLayer } from "./FilingDecisionLlm.ts";
@@ -75,8 +79,8 @@ const materializeAtomically = (
  *   FilingTextExtractionNoopLayer,
  *   makeDocumentIntake
  * } from "@beep/documents-server/aggregates/Document"
- * import { Effect, Layer } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * const program = makeDocumentIntake().pipe(
  *   Effect.provide(
  *     Layer.mergeAll(BunFileSystem.layer, BunPath.layer, FilingDecisionHeuristicLayer, FilingTextExtractionNoopLayer)

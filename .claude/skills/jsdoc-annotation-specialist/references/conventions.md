@@ -129,7 +129,8 @@ Use namespace imports for helper modules:
 | `effect/Predicate` | `import * as P from "effect/Predicate"` |
 | `effect/Record` | `import * as R from "effect/Record"` |
 
-Named imports remain appropriate for core combinators from `effect`. Never import
+Import core modules from their `effect/<Module>` paths; import `pipe` and `flow`
+from `effect/Function`. Never import
 from `@effect/schema`.
 
 ## Categories

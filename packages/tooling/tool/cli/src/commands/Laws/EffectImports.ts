@@ -11,15 +11,16 @@ import { extractFencedCodeBlockDetails } from "@beep/repo-docgen/Core";
 import { FsUtils } from "@beep/repo-utils/FsUtils";
 import { jsonParse } from "@beep/repo-utils/JsonUtils";
 import { readPackageJsonFile } from "@beep/repo-utils/schemas/PackageJson";
-import {
-  TYPESCRIPT_SOURCE_EXCLUDED_SEGMENTS,
-  TYPESCRIPT_SOURCE_EXCLUDED_SUFFIXES,
-  toPosixPath,
-} from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
+import { toPosixPath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
 import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
-import { Effect, FileSystem, Inspectable, MutableHashSet, Path, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as Inspectable from "effect/Inspectable";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -37,9 +38,8 @@ import type {
 
 const $I = $RepoCliId.create("commands/Laws/EffectImports");
 
-// P2 kept the approved pilot promoted across both measurement states. Its
-// inconclusive stop restores the default to an empty ratchet; a later family
-// may join only under a separately authorized rollout decision.
+// The public runner retains an explicit scope for fixture and library callers.
+// The CLI supplies every repository source family as the enforced default.
 const EFFECT_IMPORT_PROMOTED_FAMILY_PREFIXES = A.empty<string>();
 
 /**
@@ -112,10 +112,9 @@ export type EffectImportManualReviewKind = typeof EffectImportManualReviewKind.T
  *
  * **Details**
  *
- * `candidate` is a dry-run-only escape hatch for proving a proposed family
- * before it joins the promoted-family list. Normal Yeet and Lint Policy runs
- * leave it disabled, so the empty initial ratchet cannot rewrite unmigrated
- * families ahead of the pilot gate.
+ * `candidate` is a dry-run-only escape hatch for scoped migration probes.
+ * The CLI enforces the complete repository corpus; direct runner callers may
+ * provide their own family prefixes for isolated fixtures.
  *
  * **Example** (Configure import governance)
  *
@@ -143,6 +142,10 @@ export class EffectImportRulesOptions extends S.Class<EffectImportRulesOptions>(
       S.withDecodingDefault(Effect.succeed(false))
     ),
     candidate: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefault(Effect.succeed(false))
+    ),
+    effectOnly: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(false)),
       S.withDecodingDefault(Effect.succeed(false))
     ),
@@ -349,8 +352,11 @@ const isUnknownJsonObject = S.is(S.Record(S.String, S.Unknown));
  * extended. Flat Function exports are modeled separately below.
  */
 const EFFECT_NAMESPACE_BINDINGS = [
+  "Arbitrary",
+  "Array",
   "BigDecimal",
   "BigInt",
+  "ByteSize",
   "Brand",
   "Cache",
   "Cause",
@@ -376,6 +382,7 @@ const EFFECT_NAMESPACE_BINDINGS = [
   "FiberMap",
   "FiberSet",
   "FileSystem",
+  "Formatter",
   "Function",
   "Graph",
   "Hash",
@@ -454,34 +461,39 @@ const EFFECT_PACKAGE_JSON_PATH = NodeUrl.fileURLToPath(import.meta.resolve("effe
 
 const CODE_GLOBS = [
   "apps/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
+  "apps/storybook/.storybook/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
   "packages/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
   "infra/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
-  "!packages/**/docs/**",
+  "scripts/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
+  "goals/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
+  "explorations/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
+  "scratchpad/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
+  "tools/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
+  "plugins/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
+  "research/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
+  ".claude/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
+  ".github/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
+  "*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
 ] as const;
 
 const MARKDOWN_GLOBS = [
+  "**/*.{md,mdx}",
+  "*.{md,mdx}",
+  ".changeset/**/*.{md,mdx}",
+  ".claude/**/*.{md,mdx}",
+  ".github/**/*.{md,mdx}",
+  ".junie/**/*.{md,mdx}",
   ".patterns/**/*.{md,mdx}",
-  "standards/**/*.{md,mdx}",
-  ".claude/skills/**/*.{md,mdx}",
-  "docs/**/*.{md,mdx}",
-  "goals/*/[A-Z]*.md",
+  "scratchpad/**/*.{md,mdx}",
 ] as const;
 
-const NON_SHIPPING_PREFIXES = ["scratchpad/", "explorations/"] as const;
 const GENERATED_OR_VENDOR_SEGMENTS = ["/.repos/", "/node_modules/", "/dist/", "/vendor/"] as const;
-const GENERATED_SOURCE_SEGMENTS = A.filter(TYPESCRIPT_SOURCE_EXCLUDED_SEGMENTS, Str.includes("generated"));
-const GENERATED_SOURCE_SUFFIXES = A.filter(TYPESCRIPT_SOURCE_EXCLUDED_SUFFIXES, Str.startsWith(".gen."));
-const GOAL_OPS_PATTERN = /^goals\/[^/]+\/(?:ops|research\/assets)\//u;
 
 const hasPathPrefix = (prefix: string, filePath: string): boolean =>
   filePath === prefix || Str.startsWith(Str.endsWith("/")(prefix) ? prefix : `${prefix}/`)(filePath);
 
 const isDeliberatelyExcludedPath = (filePath: string): boolean =>
-  A.some(NON_SHIPPING_PREFIXES, (prefix) => Str.startsWith(prefix)(filePath)) ||
-  A.some(GENERATED_OR_VENDOR_SEGMENTS, (segment) => Str.includes(segment)(`/${filePath}`)) ||
-  A.some(GENERATED_SOURCE_SEGMENTS, (segment) => Str.includes(segment)(`/${filePath}`)) ||
-  A.some(GENERATED_SOURCE_SUFFIXES, (suffix) => Str.endsWith(suffix)(filePath)) ||
-  O.isSome(Str.match(GOAL_OPS_PATTERN)(filePath));
+  A.some(GENERATED_OR_VENDOR_SEGMENTS, (segment) => Str.includes(segment)(`/${filePath}`));
 
 const sameTarget = (left: ImportTarget, right: ImportTarget): boolean =>
   left.kind === right.kind &&
@@ -1512,12 +1524,51 @@ class EffectImportFenceTransformSummary extends S.Class<EffectImportFenceTransfo
   })
 ) {}
 
+const markdownImportFencePattern =
+  /^ {0,3}(`{3,}|~{3,})(typescript|javascript|tsx|jsx|mts|cts|mjs|cjs|ts|js)(?![\w-])[^\r\n]*\r?\n([\s\S]*?)^ {0,3}\1[ \t]*$/gim;
+
+const markdownImportFences = (content: string) =>
+  pipe(
+    Str.matchAll(markdownImportFencePattern)(content),
+    A.fromIterable,
+    A.map((match) => {
+      const openingLength = match[0].indexOf("\n") + 1;
+      const code = match[3] ?? "";
+      const codeStart = (match.index ?? 0) + openingLength;
+      const language = Str.toLowerCase(match[2] ?? "ts");
+      return {
+        code,
+        codeStart,
+        codeEnd: codeStart + Str.length(code),
+        extension: language === "tsx" || language === "jsx" ? (".tsx" as const) : (".ts" as const),
+      };
+    })
+  );
+
+const ROOT_EFFECT_IMPORT_PATTERN = /(?:from\s*|import\s*\(|import\s+|require\s*\()\s*["']effect["']/u;
+
+const tryTransformSourceFile = (
+  mappings: RootImportMappings,
+  file: string,
+  sourceFile: SourceFile
+): O.Option<ReturnType<typeof transformSourceFile>> => {
+  try {
+    return O.some(transformSourceFile(mappings, file, sourceFile));
+  } catch {
+    return O.none();
+  }
+};
+
 const transformFencedContent = (
   mappings: RootImportMappings,
   file: string,
-  content: string
+  content: string,
+  markdown = false
 ): EffectImportFenceTransformSummary => {
-  const [fences, parserWarnings] = extractFencedCodeBlockDetails(content);
+  const [fences, parserWarnings] = markdown
+    ? [markdownImportFences(content), A.empty<string>()]
+    : extractFencedCodeBlockDetails(content);
+  let warnings = A.fromIterable(parserWarnings);
   let rewrittenContent = content;
   let rootImportsRewritten = 0;
   let rootExportsRewritten = 0;
@@ -1528,9 +1579,17 @@ const transformFencedContent = (
 
   const indexedFences = A.map(fences, (fence, index) => ({ fence, ordinal: index + 1 }));
   for (const { fence, ordinal } of A.reverse(indexedFences)) {
+    if (!ROOT_EFFECT_IMPORT_PATTERN.test(fence.code)) {
+      continue;
+    }
     const fenceProject = new Project({ useInMemoryFileSystem: true });
     const fenceSource = fenceProject.createSourceFile(`fence-${ordinal}${fence.extension}`, fence.code);
-    const sourceSummary = transformSourceFile(mappings, `${file}#fence-${ordinal}`, fenceSource);
+    const transformed = tryTransformSourceFile(mappings, `${file}#fence-${ordinal}`, fenceSource);
+    if (O.isNone(transformed)) {
+      warnings = A.append(warnings, `${file}#fence-${ordinal}: cannot parse root Effect import`);
+      continue;
+    }
+    const sourceSummary = transformed.value;
     rootImportsRewritten += sourceSummary.rootImportsRewritten;
     rootExportsRewritten += sourceSummary.rootExportsRewritten;
     emittedImports += sourceSummary.emittedImports;
@@ -1555,7 +1614,7 @@ const transformFencedContent = (
     emittedExports,
     rootSpecifierCounts,
     manualReviews,
-    parserWarnings,
+    parserWarnings: warnings,
   });
 };
 
@@ -1573,13 +1632,14 @@ const isPathInActiveScope = (
   relativePath: string
 ): boolean =>
   !MutableHashSet.has(excludePaths, relativePath) &&
-  !isDeliberatelyExcludedPath(relativePath) &&
+  (options.mode === "markdown" || !isDeliberatelyExcludedPath(relativePath)) &&
   (P.isUndefined(options.includePaths) && A.isReadonlyArrayEmpty(options.includePrefixes)
     ? true
     : (P.isNotUndefined(options.includePaths) && A.contains(options.includePaths, relativePath)) ||
       A.some(options.includePrefixes, (prefix) => hasPathPrefix(prefix, relativePath))) &&
   (options.candidate ||
-    (options.mode !== "code" && !options.write) ||
+    options.mode !== "code" ||
+    !Str.includes("/")(relativePath) ||
     A.some(options.promotedFamilyPrefixes, (prefix) => hasPathPrefix(prefix, relativePath)));
 
 const codeGlobsFor = (options: EffectImportRulesOptions): ReadonlyArray<string> => {
@@ -1657,7 +1717,9 @@ export const runEffectImportRules = Effect.fn("EffectImports.runEffectImportRule
   project.addSourceFilesAtPaths("packages/foundation/**/src/**/*.{ts,tsx}");
 
   const effectMapping = yield* buildEffectRootMapping();
-  const foundationMappings = yield* buildFoundationRootMappings(project, effectMapping.exports);
+  const foundationMappings = options.effectOnly
+    ? R.empty<string, ImportTargetCandidates>()
+    : yield* buildFoundationRootMappings(project, effectMapping.exports);
   const rootMappings = R.set(foundationMappings, "effect", effectMapping.mappings);
 
   let rootImportsRewritten = 0;
@@ -1675,7 +1737,11 @@ export const runEffectImportRules = Effect.fn("EffectImports.runEffectImportRule
     const fs = yield* FileSystem.FileSystem;
     const fsUtils = yield* FsUtils;
     const discoveredFiles = P.isUndefined(options.includePaths)
-      ? yield* fsUtils.globFiles(MARKDOWN_GLOBS, { cwd: process.cwd(), dot: true })
+      ? yield* fsUtils.globFiles(MARKDOWN_GLOBS, {
+          cwd: process.cwd(),
+          dot: true,
+          ignore: ["**/node_modules/**", "**/.git/**", "**/.repos/**", "**/dist/**", "**/.beep/**"],
+        })
       : options.includePaths;
     const markdownFiles = pipe(
       discoveredFiles,
@@ -1688,7 +1754,7 @@ export const runEffectImportRules = Effect.fn("EffectImports.runEffectImportRule
     for (const relativePath of markdownFiles) {
       const absolutePath = path.join(process.cwd(), relativePath);
       const original = yield* fs.readFileString(absolutePath);
-      const fenceSummary = transformFencedContent(rootMappings, relativePath, original);
+      const fenceSummary = transformFencedContent(rootMappings, relativePath, original, true);
       scannedFences += fenceSummary.scannedFences;
       rootImportsRewritten += fenceSummary.rootImportsRewritten;
       rootExportsRewritten += fenceSummary.rootExportsRewritten;
@@ -1723,8 +1789,16 @@ export const runEffectImportRules = Effect.fn("EffectImports.runEffectImportRule
     scannedFiles = A.length(sourceFiles);
 
     for (const { sourceFile, relativePath } of sourceFiles) {
+      let fileAffected = false;
       if (options.mode === "code") {
-        const sourceSummary = transformSourceFile(rootMappings, relativePath, sourceFile);
+        const transformed = tryTransformSourceFile(rootMappings, relativePath, sourceFile);
+        if (O.isNone(transformed)) {
+          parserWarnings = A.append(parserWarnings, `${relativePath}: cannot parse root Effect import`);
+          changedFiles = A.append(changedFiles, relativePath);
+          sourceFile.refreshFromFileSystemSync();
+          continue;
+        }
+        const sourceSummary = transformed.value;
         // fallow-ignore-next-line code-duplication -- executable and fenced-source scans intentionally fold the same public counters into one summary ledger
         rootImportsRewritten += sourceSummary.rootImportsRewritten;
         rootExportsRewritten += sourceSummary.rootExportsRewritten;
@@ -1733,13 +1807,9 @@ export const runEffectImportRules = Effect.fn("EffectImports.runEffectImportRule
         rootSpecifierCounts = mergeSpecifierCounts(rootSpecifierCounts, sourceSummary.rootSpecifierCounts);
         manualReviews = A.appendAll(manualReviews, sourceSummary.manualReviews);
 
-        if (sourceSummary.affected) {
-          changedFiles = A.append(changedFiles, relativePath);
-        }
-        continue;
+        fileAffected = sourceSummary.affected;
       }
 
-      let fileAffected = false;
       const jsDocs = A.reverse(sourceFile.getDescendantsOfKind(SyntaxKind.JSDoc));
       for (const jsDoc of jsDocs) {
         const originalInnerText = jsDoc.getInnerText();

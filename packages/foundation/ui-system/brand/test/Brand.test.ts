@@ -18,8 +18,9 @@ import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
 import { assertFailure, assertSuccess } from "@effect/vitest/utils";
-import { Effect, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const decodeBrandIdentity = S.decodeEffect(BrandIdentity);

@@ -9,8 +9,9 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { Glob } from "@beep/schema/Glob";
 import { PosixPath } from "@beep/schema/PosixPath";
-import { Effect, Tuple } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+import * as Tuple from "effect/Tuple";
 
 const $I = $RepoCliId.create("internal/cli/RegistrationGeometry");
 

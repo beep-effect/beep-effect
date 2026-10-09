@@ -17,11 +17,14 @@ import {
 import { thunkTrue } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
 import { assertFailure, assertNone, assertSome } from "@effect/vitest/utils";
-import { Effect, Layer, Redacted, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Effect from "effect/Effect";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Redacted from "effect/Redacted";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const decodeUsptoConfigInputResult = S.decodeResult(UsptoConfigInput);

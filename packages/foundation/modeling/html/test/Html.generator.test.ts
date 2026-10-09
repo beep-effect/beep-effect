@@ -11,10 +11,11 @@ import {
 } from "@beep/html/Html.meta";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { pipe, Result } from "effect";
 import * as A from "effect/Array";
+import { pipe } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { assertReviewedCurrentAttributeGap } from "../scripts/generate.ts";
 

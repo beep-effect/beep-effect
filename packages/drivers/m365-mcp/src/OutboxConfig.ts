@@ -15,9 +15,12 @@
 import { $M365McpId } from "@beep/identity/packages";
 import { GraphPathSegment, M365AppOnlyConfigInput, M365CertificateCredential } from "@beep/m365";
 import { getSomesStruct } from "@beep/utils/Option";
-import { Config, Effect, flow, pipe, Redacted } from "effect";
 import * as A from "effect/Array";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
+import { flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { OutboxAttachmentPolicy } from "./OutboxAttachmentSource.ts";
@@ -96,8 +99,7 @@ export class OutboxConfigError extends S.TaggedError<OutboxConfigError>($I`Outbo
  * import { M365AppOnlyConfigInput, M365CertificateCredential } from "@beep/m365"
  * import { OutboxAttachmentPolicy } from "@beep/m365-mcp/OutboxAttachmentSource"
  * import { OutboxConfig } from "@beep/m365-mcp/OutboxConfig"
- * import { Redacted } from "effect"
- *
+ * import * as Redacted from "effect/Redacted";
  * const config = OutboxConfig.make({
  *   appOnly: M365AppOnlyConfigInput.make({
  *     clientId: "client-id",
@@ -239,8 +241,7 @@ const attachmentPolicy = Effect.fnUntraced(function* () {
  *
  * ```ts
  * import { loadOutboxConfig } from "@beep/m365-mcp/OutboxConfig"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = loadOutboxConfig().pipe(Effect.map((config) => config.attachments.maxAttachments))
  * console.log(Effect.isEffect(program))
  * // true

@@ -1,8 +1,10 @@
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
-import { Effect, Path, Stream } from "effect";
+import * as Effect from "effect/Effect";
+import * as Path from "effect/Path";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as Stream from "effect/Stream";
 
 // Exercise native sockets and the installed dependency graph in a bounded child.
 // MemoryFileSystem cannot represent either boundary.

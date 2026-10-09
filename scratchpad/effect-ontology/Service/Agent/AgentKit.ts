@@ -12,7 +12,9 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { Context, Effect, Layer } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -87,7 +89,7 @@ const mergeTask = (task: AgentTask, updates: Partial<AgentTask>): AgentTask => A
  * **Example** (Acquire the kit from its Default layer)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { AgentKit } from "@effect-ontology/Service/Agent/AgentKit"
  *
  * const program = Effect.gen(function* () {
@@ -342,7 +344,7 @@ const makeAgentKit = Effect.gen(function* () {
  * **Example** (Acquire the kit from its Default layer)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { AgentKit } from "@effect-ontology/Service/Agent/AgentKit"
  *
  * const program = Effect.gen(function* () {

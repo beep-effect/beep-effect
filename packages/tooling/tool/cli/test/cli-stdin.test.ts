@@ -1,6 +1,6 @@
 import { CommandStdinSource, readStdinDocument, StdinDocumentError } from "@beep/repo-cli/test/Cli";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 
 const MESSAGES = {
   missingFlag: "test command requires --from-stdin.",

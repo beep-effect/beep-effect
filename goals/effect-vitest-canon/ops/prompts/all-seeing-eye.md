@@ -59,8 +59,7 @@ Before: this valid test has ordinary runner behavior but no D7 instrumentation.
 ~~~ts
 import { it } from "@effect/vitest"
 import { strictEqual } from "@effect/vitest/utils"
-import { Effect } from "effect"
-
+import * as Effect from "effect/Effect";
 it.effect("finishes the operation", Effect.fnUntraced(function* () {
   yield* Effect.log("operation started")
   strictEqual(2 + 2, 4)
@@ -73,8 +72,7 @@ step. The test remains effect-based; tracing is controlled by the environment.
 ~~~ts
 import { it } from "@beep/test-runner"
 import { strictEqual } from "@effect/vitest/utils"
-import { Effect } from "effect"
-
+import * as Effect from "effect/Effect";
 it.effect("finishes the operation", Effect.fnUntraced(function* () {
   yield* Effect.log("operation started")
   strictEqual(2 + 2, 4)

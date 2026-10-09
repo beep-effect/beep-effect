@@ -52,10 +52,16 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Console, DateTime, Duration, Effect, flow, HashSet, Match, pipe, Ref } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import * as Console from "effect/Console";
+import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import { dual, flow, pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
+import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -164,8 +170,9 @@ import {
 } from "./Verdict.ts";
 import { YeetWatchThread, yeetFirstRed } from "./WatchStream.ts";
 import { escalateYeetPrWave } from "./WaveNotifier.ts";
-import type { FileSystem, Path } from "effect";
 import type * as Crypto from "effect/Crypto";
+import type * as FileSystem from "effect/FileSystem";
+import type * as Path from "effect/Path";
 import type { ChildProcessSpawner } from "effect/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { YeetPrCommentRow } from "./Inbox.ts";
@@ -658,8 +665,7 @@ export type YeetMonitorRerunBudget = HashSet.HashSet<string>;
  *
  * ```ts
  * import { emptyYeetMonitorRerunBudget } from "@beep/repo-cli/test/Yeet"
- * import { HashSet } from "effect"
- *
+ * import * as HashSet from "effect/HashSet";
  * console.log(HashSet.size(emptyYeetMonitorRerunBudget))
  * ```
  *
@@ -1082,8 +1088,7 @@ const classifyJob = Effect.fn("YeetMonitorLoop.classifyJob")(function* (
  *
  * ```ts
  * import { collectYeetMonitorFailedJobs } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(Effect.succeed(collectYeetMonitorFailedJobs))) // true
  * ```
  *
@@ -1153,8 +1158,7 @@ const rerunJob = Effect.fn("YeetMonitorLoop.rerunJob")(function* (
  *
  * ```ts
  * import { applyYeetMonitorJobDecision } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(Effect.succeed(applyYeetMonitorJobDecision))) // true
  * ```
  *
@@ -2408,8 +2412,7 @@ const nextMonitorSleep = (next: MonitorPoll, interval: Duration.Duration): Durat
  *
  * ```ts
  * import { runYeetMonitorUntilMerged } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.succeed(runYeetMonitorUntilMerged)
  * console.log(Effect.isEffect(program)) // true
  * ```

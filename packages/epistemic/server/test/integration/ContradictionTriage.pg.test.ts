@@ -47,6 +47,14 @@ import * as Shared from "@beep/shared-domain/identity/Shared";
 import { systemPrincipal as systemPrincipalInput } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import * as PgClient from "@effect/sql-pg/PgClient";
+import * as Config from "effect/Config";
+import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
+import * as Deferred from "effect/Deferred";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Redacted from "effect/Redacted";
 import { expectBothWritersWaiting } from "./PostgresLock.test-kit.ts";
 
 const decodeUnknownRecordEdgeFactResult = S.decodeUnknownResult(RecordEdgeFact);
@@ -54,7 +62,6 @@ const decodeUnknownRecordEdgeFactResult = S.decodeUnknownResult(RecordEdgeFact);
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertSome, assertTrue } from "@effect/vitest/utils";
-import { Config, Context, DateTime, Deferred, Effect, Layer, pipe, Redacted } from "effect";
 import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
@@ -66,10 +73,8 @@ import type { EdgeVersion } from "@beep/epistemic-domain/entities/EdgeVersion";
 
 const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
-const externalUrl = pipe(
-  Effect.runSync(Config.option(Config.String("BEEP_EPISTEMIC_CONTRADICTION_PG_URL"))),
-  O.getOrElse(() => "")
-);
+const externalUrlConfig = Config.option(Config.String("BEEP_EPISTEMIC_CONTRADICTION_PG_URL"));
+const externalUrl = Effect.runSync(externalUrlConfig).pipe(O.getOrElse(() => ""));
 
 const migrationsFolder = fileURLToPath(new URL("../../../../_internal/db-admin/drizzle", import.meta.url));
 const migrationsSchema = "epistemic_contradiction_acceptance";

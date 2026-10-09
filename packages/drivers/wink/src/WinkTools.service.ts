@@ -15,7 +15,14 @@ import { NlpToolkit } from "@beep/nlp-processing/Tools/NlpToolkit";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, Str, thunk0, thunkEmptyReadonlyArray, thunkEmptyStr, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Chunk, Clock, Effect, flow, Inspectable, identity, Layer, Match, Order, pipe } from "effect";
+import * as Chunk from "effect/Chunk";
+import * as Clock from "effect/Clock";
+import * as Effect from "effect/Effect";
+import { flow, identity, pipe } from "effect/Function";
+import * as Inspectable from "effect/Inspectable";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
+import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -355,7 +362,7 @@ type WinkNlpToolkitLiveError = typeof WinkNlpToolkitLiveError.Type;
  * **Example** (Provide layer to export tools)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { WinkNlpToolkitLive } from "@beep/wink"
  * import { exportTools } from "@beep/nlp-processing/Tools/ToolExport"
  *
@@ -407,8 +414,10 @@ export const WinkNlpToolkitLive: Layer.Layer<
         function* ({ text }) {
           yield* Effect.annotateCurrentSpan(textLengthAttribute(text, "text"));
           const document = yield* tokenization.document(text, "bag-of-words");
+          const tokenCounts = document.tokens.pipe(Chunk.toReadonlyArray, tokenBagOfWords);
+          const entries = R.toEntries(tokenCounts);
           const terms = pipe(
-            R.toEntries(tokenBagOfWords(Chunk.toReadonlyArray(document.tokens))),
+            entries,
             A.map(([value, count]) => ({ count, value })),
             A.sortBy(
               descendingNumber((entry) => entry.count),
@@ -437,11 +446,11 @@ export const WinkNlpToolkitLive: Layer.Layer<
 
           const score = yield* similarity.bowCosine(
             BagOfWords.make({
-              bow: tokenBagOfWords(Chunk.toReadonlyArray(doc1.tokens)),
+              bow: doc1.tokens.pipe(Chunk.toReadonlyArray, tokenBagOfWords),
               documentId: doc1.id,
             }),
             BagOfWords.make({
-              bow: tokenBagOfWords(Chunk.toReadonlyArray(doc2.tokens)),
+              bow: doc2.tokens.pipe(Chunk.toReadonlyArray, tokenBagOfWords),
               documentId: doc2.id,
             })
           );

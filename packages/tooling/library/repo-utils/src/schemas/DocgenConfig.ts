@@ -7,10 +7,11 @@
 
 import { $RepoUtilsId } from "@beep/identity/packages";
 import { A, Str } from "@beep/utils";
-import { Effect, flow, Path, pipe } from "effect";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
-import { dual } from "effect/Function";
+import { dual, flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -428,7 +429,8 @@ export const toCanonicalDocgenConfigJson = (config: CanonicalDocgenConfig): Cano
  * **Example** (Create package srcLink config)
  *
  * ```ts
- * import { Effect, Path } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Path from "effect/Path";
  * import {
  *   CanonicalDocgenConfigInput,
  *   createCanonicalDocgenConfig

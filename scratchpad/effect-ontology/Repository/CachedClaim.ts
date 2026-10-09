@@ -11,13 +11,17 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { Context, HashSet, Layer, pipe } from "effect";
-
+import * as Context from "effect/Context";
+import * as HashSet from "effect/HashSet";
+import * as Layer from "effect/Layer";
 const $I = $ScratchpadId.create("effect-ontology/Repository/CachedClaim");
 
-import { Cache, Data, Duration, Effect } from "effect";
+import * as Cache from "effect/Cache";
+import * as Data from "effect/Data";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import type { PersistedClaimId, PersistedCorrectionId } from "./Claim.ts";
 import { ClaimRepository } from "./Claim.ts";
@@ -60,8 +64,7 @@ interface CachedClaimRepositoryShape extends Context.Service.Shape<typeof ClaimR
  *
  * ```ts
  * import { CachedClaimRepository } from "@effect-ontology/Repository/CachedClaim"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const inspectCache = Effect.gen(function* () {
  *   const claims = yield* CachedClaimRepository
  *   const before = yield* claims.cacheStats

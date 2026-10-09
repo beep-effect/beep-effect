@@ -7,7 +7,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import type * as AST from "effect/SchemaAST";
@@ -81,8 +81,7 @@ export class FlattenMediaSummary extends S.Class<FlattenMediaSummary>($I`Flatten
  *
  * ```ts
  * import { decodeFlattenMediaOptions } from "@beep/repo-cli/commands/Files"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = decodeFlattenMediaOptions(undefined)
  * console.log(Effect.isEffect(program))
  * ```

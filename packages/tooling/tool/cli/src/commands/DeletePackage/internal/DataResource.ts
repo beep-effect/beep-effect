@@ -12,7 +12,7 @@
  */
 
 import { Str, thunkFalse } from "@beep/utils";
-import { HashSet } from "effect";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 
 // D12 locality doctrine: only loopback hosts and `.localhost` names count as

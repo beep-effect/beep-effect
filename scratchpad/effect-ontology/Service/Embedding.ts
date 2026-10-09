@@ -13,7 +13,10 @@ import { flow } from "effect/Function";
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { Clock, Context, Effect, Layer } from "effect";
+import * as Clock from "effect/Clock";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts";
 import { EmbeddingError } from "../Domain/Error/Embedding.ts";
@@ -90,7 +93,8 @@ export interface EmbeddingServiceMethods {
  * **Example** (Embed text through a test layer)
  *
  * ```ts
- * import { Effect, Layer } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * import { EmbeddingService } from "@effect-ontology/Service/Embedding"
  * import { ProviderMetadata, cosineSimilarity } from "@effect-ontology/Service/EmbeddingProvider"
  *
@@ -133,7 +137,8 @@ export class EmbeddingService extends Context.Service<EmbeddingService, Embeddin
  * **Example** (Compose live embed with a test provider)
  *
  * ```ts
- * import { Effect, Layer } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * import { EmbeddingService, EmbeddingServiceLive } from "@effect-ontology/Service/Embedding"
  * import { EmbeddingCache } from "@effect-ontology/Service/EmbeddingCache"
  * import {
@@ -252,7 +257,8 @@ export const EmbeddingServiceLive: Layer.Layer<
  * **Example** (Provide default embedding infrastructure)
  *
  * ```ts
- * import { Effect, Layer } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * import { EmbeddingService, EmbeddingServiceDefault } from "@effect-ontology/Service/Embedding"
  * import { EmbeddingCache } from "@effect-ontology/Service/EmbeddingCache"
  * import {

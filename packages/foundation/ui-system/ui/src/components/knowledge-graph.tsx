@@ -9,8 +9,10 @@
 import { A, Str } from "@beep/utils";
 import { useAtom } from "@effect/atom-react";
 import * as d3 from "d3";
-import { flow, HashSet, Order, pipe } from "effect";
+import { flow, pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import { Atom } from "effect/reactivity";
 import { forwardRef, useEffect, useId, useImperativeHandle, useRef } from "react";
 import { cn } from "../lib/index.ts";

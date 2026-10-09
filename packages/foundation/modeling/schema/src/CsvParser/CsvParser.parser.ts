@@ -7,8 +7,8 @@
 
 import { $SchemaId } from "@beep/identity";
 import { A, Str, thunkFalse } from "@beep/utils";
-import { Effect, pipe } from "effect";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -400,7 +400,7 @@ const parseCsvRowsEffect = Effect.fn("CsvParser.parseCsvRowsEffect")(function* (
  * **Example** (Parse CSV into rows)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { parseCsvRows } from "@beep/schema/CsvParser"
  * import { ParserOptions } from "@beep/schema/ParserOptions"
  *

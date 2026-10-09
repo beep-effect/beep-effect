@@ -2,8 +2,10 @@ import { findRepoRoot } from "@beep/repo-utils";
 import isIgnored from "@commitlint/is-ignored";
 import { NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
-import { Effect, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Path from "effect/Path";
 
 type IgnorePredicate = (message: string) => boolean;
 

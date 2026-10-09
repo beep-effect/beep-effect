@@ -8,9 +8,15 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { buildRepoDependencyIndex, findRepoRoot, jsonStringifyPretty, resolveWorkspaceDirs } from "@beep/repo-utils";
 import { A, Str } from "@beep/utils";
-import { Console, Effect, FileSystem, HashMap, Order, Path, pipe } from "effect";
+import * as Console from "effect/Console";
 import { Command, Flag } from "effect/cli";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
@@ -323,8 +329,7 @@ export const FALLOW_BOUNDARY_CONFIG_PATH = DEFAULT_BOUNDARY_CONFIG_PATH;
  *
  * ```ts
  * import { renderFallowBoundaryConfig } from "@beep/repo-cli/commands/Fallow"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * // Provide FileSystem, Path and FsUtils to run the effect.
  * const program = renderFallowBoundaryConfig("/repo")
  * console.log(Effect.isEffect(program)) // true
@@ -556,8 +561,7 @@ const boundariesCommand = Command.make(
  * ```ts
  * import { fallowCommand } from "@beep/repo-cli/commands/Fallow"
  * import { Command } from "effect/cli"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const run = Command.run(fallowCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true
  * ```

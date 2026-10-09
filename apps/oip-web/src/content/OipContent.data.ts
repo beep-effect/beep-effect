@@ -4,8 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { Result } from "effect";
+import * as Result from "effect/Result";
 import { decodeOipSiteContentResult, ReviewStatus } from "./OipContent.model.ts";
 import type { OipSiteContent, ReviewGate } from "./OipContent.model.ts";
 

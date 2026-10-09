@@ -6,8 +6,8 @@
  */
 import { $RepoCliId } from "@beep/identity/packages";
 import { Err } from "@beep/utils";
-import { Inspectable } from "effect";
 import { dual } from "effect/Function";
+import * as Inspectable from "effect/Inspectable";
 import * as S from "effect/Schema";
 import { EffectSchemaInventoryDrift } from "./EffectSchemaInventory.schemas.ts";
 

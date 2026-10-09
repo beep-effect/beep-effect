@@ -11,7 +11,8 @@
  */
 
 import { PgClient } from "@effect/sql-pg";
-import { Layer, Redacted } from "effect";
+import * as Layer from "effect/Layer";
+import * as Redacted from "effect/Redacted";
 import {
   DrizzleLive as CanonicalDrizzleLive,
   PgClientLive as CanonicalPgClientLive,
@@ -57,8 +58,7 @@ export * from "./schema.ts";
  *
  * ```ts
  * import { DrizzleLive, DrizzleWithPgLive, PgClientLive } from "@effect-ontology/Repository/index"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * const drizzle = Layer.provide(DrizzleLive, PgClientLive)
  * console.log(drizzle !== DrizzleLive) // true
  * console.log(DrizzleWithPgLive !== PgClientLive) // true
@@ -82,8 +82,7 @@ export const DrizzleLive = CanonicalDrizzleLive;
  *
  * ```ts
  * import { DrizzleLive, PgClientLive } from "@effect-ontology/Repository/index"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * const withPg = Layer.provide(DrizzleLive, PgClientLive)
  * console.log(withPg)
  * ```
@@ -219,8 +218,7 @@ export const EmbeddingRepositoryLive = EmbeddingRepository.Default.pipe(Layer.pr
  *   EntityRegistryRepositoryLive,
  *   RepositoriesLive
  * } from "@effect-ontology/Repository/index"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * const composed = Layer.mergeAll(
  *   ClaimRepositoryLive,
  *   ConflictRepositoryLive,

@@ -17,7 +17,7 @@ import { $EpistemicDomainId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { SemanticVersion } from "@beep/schema/SemanticVersion";
 import { Principal } from "@beep/shared-domain/entity/Principal";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 const $I = $EpistemicDomainId.create("values/ExecutionGrant/ExecutionGrant.model");

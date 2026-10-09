@@ -2,7 +2,8 @@ import { AiMetricsSourceDiscoveryInput } from "@beep/repo-ai-metrics/source-disc
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertNone, assertTrue } from "@effect/vitest/utils";
-import { pipe, Result } from "effect";
+import { pipe } from "effect/Function";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const decodeSourceDiscoveryInput = S.decodeUnknownResult(AiMetricsSourceDiscoveryInput);

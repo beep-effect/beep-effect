@@ -1,7 +1,8 @@
 import { $OntologyId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import { Effect, flow, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import { flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";

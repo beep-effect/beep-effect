@@ -16,9 +16,15 @@
 import { lookup as lookupMimeType } from "@beep/data/MimeTypes";
 import { $M365McpId } from "@beep/identity/packages";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
-import { ByteSize, Context, Crypto, Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
+import * as ByteSize from "effect/ByteSize";
+import * as Context from "effect/Context";
+import * as Crypto from "effect/Crypto";
+import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -432,8 +438,7 @@ const makeSource = Effect.fnUntraced(function* (policy: OutboxAttachmentPolicy) 
  *
  * ```ts
  * import { OutboxAttachmentPolicy, OutboxAttachmentSource } from "@beep/m365-mcp/OutboxAttachmentSource"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * const layer = OutboxAttachmentSource.layer(OutboxAttachmentPolicy.make({ roots: ["/srv/outbox-staging"] }))
  * console.log(Layer.isLayer(layer))
  * // true
@@ -458,8 +463,7 @@ export class OutboxAttachmentSource extends Context.Service<OutboxAttachmentSour
    *
    * ```ts
    * import { OutboxAttachmentPolicy, OutboxAttachmentSource } from "@beep/m365-mcp/OutboxAttachmentSource"
-   * import { Layer } from "effect"
-   *
+   * import * as Layer from "effect/Layer";
    * const layer = OutboxAttachmentSource.layer(OutboxAttachmentPolicy.make({ roots: ["/srv/outbox-staging"] }))
    * console.log(Layer.isLayer(layer))
    * // true

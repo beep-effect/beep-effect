@@ -14,8 +14,10 @@
  */
 
 import { A, O } from "@beep/utils";
-import { Effect, Layer, Result } from "effect";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Result from "effect/Result";
 import { Atom } from "effect/reactivity";
 import {
   $createParagraphNode,
@@ -391,7 +393,7 @@ const closeAttachmentLifecycle = (
  *
  * ```ts
  * import { composerRuntime } from "@beep/editor/chat/atoms"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { Atom } from "effect/reactivity"
  *
  * type WriteValue<A> = A extends Atom.Writable<unknown, infer W> ? W : never

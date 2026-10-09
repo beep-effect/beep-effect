@@ -6,9 +6,10 @@
  */
 import { $DockId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Effect, Number as N, pipe } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
+import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { GroupId, SplitId } from "./Dock.ids.ts";

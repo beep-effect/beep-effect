@@ -23,30 +23,27 @@ import { LiteralKit, SchemaUtils } from "@beep/schema";
  */
 import * as NodeRuntime from "@effect/platform-node/NodeRuntime";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import {
-  Crypto,
-  Effect,
-  FileSystem,
-  flow,
-  Layer,
-  Logger,
-  Match,
-  MutableHashMap,
-  MutableHashSet,
-  Order,
-  Path,
-  pipe,
-  Result,
-  Tuple,
-} from "effect";
 import * as A from "effect/Array";
+import * as Crypto from "effect/Crypto";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
 import * as Hex from "effect/encoding/Hex";
+import * as FileSystem from "effect/FileSystem";
+import { flow, pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Logger from "effect/Logger";
+import * as Match from "effect/Match";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as Tuple from "effect/Tuple";
 import { EnumeratedGlobalAttributes, GlobalAttributes, tokenizeHtmlSpaceSeparated } from "../src/Html.attributes.ts";
 import { toAsciiLowerCase } from "../src/internal/Html.ascii.ts";
 
@@ -2697,7 +2694,7 @@ export const ${name} = taggedUnion<${types}, ${encodeds}>(
  */
 import { $HtmlId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 // WHATWG's lowercase global event handler names are normative.
@@ -3075,7 +3072,8 @@ ${pipe(
  */
 import { $HtmlId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
-import { flow, Result } from "effect";
+import { flow } from "effect/Function";
+import * as Result from "effect/Result";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 
@@ -3647,7 +3645,7 @@ export const HtmlBooleanAttributeName = LiteralKit(${booleanAttributeValues}).pi
  *
  * \`\`\`ts
  * import { HtmlBooleanAttributeName } from "@beep/html/Html.meta"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result"
  * import * as S from "effect/Schema"
  *
  * const decoded = S.decodeUnknownResult(HtmlBooleanAttributeName)("disabled")
@@ -4196,8 +4194,10 @@ const program = Effect.gen(function* () {
 
 const runtimeLayer = Layer.mergeAll(Logger.layer([Logger.consolePretty()]), NodeServices.layer);
 
-const main = Effect.scoped(
-  Layer.build(runtimeLayer).pipe(Effect.flatMap((context) => Effect.provide(program, context)))
+const main = runtimeLayer.pipe(
+  Layer.build,
+  Effect.flatMap((context) => Effect.provide(program, context)),
+  Effect.scoped
 );
 
 if (import.meta.main) {

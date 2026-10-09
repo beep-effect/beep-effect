@@ -28,10 +28,16 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it, layer } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
-import { Effect, FileSystem, Layer, Path, Ref, Sink, Stream } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as Ref from "effect/Ref";
+import * as Sink from "effect/Sink";
+import * as Stream from "effect/Stream";
 import type { GitCommandErrorAdapter } from "@beep/repo-cli/test/RepoRun";
 
 const encode = (value: string): Uint8Array => new TextEncoder().encode(value);

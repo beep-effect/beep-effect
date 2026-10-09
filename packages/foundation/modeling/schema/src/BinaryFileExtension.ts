@@ -26,8 +26,8 @@
  */
 import { $SchemaId } from "@beep/identity/packages";
 import { A, Str, thunkEmptyStr, thunkFalse, thunkTrue } from "@beep/utils";
-import { pipe } from "effect";
 import * as Bool from "effect/Boolean";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { LiteralKit } from "./LiteralKit/index.ts";

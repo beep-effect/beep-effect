@@ -9,7 +9,7 @@
  * **Example** (Decode ObservedCause from fail)
  *
  * ```ts import.meta.vitest name="Decode ObservedCause from fail"
- * import { Cause } from "effect"
+ * import * as Cause from "effect/Cause";
  * import * as S from "effect/Schema"
  * import { ObservedCause } from "@beep/observability"
  *
@@ -192,7 +192,7 @@ export type ObservedDefectWithStack = typeof ObservedDefectWithStack.Type;
  * **Example** (Decode Cause failure reasons)
  *
  * ```ts import.meta.vitest name="Decode Cause failure reasons"
- * import { Cause } from "effect"
+ * import * as Cause from "effect/Cause";
  * import * as A from "effect/Array"
  * import * as S from "effect/Schema"
  * import { ObservedCauseReason } from "@beep/observability"
@@ -234,7 +234,7 @@ export type ObservedCauseReason = typeof ObservedCauseReason.Type;
  * **Example** (Decode full Effect cause)
  *
  * ```ts import.meta.vitest name="Decode full Effect cause"
- * import { Cause } from "effect"
+ * import * as Cause from "effect/Cause";
  * import * as S from "effect/Schema"
  * import { ObservedCause } from "@beep/observability"
  *
@@ -274,7 +274,7 @@ export type ObservedCause = typeof ObservedCause.Type;
  * **Example** (Decode failed Exit value)
  *
  * ```ts import.meta.vitest name="Decode failed Exit value"
- * import { Exit } from "effect"
+ * import * as Exit from "effect/Exit";
  * import * as S from "effect/Schema"
  * import { ObservedExit } from "@beep/observability"
  *

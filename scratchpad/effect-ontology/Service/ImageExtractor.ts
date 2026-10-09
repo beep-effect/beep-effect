@@ -12,7 +12,8 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { URLStr } from "@beep/schema";
-import { Context, Layer } from "effect";
+import * as Context from "effect/Context";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -172,7 +173,7 @@ const parseMarkdownImages = (markdown: string, sourceUrl: string, startOrder: nu
  * **Example** (Inspect image extractor)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { ImageExtractor } from "@effect-ontology/Service/ImageExtractor"
  *
  * const program = Effect.gen(function* () {

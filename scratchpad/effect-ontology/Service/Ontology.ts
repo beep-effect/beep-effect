@@ -31,7 +31,19 @@ import {
   SKOS_SCOPE_NOTE as SKOS_SCOPENOTE,
 } from "@beep/rdf/Vocab/Skos";
 import { FilePath } from "@beep/schema";
-import { Chunk, Clock, Context, Crypto, Duration, Effect, HashMap, HashSet, Inspectable, Layer, MutableHashMap, MutableHashSet, Ref } from "effect";
+import * as Chunk from "effect/Chunk";
+import * as Clock from "effect/Clock";
+import * as Context from "effect/Context";
+import * as Crypto from "effect/Crypto";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
+import * as Inspectable from "effect/Inspectable";
+import * as Layer from "effect/Layer";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
+import * as Ref from "effect/Ref";
 import * as Hex from "effect/encoding/Hex";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -212,7 +224,7 @@ type ParsedOntology = {
  * **Example** (Parse classes from an empty store)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { parseOntologyFromStore } from "@effect-ontology/Service/Ontology"
  * import { emptyRdfStore, RdfBuilder } from "@effect-ontology/Service/Rdf"
  *
@@ -606,7 +618,7 @@ export const parseOntologyFromStore: {
  * **Example** (Search ontology classes)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { OntologyService } from "@effect-ontology/Service/Ontology"
  *
  * const program = Effect.gen(function* () {

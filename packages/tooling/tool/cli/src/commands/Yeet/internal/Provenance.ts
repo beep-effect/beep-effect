@@ -12,10 +12,17 @@
  */
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Config, Context, DateTime, Effect, FileSystem, flow, Order, Path, pipe, Result } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import * as Config from "effect/Config";
+import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { dual, flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { renderPrettyCommandJson } from "../../../internal/cli/Json.ts";
@@ -523,7 +530,7 @@ const GitSha = S.NonEmptyString.pipe($I.annoteSchema("GitSha", { description: "G
  *
  * ```ts
  * import { PrRepository, PrSessionRecord } from "@beep/repo-cli/test/Yeet"
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import * as O from "effect/Option"
  *
  * const record = PrSessionRecord.make({
@@ -793,7 +800,7 @@ export const distinctPrSessions = (records: ReadonlyArray<PrSessionRecord>): Rea
  *
  * ```ts
  * import { PrRepository, PrSessionRecord, toPublicPrProvenance } from "@beep/repo-cli/test/Yeet"
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import * as O from "effect/Option"
  *
  * const record = PrSessionRecord.make({
@@ -1286,8 +1293,7 @@ const detectGitPaths = Effect.fn("PrProvenance.detectGitPaths")(function* (cwd: 
  *
  * ```ts
  * import { detectCodexEnvironment } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(detectCodexEnvironment)) // true
  * ```
  *
@@ -1442,7 +1448,7 @@ const detectSessionWorkspace = Effect.fn("PrProvenance.detectSessionWorkspace")(
  *
  * ```ts
  * import { detectPrProvenanceFromPaths } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const detection = detectPrProvenanceFromPaths(
@@ -1558,8 +1564,7 @@ export interface PrProvenanceServiceShape {
  *
  * ```ts
  * import { PrProvenanceService } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const service = yield* PrProvenanceService
  *   return yield* service.detect("/worktrees/beep-effect10", "feat/resume")
@@ -1581,8 +1586,7 @@ type Requirements = FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildPro
  *
  * ```ts
  * import { makePrProvenanceServiceLive } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(makePrProvenanceServiceLive())) // true
  * ```
  *

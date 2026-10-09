@@ -20,7 +20,11 @@ import {
 import { PostgresDrizzle } from "@beep/postgres";
 import { A, O } from "@beep/utils";
 import { asc, eq } from "drizzle-orm";
-import { Effect, Equal, pipe, Ref, Result } from "effect";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import { pipe } from "effect/Function";
+import * as Ref from "effect/Ref";
+import * as Result from "effect/Result";
 import type { ClaimDisposition } from "@beep/epistemic-domain/entities/ClaimDisposition";
 import type { ClaimDispositionOperation } from "@beep/epistemic-use-cases/ClaimDisposition";
 
@@ -60,7 +64,7 @@ const repositoryUnavailable =
  * ```ts
  * import { makeInMemoryClaimDispositionRepository } from "@beep/epistemic-server/ClaimDisposition"
  * import * as Epistemic from "@beep/shared-domain/identity/Epistemic"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const program = Effect.gen(function* () {
@@ -101,8 +105,7 @@ export const makeInMemoryClaimDispositionRepository = Effect.fn("Epistemic.Claim
  *
  * ```ts
  * import { makeDrizzleClaimDispositionRepository } from "@beep/epistemic-server/ClaimDisposition"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = makeDrizzleClaimDispositionRepository().pipe(
  *   Effect.map((repository) => typeof repository.record === "function")
  * )

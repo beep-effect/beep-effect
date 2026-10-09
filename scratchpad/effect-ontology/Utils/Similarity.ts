@@ -4,8 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { MutableHashSet } from "effect";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -30,8 +29,7 @@ import { combinedSimilarity, jaccardSimilarity, overlapRatio } from "./String.ts
  * import { Relation, RelationObject } from "@effect-ontology/Domain/Model/Entity"
  * import { EntityId } from "@effect-ontology/Domain/Model/shared"
  * import { getNeighbors } from "@effect-ontology/Utils/Similarity"
- * import { MutableHashSet } from "effect"
- *
+ * import * as MutableHashSet from "effect/MutableHashSet";
  * const worksFor = Relation.make({
  *   subjectId: EntityId.make("ada_lovelace"),
  *   predicate: IRI.make("https://schema.org/worksFor"),

@@ -5,8 +5,10 @@
  */
 
 import { $SchemaId } from "@beep/identity/packages";
-import { Effect, Result, Tuple } from "effect";
+import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Tuple from "effect/Tuple";
 import { LiteralKit } from "../LiteralKit/index.ts";
 import { LocalDateFromString } from "../LocalDate/index.ts";
 import { Sha256Hex } from "../Sha256.ts";
@@ -20,7 +22,7 @@ const $I = $SchemaId.create("Conformance/source");
  * **Example** (Decode a Git object identifier)
  *
  * ```ts import.meta.vitest name="Decode a Git object identifier"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { GitObjectId } from "@beep/schema/Conformance"
  *
@@ -66,7 +68,7 @@ const ValidCalendarDate = S.makeFilter((value: string) => Result.isSuccess(decod
  * **Example** (Reject an impossible calendar date)
  *
  * ```ts import.meta.vitest name="Reject an impossible calendar date"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { SpecificationDate } from "@beep/schema/Conformance"
  *
@@ -214,7 +216,7 @@ class PackageRevision extends S.Class<PackageRevision>($I`PackageRevision`)(
  * **Example** (Decode a release revision)
  *
  * ```ts import.meta.vitest name="Decode a release revision"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { Revision } from "@beep/schema/Conformance"
  *
@@ -260,7 +262,7 @@ export type SpecificationRevision = typeof SpecificationRevision.Type;
  * **Example** (Decode a pinned specification source)
  *
  * ```ts import.meta.vitest name="Decode a pinned specification source"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { Source } from "@beep/schema/Conformance"
  *
@@ -303,7 +305,7 @@ export class SpecificationSource extends S.Class<SpecificationSource>($I`Specifi
  * **Example** (Decode a section reference)
  *
  * ```ts import.meta.vitest name="Decode a section reference"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { Reference } from "@beep/schema/Conformance"
  *

@@ -25,9 +25,10 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { A, O, Str } from "@beep/utils";
-import { Match, pipe, Tuple } from "effect";
-import { dual } from "effect/Function";
+import { dual, pipe } from "effect/Function";
+import * as Match from "effect/Match";
 import * as S from "effect/Schema";
+import * as Tuple from "effect/Tuple";
 
 const $I = $RepoCliId.create("internal/cli/TurboCache");
 

@@ -18,7 +18,11 @@ import {
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
-import { Chunk, Effect, Graph, Layer, MutableHashMap } from "effect";
+import * as Chunk from "effect/Chunk";
+import * as Effect from "effect/Effect";
+import * as Graph from "effect/Graph";
+import * as Layer from "effect/Layer";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import type { Sentence } from "@beep/nlp/Core/Sentence";
 import type { Token } from "@beep/nlp/Core/Token";

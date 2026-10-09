@@ -8,7 +8,10 @@
 import { $PostgresId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
 import { A, O, P, Str } from "@beep/utils";
-import { Cause, Effect, pipe, Result } from "effect";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { isCause, isObject, readCauseReasons, safeBoolean } from "./internal/PostgresDiagnosticGuards.ts";
 import { getPgErrorName, PgErrorName } from "./PostgresSqlState.models.ts";

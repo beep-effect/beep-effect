@@ -18,7 +18,8 @@ import {
   VerticalSplitLayout,
 } from "@beep/dock";
 import { DockviewReact } from "@beep/dock-react";
-import { Duration, Effect } from "effect";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import type { DockAtomGraph, DockPanelProps, DockRenderer, DockTabProps } from "@beep/dock-react";

@@ -4,7 +4,8 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { Effect, FileSystem } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import * as Domain from "../Domain.ts";
 
 /**
@@ -19,7 +20,7 @@ import * as Domain from "../Domain.ts";
  *
  * ```ts
  * import { BunServices } from "@effect/platform-bun"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { readDecodedJsonFile } from "../../src/internal/JsonFile.ts"
  *

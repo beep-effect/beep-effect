@@ -6,8 +6,9 @@
  */
 import { CacheClientPin } from "@beep/repo-configs/cache";
 import { LiteralKit } from "@beep/schema";
-import { Effect, Match } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Struct from "effect/Struct";
@@ -70,7 +71,7 @@ const validateProtocolNativeRun = Effect.fn("Cache.validateProtocolNativeRun")(f
  *
  * ```ts
  * import { CacheProtocolObservation, validateCacheProtocolObservation } from "@beep/repo-cli/commands/Cache"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * const validate = (input: unknown) => S.decodeUnknownEffect(CacheProtocolObservation)(input).pipe(
  *   Effect.flatMap(validateCacheProtocolObservation)
@@ -234,7 +235,7 @@ const validateProtocolIntegrityRead = Effect.fn("Cache.validateProtocolIntegrity
  * **Example** (Validate the complete decoded execution)
  * ```ts
  * import { CacheProtocolExecution, validateCacheProtocolExecution } from "@beep/repo-cli/commands/Cache"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * const validate = (input: unknown) => S.decodeUnknownEffect(CacheProtocolExecution)(input).pipe(
  *   Effect.flatMap(validateCacheProtocolExecution)

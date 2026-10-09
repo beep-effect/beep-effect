@@ -6,7 +6,13 @@
  */
 
 import { A, dual, O } from "@beep/utils";
-import { Effect, Equal, Graph, MutableHashMap, MutableHashSet, pipe, Result } from "effect";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import { pipe } from "effect/Function";
+import * as Graph from "effect/Graph";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
+import * as Result from "effect/Result";
 import {
   CapabilityConflictError,
   DependencyCycleError,
@@ -475,8 +481,7 @@ const firstResolutionError = (
  * ```ts import.meta.vitest name="Resolve an empty catalog"
  * import { resolveEditorProfile } from "@beep/editor/capability/resolver"
  * import { EditorProfile, ProfileId } from "@beep/editor/capability/schemas"
- * import { Result } from "effect"
- *
+ * import * as Result from "effect/Result";
  * const result = resolveEditorProfile([], EditorProfile.make({
  *   id: ProfileId.make("editor.empty"), capabilities: []
  * }))
@@ -533,8 +538,7 @@ export const resolveEditorProfile: {
  * ```ts
  * import { resolveEditorProfileEffect } from "@beep/editor/capability/resolver"
  * import { EditorProfile, ProfileId } from "@beep/editor/capability/schemas"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = resolveEditorProfileEffect([], EditorProfile.make({
  *   id: ProfileId.make("editor.empty"), capabilities: []
  * }))

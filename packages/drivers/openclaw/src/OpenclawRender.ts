@@ -17,13 +17,16 @@
 
 import { $OpenclawId } from "@beep/identity";
 import { O } from "@beep/utils";
-import { Effect, flow, Match, Order, pipe, Result } from "effect";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
+import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
-import { dual } from "effect/Function";
+import { dual, flow, pipe } from "effect/Function";
+import * as Match from "effect/Match";
+import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { OpenclawSchemaPlaceholderFinding } from "./Openclaw.models.ts";

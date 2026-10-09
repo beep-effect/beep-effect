@@ -10,9 +10,9 @@ import {
   SplitRatio,
 } from "@beep/dock";
 import { useAtomSet, useAtomValue } from "@effect/atom-react";
-import { MutableHashMap } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";

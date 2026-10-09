@@ -20,8 +20,14 @@ import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
-import { Config, ConfigProvider, Effect, FileSystem, Layer, Path, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Config from "effect/Config";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import type { OntologyToolServiceShape } from "@beep/ontology-use-cases/tools";
 

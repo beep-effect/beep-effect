@@ -7,9 +7,10 @@
 
 import { $AgentsServerId } from "@beep/identity";
 import { Fn } from "@beep/schema";
-import { Effect, Match } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
+import * as Match from "effect/Match";
 import * as S from "effect/Schema";
 
 const $I = $AgentsServerId.create("AssistantTurn/ScanState");

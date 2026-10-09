@@ -8,9 +8,11 @@
 import { $BoxId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as O from "@beep/utils/Option";
-import { Effect, pipe, Result } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { BoxMethodName } from "./_generated/Box.models.gen.ts";
 import { BOX_SDK_VERSION } from "./internal/Box.constants.ts";

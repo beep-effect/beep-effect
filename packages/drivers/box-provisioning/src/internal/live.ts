@@ -1,8 +1,10 @@
 import * as B from "@beep/box";
 import { HttpsUrl } from "@beep/schema";
-import { Effect, Equal, MutableHashSet, pipe } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import { dual, pipe } from "effect/Function";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import {

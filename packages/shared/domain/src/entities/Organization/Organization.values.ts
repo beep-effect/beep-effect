@@ -19,7 +19,7 @@ const LicenseTierBase = LiteralKit(["solo", "team", "enterprise"]);
  * **Example** (Decode enterprise license tier)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { Organization } from "@beep/shared-domain/entities"
  * import * as S from "effect/Schema"
  *
@@ -63,7 +63,7 @@ export type LicenseTier = typeof LicenseTier.Type;
  * **Example** (Decode organization settings)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { Organization } from
  * "@beep/shared-domain/entities"
  * import * as S from "effect/Schema"

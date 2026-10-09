@@ -6,7 +6,7 @@
  */
 
 import { PracticeKgProjectionsLive } from "@beep/law-practice-server";
-import { Layer } from "effect";
+import * as Layer from "effect/Layer";
 import { makePracticeKgPgliteLayer } from "./Pglite.ts";
 
 /**
@@ -23,7 +23,8 @@ import { makePracticeKgPgliteLayer } from "./Pglite.ts";
  * ```ts
  * import { buildPracticeKgBundle, PracticeKgOptions } from "@beep/law-practice-server"
  * import * as BunServices from "@effect/platform-bun/BunServices"
- * import { Effect, Layer } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * import { makePracticeKgBuildLayer } from "../../src/runtime/Layer.ts"
  *
  * const bundleOut = "/corpus/staging/practice-kg-bundle"

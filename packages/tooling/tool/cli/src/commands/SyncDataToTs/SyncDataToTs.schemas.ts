@@ -9,9 +9,11 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
 import { RunMode } from "../../internal/cli/RunMode.ts";
-import type { Effect, FileSystem, Path } from "effect";
 import type * as Crypto from "effect/Crypto";
+import type * as Effect from "effect/Effect";
+import type * as FileSystem from "effect/FileSystem";
 import type { HttpClient } from "effect/http";
+import type * as Path from "effect/Path";
 import type { RunMode as RunModeValue } from "../../internal/cli/RunMode.ts";
 import type { SyncDataToTsError } from "./SyncDataToTs.errors.ts";
 

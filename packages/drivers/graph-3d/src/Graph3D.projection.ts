@@ -7,8 +7,10 @@
 
 import { $Graph3dId } from "@beep/identity/packages";
 import { Float32Arr } from "@beep/schema/Float32Array";
-import { Effect, Number as N, Order } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as N from "effect/Number";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 
 const $I = $Graph3dId.create("Graph3D.projection");

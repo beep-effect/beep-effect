@@ -7,9 +7,13 @@ import { it } from "@beep/test-runner";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
 import { expect } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Path, Ref } from "effect";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
+import * as Ref from "effect/Ref";
 
 const PathSafetyTestLayer = Layer.mergeAll(BunFileSystem.layer, BunPath.layer);
 const payload = new TextEncoder().encode("safe payload");

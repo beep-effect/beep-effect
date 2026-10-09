@@ -6,7 +6,8 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
-import { SchemaGetter, Effect } from "effect";
+import * as SchemaGetter from "effect/SchemaGetter";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { RdfObject } from "./KnowledgeModel.ts";
 import { ArticleSummary, ClaimRank, ClaimWithRank, OrderedUtcRange } from "./Timeline.ts";

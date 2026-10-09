@@ -20,7 +20,7 @@ import type { Model } from "./Organization.model.ts";
  * **Example** (Detect tenant root row)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { isTenantRoot } from "@beep/shared-domain/entities/Organization/Organization.behavior"
  * import * as Shared from "@beep/shared-domain/identity/Shared"
  * import * as S from "effect/Schema"
@@ -69,7 +69,7 @@ export const hasParentOrganization = (organization: Pick<Model, "parentOrgId">):
  * **Example** (Validate root tenant placement)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { Organization } from "@beep/shared-domain/entities"
  * import * as Shared from "@beep/shared-domain/identity/Shared"
  * import * as O from "effect/Option"

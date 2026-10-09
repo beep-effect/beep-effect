@@ -50,7 +50,7 @@ bun add @beep/api-transport
 ## Usage
 
 ```ts
-import { Effect } from "effect"
+import * as Effect from "effect/Effect";
 import * as RateLimiter from "effect/persistence/RateLimiter"
 import { ApiAuth, makeApiTransport } from "@beep/api-transport"
 

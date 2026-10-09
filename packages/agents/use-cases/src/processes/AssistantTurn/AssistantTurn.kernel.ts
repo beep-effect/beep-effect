@@ -12,7 +12,7 @@
  */
 
 import { $AgentsUseCasesId } from "@beep/identity/packages";
-import { Context } from "effect";
+import * as Context from "effect/Context";
 import type * as Stream from "effect/Stream";
 import type { AssistantTurnEvent, TurnHistoryItem } from "./AssistantTurn.contracts.ts";
 import type { TurnGenerationError } from "./AssistantTurn.errors.ts";
@@ -26,8 +26,7 @@ const $I = $AgentsUseCasesId.create("processes/AssistantTurn/AssistantTurn.kerne
  *
  * ```ts
  * import type { AgentTurnKernelShape } from "@beep/agents-use-cases/public"
- * import { Stream } from "effect"
- *
+ * import * as Stream from "effect/Stream";
  * const kernel: AgentTurnKernelShape = {
  *   streamTurn: () => Stream.empty
  * }
@@ -59,8 +58,8 @@ export interface AgentTurnKernelShape {
  * ```ts
  * import { AgentTurnKernel } from "@beep/agents-use-cases/public"
  * import { FixtureTurnKernel } from "@beep/agents-use-cases/proof"
- * import { Effect, Stream } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Stream from "effect/Stream";
  * const program = Effect.gen(function* () {
  *   const kernel = yield* AgentTurnKernel
  *   const blocks = yield* Stream.runCollect(

@@ -7,14 +7,17 @@
 
 import { A } from "@beep/utils";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
-import { Config, Effect, pipe } from "effect";
+import * as Config from "effect/Config";
 import * as Crypto from "effect/Crypto";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as ManagedRuntime from "effect/ManagedRuntime";
 import * as O from "effect/Option";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const configStringOptionSync = (name: string): O.Option<string> => Effect.runSync(Config.option(Config.String(name)));
+const configStringOptionSync = (name: string): O.Option<string> =>
+  Config.String(name).pipe(Config.option, Effect.runSync);
 const configStringEqualsSync = (name: string, expected: string): boolean =>
   pipe(
     configStringOptionSync(name),

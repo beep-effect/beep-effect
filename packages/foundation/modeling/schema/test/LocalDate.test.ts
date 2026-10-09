@@ -26,9 +26,13 @@ import {
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import { Duration, Effect, Equal, Exit, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import * as Exit from "effect/Exit";
+import { pipe } from "effect/Function";
 import * as S from "effect/Schema";
 import { TestClock } from "effect/testing";
 

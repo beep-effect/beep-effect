@@ -19,7 +19,11 @@ import { OWL_NAMESPACE } from "@beep/rdf/Vocab/Owl";
 import { RDF_NAMESPACE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_NAMESPACE } from "@beep/rdf/Vocab/Rdfs";
 import { LiteralKit } from "@beep/schema";
-import { Clock, Context, Effect, Layer, Match } from "effect";
+import * as Clock from "effect/Clock";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -420,8 +424,8 @@ const getRulesForProfile = Match.type<ReasoningProfile>().pipe(
  * **Example** (Inspect the reasoner layer)
  *
  * ```ts
- * import { Layer } from "effect"
- * import { Effect } from "effect"
+ * import * as Layer from "effect/Layer";
+ * import * as Effect from "effect/Effect";
  * import { Reasoner } from "@effect-ontology/Service/Reasoner"
  *
  * const program = Effect.gen(function* () {
@@ -618,8 +622,8 @@ const makeReasoner = (): Effect.Effect<ReasonerShape> =>
  *
  * **Example** (Inspect the reasoner layer)
  * ```ts
- * import { Layer } from "effect"
- * import { Effect } from "effect"
+ * import * as Layer from "effect/Layer";
+ * import * as Effect from "effect/Effect";
  * import { Reasoner } from "@effect-ontology/Service/Reasoner"
  *
  * const program = Effect.gen(function* () {

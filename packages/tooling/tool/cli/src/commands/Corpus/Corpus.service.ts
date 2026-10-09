@@ -6,7 +6,9 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { Context, Effect, Layer } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import { printLines } from "../../internal/cli/Printer.ts";
 import { archiveMoveImpl } from "./internal/ArchiveMove.ts";
 import { catalogCorpusImpl } from "./internal/Catalog.ts";
@@ -27,8 +29,9 @@ import {
   restoreRecycleImpl,
 } from "./internal/RestorationTransformations.ts";
 import { salvageCorpusImpl, verifySalvageImpl } from "./internal/Salvage.ts";
-import type { FileSystem, Path } from "effect";
 import type * as Crypto from "effect/Crypto";
+import type * as FileSystem from "effect/FileSystem";
+import type * as Path from "effect/Path";
 import type { ChildProcessSpawner } from "effect/process";
 import type { CorpusArchiveMoveError, CorpusCommandError, PreservationCommandError } from "./Corpus.errors.ts";
 import type {
@@ -264,8 +267,7 @@ export interface CorpusCommandServiceShape {
  *
  * ```ts
  * import { CorpusCommandService, CorpusCatalogOptions } from "@beep/repo-cli/commands/Corpus"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.map(CorpusCommandService, (service) =>
  *   service.catalogCorpus(CorpusCatalogOptions.make({ corpusRoot: "/data/corpus" }))
  * )
@@ -389,8 +391,7 @@ export const CorpusCommandServiceLive: Layer.Layer<CorpusCommandService, never, 
  *
  * ```ts
  * import { archiveMoveCorpus, CorpusArchiveMoveOptions } from "@beep/repo-cli/commands/Corpus"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const options = CorpusArchiveMoveOptions.make({
  *   archiveRoot: "/tmp/archive",
  *   provenancePaths: ["/tmp/corpus/raw/run-a/provenance.jsonl"],
@@ -420,8 +421,7 @@ export const archiveMoveCorpus = Effect.fn("Corpus.archiveMoveCorpus")(function*
  *
  * ```ts
  * import { catalogCorpus, CorpusCatalogOptions } from "@beep/repo-cli/commands/Corpus"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const options = CorpusCatalogOptions.make({ corpusRoot: "/data/corpus" })
  * const sourceFileCount = catalogCorpus(options).pipe(Effect.map((summary) => summary.sourceFiles))
  * console.log(sourceFileCount.pipe !== undefined) // true
@@ -447,8 +447,7 @@ export const catalogCorpus = Effect.fn("Corpus.catalogCorpus")(function* (
  *
  * ```ts
  * import { extractCorpus, CorpusExtractOptions } from "@beep/repo-cli/commands/Corpus"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const options = CorpusExtractOptions.make({
  *   corpusRoot: "/data/corpus",
  *   exportChildren: true,
@@ -480,8 +479,7 @@ export const extractCorpus = Effect.fn("Corpus.extractCorpus")(function* (
  *
  * ```ts
  * import { enrichCorpus, CorpusEnrichOptions } from "@beep/repo-cli/commands/Corpus"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const options = CorpusEnrichOptions.make({ corpusRoot: "/data/corpus", maxLookups: 25 })
  * const resolvedCount = enrichCorpus(options).pipe(Effect.map((summary) => summary.resolved))
  * console.log(resolvedCount.pipe !== undefined) // true
@@ -507,8 +505,7 @@ export const enrichCorpus = Effect.fn("Corpus.enrichCorpus")(function* (
  *
  * ```ts
  * import { organizeCorpus, CorpusOrganizeOptions } from "@beep/repo-cli/commands/Corpus"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const options = CorpusOrganizeOptions.make({ corpusRoot: "/data/corpus", overwrite: false })
  * const docketFiles = organizeCorpus(options).pipe(Effect.map((summary) => summary.docketFiles))
  * console.log(docketFiles.pipe !== undefined) // true
@@ -534,8 +531,7 @@ export const organizeCorpus = Effect.fn("Corpus.organizeCorpus")(function* (
  *
  * ```ts
  * import { salvageCorpus, CorpusSalvageOptions, CorpusSalvageSourceSpec } from "@beep/repo-cli/commands/Corpus"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const options = CorpusSalvageOptions.make({
  *   corpusRoot: "/tmp/corpus",
  *   sources: [CorpusSalvageSourceSpec.make({ sourceLabel: "source-a", sourcePath: "/tmp/source-a" })]
@@ -564,8 +560,7 @@ export const salvageCorpus = Effect.fn("Corpus.salvageCorpus")(function* (
  *
  * ```ts
  * import { verifySalvage, CorpusSalvageOptions } from "@beep/repo-cli/commands/Corpus"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const options = CorpusSalvageOptions.make({ corpusRoot: "/data/corpus", sampleStride: 10 })
  * const matchedCount = verifySalvage(options).pipe(Effect.map((summary) => summary.matched))
  * console.log(matchedCount.pipe !== undefined) // true
@@ -592,8 +587,7 @@ export const verifySalvage = Effect.fn("Corpus.verifySalvage")(function* (
  * ```ts
  * import * as S from "effect/Schema"
  * import { preserveRestorationArchive, RestorationPreserveOptions } from "@beep/repo-cli/commands/Corpus"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const program = preserveRestorationArchive(RestorationPreserveOptions.make({
@@ -635,8 +629,7 @@ export const preserveRestorationArchive = Effect.fn("Corpus.preserveRestorationA
  *
  * ```ts
  * import { reconcileRestorationAcceptance, RestorationVerifyOptions } from "@beep/repo-cli/commands/Corpus"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = reconcileRestorationAcceptance(
  *   RestorationVerifyOptions.make({ corpusRoot: "/archive/corpus", runLabel: "restoration-1" })
  * )
@@ -664,8 +657,7 @@ export const reconcileRestorationAcceptance = Effect.fn("Corpus.reconcileRestora
  * ```ts
  * import * as S from "effect/Schema"
  * import { restoreMail, RestorationMailOptions } from "@beep/repo-cli/commands/Corpus"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const program = restoreMail(RestorationMailOptions.make({
@@ -704,8 +696,7 @@ export const restoreMail = Effect.fn("Corpus.restoreMail")(function* (
  * ```ts
  * import * as S from "effect/Schema"
  * import { restoreLegacyWord, RestorationLegacyWordOptions } from "@beep/repo-cli/commands/Corpus"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const program = restoreLegacyWord(RestorationLegacyWordOptions.make({
@@ -744,8 +735,7 @@ export const restoreLegacyWord = Effect.fn("Corpus.restoreLegacyWord")(function*
  * ```ts
  * import * as S from "effect/Schema"
  * import { restoreRecycle, RestorationRecycleOptions } from "@beep/repo-cli/commands/Corpus"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const program = restoreRecycle(RestorationRecycleOptions.make({
@@ -779,8 +769,7 @@ export const restoreRecycle = Effect.fn("Corpus.restoreRecycle")(function* (
  *
  * ```ts
  * import { verifyRestorationArchive, RestorationVerifyOptions } from "@beep/repo-cli/commands/Corpus"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = verifyRestorationArchive(
  *   RestorationVerifyOptions.make({ corpusRoot: "/archive/corpus", runLabel: "restoration-1" })
  * )

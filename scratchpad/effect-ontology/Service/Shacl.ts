@@ -26,7 +26,15 @@ import {
   ShaclValidationViolation,
 } from "@beep/semantic-web/services/shacl-validation";
 import { ShaclValidationServiceLive } from "@beep/shacl";
-import { Context, DateTime, Duration, Effect, HashMap, Layer, MutableHashMap, Order, Ref } from "effect";
+import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
+import * as Layer from "effect/Layer";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as Order from "effect/Order";
+import * as Ref from "effect/Ref";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -204,7 +212,7 @@ export const defaultTestConfig: ShaclWorkflowServiceTestConfig = {
  * **Example** (Inspect shacl workflow service)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { ShaclWorkflowService } from "@effect-ontology/Service/Shacl"
  *
  * const program = Effect.gen(function* () {

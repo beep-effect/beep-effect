@@ -25,8 +25,8 @@
  */
 
 import { A } from "@beep/utils";
-import { Effect, identity } from "effect";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { dual, identity } from "effect/Function";
 import * as O from "effect/Option";
 import { addNode, generateNodeId, getChildren, makeNode, toArray } from "./EffectGraph.ts";
 import type { EffectGraph, GraphNode } from "./EffectGraph.ts";
@@ -43,7 +43,7 @@ import type { EffectGraph, GraphNode } from "./EffectGraph.ts";
  * **Example** (Type a named text operation)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { makeOperation, type TextOperation } from "@beep/nlp-processing/Graph/TypeClass"
  *
  * const operation: TextOperation<string, string> = makeOperation(
@@ -68,7 +68,7 @@ export interface TextOperation<A, B, R = never, E = never> {
  * **Example** (Make an operation)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { makeOperation } from "@beep/nlp-processing/Graph/TypeClass"
  *
  * const operation = makeOperation<string, string>("emit-none", () => Effect.succeed([]))
@@ -249,7 +249,7 @@ export interface Foldable<F, A> {
  * **Example** (Sum node lengths across a graph)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { singleton } from "@beep/nlp-processing/Graph/EffectGraph"
  * import { foldableGraph } from "@beep/nlp-processing/Graph/TypeClass"
  *
@@ -285,7 +285,7 @@ const getLeafNodes = <A>(graph: EffectGraph<A>): ReadonlyArray<GraphNode<A>> =>
  * **Example** (Execute an operation)
  *
  * ```ts import.meta.vitest name="Execute an operation"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { singleton, size } from "@beep/nlp-processing/Graph/EffectGraph"
  * import { executeOperation, mapOperation } from "@beep/nlp-processing/Graph/TypeClass"
  *
@@ -329,7 +329,7 @@ export const executeOperation: {
  * **Example** (Execute operations)
  *
  * ```ts import.meta.vitest name="Execute operations"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { singleton, size } from "@beep/nlp-processing/Graph/EffectGraph"
  * import { executeOperations, mapOperation } from "@beep/nlp-processing/Graph/TypeClass"
  *
@@ -393,7 +393,7 @@ export type FreeOperation<A, B, R = never, E = never> = TextOperation<A, B, R, E
  * **Example** (Type a forgetful join operation)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { makeNode } from "@beep/nlp-processing/Graph/EffectGraph"
  * import type { ForgetfulOperation } from "@beep/nlp-processing/Graph/TypeClass"
  *
@@ -524,7 +524,7 @@ export const flatMapOperation: {
  * **Example** (Collect a data)
  *
  * ```ts import.meta.vitest name="Collect a data"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { singleton } from "@beep/nlp-processing/Graph/EffectGraph"
  * import { collectData } from "@beep/nlp-processing/Graph/TypeClass"
  *
@@ -542,7 +542,7 @@ export const collectData = <A>(graph: EffectGraph<A>): ReadonlyArray<A> => A.map
  * **Example** (Measure a singleton graph's depth)
  *
  * ```ts import.meta.vitest name="Measure a singleton graph's depth"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { singleton } from "@beep/nlp-processing/Graph/EffectGraph"
  * import { depth } from "@beep/nlp-processing/Graph/TypeClass"
  *
@@ -660,7 +660,7 @@ export const map: {
  * **Example** (Sequence an effectful step)
  *
  * ```ts import.meta.vitest name="Sequence an effectful step"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { flatMap, mapOperation } from "@beep/nlp-processing/Graph/TypeClass"
  *
  * const operation = flatMap(
@@ -910,7 +910,7 @@ export const empty = <A, B>(): TextOperation<A, B> =>
  * **Example** (Traverse with an effectful step)
  *
  * ```ts import.meta.vitest name="Traverse with an effectful step"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { mapOperation, traverse } from "@beep/nlp-processing/Graph/TypeClass"
  *
  * const operation = traverse(

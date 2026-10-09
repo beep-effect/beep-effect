@@ -14,11 +14,17 @@
  */
 
 import { $PacerId } from "@beep/identity";
-import { Context, Duration, Effect, Layer, pipe, Redacted, Ref } from "effect";
+import * as Context from "effect/Context";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Redacted from "effect/Redacted";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { CsoAuthRequest, CsoAuthResponse, CsoLogoutRequest, CsoLogoutResponse } from "./CsoAuth.models.ts";

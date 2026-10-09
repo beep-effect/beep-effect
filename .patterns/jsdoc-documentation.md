@@ -338,9 +338,10 @@ Keep beep's namespace-import law; do not port Effect's named-import rule.
 | `effect/Predicate` | `import * as P from "effect/Predicate"` |
 | `effect/Record` | `import * as R from "effect/Record"` |
 
-Core combinators may use named imports from the root `effect` module, for example
-`import { Console, Effect, Layer } from "effect"`. Never import from the deprecated
-`@effect/schema` package.
+Import core modules from their per-module paths, for example
+`import * as Effect from "effect/Effect"` and `import * as Layer from "effect/Layer"`.
+Import `pipe` and `flow` from `effect/Function`. Never import from the root
+`effect` barrel or the deprecated `@effect/schema` package.
 
 ## Schema and Effect-specific guidance
 

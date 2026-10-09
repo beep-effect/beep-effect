@@ -8,8 +8,12 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { shellQuote } from "@beep/repo-ai-metrics";
 import { A } from "@beep/utils";
-import { Duration, Effect, flow, identity, Order, pipe, Result } from "effect";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import { flow, identity, pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { errorMessage, timestampIso } from "../../../../internal/cli/Timing.ts";
 import { scoreSubject } from "./Quality.rubric.ts";
@@ -53,8 +57,7 @@ const qualityErrorMessage = (error: unknown): string => errorMessage(error, "Unk
  * ```ts
  * import { A } from "@beep/utils"
  * import { docgenPacketCandidateOrder } from "@beep/repo-cli/commands/Docgen/internal/Quality"
- * import { Order } from "effect"
- *
+ * import * as Order from "effect/Order";
  * const byId = Order.mapInput(Order.String, (candidate: { readonly id: string }) => candidate.id)
  * const order = docgenPacketCandidateOrder(byId)
  * const sorted = A.sort([{ id: "b", impact: 1, isFail: false }, { id: "a", impact: 2, isFail: true }], order)
@@ -245,8 +248,8 @@ const packageReport = (
  * import { analyzePackageQuality } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.service"
  * import { discoverDocgenWorkspacePackages } from "@beep/repo-cli/commands/Docgen/internal/Operations"
  * import { BunServices } from "@effect/platform-bun"
- * import { Effect, Layer } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * const RuntimeLayer = Layer.mergeAll(FsUtilsLive).pipe(Layer.provideMerge(BunServices.layer))
  *
  * const program = Effect.gen(function* () {
@@ -320,8 +323,8 @@ export const analyzePackageQuality = Effect.fn("DocgenQuality.analyzePackageQual
  * import { analyzeDocgenQuality } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.service"
  * import { discoverDocgenWorkspacePackages } from "@beep/repo-cli/commands/Docgen/internal/Operations"
  * import { BunServices } from "@effect/platform-bun"
- * import { Effect, Layer } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * const RuntimeLayer = Layer.mergeAll(FsUtilsLive).pipe(Layer.provideMerge(BunServices.layer))
  *
  * const program = Effect.gen(function* () {

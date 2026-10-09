@@ -6,8 +6,9 @@
  */
 
 import { A, Str } from "@beep/utils";
-import { Chunk, Number as Num } from "effect";
+import * as Chunk from "effect/Chunk";
 import { dual, identity } from "effect/Function";
+import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import { EntityPatternElement, LiteralPatternElement, Pattern, POSPatternElement } from "./Pattern.ts";

@@ -14,8 +14,8 @@ import {
   cachePromotionFailures,
 } from "@beep/repo-configs/cache";
 import { Sha256HexFromBytes } from "@beep/schema";
-import { Effect } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { CacheProducerImportPreview, CacheProducerImportRequest } from "./Cache.acceptance.schemas.ts";

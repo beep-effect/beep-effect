@@ -29,7 +29,11 @@ import {
   DatasetFingerprint,
 } from "@beep/semantic-web/services/canonicalization";
 import { A, O, Str } from "@beep/utils";
-import { Duration, Effect, flow, Layer, Match, pipe } from "effect";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import { flow, pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as S from "effect/Schema";
 import { canonize, NQuads } from "rdf-canonize";
 import type { Quad } from "@beep/rdf/Rdf";

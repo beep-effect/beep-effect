@@ -236,7 +236,7 @@ export type ArtifactLocatorKind = typeof ArtifactLocatorKind.Type;
  * ```ts import.meta.vitest name="Create synthetic artifact locator"
  * import { ArtifactLocator } from "@beep/file-processing/Artifact"
  * import { PosixPath } from "@beep/schema/PosixPath"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const program = Effect.gen(function* () {
@@ -268,7 +268,7 @@ export class ArtifactLocator extends S.Class<ArtifactLocator>($I`ArtifactLocator
  * ```ts import.meta.vitest name="Construct SourceArtifact instance"
  * import { ArtifactId, ArtifactLocator, ContentDigest, SourceArtifact } from "@beep/file-processing/Artifact"
  * import { PosixPath } from "@beep/schema/PosixPath"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const program = Effect.gen(function* () {
@@ -320,7 +320,7 @@ export class SourceArtifact extends S.Class<SourceArtifact>($I`SourceArtifact`)(
  * ```ts import.meta.vitest name="Construct ArtifactReference instance"
  * import { ArtifactId, ArtifactReference } from "@beep/file-processing/Artifact"
  * import { PosixPath } from "@beep/schema/PosixPath"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const program = Effect.gen(function* () {

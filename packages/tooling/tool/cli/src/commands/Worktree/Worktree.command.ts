@@ -339,8 +339,7 @@ const runStreamingStep = Effect.fn("Worktree.runStreamingStep")(function* (
  *
  * ```ts
  * import { resolveWorktreeContext } from "@beep/repo-cli/commands/Worktree"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(resolveWorktreeContext("/repo"))) // true
  * ```
  *
@@ -391,8 +390,7 @@ export const resolveWorktreeContext = Effect.fn("Worktree.resolveWorktreeContext
  *
  * ```ts
  * import { addWorktree, WorktreeContext } from "@beep/repo-cli/commands/Worktree"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const context = WorktreeContext.make({
  *   currentRoot: "/repo",
  *   mainCheckout: "/repo",
@@ -444,8 +442,7 @@ export const addWorktree = Effect.fn("Worktree.addWorktree")(function* (
  *
  * ```ts
  * import { copyLocalFiles } from "@beep/repo-cli/commands/Worktree"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(copyLocalFiles("/repo", "/repo-worktrees/feature-x"))) // true
  * ```
  *
@@ -536,8 +533,7 @@ const inspectWorktreeEntry = Effect.fn("Worktree.inspectWorktreeEntry")(function
  *
  * ```ts
  * import { worktreeDoctorReportForContext, WorktreeContext } from "@beep/repo-cli/commands/Worktree"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const context = WorktreeContext.make({
  *   currentRoot: "/repo",
  *   mainCheckout: "/repo",
@@ -713,7 +709,7 @@ const renderDoctorReport = Effect.fn("Worktree.renderDoctorReport")(function* (r
  * **Example** (Prepare worktree reference linking)
  * ```ts
  * import { linkReferences } from "@beep/repo-cli/commands/Worktree"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * Effect.isEffect(linkReferences("/checkout", "/checkout-worktrees/topic")) // => true
  * ```
  *
@@ -856,7 +852,7 @@ const renderRemovalReceipt = Effect.fn("Worktree.renderRemovalReceipt")(function
  *
  * ```ts
  * import { renderWorktreeRemovalReceipt, WorktreeRemovalReceipt } from "@beep/repo-cli/commands/Worktree"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const receipt = WorktreeRemovalReceipt.make({
@@ -1055,8 +1051,7 @@ const worktreeDoctorCommand = Command.make(
  * ```ts
  * import { worktreeCommand } from "@beep/repo-cli/commands/Worktree"
  * import { Command } from "effect/cli"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const run = Command.run(worktreeCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true
  * ```

@@ -19,8 +19,10 @@ import {
   ValidationOptions,
 } from "@beep/technical-drawing";
 import { A } from "@beep/utils";
-import { Config, Effect, pipe } from "effect";
+import * as Config from "effect/Config";
 import { Argument, Command, Flag } from "effect/cli";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { printLines } from "../../internal/cli/Printer.ts";
@@ -327,8 +329,7 @@ const printDrawingsIndex = () =>
  * ```ts
  * import { drawingsCommand } from "@beep/repo-cli"
  * import { Command } from "effect/cli"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const run = Command.run(drawingsCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true
  * ```

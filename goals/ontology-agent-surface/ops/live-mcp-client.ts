@@ -7,11 +7,13 @@ import {
   OntologySparqlQueryResponse,
 } from "@beep/ontology-use-cases/tools";
 import { NodeRuntime } from "@effect/platform-node";
-import { Config, Effect, Layer } from "effect";
 import * as A from "effect/Array";
 import * as McpSchema from "effect/ai/McpSchema";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
 import { HttpClient, HttpClientRequest } from "effect/http";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
+import * as Layer from "effect/Layer";
 import { RpcClient, RpcSerialization } from "effect/rpc";
 import * as S from "effect/Schema";
 import { rpcSessionAuthorizationHeader } from "../../../apps/professional-desktop/server/RpcSessionAuth.ts";

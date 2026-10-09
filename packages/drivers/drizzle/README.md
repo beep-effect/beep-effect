@@ -13,8 +13,7 @@ bun add @beep/drizzle
 
 ```ts
 import { Drizzle, type DrizzleClient } from "@beep/drizzle"
-import { Effect } from "effect"
-
+import * as Effect from "effect/Effect";
 const client: DrizzleClient = {
   execute: (statement, parameters) =>
     Effect.succeed([

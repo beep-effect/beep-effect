@@ -13,9 +13,12 @@ import {
   M365MessageCollection,
   M365OutlookCategoryCollection,
 } from "@beep/m365";
-import { Context, Effect, Layer, Ref } from "effect";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Ref from "effect/Ref";
 
 export type M365Script = {
   readonly createEvent: Effect.Effect<GraphEvent, M365Error>;

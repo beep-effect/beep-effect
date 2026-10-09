@@ -11,8 +11,8 @@
  * @since 0.0.0
  */
 
-import { Effect } from "effect";
 import { Command, Flag } from "effect/cli";
+import * as Effect from "effect/Effect";
 import { printLines } from "../../internal/cli/Printer.ts";
 import { PacketEventStoreLive } from "../Goals/PacketCore/PacketEventStore.ts";
 import { exploreAtlasCommand } from "./Atlas.ts";

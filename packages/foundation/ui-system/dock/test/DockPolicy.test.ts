@@ -26,7 +26,8 @@ import {
 } from "@beep/dock";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { Effect, Layer } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import { AtomRegistry } from "effect/reactivity";
 import * as S from "effect/Schema";

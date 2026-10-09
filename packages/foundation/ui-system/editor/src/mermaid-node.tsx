@@ -22,7 +22,7 @@
 import { $EditorId } from "@beep/identity";
 import { ElementFormat } from "@beep/lexical-schema";
 import { DecoratorBlockNode } from "@lexical/react/LexicalDecoratorBlockNode";
-import { Result } from "effect";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { MermaidView } from "./mermaid-view.tsx";
 import type { EditorConfig, ElementFormatType, LexicalEditor, NodeKey, SerializedLexicalNode } from "lexical";

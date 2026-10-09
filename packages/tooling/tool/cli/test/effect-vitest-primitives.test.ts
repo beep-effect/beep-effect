@@ -17,8 +17,14 @@ import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { it } from "@effect/vitest";
 import { assertTrue, strictEqual } from "@effect/vitest/utils";
-import { Arbitrary, Effect, FileSystem, HashMap, Number as Num, Path, Schema } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as HashMap from "effect/HashMap";
+import * as Num from "effect/Number";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as Schema from "effect/Schema";
 import { Node, Project, SyntaxKind } from "ts-morph";
 import type { PropertySignature } from "ts-morph";
 
@@ -282,8 +288,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("pinned primitive graph"
         const actual = HashMap.get(byName, expected.name);
         assertTrue(O.isSome(actual), `Missing pinned primitive for ${expected.name}`);
         strictEqual(actual.value.file, expected.file);
-        strictEqual(actual.value.startLine, expected.startLine);
-        strictEqual(actual.value.endLine, expected.endLine);
+        strictEqual(actual.value.startLine, expected.startLine, expected.name);
+        strictEqual(actual.value.endLine, expected.endLine, expected.name);
       }
     })
   );

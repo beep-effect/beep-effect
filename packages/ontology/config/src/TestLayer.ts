@@ -4,8 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { Layer } from "effect";
+import * as Layer from "effect/Layer";
 import { OntologyMcpConfig } from "./McpConfig.ts";
 import { OntologyConfig } from "./ServerConfig.ts";
 import type { OntologyMcpServerConfig } from "./McpConfig.ts";
@@ -39,8 +38,7 @@ export const makeOntologyConfigTest = (config: OntologyServerConfig) => Layer.su
  * ```ts
  * import { OntologyMcpServerConfig } from "@beep/ontology-config/server"
  * import { makeOntologyMcpConfigTest } from "@beep/ontology-config/test"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * const layer = makeOntologyMcpConfigTest(
  *   OntologyMcpServerConfig.make({ mutationsEnabled: true })
  * )

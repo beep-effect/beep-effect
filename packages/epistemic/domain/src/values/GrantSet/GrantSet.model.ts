@@ -24,9 +24,11 @@ import { Principal } from "@beep/shared-domain/entity/Principal";
 import { A } from "@beep/utils";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils.js";
-import { DateTime, Result, Tuple } from "effect";
+import * as DateTime from "effect/DateTime";
 import { constFalse, dual } from "effect/Function";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Tuple from "effect/Tuple";
 import { ExecutionGrant, PolicyRevision } from "../ExecutionGrant/index.ts";
 import { ExecutionVerdict } from "../ExecutionVerdict/index.ts";
 import { canonicalJson } from "../internal/CanonicalJson.ts";
@@ -128,7 +130,8 @@ export class DraftGrantSet extends S.Class<DraftGrantSet>($I`DraftGrantSet`)(
  * **Example** (Usage)
  * ```ts
  * import { DraftGrantSet, freezeGrantSet } from "@beep/epistemic-domain"
- * import { DateTime, Result } from "effect"
+ * import * as DateTime from "effect/DateTime";
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  *
  * const draft = S.decodeUnknownSync(DraftGrantSet)({
@@ -250,7 +253,7 @@ export const emptyDraftGrantSet = (policyRevision: PolicyRevision): DraftGrantSe
  * **Example** (Usage)
  * ```ts
  * import { addGrant, emptyDraftGrantSet, ExecutionGrant, PolicyRevision } from "@beep/epistemic-domain"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  *
  * const revision = S.decodeUnknownSync(PolicyRevision)("1.0.0")
@@ -346,7 +349,8 @@ const computeGrantSetDigest = (input: GrantSetDigestInput): Result.Result<GrantS
  * **Example** (Usage)
  * ```ts
  * import { emptyDraftGrantSet, freezeGrantSet, PolicyRevision } from "@beep/epistemic-domain"
- * import { DateTime, Result } from "effect"
+ * import * as DateTime from "effect/DateTime";
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  *
  * const revision = S.decodeUnknownSync(PolicyRevision)("1.0.0")
@@ -386,7 +390,8 @@ export const freezeGrantSet: {
  * **Example** (Usage)
  * ```ts
  * import { emptyDraftGrantSet, freezeGrantSet, PolicyRevision, verifyFrozenGrantSetDigest } from "@beep/epistemic-domain"
- * import { DateTime, Result } from "effect"
+ * import * as DateTime from "effect/DateTime";
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  *
  * const revision = S.decodeUnknownSync(PolicyRevision)("1.0.0")
@@ -419,7 +424,7 @@ export const verifyFrozenGrantSetDigest = (frozen: FrozenGrantSet): boolean =>
  * **Example** (Usage)
  * ```ts
  * import { ExecutionRequestEvaluationOptions, PolicyRevision } from "@beep/epistemic-domain"
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import * as S from "effect/Schema"
  *
  * const options = ExecutionRequestEvaluationOptions.make({
@@ -474,7 +479,8 @@ const principalsEqual = S.toEquivalence(Principal);
  * **Example** (Usage)
  * ```ts
  * import { emptyDraftGrantSet, evaluateExecutionRequest, ExecutionRequest, ExecutionRequestEvaluationOptions, freezeGrantSet, PolicyRevision } from "@beep/epistemic-domain"
- * import { DateTime, Result } from "effect"
+ * import * as DateTime from "effect/DateTime";
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  *
  * const revision = S.decodeUnknownSync(PolicyRevision)("1.0.0")

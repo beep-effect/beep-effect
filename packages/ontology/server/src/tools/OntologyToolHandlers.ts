@@ -27,8 +27,9 @@ import {
   RepairOntologyTool,
 } from "@beep/ontology-use-cases/tools";
 import { CanonicalizationServiceLive } from "@beep/rdf-canonize/adapters/canonicalization";
-import { Effect, Layer } from "effect";
+import * as Effect from "effect/Effect";
 import { HttpClient, HttpClientRequest } from "effect/http";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { SessionServerLayer } from "../aggregates/Session/Session.layer.ts";

@@ -8,9 +8,14 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { normalizePath } from "@beep/schema";
 import { A, Str, Text, thunkFalse } from "@beep/utils";
-import { Console, Effect, FileSystem, Order, Path, pipe } from "effect";
+import * as Console from "effect/Console";
 import { Command, Flag } from "effect/cli";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { Node, Project, SyntaxKind } from "ts-morph";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";

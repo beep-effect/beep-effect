@@ -16,7 +16,11 @@
 import { isPathWithinRoot, writeFileWithinCanonicalRootAtomically } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, O, Str } from "@beep/utils";
-import { Effect, FileSystem, Order, Path, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { applyJsoncModification } from "../../internal/cli/Jsonc.ts";
 import { CodexFindingSeverity } from "./Findings.capture.schemas.ts";
@@ -223,8 +227,7 @@ const validateLedgerIdentityBijection = Effect.fnUntraced(function* (
  *
  * ```ts
  * import { validateCodexFindingsIngestModes } from "@beep/repo-cli/test/Codex"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const result = validateCodexFindingsIngestModes({ force: true, refresh: true }).pipe(
  *   Effect.as("accepted"),
  *   Effect.orElseSucceed(() => "conflict")
@@ -297,8 +300,7 @@ const ensurePacketDirectory = Effect.fnUntraced(function* (repoRoot: string, slu
  *
  * ```ts
  * import { loadCodexRefreshLedgerSource } from "@beep/repo-cli/test/Codex"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const source = loadCodexRefreshLedgerSource({ repoRoot: ".", slug: "codex-security-findings-2026-08-04" })
  *
  * console.log(Effect.isEffect(source)) // true

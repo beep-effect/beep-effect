@@ -8,11 +8,12 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { O } from "@beep/utils";
 import { BunHttpServer } from "@effect/platform-bun";
-import { Effect, Ref } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import { Headers, HttpServer, HttpServerRequest, HttpServerResponse } from "effect/http";
 import * as Redacted from "effect/Redacted";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { CacheFixtureArtifactKey, CacheFixtureEvent, CacheFixtureScenario } from "./Cache.protocol.fixture.schemas.ts";
@@ -89,7 +90,7 @@ const readFaultTag = (stored: StoredArtifact, fault: CacheFixtureScenario["fault
  * **Example** (Scope a fixture)
  * ```ts
  * import { CacheFixtureCredentials, makeCacheProtocolFixture } from "@beep/repo-cli/commands/Cache"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as Redacted from "effect/Redacted"
  * const fixture = makeCacheProtocolFixture(CacheFixtureCredentials.make({
  *   namespace: "team_example", reader: Redacted.make("read-only"), writer: Redacted.make("write-only")

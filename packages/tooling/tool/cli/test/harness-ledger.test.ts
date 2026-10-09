@@ -24,9 +24,14 @@ import { Sha256Hex } from "@beep/schema";
 import { A, pipe, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it, layer } from "@effect/vitest";
-import { DateTime, Effect, FileSystem, Layer, Path, Result } from "effect";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import * as HashSet from "effect/HashSet";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as Result from "effect/Result";
 import type { HarnessLedgerPruneReport } from "@beep/repo-cli/commands/HarnessLedger";
 
 const TestLayer = HarnessLedgerServiceLive.pipe(Layer.provideMerge(NodeServices.layer));
@@ -332,7 +337,7 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       const root = yield* makeRepo();
       const ledger = yield* HarnessLedgerService;
       const row = yield* proposePending(root);
-      const thisMonth = Str.slice(0, 7)(DateTime.formatIso(row.createdAt));
+      const thisMonth = row.createdAt.pipe(DateTime.formatIso, Str.slice(0, 7));
       const current = yield* ledger.list(HarnessLedgerListOptions.make({ repoRoot: root, month: O.some(thisMonth) }));
       expect(A.map(current, (entry) => entry.row.rowId)).toStrictEqual([row.rowId]);
       const elsewhere = yield* ledger.list(HarnessLedgerListOptions.make({ repoRoot: root, month: O.some("2000-01") }));

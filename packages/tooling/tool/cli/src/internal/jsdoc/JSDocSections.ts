@@ -3,8 +3,8 @@ import { extractFencedCodeBlocks } from "@beep/repo-docgen/Core";
 import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import { getSomesStruct } from "@beep/utils/Option";
-import { MutableHashMap } from "effect";
 import { dual } from "effect/Function";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Node } from "ts-morph";
@@ -267,7 +267,7 @@ const recordBindingElementOwner = (node: Node, owners: MutableHashMap.MutableHas
  *
  * ```ts
  * import { jsdocOwnersByStart } from "@beep/repo-cli/test/Docgen"
- * import { MutableHashMap } from "effect"
+ * import * as MutableHashMap from "effect/MutableHashMap";
  * import { Project } from "ts-morph"
  *
  * const source = new Project({ useInMemoryFileSystem: true }).createSourceFile(

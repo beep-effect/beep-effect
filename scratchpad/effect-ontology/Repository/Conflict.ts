@@ -10,7 +10,13 @@ import { $ScratchpadId } from "@beep/identity";
 import { PostgresDrizzle } from "@beep/postgres";
 import { Sha256Hex } from "@beep/schema/Sha256";
 import { aliasedTable, and, count, desc, eq, or } from "drizzle-orm";
-import { Context, DateTime, Effect, Equal, Layer, Match, Order } from "effect";
+import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
+import * as Order from "effect/Order";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -183,7 +189,8 @@ const decodeCountRow = (rows: unknown) => normalizeDecodedRows(S.decodeUnknownEf
  * **Example** (Order a pair and reject a self-pair)
  *
  * ```ts
- * import { Effect, Exit } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Exit from "effect/Exit";
  * import { canonicalConflictPair } from "@effect-ontology/Repository/Conflict"
  *
  * const ordered = Effect.runSync(
@@ -338,8 +345,7 @@ interface ConflictRepositoryShape {
  * ```ts
  * import { ConflictsQuery } from "@effect-ontology/Schema/Timeline"
  * import { ConflictRepository } from "@effect-ontology/Repository/Conflict"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const counts = Effect.gen(function* () {
  *   const conflicts = yield* ConflictRepository
  *   return yield* conflicts.counts(ConflictsQuery.make({ ontologyId: "people" }))

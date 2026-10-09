@@ -7,7 +7,7 @@
 import { $LangExtractId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as O from "@beep/utils/Option";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import type * as R from "effect/Record";

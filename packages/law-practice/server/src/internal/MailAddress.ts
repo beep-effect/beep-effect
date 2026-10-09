@@ -10,8 +10,8 @@
  */
 
 import { EmailString } from "@beep/schema/Email";
-import { flow } from "effect";
 import * as A from "effect/Array";
+import { flow } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";

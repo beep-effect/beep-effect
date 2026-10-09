@@ -8,8 +8,10 @@
  * @since 0.0.0
  */
 import { BunRuntime, BunServices } from "@effect/platform-bun";
-import { Effect, Layer, Logger } from "effect";
 import { Command } from "effect/cli";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Logger from "effect/Logger";
 import { makePracticeIdentifyCommand } from "./PracticeIdentify.command.ts";
 import { IdentificationStagesLive } from "./runtime/Layer.ts";
 

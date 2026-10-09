@@ -5,10 +5,10 @@
  * @since 0.0.0
  */
 
-import { Result } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 
 type ChainRefinementBuilder<Start> = {
   <A extends Start>(refinements: readonly [P.Refinement<Start, A>]): P.Refinement<Start, A>;

@@ -14,10 +14,13 @@
 import { $HtmlId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
 import { A, Struct } from "@beep/utils";
-import { Effect, flow, Match, Order, pipe, Result } from "effect";
-import { identity } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { flow, identity, pipe } from "effect/Function";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ForeignAttributeName } from "./Html.attributes.ts";
@@ -77,7 +80,7 @@ export const UntrustedHtml = S.String.pipe(
  *
  * ```ts
  * import { UntrustedHtml } from "@beep/html/Html.serialize"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  *
  * const decoded = S.decodeUnknownResult(UntrustedHtml)("<p>hello</p>")
@@ -125,7 +128,7 @@ const issueSafeHtml = (html: string): SafeHtmlValue => {
  *
  * ```ts import.meta.vitest name="Check SafeHtml provenance"
  * import { conform, enforceSafeHtml, Fragment, SafeHtml, serializeSafe } from "@beep/html"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const html = Effect.runSync(
@@ -161,8 +164,7 @@ export const SafeHtml = S.declare(SafeHtmlValue.is).pipe(
  *   serializeSafe
  * } from "@beep/html"
  * import type { SafeHtml } from "@beep/html/Html.serialize"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const html: SafeHtml = Effect.runSync(
  *   conform(Fragment.make({ children: [] })).pipe(
  *     Effect.flatMap(enforceSafeHtml),
@@ -212,7 +214,7 @@ export const HtmlSerializeRule = LiteralKit([
  *
  * ```ts import.meta.vitest name="Decoding serialize rule"
  * import { HtmlSerializeRule } from "@beep/html/Html.serialize"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  *
  * const decoded = S.decodeUnknownResult(HtmlSerializeRule)("rawTextEndTag")
@@ -595,8 +597,7 @@ const serializeRoot = Effect.fn("Html.serializeRoot")(function* (root: HtmlRoot.
  *
  * ```ts import.meta.vitest name="Serializing empty fragment"
  * import { Fragment, serialize, untrustedHtmlValue } from "@beep/html"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const html = Effect.runSync(serialize(Fragment.make({ children: [] })))
  * untrustedHtmlValue(html) // => ""
  * ```
@@ -619,8 +620,7 @@ export const serialize: (root: HtmlRoot.Type) => Effect.Effect<UntrustedHtml, Ht
  *
  * ```ts import.meta.vitest name="Serializing conformance proof"
  * import { conform, Fragment, serializeConformant, untrustedHtmlValue } from "@beep/html"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const html = Effect.runSync(
  *   conform(Fragment.make({ children: [] })).pipe(Effect.flatMap(serializeConformant))
  * )
@@ -666,8 +666,7 @@ const revalidateSafeHtmlAst = (value: SafeHtmlAst): Effect.Effect<HtmlRoot.Type,
  *   safeHtmlValue,
  *   serializeSafe,
  * } from "@beep/html"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const html = Effect.runSync(
  *   conform(Fragment.make({ children: [] })).pipe(
  *     Effect.flatMap(enforceSafeHtml),
@@ -696,8 +695,7 @@ export const serializeSafe: (value: SafeHtmlAst) => Effect.Effect<SafeHtml, Html
  *
  * ```ts import.meta.vitest name="Extracting untrusted string"
  * import { Fragment, serialize, untrustedHtmlValue } from "@beep/html"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const html = Effect.runSync(serialize(Fragment.make({ children: [] })))
  * untrustedHtmlValue(html) // => ""
  * ```
@@ -725,8 +723,7 @@ export const untrustedHtmlValue: (value: UntrustedHtml) => string = identity;
  *   safeHtmlValue,
  *   serializeSafe,
  * } from "@beep/html"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const html = Effect.runSync(
  *   conform(Fragment.make({ children: [] })).pipe(
  *     Effect.flatMap(enforceSafeHtml),

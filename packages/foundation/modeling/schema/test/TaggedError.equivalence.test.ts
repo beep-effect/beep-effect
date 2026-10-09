@@ -22,8 +22,9 @@ import {
 } from "@beep/schema/SecureHeaderError";
 import { it } from "@beep/test-runner";
 import { describe, expect, vi } from "@effect/vitest";
-import { Effect, identity } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";

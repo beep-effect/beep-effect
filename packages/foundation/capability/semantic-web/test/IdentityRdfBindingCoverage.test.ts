@@ -12,7 +12,8 @@ import {
 } from "@beep/semantic-web";
 import { it } from "@beep/test-runner";
 import { assert, describe } from "@effect/vitest";
-import { Effect, Layer } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import type { Dataset, Quad } from "@beep/rdf/Rdf";
 
 const entryComposer = $SemanticWebId.create("identity/coverage-entry");

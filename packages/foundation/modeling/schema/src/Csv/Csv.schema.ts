@@ -7,11 +7,15 @@
 
 import { $SchemaId } from "@beep/identity";
 import { A, O } from "@beep/utils";
-import { Effect, HashSet, Order, pipe, SchemaIssue, SchemaTransformation } from "effect";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
+import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import { CsvCodecOptions, CsvCodecOptionsParseOptions } from "../CsvCodecOptions/index.ts";
 import { csvError } from "../CsvError/index.ts";
 import { formatCsvDocument } from "../CsvFormatter/index.ts";
@@ -57,7 +61,7 @@ export type RowSchemaWithFields = S.Top & {
  * ```ts
  * import type { CsvDocument } from "@beep/schema/Csv"
  * import { CSV } from "@beep/schema/Csv"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const Row = S.Struct({ name: S.String })
@@ -297,7 +301,7 @@ const encodeCsvRowsEffect = <RowSchema extends RowSchemaWithFields>(
  * **Example** (Decode CSV with coercion)
  *
  * ```ts import.meta.vitest name="Decode CSV with coercion"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { CSV } from "@beep/schema/Csv"
  *
@@ -366,7 +370,7 @@ export { Csv as CSV, Csv as Schema };
  * ```ts
  * import { CSV } from "@beep/schema/Csv"
  * import type { CSV as CSVSchema } from "@beep/schema/Csv"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const Row = S.Struct({ name: S.String })
@@ -388,7 +392,7 @@ export type CSV<RowSchema extends RowSchemaWithFields> = CsvDocument<RowSchema>;
  * ```ts
  * import { Schema as CsvSchema } from "@beep/schema/Csv"
  * import type { Schema as CsvSchemaType } from "@beep/schema/Csv"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const Row = S.Struct({ name: S.String })

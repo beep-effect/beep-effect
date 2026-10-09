@@ -6,7 +6,7 @@
  */
 
 import { PatentCitationEvent } from "@beep/law-practice-domain/entities/PatentCitationEvent";
-import { Result } from "effect";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import type { Table } from "./PatentCitationEvent.table.ts";
 
@@ -62,8 +62,7 @@ const encodePatentCitationEvent = S.encodeResult(PatentCitationEvent);
  *   fromPatentCitationEventRow,
  *   toPatentCitationEventInsert
  * } from "@beep/law-practice-tables/entities/PatentCitationEvent"
- * import { Result } from "effect"
- *
+ * import * as Result from "effect/Result";
  * const insert = Result.flatMap(fromPatentCitationEventRow({}), toPatentCitationEventInsert)
  * console.log(Result.isFailure(insert)) // true
  * ```
@@ -92,8 +91,7 @@ export const toPatentCitationEventInsert = (
  *
  * ```ts
  * import { fromPatentCitationEventRow } from "@beep/law-practice-tables/entities/PatentCitationEvent"
- * import { Result } from "effect"
- *
+ * import * as Result from "effect/Result";
  * console.log(Result.isFailure(fromPatentCitationEventRow({}))) // true
  * ```
  *

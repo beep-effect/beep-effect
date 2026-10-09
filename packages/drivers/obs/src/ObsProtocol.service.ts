@@ -16,24 +16,22 @@ import { $ObsId } from "@beep/identity/packages";
 import { Fn } from "@beep/schema";
 import { O } from "@beep/utils";
 import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
-import {
-  Cause,
-  Context,
-  Deferred,
-  Duration,
-  Effect,
-  flow,
-  HashMap,
-  Layer,
-  Match,
-  PubSub,
-  Redacted,
-  Ref,
-  Stream,
-} from "effect";
+import * as Cause from "effect/Cause";
+import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
+import * as Deferred from "effect/Deferred";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
 import * as Base64 from "effect/encoding/Base64";
+import { flow } from "effect/Function";
+import * as HashMap from "effect/HashMap";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
+import * as PubSub from "effect/PubSub";
+import * as Redacted from "effect/Redacted";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import { Socket } from "effect/socket";
 import { ObsError } from "./Obs.errors.ts";
 import { resolveObsConfig } from "./Obs.models.ts";

@@ -8,8 +8,7 @@
  * @category utilities
  * @since 0.0.0
  */
-
-import { pipe } from "effect";
+import { pipe } from "effect/Function";
 import * as Str from "effect/String";
 
 /**

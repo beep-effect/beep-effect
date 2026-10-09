@@ -1,8 +1,10 @@
 import { Runpod } from "@beep/runpod";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { Config, Effect, Redacted } from "effect";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import * as Redacted from "effect/Redacted";
 import * as Str from "effect/String";
 
 // Resolve RUNPOD_API_KEY, treating absent, blank, or unresolved `op://` reference

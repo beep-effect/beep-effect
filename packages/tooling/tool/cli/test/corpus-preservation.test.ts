@@ -41,12 +41,22 @@ import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
-import { ByteSize, Context, DateTime, Effect, FileSystem, flow, Layer, Path, pipe, Result, Sink, Stream } from "effect";
 import * as A from "effect/Array";
+import * as ByteSize from "effect/ByteSize";
+import * as Context from "effect/Context";
 import { Command } from "effect/cli";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { flow, pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import { ChildProcessSpawner } from "effect/process";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Sink from "effect/Sink";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 
 const preservationTestLayer = Layer.mergeAll(CorpusCommandServiceLive, CapacityPreflightServiceLive).pipe(

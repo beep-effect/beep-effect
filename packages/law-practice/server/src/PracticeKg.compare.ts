@@ -7,9 +7,11 @@
  */
 
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { HashMap, HashSet, Order } from "effect";
 import * as A from "effect/Array";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import { PracticeKgMatterTables } from "./PracticeKg.matters.ts";
 import type { PracticeKgMatterDocketRow } from "./PracticeKg.matters.ts";

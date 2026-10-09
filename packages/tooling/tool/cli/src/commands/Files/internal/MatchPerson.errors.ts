@@ -7,7 +7,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import * as O from "@beep/utils/Option";
-import { Match } from "effect";
+import * as Match from "effect/Match";
 import * as S from "effect/Schema";
 import { FilesCommandError } from "../Files.errors.ts";
 import { PersonMatchWorkerErrorCode } from "./MatchPerson.schemas.ts";

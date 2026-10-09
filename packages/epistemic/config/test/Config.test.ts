@@ -12,7 +12,12 @@ import { it } from "@beep/test-runner";
 import { provideScopedLayer } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
-import { Cause, ConfigProvider, Effect, Exit, Layer, pipe } from "effect";
+import * as Cause from "effect/Cause";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 

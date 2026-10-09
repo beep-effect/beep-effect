@@ -12,7 +12,9 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { Effect, Layer, Ref } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Ref from "effect/Ref";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -150,7 +152,7 @@ const makeProtectedProvider = (
  * **Example** (Inspect embedding provider fallback live)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { EmbeddingProvider } from "@effect-ontology/Service/EmbeddingProvider"
  * import { EmbeddingProviderFallbackLive } from "@effect-ontology/Service/EmbeddingFallback"
  *
@@ -319,7 +321,7 @@ export const EmbeddingProviderFallbackLive: Layer.Layer<
  * **Example** (Inspect embedding provider fallback default)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { EmbeddingProvider } from "@effect-ontology/Service/EmbeddingProvider"
  * import { EmbeddingProviderFallbackDefault } from "@effect-ontology/Service/EmbeddingFallback"
  *

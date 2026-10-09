@@ -28,20 +28,25 @@ import {
   TurnGenerationError,
 } from "@beep/agents-use-cases/public";
 import { AnthropicTurnPlan } from "@beep/anthropic";
-import { Effect, Layer, Metric, Order, Ref, Stream } from "effect";
 import * as A from "effect/Array";
 import { LanguageModel, Tool, Toolkit } from "effect/ai";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Metric from "effect/Metric";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import { assistantBlockOutput } from "./AnthropicTurnCodec.ts";
 import { IssueReport, repairInvalidBlocks } from "./BlockRepair.ts";
 import { initialScanState, scanChunk } from "./ScanState.ts";
 import type { IndexedBlock } from "@beep/agents-use-cases/AssistantTurn.contracts";
 import type { BlockRepairFailed } from "@beep/agents-use-cases/AssistantTurn.repair-errors";
 import type { AssistantTurnEvent, TurnHistoryItem } from "@beep/agents-use-cases/public";
-import type { Config } from "effect";
 import type { AiError, Response } from "effect/ai";
+import type * as Config from "effect/Config";
 
 const SYSTEM_PROMPT = [
   "You are a helpful assistant in a rich-text chat application.",
@@ -263,8 +268,8 @@ const streamTurn = (
  * ```ts
  * import { AgentTurnKernel } from "@beep/agents-use-cases/public"
  * import { AnthropicTurnKernel } from "@beep/agents-server/AnthropicTurnKernel"
- * import { Effect, Stream } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Stream from "effect/Stream";
  * const program = Effect.gen(function* () {
  *   const kernel = yield* AgentTurnKernel
  *   return yield* kernel.streamTurn([{ role: "user", text: "Summarize this" }]).pipe(

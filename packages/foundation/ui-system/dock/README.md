@@ -14,8 +14,7 @@ The package may use the pure `@beep/pretext` root for title measurement contract
 
 ```ts
 import { GroupId, Panel, PanelId, PopulatedWorkspace, TabsNode, TextPanelView, validateWorkspace } from "@beep/dock"
-import { Effect } from "effect"
-
+import * as Effect from "effect/Effect";
 const panel = Panel.make({
   id: PanelId.make("panel-one"),
   title: "Panel One",

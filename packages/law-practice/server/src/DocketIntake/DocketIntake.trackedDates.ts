@@ -11,12 +11,17 @@ import { parseCsvRows } from "@beep/schema/CsvParser";
 import { LocalDateFromString } from "@beep/schema/LocalDate";
 import { ParserOptions } from "@beep/schema/ParserOptions";
 import { thunkEmptyStr } from "@beep/utils";
-import { DateTime, Effect, FileSystem, Layer, Match, pipe, Ref } from "effect";
 import * as A from "effect/Array";
-import { identity } from "effect/Function";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { identity, pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { TrackedDateType } from "@beep/law-practice-use-cases/DocketIntake";
@@ -201,8 +206,7 @@ const sameModified = O.makeEquivalence(Num.Equivalence);
  *   DocketTrackedDatesCsvOptions,
  *   makeDocketTrackedDatesCsvLayer
  * } from "@beep/law-practice-server/DocketIntake";
- * import { Layer } from "effect";
- *
+ * import * as Layer from "effect/Layer";
  * const sheet = makeDocketTrackedDatesCsvLayer(DocketTrackedDatesCsvOptions.make({ path: "docket-sheet.csv" }));
  * console.log(Layer.isLayer(sheet));
  * ```

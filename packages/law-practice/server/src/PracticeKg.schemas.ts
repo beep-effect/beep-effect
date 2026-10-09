@@ -14,13 +14,13 @@ import {
   PracticeKgProvenanceKind,
 } from "@beep/law-practice-domain/values";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { Order } from "effect";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import { PosInt } from "./internal/PosInt.ts";
-import type { Path } from "effect";
+import type * as Path from "effect/Path";
 import type * as AST from "effect/SchemaAST";
 
 const UnknownRecord = S.Record(S.String, S.Unknown);
@@ -198,8 +198,8 @@ export class PracticeKgOptions extends S.Class<PracticeKgOptions>($I`PracticeKgO
    *
    * ```ts
    * import { PracticeKgOptions } from "@beep/law-practice-server"
-   * import { Effect, Path } from "effect"
-   *
+   * import * as Effect from "effect/Effect";
+   * import * as Path from "effect/Path";
    * const program = Effect.gen(function* () {
    *   const path = yield* Path.Path
    *   return PracticeKgOptions.resolveBundleOut({ corpusRoot: "/corpus" }, path)
@@ -673,8 +673,7 @@ export class PracticeKgSummary extends S.Class<PracticeKgSummary>($I`PracticeKgS
  * import * as S from "effect/Schema"
  * import { encodePracticeKgBundleManifestJson, PracticeKgBundleManifest, PracticeKgCounts } from "@beep/law-practice-server"
  * import { PracticeKgSchemaVersions, PracticeKgSourceRuns } from "@beep/law-practice-server"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const manifest = PracticeKgBundleManifest.make({
  *   builtAt: "2026-07-27T18:04:11.000Z",
  *   bundleVersion: "2026.07.1",
@@ -710,8 +709,7 @@ export const encodePracticeKgBundleManifestJson: {
  * ```ts
  * import * as S from "effect/Schema"
  * import { encodePracticeKgCountsJson, PracticeKgCounts } from "@beep/law-practice-server"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const counts = PracticeKgCounts.make({
  *   documents: S.Natural.make(6104),
  *   edges: S.Natural.make(19233),
@@ -744,8 +742,7 @@ export const encodePracticeKgCountsJson: {
  *
  * ```ts
  * import { encodePracticeKgNodePayloadJson } from "@beep/law-practice-server"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const payload = { digest: "sha256:9f2c", sizeBytes: 18342, runLabel: "base" }
  *
  * Effect.runPromise(encodePracticeKgNodePayloadJson(payload)).then((json) => console.log(json.length > 0))
@@ -772,8 +769,7 @@ export const encodePracticeKgNodePayloadJson: {
  * ```ts
  * import * as S from "effect/Schema"
  * import { encodePracticeKgSummaryJson, PracticeKgCounts, PracticeKgSummary } from "@beep/law-practice-server"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const summary = PracticeKgSummary.make({
  *   baseDigests: S.Natural.make(6104),
  *   bundleOut: "/corpus/staging/practice-kg-bundle",

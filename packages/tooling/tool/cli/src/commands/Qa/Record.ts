@@ -27,7 +27,11 @@ import {
   Viewport,
 } from "@beep/qa-capture";
 import { A, O } from "@beep/utils";
-import { Clock, Effect, FileSystem, Layer, Path } from "effect";
+import * as Clock from "effect/Clock";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { Socket } from "effect/socket";
 import { readOptionalRedactedConfigString } from "../../internal/cli/EnvConfig.ts";
@@ -229,8 +233,7 @@ export class RecordOutcome extends S.Class<RecordOutcome>($I`RecordOutcome`)(
  * ```ts
  * import { QaEventLog } from "@beep/repo-cli/commands/Qa/Qa.session"
  * import { requireCapturedEvents } from "@beep/repo-cli/commands/Qa/Record"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = requireCapturedEvents(QaEventLog.make({ events: [], rejectedCount: 0 }))
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -449,7 +452,7 @@ const serveAndRun = Effect.fn("QaRecord.serveAndRun")(function* (
  * ```ts
  * import { runQaRecord } from "@beep/repo-cli/commands/Qa/Record"
  * import { QaRecordOptions } from "@beep/repo-cli/commands/Qa/Qa.schemas"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const options = QaRecordOptions.make({

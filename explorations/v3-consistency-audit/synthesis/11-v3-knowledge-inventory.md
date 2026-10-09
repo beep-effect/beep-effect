@@ -187,7 +187,7 @@ Law as practiced: **files that declare schemas carry `$I` keyed by their src-rel
 
 | convention | command | result |
 | --- | --- | --- |
-| `import * as S from "effect/Schema"` | `rg -l` | 192 files (domain+server); `import { Schema } from "effect"` 0; bare `from "effect"` 0 |
+| `import * as S from "effect/Schema"` | `rg -l` | 192 files (domain+server); `import { Schema } from "<legacy-effect-barrel>"` 0; bare `from "<legacy-effect-barrel>"` 0 |
 | self-alias `@beep/knowledge-domain/*` inside domain src | `rg -c` | 46 imports in 33 files (`/errors` 19, `/values` 13, `/entities` 4, `/projections` 2, deep file paths 8) vs `../` 37 vs `./` 348 |
 | package exports | `domain/package.json` | `".": src/index.ts`, `"./entities": src/entities/index.ts`, `"./*": "./src/*.ts"` — the wildcard is why root `entities.ts` shim exists |
 

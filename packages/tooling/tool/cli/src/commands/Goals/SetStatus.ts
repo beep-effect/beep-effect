@@ -22,8 +22,12 @@
  */
 
 import { A, O, pipe, Str } from "@beep/utils";
-import { Console, DateTime, Effect, FileSystem, Path } from "effect";
+import * as Console from "effect/Console";
 import { Argument, Command, Flag } from "effect/cli";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { applyJsoncModification } from "../../internal/cli/Jsonc.ts";
@@ -302,8 +306,7 @@ const printTransitionPreview = Effect.fn("Goals.printTransitionPreview")(functio
  *
  * ```ts
  * import { loadGoalPacketManifest } from "@beep/repo-cli/test/Goals"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(loadGoalPacketManifest("some-goal"))) // true
  * ```
  *

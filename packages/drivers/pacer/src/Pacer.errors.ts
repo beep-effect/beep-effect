@@ -14,8 +14,8 @@
 import { $PacerId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
 import { O } from "@beep/utils";
-import { Match } from "effect";
 import * as HttpStatus from "effect/http/HttpStatus";
+import * as Match from "effect/Match";
 import * as S from "effect/Schema";
 
 const $I = $PacerId.create("pacer/Pacer.errors");

@@ -8,10 +8,13 @@ import { composeGatedLayers, gatedLayer, SourceAuthRegistration } from "@beep/mc
 import { it } from "@beep/test-runner";
 import { assert, describe } from "@effect/vitest";
 import { assertFailure, assertSuccess } from "@effect/vitest/utils";
-import { ConfigProvider, Effect, Layer, Ref } from "effect";
 import * as A from "effect/Array";
 import { Tool, Toolkit } from "effect/ai";
 import * as McpServer from "effect/ai/McpServer";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { StubMcpClientLayer } from "./fixtures/McpClient.ts";

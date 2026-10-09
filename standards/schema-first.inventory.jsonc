@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-10-07",
+  "generatedOn": "2026-10-09",
   "scope": [
     "apps/**/*.{ts,tsx}",
     "packages/**/*.{ts,tsx}",
@@ -23,7 +23,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 19,
+      "line": 22,
       "owner": "@beep/practice-identify",
       "reason": "Stage runtime test decodes the files each stage wrote to prove the private output contract (0600, explicit paths, no overwrite); schema-derived round-trip property coverage for IdentificationIndex, EvaluationReport and Resolution lives with the use-case schemas in packages/law-practice/use-cases/test/DocumentIdentification/Identification.test.ts."
     },
@@ -71,7 +71,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 37,
+      "line": 40,
       "owner": "@beep/db-admin",
       "reason": "Migration regression decodes fixed fixture rows to prove the documents-sync target SQL and unique-index enforcement; schema-derived arbitrary round-trips for the Sync* entities live with the domain model tests (packages/documents/domain/test/Sync*.test.ts)."
     },
@@ -81,7 +81,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 39,
+      "line": 42,
       "owner": "@beep/db-admin",
       "reason": "Migration regression decodes fixed fixture rows to prove the epistemic-edge target SQL, the constraint/index name catalog, and the open-head backstop; schema-derived arbitrary round-trips for the EdgeVersion entity live with the domain model tests."
     },
@@ -91,7 +91,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 32,
+      "line": 35,
       "owner": "@beep/db-admin",
       "reason": "Migration regression proof decodes fixed fixture rows through the table converters to prove the five-table DDL, the trigger catalog, and the append-only denials; schema-derived arbitrary coverage for these entities lives with the law-practice domain model tests."
     },
@@ -177,7 +177,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-null-return",
-      "line": 47,
+      "line": 46,
       "owner": "@beep/graph-3d",
       "reason": "React hook boundary: the result carries React's RefObject (null until attached) and the not-yet-mounted handle/error as undefined, matching React ref and state conventions for the Storybook/spike consumers."
     },
@@ -187,7 +187,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-precision-audit",
-      "line": 95,
+      "line": 96,
       "owner": "@beep/hubspot",
       "reason": "Diagnostic error options intentionally preserve raw submitted email text from request-encoding failures, including values rejected before contact email normalization."
     },
@@ -197,7 +197,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-precision-audit",
-      "line": 203,
+      "line": 204,
       "owner": "@beep/hubspot",
       "reason": "Diagnostic error options intentionally preserve raw submitted email text from request-encoding failures, including values rejected before contact email normalization."
     },
@@ -263,7 +263,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 36,
+      "line": 37,
       "owner": "@beep/epistemic-server",
       "reason": "Fixture-driven integration coverage of the bounded SHACL validator behind the claim gate; schema-derived property coverage for these request/dataset schemas already lives in packages/foundation/capability/semantic-web/test/ServicesAndSurface.test.ts."
     },
@@ -273,7 +273,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 111,
+      "line": 117,
       "owner": "@beep/epistemic-server",
       "reason": "P0 persistence spike decodes fixed commands and rows to prove duplicate suppression, visibility, ordering, and transactional boundaries against PGlite; schema law coverage lives in domain and use-case tests."
     },
@@ -283,7 +283,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 52,
+      "line": 60,
       "owner": "@beep/epistemic-server",
       "reason": "External-Postgres race regression uses deterministic candidate identifiers to prove concurrent repository behavior; arbitrary values would make the race non-reproducible, and schema-derived identifier laws live with the owning domain models."
     },
@@ -293,7 +293,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 88,
+      "line": 93,
       "owner": "@beep/epistemic-server",
       "reason": "Repository integration suite uses fixed schema-decoded fixtures to prove atomic review, races, temporal queries, and restart behavior; schema-derived arbitrary round-trips live with the owning domain and use-case models."
     },
@@ -303,7 +303,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 68,
+      "line": 73,
       "owner": "@beep/epistemic-server",
       "reason": "External-Postgres race regression decodes fixed commands to drive two genuinely parallel repository writers; what is under test is database contention (row locks, the open-head index, the exclusion constraint), not schema laws, and arbitrary-driven commands would make the race non-reproducible."
     },
@@ -313,7 +313,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 56,
+      "line": 60,
       "owner": "@beep/epistemic-server",
       "reason": "Bitemporal behavior regression decodes fixed commands to drive the real repository transaction and assert exact as-of answers at named instants; schema-derived arbitrary round-trips for LogicalEdgeIdentity, the EdgeAuthority commands, and the EdgeVersion entity live with the domain and use-cases model tests."
     },
@@ -323,7 +323,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 51,
+      "line": 56,
       "owner": "@beep/epistemic-server",
       "reason": "Restart regression decodes fixed commands to write history in one PGlite scope and re-read it in a second over the same dataDir; what is under test is that the data files carry history, lineage, dispositions, and live constraints across a process boundary, not schema laws."
     },
@@ -487,7 +487,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 9,
+      "line": 10,
       "owner": "@beep/schema",
       "reason": "Exception: CurrencyCode/CurrencyName are LiteralKit unions over the generated ISO 4217 enumeration; example-based assertions cover representative decode/reject and `.Options` membership, and S.toArbitrary over a finite literal union only re-samples already-enumerated members, so schema-derived property coverage would be vacuous."
     },
@@ -497,7 +497,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 11,
+      "line": 13,
       "owner": "@beep/schema",
       "reason": "Exception: meta-test of the Fn/ThunkOf/AnyFn schema combinator over function values (declareConstructor with self-identity equivalence); no structural data for S.toArbitrary to generate or round-trip."
     },
@@ -549,7 +549,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 1324,
+      "line": 1327,
       "owner": "@beep/law-practice-domain",
       "reason": "Pure in-memory parser over optional API image maps and Markdown content; it normalizes directly into the schema-backed PatentFigure model and neither decodes nor persists the transient option bag."
     },
@@ -559,7 +559,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 1487,
+      "line": 1490,
       "owner": "@beep/law-practice-domain",
       "reason": "Pure in-memory text parser whose required content and optional title are already strings; the transient option bag is call-site ergonomics and never crosses a decode or persistence boundary."
     },
@@ -569,7 +569,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 920,
+      "line": 923,
       "owner": "@beep/law-practice-domain",
       "reason": "Pure lookup over optional in-memory office and kind-code strings; it returns Effect Option and the transient option bag is never decoded or persisted."
     },
@@ -579,7 +579,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 1080,
+      "line": 1083,
       "owner": "@beep/law-practice-domain",
       "reason": "Pure projection from optional API metadata and content into the schema-backed PatentDisplay model; the transient option bag is assembled in-process and never decoded or persisted."
     },
@@ -589,7 +589,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 837,
+      "line": 840,
       "owner": "@beep/law-practice-domain",
       "reason": "Pure lookup over optional in-memory country text and an Effect Option kind code; it returns the schema-backed PatentStatus literal and the transient option bag is never decoded or persisted."
     },
@@ -599,7 +599,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 1415,
+      "line": 1418,
       "owner": "@beep/law-practice-domain",
       "reason": "Pure parser over in-memory content plus schema-backed PatentSectionKind values; it returns the schema-backed PatentSections model and the transient option bag is never decoded or persisted."
     },
@@ -609,7 +609,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 41,
+      "line": 42,
       "owner": "@beep/law-practice-server",
       "reason": "Schema-heavy test file has 4 Schema codec assertions but no schema-derived property coverage."
     },
@@ -619,7 +619,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 555,
+      "line": 558,
       "owner": "@beep/law-practice-server",
       "reason": "Competency-question acceptance fixtures assert recorded and derived answers over one deliberately seeded practice; the questions are donor-fixed golden coverage, and schema-derived arbitrary coverage for the underlying entities lives with the law-practice domain model tests."
     },
@@ -629,7 +629,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 60,
+      "line": 62,
       "owner": "@beep/law-practice-server",
       "reason": "PGlite-backed drizzle repository proof decodes fixed fixture rows through the real migration bundle to prove read-back with database-assigned ids, tenant isolation, id-ascending order, and typed driver failures; schema-derived arbitrary coverage for these entities lives with the law-practice domain model tests (same posture as the candor sibling and the migration proof entries above)."
     },
@@ -649,7 +649,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 41,
+      "line": 43,
       "owner": "@beep/law-practice-use-cases",
       "reason": "Deterministic policy fixtures decode exact anchored event and disposition wires so lineage, source-resolution, supersession, and fail-closed semantics remain observable; schema-derived round-trip coverage for these law-practice domain schemas lives in packages/law-practice/domain/test/LawPracticeDomain.test.ts."
     },
@@ -691,7 +691,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 15,
+      "line": 16,
       "owner": "@beep/repo-utils",
       "reason": "Golden fingerprint test replays captured wire values from its __golden__ fixture; native Arbitrary seeds cannot reproduce the recorded fast-check samples, so schema-derived generation would invalidate the goldens."
     },
@@ -709,7 +709,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 52,
+      "line": 50,
       "owner": "@beep/test-utils",
       "reason": "Subprocess regression driver: these codecs decode child-runner evidence for explicit watchdog, cancellation and finalizer-order scenarios. Native schema-derived property behavior is exercised by the runtime.test.ts.txt child fixture and Vitest.test.ts; adding a codec round-trip in the parent would not test the process lifecycle contract."
     },
@@ -847,7 +847,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 180,
+      "line": 187,
       "owner": "@beep/repo-cli",
       "reason": "Pure comparison over already schema-decoded record sets; the inline input trio groups arrays of S.Class rows at the call site rather than modeling an IO boundary, and the output is the annotated JSDocMigrateBindingReport class."
     },
@@ -881,7 +881,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 430,
+      "line": 431,
       "owner": "@beep/repo-cli",
       "reason": "Inline input pairs in-memory block bytes with token allowances the rewriter computed in the same call; nothing crosses an IO boundary and the findings are transient strings consumed by quarantine reporting."
     },
@@ -931,7 +931,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 315,
+      "line": 317,
       "owner": "@beep/repo-cli",
       "reason": "Test service factory consumes already modeled ProcessTableEntry rows and returns filesystem-compatible Effect operations; its output is a live service implementation, not a serialized data boundary."
     },
@@ -941,7 +941,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 370,
+      "line": 372,
       "owner": "@beep/repo-cli",
       "reason": "Test service adapter accepts a live ProcessTableShape implementation and returns closures that preserve its attachment operations while substituting schema-modeled lineage rows."
     },
@@ -959,7 +959,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 48,
+      "line": 57,
       "owner": "@beep/repo-cli",
       "reason": "CI lane regression writes fixed JSON fixture documents through the compact S.fromJsonString(S.Unknown) codec; the codec calls serialize fixtures and assert no schema law, so schema-derived arbitrary coverage does not apply."
     },
@@ -969,7 +969,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 59,
+      "line": 69,
       "owner": "@beep/repo-cli",
       "reason": "Corpus-preservation regression serializes fixed JSON fixtures through the compact S.fromJsonString(S.Unknown) codec; the codec calls build inputs and assert no schema law, so schema-derived arbitrary coverage does not apply."
     },
@@ -979,7 +979,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 12,
+      "line": 15,
       "owner": "@beep/repo-cli",
       "reason": "Turbo input regression encodes fixed JSON fixture documents and decodes turbo summaries through S.fromJsonString codecs; the schemas are external turbo shapes exercised against real output, not domain schemas with a round-trip law."
     },
@@ -989,7 +989,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 85,
+      "line": 89,
       "owner": "@beep/repo-cli",
       "reason": "Golden/adversarial provenance regression suite uses fixed hash-bound originals, deliberately corrupted receipts, provider envelopes and exact native filesystem/Git/PDF relationships. Codec calls decode fixed receipts to prove the integrity boundary; random schema-generated values would not preserve the independently authored evidence relationships. This suite is intentionally golden/regression-only rather than broad domain-schema law coverage."
     },
@@ -999,7 +999,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 275,
+      "line": 280,
       "owner": "@beep/repo-cli",
       "reason": "Golden/adversarial provenance regression suite uses fixed hash-bound originals, deliberately corrupted receipts, provider envelopes and exact native filesystem/Git/PDF relationships. Codec calls decode fixed receipts to prove the integrity boundary; random schema-generated values would not preserve the independently authored evidence relationships. This suite is intentionally golden/regression-only rather than broad domain-schema law coverage."
     },
@@ -1009,7 +1009,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 12,
+      "line": 15,
       "owner": "@beep/repo-cli",
       "reason": "Turbo input regression encodes fixed JSON fixture documents and decodes turbo summaries through S.fromJsonString codecs; the schemas are external turbo shapes exercised against real output, not domain schemas with a round-trip law."
     },
@@ -1019,7 +1019,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 30,
+      "line": 35,
       "owner": "@beep/repo-cli",
       "reason": "Hook adapter regression encodes and decodes fixed hook payload JSON through S.fromJsonString codecs to prove adapter wiring; the payloads are fixed fixtures, not a schema law."
     }

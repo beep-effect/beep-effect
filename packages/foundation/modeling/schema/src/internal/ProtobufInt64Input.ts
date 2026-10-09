@@ -4,10 +4,11 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { Effect, SchemaGetter, SchemaIssue } from "effect";
+import * as Effect from "effect/Effect";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as SchemaGetter from "effect/SchemaGetter";
+import * as SchemaIssue from "effect/SchemaIssue";
 import * as Str from "effect/String";
 
 /**

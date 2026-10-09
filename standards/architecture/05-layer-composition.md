@@ -59,7 +59,8 @@ Services should be explicit, small, and composed at the boundary:
 
 ````ts
 import { $IamUseCasesId } from "@beep/identity";
-import { Context, type Effect } from "effect";
+import * as Context from "effect/Context";
+import type * as Effect from "effect/Effect";
 import {
   MembershipNotFound,
   MembershipRevocationDenied,
@@ -89,7 +90,8 @@ Use-case packages stop at the contract. A server layer provides the live
 implementation from its dependencies:
 
 ````ts
-import { Effect, Layer } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import {
   MembershipNotFound,
@@ -203,9 +205,8 @@ Forbidden app composition shapes include:
 // apps/web/src/runtime/Layer.ts
 import { MembershipRepositoryLive } from "@beep/iam-server/internal/MembershipRepository";
 import { SubscriptionRepositoryLive } from "@beep/billing-server/internal/SubscriptionRepository";
+import * as Layer from "effect/Layer";
 import { OrgPolicyServiceLive } from "@beep/iam-server/internal/OrgPolicyService";
-import { Layer } from "effect";
-
 export const AppLayer = Layer.mergeAll(
   MembershipRepositoryLive,
   SubscriptionRepositoryLive,
@@ -224,9 +225,8 @@ file.
 ````ts
 // apps/web/src/runtime/Layer.ts
 import { IamLive } from "@beep/iam-server/layer";
+import * as Layer from "effect/Layer";
 import { BillingLive } from "@beep/billing-server/layer";
-import { Layer } from "effect";
-
 /**
  * Application Layer composed from each slice's published `/layer` subpath.
  *

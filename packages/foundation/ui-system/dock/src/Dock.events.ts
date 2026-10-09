@@ -6,8 +6,8 @@
  */
 import { $DockId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Tuple } from "effect";
 import * as S from "effect/Schema";
+import * as Tuple from "effect/Tuple";
 import { GroupId, PanelId, RendererKey, SplitId, SplitRatio } from "./Dock.ids.ts";
 import { PanelConstraints, PanelRenderMode, PanelView } from "./Dock.models.ts";
 

@@ -8,8 +8,8 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { Effect } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import type * as AST from "effect/SchemaAST";
@@ -945,8 +945,7 @@ const decodeOperationPlanJson = S.decodeUnknownEffect(S.fromJsonString(Canonical
  *   encodeCanonicalSliceOperationPlanJson,
  *   makeCanonicalSliceOperationPlan,
  * } from "@beep/repo-cli/commands/Architecture"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = encodeCanonicalSliceOperationPlanJson(makeCanonicalSliceOperationPlan()).pipe(
  *   Effect.map((json) => json.includes("architecture-operation-plan/v1"))
  * )
@@ -973,8 +972,7 @@ export const encodeCanonicalSliceOperationPlanJson: {
  *   encodeCanonicalSliceOperationPlanJson,
  *   makeCanonicalSliceOperationPlan,
  * } from "@beep/repo-cli/commands/Architecture"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const json = yield* encodeCanonicalSliceOperationPlanJson(makeCanonicalSliceOperationPlan())
  *   const plan = yield* decodeCanonicalSliceOperationPlanJson(json)

@@ -13,8 +13,13 @@ import {
 } from "@beep/repo-utils/schemas/DocgenConfig";
 import { A, Str, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Effect, FileSystem, HashMap, MutableHashSet, Order, Path } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
+import * as HashMap from "effect/HashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { isLabsWorkspacePath, LABS_PATH_IGNORE_GLOB } from "../../../internal/cli/Labs/index.ts";
@@ -74,7 +79,7 @@ const formatOrphanDocgenConfigMessage = (paths: ReadonlyArray<string>): string =
  * **Example** (List orphaned docgen configs)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { discoverOrphanDocgenConfigPaths } from "@beep/repo-cli/commands/Docgen/internal/Workspace"
  *
  * const program = discoverOrphanDocgenConfigPaths().pipe(
@@ -223,7 +228,7 @@ export const normalizeDocsOutputPath = (relativePath: string): string =>
  * **Example** (Load a docgen config)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { loadDocgenConfigDocument } from "@beep/repo-cli/commands/Docgen/internal/Workspace"
  * const program = loadDocgenConfigDocument("/repo/packages/tooling/tool/cli")
  * console.log(Effect.isEffect(program))
@@ -253,7 +258,7 @@ export const loadDocgenConfigDocument: (
  * **Example** (Create a docgen config)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { createDocgenConfigDocument } from "@beep/repo-cli/commands/Docgen/internal/Workspace"
  * import { DocgenWorkspacePackage } from "@beep/repo-cli/commands/Docgen/Docgen.schemas"
  * const target = DocgenWorkspacePackage.make({
@@ -310,7 +315,7 @@ export const createDocgenConfigDocument: {
  * **Example** (Discover docgen workspaces)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { discoverDocgenWorkspacePackages } from "@beep/repo-cli/commands/Docgen/internal/Workspace"
  * const program = discoverDocgenWorkspacePackages().pipe(
  *   Effect.map((packages) => packages.map((pkg) => pkg.relativePath))
@@ -371,7 +376,7 @@ export const discoverDocgenWorkspacePackages: (
  * **Example** (Resolve a workspace package)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { resolveDocgenWorkspacePackage } from "@beep/repo-cli/commands/Docgen/internal/Workspace"
  * const program = resolveDocgenWorkspacePackage("@beep/repo-cli").pipe(
  *   Effect.map((pkg) => pkg.docsOutputPath)

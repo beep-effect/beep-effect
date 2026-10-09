@@ -1,4 +1,5 @@
 // P3 facet census evidence for goals/effect-schema-parity, runtime half.
+
 //
 // 1. Opaque: the identity-exclusion facet. Field and tagged-error equivalence for
 //    today's `Defect` / `OpaqueUnknown` against upstream `S.Defect` / `S.Unknown`,
@@ -12,8 +13,8 @@
 // imports to compare the retired wrappers against upstream. It is kept unchanged as the
 // source of the output recorded in goals/effect-schema-parity/research/2026-09-29-p3-gates.md.
 import { Defect, OpaqueUnknown } from "@beep/schema/Opaque";
-import { Effect } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";

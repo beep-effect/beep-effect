@@ -7,17 +7,21 @@
 
 import { $OpenaiCompatId } from "@beep/identity";
 import { A, Str } from "@beep/utils";
-import { Context, Effect, flow, Layer, Match, pipe, Stream } from "effect";
 import * as AiError from "effect/ai/AiError";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
 import * as Sse from "effect/encoding/Sse";
-import { dual } from "effect/Function";
+import { dual, flow, pipe } from "effect/Function";
 import { FetchHttpClient } from "effect/http";
 import * as Headers from "effect/http/Headers";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import {
   decodeChatCompletionChunk,
   OpenAiCompatChatCompletionRequest,
@@ -36,7 +40,7 @@ const moduleName = "OpenAiCompatClient";
  * **Example** (Make client options)
  *
  * ```ts
- * import { Redacted } from "effect"
+ * import * as Redacted from "effect/Redacted";
  * import * as O from "effect/Option"
  * import { OpenAiCompatClientOptions } from "@beep/openai-compat"
  *
@@ -73,7 +77,8 @@ export class OpenAiCompatClientOptions extends S.Class<OpenAiCompatClientOptions
  * **Example** (Stub client shape)
  *
  * ```ts
- * import { Effect, Stream } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Stream from "effect/Stream";
  * import {
  *   OpenAiCompatChatCompletionResponse,
  *   type OpenAiCompatClientShape
@@ -358,7 +363,7 @@ const makeService = (client: HttpClient.HttpClient, options: OpenAiCompatClientO
  * **Example** (Yield client service)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { OpenAiCompatClient } from "@beep/openai-compat"
  *
  * const program = Effect.gen(function* () {
@@ -381,7 +386,7 @@ export class OpenAiCompatClient extends Context.Service<OpenAiCompatClient, Open
    * **Example** (Build client layer)
    *
    * ```ts
-   * import { Redacted } from "effect"
+   * import * as Redacted from "effect/Redacted";
    * import * as O from "effect/Option"
    * import { OpenAiCompatClient, OpenAiCompatClientOptions } from "@beep/openai-compat"
    *

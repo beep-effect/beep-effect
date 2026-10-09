@@ -5,8 +5,11 @@
  * @since 0.0.0
  */
 import { $DockId } from "@beep/identity/packages";
-import { Context, Effect, Layer, Ref } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import { DockCommandEnvelope } from "./Dock.commands.ts";
 import { DockInputError, DockSnapshotMissing } from "./Dock.errors.ts";
@@ -73,8 +76,7 @@ const decodeSnapshot = Effect.fn("DockEngine.decodeSnapshot")(function* (input: 
  * ```ts
  * import { DockEngine, DockEngineLive, GroupId, Panel, PanelId, PopulatedWorkspace, TabsNode, TextPanelView } from "@beep/dock"
  * import type { DockEngineShape } from "@beep/dock"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const encode = (engine: DockEngineShape, workspace: PopulatedWorkspace) => engine.encodeSnapshot(workspace)
  * const panel = Panel.make({ id: PanelId.make("panel-one"), title: "Panel One", view: TextPanelView.make({ text: "one" }) })
  * const workspace = PopulatedWorkspace.make({ root: TabsNode.make({ groupId: GroupId.make("group-one"), active: panel }) })
@@ -116,8 +118,7 @@ export interface DockEngineShape {
  *
  * ```ts
  * import { DockEngine, DockEngineLive, GroupId, Panel, PanelId, PopulatedWorkspace, TabsNode, TextPanelView } from "@beep/dock"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const panel = Panel.make({ id: PanelId.make("panel-one"), title: "Panel One", view: TextPanelView.make({ text: "one" }) })
  * const workspace = PopulatedWorkspace.make({ root: TabsNode.make({ groupId: GroupId.make("group-one"), active: panel }) })
  * const snapshot = Effect.runSync(Effect.gen(function* () {
@@ -152,8 +153,7 @@ const makeDockEngine = Effect.succeed(
  *
  * ```ts
  * import { DockEngine, DockEngineLive, GroupId, Panel, PanelId, PopulatedWorkspace, TabsNode, TextPanelView } from "@beep/dock"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const panel = Panel.make({ id: PanelId.make("panel-one"), title: "Panel One", view: TextPanelView.make({ text: "one" }) })
  * const workspace = PopulatedWorkspace.make({ root: TabsNode.make({ groupId: GroupId.make("group-one"), active: panel }) })
  * const snapshot = Effect.runSync(Effect.gen(function* () {
@@ -175,7 +175,7 @@ export const DockEngineLive = Layer.effect(DockEngine, makeDockEngine);
  *
  * ```ts
  * import type { DockSnapshotStoreShape } from "@beep/dock"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const store: DockSnapshotStoreShape = {
@@ -201,8 +201,7 @@ export interface DockSnapshotStoreShape {
  *
  * ```ts
  * import { DockSnapshotStore, makeDockSnapshotStoreMemory } from "@beep/dock"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const store = yield* DockSnapshotStore
  *   yield* store.save("snapshot-one")
@@ -226,7 +225,7 @@ export class DockSnapshotStore extends Context.Service<DockSnapshotStore, DockSn
  * ```ts
  * import { makeDockSnapshotStoreMemory } from "@beep/dock"
  * import { DockSnapshotStore } from "@beep/dock"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const loaded = Effect.runSync(Effect.gen(function* () {
@@ -261,7 +260,7 @@ export const makeDockSnapshotStoreMemory = (initial: O.Option<string> = O.none()
  *
  * ```ts
  * import { requireSnapshot } from "@beep/dock"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const snapshot = Effect.runSync(requireSnapshot(O.some("snapshot")))

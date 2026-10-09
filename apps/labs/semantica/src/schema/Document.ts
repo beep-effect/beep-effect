@@ -1,8 +1,10 @@
 import { $SemanticaId } from "@beep/identity/packages";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
-import { identity, Option, Tuple } from "effect";
+import { identity } from "effect/Function";
+import * as Option from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as Tuple from "effect/Tuple";
 import { CorpusPaperId } from "@/corpus/Manifest";
 import { F1FixtureId, FixtureDegradedKind, FixtureExpectation } from "@/fixtures/F1";
 import { DocumentId, ProvenanceEventId } from "@/schema/Ids";
@@ -86,8 +88,7 @@ const OriginKind = LiteralKit(["W1Paper", "Fixture"]);
  * ```ts
  * import { Origin } from "@/schema/Document"
  * import { F1FixtureId } from "@/fixtures/F1"
- * import { Option } from "effect"
- *
+ * import * as Option from "effect/Option";
  * const origin = Origin.cases.Fixture.make({
  *   kind: "Fixture",
  *   fixtureId: F1FixtureId.make("md-structure"),
@@ -117,8 +118,7 @@ export const Origin = OriginKind.mapMembers(Tuple.evolve([() => W1PaperOrigin, (
  * import { Origin } from "@/schema/Document"
  * import { F1FixtureId } from "@/fixtures/F1"
  * import type { Origin as OriginValue } from "@/schema/Document"
- * import { Option } from "effect"
- *
+ * import * as Option from "effect/Option";
  * const origin: OriginValue = Origin.cases.Fixture.make({
  *   kind: "Fixture",
  *   fixtureId: F1FixtureId.make("md-structure"),

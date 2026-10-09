@@ -26,9 +26,15 @@
 
 import { $NlpProcessingId } from "@beep/identity";
 import { A, thunk0 } from "@beep/utils";
-import { Clock, Effect, Graph, HashMap, MutableHashMap, MutableHashSet, Random } from "effect";
+import * as Clock from "effect/Clock";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
+import * as Graph from "effect/Graph";
+import * as HashMap from "effect/HashMap";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
+import * as Random from "effect/Random";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 
@@ -83,7 +89,7 @@ export type NodeId = typeof NodeId.Type;
  * **Example** (Generating a fresh NodeId)
  *
  * ```ts import.meta.vitest name="Generating a fresh NodeId"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { generateNodeId } from "@beep/nlp-processing/Graph/EffectGraph"
  *
  * const program = Effect.map(generateNodeId, (id) => id.startsWith("node-"))
@@ -170,7 +176,7 @@ export class NodeMetadata extends S.Class<NodeMetadata>($I`NodeMetadata`)(
  * **Example** (Creating a GraphNode)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { makeNode, type GraphNode } from "@beep/nlp-processing/Graph/EffectGraph"
  *
  * const node: GraphNode<string> = Effect.runSync(makeNode("root"))
@@ -248,7 +254,7 @@ export interface EffectGraph<A> {
  * **Example** (Creating node with makeNode)
  *
  * ```ts import.meta.vitest name="Creating node with makeNode"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { makeNode } from "@beep/nlp-processing/Graph/EffectGraph"
  *
  * const node = Effect.runSync(makeNode("hello"))
@@ -314,7 +320,7 @@ export const empty = <A>(): EffectGraph<A> => ({
  * **Example** (Creating a singleton graph)
  *
  * ```ts import.meta.vitest name="Creating a singleton graph"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { singleton, size } from "@beep/nlp-processing/Graph/EffectGraph"
  *
  * const graph = Effect.runSync(singleton("root"))
@@ -352,7 +358,7 @@ export const singleton = Effect.fn("singleton")(function* <A>(data: A): Effect.f
  * **Example** (Adding a child node)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { addNode, getRoots, makeNode, singleton } from "@beep/nlp-processing/Graph/EffectGraph"
  * import * as O from "effect/Option"
  *
@@ -416,7 +422,7 @@ export const addNode: {
  * **Example** (Looking up node by id)
  *
  * ```ts import.meta.vitest name="Looking up node by id"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { getNode, getRoots, singleton } from "@beep/nlp-processing/Graph/EffectGraph"
  * import * as O from "effect/Option"
  *
@@ -446,7 +452,7 @@ export const getNode: {
  * **Example** (Reading direct child nodes)
  *
  * ```ts import.meta.vitest name="Reading direct child nodes"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { getChildren, getRoots, singleton } from "@beep/nlp-processing/Graph/EffectGraph"
  *
  * const program = Effect.map(singleton("root"), (graph) => {
@@ -479,7 +485,7 @@ export const getChildren: {
  * **Example** (Getting root nodes)
  *
  * ```ts import.meta.vitest name="Getting root nodes"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { getRoots, singleton } from "@beep/nlp-processing/Graph/EffectGraph"
  *
  * const program = Effect.map(singleton("root"), (graph) => getRoots(graph).length)
@@ -530,7 +536,7 @@ export type GraphAlgebra<A, B> = (node: GraphNode<A>, children: ReadonlyArray<B>
  * **Example** (Folding graph with cata)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { cata, singleton } from "@beep/nlp-processing/Graph/EffectGraph"
  *
  * const program = Effect.flatMap(
@@ -581,7 +587,7 @@ export const cata: {
  * **Example** (Countdown coalgebra expansion)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import type { GraphCoalgebra } from "@beep/nlp-processing/Graph/EffectGraph"
  *
  * const countdown: GraphCoalgebra<number, number> = (n) =>
@@ -603,7 +609,7 @@ export type GraphCoalgebra<A, B> = (seed: B) => Effect.Effect<readonly [A, Reado
  * **Example** (Unfolding seed into graph)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { ana, size } from "@beep/nlp-processing/Graph/EffectGraph"
  *
  * const program = Effect.map(
@@ -648,7 +654,7 @@ export const ana: {
  * **Example** (Mapping node payload values)
  *
  * ```ts import.meta.vitest name="Mapping node payload values"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { map, singleton, toArray } from "@beep/nlp-processing/Graph/EffectGraph"
  *
  * const program = Effect.map(singleton("root"), (graph) =>
@@ -705,7 +711,7 @@ export const map: {
  * **Example** (Collecting nodes as array)
  *
  * ```ts import.meta.vitest name="Collecting nodes as array"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { singleton, toArray } from "@beep/nlp-processing/Graph/EffectGraph"
  *
  * const program = Effect.map(singleton("root"), (graph) => toArray(graph).length)
@@ -745,7 +751,7 @@ export const size = <A>(graph: EffectGraph<A>): number => Graph.nodeCount(graph.
  * **Example** (Rendering graph as tree)
  *
  * ```ts import.meta.vitest name="Rendering graph as tree"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { show, singleton } from "@beep/nlp-processing/Graph/EffectGraph"
  *
  * const program = Effect.map(singleton("root"), show((text) => text))

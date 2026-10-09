@@ -21,16 +21,16 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { Effect, FileSystem, Path } from "effect";
-
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Path from "effect/Path";
 /**
  * Reject the mutually-exclusive `--write` / `--check` flag combination.
  *
  * **Example** (Validate exclusive mode flags)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { assertExclusiveModeFlags } from "@beep/repo-cli/test/Artifacts"
  *
  * const program = assertExclusiveModeFlags({
@@ -59,7 +59,8 @@ export const assertExclusiveModeFlags = <E, R>(input: {
  * **Example** (Write then run success)
  *
  * ```ts
- * import { Console, Effect } from "effect"
+ * import * as Console from "effect/Console";
+ * import * as Effect from "effect/Effect";
  * import { writeGeneratedFile } from "@beep/repo-cli/test/Artifacts"
  *
  * const program = writeGeneratedFile({
@@ -97,7 +98,8 @@ export const writeGeneratedFile = Effect.fn("GeneratedFileDrift.writeGeneratedFi
  * **Example** (Route missing stale current)
  *
  * ```ts
- * import { Console, Effect } from "effect"
+ * import * as Console from "effect/Console";
+ * import * as Effect from "effect/Effect";
  * import { checkGeneratedFile } from "@beep/repo-cli/test/Artifacts"
  *
  * const regenerate = "bun run beep lint schema-catalog --write"
@@ -148,7 +150,8 @@ export const checkGeneratedFile = Effect.fn("GeneratedFileDrift.checkGeneratedFi
  * **Example** (Check mode without write)
  *
  * ```ts
- * import { Console, Effect } from "effect"
+ * import * as Console from "effect/Console";
+ * import * as Effect from "effect/Effect";
  * import { syncGeneratedFile } from "@beep/repo-cli/test/Artifacts"
  *
  * const program = syncGeneratedFile({

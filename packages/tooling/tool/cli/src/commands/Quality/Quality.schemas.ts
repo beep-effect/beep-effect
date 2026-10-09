@@ -9,7 +9,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { CacheEvidenceReference } from "@beep/repo-configs/cache";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A } from "@beep/utils";
-import { Effect as EffectRuntime } from "effect";
+import * as EffectRuntime from "effect/Effect";
 import * as Equal from "effect/Equal";
 import { dual } from "effect/Function";
 import * as HashMap from "effect/HashMap";
@@ -439,8 +439,7 @@ export class PackageJsonDocument extends S.Class<PackageJsonDocument>($I`Package
  *
  * ```ts
  * import { decodePackageJsonDocument } from "@beep/repo-cli/test/Quality"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.succeed(decodePackageJsonDocument)
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -838,8 +837,7 @@ export class GithubChecksFallowFeatureMatrix extends S.Class<GithubChecksFallowF
  *
  * ```ts
  * import { decodeGithubChecksFallowFeatureMatrix } from "@beep/repo-cli/test/Quality"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.succeed(decodeGithubChecksFallowFeatureMatrix)
  * console.log(Effect.isEffect(program)) // true
  * ```

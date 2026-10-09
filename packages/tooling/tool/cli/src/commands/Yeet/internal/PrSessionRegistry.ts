@@ -11,9 +11,16 @@
  */
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Console, Context, Effect, FileSystem, Layer, Path, Ref, Runtime } from "effect";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as Ref from "effect/Ref";
+import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import {
@@ -22,7 +29,7 @@ import {
   resolveWorkstationStateDir,
 } from "../../../internal/state/WorkstationState.ts";
 import { PrSessionRecord } from "./Provenance.ts";
-import type { PlatformError } from "effect";
+import type * as PlatformError from "effect/PlatformError";
 import type { PrNumber, PrRepository } from "./Provenance.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/PrSessionRegistry");
@@ -111,8 +118,7 @@ export interface PrSessionRegistryShape {
  *
  * ```ts
  * import { PrRepository, PrSessionRegistry } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const repository = PrRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" })
  * const program = Effect.gen(function* () {
  *   const registry = yield* PrSessionRegistry
@@ -215,8 +221,7 @@ export const prSessionRegistryFileName: (repository: PrRepository) => string = r
  *
  * ```ts
  * import { makePrSessionRegistryLive } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(makePrSessionRegistryLive())) // true
  * ```
  *
@@ -273,8 +278,7 @@ export const makePrSessionRegistryLive = Effect.fn("PrSessionRegistry.makeLive")
  *
  * ```ts
  * import { layerPrSessionRegistryLive, PrSessionRegistry } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const registry = yield* PrSessionRegistry
  *   return registry
@@ -298,8 +302,7 @@ export const layerPrSessionRegistryLive = Layer.effect(PrSessionRegistry, makePr
  *   PrRepository,
  *   PrSessionRegistry,
  * } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const repository = PrRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" })
  * const program = Effect.gen(function* () {
  *   const registry = yield* PrSessionRegistry

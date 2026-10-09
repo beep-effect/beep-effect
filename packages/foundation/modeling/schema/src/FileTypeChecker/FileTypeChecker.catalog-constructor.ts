@@ -4,9 +4,10 @@
  * @since 0.0.0
  */
 
-import { Order, pipe } from "effect";
 import * as A from "effect/Array";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import { FileSignature, FileTypeInfo } from "./FileTypeChecker.schema.ts";
 import type { FileType } from "./FileTypeChecker.schema.ts";
 

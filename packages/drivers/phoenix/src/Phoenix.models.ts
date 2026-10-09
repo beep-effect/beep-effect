@@ -7,7 +7,7 @@
 
 import { $PhoenixId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 

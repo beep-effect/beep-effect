@@ -2,10 +2,15 @@ import { LibrarySource } from "@beep/repo-cli/commands/Research";
 import { acquireLibraryPaper } from "@beep/repo-cli/test/ResearchLibrary";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Path, Sink, Stream } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { HttpClient, HttpClientResponse } from "effect/http";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as Sink from "effect/Sink";
+import * as Stream from "effect/Stream";
 
 const source = LibrarySource.make({
   id: "bounded-paper",

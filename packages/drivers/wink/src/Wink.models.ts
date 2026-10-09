@@ -8,10 +8,13 @@
 import { $WinkId } from "@beep/identity";
 import { MarkRange } from "@beep/nlp/Core/Pattern";
 import { A } from "@beep/utils";
-import { Chunk, Effect, Match, pipe, Result } from "effect";
-import { dual } from "effect/Function";
+import * as Chunk from "effect/Chunk";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import type { Pattern, PatternElement } from "@beep/nlp/Core/Pattern";
 

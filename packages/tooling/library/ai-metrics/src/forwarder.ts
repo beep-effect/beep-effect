@@ -9,7 +9,12 @@ import { $RepoAiMetricsId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Clock, Effect, FileSystem, flow, Order, Path, pipe } from "effect";
+import * as Clock from "effect/Clock";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { flow, pipe } from "effect/Function";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { AiMetricsRawArchiveKey, writeEncryptedRawArchiveObject } from "./archive.ts";
 import {
@@ -113,8 +118,8 @@ export class AiMetricsForwarderError extends S.TaggedError<AiMetricsForwarderErr
  *
  * ```ts
  * import { AiMetricsForwarderInput } from "@beep/repo-ai-metrics"
- * import { Option, Redacted } from "effect"
- *
+ * import * as Option from "effect/Option";
+ * import * as Redacted from "effect/Redacted";
  * const input = AiMetricsForwarderInput.make({
  *   dataRoot: Option.some("/home/dev/.local/state/beep/ai-metrics"),
  *   hashSalt: Option.some("salt"),
@@ -985,8 +990,9 @@ const processSourceFile = Effect.fn("AiMetrics.forwarder.processSourceFile")(
  *   withAiMetricsDuckDb
  * } from "@beep/repo-ai-metrics"
  * import { NodeServices } from "@effect/platform-node"
- * import { Effect, Option, Redacted } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Option from "effect/Option";
+ * import * as Redacted from "effect/Redacted";
  * const dataRoot = "/home/dev/.local/state/beep/ai-metrics"
  *
  * const input = AiMetricsForwarderInput.make({
@@ -1125,8 +1131,7 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
  *   AiMetricsForwarderRunResult,
  *   forwarderRunResultToJson
  * } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const result = AiMetricsForwarderRunResult.make({
  *   archiveObjectCount: 0,
  *   configSnapshotId: "config-1",
@@ -1171,8 +1176,7 @@ export const forwarderRunResultToJson: (
  *
  * ```ts
  * import { AiMetricsForwarderTimerPlan, forwarderTimerPlanToJson } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const json = Effect.runSync(
  *   forwarderTimerPlanToJson(
  *     AiMetricsForwarderTimerPlan.make({

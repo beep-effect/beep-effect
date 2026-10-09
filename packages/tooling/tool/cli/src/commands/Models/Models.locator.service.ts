@@ -14,9 +14,11 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, flow, O, P, pipe, R, Str } from "@beep/utils";
-import { Effect, Layer, Match } from "effect";
 import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import { XMLParser } from "fast-xml-parser";
 import { parseDocument } from "yaml";
 import { ModelsLocatorError } from "./Models.errors.ts";

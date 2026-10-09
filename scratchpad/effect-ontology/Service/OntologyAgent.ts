@@ -19,7 +19,16 @@ import { LiteralKit } from "@beep/schema";
 import type { ShaclValidationError, ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
 import type { SparqlQueryProfile, SparqlQueryResult } from "@beep/semantic-web/services/sparql-query";
 import { SparqlQueryRequest, SparqlQueryService } from "@beep/semantic-web/services/sparql-query";
-import { Chunk, Context, DateTime, Duration, Effect, Inspectable, Layer, Match, MutableHashMap, Result } from "effect";
+import * as Chunk from "effect/Chunk";
+import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Inspectable from "effect/Inspectable";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as Result from "effect/Result";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -172,7 +181,7 @@ const makeExtractionMetrics = (outcome: ExtractionOutcome, duration: Duration.Du
  * **Example** (Compose ontology extraction)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { OntologyAgent } from "@effect-ontology/Service/OntologyAgent"
  *
  * const program = Effect.gen(function* () {
@@ -1115,7 +1124,7 @@ const makeOntologyAgent = Effect.gen(function* () {
  * **Example** (Compose ontology extraction)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { OntologyAgent } from "@effect-ontology/Service/OntologyAgent"
  *
  * const program = Effect.gen(function* () {

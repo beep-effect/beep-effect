@@ -5,10 +5,12 @@
  */
 
 import { $SchemaId } from "@beep/identity/packages";
-import { MutableHashSet, pipe, Result, SchemaParser } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import { dual, pipe } from "effect/Function";
+import * as MutableHashSet from "effect/MutableHashSet";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as SchemaParser from "effect/SchemaParser";
 import { InvariantDescriptor } from "./Conformance.invariant.schema.ts";
 import { ConformanceProfile } from "./Conformance.profile.schema.ts";
 import { SpecificationSource } from "./Conformance.source.schema.ts";
@@ -95,7 +97,7 @@ const AnnotationConsistency = S.makeFilter(isConsistentAnnotation, {
  * **Example** (Decode a consistent annotation)
  *
  * ```ts import.meta.vitest name="Decode a consistent annotation"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { Annotation } from "@beep/schema/Conformance"
  *
@@ -175,8 +177,7 @@ const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]): S.Sc
  *
  * ```ts import.meta.vitest name="Inspect an invalid registry"
  * import { makeAnnotationResult } from "@beep/schema/Conformance"
- * import { Result } from "effect"
- *
+ * import * as Result from "effect/Result";
  * const result = makeAnnotationResult({ sources: [], profiles: [], invariants: [] })
  * Result.isFailure(result) // => true
  * ```

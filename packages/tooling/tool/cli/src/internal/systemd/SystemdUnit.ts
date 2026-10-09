@@ -5,11 +5,13 @@
  * @since 0.0.0
  */
 
-import { Effect, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
+import * as FileSystem from "effect/FileSystem";
 import { constFalse, dual } from "effect/Function";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as Str from "effect/String";
 import { SystemdBunCandidate, SystemdInstalledUnit, SystemdUnitDirective } from "./SystemdUnit.schemas.ts";
 
@@ -26,8 +28,7 @@ import { SystemdBunCandidate, SystemdInstalledUnit, SystemdUnitDirective } from 
  *
  * ```ts
  * import { resolveOperatorPath } from "@beep/repo-cli/test/Systemd"
- * import { pipe } from "effect"
- *
+ * import { pipe } from "effect/Function";
  * console.log(resolveOperatorPath("~/tools/bun", "/home/op", (input) => input)) // /home/op/tools/bun
  * console.log(pipe("/usr/bin/bun", resolveOperatorPath("/home/op", (input) => input))) // /usr/bin/bun
  * ```
@@ -135,8 +136,8 @@ export const resolveUnitBunPath = Effect.fn("SystemdUnit.resolveUnitBunPath")(fu
  * ```ts
  * import { systemdUserUnitDir } from "@beep/repo-cli/test/Systemd"
  * import * as NodePath from "@effect/platform-node/NodePath"
- * import { Effect, Path } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Path from "effect/Path";
  * const program = Effect.map(Path.Path, (path) => systemdUserUnitDir(path, "/home/op"))
  * console.log(Effect.runSync(Effect.provide(program, NodePath.layer))) // /home/op/.config/systemd/user
  * ```

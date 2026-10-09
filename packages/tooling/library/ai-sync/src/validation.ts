@@ -8,11 +8,15 @@
 import { $AiSyncId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { O, Str } from "@beep/utils";
-import { Effect, FileSystem, Match, Path, SchemaIssue } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as Toml from "effect/encoding/Toml";
+import * as FileSystem from "effect/FileSystem";
+import * as Match from "effect/Match";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
 import { AiSyncError, AiSyncValidationResult, ValidateRepoConfig } from "./models.ts";
 import { ClaudeMcpJson, ClaudeSettings, CodexConfig, NormalizedAgentInstructionDocument } from "./schemas.ts";
 import type { AiSyncValidatedConfigPath, AiSyncValidationSchemaId, ValidateRepoConfigInput } from "./models.ts";
@@ -409,7 +413,7 @@ const validateRepoSafetyPolicyContent = Effect.fn("AiSync.validateRepoSafetyPoli
  *
  * ```ts
  * import * as NodeServices from "@effect/platform-node/NodeServices"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { validateRepoConfig } from "@beep/ai-sync"
  *
  * const program = validateRepoConfig({
@@ -455,7 +459,7 @@ export const validateRepoConfig = Effect.fn("AiSync.validateRepoConfig")(functio
  *
  * ```ts
  * import * as NodeServices from "@effect/platform-node/NodeServices"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { validateRepoSafetyPolicy } from "@beep/ai-sync"
  *
  * const program = validateRepoSafetyPolicy({
@@ -496,7 +500,7 @@ const validateRepoConfigWithSafetyPolicy = Effect.fn("AiSync.validateRepoConfigW
  *
  * ```ts
  * import * as NodeServices from "@effect/platform-node/NodeServices"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { validateDogfoodConfig } from "@beep/ai-sync"
  *
  * const program = validateDogfoodConfig("/workspace/repo").pipe(
@@ -523,7 +527,7 @@ export const validateDogfoodConfig = Effect.fn("AiSync.validateDogfoodConfig")(f
  *
  * ```ts
  * import * as NodeServices from "@effect/platform-node/NodeServices"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as A from "effect/Array"
  * import { validateDogfoodConfigs } from "@beep/ai-sync"
  *
@@ -554,7 +558,7 @@ export const validateDogfoodConfigs = Effect.fn("AiSync.validateDogfoodConfigs")
  *
  * ```ts
  * import * as NodeServices from "@effect/platform-node/NodeServices"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { defaultRepoRoot } from "@beep/ai-sync"
  *
  * const program = defaultRepoRoot().pipe(Effect.provide(NodeServices.layer))
@@ -578,7 +582,7 @@ export const defaultRepoRoot = Effect.fn("AiSync.defaultRepoRoot")(function* () 
  *
  * ```ts
  * import * as NodeServices from "@effect/platform-node/NodeServices"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { validateCurrentCheckoutDogfood } from "@beep/ai-sync"
  *
  * const program = validateCurrentCheckoutDogfood().pipe(
@@ -606,7 +610,7 @@ export const validateCurrentCheckoutDogfood = Effect.fn("AiSync.validateCurrentC
  *
  * ```ts
  * import * as NodeServices from "@effect/platform-node/NodeServices"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as A from "effect/Array"
  * import { validateCurrentCheckoutDogfoodConfigs } from "@beep/ai-sync"
  *

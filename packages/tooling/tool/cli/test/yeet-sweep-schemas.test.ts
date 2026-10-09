@@ -14,7 +14,8 @@ import {
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import { Effect, Exit } from "effect";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 
 const plan = SweepPlan.make({
@@ -112,7 +113,7 @@ describe("SweepPlan", () => {
           '{"schemaVersion":"yeet-sweep-plan/v1","createdAt":"2026-08-04T00:00:00.000Z","branch":"feat/merge-loop","steps":[{"id":"rm-rf-node-modules","action":"nope","preconditions":[],"requiresOperator":false}]}'
         )
       );
-      assertTrue(Exit.isFailure(exit));
+      exit.pipe(Exit.isFailure, assertTrue);
     })
   );
 });

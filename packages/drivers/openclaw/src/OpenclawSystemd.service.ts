@@ -12,8 +12,13 @@
  */
 
 import { $OpenclawId } from "@beep/identity";
-import { Context, Duration, Effect, Layer, Number as N, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as N from "effect/Number";
 import * as O from "effect/Option";
 import { ChildProcessSpawner } from "effect/process";
 import * as R from "effect/Record";
@@ -202,8 +207,7 @@ const makeService = (executable: string, runner: OpenclawCliRunner): OpenclawSys
  * import { OpenclawProcessResult } from "@beep/openclaw/Openclaw.models"
  * import { OpenclawSystemd } from "@beep/openclaw/OpenclawSystemd.service"
  * import type { OpenclawCliRunner } from "@beep/openclaw/OpenclawCli.service"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const runner: OpenclawCliRunner = () =>
  *   Effect.succeed(OpenclawProcessResult.make({ exitCode: 3, stderr: "", stdout: "inactive\n" }))
  *
@@ -258,8 +262,7 @@ export class OpenclawSystemd extends Context.Service<OpenclawSystemd, OpenclawSy
    * import { OpenclawProcessResult } from "@beep/openclaw/Openclaw.models"
    * import { OpenclawSystemd } from "@beep/openclaw/OpenclawSystemd.service"
    * import type { OpenclawCliRunner } from "@beep/openclaw/OpenclawCli.service"
-   * import { Effect } from "effect"
-   *
+   * import * as Effect from "effect/Effect";
    * const runner: OpenclawCliRunner = () =>
    *   Effect.succeed(OpenclawProcessResult.make({ exitCode: 0, stderr: "", stdout: "" }))
    *

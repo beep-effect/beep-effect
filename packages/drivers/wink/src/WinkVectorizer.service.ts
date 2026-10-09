@@ -9,12 +9,17 @@ import { $WinkId } from "@beep/identity";
 import { BagOfWords, DefaultBM25Config, DocumentVector, TermFrequency } from "@beep/nlp/Core/Vectorization";
 import { SchemaUtils } from "@beep/schema";
 import { A } from "@beep/utils";
-import { Chunk, Context, Effect, Inspectable, Layer, pipe, Ref } from "effect";
 import * as Bool from "effect/Boolean";
-import { dual } from "effect/Function";
+import * as Chunk from "effect/Chunk";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
+import * as Inspectable from "effect/Inspectable";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import { loadBM25Vectorizer, normalizeTokenText } from "./internal/bm25.ts";
 import { WinkStringArray } from "./Wink.models.ts";
@@ -61,7 +66,7 @@ const learnDocumentState = (
  * **Example** (Read scoped document terms)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import type { ScopedVectorizer } from "@beep/wink"
  *
  * const readFirstDocumentTerms = (scoped: ScopedVectorizer) =>
@@ -350,7 +355,7 @@ const makeWinkVectorizer = Effect.gen(function* () {
  * **Example** (Read vectorizer config)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { WinkEngineLive } from "@beep/wink"
  * import { WinkVectorizer, WinkVectorizerLive } from "@beep/wink"
  *
@@ -375,7 +380,8 @@ export class WinkVectorizer extends Context.Service<WinkVectorizer, WinkVectoriz
  * **Example** (Provide live vectorizer layer)
  *
  * ```ts
- * import { Effect, Layer } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * import { WinkEngineLive } from "@beep/wink"
  * import { WinkVectorizer, WinkVectorizerLive } from "@beep/wink"
  *

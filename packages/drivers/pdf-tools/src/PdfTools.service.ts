@@ -8,9 +8,14 @@
 
 import { $PdfToolsId } from "@beep/identity/packages";
 import { O, Str, thunkEmptyStr } from "@beep/utils";
-import { Context, Effect, FileSystem, Layer, Path, Stream } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import { PDFDocument } from "pdf-lib";
 import { measureP6 } from "./internal/ppm.ts";
 import { structureOf } from "./internal/structure.ts";
@@ -99,8 +104,7 @@ export class PdfToolsConfig extends S.Class<PdfToolsConfig>($I`PdfToolsConfig`)(
  *
  * ```ts
  * import type { PdfToolsShape } from "@beep/pdf-tools"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const service: PdfToolsShape = {
  *   svgToPdf: () => Effect.die("not implemented"),
  *   inspect: () => Effect.die("not implemented"),

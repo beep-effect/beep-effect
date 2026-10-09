@@ -15,7 +15,11 @@ import {
   SparqlSelectResult,
 } from "@beep/semantic-web/services/sparql-query";
 import { A, O, P, R } from "@beep/utils";
-import { Effect, Layer, Match, MutableHashMap, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as Str from "effect/String";
 import { OxigraphSparqlError } from "./Oxigraph.errors.ts";
 import type { SparqlQueryRequest, SparqlQueryResult } from "@beep/semantic-web/services/sparql-query";

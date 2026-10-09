@@ -7,11 +7,13 @@
 import { isResolvedPathWithinRoot } from "@beep/file-processing/PathSafety";
 import { findRepoRoot } from "@beep/repo-utils";
 import { O } from "@beep/utils";
-import { Effect, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
 import { Command, Flag } from "effect/cli";
 import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import * as F from "effect/Function";
+import * as Path from "effect/Path";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";

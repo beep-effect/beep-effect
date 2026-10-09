@@ -6,7 +6,9 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { Effect, FileSystem, Path } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { FilesCommandError, formatPlatformError } from "../Files.errors.ts";
 
@@ -54,8 +56,7 @@ export class StagedFileCommitRecord extends S.Class<StagedFileCommitRecord>($I`S
  * **Example** (Prepare target canonicalization)
  *
  * ```ts
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const operation = canonicalizeFileTargetPath("/tmp/report.json", "report path")
  * console.log(Effect.isEffect(operation))
  * // true
@@ -102,8 +103,7 @@ export const canonicalizeFileTargetPath = Effect.fn("Files.canonicalizeFileTarge
  * **Example** (Prepare a backup operation)
  *
  * ```ts
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const operation = backupStagedFileTarget({
  *   backedUp: false,
  *   backupPath: "/tmp/previous",
@@ -144,8 +144,7 @@ export const backupStagedFileTarget = Effect.fn("Files.backupStagedFileTarget")(
  * **Example** (Prepare a staged rename)
  *
  * ```ts
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const operation = commitStagedFileByRename(
  *   {
  *     backedUp: false,

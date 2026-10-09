@@ -11,10 +11,15 @@
 
 import { $SharedDomainId } from "@beep/identity";
 import { A, Str } from "@beep/utils";
-import { DateTime, Duration, Effect, Order as Ord, pipe, SchemaGetter, SchemaIssue } from "effect";
-import { dual } from "effect/Function";
+import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Ord from "effect/Order";
 import * as S from "effect/Schema";
+import * as SchemaGetter from "effect/SchemaGetter";
+import * as SchemaIssue from "effect/SchemaIssue";
 import { daysInGregorianMonth, isGregorianLeapYear } from "./LocalDate.calendar.ts";
 import * as LocalDate from "./LocalDate.model.ts";
 import type * as Ordering from "effect/Ordering";
@@ -78,7 +83,7 @@ export const makeOption = (input: CalendarParts): O.Option<LocalDate.Model> => L
  * **Example** (Effectful LocalDate construction)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { makeEffect } from "@beep/shared-domain/values/LocalDate"
  *
  * const iso = Effect.runSync(Effect.gen(function* () {
@@ -186,7 +191,7 @@ const LocalDateEquivalence = S.toEquivalence(LocalDate.Model);
  * **Example** (Parse ISO local date string)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { fromString } from "@beep/shared-domain/values/LocalDate"
  *
  * const month = Effect.runSync(Effect.gen(function* () {
@@ -258,7 +263,7 @@ export const today = (): LocalDate.Model => fromDateTime(DateTime.nowUnsafe());
  * **Example** (Today via Clock service)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { todayEffect } from "@beep/shared-domain/values/LocalDate"
  *
  * const program = Effect.gen(function* () {
@@ -685,7 +690,7 @@ export const daysInMonth: {
  * **Example** (Decode and encode ISO dates)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { LocalDateFromString } from "@beep/shared-domain/values/LocalDate"
  *

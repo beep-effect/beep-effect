@@ -2,9 +2,11 @@
 
 import { ANTHROPIC_DEFAULT_MODEL } from "@beep/anthropic";
 import { describe, expect } from "@effect/vitest";
-import { ConfigProvider, Effect, Layer } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as ConfigProvider from "effect/ConfigProvider";
 import { Command } from "effect/cli";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { CanaryCommand, CanaryOptions, CanaryStage } from "@/canary/Command";
@@ -23,7 +25,7 @@ const isCanaryStage = S.is(CanaryStage);
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
-import { pipe } from "effect";
+import { pipe } from "effect/Function";
 import { LabConfigLive } from "@/runtime/Config";
 import { CanaryC2 } from "@/services/CanaryC2";
 

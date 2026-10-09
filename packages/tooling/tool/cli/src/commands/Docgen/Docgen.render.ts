@@ -7,13 +7,15 @@
 
 import { DomainError } from "@beep/repo-utils";
 import { A, Str } from "@beep/utils";
-import { Console, Effect, pipe, Result } from "effect";
-import { dual } from "effect/Function";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { encodeCommandJson, renderPrettyCommandJson } from "../../internal/cli/Json.ts";
 import { printLines } from "../../internal/cli/Printer.ts";
-import type { Path } from "effect";
+import type * as Path from "effect/Path";
 import type {
   DocgenAggregateResult,
   DocgenExportAnalysis,

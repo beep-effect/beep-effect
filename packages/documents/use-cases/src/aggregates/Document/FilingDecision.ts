@@ -7,7 +7,8 @@
 
 import { DocumentContentDigest } from "@beep/documents-domain/aggregates/Document";
 import { $DocumentsUseCasesId } from "@beep/identity/packages";
-import { Context, Effect } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import type { FilingOutcome } from "@beep/documents-domain/aggregates/Document";
 import type { FilingDecisionUnavailable } from "./Document.errors.ts";
@@ -115,7 +116,7 @@ export class FilingDecisionInput extends S.Class<FilingDecisionInput>($I`FilingD
  * ```ts
  * import { FilingOutcome } from "@beep/documents-domain/aggregates/Document"
  * import type { FilingDecisionShape } from "@beep/documents-use-cases/aggregates/Document/server"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const service: FilingDecisionShape = {
@@ -145,8 +146,7 @@ export interface FilingDecisionShape {
  * import { FilingOutcome } from "@beep/documents-domain/aggregates/Document"
  * import { FilingDecision } from "@beep/documents-use-cases/aggregates/Document/server"
  * import type { FilingDecisionShape } from "@beep/documents-use-cases/aggregates/Document/server"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const service: FilingDecisionShape = {
  *   decide: () => Effect.succeed(FilingOutcome.make({
  *     kind: "inboxed",

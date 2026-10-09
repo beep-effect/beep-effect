@@ -9,8 +9,8 @@
 import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { practiceKgDocketCountryCodes } from "@beep/law-practice-use-cases/server";
-import { Effect } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { PracticeKgProjectionError } from "./PracticeKg.errors.ts";
 import { PracticeKgDocketReferenceRow, PracticeKgNumberMentionRow, withDuckDb } from "./PracticeKg.rows.ts";
@@ -119,7 +119,7 @@ export class PracticeKgReferenceScans extends S.Class<PracticeKgReferenceScans>(
  * **Example** (Scan a built bundle)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { readReferenceScans } from "../../src/PracticeKg.references.ts"
  *
  * const scans = readReferenceScans("/corpus/staging/practice-kg-bundle/practice.duckdb")

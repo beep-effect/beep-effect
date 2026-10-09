@@ -14,9 +14,14 @@ import {
   makeDocketFileStoreLayer,
 } from "@beep/law-practice-server/DocketIntake";
 import { DocketIntakeError, DocketPollOptions } from "@beep/law-practice-use-cases/DocketIntake";
-import { Console, DateTime, Duration, Effect, Layer, Schedule } from "effect";
+import * as Console from "effect/Console";
 import { Command, Flag } from "effect/cli";
+import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import { DocketIntakeAppConfigFromEnv } from "./Config.ts";
 import { DocketCycleReport, pollCycle, pollOnSchedule, seedCursor } from "./Cycle.ts";
@@ -27,8 +32,9 @@ import { DocketRunSelector, listRuns, undoDryRun, undoRun } from "./Undo.ts";
 import type { DocketIntakeJournal } from "@beep/law-practice-server/DocketIntake";
 import type { DocketIntake, DocketIntakeStore } from "@beep/law-practice-use-cases/DocketIntake";
 import type { M365 } from "@beep/m365";
-import type { FileSystem, Path } from "effect";
 import type * as Crypto from "effect/Crypto";
+import type * as FileSystem from "effect/FileSystem";
+import type * as Path from "effect/Path";
 import type { DocketIntakeAppConfig } from "./Config.ts";
 import type { DocketDryRunRecorder } from "./DryRun.ts";
 
@@ -138,7 +144,11 @@ const runWith = <A, E, R, ROut, E2, R2>(
   program: Effect.Effect<A, E, R>,
   layer: Layer.Layer<ROut, E2, R2>
 ): Effect.Effect<A, E | E2, Exclude<R, ROut> | R2> =>
-  Effect.scoped(Effect.flatMap(Layer.build(layer), (context) => Effect.provide(program, context)));
+  layer.pipe(
+    Layer.build,
+    Effect.flatMap((context) => Effect.provide(program, context)),
+    Effect.scoped
+  );
 
 // The start of a first run: `--since`, else DOCKET_INTAKE_START_AT, else now.
 const startOf = Effect.fnUntraced(function* (config: DocketIntakeAppConfig, flagged: O.Option<DateTime.Utc>) {
@@ -171,12 +181,11 @@ export const makeHandlers = <E1, R1, E2, R2, E3, R3>(wiring: DocketIntakeWiring<
   const withIntake = Effect.fnUntraced(function* (flagged: O.Option<DateTime.Utc>, program: IntakeProgram) {
     const config = yield* DocketIntakeAppConfigFromEnv;
     const startAt = yield* startOf(config, flagged);
-    yield* Effect.scoped(
-      Layer.build(
-        Layer.effectDiscard(Effect.andThen(seedCursor(startAt), program(config))).pipe(
-          Layer.provide(wiring.intake({ config, initialSince: startAt }))
-        )
-      )
+    yield* Effect.andThen(seedCursor(startAt), program(config)).pipe(
+      Layer.effectDiscard,
+      Layer.provide(wiring.intake({ config, initialSince: startAt })),
+      Layer.build,
+      Effect.scoped
     );
   });
 
@@ -223,8 +232,11 @@ export const makeHandlers = <E1, R1, E2, R2, E3, R3>(wiring: DocketIntakeWiring<
     }),
     smoke: Effect.fnUntraced(function* (flags: { readonly write: boolean }) {
       const config = yield* DocketIntakeAppConfigFromEnv;
-      yield* Effect.scoped(
-        Layer.build(Layer.effectDiscard(smoke(config, flags.write)).pipe(Layer.provide(wiring.mailbox(config))))
+      yield* smoke(config, flags.write).pipe(
+        Layer.effectDiscard,
+        Layer.provide(wiring.mailbox(config)),
+        Layer.build,
+        Effect.scoped
       );
     }),
     undo: Effect.fnUntraced(function* (flags: {

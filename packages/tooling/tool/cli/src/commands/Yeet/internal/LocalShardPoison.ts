@@ -6,8 +6,9 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { DateTime, Effect } from "effect";
 import * as A from "effect/Array";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { writeYeetAckReceipt, YeetAckFixResolution, YeetAckReceipt } from "./Ack.ts";
 import {
@@ -17,8 +18,9 @@ import {
   yeetLocalShardFailedRowId,
 } from "./Inbox.ts";
 import { loadYeetInboxView } from "./InboxView.ts";
-import type { FileSystem, Path } from "effect";
 import type * as Crypto from "effect/Crypto";
+import type * as FileSystem from "effect/FileSystem";
+import type * as Path from "effect/Path";
 import type { YeetCommandError } from "../Yeet.errors.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/LocalShardPoison");
@@ -65,8 +67,7 @@ export class YeetLocalShardOutcome extends S.Class<YeetLocalShardOutcome>($I`Yee
  *
  * ```ts
  * import { recordYeetLocalShardOutcome, YeetLocalShardOutcome } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const update = recordYeetLocalShardOutcome("/repo", YeetLocalShardOutcome.make({
  *   command: "bun run beep:check", exitCode: 0, headSha: "abc123", shard: "full:check"
  * }))

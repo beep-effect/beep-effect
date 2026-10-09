@@ -2,7 +2,13 @@ import { it } from "@beep/test-runner";
 import { provideScopedLayer } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
 import { assertExitFailure } from "@effect/vitest/utils";
-import { Cause, Context, Deferred, Effect, Fiber, Layer, Ref } from "effect";
+import * as Cause from "effect/Cause";
+import * as Context from "effect/Context";
+import * as Deferred from "effect/Deferred";
+import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
+import * as Layer from "effect/Layer";
+import * as Ref from "effect/Ref";
 
 class ExampleService extends Context.Service<ExampleService, { readonly value: string }>()(
   "@beep/test-utils/test/Layer.test/ExampleService"

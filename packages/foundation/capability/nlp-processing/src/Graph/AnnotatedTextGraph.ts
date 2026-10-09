@@ -35,8 +35,10 @@ import {
   TextNode,
 } from "@beep/nlp/Graph/Schema";
 import { A, O as OptionUtils, P } from "@beep/utils";
-import { Clock, Effect, Graph } from "effect";
+import * as Clock from "effect/Clock";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
+import * as Graph from "effect/Graph";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Backend from "../Backend/NLPBackend.ts";
@@ -362,7 +364,7 @@ class AnnotationOptions extends S.Class<AnnotationOptions>($I`AnnotationOptions`
  * **Example** (Build graph from document)
  *
  * ```ts import.meta.vitest name="Build graph from document"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { NLPBackend } from "@beep/nlp-processing/Backend/NLPBackend"
  * import { fromDocumentAnnotated } from "@beep/nlp-processing/Graph/AnnotatedTextGraph"
  * import { nodeCount } from "@beep/nlp-processing/Graph/AnnotatedTextGraph"

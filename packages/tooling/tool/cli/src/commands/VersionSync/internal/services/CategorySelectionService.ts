@@ -7,7 +7,9 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { A } from "@beep/utils";
-import { Context, Layer, Match } from "effect";
+import * as Context from "effect/Context";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import { VersionCategoryOptions } from "../../VersionSync.schemas.ts";
 import type { VersionCategory as VersionCategoryValue, VersionSyncOptions } from "../../VersionSync.schemas.ts";
 

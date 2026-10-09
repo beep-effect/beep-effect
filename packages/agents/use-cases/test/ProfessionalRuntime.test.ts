@@ -19,9 +19,11 @@ import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
-import { Effect, Ref, Result } from "effect";
+import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as O from "effect/Option";
+import * as Ref from "effect/Ref";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import type { PromotionGateRequest } from "@beep/shared-use-cases/PromotionGate";
 

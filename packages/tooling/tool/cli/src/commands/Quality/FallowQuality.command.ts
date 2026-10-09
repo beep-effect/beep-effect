@@ -8,11 +8,15 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
 import { Fn } from "@beep/schema";
-import { Console, DateTime, Effect, FileSystem, flow, Path, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
 import { Argument, Command, Flag } from "effect/cli";
-import { dual } from "effect/Function";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { dual, flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -1244,8 +1248,7 @@ const resolveBaseRef = Effect.fn("FallowQuality.resolveBaseRef")(function* (
  *
  * ```ts
  * import { collectAuditDiffInputForTesting } from "@beep/repo-cli/commands/Quality/FallowQuality.command"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const result = yield* collectAuditDiffInputForTesting(process.cwd(), "origin/main")
  *   return result.exitCode
@@ -2512,8 +2515,7 @@ const fallowFixPreviewCommand = makeFallowFeatureCommand("fix-preview");
  * ```ts
  * import { qualityFallowCommand } from "@beep/repo-cli/commands/Quality"
  * import { Command } from "effect/cli"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const run = Command.run(qualityFallowCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true
  * ```

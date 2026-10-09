@@ -9,7 +9,9 @@ import { $SemanticWebId } from "@beep/identity/packages";
 import { Dataset, Term } from "@beep/rdf/Rdf";
 import { makeSemanticSchemaMetadata } from "@beep/rdf/SemanticSchemaMetadata";
 import { LiteralKit } from "@beep/schema";
-import { Context, Effect, Layer } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 
 const $I = $SemanticWebId.create("services/sparql-query");
@@ -325,7 +327,7 @@ export interface SparqlQueryServiceShape {
  *
  * ```ts
  * import { strictEqual } from "node:assert"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import {
  *   SparqlAskResult,
@@ -369,7 +371,7 @@ export class SparqlQueryService extends Context.Service<SparqlQueryService, Spar
  *
  * ```ts
  * import { strictEqual } from "node:assert"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import {
  *   SparqlQueryRequest,

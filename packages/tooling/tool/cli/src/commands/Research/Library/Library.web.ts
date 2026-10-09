@@ -7,12 +7,15 @@
  */
 import { Firecrawl, FirecrawlScrapePayload } from "@beep/firecrawl";
 import { $RepoCliId } from "@beep/identity/packages";
-import { Effect, Layer, Path, Stream } from "effect";
+import * as Effect from "effect/Effect";
 import { HttpClient, HttpClientResponse } from "effect/http";
+import * as Layer from "effect/Layer";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { encodeLibraryJson, LibraryAdapterResult, runLibraryCommand, saveLibraryText } from "./Library.adapter.ts";
 import { LibraryError } from "./Library.errors.ts";
@@ -78,7 +81,7 @@ const readBoundedPaperBody = Effect.fn("Library.paper.readBoundedBody")(function
   const declaredLimit = pdfAllowed ? 50_000_000 : 5_000_000;
   const declared = S.decodeUnknownOption(S.FiniteFromString)(response.headers["content-length"]);
   if (O.isSome(declared) && declared.value > declaredLimit) {
-    yield* Effect.scoped(Stream.toPull(response.stream).pipe(Effect.asVoid));
+    yield* response.stream.pipe(Stream.toPull, Effect.asVoid, Effect.scoped);
     return yield* LibraryError.make({
       cause: "body-bound",
       message: `Paper HTTP body declared ${declared.value} bytes above the ${declaredLimit}-byte limit.`,
@@ -127,7 +130,7 @@ const ScrapedDocument = S.Struct({
  * **Example** (Require a successful matching scrape)
  * ```ts
  * import { validateLibraryScrape } from "@beep/repo-cli/commands/Research"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(validateLibraryScrape("https://example.org/report", {markdown: "Source text", metadata: {statusCode: 200, sourceURL: "https://example.org/report"}})))
  * ```
  *
@@ -165,7 +168,7 @@ export const validateLibraryScrape = Effect.fn("Library.validateScrape")(functio
  * ```ts
  * import { acquireLibraryWeb } from "@beep/repo-cli/test/ResearchLibrary"
  * import { classifyLibraryReference } from "@beep/repo-cli/commands/Research"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * const acquisition = classifyLibraryReference("https://example.org/report", "report").pipe(Effect.flatMap((source) => acquireLibraryWeb("/library", source, "captures/example")))
  * console.log(Effect.isEffect(acquisition))
  * ```
@@ -191,8 +194,10 @@ export const acquireLibraryWeb = Effect.fn("Library.acquireWeb")(function* (
   const provided = yield* Effect.serviceOption(Firecrawl);
   const success = yield* O.isSome(provided)
     ? request
-    : Effect.scoped(
-        Layer.build(Firecrawl.layer).pipe(Effect.flatMap((context) => request.pipe(Effect.provide(context))))
+    : Firecrawl.layer.pipe(
+        Layer.build,
+        Effect.flatMap((context) => request.pipe(Effect.provide(context))),
+        Effect.scoped
       );
   const response = yield* encodeLibraryJson(success);
   const raw = yield* saveLibraryText(root, `${prefix}/response.json`, response, "application/json", "raw-response");
@@ -275,7 +280,7 @@ export const acquireLibraryWeb = Effect.fn("Library.acquireWeb")(function* (
  * ```ts
  * import { acquireLibraryPaper } from "@beep/repo-cli/test/ResearchLibrary"
  * import { classifyLibraryReference } from "@beep/repo-cli/commands/Research"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * const acquisition = classifyLibraryReference("https://arxiv.org/abs/2610.00609", "report").pipe(Effect.flatMap((source) => acquireLibraryPaper("/library", source, "captures/example")))
  * console.log(Effect.isEffect(acquisition))
  * ```

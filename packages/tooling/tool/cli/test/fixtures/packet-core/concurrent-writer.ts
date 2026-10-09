@@ -15,10 +15,17 @@ import {
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { BunRuntime } from "@effect/platform-bun";
 import { NodeServices } from "@effect/platform-node";
-import { Console, Context, Duration, Effect, FileSystem, Layer, Path, Schedule } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
+import * as Console from "effect/Console";
+import * as Context from "effect/Context";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
+import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 

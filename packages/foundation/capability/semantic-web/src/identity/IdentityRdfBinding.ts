@@ -9,13 +9,16 @@ import { IdentityEntry } from "@beep/identity";
 import { $SemanticWebId } from "@beep/identity/packages";
 import { makeDataset, makeLiteral, makeNamedNode, makeQuad, NamedNode, ObjectTerm, Subject } from "@beep/rdf/Rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
-import { Effect, HashMap, pipe, Tuple } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
+import * as Tuple from "effect/Tuple";
 import type { Dataset, Quad } from "@beep/rdf/Rdf";
 import type * as SchemaAST from "effect/SchemaAST";
 
@@ -231,7 +234,7 @@ export class IdentityDatasetDecodeError extends S.TaggedError<IdentityDatasetDec
  * **Example** (Decode a registered entry's subject)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { IdentityEntry } from "@beep/identity"
  * import { decodeEntrySubject } from "@beep/semantic-web/identity/IdentityRdfBinding"
  *
@@ -426,8 +429,7 @@ const decodeSubject = Effect.fn("IdentityRdfBinding.decodeSubject")(function* (
  *
  * ```ts import.meta.vitest name="Encode an empty registry dataset"
  * import { DefaultIdentityRdfBinding, entriesToDataset } from "@beep/semantic-web"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const dataset = await Effect.runPromise(entriesToDataset(DefaultIdentityRdfBinding)([]))
  * dataset.quads.length // => 0
  * ```
@@ -481,8 +483,7 @@ export const entriesToDataset = (binding: IdentityRdfBinding) =>
  * ```ts import.meta.vitest name="Decode an empty registry dataset"
  * import { DefaultIdentityRdfBinding, datasetToEntries } from "@beep/semantic-web"
  * import { makeDataset } from "@beep/rdf/Rdf"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const entries = await Effect.runPromise(datasetToEntries(DefaultIdentityRdfBinding)(makeDataset([])))
  * entries.length // => 0
  * ```

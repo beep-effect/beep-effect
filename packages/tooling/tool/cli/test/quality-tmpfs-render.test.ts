@@ -1,7 +1,7 @@
 import { renderTmpfsReportLinesForTesting } from "@beep/repo-cli/test/Quality";
 import { TmpfsReapCandidate, TmpfsReapReport } from "@beep/repo-cli/test/RepoRun";
 import { describe, expect, it } from "@effect/vitest";
-import { pipe } from "effect";
+import { pipe } from "effect/Function";
 
 const report = TmpfsReapReport.make({
   scannedAt: "2026-08-30T12:00:00.000Z",

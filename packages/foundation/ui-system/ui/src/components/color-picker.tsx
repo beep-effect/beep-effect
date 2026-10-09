@@ -11,7 +11,7 @@ import { Button } from "@beep/ui/components/button";
 import { Input } from "@beep/ui/components/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@beep/ui/components/popover";
 import { make as makeScopedAtom, useAtom } from "@effect/atom-react";
-import { flow } from "effect";
+import { flow } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import { Atom } from "effect/reactivity";

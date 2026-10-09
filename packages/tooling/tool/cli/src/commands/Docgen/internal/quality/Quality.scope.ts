@@ -8,7 +8,8 @@
 import { DomainError, findRepoRoot } from "@beep/repo-utils";
 import { A } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Effect, flow, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import { flow, pipe } from "effect/Function";
 import * as Str from "effect/String";
 import { collectDirtyWorktreeFiles, runGitLines } from "../../../../internal/repo-run/ChangedFiles.ts";
 import {
@@ -83,7 +84,8 @@ const countSelectedScopes = (packageSelector: O.Option<string>, all: boolean, ch
  * import { FsUtilsLive } from "@beep/repo-utils"
  * import { resolveDocgenQualityTargets } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.scope"
  * import { BunServices } from "@effect/platform-bun"
- * import { Effect, Layer } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * import * as O from "effect/Option"
  *
  * const RuntimeLayer = FsUtilsLive.pipe(Layer.provideMerge(BunServices.layer))

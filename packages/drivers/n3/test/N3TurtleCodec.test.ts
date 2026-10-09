@@ -4,7 +4,7 @@ import { RDF_NAMESPACE } from "@beep/rdf/Vocab/Rdf";
 import { XSD_DOUBLE, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { it } from "@beep/test-runner";
 import { expect, vi } from "@effect/vitest";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { Writer } from "n3";
 import type * as N3 from "n3";

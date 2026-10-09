@@ -3,8 +3,10 @@ import { it } from "@beep/test-runner";
 import { Str } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
 import { assertExitFailure, assertTrue } from "@effect/vitest/utils";
-import { Effect, Exit, pipe } from "effect";
 import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import { pipe } from "effect/Function";
 import * as S from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
 
@@ -98,7 +100,7 @@ describe("Fn thunks", () => {
         error: S.String,
       });
       const impl = schema.implementEffect(() => Effect.die("boom"));
-      const cause = yield* Effect.flip(Effect.sandbox(impl()));
+      const cause = yield* impl().pipe(Effect.sandbox, Effect.flip);
 
       expect(Cause.hasDies(cause)).toBe(true);
       expect(Cause.hasFails(cause)).toBe(false);

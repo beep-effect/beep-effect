@@ -30,12 +30,17 @@ import {
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertSome, assertTrue } from "@effect/vitest/utils";
-import { Effect, Exit, Fiber, pipe, Queue, Result } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Fiber from "effect/Fiber";
+import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as N from "effect/Number";
 import * as O from "effect/Option";
+import * as Queue from "effect/Queue";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import { Atom, AtomRegistry } from "effect/reactivity";
 import * as S from "effect/Schema";
 import type { DockNode, DockWorkspace } from "@beep/dock";
@@ -165,7 +170,7 @@ describe("reactive title minima", () => {
       });
 
       const [minima, exit] = yield* settledAtomValue(minimaAtom, capture.completed);
-      assertTrue(Exit.isSuccess(exit));
+      exit.pipe(Exit.isSuccess, assertTrue);
       expect(minima).toEqual(titleMinima(metrics, workspace, chrome));
     })
   );
@@ -223,8 +228,8 @@ describe("reactive title minima", () => {
         infeasible.groupBoxAtom(groupOne),
         capture.completed
       );
-      assertTrue(Exit.isSuccess(feasibleExit));
-      assertTrue(Exit.isSuccess(infeasibleExit));
+      feasibleExit.pipe(Exit.isSuccess, assertTrue);
+      infeasibleExit.pipe(Exit.isSuccess, assertTrue);
       const feasibleBox = O.getOrThrow(feasibleValue);
       const infeasibleBox = O.getOrThrow(infeasibleValue);
       expect(feasibleBox.width).toBeGreaterThanOrEqual(requirement);

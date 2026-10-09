@@ -15,8 +15,7 @@ import { HttpsUrl, LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
 import { RunConfig } from "../Model/ExtractionRun.ts";
 import { BackgroundJobId } from "./JobSchema.ts";
-import { Effect } from "effect";
-
+import * as Effect from "effect/Effect";
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/Api");
 
 const SubmitJobSourceDefinition = S.TaggedUnion({

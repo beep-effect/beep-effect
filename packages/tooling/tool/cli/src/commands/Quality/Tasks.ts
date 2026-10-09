@@ -10,26 +10,22 @@ import { findRepoRoot, insertEndOfOptions } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import { A, Str, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import {
-  Console,
-  Crypto,
-  DateTime,
-  Duration,
-  Effect,
-  FileSystem,
-  flow,
-  Inspectable,
-  Match,
-  Order,
-  Path,
-  pipe,
-  Ref,
-} from "effect";
+import * as Console from "effect/Console";
+import * as Crypto from "effect/Crypto";
+import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
-import { dual } from "effect/Function";
+import * as FileSystem from "effect/FileSystem";
+import { dual, flow, pipe } from "effect/Function";
+import * as Inspectable from "effect/Inspectable";
+import * as Match from "effect/Match";
 import * as MutableHashMap from "effect/MutableHashMap";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import {
   canUseTurboCacheSecretSession,
@@ -130,8 +126,8 @@ import {
 } from "./Quality.schemas.ts";
 import type { DomainError, NoSuchFileError } from "@beep/repo-utils";
 import type { PgliteTestcontainerResource } from "@beep/test-utils";
-import type { Scope } from "effect";
 import type { ChildProcessSpawner } from "effect/process";
+import type * as Scope from "effect/Scope";
 import type { CaptureCommandTimedOutError } from "../../internal/process/index.ts";
 import type { CoverageBaselineRowDelta, CoverageScopeOwner } from "./internal/CoverageScope.ts";
 import type { FlakeQuarantineTask } from "./internal/FlakeQuarantine.ts";
@@ -963,8 +959,7 @@ const resolveCoverageTaskOptions = Effect.fn("QualityTasks.resolveCoverageTaskOp
  *
  * ```ts
  * import { validateCoverageTaskArgsForTesting } from "@beep/repo-cli/test/Quality"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(validateCoverageTaskArgsForTesting("/repo", ["--write-baseline"]))) // true
  * ```
  *
@@ -1421,7 +1416,7 @@ const runStepCapturedForQuarantine = Effect.fn("QualityTasks.runStepCapturedForQ
     bound: flakeQuarantineOutputBound,
     tee: true,
   }).pipe(
-    Effect.catchTag("CaptureCommandTimedOutError", (error) => Effect.succeed(capturedTimeoutResult(error))),
+    Effect.catchTag("CaptureCommandTimedOutError", (error) => error.pipe(capturedTimeoutResult, Effect.succeed)),
     QualityTaskConfigurationError.mapError(`Failed to spawn ${command}`)
   );
 
@@ -1987,12 +1982,12 @@ const resolveLaneInputDigestSource = Effect.fn("QualityTasks.resolveLaneInputDig
   }
   if (isWrapperLaneStep(outcome.step)) {
     return yield* O.match(ledger, {
-      onNone: () => Effect.succeed(unscopedLaneInputs(O.none())),
+      onNone: () => O.none().pipe(unscopedLaneInputs, Effect.succeed),
       onSome: (ledgerPath) => readLaneInputs(readTurboLaneLedger(ledgerPath)),
     });
   }
   return yield* O.match(directTurboTaskNames(outcome.step), {
-    onNone: () => Effect.succeed(unscopedLaneInputs(O.none())),
+    onNone: () => O.none().pipe(unscopedLaneInputs, Effect.succeed),
     onSome: (tasks) => readLaneInputs(readTurboLaneDigest(outcome.step.cwd, outcome.startedAt, tasks)),
   });
 });
@@ -2239,8 +2234,7 @@ const runStreamingStepGroup = Effect.fn("QualityTasks.runStreamingStepGroup")(fu
  *
  * ```ts
  * import { collectGithubCheckLaneWavesForTesting } from "@beep/repo-cli/test/Quality"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const report = collectGithubCheckLaneWavesForTesting("pre-push", [], "fail-fast").pipe(
  *   Effect.map(({ report: value }) => value)
  * )
@@ -2415,8 +2409,7 @@ const emitQualityTaskLaneRunReport = Effect.fn("QualityTasks.emitLaneRunReport")
  *
  * ```ts
  * import { runQualityTaskGithubCheckLaneWaves } from "@beep/repo-cli/commands/Quality/Tasks"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(runQualityTaskGithubCheckLaneWaves("pre-push", [], "fail-fast"))) // true
  * ```
  *
@@ -2511,7 +2504,7 @@ const collectResolvedStepOutput = Effect.fn("QualityTasks.collectResolvedStepOut
           timeout: captureTimeout,
         }),
   }).pipe(
-    Effect.catchTag("CaptureCommandTimedOutError", (error) => Effect.succeed(capturedTimeoutResult(error))),
+    Effect.catchTag("CaptureCommandTimedOutError", (error) => error.pipe(capturedTimeoutResult, Effect.succeed)),
     QualityTaskConfigurationError.mapError(`Failed to spawn ${command}`)
   );
 
@@ -2805,8 +2798,7 @@ export const sqlIntegrationStepForTesting: {
  *
  * ```ts
  * import { runSqlIntegrationTestLaneForTesting } from "@beep/repo-cli/commands/Quality"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = runSqlIntegrationTestLaneForTesting({
  *   acquireResource: Effect.die("provide a real SQL resource acquisition"),
  *   args: [],
@@ -3977,8 +3969,7 @@ export const collectStepOutput = (step: QualityTaskStep) =>
  *
  * ```ts
  * import { runQualityTaskStepGroup } from "@beep/repo-cli/commands/Quality"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(runQualityTaskStepGroup("lint", [], 1))) // true
  * ```
  *
@@ -3998,8 +3989,7 @@ export const runQualityTaskStepGroup = runStepGroup;
  *
  * ```ts
  * import { runQualityTaskStreamingStepGroup } from "@beep/repo-cli/commands/Quality"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(runQualityTaskStreamingStepGroup("lint", []))) // true
  * ```
  *
@@ -4018,8 +4008,7 @@ export const runQualityTaskStreamingStepGroup = runStreamingStepGroup;
  *
  * ```ts
  * import { collectGithubCheckLaneWavesForTesting } from "@beep/repo-cli/test/Quality"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(collectGithubCheckLaneWavesForTesting("pre-push", [], "fail-fast"))) // true
  * ```
  *
@@ -4052,8 +4041,7 @@ export const collectQualityTaskLaneRunsForTesting = collectQualityTaskLaneRuns;
  *
  * ```ts
  * import { runQualityTaskStepGroupForTesting } from "@beep/repo-cli/commands/Quality"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(runQualityTaskStepGroupForTesting("lint", [], 1))) // true
  * ```
  *
@@ -4073,8 +4061,7 @@ export const runQualityTaskStepGroupForTesting = runQualityTaskStepGroup;
  *
  * ```ts
  * import { runQualityTaskStreamingStepGroupForTesting } from "@beep/repo-cli/commands/Quality"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(runQualityTaskStreamingStepGroupForTesting("lint", []))) // true
  * ```
  *
@@ -4094,7 +4081,7 @@ export const runQualityTaskStreamingStepGroupForTesting = runQualityTaskStreamin
  * ```ts
  * import { recordTurboLaneLedgerRowForTesting } from "@beep/repo-cli/commands/Quality"
  * import { QualityTaskStep } from "@beep/repo-cli/commands/Quality"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const step = QualityTaskStep.make({ label: "lint", command: "bunx", args: ["turbo", "run", "lint"], cwd: "." })
@@ -4128,7 +4115,7 @@ export const recordTurboLaneLedgerRowForTesting = recordTurboLaneLedgerRow;
  *
  * ```ts
  * import { QualityTaskStep, resolveLaneInputDigestForTesting } from "@beep/repo-cli/commands/Quality"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const step = QualityTaskStep.make({ label: "lint", command: "bunx", args: ["turbo", "run", "lint"], cwd: "." })

@@ -3,8 +3,11 @@ import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { expect } from "@effect/vitest";
-import { Effect, FileSystem, HashSet, Path } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 
 const packageRoot = new URL("../", import.meta.url).pathname;
 

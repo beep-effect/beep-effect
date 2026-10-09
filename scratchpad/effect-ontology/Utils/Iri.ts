@@ -13,7 +13,10 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
-import { MutableHashMap, MutableHashSet, Number as N, SchemaGetter } from "effect";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
+import * as N from "effect/Number";
+import * as SchemaGetter from "effect/SchemaGetter";
 import * as A from "effect/Array";
 import { dual, flow, pipe } from "effect/Function";
 import * as O from "effect/Option";

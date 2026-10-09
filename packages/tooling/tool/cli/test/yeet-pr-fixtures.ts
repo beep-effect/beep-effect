@@ -3,7 +3,8 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
-import { DateTime, Layer } from "effect";
+import * as DateTime from "effect/DateTime";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import type { PrProvenanceHarness, PrProvenanceNameSource, PrProvenanceRole } from "@beep/repo-cli/test/Yeet";
 

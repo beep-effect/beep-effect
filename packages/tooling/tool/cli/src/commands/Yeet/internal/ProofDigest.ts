@@ -12,9 +12,12 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { Crypto, Effect, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
+import * as Crypto from "effect/Crypto";
+import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
+import * as FileSystem from "effect/FileSystem";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { concatBytes } from "../../../internal/cli/Bytes.ts";
@@ -119,8 +122,7 @@ export type ProofEpochComponents = Pick<
  *
  * ```ts
  * import { proofInputKey } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const key = proofInputKey({
  *   laneId: "coverage",
  *   commandDigest: "command",
@@ -158,8 +160,7 @@ export const proofInputKey = Effect.fn("Yeet.proofInputKey")(function* (
  *
  * ```ts
  * import { proofCommandDigest } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(proofCommandDigest("bun run check"))) // true
  * ```
  *
@@ -181,8 +182,7 @@ export const proofCommandDigest = Effect.fn("Yeet.proofCommandDigest")(function*
  *
  * ```ts
  * import { proofEpochDigest } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const digest = proofEpochDigest({
  *   lockfileDigest: "lock",
  *   bunVersion: "1.4.0",
@@ -229,8 +229,7 @@ export const proofEpochDigest = Effect.fn("Yeet.proofEpochDigest")(function* (
  *
  * ```ts
  * import { collectProofEpoch } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(collectProofEpoch("/repo"))) // true
  * ```
  *

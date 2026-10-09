@@ -4,13 +4,15 @@ import { fcRuns } from "@beep/test-utils";
 import { O } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
-import { Effect, Redacted, Ref } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as Headers from "effect/http/Headers";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as RateLimiter from "effect/persistence/RateLimiter";
+import * as Redacted from "effect/Redacted";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 
 const decodeApiTransportOptions = S.decodeEffect(ApiTransportOptions);

@@ -5,8 +5,8 @@
  * @since 0.0.0
  */
 
-import { Effect } from "effect";
 import * as Crypto from "effect/Crypto";
+import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import type * as PlatformError from "effect/PlatformError";
 

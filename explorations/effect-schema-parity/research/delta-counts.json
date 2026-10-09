@@ -188,7 +188,7 @@
     "examples": [
       "packages/documents/server/src/aggregates/Sync/VaultSyncEngine.service.ts:78:import * as ByteSize from \"effect/ByteSize\";",
       "packages/documents/server/src/aggregates/Sync/VaultSyncEngine.service.ts:495:        const size = yield* ByteSize.toNumber(info.size).pipe(",
-      "packages/tooling/tool/cli/test/restoration-archive-coverage.test.ts:14:import { ByteSize, Effect, FileSystem, HashMap, Layer, Path } from \"effect\";"
+      "packages/tooling/tool/cli/test/restoration-archive-coverage.test.ts:14:import { ByteSize, Effect, FileSystem, HashMap, Layer, Path } from \"<legacy-effect-barrel>\";"
     ]
   },
   "graph_proto": {

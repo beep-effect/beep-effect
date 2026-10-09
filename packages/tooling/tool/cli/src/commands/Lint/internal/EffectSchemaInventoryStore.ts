@@ -6,8 +6,13 @@
  */
 
 import { A, Str } from "@beep/utils";
-import { Effect, FileSystem, HashMap, HashSet, Inspectable, Path } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
+import * as Inspectable from "effect/Inspectable";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import { writeArtifact } from "../../../internal/artifacts/index.ts";
 import {
   decodeEffectSchemaInventoryRowJson,
@@ -57,8 +62,7 @@ const jsonlLines = (content: string): ReadonlyArray<string> => A.filter(Str.spli
  *
  * ```ts
  * import { readEffectSchemaInventoryFixture } from "@beep/repo-cli/commands/Lint"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(readEffectSchemaInventoryFixture(process.cwd()))) // true
  * ```
  *
@@ -88,8 +92,7 @@ export const readEffectSchemaInventoryFixture = Effect.fn("EffectSchemaInventory
  *
  * ```ts
  * import { EffectSchemaInventoryModules, readEffectSchemaInventoryModuleRows } from "@beep/repo-cli/commands/Lint"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const module = EffectSchemaInventoryModules[0]
  * console.log(module !== undefined && Effect.isEffect(readEffectSchemaInventoryModuleRows(process.cwd(), module))) // true
  * ```
@@ -207,8 +210,7 @@ const swapFixture = Effect.fn("EffectSchemaInventoryStore.swapFixture")(function
  * ```ts
  * import { EffectSchemaInventoryReceipt, EffectSchemaInventoryRendered, writeEffectSchemaInventoryFixture } from "@beep/repo-cli/commands/Lint"
  * import { Sha256Hex } from "@beep/schema/Sha256"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const receipt = EffectSchemaInventoryReceipt.make({
  *   pin: "df77fff9396fe31de72d1947ecb5b74f8cee89e1",
  *   parser: "6.0.2",

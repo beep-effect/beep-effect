@@ -15,9 +15,14 @@ import {
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
-import { Effect, Layer, Match, pipe, Sink, Stream } from "effect";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import { HttpClient, HttpClientError, HttpClientRequest, HttpClientResponse } from "effect/http";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
+import * as Sink from "effect/Sink";
+import * as Stream from "effect/Stream";
 
 const provPath = OntologyFilePath.make("ontology.prov.ttl");
 const sidecar = "@prefix prov: <http://www.w3.org/ns/prov#> .\nex:x a prov:Entity .\n";

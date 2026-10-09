@@ -10,7 +10,13 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { Clock, Context, Deferred, Effect, HashMap, Layer, Ref } from "effect";
+import * as Clock from "effect/Clock";
+import * as Context from "effect/Context";
+import * as Deferred from "effect/Deferred";
+import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
+import * as Layer from "effect/Layer";
+import * as Ref from "effect/Ref";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { ErrorMessage, OptionalErrorCause } from "../Domain/Error/Base.ts";
@@ -70,7 +76,7 @@ export interface ExecutionHandle {
  * **Example** (Share an in-flight handle)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { makeExecutionDeduplicator } from "@effect-ontology/Service/ExecutionDeduplicator"
  *
  * const reused = Effect.runSync(
@@ -167,7 +173,7 @@ export const makeExecutionDeduplicator = Effect.gen(function* () {
  * **Example** (Reuse a running extraction)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { ExecutionDeduplicator } from "@effect-ontology/Service/ExecutionDeduplicator"
  *
  * const reused = Effect.runSync(
@@ -196,7 +202,7 @@ export class ExecutionDeduplicator extends Context.Service<ExecutionDeduplicator
  * **Example** (Provide the live deduplicator)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { ExecutionDeduplicator, ExecutionDeduplicatorLive } from "@effect-ontology/Service/ExecutionDeduplicator"
  *
  * const created = Effect.runSync(

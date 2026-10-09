@@ -26,7 +26,7 @@ import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
-import { pipe } from "effect";
+import { pipe } from "effect/Function";
 import * as N from "effect/Number";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";

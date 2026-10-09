@@ -6,8 +6,8 @@
  */
 import { $DockId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Tuple } from "effect";
 import * as S from "effect/Schema";
+import * as Tuple from "effect/Tuple";
 import { DockCommandEnvelope, RestoreSnapshotRequest } from "./Dock.commands.ts";
 import {
   DockCommandRejected,

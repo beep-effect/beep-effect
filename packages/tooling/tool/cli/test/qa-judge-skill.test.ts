@@ -5,9 +5,13 @@ import { provideScopedLayer } from "@beep/test-utils";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, vi } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Path, Result } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as Result from "effect/Result";
 
 const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 const expectedMarkdown = Result.getOrThrow(renderSkillMarkdown(QaJudgeContract));

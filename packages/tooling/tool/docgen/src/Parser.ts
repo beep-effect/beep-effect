@@ -8,9 +8,12 @@
 import { $RepoDocgenId } from "@beep/identity/packages";
 import { A, Str, thunkEmptyStr } from "@beep/utils";
 import * as doctrine from "doctrine";
-import { Context, Effect, flow, Layer, Path, pipe } from "effect";
-import { dual } from "effect/Function";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import { dual, flow, pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -21,14 +24,13 @@ import * as Domain from "./Domain.ts";
 const $I = $RepoDocgenId.create("Parser");
 
 const withSource = <A, E, R>(source: SourceShape, effect: Effect.Effect<A, E, R | Source>) =>
-  Effect.scoped(
-    Layer.build(Source.layer(source)).pipe(
-      Effect.flatMap(
-        Effect.fnUntraced(function* (context) {
-          return yield* effect.pipe(Effect.provide(context));
-        })
-      )
-    )
+  Layer.build(Source.layer(source)).pipe(
+    Effect.flatMap(
+      Effect.fnUntraced(function* (context) {
+        return yield* effect.pipe(Effect.provide(context));
+      })
+    ),
+    Effect.scoped
   );
 
 /**
@@ -216,7 +218,7 @@ const parseInterfaceDeclarations = (interfaces: ReadonlyArray<ast.InterfaceDecla
  *
  * ```ts
  * import { parseInterfaces, Source, SourceShape } from "@beep/repo-docgen/Parser"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { Project } from "ts-morph"
  *
  * const project = new Project({ useInMemoryFileSystem: true })
@@ -338,7 +340,7 @@ const getFunctionDeclarations = Effect.gen(function* () {
  *
  * ```ts
  * import { parseFunctions, Source, SourceShape } from "@beep/repo-docgen/Parser"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { Project } from "ts-morph"
  *
  * const project = new Project({ useInMemoryFileSystem: true })
@@ -389,7 +391,7 @@ const parseTypeAliasDeclarations = (typeAliases: ReadonlyArray<ast.TypeAliasDecl
  *
  * ```ts
  * import { parseTypeAliases, Source, SourceShape } from "@beep/repo-docgen/Parser"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { Project } from "ts-morph"
  *
  * const project = new Project({ useInMemoryFileSystem: true })
@@ -434,7 +436,7 @@ const parseConstantVariableDeclaration = Effect.fn("parseConstantVariableDeclara
  *
  * ```ts
  * import { parseConstants, Source, SourceShape } from "@beep/repo-docgen/Parser"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { Project } from "ts-morph"
  *
  * const project = new Project({ useInMemoryFileSystem: true })
@@ -536,7 +538,7 @@ const parseNamedExports = (ed: ast.ExportDeclaration): Effect.Effect<Array<Domai
  *
  * ```ts
  * import { parseExports, Source, SourceShape } from "@beep/repo-docgen/Parser"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { Project } from "ts-morph"
  *
  * const project = new Project({ useInMemoryFileSystem: true })
@@ -598,7 +600,7 @@ const parseModuleDeclarations = (namespaces: ReadonlyArray<ast.ModuleDeclaration
  *
  * ```ts
  * import { parseNamespaces, Source, SourceShape } from "@beep/repo-docgen/Parser"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { Project } from "ts-morph"
  *
  * const project = new Project({ useInMemoryFileSystem: true })
@@ -784,7 +786,7 @@ const parseClass = Effect.fn("parseClass")(function* (c: ast.ClassDeclaration) {
  *
  * ```ts
  * import { parseClasses, Source, SourceShape } from "@beep/repo-docgen/Parser"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { Project } from "ts-morph"
  *
  * const project = new Project({ useInMemoryFileSystem: true })
@@ -842,7 +844,7 @@ export const parseModuleDocumentation = Source.pipe(
  *
  * ```ts
  * import { parseModule, Source, SourceShape } from "@beep/repo-docgen/Parser"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { Project } from "ts-morph"
  *
  * const project = new Project({ useInMemoryFileSystem: true })

@@ -28,7 +28,7 @@ const encodeSerializedEditorStateJson = S.encodeEffect(S.fromJsonString(Serializ
 
 import { it } from "@beep/test-runner";
 import { assertSome, assertTrue } from "@effect/vitest/utils";
-import { pipe } from "effect";
+import { pipe } from "effect/Function";
 import { $getRoot, $setState, createState } from "lexical";
 
 const text = (value: string) => MdModel.Text.make({ value });

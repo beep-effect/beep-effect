@@ -7,7 +7,8 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { Context, Effect } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 export { CliReportedExit } from "./ExitCodeError.ts";
@@ -98,8 +99,7 @@ interface StdinDocumentMessages {
  *
  * ```ts
  * import { readStdinDocument } from "@beep/repo-cli/internal/cli/Stdin"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const read = readStdinDocument(false, {
  *   missingFlag: "requires --from-stdin",
  *   noStdin: "received no stdin",

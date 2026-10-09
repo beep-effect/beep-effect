@@ -1,5 +1,6 @@
-import { Console, Effect } from "effect";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import { CiOpsKpi } from "@/kpi/CiOpsKpi";
 import { kpiOutputPaths, kpiReadingInput } from "@/kpi/Pins";

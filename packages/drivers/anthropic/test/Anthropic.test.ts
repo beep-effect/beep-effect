@@ -13,11 +13,15 @@ import {
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
-import { Config, ConfigProvider, Effect, Layer, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import { AiError } from "effect/ai";
 import * as LanguageModel from "effect/ai/LanguageModel";
+import * as Config from "effect/Config";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
@@ -99,18 +103,18 @@ describe("@beep/anthropic", () => {
 
       expect(
         sameApproximatePrice(
-          Result.getOrThrow(decodeApproximatePrice(Result.getOrThrow(encodeApproximatePrice(price)))),
+          encodeApproximatePrice(price).pipe(Result.getOrThrow, decodeApproximatePrice, Result.getOrThrow),
           price
         )
       ).toBe(true);
       expect(
         sameLanguageModelOptions(
-          Result.getOrThrow(decodeLanguageModelOptions(Result.getOrThrow(encodeLanguageModelOptions(options)))),
+          encodeLanguageModelOptions(options).pipe(Result.getOrThrow, decodeLanguageModelOptions, Result.getOrThrow),
           options
         )
       ).toBe(true);
       expect(
-        sameRepairError(Result.getOrThrow(decodeRepairError(Result.getOrThrow(encodeRepairError(error)))), error)
+        sameRepairError(error.pipe(encodeRepairError, Result.getOrThrow, decodeRepairError, Result.getOrThrow), error)
       ).toBe(true);
     },
     { arbitrary: fcRuns(50) }

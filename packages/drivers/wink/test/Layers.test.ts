@@ -2,7 +2,7 @@ import { tokenCount } from "@beep/nlp-processing/Core/Tokenization";
 import { it } from "@beep/test-runner";
 import { WinkEngine, WinkLayerAllLive } from "@beep/wink";
 import { describe, expect } from "@effect/vitest";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 
 describe("Layers", () => {
   it.layer(WinkLayerAllLive)("provides the wink driver bundle with engine and tokenization access", (it) => {

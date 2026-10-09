@@ -7,7 +7,8 @@
  */
 
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { Effect, Layer } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import { PosInt } from "../internal/PosInt.ts";
 import { MatterContactEvidence, MatterContactEvidenceSetting } from "./MailTagging.correspondents.ts";
@@ -30,8 +31,9 @@ import type {
   MailTaggingUndo,
 } from "@beep/law-practice-use-cases/MailTagging";
 import type { M365 } from "@beep/m365";
-import type { FileSystem, Path } from "effect";
 import type * as Crypto from "effect/Crypto";
+import type * as FileSystem from "effect/FileSystem";
+import type * as Path from "effect/Path";
 
 const $I = $LawPracticeServerId.create("MailTagging/MailTagging.service");
 

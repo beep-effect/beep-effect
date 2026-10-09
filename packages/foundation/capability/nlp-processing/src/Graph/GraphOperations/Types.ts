@@ -22,10 +22,14 @@
 import { $NlpProcessingId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A } from "@beep/utils";
-import { Clock, Duration, Effect, Random, Tuple } from "effect";
+import * as Clock from "effect/Clock";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
+import * as Random from "effect/Random";
 import * as S from "effect/Schema";
+import * as Tuple from "effect/Tuple";
 import type { GraphNode } from "../EffectGraph.ts";
 
 const $I = $NlpProcessingId.create("Graph/GraphOperations/Types");
@@ -249,7 +253,7 @@ export type Complexity = typeof Complexity.Type;
  * **Example** (Make constant operation cost)
  *
  * ```ts import.meta.vitest name="Make constant operation cost"
- * import { Duration } from "effect"
+ * import * as Duration from "effect/Duration";
  * import { ConstantOperationCost } from "@beep/nlp-processing/Graph/GraphOperations/Types"
  *
  * const cost = ConstantOperationCost.make({
@@ -289,7 +293,7 @@ export class ConstantOperationCost extends S.Class<ConstantOperationCost>($I`Con
  * **Example** (Make linear operation cost)
  *
  * ```ts import.meta.vitest name="Make linear operation cost"
- * import { Duration } from "effect"
+ * import * as Duration from "effect/Duration";
  * import { LinearOperationCost } from "@beep/nlp-processing/Graph/GraphOperations/Types"
  *
  * const cost = LinearOperationCost.make({
@@ -329,7 +333,7 @@ export class LinearOperationCost extends S.Class<LinearOperationCost>($I`LinearO
  * **Example** (Make linearithmic operation cost)
  *
  * ```ts import.meta.vitest name="Make linearithmic operation cost"
- * import { Duration } from "effect"
+ * import * as Duration from "effect/Duration";
  * import { LinearithmicOperationCost } from "@beep/nlp-processing/Graph/GraphOperations/Types"
  *
  * const cost = LinearithmicOperationCost.make({
@@ -369,7 +373,7 @@ export class LinearithmicOperationCost extends S.Class<LinearithmicOperationCost
  * **Example** (Make quadratic operation cost)
  *
  * ```ts import.meta.vitest name="Make quadratic operation cost"
- * import { Duration } from "effect"
+ * import * as Duration from "effect/Duration";
  * import { QuadraticOperationCost } from "@beep/nlp-processing/Graph/GraphOperations/Types"
  *
  * const cost = QuadraticOperationCost.make({
@@ -415,7 +419,7 @@ export class QuadraticOperationCost extends S.Class<QuadraticOperationCost>($I`Q
  * **Example** (Scale linear cost by leaves)
  *
  * ```ts import.meta.vitest name="Scale linear cost by leaves"
- * import { Duration } from "effect"
+ * import * as Duration from "effect/Duration";
  * import { OperationCost } from "@beep/nlp-processing/Graph/GraphOperations/Types"
  *
  * const cost = OperationCost.cases["O(n)"].make({
@@ -479,7 +483,7 @@ export const OperationCost = Complexity.mapMembers(
  * **Example** (Type constant operation cost)
  *
  * ```ts import.meta.vitest name="Type constant operation cost"
- * import { Duration } from "effect"
+ * import * as Duration from "effect/Duration";
  * import { OperationCost } from "@beep/nlp-processing/Graph/GraphOperations/Types"
  *
  * const cost: OperationCost = OperationCost.cases["O(1)"].make({
@@ -717,7 +721,7 @@ export type ExecutionId = typeof ExecutionId.Type;
  * **Example** (Generate fresh execution id)
  *
  * ```ts import.meta.vitest name="Generate fresh execution id"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { generateExecutionId } from "@beep/nlp-processing/Graph/GraphOperations/Types"
  *
  * const program = Effect.map(generateExecutionId, (id) => id.startsWith("exec-"))
@@ -776,7 +780,7 @@ export interface OperationResult<B, E> {
  * **Example** (Stamp result with clock time)
  *
  * ```ts import.meta.vitest name="Stamp result with clock time"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { ExecutionId, ExecutionMetrics, makeOperationResult } from "@beep/nlp-processing/Graph/GraphOperations/Types"
  *
  * const program = makeOperationResult(ExecutionId.make("exec-example"), {

@@ -8,10 +8,13 @@
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import { Str, thunkEmptyStr } from "@beep/utils";
-import { Effect, FileSystem, Path, Stream } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
+import * as Path from "effect/Path";
 import { ChildProcess } from "effect/process";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import { DomainError } from "../errors/index.ts";
 import { findRepoRoot } from "../Root.ts";
 import type { ChildProcessSpawner } from "effect/process";
@@ -41,7 +44,7 @@ const collectText = <E>(stream: Stream.Stream<Uint8Array, E>) =>
  *
  * ```ts
  * import { NodeServices } from "@effect/platform-node"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { renderBiomeJson } from "@beep/repo-utils/schemas/BiomeJson"
  * const formatted = await Effect.runPromise(
  *   renderBiomeJson("package.json", { name: "@beep/example", private: true }).pipe(

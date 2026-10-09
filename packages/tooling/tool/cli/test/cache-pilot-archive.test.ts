@@ -4,7 +4,7 @@ import { inspectCacheSignedPilotArchive } from "@beep/repo-cli/test/Cache";
 import { NodeCrypto } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as Redacted from "effect/Redacted";
 import * as Result from "effect/Result";
 import { Header } from "tar";

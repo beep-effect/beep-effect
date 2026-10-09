@@ -14,7 +14,8 @@
 
 import * as Pg from "@effect/sql-pg/PgClient";
 import * as Pglite from "@effect/sql-pglite/PgliteClient";
-import { Effect, Layer } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import { PgliteError } from "./Pglite.errors.ts";
 import type * as Reactivity from "effect/reactivity/Reactivity";
 import type * as Scope from "effect/Scope";

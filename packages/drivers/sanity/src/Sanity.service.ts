@@ -8,18 +8,21 @@
 import { $SanityId } from "@beep/identity";
 import { URLStr } from "@beep/schema";
 import * as O from "@beep/utils/Option";
-import { Config, Context, Effect, Layer, pipe } from "effect";
-import { dual } from "effect/Function";
+import * as Config from "effect/Config";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
 import { FetchHttpClient } from "effect/http";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
+import * as Layer from "effect/Layer";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { SanityConfigInput } from "./Sanity.config.ts";
 import { SanityError } from "./Sanity.errors.ts";
-import type { Redacted as RedactedType } from "effect";
 import type * as HttpClientError from "effect/http/HttpClientError";
 import type * as HttpClientResponse from "effect/http/HttpClientResponse";
+import type * as RedactedType from "effect/Redacted";
 
 const $I = $SanityId.create("Sanity.service");
 
@@ -153,8 +156,7 @@ export class SanityQueryResponse extends S.Class<SanityQueryResponse>($I`SanityQ
  *
  * ```ts
  * import { SanityQueryResponse, type SanityShape } from "@beep/sanity"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const service: SanityShape = {
  *   fetch: () => Effect.succeed(SanityQueryResponse.make({ result: [] }))
  * }
@@ -341,7 +343,8 @@ const makeService = (client: HttpClient.HttpClient, config: ResolvedSanityConfig
  *
  * ```ts
  * import { Sanity, SanityConfigInput, SanityQueryRequest } from "@beep/sanity"
- * import { Effect, Layer } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * import { FetchHttpClient } from "effect/http"
  *
  * const layer = Sanity.makeLayer(
@@ -370,7 +373,7 @@ export class Sanity extends Context.Service<Sanity, SanityShape>()($I`Sanity`) {
    *
    * ```ts
    * import { Sanity, SanityConfigInput } from "@beep/sanity"
-   * import { Layer } from "effect"
+   * import * as Layer from "effect/Layer";
    * import { FetchHttpClient } from "effect/http"
    *
    * const layer = Sanity.makeLayer(
@@ -403,8 +406,7 @@ export class Sanity extends Context.Service<Sanity, SanityShape>()($I`Sanity`) {
    *
    * ```ts
    * import { Sanity } from "@beep/sanity"
-   * import { Layer } from "effect"
-   *
+   * import * as Layer from "effect/Layer";
    * console.log(Layer.isLayer(Sanity.layer)) // true
    * ```
    *

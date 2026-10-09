@@ -8,7 +8,7 @@
 import { $SharedDomainId } from "@beep/identity/packages";
 import { Slug } from "@beep/schema";
 import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as Shared from "../../identity/Shared/index.ts";
 import { LicenseTier, Settings } from "./Organization.values.ts";

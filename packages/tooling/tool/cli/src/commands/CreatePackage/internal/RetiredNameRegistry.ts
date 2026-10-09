@@ -15,7 +15,9 @@
 
 import { DomainError } from "@beep/repo-utils";
 import { A, Str } from "@beep/utils";
-import { Effect, FileSystem, Path } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { RETIRED_REGISTRY_PATH, RetiredPackagesRegistry } from "../../../internal/cli/Labs/index.ts";
 
@@ -35,8 +37,7 @@ const encodeRegistryJson = S.encodeEffect(RetiredPackagesRegistryFromJsonString)
  *
  * ```ts
  * import { removeRetiredPackageName } from "@beep/repo-cli/commands/CreatePackage/internal/RetiredNameRegistry"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = removeRetiredPackageName("/repo", "@beep/probe")
  * console.log(Effect.isEffect(program)) // true
  * ```

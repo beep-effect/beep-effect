@@ -8,11 +8,15 @@ import { $UiId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, O, Str } from "@beep/utils";
 import { useAtom, useAtomInitialValues, useAtomSet, useAtomSubscribe, useAtomValue } from "@effect/atom-react";
-import { Effect, flow, Match, pipe, SchemaIssue, SchemaTransformation, Tuple } from "effect";
-import { constVoid, dual, identity } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { constVoid, dual, flow, identity, pipe } from "effect/Function";
+import * as Match from "effect/Match";
 import * as P from "effect/Predicate";
 import { Atom } from "effect/reactivity";
 import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
+import * as SchemaTransformation from "effect/SchemaTransformation";
+import * as Tuple from "effect/Tuple";
 import { useId, useRef } from "react";
 import { useSpinner } from "./useSpinner";
 import type React from "react";
@@ -516,7 +520,7 @@ export const numberToString: {
  * **Example** (Apply the data-last form in a pipe)
  *
  * ```ts import.meta.vitest name="Apply the data-last form in a pipe"
- * import { pipe } from "effect"
+ * import { pipe } from "effect/Function";
  * import { getStepFactor } from "@beep/ui/hooks/useNumberInput"
  *
  * const factor = pipe({ metaKey: true }, getStepFactor(5, { precision: 2 }))

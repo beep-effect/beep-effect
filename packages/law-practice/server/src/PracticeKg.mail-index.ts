@@ -9,9 +9,13 @@
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { extractPracticeKgReferences } from "@beep/law-practice-use-cases/server";
 import { rfc5322DateFromOutlookTimestamp } from "@beep/libpff";
-import { DateTime, Effect, MutableHashSet, Order, pipe } from "effect";
 import * as A from "effect/Array";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { readJsonlLines } from "./internal/Jsonl.ts";
@@ -23,7 +27,7 @@ import {
 import { PracticeKgProjectionError } from "./PracticeKg.errors.ts";
 import { PracticeKgDocumentAttribution } from "./PracticeKg.families.ts";
 import { matchPracticeKgMatterReferences, PracticeKgMatterTables } from "./PracticeKg.matters.ts";
-import type { FileSystem } from "effect";
+import type * as FileSystem from "effect/FileSystem";
 import type { PracticeKgEmailParticipant } from "./PracticeKg.correspondents.ts";
 
 const $I = $LawPracticeServerId.create("PracticeKg.mail-index");
@@ -582,8 +586,7 @@ const readIndexFile = (path: string) =>
  *
  * ```ts
  * import { PracticeKgMailIndexInput, PracticeKgMatterTables, readPracticeKgMailIndex } from "@beep/law-practice-server"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const read = readPracticeKgMailIndex(
  *   PracticeKgMailIndexInput.make({ paths: [], tables: PracticeKgMatterTables.make({ dockets: [], matters: [] }) })
  * )

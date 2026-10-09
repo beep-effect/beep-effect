@@ -7,9 +7,11 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { Effect, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { XMLParser } from "fast-xml-parser";
@@ -58,7 +60,7 @@ export class LibraryProbeEvidence extends S.Class<LibraryProbeEvidence>($I`Libra
  * **Example** (Prepare source-bound verification)
  * ```ts
  * import { libraryArtifactsValid } from "@beep/repo-cli/test/ResearchLibrary"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(libraryArtifactsValid("/library", [])))
  * ```
  *
@@ -134,7 +136,7 @@ const validateQualificationProbe = Effect.fn("Library.validateQualificationProbe
  * ```ts
  * import { libraryQualificationValid } from "@beep/repo-cli/test/ResearchLibrary"
  * import { LibraryCatalog, LibraryQualification } from "@beep/repo-cli/commands/Research"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * const catalog = LibraryCatalog.make({schema: "beep.research.library/v1", documents: [], sources: [], occurrences: [], captures: [], qualifications: []})
  * const receipt = LibraryQualification.make({id: "probe", adapter: "paper", status: "failed", required: true, recordedAt: "2026-10-06T00:00:00Z", evidence: [], reason: "No source-bound probe evidence"})
  * console.log(Effect.isEffect(libraryQualificationValid("/library", catalog, receipt)))

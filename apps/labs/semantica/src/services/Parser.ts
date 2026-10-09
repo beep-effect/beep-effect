@@ -1,6 +1,6 @@
 import { $SemanticaId } from "@beep/identity/packages";
-import { Context } from "effect";
-import type { Effect } from "effect";
+import * as Context from "effect/Context";
+import type * as Effect from "effect/Effect";
 import type { SourceDocument } from "@/schema/Document";
 import type { ParseOutcome } from "@/schema/Text";
 
@@ -23,8 +23,7 @@ interface ParserShape {
  *
  * ```ts
  * import { Parser } from "@/services/Parser"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(Parser)) // true
  * ```
  *

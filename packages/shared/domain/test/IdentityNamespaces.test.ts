@@ -4,7 +4,8 @@ import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
-import { Effect, Exit } from "effect";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import { cast } from "effect/Function";
 import * as S from "effect/Schema";
 import { hasFunctionStatic } from "./StaticProbes.ts";
@@ -381,7 +382,7 @@ const specs = [
 
 const expectFailure = Effect.fn("expectFailure")(function* <A, E>(effect: Effect.Effect<A, E, never>) {
   const exit = yield* Effect.exit(effect);
-  assertTrue(Exit.isFailure(exit));
+  exit.pipe(Exit.isFailure, assertTrue);
 });
 const codecStaticKeys = [
   "decodeEffect",

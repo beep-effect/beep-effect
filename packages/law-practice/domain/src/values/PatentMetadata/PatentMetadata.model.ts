@@ -8,8 +8,11 @@
 
 import { $LawPracticeDomainId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Effect, flow, Match, Number as N, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import { flow, pipe } from "effect/Function";
+import * as Match from "effect/Match";
+import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";

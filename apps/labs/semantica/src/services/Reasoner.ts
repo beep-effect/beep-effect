@@ -1,6 +1,6 @@
 import { $SemanticaId } from "@beep/identity/packages";
-import { Context } from "effect";
-import type { Effect } from "effect";
+import * as Context from "effect/Context";
+import type * as Effect from "effect/Effect";
 import type { ReasoningFailed } from "@/schema/Errors";
 import type { RdfStatement, ReasoningResult } from "@/schema/Reasoning";
 
@@ -18,8 +18,7 @@ interface ReasonerShape {
  *
  * ```ts
  * import { Reasoner } from "@/services/Reasoner"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Reasoner.pipe(Effect.map((service) => typeof service.close))
  * console.log(Effect.isEffect(program)) // true
  * ```

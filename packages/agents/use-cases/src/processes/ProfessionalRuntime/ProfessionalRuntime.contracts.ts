@@ -7,7 +7,7 @@
 
 import { $AgentsUseCasesId } from "@beep/identity/packages";
 import { EmailString } from "@beep/schema";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import {
   RuntimeActivityType,
@@ -809,8 +809,7 @@ export class SdkContextPacket extends S.Class<SdkContextPacket>($I`SdkContextPac
  *
  * ```ts
  * import { runRuntimeFixture, RuntimeFixtureInput } from "@beep/agents-use-cases/proof"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const fixture = RuntimeFixtureInput.make({
  *   body: [
  *     "[span:law-email-001-s2] We need help preparing a provisional patent application.",

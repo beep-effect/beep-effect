@@ -1,7 +1,7 @@
 import { makeCreateChalk } from "@beep/chalk/internal/ChalkRuntime";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { identity } from "effect";
+import { identity } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";

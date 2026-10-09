@@ -14,7 +14,16 @@ import type { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
 import { Percentage } from "@beep/schema/Percentage";
-import { Chunk, Clock, DateTime, Duration, Effect, HashSet, Match, Random, Ref, Stream } from "effect";
+import * as Chunk from "effect/Chunk";
+import * as Clock from "effect/Clock";
+import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as HashSet from "effect/HashSet";
+import * as Match from "effect/Match";
+import * as Random from "effect/Random";
+import * as Ref from "effect/Ref";
+import * as Stream from "effect/Stream";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -138,7 +147,8 @@ export class ProgressBuilderState extends S.Class<ProgressBuilderState>($I`Progr
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { Effect, Ref } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Ref from "effect/Ref";
  * import { ExtractionRunId } from "@effect-ontology/Identity"
  * import { makeProgressBuilder } from "@effect-ontology/Service/ProgressStreaming"
  *
@@ -184,7 +194,7 @@ const calculateOverallProgress = (state: ProgressBuilderState, phaseProgress: nu
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { ExtractionRunId } from "@effect-ontology/Identity"
  * import { createExtractionStarted, makeProgressBuilder } from "@effect-ontology/Service/ProgressStreaming"
  *
@@ -254,7 +264,7 @@ export const createExtractionStarted: {
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { ExtractionRunId } from "@effect-ontology/Identity"
  * import { createChunkingProgress, makeProgressBuilder } from "@effect-ontology/Service/ProgressStreaming"
  *
@@ -319,7 +329,7 @@ export const createChunkingProgress: {
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { ExtractionRunId } from "@effect-ontology/Identity"
  * import { createChunkProcessingStarted, makeProgressBuilder } from "@effect-ontology/Service/ProgressStreaming"
  *
@@ -384,7 +394,7 @@ export const createChunkProcessingStarted: {
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { ExtractionRunId } from "@effect-ontology/Identity"
  * import { createEntityFound, makeProgressBuilder } from "@effect-ontology/Service/ProgressStreaming"
  *
@@ -458,7 +468,7 @@ export const createEntityFound: {
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { ExtractionRunId } from "@effect-ontology/Identity"
  * import { createRelationFound, makeProgressBuilder } from "@effect-ontology/Service/ProgressStreaming"
  *
@@ -537,7 +547,7 @@ export const createRelationFound: {
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { ExtractionRunId } from "@effect-ontology/Identity"
  * import { createChunkProcessingComplete, makeProgressBuilder } from "@effect-ontology/Service/ProgressStreaming"
  *
@@ -611,7 +621,7 @@ export const createChunkProcessingComplete: {
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { ExtractionRunId } from "@effect-ontology/Identity"
  * import { createExtractionComplete, makeProgressBuilder } from "@effect-ontology/Service/ProgressStreaming"
  *
@@ -702,7 +712,7 @@ type CreateExtractionFailedOptions = {
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { ExtractionRunId } from "@effect-ontology/Identity"
  * import { createExtractionFailed, makeProgressBuilder } from "@effect-ontology/Service/ProgressStreaming"
  *
@@ -778,7 +788,7 @@ export const createExtractionFailed: {
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { ExtractionRunId } from "@effect-ontology/Identity"
  * import { createRecoverableError, makeProgressBuilder } from "@effect-ontology/Service/ProgressStreaming"
  *
@@ -852,7 +862,8 @@ export const createRecoverableError: {
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { Effect, Ref } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Ref from "effect/Ref";
  * import { ExtractionRunId } from "@effect-ontology/Identity"
  * import { makeProgressBuilder, markChunkProcessed } from "@effect-ontology/Service/ProgressStreaming"
  *
@@ -884,7 +895,8 @@ export const markChunkProcessed = (ref: Ref.Ref<ProgressBuilderState>): Effect.E
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { Effect, Ref } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Ref from "effect/Ref";
  * import { Percentage } from "@beep/schema/Percentage"
  * import { ExtractionRunId } from "@effect-ontology/Identity"
  * import { makeProgressBuilder, setPhaseProgress } from "@effect-ontology/Service/ProgressStreaming"
@@ -955,7 +967,7 @@ export class BackpressureState extends S.Class<BackpressureState>($I`Backpressur
  * **Example** (Create a backpressure handler)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { getQueueSize, makeBackpressureHandler } from "@effect-ontology/Service/ProgressStreaming"
  *
  * const size = Effect.runSync(
@@ -1061,7 +1073,7 @@ const backpressureOverflow = Match.type<BackpressureConfig["strategy"]>().pipe(
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { ExtractionRunId } from "@effect-ontology/Identity"
  * import {
  *   createExtractionStarted,
@@ -1161,7 +1173,7 @@ export const enqueueEvent: {
  * **Example** (Dequeue from an empty handler)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * import { dequeueEvent, makeBackpressureHandler } from "@effect-ontology/Service/ProgressStreaming"
  *
@@ -1191,7 +1203,7 @@ export const dequeueEvent = (ref: Ref.Ref<BackpressureState>): Effect.Effect<O.O
  * **Example** (Read queue size)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { getQueueSize, makeBackpressureHandler } from "@effect-ontology/Service/ProgressStreaming"
  *
  * const size = Effect.runSync(
@@ -1223,7 +1235,8 @@ export const getQueueSize = (ref: Ref.Ref<BackpressureState>): Effect.Effect<num
  * **Example** (Merge an empty stream list)
  *
  * ```ts
- * import { Effect, Stream } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Stream from "effect/Stream";
  * import { combineProgressStreams } from "@effect-ontology/Service/ProgressStreaming"
  *
  * const count = Effect.runSync(Stream.runCount(combineProgressStreams([], 1)))
@@ -1255,7 +1268,8 @@ export const combineProgressStreams: {
  * **Example** (Apply backpressure to an empty stream)
  *
  * ```ts
- * import { Effect, Stream } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Stream from "effect/Stream";
  * import { BackpressureConfig } from "@effect-ontology/Contract/ProgressStreaming"
  * import { withBackpressure } from "@effect-ontology/Service/ProgressStreaming"
  *
@@ -1394,7 +1408,7 @@ export class ResumableExtractionState extends S.Class<ResumableExtractionState>(
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * import { ExtractionRunId } from "@effect-ontology/Identity"
  * import {

@@ -21,15 +21,19 @@ import {
   DocketPollReport,
 } from "@beep/law-practice-use-cases/DocketIntake";
 import { Order as LocalDateOrder } from "@beep/schema/LocalDate";
-import { DateTime, Effect, Ref } from "effect";
 import * as A from "effect/Array";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import { DigestProgress, digestDayDue } from "./Digest.ts";
 import type { DocketIntakeError } from "@beep/law-practice-use-cases/DocketIntake";
 import type { LocalDate } from "@beep/schema/LocalDate";
-import type { FileSystem, Path, Schedule } from "effect";
+import type * as FileSystem from "effect/FileSystem";
+import type * as Path from "effect/Path";
+import type * as Schedule from "effect/Schedule";
 import type { DocketIntakeAppConfig } from "./Config.ts";
 
 const $I = $DocketIntakeId.create("Cycle");

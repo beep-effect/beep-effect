@@ -9,9 +9,12 @@
  * @since 0.0.0
  */
 import { A } from "@beep/utils";
-import { Effect, HashMap, HashSet, Order } from "effect";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import { topologicalSort } from "./Graph.ts";
 import type { CyclicDependencyError } from "./errors/index.ts";
@@ -58,7 +61,7 @@ const classifyRecord = (
  * **Example** (Classify workspace and NPM deps)
  *
  * ```typescript
- * import { HashSet } from "effect"
+ * import * as HashSet from "effect/HashSet";
  * import * as O from "effect/Option"
  * import { extractWorkspaceDependencies } from "@beep/repo-utils/Dependencies"
  * import { decodePackageJson } from "@beep/repo-utils/schemas/PackageJson"

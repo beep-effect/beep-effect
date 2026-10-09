@@ -13,7 +13,9 @@
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
 import { pipeline } from "@xenova/transformers";
-import { Context, Effect, Layer } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -149,7 +151,8 @@ export interface NomicNlpServiceMethods {
  * **Example** (Score vectors through a test Nomic service)
  *
  * ```ts
- * import { Effect, Layer } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * import { cosineSimilarity } from "@effect-ontology/Service/EmbeddingProvider"
  * import { NomicNlpService } from "@effect-ontology/Service/NomicNlp"
  *
@@ -215,7 +218,8 @@ export type NomicNlpConfigValue = typeof NomicNlpConfigValue.Type;
  * **Example** (Read Nomic config from a test layer)
  *
  * ```ts
- * import { Effect, Layer } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * import { NomicNlpConfig } from "@effect-ontology/Service/NomicNlp"
  *
  * const ConfigLive = Layer.succeed(NomicNlpConfig, {
@@ -243,7 +247,8 @@ export class NomicNlpConfig extends Context.Service<NomicNlpConfig, NomicNlpConf
  * **Example** (Compose embed against the live layer)
  *
  * ```ts
- * import { Effect, Layer } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * import { NomicNlpConfig, NomicNlpService, NomicNlpServiceLive } from "@effect-ontology/Service/NomicNlp"
  *
  * const layer = Layer.provide(
@@ -365,7 +370,7 @@ export const NomicNlpServiceLive = Layer.effect(
  * **Example** (Compose similarity against the default layer)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { NomicNlpService, NomicNlpServiceDefault } from "@effect-ontology/Service/NomicNlp"
  *
  * const program = Effect.gen(function* () {
@@ -391,7 +396,8 @@ export const NomicNlpServiceDefault = NomicNlpServiceLive;
  * **Example** (Provide Nomic config from application config)
  *
  * ```ts
- * import { Effect, Layer } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * import { ConfigService, DEFAULT_CONFIG } from "@effect-ontology/Service/Config"
  * import { NomicNlpConfig, NomicNlpConfigFromConfigService } from "@effect-ontology/Service/NomicNlp"
  *
@@ -431,7 +437,8 @@ export const NomicNlpConfigFromConfigService: Layer.Layer<NomicNlpConfig, never,
  * **Example** (Wire Nomic through application config)
  *
  * ```ts
- * import { Effect, Layer } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * import { ConfigService, DEFAULT_CONFIG } from "@effect-ontology/Service/Config"
  * import { NomicNlpService, NomicNlpServiceFromConfig } from "@effect-ontology/Service/NomicNlp"
  *

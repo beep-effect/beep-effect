@@ -2,7 +2,9 @@ import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { describe, expect } from "@effect/vitest";
-import { Effect, FileSystem, Layer } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as Str from "effect/String";
 import {
   decodeEvidenceMode,

@@ -11,8 +11,8 @@
 
 import { FileProcessingOperationError } from "@beep/file-processing/Operation";
 import { O } from "@beep/utils";
-import { Match } from "effect";
 import { dual } from "effect/Function";
+import * as Match from "effect/Match";
 import * as S from "effect/Schema";
 import { LibpffError } from "./Libpff.errors.ts";
 import type { ExportArchiveOperation } from "@beep/file-processing/Operation";
@@ -141,7 +141,7 @@ const operationErrorContext = (operation: ExportArchiveOperation) => ({
  * ```ts
  * import { libpffOperationError, makeLibpffError } from "@beep/libpff"
  * import { ExportArchiveOperation } from "@beep/file-processing/Operation"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const program = Effect.gen(function* () {

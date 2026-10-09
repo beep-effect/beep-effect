@@ -14,9 +14,11 @@ import { ResolveSourceTextRequest, SourceTextResolver } from "@beep/file-process
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import { CandorDispositionLifecycle, PatentReference } from "@beep/law-practice-domain";
 import { VerifyTextAnchorInput, verifyTextAnchor } from "@beep/provenance/VerifiedTextAnchor";
-import { Effect, HashSet, Layer } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as F from "effect/Function";
+import * as HashSet from "effect/HashSet";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -309,8 +311,7 @@ export const makeCandorPolicy = (): CandorPolicyShape =>
  *
  * ```ts
  * import { CandorPolicyLive } from "@beep/law-practice-use-cases/CandorPolicy"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(CandorPolicyLive)) // true
  * ```
  *

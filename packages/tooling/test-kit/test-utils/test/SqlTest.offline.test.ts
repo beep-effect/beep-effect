@@ -12,8 +12,15 @@ import {
 } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { describe, expect, vi } from "@effect/vitest";
-import { Cause, Clock, ConfigProvider, Duration, Effect, Exit, Fiber, Queue } from "effect";
+import * as Cause from "effect/Cause";
+import * as Clock from "effect/Clock";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Fiber from "effect/Fiber";
 import * as O from "effect/Option";
+import * as Queue from "effect/Queue";
 import * as SqlClient from "effect/sql/SqlClient";
 import * as TestClock from "effect/testing/TestClock";
 
@@ -239,7 +246,7 @@ describe("SqlTest offline coverage", () => {
 
   it.effect("maps mocked Testcontainers startup failure without Docker", () =>
     Effect.gen(function* () {
-      const exit = yield* Effect.exit(Effect.scoped(makePgliteTestcontainerResource()));
+      const exit = yield* makePgliteTestcontainerResource().pipe(Effect.scoped, Effect.exit);
 
       expect(Exit.isFailure(exit)).toBe(true);
       if (Exit.isFailure(exit)) {

@@ -4,8 +4,9 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { SchemaAST } from "effect";
+
 import * as O from "effect/Option";
+import * as SchemaAST from "effect/SchemaAST";
 import type * as S from "effect/Schema";
 import type { JSDocTagDefinition } from "./JSDocTagDefinition.model.ts";
 

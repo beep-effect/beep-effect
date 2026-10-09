@@ -8,14 +8,19 @@
 import { $RepoAiMetricsId } from "@beep/identity/packages";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
 import * as O from "@beep/utils/Option";
-import { Config, Effect, flow, Match, SchemaIssue, SchemaTransformation } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
 import * as F from "effect/Function";
+import { flow } from "effect/Function";
+import * as Match from "effect/Match";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Str from "effect/String";
 import { hashPrivateIdentifier, hashPublicTextSha256 } from "./privacy.ts";
 import { EvidenceTier, InstrumentClass, WaitReason } from "./telemetry-v2.ts";
@@ -632,7 +637,7 @@ export class HookPulseRawToolInput extends S.Class<HookPulseRawToolInput>($I`Hoo
  *
  * ```ts
  * import { HookPulseRawEvent } from "@beep/repo-ai-metrics"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as O from "effect/Option"
  * const decode = HookPulseRawEvent.decodeResult
  *
@@ -948,8 +953,8 @@ const isSha256Hex = S.is(Sha256Hex);
  *
  * ```ts
  * import { hookPulseHashSalt } from "@beep/repo-ai-metrics"
- * import { ConfigProvider, Effect } from "effect"
- *
+ * import * as ConfigProvider from "effect/ConfigProvider";
+ * import * as Effect from "effect/Effect";
  * const pinned = Effect.provideService(
  *   hookPulseHashSalt,
  *   ConfigProvider.ConfigProvider,
@@ -1112,7 +1117,7 @@ const hookPulseSurfaceReference = (input: HookPulseRawEventInput) =>
  *
  * ```ts
  * import { HookPulseV1 } from "@beep/repo-ai-metrics"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * const decode = HookPulseV1.decodeResult
  *
  * const row = {
@@ -1404,7 +1409,7 @@ export const HookPulseV1FromLegacyRecord = HookPulseLegacyV1Record.pipe(
  *
  * ```ts
  * import { HookPulseV1FromRawEvent } from "@beep/repo-ai-metrics"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * const decode = S.decodeUnknownResult(HookPulseV1FromRawEvent)
  *

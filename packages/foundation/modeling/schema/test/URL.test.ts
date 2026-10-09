@@ -2,8 +2,10 @@ import { HttpsUrl, URLStr } from "@beep/schema/URL";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import { Array as A, Effect, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const decodeUnknownHttpsUrl = S.decodeUnknownEffect(HttpsUrl);

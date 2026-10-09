@@ -6,8 +6,11 @@
  */
 
 import { DuckDb } from "@beep/duckdb";
-import { Console, Effect, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { ResearchCommandError } from "../Research.errors.ts";
 import { ResearchStatusSummary } from "../Research.schemas.ts";
@@ -24,7 +27,7 @@ const decodeStatusSummary = S.decodeUnknownEffect(ResearchStatusSummary);
  * **Example** (Build research status effect)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { statusImpl } from "@beep/repo-cli/commands/Research/internal/Status"
  * import { ResearchStatusOptions } from "@beep/repo-cli/commands/Research"
  *

@@ -13,8 +13,10 @@ import {
   parseCursorModelLines,
   UpstreamCatalog,
 } from "@beep/repo-cli/commands/Models";
-import { Effect, FileSystem, Layer } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { constant } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import type * as PlatformError from "effect/PlatformError";
 

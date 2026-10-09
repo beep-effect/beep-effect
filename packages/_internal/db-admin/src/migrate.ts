@@ -14,7 +14,7 @@
 
 import { fileURLToPath } from "node:url";
 import { migrate, PostgresDrizzle } from "@beep/postgres";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import type { PostgresError } from "@beep/postgres";
 
 /**
@@ -60,7 +60,7 @@ export const migrationsSchema = "drizzle" as const;
  * **Example** (Compose boot migration Effect)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { migrateOnBoot } from "@beep/db-admin"
  *
  * const bootProgram = migrateOnBoot.pipe(

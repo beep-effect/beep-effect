@@ -10,9 +10,14 @@ import { parseComment } from "@beep/repo-docgen/Parser";
 import { ContentHashFromSourceText, DomainError, findRepoRoot } from "@beep/repo-utils";
 import { normalizeJSDocCategory } from "@beep/repo-utils/schemas/JSDocCategories";
 import { A, Str, thunkEmptyStr } from "@beep/utils";
-import { Duration, Effect, FileSystem, flow, Match, Order, Path, pipe } from "effect";
-import { dual } from "effect/Function";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { dual, flow, pipe } from "effect/Function";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -99,8 +104,7 @@ export class QualityRuntimeBudget extends S.Class<QualityRuntimeBudget>($I`Quali
  *
  * ```ts
  * import { makeRuntimeBudget } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.subjects"
- * import { Duration } from "effect"
- *
+ * import * as Duration from "effect/Duration";
  * const budget = makeRuntimeBudget(Duration.seconds(1))
  * console.log(budget.timeoutMs)
  * ```
@@ -853,8 +857,7 @@ const generatedDocSnippetForFile = Effect.fn("DocgenQuality.generatedDocSnippetF
  *
  * ```ts
  * import { finalizeSubject } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.subjects"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.succeed(finalizeSubject)
  * console.log(Effect.isEffect(program))
  * ```
@@ -921,8 +924,7 @@ export class PackageSubjectCandidateResult extends S.Class<PackageSubjectCandida
  *
  * ```ts
  * import { collectPackageSubjectCandidates } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.subjects"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.succeed(collectPackageSubjectCandidates)
  * console.log(Effect.isEffect(program))
  * ```
@@ -1019,8 +1021,7 @@ export const collectPackageSubjectCandidates = Effect.fn("DocgenQuality.collectP
  *
  * ```ts
  * import { withGeneratedDocSnippets } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.subjects"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.succeed(withGeneratedDocSnippets)
  * console.log(Effect.isEffect(program))
  * ```

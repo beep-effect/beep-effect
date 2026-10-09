@@ -17,8 +17,11 @@ import { Str } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertNone, assertTrue } from "@effect/vitest/utils";
 import { getTableConfig } from "drizzle-orm/pg-core";
-import { Crypto, Effect, Exit, Layer } from "effect";
+import * as Crypto from "effect/Crypto";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import { cast } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
@@ -62,7 +65,7 @@ const TestCryptoLayer = Layer.succeed(
 const CuidTestLayer = CuidState.Default.pipe(Layer.provideMerge(TestCryptoLayer));
 const expectFailure = Effect.fn("expectFailure")(function* <A, E>(effect: Effect.Effect<A, E, never>) {
   const exit = yield* Effect.exit(effect);
-  assertTrue(Exit.isFailure(exit));
+  exit.pipe(Exit.isFailure, assertTrue);
 });
 
 const systemPrincipal = {

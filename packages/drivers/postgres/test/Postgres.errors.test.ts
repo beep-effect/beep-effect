@@ -24,11 +24,14 @@ import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, describe, expect } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
-import { Cause, Effect, Equal, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as SqlClient from "effect/sql/SqlClient";
 import type { PostgresClientValue, PostgresDrizzleDatabase } from "@beep/postgres";
@@ -531,7 +534,7 @@ describe("Postgres formatting", () => {
         params: ["a@example.com"],
       }
     );
-    const rendered = formatPostgresErrorWith(createColors(false))(Cause.fail(causeError));
+    const rendered = causeError.pipe(Cause.fail, formatPostgresErrorWith(createColors(false)));
 
     expect(rendered).toContain("operation query");
     expect(rendered).toContain("23505");

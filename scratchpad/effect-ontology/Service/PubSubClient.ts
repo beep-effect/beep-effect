@@ -13,7 +13,15 @@
 import { $ScratchpadId } from "@beep/identity";
 import type { Topic } from "@google-cloud/pubsub";
 import { PubSub } from "@google-cloud/pubsub";
-import { Config, Context, DateTime, Duration, Effect, Layer, MutableHashMap, Schedule, Stream } from "effect";
+import * as Config from "effect/Config";
+import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as Schedule from "effect/Schedule";
+import * as Stream from "effect/Stream";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { PubSubError } from "../Domain/Error/EventBus.ts";
@@ -204,7 +212,7 @@ export interface PubSubClientMethods {
  * **Example** (Inspect pub sub client)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { PubSubClient, PubSubClientDefault } from "@effect-ontology/Service/PubSubClient"
  *
  * const program = Effect.gen(function* () {
@@ -235,7 +243,8 @@ export class PubSubClient extends Context.Service<PubSubClient, PubSubClientMeth
  * **Example** (Load default Pub/Sub identifiers)
  *
  * ```ts
- * import { ConfigProvider, Effect } from "effect"
+ * import * as ConfigProvider from "effect/ConfigProvider";
+ * import * as Effect from "effect/Effect";
  * import { PubSubClientConfig } from "@effect-ontology/Service/PubSubClient"
  *
  * const config = Effect.runSync(
@@ -275,7 +284,7 @@ export const PubSubClientConfig: Config.Config<PubSubClientConfig> = Config.all(
  * **Example** (Inspect pub sub client live)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { PubSubClient, PubSubClientLive } from "@effect-ontology/Service/PubSubClient"
  *
  * const program = Effect.gen(function* () {
@@ -454,7 +463,7 @@ export const PubSubClientLive = Layer.effect(
  * **Example** (Inspect event bus pub sub bridge)
  *
  * ```ts
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer";
  * import { EventBusPubSubBridge, PubSubClientLive } from "@effect-ontology/Service/PubSubClient"
  *
  * const layer = Layer.provide(EventBusPubSubBridge, PubSubClientLive)
@@ -492,7 +501,7 @@ export const EventBusPubSubBridge = Layer.effectDiscard(
  * **Example** (Inspect pub sub client default)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { PubSubClient, PubSubClientDefault } from "@effect-ontology/Service/PubSubClient"
  *
  * const program = Effect.gen(function* () {

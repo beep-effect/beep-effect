@@ -14,7 +14,7 @@
 
 import { $TechnicalDrawingId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 const $I = $TechnicalDrawingId.create("Geometry.schemas");

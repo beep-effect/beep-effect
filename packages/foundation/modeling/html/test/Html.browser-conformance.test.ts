@@ -8,9 +8,11 @@ import { Text } from "@beep/html/Html.nodes";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertExitFailure } from "@effect/vitest/utils";
-import { Effect, Exit, pipe } from "effect";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 
 const isForeignElementName = S.is(ForeignElementName);

@@ -13,7 +13,9 @@
 import { $ScratchpadId } from "@beep/identity";
 import { Quad } from "@beep/rdf/Rdf";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
-import { Effect, HashMap, MutableHashSet } from "effect";
+import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -93,7 +95,7 @@ export class QuadDelta extends S.Class<QuadDelta>($I`QuadDelta`)(
  *
  * ```ts
  * import { makeDataset } from "@beep/rdf/Rdf"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { rdfStoreFromDataset } from "@effect-ontology/Service/Rdf"
  * import { computeQuadDelta } from "@effect-ontology/Utils/QuadDelta"
  *

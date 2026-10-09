@@ -2,7 +2,7 @@ import { TaxonomyProjectionError } from "@beep/documents-domain/values/Taxonomy"
 import { it } from "@beep/test-runner";
 import { describe } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
-import { pipe } from "effect";
+import { pipe } from "effect/Function";
 import * as S from "effect/Schema";
 
 describe("documents-domain tagged-error declared equivalence", () => {

@@ -32,10 +32,16 @@ import { LocalDate } from "@beep/schema/LocalDate";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
-import { Cause, DateTime, Effect, Exit, HashMap, Layer, Ref } from "effect";
 import * as A from "effect/Array";
+import * as Cause from "effect/Cause";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as HashMap from "effect/HashMap";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
+import * as Ref from "effect/Ref";
 import * as Str from "effect/String";
 import {
   DIRECTORY,
@@ -268,7 +274,7 @@ describe("@beep/law-practice-server DocketIntake undo", () => {
           messagesGone: 2,
           unmarked: 3,
         });
-        expect(A.sort(A.fromIterable(HashMap.keys(yield* Ref.get(fake.events))), Str.Order)).toStrictEqual([
+        expect(A.sort((yield* Ref.get(fake.events)).pipe(HashMap.keys, A.fromIterable), Str.Order)).toStrictEqual([
           "e-other",
           "e-recategorised",
           "e-verified",
@@ -361,7 +367,7 @@ describe("@beep/law-practice-server DocketIntake undo", () => {
           ["e-uncategorised", "keep"],
           ["e-adopted", "delete"],
         ]);
-        expect(A.sort(A.fromIterable(HashMap.keys(yield* Ref.get(fake.events))), Str.Order)).toStrictEqual([
+        expect(A.sort((yield* Ref.get(fake.events)).pipe(HashMap.keys, A.fromIterable), Str.Order)).toStrictEqual([
           "e-client-added",
           "e-uncategorised",
           "e-verified-added",

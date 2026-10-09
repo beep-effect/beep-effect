@@ -9,8 +9,11 @@
 import { $HtmlId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
 import { A } from "@beep/utils";
-import { Match, Number as N, pipe, Result } from "effect";
+import { pipe } from "effect/Function";
+import * as Match from "effect/Match";
+import * as N from "effect/Number";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { HeadingOffset } from "../../Html.attributes.ts";
 import { HtmlTag } from "../../Html.meta.ts";

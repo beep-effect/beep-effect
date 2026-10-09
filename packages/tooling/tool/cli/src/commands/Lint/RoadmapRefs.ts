@@ -20,9 +20,15 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils/Root";
 import { LiteralKit } from "@beep/schema";
 import { A, thunkEmptyStr } from "@beep/utils";
-import { Console, Effect, FileSystem, flow, HashSet, Number as N, Path, pipe } from "effect";
+import * as Console from "effect/Console";
 import { Command } from "effect/cli";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { flow, pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
+import * as N from "effect/Number";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -282,8 +288,7 @@ const phaseSnapshotFinding = Effect.fn("RoadmapRefs.phaseSnapshotFinding")(funct
  *
  * ```ts
  * import { runRoadmapRefsLint } from "@beep/repo-cli/commands/Lint/RoadmapRefs"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(runRoadmapRefsLint))
  * ```
  *

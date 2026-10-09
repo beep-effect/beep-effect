@@ -6,9 +6,13 @@
  */
 
 import { FirecrawlError } from "@beep/firecrawl";
-import { DateTime, Effect, FileSystem, Match, Path } from "effect";
 import * as A from "effect/Array";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as Record from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -31,7 +35,7 @@ import type { LibraryAcquireOptions } from "./Library.schemas.ts";
  * **Example** (Select the paper route)
  * ```ts
  * import { libraryAdapterFor, classifyLibraryReference } from "@beep/repo-cli/commands/Research"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * const route = classifyLibraryReference("https://arxiv.org/abs/2610.00609", "report").pipe(Effect.map(libraryAdapterFor))
  * console.log(Effect.isEffect(route))
  * ```
@@ -125,7 +129,7 @@ const adapter = (root: string, source: LibrarySource, prefix: string) => {
  * ```ts
  * import { acquireLibrarySource } from "@beep/repo-cli/test/ResearchLibrary"
  * import { classifyLibraryReference } from "@beep/repo-cli/commands/Research"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * const acquisition = classifyLibraryReference("https://arxiv.org/abs/2610.00609", "report").pipe(Effect.flatMap((source) => acquireLibrarySource("/library", source)))
  * console.log(Effect.isEffect(acquisition))
  * ```

@@ -7,16 +7,20 @@
 
 import { $HubspotId } from "@beep/identity";
 import { O, Str } from "@beep/utils";
-import { Config, Context, Effect, Layer, pipe } from "effect";
+import * as Config from "effect/Config";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import { FetchHttpClient } from "effect/http";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
+import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import { HubSpotAccountId, HubSpotBaseUrl, HubSpotConfigInput, HubSpotUrl } from "./HubSpot.config.ts";
 import { HubSpotError } from "./HubSpot.errors.ts";
-import type { Redacted as RedactedType } from "effect";
 import type * as HttpClientError from "effect/http/HttpClientError";
 import type * as HttpClientResponse from "effect/http/HttpClientResponse";
+import type * as RedactedType from "effect/Redacted";
 
 const decodeHubSpotAccountId = S.decodeEffect(HubSpotAccountId);
 const decodeHubSpotBaseUrl = S.decodeEffect(HubSpotBaseUrl);
@@ -330,8 +334,7 @@ export class HubSpotUpsertContactResponse extends S.Class<HubSpotUpsertContactRe
  *   HubSpotUpsertContactResponse,
  *   type HubSpotShape
  * } from "@beep/hubspot"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const service = {
  *   submitForm: () => Effect.succeed(HubSpotSubmitFormResponse.make({ inlineMessage: "Thanks" })),
  *   upsertContact: () =>

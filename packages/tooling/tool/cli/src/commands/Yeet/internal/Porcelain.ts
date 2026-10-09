@@ -22,8 +22,9 @@
  * @since 0.0.0
  */
 
-import { Console, Effect } from "effect";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -64,8 +65,9 @@ import {
 import { SweepPlanJson, SweepReportJson } from "./Sweep.schemas.ts";
 import { executeSweep, observeSweepGitState, overrideSweepBranch, planSweep, renderSweepReport } from "./Sweep.ts";
 import { runYeetWatchStream, yeetWatchExitFailure } from "./WatchMode.ts";
-import type { FileSystem, Path } from "effect";
 import type * as Crypto from "effect/Crypto";
+import type * as FileSystem from "effect/FileSystem";
+import type * as Path from "effect/Path";
 import type { ChildProcessSpawner } from "effect/process";
 import type { CliReportedExit } from "../../../internal/cli/ExitCodeError.ts";
 import type { runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
@@ -341,8 +343,7 @@ const retireThenSweep = Effect.fn("Yeet.retireThenSweep")(function* (
  *
  * ```ts
  * import { runYeetSweep } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.succeed(runYeetSweep)
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -379,8 +380,7 @@ export const runYeetSweep = Effect.fn("Yeet.runSweepCommand")(function* (
  *
  * ```ts
  * import { runYeetMerge } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.succeed(runYeetMerge)
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -428,8 +428,7 @@ export const runYeetMerge = Effect.fn("Yeet.runMergeCommand")(function* (
  *
  * ```ts
  * import { runYeetReplyPass } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.succeed(runYeetReplyPass)
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -467,8 +466,7 @@ export const runYeetReplyPass = Effect.fn("Yeet.runReplyCommand")(function* (
  *
  * ```ts
  * import { failYeetReplyOnFailedOutcomes, ReplyReport } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const report = ReplyReport.make({
  *   schemaVersion: "yeet-reply-report/v1",
  *   prNumber: 558,
@@ -512,8 +510,7 @@ export const failYeetReplyOnFailedOutcomes = Effect.fn("Yeet.failReplyOnFailedOu
  *
  * ```ts
  * import { runYeetMergeLoop } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.succeed(runYeetMergeLoop)
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -622,8 +619,7 @@ export const YEET_WATCH_INTERVAL_MILLIS = 10_000;
  *
  * ```ts
  * import { runYeetWatchLoop } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.succeed(runYeetWatchLoop)
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -679,8 +675,7 @@ const YEET_UNTIL_EVENT_PAIRING_MESSAGE =
  *
  * ```ts
  * import { rejectYeetUntilEventPairing } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(rejectYeetUntilEventPairing)) // true
  * ```
  *
@@ -702,7 +697,7 @@ export const rejectYeetUntilEventPairing: Effect.Effect<never, CliReportedExit> 
  *
  * ```ts
  * import { rejectYeetUntilReadyPairing } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(rejectYeetUntilReadyPairing))
  * ```
  *

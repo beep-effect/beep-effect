@@ -1,8 +1,10 @@
 import { it } from "@beep/test-runner";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { describe, expect } from "@effect/vitest";
-import { Effect, FileSystem, HashSet } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as HashSet from "effect/HashSet";
 import { OpenApi } from "effect/http-api";
 import { Catalog, resolveCatalogSpecPath } from "@/Catalog";
 import { CatalogSource } from "@/Catalog.models";

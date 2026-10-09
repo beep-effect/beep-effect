@@ -4,9 +4,11 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { Effect, FileSystem, Inspectable, Path } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Inspectable from "effect/Inspectable";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import { formatJsonc, readArtifact, writeArtifact } from "../../../internal/artifacts/index.ts";
 import { SchemaFirstInventoryReadError } from "../Lint.errors.ts";
 import {

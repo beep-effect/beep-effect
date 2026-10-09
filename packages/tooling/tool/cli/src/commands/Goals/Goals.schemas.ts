@@ -17,8 +17,8 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { Effect } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import type * as AST from "effect/SchemaAST";
@@ -478,8 +478,7 @@ export class GoalManifest extends S.Class<GoalManifest>($I`GoalManifest`)(
  *
  * ```ts
  * import { decodeGoalManifest } from "@beep/repo-cli/commands/Goals/Goals.schemas"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(decodeGoalManifest({})))
  * ```
  *

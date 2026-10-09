@@ -8,7 +8,8 @@
 import { $PandocAstId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
-import { Effect, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as S from "effect/Schema";
 
 const $I = $PandocAstId.create("Pandoc.report");

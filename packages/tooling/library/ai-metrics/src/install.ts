@@ -9,7 +9,9 @@ import { $RepoAiMetricsId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Effect, flow, Match, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import { flow, pipe } from "effect/Function";
+import * as Match from "effect/Match";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { AiMetricsDataRootInput, resolveAiMetricsDataRoot } from "./data-root.ts";
@@ -1306,7 +1308,7 @@ const doctorStatusFor = (checks: ReadonlyArray<AiMetricsInstallDoctorCheck>): Ai
  *
  * ```ts
  * import { AiMetricsInstallInput, makeAiMetricsInstallSpec } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const spec = Effect.runSync(
@@ -1370,7 +1372,7 @@ export const makeAiMetricsInstallSpec: (
  *
  * ```ts
  * import { AiMetricsInstallInput, makeAiMetricsInstallPlan } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const plan = Effect.runSync(
@@ -1434,7 +1436,7 @@ export const makeAiMetricsInstallPlan: (
  *   AiMetricsInstallInput,
  *   makeAiMetricsInstallDoctorResult
  * } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const result = Effect.runSync(
@@ -1563,7 +1565,7 @@ export const makeAiMetricsInstallDoctorResult: (
  *
  * ```ts
  * import { AiMetricsInstallInput, makeAiMetricsInstallApplyDryRunResult } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const result = Effect.runSync(
@@ -1612,7 +1614,7 @@ export const makeAiMetricsInstallApplyDryRunResult: (
  *   aiMetricsInstallPlanToJson,
  *   makeAiMetricsInstallPlan
  * } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const json = Effect.runSync(
@@ -1651,7 +1653,7 @@ export const aiMetricsInstallPlanToJson: (
  *   aiMetricsInstallDoctorToJson,
  *   makeAiMetricsInstallDoctorResult
  * } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const json = Effect.runSync(
@@ -1690,7 +1692,7 @@ export const aiMetricsInstallDoctorToJson: (
  *   aiMetricsInstallApplyDryRunToJson,
  *   makeAiMetricsInstallApplyDryRunResult
  * } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const json = Effect.runSync(

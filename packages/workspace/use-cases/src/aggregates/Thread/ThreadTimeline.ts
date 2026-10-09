@@ -10,10 +10,12 @@ import { $WorkspaceUseCasesId } from "@beep/identity/packages";
 import { Document } from "@beep/md/Md.model";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { MessageRole } from "@beep/workspace-domain/entities/Message";
-import { Effect, Order, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 
@@ -31,7 +33,7 @@ const CostMicros = S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
  * **Example** (Decode message timeline item)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { TimelineMessageItem } from "@beep/workspace-use-cases/aggregates/Thread"
  *
@@ -73,7 +75,7 @@ const turnIndexOrder = Order.mapInput(Order.Number, (turn: TimelineTurn) => turn
  * **Example** (Decode tool-call timeline item)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { TimelineToolCallItem } from "@beep/workspace-use-cases/aggregates/Thread"
  *
@@ -109,7 +111,7 @@ export class TimelineToolCallItem extends S.Class<TimelineToolCallItem>($I`Timel
  * **Example** (Decode union timeline item)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { TimelineItem } from "@beep/workspace-use-cases/aggregates/Thread"
  *
@@ -156,7 +158,7 @@ export type TimelineItem = typeof TimelineItem.Type;
  * **Example** (Decode projected timeline turn)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { TimelineTurn } from "@beep/workspace-use-cases/aggregates/Thread"
  *
@@ -206,7 +208,7 @@ export class TimelineTurn extends S.Class<TimelineTurn>($I`TimelineTurn`)(
  * **Example** (Decode thread timeline model)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { ThreadTimeline } from "@beep/workspace-use-cases/aggregates/Thread"
  *

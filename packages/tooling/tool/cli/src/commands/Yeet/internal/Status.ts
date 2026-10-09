@@ -8,9 +8,13 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as O from "@beep/utils/Option";
-import { DateTime, Effect, FileSystem, flow, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { dual, flow, pipe } from "effect/Function";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -62,7 +66,7 @@ import {
   yeetCheckRecordInstant,
   yeetCheckRecordText,
 } from "./WatchStream.ts";
-import type { Crypto } from "effect";
+import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { PrCloseoutReport } from "./Closeout.ts";
@@ -621,8 +625,7 @@ const pathListFromNulOutput: (output: string) => ReadonlyArray<string> = flow(St
  * ```ts
  * import { yeetStatusPathForTesting } from "@beep/repo-cli/test/Yeet"
  * import { RepoRunContext } from "@beep/repo-cli/internal/repo-run"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const context = RepoRunContext.make({
  *   base: "origin/main",
  *   branch: "feature/status-work",
@@ -1077,8 +1080,7 @@ const collectRemoteReviewThreads = Effect.fn("YeetStatus.collectRemoteReviewThre
  *
  * ```ts
  * import { collectRemoteWorkflowRuns } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(Effect.succeed(collectRemoteWorkflowRuns))) // true
  * ```
  *
@@ -1283,8 +1285,7 @@ const classifyReviewThreads = (
  *
  * ```ts
  * import { yeetStatusThreadTriageForTesting } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(yeetStatusThreadTriageForTesting("{}"))) // true
  * ```
  *
@@ -1803,8 +1804,7 @@ const nextCommandForStatus = (
  *
  * ```ts
  * import { collectYeetStatus } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.succeed(collectYeetStatus)
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -2053,8 +2053,7 @@ export const renderYeetStatusSummary = (snapshot: YeetStatusSnapshot): string =>
  *
  * ```ts
  * import { writeYeetStatusSnapshot } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.succeed(writeYeetStatusSnapshot)
  * console.log(Effect.isEffect(program)) // true
  * ```

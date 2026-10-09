@@ -12,9 +12,16 @@ import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertInstanceOf, assertNone, assertSome } from "@effect/vitest/utils";
-import { Effect, Fiber, FileSystem, Layer, Path, pipe, Sink, Stream } from "effect";
+import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as Sink from "effect/Sink";
+import * as Stream from "effect/Stream";
 import { TestClock } from "effect/testing";
 import { PDFDocument, StandardFonts } from "pdf-lib";
 import type * as PlatformError from "effect/PlatformError";
@@ -307,9 +314,9 @@ describe("@beep/pdf-tools service", () => {
         "stops the run at the configured timeout and reports tool-failed",
         Effect.fnUntraced(function* () {
           const tools = yield* PdfTools;
-          const fiber = yield* Effect.forkChild(
-            Effect.flip(tools.pageText(PageTextRequest.make({ pdfPath: "sheets.pdf", page: 1 })))
-          );
+          const fiber = yield* tools
+            .pageText(PageTextRequest.make({ pdfPath: "sheets.pdf", page: 1 }))
+            .pipe(Effect.flip, Effect.forkChild);
           yield* TestClock.adjust("4 seconds");
           expect(fiber.pollUnsafe()).toBeUndefined();
           yield* TestClock.adjust("2 seconds");

@@ -4,8 +4,10 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { Duration, Layer, Metric } from "effect";
+import * as Duration from "effect/Duration";
 import { dual } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Metric from "effect/Metric";
 import * as Otlp from "effect/observability/Otlp";
 import { layerMinimumLogLevel } from "../Logging.ts";
 import { ServerObservabilityConfig, toOtlpResource } from "./Config.ts";

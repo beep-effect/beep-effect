@@ -10,8 +10,8 @@ import { withTopLevelObjectInputSchemaForTesting } from "@beep/mcp-kit/Sanitized
 import { it } from "@beep/test-runner";
 import { assert, describe, expect } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
-import { Effect } from "effect";
 import { Tool, Toolkit } from "effect/ai";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Tracer from "effect/Tracer";

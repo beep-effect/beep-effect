@@ -8,8 +8,8 @@
 
 import { LiteralKit } from "@beep/schema";
 import { A } from "@beep/utils";
-import { pipe, Result } from "effect";
-import { dual } from "effect/Function";
+import { dual, pipe } from "effect/Function";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { Script } from "../../Html.model.ts";
 import { resolveScriptState, ScriptState } from "../../Html.script.ts";

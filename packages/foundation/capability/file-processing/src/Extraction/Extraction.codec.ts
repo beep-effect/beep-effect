@@ -31,7 +31,7 @@ type JsonEncodeEffect<Input> = {
  * ```ts
  * import { OperationId } from "@beep/file-processing/Artifact"
  * import { encodeProcessRunManifestJson, ProcessRunManifest } from "@beep/file-processing/Extraction"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const formats = [
@@ -77,7 +77,7 @@ export const encodeProcessRunManifestJson = ProcessRunManifest.encodeJson;
  *
  * ```ts
  * import { encodeFileProcessingCoverageSummaryJson, FileProcessingCoverageSummary } from "@beep/file-processing/Extraction"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const formats = [
@@ -116,7 +116,7 @@ export const encodeFileProcessingCoverageSummaryJson = FileProcessingCoverageSum
  * import { ArtifactId, ContentDigest, OperationId } from "@beep/file-processing/Artifact"
  * import { encodeSourceProcessingRecordJson, SucceededSourceProcessingRecord } from "@beep/file-processing/Extraction"
  * import { PosixPath } from "@beep/schema/PosixPath"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const program = Effect.gen(function* () {
@@ -156,7 +156,7 @@ export const encodeSourceProcessingRecordJson: JsonEncodeEffect<unknown> = dual(
  * import { ArtifactId, OperationId } from "@beep/file-processing/Artifact"
  * import { encodeFileProcessingFailureRecordJson, SkippedFileProcessingFailureRecord } from "@beep/file-processing/Extraction"
  * import { PosixPath } from "@beep/schema/PosixPath"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const program = Effect.gen(function* () {
@@ -195,7 +195,7 @@ export const encodeFileProcessingFailureRecordJson: JsonEncodeEffect<unknown> = 
  * import { ArtifactId, ArtifactReference } from "@beep/file-processing/Artifact"
  * import { ChildArtifactRecord, encodeChildArtifactRecordJson } from "@beep/file-processing/Extraction"
  * import { PosixPath } from "@beep/schema/PosixPath"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const program = Effect.gen(function* () {

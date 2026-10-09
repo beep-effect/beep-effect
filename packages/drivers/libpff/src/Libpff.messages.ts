@@ -66,7 +66,7 @@ export const PFFEXPORT_MESSAGES_SUFFIX = ".messages.jsonl";
  *
  * ```ts
  * import { PffexportMessageRecord } from "@beep/libpff"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const program = S.decodeUnknownEffect(PffexportMessageRecord)({
@@ -109,7 +109,7 @@ export class PffexportMessageRecord extends S.Class<PffexportMessageRecord>($I`P
  *
  * ```ts
  * import { encodePffexportMessageRecordJson, PffexportMessageRecord } from "@beep/libpff"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const program = Effect.gen(function* () {

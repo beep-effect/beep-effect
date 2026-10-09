@@ -10,10 +10,12 @@
 import { $RepoAiMetricsId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
 import * as O from "@beep/utils/Option";
-import { DateTime, Effect, pipe, Random } from "effect";
-import { dual } from "effect/Function";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as Num from "effect/Number";
+import * as Random from "effect/Random";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { hashPublicTextSha256 } from "./privacy.ts";

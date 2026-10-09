@@ -7,7 +7,8 @@
  */
 import { ProviderInstanceRpcs } from "@beep/agents-use-cases/public";
 import { $AgentsClientId } from "@beep/identity/packages";
-import { Context, Layer } from "effect";
+import * as Context from "effect/Context";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import { Atom, AtomRpc } from "effect/reactivity";
 import { RpcClient } from "effect/rpc";

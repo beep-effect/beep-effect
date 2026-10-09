@@ -43,25 +43,23 @@ import { A, N, O, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import {
-  Cause,
-  ConfigProvider,
-  Console,
-  Context,
-  Data,
-  Effect,
-  Exit,
-  FileSystem,
-  Layer,
-  Order,
-  Path,
-  pipe,
-} from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Cause from "effect/Cause";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Console from "effect/Console";
+import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
 import { Command } from "effect/cli";
+import * as Data from "effect/Data";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as Hex from "effect/encoding/Hex";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
+import * as Layer from "effect/Layer";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -121,7 +119,7 @@ const expectFilesCommandFailure = Effect.fn("FilesCommandTest.expectFilesCommand
   args: ReadonlyArray<string>
 ) {
   const exit = yield* Effect.exit(runFilesCommand(args));
-  assertTrue(Exit.isFailure(exit));
+  exit.pipe(Exit.isFailure, assertTrue);
 
   if (Exit.isFailure(exit)) {
     const error = Cause.squash(exit.cause);
@@ -1361,7 +1359,7 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })("files command"
                   })
                 )
               );
-              assertTrue(Exit.isFailure(exit));
+              exit.pipe(Exit.isFailure, assertTrue);
               if (Exit.isFailure(exit)) {
                 const error = Cause.squash(exit.cause);
                 expect(P.hasProperty(error, "exitCode") && error.exitCode === 2).toBe(true);
@@ -2853,7 +2851,7 @@ exit 74
           "--overwrite",
         ]).pipe(Effect.provideService(FileSystem.FileSystem, failingFileSystem), Effect.exit)
       );
-      assertTrue(Exit.isFailure(rollbackExit));
+      rollbackExit.pipe(Exit.isFailure, assertTrue);
       expect(stagedRenameCount).toBe(2);
       expect(linkCallCount).toBe(0);
       expect(yield* fs.readFileString(acceptedTarget)).toBe("previous solo");

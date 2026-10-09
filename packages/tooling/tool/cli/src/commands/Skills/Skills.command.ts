@@ -9,12 +9,18 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import { A, O, Str } from "@beep/utils";
-import { Console, Crypto, Effect, FileSystem, Order, Path, pipe, Result } from "effect";
+import * as Console from "effect/Console";
+import * as Crypto from "effect/Crypto";
 import { Argument, Command, Flag } from "effect/cli";
+import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
-import { dual } from "effect/Function";
+import * as FileSystem from "effect/FileSystem";
+import { dual, pipe } from "effect/Function";
 import { HttpClient, HttpClientResponse } from "effect/http";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { asArrayBufferView, concatBytes } from "../../internal/cli/Bytes.ts";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
@@ -961,7 +967,7 @@ const evaluateAgentsMirrorDrift = Effect.fnUntraced(function* (repoRoot: string,
  *
  * ```ts
  * import { runSkillsUpdate } from "@beep/repo-cli/commands/Skills"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const program = runSkillsUpdate({ mode: "check", skill: O.none() })
@@ -1072,8 +1078,7 @@ const skillsProvenanceCommand = Command.make(
  * ```ts
  * import { skillsCommand } from "@beep/repo-cli/commands/Skills"
  * import { Command } from "effect/cli"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const run = Command.run(skillsCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true
  * ```

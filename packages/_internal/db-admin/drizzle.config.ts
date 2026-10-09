@@ -1,5 +1,6 @@
 import { defineConfig } from "drizzle-kit";
-import { Config, Effect } from "effect";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
 
 const databaseUrl = Effect.runSync(
   Config.String("BEEP_TEST_DATABASE_URL").pipe(

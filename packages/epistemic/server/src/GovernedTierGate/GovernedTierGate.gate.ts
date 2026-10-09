@@ -76,9 +76,16 @@ import { $EpistemicServerId } from "@beep/identity/packages";
 import { CurrentMcpCaller, TierGate, TierGateAuditRecord, TierGateVerdict } from "@beep/mcp-kit";
 import { SystemPrincipal } from "@beep/shared-domain/entity/Principal";
 import { A, O } from "@beep/utils";
-import { Context, DateTime, Duration, Effect, HashMap, Ref, Result, Semaphore } from "effect";
 import * as AiTool from "effect/ai/Tool";
+import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
+import * as Ref from "effect/Ref";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Semaphore from "effect/Semaphore";
 import type { DecisionRecordHash, ExecutionDecisionRecord } from "@beep/epistemic-domain/values/ExecutionRecord";
 import type { FrozenGrantSet } from "@beep/epistemic-domain/values/GrantSet";
 import type { McpCallerIdentity, TierGateSettlement, ToolCallRequest } from "@beep/mcp-kit";
@@ -100,8 +107,7 @@ const $I = $EpistemicServerId.create("GovernedTierGate/GovernedTierGate.gate");
  * ```ts
  * import { GovernedTierGateOptions } from "@beep/epistemic-server/GovernedTierGate"
  * import { ExecutionSink, GrantOperation, GrantPurpose, GrantResource, SinkDestination } from "@beep/epistemic-domain/values/ExecutionGrant"
- * import { Duration } from "effect"
- *
+ * import * as Duration from "effect/Duration";
  * const options = GovernedTierGateOptions.make({
  *   grantTtl: Duration.hours(12),
  *   operations: [GrantOperation.make("ontology_propose_change_batch")],
@@ -214,8 +220,8 @@ const currentDispatchId: Effect.Effect<number> = Effect.withFiber((fiber) => Eff
  * ```ts
  * import { GovernedTierGateOptions, makeGovernedTierGate } from "@beep/epistemic-server/GovernedTierGate"
  * import { ExecutionSink, GrantOperation, GrantPurpose, GrantResource, SinkDestination } from "@beep/epistemic-domain/values/ExecutionGrant"
- * import { Duration, Effect } from "effect"
- *
+ * import * as Duration from "effect/Duration";
+ * import * as Effect from "effect/Effect";
  * const gate = makeGovernedTierGate(GovernedTierGateOptions.make({
  *   grantTtl: Duration.hours(12),
  *   operations: [GrantOperation.make("ontology_propose_change_batch")],
@@ -293,8 +299,10 @@ export const makeGovernedTierGate = Effect.fn("Epistemic.GovernedTierGate.make")
     Effect.flatMap(Ref.get(runs), (map) =>
       O.match(HashMap.get(map, runId), {
         onNone: () =>
-          Effect.flatMap(Effect.orDie(Effect.fromResult(freezeRunFor(runId, now))), (created) =>
-            Effect.as(Ref.update(runs, HashMap.set(runId, created)), created)
+          freezeRunFor(runId, now).pipe(
+            Effect.fromResult,
+            Effect.orDie,
+            Effect.flatMap((created) => Effect.as(Ref.update(runs, HashMap.set(runId, created)), created))
           ),
         onSome: Effect.succeed,
       })

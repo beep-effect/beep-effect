@@ -2,6 +2,12 @@
 //
 //   docker run -d --name effect-ontology-pg -e POSTGRES_PASSWORD=postgres \
 //     -e POSTGRES_DB=effect_ontology -p 55436:5432 pgvector/pgvector:0.8.6-pg18
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
+import * as Redacted from "effect/Redacted";
+
 //   EFFECT_ONTOLOGY_PG_URL=postgres://postgres:postgres@localhost:55436/effect_ontology \
 //     bunx --bun vitest run --config vitest.config.ts test/Runtime/MigrationRunner.pg.test.ts
 //   docker stop effect-ontology-pg && docker rm effect-ontology-pg
@@ -9,7 +15,6 @@ import { makeDrizzleLayer, PostgresDrizzle } from "@beep/postgres";
 import { BunServices } from "@effect/platform-bun";
 import * as PgClient from "@effect/sql-pg/PgClient";
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Path, Redacted } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";

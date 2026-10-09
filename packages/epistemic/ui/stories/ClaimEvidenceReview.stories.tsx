@@ -15,7 +15,7 @@ import { UserId } from "@beep/shared-domain/identity/Shared";
 import { Button } from "@beep/ui/components/button";
 import { RegistryProvider, useAtom, useAtomSet, useAtomValue } from "@effect/atom-react";
 import * as BrowserCrypto from "@effect/platform-browser/BrowserCrypto";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import { AsyncResult, Atom } from "effect/reactivity";
 import * as S from "effect/Schema";

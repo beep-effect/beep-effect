@@ -28,17 +28,23 @@ import {
 } from "@beep/xai";
 import { describe, expect } from "@effect/vitest";
 import { assertFailure, assertNone, assertSome } from "@effect/vitest/utils";
-import { Context, Effect, Layer, pipe, Redacted, Ref, Result, Stream } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
-import { constTrue } from "effect/Function";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import { constTrue, pipe } from "effect/Function";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientError from "effect/http/HttpClientError";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
+import * as Redacted from "effect/Redacted";
+import * as Ref from "effect/Ref";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import type { XAiEndpointDescriptor, XAiHttpEndpointMethodName } from "@beep/xai";
 
 const decodeXAiHttpBaseUrlResult = S.decodeResult(XAiHttpBaseUrl);

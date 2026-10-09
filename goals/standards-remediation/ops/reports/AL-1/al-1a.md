@@ -64,7 +64,7 @@ experiment and its allowlist rationale inapplicable.
 `apps/professional-desktop/scripts/build-sidecar.ts` (7-line diff):
 ```diff
  import { $ } from "bun";
-+import { Data } from "effect";
++import { Data } from "<legacy-effect-barrel>";
 +
 +class MissingTargetTripleError extends Data.TaggedError("MissingTargetTripleError")<{
 +  readonly message: string;

@@ -13,8 +13,8 @@
  * @since 0.0.0
  */
 
-import { HashMap } from "effect";
 import { cast, dual } from "effect/Function";
+import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import type { TUnsafe } from "@beep/types";
 

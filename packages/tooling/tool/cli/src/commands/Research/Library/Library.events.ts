@@ -5,8 +5,9 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { Effect } from "effect";
+
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 import { decodeProviderEvents } from "./Library.provenance.ts";
@@ -17,7 +18,7 @@ import type { LibraryArtifact } from "./Library.schemas.ts";
  * **Example** (Prepare retained event reading)
  * ```ts
  * import { readLibraryProviderEvents } from "@beep/repo-cli/test/ResearchLibrary"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(readLibraryProviderEvents("/library", []))) // true
  * ```
  *

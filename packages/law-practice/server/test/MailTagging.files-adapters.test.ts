@@ -28,9 +28,11 @@ import {
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertInstanceOf } from "@effect/vitest/utils";
-import { Effect, Layer, Path } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as Str from "effect/String";
 import { linesOf, oneRun, Platform, serviceOf, temporaryDirectory, writeText } from "./MailTagging.adapters.fixture.ts";
 import type { FilingDestination } from "@beep/law-practice-domain/values/MailTagging";
@@ -215,15 +217,11 @@ describe("MailTagging file adapters", () => {
             expect(yield* linesOf(ledger)).toStrictEqual([]);
           })
         );
-        const failed = yield* Effect.exit(
-          oneRun(
-            Effect.gen(function* () {
-              const meter = yield* meterAt(ledger, "run-0002");
-              yield* meter.record(box(4));
-              return yield* Effect.fail("upload refused");
-            })
-          )
-        );
+        const failed = yield* Effect.gen(function* () {
+          const meter = yield* meterAt(ledger, "run-0002");
+          yield* meter.record(box(4));
+          return yield* Effect.fail("upload refused");
+        }).pipe(oneRun, Effect.exit);
         yield* oneRun(meterAt(ledger, "run-0003"));
 
         expect(failed._tag).toBe("Failure");

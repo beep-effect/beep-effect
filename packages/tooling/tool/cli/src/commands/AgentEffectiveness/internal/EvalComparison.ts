@@ -4,10 +4,13 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { Console, Effect, FileSystem, pipe } from "effect";
+
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
-import { dual } from "effect/Function";
+import * as FileSystem from "effect/FileSystem";
+import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -89,7 +92,7 @@ const differences = (baseline: AgentConventionTrial, candidate: AgentConventionT
  * ```ts
  * import { AgentConventionTrial } from "@beep/repo-cli/commands/AgentEffectiveness"
  * import { compareAgentConventionTrials } from "@beep/repo-cli/test/AgentEffectiveness"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const decode = S.decodeUnknownEffect(AgentConventionTrial)
@@ -165,8 +168,7 @@ const readTrial = Effect.fn("AgentConventionComparison.readTrial")(function* (fi
  *
  * ```ts
  * import { runAgentConventionComparison } from "@beep/repo-cli/test/AgentEffectiveness"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = runAgentConventionComparison("baseline.json", "candidate.json", false)
  * console.log(Effect.isEffect(program)) // true
  * ```

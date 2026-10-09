@@ -9,8 +9,11 @@
 // concern a `.config.ts` role would normally hold) and child-process execution:
 // a Security process is only ever spawned against a verified pin, so the two
 // concerns share one module rather than one reaching into the other.
-import { Config, Effect, FileSystem, Path } from "effect";
+import * as Config from "effect/Config";
 import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Path from "effect/Path";
 import { ChildProcess } from "effect/process";
 import * as S from "effect/Schema";
 import { CodexSecurityError, toCodexSecurityError } from "./Security.errors.ts";

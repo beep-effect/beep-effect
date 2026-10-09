@@ -9,9 +9,15 @@ import { DuckDb, DuckDbConnectionOptions, DuckDbParquetExport } from "@beep/duck
 import { $RepoAiMetricsId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
-import { Clock, Effect, FileSystem, flow, Layer, Path, pipe, Tuple } from "effect";
+import * as Clock from "effect/Clock";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { flow, pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as Tuple from "effect/Tuple";
 import { AiMetricsDeployTarget, CountRow } from "./models.ts";
 
 const $I = $RepoAiMetricsId.create("mirror");
@@ -349,8 +355,7 @@ const encodeJsonString = S.encodeUnknownEffect(S.fromJsonString(S.String));
  *
  * ```ts
  * import { aiMetricsMirrorPayloadContainsJsonStringPrefix } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const found = Effect.runSync(aiMetricsMirrorPayloadContainsJsonStringPrefix('{"path":"/private/data"}', "/private"))
  * console.log(found) // true
  * ```
@@ -785,8 +790,7 @@ export class AiMetricsMirrorBundleResult extends S.Class<AiMetricsMirrorBundleRe
  * ```ts
  * import { locateLatestAiMetricsMirrorBundle } from "@beep/repo-ai-metrics"
  * import { NodeServices } from "@effect/platform-node"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = locateLatestAiMetricsMirrorBundle("/home/dev/.local/state/beep/ai-metrics").pipe(
  *   Effect.provide(NodeServices.layer)
  * )
@@ -917,8 +921,7 @@ const buildMirrorTables = Effect.fn("AiMetrics.buildMirrorTables")(function* ({
  * ```ts
  * import { AiMetricsMirrorBundleInput, buildAiMetricsMirrorBundle } from "@beep/repo-ai-metrics"
  * import { NodeServices } from "@effect/platform-node"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = buildAiMetricsMirrorBundle(
  *   AiMetricsMirrorBundleInput.make({
  *     dataRoot: "/home/dev/.local/state/beep/ai-metrics",
@@ -979,11 +982,13 @@ export const buildAiMetricsMirrorBundle = Effect.fn("AiMetrics.buildAiMetricsMir
     .makeDirectory(mirrorWorkDir, { recursive: true })
     .pipe(Effect.mapError((cause) => mirrorFailure("Failed to create AI metrics mirror working directory.", cause)));
 
-  const tables = yield* Effect.scoped(
-    Layer.build(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: mirrorDuckDbPath }))).pipe(
-      Effect.flatMap((context) => buildMirrorTables({ parquetDir, sourceDuckDbPath }).pipe(Effect.provide(context)))
-    )
-  ).pipe(Effect.mapError((cause) => mirrorFailure("Failed to build AI metrics mirror tables.", cause)));
+  const tables = yield* Layer.build(
+    DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: mirrorDuckDbPath }))
+  ).pipe(
+    Effect.flatMap((context) => buildMirrorTables({ parquetDir, sourceDuckDbPath }).pipe(Effect.provide(context))),
+    Effect.scoped,
+    Effect.mapError((cause) => mirrorFailure("Failed to build AI metrics mirror tables.", cause))
+  );
   const status = mirrorStatusFor(input, bundleId, createdAtEpochMillis, tables);
   const statusJson = yield* AiMetricsMirrorStatus.encodeJsonEffect(status).pipe(
     Effect.mapError((cause) => mirrorFailure("Failed to encode AI metrics mirror status JSON.", cause))
@@ -1086,8 +1091,7 @@ export const buildAiMetricsMirrorBundle = Effect.fn("AiMetrics.buildAiMetricsMir
  *   AiMetricsMirrorPrivacyProof,
  *   aiMetricsMirrorBundleToJson
  * } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const manifest = AiMetricsMirrorBundleManifest.make({
  *   bundleId: "p7-mirror-1",
  *   createdAtEpochMillis: 1_717_000_000_000,

@@ -9,7 +9,8 @@
 import { CuidState } from "@beep/schema/Cuid";
 import { DateTimes } from "@beep/utils/DateTime";
 import * as ThreadStoreServer from "@beep/workspace-use-cases/server";
-import { Effect, Layer } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import { makeDrizzleThreadStore, makeInMemoryThreadStore } from "./ThreadStore.repo.ts";
 
 const ThreadStore = ThreadStoreServer.Thread.ThreadStore;

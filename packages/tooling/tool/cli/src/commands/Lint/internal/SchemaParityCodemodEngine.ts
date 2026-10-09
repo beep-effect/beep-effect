@@ -10,12 +10,21 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { FsUtils } from "@beep/repo-utils/FsUtils";
 import { A, Str } from "@beep/utils";
-import { Console, Effect, FileSystem, HashMap, HashSet, Inspectable, Layer, Order, Path, pipe, Result } from "effect";
+import * as Console from "effect/Console";
 import * as Context from "effect/Context";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { dual, pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
+import * as Inspectable from "effect/Inspectable";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import { Project } from "ts-morph";
 import { formatJsonc, writeArtifact } from "../../../internal/artifacts/index.ts";
 import { runCaptured } from "../../../internal/process/index.ts";
@@ -434,8 +443,7 @@ type RunServices =
  *
  * ```ts
  * import { runSchemaParityCodemod, SchemaParityCodemodOptions } from "@beep/repo-cli/test/Lint"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = runSchemaParityCodemod(SchemaParityCodemodOptions.make({ rules: ["literal-kit-facets"] }))
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -549,8 +557,7 @@ export interface SchemaParityCodemodShape {
  *
  * ```ts
  * import { SchemaParityCodemod } from "@beep/repo-cli/test/Lint"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(Effect.service(SchemaParityCodemod))) // true
  * ```
  *
@@ -568,8 +575,7 @@ export class SchemaParityCodemod extends Context.Service<SchemaParityCodemod, Sc
  *
  * ```ts
  * import { SchemaParityCodemodLive } from "@beep/repo-cli/test/Lint"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(SchemaParityCodemodLive)) // true
  * ```
  *

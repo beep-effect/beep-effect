@@ -8,10 +8,12 @@
 import { GroundedExtraction } from "@beep/langextract/Extraction";
 import { Contract, UnitInterval } from "@beep/nlp/Handoff";
 import * as O from "@beep/utils/Option";
-import { Match, MutableHashSet, Number as Num } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import { dual, flow, identity, pipe } from "effect/Function";
+import * as Match from "effect/Match";
+import * as MutableHashSet from "effect/MutableHashSet";
+import * as Num from "effect/Number";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { MAX_FUZZY_QUERY_LENGTH, MAX_FUZZY_SOURCE_LENGTH, MAX_MINIMAL_FOLD_TRANSITIONS } from "./Alignment.config.ts";

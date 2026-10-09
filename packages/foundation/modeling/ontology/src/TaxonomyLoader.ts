@@ -8,10 +8,14 @@
 import { $OntologyId } from "@beep/identity/packages";
 import { IRIReference } from "@beep/rdf";
 import { LiteralKit } from "@beep/schema";
-import { Context, Effect, FileSystem, Layer, Match } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";

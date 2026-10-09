@@ -4,9 +4,7 @@
  * @since 0.0.0
  * @packageDocumentation
  */
-
-import { Order } from "effect";
-
+import * as Order from "effect/Order";
 /**
  * Build a descending numeric order from a projection.
  *

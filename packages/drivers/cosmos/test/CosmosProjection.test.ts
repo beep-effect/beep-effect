@@ -12,8 +12,9 @@ import { fcRuns } from "@beep/fc-runs";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertExitFailure, assertNone } from "@effect/vitest/utils";
-import { Cause, Effect } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import { vi } from "vitest";
 

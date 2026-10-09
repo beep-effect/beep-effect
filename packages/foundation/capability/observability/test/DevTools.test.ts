@@ -2,7 +2,7 @@ import { DevToolsSpanFilter, LayerFilteredDevToolsOptions } from "@beep/observab
 import { it } from "@beep/test-runner";
 import { describe } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
-import { pipe } from "effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 

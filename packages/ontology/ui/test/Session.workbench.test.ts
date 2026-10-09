@@ -19,7 +19,8 @@ import { it } from "@beep/test-runner";
 import { A, O } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
-import { Effect, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import type { ChangeEvent } from "react";
 
 const sessionId = SessionId.make("session-1");

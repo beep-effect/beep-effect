@@ -7,8 +7,9 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { Err } from "@beep/utils";
-import { Effect, Runtime } from "effect";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
+import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
 import { OpaqueDefect } from "../../internal/schema/OpaqueDefect.ts";
 
@@ -106,8 +107,7 @@ export const formatPlatformError: {
  *
  * ```ts
  * import { failOnExtensionlessFile } from "@beep/repo-cli/commands/Files"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = failOnExtensionlessFile("/tmp/README")
  * console.log(Effect.isEffect(program)) // true
  * ```

@@ -24,7 +24,7 @@ const ThreadStoreErrorReason = S.NonEmptyString.pipe(
  * **Example** (Construct not-found error)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
  * import { ThreadStoreNotFound } from "@beep/workspace-use-cases/aggregates/Thread/server"
@@ -60,7 +60,7 @@ export class ThreadStoreNotFound extends S.TaggedError<ThreadStoreNotFound>($I`T
  * **Example** (Construct conflict error)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
  * import { ThreadStoreConflict } from "@beep/workspace-use-cases/aggregates/Thread/server"

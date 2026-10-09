@@ -13,10 +13,14 @@
 import { $PacerId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
 import { O } from "@beep/utils";
-import { Effect, Layer, Number as N, pipe, Ref } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
+import * as Layer from "effect/Layer";
+import * as N from "effect/Number";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { CsoLogoutRequest } from "./CsoAuth.models.ts";

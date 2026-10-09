@@ -8,7 +8,9 @@
 
 import * as WorkerUseCaseServer from "@beep/architecture-lab-use-cases/server";
 import { $ArchitectureLabServerId } from "@beep/identity/packages";
-import { Context, Effect, Layer } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import { makeWorkerRepository } from "./Worker.repo.ts";
 import type { Worker as WorkerUseCases } from "@beep/architecture-lab-use-cases/public";
 
@@ -22,8 +24,7 @@ const $I = $ArchitectureLabServerId.create("entities/Worker/Worker.layer");
  * ```ts
  * import { makeWorkerServer } from "@beep/architecture-lab-server/entities/Worker"
  * import { Worker as WorkerUseCases } from "@beep/architecture-lab-use-cases/public"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = makeWorkerServer().pipe(
  *   Effect.flatMap((server) => server.list(WorkerUseCases.ListWorkersQuery.make({})))
  * )
@@ -50,8 +51,7 @@ export const makeWorkerServer = Effect.fn("ArchitectureLab.WorkerServer.make")(f
  * import { WorkerServer } from "@beep/architecture-lab-server/entities/Worker"
  * import { ArchitectureLabServerTest } from "@beep/architecture-lab-server/test"
  * import { Worker as WorkerUseCases } from "@beep/architecture-lab-use-cases/public"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const server = yield* WorkerServer
  *   return yield* server.list(WorkerUseCases.ListWorkersQuery.make({}))
@@ -75,8 +75,7 @@ export class WorkerServer extends Context.Service<WorkerServer, WorkerUseCases.W
  * ```ts
  * import { WorkerServer, WorkerServerLayer } from "@beep/architecture-lab-server/entities/Worker"
  * import { Worker as WorkerUseCases } from "@beep/architecture-lab-use-cases/public"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const server = yield* WorkerServer
  *   return yield* server.list(WorkerUseCases.ListWorkersQuery.make({}))

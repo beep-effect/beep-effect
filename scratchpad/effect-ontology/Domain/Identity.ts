@@ -14,7 +14,8 @@ import * as SchemaTransformation from "effect/SchemaTransformation";
  */
 import { $ScratchpadId } from "@beep/identity";
 import { SchemaUtils, Sha256Hex } from "@beep/schema";
-import { Match, Result } from "effect";
+import * as Match from "effect/Match";
+import * as Result from "effect/Result";
 import type * as Brand from "effect/Brand";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";

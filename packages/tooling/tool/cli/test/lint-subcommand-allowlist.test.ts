@@ -7,9 +7,14 @@ import { provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Order, Path, pipe } from "effect";
 import { Command } from "effect/cli";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
 import { Node, SyntaxKind } from "ts-morph";
@@ -216,7 +221,7 @@ describe("internal/cli dependency-free boundary", () => {
           "import:./internal/cli/FailureRendering.ts",
           "import:./internal/cli/LintRouting.ts",
           "import():@beep/utils",
-          "import():effect",
+          "import():effect/Function",
         ]);
 
         const beforeFastPath = (mutation: string): string =>

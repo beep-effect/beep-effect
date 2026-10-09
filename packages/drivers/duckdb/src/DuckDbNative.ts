@@ -6,7 +6,7 @@
  */
 
 import { thunkUndefined } from "@beep/utils";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import type { DuckDBConnection, DuckDBInstance } from "@duckdb/node-api";
 
 type NativeConnection = {

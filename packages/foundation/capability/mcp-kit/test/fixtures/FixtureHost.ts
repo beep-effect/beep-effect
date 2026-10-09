@@ -14,9 +14,10 @@ import {
   SourceAuthRegistration,
   sanitizedToolkit,
 } from "@beep/mcp-kit";
-import { Effect, Layer } from "effect";
 import { Tool, Toolkit } from "effect/ai";
 import * as McpServer from "effect/ai/McpServer";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import type { ConformanceHost } from "@beep/mcp-kit/test/Conformance";

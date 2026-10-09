@@ -13,9 +13,13 @@ import { RDFS_LABEL, RDFS_NAMESPACE } from "@beep/rdf/Vocab/Rdfs";
 import { Float32Arr } from "@beep/schema/Float32Array";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { A, O, P, Str } from "@beep/utils";
-import { Effect, MutableHashMap, MutableHashSet, Order, pipe, SchemaTransformation } from "effect";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import {
   OntologyResourceClassification,
   OntologyResourceKind,

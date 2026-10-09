@@ -10,8 +10,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { Effect } from "effect";
-
+import * as Effect from "effect/Effect";
 const $I = $ScratchpadId.create("effect-ontology/Domain/Model/EnrichedContent");
 
 const LanguageCode = S.String.check(

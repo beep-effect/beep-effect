@@ -25,8 +25,12 @@ import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
-import type { Config } from "effect";
-import { Clock, Context, Effect, Layer, Match } from "effect";
+import type * as Config from "effect/Config";
+import * as Clock from "effect/Clock";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -694,7 +698,7 @@ const correctionFromResponse: (response: CorrectionResponse) => (violation: Shac
  * **Example** (Classify a minCount violation)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { makeNamedNode } from "@beep/rdf/Rdf"
  * import { ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation"
  * import { CorrectorAgent } from "@effect-ontology/Service/Agent/CorrectorAgent"

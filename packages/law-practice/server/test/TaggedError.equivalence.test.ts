@@ -4,7 +4,7 @@ import { PromotionGateRequest, PromotionSubjectRef, PromotionTenantRef } from "@
 import { it } from "@beep/test-runner";
 import { describe } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
-import { pipe } from "effect";
+import { pipe } from "effect/Function";
 import * as S from "effect/Schema";
 
 const expectDeclaredEquivalence = <A>(same: (self: A, that: A) => boolean, first: A, second: A, different: A) => {

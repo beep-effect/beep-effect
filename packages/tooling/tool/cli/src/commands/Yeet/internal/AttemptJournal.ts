@@ -7,7 +7,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import {
@@ -20,8 +20,9 @@ import { UUID } from "../../../internal/schema/Uuid.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { runArtifactPathForContext } from "./ArtifactPaths.ts";
 import { YeetVerdict } from "./Verdict.ts";
-import type { FileSystem, Path } from "effect";
 import type * as Crypto from "effect/Crypto";
+import type * as FileSystem from "effect/FileSystem";
+import type * as Path from "effect/Path";
 import type * as SchemaAST from "effect/SchemaAST";
 import type { RepoRunContext } from "../../../internal/repo-run/RepoRun.models.ts";
 

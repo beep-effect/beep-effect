@@ -9,7 +9,8 @@
  * **Example** (Profile migrations phase)
  *
  * ```typescript
- * import { Effect, Metric } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Metric from "effect/Metric";
  * import { profilePhase } from "@beep/observability"
  *
  * const migrate = Effect.log("running migrations")
@@ -27,8 +28,13 @@
  */
 import { $ObservabilityId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Clock, Duration, Effect, Exit, Match, Metric } from "effect";
+import * as Clock from "effect/Clock";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import { dual } from "effect/Function";
+import * as Match from "effect/Match";
+import * as Metric from "effect/Metric";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { LogRedactedCauseOptions, logRedactedCause } from "./CauseRedaction.ts";
@@ -55,8 +61,7 @@ const isProfilePhaseDataFirst = (args: IArguments): boolean => args.length >= 2 
  *
  * ```ts import.meta.vitest name="Return completed outcome"
  * import { PhaseOutcome, profilePhase } from "@beep/observability"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = profilePhase(Effect.succeed(PhaseOutcome.Enum.completed), {
  *   phase: "startup"
  * })
@@ -200,7 +205,8 @@ const logPhaseProfile = <A, E>(profile: PhaseProfile, exit: Exit.Exit<A, E>): Ef
  * **Example** (Profile with custom metrics)
  *
  * ```typescript
- * import { Effect, Metric } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Metric from "effect/Metric";
  * import { profilePhase } from "@beep/observability"
  *
  * const completed = Metric.counter("phase_completed_total")
@@ -287,7 +293,7 @@ const profilePhaseImpl = Effect.fn("profilePhaseImpl")(function* <A, E, R>(
  * **Example** (Profile a startup phase)
  *
  * ```typescript
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { profilePhase } from "@beep/observability"
  *
  * const program = profilePhase(Effect.succeed("ok"), { phase: "startup" })

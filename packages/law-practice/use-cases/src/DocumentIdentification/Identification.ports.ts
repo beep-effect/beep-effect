@@ -5,8 +5,9 @@
  */
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import { Fn } from "@beep/schema";
-import { Context, Stream } from "effect";
+import * as Context from "effect/Context";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import { EffectOutput } from "../internal/effectOutput.ts";
 import type * as O from "effect/Option";
 import type { ConfirmedExtraction, RawContactCard, UsptoRecordFacts } from "./Identification.schemas.ts";
@@ -44,7 +45,8 @@ export class IdentificationError extends S.TaggedError<IdentificationError>($I`I
  *
  * ```ts
  * import { ContactCardSourceShape } from "@beep/law-practice-use-cases/DocumentIdentification"
- * import { Effect, Stream } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Stream from "effect/Stream";
  * const service = ContactCardSourceShape.make({ cards: Stream.empty })
  * console.log(typeof service.cards) // "function"
  * ```
@@ -65,7 +67,9 @@ export class ContactCardSourceShape extends S.Class<ContactCardSourceShape>($I`C
  *
  * ```ts
  * import { ContactCardSource, ContactCardSourceShape } from "@beep/law-practice-use-cases/DocumentIdentification"
- * import { Effect, Stream, Layer } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Stream from "effect/Stream";
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(Layer.succeed(ContactCardSource, ContactCardSourceShape.make({ cards: Stream.empty })))) // true
  * ```
  *
@@ -83,7 +87,8 @@ export class ContactCardSource extends Context.Service<ContactCardSource, Contac
  *
  * ```ts
  * import { UsptoRecordLookupShape } from "@beep/law-practice-use-cases/DocumentIdentification"
- * import { Effect, Stream } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Stream from "effect/Stream";
  * const service = UsptoRecordLookupShape.make({ byApplication: () => Effect.succeedNone, byPatent: () => Effect.succeedNone })
  * console.log(typeof service.byApplication) // "function"
  * ```
@@ -105,7 +110,9 @@ export class UsptoRecordLookupShape extends S.Class<UsptoRecordLookupShape>($I`U
  *
  * ```ts
  * import { UsptoRecordLookup, UsptoRecordLookupShape } from "@beep/law-practice-use-cases/DocumentIdentification"
- * import { Effect, Stream, Layer } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Stream from "effect/Stream";
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(Layer.succeed(UsptoRecordLookup, UsptoRecordLookupShape.make({ byApplication: () => Effect.succeedNone, byPatent: () => Effect.succeedNone })))) // true
  * ```
  *
@@ -122,7 +129,8 @@ export class UsptoRecordLookup extends Context.Service<UsptoRecordLookup, UsptoR
  *
  * ```ts
  * import { DomainRegistrantLookupShape } from "@beep/law-practice-use-cases/DocumentIdentification"
- * import { Effect, Stream } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Stream from "effect/Stream";
  * const service = DomainRegistrantLookupShape.make({ registrant: () => Effect.succeedNone })
  * console.log(typeof service.registrant) // "function"
  * ```
@@ -141,7 +149,9 @@ export class DomainRegistrantLookupShape extends S.Class<DomainRegistrantLookupS
  *
  * ```ts
  * import { DomainRegistrantLookup, DomainRegistrantLookupShape } from "@beep/law-practice-use-cases/DocumentIdentification"
- * import { Effect, Stream, Layer } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Stream from "effect/Stream";
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(Layer.succeed(DomainRegistrantLookup, DomainRegistrantLookupShape.make({ registrant: () => Effect.succeedNone })))) // true
  * ```
  *
@@ -158,7 +168,8 @@ export class DomainRegistrantLookup extends Context.Service<DomainRegistrantLook
  *
  * ```ts
  * import { DocumentExtractionSourceShape } from "@beep/law-practice-use-cases/DocumentIdentification"
- * import { Effect, Stream } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Stream from "effect/Stream";
  * const service = DocumentExtractionSourceShape.make({ extraction: () => Effect.succeedNone })
  * console.log(typeof service.extraction) // "function"
  * ```
@@ -179,7 +190,9 @@ export class DocumentExtractionSourceShape extends S.Class<DocumentExtractionSou
  *
  * ```ts
  * import { DocumentExtractionSource, DocumentExtractionSourceShape } from "@beep/law-practice-use-cases/DocumentIdentification"
- * import { Effect, Stream, Layer } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Stream from "effect/Stream";
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(Layer.succeed(DocumentExtractionSource, DocumentExtractionSourceShape.make({ extraction: () => Effect.succeedNone })))) // true
  * ```
  *

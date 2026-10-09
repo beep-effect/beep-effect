@@ -85,8 +85,13 @@ import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
-import { Console, Effect, Exit, FileSystem, Layer, Path } from "effect";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
@@ -218,7 +223,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
         const exit = yield* Effect.exit(
           resolveCaptureTarget("/repo", CaptureTargetRequest.make({ app: O.none(), url: O.none() }))
         );
-        assertTrue(Exit.isFailure(exit));
+        exit.pipe(Exit.isFailure, assertTrue);
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 
@@ -227,7 +232,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
         const exit = yield* Effect.exit(
           resolveCaptureTarget("/repo", CaptureTargetRequest.make({ app: O.none(), url: O.some("not-a-url") }))
         );
-        assertTrue(Exit.isFailure(exit));
+        exit.pipe(Exit.isFailure, assertTrue);
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
   });
@@ -699,11 +704,11 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
         const clean = yield* Effect.exit(
           raiseCrossCheckFailure(1, EvidenceCrossCheck.make({ missingEventIds: [], missingPaths: [] }))
         );
-        assertTrue(Exit.isSuccess(clean));
+        clean.pipe(Exit.isSuccess, assertTrue);
         const dirty = yield* Effect.exit(
           raiseCrossCheckFailure(1, EvidenceCrossCheck.make({ missingEventIds: [9], missingPaths: [] }))
         );
-        assertTrue(Exit.isFailure(dirty));
+        dirty.pipe(Exit.isFailure, assertTrue);
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
   });

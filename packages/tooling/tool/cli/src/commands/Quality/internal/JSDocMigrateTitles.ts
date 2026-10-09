@@ -7,11 +7,18 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, O, Str } from "@beep/utils";
-import { Config, Console, Effect, MutableHashMap, Order, pipe, Redacted, Semaphore } from "effect";
+import * as Config from "effect/Config";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
+import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
+import * as Semaphore from "effect/Semaphore";
 import { QualityScriptCommandError } from "../Quality.errors.ts";
 import {
   defaultJSDocMigrateExtractPath,
@@ -27,7 +34,8 @@ import {
   readJSDocMigrateExtractRequired,
   readJSDocMigrateJsonl,
 } from "./JSDocMigrateData.ts";
-import type { FileSystem, Path } from "effect";
+import type * as FileSystem from "effect/FileSystem";
+import type * as Path from "effect/Path";
 import type { JSDocMigrateExtractRecord } from "./JSDocMigrate.schemas.ts";
 
 const decodeJsonEffect = S.decodeEffect(S.fromJsonString(S.Unknown));
@@ -270,8 +278,7 @@ const collectTitleSuggestions = (
  *
  * ```ts
  * import { JSDocMigrateExtractRecord, jsdocMigrateTitleRecordsFromResponse } from "@beep/repo-cli/test/Quality"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const record = JSDocMigrateExtractRecord.make({
  *   anchor: "packages/x/src/Y.ts#decode#0",
  *   filePath: "packages/x/src/Y.ts",
@@ -543,8 +550,7 @@ const requestTitlesForFile = Effect.fn("JSDocMigrateTitles.requestTitlesForFile"
  *
  * ```ts
  * import { runJSDocMigrateTitles, RunJSDocMigrateTitlesOptions } from "@beep/repo-cli/test/Quality"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = runJSDocMigrateTitles(RunJSDocMigrateTitlesOptions.make({ limitFiles: 1 }))
  * console.log(Effect.isEffect(program)) // true
  * ```

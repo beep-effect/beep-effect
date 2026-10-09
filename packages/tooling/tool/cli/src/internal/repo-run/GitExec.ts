@@ -18,10 +18,14 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { isOptionLike } from "@beep/repo-utils";
-import { Effect, FileSystem, flow, Number as N, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { dual, flow, pipe } from "effect/Function";
+import * as N from "effect/Number";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -382,7 +386,7 @@ const failFromOutcome = <E>(
  *
  * ```ts
  * import { runGitOutput } from "@beep/repo-cli/internal/repo-run"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const status = runGitOutput(process.cwd(), ["status", "--short"], {
@@ -428,7 +432,7 @@ export const runGitOutput = Effect.fn("GitExec.runGitOutput")(function* <E>(
  *
  * ```ts
  * import { runGitPathList } from "@beep/repo-cli/internal/repo-run"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const staged = runGitPathList(process.cwd(), ["diff", "--cached", "--name-only", "-z"], {
@@ -469,7 +473,7 @@ export const runGitPathList = Effect.fn("GitExec.runGitPathList")(function* <E>(
  *
  * ```ts
  * import { runGitLines } from "@beep/repo-cli/internal/repo-run"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const untracked = runGitLines(process.cwd(), ["ls-files", "--others", "--exclude-standard"], {
@@ -721,7 +725,7 @@ export const readGitRenames = Effect.fn("GitExec.readGitRenames")(function* <E>(
  *
  * ```ts
  * import { collectStagedPaths } from "@beep/repo-cli/internal/repo-run"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const staged = collectStagedPaths(process.cwd(), {
@@ -753,7 +757,7 @@ export const collectStagedPaths = Effect.fn("GitExec.collectStagedPaths")(functi
  *
  * ```ts
  * import { collectUnstagedPaths } from "@beep/repo-cli/internal/repo-run"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const unstaged = collectUnstagedPaths(process.cwd(), {
@@ -790,7 +794,7 @@ export const collectUnstagedPaths = Effect.fn("GitExec.collectUnstagedPaths")(fu
  *
  * ```ts
  * import { collectUntrackedPaths } from "@beep/repo-cli/internal/repo-run"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const untracked = collectUntrackedPaths(process.cwd(), {
@@ -826,7 +830,7 @@ export const collectUntrackedPaths = Effect.fn("GitExec.collectUntrackedPaths")(
  *
  * ```ts
  * import { collectDirtyPaths } from "@beep/repo-cli/internal/repo-run"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const dirty = collectDirtyPaths(process.cwd(), {
@@ -861,7 +865,7 @@ export const collectDirtyPaths = Effect.fn("GitExec.collectDirtyPaths")(function
  *
  * ```ts
  * import { collectChangedPathsSinceBase } from "@beep/repo-cli/internal/repo-run"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const changed = collectChangedPathsSinceBase(process.cwd(), "origin/main...HEAD", {
@@ -915,7 +919,7 @@ export type CurrentBranchRef = "abbrev-ref" | "show-current";
  *
  * ```ts
  * import { currentBranch } from "@beep/repo-cli/internal/repo-run"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const branch = currentBranch(process.cwd(), {
@@ -960,7 +964,7 @@ export const currentBranch = Effect.fn("GitExec.currentBranch")(function* <E>(
  *
  * ```ts
  * import { ensureOriginMain } from "@beep/repo-cli/internal/repo-run"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const refreshed = ensureOriginMain(process.cwd(), {

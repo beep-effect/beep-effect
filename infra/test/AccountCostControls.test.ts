@@ -3,10 +3,13 @@ import { it } from "@beep/test-runner";
 import { describe, expect, vi } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as pulumi from "@pulumi/pulumi";
-import { Effect, MutableHashMap, pipe, Result } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const decode = S.decodeUnknownResult(AccountCostControlsConfig);
@@ -153,7 +156,7 @@ describe("@beep/infra AccountCostControls", { concurrent: false }, () => {
       for (const key of ["App", "Project", "ManagedBy", "beep-ci", "ghr:environment", "DataClass"]) {
         expect(resource(`cost-tag-${key}`)).toEqual({ tagKey: key, status: "Active" });
       }
-      expect(A.sort(A.fromIterable(MutableHashMap.values(types)), Order.String)).toEqual([
+      expect(A.sort(types.pipe(MutableHashMap.values, A.fromIterable), Order.String)).toEqual([
         "aws:budgets/budget:Budget",
         "aws:computeoptimizer/enrollmentStatus:EnrollmentStatus",
         "aws:costexplorer/anomalyMonitor:AnomalyMonitor",

@@ -25,8 +25,10 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Console, DateTime, Effect } from "effect";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
@@ -145,7 +147,7 @@ export const parseMergeGateTolerance = (value: string): O.Option<MergeGateTolera
  *
  * ```ts
  * import { MergeGateRead } from "@beep/repo-cli/test/Yeet"
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import * as O from "effect/Option"
  *
  * const read = MergeGateRead.make({
@@ -317,9 +319,7 @@ export type MergeGateDecision = typeof MergeGateDecision.Type;
  *
  * ```ts
  * import { MergeGateOptions } from "@beep/repo-cli/test/Yeet"
- *
- * import { DateTime } from "effect"
- *
+ * import * as DateTime from "effect/DateTime";
  * const options = MergeGateOptions.make({ wantSha: "abc", now: DateTime.makeUnsafe(0), tolerate: [], forceWindow: false })
  * console.log(options.forceWindow) // false
  * ```
@@ -513,7 +513,7 @@ const threadsHold = (read: MergeGateRead): O.Option<MergeGateHold> =>
  *
  * ```ts
  * import { MergeGateRead, decideMergeGate } from "@beep/repo-cli/test/Yeet"
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import * as O from "effect/Option"
  *
  * const read = MergeGateRead.make({

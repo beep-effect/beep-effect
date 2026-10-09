@@ -29,13 +29,15 @@
  */
 import { TSMorphService, TSMorphServiceLive } from "@beep/repo-utils";
 import { NodeRuntime, NodeServices } from "@effect/platform-node";
-import { Console, Effect, Layer } from "effect";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import { Node, SyntaxKind } from "ts-morph";
 import type { TSMorphServiceError } from "@beep/repo-utils";
 import type { BinaryExpression, Expression, ObjectLiteralExpression, PropertyAssignment, SourceFile } from "ts-morph";
 
 const SCHEMA_MODULE = "effect/Schema";
-const EFFECT_MODULE = "effect";
+const EFFECT_MODULE = "effect/Effect";
 const EFFECT_LOCAL = "Effect";
 
 /** Combinators that already attach a default; a field carrying one is skipped. */
@@ -166,21 +168,19 @@ const asFallback = (
   return { fieldName: left.getName(), defaultText: right.getText(), lhsText: left.getText() };
 };
 
-/** Ensure a value `import { Effect } from "effect"` is present. */
+/** Ensure a value `import * as Effect from "effect/Effect"` is present. */
 const ensureEffectImport = (sourceFile: SourceFile): void => {
   for (const declaration of sourceFile.getImportDeclarations()) {
     if (declaration.getModuleSpecifierValue() !== EFFECT_MODULE || declaration.isTypeOnly()) {
       continue;
     }
-    if (declaration.getNamedImports().some((specifier) => specifier.getName() === EFFECT_LOCAL)) {
+    if (declaration.getNamespaceImport()?.getText() === EFFECT_LOCAL) {
       return;
     }
-    declaration.addNamedImport(EFFECT_LOCAL);
-    return;
   }
   sourceFile.addImportDeclaration({
     moduleSpecifier: EFFECT_MODULE,
-    namedImports: [EFFECT_LOCAL],
+    namespaceImport: EFFECT_LOCAL,
   });
 };
 

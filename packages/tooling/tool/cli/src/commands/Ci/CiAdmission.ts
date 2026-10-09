@@ -16,8 +16,12 @@
  */
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
-import { Config, Console, Effect, FileSystem, pipe } from "effect";
+import * as Config from "effect/Config";
+import * as Console from "effect/Console";
 import { Command, Flag } from "effect/cli";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
@@ -45,8 +49,7 @@ const $I = $RepoCliId.create("commands/Ci/CiAdmission");
  *
  * ```ts
  * import { HeavyAdmission, HeavyAdmissionJson } from "@beep/repo-cli/commands/Ci"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const admission = HeavyAdmission.make({ verdict: "run", admitted: true, sources: ["main-push"], docsOnly: false, changedPathCount: 0 })
  * Effect.runPromise(HeavyAdmissionJson.encode(admission)).then((text) => console.log(text.includes("\"verdict\":\"run\""))) // true
  * ```
@@ -105,7 +108,7 @@ const decodeEventName = S.decodeUnknownEffect(HeavyAdmissionEventName);
  *
  * ```ts
  * import { CiAdmissionInput, runCiAdmission } from "@beep/repo-cli/commands/Ci"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const program = runCiAdmission(CiAdmissionInput.make({ eventName: O.some("push"), cwd: "." }))

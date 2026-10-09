@@ -6,7 +6,7 @@
  */
 
 import { IdsSubmissionFact } from "@beep/law-practice-domain/entities/IdsSubmissionFact";
-import { Result } from "effect";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import type { Table } from "./IdsSubmissionFact.table.ts";
 
@@ -67,8 +67,7 @@ const encodeIdsSubmissionFact = S.encodeResult(IdsSubmissionFact);
  *   fromIdsSubmissionFactRow,
  *   toIdsSubmissionFactInsert
  * } from "@beep/law-practice-tables/entities/IdsSubmissionFact"
- * import { Result } from "effect"
- *
+ * import * as Result from "effect/Result";
  * const insert = Result.flatMap(fromIdsSubmissionFactRow({}), toIdsSubmissionFactInsert)
  * console.log(Result.isFailure(insert)) // true
  * ```
@@ -97,8 +96,7 @@ export const toIdsSubmissionFactInsert = (
  *
  * ```ts
  * import { fromIdsSubmissionFactRow } from "@beep/law-practice-tables/entities/IdsSubmissionFact"
- * import { Result } from "effect"
- *
+ * import * as Result from "effect/Result";
  * console.log(Result.isFailure(fromIdsSubmissionFactRow({}))) // true
  * ```
  *

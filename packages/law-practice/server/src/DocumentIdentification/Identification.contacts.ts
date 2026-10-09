@@ -10,11 +10,15 @@ import {
   IdentificationError,
   RawContactCard,
 } from "@beep/law-practice-use-cases/DocumentIdentification";
-import { Context, Effect, FileSystem, Layer, Stream } from "effect";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as M from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 
 const $I = $LawPracticeServerId.create("DocumentIdentification/Identification.contacts");

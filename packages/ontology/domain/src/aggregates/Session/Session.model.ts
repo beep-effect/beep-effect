@@ -25,8 +25,8 @@ import {
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { A, O } from "@beep/utils";
-import { Effect, pipe } from "effect";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
 import * as S from "effect/Schema";
 import { GraphPartition, graphPartitionIri, isExcludedFromReasoning, SessionId } from "./Session.values.ts";
 import type { Subject } from "@beep/rdf/Rdf";

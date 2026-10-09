@@ -38,9 +38,12 @@ import {
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
-import { Effect, flow, Layer, pipe, Result } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import { flow, pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as SqlClient from "effect/sql/SqlClient";
 import type { CitingApplicationIdentity } from "@beep/law-practice-domain";

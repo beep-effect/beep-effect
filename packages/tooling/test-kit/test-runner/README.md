@@ -13,8 +13,7 @@ bun add @beep/test-runner
 ```ts
 import { it } from "@beep/test-runner"
 import { assertTrue } from "@effect/vitest/utils"
-import { Effect } from "effect"
-
+import * as Effect from "effect/Effect";
 it.effect("runs with a watchdog", () => Effect.sync(() => assertTrue(true)))
 ```
 

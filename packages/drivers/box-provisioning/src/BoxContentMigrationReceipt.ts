@@ -7,7 +7,7 @@
 
 import { $BoxProvisioningId } from "@beep/identity";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { BoxContentMigrationPlan } from "./BoxContentMigrationPlan.ts";
 import { BoxProvisioningSchemaError } from "./BoxProvisioningErrors.ts";

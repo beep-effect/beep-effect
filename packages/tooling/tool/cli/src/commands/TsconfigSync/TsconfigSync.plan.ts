@@ -30,8 +30,13 @@ import {
 import { normalizePath } from "@beep/schema";
 import { A, Str, thunkFalse, thunkUndefined } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Console, Effect, FileSystem, flow, HashMap, HashSet, Path, pipe } from "effect";
-import { constTrue } from "effect/Function";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { constTrue, flow, pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -123,8 +128,7 @@ const readFileString = Effect.fn(function* (filePath: string) {
  *
  * ```ts
  * import { writeFileString } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * // Writes file content; provide FileSystem to run the effect.
  * const program = writeFileString("/repo/tsconfig.json", "{}\n")
  * console.log(Effect.isEffect(program)) // true
@@ -161,8 +165,8 @@ const applyJsoncModification = (
  *
  * ```ts
  * import { relativeFromRoot } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
- * import { Effect, Path } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Path from "effect/Path";
  * const program = Effect.gen(function* () {
  *   const path = yield* Path.Path
  *   return relativeFromRoot("/repo", "/repo/packages/schema/tsconfig.json", path)
@@ -268,8 +272,7 @@ const workspaceContainsPath = (workspace: WorkspaceDescriptor, targetPath: strin
  *
  * ```ts
  * import { buildWorkspaceDescriptors } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * // Scans the repo for workspace descriptors; provide FileSystem/Path to run it.
  * const program = buildWorkspaceDescriptors("/repo")
  * console.log(Effect.isEffect(program)) // true
@@ -378,8 +381,7 @@ const buildWorkspaceDescriptors = Effect.fn(function* (rootDir: string) {
  *
  * ```ts
  * import { buildAdjacency } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
- * import { HashMap } from "effect"
- *
+ * import * as HashMap from "effect/HashMap";
  * // An empty dependency index yields an empty adjacency map.
  * console.log(HashMap.size(buildAdjacency(HashMap.empty()))) // 0
  * ```
@@ -448,8 +450,7 @@ const contributesRootReference = (workspace: WorkspaceDescriptor): boolean =>
  *
  * ```ts
  * import { planRootReferenceSync } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = planRootReferenceSync("/repo", [])
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -609,8 +610,7 @@ const pathValuesEqual = (currentValue: unknown, expectedValue: ReadonlyArray<str
  *
  * ```ts
  * import { planRootAliasSync } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = planRootAliasSync("/repo", [])
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -713,7 +713,7 @@ const aliasPathEntriesEqual = (
  *
  * ```ts
  * import { planRootVitestAliasSync } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const program = planRootVitestAliasSync("/repo", O.none())
@@ -772,8 +772,7 @@ const planRootVitestAliasSync = Effect.fn(function* (rootDir: string, plannedRoo
  *
  * ```ts
  * import { planRootFallowBoundarySync } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = planRootFallowBoundarySync("/repo")
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -816,8 +815,7 @@ const planRootFallowBoundarySync = Effect.fn(function* (rootDir: string) {
  *
  * ```ts
  * import { planRootSyncpackSync } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = planRootSyncpackSync("/repo")
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -1084,8 +1082,8 @@ const planOnePackageReferenceSync = Effect.fnUntraced(function* (
  *
  * ```ts
  * import { planPackageReferenceSync } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
- * import { Effect, HashMap } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as HashMap from "effect/HashMap";
  * const program = planPackageReferenceSync("/repo", [], HashMap.empty(), HashMap.empty())
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -1190,8 +1188,8 @@ const planOnePackageCheckReferenceSync = Effect.fnUntraced(function* (
  *
  * ```ts
  * import { planPackageCheckReferenceSync } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
- * import { Effect, HashMap } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as HashMap from "effect/HashMap";
  * const program = planPackageCheckReferenceSync([], undefined, HashMap.empty())
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -1226,8 +1224,7 @@ const planPackageCheckReferenceSync = Effect.fn(function* (
  *
  * ```ts
  * import { planPackageDocgenSync } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = planPackageDocgenSync("/repo", [], undefined)
  * console.log(Effect.isEffect(program)) // true
  * ```

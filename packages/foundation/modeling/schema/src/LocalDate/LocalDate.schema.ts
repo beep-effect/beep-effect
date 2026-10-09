@@ -10,23 +10,19 @@
  */
 import { $SchemaId } from "@beep/identity";
 import { Str } from "@beep/utils";
-import {
-  DateTime,
-  Duration,
-  Effect,
-  Equal,
-  flow,
-  Hash,
-  Match,
-  Order as Order_,
-  pipe,
-  SchemaGetter,
-  SchemaIssue,
-} from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import { dual, flow, pipe } from "effect/Function";
+import * as Hash from "effect/Hash";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
+import * as Order_ from "effect/Order";
 import * as S from "effect/Schema";
+import * as SchemaGetter from "effect/SchemaGetter";
+import * as SchemaIssue from "effect/SchemaIssue";
 import * as SchemaUtils from "../SchemaUtils/index.ts";
 import type * as Ordering from "effect/Ordering";
 import type * as AST from "effect/SchemaAST";
@@ -234,7 +230,7 @@ const encodeLocalDateFromString = (localDate: {
  * **Example** (Parse ISO date string)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { fromString } from "@beep/schema/LocalDate"
  *
  * const program = fromString("2024-06-15")
@@ -308,7 +304,7 @@ export const today = (): LocalDate => DateTime.nowUnsafe().pipe(DateTime.toDate,
  * **Example** (Get today via Effect)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { todayEffect } from "@beep/schema/LocalDate"
  *
  * const date = await Effect.runPromise(todayEffect)
@@ -330,7 +326,7 @@ export const todayEffect = pipe(
  * **Example** (Create from DateTime)
  *
  * ```ts
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import { fromDateTime } from "@beep/schema/LocalDate"
  *
  * const date = fromDateTime(DateTime.makeUnsafe("2024-06-15T10:30:00Z"))

@@ -8,8 +8,10 @@
 import { $FirecrawlId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as O from "@beep/utils/Option";
-import { Effect, flow, pipe, Result } from "effect";
+import * as Effect from "effect/Effect";
+import { flow, pipe } from "effect/Function";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const $I = $FirecrawlId.create("Firecrawl.errors");

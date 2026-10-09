@@ -24,8 +24,7 @@ import * as S from "effect/Schema";
 import * as SchemaGetter from "effect/SchemaGetter";
 import * as Str from "effect/String";
 import { Model, NonNegativeInt, optionalNull, pg, Table, textBoundsCheck } from "./Kit.ts";
-import { Result } from "effect";
-
+import * as Result from "effect/Result";
 const $I = $ScratchpadId.create("beep/ProductMemory");
 
 const awareInstant =

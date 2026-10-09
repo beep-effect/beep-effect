@@ -36,7 +36,7 @@ export const CandidateDraftId = make("candidate_draft", {
  * **Example** (Decode CandidateDraftId with Schema)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
  * import * as S from "effect/Schema"
  *

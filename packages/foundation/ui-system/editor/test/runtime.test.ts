@@ -3,9 +3,11 @@ import { TextDetailMask, TextFormatMask, TextNode } from "@beep/lexical-schema/L
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import { Effect, pipe, Result } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import type { SerializedEditorState } from "@beep/lexical-schema/Lexical.model";
 
 const validWire = {

@@ -9,10 +9,14 @@ import { it } from "@beep/test-runner";
 import { assertSchemaArbitraryDecodesToSelf } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
 import { assertInstanceOf, assertNone, assertSome } from "@effect/vitest/utils";
-import { Effect, Fiber, FileSystem, Path, Runtime } from "effect";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
+import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { TestClock } from "effect/testing";
@@ -230,7 +234,7 @@ describe("practice-mail-tagging watch", () => {
     it.effect("stops with exit code 3 on throttling and never calls the provider again", () =>
       Effect.gen(function* () {
         yield* failNextListings([MailTaggingPortError.throttled("Mailbox", "listMessagesSince", "HTTP 429")]);
-        const fiber = yield* Effect.forkChild(refusal(run(["watch", "--yes"])));
+        const fiber = yield* run(["watch", "--yes"]).pipe(refusal, Effect.forkChild);
         yield* TestClock.adjust(pollInterval);
         const error = yield* Fiber.join(fiber);
         yield* TestClock.adjust(pollInterval);

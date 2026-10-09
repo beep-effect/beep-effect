@@ -26,10 +26,10 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, O, pipe } from "@beep/utils";
-import { Order } from "effect";
+import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import type { Equivalence } from "effect";
+import type * as Equivalence from "effect/Equivalence";
 
 const $I = $RepoCliId.create("internal/ratchet/RatchetDiff");
 
@@ -50,8 +50,7 @@ const $I = $RepoCliId.create("internal/ratchet/RatchetDiff");
  *
  * ```ts
  * import { diffMembership } from "@beep/repo-cli/test/Ratchet"
- * import { Order } from "effect"
- *
+ * import * as Order from "effect/Order";
  * const diff = diffMembership({
  *   current: ["a", "c"],
  *   baseline: ["a", "b"],

@@ -5,11 +5,14 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { describe, expect } from "@effect/vitest";
 import { assertInstanceOf, assertNone, assertSome } from "@effect/vitest/utils";
-import { DateTime, Effect, FileSystem, Layer } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -433,7 +436,7 @@ describe("@beep/ciops KPI reading", () => {
         expect(A.length(changeEventTable)).toBe(44);
         A.forEach(A.zip(blocks, changeEventTable), ([block, row]) => {
           expect(Str.startsWith(`${row.id}\n`)(block)).toBe(true);
-          expect(block).toContain(`landedAt: "${Str.replace(".000Z", "Z")(DateTime.formatIso(row.landedAt))}"`);
+          expect(block).toContain(`landedAt: "${row.landedAt.pipe(DateTime.formatIso, Str.replace(".000Z", "Z"))}"`);
           expect(block).toContain(`mergeCommit: ${row.mergeCommit}`);
         });
       })

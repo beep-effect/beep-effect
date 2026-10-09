@@ -8,8 +8,13 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { normalizePath } from "@beep/schema";
 import { A, Str, thunkFalse } from "@beep/utils";
-import { Console, Effect, FileSystem, Order, Path, pipe } from "effect";
+import * as Console from "effect/Console";
 import { Command } from "effect/cli";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -402,8 +407,7 @@ const collectTsconfigViolations = Effect.fn("SchemaTopology.collectTsconfigViola
  *
  * ```ts
  * import { collectSchemaTopologyViolations } from "@beep/repo-cli/commands/Lint"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const violations = yield* collectSchemaTopologyViolations()
  *   console.log(violations.length)

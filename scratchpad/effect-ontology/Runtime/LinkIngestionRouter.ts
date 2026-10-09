@@ -10,7 +10,16 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { Context, DateTime, Effect, FiberSet, HashSet, Inspectable, Layer, Random, Schedule, Result } from "effect";
+import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FiberSet from "effect/FiberSet";
+import * as HashSet from "effect/HashSet";
+import * as Inspectable from "effect/Inspectable";
+import * as Layer from "effect/Layer";
+import * as Random from "effect/Random";
+import * as Schedule from "effect/Schedule";
+import * as Result from "effect/Result";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -57,8 +66,7 @@ class BatchNotTerminalError extends S.TaggedError<BatchNotTerminalError>($I`Batc
  *
  * ```ts
  * import { LinkIngestionBackgroundTasks } from "@effect-ontology/Runtime/LinkIngestionRouter"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const tasks = yield* LinkIngestionBackgroundTasks
  *   yield* tasks.fork(Effect.logInfo("Finalizing link status"))
@@ -93,7 +101,7 @@ export class LinkIngestionBackgroundTasks extends Context.Service<LinkIngestionB
  * **Example** (Register the from-links routes on an HTTP router)
  *
  * ```ts
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer";
  * import { HttpRouter } from "effect/http"
  * import { LinkIngestionRouter } from "@effect-ontology/Runtime/LinkIngestionRouter"
  *

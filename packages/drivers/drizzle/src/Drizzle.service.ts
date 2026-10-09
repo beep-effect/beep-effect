@@ -6,9 +6,10 @@
  */
 
 import { $DrizzleId } from "@beep/identity";
-import { Context, Layer } from "effect";
+import * as Context from "effect/Context";
+import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
-import type { Effect } from "effect";
+import type * as Effect from "effect/Effect";
 import type { DrizzleError } from "./Drizzle.errors.ts";
 
 const $I = $DrizzleId.create("Drizzle.service");
@@ -73,8 +74,7 @@ export type DrizzleRows = typeof DrizzleRows.Type;
  * ```ts
  * import { deepStrictEqual } from "node:assert"
  * import type { DrizzleClient } from "@beep/drizzle"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const client: DrizzleClient = {
  *   execute: (statement, parameters) => Effect.succeed([{ statement, parameters }]),
  *   withTransaction: (use) => use(client)
@@ -111,8 +111,7 @@ export interface DrizzleClient {
  * ```ts
  * import { deepStrictEqual } from "node:assert"
  * import type { DrizzleShape } from "@beep/drizzle"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * let service: DrizzleShape
  * service = {
  *   execute: (statement, parameters) => Effect.succeed([`${statement}:${parameters.length}`]),
@@ -152,8 +151,7 @@ const makeService = (client: DrizzleClient): DrizzleShape =>
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { Drizzle, type DrizzleClient } from "@beep/drizzle"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const client: DrizzleClient = {
  *   execute: () => Effect.succeed([{ ok: true }]),
  *   withTransaction: (use) => use(client)
@@ -185,8 +183,7 @@ export class Drizzle extends Context.Service<Drizzle, DrizzleShape>()($I`Drizzle
    * ```ts
    * import { deepStrictEqual } from "node:assert"
    * import { Drizzle, type DrizzleClient } from "@beep/drizzle"
-   * import { Effect } from "effect"
-   *
+   * import * as Effect from "effect/Effect";
    * const client: DrizzleClient = {
    *   execute: (statement, parameters) => Effect.succeed([{ statement, parameters }]),
    *   withTransaction: (use) => use(client)

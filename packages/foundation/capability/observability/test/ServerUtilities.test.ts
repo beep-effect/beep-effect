@@ -2,7 +2,7 @@ import { layerLocalLgtmServer, ServerObservabilityConfig, sanitizePrometheusMetr
 import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
-import { Layer } from "effect";
+import * as Layer from "effect/Layer";
 
 describe("ServerUtilities", () => {
   it("builds the local LGTM layer when optional layer options are omitted", () => {

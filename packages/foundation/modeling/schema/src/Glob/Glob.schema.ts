@@ -23,9 +23,9 @@
 
 import { $SchemaId } from "@beep/identity/packages";
 import { Str, thunkFalse } from "@beep/utils";
-import { Result } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const $I = $SchemaId.create("Glob");

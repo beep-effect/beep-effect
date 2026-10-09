@@ -20,8 +20,8 @@
 
 import { $NlpId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
-import { Tuple } from "effect";
 import * as S from "effect/Schema";
+import * as Tuple from "effect/Tuple";
 
 const $I = $NlpId.create("Graph/Schema");
 

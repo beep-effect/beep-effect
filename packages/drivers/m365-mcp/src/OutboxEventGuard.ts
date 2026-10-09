@@ -17,8 +17,8 @@
 import { $M365McpId } from "@beep/identity/packages";
 import { GraphEvent } from "@beep/m365";
 import { LiteralKit } from "@beep/schema";
-import { pipe } from "effect";
 import * as A from "effect/Array";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 

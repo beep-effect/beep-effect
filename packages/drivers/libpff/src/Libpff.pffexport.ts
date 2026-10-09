@@ -18,9 +18,16 @@ import { $LibpffId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { A, O, R, Str, Struct } from "@beep/utils";
-import { Effect, FileSystem, flow, Match, Number as Num, Order, Path, Stream } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { flow } from "effect/Function";
+import * as Match from "effect/Match";
+import * as Num from "effect/Number";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import {
   assembleEml,
   PFFEXPORT_EML_FILE_NAME,
@@ -34,8 +41,8 @@ import { PFFEXPORT_MESSAGES_SUFFIX, PffexportMessageRecord } from "./Libpff.mess
 import { LibpffFileProcessingEngine, LibpffFileProcessingEngineDescriptor } from "./Libpff.service.ts";
 import type { ExportArchiveOperation, ExtractFileOperation } from "@beep/file-processing/Operation";
 import type { FileProcessingEngineShape } from "@beep/file-processing/Service";
-import type { Scope } from "effect";
 import type * as Crypto from "effect/Crypto";
+import type * as Scope from "effect/Scope";
 import type { LibpffError } from "./Libpff.errors.ts";
 
 const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" })).annotate({
@@ -539,8 +546,7 @@ const claimReleaseFailedWarning =
  * **Example** (Usage)
  * ```ts
  * import { makePffexportFileProcessingEngine, PffexportEngineConfig } from "@beep/libpff"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const engine = yield* makePffexportFileProcessingEngine(
  *     PffexportEngineConfig.make({ exportRoot: "/tmp/pst-out" })

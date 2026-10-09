@@ -11,9 +11,12 @@
  */
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Cause, Effect, Exit, Match } from "effect";
 import * as A from "effect/Array";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import { dual } from "effect/Function";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -605,7 +608,7 @@ export type ProofJobCancelOutcome = typeof ProofJobCancelOutcome.Type;
  * ```ts
  * import { proofJobUnitName } from "@beep/repo-cli/test/Yeet"
  * import { UUID } from "@beep/repo-cli/test/SharedInternals"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * console.log(proofJobUnitName(Effect.runSync(S.decodeEffect(UUID)("0f5c9a3e-6d3b-4c1e-9a8f-2b7d1c4e5a60"))))
@@ -832,7 +835,7 @@ export class ProofJobCommandEnd extends S.Class<ProofJobCommandEnd>($I`ProofJobC
  *
  * ```ts
  * import { ProofJobCommandEnd, proofJobOutcomeForExit } from "@beep/repo-cli/test/Yeet"
- * import { Exit } from "effect"
+ * import * as Exit from "effect/Exit";
  * import * as O from "effect/Option"
  *
  * const end = ProofJobCommandEnd.make({ endedAt: "2026-09-16T00:00:01.000Z", elapsedMs: 1000 })
@@ -930,7 +933,7 @@ const proofJobRecordReturnedWaveRowIdsDefault = A.empty<string>();
  * ```ts
  * import { ProofJobRecord, ProofJobRequest, ProofJobSubmitter, ProofJobUnit } from "@beep/repo-cli/test/Yeet"
  * import { UUID } from "@beep/repo-cli/test/SharedInternals"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import * as O from "effect/Option"
  *
@@ -1193,7 +1196,7 @@ export const proofJobRowSeverityFor: {
  * ```ts
  * import { YeetProofJobCapsule } from "@beep/repo-cli/test/Yeet"
  * import { UUID } from "@beep/repo-cli/test/SharedInternals"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const capsule = YeetProofJobCapsule.make({

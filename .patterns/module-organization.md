@@ -305,7 +305,7 @@ export type ReadonlyRecord<K extends string | symbol, V> = { readonly [P in K]: 
  * @example
  * ```typescript
  * import * as A from "effect/Array"
- * import { pipe } from "effect"
+ * import { pipe } from "effect/Function"
  *
  * // Data-first usage
  * const result1 = A.map([1, 2, 3], x => x * 2)
@@ -409,7 +409,8 @@ export const symbol = "~effect/interfaces/Equal"
  *
  * @example
  * ```typescript
- * import { Effect, FiberSet } from "effect"
+ * import * as Effect from "effect/Effect"
+ * import * as FiberSet from "effect/FiberSet"
  *
  * Effect.gen(function*() {
  * 

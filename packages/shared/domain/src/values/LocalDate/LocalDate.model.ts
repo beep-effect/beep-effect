@@ -10,8 +10,9 @@
  */
 import { $SharedDomainId } from "@beep/identity";
 import { Str } from "@beep/utils";
-import { DateTime, Hash } from "effect";
+import * as DateTime from "effect/DateTime";
 import * as Eq from "effect/Equal";
+import * as Hash from "effect/Hash";
 import * as S from "effect/Schema";
 import { CalendarParts, isValidGregorianDate } from "./LocalDate.calendar.ts";
 
@@ -106,7 +107,7 @@ export class Model extends S.Class<Model>($I`LocalDateModel`)(
    * **Example** (Compare equal LocalDates)
    *
    * ```ts
-   * import { Equal } from "effect"
+   * import * as Equal from "effect/Equal";
    * import { Model } from "@beep/shared-domain/values/LocalDate"
    *
    * const left = Model.make({ year: 2024, month: 6, day: 15 })
@@ -130,7 +131,7 @@ export class Model extends S.Class<Model>($I`LocalDateModel`)(
    * **Example** (Hash matches ISO string)
    *
    * ```ts
-   * import { Hash } from "effect"
+   * import * as Hash from "effect/Hash";
    * import { Model } from "@beep/shared-domain/values/LocalDate"
    *
    * const date = Model.make({ year: 2024, month: 6, day: 15 })

@@ -8,14 +8,15 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { A } from "@beep/utils";
-import { Effect, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { Node, SyntaxKind } from "ts-morph";
 import { lawScanSourcePaths, runLawScan } from "./internal/LawScan.ts";
 import type { TSMorphService, TSMorphServiceError } from "@beep/repo-utils/TSMorph/index";
-import type { Path } from "effect";
+import type * as Path from "effect/Path";
 import type {
   ArrowFunction,
   CallExpression,
@@ -373,7 +374,7 @@ const collectEffectFnDiagnostics = (
  * **Example** (Run effect fn rules)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { runEffectFnRules, EffectFnRulesOptions } from "@beep/repo-cli/commands/Laws/EffectFn"
  *
  * const program = Effect.map(

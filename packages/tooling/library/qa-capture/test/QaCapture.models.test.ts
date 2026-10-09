@@ -41,8 +41,9 @@ import {
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
-import { Effect, Equal } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
 import * as S from "effect/Schema";
 
 const assertRoundTrip = Effect.fn("QaCaptureTest.assertRoundTrip")(function* <Schema extends S.Codec<unknown, unknown>>(

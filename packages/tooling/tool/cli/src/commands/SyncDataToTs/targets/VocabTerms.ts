@@ -13,7 +13,8 @@
 
 import { CoreVocab } from "@beep/identity";
 import { A, Str } from "@beep/utils";
-import { Effect, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as R from "effect/Record";
 import { doctestFenceInfo } from "../../../internal/jsdoc/DoctestSource.ts";
 import { formatJson, outputFile } from "../internal/Source.ts";

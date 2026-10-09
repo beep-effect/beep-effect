@@ -5,10 +5,17 @@ import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { sha256 } from "@noble/hashes/sha2.js";
-import { Data, Effect, FileSystem, Layer, Match, Path, Ref, Tuple } from "effect";
+import * as Data from "effect/Data";
+import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
+import * as FileSystem from "effect/FileSystem";
 import { HttpClient, HttpClientError, HttpClientResponse } from "effect/http";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
+import * as Path from "effect/Path";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
+import * as Tuple from "effect/Tuple";
 import * as TestConsole from "effect/testing/TestConsole";
 import type * as HttpClientRequest from "effect/http/HttpClientRequest";
 

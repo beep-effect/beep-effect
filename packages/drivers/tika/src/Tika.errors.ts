@@ -8,7 +8,7 @@
 import { $TikaId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { O, Str } from "@beep/utils";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 

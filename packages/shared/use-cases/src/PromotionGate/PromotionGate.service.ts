@@ -7,8 +7,8 @@
  */
 
 import { $SharedUseCasesId } from "@beep/identity/packages";
-import { Context } from "effect";
-import type { Effect } from "effect";
+import * as Context from "effect/Context";
+import type * as Effect from "effect/Effect";
 import type { PromotionGateRequest, PromotionGateVerdict } from "./PromotionGate.schema.ts";
 
 const $I = $SharedUseCasesId.create("PromotionGate/PromotionGate.service");
@@ -42,8 +42,7 @@ export interface PromotionGateShape {
  *   PromotionTenantRef
  * } from "@beep/shared-use-cases/PromotionGate"
  * import { PromotionGate } from "@beep/shared-use-cases/server"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = PromotionGate.pipe(
  *   Effect.flatMap((gate) => gate.evaluate(PromotionGateRequest.make({
  *     subject: PromotionSubjectRef.make({ id: "subject-1", kind: "example" }),

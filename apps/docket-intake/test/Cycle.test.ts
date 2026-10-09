@@ -8,10 +8,17 @@ import { addDays, LocalDate } from "@beep/schema/LocalDate";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
-import { Cause, Effect, Exit, FileSystem, HashMap, Layer, Ref, Schedule } from "effect";
 import * as A from "effect/Array";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
+import * as HashMap from "effect/HashMap";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
+import * as Ref from "effect/Ref";
+import * as Schedule from "effect/Schedule";
 import * as Str from "effect/String";
 import { pollCycle, pollOnSchedule, seedCursor } from "@/Cycle";
 import { fixtureConfig, STATE_DIRECTORY } from "./support/Config.ts";
@@ -85,7 +92,7 @@ describe("@beep/docket-intake poll cycle", () => {
 
         const first = yield* pollCycle(fixtureConfig);
         const afterFirst = yield* store.load;
-        const entries = A.fromIterable(HashMap.values(yield* Ref.get(harness.entries)));
+        const entries = (yield* Ref.get(harness.entries)).pipe(HashMap.values, A.fromIterable);
         const second = yield* pollCycle(fixtureConfig);
 
         expect([first.seen, first.processed, first.entered, first.failed]).toStrictEqual([1, 1, 1, 0]);
@@ -122,9 +129,10 @@ describe("@beep/docket-intake poll cycle", () => {
         const files = A.sort(yield* fs.readDirectory(DIGESTS), Str.Order);
         const dayOne = yield* fs.readFileString(`${DIGESTS}/1969-12-28.md`);
         const dayTwo = yield* fs.readFileString(`${DIGESTS}/1969-12-29.md`);
-        const digestEntries = A.filter(
-          A.fromIterable(HashMap.values(yield* Ref.get(harness.entries))),
-          (entry) => entry.kind === "digest"
+        const digestEntries = (yield* Ref.get(harness.entries)).pipe(
+          HashMap.values,
+          A.fromIterable,
+          A.filter((entry) => entry.kind === "digest")
         );
 
         expect(files).toStrictEqual(["1969-12-28.md", "1969-12-29.md", "1969-12-30.md"]);

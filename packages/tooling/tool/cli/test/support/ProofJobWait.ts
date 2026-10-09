@@ -11,7 +11,11 @@
  */
 
 import { assertInclude } from "@effect/vitest/utils";
-import { Clock, Deferred, Duration, Effect, Fiber } from "effect";
+import * as Clock from "effect/Clock";
+import * as Deferred from "effect/Deferred";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as TestClock from "effect/testing/TestClock";
@@ -44,7 +48,7 @@ export const waitTimesOut = Effect.fnUntraced(function* (
   // A waiter that returns never sleeps, so its exit also ends the race.
   yield* Effect.raceFirst(Deferred.await(polled), Fiber.await(waiter));
   yield* testClock.adjust(Duration.millis(timeoutMs + 1));
-  yield* Result.match(yield* Effect.result(Fiber.join(waiter)), {
+  yield* Result.match(yield* waiter.pipe(Fiber.join, Effect.result), {
     onFailure: (error) => Effect.sync(() => assertInclude(error.message, "Timed out")),
     onSuccess: (returned) => Effect.die(`the wait returned ${returned.kind} where it had to time out`),
   });

@@ -10,7 +10,14 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { Clock, Context, Duration, Effect, HashMap, Inspectable, Layer, Ref } from "effect";
+import * as Clock from "effect/Clock";
+import * as Context from "effect/Context";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
+import * as Inspectable from "effect/Inspectable";
+import * as Layer from "effect/Layer";
+import * as Ref from "effect/Ref";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -94,7 +101,7 @@ const embeddingCacheConfigMaxEntriesDefault = PosInt.make(10_000);
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { Duration } from "effect"
+ * import * as Duration from "effect/Duration";
  * import { EmbeddingCacheConfig } from "@effect-ontology/Service/EmbeddingCache"
  *
  * const PosInt = S.Int.check(S.isGreaterThan(0))
@@ -175,7 +182,7 @@ export interface EmbeddingCacheService {
  * **Example** (Set and get a vector)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * import { EmbeddingCache } from "@effect-ontology/Service/EmbeddingCache"
  *
@@ -272,7 +279,7 @@ export class EmbeddingCache extends Context.Service<EmbeddingCache, EmbeddingCac
  * **Example** (Observe a guaranteed miss)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * import { EmbeddingCache, EmbeddingCacheTest } from "@effect-ontology/Service/EmbeddingCache"
  *
@@ -344,7 +351,8 @@ export interface PersistentEmbeddingCacheService extends EmbeddingCacheService {
  * **Example** (Clear memory while a persisted copy survives)
  *
  * ```ts
- * import { Effect, Layer } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * import * as O from "effect/Option"
  * import { makePersistentEmbeddingCache, PersistentEmbeddingCache } from "@effect-ontology/Service/EmbeddingCache"
  * import { StorageService, StorageServiceTest } from "@effect-ontology/Service/Storage"
@@ -412,7 +420,7 @@ const encodeEmbeddingBlob = S.encodeEffect(S.fromJsonString(EmbeddingBlob));
  * **Example** (Set, then reload after a memory miss)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * import { makePersistentEmbeddingCache } from "@effect-ontology/Service/EmbeddingCache"
  * import { StorageService, StorageServiceTest } from "@effect-ontology/Service/Storage"
@@ -785,7 +793,8 @@ const EmbeddingCacheAliasLayer = Layer.effect(EmbeddingCache, PersistentEmbeddin
  * **Example** (Provide persistence over in-memory storage)
  *
  * ```ts
- * import { Effect, Layer } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * import * as O from "effect/Option"
  * import { ConfigService, DEFAULT_CONFIG } from "@effect-ontology/Service/Config"
  * import { EmbeddingCache, EmbeddingCacheWithPersistence } from "@effect-ontology/Service/EmbeddingCache"

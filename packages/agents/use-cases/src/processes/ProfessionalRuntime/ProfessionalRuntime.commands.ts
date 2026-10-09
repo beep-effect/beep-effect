@@ -19,8 +19,7 @@ const $I = $AgentsUseCasesId.create("processes/ProfessionalRuntime/ProfessionalR
  * ```ts
  * import { RuntimeFixtureInput, runRuntimeFixture } from "@beep/agents-use-cases/proof"
  * import { ProposeCandidateOutputSet, RuntimeScope } from "@beep/agents-use-cases/public"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const fixture = RuntimeFixtureInput.make({
  *   body: [
  *     "[span:law-email-001-s2] We need help preparing a provisional patent application.",

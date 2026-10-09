@@ -57,9 +57,15 @@ import * as PublicEntityId from "@beep/shared-domain/entity/PublicEntityId";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import { A, O } from "@beep/utils";
 import { and, count, desc, eq, getColumns, gt, inArray, isNull, lte, or, sql } from "drizzle-orm";
-import { DateTime, Effect, Match, Order, pipe, Result, Semaphore } from "effect";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
+import { pipe } from "effect/Function";
+import * as Match from "effect/Match";
+import * as Order from "effect/Order";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Semaphore from "effect/Semaphore";
 import { supersedeEdgeFactInTransaction, supersessionHeadOf } from "../EdgeAuthority/EdgeAuthority.repo.ts";
 import { PosInt } from "../internal/PosInt.ts";
 import type { Evidence } from "@beep/epistemic-domain/entities/Evidence";
@@ -427,8 +433,7 @@ const listWhere = (query: ListContradictionCandidates) => {
  *
  * ```ts
  * import { makeDrizzleContradictionTriageRepository } from "@beep/epistemic-server"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(makeDrizzleContradictionTriageRepository())) // true
  * ```
  *

@@ -8,7 +8,7 @@ import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, MimeType, Sha256Hex, URLStr } from "@beep/schema";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { PosInt } from "../../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Model/Image");
@@ -299,7 +299,7 @@ const imageManifestImagesDefault = A.empty<ImageRef>();
  *
  * **Example** (Use ImageManifest)
  * ```ts
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import { ImageManifest } from "@effect-ontology/Model/Image"
  *
  * const manifest = ImageManifest.make({
@@ -336,23 +336,23 @@ export class ImageManifest extends S.Class<ImageManifest>($I`ImageManifest`)(
   })
 ) {
   /**
-   * Number of references in this manifest.
-   *
-   * **Example** (Inspect an empty manifest)
-   * ```ts
-   * import { DateTime } from "effect"
-   * import { ImageManifest } from "@effect-ontology/Model/Image"
-   *
-   * const manifest = ImageManifest.make({
-   *   ownerType: "document",
-   *   ownerId: "doc-1",
-   *   updatedAt: DateTime.nowUnsafe()
-   * })
-   * console.log(manifest.totalCount) // 0
-   * ```
-   *
-   * @returns The current number of image references.
-   */
+     * Number of references in this manifest.
+     *
+     * **Example** (Inspect an empty manifest)
+     * ```ts
+     * import * as DateTime from "effect/DateTime";
+     * import { ImageManifest } from "@effect-ontology/Model/Image"
+     *
+     * const manifest = ImageManifest.make({
+     *   ownerType: "document",
+     *   ownerId: "doc-1",
+     *   updatedAt: DateTime.nowUnsafe()
+     * })
+     * console.log(manifest.totalCount) // 0
+     * ```
+     *
+     * @returns The current number of image references.
+     */
   get totalCount(): number {
     return A.length(this.images);
   }

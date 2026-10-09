@@ -14,7 +14,8 @@
  */
 
 import { A, O } from "@beep/utils";
-import { pipe, Result } from "effect";
+import { pipe } from "effect/Function";
+import * as Result from "effect/Result";
 import { approvalStatement } from "./Approval.schemas.ts";
 import type { ApprovalRefusalReason, Confirmation, EmailAddress } from "./Approval.schemas.ts";
 import type { Sha256Hex } from "./Manifest.schemas.ts";

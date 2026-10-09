@@ -15,8 +15,10 @@ import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import { DateTime, Effect, pipe } from "effect";
 import * as Crypto from "effect/Crypto";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 

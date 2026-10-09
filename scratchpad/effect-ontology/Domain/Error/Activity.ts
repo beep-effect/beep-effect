@@ -13,7 +13,9 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
 import { dual, O, P } from "@beep/utils";
-import { Inspectable, Match, Effect } from "effect";
+import * as Inspectable from "effect/Inspectable";
+import * as Match from "effect/Match";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { ErrorMessage, Milliseconds, OptionalErrorMessage } from "./Base.ts";
 

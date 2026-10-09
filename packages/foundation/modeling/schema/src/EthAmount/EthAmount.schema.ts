@@ -8,8 +8,9 @@
  */
 
 import { $SchemaId } from "@beep/identity/packages";
-import { BigDecimal, SchemaGetter } from "effect";
+import * as BigDecimal from "effect/BigDecimal";
 import * as S from "effect/Schema";
+import * as SchemaGetter from "effect/SchemaGetter";
 
 const $I = $SchemaId.create("EthAmount");
 

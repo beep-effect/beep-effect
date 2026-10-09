@@ -8,12 +8,13 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { Config, Effect } from "effect";
 import * as A from "effect/Array";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import type { PlatformError } from "effect";
+import type * as PlatformError from "effect/PlatformError";
 
 const $I = $RepoCliId.create("internal/state/WorkstationState");
 

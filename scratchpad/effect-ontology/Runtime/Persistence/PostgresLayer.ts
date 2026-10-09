@@ -19,7 +19,9 @@ import { $ScratchpadId } from "@beep/identity";
 import { makeDrizzleLayer } from "@beep/postgres";
 import { Port } from "@beep/schema/Port";
 import { PgClient } from "@effect/sql-pg";
-import { Config, Effect, Layer} from "effect";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import { ShardingConfig, SqlMessageStorage, SqlRunnerStorage } from "effect/cluster";
 import { databaseReady } from "./DatabaseReady.ts";
@@ -111,7 +113,8 @@ const PostgresPortConfig = Config.Number("POSTGRES_PORT").pipe(
  * **Example** (Decode host from a password-bearing env provider)
  *
  * ```ts
- * import { ConfigProvider, Effect } from "effect"
+ * import * as ConfigProvider from "effect/ConfigProvider";
+ * import * as Effect from "effect/Effect";
  * import { PostgresConfigFromEnv } from "@effect-ontology/Runtime/Persistence/PostgresLayer"
  *
  * const config = Effect.runSync(
@@ -195,7 +198,7 @@ export const PgClientLayerFromConfig = (config: PostgresConfig) =>
  * **Example** (Compose the env-backed PostgreSQL client)
  *
  * ```ts
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer";
  * import { DrizzleLive, PgClientLive } from "@effect-ontology/Runtime/Persistence/PostgresLayer"
  *
  * console.log(Layer.mergeAll(PgClientLive, DrizzleLive) !== PgClientLive) // true
@@ -212,7 +215,7 @@ export const PgClientLive = Layer.unwrap(PostgresConfigFromEnv.pipe(Effect.map(P
  * **Example** (Merge Drizzle onto a PostgreSQL client)
  *
  * ```ts
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer";
  * import { DrizzleLive, PgClientLive } from "@effect-ontology/Runtime/Persistence/PostgresLayer"
  *
  * console.log(Layer.mergeAll(PgClientLive, DrizzleLive) !== DrizzleLive) // true
@@ -356,7 +359,7 @@ export const ShardingConfigLive = ShardingConfig.layerDefaults;
  * **Example** (Compose message and runner storage)
  *
  * ```ts
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer";
  * import { MessageStorageLive, PostgresPersistenceLive, RunnerStorageLive } from "@effect-ontology/Runtime/Persistence/PostgresLayer"
  *
  * const storage = Layer.mergeAll(MessageStorageLive, RunnerStorageLive)

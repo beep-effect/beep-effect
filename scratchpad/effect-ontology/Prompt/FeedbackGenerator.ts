@@ -6,7 +6,12 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { Formatter, flow, HashSet, Inspectable, pipe, SchemaIssue, Effect } from "effect";
+import * as Formatter from "effect/Formatter";
+import * as HashSet from "effect/HashSet";
+import * as Inspectable from "effect/Inspectable";
+import * as SchemaIssue from "effect/SchemaIssue";
+import * as Effect from "effect/Effect";
+import { flow, pipe } from "effect/Function";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";

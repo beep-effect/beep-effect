@@ -1,6 +1,8 @@
 import { TextAnchor } from "@beep/provenance";
-import { Effect, Layer, Match } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -253,8 +255,7 @@ const makeChunker = Effect.gen(function* () {
  *
  * ```ts
  * import { ChunkerLive } from "@/layers/ChunkerLive"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(ChunkerLive)) // true
  * ```
  *

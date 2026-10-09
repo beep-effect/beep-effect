@@ -16,7 +16,9 @@ resources.
 ```ts
 import { Box, BoxCcgConfig } from "@beep/box"
 import { BoxProvisioning } from "@beep/box-provisioning"
-import { Effect, Layer, Redacted } from "effect"
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Redacted from "effect/Redacted";
 import * as O from "effect/Option"
 
 const BoxLive = Box.makeCcgLayer(BoxCcgConfig.make({
@@ -94,8 +96,8 @@ apply only a plan that a fresh run reproduces.
 ```ts
 import { Box } from "@beep/box"
 import { BoxContentMigration, encodeBoxContentMigrationPlan } from "@beep/box-provisioning"
-import { Effect, Layer } from "effect"
-
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 const makeMigrationLive = (boxLive: Layer.Layer<Box>) =>
   BoxContentMigration.liveLayer.pipe(Layer.provide(boxLive))
 

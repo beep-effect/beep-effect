@@ -12,8 +12,9 @@
 
 import { $LibpffId } from "@beep/identity";
 import { A, O, R, Str } from "@beep/utils";
-import { Match, MutableHashMap } from "effect";
 import * as Base64 from "effect/encoding/Base64";
+import * as Match from "effect/Match";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as S from "effect/Schema";
 
 const $I = $LibpffId.create("Libpff.eml");
@@ -565,7 +566,7 @@ export const parseInternetHeaders = (text: string): InternetHeaderMap => {
     if (colon <= 0) continue;
     const key = Str.toLowerCase(Str.trim(line.slice(0, colon)));
     const value = Str.trim(line.slice(colon + 1));
-    const previous = O.getOrElse(MutableHashMap.get(headers, key), () => A.empty<string>());
+    const previous = O.getOrElse(MutableHashMap.get(headers, key), A.empty<string>);
     MutableHashMap.set(headers, key, A.appendAll(previous, internetHeaderValues({ key, value })));
   }
   // `R.fromEntries` defines own data properties, so a `Constructor:` or

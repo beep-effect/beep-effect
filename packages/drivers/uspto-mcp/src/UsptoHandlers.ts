@@ -14,8 +14,10 @@
 
 import { apiKeyRequiredFailure, FetchableHandle, resolveSourceCredential } from "@beep/mcp-kit";
 import { Uspto } from "@beep/uspto";
-import { DateTime, Effect, Random } from "effect";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import * as Random from "effect/Random";
 import {
   MintFetchableHandle,
   ProjectDocumentsWithinBudgetOptions,
@@ -85,7 +87,8 @@ const makeDiagnosticFetchableHandleMinter = Effect.fn("UsptoMcp.makeDiagnosticFe
  * ```ts
  * import { UsptoToolkitHandlersLive } from "@beep/uspto-mcp/UsptoHandlers"
  * import { Uspto, UsptoConfigInput } from "@beep/uspto"
- * import { Layer, Redacted } from "effect"
+ * import * as Layer from "effect/Layer";
+ * import * as Redacted from "effect/Redacted";
  * import { FetchHttpClient } from "effect/http"
  *
  * const layer = UsptoToolkitHandlersLive.pipe(

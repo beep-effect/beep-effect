@@ -12,7 +12,10 @@
 import { getSomesStruct } from "@beep/utils/Option";
 import { thunkEmptyStr } from "@beep/utils/thunk";
 import type { DrizzleError } from "drizzle-orm";
-import { Console, DateTime, Effect, FileSystem } from "effect";
+import * as Console from "effect/Console";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import * as A from "effect/Array";
 import { flow, pipe } from "effect/Function";
 import * as O from "effect/Option";

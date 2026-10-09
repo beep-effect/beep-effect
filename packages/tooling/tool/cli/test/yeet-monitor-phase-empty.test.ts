@@ -11,9 +11,11 @@ import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
-import { Effect, Layer, Ref } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Ref from "effect/Ref";
 import type { YeetExecutedStep, YeetVerdictExtrasForTesting } from "@beep/repo-cli/test/Yeet";
 
 const PlatformLayer = NodeChildProcessSpawner.layer.pipe(

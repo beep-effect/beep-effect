@@ -28,8 +28,7 @@ const $I = $LawPracticeServerId.create("PracticeKg.errors");
  *
  * ```ts
  * import { PracticeKgProjectionError } from "@beep/law-practice-server"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const failing = Effect.gen(function* () {
  *   return yield* PracticeKgProjectionError.make({
  *     message: "Graph bundle already exists; pass --overwrite to replace it."
@@ -103,8 +102,7 @@ export class PracticeKgProjectionError extends S.TaggedError<PracticeKgProjectio
    *
    * ```ts
    * import { PracticeKgProjectionError } from "@beep/law-practice-server"
-   * import { Effect } from "effect"
-   *
+   * import * as Effect from "effect/Effect";
    * const described = Effect.fail(new Error("ENOENT")).pipe(
    *   PracticeKgProjectionError.mapError("Failed reading extract children root."),
    *   Effect.catchTag("PracticeKgProjectionError", (error) => Effect.succeed(error.message))

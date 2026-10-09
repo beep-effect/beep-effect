@@ -2,7 +2,7 @@ import { DOMCssProperties, isCSSProperties } from "@beep/schema/DomCssProperties
 import { createDOMRefSchema, DOMReactNode, isReactNode, isReactRef } from "@beep/schema/DomReactNode";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { DateTime } from "effect";
+import * as DateTime from "effect/DateTime";
 import * as S from "effect/Schema";
 
 const isDOMCssProperties = S.is(DOMCssProperties);

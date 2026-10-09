@@ -8,7 +8,12 @@
 
 import { $TechnicalDrawingId } from "@beep/identity/packages";
 import { A, O } from "@beep/utils";
-import { Context, Effect, FileSystem, Layer, Path, pipe } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { ShadingPlan } from "./Geometry.schemas.ts";
 import { mirrorSegments, sameSegments } from "./Geometry.segments.ts";
@@ -73,8 +78,7 @@ export class RenderRequest extends S.Class<RenderRequest>($I`RenderRequest`)(
  *
  * ```ts
  * import type { FigureSetShape } from "@beep/technical-drawing"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const service: FigureSetShape = {
  *   render: () => Effect.die("not implemented"),
  *   validate: () => Effect.die("not implemented")
@@ -237,7 +241,7 @@ const makeService = Effect.fn("FigureSet.makeService")(function* () {
         const shadingLines = pipe(
           A.get(shading, index),
           O.map((view) => view.shading),
-          O.getOrElse(() => A.empty<Segment2>())
+          O.getOrElse(A.empty<Segment2>)
         );
         const svg = composeSheet({
           segments: edges.visible,

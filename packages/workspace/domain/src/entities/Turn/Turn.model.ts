@@ -8,7 +8,7 @@
 import { $WorkspaceDomainId } from "@beep/identity/packages";
 import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { TurnItems } from "./Turn.values.ts";
 

@@ -11,7 +11,7 @@ import * as S from "effect/Schema";
 import { Entity } from "./Entity.ts";
 import { EREdge, ERNode, ResolutionMethod } from "./EntityResolution.ts";
 import { EntityId } from "./shared.ts";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as A from "effect/Array";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Model/EntityResolutionGraph");
@@ -237,8 +237,8 @@ const ResolutionGraph = S.toCodecJson(S.Graph("directed", ERNode, EREdge)).pipe(
  *
  * **Example** (Use EntityResolutionGraph)
  * ```ts
- * import { Graph } from "effect"
- * import { DateTime } from "effect"
+ * import * as Graph from "effect/Graph";
+ * import * as DateTime from "effect/DateTime";
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  * import { EntityResolutionGraph, EntityResolutionStats } from "@effect-ontology/Model/EntityResolutionGraph"

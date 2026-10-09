@@ -8,22 +8,18 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { A, HostProcessArchitecture, HostProcessPlatform, Str } from "@beep/utils";
-import {
-  Config,
-  Console,
-  Effect,
-  FileSystem,
-  flow,
-  Match,
-  MutableHashSet,
-  MutableRef,
-  Number as Num,
-  Path,
-  pipe,
-} from "effect";
 import * as Bool from "effect/Boolean";
-import { dual } from "effect/Function";
+import * as Config from "effect/Config";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { dual, flow, pipe } from "effect/Function";
+import * as Match from "effect/Match";
+import * as MutableHashSet from "effect/MutableHashSet";
+import * as MutableRef from "effect/MutableRef";
+import * as Num from "effect/Number";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import {
   CommandJsonOutput,

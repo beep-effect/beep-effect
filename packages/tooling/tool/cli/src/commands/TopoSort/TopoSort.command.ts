@@ -7,8 +7,10 @@
 
 import { buildRepoDependencyIndex, findRepoRoot, sortWorkspacePackages } from "@beep/repo-utils";
 import { A } from "@beep/utils";
-import { Console, Effect, HashMap } from "effect";
+import * as Console from "effect/Console";
 import { Command } from "effect/cli";
+import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
 import { isRootDepIndexKey } from "../TsconfigSync/TsconfigSync.schemas.ts";
 
 /**

@@ -14,27 +14,25 @@ import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
-import {
-  Arbitrary,
-  ConfigProvider,
-  Context,
-  Deferred,
-  Effect,
-  FileSystem,
-  HashSet,
-  Layer,
-  Path,
-  Ref,
-  Sink,
-  Stream,
-} from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Context from "effect/Context";
 import { Command } from "effect/cli";
+import * as Deferred from "effect/Deferred";
+import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
+import * as FileSystem from "effect/FileSystem";
+import * as HashSet from "effect/HashSet";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
+import * as Sink from "effect/Sink";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";

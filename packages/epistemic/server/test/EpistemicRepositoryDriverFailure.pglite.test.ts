@@ -22,8 +22,10 @@ import { it } from "@beep/test-runner";
 import { makePgliteSqlTestLayer } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import { Effect, Layer, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import * as SqlClient from "effect/sql/SqlClient";
 

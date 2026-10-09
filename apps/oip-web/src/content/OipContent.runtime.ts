@@ -9,8 +9,9 @@ import { $OipWebId } from "@beep/identity/packages";
 import { Sanity, SanityConfigInput, SanityQueryRequest } from "@beep/sanity";
 import { LiteralKit } from "@beep/schema";
 import { O } from "@beep/utils";
-import { Effect, Layer } from "effect";
+import * as Effect from "effect/Effect";
 import { FetchHttpClient } from "effect/http";
+import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import { makeRedactedConfigOptionReader, makeTextConfigOptionReader } from "../runtime/OipRuntimeConfig.ts";
 import { oipSiteContent } from "./OipContent.data.ts";
@@ -113,19 +114,17 @@ const sanityConfig = Effect.fn("OipContent.sanityConfig")(function* () {
 });
 
 const loadFromSanity = (config: SanityConfigInput): Effect.Effect<OipSiteContent, OipContentLoadError> =>
-  Effect.scoped(
-    Layer.build(Sanity.makeLayer(config).pipe(Layer.provide(FetchHttpClient.layer))).pipe(
-      Effect.flatMap((context) =>
-        Effect.gen(function* () {
-          const sanity = yield* Sanity;
-          const response = yield* sanity.fetch(SanityQueryRequest.make({ query }));
-          return yield* decodeOipSiteContent(response.result).pipe(
-            Effect.mapError(() => OipContentLoadError.fromReason("decode", { provider: "sanity" }))
-          );
-        }).pipe(Effect.provide(context))
-      )
-    )
-  ).pipe(
+  Layer.build(Sanity.makeLayer(config).pipe(Layer.provide(FetchHttpClient.layer))).pipe(
+    Effect.flatMap((context) =>
+      Effect.gen(function* () {
+        const sanity = yield* Sanity;
+        const response = yield* sanity.fetch(SanityQueryRequest.make({ query }));
+        return yield* decodeOipSiteContent(response.result).pipe(
+          Effect.mapError(() => OipContentLoadError.fromReason("decode", { provider: "sanity" }))
+        );
+      }).pipe(Effect.provide(context))
+    ),
+    Effect.scoped,
     Effect.catchTag("SanityError", (error: SanityError) =>
       Effect.fail(
         OipContentLoadError.fromReason("provider", {

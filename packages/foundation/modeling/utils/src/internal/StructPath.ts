@@ -6,8 +6,8 @@
  */
 
 import { $UtilsId } from "@beep/identity/packages";
-import { Match } from "effect";
 import { cast, dual, flow } from "effect/Function";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";

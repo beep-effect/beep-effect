@@ -14,7 +14,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { Err } from "@beep/utils";
-import { Runtime } from "effect";
+import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
 import { OpaqueDefect } from "../../internal/schema/OpaqueDefect.ts";
 
@@ -176,8 +176,7 @@ export class CodexFindingsIngestError extends S.TaggedError<CodexFindingsIngestE
    *
    * ```ts
    * import { CodexFindingsIngestError } from "@beep/repo-cli/commands/Codex/Findings.errors"
-   * import { Effect } from "effect"
-   *
+   * import * as Effect from "effect/Effect";
    * const program = Effect.fail("boom").pipe(
    *   Effect.mapError((cause) =>
    *     CodexFindingsIngestError.from(cause, "payload-invalid", "Unusable payload.")

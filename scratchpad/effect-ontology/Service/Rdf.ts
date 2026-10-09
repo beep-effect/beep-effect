@@ -46,16 +46,15 @@ import {
   XSD_INTEGER,
   XSD_NAMESPACE
 } from "@beep/rdf/Vocab/Xsd";
-import type {Scope} from "effect";
-import {
-  Chunk,
-  Context,
-  Duration,
-  Effect,
-  Layer,
-  Match,
-  MutableHashSet, Result
-} from "effect";
+import type * as Scope from "effect/Scope";
+import * as Chunk from "effect/Chunk";
+import * as Context from "effect/Context";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
+import * as MutableHashSet from "effect/MutableHashSet";
+import * as Result from "effect/Result";
 import * as A from "effect/Array";
 import {dual} from "effect/Function";
 import * as O from "effect/Option";
@@ -270,7 +269,7 @@ export const rdfStoreSize = (store: RdfStore): number => backend(store).size;
  * **Example** (Query an empty store)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { emptyRdfStore, rdfStoreQuads } from "@effect-ontology/Service/Rdf"
  *
  * const quads = Effect.runSync(rdfStoreQuads(emptyRdfStore(), {}).pipe(Effect.orDie))
@@ -302,7 +301,7 @@ export const rdfStoreQuads: {
  * **Example** (Read every quad)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { emptyRdfStore, rdfStoreAllQuads } from "@effect-ontology/Service/Rdf"
  *
  * const quads = Effect.runSync(rdfStoreAllQuads(emptyRdfStore()).pipe(Effect.orDie))
@@ -398,7 +397,7 @@ export const cloneRdfStore = (store: RdfStore): RdfStore => makeRdfStore(new N3.
  * **Example** (Apply an empty rule set)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { emptyRdfStore, rdfStoreApplyRules, rdfStoreSize } from "@effect-ontology/Service/Rdf"
  *
  * const store = emptyRdfStore()
@@ -555,7 +554,7 @@ const canonicalQuadToN3 = (quad: CanonicalRdf.Quad): N3.Quad =>
  * **Example** (Export an empty store)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { emptyRdfStore, rdfStoreToDataset } from "@effect-ontology/Service/Rdf"
  *
  * const dataset = Effect.runSync(rdfStoreToDataset(emptyRdfStore()).pipe(Effect.orDie))
@@ -926,7 +925,7 @@ export interface RdfBuilderShape {
  * **Example** (Parse Turtle into a store)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { RdfBuilder, rdfStoreSize } from "@effect-ontology/Service/Rdf"
  *
  * const program = Effect.gen(function* () {

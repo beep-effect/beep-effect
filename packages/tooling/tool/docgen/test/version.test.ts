@@ -2,7 +2,8 @@ import * as Version from "@beep/repo-docgen/Version";
 import { it } from "@beep/test-runner";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { expect } from "@effect/vitest";
-import { Effect, FileSystem } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import * as S from "effect/Schema";
 
 const decodeManifestVersion = S.decodeUnknownEffect(S.fromJsonString(S.Struct({ version: S.String })));

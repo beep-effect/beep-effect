@@ -17,8 +17,12 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, O, pipe, Str } from "@beep/utils";
-import { Console, Effect, FileSystem, Order, Path } from "effect";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { constUndefined, dual } from "effect/Function";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { GoalDoctorFinding } from "../Goals/Doctor.ts";
 import { listGoalPackets, parseGoalManifestText, TEMPLATE_SLUG } from "../Goals/Inventory.ts";
@@ -347,8 +351,7 @@ const printCheckReport = Effect.fn("Explore.printCheckReport")(function* (scan: 
  *
  * ```ts
  * import { runExploreCheck } from "@beep/repo-cli/commands/Explore/Check"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(runExploreCheck()))
  * ```
  *

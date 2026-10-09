@@ -15,8 +15,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import type * as O from "effect/Option";
@@ -59,7 +58,7 @@ export interface JsonStringCodec<Sch extends S.Codec<unknown, unknown>> {
  *
  * ```ts
  * import { JsonStringCodec } from "@beep/repo-cli/internal/schema/JsonCodec"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const Point = S.Struct({ x: S.Finite, y: S.Finite })
@@ -102,7 +101,7 @@ type JsonTextDecoder<Sch extends S.Codec<unknown, unknown>, E> = (text: string) 
  *
  * ```ts
  * import { decodeOrFail } from "@beep/repo-cli/internal/schema/JsonCodec"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const Config = S.Struct({ port: S.Finite })

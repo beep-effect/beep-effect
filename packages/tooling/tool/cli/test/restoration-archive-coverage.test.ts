@@ -12,9 +12,15 @@ import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
-import { ByteSize, Context, Effect, FileSystem, HashMap, Layer, Path } from "effect";
+import * as ByteSize from "effect/ByteSize";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
+import * as HashMap from "effect/HashMap";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 
@@ -447,7 +453,7 @@ describe("restoration archive boundary helpers", () => {
         (yield* preserveRestorationArchive(options).pipe(
           Effect.provideServiceEffect(
             CorpusCommandService,
-            Layer.build(Layer.fresh(layer)).pipe(Effect.map(Context.get(CorpusCommandService)))
+            layer.pipe(Layer.fresh, Layer.build, Effect.map(Context.get(CorpusCommandService)))
           ),
           Effect.scoped,
           Effect.exit
@@ -523,7 +529,7 @@ describe("restoration archive boundary helpers", () => {
           (yield* preserveRestorationArchive(options).pipe(
             Effect.provideServiceEffect(
               CorpusCommandService,
-              Layer.build(Layer.fresh(layer)).pipe(Effect.map(Context.get(CorpusCommandService)))
+              layer.pipe(Layer.fresh, Layer.build, Effect.map(Context.get(CorpusCommandService)))
             ),
             Effect.scoped,
             Effect.exit
@@ -599,7 +605,7 @@ describe("restoration archive boundary helpers", () => {
         const outcome = yield* preserveRestorationArchive(options).pipe(
           Effect.provideServiceEffect(
             CorpusCommandService,
-            Layer.build(Layer.fresh(layer)).pipe(Effect.map(Context.get(CorpusCommandService)))
+            layer.pipe(Layer.fresh, Layer.build, Effect.map(Context.get(CorpusCommandService)))
           ),
           Effect.scoped,
           Effect.exit

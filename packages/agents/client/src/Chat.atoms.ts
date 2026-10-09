@@ -20,15 +20,23 @@ import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability";
 import { LiteralKit } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { A, O, P, Str } from "@beep/utils";
-import { Cause, Clock, Config, Duration, Effect, Match, Metric, Random, Stream } from "effect";
+import * as Cause from "effect/Cause";
+import * as Clock from "effect/Clock";
+import * as Config from "effect/Config";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
 import { constant } from "effect/Function";
+import * as Match from "effect/Match";
+import * as Metric from "effect/Metric";
 import { KeyValueStore } from "effect/persistence";
+import * as Random from "effect/Random";
 import { AsyncResult, Atom, AtomRegistry, AtomRpc, Reactivity } from "effect/reactivity";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import { HttpChatProtocolLive } from "./Chat.layer.ts";
 import { ClientObservabilityLive } from "./ClientObservability.ts";
 import type { TurnRequestStatus } from "@beep/agents-use-cases/public";
-import type { Layer } from "effect";
+import type * as Layer from "effect/Layer";
 import type { RpcClient, RpcClientError } from "effect/rpc";
 
 const isChatActionError = S.is(ChatActionError);
@@ -80,7 +88,7 @@ export { HttpChatProtocolLive } from "./Chat.layer.ts";
  *
  * ```ts
  * import { chatProtocolLayerAtom, HttpChatProtocolLive } from "@beep/agents-client"
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer";
  * import { AtomRegistry } from "effect/reactivity"
  *
  * const registry = AtomRegistry.make()
@@ -694,7 +702,7 @@ export const reportDecodeFailureAtom = ChatClient.runtime.fn<void>()(
  * import { SendTurnRequest } from "@beep/agents-client"
  * import { Md } from "@beep/md"
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  *
  * const threadId = Result.getOrThrow(S.decodeUnknownResult(Workspace.ThreadId)(10))
@@ -725,7 +733,7 @@ export class SendTurnRequest extends S.TaggedClass<SendTurnRequest>("SendTurnReq
  * import { EditTurnRequest } from "@beep/agents-client"
  * import { Md } from "@beep/md"
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  *
  * const threadId = Result.getOrThrow(S.decodeUnknownResult(Workspace.ThreadId)(10))
@@ -760,7 +768,7 @@ export class EditTurnRequest extends S.TaggedClass<EditTurnRequest>("EditTurnReq
  * import { SendTurnRequest, TurnRequest } from "@beep/agents-client"
  * import { Md } from "@beep/md"
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  *
  * const threadId = Result.getOrThrow(S.decodeUnknownResult(Workspace.ThreadId)(10))
@@ -792,7 +800,7 @@ export const TurnRequest = S.Union([SendTurnRequest, EditTurnRequest]).pipe(
  * import type { TurnRequest } from "@beep/agents-client"
  * import { Md } from "@beep/md"
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  *
  * const threadId = Result.getOrThrow(S.decodeUnknownResult(Workspace.ThreadId)(10))
@@ -853,7 +861,7 @@ const turnGenerationAtom = Atom.keepAlive(Atom.make(0));
  * import { runTurnAtom, SendTurnRequest, TurnRequest } from "@beep/agents-client"
  * import { Md } from "@beep/md"
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { Atom } from "effect/reactivity"
  *

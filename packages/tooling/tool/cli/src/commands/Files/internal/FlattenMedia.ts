@@ -10,8 +10,14 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { walkFiles } from "@beep/repo-utils";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Cause, Console, Effect, Exit, FileSystem, HashSet, Path } from "effect";
+import * as Cause from "effect/Cause";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
+import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
+import * as HashSet from "effect/HashSet";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { allocateUniqueName } from "../../../internal/cli/FsGuards.ts";
 import { FilesCommandError, formatPlatformError } from "../Files.errors.ts";
@@ -455,8 +461,7 @@ const makeFlattenMediaSummary = (plan: FlattenMediaPlan, dryRun: boolean, movedC
  * ```ts
  * import { FlattenMediaOptions } from "@beep/repo-cli/commands/Files"
  * import { runFlattenMediaFiles } from "@beep/repo-cli/commands/Files/internal/FlattenMedia"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = runFlattenMediaFiles(FlattenMediaOptions.make({
  *   dir: "./raw",
  *   outDir: "./flat"

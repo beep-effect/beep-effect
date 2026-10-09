@@ -8,10 +8,11 @@ import { $LangExtractId } from "@beep/identity";
 import * as A from "@beep/utils/Array";
 import * as O from "@beep/utils/Option";
 import * as Str from "@beep/utils/Str";
-import { Iterable as I, Match } from "effect";
 import * as Bool from "effect/Boolean";
 import * as Eq from "effect/Equal";
 import { flow, pipe } from "effect/Function";
+import * as I from "effect/Iterable";
+import * as Match from "effect/Match";
 import * as S from "effect/Schema";
 
 const $I = $LangExtractId.create("VerifiedSpan/normalization");

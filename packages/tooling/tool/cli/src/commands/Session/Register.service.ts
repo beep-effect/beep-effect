@@ -15,8 +15,13 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { Context, DateTime, Effect, flow, Layer, Ref } from "effect";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import { flow } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import { makeJsonLinesStore, partitionJsonLines } from "../../internal/state/JsonLinesStore.ts";
 import { repositoryJsonLinesFileName, resolveWorkstationStateDir } from "../../internal/state/WorkstationState.ts";
@@ -56,8 +61,7 @@ export interface OrchestratorRegisterShape {
  *
  * ```ts
  * import { OrchestratorRegister } from "@beep/repo-cli/test/Session"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const register = yield* OrchestratorRegister
  *   return register
@@ -182,8 +186,7 @@ export const layerOrchestratorRegisterLive = Layer.effect(OrchestratorRegister, 
  *
  * ```ts
  * import { layerOrchestratorRegisterMemory } from "@beep/repo-cli/test/Session"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(layerOrchestratorRegisterMemory)) // true
  * ```
  *

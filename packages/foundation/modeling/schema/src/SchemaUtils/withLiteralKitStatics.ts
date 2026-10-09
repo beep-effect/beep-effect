@@ -7,7 +7,7 @@
 
 import { withStatics } from "./withStatics.ts";
 import type { A } from "@beep/utils";
-import type { SchemaAST } from "effect";
+import type * as SchemaAST from "effect/SchemaAST";
 import type { LiteralKit as LiteralKitSchema } from "../LiteralKit/index.ts";
 
 type LiteralKitStatics<L extends A.NonEmptyReadonlyArray<SchemaAST.LiteralValue>> = Pick<

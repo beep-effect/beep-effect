@@ -5,7 +5,8 @@
  */
 import { $PracticeIdentifyId } from "@beep/identity/packages";
 import { Fn } from "@beep/schema";
-import { Context, Effect } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import type { IdentificationError } from "@beep/law-practice-use-cases/DocumentIdentification";
 
@@ -140,7 +141,8 @@ export class IdentificationStagesShape extends S.Class<IdentificationStagesShape
  *
  * ```ts
  * import { IdentificationStages, IdentificationStagesShape } from "@/PracticeIdentify.config"
- * import { Effect, Layer } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(Layer.succeed(IdentificationStages, IdentificationStagesShape.make({ contacts: () => Effect.succeed(0), index: () => Effect.succeed(0), uspto: () => Effect.succeed(0), resolve: () => Effect.succeed(0), evaluate: () => Effect.succeed(0) })))) // true
  * ```
  *

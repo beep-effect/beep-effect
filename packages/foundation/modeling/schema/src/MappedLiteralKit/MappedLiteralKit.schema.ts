@@ -7,11 +7,12 @@
 
 import { $SchemaId } from "@beep/identity/packages";
 import { A } from "@beep/utils";
-import { HashMap, pipe } from "effect";
+import { pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { LiteralKit, matchLiteral } from "../LiteralKit/index.ts";
-import type { SchemaAST } from "effect";
+import type * as SchemaAST from "effect/SchemaAST";
 import type { LiteralKit as LiteralKitSchema, LiteralToKey } from "../LiteralKit/index.ts";
 
 const $I = $SchemaId.create("MappedLiteralKit");

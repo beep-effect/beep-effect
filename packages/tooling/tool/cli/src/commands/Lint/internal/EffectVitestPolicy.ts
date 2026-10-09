@@ -6,9 +6,11 @@
  */
 
 import { A, Str } from "@beep/utils";
-import { Effect, HashMap, Schema } from "effect";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
+import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
+import * as Schema from "effect/Schema";
 import { EffectVitestPrimitiveGraphError } from "../Lint.errors.ts";
 import { EffectVitestFinding, EffectVitestReplacement, EffectVitestRuleId } from "../Lint.schemas.ts";
 import { indexEffectVitestPrimitives } from "./EffectVitestPrimitives.ts";
@@ -178,7 +180,7 @@ const entries: ReadonlyArray<readonly [EffectVitestRuleId, RulePolicy]> = [
  *
  * ```ts
  * import { EffectVitestRulePolicies } from "@beep/repo-cli/commands/Lint"
- * import { HashMap } from "effect"
+ * import * as HashMap from "effect/HashMap";
  * import * as O from "effect/Option"
  *
  * console.log(O.map(HashMap.get(EffectVitestRulePolicies, "EV001"), ({ primitive }) => primitive)) // Some("it.effect")
@@ -202,8 +204,7 @@ export const EffectVitestRulePolicies = HashMap.fromIterable(entries);
  *
  * ```ts
  * import { applyEffectVitestPrimitiveGraph, readEffectVitestPrimitiveGraph } from "@beep/repo-cli/commands/Lint"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = readEffectVitestPrimitiveGraph(process.cwd()).pipe(
  *   Effect.flatMap((graph) => applyEffectVitestPrimitiveGraph([], graph))
  * )

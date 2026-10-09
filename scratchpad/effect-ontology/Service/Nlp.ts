@@ -21,20 +21,19 @@ import { WinkLayerAllLive } from "@beep/wink/Wink.layer";
 import { WinkStringArray } from "@beep/wink/Wink.models";
 import { WinkEngine } from "@beep/wink/Wink.service";
 import { WinkCorpusManager } from "@beep/wink/WinkCorpus.service";
-import {
-  Context,
-  Duration,
-  Effect,
-  Inspectable,
-  Layer,
-  Match,
-  MutableHashMap,
-  Order,
-  pipe,
-  Schedule,
-  SchemaGetter,
-  Tuple, Result,
-} from "effect";
+import * as Context from "effect/Context";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Inspectable from "effect/Inspectable";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as Order from "effect/Order";
+import * as Schedule from "effect/Schedule";
+import * as SchemaGetter from "effect/SchemaGetter";
+import * as Tuple from "effect/Tuple";
+import * as Result from "effect/Result";
+import { pipe } from "effect/Function";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -651,7 +650,7 @@ type WinkSentenceView = {
  * **Example** (Tokenize through the service)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { NlpService } from "@effect-ontology/Service/Nlp"
  *
  * const program = Effect.gen(function* () {

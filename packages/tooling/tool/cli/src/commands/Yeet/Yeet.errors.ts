@@ -8,8 +8,8 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { Err } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Runtime } from "effect";
 import { dual } from "effect/Function";
+import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
 import { OpaqueDefect } from "../../internal/schema/OpaqueDefect.ts";
 

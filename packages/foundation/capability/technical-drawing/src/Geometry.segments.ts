@@ -6,7 +6,8 @@
  */
 
 import { A, N } from "@beep/utils";
-import { Order, pipe } from "effect";
+import { pipe } from "effect/Function";
+import * as Order from "effect/Order";
 import type { Segment2 } from "./Geometry.schemas.ts";
 
 const round = (value: number): number => {

@@ -8,8 +8,8 @@
 import { $AcpId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
 import * as O from "@beep/utils/Option";
-import { Effect, pipe } from "effect";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
 import * as S from "effect/Schema";
 import * as AcpSchema from "./_generated/schema.gen.ts";
 

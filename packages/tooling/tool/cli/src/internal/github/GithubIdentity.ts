@@ -20,8 +20,12 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { GitHubApp, GitHubClient, Repo, RepoRef } from "@effected/github";
-import { Effect, Layer, pipe, Redacted, Runtime } from "effect";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Redacted from "effect/Redacted";
+import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { configStringOption } from "../cli/EnvConfig.ts";
@@ -188,7 +192,7 @@ const identityError = (reason: typeof GithubIdentityErrorReason.Type, message: s
  *
  * ```ts
  * import { selectGithubIdentity } from "@beep/repo-cli/test/SharedInternals"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * console.log(Effect.isEffect(selectGithubIdentity(O.some("op://vault/item/token")))) // true
@@ -403,7 +407,7 @@ export const layerGithubRepoFor = (
         ? override
         : yield* runRepoCommandCaptureRaw("git", ["remote", "get-url", "origin"], cwd).pipe(
             Effect.map((result) => (result.exitCode === 0 ? repoSlugFromRemote(result.output) : O.none())),
-            Effect.orElseSucceed(() => O.none<string>())
+            Effect.orElseSucceed(O.none<string>)
           );
       const value = yield* Effect.fromOption(slug, () =>
         identityError("repo-unknown", "could not resolve the GitHub repository (set GH_REPO or an origin remote)")

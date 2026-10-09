@@ -12,9 +12,15 @@
 import * as NodeOS from "node:os";
 import { $AiProviderCliId } from "@beep/identity";
 import * as HostPath from "@beep/utils/Path";
-import { Context, Effect, FileSystem, flow, Layer, Match, Path, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { flow, pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -429,7 +435,7 @@ const makeHome = (fs: FileSystem.FileSystem, path: Path.Path): AiProviderCliHome
  * **Example** (Ensure Codex shadow home)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * import { AiProviderCliHome } from "@beep/ai-provider-cli"
  *

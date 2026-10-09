@@ -14,8 +14,10 @@ import { Exiftool } from "@beep/exiftool";
 import { FFmpeg } from "@beep/ffmpeg";
 import { CaptureLane, ClockCorrelator, Collector, ExtractionRuleSet, SessionStore, Witness } from "@beep/qa-capture";
 import { A } from "@beep/utils";
-import { Effect, Layer, Path } from "effect";
 import { Argument, Command, Flag } from "effect/cli";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { printLines } from "../../internal/cli/Printer.ts";
 import { markLiveSession, stopLiveSession } from "./Control.ts";
@@ -55,8 +57,7 @@ const FFmpegLive = FFmpeg.makeLayer();
  *
  * ```ts
  * import { QaCommandLayers } from "@beep/repo-cli/commands/Qa/Qa.command"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(QaCommandLayers)) // true
  * ```
  *
@@ -307,8 +308,7 @@ const qaJudgeSkillCommand = Command.make("judge-skill", { write: writeSkillFlag 
  * ```ts
  * import { qaCommand } from "@beep/repo-cli/commands/Qa/index"
  * import { Command } from "effect/cli"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const run = Command.run(qaCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true
  * ```

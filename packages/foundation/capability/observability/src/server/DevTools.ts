@@ -6,11 +6,14 @@
  */
 import { $ObservabilityId } from "@beep/identity/packages";
 import { Fn } from "@beep/schema";
-import { Effect, Layer, Match, Tracer } from "effect";
 import * as DevToolsClient from "effect/devtools/DevToolsClient";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Socket from "effect/socket/Socket";
+import * as Tracer from "effect/Tracer";
 import type * as DevToolsSchema from "effect/devtools/DevToolsSchema";
 
 const $I = $ObservabilityId.create("server/DevTools");

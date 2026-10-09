@@ -7,7 +7,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -455,8 +455,8 @@ export const isKnowledgeFinding = S.is(KnowledgeFinding);
  *
  * ```ts
  * import { decodeKnowledgeFinding } from "@beep/repo-cli/commands/Knowledge/Knowledge.schemas"
- * import { Effect, Result } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Result from "effect/Result";
  * const outcome = Effect.runSync(Effect.result(decodeKnowledgeFinding({ kind: "index-drift" })))
  *
  * console.log(Result.isFailure(outcome)) // true
@@ -482,7 +482,7 @@ export const decodeKnowledgeFinding: {
  *   KnowledgeFindingId,
  *   KnowledgeFindingLocation,
  * } from "@beep/repo-cli/commands/Knowledge/Knowledge.schemas"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const finding = KnowledgeFinding.make({
@@ -880,8 +880,7 @@ export class KnowledgeSemanticDeltaReport extends S.Class<KnowledgeSemanticDelta
  *   encodeKnowledgeSemanticDeltaReportJson,
  *   KnowledgeSemanticDeltaReport,
  * } from "@beep/repo-cli/commands/Knowledge/Knowledge.schemas"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const json = Effect.runSync(
  *   encodeKnowledgeSemanticDeltaReportJson(
  *     KnowledgeSemanticDeltaReport.make({

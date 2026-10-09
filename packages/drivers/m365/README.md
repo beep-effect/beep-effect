@@ -40,7 +40,7 @@ On the app-only lane:
 ```ts
 import { M365, M365CreateEventRequest, M365EventDraft, m365AllDayWindow } from "@beep/m365"
 import { LocalDate } from "@beep/schema/LocalDate"
-import { Effect } from "effect"
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option"
 
 const program = Effect.gen(function* () {

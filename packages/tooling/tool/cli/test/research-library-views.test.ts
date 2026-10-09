@@ -31,8 +31,13 @@ import {
 } from "@beep/repo-cli/test/ResearchLibrary";
 import { NodeServices } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
-import { Cause, Config, Effect, Exit, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
+import * as Cause from "effect/Cause";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 
 const LibraryProbeEvidenceJson = S.fromJsonString(LibraryProbeEvidence);

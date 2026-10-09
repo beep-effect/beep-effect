@@ -57,8 +57,7 @@ In the following example, we test a function that divides two numbers, but fails
 
 ```ts
 import { expect, it } from "@effect/vitest"
-import { Effect } from "effect"
-
+import * as Effect from "effect/Effect";
 // A simple divide function that returns an Effect, failing when dividing by zero
 function divide(a: number, b: number) {
   if (b === 0) return Effect.fail("Cannot divide by zero")
@@ -81,8 +80,8 @@ When you need to handle both success and failure cases in a test, you can use `E
 
 ```ts
 import { expect, it } from "@effect/vitest"
-import { Effect, Exit } from "effect"
-
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 // A function that divides two numbers and returns an Effect.
 // It fails if the divisor is zero.
 function divide(a: number, b: number) {
@@ -123,7 +122,8 @@ Here are examples that demonstrate how you can work with time in your tests usin
 
 ```ts
 import { it } from "@effect/vitest"
-import { Clock, Effect } from "effect"
+import * as Clock from "effect/Clock";
+import * as Effect from "effect/Effect";
 import { TestClock } from "effect/testing"
 
 // Effect to log the current time
@@ -161,7 +161,8 @@ If you need to temporarily disable a test but don't want to delete or comment ou
 ```ts
 import { it } from "@effect/vitest"
 import { expect } from "@effect/vitest"
-import { Effect, Exit } from "effect"
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 
 function divide(a: number, b: number) {
   if (b === 0) return Effect.fail("Cannot divide by zero")
@@ -185,7 +186,8 @@ When you're developing or debugging, it's often useful to run a specific test wi
 ```ts
 import { it } from "@effect/vitest"
 import { expect } from "@effect/vitest"
-import { Effect, Exit } from "effect"
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 
 function divide(a: number, b: number) {
   if (b === 0) return Effect.fail("Cannot divide by zero")
@@ -208,7 +210,8 @@ When adding new failing tests, you might not be able to fix them right away. Ins
 
 ```ts
 import { it } from "@effect/vitest"
-import { Effect, Exit } from "effect"
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 
 function divide(a: number, b: number) {
   if (b === 0) return Effect.fail("Cannot divide by zero")
@@ -231,8 +234,8 @@ By default, `it.effect` suppresses log output, which can be useful for keeping t
 
 ```ts
 import { it } from "@effect/vitest"
-import { Effect, Logger } from "effect"
-
+import * as Effect from "effect/Effect";
+import * as Logger from "effect/Logger";
 // This test won't display the log message, as logging is suppressed by default in `it.effect`
 it.effect("does not display a log", () =>
   Effect.gen(function*() {
@@ -262,8 +265,8 @@ Both `it.effect` and `it.live` provide a fresh `Scope` and close it after each t
 
 ```ts
 import { it } from "@effect/vitest"
-import { Console, Effect } from "effect"
-
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
 // Simulating the acquisition and release of a resource with console logging
 const acquire = Console.log("acquire resource")
 const release = Console.log("release resource")
@@ -287,8 +290,8 @@ Let's start by setting up a basic test scenario that has the potential to fail r
 
 ```ts
 import { it } from "@effect/vitest"
-import { Effect, Random } from "effect"
-
+import * as Effect from "effect/Effect";
+import * as Random from "effect/Random";
 // Simulating a flaky effect
 const flaky = Effect.gen(function*() {
   const random = yield* Random.nextBoolean

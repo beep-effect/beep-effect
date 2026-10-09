@@ -36,7 +36,7 @@ export const ClaimDispositionId = make("claim_disposition", {
  * **Example** (Decode ClaimDispositionId value)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as Epistemic from "@beep/shared-domain/identity/Epistemic"
  * import * as S from "effect/Schema"
  *

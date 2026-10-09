@@ -7,8 +7,8 @@
 
 import { $SharedDomainId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
-import { Result } from "effect";
 import { dual, pipe } from "effect/Function";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as EntityId from "./EntityId.ts";
 
@@ -36,7 +36,7 @@ class EntityRefInvariantError extends S.TaggedError<EntityRefInvariantError>($I`
  * **Example** (Decode EntityType schema)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { EntityType } from "@beep/shared-domain/entity/EntityRef"
  *
@@ -87,7 +87,7 @@ export type EntityType = typeof EntityType.Type;
  * **Example** (Make EntityRef value)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { EntityIdValue } from "@beep/shared-domain/entity/EntityId"
  * import { EntityRef, EntityType } from "@beep/shared-domain/entity/EntityRef"
@@ -164,7 +164,7 @@ function assertEntityRefFor<const Entity extends EntityId.Any>(
  * **Example** (Build Result reference)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as Result from "effect/Result"
  * import * as S from "effect/Schema"
  * import { makeResult } from "@beep/shared-domain/entity/EntityRef"
@@ -214,7 +214,7 @@ export const makeResult: {
  * **Example** (Build typed reference)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { make } from "@beep/shared-domain/entity/EntityRef"
  * import { OrganizationId } from "@beep/shared-domain/identity/Shared"

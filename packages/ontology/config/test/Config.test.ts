@@ -10,7 +10,11 @@ import { makeOntologyConfigTest, makeOntologyMcpConfigTest } from "@beep/ontolog
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
-import { Cause, ConfigProvider, Effect, Exit, Layer } from "effect";
+import * as Cause from "effect/Cause";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Layer from "effect/Layer";
 
 const configLayer = (configuration: Readonly<Record<string, string>>) =>
   OntologyConfigLive.pipe(Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown(configuration))));
@@ -41,11 +45,11 @@ describe("OntologyConfigLive", () => {
     "keeps missing and empty configuration in the typed failure channel",
     Effect.fnUntraced(function* () {
       for (const configuration of [{}, { ONTOLOGY_WORKSPACE_ROOT: "" }]) {
-        const exit = yield* Effect.exit(Layer.build(configLayer(configuration)));
+        const exit = yield* configLayer(configuration).pipe(Layer.build, Effect.exit);
 
-        assertTrue(Exit.isFailure(exit));
-        assertTrue(Cause.hasFails(exit.cause));
-        assertFalse(Cause.hasDies(exit.cause));
+        if (!Exit.isFailure(exit)) throw new Error("Expected a failure exit");
+        assertTrue(exit.cause.pipe(Cause.hasFails));
+        assertFalse(exit.cause.pipe(Cause.hasDies));
       }
     })
   );
@@ -82,11 +86,11 @@ describe("OntologyMcpConfigLive", () => {
     Effect.fnUntraced(function* () {
       // Silently reading a typo as `false` would be safe but dishonest: the
       // operator asked for something and got no signal that it was ignored.
-      const exit = yield* Effect.exit(Layer.build(mcpConfigLayer({ ONTOLOGY_MCP_MUTATIONS_ENABLED: "maybe" })));
+      const exit = yield* mcpConfigLayer({ ONTOLOGY_MCP_MUTATIONS_ENABLED: "maybe" }).pipe(Layer.build, Effect.exit);
 
-      assertTrue(Exit.isFailure(exit));
-      assertTrue(Cause.hasFails(exit.cause));
-      assertFalse(Cause.hasDies(exit.cause));
+      if (!Exit.isFailure(exit)) throw new Error("Expected a failure exit");
+      assertTrue(exit.cause.pipe(Cause.hasFails));
+      assertFalse(exit.cause.pipe(Cause.hasDies));
     })
   );
 });

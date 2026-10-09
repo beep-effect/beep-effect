@@ -18,7 +18,10 @@ import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import { Effect, Equal, pipe, Result } from "effect";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import { pipe } from "effect/Function";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import type { CapabilityDisposition, ProfileKind } from "@beep/editor/capability/schemas";
 

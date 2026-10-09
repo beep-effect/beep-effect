@@ -6,11 +6,12 @@
  */
 import { $DockId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Match, Number as N, pipe } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as Eq from "effect/Equal";
-import { dual } from "effect/Function";
+import { dual, pipe } from "effect/Function";
+import * as Match from "effect/Match";
+import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import { Atom } from "effect/reactivity";

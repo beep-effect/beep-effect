@@ -10,7 +10,8 @@ import * as DomainSyncCursor from "@beep/documents-domain/entities/SyncCursor";
 import { DmsProvider } from "@beep/documents-domain/values/Sync";
 import { $DocumentsUseCasesId } from "@beep/identity/packages";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
-import { Context, Effect } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import type * as O from "effect/Option";
 
@@ -147,7 +148,7 @@ export class FindSyncCursorInput extends S.Class<FindSyncCursorInput>($I`FindSyn
  *   SyncCursorRepositoryUnavailable
  * } from "@beep/documents-use-cases/entities/SyncCursor/server"
  * import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
@@ -186,7 +187,7 @@ export interface SyncCursorRepositoryShape {
  *   SyncCursorRepositoryUnavailable,
  *   type SyncCursorRepositoryShape
  * } from "@beep/documents-use-cases/entities/SyncCursor/server"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const repository: SyncCursorRepositoryShape = {

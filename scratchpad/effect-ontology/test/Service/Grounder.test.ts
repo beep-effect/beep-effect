@@ -1,7 +1,9 @@
 import { IRI } from "@beep/rdf/Iri";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Layer, Stream } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Stream from "effect/Stream";
 import * as O from "effect/Option";
 import * as LanguageModel from "effect/ai/LanguageModel";
 import * as Response from "effect/ai/Response";

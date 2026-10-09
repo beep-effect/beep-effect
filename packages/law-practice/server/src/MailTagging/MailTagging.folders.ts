@@ -9,14 +9,17 @@
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { DocumentFolderId, FilingDestination } from "@beep/law-practice-domain/values/MailTagging";
 import { MatterFolderDirectory, MatterFolderDirectoryShape } from "@beep/law-practice-use-cases/MailTagging";
-import { Context, Effect, Layer } from "effect";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { makeStateFileAt } from "../internal/MailTaggingStateFile.ts";
 import type { MailTaggingStateError, MatterFolderRequest } from "@beep/law-practice-use-cases/MailTagging";
-import type { FileSystem, Path } from "effect";
+import type * as FileSystem from "effect/FileSystem";
+import type * as Path from "effect/Path";
 
 const $I = $LawPracticeServerId.create("MailTagging/MailTagging.folders");
 

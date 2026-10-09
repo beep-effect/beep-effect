@@ -14,8 +14,8 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { Context } from "effect";
-import type { Effect } from "effect";
+import * as Context from "effect/Context";
+import type * as Effect from "effect/Effect";
 import type { CorpusCommandError } from "../Corpus.errors.ts";
 import type {
   AttachmentRepairJournalRow,

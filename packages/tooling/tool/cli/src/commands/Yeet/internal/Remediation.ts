@@ -42,10 +42,16 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Console, Effect, FileSystem, HashSet, Match, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { dual, pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -64,7 +70,7 @@ import {
   yeetInboxPaths,
   yeetInboxRowId,
 } from "./Inbox.ts";
-import type { Crypto } from "effect";
+import type * as Crypto from "effect/Crypto";
 import type { YeetCommandError } from "../Yeet.errors.ts";
 import type { YeetBaseConflictCapsule } from "./Inbox.ts";
 import type { YeetWatchCheck } from "./WatchStream.ts";
@@ -536,8 +542,7 @@ export const yeetRedSetKeyGained: {
  *
  * ```ts
  * import { yeetDispatchStatePath } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(yeetDispatchStatePath("/repo"))) // true
  * ```
  *
@@ -568,8 +573,7 @@ export const yeetDispatchStatePath = Effect.fn("Yeet.yeetDispatchStatePath")(fun
  *
  * ```ts
  * import { loadYeetRemediationWave } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(loadYeetRemediationWave("/repo"))) // true
  * ```
  *
@@ -780,8 +784,7 @@ export const renderYeetDispatchLine = (report: YeetDispatchReport): string => {
  *
  * ```ts
  * import { dispatchYeetCheckFailure, YeetWatchCheck } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const check = YeetWatchCheck.make({ name: "Check", outcome: "fail" })
  * const head = { headSha: "abc123", prNumber: 751 }
  *
@@ -1159,8 +1162,7 @@ export const dispatchYeetBaseConflict = Effect.fn("Yeet.dispatchYeetBaseConflict
  *
  * ```ts
  * import { supersedeYeetDispatchState } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(supersedeYeetDispatchState("/repo", "bbb222", 751, "2026-08-17T00:00:00Z"))) // true
  * ```
  *

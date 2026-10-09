@@ -6,9 +6,10 @@
  */
 
 import { escapeHtml as escape } from "@beep/utils/Html";
-import { Effect, flow } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import { flow } from "effect/Function";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";

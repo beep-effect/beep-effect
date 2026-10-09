@@ -6,7 +6,7 @@
  */
 
 import { LegalOppositionCandidate } from "@beep/law-practice-domain/entities/LegalOppositionCandidate";
-import { Result } from "effect";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import type { Table } from "./LegalOppositionCandidate.table.ts";
 
@@ -68,8 +68,7 @@ const encodeLegalOppositionCandidate = S.encodeResult(LegalOppositionCandidate);
  *   fromLegalOppositionCandidateRow,
  *   toLegalOppositionCandidateInsert
  * } from "@beep/law-practice-tables/entities/LegalOppositionCandidate"
- * import { Result } from "effect"
- *
+ * import * as Result from "effect/Result";
  * const insert = Result.flatMap(fromLegalOppositionCandidateRow({}), toLegalOppositionCandidateInsert)
  * console.log(Result.isFailure(insert)) // true
  * ```
@@ -105,8 +104,7 @@ export const toLegalOppositionCandidateInsert = (
  *
  * ```ts
  * import { fromLegalOppositionCandidateRow } from "@beep/law-practice-tables/entities/LegalOppositionCandidate"
- * import { Result } from "effect"
- *
+ * import * as Result from "effect/Result";
  * console.log(Result.isFailure(fromLegalOppositionCandidateRow({}))) // true
  * ```
  *

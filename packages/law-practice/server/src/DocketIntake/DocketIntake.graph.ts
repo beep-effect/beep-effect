@@ -39,9 +39,13 @@ import {
   m365AllDayWindow,
 } from "@beep/m365";
 import { LocalDate } from "@beep/schema/LocalDate";
-import { DateTime, Effect, HashMap, HashSet, Layer, pipe } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -245,7 +249,7 @@ const isInbound =
  *
  * ```ts
  * import { docketDayInZone } from "@beep/law-practice-server/DocketIntake";
- * import { DateTime } from "effect";
+ * import * as DateTime from "effect/DateTime";
  * import * as O from "effect/Option";
  *
  * const day = O.map(

@@ -77,7 +77,7 @@ export class LegalPositionRelatorAdmissionError extends S.TaggedError<LegalPosit
    * ```ts
    * import { LegalPositionRelatorAdmissionError } from "@beep/law-practice-use-cases/LegalPositionRelatorPolicy"
    * import { LegalPositionRelator } from "@beep/law-practice-domain"
-   * import { Effect } from "effect"
+   * import * as Effect from "effect/Effect";
    * import * as S from "effect/Schema"
    *
    * const admitted = S.decodeUnknownEffect(LegalPositionRelator)({}).pipe(

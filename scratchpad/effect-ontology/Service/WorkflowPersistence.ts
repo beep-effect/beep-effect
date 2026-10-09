@@ -9,8 +9,8 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { Effect, Layer } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import { KeyValueStore, Persistence } from "effect/persistence";
 import { StorageService, StorageServiceLive, StorageServiceTest } from "./Storage.ts";
 
@@ -30,8 +30,7 @@ import { StorageService, StorageServiceLive, StorageServiceTest } from "./Storag
  *
  * ```ts
  * import { StorageKeyValueStoreLive } from "@effect-ontology/Service/WorkflowPersistence"
- *
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer";
  * import { StorageServiceTest } from "@effect-ontology/Service/Storage"
  *
  * const layer = Layer.provide(StorageKeyValueStoreLive, StorageServiceTest)
@@ -80,7 +79,7 @@ export const StorageKeyValueStoreLive = Layer.effect(
  * **Example** (Inspect workflow persistence live)
  *
  * ```ts
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer";
  * import { WorkflowPersistenceLive, WorkflowPersistenceMemory } from "@effect-ontology/Service/WorkflowPersistence"
  *
  * const layer = Layer.merge(WorkflowPersistenceLive, WorkflowPersistenceMemory)
@@ -106,7 +105,7 @@ export const WorkflowPersistenceLive = Persistence.layerKvs.pipe(
  * **Example** (Inspect workflow persistence test)
  *
  * ```ts
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer";
  * import { WorkflowPersistenceMemory, WorkflowPersistenceTest } from "@effect-ontology/Service/WorkflowPersistence"
  *
  * const layer = Layer.merge(WorkflowPersistenceTest, WorkflowPersistenceMemory)
@@ -132,9 +131,7 @@ export const WorkflowPersistenceTest = Persistence.layerKvs.pipe(
  *
  * ```ts
  * import { WorkflowPersistenceMemory } from "@effect-ontology/Service/WorkflowPersistence"
- *
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.merge(WorkflowPersistenceMemory, WorkflowPersistenceMemory))
  * ```
  *

@@ -6,8 +6,8 @@
  */
 
 import { A, O } from "@beep/utils";
-import { pipe } from "effect";
 import * as F from "effect/Function";
+import { pipe } from "effect/Function";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";

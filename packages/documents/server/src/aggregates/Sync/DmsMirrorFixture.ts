@@ -26,10 +26,16 @@ import { $DocumentsServerId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
-import { Context, Effect, HashMap, Layer, Number as N, pipe, Ref } from "effect";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
+import * as Layer from "effect/Layer";
+import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import type {
   EnsureFolderInput,
@@ -186,7 +192,7 @@ export class DmsMirrorFixtureNode extends S.Class<DmsMirrorFixtureNode>($I`DmsMi
  *
  * ```ts
  * import { DmsMirrorFixtureCounts, type DmsMirrorFixtureHandleShape } from "@beep/documents-server/aggregates/Sync"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const idleCounts = S.decodeUnknownSync(DmsMirrorFixtureCounts)({
@@ -295,8 +301,7 @@ const nodeOf = (item: FixtureItemState): DmsMirrorFixtureNode =>
  * ```ts
  * import { makeDmsMirrorFixture } from "@beep/documents-server/aggregates/Sync"
  * import { EnsureFolderInput } from "@beep/documents-use-cases/aggregates/Sync/server"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const fixture = yield* makeDmsMirrorFixture()
  *   yield* fixture.mirror.ensureFolder(EnsureFolderInput.make({ name: "matters" }))
@@ -385,8 +390,9 @@ export const makeDmsMirrorFixture = Effect.fn($I`makeDmsMirrorFixture`)(function
     parentId: O.Option<string>,
     name: string
   ): O.Option<FixtureItemState> =>
-    pipe(
-      A.fromIterable(HashMap.values(items)),
+    items.pipe(
+      HashMap.values,
+      A.fromIterable,
       A.findFirst((item) => item.itemKind === itemKind && item.name === name && sameParent(item.parentId, parentId))
     );
 
@@ -535,8 +541,11 @@ export const makeDmsMirrorFixture = Effect.fn($I`makeDmsMirrorFixture`)(function
     requestedStreamPositions: Ref.get(requestedRef),
     snapshotTree: Effect.gen(function* () {
       const items = yield* Ref.get(itemsRef);
-      return R.fromEntries(
-        A.map(A.fromIterable(HashMap.values(items)), (item) => [treePath(items, item), nodeOf(item)] as const)
+      return items.pipe(
+        HashMap.values,
+        A.fromIterable,
+        A.map((item) => [treePath(items, item), nodeOf(item)] as const),
+        R.fromEntries
       );
     }),
   });

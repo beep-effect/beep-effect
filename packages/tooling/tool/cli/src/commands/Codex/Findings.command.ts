@@ -12,8 +12,10 @@
 
 import { findRepoRoot } from "@beep/repo-utils";
 import { A, O, Str } from "@beep/utils";
-import { Effect, FileSystem, Path } from "effect";
 import { Command, Flag } from "effect/cli";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { dryRunFlag, forceFlag, jsonFlag } from "../../internal/cli/Flags.ts";
 import { printJsonOrLines, printLines } from "../../internal/cli/Printer.ts";

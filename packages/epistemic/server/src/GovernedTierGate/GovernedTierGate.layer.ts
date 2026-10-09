@@ -15,7 +15,7 @@
  */
 
 import { TierGate } from "@beep/mcp-kit";
-import { Layer } from "effect";
+import * as Layer from "effect/Layer";
 import { makeGovernedTierGate } from "./GovernedTierGate.gate.ts";
 import type { EpistemicConfig } from "@beep/epistemic-config/server";
 import type { ExecutionLedger } from "@beep/epistemic-use-cases/ExecutionLedger";
@@ -29,8 +29,8 @@ import type { GovernedTierGateOptions } from "./GovernedTierGate.gate.ts";
  * ```ts
  * import { GovernedTierGateLive, GovernedTierGateOptions } from "@beep/epistemic-server/GovernedTierGate"
  * import { ExecutionSink, GrantOperation, GrantPurpose, GrantResource, SinkDestination } from "@beep/epistemic-domain/values/ExecutionGrant"
- * import { Duration, Layer } from "effect"
- *
+ * import * as Duration from "effect/Duration";
+ * import * as Layer from "effect/Layer";
  * const gate = GovernedTierGateLive(GovernedTierGateOptions.make({
  *   grantTtl: Duration.hours(12),
  *   operations: [GrantOperation.make("ontology_propose_change_batch")],

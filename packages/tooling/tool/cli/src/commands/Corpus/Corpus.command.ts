@@ -5,9 +5,10 @@
  * @since 0.0.0
  */
 
-import { Config, Effect } from "effect";
 import * as A from "effect/Array";
+import * as Config from "effect/Config";
 import { Command, Flag } from "effect/cli";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";

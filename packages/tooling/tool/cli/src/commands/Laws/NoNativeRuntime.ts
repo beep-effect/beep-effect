@@ -18,9 +18,14 @@ import {
 import { toPosixPath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
 import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
-import { Effect, HashSet, Inspectable, Match, Order, Path, pipe } from "effect";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
+import * as Inspectable from "effect/Inspectable";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { Node } from "ts-morph";

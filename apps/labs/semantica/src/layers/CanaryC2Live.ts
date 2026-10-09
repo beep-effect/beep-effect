@@ -1,9 +1,18 @@
 import { Sha256Hex } from "@beep/schema";
-import { Clock, Console, Crypto, Effect, Exit, FileSystem, Layer, Number as N, Path, Stream } from "effect";
 import * as A from "effect/Array";
+import * as Clock from "effect/Clock";
+import * as Console from "effect/Console";
+import * as Crypto from "effect/Crypto";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as N from "effect/Number";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { writeJsonArtifact } from "@/canary/Artifact";
 import { CanaryOptions } from "@/canary/Command";
@@ -398,8 +407,7 @@ const makeCanaryC2 = Effect.fn("CanaryC2.make")(function* () {
  *
  * ```ts
  * import { CanaryC2Live } from "@/layers/CanaryC2Live"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(CanaryC2Live)) // true
  * ```
  *

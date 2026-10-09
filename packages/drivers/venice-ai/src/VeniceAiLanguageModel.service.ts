@@ -14,12 +14,15 @@ import {
 } from "@beep/openai-compat";
 import * as O from "@beep/utils/Option";
 import * as Str from "@beep/utils/Str";
-import { Effect, Layer, pipe, Result, Stream } from "effect";
 import * as AiError from "effect/ai/AiError";
 import * as LanguageModel from "effect/ai/LanguageModel";
 import * as AiModel from "effect/ai/Model";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import { VeniceAI, VeniceAIErrorReason, VeniceAIRequestOptions, VeniceAIResponse } from "./VeniceAI.service.ts";
 import type { OpenAiCompatChatCompletionRequest } from "@beep/openai-compat";
 import type { VeniceAIError, VeniceAIServerSentEvent, VeniceAIShape } from "./VeniceAI.service.ts";

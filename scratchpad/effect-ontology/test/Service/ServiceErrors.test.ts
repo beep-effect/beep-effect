@@ -1,7 +1,8 @@
 import { makeNamedNode } from "@beep/rdf";
 import { ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
 import { assert, describe, it } from "@effect/vitest";
-import { Duration, Effect } from "effect";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { AssertionError } from "../../Service/Assertion.ts";

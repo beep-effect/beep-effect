@@ -136,8 +136,8 @@ The following uses live repository Effect v4 patterns (`S.decodeTo` plus
 
 ```ts
 import { DmsMirrorDisconnectReason } from "./DmsMirror.ts"
-import { Effect, SchemaTransformation } from "effect"
-
+import * as Effect from "effect/Effect";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 export const VaultSyncStatusEncoded = S.Struct({
   conflictItems: NonNegativeInt,
   connected: S.Boolean,

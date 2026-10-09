@@ -13,8 +13,10 @@
  * @since 0.0.0
  */
 
-import { DateTime, Effect, pipe } from "effect";
 import * as A from "effect/Array";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { AdoptionTable, KpiReading } from "./Schemas.ts";
@@ -37,7 +39,8 @@ const pretty = (encoded: unknown): string => `${JSON.stringify(encoded, null, 2)
  *
  * ```ts
  * import { Sha256Hex } from "@beep/schema/Sha256"
- * import { DateTime, Effect } from "effect"
+ * import * as DateTime from "effect/DateTime";
+ * import * as Effect from "effect/Effect";
  * import { renderAdoptionTable } from "@/kpi/Render"
  * import { AdoptionTable, PinnedKpiInput } from "@/kpi/Schemas"
  *

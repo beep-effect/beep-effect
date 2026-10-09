@@ -5,12 +5,15 @@
  * @since 0.0.0
  */
 
-import { Config, Effect, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
+import * as Config from "effect/Config";
 import { Argument, Command, Flag } from "effect/cli";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
+import * as FileSystem from "effect/FileSystem";
 import { constFalse } from "effect/Function";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { resolveOperatorPath, resolveUnitBunPath, systemdUnitPathRule } from "../../internal/systemd/index.ts";
@@ -391,7 +394,7 @@ const installTimers = Effect.fn("ResearchCommand.installTimers")(function* (opti
  *
  * ```ts
  * import { runResearchInstallTimers } from "@beep/repo-cli/commands/Research"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const program = runResearchInstallTimers({ bunPath: O.none(), page: O.none(), uninstall: false })

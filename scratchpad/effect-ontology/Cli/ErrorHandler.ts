@@ -4,7 +4,11 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { Cause, Console, Effect, Inspectable, Result } from "effect";
+import * as Cause from "effect/Cause";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as Inspectable from "effect/Inspectable";
+import * as Result from "effect/Result";
 import * as P from "effect/Predicate";
 
 /**
@@ -47,8 +51,8 @@ const formatCause = (cause: Cause.Cause<unknown>): string => {
  *
  * ```ts
  * import { withErrorHandler } from "@effect-ontology/Cli/ErrorHandler"
- * import { Effect, Exit } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Exit from "effect/Exit";
  * const handled = withErrorHandler(Effect.fail(new Error("ontology file not found")))
  * const exit = Effect.runSync(Effect.exit(handled))
  * console.log(Exit.isFailure(exit)) // true

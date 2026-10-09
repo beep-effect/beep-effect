@@ -10,7 +10,8 @@
 import { CandorGateVerdict, CandorPolicy } from "@beep/law-practice-use-cases/CandorPolicy";
 import { PromotionBlockReason, PromotionGateVerdict } from "@beep/shared-use-cases/PromotionGate";
 import { PromotionGate } from "@beep/shared-use-cases/server";
-import { Effect, Layer } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import { CandorPromotionSubjectResolver } from "./CandorPromotionGate.ports.ts";
 import type { SourceTextResolver } from "@beep/file-processing/SourceText";
 import type { CandorRecordReadError, CandorRecordReader } from "@beep/law-practice-use-cases/CandorPolicy";
@@ -34,8 +35,7 @@ const candorUnavailable = PromotionBlockReason.make("law-practice-candor-policy-
  *
  * ```ts
  * import { makeCandorPromotionGate } from "@beep/law-practice-server/CandorPromotionGate"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(makeCandorPromotionGate()))
  * ```
  *

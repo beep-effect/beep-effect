@@ -10,8 +10,8 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity";
-import { Effect } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { CitationId } from "../CitationId/index.ts";
 import { CitationSignal } from "../CitationSignal/index.ts";

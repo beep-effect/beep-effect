@@ -41,8 +41,7 @@ export { resolveChatRpcHttpUrl } from "./Chat.layer.ts";
  *
  * ```ts
  * import { ClientObservabilityLive } from "@beep/agents-client"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(ClientObservabilityLive)) // true
  * ```
  *

@@ -8,8 +8,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { calculateCost } from "./CostCalculator.ts";
 
 /**

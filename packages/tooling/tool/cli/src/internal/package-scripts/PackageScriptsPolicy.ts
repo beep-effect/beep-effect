@@ -5,12 +5,16 @@
  */
 import { $RepoCliId } from "@beep/identity/packages";
 import { FsUtils, jsonStringifyPretty, resolveWorkspaceDirs } from "@beep/repo-utils";
-import { Context, Effect, FileSystem, Match, Path } from "effect";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";

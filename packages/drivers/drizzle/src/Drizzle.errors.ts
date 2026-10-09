@@ -8,8 +8,10 @@
 import { $DrizzleId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, O, P, Str } from "@beep/utils";
-import { Cause, Effect, flow, pipe, Result } from "effect";
-import { dual } from "effect/Function";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import { dual, flow, pipe } from "effect/Function";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const $I = $DrizzleId.create("Drizzle.errors");

@@ -8,9 +8,13 @@
 
 import { Sha256HexFromBytes } from "@beep/schema";
 import { A, Str } from "@beep/utils";
-import { Effect, HashMap, HashSet, Number as Num, Order, pipe } from "effect";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
+import * as Num from "effect/Number";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import {
@@ -84,8 +88,7 @@ export const effectSchemaInventoryByteLength = (text: string): number => encoder
  *
  * ```ts
  * import { renderEffectSchemaInventoryJsonl } from "@beep/repo-cli/commands/Lint"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * Effect.runPromise(renderEffectSchemaInventoryJsonl([])).then((body) => console.log(body === "")) // true
  * ```
  *
@@ -115,8 +118,7 @@ export const renderEffectSchemaInventoryJsonl = Effect.fn("EffectSchemaInventory
  * ```ts
  * import { digestEffectSchemaInventoryJsonl } from "@beep/repo-cli/commands/Lint"
  * import { NodeServices } from "@effect/platform-node"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * Effect.runPromise(digestEffectSchemaInventoryJsonl([]).pipe(Effect.provide(NodeServices.layer))).then(console.log)
  * // "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
  * ```
@@ -252,8 +254,7 @@ export const renderEffectSchemaInventoryIndex = (input: {
  * ```ts
  * import { EffectSchemaInventoryExtraction, renderEffectSchemaInventory } from "@beep/repo-cli/commands/Lint"
  * import { NodeServices } from "@effect/platform-node"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const extraction = EffectSchemaInventoryExtraction.make({ parser: "6.0.2", bareStarDeclarationsOmitted: 0, modules: [] })
  * const program = renderEffectSchemaInventory("df77fff9396fe31de72d1947ecb5b74f8cee89e1", extraction)
  * Effect.runPromise(program.pipe(Effect.provide(NodeServices.layer))).then((rendered) =>
@@ -384,8 +385,7 @@ const staleDrift = (file: string, expected: string, actual: string): EffectSchem
  *
  * ```ts
  * import { diffEffectSchemaInventoryFiles, EffectSchemaInventoryFile } from "@beep/repo-cli/commands/Lint"
- * import { HashMap } from "effect"
- *
+ * import * as HashMap from "effect/HashMap";
  * const drift = diffEffectSchemaInventoryFiles(
  *   [EffectSchemaInventoryFile.make({ name: "INDEX.md", content: "a\nb\n" })],
  *   HashMap.make(["INDEX.md", "a\nc\n"])

@@ -8,10 +8,11 @@
 import { Fibered } from "@beep/identity/Fibered";
 import { $RepoUtilsId } from "@beep/identity/packages";
 import { compileAssertion } from "@beep/utils/Schema";
-import { Effect, SchemaGetter } from "effect";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as SchemaGetter from "effect/SchemaGetter";
 /* cspell:ignore Derivability derivability */
 import { ApplicableTo } from "./ApplicableTo.model.ts";
 import { ASTDerivability } from "./ASTDerivability.model.ts";

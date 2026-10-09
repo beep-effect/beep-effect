@@ -5,8 +5,7 @@
  * @category layers
  * @since 0.0.0
  */
-
-import { Layer } from "effect";
+import * as Layer from "effect/Layer";
 import { ThreadStoreDrizzleLayer, ThreadStoreInMemoryLayer } from "./aggregates/Thread/index.ts";
 import { WorkspaceVaultStoreDrizzleLayer, WorkspaceVaultStoreInMemoryLayer } from "./aggregates/Workspace/index.ts";
 

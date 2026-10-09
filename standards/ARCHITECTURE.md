@@ -1376,7 +1376,9 @@ capability, not product verbs:
 
 ````ts
 import { $DrizzleId } from "@beep/identity";
-import { Context, type Effect, Layer } from "effect";
+import * as Context from "effect/Context";
+import type * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 
 const $I = $DrizzleId.create("Drizzle.service");
@@ -1460,7 +1462,8 @@ API:
 
 ````ts
 import { $IamUseCasesId } from "@beep/identity/packages";
-import { Context, type Effect } from "effect";
+import * as Context from "effect/Context";
+import type * as Effect from "effect/Effect";
 import type * as O from "effect/Option";
 import type { Membership, MembershipId } from "@beep/iam-domain/entities/Membership";
 import type { MembershipRepositoryUnavailable } from "./Membership.errors.ts";
@@ -1485,7 +1488,8 @@ export class MembershipRepository extends Context.Service<
 The implementation belongs in server:
 
 ````ts
-import { Effect, Layer } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -1724,7 +1728,7 @@ export class MembershipAlreadyRevoked extends S.TaggedError<MembershipAlreadyRev
 ````ts
 import { $IamDomainId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { AccountId } from "@beep/iam-domain/entities/Account";
 import { OrganizationId } from "@beep/iam-domain/entities/Organization";
@@ -1823,7 +1827,8 @@ Use-case service defines the contract in product language:
 
 ````ts
 import { $IamUseCasesId } from "@beep/identity/packages";
-import { Context, type Effect } from "effect";
+import * as Context from "effect/Context";
+import type * as Effect from "effect/Effect";
 import type { RevokeMembershipCommand } from "./Membership.commands.ts";
 import type {
   MembershipNotFound,
@@ -1852,7 +1857,8 @@ export class MembershipService extends Context.Service<
 Server layer wires that contract to the runtime boundary:
 
 ````ts
-import { Effect, Layer } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import { MembershipNotFound, type RevokeMembershipCommand } from "@beep/iam-use-cases/public";
 import { MembershipAccess, MembershipRepository, MembershipService } from "@beep/iam-use-cases/server";
@@ -1896,7 +1902,7 @@ that boundary rule.
 Server handlers consume use-case services:
 
 ````ts
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import type { RevokeMembershipCommand } from "@beep/iam-use-cases/public";
 import { MembershipService } from "@beep/iam-use-cases/server";
 

@@ -7,9 +7,13 @@
 
 import { $UsptoId } from "@beep/identity";
 import { Str } from "@beep/utils";
-import { Effect, flow, pipe, SchemaGetter, SchemaIssue, SchemaTransformation } from "effect";
+import * as Effect from "effect/Effect";
+import { flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as SchemaGetter from "effect/SchemaGetter";
+import * as SchemaIssue from "effect/SchemaIssue";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 
 const $I = $UsptoId.create("Uspto.models");
 

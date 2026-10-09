@@ -6,11 +6,14 @@
  */
 import { $SchemaId } from "@beep/identity";
 import { A, Struct } from "@beep/utils";
-import { Effect, pipe, SchemaIssue, SchemaTransformation } from "effect";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as internal from "../Http/Http.headers.shared.ts";
 import { LiteralKit } from "../LiteralKit/index.ts";
 import * as SchemaUtils from "../SchemaUtils/index.ts";

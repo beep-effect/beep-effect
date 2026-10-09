@@ -1,8 +1,8 @@
 import { decodeBoxContentMigrationMap } from "@beep/box-provisioning";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { Effect } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 
 const file = (folderPath: ReadonlyArray<string>, fileName: string, sourceRelativePath = "source/file.bin") => ({
   fileName,

@@ -8,7 +8,9 @@
 
 import * as WorkItemUseCaseServer from "@beep/architecture-lab-use-cases/server";
 import { $ArchitectureLabServerId } from "@beep/identity/packages";
-import { Context, Effect, Layer } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import { makeWorkItemRepository } from "./WorkItem.repo.ts";
 import type { WorkItem as WorkItemUseCases } from "@beep/architecture-lab-use-cases/public";
 
@@ -23,8 +25,7 @@ const $I = $ArchitectureLabServerId.create("aggregates/WorkItem/WorkItem.layer")
  * import { ArchitectureLabConfigTest } from "@beep/architecture-lab-config/test"
  * import { makeWorkItemServer } from "@beep/architecture-lab-server/aggregates/WorkItem"
  * import { WorkItem as WorkItemUseCases } from "@beep/architecture-lab-use-cases/public"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const server = yield* makeWorkItemServer()
  *   return yield* server.list(WorkItemUseCases.ListWorkItemsQuery.make({}))
@@ -52,8 +53,7 @@ export const makeWorkItemServer = Effect.fn("ArchitectureLab.WorkItemServer.make
  * import { WorkItemServer } from "@beep/architecture-lab-server/aggregates/WorkItem"
  * import { ArchitectureLabServerTest } from "@beep/architecture-lab-server/test"
  * import { WorkItem as WorkItemUseCases } from "@beep/architecture-lab-use-cases/public"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const server = yield* WorkItemServer
  *   return yield* server.list(WorkItemUseCases.ListWorkItemsQuery.make({}))
@@ -81,8 +81,8 @@ export class WorkItemServer extends Context.Service<WorkItemServer, WorkItemUseC
  *   WorkItemServerLayer
  * } from "@beep/architecture-lab-server/aggregates/WorkItem"
  * import { WorkItem as WorkItemUseCases } from "@beep/architecture-lab-use-cases/public"
- * import { Effect, Layer } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * const layer = WorkItemServerLayer.pipe(Layer.provide(ArchitectureLabConfigTest))
  *
  * const program = Effect.gen(function* () {

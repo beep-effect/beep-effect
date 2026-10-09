@@ -7,11 +7,18 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Clock, Console, DateTime, Duration, Effect, FileSystem, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Clock from "effect/Clock";
+import * as Console from "effect/Console";
 import * as Crypto from "effect/Crypto";
-import { constant, flow } from "effect/Function";
+import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { constant, flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { UUID as UUIDSchema } from "../schema/Uuid.ts";

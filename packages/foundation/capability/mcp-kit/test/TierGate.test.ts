@@ -11,13 +11,16 @@ import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { assert, describe } from "@effect/vitest";
 import { assertExitFailure, assertNone, assertSome } from "@effect/vitest/utils";
-import { Deferred, Effect, Fiber, Ref } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import { Tool } from "effect/ai";
 import * as Cause from "effect/Cause";
+import * as Deferred from "effect/Deferred";
+import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import * as Fiber from "effect/Fiber";
 import * as O from "effect/Option";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 
 const decodeTierGateAuditRecord = S.decodeUnknownEffect(TierGateAuditRecord);

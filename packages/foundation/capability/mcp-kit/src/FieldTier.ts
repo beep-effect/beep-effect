@@ -20,9 +20,9 @@
 
 import { $McpKitId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { HashSet } from "effect";
 import * as A from "effect/Array";
 import { dual, identity } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";

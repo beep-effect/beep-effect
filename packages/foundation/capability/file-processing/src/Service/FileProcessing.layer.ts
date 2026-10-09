@@ -6,7 +6,9 @@
  */
 
 import { A, O } from "@beep/utils";
-import { Effect, Layer, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import {
   ArchiveExportProcessFileResult,
   ExtractedProcessFileResult,
@@ -90,8 +92,7 @@ const detectWithAvailableEngine = Effect.fn("FileProcessingService.detectWithAva
  * import * as BunCrypto from "@effect/platform-bun/BunCrypto"
  * import { FileProcessingService, makeFileProcessingServiceLayer } from "@beep/file-processing/Service"
  * import { TestFileProcessingEngine } from "@beep/file-processing/test"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = FileProcessingService.pipe(
  *   Effect.map((service) => typeof service.detect),
  *   Effect.provide(makeFileProcessingServiceLayer([TestFileProcessingEngine])),

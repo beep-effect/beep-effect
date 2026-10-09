@@ -7,8 +7,8 @@ import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
-import { Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const decodeConfigurationConfigurationSchemaResult = S.decodeResult(Configuration.ConfigurationSchema);
@@ -21,7 +21,7 @@ const encodeUnknownProofManifestDocgenProofManifestFileResult = S.encodeUnknownR
 const assertSchemaRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, value: Schema["Type"]): void => {
   const encode = S.encodeUnknownResult(schema);
   const decode = S.decodeUnknownResult(schema);
-  expect(S.toEquivalence(schema)(Result.getOrThrow(decode(Result.getOrThrow(encode(value)))), value)).toBe(true);
+  expect(S.toEquivalence(schema)(encode(value).pipe(Result.getOrThrow, decode, Result.getOrThrow), value)).toBe(true);
 };
 
 describe("schema parity", () => {

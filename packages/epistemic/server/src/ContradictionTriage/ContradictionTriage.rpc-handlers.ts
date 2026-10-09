@@ -7,8 +7,7 @@
 
 import { ContradictionRpcs } from "@beep/epistemic-use-cases/public";
 import { ContradictionTriageService } from "@beep/epistemic-use-cases/server";
-import { Effect } from "effect";
-
+import * as Effect from "effect/Effect";
 /**
  * RPC handlers delegated to the contradiction-triage application service.
  *
@@ -16,8 +15,7 @@ import { Effect } from "effect";
  *
  * ```ts
  * import { ContradictionHandlersLive } from "@beep/epistemic-server/layer"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(ContradictionHandlersLive)) // true
  * ```
  *

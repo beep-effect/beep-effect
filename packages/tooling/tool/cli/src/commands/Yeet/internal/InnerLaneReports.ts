@@ -6,9 +6,10 @@
  * @since 0.0.0
  */
 
-import { Effect, FileSystem, pipe } from "effect";
 import * as A from "effect/Array";
-import { constFalse, dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { constFalse, dual, pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -16,8 +17,8 @@ import * as Str from "effect/String";
 import { GithubCheckLaneRunStatus, QualityTaskLaneRunReport } from "../../Quality/Quality.schemas.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { runArtifactPathForContext } from "./ArtifactPaths.ts";
-import type { Path } from "effect";
 import type * as Crypto from "effect/Crypto";
+import type * as Path from "effect/Path";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { QualityTaskLaneRun } from "../../Quality/Quality.schemas.ts";
 
@@ -57,8 +58,7 @@ const decodeInnerLaneReportOption = S.decodeUnknownOption(S.fromJsonString(Quali
  *
  * ```ts
  * import { readInnerLaneReports, RepoRunContext, TurboPlanSnapshot } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const context = RepoRunContext.make({
  *   base: "origin/main",
  *   branch: "feature/closeout",

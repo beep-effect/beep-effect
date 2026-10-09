@@ -43,7 +43,7 @@ const ConformanceProfileValue = ConformanceProfileFields.check(ConformanceProfil
  * **Example** (Decode a CommonMark profile)
  *
  * ```ts import.meta.vitest name="Decode a CommonMark profile"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { Profile } from "@beep/schema/Conformance"
  *

@@ -8,10 +8,14 @@
 import { $SchemaId } from "@beep/identity";
 import { A } from "@beep/utils";
 import { cast } from "@beep/utils/Function";
-import { Effect, identity, Option, Result, SchemaIssue, SchemaTransformation } from "effect";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { dual, identity } from "effect/Function";
+import * as Option from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 
 const $I = $SchemaId.create("Http/headers");
 
@@ -258,7 +262,7 @@ export class ResponseHeader extends S.Class<ResponseHeader>($I`ResponseHeader`)(
  * **Example** (Forbidden encode always fails)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { makeHeaderEncodeForbidden } from "../../src/Http/Http.headers.shared.ts"
  *
  * const result = Effect.runSyncExit(makeHeaderEncodeForbidden("DemoHeader")("value"))

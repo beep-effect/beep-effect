@@ -20,10 +20,11 @@ import {
 } from "@beep/law-practice-domain/values/DocketDeadline";
 import { isBefore, equals as sameDate } from "@beep/schema/LocalDate";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import { Effect, HashSet, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
-import { dual, flow } from "effect/Function";
+import { dual, flow, pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";

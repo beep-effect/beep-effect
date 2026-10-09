@@ -10,10 +10,10 @@
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { PromotionGateRequest } from "@beep/shared-use-cases/PromotionGate";
-import { Context } from "effect";
+import * as Context from "effect/Context";
 import * as S from "effect/Schema";
 import type { CandorFilingScope } from "@beep/law-practice-use-cases/CandorPolicy";
-import type { Effect } from "effect";
+import type * as Effect from "effect/Effect";
 
 const $I = $LawPracticeServerId.create("CandorPromotionGate/CandorPromotionGate.ports");
 const CandorPromotionSubjectResolutionReasonBase = LiteralKit([
@@ -119,8 +119,7 @@ export interface CandorPromotionSubjectResolverShape {
  *   CandorPromotionSubjectResolutionError,
  *   CandorPromotionSubjectResolver
  * } from "@beep/law-practice-server/CandorPromotionGate"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const resolver = CandorPromotionSubjectResolver.of({
  *   resolve: (request) => Effect.fail(CandorPromotionSubjectResolutionError.make({
  *     reason: "mapping-unavailable",

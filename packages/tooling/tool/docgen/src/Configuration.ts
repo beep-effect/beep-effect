@@ -8,8 +8,13 @@
 import { $RepoDocgenId } from "@beep/identity/packages";
 import { decodeTSConfigFromJsoncTextEffect, TSConfigCompilerOptions } from "@beep/repo-utils";
 import { A } from "@beep/utils";
-import { Context, Effect, FileSystem, Layer, Path, pipe } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as jsonc from "jsonc-parser";
@@ -263,7 +268,7 @@ export class ConfigurationShape extends S.Class<ConfigurationShape>($I`Configura
  * **Example** (Provide configuration service)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import {
  *   DEFAULT_THEME,
  *   Configuration,
@@ -513,7 +518,7 @@ const resolveString = (fromCLI: O.Option<string>, fromDocgenJson: O.Option<strin
  * **Example** (Load config from CLI)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * import { load } from "@beep/repo-docgen/Configuration"
  * const program = load({
@@ -621,7 +626,7 @@ export const load = Effect.fn("load")(function* (args: LoadArgs) {
  * **Example** (Merge empty config layer)
  *
  * ```ts
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer";
  * import { configProviderLayer } from "@beep/repo-docgen/Configuration"
  *
  * const merged = Layer.mergeAll(configProviderLayer, Layer.empty)

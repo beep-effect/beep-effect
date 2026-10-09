@@ -6,7 +6,7 @@ import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import { $isCodeNode } from "@lexical/code";
 import { createHeadlessEditor } from "@lexical/headless";
-import { pipe } from "effect";
+import { pipe } from "effect/Function";
 import { AtomRegistry } from "effect/reactivity";
 import { $createParagraphNode, $createTextNode, $getRoot, COMMAND_PRIORITY_LOW, KEY_ENTER_COMMAND } from "lexical";
 import type { LexicalEditor } from "lexical";

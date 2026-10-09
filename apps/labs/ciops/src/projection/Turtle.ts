@@ -5,8 +5,10 @@
  * @since 0.0.0
  */
 
-import { Effect, Order, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as Order from "effect/Order";
 import * as Str from "effect/String";
 import { ScheduleScope, TurtleDocument } from "./Schemas.ts";
 import type { LanePlanProposal, LaneStep, PendingRequest, ScheduleProposal } from "./Schemas.ts";
@@ -139,8 +141,7 @@ const serializeProposal = (proposal: ScheduleProposal): TurtleDocument => {
  * import * as S from "effect/Schema"
  * import { emitScheduleAbox } from "@/projection/Turtle"
  * import { ScheduleProposal } from "@/projection/Schemas"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const proposal = ScheduleProposal.make({
  *   episodeId: "verification-1",
  *   proposalId: "schedule-policy-prefix-1000",
@@ -235,8 +236,7 @@ const serializeLanePlan = (plan: LanePlanProposal): TurtleDocument => {
  * import { Sha256Hex } from "@beep/schema/Sha256"
  * import { emitLanePlan } from "@/projection/Turtle"
  * import { LanePlanProposal } from "@/projection/Schemas"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const handoffSha256 = Sha256Hex.make("705f3e754a51c6750529ccec1021293c82fce0994709a18906b863609a0a2198")
  * const plan = LanePlanProposal.make({
  *   episodeId: "lane-plan-episode-1",

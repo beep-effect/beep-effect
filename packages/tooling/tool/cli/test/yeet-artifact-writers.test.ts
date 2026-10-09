@@ -33,9 +33,14 @@ import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
 import { assertDefined, assertNone, assertSome } from "@effect/vitest/utils";
-import { Effect, Exit, FileSystem, Path, pipe, Ref } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { YeetVerdictExtrasForTesting } from "@beep/repo-cli/test/Yeet";
@@ -154,7 +159,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("writeRunVerdict", (it) 
       const reportPath = yield* runArtifactPathForContext(context, "inner-lanes.ndjson");
       yield* fs.makeDirectory(path.dirname(reportPath), { recursive: true });
       yield* fs.writeFileString(reportPath, `${yield* encodeQualityTaskLaneRunReportJson(report)}\n`);
-      const extras = yield* Ref.make<YeetVerdictExtrasForTesting>(extrasWith(O.some(blockedMergeReady)));
+      const extras = yield* O.some(blockedMergeReady).pipe(extrasWith, Ref.make);
 
       yield* writeRunVerdictForTesting(
         plan,
@@ -208,7 +213,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("writeRunVerdict", (it) 
       const context = contextForRoot(tmpDir);
       const plan = RepoRunPlan.make({ context, steps: A.empty() });
       const recorder = yield* Ref.make<ReadonlyArray<YeetExecutedStep>>(A.empty());
-      const extras = yield* Ref.make<YeetVerdictExtrasForTesting>(extrasWith(O.none()));
+      const extras = yield* O.none().pipe(extrasWith, Ref.make);
 
       yield* writeRunVerdictForTesting(
         plan,

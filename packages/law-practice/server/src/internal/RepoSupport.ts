@@ -26,11 +26,12 @@
  * @since 0.0.0
  */
 
-import { Effect, Order } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import { dual, flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
-import type { Result } from "effect";
+import * as Order from "effect/Order";
+import type * as Result from "effect/Result";
 import type * as S from "effect/Schema";
 
 /**

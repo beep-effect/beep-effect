@@ -3,8 +3,9 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { Effect } from "effect";
+
 import { Command, Flag } from "effect/cli";
+import * as Effect from "effect/Effect";
 import {
   ContactsInput,
   EvaluateInput,
@@ -13,7 +14,7 @@ import {
   ResolveInput,
   UsptoInput,
 } from "./PracticeIdentify.config.ts";
-import type { Layer } from "effect";
+import type * as Layer from "effect/Layer";
 
 const pathFlag = (name: string) =>
   Flag.String(name).pipe(Flag.withDescription("Explicit private file path; no data location default."));
@@ -67,7 +68,8 @@ const evaluate = Command.make(
  * ```ts
  * import { makePracticeIdentifyCommand } from "@/PracticeIdentify.command"
  * import { IdentificationStages, IdentificationStagesShape } from "@/PracticeIdentify.config"
- * import { Effect, Layer } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * const stages = Layer.succeed(IdentificationStages, IdentificationStagesShape.make({ contacts: () => Effect.succeed(0), index: () => Effect.succeed(0), uspto: () => Effect.succeed(0), resolve: () => Effect.succeed(0), evaluate: () => Effect.succeed(0) }))
  * console.log(makePracticeIdentifyCommand(stages).name) // "practice-identify"
  * ```

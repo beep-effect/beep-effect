@@ -7,7 +7,7 @@
 import { M365 } from "@beep/m365";
 import * as NodeRuntime from "@effect/platform-node/NodeRuntime";
 import * as NodeStdio from "@effect/platform-node/NodeStdio";
-import { Layer } from "effect";
+import * as Layer from "effect/Layer";
 import { M365McpServerConfig, makeServerLayer, VERSION } from "./index.ts";
 
 const ServerConfig = M365McpServerConfig.make({

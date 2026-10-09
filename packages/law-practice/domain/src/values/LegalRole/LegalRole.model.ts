@@ -6,7 +6,7 @@
  */
 import { $LawPracticeDomainId } from "@beep/identity/packages";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
-import { HashSet } from "effect";
+import * as HashSet from "effect/HashSet";
 import * as S from "effect/Schema";
 import { PartyKind } from "../PartyKind/index.ts";
 import { SourceNormRef } from "../SourceNormRef/index.ts";

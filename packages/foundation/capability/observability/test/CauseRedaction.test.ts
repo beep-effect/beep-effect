@@ -14,9 +14,15 @@ import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it as loggerSubjectIt } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
-import { Cause, Context, Effect, Equal, Layer, Logger, References } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Cause from "effect/Cause";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import * as Layer from "effect/Layer";
+import * as Logger from "effect/Logger";
 import * as O from "effect/Option";
+import * as References from "effect/References";
 import * as S from "effect/Schema";
 
 const decodeUnknownRedactCauseOptionsOption = S.decodeUnknownOption(RedactCauseOptions);
@@ -155,10 +161,10 @@ describe("CauseRedaction", () => {
         "preserves the original cause",
         Effect.fnUntraced(function* () {
           const original = Cause.fail(new Error("boom"));
-          const exit = yield* Effect.exit(
-            Effect.failCause(original).pipe(
-              tapRedactedCause(LogRedactedCauseOptions.make({ message: "boundary failed" }))
-            )
+          const exit = yield* original.pipe(
+            Effect.failCause,
+            tapRedactedCause(LogRedactedCauseOptions.make({ message: "boundary failed" })),
+            Effect.exit
           );
 
           expect(exit._tag).toBe("Failure");

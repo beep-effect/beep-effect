@@ -6,15 +6,19 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { Console, Effect, FileSystem, Path } from "effect";
+
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
 import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as Str from "effect/String";
 import { emptyWhenNotFound } from "./WorkstationState.ts";
-import type { PlatformError } from "effect";
+import type * as PlatformError from "effect/PlatformError";
 
 /**
  * Rows that decoded from a JSON Lines file, and how many non-empty lines did not.
@@ -70,9 +74,7 @@ export const partitionJsonLines =
  *
  * ```ts
  * import { type NewestPerKeyOptions } from "@beep/repo-cli/test/SharedInternals"
- *
- * import { DateTime } from "effect"
- *
+ * import * as DateTime from "effect/DateTime";
  * const options: NewestPerKeyOptions<{ name: string; at: number }> = {
  *   key: (row) => row.name,
  *   at: (row) => DateTime.makeUnsafe(row.at),
@@ -102,8 +104,7 @@ export interface NewestPerKeyOptions<Row> {
  *
  * ```ts
  * import { newestPerKey } from "@beep/repo-cli/test/SharedInternals"
- * import { DateTime } from "effect"
- *
+ * import * as DateTime from "effect/DateTime";
  * const current = newestPerKey<{ k: string; t: number }>({
  *   key: (row) => row.k,
  *   at: (row) => DateTime.makeUnsafe(row.t),

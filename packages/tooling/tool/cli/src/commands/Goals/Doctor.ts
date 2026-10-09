@@ -21,12 +21,18 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import { A, O, pipe, Str, thunkEmptyStr, thunkFalse } from "@beep/utils";
-import { Console, Effect, FileSystem, HashSet, Order, Path, SchemaGetter } from "effect";
+import * as Console from "effect/Console";
 import { Command, Flag } from "effect/cli";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { dual, flow } from "effect/Function";
+import * as HashSet from "effect/HashSet";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as SchemaGetter from "effect/SchemaGetter";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { diffMembership } from "../../internal/ratchet/RatchetDiff.ts";
 import { runGitOutput } from "../../internal/repo-run/index.ts";
@@ -777,8 +783,7 @@ const findingLine = (item: GoalDoctorFinding): string => `- ${item.slug} [${item
  *
  * ```ts
  * import { runGoalsDoctor } from "@beep/repo-cli/commands/Goals/Doctor"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(runGoalsDoctor({ writeBaseline: false })))
  * ```
  *
@@ -867,8 +872,7 @@ const printNonFatalFindings = Effect.fn("Goals.printNonFatalFindings")(function*
  *
  * ```ts
  * import { runGoalsDoctor } from "@beep/repo-cli/commands/Goals/Doctor"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(runGoalsDoctor({ writeBaseline: false })))
  * ```
  *

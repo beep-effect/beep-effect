@@ -11,7 +11,9 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { Context, Effect, Layer } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { ArticleRepository } from "../Repository/Article.ts";
@@ -105,7 +107,7 @@ export class PersistenceResult extends S.Class<PersistenceResult>($I`Persistence
  * **Example** (Persist claims for an article)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { ArticleMetadata, ClaimPersistenceService } from "@effect-ontology/Service/ClaimPersistence"
  *
  * const program = Effect.gen(function* () {

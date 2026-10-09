@@ -10,9 +10,12 @@ import { buildPracticeKgBundle, PracticeKgOptions, PracticeKgRunLabel } from "@b
 import * as OptionUtils from "@beep/utils/Option";
 import { BunRuntime } from "@effect/platform-bun";
 import * as BunServices from "@effect/platform-bun/BunServices";
-import { Effect, FileSystem, Layer, Path } from "effect";
 import { Command, Flag } from "effect/cli";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { makePracticeKgBuildLayer } from "./runtime/index.ts";
 
@@ -111,18 +114,17 @@ const buildCommand = Command.make(
     }
     yield* fs.makeDirectory(resolvedBundleOut, { recursive: true });
     const build = buildPracticeKgBundle(options);
-    yield* Effect.scoped(
-      Layer.build(makePracticeKgBuildLayer(path.join(resolvedBundleOut, "kg.pglite"))).pipe(
-        Effect.flatMap((context) => build.pipe(Effect.provide(context)))
-      )
+    yield* Layer.build(makePracticeKgBuildLayer(path.join(resolvedBundleOut, "kg.pglite"))).pipe(
+      Effect.flatMap((context) => build.pipe(Effect.provide(context))),
+      Effect.scoped
     );
   })
 );
 
-const program = Effect.scoped(
-  Layer.build(BunServices.layer).pipe(
-    Effect.flatMap((context) => Command.run(buildCommand, { version: "0.0.0" }).pipe(Effect.provide(context)))
-  )
+const program = BunServices.layer.pipe(
+  Layer.build,
+  Effect.flatMap((context) => Command.run(buildCommand, { version: "0.0.0" }).pipe(Effect.provide(context))),
+  Effect.scoped
 );
 
 BunRuntime.runMain(program);

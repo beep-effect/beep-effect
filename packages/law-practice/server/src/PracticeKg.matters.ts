@@ -17,8 +17,13 @@ import {
   PracticeKgMatterMatchedOn,
 } from "@beep/law-practice-use-cases/server";
 import * as O from "@beep/utils/Option";
-import { Context, Effect, Layer, MutableHashMap, Order, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { PracticeKgProjectionError } from "./PracticeKg.errors.ts";
@@ -329,7 +334,7 @@ INSERT INTO matter_dockets VALUES (
  * **Example** (Write empty matter tables)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { PracticeKgMatterTables, writeMatterTables } from "../../src/PracticeKg.matters.ts"
  *
  * const write = writeMatterTables("/corpus/staging/practice-kg-bundle/practice.duckdb")(
@@ -507,7 +512,7 @@ const lookupFailure =
  *
  * ```ts
  * import { PracticeKgMatterLookupRequest } from "@beep/law-practice-use-cases/server"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { lookupPracticeKgMatters } from "../../src/PracticeKg.matters.ts"
  *
  * const lookup = lookupPracticeKgMatters(PracticeKgMatterLookupRequest.make({ reference: "12345.10008US01" }))
@@ -593,8 +598,7 @@ export const lookupPracticeKgMatters = Effect.fn("PracticeKg.lookupMatters")(fun
  * ```ts
  * import { PracticeKgMatterLookup } from "@beep/law-practice-server"
  * import { PracticeKgMatterLookupRequest } from "@beep/law-practice-use-cases/server"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const resolution = Effect.gen(function* () {
  *   const matters = yield* PracticeKgMatterLookup
  *   const result = yield* matters.lookup(PracticeKgMatterLookupRequest.make({ reference: "10008US01" }))
@@ -632,8 +636,7 @@ export class PracticeKgMatterLookup extends Context.Service<
  * ```ts
  * import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb"
  * import { PracticeKgMatterLookupLive } from "@beep/law-practice-server"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * const duckDb = DuckDb.makeNodeLayer(
  *   DuckDbConnectionOptions.make({
  *     databaseOptions: { access_mode: "READ_ONLY" },
@@ -700,8 +703,7 @@ const docketRowOf = (docket: MatterDocketQueryRow): PracticeKgMatterDocketRow =>
  *
  * ```ts
  * import { readPracticeKgMatterTables } from "@beep/law-practice-server"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(readPracticeKgMatterTables)) // true
  * ```
  *

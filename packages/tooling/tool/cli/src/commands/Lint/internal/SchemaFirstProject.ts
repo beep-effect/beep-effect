@@ -6,7 +6,8 @@
  */
 
 import { isExcludedTypeScriptSourcePath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
-import { Effect, Path } from "effect";
+import * as Effect from "effect/Effect";
+import * as Path from "effect/Path";
 import { createRepoTsMorphProject, createWorkspaceOwnerResolver } from "../../../internal/tsmorph/index.ts";
 import { isEcosystemMemberSourcePath } from "../../Laws/internal/LawScan.ts";
 import { SchemaFirstSourceFileGlobs } from "../Lint.schemas.ts";
@@ -18,8 +19,7 @@ import { SchemaFirstSourceFileGlobs } from "../Lint.schemas.ts";
  *
  * ```ts
  * import { makeSchemaFirstOwnerResolver } from "@beep/repo-cli/commands/Lint"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.succeed(makeSchemaFirstOwnerResolver)
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -45,8 +45,7 @@ export const makeSchemaFirstOwnerResolver = Effect.fn("makeSchemaFirstOwnerResol
  *
  * ```ts
  * import { makeSchemaFirstProject } from "@beep/repo-cli/commands/Lint"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.succeed(makeSchemaFirstProject)
  * console.log(Effect.isEffect(program)) // true
  * ```

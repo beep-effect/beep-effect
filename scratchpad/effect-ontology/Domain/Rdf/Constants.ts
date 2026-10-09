@@ -12,8 +12,7 @@
  */
 import { IRI, makeNamedNode } from "@beep/rdf";
 import * as S from "effect/Schema";
-import { Result } from "effect";
-
+import * as Result from "effect/Result";
 const vocabularyTerm = (namespace: string, localName: string) => makeNamedNode(`${namespace}${localName}`);
 
 const extractionNamespace = Result.getOrThrow(S.decodeResult(IRI)("https://example.org/kg/"));

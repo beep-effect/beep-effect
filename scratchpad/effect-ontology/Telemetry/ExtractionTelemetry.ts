@@ -6,7 +6,9 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { Context, Effect, Ref } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Ref from "effect/Ref";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { ExtractionTelemetry, ProviderTokenUsage } from "../Domain/Model/ExtractionTelemetry.ts";
@@ -83,7 +85,7 @@ const toUsage = (state: UsageState): ProviderTokenUsage => {
  * **Example** (Capture a provider attempt into a snapshot)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { captureExtractionTelemetry, recordProviderAttempt } from "@effect-ontology/Telemetry/ExtractionTelemetry"
  *
  * const [, snapshot] = Effect.runSync(captureExtractionTelemetry(recordProviderAttempt))
@@ -162,7 +164,7 @@ const makeExtractionTelemetry = Effect.fn("ExtractionTelemetry.make")(function* 
  * **Example** (Count an attempt without token totals)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { captureExtractionTelemetry, recordProviderAttempt } from "@effect-ontology/Telemetry/ExtractionTelemetry"
  *
  * const [, snapshot] = Effect.runSync(captureExtractionTelemetry(recordProviderAttempt))
@@ -189,7 +191,7 @@ export const recordProviderAttempt: Effect.Effect<void> = Effect.serviceOption(E
  * **Example** (Capture complete token usage)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { captureExtractionTelemetry, recordProviderAttempt, recordProviderUsage } from "@effect-ontology/Telemetry/ExtractionTelemetry"
  *
  * const [, snapshot] = Effect.runSync(
@@ -231,7 +233,7 @@ export const recordProviderUsage = (usage: {
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { captureExtractionTelemetry, recordExtractionChunkCount } from "@effect-ontology/Telemetry/ExtractionTelemetry"
  *
  * const [, snapshot] = Effect.runSync(
@@ -266,7 +268,7 @@ export const recordExtractionChunkCount = (chunkCount: number): Effect.Effect<vo
  * **Example** (Capture complete usage for one extraction)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { captureExtractionTelemetry, recordProviderAttempt, recordProviderUsage } from "@effect-ontology/Telemetry/ExtractionTelemetry"
  *
  * const [value, snapshot] = Effect.runSync(

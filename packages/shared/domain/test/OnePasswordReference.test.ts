@@ -2,14 +2,15 @@ import { isOnePasswordReference, OnePasswordReference } from "@beep/shared-domai
 import { it } from "@beep/test-runner";
 import { assert, describe } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
-import { Effect, Exit } from "effect";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as S from "effect/Schema";
 
 const decodeOnePasswordReference = S.decodeUnknownEffect(OnePasswordReference);
 
 const expectDecodeFailure = Effect.fn("OnePasswordReferenceTest.expectDecodeFailure")(function* (input: unknown) {
   const exit = yield* Effect.exit(decodeOnePasswordReference(input));
-  assertTrue(Exit.isFailure(exit));
+  exit.pipe(Exit.isFailure, assertTrue);
 });
 
 describe("OnePasswordReference", () => {

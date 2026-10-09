@@ -10,11 +10,19 @@ import { LiteralKit, Sha256Hex } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { sha256 } from "@noble/hashes/sha2.js";
-import { Crypto, Duration, Effect, FileSystem, Match, Number as Num, Path, Schedule, Stream } from "effect";
+import * as Crypto from "effect/Crypto";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
+import * as FileSystem from "effect/FileSystem";
 import { HttpClient, HttpClientError, HttpClientRequest } from "effect/http";
+import * as Match from "effect/Match";
+import * as Num from "effect/Number";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
+import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import { PosInt } from "../../../internal/schema/PosInt.ts";
 import { canonicalizeFileTargetPath } from "./FileTransaction.ts";
 import { MatchPersonError } from "./MatchPerson.errors.ts";
@@ -589,7 +597,7 @@ const downloadArtifact = Effect.fn("Files.PersonMatchModelStore.downloadArtifact
  * ```ts
  * import * as S from "effect/Schema"
  * import { Sha256Hex } from "@beep/schema"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { acquirePinnedPersonMatchArtifactForTest } from "./MatchPerson.model-store.ts"
  *
  * const PosInt = S.Int.check(S.isGreaterThan(0))
@@ -698,8 +706,7 @@ const validateExactArtifactAllowlist = Effect.fn("Files.PersonMatchModelStore.va
  *
  * ```ts
  * import { prepareAdaFaceArtifacts } from "./MatchPerson.model-store.ts"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const operation = prepareAdaFaceArtifacts("/cache/adaface-kprpe")
  * console.log(Effect.isEffect(operation))
  * ```

@@ -21,9 +21,14 @@
 
 import { $NlpProcessingId } from "@beep/identity";
 import { A } from "@beep/utils";
-import { Clock, Context, Effect, HashMap, Layer, Ref } from "effect";
+import * as Clock from "effect/Clock";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
+import * as HashMap from "effect/HashMap";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import { NodeId, NodeMetadata } from "../EffectGraph.ts";
 import { ExecutionId, ExecutionMetrics } from "./Types.ts";
@@ -344,7 +349,7 @@ const makeResultStore = Effect.gen(function* () {
  * **Example** (Provide live store layer)
  *
  * ```ts import.meta.vitest name="Provide live store layer"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { ResultStoreLive } from "@beep/nlp-processing/Graph/GraphOperations/ResultStore"
  * import { ResultStore } from "@beep/nlp-processing/Graph/GraphOperations/ResultStore"
  *
@@ -369,7 +374,7 @@ export const ResultStoreLive: Layer.Layer<ResultStore> = Layer.effect(ResultStor
  * **Example** (Assert empty test store)
  *
  * ```ts import.meta.vitest name="Assert empty test store"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { ResultStoreTest } from "@beep/nlp-processing/Graph/GraphOperations/ResultStore"
  * import { ResultStore } from "@beep/nlp-processing/Graph/GraphOperations/ResultStore"
  *

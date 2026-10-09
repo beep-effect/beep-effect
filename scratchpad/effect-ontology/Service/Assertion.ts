@@ -20,7 +20,16 @@ import { PROV_NAMESPACE } from "@beep/rdf/Vocab/Prov";
 import { RDF_NAMESPACE, RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { XSD_DOUBLE, XSD_NAMESPACE } from "@beep/rdf/Vocab/Xsd";
 import { LiteralKit } from "@beep/schema";
-import { Clock, Context, DateTime, Effect, HashMap, Layer, Order, Random, Ref, Result } from "effect";
+import * as Clock from "effect/Clock";
+import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
+import * as Layer from "effect/Layer";
+import * as Order from "effect/Order";
+import * as Random from "effect/Random";
+import * as Ref from "effect/Ref";
+import * as Result from "effect/Result";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -333,7 +342,7 @@ const ASSERTIONS = {
  * **Example** (Create an assertion from accepted claims)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { AssertionService } from "@effect-ontology/Service/Assertion"
  *
  * const program = Effect.gen(function* () {
@@ -757,7 +766,7 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
  * **Example** (Provide the live assertion layer)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { AssertionService, AssertionServiceLive } from "@effect-ontology/Service/Assertion"
  *
  * const program = Effect.gen(function* () {

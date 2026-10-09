@@ -3,22 +3,20 @@ import { Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
 import { assertExitFailure } from "@effect/vitest/utils";
-import {
-  Array as Arr,
-  Cause,
-  Clock,
-  Config,
-  Deferred,
-  Effect,
-  Exit,
-  Fiber,
-  FileSystem,
-  Option as O,
-  Path,
-  Schema,
-  Stream,
-} from "effect";
+import * as Arr from "effect/Array";
+import * as Cause from "effect/Cause";
+import * as Clock from "effect/Clock";
+import * as Config from "effect/Config";
+import * as Deferred from "effect/Deferred";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Fiber from "effect/Fiber";
+import * as FileSystem from "effect/FileSystem";
+import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as Schema from "effect/Schema";
+import * as Stream from "effect/Stream";
 import type * as PlatformError from "effect/PlatformError";
 
 const packageRoot = NodeURL.fileURLToPath(new URL("..", import.meta.url));

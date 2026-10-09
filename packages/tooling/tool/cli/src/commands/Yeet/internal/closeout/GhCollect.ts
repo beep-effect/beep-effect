@@ -6,8 +6,8 @@
  */
 
 import { O } from "@beep/utils";
-import { Effect } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import { collectTruncatableThreadPages, GhPageInfo, ghOutput } from "../../../../internal/github/index.ts";
 import { YeetCommandError } from "../../Yeet.errors.ts";
@@ -42,7 +42,7 @@ type CloseoutWriteIntent = ReturnType<typeof closeoutWritePlan>["intents"][numbe
  * **Example** (Read repository coordinates for closeout)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { closeoutGhOutput, RepoRunContext } from "@beep/repo-cli/test/Yeet"
  *
  * const context = RepoRunContext.make({
@@ -253,7 +253,7 @@ const collectReviewPages = Effect.fn("YeetCloseout.collectReviewPages")(function
  * **Example** (Fetch the closeout payload for the current branch)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { collectPrCloseoutPayload, RepoRunContext } from "@beep/repo-cli/test/Yeet"
  *
  * const context = RepoRunContext.make({
@@ -315,7 +315,7 @@ export const collectPrCloseoutPayload = Effect.fn("YeetCloseout.collectPrCloseou
  * **Example** (Resolve one review thread during closeout)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * import { performCloseoutWriteActions, RepoRunContext } from "@beep/repo-cli/test/Yeet"
  *

@@ -14,8 +14,9 @@ import {
 import { it } from "@beep/test-runner";
 import { beforeEach, describe, expect, vi } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
-import { Console, Effect } from "effect";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
 import * as MutableRef from "effect/MutableRef";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
@@ -162,7 +163,7 @@ describe("internal/cli/Json printCommandJson", () => {
     const moduleUrl = new URL("../src/internal/cli/Json.ts", import.meta.url).href;
     const program = [
       `import { printCommandJson } from ${JSON.stringify(moduleUrl)};`,
-      'import { Effect } from "effect";',
+      'import * as Effect from "effect/Effect";',
       "const rawWrite = process.stdout.write.bind(process.stdout);",
       "process.stdout.write = (chunk, ...args) => {",
       '  const bytes = typeof chunk === "string" ? new TextEncoder().encode(chunk) : chunk;',

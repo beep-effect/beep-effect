@@ -502,7 +502,7 @@ export class EpisodeAdoption extends S.Class<EpisodeAdoption>($I`EpisodeAdoption
  * **Example** (Construct a closed seat-request episode)
  *
  * ```ts
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import * as S from "effect/Schema"
  * import { EpisodeKey, KpiEpisode } from "@/kpi/Schemas"
  *
@@ -544,7 +544,7 @@ export class KpiEpisode extends S.Class<KpiEpisode>($I`KpiEpisode`)(
  * **Example** (Construct the #1427 row)
  *
  * ```ts
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import { ChangeEventRow } from "@/kpi/Schemas"
  *
  * const row = ChangeEventRow.make({
@@ -643,7 +643,7 @@ export class AdoptionProbe extends S.Class<AdoptionProbe>($I`AdoptionProbe`)(
  * **Example** (Bound the post-baseline window)
  *
  * ```ts
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import { WindowBounds } from "@/kpi/Schemas"
  *
  * const window = WindowBounds.make({
@@ -914,7 +914,7 @@ export type Cq012Decomposition = typeof Cq012Decomposition.Type;
  *
  * ```ts
  * import { Sha256Hex } from "@beep/schema/Sha256"
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import { AdoptionTable, PinnedKpiInput } from "@/kpi/Schemas"
  *
  * const table = AdoptionTable.make({
@@ -1054,7 +1054,7 @@ export class ChangeEventPartition extends S.Class<ChangeEventPartition>($I`Chang
  *
  * ```ts
  * import { Sha256Hex } from "@beep/schema/Sha256"
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import * as S from "effect/Schema"
  * import { Cq012Decomposition, KpiReading, PinnedKpiInput, WindowBounds } from "@/kpi/Schemas"
  *

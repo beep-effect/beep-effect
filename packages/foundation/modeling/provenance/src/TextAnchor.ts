@@ -12,8 +12,8 @@
  * @since 0.0.0
  */
 import { $ProvenanceId } from "@beep/identity/packages";
-import { identity, Number as N } from "effect";
-import { dual } from "effect/Function";
+import { dual, identity } from "effect/Function";
+import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
@@ -133,7 +133,7 @@ const TextAnchorSchema = TextAnchorStruct.mapFields(identity).check(TextAnchorWi
  * **Example** (Decoding a TextAnchor)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { TextAnchor } from "@beep/provenance/TextAnchor"
  * import * as S from "effect/Schema"
  *

@@ -1,7 +1,7 @@
 import { URLStr } from "@beep/schema";
 import { ShaclValidationError } from "@beep/semantic-web/services/shacl-validation";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as Duration from "effect/Duration";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";

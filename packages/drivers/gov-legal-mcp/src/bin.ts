@@ -7,7 +7,9 @@
 
 import * as NodeRuntime from "@effect/platform-node/NodeRuntime";
 import * as NodeStdio from "@effect/platform-node/NodeStdio";
-import { Effect, Layer, Logger } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Logger from "effect/Logger";
 import { VERSION } from "./_generated/version.ts";
 import { GovLegalMcpServerConfig, makeServerLayer } from "./Server.ts";
 

@@ -8,8 +8,8 @@
 import { $FileProcessingId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A } from "@beep/utils";
-import { Match } from "effect";
 import { dual } from "effect/Function";
+import * as Match from "effect/Match";
 import * as S from "effect/Schema";
 
 const $I = $FileProcessingId.create("Strategy");
@@ -428,7 +428,7 @@ export class UnsupportedSelectedStrategy extends S.Class<UnsupportedSelectedStra
  *
  * ```ts
  * import { SelectedStrategy } from "@beep/file-processing/Strategy"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const program = S.decodeUnknownEffect(SelectedStrategy)({
@@ -463,7 +463,7 @@ export const SelectedStrategy = S.Union([
  *
  * ```ts import.meta.vitest name="Typed decode selected strategy"
  * import { SelectedStrategy } from "@beep/file-processing/Strategy"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const program = Effect.gen(function* () {

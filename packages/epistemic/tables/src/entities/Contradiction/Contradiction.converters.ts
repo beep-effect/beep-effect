@@ -12,12 +12,15 @@ import {
   ContradictionReceipt,
   hasValidSeals,
 } from "@beep/epistemic-domain/entities/Contradiction";
-import { DateTime, Match, pipe, Result, SchemaIssue } from "effect";
 import * as A from "effect/Array";
+import * as DateTime from "effect/DateTime";
 import * as Eq from "effect/Equal";
-import { dual, identity } from "effect/Function";
+import { dual, identity, pipe } from "effect/Function";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
 import type { EdgeVersion } from "@beep/epistemic-domain/entities/EdgeVersion";
 import type { candidateTable, dispositionTable, receiptTable } from "./Contradiction.table.ts";
 

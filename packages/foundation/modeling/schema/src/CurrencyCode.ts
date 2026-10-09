@@ -9,7 +9,7 @@ import { CurrencyCodes as CurrencyCodesData } from "@beep/data";
 import { $SchemaId } from "@beep/identity";
 import { A, Struct } from "@beep/utils";
 import { cast } from "@beep/utils/Function";
-import { pipe } from "effect";
+import { pipe } from "effect/Function";
 import * as S from "effect/Schema";
 import { LiteralKit } from "./LiteralKit/index.ts";
 

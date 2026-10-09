@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { Runtime } from "effect";
+import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
 import { OpaqueDefect } from "../../internal/schema/OpaqueDefect.ts";
 

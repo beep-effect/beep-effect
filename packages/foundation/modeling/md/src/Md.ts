@@ -6,10 +6,12 @@
  */
 
 import { A, Str } from "@beep/utils";
-import { Effect, Match, Result } from "effect";
+import * as Effect from "effect/Effect";
 import { dual, pipe } from "effect/Function";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { renderSafeHtml, safeHtmlValue } from "./Md.html.ts";
 import {
@@ -1193,7 +1195,7 @@ export const embed: {
  * **Example** (Create YouTube embed result)
  *
  * ```ts import.meta.vitest name="Create YouTube embed result"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import { Md } from "@beep/md"
  *
  * const result = Md.youtube("M7lc1UVf-VE")
@@ -1212,8 +1214,7 @@ const youtubeInput = (videoId: string): YouTube.Encoded => ({ _tag: "youtube", v
  *
  * ```ts import.meta.vitest name="Create YouTube embed"
  * import { Md } from "@beep/md"
- * import { Result } from "effect"
- *
+ * import * as Result from "effect/Result";
  * const result = Md.youtube("M7lc1UVf-VE")
  * Result.isSuccess(result) && result.success._tag === "youtube" // => true
  * ```
@@ -1230,7 +1231,7 @@ export const youtube = (videoId: string): Result.Result<YouTube, S.SchemaError> 
  * **Example** (Effectful YouTube constructor)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { Md } from "@beep/md"
  *
  * const program = Md.youtubeEffect("M7lc1UVf-VE")
@@ -1321,8 +1322,7 @@ export const make: {
  *
  * ```ts import.meta.vitest name="Build and render document"
  * import { Md } from "@beep/md"
- * import { Result } from "effect"
- *
+ * import * as Result from "effect/Result";
  * const document = Md.make([Md.h1`Hello`, Md.p`World`])
  * Result.getOrThrow(Md.render(document)) // => "# Hello\n\nWorld"
  * ```

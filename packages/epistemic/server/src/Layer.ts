@@ -28,7 +28,8 @@ import {
 import { ClaimGate, makeClaimGate } from "@beep/epistemic-use-cases/ClaimGate";
 import { ClaimTransition, makeClaimTransition } from "@beep/epistemic-use-cases/ClaimLifecycle";
 import { ShaclValidationService } from "@beep/semantic-web/services/shacl-validation";
-import { Effect, Layer } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import { ClaimDispositionRepositoryDrizzle, ClaimDispositionRepositoryInMemory } from "./ClaimDisposition/index.ts";
 import {
   ContradictionHandlersLive,

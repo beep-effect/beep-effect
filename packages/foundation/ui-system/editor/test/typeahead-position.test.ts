@@ -2,7 +2,7 @@ import { shouldOpenUpward, typeaheadInsetPx, typeaheadMenuPosition } from "@beep
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
-import { pipe } from "effect";
+import { pipe } from "effect/Function";
 
 describe("shouldOpenUpward", () => {
   it("opens downward when the full menu fits below the caret", () => {

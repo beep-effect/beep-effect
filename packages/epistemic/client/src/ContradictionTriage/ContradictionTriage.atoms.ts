@@ -12,7 +12,9 @@ import {
   EvidenceSourcePagePayload,
   GetContradictionCandidate,
 } from "@beep/epistemic-use-cases/public";
-import { DateTime, Effect, pipe } from "effect";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import { AsyncResult, Atom, AtomRpc, Reactivity } from "effect/reactivity";
 import * as S from "effect/Schema";

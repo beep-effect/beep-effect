@@ -6,7 +6,8 @@
  */
 
 import { A } from "@beep/utils";
-import { Console, Effect } from "effect";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import { EffectSchemaInventoryCheckReport, EffectSchemaInventoryRequest } from "../EffectSchemaInventory.schemas.ts";
 import { EffectSchemaInventoryDriftError, EffectSchemaInventoryError } from "../Lint.errors.ts";
@@ -23,8 +24,9 @@ import {
 } from "./EffectSchemaInventoryRender.ts";
 import { EffectSchemaInventorySource } from "./EffectSchemaInventorySource.ts";
 import { readEffectSchemaInventoryFixture, writeEffectSchemaInventoryFixture } from "./EffectSchemaInventoryStore.ts";
-import type { FileSystem, Path } from "effect";
 import type * as Crypto from "effect/Crypto";
+import type * as FileSystem from "effect/FileSystem";
+import type * as Path from "effect/Path";
 import type { EffectSchemaInventoryReceipt } from "../EffectSchemaInventory.schemas.ts";
 import type {
   EffectSchemaInventoryCatalogPinError,
@@ -62,7 +64,7 @@ const describeReceipt = (receipt: EffectSchemaInventoryReceipt): string =>
  *
  * ```ts
  * import { effectSchemaInventoryRequestFromFlags } from "@beep/repo-cli/commands/Lint"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const request = effectSchemaInventoryRequestFromFlags({ write: false, check: false, prompt: O.none(), out: O.none() })
@@ -126,8 +128,7 @@ const extractPinned = Effect.fn("EffectSchemaInventoryRun.extractPinned")(functi
  *
  * ```ts
  * import { generateEffectSchemaInventory } from "@beep/repo-cli/commands/Lint"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(generateEffectSchemaInventory())) // true
  * ```
  *
@@ -154,8 +155,7 @@ export const generateEffectSchemaInventory = Effect.fn("EffectSchemaInventoryRun
  *
  * ```ts
  * import { checkEffectSchemaInventory } from "@beep/repo-cli/commands/Lint"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(checkEffectSchemaInventory(process.cwd()))) // true
  * ```
  *
@@ -181,8 +181,7 @@ export const checkEffectSchemaInventory = Effect.fn("EffectSchemaInventoryRun.ch
  * ```ts
  * import { EffectSchemaInventoryCheckReport, EffectSchemaInventoryReceipt, reportEffectSchemaInventoryCheck } from "@beep/repo-cli/commands/Lint"
  * import { Sha256Hex } from "@beep/schema/Sha256"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const receipt = EffectSchemaInventoryReceipt.make({
  *   pin: "df77fff9396fe31de72d1947ecb5b74f8cee89e1",
  *   parser: "6.0.2",
@@ -229,8 +228,7 @@ export const reportEffectSchemaInventoryCheck = (
  *
  * ```ts
  * import { EffectSchemaInventoryRequest, runEffectSchemaInventory } from "@beep/repo-cli/commands/Lint"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const request = EffectSchemaInventoryRequest.cases.check.make({})
  * console.log(Effect.isEffect(runEffectSchemaInventory(process.cwd(), request))) // true
  * ```

@@ -7,8 +7,8 @@
  */
 
 import { O, pipe } from "@beep/utils";
-import { Layer } from "effect";
 import { FetchHttpClient } from "effect/http";
+import * as Layer from "effect/Layer";
 import { RpcClient, RpcSerialization } from "effect/rpc";
 import { resolveBrowserHttpUrl } from "./internal/BrowserHttpUrl.ts";
 
@@ -63,8 +63,7 @@ export const resolveChatRpcHttpUrl = (
  *
  * ```ts
  * import { HttpChatProtocolLive } from "@beep/agents-client/Chat.layer"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(HttpChatProtocolLive)) // true
  * ```
  *

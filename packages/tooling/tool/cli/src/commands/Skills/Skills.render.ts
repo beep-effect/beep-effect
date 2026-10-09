@@ -5,8 +5,8 @@
  * @since 0.0.0
  */
 
-import { Result } from "effect";
 import * as A from "effect/Array";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as jsonc from "jsonc-parser";

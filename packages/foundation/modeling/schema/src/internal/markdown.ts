@@ -4,10 +4,10 @@
  * @since 0.0.0
  */
 import { thunkEmptyRecord } from "@beep/utils";
-import { flow, pipe, Result } from "effect";
-import { dual } from "effect/Function";
+import { dual, flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import * as MarkdownPackage from "micromark";
 import * as MarkdownGfmPackage from "micromark-extension-gfm";
 

@@ -6,8 +6,8 @@ import {
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { layer, vi } from "@effect/vitest";
 import { assertFalse, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
-import { Effect } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import { createWrappedNode, Node, Project, SyntaxKind, ts } from "ts-morph";
 import type { EffectVitestRuleId } from "@beep/repo-cli/test/Lint";

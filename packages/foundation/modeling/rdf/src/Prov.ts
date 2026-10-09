@@ -7,7 +7,8 @@
  */
 
 import { $RdfId } from "@beep/identity/packages";
-import { DateTime, Effect } from "effect";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { makeSemanticSchemaMetadata } from "./SemanticSchemaMetadata/index.ts";

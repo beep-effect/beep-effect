@@ -175,7 +175,7 @@
       "beforeMatches": [
         {
           "line": 339,
-          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeDefaultTsconfig; yield* writeProjectFile( DemoSourcePath, A.join( [ 'import { pipe } from \"effect\";', 'import * as O"
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeDefaultTsconfig; yield* writeProjectFile( DemoSourcePath, A.join( [ 'import { pipe } from \"<legacy-effect-barrel>\";', 'import * as O"
         }
       ],
       "afterMatches": []

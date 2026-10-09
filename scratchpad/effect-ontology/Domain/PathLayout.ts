@@ -13,7 +13,9 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { pipe, Result, Tuple } from "effect";
+import * as Result from "effect/Result";
+import * as Tuple from "effect/Tuple";
+import { pipe } from "effect/Function";
 import * as S from "effect/Schema";
 import { BatchId, ContentHash, DocumentId, Namespace, OntologyName } from "./Identity.ts";
 import { OutputFilename, OutputType } from "./Model/OutputType.ts";

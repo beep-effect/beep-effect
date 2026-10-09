@@ -7,9 +7,9 @@
  */
 
 import { $ArchitectureLabUseCasesId } from "@beep/identity/packages";
-import { Context } from "effect";
+import * as Context from "effect/Context";
 import type * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker";
-import type { Effect } from "effect";
+import type * as Effect from "effect/Effect";
 import type { CreateWorkerCommand, GetWorkerQuery, ListWorkersQuery } from "./Worker.commands.ts";
 import type { WorkerActionError } from "./Worker.errors.ts";
 
@@ -26,8 +26,7 @@ const $I = $ArchitectureLabUseCasesId.create("entities/Worker/Worker.use-cases")
  *   WorkerActionFailed,
  *   type WorkerUseCasesShape
  * } from "@beep/architecture-lab-use-cases/entities/Worker"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const unavailable = WorkerActionFailed.make({ reason: "offline" })
  * const useCases: WorkerUseCasesShape = {
  *   create: () => Effect.fail(unavailable),
@@ -64,8 +63,7 @@ export interface WorkerUseCasesShape {
  *   WorkerUseCases,
  *   type WorkerUseCasesShape
  * } from "@beep/architecture-lab-use-cases/entities/Worker"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const unavailable = WorkerActionFailed.make({ reason: "offline" })
  * const useCases: WorkerUseCasesShape = {
  *   create: () => Effect.fail(unavailable),

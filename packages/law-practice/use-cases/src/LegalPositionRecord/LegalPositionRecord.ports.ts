@@ -17,7 +17,8 @@ import {
   PowerExercise,
 } from "@beep/law-practice-domain";
 import { Fn, LiteralKit, SchemaUtils } from "@beep/schema";
-import { Context, Effect } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { EffectOutput } from "../internal/effectOutput.ts";
@@ -193,8 +194,7 @@ export class LegalPositionRecordRepositoryUnavailable extends S.TaggedError<Lega
  *
  * ```ts
  * import { LegalPositionRecordRepositoryShape } from "@beep/law-practice-use-cases/LegalPositionRecord"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const repository = LegalPositionRecordRepositoryShape.make({
  *   listCorrections: () => Effect.succeed([]),
  *   listExercises: () => Effect.succeed([]),
@@ -301,8 +301,7 @@ export class LegalPositionRecordRepositoryShape extends S.Class<LegalPositionRec
  *   LegalPositionRecordScope
  * } from "@beep/law-practice-use-cases/LegalPositionRecord"
  * import * as Shared from "@beep/shared-domain/identity/Shared"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const repository = yield* LegalPositionRecordRepository
  *   return yield* repository.listRelators(

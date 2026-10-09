@@ -5,10 +5,13 @@
  * @since 0.0.0
  */
 import { Sha256HexFromBytes } from "@beep/schema";
-import { Effect, FileSystem, Match, Ref } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import * as F from "effect/Function";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { readContainedFileBytesNoFollow } from "../../internal/cli/FsGuards.ts";

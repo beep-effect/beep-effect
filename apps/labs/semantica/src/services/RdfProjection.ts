@@ -1,7 +1,7 @@
 import { $SemanticaId } from "@beep/identity/packages";
-import { Context } from "effect";
+import * as Context from "effect/Context";
 import type * as Rdf from "@beep/rdf/Rdf";
-import type { Effect } from "effect";
+import type * as Effect from "effect/Effect";
 import type { ProjectionFailed } from "@/schema/Errors";
 import type { LedgerSnapshot } from "@/schema/Ledger";
 import type { SparqlExpectation, SparqlResultWitness } from "@/schema/Projection";
@@ -47,8 +47,7 @@ interface RdfProjectionShape {
  *
  * ```ts
  * import { RdfProjection } from "@/services/RdfProjection"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = RdfProjection.pipe(Effect.map((service) => typeof service.rebuild))
  * console.log(Effect.isEffect(program)) // true
  * ```

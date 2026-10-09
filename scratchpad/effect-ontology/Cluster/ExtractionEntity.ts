@@ -21,7 +21,7 @@ import * as Rpc from "effect/rpc/Rpc";
 import { ProgressEvent } from "../Contract/ProgressStreaming.ts";
 import { ExtractionError } from "../Domain/Error/Extraction.ts";
 import { Entity as DomainEntity, Relation } from "../Domain/Model/Entity.ts";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { PosInt } from "../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Cluster/ExtractionEntity");

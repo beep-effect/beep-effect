@@ -41,8 +41,14 @@ import {
   videoSecondsToEpochMs,
 } from "@beep/qa-capture";
 import { A, O, Str } from "@beep/utils";
-import { Console, Effect, FileSystem, flow, Match, Number as N, Order, Path, pipe } from "effect";
-import { dual } from "effect/Function";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { dual, flow, pipe } from "effect/Function";
+import * as Match from "effect/Match";
+import * as N from "effect/Number";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { printLines } from "../../internal/cli/Printer.ts";
 import { QaCommandError } from "./Qa.errors.ts";
@@ -123,8 +129,8 @@ const scenarioMarkerNameAt = (events: ReadonlyArray<ActionEvent>, windowStartEpo
  * ```ts
  * import { RoundLayout } from "@beep/qa-capture"
  * import { extractionPlanPath } from "@beep/repo-cli/commands/Qa/Extract"
- * import { Effect, Path } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Path from "effect/Path";
  * const program = Effect.gen(function* () {
  *   const path = yield* Path.Path
  *   const layout = RoundLayout.make({
@@ -164,8 +170,8 @@ export const extractionPlanPath: {
  * ```ts
  * import { RoundLayout } from "@beep/qa-capture"
  * import { artifactBudgetPath } from "@beep/repo-cli/commands/Qa/Extract"
- * import { Effect, Path } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Path from "effect/Path";
  * const program = Effect.gen(function* () {
  *   const path = yield* Path.Path
  *   const layout = RoundLayout.make({
@@ -200,8 +206,7 @@ export const artifactBudgetPath: {
  * ```ts
  * import { ArtifactBudget } from "@beep/qa-capture"
  * import { writeArtifactBudget } from "@beep/repo-cli/commands/Qa/Extract"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = writeArtifactBudget("/repo/.beep/qa/round-1/artifact-budget.json", ArtifactBudget.make({}))
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -227,8 +232,7 @@ export const writeArtifactBudget = Effect.fn("QaExtract.writeArtifactBudget")(fu
  *
  * ```ts
  * import { readArtifactBudget } from "@beep/repo-cli/commands/Qa/Extract"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(readArtifactBudget("/repo/.beep/qa/round-1/artifact-budget.json"))) // true
  * ```
  *
@@ -251,8 +255,7 @@ export const readArtifactBudget = Effect.fn("QaExtract.readArtifactBudget")(func
  *
  * ```ts
  * import { readExtractionPlan } from "@beep/repo-cli/commands/Qa/Extract"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(readExtractionPlan("/repo/.beep/qa/round-1/extraction-plan.json"))) // true
  * ```
  *
@@ -312,7 +315,7 @@ const layoutOfSessionDir = Effect.fnUntraced(function* (
  *
  * ```ts
  * import { resolveRoundLayout } from "@beep/repo-cli/commands/Qa/Extract"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * console.log(Effect.isEffect(resolveRoundLayout("/repo", O.none()))) // true
@@ -779,7 +782,7 @@ const executeRequest = Effect.fn("QaExtract.executeRequest")(function* (
  * ```ts
  * import { runQaExtract } from "@beep/repo-cli/commands/Qa/Extract"
  * import { QaExtractOptions } from "@beep/repo-cli/commands/Qa/Qa.schemas"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const options = QaExtractOptions.make({ budgetMb: O.none(), dryRun: true, rules: O.none(), session: O.none() })

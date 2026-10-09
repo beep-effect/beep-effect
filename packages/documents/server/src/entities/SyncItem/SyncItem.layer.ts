@@ -7,7 +7,7 @@
  */
 
 import { SyncItemRepository } from "@beep/documents-use-cases/entities/SyncItem/server";
-import { Layer } from "effect";
+import * as Layer from "effect/Layer";
 import { makeDrizzleSyncItemRepository, makeInMemorySyncItemRepository } from "./SyncItem.repo.ts";
 
 /**

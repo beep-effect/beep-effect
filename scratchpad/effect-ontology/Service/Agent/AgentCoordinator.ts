@@ -25,8 +25,17 @@
 import { $ScratchpadId } from "@beep/identity";
 import { Percentage } from "@beep/schema/Percentage";
 import { thunk0 } from "@beep/utils/thunk";
-import type { Config } from "effect";
-import { Clock, Context, DateTime, Duration, Effect, HashMap, Inspectable, Layer, Match, Ref } from "effect";
+import type * as Config from "effect/Config";
+import * as Clock from "effect/Clock";
+import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
+import * as Inspectable from "effect/Inspectable";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
+import * as Ref from "effect/Ref";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -121,7 +130,7 @@ export type ExecutionPolicyInput = Exclude<(typeof ExecutionPolicy)["~type.make.
  * **Example** (Observe pipeline events)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import type { ExecutionHooks } from "@effect-ontology/Service/Agent/AgentCoordinator"
  *
  * const hooks: ExecutionHooks = { onEvent: () => Effect.void }
@@ -181,7 +190,8 @@ const resolveExecutionOptions = (options?: ExecutionOptions): ResolvedExecutionO
  * **Example** (Capture a pending pipeline result)
  *
  * ```ts
- * import { DateTime, HashMap } from "effect"
+ * import * as DateTime from "effect/DateTime";
+ * import * as HashMap from "effect/HashMap";
  * import { AgentId, PipelineState, PipelineStatus } from "@effect-ontology/Model/Agent"
  * import { ExecutionResult } from "@effect-ontology/Service/Agent/AgentCoordinator"
  *
@@ -267,7 +277,7 @@ interface AgentCoordinatorShape {
  * **Example** (List registered agents)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { AgentCoordinator } from "@effect-ontology/Service/Agent/AgentCoordinator"
  *
  * const program = Effect.gen(function* () {

@@ -8,7 +8,7 @@
 
 import { $RdfId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { AbsoluteIRI, IRI, IRIReference } from "./Iri.ts";
 import { makeSemanticSchemaMetadata } from "./SemanticSchemaMetadata/index.ts";

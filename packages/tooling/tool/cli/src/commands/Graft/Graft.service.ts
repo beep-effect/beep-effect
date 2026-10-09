@@ -6,13 +6,14 @@
  */
 import { isResolvedPathWithinRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
-import { Effect, Match } from "effect";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
 import * as FileSystem from "effect/FileSystem";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";

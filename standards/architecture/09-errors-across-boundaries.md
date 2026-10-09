@@ -176,7 +176,10 @@ The port's `findById` then declares `Effect.Effect<Membership, MembershipReposit
 
 ````ts
 // packages/iam/server/src/Membership/Membership.repo.ts
-import { Effect, pipe } from "effect";
+import { pipe } from "effect/Function";
+import * as Effect from "effect/Effect";
+
+// packages/iam/server/src/Membership/Membership.repo.ts
 import * as O from "effect/Option";
 import type { Membership, MembershipId } from "@beep/iam-domain/Membership";
 import {
@@ -209,7 +212,9 @@ const findById = (
 
 ````ts
 // packages/iam/use-cases/src/Membership/Membership.service.ts
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
+
+// packages/iam/use-cases/src/Membership/Membership.service.ts
 import * as Match from "effect/Match";
 import {
   MembershipNotFound,
@@ -240,7 +245,9 @@ The use-case never names a port error in its return type. The public action unio
 
 ````ts
 // packages/iam/server/src/Membership/Membership.http-handlers.ts
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
+
+// packages/iam/server/src/Membership/Membership.http-handlers.ts
 import { problemDetail } from "@beep/http-problem-detail";
 
 const handler = Effect.fn("http.POST /v1/iam/memberships/:id/revoke")(

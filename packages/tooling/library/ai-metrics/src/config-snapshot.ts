@@ -9,7 +9,14 @@ import { $RepoAiMetricsId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Clock, Effect, FileSystem, flow, Order, Path, pipe, Random, Ref } from "effect";
+import * as Clock from "effect/Clock";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { flow, pipe } from "effect/Function";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
+import * as Random from "effect/Random";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import { isNestedGitRoot } from "./identity-registry.ts";
 import { fileSizeBytes } from "./internal/file-info.ts";
@@ -932,8 +939,7 @@ const readPreviousSnapshot = (previousSnapshotPath: O.Option<string>) =>
  * ```ts
  * import { AiMetricsConfigSnapshotInput, makeAiMetricsConfigSnapshot } from "@beep/repo-ai-metrics"
  * import { NodeServices } from "@effect/platform-node"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = makeAiMetricsConfigSnapshot(
  *   AiMetricsConfigSnapshotInput.make({ repoRoot: "/repo" })
  * ).pipe(Effect.provide(NodeServices.layer))
@@ -1082,8 +1088,7 @@ export const makeAiMetricsConfigSnapshot = Effect.fn("AiMetrics.makeAiMetricsCon
  *   writeAiMetricsConfigSnapshotArtifacts
  * } from "@beep/repo-ai-metrics"
  * import { NodeServices } from "@effect/platform-node"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const result = AiMetricsConfigSnapshotResult.make({
  *   excludedDirectoryNames: [],
  *   diff: AiMetricsConfigSnapshotDiff.make({
@@ -1189,8 +1194,7 @@ export const writeAiMetricsConfigSnapshotArtifacts = Effect.fn("AiMetrics.writeA
  *   ConfigSnapshot,
  *   configSnapshotToJson
  * } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const result = AiMetricsConfigSnapshotResult.make({
  *   excludedDirectoryNames: [],
  *   diff: AiMetricsConfigSnapshotDiff.make({

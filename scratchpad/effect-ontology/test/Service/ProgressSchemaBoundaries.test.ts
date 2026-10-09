@@ -1,6 +1,8 @@
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { assert, describe, it } from "@effect/vitest";
-import { Duration, Effect, Ref } from "effect";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { BackpressureConfig } from "../../Contract/ProgressStreaming.ts";

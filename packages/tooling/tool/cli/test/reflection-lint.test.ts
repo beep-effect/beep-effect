@@ -5,8 +5,17 @@ import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import { Cause, Console, Effect, Exit, FileSystem, flow, Layer, Path, Result, Runtime } from "effect";
+import * as Cause from "effect/Cause";
+import * as Console from "effect/Console";
 import { Command } from "effect/cli";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
+import { flow } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
+import * as Result from "effect/Result";
+import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
@@ -16,7 +25,7 @@ const runLintCommand = Command.runWith(lintCommand, { version: "0.0.0" });
 const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
 const expectReportedFailure = (exit: Exit.Exit<unknown, unknown>) => {
-  assertTrue(Exit.isFailure(exit));
+  exit.pipe(Exit.isFailure, assertTrue);
   if (Exit.isFailure(exit)) {
     const error = Cause.squash(exit.cause);
     expect(Runtime.getErrorExitCode(error)).toBe(1);
@@ -103,7 +112,7 @@ const expectReflectionLintSuccess = Effect.fn("expectReflectionLintSuccess")(fun
   fixture: ReflectionLintFixture
 ) {
   const exit = yield* runReflectionLintFixture(fixture);
-  assertTrue(Exit.isSuccess(exit));
+  exit.pipe(Exit.isSuccess, assertTrue);
 });
 
 it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
@@ -248,7 +257,7 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
             yield* writeReflection("in-flight", "2026-08-17-claude.md", VALID_REFLECTION);
             yield* writeActiveGoal("no-reflections-yet");
             const exit = yield* Effect.exit(runLintCommand(["reflection-artifacts"]));
-            assertTrue(Exit.isSuccess(exit));
+            exit.pipe(Exit.isSuccess, assertTrue);
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
       20_000

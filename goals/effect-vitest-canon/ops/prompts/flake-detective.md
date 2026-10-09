@@ -57,8 +57,7 @@ Before: TestClock time never advances, so the test waits for the Vitest timeout.
 
 ~~~ts
 import { it } from "@effect/vitest"
-import { Effect } from "effect"
-
+import * as Effect from "effect/Effect";
 it.effect("finishes the delay", () => Effect.sleep("1 second"))
 ~~~
 
@@ -67,7 +66,8 @@ After: a scoped child waits while the test advances the clock and joins it.
 ~~~ts
 import { it } from "@effect/vitest"
 import { strictEqual } from "@effect/vitest/utils"
-import { Effect, Fiber } from "effect"
+import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
 import * as TestClock from "effect/testing/TestClock"
 
 it.effect("finishes the delay", Effect.fnUntraced(function* () {

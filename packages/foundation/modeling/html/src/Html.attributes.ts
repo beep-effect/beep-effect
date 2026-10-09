@@ -21,12 +21,15 @@ import { $HtmlId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as Eq from "@beep/utils/Equal";
 import * as Struct from "@beep/utils/Struct";
-import { Effect, SchemaIssue, SchemaTransformation, Tuple } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import { flow, identity, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Str from "effect/String";
+import * as Tuple from "effect/Tuple";
 import { toAsciiLowerCase } from "./internal/Html.ascii.ts";
 import { readonlyStruct } from "./internal/Html.readonly.ts";
 
@@ -64,7 +67,7 @@ const assertAsciiFoldUnique = (values: ReadonlyArray<string>, label: string, all
  *
  * ```ts
  * import { makeAsciiCaseInsensitiveEnumerated } from "@beep/html/Html.attributes"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  *
  * const Loading = makeAsciiCaseInsensitiveEnumerated(["eager", "lazy"])
@@ -693,7 +696,7 @@ const CrossOriginInput = makeAsciiCaseInsensitiveEnumerated(["", ...CrossOriginB
  *
  * ```ts
  * import { CrossOrigin } from "@beep/html/Html.attributes"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  *
  * const decoded = S.decodeUnknownResult(CrossOrigin)("")
@@ -784,7 +787,7 @@ export type ReferrerPolicy = typeof ReferrerPolicy.Type;
  *
  * ```ts
  * import { Utf8Charset } from "@beep/html/Html.attributes"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  *
  * const decoded = S.decodeUnknownResult(Utf8Charset)("UTF-8")
@@ -823,7 +826,7 @@ export type Utf8Charset = typeof Utf8Charset.Type;
  *
  * ```ts
  * import { FormAutocomplete } from "@beep/html/Html.attributes"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  *
  * const decoded = S.decodeUnknownResult(FormAutocomplete)("OFF")
@@ -878,7 +881,7 @@ const CustomButtonCommand = S.String.check(
  *
  * ```ts
  * import { ButtonCommand } from "@beep/html/Html.attributes"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  *
  * const decoded = S.decodeUnknownResult(ButtonCommand)("SHOW-MODAL")
@@ -1183,7 +1186,7 @@ export type HtmlPositiveNumber = typeof HtmlPositiveNumber.Type;
  *
  * ```ts
  * import { HtmlStep } from "@beep/html/Html.attributes"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  *
  * const decoded = S.decodeUnknownResult(HtmlStep)("ANY")
@@ -1383,7 +1386,7 @@ const makeOpenSpaceSeparatedTokenList = (
  *
  * ```ts
  * import { HtmlRelationList } from "@beep/html/Html.attributes"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  *
  * const decoded = S.decodeUnknownResult(HtmlRelationList)("ME x-beep")
@@ -1429,7 +1432,7 @@ export type HtmlRelationList = typeof HtmlRelationList.Type;
  *
  * ```ts
  * import { LinkRelationList } from "@beep/html/Html.attributes"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  *
  * const decoded = S.decodeUnknownResult(LinkRelationList)("APPLE-TOUCH-ICON x-beep")
@@ -1477,7 +1480,7 @@ export type LinkRelationList = typeof LinkRelationList.Type;
  *
  * ```ts
  * import { HtmlIdReferenceList } from "@beep/html/Html.attributes"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  *
  * const decoded = S.decodeUnknownResult(HtmlIdReferenceList)("First\tsecond")
@@ -1539,7 +1542,7 @@ const CanonicalMetadataName = MetadataNameInput.check(
  *
  * ```ts
  * import { MetadataName } from "@beep/html/Html.attributes"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  *
  * const decoded = S.decodeUnknownResult(MetadataName)("X-BEEP")
@@ -1616,7 +1619,7 @@ const CanonicalAutocompleteAttribute = S.String.check(
  *
  * ```ts import.meta.vitest name="Validate with AutocompleteAttribute"
  * import { AutocompleteAttribute } from "@beep/html/Html.attributes"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  *
  * const decoded = S.decodeUnknownResult(AutocompleteAttribute)("SHIPPING  Email")
@@ -1820,7 +1823,7 @@ type OptionalString = typeof OptionalString;
  *
  * ```ts
  * import { EnumeratedGlobalAttributes } from "@beep/html/Html.attributes"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  *
  * const decoded = S.decodeUnknownResult(S.Struct(EnumeratedGlobalAttributes))({ dir: "RTL" })
@@ -1927,7 +1930,7 @@ export const DatasetKey = S.String.check(
  *
  * ```ts import.meta.vitest name="Annotate a DatasetKey value"
  * import { DatasetKey } from "@beep/html/Html.attributes"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  *
  * const decoded = S.decodeUnknownResult(DatasetKey)("testid")

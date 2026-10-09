@@ -13,10 +13,16 @@
 
 import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
 import { $RepoCliId } from "@beep/identity/packages";
-import { Config, DateTime, Effect, FileSystem, Layer, Path, SchemaTransformation } from "effect";
 import * as A from "effect/Array";
+import * as Config from "effect/Config";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Str from "effect/String";
 import { ResearchCommandError } from "../Research.errors.ts";
 import type { BrowserKind } from "../Research.schemas.ts";
@@ -150,17 +156,17 @@ export const readProfileHistory = Effect.fn("BrowserHistory.readProfileHistory")
     WHERE last_visit_time > ${Math.floor(sinceChromeEpochMicros)}
     ORDER BY last_visit_time ASC`;
 
-  const rows = yield* Effect.scoped(
-    Layer.build(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: ":memory:" }))).pipe(
-      Effect.flatMap((context) =>
-        Effect.gen(function* () {
-          const db = yield* DuckDb;
-          yield* db.runMany(["INSTALL sqlite", "LOAD sqlite"]);
-          return yield* db.query(statement);
-        }).pipe(Effect.provide(context))
-      )
-    )
+  const rows = yield* Layer.build(
+    DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: ":memory:" }))
   ).pipe(
+    Effect.flatMap((context) =>
+      Effect.gen(function* () {
+        const db = yield* DuckDb;
+        yield* db.runMany(["INSTALL sqlite", "LOAD sqlite"]);
+        return yield* db.query(statement);
+      }).pipe(Effect.provide(context))
+    ),
+    Effect.scoped,
     ResearchCommandError.mapError(`Failed scanning history copy "${copyPath}".`),
     Effect.ensuring(fs.remove(copyPath).pipe(Effect.ignore))
   );

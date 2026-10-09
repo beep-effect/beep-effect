@@ -1,5 +1,5 @@
 import { assertTrue } from "@effect/vitest/utils";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 export const expectSchemaRoundTrip = Effect.fnUntraced(function* <A, E>(schema: S.Codec<A, E, never, never>, value: A) {

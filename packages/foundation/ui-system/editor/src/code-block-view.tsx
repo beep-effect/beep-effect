@@ -7,7 +7,9 @@
 "use client";
 
 import { useAtomSet, useAtomValue } from "@effect/atom-react";
-import { Duration, Effect, Layer } from "effect";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import { Atom } from "effect/reactivity";
 import type { JSX } from "react";
 

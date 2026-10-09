@@ -1,7 +1,11 @@
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
-import { Config, Effect, FileSystem, Path, Stream } from "effect";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Path from "effect/Path";
 import { ChildProcess } from "effect/process";
+import * as Stream from "effect/Stream";
 import { expect } from "vitest";
 
 const writeExecutable = Effect.fn("SetupEffectRefTest.writeExecutable")(function* (filePath: string, content: string) {

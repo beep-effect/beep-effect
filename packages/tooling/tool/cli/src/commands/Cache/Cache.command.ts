@@ -7,10 +7,17 @@
 
 import { CachePolicyAuditReport, CacheQualificationStore } from "@beep/repo-configs/cache";
 import { A, Str, thunk0 } from "@beep/utils";
-import { Clock, Console, DateTime, Effect, FileSystem, MutableHashMap, MutableHashSet, Order } from "effect";
+import * as Clock from "effect/Clock";
+import * as Console from "effect/Console";
 import { Argument, Command, Flag } from "effect/cli";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -251,8 +258,8 @@ const runCacheWarmWith = Effect.fn("Cache.runCacheWarmWith")(function* (
  *
  * ```ts
  * import { runCacheWarm } from "@beep/repo-cli/commands/Cache"
- * import { Effect, Option } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Option from "effect/Option";
  * console.log(Effect.isEffect(runCacheWarm(".", Option.none()))) // true
  * ```
  *
@@ -271,7 +278,7 @@ export const runCacheWarm = Effect.fn("Cache.runCacheWarm")(function* (repoRoot:
  * ```ts
  * import { CacheWarmLane } from "@beep/repo-cli/commands/Cache"
  * import { runCacheWarmForTesting } from "@beep/repo-cli/test/Cache"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const runner = () =>
@@ -448,8 +455,8 @@ const observeCacheRun = (
  *
  * ```ts
  * import { buildCacheDashboard } from "@beep/repo-cli/commands/Cache"
- * import { Effect, Option } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Option from "effect/Option";
  * console.log(Effect.isEffect(buildCacheDashboard(".turbo/runs", Option.none(), []))) // true
  * ```
  *
@@ -503,8 +510,7 @@ export const buildCacheDashboard = Effect.fn("Cache.buildCacheDashboard")(functi
  *
  * ```ts
  * import { runCacheRestorationProbe } from "@beep/repo-cli/commands/Cache"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(runCacheRestorationProbe(".", ".beep/cache/probe"))) // true
  * ```
  *

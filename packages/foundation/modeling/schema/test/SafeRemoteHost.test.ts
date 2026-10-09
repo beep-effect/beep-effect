@@ -1,7 +1,7 @@
 import { assertAllowedRemoteHost, assertAllowedRemoteUrl, isBlockedRemoteHost } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 
 describe("SafeRemoteHost", () => {
   it("classifies literal loopback, link-local, RFC1918/ULA, and metadata hosts", () => {

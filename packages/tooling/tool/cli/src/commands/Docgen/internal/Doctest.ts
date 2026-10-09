@@ -2,9 +2,17 @@ import { extractFencedCodeBlockDetails } from "@beep/repo-docgen/Core";
 import { FsUtils, findRepoRoot, resolveWorkspaceDirs } from "@beep/repo-utils";
 import { A, O, Str } from "@beep/utils";
 import { transform as transformDoctest } from "@effect/doctest/Transform";
-import { Effect, FileSystem, flow, Hash, HashMap, Layer, MutableHashMap, Order, Path, pipe, Result } from "effect";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { dual, flow, pipe } from "effect/Function";
+import * as Hash from "effect/Hash";
+import * as HashMap from "effect/HashMap";
+import * as Layer from "effect/Layer";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import { Node, SyntaxKind } from "ts-morph";
 import { doctestSourceMarker, isDoctestSourcePath } from "../../../internal/jsdoc/DoctestSource.ts";
 import {
@@ -733,8 +741,7 @@ const gitErrorAdapter: GitCommandErrorAdapter<DoctestAnalysisError> = {
  *
  * ```ts
  * import { discoverChangedDoctestFilesForTesting } from "@beep/repo-cli/test/Docgen"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(discoverChangedDoctestFilesForTesting("/repo")))
  * ```
  *
@@ -1016,8 +1023,7 @@ const rewriteSource = (
  *
  * ```ts
  * import { rewriteDoctestSourceForTesting } from "@beep/repo-cli/test/Docgen"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const rewritten = Effect.runSync(
  *   rewriteDoctestSourceForTesting("packages/example/src/index.ts", "export const value = 1", [])
  * )
@@ -1073,8 +1079,7 @@ const rewriteWithServices = Effect.fn("Doctest.rewrite")(function* (plans: Reado
  *
  * ```ts
  * import { DoctestFenceAnalyzerLive } from "@beep/repo-cli/test/Docgen"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(DoctestFenceAnalyzerLive))
  * ```
  *
@@ -1103,8 +1108,7 @@ export const DoctestFenceAnalyzerLive = Layer.effect(
  *
  * ```ts
  * import { DoctestFenceRewriterLive } from "@beep/repo-cli/test/Docgen"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(DoctestFenceRewriterLive))
  * ```
  *
@@ -1133,8 +1137,8 @@ export const DoctestFenceRewriterLive = Layer.effect(
  *
  * ```ts
  * import { makeDoctestAnalyzerLayer } from "@beep/repo-cli/test/Docgen"
- * import { Effect, Layer } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * const layer = makeDoctestAnalyzerLayer({
  *   analyze: () => Effect.dieMessage("analysis is not used in this fixture"),
  *   validateMarkedAssertions: () => Effect.void
@@ -1157,8 +1161,8 @@ export const makeDoctestAnalyzerLayer = (service: DoctestFenceAnalyzerShape) =>
  *
  * ```ts
  * import { makeDoctestRewriterLayer } from "@beep/repo-cli/test/Docgen"
- * import { Effect, Layer } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * const layer = makeDoctestRewriterLayer({
  *   preview: () => Effect.succeed([]),
  *   write: () => Effect.succeed([])

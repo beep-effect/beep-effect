@@ -14,9 +14,12 @@ import { addDays, todayEffect } from "@beep/schema/LocalDate";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
-import { Clock, Effect, pipe, Redacted } from "effect";
 import * as A from "effect/Array";
+import * as Clock from "effect/Clock";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 

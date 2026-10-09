@@ -8,11 +8,13 @@
 
 import { TaggingRunId } from "@beep/law-practice-domain/values/MailTagging";
 import { RunMailTaggingRequest, UndoMailTaggingRequest } from "@beep/law-practice-use-cases/MailTagging";
-import { Effect, Layer, Schedule } from "effect";
 import * as A from "effect/Array";
 import { Command, Flag } from "effect/cli";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
+import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import { PracticeMailTaggingError, PracticeMailTaggingFailureKind } from "./PracticeMailTagging.errors.ts";
 import { StateLock } from "./PracticeMailTagging.lock.ts";

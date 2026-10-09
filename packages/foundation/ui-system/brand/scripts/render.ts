@@ -8,7 +8,11 @@ import { beep, renderBrandAssets } from "@beep/brand";
 import { A } from "@beep/utils";
 import { BunRuntime } from "@effect/platform-bun";
 import * as BunServices from "@effect/platform-bun/BunServices";
-import { Console, Effect, FileSystem, Layer, Path } from "effect";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
 
 const packageRoot = new URL("../", import.meta.url).pathname;
 
@@ -26,8 +30,9 @@ const writeAll = Effect.forEach(assets, writeAsset, { discard: true }).pipe(
   Effect.andThen(Console.log(`rendered ${A.length(assets)} files`))
 );
 
-const program = Effect.scoped(
-  Layer.build(BunServices.layer).pipe(Effect.flatMap((context) => writeAll.pipe(Effect.provide(context))))
+const program = Layer.build(BunServices.layer).pipe(
+  Effect.flatMap((context) => writeAll.pipe(Effect.provide(context))),
+  Effect.scoped
 );
 
 BunRuntime.runMain(program);

@@ -6,8 +6,10 @@
  */
 
 import { O, Str } from "@beep/utils";
-import { Config, Effect, flow, pipe, Redacted } from "effect";
-import { dual } from "effect/Function";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
+import { dual, flow, pipe } from "effect/Function";
+import * as Redacted from "effect/Redacted";
 
 type ConfigErrorFactory<Error> = () => Error;
 type TextConfigOptionReader<Error> = (key: string) => Effect.Effect<O.Option<string>, Error>;
@@ -40,7 +42,7 @@ const trimTextConfigOption: (value: O.Option<string>) => O.Option<string> = flow
  * **Example** (Building text config reader)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { makeTextConfigOptionReader } from "@/runtime/OipRuntimeConfig"
  *
  * const readOption = makeTextConfigOptionReader("Example.readOption", () => "config")
@@ -72,7 +74,7 @@ export const makeTextConfigOptionReader: {
  * **Example** (Building redacted config reader)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { makeRedactedConfigOptionReader } from "@/runtime/OipRuntimeConfig"
  *
  * const readSecret = makeRedactedConfigOptionReader("Example.readSecret", () => "config")

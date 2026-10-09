@@ -14,9 +14,13 @@ import { it } from "@beep/test-runner";
 import { ThreadTimeline } from "@beep/workspace-use-cases/aggregates/Thread";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
-import { Effect, Exit, Layer, pipe, Stream } from "effect";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import { AtomRegistry, Reactivity } from "effect/reactivity";
+import * as Stream from "effect/Stream";
 
 const threadId = WorkspaceIdentity.ThreadId.make(1);
 const content = decodeSafeDocumentUnsafe(

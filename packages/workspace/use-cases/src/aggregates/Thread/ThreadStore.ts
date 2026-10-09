@@ -16,7 +16,8 @@ import { Document } from "@beep/md/Md.model";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { Message, MessageRole } from "@beep/workspace-domain/entities/Message";
 import { Turn } from "@beep/workspace-domain/entities/Turn";
-import { Context, Effect } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import type { Thread } from "@beep/workspace-domain/entities/Thread";
 import type { ThreadStoreConflict, ThreadStoreNotFound, ThreadStoreUnavailable } from "./Thread.errors.ts";
@@ -30,7 +31,7 @@ const $I = $WorkspaceUseCasesId.create("aggregates/Thread/ThreadStore");
  * **Example** (Make create-thread input)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
  * import { CreateThreadInput } from "@beep/workspace-use-cases/aggregates/Thread/server"
@@ -68,7 +69,7 @@ export class CreateThreadInput extends S.Class<CreateThreadInput>($I`CreateThrea
  *
  * ```ts
  * import { Document } from "@beep/md/Md.model"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
  * import * as O from "effect/Option"
@@ -147,7 +148,7 @@ export class AppendTurnResult extends S.Class<AppendTurnResult>($I`AppendTurnRes
  * **Example** (Make set-title input)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { SetThreadTitleIfEmptyInput } from "@beep/workspace-use-cases/aggregates/Thread/server"
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
  * import * as S from "effect/Schema"
@@ -229,7 +230,7 @@ export interface ThreadStoreShape {
  * **Example** (Provide ThreadStore service)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { ThreadStore } from "@beep/workspace-use-cases/aggregates/Thread/server"
  * import type { ThreadStoreShape } from "@beep/workspace-use-cases/aggregates/Thread/server"
  *

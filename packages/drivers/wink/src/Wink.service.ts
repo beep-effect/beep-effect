@@ -8,8 +8,13 @@
 import { createRequire } from "node:module";
 import { $WinkId } from "@beep/identity";
 import { A } from "@beep/utils";
-import { Clock, Context, Effect, Layer, pipe, Ref } from "effect";
+import * as Clock from "effect/Clock";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import { WinkEngineError, WinkEntityError, WinkTokenizationError } from "./Wink.errors.ts";
 import { WinkEngineCustomEntities } from "./Wink.models.ts";
@@ -119,7 +124,8 @@ export class WinkEngineState extends S.Class<WinkEngineState>($I`WinkEngineState
  * **Example** (Read live runtime state)
  *
  * ```ts
- * import { Effect, Ref } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Ref from "effect/Ref";
  * import { WinkEngine, WinkEngineLive } from "@beep/wink"
  * import type { WinkEngineRuntimeState } from "@beep/wink"
  *
@@ -273,7 +279,7 @@ const makeWinkEngine = Effect.gen(function* () {
  * **Example** (Count tokens via service)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { WinkEngine, WinkEngineLive } from "@beep/wink"
  *
  * const tokenCount = Effect.gen(function* () {
@@ -295,7 +301,7 @@ export class WinkEngine extends Context.Service<WinkEngine, WinkEngineShape>()($
  * **Example** (Provide live engine layer)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { WinkEngine, WinkEngineLive } from "@beep/wink"
  *
  * const readRuntimeHelpers = Effect.gen(function* () {

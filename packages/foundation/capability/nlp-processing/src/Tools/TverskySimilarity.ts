@@ -8,8 +8,8 @@
 import { $NlpProcessingId } from "@beep/identity";
 import { SimilarityMethod } from "@beep/nlp/Core/Similarity";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import { Effect } from "effect";
 import { Tool } from "effect/ai";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { AiToolError } from "./_schemas.ts";
 

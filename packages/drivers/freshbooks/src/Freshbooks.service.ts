@@ -15,16 +15,20 @@
 
 import { $FreshbooksId } from "@beep/identity";
 import { O } from "@beep/utils";
-import { Config, Context, Effect, Layer, pipe } from "effect";
+import * as Config from "effect/Config";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import { FetchHttpClient } from "effect/http";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
+import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import { FreshbooksBaseUrl, FreshbooksConfigInput } from "./Freshbooks.config.ts";
 import { FreshbooksError } from "./Freshbooks.errors.ts";
 import { FreshbooksDecode, FreshbooksPagination } from "./Freshbooks.models.ts";
 import { FreshbooksAuth, FreshbooksTokenStore, makeFreshbooksAuth } from "./Freshbooks.token.ts";
-import type { Redacted } from "effect";
+import type * as Redacted from "effect/Redacted";
 import type { FreshbooksAccountId } from "./Freshbooks.config.ts";
 import type {
   FreshbooksClient,
@@ -66,8 +70,7 @@ export const FRESHBOOKS_MAX_PER_PAGE = 100;
  *
  * ```ts
  * import { ResolvedFreshbooksConfig } from "@beep/freshbooks"
- * import { Redacted } from "effect"
- *
+ * import * as Redacted from "effect/Redacted";
  * const config = ResolvedFreshbooksConfig.make({
  *   clientId: "dev-client-id",
  *   clientSecret: Redacted.make("dev-client-secret"),
@@ -104,8 +107,7 @@ export class ResolvedFreshbooksConfig extends S.Class<ResolvedFreshbooksConfig>(
  *
  * ```ts
  * import { FreshbooksConfigInput, resolveConfig } from "@beep/freshbooks"
- * import { Redacted } from "effect"
- *
+ * import * as Redacted from "effect/Redacted";
  * const resolved = resolveConfig(
  *   FreshbooksConfigInput.make({
  *     clientId: "dev-client-id",
@@ -298,8 +300,7 @@ const makeService = (
  *
  * ```ts
  * import { Freshbooks, FreshbooksConfigInput } from "@beep/freshbooks"
- * import { Redacted } from "effect"
- *
+ * import * as Redacted from "effect/Redacted";
  * const layer = Freshbooks.makeLayer(
  *   FreshbooksConfigInput.make({
  *     clientId: "dev-client-id",
@@ -323,8 +324,7 @@ export class Freshbooks extends Context.Service<Freshbooks, FreshbooksShape>()($
    *
    * ```ts
    * import { Freshbooks, FreshbooksConfigInput } from "@beep/freshbooks"
-   * import { Redacted } from "effect"
-   *
+   * import * as Redacted from "effect/Redacted";
    * const layer = Freshbooks.makeLayer(
    *   FreshbooksConfigInput.make({
    *     clientId: "dev-client-id",
@@ -405,8 +405,7 @@ export class Freshbooks extends Context.Service<Freshbooks, FreshbooksShape>()($
  * ```ts
  * import { FreshbooksConfigInput } from "@beep/freshbooks"
  * import { makeFreshbooksAuthLayer } from "@beep/freshbooks"
- * import { Redacted } from "effect"
- *
+ * import * as Redacted from "effect/Redacted";
  * const layer = makeFreshbooksAuthLayer(
  *   FreshbooksConfigInput.make({
  *     clientId: "dev-client-id",

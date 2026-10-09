@@ -6,9 +6,11 @@
  */
 
 import { A, thunk0, thunk1 } from "@beep/utils";
-import { Number as Num, Result, SchemaGetter } from "effect";
 import * as Bool from "effect/Boolean";
+import * as Num from "effect/Number";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as SchemaGetter from "effect/SchemaGetter";
 import { HexColor, hexToRgbValue, NormalizeHexColor, rgbToHexValue } from "./Color.hex.ts";
 import { $I, schemaIssueToError } from "./Color.shared.ts";
 import { hexToOklchValue, oklchToHexValue } from "./Color.transforms.ts";

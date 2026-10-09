@@ -16,8 +16,8 @@ import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkIt
 import { $ArchitectureLabUiId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
-import { Effect, pipe } from "effect";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import type { WorkItemPublicConfig } from "@beep/architecture-lab-config/public";

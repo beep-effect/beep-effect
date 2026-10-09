@@ -9,9 +9,15 @@
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { DocketIntakeError, DocketIntakeState, DocketIntakeStore } from "@beep/law-practice-use-cases/DocketIntake";
 import { thunkEmptyStr } from "@beep/utils";
-import { DateTime, Effect, FileSystem, Layer, Path, pipe, Random } from "effect";
 import * as A from "effect/Array";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as Random from "effect/Random";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { LocalDate } from "@beep/schema/LocalDate";

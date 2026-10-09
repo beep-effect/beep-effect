@@ -11,8 +11,8 @@
 
 import { FileProcessingOperationError } from "@beep/file-processing/Operation";
 import { O } from "@beep/utils";
-import { Match, pipe } from "effect";
-import { dual } from "effect/Function";
+import { dual, pipe } from "effect/Function";
+import * as Match from "effect/Match";
 import * as S from "effect/Schema";
 import { TIKA_ENGINE_NAME } from "./Tika.config.ts";
 import { TikaError } from "./Tika.errors.ts";
@@ -121,7 +121,7 @@ const translate = (error: TikaError, engineUnavailableMessage: string): Translat
  * ```ts
  * import { makeTikaError, tikaOperationError } from "@beep/tika"
  * import { ExtractFileOperation } from "@beep/file-processing/Operation"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const program = Effect.gen(function* () {

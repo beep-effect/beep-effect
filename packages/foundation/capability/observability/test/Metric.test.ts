@@ -10,8 +10,12 @@ import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
 import { assertDefined, assertTrue } from "@effect/vitest/utils";
-import { Cause, Effect, Equal, Exit, Metric } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import * as Exit from "effect/Exit";
+import * as Metric from "effect/Metric";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -88,8 +92,8 @@ describe("Metric", () => {
 
       const interruptedState = yield* Metric.value(interrupted);
 
-      assertTrue(Exit.isFailure(exit));
-      assertTrue(Cause.hasInterruptsOnly(exit.cause));
+      if (!Exit.isFailure(exit)) throw new Error("Expected a failure exit");
+      assertTrue(exit.cause.pipe(Cause.hasInterruptsOnly));
       expect(interruptedState.count).toBe(1);
     })
   );
@@ -101,7 +105,7 @@ describe("Metric", () => {
       const state = yield* Metric.value(duration);
 
       expect(exit._tag).toBe("Failure");
-      assertTrue(Exit.isFailure(exit));
+      if (!Exit.isFailure(exit)) throw new Error("Expected a failure exit");
       expect(exit.cause.reasons).toHaveLength(1);
       const reason = exit.cause.reasons[0];
       assertDefined(reason);
@@ -118,8 +122,8 @@ describe("Metric", () => {
       const state = yield* Metric.value(duration);
 
       expect(exit._tag).toBe("Failure");
-      assertTrue(Exit.isFailure(exit));
-      assertTrue(Cause.hasInterruptsOnly(exit.cause));
+      if (!Exit.isFailure(exit)) throw new Error("Expected a failure exit");
+      assertTrue(exit.cause.pipe(Cause.hasInterruptsOnly));
       expect(state.count).toBe(1);
     })
   );

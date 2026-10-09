@@ -21,8 +21,9 @@ import {
   ShaclPropertyShape,
   ShaclValidationRequest,
 } from "@beep/semantic-web/services/shacl-validation";
-import { Effect, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import type * as DomainCandidateClaim from "@beep/epistemic-domain/entities/CandidateClaim";
@@ -96,7 +97,7 @@ const toVerdict = (result: ShaclValidationResult): ClaimGateResult =>
  * import { CandidateClaim } from "@beep/epistemic-domain"
  * import { makeClaimGate } from "@beep/epistemic-use-cases/ClaimGate"
  * import { ShaclValidationResult } from "@beep/semantic-web/services/shacl-validation"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const claim = S.decodeUnknownSync(CandidateClaim)({
