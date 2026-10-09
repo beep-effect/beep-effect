@@ -64,7 +64,7 @@ const retryMailboxLock = <A, R>(operation: Effect.Effect<A, RouterError, R>) =>
  * console.log(Effect.isEffect(loop)) // true
  * ```
  * @internal
- * @category operations
+ * @category processes
  * @since 0.0.0
  */
 export const runAgentMessageDispatchLoop = Effect.fn("AgentMessage.dispatchLoop")(function* (

@@ -14,7 +14,7 @@ Keep the requested native Desktop attachment investigation separate. T3 is an al
 
 The existing `.repos/t3code` reference was clean at commit `101f8b2f55df50d4f8d70ed8e6b8e0edf71a2f31`, committed 2026-10-09. No reference refresh occurred. The official main branch was `454b94a13aea918f27bb060d8d054d4cfb791bc2` at the read-only GitHub check, later on the same date. Source assertions below bind to the local reference commit; current official documentation was checked separately. This is research qualification, not an executed T3 integration proof.
 
-The local `t3` command was absent from PATH and the bounded process-name check found no T3-named process. No T3 UI inventory was obtained, so existing visible T3 sessions are **not verified**. This observation does not rule out a differently named process or another host. No user transcript or provider session directory was inspected.
+The local `t3` command was absent from PATH and the bounded process-name check found no T3-named process. A later targeted artifact check found the existing `t3code` launcher, source-built AppImage, desktop entries, and updater unit. Its installed source stamp is `365aa87982a4d81cc8e0c085e8d1a40ca7daecdc`, which differs from the October 9 reference used for this assessment. Reuse and qualify that installed build before deciding whether an update is needed. No app was launched or configuration changed, and no T3 UI inventory was obtained, so existing visible T3 sessions and the installed build's messaging capabilities are **not verified**. No user transcript or provider session directory was inspected.
 
 ## Existing control surface
 
