@@ -648,12 +648,11 @@ const enumerateSnapshotPaths = Effect.fn("AiMetrics.enumerateConfigSnapshotPaths
   if (O.isSome(tracked)) {
     const selected = A.filter(tracked.value, (relative) => {
       const parts = Str.split(relative, "/");
+      const inConfigRoot = A.some(CONFIG_ROOTS, (root) => Str.startsWith(`${root}/`)(relative));
       return (
-        A.length(parts) <= budget.maxDepth &&
+        A.length(parts) <= budget.maxDepth + (inConfigRoot ? 1 : 0) &&
         !A.some(parts, isExcludedDirectoryName) &&
-        (relative === ".mcp.json" ||
-          isAgentDocName(pathApi.basename(relative)) ||
-          A.some(CONFIG_ROOTS, (root) => Str.startsWith(`${root}/`)(relative)))
+        (relative === ".mcp.json" || isAgentDocName(pathApi.basename(relative)) || inConfigRoot)
       );
     });
     const local = pathApi.join(repoRoot, ".claude/settings.local.json");

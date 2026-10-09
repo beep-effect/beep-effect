@@ -981,6 +981,8 @@ it.layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
       yield* fs.makeDirectory(path.join(root, "packages/foo"), { recursive: true });
       yield* fs.makeDirectory(path.join(root, ".ai"));
       yield* fs.makeDirectory(path.join(root, ".aiassistant"));
+      yield* fs.makeDirectory(path.join(root, ".claude/a/b/c/d/e/f/g"), { recursive: true });
+      yield* fs.writeFileString(path.join(root, ".claude/a/b/c/d/e/f/g/config.json"), "{}\n");
       yield* fs.writeFileString(path.join(root, "AGENTS.md"), "# Indexed fixture\n");
       yield* fs.symlink("AGENTS.md", path.join(root, "CLAUDE.md"));
       yield* fs.writeFileString(path.join(root, "packages/foo/AGENTS.md"), "# Nested fixture\n");
@@ -1002,6 +1004,7 @@ it.layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
       expect(A.map(oracle.snapshot.files, (file) => file.relativePath)).toContain("packages/foo/AGENTS.md");
       expect(A.map(oracle.snapshot.files, (file) => file.relativePath)).toContain("CLAUDE.md");
       expect(A.map(oracle.snapshot.files, (file) => file.relativePath)).toContain(".ai/config.json");
+      expect(A.map(oracle.snapshot.files, (file) => file.relativePath)).toContain(".claude/a/b/c/d/e/f/g/config.json");
     }).pipe(Effect.scoped)
   );
 
