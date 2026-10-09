@@ -1,5 +1,5 @@
 import { GroundedExtraction } from "@beep/langextract/Extraction";
-import { DocStructureDocument, DocStructureRuleFamily } from "@beep/law-practice-domain";
+import { DocStructureAbstention, DocStructureDocument, DocStructureRuleFamily } from "@beep/law-practice-domain";
 import {
   OfficeActionDocketIntakeLive,
   officeActionStructureFileStore,
@@ -17,6 +17,7 @@ import { VerifySourceTextIdentityInput } from "@beep/provenance/VerifiedTextAnch
 import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import { expect, it } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -320,3 +321,16 @@ it.layer(StateLive, { timeout: "10 seconds" })("storage failures remain typed", 
     })
   );
 });
+
+it.effect.prop(
+  "preserves every closed receipt and positive rule version across JSON",
+  { closed: Arbitrary.schema(DocStructureAbstention) },
+  ({ closed }) =>
+    Effect.gen(function* () {
+      const codec = S.fromJsonString(DocStructureAbstention);
+      const restored = yield* S.decodeEffect(codec)(yield* S.encodeEffect(codec)(closed));
+      expect(S.toEquivalence(DocStructureAbstention)(closed, restored)).toBe(true);
+      expect(restored.status).toBe("abstained");
+      expect("candidates" in restored).toBe(false);
+    })
+);

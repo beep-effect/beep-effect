@@ -24,3 +24,6 @@ export const Fixture = S.Struct({
   outcome: Outcome,
 });
 export type Fixture = typeof Fixture.Type;
+
+/** Decodes the inventory's JSON boundary with its single fixture schema. */
+export const decodeFixtureJson = S.decodeEffect(S.fromJsonString(Fixture));

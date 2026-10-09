@@ -216,3 +216,16 @@
   merge main, and resolve projections only with `beep tsconfig-sync`: both branch
   aliases survive. An installed owner-regeneration merge driver would avoid
   manual conflict setup; do not bypass publication’s stale-base gate.
+
+- Publication exposed the server’s new dependency edges as reviewed cache
+  configuration drift. The owner `cache baseline --request` records only that
+  subject with a content-addressed packet review; no qualification or cache
+  permissions are granted. Surface this dependency effect during package verify
+  to avoid finding it at publication.
+- Schema-first required property coverage after adding multiple JSON assertions
+  to the server golden test. Added schema-derived closed-receipt round trips and
+  colocated fixture JSON decoding with its schema. Neither inventory was relaxed.
+- Newly merged main #1572 introduces EV015 at the contradiction golden test’s
+  shared `TestClock.adjust` (line 126). The lane’s test canon had zero introduced
+  findings before that merge. Own source is unchanged in that package; route the
+  inherited red to the S11 main repair without copying or suppressing it here.

@@ -9,20 +9,16 @@ import * as Layer from "effect/Layer";
 import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { Fixture } from "./fixtures/office-action-structure/Fixture.schema.ts";
+import { decodeFixtureJson } from "./fixtures/office-action-structure/Fixture.schema.ts";
 import { fixtureTexts } from "./fixtures/office-action-structure/texts.ts";
 
 export const readFixture = (name: string) =>
   Effect.fromOption(HashMap.get(fixtureTexts, name), () => `Missing fixture: ${name}`);
 export const fixtureInventory = Effect.gen(function* () {
   const text = yield* readFixture("labels.jsonl");
-  return yield* Effect.forEach(
-    Str.split(Str.trimEnd(text), "\n"),
-    (line) => S.decodeEffect(S.fromJsonString(Fixture))(line),
-    {
-      concurrency: 1,
-    }
-  );
+  return yield* Effect.forEach(Str.split(Str.trimEnd(text), "\n"), decodeFixtureJson, {
+    concurrency: 1,
+  });
 });
 export const TestCrypto = Layer.succeed(
   Crypto.Crypto,
