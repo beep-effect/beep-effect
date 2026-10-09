@@ -27,11 +27,6 @@ export const quotedStringsOptions = S.Struct({
 	required: S.optionalKey(S.Boolean),
 });
 
-interface QuotedStringsOptions {
-	readonly quoteType?: "single" | "double";
-	readonly required?: boolean;
-}
-
 /**
  * A value-preserving requote/wrap edit, or undefined when none is safe.
  * Delegates to the shared helper's CONSERVATIVE mode — the shipped
@@ -48,7 +43,7 @@ const safeQuoteFix = (ctx: LintContext, scalar: YamlScalar, quote: '"' | "'"): Y
 export const quotedStrings: YamlRule = {
 	id: "quoted-strings",
 	check: (ctx, options) => {
-		const opts = (options ?? {}) as QuotedStringsOptions;
+		const opts = S.is(quotedStringsOptions)(options) ? options : {};
 		const quoteType = opts.quoteType ?? "double";
 		const required = opts.required ?? false;
 		const quote = quoteType === "double" ? '"' : "'";

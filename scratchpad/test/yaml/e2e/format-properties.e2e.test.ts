@@ -20,6 +20,7 @@
  */
 
 import { assert, describe, it } from "@effect/vitest";
+import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import { Yaml, YamlFormat } from "../../../effected/yaml/index.ts";
 import { loadAllTestCases } from "./support/suite.ts";
@@ -38,10 +39,11 @@ function deepEqual(a: unknown, b: unknown): boolean {
 		return a.every((v, i) => deepEqual(v, b[i]));
 	}
 	if (Array.isArray(a) !== Array.isArray(b)) return false;
-	const keysA = Object.keys(a as Record<string, unknown>);
-	const keysB = Object.keys(b as Record<string, unknown>);
+	if (!P.isObject(a) || !P.isObject(b)) return false;
+	const keysA = Object.keys(a);
+	const keysB = Object.keys(b);
 	if (keysA.length !== keysB.length) return false;
-	return keysA.every((k) => deepEqual((a as Record<string, unknown>)[k], (b as Record<string, unknown>)[k]));
+	return keysA.every((k) => deepEqual(a[k], b[k]));
 }
 
 // ── Known-defect ledgers (exact-match ratchets) ─────────────────────────────

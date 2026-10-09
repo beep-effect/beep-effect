@@ -3,7 +3,7 @@
 // from `block.ts`; block composition reaches these composers through
 // `state.flow` so the import stays one-directional (flow → block).
 
-import type { CollectionStyle, ScalarStyle, YamlNode, YamlPair } from "../../YamlNode.ts";
+import type { YamlNode, YamlPair } from "../../YamlNode.ts";
 import { YamlMap, YamlScalar, YamlSeq } from "../../YamlNode.ts";
 import type { CstNode } from "../cst.ts";
 import { checkAnchorOnAlias, getAnchorName, makeAlias, registerAnchor } from "./anchors.ts";
@@ -233,7 +233,7 @@ function composeFlowMapInner(cst: CstNode, state: ComposerState, meta?: NodeMeta
 			: trailingComment;
 	const map = YamlMap.make({
 		items: pairs,
-		style: "flow" as CollectionStyle,
+		style: "flow",
 		offset: cst.offset,
 		length: cst.length,
 		...(meta?.tag !== undefined ? { tag: meta.tag } : {}),
@@ -269,7 +269,7 @@ export function flattenFlowChildren(...args: [children: readonly CstNode[], stat
 					const value = resolveScalar("", "plain", pendingMeta.tag, state);
 					const scalar = YamlScalar.make({
 						value,
-						style: "plain" as ScalarStyle,
+						style: "plain",
 						offset: child.offset,
 						length: 0,
 						...(pendingMeta.tag !== undefined ? { tag: pendingMeta.tag } : {}),
@@ -287,7 +287,7 @@ export function flattenFlowChildren(...args: [children: readonly CstNode[], stat
 					const value = resolveScalar("", "plain", pendingMeta.tag, state);
 					const scalar = YamlScalar.make({
 						value,
-						style: "plain" as ScalarStyle,
+						style: "plain",
 						offset: child.offset,
 						length: 0,
 						...(pendingMeta.tag !== undefined ? { tag: pendingMeta.tag } : {}),
@@ -377,7 +377,7 @@ export function flattenFlowChildren(...args: [children: readonly CstNode[], stat
 					const resolved = resolveScalar(value, "plain", pendingMeta.tag, state);
 					const scalar = YamlScalar.make({
 						value: resolved,
-						style: "plain" as ScalarStyle,
+						style: "plain",
 						offset: child.offset,
 						length: child.length,
 						...(pendingMeta.tag !== undefined ? { tag: pendingMeta.tag } : {}),
@@ -399,7 +399,7 @@ export function flattenFlowChildren(...args: [children: readonly CstNode[], stat
 				const resolved = resolveScalar(value, "plain", pendingMeta.tag, state);
 				const scalar = YamlScalar.make({
 					value: resolved,
-					style: "plain" as ScalarStyle,
+					style: "plain",
 					offset: child.offset,
 					// Span the whole folded scalar, not just the first fragment,
 					// so findAtOffset covers continuation lines and the
@@ -443,7 +443,7 @@ export function flattenFlowChildren(...args: [children: readonly CstNode[], stat
 		const value = resolveScalar("", "plain", pendingMeta.tag, state);
 		const scalar = YamlScalar.make({
 			value,
-			style: "plain" as ScalarStyle,
+			style: "plain",
 			offset: 0,
 			length: 0,
 			...(pendingMeta.tag !== undefined ? { tag: pendingMeta.tag } : {}),
@@ -564,10 +564,10 @@ function composeFlowSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMeta
 	let lastItemEnd = -1;
 	let pushedIdx = -1;
 	const joinPending = (parts: ReadonlyArray<PendingFlowComment>): string | undefined => {
-		if (parts.length === 0) return undefined;
-		let out = (parts[0] as PendingFlowComment).text;
-		for (let k = 1; k < parts.length; k++) {
-			const part = parts[k] as PendingFlowComment;
+		const [first, ...rest] = parts;
+		if (first === undefined) return undefined;
+		let out = first.text;
+		for (const part of rest) {
 			out += part.blankAbove ? `\n\n${part.text}` : `\n${part.text}`;
 		}
 		return out;
@@ -636,7 +636,7 @@ function composeFlowSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMeta
 				const fields = takePendingFields(segFirst !== undefined ? segFirst.offset : -1);
 				const map = YamlMap.make({
 					items: pairs,
-					style: "flow" as CollectionStyle,
+					style: "flow",
 					offset: firstPair.key.offset,
 					length: 0,
 					...fields,
@@ -707,7 +707,7 @@ function composeFlowSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMeta
 			: seqTrailing;
 	const seq = YamlSeq.make({
 		items,
-		style: "flow" as CollectionStyle,
+		style: "flow",
 		offset: cst.offset,
 		length: cst.length,
 		...(meta?.tag !== undefined ? { tag: meta.tag } : {}),

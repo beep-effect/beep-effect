@@ -26,11 +26,6 @@ export const truthyOptions = S.Struct({
 	checkKeys: S.optionalKey(S.Boolean),
 });
 
-interface TruthyOptions {
-	readonly allowed?: ReadonlyArray<string>;
-	readonly checkKeys?: boolean;
-}
-
 /** The YAML 1.1 boolean family, per spelling case the 1.1 grammar admits. */
 const TRUTHY = new Set([
 	"yes",
@@ -59,7 +54,7 @@ const TRUE_SET = new Set(["yes", "on", "true"]);
 export const truthy: YamlRule = {
 	id: "truthy",
 	check: (ctx: LintContext, options) => {
-		const opts = (options ?? {}) as TruthyOptions;
+		const opts = S.is(truthyOptions)(options) ? options : {};
 		const allowed = new Set(opts.allowed ?? ["true", "false"]);
 		const checkKeys = opts.checkKeys ?? true;
 		const out: Array<YamlLintDiagnostic> = [];

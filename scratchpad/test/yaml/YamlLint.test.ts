@@ -51,7 +51,7 @@ describe("YamlLintConfig", () => {
 		const messageOf = (input: unknown): string => {
 			const r = S.decodeUnknownResult(YamlLintConfig)(input);
 			assert.isTrue(Result.isFailure(r));
-			return Result.isFailure(r) ? (r.failure as Error).message : "";
+			return Result.isFailure(r) ? r.failure.message : "";
 		};
 		assert.include(messageOf({ rules: { "parse-validity": "off" } }), 'Rule "parse-validity" is always-on');
 		assert.include(messageOf({ rules: { "parse-validity": "warning" } }), 'Rule "parse-validity" is always-on');

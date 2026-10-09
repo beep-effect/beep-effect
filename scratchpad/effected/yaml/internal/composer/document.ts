@@ -1168,7 +1168,8 @@ export function composeAllDocuments(...args: [text: string, options?: ParseOptio
  */
 function attachHeaderToFirstEntry(contents: YamlNode, header: string): YamlNode {
 	if (Schema.is(YamlMap)(contents) && contents.items.length > 0) {
-		const first = contents.items[0] as YamlPair;
+		const first = contents.items[0];
+		if (first === undefined) return contents;
 		const items = [...contents.items];
 		items[0] = YamlPair.make({ key: withCommentFields(first.key, { commentBefore: header }), value: first.value });
 		return YamlMap.make({
@@ -1186,7 +1187,9 @@ function attachHeaderToFirstEntry(contents: YamlNode, header: string): YamlNode 
 	}
 	if (Schema.is(YamlSeq)(contents) && contents.items.length > 0) {
 		const items = [...contents.items];
-		items[0] = withCommentFields(items[0] as YamlNode, { commentBefore: header });
+		const first = items[0];
+		if (first === undefined) return contents;
+		items[0] = withCommentFields(first, { commentBefore: header });
 		return YamlSeq.make({
 			items,
 			style: contents.style,

@@ -97,8 +97,12 @@ const promoteAll = (text: string, tokens: ReadonlyArray<InternalToken>): Readonl
 	return tokens.map((token) => {
 		// Defensive: a non-monotone offset would otherwise yield a negative
 		// `character`. Restart the scan instead.
-		if (token.offset < (lineStarts[line] as number)) line = 0;
-		while (line + 1 < lineStarts.length && (lineStarts[line + 1] as number) <= token.offset) line++;
+		if (token.offset < (lineStarts[line] ?? 0)) line = 0;
+		let nextStart = lineStarts[line + 1];
+		while (nextStart !== undefined && nextStart <= token.offset) {
+			line++;
+			nextStart = lineStarts[line + 1];
+		}
 		// Hot path: tokenizing a large document materializes thousands of
 		// instances, so construction uses `new` (the engine's recorded
 		// hot-path exception) rather than the validating `make`.
@@ -108,7 +112,7 @@ const promoteAll = (text: string, tokens: ReadonlyArray<InternalToken>): Readonl
 			offset: token.offset,
 			length: token.length,
 			line,
-			character: token.offset - (lineStarts[line] as number),
+			character: token.offset - (lineStarts[line] ?? 0),
 		});
 	});
 };

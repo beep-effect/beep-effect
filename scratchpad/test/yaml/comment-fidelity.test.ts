@@ -18,7 +18,8 @@ import { Yaml, YamlDocument, YamlFormat, YamlMap, YamlScalar, YamlSeq, YamlVisit
 
 const firstMap = (doc: YamlDocument): YamlMap => {
 	assert.instanceOf(doc.contents, YamlMap);
-	return doc.contents as YamlMap;
+	assert.ok(S.is(YamlMap)(doc.contents));
+	return doc.contents;
 };
 
 const JsonString = S.fromJsonString(S.String);
@@ -71,9 +72,10 @@ describe("comment fidelity (#127)", () => {
 				const map = firstMap(doc);
 				const aValue = map.items[0]?.value;
 				assert.instanceOf(aValue, YamlMap);
-				assert.strictEqual((aValue as YamlMap).comment, " end of a");
+				assert.ok(S.is(YamlMap)(aValue));
+				assert.strictEqual(aValue.comment, " end of a");
 				// It must NOT have attached backward to the b entry.
-				assert.isUndefined((aValue as YamlMap).items[0]?.value?.comment);
+				assert.isUndefined(aValue.items[0]?.value?.comment);
 			}),
 		);
 
@@ -86,12 +88,15 @@ describe("comment fidelity (#127)", () => {
 				const map = firstMap(doc);
 				const seq = map.items[0]?.value;
 				assert.instanceOf(seq, YamlSeq);
-				assert.strictEqual((seq as YamlSeq).commentBefore, " first step");
-				const [first, second] = (seq as YamlSeq).items;
+				assert.ok(S.is(YamlSeq)(seq));
+				assert.strictEqual(seq.commentBefore, " first step");
+				const [first, second] = seq.items;
 				assert.instanceOf(first, YamlScalar);
-				assert.isUndefined((first as YamlScalar).commentBefore);
-				assert.strictEqual((second as YamlScalar).commentBefore, " mid");
-				assert.strictEqual((second as YamlScalar).comment, " inline");
+				assert.ok(S.is(YamlScalar)(first));
+				assert.isUndefined(first.commentBefore);
+				assert.ok(S.is(YamlScalar)(second));
+				assert.strictEqual(second.commentBefore, " mid");
+				assert.strictEqual(second.comment, " inline");
 			}),
 		);
 
@@ -132,7 +137,8 @@ describe("comment fidelity (#127)", () => {
 				const map = firstMap(doc);
 				const value = map.items[0]?.value;
 				assert.instanceOf(value, YamlScalar);
-				assert.strictEqual((value as YamlScalar).commentBefore, " note");
+				assert.ok(S.is(YamlScalar)(value));
+				assert.strictEqual(value.commentBefore, " note");
 			}),
 		);
 
@@ -177,7 +183,8 @@ describe("comment fidelity (#127)", () => {
 				const map = firstMap(doc);
 				const cValue = map.items[0]?.value;
 				assert.instanceOf(cValue, YamlMap);
-				assert.isUndefined((cValue as YamlMap).comment);
+				assert.ok(S.is(YamlMap)(cValue));
+				assert.isUndefined(cValue.comment);
 				assert.strictEqual(map.items[1]?.key.commentBefore, " tail\n");
 			}),
 		);
@@ -345,7 +352,10 @@ describe("comment fidelity (#127)", () => {
 				const doc = yield* YamlDocument.parse("[ a\n# own\n, b ]\n");
 				const seq = doc.contents;
 				assert.instanceOf(seq, YamlSeq);
-				assert.strictEqual(((seq as YamlSeq).items[1] as YamlScalar).commentBefore, " own");
+				assert.ok(S.is(YamlSeq)(seq));
+				const second = seq.items[1];
+				assert.ok(S.is(YamlScalar)(second));
+				assert.strictEqual(second.commentBefore, " own");
 				const out = yield* doc.stringify();
 				assert.strictEqual(out, "[\n  a,\n  # own\n  b\n]\n");
 				const again = yield* YamlDocument.parse(out);
@@ -358,9 +368,14 @@ describe("comment fidelity (#127)", () => {
 			() =>
 				Effect.gen(function* () {
 					const doc = yield* YamlDocument.parse("[ a # t\n# own\n, b ]\n");
-					const seq = doc.contents as YamlSeq;
-					assert.strictEqual((seq.items[0] as YamlScalar).comment, " t");
-					assert.strictEqual((seq.items[1] as YamlScalar).commentBefore, " own");
+					const seq = doc.contents;
+					assert.ok(S.is(YamlSeq)(seq));
+					const first = seq.items[0];
+					assert.ok(S.is(YamlScalar)(first));
+					assert.strictEqual(first.comment, " t");
+					const second = seq.items[1];
+					assert.ok(S.is(YamlScalar)(second));
+					assert.strictEqual(second.commentBefore, " own");
 					const out = yield* doc.stringify();
 					assert.strictEqual(out, "[\n  a, # t\n  # own\n  b\n]\n");
 					const again = yield* YamlDocument.parse(out);
@@ -371,7 +386,8 @@ describe("comment fidelity (#127)", () => {
 		it.effect("flow: an own-line comment after the last item becomes the sequence's trailing comment (PR #338)", () =>
 			Effect.gen(function* () {
 				const doc = yield* YamlDocument.parse("[ a,\nb\n# own\n]\n");
-				const seq = doc.contents as YamlSeq;
+				const seq = doc.contents;
+				assert.ok(S.is(YamlSeq)(seq));
 				assert.strictEqual(seq.comment, " own");
 				// Pin the exact FIRST emission — a stringifier that dropped or
 				// relocated `# own` could still fixed-point on its reduced output.
@@ -394,7 +410,9 @@ describe("comment fidelity (#127)", () => {
 					const doc = yield* YamlDocument.parse(source);
 					const seq = firstMap(doc).items[0]?.value;
 					assert.instanceOf(seq, YamlSeq);
-					const second = (seq as YamlSeq).items[1] as YamlScalar;
+					assert.ok(S.is(YamlSeq)(seq));
+					const second = seq.items[1];
+					assert.ok(S.is(YamlScalar)(second));
 					assert.strictEqual(second.commentBefore, " c");
 					assert.strictEqual(second.spaceBefore, true);
 					const out = YamlFormat.formatToString(source);
@@ -409,8 +427,9 @@ describe("comment fidelity (#127)", () => {
 					const doc = yield* YamlDocument.parse(source);
 					const map = firstMap(doc).items[0]?.value;
 					assert.instanceOf(map, YamlMap);
-					assert.strictEqual((map as YamlMap).items[1]?.key.commentBefore, " c");
-					assert.strictEqual((map as YamlMap).items[1]?.key.spaceBefore, true);
+					assert.ok(S.is(YamlMap)(map));
+					assert.strictEqual(map.items[1]?.key.commentBefore, " c");
+					assert.strictEqual(map.items[1]?.key.spaceBefore, true);
 					const out = YamlFormat.formatToString(source);
 					assert.strictEqual(out, "m:\n  {\n    a: 1,\n\n    # c\n    b: 2\n  }\n");
 					assert.strictEqual(YamlFormat.formatToString(out), out);
@@ -423,7 +442,8 @@ describe("comment fidelity (#127)", () => {
 					const doc = yield* YamlDocument.parse(source);
 					const seq = firstMap(doc).items[0]?.value;
 					assert.instanceOf(seq, YamlSeq);
-					assert.strictEqual((seq as YamlSeq).comment, "\n tail");
+					assert.ok(S.is(YamlSeq)(seq));
+					assert.strictEqual(seq.comment, "\n tail");
 					const out = YamlFormat.formatToString(source);
 					assert.strictEqual(out, "a:\n  [\n    1,\n    2\n\n    # tail\n  ]\n");
 					assert.strictEqual(YamlFormat.formatToString(out), out);
@@ -436,7 +456,9 @@ describe("comment fidelity (#127)", () => {
 					const doc = yield* YamlDocument.parse(source);
 					const seq = firstMap(doc).items[0]?.value;
 					assert.instanceOf(seq, YamlSeq);
-					const second = (seq as YamlSeq).items[1] as YamlScalar;
+					assert.ok(S.is(YamlSeq)(seq));
+					const second = seq.items[1];
+					assert.ok(S.is(YamlScalar)(second));
 					assert.strictEqual(second.commentBefore, " c1\n\n c2");
 					assert.strictEqual(second.spaceBefore, true);
 					const out = YamlFormat.formatToString(source);
@@ -455,7 +477,8 @@ describe("comment fidelity (#127)", () => {
 					const source = "a: {b: 1} # t\n";
 					const map = firstMap(yield* YamlDocument.parse(source)).items[0]?.value;
 					assert.instanceOf(map, YamlMap);
-					assert.strictEqual((map as YamlMap).comment, " t");
+					assert.ok(S.is(YamlMap)(map));
+					assert.strictEqual(map.comment, " t");
 					const out = YamlFormat.formatToString(source);
 					assert.strictEqual(out, "a: {b: 1} # t\n");
 					assert.strictEqual(YamlFormat.formatToString(out), out);
@@ -545,8 +568,9 @@ describe("comment fidelity (#127)", () => {
 					const doc = yield* YamlDocument.parse("a: | # hdr\n  body\n");
 					const pair = firstMap(doc).items[0];
 					assert.isUndefined(pair?.key.commentBefore);
-					const scalar = pair?.value as YamlScalar;
+					const scalar = pair?.value;
 					assert.instanceOf(scalar, YamlScalar);
+					assert.ok(S.is(YamlScalar)(scalar));
 					assert.strictEqual(scalar.comment, " hdr");
 					assert.strictEqual(scalar.value, "body\n");
 				}),
@@ -556,9 +580,11 @@ describe("comment fidelity (#127)", () => {
 				Effect.gen(function* () {
 					const doc = yield* YamlDocument.parse("- | # hdr\n  body\n");
 					assert.instanceOf(doc.contents, YamlSeq);
-					const item = (doc.contents as YamlSeq).items[0];
+					assert.ok(S.is(YamlSeq)(doc.contents));
+					const item = doc.contents.items[0];
 					assert.instanceOf(item, YamlScalar);
-					assert.strictEqual((item as YamlScalar).comment, " hdr");
+					assert.ok(S.is(YamlScalar)(item));
+					assert.strictEqual(item.comment, " hdr");
 				}),
 			);
 
@@ -583,8 +609,9 @@ describe("comment fidelity (#127)", () => {
 					const doc = yield* YamlDocument.parse(source);
 					const pair = firstMap(doc).items[0];
 					assert.strictEqual(pair?.key.comment, " pair");
-					const scalar = pair?.value as YamlScalar;
+					const scalar = pair?.value;
 					assert.instanceOf(scalar, YamlScalar);
+					assert.ok(S.is(YamlScalar)(scalar));
 					assert.strictEqual(scalar.comment, " hdr");
 					// Both want the key line, because the block-scalar header hoists
 					// onto it. The header wins the line and the key's comment spills
@@ -612,13 +639,15 @@ describe("comment fidelity (#127)", () => {
 			it.effect("captures the explicit indicators on the scalar: chomp keep and blockIndent", () =>
 				Effect.gen(function* () {
 					const doc = yield* YamlDocument.parse("a: |2+ # hdr\n  body\n");
-					const scalar = firstMap(doc).items[0]?.value as YamlScalar;
+					const scalar = firstMap(doc).items[0]?.value;
+					assert.ok(S.is(YamlScalar)(scalar));
 					assert.strictEqual(scalar.chomp, "keep");
 					assert.strictEqual(scalar.blockIndent, 2);
 					assert.strictEqual(scalar.value, "body\n");
 					// No explicit indicator → no captured field.
 					const doc2 = yield* YamlDocument.parse("a: |\n  body\n");
-					const scalar2 = firstMap(doc2).items[0]?.value as YamlScalar;
+					const scalar2 = firstMap(doc2).items[0]?.value;
+					assert.ok(S.is(YamlScalar)(scalar2));
 					assert.isUndefined(scalar2.blockIndent);
 				}),
 			);
@@ -628,7 +657,8 @@ describe("comment fidelity (#127)", () => {
 					// blockIndent 4 with a rendered indent of 2 would lie about the
 					// content columns — the header falls back to auto-detection.
 					const doc = yield* YamlDocument.parse("a: |4\n    body\n");
-					const scalar = firstMap(doc).items[0]?.value as YamlScalar;
+					const scalar = firstMap(doc).items[0]?.value;
+					assert.ok(S.is(YamlScalar)(scalar));
 					assert.strictEqual(scalar.blockIndent, 4);
 					assert.strictEqual(scalar.value, "body\n");
 					assert.strictEqual(yield* doc.stringify(), "a: |\n  body\n");
@@ -641,12 +671,14 @@ describe("comment fidelity (#127)", () => {
 					// `# x+y` parsed as keep-chomp and re-emitted as `|+`, changing
 					// what the document means.
 					const doc = yield* YamlDocument.parse("a: | # x+y\n  body\n");
-					const scalar = firstMap(doc).items[0]?.value as YamlScalar;
+					const scalar = firstMap(doc).items[0]?.value;
+					assert.ok(S.is(YamlScalar)(scalar));
 					assert.strictEqual(scalar.chomp, "clip");
 					assert.strictEqual(yield* doc.stringify(), "a: | # x+y\n  body\n");
 
 					const doc2 = yield* YamlDocument.parse("a: | # strip-me\n  body\n");
-					const scalar2 = firstMap(doc2).items[0]?.value as YamlScalar;
+					const scalar2 = firstMap(doc2).items[0]?.value;
+					assert.ok(S.is(YamlScalar)(scalar2));
 					assert.strictEqual(scalar2.chomp, "clip");
 				}),
 			);
@@ -690,8 +722,9 @@ describe("comment fidelity (#127)", () => {
 				Effect.gen(function* () {
 					const doc = yield* YamlDocument.parse("| # hdr\n  body\n");
 					assert.instanceOf(doc.contents, YamlScalar);
-					assert.strictEqual((doc.contents as YamlScalar).comment, " hdr");
-					assert.strictEqual((doc.contents as YamlScalar).value, "body\n");
+					assert.ok(S.is(YamlScalar)(doc.contents));
+					assert.strictEqual(doc.contents.comment, " hdr");
+					assert.strictEqual(doc.contents.value, "body\n");
 				}),
 			);
 
@@ -780,9 +813,10 @@ describe("comment fidelity (#127)", () => {
 					const doc = yield* YamlDocument.parse(source);
 					const value = firstMap(doc).items[0]?.value;
 					assert.instanceOf(value, YamlSeq);
+					assert.ok(S.is(YamlSeq)(value));
 					// Both comments sit on the `:` side with the value below, so both
 					// lead the value and join into one run — neither is dropped.
-					assert.include((value as YamlSeq).commentBefore ?? "", "lala");
+					assert.include(value.commentBefore ?? "", "lala");
 					const out = yield* doc.stringify();
 					assert.strictEqual(YamlFormat.formatToString(out), out);
 					assert.strictEqual((out.match(/#/g) ?? []).length, 2);
@@ -801,7 +835,8 @@ describe("comment fidelity (#127)", () => {
 				Effect.gen(function* () {
 					const source = "? - seq1\n:\n  #lead\n  - seq2\n";
 					const doc = yield* YamlDocument.parse(source);
-					const seq = firstMap(doc).items[0]?.value as YamlSeq;
+					const seq = firstMap(doc).items[0]?.value;
+					assert.ok(S.is(YamlSeq)(seq));
 					assert.strictEqual(seq.commentBefore, "lead");
 					assert.strictEqual(yield* doc.stringify(), source);
 				}),
@@ -972,9 +1007,7 @@ describe("comment fidelity (#127)", () => {
 				const events = yield* Stream.runCollect(
 					YamlVisitor.visit("# header\n# section\na: 1 # trailing\n...\n# tail\n"),
 				);
-				const comments = [...events]
-					.filter((e) => e._tag === "Comment")
-					.map((e) => e as { readonly text: string; readonly placement: "leading" | "trailing" });
+				const comments = [...events].filter((e) => e._tag === "Comment");
 				assert.deepStrictEqual(
 					comments.map((c) => [c.placement, c.text]),
 					[

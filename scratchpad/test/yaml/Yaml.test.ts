@@ -1,6 +1,7 @@
 // @effect-diagnostics nodeBuiltinImport:skip-file
 import { readFileSync } from "node:fs";
 import { assert, describe, it } from "@effect/vitest";
+import * as P from "effect/Predicate";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -211,7 +212,8 @@ describe("Yaml", () => {
 
 			it.effect("an int and a float key with equal JS value are not a duplicate", () =>
 				Effect.gen(function* () {
-					const value = (yield* Yaml.parse("{1: int, 1.0: float}")) as Record<string, unknown>;
+					const value = (yield* Yaml.parse("{1: int, 1.0: float}"));
+					assert.ok(P.isObject(value));
 					// The lossy JS object collapses both onto the "1" property (last
 					// wins), but the parse itself must not have rejected the document.
 					assert.strictEqual(value["1"], "float");
@@ -256,9 +258,11 @@ describe("Yaml", () => {
 				const doc = yield* YamlDocument.parse(text);
 				const map = doc.contents;
 				assert.instanceOf(map, YamlMap);
-				const first = (map as YamlMap).items[0]?.value;
+				assert.ok(S.is(YamlMap)(map));
+				const first = map.items[0]?.value;
 				assert.instanceOf(first, YamlScalar);
-				const scalar = first as YamlScalar;
+				assert.ok(S.is(YamlScalar)(first));
+				const scalar = first;
 				assert.strictEqual(text.slice(scalar.offset, scalar.offset + scalar.length), "'x'");
 			}),
 		);
@@ -884,7 +888,7 @@ describe("Yaml", () => {
 		describe("control characters force quoting (regression)", () => {
 			// Released 0.4.0 emitted CR and interior-tab scalars as PLAIN text
 			// because `requiresQuoting`'s control-char loop used `isControlChar`
-			// alone, which excludes TAB (0x09) and CR (0x0D). The CR case was
+			// alone, which excludes TAB (0x09) and CR 0x0D. The CR case was
 			// silent data corruption: `has\rcarriage` round-tripped back as
 			// `has carriage`. Each case asserts BOTH that the scalar is quoted
 			// and that it survives a parse round-trip unchanged.
@@ -1186,7 +1190,8 @@ describe("Yaml", () => {
 	describe("hostile input", () => {
 		it.effect("__proto__ becomes an own data property, never a prototype mutation", () =>
 			Effect.gen(function* () {
-				const value = (yield* Yaml.parse('"__proto__":\n  polluted: true')) as Record<string, unknown>;
+				const value = (yield* Yaml.parse('"__proto__":\n  polluted: true'));
+				assert.ok(P.isObject(value));
 				assert.strictEqual(Object.getPrototypeOf(value), Object.prototype);
 				assert.isTrue(Object.hasOwn(value, "__proto__"));
 				assert.isFalse("polluted" in {});
@@ -1276,7 +1281,8 @@ describe("Yaml", () => {
 				if (!Result.isSuccess(result)) {
 					assert.fail("a benign alias-heavy document must not trip the expansion budget");
 				}
-				const value = result.success as Record<string, number>;
+				const value = result.success;
+				assert.ok(P.isObject(value));
 				assert.strictEqual(value.r0, 0);
 				assert.strictEqual(value.r89, 89);
 			}),

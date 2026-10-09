@@ -18,6 +18,7 @@
 
 import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { EMPTY_DOCUMENT, composeAllDocuments, composeFirstDocumentCounted } from "./internal/composer/document.ts";
 import { MAX_NESTING_DEPTH } from "./internal/composer/state.ts";
@@ -35,7 +36,7 @@ import {
 } from "./internal/stringifier.ts";
 import { YamlStringifyOptions } from "./Yaml.ts";
 import { YamlDiagnostic } from "./YamlDiagnostic.ts";
-import type { YamlPath, YamlSegment } from "./YamlEdit.ts";
+import type { YamlPath } from "./YamlEdit.ts";
 import { YamlEdit, YamlRange } from "./YamlEdit.ts";
 import type { YamlNode } from "./YamlNode.ts";
 import { YamlMap, YamlPair, YamlScalar, YamlSeq } from "./YamlNode.ts";
@@ -176,7 +177,8 @@ function resolveRange(
 /** Copy only the defined entries of `fields` — never emits an explicit `undefined` into a v4 `optionalKey` field. */
 function definedFields<T extends Record<string, unknown>>(fields: T): Partial<T> {
 	const out: Partial<T> = {};
-	for (const key of Object.keys(fields) as Array<keyof T>) {
+	for (const key in fields) {
+		if (!Object.hasOwn(fields, key)) continue;
 		if (fields[key] !== undefined) out[key] = fields[key];
 	}
 	return out;
@@ -331,12 +333,11 @@ function formatStream(
 	const preserveComments = options?.preserveComments ?? true;
 	const base = toStringifyInput(options);
 	const parts: Array<string> = [];
-	for (let i = 0; i < documents.length; i++) {
-		const doc = documents[i] as RawYamlDocument;
+	for (const [i, doc] of documents.entries()) {
 		// A document after the first is separated from its predecessor by its
 		// own `---` or the predecessor's `...`; the composer guarantees one of
 		// the two, so a stream violating it cannot be re-emitted — refuse.
-		if (i > 0 && !doc.hasDocumentStart && !(documents[i - 1] as RawYamlDocument).hasDocumentEnd) return undefined;
+		if (i > 0 && !doc.hasDocumentStart && documents[i - 1]?.hasDocumentEnd !== true) return undefined;
 		// Every document but the last must end in a newline for the next
 		// document's framing to start on its own line; the caller's
 		// `finalNewline` applies only to the last document.
@@ -376,7 +377,7 @@ function jsValueToNode(value: unknown, seen: Set<object>, depth: number): YamlNo
 			0,
 		);
 	}
-	if (typeof value === "object" && value !== null) {
+	if (Array.isArray(value) || P.isObject(value)) {
 		if (seen.has(value)) {
 			throw new ModifyFailure("CircularReference", "Replacement value contains a circular reference", 0, 0);
 		}
@@ -390,12 +391,11 @@ function jsValueToNode(value: unknown, seen: Set<object>, depth: number): YamlNo
 					length: 0,
 				});
 			}
-			const record = value as Record<string, unknown>;
 			return YamlMap.make({
-				items: Object.keys(record).map((key) =>
+				items: Object.keys(value).map((key) =>
 					YamlPair.make({
 						key: YamlScalar.make({ value: key, style: "plain", offset: 0, length: 0 }),
-						value: jsValueToNode(record[key], seen, depth + 1),
+						value: jsValueToNode(value[key], seen, depth + 1),
 					}),
 				),
 				style: "block",
@@ -425,7 +425,7 @@ function modifyDocument(doc: RawYamlDocument, path: YamlPath, value: unknown): Y
 }
 
 function modifyNode(node: YamlNode, path: YamlPath, depth: number, value: unknown): YamlNode {
-	const segment = path[depth] as YamlSegment;
+	const segment = path[depth];
 	const isLast = depth === path.length - 1;
 
 	if (S.is(YamlMap)(node)) {
@@ -442,7 +442,8 @@ function modifyNode(node: YamlNode, path: YamlPath, depth: number, value: unknow
 			const newValueNode = lowerValue(value);
 			if (pairIndex >= 0) {
 				const newItems = [...node.items];
-				const oldPair = newItems[pairIndex] as YamlPair;
+				const oldPair = newItems[pairIndex];
+				if (oldPair === undefined) throw new TypeError("Cannot read properties of undefined (reading 'key')");
 				// Comments live on the key and value nodes, so the key carries its
 				// own through unchanged; the replacement value is a fresh node and
 				// deliberately starts with no comments of its own.
@@ -465,7 +466,8 @@ function modifyNode(node: YamlNode, path: YamlPath, depth: number, value: unknow
 				node.length,
 			);
 		}
-		const pair = node.items[pairIndex] as YamlPair;
+		const pair = node.items[pairIndex];
+		if (pair === undefined) throw new TypeError("Cannot read properties of undefined (reading 'value')");
 		if (pair.value === null) {
 			throw new ModifyFailure("PathNotFound", `Value at key "${String(segment)}" is null`, node.offset, node.length);
 		}
@@ -496,7 +498,8 @@ function modifyNode(node: YamlNode, path: YamlPath, depth: number, value: unknow
 		if (idx >= node.items.length) {
 			throw new ModifyFailure("InvalidIndex", `Index ${idx} out of bounds`, node.offset, node.length);
 		}
-		const child = node.items[idx] as YamlNode;
+		const child = node.items[idx];
+		if (child === undefined) throw new TypeError("Cannot read properties of undefined (reading '_tag')");
 		const newChild = modifyNode(child, path, depth + 1, value);
 		const newItems = [...node.items];
 		newItems[idx] = newChild;
@@ -579,7 +582,7 @@ function findExistingTarget(
 	if (contents === null || path.length === 0) return undefined;
 	let current: YamlNode = contents;
 	for (let depth = 0; depth < path.length; depth++) {
-		const segment = path[depth] as YamlSegment;
+		const segment = path[depth];
 		const isLast = depth === path.length - 1;
 		if (S.is(YamlMap)(current)) {
 			const pair = current.items.find((p) => S.is(YamlScalar)(p.key) && p.key.value === segment);
@@ -590,7 +593,8 @@ function findExistingTarget(
 		} else if (S.is(YamlSeq)(current)) {
 			const idx = typeof segment === "number" ? segment : Number(segment);
 			if (Number.isNaN(idx) || idx < 0 || idx >= current.items.length) return undefined;
-			const child = current.items[idx] as YamlNode;
+			const child = current.items[idx];
+			if (child === undefined) return undefined;
 			if (isLast) return { node: child, inFlow: current.style === "flow" };
 			current = child;
 		} else {
@@ -981,7 +985,7 @@ export class YamlFormat {
 		// to the whole-document pipeline below, unchanged.
 		const regional = tryRegionalScalarEdit(text, doc, path, value, options);
 		if (regional !== undefined) {
-			return regional.map((e) => YamlEdit.make(e)) as ReadonlyArray<YamlEdit>;
+			return regional.map((e) => YamlEdit.make(e));
 		}
 
 		const newContents = yield* Effect.try({
@@ -1002,7 +1006,7 @@ export class YamlFormat {
 
 		const outputDoc: RawYamlDocument = { ...doc, contents: newContents };
 		const formatted = stringifyDocument(outputDoc, toStringifyInput(options));
-		return computeEdits(text, withSourceBom(text, formatted)).map((e) => YamlEdit.make(e)) as ReadonlyArray<YamlEdit>;
+		return computeEdits(text, withSourceBom(text, formatted)).map((e) => YamlEdit.make(e));
 	});
 
 	/**

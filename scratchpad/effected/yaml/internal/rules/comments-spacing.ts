@@ -23,11 +23,6 @@ export const commentsSpacingOptions = S.Struct({
 	requireSpaceAfter: S.optionalKey(S.Boolean),
 });
 
-interface CommentsSpacingOptions {
-	readonly minSpacesBefore?: number;
-	readonly requireSpaceAfter?: boolean;
-}
-
 /**
  * The horizontal whitespace run directly before a comment token, and whether
  * line content precedes it (a TRAILING comment) — shared by the check and
@@ -53,7 +48,7 @@ const isShebang = (token: YamlToken): boolean => token.offset === 0 && token.tex
 export const commentsSpacing: YamlRule = {
 	id: "comments-spacing",
 	check: (ctx, options) => {
-		const opts = (options ?? {}) as CommentsSpacingOptions;
+		const opts = S.is(commentsSpacingOptions)(options) ? options : {};
 		const minBefore = opts.minSpacesBefore ?? 1;
 		const requireAfter = opts.requireSpaceAfter ?? true;
 		const out: Array<YamlLintDiagnostic> = [];
@@ -61,7 +56,7 @@ export const commentsSpacing: YamlRule = {
 			if (token.kind !== "comment") continue;
 			if (isShebang(token)) continue;
 			// Space after `#`: a bare `#` is fine, `#text` is not.
-			if (requireAfter && token.text.length > 1 && !/[ \t]/.test(token.text[1] as string)) {
+			if (requireAfter && token.text.length > 1 && !/[ \t]/.test(token.text.charAt(1))) {
 				out.push(
 					YamlLintDiagnostic.make({
 						rule: "comments-spacing",
@@ -114,7 +109,7 @@ export const commentsSpacing: YamlRule = {
 				out.push(
 					StyleVote.make({
 						dimension: "requireSpaceAfter",
-						value: /[ \t]/.test(token.text[1] as string),
+						value: /[ \t]/.test(token.text.charAt(1)),
 						offset: token.offset,
 						length: token.length,
 						line: token.line,

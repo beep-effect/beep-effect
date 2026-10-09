@@ -502,8 +502,7 @@ function descendToNode(node: YamlNode, target: YamlNode, path: Array<string | nu
 	}
 
 	if (S.is(YamlSeq)(node)) {
-		for (let i = 0; i < node.items.length; i++) {
-			const item = node.items[i] as YamlNode;
+		for (const [i, item] of node.items.entries()) {
 			path.push(i);
 			if (descendToNode(item, target, path)) {
 				return true;

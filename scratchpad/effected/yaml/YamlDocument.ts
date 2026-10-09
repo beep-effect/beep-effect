@@ -120,7 +120,7 @@ export class YamlDocument extends S.Class<YamlDocument>("YamlDocument")({
 				input: text,
 			});
 		}
-		return documents.map((raw) => fromRawDocument(raw, text)) as ReadonlyArray<YamlDocument>;
+		return documents.map((raw) => fromRawDocument(raw, text));
 	});
 
 	/**

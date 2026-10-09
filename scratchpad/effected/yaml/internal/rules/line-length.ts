@@ -23,7 +23,8 @@ const DEFAULT_MAX = 120;
 export const lineLength: YamlRule = {
 	id: "line-length",
 	check: (ctx, options) => {
-		const max = (options as { readonly max?: number } | undefined)?.max ?? DEFAULT_MAX;
+		const opts = S.is(lineLengthOptions)(options) ? options : {};
+		const max = opts.max ?? DEFAULT_MAX;
 		const out: Array<YamlLintDiagnostic> = [];
 		for (const line of ctx.lines) {
 			if (line.text.length > max) {

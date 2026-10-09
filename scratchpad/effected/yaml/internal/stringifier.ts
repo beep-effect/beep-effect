@@ -7,6 +7,7 @@
 // formatting with support for block/flow styles, scalar quoting rules, and
 // round-trip preservation of AST node styles.
 
+import * as P from "effect/Predicate";
 import type { CollectionStyle, QuoteCompat, QuoteStyle, ScalarStyle, YamlNode } from "../YamlNode.ts";
 import { YamlAlias, YamlMap, YamlPair, YamlScalar, YamlSeq } from "../YamlNode.ts";
 import { MAX_NESTING_DEPTH } from "./composer/state.ts";
@@ -625,22 +626,22 @@ function stringifyLines(value: unknown, ctx: StringifyContext, depth: number, al
 	// array
 	if (Array.isArray(value)) {
 		detectCircular(value, ctx.seen);
-		ctx.seen.add(value as object);
+		ctx.seen.add(value);
 		try {
 			return stringifyArrayLines(value, ctx, depth);
 		} finally {
-			ctx.seen.delete(value as object);
+			ctx.seen.delete(value);
 		}
 	}
 
 	// object (plain object / record)
-	if (typeof value === "object" && value !== null) {
+	if (P.isObject(value)) {
 		detectCircular(value, ctx.seen);
-		ctx.seen.add(value as object);
+		ctx.seen.add(value);
 		try {
-			return stringifyObjectLines(value as Record<string, unknown>, ctx, depth);
+			return stringifyObjectLines(value, ctx, depth);
 		} finally {
-			ctx.seen.delete(value as object);
+			ctx.seen.delete(value);
 		}
 	}
 
@@ -1424,8 +1425,7 @@ function stringifyMapNodeLines(node: YamlMap, ctx: StringifyContext, depth: numb
 			// flow layout), so a `#` comment cannot swallow the closing brace.
 			const flowPad = " ".repeat(ctx.indent);
 			const flowLines: string[] = [(flowPrefix !== undefined && flowPrefix !== "") ? `${flowPrefix} {` : "{"];
-			for (let fi = 0; fi < items.length; fi++) {
-				const pair = items[fi] as YamlPair;
+			for (const [fi, pair] of items.entries()) {
 				if (pairSpaceBefore(pair) === true) flowLines.push("");
 				const flowLeading = pairLeading(pair);
 				if (flowLeading !== undefined) {
@@ -1838,8 +1838,7 @@ function stringifySeqNodeLines(node: YamlSeq, ctx: StringifyContext, depth: numb
 			// flow layout), so a `#` comment cannot swallow the closing bracket.
 			const flowPad = " ".repeat(ctx.indent);
 			const flowLines: string[] = [(flowPrefix !== undefined && flowPrefix !== "") ? `${flowPrefix} [` : "["];
-			for (let fi = 0; fi < items.length; fi++) {
-				const item = items[fi] as YamlNode;
+			for (const [fi, item] of items.entries()) {
 				const fields = itemFields(item);
 				if (fields?.spaceBefore === true) flowLines.push("");
 				if (fields?.commentBefore !== undefined) {
@@ -1943,13 +1942,14 @@ function stringifySeqNodeLines(node: YamlSeq, ctx: StringifyContext, depth: numb
  * (`Infinity`, `-Infinity`, `NaN`) are rendered as `.inf`, `-.inf`, and
  * `.nan` respectively. Circular references throw {@link StringifyFailure}.
  */
-// The value accepts every options object too, so a single object cannot distinguish the two call forms.
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export function stringifyValue(value: unknown, options?: StringifyOptionsInput): string {
+export const stringifyValue: {
+	(value: unknown, options?: StringifyOptionsInput): string;
+	(options?: StringifyOptionsInput): (value: unknown) => string;
+} = dual((args) => args.length >= 1, function stringifyValue(value: unknown, options?: StringifyOptionsInput): string {
 	const ctx = createContext(options);
 	const result = stringifyLines(value, ctx, 0).join("\n");
 	return (options?.finalNewline ?? true) ? `${result}\n` : result;
-}
+});
 
 /**
  * Converts a composed YAML document AST into a YAML text string, preserving

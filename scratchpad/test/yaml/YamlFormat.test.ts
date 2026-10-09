@@ -1,6 +1,7 @@
 // @effect-diagnostics nodeBuiltinImport:skip-file
 import { readFileSync } from "node:fs";
 import { assert, describe, it } from "@effect/vitest";
+import * as P from "effect/Predicate";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import { Yaml, YamlEdit } from "../../effected/yaml/index.ts";
@@ -569,7 +570,8 @@ describe("YamlFormat", () => {
 				const key = `weird: key "with" quotes`;
 				const edits = yield* YamlFormat.modify(text, [key], "value");
 				const out = apply(text, edits);
-				const parsed = (yield* Yaml.parse(out)) as Record<string, unknown>;
+				const parsed = (yield* Yaml.parse(out));
+				assert.ok(P.isObject(parsed));
 				assert.strictEqual(parsed[key], "value");
 			}),
 		);
@@ -640,7 +642,7 @@ describe("YamlFormat", () => {
 				const value = { a: { b: [1, { c: [2, 3] }] }, e: {}, xs: [] };
 				const out = yield* YamlFormat.modifyToString("root: keep\n", ["meta"], value);
 				assert.notInclude(out, "[object Object]");
-				assert.deepStrictEqual((yield* Yaml.parse(out)) as Record<string, unknown>, {
+				assert.deepStrictEqual((yield* Yaml.parse(out)), {
 					root: "keep",
 					meta: value,
 				});

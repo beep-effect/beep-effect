@@ -21,17 +21,11 @@ export const emptyLinesOptions = S.Struct({
 	maxEnd: S.optionalKey(nonNegativeIntegerOption),
 });
 
-interface EmptyLinesOptions {
-	readonly max?: number;
-	readonly maxStart?: number;
-	readonly maxEnd?: number;
-}
-
 /** Runs of blank lines beyond the configured caps, with a deleting fix. */
 export const emptyLines: YamlRule = {
 	id: "empty-lines",
 	check: (ctx: LintContext, options) => {
-		const opts = (options ?? {}) as EmptyLinesOptions;
+		const opts = S.is(emptyLinesOptions)(options) ? options : {};
 		const max = opts.max ?? 2;
 		const maxStart = opts.maxStart ?? 0;
 		const maxEnd = opts.maxEnd ?? 0;

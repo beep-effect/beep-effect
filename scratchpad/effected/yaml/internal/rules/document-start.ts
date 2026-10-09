@@ -31,7 +31,8 @@ const headToken = (ctx: LintContext): YamlToken | undefined => ctx.tokens.find((
 export const documentStart: YamlRule = {
 	id: "document-start",
 	check: (ctx, options) => {
-		const present = (options as { readonly present?: boolean } | undefined)?.present ?? true;
+		const opts = S.is(documentStartOptions)(options) ? options : {};
+		const present = opts.present ?? true;
 		// The first non-trivia token decides: is the stream headed by `---`?
 		const directives = hasDirectives(ctx);
 		const first = headToken(ctx);

@@ -33,7 +33,8 @@ describe("YamlFormat.modify region-confined scalar replacement (#659)", () => {
 		const text = "generated:\n  by: x\n  at: '2020-01-01T00:00:00Z'\n";
 		const edits = modify(text, ["generated", "at"], "2026-01-01T00:00:00Z");
 		assert.strictEqual(edits.length, 1);
-		const edit = edits[0] as { offset: number; length: number; content: string };
+		const edit = edits[0];
+		assert.isDefined(edit);
 		assert.strictEqual(text.slice(edit.offset, edit.offset + edit.length), "'2020-01-01T00:00:00Z'");
 		assert.strictEqual(edit.content, "'2026-01-01T00:00:00Z'");
 	});
@@ -58,7 +59,8 @@ describe("YamlFormat.modify region-confined scalar replacement (#659)", () => {
 		assert.ok(out.match(/^flag: (['"])123\1\nother: 1\n$/));
 		const edits = modify(text, ["flag"], "123");
 		assert.strictEqual(edits.length, 1);
-		const edit = edits[0] as { offset: number; length: number };
+		const edit = edits[0];
+		assert.isDefined(edit);
 		assert.ok(edit.offset + edit.length <= text.indexOf("\nother"));
 	});
 
@@ -194,7 +196,7 @@ describe("YamlFormat.modify region-confined scalar replacement (#659)", () => {
 		const text = "a: 1\n";
 		const error = YamlFormat.modify(text, ["missing", "deeper"], "v").pipe(Effect.flip, Effect.runSync);
 		assert.ok(S.is(YamlModificationError)(error));
-		assert.deepStrictEqual((error as { path: ReadonlyArray<string | number> }).path, ["missing", "deeper"]);
+		assert.deepStrictEqual(error.path, ["missing", "deeper"]);
 	});
 
 	it("still refuses multi-document streams and directives on the fast path shape", () => {
@@ -220,7 +222,8 @@ describe("YamlFormat.modify region-confined scalar replacement (#659)", () => {
 		// Still regional: one edit, confined to the target span.
 		const edits = modify("a: [x, y]\n", ["a", 0], "p, q");
 		assert.strictEqual(edits.length, 1);
-		const edit = edits[0] as { offset: number; length: number; content: string };
+		const edit = edits[0];
+		assert.isDefined(edit);
 		assert.strictEqual(edit.offset, 4);
 		assert.strictEqual(edit.length, 1);
 		assert.strictEqual(edit.content, "'p, q'");

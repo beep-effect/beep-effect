@@ -29,11 +29,6 @@ export const indentationOptions = S.Struct({
 	indentSequences: S.optionalKey(S.Union([S.Boolean, S.Literals(["consistent"])])),
 });
 
-interface IndentationOptions {
-	readonly spaces?: number | "consistent";
-	readonly indentSequences?: boolean | "consistent";
-}
-
 interface ContentLine {
 	readonly line: LintLine;
 	readonly indent: number;
@@ -110,7 +105,7 @@ const isKeyThenSeqEntry = (
 export const indentation: YamlRule = {
 	id: "indentation",
 	check: (ctx, options) => {
-		const opts = (options ?? {}) as IndentationOptions;
+		const opts = S.is(indentationOptions)(options) ? options : {};
 		const spacesOpt = opts.spaces ?? "consistent";
 		const seqOpt = opts.indentSequences ?? "consistent";
 		const out: Array<YamlLintDiagnostic> = [];
@@ -122,7 +117,7 @@ export const indentation: YamlRule = {
 		let unit = typeof spacesOpt === "number" ? spacesOpt : undefined;
 		const stack: Array<number> = [0];
 		for (const { line, indent } of content) {
-			const top = stack[stack.length - 1] as number;
+			const top = stack[stack.length - 1] ?? 0;
 			if (indent > top) {
 				const delta = indent - top;
 				if (unit === undefined) {
@@ -142,7 +137,7 @@ export const indentation: YamlRule = {
 				}
 				stack.push(indent);
 			} else if (indent < top) {
-				while (stack.length > 1 && (stack[stack.length - 1] as number) > indent) stack.pop();
+				while (stack.length > 1 && (stack[stack.length - 1] ?? 0) > indent) stack.pop();
 				// A dedent to an unknown level is a parse error — parse-validity's
 				// business, not style.
 			}
@@ -152,8 +147,9 @@ export const indentation: YamlRule = {
 		// on consecutive content-line pairs `key:` → `- item`.
 		let seqIndented = typeof seqOpt === "boolean" ? seqOpt : undefined;
 		for (let i = 1; i < content.length; i++) {
-			const prev = content[i - 1] as ContentLine;
-			const curr = content[i] as ContentLine;
+			const prev = content[i - 1];
+			const curr = content[i];
+			if (prev === undefined || curr === undefined) continue;
 			if (!isKeyThenSeqEntry(ctx, prev, curr, unit)) continue;
 			const indented = curr.indent > prev.indent;
 			if (seqIndented === undefined) {
@@ -188,7 +184,7 @@ export const indentation: YamlRule = {
 		let unit: number | undefined;
 		const stack: Array<number> = [0];
 		for (const { line, indent } of content) {
-			const top = stack[stack.length - 1] as number;
+			const top = stack[stack.length - 1] ?? 0;
 			if (indent > top) {
 				out.push(
 					StyleVote.make({
@@ -203,13 +199,14 @@ export const indentation: YamlRule = {
 				if (unit === undefined) unit = indent - top;
 				stack.push(indent);
 			} else if (indent < top) {
-				while (stack.length > 1 && (stack[stack.length - 1] as number) > indent) stack.pop();
+				while (stack.length > 1 && (stack[stack.length - 1] ?? 0) > indent) stack.pop();
 			}
 		}
 
 		for (let i = 1; i < content.length; i++) {
-			const prev = content[i - 1] as ContentLine;
-			const curr = content[i] as ContentLine;
+			const prev = content[i - 1];
+			const curr = content[i];
+			if (prev === undefined || curr === undefined) continue;
 			if (!isKeyThenSeqEntry(ctx, prev, curr, unit)) continue;
 			out.push(
 				StyleVote.make({

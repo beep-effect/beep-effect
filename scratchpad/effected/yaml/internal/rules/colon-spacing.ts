@@ -3,6 +3,7 @@
 // after it. An explicit-value `:` at the head of its line is structure, not
 // spacing, and a comment after the colon belongs to comments-spacing.
 
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { YamlEdit } from "../../YamlEdit.ts";
 import type { YamlRule } from "../../YamlLintRule.ts";
@@ -22,20 +23,15 @@ export const colonSpacingOptions = S.Struct({
 	maxSpacesAfter: S.optionalKey(positiveIntegerOption),
 });
 
-interface ColonSpacingOptions {
-	readonly maxSpacesBefore?: number;
-	readonly maxSpacesAfter?: number;
-}
-
 /** Spacing around the block-mapping `:` indicator. */
 export const colonSpacing: YamlRule = {
 	id: "colon-spacing",
 	check: (ctx, options) => {
-		const opts = (options ?? {}) as ColonSpacingOptions;
-		const maxBefore = opts.maxSpacesBefore ?? 0;
+		const opts = P.isObject(options) ? options : {};
+		const maxBefore = P.isNumber(opts.maxSpacesBefore) ? opts.maxSpacesBefore : 0;
 		// Clamped so a hand-built options object cannot bypass the schema and
 		// delete the separation space.
-		const maxAfter = Math.max(1, opts.maxSpacesAfter ?? 1);
+		const maxAfter = Math.max(1, P.isNumber(opts.maxSpacesAfter) ? opts.maxSpacesAfter : 1);
 		const out: Array<YamlLintDiagnostic> = [];
 		for (const token of ctx.tokens) {
 			if (token.kind !== "block-map-value") continue;

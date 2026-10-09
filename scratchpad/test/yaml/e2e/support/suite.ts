@@ -53,7 +53,7 @@ function parseMultiJson(text: string): ParsedJson {
 
 	while (i < src.length) {
 		// Skip whitespace between values
-		while (i < src.length && /\s/.test(src[i] as string)) i++;
+		while (i < src.length && /\s/.test(src.charAt(i))) i++;
 		if (i >= src.length) break;
 
 		const ch = src[i];
@@ -106,7 +106,7 @@ function parseMultiJson(text: string): ParsedJson {
 				}
 			} else {
 				// Unquoted: number, true, false, null
-				while (i < src.length && !/\s/.test(src[i] as string)) i++;
+				while (i < src.length && !/\s/.test(src.charAt(i))) i++;
 			}
 			values.push(JSON.parse(src.slice(start, i)));
 		}

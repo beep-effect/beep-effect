@@ -259,12 +259,12 @@ function splitDocStartFromTaggedScalar(segment: string): string {
 	const verbatimMatch = segment.match(/^(---) (!<[^>]+>) (.*)$/m);
 	if ((verbatimMatch !== null)) {
 		const [whole, dashes, tag, rest] = verbatimMatch;
-		return segment.replace(whole as string, `${dashes} ${tag}\n${rest}`);
+		return segment.replace(whole, `${dashes} ${tag}\n${rest}`);
 	}
 	const shorthandMatch = segment.match(/^(---) (![^ \n]+) (.*)$/m);
 	if ((shorthandMatch !== null)) {
 		const [whole, dashes, tag, rest] = shorthandMatch;
-		return segment.replace(whole as string, `${dashes}\n${tag} ${rest}`);
+		return segment.replace(whole, `${dashes}\n${tag} ${rest}`);
 	}
 	return segment;
 }
@@ -361,7 +361,7 @@ function sourceHasFlowWithIsolatedColon(source: string): boolean {
 		}
 		if (ch === '"' || ch === "'") {
 			inString = true;
-			stringCh = ch as string;
+			stringCh = ch;
 			if (inFlow) inFlowText += ch;
 			continue;
 		}

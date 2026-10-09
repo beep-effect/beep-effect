@@ -103,7 +103,8 @@ export function testRule(...args: [rule: YamlRule, fixtures: ReadonlyArray<RuleF
 						.join(" | ")}`,
 				);
 				fixture.expected.forEach((expected, i) => {
-					const actual = diagnostics[i] as YamlLintDiagnostic;
+					const actual = diagnostics[i];
+					assert.isDefined(actual);
 					assert.strictEqual(actual.line, expected.line, `diagnostic ${i} line`);
 					if (expected.character !== undefined) {
 						assert.strictEqual(actual.character, expected.character, `diagnostic ${i} character`);

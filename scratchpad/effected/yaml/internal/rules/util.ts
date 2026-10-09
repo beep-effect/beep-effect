@@ -13,11 +13,9 @@ import { dual } from "effect/Function";
  * Rejects NaN, negatives and fractions with a message naming the constraint;
  * the config layer's wrapper names the rule and the field.
  */
-// The check below rejects NaN and the infinities itself and names the option domain in its message;
-// a finite-only base would answer first with a different message.
-// @effect-diagnostics-next-line schemaNumber:off
 export const nonNegativeIntegerOption = S.Number.check(
-	S.makeFilter((n) => (Number.isInteger(n) && n >= 0 ? undefined : "Expected a non-negative integer")),
+	S.makeFilter((n) => (Number.isInteger(n) && n >= 0 ? undefined : "Expected a non-negative integer"), undefined, true),
+	S.isFinite(),
 );
 
 /**
@@ -26,12 +24,13 @@ export const nonNegativeIntegerOption = S.Number.check(
  * content (`- item` → `-item`, `a: val` → `a:val` — different tokens, not a
  * spacing change).
  */
-// Same as above: the check owns the rejection and its message.
-// @effect-diagnostics-next-line schemaNumber:off
 export const positiveIntegerOption = S.Number.check(
-	S.makeFilter((n) =>
-		Number.isInteger(n) && n >= 1 ? undefined : "Expected an integer greater than or equal to 1",
+	S.makeFilter(
+		(n) => (Number.isInteger(n) && n >= 1 ? undefined : "Expected an integer greater than or equal to 1"),
+		undefined,
+		true,
 	),
+	S.isFinite(),
 );
 
 /** Where a scalar sits in its parent construct. */
@@ -93,7 +92,8 @@ export function coveringToken(...args: [tokens: ReadonlyArray<YamlToken>, offset
 	let hi = tokens.length - 1;
 	while (lo <= hi) {
 		const mid = (lo + hi) >> 1;
-		const token = tokens[mid] as YamlToken;
+		const token = tokens[mid];
+		if (token === undefined) break;
 		if (offset < token.offset) {
 			hi = mid - 1;
 		} else if (offset >= token.offset + token.length) {
@@ -140,7 +140,8 @@ export function positionAt(...args: [lines: ReadonlyArray<LintLine>, offset: num
 	let found: LintLine | undefined;
 	while (lo <= hi) {
 		const mid = (lo + hi) >> 1;
-		const line = lines[mid] as LintLine;
+		const line = lines[mid];
+		if (line === undefined) break;
 		if (line.offset <= offset) {
 			found = line;
 			lo = mid + 1;

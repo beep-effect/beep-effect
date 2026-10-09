@@ -84,11 +84,10 @@ describe("StyleEvidence — the monoid", () => {
 			],
 		);
 		// The merge is fold-order independent (associativity, applied).
-		const [e1, e2, e3] = parts.map((text) => YamlLint.observe(text, YamlLint.builtins)) as [
-			StyleEvidence,
-			StyleEvidence,
-			StyleEvidence,
-		];
+		const [e1, e2, e3] = parts.map((text) => YamlLint.observe(text, YamlLint.builtins));
+		assert.isDefined(e1);
+		assert.isDefined(e2);
+		assert.isDefined(e3);
 		assert.deepStrictEqual(merged, StyleEvidence.combine(e1, StyleEvidence.combine(e2, e3)));
 	});
 });
@@ -196,7 +195,7 @@ describe("YamlLint.resolveStrict", () => {
 			length: 0,
 			line: 0,
 			character: 0,
-		} as StyleVote;
+		};
 		assert.isFalse(S.is(StyleVote)(plainVote), "the fixture must NOT be a class instance");
 		const custom: YamlRule = { id: "my-rule", check: () => [], infer: () => [plainVote] };
 		const evidence = YamlLint.observe("a: 1\n", [custom]);

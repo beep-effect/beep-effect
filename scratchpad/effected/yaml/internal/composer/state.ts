@@ -50,13 +50,14 @@ export function lineCol(...args: [text: string, offset: number] | [offset: numbe
 	let hi = starts.length - 1;
 	while (lo < hi) {
 		const mid = (lo + hi + 1) >> 1;
-		if ((starts[mid] as number) <= pos) {
+		const start = starts[mid];
+		if (start !== undefined && start <= pos) {
 			lo = mid;
 		} else {
 			hi = mid - 1;
 		}
 	}
-	const lineStart = starts[lo] as number;
+	const lineStart = starts[lo] ?? 0;
 	const bom = text[lineStart] === "\uFEFF" && pos > lineStart ? 1 : 0;
 	return { line: lo, column: pos - lineStart - bom };
 })(...args);

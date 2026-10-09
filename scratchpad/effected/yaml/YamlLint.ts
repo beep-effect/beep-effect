@@ -65,7 +65,7 @@ const validateRulesMap = (rules: { readonly [id: string]: YamlLintRuleSetting })
 				// onExcessProperty: "error" — a typo'd option KEY fails loudly with
 				// an UnexpectedKey issue naming the key, instead of decoding to {}
 				// (v4 Structs strip unknown keys by default).
-				const decoded = S.decodeResult(optionsSchema as S.Codec<unknown, unknown>, {
+				const decoded = S.decodeResult(optionsSchema, {
 					onExcessProperty: "error",
 				})(entry);
 				if (Result.isFailure(decoded)) {
@@ -407,7 +407,7 @@ const overlayConfig = (
 		if (typeof entry === "object") Object.assign(merged, entry);
 		else if (entry === "warning") merged.severity = "warning";
 		for (const [dimension, value] of dims) merged[dimension] = value;
-		rules[ruleId] = merged as YamlLintRuleSetting;
+		rules[ruleId] = merged;
 	}
 	return YamlLintConfig.make({ rules });
 };
@@ -440,7 +440,8 @@ const resolveStrictEvidence = (
 				);
 				continue;
 			}
-			const only = tallies[0] as StyleVoteTally;
+			const only = tallies[0];
+			if (only === undefined) continue;
 			const dimPicks = picks.get(ruleId) ?? new Map<string, string | number | boolean>();
 			dimPicks.set(dimension, only.value);
 			picks.set(ruleId, dimPicks);
@@ -456,7 +457,8 @@ const resolveLenientEvidence = (evidence: StyleEvidence, base: YamlLintConfig): 
 		for (const [dimension, tallies] of dims) {
 			// Dominant = plurality: highest count wins; a tie breaks to the first
 			// tally in canonical (value-key) order, so the pick is deterministic.
-			let dominant = tallies[0] as StyleVoteTally;
+			let dominant = tallies[0];
+			if (dominant === undefined) continue;
 			for (const tally of tallies) {
 				if (tally.count > dominant.count) dominant = tally;
 			}

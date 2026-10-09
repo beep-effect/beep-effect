@@ -237,8 +237,7 @@ function* walkNode(node: YamlNode, path: YamlPath, depth: number): Generator<Yam
 			...(node.tag !== undefined ? { tag: node.tag } : {}),
 			...(node.anchor !== undefined ? { anchor: node.anchor } : {}),
 		});
-		for (let i = 0; i < node.items.length; i++) {
-			const item = node.items[i] as YamlNode;
+		for (const [i, item] of node.items.entries()) {
 			yield* walkNode(item, [...path, i], depth + 1);
 		}
 		yield YamlVisitorEvent.SeqEnd({ path, depth });

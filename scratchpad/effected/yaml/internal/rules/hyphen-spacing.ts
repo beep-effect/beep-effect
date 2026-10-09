@@ -3,6 +3,7 @@
 // rule's business — and a comment after the hyphen belongs to
 // comments-spacing.
 
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { YamlEdit } from "../../YamlEdit.ts";
 import type { YamlRule } from "../../YamlLintRule.ts";
@@ -19,18 +20,14 @@ export const hyphenSpacingOptions = S.Struct({
 	maxSpacesAfter: S.optionalKey(positiveIntegerOption),
 });
 
-interface HyphenSpacingOptions {
-	readonly maxSpacesAfter?: number;
-}
-
 /** Spacing after the block-sequence `-` indicator. */
 export const hyphenSpacing: YamlRule = {
 	id: "hyphen-spacing",
 	check: (ctx, options) => {
-		const opts = (options ?? {}) as HyphenSpacingOptions;
+		const opts = P.isObject(options) ? options : {};
 		// Clamped so a hand-built options object cannot bypass the schema and
 		// delete the separation space.
-		const maxAfter = Math.max(1, opts.maxSpacesAfter ?? 1);
+		const maxAfter = Math.max(1, P.isNumber(opts.maxSpacesAfter) ? opts.maxSpacesAfter : 1);
 		const out: Array<YamlLintDiagnostic> = [];
 		for (const token of ctx.tokens) {
 			if (token.kind !== "block-seq-entry") continue;

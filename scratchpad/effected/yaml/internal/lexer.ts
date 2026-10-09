@@ -74,7 +74,7 @@ export function createScanner(text: string): YamlScanner {
 	/** Buffer of tokens to emit before scanning the next real token. */
 	const pending: YamlToken[] = [];
 	/** Mutable holder for the most recently produced token, set by the public {@link scan} method. */
-	const state = { currentToken: null as YamlToken | null };
+	const state: { currentToken: YamlToken | null } = { currentToken: null };
 
 	// -----------------------------------------------------------------------
 	// Helpers

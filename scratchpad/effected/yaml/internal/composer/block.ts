@@ -5,7 +5,7 @@
 // Cross-seam recursion into flow composition goes through `state.flow` (see
 // `FlowComposers` in `state.ts`) so this module never imports `flow.ts`.
 
-import type { CollectionStyle, ScalarStyle, YamlNode } from "../../YamlNode.ts";
+import type { YamlNode } from "../../YamlNode.ts";
 import { YamlAlias, YamlMap, YamlPair, YamlScalar, YamlSeq } from "../../YamlNode.ts";
 import type { CstNode } from "../cst.ts";
 import { checkAnchorOnAlias, getAnchorName, makeAlias, registerAnchor } from "./anchors.ts";
@@ -100,7 +100,7 @@ function composeBlockMapInner(
 	// larger column, but the property column is what matters for validating
 	// continuation-line indentation.
 	const extKeyOffset =
-		(externalFirstKey !== undefined) && "offset" in externalFirstKey ? (externalFirstKey as YamlScalar).offset : undefined;
+		(externalFirstKey !== undefined) && "offset" in externalFirstKey ? externalFirstKey.offset : undefined;
 	const extKeyCol = extKeyOffset !== undefined ? lineIndentColumn(state.text, extKeyOffset) : undefined;
 	const items = flattenBlockMapChildren(children, state, extKeyCol, extKeyOffset);
 
@@ -117,7 +117,7 @@ function composeBlockMapInner(
 
 	const offset = (externalFirstKey !== undefined)
 		? "offset" in externalFirstKey
-			? (externalFirstKey as YamlScalar).offset
+			? externalFirstKey.offset
 			: blockMapCst.offset
 		: blockMapCst.offset;
 	const end = trimDisownedTrailingComments(
@@ -136,7 +136,7 @@ function composeBlockMapInner(
 			: trailingComment;
 	const map = YamlMap.make({
 		items: pairs,
-		style: "block" as CollectionStyle,
+		style: "block",
 		offset,
 		length,
 		...(meta?.tag !== undefined ? { tag: meta.tag } : {}),
@@ -344,7 +344,7 @@ export function flattenBlockMapChildren(...args: [children: readonly CstNode[], 
 					const innerEnd = (lastC !== undefined) ? lastC.offset + lastC.length : child.offset + child.length;
 					const innerMap = YamlMap.make({
 						items: innerPairs,
-						style: "block" as CollectionStyle,
+						style: "block",
 						offset: innerOffset,
 						length: innerEnd - innerOffset,
 						...(innerTrailing !== undefined ? { comment: innerTrailing } : {}),
@@ -368,7 +368,7 @@ export function flattenBlockMapChildren(...args: [children: readonly CstNode[], 
 					const value = resolveScalar("", "plain", flushMeta.tag, state);
 					const scalar = YamlScalar.make({
 						value,
-						style: "plain" as ScalarStyle,
+						style: "plain",
 						offset: child.offset,
 						length: 0,
 						...(flushMeta.tag !== undefined ? { tag: flushMeta.tag } : {}),
@@ -470,7 +470,7 @@ export function flattenBlockMapChildren(...args: [children: readonly CstNode[], 
 					const value = resolveScalar("", "plain", flushMeta.tag, state);
 					const scalar = YamlScalar.make({
 						value,
-						style: "plain" as ScalarStyle,
+						style: "plain",
 						offset: child.offset,
 						length: 0,
 						...(flushMeta.tag !== undefined ? { tag: flushMeta.tag } : {}),
@@ -588,7 +588,7 @@ export function flattenBlockMapChildren(...args: [children: readonly CstNode[], 
 					const resolved = resolveScalar(keyValue, "plain", keyMeta.tag, state);
 					const scalar = YamlScalar.make({
 						value: resolved,
-						style: "plain" as ScalarStyle,
+						style: "plain",
 						offset: child.offset,
 						length: child.length,
 						...(keyMeta.tag !== undefined ? { tag: keyMeta.tag } : {}),
@@ -668,7 +668,7 @@ export function flattenBlockMapChildren(...args: [children: readonly CstNode[], 
 				const needsRaw = typeof resolved !== "string" && resolved !== undefined && shouldPreserveRaw(value, resolved);
 				const scalar = YamlScalar.make({
 					value: resolved,
-					style: "plain" as ScalarStyle,
+					style: "plain",
 					offset: child.offset,
 					// Span the whole folded scalar, not just the first fragment,
 					// so findAtOffset covers continuation lines and the
@@ -776,7 +776,7 @@ export function flattenBlockMapChildren(...args: [children: readonly CstNode[], 
 			if (hasMeta(pendingMeta) && blockMapStartsWithValueSep(child)) {
 				const emptyKey = YamlScalar.make({
 					value: null,
-					style: "plain" as ScalarStyle,
+					style: "plain",
 					offset: child.offset,
 					length: 0,
 					...(pendingMeta.tag !== undefined ? { tag: pendingMeta.tag } : {}),
@@ -851,7 +851,7 @@ export function flattenBlockMapChildren(...args: [children: readonly CstNode[], 
 		const value = resolveScalar("", "plain", trailingMeta.tag, state);
 		const scalar = YamlScalar.make({
 			value,
-			style: "plain" as ScalarStyle,
+			style: "plain",
 			offset: 0,
 			length: 0,
 			...(trailingMeta.tag !== undefined ? { tag: trailingMeta.tag } : {}),
@@ -940,10 +940,10 @@ export function buildPairs(...args: [items: SemanticItem[], pairs: YamlPair[], t
 
 	/** Join pending parts: `\n` between lines, an extra `\n` per embedded blank. */
 	const joinPending = (parts: ReadonlyArray<PendingComment>): string | undefined => {
-		if (parts.length === 0) return undefined;
-		let out = (parts[0] as PendingComment).text;
-		for (let k = 1; k < parts.length; k++) {
-			const part = parts[k] as PendingComment;
+		const [first, ...rest] = parts;
+		if (first === undefined) return undefined;
+		let out = first.text;
+		for (const part of rest) {
 			out += part.blankAbove ? `\n\n${part.text}` : `\n${part.text}`;
 		}
 		return out;
@@ -1026,7 +1026,7 @@ export function buildPairs(...args: [items: SemanticItem[], pairs: YamlPair[], t
 			const valueNode = consumeValueNodeForNullKey(items, i, text, valueSepOffset);
 			const nullKey = YamlScalar.make({
 				value: null,
-				style: "plain" as ScalarStyle,
+				style: "plain",
 				offset: valueSepOffset,
 				length: 0,
 			});
@@ -1065,7 +1065,7 @@ export function buildPairs(...args: [items: SemanticItem[], pairs: YamlPair[], t
 				i++;
 			}
 			const keyOrNull = (): YamlNode =>
-				keyNode ?? YamlScalar.make({ value: null, style: "plain" as ScalarStyle, offset: 0, length: 0 });
+				keyNode ?? YamlScalar.make({ value: null, style: "plain", offset: 0, length: 0 });
 			// Look for value-sep
 			if (i < items.length && items[i]?.kind === "value-sep") {
 				const sepOffset = items[i]?.offset ?? ((keyNode !== undefined) ? nodeEnd(keyNode) : 0);
@@ -1274,7 +1274,7 @@ function consumeValueNodeForNullKey(
 			if (i + 1 < items.length && items[i + 1]?.kind === "value-sep") {
 				// Check if the candidate node is on a different line from the
 				// null key's value-sep. Only refuse to consume cross-line nodes.
-				const nodeOffset = (item.node !== undefined) && "offset" in item.node ? (item.node as YamlScalar).offset : 0;
+				const nodeOffset = (item.node !== undefined) && "offset" in item.node ? item.node.offset : 0;
 				const hasNewline = text.slice(valueSepOffset, nodeOffset).includes("\n");
 				if (hasNewline) {
 					// Cross-line: this node is a key for the next pair, not our value.
@@ -1765,10 +1765,10 @@ function composeBlockSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMet
 	// gate (a blank inside a `|+` item's span is VALUE, not style).
 	let lastItemNode: YamlNode | undefined;
 	const joinPending = (parts: ReadonlyArray<PendingSeqComment>): string | undefined => {
-		if (parts.length === 0) return undefined;
-		let out = (parts[0] as PendingSeqComment).text;
-		for (let k = 1; k < parts.length; k++) {
-			const part = parts[k] as PendingSeqComment;
+		const [first, ...rest] = parts;
+		if (first === undefined) return undefined;
+		let out = first.text;
+		for (const part of rest) {
 			out += part.blankAbove ? `\n\n${part.text}` : `\n${part.text}`;
 		}
 		return out;
@@ -1844,7 +1844,7 @@ function composeBlockSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMet
 				if (sawEntry) {
 					const emptyScalar = YamlScalar.make({
 						value: null,
-						style: "plain" as ScalarStyle,
+						style: "plain",
 						offset: child.offset,
 						length: 0,
 						...(pendingMeta.tag !== undefined ? { tag: pendingMeta.tag } : {}),
@@ -1914,7 +1914,7 @@ function composeBlockSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMet
 					const resolved = resolveScalar(merged, "plain", pendingMeta.tag, state);
 					const scalar = YamlScalar.make({
 						value: resolved,
-						style: "plain" as ScalarStyle,
+						style: "plain",
 						offset: child.offset,
 						// Span the whole folded scalar — see the value-position
 						// site above.
@@ -1953,7 +1953,7 @@ function composeBlockSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMet
 			if (hasMeta(pendingMeta) && blockMapStartsWithValueSep(child)) {
 				const emptyKey = YamlScalar.make({
 					value: null,
-					style: "plain" as ScalarStyle,
+					style: "plain",
 					offset: child.offset,
 					length: 0,
 					...(pendingMeta.tag !== undefined ? { tag: pendingMeta.tag } : {}),
@@ -2005,7 +2005,7 @@ function composeBlockSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMet
 		items.push(
 			YamlScalar.make({
 				value: null,
-				style: "plain" as ScalarStyle,
+				style: "plain",
 				offset: cst.offset + cst.length,
 				length: 0,
 			}),
@@ -2016,7 +2016,7 @@ function composeBlockSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMet
 		const value = resolveScalar("", "plain", pendingMeta.tag, state);
 		const scalar = YamlScalar.make({
 			value,
-			style: "plain" as ScalarStyle,
+			style: "plain",
 			offset: 0,
 			length: 0,
 			...(pendingMeta.tag !== undefined ? { tag: pendingMeta.tag } : {}),
@@ -2068,7 +2068,7 @@ function composeBlockSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMet
 	const seqEnd = trimDisownedTrailingComments(state.text, cst.offset, cst.offset + cst.length, state.escapedComments);
 	const seq = YamlSeq.make({
 		items: rawItems,
-		style: "block" as CollectionStyle,
+		style: "block",
 		offset: cst.offset,
 		length: seqEnd - cst.offset,
 		...(meta?.tag !== undefined ? { tag: meta.tag } : {}),
@@ -2106,7 +2106,7 @@ export function composeFlatBlockMap(...args: [children: readonly CstNode[], star
 	if (state.options.uniqueKeys) checkDuplicateKeys(pairs, state);
 	checkMultilineImplicitKeys(pairs, state);
 
-	const offset = "offset" in externalFirstKey ? (externalFirstKey as YamlScalar).offset : parentCst.offset;
+	const offset = "offset" in externalFirstKey ? externalFirstKey.offset : parentCst.offset;
 	const end = trimDisownedTrailingComments(
 		state.text,
 		offset,
@@ -2122,7 +2122,7 @@ export function composeFlatBlockMap(...args: [children: readonly CstNode[], star
 			: trailingComment;
 	const map = YamlMap.make({
 		items: pairs,
-		style: "block" as CollectionStyle,
+		style: "block",
 		offset,
 		length: end - offset,
 		...(meta?.tag !== undefined ? { tag: meta.tag } : {}),

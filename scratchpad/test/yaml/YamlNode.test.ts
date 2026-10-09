@@ -1,6 +1,8 @@
 import { assert, describe, it } from "@effect/vitest";
+import * as P from "effect/Predicate";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
+import * as S from "effect/Schema";
 import * as O from "effect/Option";
 import { Yaml, YamlAlias, YamlMap, YamlPair, YamlScalar, YamlSeq } from "../../effected/yaml/index.ts";
 
@@ -46,7 +48,9 @@ describe("YamlNode", () => {
 			const root = tree();
 			const port = root.find(["ports", 1]);
 			assert.isTrue(O.isSome(port));
-			assert.strictEqual((O.getOrThrow(port) as YamlScalar).value, 8443);
+			const foundPort = O.getOrThrow(port);
+			assert.ok(S.is(YamlScalar)(foundPort));
+			assert.strictEqual(foundPort.value, 8443);
 		});
 
 		it("returns none for unresolvable segments and wrong container kinds", () => {
@@ -66,7 +70,9 @@ describe("YamlNode", () => {
 		it("finds the deepest node covering the offset with half-open spans", () => {
 			const root = tree();
 			const atHost = root.findAtOffset(7);
-			assert.strictEqual((O.getOrThrow(atHost) as YamlScalar).value, "localhost");
+			const host = O.getOrThrow(atHost);
+			assert.ok(S.is(YamlScalar)(host));
+			assert.strictEqual(host.value, "localhost");
 			// End offset is exclusive: offset 40 is outside the root span [0, 40).
 			assert.isTrue(O.isNone(root.findAtOffset(40)));
 		});
@@ -118,7 +124,8 @@ describe("YamlNode", () => {
 				offset: 0,
 				length: 12,
 			});
-			const value = map.toValue() as Record<string, unknown>;
+			const value = map.toValue();
+			assert.ok(P.isObject(value));
 			assert.strictEqual(Object.getPrototypeOf(value), Object.prototype);
 			assert.isTrue(Object.hasOwn(value, "__proto__"));
 		});

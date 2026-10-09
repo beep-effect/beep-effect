@@ -46,7 +46,8 @@ const commentsOf = (node: YamlNode | null): Comments => {
 
 const rootMap = (doc: YamlDocument): YamlMap => {
 	assert.instanceOf(doc.contents, YamlMap);
-	return doc.contents as YamlMap;
+	assert.ok(S.is(YamlMap)(doc.contents));
+	return doc.contents;
 };
 
 /** `key` / `value` comment triples of the pair at `index` of the root mapping. */
@@ -134,7 +135,8 @@ describe("node-level comment model — oracle contract (yaml@2.9.0)", () => {
 				const doc = yield* YamlDocument.parse("a: &x 1\nb: *x # ac\n");
 				const value = rootMap(doc).items[1]?.value;
 				assert.instanceOf(value, YamlAlias);
-				assert.deepStrictEqual(commentsOf(value as YamlAlias), { comment: " ac" });
+				assert.ok(S.is(YamlAlias)(value));
+				assert.deepStrictEqual(commentsOf(value), { comment: " ac" });
 			}),
 		);
 
@@ -143,7 +145,8 @@ describe("node-level comment model — oracle contract (yaml@2.9.0)", () => {
 				const doc = yield* YamlDocument.parse("a: &x 1\nb:\n  # lead\n  *x\n");
 				const value = rootMap(doc).items[1]?.value;
 				assert.instanceOf(value, YamlAlias);
-				assert.deepStrictEqual(commentsOf(value as YamlAlias), { commentBefore: " lead" });
+				assert.ok(S.is(YamlAlias)(value));
+				assert.deepStrictEqual(commentsOf(value), { commentBefore: " lead" });
 			}),
 		);
 
@@ -152,9 +155,11 @@ describe("node-level comment model — oracle contract (yaml@2.9.0)", () => {
 				const doc = yield* YamlDocument.parse("a: &x 1\nb:\n  - *x # ac\n");
 				const seq = rootMap(doc).items[1]?.value;
 				assert.instanceOf(seq, YamlSeq);
-				const item = (seq as YamlSeq).items[0];
+				assert.ok(S.is(YamlSeq)(seq));
+				const item = seq.items[0];
 				assert.instanceOf(item, YamlAlias);
-				assert.deepStrictEqual(commentsOf(item as YamlAlias), { comment: " ac" });
+				assert.ok(S.is(YamlAlias)(item));
+				assert.deepStrictEqual(commentsOf(item), { comment: " ac" });
 			}),
 		);
 
@@ -214,7 +219,8 @@ describe("node-level comment model — oracle contract (yaml@2.9.0)", () => {
 				const doc = yield* YamlDocument.parse("a: {\n  # lead\n  b: 1,\n}\n");
 				const inner = rootMap(doc).items[0]?.value;
 				assert.instanceOf(inner, YamlMap);
-				assert.deepStrictEqual(commentsOf((inner as YamlMap).items[0]?.key ?? null), { commentBefore: " lead" });
+				assert.ok(S.is(YamlMap)(inner));
+				assert.deepStrictEqual(commentsOf(inner.items[0]?.key ?? null), { commentBefore: " lead" });
 			}),
 		);
 
@@ -223,7 +229,8 @@ describe("node-level comment model — oracle contract (yaml@2.9.0)", () => {
 				const doc = yield* YamlDocument.parse("a: [\n  # lead\n  1,\n]\n");
 				const inner = rootMap(doc).items[0]?.value;
 				assert.instanceOf(inner, YamlSeq);
-				assert.deepStrictEqual(commentsOf((inner as YamlSeq).items[0] ?? null), { commentBefore: " lead" });
+				assert.ok(S.is(YamlSeq)(inner));
+				assert.deepStrictEqual(commentsOf(inner.items[0] ?? null), { commentBefore: " lead" });
 			}),
 		);
 

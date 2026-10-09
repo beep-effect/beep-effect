@@ -15,6 +15,7 @@
 // satisfied.
 
 import * as Effect from "effect/Effect";
+import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
@@ -375,7 +376,7 @@ const parseAllResultImpl = (
 			throw defect;
 		}
 	}
-	return Result.succeed(values as ReadonlyArray<unknown>);
+	return Result.succeed(values);
 };
 
 /**
@@ -671,7 +672,7 @@ export class Yaml {
 		let inDoubleQuote = false;
 
 		while (i < text.length) {
-			const ch = text[i] as string;
+			const ch = text.charAt(i);
 
 			if (inComment) {
 				if (ch === "\n") {
@@ -840,8 +841,8 @@ export class Yaml {
 		options?: YamlParseOptions,
 	): S.Codec<T, string, RD, RE> {
 		return Yaml.fromString(options).pipe(
-			S.decodeTo(target as unknown as S.Codec<T, unknown, RD, RE>),
-		) as unknown as S.Codec<T, string, RD, RE>;
+			S.decodeTo(target),
+		);
 	}
 
 	/**
@@ -937,9 +938,9 @@ function deepEqualValues(a: unknown, b: unknown): boolean {
 	}
 	if (Array.isArray(b)) return false;
 
-	if (typeof a === "object" && typeof b === "object") {
-		const aObj = a as Record<string, unknown>;
-		const bObj = b as Record<string, unknown>;
+	if (P.isObject(a) && P.isObject(b)) {
+		const aObj = a;
+		const bObj = b;
 		const aKeys = Object.keys(aObj);
 		const bKeys = Object.keys(bObj);
 		if (aKeys.length !== bKeys.length) return false;

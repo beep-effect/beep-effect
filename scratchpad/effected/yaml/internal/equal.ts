@@ -1,6 +1,7 @@
 // Deep structural equality for plain JavaScript values — the primitive
 // behind the facade's semantic `equals`/`equalsValue` statics.
 
+import * as P from "effect/Predicate";
 import { dual } from "effect/Function";
 
 /**
@@ -41,9 +42,9 @@ export function deepEqual(...args: [a: unknown, b: unknown] | [b: unknown]): boo
 	}
 	if (Array.isArray(b)) return false;
 
-	if (typeof a === "object" && typeof b === "object") {
-		const aObj = a as Record<string, unknown>;
-		const bObj = b as Record<string, unknown>;
+	if (P.isObject(a) && P.isObject(b)) {
+		const aObj = a;
+		const bObj = b;
 		const aKeys = Object.keys(aObj);
 		const bKeys = Object.keys(bObj);
 		if (aKeys.length !== bKeys.length) return false;

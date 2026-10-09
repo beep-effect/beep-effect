@@ -253,14 +253,28 @@ export function renderSingleQuotedMultiline(...args: [s: string, indent: string]
  * @param explicitIndent - Explicit indentation-indicator digit from the AST,
  * re-emitted only when it matches the rendered indent (fidelity path).
  */
-// Content and indentation are both strings, so optional rendering arguments make the two call forms ambiguous.
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export function renderBlockLiteral(
+export const renderBlockLiteral: {
+	(
+		s: string,
+		indent: string,
+		explicitChomp: "strip" | "clip" | "keep" | undefined,
+		parentPosition: "block-map-value" | "block-seq-item" | undefined,
+		preserveKeep: boolean,
+		explicitIndent: number | undefined,
+	): string;
+	(
+		indent: string,
+		explicitChomp: "strip" | "clip" | "keep" | undefined,
+		parentPosition: "block-map-value" | "block-seq-item" | undefined,
+		preserveKeep: boolean,
+		explicitIndent: number | undefined,
+	): (s: string) => string;
+} = dual(6, function renderBlockLiteral(
 	s: string,
 	indent: string,
 	explicitChomp?: "strip" | "clip" | "keep",
 	parentPosition?: "block-map-value" | "block-seq-item",
-	preserveKeep = false,
+	preserveKeep: boolean = false,
 	explicitIndent?: number,
 ): string {
 	// Compute chomp indicator from the value's trailing-newline structure.
@@ -308,7 +322,7 @@ export function renderBlockLiteral(
 		indentIndicator = String(explicitIndent);
 	}
 	return `|${indentIndicator}${chomp}\n${lines.map((l) => (l === "" ? "" : `${indent}${l}`)).join("\n")}`;
-}
+});
 
 /**
  * Renders a string scalar using block folded style (greater-than `>`).
@@ -318,9 +332,10 @@ export function renderBlockLiteral(
  * the output must contain an empty line (double newline). Each empty line
  * in the value already produces the correct number of blank lines.
  */
-// Content and indentation are both strings, so optional rendering arguments make the two call forms ambiguous.
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export function renderBlockFolded(
+export const renderBlockFolded: {
+	(s: string, indent: string, explicitChomp: "strip" | "clip" | "keep" | undefined, explicitIndent: number | undefined): string;
+	(indent: string, explicitChomp: "strip" | "clip" | "keep" | undefined, explicitIndent: number | undefined): (s: string) => string;
+} = dual(4, function renderBlockFolded(
 	s: string,
 	indent: string,
 	explicitChomp?: "strip" | "clip" | "keep",
@@ -439,4 +454,4 @@ export function renderBlockFolded(
 	}
 
 	return `>${indentIndicator}${chomp}\n${outputLines.join("\n")}`;
-}
+});

@@ -48,7 +48,8 @@ const endOfStreamPosition = (
 export const documentEnd: YamlRule = {
 	id: "document-end",
 	check: (ctx, options) => {
-		const present = (options as { readonly present?: boolean } | undefined)?.present ?? true;
+		const opts = S.is(documentEndOptions)(options) ? options : {};
+		const present = opts.present ?? true;
 		// The last non-trivia token decides: does the stream end with `...`?
 		const tail = tailToken(ctx);
 		const ended = tail?.kind === "document-end";
