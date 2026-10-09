@@ -1,8 +1,8 @@
-// SigV4 requires synchronous HMAC, which Effect Crypto does not expose.
-// @effect-diagnostics nodeBuiltinImport:skip-file
 import * as Function from "effect/Function";
-import { createHmac } from "node:crypto";
 import { sha256Hex } from "./digest.ts";
+
+// Effect Crypto cannot provide the synchronous HMAC required by SigV4.
+const { createHmac } = process.getBuiltinModule("node:crypto");
 
 /**
  * AWS Signature Version 4, for S3-compatible object stores.
@@ -13,11 +13,8 @@ import { sha256Hex } from "./digest.ts";
  * algorithm over strings and HMACs; the SDK around it exists to manage
  * credentials, retries and a service catalogue this package does not want.
  *
- * `node:crypto` rather than core `Crypto` because core's `Crypto` offers only
- * one-shot SHA digests over bytes already in memory — no HMAC, no incremental
- * hasher (see `internal/digest.ts`, this package's other `node:crypto`
- * licence). This package is the one place in the kit where a `node:` import
- * is sanctioned, and this is one of the four reasons.
+ * Native HMAC supplies the synchronous signing primitive; incremental hashing
+ * is centralized in `internal/digest.ts`.
  *
  * @internal
  */

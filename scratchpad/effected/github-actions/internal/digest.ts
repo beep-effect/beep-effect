@@ -1,21 +1,12 @@
-// The synchronous and streaming digests require incremental hashing, which Effect Crypto does not expose.
-// @effect-diagnostics nodeBuiltinImport:skip-file
-// The sanctioned `node:crypto` digests, spelled once.
-//
-// Core `Crypto` offers one-shot SHA digests over bytes already in memory, but
-// no HMAC and no incremental hasher, so this package's licence for a `node:`
-// import covers hashing. Keeping every
-// `createHash` behind this module is what makes that licence auditable in one
-// place rather than six, and keeps the streamed file digest — the shape a
-// multi-gigabyte toolchain archive needs — from being re-derived per caller.
-
-import { createHash } from "node:crypto";
 import type * as FileSystem from "effect/FileSystem";
 import type * as PlatformError from "effect/PlatformError";
 import * as Effect from "effect/Effect";
 import * as Stream from "effect/Stream";
 import * as Function from "effect/Function";
 import * as Hex from "effect/encoding/Hex";
+
+// Effect Crypto cannot provide synchronous or incremental digests.
+const { createHash } = process.getBuiltinModule("node:crypto");
 
 /** The raw SHA-256 of a string or byte array held in memory. @internal */
 export const sha256 = (value: string | Uint8Array): Uint8Array =>

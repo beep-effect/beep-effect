@@ -2,7 +2,6 @@
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import type { Server, ServerResponse } from "node:http";
 import { createServer } from "node:http";
-import type { AddressInfo } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { assert, describe, it } from "@effect/vitest";
@@ -26,6 +25,7 @@ import {
 } from "../../effected/github-actions/index.ts";
 
 const Json = S.fromJsonString(S.Unknown);
+const EnvironmentRecord = S.Record(S.String, S.String);
 
 /** A fresh scratch directory per use, removed by the test that made it. */
 const scratch = () => mkdtempSync(join(tmpdir(), "effected-detached-"));
@@ -65,7 +65,7 @@ const withKillSpy = <A, E>(
 	use: (calls: ReadonlyArray<ReadonlyArray<unknown>>) => Effect.Effect<A, E>,
 ) =>
 	Effect.acquireUseRelease(
-		Effect.sync(() => vi.spyOn(process, "kill").mockImplementation(implementation as never)),
+		Effect.sync(() => vi.spyOn(process, "kill").mockImplementation(implementation)),
 		(spy) => use(spy.mock.calls),
 		(spy) => Effect.sync(() => spy.mockRestore()),
 	);
@@ -248,7 +248,13 @@ describe("DetachedProcess", () => {
 							server.listen(0, "127.0.0.1", () => resolve(server));
 						}),
 				),
-				(server) => use(`http://127.0.0.1:${(server.address() as AddressInfo).port}/status`),
+				(server) => {
+					const address = server.address();
+					if (address === null || typeof address === "string") {
+						assert.fail("expected a bound TCP address");
+					}
+					return use(`http://127.0.0.1:${address.port}/status`);
+				},
 				(server) =>
 					Effect.promise(
 						() =>
@@ -287,7 +293,11 @@ describe("DetachedProcess", () => {
 						new Promise<number>((resolve) => {
 							const server = createServer();
 							server.listen(0, "127.0.0.1", () => {
-								const bound = (server.address() as AddressInfo).port;
+								const address = server.address();
+								if (address === null || typeof address === "string") {
+									assert.fail("expected a bound TCP address");
+								}
+								const bound = address.port;
 								server.close(() => resolve(bound));
 							});
 						}),
@@ -322,7 +332,8 @@ describe("DetachedProcess", () => {
 			assert.isTrue(Cause.hasDies(exit.cause), "an unstubbed member must die, never fail typed");
 			const defect = exit.cause.reasons.filter(Cause.isDieReason).map((reason) => reason.defect)[0];
 			assert.instanceOf(defect, Error);
-			return (defect as Error).message;
+			assert.isTrue(defect instanceof Error);
+			return defect.message;
 		};
 
 		it("ops IS the real statics — same references, not wrappers", () => {
@@ -449,7 +460,10 @@ describe("DetachedProcess", () => {
 					}),
 				);
 				assert.isTrue(wrote, "the child must have printed its environment");
-				const seen = Result.getOrThrowWith(S.decodeResult(Json)(readFileSync(logFile, "utf8")), (error) => error) as Record<string, string>;
+				const seen = Result.getOrThrowWith(S.decodeResult(Json)(readFileSync(logFile, "utf8")), (error) => error);
+				if (!S.is(EnvironmentRecord)(seen)) {
+					assert.fail("expected a string environment record");
+				}
 				assert.strictEqual(seen.ONLY, "1");
 				assert.strictEqual(seen.X, "y");
 				assert.strictEqual(seen.PATH, process.env.PATH);
@@ -489,7 +503,10 @@ describe("DetachedProcess", () => {
 					}),
 				);
 				assert.isTrue(wrote, "the child must have printed its environment");
-				const seen = Result.getOrThrowWith(S.decodeResult(Json)(readFileSync(logFile, "utf8")), (error) => error) as Record<string, string>;
+				const seen = Result.getOrThrowWith(S.decodeResult(Json)(readFileSync(logFile, "utf8")), (error) => error);
+				if (!S.is(EnvironmentRecord)(seen)) {
+					assert.fail("expected a string environment record");
+				}
 				assert.strictEqual(seen.KEY, "from-env");
 			}).pipe(Effect.ensuring(Effect.sync(() => rmSync(directory, { recursive: true, force: true }))));
 		});

@@ -314,12 +314,12 @@ const make = (
 		const listAll = (artifact: string) =>
 			Effect.map(
 				call("ListArtifacts", () => ({}), artifact),
-				(answer) => {
+				(answer): ReadonlyArray<ArtifactItem> => {
 					if (answer === CONFLICT) {
-						return [] as ReadonlyArray<ArtifactItem>;
+						return [];
 					}
 					const rows = field(answer, "artifacts");
-					return Array.isArray(rows) ? rows.map(toItem) : ([] as ReadonlyArray<ArtifactItem>);
+					return Array.isArray(rows) ? rows.map(toItem) : [];
 				},
 			);
 

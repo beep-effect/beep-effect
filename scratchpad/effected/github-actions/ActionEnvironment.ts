@@ -189,7 +189,7 @@ const numeric = (name: string, raw: string): Effect.Effect<number, ActionEnviron
 };
 
 const make = (
-	base: Readonly<Record<string, string>>,
+	base: Readonly<Record<string, string | undefined>>,
 ): Effect.Effect<ActionEnvironmentShape, never, FileSystem.FileSystem> =>
 	Effect.gen(function* () {
 		const fs = yield* FileSystem.FileSystem;
@@ -260,7 +260,7 @@ const make = (
 					),
 				);
 				return yield* Effect.try({
-					try: () => Result.getOrThrowWith(S.decodeResult(Json)(raw), (error) => error) as unknown,
+					try: () => Result.getOrThrowWith(S.decodeResult(Json)(raw), (error) => error),
 					catch: (cause) =>
 						ActionEnvironmentError.make({
 							reason: "malformed",
@@ -331,7 +331,7 @@ export class ActionEnvironment extends Context.Service<ActionEnvironment, Action
 	static readonly layer: Layer.Layer<ActionEnvironment, never, FileSystem.FileSystem> = Layer.effect(
 		this,
 		Effect.flatMap(
-			Effect.sync(() => ({ ...process.env }) as Readonly<Record<string, string>>),
+			Effect.sync(() => ({ ...process.env })),
 			make,
 		),
 	);

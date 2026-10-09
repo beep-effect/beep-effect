@@ -9,6 +9,7 @@ import * as SchemaIssue from "effect/SchemaIssue";
 import * as Result from "effect/Result";
 
 const Json = S.fromJsonString(S.Unknown);
+const StringList = S.Array(S.String);
 
 /**
  * The variable name the runner publishes an input under.
@@ -235,8 +236,8 @@ export class ActionInput {
 	): Config.Config<L[number]> {
 		return Config.String(inputVariable(name)).pipe(
 			Config.mapEffect((raw) =>
-				allowed.includes(raw)
-					? Effect.succeed(raw as L[number])
+				S.is(S.Literals(allowed))(raw)
+					? Effect.succeed(raw)
 					: Effect.fail(configError(`Input "${name}" must be one of: ${allowed.join(" | ")} — received "${raw}"`, raw)),
 			),
 		);
@@ -329,8 +330,8 @@ export class ActionInput {
 				if (trimmed.startsWith("[")) {
 					try {
 						const parsed: unknown = Result.getOrThrowWith(S.decodeResult(Json)(trimmed), (error) => error);
-						if (Array.isArray(parsed) && parsed.every((item) => typeof item === "string")) {
-							return Effect.succeed<ReadonlyArray<string>>(parsed as ReadonlyArray<string>);
+						if (S.is(StringList)(parsed)) {
+							return Effect.succeed<ReadonlyArray<string>>(parsed);
 						}
 						return Effect.fail(configError(`Input "${name}" is a JSON array but not an array of strings`, raw));
 					} catch {

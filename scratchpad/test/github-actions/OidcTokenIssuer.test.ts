@@ -9,6 +9,7 @@ import { FetchHttpClient } from "effect/http";
 import { ActionEnvironment, OidcClaims, OidcTokenIssuer } from "../../effected/github-actions/index.ts";
 
 const Json = S.fromJsonString(S.Unknown);
+const WorkflowClaim = S.Struct({ job_workflow_ref: S.optionalKey(S.String) });
 
 const TOKEN_ENV = {
 	ACTIONS_ID_TOKEN_REQUEST_TOKEN: "runner-bearer",
@@ -263,9 +264,10 @@ describe("OidcTokenIssuer", () => {
 				// same claims the service reports, or the path stays untested while
 				// looking tested.
 				const payload = Redacted.value(token).split(".")[1] ?? "";
-				const decoded = Result.getOrThrowWith(S.decodeResult(Json)(Buffer.from(payload, "base64url").toString("utf8")), (error) => error) as {
-					job_workflow_ref?: string;
-				};
+				const decoded = Result.getOrThrowWith(S.decodeResult(Json)(Buffer.from(payload, "base64url").toString("utf8")), (error) => error);
+				if (!S.is(WorkflowClaim)(decoded)) {
+					assert.fail("expected workflow claims");
+				}
 				assert.strictEqual(decoded.job_workflow_ref, CLAIMS.job_workflow_ref);
 				assert.deepStrictEqual(yield* issuer.claims(), CLAIMS);
 			}).pipe(Effect.provide(OidcTokenIssuer.layerFor(CLAIMS))),

@@ -45,15 +45,21 @@ describe("archiveCommands", () => {
 			"Add-Type -AssemblyName System.IO.Compression.FileSystem; ";
 		const ZIP_EPILOGUE =
 			"} } } finally { $zip.Dispose() } } catch { [Console]::Error.WriteLine($_.Exception.ToString()); exit 1 }";
-		const windowsZip = (files: ReadonlyArray<string>, level = 6, root = "D:\\a\\root") =>
-			zipCommand({
+		const windowsZip = (files: ReadonlyArray<string>, level = 6, root = "D:\\a\\root") => {
+			const command = zipCommand({
 				windows: true,
 				root,
 				files,
 				manifest: "D:\\a\\_temp\\artifact.manifest",
 				destination: "D:\\a\\_temp\\artifact.zip",
 				level,
-			}).args[3] as string;
+			});
+			const script = command.args[3];
+			if (script === undefined) {
+				assert.fail("expected a PowerShell script argument");
+			}
+			return script;
+		};
 
 		it("Windows: a constant-size pwsh script driving ZipFile — delete, open Create, one explicit entry per manifest line", () => {
 			const command = zipCommand({
@@ -120,7 +126,10 @@ describe("archiveCommands", () => {
 				destination: "D:\\o'brien\\a.zip",
 				level: 6,
 			});
-			const script = command.args[3] as string;
+			const script = command.args[3];
+			if (script === undefined) {
+				assert.fail("expected a PowerShell script argument");
+			}
 			assert.include(script, "[System.IO.File]::Delete('D:\\o''brien\\a.zip'); ");
 			assert.include(script, "ZipFile]::Open('D:\\o''brien\\a.zip', ");
 			assert.include(script, "ReadAllLines('D:\\o''brien\\a.manifest')");

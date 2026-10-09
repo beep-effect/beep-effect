@@ -1,7 +1,3 @@
-// Detached children must outlive the Effect scope and inherit native log descriptors before unref.
-// @effect-diagnostics nodeBuiltinImport:skip-file
-import { spawn as spawnChild } from "node:child_process";
-import { closeSync, openSync } from "node:fs";
 import type * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Schedule from "effect/Schedule";
@@ -9,7 +5,12 @@ import * as S from "effect/Schema";
 import { HttpClient } from "effect/http";
 import { ChildProcessSpawner } from "effect/process";
 import { isErrno } from "./internal/fsProbe.ts";
+import { IeeeNumber } from "./internal/ieeeNumber.ts";
 import { unstubbed } from "./internal/unstubbed.ts";
+
+// Effect ChildProcess cannot route detached output to native file descriptors.
+const { spawn: spawnChild } = process.getBuiltinModule("node:child_process");
+const { closeSync, openSync } = process.getBuiltinModule("node:fs");
 
 /**
  * Raised when the log file for a detached child's output cannot be opened.
@@ -58,9 +59,7 @@ export class DetachedSpawnFailedError extends S.TaggedError<DetachedSpawnFailedE
  */
 export class InvalidPidError extends S.TaggedError<InvalidPidError>()("InvalidPidError", {
 	/** The pid that was refused. */
-	// The error reports the pid it refused, which may be NaN or infinite.
-	// @effect-diagnostics-next-line schemaNumber:off
-	pid: S.Number,
+	pid: IeeeNumber,
 	/** The underlying failure, preserved structurally. */
 	cause: S.optionalKey(S.Defect()),
 }) {
@@ -78,9 +77,7 @@ export class DetachedSignalFailedError extends S.TaggedError<DetachedSignalFaile
 	"DetachedSignalFailedError",
 	{
 		/** The pid that could not be signalled. */
-		// The error reports the pid it refused, which may be NaN or infinite.
-		// @effect-diagnostics-next-line schemaNumber:off
-		pid: S.Number,
+		pid: S.Finite,
 		/** The underlying failure, preserved structurally. */
 		cause: S.optionalKey(S.Defect()),
 	},
@@ -156,13 +153,14 @@ export type DetachedProcessError =
  *
  * @public
  */
-// The integer check in the pipe rejects NaN and the infinities itself, with its own message.
-// @effect-diagnostics-next-line schemaNumber:off
 export const ProcessId = S.Number.pipe(
 	S.check(
-		S.makeFilter((value) =>
-			Number.isInteger(value) && value > 0 ? undefined : "Expected a positive integer process id",
+		S.makeFilter(
+			(value) => (Number.isInteger(value) && value > 0 ? undefined : "Expected a positive integer process id"),
+			undefined,
+			true,
 		),
+		S.isFinite(),
 	),
 	S.brand("ProcessId"),
 );

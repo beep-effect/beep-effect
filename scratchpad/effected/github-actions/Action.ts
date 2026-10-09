@@ -8,6 +8,7 @@ import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
 import * as LogLevel from "effect/LogLevel";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as References from "effect/References";
 import * as Result from "effect/Result";
 import type { HttpClient } from "effect/http";
@@ -169,8 +170,11 @@ export const describeCause = (cause: Cause.Cause<unknown>): string => {
 /** The `[Tag]: message` half, over anything a failure or a defect can be. */
 const describeError = (error: unknown): string => {
 	if (typeof error === "object" && error !== null && "_tag" in error) {
-		const tagged = error as { readonly _tag: unknown; readonly message?: unknown };
-		const detail = typeof tagged.message === "string" && tagged.message !== "" ? `: ${tagged.message}` : "";
+		const tagged = error;
+		const detail =
+			P.hasProperty(tagged, "message") && P.isString(tagged.message) && tagged.message !== ""
+				? `: ${tagged.message}`
+				: "";
 		return `[${String(tagged._tag)}]${detail}`;
 	}
 	return error instanceof Error ? `[${error.name}]: ${error.message}` : `[unknown]: ${String(error)}`;

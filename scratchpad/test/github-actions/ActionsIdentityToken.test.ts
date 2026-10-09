@@ -7,6 +7,7 @@ import * as Equal from "effect/Equal";
 import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
+import * as S from "effect/Schema";
 import { ActionsIdentityToken, OidcClaims, OidcTokenError, OidcTokenIssuer } from "../../effected/github-actions/index.ts";
 
 const CLAIMS = OidcClaims.make({
@@ -75,7 +76,11 @@ describe("ActionsIdentityToken", () => {
 				// The original OidcTokenError survives structurally, so "why did the
 				// runner decline" (missing `id-token: write`) is still readable.
 				assert.instanceOf(error.cause, OidcTokenError);
-				assert.strictEqual((error.cause as OidcTokenError).reason, "unavailable");
+				const cause = error.cause;
+				if (!S.is(OidcTokenError)(cause)) {
+					assert.fail("expected the original OidcTokenError");
+				}
+				assert.strictEqual(cause.reason, "unavailable");
 			}),
 			OidcTokenIssuer.layerTest({
 				token: () => Effect.fail(OidcTokenError.make({ reason: "unavailable", detail: "ACTIONS_ID_TOKEN_REQUEST_URL" })),

@@ -11,6 +11,7 @@
 // no such dependency and keep their Node entry points.
 
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as Function from "effect/Function";
 import * as Base64 from "effect/encoding/Base64";
@@ -87,11 +88,15 @@ export const detectMusl = (): boolean => {
 		return false;
 	}
 	try {
-		const report = process.report?.getReport() as { readonly header?: { readonly glibcVersionRuntime?: unknown } };
-		if (report === undefined || report.header === undefined) {
+		const report = process.report?.getReport();
+		if (!P.hasProperty(report, "header") || !P.isObjectOrArray(report.header)) {
 			return false;
 		}
-		return report.header.glibcVersionRuntime === undefined || report.header.glibcVersionRuntime === "";
+		return (
+			!P.hasProperty(report.header, "glibcVersionRuntime") ||
+			report.header.glibcVersionRuntime === undefined ||
+			report.header.glibcVersionRuntime === ""
+		);
 	} catch {
 		return false;
 	}

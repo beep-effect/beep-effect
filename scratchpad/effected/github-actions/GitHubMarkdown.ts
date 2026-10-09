@@ -13,6 +13,7 @@ import {
 	TableRow,
 } from "../markdown/index.ts";
 import * as Result from "effect/Result";
+import * as P from "effect/Predicate";
 import * as Schema from "effect/Schema";
 import * as SchemaAST from "effect/SchemaAST";
 import { flow } from "effect/Function";
@@ -311,18 +312,25 @@ export class GitHubMarkdown {
 			? [options?: GitHubSchemaTableOptions<S["fields"]>]
 			: [options: GitHubSchemaTableOptions<S["fields"]>]
 	): GitHubSchemaTable<S["Type"]> {
-		const overrides = (options[0]?.columns ?? {}) as Record<string, GitHubSchemaTableColumn<unknown> | undefined>;
-		const columns: ReadonlyArray<ColumnRuntime> = Object.keys(schema.fields).map((key) => {
-			const field = schema.fields[key] as Schema.Constraint;
-			const column = overrides[key];
+		const overrides: unknown = options[0]?.columns ?? {};
+		const columns: ReadonlyArray<ColumnRuntime> = Object.entries(schema.fields).map(([key, field]) => {
+			const column = P.hasProperty(overrides, key) ? overrides[key] : undefined;
+			const format = P.hasProperty(column, "format") && P.isFunction(column.format) ? column.format : undefined;
+			const header = P.hasProperty(column, "header") && P.isString(column.header) ? column.header : undefined;
 			// The caller's `format` wins; otherwise the field's own encoder renders
 			// the cell (an encoder yielding nothing is an empty cell). Built once
 			// per column, not per cell — this is the one path that renders in a loop.
-			const encode = flow(Schema.encodeResult(field as Schema.ConstraintEncoder<string | undefined>), Result.getOrThrowWith((error) => error));
-			const project: (value: unknown) => string = column?.format ?? ((value) => encode(value) ?? "");
+			const encode = flow(
+				Schema.encodeUnknownResult(Schema.make<Schema.Codec<unknown, unknown>>(field.ast)),
+				Result.getOrThrowWith((error) => error),
+			);
+			const project = (value: unknown): string => {
+				const rendered: unknown = format === undefined ? encode(value) ?? "" : format(value);
+				return Result.getOrThrowWith(Schema.decodeUnknownResult(Schema.String)(rendered), (error) => error);
+			};
 			return {
 				key,
-				header: column?.header ?? SchemaAST.resolveTitle(field.ast) ?? key,
+				header: header ?? SchemaAST.resolveTitle(field.ast) ?? key,
 				cell: (value: unknown): string => (value === undefined ? "" : project(value)),
 			};
 		});
@@ -331,7 +339,7 @@ export class GitHubMarkdown {
 			render: (rows: ReadonlyArray<S["Type"]>): string =>
 				GitHubMarkdown.table(
 					headers,
-					rows.map((row) => columns.map((column) => column.cell((row as Record<string, unknown>)[column.key]))),
+					rows.map((row) => columns.map((column) => column.cell(P.hasProperty(row, column.key) ? row[column.key] : undefined))),
 				),
 		};
 	}

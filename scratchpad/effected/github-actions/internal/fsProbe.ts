@@ -29,4 +29,4 @@ export const isErrno: {
 	(cause: unknown, code: string): boolean;
 	(code: string): (cause: unknown) => boolean;
 } = Function.dual(2, (cause: unknown, code: string): boolean =>
-	typeof cause === "object" && cause !== null && (cause as { code?: unknown }).code === code);
+	typeof cause === "object" && cause !== null && "code" in cause && cause.code === code);

@@ -138,7 +138,7 @@ const make = Effect.gen(function* () {
 			const { parsed, serialized } = yield* Effect.try({
 				try: () => {
 					const serialized = Result.getOrThrowWith(S.encodeResult(Json)(encoded), (error) => error);
-					return { parsed: Result.getOrThrowWith(S.decodeResult(Json)(serialized), (error) => error) as unknown, serialized };
+					return { parsed: Result.getOrThrowWith(S.decodeResult(Json)(serialized), (error) => error), serialized };
 				},
 				catch: (cause) => ActionStateError.make({ reason: "notPlainJson", key, cause }),
 			});

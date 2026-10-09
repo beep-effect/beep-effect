@@ -298,7 +298,10 @@ const corepack = (value: string): IntegrityHashBrand => flow(S.decodeResult(Core
 const cachedOf = (installed: InstalledPackageManager): CachedPackageManager => {
 	assert.instanceOf(installed, CachedPackageManager);
 	assert.strictEqual(installed.source, "tool-cache");
-	return installed as CachedPackageManager;
+	if (!S.is(CachedPackageManager)(installed)) {
+		assert.fail("expected a cached package manager");
+	}
+	return installed;
 };
 
 describe("PackageManagerInstaller", () => {
@@ -1404,7 +1407,9 @@ describe("PackageManagerInstaller", () => {
 					yield* attempt({});
 					yield* attempt({ "@pnpm/exe.linux-x64": wrongSri, "@pnpm/exe.darwin-x64": wrongSri });
 					// An inherited member is not a recorded checksum.
-					yield* attempt(Object.create({ "@pnpm/exe.darwin-arm64": wrongSri }) as Record<string, string>);
+					const inherited: Record<string, string> = {};
+					Object.setPrototypeOf(inherited, { "@pnpm/exe.darwin-arm64": wrongSri });
+					yield* attempt(inherited);
 				}),
 			);
 

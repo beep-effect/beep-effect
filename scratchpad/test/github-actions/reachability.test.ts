@@ -18,6 +18,14 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { assert, describe, it } from "@effect/vitest";
+import * as S from "effect/Schema";
+import * as Result from "effect/Result";
+
+const SideEffectsManifestJson = S.fromJsonString(S.Struct({ sideEffects: S.optionalKey(S.Unknown) }));
+const DependenciesManifestJson = S.fromJsonString(S.Struct({
+	dependencies: S.optionalKey(S.Record(S.String, S.String)),
+	peerDependencies: S.optionalKey(S.Record(S.String, S.String)),
+}));
 
 const SRC = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "effected", "github-actions");
 
@@ -170,14 +178,12 @@ describe("bundle reachability", () => {
 			"@effected/walker",
 			"effect",
 			"effect/encoding/Hex",
-			"node:crypto",
 		]);
 		assert.deepStrictEqual([...reachableBareImports("BlobStore.ts")].sort(), [
 			"@effected/github-commands",
 			"effect",
 			"effect/encoding/Hex",
 			"effect/http",
-			"node:crypto",
 		]);
 		// The workflow-command protocol is not in this package any more: it lives in the pure
 		// `@effected/github-commands` (which imports nothing, not even `effect`), and this package takes it as a peer. The
@@ -252,7 +258,6 @@ describe("bundle reachability", () => {
 			"effect/encoding/Hex",
 			"effect/http",
 			"effect/process",
-			"node:crypto",
 		]);
 	});
 
@@ -307,7 +312,6 @@ describe("bundle reachability", () => {
 			"effect/Function",
 			"effect/Stream",
 			"effect/encoding/Hex",
-			"node:crypto",
 		]);
 		assert.deepStrictEqual([...reachableBareImports("internal/fsProbe.ts")].sort(), ["effect/Effect", "effect/Function"]);
 		assert.deepStrictEqual([...reachableBareImports("internal/jwt.ts")].sort(), [
@@ -359,18 +363,21 @@ describe("bundle reachability", () => {
 	it("the package declares itself side-effect free", () => {
 		// The other half of the mechanism: without this a bundler must assume
 		// evaluating an unreferenced module matters, and keeps it.
-		const manifest = JSON.parse(readFileSync(resolve(SRC, "..", "package.json"), "utf8")) as {
-			sideEffects?: unknown;
-		};
+		const manifest = Result.getOrThrowWith(
+			S.decodeResult(SideEffectsManifestJson)(
+				readFileSync(resolve(SRC, "..", "package.json"), "utf8"),
+			),
+			(error) => error,
+		);
 		assert.strictEqual(manifest.sideEffects, false);
 	});
 
 	it("every runtime dependency is declared", () => {
 		// A package you import but do not declare is how a peer closure rots.
-		const manifest = JSON.parse(readFileSync(resolve(SRC, "..", "package.json"), "utf8")) as {
-			dependencies?: Record<string, string>;
-			peerDependencies?: Record<string, string>;
-		};
+		const manifest = Result.getOrThrowWith(
+			S.decodeResult(DependenciesManifestJson)(readFileSync(resolve(SRC, "..", "package.json"), "utf8")),
+			(error) => error,
+		);
 		const declared = new Set([
 			...Object.keys(manifest.dependencies ?? {}),
 			...Object.keys(manifest.peerDependencies ?? {}),

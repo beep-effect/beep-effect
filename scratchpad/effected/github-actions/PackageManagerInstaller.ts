@@ -7,6 +7,7 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
+import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import { ActionEnvironment } from "./ActionEnvironment.ts";
@@ -408,7 +409,7 @@ const make = Effect.gen(function* () {
 	// routes through ActionEnvironment.
 	const runnerOs = yield* Effect.map(env.getOptional("RUNNER_OS"), (found) => O.getOrElse(found, () => ""));
 	const arch = yield* Effect.map(env.getOptional("RUNNER_ARCH"), (found) =>
-		O.match(found, { onNone: () => process.arch as string, onSome: archFromRunner }),
+		O.match(found, { onNone: (): string => process.arch, onSome: archFromRunner }),
 	);
 	const windows = yield* isWindowsRunner(env);
 	// The host libc, read once here beside the platform: it decides between
@@ -528,10 +529,10 @@ const make = Effect.gen(function* () {
 					Effect.mapError((cause) => errorFor(pin)({ reason: "layoutUnexpected", subject: "no package.json", cause })),
 				);
 			const manifest = yield* Effect.try({
-				try: () => Result.getOrThrowWith(S.decodeResult(Json)(raw), (error) => error) as { readonly bin?: unknown; readonly optionalDependencies?: unknown },
+				try: () => Result.getOrThrowWith(S.decodeResult(Json)(raw), (error) => error),
 				catch: (cause) => errorFor(pin)({ reason: "layoutUnexpected", subject: "unparseable package.json", cause }),
 			});
-			const bins = O.getOrUndefined(normalizeBins(manifest.bin, pin.name));
+			const bins = O.getOrUndefined(normalizeBins(P.hasProperty(manifest, "bin") ? manifest.bin : undefined, pin.name));
 			if (bins === undefined) {
 				return yield* errorFor(pin)({ reason: "layoutUnexpected", subject: "package.json names no bin" });
 			}
@@ -552,7 +553,10 @@ const make = Effect.gen(function* () {
 				}
 				yield* assertFile(pin, target, `bin ${name} (${relative}) is missing`);
 			}
-			return { bins, nativePackages: nativePackagesOf(manifest.optionalDependencies) };
+			return {
+				bins,
+				nativePackages: nativePackagesOf(P.hasProperty(manifest, "optionalDependencies") ? manifest.optionalDependencies : undefined),
+			};
 		});
 
 	/**
@@ -745,12 +749,13 @@ const make = Effect.gen(function* () {
 				Effect.mapError(unverifiable),
 				Effect.flatMap((raw) =>
 					Effect.try({
-						try: () => Result.getOrThrowWith(S.decodeResult(Json)(raw), (error) => error) as { readonly dist?: { readonly integrity?: unknown } },
+						try: () => Result.getOrThrowWith(S.decodeResult(Json)(raw), (error) => error),
 						catch: unverifiable,
 					}),
 				),
 			);
-			return yield* expectedFromSri(pin, packument.dist?.integrity, packumentUrl);
+			const dist = P.hasProperty(packument, "dist") ? packument.dist : undefined;
+			return yield* expectedFromSri(pin, P.hasProperty(dist, "integrity") ? dist.integrity : undefined, packumentUrl);
 		});
 
 	/**

@@ -261,7 +261,10 @@ describe("GitHubMarkdown", () => {
 			// `assert.throws` would stay green if the serializer or a stray
 			// TypeError started throwing instead, which is the exact confusion this
 			// block exists to settle.
-			assert.strictEqual((caught as { readonly _tag?: string })?._tag, "SchemaError");
+			if (!S.isSchemaError(caught)) {
+				assert.fail("expected a SchemaError");
+			}
+			assert.strictEqual(caught._tag, "SchemaError");
 		});
 
 		it("a user-supplied format function is the other way a render can throw", () => {

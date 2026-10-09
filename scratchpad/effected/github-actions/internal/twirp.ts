@@ -145,6 +145,9 @@ export const twirpCall = (options: {
 	);
 };
 
+/** Check the property before reading an unknown JSON object, including inherited fields. */
+const hasField = <Key extends string>(body: object, key: Key): body is object & Record<Key, unknown> => key in body;
+
 /**
  * Read a Twirp JSON field under either spelling.
  *
@@ -164,9 +167,8 @@ export const field: {
 	if (typeof body !== "object" || body === null) {
 		return undefined;
 	}
-	const record = body as Record<string, unknown>;
-	const snake = name.replaceAll(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
-	return record[name] ?? record[snake];
+		const snake = name.replaceAll(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
+	return (hasField(body, name) ? body[name] : undefined) ?? (hasField(body, snake) ? body[snake] : undefined);
 });
 
 /** {@link field}, as a string, or `undefined` when absent or empty. @internal */

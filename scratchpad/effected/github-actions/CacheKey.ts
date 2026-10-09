@@ -505,7 +505,7 @@ export class CacheKey extends S.Class<CacheKey>("CacheKey")(
 		return [...candidates]
 			.filter((candidate) => set.matches(candidate))
 			.sort()
-			.map((candidate) => path.join(workspace, candidate)) as ReadonlyArray<string>;
+			.map((candidate) => path.join(workspace, candidate));
 	});
 
 	/**

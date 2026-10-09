@@ -15,6 +15,7 @@ import * as Result from "effect/Result";
 import { ActionEnvironment } from "../../effected/github-actions/index.ts";
 
 const Json = S.fromJsonString(S.Unknown);
+const RequestBodyJson = S.fromJsonString(S.Record(S.String, S.Unknown));
 
 /** A base64url segment, as a JWT carries them. */
 const segment = (value: unknown): string => Buffer.from(Result.getOrThrowWith(S.encodeResult(Json)(value), (error) => error)).toString("base64url");
@@ -73,7 +74,10 @@ export const twirpFetch = (
 		// which throws in `JSON.parse` — inside a fake `fetch`, that surfaces as a
 		// transport fault, which the client then RETRIES, which hangs the virtual
 		// clock. One misread fixture presented as ten unrelated timeouts.
-		const body = JSON.parse((await new Response(init?.body ?? "{}").text()) || "{}") as Record<string, unknown>;
+		const body = Result.getOrThrowWith(
+			S.decodeResult(RequestBodyJson)((await new Response(init?.body ?? "{}").text()) || "{}"),
+			(error) => error,
+		);
 		const index = calls.filter((call) => call.method === method).length;
 		calls.push({ url, method, body, authorization: new Headers(init?.headers).get("authorization") });
 		const handler = handlers[method];

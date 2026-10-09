@@ -10,6 +10,8 @@ import * as Result from "effect/Result";
 import { ActionEnvironment, ActionEnvironmentError } from "../../effected/github-actions/index.ts";
 
 const Json = S.fromJsonString(S.Unknown);
+const ActionPayload = S.Struct({ action: S.optionalKey(S.String) });
+const PullRequestPayload = S.Struct({ pull_request: S.optionalKey(S.Struct({ number: S.optionalKey(S.Finite) })) });
 
 const BASE = {
 	GITHUB_REPOSITORY: "owner/repo",
@@ -200,7 +202,10 @@ describe("ActionEnvironment", () => {
 					// The type is the assertion: `payload` carries no FileSystem in R,
 					// so a caller never has to re-inject one.
 					const payload: Effect.Effect<unknown, ActionEnvironmentError> = env.payload;
-					const value = (yield* payload) as { readonly action?: string };
+					const value = yield* payload;
+					if (!S.is(ActionPayload)(value)) {
+						assert.fail("expected an action payload");
+					}
 					assert.strictEqual(value.action, "opened");
 				}),
 				{ ...BASE, GITHUB_EVENT_PATH: "/event.json" },
@@ -349,7 +354,10 @@ describe("ActionEnvironment", () => {
 				// from the STANDARD double, without dropping to makeTest and hand-rolling
 				// a filesystem stub at every site.
 				const payload: Effect.Effect<unknown, ActionEnvironmentError> = env.payload;
-				const value = (yield* payload) as { readonly pull_request?: { readonly number?: number } };
+				const value = yield* payload;
+				if (!S.is(PullRequestPayload)(value)) {
+					assert.fail("expected a pull request payload");
+				}
 				assert.strictEqual(value.pull_request?.number, 42);
 			}).pipe(
 				Effect.provide(

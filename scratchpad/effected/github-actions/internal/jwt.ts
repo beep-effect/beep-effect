@@ -40,7 +40,7 @@ export const payloadOf = (token: string): Result.Result<unknown, JwtPayloadFailu
 		return Result.fail({ kind: "payload", detail: "the payload is not base64url JSON", cause: json.failure });
 	}
 	try {
-		return Result.succeed(Result.getOrThrowWith(S.decodeResult(Json)(json.success), (error) => error) as unknown);
+		return Result.succeed(Result.getOrThrowWith(S.decodeResult(Json)(json.success), (error) => error));
 	} catch (cause) {
 		return Result.fail({ kind: "payload", detail: "the payload is not base64url JSON", cause });
 	}
