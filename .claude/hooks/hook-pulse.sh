@@ -520,7 +520,7 @@ END {
     wait "$!" || exit 1
     [ ! -f .claude/settings.local.json ] || indexed_paths+=(.claude/settings.local.json)
   else
-    metadata_probe="$PWD"
+    metadata_probe="$(pwd -P)"
     while :; do
       [ ! -e "${metadata_probe}/.git" ] && [ ! -L "${metadata_probe}/.git" ] || exit 1
       metadata_parent="$(dirname "${metadata_probe}")"

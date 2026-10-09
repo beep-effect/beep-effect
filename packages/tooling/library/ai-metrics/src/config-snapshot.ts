@@ -635,7 +635,9 @@ const readTrackedSnapshotPaths = Effect.fn("AiMetrics.readTrackedSnapshotPaths")
 const hasAncestorGitMetadata = Effect.fnUntraced(function* (repoRoot: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  let directory = path.resolve(repoRoot);
+  let directory = yield* fs
+    .realPath(path.resolve(repoRoot))
+    .pipe(Effect.mapError((cause) => configSnapshotFailure("Cannot resolve Git snapshot ancestry.", cause)));
   while (true) {
     const entries = yield* fs
       .readDirectory(directory)
