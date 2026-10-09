@@ -729,3 +729,53 @@ installation. Physical installed-source verification follows rather than
 claiming that absent output. Owner regeneration reports 152 manifests,
 zero drift/writes; cache profile, goals index and CLI tsconfig remain in sync.
 The three policy reruns are queued through the canonical heavy wrapper.
+### Run 6 terminal blocked closeout
+
+Dependency repair commit: `1a0adff1e65f00a0d0934064e4d8b51a754a8829`.
+Recovery record commit: `9040f6b342` (report-only closeout commit follows).
+Current worktree is based on main `35ed1b5dda`. Root manifest/lockfile changes
+are exactly the two unused-root-dependency rows; all package pins and patches
+remain. `.beep/rsc-c-run6-light-result.txt` records install/owner/cache/knowledge
+passes; installed ONNX patch markers are 4/4. The first literal-based install
+failure is attributed and corrected, not counted as a pass.
+
+S5 confirmation is absent from the brief and RULINGS at closeout. The explicit
+lockfile notification above is the request to the orchestrator. C does not
+push pending that mandatory confirmation. No publication bypass attempt,
+PR creation, ready transition or merge occurred in this run.
+
+The three requested policy reruns remained unadmitted after approximately six
+minutes. The owned wrapper unit was stopped before any gate child launched;
+`.beep/rsc-c-run6-result.txt` records pending/cancelled-before-admission for
+all three. No terminal pass is claimed. The command script and prepared PR
+body remain in `.beep/rsc-c-run6-gates.sh` and `.beep/rsc-c-run6-pr-body.md`.
+All commands/units started by Run 6 have ended; no C-owned heavy job remains.
+
+Resume: orchestrator confirms effected-port notification (or proves S5 ended
+when that branch landed); run the saved three-gate batch through beep-heavy;
+attribute any red and preserve the B-owned judgment rows; record the results,
+commit the final receipt, then publish with `env TURBO_CONCURRENCY=2 bun run
+beep yeet publish --push-only`. If that refuses, record the refusal and use
+the explicitly authorized push/create fallback, then ready at content-final.
+E reviews workflow hunks and ordering on the PR. C never merges.
+
+The user requires work only inside the lane: no external session-ledger or
+orchestrator final-file write is performed. This handoff is the named durable
+communication surface. The final report is the requested closeout format;
+no additional operator-choice prompt overrides the worker brief.
+
+### Run 6 report
+
+lane: rsc-c-scripts · head: 9040f6b342 (recovery work head; report-only commit follows)
+· PR: none (wave 1 not pushed; S5 notification confirmation pending)
+· package-verify: @beep/repo-cli pass (retained Run 4 terminal audit 811.4s / docgen 28.8s; not rerun)
+· hosted-parity: test-tsgo pass (retained 334-file local proof); docgen local pass (retained);
+jsdoc-ratchet pass (retained); knowledge refs --check pass (Run 6: zero live gated observations);
+fallow audit+health pass (retained ordinary Run 4 runs); coverage read complete (existing floors,
+no changes). Hosted proof absent. Run 6 quality:knip / fallow:audit / fallow:dead-code policy
+reruns pending, stopped before admission; no fresh pass claimed.
+· handoff: history/handoffs/rsc-c-scripts-2026-10-09.md
+· open: S5 effected-port notification confirmation before lockfile push; the three named policy
+reruns; authorized push-only publication/ready; E workflow co-sign; B admission after V for
+2 wire-schema + 12 test judgment rows; hosted evidence and orchestrator merge gate.
+No C-owned command/unit remains running. No final marker is emitted without a content-final PR.

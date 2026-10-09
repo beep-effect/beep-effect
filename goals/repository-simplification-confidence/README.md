@@ -79,8 +79,8 @@ C includes the coordinated Ci group and pre-runtime adapters. Full
 receipts are retained. Resume ruling 4 authorizes removing the unused root ONNX
 devDependency and publishing with the push-only bypass for B-owned judgment rows.
 Run 6 preserves the catalog, override, patch and live package consumer; install
-passes, installed patch markers are present, and Knip/Fallow policy reruns are
-queued. S5 lockfile notification confirmation precedes the push. E's workflow
+passes, installed patch markers are present, and Knip/Fallow policy reruns remain
+pending (the unadmitted waiter was stopped at the S5 blocked boundary). S5 lockfile notification confirmation precedes the push. E's workflow
 co-sign and hosted evidence remain open. C edits no inventory or allowlist and
 does not close program acceptance.
 

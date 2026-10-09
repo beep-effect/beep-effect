@@ -194,6 +194,6 @@ removed; catalog range, override, installer patch and face-detection consumer
 remain. Install exits 0; reused installed ONNX 1.30.0 has all four patch markers.
 Bun emits no fresh patch-applied line, so that output is not claimed.
 Run 4's six-row terminal qualification remains the verification of record.
-The requested Knip/Fallow policy reruns are queued through beep-heavy; owner
+The requested Knip/Fallow policy reruns remain pending; the beep-heavy waiter was stopped before admission at the S5 blocked boundary; owner
 regeneration has zero tracked diff. S5 requires lockfile notification confirmation
 before push. E co-sign, hosted evidence and B/V judgment admission remain open.

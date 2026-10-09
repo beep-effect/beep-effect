@@ -94,7 +94,7 @@ Run 4's full package and local parity qualification is terminal and retained.
 Run 6 integrates main, removes only the unused root ONNX devDependency,
 retains catalog/override/patch/consumer and installs successfully. The installed
 1.30.0 source retains all four patch markers. Shared owner regeneration has
-zero tracked diff. The three named Knip/Fallow reruns are queued; S5 lockfile
+zero tracked diff. The three named Knip/Fallow reruns remain pending (waiter stopped before admission); S5 lockfile
 notification confirmation is pending before authorized push-only publication.
 B owns occurrence-specific judgment admission after V. E's workflow co-sign,
 publication and hosted evidence remain open. No inventory is edited.
