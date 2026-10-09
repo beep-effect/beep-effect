@@ -1,4 +1,5 @@
 import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -19,7 +20,10 @@ class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("
  *
  * @public
  */
-export const FileMode = S.Literals(["100644", "100755", "120000"]).pipe($I.annoteSchema("FileMode", { description: "A blob's file mode, as the Git Database API spells it." }));
+export const FileMode = LiteralKit(["100644", "100755", "120000"]).pipe($I.annoteSchema("FileMode", { description: "A blob's file mode, as the Git Database API spells it." }));
+
+/** The values accepted by {@link FileMode}. @public */
+export type FileMode = typeof FileMode.Type;
 
 /**
  * A file to write in a commit.

@@ -1,13 +1,13 @@
 import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "@beep/utils/Option";
-import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import { GitHubClient } from "./GitHubClient.ts";
-import type { GitHubError } from "./GitHubError.ts";
+import { GitHubError } from "./GitHubError.ts";
 import type { PageSource } from "./internal/paginate.ts";
 import { paginate } from "./internal/paginate.ts";
 import { Repo } from "./Repo.ts";
@@ -16,13 +16,8 @@ import type { PageOptions } from "./Rest.ts";
 const $I = $ScratchpadId.create("effected/github/GitHubCommit");
 
 class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("UnstubbedError", {
-	message: S.String,
-}) {}
-
-class CommitFileDecodeError extends S.TaggedError<CommitFileDecodeError>($I`CommitFileDecodeError`)("CommitFileDecodeError", {
-	message: S.String,
-	cause: S.Defect({ includeStack: true }),
-}) {}
+	message: S.String.annotateKey({ description: "The test-double member that needs an override." }),
+}, $I.annote("UnstubbedError", { description: "An unconfigured test-double member was called." })) {}
 
 /**
  * A commit, projected to what callers read.
@@ -61,7 +56,7 @@ export class CommitSummary extends S.Class<CommitSummary>($I`CommitSummary`)({
  *
  * @public
  */
-export const FileStatus = S.Literals([
+export const FileStatus = LiteralKit([
 	"added",
 	"removed",
 	"modified",
@@ -70,6 +65,9 @@ export const FileStatus = S.Literals([
 	"changed",
 	"unchanged",
 ]).pipe($I.annoteSchema("FileStatus", { description: "How a file changed in a commit or a comparison." }));
+
+/** The values accepted by {@link FileStatus}. @public */
+export type FileStatus = typeof FileStatus.Type;
 
 /**
  * One changed file.
@@ -230,17 +228,17 @@ export interface RawFile {
  * Project a `diff-entry` to a {@link CommitFile}. Shared with
  * `PullRequest.listFiles`; not re-exported from the package entrypoint.
  */
-export const fileOf = (raw: RawFile): CommitFile =>
-	Result.getOrThrowWith(
-		S.decodeUnknownResult(CommitFile)({
-			path: raw.filename,
-			status: raw.status,
-			additions: raw.additions,
-			deletions: raw.deletions,
-			...O.getSomesStruct({ previousPath: O.fromUndefinedOr(raw.previous_filename) }),
-		}),
-		(error) => CommitFileDecodeError.make({ message: "Schema validation failed", cause: error.issue }),
+export const fileOf = Effect.fn("GitHubCommit.fileOf")(function* (raw: RawFile, operation: string) {
+	return yield* S.decodeUnknownEffect(CommitFile)({
+		path: raw.filename,
+		status: raw.status,
+		additions: raw.additions,
+		deletions: raw.deletions,
+		...O.getSomesStruct({ previousPath: O.fromUndefinedOr(raw.previous_filename) }),
+	}).pipe(
+		Effect.mapError((error) => GitHubError.decode(operation, "GitHub returned an unexpected commit file", error)),
 	);
+});
 
 const make = (client: GitHubClient["Service"]): GitHubCommitShape => ({
 	get: Effect.fn("GitHubCommit.get")(function* (ref: string) {
@@ -283,7 +281,7 @@ const make = (client: GitHubClient["Service"]): GitHubCommitShape => ({
 			aheadBy: comparison.ahead_by,
 			behindBy: comparison.behind_by,
 			commits: comparison.commits.map(summarize),
-			files: (comparison.files ?? []).map(fileOf),
+			files: yield* Effect.forEach(comparison.files ?? [], (file) => fileOf(file, "GitHubCommit.compare")),
 		});
 	}),
 
@@ -310,10 +308,12 @@ const make = (client: GitHubClient["Service"]): GitHubCommitShape => ({
 					return client
 						.request("GET /repos/{owner}/{repo}/commits/{ref}", { owner, repo, ref, page, per_page: perPage })
 						.pipe(
-							Effect.map((commit) => {
+							Effect.flatMap((commit) => {
 								const files = commit.files ?? [];
 								if (files.length < perPage) finished = true;
-								return files.length === 0 ? O.none<ReadonlyArray<CommitFile>>() : O.some(files.map(fileOf));
+								return files.length === 0
+									? Effect.succeed(O.none<ReadonlyArray<CommitFile>>())
+									: Effect.asSome(Effect.forEach(files, (file) => fileOf(file, "GitHubCommit.changedFiles")));
 							}),
 						);
 				}),

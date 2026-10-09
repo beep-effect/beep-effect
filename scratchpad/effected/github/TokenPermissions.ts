@@ -1,5 +1,8 @@
 import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as R from "effect/Record";
 
@@ -10,10 +13,12 @@ const $I = $ScratchpadId.create("effected/github/TokenPermissions");
  *
  * @public
  */
-export const PermissionLevel = S.Literals(["read", "write", "admin"]).pipe($I.annoteSchema("PermissionLevel", { description: "How much access a permission grants." }));
+export const PermissionLevel = LiteralKit(["read", "write", "admin"]).pipe($I.annoteSchema("PermissionLevel", { description: "How much access a permission grants." }));
 
 /** How much access a permission grants. @public */
-export type PermissionLevel = (typeof PermissionLevel.literals)[number];
+export type PermissionLevel = typeof PermissionLevel.Type;
+
+const isPermissionLevel = S.is(PermissionLevel);
 
 /** `read` < `write` < `admin`. */
 const RANK: Record<PermissionLevel, number> = { read: 1, write: 2, admin: 3 };
@@ -127,10 +132,9 @@ export class TokenPermissions extends S.Class<TokenPermissions>($I`TokenPermissi
    * permission entirely.
    */
   static fromGitHub(permissions: Readonly<Record<string, string>>): TokenPermissions {
-    const granted: Record<string, PermissionLevel> = {};
-    for (const [name, level] of R.toEntries(permissions)) {
-      if (level === "read" || level === "write" || level === "admin") granted[name] = level;
-    }
+    const granted = R.fromEntries(A.flatMap(R.toEntries(permissions), ([name, level]) =>
+      isPermissionLevel(level) ? [[name, level] as const] : [],
+    ));
     return TokenPermissions.make({ granted });
   }
 
@@ -139,26 +143,26 @@ export class TokenPermissions extends S.Class<TokenPermissions>($I`TokenPermissi
     const missing: Array<PermissionGap> = [];
     const extra: Array<ExtraPermission> = [];
     for (const [permission, want] of R.toEntries(required)) {
-      const have = this.granted[permission];
-      if (have === undefined) {
+      const have = R.get(this.granted, permission);
+      if (O.isNone(have)) {
         missing.push(PermissionGap.make({ permission, required: want }));
-      } else if (RANK[have] < RANK[want]) {
+      } else if (RANK[have.value] < RANK[want]) {
         missing.push(PermissionGap.make({
           permission,
           required: want,
-          granted: have,
+          granted: have.value,
         }));
       }
     }
     for (const [permission, have] of R.toEntries(this.granted)) {
-      const want = required[permission];
-      if (want === undefined) {
+      const want = R.get(required, permission);
+      if (O.isNone(want)) {
         extra.push(ExtraPermission.make({ permission, granted: have }));
-      } else if (RANK[have] > RANK[want]) {
+      } else if (RANK[have] > RANK[want.value]) {
         extra.push(ExtraPermission.make({
           permission,
           granted: have,
-          required: want,
+          required: want.value,
         }));
       }
     }

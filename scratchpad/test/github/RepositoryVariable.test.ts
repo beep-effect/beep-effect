@@ -7,7 +7,10 @@ import type { GitHubFixtures, RecordedCall } from "../../effected/github/GitHubC
 import { GitHubClient } from "../../effected/github/GitHubClient.ts";
 import { GitHubError } from "../../effected/github/GitHubError.ts";
 import { Repo, RepoRef } from "../../effected/github/Repo.ts";
-import { RepositoryVariable } from "../../effected/github/RepositoryVariable.ts";
+import * as S from "effect/Schema";
+import { RepositoryVariable, VariableInfo } from "../../effected/github/RepositoryVariable.ts";
+
+const decodeVariableInfos = S.decodeResult(S.Array(VariableInfo));
 
 const run = Effect.fn("run")(function*<A, E>(
 	effect: Effect.Effect<A, E, RepositoryVariable | GitHubClient | Repo>,
@@ -105,6 +108,8 @@ describe("RepositoryVariable.list and delete", () => {
 				},
 			);
 
+			assert.deepStrictEqual(Result.getOrThrow(decodeVariableInfos(value)), value);
+
 			// Variables are readable, unlike secrets — discarding the value here
 			// would make an EDITED variable undetectable downstream.
 			assert.deepStrictEqual(value, [
@@ -116,11 +121,12 @@ describe("RepositoryVariable.list and delete", () => {
 
 	it.effect("delete removes by name", () =>
 		Effect.gen(function* () {
-			const { requested } = yield* run(
+			const { value, requested } = yield* run(
 				Effect.flatMap(RepositoryVariable, (v) => v.delete("NODE_ENV")),
 				{ "DELETE /repos/{owner}/{repo}/actions/variables/{name}": Result.succeed("") },
 			);
 
+			assert.strictEqual(value, undefined);
 			assert.deepStrictEqual(requested[0]?.params, { owner: "acme", repo: "widget", name: "NODE_ENV" });
 		}),
 	);
@@ -201,11 +207,13 @@ describe("RepositoryVariable, per environment", () => {
 				{ "GET /repos/{owner}/{repo}/environments/{environment_name}/variables": Result.succeed([variableFixture({ name: "LEVEL", value: "high" })]) },
 			);
 			assert.deepStrictEqual(listed.value, [{ name: "LEVEL", value: "high" }]);
+			assert.deepStrictEqual(Result.getOrThrow(decodeVariableInfos(listed.value)), listed.value);
 
 			const deleted = yield* run(
 				Effect.flatMap(RepositoryVariable, (v) => v.deleteForEnvironment("prod", "LEVEL")),
 				{ "DELETE /repos/{owner}/{repo}/environments/{environment_name}/variables/{name}": Result.succeed("") },
 			);
+			assert.strictEqual(deleted.value, undefined);
 			assert.deepStrictEqual(deleted.requested[0]?.params, {
 				owner: "acme",
 				repo: "widget",
@@ -214,4 +222,15 @@ describe("RepositoryVariable, per environment", () => {
 			});
 		}),
 	);
+});
+
+
+describe("VariableInfo boundary", () => {
+	it("keeps plain listing fields and requires the readable value", () => {
+		const info: VariableInfo = { name: "LEVEL", value: "high" };
+		assert.deepStrictEqual(Result.getOrThrow(S.decodeResult(VariableInfo)(info)), info);
+		assert.deepStrictEqual(Result.getOrThrow(S.encodeResult(VariableInfo)(info)), info);
+		assert.strictEqual(Result.isFailure(S.decodeUnknownResult(VariableInfo)({ name: "LEVEL" })), true);
+		assert.strictEqual(Result.isFailure(S.decodeUnknownResult(VariableInfo)({ name: "LEVEL", value: 7 })), true);
+	});
 });

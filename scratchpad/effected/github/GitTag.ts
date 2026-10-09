@@ -245,11 +245,11 @@ const make = (client: GitHubClient["Service"]): GitTagShape => {
 			const { owner, repo } = yield* Repo;
 			const short = yield* rejectEmpty("GitTag.delete", tag);
 			yield* Effect.annotateCurrentSpan({ owner, repo, tag: short });
-			return yield* client.request("DELETE /repos/{owner}/{repo}/git/refs/{ref}", {
-    owner,
-    repo,
-    ref: `tags/${short}`,
-});
+			yield* client.request("DELETE /repos/{owner}/{repo}/git/refs/{ref}", {
+				owner,
+				repo,
+				ref: `tags/${short}`,
+			});
 		}),
 		list,
 		resolve: Effect.fn("GitTag.resolve")(function* (tag: string) {

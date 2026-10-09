@@ -251,7 +251,7 @@ export class GraphQLDocument<A, V extends Record<string, unknown>> {
       new GraphQLDocument<A, V>(
         options.name,
         options.document,
-        (raw) => decode(raw),
+        decode,
         encodeVariables ?? ((variables) => variables),
       );
   }

@@ -38,10 +38,12 @@ export type SecretScope = "actions" | "dependabot" | "codespaces";
  *
  * @public
  */
-export interface SecretInfo {
-  /** The secret's name. */
-  readonly name: string;
-}
+export const SecretInfo = S.Struct({
+  name: S.String.annotateKey({ description: "The secret's name; its value is never returned by GitHub." }),
+}).pipe($I.annoteSchema("SecretInfo", { description: "A secret name returned by repository or environment listings." }));
+
+/** The plain-object secret listing fields. */
+export type SecretInfo = typeof SecretInfo.Type;
 
 /**
  * Write, list and delete Actions, Dependabot and Codespaces secrets on a
@@ -169,15 +171,15 @@ const unstubbed = (member: string): never => {
  * Seal a value, turning a malformed public key into a typed failure.
  *
  * @remarks
- * `encryptSecret` returns a `Result` because a base64 decode can fail. A public
+ * `encryptSecret` returns a `Result` because base64 decoding or key length validation can fail. A public
  * key GitHub cannot have produced is still *input*, and input failures are
  * typed rather than thrown — so this maps it onto the same `GitHubError` a
  * caller already handles, naming the route it came from.
  */
 const seal = (route: string, publicKey: string, value: Redacted.Redacted<string>): Effect.Effect<string, GitHubError> =>
   Result.match(encryptSecret(publicKey, Redacted.value(value)), {
-    onSuccess: (sealed) => Effect.succeed(sealed),
-    onFailure: () => Effect.fail(GitHubError.decode(route, "the secrets public key was not valid base64")),
+    onSuccess: Effect.succeed,
+    onFailure: () => Effect.fail(GitHubError.decode(route, "the secrets public key was not valid base64 encoding of a 32-byte key")),
   });
 
 const make = (client: GitHubClient["Service"]): RepositorySecretShape => {
@@ -218,7 +220,7 @@ const make = (client: GitHubClient["Service"]): RepositorySecretShape => {
     const { owner, repo } = yield* Repo;
     yield* Effect.annotateCurrentSpan({ owner, repo, scope, secret: name });
 
-    return yield* client.request(ROUTES[scope].remove, {
+    yield* client.request(ROUTES[scope].remove, {
       owner,
       repo,
       secret_name: name,
@@ -281,7 +283,7 @@ const make = (client: GitHubClient["Service"]): RepositorySecretShape => {
       secret: name,
     });
 
-    return yield* client.request("DELETE /repos/{owner}/{repo}/environments/{environment_name}/secrets/{secret_name}", {
+    yield* client.request("DELETE /repos/{owner}/{repo}/environments/{environment_name}/secrets/{secret_name}", {
       owner,
       repo,
       environment_name: environment,

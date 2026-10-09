@@ -141,7 +141,7 @@ const make = (client: GitHubClient["Service"]): RepositorySecurityShape => {
     const { owner, repo } = yield* Repo;
     yield* Effect.annotateCurrentSpan({ owner, repo, enabled });
 
-    return yield* enabled ? client.request("PUT /repos/{owner}/{repo}/vulnerability-alerts", {
+    yield* enabled ? client.request("PUT /repos/{owner}/{repo}/vulnerability-alerts", {
       owner,
       repo,
     }) : client.request("DELETE /repos/{owner}/{repo}/vulnerability-alerts", {
@@ -167,7 +167,7 @@ const make = (client: GitHubClient["Service"]): RepositorySecurityShape => {
     const { owner, repo } = yield* Repo;
     yield* Effect.annotateCurrentSpan({ owner, repo, enabled });
 
-    return yield* enabled ? client.request("PUT /repos/{owner}/{repo}/automated-security-fixes", {
+    yield* enabled ? client.request("PUT /repos/{owner}/{repo}/automated-security-fixes", {
       owner,
       repo,
     }) : client.request("DELETE /repos/{owner}/{repo}/automated-security-fixes", {
@@ -193,7 +193,7 @@ const make = (client: GitHubClient["Service"]): RepositorySecurityShape => {
     const { owner, repo } = yield* Repo;
     yield* Effect.annotateCurrentSpan({ owner, repo, enabled });
 
-    return yield* enabled ? client.request("PUT /repos/{owner}/{repo}/private-vulnerability-reporting", {
+    yield* enabled ? client.request("PUT /repos/{owner}/{repo}/private-vulnerability-reporting", {
       owner,
       repo,
     }) : client.request("DELETE /repos/{owner}/{repo}/private-vulnerability-reporting", {

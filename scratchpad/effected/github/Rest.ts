@@ -67,9 +67,9 @@ export type Response<R extends Route> = Endpoints[R]["response"];
  *
  * @public
  */
-export type Data<R extends Route> = [Endpoints[R]["response"]["data"]] extends [never]
-	? ""
-	: Endpoints[R]["response"]["data"];
+export type Data<R extends Route> = R extends Route
+	? ([Endpoints[R]["response"]["data"]] extends [never] ? "" : Endpoints[R]["response"]["data"])
+	: never;
 
 /**
  * The subset of routes that paginate.

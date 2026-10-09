@@ -35,6 +35,7 @@ describe("RepositorySecurity setters", () => {
 					Effect.flatMap(RepositorySecurity, (s) => s[setter](true)),
 					{ [`PUT /repos/{owner}/{repo}/${segment}`]: Result.succeed("") },
 				);
+				assert.strictEqual(on.value, undefined);
 				assert.strictEqual(on.requested[0]?.route, `PUT /repos/{owner}/{repo}/${segment}`);
 				assert.deepStrictEqual(on.requested[0]?.params, { owner: "acme", repo: "widget" });
 
@@ -42,6 +43,7 @@ describe("RepositorySecurity setters", () => {
 					Effect.flatMap(RepositorySecurity, (s) => s[setter](false)),
 					{ [`DELETE /repos/{owner}/{repo}/${segment}`]: Result.succeed("") },
 				);
+				assert.strictEqual(off.value, undefined);
 				assert.strictEqual(off.requested[0]?.route, `DELETE /repos/{owner}/{repo}/${segment}`);
 				assert.deepStrictEqual(off.requested[0]?.params, { owner: "acme", repo: "widget" });
 			}),

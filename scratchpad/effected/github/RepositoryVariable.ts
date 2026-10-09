@@ -25,12 +25,13 @@ class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("
  *
  * @public
  */
-export interface VariableInfo {
-  /** The variable's name. */
-  readonly name: string;
-  /** The variable's current value. */
-  readonly value: string;
-}
+export const VariableInfo = S.Struct({
+  name: S.String.annotateKey({ description: "The variable's name." }),
+  value: S.String.annotateKey({ description: "The variable's current readable value." }),
+}).pipe($I.annoteSchema("VariableInfo", { description: "A variable name and value returned by repository or environment listings." }));
+
+/** The plain-object variable listing fields. */
+export type VariableInfo = typeof VariableInfo.Type;
 
 /**
  * Create or update, list and delete Actions variables on a repository and on
@@ -209,7 +210,7 @@ const make = (client: GitHubClient["Service"]): RepositoryVariableShape => {
     const { owner, repo } = yield* Repo;
     yield* Effect.annotateCurrentSpan({ owner, repo, variable: name });
 
-    return yield* client.request("DELETE /repos/{owner}/{repo}/actions/variables/{name}", {
+    yield* client.request("DELETE /repos/{owner}/{repo}/actions/variables/{name}", {
       owner,
       repo,
       name,
@@ -293,7 +294,7 @@ const make = (client: GitHubClient["Service"]): RepositoryVariableShape => {
       variable: name,
     });
 
-    return yield* client.request("DELETE /repos/{owner}/{repo}/environments/{environment_name}/variables/{name}", {
+    yield* client.request("DELETE /repos/{owner}/{repo}/environments/{environment_name}/variables/{name}", {
     owner,
     repo,
     environment_name: environment,

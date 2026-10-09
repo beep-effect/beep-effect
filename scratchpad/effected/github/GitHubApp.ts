@@ -12,6 +12,7 @@ import * as Redacted from "effect/Redacted";
 import * as Ref from "effect/Ref";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as Semaphore from "effect/Semaphore";
 import * as Stream from "effect/Stream";
 import githubAppJwt from "universal-github-app-jwt";
 import type { GitHubClientShape } from "./GitHubClient.ts";
@@ -492,7 +493,7 @@ function makeApp(options: GitHubAppOptions): Effect.Effect<GitHubAppShape> {
 
 		const revoke = Effect.fn("GitHubApp.revoke")(function* (value: Redacted.Redacted<string>) {
 			const client = yield* asBearer(value, options);
-			return yield* client.request("DELETE /installation/token", {}).pipe(Effect.catch(appFailure("revoke")));
+			yield* client.request("DELETE /installation/token", {}).pipe(Effect.catch(appFailure("revoke")));
 		});
 
 		const scopedToken = (request: TokenRequest): Effect.Effect<InstallationToken, GitHubAppError, Scope.Scope> =>
@@ -550,6 +551,7 @@ const makeRotatingClient = Effect.fn("makeRotatingClient")(function* (
 	options: GitHubAppOptions,
 ): Effect.fn.Return<GitHubClientShape, GitHubAppError, Scope.Scope> {
 	const held = yield* Ref.make(O.none<{ token: InstallationToken; client: GitHubClientShape }>());
+	const rotation = yield* Semaphore.make(1);
 
 	const revokeHeld = Effect.flatMap(Ref.get(held), (current) =>
 		O.isSome(current) ? Effect.ignore(app.revoke(current.value.token.token)) : Effect.void,
@@ -561,13 +563,12 @@ const makeRotatingClient = Effect.fn("makeRotatingClient")(function* (
 		const client = yield* makeClientShape({ ...options, token: minted.token });
 		yield* Ref.set(held, O.some({ token: minted, client }));
 		return client;
-	});
+	}).pipe(Effect.uninterruptible);
 
 	// Mint eagerly so a misconfigured app fails at layer construction, where
 	// the error is a `GitHubAppError` a caller can read, rather than on the
 	// first request as an opaque authorization failure.
-	yield* rotate;
-	yield* Effect.addFinalizer(() => revokeHeld);
+	yield* Effect.acquireRelease(rotate, () => revokeHeld.pipe(rotation.withPermits(1)));
 
 	/** The live client, re-minting first if the held token is spent. */
 	const fresh: Effect.Effect<GitHubClientShape, GitHubAppError> = Effect.gen(function* () {
@@ -575,7 +576,7 @@ const makeRotatingClient = Effect.fn("makeRotatingClient")(function* (
 		const state = yield* Ref.get(held);
 		if (O.isSome(state) && !state.value.token.isExpired(now)) return state.value.client;
 		return yield* rotate;
-	});
+	}).pipe(rotation.withPermits(1));
 
 	// A credential failure is reported in the channel the caller is already
 	// handling: "could not authenticate" IS an authorization failure from a

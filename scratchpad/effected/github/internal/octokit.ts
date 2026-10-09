@@ -1,18 +1,28 @@
+import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import { Octokit } from "@octokit/core";
 import { composePaginateRest } from "@octokit/plugin-paginate-rest";
 import type { OctokitResponse } from "@octokit/types";
+import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
-import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";
 import * as O from "@beep/utils/Option";
 import * as P from "effect/Predicate";
 import * as Redacted from "effect/Redacted";
 import * as Ref from "effect/Ref";
+import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { GitHubError, readRateLimitHeaders } from "../GitHubError.ts";
 import { GitHubGraphQLError } from "../GraphQL.ts";
 import type { RetryPolicy, RetryableFailure } from "../Resilience.ts";
 import { RateLimitSnapshot } from "../Resilience.ts";
 import type { PageSource } from "./paginate.ts";
+
+const $I = $ScratchpadId.create("effected/github/internal/octokit");
+
+const RequestMethod = LiteralKit(["DELETE", "GET", "HEAD", "PATCH", "POST", "PUT"]).pipe(
+	$I.annoteSchema("RequestMethod", { description: "The standard GitHub REST request methods." }),
+);
 
 /**
  * The one place `@octokit/core` is constructed, and the one place its
@@ -62,7 +72,9 @@ export interface Transport {
 	readonly rateLimit: Effect.Effect<O.Option<RateLimitSnapshot>>;
 }
 
-class TransportFailure extends Data.TaggedError("TransportFailure")<{ readonly error: unknown }> {}
+class TransportFailure extends S.TaggedError<TransportFailure>($I`TransportFailure`)("TransportFailure", {
+	error: S.Defect().annotateKey({ description: "The original throwable, preserved for transport classification." }),
+}, $I.annote("TransportFailure", { description: "Carries an Octokit throwable until it is classified." })) {}
 
 const SILENT_LOG = {
 	debug: () => {},
@@ -124,7 +136,7 @@ export const makeTransport = Effect.fn("makeTransport")(function* (options: Tran
 			call: (signal: AbortSignal) => Promise<A>,
 			classify: (error: unknown, nowMillis: number) => E,
 		): Effect.Effect<A, E> =>
-			Effect.tryPromise({ try: call, catch: (error) => new TransportFailure({ error }) }).pipe(
+			Effect.tryPromise({ try: call, catch: (error) => TransportFailure.make({ error }) }).pipe(
 				Effect.catch(Effect.fnUntraced(function* ({ error }) {
 						const now = yield* Clock.currentTimeMillis;
 						yield* record(readThrownHeaders(error));
@@ -149,7 +161,7 @@ export const makeTransport = Effect.fn("makeTransport")(function* (options: Tran
 			withRetry(
 				operation,
 				attempt(
-					(signal): Promise<OctokitResponse<A>> => octokit.request<string>(route, withSignal(params, signal)),
+					(signal) => octokit.request<A>({ ...routeOptions(route), ...withSignal(params, signal) }),
 					(error, now) => GitHubError.fromOctokit(operation, error, now),
 				).pipe(Effect.tap((response) => record(response.headers))),
 			);
@@ -162,23 +174,39 @@ export const makeTransport = Effect.fn("makeTransport")(function* (options: Tran
 			// carries the compare endpoint's `total_commits` continuation, the
 			// search-shaped `{ total_count, items }` normalization, and the
 			// empty-repository 409 that GitHub answers commit listings with.
-			const pages: AsyncIterable<OctokitResponse<ReadonlyArray<A>>> = composePaginateRest.iterator(octokit, route, params);
+			const paginationOctokit = makeOctokit(options);
+			let currentSignal: AbortSignal | undefined;
+			// The iterator retains only method, url and headers. Wrap its request
+			// method so each attempt keeps its signal and per-request options.
+			paginationOctokit.hook.wrap("request", (request, pageOptions): Promise<OctokitResponse<unknown>> => {
+				// Hook wrappers bind this options object, including the auth hook.
+				pageOptions.request = {
+						...pageOptions.request,
+						...requestOptions(params),
+						...O.getSomesStruct({ signal: O.fromUndefinedOr(currentSignal) }),
+				};
+				return Promise.resolve(request(pageOptions));
+			});
+			const pages: AsyncIterable<OctokitResponse<ReadonlyArray<A>>> = composePaginateRest.iterator(paginationOctokit, route, params);
 			const iterator = pages[Symbol.asyncIterator]();
 			let finished = false;
 			return {
 				next: Effect.suspend(() =>
 					finished
-						? Effect.succeed(O.none<ReadonlyArray<A>>())
+						? Effect.succeedNone
 						: withRetry(
 								operation,
 								attempt(
-									() => iterator.next(),
+									(signal) => {
+										currentSignal = signal;
+										return iterator.next();
+									},
 									(error, now) => GitHubError.fromOctokit(operation, error, now),
 								).pipe(
 									Effect.flatMap((result) => {
 										if (result.done === true || result.value === undefined) {
 											finished = true;
-											return Effect.succeed(O.none<ReadonlyArray<A>>());
+											return Effect.succeedNone;
 										}
 										const response = result.value;
 										return record(response.headers).pipe(Effect.as(O.some(response.data)));
@@ -193,7 +221,7 @@ export const makeTransport = Effect.fn("makeTransport")(function* (options: Tran
 			withRetry(
 				operation,
 				attempt(
-					() => octokit.graphql<unknown>(document, variables),
+					(signal) => octokit.graphql<unknown>(document, withSignal(variables, signal)),
 					(error, now) => GitHubGraphQLError.fromThrowable(operation, error, now),
 				),
 			);
@@ -201,11 +229,21 @@ export const makeTransport = Effect.fn("makeTransport")(function* (options: Tran
 		return { request, pageSource, graphql, rateLimit: Ref.get(snapshot) };
 	});
 
-/** Merge our abort signal into octokit's per-request options without clobbering them. */
-const withSignal = (params: Record<string, unknown>, signal: AbortSignal): Record<string, unknown> => {
-	const existing = P.isObjectKeyword(params.request) && !P.isFunction(params.request) ? params.request : {};
-	return { ...params, request: { ...existing, signal } };
+/** Keep Octokit's first-two-space-separated-token route parsing and GET defaults. */
+const routeOptions = (route: string) => {
+	const [methodOrUrl = "", url] = Str.split(route, " ");
+	const normalized = Str.toUpperCase(methodOrUrl);
+	return url !== undefined && Str.isNonEmpty(url)
+		? { method: S.is(RequestMethod)(normalized) ? normalized : methodOrUrl, url }
+		: { url: methodOrUrl };
 };
+
+const requestOptions = (params: Record<string, unknown>) =>
+	P.isObjectKeyword(params.request) && !P.isFunction(params.request) ? params.request : {};
+
+/** Merge our abort signal into octokit's per-request options without clobbering them. */
+const withSignal = (params: Record<string, unknown>, signal: AbortSignal): Record<string, unknown> =>
+	({ ...params, request: { ...requestOptions(params), signal } });
 
 /** Response headers off a throwable, when it carried any. */
 const readThrownHeaders = (error: unknown): Record<string, unknown> | undefined => {
@@ -213,7 +251,5 @@ const readThrownHeaders = (error: unknown): Record<string, unknown> | undefined 
 	const response = error.response;
 	if (!P.isObjectOrArray(response) || !P.hasProperty(response, "headers")) return undefined;
 	const headers = response.headers;
-	return isRecord(headers) ? headers : undefined;
+	return P.isObjectOrArray(headers) && !A.isArray(headers) ? headers : undefined;
 };
-
-const isRecord = (value: unknown): value is Record<string, unknown> => P.isObjectOrArray(value);

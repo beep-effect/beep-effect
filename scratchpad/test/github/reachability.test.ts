@@ -178,7 +178,7 @@ describe("bundle reachability", () => {
 		// The other half of the mechanism: without this a bundler must assume
 		// evaluating an unreferenced module matters, and keeps it.
 		const manifest = Result.getOrThrow(
-			S.decodeResult(PackageManifest)(readFileSync(resolve(SRC, "..", "package.json"), "utf8")),
+			S.decodeResult(PackageManifest)(readFileSync(resolve(SRC, "package.json"), "utf8")),
 		);
 		assert.strictEqual(manifest.sideEffects, false);
 	});
@@ -229,7 +229,7 @@ describe("bundle reachability", () => {
 		// classifier in GitHubError reads octokit's throwables structurally rather
 		// than importing `@octokit/request-error` for exactly this reason.
 		const manifest = Result.getOrThrow(
-			S.decodeResult(PackageManifest)(readFileSync(resolve(SRC, "..", "package.json"), "utf8")),
+			S.decodeResult(PackageManifest)(readFileSync(resolve(SRC, "package.json"), "utf8")),
 		);
 		const declared = new Set([
 			...Object.keys(manifest.dependencies ?? {}),

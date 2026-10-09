@@ -25,20 +25,23 @@ class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("
  *
  * @public
  */
-export interface CodeScanningSetup {
+export const CodeScanningSetup = S.Struct({
 	/** Whether default setup is `configured` or `not-configured`. */
-	readonly state?: "configured" | "not-configured" | undefined;
+	state: S.optional(S.Literals(["configured", "not-configured"])).annotateKey({ description: "Whether default setup is configured or not-configured." }),
 	/** The CodeQL languages to analyse. */
-	readonly languages?: ReadonlyArray<string> | undefined;
+	languages: S.String.pipe(S.Array, S.optional).annotateKey({ description: "The CodeQL languages to analyse." }),
 	/** `default` or `extended`. */
-	readonly query_suite?: string | undefined;
+	query_suite: S.optional(S.String).annotateKey({ description: "The query suite; accepts GitHub's evolving string vocabulary." }),
 	/** `remote` or `remote_and_local`. */
-	readonly threat_model?: string | undefined;
+	threat_model: S.optional(S.String).annotateKey({ description: "The threat model; accepts GitHub's evolving string vocabulary." }),
 	/** `standard` or `labeled`. */
-	readonly runner_type?: string | undefined;
+	runner_type: S.optional(S.String).annotateKey({ description: "The runner type; accepts GitHub's evolving string vocabulary." }),
 	/** The runner label, when `runner_type` is `labeled`. */
-	readonly runner_label?: string | undefined;
-}
+	runner_label: S.optional(S.String).annotateKey({ description: "The runner label, when runner_type is labeled." }),
+}).annotate($I.annote("CodeScanningSetup", { description: "A partial CodeQL default-setup configuration preserving omitted fields." }));
+
+/** The structural configuration owned by {@link CodeScanningSetup}. */
+export type CodeScanningSetup = typeof CodeScanningSetup.Type;
 
 /**
  * CodeQL default setup, and the language detection that gates it.

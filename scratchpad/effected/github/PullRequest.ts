@@ -1,4 +1,5 @@
 import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -17,11 +18,14 @@ import { PageOptions } from "./Rest.ts";
 const $I = $ScratchpadId.create("effected/github/PullRequest");
 
 class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("UnstubbedError", {
-	message: S.String,
-}) {}
+	message: S.String.annotateKey({ description: "The test-double member that needs an override." }),
+}, $I.annote("UnstubbedError", { description: "An unconfigured test-double member was called." })) {}
 
 /** How a pull request is merged. @public */
-export const MergeMethod = S.Literals(["merge", "squash", "rebase"]).pipe($I.annoteSchema("MergeMethod", { description: "How a pull request is merged." }));
+export const MergeMethod = LiteralKit(["merge", "squash", "rebase"]).pipe($I.annoteSchema("MergeMethod", { description: "How a pull request is merged." }));
+
+/** The values accepted by {@link MergeMethod}. @public */
+export type MergeMethod = typeof MergeMethod.Type;
 
 /**
  * A pull request, projected to what callers read.
@@ -73,12 +77,15 @@ export class PullRequestInfo extends S.Class<PullRequestInfo>($I`PullRequestInfo
  *
  * @public
  */
-export interface UpsertedPullRequest {
+export const UpsertedPullRequest = S.Struct({
 	/** The pull request, as created or as updated. */
-	readonly pullRequest: PullRequestInfo;
+	pullRequest: PullRequestInfo.annotateKey({ description: "The pull request, as created or as updated." }),
 	/** `true` when a new pull request was opened, `false` when an open one was updated. */
-	readonly created: boolean;
-}
+	created: S.Boolean.annotateKey({ description: "Whether this operation opened a new pull request rather than updating one." }),
+}).pipe($I.annoteSchema("UpsertedPullRequest", { description: "What PullRequest.upsert did, retaining its plain-object return boundary." }));
+
+/** What {@link PullRequestShape.upsert} did. @public */
+export type UpsertedPullRequest = typeof UpsertedPullRequest.Type;
 
 const AutoMergeResponse = S.Struct({});
 
@@ -194,7 +201,7 @@ export interface PullRequestShape {
 	readonly merge: (
 		number: number,
 		options?: {
-			readonly method?: "merge" | "squash" | "rebase" | undefined;
+			readonly method?: MergeMethod | undefined;
 			readonly commitTitle?: string | undefined;
 			readonly commitMessage?: string | undefined;
 		},
@@ -219,7 +226,7 @@ export interface PullRequestShape {
 	 */
 	readonly setAutoMerge: (
 		pullRequest: PullRequestInfo,
-		method: "merge" | "squash" | "rebase" | "off",
+		method: MergeMethod | "off",
 	) => Effect.Effect<void, GitHubGraphQLError, Repo>;
 }
 
@@ -430,7 +437,7 @@ const make = (client: GitHubClient["Service"]): PullRequestShape => {
 			);
 			// The same `diff-entry` wire shape the single-commit read answers with,
 			// so the same projection turns it into `CommitFile`s.
-			return files.map(fileOf);
+			return yield* Effect.forEach(files, (file) => fileOf(file, "PullRequest.listFiles"));
 		}),
 
 		listAssociatedWithCommit: Effect.fn("PullRequest.listAssociatedWithCommit")(function* (
@@ -474,7 +481,7 @@ const make = (client: GitHubClient["Service"]): PullRequestShape => {
 		merge: Effect.fn("PullRequest.merge")(function* (
 			number: number,
 			options?: {
-				readonly method?: "merge" | "squash" | "rebase" | undefined;
+				readonly method?: MergeMethod | undefined;
 				readonly commitTitle?: string | undefined;
 				readonly commitMessage?: string | undefined;
 			},
@@ -523,7 +530,7 @@ const make = (client: GitHubClient["Service"]): PullRequestShape => {
 
 		setAutoMerge: Effect.fn("PullRequest.setAutoMerge")(function* (
 			pullRequest: PullRequestInfo,
-			method: "merge" | "squash" | "rebase" | "off",
+			method: MergeMethod | "off",
 		) {
 			yield* Effect.annotateCurrentSpan({ number: pullRequest.number, method });
 			if (method === "off") {

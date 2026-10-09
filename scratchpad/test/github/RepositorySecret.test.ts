@@ -2,6 +2,7 @@
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
+import { GitHubError } from "../../effected/github/GitHubError.ts";
 import { secretFixture } from "./fixtures.ts";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
@@ -10,7 +11,9 @@ import type { GitHubFixtures, RecordedCall } from "../../effected/github/GitHubC
 import { GitHubClient } from "../../effected/github/GitHubClient.ts";
 import { Repo, RepoRef } from "../../effected/github/Repo.ts";
 import type { SecretScope } from "../../effected/github/RepositorySecret.ts";
-import { RepositorySecret } from "../../effected/github/RepositorySecret.ts";
+import { RepositorySecret, SecretInfo } from "../../effected/github/RepositorySecret.ts";
+
+const decodeSecretInfos = S.decodeResult(S.Array(SecretInfo));
 
 const JsonValue = S.fromJsonString(S.Unknown);
 
@@ -71,17 +74,19 @@ describe("RepositorySecret, per store", () => {
 				);
 
 				assert.deepStrictEqual(value, [{ name: "A" }, { name: "B" }]);
+				assert.deepStrictEqual(Result.getOrThrow(decodeSecretInfos(value)), value);
 				assert.deepStrictEqual(requested[0]?.params, { owner: "acme", repo: "widget" });
 			}),
 		);
 
 		it.effect(`delete (${scope}) deletes on that store's route`, () =>
 			Effect.gen(function* () {
-				const { requested } = yield* run(
+				const { value, requested } = yield* run(
 					Effect.flatMap(RepositorySecret, (s) => s.delete("TOKEN", scope)),
 					{ [`DELETE /repos/{owner}/{repo}/${scope}/secrets/{secret_name}`]: Result.succeed("") },
 				);
 
+				assert.strictEqual(value, undefined);
 				assert.strictEqual(requested[0]?.route, `DELETE /repos/{owner}/{repo}/${scope}/secrets/{secret_name}`);
 				assert.deepStrictEqual(requested[0]?.params, { owner: "acme", repo: "widget", secret_name: "TOKEN" });
 			}),
@@ -130,12 +135,14 @@ describe("RepositorySecret, per environment", () => {
 				{ "GET /repos/{owner}/{repo}/environments/{environment_name}/secrets": Result.succeed([secretFixture({ name: "A" })]) },
 			);
 			assert.deepStrictEqual(listed.value, [{ name: "A" }]);
+			assert.deepStrictEqual(Result.getOrThrow(decodeSecretInfos(listed.value)), listed.value);
 			assert.deepStrictEqual(listed.requested[0]?.params, { owner: "acme", repo: "widget", environment_name: "prod" });
 
 			const deleted = yield* run(
 				Effect.flatMap(RepositorySecret, (s) => s.deleteForEnvironment("prod", "TOKEN")),
 				{ "DELETE /repos/{owner}/{repo}/environments/{environment_name}/secrets/{secret_name}": Result.succeed("") },
 			);
+			assert.strictEqual(deleted.value, undefined);
 			assert.deepStrictEqual(deleted.requested[0]?.params, {
 				owner: "acme",
 				repo: "widget",
@@ -174,5 +181,53 @@ describe("the Redacted seam", () => {
 		assert.notInclude(`${value}`, "hunter2");
 		// And it is still readable where the code deliberately asks.
 		assert.strictEqual(Redacted.value(value), "hunter2");
+	});
+});
+
+
+describe("RepositorySecret key-shape failures", () => {
+	for (const size of [0, 31, 33]) {
+		for (const scope of SCOPES) {
+			it.effect(`set (${scope}) fails typed for a ${size}-byte public key without writing`, () =>
+				Effect.gen(function* () {
+					const route = `GET /repos/{owner}/{repo}/${scope}/secrets/public-key`;
+					const { value, requested } = yield* run(
+						Effect.flatMap(RepositorySecret, (s) => s.set("TOKEN", Redacted.make("plaintext"), scope)).pipe(Effect.result),
+						{ [route]: Result.succeed({ key: Base64.encode(new Uint8Array(size)), key_id: "k" }) },
+					);
+					const error = value.pipe(Result.flip, Result.getOrThrow);
+					assert.instanceOf(error, GitHubError);
+					assert.strictEqual(error.kind, "decode");
+					assert.strictEqual(error.operation, route);
+					assert.include(error.reason, "32-byte key");
+					assert.deepStrictEqual(requested.map((call) => call.route), [route]);
+					assert.notInclude(error.reason, "plaintext");
+				}),
+			);
+		}
+		it.effect(`setForEnvironment fails typed for a ${size}-byte public key without writing`, () =>
+			Effect.gen(function* () {
+				const route = "GET /repos/{owner}/{repo}/environments/{environment_name}/secrets/public-key";
+				const { value, requested } = yield* run(
+					Effect.flatMap(RepositorySecret, (s) => s.setForEnvironment("prod", "TOKEN", Redacted.make("plaintext"))).pipe(Effect.result),
+					{ [route]: Result.succeed({ key: Base64.encode(new Uint8Array(size)), key_id: "k" }) },
+				);
+				const error = value.pipe(Result.flip, Result.getOrThrow);
+				assert.deepStrictEqual(requested.map((call) => call.route), [route]);
+				assert.instanceOf(error, GitHubError);
+				assert.strictEqual(error.kind, "decode");
+				assert.strictEqual(error.operation, route);
+				assert.include(error.reason, "32-byte key");
+			}),
+		);
+	}
+});
+
+describe("SecretInfo boundary", () => {
+	it("keeps plain listing fields and rejects a non-string name", () => {
+		const info: SecretInfo = { name: "TOKEN" };
+		assert.deepStrictEqual(Result.getOrThrow(S.decodeResult(SecretInfo)(info)), info);
+		assert.deepStrictEqual(Result.getOrThrow(S.encodeResult(SecretInfo)(info)), info);
+		assert.strictEqual(Result.isFailure(S.decodeUnknownResult(SecretInfo)({ name: 7 })), true);
 	});
 });

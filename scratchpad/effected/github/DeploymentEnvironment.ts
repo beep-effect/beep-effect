@@ -1,4 +1,5 @@
 import { $ScratchpadId } from "@beep/identity/packages";
+import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -18,10 +19,13 @@ class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("
  *
  * @public
  */
-export interface DeploymentEnvironmentInfo {
+export const DeploymentEnvironmentInfo = S.Struct({
 	/** The environment's name. */
-	readonly name: string;
-}
+	name: S.String.annotateKey({ description: "The environment's name." }),
+}).annotate($I.annote("DeploymentEnvironmentInfo", { description: "A deployment environment's plain-object listing projection." }));
+
+/** The structural listing result owned by {@link DeploymentEnvironmentInfo}. */
+export type DeploymentEnvironmentInfo = typeof DeploymentEnvironmentInfo.Type;
 
 /**
  * Create or update, list and delete a repository's deployment environments.
@@ -140,14 +144,14 @@ const make = (client: GitHubClient["Service"]): DeploymentEnvironmentShape => {
 		// Paginated, so this is already an array — octokit's paginator normalises
 		// the envelope, including the case where a repository with none answers
 		// without the key at all.
-		return environments.map((environment): DeploymentEnvironmentInfo => ({ name: environment.name }));
+		return A.map(environments, (environment) => DeploymentEnvironmentInfo.make({ name: environment.name }));
 	}));
 
 	const delete_ = Effect.fn("DeploymentEnvironment.delete")(function* (name: string) {
 		const { owner, repo } = yield* Repo;
 		yield* Effect.annotateCurrentSpan({ owner, repo, environment: name });
 
-		return yield* client.request("DELETE /repos/{owner}/{repo}/environments/{environment_name}", {
+		yield* client.request("DELETE /repos/{owner}/{repo}/environments/{environment_name}", {
     owner,
     repo,
     environment_name: name,

@@ -1,9 +1,12 @@
 // @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { environmentFixture } from "./fixtures.ts";
-import { DeploymentEnvironment } from "../../effected/github/DeploymentEnvironment.ts";
+import { DeploymentEnvironment, DeploymentEnvironmentInfo } from "../../effected/github/DeploymentEnvironment.ts";
+import { harness } from "./harness.ts";
 import type { GitHubFixtures, RecordedCall } from "../../effected/github/GitHubClient.ts";
 import { GitHubClient } from "../../effected/github/GitHubClient.ts";
 import { Repo, RepoRef } from "../../effected/github/Repo.ts";
@@ -106,6 +109,19 @@ describe("DeploymentEnvironment.list", () => {
 });
 
 describe("DeploymentEnvironment.delete", () => {
+	it.effect("returns undefined after HTTP 204 through the live client", () =>
+		Effect.gen(function* () {
+			const { base, script } = harness([{ status: 204 }]);
+			const value = yield* Effect.provide(
+				Effect.flatMap(DeploymentEnvironment, (environment) => environment.delete("prod")),
+				DeploymentEnvironment.layer.pipe(Layer.provideMerge(base)),
+			);
+			assert.strictEqual(value, undefined);
+			assert.strictEqual(script.calls[0]?.method, "DELETE");
+			assert.strictEqual(script.calls[0]?.path, "/repos/acme/widget/environments/prod");
+		}),
+	);
+
 	it.effect("removes by name", () =>
 		Effect.gen(function* () {
 			const { requested } = yield* run(
@@ -114,6 +130,17 @@ describe("DeploymentEnvironment.delete", () => {
 			);
 
 			assert.deepStrictEqual(requested[0]?.params, { owner: "acme", repo: "widget", environment_name: "prod" });
+		}),
+	);
+});
+
+describe("DeploymentEnvironmentInfo", () => {
+	it.effect("decodes and encodes an open environment name as a plain object", () =>
+		Effect.gen(function* () {
+			const input = { name: "preview/customer branch" };
+			const value = yield* S.decodeEffect(DeploymentEnvironmentInfo)(input);
+			assert.deepStrictEqual(value, input);
+			assert.deepStrictEqual(yield* S.encodeEffect(DeploymentEnvironmentInfo)(value), input);
 		}),
 	);
 });

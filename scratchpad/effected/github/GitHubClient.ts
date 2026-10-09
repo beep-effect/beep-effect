@@ -22,12 +22,12 @@ import type { PageOptions } from "./Rest.ts";
 const $I = $ScratchpadId.create("effected/github/GitHubClient");
 
 class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("UnstubbedError", {
-	message: S.String,
-}) {}
+	message: S.String.pipe(S.annotateKey({ description: "The test-double member that was called without an override." })),
+}, $I.annote("UnstubbedError", { description: "An unconfigured GitHubClient test-double member was called." })) {}
 
 class FixtureError extends S.TaggedError<FixtureError>($I`FixtureError`)("FixtureError", {
-	message: S.String,
-}) {}
+	message: S.String.pipe(S.annotateKey({ description: "The requested route or GraphQL document missing from the fixture." })),
+}, $I.annote("FixtureError", { description: "A GitHubClient fixture has no response for the requested operation." })) {}
 
 /** GitHub's own maximum page size, and the default this package requests. */
 const DEFAULT_PER_PAGE = 100;

@@ -1,11 +1,11 @@
-// @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { ArtifactMetadata, StorageRecordInput } from "../../effected/github/ArtifactMetadata.ts";
 import { GitBranch } from "../../effected/github/GitBranch.ts";
-import { TokenPermissions } from "../../effected/github/TokenPermissions.ts";
+import { PermissionLevel, TokenPermissions } from "../../effected/github/TokenPermissions.ts";
 import { harness } from "./harness.ts";
 
 const JsonObject = S.fromJsonString(S.Record(S.String, S.Unknown));
@@ -13,6 +13,93 @@ const JsonGraphQL = S.fromJsonString(S.Struct({ query: S.String, variables: S.Un
 
 describe("TokenPermissions", () => {
 	const granted = TokenPermissions.fromGitHub({ contents: "write", metadata: "read", issues: "admin" });
+	const prototypeNames = ["__proto__", "constructor", "toString"] as const;
+
+	it("derives permission membership from the literal kit", () => {
+		assert.deepStrictEqual(PermissionLevel.literals, ["read", "write", "admin"]);
+		assert.isTrue(PermissionLevel.is.read("read"));
+		assert.isTrue(PermissionLevel.is.write("write"));
+		assert.isTrue(PermissionLevel.is.admin("admin"));
+		assert.isFalse(S.is(PermissionLevel)("superuser"));
+	});
+
+	it("preserves prototype names and arbitrary permission names as own keys", () => {
+		const permissions = R.fromEntries([
+			["__proto__", "read"], ["constructor", "write"], ["toString", "admin"],
+			["future_permission", "write"], ["unknown_level", "superuser"],
+		]);
+		const token = TokenPermissions.fromGitHub(permissions);
+		assert.deepStrictEqual(R.toEntries(token.granted), [
+			["__proto__", "read"], ["constructor", "write"], ["toString", "admin"],
+			["future_permission", "write"],
+		]);
+		for (const name of prototypeNames) assert.isTrue(R.has(token.granted, name));
+		assert.isFalse(R.has(token.granted, "unknown_level"));
+	});
+
+	it("reports missing prototype-name permissions instead of inherited grants", () => {
+		for (const name of prototypeNames) {
+			const result = TokenPermissions.fromGitHub({}).compare(R.fromEntries([[name, "read"]] as const));
+			assert.deepStrictEqual(result.missing.map((gap) => [gap.permission, gap.required, gap.granted]),
+				[[name, "read", undefined]]);
+			assert.deepStrictEqual(result.extra, []);
+			assert.isFalse(result.satisfied);
+			assert.isFalse(result.exact);
+		}
+	});
+
+	it("reports extra prototype-name permissions instead of inherited requirements", () => {
+		for (const name of prototypeNames) {
+			const result = TokenPermissions.fromGitHub(R.fromEntries([[name, "read"]])).compare({});
+			assert.deepStrictEqual(result.extra.map((extra) => [extra.permission, extra.granted, extra.required]),
+				[[name, "read", undefined]]);
+			assert.deepStrictEqual(result.missing, []);
+			assert.isTrue(result.satisfied);
+			assert.isFalse(result.exact);
+		}
+	});
+
+	it("preserves ranks for prototype-name permissions", () => {
+		for (const name of prototypeNames) {
+			const token = TokenPermissions.fromGitHub(R.fromEntries([[name, "write"]]));
+			assert.deepStrictEqual(token.compare(R.fromEntries([[name, "admin"]] as const)).missing
+				.map((gap) => [gap.permission, gap.required, gap.granted]), [[name, "admin", "write"]]);
+			assert.deepStrictEqual(token.compare(R.fromEntries([[name, "read"]] as const)).extra
+				.map((extra) => [extra.permission, extra.granted, extra.required]), [[name, "write", "read"]]);
+			assert.isTrue(token.compare(R.fromEntries([[name, "write"]] as const)).exact);
+		}
+	});
+
+	it.effect("assertions reject missing prototype-name permissions", () =>
+		Effect.gen(function* () {
+			const token = TokenPermissions.fromGitHub({});
+			for (const name of prototypeNames) {
+				const required = R.fromEntries([[name, "read"]] as const);
+				const insufficient = yield* Effect.flip(token.assertSufficient(required));
+				const inexact = yield* Effect.flip(token.assertExact(required));
+				for (const error of [insufficient, inexact]) {
+					assert.strictEqual(error.kind, "insufficient");
+					assert.strictEqual(error.result.missing[0]?.permission, name);
+					assert.include(error.message, `${name}:read`);
+				}
+			}
+		}),
+	);
+
+	it.effect("assertExact rejects extra prototype-name permissions and accepts exact grants", () =>
+		Effect.gen(function* () {
+			for (const name of prototypeNames) {
+				const permissions = R.fromEntries([[name, "read"]] as const);
+				const token = TokenPermissions.fromGitHub(permissions);
+				const error = yield* Effect.flip(token.assertExact({}));
+				assert.strictEqual(error.kind, "excess");
+				assert.strictEqual(error.result.extra[0]?.permission, name);
+				assert.include(error.message, `${name}:read`);
+				yield* token.assertSufficient({});
+				yield* token.assertExact(permissions);
+			}
+		}),
+	);
 
 	it("needs no layer, no client and no double", () => {
 		// The point of demoting this from a service: the whole comparison is
@@ -100,7 +187,9 @@ describe("ArtifactMetadata", () => {
 	it.effect("posts the fields the endpoint actually accepts", () =>
 		Effect.gen(function* () {
 			const { script, base } = harness([{ status: 201, body: { storage_records: [{ id: 11 }, { id: 12 }] } }]);
-			const ids = yield* Effect.provide(
+			const ids = yield* Effect.scopedWith((scope) => Effect.flatMap(
+				Layer.buildWithScope(ArtifactMetadata.layer.pipe(Layer.provideMerge(base)), scope),
+				(context) => Effect.provideContext(
 				Effect.flatMap(ArtifactMetadata, (metadata) =>
 					metadata.createStorageRecord(
 						StorageRecordInput.make({
@@ -111,8 +200,9 @@ describe("ArtifactMetadata", () => {
 						}),
 					),
 				),
-				ArtifactMetadata.layer.pipe(Layer.provideMerge(base)),
-			);
+				context,
+				),
+			));
 			assert.deepStrictEqual([...ids], [11, 12]);
 			// The organization comes from Repo's owner, like every other resource —
 			// not from a positional argument.
@@ -135,7 +225,9 @@ describe("GitBranch.createLinked", () => {
 	it.effect("sends the one mutation with no REST equivalent", () =>
 		Effect.gen(function* () {
 			const { script, base } = harness([{ status: 200, body: { data: { createLinkedBranch: {} } } }]);
-			yield* Effect.provide(
+			yield* Effect.scopedWith((scope) => Effect.flatMap(
+				Layer.buildWithScope(GitBranch.layer.pipe(Layer.provideMerge(base)), scope),
+				(context) => Effect.provideContext(
 				Effect.flatMap(GitBranch, (branch) =>
 					branch.createLinked({
 						issueNodeId: "I_1",
@@ -144,8 +236,9 @@ describe("GitBranch.createLinked", () => {
 						sha: "abc",
 					}),
 				),
-				GitBranch.layer.pipe(Layer.provideMerge(base)),
-			);
+				context,
+				),
+			));
 			const body = (yield* S.decodeEffect(JsonGraphQL)(script.calls[0]?.body ?? "{}"));
 			assert.include(body.query, "createLinkedBranch");
 			assert.deepStrictEqual(body.variables, {

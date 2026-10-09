@@ -26,244 +26,22 @@ class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("
  *
  * @public
  */
-export interface RulesetInfo {
-  /** The ruleset's numeric id. */
-  readonly id: number;
-  /** The ruleset's name. */
-  readonly name: string;
-  /** `"Repository"` for the repository's own, `"Organization"` for an inherited one. */
-  readonly source_type?: string | undefined;
-}
+export const RulesetInfo = S.Struct({
+  id: S.Finite.annotateKey({ description: "The ruleset's numeric id." }),
+  name: S.String.annotateKey({ description: "The ruleset's name." }),
+  source_type: S.optional(S.String).annotateKey({ description: "Repository for an owned ruleset, Organization for an inherited ruleset; absent when GitHub omits it." }),
+}).pipe($I.annoteSchema("RulesetInfo", { description: "A plain-object ruleset listing, including its ownership source." }));
 
-const RuleDismissalActor = S.Struct({
-  id: S.Finite,
-  type: S.Literals(["User", "Team", "IntegrationInstallation", "RepositoryRole"]),
-}).annotate({
-  identifier: "RuleDismissalActor",
-  description: "GitHub OpenAPI repository-rule-params-actor wire fields.",
-});
-
-const RuleDismissalRestriction = S.Struct({
-  allowed_actors: RuleDismissalActor.pipe(S.Array, S.mutable, S.optionalKey),
-  enabled: S.Boolean,
-}).annotate({
-  identifier: "RuleDismissalRestriction",
-  description: "GitHub OpenAPI repository-rule-params-dismissal-restriction wire fields.",
-});
-
-const RuleReviewer = S.Struct({
-  id: S.Finite,
-  type: S.Literal("Team"),
-}).annotate({
-  identifier: "RuleReviewer",
-  description: "GitHub OpenAPI repository-rule-params-reviewer wire fields.",
-});
-
-const RuleRequiredReviewer = S.Struct({
-  file_patterns: S.String.pipe(S.Array, S.mutable),
-  minimum_approvals: S.Finite,
-  reviewer: RuleReviewer,
-}).annotate({
-  identifier: "RuleRequiredReviewer",
-  description: "GitHub OpenAPI repository-rule-params-required-reviewer-configuration wire fields.",
-});
-
-const RuleStatusCheck = S.Struct({
-  context: S.String,
-  integration_id: S.optionalKey(S.Finite),
-}).annotate({
-  identifier: "RuleStatusCheck",
-  description: "GitHub OpenAPI repository-rule-params-status-check-configuration wire fields.",
-});
-
-const RuleWorkflow = S.Struct({
-  path: S.String,
-  ref: S.optionalKey(S.String),
-  repository_id: S.Finite,
-  sha: S.optionalKey(S.String),
-}).annotate({
-  identifier: "RuleWorkflow",
-  description: "GitHub OpenAPI repository-rule-params-workflow-file-reference wire fields.",
-});
-
-const RuleScanningTool = S.Struct({
-  alerts_threshold: S.Literals(["none", "errors", "errors_and_warnings", "all"]),
-  security_alerts_threshold: S.Literals(["none", "critical", "high_or_higher", "medium_or_higher", "all"]),
-  tool: S.String,
-}).annotate({
-  identifier: "RuleScanningTool",
-  description: "GitHub OpenAPI repository-rule-params-code-scanning-tool wire fields.",
-});
-
-const RulesetBypassActor = S.Struct({
-  actor_id: S.Finite.pipe(S.NullOr, S.optionalKey),
-  actor_type: S.Literals(["Integration", "OrganizationAdmin", "RepositoryRole", "Team", "DeployKey", "User"]),
-  bypass_mode: S.optionalKey(S.Literals(["always", "pull_request", "exempt"])),
-}).annotate({
-  identifier: "RulesetBypassActor",
-  description: "GitHub OpenAPI repository-ruleset-bypass-actor wire fields.",
-});
-
-const RulesetConditions = S.Struct({
-  ref_name: S.optionalKey(S.Struct({
-    include: S.String.pipe(S.Array, S.mutable, S.optionalKey),
-    exclude: S.String.pipe(S.Array, S.mutable, S.optionalKey),
-  })),
-}).annotate({
-  identifier: "RulesetConditions",
-  description: "GitHub OpenAPI repository-ruleset-conditions wire fields.",
-});
-
-const RulePatternParameters = S.Struct({
-  name: S.optionalKey(S.String),
-  negate: S.optionalKey(S.Boolean),
-  operator: S.Literals(["starts_with", "ends_with", "contains", "regex"]),
-  pattern: S.String,
-}).annotate({
-  identifier: "RulePatternParameters",
-  description: "The operator and pattern shared by commit, email, branch and tag rules.",
-});
-
-const RulesetRule = S.Union([
-  S.Struct({
-    type: S.Literal("creation"),
-  }),
-  S.Struct({
-    type: S.Literal("update"),
-    parameters: S.optionalKey(S.Struct({
-      update_allows_fetch_and_merge: S.Boolean,
-    })),
-  }),
-  S.Struct({
-    type: S.Literal("deletion"),
-  }),
-  S.Struct({
-    type: S.Literal("required_linear_history"),
-  }),
-  S.Struct({
-    type: S.Literal("merge_queue"),
-    parameters: S.optionalKey(S.Struct({
-      check_response_timeout_minutes: S.Finite,
-      grouping_strategy: S.Literals(["ALLGREEN", "HEADGREEN"]),
-      max_entries_to_build: S.Finite,
-      max_entries_to_merge: S.Finite,
-      merge_method: S.Literals(["MERGE", "SQUASH", "REBASE"]),
-      min_entries_to_merge: S.Finite,
-      min_entries_to_merge_wait_minutes: S.Finite,
-    })),
-  }),
-  S.Struct({
-    type: S.Literal("required_deployments"),
-    parameters: S.optionalKey(S.Struct({
-      required_deployment_environments: S.String.pipe(S.Array, S.mutable),
-    })),
-  }),
-  S.Struct({
-    type: S.Literal("required_signatures"),
-  }),
-  S.Struct({
-    type: S.Literal("pull_request"),
-    parameters: S.optionalKey(S.Struct({
-      allowed_merge_methods: S.Literals(["merge", "squash", "rebase"]).pipe(S.Array, S.mutable, S.optionalKey),
-      dismiss_stale_reviews_on_push: S.Boolean,
-      dismissal_restriction: S.optionalKey(RuleDismissalRestriction),
-      require_code_owner_review: S.Boolean,
-      require_last_push_approval: S.Boolean,
-      required_approving_review_count: S.Finite,
-      required_review_thread_resolution: S.Boolean,
-      required_reviewers: RuleRequiredReviewer.pipe(S.Array, S.mutable, S.optionalKey),
-    })),
-  }),
-  S.Struct({
-    type: S.Literal("required_status_checks"),
-    parameters: S.optionalKey(S.Struct({
-      do_not_enforce_on_create: S.optionalKey(S.Boolean),
-      required_status_checks: RuleStatusCheck.pipe(S.Array, S.mutable),
-      strict_required_status_checks_policy: S.Boolean,
-    })),
-  }),
-  S.Struct({
-    type: S.Literal("non_fast_forward"),
-  }),
-  S.Struct({
-    type: S.Literal("commit_message_pattern"),
-    parameters: S.optionalKey(RulePatternParameters),
-  }),
-  S.Struct({
-    type: S.Literal("commit_author_email_pattern"),
-    parameters: S.optionalKey(RulePatternParameters),
-  }),
-  S.Struct({
-    type: S.Literal("committer_email_pattern"),
-    parameters: S.optionalKey(RulePatternParameters),
-  }),
-  S.Struct({
-    type: S.Literal("branch_name_pattern"),
-    parameters: S.optionalKey(RulePatternParameters),
-  }),
-  S.Struct({
-    type: S.Literal("tag_name_pattern"),
-    parameters: S.optionalKey(RulePatternParameters),
-  }),
-  S.Struct({
-    type: S.Literal("workflows"),
-    parameters: S.optionalKey(S.Struct({
-      do_not_enforce_on_create: S.optionalKey(S.Boolean),
-      workflows: RuleWorkflow.pipe(S.Array, S.mutable),
-    })),
-  }),
-  S.Struct({
-    type: S.Literal("code_scanning"),
-    parameters: S.optionalKey(S.Struct({
-      code_scanning_tools: RuleScanningTool.pipe(S.Array, S.mutable),
-    })),
-  }),
-  S.Struct({
-    type: S.Literal("copilot_code_review"),
-    parameters: S.optionalKey(S.Struct({
-      review_draft_pull_requests: S.optionalKey(S.Boolean),
-      review_on_push: S.optionalKey(S.Boolean),
-    })),
-  }),
-  S.Struct({
-    type: S.Literal("license_compliance_scanning"),
-  }),
-  S.Struct({
-    type: S.Literal("file_path_restriction"),
-    parameters: S.optionalKey(S.Struct({
-      restricted_file_paths: S.String.pipe(S.Array, S.mutable),
-    })),
-  }),
-  S.Struct({
-    type: S.Literal("max_file_path_length"),
-    parameters: S.optionalKey(S.Struct({
-      max_file_path_length: S.Finite,
-    })),
-  }),
-  S.Struct({
-    type: S.Literal("file_extension_restriction"),
-    parameters: S.optionalKey(S.Struct({
-      restricted_file_extensions: S.String.pipe(S.Array, S.mutable),
-    })),
-  }),
-  S.Struct({
-    type: S.Literal("max_file_size"),
-    parameters: S.optionalKey(S.Struct({
-      max_file_size: S.Finite,
-    })),
-  }),
-]).pipe(S.toTaggedUnion("type")).annotate({
-  identifier: "RulesetRule",
-  description: "The repository rule variants supported by the installed Octokit parameters.",
-});
+/** The plain-object ruleset listing fields. */
+export type RulesetInfo = typeof RulesetInfo.Type;
 
 /**
- * A repository ruleset write matching the installed Octokit parameter vocabulary.
+ * What a ruleset write sends.
  *
  * **Details**
- * This wire schema preserves optional keys and uses mutable arrays to match
- * Octokit's generated request types. Decode unknown configuration with it
- * before calling `upsert`.
+ * GitHub's rule vocabulary is large, versioned and expanding. Target and
+ * enforcement remain strings, and conditions, rules and bypass actors are
+ * passed through as given, including future vocabulary and partial parameters.
  *
  * **Example** (Protect matching branches)
  * ```ts
@@ -279,18 +57,15 @@ const RulesetRule = S.Union([
  * @since 0.0.0
  */
 export const RulesetPayload = S.Struct({
-  name: S.String,
-  target: S.Literals(["branch", "tag", "push"]),
-  enforcement: S.Literals(["active", "evaluate", "disabled"]),
-  conditions: S.optionalKey(RulesetConditions),
-  rules: RulesetRule.pipe(S.Array, S.mutable, S.optionalKey),
-  bypass_actors: RulesetBypassActor.pipe(S.Array, S.mutable, S.optionalKey),
-}).annotate({
-  identifier: "RulesetPayload",
-  description: "A repository ruleset body accepted by both create and update routes.",
-});
+  name: S.String.annotateKey({ description: "The ruleset's name, which upsert matches on." }),
+  target: S.String.annotateKey({ description: "What the ruleset applies to, passed to GitHub as given." }),
+  enforcement: S.String.annotateKey({ description: "The enforcement mode, passed to GitHub as given." }),
+  conditions: S.optionalKey(S.Unknown).annotateKey({ description: "Conditions passed to GitHub as given, including non-ref-name conditions." }),
+  rules: S.optionalKey(S.Unknown).annotateKey({ description: "Rules passed to GitHub as given, including future rule vocabulary and partial parameters." }),
+  bypass_actors: S.optionalKey(S.Unknown).annotateKey({ description: "Actors allowed to bypass the ruleset, passed to GitHub as given." }),
+}).pipe($I.annoteSchema("RulesetPayload", { description: "An open repository ruleset body accepted by both create and update routes." }));
 
-/** The validated repository ruleset write fields. @category type-level @since 0.0.0 */
+/** The open repository ruleset write fields. @category type-level @since 0.0.0 */
 export type RulesetPayload = typeof RulesetPayload.Type;
 
 /**
@@ -431,20 +206,20 @@ const make = (client: GitHubClient["Service"]): RulesetShape => {
     };
 
     if (match !== undefined) {
-      yield* client.request("PUT /repos/{owner}/{repo}/rulesets/{ruleset_id}", {
+      yield* client.requestDecoded("PUT /repos/{owner}/{repo}/rulesets/{ruleset_id}", {
         owner,
         repo,
         ruleset_id: match.id,
         ...body,
-      });
+      }, S.Unknown);
       return;
     }
 
-    yield* client.request("POST /repos/{owner}/{repo}/rulesets", {
+    yield* client.requestDecoded("POST /repos/{owner}/{repo}/rulesets", {
       owner,
       repo,
       ...body,
-    });
+    }, S.Unknown);
   });
 
   const list = Effect.suspend(Effect.fn("Ruleset.list")(function* () {
@@ -468,7 +243,7 @@ const make = (client: GitHubClient["Service"]): RulesetShape => {
     const { owner, repo } = yield* Repo;
     yield* Effect.annotateCurrentSpan({ owner, repo, ruleset_id: rulesetId });
 
-    return yield* client.request("DELETE /repos/{owner}/{repo}/rulesets/{ruleset_id}", {
+    yield* client.request("DELETE /repos/{owner}/{repo}/rulesets/{ruleset_id}", {
       owner,
       repo,
       ruleset_id: rulesetId,

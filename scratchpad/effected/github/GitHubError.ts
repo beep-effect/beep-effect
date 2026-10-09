@@ -1,4 +1,5 @@
 import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as HashSet from "effect/HashSet";
@@ -18,7 +19,7 @@ const $I = $ScratchpadId.create("effected/github/GitHubError");
  *
  * @public
  */
-export const GitHubErrorKind = S.Literals([
+export const GitHubErrorKind = LiteralKit([
 	/** The resource is not there (404). Often not an error at all — see the `*Option` reads. */
 	"notFound",
 	/** The resource already exists (422/409 saying so). What makes `upsert` implementable. */
@@ -34,6 +35,9 @@ export const GitHubErrorKind = S.Literals([
 	/** A response arrived but did not match the schema it was decoded against. */
 	"decode",
 ]).pipe($I.annoteSchema("GitHubErrorKind", { description: "Why a GitHub call failed, as a value you can branch on." }));
+
+/** The values accepted by {@link GitHubErrorKind}. @public */
+export type GitHubErrorKind = typeof GitHubErrorKind.Type;
 
 /**
  * The validation codes GitHub documents for a 422's `errors[].code`.
@@ -51,7 +55,7 @@ export const GitHubErrorKind = S.Literals([
  *
  * @public
  */
-export const GitHubValidationCode = S.Literals([
+export const GitHubValidationCode = LiteralKit([
 	/** A resource the request referred to does not exist. */
 	"missing",
 	/** A required parameter was not sent. */
@@ -65,6 +69,9 @@ export const GitHubValidationCode = S.Literals([
 	/** No fixed meaning: read the entry's `message`. */
 	"custom",
 ]).pipe($I.annoteSchema("GitHubValidationCode", { description: "The validation codes GitHub documents for a 422's `errors[].code`." }));
+
+/** The values accepted by {@link GitHubValidationCode}. @public */
+export type GitHubValidationCode = typeof GitHubValidationCode.Type;
 
 /**
  * One entry from a failed response's `data.errors` array, as GitHub sent it.

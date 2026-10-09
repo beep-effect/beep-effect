@@ -1,4 +1,5 @@
 import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as Cause from "effect/Cause";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
@@ -16,11 +17,11 @@ import * as O from "@beep/utils/Option";
 const $I = $ScratchpadId.create("effected/github/CheckRun");
 
 class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("UnstubbedError", {
-  message: S.String,
-}) {}
+  message: S.String.annotateKey({ description: "The test-double member that needs an override." }),
+}, $I.annote("UnstubbedError", { description: "An unconfigured test-double member was called." })) {}
 
 /** How a check run finished. @public */
-export const CheckConclusion = S.Literals([
+export const CheckConclusion = LiteralKit([
   "success",
   "failure",
   "neutral",
@@ -30,8 +31,14 @@ export const CheckConclusion = S.Literals([
   "skipped",
 ]).pipe($I.annoteSchema("CheckConclusion", { description: "How a check run finished." }));
 
+/** The values accepted by {@link CheckConclusion}. @public */
+export type CheckConclusion = typeof CheckConclusion.Type;
+
 /** How serious an annotation is. @public */
-export const AnnotationLevel = S.Literals(["notice", "warning", "failure"]).pipe($I.annoteSchema("AnnotationLevel", { description: "How serious an annotation is." }));
+export const AnnotationLevel = LiteralKit(["notice", "warning", "failure"]).pipe($I.annoteSchema("AnnotationLevel", { description: "How serious an annotation is." }));
+
+/** The values accepted by {@link AnnotationLevel}. @public */
+export type AnnotationLevel = typeof AnnotationLevel.Type;
 
 /**
  * One annotation on a check run.
@@ -102,15 +109,16 @@ export class CheckRunOutput extends S.Class<CheckRunOutput>($I`CheckRunOutput`)(
  * Cut `value` to GitHub's byte budget without leaving a broken code point.
  *
  * @remarks
- * Slicing a UTF-8 buffer mid-character decodes to U+FFFD. Splitting a four-byte
- * code point can produce **more than one** replacement character, so the trim
- * loops rather than dropping a single one.
+ * A cut inside a UTF-8 sequence moves back to its leading byte before
+ * decoding. Complete characters, including an existing U+FFFD, survive.
  */
 const capBytes = (value: string): string => {
   if (Buffer.byteLength(value, "utf8") <= CheckRunOutput.LIMIT_BYTES) return value;
   const budget = CheckRunOutput.LIMIT_BYTES - Buffer.byteLength(CheckRunOutput.NOTICE, "utf8");
-  let cut = Buffer.from(value, "utf8").subarray(0, budget).toString("utf8");
-  while (cut.endsWith("�")) cut = cut.slice(0, -1);
+  const bytes = Buffer.from(value, "utf8");
+  let end = budget;
+  while (end > 0 && ((bytes[end] ?? 0) & 0xc0) === 0x80) end -= 1;
+  const cut = bytes.subarray(0, end).toString("utf8");
   return `${cut}${CheckRunOutput.NOTICE}`;
 };
 
@@ -431,7 +439,7 @@ const make = (client: GitHubClient["Service"]): CheckRunShape => {
         conclusion,
         output,
       });
-      return yield* use(run.id, conclude).pipe(
+      return yield* Effect.suspend(() => use(run.id, conclude)).pipe(
         Effect.onExit((exit) =>
           Effect.flatMap(Ref.get(recorded), (chosen) => concludeFor(name, run.id, exit, chosen, complete)),
         ),

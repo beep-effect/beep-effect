@@ -1,6 +1,8 @@
 // @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
+import { assertSuccess } from "@effect/vitest/utils";
+import * as Cause from "effect/Cause";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -13,9 +15,10 @@ import { TestClock } from "effect/testing";
 import { Attestation } from "../../effected/github/Attestation.ts";
 import { Annotation, CheckRun, CheckRunOutput } from "../../effected/github/CheckRun.ts";
 import type { GitHubClient } from "../../effected/github/GitHubClient.ts";
+import { GitHubError } from "../../effected/github/GitHubError.ts";
 import { GitHubIssue } from "../../effected/github/GitHubIssue.ts";
 import { GitHubRelease, ReleaseInfo } from "../../effected/github/GitHubRelease.ts";
-import { PullRequest, PullRequestInfo } from "../../effected/github/PullRequest.ts";
+import { PullRequest, PullRequestInfo, UpsertedPullRequest } from "../../effected/github/PullRequest.ts";
 import { CommentMarker, PullRequestComment } from "../../effected/github/PullRequestComment.ts";
 import type { Repo } from "../../effected/github/Repo.ts";
 import { PageOptions } from "../../effected/github/Rest.ts";
@@ -66,6 +69,26 @@ describe("CheckRunOutput byte budgeting", () => {
 	it("leaves no broken code point behind", () => {
 		const cut = CheckRunOutput.make({ title: "t", summary: "🦋".repeat(30_000) }).truncated().summary;
 		assert.notInclude(cut.slice(0, -CheckRunOutput.NOTICE.length), "�");
+	});
+
+	it("preserves complete replacement characters at the byte boundary", () => {
+		const budget = CheckRunOutput.LIMIT_BYTES - Buffer.byteLength(CheckRunOutput.NOTICE, "utf8");
+		const prefix = "a".repeat(budget - 6) + "��";
+		const cut = CheckRunOutput.make({ title: "t", summary: prefix + "b".repeat(100) }).truncated().summary;
+		assert.strictEqual(cut, prefix + CheckRunOutput.NOTICE);
+		assert.strictEqual(Buffer.byteLength(cut, "utf8"), CheckRunOutput.LIMIT_BYTES);
+	});
+
+	it("removes only an incomplete trailing UTF-8 sequence", () => {
+		const budget = CheckRunOutput.LIMIT_BYTES - Buffer.byteLength(CheckRunOutput.NOTICE, "utf8");
+		for (const character of ["é", "€", "🦋", "�"]) {
+			for (let included = 1; included < Buffer.byteLength(character, "utf8"); included += 1) {
+				const prefix = "a".repeat(budget - included - 3) + "�";
+				const cut = CheckRunOutput.make({ title: "t", summary: prefix + character + "b".repeat(100) }).truncated().summary;
+				assert.strictEqual(cut, prefix + CheckRunOutput.NOTICE);
+				assert.isAtMost(Buffer.byteLength(cut, "utf8"), CheckRunOutput.LIMIT_BYTES);
+			}
+		}
 	});
 
 	it("caps text as well as summary", () => {
@@ -316,6 +339,37 @@ describe("CheckRun", () => {
 		}),
 	);
 
+	for (const completionStatus of [200, 422]) {
+		it.effect(`a synchronous callback defect concludes the run and survives PATCH status ${completionStatus}`, () =>
+			Effect.gen(function* () {
+				const defect = GitHubError.decode("callback", "construction defect");
+				const { script, base } = harness([
+					{ status: 201, body: { id: 7, name: "n", status: "in_progress", html_url: "u" } },
+					{ status: completionStatus, body: { id: 7, name: "n", status: "completed", html_url: "u" } },
+				]);
+				const exit = yield* Effect.exit(
+					Effect.provide(
+						Effect.flatMap(CheckRun, (check) => check.withCheckRun("build", "sha", (): Effect.Effect<never> => { throw defect; })),
+						CheckRun.layer.pipe(Layer.provideMerge(base)),
+					),
+				);
+				assert.isTrue(Exit.isFailure(exit));
+				if (Exit.isFailure(exit)) {
+					assert.lengthOf(exit.cause.reasons, 1);
+					const found = Cause.findDefect(exit.cause);
+					assertSuccess(found, defect);
+					assert.strictEqual(found.success, defect);
+				}
+				assert.lengthOf(script.calls, 2);
+				assert.strictEqual(script.calls[1]?.method, "PATCH");
+				assert.strictEqual(script.calls[1]?.path, "/repos/acme/widget/check-runs/7");
+				const body = yield* Schema.decodeEffect(JsonObject)(script.calls[1]?.body ?? "{}");
+				assert.strictEqual(body.status, "completed");
+				assert.strictEqual(body.conclusion, "failure");
+			}),
+		);
+	}
+
 	it.effect("a defect in `use` still concludes the run", () =>
 		Effect.gen(function* () {
 			// `tapError` fires on the typed error channel only, so a defect used to
@@ -532,6 +586,20 @@ describe("PullRequest", () => {
 		}),
 	);
 
+	it.effect("listFiles rejects an unknown file status through GitHubError", () =>
+		Effect.gen(function* () {
+			const { value } = yield* drive(
+				[{ status: 200, body: [{ filename: "a.txt", status: "future_status", additions: 1, deletions: 0 }] }],
+				PullRequest, PullRequest,
+				(pulls) => Effect.flip(pulls.listFiles(7)),
+			);
+			assert.instanceOf(value, GitHubError);
+			assert.strictEqual(value.kind, "decode");
+			assert.strictEqual(value.operation, "PullRequest.listFiles");
+			assert.isDefined(value.cause);
+		}),
+	);
+
 	it.effect("upsert opens one when none is open", () =>
 		Effect.gen(function* () {
 			const { value, script } = yield* drive(
@@ -561,6 +629,31 @@ describe("PullRequest", () => {
 			);
 			assert.isFalse(value.created);
 			assert.strictEqual(script.calls[1]?.method, "PATCH");
+		}),
+	);
+
+	it.effect("upsert returns schema-valid plain objects for create and update", () =>
+		Effect.gen(function* () {
+			const { value } = yield* drive(
+				[
+					{ status: 200, body: [] },
+					{ status: 201, body: pull(3) },
+					{ status: 200, body: [pull(3)] },
+					{ status: 200, body: pull(3, { title: "t2" }) },
+				],
+				PullRequest, PullRequest,
+				(pulls) => Effect.gen(function* () {
+					const created = yield* pulls.upsert({ title: "t", head: "feature", base: "main" });
+					const updated = yield* pulls.upsert({ title: "t2", head: "feature", base: "main" });
+					return { created, updated };
+				}),
+			);
+			assert.isTrue(Schema.is(UpsertedPullRequest)(value.created));
+			assert.isTrue(Schema.is(UpsertedPullRequest)(value.updated));
+			assert.deepStrictEqual(value.created, { pullRequest: value.created.pullRequest, created: true });
+			assert.deepStrictEqual(value.updated, { pullRequest: value.updated.pullRequest, created: false });
+			assert.strictEqual(value.created.pullRequest.number, 3);
+			assert.strictEqual(value.updated.pullRequest.title, "t2");
 		}),
 	);
 
@@ -968,24 +1061,23 @@ describe("WorkflowDispatch", () => {
 	const run = (status: string, conclusion?: string) => ({
 		status: 200,
 		body: {
-			workflow_runs: [
-				{
-					id: 1,
-					status,
-					html_url: "https://x/1",
-					path: ".github/workflows/ci.yml",
-					...(conclusion !== undefined ? { conclusion } : {}),
-				},
-			],
-			total_count: 1,
+			id: 1,
+			status,
+			html_url: "https://x/1",
+			path: ".github/workflows/ci.yml",
+			...(conclusion !== undefined ? { conclusion } : {}),
 		},
+	});
+	const runs = (status: string) => ({
+		status: 200,
+		body: { workflow_runs: [run(status).body], total_count: 1 },
 	});
 
 	it.effect("polls until the run finishes, with no sentinel error", () =>
 		Effect.gen(function* () {
 			const { script, base } = harness([
 				{ status: 204 },
-				run("queued"),
+				runs("queued"),
 				run("in_progress"),
 				run("completed", "success"),
 			]);
@@ -1004,12 +1096,15 @@ describe("WorkflowDispatch", () => {
 			assert.strictEqual(status.conclusion, "success");
 			assert.isTrue(status.isDone);
 			assert.isAtLeast(script.count(), 4);
+			assert.strictEqual(script.calls[1]?.path, "/repos/acme/widget/actions/workflows/ci.yml/runs");
+			assert.strictEqual(script.calls[2]?.path, "/repos/acme/widget/actions/runs/1");
+			assert.strictEqual(script.calls[3]?.path, "/repos/acme/widget/actions/runs/1");
 		}),
 	);
 
 	it.effect("fails typed when the run never finishes", () =>
 		Effect.gen(function* () {
-			const { base } = harness([{ status: 204 }, run("in_progress")]);
+			const { script, base } = harness([{ status: 204 }, runs("in_progress"), run("in_progress")]);
 			const fiber = yield* WorkflowDispatch.pipe(
 				Effect.flatMap((workflows) =>
 					workflows.dispatchAndWait("ci.yml", "main", {
@@ -1024,6 +1119,9 @@ describe("WorkflowDispatch", () => {
 			const error = yield* Fiber.join(fiber);
 			assert.strictEqual(error.kind, "rejected");
 			assert.include(error.reason, "did not finish");
+			assert.strictEqual(error.status, 408);
+			assert.strictEqual(script.calls[1]?.path, "/repos/acme/widget/actions/workflows/ci.yml/runs");
+			assert.strictEqual(script.calls[2]?.path, "/repos/acme/widget/actions/runs/1");
 		}),
 	);
 });

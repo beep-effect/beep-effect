@@ -6,6 +6,7 @@ import * as O from "effect/Option";
 import * as Schema from "effect/Schema";
 import { FileContent, FileDeletion, GitCommit } from "../../effected/github/GitCommit.ts";
 import type { GitHubClient } from "../../effected/github/GitHubClient.ts";
+import { GitHubError } from "../../effected/github/GitHubError.ts";
 import { GitHubCommit } from "../../effected/github/GitHubCommit.ts";
 import { GitHubContent } from "../../effected/github/GitHubContent.ts";
 import { GitHubRepository } from "../../effected/github/GitHubRepository.ts";
@@ -439,6 +440,39 @@ describe("GitHubCommit", () => {
 			assert.lengthOf(value.commits, 2);
 			assert.strictEqual(value.files[1]?.previousPath, "old.txt");
 			assert.include(script.calls[0]?.path ?? "", "/compare/main...feature");
+		}),
+	);
+
+	it.effect("compare rejects an unknown file status through GitHubError", () =>
+		Effect.gen(function* () {
+			const { value } = yield* drive(
+				[{ status: 200, body: {
+					status: "ahead", ahead_by: 1, behind_by: 0, commits: [commit("c1")],
+					files: [{ filename: "a.txt", status: "future_status", additions: 1, deletions: 0 }],
+				} }],
+				GitHubCommit, GitHubCommit,
+				(commits) => Effect.flip(commits.compare("main", "feature")),
+			);
+			assert.instanceOf(value, GitHubError);
+			assert.strictEqual(value.kind, "decode");
+			assert.strictEqual(value.operation, "GitHubCommit.compare");
+			assert.isDefined(value.cause);
+		}),
+	);
+
+	it.effect("changedFiles rejects an unknown file status through GitHubError", () =>
+		Effect.gen(function* () {
+			const { value } = yield* drive(
+				[{ status: 200, body: commit("c1", {
+					files: [{ filename: "a.txt", status: "future_status", additions: 1, deletions: 0 }],
+				}) }],
+				GitHubCommit, GitHubCommit,
+				(commits) => Effect.flip(commits.changedFiles("c1")),
+			);
+			assert.instanceOf(value, GitHubError);
+			assert.strictEqual(value.kind, "decode");
+			assert.strictEqual(value.operation, "GitHubCommit.changedFiles");
+			assert.isDefined(value.cause);
 		}),
 	);
 

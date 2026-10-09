@@ -2,6 +2,22 @@ import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { PageOptions } from "../../effected/github/Rest.ts";
+import type { Data } from "../../effected/github/Rest.ts";
+import { repositoryFixture } from "./fixtures.ts";
+
+describe("Rest.Data", () => {
+	it("preserves bodyful and bodyless successful payloads for a route union", () => {
+		type Payload = Data<"GET /repos/{owner}/{repo}" | "DELETE /repos/{owner}/{repo}">;
+		const bodyful: Payload = repositoryFixture({ full_name: "acme/widget" });
+		const bodyless: Payload = "";
+		const exact: [Payload] extends [Data<"GET /repos/{owner}/{repo}"> | ""]
+			? ([Data<"GET /repos/{owner}/{repo}"> | ""] extends [Payload] ? true : never)
+			: never = true;
+		assert.isTrue(exact);
+		assert.strictEqual(bodyful.full_name, "acme/widget");
+		assert.strictEqual(bodyless, "");
+	});
+});
 
 describe("PageOptions", () => {
 	it("accepts a page size inside GitHub's range", () => {

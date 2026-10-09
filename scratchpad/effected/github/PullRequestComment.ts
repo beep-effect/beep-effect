@@ -200,11 +200,11 @@ const make = (client: GitHubClient["Service"]): PullRequestCommentShape => {
 		delete: Effect.fn("PullRequestComment.delete")(function* (commentId: number) {
 			const { owner, repo } = yield* Repo;
 			yield* Effect.annotateCurrentSpan({ owner, repo, commentId });
-			return yield* client.request("DELETE /repos/{owner}/{repo}/issues/comments/{comment_id}", {
-    owner,
-    repo,
-    comment_id: commentId,
-});
+			yield* client.request("DELETE /repos/{owner}/{repo}/issues/comments/{comment_id}", {
+				owner,
+				repo,
+				comment_id: commentId,
+			});
 		}),
 	};
 };

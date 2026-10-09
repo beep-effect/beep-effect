@@ -2,7 +2,8 @@
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
-import { CodeScanning } from "../../effected/github/CodeScanning.ts";
+import * as S from "effect/Schema";
+import { CodeScanning, CodeScanningSetup } from "../../effected/github/CodeScanning.ts";
 import type { GitHubFixtures, RecordedCall } from "../../effected/github/GitHubClient.ts";
 import { GitHubClient } from "../../effected/github/GitHubClient.ts";
 import { Repo, RepoRef } from "../../effected/github/Repo.ts";
@@ -103,6 +104,36 @@ describe("CodeScanning", () => {
 					{ owner: "other", repo: "thing" },
 				],
 			);
+		}),
+	);
+});
+
+describe("CodeScanningSetup", () => {
+	it.effect("preserves omitted keys and explicit undefined keys", () =>
+		Effect.gen(function* () {
+			const omitted = yield* S.decodeEffect(CodeScanningSetup)({});
+			assert.deepStrictEqual(omitted, {});
+			assert.deepStrictEqual(yield* S.encodeEffect(CodeScanningSetup)(omitted), {});
+			const explicit = { runner_label: undefined };
+			const value = yield* S.decodeEffect(CodeScanningSetup)(explicit);
+			assert.deepStrictEqual(value, explicit);
+			assert.deepStrictEqual(yield* S.encodeEffect(CodeScanningSetup)(value), explicit);
+		}),
+	);
+
+	it.effect("retains open language and configuration string inputs", () =>
+		Effect.gen(function* () {
+			const input = {
+				state: "configured" as const,
+				languages: ["future-language"],
+				query_suite: "future-suite",
+				threat_model: "future-model",
+				runner_type: "future-runner",
+				runner_label: "custom runner",
+			};
+			const value = yield* S.decodeEffect(CodeScanningSetup)(input);
+			assert.deepStrictEqual(value, input);
+			assert.deepStrictEqual(yield* S.encodeEffect(CodeScanningSetup)(value), input);
 		}),
 	);
 });

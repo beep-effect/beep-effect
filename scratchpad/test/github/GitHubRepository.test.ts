@@ -1,11 +1,15 @@
-// @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as Result from "effect/Result";
+import * as S from "effect/Schema";
+import * as Tracer from "effect/Tracer";
+import { deliberatelyInvalid } from "./deliberatelyInvalid.ts";
 import { repositoryFixture, userFixture } from "./fixtures.ts";
 import type { GitHubFixtures, RecordedCall } from "../../effected/github/GitHubClient.ts";
 import { GitHubClient } from "../../effected/github/GitHubClient.ts";
-import { GitHubRepository, repositoryPatch, transformSecurityAndAnalysis } from "../../effected/github/GitHubRepository.ts";
+import { AppliedSettings, GitHubRepository, repositoryPatch, transformSecurityAndAnalysis } from "../../effected/github/GitHubRepository.ts";
+import type { RepositoryPatch } from "../../effected/github/GitHubRepository.ts";
 import { Repo, RepoRef } from "../../effected/github/Repo.ts";
 
 /**
@@ -18,11 +22,13 @@ const run = Effect.fn("run")(function*<A, E>(
 	graphql: Record<string, unknown> = {},
 ) {
 		const requested: RecordedCall[] = [];
-		const value = yield* effect.pipe(
-			Effect.provide(GitHubRepository.layer),
-			Effect.provide(GitHubClient.layerFixture({ request, graphql, requested })),
-			Effect.provide(Repo.layer(RepoRef.make({ owner: "acme", repo: "widget" }))),
-		);
+		const value = yield* Effect.scopedWith((scope) => Effect.flatMap(
+			Layer.buildWithScope(GitHubRepository.layer.pipe(Layer.provideMerge(Layer.mergeAll(
+				GitHubClient.layerFixture({ request, graphql, requested }),
+				Repo.layer(RepoRef.make({ owner: "acme", repo: "widget" })),
+			))), scope),
+			(context) => Effect.provideContext(effect, context),
+		));
 		return { value, requested, routes: requested.filter((c) => c.kind !== "graphql").map((c) => c.route) };
 	});
 
@@ -30,6 +36,46 @@ const REPO = { node_id: "R_node123", default_branch: "main" };
 const UPDATE_REPOSITORY = { UpdateRepository: { updateRepository: { repository: { id: "R_node123" } } } };
 
 describe("GitHubRepository reads", () => {
+	it.effect("keeps coordinate annotations on resource spans, including derived settings reads", () =>
+		Effect.gen(function* () {
+			const baseTracer = yield* Effect.tracer;
+			const spans: Array<Tracer.Span> = [];
+			const tracer = Tracer.make({
+				...baseTracer,
+				span: (options) => {
+					const span = baseTracer.span(options);
+					spans.push(span);
+					return span;
+				},
+			});
+			yield* run(
+				Effect.flatMap(GitHubRepository, (r) => Effect.gen(function* () {
+					yield* r.settings;
+					yield* r.defaultBranch;
+					yield* r.nodeId;
+					yield* r.ownerType;
+				})),
+				{
+					"GET /repos/{owner}/{repo}": Result.succeed(repositoryFixture(REPO)),
+					"GET /users/{username}": Result.succeed(userFixture({ type: "Organization" })),
+				},
+			).pipe(Effect.withSpan("caller"), Effect.withTracer(tracer));
+			const settingsSpans = spans.filter((span) => span.name === "GitHubRepository.settings");
+			assert.lengthOf(settingsSpans, 3);
+			for (const span of settingsSpans) {
+				assert.strictEqual(span.attributes.get("owner"), "acme");
+				assert.strictEqual(span.attributes.get("repo"), "widget");
+			}
+			const ownerSpans = spans.filter((span) => span.name === "GitHubRepository.ownerType");
+			assert.lengthOf(ownerSpans, 1);
+			assert.strictEqual(ownerSpans[0]?.attributes.get("owner"), "acme");
+			assert.isUndefined(ownerSpans[0]?.attributes.get("repo"));
+			const caller = spans.find((span) => span.name === "caller");
+			assert.isDefined(caller);
+			assert.isUndefined(caller?.attributes.get("owner"));
+			assert.isUndefined(caller?.attributes.get("repo"));
+		}),
+	);
 	it.effect("settings, defaultBranch and nodeId all come off one GET", () =>
 		Effect.gen(function* () {
 			const branch = yield* run(
@@ -114,12 +160,12 @@ describe("GitHubRepository.updateSettings", () => {
 		Effect.gen(function* () {
 			const { requested } = yield* run(
 				Effect.flatMap(GitHubRepository, (r) =>
-					r.applySettings({
+					r.updateSettings(deliberatelyInvalid<RepositoryPatch>({
 						security_and_analysis: {
 							secret_scanning: "enabled",
 							delegated_bypass_reviewers: [{ reviewer_id: 7 }],
 						},
-					}),
+					})),
 				),
 				{ "PATCH /repos/{owner}/{repo}": Result.succeed(repositoryFixture(REPO)) },
 			);
@@ -276,6 +322,21 @@ describe("GitHubRepository.applySettings", () => {
 });
 
 describe("transformSecurityAndAnalysis", () => {
+	it("accepts wrapped enabled and disabled statuses while retaining excess properties and identity", () => {
+		for (const status of ["enabled", "disabled"]) {
+			const wrapped = { status, extra: "retained" };
+			const transformed = transformSecurityAndAnalysis({ secret_scanning: wrapped });
+			assert.strictEqual(transformed?.secret_scanning, wrapped);
+			assert.deepStrictEqual(transformed, { secret_scanning: { status, extra: "retained" } });
+		}
+	});
+
+	it("rejects missing and invalid wrapped statuses and array-shaped status values", () => {
+		for (const wrapped of [{}, { status: "on" }, { status: 42 }, { status: null }, null, undefined]) {
+			assert.isUndefined(transformSecurityAndAnalysis({ secret_scanning: wrapped }));
+		}
+		assert.isUndefined(transformSecurityAndAnalysis({ secret_scanning: Object.assign([], { status: "enabled" }) }));
+	});
 	it("wraps status fields and returns undefined when nothing survives", () => {
 		assert.deepStrictEqual(transformSecurityAndAnalysis({ secret_scanning: "enabled" }), {
 			secret_scanning: { status: "enabled" },
@@ -297,6 +358,25 @@ describe("transformSecurityAndAnalysis", () => {
 });
 
 describe("GitHubRepository.applySettings reporting", () => {
+	it.effect("returns a plain object compatible with the owning AppliedSettings schema", () =>
+		Effect.gen(function* () {
+			const { value } = yield* run(
+				Effect.flatMap(GitHubRepository, (r) => r.applySettings({ has_issues: true, has_sponsorships: true })),
+				{
+					"GET /repos/{owner}/{repo}": Result.succeed(repositoryFixture(REPO)),
+					"PATCH /repos/{owner}/{repo}": Result.succeed(repositoryFixture(REPO)),
+				},
+				UPDATE_REPOSITORY,
+			);
+			const report: AppliedSettings = value;
+			assert.isTrue(S.is(AppliedSettings)(report));
+			assert.deepStrictEqual(report, { rest: ["has_issues"], graphql: ["has_sponsorships"] });
+			const decoded = yield* S.decodeEffect(AppliedSettings)(report);
+			assert.deepStrictEqual(decoded, report);
+			assert.isFalse(S.is(AppliedSettings)({ rest: [] }));
+			assert.isFalse(S.is(AppliedSettings)({ rest: [42], graphql: [] }));
+		}),
+	);
 	it.effect("reports the fields it SENT, not the fields it was given", () =>
 		Effect.gen(function* () {
 			// The case the whole return value exists for. `merge_commit_title` is

@@ -2,7 +2,7 @@ import blakejs from "blakejs";
 import * as Result from "effect/Result";
 import { dual } from "effect/Function";
 import * as Base64 from "effect/encoding/Base64";
-import type * as EncodingError from "effect/encoding/EncodingError";
+import * as EncodingError from "effect/encoding/EncodingError";
 import nacl from "tweetnacl";
 
 // `blakejs` is CommonJS, and Node's cjs-module-lexer detects only PART of its
@@ -68,7 +68,15 @@ export const encryptSecret: {
 	publicKey: string,
 	secretValue: string,
 ): Result.Result<string, EncodingError.EncodingError> =>
-	Result.map(Base64.decode(publicKey), (publicKeyBytes) => {
+	Result.flatMap(Base64.decode(publicKey), (publicKeyBytes) => {
+		if (publicKeyBytes.length !== PUBLIC_KEY_BYTES) {
+			return Result.fail(new EncodingError.EncodingError({
+				kind: "Decode",
+				module: "encryptSecret",
+				input: publicKey,
+				message: `Expected a ${PUBLIC_KEY_BYTES}-byte public key, got ${publicKeyBytes.length} bytes`,
+			}));
+		}
 		const ephemeralKeyPair = nacl.box.keyPair();
 
 		const nonceInput = new Uint8Array(PUBLIC_KEY_BYTES * 2);
@@ -82,5 +90,5 @@ export const encryptSecret: {
 		sealed.set(ephemeralKeyPair.publicKey);
 		sealed.set(ciphertext, ephemeralKeyPair.publicKey.length);
 
-		return Base64.encode(sealed);
+		return Result.succeed(Base64.encode(sealed));
 	}));

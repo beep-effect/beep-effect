@@ -208,6 +208,13 @@ describe("GitBranch reads", () => {
 });
 
 describe("GitBranch.delete", () => {
+	it.effect("returns undefined after HTTP 204", () =>
+		Effect.gen(function* () {
+			const { value } = yield* run([{ status: 204 }], (branch) => branch.delete("release/1.2"));
+			assert.strictEqual(value, undefined);
+		}),
+	);
+
 	it.effect("deletes the short ref", () =>
 		Effect.gen(function* () {
 			const { script } = yield* run([{ status: 204 }], (branch) => branch.delete("release/1.2"));

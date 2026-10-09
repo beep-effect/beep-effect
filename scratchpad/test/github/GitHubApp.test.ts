@@ -174,6 +174,15 @@ describe("GitHubApp.token", () => {
 });
 
 describe("GitHubApp.revoke and scopedToken", () => {
+	it.effect("returns undefined after an HTTP 204 revocation", () =>
+		withApp([{ status: 204 }], (app) =>
+			Effect.gen(function* () {
+				const value = yield* app.revoke(Redacted.make("ghs_installation"));
+				assert.strictEqual(value, undefined);
+			}),
+		),
+	);
+
 	it.effect("revokes with a token credential, not a bearer", () =>
 		withApp([{ status: 204 }], (app, script) =>
 			Effect.gen(function* () {
@@ -337,6 +346,36 @@ describe("GitHubApp.clientLayer", () => {
 			// actually wrong — not an opaque authorization failure on first use.
 			assert.strictEqual(error._tag, "GitHubAppError");
 			assert.strictEqual(error.kind, "token");
+		}),
+	);
+
+	it.effect("concurrent expired-token requests share one replacement and revoke every minted token", () =>
+		Effect.gen(function* () {
+			const script = scriptedFetch([
+				tokenReply({ expiresAt: "1970-01-01T00:00:00Z", token: "ghs_first" }),
+				{ status: 204 },
+				tokenReply({ token: "ghs_second" }),
+				{ status: 200, body: { default_branch: "main" } },
+				{ status: 200, body: { default_branch: "main" } },
+				{ status: 204 },
+			]);
+			const values = yield* Effect.provide(
+				Effect.gen(function* () {
+					const client = yield* GitHubClient;
+					return yield* Effect.all([
+						client.request("GET /repos/{owner}/{repo}", { owner: "o", repo: "r" }),
+						client.request("GET /repos/{owner}/{repo}", { owner: "o", repo: "r" }),
+					], { concurrency: 2 });
+				}),
+				GitHubApp.clientLayer({ ...CREDENTIALS, installationId: 42 }, { fetch: script.fetch, retry: NO_RETRY }),
+			);
+			assert.deepStrictEqual(values.map((value) => value.default_branch), ["main", "main"]);
+			assert.strictEqual(script.count(), 6, "one initial mint, one rotation, two reads and two revocations");
+			assert.deepStrictEqual(script.calls.map((call) => call.method), ["POST", "DELETE", "POST", "GET", "GET", "DELETE"]);
+			assert.strictEqual(script.calls[1]?.headers.authorization, "token ghs_first");
+			assert.strictEqual(script.calls[3]?.headers.authorization, "token ghs_second");
+			assert.strictEqual(script.calls[4]?.headers.authorization, "token ghs_second");
+			assert.strictEqual(script.calls[5]?.headers.authorization, "token ghs_second");
 		}),
 	);
 });

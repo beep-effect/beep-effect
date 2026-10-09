@@ -286,7 +286,7 @@ const make = (client: GitHubClient["Service"]): GitBranchShape => {
       const { owner, repo } = yield* Repo;
       const short = yield* rejectEmpty("GitBranch.delete", branch);
       yield* Effect.annotateCurrentSpan({ owner, repo, branch: short });
-      return yield* client.request("DELETE /repos/{owner}/{repo}/git/refs/{ref}", {
+      yield* client.request("DELETE /repos/{owner}/{repo}/git/refs/{ref}", {
         owner,
         repo,
         ref: `heads/${short}`,

@@ -1,4 +1,5 @@
 import { $ScratchpadId } from "@beep/identity/packages";
+import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
@@ -52,16 +53,19 @@ export class WorkflowRunStatus extends S.Class<WorkflowRunStatus>($I`WorkflowRun
  *
  * @public
  */
-export interface WorkflowInfo {
+export const WorkflowInfo = S.Struct({
   /** The workflow's numeric id, usable as `workflow_id` on other routes. */
-  readonly id: number;
+  id: S.Finite.annotateKey({ description: "The workflow's numeric id, usable as workflow_id on other routes." }),
   /** The workflow's display name. */
-  readonly name: string;
+  name: S.String.annotateKey({ description: "The workflow's display name." }),
   /** Repository-relative path, e.g. `.github/workflows/ci.yml`. */
-  readonly path: string;
+  path: S.String.annotateKey({ description: "Repository-relative workflow path." }),
   /** GitHub's state string; see the remarks above before branching on it. */
-  readonly state: string;
-}
+  state: S.String.annotateKey({ description: "GitHub's uninterpreted workflow state string." }),
+}).annotate($I.annote("WorkflowInfo", { description: "One workflow defined in the repository." }));
+
+/** The plain-object result described by {@link WorkflowInfo}. @public */
+export type WorkflowInfo = typeof WorkflowInfo.Type;
 
 /**
  * How often to poll for a dispatched run, and how long to keep polling.
@@ -115,8 +119,11 @@ export interface WorkflowDispatchShape {
    * The wait is `Effect.repeat` with a predicate over the **success** value, so
    * "not finished yet" is never an error. If the run is not found finished
    * within `poll.timeout`, it fails with a `rejected` `GitHubError` (status
-   * 408). The run is matched by branch, creation time and workflow path, so
-   * concurrent dispatches of the same workflow on the same ref can be confused.
+   * 408), including time spent inside requests. A non-positive polling interval
+   * fails with a `rejected` `GitHubError` (status 422) before dispatching.
+   * Discovery filters by workflow, event, branch and creation time, then retains
+   * one run id. Concurrent dispatches of the same workflow on the same ref can
+   * still be confused because GitHub's dispatch response supplies no run id.
    */
   readonly dispatchAndWait: (
     workflow: string,
@@ -235,7 +242,7 @@ const make = (client: GitHubClient["Service"]): WorkflowDispatchShape => {
       owner,
       repo,
     });
-    return workflows.map(
+    return A.map(workflows,
       (workflow): WorkflowInfo => ({
         id: workflow.id,
         name: workflow.name,
@@ -261,48 +268,51 @@ const make = (client: GitHubClient["Service"]): WorkflowDispatchShape => {
       const { owner, repo } = yield* Repo;
       const interval = options?.poll?.interval ?? DEFAULT_INTERVAL;
       const timeout = options?.poll?.timeout ?? DEFAULT_TIMEOUT;
-      const attempts = Math.max(1, Math.ceil(Duration.toMillis(timeout) / Duration.toMillis(interval)));
+      if (Duration.isPositive(interval) === false) {
+        return yield* GitHubError.rejected(
+          "WorkflowDispatch.dispatchAndWait", 422, "polling interval must be positive",
+        );
+      }
       yield* Effect.annotateCurrentSpan({
         owner,
         repo,
         workflow,
         ref,
-        attempts,
+        interval: Duration.format(interval),
+        timeout: Duration.format(timeout),
       });
 
       // GitHub answers a dispatch with 204 and no run id, so the run has to be
       // found by when it was created. `dispatchedAt` is read before the
       // dispatch so a run created in the same second is not missed.
-      const dispatchedAt = DateTime.formatIso(yield* DateTime.now);
-      yield* dispatch(workflow, ref, options?.inputs);
-
-      const findRun = Effect.gen(function* () {
-        const runs = yield* client.paginate(
-          "GET /repos/{owner}/{repo}/actions/runs",
-          { owner, repo, created: `>=${dispatchedAt}`, branch: ref },
-          PageOptions.make({ perPage: 10, maxPages: 1 }),
-        );
-        const match = runs.find((run) => run.path?.endsWith(workflow) ?? true);
-        return match === undefined ? O.none<WorkflowRunStatus>() : O.some(statusOf(match));
-      });
-
-      const settled = yield* Effect.repeat(findRun, {
-        // Repeat WHILE the answer is "not yet" — a predicate over the success
-        // value, so "pending" never has to masquerade as an error.
-        while: (found) => O.isNone(found) || !found.value.isDone,
-        schedule: Schedule.spaced(interval),
-        times: attempts,
-      });
-
-      if (O.isNone(settled) || !settled.value.isDone) {
-        return yield*
-          GitHubError.rejected(
-            "WorkflowDispatch.dispatchAndWait",
-            408,
-            `workflow ${workflow} did not finish within ${Duration.format(timeout)}`,
+      const expired = GitHubError.rejected(
+        "WorkflowDispatch.dispatchAndWait",
+        408,
+        `workflow ${workflow} did not finish within ${Duration.format(timeout)}`,
+      );
+      return yield* Effect.gen(function* () {
+        const dispatchedAt = DateTime.formatIso(yield* DateTime.now);
+        yield* dispatch(workflow, ref, options?.inputs);
+        let selectedId = O.none<number>();
+        const poll = Effect.fnUntraced(function* () {
+          if (O.isSome(selectedId)) {
+            return O.some(yield* runStatus(selectedId.value));
+          }
+          const runs = yield* client.paginate(
+            "GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs",
+            { owner, repo, workflow_id: workflow, event: "workflow_dispatch", created: `>=${dispatchedAt}`, branch: ref },
+            PageOptions.make({ perPage: 10, maxPages: 1 }),
           );
-      }
-      return settled.value;
+          const found = O.map(A.head(runs), statusOf);
+          selectedId = O.map(found, (run) => run.id);
+          return found;
+        });
+        const settled = yield* Effect.repeat(poll(), {
+          while: (found) => O.isNone(found) || found.value.isDone === false,
+          schedule: Schedule.spaced(interval),
+        });
+        return yield* Effect.fromOption(settled).pipe(Effect.mapError(() => expired));
+      }).pipe(Effect.timeoutOrElse({ duration: timeout, orElse: () => Effect.fail(expired) }));
     }),
   };
 };

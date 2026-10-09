@@ -3,6 +3,7 @@ import { assert, describe, it } from "@effect/vitest";
 import blakejs from "blakejs";
 import * as Result from "effect/Result";
 import * as Base64 from "effect/encoding/Base64";
+import * as EncodingError from "effect/encoding/EncodingError";
 import nacl from "tweetnacl";
 import { encryptSecret } from "../../effected/github/internal/crypto.ts";
 
@@ -125,4 +126,22 @@ describe("the blakejs interop surface", () => {
 		// function you want.
 		assert.isAbove(onDefault.length, named(namespace).length);
 	});
+});
+
+
+describe("encryptSecret key shape", () => {
+	for (const size of [0, 31, 33]) {
+		it(`returns an EncodingError Result for a ${size}-byte public key`, () => {
+			const publicKey = b64(new Uint8Array(size));
+			const sealed = encryptSecret(publicKey, "hunter2");
+			assert.strictEqual(Result.isFailure(sealed), true);
+			const error = sealed.pipe(Result.flip, Result.getOrThrow);
+			assert.strictEqual(EncodingError.isEncodingError(error), true);
+			assert.strictEqual(error.kind, "Decode");
+			assert.strictEqual(error.module, "encryptSecret");
+			assert.strictEqual(error.input, publicKey);
+			assert.include(error.message, `got ${size} bytes`);
+			assert.notInclude(error.message, "hunter2");
+		});
+	}
 });

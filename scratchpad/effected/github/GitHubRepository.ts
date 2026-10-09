@@ -17,8 +17,8 @@ import type * as Rest from "./Rest.ts";
 const $I = $ScratchpadId.create("effected/github/GitHubRepository");
 
 class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("UnstubbedError", {
-	message: S.String,
-}) {}
+	message: S.String.pipe(S.annotateKey({ description: "The repository test-double member read without an override." })),
+}, $I.annote("UnstubbedError", { description: "An unconfigured GitHubRepository test-double member was read." })) {}
 
 /**
  * Everything GitHub reports about a repository.
@@ -148,11 +148,10 @@ export const GRAPHQL_ONLY_SETTINGS: Readonly<Record<string, string>> = {
 };
 
 /** `{ status: "enabled" | "disabled" }` — the form GitHub accepts and the type declares. */
-const isStatusObject = (raw: unknown): raw is { readonly status: "enabled" | "disabled" } => {
-	if (!P.isObjectOrArray(raw) || !P.hasProperty(raw, "status")) return false;
-	const status = raw.status;
-	return status === "enabled" || status === "disabled";
-};
+const StatusObject = S.Struct({
+	status: S.Literals(["enabled", "disabled"]).pipe(S.annotateKey({ description: "Whether the security feature is enabled or disabled." })),
+}).pipe($I.annoteSchema("StatusObject", { description: "The wrapped security-feature status accepted at the repository settings boundary." }));
+const isStatusObject = S.is(StatusObject);
 
 /**
  * Translate a user-facing `security_and_analysis` block into the shape
@@ -282,12 +281,11 @@ const preparePatch = (patch: Record<string, unknown>): Record<string, unknown> =
  *
  * @public
  */
-export interface AppliedSettings {
-	/** Keys sent on the REST patch, after preparation dropped anything GitHub would refuse. */
-	readonly rest: ReadonlyArray<string>;
-	/** Keys sent through the GraphQL mutation, named as the caller supplied them. */
-	readonly graphql: ReadonlyArray<string>;
-}
+export const AppliedSettings = S.Struct({
+	rest: S.Array(S.String).pipe(S.annotateKey({ description: "Keys sent on the REST patch after preparation dropped anything GitHub would refuse." })),
+	graphql: S.Array(S.String).pipe(S.annotateKey({ description: "Keys sent through the GraphQL mutation, named as the caller supplied them." })),
+}).pipe($I.annoteSchema("AppliedSettings", { description: "The fields actually sent through REST and GraphQL when applying repository settings." }));
+export type AppliedSettings = typeof AppliedSettings.Type;
 
 /**
  * Read and update a repository's settings, and look up its default branch, node
@@ -411,17 +409,17 @@ const unstubbed = (member: string): never => {
 
 const make = (client: GitHubClient["Service"]): GitHubRepositoryShape => {
 	const settings = Effect.gen(function* () {
-    const { owner, repo } = yield* Repo;
-    yield* Effect.annotateCurrentSpan({ owner, repo });
-    return yield* client.request("GET /repos/{owner}/{repo}", { owner, repo });
-});
+		const { owner, repo } = yield* Repo;
+		yield* Effect.annotateCurrentSpan({ owner, repo });
+		return yield* client.request("GET /repos/{owner}/{repo}", { owner, repo });
+	}).pipe(Effect.withSpan("GitHubRepository.settings"));
 
 	const ownerType = Effect.gen(function* () {
-    const { owner } = yield* Repo;
-    yield* Effect.annotateCurrentSpan({ owner });
-    const user = yield* client.request("GET /users/{username}", { username: owner });
-    return user.type === "Organization" ? "Organization" : "User";
-});
+		const { owner } = yield* Repo;
+		yield* Effect.annotateCurrentSpan({ owner });
+		const user = yield* client.request("GET /users/{username}", { username: owner });
+		return user.type === "Organization" ? "Organization" : "User";
+	}).pipe(Effect.withSpan("GitHubRepository.ownerType"));
 
 	return {
 		settings,
