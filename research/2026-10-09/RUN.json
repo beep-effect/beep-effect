@@ -96,7 +96,7 @@
     "opened_pr": false,
     "wrote_explorations_inbox": false,
     "wrote_goals": false,
-    "stage": "publisher"
+    "stage": "writer"
   },
   "publisher": {
     "agent": "cursor-cloud-agent",
