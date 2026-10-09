@@ -490,3 +490,11 @@ but standing S5 requires confirmation that the effected-port session was notifie
 C's handoff reports the one-line lockfile delta; confirmation is absent from the
 brief and rulings at the recovery boundary. Including the notification receipt
 in the same recovery ruling would remove this additional handoff round.
+
+## C Run 7: user-manager environment missing
+
+The first canonical heavy-wrapper launch failed before admission with
+`$DBUS_SESSION_BUS_ADDRESS and $XDG_RUNTIME_DIR not defined`. Supplying the
+standard user-manager runtime and bus environment allowed the same wrapper
+to queue normally. Exporting these variables in the worker launcher would
+prevent this pre-admission failure; no gate pass or host change is claimed.

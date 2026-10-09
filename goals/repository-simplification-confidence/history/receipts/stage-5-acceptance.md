@@ -197,3 +197,16 @@ Run 4's six-row terminal qualification remains the verification of record.
 The requested Knip/Fallow policy reruns remain pending; the beep-heavy waiter was stopped before admission at the S5 blocked boundary; owner
 regeneration has zero tracked diff. S5 requires lockfile notification confirmation
 before push. E co-sign, hosted evidence and B/V judgment admission remain open.
+
+### C Run 7 dependency-policy recovery
+
+Resume ruling 5 clears S5 for the exact one-row root lockfile delta using
+durable orchestrator notification. Required fetch/merge is already up to date.
+The admitted reruns terminate with `quality:knip=0`, `fallow:audit=0` and
+`fallow:dead-code=0` in `.beep/rsc-c-run7-result.txt`. Knip: current 41,
+baseline 41, introduced 0. Fallow audit: one nonblocking inherited-adjacent
+complexity observation, introduced 0. Fallow dead-code: findings 0. The unused
+root ONNX regression is gone without any inventory or baseline edit. Run 4's
+six qualification passes and Run 6's install/owner proofs are retained.
+Publication uses the orchestrator-authorized push-only route; E review,
+B/V occurrence-specific admission and hosted evidence remain separate gates.

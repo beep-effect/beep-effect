@@ -779,3 +779,32 @@ reruns pending, stopped before admission; no fresh pass claimed.
 reruns; authorized push-only publication/ready; E workflow co-sign; B admission after V for
 2 wire-schema + 12 test judgment rows; hosted evidence and orchestrator merge gate.
 No C-owned command/unit remains running. No final marker is emitted without a content-final PR.
+
+## Run 7 (after crash): S5 cleared and policy reruns
+
+Resume ruling 5 clears S5 for the one-row lockfile delta by durable
+orchestrator notification when the effected-port session is unreachable.
+Required fetch/merge reports already up to date. The clean starting head is
+`a22fbbebdd`; Run 4 qualification and Run 6 install/owner evidence are retained.
+The three policy reruns use `.beep/rsc-c-run7-gates.sh` through `beep-heavy`,
+with Turbo concurrency 2. The first launch failed before admission because
+the user-manager environment was absent; the corrected launch is queued.
+No inventory, allowlist, floor, cap or another lane is modified.
+
+### Run 7 terminal dependency-policy evidence
+
+The corrected heavy batch ends at 2026-10-09T20:21:28Z; its wrapper exits 0.
+`.beep/rsc-c-run7-result.txt` records all three rows zero.
+
+| Command | Result | Attribution |
+| --- | --- | --- |
+| `bunx turbo run knip:check --cache=local:rw --summarize` | pass | current 41, baseline 41, introduced 0; fingerprint current |
+| `beep quality fallow audit --check --base origin/main` | pass | introduced 0; one nonblocking inherited-adjacent complexity observation |
+| `beep quality fallow dead-code --check --base origin/main` | pass | zero findings |
+
+The unused root ONNX regression is gone. Logs are
+`.beep/rsc-c-run7-knip.log`, `.beep/rsc-c-run7-fallow-audit.log` and
+`.beep/rsc-c-run7-fallow-dead-code.log`; reports are under `.beep/fallow/`.
+Run 4 six-row terminal qualification plus these three reruns is the
+verification of record under resume rulings 4/5. No passed gate is rerun.
+No C-owned heavy unit remains running. Publication and ready transition follow.

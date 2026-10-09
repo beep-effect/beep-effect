@@ -78,11 +78,13 @@ C includes the coordinated Ci group and pre-runtime adapters. Full
 `@beep/repo-cli` package verification and Run 4 local parity pass; those terminal
 receipts are retained. Resume ruling 4 authorizes removing the unused root ONNX
 devDependency and publishing with the push-only bypass for B-owned judgment rows.
-Run 6 preserves the catalog, override, patch and live package consumer; install
-passes, installed patch markers are present, and Knip/Fallow policy reruns remain
-pending (the unadmitted waiter was stopped at the S5 blocked boundary). S5 lockfile notification confirmation precedes the push. E's workflow
-co-sign and hosted evidence remain open. C edits no inventory or allowlist and
-does not close program acceptance.
+Run 7 retains the successful install and four installed patch markers, clears
+S5 through the orchestrator's durable notification, and passes all three required
+Knip/Fallow policy reruns. Knip has zero introduced findings; dead-code has zero
+findings; audit retains one nonblocking inherited complexity observation.
+Authorized push-only publication is next. E's workflow co-sign, B/V judgment
+admission and hosted evidence remain open. C edits no inventory or allowlist
+and does not close program acceptance.
 
 ## Notes
 
