@@ -76,7 +76,7 @@ compiler and runtime results below.
 | `CI=true beep knowledge refs --check` | pass; zero live gated observations after D repaired the inherited SPEC literal |
 | `beep quality fallow audit` / `health` | pass; zero introduced findings, one inherited-adjacent audit finding |
 | Scoped goal and merge-gate coverage | 258 tests passed across 13 files; every existing touched baseline row met or improved |
-| `beep quality package-verify @beep/repo-cli` | fail (handoff gate incomplete: repaired-head full run never admitted; cancelled while queued, not a test failure) |
+| `beep quality package-verify @beep/repo-cli` | pass on delivery head `f28278cc12`; full audit 989.2s, docgen 27.3s |
 
 All heavy commands ran through the canonical admission wrapper, with at most two
 H2 admissions. The scoped fixture run uses its own module-cache path to avoid
@@ -188,7 +188,7 @@ The five remaining substring-only legacy citations (`agent-pipeline-velocity`,
 changes only the three specified manifests. Missing historical verdicts remain
 unknown until an authentic accepted-head verdict is recovered.
 
-## Capacity-blocked delivery
+## Delivery qualification and recovery
 
 The full repaired-head package command remained unstarted through canonical
 admission contention and a retry. The worker stopped only its queued command
@@ -201,3 +201,11 @@ readiness monitoring and orchestrator merge remain open.
 The final GraphQL lane reported API rate exhaustion. REST updated the PR body
 and confirmed its draft/head state. The last successful thread read had zero
 threads; a final thread read is unknown until GraphQL quota recovers.
+
+The resume retry acquired canonical admission and returned exit 0: audit 989.2s,
+docgen 27.3s. The pass covers `f28278cc12` and qualified H2 source `9e05651ae0`.
+The worker then integrated main `df7d88aad7` in `fc0a2f8d28`, retaining both
+lanes' append-only friction records without changing H2 source. The resumed
+GraphQL-backed Yeet closeout read succeeded with zero actionable threads and
+zero unanswered follow-ups. Earlier queue cancellation and quota failure are
+historical observations; neither substitutes for this completed proof or read.
