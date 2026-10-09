@@ -1445,11 +1445,11 @@ const archiveCandidate = Effect.fnUntraced(function* (
   const skipped = skippedAppliedCandidate(assessed, rechecked);
   const archive = yield* ResidueArchive;
   const destination = O.fromUndefinedOr(assessed.recoveryDestination);
-  if (O.isNone(destination)) return skipped("path-changed", "Archive destination missing.");
+  if (O.isNone(destination)) return skipped("path-changed", `${assessed.path}: archive destination missing.`);
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const archiveParent = yield* fs.realPath(path.dirname(destination.value)).pipe(Effect.option);
-  if (O.isNone(archiveParent)) return skipped("path-changed", "Archive parent disappeared.");
+  if (O.isNone(archiveParent)) return skipped("path-changed", `${assessed.path}: archive parent disappeared.`);
   const resolvedDestination = path.join(archiveParent.value, path.basename(destination.value));
   const journalPath = `${resolvedDestination}.intent.json`;
   const intent = ResidueArchiveIntent.make({
@@ -1506,6 +1506,7 @@ const applyCandidate = Effect.fnUntraced(function* (
   policy: ReapPolicy,
   checkpoint: (phase: "intent" | "moved") => Effect.Effect<void>
 ): Effect.fn.Return<AppliedCandidate, never, DiscoveryRequirements | ResidueArchive> {
+  if (ResidueReapAction.is.skip(assessed.action)) return unapplied(assessed);
   // Reports keep speaking the operator's lexical path even though the checks and the
   // removal below run on the resolved one.
   const reported = reportedCandidate(assessed);
@@ -2106,6 +2107,7 @@ const checkoutResidueCandidates = Effect.fnUntraced(function* (
       const nested = O.isSome(scoped)
         ? yield* fs.readDirectory(scoped.value).pipe(Effect.option)
         : O.none<ReadonlyArray<string>>();
+      if (O.isSome(scoped) && O.isNone(nested)) return A.empty<ResidueReapCandidate>();
       const targets = O.isSome(nested)
         ? A.map(nested.value, (child) =>
             path.join(
