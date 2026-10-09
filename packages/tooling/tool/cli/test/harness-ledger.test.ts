@@ -837,6 +837,40 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
     }).pipe(Effect.scoped)
   );
 
+  it.effect("reports mixed fingerprints and payload-free refusals separately", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* makeRepo();
+      const current = yield* repoHarnessHash(root);
+      const evidenceRoot = yield* fs.makeTempDirectoryScoped({ prefix: "harness-buckets-" });
+      const stateDir = path.join(evidenceRoot, "hook-events");
+      yield* fs.makeDirectory(stateDir);
+      yield* writeShard(stateDir, "2026-10-09", sessionA, [
+        yield* sessionStart(sessionA, "2026-10-09T10:00:00Z", current),
+        yield* sessionStart(sessionA, "2026-10-09T10:00:01Z", Sha256Hex.make("f".repeat(64))),
+        yield* pulse(sessionA, "2026-10-09T10:01:00Z", O.none()),
+      ]);
+      yield* fs.writeFileString(
+        path.join(evidenceRoot, "hook-pulse-refusals-2026-10-09.ndjson"),
+        '{"ts":"2026-10-09T10:00:00Z","agentKind":"claude-code","reason":"encode-failed"}\n'
+      );
+      const ledger = yield* HarnessLedgerService;
+      const report = yield* ledger.pruneProposals(
+        HarnessLedgerPruneOptions.make({ repoRoot: root, stateDir, windowSessions: 1 })
+      );
+      expect(report.sessionsSkippedMixedFingerprint).toBe(1);
+      expect(report.sessionsObserved).toBe(0);
+      expect(report.refusalsByAgentKind["claude-code"]).toBe(1);
+      expect(report.clientCoverage).toStrictEqual({
+        "claude-code": "stamped",
+        "codex-cli": "not-configured",
+        "cursor-cli": "not-configured",
+      });
+      expect(report.nonUseQualified).toBe(false);
+    }).pipe(Effect.scoped)
+  );
+
   it.effect("a session overlapping a disarm window cannot qualify", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;

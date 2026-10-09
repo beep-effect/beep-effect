@@ -396,6 +396,9 @@ const planPruneProposals = Effect.fn("HarnessLedger.planPruneProposals")(functio
     sessionsSkippedOutOfRegime: observed.sessionsSkippedOutOfRegime,
     sessionsSkippedUnstamped: observed.sessionsSkippedUnstamped,
     sessionsByAgentKind: observed.sessionsByAgentKind,
+    sessionsSkippedMixedFingerprint: observed.sessionsSkippedMixedFingerprint,
+    refusalsByAgentKind: observed.refusalsByAgentKind,
+    clientCoverage: observed.clientCoverage,
     sessionsSkippedDisarmed: observed.sessionsSkippedDisarmed,
     sessionsBelowActivityFloor: observed.sessionsBelowActivityFloor,
     windowEnd: observed.windowEnd,
@@ -435,20 +438,21 @@ const pruneProposalsImpl = Effect.fn("HarnessLedger.pruneProposals")(function* (
   const harnessHash = yield* deriveHarnessHash(fingerprint).pipe(
     Effect.mapError(HarnessLedgerIoError.wrap("Failed to derive the current harness hash."))
   );
-  const observed = yield* observeSessionWindow(
-    options.stateDir,
-    options.windowSessions,
-    harnessHash,
-    options.agentKind
-  );
-  // A partial window is shown but never written: a stored row must carry a
-  // full window of evidence, so a written row's `windowSessions` (the observed
-  // count) always equals the requested window.
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const shared = yield* fs
     .exists(path.join(options.repoRoot, ".agents/skills"))
     .pipe(Effect.mapError(HarnessLedgerIoError.wrap("Cannot inspect shared harness surfaces.")));
+  const observed = yield* observeSessionWindow(
+    options.stateDir,
+    options.windowSessions,
+    harnessHash,
+    options.agentKind,
+    shared
+  );
+  // A partial window is shown but never written: a stored row must carry a
+  // full window of evidence, so a written row's `windowSessions` (the observed
+  // count) always equals the requested window.
   const allWindowsFull =
     !shared || A.every(R.values(observed.sessionsByAgentKind), (count) => count >= options.windowSessions);
   return yield* Bool.match(options.write && observed.sessionsObserved >= options.windowSessions && allWindowsFull, {

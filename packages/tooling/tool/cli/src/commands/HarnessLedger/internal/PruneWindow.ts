@@ -9,7 +9,9 @@
 
 import {
   contextSurfaceId,
+  HookPulseClientCoverage,
   HookPulseDisarmWindow,
+  HookPulseRefusal,
   HookPulseV1,
   hashPrivateIdentifier,
   hookPulseHashSalt,
@@ -146,6 +148,7 @@ type ShardScan = {
   shardsRead: number;
   readonly disarmWindows: ReadonlyArray<HookPulseDisarmWindow>;
   readonly openDisarm: boolean;
+  readonly refusalsByAgentKind: ObservedSessionWindow["refusalsByAgentKind"];
 };
 
 // Split shard names into those indexed by session and date and those read
@@ -229,7 +232,8 @@ const windowReport = (
   visited: ShardScan["tallies"],
   window: number,
   harnessHash: HarnessHash,
-  agentKind: HookPulseAgentKind
+  agentKind: HookPulseAgentKind,
+  shared: boolean
 ): ObservedSessionWindow => {
   const ranked = pipe(A.fromIterable(MutableHashMap.values(visited)), A.sort(byNewestFirst));
   const overlapsDisarm = (tally: SessionTally) =>
@@ -266,12 +270,33 @@ const windowReport = (
     A.filter(qualifying, (tally) => tally.agentKind === agentKind),
     window
   );
+  const rootsForTouches = shared
+    ? A.flatten(
+        R.values(
+          R.map(counts, (_, kind) =>
+            A.take(
+              A.filter(qualifying, (tally) => tally.agentKind === kind),
+              window
+            )
+          )
+        )
+      )
+    : inRegime;
   const selectedRanked = A.filter(ranked, (tally) => tally.agentKind === agentKind);
   const oldest = A.length(inRegime) < window ? O.none<SessionTally>() : A.last(inRegime);
   return ObservedSessionWindow.make({
     harnessHash,
     sessionsObserved: A.length(inRegime),
     sessionsByAgentKind: counts,
+    sessionsSkippedMixedFingerprint: A.length(A.filter(selectedRanked, (tally) => HashSet.size(tally.stamps) > 1)),
+    refusalsByAgentKind: scan.refusalsByAgentKind,
+    clientCoverage: R.map(counts, (_, kind) =>
+      scan.openDisarm
+        ? HookPulseClientCoverage.Enum.disabled
+        : A.some(ranked, (tally) => tally.agentKind === kind && !HashSet.isEmpty(tally.stamps))
+          ? HookPulseClientCoverage.Enum.stamped
+          : HookPulseClientCoverage.Enum["not-configured"]
+    ),
     sessionsSkippedDisarmed: A.length(A.filter(selectedRanked, overlapsDisarm)),
     sessionsBelowActivityFloor: A.length(A.filter(selectedRanked, (tally) => !active(tally))),
     sessionsSkippedOutOfRegime: countSkipped(selectedRanked, oldest, harnessHash, SessionRegime.Enum["out-of-regime"]),
@@ -281,7 +306,7 @@ const windowReport = (
       O.map((tally) => DateTime.makeUnsafe(tally.maxTs))
     ),
     touched: A.reduce(
-      A.filter(ranked, (tally) => A.some(inRegime, (root) => root.parent === tally.parent)),
+      A.filter(ranked, (tally) => A.some(rootsForTouches, (root) => root.parent === tally.parent)),
       HashSet.empty<string>(),
       (acc, tally) => HashSet.union(acc, tally.surfaces)
     ),
@@ -309,17 +334,50 @@ export const observeSessionWindow = Effect.fn("HarnessLedger.observeSessionWindo
   stateDir: string,
   window: number,
   harnessHash: HarnessHash,
-  agentKind: HookPulseAgentKind = "claude-code"
+  agentKind: HookPulseAgentKind = "claude-code",
+  shared = false
 ) {
   const names = A.filter(yield* listDirectorySorted(stateDir), (name) => ANY_SHARD.test(name));
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const root = path.dirname(stateDir);
-  const windowsText = yield* fs
-    .readFileString(path.join(root, "hook-pulse-disarm-windows.ndjson"))
-    .pipe(Effect.orElseSucceed(() => ""));
+  const windowsFile = path.join(root, "hook-pulse-disarm-windows.ndjson");
+  const windowsExist = yield* fs
+    .exists(windowsFile)
+    .pipe(Effect.mapError(HarnessLedgerIoError.wrap("Cannot inspect disarm windows.")));
+  const windowsText = windowsExist
+    ? yield* fs
+        .readFileString(windowsFile)
+        .pipe(Effect.mapError(HarnessLedgerIoError.wrap("Cannot read disarm windows.")))
+    : "";
   const windows = A.filterMap(Str.split(windowsText, "\n"), (line) => HookPulseDisarmWindow.decodeJsonResult(line));
-  const openDisarm = yield* fs.exists(path.join(root, "hook-pulse.disarmed")).pipe(Effect.orElseSucceed(() => true));
+  const sentinelPresent = yield* fs
+    .exists(path.join(root, "hook-pulse.disarmed"))
+    .pipe(Effect.orElseSucceed(() => true));
+  const openDisarm =
+    sentinelPresent ||
+    A.some(A.filter(Str.split(windowsText, "\n"), Str.isNonEmpty), (line) =>
+      Result.isFailure(HookPulseDisarmWindow.decodeJsonResult(line))
+    );
+  const refusalsByAgentKind = { "claude-code": 0, "codex-cli": 0, "cursor-cli": 0 };
+  for (const name of A.filter(yield* listDirectorySorted(root), (name) =>
+    /^hook-pulse-refusals-.*\.ndjson$/.test(name)
+  )) {
+    const text = yield* fs
+      .readFileString(path.join(root, name))
+      .pipe(Effect.mapError(HarnessLedgerIoError.wrap("Cannot read payload-free refusal ledger.")));
+    for (const line of A.filter(Str.split(text, "\n"), Str.isNonEmpty)) {
+      const row = HookPulseRefusal.decodeJsonResult(line);
+      if (
+        Result.isSuccess(row) &&
+        (row.success.agentKind === "claude-code" ||
+          row.success.agentKind === "codex-cli" ||
+          row.success.agentKind === "cursor-cli")
+      ) {
+        refusalsByAgentKind[row.success.agentKind] += 1;
+      }
+    }
+  }
   const scan: ShardScan = {
     stateDir,
     tallies: MutableHashMap.empty(),
@@ -327,9 +385,10 @@ export const observeSessionWindow = Effect.fn("HarnessLedger.observeSessionWindo
     shardsRead: 0,
     disarmWindows: windows,
     openDisarm,
+    refusalsByAgentKind,
   };
   yield* Effect.forEach(names, (name) => readShard(scan, name), { discard: true });
-  return windowReport(scan, scan.tallies, window, harnessHash, agentKind);
+  return windowReport(scan, scan.tallies, window, harnessHash, agentKind, shared);
 });
 
 // Only structural metadata is decoded. Content strings never leave this reader.

@@ -421,6 +421,7 @@ const outcomeLine = (report: HarnessLedgerPruneReport, write: boolean): string =
     written: report.written,
     write,
     full: report.windowFull,
+    sharedFull: report.sharedHarnessWindowFull,
     empty: A.isReadonlyArrayEmpty(report.proposals),
   }).pipe(
     Match.when(
@@ -428,6 +429,10 @@ const outcomeLine = (report: HarnessLedgerPruneReport, write: boolean): string =
       () => `written: appended ${A.length(report.proposals)} proposed rows to harness-ledger/rows.`
     ),
     Match.when({ write: true, full: false }, () => `nothing written: window not full (${windowCount(report)}).`),
+    Match.when(
+      { write: true, sharedFull: false },
+      () => "nothing written: shared surfaces require complete windows for every loading client."
+    ),
     Match.when({ empty: true }, () => "nothing written: no fresh proposals."),
     Match.when(
       { full: false },

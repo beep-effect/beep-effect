@@ -12,6 +12,7 @@ import {
   HookPulseEvidenceTier,
   HookPulseInstrumentClass,
   HookPulseNotificationType,
+  HookPulseRefusal,
   HookPulseSchemaVersion,
   HookPulseV1,
   HookPulseV1Arbitrary,
@@ -177,6 +178,7 @@ const jqAllowlist = (source: string, definition: string): ReadonlyArray<string> 
 interface WriterRun {
   readonly exitCode: number;
   readonly files: ReadonlyArray<string>;
+  readonly refusals: ReadonlyArray<string>;
   readonly rows: ReadonlyArray<string>;
   readonly stderr: string;
   readonly stdout: string;
@@ -308,7 +310,18 @@ const runWriter = Effect.fnUntraced(function* (
     A.flatten
   );
 
-  return { exitCode, files, stderr, stdout, rows };
+  const rootExists = yield* fs.exists(evidenceRoot);
+  const refusalFiles = rootExists
+    ? A.filter(yield* fs.readDirectory(evidenceRoot), (name) => name.startsWith("hook-pulse-refusals-"))
+    : A.empty<string>();
+  const refusals = A.flatten(
+    yield* Effect.forEach(refusalFiles, (name) =>
+      fs
+        .readFileString(path.join(evidenceRoot, name))
+        .pipe(Effect.map((text) => A.filter(text.split("\n"), (line) => line.length > 0)))
+    )
+  );
+  return { exitCode, files, stderr, stdout, rows, refusals };
 });
 
 const session = "ccd-session-writer";
@@ -669,8 +682,14 @@ it.layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
   it.effect("writes nothing for an agent kind outside HookPulseAgentKind", () =>
     Effect.gen(function* () {
       const run = yield* runWriter(yield* encodeJson(preToolUsePayload), { agentKind: "other" });
-
       expectSilentRefusal(run);
+      expect(run.refusals).toHaveLength(1);
+      const refusal = yield* S.decodeUnknownEffect(S.fromJsonString(HookPulseRefusal))(
+        pipe(A.head(run.refusals), O.getOrThrow)
+      );
+      expect(refusal.agentKind).toBe("unknown");
+      expect(refusal.reason).toBe("unknown-agent-kind");
+      expect(pipe(A.head(run.refusals), O.getOrThrow)).not.toContain(CANARY);
     })
   );
 
@@ -879,6 +898,10 @@ it.layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
           payload: surfacePayload("Read", { file_path: `${baseFields.cwd}/.claude/hooks/${CANARY}.sh` }),
           key: O.some(`hook:${CANARY}.sh`),
         },
+        ...A.map([".agents", ".codex", ".cursor"], (root) => ({
+          payload: surfacePayload("Read", { file_path: `${baseFields.cwd}/${root}/skills/${CANARY}/SKILL.md` }),
+          key: O.some(`skill:${CANARY}`),
+        })),
         { payload: surfacePayload("Read", { file_path: "packages/foo/src/x.ts" }), key: O.none<string>() },
         { payload: surfacePayload("mcp__notion__search", { path: ["a", "b"] }), key: O.some("mcp-server:notion") },
         {
@@ -1129,6 +1152,11 @@ it.layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
       });
 
       expectSilentRefusal(run);
+      expect(run.refusals).toHaveLength(1);
+      const refusal = yield* S.decodeUnknownEffect(S.fromJsonString(HookPulseRefusal))(
+        pipe(A.head(run.refusals), O.getOrThrow)
+      );
+      expect(refusal.reason).toBe("disabled");
     })
   );
 

@@ -18,6 +18,7 @@ import {
   HarnessLedgerRow,
   HarnessLedgerRowId,
   HookPulseAgentKind,
+  HookPulseClientCoverage,
   LedgerDisposition,
   MechanismClass,
 } from "@beep/repo-ai-metrics";
@@ -509,6 +510,19 @@ export class ObservedSessionWindow extends S.Class<ObservedSessionWindow>($I`Obs
     sessionsObserved: S.Finite,
     sessionsSkippedOutOfRegime: S.Finite,
     sessionsSkippedUnstamped: S.Finite,
+    sessionsSkippedMixedFingerprint: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(0))),
+    refusalsByAgentKind: S.Record(HookPulseAgentKind, S.Natural).pipe(
+      S.withConstructorDefault(Effect.succeed({ "claude-code": 0, "codex-cli": 0, "cursor-cli": 0 }))
+    ),
+    clientCoverage: S.Record(HookPulseAgentKind, HookPulseClientCoverage).pipe(
+      S.withConstructorDefault(
+        Effect.succeed({
+          "claude-code": "not-configured",
+          "codex-cli": "not-configured",
+          "cursor-cli": "not-configured",
+        })
+      )
+    ),
     sessionsSkippedDisarmed: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(0))),
     sessionsBelowActivityFloor: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(0))),
     sessionsByAgentKind: S.Record(HookPulseAgentKind, S.Natural).pipe(
@@ -566,6 +580,19 @@ export class HarnessLedgerPruneReport extends S.Class<HarnessLedgerPruneReport>(
     nonUseQualified: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
     sessionsSkippedOutOfRegime: S.Finite,
     sessionsSkippedUnstamped: S.Finite,
+    sessionsSkippedMixedFingerprint: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(0))),
+    refusalsByAgentKind: S.Record(HookPulseAgentKind, S.Natural).pipe(
+      S.withConstructorDefault(Effect.succeed({ "claude-code": 0, "codex-cli": 0, "cursor-cli": 0 }))
+    ),
+    clientCoverage: S.Record(HookPulseAgentKind, HookPulseClientCoverage).pipe(
+      S.withConstructorDefault(
+        Effect.succeed({
+          "claude-code": "not-configured",
+          "codex-cli": "not-configured",
+          "cursor-cli": "not-configured",
+        })
+      )
+    ),
     sessionsSkippedDisarmed: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(0))),
     sessionsBelowActivityFloor: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(0))),
     sessionsByAgentKind: S.Record(HookPulseAgentKind, S.Natural).pipe(
