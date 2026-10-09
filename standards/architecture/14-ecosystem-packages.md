@@ -125,10 +125,14 @@ and cannot be named in pending notes. `publishConfig.access: "public"` and
 provenance are dormant template settings, not a publication promise.
 
 Activation is a deliberate release-policy change: establish versioning,
-compatibility and external-consumer obligations, flip `private: false`, remove
+compatibility and external-consumer obligations, reconcile public access and
+provenance, flip `private: false`, remove
 any inappropriate changeset-ignore exemption, and add the publication workflow.
 The status gate then requires in-branch changesets for changed versioned members.
-If the workflow uses `changesets/action`, restore its hosted allowlist entry.
+The repo-level Changesets access is `restricted`; retain the member override
+`publishConfig.access: "public"` and provenance when activating public packages.
+If E-19 has removed the `changesets/action` allowlist entry, restore it when
+the activated workflow uses that action.
 The retained Changesets config and changelog adapter support that future lane;
 private package versioning and tagging remain disabled. Pre-npm feedback flows
 through the public repository. Activation never happens as a side effect of

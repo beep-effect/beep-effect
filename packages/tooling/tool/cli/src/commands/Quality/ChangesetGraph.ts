@@ -591,12 +591,20 @@ export const runChangesetGraphCheck = Effect.fn("ChangesetGraph.runChangesetGrap
   FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const workspaces = yield* collectWorkspacePackages(repoRoot);
-  const workspacePackageNames = A.getSomes(A.map(workspaces, (document) => O.fromUndefinedOr(document.name)));
-  const privatePackageNames = A.getSomes(
+  const workspacePackageNames = pipe(
+    A.map(workspaces, (document) => O.fromUndefinedOr(document.name)),
+    A.getSomes,
+    A.dedupe,
+    A.sort(Order.String)
+  );
+  const privatePackageNames = pipe(
     A.map(
       A.filter(workspaces, (document) => document.private === true),
       (document) => O.fromUndefinedOr(document.name)
-    )
+    ),
+    A.getSomes,
+    A.dedupe,
+    A.sort(Order.String)
   );
   const allowedMissingPackageNames = yield* readRetiredChangesetPackageNames(repoRoot);
   const changesetFiles = yield* collectChangesetFiles(repoRoot);

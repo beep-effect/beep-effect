@@ -1008,8 +1008,7 @@ turbo work, so they are cheap to run mid-loop.
 - The cheap-gates tier includes `beep quality changeset-status --since
   origin/main` (parity with hosted Repo Sanity). It enforces in-process: every
   changed, versioned, publish-enabled (`private !== true`), non-ignored product
-  workspace must be named by a
-  changeset **added in-branch** (the base backlog never counts, and empty
+  workspace must be named by a changeset **added in-branch** (the base backlog never counts, and empty
   changesets satisfy nothing). Write real `"@pkg": patch` frontmatter for each
   changed publish-enabled package; private workspaces and lab-only change sets
   are ceremony-exempt. The graph guard rejects notes naming private workspaces.

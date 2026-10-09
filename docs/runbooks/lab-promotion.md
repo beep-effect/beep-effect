@@ -37,8 +37,8 @@ Standard" routing table in
   Touch table in the repo agent guide). Existing home: add role files per the
   `bun run beep architecture` grammar.
 - Full registration applies at the destination: changeset for publish-enabled
-  packages, docgen surface,
-  JSDoc and coverage ratchets, Storybook if UI, tsconfig-sync — everything the
+  packages, docgen surface, JSDoc and coverage ratchets, Storybook if UI,
+  tsconfig-sync — everything the
   lab was path-exempted from.
 
 ## 3. Move code and migrate consumers in the same change

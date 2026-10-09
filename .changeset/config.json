@@ -2,9 +2,7 @@
   "$schema": "https://unpkg.com/@changesets/config@3.1.2/schema.json",
   "changelog": [
     "../scripts/changeset-changelog.cjs",
-    {
-      "repo": "beep-effect/beep-effect"
-    }
+    { "repo": "beep-effect/beep-effect" }
   ],
   "commit": false,
   "fixed": [],
@@ -13,8 +11,5 @@
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
   "ignore": ["@beep/repo-cli", "@beep/repo-utils", "@beep/scratchpad"],
-  "privatePackages": {
-    "version": false,
-    "tag": false
-  }
+  "privatePackages": { "version": false, "tag": false }
 }

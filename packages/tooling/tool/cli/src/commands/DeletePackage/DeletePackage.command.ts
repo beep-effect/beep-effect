@@ -187,7 +187,7 @@ const resolveDeleteTarget = Effect.fn("DeletePackage.resolveTarget")(function* (
       target: RegistrationTarget.make({
         packageName: name,
         packagePath: relativeDir,
-        private: manifest.private !== false,
+        private: manifest.private === true,
         lab,
       }),
       liveWorkspace: true,

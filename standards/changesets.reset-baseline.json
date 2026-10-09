@@ -25,5 +25,6 @@
     "git ls-tree --name-only d839776128c29c6c4cc7c2937329942d873b973c",
     "git show da1a85157d7c8cc6b72fe43f12d01389db811ce9:.changeset/<name>.md",
     "git checkout da1a85157d7c8cc6b72fe43f12d01389db811ce9 -- .changeset"
-  ]
+  ],
+  "recoveryPolicy": "Full-directory checkout also restores config and README. Revert the reset policy PR (including private-note graph rejection) with it; restored private notes alone deliberately fail current validation. Use ls-tree/show for read-only history inspection."
 }

@@ -51,7 +51,9 @@ has not edited AGENTS.md. R38 also requires its shared-policy review of
 
 Restore notes with `git checkout da1a85157d7c8cc6b72fe43f12d01389db811ce9 -- .changeset`.
 Inspect the original tree with `git ls-tree --name-only d839776128c29c6c4cc7c2937329942d873b973c`.
-Restore code/policy by reverting the PR. The orchestrator records merge SHA
+The full-directory checkout also restores historical config/README. Restore
+code/policy by reverting the PR with it, including the private-note graph guard;
+restored private notes alone deliberately fail the current guard. The orchestrator records merge SHA
 in stage-2-policy.md after merge (R34). Never merge or retire from this lane
 until the orchestrator directs retirement.
 
