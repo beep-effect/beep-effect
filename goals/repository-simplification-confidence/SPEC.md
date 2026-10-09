@@ -778,6 +778,8 @@ without claiming completion.
 
 | 2026-10-09 | C integrates V main under resume ruling 7: retain both packet contributions, V first in the add/add Stage 5 receipt, and V scoped Effect harness with C typed installation assertions. | Preserve every decision/friction/acceptance row and all four cleanup witnesses; portable process boundary supports Node and Bun without restoring the retired setup script. | Revert the C integration merge; V main and previous C proof remain in Git history. |
 
+| 2026-10-09 | H3 uses the standing inherited-publish push/create fallback after collected cheap gates refuse solely on main Accounts/CI-security schema rows and Epistemic EV015. | The three files match origin/main byte-for-byte; every other cheap lane passes. Main reds belong to the orchestrator consolidated repair under S11, while introduced H3 defects remain H3-owned. | Restore strict green publication after the consolidated main repair; revert the H3 PR without touching inherited files. |
+
 ## Exception Ledger
 
 | Exception | Scope | Owner | Rationale | Removal condition |

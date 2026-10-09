@@ -1005,3 +1005,5 @@ Effect v4 ChildProcessSpawner boundary preserves both runtimes and all
 assertions; rerun the affected fixtures, type and package checks. Checking
 the canonical process API before choosing the native boundary would have
 prevented this extra qualification wave. No suppression or inventory edit.
+
+- H3 final publication collected all cheap gates and refused only inherited schema-first rows in AccountsSecretsLayout.schemas.ts/ci-runner-security.test.ts and Epistemic EV015. All three files match origin/main byte-for-byte; H3 changes none of them. All other cheap lanes passed. The standing inherited-publish ruling authorizes commit-by-name and push/create fallback, with the orchestrator consolidating main reds under S11. Preventive improvement: present source-bound inherited attribution before re-running expensive global gate scans.
