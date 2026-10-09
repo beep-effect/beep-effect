@@ -210,3 +210,39 @@
   manage the submitted monitor through `yeet job` before the final handoff.
 - Prevention: help should distinguish the publish job ceiling from the
   automatically submitted monitor's lifetime, or expose a monitor ceiling.
+### 2026-10-09 — H3 admission environment
+
+- Work: admitted AI-metrics and CLI type checks.
+- Evidence: `beep-heavy` initially returned `Failed to connect to user scope bus`.
+- Cause: the worker shell lacked `XDG_RUNTIME_DIR` and `DBUS_SESSION_BUS_ADDRESS`.
+- Repair: supplied the existing user-manager environment and re-entered the queue.
+- Prevention: export that environment in the lane launch contract; no queue bypass.
+
+### 2026-10-09 — H3 direct type-check attribution
+
+- Work: direct admitted `tsgo -p` checks before package verification.
+- Evidence: CLI check produced TS6305 for workspace dependency declarations absent
+  from the fresh worktree, followed by cascading unknown/any diagnostics.
+- Attribution: environment-only precondition; the direct command does not build dependencies.
+- Prevention: use the package verifier or canonical test-tsgo lane with dependency setup.
+
+| 2026-10-09 | H3 telemetry qualification | A single package is accepted by `quality package-verify`, although its help suggests multiple package arguments. | Multi-package launch rejected before proof; each package now runs separately through admission. | Align help cardinality with the parser. |
+| 2026-10-09 | H3 independent review | The pinned Claude read-only reviewer returned no output within both 120 s and 300 s bounds. | Bounded processes exited 124; no reviewer verdict exists. | Surface transport progress and bound review chunks without weakening the gate. |
+| 2026-10-09 | H3 Cursor live workflow | The pinned Cursor Opus route rejected the model call with a usage-limit error. | SessionStart and SessionEnd hooks ran, but no tool workflow completed. | Re-run through the same authorized subscription after its quota resets; no paid top-up. |
+| 2026-10-09 | H3 forwarder credential preflight | The documented `op run --env-file` route failed because its example vault is absent from the automation account. | Suppressed preflight failed; `op-doctor` confirmed the service-account backend is healthy. The archive-key operation was stopped. | Maintain current lane-scoped secret references beside the runbook, owned by F; never request raw values. |
+| 2026-10-09 | H3 shared admission | Two admitted H3 commands remained queued while all three shared slots were occupied. | More than 20 minutes elapsed before execution; no slot bypass or other-lane cancellation. | Expose queue age and holder liveness without command environments. |
+
+### H3 proof-driver immutability
+
+Editing an executing proof driver shifted its shell read offset and emitted
+`check: command not found`; a dedicated immutable post-review driver now repeats
+the complete final gate sequence. Freeze a driver before admission and queue a
+new one for later repair waves. Earlier individual results are retained as
+intermediate evidence, not final-head proof.
+
+### H3 additive row contract
+
+Adding `sessionStartSource` exposed the writer conformance test's explicit field
+allowlist. The package audit rejected the omission; the allowlist and raw codec
+were aligned before the final proof. Schema-field additions should update the
+conformance contract in the same commit.

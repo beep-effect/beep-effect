@@ -71,6 +71,12 @@ and [lane handoff](./history/handoffs/rsc-h1-catalog-2026-10-09.md).
 (14 sweeps and 19 gap follow-ups); Knip reconciliation at `e62411d63f`
 (41 of 41 rows reproduced, `research/knip-findings-2026-10-09.md`).
 
+H3 execution evidence: [`history/receipts/stage-4-h3-telemetry.md`](./history/receipts/stage-4-h3-telemetry.md)
+(2026-10-09). Shared writer fixtures and native Claude primary/lane workflows
+are recorded separately from live qualifying windows. No non-use retirement is
+qualified; native trust, global projection and remote OTel validation remain
+owned prerequisites.
+
 ## Notes
 
 - Orchestrator: the program's Claude Fable orchestrator session, which holds
