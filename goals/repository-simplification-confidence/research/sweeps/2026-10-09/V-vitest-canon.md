@@ -14,9 +14,10 @@
 
 ## 1. Headline
 
-**The continuation lane is a strict superset of the other five lanes, and PR #1506 did not carry its consolidation.**
+**The continuation lane's committed history is a strict superset of the other five lanes' committed history, and PR #1506 did not carry its consolidation.**
 
 - All five sibling heads are ancestors of continuation `e4c608f9c1`, checked with `git merge-base --is-ancestor`.
+- This covers commits only. The six unstaged detector-resources test files (§3.5) are in no commit, so continuation does not contain them; the plan applies that WIP separately (step 4).
 - PR #1506 merged the `bd7a8e0301..64bff0e5b9` slice plus a separate conflict-only merge, `c921d9e11d`.
 - The 16 later continuation commits never reached GitHub:
   - property values,
@@ -245,5 +246,5 @@ The net delta adds 6 new root-barrel `from "effect"` import lines. Repository la
 - Was property-boundaries' "package/review" step ever completed with a terminal receipt? The staged SPEC row cites a 726.2s package audit at `5ba9351314`. The later aggregate proof was interrupted, and no full-package receipt exists at `e4c608f9c1`.
 - Which retired lane produced `c921d9e11d`, and does any residue of it remain? It is not among the six.
 - Was the detector-resources WIP ever run (Node/Bun or typecheck)? It has no receipt. The lane's cache directory `~/.cache/beep/effect-vitest-canon/detector-resources-20261006` exists but was not opened.
-- What does the 4.0.1 → 4.0.2 bump (#1555) change in detector rules? It is unverified whether regeneration alone reconciles it.
+- Does regenerating the inventory under the 4.0.2 pin pass the pin check, with the bump itself contributing only re-anchored rows? `V-other-worktrees-and-detector-delta.md` §5 found that #1555 changed pins and anchors only, not detector logic or rule primitives, but no integration lane has run the regeneration yet.
 - `~/YeeBois/projects/beep-effect2-worktrees/` holds 41 other `effect-vitest-*` worktrees, such as `effect-vitest-wave-d-*`, `effect-vitest-pr1399-conflict` and `effect-vitest-inventory-next`. They are out of scope here, and their merged, closed or unpublished state was not assessed.
