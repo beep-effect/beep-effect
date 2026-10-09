@@ -206,6 +206,14 @@ const heavyAdmissionEventChangedPathsDefault = A.empty<string>();
 export class HeavyAdmissionEvent extends S.Class<HeavyAdmissionEvent>($I`HeavyAdmissionEvent`)(
   {
     eventName: HeavyAdmissionEventName,
+    headRepository: S.String.pipe(
+      S.withConstructorDefault(Effect.succeed("beep-effect/beep-effect")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("beep-effect/beep-effect"))
+    ),
+    baseRepository: S.String.pipe(
+      S.withConstructorDefault(Effect.succeed("beep-effect/beep-effect")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("beep-effect/beep-effect"))
+    ),
     labels: S.Array(S.String).pipe(
       S.withConstructorDefault(Effect.succeed(heavyAdmissionEventLabelsDefault)),
       S.withDecodingDefaultTypeKey(Effect.succeed(heavyAdmissionEventLabelsDefault))
@@ -275,7 +283,7 @@ export class HeavyAdmission extends S.Class<HeavyAdmission>($I`HeavyAdmission`)(
  * ```ts
  * import { heavyDocsOnlyPattern } from "@beep/repo-cli/commands/Ci"
  *
- * console.log(heavyDocsOnlyPattern.test("packages/a/README.md")) // true
+ * console.log(heavyDocsOnlyPattern.test("packages/a/README.md")) // false
  * console.log(heavyDocsOnlyPattern.test("goals/x/scripts/run.sh")) // false
  * ```
  *
@@ -283,7 +291,7 @@ export class HeavyAdmission extends S.Class<HeavyAdmission>($I`HeavyAdmission`)(
  * @since 0.0.0
  */
 export const heavyDocsOnlyPattern: RegExp = new RegExp(
-  `${ciOperationalPatterns.goals}|${ciOperationalPatterns.docs}`,
+  `^(?!(?:packages|apps|infra)/)(?:${ciOperationalPatterns.goals}|.*(?:${ciOperationalPatterns.docs}))`,
   "u"
 );
 
@@ -304,7 +312,7 @@ export const heavyDocsOnlyPattern: RegExp = new RegExp(
  * @category predicates
  * @since 0.0.0
  */
-export const isHeavyDocsOnlyPath = (path: string): boolean => heavyDocsOnlyPattern.test(path);
+export const isHeavyDocsOnlyPath = S.is(S.String.check(S.isPattern(heavyDocsOnlyPattern)));
 
 const sourcesFor = (event: HeavyAdmissionEvent): ReadonlyArray<HeavyAdmissionSource> =>
   pipe(
@@ -312,7 +320,10 @@ const sourcesFor = (event: HeavyAdmissionEvent): ReadonlyArray<HeavyAdmissionSou
     Match.when("push", () => [HeavyAdmissionSource.Enum["main-push"]]),
     Match.when("merge_group", () => [HeavyAdmissionSource.Enum["merge-group"]]),
     Match.when("pull_request", () =>
-      A.contains(event.labels, HEAVY_ADMISSION_LABEL)
+      A.contains(event.labels, HEAVY_ADMISSION_LABEL) &&
+      Str.isNonEmpty(event.headRepository) &&
+      Str.isNonEmpty(event.baseRepository) &&
+      (event.headRepository === event.baseRepository || A.contains(event.labels, "ready-for-heavy-fork"))
         ? [HeavyAdmissionSource.Enum.label]
         : A.empty<HeavyAdmissionSource>()
     ),
@@ -364,7 +375,9 @@ export const decideHeavyAdmission = (event: HeavyAdmissionEvent): HeavyAdmission
   const docsOnly =
     HeavyAdmissionEventName.is.pull_request(event.eventName) &&
     A.isReadonlyArrayNonEmpty(event.changedPaths) &&
-    A.every(event.changedPaths, isHeavyDocsOnlyPath);
+    A.every(event.changedPaths, isHeavyDocsOnlyPath) &&
+    Str.isNonEmpty(event.headRepository) &&
+    event.headRepository === event.baseRepository;
   const verdict = verdictFor(A.isReadonlyArrayNonEmpty(sources), docsOnly);
   return HeavyAdmission.make({
     verdict,
@@ -391,7 +404,8 @@ class GhEventPullRequest extends S.Class<GhEventPullRequest>($I`GhEventPullReque
       S.withConstructorDefault(Effect.succeed(ghEventPullRequestLabelsDefault)),
       S.withDecodingDefaultTypeKey(Effect.succeed(ghEventPullRequestLabelsDefault))
     ),
-    base: S.Struct({ ref: S.String }),
+    head: S.optionalKey(S.Struct({ repo: S.NullOr(S.Struct({ full_name: S.String })) })),
+    base: S.Struct({ ref: S.String, repo: S.optionalKey(S.Struct({ full_name: S.String })) }),
   },
   $I.annote("GhEventPullRequest", {
     description: "The pull_request fields of a GitHub event payload that admission reads.",
@@ -576,6 +590,8 @@ export const readHeavyAdmissionEvent = Effect.fn("Ci.readHeavyAdmissionEvent")(f
   const changedPaths = yield* readHeavyAdmissionChangedPaths(branch, input.cwd, capture);
   return HeavyAdmissionEvent.make({
     eventName: input.eventName,
+    headRepository: payload.pull_request.head?.repo?.full_name ?? "",
+    baseRepository: payload.pull_request.base.repo?.full_name ?? "",
     labels: A.map(payload.pull_request.labels, (label) => label.name),
     draft: payload.pull_request.draft,
     changedPaths,

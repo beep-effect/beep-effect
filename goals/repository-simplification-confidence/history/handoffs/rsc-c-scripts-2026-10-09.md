@@ -872,3 +872,30 @@ fallow:dead-code also pass with zero introduced findings.
 merge/retirement. S5 and publication are resolved. All C-owned jobs are terminal.
 
 Content is final; the receipt-only push carries this report. The lane never merges.
+
+## Run 8 main integration
+
+Read E's [co-sign](https://github.com/beep-effect/beep-effect/pull/1583#issuecomment-6088793345)
+and its committed handoff before merging `origin/main` at `df7d88aad7`.
+The six expected conflicts were resolved with E's hosted policy semantics and
+C's command structure: governance commands remain registered; docs-only Heavy
+admission excludes packages/apps/infra; Security retains its job-token permissions
+and hosted checks, caller guards and coordinated descriptors survive. ONNX still
+runs the owning-package suite before OSV and merge-driver setup before assertions.
+The composite preserves E's retired Bun dependency cache, with install before
+`beep ci job-env` before Turbo restore. All three description references are
+corrected to `beep ci job-env`. OPPORTUNITIES retains both lanes' rows in order.
+
+The independent review's P2 is accepted and repaired: the resource adapter uses
+a private temporary launch receipt to fall back directly when the CLI never
+starts the lane, while preserving a started lane's exit without repeating it.
+Two synthetic fixtures cover CLI boot failure and exactly-once execution after
+lane failure; existing stdin, signal, invalid-proc and unwritable-output fixtures
+remain. No secret input, host unit or inventory is changed.
+
+Owner regeneration: `ci patterns --write` succeeds; `lint package-scripts --write`
+reports 152 manifests / 0 drifting / 0 written; `cache profile --write` succeeds
+without a new tracked profile diff. `.beep/rsc-c-run8-gates.sh` queues only the
+five required integration checks through `beep-heavy` with Turbo concurrency 2.
+Terminal evidence will be appended before the single push. Previous terminal
+passes remain the verification of record for unaffected surfaces.

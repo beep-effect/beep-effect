@@ -1,9 +1,16 @@
-import { CiOperationalPatterns, ciOperationalPatterns } from "@beep/repo-cli/commands/Ci";
+import {
+  CI_LANE_DESCRIPTORS,
+  CiOperationalPatterns,
+  ciOperationalPatterns,
+  isHeavyDocsOnlyPath,
+  workflowJobContexts,
+  workflowPolicyDiagnostics,
+} from "@beep/repo-cli/commands/Ci";
 import { findRepoRoot } from "@beep/repo-utils/Root";
 import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
-import { assert } from "@effect/vitest";
+import { assert, expect } from "@effect/vitest";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -47,7 +54,9 @@ const secretReference = (name: string): string =>
     ? `\${{ secrets.${name} }}`
     : `\${{ github.event_name == 'push' && secrets.${name} || '' }}`;
 const secretInputLine = ([input, name]: readonly [string, string]): string => `${input}: ${secretReference(name)}`;
-const SECRET_INPUT_LINES = A.map(SECRET_INPUTS, secretInputLine);
+const MATRIX_WRITE_TOKEN =
+  "${{ github.event_name == 'push' && matrix.uses_turbo == 'true' && secrets.TURBO_TOKEN || '' }}";
+const SECRET_INPUT_LINES = [...A.map(SECRET_INPUTS, secretInputLine), `turbo-token: ${MATRIX_WRITE_TOKEN}`];
 const SECRET_REFERENCES = A.map(SECRET_INPUTS, ([, name]) => `secrets.${name}`);
 
 const WorkflowStep = S.Struct({
@@ -59,7 +68,13 @@ const WorkflowStep = S.Struct({
   env: S.optionalKey(S.Record(S.String, S.Unknown)),
 });
 type WorkflowStep = typeof WorkflowStep.Type;
-const WorkflowJobs = S.Record(S.String, S.Struct({ steps: WorkflowStep.pipe(S.Array, S.optionalKey) }));
+const WorkflowJobs = S.Record(
+  S.String,
+  S.Struct({
+    permissions: S.optionalKey(S.Record(S.String, S.String)),
+    steps: WorkflowStep.pipe(S.Array, S.optionalKey),
+  })
+);
 type WorkflowJobs = typeof WorkflowJobs.Type;
 const decodeWorkflowSteps = S.decodeUnknownEffect(S.Array(WorkflowStep));
 const decodeWorkflowJobs = S.decodeUnknownEffect(WorkflowJobs);
@@ -252,13 +267,16 @@ const turboJobTable = Effect.fnUntraced(function* (documents: {
 // application secrets only where the job is allowed them.
 const assertTurboJobSetup = (jobs: WorkflowJobs, jobId: string, appSecrets: boolean): void => {
   const inputs = setupMonorepoInputs(jobs, jobId);
-  assert.strictEqual(inputs["turbo-remote-cache"], "true", jobId);
+  assert.strictEqual(inputs["turbo-remote-cache"], jobId === "verify" ? "${{ matrix.uses_turbo }}" : "true", jobId);
   assert.strictEqual(inputs["turbo-api"], "${{ vars.TURBO_API }}", jobId);
   assert.strictEqual(inputs["turbo-team"], "${{ vars.TURBO_TEAM }}", jobId);
   assert.isUndefined(inputs["repository-secrets"], jobId);
-  for (const [input, name] of TURBO_SECRET_INPUTS) {
-    assert.strictEqual(inputs[input], secretReference(name), `${jobId} ${input}`);
-  }
+  assert.strictEqual(
+    inputs["turbo-token"],
+    jobId === "verify" ? MATRIX_WRITE_TOKEN : secretReference("TURBO_TOKEN"),
+    `${jobId} turbo-token`
+  );
+  assert.strictEqual(inputs["turbo-read-token"], secretReference("TURBO_READ_TOKEN"), `${jobId} turbo-read-token`);
   for (const [input, name] of APP_SECRET_INPUTS) {
     assert.strictEqual(inputs[input], appSecrets ? secretReference(name) : undefined, `${jobId} ${input}`);
   }
@@ -277,8 +295,42 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       );
       const decoded = yield* S.decodeEffect(S.fromJsonString(CiOperationalPatterns))(projection);
       assert.deepEqual(decoded, ciOperationalPatterns);
+      for (const file of ["README.md", "nested/note.md", "docs/runbooks/ci.md", "goals/demo/PLAN.md"]) {
+        assert.isTrue(isHeavyDocsOnlyPath(file), file);
+      }
+      for (const file of ["packages/demo/README.md", "apps/demo/README.md", "infra/demo/README.md"]) {
+        assert.isFalse(isHeavyDocsOnlyPath(file), file);
+      }
     })
   );
+  it.effect(
+    "scopes hosted governance reads to Security and exercises its job token on pull requests",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repoRoot = yield* findRepoRoot();
+      const jobs = yield* workflowJobs(
+        parsedDocument(yield* fs.readFileString(path.join(repoRoot, ".github/workflows/check.yml")))
+      );
+      expect(jobs.verify?.permissions).toEqual({ contents: "read" });
+      expect(jobs.security?.permissions).toEqual({ contents: "read", actions: "read", "pull-requests": "write" });
+      const securitySteps = jobSteps(jobs, "security");
+      const hosted = stepByName(securitySteps, "Check hosted settings policy");
+      expect(hosted.env).toEqual({ GH_TOKEN: "${{ github.token }}" });
+      expect(hosted.if).toBeUndefined();
+      expect(hosted.run).toContain("bun run beep ci ruleset --check");
+      expect(hosted.run).toContain("bun run beep ci settings --check");
+      expect(hosted.run).toContain("bun run beep ci held-group");
+      assert.isAbove(
+        stepIndexByName(securitySteps, "Check hosted settings policy"),
+        stepIndexByName(securitySteps, "Dependency review")
+      );
+      const localPolicy = stepByName(jobSteps(jobs, "verify"), "Check workflow policy");
+      expect(localPolicy.env).toBeUndefined();
+      expect(localPolicy.run).toBe("bun run beep ci workflow-lint");
+    })
+  );
+
   it.effect(
     "preserves the requested PR lane when an older checkout has no resource helper",
     Effect.fnUntraced(function* () {
@@ -312,6 +364,62 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         result.stdout.toString(),
         "<run>\n<beep>\n<ci>\n<lane>\n<check>\n<--affected>\n<--base>\n<origin/main>\n<--summarize>\n"
       );
+    })
+  );
+
+  it.effect(
+    "runs the lane once when the measurement CLI cannot boot",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* findRepoRoot();
+      const temp = yield* fs.makeTempDirectoryScoped();
+      const fakeBun = path.join(temp, "bun");
+      const receipt = path.join(temp, "lane-runs");
+      yield* fs.writeFileString(fakeBun, "#!/usr/bin/env bash\nexit 42\n");
+      yield* fs.chmod(fakeBun, 0o755);
+      const result = Bun.spawnSync(
+        [
+          "bash",
+          path.join(root, "scripts/ci-runner-resources.sh"),
+          "check",
+          "bash",
+          "-c",
+          'printf run >> "$1"; exit 7',
+          "fixture",
+          receipt,
+        ],
+        { env: { ...process.env, PATH: `${temp}:${process.env.PATH}` }, stderr: "pipe", stdout: "pipe" }
+      );
+      assert.strictEqual(result.exitCode, 7);
+      assert.strictEqual(yield* fs.readFileString(receipt), "run");
+      assert.include(result.stderr.toString(), "resource measurement unavailable");
+    })
+  );
+
+  it.effect(
+    "does not rerun a lane that fails after the measurement CLI starts it",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* findRepoRoot();
+      const temp = yield* fs.makeTempDirectoryScoped();
+      const receipt = path.join(temp, "lane-runs");
+      const result = Bun.spawnSync(
+        [
+          "bash",
+          path.join(root, "scripts/ci-runner-resources.sh"),
+          "check",
+          "bash",
+          "-c",
+          'printf run >> "$1"; exit 7',
+          "fixture",
+          receipt,
+        ],
+        { env: { ...process.env, RUNNER_TEMP: temp }, stderr: "pipe", stdout: "pipe" }
+      );
+      assert.strictEqual(result.exitCode, 7);
+      assert.strictEqual(yield* fs.readFileString(receipt), "run");
     })
   );
 
@@ -894,7 +1002,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       assert.isUndefined(workflow.getIn(["jobs", "build"]));
       assert.strictEqual(
         heavyWorkflow.getIn(["jobs", "verify", "environment"]),
-        "${{ github.event_name == 'push' && 'turbo-cache-write' || null }}"
+        "${{ github.event_name == 'push' && inputs.admitted && matrix.uses_turbo == 'true' && 'turbo-cache-write' || null }}"
       );
       const buildLane = O.getOrThrowWith(
         A.findFirst(heavyMatrixLanes(heavyWorkflow), (lane) => lane.id === "build"),
@@ -1135,7 +1243,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       assert.lengthOf(workflow.errors, 0);
       const jobs = yield* workflowJobs(workflow);
       const setup = setupMonorepoStep(jobs, "verify");
-      assert.strictEqual(setup.with?.["turbo-remote-cache"], "true");
+      assert.strictEqual(setup.with?.["turbo-remote-cache"], "${{ matrix.uses_turbo }}");
       assert.strictEqual(setup.with?.["cache-write"], "false");
       assert.strictEqual(
         workflow.getIn(["jobs", "verify", "env", "BEEP_DOCGEN_CONCURRENCY"]),
@@ -1199,6 +1307,53 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       assert.notInclude(packageJson, '"doctest":');
       assert.include(packageJson, '"@effect/doctest": "catalog:"');
       assert.isFalse(yield* fs.exists(path.join(repoRoot, "vitest.docs.ts")));
+    })
+  );
+
+  // Reusable Heavy is trusted at main; caller and scheduled names are orchestration exemptions.
+  it.effect(
+    "maps every hosted job to a descriptor or explicit orchestration exemption",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = new URL("../../../../..", import.meta.url).pathname;
+      const exemptions = [
+        "check.yml:Heavy Admission",
+        "check.yml:Heavy",
+        "check.yml:Lint (${{ matrix.partition }})",
+        "check.yml:Test Unit (${{ matrix.partition }})",
+        "cache-warm.yml:Warm Turbo cache",
+        "data-sync.yml:Sync Official Data",
+        "fleet-lane-probe.yml:Lane Probe (${{ inputs.lane }})",
+        "fleet-shadow-check.yml:Shadow Probe",
+        "heavy-admit.yml:Heavy Admission",
+        "heavy-admit.yml:Heavy",
+        "property-laws-nightly.yml:Property Laws Sweep",
+        "release-desktop.yml:Validate desktop release inputs",
+        "release-desktop.yml:macOS arm64",
+        "release-desktop.yml:macOS x64",
+        "release-desktop.yml:Linux x64",
+        "release-desktop.yml:Windows x64",
+        "release-desktop.yml:Desktop release draft ready",
+        "rerun-runner-loss.yml:Rerun Runner Loss",
+      ];
+      const files = A.filter(yield* fs.readDirectory(`${root}/.github/workflows`), Str.endsWith(".yml"));
+      for (const file of files) {
+        const workflow = Str.replace(/\.yml$/, "")(file);
+        const text = yield* fs.readFileString(`${root}/.github/workflows/${file}`);
+        expect(yield* workflowPolicyDiagnostics(file, text)).toEqual([]);
+        const contexts = yield* workflowJobContexts(file, text);
+        const declared = A.map(
+          A.filter(CI_LANE_DESCRIPTORS, (row) => row.workflow === workflow),
+          (row) => row.contextName
+        );
+        expect(
+          A.filter(
+            contexts,
+            (context) => !A.contains(declared, context) && !A.contains(exemptions, `${file}:${context}`)
+          )
+        ).toEqual([]);
+        expect(A.filter(declared, (context) => !A.contains(contexts, context))).toEqual([]);
+      }
     })
   );
 });

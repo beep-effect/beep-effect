@@ -4,6 +4,8 @@
 
 Lifecycle: `active`
 
+Latest E evidence: [GitHub audit](./history/receipts/stage-4-github-audit.md), [settings snapshots](./history/receipts/stage-3-github-settings.md), and [lane handoff](./history/handoffs/rsc-e-github-2026-10-09.md). E source repairs are final in ready PR #1568. Both integrated full package gates and all local hosted-parity lanes pass; focused fixtures pass 127 tests and scoped coverage passes 396 tests across all seven touched baseline files. The actual GITHUB_TOKEN hosted governance step passes. Cross-lane, trusted-main writer and post-merge acceptance remain open; inherited hosted coverage reds remain attributed for the consolidated repair.
+
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
 ## Mission
@@ -83,8 +85,9 @@ S5 through the orchestrator's durable notification, and passes all three require
 Knip/Fallow policy reruns. Knip has zero introduced findings; dead-code has zero
 findings; audit retains one nonblocking inherited complexity observation.
 [PR #1583](https://github.com/beep-effect/beep-effect/pull/1583) is published
-and ready for review through the authorized push/create fallback. E's workflow co-sign, B/V judgment
-admission and hosted evidence remain open. C edits no inventory or allowlist
+and ready for review through the authorized push/create fallback. E's workflow co-sign
+is received; Run 8 integrates its main policy and repairs the resource-adapter P2.
+Scoped integration checks, B/V judgment admission and updated-head hosted evidence remain open. C edits no inventory or allowlist
 and does not close program acceptance.
 
 ## Notes

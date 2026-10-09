@@ -8,7 +8,7 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -136,6 +136,15 @@ jobs:
         if: steps.lane-gate.outputs.should_run == 'true' && always()
         run: bun run beep ci append-turbo-summary
 
+      - name: Upload trusted Turbo summaries
+        if: github.event_name == 'push' && hashFiles('.turbo/runs/*.json') != ''
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: turbo-summary-${{ github.job }}-${{ matrix.id || matrix.partition || 'single' }}
+          path: .turbo/runs/*.json
+          retention-days: 7
+          if-no-files-found: warn
+
       - name: Upload Storybook static artifact
         # The affected lane can skip successfully; a build enforces index.html itself.
         if: steps.lane-gate.outputs.should_run == 'true' && hashFiles('apps/storybook/storybook-static/index.html') != ''
@@ -144,6 +153,7 @@ jobs:
           name: storybook-static
           path: apps/storybook/storybook-static
           if-no-files-found: error
+          retention-days: ${{ github.event_name == 'pull_request' && 7 || 30 }}
 
       - name: Skip lane
         if: steps.lane-gate.outputs.should_run != 'true'

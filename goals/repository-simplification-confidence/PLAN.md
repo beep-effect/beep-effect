@@ -10,6 +10,8 @@ see the SPEC.md Decision Log). Packet lane: `rsc-packet`
 (branch recorded in the baseline receipts), cut from `e62411d63f`. Baseline receipts:
 [`research/baseline-2026-10-09.md`](./research/baseline-2026-10-09.md).
 
+E recovery state: E source repairs are final in ready PR #1568. Both integrated full package gates and all local hosted-parity lanes pass; focused fixtures pass 127 tests and scoped coverage passes 396 tests across all seven touched baseline files. The actual GITHUB_TOKEN hosted governance step passes. Cross-lane, trusted-main writer and post-merge acceptance remain open; inherited hosted coverage reds remain attributed for the consolidated repair. Current evidence: [E handoff](./history/handoffs/rsc-e-github-2026-10-09.md).
+
 ## Phases
 
 The manifest keeps the archetype phases (validated by `goals doctor`); the six
@@ -98,8 +100,9 @@ required policy reruns now pass: Knip has zero introduced findings, Fallow
 dead-code has zero findings, and audit retains one nonblocking inherited
 complexity observation. PR #1583 is published and ready for review via the explicitly authorized
 push/create fallback after the push-only refusal. B owns the
-occurrence-specific judgments after V; E's workflow co-sign and hosted evidence
-remain open. No inventory is edited.
+occurrence-specific judgments after V. E co-signs the workflow ordering on #1583;
+Run 8 integrates E main and repairs the resource-adapter P2. The five scoped
+integration checks and updated-head hosted evidence remain pending. No inventory is edited.
 Evidence:
 [`history/handoffs/rsc-c-scripts-2026-10-09.md`](history/handoffs/rsc-c-scripts-2026-10-09.md),
 [`history/receipts/stage-5-acceptance.md`](history/receipts/stage-5-acceptance.md).
