@@ -2,14 +2,24 @@
 
 ## Status
 
-Lifecycle: `active`; P0 placement/contract and P1 implementation are complete;
-P2 final verification is ongoing. Router evidence is 44 passing tests and one
-pre-existing deferred P2 R1. Owned autonomous Codex↔Grok and Codex↔Claude request/
-reply/ACK proofs passed; Claude also passed the distinct two-message queued-busy
-exercise. Native transport has 19 passing cases and corrected provider full
-audit/docgen. Final Claude patch review also reports zero introduced findings.
-CLI full package/cheap gates and exact-head hosted proof remain separate. P3 publication is pending; no PR or completed
-lifecycle is claimed.
+**Proposed state for merged `main`, [PR #1571](https://github.com/beep-effect/beep-effect/pull/1571).**
+The lifecycle, phases and merge-conditional checklist items in this branch take
+effect when this PR merges after its exact final head passes required hosted
+checks, answered/resolved review threads and the 20-minute review window.
+Execution remains open until then; the PR's live merge gate supplies the
+completion evidence.
+
+Local full verification and the initial Yeet publication are complete: all three
+touched package audits/docgen passed, CLI audit 745.2 seconds/docgen 23.9 seconds,
+and 16 cheap gates plus clean-head install passed. PR #1571 was created from
+implementation source commit `1565951a24da16aed9e238fde55ca7250fe9c7d2`. Exact final-head hosted checks,
+review closure/window and merge remain unverified here.
+
+
+Local full proof binds the qualified implementation snapshot published at
+`1565951a24da16aed9e238fde55ca7250fe9c7d2`. Advancing-base integration and the final
+packet commit retain their own exact-head hosted/review gate; earlier local proof
+is not automatically promoted to the integrated final head.
 
 ## Phases
 
@@ -17,9 +27,9 @@ lifecycle is claimed.
 | --- | --- | --- | --- |
 | P0 Research | complete | Finalize architecture placement, reuse boundaries, store/migration choice, receipt transitions, scope grants and explicit capability/policy contract; write an implementation handoff for the bridges goal. | Architecture and bounded source contract recorded; dependency ready |
 | P1 Implement | complete | Implement the local router schemas/store/services/operator surface and injected vertical slice without adding provider adapters or changing production orchestration. | Real implementation meets its scoped acceptance |
-| P2 Verify | in-progress | Run real-store crash/replay/order/claim/policy tests and focused package proof; preserve the distinction between transport acceptance, context receipt and completion. | Required local/package checks pass, receipt limits recorded |
-| P3 Yeet: PR to mergeable | pending | Publish final waves through Yeet, mark ready at content-final, answer/resolve review threads and wait detached readiness monitor | Exact final-head hosted checks, review closure and window satisfy the existing merge gate |
-| P4 Close | pending | Same-PR final lifecycle/reflection update, merge at gate and retire owning lane | Merged/mergeable proof retained, reflection validates, lifecycle completed-retained only when achieved |
+| P2 Verify | complete | Run real-store crash/replay/order/claim/policy tests and focused package proof; preserve the distinction between transport acceptance, context receipt and completion. | Required local/package checks pass, receipt limits recorded |
+| P3 Yeet: PR to mergeable | complete (merge-conditional) | Publish final waves through Yeet, mark ready at content-final, answer/resolve review threads and wait detached readiness monitor | Exact final-head hosted checks, review closure and window satisfy the existing merge gate |
+| P4 Close | complete (merge-conditional) | Same-PR final lifecycle/reflection update, merge at gate and retire owning lane | Merged/mergeable proof retained, reflection validates, lifecycle completed-retained only when achieved |
 
 ## First vertical slice
 
@@ -34,7 +44,7 @@ cells; no silent provider replacement, plan purchase or app-session takeover.
 ## P4 Closeout Checklist
 
 1. Record exact implementation PR/head, local proof, hosted gate and resolved review evidence.
-2. Finalize the dated reflection draft under `history/reflections/` with actual PR/head, package/hosted outcomes, remaining follow-ups and closeout evidence; validate reflection-artifacts.
+2. Retain the final dated reflection under `history/reflections/` with actual source commit, local package outcomes, remaining follow-ups and prospective closeout limits; validate reflection-artifacts.
 3. Land final phase/lifecycle changes with final work. Never mark this scaffold completed-retained from exploration fixture evidence.
 4. Merge only through the current gate after rereading review threads, then run the owning lane's Yeet retirement/sweep route.
 

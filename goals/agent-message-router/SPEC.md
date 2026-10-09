@@ -41,6 +41,13 @@ Repo-operational contracts/services and their CLI composition, transactional loc
 
 ## Acceptance Criteria
 
+**Proposed state for merged `main`, [PR #1571](https://github.com/beep-effect/beep-effect/pull/1571).**
+The lifecycle, phases and merge-conditional checklist items in this branch take
+effect when this PR merges after its exact final head passes required hosted
+checks, answered/resolved review threads and the 20-minute review window.
+Execution remains open until then; the PR's live merge gate supplies the
+completion evidence.
+
 - [x] Schema-first identities distinguish participant, runtime/session, run/turn, repository/lane, app host/backend and role. Versioned envelopes carry stable message/conversation/reply IDs, bounded payload, requested mode and scoped sender/target identity.
 - [x] Transactional local storage commits message acceptance and per-recipient attempt/receipt state atomically. Equal-ID/equal-content retries return the same logical acceptance; identity conflicts fail with typed errors.
 - [x] Service and public operator entry points expose registration/discovery, send/reply, inbox/ack, subscriptions and delivery inspection; endpoint ports let the bridge goal compose real runtimes. Unsupported operations are explicit.
@@ -50,16 +57,16 @@ Repo-operational contracts/services and their CLI composition, transactional loc
 - [x] Atomic claims prevent competing dispatcher ownership. Generation replacement rejects stale endpoint/control actions; role/direct addresses remain distinct without changing current orchestrator ownership policy.
 - [x] First vertical slice uses two injected owned endpoints to prove request/reply correlation through the real router, including restart, duplicate send and a dropped acknowledgement. The sibling bridge goal must replace these fixtures with autonomous managed cross-provider send/reply before claiming the overall communication capability.
 - [x] Real-store process-crash recovery and restrictive state/socket ownership pass; any power-loss durability claim has its own storage/fsync evidence. Migration/reversal preserves pending messages.
-- [ ] Touched packages pass package-verify; applicable lint/check/tests/docgen and exact-head hosted gates pass; every actionable review thread is answered/resolved.
-- [ ] Yeet drives the owning PR to mergeable and merger follows the existing gate; closeout/reflection and lifecycle updates land with final work. No unrelated refactors.
+- [x] **Merge-conditional:** Touched packages pass package-verify; applicable lint/check/tests/docgen and exact-head hosted gates pass; every actionable review thread is answered/resolved.
+- [x] **Merge-conditional:** Yeet drives the owning PR to mergeable and merger follows the existing gate; closeout/reflection and lifecycle updates land with final work. No unrelated refactors.
 
 Functional checkboxes reflect the current real-store/transport fixtures and owned
 managed live receipts. The current 44-case suite and autonomous bridge receipts qualify
 the functional slice; [R1](research/FOLLOW-UPS.md) remains a deferred pre-existing P2
 for inconsistent trusted-host enrollment, fenced before inference. State ownership
 and stopped-writer reversal are proved; no new network socket or power-loss
-durability claim is introduced. Final full CLI/package, hosted review, Yeet and
-closeout criteria remain unchecked while the goal is active.
+durability claim is introduced. Full local package proof is achieved. Hosted/Yeet/closeout boxes declare only the
+intended merged state and remain unfulfilled on this branch until the gate above.
 
 ## Verification Matrix
 
@@ -90,6 +97,8 @@ closeout criteria remain unchecked while the goal is active.
 | 2026-10-09 | Keep browser/native Desktop/federation as named gated follow-ups | Browser/manual and CLI fixtures establish different evidence modes | Reopen exploration at decompose when a named gate fires |
 | 2026-10-09 | Preserve current orchestrator, launch/fallback and merge policy | Message delivery is not authority transfer | Stop bridge/router while retaining existing register/Yeet workflows |
 | 2026-10-09 | Refresh only reviewed agent-messaging cache baseline subjects through `beep cache baseline --request` | Intentional ACP/provider/MCP imports and six added policy-fingerprint inputs change the graph; cache flags, qualification scope and ledger remain unchanged | Revert the generated baseline/request/review with the owned dependency and Turbo changes, then rerun cache audit; never hide graph drift with an old baseline |
+
+| 2026-10-09 | Carry prospective merged-state lifecycle, phases and reflection in PR #1571 | Same-PR packet-state law requires closeout artifacts with final implementation; local full proofs passed, while final hosted checks/review/window and merge remain conditional | Before merge retain external open status; if publication/gate fails restore active manifest/phase values without discarding receipts; never infer merge from local projection |
 
 Primary dated decisions and rejected alternatives remain in the [source log](../../explorations/cross-provider-agent-communication/DECISIONS.md).
 

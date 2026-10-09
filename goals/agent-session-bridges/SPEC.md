@@ -41,6 +41,13 @@ Flat external runtime adapters in existing driver families or architecture-appro
 
 ## Acceptance Criteria
 
+**Proposed state for merged `main`, [PR #1571](https://github.com/beep-effect/beep-effect/pull/1571).**
+The lifecycle, phases and merge-conditional checklist items in this branch take
+effect when this PR merges after its exact final head passes required hosted
+checks, answered/resolved review threads and the 20-minute review window.
+Execution remains open until then; the PR's live merge gate supplies the
+completion evidence.
+
 - [x] Native owned Codex app-server, Claude persistent stream input and Grok ACP adapters implement the router's endpoint port and advertise only version/evidence-qualified capabilities; native extensions preserve Codex active steering and other stronger features.
 - [x] Cursor access failure is classified independently of an apparently successful end_turn/RPC result. The adapter can handshake and report a blocked generation route without pretending the approved model generated output; a later paid remedy requires separate operator authorization.
 - [x] Scoped CLI/MCP send/reply tools carry recipient authentication, repository/task scopes, reply correlation and loop budgets through the real router; model text cannot impersonate an operator ruling or confer launch/merge permission.
@@ -51,8 +58,8 @@ Flat external runtime adapters in existing driver families or architecture-appro
 - [x] Busy steering versus queued follow-up, idle delivery versus wake, cancellation acceptance versus terminal cancellation, history resume versus same visible session and transport acceptance versus consumption are separate contract/evidence states.
 - [x] Restart/late-event/lost-ack behavior integrates with the router's ambiguous/reconciliation states. A provider without consumptive reconciliation holds unsafe retries; streaming buffers are not a durable queue.
 - [x] Evidence matrix explicitly leaves native Desktop enrollment, production browser bridge, cloud ChatGPT/Work and federation queued/gated. The earlier Claude web browser-mediated proof is useful acceptance evidence within that mode, not a production autonomous bridge.
-- [ ] Scoped model tests use existing subscriptions/pins, minimal worker configuration and sanitized receipts; required package-verify/lint/check/test/docgen and exact-head hosted gates pass.
-- [ ] Yeet drives the owning PR to mergeable and merger follows the existing gate; final reflection/lifecycle closeout lands with work. No unrelated refactors.
+- [x] **Merge-conditional:** Scoped model tests use existing subscriptions/pins, minimal worker configuration and sanitized receipts; required package-verify/lint/check/test/docgen and exact-head hosted gates pass.
+- [x] **Merge-conditional:** Yeet drives the owning PR to mergeable and merger follows the existing gate; final reflection/lifecycle closeout lands with work. No unrelated refactors.
 
 Functional checkboxes reflect the current real-store/transport fixtures and owned
 managed live receipts. The autonomous Codex↔Grok and Codex↔Claude receipts
@@ -60,8 +67,8 @@ include the distinct Claude queued-busy proof; Cursor remains an explicitly bloc
 generation cell. The [final Claude patch review](research/CLAUDE-PATCH-REVIEW.md)
 reports zero actionable introduced findings on its exact three-file snapshot.
 Stronger controls and permission readback retain their per-provider evidence
-limits; existing-app modes remain gated. Final full CLI/package, hosted review, Yeet and
-closeout criteria remain unchecked while the goal is active.
+limits; existing-app modes remain gated. Full local package proof is achieved. Hosted/Yeet/closeout boxes declare only the
+intended merged state and remain unfulfilled on this branch until the gate above.
 
 ## Verification Matrix
 
@@ -91,6 +98,8 @@ closeout criteria remain unchecked while the goal is active.
 | 2026-10-09 | Explicit model/permission fingerprint before inference | Default Codex server restart widened sandbox in the recorded probe | Disable resume/queue for affected adapter without discarding mail |
 | 2026-10-09 | Keep browser/native Desktop/federation as named gated follow-ups | Browser/manual and CLI fixtures establish different evidence modes | Reopen exploration at decompose when a named gate fires |
 | 2026-10-09 | Preserve current orchestrator, launch/fallback and merge policy | Message delivery is not authority transfer | Stop bridge/router while retaining existing register/Yeet workflows |
+
+| 2026-10-09 | Carry prospective merged-state lifecycle, phases and reflection in PR #1571 | Same-PR packet-state law requires closeout artifacts with final implementation; local full proofs passed, while final hosted checks/review/window and merge remain conditional | Before merge retain external open status; if publication/gate fails restore active manifest/phase values without discarding receipts; never infer merge from local projection |
 
 Primary dated decisions and rejected alternatives remain in the [source log](../../explorations/cross-provider-agent-communication/DECISIONS.md).
 

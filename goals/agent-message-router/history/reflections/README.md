@@ -1,6 +1,7 @@
 # Closeout reflection
 
-A [dated reflection draft](2026-10-09-codex.md) records current implementation,
-friction and evidence limits. The goal remains active. Finalize it with actual
-package, publication, hosted review and merge/closeout evidence before the final
-lifecycle transition, then run `bun run beep lint reflection-artifacts`.
+The [final dated reflection](2026-10-09-codex.md) accompanies PR #1571 under the
+same-PR closeout law. Its merged-state declaration is prospective on the branch:
+effective only after exact final-head hosted checks, resolved reviews, the
+20-minute review window and merge. Local manifest values do not prove that gate.
+Reflection schema validation is required before publishing the final wave.

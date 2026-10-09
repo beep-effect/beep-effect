@@ -3,13 +3,13 @@
   "initiative": {
     "id": "agent-session-bridges",
     "title": "Agent Session Bridges",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-10-09",
     "updated": "2026-10-09",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/agent-session-bridges",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Compose the local router with owned native Codex, Claude and Grok sessions and CLI/MCP send/reply tools, preserving policy, capability, lifecycle and app-mode evidence.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -84,17 +84,17 @@
     {
       "id": "P2",
       "name": "Verify",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -112,5 +112,5 @@
   ],
   "dependsOn": ["goals/agent-message-router"],
   "resumeCondition": "Satisfied on 2026-10-09: documented versioned router contract and combined 20 injected/schema/tool/filesystem tests passed. Execution activated; later review findings are remediation within active work.",
-  "statusNote": "Active on 2026-10-09. P1 implementation complete; P2 final verification ongoing and P3 publication pending, with no PR yet. Router 44 tests pass and independent extraction retains one pre-existing deferred P2 (R1). Native 19 tests and corrected provider full audit/docgen pass; final Claude patch review reports zero actionable introduced findings. Owned autonomous Codex-Grok and Codex-Claude proofs passed in 39.91 and 56.2 seconds total respectively; Claude additionally passed a distinct two-message queued-busy exercise. All required message ACKs/settled dispatches, grant use, unchanged digests and cleanup passed. CLI full package/cheap gates, hosted review and final reflection/closeout remain pending."
+  "statusNote": "PROSPECTIVE MERGED-STATE DECLARATION for PR #1571 (https://github.com/beep-effect/beep-effect/pull/1571), effective ONLY after exact final-head hosted checks, answered/resolved reviews, the 20-minute review window and merge through the existing gate. External execution remains open until then; literal local completed-retained/phase values are not proof of completion. Published implementation source commit 1565951a24da16aed9e238fde55ca7250fe9c7d2; all three full package audits/docgen passed, CLI audit 745.2 seconds/docgen 23.9 seconds, 16 cheap gates and clean-head install passed. Router 44 tests; native 19 tests and final Claude patch zero introduced findings; both autonomous live pairs and Claude busy exercise passed. R1 remains one deferred pre-existing P2. Final reflection is retained; no hosted-gate pass or merge SHA is claimed."
 }

@@ -1,15 +1,21 @@
 # Implementation evidence and current handoff
 
-2026-10-09. Both goals remain active; P1 is complete and P2 final verification is ongoing. No implementation PR or completed closeout
-is claimed. The router dependency contract has been implemented, and the first
-owned autonomous cross-provider slice has passed.
+2026-10-09. Yeet published initial draft [PR #1571](https://github.com/beep-effect/beep-effect/pull/1571) from implementation
+source commit `1565951a24da16aed9e238fde55ca7250fe9c7d2`. Both packets now carry the prospective lifecycle and
+phase declarations intended for merged `main`, effective only after exact final-
+head hosted checks, answered/resolved reviews, the 20-minute window and merge.
+External execution remains open; no merge SHA or hosted readiness is claimed.
+All three touched packages passed full audit/docgen on the qualified implementation
+snapshot (CLI audit 745.2 seconds; docgen 23.9 seconds). All 16 cheap gates and
+clean-head install passed before initial publication. Base integration and the
+final packet wave retain their own exact-head gate.
 
 ## Current deterministic and review evidence
 
 The combined router suite passes **44/44 tests**, including 23 storage cases and
 21 schema/tool/private-filesystem cases, in 12.01 seconds. The explicit CLI test
-project type-checks. Canonical quick CLI package verification passes lint and
-check; full package audit/docgen and exact-head hosted evidence remain distinct.
+project type-checks. Canonical full package audit/docgen passed on the qualified implementation
+snapshot; final integrated-head hosted evidence remains distinct.
 
 The final independent store extraction review found no introduced regression on
 store SHA-256 `b8ef0633b663c0c8d3a8c59b0cdc86c6c5f5ee6984d239ab1bdd4ce55060feac`.
@@ -41,7 +47,7 @@ receipt does not claim busy delivery, built-in tool denial or existing app
 attachment. See [native qualification](../../agent-session-bridges/research/NATIVE-QUALIFICATION.md)
 for the root-owned qualification matrix and per-route limits.
 
-## Pending gates and reflection drafts
+## Prospective closeout and remaining gate
 
 The corrected [Codex↔Claude receipt](../../agent-session-bridges/research/CLAUDE-MANAGED-ROUNDTRIP.json)
 records a successful 56.2-second total run including setup and cleanup. Its distinct
@@ -59,12 +65,18 @@ Cursor generation retains its existing access blocker. Native Desktop, productio
 browser bridge, cloud conversation control and federation remain named gated
 follow-ups. No production orchestrator, fallback or merge authority changed.
 
-Full required package checks, final local evidence, Yeet publication, exact-head
-hosted review/window gates, final reflection and lifecycle closeout remain open.
-Reflection drafts are prepared under each goal's history; finalize them against
-actual publication/merge evidence before completing the goals. Raw transcripts,
-authentication material and private failed-run databases remain outside tracked
-packets. The following historical attempts retain their original evidence limits.
+The final [reflections](../history/reflections/README.md) accompany the same PR
+as the implementation. Manifest lifecycle and phase values declare intended merged
+state, not an achieved hosted gate. Local full proof binds the qualified
+implementation snapshot; integration of advancing `main` and the final packet
+commit must satisfy the existing exact-head hosted and review gates. No new
+provider proof is inferred from inherited base changes. After actual merge the
+orchestrator verifies the merge/head, records external completion and retires
+through the existing sweep route.
+
+Failed raw transcripts and private databases remain outside tracked packets;
+receipts retain the exact source digest that ran. The following historical
+attempts retain their original evidence limits.
 
 ---
 

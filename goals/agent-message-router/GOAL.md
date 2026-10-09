@@ -8,7 +8,7 @@ architecture outrank packet prose. Read source exploration decisions and execute
 spike receipts; do not confuse fixtures, controller-mediated browser replies or
 managed CLI evidence with production autonomous tools or native app enrollment.
 
-Current lifecycle: active. Placement and versioned router contract qualification passed; implementation and verification are underway. Complete review remediation and autonomous native reply proof, then carry the existing Yeet and reflection gates through closeout.
+Merged-state declaration: completed-retained, effective only after PR #1571's exact final-head hosted checks, resolved reviews, 20-minute window and merge. Local implementation/full proofs passed; external closeout remains open until that gate. See README/SPEC for the prospective boundary; never treat this local manifest as a merge receipt.
 
 Bounded first slice: Implement schemas, transactional store and one injected endpoint request/reply through the real router; prove duplicate identity, crash recovery and ambiguous acknowledgement before adding live provider adapters.
 

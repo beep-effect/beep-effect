@@ -6,8 +6,10 @@ The latest independent store extraction review found no introduced regression bu
 confirmed one pre-existing P2, [R1](FOLLOW-UPS.md), for contradictory trusted-host
 provider enrollment. Dispatch rejects it before inference, after acceptance and
 quota use. This tracked finding remains deferred under the review-round policy.
-The current combined suite passes 44 tests; full audit/docgen, final hosted gates,
-Yeet and final reflection/lifecycle closeout remain required. Historical counts
+The current combined suite passes 44 tests, and full audit/docgen passed on the
+qualified implementation snapshot published in PR #1571. Final integrated-head
+hosted gates, review closure/window and merge remain unverified here. The packet
+values declare prospective merged state; external execution remains open. Historical counts
 and earlier owner/independent zero statements below retain their snapshot limits.
 
 | Criterion | Current implementation/evidence | Remaining action |
@@ -21,7 +23,7 @@ and earlier owner/independent zero statements below retain their snapshot limits
 | Ownership/authority | Atomic process-excluding claims; active/ambiguous replacement hold; old unsent generation failed explicitly; grants current owner/generation/scope/task + persistent quota | No enrollment/grant issuance exposed in model toolkit; CLI trusted local operator only |
 | Injected vertical slice | One two-endpoint fixture combines restart, duplicate request acceptance, correlated reply and dropped reply ACK hold | Owned Codex↔Grok and Codex↔Claude autonomous proofs plus Claude queued-busy passed |
 | Crash/privacy/reversal | Actual SIGKILL after committed accept and claim; two child process claim race; private path fixtures; futureversion fence; stopped-writer backup+restore retains pending mail/receipt/quota | No power-loss/online-backup/production restore claim |
-| Package/review gates | Current combined four-file suite 44/44 (store23, boundary21); explicit test typing and CLI --quick passed | Parent must run full audit/docgen, final test typing, independent review and hosted finalhead checks |
+| Package/review gates | Current combined suite 44/44 (store23, boundary21), explicit typing and full package audit/docgen passed on qualified implementation snapshot | Parent must satisfy final integrated-head hosted checks, answered/resolved reviews, review window and merge |
 | Merge/closeout | Parent owns lane/Yeet | Existing gate, reflection and lifecycle closeout required |
 
 Historical owner receipt (37-test snapshot). Exact focused command: `bunx --bun vitest run test/agent-message-store.test.ts test/agent-message-models.test.ts test/AgentMessage.tools.test.ts test/AgentMessage.layer.test.ts`, from CLI workspace. Result: four files passed, 37 tests passed, 8.89 seconds. These are synthetic provider-free behavior fixtures; they do not establish native app continuity or autonomous provider delivery.

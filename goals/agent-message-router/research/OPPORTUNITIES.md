@@ -109,3 +109,14 @@ corrupt its evidence. Let that active audit finish and clean its scoped fixtures
 then retry the unchanged staged publication. Do not add a broad ignore or stage
 the generated receipts. Prevention: test scratch should stay outside the source
 checkout, or publication must coordinate with a live test's fixture lifetime.
+
+## 2026-10-09 — Release-policy landing changes the final integration base
+
+After the initial draft publication, PR #1566 landed the manifest-aware release
+policy. Merging it conflicted only in the generated cache baseline; preserve
+both the release-policy and messaging graph reviews through structural resolution
+and the canonical audit. Both touched drivers are private workspaces, so remove
+this branch's now-rejected private-package changeset. Package publication remains
+dormant. The prior full CLI proof belongs to implementation commit `1565951a24`;
+final hosted checks qualify the integrated head. No message-router or provider
+implementation is changed by this merge.

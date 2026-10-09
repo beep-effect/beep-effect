@@ -2,7 +2,14 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
+
+**Proposed state for merged `main`, [PR #1571](https://github.com/beep-effect/beep-effect/pull/1571).**
+The lifecycle, phases and merge-conditional checklist items in this branch take
+effect when this PR merges after its exact final head passes required hosted
+checks, answered/resolved review threads and the 20-minute review window.
+Execution remains open until then; the PR's live merge gate supplies the
+completion evidence.
 
 Source: [ops/manifest.json](ops/manifest.json).
 
@@ -27,7 +34,9 @@ Implement a local durable agent-message contract, transactional delivery store a
 
 ## Current Phase
 
-P0 placement/contract and P1 implementation are complete. P2 final verification is underway; lifecycle remains `active`.
+Local implementation and verification are complete. The phase values describe
+intended merged state; PR #1571 still requires exact final-head hosted review and
+merge. External execution remains open until that gate and post-merge closeout.
 
 First slice: Implement the local durable router and finish correctness review, focused/package verification and the existing Yeet gates.
 
@@ -39,7 +48,8 @@ of the store extraction found no introduced regression and confirmed one
 pre-existing P2, tracked as [R1](research/FOLLOW-UPS.md): contradictory trusted-host
 provider metadata can consume send quota before the dispatcher fences it. The
 latest store review therefore retains one deferred P2. Canonical quick CLI checks
-pass; full package and exact-head hosted gates retain their separate evidence.
+pass. All three touched packages passed full audit/docgen; CLI full audit took
+745.2 seconds and docgen 23.9 seconds. Hosted gates remain separate.
 
 The actual owned Codex↔Grok autonomous exchange passed in **39.91 seconds**:
 three logical messages (seed, request and correlated reply) were acknowledged,
@@ -62,16 +72,25 @@ See the [Claude receipt](../agent-session-bridges/research/CLAUDE-MANAGED-ROUNDT
 Native transport has **19 passing synthetic cases**. The earlier independent
 review ended with zero findings; the final three-file Claude launch correction
 also received an independent zero actionable introduced findings review. The provider full audit/docgen
-passed after correction. Cursor generation remains access blocked. P1 is complete;
-P2 final CLI package and cheap gates are running, with P3 publication pending.
-No PR exists yet, and final hosted review and closeout remain open. The
-[Claude patch review](../agent-session-bridges/research/CLAUDE-PATCH-REVIEW.md) retains the exact three-file hashes and review scope.
+passed after correction. Cursor generation remains access blocked. The
+[Claude patch review](../agent-session-bridges/research/CLAUDE-PATCH-REVIEW.md) retains exact three-file hashes and scope.
+
+Yeet published initial draft [PR #1571](https://github.com/beep-effect/beep-effect/pull/1571) from implementation source commit
+`1565951a24da16aed9e238fde55ca7250fe9c7d2` after all 16 cheap gates and the clean-head install passed. These local
+and publication facts do not establish the final head's hosted gate or merge.
+The final packet wave must pass its own required checks and review window.
 
 See [implementation progress](research/PROGRESS.md), the [approved topology](research/IMPLEMENTATION.md), and the
 [agent messaging runbook](../../docs/runbooks/agent-messaging.md).
 
-A [reflection draft](history/reflections/2026-10-09-codex.md) records lessons and
-pending gates; it is not final closeout or a completed-retained state.
+The [final reflection](history/reflections/2026-10-09-codex.md) records local
+outcomes and the prospective merged-state boundary; hosted/merge evidence remains
+the orchestrator’s external closeout responsibility until verified.
+
+Local full proof binds the qualified implementation snapshot published at
+`1565951a24da16aed9e238fde55ca7250fe9c7d2`. Advancing-base integration and the final
+packet commit retain their own exact-head hosted/review gate; earlier local proof
+is not automatically promoted to the integrated final head.
 
 ## Gated follow-ups
 
@@ -84,5 +103,5 @@ These named candidates stay in the exploration map, not falsely completed by thi
 ## Closeout
 
 Drive the implementation PR through Yeet to mergeable under current exact-head
-checks/review/window rules, merge at the existing gate, then write the reflection
+checks/review/window rules, merge at the existing gate, then apply this prospective declaration
 and retire the lane. Same-PR final lifecycle/reflection updates are required.
