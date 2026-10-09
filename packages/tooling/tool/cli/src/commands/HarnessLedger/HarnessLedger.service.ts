@@ -398,6 +398,8 @@ const planPruneProposals = Effect.fn("HarnessLedger.planPruneProposals")(functio
     sessionsSkippedDisarmed: observed.sessionsSkippedDisarmed,
     sessionsBelowActivityFloor: observed.sessionsBelowActivityFloor,
     sessionsSkippedRole: observed.sessionsSkippedRole,
+    sessionsSkippedUnknownRestart: observed.sessionsSkippedUnknownRestart,
+    writerRefusalsTotal: observed.writerRefusalsTotal,
     windowEnd: observed.windowEnd,
     shardsRead: observed.shardsRead,
     undecodableLines: observed.undecodableLines,

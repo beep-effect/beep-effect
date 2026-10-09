@@ -148,6 +148,7 @@ type ShardScan = {
   readonly disarmWindows: ReadonlyArray<HookPulseDisarmWindow>;
   readonly openDisarm: boolean;
   readonly provenDisarmed: boolean;
+  readonly writerRefusalsTotal: number;
   readonly refusalsByAgentKind: ObservedSessionWindow["refusalsByAgentKind"];
 };
 
@@ -269,6 +270,7 @@ const windowReport = (
         stamps: parentStamps(tally),
         primary: A.some(group, (other) => other.primary && !other.child),
         child: A.every(group, (other) => other.child),
+        unknownStart: A.some(group, (other) => other.unknownStart),
         userTurns: 0,
         toolEvents: 0,
       },
@@ -363,6 +365,8 @@ const windowReport = (
         (tally) => tally.primary && !tally.child && (tally.userTurns < 1 || tally.toolEvents < 1)
       )
     ),
+    sessionsSkippedUnknownRestart: A.length(A.filter(selectedGrouped, (tally) => tally.unknownStart)),
+    writerRefusalsTotal: scan.writerRefusalsTotal,
     sessionsSkippedRole: A.length(A.filter(selectedGrouped, (tally) => !tally.primary || tally.child)),
     sessionsSkippedOutOfRegime: countSkipped(selectedGrouped, oldest, harnessHash, SessionRegime.Enum["out-of-regime"]),
     sessionsSkippedUnstamped: countSkipped(selectedGrouped, oldest, harnessHash, SessionRegime.Enum.unstamped),
@@ -433,6 +437,8 @@ export const observeSessionWindow = Effect.fn("HarnessLedger.observeSessionWindo
     A.some(A.filter(Str.split(windowsText, "\n"), Str.isNonEmpty), (line) =>
       Result.isFailure(HookPulseDisarmWindow.decodeJsonResult(line))
     );
+  let refusalUndecodableLines = 0;
+  let writerRefusalsTotal = 0;
   const refusalsByAgentKind = { "claude-code": 0, "codex-cli": 0, "cursor-cli": 0 };
   for (const name of A.filter(yield* listDirectorySorted(root), (name) =>
     /^hook-pulse-refusals-.*\.ndjson$/.test(name)
@@ -442,6 +448,11 @@ export const observeSessionWindow = Effect.fn("HarnessLedger.observeSessionWindo
       .pipe(Effect.mapError(HarnessLedgerIoError.wrap("Cannot read payload-free refusal ledger.")));
     for (const line of A.filter(Str.split(text, "\n"), Str.isNonEmpty)) {
       const row = HookPulseRefusal.decodeJsonResult(line);
+      if (Result.isFailure(row)) {
+        refusalUndecodableLines += 1;
+        continue;
+      }
+      writerRefusalsTotal += 1;
       if (
         Result.isSuccess(row) &&
         (row.success.agentKind === "claude-code" ||
@@ -455,11 +466,12 @@ export const observeSessionWindow = Effect.fn("HarnessLedger.observeSessionWindo
   const scan: ShardScan = {
     stateDir,
     tallies: MutableHashMap.empty(),
-    undecodableLines: 0,
+    undecodableLines: refusalUndecodableLines,
     shardsRead: 0,
     disarmWindows: windows,
     openDisarm,
     provenDisarmed: O.getOrElse(sentinelPresent, () => false),
+    writerRefusalsTotal,
     refusalsByAgentKind,
   };
   yield* Effect.forEach(names, (name) => readShard(scan, name), { discard: true });
