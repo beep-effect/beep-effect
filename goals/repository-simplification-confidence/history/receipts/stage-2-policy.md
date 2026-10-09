@@ -23,9 +23,8 @@ No discovered contract authorizes an API or version break in this cleanup.
 
 ## Desktop release
 
-Pending E-09 (R35): E owns this anchor's final verification. D does not wait for
-that decision to retire internal notes. `.github/workflows/release-desktop.yml`
-keeps executable behavior; D changes its explanatory comment only.
+E-09 follows R42's conservative default: `release-desktop.yml` remains enabled, with no successful or attempted release run. The lane created the reviewer-protected environment and `professional-desktop-v*` tag policy. Updater signing secrets remain externally blocked on the operator; environment protection passing does not prove a signed release. Current repository URLs replace rename redirects. Desktop versioning stays separate from private package publication policy. See the E Decision Log and stage-3 settings snapshots for reversal. D owns the rest of this policy receipt and the external-contract census.
+
 Versions are manually bumped in `apps/professional-desktop/package.json` and
 `apps/professional-desktop/src-tauri/tauri.conf.json` before a
 `professional-desktop-v*` tag. `Cargo.toml`'s 0.0.0 drift is recorded, not aligned;
