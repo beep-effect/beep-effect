@@ -16,6 +16,7 @@ import { Jsonc } from "../../jsonc/index.ts";
 import { Walker } from "../../walker/index.ts";
 import type { PlatformError } from "effect";
 import { Effect, FileSystem, Option, Path } from "effect";
+import { dual } from "effect/Function";
 
 /** Conditions honored in an `exports` condition object, plus the always-eligible `default`. */
 const CONDITIONS = new Set(["require", "types", "node"]);
@@ -126,12 +127,15 @@ const resolveConditionValue = (value: unknown, depth: number): string | undefine
  * from the manifest (still relative to the package directory) — the caller joins
  * and probes it.
  */
-export const resolveExports = (exports: unknown, subpath: string): Option.Option<string> => {
+export const resolveExports: {
+	(exports: unknown, subpath: string): Option.Option<string>;
+	(subpath: string): (exports: unknown) => Option.Option<string>;
+} = dual(2, (exports: unknown, subpath: string): Option.Option<string> => {
 	const matched = matchExportKey(exports, subpath);
 	if (matched === undefined) return Option.none();
 	const resolved = resolveConditionValue(matched, 0);
 	return resolved === undefined ? Option.none() : Option.some(resolved);
-};
+});
 
 /**
  * Read and parse a `package.json`, coercing every failure that is not a
@@ -248,7 +252,10 @@ const tryCandidate = (
  * (tsc parity — the candidate's manifest-less lookups still run); a
  * `PlatformError` from the underlying IO flows through.
  */
-export const resolveExtendsTarget = (
+export const resolveExtendsTarget: {
+	(spec: string, fromConfigPath: string): Effect.Effect<Option.Option<string>, PlatformError.PlatformError, FileSystem.FileSystem | Path.Path>;
+	(fromConfigPath: string): (spec: string) => Effect.Effect<Option.Option<string>, PlatformError.PlatformError, FileSystem.FileSystem | Path.Path>;
+} = dual(2, (
 	spec: string,
 	fromConfigPath: string,
 ): Effect.Effect<Option.Option<string>, PlatformError.PlatformError, FileSystem.FileSystem | Path.Path> =>
@@ -272,4 +279,4 @@ export const resolveExtendsTarget = (
 			if (Option.isSome(candidate)) return candidate;
 		}
 		return Option.none();
-	});
+	}));
