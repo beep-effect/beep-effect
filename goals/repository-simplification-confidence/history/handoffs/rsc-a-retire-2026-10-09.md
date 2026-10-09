@@ -397,3 +397,30 @@ nine resolved; its baseline inventory is unchanged. FreshBooks regenerated
 references pass quick lint/check. The default retirement repo-cli package
 gate and hosted-parity sequence remain pending; earlier failures above are
 preserved as repair evidence, not substituted for this final proof.
+
+### Run 4 main integration and proof boundary
+
+Fetched and merged main `36027982f2` (accounts live-board #1563 and H1 OSV
+#1562) at merge `e35cee41f1`. Packet conflicts retain both A and H1 records.
+The active repo-cli audit was cancelled with terminal exit 130 because main
+changed its source/tests during that run; it is unproven, not a pass. Owner
+JSDoc/schema/fingerprint refresh and the package/parity sequence restart on
+the integrated tree. Updated S12 admission settings apply to the replacement
+runner. The extra generated bin ordering S5 notice still awaits confirmation.
+
+### Run 4 blocked boundary
+
+S5 confirmation for the extra generated bin ordering has not arrived. To
+return the concrete notice to the orchestrator, the queued integrated-tree
+regeneration coordinator was stopped before admission. Its child has no
+completed result and is unproven. No A-owned unit remains active. The
+preceding full repo-cli audit ended with cancellation 130 after main changed
+source; all final package/parity/coverage lanes still require completion.
+No push, draft PR, readiness flip, merge or local-residue deletion occurred.
+
+Next owner: orchestrator/shared reviews the exact two-line bin reorder and
+confirms effected-port notification; A then runs the integrated owner/package/
+parity sequence, publishes wave 1, flips ready at content-final and reports
+its final head. E owns the workflow window; the orchestrator owns the ruleset
+context and serialized merge. Waves 2/3, F home cleanup, C compiler/ONNX
+handoff, H1 exact-version exit and post-merge live-clone residue remain open.

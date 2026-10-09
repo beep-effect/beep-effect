@@ -1,10 +1,10 @@
 # Workstream A acceptance evidence
 
-This is a partial lane receipt, recorded 2026-10-09 against base `3dbf109066` and the current uncommitted A worktree. It does not claim program completion or hosted acceptance.
+This is a partial lane receipt, recorded 2026-10-09 after integrating main `36027982f2`, with wave-1 implementation committed locally and later-wave groundwork still outside that commit. It does not claim program completion or hosted acceptance.
 
 ## Removals
 
-Wave 1: 40 Knip rows fixed and one Govinfo drift oracle documented at `8f29e3528e`; the final patched Knip 6.40.0 cross-check reports only that oracle. The local Knip implementation, dependency/catalog/patch, config, scripts, Turbo task, baseline and CLI wiring are removed. Owner regenerations and retirement-package verification are in progress. E owns the workflow job removal; the orchestrator owns the required ruleset context. Neither is claimed removed here. Other retirement waves remain open.
+Wave 1: 40 Knip rows fixed and one Govinfo drift oracle documented at `8f29e3528e`; the final patched Knip 6.40.0 cross-check reports only that oracle. The local Knip implementation, dependency/catalog/patch, config, scripts, Turbo task, baseline and CLI wiring are removed. Earlier owner regenerations pass. Main added repo-cli source/tests while the retirement audit ran; that audit was cancelled as unproven. Integrated-tree owner regeneration and final package/parity/coverage remain required. Publication is blocked on S5 confirmation for an extra generated bin-map ordering hunk. E owns the workflow job removal; the orchestrator owns the required ruleset context. Neither is claimed removed here. Other retirement waves remain open.
 
 ## Retained tools
 
@@ -16,7 +16,7 @@ Pending. C owns the ONNX test move (R23), H1 owns its exact-version hold, and A 
 
 ## Harness ledger
 
-The context presentation change adds `harness-ledger/rows/` to `.rgignore`, `.aiignore` and `.graftignore`, leaving the compact README and supported CLI accessible. No `.gitignore` change is made. The graft meaning-tier ignore prevents row content from entering summaries; its structural graph still indexes paths per that file's contract.
+Later-wave unstaged groundwork adds `harness-ledger/rows/` to `.rgignore`, `.aiignore` and `.graftignore`, leaving the compact README and supported CLI accessible. No `.gitignore` change is made. The graft meaning-tier ignore prevents row content from entering summaries; its structural graph still indexes paths per that file's contract.
 
 Before-change row hashes:
 
@@ -27,7 +27,7 @@ Verification: the same hashes remain after the ignore edits; `git ls-files harne
 
 ## Package gates
 
-All eleven transfer packages passed default `beep-heavy bun run beep quality package-verify`: box-provisioning, box, freshbooks, occt, pdf-tools, wink, colors, data, repo-ai-metrics, codegen-kit and repo-cli. Repo AI metrics passed after the introduced import-order repair. Knip retirement changes repo-cli again and requires a new gate; no retirement-head pass is claimed yet.
+All eleven transfer packages passed default `beep-heavy bun run beep quality package-verify`: box-provisioning, box, freshbooks, occt, pdf-tools, wink, colors, data, repo-ai-metrics, codegen-kit and repo-cli. Repo AI metrics passed after the introduced import-order repair. Knip retirement changes repo-cli again. Its first default audit exposed five introduced expectations, now repaired with a 182-test focused pass; the later full audit was cancelled after main changed source. No final retirement-head pass is claimed. FreshBooks generated references pass quick lint/check after its prior default pass.
 
 ## Scope
 
