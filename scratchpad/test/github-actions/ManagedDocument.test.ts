@@ -166,9 +166,9 @@ describe("ManagedDocument", () => {
 		});
 
 		it("every kind renders a message naming the region", () => {
-			const error = new ManagedDocumentError({ kind: "markerInContent", key: "body" });
+			const error = ManagedDocumentError.make({ kind: "markerInContent", key: "body" });
 			assert.include(error.message, 'region "body"');
-			const structural = new ManagedDocumentError({ kind: "unterminatedRegion", line: 3 });
+			const structural = ManagedDocumentError.make({ kind: "unterminatedRegion", line: 3 });
 			assert.include(structural.message, "line 3");
 		});
 	});

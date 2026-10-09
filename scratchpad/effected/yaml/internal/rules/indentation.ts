@@ -129,7 +129,7 @@ export const indentation: YamlRule = {
 					unit = delta;
 				} else if (delta !== unit) {
 					out.push(
-						new YamlLintDiagnostic({
+						YamlLintDiagnostic.make({
 							rule: "indentation",
 							severity: "error",
 							message: `Indent of ${delta} spaces, expected ${unit}`,
@@ -160,7 +160,7 @@ export const indentation: YamlRule = {
 				seqIndented = indented;
 			} else if (indented !== seqIndented) {
 				out.push(
-					new YamlLintDiagnostic({
+					YamlLintDiagnostic.make({
 						rule: "indentation",
 						severity: "error",
 						message: seqIndented

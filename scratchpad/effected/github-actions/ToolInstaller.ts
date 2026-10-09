@@ -23,7 +23,7 @@ export class ToolInstallerError extends Schema.TaggedError<ToolInstallerError>()
 	 */
 	reason: Schema.Literals(["downloadFailed", "extractFailed", "cacheFailed"]),
 	/** The HTTP status, when there was one. Drives the retry decision. */
-	status: Schema.optionalKey(Schema.Number),
+	status: Schema.optionalKey(Schema.Finite),
 	/** What was being worked on — a url, an archive path, or a tool name. */
 	subject: Schema.String,
 	/** The extraction tool's own complaint, which is the only useful part of a tar failure. */
@@ -260,13 +260,13 @@ const make = Effect.gen(function* () {
 				.pipe(
 					Effect.mapError(
 						(cause) =>
-							new ToolInstallerError({ reason: "extractFailed", subject: "a temporary extraction directory", cause }),
+							ToolInstallerError.make({ reason: "extractFailed", subject: "a temporary extraction directory", cause }),
 					),
 				);
 		}
 		return fs.makeDirectory(requested, { recursive: true }).pipe(
 			Effect.as(requested),
-			Effect.mapError((cause) => new ToolInstallerError({ reason: "extractFailed", subject: requested, cause })),
+			Effect.mapError((cause) => ToolInstallerError.make({ reason: "extractFailed", subject: requested, cause })),
 		);
 	};
 
@@ -285,12 +285,10 @@ const make = Effect.gen(function* () {
 	const extractWith = (command: ChildProcess.Command, archive: string): Effect.Effect<void, ToolInstallerError> =>
 		Effect.gen(function* () {
 			const { output, code } = yield* spawnOnce(spawner, command).pipe(
-				Effect.mapError((cause) => new ToolInstallerError({ reason: "extractFailed", subject: archive, cause })),
+				Effect.mapError((cause) => ToolInstallerError.make({ reason: "extractFailed", subject: archive, cause })),
 			);
 			if (code !== 0) {
-				return yield* Effect.fail(
-					new ToolInstallerError({ reason: "extractFailed", subject: archive, stderr: output.trim() }),
-				);
+				return yield* ToolInstallerError.make({ reason: "extractFailed", subject: archive, stderr: output.trim() });
 			}
 		});
 
@@ -313,7 +311,7 @@ const make = Effect.gen(function* () {
 			yield* fs.remove(destination, { recursive: true, force: true });
 			yield* fs.rename(staging, destination);
 			return destination;
-		}).pipe(Effect.mapError((cause) => new ToolInstallerError({ reason: "cacheFailed", subject: tool, cause })));
+		}).pipe(Effect.mapError((cause) => ToolInstallerError.make({ reason: "cacheFailed", subject: tool, cause })));
 
 	/**
 	 * Move a source tree into the staging directory, consuming the source.
@@ -356,7 +354,7 @@ const make = Effect.gen(function* () {
 			const staging = yield* fs.makeTempDirectory({ directory: root, prefix: ".staging-" });
 			return staging;
 		}).pipe(
-			Effect.mapError((cause) => new ToolInstallerError({ reason: "cacheFailed", subject: tool, cause })),
+			Effect.mapError((cause) => ToolInstallerError.make({ reason: "cacheFailed", subject: tool, cause })),
 			Effect.flatMap((staging) =>
 				use(staging).pipe(
 					// Removed on the failure path only: on the success path it has
@@ -370,20 +368,18 @@ const make = Effect.gen(function* () {
 		const attempt = Effect.gen(function* () {
 			const response = yield* http
 				.get(url)
-				.pipe(Effect.mapError((cause) => new ToolInstallerError({ reason: "downloadFailed", subject: url, cause })));
+				.pipe(Effect.mapError((cause) => ToolInstallerError.make({ reason: "downloadFailed", subject: url, cause })));
 			if (response.status < 200 || response.status >= 300) {
-				return yield* Effect.fail(
-					new ToolInstallerError({ reason: "downloadFailed", subject: url, status: response.status }),
-				);
+				return yield* ToolInstallerError.make({ reason: "downloadFailed", subject: url, status: response.status });
 			}
 			const directory = yield* fs
 				.makeTempDirectory({ prefix: "effected-download-" })
-				.pipe(Effect.mapError((cause) => new ToolInstallerError({ reason: "downloadFailed", subject: url, cause })));
+				.pipe(Effect.mapError((cause) => ToolInstallerError.make({ reason: "downloadFailed", subject: url, cause })));
 			const file = path.join(directory, "download");
 			// Streamed to disk rather than buffered: a toolchain archive is measured
 			// in hundreds of megabytes and a runner is not generous with memory.
 			yield* Stream.run(response.stream, fs.sink(file)).pipe(
-				Effect.mapError((cause) => new ToolInstallerError({ reason: "downloadFailed", subject: url, cause })),
+				Effect.mapError((cause) => ToolInstallerError.make({ reason: "downloadFailed", subject: url, cause })),
 			);
 			return file;
 		});
@@ -394,7 +390,7 @@ const make = Effect.gen(function* () {
 			// downloadFailed instead of a silent hang to the job timeout.
 			Effect.timeout(options?.timeout ?? DOWNLOAD_TIMEOUT),
 			Effect.catchTag("TimeoutError", (cause) =>
-				Effect.fail(new ToolInstallerError({ reason: "downloadFailed", subject: url, cause })),
+				Effect.fail(ToolInstallerError.make({ reason: "downloadFailed", subject: url, cause })),
 			),
 			Effect.retry({
 				schedule: Schedule.exponential("1 second"),
@@ -418,7 +414,7 @@ const make = Effect.gen(function* () {
 		yield* Effect.annotateCurrentSpan({ tool, version });
 		return yield* staged(tool, (staging) =>
 			fs.copyFile(source, path.join(staging, name)).pipe(
-				Effect.mapError((cause) => new ToolInstallerError({ reason: "cacheFailed", subject: tool, cause })),
+				Effect.mapError((cause) => ToolInstallerError.make({ reason: "cacheFailed", subject: tool, cause })),
 				Effect.flatMap(() => swapIntoCache(staging, tool, version)),
 			),
 		);
@@ -451,7 +447,7 @@ const make = Effect.gen(function* () {
 			yield* Effect.annotateCurrentSpan({ tool, version });
 			return yield* staged(tool, (staging) =>
 				moveIntoStaging(source, staging).pipe(
-					Effect.mapError((cause) => new ToolInstallerError({ reason: "cacheFailed", subject: tool, cause })),
+					Effect.mapError((cause) => ToolInstallerError.make({ reason: "cacheFailed", subject: tool, cause })),
 					Effect.flatMap(() => swapIntoCache(staging, tool, version)),
 				),
 			);
@@ -480,7 +476,7 @@ const make = Effect.gen(function* () {
 				// runnable tool — same ordering as PackageManagerInstaller's bun path.
 				yield* fs
 					.chmod(file, 0o755)
-					.pipe(Effect.mapError((cause) => new ToolInstallerError({ reason: "cacheFailed", subject: file, cause })));
+					.pipe(Effect.mapError((cause) => ToolInstallerError.make({ reason: "cacheFailed", subject: file, cause })));
 			}
 			const directory = yield* cacheFile(file, options.binary, options.tool, options.version);
 			return { directory, binDir: directory };
@@ -533,7 +529,7 @@ const testRoot = (): string => process.env.RUNNER_TOOL_CACHE ?? "/tmp/runner-too
  * @public
  */
 export class ToolInstaller extends Context.Service<ToolInstaller, ToolInstallerShape>()(
-	"@effected/github-actions/ToolInstaller",
+	"@beep/scratchpad/effected/github-actions/ToolInstaller",
 ) {
 	/**
 	 * The live installer, over the runner's tool cache, `HttpClient` and `tar`.

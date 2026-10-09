@@ -29,7 +29,7 @@ export interface CliExitShape {
  *
  * @public
  */
-export class CliExit extends Context.Service<CliExit, CliExitShape>()("@effected/cli/CliExit") {
+export class CliExit extends Context.Service<CliExit, CliExitShape>()("@beep/scratchpad/effected/cli/CliExit") {
 	/**
 	 * A fresh cell at `0`; `CliRuntime.main` provides it, and tests provide it
 	 * directly.

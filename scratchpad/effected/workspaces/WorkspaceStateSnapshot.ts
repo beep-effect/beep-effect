@@ -316,7 +316,7 @@ export class WorkspaceStateSnapshot extends Schema.Class<WorkspaceStateSnapshot>
 		specifier: string,
 		onUnresolvedCatalog: () => Option.Option<string>,
 	): Option.Option<string> {
-		const exit = Schema.decodeUnknownExit(DependencySpecifier.FromString)(specifier);
+		const exit = Schema.decodeExit(DependencySpecifier.FromString)(specifier);
 		if (!Exit.isSuccess(exit)) return Option.none();
 		const classified = exit.value;
 		switch (classified._tag) {
@@ -519,14 +519,14 @@ export class WorkspaceStateSnapshot extends Schema.Class<WorkspaceStateSnapshot>
 					const version = member.version;
 					if (version === undefined) {
 						return Effect.fail(
-							new DependencyResolutionError({
+							DependencyResolutionError.make({
 								specifier: `workspace:${packageName}`,
 								reason: "no-version",
 								cause: undefined,
 							}),
 						);
 					}
-					return Effect.succeed(Option.some(version));
+					return Effect.succeedSome(version);
 				},
 			});
 		}

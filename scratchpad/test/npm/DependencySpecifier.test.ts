@@ -38,7 +38,7 @@ describe("DependencySpecifier schema", () => {
 	it.effect("accepts every recognized specifier", () =>
 		Effect.gen(function* () {
 			for (const specifier of valid) {
-				assert.strictEqual(yield* Schema.decodeUnknownEffect(DependencySpecifier)(specifier), specifier);
+				assert.strictEqual(yield* Schema.decodeEffect(DependencySpecifier)(specifier), specifier);
 			}
 		}),
 	);
@@ -46,7 +46,7 @@ describe("DependencySpecifier schema", () => {
 	it.effect("rejects garbage, unknown protocols and empty string", () =>
 		Effect.gen(function* () {
 			for (const specifier of ["!!garbage", "patch:lodash", ""]) {
-				const error = yield* Effect.flip(Schema.decodeUnknownEffect(DependencySpecifier)(specifier));
+				const error = yield* Effect.flip(Schema.decodeEffect(DependencySpecifier)(specifier));
 				assert.strictEqual(error._tag, "SchemaError", specifier);
 			}
 		}),
@@ -275,7 +275,7 @@ describe("DependencySpecifier.FromString", () => {
 	it.effect("fails decoding an invalid specifier", () =>
 		Effect.gen(function* () {
 			for (const bad of ["", "!!garbage", "patch:lodash"]) {
-				const error = yield* Effect.flip(Schema.decodeUnknownEffect(DependencySpecifier.FromString)(bad));
+				const error = yield* Effect.flip(Schema.decodeEffect(DependencySpecifier.FromString)(bad));
 				assert.strictEqual(error._tag, "SchemaError", bad);
 			}
 		}),
@@ -307,7 +307,7 @@ describe("DependencySpecifier.FromString", () => {
 		],
 		([specifier]) =>
 			Effect.gen(function* () {
-				const decoded = yield* Schema.decodeUnknownEffect(DependencySpecifier.FromString)(specifier);
+				const decoded = yield* Schema.decodeEffect(DependencySpecifier.FromString)(specifier);
 				const encoded = yield* Schema.encodeUnknownEffect(DependencySpecifier.FromString)(decoded);
 				assert.strictEqual(encoded, specifier);
 			}),

@@ -29,8 +29,8 @@ export const TomlFrontmatter: FrontmatterCodec = {
 	format: "toml",
 	decode: (node) =>
 		node.format !== "toml"
-			? Effect.fail(new FrontmatterFormatMismatchError({ expected: "toml", actual: node.format }))
-			: Toml.parse(node.value).pipe(Effect.mapError((cause) => new FrontmatterDecodeError({ format: "toml", cause }))),
+			? Effect.fail(FrontmatterFormatMismatchError.make({ expected: "toml", actual: node.format }))
+			: Toml.parse(node.value).pipe(Effect.mapError((cause) => FrontmatterDecodeError.make({ format: "toml", cause }))),
 	encode: (data) =>
-		Toml.stringify(data).pipe(Effect.mapError((cause) => new FrontmatterEncodeError({ format: "toml", cause }))),
+		Toml.stringify(data).pipe(Effect.mapError((cause) => FrontmatterEncodeError.make({ format: "toml", cause }))),
 };

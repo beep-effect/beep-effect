@@ -1,3 +1,4 @@
+// @effect-diagnostics nodeBuiltinImport:skip-file
 // Formatting surface: indent modes (spaces / "tab" / "preserve"), the
 // sort-package-json@4.0.0 canonical top-level key order, map alphabetization,
 // and byte parity against frozen sort-package-json output for real manifests

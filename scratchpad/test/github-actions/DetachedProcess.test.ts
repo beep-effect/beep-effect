@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file nodeBuiltinImport:skip-file asyncFunction:skip-file processEnv:skip-file processEnvInEffect:skip-file globalTimers:skip-file newPromise:skip-file globalRandom:skip-file
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import type { Server, ServerResponse } from "node:http";
 import { createServer } from "node:http";
@@ -153,14 +154,14 @@ describe("DetachedProcess", () => {
 		it("refuses the zero a truncated state file decodes to", () => {
 			// Both defenses matter and this is the first: the bad value never reaches
 			// reap, because it never leaves ActionState.
-			assert.strictEqual(Schema.decodeUnknownExit(ProcessId)(0)._tag, "Failure");
-			assert.strictEqual(Schema.decodeUnknownExit(ProcessId)(-1)._tag, "Failure");
-			assert.strictEqual(Schema.decodeUnknownExit(ProcessId)(1.5)._tag, "Failure");
+			assert.strictEqual(Schema.decodeExit(ProcessId)(0)._tag, "Failure");
+			assert.strictEqual(Schema.decodeExit(ProcessId)(-1)._tag, "Failure");
+			assert.strictEqual(Schema.decodeExit(ProcessId)(1.5)._tag, "Failure");
 		});
 
 		it.effect("accepts a real pid", () =>
 			Effect.gen(function* () {
-				assert.strictEqual(yield* Schema.decodeUnknownEffect(ProcessId)(4242), 4242);
+				assert.strictEqual(yield* Schema.decodeEffect(ProcessId)(4242), 4242);
 			}),
 		);
 	});

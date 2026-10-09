@@ -34,9 +34,9 @@ const PackJsonEntry = Schema.Struct({
 	version: Schema.String,
 	filename: Schema.String,
 	integrity: Schema.optionalKey(Schema.String),
-	size: Schema.optionalKey(Schema.Number),
-	unpackedSize: Schema.optionalKey(Schema.Number),
-	entryCount: Schema.optionalKey(Schema.Number),
+	size: Schema.optionalKey(Schema.Finite),
+	unpackedSize: Schema.optionalKey(Schema.Finite),
+	entryCount: Schema.optionalKey(Schema.Finite),
 });
 
 /**
@@ -77,11 +77,11 @@ export class PackedTarball extends Schema.Class<PackedTarball>("PackedTarball")(
 	 */
 	sha256Hex: Schema.String,
 	/** Tarball size in bytes. */
-	packedSize: Schema.optionalKey(Schema.Number),
+	packedSize: Schema.optionalKey(Schema.Finite),
 	/** Unpacked size in bytes. */
-	unpackedSize: Schema.optionalKey(Schema.Number),
+	unpackedSize: Schema.optionalKey(Schema.Finite),
 	/** Number of files in the tarball. */
-	fileCount: Schema.optionalKey(Schema.Number),
+	fileCount: Schema.optionalKey(Schema.Finite),
 }) {}
 
 /**
@@ -246,7 +246,7 @@ const make = Effect.fnUntraced(function* () {
 				Effect.flatMap((command) => Run.collect(command)),
 				Effect.catch((cause) =>
 					Effect.fail(
-						new PublishError({
+						PublishError.make({
 							kind: options.kind,
 							subject: options.subject,
 							...(options.registry === undefined ? {} : { registry: options.registry }),
@@ -260,11 +260,11 @@ const make = Effect.fnUntraced(function* () {
 	const parsePackJson = (stdout: string, subject: string) =>
 		Effect.try({
 			try: () => JSON.parse(stdout) as unknown,
-			catch: (cause) => new PublishError({ kind: "output", subject, cause }),
+			catch: (cause) => PublishError.make({ kind: "output", subject, cause }),
 		}).pipe(
 			Effect.flatMap((parsed) =>
 				Schema.decodeUnknownEffect(PackJson)(parsed).pipe(
-					Effect.catch((cause) => Effect.fail(new PublishError({ kind: "output", subject, cause }))),
+					Effect.catch((cause) => Effect.fail(PublishError.make({ kind: "output", subject, cause }))),
 				),
 			),
 			Effect.flatMap((decoded) => {
@@ -277,7 +277,7 @@ const make = Effect.fnUntraced(function* () {
 					: Object.values(decoded);
 				const entry = entries[0];
 				return entry === undefined
-					? Effect.fail(new PublishError({ kind: "output", subject, output: stdout }))
+					? Effect.fail(PublishError.make({ kind: "output", subject, output: stdout }))
 					: Effect.succeed(entry);
 			}),
 		);
@@ -303,7 +303,7 @@ const make = Effect.fnUntraced(function* () {
 					cause.reason._tag === "NotFound"
 						? Effect.succeed("")
 						: Effect.fail(
-								new PublishError({ kind: "auth", registry: options.registry, subject: options.npmrcPath, cause }),
+								PublishError.make({ kind: "auth", registry: options.registry, subject: options.npmrcPath, cause }),
 							),
 				),
 			);
@@ -313,7 +313,7 @@ const make = Effect.fnUntraced(function* () {
 		yield* fs
 			.writeFileString(options.npmrcPath, `${existing}${separator}${line}\n`)
 			.pipe(
-				Effect.catch((cause) => Effect.fail(new PublishError({ kind: "auth", registry: options.registry, cause }))),
+				Effect.catch((cause) => Effect.fail(PublishError.make({ kind: "auth", registry: options.registry, cause }))),
 			);
 	});
 
@@ -326,14 +326,12 @@ const make = Effect.fnUntraced(function* () {
 			subject: packageDir,
 		});
 		if (!output.succeeded) {
-			return yield* Effect.fail(
-				new PublishError({
+			return yield* PublishError.make({
 					kind: "pack",
 					subject: packageDir,
 					exitCode: output.exitCode,
 					output: output.stderr === "" ? output.stdout : output.stderr,
-				}),
-			);
+				});
 		}
 		const entry = yield* parsePackJson(output.stdout, packageDir);
 		const tarballPath = `${packageDir}/${entry.filename}`;
@@ -342,10 +340,10 @@ const make = Effect.fnUntraced(function* () {
 		// subjects), and deriving it from the file is what makes it verifiable.
 		const bytes = yield* fs
 			.readFile(tarballPath)
-			.pipe(Effect.catch((cause) => Effect.fail(new PublishError({ kind: "digest", subject: tarballPath, cause }))));
+			.pipe(Effect.catch((cause) => Effect.fail(PublishError.make({ kind: "digest", subject: tarballPath, cause }))));
 		const digest = yield* crypto
 			.digest("SHA-256", bytes)
-			.pipe(Effect.catch((cause) => Effect.fail(new PublishError({ kind: "digest", subject: tarballPath, cause }))));
+			.pipe(Effect.catch((cause) => Effect.fail(PublishError.make({ kind: "digest", subject: tarballPath, cause }))));
 		return PackedTarball.make({
 			tarballPath,
 			name: entry.name,
@@ -391,15 +389,13 @@ const make = Effect.fnUntraced(function* () {
 				: {}),
 		});
 		if (!output.succeeded) {
-			return yield* Effect.fail(
-				new PublishError({
+			return yield* PublishError.make({
 					kind: "publish",
 					subject: tarballPath,
 					registry: options.registry,
 					exitCode: output.exitCode,
 					output: output.stderr === "" ? output.stdout : output.stderr,
-				}),
-			);
+				});
 		}
 		const printed = `${output.stdout}\n${output.stderr}`;
 		const provenanceUrl = PROVENANCE_URL.exec(printed)?.[0];
@@ -440,7 +436,7 @@ const make = Effect.fnUntraced(function* () {
 const integrityField = (raw: string | undefined): { integrity?: typeof IntegrityHash.Type } =>
 	raw === undefined
 		? {}
-		: Option.match(Schema.decodeUnknownOption(IntegrityHash)(raw), {
+		: Option.match(Schema.decodeOption(IntegrityHash)(raw), {
 				onNone: () => ({}),
 				onSome: (integrity) => ({ integrity }),
 			});
@@ -487,7 +483,7 @@ const notStubbed = (method: string) => () =>
  * @public
  */
 export class PackagePublish extends Context.Service<PackagePublish, PackagePublishShape>()(
-	"@effected/npm/PackagePublish",
+	"@beep/scratchpad/effected/npm/PackagePublish",
 ) {
 	/**
 	 * The live service. Requires `FileSystem`, `Crypto`, `ChildProcessSpawner`

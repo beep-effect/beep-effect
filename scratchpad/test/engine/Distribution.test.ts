@@ -5,13 +5,13 @@ import { CurrentDistribution, Distribution, DistributionField, distributionSuffi
 describe("Distribution", () => {
 	it("round-trips a plain { name, version } object", () => {
 		const value = { name: "@okfit/plugin", version: "0.5.1" };
-		const decoded = Schema.decodeUnknownSync(Distribution)(value);
+		const decoded = Schema.decodeSync(Distribution)(value);
 		assert.deepStrictEqual(Schema.encodeSync(Distribution)(decoded), value);
 	});
 
 	it("DistributionField encodes a direct install as null", () => {
 		assert.strictEqual(Schema.encodeSync(DistributionField)(null), null);
-		assert.isNull(Schema.decodeUnknownSync(DistributionField)(null));
+		assert.isNull(Schema.decodeSync(DistributionField)(null));
 	});
 
 	it("rejects a distribution missing its version", () => {

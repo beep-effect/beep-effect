@@ -84,7 +84,7 @@ export class LicenseException extends Schema.Class<LicenseException>("LicenseExc
 	static parseResult(id: string): Result.Result<LicenseException, InvalidSpdxExpressionError> {
 		const known = LicenseException.catalog.get(id);
 		if (known !== undefined) return Result.succeed(known);
-		return Result.fail(new InvalidSpdxExpressionError({ input: id }));
+		return Result.fail(InvalidSpdxExpressionError.make({ input: id }));
 	}
 
 	/**

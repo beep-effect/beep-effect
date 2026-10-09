@@ -90,7 +90,7 @@ export class CatalogSet extends Schema.Class<CatalogSet>("CatalogSet")({
 	 */
 	static readonly fromWorkspaceYaml = Effect.fn("CatalogSet.fromWorkspaceYaml")(function* (text: string) {
 		const document = yield* Yaml.parse(text).pipe(
-			Effect.mapError((cause) => new CatalogAssemblyError({ source: "manifest", path: "pnpm-workspace.yaml", cause })),
+			Effect.mapError((cause) => CatalogAssemblyError.make({ source: "manifest", path: "pnpm-workspace.yaml", cause })),
 		);
 		return CatalogSet.fromCatalogs(inlineCatalogs(catalogBlocksOf(document)));
 	});
@@ -161,16 +161,14 @@ export class CatalogSet extends Schema.Class<CatalogSet>("CatalogSet")({
 	static readonly fromManifestWorkspaces = Effect.fn("CatalogSet.fromManifestWorkspaces")(function* (text: string) {
 		const manifest = yield* Effect.try({
 			try: () => JSON.parse(text) as unknown,
-			catch: (cause) => new CatalogAssemblyError({ source: "manifest", path: "package.json", cause }),
+			catch: (cause) => CatalogAssemblyError.make({ source: "manifest", path: "package.json", cause }),
 		});
 		if (!isObject(manifest)) {
-			return yield* Effect.fail(
-				new CatalogAssemblyError({
+			return yield* CatalogAssemblyError.make({
 					source: "manifest",
 					path: "package.json",
 					cause: new Error("package.json is not a JSON object"),
-				}),
-			);
+				});
 		}
 		const blocks = yield* manifestCatalogBlocks(manifest.workspaces);
 		return CatalogSet.fromBunBlocks(blocks);
@@ -268,17 +266,17 @@ const inlineReleaseAge = (document: unknown): Effect.Effect<PartialReleaseAgeGat
 		raw.exclude = document.minimumReleaseAgeExclude;
 	}
 	if (Object.keys(raw).length === 0) return Effect.succeed({});
-	return Schema.decodeUnknownEffect(PartialReleaseAgeGate)(raw).pipe(
+	return Schema.decodeEffect(PartialReleaseAgeGate)(raw).pipe(
 		Effect.catchTag(
 			"SchemaError",
-			(cause) => new CatalogAssemblyError({ source: "manifest", path: "pnpm-workspace.yaml", cause }),
+			(cause) => CatalogAssemblyError.make({ source: "manifest", path: "pnpm-workspace.yaml", cause }),
 		),
 	);
 };
 
 /** A hard-fail catalog-assembly failure naming the malformed part of a `workspaces` field. */
 const malformed = (source: "manifest" | "catalog", path: string, detail: string): CatalogAssemblyError =>
-	new CatalogAssemblyError({ source, path, cause: new Error(detail) });
+	CatalogAssemblyError.make({ source, path, cause: new Error(detail) });
 
 /**
  * Validate a `catalog` (default) / `catalogs` (named) block pair, hard-failing on
@@ -597,7 +595,7 @@ export interface WorkspaceCatalogsOptions {
  * @public
  */
 export class WorkspaceCatalogs extends Context.Service<WorkspaceCatalogs, WorkspaceCatalogsShape>()(
-	"@effected/workspaces/WorkspaceCatalogs",
+	"@beep/scratchpad/effected/workspaces/WorkspaceCatalogs",
 ) {
 	/** Builds the service. */
 	static readonly make = (
@@ -635,7 +633,7 @@ export class WorkspaceCatalogs extends Context.Service<WorkspaceCatalogs, Worksp
 						const reason = error.reason;
 						return reason instanceof PlatformError.SystemError && reason._tag === "NotFound"
 							? Effect.succeed(false)
-							: Effect.fail(new CatalogAssemblyError({ source: "manifest", path: target, cause: error }));
+							: Effect.fail(CatalogAssemblyError.make({ source: "manifest", path: target, cause: error }));
 					}),
 				);
 
@@ -688,11 +686,11 @@ export class WorkspaceCatalogs extends Context.Service<WorkspaceCatalogs, Worksp
 					const text = yield* fs
 						.readFileString(workspaceYaml)
 						.pipe(
-							Effect.mapError((cause) => new CatalogAssemblyError({ source: "manifest", path: workspaceYaml, cause })),
+							Effect.mapError((cause) => CatalogAssemblyError.make({ source: "manifest", path: workspaceYaml, cause })),
 						);
 					const document = yield* Yaml.parse(text).pipe(
 						Effect.mapError(
-							(cause) => new CatalogAssemblyError({ source: "manifest", path: "pnpm-workspace.yaml", cause }),
+							(cause) => CatalogAssemblyError.make({ source: "manifest", path: "pnpm-workspace.yaml", cause }),
 						),
 					);
 					// Validate the inline shape BEFORE normalizing: a malformed catalog block
@@ -746,7 +744,7 @@ export class WorkspaceCatalogs extends Context.Service<WorkspaceCatalogs, Worksp
 					const text = yield* fs
 						.readFileString(manifestPath)
 						.pipe(
-							Effect.mapError((cause) => new CatalogAssemblyError({ source: "manifest", path: manifestPath, cause })),
+							Effect.mapError((cause) => CatalogAssemblyError.make({ source: "manifest", path: manifestPath, cause })),
 						);
 					inline = yield* CatalogSet.fromManifestWorkspaces(text);
 					// Config dependencies are a pnpm feature; there are none on this path.
@@ -980,7 +978,7 @@ export class WorkspaceCatalogs extends Context.Service<WorkspaceCatalogs, Worksp
 						Effect.map((set) => set.rangeOf(packageName, catalog)),
 						Effect.catchTag("WorkspaceRootNotFoundError", (cause) =>
 							Effect.fail(
-								new DependencyResolutionError({
+								DependencyResolutionError.make({
 									specifier: Option.match(catalog, {
 										onNone: () => "catalog:",
 										onSome: (name) => `catalog:${name}`,

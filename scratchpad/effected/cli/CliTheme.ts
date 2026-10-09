@@ -148,7 +148,7 @@ const ASCII_PROMPT_GLYPHS = {
  *
  * @public
  */
-export class CliTheme extends Context.Service<CliTheme, CliThemeShape>()("@effected/cli/CliTheme") {
+export class CliTheme extends Context.Service<CliTheme, CliThemeShape>()("@beep/scratchpad/effected/cli/CliTheme") {
 	/**
 	 * The theme for the terminal `TerminalEnv` describes.
 	 *

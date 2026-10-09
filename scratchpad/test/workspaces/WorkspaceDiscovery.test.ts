@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it, layer } from "@effect/vitest";
 import { WorkspaceResolver } from "../../effected/npm/index.ts";
 import { Cause, Effect, Exit, Layer, Option } from "effect";

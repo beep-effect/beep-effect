@@ -1,3 +1,4 @@
+// @effect-diagnostics nodeBuiltinImport:skip-file
 import { readFileSync } from "node:fs";
 import * as tty from "node:tty";
 import { fileURLToPath } from "node:url";

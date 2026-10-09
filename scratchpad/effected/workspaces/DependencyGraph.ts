@@ -171,7 +171,7 @@ export class DependencyGraph extends Schema.Class<DependencyGraph>("DependencyGr
 		(name: string): Effect.Effect<ReadonlyArray<string>, PackageNotFoundError> => {
 			const deps = this.#index().forward.get(name);
 			return deps === undefined
-				? Effect.fail(new PackageNotFoundError({ name, available: this.names }))
+				? Effect.fail(PackageNotFoundError.make({ name, available: this.names }))
 				: Effect.succeed([...deps].sort());
 		},
 	);
@@ -181,7 +181,7 @@ export class DependencyGraph extends Schema.Class<DependencyGraph>("DependencyGr
 		(name: string): Effect.Effect<ReadonlyArray<string>, PackageNotFoundError> => {
 			const dependents = this.#index().reverse.get(name);
 			return dependents === undefined
-				? Effect.fail(new PackageNotFoundError({ name, available: this.names }))
+				? Effect.fail(PackageNotFoundError.make({ name, available: this.names }))
 				: Effect.succeed([...dependents].sort());
 		},
 	);
@@ -225,7 +225,7 @@ export class DependencyGraph extends Schema.Class<DependencyGraph>("DependencyGr
 				const edges = this.#index();
 				const result = kahn(edges);
 				return result.stalled.length > 0
-					? Effect.fail(new CyclicDependencyError({ cycle: cycleMembers(edges) }))
+					? Effect.fail(CyclicDependencyError.make({ cycle: cycleMembers(edges) }))
 					: Effect.succeed(result.levels);
 			}),
 	);
@@ -255,7 +255,7 @@ export class DependencyGraph extends Schema.Class<DependencyGraph>("DependencyGr
 				const { forward } = this.#index();
 				for (const name of names) {
 					if (!forward.has(name)) {
-						return Effect.fail(new PackageNotFoundError({ name, available: this.names }));
+						return Effect.fail(PackageNotFoundError.make({ name, available: this.names }));
 					}
 				}
 
@@ -283,7 +283,7 @@ export class DependencyGraph extends Schema.Class<DependencyGraph>("DependencyGr
 				const subEdges: Edges = { forward: subForward, reverse: subReverse };
 				const result = kahn(subEdges);
 				return result.stalled.length > 0
-					? Effect.fail(new CyclicDependencyError({ cycle: cycleMembers(subEdges) }))
+					? Effect.fail(CyclicDependencyError.make({ cycle: cycleMembers(subEdges) }))
 					: Effect.succeed(result.levels.flat());
 			}),
 	);

@@ -219,7 +219,7 @@ describe("Package wire transform + rest", () => {
 				myTool: Schema.optionalKey(Schema.String),
 			}) {}
 			const wire = Package.wireFor(ToolPackage);
-			const decoded = yield* Schema.decodeUnknownEffect(wire)({
+			const decoded = yield* Schema.decodeEffect(wire)({
 				name: "p",
 				version: "1.0.0",
 				myTool: "configured",

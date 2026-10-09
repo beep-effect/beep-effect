@@ -1,3 +1,4 @@
+// @effect-diagnostics nodeBuiltinImport:skip-file
 // On-disk fixtures for the config-dependency resolution ladder: a fake
 // `node_modules/.pnpm-config/<name>` install, a fake pnpm store `links/` tree,
 // and the `.modules.yaml` that points one at the other. Real filesystem by

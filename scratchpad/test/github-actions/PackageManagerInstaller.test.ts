@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file nodeBuiltinImport:skip-file asyncFunction:skip-file
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
@@ -282,7 +283,7 @@ const install = (
 ) => Effect.flatMap(PackageManagerInstaller, (installer) => installer.install(pin(spec), options));
 
 /** A corepack `<algo>.<hex>` integrity, decoded through the same schema a pin's tail is. */
-const corepack = (value: string): IntegrityHashBrand => Schema.decodeUnknownSync(CorepackIntegrityHash)(value);
+const corepack = (value: string): IntegrityHashBrand => Schema.decodeSync(CorepackIntegrityHash)(value);
 
 /** Narrow to the tool-cache variant or fail the test loudly. */
 const cachedOf = (installed: InstalledPackageManager): CachedPackageManager => {
@@ -405,7 +406,7 @@ describe("PackageManagerInstaller", () => {
 				Effect.provide(
 					stubbed({
 						// find misses; download would DIE if the short-circuit failed to fire.
-						installer: { find: () => Effect.succeed(Option.none()) },
+						installer: { find: () => Effect.succeedNone },
 						spawner: scriptedSpawner(() => Effect.succeed("9.9.9\n")),
 					}),
 				),
@@ -439,7 +440,7 @@ describe("PackageManagerInstaller", () => {
 									}),
 								),
 								installer: {
-									find: () => Effect.succeed(Option.none()),
+									find: () => Effect.succeedNone,
 									download: () => Effect.succeed(join(root, "unused-archive")),
 									extractTar: () => Effect.succeed(join(root, "extracted")),
 									cacheDir: () => Effect.succeed(destination),
@@ -463,7 +464,7 @@ describe("PackageManagerInstaller", () => {
 			}).pipe(
 				Effect.provide(
 					stubbed({
-						installer: { find: () => Effect.succeed(Option.none()) },
+						installer: { find: () => Effect.succeedNone },
 						spawner: scriptedSpawner(() => Effect.succeed("9.9.9\n")),
 					}),
 				),
@@ -500,7 +501,7 @@ describe("PackageManagerInstaller", () => {
 									}),
 								),
 								installer: {
-									find: () => Effect.succeed(Option.none()),
+									find: () => Effect.succeedNone,
 									download: () => Effect.succeed(join(root, "unused-archive")),
 									extractTar: () => Effect.succeed(join(root, "extracted")),
 									cacheDir: () => Effect.succeed(destination),
@@ -568,7 +569,7 @@ describe("PackageManagerInstaller", () => {
 									),
 								),
 								installer: {
-									find: () => Effect.succeed(Option.none()),
+									find: () => Effect.succeedNone,
 									download: () => Effect.succeed(join(root, "unused-archive")),
 									extractTar: () => Effect.succeed(join(root, "extracted")),
 									cacheDir: () => Effect.succeed(destination),
@@ -706,7 +707,7 @@ describe("PackageManagerInstaller", () => {
 				// than reporting a mismatch it never measured as
 				// "expected undefined, got undefined".
 				assert.include(
-					new PackageManagerInstallerError({
+					PackageManagerInstallerError.make({
 						reason: "integrityMismatch",
 						name: "pnpm",
 						version: "1.0.1",
@@ -866,7 +867,7 @@ describe("PackageManagerInstaller", () => {
 				const { archive, script } = served(root, "1.1.5");
 				// The tarball's CORRECT digest, in the SRI spelling a lockfile records:
 				// the form is refused, not the value.
-				const sri = Schema.decodeUnknownSync(IntegrityHash)(sha512Sri(archive));
+				const sri = Schema.decodeSync(IntegrityHash)(sha512Sri(archive));
 				const error = yield* Effect.flip(
 					install("pnpm@1.1.5", { integrity: sri }).pipe(
 						Effect.provide(live(root, script.fetch)),
@@ -1714,10 +1715,10 @@ describe("PackageManagerInstaller", () => {
 						Effect.provide(
 							stubbed({
 								installer: {
-									find: () => Effect.succeed(Option.none()),
+									find: () => Effect.succeedNone,
 									download: () => Effect.succeed(join(root, "unused-archive")),
 									extractTar: () => Effect.succeed(join(root, "extracted")),
-									cacheDir: () => Effect.fail(new ToolInstallerError({ reason: "cacheFailed", subject: "pnpm" })),
+									cacheDir: () => Effect.fail(ToolInstallerError.make({ reason: "cacheFailed", subject: "pnpm" })),
 								},
 							}),
 						),
@@ -1748,7 +1749,7 @@ describe("PackageManagerInstaller", () => {
 						Effect.provide(
 							stubbed({
 								installer: {
-									find: () => Effect.succeed(Option.none()),
+									find: () => Effect.succeedNone,
 									download: () => Effect.succeed(join(root, "unused-archive")),
 									extractTar: () => Effect.succeed(join(root, "extracted")),
 									cachePath: (tool, version) => {

@@ -381,7 +381,7 @@ export const CompilerOptions = Schema.StructWithRest(
 		plugins: Schema.optionalKey(Schema.Array(PluginEntry)),
 
 		// ── Number ────────────────────────────────────────────────────
-		maxNodeModuleJsDepth: Schema.optionalKey(Schema.Number),
+		maxNodeModuleJsDepth: Schema.optionalKey(Schema.Finite),
 	}),
 	[Schema.Record(Schema.String, Schema.Unknown)],
 );

@@ -15,7 +15,7 @@ export class InvalidComparatorError extends Schema.TaggedError<InvalidComparator
 	/** The raw input string that failed to parse. */
 	input: Schema.String,
 	/** The character position where parsing failed, if available. */
-	position: Schema.optionalKey(Schema.Number),
+	position: Schema.optionalKey(Schema.Finite),
 }) {
 	override get message(): string {
 		const base = `Invalid comparator: "${this.input}"`;
@@ -108,7 +108,7 @@ export class Comparator extends Schema.Class<Comparator>("Comparator")({
 	static parseResult(input: string): Result.Result<Comparator, InvalidComparatorError> {
 		const result = parseComparator(input);
 		if (!result.ok) {
-			return Result.fail(new InvalidComparatorError({ input: result.input, position: result.position }));
+			return Result.fail(InvalidComparatorError.make({ input: result.input, position: result.position }));
 		}
 		return Result.succeed(
 			Comparator.make({ operator: result.value.operator, version: SemVer.make(result.value.version) }),

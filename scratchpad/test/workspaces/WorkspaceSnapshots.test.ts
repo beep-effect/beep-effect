@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it, layer } from "@effect/vitest";
 import { Git, GitCommandError, LsTreeEntry } from "../../effected/git/index.ts";
 import { CatalogAssemblyError, CatalogResolver, WorkspaceResolver } from "../../effected/npm/index.ts";
@@ -241,7 +242,7 @@ describe("WorkspaceSnapshots.at — a failed init is retried", () => {
 		lsTreeCalls += 1;
 		if (lsTreeCalls === 1) {
 			return Effect.fail(
-				new GitCommandError({ kind: "failed", args: ["ls-tree", "-r", "-z", ref], cwd: "/repo", stderr: "boom" }),
+				GitCommandError.make({ kind: "failed", args: ["ls-tree", "-r", "-z", ref], cwd: "/repo", stderr: "boom" }),
 			);
 		}
 		return Effect.succeed(
@@ -317,7 +318,7 @@ describe('WorkspaceStateSnapshot — a version-less member is absent, never `""`
 	});
 
 	it('a snapshot serialized with the old `""` sentinel decodes to the absent key', () => {
-		const legacy = Schema.decodeUnknownSync(PackageStateSnapshot)({
+		const legacy = Schema.decodeSync(PackageStateSnapshot)({
 			name: "@x/bare",
 			version: "",
 			relativePath: "packages/bare",
@@ -325,7 +326,7 @@ describe('WorkspaceStateSnapshot — a version-less member is absent, never `""`
 		assert.isFalse(Object.hasOwn(legacy, "version"));
 		assert.isTrue(Equal.equals(legacy, bareVersionSnapshot.packages[0]));
 		// Control: a real version survives the same decode.
-		const versioned = Schema.decodeUnknownSync(PackageStateSnapshot)({
+		const versioned = Schema.decodeSync(PackageStateSnapshot)({
 			name: "@x/alpha",
 			version: "1.2.3",
 			relativePath: "packages/alpha",
@@ -734,7 +735,7 @@ describe("WorkspaceSnapshots.at — a hook replay failure at the ref surfaces ty
 	const failing = Layer.succeed(ConfigDependencyHooks, {
 		inject: (_root, configDependencies) =>
 			Effect.fail(
-				new CatalogAssemblyError({
+				CatalogAssemblyError.make({
 					source: "hooks",
 					path: Object.keys(configDependencies)[0] ?? "",
 					cause: new Error("not installed"),
@@ -747,7 +748,7 @@ describe("WorkspaceSnapshots.at — a hook replay failure at the ref surfaces ty
 				const snapshots = yield* WorkspaceSnapshots;
 				const error = yield* Effect.flip(snapshots.at("before"));
 				assert.instanceOf(error, CatalogAssemblyError);
-				if (error instanceof CatalogAssemblyError) {
+				if (Schema.is(CatalogAssemblyError)(error)) {
 					assert.strictEqual(error.source, "hooks");
 					assert.strictEqual(error.path, "@scope/plugin");
 				}

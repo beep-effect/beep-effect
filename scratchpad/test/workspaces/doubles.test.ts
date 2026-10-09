@@ -93,7 +93,7 @@ describe("WorkspaceCatalogs.makeTest — resolveSpecifier derives from a supplie
 		Effect.gen(function* () {
 			const double = WorkspaceCatalogs.makeTest({
 				set: () => Effect.succeed(stubbedSet),
-				resolveSpecifier: () => Effect.succeed(Option.some("pinned")),
+				resolveSpecifier: () => Effect.succeedSome("pinned"),
 				releaseAgeGate: () => Effect.succeed(ReleaseAgeGate.combine()),
 			});
 			assert.deepStrictEqual(yield* double.resolveSpecifier("effect", "catalog:"), Option.some("pinned"));
@@ -228,16 +228,12 @@ describe("LockfileReader.makeTest — resolvedVersion derives from a supplied re
 			const double = LockfileReader.makeTest({
 				read: () => Effect.succeed(stubbedLockfile),
 				resolvedVersion: () =>
-					Effect.succeed(
-						Option.some(
-							ResolvedPackage.make({
+					Effect.succeedSome(ResolvedPackage.make({
 								name: "left-pad",
 								version: "9.9.9",
 								instanceId: "left-pad@9.9.9",
 								isWorkspace: false,
-							}),
-						),
-					),
+							})),
 			});
 			const resolved = yield* double.resolvedVersion("left-pad");
 			assert.isTrue(Option.isSome(resolved));

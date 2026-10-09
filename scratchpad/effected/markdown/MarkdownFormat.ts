@@ -153,8 +153,8 @@ export class MarkdownModificationError extends Schema.TaggedError<MarkdownModifi
 	{
 		code: MarkdownModificationErrorCode,
 		detail: Schema.String,
-		offset: Schema.Number,
-		length: Schema.Number,
+		offset: Schema.Finite,
+		length: Schema.Finite,
 	},
 ) {
 	override get message(): string {
@@ -736,7 +736,7 @@ export class MarkdownFormat {
 	) {
 		const { start, end } = spanOf(target);
 		const fail = (code: MarkdownModificationErrorCode, detail: string) =>
-			new MarkdownModificationError({ code, detail, offset: start, length: end - start });
+			MarkdownModificationError.make({ code, detail, offset: start, length: end - start });
 		const ancestry = findAncestry(document.root, target);
 		if (ancestry === undefined) {
 			return yield* fail("NodeNotInDocument", "the target node is not part of the document's tree");

@@ -184,7 +184,7 @@ const isAtOrBelow = (descendant: string, ancestor: string): boolean => {
  * @public
  */
 export class WorkspaceRoot extends Context.Service<WorkspaceRoot, WorkspaceRootShape>()(
-	"@effected/workspaces/WorkspaceRoot",
+	"@beep/scratchpad/effected/workspaces/WorkspaceRoot",
 ) {
 	/** Builds the service over core `FileSystem` and `Path`. */
 	static readonly make: Effect.Effect<WorkspaceRootShape, never, FileSystem.FileSystem | Path.Path> = Effect.gen(
@@ -208,13 +208,11 @@ export class WorkspaceRoot extends Context.Service<WorkspaceRoot, WorkspaceRootS
 				});
 				const found = yield* Walker.findRoot(chain, isWorkspaceRoot);
 				if (Option.isNone(found)) {
-					return yield* Effect.fail(
-						new WorkspaceRootNotFoundError({
+					return yield* WorkspaceRootNotFoundError.make({
 							searchPath: start,
 							markers: WORKSPACE_MARKERS,
 							...(ceiling === undefined ? {} : { stopAt: ceiling }),
-						}),
-					);
+						});
 				}
 				yield* Effect.logDebug("Workspace root found").pipe(Effect.annotateLogs("workspace.root", found.value));
 				return found.value;
@@ -273,7 +271,7 @@ export class WorkspaceRoot extends Context.Service<WorkspaceRoot, WorkspaceRootS
 					// than live, the divergence this double exists to prevent.
 					options?.stopAt !== undefined && !isAtOrBelow(root, path.resolve(options.stopAt))
 						? Effect.fail(
-								new WorkspaceRootNotFoundError({
+								WorkspaceRootNotFoundError.make({
 									searchPath: cwd,
 									markers: WORKSPACE_MARKERS,
 									stopAt: options.stopAt,

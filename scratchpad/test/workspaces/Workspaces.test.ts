@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file
 // The one-call conveniences on the composite: `Workspaces.resolverLayer`
 // (the two @effected/npm contracts over one factory call) and
 // `Workspaces.resolveManifest` (whole-manifest projection in one shot).

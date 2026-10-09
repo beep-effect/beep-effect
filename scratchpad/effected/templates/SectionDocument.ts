@@ -26,7 +26,7 @@ export class SectionParseError extends Schema.TaggedError<SectionParseError>()("
 	/** Which ambiguity was found. */
 	reason: Schema.Literals(SCAN_FAILURE_REASONS),
 	/** 1-based line of the offending marker. */
-	line: Schema.Number,
+	line: Schema.Finite,
 	/** The section key involved, when the failure names one. */
 	key: Schema.optionalKey(Schema.String),
 	/** The file the document came from. Absent for a document parsed from a string. */

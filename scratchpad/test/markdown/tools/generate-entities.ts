@@ -1,3 +1,4 @@
+// @effect-diagnostics nodeBuiltinImport:skip-file
 /**
  * One-off generator for `src/internal/entityMap.ts`.
  *

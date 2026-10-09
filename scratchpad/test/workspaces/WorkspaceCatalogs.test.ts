@@ -367,7 +367,7 @@ describe("WorkspaceCatalogs — a bun/package.json presence-probe failure is not
 			Layer.mock(LockfileReader, {
 				read: () =>
 					Effect.fail(
-						new LockfileReadError({
+						LockfileReadError.make({
 							lockfilePath: "/repo/pnpm-lock.yaml",
 							format: "pnpm",
 							cause: new Error("no lockfile"),

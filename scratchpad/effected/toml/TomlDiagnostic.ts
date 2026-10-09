@@ -106,10 +106,10 @@ export type TomlErrorCode = typeof TomlErrorCode.Type;
 export class TomlDiagnostic extends Schema.Class<TomlDiagnostic>("TomlDiagnostic")({
 	code: TomlErrorCode,
 	message: Schema.String,
-	offset: Schema.Number,
-	length: Schema.Number,
-	line: Schema.Number,
-	character: Schema.Number,
+	offset: Schema.Finite,
+	length: Schema.Finite,
+	line: Schema.Finite,
+	character: Schema.Finite,
 }) {
 	/**
 	 * Materialize an engine record, deriving `line`/`character` (0-based)

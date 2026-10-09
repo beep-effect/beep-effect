@@ -34,7 +34,7 @@ describe("VersionDiff", () => {
 			Effect.gen(function* () {
 				const diff = VersionDiff.between(SemVer.of(1, 0, 0), SemVer.of(2, 0, 0));
 				const encoded = yield* Schema.encodeUnknownEffect(VersionDiff)(diff);
-				const decoded = yield* Schema.decodeUnknownEffect(VersionDiff)(encoded);
+				const decoded = yield* Schema.decodeEffect(VersionDiff)(encoded);
 				assert.strictEqual(decoded._tag, "VersionDiff");
 				assert.strictEqual(decoded.type, "major");
 				assert.instanceOf(decoded.from, SemVer);

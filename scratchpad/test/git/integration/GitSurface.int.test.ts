@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file nodeBuiltinImport:skip-file asyncFunction:skip-file processEnv:skip-file
 // Proves the Task 3-6 surface additions (nameStatus, the promoted working-tree
 // primitives, the quiet probes, commitInfo/status, and the mutating tier)
 // against a REAL git binary and a real filesystem, through
@@ -23,7 +24,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { NodeServices } from "@effect/platform-node";
 import { afterAll, assert, beforeAll, describe, it } from "@effect/vitest";
-import { Cause, DateTime, Effect, Exit, Layer, Option, Result } from "effect";
+import { Cause, DateTime, Effect, Exit, Layer, Option, Result, Schema } from "effect";
 import type { ChildProcessSpawner } from "effect/process";
 import { ChildProcess } from "effect/process";
 import { Git, NotARepositoryError, UnknownRefError } from "../../../effected/git/Git.ts";
@@ -404,7 +405,7 @@ describe("Git surface — submodule/fetch pair (fixture B)", () => {
 				if (Exit.isFailure(exit)) {
 					// Cause.failureOption does not exist at beta.98 — findFail returns a Result.
 					const found = Cause.findFail(exit.cause);
-					assert.isTrue(Result.isSuccess(found) && found.success.error instanceof UnknownRefError);
+					assert.isTrue(Result.isSuccess(found) && Schema.is(UnknownRefError)(found.success.error));
 				}
 			}),
 		),
@@ -667,7 +668,7 @@ describe("Git.log — history repository (fixture C)", () => {
 			Effect.gen(function* () {
 				const git = yield* Git;
 				const error = yield* Effect.flip(git.log(tmpdir()));
-				assert.isTrue(error instanceof NotARepositoryError);
+				assert.isTrue(Schema.is(NotARepositoryError)(error));
 			}),
 		),
 	);

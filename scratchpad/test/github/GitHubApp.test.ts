@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file nodeBuiltinImport:skip-file
 import { generateKeyPairSync } from "node:crypto";
 import { assert, describe, it } from "@effect/vitest";
 import { DateTime, Duration, Effect, Option, Redacted, Schema } from "effect";
@@ -368,7 +369,7 @@ describe("InstallationToken", () => {
 				installationId: 1,
 				permissions: { contents: "write" },
 			});
-			const decoded = yield* Schema.decodeUnknownEffect(InstallationToken)(encoded);
+			const decoded = yield* Schema.decodeEffect(InstallationToken)(encoded);
 			assert.strictEqual(Redacted.value(decoded.token), "ghs_x");
 			assert.isTrue(DateTime.toEpochMillis(decoded.expiresAt) === DateTime.toEpochMillis(token.expiresAt));
 		}),

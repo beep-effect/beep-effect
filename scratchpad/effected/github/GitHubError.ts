@@ -145,27 +145,27 @@ export class GitHubError extends Schema.TaggedError<GitHubError>()("GitHubError"
 
 	/** The requested thing is not there. */
 	static notFound(operation: string, subject: string): GitHubError {
-		return new GitHubError({ kind: "notFound", operation, reason: `${subject} not found`, status: 404 });
+		return GitHubError.make({ kind: "notFound", operation, reason: `${subject} not found`, status: 404 });
 	}
 
 	/** The thing you asked to create is already there. */
 	static alreadyExists(operation: string, subject: string): GitHubError {
-		return new GitHubError({
-			kind: "alreadyExists",
-			operation,
-			reason: `${subject} already exists`,
-			status: 422,
-		});
+		return GitHubError.make({
+    kind: "alreadyExists",
+    operation,
+    reason: `${subject} already exists`,
+    status: 422,
+});
 	}
 
 	/** GitHub understood the request and refused it. */
 	static rejected(operation: string, status: number, reason: string): GitHubError {
-		return new GitHubError({ kind: "rejected", operation, reason, status });
+		return GitHubError.make({ kind: "rejected", operation, reason, status });
 	}
 
 	/** A response did not match the schema it was decoded against. */
 	static decode(operation: string, reason: string, cause?: unknown): GitHubError {
-		return new GitHubError({
+		return GitHubError.make({
 			kind: "decode",
 			operation,
 			reason,
@@ -191,15 +191,15 @@ export class GitHubError extends Schema.TaggedError<GitHubError>()("GitHubError"
 		const facts = readThrowable(error);
 		const retryAfterMillis = retryAfterMillisFrom(facts.headers, nowMillis);
 		const kind = classify(facts, retryAfterMillis);
-		return new GitHubError({
-			kind,
-			operation,
-			reason: facts.reason,
-			...(facts.status !== undefined ? { status: facts.status } : {}),
-			...(retryAfterMillis !== undefined ? { retryAfterMillis } : {}),
-			...(facts.validation.length > 0 ? { validation: facts.validation } : {}),
-			cause: error,
-		});
+		return GitHubError.make({
+    kind,
+    operation,
+    reason: facts.reason,
+    ...(facts.status !== undefined ? { status: facts.status } : {}),
+    ...(retryAfterMillis !== undefined ? { retryAfterMillis } : {}),
+    ...(facts.validation.length > 0 ? { validation: facts.validation } : {}),
+    cause: error,
+});
 	}
 
 	/**

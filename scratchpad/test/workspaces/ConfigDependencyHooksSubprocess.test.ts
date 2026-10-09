@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file nodeBuiltinImport:skip-file newPromise:skip-file
 // Parent-side plumbing of `ConfigDependencyHooks.layerSubprocess`, over the
 // public `ScriptedSpawner` double from `@effected/commands`.
 //

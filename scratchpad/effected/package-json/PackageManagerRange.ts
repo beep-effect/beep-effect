@@ -125,7 +125,7 @@ const fromParts = (
 	tail: string,
 ): Result.Result<PackageManagerRange, InvalidPackageManagerRangeError> => {
 	if (!PACKAGE_MANAGER_NAME_RE.test(name)) {
-		return Result.fail(new InvalidPackageManagerRangeError({ input, reason: "name" }));
+		return Result.fail(InvalidPackageManagerRangeError.make({ input, reason: "name" }));
 	}
 	// The first `+` begins the integrity component, unconditionally — the
 	// version position of this field never carries build metadata.
@@ -134,7 +134,7 @@ const fromParts = (
 	// An empty range (`pnpm@`) is a range error, not the `*` node-semver
 	// coerces an empty string to — coercion would be a silent edit.
 	if (range.length === 0 || Result.isFailure(Range.parseResult(range))) {
-		return Result.fail(new InvalidPackageManagerRangeError({ input, reason: "range" }));
+		return Result.fail(InvalidPackageManagerRangeError.make({ input, reason: "range" }));
 	}
 	if (plus === -1) {
 		return Result.succeed(PackageManagerRange.make({ name, range, integrity: Option.none() }));
@@ -142,9 +142,9 @@ const fromParts = (
 	// Validate the integrity through the corepack-restricted schema so a
 	// malformed hash is a typed failure, not the defect `make` would throw on
 	// a value the field schema rejects.
-	const decoded = Schema.decodeUnknownExit(CorepackIntegrityHash)(tail.slice(plus + 1));
+	const decoded = Schema.decodeExit(CorepackIntegrityHash)(tail.slice(plus + 1));
 	if (Exit.isFailure(decoded)) {
-		return Result.fail(new InvalidPackageManagerRangeError({ input, reason: "integrity" }));
+		return Result.fail(InvalidPackageManagerRangeError.make({ input, reason: "integrity" }));
 	}
 	return Result.succeed(PackageManagerRange.make({ name, range, integrity: Option.some(decoded.value) }));
 };
@@ -249,7 +249,7 @@ export class PackageManagerRange extends Schema.Class<PackageManagerRange>("Pack
 	static parseResult(input: string): Result.Result<PackageManagerRange, InvalidPackageManagerRangeError> {
 		const at = input.indexOf("@");
 		return at === -1
-			? Result.fail(new InvalidPackageManagerRangeError({ input, reason: "format" }))
+			? Result.fail(InvalidPackageManagerRangeError.make({ input, reason: "format" }))
 			: fromParts(input, input.slice(0, at), input.slice(at + 1));
 	}
 
@@ -291,7 +291,7 @@ export class PackageManagerRange extends Schema.Class<PackageManagerRange>("Pack
 		engine: DevEnginePackageManagerEntry,
 	): Result.Result<PackageManagerRange, InvalidPackageManagerRangeError> {
 		if (engine.version === undefined) {
-			return Result.fail(new InvalidPackageManagerRangeError({ input: engine.name, reason: "range" }));
+			return Result.fail(InvalidPackageManagerRangeError.make({ input: engine.name, reason: "range" }));
 		}
 		return fromParts(`${engine.name}@${engine.version}`, engine.name, engine.version);
 	}
@@ -381,7 +381,7 @@ export class PackageManagerRange extends Schema.Class<PackageManagerRange>("Pack
 		const parts = singleComparator(this.range);
 		if (Option.isNone(parts) || !SemVer.isPinnable(version)) {
 			return Result.fail(
-				new InvalidPackageManagerRangeError({ input: `${this.name}@${this.range} -> ${version}`, reason: "range" }),
+				InvalidPackageManagerRangeError.make({ input: `${this.name}@${this.range} -> ${version}`, reason: "range" }),
 			);
 		}
 		return Result.succeed(

@@ -40,7 +40,7 @@ export class UnsupportedBlobEnvelopeVersionError extends Schema.TaggedError<Unsu
 	"UnsupportedBlobEnvelopeVersionError",
 	{
 		/** The envelope version found. */
-		version: Schema.Number,
+		version: Schema.Finite,
 		/** The underlying failure, preserved structurally. */
 		cause: Schema.optionalKey(Schema.Defect()),
 	},
@@ -167,7 +167,7 @@ export class BlobEnvelope {
 	): Result.Result<Uint8Array, BlobEnvelopeError> {
 		const encoded = Schema.encodeUnknownResult(Schema.fromJsonString(schema))(metadata);
 		if (Result.isFailure(encoded)) {
-			return Result.fail(new BlobMetadataEncodeError({ cause: encoded.failure }));
+			return Result.fail(BlobMetadataEncodeError.make({ cause: encoded.failure }));
 		}
 		const metaBytes = new TextEncoder().encode(encoded.success);
 		const out = new Uint8Array(HEADER_BYTES + metaBytes.length + body.length);
@@ -193,23 +193,23 @@ export class BlobEnvelope {
 		schema: Schema.Codec<A, I>,
 	): Result.Result<{ readonly metadata: A; readonly body: Uint8Array }, BlobEnvelopeError> {
 		if (bytes.length < MAGIC.length || !MAGIC.every((byte, index) => bytes[index] === byte)) {
-			return Result.fail(new NotABlobEnvelopeError({}));
+			return Result.fail(NotABlobEnvelopeError.make({}));
 		}
 		if (bytes.length < HEADER_BYTES) {
-			return Result.fail(new TruncatedBlobEnvelopeError({}));
+			return Result.fail(TruncatedBlobEnvelopeError.make({}));
 		}
 		const version = bytes[MAGIC.length] ?? 0;
 		if (version !== VERSION) {
-			return Result.fail(new UnsupportedBlobEnvelopeVersionError({ version }));
+			return Result.fail(UnsupportedBlobEnvelopeVersionError.make({ version }));
 		}
 		const metaLength = new DataView(bytes.buffer, bytes.byteOffset).getUint32(MAGIC.length + 1, false);
 		if (bytes.length < HEADER_BYTES + metaLength) {
-			return Result.fail(new TruncatedBlobEnvelopeError({}));
+			return Result.fail(TruncatedBlobEnvelopeError.make({}));
 		}
 		const metaText = new TextDecoder().decode(bytes.subarray(HEADER_BYTES, HEADER_BYTES + metaLength));
-		const decoded = Schema.decodeUnknownResult(Schema.fromJsonString(schema))(metaText);
+		const decoded = Schema.decodeResult(Schema.fromJsonString(schema))(metaText);
 		if (Result.isFailure(decoded)) {
-			return Result.fail(new BlobMetadataDecodeError({ cause: decoded.failure }));
+			return Result.fail(BlobMetadataDecodeError.make({ cause: decoded.failure }));
 		}
 		return Result.succeed({
 			metadata: decoded.success,

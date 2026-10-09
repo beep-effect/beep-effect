@@ -24,7 +24,7 @@ export const answerWithoutPerson = <A>(
 	if ("otherwise" in target && target.otherwise !== undefined) return Effect.succeed(Prompt.succeed(target.otherwise));
 	return Effect.fail(
 		"flag" in target
-			? new CliError.MissingOption({ option: target.flag })
-			: new CliError.MissingArgument({ argument: target.argument }),
+			? CliError.MissingOption.make({ option: target.flag })
+			: CliError.MissingArgument.make({ argument: target.argument }),
 	);
 };

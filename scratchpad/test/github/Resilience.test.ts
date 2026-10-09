@@ -101,7 +101,7 @@ describe("RetryPolicy.schedule under Effect.retry", () => {
 	 * above, purely.
 	 */
 	const policy = RetryPolicy.make({ ...RetryPolicy.default, maxRetries: 3 });
-	const rateLimited = new GitHubError({
+	const rateLimited = GitHubError.make({
 		kind: "rateLimited",
 		operation: "probe",
 		reason: "slow down",
@@ -144,7 +144,7 @@ describe("RetryPolicy.schedule under Effect.retry", () => {
 	it.effect("stops immediately when the advised delay exceeds the ceiling", () =>
 		Effect.gen(function* () {
 			const attempts = yield* Ref.make(0);
-			const tooLong = new GitHubError({
+			const tooLong = GitHubError.make({
 				kind: "rateLimited",
 				operation: "probe",
 				reason: "come back later",

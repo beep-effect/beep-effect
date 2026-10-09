@@ -147,7 +147,7 @@ export class PackageManager extends Schema.Class<PackageManager>("PackageManager
 					// field never legitimately carries — is a typed failure, not the
 					// defect `make` would throw on a value the field schema rejects.
 					const rawIntegrity = rest.slice(plus + 1);
-					const decoded = Schema.decodeUnknownExit(CorepackIntegrityHash)(rawIntegrity);
+					const decoded = Schema.decodeExit(CorepackIntegrityHash)(rawIntegrity);
 					if (Exit.isFailure(decoded)) {
 						return invalid(input, `Invalid packageManager integrity: "${rawIntegrity}"`);
 					}

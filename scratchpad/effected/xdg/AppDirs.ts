@@ -290,7 +290,7 @@ const badNamespace = (namespace: string): Error | undefined => {
  *
  * @public
  */
-export class AppDirs extends Context.Service<AppDirs, AppDirsShape>()("@effected/xdg/AppDirs") {
+export class AppDirs extends Context.Service<AppDirs, AppDirsShape>()("@beep/scratchpad/effected/xdg/AppDirs") {
 	/**
 	 * Resolve the namespace's directories against the ambient {@link Xdg}
 	 * environment and platform.
@@ -316,7 +316,7 @@ export class AppDirs extends Context.Service<AppDirs, AppDirsShape>()("@effected
 
 				const makeDir = (kind: AppDirKind, target: string): Effect.Effect<string, AppDirsError> =>
 					fs.makeDirectory(target, { recursive: true }).pipe(
-						Effect.mapError((cause) => new AppDirsError({ directory: kind, path: target, cause })),
+						Effect.mapError((cause) => AppDirsError.make({ directory: kind, path: target, cause })),
 						Effect.as(target),
 					);
 

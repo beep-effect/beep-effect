@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { Effect, Redacted } from "effect";
 import * as Base64 from "effect/encoding/Base64";

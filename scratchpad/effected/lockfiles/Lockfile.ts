@@ -121,8 +121,8 @@ export const materializeFailure = (
 	failure: ParseFailure,
 ): LockfileParseError | LockfileFramingError =>
 	failure.stage === "framing"
-		? new LockfileFramingError({ format, reason: failure.reason, documents: failure.documents })
-		: new LockfileParseError({ format, stage: failure.stage, cause: failure.cause });
+		? LockfileFramingError.make({ format, reason: failure.reason, documents: failure.documents })
+		: LockfileParseError.make({ format, stage: failure.stage, cause: failure.cause });
 
 const dispatch = (
 	format: LockfileFormat,

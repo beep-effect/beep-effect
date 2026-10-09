@@ -1,3 +1,4 @@
+// @effect-diagnostics nodeBuiltinImport:skip-file
 import { readFileSync } from "node:fs";
 import { assert, describe, it } from "@effect/vitest";
 import { Effect, Result } from "effect";

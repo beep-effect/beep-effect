@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { Effect } from "effect";
 import type { RecordedCall } from "../../effected/github/index.ts";
@@ -83,7 +84,7 @@ describe("RepositorySecurity.vulnerabilityAlerts", () => {
 					// A mis-scoped token is not "disabled". A blanket catch here would
 					// report a permissions problem as a feature being off, and the sync
 					// that follows would try to turn it "on" forever.
-					"GET /repos/{owner}/{repo}/vulnerability-alerts": new GitHubError({
+					"GET /repos/{owner}/{repo}/vulnerability-alerts": GitHubError.make({
 						kind: "unauthorized",
 						operation: "test",
 						reason: "the token lacks the required scope",

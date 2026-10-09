@@ -13,7 +13,7 @@ import type { ConfigCodec, ConfigCodecError } from "./ConfigCodec.ts";
  */
 export class ConfigMigrationError extends Schema.TaggedError<ConfigMigrationError>()("ConfigMigrationError", {
 	/** The target version of the step that failed. `0` when reading the version failed. */
-	version: Schema.Number,
+	version: Schema.Finite,
 	/** The name of the step that failed; empty when reading the version failed. */
 	name: Schema.String,
 	/** Which stage of a migration step failed. */
@@ -98,7 +98,7 @@ const runPhase = <A>(
 	name: string,
 	run: () => Effect.Effect<A, unknown>,
 ): Effect.Effect<A, ConfigMigrationError> =>
-	Effect.suspend(run).pipe(Effect.mapError((cause) => new ConfigMigrationError({ version, name, phase, cause })));
+	Effect.suspend(run).pipe(Effect.mapError((cause) => ConfigMigrationError.make({ version, name, phase, cause })));
 
 // Implementation of ConfigMigration.make; the public contract lives on the static.
 const make = (options: ConfigMigrationOptions): ConfigCodec<ConfigCodecError | ConfigMigrationError> => {

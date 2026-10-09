@@ -200,7 +200,7 @@ function materialize(raw: RawExpression): SpdxExpression {
 // leak an un-exported symbol (ae-forgotten-export) onto the `@public` surface.
 const parseResult = (input: string): Result.Result<SpdxExpression, InvalidSpdxExpressionError> => {
 	const raw = parseRaw(input);
-	return raw === undefined ? Result.fail(new InvalidSpdxExpressionError({ input })) : Result.succeed(materialize(raw));
+	return raw === undefined ? Result.fail(InvalidSpdxExpressionError.make({ input })) : Result.succeed(materialize(raw));
 };
 
 /**

@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file
 // The inverted OIDC contract.
 //
 // The whole point of declaring this here rather than importing an issuer is
@@ -71,7 +72,7 @@ describe("IdentityToken doubles", () => {
 		}).pipe(
 			Effect.provide(
 				IdentityToken.layerTest({
-					token: (audience) => Effect.fail(new IdentityTokenError({ audience, cause: new Error("nope") })),
+					token: (audience) => Effect.fail(IdentityTokenError.make({ audience, cause: new Error("nope") })),
 				}),
 			),
 		),
@@ -80,7 +81,7 @@ describe("IdentityToken doubles", () => {
 
 describe("IdentityTokenError", () => {
 	it("names the audience, because that is the first thing to check", () => {
-		const error = new IdentityTokenError({ audience: "sigstore", cause: new Error("403") });
+		const error = IdentityTokenError.make({ audience: "sigstore", cause: new Error("403") });
 		assert.include(error.message, "sigstore");
 		assert.strictEqual(error._tag, "IdentityTokenError");
 	});

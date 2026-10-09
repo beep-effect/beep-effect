@@ -1,3 +1,4 @@
+// @effect-diagnostics nodeBuiltinImport:skip-file
 // Every published @effected package declares its full @effected peer closure: never left to be satisfied by whatever
 // a consumer's tree happens to contain. The kit's own packages are each other's dependencies, so a package that peers
 // on X must also peer on everything X requires, or X's peers escape to the consumer's importer and are satisfied only

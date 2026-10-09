@@ -36,7 +36,7 @@ export class TarballError extends Schema.TaggedError<TarballError>()("TarballErr
 	/** The version being fetched. */
 	version: Schema.String,
 	/** The HTTP status, for `reason: "http"` and a 404 `notFound`. */
-	status: Schema.optionalKey(Schema.Number),
+	status: Schema.optionalKey(Schema.Finite),
 	/** The integrity the registry vouched for, for `reason: "integrityMismatch"`. */
 	expected: Schema.optionalKey(Schema.String),
 	/** The integrity the downloaded bytes actually have. */
@@ -110,11 +110,11 @@ const make = Effect.fnUntraced(function* () {
 		const fail = (
 			reason: "notFound" | "http" | "integrityMismatch" | "integrityUnverifiable" | "extractFailed",
 			extra: { status?: number; expected?: string; actual?: string; cause?: unknown } = {},
-		): TarballError => new TarballError({ reason, package: name, version, ...extra });
+		): TarballError => TarballError.make({ reason, package: name, version, ...extra });
 
 		const url = published.tarball;
 		if (url === undefined) {
-			return yield* Effect.fail(fail("notFound"));
+			return yield* fail("notFound");
 		}
 
 		const response = yield* http.get(url).pipe(Effect.mapError((cause) => fail("http", { cause })));
@@ -123,7 +123,7 @@ const make = Effect.fnUntraced(function* () {
 		// error page to `tar` surfaces as a misleading "could not extract"
 		// instead of naming the real failure.
 		if (Math.floor(response.status / 100) !== 2) {
-			return yield* Effect.fail(fail(response.status === 404 ? "notFound" : "http", { status: response.status }));
+			return yield* fail(response.status === 404 ? "notFound" : "http", { status: response.status });
 		}
 
 		const bytes = yield* response.arrayBuffer.pipe(
@@ -163,7 +163,7 @@ const make = Effect.fnUntraced(function* () {
 				// difference. Refusing a valid tarball over one would be the
 				// worse failure of the two.
 				if (unpadded(actual) !== unpadded(expected)) {
-					return yield* Effect.fail(fail("integrityMismatch", { expected, actual }));
+					return yield* fail("integrityMismatch", { expected, actual });
 				}
 			}
 		}
@@ -179,7 +179,7 @@ const make = Effect.fnUntraced(function* () {
 			Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
 		);
 		if (!unpacked) {
-			return yield* Effect.fail(fail("extractFailed"));
+			return yield* fail("extractFailed");
 		}
 
 		// npm tarballs unpack to a fixed `package/` root.
@@ -229,7 +229,7 @@ const make = Effect.fnUntraced(function* () {
  * @public
  */
 export class PackageTarball extends Context.Service<PackageTarball, PackageTarballShape>()(
-	"@effected/npm/PackageTarball",
+	"@beep/scratchpad/effected/npm/PackageTarball",
 ) {
 	/**
 	 * The live service, over core's `FileSystem`, `Crypto`, `HttpClient` and

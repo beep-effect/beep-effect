@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file
 // `ConfigFile.read` — the one-shot form: a path and a schema in one expression,
 // with no service class, no layer and no tag.
 //

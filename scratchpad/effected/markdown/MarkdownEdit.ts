@@ -44,8 +44,8 @@ export type MarkdownPath = ReadonlyArray<MarkdownSegment>;
  * @public
  */
 export class MarkdownRange extends Schema.Class<MarkdownRange>("MarkdownRange")({
-	offset: Schema.Number,
-	length: Schema.Number,
+	offset: Schema.Finite,
+	length: Schema.Finite,
 }) {}
 
 /**
@@ -61,8 +61,8 @@ export class MarkdownRange extends Schema.Class<MarkdownRange>("MarkdownRange")(
  * @public
  */
 export class MarkdownEdit extends Schema.Class<MarkdownEdit>("MarkdownEdit")({
-	offset: Schema.Number,
-	length: Schema.Number,
+	offset: Schema.Finite,
+	length: Schema.Finite,
 	content: Schema.String,
 }) {
 	/**

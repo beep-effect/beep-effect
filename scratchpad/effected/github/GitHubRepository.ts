@@ -372,7 +372,7 @@ export interface GitHubRepositoryShape {
  * @public
  */
 export class GitHubRepository extends Context.Service<GitHubRepository, GitHubRepositoryShape>()(
-	"@effected/github/GitHubRepository",
+	"@beep/scratchpad/effected/github/GitHubRepository",
 ) {
 	/** The live service, built over a `GitHubClient`. */
 	static readonly layer: Layer.Layer<GitHubRepository, never, GitHubClient> = Layer.effect(
@@ -400,18 +400,18 @@ const unstubbed = (member: string): never => {
 };
 
 const make = (client: GitHubClient["Service"]): GitHubRepositoryShape => {
-	const settings = Effect.fn("GitHubRepository.settings")(function* () {
-		const { owner, repo } = yield* Repo;
-		yield* Effect.annotateCurrentSpan({ owner, repo });
-		return yield* client.request("GET /repos/{owner}/{repo}", { owner, repo });
-	})();
+	const settings = Effect.gen(function* () {
+    const { owner, repo } = yield* Repo;
+    yield* Effect.annotateCurrentSpan({ owner, repo });
+    return yield* client.request("GET /repos/{owner}/{repo}", { owner, repo });
+});
 
-	const ownerType = Effect.fn("GitHubRepository.ownerType")(function* () {
-		const { owner } = yield* Repo;
-		yield* Effect.annotateCurrentSpan({ owner });
-		const user = yield* client.request("GET /users/{username}", { username: owner });
-		return user.type === "Organization" ? "Organization" : "User";
-	})();
+	const ownerType = Effect.gen(function* () {
+    const { owner } = yield* Repo;
+    yield* Effect.annotateCurrentSpan({ owner });
+    const user = yield* client.request("GET /users/{username}", { username: owner });
+    return user.type === "Organization" ? "Organization" : "User";
+});
 
 	return {
 		settings,

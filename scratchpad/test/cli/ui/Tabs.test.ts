@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { Effect, Fiber, Option, Schedule } from "effect";
 import { Text } from "ink";

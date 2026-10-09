@@ -1,3 +1,4 @@
+// @effect-diagnostics nodeBuiltinImport:skip-file
 // The package's own source, scanned by the scanner it ships. Real disk, real
 // lexing: ConfigDependencyHooks.ts embeds a child script whose process.argv and
 // process.stdout.write sit in TEMPLATE TEXT, which must not count, while three

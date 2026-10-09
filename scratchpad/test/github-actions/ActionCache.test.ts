@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file nodeBuiltinImport:skip-file asyncFunction:skip-file
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { readFile, writeFile } from "node:fs/promises";
@@ -28,7 +29,7 @@ const fileTransfer = () => {
 				try: async () => {
 					blobs.set(url, new Uint8Array(await readFile(file)));
 				},
-				catch: (cause) => new BlobTransferError({ reason: "uploadFailed", cause }),
+				catch: (cause) => BlobTransferError.make({ reason: "uploadFailed", cause }),
 			}),
 		downloadToFile: (url, file) =>
 			Effect.tryPromise({
@@ -39,7 +40,7 @@ const fileTransfer = () => {
 					}
 					await writeFile(file, found);
 				},
-				catch: (cause) => new BlobTransferError({ reason: "downloadFailed", cause }),
+				catch: (cause) => BlobTransferError.make({ reason: "downloadFailed", cause }),
 			}),
 	};
 	return { blobs, transfer };
@@ -252,7 +253,7 @@ describe("ActionCache", () => {
 				downloadToFile: (_url, file) =>
 					Effect.tryPromise({
 						try: () => writeFile(file, "this is not an archive"),
-						catch: (cause) => new BlobTransferError({ reason: "downloadFailed", cause }),
+						catch: (cause) => BlobTransferError.make({ reason: "downloadFailed", cause }),
 					}),
 			};
 			const { fetch } = twirpFetch({
@@ -310,8 +311,8 @@ describe("ActionCache", () => {
 				const file = join(root, "f.txt");
 				writeFileSync(file, "x");
 				const failing: FileBlobTransfer = {
-					uploadFile: () => Effect.fail(new BlobTransferError({ reason: "uploadFailed" })),
-					downloadToFile: () => Effect.fail(new BlobTransferError({ reason: "downloadFailed" })),
+					uploadFile: () => Effect.fail(BlobTransferError.make({ reason: "uploadFailed" })),
+					downloadToFile: () => Effect.fail(BlobTransferError.make({ reason: "downloadFailed" })),
 				};
 				const { fetch } = twirpFetch({
 					CreateCacheEntry: () => json({ ok: true, signedUploadUrl: "https://blob.example/d" }),

@@ -1,3 +1,4 @@
+// @effect-diagnostics nodeBuiltinImport:skip-file
 // Document framing: a lockfile file is a YAML *stream*, not necessarily a
 // single document. pnpm 11 writes a config-dependencies ("env") preamble
 // document ahead of the lockfile whenever the workspace uses
@@ -19,7 +20,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { assert, describe, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import { Lockfile, LockfileFramingError, LockfileParseError } from "../../effected/lockfiles/Lockfile.ts";
 import type { LockfileFormat } from "../../effected/lockfiles/LockfileFormat.ts";
 import { PnpmEnvLockfile } from "../../effected/lockfiles/PnpmEnvLockfile.ts";
@@ -353,7 +354,7 @@ describe("document framing", () => {
 				const error = yield* Effect.flip(Lockfile.parse("---\n---\n", { format: "pnpm" }));
 
 				assert.instanceOf(error, LockfileFramingError);
-				assert.isFalse(error instanceof LockfileParseError);
+				assert.isFalse(Schema.is(LockfileParseError)(error));
 				assert.strictEqual(error._tag, "LockfileFramingError");
 			}),
 		);

@@ -4,7 +4,7 @@ import { Cause, Console, Context, Effect, Exit, Layer, MutableRef, Runtime } fro
 import { CliError, Command } from "effect/cli";
 import { CliExit, CliRuntime } from "../../effected/cli/index.ts";
 
-class Platform extends Context.Service<Platform, { readonly name: string }>()("test/Platform") {}
+class Platform extends Context.Service<Platform, { readonly name: string }>()("@beep/scratchpad/test/cli/CliMain.test/Platform") {}
 
 const capturing = () => {
 	const out: string[] = [];
@@ -136,7 +136,7 @@ describe("CliRuntime.main and a UserError raised through Command.runWith", () =>
 	// A handler that fails with CliError.UserError. runWith renders it through
 	// the CliOutput formatter itself, then re-fails with it.
 	const deploy = Command.make("deploy", {}, () =>
-		Effect.fail(new CliError.UserError({ cause: "unknown target: moon", userMessage: "unknown target: moon" })),
+		Effect.fail(CliError.UserError.make({ cause: "unknown target: moon", userMessage: "unknown target: moon" })),
 	);
 
 	it.effect("reports it exactly once, and exits with the usage code 64", () =>
@@ -174,14 +174,14 @@ describe("CliRuntime.main and a UserError raised through Command.runWith", () =>
 		Effect.sync(() => {
 			// The usage-code fallback below relies on this: were core ever to mark
 			// a UserError with a code, chooseExitCode would keep that instead.
-			assert.isFalse(Runtime.errorExitCode in new CliError.UserError({ cause: "x" }));
+			assert.isFalse(Runtime.errorExitCode in CliError.UserError.make({ cause: "x" }));
 		}),
 	);
 
 	it.effect("a UserError marked with an explicit exit code keeps it, and is printed once", () =>
 		Effect.gen(function* () {
 			const marked = Command.make("deploy", {}, () =>
-				Effect.fail(CliRuntime.reported(new CliError.UserError({ cause: "x" }), 3)),
+				Effect.fail(CliRuntime.reported(CliError.UserError.make({ cause: "x" }), 3)),
 			);
 			const { double, err } = capturing();
 			const exit = yield* CliRuntime.main(Command.runWith(marked, { version: "1.0.0" })([]), {

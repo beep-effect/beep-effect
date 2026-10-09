@@ -43,10 +43,10 @@ export class YamlLintDiagnostic extends Schema.Class<YamlLintDiagnostic>("YamlLi
 	rule: Schema.String,
 	severity: YamlLintSeverity,
 	message: Schema.String,
-	offset: Schema.Number,
-	length: Schema.Number,
-	line: Schema.Number,
-	character: Schema.Number,
+	offset: Schema.Finite,
+	length: Schema.Finite,
+	line: Schema.Finite,
+	character: Schema.Finite,
 	fix: Schema.optionalKey(YamlEdit),
 }) {}
 
@@ -108,11 +108,11 @@ export interface LintContext {
  */
 export class StyleVote extends Schema.TaggedClass<StyleVote>()("StyleVote", {
 	dimension: Schema.String,
-	value: Schema.Union([Schema.String, Schema.Number, Schema.Boolean]),
-	offset: Schema.Number,
-	length: Schema.Number,
-	line: Schema.Number,
-	character: Schema.Number,
+	value: Schema.Union([Schema.String, Schema.Finite, Schema.Boolean]),
+	offset: Schema.Finite,
+	length: Schema.Finite,
+	line: Schema.Finite,
+	character: Schema.Finite,
 }) {}
 
 /**
@@ -130,7 +130,7 @@ export class StyleVote extends Schema.TaggedClass<StyleVote>()("StyleVote", {
  */
 export class StyleFloor extends Schema.TaggedClass<StyleFloor>()("StyleFloor", {
 	dimension: Schema.String,
-	value: Schema.Number,
+	value: Schema.Finite,
 }) {}
 
 /**

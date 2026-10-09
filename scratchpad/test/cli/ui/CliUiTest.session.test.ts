@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { Cause, Console, Effect, Exit, Fiber } from "effect";
 import { NotInteractive } from "../../../effected/cli/index.ts";

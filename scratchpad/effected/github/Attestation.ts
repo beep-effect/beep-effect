@@ -89,7 +89,7 @@ export interface AttestationShape {
  *
  * @public
  */
-export class Attestation extends Context.Service<Attestation, AttestationShape>()("@effected/github/Attestation") {
+export class Attestation extends Context.Service<Attestation, AttestationShape>()("@beep/scratchpad/effected/github/Attestation") {
 	/** The live service, built over a `GitHubClient`. */
 	static readonly layer: Layer.Layer<Attestation, never, GitHubClient> = Layer.effect(
 		this,

@@ -1,3 +1,4 @@
+// @effect-diagnostics nodeBuiltinImport:skip-file
 // Every source file is erasable TypeScript: Node's strip-only mode runs it by removing the types alone. A parameter
 // property, an enum or a runtime namespace needs code generated for it, and Node refuses the file.
 import { readFileSync, readdirSync } from "node:fs";

@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file
 // The case-insensitive volume contract. It runs against the host filesystem
 // first (integration/case-insensitive.int.test.ts, on a case-folding volume
 // such as default APFS) so every expectation below is observed behaviour, not

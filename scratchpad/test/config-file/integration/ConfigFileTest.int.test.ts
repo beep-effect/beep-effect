@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file nodeBuiltinImport:skip-file
 import * as nodeFs from "node:fs/promises";
 import * as nodePath from "node:path";
 import { NodeFileSystem } from "@effect/platform-node";

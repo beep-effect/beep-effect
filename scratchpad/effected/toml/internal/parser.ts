@@ -44,6 +44,7 @@ import {
 	scanWhitespace,
 	skipBom,
 } from "./scanner.ts";
+import * as Schema from "effect/Schema";
 
 const LF = 0x0a;
 const CR = 0x0d;
@@ -77,14 +78,14 @@ const parseSimpleKey = (source: string, pos: number): Parsed<TomlKey> => {
 	if (code === QUOTE) {
 		const scanned = scanBasicString(source, pos);
 		return {
-			node: new TomlKey({ value: scanned.value, kind: "basic", offset: pos, length: scanned.end - pos }),
+			node: TomlKey.make({ value: scanned.value, kind: "basic", offset: pos, length: scanned.end - pos }),
 			end: scanned.end,
 		};
 	}
 	if (code === APOSTROPHE) {
 		const scanned = scanLiteralString(source, pos);
 		return {
-			node: new TomlKey({ value: scanned.value, kind: "literal", offset: pos, length: scanned.end - pos }),
+			node: TomlKey.make({ value: scanned.value, kind: "literal", offset: pos, length: scanned.end - pos }),
 			end: scanned.end,
 		};
 	}
@@ -92,7 +93,7 @@ const parseSimpleKey = (source: string, pos: number): Parsed<TomlKey> => {
 	if (bare.end === pos) {
 		return raise("ExpectedKey", "expected a key", pos, 1);
 	}
-	return { node: new TomlKey({ value: bare.value, kind: "bare", offset: pos, length: bare.end - pos }), end: bare.end };
+	return { node: TomlKey.make({ value: bare.value, kind: "bare", offset: pos, length: bare.end - pos }), end: bare.end };
 };
 
 /** A dotted key path: `simple-key ( ws "." ws simple-key )*`. */
@@ -192,7 +193,7 @@ const parseArray = (source: string, openPos: number, depth: number): Parsed<Toml
 		}
 		raise("UnterminatedArray", "expected , or ] in array", i, 1);
 	}
-	return { node: new TomlArray({ items, offset: openPos, length: i - openPos }), end: i };
+	return { node: TomlArray.make({ items, offset: openPos, length: i - openPos }), end: i };
 };
 
 /**
@@ -226,7 +227,7 @@ const parseInlineTable = (source: string, openPos: number, depth: number): Parse
 		i = scanWhitespace(source, i + 1);
 		const value = parseValue(source, i, depth);
 		entries.push(
-			new TomlInlineEntry({
+			TomlInlineEntry.make({
 				keyPath: keyPath.node,
 				value: value.node,
 				offset: entryStart,
@@ -248,7 +249,7 @@ const parseInlineTable = (source: string, openPos: number, depth: number): Parse
 		}
 		raise("UnterminatedInlineTable", "expected , or } in inline table", i, 1);
 	}
-	return { node: new TomlInlineTable({ entries, offset: openPos, length: i - openPos }), end: i };
+	return { node: TomlInlineTable.make({ entries, offset: openPos, length: i - openPos }), end: i };
 };
 
 /** Wrap a classified scalar token into its value node. */
@@ -260,24 +261,24 @@ const scalarNode = (source: string, pos: number): Parsed<TomlValueNode> => {
 	const scalar = classifyValueToken(token.value, pos);
 	const length = token.end - pos;
 	if (typeof scalar === "boolean") {
-		return { node: new TomlBoolean({ value: scalar, offset: pos, length }), end: token.end };
+		return { node: TomlBoolean.make({ value: scalar, offset: pos, length }), end: token.end };
 	}
 	if (typeof scalar === "bigint") {
-		return { node: new TomlInteger({ value: scalar, offset: pos, length }), end: token.end };
+		return { node: TomlInteger.make({ value: scalar, offset: pos, length }), end: token.end };
 	}
 	if (typeof scalar === "number") {
 		const node = isFloatToken(token.value)
-			? new TomlFloat({ value: scalar, offset: pos, length })
-			: new TomlInteger({ value: scalar, offset: pos, length });
+			? TomlFloat.make({ value: scalar, offset: pos, length })
+			: TomlInteger.make({ value: scalar, offset: pos, length });
 		return { node, end: token.end };
 	}
 	if (
-		scalar instanceof TomlOffsetDateTime ||
-		scalar instanceof TomlLocalDateTime ||
-		scalar instanceof TomlLocalDate ||
-		scalar instanceof TomlLocalTime
+		Schema.is(TomlOffsetDateTime)(scalar) ||
+		Schema.is(TomlLocalDateTime)(scalar) ||
+		Schema.is(TomlLocalDate)(scalar) ||
+		Schema.is(TomlLocalTime)(scalar)
 	) {
-		return { node: new TomlDateTimeLiteral({ value: scalar, offset: pos, length }), end: token.end };
+		return { node: TomlDateTimeLiteral.make({ value: scalar, offset: pos, length }), end: token.end };
 	}
 	// classifyValueToken never returns a plain string; unreachable backstop.
 	return raise("InvalidValue", `${String(scalar)} is not a valid TOML value`, pos, length);
@@ -302,7 +303,7 @@ const parseValue = (source: string, pos: number, depth: number): Parsed<TomlValu
 		if (source.charCodeAt(pos + 1) === QUOTE && source.charCodeAt(pos + 2) === QUOTE) {
 			const scanned = scanMultilineBasicString(source, pos);
 			return {
-				node: new TomlString({
+				node: TomlString.make({
 					value: scanned.value,
 					style: "multiline-basic",
 					offset: pos,
@@ -313,7 +314,7 @@ const parseValue = (source: string, pos: number, depth: number): Parsed<TomlValu
 		}
 		const scanned = scanBasicString(source, pos);
 		return {
-			node: new TomlString({ value: scanned.value, style: "basic", offset: pos, length: scanned.end - pos }),
+			node: TomlString.make({ value: scanned.value, style: "basic", offset: pos, length: scanned.end - pos }),
 			end: scanned.end,
 		};
 	}
@@ -321,7 +322,7 @@ const parseValue = (source: string, pos: number, depth: number): Parsed<TomlValu
 		if (source.charCodeAt(pos + 1) === APOSTROPHE && source.charCodeAt(pos + 2) === APOSTROPHE) {
 			const scanned = scanMultilineLiteralString(source, pos);
 			return {
-				node: new TomlString({
+				node: TomlString.make({
 					value: scanned.value,
 					style: "multiline-literal",
 					offset: pos,
@@ -332,7 +333,7 @@ const parseValue = (source: string, pos: number, depth: number): Parsed<TomlValu
 		}
 		const scanned = scanLiteralString(source, pos);
 		return {
-			node: new TomlString({ value: scanned.value, style: "literal", offset: pos, length: scanned.end - pos }),
+			node: TomlString.make({ value: scanned.value, style: "literal", offset: pos, length: scanned.end - pos }),
 			end: scanned.end,
 		};
 	}
@@ -356,7 +357,7 @@ const parseKeyValueExpression = (source: string, lineStart: number, keyStart: nu
 	const value = parseValue(source, valueStart, 0);
 	const lineEnd = parseLineEnd(source, value.end);
 	return {
-		node: new TomlKeyValue({
+		node: TomlKeyValue.make({
 			keyPath: keyPath.node,
 			value: value.node,
 			...(lineEnd.comment !== undefined ? { comment: lineEnd.comment } : {}),
@@ -395,7 +396,7 @@ const parseHeaderExpression = (
 		offset: lineStart,
 		length: lineEnd.end - lineStart,
 	};
-	return { node: isArrayTable ? new TomlArrayTableHeader(fields) : new TomlTableHeader(fields), end: lineEnd.end };
+	return { node: isArrayTable ? TomlArrayTableHeader.make(fields) : TomlTableHeader.make(fields), end: lineEnd.end };
 };
 
 /**
@@ -411,7 +412,7 @@ export const parseExpressions = (source: string): ReadonlyArray<TomlExpression> 
 	const flushTrivia = (end: number): void => {
 		if (triviaStart !== -1) {
 			expressions.push(
-				new TomlTrivia({ text: source.slice(triviaStart, end), offset: triviaStart, length: end - triviaStart }),
+				TomlTrivia.make({ text: source.slice(triviaStart, end), offset: triviaStart, length: end - triviaStart }),
 			);
 			triviaStart = -1;
 		}

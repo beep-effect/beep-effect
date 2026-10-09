@@ -1,3 +1,4 @@
+// @effect-diagnostics nodeBuiltinImport:skip-file
 // The smol-toml differential oracle: property tests cross-checking the engine
 // against the reference implementation (smol-toml 1.7.0, exact-pinned), plus
 // a corpus-wide differential over every toml-test valid file. This is the
@@ -123,7 +124,7 @@ const canon = (value: unknown): unknown => {
 		default:
 			break;
 	}
-	if (value instanceof TomlOffsetDateTime) {
+	if (Schema.is(TomlOffsetDateTime)(value)) {
 		return {
 			$dt: "datetime",
 			year: value.year,
@@ -136,7 +137,7 @@ const canon = (value: unknown): unknown => {
 			offset: value.offsetMinutes === 0 ? 0 : value.offsetMinutes,
 		};
 	}
-	if (value instanceof TomlLocalDateTime) {
+	if (Schema.is(TomlLocalDateTime)(value)) {
 		return {
 			$dt: "datetime-local",
 			year: value.year,
@@ -148,10 +149,10 @@ const canon = (value: unknown): unknown => {
 			ms: Math.floor(value.nanosecond / 1_000_000),
 		};
 	}
-	if (value instanceof TomlLocalDate) {
+	if (Schema.is(TomlLocalDate)(value)) {
 		return { $dt: "date-local", year: value.year, month: value.month, day: value.day };
 	}
-	if (value instanceof TomlLocalTime) {
+	if (Schema.is(TomlLocalTime)(value)) {
 		return {
 			$dt: "time-local",
 			hour: value.hour,

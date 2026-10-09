@@ -1,3 +1,4 @@
+// @effect-diagnostics nodeBuiltinImport:skip-file
 // `funding` — the manifest field a consumer reaches for when it wants to put a
 // sponsor link beside a maintainer's name.
 //

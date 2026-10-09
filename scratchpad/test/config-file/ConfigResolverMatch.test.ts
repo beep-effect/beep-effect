@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
 import type { FileSystem } from "effect";
@@ -103,7 +104,7 @@ describe("ConfigResolver match reporting", () => {
 				subpaths: ["."],
 				cwd: "/repo/pkg/src",
 			});
-			const match = yield* resolver.resolveMatch ?? Effect.succeed(Option.none());
+			const match = yield* resolver.resolveMatch ?? Effect.succeedNone;
 			assert.deepStrictEqual(
 				match,
 				Option.some({ path: "/repo/app.toml", dir: "/repo", filename: "app.toml", subpath: "." }),
@@ -114,7 +115,7 @@ describe("ConfigResolver match reporting", () => {
 	it.effect("staticDir reports its dir and filename", () =>
 		Effect.gen(function* () {
 			const resolver = ConfigResolver.staticDir({ dir: "/etc/app", filename: "config.json" });
-			const match = yield* resolver.resolveMatch ?? Effect.succeed(Option.none());
+			const match = yield* resolver.resolveMatch ?? Effect.succeedNone;
 			assert.deepStrictEqual(
 				match,
 				Option.some({ path: "/etc/app/config.json", dir: "/etc/app", filename: "config.json" }),
@@ -129,7 +130,7 @@ describe("ConfigResolver match reporting", () => {
 				subpaths: [".config"],
 				cwd: "/repo/pkg",
 			});
-			const match = yield* resolver.resolveMatch ?? Effect.succeed(Option.none());
+			const match = yield* resolver.resolveMatch ?? Effect.succeedNone;
 			assert.deepStrictEqual(
 				match,
 				Option.some({
@@ -145,7 +146,7 @@ describe("ConfigResolver match reporting", () => {
 	it.effect("explicitPath reports the path alone — it has no anchor", () =>
 		Effect.gen(function* () {
 			const resolver = ConfigResolver.explicitPath("/somewhere/else.json");
-			const match = yield* resolver.resolveMatch ?? Effect.succeed(Option.none());
+			const match = yield* resolver.resolveMatch ?? Effect.succeedNone;
 			assert.deepStrictEqual(match, Option.some({ path: "/somewhere/else.json" }));
 		}).pipe(Effect.provide(platform({ "/somewhere/else.json": "" }))),
 	);
@@ -185,7 +186,7 @@ describe("ConfigResolver match reporting", () => {
 					schema: Doc,
 					codec: JsonCodec,
 					strategy: MergeStrategy.firstMatch<typeof Doc.Type>(),
-					resolvers: [{ name: "hand-rolled", resolve: Effect.succeed(Option.some("/repo/app.json")) }],
+					resolvers: [{ name: "hand-rolled", resolve: Effect.succeedSome("/repo/app.json") }],
 				}).pipe(Layer.provide(platform({ "/repo/app.json": `{"from":"repo"}` }))),
 			),
 		),
@@ -271,7 +272,7 @@ describe("ConfigResolver probe reporting", () => {
 		Effect.gen(function* () {
 			const resolver = ConfigResolver.upwardWalk({ filename: "app.toml", cwd: "/repo", stopAt: "/repo" });
 			const probe = yield* resolver.resolveProbe ?? Effect.succeed({ match: Option.none(), probed: [] });
-			const match = yield* resolver.resolveMatch ?? Effect.succeed(Option.none());
+			const match = yield* resolver.resolveMatch ?? Effect.succeedNone;
 			const resolved = yield* resolver.resolve;
 			assert.deepStrictEqual(match, probe.match);
 			assert.deepStrictEqual(

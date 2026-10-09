@@ -75,7 +75,7 @@ const resolve = (input: AudienceFlagInput): Effect.Effect<AudienceShape, CliErro
 	// The counting rule is shared with `scanAudience`, which reads argv before parsing, so the two cannot drift.
 	const { given: named, conflict } = tallyAudience(input);
 	if (conflict) {
-		return Effect.fail(new CliError.UserError({ cause: new Error(CONFLICT), userMessage: CONFLICT }));
+		return Effect.fail(CliError.UserError.make({ cause: new Error(CONFLICT), userMessage: CONFLICT }));
 	}
 	const [kind] = named;
 	// No flag: the ambient audience, the override variable or detection, is read and provided back unchanged.

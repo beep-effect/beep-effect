@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file
 // Shared by the CliUi.live tests: a small event model, its fold and frame, and the fake-terminal runner.
 import type { Cause, PubSub, Stream } from "effect";
 import { Console, Effect, Option, Queue, Schedule } from "effect";

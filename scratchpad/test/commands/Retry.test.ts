@@ -65,7 +65,7 @@ describe("Retry.transient", () => {
 			const attempts = yield* Ref.make(0);
 			const flaky = Effect.gen(function* () {
 				const n = yield* Ref.updateAndGet(attempts, (c) => c + 1);
-				if (n < 3) return yield* Effect.fail(failedWith("npm error ECONNRESET"));
+				if (n < 3) return yield* failedWith("npm error ECONNRESET");
 				return "published";
 			});
 			const fiber = yield* Effect.forkChild(Effect.retry(flaky, Retry.transient()));
@@ -80,7 +80,7 @@ describe("Retry.transient", () => {
 			const attempts = yield* Ref.make(0);
 			const doomed = Effect.gen(function* () {
 				yield* Ref.update(attempts, (c) => c + 1);
-				return yield* Effect.fail(failedWith("EPUBLISHCONFLICT"));
+				return yield* failedWith("EPUBLISHCONFLICT");
 			});
 			const fiber = yield* Effect.forkChild(Effect.flip(Effect.retry(doomed, Retry.transient())));
 			yield* TestClock.adjust("1 minute");
@@ -94,7 +94,7 @@ describe("Retry.transient", () => {
 			const attempts = yield* Ref.make(0);
 			const alwaysTransient = Effect.gen(function* () {
 				yield* Ref.update(attempts, (c) => c + 1);
-				return yield* Effect.fail(failedWith("ECONNRESET"));
+				return yield* failedWith("ECONNRESET");
 			});
 			const fiber = yield* Effect.forkChild(Effect.flip(Effect.retry(alwaysTransient, Retry.transient({ times: 2 }))));
 			yield* TestClock.adjust("1 minute");

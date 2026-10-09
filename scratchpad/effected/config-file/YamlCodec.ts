@@ -20,10 +20,10 @@ export const YamlCodec: ConfigCodec = {
 	name: "yaml",
 	parse: (raw) =>
 		Yaml.parse(raw).pipe(
-			Effect.mapError((cause) => new ConfigCodecError({ codec: "yaml", operation: "parse", cause })),
+			Effect.mapError((cause) => ConfigCodecError.make({ codec: "yaml", operation: "parse", cause })),
 		),
 	stringify: (value) =>
 		Yaml.stringify(value).pipe(
-			Effect.mapError((cause) => new ConfigCodecError({ codec: "yaml", operation: "stringify", cause })),
+			Effect.mapError((cause) => ConfigCodecError.make({ codec: "yaml", operation: "stringify", cause })),
 		),
 };

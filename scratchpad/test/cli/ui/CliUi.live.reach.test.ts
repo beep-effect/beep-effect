@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file asyncFunction:skip-file
 // What a command with a live view loads, run by run: React and Ink load only when something is drawn with Ink. No
 // static ink or react import here, and none of the view's module: the mocks below record each package's first load,
 // and the fixture counts its own.

@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { ConfigFile, JsonCodec, MergeStrategy } from "../../effected/config-file/index.ts";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";

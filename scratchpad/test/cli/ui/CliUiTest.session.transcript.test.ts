@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { Console, Deferred, Effect, Fiber, PubSub } from "effect";
 import { CliUi, Select } from "../../../effected/cli/ui.ts";

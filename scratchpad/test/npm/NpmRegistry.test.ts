@@ -1,6 +1,7 @@
+// @effect-diagnostics strictEffectProvide:skip-file nodeBuiltinImport:skip-file
 import { readFileSync } from "node:fs";
 import { assert, describe, it } from "@effect/vitest";
-import { DateTime, Effect, Exit, Layer, Option, Redacted } from "effect";
+import { DateTime, Effect, Exit, Layer, Option, Redacted, Schema } from "effect";
 import { HttpClient, HttpClientError, HttpClientResponse } from "effect/http";
 import { NpmRegistry, PublishedVersion, RegistryReadError } from "../../effected/npm/NpmRegistry.ts";
 
@@ -104,7 +105,7 @@ describe("NpmRegistry.version", () => {
 				),
 			);
 			assert.instanceOf(error, RegistryReadError);
-			if (error instanceof RegistryReadError) {
+			if (Schema.is(RegistryReadError)(error)) {
 				assert.strictEqual(error.kind, "status");
 				assert.strictEqual(error.status, 500);
 				assert.strictEqual(error.package, "pkg");
@@ -121,7 +122,7 @@ describe("NpmRegistry.version", () => {
 					client,
 				),
 			);
-			if (error instanceof RegistryReadError) {
+			if (Schema.is(RegistryReadError)(error)) {
 				assert.strictEqual(error.kind, "transport");
 				assert.strictEqual(error.status, undefined);
 			}
@@ -137,7 +138,7 @@ describe("NpmRegistry.version", () => {
 					client,
 				),
 			);
-			if (error instanceof RegistryReadError) {
+			if (Schema.is(RegistryReadError)(error)) {
 				assert.strictEqual(error.kind, "decode");
 			}
 		}),
@@ -348,7 +349,7 @@ describe("NpmRegistry.version — registries without the per-version endpoint", 
 				),
 			);
 			assert.instanceOf(error, RegistryReadError);
-			if (error instanceof RegistryReadError) {
+			if (Schema.is(RegistryReadError)(error)) {
 				assert.strictEqual(error.kind, "decode");
 			}
 		}),

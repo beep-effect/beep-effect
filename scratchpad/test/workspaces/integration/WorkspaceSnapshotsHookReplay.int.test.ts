@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file nodeBuiltinImport:skip-file processEnv:skip-file processEnvInEffect:skip-file
 // `WorkspaceSnapshots.at(ref)` through the REAL composites, over a real git
 // repository: two commits that declare two different versions of one config
 // dependency, with the older version installed under `.pnpm-config` and the

@@ -596,7 +596,7 @@ export const classifyValueToken = (token: string, offset: number): ScalarValue =
 		validateDate(year, month, day, offset, length);
 		validateTime(hour, minute, second, offset, length);
 		const offsetMinutes = decodeOffsetMinutes(offsetText, offset, length);
-		return new TomlOffsetDateTime({
+		return TomlOffsetDateTime.make({
 			year,
 			month,
 			day,
@@ -618,7 +618,7 @@ export const classifyValueToken = (token: string, offset: number): ScalarValue =
 		const second = s === undefined ? 0 : Number(s);
 		validateDate(year, month, day, offset, length);
 		validateTime(hour, minute, second, offset, length);
-		return new TomlLocalDateTime({ year, month, day, hour, minute, second, nanosecond: decodeNanosecond(fraction) });
+		return TomlLocalDateTime.make({ year, month, day, hour, minute, second, nanosecond: decodeNanosecond(fraction) });
 	}
 	match = LOCAL_DATE.exec(token);
 	if (match !== null) {
@@ -627,7 +627,7 @@ export const classifyValueToken = (token: string, offset: number): ScalarValue =
 		const month = Number(mo);
 		const day = Number(d);
 		validateDate(year, month, day, offset, length);
-		return new TomlLocalDate({ year, month, day });
+		return TomlLocalDate.make({ year, month, day });
 	}
 	match = LOCAL_TIME.exec(token);
 	if (match !== null) {
@@ -636,7 +636,7 @@ export const classifyValueToken = (token: string, offset: number): ScalarValue =
 		const minute = Number(mi);
 		const second = s === undefined ? 0 : Number(s);
 		validateTime(hour, minute, second, offset, length);
-		return new TomlLocalTime({ hour, minute, second, nanosecond: decodeNanosecond(fraction) });
+		return TomlLocalTime.make({ hour, minute, second, nanosecond: decodeNanosecond(fraction) });
 	}
 	if (INTEGER_DEC.test(token)) {
 		return decodeDecimalInteger(token, offset);

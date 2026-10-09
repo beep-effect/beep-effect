@@ -135,9 +135,9 @@ export class PlacedSection extends Schema.Class<PlacedSection>("PlacedSection")(
 	/** The section, with line endings already normalized to `\n`. */
 	section: Section,
 	/** Offset of the begin marker's first character. */
-	start: Schema.Number,
+	start: Schema.Finite,
 	/** Offset one past the end marker's last character. */
-	end: Schema.Number,
+	end: Schema.Finite,
 	/** 1-based line of the begin marker. */
-	line: Schema.Number,
+	line: Schema.Finite,
 }) {}

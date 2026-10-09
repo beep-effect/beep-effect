@@ -245,7 +245,7 @@ export class LenientManifest extends Schema.Class<LenientManifest>("LenientManif
 	static decodeResult(input: unknown): Result.Result<LenientManifest, PackageDecodeError> {
 		const exit = decodeRecord(input);
 		if (Exit.isFailure(exit)) {
-			return Result.fail(new PackageDecodeError({ cause: Cause.squash(exit.cause) }));
+			return Result.fail(PackageDecodeError.make({ cause: Cause.squash(exit.cause) }));
 		}
 		return Result.succeed(sift(exit.value));
 	}
@@ -278,10 +278,10 @@ export class LenientManifest extends Schema.Class<LenientManifest>("LenientManif
 		try {
 			raw = JSON.parse(text) as unknown;
 		} catch (cause) {
-			return Result.fail(new PackageJsonSyntaxError({ reason: "invalid-json", cause }));
+			return Result.fail(PackageJsonSyntaxError.make({ reason: "invalid-json", cause }));
 		}
 		if (!isPlainRecord(raw)) {
-			return Result.fail(new PackageJsonSyntaxError({ reason: "not-an-object" }));
+			return Result.fail(PackageJsonSyntaxError.make({ reason: "not-an-object" }));
 		}
 		return Result.succeed(sift(raw));
 	}

@@ -119,13 +119,13 @@ export class WorkspaceResolver extends Context.Service<
 	{
 		readonly versionOf: (packageName: string) => Effect.Effect<Option.Option<string>, DependencyResolutionError>;
 	}
->()("@effected/npm/WorkspaceResolver") {
+>()("@beep/scratchpad/effected/npm/WorkspaceResolver") {
 	/**
 	 * No-op default: `versionOf` always succeeds with `Option.none()`, never
 	 * consulting an actual workspace. A pure `Layer.succeed`, bound to a
 	 * const so it memoizes by reference.
 	 */
 	static readonly noop: Layer.Layer<WorkspaceResolver> = Layer.succeed(WorkspaceResolver, {
-		versionOf: () => Effect.succeed(Option.none()),
+		versionOf: () => Effect.succeedNone,
 	});
 }

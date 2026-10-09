@@ -118,7 +118,7 @@ export class NodeRef extends Schema.Class<NodeRef>("NodeRef")({
 	static toCheckedResult(id: string): Result.Result<NodeRef, InvalidNodeIdError> {
 		return NodeRef.isValidId(id)
 			? Result.succeed(NodeRef.make({ "@id": id }))
-			: Result.fail(new InvalidNodeIdError({ input: id }));
+			: Result.fail(InvalidNodeIdError.make({ input: id }));
 	}
 
 	/**

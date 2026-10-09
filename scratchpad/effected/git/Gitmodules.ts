@@ -162,7 +162,7 @@ export class Gitmodules extends Schema.Class<Gitmodules>("Gitmodules")({
 		for (const { name, fields } of byName.values()) {
 			const raw = (key: string): string | null | undefined => fields.get(key);
 			const invalid = (field: string, value: string | null): GitmodulesDecodeError =>
-				new GitmodulesDecodeError({
+				GitmodulesDecodeError.make({
 					name,
 					field,
 					...(value !== null ? { value } : {}),
@@ -170,11 +170,11 @@ export class Gitmodules extends Schema.Class<Gitmodules>("Gitmodules")({
 				});
 			const path = raw("path");
 			if (path === undefined || path === null) {
-				return Result.fail(new GitmodulesDecodeError({ name, field: "path", reason: "missingPath" }));
+				return Result.fail(GitmodulesDecodeError.make({ name, field: "path", reason: "missingPath" }));
 			}
 			const url = raw("url");
 			if (url === undefined || url === null) {
-				return Result.fail(new GitmodulesDecodeError({ name, field: "url", reason: "missingUrl" }));
+				return Result.fail(GitmodulesDecodeError.make({ name, field: "url", reason: "missingUrl" }));
 			}
 			const branch = raw("branch");
 			if (branch === null) return Result.fail(invalid("branch", branch));

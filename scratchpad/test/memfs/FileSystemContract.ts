@@ -956,7 +956,7 @@ export const suite = (name: string, fsLayer: Layer.Layer<FileSystem.FileSystem, 
 						return assert.fail("Expected the scoped operation to fail");
 					}
 					if (result.failure._tag === "PlatformError") {
-						return yield* Effect.fail(result.failure);
+						return yield* result.failure;
 					}
 					const directory = result.failure.directory;
 

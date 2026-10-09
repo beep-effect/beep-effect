@@ -134,7 +134,7 @@ export interface GitCommitShape {
  *
  * @public
  */
-export class GitCommit extends Context.Service<GitCommit, GitCommitShape>()("@effected/github/GitCommit") {
+export class GitCommit extends Context.Service<GitCommit, GitCommitShape>()("@beep/scratchpad/effected/github/GitCommit") {
 	/** The live service, built over a `GitHubClient`. */
 	static readonly layer: Layer.Layer<GitCommit, never, GitHubClient> = Layer.effect(
 		this,

@@ -1,9 +1,10 @@
+// @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { IdentityToken, IdentityTokenError } from "../../effected/sbom/index.ts";
 import { Cause, Effect, Equal, Exit, Layer, Redacted } from "effect";
 import { ActionsIdentityToken, OidcClaims, OidcTokenError, OidcTokenIssuer } from "../../effected/github-actions/index.ts";
 
-const CLAIMS = new OidcClaims({
+const CLAIMS = OidcClaims.make({
 	iss: "https://token.actions.githubusercontent.com",
 	ref: "refs/heads/main",
 	sha: "abc123",
@@ -72,7 +73,7 @@ describe("ActionsIdentityToken", () => {
 				assert.strictEqual((error.cause as OidcTokenError).reason, "unavailable");
 			}),
 			OidcTokenIssuer.layerTest({
-				token: () => Effect.fail(new OidcTokenError({ reason: "unavailable", detail: "ACTIONS_ID_TOKEN_REQUEST_URL" })),
+				token: () => Effect.fail(OidcTokenError.make({ reason: "unavailable", detail: "ACTIONS_ID_TOKEN_REQUEST_URL" })),
 			}),
 		),
 	);

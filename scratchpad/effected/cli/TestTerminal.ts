@@ -89,7 +89,7 @@ export class TestTerminal {
 				}),
 				readLine: Effect.suspend(() => {
 					lines++;
-					return Effect.fail(new Terminal.QuitError({}));
+					return Effect.fail(Terminal.QuitError.make({}));
 				}),
 				display: (text) =>
 					Effect.sync(() => {

@@ -1,3 +1,4 @@
+// @effect-diagnostics asyncFunction:skip-file
 /**
  * A scripted `fetch` for driving the REAL request path.
  *

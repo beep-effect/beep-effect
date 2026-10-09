@@ -95,7 +95,7 @@ export class PackageManifest extends Schema.Class<PackageManifest>("PackageManif
 	 */
 	static readonly decode = Effect.fn("PackageManifest.decode")(function* (input: unknown) {
 		return yield* Schema.decodeUnknownEffect(PackageManifest.schema)(input).pipe(
-			Effect.catchTag("SchemaError", (cause) => new PackageDecodeError({ cause })),
+			Effect.catchTag("SchemaError", (cause) => PackageDecodeError.make({ cause })),
 		);
 	});
 

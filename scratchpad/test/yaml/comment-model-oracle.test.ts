@@ -23,7 +23,7 @@
 // of src/internal/composer/comments.ts.
 
 import { assert, describe, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import type { YamlNode } from "../../effected/yaml/index.ts";
 import { YamlAlias, YamlDocument, YamlMap, YamlScalar, YamlSeq } from "../../effected/yaml/index.ts";
 
@@ -274,12 +274,12 @@ describe("node-level comment model — oracle contract (yaml@2.9.0)", () => {
 					const found: YamlScalar[] = [];
 					const visit = (node: YamlNode | null): void => {
 						if (node === null) return;
-						if (node instanceof YamlScalar) {
+						if (Schema.is(YamlScalar)(node)) {
 							if (node.comment !== undefined) found.push(node);
 							return;
 						}
-						if (node instanceof YamlSeq) for (const item of node.items) visit(item);
-						if (node instanceof YamlMap) {
+						if (Schema.is(YamlSeq)(node)) for (const item of node.items) visit(item);
+						if (Schema.is(YamlMap)(node)) {
 							for (const pair of node.items) {
 								visit(pair.key);
 								visit(pair.value);

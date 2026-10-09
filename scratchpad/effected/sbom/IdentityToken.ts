@@ -77,7 +77,7 @@ const TEST_TOKEN = "test-identity-token";
  * @public
  */
 export class IdentityToken extends Context.Service<IdentityToken, IdentityTokenShape>()(
-	"@effected/sbom/IdentityToken",
+	"@beep/scratchpad/effected/sbom/IdentityToken",
 ) {
 	/**
 	 * A layer answering with a token the caller already holds.

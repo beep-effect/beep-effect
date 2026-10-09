@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file
 // `stopAt` across every root-resolving service, and through the composites.
 //
 // The layout is the nested checkout: a plain single-package repository checked

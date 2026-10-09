@@ -1,3 +1,4 @@
+// @effect-diagnostics nodeBuiltinImport:skip-file
 // Differential oracle for the sync port: the same tree on a real tmpdir and in
 // memfs, compared call for call. node is the reference; if they disagree the
 // port is wrong, never the expectation.

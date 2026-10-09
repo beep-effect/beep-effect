@@ -1,3 +1,4 @@
+// @effect-diagnostics nodeBuiltinImport:skip-file
 import * as nodePath from "node:path";
 import { assert, describe, it, layer } from "@effect/vitest";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";

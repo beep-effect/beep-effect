@@ -129,9 +129,7 @@ const collect = (
 
 		// Depth guard (hardening): refuse to descend past MAX_EXTENDS_DEPTH levels.
 		if (chain.length >= MAX_EXTENDS_DEPTH) {
-			return yield* Effect.fail(
-				TsconfigExtendsError.make({ path: abs, target: abs, reason: "depth", chain: [...chain, abs] }),
-			);
+			return yield* TsconfigExtendsError.make({ path: abs, target: abs, reason: "depth", chain: [...chain, abs] });
 		}
 
 		const doc = yield* loadAbs(abs);
@@ -142,27 +140,21 @@ const collect = (
 		const layers: Array<ConfigLayer> = [];
 		for (const spec of extendsSpecs(absolutized)) {
 			if (spec === "") {
-				return yield* Effect.fail(
-					TsconfigExtendsError.make({ path: abs, target: "", reason: "empty", chain: newChain }),
-				);
+				return yield* TsconfigExtendsError.make({ path: abs, target: "", reason: "empty", chain: newChain });
 			}
 			const target = yield* resolveExtendsTarget(spec, abs);
 			if (Option.isNone(target)) {
-				return yield* Effect.fail(
-					TsconfigExtendsError.make({ path: abs, target: spec, reason: "not-found", chain: newChain }),
-				);
+				return yield* TsconfigExtendsError.make({ path: abs, target: spec, reason: "not-found", chain: newChain });
 			}
 			const normTarget = normalizeSlashes(target.value);
 			// Cycle guard: the target already sits on this branch's stack.
 			if (newChain.includes(normTarget)) {
-				return yield* Effect.fail(
-					TsconfigExtendsError.make({
+				return yield* TsconfigExtendsError.make({
 						path: abs,
 						target: normTarget,
 						reason: "cycle",
 						chain: [...newChain, normTarget],
-					}),
-				);
+					});
 			}
 			// Depth-first: fully flatten this entry's nested chain before the sibling.
 			const subLayers = yield* collect(normTarget, newChain);

@@ -76,7 +76,7 @@ export interface CodeScanningShape {
  *
  * @public
  */
-export class CodeScanning extends Context.Service<CodeScanning, CodeScanningShape>()("@effected/github/CodeScanning") {
+export class CodeScanning extends Context.Service<CodeScanning, CodeScanningShape>()("@beep/scratchpad/effected/github/CodeScanning") {
 	/**
 	 * The live service, built over a `GitHubClient`.
 	 *

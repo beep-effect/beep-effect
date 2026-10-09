@@ -56,7 +56,7 @@ const readBunPackageInfo = (value: unknown): typeof BunPackageInfo.Type | undefi
 };
 
 const BunLockfileRaw = Schema.Struct({
-	lockfileVersion: Schema.Number,
+	lockfileVersion: Schema.Finite,
 	workspaces: Schema.optionalKey(Schema.Record(Schema.String, BunWorkspaceEntry)),
 	packages: Schema.optionalKey(Schema.Record(Schema.String, Schema.Array(Schema.Unknown))),
 	catalog: Schema.optionalKey(Schema.Record(Schema.String, Schema.Unknown)),

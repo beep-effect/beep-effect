@@ -54,7 +54,7 @@ export const documentEnd: YamlRule = {
 		const ended = tail?.kind === "document-end";
 		if (present && !ended && ctx.text.trim() !== "") {
 			return [
-				new YamlLintDiagnostic({
+				YamlLintDiagnostic.make({
 					rule: "document-end",
 					severity: "error",
 					message: 'Missing "..." document end marker',
@@ -76,7 +76,7 @@ export const documentEnd: YamlRule = {
 			// (two characters under CRLF, one under LF).
 			const terminator = ctx.text.startsWith("\r\n", tail.offset + tail.length) ? 2 : 1;
 			return [
-				new YamlLintDiagnostic({
+				YamlLintDiagnostic.make({
 					rule: "document-end",
 					severity: "error",
 					message: 'Forbidden "..." document end marker',

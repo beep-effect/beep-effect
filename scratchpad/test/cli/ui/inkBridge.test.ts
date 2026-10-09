@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import type { ColorLevel } from "../../../effected/env/index.ts";
 import type { Scope } from "effect";

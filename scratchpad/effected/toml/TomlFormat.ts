@@ -132,19 +132,19 @@ interface TaggedEdit {
 
 /** Multi-line string value spans — the bytes formatting must never touch. */
 const collectMultilineSpans = (node: TomlValueNode, out: Array<readonly [number, number]>): void => {
-	if (node instanceof TomlString) {
+	if (Schema.is(TomlString)(node)) {
 		if (node.style === "multiline-basic" || node.style === "multiline-literal") {
 			out.push([node.offset, node.offset + node.length]);
 		}
 		return;
 	}
-	if (node instanceof TomlArray) {
+	if (Schema.is(TomlArray)(node)) {
 		for (const item of node.items) {
 			collectMultilineSpans(item, out);
 		}
 		return;
 	}
-	if (node instanceof TomlInlineTable) {
+	if (Schema.is(TomlInlineTable)(node)) {
 		for (const entry of node.entries) {
 			collectMultilineSpans(entry.value, out);
 		}
@@ -293,7 +293,7 @@ const normalizeNewlines = (
 const headerContentEnd = (source: string, expr: TomlTableHeader | TomlArrayTableHeader): number => {
 	const lastKey = expr.keyPath[expr.keyPath.length - 1];
 	const bracket = scanWs(source, lastKey.offset + lastKey.length, expr.offset + expr.length);
-	return bracket + (expr instanceof TomlArrayTableHeader ? 2 : 1);
+	return bracket + (Schema.is(TomlArrayTableHeader)(expr) ? 2 : 1);
 };
 
 /** All six format rules over the expression list; `[]` on malformed input (never corrupt it). */
@@ -308,9 +308,9 @@ const computeFormatEdits = (source: string, options: TomlFormattingOptions | und
 	const target = options?.newline;
 	for (const expr of expressions) {
 		let protectedSpans: ReadonlyArray<readonly [number, number]> = [];
-		if (expr instanceof TomlTrivia) {
+		if (Schema.is(TomlTrivia)(expr)) {
 			formatTrivia(source, emit, expr);
-		} else if (expr instanceof TomlKeyValue) {
+		} else if (Schema.is(TomlKeyValue)(expr)) {
 			formatLeading(source, emit, expr);
 			const lastKey = expr.keyPath[expr.keyPath.length - 1];
 			const keyEnd = lastKey.offset + lastKey.length;
@@ -402,9 +402,9 @@ const buildSemanticIndex = (
 ): { readonly root: ResTable; readonly sections: ReadonlyArray<Section> } => {
 	const sections: Array<Section> = [{ header: undefined, insertAfter: undefined }];
 	for (const expr of expressions) {
-		if (expr instanceof TomlTableHeader || expr instanceof TomlArrayTableHeader) {
+		if (Schema.is(TomlTableHeader)(expr) || Schema.is(TomlArrayTableHeader)(expr)) {
 			sections.push({ header: expr, insertAfter: expr.offset + expr.length });
-		} else if (!(expr instanceof TomlTrivia)) {
+		} else if (!(Schema.is(TomlTrivia)(expr))) {
 			sections[sections.length - 1].insertAfter = expr.offset + expr.length;
 		}
 	}
@@ -523,7 +523,7 @@ type Cursor =
 
 /** Wrap a CST value as a cursor; inline tables open as an entry scope (dotted keys included). */
 const cstCursor = (node: TomlValueNode, del: DeleteTarget): Cursor =>
-	node instanceof TomlInlineTable
+	Schema.is(TomlInlineTable)(node)
 		? { t: "inline", table: node, candidates: node.entries.map((entry, index) => ({ entry, index })), depth: 0 }
 		: { t: "cst", node, del };
 
@@ -579,7 +579,7 @@ const step = (cur: Cursor, segment: TomlSegment): Cursor => {
 		return { t: "inline", table: cur.table, candidates: matches, depth: cur.depth + 1 };
 	}
 	const node = cur.node;
-	if (node instanceof TomlArray) {
+	if (Schema.is(TomlArray)(node)) {
 		const idx = requireIndex(segment, "an array", node.offset, node.length);
 		if (idx >= node.items.length) {
 			return failResolve("DottedKeyConflict", `array index ${idx} is out of bounds`, node.offset, node.length);
@@ -721,7 +721,7 @@ const terminal = (cur: Cursor, segment: TomlSegment, value: unknown, ctx: Modify
 		return [{ offset: full.entry.value.offset, length: full.entry.value.length, newText: renderInlineValue(value) }];
 	}
 	const node = cur.node;
-	if (node instanceof TomlArray) {
+	if (Schema.is(TomlArray)(node)) {
 		const idx = requireIndex(segment, "an array", node.offset, node.length);
 		if (value === undefined) {
 			if (idx >= node.items.length) {
@@ -850,7 +850,7 @@ export class TomlFormat {
 		options?: TomlFormattingOptions,
 	) {
 		const failWith = (code: TomlErrorCodeRaw, message: string, offset = 0, length = 0): TomlModificationError =>
-			new TomlModificationError({ diagnostic: TomlDiagnostic.fromRaw(text, { code, message, offset, length }) });
+			TomlModificationError.make({ diagnostic: TomlDiagnostic.fromRaw(text, { code, message, offset, length }) });
 		if (path.length === 0) {
 			return yield* failWith("DottedKeyConflict", "an empty path does not address a value");
 		}
@@ -859,7 +859,7 @@ export class TomlFormat {
 		}
 		const doc = yield* TomlDocument.parse(text);
 		if (doc.diagnostics.length > 0) {
-			return yield* new TomlModificationError({ diagnostic: doc.diagnostics[0] });
+			return yield* TomlModificationError.make({ diagnostic: doc.diagnostics[0] });
 		}
 		const { root, sections } = buildSemanticIndex(doc.expressions);
 		const ctx: ModifyContext = { source: text, sections, nl: options?.newline ?? dominantNewline(text) };
@@ -875,7 +875,7 @@ export class TomlFormat {
 				return yield* failWith(defect.code, defect.message, defect.offset, defect.len);
 			}
 			if (isRawTomlError(defect)) {
-				return yield* new TomlModificationError({ diagnostic: TomlDiagnostic.fromRaw(text, defect.diagnostic) });
+				return yield* TomlModificationError.make({ diagnostic: TomlDiagnostic.fromRaw(text, defect.diagnostic) });
 			}
 			if (isGuardExceeded(defect)) {
 				return yield* failWith("NestingDepthExceeded", defect.message, defect.offset);

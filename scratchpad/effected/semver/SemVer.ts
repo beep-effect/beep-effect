@@ -28,7 +28,7 @@ export class InvalidVersionError extends Schema.TaggedError<InvalidVersionError>
 	/** The raw input string that failed to parse. */
 	input: Schema.String,
 	/** The character position where parsing failed, if available. */
-	position: Schema.optionalKey(Schema.Number),
+	position: Schema.optionalKey(Schema.Finite),
 }) {
 	override get message(): string {
 		const base = `Invalid version string: "${this.input}"`;
@@ -38,7 +38,7 @@ export class InvalidVersionError extends Schema.TaggedError<InvalidVersionError>
 
 // Non-negative safe integer schema shared by the `major`/`minor`/`patch`
 // fields.
-const nonNegativeInteger = Schema.Number.check(
+const nonNegativeInteger = Schema.Finite.check(
 	Schema.isInt(),
 	Schema.isBetween({ minimum: 0, maximum: Number.MAX_SAFE_INTEGER }),
 );
@@ -211,7 +211,7 @@ export class SemVer extends Schema.Class<SemVer>("SemVer")({
 	static parseResult(input: string): Result.Result<SemVer, InvalidVersionError> {
 		const result = parseVersion(input);
 		if (!result.ok) {
-			return Result.fail(new InvalidVersionError({ input: result.input, position: result.position }));
+			return Result.fail(InvalidVersionError.make({ input: result.input, position: result.position }));
 		}
 		return Result.succeed(SemVer.make(result.value));
 	}
@@ -540,7 +540,7 @@ export class SemVer extends Schema.Class<SemVer>("SemVer")({
 	// Equal.equals short-circuits on hash mismatch.
 
 	[Equal.symbol](that: unknown): boolean {
-		if (!(that instanceof SemVer)) return false;
+		if (!(Schema.is(SemVer)(that))) return false;
 		return (
 			this.major === that.major &&
 			this.minor === that.minor &&

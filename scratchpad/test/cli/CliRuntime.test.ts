@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { Cause, Console, Effect, Exit, Runtime } from "effect";
 import { CliError } from "effect/cli";
@@ -178,7 +179,7 @@ describe("CliRuntime.reportFailures", () => {
 describe("CliRuntime.reportFailures and ShowHelp", () => {
 	it.effect("never renders a ShowHelp: runWith already printed help", () =>
 		Effect.gen(function* () {
-			const help = new CliError.ShowHelp({ commandPath: ["tool"], errors: [] });
+			const help = CliError.ShowHelp.make({ commandPath: ["tool"], errors: [] });
 			const { out, err } = yield* run(Effect.fail(help));
 			assert.deepStrictEqual(err, []);
 			assert.deepStrictEqual(out, []);
@@ -187,7 +188,7 @@ describe("CliRuntime.reportFailures and ShowHelp", () => {
 
 	it.effect("a bare-root ShowHelp (no errors) exits 0", () =>
 		Effect.gen(function* () {
-			const help = new CliError.ShowHelp({ commandPath: ["tool"], errors: [] });
+			const help = CliError.ShowHelp.make({ commandPath: ["tool"], errors: [] });
 			const { exit } = yield* run(Effect.fail(help));
 			assert.strictEqual(Runtime.getErrorExitCode(failureOf(exit)), 0);
 		}),
@@ -195,9 +196,9 @@ describe("CliRuntime.reportFailures and ShowHelp", () => {
 
 	it.effect("a ShowHelp carrying parse errors exits with usageExitCode, default 64", () =>
 		Effect.gen(function* () {
-			const help = new CliError.ShowHelp({
+			const help = CliError.ShowHelp.make({
 				commandPath: ["tool"],
-				errors: [new CliError.UnrecognizedOption({ option: "--nope", suggestions: [] })],
+				errors: [CliError.UnrecognizedOption.make({ option: "--nope", suggestions: [] })],
 			});
 			const { exit } = yield* run(Effect.fail(help));
 			assert.strictEqual(Runtime.getErrorExitCode(failureOf(exit)), 64);

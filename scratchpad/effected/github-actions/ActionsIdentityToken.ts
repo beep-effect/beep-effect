@@ -56,7 +56,7 @@ export class ActionsIdentityToken {
 		IdentityToken,
 		Effect.map(OidcTokenIssuer, (issuer) => ({
 			token: (audience: string) =>
-				issuer.token(audience).pipe(Effect.mapError((cause) => new IdentityTokenError({ audience, cause }))),
+				issuer.token(audience).pipe(Effect.mapError((cause) => IdentityTokenError.make({ audience, cause }))),
 		})),
 	);
 }

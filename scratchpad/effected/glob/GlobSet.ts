@@ -157,12 +157,12 @@ export class GlobSet extends Schema.Class<GlobSet>("GlobSet")(
 				new Minimatch(target, {});
 			} catch (e) {
 				if (isGuardExceeded(e)) {
-					return Result.fail(new GlobPatternError({ pattern, reason: e.reason, limit: e.limit, actual: e.actual }));
+					return Result.fail(GlobPatternError.make({ pattern, reason: e.reason, limit: e.limit, actual: e.actual }));
 				}
 				throw e;
 			}
 		}
-		return Result.succeed(new GlobSet({ patterns }));
+		return Result.succeed(GlobSet.make({ patterns }));
 	}
 
 	/**

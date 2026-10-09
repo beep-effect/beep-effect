@@ -1,5 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Cause, Effect, Exit, Option } from "effect";
+import { Cause, Effect, Exit, Option, Schema } from "effect";
 import { Cancelled, Fmt } from "../../../effected/cli/index.ts";
 import type { MultiSelectSection } from "../../../effected/cli/ui.ts";
 import { MultiSelect } from "../../../effected/cli/ui.ts";
@@ -139,7 +139,7 @@ describe("MultiSelect.screen under CliUiTest", () => {
 			const handle = yield* CliUiTest.render(MultiSelect.screen({ message: "Promote which?", sections }));
 			yield* handle.type("q");
 			const error = yield* Effect.flip(handle.result);
-			assert.strictEqual(error instanceof Cancelled ? error.reason : undefined, "escape");
+			assert.strictEqual(Schema.is(Cancelled)(error) ? error.reason : undefined, "escape");
 		}).pipe(Effect.scoped),
 	);
 

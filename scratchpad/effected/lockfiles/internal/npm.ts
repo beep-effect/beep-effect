@@ -47,13 +47,13 @@ const NpmPackageEntry = Schema.Struct({
  * @internal
  */
 const NpmVersionProbe = Schema.Struct({
-	lockfileVersion: Schema.Union([Schema.Number, Schema.String]),
+	lockfileVersion: Schema.Union([Schema.Finite, Schema.String]),
 });
 
 const NpmLockfileRaw = Schema.Struct({
 	name: Schema.optionalKey(Schema.String),
 	version: Schema.optionalKey(Schema.String),
-	lockfileVersion: Schema.Union([Schema.Number, Schema.String]),
+	lockfileVersion: Schema.Union([Schema.Finite, Schema.String]),
 	requires: Schema.optionalKey(Schema.Boolean),
 	packages: Schema.Record(Schema.String, NpmPackageEntry),
 });

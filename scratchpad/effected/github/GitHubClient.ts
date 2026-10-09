@@ -259,7 +259,7 @@ const unstubbed = (member: string): never => {
  *
  * @public
  */
-export class GitHubClient extends Context.Service<GitHubClient, GitHubClientShape>()("@effected/github/GitHubClient") {
+export class GitHubClient extends Context.Service<GitHubClient, GitHubClientShape>()("@beep/scratchpad/effected/github/GitHubClient") {
 	/**
 	 * A client authenticated with a token you already hold.
 	 *
@@ -312,7 +312,7 @@ export class GitHubClient extends Context.Service<GitHubClient, GitHubClientShap
 		paginate: overrides.paginate ?? (() => unstubbed("paginate")),
 		paginateStream: overrides.paginateStream ?? (() => unstubbed("paginateStream")),
 		graphql: overrides.graphql ?? (() => unstubbed("graphql")),
-		rateLimit: overrides.rateLimit ?? Effect.succeed(Option.none()),
+		rateLimit: overrides.rateLimit ?? Effect.succeedNone,
 	});
 
 	/** {@link GitHubClient.makeTest} behind a `Layer`. */
@@ -444,7 +444,7 @@ const makeFixture = (fixtures: GitHubFixtures): GitHubClientShape => {
 		requested?.push({ kind: "paginate", route, params: _params as Record<string, unknown>, perPage });
 
 		const recorded = fixtures.paginate?.[route];
-		if (recorded instanceof GitHubError) return Stream.fail(recorded);
+		if (Schema.is(GitHubError)(recorded)) return Stream.fail(recorded);
 		const items = recorded;
 		if (items === undefined) {
 			switch (fixtures.unstubbed ?? "die") {
@@ -478,13 +478,13 @@ const makeFixture = (fixtures: GitHubFixtures): GitHubClientShape => {
 			if (data === undefined) return missing<Rest.Data<R>>("GitHubClient.request", route);
 			// A recorded GitHubError IS the response: this is how a suite stubs a
 			// 404 deliberately, rather than relying on a route's absence.
-			return data instanceof GitHubError ? Effect.fail(data) : Effect.succeed(data as Rest.Data<R>);
+			return Schema.is(GitHubError)(data) ? Effect.fail(data) : Effect.succeed(data as Rest.Data<R>);
 		},
 		requestDecoded: <A, I>(route: string, params: Record<string, unknown>, schema: Schema.Codec<A, I>) => {
 			requested?.push({ kind: "requestDecoded", route, params });
 			const data = fixtures.request?.[route];
 			if (data === undefined) return missing<A>("GitHubClient.requestDecoded", route);
-			if (data instanceof GitHubError) return Effect.fail(data);
+			if (Schema.is(GitHubError)(data)) return Effect.fail(data);
 			return Schema.decodeUnknownEffect(schema)(data).pipe(
 				Effect.catchTag("SchemaError", (error) =>
 					Effect.fail(GitHubError.decode(route, "fixture did not match its schema", error)),

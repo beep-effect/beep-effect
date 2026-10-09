@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file
 // The `Git.log` unit suite: argv routing, the record parser's byte shape, the
 // unborn-HEAD degrade, and the two pre-spawn refusals. Every case here scripts
 // the spawner — `__test__/integration/GitSurface.int.test.ts` is where `log`
@@ -51,7 +52,7 @@ describe("Git.log", () => {
 			);
 			assert.strictEqual(entries.length, 1);
 			const entry = entries[0];
-			assert.isTrue(entry instanceof CommitLogEntry);
+			assert.isTrue(Schema.is(CommitLogEntry)(entry));
 			assert.strictEqual(entry?.sha, SHA_A);
 			assert.strictEqual(entry?.authorName, "Ada");
 			assert.strictEqual(entry?.authorEmail, "ada@example.com");
@@ -141,7 +142,7 @@ describe("Git.log", () => {
 			const error = yield* Effect.flip(
 				run(log(), (): ScriptResult => ({ stderr: "fatal: not a git repository\n", exit: 128 })),
 			);
-			assert.isTrue(error instanceof NotARepositoryError);
+			assert.isTrue(Schema.is(NotARepositoryError)(error));
 		}),
 	);
 
@@ -150,8 +151,8 @@ describe("Git.log", () => {
 			const error = yield* Effect.flip(
 				run(log(), (): ScriptResult => ({ stderr: "fatal: something else entirely\n", exit: 128 })),
 			);
-			assert.isTrue(error instanceof GitCommandError);
-			assert.strictEqual(error instanceof GitCommandError ? error.kind : undefined, "failed");
+			assert.isTrue(Schema.is(GitCommandError)(error));
+			assert.strictEqual(Schema.is(GitCommandError)(error) ? error.kind : undefined, "failed");
 		}),
 	);
 
@@ -160,8 +161,8 @@ describe("Git.log", () => {
 			const exit = yield* Effect.exit(run(log(), (): ScriptResult => ({ stdout: "not a record at all\n" })));
 			assert.isTrue(Exit.isFailure(exit));
 			const error = yield* Effect.flip(run(log(), (): ScriptResult => ({ stdout: "not a record at all\n" })));
-			assert.isTrue(error instanceof GitCommandError);
-			assert.include(error instanceof GitCommandError ? (error.detail ?? "") : "", "unparseable log output");
+			assert.isTrue(Schema.is(GitCommandError)(error));
+			assert.include(Schema.is(GitCommandError)(error) ? (error.detail ?? "") : "", "unparseable log output");
 		}),
 	);
 
@@ -175,8 +176,8 @@ describe("Git.log", () => {
 					}),
 				),
 			);
-			assert.isTrue(error instanceof GitCommandError);
-			assert.include(error instanceof GitCommandError ? (error.detail ?? "") : "", "undecodable date");
+			assert.isTrue(Schema.is(GitCommandError)(error));
+			assert.include(Schema.is(GitCommandError)(error) ? (error.detail ?? "") : "", "undecodable date");
 		}),
 	);
 
@@ -188,9 +189,9 @@ describe("Git.log", () => {
 						throw new Error("Git.log spawned git despite the --follow guard");
 					}),
 				);
-				assert.isTrue(error instanceof GitCommandError);
-				assert.strictEqual(error instanceof GitCommandError ? error.kind : undefined, "refused");
-				assert.include(error instanceof GitCommandError ? (error.detail ?? "") : "", "refused --follow");
+				assert.isTrue(Schema.is(GitCommandError)(error));
+				assert.strictEqual(Schema.is(GitCommandError)(error) ? error.kind : undefined, "refused");
+				assert.include(Schema.is(GitCommandError)(error) ? (error.detail ?? "") : "", "refused --follow");
 			}
 		}),
 	);
@@ -203,7 +204,7 @@ describe("Git.log", () => {
 						throw new Error("Git.log spawned git despite the limit guard");
 					}),
 				);
-				assert.strictEqual(error instanceof GitCommandError ? error.kind : undefined, "refused");
+				assert.strictEqual(Schema.is(GitCommandError)(error) ? error.kind : undefined, "refused");
 			}
 		}),
 	);
@@ -234,7 +235,7 @@ describe("Git.log", () => {
 			const error = yield* Effect.flip(
 				run(log(), () => PlatformError.systemError({ _tag: "NotFound", module: "ChildProcess", method: "spawn" })),
 			);
-			assert.isTrue(error instanceof GitCommandError);
+			assert.isTrue(Schema.is(GitCommandError)(error));
 		}),
 	);
 

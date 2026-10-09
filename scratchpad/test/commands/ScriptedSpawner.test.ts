@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file
 // The public scripted-spawner fixture is itself load-bearing test machinery —
 // every unit suite in this package (and downstream consumers stubbing the
 // spawner seam) leans on it — so its contract is tested directly: script
@@ -5,7 +6,7 @@
 // path, hang, unref observation, and the loud pipeline refusal.
 
 import { assert, describe, it } from "@effect/vitest";
-import { Cause, Effect, Exit, Fiber } from "effect";
+import { Cause, Effect, Exit, Fiber, Schema } from "effect";
 import { ChildProcess } from "effect/process";
 import { TestClock } from "effect/testing";
 import { CommandFailedError, Run } from "../../effected/commands/Run.ts";
@@ -73,7 +74,7 @@ describe("ScriptedSpawner.make", () => {
 			const spawner = ScriptedSpawner.make((command) => ScriptedSpawner.notFound(command));
 			const error = yield* Effect.flip(Run.collect(cmd("missing")).pipe(Effect.provide(spawner.layer)));
 			assert.instanceOf(error, CommandFailedError);
-			if (error instanceof CommandFailedError) {
+			if (Schema.is(CommandFailedError)(error)) {
 				assert.strictEqual(error.kind, "spawn");
 				assert.isTrue(error.notFound, "a NotFound system error must classify as absent");
 			}
@@ -86,7 +87,7 @@ describe("ScriptedSpawner.make", () => {
 			const spawner = ScriptedSpawner.make((command) => ScriptedSpawner.permissionDenied(command));
 			const error = yield* Effect.flip(Run.collect(cmd("blocked")).pipe(Effect.provide(spawner.layer)));
 			assert.instanceOf(error, CommandFailedError);
-			if (error instanceof CommandFailedError) {
+			if (Schema.is(CommandFailedError)(error)) {
 				assert.strictEqual(error.kind, "spawn");
 				assert.isFalse(error.notFound);
 			}
@@ -102,7 +103,7 @@ describe("ScriptedSpawner.make", () => {
 			yield* TestClock.adjust("31 seconds");
 			const error = yield* Fiber.join(fiber);
 			assert.instanceOf(error, CommandFailedError);
-			if (error instanceof CommandFailedError) {
+			if (Schema.is(CommandFailedError)(error)) {
 				assert.strictEqual(error.kind, "timeout");
 			}
 		}),

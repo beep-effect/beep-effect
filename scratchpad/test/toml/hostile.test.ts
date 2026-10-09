@@ -229,7 +229,7 @@ describe("hostile input", () => {
 
 		it.effect("the TomlFromString schema surfaces the bomb as a SchemaError, never a defect", () =>
 			Effect.gen(function* () {
-				const error = yield* Effect.flip(Schema.decodeUnknownEffect(Toml.TomlFromString)(bomb));
+				const error = yield* Effect.flip(Schema.decodeEffect(Toml.TomlFromString)(bomb));
 				assert.strictEqual(error._tag, "SchemaError");
 				assert.include(String(error), "NestingDepthExceeded");
 			}),

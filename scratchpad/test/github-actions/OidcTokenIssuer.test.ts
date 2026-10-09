@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file asyncFunction:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { Effect, Layer, Redacted } from "effect";
 import { FetchHttpClient } from "effect/http";

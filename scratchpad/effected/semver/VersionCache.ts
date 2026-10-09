@@ -140,7 +140,7 @@ const dedupeSorted = (versions: ReadonlyArray<SemVer>): ReadonlyArray<SemVer> =>
  *
  * @public
  */
-export class VersionCache extends Context.Service<VersionCache, VersionCacheShape>()("@effected/semver/VersionCache") {
+export class VersionCache extends Context.Service<VersionCache, VersionCacheShape>()("@beep/scratchpad/effected/semver/VersionCache") {
 	/**
 	 * Live implementation backed by a `Ref` of a sorted, deduplicated array.
 	 * Requires nothing: range strings are parsed with {@link Range.parse}
@@ -154,7 +154,7 @@ export class VersionCache extends Context.Service<VersionCache, VersionCacheShap
 			const requireNonEmpty = Effect.gen(function* () {
 				const arr = yield* Ref.get(ref);
 				if (arr.length === 0) {
-					return yield* new EmptyCacheError();
+					return yield* EmptyCacheError.make();
 				}
 				return arr;
 			});
@@ -166,7 +166,7 @@ export class VersionCache extends Context.Service<VersionCache, VersionCacheShap
 						return arr[i];
 					}
 				}
-				return yield* new UnsatisfiedRangeError({ range, available: arr });
+				return yield* UnsatisfiedRangeError.make({ range, available: arr });
 			});
 
 			const locate = (arr: ReadonlyArray<SemVer>, version: SemVer) => {
@@ -215,10 +215,10 @@ export class VersionCache extends Context.Service<VersionCache, VersionCacheShap
 				diff: Effect.fn("VersionCache.diff")(function* (a: SemVer, b: SemVer) {
 					const arr = yield* Ref.get(ref);
 					if (Option.isNone(locate(arr, a))) {
-						return yield* new VersionNotFoundError({ version: a });
+						return yield* VersionNotFoundError.make({ version: a });
 					}
 					if (Option.isNone(locate(arr, b))) {
-						return yield* new VersionNotFoundError({ version: b });
+						return yield* VersionNotFoundError.make({ version: b });
 					}
 					return VersionDiff.between(a, b);
 				}),
@@ -227,7 +227,7 @@ export class VersionCache extends Context.Service<VersionCache, VersionCacheShap
 					const arr = yield* Ref.get(ref);
 					const index = locate(arr, version);
 					if (Option.isNone(index)) {
-						return yield* new VersionNotFoundError({ version });
+						return yield* VersionNotFoundError.make({ version });
 					}
 					return index.value < arr.length - 1 ? Option.some(arr[index.value + 1]) : Option.none();
 				}),
@@ -236,7 +236,7 @@ export class VersionCache extends Context.Service<VersionCache, VersionCacheShap
 					const arr = yield* Ref.get(ref);
 					const index = locate(arr, version);
 					if (Option.isNone(index)) {
-						return yield* new VersionNotFoundError({ version });
+						return yield* VersionNotFoundError.make({ version });
 					}
 					return index.value > 0 ? Option.some(arr[index.value - 1]) : Option.none();
 				}),

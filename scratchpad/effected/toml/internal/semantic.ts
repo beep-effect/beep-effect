@@ -19,6 +19,7 @@ import type { TomlExpression, TomlKey, TomlKeyValue, TomlValueNode } from "../To
 import { TomlArray, TomlArrayTableHeader, TomlInlineTable, TomlTableHeader, TomlTrivia } from "../TomlNode.ts";
 import type { TomlSemanticErrorCodeRaw } from "./diagnostics.ts";
 import { RawTomlError } from "./diagnostics.ts";
+import * as Schema from "effect/Schema";
 
 /** Semantic-pass callbacks, fired in document order after each expression validates. */
 export interface SemanticVisitor {
@@ -181,10 +182,10 @@ const assignEntry = (
 
 /** The provenance node for an assigned value; validates inline tables (arrays included) on the way. */
 const nodeForValue = (value: TomlValueNode, context: Context): SemNode => {
-	if (value instanceof TomlInlineTable) {
+	if (Schema.is(TomlInlineTable)(value)) {
 		return inlineNode(value, context);
 	}
-	if (value instanceof TomlArray) {
+	if (Schema.is(TomlArray)(value)) {
 		for (const item of value.items) {
 			checkArrayItem(item, context);
 		}
@@ -195,11 +196,11 @@ const nodeForValue = (value: TomlValueNode, context: Context): SemNode => {
 
 /** Inline tables hide anywhere inside a static array; validate them all. Depth is parser-capped. */
 const checkArrayItem = (item: TomlValueNode, context: Context): void => {
-	if (item instanceof TomlInlineTable) {
+	if (Schema.is(TomlInlineTable)(item)) {
 		inlineNode(item, context);
 		return;
 	}
-	if (item instanceof TomlArray) {
+	if (Schema.is(TomlArray)(item)) {
 		for (const inner of item.items) {
 			checkArrayItem(inner, context);
 		}
@@ -233,17 +234,17 @@ export const analyze = (expressions: ReadonlyArray<TomlExpression>, visitor?: Se
 	let currentPrefix: ReadonlyArray<string> = [];
 	visitor?.onTableStart?.([], undefined);
 	for (const expression of expressions) {
-		if (expression instanceof TomlTrivia) {
+		if (Schema.is(TomlTrivia)(expression)) {
 			continue;
 		}
-		if (expression instanceof TomlTableHeader) {
+		if (Schema.is(TomlTableHeader)(expression)) {
 			currentTable = openTable(root, expression.keyPath);
 			currentSectionId = context.nextId++;
 			currentPrefix = expression.keyPath.map((key) => key.value);
 			visitor?.onTableStart?.(currentPrefix, expression);
 			continue;
 		}
-		if (expression instanceof TomlArrayTableHeader) {
+		if (Schema.is(TomlArrayTableHeader)(expression)) {
 			const { element, index } = openArrayTable(root, expression.keyPath);
 			currentTable = element;
 			currentSectionId = context.nextId++;
@@ -294,10 +295,10 @@ const navigateOutput = (target: Record<string, unknown>, path: ReadonlyArray<str
 
 /** Materialize a CST value node into a plain value. Recursion is parser-depth-capped. */
 const materialize = (value: TomlValueNode): unknown => {
-	if (value instanceof TomlArray) {
+	if (Schema.is(TomlArray)(value)) {
 		return value.items.map(materialize);
 	}
-	if (value instanceof TomlInlineTable) {
+	if (Schema.is(TomlInlineTable)(value)) {
 		const output: Record<string, unknown> = {};
 		for (const entry of value.entries) {
 			const parent = navigateOutput(

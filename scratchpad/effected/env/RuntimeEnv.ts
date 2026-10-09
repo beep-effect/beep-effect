@@ -9,7 +9,7 @@ import { detectOsc8 } from "./internal/osc8/detect.ts";
  * decoding after a field is added.
  */
 const optionField = <S extends Schema.Constraint>(schema: S) =>
-	Schema.OptionFromNullOr(schema).pipe(Schema.withDecodingDefaultTypeKey(Effect.succeed(Option.none())));
+	Schema.OptionFromNullOr(schema).pipe(Schema.withDecodingDefaultTypeKey(Effect.succeedNone));
 
 /**
  * The CI providers a {@link RuntimeEnv} names: `github-actions` when `GITHUB_ACTIONS` is set, `generic` for any other
@@ -97,7 +97,7 @@ export interface RuntimeEnvOverrides {
  * @public
  */
 export class CurrentRuntimeEnv extends Context.Service<CurrentRuntimeEnv, RuntimeEnv>()(
-	"@effected/env/CurrentRuntimeEnv",
+	"@beep/scratchpad/effected/env/RuntimeEnv/CurrentRuntimeEnv",
 ) {
 	/**
 	 * Reads the environment through `Config` once, when the layer is built. Requires nothing: the provider is read

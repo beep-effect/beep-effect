@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file nodeBuiltinImport:skip-file processEnv:skip-file processEnvInEffect:skip-file
 // `ConfigDependencyHooks.layerSubprocess` against a real `node` child process.
 //
 // The subprocess replay exists because a bundler compiles layerLive's computed

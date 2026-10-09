@@ -144,7 +144,7 @@ const runRules = Effect.fn("PackageValidator.validate")(function* (pkg: Package,
 		}
 	}
 	if (failures.length > 0) {
-		return yield* new PackageValidationError({ failures });
+		return yield* PackageValidationError.make({ failures });
 	}
 });
 
@@ -173,7 +173,7 @@ const runRules = Effect.fn("PackageValidator.validate")(function* (pkg: Package,
 export class PackageValidator extends Context.Service<
 	PackageValidator,
 	{ readonly validate: (pkg: Package) => Effect.Effect<void, PackageValidationError> }
->()("@effected/package-json/PackageValidator") {
+>()("@beep/scratchpad/effected/package-json/PackageValidator") {
 	/** The default layer, backed by {@link defaultRules}. */
 	static readonly layer: Layer.Layer<PackageValidator> = Layer.succeed(PackageValidator, {
 		validate: (pkg) => runRules(pkg, defaultRules),

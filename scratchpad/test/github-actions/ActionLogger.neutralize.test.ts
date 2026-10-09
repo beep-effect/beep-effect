@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { WorkflowCommand } from "../../effected/github-commands/index.ts";
 import { Effect, Layer, References } from "effect";

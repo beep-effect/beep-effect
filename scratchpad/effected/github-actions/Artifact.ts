@@ -43,7 +43,7 @@ export class ArtifactError extends Schema.TaggedError<ArtifactError>()("Artifact
 	/** The artifact's name or id. A stable identifier, never a value. */
 	artifact: Schema.optionalKey(Schema.String),
 	/** The HTTP status, when the backend answered. */
-	status: Schema.optionalKey(Schema.Number),
+	status: Schema.optionalKey(Schema.Finite),
 	/** What went wrong, when the reason alone does not say. */
 	detail: Schema.optionalKey(Schema.String),
 	/** `zip`'s own complaint, which is the only useful part of an archive failure. */
@@ -223,12 +223,12 @@ const azure: FileBlobTransfer = {
 					concurrency: 8,
 					maxSingleShotSize: 128 * 1024 * 1024,
 				}),
-			catch: (cause) => new BlobTransferError({ reason: "uploadFailed", cause }),
+			catch: (cause) => BlobTransferError.make({ reason: "uploadFailed", cause }),
 		}).pipe(Effect.asVoid),
 	downloadToFile: (url, file) =>
 		Effect.tryPromise({
 			try: () => new BlobClient(url).downloadToFile(file),
-			catch: (cause) => new BlobTransferError({ reason: "downloadFailed", cause }),
+			catch: (cause) => BlobTransferError.make({ reason: "downloadFailed", cause }),
 		}).pipe(Effect.asVoid),
 };
 
@@ -267,7 +267,7 @@ const make = (
 			resultsBackend(env).pipe(
 				Effect.mapError(
 					(name) =>
-						new ArtifactError({
+						ArtifactError.make({
 							reason: "misconfigured",
 							artifact,
 							detail: misconfiguredDetail(name, "artifact service"),
@@ -279,7 +279,7 @@ const make = (
 					// and saying which is the difference between a fixable workflow and a
 					// bug report.
 					Result.isFailure(resolved.backendIds)
-						? Effect.fail(new ArtifactError({ reason: "misconfigured", artifact, detail: resolved.backendIds.failure }))
+						? Effect.fail(ArtifactError.make({ reason: "misconfigured", artifact, detail: resolved.backendIds.failure }))
 						: Effect.succeed({
 								baseUrl: resolved.baseUrl,
 								token: resolved.token,
@@ -298,7 +298,7 @@ const make = (
 					token,
 					method,
 					body: { ...ids, ...body(ids) },
-				}).pipe(Effect.mapError((failure) => new ArtifactError({ ...twirpFailureFields(failure), artifact })));
+				}).pipe(Effect.mapError((failure) => ArtifactError.make({ ...twirpFailureFields(failure), artifact })));
 			});
 
 		const listAll = (artifact: string) =>
@@ -317,10 +317,10 @@ const make = (
 		const archive = (command: ChildProcess.Command, artifact: string) =>
 			Effect.gen(function* () {
 				const { output, code } = yield* spawnOnce(spawner, command).pipe(
-					Effect.mapError((cause) => new ArtifactError({ reason: "archiveFailed", artifact, cause })),
+					Effect.mapError((cause) => ArtifactError.make({ reason: "archiveFailed", artifact, cause })),
 				);
 				if (code !== 0) {
-					return yield* Effect.fail(new ArtifactError({ reason: "archiveFailed", artifact, stderr: output.trim() }));
+					return yield* ArtifactError.make({ reason: "archiveFailed", artifact, stderr: output.trim() });
 				}
 			});
 
@@ -331,7 +331,7 @@ const make = (
 			Effect.acquireUseRelease(
 				fs
 					.makeTempDirectory({ prefix: "effected-artifact-" })
-					.pipe(Effect.mapError((cause) => new ArtifactError({ reason: "archiveFailed", artifact, cause }))),
+					.pipe(Effect.mapError((cause) => ArtifactError.make({ reason: "archiveFailed", artifact, cause }))),
 				use,
 				(directory) => Effect.ignore(fs.remove(directory, { recursive: true, force: true })),
 			);
@@ -346,11 +346,11 @@ const make = (
 		 */
 		const digestOf = (file: string, artifact: string) =>
 			digestFileHex(fs, file, "sha256").pipe(
-				Effect.mapError((cause) => new ArtifactError({ reason: "archiveFailed", artifact, cause })),
+				Effect.mapError((cause) => ArtifactError.make({ reason: "archiveFailed", artifact, cause })),
 			);
 
 		const moved = (artifact: string) =>
-			Effect.mapError((cause: BlobTransferError) => new ArtifactError({ reason: "transferFailed", artifact, cause }));
+			Effect.mapError((cause: BlobTransferError) => ArtifactError.make({ reason: "transferFailed", artifact, cause }));
 
 		const zip = (files: ReadonlyArray<string>, root: string, destination: string, level: number, artifact: string) =>
 			// Stored relative to `rootDirectory`: `zip` records the paths exactly
@@ -366,13 +366,11 @@ const make = (
 				// runner and fail on another.
 				const unrepresentable = relative.find((file) => file.includes("\n") || file.includes("\r"));
 				if (unrepresentable !== undefined) {
-					return yield* Effect.fail(
-						new ArtifactError({
+					return yield* ArtifactError.make({
 							reason: "invalidOptions",
 							artifact,
 							detail: `a file path may not contain a line break: ${JSON.stringify(unrepresentable)}`,
-						}),
-					);
+						});
 				}
 				// Beside the archive inside the scratch directory, so `scratch`'s
 				// release removes it with the zip. `writeFileString` is UTF-8 with no
@@ -382,7 +380,7 @@ const make = (
 				if (windows) {
 					yield* fs
 						.writeFileString(manifest, zipManifest(relative))
-						.pipe(Effect.mapError((cause) => new ArtifactError({ reason: "archiveFailed", artifact, cause })));
+						.pipe(Effect.mapError((cause) => ArtifactError.make({ reason: "archiveFailed", artifact, cause })));
 				}
 				yield* archive(zipCommand({ windows, root, files: relative, manifest, destination, level }), artifact);
 			});
@@ -402,18 +400,14 @@ const make = (
 			) {
 				yield* Effect.annotateCurrentSpan({ name });
 				if (files.length === 0) {
-					return yield* Effect.fail(
-						new ArtifactError({ reason: "invalidOptions", artifact: name, detail: "no files were given to upload" }),
-					);
+					return yield* ArtifactError.make({ reason: "invalidOptions", artifact: name, detail: "no files were given to upload" });
 				}
 				if (options?.retentionDays !== undefined && options.retentionDays <= 0) {
-					return yield* Effect.fail(
-						new ArtifactError({
+					return yield* ArtifactError.make({
 							reason: "invalidOptions",
 							artifact: name,
 							detail: "retentionDays must be positive — omit it to use the repository default",
-						}),
-					);
+						});
 				}
 				return yield* scratch(name, (directory) =>
 					Effect.gen(function* () {
@@ -429,29 +423,25 @@ const make = (
 						// hold one artifact per name, so the second upload is a mistake
 						// rather than a race that resolved itself.
 						if (created === CONFLICT || !isOk(created)) {
-							return yield* Effect.fail(
-								new ArtifactError({
+							return yield* ArtifactError.make({
 									reason: "refused",
 									artifact: name,
 									detail: "an artifact with this name already exists in this run",
-								}),
-							);
+								});
 						}
 						const url = stringField(created, "signedUploadUrl");
 						if (url === undefined) {
-							return yield* Effect.fail(
-								new ArtifactError({
+							return yield* ArtifactError.make({
 									reason: "refused",
 									artifact: name,
 									detail: "CreateArtifact returned no upload url",
-								}),
-							);
+								});
 						}
 						yield* transfer.uploadFile(url, packed).pipe(moved(name));
 
 						const size = yield* fs
 							.stat(packed)
-							.pipe(Effect.mapError((cause) => new ArtifactError({ reason: "archiveFailed", artifact: name, cause })));
+							.pipe(Effect.mapError((cause) => ArtifactError.make({ reason: "archiveFailed", artifact: name, cause })));
 						const digest = yield* digestOf(packed, name);
 						const finalized = yield* call(
 							"FinalizeArtifact",
@@ -466,13 +456,11 @@ const make = (
 							name,
 						);
 						if (finalized === CONFLICT || !isOk(finalized)) {
-							return yield* Effect.fail(
-								new ArtifactError({
+							return yield* ArtifactError.make({
 									reason: "refused",
 									artifact: name,
 									detail: "FinalizeArtifact did not confirm the upload",
-								}),
-							);
+								});
 						}
 						return {
 							id: Number(stringField(finalized, "artifactId") ?? 0),
@@ -501,18 +489,16 @@ const make = (
 				const all = yield* listAll(label);
 				const found = all.find((item) => item.id === artifactId);
 				if (found === undefined) {
-					return yield* Effect.fail(new ArtifactError({ reason: "notFound", artifact: label }));
+					return yield* ArtifactError.make({ reason: "notFound", artifact: label });
 				}
 				const signed = yield* call("GetSignedArtifactURL", () => ({ name: found.name }), label);
 				const url = signed === CONFLICT ? undefined : stringField(signed, "signedUrl");
 				if (url === undefined) {
-					return yield* Effect.fail(
-						new ArtifactError({
+					return yield* ArtifactError.make({
 							reason: "refused",
 							artifact: label,
 							detail: "GetSignedArtifactURL returned no url",
-						}),
-					);
+						});
 				}
 				const destination = options?.path;
 				const downloadPath =
@@ -520,11 +506,11 @@ const make = (
 						? yield* fs
 								.makeTempDirectory({ prefix: "effected-artifact-download-" })
 								.pipe(
-									Effect.mapError((cause) => new ArtifactError({ reason: "archiveFailed", artifact: label, cause })),
+									Effect.mapError((cause) => ArtifactError.make({ reason: "archiveFailed", artifact: label, cause })),
 								)
 						: yield* fs.makeDirectory(destination, { recursive: true }).pipe(
 								Effect.as(destination),
-								Effect.mapError((cause) => new ArtifactError({ reason: "archiveFailed", artifact: label, cause })),
+								Effect.mapError((cause) => ArtifactError.make({ reason: "archiveFailed", artifact: label, cause })),
 							);
 				yield* scratch(label, (directory) =>
 					Effect.gen(function* () {
@@ -541,13 +527,11 @@ const make = (
 				const all = yield* listAll(name);
 				const found = all.find((item) => item.name === name);
 				if (found === undefined) {
-					return yield* Effect.fail(new ArtifactError({ reason: "notFound", artifact: name }));
+					return yield* ArtifactError.make({ reason: "notFound", artifact: name });
 				}
 				const deleted = yield* call("DeleteArtifact", () => ({ name }), name);
 				if (deleted === CONFLICT || !isOk(deleted)) {
-					return yield* Effect.fail(
-						new ArtifactError({ reason: "refused", artifact: name, detail: "DeleteArtifact did not confirm" }),
-					);
+					return yield* ArtifactError.make({ reason: "refused", artifact: name, detail: "DeleteArtifact did not confirm" });
 				}
 				return { id: Number(stringField(deleted, "artifactId") ?? found.id) } satisfies ArtifactRef;
 			}),
@@ -588,7 +572,7 @@ const dies = unstubbed("Artifact.makeTest");
  *
  * @public
  */
-export class Artifact extends Context.Service<Artifact, ArtifactShape>()("@effected/github-actions/Artifact") {
+export class Artifact extends Context.Service<Artifact, ArtifactShape>()("@beep/scratchpad/effected/github-actions/Artifact") {
 	/** The service, over the real Azure client and the real `zip`. */
 	static readonly layer: Layer.Layer<
 		Artifact,

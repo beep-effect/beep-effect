@@ -21,11 +21,11 @@ export const JsoncCodec: ConfigCodec = {
 	name: "jsonc",
 	parse: (raw) =>
 		Jsonc.parse(raw).pipe(
-			Effect.mapError((cause) => new ConfigCodecError({ codec: "jsonc", operation: "parse", cause })),
+			Effect.mapError((cause) => ConfigCodecError.make({ codec: "jsonc", operation: "parse", cause })),
 		),
 	stringify: (value) =>
 		Effect.try({
 			try: () => JSON.stringify(value, null, 2),
-			catch: (cause) => new ConfigCodecError({ codec: "jsonc", operation: "stringify", cause }),
+			catch: (cause) => ConfigCodecError.make({ codec: "jsonc", operation: "stringify", cause }),
 		}),
 };

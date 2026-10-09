@@ -101,7 +101,7 @@ describe("TextInput.screen under CliUiTest", () => {
 			yield* handle.type("ab");
 			yield* handle.press("escape");
 			const error = yield* Effect.flip(handle.result);
-			assert.strictEqual(error instanceof Cancelled ? error.reason : undefined, "escape");
+			assert.strictEqual(Schema.is(Cancelled)(error) ? error.reason : undefined, "escape");
 		}).pipe(Effect.scoped),
 	);
 
@@ -110,7 +110,7 @@ describe("TextInput.screen under CliUiTest", () => {
 			const handle = yield* CliUiTest.render(TextInput.screen({ message: "Name" }));
 			yield* handle.press("ctrl+c");
 			const error = yield* Effect.flip(handle.result);
-			assert.strictEqual(error instanceof Cancelled ? error.reason : undefined, "interrupt");
+			assert.strictEqual(Schema.is(Cancelled)(error) ? error.reason : undefined, "interrupt");
 		}).pipe(Effect.scoped),
 	);
 

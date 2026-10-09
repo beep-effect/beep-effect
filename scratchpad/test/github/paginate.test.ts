@@ -77,7 +77,7 @@ describe("paginate", () => {
 			const boom = GitHubError.rejected("probe", 500, "page two exploded");
 			let index = 0;
 			const source = (): PageSource<number> => ({
-				next: Effect.suspend(() => (index++ === 0 ? Effect.succeed(Option.some([1, 2])) : Effect.fail(boom))),
+				next: Effect.suspend(() => (index++ === 0 ? Effect.succeedSome([1, 2]) : Effect.fail(boom))),
 			});
 			const error = yield* Effect.flip(Stream.runCollect(paginate(source, undefined)));
 			assert.strictEqual(error.reason, "page two exploded");

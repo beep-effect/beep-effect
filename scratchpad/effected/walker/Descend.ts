@@ -138,7 +138,7 @@ export class DescendError extends Schema.TaggedError<DescendError>()("DescendErr
 	/** The offending directory, relative to `cwd` (`""` is the walk's base). */
 	path: Schema.String,
 	/** The depth cap, present when `reason` is `"depthExceeded"`. */
-	limit: Schema.optionalKey(Schema.Number),
+	limit: Schema.optionalKey(Schema.Finite),
 }) {
 	override get message(): string {
 		const where = this.path === "" ? "the base directory" : JSON.stringify(this.path);
@@ -254,7 +254,7 @@ const descendImpl: (
 				if (error.reason._tag === "NotFound") return Effect.succeed(undefined);
 				if (onUnreadable === "fail") {
 					return Effect.fail(
-						new DescendError({ pattern: pattern.source, reason: "unreadableDirectory", path: relative }),
+						DescendError.make({ pattern: pattern.source, reason: "unreadableDirectory", path: relative }),
 					);
 				}
 				if (onUnreadable === "record") unreadable.push({ path: relative, cause: error });
@@ -321,7 +321,7 @@ const descendImpl: (
 				if (error.reason._tag === "NotFound") return Effect.succeed<Array<string>>([]);
 				if (onUnreadable === "fail") {
 					return Effect.fail(
-						new DescendError({ pattern: pattern.source, reason: "unreadableDirectory", path: frame.relative }),
+						DescendError.make({ pattern: pattern.source, reason: "unreadableDirectory", path: frame.relative }),
 					);
 				}
 				if (onUnreadable === "record") unreadable.push({ path: frame.relative, cause: error });
@@ -371,7 +371,7 @@ const descendImpl: (
 			}
 			// Depth exhaustion is a typed failure, not a truncation.
 			if (frame.depth + 1 > maxDepth) {
-				return yield* new DescendError({
+				return yield* DescendError.make({
 					pattern: pattern.source,
 					reason: "depthExceeded",
 					path: frame.relative,

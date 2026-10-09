@@ -19,7 +19,7 @@
 // throws raw carriers (`RawTomlError`, `GuardExceeded`); this module builds
 // the typed `TomlParseError`, never letting a raw carrier escape as a defect.
 
-import { Data, Effect, Stream } from "effect";
+import { Data, Effect, Stream, Schema } from "effect";
 import { isRawTomlError } from "./internal/diagnostics.ts";
 import { isGuardExceeded } from "./internal/limits.ts";
 import { parseExpressions } from "./internal/parser.ts";
@@ -77,7 +77,7 @@ const trailingCommentOffset = (
 	source: string,
 	expression: TomlKeyValue | TomlTableHeader | TomlArrayTableHeader,
 ): number => {
-	if (expression instanceof TomlKeyValue) {
+	if (Schema.is(TomlKeyValue)(expression)) {
 		return source.indexOf("#", expression.value.offset + expression.value.length);
 	}
 	const lastKey = expression.keyPath[expression.keyPath.length - 1];
@@ -129,7 +129,7 @@ const collectEvents = (text: string): Array<TomlVisitorEvent> => {
 	});
 
 	for (const expression of expressions) {
-		if (expression instanceof TomlTrivia) {
+		if (Schema.is(TomlTrivia)(expression)) {
 			positioned.push(...collectTriviaComments(expression));
 			continue;
 		}
@@ -153,10 +153,10 @@ const collectEventsOrFail = (text: string): Effect.Effect<Array<TomlVisitorEvent
 		try: () => collectEvents(text),
 		catch: (defect) => {
 			if (isRawTomlError(defect)) {
-				return new TomlParseError({ diagnostics: [TomlDiagnostic.fromRaw(text, defect.diagnostic)] });
+				return TomlParseError.make({ diagnostics: [TomlDiagnostic.fromRaw(text, defect.diagnostic)] });
 			}
 			if (isGuardExceeded(defect)) {
-				return new TomlParseError({
+				return TomlParseError.make({
 					diagnostics: [
 						TomlDiagnostic.fromRaw(text, {
 							code: "NestingDepthExceeded",

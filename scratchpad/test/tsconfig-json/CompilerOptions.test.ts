@@ -13,7 +13,7 @@ import {
 describe("CompilerOptions", () => {
 	it.effect("decodes a full realistic options object preserving every field", () =>
 		Effect.gen(function* () {
-			const decoded = yield* Schema.decodeUnknownEffect(CompilerOptions)({
+			const decoded = yield* Schema.decodeEffect(CompilerOptions)({
 				target: "es2023",
 				module: "nodenext",
 				moduleResolution: "bundler",
@@ -32,24 +32,24 @@ describe("CompilerOptions", () => {
 
 	it.effect("decodes enum values case-insensitively", () =>
 		Effect.gen(function* () {
-			const target = yield* Schema.decodeUnknownEffect(CompilerOptions)({ target: "ES2023" });
+			const target = yield* Schema.decodeEffect(CompilerOptions)({ target: "ES2023" });
 			assert.strictEqual(target.target, "es2023");
 
-			const mod = yield* Schema.decodeUnknownEffect(CompilerOptions)({ module: "NodeNext" });
+			const mod = yield* Schema.decodeEffect(CompilerOptions)({ module: "NodeNext" });
 			assert.strictEqual(mod.module, "nodenext");
 		}),
 	);
 
 	it.effect("rejects an unknown enum value", () =>
 		Effect.gen(function* () {
-			const result = yield* Effect.result(Schema.decodeUnknownEffect(CompilerOptions)({ target: "es9999" }));
+			const result = yield* Effect.result(Schema.decodeEffect(CompilerOptions)({ target: "es9999" }));
 			assert.strictEqual(result._tag, "Failure");
 		}),
 	);
 
 	it.effect("passes unknown option keys through and preserves them across encode", () =>
 		Effect.gen(function* () {
-			const decoded = yield* Schema.decodeUnknownEffect(CompilerOptions)({ strict: true, futureOption: 42 });
+			const decoded = yield* Schema.decodeEffect(CompilerOptions)({ strict: true, futureOption: 42 });
 			assert.strictEqual(decoded.strict, true);
 			assert.strictEqual(decoded.futureOption, 42);
 
@@ -60,7 +60,7 @@ describe("CompilerOptions", () => {
 
 	it.effect("treats dead options as passthrough, not errors", () =>
 		Effect.gen(function* () {
-			const decoded = yield* Schema.decodeUnknownEffect(CompilerOptions)({ charset: "utf8", out: "x.js" });
+			const decoded = yield* Schema.decodeEffect(CompilerOptions)({ charset: "utf8", out: "x.js" });
 			assert.strictEqual(decoded.charset, "utf8");
 			assert.strictEqual(decoded.out, "x.js");
 		}),
@@ -68,14 +68,14 @@ describe("CompilerOptions", () => {
 
 	it.effect("decodes maxNodeModuleJsDepth as a number", () =>
 		Effect.gen(function* () {
-			const decoded = yield* Schema.decodeUnknownEffect(CompilerOptions)({ maxNodeModuleJsDepth: 2 });
+			const decoded = yield* Schema.decodeEffect(CompilerOptions)({ maxNodeModuleJsDepth: 2 });
 			assert.strictEqual(decoded.maxNodeModuleJsDepth, 2);
 		}),
 	);
 
 	it.effect("keeps unknown keys on plugins array elements", () =>
 		Effect.gen(function* () {
-			const decoded = yield* Schema.decodeUnknownEffect(CompilerOptions)({
+			const decoded = yield* Schema.decodeEffect(CompilerOptions)({
 				plugins: [{ name: "x", extra: 1 }],
 			});
 			assert.strictEqual(decoded.plugins?.[0]?.name, "x");
@@ -87,44 +87,44 @@ describe("CompilerOptions", () => {
 	describe("enum value schemas", () => {
 		it.effect("Target decodes case-insensitively and rejects unknown members", () =>
 			Effect.gen(function* () {
-				const decoded = yield* Schema.decodeUnknownEffect(Target)("ES2015");
+				const decoded = yield* Schema.decodeEffect(Target)("ES2015");
 				assert.strictEqual(decoded, "es2015");
-				const result = yield* Effect.result(Schema.decodeUnknownEffect(Target)("es9999"));
+				const result = yield* Effect.result(Schema.decodeEffect(Target)("es9999"));
 				assert.strictEqual(result._tag, "Failure");
 			}),
 		);
 
 		it.effect("Module decodes case-insensitively", () =>
 			Effect.gen(function* () {
-				const decoded = yield* Schema.decodeUnknownEffect(Module)("NodeNext");
+				const decoded = yield* Schema.decodeEffect(Module)("NodeNext");
 				assert.strictEqual(decoded, "nodenext");
 			}),
 		);
 
 		it.effect("ModuleResolution decodes case-insensitively", () =>
 			Effect.gen(function* () {
-				const decoded = yield* Schema.decodeUnknownEffect(ModuleResolution)("Bundler");
+				const decoded = yield* Schema.decodeEffect(ModuleResolution)("Bundler");
 				assert.strictEqual(decoded, "bundler");
 			}),
 		);
 
 		it.effect("Jsx decodes case-insensitively", () =>
 			Effect.gen(function* () {
-				const decoded = yield* Schema.decodeUnknownEffect(Jsx)("React-JSX");
+				const decoded = yield* Schema.decodeEffect(Jsx)("React-JSX");
 				assert.strictEqual(decoded, "react-jsx");
 			}),
 		);
 
 		it.effect("NewLine decodes case-insensitively", () =>
 			Effect.gen(function* () {
-				const decoded = yield* Schema.decodeUnknownEffect(NewLine)("CRLF");
+				const decoded = yield* Schema.decodeEffect(NewLine)("CRLF");
 				assert.strictEqual(decoded, "crlf");
 			}),
 		);
 
 		it.effect("ModuleDetection decodes case-insensitively", () =>
 			Effect.gen(function* () {
-				const decoded = yield* Schema.decodeUnknownEffect(ModuleDetection)("Force");
+				const decoded = yield* Schema.decodeEffect(ModuleDetection)("Force");
 				assert.strictEqual(decoded, "force");
 			}),
 		);
@@ -141,9 +141,9 @@ describe("CompilerOptions round-trip", () => {
 
 	it.effect.prop("decode ∘ encode is identity over a generated subset of typed fields", [Subset], ([subset]) =>
 		Effect.gen(function* () {
-			const decoded = yield* Schema.decodeUnknownEffect(CompilerOptions)(subset);
+			const decoded = yield* Schema.decodeEffect(CompilerOptions)(subset);
 			const encoded = yield* Schema.encodeUnknownEffect(CompilerOptions)(decoded);
-			const redecoded = yield* Schema.decodeUnknownEffect(CompilerOptions)(encoded);
+			const redecoded = yield* Schema.decodeEffect(CompilerOptions)(encoded);
 			assert.deepStrictEqual(redecoded, decoded);
 		}),
 	);

@@ -1,3 +1,4 @@
+// @effect-diagnostics nodeBuiltinImport:skip-file
 import { realpathSync } from "node:fs";
 import { assert, describe, it } from "@effect/vitest";
 import { Console, Effect, Option } from "effect";

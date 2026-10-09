@@ -1214,7 +1214,7 @@ export function makeScalar(cst: CstNode, state: ComposerState, meta?: NodeMeta):
 	// `450.00` resolves to 450 but should keep the trailing zeros.
 	const needsRaw =
 		style === "plain" && typeof value !== "string" && value !== undefined && shouldPreserveRaw(rawValue, value);
-	const scalar = new YamlScalar({
+	const scalar = YamlScalar.make({
 		value,
 		style,
 		offset: cst.offset,

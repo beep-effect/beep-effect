@@ -35,7 +35,7 @@ const PnpmImporter = Schema.Struct({
 });
 
 const PnpmLockfileRaw = Schema.Struct({
-	lockfileVersion: Schema.Union([Schema.String, Schema.Number]),
+	lockfileVersion: Schema.Union([Schema.String, Schema.Finite]),
 	settings: Schema.optionalKey(
 		Schema.Struct({
 			autoInstallPeers: Schema.optionalKey(Schema.Boolean),

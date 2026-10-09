@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
 import { SlsaProvenance } from "../../effected/sbom/index.ts";
@@ -10,7 +11,7 @@ import { ActionEnvironment, ActionsProvenance, OidcClaims, OidcTokenError, OidcT
 // the other, and a constructor that confuses them passes everything when they
 // are equal. A survived mutant found exactly that; do not collapse them here
 // either.
-const CLAIMS = new OidcClaims({
+const CLAIMS = OidcClaims.make({
 	iss: "https://token.actions.githubusercontent.com",
 	ref: "refs/heads/release",
 	sha: "d34db33fd34db33fd34db33fd34db33fd34db33f",
@@ -125,7 +126,7 @@ describe("ActionsProvenance", () => {
 
 	it.effect("an issuer failure passes through untouched — the error policy stays the consumer's", () =>
 		Effect.gen(function* () {
-			const failure = new OidcTokenError({ reason: "unavailable", detail: "ACTIONS_ID_TOKEN_REQUEST_URL" });
+			const failure = OidcTokenError.make({ reason: "unavailable", detail: "ACTIONS_ID_TOKEN_REQUEST_URL" });
 			const error = yield* provided(
 				Effect.flip(ActionsProvenance.capture("sigstore")),
 				OidcTokenIssuer.layerTest({ claims: () => Effect.fail(failure) }),

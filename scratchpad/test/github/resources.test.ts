@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { Effect, Layer, Option } from "effect";
 import { FileContent, FileDeletion, GitCommit } from "../../effected/github/GitCommit.ts";

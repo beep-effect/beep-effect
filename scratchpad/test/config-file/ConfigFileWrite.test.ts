@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import type { MemoryFileSystemSeed } from "../../effected/memfs/index.ts";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
@@ -31,7 +32,7 @@ describe("ConfigFile.write", () => {
 			const host = recordingFs({ "/explicit": MemoryFileSystem.directory() });
 			yield* Effect.gen(function* () {
 				const cfg = yield* AppConfig;
-				yield* cfg.write(new AppShape({ port: 9090 }), "/explicit/.apprc");
+				yield* cfg.write(AppShape.make({ port: 9090 }), "/explicit/.apprc");
 			}).pipe(Effect.provide(layerFor(host)));
 
 			assert.deepStrictEqual(JSON.parse(host.volume.text("/explicit/.apprc") as string), { port: 9090 });
@@ -44,7 +45,7 @@ describe("ConfigFile.write", () => {
 		Effect.gen(function* () {
 			const error = yield* Effect.gen(function* () {
 				const cfg = yield* AppConfig;
-				return yield* Effect.flip(cfg.write(new AppShape({ port: 1 }), "/ro/.apprc"));
+				return yield* Effect.flip(cfg.write(AppShape.make({ port: 1 }), "/ro/.apprc"));
 			}).pipe(Effect.provide(layerFor(hostileFs())));
 
 			assert.instanceOf(error, ConfigFileWriteError);
@@ -67,12 +68,12 @@ describe("ConfigFile.write", () => {
 				name: "broken",
 				parse: JsonCodec.parse,
 				stringify: () =>
-					Effect.fail(new ConfigCodecError({ codec: "broken", operation: "stringify", cause: new Error("nope") })),
+					Effect.fail(ConfigCodecError.make({ codec: "broken", operation: "stringify", cause: new Error("nope") })),
 			};
 
 			const error = yield* Effect.gen(function* () {
 				const cfg = yield* AppConfig;
-				return yield* Effect.flip(cfg.write(new AppShape({ port: 1 }), "/x/.apprc"));
+				return yield* Effect.flip(cfg.write(AppShape.make({ port: 1 }), "/x/.apprc"));
 			}).pipe(Effect.provide(layerFor(host, undefined, brokenCodec)));
 
 			assert.instanceOf(error, ConfigCodecError);
@@ -89,7 +90,7 @@ describe("ConfigFile.save", () => {
 			const host = recordingFs({});
 			const written = yield* Effect.gen(function* () {
 				const cfg = yield* AppConfig;
-				return yield* cfg.save(new AppShape({ port: 7070 }));
+				return yield* cfg.save(AppShape.make({ port: 7070 }));
 			}).pipe(Effect.provide(layerFor(host, "/home/u/.config/app/.apprc")));
 
 			assert.strictEqual(written, "/home/u/.config/app/.apprc");
@@ -103,7 +104,7 @@ describe("ConfigFile.save", () => {
 			const host = recordingFs({});
 			const error = yield* Effect.gen(function* () {
 				const cfg = yield* AppConfig;
-				return yield* Effect.flip(cfg.save(new AppShape({ port: 1 })));
+				return yield* Effect.flip(cfg.save(AppShape.make({ port: 1 })));
 			}).pipe(Effect.provide(layerFor(host)));
 
 			assert.instanceOf(error, ConfigDefaultPathMissingError);
@@ -120,7 +121,7 @@ describe("ConfigFile.save", () => {
 			const host = recordingFs({});
 			const label = yield* Effect.gen(function* () {
 				const cfg = yield* AppConfig;
-				return yield* cfg.save(new AppShape({ port: 1 })).pipe(
+				return yield* cfg.save(AppShape.make({ port: 1 })).pipe(
 					Effect.as("saved"),
 					Effect.catchTag("ConfigDefaultPathMissingError", () => Effect.succeed("no-default-path")),
 					Effect.catchTag("ConfigFileWriteError", () => Effect.succeed("unwritable")),
@@ -140,7 +141,7 @@ describe("ConfigFile.update", () => {
 			const host = recordingFs({ "/app/.apprc": `{"port":1}` });
 			const updated = yield* Effect.gen(function* () {
 				const cfg = yield* AppConfig;
-				return yield* cfg.update((current) => new AppShape({ port: current.port + 1 }));
+				return yield* cfg.update((current) => AppShape.make({ port: current.port + 1 }));
 			}).pipe(Effect.provide(layerFor(host, "/app/.apprc")));
 
 			assert.strictEqual(updated.port, 2);
@@ -153,7 +154,7 @@ describe("ConfigFile.update", () => {
 			const host = recordingFs({});
 			const updated = yield* Effect.gen(function* () {
 				const cfg = yield* AppConfig;
-				return yield* cfg.update((current) => new AppShape({ port: current.port + 1 }), new AppShape({ port: 10 }));
+				return yield* cfg.update((current) => AppShape.make({ port: current.port + 1 }), AppShape.make({ port: 10 }));
 			}).pipe(Effect.provide(layerFor(host, "/app/.apprc")));
 
 			assert.strictEqual(updated.port, 11);
@@ -223,7 +224,7 @@ describe("ConfigFile.layer with an empty resolver chain", () => {
 
 			const written = yield* Effect.gen(function* () {
 				const cfg = yield* AppConfig;
-				return yield* cfg.save(new AppShape({ port: 42 }));
+				return yield* cfg.save(AppShape.make({ port: 42 }));
 			}).pipe(Effect.provide(writeOnlyLayer));
 
 			assert.strictEqual(written, "/write-only/.apprc");
@@ -269,7 +270,7 @@ describe("ConfigFile.update — concurrency", () => {
 
 			yield* Effect.gen(function* () {
 				const cfg = yield* AppConfig;
-				const bump = cfg.update((current) => new AppShape({ port: current.port + 1 }));
+				const bump = cfg.update((current) => AppShape.make({ port: current.port + 1 }));
 				// Unserialized, both fibers read port=0 across the yield and both write 1.
 				yield* Effect.all([bump, bump], { concurrency: 2 });
 			}).pipe(Effect.provide(layer));

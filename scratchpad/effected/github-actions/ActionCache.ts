@@ -33,7 +33,7 @@ export class ActionCacheError extends Schema.TaggedError<ActionCacheError>()("Ac
 	/** The cache key involved. A stable identifier, never a value. */
 	key: Schema.optionalKey(Schema.String),
 	/** The HTTP status, when the backend answered. */
-	status: Schema.optionalKey(Schema.Number),
+	status: Schema.optionalKey(Schema.Finite),
 	/** What went wrong, when the reason alone does not say. */
 	detail: Schema.optionalKey(Schema.String),
 	/** `tar`'s own complaint, which is the only useful part of an archive failure. */
@@ -160,12 +160,12 @@ const azure: FileBlobTransfer = {
 					concurrency: 8,
 					maxSingleShotSize: 128 * 1024 * 1024,
 				}),
-			catch: (cause) => new BlobTransferError({ reason: "uploadFailed", cause }),
+			catch: (cause) => BlobTransferError.make({ reason: "uploadFailed", cause }),
 		}).pipe(Effect.asVoid),
 	downloadToFile: (url, file) =>
 		Effect.tryPromise({
 			try: () => new BlobClient(url).downloadToFile(file),
-			catch: (cause) => new BlobTransferError({ reason: "downloadFailed", cause }),
+			catch: (cause) => BlobTransferError.make({ reason: "downloadFailed", cause }),
 		}).pipe(Effect.asVoid),
 };
 
@@ -197,11 +197,11 @@ const make = (
 
 		/** A filesystem or subprocess failure on the way to or from the archive. */
 		const archiveFailed = (key: string) => (cause: unknown) =>
-			new ActionCacheError({ reason: "archiveFailed", key, cause });
+			ActionCacheError.make({ reason: "archiveFailed", key, cause });
 
 		const backend = resultsBackend(env).pipe(
 			Effect.mapError(
-				(name) => new ActionCacheError({ reason: "misconfigured", detail: misconfiguredDetail(name, "Actions cache") }),
+				(name) => ActionCacheError.make({ reason: "misconfigured", detail: misconfiguredDetail(name, "Actions cache") }),
 			),
 		);
 
@@ -211,10 +211,10 @@ const make = (
 				Effect.gen(function* () {
 					const { baseUrl, token } = yield* backend;
 					return yield* twirpCall({ http, baseUrl, service: CACHE_SERVICE, token, method, body }).pipe(
-						Effect.mapError((failure) => new ActionCacheError({ ...twirpFailureFields(failure), key })),
+						Effect.mapError((failure) => ActionCacheError.make({ ...twirpFailureFields(failure), key })),
 					);
 				}),
-			refused: (detail) => new ActionCacheError({ reason: "refused", key, detail }),
+			refused: (detail) => ActionCacheError.make({ reason: "refused", key, detail }),
 		});
 
 		/**
@@ -236,7 +236,7 @@ const make = (
 					Effect.mapError(archiveFailed(key)),
 				);
 				if (code !== 0 && !(tolerateWarnings && code === 1)) {
-					return yield* Effect.fail(new ActionCacheError({ reason: "archiveFailed", key, stderr: output.trim() }));
+					return yield* ActionCacheError.make({ reason: "archiveFailed", key, stderr: output.trim() });
 				}
 			});
 
@@ -255,7 +255,7 @@ const make = (
 			);
 
 		const moved = (key: string) =>
-			Effect.mapError((cause: BlobTransferError) => new ActionCacheError({ reason: "transferFailed", key, cause }));
+			Effect.mapError((cause: BlobTransferError) => ActionCacheError.make({ reason: "transferFailed", key, cause }));
 
 		/** Platform separators to the dialect's — applied to paths WE produce, never to the caller's pattern text, where a backslash is minimatch's escape character. */
 		const posix = (value: string): string => value.replaceAll("\\", "/");
@@ -288,7 +288,7 @@ const make = (
 		): Effect.Effect<ReadonlyArray<string>, ActionCacheError> =>
 			Effect.gen(function* () {
 				const failed = (detail: string, cause?: unknown) =>
-					new ActionCacheError({ reason: "archiveFailed", key, detail, ...(cause === undefined ? {} : { cause }) });
+					ActionCacheError.make({ reason: "archiveFailed", key, detail, ...(cause === undefined ? {} : { cause }) });
 				const cleaned = patterns.map((pattern) => pattern.trim()).filter((p) => p !== "" && !p.startsWith("#"));
 				// The toolkit roots relative patterns at the process working directory
 				// and relativizes matches against GITHUB_WORKSPACE; on a runner the two
@@ -306,9 +306,7 @@ const make = (
 							home = yield* env.getOptional("USERPROFILE");
 						}
 						if (Option.isNone(home)) {
-							return yield* Effect.fail(
-								failed(`cannot expand "~" in "${pattern}" — neither HOME nor USERPROFILE is set`),
-							);
+							return yield* failed(`cannot expand "~" in "${pattern}" — neither HOME nor USERPROFILE is set`);
 						}
 						target = `${GlobPattern.escape(posix(path.resolve(home.value)))}${target.slice(1)}`;
 					}
@@ -395,7 +393,7 @@ const make = (
 					}
 				}
 				if (matched.length === 0) {
-					return yield* Effect.fail(failed(`no file or directory matched the cache paths: ${cleaned.join(", ")}`));
+					return yield* failed(`no file or directory matched the cache paths: ${cleaned.join(", ")}`);
 				}
 				return matched;
 			});
@@ -405,9 +403,7 @@ const make = (
 				const { primary } = ladder(key, undefined);
 				yield* Effect.annotateCurrentSpan({ key: primary });
 				if (paths.length === 0) {
-					return yield* Effect.fail(
-						new ActionCacheError({ reason: "archiveFailed", key: primary, detail: "no paths were given to cache" }),
-					);
+					return yield* ActionCacheError.make({ reason: "archiveFailed", key: primary, detail: "no paths were given to cache" });
 				}
 				// The LITERAL list, before resolution — see `versionOf` for why.
 				const version = versionOf(paths);
@@ -513,7 +509,7 @@ const dies = unstubbed("ActionCache.makeTest");
  * @public
  */
 export class ActionCache extends Context.Service<ActionCache, ActionCacheShape>()(
-	"@effected/github-actions/ActionCache",
+	"@beep/scratchpad/effected/github-actions/ActionCache",
 ) {
 	/** The cache, over the real Azure client and the real `tar`. */
 	static readonly layer: Layer.Layer<

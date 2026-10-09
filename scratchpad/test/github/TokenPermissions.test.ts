@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import { ArtifactMetadata, StorageRecordInput } from "../../effected/github/ArtifactMetadata.ts";

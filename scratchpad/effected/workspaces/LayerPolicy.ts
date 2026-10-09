@@ -116,7 +116,7 @@ export class LayerPolicy extends Schema.Class<LayerPolicy>("LayerPolicy")({
 				errors: "all",
 			}).pipe(
 				Effect.mapError(
-					(cause) => new LayerPolicyError({ reason: "decode", cause, ...(path === undefined ? {} : { path }) }),
+					(cause) => LayerPolicyError.make({ reason: "decode", cause, ...(path === undefined ? {} : { path }) }),
 				),
 			);
 		},
@@ -130,10 +130,10 @@ export class LayerPolicy extends Schema.Class<LayerPolicy>("LayerPolicy")({
 		const fs = yield* FileSystem.FileSystem;
 		const text = yield* fs
 			.readFileString(path)
-			.pipe(Effect.mapError((cause) => new LayerPolicyError({ reason: "read", path, cause })));
+			.pipe(Effect.mapError((cause) => LayerPolicyError.make({ reason: "read", path, cause })));
 		const json = yield* Effect.try({
 			try: () => JSON.parse(text) as unknown,
-			catch: (cause) => new LayerPolicyError({ reason: "json", path, cause }),
+			catch: (cause) => LayerPolicyError.make({ reason: "json", path, cause }),
 		});
 		return yield* LayerPolicy.decode(json, { path, allowKeys: options?.allowKeys });
 	});

@@ -462,14 +462,14 @@ const replayInProcess = (
 				// `layerSubprocess`, because this module stays in its import graph
 				// either way.
 				try: () => import(/* webpackIgnore: true */ url) as Promise<unknown>,
-				catch: (cause) => new CatalogAssemblyError({ source: "hooks", path: name, cause }),
+				catch: (cause) => CatalogAssemblyError.make({ source: "hooks", path: name, cause }),
 			});
 			const updateConfig = updateConfigOf(loaded);
 			if (updateConfig === undefined) continue;
 			const currentConfig = config;
 			config = yield* Effect.try({
 				try: () => configOf(updateConfig(currentConfig), currentConfig),
-				catch: (cause) => new CatalogAssemblyError({ source: "hooks", path: name, cause }),
+				catch: (cause) => CatalogAssemblyError.make({ source: "hooks", path: name, cause }),
 			});
 		}
 		return injectionOf(config, pnpmfiles);
@@ -645,7 +645,7 @@ const replayFailureCause = (payload: { readonly message?: string; readonly stack
  * @public
  */
 export class ConfigDependencyHooks extends Context.Service<ConfigDependencyHooks, ConfigDependencyHooksShape>()(
-	"@effected/workspaces/ConfigDependencyHooks",
+	"@beep/scratchpad/effected/workspaces/ConfigDependencyHooks",
 ) {
 	/**
 	 * The no-op layer: `inject` returns the seed unchanged and never touches a
@@ -879,20 +879,18 @@ export class ConfigDependencyHooks extends Context.Service<ConfigDependencyHooks
 							// any other transport failure.
 							const payload = yield* Run.jsonLine(command, ReplayPayload, { timeout: REPLAY_TIMEOUT }).pipe(
 								Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
-								Effect.catch((cause) => Effect.fail(new CatalogAssemblyError({ source: "hooks", path: root, cause }))),
+								Effect.catch((cause) => Effect.fail(CatalogAssemblyError.make({ source: "hooks", path: root, cause }))),
 							);
 
 							// A serialized per-name failure: the child reports a real load/replay
 							// failure by name, so this maps 1:1 onto layerLive's typed error,
 							// attribution intact.
 							if (payload.ok === false) {
-								return yield* Effect.fail(
-									new CatalogAssemblyError({
+								return yield* CatalogAssemblyError.make({
 										source: "hooks",
 										path: payload.name ?? root,
 										cause: replayFailureCause(payload),
-									}),
-								);
+									});
 							}
 
 							// The child returned the raw threaded config slice; fold and normalize

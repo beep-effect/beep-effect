@@ -46,10 +46,10 @@ export type MarkdownParseErrorCode = typeof MarkdownParseErrorCode.Type;
 export class MarkdownDiagnostic extends Schema.Class<MarkdownDiagnostic>("MarkdownDiagnostic")({
 	code: MarkdownParseErrorCode,
 	message: Schema.String,
-	offset: Schema.Number,
-	length: Schema.Number,
-	line: Schema.Number,
-	character: Schema.Number,
+	offset: Schema.Finite,
+	length: Schema.Finite,
+	line: Schema.Finite,
+	character: Schema.Finite,
 }) {
 	/**
 	 * Materialize an engine record, deriving zero-based `line`/`character`

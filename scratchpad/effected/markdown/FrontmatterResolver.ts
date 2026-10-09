@@ -253,37 +253,37 @@ export class SchemaResolver {
 	static classify(value: unknown): Result.Result<SchemaDeclaration, SchemaDeclarationInvalidError> {
 		if (typeof value === "string") {
 			if (value.length === 0) {
-				return Result.fail(new SchemaDeclarationInvalidError({ reason: "the declaration is empty", value }));
+				return Result.fail(SchemaDeclarationInvalidError.make({ reason: "the declaration is empty", value }));
 			}
 			if (value.includes("://")) {
-				return Result.succeed(new SchemaDeclarationByUrl({ url: value }));
+				return Result.succeed(SchemaDeclarationByUrl.make({ url: value }));
 			}
 			if (value.startsWith("./") || value.startsWith("../") || value.startsWith("/")) {
-				return Result.succeed(new SchemaDeclarationByPath({ path: value }));
+				return Result.succeed(SchemaDeclarationByPath.make({ path: value }));
 			}
 			const separator = value.lastIndexOf("@");
 			if (separator <= 0) {
 				// No separator, or only the leading scope @ — the whole string is
 				// the name.
-				return Result.succeed(new SchemaDeclarationByName({ name: value }));
+				return Result.succeed(SchemaDeclarationByName.make({ name: value }));
 			}
 			const name = value.slice(0, separator);
 			const version = value.slice(separator + 1);
 			if (parseVersionSegments(version) === undefined) {
 				return Result.fail(
-					new SchemaDeclarationInvalidError({
+					SchemaDeclarationInvalidError.make({
 						reason: `version "${version}" is outside the X[.Y[.Z]] integer grammar`,
 						value,
 					}),
 				);
 			}
-			return Result.succeed(new SchemaDeclarationByName({ name, version }));
+			return Result.succeed(SchemaDeclarationByName.make({ name, version }));
 		}
 		if (isMapping(value)) {
-			return Result.succeed(new SchemaDeclarationInline({ document: value }));
+			return Result.succeed(SchemaDeclarationInline.make({ document: value }));
 		}
 		return Result.fail(
-			new SchemaDeclarationInvalidError({ reason: "the declaration is neither a string nor a mapping", value }),
+			SchemaDeclarationInvalidError.make({ reason: "the declaration is neither a string nor a mapping", value }),
 		);
 	}
 
@@ -308,7 +308,7 @@ export class SchemaResolver {
 	): Result.Result<SchemaDeclaration | undefined, SchemaDeclarationInvalidError | SchemaDeclarationMissingError> {
 		if (!isMapping(data) || !Object.hasOwn(data, "$schema")) {
 			return options?.requireDeclaration === true
-				? Result.fail(new SchemaDeclarationMissingError())
+				? Result.fail(SchemaDeclarationMissingError.make())
 				: Result.succeed(undefined);
 		}
 		return SchemaResolver.classify(data.$schema);
@@ -343,7 +343,7 @@ export class SchemaResolver {
 		const byName = new Map<string, { versionless?: Schema.Top; versions: Map<string, Schema.Top> }>();
 		for (const [key, schema] of Object.entries(registrations)) {
 			const classified = SchemaResolver.classify(key);
-			if (Result.isFailure(classified) || !(classified.success instanceof SchemaDeclarationByName)) {
+			if (Result.isFailure(classified) || !(Schema.is(SchemaDeclarationByName)(classified.success))) {
 				throw new Error(`SchemaResolver.fromRegistry: registration key "${key}" is outside the name[@version] grammar`);
 			}
 			const declaration = classified.success;
@@ -371,24 +371,24 @@ export class SchemaResolver {
 		return {
 			resolve: (declaration, _data) => {
 				if (declaration === undefined) {
-					return Effect.fail(new SchemaDeclarationMissingError());
+					return Effect.fail(SchemaDeclarationMissingError.make());
 				}
-				if (!(declaration instanceof SchemaDeclarationByName)) {
-					return Effect.fail(new SchemaNameUnknownError({ declaration }));
+				if (!(Schema.is(SchemaDeclarationByName)(declaration))) {
+					return Effect.fail(SchemaNameUnknownError.make({ declaration }));
 				}
 				const entry = byName.get(declaration.name);
 				if (entry === undefined) {
-					return Effect.fail(new SchemaNameUnknownError({ declaration }));
+					return Effect.fail(SchemaNameUnknownError.make({ declaration }));
 				}
 				if (declaration.version === undefined) {
 					return entry.versionless === undefined
-						? Effect.fail(new SchemaVersionUnresolvableError({ name: declaration.name }))
+						? Effect.fail(SchemaVersionUnresolvableError.make({ name: declaration.name }))
 						: Effect.succeed(entry.versionless);
 				}
 				const segments = parseVersionSegments(declaration.version);
 				const match = segments === undefined ? undefined : entry.versions.get(segments.join("."));
 				return match === undefined
-					? Effect.fail(new SchemaVersionUnresolvableError({ name: declaration.name, version: declaration.version }))
+					? Effect.fail(SchemaVersionUnresolvableError.make({ name: declaration.name, version: declaration.version }))
 					: Effect.succeed(match);
 			},
 		};

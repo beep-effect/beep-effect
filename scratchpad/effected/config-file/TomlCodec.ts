@@ -25,10 +25,10 @@ export const TomlCodec: ConfigCodec = {
 	name: "toml",
 	parse: (raw) =>
 		Toml.parse(raw).pipe(
-			Effect.mapError((cause) => new ConfigCodecError({ codec: "toml", operation: "parse", cause })),
+			Effect.mapError((cause) => ConfigCodecError.make({ codec: "toml", operation: "parse", cause })),
 		),
 	stringify: (value) =>
 		Toml.stringify(value).pipe(
-			Effect.mapError((cause) => new ConfigCodecError({ codec: "toml", operation: "stringify", cause })),
+			Effect.mapError((cause) => ConfigCodecError.make({ codec: "toml", operation: "stringify", cause })),
 		),
 };

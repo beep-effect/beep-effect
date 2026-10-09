@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file nodeBuiltinImport:skip-file globalTimers:skip-file newPromise:skip-file
 // Integration: the real Node filesystem, against real files in a temp dir.
 //
 // The unit suite runs on an in-memory double that CONSTRUCTS the platform

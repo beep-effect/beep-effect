@@ -103,7 +103,7 @@ describe("WorkspaceResolver", () => {
 		});
 
 		it("decodes an error encoded before reason existed as a mechanism failure", () => {
-			const decoded = Schema.decodeUnknownSync(DependencyResolutionError)({
+			const decoded = Schema.decodeSync(DependencyResolutionError)({
 				_tag: "DependencyResolutionError",
 				specifier: "catalog:",
 				cause: "unresolved",

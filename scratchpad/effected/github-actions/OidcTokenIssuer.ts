@@ -24,7 +24,7 @@ export class OidcTokenError extends Schema.TaggedError<OidcTokenError>()("OidcTo
 	/** What was wrong, in one line. */
 	detail: Schema.optionalKey(Schema.String),
 	/** The HTTP status, when the token service answered. */
-	status: Schema.optionalKey(Schema.Number),
+	status: Schema.optionalKey(Schema.Finite),
 	/** The underlying failure, preserved structurally. */
 	cause: Schema.optionalKey(Schema.Defect()),
 }) {
@@ -86,7 +86,7 @@ export class OidcClaims extends Schema.Class<OidcClaims>("OidcClaims")({
 /** The token envelope the runner's token service answers with. */
 const TokenEnvelope = Schema.Struct({
 	value: Schema.String,
-	count: Schema.optionalKey(Schema.Number),
+	count: Schema.optionalKey(Schema.Finite),
 });
 
 const REQUEST_TOKEN = "ACTIONS_ID_TOKEN_REQUEST_TOKEN";
@@ -104,12 +104,12 @@ const readClaims = (token: string): Effect.Effect<OidcClaims, OidcTokenError> =>
 		const decoded = yield* Effect.fromResult(payloadOf(token)).pipe(
 			Effect.mapError((failure) =>
 				failure.kind === "segments"
-					? new OidcTokenError({ reason: "malformedToken", detail: failure.detail })
-					: new OidcTokenError({ reason: "malformedToken", detail: failure.detail, cause: failure.cause }),
+					? OidcTokenError.make({ reason: "malformedToken", detail: failure.detail })
+					: OidcTokenError.make({ reason: "malformedToken", detail: failure.detail, cause: failure.cause }),
 			),
 		);
 		return yield* Schema.decodeUnknownEffect(OidcClaims)(decoded).pipe(
-			Effect.mapError((cause) => new OidcTokenError({ reason: "missingClaims", cause })),
+			Effect.mapError((cause) => OidcTokenError.make({ reason: "missingClaims", cause })),
 		);
 	});
 
@@ -163,7 +163,7 @@ const make = Effect.gen(function* () {
 	const http = yield* HttpClient.HttpClient;
 
 	const required = (name: string): Effect.Effect<string, OidcTokenError> =>
-		env.get(name).pipe(Effect.mapError(() => new OidcTokenError({ reason: "unavailable", detail: name })));
+		env.get(name).pipe(Effect.mapError(() => OidcTokenError.make({ reason: "unavailable", detail: name })));
 
 	/**
 	 * The raw JWT, before it is wrapped.
@@ -184,14 +184,14 @@ const make = Effect.gen(function* () {
 
 		const response = yield* http
 			.execute(HttpClientRequest.get(url).pipe(HttpClientRequest.bearerToken(bearer), HttpClientRequest.acceptJson))
-			.pipe(Effect.mapError((cause) => new OidcTokenError({ reason: "requestFailed", cause })));
+			.pipe(Effect.mapError((cause) => OidcTokenError.make({ reason: "requestFailed", cause })));
 
 		if (response.status < 200 || response.status >= 300) {
-			return yield* Effect.fail(new OidcTokenError({ reason: "requestFailed", status: response.status }));
+			return yield* OidcTokenError.make({ reason: "requestFailed", status: response.status });
 		}
 
 		const envelope = yield* HttpClientResponse.schemaBodyJson(TokenEnvelope)(response).pipe(
-			Effect.mapError((cause) => new OidcTokenError({ reason: "malformedResponse", cause })),
+			Effect.mapError((cause) => OidcTokenError.make({ reason: "malformedResponse", cause })),
 		);
 		return envelope.value;
 	});
@@ -230,7 +230,7 @@ const dies = unstubbed("OidcTokenIssuer.makeTest");
  * @public
  */
 export class OidcTokenIssuer extends Context.Service<OidcTokenIssuer, OidcTokenIssuerShape>()(
-	"@effected/github-actions/OidcTokenIssuer",
+	"@beep/scratchpad/effected/github-actions/OidcTokenIssuer",
 ) {
 	/**
 	 * The live issuer, requesting tokens from the runner's token service.

@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file
 // Ported from Effect-TS/effect PR #6573 (pinned head
 // c0528bd5cf12154aa95a7ceec243fd2045876853), upstream source
 // packages/effect/test/MemoryFileSystem.test.ts — the memory-specific adapter

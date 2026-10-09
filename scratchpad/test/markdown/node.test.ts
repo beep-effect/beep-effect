@@ -384,7 +384,7 @@ describe("MarkdownNode", () => {
 
 			let cursor: unknown = decoded.children[0];
 			let seen = 0;
-			while (cursor instanceof Blockquote) {
+			while (Schema.is(Blockquote)(cursor)) {
 				seen += 1;
 				cursor = cursor.children[0];
 			}

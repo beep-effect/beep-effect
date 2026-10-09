@@ -22,9 +22,9 @@ here, skip them with a reason, or supply what they need (for example the upstrea
 | sbom | 3 failed, 127 passed (130) | 3 | 0 |
 | schema-org | 98 passed (98) | 0 | 0 |
 | workspaces | 15 failed, 988 passed, 1 skipped (1004) | 15 | 0 |
-| yaml | 1 failed, 2039 passed (2040) | 0 | 1 |
+| yaml | 2040 passed (2040) | 0 | 0 |
 
-Totals: 42 environment-bound, 6 other.
+Totals: 42 environment-bound, 5 other.
 
 ## Environment-bound
 
@@ -100,4 +100,3 @@ Failures that are neither a layout path nor a missing environment.
 - **github-actions**: reachability.test.ts > bundle reachability > the light half reaches only effect and the kit packages it derives from - AssertionError at line 158: expected ['@effected/github-commands','effect'], received ['effect']. Cause: the copy rewrote the source's bare sibling imports ("@effected/github-commands", "@effected/glob", "@effected/walker") to relative paths ("../github-commands/index.ts" etc.). The test's walker treats every specifier starting with "." as an intra-package edge and follows it, so the sibling kit packages never appear in the bare-import set. Not fixable by rules 1 or 2: replacing the expected literal with the rewritten specifier still fails because the walker never records relative specifiers, and dropping the literal would remove an asserted edge. Left unchanged.
 - **github-actions**: reachability.test.ts > bundle reachability > the markdown engine is confined to the writer, on Azure's terms - AssertionError at line 207 ('GitHubMarkdown does not reach the engine — the walker is blind: expected false to be true'). Same cause: GitHubMarkdown.ts now imports "../markdown/index.ts" instead of "@effected/markdown" (and ManagedDocument/CheckDocument import "../templates/index.ts"), which the walker follows instead of recording. Left unchanged.
 - **github-actions**: reachability.test.ts > bundle reachability > the @effected/npm edge is confined to the installer, on Azure's terms - AssertionError at line 233 ('PackageManagerInstaller does not reach @effected/npm — the walker is blind: expected false to be true'). Same cause: PackageManagerInstaller.ts now imports "../npm/index.ts" instead of "@effected/npm". Left unchanged.
-- **yaml**: scratchpad/test/yaml/YamlLint.test.ts > YamlLintConfig > rejects out-of-domain numeric options, naming the field - caused by the uncommitted edit in scratchpad/effected/yaml/internal/rules/util.ts (nonNegativeIntegerOption: Schema.Number.check(...) changed to Schema.Finite.check(...); confirmed with git diff). The test decodes { rules: { "line-length": { max: NaN } } } and asserts the message includes "non-negative integer"; with Schema.Finite, NaN is rejected by the base schema first with "Expected a finite number", so the filter's "Expected a non-negative integer" never appears (line 85). Probe with the installed effect: Schema.Number base gives "Expected a non-negative integer" for NaN, -1 and 1.5; Schema.Finite base gives "Expected a finite number" for NaN and the filter message for -1 and 1.5. Source and test left untouched; the test passes as copied only if the base stays Schema.Number, or the test expectation is deliberately revised by whoever owns that edit.

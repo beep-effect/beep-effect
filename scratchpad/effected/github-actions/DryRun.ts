@@ -57,7 +57,7 @@ const make = (enabled: boolean): DryRunShape => ({
  *
  * @public
  */
-export class DryRun extends Context.Service<DryRun, DryRunShape>()("@effected/github-actions/DryRun") {
+export class DryRun extends Context.Service<DryRun, DryRunShape>()("@beep/scratchpad/effected/github-actions/DryRun") {
 	/**
 	 * Driven by a named input.
 	 *

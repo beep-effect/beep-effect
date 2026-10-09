@@ -41,7 +41,7 @@ export const toIntegrityHash = (
 	raw: string | undefined,
 ): Effect.Effect<IntegrityHashBrand | undefined, ParseFailure> => {
 	if (raw === undefined) return Effect.succeed(undefined);
-	return Schema.decodeUnknownEffect(IntegrityHash)(raw).pipe(Effect.mapError(validationFailure));
+	return Schema.decodeEffect(IntegrityHash)(raw).pipe(Effect.mapError(validationFailure));
 };
 
 const decodeSpecifier = Schema.decodeUnknownExit(DependencySpecifier.FromString);
@@ -284,7 +284,7 @@ export const requireLockfileVersion = (
  * @internal
  */
 const PnpmVersionProbe = Schema.Struct({
-	lockfileVersion: Schema.Union([Schema.String, Schema.Number]),
+	lockfileVersion: Schema.Union([Schema.String, Schema.Finite]),
 });
 
 /**

@@ -38,7 +38,7 @@ export const documentStart: YamlRule = {
 		const headed = first?.kind === "document-start";
 		if (present && !headed && ctx.text.trim() !== "") {
 			return [
-				new YamlLintDiagnostic({
+				YamlLintDiagnostic.make({
 					rule: "document-start",
 					severity: "error",
 					message: 'Missing "---" document start marker',
@@ -62,7 +62,7 @@ export const documentStart: YamlRule = {
 			// (two characters under CRLF, one under LF).
 			const terminator = ctx.text.startsWith("\r\n", first.offset + first.length) ? 2 : 1;
 			return [
-				new YamlLintDiagnostic({
+				YamlLintDiagnostic.make({
 					rule: "document-start",
 					severity: "error",
 					message: 'Forbidden "---" document start marker',

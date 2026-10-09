@@ -86,7 +86,7 @@ export class CatalogAssemblyError extends Schema.TaggedError<CatalogAssemblyErro
 	 * summary, so its message is used as-is rather than prefixed a second time.
 	 */
 	override get message(): string {
-		if (this.cause instanceof CatalogAssemblyError) return this.cause.message;
+		if (Schema.is(CatalogAssemblyError)(this.cause)) return this.cause.message;
 		const summary = `Failed to assemble catalogs from ${this.source} ${this.path}`;
 		const detail = causeMessage(this.cause);
 		return detail === undefined ? summary : `${summary}: ${detail}`;

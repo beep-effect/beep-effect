@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file
 // scanAudience reads argv by hand, mirroring core's lexer. This differential test is what pins that mirror: it runs
 // core's REAL parser over a set of edge argvs, reads the parsed audience flags back out, and requires the scan to
 // agree. A change in core's lexer or boolean spellings fails here instead of silently drifting.

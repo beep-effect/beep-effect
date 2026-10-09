@@ -54,7 +54,7 @@ import {
  */
 export class YamlParseOptions extends Schema.Class<YamlParseOptions>("YamlParseOptions")({
 	strict: Schema.optionalKey(Schema.Boolean),
-	maxAliasCount: Schema.optionalKey(Schema.Number),
+	maxAliasCount: Schema.optionalKey(Schema.Finite),
 	uniqueKeys: Schema.optionalKey(Schema.Boolean),
 }) {}
 
@@ -109,7 +109,7 @@ export class YamlParseOptions extends Schema.Class<YamlParseOptions>("YamlParseO
  * @public
  */
 export class YamlStringifyOptions extends Schema.Class<YamlStringifyOptions>("YamlStringifyOptions")({
-	indent: Schema.optionalKey(Schema.Number),
+	indent: Schema.optionalKey(Schema.Finite),
 	/**
 	 * Column at which to fold long scalars. Default `0` (and any value `<= 0`)
 	 * never wraps; a positive value folds plain, double-quoted and block-folded
@@ -124,7 +124,7 @@ export class YamlStringifyOptions extends Schema.Class<YamlStringifyOptions>("Ya
 	 * helpers built on it — threads the field into its render context but
 	 * never reads it, so it is inert there.
 	 */
-	lineWidth: Schema.optionalKey(Schema.Number),
+	lineWidth: Schema.optionalKey(Schema.Finite),
 	defaultScalarStyle: Schema.optionalKey(ScalarStyle),
 	defaultCollectionStyle: Schema.optionalKey(CollectionStyle),
 	sortKeys: Schema.optionalKey(Schema.Boolean),
@@ -254,7 +254,7 @@ const toDiagnostics = (text: string, records: ReadonlyArray<RawDiagnostic>): Rea
  * diagnostic carries zero offsets.
  */
 const aliasCountExceededError = (message: string, text: string): YamlParseError =>
-	new YamlParseError({
+	YamlParseError.make({
 		diagnostics: [
 			YamlDiagnostic.make({ code: "AliasCountExceeded", message, offset: 0, length: 0, line: 0, character: 0 }),
 		],
@@ -269,7 +269,7 @@ const aliasCountExceededError = (message: string, text: string): YamlParseError 
  */
 const stringifyDefectToError = (defect: unknown, value: unknown): YamlStringifyError | undefined => {
 	if (defect instanceof StringifyFailure) {
-		return new YamlStringifyError({
+		return YamlStringifyError.make({
 			diagnostics: [
 				YamlDiagnostic.make({
 					code: "CircularReference",
@@ -286,7 +286,7 @@ const stringifyDefectToError = (defect: unknown, value: unknown): YamlStringifyE
 	// Deeply-nested acyclic value overflowed the stringifier's recursion budget —
 	// surface it as a fatal stringify error, not a stack-overflow defect.
 	if (defect instanceof StringifyDepthExceeded) {
-		return new YamlStringifyError({
+		return YamlStringifyError.make({
 			diagnostics: [
 				YamlDiagnostic.make({
 					code: "NestingDepthExceeded",
@@ -314,7 +314,7 @@ const parseResultImpl = (text: string, options?: YamlParseOptions): Result.Resul
 	const doc = composeFirstDocument(text, toParseInput(options));
 	const failures = failureRecords(doc, options?.uniqueKeys ?? true);
 	if (failures.length > 0) {
-		return Result.fail(new YamlParseError({ diagnostics: toDiagnostics(text, failures), input: text }));
+		return Result.fail(YamlParseError.make({ diagnostics: toDiagnostics(text, failures), input: text }));
 	}
 	// An empty map lets nodeToJsValue register anchors incrementally, so aliases
 	// resolve to the most recent anchor at the point of use.
@@ -351,7 +351,7 @@ const parseAllResultImpl = (
 		...documents.flatMap((d) => failureRecords(d, uniqueKeys)),
 	];
 	if (failures.length > 0) {
-		return Result.fail(new YamlParseError({ diagnostics: toDiagnostics(text, failures), input: text }));
+		return Result.fail(YamlParseError.make({ diagnostics: toDiagnostics(text, failures), input: text }));
 	}
 	const maxAliasCount = options?.maxAliasCount ?? 100;
 	const values: Array<unknown> = [];
@@ -864,7 +864,7 @@ export class Yaml {
 	 * import { Yaml } from "./index.ts";
 	 * import { Effect, Schema } from "effect";
 	 *
-	 * const Config = Schema.Struct({ port: Schema.Number });
+	 * const Config = Schema.Struct({ port: Schema.Finite });
 	 * const config = Yaml.bind(Config);
 	 *
 	 * const program = Effect.gen(function* () {

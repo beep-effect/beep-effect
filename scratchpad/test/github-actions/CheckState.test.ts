@@ -6,7 +6,7 @@ import { CheckState, projectCheckState } from "../../effected/github-actions/Che
 describe("CheckState", () => {
 	it("decodes every state in the vocabulary", () => {
 		for (const state of CheckState.literals) {
-			assert.strictEqual(Schema.decodeUnknownSync(CheckState)(state), state);
+			assert.strictEqual(Schema.decodeSync(CheckState)(state), state);
 		}
 	});
 

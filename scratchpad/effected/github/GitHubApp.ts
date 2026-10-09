@@ -33,7 +33,7 @@ export class GitHubAppError extends Schema.TaggedError<GitHubAppError>()("GitHub
 
 	/** @internal */
 	static of(kind: GitHubAppError["kind"], reason: string, cause?: unknown): GitHubAppError {
-		return new GitHubAppError({ kind, reason, ...(cause !== undefined ? { cause } : {}) });
+		return GitHubAppError.make({ kind, reason, ...(cause !== undefined ? { cause } : {}) });
 	}
 }
 
@@ -282,7 +282,7 @@ export interface GitHubAppOptions {
  *
  * @public
  */
-export class GitHubApp extends Context.Service<GitHubApp, GitHubAppShape>()("@effected/github/GitHubApp") {
+export class GitHubApp extends Context.Service<GitHubApp, GitHubAppShape>()("@beep/scratchpad/effected/github/GitHubApp") {
 	/** The default transport. Bind it once; layers are memoized by reference. */
 	static readonly layer: Layer.Layer<GitHubApp> = Layer.effect(this, makeApp({}));
 
@@ -435,23 +435,21 @@ function makeApp(options: GitHubAppOptions): Effect.Effect<GitHubAppShape> {
 							const wanted = request.owner.toLowerCase();
 							const match = all.find((entry) => entry.account?.toLowerCase() === wanted);
 							if (match !== undefined) return match.id;
-							return yield* Effect.fail(
+							return yield*
 								GitHubAppError.of(
 									"installation",
 									`the app is not installed on ${request.owner} (installed on: ${all.map((entry) => entry.account ?? entry.id).join(", ") || "nothing"})`,
-								),
-							);
+								);
 						}
 						const only = all[0];
 						if (all.length === 1 && only !== undefined) return only.id;
-						return yield* Effect.fail(
+						return yield*
 							GitHubAppError.of(
 								"installation",
 								all.length === 0
 									? "the app has no installations"
 									: `the app has ${all.length} installations; pass installationId or owner`,
-							),
-						);
+							);
 					});
 
 		const token = Effect.fn("GitHubApp.token")(function* (request: TokenRequest) {
@@ -460,7 +458,7 @@ function makeApp(options: GitHubAppOptions): Effect.Effect<GitHubAppShape> {
 			const minted = yield* client
 				.request("POST /app/installations/{installation_id}/access_tokens", { installation_id: installationId })
 				.pipe(Effect.catch(appFailure("token")));
-			return yield* Schema.decodeUnknownEffect(InstallationToken)({
+			return yield* Schema.decodeEffect(InstallationToken)({
 				token: minted.token,
 				expiresAt: minted.expires_at,
 				installationId,
@@ -474,7 +472,7 @@ function makeApp(options: GitHubAppOptions): Effect.Effect<GitHubAppShape> {
 
 		const revoke = Effect.fn("GitHubApp.revoke")(function* (value: Redacted.Redacted<string>) {
 			const client = yield* asBearer(value, options);
-			yield* client.request("DELETE /installation/token", {}).pipe(Effect.catch(appFailure("revoke")));
+			return yield* client.request("DELETE /installation/token", {}).pipe(Effect.catch(appFailure("revoke")));
 		});
 
 		const scopedToken = (request: TokenRequest): Effect.Effect<InstallationToken, GitHubAppError, Scope.Scope> =>
@@ -486,7 +484,7 @@ function makeApp(options: GitHubAppOptions): Effect.Effect<GitHubAppShape> {
 			const appClient = yield* asApp(request, options);
 			const app = yield* appClient.request("GET /app", {}).pipe(Effect.catch(appFailure("identity")));
 			if (app === null) {
-				return yield* Effect.fail(GitHubAppError.of("identity", "GET /app returned no app"));
+				return yield*GitHubAppError.of("identity", "GET /app returned no app");
 			}
 			const slug = app.slug ?? "";
 			const name = app.name;
@@ -567,12 +565,12 @@ const makeRotatingClient = (
 		const current: Effect.Effect<GitHubClientShape, GitHubError> = fresh.pipe(
 			Effect.catchTag("GitHubAppError", (error) =>
 				Effect.fail(
-					new GitHubError({
-						kind: "unauthorized",
-						operation: "GitHubApp.clientLayer",
-						reason: error.reason,
-						cause: error,
-					}),
+					GitHubError.make({
+    kind: "unauthorized",
+    operation: "GitHubApp.clientLayer",
+    reason: error.reason,
+    cause: error,
+}),
 				),
 			),
 		);
@@ -580,13 +578,13 @@ const makeRotatingClient = (
 		const currentForGraphQL: Effect.Effect<GitHubClientShape, GitHubGraphQLError> = fresh.pipe(
 			Effect.catchTag("GitHubAppError", (error) =>
 				Effect.fail(
-					new GitHubGraphQLError({
-						kind: "unauthorized",
-						operation: "GitHubApp.clientLayer",
-						reason: error.reason,
-						errors: [],
-						cause: error,
-					}),
+					GitHubGraphQLError.make({
+    kind: "unauthorized",
+    operation: "GitHubApp.clientLayer",
+    reason: error.reason,
+    errors: [],
+    cause: error,
+}),
 				),
 			),
 		);
@@ -602,7 +600,7 @@ const makeRotatingClient = (
 			graphql: (document, variables) =>
 				Effect.flatMap(currentForGraphQL, (client) => client.graphql(document, variables)),
 			rateLimit: Effect.flatMap(Ref.get(held), (state) =>
-				Option.isSome(state) ? state.value.client.rateLimit : Effect.succeed(Option.none()),
+				Option.isSome(state) ? state.value.client.rateLimit : Effect.succeedNone,
 			),
 		} satisfies GitHubClientShape;
 	});

@@ -61,7 +61,7 @@ const KINDS: ReadonlyArray<AudienceKind> = ["human", "agent", "ci"];
  *
  * @public
  */
-export class Audience extends Context.Service<Audience, AudienceShape>()("@effected/env/Audience") {
+export class Audience extends Context.Service<Audience, AudienceShape>()("@beep/scratchpad/effected/env/Audience") {
 	/**
 	 * Decide the audience from `CurrentRuntimeEnv`, and from the override variable named by `options.envVar`.
 	 *

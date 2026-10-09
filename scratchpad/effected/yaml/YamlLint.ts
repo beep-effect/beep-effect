@@ -64,7 +64,7 @@ const validateRulesMap = (rules: { readonly [id: string]: YamlLintRuleSetting })
 				// onExcessProperty: "error" — a typo'd option KEY fails loudly with
 				// an UnexpectedKey issue naming the key, instead of decoding to {}
 				// (v4 Structs strip unknown keys by default).
-				const decoded = Schema.decodeUnknownResult(optionsSchema as Schema.Codec<unknown, unknown>, {
+				const decoded = Schema.decodeResult(optionsSchema as Schema.Codec<unknown, unknown>, {
 					onExcessProperty: "error",
 				})(entry);
 				if (Result.isFailure(decoded)) {
@@ -198,12 +198,12 @@ const buildContext = (text: string): LintContext => {
 export class StyleVoteTally extends Schema.Class<StyleVoteTally>("StyleVoteTally")({
 	rule: Schema.String,
 	dimension: Schema.String,
-	value: Schema.Union([Schema.String, Schema.Number, Schema.Boolean]),
-	count: Schema.Number,
-	offset: Schema.Number,
-	length: Schema.Number,
-	line: Schema.Number,
-	character: Schema.Number,
+	value: Schema.Union([Schema.String, Schema.Finite, Schema.Boolean]),
+	count: Schema.Finite,
+	offset: Schema.Finite,
+	length: Schema.Finite,
+	line: Schema.Finite,
+	character: Schema.Finite,
 }) {}
 
 /**
@@ -217,7 +217,7 @@ export class StyleVoteTally extends Schema.Class<StyleVoteTally>("StyleVoteTally
 export class StyleFloorTally extends Schema.Class<StyleFloorTally>("StyleFloorTally")({
 	rule: Schema.String,
 	dimension: Schema.String,
-	value: Schema.Number,
+	value: Schema.Finite,
 }) {}
 
 /** Canonical histogram key for a vote value — type-discriminating (`"2"` ≠ `2`, `"true"` ≠ `true`). */
@@ -445,7 +445,7 @@ const resolveStrictEvidence = (
 			picks.set(ruleId, dimPicks);
 		}
 	}
-	if (conflicts.length > 0) return Result.fail(new YamlStyleConflictError({ conflicts }));
+	if (conflicts.length > 0) return Result.fail(YamlStyleConflictError.make({ conflicts }));
 	return Result.succeed(overlayConfig(base, picks));
 };
 
@@ -511,7 +511,7 @@ const runRules = (
 		const options = typeof entry === "object" ? entry : undefined;
 		for (const diagnostic of rule.check(ctx, options)) {
 			out.push(
-				alwaysOn || diagnostic.severity === severity ? diagnostic : new YamlLintDiagnostic({ ...diagnostic, severity }),
+				alwaysOn || diagnostic.severity === severity ? diagnostic : YamlLintDiagnostic.make({ ...diagnostic, severity }),
 			);
 		}
 	}
@@ -613,7 +613,7 @@ export class YamlLint {
 		const ctx = buildContext(text);
 		const fatal = ctx.document.errors.filter((e) => isFatalCode(e.code));
 		if (fatal.length > 0) {
-			return Result.fail(new YamlParseError({ diagnostics: fatal, input: text }));
+			return Result.fail(YamlParseError.make({ diagnostics: fatal, input: text }));
 		}
 		const fixes: Array<YamlEdit> = [];
 		let lastEnd = -1;

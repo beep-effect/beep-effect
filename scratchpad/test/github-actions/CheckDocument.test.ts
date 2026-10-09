@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import type { Duration } from "effect";
 import { Effect, Fiber, Logger, Option, Ref, Result } from "effect";

@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { TerminalEnv } from "../../effected/env/index.ts";
 import { ConfigProvider, Effect } from "effect";

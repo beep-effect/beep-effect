@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file nodeBuiltinImport:skip-file processEnvInEffect:skip-file
 // Real-process check of okf/decisions/live-tick-is-a-scoped-schedule.md: a live view's tick is an Effect schedule forked into the run's scope, so closing the
 // scope interrupts it and the process exits at once. A tick left on a ref'd timer would keep the child alive.
 // Runs the package sources through Node's type stripping (fixtures/register-ts.mjs); see CliStdin.test.ts for the

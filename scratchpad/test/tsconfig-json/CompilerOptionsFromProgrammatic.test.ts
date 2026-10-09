@@ -100,11 +100,11 @@ describe("CompilerOptionsFromProgrammatic", () => {
 	// The consumer path this codec exists for: a synchronous caller holding the
 	// programmatic spelling gets a validated result with no cast and no Effect.
 	it("decodes synchronously through Result for a non-Effect caller", () => {
-		const ok = Schema.decodeUnknownResult(CompilerOptionsFromProgrammatic)({ target: 12, strict: true });
+		const ok = Schema.decodeResult(CompilerOptionsFromProgrammatic)({ target: 12, strict: true });
 		assert.isTrue(Result.isSuccess(ok));
 		if (Result.isSuccess(ok)) assert.strictEqual(ok.success.target, "es2025");
 
-		const bad = Schema.decodeUnknownResult(CompilerOptionsFromProgrammatic)({ target: 9999 });
+		const bad = Schema.decodeResult(CompilerOptionsFromProgrammatic)({ target: 9999 });
 		assert.isTrue(Result.isFailure(bad));
 	});
 });

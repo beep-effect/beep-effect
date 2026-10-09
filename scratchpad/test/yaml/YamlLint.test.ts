@@ -1,3 +1,4 @@
+// @effect-diagnostics nodeBuiltinImport:skip-file
 // YamlLint facade + YamlLintConfig (#129): rule-aware config validation
 // (parse-validity locked always-on), severity resolution and precedence,
 // run() ordering, custom-rule registration, and the surgical fix pipeline
@@ -18,7 +19,7 @@ const todoRule: YamlRule = {
 			.filter((t) => t.kind === "scalar" && t.text === "TODO")
 			.map(
 				(t) =>
-					new YamlLintDiagnostic({
+					YamlLintDiagnostic.make({
 						rule: "no-todo",
 						severity: "error",
 						message: "TODO is not allowed",
@@ -64,7 +65,7 @@ describe("YamlLintConfig", () => {
 	it("rejects a typo'd option KEY on a built-in rule, naming the key and the rule", () => {
 		// The reviewer's probe: `mxa` must not silently decode to {}.
 		assert.throws(() => YamlLintConfig.make({ rules: { "line-length": { mxa: 100 } } }));
-		const r = Schema.decodeUnknownResult(YamlLintConfig)({ rules: { "line-length": { mxa: 100 } } });
+		const r = Schema.decodeResult(YamlLintConfig)({ rules: { "line-length": { mxa: 100 } } });
 		assert.isTrue(Result.isFailure(r));
 		if (Result.isFailure(r)) {
 			assert.include(r.failure.message, "line-length");
@@ -78,7 +79,7 @@ describe("YamlLintConfig", () => {
 
 	it("rejects out-of-domain numeric options, naming the field", () => {
 		for (const bad of [Number.NaN, -1, 1.5]) {
-			const r = Schema.decodeUnknownResult(YamlLintConfig)({ rules: { "line-length": { max: bad } } });
+			const r = Schema.decodeResult(YamlLintConfig)({ rules: { "line-length": { max: bad } } });
 			assert.isTrue(Result.isFailure(r), `max: ${bad} must be rejected`);
 			if (Result.isFailure(r)) {
 				assert.include(r.failure.message, "max");
@@ -93,21 +94,21 @@ describe("YamlLintConfig", () => {
 			["hyphen-spacing", "maxSpacesAfter"],
 			["indentation", "spaces"],
 		] as const) {
-			const r = Schema.decodeUnknownResult(YamlLintConfig)({ rules: { [rule]: { [field]: -2 } } });
+			const r = Schema.decodeResult(YamlLintConfig)({ rules: { [rule]: { [field]: -2 } } });
 			assert.isTrue(Result.isFailure(r), `${rule}.${field}: -2 must be rejected`);
 		}
 		// `maxSpacesAfter: 0` would make the fix delete the separation space
 		// and fuse the indicator with its content (`- item` → `-item`,
 		// `a: val` → `a:val`) — the floor is 1, not 0.
 		for (const rule of ["colon-spacing", "hyphen-spacing"] as const) {
-			const r = Schema.decodeUnknownResult(YamlLintConfig)({ rules: { [rule]: { maxSpacesAfter: 0 } } });
+			const r = Schema.decodeResult(YamlLintConfig)({ rules: { [rule]: { maxSpacesAfter: 0 } } });
 			assert.isTrue(Result.isFailure(r), `${rule}.maxSpacesAfter: 0 must be rejected`);
 			if (Result.isFailure(r)) {
 				assert.include(r.failure.message, "greater than or equal to 1");
 			}
 		}
 		// `maxSpacesBefore: 0` stays legal — `key:` needs no space before the colon.
-		const before0 = Schema.decodeUnknownResult(YamlLintConfig)({
+		const before0 = Schema.decodeResult(YamlLintConfig)({
 			rules: { "colon-spacing": { maxSpacesBefore: 0 } },
 		});
 		assert.isTrue(Result.isSuccess(before0), "colon-spacing.maxSpacesBefore: 0 must be accepted");
@@ -213,7 +214,7 @@ describe("YamlLint.fix", () => {
 					.filter((t) => t.kind === "scalar" && t.text === "TODO")
 					.map(
 						(t) =>
-							new YamlLintDiagnostic({
+							YamlLintDiagnostic.make({
 								rule: "rival",
 								severity: "error",
 								message: "rival fix",
@@ -240,7 +241,7 @@ describe("YamlLint.fix", () => {
 		const insertRule = (id: string, content: string): YamlRule => ({
 			id,
 			check: (ctx) => [
-				new YamlLintDiagnostic({
+				YamlLintDiagnostic.make({
 					rule: id,
 					severity: "error",
 					message: `insert ${content}`,

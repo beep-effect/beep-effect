@@ -124,7 +124,7 @@ export interface GitHubReleaseShape {
  * @public
  */
 export class GitHubRelease extends Context.Service<GitHubRelease, GitHubReleaseShape>()(
-	"@effected/github/GitHubRelease",
+	"@beep/scratchpad/effected/github/GitHubRelease",
 ) {
 	/** The live service, built over a `GitHubClient`. */
 	static readonly layer: Layer.Layer<GitHubRelease, never, GitHubClient> = Layer.effect(
@@ -223,7 +223,7 @@ const make = (client: GitHubClient["Service"]): GitHubReleaseShape => {
 
 		getByTagOption: Effect.fn("GitHubRelease.getByTagOption")(function* (tag: string) {
 			return yield* getByTag(tag).pipe(
-				Effect.map(Option.some),
+				Effect.asSome,
 				Effect.catchIf(GitHubError.hasKind("notFound"), () => Effect.succeed(Option.none<ReleaseInfo>())),
 			);
 		}),

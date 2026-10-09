@@ -267,7 +267,7 @@ export class Package extends Schema.Class<Package>("Package")({
 	 */
 	static readonly decode = Effect.fn("Package.decode")(function* (input: unknown) {
 		return yield* Schema.decodeUnknownEffect(Package.schema)(input).pipe(
-			Effect.catchTag("SchemaError", (cause) => new PackageDecodeError({ cause })),
+			Effect.catchTag("SchemaError", (cause) => PackageDecodeError.make({ cause })),
 		);
 	});
 
@@ -350,7 +350,7 @@ export class Package extends Schema.Class<Package>("Package")({
 		2,
 		Effect.fn("Package.setName")(function* (pkg: Package, name: string) {
 			if (!PackageName.isValid(name)) {
-				return yield* new InvalidPackageNameError({ input: name });
+				return yield* InvalidPackageNameError.make({ input: name });
 			}
 			return pkg.copyWith({ name: name as PackageName });
 		}),
@@ -364,7 +364,7 @@ export class Package extends Schema.Class<Package>("Package")({
 		2,
 		Effect.fn("Package.setLicense")(function* (pkg: Package, license: string) {
 			if (!isValidSpdx(license)) {
-				return yield* new InvalidSpdxLicenseError({ input: license });
+				return yield* InvalidSpdxLicenseError.make({ input: license });
 			}
 			return pkg.copyWith({ license: license as SpdxLicense });
 		}),

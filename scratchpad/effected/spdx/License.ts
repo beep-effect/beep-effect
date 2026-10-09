@@ -141,7 +141,7 @@ export class License extends Schema.Class<License>("License")({
 		const known = License.catalog.get(id);
 		if (known !== undefined) return Result.succeed(known);
 		if (LICENSE_REF_PATTERN.test(id)) return Result.succeed(License.make({ id, deprecated: false }));
-		return Result.fail(new InvalidSpdxExpressionError({ input: id }));
+		return Result.fail(InvalidSpdxExpressionError.make({ input: id }));
 	}
 
 	/**

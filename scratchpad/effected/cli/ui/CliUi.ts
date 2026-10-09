@@ -151,7 +151,7 @@ const mount = <A>(
 				Deferred.doneUnsafe(result, Exit.succeed(value));
 			},
 			cancel: (reason) => {
-				Deferred.doneUnsafe(result, Exit.fail(new Cancelled({ reason })));
+				Deferred.doneUnsafe(result, Exit.fail(Cancelled.make({ reason })));
 			},
 		};
 		const element = yield* Effect.promise(async () => screen(control));
@@ -273,7 +273,7 @@ export class CliUi {
 		options?: CliUiRunOptions,
 	): Effect.Effect<A, Cli.Cancelled | Cli.NotInteractive, Cli.CliTheme> =>
 		Effect.gen(function* () {
-			if (!(yield* CliInteractive)) return yield* Effect.fail(new NotInteractive());
+			if (!(yield* CliInteractive)) return yield* NotInteractive.make();
 			const theme = yield* audienceTheme;
 			const neutralize = yield* underGithubActions;
 			const crash: CrashCell = { current: undefined };

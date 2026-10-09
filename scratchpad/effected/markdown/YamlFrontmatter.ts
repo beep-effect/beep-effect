@@ -30,8 +30,8 @@ export const YamlFrontmatter: FrontmatterCodec = {
 	format: "yaml",
 	decode: (node) =>
 		node.format !== "yaml"
-			? Effect.fail(new FrontmatterFormatMismatchError({ expected: "yaml", actual: node.format }))
-			: Yaml.parse(node.value).pipe(Effect.mapError((cause) => new FrontmatterDecodeError({ format: "yaml", cause }))),
+			? Effect.fail(FrontmatterFormatMismatchError.make({ expected: "yaml", actual: node.format }))
+			: Yaml.parse(node.value).pipe(Effect.mapError((cause) => FrontmatterDecodeError.make({ format: "yaml", cause }))),
 	encode: (data) =>
-		Yaml.stringify(data).pipe(Effect.mapError((cause) => new FrontmatterEncodeError({ format: "yaml", cause }))),
+		Yaml.stringify(data).pipe(Effect.mapError((cause) => FrontmatterEncodeError.make({ format: "yaml", cause }))),
 };

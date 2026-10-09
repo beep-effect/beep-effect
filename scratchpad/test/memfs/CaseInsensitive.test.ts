@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { Effect, FileSystem } from "effect";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";

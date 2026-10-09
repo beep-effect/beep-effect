@@ -21,7 +21,7 @@ import { Package } from "../../effected/package-json/index.ts";
 
 const base = { name: "@scope/pkg", version: "1.0.0" };
 
-const decode = (extra: Record<string, unknown>) => Schema.decodeUnknownEffect(Package.schema)({ ...base, ...extra });
+const decode = (extra: Record<string, unknown>) => Schema.decodeEffect(Package.schema)({ ...base, ...extra });
 const encode = (pkg: Package) => Schema.encodeUnknownEffect(Package.schema)(pkg);
 
 describe("maintainers", () => {

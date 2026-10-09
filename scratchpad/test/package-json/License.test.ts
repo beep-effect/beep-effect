@@ -20,8 +20,8 @@ describe("isValidSpdx", () => {
 describe("SpdxLicense schema", () => {
 	it.effect("decodes a valid license and rejects an invalid one", () =>
 		Effect.gen(function* () {
-			assert.strictEqual(yield* Schema.decodeUnknownEffect(SpdxLicense)("MIT"), "MIT");
-			const error = yield* Effect.flip(Schema.decodeUnknownEffect(SpdxLicense)("NOT-A-LICENSE"));
+			assert.strictEqual(yield* Schema.decodeEffect(SpdxLicense)("MIT"), "MIT");
+			const error = yield* Effect.flip(Schema.decodeEffect(SpdxLicense)("NOT-A-LICENSE"));
 			assert.strictEqual(error._tag, "SchemaError");
 		}),
 	);
@@ -29,7 +29,7 @@ describe("SpdxLicense schema", () => {
 
 describe("InvalidSpdxLicenseError", () => {
 	it("renders a message", () => {
-		const error = new InvalidSpdxLicenseError({ input: "NOT-A-LICENSE" });
+		const error = InvalidSpdxLicenseError.make({ input: "NOT-A-LICENSE" });
 		assert.strictEqual(error._tag, "InvalidSpdxLicenseError");
 		assert.include(error.message, "NOT-A-LICENSE");
 	});

@@ -93,7 +93,7 @@ const isUrl = (value: string): boolean => value.startsWith("http://") || value.s
 // Pure Option-returning range parse: decode `Range.FromString` synchronously via
 // an Exit, never running an Effect inside a getter.
 const parseRange = (value: string): Option.Option<Range> => {
-	const exit = Schema.decodeUnknownExit(Range.FromString)(value);
+	const exit = Schema.decodeExit(Range.FromString)(value);
 	return Exit.isSuccess(exit) ? Option.some(exit.value) : Option.none();
 };
 
@@ -383,8 +383,8 @@ const brandedSpecifier = Schema.String.pipe(
 );
 
 const decode = (input: string): Effect.Effect<DependencySpecifierBrand, InvalidDependencySpecifierError> =>
-	Schema.decodeUnknownEffect(brandedSpecifier)(input).pipe(
-		Effect.mapError(() => new InvalidDependencySpecifierError({ input })),
+	Schema.decodeEffect(brandedSpecifier)(input).pipe(
+		Effect.mapError(() => InvalidDependencySpecifierError.make({ input })),
 	);
 
 /**

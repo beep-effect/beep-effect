@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { Effect, Option } from "effect";
 import { ChildProcess } from "effect/process";
@@ -161,6 +162,6 @@ describe("LocalExec layers", () => {
 			const local = yield* LocalExec;
 			const error = yield* Effect.flip(local.context);
 			assert.instanceOf(error, LocalExecError);
-		}).pipe(Effect.provide(LocalExec.layerTest({ context: Effect.fail(new LocalExecError({})) }))),
+		}).pipe(Effect.provide(LocalExec.layerTest({ context: Effect.fail(LocalExecError.make({})) }))),
 	);
 });

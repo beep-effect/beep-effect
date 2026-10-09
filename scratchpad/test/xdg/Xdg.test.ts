@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { Cause, ConfigProvider, Effect, Exit, Layer, Option } from "effect";
 import { Xdg, XdgEnvError, XdgPaths } from "../../effected/xdg/index.ts";

@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file asyncFunction:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { Audience } from "../../../effected/env/index.ts";
 import { Console, Effect } from "effect";

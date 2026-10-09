@@ -64,7 +64,7 @@ export const emptyLines: YamlRule = {
 					const nextLine = lines[end];
 					const deleteEnd = nextLine !== undefined ? nextLine.offset : ctx.text.length;
 					out.push(
-						new YamlLintDiagnostic({
+						YamlLintDiagnostic.make({
 							rule: "empty-lines",
 							severity: "error",
 							message: `Too many consecutive blank lines (${runLength} > ${allowed})`,

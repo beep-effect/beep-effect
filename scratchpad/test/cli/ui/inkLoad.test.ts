@@ -1,3 +1,4 @@
+// @effect-diagnostics asyncFunction:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { Effect } from "effect";
 import { vi } from "vitest";

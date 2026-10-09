@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file asyncFunction:skip-file
 // Signing, without keys, without OIDC and without a network.
 //
 // `@sigstore/sign` is built for this: `DSSEBundleBuilder` takes its `Signer`
@@ -194,7 +195,7 @@ describe("SigstoreSigner.sign — failures, attributed", () => {
 	it.effect("an identity failure is kind `identity`", () =>
 		Effect.gen(function* () {
 			const failing = IdentityToken.layerTest({
-				token: (audience) => Effect.fail(new IdentityTokenError({ audience, cause: new Error("no token service") })),
+				token: (audience) => Effect.fail(IdentityTokenError.make({ audience, cause: new Error("no token service") })),
 			});
 			const error = yield* Effect.flip(signWith({ signer: stubSigner(), witnesses: [] }, failing));
 			assert.instanceOf(error, SigningError);

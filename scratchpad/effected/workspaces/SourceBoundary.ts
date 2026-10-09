@@ -93,9 +93,9 @@ export class Offence extends Schema.Class<Offence>("Offence")({
 	/** The file, relative to the scanned root, with `/` separators. */
 	file: Schema.String,
 	/** The 1-based line. */
-	line: Schema.Number,
+	line: Schema.Finite,
 	/** The 1-based column, in UTF-16 code units. */
-	column: Schema.Number,
+	column: Schema.Finite,
 	/** The rule broken. */
 	rule: Schema.Literals([
 		"process",

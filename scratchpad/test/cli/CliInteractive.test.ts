@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import type { AudienceKind } from "../../effected/env/index.ts";
 import { Audience, TerminalEnv } from "../../effected/env/index.ts";

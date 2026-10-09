@@ -53,7 +53,7 @@ export class CatalogResolver extends Context.Service<
 			catalog: Option.Option<string>,
 		) => Effect.Effect<Option.Option<string>, CatalogAssemblyError | DependencyResolutionError>;
 	}
->()("@effected/npm/CatalogResolver") {
+>()("@beep/scratchpad/effected/npm/CatalogResolver") {
 	/**
 	 * No-op default: `rangeOf` always succeeds with `Option.none()`, never
 	 * consulting an actual catalog. A pure `Layer.succeed`, bound to a const
@@ -61,6 +61,6 @@ export class CatalogResolver extends Context.Service<
 	 * reference to `CatalogResolver.noop`.
 	 */
 	static readonly noop: Layer.Layer<CatalogResolver> = Layer.succeed(CatalogResolver, {
-		rangeOf: () => Effect.succeed(Option.none()),
+		rangeOf: () => Effect.succeedNone,
 	});
 }

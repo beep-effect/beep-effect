@@ -6,6 +6,7 @@ import type { YamlNode } from "../../YamlNode.ts";
 import { YamlAlias, YamlMap, YamlScalar, YamlSeq } from "../../YamlNode.ts";
 import type { CstNode } from "../cst.ts";
 import type { ComposerState, NodeMeta } from "./state.ts";
+import * as Schema from "effect/Schema";
 
 /**
  * Check if a pending anchor is being applied to an alias node (invalid in YAML 1.2 §3.2.2).
@@ -52,7 +53,7 @@ export function makeAlias(cst: CstNode, state: ComposerState): YamlAlias {
 		}
 	}
 
-	return new YamlAlias({ name, offset: cst.offset, length: cst.length });
+	return YamlAlias.make({ name, offset: cst.offset, length: cst.length });
 }
 
 export function registerAnchor(node: YamlNode, anchor: string, state: ComposerState, offset: number): void {
@@ -128,15 +129,15 @@ export function buildAnchorMap(node: YamlNode | null): Map<string, YamlNode> {
 
 function collectAnchors(node: YamlNode | null, anchors: Map<string, YamlNode>): void {
 	if (node === null) return;
-	if (node instanceof YamlScalar) {
+	if (Schema.is(YamlScalar)(node)) {
 		if (node.anchor !== undefined) anchors.set(node.anchor, node);
-	} else if (node instanceof YamlMap) {
+	} else if (Schema.is(YamlMap)(node)) {
 		if (node.anchor !== undefined) anchors.set(node.anchor, node);
 		for (const pair of node.items) {
 			collectAnchors(pair.key, anchors);
 			collectAnchors(pair.value, anchors);
 		}
-	} else if (node instanceof YamlSeq) {
+	} else if (Schema.is(YamlSeq)(node)) {
 		if (node.anchor !== undefined) anchors.set(node.anchor, node);
 		for (const item of node.items) {
 			collectAnchors(item, anchors);

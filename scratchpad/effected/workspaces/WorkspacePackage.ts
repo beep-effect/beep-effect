@@ -356,16 +356,16 @@ export class WorkspacePackage extends Schema.Class<WorkspacePackage>("WorkspaceP
 			.pipe(
 				Effect.mapError(
 					(cause: PlatformError.PlatformError) =>
-						new WorkspaceManifestError({ packageJsonPath: self.packageJsonPath, kind: "read", cause }),
+						WorkspaceManifestError.make({ packageJsonPath: self.packageJsonPath, kind: "read", cause }),
 				),
 			);
 		const raw = yield* Effect.try({
 			try: () => JSON.parse(content) as unknown,
-			catch: (cause) => new WorkspaceManifestError({ packageJsonPath: self.packageJsonPath, kind: "decode", cause }),
+			catch: (cause) => WorkspaceManifestError.make({ packageJsonPath: self.packageJsonPath, kind: "decode", cause }),
 		});
 		return yield* Package.decode(raw).pipe(
 			Effect.mapError(
-				(cause) => new WorkspaceManifestError({ packageJsonPath: self.packageJsonPath, kind: "decode", cause }),
+				(cause) => WorkspaceManifestError.make({ packageJsonPath: self.packageJsonPath, kind: "decode", cause }),
 			),
 		);
 	});

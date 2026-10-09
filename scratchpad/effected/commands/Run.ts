@@ -70,7 +70,7 @@ export class CommandOutput extends Schema.Class<CommandOutput>("CommandOutput")(
 	/** Captured standard error, redacted. */
 	stderr: Schema.String,
 	/** The process exit code. A non-zero value is NOT an error at this level. */
-	exitCode: Schema.Number,
+	exitCode: Schema.Finite,
 }) {
 	/** Whether the process exited zero. */
 	get succeeded(): boolean {
@@ -129,7 +129,7 @@ export class CommandFailedError extends Schema.TaggedError<CommandFailedError>()
 	/** argv, redacted. */
 	args: Schema.Array(Schema.String),
 	/** The exit code, when the process ran. */
-	exitCode: Schema.optionalKey(Schema.Number),
+	exitCode: Schema.optionalKey(Schema.Finite),
 	/** Captured standard error, redacted, when the process ran. */
 	stderr: Schema.optionalKey(Schema.String),
 	/** Captured standard output, redacted, when the process ran. */
@@ -144,7 +144,7 @@ export class CommandFailedError extends Schema.TaggedError<CommandFailedError>()
 		secrets?: ReadonlyArray<Redacted.Redacted<string>> | undefined,
 	): CommandFailedError => {
 		const described = describeCommand(command);
-		return new CommandFailedError({
+		return CommandFailedError.make({
 			kind: "nonZero",
 			command: described.command,
 			args: safeArgs(described.args, secrets),
@@ -161,7 +161,7 @@ export class CommandFailedError extends Schema.TaggedError<CommandFailedError>()
 		secrets?: ReadonlyArray<Redacted.Redacted<string>> | undefined,
 	): CommandFailedError => {
 		const described = describeCommand(command);
-		return new CommandFailedError({
+		return CommandFailedError.make({
 			kind: "spawn",
 			command: described.command,
 			args: safeArgs(described.args, secrets),
@@ -175,7 +175,7 @@ export class CommandFailedError extends Schema.TaggedError<CommandFailedError>()
 		secrets?: ReadonlyArray<Redacted.Redacted<string>> | undefined,
 	): CommandFailedError => {
 		const described = describeCommand(command);
-		return new CommandFailedError({
+		return CommandFailedError.make({
 			kind: "timeout",
 			command: described.command,
 			args: safeArgs(described.args, secrets),
@@ -234,7 +234,7 @@ export class CommandOutputError extends Schema.TaggedError<CommandOutputError>()
 	/** The underlying parse or decode failure. */
 	cause: Schema.optionalKey(Schema.Defect()),
 	/** The exit code, when the combinator parses independently of it. */
-	exitCode: Schema.optionalKey(Schema.Number),
+	exitCode: Schema.optionalKey(Schema.Finite),
 	/** Captured standard error, redacted, when the process ran. */
 	stderr: Schema.optionalKey(Schema.String),
 	/** Captured standard output, redacted, when the process ran. */
@@ -300,7 +300,7 @@ const collectClassified = (
 		Effect.catch((error) =>
 			Effect.fail(
 				error instanceof OutputTooLarge
-					? new CommandOutputError({ kind: "tooLarge", command: described.command, cause: error })
+					? CommandOutputError.make({ kind: "tooLarge", command: described.command, cause: error })
 					: CommandFailedError.spawn(command, error, options?.redact),
 			),
 		),
@@ -371,10 +371,10 @@ const json = Effect.fn("Run.json")(function* <A, I>(
 	const checked = yield* requireZero(command, output, options);
 	const parsed = yield* Effect.try({
 		try: () => JSON.parse(checked.stdout) as unknown,
-		catch: (cause) => new CommandOutputError({ kind: "notJson", command: described.command, cause }),
+		catch: (cause) => CommandOutputError.make({ kind: "notJson", command: described.command, cause }),
 	});
 	return yield* Schema.decodeUnknownEffect(schema)(parsed).pipe(
-		Effect.catch((cause) => Effect.fail(new CommandOutputError({ kind: "schema", command: described.command, cause }))),
+		Effect.catch((cause) => Effect.fail(CommandOutputError.make({ kind: "schema", command: described.command, cause }))),
 	);
 });
 
@@ -393,14 +393,12 @@ const jsonLine = Effect.fn("Run.jsonLine")(function* <A, I>(
 	const context = { exitCode: output.exitCode, stderr: output.stderr, stdout: output.stdout };
 	const candidates = output.stdout.split(/\r?\n/).filter((candidate) => candidate.trim().length > 0);
 	if (candidates.length === 0) {
-		return yield* Effect.fail(
-			new CommandOutputError({
+		return yield* CommandOutputError.make({
 				kind: "notJson",
 				command: described.command,
 				cause: new Error("stdout carried no non-empty line"),
 				...context,
-			}),
-		);
+			});
 	}
 	// Scan from the END: the first candidate that both JSON-parses and decodes
 	// under the schema is the payload. The near-miss diagnostics below record
@@ -426,11 +424,9 @@ const jsonLine = Effect.fn("Run.jsonLine")(function* <A, I>(
 	// Nothing decoded anywhere. When at least one line parsed as JSON, the
 	// near-miss is a schema drift — report kind "schema" with the last
 	// parseable line's decode failure; otherwise nothing was JSON at all.
-	return yield* Effect.fail(
-		schemaCause !== undefined
-			? new CommandOutputError({ kind: "schema", command: described.command, cause: schemaCause, ...context })
-			: new CommandOutputError({ kind: "notJson", command: described.command, cause: notJsonCause, ...context }),
-	);
+	return yield* schemaCause !== undefined
+			? CommandOutputError.make({ kind: "schema", command: described.command, cause: schemaCause, ...context })
+			: CommandOutputError.make({ kind: "notJson", command: described.command, cause: notJsonCause, ...context });
 });
 
 // Implementation of Run.exitCode; the public contract lives on the static.

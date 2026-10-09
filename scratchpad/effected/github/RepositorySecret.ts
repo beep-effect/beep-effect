@@ -27,8 +27,8 @@ export type SecretScope = "actions" | "dependabot" | "codespaces";
  * @public
  */
 export interface SecretInfo {
-	/** The secret's name. */
-	readonly name: string;
+  /** The secret's name. */
+  readonly name: string;
 }
 
 /**
@@ -38,48 +38,48 @@ export interface SecretInfo {
  * @public
  */
 export interface RepositorySecretShape {
-	/** Encrypt and write one repository secret in the given store. */
-	readonly set: (
-		name: string,
-		value: Redacted.Redacted<string>,
-		scope?: SecretScope,
-	) => Effect.Effect<void, GitHubError, Repo>;
-	/** The names of the repository's secrets in the given store. */
-	readonly list: (scope?: SecretScope) => Effect.Effect<ReadonlyArray<SecretInfo>, GitHubError, Repo>;
-	/** Remove one repository secret from the given store. */
-	readonly delete: (name: string, scope?: SecretScope) => Effect.Effect<void, GitHubError, Repo>;
+  /** Encrypt and write one repository secret in the given store. */
+  readonly set: (
+    name: string,
+    value: Redacted.Redacted<string>,
+    scope?: SecretScope,
+  ) => Effect.Effect<void, GitHubError, Repo>;
+  /** The names of the repository's secrets in the given store. */
+  readonly list: (scope?: SecretScope) => Effect.Effect<ReadonlyArray<SecretInfo>, GitHubError, Repo>;
+  /** Remove one repository secret from the given store. */
+  readonly delete: (name: string, scope?: SecretScope) => Effect.Effect<void, GitHubError, Repo>;
 
-	/** Encrypt and write one environment secret. */
-	readonly setForEnvironment: (
-		environment: string,
-		name: string,
-		value: Redacted.Redacted<string>,
-	) => Effect.Effect<void, GitHubError, Repo>;
-	/** The names of one environment's secrets. */
-	readonly listForEnvironment: (environment: string) => Effect.Effect<ReadonlyArray<SecretInfo>, GitHubError, Repo>;
-	/** Remove one environment secret. */
-	readonly deleteForEnvironment: (environment: string, name: string) => Effect.Effect<void, GitHubError, Repo>;
+  /** Encrypt and write one environment secret. */
+  readonly setForEnvironment: (
+    environment: string,
+    name: string,
+    value: Redacted.Redacted<string>,
+  ) => Effect.Effect<void, GitHubError, Repo>;
+  /** The names of one environment's secrets. */
+  readonly listForEnvironment: (environment: string) => Effect.Effect<ReadonlyArray<SecretInfo>, GitHubError, Repo>;
+  /** Remove one environment secret. */
+  readonly deleteForEnvironment: (environment: string, name: string) => Effect.Effect<void, GitHubError, Repo>;
 }
 
 const ROUTES = {
-	actions: {
-		publicKey: "GET /repos/{owner}/{repo}/actions/secrets/public-key",
-		put: "PUT /repos/{owner}/{repo}/actions/secrets/{secret_name}",
-		list: "GET /repos/{owner}/{repo}/actions/secrets",
-		remove: "DELETE /repos/{owner}/{repo}/actions/secrets/{secret_name}",
-	},
-	dependabot: {
-		publicKey: "GET /repos/{owner}/{repo}/dependabot/secrets/public-key",
-		put: "PUT /repos/{owner}/{repo}/dependabot/secrets/{secret_name}",
-		list: "GET /repos/{owner}/{repo}/dependabot/secrets",
-		remove: "DELETE /repos/{owner}/{repo}/dependabot/secrets/{secret_name}",
-	},
-	codespaces: {
-		publicKey: "GET /repos/{owner}/{repo}/codespaces/secrets/public-key",
-		put: "PUT /repos/{owner}/{repo}/codespaces/secrets/{secret_name}",
-		list: "GET /repos/{owner}/{repo}/codespaces/secrets",
-		remove: "DELETE /repos/{owner}/{repo}/codespaces/secrets/{secret_name}",
-	},
+  actions: {
+    publicKey: "GET /repos/{owner}/{repo}/actions/secrets/public-key",
+    put: "PUT /repos/{owner}/{repo}/actions/secrets/{secret_name}",
+    list: "GET /repos/{owner}/{repo}/actions/secrets",
+    remove: "DELETE /repos/{owner}/{repo}/actions/secrets/{secret_name}",
+  },
+  dependabot: {
+    publicKey: "GET /repos/{owner}/{repo}/dependabot/secrets/public-key",
+    put: "PUT /repos/{owner}/{repo}/dependabot/secrets/{secret_name}",
+    list: "GET /repos/{owner}/{repo}/dependabot/secrets",
+    remove: "DELETE /repos/{owner}/{repo}/dependabot/secrets/{secret_name}",
+  },
+  codespaces: {
+    publicKey: "GET /repos/{owner}/{repo}/codespaces/secrets/public-key",
+    put: "PUT /repos/{owner}/{repo}/codespaces/secrets/{secret_name}",
+    list: "GET /repos/{owner}/{repo}/codespaces/secrets",
+    remove: "DELETE /repos/{owner}/{repo}/codespaces/secrets/{secret_name}",
+  },
 } as const;
 
 /**
@@ -118,38 +118,38 @@ const ROUTES = {
  * @public
  */
 export class RepositorySecret extends Context.Service<RepositorySecret, RepositorySecretShape>()(
-	"@effected/github/RepositorySecret",
+  "@beep/scratchpad/effected/github/RepositorySecret",
 ) {
-	/**
-	 * The live service, built over a `GitHubClient`.
-	 *
-	 * @remarks
-	 * `(client) => make(client)` rather than `make`: a static initializer runs
-	 * while the module body is still evaluating, so naming a `const` declared
-	 * further down throws at import time with a clean typecheck.
-	 */
-	static readonly layer: Layer.Layer<RepositorySecret, never, GitHubClient> = Layer.effect(
-		this,
-		Effect.map(GitHubClient, (client) => make(client)),
-	);
+  /**
+   * The live service, built over a `GitHubClient`.
+   *
+   * @remarks
+   * `(client) => make(client)` rather than `make`: a static initializer runs
+   * while the module body is still evaluating, so naming a `const` declared
+   * further down throws at import time with a clean typecheck.
+   */
+  static readonly layer: Layer.Layer<RepositorySecret, never, GitHubClient> = Layer.effect(
+    this,
+    Effect.map(GitHubClient, (client) => make(client)),
+  );
 
-	/** An in-memory double; unstubbed members die naming themselves. */
-	static readonly makeTest = (overrides: Partial<RepositorySecretShape> = {}): RepositorySecretShape => ({
-		set: overrides.set ?? (() => unstubbed("set")),
-		list: overrides.list ?? (() => unstubbed("list")),
-		delete: overrides.delete ?? (() => unstubbed("delete")),
-		setForEnvironment: overrides.setForEnvironment ?? (() => unstubbed("setForEnvironment")),
-		listForEnvironment: overrides.listForEnvironment ?? (() => unstubbed("listForEnvironment")),
-		deleteForEnvironment: overrides.deleteForEnvironment ?? (() => unstubbed("deleteForEnvironment")),
-	});
+  /** An in-memory double; unstubbed members die naming themselves. */
+  static readonly makeTest = (overrides: Partial<RepositorySecretShape> = {}): RepositorySecretShape => ({
+    set: overrides.set ?? (() => unstubbed("set")),
+    list: overrides.list ?? (() => unstubbed("list")),
+    delete: overrides.delete ?? (() => unstubbed("delete")),
+    setForEnvironment: overrides.setForEnvironment ?? (() => unstubbed("setForEnvironment")),
+    listForEnvironment: overrides.listForEnvironment ?? (() => unstubbed("listForEnvironment")),
+    deleteForEnvironment: overrides.deleteForEnvironment ?? (() => unstubbed("deleteForEnvironment")),
+  });
 
-	/** {@link RepositorySecret.makeTest} behind a `Layer`. */
-	static readonly layerTest = (overrides: Partial<RepositorySecretShape> = {}): Layer.Layer<RepositorySecret> =>
-		Layer.succeed(RepositorySecret, RepositorySecret.makeTest(overrides));
+  /** {@link RepositorySecret.makeTest} behind a `Layer`. */
+  static readonly layerTest = (overrides: Partial<RepositorySecretShape> = {}): Layer.Layer<RepositorySecret> =>
+    Layer.succeed(RepositorySecret, RepositorySecret.makeTest(overrides));
 }
 
 const unstubbed = (member: string): never => {
-	throw new Error(`RepositorySecret.makeTest: ${member}() was called but not stubbed — pass an override.`);
+  throw new Error(`RepositorySecret.makeTest: ${member}() was called but not stubbed — pass an override.`);
 };
 
 /**
@@ -162,105 +162,126 @@ const unstubbed = (member: string): never => {
  * caller already handles, naming the route it came from.
  */
 const seal = (route: string, publicKey: string, value: Redacted.Redacted<string>): Effect.Effect<string, GitHubError> =>
-	Result.match(encryptSecret(publicKey, Redacted.value(value)), {
-		onSuccess: (sealed) => Effect.succeed(sealed),
-		onFailure: () => Effect.fail(GitHubError.decode(route, "the secrets public key was not valid base64")),
-	});
+  Result.match(encryptSecret(publicKey, Redacted.value(value)), {
+    onSuccess: (sealed) => Effect.succeed(sealed),
+    onFailure: () => Effect.fail(GitHubError.decode(route, "the secrets public key was not valid base64")),
+  });
 
 const make = (client: GitHubClient["Service"]): RepositorySecretShape => {
-	const set = Effect.fn("RepositorySecret.set")(function* (
-		name: string,
-		value: Redacted.Redacted<string>,
-		scope: SecretScope = "actions",
-	) {
-		const { owner, repo } = yield* Repo;
-		yield* Effect.annotateCurrentSpan({ owner, repo, scope, secret: name });
+  const set = Effect.fn("RepositorySecret.set")(function* (
+    name: string,
+    value: Redacted.Redacted<string>,
+    scope: SecretScope = "actions",
+  ) {
+    const { owner, repo } = yield* Repo;
+    yield* Effect.annotateCurrentSpan({ owner, repo, scope, secret: name });
 
-		const routes = ROUTES[scope];
-		const publicKey = yield* client.request(routes.publicKey, { owner, repo });
+    const routes = ROUTES[scope];
+    const publicKey = yield* client.request(routes.publicKey, { owner, repo });
 
-		yield* client.request(routes.put, {
-			owner,
-			repo,
-			secret_name: name,
-			// The single unwrap, at the moment of encryption. What continues from
-			// here is the sealed box.
-			encrypted_value: yield* seal(routes.publicKey, publicKey.key, value),
-			key_id: publicKey.key_id,
-		});
-	});
+    yield* client.request(routes.put, {
+      owner,
+      repo,
+      secret_name: name,
+      // The single unwrap, at the moment of encryption. What continues from
+      // here is the sealed box.
+      encrypted_value: yield* seal(routes.publicKey, publicKey.key, value),
+      key_id: publicKey.key_id,
+    });
+  });
 
-	const list = Effect.fn("RepositorySecret.list")(function* (scope: SecretScope = "actions") {
-		const { owner, repo } = yield* Repo;
-		yield* Effect.annotateCurrentSpan({ owner, repo, scope });
+  const list = Effect.fn("RepositorySecret.list")(function* (scope: SecretScope = "actions") {
+    const { owner, repo } = yield* Repo;
+    yield* Effect.annotateCurrentSpan({ owner, repo, scope });
 
-		// Paginated: the array on one page is a page, not the count. A repository
-		// with more secrets than a page holds would otherwise report a truncated
-		// list that looks complete.
-		const secrets = yield* client.paginate(ROUTES[scope].list, { owner, repo });
-		return secrets.map((secret): SecretInfo => ({ name: secret.name }));
-	});
+    // Paginated: the array on one page is a page, not the count. A repository
+    // with more secrets than a page holds would otherwise report a truncated
+    // list that looks complete.
+    const secrets = yield* client.paginate(ROUTES[scope].list, { owner, repo });
+    return secrets.map((secret): SecretInfo => ({ name: secret.name }));
+  });
 
-	const delete_ = Effect.fn("RepositorySecret.delete")(function* (name: string, scope: SecretScope = "actions") {
-		const { owner, repo } = yield* Repo;
-		yield* Effect.annotateCurrentSpan({ owner, repo, scope, secret: name });
+  const delete_ = Effect.fn("RepositorySecret.delete")(function* (name: string, scope: SecretScope = "actions") {
+    const { owner, repo } = yield* Repo;
+    yield* Effect.annotateCurrentSpan({ owner, repo, scope, secret: name });
 
-		yield* client.request(ROUTES[scope].remove, { owner, repo, secret_name: name });
-	});
+    return yield* client.request(ROUTES[scope].remove, {
+      owner,
+      repo,
+      secret_name: name,
+    });
+  });
 
-	const setForEnvironment = Effect.fn("RepositorySecret.setForEnvironment")(function* (
-		environment: string,
-		name: string,
-		value: Redacted.Redacted<string>,
-	) {
-		const { owner, repo } = yield* Repo;
-		yield* Effect.annotateCurrentSpan({ owner, repo, environment, secret: name });
+  const setForEnvironment = Effect.fn("RepositorySecret.setForEnvironment")(function* (
+    environment: string,
+    name: string,
+    value: Redacted.Redacted<string>,
+  ) {
+    const { owner, repo } = yield* Repo;
+    yield* Effect.annotateCurrentSpan({
+      owner,
+      repo,
+      environment,
+      secret: name,
+    });
 
-		const publicKey = yield* client.request(
-			"GET /repos/{owner}/{repo}/environments/{environment_name}/secrets/public-key",
-			{ owner, repo, environment_name: environment },
-		);
+    const publicKey = yield* client.request(
+      "GET /repos/{owner}/{repo}/environments/{environment_name}/secrets/public-key",
+      { owner, repo, environment_name: environment },
+    );
 
-		yield* client.request("PUT /repos/{owner}/{repo}/environments/{environment_name}/secrets/{secret_name}", {
-			owner,
-			repo,
-			environment_name: environment,
-			secret_name: name,
-			encrypted_value: yield* seal(
-				"GET /repos/{owner}/{repo}/environments/{environment_name}/secrets/public-key",
-				publicKey.key,
-				value,
-			),
-			key_id: publicKey.key_id,
-		});
-	});
+    yield* client.request("PUT /repos/{owner}/{repo}/environments/{environment_name}/secrets/{secret_name}", {
+      owner,
+      repo,
+      environment_name: environment,
+      secret_name: name,
+      encrypted_value: yield* seal(
+        "GET /repos/{owner}/{repo}/environments/{environment_name}/secrets/public-key",
+        publicKey.key,
+        value,
+      ),
+      key_id: publicKey.key_id,
+    });
+  });
 
-	const listForEnvironment = Effect.fn("RepositorySecret.listForEnvironment")(function* (environment: string) {
-		const { owner, repo } = yield* Repo;
-		yield* Effect.annotateCurrentSpan({ owner, repo, environment });
+  const listForEnvironment = Effect.fn("RepositorySecret.listForEnvironment")(function* (environment: string) {
+    const { owner, repo } = yield* Repo;
+    yield* Effect.annotateCurrentSpan({ owner, repo, environment });
 
-		const secrets = yield* client.paginate("GET /repos/{owner}/{repo}/environments/{environment_name}/secrets", {
-			owner,
-			repo,
-			environment_name: environment,
-		});
-		return secrets.map((secret): SecretInfo => ({ name: secret.name }));
-	});
+    const secrets = yield* client.paginate("GET /repos/{owner}/{repo}/environments/{environment_name}/secrets", {
+      owner,
+      repo,
+      environment_name: environment,
+    });
+    return secrets.map((secret): SecretInfo => ({ name: secret.name }));
+  });
 
-	const deleteForEnvironment = Effect.fn("RepositorySecret.deleteForEnvironment")(function* (
-		environment: string,
-		name: string,
-	) {
-		const { owner, repo } = yield* Repo;
-		yield* Effect.annotateCurrentSpan({ owner, repo, environment, secret: name });
+  const deleteForEnvironment = Effect.fn("RepositorySecret.deleteForEnvironment")(function* (
+    environment: string,
+    name: string,
+  ) {
+    const { owner, repo } = yield* Repo;
+    yield* Effect.annotateCurrentSpan({
+      owner,
+      repo,
+      environment,
+      secret: name,
+    });
 
-		yield* client.request("DELETE /repos/{owner}/{repo}/environments/{environment_name}/secrets/{secret_name}", {
-			owner,
-			repo,
-			environment_name: environment,
-			secret_name: name,
-		});
-	});
+    return yield* client.request("DELETE /repos/{owner}/{repo}/environments/{environment_name}/secrets/{secret_name}", {
+      owner,
+      repo,
+      environment_name: environment,
+      secret_name: name,
+    });
+  });
 
-	return { set, list, delete: delete_, setForEnvironment, listForEnvironment, deleteForEnvironment };
+  return {
+    set,
+    list,
+    delete: delete_,
+    setForEnvironment,
+    listForEnvironment,
+    deleteForEnvironment,
+  };
 };

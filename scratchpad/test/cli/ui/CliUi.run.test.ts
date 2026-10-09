@@ -1,6 +1,7 @@
+// @effect-diagnostics strictEffectProvide:skip-file asyncFunction:skip-file globalTimers:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import type { Scope } from "effect";
-import { Cause, Effect, Exit, Fiber, Option, Schedule } from "effect";
+import { Cause, Effect, Exit, Fiber, Option, Schedule, Schema } from "effect";
 import { Text, useApp } from "ink";
 import type { ReactElement } from "react";
 import { createElement, useEffect, useState } from "react";
@@ -127,7 +128,7 @@ describe("CliUi.run", () => {
 			fake.input("\u0003");
 			const error = yield* Effect.flip(Fiber.join(fiber));
 			assert.instanceOf(error, Cancelled);
-			assert.strictEqual(error instanceof Cancelled ? error.reason : undefined, "interrupt");
+			assert.strictEqual(Schema.is(Cancelled)(error) ? error.reason : undefined, "interrupt");
 		}),
 	);
 
@@ -141,7 +142,7 @@ describe("CliUi.run", () => {
 			const error = yield* Effect.flip(Fiber.join(fiber));
 			assert.isAtLeast(Date.now() - pressed, 15, "Ink holds a lone ESC for its flush before reporting it");
 			assert.instanceOf(error, Cancelled);
-			assert.strictEqual(error instanceof Cancelled ? error.reason : undefined, "escape");
+			assert.strictEqual(Schema.is(Cancelled)(error) ? error.reason : undefined, "escape");
 		}),
 	);
 

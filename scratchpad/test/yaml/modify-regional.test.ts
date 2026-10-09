@@ -5,7 +5,7 @@
 // preconditions keeps the whole-document pipeline's existing behavior.
 
 import { assert, describe, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import { YamlFormat, YamlModificationError } from "../../effected/yaml/YamlFormat.ts";
 
 const modify = (
@@ -192,7 +192,7 @@ describe("YamlFormat.modify region-confined scalar replacement (#659)", () => {
 	it("keeps typed navigation errors unchanged", () => {
 		const text = "a: 1\n";
 		const error = Effect.runSync(Effect.flip(YamlFormat.modify(text, ["missing", "deeper"], "v")));
-		assert.ok(error instanceof YamlModificationError);
+		assert.ok(Schema.is(YamlModificationError)(error));
 		assert.deepStrictEqual((error as { path: ReadonlyArray<string | number> }).path, ["missing", "deeper"]);
 	});
 

@@ -47,7 +47,7 @@ export const reconcile = (input: ReconcileInput): Result.Result<ReconcileOutput,
 	for (const section of declared) {
 		const identity = identityOf(section.key, section.commentStyle);
 		if (rendered.has(identity)) {
-			return Result.fail(new SectionRenderError({ reason: "duplicateDeclaration", key: section.key }));
+			return Result.fail(SectionRenderError.make({ reason: "duplicateDeclaration", key: section.key }));
 		}
 		const result = dialect.render(section, eol);
 		if (Result.isFailure(result)) {

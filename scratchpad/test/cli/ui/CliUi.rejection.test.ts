@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file asyncFunction:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { Cause, Effect, Exit } from "effect";
 import { vi } from "vitest";

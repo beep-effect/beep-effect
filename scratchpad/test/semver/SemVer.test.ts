@@ -37,7 +37,7 @@ describe("SemVer", () => {
 	describe("FromString", () => {
 		it.effect("decodes a version string to a SemVer instance", () =>
 			Effect.gen(function* () {
-				const v = yield* Schema.decodeUnknownEffect(SemVer.FromString)("2.0.0-rc.1");
+				const v = yield* Schema.decodeEffect(SemVer.FromString)("2.0.0-rc.1");
 				assert.instanceOf(v, SemVer);
 				assert.strictEqual(v.major, 2);
 				assert.deepStrictEqual([...v.prerelease], ["rc", 1]);
@@ -54,7 +54,7 @@ describe("SemVer", () => {
 
 		it.effect("fails decoding invalid input with a SchemaError", () =>
 			Effect.gen(function* () {
-				const error = yield* Effect.flip(Schema.decodeUnknownEffect(SemVer.FromString)("nope"));
+				const error = yield* Effect.flip(Schema.decodeEffect(SemVer.FromString)("nope"));
 				assert.strictEqual(error._tag, "SchemaError");
 			}),
 		);
@@ -62,7 +62,7 @@ describe("SemVer", () => {
 		it.effect.prop("round-trips decode(encode(v))", [SemVer], ([v]) =>
 			Effect.gen(function* () {
 				const encoded = yield* Schema.encodeUnknownEffect(SemVer.FromString)(v);
-				const decoded = yield* Schema.decodeUnknownEffect(SemVer.FromString)(encoded);
+				const decoded = yield* Schema.decodeEffect(SemVer.FromString)(encoded);
 				assert.isTrue(Equal.equals(decoded, v), `expected ${decoded.toString()} to equal ${v.toString()}`);
 				assert.deepStrictEqual([...decoded.build], [...v.build]);
 			}),

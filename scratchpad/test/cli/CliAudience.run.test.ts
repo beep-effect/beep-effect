@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file
 // The audience flag must be known BEFORE core parses, because a fallback prompt fires during the parse: core parses
 // the root flags into a local context (Command.ts:922-925) and only wraps the subcommand HANDLER with what
 // `provideEffect` resolves (Command.ts:941), so the prompt in `sub.parse` (Param.ts:1478-1485) cannot see them.

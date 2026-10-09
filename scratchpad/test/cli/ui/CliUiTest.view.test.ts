@@ -1,5 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Cause, Effect, Exit } from "effect";
+import { Cause, Effect, Exit, Schema } from "effect";
 import { Text, useInput } from "ink";
 import type { ReactElement } from "react";
 import { createElement, useState } from "react";
@@ -125,7 +125,7 @@ describe("CliUiTest.view surfaces an element that crashes or is refused", () => 
 			);
 			assert.isTrue(Exit.isFailure(exit), "control: it did not succeed");
 			assert.notInclude(messageOf(exit), "<succeeded>");
-			assert.isTrue(Exit.isFailure(exit) && Cause.squash(exit.cause) instanceof NotInteractive, messageOf(exit));
+			assert.isTrue(Exit.isFailure(exit) && Schema.is(NotInteractive)(Cause.squash(exit.cause)), messageOf(exit));
 		}),
 	);
 });

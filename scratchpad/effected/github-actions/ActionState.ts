@@ -94,11 +94,11 @@ const make = Effect.gen(function* () {
 
 	const write = (key: string, serialized: string): Effect.Effect<void, ActionStateError> =>
 		Effect.gen(function* () {
-			const writeFailed = (cause: unknown) => new ActionStateError({ reason: "writeFailed", key, cause });
+			const writeFailed = (cause: unknown) => ActionStateError.make({ reason: "writeFailed", key, cause });
 			// The same heredoc protocol as ActionOutputs (`internal/runnerFile.ts`):
 			// a key that cannot head a block would corrupt every entry after it.
 			if (!isUsableName(key)) {
-				return yield* Effect.fail(writeFailed(new Error(`"${key}" cannot name a GITHUB_STATE entry`)));
+				return yield* writeFailed(new Error(`"${key}" cannot name a GITHUB_STATE entry`));
 			}
 			const path = yield* env.get("GITHUB_STATE").pipe(Effect.mapError(writeFailed));
 			yield* fs.writeFileString(path, heredocBlock(key, serialized), { flag: "a" }).pipe(Effect.mapError(writeFailed));
@@ -110,8 +110,8 @@ const make = Effect.gen(function* () {
 			if (Option.isNone(raw)) {
 				return Option.none<A>();
 			}
-			const decoded = yield* Schema.decodeUnknownEffect(Schema.fromJsonString(schema))(raw.value).pipe(
-				Effect.mapError((cause) => new ActionStateError({ reason: "malformed", key, cause })),
+			const decoded = yield* Schema.decodeEffect(Schema.fromJsonString(schema))(raw.value).pipe(
+				Effect.mapError((cause) => ActionStateError.make({ reason: "malformed", key, cause })),
 			);
 			return Option.some(decoded);
 		});
@@ -119,7 +119,7 @@ const make = Effect.gen(function* () {
 	const save = <A, I>(key: string, value: A, schema: Schema.Codec<A, I>) =>
 		Effect.gen(function* () {
 			const encoded = yield* Schema.encodeUnknownEffect(schema)(value).pipe(
-				Effect.mapError((cause) => new ActionStateError({ reason: "malformed", key, cause })),
+				Effect.mapError((cause) => ActionStateError.make({ reason: "malformed", key, cause })),
 			);
 			// Prove at save time that the encoded form survives the boundary it is
 			// about to cross: GITHUB_STATE is text, so what `get` will see is
@@ -133,10 +133,10 @@ const make = Effect.gen(function* () {
 					const serialized = JSON.stringify(encoded);
 					return { parsed: JSON.parse(serialized) as unknown, serialized };
 				},
-				catch: (cause) => new ActionStateError({ reason: "notPlainJson", key, cause }),
+				catch: (cause) => ActionStateError.make({ reason: "notPlainJson", key, cause }),
 			});
 			yield* Schema.decodeUnknownEffect(schema)(parsed).pipe(
-				Effect.mapError((cause) => new ActionStateError({ reason: "notPlainJson", key, cause })),
+				Effect.mapError((cause) => ActionStateError.make({ reason: "notPlainJson", key, cause })),
 			);
 			yield* write(key, serialized);
 		});
@@ -148,7 +148,7 @@ const make = Effect.gen(function* () {
 			Effect.flatMap(read(key, schema), (found) =>
 				Option.isSome(found)
 					? Effect.succeed(found.value)
-					: Effect.fail(new ActionStateError({ reason: "missing", key })),
+					: Effect.fail(ActionStateError.make({ reason: "missing", key })),
 			),
 		saveSecret: (key: string, secret: string) =>
 			// Mask first, then persist. The ordering is the guarantee.
@@ -176,13 +176,13 @@ const dies = unstubbed("ActionState.makeTest");
  * // in `pre`
  * const pre = Effect.gen(function* () {
  *   const state = yield* ActionState;
- *   yield* state.save("server-pid", 4242, Schema.Number);
+ *   yield* state.save("server-pid", 4242, Schema.Finite);
  * });
  *
  * // in `post`
  * const post = Effect.gen(function* () {
  *   const state = yield* ActionState;
- *   const pid = yield* state.get("server-pid", Schema.Number);
+ *   const pid = yield* state.get("server-pid", Schema.Finite);
  *   return pid;
  * });
  * ```
@@ -190,7 +190,7 @@ const dies = unstubbed("ActionState.makeTest");
  * @public
  */
 export class ActionState extends Context.Service<ActionState, ActionStateShape>()(
-	"@effected/github-actions/ActionState",
+	"@beep/scratchpad/effected/github-actions/ActionState",
 ) {
 	/**
 	 * The live service, writing to the runner's `GITHUB_STATE` file and reading

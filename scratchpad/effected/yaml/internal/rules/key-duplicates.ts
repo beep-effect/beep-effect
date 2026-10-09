@@ -20,15 +20,15 @@ export const keyDuplicatesOptions = Schema.Struct({
 
 const walk = (node: YamlNode | null, text: string, out: Array<YamlLintDiagnostic>, ctx: LintContext): void => {
 	if (node === null) return;
-	if (node instanceof YamlMap) {
+	if (Schema.is(YamlMap)(node)) {
 		const seen = new Set<string>();
 		for (const pair of node.items) {
-			if (pair.key instanceof YamlScalar) {
+			if (Schema.is(YamlScalar)(pair.key)) {
 				const id = keyIdentity(pair.key, text);
 				if (seen.has(id)) {
 					const pos = positionAt(ctx.lines, pair.key.offset);
 					out.push(
-						new YamlLintDiagnostic({
+						YamlLintDiagnostic.make({
 							rule: "key-duplicates",
 							severity: "error",
 							message: `Duplicate key: ${String(pair.key.value)}`,
@@ -46,7 +46,7 @@ const walk = (node: YamlNode | null, text: string, out: Array<YamlLintDiagnostic
 		}
 		return;
 	}
-	if (node instanceof YamlSeq) {
+	if (Schema.is(YamlSeq)(node)) {
 		for (const item of node.items) walk(item, text, out, ctx);
 	}
 };

@@ -245,7 +245,7 @@ export class Action {
 		const leveled = options.stepDebugLogLevel === false ? program : withStepDebugLogLevel(program);
 
 		const runnable = leveled.pipe(
-			Effect.provide(composed as Layer.Layer<ActionServices | R>),
+			Effect.provide(composed),
 			Effect.exit,
 			Effect.flatMap((exit) =>
 				Exit.isSuccess(exit)

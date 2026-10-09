@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { ConfigProvider, Effect, Layer, Logger, Option } from "effect";
 import type { AudienceOptions } from "../../effected/env/Audience.ts";

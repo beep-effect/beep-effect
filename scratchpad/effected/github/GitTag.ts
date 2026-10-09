@@ -138,7 +138,7 @@ export interface GitTagShape {
  *
  * @public
  */
-export class GitTag extends Context.Service<GitTag, GitTagShape>()("@effected/github/GitTag") {
+export class GitTag extends Context.Service<GitTag, GitTagShape>()("@beep/scratchpad/effected/github/GitTag") {
 	/** The live service, built over a `GitHubClient`. */
 	static readonly layer: Layer.Layer<GitTag, never, GitHubClient> = Layer.effect(
 		this,
@@ -186,8 +186,7 @@ const make = (client: GitHubClient["Service"]): GitTagShape => {
 		});
 	});
 
-	const reset = (tag: string, sha: string) =>
-		Effect.gen(function* () {
+	const reset = Effect.fn("reset")(function*(tag: string, sha: string) {
 			const { owner, repo } = yield* Repo;
 			yield* client.request("PATCH /repos/{owner}/{repo}/git/refs/{ref}", {
 				owner,
@@ -232,11 +231,11 @@ const make = (client: GitHubClient["Service"]): GitTagShape => {
 			const { owner, repo } = yield* Repo;
 			const short = yield* rejectEmpty("GitTag.delete", tag);
 			yield* Effect.annotateCurrentSpan({ owner, repo, tag: short });
-			yield* client.request("DELETE /repos/{owner}/{repo}/git/refs/{ref}", {
-				owner,
-				repo,
-				ref: `tags/${short}`,
-			});
+			return yield* client.request("DELETE /repos/{owner}/{repo}/git/refs/{ref}", {
+    owner,
+    repo,
+    ref: `tags/${short}`,
+});
 		}),
 		list,
 		resolve: Effect.fn("GitTag.resolve")(function* (tag: string) {
@@ -252,9 +251,8 @@ const make = (client: GitHubClient["Service"]): GitTagShape => {
 			let type = ref.object.type;
 			for (let peeled = 0; type === "tag"; peeled += 1) {
 				if (peeled >= MAX_TAG_PEEL) {
-					return yield* Effect.fail(
-						GitHubError.rejected("GitTag.resolve", 422, `tag ${short} nests deeper than ${MAX_TAG_PEEL} levels`),
-					);
+					return yield*
+						GitHubError.rejected("GitTag.resolve", 422, `tag ${short} nests deeper than ${MAX_TAG_PEEL} levels`);
 				}
 				const annotated = yield* client.request("GET /repos/{owner}/{repo}/git/tags/{tag_sha}", {
 					owner,
@@ -265,9 +263,7 @@ const make = (client: GitHubClient["Service"]): GitTagShape => {
 				type = annotated.object.type;
 			}
 			if (type !== "commit") {
-				return yield* Effect.fail(
-					GitHubError.rejected("GitTag.resolve", 422, `tag ${short} points at a ${type}, not a commit`),
-				);
+				return yield* GitHubError.rejected("GitTag.resolve", 422, `tag ${short} points at a ${type}, not a commit`);
 			}
 			return sha;
 		}),

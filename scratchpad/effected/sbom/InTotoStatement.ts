@@ -83,7 +83,7 @@ const parseResult = (value: string): Result.Result<Sha256Digest, InvalidSha256Di
 	const normalized = normalizeDigest(value);
 	return SHA256_RE.test(normalized)
 		? Result.succeed(normalized as Sha256Digest)
-		: Result.fail(new InvalidSha256DigestError({ input: value }));
+		: Result.fail(InvalidSha256DigestError.make({ input: value }));
 };
 
 /**

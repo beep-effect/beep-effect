@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import type { MemoryFileSystemOptions, MemoryFileSystemSeedEntry } from "../../effected/memfs/index.ts";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
@@ -128,7 +129,7 @@ describe("CacheKey", () => {
 			// The policy is a plain field, so a key that crossed a serialization
 			// boundary (state, JSON output) keeps meaning "exact match only".
 			const encoded = Schema.encodeSync(CacheKey)(CacheKey.of("Linux", "pnpm-store").withoutRestoreKeys());
-			const decoded = Schema.decodeUnknownSync(CacheKey)(encoded);
+			const decoded = Schema.decodeSync(CacheKey)(encoded);
 			assert.deepStrictEqual(decoded.restoreKeys, []);
 			assert.strictEqual(decoded.key, "Linux-pnpm-store");
 		});

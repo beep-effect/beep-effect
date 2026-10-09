@@ -505,7 +505,7 @@ const readPackageSync = (
 	const publishConfig = raw.publishConfig;
 	const config =
 		publishConfig !== null && typeof publishConfig === "object"
-			? Effect.runSyncExit(Schema.decodeUnknownEffect(PublishConfig)(publishConfig))
+			? Effect.runSyncExit(Schema.decodeEffect(PublishConfig)(publishConfig))
 			: undefined;
 
 	return WorkspacePackage.make({
@@ -693,7 +693,7 @@ export const getWorkspacePackagesSync = (
 
 	const members: Array<WorkspacePackage> = [];
 	const admit = (read: WorkspacePackage | WorkspaceDiscoverySkip): void => {
-		if (read instanceof WorkspacePackage) members.push(read);
+		if (Schema.is(WorkspacePackage)(read)) members.push(read);
 		else options.onSkip?.(read);
 	};
 	for (const [relativePath, absolute] of [...included.entries()].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))) {
@@ -702,7 +702,7 @@ export const getWorkspacePackagesSync = (
 	}
 
 	const rootPackage = readPackageSync(options, root, root, ".");
-	if (rootPackage instanceof WorkspacePackage) return [rootPackage, ...members];
+	if (Schema.is(WorkspacePackage)(rootPackage)) return [rootPackage, ...members];
 	options.onSkip?.(rootPackage);
 	return members;
 };

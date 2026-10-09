@@ -146,7 +146,7 @@ export interface ChangeDetectorShape {
  * @public
  */
 export class ChangeDetector extends Context.Service<ChangeDetector, ChangeDetectorShape>()(
-	"@effected/workspaces/ChangeDetector",
+	"@beep/scratchpad/effected/workspaces/ChangeDetector",
 ) {
 	/** Builds the service over `Git` and {@link WorkspaceDiscovery}. */
 	static readonly make: Effect.Effect<ChangeDetectorShape, never, Git | WorkspaceDiscovery> = Effect.gen(function* () {

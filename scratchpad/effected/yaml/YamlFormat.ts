@@ -111,7 +111,7 @@ export class YamlFormattingOptions extends Schema.Class<YamlFormattingOptions>("
  * @public
  */
 export class YamlModificationError extends Schema.TaggedError<YamlModificationError>()("YamlModificationError", {
-	path: Schema.Array(Schema.Union([Schema.String, Schema.Number])),
+	path: Schema.Array(Schema.Union([Schema.String, Schema.Finite])),
 	diagnostics: Schema.Array(YamlDiagnostic),
 }) {
 	override get message(): string {
@@ -194,7 +194,7 @@ function definedFields<T extends Record<string, unknown>>(fields: T): Partial<T>
  * the surrounding diff keeps the edit surgical per scalar span.
  */
 function requoteNode(node: YamlNode, text: string, quote: '"' | "'"): YamlNode {
-	if (node instanceof YamlScalar) {
+	if (Schema.is(YamlScalar)(node)) {
 		if (requoteScalarText(text, node, quote, "escaping") === undefined) return node;
 		return YamlScalar.make({
 			value: node.value,
@@ -210,7 +210,7 @@ function requoteNode(node: YamlNode, text: string, quote: '"' | "'"): YamlNode {
 			length: node.length,
 		});
 	}
-	if (node instanceof YamlMap) {
+	if (Schema.is(YamlMap)(node)) {
 		return rebuildMap(
 			node,
 			node.items.map((pair) =>
@@ -221,7 +221,7 @@ function requoteNode(node: YamlNode, text: string, quote: '"' | "'"): YamlNode {
 			),
 		);
 	}
-	if (node instanceof YamlSeq) {
+	if (Schema.is(YamlSeq)(node)) {
 		return rebuildSeq(
 			node,
 			node.items.map((item) => requoteNode(item, text, quote)),
@@ -427,8 +427,8 @@ function modifyNode(node: YamlNode, path: YamlPath, depth: number, value: unknow
 	const segment = path[depth] as YamlSegment;
 	const isLast = depth === path.length - 1;
 
-	if (node instanceof YamlMap) {
-		const pairIndex = node.items.findIndex((pair) => pair.key instanceof YamlScalar && pair.key.value === segment);
+	if (Schema.is(YamlMap)(node)) {
+		const pairIndex = node.items.findIndex((pair) => Schema.is(YamlScalar)(pair.key) && pair.key.value === segment);
 
 		if (isLast) {
 			if (value === undefined) {
@@ -474,7 +474,7 @@ function modifyNode(node: YamlNode, path: YamlPath, depth: number, value: unknow
 		return rebuildMap(node, newItems);
 	}
 
-	if (node instanceof YamlSeq) {
+	if (Schema.is(YamlSeq)(node)) {
 		const idx = typeof segment === "number" ? segment : Number(segment);
 		if (Number.isNaN(idx) || idx < 0) {
 			throw new ModifyFailure("InvalidIndex", `Invalid sequence index: ${String(segment)}`, node.offset, node.length);
@@ -580,13 +580,13 @@ function findExistingTarget(
 	for (let depth = 0; depth < path.length; depth++) {
 		const segment = path[depth] as YamlSegment;
 		const isLast = depth === path.length - 1;
-		if (current instanceof YamlMap) {
-			const pair = current.items.find((p) => p.key instanceof YamlScalar && p.key.value === segment);
+		if (Schema.is(YamlMap)(current)) {
+			const pair = current.items.find((p) => Schema.is(YamlScalar)(p.key) && p.key.value === segment);
 			if (pair === undefined) return undefined;
 			if (isLast) return { node: pair.value, inFlow: current.style === "flow" };
 			if (pair.value === null) return undefined;
 			current = pair.value;
-		} else if (current instanceof YamlSeq) {
+		} else if (Schema.is(YamlSeq)(current)) {
 			const idx = typeof segment === "number" ? segment : Number(segment);
 			if (Number.isNaN(idx) || idx < 0 || idx >= current.items.length) return undefined;
 			const child = current.items[idx] as YamlNode;
@@ -647,14 +647,14 @@ function regionalRenderPreservesValue(rendered: string, value: string | number |
 	const { document: probeDoc } = composeFirstDocumentCounted(probeText, {});
 	if (probeDoc.errors.some((e) => isFatalCode(e.code))) return false;
 	const contents = probeDoc.contents;
-	if (!(contents instanceof YamlMap)) return false;
-	const pair = contents.items.find((p) => p.key instanceof YamlScalar && p.key.value === "k");
+	if (!(Schema.is(YamlMap)(contents))) return false;
+	const pair = contents.items.find((p) => Schema.is(YamlScalar)(p.key) && p.key.value === "k");
 	let node = pair?.value;
 	if (inFlow) {
-		if (!(node instanceof YamlSeq) || node.items.length !== 1) return false;
+		if (!(Schema.is(YamlSeq)(node)) || node.items.length !== 1) return false;
 		node = node.items[0];
 	}
-	if (!(node instanceof YamlScalar)) return false;
+	if (!(Schema.is(YamlScalar)(node))) return false;
 	return Object.is(node.value, value);
 }
 
@@ -697,7 +697,7 @@ function tryRegionalScalarEdit(
 	const found = findExistingTarget(doc.contents, path);
 	if (found === undefined) return undefined;
 	const { node: target, inFlow } = found;
-	if (!(target instanceof YamlScalar)) return undefined;
+	if (!(Schema.is(YamlScalar)(target))) return undefined;
 	// A synthesised empty span (`key:` with no value) is an insertion site,
 	// not a replaceable range.
 	if (target.length <= 0) return undefined;
@@ -933,7 +933,7 @@ export class YamlFormat {
 	) {
 		const { document: doc, documentCount } = composeFirstDocumentCounted(text, {});
 		if (documentCount > 1) {
-			return yield* new YamlModificationError({
+			return yield* YamlModificationError.make({
 				path,
 				diagnostics: [
 					YamlDiagnostic.fromRaw(
@@ -950,13 +950,13 @@ export class YamlFormat {
 		}
 		const fatal = doc.errors.filter((e) => isFatalCode(e.code));
 		if (fatal.length > 0) {
-			return yield* new YamlModificationError({
+			return yield* YamlModificationError.make({
 				path,
 				diagnostics: fatal.map((e) => YamlDiagnostic.fromRaw(e, text)),
 			});
 		}
 		if (doc.directives.length > 0) {
-			return yield* new YamlModificationError({
+			return yield* YamlModificationError.make({
 				path,
 				diagnostics: [
 					YamlDiagnostic.fromRaw(
@@ -988,7 +988,7 @@ export class YamlFormat {
 			newContents = modifyDocument(doc, path, value);
 		} catch (err) {
 			if (!(err instanceof ModifyFailure)) throw err;
-			return yield* new YamlModificationError({
+			return yield* YamlModificationError.make({
 				path,
 				diagnostics: [
 					YamlDiagnostic.fromRaw(

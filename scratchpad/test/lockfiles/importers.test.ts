@@ -1,3 +1,4 @@
+// @effect-diagnostics nodeBuiltinImport:skip-file
 // Per-format importer extraction: the `Lockfile.importers` field and the
 // `lockfile.importer(path)` keyed lookup. pnpm records `{ specifier, version }`
 // per importer dependency — the parser splits pnpm's peer-disambiguation

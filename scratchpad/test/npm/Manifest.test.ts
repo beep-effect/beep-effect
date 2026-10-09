@@ -244,7 +244,7 @@ describe("Manifest.resolve", () => {
 
 	// A CatalogResolver whose assembly failed: the typed CatalogAssemblyError
 	// must pass through resolve untouched — never re-wrapped or defected.
-	const assemblyFailure = new CatalogAssemblyError({
+	const assemblyFailure = CatalogAssemblyError.make({
 		source: "manifest",
 		path: "pnpm-workspace.yaml",
 		cause: new Error("unreadable"),
@@ -252,7 +252,7 @@ describe("Manifest.resolve", () => {
 	const FailingResolvers = Layer.mergeAll(
 		Layer.succeed(CatalogResolver, { rangeOf: () => Effect.fail(assemblyFailure) }),
 		Layer.succeed(WorkspaceResolver, {
-			versionOf: () => Effect.fail(new DependencyResolutionError({ specifier: "workspace:*", cause: "broken" })),
+			versionOf: () => Effect.fail(DependencyResolutionError.make({ specifier: "workspace:*", cause: "broken" })),
 		}),
 	);
 

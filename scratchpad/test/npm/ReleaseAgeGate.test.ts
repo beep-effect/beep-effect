@@ -174,7 +174,7 @@ describe("ReleaseAgeGate schema", () => {
 	it.effect("decodes and re-encodes a gate round-trip", () =>
 		Effect.gen(function* () {
 			const input = { ageMinutes: 1440, exclude: ["@effect/*", "prettier"] };
-			const gate = yield* Schema.decodeUnknownEffect(ReleaseAgeGate)(input);
+			const gate = yield* Schema.decodeEffect(ReleaseAgeGate)(input);
 			assert.instanceOf(gate, ReleaseAgeGate);
 			assert.strictEqual(gate.ageMinutes, 1440);
 			assert.deepStrictEqual(gate.exclude, ["@effect/*", "prettier"]);
@@ -185,7 +185,7 @@ describe("ReleaseAgeGate schema", () => {
 
 	it.effect("rejects a negative age", () =>
 		Effect.gen(function* () {
-			const error = yield* Effect.flip(Schema.decodeUnknownEffect(ReleaseAgeGate)({ ageMinutes: -1, exclude: [] }));
+			const error = yield* Effect.flip(Schema.decodeEffect(ReleaseAgeGate)({ ageMinutes: -1, exclude: [] }));
 			assert.strictEqual(error._tag, "SchemaError");
 		}),
 	);
@@ -193,7 +193,7 @@ describe("ReleaseAgeGate schema", () => {
 	it.effect("rejects a non-finite age", () =>
 		Effect.gen(function* () {
 			const error = yield* Effect.flip(
-				Schema.decodeUnknownEffect(ReleaseAgeGate)({ ageMinutes: Number.POSITIVE_INFINITY, exclude: [] }),
+				Schema.decodeEffect(ReleaseAgeGate)({ ageMinutes: Number.POSITIVE_INFINITY, exclude: [] }),
 			);
 			assert.strictEqual(error._tag, "SchemaError");
 		}),
@@ -203,7 +203,7 @@ describe("ReleaseAgeGate schema", () => {
 describe("PartialReleaseAgeGate schema", () => {
 	it.effect("decodes an empty contribution", () =>
 		Effect.gen(function* () {
-			const partial = yield* Schema.decodeUnknownEffect(PartialReleaseAgeGate)({});
+			const partial = yield* Schema.decodeEffect(PartialReleaseAgeGate)({});
 			assert.deepStrictEqual(partial, {});
 		}),
 	);
@@ -211,7 +211,7 @@ describe("PartialReleaseAgeGate schema", () => {
 	it.effect("decodes and re-encodes a full contribution round-trip", () =>
 		Effect.gen(function* () {
 			const input = { ageMinutes: 720, exclude: ["a", "b"] };
-			const partial = yield* Schema.decodeUnknownEffect(PartialReleaseAgeGate)(input);
+			const partial = yield* Schema.decodeEffect(PartialReleaseAgeGate)(input);
 			assert.deepStrictEqual(partial, input);
 			const encoded = yield* Schema.encodeUnknownEffect(PartialReleaseAgeGate)(partial);
 			assert.deepStrictEqual(encoded, input);
@@ -220,7 +220,7 @@ describe("PartialReleaseAgeGate schema", () => {
 
 	it.effect("tolerates a negative age (the clamp lives in combine, not the schema)", () =>
 		Effect.gen(function* () {
-			const partial = yield* Schema.decodeUnknownEffect(PartialReleaseAgeGate)({ ageMinutes: -10 });
+			const partial = yield* Schema.decodeEffect(PartialReleaseAgeGate)({ ageMinutes: -10 });
 			assert.strictEqual(partial.ageMinutes, -10);
 		}),
 	);

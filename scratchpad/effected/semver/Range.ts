@@ -18,7 +18,7 @@ export class InvalidRangeError extends Schema.TaggedError<InvalidRangeError>()("
 	/** The raw input string that failed to parse. */
 	input: Schema.String,
 	/** The character position where parsing failed, if available. */
-	position: Schema.optionalKey(Schema.Number),
+	position: Schema.optionalKey(Schema.Finite),
 }) {
 	override get message(): string {
 		const base = `Invalid range expression: "${this.input}"`;
@@ -118,7 +118,7 @@ export class Range extends Schema.Class<Range>("Range")({
 	static parseResult(input: string): Result.Result<Range, InvalidRangeError> {
 		const result = parseRange(input);
 		if (!result.ok) {
-			return Result.fail(new InvalidRangeError({ input: result.input, position: result.position }));
+			return Result.fail(InvalidRangeError.make({ input: result.input, position: result.position }));
 		}
 		return Result.succeed(
 			Range.make({
@@ -268,7 +268,7 @@ export class Range extends Schema.Class<Range>("Range")({
 		}
 
 		if (candidates.length === 0) {
-			return Result.fail(new UnsatisfiableConstraintError({ constraints: [self, that] }));
+			return Result.fail(UnsatisfiableConstraintError.make({ constraints: [self, that] }));
 		}
 
 		return Result.succeed(Range.make({ sets: candidates }));

@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file asyncFunction:skip-file
 // MemoryFileSystem.makeHandle (inside Effect) and makeSync (at describe
 // scope): every view over one volume, and the node-shaped mutators.
 

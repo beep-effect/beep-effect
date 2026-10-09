@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
 import type { AudienceKind, StreamEnv } from "../../effected/env/index.ts";
@@ -318,11 +319,11 @@ describe("CliFailure.toDoc: interrupts and prompts", () => {
 
 	it("Cancelled and NotInteractive keep their one fixed line, with no status glyph", () => {
 		assert.strictEqual(
-			plain(CliFailure.toDoc(Cause.fail(new Cancelled({ reason: "escape" })))),
+			plain(CliFailure.toDoc(Cause.fail(Cancelled.make({ reason: "escape" })))),
 			"cancelled; nothing written",
 		);
 		assert.strictEqual(
-			plain(CliFailure.toDoc(Cause.fail(new NotInteractive()))),
+			plain(CliFailure.toDoc(Cause.fail(NotInteractive.make()))),
 			"not interactive: run in a terminal or pass the flag",
 		);
 	});
@@ -471,7 +472,7 @@ describe("CliRuntime: the default failure path", () => {
 			assert.strictEqual((yield* runMain(failing, {}, true, { exitCode: 7 })).code, 7);
 			const marked = CliRuntime.reported(new Boom("m"), 4);
 			assert.strictEqual((yield* runMain(Effect.fail(marked), {}, true, { exitCode: 7 })).code, 4);
-			const cancelled = yield* runMain(Effect.fail(new Cancelled({ reason: "escape" })), { AI_AGENT: "claude" }, true);
+			const cancelled = yield* runMain(Effect.fail(Cancelled.make({ reason: "escape" })), { AI_AGENT: "claude" }, true);
 			assert.strictEqual(cancelled.code, 130);
 			assert.deepStrictEqual(cancelled.err, ["cancelled; nothing written"]);
 		}),
@@ -618,7 +619,7 @@ describe("CliRuntime.defaultRender", () => {
 	});
 
 	it("keeps the fixed lines for the two prompt failures", () => {
-		const cancelled = Cause.fail(new Cancelled({ reason: "interrupt" }));
+		const cancelled = Cause.fail(Cancelled.make({ reason: "interrupt" }));
 		assert.deepStrictEqual(CliRuntime.defaultRender(Cause.squash(cancelled), { cause: cancelled, isDefect: false }), [
 			"cancelled; nothing written",
 		]);

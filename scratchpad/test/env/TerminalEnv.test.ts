@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { ConfigProvider, Effect, Layer, Option, Stdio, Terminal } from "effect";
 import type { ColorLevel } from "../../effected/env/ColorLevel.ts";

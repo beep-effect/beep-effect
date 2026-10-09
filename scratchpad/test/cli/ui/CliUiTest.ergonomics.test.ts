@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
 import { Cause, Config, ConfigProvider, Console, Effect, Exit, Fiber, MutableRef, Option } from "effect";
@@ -48,15 +49,15 @@ describe("CliUiTest.cancelReason (O2b)", () => {
 
 	it("finds one as a defect, and in a bare Cause", () => {
 		assert.deepStrictEqual(
-			CliUiTest.cancelReason(Exit.die(new Cancelled({ reason: "interrupt" }))),
+			CliUiTest.cancelReason(Exit.die(Cancelled.make({ reason: "interrupt" }))),
 			Option.some("interrupt"),
 		);
 		assert.deepStrictEqual(
-			CliUiTest.cancelReason(Cause.fail(new Cancelled({ reason: "escape" }))),
+			CliUiTest.cancelReason(Cause.fail(Cancelled.make({ reason: "escape" }))),
 			Option.some("escape"),
 		);
 		assert.deepStrictEqual(
-			CliUiTest.cancelReason(Cause.die(new Cancelled({ reason: "interrupt" }))),
+			CliUiTest.cancelReason(Cause.die(Cancelled.make({ reason: "interrupt" }))),
 			Option.some("interrupt"),
 		);
 	});

@@ -391,9 +391,7 @@ const resolveDirectory = (
 		// which one the ref's integrity pinned, so replaying either would be a
 		// guess about which code to execute. Fail closed and say why.
 		if (only !== undefined)
-			return yield* Effect.fail(
-				hooksError(name, new Error(ambiguousMessage(name, declared, store, matches)), "ambiguous"),
-			);
+			return yield* hooksError(name, new Error(ambiguousMessage(name, declared, store, matches)), "ambiguous");
 		const notInstalled = (fetch: Option.Option<FetchFailure>) => {
 			const message = notInstalledMessage(name, declared, installed, searched, side, fetch);
 			const cause = Option.getOrUndefined(fetch)?.cause;
@@ -403,7 +401,7 @@ const resolveDirectory = (
 				Option.match(fetch, { onNone: () => "notInstalled" as const, onSome: (failure) => failure.reason }),
 			);
 		};
-		if (options.fetch === undefined) return yield* Effect.fail(notInstalled(Option.none()));
+		if (options.fetch === undefined) return yield* notInstalled(Option.none());
 		const fetched = yield* options
 			.fetch({ root, name, version: declared, spec: entry.spec, stores: searched, side, locks })
 			.pipe(Effect.mapError((failure) => notInstalled(Option.some(failure))));

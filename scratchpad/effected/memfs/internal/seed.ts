@@ -116,9 +116,7 @@ export const seedWith = (
 	Effect.gen(function* () {
 		const applied = applyRoot(seed, options?.root);
 		if (Result.isFailure(applied)) {
-			return yield* Effect.fail(
-				badArgument({ module: "FileSystem", method: "seed", description: applied.failure.description }),
-			);
+			return yield* badArgument({ module: "FileSystem", method: "seed", description: applied.failure.description });
 		}
 		if (applied.success.root !== undefined) {
 			yield* fs.makeDirectory(applied.success.root, { recursive: true });

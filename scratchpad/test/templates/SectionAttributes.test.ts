@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file
 // Marker attributes: `name="value"` pairs on a BEGIN marker. Metadata, not
 // identity — they participate in equality (an attribute change is real drift)
 // but never in which block a marker names.

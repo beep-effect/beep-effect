@@ -31,6 +31,7 @@ import {
 import type { ComposerState, FlowComposers, NodeMeta } from "./state.ts";
 import { clearMeta, commentProps, createState, hasMeta, sameLine } from "./state.ts";
 import { parseDirective, validateTagHandlesInDocument } from "./tags.ts";
+import * as Schema from "effect/Schema";
 
 /** The flow-composer dispatch wired into every state this module creates. */
 const FLOW: FlowComposers = { composeFlowMap, composeFlowSeq };
@@ -474,7 +475,7 @@ export function composeDocument(
 				// fragment, including directives and other non-scalar
 				// continuations the lexer mis-tokenised on a folded line.
 				const scalarLength = partsCount > 1 ? endOffset - child.offset : child.length;
-				contents = new YamlScalar({
+				contents = YamlScalar.make({
 					value: resolved,
 					style: "plain",
 					offset: child.offset,
@@ -691,7 +692,7 @@ export function composeDocument(
 	if (documentCommentAfter === undefined && contents !== null && contents.comment !== undefined) {
 		// BLOCK style only: a flow collection's terminal comment sits INSIDE its
 		// brackets, so it has nowhere to escape to and stays on the collection.
-		if ((contents instanceof YamlMap || contents instanceof YamlSeq) && contents.style !== "flow") {
+		if ((Schema.is(YamlMap)(contents) || Schema.is(YamlSeq)(contents)) && contents.style !== "flow") {
 			documentCommentAfter = contents.comment;
 			contents = stripOwnComment(contents);
 		}
@@ -983,10 +984,10 @@ function isSourceMultiline(text: string, offset: number, length: number): boolea
 }
 
 function decorateSourceMultiline(node: YamlNode | null, text: string): YamlNode | null {
-	if (node === null || node instanceof YamlAlias) return node;
-	if (node instanceof YamlScalar) {
+	if (node === null || Schema.is(YamlAlias)(node)) return node;
+	if (Schema.is(YamlScalar)(node)) {
 		if (!isSourceMultiline(text, node.offset, node.length)) return node;
-		return new YamlScalar({
+		return YamlScalar.make({
 			value: node.value,
 			style: node.style,
 			...(node.tag !== undefined ? { tag: node.tag } : {}),
@@ -1000,16 +1001,16 @@ function decorateSourceMultiline(node: YamlNode | null, text: string): YamlNode 
 			length: node.length,
 		});
 	}
-	if (node instanceof YamlMap) {
+	if (Schema.is(YamlMap)(node)) {
 		const newItems = node.items.map(
 			(pair) =>
-				new YamlPair({
+				YamlPair.make({
 					key: decorateSourceMultiline(pair.key, text) ?? pair.key,
 					value: pair.value === null ? null : decorateSourceMultiline(pair.value, text),
 				}),
 		);
 		const multiline = isSourceMultiline(text, node.offset, node.length);
-		return new YamlMap({
+		return YamlMap.make({
 			items: newItems,
 			style: node.style,
 			...(node.tag !== undefined ? { tag: node.tag } : {}),
@@ -1020,10 +1021,10 @@ function decorateSourceMultiline(node: YamlNode | null, text: string): YamlNode 
 			length: node.length,
 		});
 	}
-	if (node instanceof YamlSeq) {
+	if (Schema.is(YamlSeq)(node)) {
 		const newItems = node.items.map((item) => decorateSourceMultiline(item, text) ?? item);
 		const multiline = isSourceMultiline(text, node.offset, node.length);
-		return new YamlSeq({
+		return YamlSeq.make({
 			items: newItems,
 			style: node.style,
 			...(node.tag !== undefined ? { tag: node.tag } : {}),
@@ -1141,11 +1142,11 @@ export function composeAllDocuments(
  * like any other.
  */
 function attachHeaderToFirstEntry(contents: YamlNode, header: string): YamlNode {
-	if (contents instanceof YamlMap && contents.items.length > 0) {
+	if (Schema.is(YamlMap)(contents) && contents.items.length > 0) {
 		const first = contents.items[0] as YamlPair;
 		const items = [...contents.items];
-		items[0] = new YamlPair({ key: withCommentFields(first.key, { commentBefore: header }), value: first.value });
-		return new YamlMap({
+		items[0] = YamlPair.make({ key: withCommentFields(first.key, { commentBefore: header }), value: first.value });
+		return YamlMap.make({
 			items,
 			style: contents.style,
 			...(contents.tag !== undefined ? { tag: contents.tag } : {}),
@@ -1158,10 +1159,10 @@ function attachHeaderToFirstEntry(contents: YamlNode, header: string): YamlNode 
 			length: contents.length,
 		});
 	}
-	if (contents instanceof YamlSeq && contents.items.length > 0) {
+	if (Schema.is(YamlSeq)(contents) && contents.items.length > 0) {
 		const items = [...contents.items];
 		items[0] = withCommentFields(items[0] as YamlNode, { commentBefore: header });
-		return new YamlSeq({
+		return YamlSeq.make({
 			items,
 			style: contents.style,
 			...(contents.tag !== undefined ? { tag: contents.tag } : {}),
@@ -1189,7 +1190,7 @@ function stripOwnComment(node: YamlMap | YamlSeq): YamlNode {
 		offset: node.offset,
 		length: node.length,
 	};
-	return node instanceof YamlMap
-		? new YamlMap({ items: node.items, ...shared })
-		: new YamlSeq({ items: node.items, ...shared });
+	return Schema.is(YamlMap)(node)
+		? YamlMap.make({ items: node.items, ...shared })
+		: YamlSeq.make({ items: node.items, ...shared });
 }

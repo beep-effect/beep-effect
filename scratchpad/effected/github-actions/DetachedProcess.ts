@@ -54,6 +54,8 @@ export class DetachedSpawnFailedError extends Schema.TaggedError<DetachedSpawnFa
  */
 export class InvalidPidError extends Schema.TaggedError<InvalidPidError>()("InvalidPidError", {
 	/** The pid that was refused. */
+	// The error reports the pid it refused, which may be NaN or infinite.
+	// @effect-diagnostics-next-line schemaNumber:off
 	pid: Schema.Number,
 	/** The underlying failure, preserved structurally. */
 	cause: Schema.optionalKey(Schema.Defect()),
@@ -72,6 +74,8 @@ export class DetachedSignalFailedError extends Schema.TaggedError<DetachedSignal
 	"DetachedSignalFailedError",
 	{
 		/** The pid that could not be signalled. */
+		// The error reports the pid it refused, which may be NaN or infinite.
+		// @effect-diagnostics-next-line schemaNumber:off
 		pid: Schema.Number,
 		/** The underlying failure, preserved structurally. */
 		cause: Schema.optionalKey(Schema.Defect()),
@@ -148,6 +152,8 @@ export type DetachedProcessError =
  *
  * @public
  */
+// The integer check in the pipe rejects NaN and the infinities itself, with its own message.
+// @effect-diagnostics-next-line schemaNumber:off
 export const ProcessId = Schema.Number.pipe(
 	Schema.check(
 		Schema.makeFilter((value) =>
@@ -305,7 +311,7 @@ export class DetachedProcess {
 	static readonly spawn = Effect.fn("DetachedProcess.spawn")(function* (options: DetachedSpawnOptions) {
 		const descriptor = yield* Effect.try({
 			try: () => openSync(options.logFile, "a"),
-			catch: (cause) => new DetachedLogUnavailableError({ path: options.logFile, cause }),
+			catch: (cause) => DetachedLogUnavailableError.make({ path: options.logFile, cause }),
 		});
 
 		const pid = yield* Effect.try({
@@ -333,7 +339,7 @@ export class DetachedProcess {
 					closeSync(descriptor);
 				}
 			},
-			catch: (cause) => new DetachedSpawnFailedError({ cause }),
+			catch: (cause) => DetachedSpawnFailedError.make({ cause }),
 		});
 
 		yield* Effect.annotateCurrentSpan({ pid });
@@ -368,7 +374,7 @@ export class DetachedProcess {
 			until: (answer) => answer,
 		});
 		if (!ready) {
-			return yield* Effect.fail(new DetachedNotReadyError({}));
+			return yield* DetachedNotReadyError.make({});
 		}
 	});
 
@@ -426,7 +432,7 @@ export class DetachedProcess {
 	static readonly reap = Effect.fn("DetachedProcess.reap")(function* (pid: number, signal: NodeJS.Signals = "SIGTERM") {
 		yield* Effect.annotateCurrentSpan({ pid });
 		if (!Number.isInteger(pid) || pid <= 0) {
-			return yield* Effect.fail(new InvalidPidError({ pid }));
+			return yield* InvalidPidError.make({ pid });
 		}
 		return yield* Effect.suspend(() => {
 			try {
@@ -437,7 +443,7 @@ export class DetachedProcess {
 				// has already exited — the normal ending, not a failure.
 				return isErrno(cause, "ESRCH")
 					? Effect.succeed(false)
-					: Effect.fail(new DetachedSignalFailedError({ pid, cause }));
+					: Effect.fail(DetachedSignalFailedError.make({ pid, cause }));
 			}
 		});
 	});

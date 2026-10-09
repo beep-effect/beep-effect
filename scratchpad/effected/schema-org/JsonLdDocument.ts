@@ -84,8 +84,8 @@ const reservedTerms = (node: JsonLdNode): ReadonlySet<string> =>
 const referencedIds = (node: JsonLdNode): ReadonlyArray<string> => {
 	const ids: Array<string> = [];
 	for (const value of Object.values(node)) {
-		if (value instanceof NodeRef) ids.push(value["@id"]);
-		else if (Array.isArray(value)) for (const item of value) if (item instanceof NodeRef) ids.push(item["@id"]);
+		if (Schema.is(NodeRef)(value)) ids.push(value["@id"]);
+		else if (Array.isArray(value)) for (const item of value) if (Schema.is(NodeRef)(item)) ids.push(item["@id"]);
 	}
 	return ids;
 };
@@ -182,17 +182,17 @@ export class JsonLdDocument extends Schema.Class<JsonLdDocument>("JsonLdDocument
 		const seen = new Set<string>();
 		for (const node of nodes) {
 			const id = node["@id"];
-			if (!NodeRef.isValidId(id)) return Result.fail(new InvalidNodeIdError({ input: id }));
-			if (seen.has(id)) return Result.fail(new DuplicateNodeIdError({ id }));
+			if (!NodeRef.isValidId(id)) return Result.fail(InvalidNodeIdError.make({ input: id }));
+			if (seen.has(id)) return Result.fail(DuplicateNodeIdError.make({ id }));
 			seen.add(id);
 
 			for (const referenced of referencedIds(node)) {
-				if (!NodeRef.isValidId(referenced)) return Result.fail(new InvalidNodeIdError({ input: referenced }));
+				if (!NodeRef.isValidId(referenced)) return Result.fail(InvalidNodeIdError.make({ input: referenced }));
 			}
 
 			const reserved = reservedTerms(node);
 			for (const term of Object.keys(node.additional ?? {})) {
-				if (reserved.has(term)) return Result.fail(new ConflictingTermError({ nodeId: id, term }));
+				if (reserved.has(term)) return Result.fail(ConflictingTermError.make({ nodeId: id, term }));
 			}
 		}
 		return Result.succeed(JsonLdDocument.make({ "@graph": nodes }));

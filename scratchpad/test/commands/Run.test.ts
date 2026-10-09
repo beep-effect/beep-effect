@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import type { PlatformError } from "effect";
 import { Effect, Fiber, Redacted, Schema, Sink, Stdio, Stream } from "effect";
@@ -57,7 +58,7 @@ describe("Run.collect", () => {
 			);
 			assert.instanceOf(error, CommandFailedError);
 			assert.strictEqual(error._tag, "CommandFailedError");
-			if (error instanceof CommandFailedError) {
+			if (Schema.is(CommandFailedError)(error)) {
 				assert.strictEqual(error.kind, "spawn");
 				assert.strictEqual(error.command, "missing");
 				assert.isTrue(error.notFound, "a NotFound system error must set notFound");
@@ -73,7 +74,7 @@ describe("Run.collect", () => {
 					() => ScriptedSpawner.permissionDenied("blocked"),
 				),
 			);
-			if (error instanceof CommandFailedError) {
+			if (Schema.is(CommandFailedError)(error)) {
 				assert.strictEqual(error.kind, "spawn");
 				assert.isFalse(error.notFound);
 			}
@@ -89,7 +90,7 @@ describe("Run.collect", () => {
 				),
 			);
 			assert.instanceOf(error, CommandOutputError);
-			if (error instanceof CommandOutputError) {
+			if (Schema.is(CommandOutputError)(error)) {
 				assert.strictEqual(error.kind, "tooLarge");
 			}
 		}),
@@ -136,7 +137,7 @@ describe("Run.collect", () => {
 			yield* TestClock.adjust("31 seconds");
 			const error = yield* Fiber.join(fiber);
 			assert.instanceOf(error, CommandFailedError);
-			if (error instanceof CommandFailedError) {
+			if (Schema.is(CommandFailedError)(error)) {
 				assert.strictEqual(error.kind, "timeout");
 			}
 		}),
@@ -163,7 +164,7 @@ describe("Run.text", () => {
 				),
 			);
 			assert.instanceOf(error, CommandFailedError);
-			if (error instanceof CommandFailedError) {
+			if (Schema.is(CommandFailedError)(error)) {
 				assert.strictEqual(error.kind, "nonZero");
 				assert.strictEqual(error.exitCode, 2);
 				assert.strictEqual(error.stderr, "boom");
@@ -235,7 +236,7 @@ describe("Run.json", () => {
 				),
 			);
 			assert.instanceOf(error, CommandOutputError);
-			if (error instanceof CommandOutputError) {
+			if (Schema.is(CommandOutputError)(error)) {
 				assert.strictEqual(error.kind, "notJson");
 			}
 		}),
@@ -250,7 +251,7 @@ describe("Run.json", () => {
 				),
 			);
 			assert.instanceOf(error, CommandOutputError);
-			if (error instanceof CommandOutputError) {
+			if (Schema.is(CommandOutputError)(error)) {
 				assert.strictEqual(error.kind, "schema");
 			}
 		}),
@@ -334,7 +335,7 @@ describe("Run.jsonLine", () => {
 				),
 			);
 			assert.instanceOf(error, CommandOutputError);
-			if (error instanceof CommandOutputError) {
+			if (Schema.is(CommandOutputError)(error)) {
 				assert.strictEqual(error.kind, "notJson");
 				assert.strictEqual(error.exitCode, 7);
 				assert.strictEqual(error.stderr, "boom from node");
@@ -353,7 +354,7 @@ describe("Run.jsonLine", () => {
 				),
 			);
 			assert.instanceOf(error, CommandOutputError);
-			if (error instanceof CommandOutputError) {
+			if (Schema.is(CommandOutputError)(error)) {
 				assert.strictEqual(error.kind, "notJson");
 				assert.strictEqual(error.exitCode, 0);
 				assert.strictEqual(error.stdout, "definitely not json\nnor this\n");
@@ -370,7 +371,7 @@ describe("Run.jsonLine", () => {
 				),
 			);
 			assert.instanceOf(error, CommandOutputError);
-			if (error instanceof CommandOutputError) {
+			if (Schema.is(CommandOutputError)(error)) {
 				assert.strictEqual(error.kind, "schema");
 				assert.strictEqual(error.exitCode, 0);
 			}
@@ -386,7 +387,7 @@ describe("Run.jsonLine", () => {
 				),
 			);
 			assert.instanceOf(error, CommandFailedError);
-			if (error instanceof CommandFailedError) {
+			if (Schema.is(CommandFailedError)(error)) {
 				assert.strictEqual(error.kind, "spawn");
 			}
 		}),
@@ -401,7 +402,7 @@ describe("Run.jsonLine", () => {
 				),
 			);
 			assert.instanceOf(error, CommandOutputError);
-			if (error instanceof CommandOutputError) {
+			if (Schema.is(CommandOutputError)(error)) {
 				assert.notInclude(error.stdout ?? "", "s3cr3t");
 				assert.notInclude(error.stderr ?? "", "s3cr3t");
 				assert.notInclude(error.message, "s3cr3t");
@@ -468,7 +469,7 @@ describe("Run.jsonLine", () => {
 				),
 			);
 			assert.instanceOf(error, CommandOutputError);
-			if (error instanceof CommandOutputError) {
+			if (Schema.is(CommandOutputError)(error)) {
 				assert.strictEqual(error.kind, "schema");
 				assert.strictEqual(error.exitCode, 3);
 				assert.strictEqual(error.stderr, "hook stderr");
@@ -486,7 +487,7 @@ describe("Run.jsonLine", () => {
 				),
 			);
 			assert.instanceOf(error, CommandOutputError);
-			if (error instanceof CommandOutputError) {
+			if (Schema.is(CommandOutputError)(error)) {
 				assert.strictEqual(error.kind, "notJson");
 				assert.strictEqual(error.exitCode, 5);
 				assert.strictEqual(error.stdout, "line one\nline two\n");
@@ -565,7 +566,7 @@ describe("Run redaction", () => {
 					() => ({ stderr: "denied", exit: 1 }),
 				),
 			);
-			if (error instanceof CommandFailedError) {
+			if (Schema.is(CommandFailedError)(error)) {
 				assert.notInclude(error.args.join(" "), "s3cr3t");
 				assert.notInclude(error.message, "s3cr3t");
 			}
@@ -580,7 +581,7 @@ describe("Run redaction", () => {
 					() => ({ stderr: "auth failed for s3cr3t", exit: 1 }),
 				),
 			);
-			if (error instanceof CommandFailedError) {
+			if (Schema.is(CommandFailedError)(error)) {
 				assert.notInclude(error.stderr ?? "", "s3cr3t");
 				assert.notInclude(error.message, "s3cr3t");
 			}
@@ -595,7 +596,7 @@ describe("Run redaction", () => {
 					() => ({ stderr: "denied", exit: 1 }),
 				),
 			);
-			if (error instanceof CommandFailedError) {
+			if (Schema.is(CommandFailedError)(error)) {
 				assert.notInclude(error.args.join(" "), "undeclared");
 			}
 		}),
@@ -669,7 +670,7 @@ describe("Run.detach", () => {
 				),
 			);
 			assert.instanceOf(error, CommandFailedError);
-			if (error instanceof CommandFailedError) {
+			if (Schema.is(CommandFailedError)(error)) {
 				assert.strictEqual(error.kind, "spawn");
 			}
 		}),

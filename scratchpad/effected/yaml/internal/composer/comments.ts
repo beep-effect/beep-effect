@@ -45,6 +45,7 @@
 
 import type { YamlNode } from "../../YamlNode.ts";
 import { YamlAlias, YamlMap, YamlScalar, YamlSeq } from "../../YamlNode.ts";
+import * as Schema from "effect/Schema";
 
 /** The comment field triple accepted by {@link withCommentFields}. */
 export interface CommentFields {
@@ -145,14 +146,14 @@ export function blankLineAboveStart(text: string, offset: number): number {
 function deepestTrailingScalar(node: YamlNode): YamlScalar | undefined {
 	let current: YamlNode = node;
 	for (;;) {
-		if (current instanceof YamlScalar) return current;
-		if (current instanceof YamlMap) {
+		if (Schema.is(YamlScalar)(current)) return current;
+		if (Schema.is(YamlMap)(current)) {
 			const last = current.items[current.items.length - 1];
 			if (last === undefined) return undefined;
 			current = last.value ?? last.key;
 			continue;
 		}
-		if (current instanceof YamlSeq) {
+		if (Schema.is(YamlSeq)(current)) {
 			const last = current.items[current.items.length - 1];
 			if (last === undefined) return undefined;
 			current = last;
@@ -257,8 +258,8 @@ export interface EscapedComment {
  * included.
  */
 export function withCommentFields(node: YamlNode, fields: CommentFields): YamlNode {
-	if (node instanceof YamlScalar) {
-		return new YamlScalar({
+	if (Schema.is(YamlScalar)(node)) {
+		return YamlScalar.make({
 			value: node.value,
 			style: node.style,
 			...(node.tag !== undefined ? { tag: node.tag } : {}),
@@ -272,8 +273,8 @@ export function withCommentFields(node: YamlNode, fields: CommentFields): YamlNo
 			length: node.length,
 		});
 	}
-	if (node instanceof YamlMap) {
-		return new YamlMap({
+	if (Schema.is(YamlMap)(node)) {
+		return YamlMap.make({
 			items: node.items,
 			style: node.style,
 			...(node.tag !== undefined ? { tag: node.tag } : {}),
@@ -284,8 +285,8 @@ export function withCommentFields(node: YamlNode, fields: CommentFields): YamlNo
 			length: node.length,
 		});
 	}
-	if (node instanceof YamlSeq) {
-		return new YamlSeq({
+	if (Schema.is(YamlSeq)(node)) {
+		return YamlSeq.make({
 			items: node.items,
 			style: node.style,
 			...(node.tag !== undefined ? { tag: node.tag } : {}),
@@ -296,7 +297,7 @@ export function withCommentFields(node: YamlNode, fields: CommentFields): YamlNo
 			length: node.length,
 		});
 	}
-	return new YamlAlias({
+	return YamlAlias.make({
 		name: node.name,
 		...mergedCommentFields(node, fields),
 		offset: node.offset,

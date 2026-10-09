@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file
 // The fault-injection kit extension: a delegate-by-default wrapper over a real
 // volume. Only registered methods are intercepted; a handler that declines
 // (returns undefined) — and every unregistered method — reaches the wrapped

@@ -159,14 +159,14 @@ export class ConfigDependencySpec extends Schema.Class<ConfigDependencySpec>("Co
 			!SemVer.isPinnable(parts.version) ||
 			version.success.toString() !== parts.version
 		) {
-			return Result.fail(new InvalidConfigDependencySpecError({ input, reason: "version" }));
+			return Result.fail(InvalidConfigDependencySpecError.make({ input, reason: "version" }));
 		}
 		if (parts.integrity === undefined) {
 			return Result.succeed(ConfigDependencySpec.make({ version: version.success, integrity: Option.none() }));
 		}
-		const integrity = Schema.decodeUnknownExit(SriIntegrityHash)(parts.integrity);
+		const integrity = Schema.decodeExit(SriIntegrityHash)(parts.integrity);
 		if (Exit.isFailure(integrity)) {
-			return Result.fail(new InvalidConfigDependencySpecError({ input, reason: "integrity" }));
+			return Result.fail(InvalidConfigDependencySpecError.make({ input, reason: "integrity" }));
 		}
 		return Result.succeed(
 			ConfigDependencySpec.make({ version: version.success, integrity: Option.some(integrity.value) }),

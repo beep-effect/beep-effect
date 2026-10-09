@@ -178,7 +178,7 @@ describe("WorkspacePackage", () => {
 	it("publishConfig.linkDirectory round-trips through decode and encode", () => {
 		// The pnpm dist-linking field: `directory` says what publishes,
 		// `linkDirectory` says workspace links point there during development.
-		const decoded = Schema.decodeUnknownSync(PublishConfig)({ directory: "dist/dev/pkg", linkDirectory: true });
+		const decoded = Schema.decodeSync(PublishConfig)({ directory: "dist/dev/pkg", linkDirectory: true });
 		assert.isTrue(decoded.linkDirectory);
 		assert.strictEqual(decoded.directory, "dist/dev/pkg");
 
@@ -187,7 +187,7 @@ describe("WorkspacePackage", () => {
 	});
 
 	it("publishConfig.linkDirectory is an optionalKey — absent stays absent, never explicit undefined", () => {
-		const absent = Schema.decodeUnknownSync(PublishConfig)({ access: "public" });
+		const absent = Schema.decodeSync(PublishConfig)({ access: "public" });
 		assert.isFalse("linkDirectory" in absent);
 		assert.isFalse("linkDirectory" in Schema.encodeUnknownSync(PublishConfig)(absent));
 
@@ -270,7 +270,7 @@ describe("WorkspacePackage.manifestRecord", () => {
 			relativePath: "packages/old",
 			workspaceRoot: "/repo",
 		};
-		const decoded = Schema.decodeUnknownSync(WorkspacePackage)(legacy);
+		const decoded = Schema.decodeSync(WorkspacePackage)(legacy);
 		assert.deepStrictEqual(decoded.manifestRecord, {});
 	});
 

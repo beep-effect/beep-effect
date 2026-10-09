@@ -52,7 +52,7 @@ export interface GitHubContentShape {
  * @public
  */
 export class GitHubContent extends Context.Service<GitHubContent, GitHubContentShape>()(
-	"@effected/github/GitHubContent",
+	"@beep/scratchpad/effected/github/GitHubContent",
 ) {
 	/** The live service, built over a `GitHubClient`. */
 	static readonly layer: Layer.Layer<GitHubContent, never, GitHubClient> = Layer.effect(
@@ -91,24 +91,22 @@ const make = (client: GitHubClient["Service"]): GitHubContentShape => {
 		// A directory comes back as an array. Reading one as a file would be a
 		// silent type confusion.
 		if (Array.isArray(content)) {
-			return yield* Effect.fail(GitHubError.rejected("GitHubContent.getFile", 422, `${path} is a directory`));
+			return yield*GitHubError.rejected("GitHubContent.getFile", 422, `${path} is a directory`);
 		}
 		if (content.type !== "file") {
-			return yield* Effect.fail(
-				GitHubError.rejected("GitHubContent.getFile", 422, `${path} is a ${content.type}, not a file`),
-			);
+			return yield*
+				GitHubError.rejected("GitHubContent.getFile", 422, `${path} is a ${content.type}, not a file`);
 		}
 		// Over about a megabyte GitHub answers with `encoding: "none"` and an empty
 		// body. Decoding that as base64 yields an empty string that looks exactly
 		// like a legitimately empty file, so it is refused instead.
 		if (content.encoding !== "base64") {
-			return yield* Effect.fail(
+			return yield*
 				GitHubError.rejected(
 					"GitHubContent.getFile",
 					422,
 					`${path} came back with encoding ${JSON.stringify(content.encoding)} — it is probably too large for the contents API`,
-				),
-			);
+				);
 		}
 		return Buffer.from(content.content.replace(/\s/g, ""), "base64").toString("utf8");
 	});
@@ -120,7 +118,7 @@ const make = (client: GitHubClient["Service"]): GitHubContentShape => {
 			options?: { readonly ref?: string | undefined },
 		) {
 			return yield* getFile(path, options).pipe(
-				Effect.map(Option.some),
+				Effect.asSome,
 				Effect.catchIf(GitHubError.hasKind("notFound"), () => Effect.succeed(Option.none<string>())),
 			);
 		}),

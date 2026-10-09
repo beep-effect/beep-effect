@@ -27,7 +27,7 @@ export class PublishError extends Schema.TaggedError<PublishError>()("PublishErr
 	/** The registry involved, for `"auth"` and `"publish"`. */
 	registry: Schema.optionalKey(Schema.String),
 	/** npm's exit code, when npm ran and failed. */
-	exitCode: Schema.optionalKey(Schema.Number),
+	exitCode: Schema.optionalKey(Schema.Finite),
 	/** npm's output, already redacted by the runner. */
 	output: Schema.optionalKey(Schema.String),
 	/** The underlying failure. */

@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file
 // The seeded-catalog seam on `WorkspaceStateSnapshot`.
 //
 // Everything here is pure: a snapshot is a value, so these tests need no
@@ -213,7 +214,7 @@ describe("WorkspaceStateSnapshot — seededCatalogs and serialization", () => {
 				catalogs({ react18: { react: "^18.2.0" } }),
 			);
 			const encoded = yield* Schema.encodeEffect(WorkspaceStateSnapshot)(seeded);
-			const decoded = yield* Schema.decodeUnknownEffect(WorkspaceStateSnapshot)(encoded);
+			const decoded = yield* Schema.decodeEffect(WorkspaceStateSnapshot)(encoded);
 			assert.deepStrictEqual(decoded.resolve("react", "catalog:react18"), Option.some("^18.2.0"));
 			assert.deepStrictEqual(decoded.catalogs.entries, { default: { effect: "^4.0.0" } });
 		}),
@@ -235,14 +236,14 @@ describe("WorkspaceStateSnapshot — seededCatalogs and serialization", () => {
 			// The other side had none, and seeding must not invent one.
 			assert.isUndefined(seededAfter.hookReplays);
 			const encoded = yield* Schema.encodeEffect(WorkspaceStateSnapshot)(seededBefore);
-			const decoded = yield* Schema.decodeUnknownEffect(WorkspaceStateSnapshot)(encoded);
+			const decoded = yield* Schema.decodeEffect(WorkspaceStateSnapshot)(encoded);
 			assert.deepStrictEqual(decoded.hookReplays, replays);
 		}),
 	);
 
 	it.effect("decodes a snapshot serialized before hookReplays existed", () =>
 		Effect.gen(function* () {
-			const decoded = yield* Schema.decodeUnknownEffect(WorkspaceStateSnapshot)({
+			const decoded = yield* Schema.decodeEffect(WorkspaceStateSnapshot)({
 				packages: [],
 				catalogs: { entries: {} },
 				importerVersions: {},
@@ -255,7 +256,7 @@ describe("WorkspaceStateSnapshot — seededCatalogs and serialization", () => {
 		Effect.gen(function* () {
 			// The field is optional precisely so stored values stay readable, and an
 			// absent seed must be inert rather than an empty-set answer.
-			const decoded = yield* Schema.decodeUnknownEffect(WorkspaceStateSnapshot)({
+			const decoded = yield* Schema.decodeEffect(WorkspaceStateSnapshot)({
 				packages: [],
 				catalogs: { entries: { default: { effect: "^4.0.0" } } },
 			});

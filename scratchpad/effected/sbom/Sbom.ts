@@ -90,7 +90,7 @@ const write = Effect.fn("Sbom.write")(function* (document: SbomDocument, path: s
 	const fs = yield* FileSystem.FileSystem;
 	yield* fs
 		.writeFileString(path, toJson(document, options))
-		.pipe(Effect.mapError((cause) => new SbomWriteError({ path, cause })));
+		.pipe(Effect.mapError((cause) => SbomWriteError.make({ path, cause })));
 });
 
 /**

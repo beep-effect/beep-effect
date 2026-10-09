@@ -522,7 +522,7 @@ export class Mdast {
 	 *   failing with {@link MdastDecodeError} carrying the structured issue.
 	 */
 	static fromMdastResult(input: unknown): Result.Result<Root, MdastDecodeError> {
-		return Result.mapError(decodeRoot(normalizeNode(input)), (error) => new MdastDecodeError({ issue: error.issue }));
+		return Result.mapError(decodeRoot(normalizeNode(input)), (error) => MdastDecodeError.make({ issue: error.issue }));
 	}
 
 	/**

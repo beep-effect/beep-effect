@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file
 // Classification is pure and total, so most of this file is plain `it()`.
 // Only `detect` — the one effectful entry point — needs a runner, and it is
 // tested against `WorkspaceDiscovery.layerTest` plus a stub

@@ -92,11 +92,11 @@ const parseToResult = (text: string): Result.Result<unknown, TomlParseError> => 
 		return Result.succeed(buildValue(parseExpressions(text)));
 	} catch (defect) {
 		if (isRawTomlError(defect)) {
-			return Result.fail(new TomlParseError({ diagnostics: [TomlDiagnostic.fromRaw(text, defect.diagnostic)] }));
+			return Result.fail(TomlParseError.make({ diagnostics: [TomlDiagnostic.fromRaw(text, defect.diagnostic)] }));
 		}
 		if (isGuardExceeded(defect)) {
 			return Result.fail(
-				new TomlParseError({
+				TomlParseError.make({
 					diagnostics: [
 						TomlDiagnostic.fromRaw(text, {
 							code: "NestingDepthExceeded",
@@ -120,11 +120,11 @@ const stringifyToResult = (
 		return Result.succeed(stringifyValue(value, options?.newline ?? "\n"));
 	} catch (defect) {
 		if (isRawTomlError(defect)) {
-			return Result.fail(new TomlStringifyError({ diagnostic: TomlDiagnostic.fromRaw("", defect.diagnostic) }));
+			return Result.fail(TomlStringifyError.make({ diagnostic: TomlDiagnostic.fromRaw("", defect.diagnostic) }));
 		}
 		if (isGuardExceeded(defect)) {
 			return Result.fail(
-				new TomlStringifyError({
+				TomlStringifyError.make({
 					diagnostic: TomlDiagnostic.fromRaw("", {
 						code: "NestingDepthExceeded",
 						message: defect.message,

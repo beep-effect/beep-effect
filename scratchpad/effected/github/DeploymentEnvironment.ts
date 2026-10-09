@@ -70,7 +70,7 @@ export interface DeploymentEnvironmentShape {
  * @public
  */
 export class DeploymentEnvironment extends Context.Service<DeploymentEnvironment, DeploymentEnvironmentShape>()(
-	"@effected/github/DeploymentEnvironment",
+	"@beep/scratchpad/effected/github/DeploymentEnvironment",
 ) {
 	/**
 	 * The live service, built over a `GitHubClient`.
@@ -141,11 +141,11 @@ const make = (client: GitHubClient["Service"]): DeploymentEnvironmentShape => {
 		const { owner, repo } = yield* Repo;
 		yield* Effect.annotateCurrentSpan({ owner, repo, environment: name });
 
-		yield* client.request("DELETE /repos/{owner}/{repo}/environments/{environment_name}", {
-			owner,
-			repo,
-			environment_name: name,
-		});
+		return yield* client.request("DELETE /repos/{owner}/{repo}/environments/{environment_name}", {
+    owner,
+    repo,
+    environment_name: name,
+});
 	});
 
 	return { upsert, list, delete: delete_ };

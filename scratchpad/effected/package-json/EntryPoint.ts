@@ -189,7 +189,7 @@ export const resolveEntryPoint = (
 		if (isRootConditions(exportsField)) {
 			const resolved = resolveConditions(exportsField, conditions);
 			return resolved === undefined
-				? Result.fail(new UnresolvedEntryPointError({ reason: "noConditionMatched", conditions }))
+				? Result.fail(UnresolvedEntryPointError.make({ reason: "noConditionMatched", conditions }))
 				: Result.succeed(resolved);
 		}
 		const dot = exportsField["."];
@@ -199,17 +199,17 @@ export const resolveEntryPoint = (
 		if (isPlainObject(dot)) {
 			const resolved = resolveConditions(dot, conditions);
 			return resolved === undefined
-				? Result.fail(new UnresolvedEntryPointError({ reason: "noConditionMatched", conditions }))
+				? Result.fail(UnresolvedEntryPointError.make({ reason: "noConditionMatched", conditions }))
 				: Result.succeed(resolved);
 		}
 		// A subpath map with no usable "." entry exports no root entry point.
-		return Result.fail(new UnresolvedEntryPointError({ reason: "noRootExport" }));
+		return Result.fail(UnresolvedEntryPointError.make({ reason: "noRootExport" }));
 	}
 
 	// An array fallback list, or any other non-string non-object value, is an
 	// `exports` this resolver does not implement — encapsulation still applies.
 	if (exportsField !== undefined) {
-		return Result.fail(new UnresolvedEntryPointError({ reason: "unsupportedExportsForm" }));
+		return Result.fail(UnresolvedEntryPointError.make({ reason: "unsupportedExportsForm" }));
 	}
 
 	return Result.succeed(typeof manifest.main === "string" && manifest.main !== "" ? manifest.main : "index.js");

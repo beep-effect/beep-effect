@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file asyncFunction:skip-file globalTimers:skip-file newPromise:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { Cause, Effect, Exit, Fiber, Layer, Option } from "effect";
 import { Text } from "ink";

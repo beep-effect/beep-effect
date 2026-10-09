@@ -26,7 +26,7 @@ export const parseValidity: YamlRule = {
 		// the configurable `key-duplicates` rule.)
 		...ctx.document.errors.map(
 			(d) =>
-				new YamlLintDiagnostic({
+				YamlLintDiagnostic.make({
 					rule: "parse-validity",
 					severity: "error",
 					message: d.message,
@@ -38,7 +38,7 @@ export const parseValidity: YamlRule = {
 		),
 		...ctx.document.warnings.map(
 			(d) =>
-				new YamlLintDiagnostic({
+				YamlLintDiagnostic.make({
 					rule: "parse-validity",
 					severity: "warning",
 					message: d.message,

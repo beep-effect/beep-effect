@@ -1,5 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Cause, Effect, Exit, Option } from "effect";
+import { Cause, Effect, Exit, Option, Schema } from "effect";
 import { Cancelled, Fmt } from "../../../effected/cli/index.ts";
 import type { SelectChoice } from "../../../effected/cli/ui.ts";
 import { Select } from "../../../effected/cli/ui.ts";
@@ -129,7 +129,7 @@ describe("Select.screen under CliUiTest", () => {
 			yield* handle.type("q");
 			const error = yield* Effect.flip(handle.result);
 			assert.instanceOf(error, Cancelled);
-			assert.strictEqual(error instanceof Cancelled ? error.reason : undefined, "escape");
+			assert.strictEqual(Schema.is(Cancelled)(error) ? error.reason : undefined, "escape");
 		}).pipe(Effect.scoped),
 	);
 

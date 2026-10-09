@@ -418,7 +418,7 @@ const make = Effect.gen(function* () {
 			readonly actual?: string;
 			readonly cause?: unknown;
 		}): PackageManagerInstallerError =>
-			new PackageManagerInstallerError({ name: pin.name, version: pin.version.toString(), ...fields });
+			PackageManagerInstallerError.make({ name: pin.name, version: pin.version.toString(), ...fields });
 
 	/** Map a ToolInstaller failure onto this surface; the reasons line up 1:1. */
 	const fromInstaller =
@@ -464,14 +464,12 @@ const make = Effect.gen(function* () {
 			const expectedHex = integrity.slice(dot + 1);
 			const actualHex = yield* hashFile(pin, file, algorithm);
 			if (actualHex !== expectedHex) {
-				return yield* Effect.fail(
-					errorFor(pin)({
+				return yield* errorFor(pin)({
 						reason: "integrityMismatch",
 						subject: file,
 						expected: integrity,
 						actual: `${algorithm}.${actualHex}`,
-					}),
-				);
+					});
 			}
 		});
 
@@ -493,7 +491,7 @@ const make = Effect.gen(function* () {
 	): Effect.Effect<void, PackageManagerInstallerError> =>
 		Effect.gen(function* () {
 			if ((yield* typeAt(fs, file)) !== "File") {
-				return yield* Effect.fail(errorFor(pin)({ reason: "layoutUnexpected", subject }));
+				return yield* errorFor(pin)({ reason: "layoutUnexpected", subject });
 			}
 		});
 
@@ -526,7 +524,7 @@ const make = Effect.gen(function* () {
 			});
 			const bins = Option.getOrUndefined(normalizeBins(manifest.bin, pin.name));
 			if (bins === undefined) {
-				return yield* Effect.fail(errorFor(pin)({ reason: "layoutUnexpected", subject: "package.json names no bin" }));
+				return yield* errorFor(pin)({ reason: "layoutUnexpected", subject: "package.json names no bin" });
 			}
 			for (const [name, relative] of Object.entries(bins)) {
 				const target = path.join(packageDir, relative);
@@ -538,12 +536,10 @@ const make = Effect.gen(function* () {
 				// through any spelling is caught.
 				const containment = path.relative(packageDir, target);
 				if (containment === ".." || containment.startsWith(`..${path.sep}`) || path.isAbsolute(containment)) {
-					return yield* Effect.fail(
-						errorFor(pin)({
+					return yield* errorFor(pin)({
 							reason: "layoutUnexpected",
 							subject: `bin ${name} (${relative}) escapes the package directory`,
-						}),
-					);
+						});
 				}
 				yield* assertFile(pin, target, `bin ${name} (${relative}) is missing`);
 			}
@@ -794,9 +790,7 @@ const make = Effect.gen(function* () {
 			const packageName = target === undefined ? undefined : `${PNPM_EXE_PREFIX}${target}`;
 			const nativeVersion = packageName === undefined ? undefined : nativePackages[packageName];
 			if (target === undefined || packageName === undefined || nativeVersion === undefined) {
-				return yield* Effect.fail(
-					errorFor(pin)({ reason: "unsupportedPlatform", subject: `${runnerOs || "unknown"}/${arch}` }),
-				);
+				return yield* errorFor(pin)({ reason: "unsupportedPlatform", subject: `${runnerOs || "unknown"}/${arch}` });
 			}
 			// The wrapper's own release pins its native package to the wrapper's
 			// version, so anything else is a malformed manifest — and this string
@@ -804,18 +798,14 @@ const make = Effect.gen(function* () {
 			// version (already validated by the pin grammar) that goes there, never
 			// the manifest's bytes.
 			if (nativeVersion !== pin.version.toString()) {
-				return yield* Effect.fail(
-					errorFor(pin)({
+				return yield* errorFor(pin)({
 						reason: "layoutUnexpected",
 						subject: `${packageName} is pinned at ${nativeVersion}, not the wrapper's ${pin.version.toString()}`,
-					}),
-				);
+					});
 			}
 			const placeholder = bins[pin.name];
 			if (placeholder === undefined) {
-				return yield* Effect.fail(
-					errorFor(pin)({ reason: "layoutUnexpected", subject: `package.json names no ${pin.name} bin to overlay` }),
-				);
+				return yield* errorFor(pin)({ reason: "layoutUnexpected", subject: `package.json names no ${pin.name} bin to overlay` });
 			}
 
 			// The expected integrity, settled before the 36 MB tarball is fetched.
@@ -832,14 +822,12 @@ const make = Effect.gen(function* () {
 			const archive = yield* installer.download(tarballUrl).pipe(Effect.mapError(fromInstaller(pin)));
 			const actualHex = yield* hashFile(pin, archive, expected.algorithm);
 			if (actualHex !== expected.hex) {
-				return yield* Effect.fail(
-					errorFor(pin)({
+				return yield* errorFor(pin)({
 						reason: "integrityMismatch",
 						subject: tarballUrl,
 						expected: `${expected.algorithm}.${expected.hex}`,
 						actual: `${expected.algorithm}.${actualHex}`,
-					}),
-				);
+					});
 			}
 			const extracted = yield* installer.extractTar(archive).pipe(Effect.mapError(fromInstaller(pin)));
 			const nativeName = windows ? "pnpm.exe" : "pnpm";
@@ -884,9 +872,7 @@ const make = Effect.gen(function* () {
 			const version = pin.version.toString();
 			const target = Option.getOrUndefined(bunTarget(runnerOs, arch));
 			if (target === undefined) {
-				return yield* Effect.fail(
-					errorFor(pin)({ reason: "unsupportedPlatform", subject: `${runnerOs || "unknown"}/${arch}` }),
-				);
+				return yield* errorFor(pin)({ reason: "unsupportedPlatform", subject: `${runnerOs || "unknown"}/${arch}` });
 			}
 			const url = `https://github.com/oven-sh/bun/releases/download/bun-v${version}/${target}.zip`;
 			const archive = yield* installer.download(url).pipe(Effect.mapError(fromInstaller(pin)));
@@ -938,9 +924,7 @@ const make = Effect.gen(function* () {
 			const extracted = yield* installer.extractTar(archive).pipe(Effect.mapError(fromInstaller(pin)));
 			const packageDir = path.join(extracted, "package");
 			if ((yield* typeAt(fs, packageDir)) !== "Directory") {
-				return yield* Effect.fail(
-					errorFor(pin)({ reason: "layoutUnexpected", subject: "tarball has no package/ root" }),
-				);
+				return yield* errorFor(pin)({ reason: "layoutUnexpected", subject: "tarball has no package/ root" });
 			}
 			const manifest = yield* readPackageManifest(pin, packageDir);
 			// pnpm 12's layout, detected by what the manifest declares rather than
@@ -995,7 +979,7 @@ const make = Effect.gen(function* () {
 			if (integrity === undefined) {
 				return pin;
 			}
-			const option = yield* Schema.decodeUnknownEffect(CorepackIntegrityHash)(integrity).pipe(
+			const option = yield* Schema.decodeEffect(CorepackIntegrityHash)(integrity).pipe(
 				Effect.mapError((cause) =>
 					errorFor(pin)({
 						reason: "integrityMismatch",
@@ -1005,13 +989,11 @@ const make = Effect.gen(function* () {
 				),
 			);
 			if (pin.integrity !== undefined && pin.integrity !== option) {
-				return yield* Effect.fail(
-					errorFor(pin)({
+				return yield* errorFor(pin)({
 						reason: "integrityMismatch",
 						subject: `the pin declares ${pin.integrity}, which disagrees with the integrity option`,
 						expected: option,
-					}),
-				);
+					});
 			}
 			return PackageManagerPin.make({ name: pin.name, version: pin.version, integrity: option });
 		});
@@ -1032,7 +1014,7 @@ const make = Effect.gen(function* () {
 		// before any path — a cache hit does not launder an integrity-less
 		// install, and an option-supplied integrity counts exactly as a pin's.
 		if (options?.requireIntegrity === true && effective.integrity === undefined) {
-			return yield* Effect.fail(errorFor(pin)({ reason: "integrityMissing" }));
+			return yield* errorFor(pin)({ reason: "integrityMissing" });
 		}
 
 		const cached = yield* installer.find(effective.name, version);
@@ -1127,7 +1109,7 @@ const dies = unstubbed("PackageManagerInstaller.makeTest");
  * @public
  */
 export class PackageManagerInstaller extends Context.Service<PackageManagerInstaller, PackageManagerInstallerShape>()(
-	"@effected/github-actions/PackageManagerInstaller",
+	"@beep/scratchpad/effected/github-actions/PackageManagerInstaller",
 ) {
 	/**
 	 * The live installer, caching through {@link ToolInstaller}.

@@ -85,7 +85,7 @@ export class YamlDocument extends Schema.Class<YamlDocument>("YamlDocument")({
 		const raw = composeFirstDocument(text, toParseInput(options));
 		const fatal = raw.errors.filter((e) => isFatalCode(e.code));
 		if (fatal.length > 0) {
-			return yield* new YamlParseError({
+			return yield* YamlParseError.make({
 				diagnostics: fatal.map((e) => YamlDiagnostic.fromRaw(e, text)),
 				input: text,
 			});
@@ -111,7 +111,7 @@ export class YamlDocument extends Schema.Class<YamlDocument>("YamlDocument")({
 			...documents.flatMap((d) => d.errors.filter((e) => isFatalCode(e.code))),
 		];
 		if (fatal.length > 0) {
-			return yield* new YamlParseError({
+			return yield* YamlParseError.make({
 				diagnostics: fatal.map((e) => YamlDiagnostic.fromRaw(e, text)),
 				input: text,
 			});
@@ -178,7 +178,7 @@ export class YamlDocument extends Schema.Class<YamlDocument>("YamlDocument")({
 			try: () => stringifyDocument(toRawDocument(this), toStringifyInput(options)),
 			catch: (defect) => {
 				if (defect instanceof StringifyFailure) {
-					return new YamlStringifyError({
+					return YamlStringifyError.make({
 						diagnostics: [
 							YamlDiagnostic.make({
 								code: "CircularReference",
@@ -196,7 +196,7 @@ export class YamlDocument extends Schema.Class<YamlDocument>("YamlDocument")({
 				// the node-path recursion — surface it typed, not as a stack-overflow
 				// defect.
 				if (defect instanceof StringifyDepthExceeded) {
-					return new YamlStringifyError({
+					return YamlStringifyError.make({
 						diagnostics: [
 							YamlDiagnostic.make({
 								code: "NestingDepthExceeded",
@@ -269,11 +269,11 @@ export function documentFromRaw(raw: RawYamlDocument, text: string): YamlDocumen
 
 /** Materialize a raw engine document into the public class. */
 function fromRawDocument(raw: RawYamlDocument, text: string): YamlDocument {
-	return new YamlDocument({
+	return YamlDocument.make({
 		contents: raw.contents,
 		errors: raw.errors.map((e) => YamlDiagnostic.fromRaw(e, text)),
 		warnings: raw.warnings.map((w) => YamlDiagnostic.fromRaw(w, text)),
-		directives: raw.directives.map((d) => new YamlDirective({ name: d.name, parameters: d.parameters })),
+		directives: raw.directives.map((d) => YamlDirective.make({ name: d.name, parameters: d.parameters })),
 		...(raw.commentBefore !== undefined ? { commentBefore: raw.commentBefore } : {}),
 		...(raw.comment !== undefined ? { comment: raw.comment } : {}),
 		hasDocumentStart: raw.hasDocumentStart,

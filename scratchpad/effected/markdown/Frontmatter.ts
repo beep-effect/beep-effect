@@ -320,7 +320,7 @@ export class MarkdownFrontmatter {
 					// parsed with the toggle off — the accessor and this error agree by
 					// construction.
 					Effect.fail(
-						new FrontmatterMissingError({ reason: document.hasFrontmatterBlock ? "captureDisabled" : "absent" }),
+						FrontmatterMissingError.make({ reason: document.hasFrontmatterBlock ? "captureDisabled" : "absent" }),
 					)
 				: codec.decode(node).pipe(
 						Effect.flatMap((data) =>
@@ -329,7 +329,7 @@ export class MarkdownFrontmatter {
 								// SchemaError deeper, never stringify it — carry its
 								// structured issue tree instead.
 								Effect.catchTag("SchemaError", (error) =>
-									Effect.fail(new FrontmatterValidationError({ issue: error.issue })),
+									Effect.fail(FrontmatterValidationError.make({ issue: error.issue })),
 								),
 							),
 						),
@@ -384,12 +384,12 @@ export class MarkdownFrontmatter {
 		return (document, data) => {
 			const node = document.frontmatter;
 			if (node !== undefined && node.format !== codec.format) {
-				return Effect.fail(new FrontmatterFormatMismatchError({ expected: codec.format, actual: node.format }));
+				return Effect.fail(FrontmatterFormatMismatchError.make({ expected: codec.format, actual: node.format }));
 			}
 			return Schema.encodeUnknownEffect(schema)(data).pipe(
 				// Normalize the schema failure at the boundary, exactly as the
 				// decode side does: carry the structured issue tree, never a string.
-				Effect.catchTag("SchemaError", (error) => Effect.fail(new FrontmatterValidationError({ issue: error.issue }))),
+				Effect.catchTag("SchemaError", (error) => Effect.fail(FrontmatterValidationError.make({ issue: error.issue }))),
 				Effect.flatMap((encoded) => codec.encode(encoded)),
 				Effect.map((body) => {
 					const block = renderBlock(codec.format, body);

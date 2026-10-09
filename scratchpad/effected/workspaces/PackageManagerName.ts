@@ -126,7 +126,7 @@ const isPlainObject = (value: unknown): value is Record<string, unknown> =>
  * range is not a version and corepack will not run one either.
  */
 const exactVersionOf = (name: string, version: string): Option.Option<string> =>
-	Schema.decodeUnknownOption(PackageManager.FromString)(`${name}@${version}`).pipe(Option.map((pm) => pm.version));
+	Schema.decodeOption(PackageManager.FromString)(`${name}@${version}`).pipe(Option.map((pm) => pm.version));
 
 /**
  * The `devEngines.packageManager` hint, or none.
@@ -159,7 +159,7 @@ const devEnginesHint = (manifest: Record<string, unknown>): Option.Option<Manage
 const corepackHint = (manifest: Record<string, unknown>): Option.Option<ManagerHint> => {
 	const raw = manifest.packageManager;
 	if (typeof raw !== "string") return Option.none();
-	return Schema.decodeUnknownOption(PackageManager.FromString)(raw).pipe(
+	return Schema.decodeOption(PackageManager.FromString)(raw).pipe(
 		Option.map((pm) => ({ name: pm.name, version: Option.some(pm.version) })),
 	);
 };
@@ -257,7 +257,7 @@ export interface PackageManagerDetectorShape {
  * @public
  */
 export class PackageManagerDetector extends Context.Service<PackageManagerDetector, PackageManagerDetectorShape>()(
-	"@effected/workspaces/PackageManagerDetector",
+	"@beep/scratchpad/effected/workspaces/PackageManagerName/PackageManagerDetector",
 ) {
 	/** Builds the service over core `FileSystem` and `Path`. */
 	static readonly make: Effect.Effect<
@@ -288,21 +288,19 @@ export class PackageManagerDetector extends Context.Service<PackageManagerDetect
 
 				const content = yield* fs
 					.readFileString(packageJsonPath)
-					.pipe(Effect.mapError((cause) => new WorkspaceManifestError({ packageJsonPath, kind: "read", cause })));
+					.pipe(Effect.mapError((cause) => WorkspaceManifestError.make({ packageJsonPath, kind: "read", cause })));
 
 				const parsed = yield* Effect.try({
 					try: () => JSON.parse(content) as unknown,
-					catch: (cause) => new WorkspaceManifestError({ packageJsonPath, kind: "decode", cause }),
+					catch: (cause) => WorkspaceManifestError.make({ packageJsonPath, kind: "decode", cause }),
 				});
 
 				if (!isPlainObject(parsed)) {
-					return yield* Effect.fail(
-						new WorkspaceManifestError({
+					return yield* WorkspaceManifestError.make({
 							packageJsonPath,
 							kind: "decode",
 							cause: new Error("package.json is not a JSON object"),
-						}),
-					);
+						});
 				}
 				return Option.some(parsed);
 			});
@@ -478,7 +476,7 @@ export class PackageManagerDetector extends Context.Service<PackageManagerDetect
 			// Nothing matched, and the package REFUSES TO GUESS: a default is policy,
 			// not detection. A caller who wants one writes `Effect.orElseSucceed`
 			// where a reader can see it.
-			return yield* Effect.fail(new PackageManagerDetectionError({ root, checked: CHECKED }));
+			return yield* PackageManagerDetectionError.make({ root, checked: CHECKED });
 		});
 
 		return {

@@ -27,9 +27,9 @@ export class GlobPatternError extends Schema.TaggedError<GlobPatternError>()("Gl
 	/** Which guard tripped: pattern length, brace-expansion budget, or nesting depth. */
 	reason: Schema.Literals(["PatternTooLong", "ExpansionBudgetExceeded", "NestingDepthExceeded"]),
 	/** The cap the pattern exceeded. */
-	limit: Schema.Number,
+	limit: Schema.Finite,
 	/** The measured value that exceeded `limit`. */
-	actual: Schema.Number,
+	actual: Schema.Finite,
 }) {
 	override get message(): string {
 		const shown = this.pattern.length > 64 ? `${this.pattern.slice(0, 64)}…` : this.pattern;
@@ -83,7 +83,7 @@ export class GlobPatternOptions extends Schema.Class<GlobPatternOptions>("GlobPa
 	windowsNoMagicRoot: Schema.optionalKey(Schema.Boolean),
 	/** The level of pre-parse pattern optimization: `0`, `1` or `2`. */
 	optimizationLevel: Schema.optionalKey(
-		Schema.Number.check(Schema.isInt(), Schema.isBetween({ minimum: 0, maximum: 2 })),
+		Schema.Finite.check(Schema.isInt(), Schema.isBetween({ minimum: 0, maximum: 2 })),
 	),
 	/** The operating system the pattern is interpreted for. Defaults to `"posix"`; only `"win32"` changes behavior, and it is never read from the ambient process. */
 	platform: Schema.optionalKey(
@@ -104,12 +104,12 @@ export class GlobPatternOptions extends Schema.Class<GlobPatternOptions>("GlobPa
 	),
 	/** Maximum number of `{...}` expansions, from `1` to `100000` (the default and ceiling). */
 	braceExpandMax: Schema.optionalKey(
-		Schema.Number.check(Schema.isInt(), Schema.isBetween({ minimum: 1, maximum: EXPANSION_MAX })),
+		Schema.Finite.check(Schema.isInt(), Schema.isBetween({ minimum: 1, maximum: EXPANSION_MAX })),
 	),
 	/** Maximum number of non-adjacent `**` segments the matcher recursively walks down. */
-	maxGlobstarRecursion: Schema.optionalKey(Schema.Number.check(Schema.isInt(), Schema.isGreaterThan(0))),
+	maxGlobstarRecursion: Schema.optionalKey(Schema.Finite.check(Schema.isInt(), Schema.isGreaterThan(0))),
 	/** Maximum depth to traverse for nested extglobs like `*(a|b|c)`. */
-	maxExtglobRecursion: Schema.optionalKey(Schema.Number.check(Schema.isInt(), Schema.isGreaterThan(0))),
+	maxExtglobRecursion: Schema.optionalKey(Schema.Finite.check(Schema.isInt(), Schema.isGreaterThan(0))),
 }) {}
 
 // Conditional-spread bridge: a present-but-undefined optionalKey never happens
@@ -227,14 +227,14 @@ export class GlobPattern extends Schema.Class<GlobPattern>("GlobPattern")(
 			// Defaults first (the value invariant), then the effective engine.
 			new Minimatch(source, {});
 			const engine = new Minimatch(source, engineOptions);
-			const pattern = new GlobPattern({ source });
+			const pattern = GlobPattern.make({ source });
 			pattern.#engine = engine;
 			pattern.#engineOptions = engineOptions;
 			return Result.succeed(pattern);
 		} catch (e) {
 			if (isGuardExceeded(e)) {
 				return Result.fail(
-					new GlobPatternError({ pattern: source, reason: e.reason, limit: e.limit, actual: e.actual }),
+					GlobPatternError.make({ pattern: source, reason: e.reason, limit: e.limit, actual: e.actual }),
 				);
 			}
 			throw e;

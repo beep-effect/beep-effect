@@ -133,7 +133,7 @@ const withUsableName = <A, E, R>(
 	name: string,
 	effect: Effect.Effect<A, E, R>,
 ): Effect.Effect<A, E | InvalidOutputNameError, R> =>
-	isUsableName(name) ? effect : Effect.fail(new InvalidOutputNameError({ file, name }));
+	isUsableName(name) ? effect : Effect.fail(InvalidOutputNameError.make({ file, name }));
 
 /**
  * The JSON text `setJson` publishes for `value`: encoded through `schema`,
@@ -146,7 +146,7 @@ const encodeJson = <A, I>(
 	schema: Schema.Codec<A, I>,
 ): Effect.Effect<string, OutputEncodeError> =>
 	Schema.encodeUnknownEffect(Schema.fromJsonString(schema))(value).pipe(
-		Effect.mapError((cause) => new OutputEncodeError({ name, cause })),
+		Effect.mapError((cause) => OutputEncodeError.make({ name, cause })),
 	);
 
 /**
@@ -235,10 +235,10 @@ const make = Effect.gen(function* () {
 
 	const append = (file: string, content: string): Effect.Effect<void, ActionOutputError> =>
 		Effect.gen(function* () {
-			const path = yield* env.get(file).pipe(Effect.mapError(() => new RunnerFileUnavailableError({ file })));
+			const path = yield* env.get(file).pipe(Effect.mapError(() => RunnerFileUnavailableError.make({ file })));
 			yield* fs
 				.writeFileString(path, content, { flag: "a" })
-				.pipe(Effect.mapError((cause) => new RunnerFileWriteError({ file, cause })));
+				.pipe(Effect.mapError((cause) => RunnerFileWriteError.make({ file, cause })));
 		});
 
 	const appendBlock = (file: string, name: string, value: string): Effect.Effect<void, ActionOutputError> =>
@@ -290,7 +290,7 @@ const dies = unstubbed("ActionOutputs.makeTest");
  * @public
  */
 export class ActionOutputs extends Context.Service<ActionOutputs, ActionOutputsShape>()(
-	"@effected/github-actions/ActionOutputs",
+	"@beep/scratchpad/effected/github-actions/ActionOutputs",
 ) {
 	/**
 	 * The live service, appending to the runner's `GITHUB_OUTPUT`, `GITHUB_ENV`,
@@ -341,11 +341,11 @@ export class ActionOutputs extends Context.Service<ActionOutputs, ActionOutputsS
 	 *   channel to fail through.
 	 */
 	static readonly layerDetached: Layer.Layer<ActionOutputs> = Layer.succeed(this, {
-		set: (name) => Effect.fail(new DetachedOutputError({ file: RUNNER_FILE.set, name })),
-		setJson: (name) => Effect.fail(new DetachedOutputError({ file: RUNNER_FILE.setJson, name })),
-		summary: () => Effect.fail(new DetachedOutputError({ file: RUNNER_FILE.summary })),
-		exportVariable: (name) => Effect.fail(new DetachedOutputError({ file: RUNNER_FILE.exportVariable, name })),
-		addPath: () => Effect.fail(new DetachedOutputError({ file: RUNNER_FILE.addPath })),
+		set: (name) => Effect.fail(DetachedOutputError.make({ file: RUNNER_FILE.set, name })),
+		setJson: (name) => Effect.fail(DetachedOutputError.make({ file: RUNNER_FILE.setJson, name })),
+		summary: () => Effect.fail(DetachedOutputError.make({ file: RUNNER_FILE.summary })),
+		exportVariable: (name) => Effect.fail(DetachedOutputError.make({ file: RUNNER_FILE.exportVariable, name })),
+		addPath: () => Effect.fail(DetachedOutputError.make({ file: RUNNER_FILE.addPath })),
 		setFailed: (message) => Console.error(CommandNeutralizer.text(message)),
 		setSecret: () => Effect.void,
 	} satisfies ActionOutputsShape);

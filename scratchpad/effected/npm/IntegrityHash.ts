@@ -131,8 +131,8 @@ const brandedIntegrity = Schema.String.pipe(
 );
 
 const decode = (input: string): Effect.Effect<IntegrityHashBrand, InvalidIntegrityHashError> =>
-	Schema.decodeUnknownEffect(brandedIntegrity)(input).pipe(
-		Effect.mapError(() => new InvalidIntegrityHashError({ input })),
+	Schema.decodeEffect(brandedIntegrity)(input).pipe(
+		Effect.mapError(() => InvalidIntegrityHashError.make({ input })),
 	);
 
 /**
@@ -392,8 +392,8 @@ export class InvalidSriIntegrityHashError extends Schema.TaggedError<InvalidSriI
 }
 
 const fromSri = (input: string): Effect.Effect<IntegrityHashBrand, InvalidSriIntegrityHashError> =>
-	Schema.decodeUnknownEffect(corepackFromSri)(input).pipe(
-		Effect.mapError(() => new InvalidSriIntegrityHashError({ input })),
+	Schema.decodeEffect(corepackFromSri)(input).pipe(
+		Effect.mapError(() => InvalidSriIntegrityHashError.make({ input })),
 	);
 
 /** Conversion statics attached to the `CorepackIntegrityHash` schema value. */

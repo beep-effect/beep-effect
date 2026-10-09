@@ -1,3 +1,4 @@
+// @effect-diagnostics nodeBuiltinImport:skip-file
 // TomlDocument: the lossless document class. The headline contract is the
 // byte-exact round-trip — stringify() reconstructs the source by
 // concatenating expression spans in order, proven byte-for-byte across every
@@ -118,7 +119,7 @@ describe("TomlDocument", () => {
 
 		it.effect("decodes TOML text into a TomlDocument", () =>
 			Effect.gen(function* () {
-				const doc = yield* Schema.decodeUnknownEffect(codec)('a = "b"\n');
+				const doc = yield* Schema.decodeEffect(codec)('a = "b"\n');
 				assert.instanceOf(doc, TomlDocument);
 				assert.strictEqual(doc.source, 'a = "b"\n');
 				const value = yield* doc.toValue();
@@ -136,7 +137,7 @@ describe("TomlDocument", () => {
 
 		it.effect("a failing decode surfaces a SchemaError carrying the parse message", () =>
 			Effect.gen(function* () {
-				const error = yield* Effect.flip(Schema.decodeUnknownEffect(codec)("a = [1\n"));
+				const error = yield* Effect.flip(Schema.decodeEffect(codec)("a = [1\n"));
 				assert.include(String(error), "TOML parse failed");
 			}),
 		);

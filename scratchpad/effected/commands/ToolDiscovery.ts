@@ -283,7 +283,7 @@ const make = Effect.fnUntraced(function* () {
 		yield* Effect.annotateCurrentSpan({ tool: tool.name, source: tool.source });
 		// Pre-spawn guard: argv position zero is not a place to accept a flag.
 		if (tool.name === "" || tool.name.startsWith("-")) {
-			return yield* Effect.fail(new ToolRefusedError({ tool: tool.name }));
+			return yield* ToolRefusedError.make({ tool: tool.name });
 		}
 
 		const evidence = yield* evidenceFor(tool);
@@ -300,7 +300,7 @@ const make = Effect.fnUntraced(function* () {
 						: evidence.local.found;
 
 		if (!satisfied) {
-			return yield* Effect.fail(new ToolNotFoundError({ tool: tool.name, searched: required }));
+			return yield* ToolNotFoundError.make({ tool: tool.name, searched: required });
 		}
 
 		const bothFound = evidence.global.found && evidence.local.found;
@@ -311,13 +311,11 @@ const make = Effect.fnUntraced(function* () {
 			evidence.global.version.value !== evidence.local.version.value;
 
 		if (mismatch && tool.onMismatch === "fail") {
-			return yield* Effect.fail(
-				new ToolVersionMismatchError({
+			return yield* ToolVersionMismatchError.make({
 					tool: tool.name,
 					globalVersion: Option.getOrElse(evidence.global.version, () => ""),
 					localVersion: Option.getOrElse(evidence.local.version, () => ""),
-				}),
-			);
+				});
 		}
 
 		// Which copy to run: an explicit source requirement decides; otherwise the
@@ -412,7 +410,7 @@ const notStubbed = (method: string) => () =>
  * @public
  */
 export class ToolDiscovery extends Context.Service<ToolDiscovery, ToolDiscoveryShape>()(
-	"@effected/commands/ToolDiscovery",
+	"@beep/scratchpad/effected/commands/ToolDiscovery",
 ) {
 	/** Resolves its dependencies once at construction, so every method's `R` is `never`. */
 	static readonly layer: Layer.Layer<ToolDiscovery, never, ChildProcessSpawner.ChildProcessSpawner | LocalExec> =

@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file processEnv:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { ConfigProvider, Context, Effect, Layer, Option, Schema } from "effect";
 import { CurrentRuntimeEnv, RuntimeEnv } from "../../effected/env/RuntimeEnv.ts";
@@ -207,8 +208,8 @@ describe("RuntimeEnv.fromRecord", () => {
 });
 
 describe("CurrentRuntimeEnv.layerFrom", () => {
-	class First extends Context.Service<First, Option.Option<string>>()("test/First") {}
-	class Second extends Context.Service<Second, Option.Option<string>>()("test/Second") {}
+	class First extends Context.Service<First, Option.Option<string>>()("@beep/scratchpad/test/env/RuntimeEnv.test/First") {}
+	class Second extends Context.Service<Second, Option.Option<string>>()("@beep/scratchpad/test/env/RuntimeEnv.test/Second") {}
 	const envOf = Effect.gen(function* () {
 		return yield* CurrentRuntimeEnv;
 	});

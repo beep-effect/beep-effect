@@ -172,7 +172,7 @@ describe("GlobPattern construction and schema", () => {
 
 	it.effect("class decode produces a working instance and encode emits only source", () =>
 		Effect.gen(function* () {
-			const p = yield* Schema.decodeUnknownEffect(GlobPattern)({ source: "@scope/*" });
+			const p = yield* Schema.decodeEffect(GlobPattern)({ source: "@scope/*" });
 			assert.instanceOf(p, GlobPattern);
 			assert.isFalse(p.matches("somepkg"));
 			assert.isTrue(p.matches("@scope/x"));
@@ -183,14 +183,14 @@ describe("GlobPattern construction and schema", () => {
 
 	it.effect("class decode rejects an uncompilable pattern as SchemaError", () =>
 		Effect.gen(function* () {
-			const e = yield* Effect.flip(Schema.decodeUnknownEffect(GlobPattern)({ source: "{a,b}".repeat(17) }));
+			const e = yield* Effect.flip(Schema.decodeEffect(GlobPattern)({ source: "{a,b}".repeat(17) }));
 			assert.strictEqual(e._tag, "SchemaError");
 		}),
 	);
 
 	it.effect("FromString decodes a bare string into a working instance and encodes back to source", () =>
 		Effect.gen(function* () {
-			const p = yield* Schema.decodeUnknownEffect(GlobPattern.FromString)("@scope/*");
+			const p = yield* Schema.decodeEffect(GlobPattern.FromString)("@scope/*");
 			assert.instanceOf(p, GlobPattern);
 			assert.isFalse(p.matches("somepkg"));
 			assert.strictEqual(yield* Schema.encodeEffect(GlobPattern.FromString)(p), "@scope/*");
@@ -199,7 +199,7 @@ describe("GlobPattern construction and schema", () => {
 
 	it.effect("FromString surfaces uncompilable input as SchemaError", () =>
 		Effect.gen(function* () {
-			const e = yield* Effect.flip(Schema.decodeUnknownEffect(GlobPattern.FromString)("{a,b}".repeat(17)));
+			const e = yield* Effect.flip(Schema.decodeEffect(GlobPattern.FromString)("{a,b}".repeat(17)));
 			assert.strictEqual(e._tag, "SchemaError");
 		}),
 	);

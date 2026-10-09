@@ -1,3 +1,4 @@
+// @effect-diagnostics nodeBuiltinImport:skip-file
 // Per-format fixture tests: the ported corpus (pnpm v1–v3, npm v1–v2,
 // yarn v1–v2, bun v1–v3) asserted against the unified model — package
 // counts, workspace identification, integrity hashes, workspace dependency

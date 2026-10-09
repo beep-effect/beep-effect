@@ -12,6 +12,9 @@ import type { YamlToken } from "../../YamlToken.ts";
  * Rejects NaN, negatives and fractions with a message naming the constraint;
  * the config layer's wrapper names the rule and the field.
  */
+// The check below rejects NaN and the infinities itself and names the option domain in its message;
+// a finite-only base would answer first with a different message.
+// @effect-diagnostics-next-line schemaNumber:off
 export const nonNegativeIntegerOption = Schema.Number.check(
 	Schema.makeFilter((n) => (Number.isInteger(n) && n >= 0 ? undefined : "Expected a non-negative integer")),
 );
@@ -22,6 +25,8 @@ export const nonNegativeIntegerOption = Schema.Number.check(
  * content (`- item` → `-item`, `a: val` → `a:val` — different tokens, not a
  * spacing change).
  */
+// Same as above: the check owns the rejection and its message.
+// @effect-diagnostics-next-line schemaNumber:off
 export const positiveIntegerOption = Schema.Number.check(
 	Schema.makeFilter((n) =>
 		Number.isInteger(n) && n >= 1 ? undefined : "Expected an integer greater than or equal to 1",
@@ -38,18 +43,18 @@ export function walkScalars(
 	visit: (scalar: YamlScalar, role: ScalarRole) => void,
 ): void {
 	if (node === null) return;
-	if (node instanceof Scalar) {
+	if (Schema.is(Scalar)(node)) {
 		visit(node, role);
 		return;
 	}
-	if (node instanceof YamlMap) {
+	if (Schema.is(YamlMap)(node)) {
 		for (const pair of node.items) {
 			walkScalars(pair.key, "key", visit);
 			walkScalars(pair.value, "value", visit);
 		}
 		return;
 	}
-	if (node instanceof YamlSeq) {
+	if (Schema.is(YamlSeq)(node)) {
 		for (const item of node.items) walkScalars(item, "item", visit);
 	}
 }

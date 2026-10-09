@@ -19,11 +19,11 @@ export const JsonCodec: ConfigCodec = {
 	parse: (raw) =>
 		Effect.try({
 			try: () => JSON.parse(raw) as unknown,
-			catch: (cause) => new ConfigCodecError({ codec: "json", operation: "parse", cause }),
+			catch: (cause) => ConfigCodecError.make({ codec: "json", operation: "parse", cause }),
 		}),
 	stringify: (value) =>
 		Effect.try({
 			try: () => JSON.stringify(value, null, 2),
-			catch: (cause) => new ConfigCodecError({ codec: "json", operation: "stringify", cause }),
+			catch: (cause) => ConfigCodecError.make({ codec: "json", operation: "stringify", cause }),
 		}),
 };

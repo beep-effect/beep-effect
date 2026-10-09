@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file nodeBuiltinImport:skip-file
 // `WorkspaceSnapshots.at(ref)` against a workspace root NESTED inside a larger
 // git repo — the case a scripted `Git` mock cannot discriminate, because it
 // needs real git's two path-base conventions to diverge.

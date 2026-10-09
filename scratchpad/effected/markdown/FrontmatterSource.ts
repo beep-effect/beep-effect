@@ -81,7 +81,7 @@ export class FrontmatterSourceBlock extends Schema.Class<FrontmatterSourceBlock>
 export class FrontmatterSourceSplit extends Schema.Class<FrontmatterSourceSplit>("FrontmatterSourceSplit")({
 	frontmatter: Schema.optionalKey(FrontmatterSourceBlock),
 	body: Schema.String,
-	bodyOffset: Schema.Number.pipe(Schema.withConstructorDefault(Effect.succeed(0))),
+	bodyOffset: Schema.Finite.pipe(Schema.withConstructorDefault(Effect.succeed(0))),
 }) {}
 
 /** The opening fence line per format (the closed grammar's spellings). */

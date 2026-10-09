@@ -14,7 +14,7 @@ describe("DevEngine", () => {
 describe("DevEnginesSchema", () => {
 	it.effect("decodes a single packageManager constraint and a runtime array", () =>
 		Effect.gen(function* () {
-			const decoded = yield* Schema.decodeUnknownEffect(DevEnginesSchema)({
+			const decoded = yield* Schema.decodeEffect(DevEnginesSchema)({
 				packageManager: { name: "pnpm", version: "10.33.0", onFail: "ignore" },
 				runtime: [{ name: "node", version: "24.11.0", onFail: "ignore" }],
 			});

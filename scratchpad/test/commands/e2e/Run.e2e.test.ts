@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file globalTimers:skip-file newPromise:skip-file
 // Real processes, through @effect/platform-node's real ChildProcessSpawner.
 //
 // Everything here exercises behavior a mocked spawner cannot reproduce: OS pipe
@@ -46,7 +47,7 @@ describe("Run against real processes", () => {
 		Effect.gen(function* () {
 			const error = yield* Effect.flip(live(Run.text(node("process.stderr.write('bad'); process.exit(3)"))));
 			assert.instanceOf(error, CommandFailedError);
-			if (error instanceof CommandFailedError) {
+			if (Schema.is(CommandFailedError)(error)) {
 				assert.strictEqual(error.kind, "nonZero");
 				assert.strictEqual(error.exitCode, 3);
 				assert.include(error.stderr ?? "", "bad");
@@ -63,7 +64,7 @@ describe("Run against real processes", () => {
 		Effect.gen(function* () {
 			const error = yield* Effect.flip(live(Run.text(ChildProcess.make("effected-no-such-binary-xyz", []))));
 			assert.instanceOf(error, CommandFailedError);
-			if (error instanceof CommandFailedError) {
+			if (Schema.is(CommandFailedError)(error)) {
 				assert.strictEqual(error.kind, "spawn");
 				assert.isTrue(error.notFound, "ENOENT from a real spawn must classify as notFound");
 			}

@@ -61,7 +61,7 @@ export const quotedStrings: YamlRule = {
 				const fix = safeQuoteFix(ctx, scalar, quote);
 				const pos = positionAt(ctx.lines, scalar.offset);
 				out.push(
-					new YamlLintDiagnostic({
+					YamlLintDiagnostic.make({
 						rule: "quoted-strings",
 						severity: "error",
 						message: `String should use ${quoteType} quotes`,
@@ -78,7 +78,7 @@ export const quotedStrings: YamlRule = {
 				const fix = safeQuoteFix(ctx, scalar, quote);
 				const pos = positionAt(ctx.lines, scalar.offset);
 				out.push(
-					new YamlLintDiagnostic({
+					YamlLintDiagnostic.make({
 						rule: "quoted-strings",
 						severity: "error",
 						message: `String should be quoted (${quoteType})`,

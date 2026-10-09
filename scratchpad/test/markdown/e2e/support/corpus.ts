@@ -1,3 +1,4 @@
+// @effect-diagnostics nodeBuiltinImport:skip-file
 /**
  * Test data loaders for the vendored CommonMark and GFM conformance corpora.
  *

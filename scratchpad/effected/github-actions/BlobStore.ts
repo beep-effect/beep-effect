@@ -23,7 +23,7 @@ export class BlobStoreError extends Schema.TaggedError<BlobStoreError>()("BlobSt
 	/** The key involved. A stable identifier, never a value. */
 	key: Schema.optionalKey(Schema.String),
 	/** The HTTP status, when the store answered. */
-	status: Schema.optionalKey(Schema.Number),
+	status: Schema.optionalKey(Schema.Finite),
 	/** What is wrong, when the reason alone does not say. */
 	detail: Schema.optionalKey(Schema.String),
 	/** The underlying failure, preserved structurally. */
@@ -133,7 +133,7 @@ export interface S3Config {
  * import { BlobStore } from "./index.ts";
  * import { Effect, Schema } from "effect";
  *
- * class Meta extends Schema.Class<Meta>("Meta")({ tag: Schema.String, durationMs: Schema.Number }) {}
+ * class Meta extends Schema.Class<Meta>("Meta")({ tag: Schema.String, durationMs: Schema.Finite }) {}
  *
  * const program = Effect.gen(function* () {
  *   const store = yield* BlobStore;
@@ -144,7 +144,7 @@ export interface S3Config {
  *
  * @public
  */
-export class BlobStore extends Context.Service<BlobStore, BlobStoreShape>()("@effected/github-actions/BlobStore") {
+export class BlobStore extends Context.Service<BlobStore, BlobStoreShape>()("@beep/scratchpad/effected/github-actions/BlobStore") {
 	/**
 	 * An S3-compatible backend, signed with SigV4.
 	 *
@@ -249,12 +249,12 @@ const makeS3 = (config: S3Config): Effect.Effect<BlobStoreShape, never, HttpClie
 				const built = body.length === 0 ? base : HttpClientRequest.bodyUint8Array(base, body);
 				return http
 					.execute(built)
-					.pipe(Effect.mapError((cause) => new BlobStoreError({ reason: "unreachable", key, cause })));
+					.pipe(Effect.mapError((cause) => BlobStoreError.make({ reason: "unreachable", key, cause })));
 			});
 
 		/** Anything outside 2xx is the store refusing; a caller reads `404` first where a miss is an answer. */
 		const accepted = (key: string, status: number): Effect.Effect<void, BlobStoreError> =>
-			status < 200 || status >= 300 ? Effect.fail(new BlobStoreError({ reason: "refused", key, status })) : Effect.void;
+			status < 200 || status >= 300 ? Effect.fail(BlobStoreError.make({ reason: "refused", key, status })) : Effect.void;
 
 		return {
 			get: <A, I>(key: string, schema: Schema.Codec<A, I>) =>
@@ -266,7 +266,7 @@ const makeS3 = (config: S3Config): Effect.Effect<BlobStoreShape, never, HttpClie
 					}
 					yield* accepted(key, response.status);
 					const buffer = yield* response.arrayBuffer.pipe(
-						Effect.mapError((cause) => new BlobStoreError({ reason: "unreachable", key, cause })),
+						Effect.mapError((cause) => BlobStoreError.make({ reason: "unreachable", key, cause })),
 					);
 					return Option.some(yield* Effect.fromResult(BlobEnvelope.decodeResult(new Uint8Array(buffer), schema)));
 				}),

@@ -6,13 +6,13 @@ import { Repo } from "./Repo.ts";
 
 /** How a check run finished. @public */
 export const CheckConclusion = Schema.Literals([
-	"success",
-	"failure",
-	"neutral",
-	"cancelled",
-	"timed_out",
-	"action_required",
-	"skipped",
+  "success",
+  "failure",
+  "neutral",
+  "cancelled",
+  "timed_out",
+  "action_required",
+  "skipped",
 ]);
 
 /** How serious an annotation is. @public */
@@ -24,16 +24,17 @@ export const AnnotationLevel = Schema.Literals(["notice", "warning", "failure"])
  * @public
  */
 export class Annotation extends Schema.Class<Annotation>("Annotation")({
-	/** Repository-relative path. */
-	path: Schema.String,
-	/** First line of the range, 1-based. */
-	startLine: Schema.Int,
-	/** Last line of the range, 1-based. */
-	endLine: Schema.Int,
-	level: AnnotationLevel,
-	message: Schema.String,
-	title: Schema.optionalKey(Schema.String),
-}) {}
+  /** Repository-relative path. */
+  path: Schema.String,
+  /** First line of the range, 1-based. */
+  startLine: Schema.Int,
+  /** Last line of the range, 1-based. */
+  endLine: Schema.Int,
+  level: AnnotationLevel,
+  message: Schema.String,
+  title: Schema.optionalKey(Schema.String),
+}) {
+}
 
 /**
  * A check run's rendered output.
@@ -48,38 +49,38 @@ export class Annotation extends Schema.Class<Annotation>("Annotation")({
  * @public
  */
 export class CheckRunOutput extends Schema.Class<CheckRunOutput>("CheckRunOutput")({
-	title: Schema.String,
-	/** Markdown shown under the title. Capped at 65535 **bytes**. */
-	summary: Schema.String,
-	/** Longer markdown. Capped at 65535 **bytes**. */
-	text: Schema.optionalKey(Schema.String),
-	/** At most 50 per request; the rest are dropped by {@link CheckRunOutput.truncated}. */
-	annotations: Schema.optionalKey(Schema.Array(Annotation)),
+  title: Schema.String,
+  /** Markdown shown under the title. Capped at 65535 **bytes**. */
+  summary: Schema.String,
+  /** Longer markdown. Capped at 65535 **bytes**. */
+  text: Schema.optionalKey(Schema.String),
+  /** At most 50 per request; the rest are dropped by {@link CheckRunOutput.truncated}. */
+  annotations: Schema.optionalKey(Schema.Array(Annotation)),
 }) {
-	/** GitHub's cap on `summary` and `text`, in UTF-8 bytes. */
-	static readonly LIMIT_BYTES = 65_535;
-	/** GitHub's cap on annotations per request. */
-	static readonly MAX_ANNOTATIONS = 50;
-	/** Appended when a field had to be cut. */
-	static readonly NOTICE = "\n\n_…truncated (exceeded GitHub's 65535-byte check limit)._";
+  /** GitHub's cap on `summary` and `text`, in UTF-8 bytes. */
+  static readonly LIMIT_BYTES = 65_535;
+  /** GitHub's cap on annotations per request. */
+  static readonly MAX_ANNOTATIONS = 50;
+  /** Appended when a field had to be cut. */
+  static readonly NOTICE = "\n\n_…truncated (exceeded GitHub's 65535-byte check limit)._";
 
-	/**
-	 * This output, cut to fit GitHub's limits.
-	 *
-	 * @remarks
-	 * Pure, so the byte arithmetic is testable with no client, no layer and no
-	 * network — which is what lets a property test hammer it with arbitrary
-	 * multi-byte input.
-	 */
-	truncated(): CheckRunOutput {
-		const annotations = this.annotations;
-		return CheckRunOutput.make({
-			title: this.title,
-			summary: capBytes(this.summary),
-			...(this.text !== undefined ? { text: capBytes(this.text) } : {}),
-			...(annotations !== undefined ? { annotations: annotations.slice(0, CheckRunOutput.MAX_ANNOTATIONS) } : {}),
-		});
-	}
+  /**
+   * This output, cut to fit GitHub's limits.
+   *
+   * @remarks
+   * Pure, so the byte arithmetic is testable with no client, no layer and no
+   * network — which is what lets a property test hammer it with arbitrary
+   * multi-byte input.
+   */
+  truncated(): CheckRunOutput {
+    const annotations = this.annotations;
+    return CheckRunOutput.make({
+      title: this.title,
+      summary: capBytes(this.summary),
+      ...(this.text !== undefined ? { text: capBytes(this.text) } : {}),
+      ...(annotations !== undefined ? { annotations: annotations.slice(0, CheckRunOutput.MAX_ANNOTATIONS) } : {}),
+    });
+  }
 }
 
 /**
@@ -91,11 +92,11 @@ export class CheckRunOutput extends Schema.Class<CheckRunOutput>("CheckRunOutput
  * loops rather than dropping a single one.
  */
 const capBytes = (value: string): string => {
-	if (Buffer.byteLength(value, "utf8") <= CheckRunOutput.LIMIT_BYTES) return value;
-	const budget = CheckRunOutput.LIMIT_BYTES - Buffer.byteLength(CheckRunOutput.NOTICE, "utf8");
-	let cut = Buffer.from(value, "utf8").subarray(0, budget).toString("utf8");
-	while (cut.endsWith("�")) cut = cut.slice(0, -1);
-	return `${cut}${CheckRunOutput.NOTICE}`;
+  if (Buffer.byteLength(value, "utf8") <= CheckRunOutput.LIMIT_BYTES) return value;
+  const budget = CheckRunOutput.LIMIT_BYTES - Buffer.byteLength(CheckRunOutput.NOTICE, "utf8");
+  let cut = Buffer.from(value, "utf8").subarray(0, budget).toString("utf8");
+  while (cut.endsWith("�")) cut = cut.slice(0, -1);
+  return `${cut}${CheckRunOutput.NOTICE}`;
 };
 
 /**
@@ -104,12 +105,13 @@ const capBytes = (value: string): string => {
  * @public
  */
 export class CheckRunRef extends Schema.Class<CheckRunRef>("CheckRunRef")({
-	id: Schema.Int,
-	name: Schema.String,
-	/** The web URL. */
-	url: Schema.String,
-	status: Schema.String,
-}) {}
+  id: Schema.Int,
+  name: Schema.String,
+  /** The web URL. */
+  url: Schema.String,
+  status: Schema.String,
+}) {
+}
 
 /**
  * Conclude the surrounding {@link CheckRunShape.withCheckRun} explicitly.
@@ -131,8 +133,8 @@ export class CheckRunRef extends Schema.Class<CheckRunRef>("CheckRunRef")({
  * @public
  */
 export type ConcludeCheckRun = (
-	conclusion: (typeof CheckConclusion.literals)[number],
-	output?: CheckRunOutput,
+  conclusion: (typeof CheckConclusion.literals)[number],
+  output?: CheckRunOutput,
 ) => Effect.Effect<void>;
 
 /**
@@ -145,69 +147,69 @@ export type ConcludeCheckRun = (
  * @public
  */
 export interface CheckRunShape {
-	/** Start an in-progress check run against a commit. */
-	readonly create: (name: string, headSha: string) => Effect.Effect<CheckRunRef, GitHubError, Repo>;
-	readonly get: (id: number) => Effect.Effect<CheckRunRef, GitHubError, Repo>;
-	/** Update an in-flight run's output. */
-	readonly update: (id: number, output: CheckRunOutput) => Effect.Effect<void, GitHubError, Repo>;
-	/** Finish a run. */
-	readonly complete: (
-		id: number,
-		conclusion: (typeof CheckConclusion.literals)[number],
-		output?: CheckRunOutput,
-	) => Effect.Effect<void, GitHubError, Repo>;
-	/**
-	 * Run `use` inside a check run, concluding it however `use` exits.
-	 *
-	 * @remarks
-	 * **Every exit reaches a terminal state.** Left to itself the bracket
-	 * concludes `"success"` on success, `"failure"` on a typed failure or a
-	 * defect, and `"cancelled"` on an interrupt. A run left `in_progress` is
-	 * never reaped by GitHub and blocks branch protection until someone deletes
-	 * it by hand, so the finalizer is exit-aware rather than a `tap`/`tapError`
-	 * pair — which fires on the first two only.
-	 *
-	 * **`use` can override that verdict**, which is how the other four
-	 * conclusions are reachable. `conclude` records one; a recorded verdict
-	 * **wins on every exit path**, including failure and interruption, because
-	 * how a check ran and how the surrounding program ended are different
-	 * questions. A findings-derived `"neutral"` is the motivating case: the work
-	 * ran fine and the result is advisory.
-	 *
-	 * Only the success path can fail the effect on the conclusion's behalf.
-	 * Neither an interrupt nor an existing failure is replaced by whatever went
-	 * wrong while reporting it.
-	 *
-	 * `use` keeps its own `R` and its own `A`, so the bracket composes with
-	 * whatever services the wrapped work needs.
-	 *
-	 * @example
-	 * ```ts
-	 * import { CheckRun, CheckRunOutput } from "./index.ts";
-	 * import { Effect } from "effect";
-	 *
-	 * const lintWithCheck = (sha: string) =>
-	 *   Effect.gen(function* () {
-	 *     const check = yield* CheckRun;
-	 *     return yield* check.withCheckRun("lint", sha, (_id, conclude) =>
-	 *       Effect.gen(function* () {
-	 *         const findings = 3; // run the linter here
-	 *         // An advisory result: record "neutral" instead of the default "success".
-	 *         yield* conclude(
-	 *           "neutral",
-	 *           CheckRunOutput.make({ title: "lint", summary: `${findings} findings` }),
-	 *         );
-	 *         return findings;
-	 *       }),
-	 *     );
-	 *   });
-	 * ```
-	 */
-	readonly withCheckRun: <A, E, R>(
-		name: string,
-		headSha: string,
-		use: (id: number, conclude: ConcludeCheckRun) => Effect.Effect<A, E, R>,
-	) => Effect.Effect<A, E | GitHubError, R | Repo>;
+  /** Start an in-progress check run against a commit. */
+  readonly create: (name: string, headSha: string) => Effect.Effect<CheckRunRef, GitHubError, Repo>;
+  readonly get: (id: number) => Effect.Effect<CheckRunRef, GitHubError, Repo>;
+  /** Update an in-flight run's output. */
+  readonly update: (id: number, output: CheckRunOutput) => Effect.Effect<void, GitHubError, Repo>;
+  /** Finish a run. */
+  readonly complete: (
+    id: number,
+    conclusion: (typeof CheckConclusion.literals)[number],
+    output?: CheckRunOutput,
+  ) => Effect.Effect<void, GitHubError, Repo>;
+  /**
+   * Run `use` inside a check run, concluding it however `use` exits.
+   *
+   * @remarks
+   * **Every exit reaches a terminal state.** Left to itself the bracket
+   * concludes `"success"` on success, `"failure"` on a typed failure or a
+   * defect, and `"cancelled"` on an interrupt. A run left `in_progress` is
+   * never reaped by GitHub and blocks branch protection until someone deletes
+   * it by hand, so the finalizer is exit-aware rather than a `tap`/`tapError`
+   * pair — which fires on the first two only.
+   *
+   * **`use` can override that verdict**, which is how the other four
+   * conclusions are reachable. `conclude` records one; a recorded verdict
+   * **wins on every exit path**, including failure and interruption, because
+   * how a check ran and how the surrounding program ended are different
+   * questions. A findings-derived `"neutral"` is the motivating case: the work
+   * ran fine and the result is advisory.
+   *
+   * Only the success path can fail the effect on the conclusion's behalf.
+   * Neither an interrupt nor an existing failure is replaced by whatever went
+   * wrong while reporting it.
+   *
+   * `use` keeps its own `R` and its own `A`, so the bracket composes with
+   * whatever services the wrapped work needs.
+   *
+   * @example
+   * ```ts
+   * import { CheckRun, CheckRunOutput } from "./index.ts";
+   * import { Effect } from "effect";
+   *
+   * const lintWithCheck = (sha: string) =>
+   *   Effect.gen(function* () {
+   *     const check = yield* CheckRun;
+   *     return yield* check.withCheckRun("lint", sha, (_id, conclude) =>
+   *       Effect.gen(function* () {
+   *         const findings = 3; // run the linter here
+   *         // An advisory result: record "neutral" instead of the default "success".
+   *         yield* conclude(
+   *           "neutral",
+   *           CheckRunOutput.make({ title: "lint", summary: `${findings} findings` }),
+   *         );
+   *         return findings;
+   *       }),
+   *     );
+   *   });
+   * ```
+   */
+  readonly withCheckRun: <A, E, R>(
+    name: string,
+    headSha: string,
+    use: (id: number, conclude: ConcludeCheckRun) => Effect.Effect<A, E, R>,
+  ) => Effect.Effect<A, E | GitHubError, R | Repo>;
 }
 
 /**
@@ -220,56 +222,56 @@ export interface CheckRunShape {
  *
  * @public
  */
-export class CheckRun extends Context.Service<CheckRun, CheckRunShape>()("@effected/github/CheckRun") {
-	/** The live service, built over a `GitHubClient`. */
-	static readonly layer: Layer.Layer<CheckRun, never, GitHubClient> = Layer.effect(
-		this,
-		Effect.map(GitHubClient, (client) => make(client)),
-	);
+export class CheckRun extends Context.Service<CheckRun, CheckRunShape>()("@beep/scratchpad/effected/github/CheckRun") {
+  /** The live service, built over a `GitHubClient`. */
+  static readonly layer: Layer.Layer<CheckRun, never, GitHubClient> = Layer.effect(
+    this,
+    Effect.map(GitHubClient, (client) => make(client)),
+  );
 
-	/** An in-memory double; unstubbed members die naming themselves. */
-	static readonly makeTest = (overrides: Partial<CheckRunShape> = {}): CheckRunShape => ({
-		create: overrides.create ?? (() => unstubbed("create")),
-		get: overrides.get ?? (() => unstubbed("get")),
-		update: overrides.update ?? (() => unstubbed("update")),
-		complete: overrides.complete ?? (() => unstubbed("complete")),
-		withCheckRun: overrides.withCheckRun ?? (() => unstubbed("withCheckRun")),
-	});
+  /** An in-memory double; unstubbed members die naming themselves. */
+  static readonly makeTest = (overrides: Partial<CheckRunShape> = {}): CheckRunShape => ({
+    create: overrides.create ?? (() => unstubbed("create")),
+    get: overrides.get ?? (() => unstubbed("get")),
+    update: overrides.update ?? (() => unstubbed("update")),
+    complete: overrides.complete ?? (() => unstubbed("complete")),
+    withCheckRun: overrides.withCheckRun ?? (() => unstubbed("withCheckRun")),
+  });
 
-	/** {@link CheckRun.makeTest} behind a `Layer`. */
-	static readonly layerTest = (overrides: Partial<CheckRunShape> = {}): Layer.Layer<CheckRun> =>
-		Layer.succeed(CheckRun, CheckRun.makeTest(overrides));
+  /** {@link CheckRun.makeTest} behind a `Layer`. */
+  static readonly layerTest = (overrides: Partial<CheckRunShape> = {}): Layer.Layer<CheckRun> =>
+    Layer.succeed(CheckRun, CheckRun.makeTest(overrides));
 }
 
 const unstubbed = (member: string): never => {
-	throw new Error(`CheckRun.makeTest: ${member}() was called but not stubbed — pass an override.`);
+  throw new Error(`CheckRun.makeTest: ${member}() was called but not stubbed — pass an override.`);
 };
 
 const wireOutput = (output: CheckRunOutput) => {
-	const capped = output.truncated();
-	return {
-		title: capped.title,
-		summary: capped.summary,
-		...(capped.text !== undefined ? { text: capped.text } : {}),
-		...(capped.annotations !== undefined
-			? {
-					annotations: capped.annotations.map((annotation) => ({
-						path: annotation.path,
-						start_line: annotation.startLine,
-						end_line: annotation.endLine,
-						annotation_level: annotation.level,
-						message: annotation.message,
-						...(annotation.title !== undefined ? { title: annotation.title } : {}),
-					})),
-				}
-			: {}),
-	};
+  const capped = output.truncated();
+  return {
+    title: capped.title,
+    summary: capped.summary,
+    ...(capped.text !== undefined ? { text: capped.text } : {}),
+    ...(capped.annotations !== undefined
+      ? {
+        annotations: capped.annotations.map((annotation) => ({
+          path: annotation.path,
+          start_line: annotation.startLine,
+          end_line: annotation.endLine,
+          annotation_level: annotation.level,
+          message: annotation.message,
+          ...(annotation.title !== undefined ? { title: annotation.title } : {}),
+        })),
+      }
+      : {}),
+  };
 };
 
 /** A verdict `use` recorded through {@link ConcludeCheckRun}. */
 interface RecordedConclusion {
-	readonly conclusion: (typeof CheckConclusion.literals)[number];
-	readonly output: CheckRunOutput | undefined;
+  readonly conclusion: (typeof CheckConclusion.literals)[number];
+  readonly output: CheckRunOutput | undefined;
 }
 
 /**
@@ -283,20 +285,23 @@ interface RecordedConclusion {
  * run, so it blocks branch protection until a human deletes it by hand.
  */
 const defaultConclusion = <A, E>(name: string, exit: Exit.Exit<A, E>): RecordedConclusion => {
-	if (Exit.isSuccess(exit)) {
-		return {
-			conclusion: "success",
-			output: CheckRunOutput.make({ title: name, summary: "Completed successfully." }),
-		};
-	}
-	const cancelled = Cause.hasInterruptsOnly(exit.cause);
-	return {
-		conclusion: cancelled ? "cancelled" : "failure",
-		output: CheckRunOutput.make({
-			title: name,
-			summary: cancelled ? "Cancelled before completion." : "Failed.",
-		}),
-	};
+  if (Exit.isSuccess(exit)) {
+    return {
+      conclusion: "success",
+      output: CheckRunOutput.make({
+        title: name,
+        summary: "Completed successfully.",
+      }),
+    };
+  }
+  const cancelled = Cause.hasInterruptsOnly(exit.cause);
+  return {
+    conclusion: cancelled ? "cancelled" : "failure",
+    output: CheckRunOutput.make({
+      title: name,
+      summary: cancelled ? "Cancelled before completion." : "Failed.",
+    }),
+  };
 };
 
 /**
@@ -319,93 +324,105 @@ const defaultConclusion = <A, E>(name: string, exit: Exit.Exit<A, E>): RecordedC
  * **exit's**, independent of whose verdict is being written.
  */
 const concludeFor = <A, E>(
-	name: string,
-	id: number,
-	exit: Exit.Exit<A, E>,
-	recorded: RecordedConclusion | undefined,
-	complete: CheckRunShape["complete"],
+  name: string,
+  id: number,
+  exit: Exit.Exit<A, E>,
+  recorded: RecordedConclusion | undefined,
+  complete: CheckRunShape["complete"],
 ): Effect.Effect<void, GitHubError, Repo> => {
-	const settled = recorded ?? defaultConclusion(name, exit);
-	const write = complete(id, settled.conclusion, settled.output);
-	return Exit.isSuccess(exit) ? write : Effect.ignore(write);
+  const settled = recorded ?? defaultConclusion(name, exit);
+  const write = complete(id, settled.conclusion, settled.output);
+  return Exit.isSuccess(exit) ? write : Effect.ignore(write);
 };
 
-const refOf = (raw: { id: number | bigint; name: string; html_url?: string | null; status: string }): CheckRunRef =>
-	CheckRunRef.make({ id: numericId(raw.id), name: raw.name, url: raw.html_url ?? "", status: raw.status });
+const refOf = (raw: {
+  id: number | bigint;
+  name: string;
+  html_url?: string | null;
+  status: string
+}): CheckRunRef =>
+  CheckRunRef.make({
+    id: numericId(raw.id),
+    name: raw.name,
+    url: raw.html_url ?? "",
+    status: raw.status,
+  });
 
 const make = (client: GitHubClient["Service"]): CheckRunShape => {
-	const create = Effect.fn("CheckRun.create")(function* (name: string, headSha: string) {
-		const { owner, repo } = yield* Repo;
-		yield* Effect.annotateCurrentSpan({ owner, repo, name, headSha });
-		const created = yield* client.request("POST /repos/{owner}/{repo}/check-runs", {
-			owner,
-			repo,
-			name,
-			head_sha: headSha,
-			status: "in_progress",
-			started_at: new Date().toISOString(),
-		});
-		return refOf(created);
-	});
+  const create = Effect.fn("CheckRun.create")(function* (name: string, headSha: string) {
+    const { owner, repo } = yield* Repo;
+    yield* Effect.annotateCurrentSpan({ owner, repo, name, headSha });
+    const created = yield* client.request("POST /repos/{owner}/{repo}/check-runs", {
+      owner,
+      repo,
+      name,
+      head_sha: headSha,
+      status: "in_progress",
+      started_at: new Date().toISOString(),
+    });
+    return refOf(created);
+  });
 
-	const complete = Effect.fn("CheckRun.complete")(function* (
-		id: number,
-		conclusion: (typeof CheckConclusion.literals)[number],
-		output?: CheckRunOutput,
-	) {
-		const { owner, repo } = yield* Repo;
-		yield* Effect.annotateCurrentSpan({ owner, repo, id, conclusion });
-		yield* client.request("PATCH /repos/{owner}/{repo}/check-runs/{check_run_id}", {
-			owner,
-			repo,
-			check_run_id: id,
-			status: "completed",
-			conclusion,
-			completed_at: new Date().toISOString(),
-			...(output !== undefined ? { output: wireOutput(output) } : {}),
-		});
-	});
+  const complete = Effect.fn("CheckRun.complete")(function* (
+    id: number,
+    conclusion: (typeof CheckConclusion.literals)[number],
+    output?: CheckRunOutput,
+  ) {
+    const { owner, repo } = yield* Repo;
+    yield* Effect.annotateCurrentSpan({ owner, repo, id, conclusion });
+    yield* client.request("PATCH /repos/{owner}/{repo}/check-runs/{check_run_id}", {
+      owner,
+      repo,
+      check_run_id: id,
+      status: "completed",
+      conclusion,
+      completed_at: new Date().toISOString(),
+      ...(output !== undefined ? { output: wireOutput(output) } : {}),
+    });
+  });
 
-	return {
-		create,
-		complete,
+  return {
+    create,
+    complete,
 
-		get: Effect.fn("CheckRun.get")(function* (id: number) {
-			const { owner, repo } = yield* Repo;
-			yield* Effect.annotateCurrentSpan({ owner, repo, id });
-			const raw = yield* client.request("GET /repos/{owner}/{repo}/check-runs/{check_run_id}", {
-				owner,
-				repo,
-				check_run_id: id,
-			});
-			return refOf(raw);
-		}),
+    get: Effect.fn("CheckRun.get")(function* (id: number) {
+      const { owner, repo } = yield* Repo;
+      yield* Effect.annotateCurrentSpan({ owner, repo, id });
+      const raw = yield* client.request("GET /repos/{owner}/{repo}/check-runs/{check_run_id}", {
+        owner,
+        repo,
+        check_run_id: id,
+      });
+      return refOf(raw);
+    }),
 
-		update: Effect.fn("CheckRun.update")(function* (id: number, output: CheckRunOutput) {
-			const { owner, repo } = yield* Repo;
-			yield* Effect.annotateCurrentSpan({ owner, repo, id });
-			yield* client.request("PATCH /repos/{owner}/{repo}/check-runs/{check_run_id}", {
-				owner,
-				repo,
-				check_run_id: id,
-				output: wireOutput(output),
-			});
-		}),
+    update: Effect.fn("CheckRun.update")(function* (id: number, output: CheckRunOutput) {
+      const { owner, repo } = yield* Repo;
+      yield* Effect.annotateCurrentSpan({ owner, repo, id });
+      yield* client.request("PATCH /repos/{owner}/{repo}/check-runs/{check_run_id}", {
+        owner,
+        repo,
+        check_run_id: id,
+        output: wireOutput(output),
+      });
+    }),
 
-		withCheckRun: <A, E, R>(
-			name: string,
-			headSha: string,
-			use: (id: number, conclude: ConcludeCheckRun) => Effect.Effect<A, E, R>,
-		) =>
-			Effect.gen(function* () {
-				const run = yield* create(name, headSha);
-				const recorded = yield* Ref.make<RecordedConclusion | undefined>(undefined);
-				const conclude: ConcludeCheckRun = (conclusion, output) => Ref.set(recorded, { conclusion, output });
-				return yield* use(run.id, conclude).pipe(
-					Effect.onExit((exit) =>
-						Effect.flatMap(Ref.get(recorded), (chosen) => concludeFor(name, run.id, exit, chosen, complete)),
-					),
-				);
-			}),
-	};
+    withCheckRun: Effect.fn("withCheckRun")(function* <A, E, R>(
+      name: string,
+      headSha: string,
+      use: (id: number, conclude: ConcludeCheckRun) => Effect.Effect<A, E, R>,
+    ) {
+      const run = yield* create(name, headSha);
+      const recorded = yield* Ref.make<RecordedConclusion | undefined>(undefined);
+      const conclude: ConcludeCheckRun = (conclusion, output) => Ref.set(recorded, {
+        conclusion,
+        output,
+      });
+      return yield* use(run.id, conclude).pipe(
+        Effect.onExit((exit) =>
+          Effect.flatMap(Ref.get(recorded), (chosen) => concludeFor(name, run.id, exit, chosen, complete)),
+        ),
+      );
+    }),
+  };
 };

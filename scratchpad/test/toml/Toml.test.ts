@@ -17,7 +17,7 @@ describe("Toml", () => {
 				);
 				const doc = v as Record<string, unknown>;
 				assert.deepStrictEqual(doc.srv, [{ port: 1 }, { port: 2 }]);
-				assert.isTrue((doc.owner as Record<string, unknown>).dob instanceof TomlLocalDate);
+				assert.isTrue(Schema.is(TomlLocalDate)((doc.owner as Record<string, unknown>).dob));
 			}),
 		);
 
@@ -108,7 +108,7 @@ describe("Toml", () => {
 				assert.strictEqual(back["k y"], 'va"l');
 				assert.strictEqual((back.a as Array<unknown>)[1], 2n ** 60n);
 				assert.isTrue(Number.isNaN(back.nan));
-				assert.isTrue(back.d instanceof TomlLocalDate);
+				assert.isTrue(Schema.is(TomlLocalDate)(back.d));
 				assert.strictEqual(String(back.d), "2000-02-29");
 			}),
 		);
@@ -222,7 +222,7 @@ describe("Toml", () => {
 
 		it.effect("TomlFromString decodes TOML text", () =>
 			Effect.gen(function* () {
-				const v = yield* Schema.decodeUnknownEffect(Toml.TomlFromString)("a = 1\n");
+				const v = yield* Schema.decodeEffect(Toml.TomlFromString)("a = 1\n");
 				assert.deepStrictEqual(v, { a: 1 });
 			}),
 		);
@@ -237,14 +237,14 @@ describe("Toml", () => {
 		it.effect("schema(Target) decodes TOML straight into a domain value", () =>
 			Effect.gen(function* () {
 				const ConfigFromToml = Toml.schema(Config);
-				const config = yield* Schema.decodeUnknownEffect(ConfigFromToml)("port = 8080\n");
+				const config = yield* Schema.decodeEffect(ConfigFromToml)("port = 8080\n");
 				assert.deepStrictEqual(config, { port: 8080 });
 			}),
 		);
 
 		it.effect("a failing decode surfaces a SchemaError carrying the parse message", () =>
 			Effect.gen(function* () {
-				const e = yield* Effect.flip(Schema.decodeUnknownEffect(Toml.TomlFromString)("a = 1\na = 2\n"));
+				const e = yield* Effect.flip(Schema.decodeEffect(Toml.TomlFromString)("a = 1\na = 2\n"));
 				assert.strictEqual(e._tag, "SchemaError");
 				assert.include(String(e), "TOML parse failed");
 			}),
@@ -297,7 +297,7 @@ describe("Toml", () => {
 
 		it.effect("schema is the Toml.schema composition, usable with generic Schema machinery", () =>
 			Effect.gen(function* () {
-				const value = yield* Schema.decodeUnknownEffect(config.schema)("port = 8080\n");
+				const value = yield* Schema.decodeEffect(config.schema)("port = 8080\n");
 				assert.deepStrictEqual(value, { port: 8080 });
 			}),
 		);

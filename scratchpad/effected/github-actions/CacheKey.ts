@@ -84,7 +84,7 @@ const Segments = Schema.NonEmptyArray(Segment).check(
  * One explicit rung: how many leading segments it keeps. The upper bound is
  * cross-field (`segments.length - 1`) and lives on the class schema.
  */
-const RestoreDepth = Schema.Number.check(
+const RestoreDepth = Schema.Finite.check(
 	Schema.isInt(),
 	Schema.isBetween({ minimum: 1, maximum: Number.MAX_SAFE_INTEGER }),
 );
@@ -382,7 +382,7 @@ export class CacheKey extends Schema.Class<CacheKey>("CacheKey")(
 		const digests = yield* Effect.all(
 			ordered.map((path) =>
 				fs.readFile(path).pipe(
-					Effect.mapError((cause) => new CacheKeyReadError({ path, cause })),
+					Effect.mapError((cause) => CacheKeyReadError.make({ path, cause })),
 					Effect.map(sha256),
 				),
 			),
@@ -445,12 +445,12 @@ export class CacheKey extends Schema.Class<CacheKey>("CacheKey")(
 		const path = yield* Path.Path;
 		const { workspace } = options;
 		const set = yield* GlobSet.compile(options.patterns).pipe(
-			Effect.mapError((cause) => new CacheKeyBadPatternError({ pattern: cause.pattern, cause })),
+			Effect.mapError((cause) => CacheKeyBadPatternError.make({ pattern: cause.pattern, cause })),
 		);
 		// An absent workspace is a failure naming it, never an empty answer:
 		// `descend` reads a missing base as zero matches, which here would fold
 		// into a key that silently caches against a constant.
-		yield* fs.stat(workspace).pipe(Effect.mapError((cause) => new CacheKeyReadError({ path: workspace, cause })));
+		yield* fs.stat(workspace).pipe(Effect.mapError((cause) => CacheKeyReadError.make({ path: workspace, cause })));
 
 		// The walk is `@effected/walker`'s: each include is expanded from its own
 		// literal prefix (a literal include is one stat, never a walk), files
@@ -481,7 +481,7 @@ export class CacheKey extends Schema.Class<CacheKey>("CacheKey")(
 					(error) => error.reason._tag === "NotFound",
 					() => Effect.succeedNone,
 				),
-				Effect.mapError((cause) => new CacheKeyReadError({ path: target, cause })),
+				Effect.mapError((cause) => CacheKeyReadError.make({ path: target, cause })),
 			);
 			if (Option.isSome(info) && info.value.type === "File") {
 				candidates.add(literal);
@@ -493,7 +493,7 @@ export class CacheKey extends Schema.Class<CacheKey>("CacheKey")(
 				continue;
 			}
 			const found = yield* descend(wildcard, { cwd: workspace, prune: [], followSymlinks: true }).pipe(
-				Effect.mapError((cause) => new CacheKeyReadError({ path: path.join(workspace, cause.path), cause })),
+				Effect.mapError((cause) => CacheKeyReadError.make({ path: path.join(workspace, cause.path), cause })),
 			);
 			for (const match of found) {
 				candidates.add(match);

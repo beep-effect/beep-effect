@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
 import { Effect, Layer, Option, Path, PlatformError, Schema } from "effect";
@@ -89,7 +90,7 @@ describe("ConfigFile.load", () => {
 		}).pipe(
 			Effect.provide(
 				layerFor({}, [
-					{ name: "hand-rolled", resolve: Effect.succeed(Option.none()) },
+					{ name: "hand-rolled", resolve: Effect.succeedNone },
 					ConfigResolver.explicitPath("/app/.apprc"),
 				]),
 			),
@@ -180,7 +181,7 @@ describe("ConfigFile.loadOrDefault", () => {
 	it.effect("returns the default when nothing is found", () =>
 		Effect.gen(function* () {
 			const cfg = yield* AppConfig;
-			const value = yield* cfg.loadOrDefault(new AppShape({ port: 1 }));
+			const value = yield* cfg.loadOrDefault(AppShape.make({ port: 1 }));
 			assert.strictEqual(value.port, 1);
 		}).pipe(Effect.provide(layerFor({}))),
 	);
@@ -188,7 +189,7 @@ describe("ConfigFile.loadOrDefault", () => {
 	it.effect("still propagates a codec failure — a corrupt file is not a missing file", () =>
 		Effect.gen(function* () {
 			const cfg = yield* AppConfig;
-			const error = yield* Effect.flip(cfg.loadOrDefault(new AppShape({ port: 1 })));
+			const error = yield* Effect.flip(cfg.loadOrDefault(AppShape.make({ port: 1 })));
 			assert.strictEqual(error._tag, "ConfigCodecError");
 		}).pipe(Effect.provide(layerFor({ "/app/.apprc": "{ not json" }))),
 	);
@@ -244,7 +245,7 @@ describe("ConfigFile.loadFrom / validate", () => {
 describe("ConfigFile options.validate", () => {
 	const rejectPort0 = (value: AppShape): Effect.Effect<AppShape, ConfigValidationError> =>
 		value.port === 0
-			? Effect.fail(new ConfigValidationError({ path: Option.none(), issue: "port must not be 0" }))
+			? Effect.fail(ConfigValidationError.make({ path: Option.none(), issue: "port must not be 0" }))
 			: Effect.succeed(value);
 
 	it.effect("cfg.load fails with ConfigValidationError when the caller hook rejects a schema-valid document", () =>
@@ -277,7 +278,7 @@ describe("ConfigFile options.validate", () => {
 			const cfg = yield* AppConfig;
 			// port: 0 would be rejected by rejectPort0 if it were run, and by the
 			// schema if re-decoded. Its return unmolested pins the v3-parity behavior.
-			const defaultValue = new AppShape({ port: 0 });
+			const defaultValue = AppShape.make({ port: 0 });
 			const value = yield* cfg.loadOrDefault(defaultValue);
 			assert.strictEqual(value, defaultValue);
 			assert.strictEqual(value.port, 0);

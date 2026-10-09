@@ -1,3 +1,4 @@
+// @effect-diagnostics nodeBuiltinImport:skip-file
 // The toml-test compliance gate: one test per vendored corpus case, no skip
 // list. Every valid pair must decode to its tagged expected value; every
 // invalid file must fail through the typed error channel (TomlParseError,

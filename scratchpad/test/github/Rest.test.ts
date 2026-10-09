@@ -35,7 +35,7 @@ describe("PageOptions", () => {
 
 	it.effect("surfaces an out-of-range page size as a SchemaError when decoded", () =>
 		Effect.gen(function* () {
-			const error = yield* Effect.flip(Schema.decodeUnknownEffect(PageOptions)({ perPage: 101 }));
+			const error = yield* Effect.flip(Schema.decodeEffect(PageOptions)({ perPage: 101 }));
 			assert.strictEqual(error._tag, "SchemaError");
 		}),
 	);

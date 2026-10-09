@@ -28,7 +28,7 @@ describe("Cancelled", () => {
 	for (const reason of ["escape", "interrupt"] as const) {
 		it.effect(`${reason}: exits 130 with one plain stderr line`, () =>
 			Effect.gen(function* () {
-				const { code, reported, out, err } = yield* run(new Cancelled({ reason }));
+				const { code, reported, out, err } = yield* run(Cancelled.make({ reason }));
 				assert.strictEqual(code, 130);
 				assert.strictEqual(reported, false, "the runtime must not report it a second time");
 				assert.deepStrictEqual(err, ["cancelled; nothing written"]);
@@ -39,14 +39,14 @@ describe("Cancelled", () => {
 
 	it.effect("a consumer render overrides the default line but keeps the exit code", () =>
 		Effect.gen(function* () {
-			const { code, err } = yield* run(new Cancelled({ reason: "escape" }), () => "custom");
+			const { code, err } = yield* run(Cancelled.make({ reason: "escape" }), () => "custom");
 			assert.strictEqual(code, 130);
 			assert.deepStrictEqual(err, ["custom"]);
 		}),
 	);
 
 	it("the exit-code marker is not an own enumerable property: a JSON dump or logger dump does not carry it", () => {
-		const cancelled = new Cancelled({ reason: "escape" });
+		const cancelled = Cancelled.make({ reason: "escape" });
 		assert.notInclude(JSON.stringify(cancelled), "errorExitCode");
 		assert.notInclude(Object.keys(cancelled).join(","), "errorExitCode");
 		// But core still finds it: `in` sees a prototype getter, and the code is read through it.
@@ -55,14 +55,14 @@ describe("Cancelled", () => {
 	});
 
 	it("a decoded instance keeps its exit code, and two equal ones are equal", () => {
-		const decoded = Schema.decodeUnknownSync(Cancelled)({ _tag: "Cancelled", reason: "interrupt" });
+		const decoded = Schema.decodeSync(Cancelled)({ _tag: "Cancelled", reason: "interrupt" });
 		assert.strictEqual(Runtime.getErrorExitCode(decoded), 130);
-		assert.isTrue(Equal.equals(new Cancelled({ reason: "escape" }), new Cancelled({ reason: "escape" })));
-		assert.isFalse(Equal.equals(new Cancelled({ reason: "escape" }), new Cancelled({ reason: "interrupt" })));
+		assert.isTrue(Equal.equals(Cancelled.make({ reason: "escape" }), Cancelled.make({ reason: "escape" })));
+		assert.isFalse(Equal.equals(Cancelled.make({ reason: "escape" }), Cancelled.make({ reason: "interrupt" })));
 	});
 
 	it("stays a tagged-error schema: the marker does not leak into encode, equality or the tag", () => {
-		const a = new Cancelled({ reason: "escape" });
+		const a = Cancelled.make({ reason: "escape" });
 		assert.strictEqual(a._tag, "Cancelled");
 		assert.strictEqual(a.reason, "escape");
 		assert.deepStrictEqual(Schema.encodeSync(Cancelled)(a), { _tag: "Cancelled", reason: "escape" });
@@ -75,7 +75,7 @@ describe("Cancelled", () => {
 describe("a library that rewrites error.message cannot make these errors throw", () => {
 	// ES modules are strict, so assigning to a property that has only a getter throws a TypeError.
 	it("assigning to message is a no-op, for both errors, and the line stays", () => {
-		for (const error of [new Cancelled({ reason: "escape" }), new NotInteractive()]) {
+		for (const error of [Cancelled.make({ reason: "escape" }), NotInteractive.make()]) {
 			const line = error.message;
 			assert.doesNotThrow(() => {
 				error.message = "rewritten by a library";
@@ -86,7 +86,7 @@ describe("a library that rewrites error.message cannot make these errors throw",
 	});
 
 	it("a wrapper that sets message on a copy of the error keeps working", () => {
-		const wrapped = Object.assign(Object.create(new Cancelled({ reason: "interrupt" })), { message: "x" }) as Cancelled;
+		const wrapped = Object.assign(Object.create(Cancelled.make({ reason: "interrupt" })), { message: "x" }) as Cancelled;
 		assert.strictEqual(wrapped.message, "cancelled; nothing written");
 	});
 });
@@ -97,32 +97,32 @@ describe("the fixed lines are the errors' own message", () => {
 
 	it("Cancelled.message is its line, for either reason, and String(error) carries it", () => {
 		for (const reason of ["escape", "interrupt"] as const) {
-			const error = new Cancelled({ reason });
+			const error = Cancelled.make({ reason });
 			assert.strictEqual(error.message, CANCELLED);
 			assert.include(String(error), CANCELLED);
 		}
 	});
 
 	it("NotInteractive.message is its line, and String(error) carries it", () => {
-		const error = new NotInteractive();
+		const error = NotInteractive.make();
 		assert.strictEqual(error.message, NOT_INTERACTIVE);
 		assert.include(String(error), NOT_INTERACTIVE);
 	});
 
 	it("a decoded instance has the message too, and it is not part of the encoded form or equality", () => {
-		const decoded = Schema.decodeUnknownSync(Cancelled)({ _tag: "Cancelled", reason: "escape" });
+		const decoded = Schema.decodeSync(Cancelled)({ _tag: "Cancelled", reason: "escape" });
 		assert.strictEqual(decoded.message, CANCELLED);
 		assert.deepStrictEqual(Schema.encodeSync(Cancelled)(decoded), { _tag: "Cancelled", reason: "escape" });
 		assert.notInclude(JSON.stringify(decoded), CANCELLED);
-		assert.isTrue(Equal.equals(decoded, new Cancelled({ reason: "escape" })));
-		assert.notInclude(Object.keys(new NotInteractive()).join(","), "message");
+		assert.isTrue(Equal.equals(decoded, Cancelled.make({ reason: "escape" })));
+		assert.notInclude(Object.keys(NotInteractive.make()).join(","), "message");
 	});
 
 	it.effect("a consumer render that prints error.message gets the kit's line, for these errors and its own", () =>
 		Effect.gen(function* () {
 			const render = (error: unknown): string => (error instanceof Error ? error.message : String(error));
-			assert.deepStrictEqual((yield* run(new Cancelled({ reason: "escape" }), render)).err, [CANCELLED]);
-			assert.deepStrictEqual((yield* run(new NotInteractive(), render)).err, [NOT_INTERACTIVE]);
+			assert.deepStrictEqual((yield* run(Cancelled.make({ reason: "escape" }), render)).err, [CANCELLED]);
+			assert.deepStrictEqual((yield* run(NotInteractive.make(), render)).err, [NOT_INTERACTIVE]);
 			assert.deepStrictEqual((yield* run(new Error("mine"), render)).err, ["mine"]);
 		}),
 	);
@@ -131,7 +131,7 @@ describe("the fixed lines are the errors' own message", () => {
 describe("NotInteractive", () => {
 	it.effect("exits 64 with its one line", () =>
 		Effect.gen(function* () {
-			const { code, reported, out, err } = yield* run(new NotInteractive());
+			const { code, reported, out, err } = yield* run(NotInteractive.make());
 			assert.strictEqual(code, 64);
 			assert.strictEqual(reported, false);
 			assert.deepStrictEqual(err, ["not interactive: run in a terminal or pass the flag"]);
@@ -140,14 +140,14 @@ describe("NotInteractive", () => {
 	);
 
 	it("its exit-code marker is not an own enumerable property either", () => {
-		const error = new NotInteractive();
+		const error = NotInteractive.make();
 		assert.notInclude(JSON.stringify(error), "errorExitCode");
 		assert.isTrue(Runtime.errorExitCode in error);
 		assert.strictEqual(Runtime.getErrorExitCode(error), 64);
 	});
 
 	it("is a tagged error with no fields", () => {
-		const e = new NotInteractive();
+		const e = NotInteractive.make();
 		assert.strictEqual(e._tag, "NotInteractive");
 		assert.deepStrictEqual(Schema.encodeSync(NotInteractive)(e), { _tag: "NotInteractive" });
 	});
@@ -157,10 +157,10 @@ describe("CliRuntime.defaultRender", () => {
 	const details = { cause: Cause.empty, isDefect: false };
 
 	it("is the kit's own line for the two prompt failures, and a status line for anything else", () => {
-		assert.deepStrictEqual(CliRuntime.defaultRender(new Cancelled({ reason: "escape" }), details), [
+		assert.deepStrictEqual(CliRuntime.defaultRender(Cancelled.make({ reason: "escape" }), details), [
 			"cancelled; nothing written",
 		]);
-		assert.deepStrictEqual(CliRuntime.defaultRender(new NotInteractive(), details), [
+		assert.deepStrictEqual(CliRuntime.defaultRender(NotInteractive.make(), details), [
 			"not interactive: run in a terminal or pass the flag",
 		]);
 		assert.deepStrictEqual(CliRuntime.defaultRender(new Error("boom"), details), ["[FAIL] Error: boom"]);
@@ -170,7 +170,7 @@ describe("CliRuntime.defaultRender", () => {
 	it.effect("a consumer render can hand the two prompt failures back and keep its own line for the rest", () =>
 		Effect.gen(function* () {
 			const render = (error: unknown, d: { readonly cause: Cause.Cause<unknown>; readonly isDefect: boolean }) =>
-				error instanceof Cancelled || error instanceof NotInteractive
+				Schema.is(Cancelled)(error) || Schema.is(NotInteractive)(error)
 					? CliRuntime.defaultRender(error, d)
 					: `tool: ${String(error)}`;
 			const run2 = <E>(failure: E) =>
@@ -182,8 +182,8 @@ describe("CliRuntime.defaultRender", () => {
 					);
 					return err;
 				});
-			assert.deepStrictEqual(yield* run2(new Cancelled({ reason: "interrupt" })), ["cancelled; nothing written"]);
-			assert.deepStrictEqual(yield* run2(new NotInteractive()), [
+			assert.deepStrictEqual(yield* run2(Cancelled.make({ reason: "interrupt" })), ["cancelled; nothing written"]);
+			assert.deepStrictEqual(yield* run2(NotInteractive.make()), [
 				"not interactive: run in a terminal or pass the flag",
 			]);
 			assert.deepStrictEqual(yield* run2("other"), ["tool: other"]);

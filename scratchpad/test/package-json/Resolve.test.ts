@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { CatalogAssemblyError, CatalogResolver, Default as NpmDefault, WorkspaceResolver } from "../../effected/npm/index.ts";
 import { Effect, HashMap, Layer, Option } from "effect";
@@ -90,7 +91,7 @@ describe("Package.resolve", () => {
 	// — never re-wrapped or defected. Mirrors @effected/npm's identity pin.
 	it.effect("a CatalogAssemblyError from the resolver passes through typed and unwrapped", () =>
 		Effect.gen(function* () {
-			const assemblyFailure = new CatalogAssemblyError({
+			const assemblyFailure = CatalogAssemblyError.make({
 				source: "manifest",
 				path: "pnpm-workspace.yaml",
 				cause: new Error("unreadable"),

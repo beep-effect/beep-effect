@@ -1,5 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Cause, Effect, Exit, Option } from "effect";
+import { Cause, Effect, Exit, Option, Schema } from "effect";
 import { createElement } from "react";
 import { Cancelled, Fmt } from "../../../effected/cli/index.ts";
 import type { ConfirmResult, ConfirmToggle } from "../../../effected/cli/ui.ts";
@@ -115,7 +115,7 @@ describe("Confirm.screen under CliUiTest", () => {
 			const handle = yield* CliUiTest.render(Confirm.screen({ message: "Go?", toggles: promote(1) }));
 			yield* handle.type("q");
 			const error = yield* Effect.flip(handle.result);
-			assert.strictEqual(error instanceof Cancelled ? error.reason : undefined, "escape");
+			assert.strictEqual(Schema.is(Cancelled)(error) ? error.reason : undefined, "escape");
 		}).pipe(Effect.scoped),
 	);
 

@@ -168,7 +168,7 @@ export class SbomDocument extends Schema.Class<SbomDocument>("SbomDocument")({
 	/** Always `"1.6"`. */
 	specVersion: Schema.Literal(SPEC_VERSION),
 	/** The document revision, `1` for a freshly assembled BOM. */
-	version: Schema.Number,
+	version: Schema.Finite,
 	/** Document metadata. */
 	metadata: Schema.optionalKey(SbomMetadata),
 	/** The components the BOM describes, sorted by name. */

@@ -137,11 +137,11 @@ export class YamlScalar extends Schema.TaggedClass<YamlScalar>()("YamlScalar", {
 	comment: Schema.optionalKey(Schema.String),
 	spaceBefore: Schema.optionalKey(Schema.Boolean),
 	chomp: Schema.optionalKey(ScalarChomp),
-	blockIndent: Schema.optionalKey(Schema.Number),
+	blockIndent: Schema.optionalKey(Schema.Finite),
 	raw: Schema.optionalKey(Schema.String),
 	sourceMultiline: Schema.optionalKey(Schema.Boolean),
-	offset: Schema.Number,
-	length: Schema.Number,
+	offset: Schema.Finite,
+	length: Schema.Finite,
 }) {
 	/**
 	 * Navigate to a descendant by path (string segments for mapping keys,
@@ -192,8 +192,8 @@ export class YamlScalar extends Schema.TaggedClass<YamlScalar>()("YamlScalar", {
  */
 export class YamlAlias extends Schema.TaggedClass<YamlAlias>()("YamlAlias", {
 	name: Schema.String,
-	offset: Schema.Number,
-	length: Schema.Number,
+	offset: Schema.Finite,
+	length: Schema.Finite,
 	commentBefore: Schema.optionalKey(Schema.String),
 	comment: Schema.optionalKey(Schema.String),
 	spaceBefore: Schema.optionalKey(Schema.Boolean),
@@ -320,8 +320,8 @@ export class YamlMap extends Schema.TaggedClass<YamlMap>()("YamlMap", {
 	comment: Schema.optionalKey(Schema.String),
 	spaceBefore: Schema.optionalKey(Schema.Boolean),
 	sourceMultiline: Schema.optionalKey(Schema.Boolean),
-	offset: Schema.Number,
-	length: Schema.Number,
+	offset: Schema.Finite,
+	length: Schema.Finite,
 }) {
 	/** See `YamlScalar.find`. Pure. */
 	find(path: YamlPath): Option.Option<YamlNode> {
@@ -365,8 +365,8 @@ export class YamlSeq extends Schema.TaggedClass<YamlSeq>()("YamlSeq", {
 	comment: Schema.optionalKey(Schema.String),
 	spaceBefore: Schema.optionalKey(Schema.Boolean),
 	sourceMultiline: Schema.optionalKey(Schema.Boolean),
-	offset: Schema.Number,
-	length: Schema.Number,
+	offset: Schema.Finite,
+	length: Schema.Finite,
 }) {
 	/** See `YamlScalar.find`. Pure. */
 	find(path: YamlPath): Option.Option<YamlNode> {
@@ -403,11 +403,11 @@ function findByPath(root: YamlNode, path: YamlPath): Option.Option<YamlNode> {
 
 		if (typeof segment === "string") {
 			// Navigate by key — requires a YamlMap
-			if (!(current instanceof YamlMap)) {
+			if (!(Schema.is(YamlMap)(current))) {
 				return Option.none();
 			}
 			const pair: YamlPair | undefined = current.items.find(
-				(p: YamlPair) => p.key instanceof YamlScalar && typeof p.key.value === "string" && p.key.value === segment,
+				(p: YamlPair) => Schema.is(YamlScalar)(p.key) && typeof p.key.value === "string" && p.key.value === segment,
 			);
 			if (!pair || pair.value === null) {
 				return Option.none();
@@ -415,7 +415,7 @@ function findByPath(root: YamlNode, path: YamlPath): Option.Option<YamlNode> {
 			current = pair.value;
 		} else {
 			// Navigate by index — requires a YamlSeq
-			if (!(current instanceof YamlSeq)) {
+			if (!(Schema.is(YamlSeq)(current))) {
 				return Option.none();
 			}
 			const item: YamlNode | undefined = current.items[segment];
@@ -442,7 +442,7 @@ function findDeepestAtOffset(node: YamlNode, offset: number): Option.Option<Yaml
 		return Option.none();
 	}
 
-	if (node instanceof YamlMap) {
+	if (Schema.is(YamlMap)(node)) {
 		for (const pair of node.items) {
 			const keyResult = findDeepestAtOffset(pair.key, offset);
 			if (Option.isSome(keyResult)) return keyResult;
@@ -453,7 +453,7 @@ function findDeepestAtOffset(node: YamlNode, offset: number): Option.Option<Yaml
 		}
 	}
 
-	if (node instanceof YamlSeq) {
+	if (Schema.is(YamlSeq)(node)) {
 		for (const item of node.items) {
 			const itemResult = findDeepestAtOffset(item, offset);
 			if (Option.isSome(itemResult)) return itemResult;
@@ -480,9 +480,9 @@ function descendToNode(node: YamlNode, target: YamlNode, path: Array<string | nu
 		return true;
 	}
 
-	if (node instanceof YamlMap) {
+	if (Schema.is(YamlMap)(node)) {
 		for (const pair of node.items) {
-			if (pair.key instanceof YamlScalar && typeof pair.key.value === "string") {
+			if (Schema.is(YamlScalar)(pair.key) && typeof pair.key.value === "string") {
 				if (pair.key === target) {
 					path.push(pair.key.value);
 					return true;
@@ -498,7 +498,7 @@ function descendToNode(node: YamlNode, target: YamlNode, path: Array<string | nu
 		}
 	}
 
-	if (node instanceof YamlSeq) {
+	if (Schema.is(YamlSeq)(node)) {
 		for (let i = 0; i < node.items.length; i++) {
 			const item = node.items[i] as YamlNode;
 			path.push(i);
@@ -602,21 +602,21 @@ function nodeToValue(
 	// Register this node's anchor incrementally so aliases resolve to the most
 	// recent anchor at the point of reference (not the last definition in the
 	// entire document).
-	if (anchors !== undefined && !(node instanceof YamlAlias) && node.anchor !== undefined) {
+	if (anchors !== undefined && !(Schema.is(YamlAlias)(node)) && node.anchor !== undefined) {
 		anchors.set(node.anchor, node);
 	}
-	if (node instanceof YamlScalar) return node.value;
-	if (node instanceof YamlMap) {
+	if (Schema.is(YamlScalar)(node)) return node.value;
+	if (Schema.is(YamlMap)(node)) {
 		const result: Record<string, unknown> = {};
 		for (const pair of node.items) {
 			let key: string;
-			if (pair.key instanceof YamlScalar) {
+			if (Schema.is(YamlScalar)(pair.key)) {
 				// Register key anchor before resolving value
 				if (anchors !== undefined && pair.key.anchor !== undefined) {
 					anchors.set(pair.key.anchor, pair.key);
 				}
 				key = String(pair.key.value ?? "");
-			} else if (pair.key instanceof YamlAlias) {
+			} else if (Schema.is(YamlAlias)(pair.key)) {
 				const resolved = anchors?.get(pair.key.name);
 				// Resolving an alias key enters alias expansion → count its subtree.
 				key = resolved !== undefined ? String(nodeToValue(resolved, anchors, budget, true) ?? "") : "";
@@ -627,8 +627,8 @@ function nodeToValue(
 		}
 		return result;
 	}
-	if (node instanceof YamlSeq) return node.items.map((item) => nodeToValue(item, anchors, budget, counting));
-	if (node instanceof YamlAlias) {
+	if (Schema.is(YamlSeq)(node)) return node.items.map((item) => nodeToValue(item, anchors, budget, counting));
+	if (Schema.is(YamlAlias)(node)) {
 		const resolved = anchors?.get(node.name);
 		// Resolving an alias enters alias expansion → count the resolved subtree.
 		return resolved !== undefined ? nodeToValue(resolved, anchors, budget, true) : null;

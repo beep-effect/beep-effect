@@ -37,7 +37,7 @@ export class RepoRef extends Schema.Class<RepoRef>("RepoRef")({
 		const parts = slug.split("/");
 		const [owner, repo] = parts;
 		if (parts.length !== 2 || owner === undefined || repo === undefined || owner === "" || repo === "") {
-			return Result.fail(new InvalidRepoRefError({ input: slug }));
+			return Result.fail(InvalidRepoRefError.make({ input: slug }));
 		}
 		return Result.succeed(RepoRef.make({ owner, repo }));
 	}
@@ -81,7 +81,7 @@ export class RepoRef extends Schema.Class<RepoRef>("RepoRef")({
  *
  * @public
  */
-export class Repo extends Context.Service<Repo, RepoRef>()("@effected/github/Repo") {
+export class Repo extends Context.Service<Repo, RepoRef>()("@beep/scratchpad/effected/github/Repo") {
 	/** The repository, as a value you already have. */
 	static readonly layer = (ref: RepoRef): Layer.Layer<Repo> => Layer.succeed(Repo, ref);
 

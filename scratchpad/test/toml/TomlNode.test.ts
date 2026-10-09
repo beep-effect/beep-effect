@@ -67,7 +67,7 @@ describe("TomlNode", () => {
 				length: 10,
 			});
 			assert.strictEqual(node._tag, "TomlDateTimeLiteral");
-			assert.isTrue(node.value instanceof TomlLocalDate);
+			assert.isTrue(Schema.is(TomlLocalDate)(node.value));
 		});
 		it("constructs TomlArray, TomlInlineEntry and TomlInlineTable", () => {
 			const entry = TomlInlineEntry.make({
@@ -158,18 +158,18 @@ describe("TomlNode", () => {
 				length: 23,
 			});
 			const encoded = Schema.encodeSync(TomlArray)(array);
-			const decoded = Schema.decodeUnknownSync(TomlArray)(encoded);
-			assert.isTrue(decoded instanceof TomlArray);
-			assert.isTrue(decoded.items[1] instanceof TomlArray);
-			assert.isTrue(decoded.items[2] instanceof TomlInlineTable);
+			const decoded = Schema.decodeSync(TomlArray)(encoded);
+			assert.isTrue(Schema.is(TomlArray)(decoded));
+			assert.isTrue(Schema.is(TomlArray)(decoded.items[1]));
+			assert.isTrue(Schema.is(TomlInlineTable)(decoded.items[2]));
 			assert.isTrue(Equal.equals(decoded, array));
 		});
 		it("decodes each expression variant through the TomlExpression union", () => {
 			const trivia = TomlTrivia.make({ text: "\n", offset: 0, length: 1 });
-			const decoded = Schema.decodeUnknownSync(TomlExpression)(Schema.encodeSync(TomlExpression)(trivia));
-			assert.isTrue(decoded instanceof TomlTrivia);
-			const kv = Schema.decodeUnknownSync(TomlExpression)(Schema.encodeSync(TomlExpression)(sampleKeyValue()));
-			assert.isTrue(kv instanceof TomlKeyValue);
+			const decoded = Schema.decodeSync(TomlExpression)(Schema.encodeSync(TomlExpression)(trivia));
+			assert.isTrue(Schema.is(TomlTrivia)(decoded));
+			const kv = Schema.decodeSync(TomlExpression)(Schema.encodeSync(TomlExpression)(sampleKeyValue()));
+			assert.isTrue(Schema.is(TomlKeyValue)(kv));
 		});
 	});
 });

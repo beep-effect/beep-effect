@@ -273,9 +273,9 @@ function assertedTerms(node: JsonLdNode): ReadonlyArray<string> {
 function referencesOf(node: JsonLdNode): ReadonlyArray<readonly [property: string, id: string]> {
 	const out: Array<readonly [string, string]> = [];
 	for (const [property, value] of Object.entries(node)) {
-		if (value instanceof NodeRef) out.push([property, value["@id"]]);
+		if (Schema.is(NodeRef)(value)) out.push([property, value["@id"]]);
 		else if (Array.isArray(value)) {
-			for (const item of value) if (item instanceof NodeRef) out.push([property, item["@id"]]);
+			for (const item of value) if (Schema.is(NodeRef)(item)) out.push([property, item["@id"]]);
 		}
 	}
 	return out;
@@ -360,11 +360,11 @@ export class Conformance {
 
 			if (typeTerm !== undefined) {
 				if (!typeKnown) {
-					issues.push(new UnknownTerm({ nodeId, nodeType, term: nodeType, kind: "type" }));
+					issues.push(UnknownTerm.make({ nodeId, nodeType, term: nodeType, kind: "type" }));
 				} else {
 					const superseded = Vocabulary.supersededBy(typeTerm);
 					if (Option.isSome(superseded)) {
-						issues.push(new DeprecatedType({ nodeId, nodeType, supersededBy: superseded.value }));
+						issues.push(DeprecatedType.make({ nodeId, nodeType, supersededBy: superseded.value }));
 					}
 				}
 			}
@@ -373,22 +373,22 @@ export class Conformance {
 				const term = nativeTerm(written);
 				if (term === undefined) continue;
 				if (!Vocabulary.hasProperty(term)) {
-					issues.push(new UnknownTerm({ nodeId, nodeType, term: written, kind: "property" }));
+					issues.push(UnknownTerm.make({ nodeId, nodeType, term: written, kind: "property" }));
 					continue;
 				}
 				if (typeKnown && typeTerm !== undefined && !Vocabulary.isPropertyOn(term, typeTerm)) {
-					issues.push(new PropertyNotOnType({ nodeId, nodeType, property: written }));
+					issues.push(PropertyNotOnType.make({ nodeId, nodeType, property: written }));
 					continue;
 				}
 				const superseded = Vocabulary.supersededBy(term);
 				if (Option.isSome(superseded)) {
-					issues.push(new DeprecatedProperty({ nodeId, nodeType, property: written, supersededBy: superseded.value }));
+					issues.push(DeprecatedProperty.make({ nodeId, nodeType, property: written, supersededBy: superseded.value }));
 				}
 			}
 
 			for (const [property, reference] of referencesOf(node)) {
 				if (!defined.has(reference)) {
-					issues.push(new DanglingReference({ nodeId, nodeType, property, reference }));
+					issues.push(DanglingReference.make({ nodeId, nodeType, property, reference }));
 				}
 			}
 		}
@@ -438,7 +438,7 @@ export class Conformance {
 			}
 		});
 
-		return fails ? Result.fail(new NonConformantGraphError({ issues })) : Result.succeed(graph);
+		return fails ? Result.fail(NonConformantGraphError.make({ issues })) : Result.succeed(graph);
 	}
 
 	/**

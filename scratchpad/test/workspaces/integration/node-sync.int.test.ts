@@ -1,3 +1,4 @@
+// @effect-diagnostics nodeBuiltinImport:skip-file
 // The node-sync preset driving the sync entry points against the repository
 // it lives in — the real filesystem, no virtual tree.
 //

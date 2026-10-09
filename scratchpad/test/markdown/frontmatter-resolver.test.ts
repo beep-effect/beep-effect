@@ -169,7 +169,7 @@ describe("SchemaResolver.classify", () => {
 			if (Result.isSuccess(result)) {
 				const declaration = result.success;
 				assert.instanceOf(declaration, SchemaDeclarationByName);
-				if (declaration instanceof SchemaDeclarationByName) {
+				if (Schema.is(SchemaDeclarationByName)(declaration)) {
 					assert.strictEqual(declaration.version, version);
 				}
 			}
@@ -260,7 +260,7 @@ describe("SchemaResolver.fromRegistry", () => {
 			// documented prefix-resolution future minor must NOT fire.
 			const failure = yield* Effect.flip(resolver.resolve(declare("skill@2"), {}));
 			assert.instanceOf(failure, SchemaVersionUnresolvableError);
-			if (failure instanceof SchemaVersionUnresolvableError) {
+			if (Schema.is(SchemaVersionUnresolvableError)(failure)) {
 				assert.strictEqual(failure.name, "skill");
 				assert.strictEqual(failure.version, "2");
 			}
@@ -281,7 +281,7 @@ describe("SchemaResolver.fromRegistry", () => {
 			Effect.gen(function* () {
 				const failure = yield* Effect.flip(resolver.resolve(declare("skill"), {}));
 				assert.instanceOf(failure, SchemaVersionUnresolvableError);
-				if (failure instanceof SchemaVersionUnresolvableError) {
+				if (Schema.is(SchemaVersionUnresolvableError)(failure)) {
 					assert.strictEqual(failure.name, "skill");
 					assert.isFalse(Object.hasOwn(failure, "version"));
 				}
@@ -347,7 +347,7 @@ describe("the resolver seam", () => {
 			const okf: FrontmatterSchemaResolver = {
 				resolve: (_declaration, data) => {
 					const record = data as { readonly type?: string };
-					return record.type === "concept" ? Effect.succeed(Skill) : Effect.fail(new SchemaDeclarationMissingError());
+					return record.type === "concept" ? Effect.succeed(Skill) : Effect.fail(SchemaDeclarationMissingError.make());
 				},
 			};
 			const schema = yield* okf.resolve(undefined, { type: "concept", title: "t" });

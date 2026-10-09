@@ -1,3 +1,4 @@
+// @effect-diagnostics nodeBuiltinImport:skip-file
 import { readFileSync } from "node:fs";
 import { assert, describe, it } from "@effect/vitest";
 import { Effect, Result, Schema } from "effect";
@@ -1278,7 +1279,7 @@ describe("Yaml", () => {
 
 		it.effect("YamlFromString decodes YAML to unknown", () =>
 			Effect.gen(function* () {
-				const value = yield* Schema.decodeUnknownEffect(Yaml.YamlFromString)("host: localhost\nport: 3000");
+				const value = yield* Schema.decodeEffect(Yaml.YamlFromString)("host: localhost\nport: 3000");
 				assert.deepStrictEqual(value, { host: "localhost", port: 3000 });
 			}),
 		);
@@ -1286,7 +1287,7 @@ describe("Yaml", () => {
 		it.effect("schema(Target) decodes YAML straight into a domain value", () =>
 			Effect.gen(function* () {
 				const ConfigFromYaml = Yaml.schema(Config);
-				const config = yield* Schema.decodeUnknownEffect(ConfigFromYaml)("host: localhost\nport: 3000");
+				const config = yield* Schema.decodeEffect(ConfigFromYaml)("host: localhost\nport: 3000");
 				assert.deepStrictEqual(config, { host: "localhost", port: 3000 });
 			}),
 		);
@@ -1301,11 +1302,11 @@ describe("Yaml", () => {
 		it.effect("allFromString decodes and encodes multi-document streams", () =>
 			Effect.gen(function* () {
 				const codec = Yaml.allFromString();
-				const values = yield* Schema.decodeUnknownEffect(codec)("a: 1\n---\nb: 2");
+				const values = yield* Schema.decodeEffect(codec)("a: 1\n---\nb: 2");
 				assert.deepStrictEqual(values, [{ a: 1 }, { b: 2 }]);
 				const encoded = yield* Schema.encodeUnknownEffect(codec)([{ a: 1 }, { b: 2 }]);
 				assert.strictEqual(encoded, "a: 1\n---\nb: 2\n");
-				const roundTripped = yield* Schema.decodeUnknownEffect(codec)(encoded);
+				const roundTripped = yield* Schema.decodeEffect(codec)(encoded);
 				assert.deepStrictEqual(roundTripped, [{ a: 1 }, { b: 2 }]);
 			}),
 		);
@@ -1319,7 +1320,7 @@ describe("Yaml", () => {
 
 		it.effect("schema decode surfaces a SchemaError carrying the aggregate parse message", () =>
 			Effect.gen(function* () {
-				const error = yield* Effect.flip(Schema.decodeUnknownEffect(Yaml.YamlFromString)("a: *missing"));
+				const error = yield* Effect.flip(Schema.decodeEffect(Yaml.YamlFromString)("a: *missing"));
 				assert.strictEqual(error._tag, "SchemaError");
 				assert.include(String(error), "YAML parse failed");
 			}),
@@ -1364,7 +1365,7 @@ describe("Yaml", () => {
 
 		it.effect("schema is the Yaml.schema composition, usable with generic Schema machinery", () =>
 			Effect.gen(function* () {
-				const value = yield* Schema.decodeUnknownEffect(config.schema)("host: localhost\nport: 3000");
+				const value = yield* Schema.decodeEffect(config.schema)("host: localhost\nport: 3000");
 				assert.deepStrictEqual(value, { host: "localhost", port: 3000 });
 			}),
 		);

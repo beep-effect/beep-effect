@@ -138,7 +138,7 @@ export class SectionDialect extends Schema.Class<SectionDialect>("SectionDialect
 	 */
 	render(section: Section, eol: Eol = "\n"): Result.Result<string, SectionRenderError> {
 		if (!this.recognizes(section.commentStyle)) {
-			return Result.fail(new SectionRenderError({ reason: "unknownCommentStyle", key: section.key }));
+			return Result.fail(SectionRenderError.make({ reason: "unknownCommentStyle", key: section.key }));
 		}
 		for (const [name, value] of Object.entries(section.attributes)) {
 			// Attribute names and values are runtime data, so a violation is a
@@ -146,11 +146,11 @@ export class SectionDialect extends Schema.Class<SectionDialect>("SectionDialect
 			// of violation would emit a marker the scanner reads differently — or
 			// not at all — so both are refused before anything is written.
 			if (!ATTRIBUTE_NAME_PATTERN.test(name) || !isValidAttributeValue(value)) {
-				return Result.fail(new SectionRenderError({ reason: "invalidAttribute", key: section.key, attribute: name }));
+				return Result.fail(SectionRenderError.make({ reason: "invalidAttribute", key: section.key, attribute: name }));
 			}
 		}
 		if (this.containsMarker(section.content)) {
-			return Result.fail(new SectionRenderError({ reason: "markerInContent", key: section.key }));
+			return Result.fail(SectionRenderError.make({ reason: "markerInContent", key: section.key }));
 		}
 		const body = eol === "\n" ? section.content : section.content.replace(/\n/g, eol);
 		const begin = this.marker("BEGIN", section.id, section.attributes);

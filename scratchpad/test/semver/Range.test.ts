@@ -47,10 +47,10 @@ describe("Range", () => {
 	describe("FromString", () => {
 		it.effect("decodes and encodes canonically", () =>
 			Effect.gen(function* () {
-				const range = yield* Schema.decodeUnknownEffect(Range.FromString)("^1.0.0 || 2.x");
+				const range = yield* Schema.decodeEffect(Range.FromString)("^1.0.0 || 2.x");
 				assert.instanceOf(range, Range);
 				const encoded = yield* Schema.encodeUnknownEffect(Range.FromString)(range);
-				const reparsed = yield* Schema.decodeUnknownEffect(Range.FromString)(encoded);
+				const reparsed = yield* Schema.decodeEffect(Range.FromString)(encoded);
 				assert.strictEqual(reparsed.toString(), range.toString());
 			}),
 		);

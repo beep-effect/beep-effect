@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file nodeBuiltinImport:skip-file asyncFunction:skip-file processEnv:skip-file newPromise:skip-file
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -544,7 +545,7 @@ describe("ToolInstaller", () => {
 
 		it.live("classifies what is worth retrying", () => {
 			const of = (status?: number) =>
-				new ToolInstallerError({
+				ToolInstallerError.make({
 					reason: "downloadFailed",
 					subject: "https://example.test/tool.tgz",
 					...(status === undefined ? {} : { status }),
@@ -556,7 +557,7 @@ describe("ToolInstaller", () => {
 			assert.isTrue(of().retryable, "a transport fault with no status is the most retryable thing there is");
 			assert.isFalse(of(404).retryable);
 			assert.isFalse(of(401).retryable);
-			assert.isFalse(new ToolInstallerError({ reason: "extractFailed", subject: "tool.tgz" }).retryable);
+			assert.isFalse(ToolInstallerError.make({ reason: "extractFailed", subject: "tool.tgz" }).retryable);
 			return Effect.void;
 		});
 
@@ -734,7 +735,7 @@ describe("ToolInstaller", () => {
 			Effect.gen(function* () {
 				const found = yield* Effect.flatMap(ToolInstaller, (installer) => installer.find("node", "1"));
 				assert.deepStrictEqual(found, Option.some("/cached"));
-			}).pipe(Effect.provide(ToolInstaller.layerTest({ find: () => Effect.succeed(Option.some("/cached")) }))),
+			}).pipe(Effect.provide(ToolInstaller.layerTest({ find: () => Effect.succeedSome("/cached") }))),
 		);
 
 		it("cachePath is the one member with a default: the static layout over RUNNER_TOOL_CACHE or the off-runner root", () => {

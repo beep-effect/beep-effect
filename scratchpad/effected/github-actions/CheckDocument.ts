@@ -354,7 +354,7 @@ export interface CheckDocumentShape {
  * @public
  */
 export class CheckDocument extends Context.Service<CheckDocument, CheckDocumentShape>()(
-	"@effected/github-actions/CheckDocument",
+	"@beep/scratchpad/effected/github-actions/CheckDocument",
 ) {
 	/**
 	 * The reconciler over one document.
@@ -396,13 +396,13 @@ export class CheckDocument extends Context.Service<CheckDocument, CheckDocumentS
 							? yield* Ref.get(writtenRef)
 							: ((yield* sink.read.pipe(
 									Effect.timeout(passTimeout),
-									Effect.mapError((cause) => new CheckDocumentError({ kind: "read", cause })),
+									Effect.mapError((cause) => CheckDocumentError.make({ kind: "read", cause })),
 								)) ?? "");
 					const document = yield* ManagedDocument.parse({
 						namespace: options.namespace,
 						key: options.key,
 						text: current,
-					}).pipe(Effect.mapError((cause) => new CheckDocumentError({ kind: "render", cause })));
+					}).pipe(Effect.mapError((cause) => CheckDocumentError.make({ kind: "render", cause })));
 					if (stamp !== undefined) {
 						// The drop rule: regions already stamped by a more recent run
 						// win; a strictly older pass must not clobber them. Regions
@@ -435,7 +435,7 @@ export class CheckDocument extends Context.Service<CheckDocument, CheckDocumentS
 						.withRegions(
 							stampMeta === undefined ? entries : entries.map(([key, content]) => [key, content, stampMeta] as const),
 						)
-						.pipe(Effect.mapError((cause) => new CheckDocumentError({ kind: "render", cause })));
+						.pipe(Effect.mapError((cause) => CheckDocumentError.make({ kind: "render", cause })));
 					if (next.text === current) {
 						return "unchanged" as const;
 					}
@@ -444,7 +444,7 @@ export class CheckDocument extends Context.Service<CheckDocument, CheckDocumentS
 					// unbounded hung sink would stall reconciling AND scope teardown.
 					yield* sink.write(next.text).pipe(
 						Effect.timeout(passTimeout),
-						Effect.mapError((cause) => new CheckDocumentError({ kind: "sink", cause })),
+						Effect.mapError((cause) => CheckDocumentError.make({ kind: "sink", cause })),
 					);
 					yield* Ref.set(writtenRef, next.text);
 					return "written" as const;

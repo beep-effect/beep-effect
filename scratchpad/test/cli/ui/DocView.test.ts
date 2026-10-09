@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { Audience, CurrentRuntimeEnv } from "../../../effected/env/index.ts";
 import { Effect, Option, Stream } from "effect";

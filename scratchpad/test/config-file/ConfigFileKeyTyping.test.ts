@@ -12,7 +12,7 @@ type SettingsEncoded = typeof Settings.Encoded;
 class SettingsFile extends ConfigFile.Service<SettingsFile, Settings>()("key-typing/SettingsFile") {}
 // A key over a WIDER shape: the layer could never supply `extra`.
 class WiderFile extends Context.Service<WiderFile, ConfigFileShape<Settings> & { readonly extra: string }>()(
-	"key-typing/WiderFile",
+	"@beep/scratchpad/test/config-file/ConfigFileKeyTyping.test/WiderFile",
 ) {}
 
 // The downstream regression shape: optional fields and a bare `firstMatch()`, whose

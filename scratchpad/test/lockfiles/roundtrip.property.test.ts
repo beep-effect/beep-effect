@@ -92,7 +92,7 @@ const specifierArb = Arbitrary.schema(
 		"file:../local",
 		"npm:lodash@^4.0.0",
 	]),
-).pipe(Arbitrary.map((s) => Schema.decodeUnknownSync(DependencySpecifier.FromString)(s)));
+).pipe(Arbitrary.map((s) => Schema.decodeSync(DependencySpecifier.FromString)(s)));
 
 const DepField = Schema.Literals(["dependencies", "devDependencies", "peerDependencies", "optionalDependencies"]);
 
@@ -231,7 +231,7 @@ describe("codec round-trips", () => {
 						dependencies: [
 							ImporterDependency.make({
 								name: "lodash",
-								specifier: Schema.decodeUnknownSync(DependencySpecifier.FromString)("catalog:"),
+								specifier: Schema.decodeSync(DependencySpecifier.FromString)("catalog:"),
 								version: "4.17.23",
 								depType: "dependencies",
 							}),

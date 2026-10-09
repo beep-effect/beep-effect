@@ -1,3 +1,4 @@
+// @effect-diagnostics nodeBuiltinImport:skip-file
 // Comment fidelity (#127): the commentBefore / comment / spaceBefore split on
 // the four node classes, the composer's FORWARD own-line attribution, blank
 // line preservation, and stringifier emission across node kinds and styles.

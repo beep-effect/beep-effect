@@ -1,3 +1,4 @@
+// @effect-diagnostics nodeBuiltinImport:skip-file
 // The Azure confinement invariant, as a test rather than a promise.
 //
 // `@azure/storage-blob` is the only heavy dependency this package has, and the

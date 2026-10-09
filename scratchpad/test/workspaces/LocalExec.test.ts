@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file
 // `Workspaces.localExecLayer` — this package's implementation of
 // `@effected/commands`' inverted `LocalExec` contract.
 //
@@ -44,7 +45,7 @@ const detectorFailing = (failure: PackageManagerDetectionError | WorkspaceManife
 /** A root resolver that never finds a workspace. */
 const noRoot = Layer.succeed(WorkspaceRoot, {
 	find: (cwd: string) =>
-		Effect.fail(new WorkspaceRootNotFoundError({ searchPath: cwd, markers: ["pnpm-workspace.yaml"] })),
+		Effect.fail(WorkspaceRootNotFoundError.make({ searchPath: cwd, markers: ["pnpm-workspace.yaml"] })),
 });
 
 const contextOf = (layers: Layer.Layer<PackageManagerDetector | WorkspaceRoot>) =>
@@ -124,7 +125,7 @@ describe("Workspaces.localExecLayer — NONE is success, not failure", () => {
 			const context = yield* contextOf(
 				workspaceAt(
 					"/repo",
-					detectorFailing(new PackageManagerDetectionError({ root: "/repo", checked: ["pnpm-workspace.yaml"] })),
+					detectorFailing(PackageManagerDetectionError.make({ root: "/repo", checked: ["pnpm-workspace.yaml"] })),
 				),
 			);
 			assert.isTrue(Option.isNone(context));
@@ -144,7 +145,7 @@ describe("Workspaces.localExecLayer — mechanism failure IS the typed error", (
 					workspaceAt(
 						"/repo",
 						detectorFailing(
-							new WorkspaceManifestError({
+							WorkspaceManifestError.make({
 								packageJsonPath: "/repo/package.json",
 								kind: "decode",
 								cause: new Error("Unexpected token"),
@@ -164,7 +165,7 @@ describe("Workspaces.localExecLayer — mechanism failure IS the typed error", (
 					workspaceAt(
 						"/repo",
 						detectorFailing(
-							new WorkspaceManifestError({
+							WorkspaceManifestError.make({
 								packageJsonPath: "/repo/package.json",
 								kind: "read",
 								cause: new Error("EACCES"),
@@ -180,7 +181,7 @@ describe("Workspaces.localExecLayer — mechanism failure IS the typed error", (
 
 	it.effect("the originating failure is preserved structurally on `cause`", () =>
 		Effect.gen(function* () {
-			const underlying = new WorkspaceManifestError({
+			const underlying = WorkspaceManifestError.make({
 				packageJsonPath: "/repo/package.json",
 				kind: "decode",
 				cause: new Error("Unexpected token"),

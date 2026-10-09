@@ -182,7 +182,7 @@ describe("MarkdownDocument schema", () => {
 			return;
 		}
 		const encoded = Schema.encodeUnknownSync(MarkdownDocument)(result.success);
-		const decoded = Schema.decodeUnknownSync(MarkdownDocument)(encoded);
+		const decoded = Schema.decodeSync(MarkdownDocument)(encoded);
 		assert.strictEqual(decoded.source, result.success.source);
 		assert.strictEqual(decoded.definitions.size, result.success.definitions.size);
 		assert.deepStrictEqual(

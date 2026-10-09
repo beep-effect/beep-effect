@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { Arbitrary, Duration, Effect, Exit, Fiber, Latch, Layer, Option, Schema } from "effect";
 import { TestClock } from "effect/testing";

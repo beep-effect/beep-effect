@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file asyncFunction:skip-file newPromise:skip-file
 // CliUi.live hands its handle back without loading Ink: a run's first mount loads it, so a
 // host holds the handle, and can close it, before Ink has resolved. No static ink or react import here: the mock
 // below gates Ink's load, and a static import would open it.

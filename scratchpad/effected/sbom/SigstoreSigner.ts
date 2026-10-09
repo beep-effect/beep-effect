@@ -129,7 +129,7 @@ const make = (identity: IdentityTokenShape, options: SigstoreSignerOptions): Sig
 	sign: Effect.fn("SigstoreSigner.sign")(function* (statement: InTotoStatement) {
 		const token = yield* identity
 			.token(SIGSTORE_OIDC_AUDIENCE)
-			.pipe(Effect.mapError((cause) => new SigningError({ kind: "identity", cause })));
+			.pipe(Effect.mapError((cause) => SigningError.make({ kind: "identity", cause })));
 
 		// The single declassification point in this package.
 		const identityProvider: IdentityProvider = { getToken: () => Promise.resolve(Redacted.value(token)) };
@@ -149,7 +149,7 @@ const make = (identity: IdentityTokenShape, options: SigstoreSignerOptions): Sig
 
 		const bundle = yield* Effect.tryPromise({
 			try: () => builder.create({ data: Buffer.from(statement.toJson(), "utf8"), type: IN_TOTO_PAYLOAD_TYPE }),
-			catch: (cause) => new SigningError({ kind: kindOf(cause), cause }),
+			catch: (cause) => SigningError.make({ kind: kindOf(cause), cause }),
 		});
 
 		return yield* Effect.try({
@@ -161,7 +161,7 @@ const make = (identity: IdentityTokenShape, options: SigstoreSignerOptions): Sig
 					dsseEnvelope: serialized.dsseEnvelope,
 				});
 			},
-			catch: (cause) => new SigningError({ kind: "bundle", cause }),
+			catch: (cause) => SigningError.make({ kind: "bundle", cause }),
 		});
 	}),
 });
@@ -200,7 +200,7 @@ const unstubbed = (): never => {
  * @public
  */
 export class SigstoreSigner extends Context.Service<SigstoreSigner, SigstoreSignerShape>()(
-	"@effected/sbom/SigstoreSigner",
+	"@beep/scratchpad/effected/sbom/SigstoreSigner",
 ) {
 	/** Signing against the public-good Fulcio and Rekor instances. */
 	static readonly layer: Layer.Layer<SigstoreSigner, never, IdentityToken> = Layer.effect(

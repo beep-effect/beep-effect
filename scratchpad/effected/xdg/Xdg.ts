@@ -138,7 +138,7 @@ const splitDirs = (raw: string | undefined, fallback: ReadonlyArray<string>): Re
  *
  * @public
  */
-export class Xdg extends Context.Service<Xdg, XdgPaths>()("@effected/xdg/Xdg") {
+export class Xdg extends Context.Service<Xdg, XdgPaths>()("@beep/scratchpad/effected/xdg/Xdg") {
 	/**
 	 * Read the XDG environment through Effect's `Config`.
 	 *
@@ -155,7 +155,7 @@ export class Xdg extends Context.Service<Xdg, XdgPaths>()("@effected/xdg/Xdg") {
 			 * Every `ConfigError` becomes an `XdgEnvError` naming the variable it came from.
 			 */
 			const asEnvError = <A>(name: string, config: Config.Config<A>): Effect.Effect<A, XdgEnvError> =>
-				Effect.catchTag(config, "ConfigError", (cause) => Effect.fail(new XdgEnvError({ variable: name, cause })));
+				Effect.catchTag(config, "ConfigError", (cause) => Effect.fail(XdgEnvError.make({ variable: name, cause })));
 
 			const home = yield* asEnvError("HOME", Config.String("HOME"));
 

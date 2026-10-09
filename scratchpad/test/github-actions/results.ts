@@ -1,3 +1,4 @@
+// @effect-diagnostics asyncFunction:skip-file
 // Shared fixtures for the three services that speak the Actions results
 // backend: the cache, the artifact protocol and the GitHub-cache blob store.
 //

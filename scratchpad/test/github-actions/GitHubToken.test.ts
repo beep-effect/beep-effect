@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file asyncFunction:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import type { GitHubAppShape } from "../../effected/github/index.ts";
 import { AppIdentity, GitHubApp, GitHubAppError, GitHubClient, InstallationToken } from "../../effected/github/index.ts";
@@ -65,7 +66,7 @@ const rig = (
 			Effect.suspend(() => {
 				const found = saved.get(key);
 				return found === undefined
-					? Effect.succeed(Option.none())
+					? Effect.succeedNone
 					: Effect.map(Effect.orDie(Schema.decodeUnknownEffect(schema)(JSON.parse(found))), Option.some);
 			}),
 	});
@@ -177,7 +178,7 @@ describe("GitHubToken", () => {
 					}),
 					ActionOutputs.layerTest({ setSecret: () => Effect.void }),
 					ActionState.layerTest({
-						save: (key) => Effect.fail(new ActionStateError({ reason: "writeFailed", key })),
+						save: (key) => Effect.fail(ActionStateError.make({ reason: "writeFailed", key })),
 					}),
 				);
 				yield* TestClock.setTime(NOW);

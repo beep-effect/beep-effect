@@ -52,7 +52,7 @@ export interface ArtifactMetadataShape {
  * @public
  */
 export class ArtifactMetadata extends Context.Service<ArtifactMetadata, ArtifactMetadataShape>()(
-	"@effected/github/ArtifactMetadata",
+	"@beep/scratchpad/effected/github/ArtifactMetadata",
 ) {
 	/** The live service, built over a `GitHubClient`. */
 	static readonly layer: Layer.Layer<ArtifactMetadata, never, GitHubClient> = Layer.effect(

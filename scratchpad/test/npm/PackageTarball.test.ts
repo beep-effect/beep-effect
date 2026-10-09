@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file asyncFunction:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
 import { Crypto, Effect, Layer, PlatformError, Schema } from "effect";
@@ -47,7 +48,7 @@ const http = (result: { status: number; body?: Uint8Array } | "transport"): Laye
 	);
 
 const published = (fields: { tarball?: string; integrity?: string }) =>
-	Schema.decodeUnknownSync(PublishedVersion)({ name: "some-pkg", version: "1.2.3", ...fields });
+	Schema.decodeSync(PublishedVersion)({ name: "some-pkg", version: "1.2.3", ...fields });
 
 const WITH_TARBALL = { tarball: "https://registry.test/some-pkg/-/some-pkg-1.2.3.tgz" };
 

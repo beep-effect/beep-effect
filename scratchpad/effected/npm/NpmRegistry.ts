@@ -108,7 +108,7 @@ export class RegistryReadError extends Schema.TaggedError<RegistryReadError>()("
 	/** The registry that was being read from. */
 	registry: Schema.String,
 	/** The HTTP status, for `kind: "status"`. */
-	status: Schema.optionalKey(Schema.Number),
+	status: Schema.optionalKey(Schema.Finite),
 	/** The underlying failure. */
 	cause: Schema.optionalKey(Schema.Defect()),
 }) {
@@ -176,7 +176,7 @@ const NON_VERSION_TIME_KEYS = new Set(["created", "modified"]);
 const integrityField = (raw: string | undefined): { integrity?: typeof IntegrityHash.Type } =>
 	raw === undefined
 		? {}
-		: Option.match(Schema.decodeUnknownOption(IntegrityHash)(raw), {
+		: Option.match(Schema.decodeOption(IntegrityHash)(raw), {
 				onNone: () => ({}),
 				onSome: (integrity) => ({ integrity }),
 			});
@@ -246,20 +246,20 @@ const make = Effect.fnUntraced(function* () {
 			})
 			.pipe(
 				Effect.catch((cause: HttpClientError.HttpClientError) =>
-					Effect.fail(new RegistryReadError({ kind: "transport", package: name, registry, cause })),
+					Effect.fail(RegistryReadError.make({ kind: "transport", package: name, registry, cause })),
 				),
 				Effect.flatMap((response) => {
 					if (response.status === 404) return Effect.succeed(Option.none<A>());
 					if (response.status < 200 || response.status >= 300) {
 						return Effect.fail(
-							new RegistryReadError({ kind: "status", package: name, registry, status: response.status }),
+							RegistryReadError.make({ kind: "status", package: name, registry, status: response.status }),
 						);
 					}
 					return response.json.pipe(
 						Effect.flatMap((body) => Schema.decodeUnknownEffect(schema)(body)),
 						Effect.map(Option.some),
 						Effect.catch((cause) =>
-							Effect.fail(new RegistryReadError({ kind: "decode", package: name, registry, cause })),
+							Effect.fail(RegistryReadError.make({ kind: "decode", package: name, registry, cause })),
 						),
 					);
 				}),
@@ -297,7 +297,7 @@ const make = Effect.fnUntraced(function* () {
 				return Schema.decodeUnknownEffect(VersionManifest)(published[versionNumber]).pipe(
 					Effect.map(Option.some),
 					Effect.catch((cause) =>
-						Effect.fail(new RegistryReadError({ kind: "decode", package: name, registry, cause })),
+						Effect.fail(RegistryReadError.make({ kind: "decode", package: name, registry, cause })),
 					),
 				);
 			}),
@@ -440,7 +440,7 @@ export interface RegistrySeed {
  *
  * @public
  */
-export class NpmRegistry extends Context.Service<NpmRegistry, NpmRegistryShape>()("@effected/npm/NpmRegistry") {
+export class NpmRegistry extends Context.Service<NpmRegistry, NpmRegistryShape>()("@beep/scratchpad/effected/npm/NpmRegistry") {
 	/** The live service. Resolves `HttpClient` once at construction, so every method's `R` is `never`. */
 	static readonly layer: Layer.Layer<NpmRegistry, never, HttpClient.HttpClient> = Layer.effect(this, make());
 

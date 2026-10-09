@@ -196,7 +196,7 @@ describe("YamlLint.resolveStrict", () => {
 			line: 0,
 			character: 0,
 		} as StyleVote;
-		assert.isFalse(plainVote instanceof StyleVote, "the fixture must NOT be a class instance");
+		assert.isFalse(Schema.is(StyleVote)(plainVote), "the fixture must NOT be a class instance");
 		const custom: YamlRule = { id: "my-rule", check: () => [], infer: () => [plainVote] };
 		const evidence = YamlLint.observe("a: 1\n", [custom]);
 		assert.strictEqual(evidence.floors.length, 0, "a plain-object vote must not land in the floor tally");

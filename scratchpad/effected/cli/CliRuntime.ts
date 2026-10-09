@@ -1,7 +1,7 @@
 import type { Audience, TerminalEnv } from "../env/index.ts";
 import { CommandNeutralizer } from "../github-commands/index.ts";
 import type { FileSystem, Path, Stdio, Terminal } from "effect";
-import { Cause, Effect, Layer, Logger, MutableRef, Runtime } from "effect";
+import { Cause, Effect, Layer, Logger, MutableRef, Runtime, Schema } from "effect";
 import { CliError } from "effect/cli";
 import { Cancelled } from "./Cancelled.ts";
 import { CliColor } from "./CliColor.ts";
@@ -421,8 +421,8 @@ export class CliRuntime {
 						const details: FailureDetails = {
 							cause,
 							isDefect: !Cause.hasFails(cause),
-							isCancelled: error instanceof Cancelled,
-							isNotInteractive: error instanceof NotInteractive,
+							isCancelled: Schema.is(Cancelled)(error),
+							isNotInteractive: Schema.is(NotInteractive)(error),
 							defaultLines,
 							lines: (options) =>
 								options?.status === false || options?.spans !== undefined

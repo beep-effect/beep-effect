@@ -1,3 +1,4 @@
+// @effect-diagnostics nodeBuiltinImport:skip-file
 // The package discovering the repository it lives in.
 //
 // Everything else in the suite runs against a virtual filesystem. This runs

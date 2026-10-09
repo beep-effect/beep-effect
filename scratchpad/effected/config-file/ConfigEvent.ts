@@ -119,7 +119,7 @@ export interface ConfigEventsShape {
  * @public
  */
 export class ConfigEvents extends Context.Service<ConfigEvents, ConfigEventsShape>()(
-	"@effected/config-file/ConfigEvents",
+	"@beep/scratchpad/effected/config-file/ConfigEvent/ConfigEvents",
 ) {
 	/**
 	 * An unbounded PubSub of config events.

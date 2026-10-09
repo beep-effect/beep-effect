@@ -43,12 +43,12 @@ const azure: DataBlobTransfer = {
 	uploadData: (url, data) =>
 		Effect.tryPromise({
 			try: () => new BlockBlobClient(url).uploadData(data),
-			catch: (cause) => new BlobTransferError({ reason: "uploadFailed", cause }),
+			catch: (cause) => BlobTransferError.make({ reason: "uploadFailed", cause }),
 		}).pipe(Effect.asVoid),
 	downloadToBuffer: (url) =>
 		Effect.tryPromise({
 			try: () => new BlobClient(url).downloadToBuffer(),
-			catch: (cause) => new BlobTransferError({ reason: "downloadFailed", cause }),
+			catch: (cause) => BlobTransferError.make({ reason: "downloadFailed", cause }),
 		}).pipe(Effect.map((buffer) => new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength))),
 };
 
@@ -63,7 +63,7 @@ const make = (
 		const backend = resultsBackend(env).pipe(
 			Effect.mapError(
 				(name) =>
-					new BlobStoreError({ reason: "misconfigured", detail: misconfiguredDetail(name, "Actions results backend") }),
+					BlobStoreError.make({ reason: "misconfigured", detail: misconfiguredDetail(name, "Actions results backend") }),
 			),
 		);
 
@@ -73,10 +73,10 @@ const make = (
 				Effect.gen(function* () {
 					const { baseUrl, token } = yield* backend;
 					return yield* twirpCall({ http, baseUrl, service: CACHE_SERVICE, token, method, body }).pipe(
-						Effect.mapError((failure) => new BlobStoreError({ ...twirpFailureFields(failure), key })),
+						Effect.mapError((failure) => BlobStoreError.make({ ...twirpFailureFields(failure), key })),
 					);
 				}),
-			refused: (detail) => new BlobStoreError({ reason: "refused", key, detail }),
+			refused: (detail) => BlobStoreError.make({ reason: "refused", key, detail }),
 		});
 
 		/** The signed download url for a key, or nothing — a miss is not a failure. */
@@ -87,7 +87,7 @@ const make = (
 			);
 
 		const moved = (key: string) =>
-			Effect.mapError((cause: BlobTransferError) => new BlobStoreError({ reason: "unreachable", key, cause }));
+			Effect.mapError((cause: BlobTransferError) => BlobStoreError.make({ reason: "unreachable", key, cause }));
 
 		return {
 			get: <A, I>(key: string, schema: Schema.Codec<A, I>) =>

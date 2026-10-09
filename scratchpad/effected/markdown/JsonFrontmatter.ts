@@ -31,8 +31,8 @@ export const JsonFrontmatter: FrontmatterCodec = {
 	format: "json",
 	decode: (node) =>
 		node.format !== "json"
-			? Effect.fail(new FrontmatterFormatMismatchError({ expected: "json", actual: node.format }))
-			: Jsonc.parse(node.value).pipe(Effect.mapError((cause) => new FrontmatterDecodeError({ format: "json", cause }))),
+			? Effect.fail(FrontmatterFormatMismatchError.make({ expected: "json", actual: node.format }))
+			: Jsonc.parse(node.value).pipe(Effect.mapError((cause) => FrontmatterDecodeError.make({ format: "json", cause }))),
 	encode: (data) =>
-		Jsonc.stringify(data).pipe(Effect.mapError((cause) => new FrontmatterEncodeError({ format: "json", cause }))),
+		Jsonc.stringify(data).pipe(Effect.mapError((cause) => FrontmatterEncodeError.make({ format: "json", cause }))),
 };

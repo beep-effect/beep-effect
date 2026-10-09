@@ -39,7 +39,7 @@ describe("Comparator", () => {
 	describe("FromString", () => {
 		it.effect("decodes and encodes canonically", () =>
 			Effect.gen(function* () {
-				const c = yield* Schema.decodeUnknownEffect(Comparator.FromString)("<=2.0.0");
+				const c = yield* Schema.decodeEffect(Comparator.FromString)("<=2.0.0");
 				assert.instanceOf(c, Comparator);
 				const encoded = yield* Schema.encodeUnknownEffect(Comparator.FromString)(c);
 				assert.strictEqual(encoded, "<=2.0.0");
@@ -49,7 +49,7 @@ describe("Comparator", () => {
 		it.effect.prop("round-trips decode(encode(c))", [Comparator], ([c]) =>
 			Effect.gen(function* () {
 				const encoded = yield* Schema.encodeUnknownEffect(Comparator.FromString)(c);
-				const decoded = yield* Schema.decodeUnknownEffect(Comparator.FromString)(encoded);
+				const decoded = yield* Schema.decodeEffect(Comparator.FromString)(encoded);
 				assert.isTrue(Equal.equals(decoded, c), `expected ${decoded.toString()} to equal ${c.toString()}`);
 				assert.deepStrictEqual([...decoded.version.build], [...c.version.build]);
 			}),

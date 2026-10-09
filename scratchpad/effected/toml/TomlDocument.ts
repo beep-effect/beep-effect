@@ -26,10 +26,10 @@ import { TomlExpression } from "./TomlNode.ts";
  */
 const materializeError = (text: string, defect: unknown): TomlParseError => {
 	if (isRawTomlError(defect)) {
-		return new TomlParseError({ diagnostics: [TomlDiagnostic.fromRaw(text, defect.diagnostic)] });
+		return TomlParseError.make({ diagnostics: [TomlDiagnostic.fromRaw(text, defect.diagnostic)] });
 	}
 	if (isGuardExceeded(defect)) {
-		return new TomlParseError({
+		return TomlParseError.make({
 			diagnostics: [
 				TomlDiagnostic.fromRaw(text, {
 					code: "NestingDepthExceeded",
@@ -142,7 +142,7 @@ export class TomlDocument extends Schema.Class<TomlDocument>("TomlDocument")({
 	 */
 	toValue(): Effect.Effect<unknown, TomlParseError> {
 		if (this.diagnostics.length > 0) {
-			return Effect.fail(new TomlParseError({ diagnostics: this.diagnostics }));
+			return Effect.fail(TomlParseError.make({ diagnostics: this.diagnostics }));
 		}
 		return Effect.try({
 			try: () => buildValue(this.expressions),

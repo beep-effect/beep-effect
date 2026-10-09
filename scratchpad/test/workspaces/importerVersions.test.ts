@@ -168,7 +168,7 @@ describe("WorkspaceStateSnapshot — wire compatibility", () => {
 		// The field is optional precisely so older serialized snapshots survive; an
 		// absent index simply makes the fallback inert, which is the behavior those
 		// values were captured under.
-		const decoded = Schema.decodeUnknownSync(WorkspaceStateSnapshot)({
+		const decoded = Schema.decodeSync(WorkspaceStateSnapshot)({
 			packages: [],
 			catalogs: { entries: {} },
 		});

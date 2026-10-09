@@ -129,10 +129,10 @@ export type YamlErrorCode = typeof YamlErrorCode.Type;
 export class YamlDiagnostic extends Schema.Class<YamlDiagnostic>("YamlDiagnostic")({
 	code: YamlErrorCode,
 	message: Schema.String,
-	offset: Schema.Number,
-	length: Schema.Number,
-	line: Schema.Number,
-	character: Schema.Number,
+	offset: Schema.Finite,
+	length: Schema.Finite,
+	line: Schema.Finite,
+	character: Schema.Finite,
 }) {
 	/**
 	 * The single fatal-code predicate: whether diagnostics with this code

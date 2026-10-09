@@ -231,7 +231,7 @@ export interface GitHubIssueShape {
  *
  * @public
  */
-export class GitHubIssue extends Context.Service<GitHubIssue, GitHubIssueShape>()("@effected/github/GitHubIssue") {
+export class GitHubIssue extends Context.Service<GitHubIssue, GitHubIssueShape>()("@beep/scratchpad/effected/github/GitHubIssue") {
 	/** The live service, built over a `GitHubClient`. */
 	static readonly layer: Layer.Layer<GitHubIssue, never, GitHubClient> = Layer.effect(
 		this,

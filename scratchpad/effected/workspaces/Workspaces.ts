@@ -274,7 +274,7 @@ const localExecLayer = (options?: {
 					// Everything left is a broken manifest. Wrap it in the contract's
 					// error, preserving the original structurally rather than
 					// flattening it to a message.
-					Effect.mapError((cause) => new LocalExecError({ directory: root.value, cause })),
+					Effect.mapError((cause) => LocalExecError.make({ directory: root.value, cause })),
 				);
 				if (Option.isNone(detected)) return Option.none<ExecContext>();
 

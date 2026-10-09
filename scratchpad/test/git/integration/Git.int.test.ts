@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file nodeBuiltinImport:skip-file asyncFunction:skip-file processEnv:skip-file
 // Proves the whole @effected/git stack against a REAL git binary and a real
 // filesystem, through @effect/platform-node's NodeServices.layer. Every other
 // test in this package runs against the scripted spawner in ../fixtures.ts;

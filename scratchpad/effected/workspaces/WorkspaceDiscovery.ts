@@ -289,7 +289,7 @@ export interface WorkspaceDiscoveryShape {
  * @public
  */
 export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, WorkspaceDiscoveryShape>()(
-	"@effected/workspaces/WorkspaceDiscovery",
+	"@beep/scratchpad/effected/workspaces/WorkspaceDiscovery",
 ) {
 	/**
 	 * Builds the service. Root resolution is one explicit concern: `cwd` is an
@@ -315,12 +315,12 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 						.readFileString(packageJsonPath)
 						.pipe(
 							Effect.mapError(
-								(cause) => new WorkspaceDiscoveryError({ root, path: packageJsonPath, kind: "read", cause }),
+								(cause) => WorkspaceDiscoveryError.make({ root, path: packageJsonPath, kind: "read", cause }),
 							),
 						);
 					const parsed = yield* Effect.try({
 						try: () => JSON.parse(content) as unknown,
-						catch: (cause) => new WorkspaceDiscoveryError({ root, path: packageJsonPath, kind: "invalidJson", cause }),
+						catch: (cause) => WorkspaceDiscoveryError.make({ root, path: packageJsonPath, kind: "invalidJson", cause }),
 					});
 
 					// `JSON.parse` never returns `undefined`, so a guard on `undefined`
@@ -331,27 +331,23 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 					// This is `invalidShape`, NOT `invalidJson`: the text is perfectly valid
 					// JSON. What is wrong is that it does not denote an object.
 					if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
-						return yield* Effect.fail(
-							new WorkspaceDiscoveryError({
+						return yield* WorkspaceDiscoveryError.make({
 								root,
 								path: packageJsonPath,
 								kind: "invalidShape",
 								cause: new Error("package.json is not a JSON object"),
-							}),
-						);
+							});
 					}
 					const raw = parsed as Record<string, unknown>;
 
 					const name = raw.name;
 					if (typeof name !== "string" || name.length === 0) {
-						return yield* Effect.fail(
-							new WorkspaceDiscoveryError({
+						return yield* WorkspaceDiscoveryError.make({
 								root,
 								path: packageJsonPath,
 								kind: "missingName",
 								cause: undefined,
-							}),
-						);
+							});
 					}
 					// `version` is optional, and optional means ABSENT — not "any present
 					// value counts". A present non-string is the manifest's shape being
@@ -362,24 +358,20 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 					// attaches to the same skip.
 					const version = raw.version;
 					if (version !== undefined && typeof version !== "string") {
-						return yield* Effect.fail(
-							new WorkspaceDiscoveryError({
+						return yield* WorkspaceDiscoveryError.make({
 								root,
 								path: packageJsonPath,
 								kind: "invalidShape",
 								cause: new Error(`version must be a string, got ${typeof version}`),
-							}),
-						);
+							});
 					}
 					if (version === "") {
-						return yield* Effect.fail(
-							new WorkspaceDiscoveryError({
+						return yield* WorkspaceDiscoveryError.make({
 								root,
 								path: packageJsonPath,
 								kind: "invalidShape",
 								cause: new Error("version must be a non-empty string"),
-							}),
-						);
+							});
 					}
 					// The tolerant projection: decoded through the schema, so a malformed
 					// field fails typed rather than corrupting the model — but never
@@ -388,7 +380,7 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 					// rides through as the manifest has it: absent stays absent (pnpm
 					// accepts a version-less private package; a private root without one
 					// is the ordinary shape), a non-empty string verbatim.
-					return yield* Schema.decodeUnknownEffect(WorkspacePackage)({
+					return yield* Schema.decodeEffect(WorkspacePackage)({
 						name,
 						...(version !== undefined ? { version } : {}),
 						path: directory,
@@ -414,7 +406,7 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 							// A well-formed JSON document whose SHAPE the schema rejects — not a
 							// syntax error. A consumer branching on `kind` must be able to tell
 							// "this file is not JSON" from "this file is JSON I cannot use".
-							(cause) => new WorkspaceDiscoveryError({ root, path: packageJsonPath, kind: "invalidShape", cause }),
+							(cause) => WorkspaceDiscoveryError.make({ root, path: packageJsonPath, kind: "invalidShape", cause }),
 						),
 					);
 				});
@@ -439,7 +431,7 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 					const patterns = yield* readPatterns(root).pipe(
 						Effect.mapError(
 							(failure) =>
-								new WorkspaceDiscoveryError({
+								WorkspaceDiscoveryError.make({
 									root,
 									path: failure.path,
 									kind: failure.kind,
@@ -451,7 +443,7 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 					const globs = yield* GlobSet.compile(patterns).pipe(
 						Effect.mapError(
 							(error) =>
-								new WorkspacePatternError({
+								WorkspacePatternError.make({
 									root,
 									pattern: error.pattern,
 									kind: "uncompilable",
@@ -463,7 +455,7 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 					const directories = yield* enumerate(root, globs, { maxDepth: options?.maxDepth ?? 32 }).pipe(
 						Effect.mapError(
 							(failure) =>
-								new WorkspacePatternError({
+								WorkspacePatternError.make({
 									root,
 									pattern: failure.pattern,
 									kind: patternKindOf(failure.kind),
@@ -621,7 +613,7 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 					const all = yield* packages;
 					const found = packagesByName(all).get(name);
 					if (found !== undefined) return found;
-					return yield* Effect.fail(new PackageNotFoundError({ name, available: all.map((pkg) => pkg.name) }));
+					return yield* PackageNotFoundError.make({ name, available: all.map((pkg) => pkg.name) });
 				}),
 
 				resolveFile: Effect.fn("WorkspaceDiscovery.resolveFile")(function* (filePath: string) {
@@ -768,7 +760,7 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 					const found = all.find((pkg) => pkg.name === name);
 					return found !== undefined
 						? Effect.succeed(found)
-						: Effect.fail(new PackageNotFoundError({ name, available: all.map((pkg) => pkg.name) }));
+						: Effect.fail(PackageNotFoundError.make({ name, available: all.map((pkg) => pkg.name) }));
 				}),
 			resolveFile: (filePath: string) => Effect.map(listPackages(), (all) => ownerOf(filePath, all)),
 			resolveFiles: (filePaths: ReadonlyArray<string>) =>
@@ -880,7 +872,7 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 				versionOf: (packageName: string) => {
 					const specifier = `workspace:${packageName}`;
 					return discovery.listPackages().pipe(
-						Effect.mapError((cause) => new DependencyResolutionError({ specifier, cause })),
+						Effect.mapError((cause) => DependencyResolutionError.make({ specifier, cause })),
 						Effect.flatMap((all) => {
 							const index = versionsByName(all);
 							if (!index.has(packageName)) return Effect.succeed(Option.none<string>());
@@ -889,9 +881,9 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 								? Effect.fail(
 										// A domain condition read from structured data, not a foreign
 										// failure: typed by `reason`, with nothing to carry as `cause`.
-										new DependencyResolutionError({ specifier, reason: "no-version", cause: undefined }),
+										DependencyResolutionError.make({ specifier, reason: "no-version", cause: undefined }),
 									)
-								: Effect.succeed(Option.some(version));
+								: Effect.succeedSome(version);
 						}),
 					);
 				},

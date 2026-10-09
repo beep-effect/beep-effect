@@ -63,7 +63,7 @@ export class LayeringReport extends Schema.Class<LayeringReport>("LayeringReport
 	/** Required edges absent from the checked fields. */
 	missingRequiredEdges: Schema.Array(Schema.String),
 	/** Edges in the checked fields; `0` is itself a violation. */
-	edgeCount: Schema.Number,
+	edgeCount: Schema.Finite,
 }) {
 	/** One line per violation: `[]` means the graph honours the policy and the check was not vacuous. */
 	get violations(): ReadonlyArray<string> {

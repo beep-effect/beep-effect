@@ -135,9 +135,9 @@ export const compileAndExpand: (
 	// boundary twice just to reach it.
 	const compiled = GlobPattern.compileResult(pattern, options.glob);
 	if (Result.isFailure(compiled)) {
-		return yield* new GlobExpansionError({ pattern, cause: compiled.failure });
+		return yield* GlobExpansionError.make({ pattern, cause: compiled.failure });
 	}
 	return yield* descend(compiled.success, options).pipe(
-		Effect.mapError((cause) => new GlobExpansionError({ pattern, cause })),
+		Effect.mapError((cause) => GlobExpansionError.make({ pattern, cause })),
 	);
 });

@@ -141,7 +141,7 @@ export function testRule(rule: YamlRule, fixtures: ReadonlyArray<RuleFixture>): 
 				const unfixing: YamlRule = {
 					id: rule.id,
 					check: (ctx, options) =>
-						[...rule.check(ctx, options)].map(({ fix: _fix, ...rest }) => new YamlLintDiagnostic(rest)),
+						[...rule.check(ctx, options)].map(({ fix: _fix, ...rest }) => YamlLintDiagnostic.make(rest)),
 				};
 				const discriminates = fixing.some((fixture) => {
 					const result = YamlLint.fix(fixture.input, [unfixing], configFor(rule, fixture.setting));

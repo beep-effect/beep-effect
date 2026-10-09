@@ -64,9 +64,9 @@ export class GitHubContext extends Schema.Class<GitHubContext>("GitHubContext")(
 	/** The current job's id. */
 	job: Schema.String,
 	/** The run's unique number, decoded from `GITHUB_RUN_ID`. */
-	runId: Schema.Number,
+	runId: Schema.Finite,
 	/** The attempt number of this run, starting at 1. */
-	runAttempt: Schema.Number,
+	runAttempt: Schema.Finite,
 	/** The name of the event that triggered the workflow, e.g. `push`. */
 	eventName: Schema.String,
 	/** The login of the user that triggered the run. */
@@ -177,7 +177,7 @@ const numeric = (name: string, raw: string): Effect.Effect<number, ActionEnviron
 	const parsed = Number(raw);
 	return Number.isFinite(parsed)
 		? Effect.succeed(parsed)
-		: Effect.fail(new ActionEnvironmentError({ reason: "malformed", name, detail: `expected a number, got "${raw}"` }));
+		: Effect.fail(ActionEnvironmentError.make({ reason: "malformed", name, detail: `expected a number, got "${raw}"` }));
 };
 
 const make = (
@@ -198,7 +198,7 @@ const make = (
 			Effect.flatMap(lookup(name), (found) =>
 				Option.isSome(found)
 					? Effect.succeed(found.value)
-					: Effect.fail(new ActionEnvironmentError({ reason: "missing", name })),
+					: Effect.fail(ActionEnvironmentError.make({ reason: "missing", name })),
 			);
 
 		return {
@@ -246,7 +246,7 @@ const make = (
 				const raw = yield* fs.readFileString(path).pipe(
 					Effect.mapError(
 						(cause) =>
-							new ActionEnvironmentError({
+							ActionEnvironmentError.make({
 								reason: "malformed",
 								name: "GITHUB_EVENT_PATH",
 								detail: `could not read "${path}": ${String(cause)}`,
@@ -256,7 +256,7 @@ const make = (
 				return yield* Effect.try({
 					try: () => JSON.parse(raw) as unknown,
 					catch: (cause) =>
-						new ActionEnvironmentError({
+						ActionEnvironmentError.make({
 							reason: "malformed",
 							name: "GITHUB_EVENT_PATH",
 							detail: `not valid JSON: ${String(cause)}`,
@@ -319,7 +319,7 @@ const TEST_DEFAULTS: Readonly<Record<string, string>> = {
  * @public
  */
 export class ActionEnvironment extends Context.Service<ActionEnvironment, ActionEnvironmentShape>()(
-	"@effected/github-actions/ActionEnvironment",
+	"@beep/scratchpad/effected/github-actions/ActionEnvironment",
 ) {
 	/** Seeded from `process.env`, once, at layer construction. */
 	static readonly layer: Layer.Layer<ActionEnvironment, never, FileSystem.FileSystem> = Layer.effect(

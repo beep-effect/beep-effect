@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file asyncFunction:skip-file globalTimers:skip-file newPromise:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { Audience } from "../../../effected/env/index.ts";
 import type { Console } from "effect";

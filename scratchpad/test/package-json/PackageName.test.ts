@@ -39,27 +39,27 @@ describe("PackageName classification statics", () => {
 describe("PackageName schema", () => {
 	it.effect("decodes valid scoped and unscoped names", () =>
 		Effect.gen(function* () {
-			assert.strictEqual(yield* Schema.decodeUnknownEffect(PackageName)("lodash"), "lodash");
-			assert.strictEqual(yield* Schema.decodeUnknownEffect(PackageName)("@scope/pkg"), "@scope/pkg");
+			assert.strictEqual(yield* Schema.decodeEffect(PackageName)("lodash"), "lodash");
+			assert.strictEqual(yield* Schema.decodeEffect(PackageName)("@scope/pkg"), "@scope/pkg");
 		}),
 	);
 
 	it.effect("rejects an invalid name with a SchemaError", () =>
 		Effect.gen(function* () {
-			const error = yield* Effect.flip(Schema.decodeUnknownEffect(PackageName)("BAD"));
+			const error = yield* Effect.flip(Schema.decodeEffect(PackageName)("BAD"));
 			assert.strictEqual(error._tag, "SchemaError");
 		}),
 	);
 
 	it.effect("ScopedPackageName rejects unscoped, UnscopedPackageName rejects scoped", () =>
 		Effect.gen(function* () {
-			assert.strictEqual(yield* Schema.decodeUnknownEffect(ScopedPackageName)("@scope/pkg"), "@scope/pkg");
+			assert.strictEqual(yield* Schema.decodeEffect(ScopedPackageName)("@scope/pkg"), "@scope/pkg");
 			assert.isTrue(
-				(yield* Effect.flip(Schema.decodeUnknownEffect(ScopedPackageName)("lodash")))._tag === "SchemaError",
+				(yield* Effect.flip(Schema.decodeEffect(ScopedPackageName)("lodash")))._tag === "SchemaError",
 			);
-			assert.strictEqual(yield* Schema.decodeUnknownEffect(UnscopedPackageName)("lodash"), "lodash");
+			assert.strictEqual(yield* Schema.decodeEffect(UnscopedPackageName)("lodash"), "lodash");
 			assert.isTrue(
-				(yield* Effect.flip(Schema.decodeUnknownEffect(UnscopedPackageName)("@scope/pkg")))._tag === "SchemaError",
+				(yield* Effect.flip(Schema.decodeEffect(UnscopedPackageName)("@scope/pkg")))._tag === "SchemaError",
 			);
 		}),
 	);
@@ -80,7 +80,7 @@ describe("PackageName schema", () => {
 
 describe("InvalidPackageNameError", () => {
 	it("renders a message", () => {
-		const error = new InvalidPackageNameError({ input: "BAD" });
+		const error = InvalidPackageNameError.make({ input: "BAD" });
 		assert.strictEqual(error._tag, "InvalidPackageNameError");
 		assert.include(error.message, "BAD");
 	});

@@ -49,6 +49,7 @@ import {
 	lineIndentColumn,
 	sameLine,
 } from "./state.ts";
+import * as Schema from "effect/Schema";
 
 // ---------------------------------------------------------------------------
 // Compose block map
@@ -71,7 +72,7 @@ export function composeBlockMap(
 ): YamlMap {
 	// Nesting-depth guard: unbounded recursion is a stack-overflow DoS vector.
 	if (!enterNesting(state, blockMapCst)) {
-		return new YamlMap({ items: [], style: "block", offset: blockMapCst.offset, length: blockMapCst.length });
+		return YamlMap.make({ items: [], style: "block", offset: blockMapCst.offset, length: blockMapCst.length });
 	}
 	try {
 		return composeBlockMapInner(blockMapCst, state, externalFirstKey, meta);
@@ -130,7 +131,7 @@ function composeBlockMapInner(
 				? `${meta.comment}\n${trailingComment}`
 				: meta.comment
 			: trailingComment;
-	const map = new YamlMap({
+	const map = YamlMap.make({
 		items: pairs,
 		style: "block" as CollectionStyle,
 		offset,
@@ -337,7 +338,7 @@ export function flattenBlockMapChildren(
 					const lastC = findLastContent(sliceChildren);
 					const innerOffset = firstC ? firstC.offset : child.offset;
 					const innerEnd = lastC ? lastC.offset + lastC.length : child.offset + child.length;
-					const innerMap = new YamlMap({
+					const innerMap = YamlMap.make({
 						items: innerPairs,
 						style: "block" as CollectionStyle,
 						offset: innerOffset,
@@ -361,7 +362,7 @@ export function flattenBlockMapChildren(
 				const flushMeta = combinedPending();
 				if (hasMeta(flushMeta)) {
 					const value = resolveScalar("", "plain", flushMeta.tag, state);
-					const scalar = new YamlScalar({
+					const scalar = YamlScalar.make({
 						value,
 						style: "plain" as ScalarStyle,
 						offset: child.offset,
@@ -463,7 +464,7 @@ export function flattenBlockMapChildren(
 				const flushMeta = combinedPending();
 				if (hasMeta(flushMeta)) {
 					const value = resolveScalar("", "plain", flushMeta.tag, state);
-					const scalar = new YamlScalar({
+					const scalar = YamlScalar.make({
 						value,
 						style: "plain" as ScalarStyle,
 						offset: child.offset,
@@ -581,7 +582,7 @@ export function flattenBlockMapChildren(
 					const { value: keyValue, nextIdx: keyNextIdx } = collectMultilineKey(children, i);
 					const keyMeta = combinedPending();
 					const resolved = resolveScalar(keyValue, "plain", keyMeta.tag, state);
-					const scalar = new YamlScalar({
+					const scalar = YamlScalar.make({
 						value: resolved,
 						style: "plain" as ScalarStyle,
 						offset: child.offset,
@@ -661,7 +662,7 @@ export function flattenBlockMapChildren(
 				const plainMeta = combinedPending();
 				const resolved = resolveScalar(value, "plain", plainMeta.tag, state);
 				const needsRaw = typeof resolved !== "string" && resolved !== undefined && shouldPreserveRaw(value, resolved);
-				const scalar = new YamlScalar({
+				const scalar = YamlScalar.make({
 					value: resolved,
 					style: "plain" as ScalarStyle,
 					offset: child.offset,
@@ -769,7 +770,7 @@ export function flattenBlockMapChildren(
 			// pending meta belongs to that empty key, not to the block map.
 			// Outer meta (from across a newline) still applies to the map.
 			if (hasMeta(pendingMeta) && blockMapStartsWithValueSep(child)) {
-				const emptyKey = new YamlScalar({
+				const emptyKey = YamlScalar.make({
 					value: null,
 					style: "plain" as ScalarStyle,
 					offset: child.offset,
@@ -844,7 +845,7 @@ export function flattenBlockMapChildren(
 	const trailingMeta = combinedPending();
 	if (hasMeta(trailingMeta)) {
 		const value = resolveScalar("", "plain", trailingMeta.tag, state);
-		const scalar = new YamlScalar({
+		const scalar = YamlScalar.make({
 			value,
 			style: "plain" as ScalarStyle,
 			offset: 0,
@@ -906,8 +907,8 @@ export function buildPairs(
 	 */
 	const withTrailingComment = (pair: YamlPair, text: string, onKey = false): YamlPair =>
 		pair.value !== null && !onKey
-			? new YamlPair({ key: pair.key, value: withCommentFields(pair.value, { comment: text }) })
-			: new YamlPair({ key: withCommentFields(pair.key, { comment: text }), value: pair.value });
+			? YamlPair.make({ key: pair.key, value: withCommentFields(pair.value, { comment: text }) })
+			: YamlPair.make({ key: withCommentFields(pair.key, { comment: text }), value: pair.value });
 
 	/**
 	 * Finish a pair: the pending leading fields go to its KEY node, the entry's
@@ -923,7 +924,7 @@ export function buildPairs(
 		const withLeading =
 			Object.keys(leading).length === 0
 				? pair
-				: new YamlPair({ key: withCommentFields(pair.key, leading), value: pair.value });
+				: YamlPair.make({ key: withCommentFields(pair.key, leading), value: pair.value });
 		return trailing === undefined ? withLeading : withTrailingComment(withLeading, trailing, trailingOnKey);
 	};
 
@@ -1017,19 +1018,19 @@ export function buildPairs(
 			// instead of 0:0.
 			noteContentColumn(valueSepOffset);
 			const valueNode = consumeValueNodeForNullKey(items, i, text, valueSepOffset);
-			const nullKey = new YamlScalar({
+			const nullKey = YamlScalar.make({
 				value: null,
 				style: "plain" as ScalarStyle,
 				offset: valueSepOffset,
 				length: 0,
 			});
 			if (valueNode) {
-				pairs.push(pushPair(new YamlPair({ key: nullKey, value: valueNode.node ?? null }), pendingFields, undefined));
+				pairs.push(pushPair(YamlPair.make({ key: nullKey, value: valueNode.node ?? null }), pendingFields, undefined));
 				i = valueNode.nextIdx;
 				lastEnd = valueNode.node ? nodeEnd(valueNode.node) : valueSepOffset + 1;
 				lastNode = valueNode.node ?? undefined;
 			} else {
-				pairs.push(pushPair(new YamlPair({ key: nullKey, value: null }), pendingFields, undefined));
+				pairs.push(pushPair(YamlPair.make({ key: nullKey, value: null }), pendingFields, undefined));
 				lastEnd = valueSepOffset + 1;
 				lastNode = undefined;
 			}
@@ -1058,7 +1059,7 @@ export function buildPairs(
 				i++;
 			}
 			const keyOrNull = (): YamlNode =>
-				keyNode ?? new YamlScalar({ value: null, style: "plain" as ScalarStyle, offset: 0, length: 0 });
+				keyNode ?? YamlScalar.make({ value: null, style: "plain" as ScalarStyle, offset: 0, length: 0 });
 			// Look for value-sep
 			if (i < items.length && items[i]?.kind === "value-sep") {
 				const sepOffset = items[i]?.offset ?? (keyNode ? nodeEnd(keyNode) : 0);
@@ -1075,7 +1076,7 @@ export function buildPairs(
 					}
 					pairs.push(
 						pushPair(
-							new YamlPair({ key: keyOrNull(), value: valNode }),
+							YamlPair.make({ key: keyOrNull(), value: valNode }),
 							pendingFields,
 							pairTrailing,
 							// Decided from the COMPOSED value: when it does not sit on
@@ -1090,13 +1091,13 @@ export function buildPairs(
 					lastEnd = valNode ? nodeEnd(valNode) : sepOffset + 1;
 					lastNode = valNode ?? undefined;
 				} else {
-					pairs.push(pushPair(new YamlPair({ key: keyOrNull(), value: null }), pendingFields, pairTrailing));
+					pairs.push(pushPair(YamlPair.make({ key: keyOrNull(), value: null }), pendingFields, pairTrailing));
 					lastEnd = sepOffset + 1;
 					lastNode = undefined;
 				}
 			} else {
 				// Key with no value
-				pairs.push(pushPair(new YamlPair({ key: keyOrNull(), value: null }), pendingFields, pairTrailing));
+				pairs.push(pushPair(YamlPair.make({ key: keyOrNull(), value: null }), pendingFields, pairTrailing));
 				lastEnd = keyNode ? nodeEnd(keyNode) : lastEnd;
 				if (keyNode) lastNode = keyNode;
 			}
@@ -1146,8 +1147,8 @@ export function buildPairs(
 function keyIsSimple(keyNode: YamlNode | undefined): boolean {
 	// An alias key emits in implicit form (`*x : value`), so it owns its line
 	// exactly as a plain scalar key does and can carry a trailing comment.
-	if (keyNode instanceof YamlAlias) return true;
-	if (!(keyNode instanceof YamlScalar)) return false;
+	if (Schema.is(YamlAlias)(keyNode)) return true;
+	if (!(Schema.is(YamlScalar)(keyNode))) return false;
 	if (typeof keyNode.value === "string" && keyNode.value.includes("\n")) return false;
 	return keyNode.style !== "block-literal" && keyNode.style !== "block-folded";
 }
@@ -1319,7 +1320,7 @@ export function keyIdentity(key: YamlScalar, text: string): string {
 export function checkDuplicateKeys(pairs: YamlPair[], state: ComposerState): void {
 	const seen = new Set<string>();
 	for (const pair of pairs) {
-		if (pair.key instanceof YamlScalar) {
+		if (Schema.is(YamlScalar)(pair.key)) {
 			const id = keyIdentity(pair.key, state.text);
 			if (seen.has(id)) {
 				state.warnings.push({
@@ -1692,7 +1693,7 @@ function validatePropertyContinuationColumn(
 export function composeBlockSeq(cst: CstNode, state: ComposerState, meta?: NodeMeta): YamlSeq {
 	// Nesting-depth guard: unbounded recursion is a stack-overflow DoS vector.
 	if (!enterNesting(state, cst)) {
-		return new YamlSeq({ items: [], style: "block", offset: cst.offset, length: cst.length });
+		return YamlSeq.make({ items: [], style: "block", offset: cst.offset, length: cst.length });
 	}
 	try {
 		return composeBlockSeqInner(cst, state, meta);
@@ -1808,7 +1809,7 @@ function composeBlockSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMet
 				// pending anchor/tag belongs to that empty scalar (e.g. `- &a\n- b`
 				// anchors the first entry, not the second).
 				if (sawEntry) {
-					const emptyScalar = new YamlScalar({
+					const emptyScalar = YamlScalar.make({
 						value: null,
 						style: "plain" as ScalarStyle,
 						offset: child.offset,
@@ -1878,7 +1879,7 @@ function composeBlockSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMet
 				} = collectMultilinePlainScalar(children, ci, undefined, state.text);
 				if (partsCount > 1) {
 					const resolved = resolveScalar(merged, "plain", pendingMeta.tag, state);
-					const scalar = new YamlScalar({
+					const scalar = YamlScalar.make({
 						value: resolved,
 						style: "plain" as ScalarStyle,
 						offset: child.offset,
@@ -1917,7 +1918,7 @@ function composeBlockSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMet
 			// pending anchor/tag, that meta belongs to the empty key (e.g.
 			// `- &a : value` → first key is empty with anchor `a`, not the map).
 			if (hasMeta(pendingMeta) && blockMapStartsWithValueSep(child)) {
-				const emptyKey = new YamlScalar({
+				const emptyKey = YamlScalar.make({
 					value: null,
 					style: "plain" as ScalarStyle,
 					offset: child.offset,
@@ -1969,7 +1970,7 @@ function composeBlockSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMet
 	// Flush trailing entry with no content as null
 	if (sawEntry && !hasMeta(pendingMeta)) {
 		items.push(
-			new YamlScalar({
+			YamlScalar.make({
 				value: null,
 				style: "plain" as ScalarStyle,
 				offset: cst.offset + cst.length,
@@ -1980,7 +1981,7 @@ function composeBlockSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMet
 	// Flush trailing pending tag/anchor as empty scalar (e.g., - !!str)
 	if (hasMeta(pendingMeta)) {
 		const value = resolveScalar("", "plain", pendingMeta.tag, state);
-		const scalar = new YamlScalar({
+		const scalar = YamlScalar.make({
 			value,
 			style: "plain" as ScalarStyle,
 			offset: 0,
@@ -2032,7 +2033,7 @@ function composeBlockSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMet
 				: meta.comment
 			: seqTrailing;
 	const seqEnd = trimDisownedTrailingComments(state.text, cst.offset, cst.offset + cst.length, state.escapedComments);
-	const seq = new YamlSeq({
+	const seq = YamlSeq.make({
 		items: rawItems,
 		style: "block" as CollectionStyle,
 		offset: cst.offset,
@@ -2087,7 +2088,7 @@ export function composeFlatBlockMap(
 				? `${meta.comment}\n${trailingComment}`
 				: meta.comment
 			: trailingComment;
-	const map = new YamlMap({
+	const map = YamlMap.make({
 		items: pairs,
 		style: "block" as CollectionStyle,
 		offset,

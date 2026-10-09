@@ -37,8 +37,8 @@ export type YamlPath = ReadonlyArray<YamlSegment>;
  * @public
  */
 export class YamlRange extends Schema.Class<YamlRange>("YamlRange")({
-	offset: Schema.Number,
-	length: Schema.Number,
+	offset: Schema.Finite,
+	length: Schema.Finite,
 }) {}
 
 /**
@@ -54,8 +54,8 @@ export class YamlRange extends Schema.Class<YamlRange>("YamlRange")({
  * @public
  */
 export class YamlEdit extends Schema.Class<YamlEdit>("YamlEdit")({
-	offset: Schema.Number,
-	length: Schema.Number,
+	offset: Schema.Finite,
+	length: Schema.Finite,
 	content: Schema.String,
 }) {
 	/**

@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { TerminalEnv } from "../../effected/env/index.ts";
 import { ConfigProvider, Effect, Stdio } from "effect";
@@ -83,7 +84,7 @@ describe("CliColor.enabled", () => {
 });
 
 describe("CliColor.formatterLayer", () => {
-	const sampleErrors = [new CliError.MissingOption({ option: "--required" })];
+	const sampleErrors = [CliError.MissingOption.make({ option: "--required" })];
 
 	it.effect("applies an override while non-overridden methods still render the real default output", () =>
 		Effect.gen(function* () {

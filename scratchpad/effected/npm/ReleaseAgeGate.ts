@@ -37,7 +37,7 @@ const MS_PER_MINUTE = 60_000;
  */
 export const PartialReleaseAgeGate = Schema.Struct({
 	/** Minutes a release must age; absent means this source sets no age. */
-	ageMinutes: Schema.optionalKey(Schema.Number),
+	ageMinutes: Schema.optionalKey(Schema.Finite),
 	/** Exempt package-name patterns; absent means this source adds no exemptions. */
 	exclude: Schema.optionalKey(Schema.Array(Schema.String)),
 });
@@ -55,7 +55,7 @@ export type PartialReleaseAgeGate = typeof PartialReleaseAgeGate.Type;
 // integer of minutes, but `combine` takes `Math.max` of arbitrary finite
 // contributions, and requiring an integer here would make a fractional
 // contribution throw at construction, breaking `combine`'s totality.
-const AgeMinutes = Schema.Number.check(Schema.isGreaterThanOrEqualTo(0), Schema.isFinite());
+const AgeMinutes = Schema.Finite.check(Schema.isGreaterThanOrEqualTo(0), Schema.isFinite());
 
 // Match a package name against a single pattern with pnpm `@pnpm/matcher`
 // semantics: an exact-name match, or a `*`-glob where `*` matches ANY run of

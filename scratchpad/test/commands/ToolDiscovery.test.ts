@@ -1,5 +1,6 @@
+// @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Layer, Option } from "effect";
+import { Effect, Layer, Option, Schema } from "effect";
 import { ChildProcess } from "effect/process";
 import { ExecContext, LocalExec } from "../../effected/commands/LocalExec.ts";
 import type { ScriptResult } from "../../effected/commands/ScriptedSpawner.ts";
@@ -79,7 +80,7 @@ describe("ToolDiscovery.resolve — source requirements", () => {
 		Effect.gen(function* () {
 			const error = yield* Effect.flip(run(resolve(Tool.named("biome")), world({})).effect);
 			assert.instanceOf(error, ToolNotFoundError);
-			if (error instanceof ToolNotFoundError) {
+			if (Schema.is(ToolNotFoundError)(error)) {
 				assert.strictEqual(error.tool, "biome");
 				assert.deepStrictEqual([...error.searched], ["global", "local"]);
 			}
@@ -92,7 +93,7 @@ describe("ToolDiscovery.resolve — source requirements", () => {
 				run(resolve(Tool.named("biome", { source: "local" })), world({ global: "1.0.0" })).effect,
 			);
 			assert.instanceOf(error, ToolNotFoundError);
-			if (error instanceof ToolNotFoundError) {
+			if (Schema.is(ToolNotFoundError)(error)) {
 				assert.deepStrictEqual([...error.searched], ["local"]);
 			}
 		}),
@@ -157,7 +158,7 @@ describe("ToolDiscovery.resolve — mismatch policy", () => {
 		Effect.gen(function* () {
 			const error = yield* Effect.flip(run(resolve(Tool.named("biome", { onMismatch: "fail" })), both).effect);
 			assert.instanceOf(error, ToolVersionMismatchError);
-			if (error instanceof ToolVersionMismatchError) {
+			if (Schema.is(ToolVersionMismatchError)(error)) {
 				assert.strictEqual(error.globalVersion, "1.0.0");
 				assert.strictEqual(error.localVersion, "2.0.0");
 			}

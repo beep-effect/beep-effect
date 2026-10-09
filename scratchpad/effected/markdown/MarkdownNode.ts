@@ -38,9 +38,9 @@ import { Effect, Schema } from "effect";
  * @public
  */
 export class Point extends Schema.Class<Point>("Point")({
-	line: Schema.Number,
-	column: Schema.Number,
-	offset: Schema.Number,
+	line: Schema.Finite,
+	column: Schema.Finite,
+	offset: Schema.Finite,
 }) {}
 
 /**
@@ -553,7 +553,7 @@ export class Code extends Schema.Class<Code>("Code")({
 	meta: Schema.optionalKey(Schema.String),
 	position: NodePosition,
 	fenceChar: Schema.optionalKey(FenceChar),
-	fenceLength: Schema.optionalKey(Schema.Number),
+	fenceLength: Schema.optionalKey(Schema.Finite),
 }) {}
 
 /**
@@ -655,7 +655,7 @@ export class ListItem extends Schema.Class<ListItem>("ListItem")({
 export class List extends Schema.Class<List>("List")({
 	type: Schema.tag("list"),
 	ordered: Schema.optionalKey(Schema.Boolean),
-	start: Schema.optionalKey(Schema.Number),
+	start: Schema.optionalKey(Schema.Finite),
 	spread: Schema.optionalKey(Schema.Boolean),
 	children: Schema.Array(Schema.suspend((): Schema.Codec<ListContent> => ListContent)),
 	position: NodePosition,

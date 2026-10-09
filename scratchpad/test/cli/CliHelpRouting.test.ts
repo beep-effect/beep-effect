@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
 import { Cause, Console, Effect, Exit, Layer, Runtime } from "effect";
@@ -164,7 +165,7 @@ describe("CliRuntime.main helpOnUsageError", () => {
 				const program = Effect.gen(function* () {
 					const formatter = yield* CliOutput.Formatter;
 					const help = formatter.formatHelpDoc({ description: "", usage: "USAGE x", flags: [], args: [] } as never);
-					const errors = formatter.formatErrors([new CliError.UserError({ cause: "bad flag" })]);
+					const errors = formatter.formatErrors([CliError.UserError.make({ cause: "bad flag" })]);
 					yield* body({ help, errors });
 				});
 				yield* CliRuntime.main(program, { platform: NodeServices.layer, helpOnUsageError: "stderr" }).pipe(

@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { Cause, Effect, Exit, Layer, PlatformError } from "effect";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";

@@ -66,7 +66,7 @@ export class CliPrompt {
 		Effect.gen(function* () {
 			if (yield* CliInteractive) {
 				const answer = yield* Prompt.run(prompt).pipe(
-					Effect.catchTag("QuitError", () => Effect.die(new Cancelled({ reason: "interrupt" }))),
+					Effect.catchTag("QuitError", () => Effect.die(Cancelled.make({ reason: "interrupt" }))),
 				);
 				return Prompt.succeed(answer);
 			}
@@ -103,7 +103,7 @@ export class CliPrompt {
 				rows: real.rows,
 				readInput: Effect.flatMap(CliInteractive, (interactive) => (interactive ? real.readInput : endedInput)),
 				readLine: Effect.flatMap(CliInteractive, (interactive) =>
-					interactive ? real.readLine : Effect.fail(new Terminal.QuitError({})),
+					interactive ? real.readLine : Effect.fail(Terminal.QuitError.make({})),
 				),
 				display: (text) =>
 					Effect.flatMap(CliInteractive, (interactive) => (interactive ? real.display(text) : Effect.void)),

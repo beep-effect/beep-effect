@@ -135,7 +135,7 @@ const quiet: StreamEnv = { isTerminal: false, color: "none", hyperlinks: false, 
  *
  * @public
  */
-export class TerminalEnv extends Context.Service<TerminalEnv, TerminalEnvShape>()("@effected/env/TerminalEnv") {
+export class TerminalEnv extends Context.Service<TerminalEnv, TerminalEnvShape>()("@beep/scratchpad/effected/env/TerminalEnv") {
 	/**
 	 * Build the snapshot from `Stdio`, `Terminal` and the ambient `ConfigProvider`.
 	 *

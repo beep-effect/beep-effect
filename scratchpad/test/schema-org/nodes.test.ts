@@ -180,7 +180,7 @@ describe("NodeRef", () => {
 			"nel\u0085here",
 			"c1\u0090here",
 		]) {
-			const schemaAccepts = Result.isSuccess(Schema.decodeUnknownResult(NodeId)(id));
+			const schemaAccepts = Result.isSuccess(Schema.decodeResult(NodeId)(id));
 			assert.strictEqual(
 				NodeRef.isValidId(id),
 				schemaAccepts,

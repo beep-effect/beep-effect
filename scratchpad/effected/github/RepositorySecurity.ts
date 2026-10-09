@@ -11,25 +11,25 @@ import { Repo } from "./Repo.ts";
  * @public
  */
 export interface RepositorySecurityShape {
-	/** Whether Dependabot vulnerability alerts are on. */
-	readonly vulnerabilityAlerts: () => Effect.Effect<boolean, GitHubError, Repo>;
-	/** Turn Dependabot vulnerability alerts on or off. */
-	readonly setVulnerabilityAlerts: (enabled: boolean) => Effect.Effect<void, GitHubError, Repo>;
+  /** Whether Dependabot vulnerability alerts are on. */
+  readonly vulnerabilityAlerts: () => Effect.Effect<boolean, GitHubError, Repo>;
+  /** Turn Dependabot vulnerability alerts on or off. */
+  readonly setVulnerabilityAlerts: (enabled: boolean) => Effect.Effect<void, GitHubError, Repo>;
 
-	/** Whether Dependabot security pull requests are on. */
-	readonly automatedSecurityFixes: () => Effect.Effect<boolean, GitHubError, Repo>;
-	/** Turn Dependabot security pull requests on or off. */
-	readonly setAutomatedSecurityFixes: (enabled: boolean) => Effect.Effect<void, GitHubError, Repo>;
+  /** Whether Dependabot security pull requests are on. */
+  readonly automatedSecurityFixes: () => Effect.Effect<boolean, GitHubError, Repo>;
+  /** Turn Dependabot security pull requests on or off. */
+  readonly setAutomatedSecurityFixes: (enabled: boolean) => Effect.Effect<void, GitHubError, Repo>;
 
-	/** Whether the private vulnerability reporting inbox is on. */
-	readonly privateVulnerabilityReporting: () => Effect.Effect<boolean, GitHubError, Repo>;
-	/** Turn the private vulnerability reporting inbox on or off. */
-	readonly setPrivateVulnerabilityReporting: (enabled: boolean) => Effect.Effect<void, GitHubError, Repo>;
+  /** Whether the private vulnerability reporting inbox is on. */
+  readonly privateVulnerabilityReporting: () => Effect.Effect<boolean, GitHubError, Repo>;
+  /** Turn the private vulnerability reporting inbox on or off. */
+  readonly setPrivateVulnerabilityReporting: (enabled: boolean) => Effect.Effect<void, GitHubError, Repo>;
 }
 
 /** What the automated-fixes and private-reporting reads answer with. */
 interface EnabledFlag {
-	readonly enabled?: boolean;
+  readonly enabled?: boolean;
 }
 
 /**
@@ -76,112 +76,133 @@ interface EnabledFlag {
  * @public
  */
 export class RepositorySecurity extends Context.Service<RepositorySecurity, RepositorySecurityShape>()(
-	"@effected/github/RepositorySecurity",
+  "@beep/scratchpad/effected/github/RepositorySecurity",
 ) {
-	/**
-	 * The live service, built over a `GitHubClient`.
-	 *
-	 * @remarks
-	 * `(client) => make(client)` rather than `make`: a static initializer runs
-	 * while the module body is still evaluating, so naming a `const` declared
-	 * further down throws at import time with a clean typecheck.
-	 */
-	static readonly layer: Layer.Layer<RepositorySecurity, never, GitHubClient> = Layer.effect(
-		this,
-		Effect.map(GitHubClient, (client) => make(client)),
-	);
+  /**
+   * The live service, built over a `GitHubClient`.
+   *
+   * @remarks
+   * `(client) => make(client)` rather than `make`: a static initializer runs
+   * while the module body is still evaluating, so naming a `const` declared
+   * further down throws at import time with a clean typecheck.
+   */
+  static readonly layer: Layer.Layer<RepositorySecurity, never, GitHubClient> = Layer.effect(
+    this,
+    Effect.map(GitHubClient, (client) => make(client)),
+  );
 
-	/** An in-memory double; unstubbed members die naming themselves. */
-	static readonly makeTest = (overrides: Partial<RepositorySecurityShape> = {}): RepositorySecurityShape => ({
-		vulnerabilityAlerts: overrides.vulnerabilityAlerts ?? (() => unstubbed("vulnerabilityAlerts")),
-		setVulnerabilityAlerts: overrides.setVulnerabilityAlerts ?? (() => unstubbed("setVulnerabilityAlerts")),
-		automatedSecurityFixes: overrides.automatedSecurityFixes ?? (() => unstubbed("automatedSecurityFixes")),
-		setAutomatedSecurityFixes: overrides.setAutomatedSecurityFixes ?? (() => unstubbed("setAutomatedSecurityFixes")),
-		privateVulnerabilityReporting:
-			overrides.privateVulnerabilityReporting ?? (() => unstubbed("privateVulnerabilityReporting")),
-		setPrivateVulnerabilityReporting:
-			overrides.setPrivateVulnerabilityReporting ?? (() => unstubbed("setPrivateVulnerabilityReporting")),
-	});
+  /** An in-memory double; unstubbed members die naming themselves. */
+  static readonly makeTest = (overrides: Partial<RepositorySecurityShape> = {}): RepositorySecurityShape => ({
+    vulnerabilityAlerts: overrides.vulnerabilityAlerts ?? (() => unstubbed("vulnerabilityAlerts")),
+    setVulnerabilityAlerts: overrides.setVulnerabilityAlerts ?? (() => unstubbed("setVulnerabilityAlerts")),
+    automatedSecurityFixes: overrides.automatedSecurityFixes ?? (() => unstubbed("automatedSecurityFixes")),
+    setAutomatedSecurityFixes: overrides.setAutomatedSecurityFixes ?? (() => unstubbed("setAutomatedSecurityFixes")),
+    privateVulnerabilityReporting:
+      overrides.privateVulnerabilityReporting ?? (() => unstubbed("privateVulnerabilityReporting")),
+    setPrivateVulnerabilityReporting:
+      overrides.setPrivateVulnerabilityReporting ?? (() => unstubbed("setPrivateVulnerabilityReporting")),
+  });
 
-	/** {@link RepositorySecurity.makeTest} behind a `Layer`. */
-	static readonly layerTest = (overrides: Partial<RepositorySecurityShape> = {}): Layer.Layer<RepositorySecurity> =>
-		Layer.succeed(RepositorySecurity, RepositorySecurity.makeTest(overrides));
+  /** {@link RepositorySecurity.makeTest} behind a `Layer`. */
+  static readonly layerTest = (overrides: Partial<RepositorySecurityShape> = {}): Layer.Layer<RepositorySecurity> =>
+    Layer.succeed(RepositorySecurity, RepositorySecurity.makeTest(overrides));
 }
 
 const unstubbed = (member: string): never => {
-	throw new Error(`RepositorySecurity.makeTest: ${member}() was called but not stubbed — pass an override.`);
+  throw new Error(`RepositorySecurity.makeTest: ${member}() was called but not stubbed — pass an override.`);
 };
 
 const make = (client: GitHubClient["Service"]): RepositorySecurityShape => {
-	const vulnerabilityAlerts = Effect.fn("RepositorySecurity.vulnerabilityAlerts")(function* () {
-		const { owner, repo } = yield* Repo;
-		yield* Effect.annotateCurrentSpan({ owner, repo });
+  const vulnerabilityAlerts = Effect.fn("RepositorySecurity.vulnerabilityAlerts")(function* () {
+    const { owner, repo } = yield* Repo;
+    yield* Effect.annotateCurrentSpan({ owner, repo });
 
-		return yield* client.request("GET /repos/{owner}/{repo}/vulnerability-alerts", { owner, repo }).pipe(
-			Effect.as(true),
-			// Disabled is reported as 404 rather than as a payload. Only `notFound`
-			// is absorbed; a 403 from a mis-scoped token still fails, which is the
-			// distinction a blanket `orElseSucceed(false)` would destroy.
-			Effect.catchIf(
-				(error) => error.kind === "notFound",
-				() => Effect.succeed(false),
-			),
-		);
-	});
+    return yield* client.request("GET /repos/{owner}/{repo}/vulnerability-alerts", {
+      owner,
+      repo,
+    }).pipe(
+      Effect.as(true),
+      // Disabled is reported as 404 rather than as a payload. Only `notFound`
+      // is absorbed; a 403 from a mis-scoped token still fails, which is the
+      // distinction a blanket `orElseSucceed(false)` would destroy.
+      Effect.catchIf(
+        (error) => error.kind === "notFound",
+        () => Effect.succeed(false),
+      ),
+    );
+  });
 
-	const setVulnerabilityAlerts = Effect.fn("RepositorySecurity.setVulnerabilityAlerts")(function* (enabled: boolean) {
-		const { owner, repo } = yield* Repo;
-		yield* Effect.annotateCurrentSpan({ owner, repo, enabled });
+  const setVulnerabilityAlerts = Effect.fn("RepositorySecurity.setVulnerabilityAlerts")(function* (enabled: boolean) {
+    const { owner, repo } = yield* Repo;
+    yield* Effect.annotateCurrentSpan({ owner, repo, enabled });
 
-		yield* enabled
-			? client.request("PUT /repos/{owner}/{repo}/vulnerability-alerts", { owner, repo })
-			: client.request("DELETE /repos/{owner}/{repo}/vulnerability-alerts", { owner, repo });
-	});
+    return yield* enabled ? client.request("PUT /repos/{owner}/{repo}/vulnerability-alerts", {
+      owner,
+      repo,
+    }) : client.request("DELETE /repos/{owner}/{repo}/vulnerability-alerts", {
+      owner,
+      repo,
+    });
+  });
 
-	const automatedSecurityFixes = Effect.fn("RepositorySecurity.automatedSecurityFixes")(function* () {
-		const { owner, repo } = yield* Repo;
-		yield* Effect.annotateCurrentSpan({ owner, repo });
+  const automatedSecurityFixes = Effect.fn("RepositorySecurity.automatedSecurityFixes")(function* () {
+    const { owner, repo } = yield* Repo;
+    yield* Effect.annotateCurrentSpan({ owner, repo });
 
-		const data = yield* client.request("GET /repos/{owner}/{repo}/automated-security-fixes", { owner, repo });
-		return Boolean((data as EnabledFlag).enabled);
-	});
+    const data = yield* client.request("GET /repos/{owner}/{repo}/automated-security-fixes", {
+      owner,
+      repo,
+    });
+    return Boolean((data as EnabledFlag).enabled);
+  });
 
-	const setAutomatedSecurityFixes = Effect.fn("RepositorySecurity.setAutomatedSecurityFixes")(function* (
-		enabled: boolean,
-	) {
-		const { owner, repo } = yield* Repo;
-		yield* Effect.annotateCurrentSpan({ owner, repo, enabled });
+  const setAutomatedSecurityFixes = Effect.fn("RepositorySecurity.setAutomatedSecurityFixes")(function* (
+    enabled: boolean,
+  ) {
+    const { owner, repo } = yield* Repo;
+    yield* Effect.annotateCurrentSpan({ owner, repo, enabled });
 
-		yield* enabled
-			? client.request("PUT /repos/{owner}/{repo}/automated-security-fixes", { owner, repo })
-			: client.request("DELETE /repos/{owner}/{repo}/automated-security-fixes", { owner, repo });
-	});
+    return yield* enabled ? client.request("PUT /repos/{owner}/{repo}/automated-security-fixes", {
+      owner,
+      repo,
+    }) : client.request("DELETE /repos/{owner}/{repo}/automated-security-fixes", {
+      owner,
+      repo,
+    });
+  });
 
-	const privateVulnerabilityReporting = Effect.fn("RepositorySecurity.privateVulnerabilityReporting")(function* () {
-		const { owner, repo } = yield* Repo;
-		yield* Effect.annotateCurrentSpan({ owner, repo });
+  const privateVulnerabilityReporting = Effect.fn("RepositorySecurity.privateVulnerabilityReporting")(function* () {
+    const { owner, repo } = yield* Repo;
+    yield* Effect.annotateCurrentSpan({ owner, repo });
 
-		const data = yield* client.request("GET /repos/{owner}/{repo}/private-vulnerability-reporting", { owner, repo });
-		return Boolean((data as EnabledFlag).enabled);
-	});
+    const data = yield* client.request("GET /repos/{owner}/{repo}/private-vulnerability-reporting", {
+      owner,
+      repo,
+    });
+    return Boolean((data as EnabledFlag).enabled);
+  });
 
-	const setPrivateVulnerabilityReporting = Effect.fn("RepositorySecurity.setPrivateVulnerabilityReporting")(function* (
-		enabled: boolean,
-	) {
-		const { owner, repo } = yield* Repo;
-		yield* Effect.annotateCurrentSpan({ owner, repo, enabled });
+  const setPrivateVulnerabilityReporting = Effect.fn("RepositorySecurity.setPrivateVulnerabilityReporting")(function* (
+    enabled: boolean,
+  ) {
+    const { owner, repo } = yield* Repo;
+    yield* Effect.annotateCurrentSpan({ owner, repo, enabled });
 
-		yield* enabled
-			? client.request("PUT /repos/{owner}/{repo}/private-vulnerability-reporting", { owner, repo })
-			: client.request("DELETE /repos/{owner}/{repo}/private-vulnerability-reporting", { owner, repo });
-	});
+    return yield* enabled ? client.request("PUT /repos/{owner}/{repo}/private-vulnerability-reporting", {
+      owner,
+      repo,
+    }) : client.request("DELETE /repos/{owner}/{repo}/private-vulnerability-reporting", {
+      owner,
+      repo,
+    });
+  });
 
-	return {
-		vulnerabilityAlerts,
-		setVulnerabilityAlerts,
-		automatedSecurityFixes,
-		setAutomatedSecurityFixes,
-		privateVulnerabilityReporting,
-		setPrivateVulnerabilityReporting,
-	};
+  return {
+    vulnerabilityAlerts,
+    setVulnerabilityAlerts,
+    automatedSecurityFixes,
+    setAutomatedSecurityFixes,
+    privateVulnerabilityReporting,
+    setPrivateVulnerabilityReporting,
+  };
 };

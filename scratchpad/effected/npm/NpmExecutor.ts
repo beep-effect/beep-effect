@@ -130,14 +130,14 @@ export class NpmExecutor extends Schema.Class<NpmExecutor>("NpmExecutor")({
 		return Effect.gen(function* () {
 			const local = yield* LocalExec;
 			const context = yield* local.context.pipe(
-				Effect.catch((cause) => Effect.fail(new PublishError({ kind: "executor", cause }))),
+				Effect.catch((cause) => Effect.fail(PublishError.make({ kind: "executor", cause }))),
 			);
 			if (Option.isNone(context)) {
-				return yield* Effect.fail(new PublishError({ kind: "executor" }));
+				return yield* PublishError.make({ kind: "executor" });
 			}
 			const dlx = context.value.applyDlx(ChildProcess.make(spec, all));
 			if (!ChildProcess.isStandardCommand(dlx)) {
-				return yield* Effect.fail(new PublishError({ kind: "executor" }));
+				return yield* PublishError.make({ kind: "executor" });
 			}
 			return dlx;
 		});

@@ -264,7 +264,7 @@ describe("JsonLdDocument — the decode direction is unimplemented, and the asym
 			JsonLdDocument.buildResult([SoftwareSourceCode.make({ "@id": PKG, additional: { alternateName: "ex" } })]),
 		);
 
-		const decoded = Schema.decodeUnknownResult(JsonLdDocument)(Schema.encodeSync(JsonLdDocument)(graph));
+		const decoded = Schema.decodeResult(JsonLdDocument)(Schema.encodeSync(JsonLdDocument)(graph));
 
 		assert.isTrue(Result.isSuccess(decoded));
 		assert.deepStrictEqual(

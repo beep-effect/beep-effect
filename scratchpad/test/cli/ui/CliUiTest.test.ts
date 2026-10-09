@@ -1,5 +1,6 @@
+// @effect-diagnostics globalTimers:skip-file
 import { assert, describe, it } from "@effect/vitest";
-import { Cause, Effect, Exit } from "effect";
+import { Cause, Effect, Exit, Schema } from "effect";
 import { Text, useInput } from "ink";
 import type { ReactElement } from "react";
 import { createElement, useEffect, useState } from "react";
@@ -113,7 +114,7 @@ describe("CliUiTest.render", () => {
 				}),
 			);
 			assert.instanceOf(escaped, Cancelled);
-			assert.strictEqual(escaped instanceof Cancelled ? escaped.reason : undefined, "escape");
+			assert.strictEqual(Schema.is(Cancelled)(escaped) ? escaped.reason : undefined, "escape");
 			const interrupted = yield* Effect.scoped(
 				Effect.gen(function* () {
 					const handle = yield* CliUiTest.render(showing(() => createElement(Echo)));
@@ -121,7 +122,7 @@ describe("CliUiTest.render", () => {
 					return yield* Effect.flip(handle.result);
 				}),
 			);
-			assert.strictEqual(interrupted instanceof Cancelled ? interrupted.reason : undefined, "interrupt");
+			assert.strictEqual(Schema.is(Cancelled)(interrupted) ? interrupted.reason : undefined, "interrupt");
 		}),
 	);
 

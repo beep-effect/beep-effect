@@ -367,8 +367,8 @@ const Service =
  * reaches here is if `E` admits one.
  */
 const withCodecPath = <E>(error: E, target: string): E =>
-	error instanceof ConfigCodecError && error.path === undefined
-		? (new ConfigCodecError({
+	Schema.is(ConfigCodecError)(error) && error.path === undefined
+		? (ConfigCodecError.make({
 				codec: error.codec,
 				operation: error.operation,
 				cause: error.cause,
@@ -417,7 +417,7 @@ const makeImpl = <A, I, RR>(
 							onSome: (svc) =>
 								Effect.gen(function* () {
 									const timestamp = yield* DateTime.now;
-									yield* PubSub.publish(svc.events, new ConfigEvent({ timestamp, event: payload }));
+									yield* PubSub.publish(svc.events, ConfigEvent.make({ timestamp, event: payload }));
 								}),
 						}),
 					),
@@ -435,7 +435,7 @@ const makeImpl = <A, I, RR>(
 			// Normalize the schema failure at the boundary. Never leak SchemaError
 			// deeper, never stringify it — carry its structured issue tree instead.
 			Effect.catchTag("SchemaError", (error) =>
-				Effect.fail(new ConfigValidationError({ path: at, issue: error.issue })),
+				Effect.fail(ConfigValidationError.make({ path: at, issue: error.issue })),
 			),
 		);
 
@@ -445,7 +445,7 @@ const makeImpl = <A, I, RR>(
 	const loadFrom = Effect.fn("ConfigFile.loadFrom")(function* (target: string) {
 		const raw = yield* fs
 			.readFileString(target)
-			.pipe(Effect.mapError((cause) => new ConfigFileReadError({ path: target, cause })));
+			.pipe(Effect.mapError((cause) => ConfigFileReadError.make({ path: target, cause })));
 
 		const parsed = yield* options.codec.parse(raw).pipe(
 			Effect.mapError((error) => withCodecPath(error, target)),
@@ -520,7 +520,7 @@ const makeImpl = <A, I, RR>(
 		const { sources, candidates } = yield* discover();
 		if (sources.length === 0) {
 			yield* emit({ _tag: "NotFound" });
-			return yield* Effect.fail(new ConfigFileNotFoundError({ searched, candidates }));
+			return yield* ConfigFileNotFoundError.make({ searched, candidates });
 		}
 		// Guarded by the check above; TypeScript cannot narrow Array<T> to [T, ...T[]].
 		return yield* mergeAndEmit(sources as unknown as NonEmptySources<A>);
@@ -559,7 +559,7 @@ const makeImpl = <A, I, RR>(
 			const encoded = yield* Schema.encodeEffect(options.schema)(value).pipe(
 				// Same normalization as `decode`: carry the structured issue, never stringify.
 				Effect.catchTag("SchemaError", (error) =>
-					Effect.fail(new ConfigValidationError({ path: target, issue: error.issue })),
+					Effect.fail(ConfigValidationError.make({ path: target, issue: error.issue })),
 				),
 			);
 			const serialized = yield* options.codec
@@ -594,7 +594,7 @@ const makeImpl = <A, I, RR>(
 			);
 			yield* fs
 				.writeFileString(target, serialized)
-				.pipe(Effect.mapError((cause) => new ConfigFileWriteError({ path: target, cause })));
+				.pipe(Effect.mapError((cause) => ConfigFileWriteError.make({ path: target, cause })));
 		});
 
 	// No event: nothing was written.
@@ -614,13 +614,13 @@ const makeImpl = <A, I, RR>(
 	const saveTo = (value: A): Effect.Effect<string, ConfigSaveError> =>
 		Effect.gen(function* () {
 			const configured = options.defaultPath;
-			if (configured === undefined) return yield* Effect.fail(new ConfigDefaultPathMissingError({}));
+			if (configured === undefined) return yield* ConfigDefaultPathMissingError.make({});
 			// `defaultPath`'s requirements are `RR`, satisfied by the same context the
 			// resolvers use. No cast needed.
 			const target = yield* Effect.provide(configured, resolverEnv);
 			yield* fs
 				.makeDirectory(path.dirname(target), { recursive: true })
-				.pipe(Effect.mapError((cause) => new ConfigFileWriteError({ path: target, cause })));
+				.pipe(Effect.mapError((cause) => ConfigFileWriteError.make({ path: target, cause })));
 			yield* encodeAndWrite(value, target);
 			return target;
 		});
@@ -824,7 +824,7 @@ const read = <A, I>(
 
 		const raw = yield* fs
 			.readFileString(path)
-			.pipe(Effect.mapError((cause) => new ConfigFileReadError({ path, cause })));
+			.pipe(Effect.mapError((cause) => ConfigFileReadError.make({ path, cause })));
 
 		const parsed = yield* options.codec.parse(raw).pipe(Effect.mapError((error) => withCodecPath(error, path)));
 
@@ -832,7 +832,7 @@ const read = <A, I>(
 			// The same boundary normalization the service performs: never leak a
 			// SchemaError outward, and carry its issue tree rather than a string.
 			Effect.catchTag("SchemaError", (error) =>
-				Effect.fail(new ConfigValidationError({ path: Option.some(path), issue: error.issue })),
+				Effect.fail(ConfigValidationError.make({ path: Option.some(path), issue: error.issue })),
 			),
 		);
 	}).pipe(Effect.withSpan("ConfigFile.read", { attributes: { path } }));
@@ -882,7 +882,7 @@ export class ConfigFile {
 	 * import { ConfigFile, ConfigResolver, JsonCodec, MergeStrategy } from "./index.ts";
 	 * import { Schema } from "effect";
 	 *
-	 * const AppShape = Schema.Struct({ port: Schema.Number });
+	 * const AppShape = Schema.Struct({ port: Schema.Finite });
 	 * class AppConfig extends ConfigFile.Service<AppConfig, typeof AppShape.Type>()("app/Config") {}
 	 *
 	 * const AppConfigLive = ConfigFile.layer(AppConfig, {
@@ -955,7 +955,7 @@ export class ConfigFile {
 	 * import { ConfigFile, JsonCodec } from "./index.ts";
 	 * import { Effect, Schema } from "effect";
 	 *
-	 * const MyConfig = Schema.Struct({ port: Schema.Number });
+	 * const MyConfig = Schema.Struct({ port: Schema.Finite });
 	 *
 	 * // Requires `FileSystem` in `R`; provide it from a platform layer.
 	 * const program = Effect.gen(function* () {

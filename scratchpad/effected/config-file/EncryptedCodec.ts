@@ -27,7 +27,7 @@ export class ConfigEncryptionError extends Schema.TaggedError<ConfigEncryptionEr
 
 /** Lift `internal/crypto`'s dependency-free failure into the public error. */
 const toPublic = (failure: CryptoFailure): ConfigEncryptionError =>
-	new ConfigEncryptionError({ phase: failure.phase, cause: failure.cause });
+	ConfigEncryptionError.make({ phase: failure.phase, cause: failure.cause });
 
 /**
  * Key source union for {@link EncryptedCodec}.
@@ -144,9 +144,7 @@ export function EncryptedCodec<E>(
 				const combined = yield* Effect.mapError(fromBase64(raw), toPublic);
 
 				if (combined.length <= IV_LENGTH) {
-					return yield* Effect.fail(
-						new ConfigEncryptionError({ phase: "decrypt", cause: new Error("Ciphertext too short to contain IV") }),
-					);
+					return yield* ConfigEncryptionError.make({ phase: "decrypt", cause: new Error("Ciphertext too short to contain IV") });
 				}
 
 				const key = yield* getKey;

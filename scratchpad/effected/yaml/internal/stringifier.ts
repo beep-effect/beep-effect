@@ -21,6 +21,7 @@ import {
 } from "./fold.ts";
 import type { StringifyOptionsInput } from "./options.ts";
 import type { RawDirective, RawYamlDocument } from "./raw-document.ts";
+import * as Schema from "effect/Schema";
 
 /**
  * Thrown by the stringifier on its failure paths (circular references). The
@@ -907,8 +908,8 @@ function normalizeTag(tag: string, tagMap: Map<string, string>): string {
  * Recursively normalizes tags on all AST nodes using document directives.
  */
 function normalizeNodeTags(node: YamlNode, tagMap: Map<string, string>): YamlNode {
-	if (node instanceof YamlScalar) {
-		return new YamlScalar({
+	if (Schema.is(YamlScalar)(node)) {
+		return YamlScalar.make({
 			value: node.value,
 			style: node.style,
 			...(node.tag ? { tag: normalizeTag(node.tag, tagMap) } : {}),
@@ -924,11 +925,11 @@ function normalizeNodeTags(node: YamlNode, tagMap: Map<string, string>): YamlNod
 			length: node.length,
 		});
 	}
-	if (node instanceof YamlMap) {
-		return new YamlMap({
+	if (Schema.is(YamlMap)(node)) {
+		return YamlMap.make({
 			items: node.items.map(
 				(pair) =>
-					new YamlPair({
+					YamlPair.make({
 						key: normalizeNodeTags(pair.key, tagMap),
 						value: pair.value ? normalizeNodeTags(pair.value, tagMap) : null,
 					}),
@@ -944,8 +945,8 @@ function normalizeNodeTags(node: YamlNode, tagMap: Map<string, string>): YamlNod
 			length: node.length,
 		});
 	}
-	if (node instanceof YamlSeq) {
-		return new YamlSeq({
+	if (Schema.is(YamlSeq)(node)) {
+		return YamlSeq.make({
 			items: node.items.map((item) => normalizeNodeTags(item, tagMap)),
 			style: node.style,
 			...(node.tag ? { tag: normalizeTag(node.tag, tagMap) } : {}),
@@ -970,8 +971,8 @@ function normalizeNodeTags(node: YamlNode, tagMap: Map<string, string>): YamlNod
  * Used when forceDefaultStyles is true to produce canonical output.
  */
 export function stripNodeComments(node: YamlNode): YamlNode {
-	if (node instanceof YamlScalar) {
-		return new YamlScalar({
+	if (Schema.is(YamlScalar)(node)) {
+		return YamlScalar.make({
 			value: node.value,
 			style: node.style,
 			...(node.tag !== undefined ? { tag: node.tag } : {}),
@@ -984,11 +985,11 @@ export function stripNodeComments(node: YamlNode): YamlNode {
 			length: node.length,
 		});
 	}
-	if (node instanceof YamlMap) {
-		return new YamlMap({
+	if (Schema.is(YamlMap)(node)) {
+		return YamlMap.make({
 			items: node.items.map(
 				(pair) =>
-					new YamlPair({
+					YamlPair.make({
 						key: stripNodeComments(pair.key),
 						value: pair.value ? stripNodeComments(pair.value) : null,
 					}),
@@ -1001,8 +1002,8 @@ export function stripNodeComments(node: YamlNode): YamlNode {
 			length: node.length,
 		});
 	}
-	if (node instanceof YamlSeq) {
-		return new YamlSeq({
+	if (Schema.is(YamlSeq)(node)) {
+		return YamlSeq.make({
 			items: node.items.map(stripNodeComments),
 			style: node.style,
 			...(node.tag !== undefined ? { tag: node.tag } : {}),
@@ -1033,16 +1034,16 @@ function stringifyNodeLines(node: YamlNode, ctx: StringifyContext, depth: number
 	// deep trees do.
 	if (depth > MAX_NESTING_DEPTH) throw new StringifyDepthExceeded();
 
-	if (node instanceof YamlScalar) {
+	if (Schema.is(YamlScalar)(node)) {
 		return stringifyScalarNodeLines(node, ctx);
 	}
-	if (node instanceof YamlMap) {
+	if (Schema.is(YamlMap)(node)) {
 		return stringifyMapNodeLines(node, ctx, depth);
 	}
-	if (node instanceof YamlSeq) {
+	if (Schema.is(YamlSeq)(node)) {
 		return stringifySeqNodeLines(node, ctx, depth);
 	}
-	if (node instanceof YamlAlias) {
+	if (Schema.is(YamlAlias)(node)) {
 		return [`*${node.name}`];
 	}
 	return ["null"];
@@ -1136,7 +1137,7 @@ const MERGE_KEY = "<<";
  */
 function isPlainMergeKey(node: YamlNode | null | undefined): boolean {
 	return (
-		node instanceof YamlScalar &&
+		Schema.is(YamlScalar)(node) &&
 		node.value === MERGE_KEY &&
 		(node.style ?? "plain") === "plain" &&
 		node.tag === undefined &&
@@ -1236,7 +1237,7 @@ function entryTrailing(pair: YamlPair, ctx: StringifyContext): string | undefine
  * a terminal run rather than something that can sit on the entry's line.
  */
 function rendersAcrossLines(node: YamlNode, ctx: StringifyContext): boolean {
-	if (!(node instanceof YamlMap || node instanceof YamlSeq)) return false;
+	if (!(Schema.is(YamlMap)(node) || Schema.is(YamlSeq)(node))) return false;
 	if (node.items.length === 0) return false;
 	const style = ctx.forceDefaultStyles ? ctx.defaultCollectionStyle : (node.style ?? ctx.defaultCollectionStyle);
 	if (style === "block" || node.sourceMultiline === true) return true;
@@ -1246,7 +1247,7 @@ function rendersAcrossLines(node: YamlNode, ctx: StringifyContext): boolean {
 	// it neither swallows anything nor forces the layout, and `a: {b: 1} # t`
 	// stays on one line. Canonical mode emits no comments at all.
 	if (ctx.forceDefaultStyles) return false;
-	return node instanceof YamlMap
+	return Schema.is(YamlMap)(node)
 		? node.items.some(
 				(p) => pairLeading(p) !== undefined || (p.value ?? p.key).comment !== undefined || pairSpaceBefore(p) === true,
 			)
@@ -1307,7 +1308,7 @@ function pushExplicitKeyValueLines(
 	// either bare or after an optional `&anchor` / `!tag` prefix.
 	const firstStripped = stripScalarMetadataPrefix(first);
 	const isBlockScalarHeader = firstStripped.startsWith("|") || firstStripped.startsWith(">");
-	const valIsScalar = valNode instanceof YamlScalar;
+	const valIsScalar = Schema.is(YamlScalar)(valNode);
 	const isInlineQuoted = valIsScalar && (firstStripped.startsWith("'") || firstStripped.startsWith('"'));
 	if (isBlockScalarHeader || isInlineQuoted) {
 		const headerIdx = lines.length;
@@ -1331,7 +1332,7 @@ function pushExplicitKeyValueLines(
 		return -1;
 	}
 	const valIsBlockMap =
-		valNode instanceof YamlMap &&
+		Schema.is(YamlMap)(valNode) &&
 		valNode.items.length > 0 &&
 		(ctx.forceDefaultStyles ? ctx.defaultCollectionStyle : (valNode.style ?? ctx.defaultCollectionStyle)) === "block";
 	if (valIsBlockMap) {
@@ -1362,8 +1363,8 @@ function stringifyMapNodeLines(node: YamlMap, ctx: StringifyContext, depth: numb
 	let items = [...node.items];
 	if (ctx.sortKeys) {
 		items = items.sort((a, b) => {
-			const ka = a.key instanceof YamlScalar ? String(a.key.value) : "";
-			const kb = b.key instanceof YamlScalar ? String(b.key.value) : "";
+			const ka = Schema.is(YamlScalar)(a.key) ? String(a.key.value) : "";
+			const kb = Schema.is(YamlScalar)(b.key) ? String(b.key.value) : "";
 			return ka < kb ? -1 : ka > kb ? 1 : 0;
 		});
 	}
@@ -1457,7 +1458,7 @@ function stringifyMapNodeLines(node: YamlMap, ctx: StringifyContext, depth: numb
 		// - Key is a block-style scalar (block-literal/block-folded) whose
 		//   header introduces a multi-line scalar
 		const keyIsScalarWithNewline =
-			pair.key instanceof YamlScalar &&
+			Schema.is(YamlScalar)(pair.key) &&
 			((typeof pair.key.value === "string" && pair.key.value.includes("\n")) ||
 				pair.key.style === "block-literal" ||
 				pair.key.style === "block-folded");
@@ -1466,7 +1467,7 @@ function stringifyMapNodeLines(node: YamlMap, ctx: StringifyContext, depth: numb
 		// be inlined safely. Empty collections render as `[]` / `{}` on one
 		// line and CAN be implicit (M2N8/01: `[]: x`).
 		const keyIsNonEmptyCollection =
-			(pair.key instanceof YamlMap || pair.key instanceof YamlSeq) && pair.key.items.length > 0;
+			(Schema.is(YamlMap)(pair.key) || Schema.is(YamlSeq)(pair.key)) && pair.key.items.length > 0;
 		const isComplexKey = keyIsNonEmptyCollection || keyIsScalarWithNewline;
 		if (isComplexKey) {
 			const keyLines = stringifyNodeLines(pair.key, ctx, depth + 1);
@@ -1485,7 +1486,7 @@ function stringifyMapNodeLines(node: YamlMap, ctx: StringifyContext, depth: numb
 			const firstIsMetaOnly =
 				firstTokens.length > 0 && firstTokens.every((t) => t.startsWith("&") || t.startsWith("!"));
 			const keyIsBlockScalar =
-				pair.key instanceof YamlScalar && (pair.key.style === "block-literal" || pair.key.style === "block-folded");
+				Schema.is(YamlScalar)(pair.key) && (pair.key.style === "block-literal" || pair.key.style === "block-folded");
 			const contPad = firstIsMetaOnly || keyIsBlockScalar ? "" : EXPLICIT_COMPACT_PAD;
 			for (let k = 1; k < keyLines.length; k++) {
 				lines.push(`${contPad}${keyLines[k]}`);
@@ -1515,7 +1516,7 @@ function stringifyMapNodeLines(node: YamlMap, ctx: StringifyContext, depth: numb
 			ctx.forceDefaultStyles &&
 			node.style === "flow" &&
 			node.sourceMultiline !== true &&
-			pair.key instanceof YamlScalar &&
+			Schema.is(YamlScalar)(pair.key) &&
 			(pair.key.style === "single-quoted" || pair.key.style === "double-quoted") &&
 			typeof pair.key.value === "string" &&
 			/^[A-Za-z_][A-Za-z0-9_]*$/.test(pair.key.value)
@@ -1540,11 +1541,11 @@ function stringifyMapNodeLines(node: YamlMap, ctx: StringifyContext, depth: numb
 		// absorbing the `:`. Empty scalar keys whose only rendering is an
 		// anchor or tag (e.g. `&a` or `!!str`) need the same disambiguation.
 		const keyIsAnchoredOrTaggedEmpty =
-			pair.key instanceof YamlScalar &&
+			Schema.is(YamlScalar)(pair.key) &&
 			pair.key.length === 0 &&
 			(pair.key.value === null || pair.key.value === undefined || pair.key.value === "") &&
 			(pair.key.anchor !== undefined || pair.key.tag !== undefined);
-		const sep = pair.key instanceof YamlAlias || keyIsAnchoredOrTaggedEmpty ? " :" : ":";
+		const sep = Schema.is(YamlAlias)(pair.key) || keyIsAnchoredOrTaggedEmpty ? " :" : ":";
 		const valNode = pair.value;
 		if (!valNode) {
 			// 4ABK: when the document ROOT is a multi-line flow map AND the
@@ -1554,8 +1555,8 @@ function stringifyMapNodeLines(node: YamlMap, ctx: StringifyContext, depth: numb
 			// nested flow maps (8KB6: flow inside a block-seq item) keep
 			// `key:`. Single-line flow root keeps `key:` too — only
 			// multi-line flow root triggers the explicit-null form.
-			const isPlainKey = pair.key instanceof YamlScalar && pair.key.style === "plain";
-			const keyIsNonEmpty = pair.key instanceof YamlScalar && pair.key.length > 0;
+			const isPlainKey = Schema.is(YamlScalar)(pair.key) && pair.key.style === "plain";
+			const keyIsNonEmpty = Schema.is(YamlScalar)(pair.key) && pair.key.length > 0;
 			const isRootFlowMap = ctx.parentPosition === undefined && node.style === "flow" && node.sourceMultiline === true;
 			if (ctx.forceDefaultStyles && isRootFlowMap && isPlainKey && keyIsNonEmpty) {
 				lines.push(`${keyStr}${sep} null`);
@@ -1569,7 +1570,7 @@ function stringifyMapNodeLines(node: YamlMap, ctx: StringifyContext, depth: numb
 		const valLines = stringifyNodeLines(valNode, valCtx, depth + 1);
 		const valLeading = valueLeading(valNode);
 		const isBlockSeqValue =
-			valNode instanceof YamlSeq &&
+			Schema.is(YamlSeq)(valNode) &&
 			valNode.items.length > 0 &&
 			(ctx.forceDefaultStyles ? ctx.defaultCollectionStyle : (valNode.style ?? ctx.defaultCollectionStyle)) === "block";
 		if (isBlockSeqValue) {
@@ -1593,7 +1594,7 @@ function stringifyMapNodeLines(node: YamlMap, ctx: StringifyContext, depth: numb
 				lines.push(ctx.indentSequences && vl !== "" ? `${pad}${vl}` : vl);
 			}
 		} else if (
-			valNode instanceof YamlMap &&
+			Schema.is(YamlMap)(valNode) &&
 			valNode.items.length > 0 &&
 			(ctx.forceDefaultStyles ? ctx.defaultCollectionStyle : (valNode.style ?? ctx.defaultCollectionStyle)) === "block"
 		) {
@@ -1636,7 +1637,7 @@ function stringifyMapNodeLines(node: YamlMap, ctx: StringifyContext, depth: numb
 			// optional `&anchor` / `!tag` prefix that the scalar renderer may add.
 			const firstStripped = stripScalarMetadataPrefix(first);
 			const isBlockScalarHeader = firstStripped.startsWith("|") || firstStripped.startsWith(">");
-			const valIsScalar = valNode instanceof YamlScalar;
+			const valIsScalar = Schema.is(YamlScalar)(valNode);
 			const isInlineQuoted = valIsScalar && (firstStripped.startsWith("'") || firstStripped.startsWith('"'));
 			if (isBlockScalarHeader || isInlineQuoted) {
 				if (valLeading !== undefined) {
@@ -1658,7 +1659,7 @@ function stringifyMapNodeLines(node: YamlMap, ctx: StringifyContext, depth: numb
 				// line: the key keeps its own, and the header spills to an indented
 				// line of its own (`a: # pair` / `  | # hdr` / `  body`).
 				const keyComment = !ctx.forceDefaultStyles ? pair.key.comment : undefined;
-				const scalarComment = isBlockScalarHeader && valNode instanceof YamlScalar ? valNode.comment : undefined;
+				const scalarComment = isBlockScalarHeader && Schema.is(YamlScalar)(valNode) ? valNode.comment : undefined;
 				if (keyComment !== undefined && scalarComment !== undefined) {
 					lines.push(`${keyStr}${sep}`);
 					appendTrailing(lines.length - 1, keyComment);
@@ -1686,7 +1687,7 @@ function stringifyMapNodeLines(node: YamlMap, ctx: StringifyContext, depth: numb
 			} else {
 				// Check if this is a block map value with metadata prefix
 				const isBlockMapValue =
-					valNode instanceof YamlMap &&
+					Schema.is(YamlMap)(valNode) &&
 					(ctx.forceDefaultStyles ? ctx.defaultCollectionStyle : (valNode.style ?? ctx.defaultCollectionStyle)) ===
 						"block";
 				const mapMeta = isBlockMapValue ? buildMetadataPrefix(valNode.tag, valNode.anchor) : undefined;
@@ -1850,7 +1851,7 @@ function stringifySeqNodeLines(node: YamlSeq, ctx: StringifyContext, depth: numb
 			// continuation lines emitted as-is. Detection allows an optional
 			// `&anchor` / `!tag` prefix that the scalar renderer may have added.
 			const firstStripped = stripScalarMetadataPrefix(first);
-			const itemIsScalar = item instanceof YamlScalar;
+			const itemIsScalar = Schema.is(YamlScalar)(item);
 			const isBlockScalarHeader = firstStripped.startsWith("|") || firstStripped.startsWith(">");
 			const isInlineScalar =
 				isBlockScalarHeader || (itemIsScalar && (firstStripped.startsWith("'") || firstStripped.startsWith('"')));
@@ -1968,7 +1969,7 @@ export function stringifyDocument(doc: RawYamlDocument, options?: StringifyOptio
 	// slot is never contested. Canonical mode stays comment-free.
 	const rootHeaderComment =
 		!ctx.forceDefaultStyles &&
-		contents instanceof YamlScalar &&
+		Schema.is(YamlScalar)(contents) &&
 		(contents.style === "block-literal" || contents.style === "block-folded")
 			? contents.comment
 			: undefined;
@@ -1984,7 +1985,7 @@ export function stringifyDocument(doc: RawYamlDocument, options?: StringifyOptio
 	const needsTerminatorForAnchoredPlainScalar =
 		ctx.forceDefaultStyles &&
 		doc.hasDocumentStart &&
-		contents instanceof YamlScalar &&
+		Schema.is(YamlScalar)(contents) &&
 		contents.style === "plain" &&
 		contents.anchor !== undefined &&
 		!contents.tag;
@@ -1996,11 +1997,11 @@ export function stringifyDocument(doc: RawYamlDocument, options?: StringifyOptio
 	// roots (3MYT, EX5H, EXG3) without a `%` continuation render
 	// without `...`.
 	const looksLikeDirectiveContinuation =
-		contents instanceof YamlScalar && typeof contents.value === "string" && / %[A-Z]/.test(contents.value);
+		Schema.is(YamlScalar)(contents) && typeof contents.value === "string" && / %[A-Z]/.test(contents.value);
 	const needsTerminatorForMultilinePlainScalar =
 		ctx.forceDefaultStyles &&
 		doc.hasDocumentStart &&
-		contents instanceof YamlScalar &&
+		Schema.is(YamlScalar)(contents) &&
 		contents.style === "plain" &&
 		contents.sourceMultiline === true &&
 		looksLikeDirectiveContinuation;
@@ -2045,8 +2046,8 @@ export function stringifyDocument(doc: RawYamlDocument, options?: StringifyOptio
 	if (doc.hasDocumentStart) {
 		const rootTag = contents && "tag" in contents ? contents.tag : undefined;
 		const rootAnchor = contents && "anchor" in contents ? contents.anchor : undefined;
-		const isCollection = contents instanceof YamlMap || contents instanceof YamlSeq;
-		const isScalar = contents instanceof YamlScalar;
+		const isCollection = Schema.is(YamlMap)(contents) || Schema.is(YamlSeq)(contents);
+		const isScalar = Schema.is(YamlScalar)(contents);
 
 		if (rootTag || rootAnchor) {
 			// Build metadata prefix — canonical ordering: &anchor !!tag

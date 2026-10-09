@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file nodeBuiltinImport:skip-file
 // The differential oracle for NodeSyncFileSystem: every read member it serves
 // must agree with @effect/platform-node's NodeFileSystem on the same real
 // directory — success values identical, failures identical in tag, method and

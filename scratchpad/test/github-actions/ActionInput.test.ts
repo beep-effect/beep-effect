@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { Config, ConfigProvider, Effect, Redacted, Schema } from "effect";
 import { ActionInput } from "../../effected/github-actions/index.ts";

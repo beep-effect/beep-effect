@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file asyncFunction:skip-file
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
 import { Cause, ConfigProvider, Console, Effect, Exit, Fiber, Layer, Runtime, Stdio, Terminal } from "effect";

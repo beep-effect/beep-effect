@@ -208,7 +208,7 @@ describe("EncryptedCodec", () => {
 	it.effect("a failing key effect is retried after failure", () =>
 		Effect.gen(function* () {
 			let attempts = 0;
-			const boom = new ConfigEncryptionError({ phase: "key-derivation", cause: new Error("kms down") });
+			const boom = ConfigEncryptionError.make({ phase: "key-derivation", cause: new Error("kms down") });
 			const failing = EncryptedCodecKey.fromCryptoKey(
 				Effect.suspend(() => {
 					attempts++;
@@ -263,7 +263,7 @@ describe("EncryptedCodec", () => {
 				Effect.suspend((): Effect.Effect<CryptoKey, ConfigEncryptionError> => {
 					attempts++;
 					return attempts === 1
-						? Effect.fail(new ConfigEncryptionError({ phase: "key-derivation", cause: new Error("kms down") }))
+						? Effect.fail(ConfigEncryptionError.make({ phase: "key-derivation", cause: new Error("kms down") }))
 						: generateKeyForTest();
 				}),
 			);

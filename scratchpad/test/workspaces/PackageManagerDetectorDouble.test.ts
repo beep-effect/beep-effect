@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file
 // `PackageManagerDetector.makeTest` / `layerTest` — the sanctioned double.
 //
 // The house pattern, matching `WorkspaceRoot` and `WorkspaceDiscovery` in this
@@ -37,7 +38,7 @@ describe("PackageManagerDetector.makeTest", () => {
 		Effect.gen(function* () {
 			const double = PackageManagerDetector.makeTest({
 				detect: (root: string) =>
-					Effect.fail(new PackageManagerDetectionError({ root, checked: ["pnpm-workspace.yaml"] })),
+					Effect.fail(PackageManagerDetectionError.make({ root, checked: ["pnpm-workspace.yaml"] })),
 			});
 			const error = yield* Effect.flip(double.detect("/repo"));
 			assert.instanceOf(error, PackageManagerDetectionError);

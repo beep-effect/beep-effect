@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file
 // The volume-inspection kit extension (effected#383): an opt-in second service
 // publishing a synchronous, read-only view of the SAME volume backing the
 // FileSystem, so write-path tests can assert on what a program wrote without

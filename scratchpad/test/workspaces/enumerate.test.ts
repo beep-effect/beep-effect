@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { GlobSet } from "../../effected/glob/index.ts";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";

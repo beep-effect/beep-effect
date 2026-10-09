@@ -8,6 +8,7 @@
 
 import type { RawYamlDocument } from "../../../../effected/yaml/internal/raw-document.ts";
 import { YamlMap, YamlScalar, YamlSeq } from "../../../../effected/yaml/YamlNode.ts";
+import * as Schema from "effect/Schema";
 
 /** Render a string as a YAML double-quoted single-line scalar. */
 function renderDoubleQuoted(s: string): string {
@@ -41,7 +42,7 @@ export function applySingleDocCanonical(output: string, doc: RawYamlDocument, so
 	// BEC7, RTP8). Source-shape detection: scan for `---` followed by a newline
 	// (rather than a space) before the scalar body.
 	if (
-		root instanceof YamlScalar &&
+		Schema.is(YamlScalar)(root) &&
 		!root.tag &&
 		!root.anchor &&
 		doc.hasDocumentStart &&
@@ -60,7 +61,7 @@ export function applySingleDocCanonical(output: string, doc: RawYamlDocument, so
 	// (R4YG: items are bare block scalars; M6YH/735Y: mixed items) stay
 	// unchanged.
 	if (
-		root instanceof YamlSeq &&
+		Schema.is(YamlSeq)(root) &&
 		root.style === "block" &&
 		hasExplicitIndentInMapValue(root, source) &&
 		!output.startsWith("---")
@@ -76,7 +77,7 @@ export function applySingleDocCanonical(output: string, doc: RawYamlDocument, so
 	// root level AND output's first non-leading-space content starts with `?`
 	// followed by an alpha char (key starts with `?`).
 	if (
-		root instanceof YamlMap &&
+		Schema.is(YamlMap)(root) &&
 		sourceHasFlowAtRoot(source) &&
 		!output.startsWith("---") &&
 		/^[?][A-Za-z]/.test(output)
@@ -90,7 +91,7 @@ export function applySingleDocCanonical(output: string, doc: RawYamlDocument, so
 	// Common multi-line flow (87E4, 8UDB, DBG4) keeps tokens together on lines,
 	// so it does not match this pattern.
 	if (
-		(root instanceof YamlMap || root instanceof YamlSeq) &&
+		(Schema.is(YamlMap)(root) || Schema.is(YamlSeq)(root)) &&
 		sourceHasFlowWithIsolatedColon(source) &&
 		!output.startsWith("---")
 	) {
@@ -102,7 +103,7 @@ export function applySingleDocCanonical(output: string, doc: RawYamlDocument, so
 	// libyaml's canonical emitter drops the redundant `---` here. The companion
 	// fixture 96L6 has only 1 trailing newline and keeps `---`.
 	if (
-		root instanceof YamlScalar &&
+		Schema.is(YamlScalar)(root) &&
 		root.style === "block-folded" &&
 		typeof root.value === "string" &&
 		!root.value.replace(/\n$/, "").includes("\n") &&
@@ -112,7 +113,7 @@ export function applySingleDocCanonical(output: string, doc: RawYamlDocument, so
 		return output.slice(4);
 	}
 
-	if (!(root instanceof YamlScalar)) return output;
+	if (!(Schema.is(YamlScalar)(root))) return output;
 	if (!output.startsWith("--- ")) return output;
 	const firstAfter = output[4];
 	const val = root.value;
@@ -279,10 +280,10 @@ function hadDocStartOnOwnLine(source: string): boolean {
  */
 function hasExplicitIndentInMapValue(seq: YamlSeq, source: string): boolean {
 	for (const item of seq.items) {
-		if (item instanceof YamlMap) {
+		if (Schema.is(YamlMap)(item)) {
 			for (const pair of item.items) {
 				const val = pair.value;
-				if (val instanceof YamlScalar && (val.style === "block-literal" || val.style === "block-folded")) {
+				if (Schema.is(YamlScalar)(val) && (val.style === "block-literal" || val.style === "block-folded")) {
 					const region = source.slice(val.offset, val.offset + Math.min(val.length, 6));
 					if (/^[|>][1-9]/.test(region)) return true;
 				}

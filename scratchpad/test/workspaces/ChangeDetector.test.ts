@@ -168,7 +168,7 @@ describe("ChangeDetector — the working tree is not a git repository", () => {
 	// `Git` surfaces a non-repository directly as NotARepositoryError — the
 	// v1 `available()` pre-check that synthesized a `GitCommandError` is gone.
 	const notARepo = stubGit({
-		changedFiles: (cwd) => Effect.fail(new NotARepositoryError({ cwd })),
+		changedFiles: (cwd) => Effect.fail(NotARepositoryError.make({ cwd })),
 	});
 	layer(detectorOver(notARepo))((it) => {
 		it.effect("fails typed with NotARepositoryError, not a defect", () =>
@@ -188,7 +188,7 @@ describe("ChangeDetector — a git command that fails", () => {
 		changedFiles: (cwd, { base, head }) =>
 			base === "nope"
 				? Effect.fail(
-						new GitCommandError({
+						GitCommandError.make({
 							kind: "failed",
 							args: ["diff", "--name-only", "-z", "--relative", `${base}...${head}`],
 							cwd,

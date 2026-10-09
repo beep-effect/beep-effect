@@ -9,7 +9,7 @@
 //
 // This is the AST-level visitor only — the CST layer stays internal.
 
-import { Data, Stream } from "effect";
+import { Data, Stream, Schema } from "effect";
 import { composeAllDocuments } from "./internal/composer/document.ts";
 import type { RawYamlDocument } from "./internal/raw-document.ts";
 import type { YamlParseOptions } from "./Yaml.ts";
@@ -180,7 +180,7 @@ function* walkDocument(doc: RawYamlDocument, text: string): Generator<YamlVisito
 }
 
 function* walkNode(node: YamlNode, path: YamlPath, depth: number): Generator<YamlVisitorEvent> {
-	if (node instanceof YamlScalar) {
+	if (Schema.is(YamlScalar)(node)) {
 		if (node.commentBefore !== undefined) {
 			yield YamlVisitorEvent.Comment({ path, depth, text: node.commentBefore, placement: "leading" });
 		}
@@ -195,7 +195,7 @@ function* walkNode(node: YamlNode, path: YamlPath, depth: number): Generator<Yam
 			...(node.tag !== undefined ? { tag: node.tag } : {}),
 			...(node.anchor !== undefined ? { anchor: node.anchor } : {}),
 		});
-	} else if (node instanceof YamlAlias) {
+	} else if (Schema.is(YamlAlias)(node)) {
 		if (node.commentBefore !== undefined) {
 			yield YamlVisitorEvent.Comment({ path, depth, text: node.commentBefore, placement: "leading" });
 		}
@@ -203,7 +203,7 @@ function* walkNode(node: YamlNode, path: YamlPath, depth: number): Generator<Yam
 			yield YamlVisitorEvent.Comment({ path, depth, text: node.comment, placement: "trailing" });
 		}
 		yield YamlVisitorEvent.Alias({ path, depth, name: node.name });
-	} else if (node instanceof YamlMap) {
+	} else if (Schema.is(YamlMap)(node)) {
 		if (node.commentBefore !== undefined) {
 			yield YamlVisitorEvent.Comment({ path, depth, text: node.commentBefore, placement: "leading" });
 		}
@@ -221,7 +221,7 @@ function* walkNode(node: YamlNode, path: YamlPath, depth: number): Generator<Yam
 			yield* walkPair(pair, path, depth + 1);
 		}
 		yield YamlVisitorEvent.MapEnd({ path, depth });
-	} else if (node instanceof YamlSeq) {
+	} else if (Schema.is(YamlSeq)(node)) {
 		if (node.commentBefore !== undefined) {
 			yield YamlVisitorEvent.Comment({ path, depth, text: node.commentBefore, placement: "leading" });
 		}
@@ -244,8 +244,8 @@ function* walkNode(node: YamlNode, path: YamlPath, depth: number): Generator<Yam
 }
 
 function* walkPair(pair: YamlPair, parentPath: YamlPath, depth: number): Generator<YamlVisitorEvent> {
-	const resolvedKey = pair.key instanceof YamlScalar ? pair.key.value : null;
-	const resolvedValue = pair.value instanceof YamlScalar ? pair.value.value : null;
+	const resolvedKey = Schema.is(YamlScalar)(pair.key) ? pair.key.value : null;
+	const resolvedValue = Schema.is(YamlScalar)(pair.value) ? pair.value.value : null;
 
 	const keySegment: string | number =
 		typeof resolvedKey === "string" ? resolvedKey : typeof resolvedKey === "number" ? resolvedKey : String(resolvedKey);

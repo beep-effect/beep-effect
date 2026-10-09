@@ -1,3 +1,4 @@
+// @effect-diagnostics nodeBuiltinImport:skip-file processEnv:skip-file
 // SLSA Provenance v1 — typed, total, and byte-compatible with @actions/attest.
 //
 // The compatibility claim is the reason this file reads a fixture rather than

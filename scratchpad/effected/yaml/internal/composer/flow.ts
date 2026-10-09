@@ -177,7 +177,7 @@ export function composeFlowMap(
 ): YamlMap {
 	// Nesting-depth guard: unbounded recursion is a stack-overflow DoS vector.
 	if (!enterNesting(state, cst)) {
-		return new YamlMap({ items: [], style: "flow", offset: cst.offset, length: cst.length });
+		return YamlMap.make({ items: [], style: "flow", offset: cst.offset, length: cst.length });
 	}
 	try {
 		return composeFlowMapInner(cst, state, meta, parentBlockColumn);
@@ -228,7 +228,7 @@ function composeFlowMapInner(cst: CstNode, state: ComposerState, meta?: NodeMeta
 				? `${meta.comment}\n${trailingComment}`
 				: meta.comment
 			: trailingComment;
-	const map = new YamlMap({
+	const map = YamlMap.make({
 		items: pairs,
 		style: "flow" as CollectionStyle,
 		offset: cst.offset,
@@ -258,7 +258,7 @@ export function flattenFlowChildren(children: readonly CstNode[], state: Compose
 			if (child.source === ",") {
 				if (hasMeta(pendingMeta)) {
 					const value = resolveScalar("", "plain", pendingMeta.tag, state);
-					const scalar = new YamlScalar({
+					const scalar = YamlScalar.make({
 						value,
 						style: "plain" as ScalarStyle,
 						offset: child.offset,
@@ -276,7 +276,7 @@ export function flattenFlowChildren(children: readonly CstNode[], state: Compose
 				// Flush pending tag/anchor as empty scalar before value-sep
 				if (hasMeta(pendingMeta)) {
 					const value = resolveScalar("", "plain", pendingMeta.tag, state);
-					const scalar = new YamlScalar({
+					const scalar = YamlScalar.make({
 						value,
 						style: "plain" as ScalarStyle,
 						offset: child.offset,
@@ -366,7 +366,7 @@ export function flattenFlowChildren(children: readonly CstNode[], state: Compose
 					// continuation plain scalars) — merge as multi-line key
 					const { value, nextIdx } = collectMultilineKey(children, i);
 					const resolved = resolveScalar(value, "plain", pendingMeta.tag, state);
-					const scalar = new YamlScalar({
+					const scalar = YamlScalar.make({
 						value: resolved,
 						style: "plain" as ScalarStyle,
 						offset: child.offset,
@@ -388,7 +388,7 @@ export function flattenFlowChildren(children: readonly CstNode[], state: Compose
 					state.text,
 				);
 				const resolved = resolveScalar(value, "plain", pendingMeta.tag, state);
-				const scalar = new YamlScalar({
+				const scalar = YamlScalar.make({
 					value: resolved,
 					style: "plain" as ScalarStyle,
 					offset: child.offset,
@@ -432,7 +432,7 @@ export function flattenFlowChildren(children: readonly CstNode[], state: Compose
 	// Flush trailing pending tag/anchor as empty scalar (e.g., !!str at end of flow)
 	if (hasMeta(pendingMeta)) {
 		const value = resolveScalar("", "plain", pendingMeta.tag, state);
-		const scalar = new YamlScalar({
+		const scalar = YamlScalar.make({
 			value,
 			style: "plain" as ScalarStyle,
 			offset: 0,
@@ -458,7 +458,7 @@ export function composeFlowSeq(
 ): YamlSeq {
 	// Nesting-depth guard: unbounded recursion is a stack-overflow DoS vector.
 	if (!enterNesting(state, cst)) {
-		return new YamlSeq({ items: [], style: "flow", offset: cst.offset, length: cst.length });
+		return YamlSeq.make({ items: [], style: "flow", offset: cst.offset, length: cst.length });
 	}
 	try {
 		return composeFlowSeqInner(cst, state, meta, parentBlockColumn);
@@ -622,7 +622,7 @@ function composeFlowSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMeta
 				// segment is this item's spaceBefore.
 				const segFirst = content[0];
 				const fields = takePendingFields(segFirst !== undefined ? segFirst.offset : -1);
-				const map = new YamlMap({
+				const map = YamlMap.make({
 					items: pairs,
 					style: "flow" as CollectionStyle,
 					offset: firstPair.key.offset,
@@ -693,7 +693,7 @@ function composeFlowSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMeta
 				? `${meta.comment}\n${seqTrailing}`
 				: meta.comment
 			: seqTrailing;
-	const seq = new YamlSeq({
+	const seq = YamlSeq.make({
 		items,
 		style: "flow" as CollectionStyle,
 		offset: cst.offset,

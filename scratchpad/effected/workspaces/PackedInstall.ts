@@ -759,7 +759,7 @@ const failure = (
 	reason: PackedInstallError["reason"],
 	message: string,
 	extra: { manager?: PackageManagerName; package?: string; output?: string; cause?: unknown } = {},
-): PackedInstallError => new PackedInstallError({ reason, message, ...extra });
+): PackedInstallError => PackedInstallError.make({ reason, message, ...extra });
 
 /** A package from outside the workspace that replaces registry resolution: where it is and how to get a tarball of it. */
 interface Replacement {

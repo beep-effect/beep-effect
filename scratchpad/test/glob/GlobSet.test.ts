@@ -220,7 +220,7 @@ describe("GlobSet: construction and failure", () => {
 
 	it.effect("class decode produces a working instance", () =>
 		Effect.gen(function* () {
-			const set = yield* Schema.decodeUnknownEffect(GlobSet)({ patterns: ["x/*"] });
+			const set = yield* Schema.decodeEffect(GlobSet)({ patterns: ["x/*"] });
 			assert.instanceOf(set, GlobSet);
 			assert.isTrue(set.matches("x/y"));
 		}),

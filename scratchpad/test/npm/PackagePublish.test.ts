@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { LocalExec } from "../../effected/commands/index.ts";
 import type { MemoryFileSystemFaults, MemoryFileSystemHandle, MemoryFileSystemSeed } from "../../effected/memfs/index.ts";

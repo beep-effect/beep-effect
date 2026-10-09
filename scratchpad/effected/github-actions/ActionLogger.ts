@@ -375,7 +375,7 @@ const make = Effect.gen(function* () {
  * @public
  */
 export class ActionLogger extends Context.Service<ActionLogger, ActionLoggerShape>()(
-	"@effected/github-actions/ActionLogger",
+	"@beep/scratchpad/effected/github-actions/ActionLogger",
 ) {
 	/**
 	 * The service: groups, the buffered step renderer, notices and annotations.

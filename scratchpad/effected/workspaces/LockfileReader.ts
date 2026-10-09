@@ -149,7 +149,7 @@ const unstubbed = (method: string): Effect.Effect<never> =>
  * @public
  */
 export class LockfileReader extends Context.Service<LockfileReader, LockfileReaderShape>()(
-	"@effected/workspaces/LockfileReader",
+	"@beep/scratchpad/effected/workspaces/LockfileReader",
 ) {
 	/** Builds the service. */
 	static readonly make = (
@@ -176,7 +176,7 @@ export class LockfileReader extends Context.Service<LockfileReader, LockfileRead
 
 				const content = yield* fs
 					.readFileString(lockfilePath)
-					.pipe(Effect.mapError((cause) => new LockfileReadError({ lockfilePath, format, cause })));
+					.pipe(Effect.mapError((cause) => LockfileReadError.make({ lockfilePath, format, cause })));
 
 				// `Lockfile.parse` owns YAML-stream framing: `pnpm-lock.yaml` is a
 				// stream, and pnpm's writer always emits the config-dependencies document

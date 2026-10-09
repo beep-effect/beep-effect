@@ -105,7 +105,7 @@ export interface PullRequestCommentShape {
  * @public
  */
 export class PullRequestComment extends Context.Service<PullRequestComment, PullRequestCommentShape>()(
-	"@effected/github/PullRequestComment",
+	"@beep/scratchpad/effected/github/PullRequestComment",
 ) {
 	/** The live service, built over a `GitHubClient`. */
 	static readonly layer: Layer.Layer<PullRequestComment, never, GitHubClient> = Layer.effect(
@@ -189,11 +189,11 @@ const make = (client: GitHubClient["Service"]): PullRequestCommentShape => {
 		delete: Effect.fn("PullRequestComment.delete")(function* (commentId: number) {
 			const { owner, repo } = yield* Repo;
 			yield* Effect.annotateCurrentSpan({ owner, repo, commentId });
-			yield* client.request("DELETE /repos/{owner}/{repo}/issues/comments/{comment_id}", {
-				owner,
-				repo,
-				comment_id: commentId,
-			});
+			return yield* client.request("DELETE /repos/{owner}/{repo}/issues/comments/{comment_id}", {
+    owner,
+    repo,
+    comment_id: commentId,
+});
 		}),
 	};
 };

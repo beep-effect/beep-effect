@@ -1,3 +1,4 @@
+// @effect-diagnostics nodeBuiltinImport:skip-file
 // The kit's own package graph, held to lib/configs/layers.json by the check it ships.
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";

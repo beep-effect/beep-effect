@@ -248,9 +248,7 @@ export class GitHubToken {
 		const token = yield* state.get(options.stateKey ?? DEFAULT_KEY, InstallationToken);
 		const now = yield* DateTime.now;
 		if (token.isExpired(DateTime.toEpochMillis(now), options.skew)) {
-			return yield* Effect.fail(
-				new GitHubTokenError({ reason: "expired", expiresAt: DateTime.formatIso(token.expiresAt) }),
-			);
+			return yield* GitHubTokenError.make({ reason: "expired", expiresAt: DateTime.formatIso(token.expiresAt) });
 		}
 		return token;
 	});

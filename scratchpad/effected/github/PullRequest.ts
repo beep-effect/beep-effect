@@ -238,7 +238,7 @@ export interface PullRequestShape {
  *
  * @public
  */
-export class PullRequest extends Context.Service<PullRequest, PullRequestShape>()("@effected/github/PullRequest") {
+export class PullRequest extends Context.Service<PullRequest, PullRequestShape>()("@beep/scratchpad/effected/github/PullRequest") {
 	/** The live service, built over a `GitHubClient`. */
 	static readonly layer: Layer.Layer<PullRequest, never, GitHubClient> = Layer.effect(
 		this,

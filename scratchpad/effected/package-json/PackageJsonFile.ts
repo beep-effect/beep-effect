@@ -199,7 +199,7 @@ export interface PackageJsonFileShape {
  * @public
  */
 export class PackageJsonFile extends Context.Service<PackageJsonFile, PackageJsonFileShape>()(
-	"@effected/package-json/PackageJsonFile",
+	"@beep/scratchpad/effected/package-json/PackageJsonFile",
 ) {
 	/** Build the service implementation from `FileSystem` / `Path` in context; use {@link PackageJsonFile.layer} to provide it. */
 	static readonly make: Effect.Effect<PackageJsonFileShape, never, FileSystem.FileSystem | Path.Path> = Effect.gen(
@@ -218,8 +218,8 @@ export class PackageJsonFile extends Context.Service<PackageJsonFile, PackageJso
 					.pipe(
 						Effect.mapError((cause) =>
 							cause.reason._tag === "NotFound"
-								? new PackageJsonNotFoundError({ path: target })
-								: new PackageJsonReadError({ path: target, cause }),
+								? PackageJsonNotFoundError.make({ path: target })
+								: PackageJsonReadError.make({ path: target, cause }),
 						),
 					);
 
@@ -228,7 +228,7 @@ export class PackageJsonFile extends Context.Service<PackageJsonFile, PackageJso
 					const content = yield* readText(target);
 					return yield* Effect.try({
 						try: () => JSON.parse(content) as unknown,
-						catch: (cause) => new PackageJsonParseError({ path: target, cause }),
+						catch: (cause) => PackageJsonParseError.make({ path: target, cause }),
 					});
 				});
 
@@ -251,10 +251,10 @@ export class PackageJsonFile extends Context.Service<PackageJsonFile, PackageJso
 					const directory = path.dirname(target);
 					yield* fs
 						.makeDirectory(directory, { recursive: true })
-						.pipe(Effect.mapError((cause) => new PackageJsonWriteError({ path: target, cause })));
+						.pipe(Effect.mapError((cause) => PackageJsonWriteError.make({ path: target, cause })));
 					yield* fs
 						.writeFileString(target, json)
-						.pipe(Effect.mapError((cause) => new PackageJsonWriteError({ path: target, cause })));
+						.pipe(Effect.mapError((cause) => PackageJsonWriteError.make({ path: target, cause })));
 				});
 
 			const read = Effect.fn("PackageJsonFile.read")(function* (target: string) {
@@ -296,7 +296,7 @@ export class PackageJsonFile extends Context.Service<PackageJsonFile, PackageJso
 						// The service's invalid-JSON tag is PackageJsonParseError,
 						// whichever entry point met it — normalize the text-level
 						// syntax error at this boundary.
-						Effect.catchTag("PackageJsonSyntaxError", (cause) => new PackageJsonParseError({ path: target, cause })),
+						Effect.catchTag("PackageJsonSyntaxError", (cause) => PackageJsonParseError.make({ path: target, cause })),
 					);
 				}
 				// A no-op edit set leaves the bytes alone entirely — no write, no

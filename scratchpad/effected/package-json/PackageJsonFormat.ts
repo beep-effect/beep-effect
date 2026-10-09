@@ -93,7 +93,7 @@ const isJsonObject = (value: unknown): value is Record<string, unknown> =>
  */
 export class PackageJsonModifyError extends Schema.TaggedError<PackageJsonModifyError>()("PackageJsonModifyError", {
 	/** The field path whose navigation failed. */
-	path: Schema.Array(Schema.Union([Schema.String, Schema.Number])),
+	path: Schema.Array(Schema.Union([Schema.String, Schema.Finite])),
 	/** The underlying `JsoncModificationError`, preserved structurally. */
 	cause: Schema.Defect(),
 }) {
@@ -203,10 +203,10 @@ export class PackageJsonFormat {
 		try {
 			parsed = JSON.parse(source) as unknown;
 		} catch (cause) {
-			return Result.fail(new PackageJsonSyntaxError({ reason: "invalid-json", cause }));
+			return Result.fail(PackageJsonSyntaxError.make({ reason: "invalid-json", cause }));
 		}
 		if (!isJsonObject(parsed)) {
-			return Result.fail(new PackageJsonSyntaxError({ reason: "not-an-object" }));
+			return Result.fail(PackageJsonSyntaxError.make({ reason: "not-an-object" }));
 		}
 		return Result.succeed(
 			renderJson(parsed, {
@@ -255,10 +255,10 @@ export class PackageJsonFormat {
 		try {
 			parsed = JSON.parse(source) as unknown;
 		} catch (cause) {
-			return yield* new PackageJsonSyntaxError({ reason: "invalid-json", cause });
+			return yield* PackageJsonSyntaxError.make({ reason: "invalid-json", cause });
 		}
 		if (!isJsonObject(parsed)) {
-			return yield* new PackageJsonSyntaxError({ reason: "not-an-object" });
+			return yield* PackageJsonSyntaxError.make({ reason: "not-an-object" });
 		}
 		const indent = detectIndent(source);
 		const formattingOptions = {
@@ -267,7 +267,7 @@ export class PackageJsonFormat {
 			eol: source.includes("\r\n") ? "\r\n" : "\n",
 		};
 		return yield* JsoncModifier.modify(source, path, value, { formattingOptions }).pipe(
-			Effect.catchTag("JsoncModificationError", (cause) => new PackageJsonModifyError({ path, cause })),
+			Effect.catchTag("JsoncModificationError", (cause) => PackageJsonModifyError.make({ path, cause })),
 		);
 	});
 

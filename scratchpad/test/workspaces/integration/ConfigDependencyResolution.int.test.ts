@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file nodeBuiltinImport:skip-file processEnvInEffect:skip-file
 // The declared-version resolution ladder, driven through BOTH replaying layers
 // against one on-disk fixture — a fake `.pnpm-config` install and a fake pnpm
 // store `links/` tree — so `layerLive` and `layerSubprocess` are pinned to

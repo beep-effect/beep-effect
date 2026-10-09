@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file
 // Seeding: makeWith and layerWith seeds, the tagged entries (files with modes
 // and mtimes, directories, symlinks) and the seed options (root).
 

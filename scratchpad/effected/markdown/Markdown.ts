@@ -150,7 +150,7 @@ export const parsePassResult = (
 	} catch (caught) {
 		if (isGuardExceeded(caught)) {
 			return Result.fail(
-				new MarkdownParseError({
+				MarkdownParseError.make({
 					diagnostic: MarkdownDiagnostic.fromRaw(text, {
 						code: caught.reason,
 						message: caught.message,
@@ -161,7 +161,7 @@ export const parsePassResult = (
 			);
 		}
 		if (isRawMarkdownError(caught)) {
-			return Result.fail(new MarkdownParseError({ diagnostic: MarkdownDiagnostic.fromRaw(text, caught.diagnostic) }));
+			return Result.fail(MarkdownParseError.make({ diagnostic: MarkdownDiagnostic.fromRaw(text, caught.diagnostic) }));
 		}
 		throw caught;
 	}
@@ -285,7 +285,7 @@ export class Markdown {
 		} catch (caught) {
 			if (isGuardExceeded(caught)) {
 				return Result.fail(
-					new MarkdownParseError({
+					MarkdownParseError.make({
 						diagnostic: MarkdownDiagnostic.fromRaw(text, {
 							code: caught.reason,
 							message: caught.message,
@@ -413,7 +413,7 @@ export class Markdown {
 		} catch (caught) {
 			if (isGuardExceeded(caught)) {
 				return Result.fail(
-					new MarkdownStringifyError({
+					MarkdownStringifyError.make({
 						diagnostic: MarkdownDiagnostic.make({
 							code: caught.reason,
 							message: caught.message,

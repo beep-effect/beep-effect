@@ -154,18 +154,18 @@ describe("Gitmodules", () => {
 	describe("FromString codec", () => {
 		it.effect("decodes text and re-encodes the canonical document", () =>
 			Effect.gen(function* () {
-				const modules = yield* Schema.decodeUnknownEffect(Gitmodules.FromString)(REAL_WORLD);
+				const modules = yield* Schema.decodeEffect(Gitmodules.FromString)(REAL_WORLD);
 				assert.strictEqual(modules.entries.length, 2);
 				const encoded = yield* Schema.encodeUnknownEffect(Gitmodules.FromString)(modules);
 				// Canonical rendering, then a decode of it, must agree with the original decode.
-				const again = yield* Schema.decodeUnknownEffect(Gitmodules.FromString)(encoded);
+				const again = yield* Schema.decodeEffect(Gitmodules.FromString)(encoded);
 				assert.deepStrictEqual(again, modules);
 			}),
 		);
 
 		it.effect("a malformed document fails schema decode", () =>
 			Effect.gen(function* () {
-				const exit = yield* Effect.result(Schema.decodeUnknownEffect(Gitmodules.FromString)('[submodule "a"]\n'));
+				const exit = yield* Effect.result(Schema.decodeEffect(Gitmodules.FromString)('[submodule "a"]\n'));
 				assert.isTrue(Result.isFailure(exit));
 			}),
 		);

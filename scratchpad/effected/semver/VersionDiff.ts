@@ -48,11 +48,11 @@ export class VersionDiff extends Schema.TaggedClass<VersionDiff>()("VersionDiff"
 	/** The later version being compared. */
 	to: SemVer,
 	/** Signed delta of the major component (`to.major - from.major`). */
-	major: Schema.Number,
+	major: Schema.Finite,
 	/** Signed delta of the minor component (`to.minor - from.minor`). */
-	minor: Schema.Number,
+	minor: Schema.Finite,
 	/** Signed delta of the patch component (`to.patch - from.patch`). */
-	patch: Schema.Number,
+	patch: Schema.Finite,
 }) {
 	/**
 	 * Compute the diff from `a` to `b`.

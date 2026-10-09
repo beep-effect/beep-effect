@@ -208,11 +208,11 @@ export class PackageManagerPin extends Schema.Class<PackageManagerPin>("PackageM
 	static parseResult(input: string): Result.Result<PackageManagerPin, InvalidPackageManagerPinError> {
 		const at = input.indexOf("@");
 		if (at === -1) {
-			return Result.fail(new InvalidPackageManagerPinError({ input, reason: "format" }));
+			return Result.fail(InvalidPackageManagerPinError.make({ input, reason: "format" }));
 		}
 		const name = input.slice(0, at);
 		if (!isPinName(name)) {
-			return Result.fail(new InvalidPackageManagerPinError({ input, reason: "name" }));
+			return Result.fail(InvalidPackageManagerPinError.make({ input, reason: "name" }));
 		}
 		const rest = input.slice(at + 1);
 		// The first `+` begins the integrity component, unconditionally — the
@@ -225,14 +225,14 @@ export class PackageManagerPin extends Schema.Class<PackageManagerPin>("PackageM
 		// fails typed here rather than being silently canonicalized.
 		const version = SemVer.parseResult(candidate);
 		if (Result.isFailure(version) || !SemVer.isPinnable(candidate)) {
-			return Result.fail(new InvalidPackageManagerPinError({ input, reason: "version" }));
+			return Result.fail(InvalidPackageManagerPinError.make({ input, reason: "version" }));
 		}
 		if (plus === -1) {
 			return Result.succeed(PackageManagerPin.make({ name, version: version.success }));
 		}
-		const integrity = Schema.decodeUnknownExit(CorepackIntegrityHash)(rest.slice(plus + 1));
+		const integrity = Schema.decodeExit(CorepackIntegrityHash)(rest.slice(plus + 1));
 		if (Exit.isFailure(integrity)) {
-			return Result.fail(new InvalidPackageManagerPinError({ input, reason: "integrity" }));
+			return Result.fail(InvalidPackageManagerPinError.make({ input, reason: "integrity" }));
 		}
 		return Result.succeed(PackageManagerPin.make({ name, version: version.success, integrity: integrity.value }));
 	}

@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { ConfigProvider, Duration, Effect, Exit, Option, Redacted, Schema, Stream } from "effect";
 import type { RecordedCall } from "../../effected/github/GitHubClient.ts";

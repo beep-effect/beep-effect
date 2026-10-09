@@ -60,7 +60,7 @@ describe("PackageManagerCache", () => {
 	it("the manager literal schema decodes its rows and refuses a bare `yarn`", () => {
 		// A bare `yarn` is exactly the question this vocabulary refuses to guess
 		// at: nothing about the name says which major's cache location applies.
-		assert.strictEqual(Schema.decodeUnknownSync(CachingPackageManager)("yarn-berry"), "yarn-berry");
+		assert.strictEqual(Schema.decodeSync(CachingPackageManager)("yarn-berry"), "yarn-berry");
 		assert.throws(() => Schema.decodeUnknownSync(CachingPackageManager)("yarn"));
 	});
 });

@@ -32,7 +32,7 @@ const YarnEntry = Schema.Struct({
 type YarnEntryType = typeof YarnEntry.Type;
 
 const YarnMetadata = Schema.Struct({
-	version: Schema.optionalKey(Schema.Union([Schema.String, Schema.Number])),
+	version: Schema.optionalKey(Schema.Union([Schema.String, Schema.Finite])),
 });
 
 /**

@@ -124,7 +124,7 @@ describe("SpdxExpression", () => {
 	);
 	it.effect("FromString decodes a string to the AST that re-serializes to canonical form", () =>
 		Effect.gen(function* () {
-			const ast = yield* Schema.decodeUnknownEffect(SpdxExpression.FromString)("(MIT OR Apache-2.0)");
+			const ast = yield* Schema.decodeEffect(SpdxExpression.FromString)("(MIT OR Apache-2.0)");
 			assert.strictEqual(ast._tag, "Or");
 			// the decoded AST is the same tree the sync parser produces
 			assert.strictEqual(ast.toString(), "(MIT OR Apache-2.0)");
@@ -143,12 +143,12 @@ describe("SpdxExpression", () => {
 	]) {
 		it.effect(`FromString encode round-trips ${s}`, () =>
 			Effect.gen(function* () {
-				const ast = yield* Schema.decodeUnknownEffect(SpdxExpression.FromString)(s);
+				const ast = yield* Schema.decodeEffect(SpdxExpression.FromString)(s);
 				const encoded = yield* Schema.encodeEffect(SpdxExpression.FromString)(ast);
 				// encode emits the canonical string the input already is
 				assert.strictEqual(encoded, s);
 				// decode∘encode is identity: the string re-decodes and re-encodes to itself
-				const reAst = yield* Schema.decodeUnknownEffect(SpdxExpression.FromString)(encoded);
+				const reAst = yield* Schema.decodeEffect(SpdxExpression.FromString)(encoded);
 				const reEncoded = yield* Schema.encodeEffect(SpdxExpression.FromString)(reAst);
 				assert.strictEqual(reEncoded, encoded);
 			}),
@@ -158,7 +158,7 @@ describe("SpdxExpression", () => {
 		Effect.gen(function* () {
 			const expr = yield* SpdxExpression.parse("LicenseRef-Foo WITH Bison-exception-2.2");
 			assert.instanceOf(expr, WithExceptionNode);
-			if (expr instanceof WithExceptionNode) {
+			if (Schema.is(WithExceptionNode)(expr)) {
 				assert.instanceOf(expr.license, LicenseRefNode);
 				assert.strictEqual(expr.exception, "Bison-exception-2.2");
 			}
@@ -199,7 +199,7 @@ describe("SpdxExpression", () => {
 	it.effect.prop("FromString round-trips decode(encode(e))", [spdxExpressionArb], ([e]) =>
 		Effect.gen(function* () {
 			const encoded = yield* Schema.encodeUnknownEffect(SpdxExpression.FromString)(e);
-			const decoded = yield* Schema.decodeUnknownEffect(SpdxExpression.FromString)(encoded);
+			const decoded = yield* Schema.decodeEffect(SpdxExpression.FromString)(encoded);
 			assert.isTrue(Equal.equals(decoded, e), `expected ${decoded.toString()} to equal ${e.toString()}`);
 			const reEncoded = yield* Schema.encodeUnknownEffect(SpdxExpression.FromString)(decoded);
 			assert.strictEqual(reEncoded, encoded);

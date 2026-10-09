@@ -1,3 +1,4 @@
+// @effect-diagnostics nodeBuiltinImport:skip-file asyncFunction:skip-file
 import { spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";

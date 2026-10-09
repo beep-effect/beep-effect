@@ -80,7 +80,7 @@ export const truthy: YamlRule = {
 					: undefined
 				: YamlEdit.make({ offset: scalar.offset, length: scalar.length, content: `"${raw}"` });
 			out.push(
-				new YamlLintDiagnostic({
+				YamlLintDiagnostic.make({
 					rule: "truthy",
 					severity: "error",
 					message: `Truthy value "${raw}" is not in the allowed spellings`,

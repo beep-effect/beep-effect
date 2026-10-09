@@ -178,7 +178,7 @@ export class Manifest extends Schema.Class<Manifest>("Manifest")({
 	 */
 	static readonly decode = Effect.fn("Manifest.decode")(function* (input: unknown) {
 		return yield* Schema.decodeUnknownEffect(Manifest.schema)(input).pipe(
-			Effect.catchTag("SchemaError", (cause) => new ManifestDecodeError({ cause })),
+			Effect.catchTag("SchemaError", (cause) => ManifestDecodeError.make({ cause })),
 		);
 	});
 
@@ -257,9 +257,7 @@ const resolveManifest = Effect.fn("Manifest.resolve")(function* (manifest: Manif
 			if (DependencySpecifier.isCatalog(specifier)) {
 				const range = yield* catalogs.rangeOf(dependency, DependencySpecifier.catalogNameOf(specifier));
 				if (Option.isNone(range)) {
-					return yield* Effect.fail(
-						new UnresolvedDependencyError({ field, dependency, specifier, reason: "catalog-entry-missing" }),
-					);
+					return yield* UnresolvedDependencyError.make({ field, dependency, specifier, reason: "catalog-entry-missing" });
 				}
 				resolved[dependency] = range.value;
 				continue;
@@ -272,14 +270,12 @@ const resolveManifest = Effect.fn("Manifest.resolve")(function* (manifest: Manif
 				const target = Option.getOrElse(DependencySpecifier.workspaceTargetOf(specifier), () => dependency);
 				const version = yield* workspaces.versionOf(target);
 				if (Option.isNone(version)) {
-					return yield* Effect.fail(
-						new UnresolvedDependencyError({
+					return yield* UnresolvedDependencyError.make({
 							field,
 							dependency: target,
 							specifier,
 							reason: "workspace-package-missing",
-						}),
-					);
+						});
 				}
 				resolved[dependency] = DependencySpecifier.resolveWorkspace(specifier, version.value);
 				continue;

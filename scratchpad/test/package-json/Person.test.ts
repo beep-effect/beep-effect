@@ -5,7 +5,7 @@ import { Person } from "../../effected/package-json/Person.ts";
 describe("Person.FromString", () => {
 	it.effect("parses the Name <email> (url) shorthand", () =>
 		Effect.gen(function* () {
-			const person = yield* Schema.decodeUnknownEffect(Person.FromString)("Jane Doe <jane@x.com> (https://x.com)");
+			const person = yield* Schema.decodeEffect(Person.FromString)("Jane Doe <jane@x.com> (https://x.com)");
 			assert.strictEqual(person.name, "Jane Doe");
 			assert.strictEqual(person.email, "jane@x.com");
 			assert.strictEqual(person.url, "https://x.com");
@@ -18,7 +18,7 @@ describe("Person.FromString", () => {
 
 	it.effect("parses a bare name", () =>
 		Effect.gen(function* () {
-			const person = yield* Schema.decodeUnknownEffect(Person.FromString)("Solo");
+			const person = yield* Schema.decodeEffect(Person.FromString)("Solo");
 			assert.strictEqual(person.name, "Solo");
 			assert.strictEqual(person.email, undefined);
 		}),
@@ -28,7 +28,7 @@ describe("Person.FromString", () => {
 describe("Person.FromValue", () => {
 	it.effect("accepts the structured object form", () =>
 		Effect.gen(function* () {
-			const person = yield* Schema.decodeUnknownEffect(Person.FromValue)({ name: "Bob", email: "b@x.com" });
+			const person = yield* Schema.decodeEffect(Person.FromValue)({ name: "Bob", email: "b@x.com" });
 			assert.strictEqual(person.name, "Bob");
 			assert.strictEqual(person.email, "b@x.com");
 			assert.deepStrictEqual(yield* Schema.encodeUnknownEffect(Person.FromValue)(person), {
@@ -40,7 +40,7 @@ describe("Person.FromValue", () => {
 
 	it.effect("accepts the shorthand string form", () =>
 		Effect.gen(function* () {
-			const person = yield* Schema.decodeUnknownEffect(Person.FromValue)("Ann <a@x.com>");
+			const person = yield* Schema.decodeEffect(Person.FromValue)("Ann <a@x.com>");
 			assert.strictEqual(person.name, "Ann");
 			assert.strictEqual(person.email, "a@x.com");
 		}),
@@ -106,7 +106,7 @@ describe("Person wire-form preservation", () => {
 			// Rebuilding produces a new instance with no recorded wire form. Emitting
 			// shorthand for it would be inventing an encoding this person was never
 			// read in, so the canonical object form wins.
-			const person = yield* Schema.decodeUnknownEffect(Person.FromValue)("Ann <ann@x.dev>");
+			const person = yield* Schema.decodeEffect(Person.FromValue)("Ann <ann@x.dev>");
 			const edited = Person.make({ ...person, email: "new@x.dev" });
 			assert.isTrue(Option.isNone(Person.wireStringOf(edited)));
 			assert.deepStrictEqual(yield* Schema.encodeUnknownEffect(Person.FromValue)(edited), {
@@ -120,7 +120,7 @@ describe("Person wire-form preservation", () => {
 		Effect.gen(function* () {
 			// `FromString` has no object form to fall back to, so it rebuilds the
 			// shorthand from the fields rather than replaying stale text.
-			const person = yield* Schema.decodeUnknownEffect(Person.FromString)("Ann <ann@x.dev>");
+			const person = yield* Schema.decodeEffect(Person.FromString)("Ann <ann@x.dev>");
 			const edited = Person.make({ ...person, email: "new@x.dev" });
 			assert.strictEqual(yield* Schema.encodeUnknownEffect(Person.FromString)(edited), "Ann <new@x.dev>");
 		}),
@@ -128,8 +128,8 @@ describe("Person wire-form preservation", () => {
 
 	it.effect("reports the shorthand text via wireStringOf, and None for the object form", () =>
 		Effect.gen(function* () {
-			const fromString = yield* Schema.decodeUnknownEffect(Person.FromValue)("Ann <ann@x.dev>");
-			const fromObject = yield* Schema.decodeUnknownEffect(Person.FromValue)({ name: "Ann", email: "ann@x.dev" });
+			const fromString = yield* Schema.decodeEffect(Person.FromValue)("Ann <ann@x.dev>");
+			const fromObject = yield* Schema.decodeEffect(Person.FromValue)({ name: "Ann", email: "ann@x.dev" });
 			assert.deepStrictEqual(Person.wireStringOf(fromString), Option.some("Ann <ann@x.dev>"));
 			assert.isTrue(Option.isNone(Person.wireStringOf(fromObject)));
 		}),
@@ -137,7 +137,7 @@ describe("Person wire-form preservation", () => {
 
 	it.effect("still rejects a malformed person object", () =>
 		Effect.gen(function* () {
-			const result = yield* Effect.result(Schema.decodeUnknownEffect(Person.FromValue)({ name: 123 }));
+			const result = yield* Effect.result(Schema.decodeEffect(Person.FromValue)({ name: 123 }));
 			assert.isTrue(result._tag === "Failure");
 		}),
 	);
@@ -150,7 +150,7 @@ describe("Person wire-form preservation", () => {
 	// where the two implementations could plausibly disagree.
 	it.effect("an email-only shorthand yields an empty name, not a failure", () =>
 		Effect.gen(function* () {
-			const person = yield* Schema.decodeUnknownEffect(Person.FromValue)("<dee@example.com>");
+			const person = yield* Schema.decodeEffect(Person.FromValue)("<dee@example.com>");
 			assert.strictEqual(person.email, "dee@example.com");
 			assert.strictEqual(person.name, "");
 		}),
@@ -184,7 +184,7 @@ describe("Person — stale wire provenance", () => {
 		// manifest to the object form, which would be a shape-fidelity
 		// violation on an otherwise unrelated edit.
 		Effect.gen(function* () {
-			const person = yield* Schema.decodeUnknownEffect(Person.FromValue)("Ann <ann@x.dev>");
+			const person = yield* Schema.decodeEffect(Person.FromValue)("Ann <ann@x.dev>");
 			// In place: same instance, so the WeakMap entry survives the edit.
 			(person as { email: string }).email = "new@x.dev";
 			const encoded = yield* Schema.encodeUnknownEffect(Person.FromValue)(person);
@@ -195,7 +195,7 @@ describe("Person — stale wire provenance", () => {
 
 	it.effect("a MUTATED name is reflected too", () =>
 		Effect.gen(function* () {
-			const person = yield* Schema.decodeUnknownEffect(Person.FromValue)("Ann <ann@x.dev>");
+			const person = yield* Schema.decodeEffect(Person.FromValue)("Ann <ann@x.dev>");
 			(person as { name: string }).name = "Bea";
 			const encoded = yield* Schema.encodeUnknownEffect(Person.FromValue)(person);
 			assert.notStrictEqual(encoded, "Ann <ann@x.dev>");
@@ -205,7 +205,7 @@ describe("Person — stale wire provenance", () => {
 
 	it.effect("a MUTATED url is reflected too", () =>
 		Effect.gen(function* () {
-			const person = yield* Schema.decodeUnknownEffect(Person.FromValue)("Ann (https://old.dev)");
+			const person = yield* Schema.decodeEffect(Person.FromValue)("Ann (https://old.dev)");
 			(person as { url: string }).url = "https://new.dev";
 			const encoded = yield* Schema.encodeUnknownEffect(Person.FromValue)(person);
 			assert.notStrictEqual(encoded, "Ann (https://old.dev)");
@@ -215,7 +215,7 @@ describe("Person — stale wire provenance", () => {
 
 	it.effect("the same guard holds on the FromString codec", () =>
 		Effect.gen(function* () {
-			const person = yield* Schema.decodeUnknownEffect(Person.FromString)("Ann <ann@x.dev>");
+			const person = yield* Schema.decodeEffect(Person.FromString)("Ann <ann@x.dev>");
 			(person as { email: string }).email = "new@x.dev";
 			assert.strictEqual(yield* Schema.encodeUnknownEffect(Person.FromString)(person), "Ann <new@x.dev>");
 		}),
@@ -223,7 +223,7 @@ describe("Person — stale wire provenance", () => {
 
 	it.effect("a MUTATED object-decoded person does not re-emit the stale object", () =>
 		Effect.gen(function* () {
-			const person = yield* Schema.decodeUnknownEffect(Person.FromValue)({ name: "Ann", email: "ann@x.dev" });
+			const person = yield* Schema.decodeEffect(Person.FromValue)({ name: "Ann", email: "ann@x.dev" });
 			(person as { email: string }).email = "new@x.dev";
 			assert.deepStrictEqual<unknown>(yield* Schema.encodeUnknownEffect(Person.FromValue)(person), {
 				name: "Ann",
@@ -236,7 +236,7 @@ describe("Person — stale wire provenance", () => {
 		// `rest` is the half a field-by-field comparison would miss; `sameRest`
 		// is what covers it.
 		Effect.gen(function* () {
-			const person = yield* Schema.decodeUnknownEffect(Person.FromValue)({ name: "Ann", twitter: "@ann" });
+			const person = yield* Schema.decodeEffect(Person.FromValue)({ name: "Ann", twitter: "@ann" });
 			(person as { rest: Record<string, unknown> }).rest = { twitter: "@bea" };
 			assert.deepStrictEqual<unknown>(yield* Schema.encodeUnknownEffect(Person.FromValue)(person), {
 				twitter: "@bea",
@@ -252,7 +252,7 @@ describe("Person — stale wire provenance", () => {
 		// wire replays, and the added keys vanish on write. Same corruption
 		// class, reached through the field nobody thinks to check.
 		Effect.gen(function* () {
-			const person = yield* Schema.decodeUnknownEffect(Person.FromValue)("Ann");
+			const person = yield* Schema.decodeEffect(Person.FromValue)("Ann");
 			(person as { rest: Record<string, unknown> }).rest = { twitter: "@ann" };
 			const encoded = yield* Schema.encodeUnknownEffect(Person.FromValue)(person);
 			assert.notStrictEqual(encoded, "Ann", "the shorthand cannot carry rest and must not be replayed");
@@ -266,7 +266,7 @@ describe("Person — stale wire provenance", () => {
 		// The other side of that clause: `rest: {}` carries no information, so it
 		// must not force an unrelated person out of its shorthand.
 		Effect.gen(function* () {
-			const person = yield* Schema.decodeUnknownEffect(Person.FromValue)("Ann <ann@x.dev>");
+			const person = yield* Schema.decodeEffect(Person.FromValue)("Ann <ann@x.dev>");
 			(person as { rest: Record<string, unknown> }).rest = {};
 			assert.strictEqual(yield* Schema.encodeUnknownEffect(Person.FromValue)(person), "Ann <ann@x.dev>");
 		}),
@@ -276,12 +276,12 @@ describe("Person — stale wire provenance", () => {
 		// The other direction: the guard must not be so eager that it destroys
 		// the provenance replay the WeakMap exists for. Key order included.
 		Effect.gen(function* () {
-			const shorthand = yield* Schema.decodeUnknownEffect(Person.FromValue)("Ann <ann@x.dev> (https://x.dev)");
+			const shorthand = yield* Schema.decodeEffect(Person.FromValue)("Ann <ann@x.dev> (https://x.dev)");
 			assert.strictEqual(
 				yield* Schema.encodeUnknownEffect(Person.FromValue)(shorthand),
 				"Ann <ann@x.dev> (https://x.dev)",
 			);
-			const object = yield* Schema.decodeUnknownEffect(Person.FromValue)({ twitter: "@ann", name: "Ann" });
+			const object = yield* Schema.decodeEffect(Person.FromValue)({ twitter: "@ann", name: "Ann" });
 			assert.deepStrictEqual<unknown>(yield* Schema.encodeUnknownEffect(Person.FromValue)(object), {
 				twitter: "@ann",
 				name: "Ann",

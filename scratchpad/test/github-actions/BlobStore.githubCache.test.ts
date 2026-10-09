@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { Effect, Exit, Layer, Option, Schema } from "effect";
 import { FetchHttpClient } from "effect/http";
@@ -20,7 +21,7 @@ const memoryTransfer = () => {
 			Effect.suspend(() => {
 				const found = blobs.get(url);
 				return found === undefined
-					? Effect.fail(new BlobTransferError({ reason: "downloadFailed" }))
+					? Effect.fail(BlobTransferError.make({ reason: "downloadFailed" }))
 					: Effect.succeed(found);
 			}),
 	};

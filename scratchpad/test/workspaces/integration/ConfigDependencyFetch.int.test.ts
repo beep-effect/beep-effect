@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file nodeBuiltinImport:skip-file processEnv:skip-file processEnvInEffect:skip-file
 // effected#842: a diff across a config-dependency bump, where the BASE side
 // declares a version this checkout never installed.
 //

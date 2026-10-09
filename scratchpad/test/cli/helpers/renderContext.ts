@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file
 import { Effect } from "effect";
 import type { RenderContext } from "../../../effected/cli/index.ts";
 import { CliTheme } from "../../../effected/cli/index.ts";

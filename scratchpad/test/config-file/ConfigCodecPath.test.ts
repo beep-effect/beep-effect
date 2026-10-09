@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
 import type { FileSystem } from "effect";
@@ -31,7 +32,7 @@ const UnserializableCodec = {
 	name: "json",
 	parse: JsonCodec.parse,
 	stringify: () =>
-		Effect.fail(new ConfigCodecError({ codec: "json", operation: "stringify", cause: new Error("nope") })),
+		Effect.fail(ConfigCodecError.make({ codec: "json", operation: "stringify", cause: new Error("nope") })),
 };
 
 const writing = ConfigFile.layer(WriteConfig, {

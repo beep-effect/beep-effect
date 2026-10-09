@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
 import { Effect, Layer, Option, Path, PubSub, Schema } from "effect";
@@ -69,7 +70,7 @@ describe("ConfigEventPayload", () => {
 
 	it.effect("still defines the variants the pipeline does emit", () =>
 		Effect.gen(function* () {
-			const result = yield* Effect.result(Schema.decodeUnknownEffect(ConfigEventPayload)({ _tag: "NotFound" }));
+			const result = yield* Effect.result(Schema.decodeEffect(ConfigEventPayload)({ _tag: "NotFound" }));
 			assert.strictEqual(result._tag, "Success");
 		}),
 	);
@@ -149,7 +150,7 @@ describe("ConfigEvent per-operation granularity", () => {
 			const svc = yield* ConfigEvents;
 			const sub = yield* PubSub.subscribe(svc.events);
 			const cfg = yield* AppConfig;
-			yield* cfg.write(new AppShape({ port: 3 }), "/explicit/.apprc");
+			yield* cfg.write(AppShape.make({ port: 3 }), "/explicit/.apprc");
 
 			assert.include(tagsOf(yield* drain(sub)), "Written");
 		}).pipe(
@@ -164,7 +165,7 @@ describe("ConfigEvent per-operation granularity", () => {
 			const svc = yield* ConfigEvents;
 			const sub = yield* PubSub.subscribe(svc.events);
 			const cfg = yield* AppConfig;
-			yield* cfg.save(new AppShape({ port: 3 }));
+			yield* cfg.save(AppShape.make({ port: 3 }));
 
 			assert.include(tagsOf(yield* drain(sub)), "Saved");
 		}).pipe(Effect.scoped, Effect.provide(writeLayer(recordingFs({}), "/app/.apprc"))),
@@ -178,7 +179,7 @@ describe("ConfigEvent per-operation granularity", () => {
 			const svc = yield* ConfigEvents;
 			const sub = yield* PubSub.subscribe(svc.events);
 			const cfg = yield* AppConfig;
-			yield* cfg.update((current) => new AppShape({ port: current.port + 1 }));
+			yield* cfg.update((current) => AppShape.make({ port: current.port + 1 }));
 
 			const tags = tagsOf(yield* drain(sub));
 			assert.lengthOf(
@@ -195,7 +196,7 @@ describe("ConfigEvent per-operation granularity", () => {
 			const svc = yield* ConfigEvents;
 			const sub = yield* PubSub.subscribe(svc.events);
 			const cfg = yield* AppConfig;
-			yield* cfg.update((current) => new AppShape({ port: current.port + 1 }));
+			yield* cfg.update((current) => AppShape.make({ port: current.port + 1 }));
 
 			const updated = (yield* drain(sub)).map((e) => e.event).find((p) => p._tag === "Updated");
 			if (updated === undefined || updated._tag !== "Updated") {

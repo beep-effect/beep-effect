@@ -191,7 +191,7 @@ const build = (options: CliLinksOptions, ambient: Ambient): Effect.Effect<CliLin
  *
  * @public
  */
-export class CliLinks extends Context.Service<CliLinks, CliLinksShape>()("@effected/cli/CliLinks") {
+export class CliLinks extends Context.Service<CliLinks, CliLinksShape>()("@beep/scratchpad/effected/cli/CliLinks") {
 	/**
 	 * The links for the working directory, reading the filesystem for a `.vscode/` directory.
 	 *

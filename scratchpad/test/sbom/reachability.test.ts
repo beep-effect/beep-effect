@@ -1,3 +1,4 @@
+// @effect-diagnostics nodeBuiltinImport:skip-file
 // The confinement invariant, as a test rather than a promise.
 //
 // This package is two independent capabilities in one: emitting an SBOM is pure

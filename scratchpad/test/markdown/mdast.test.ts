@@ -4,7 +4,7 @@
 // sentinel positions, frontmatter literal mapping, and typed failure.
 
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Result } from "effect";
+import { Effect, Result, Schema } from "effect";
 import { Markdown, MarkdownParseOptions } from "../../effected/markdown/Markdown.ts";
 import { Frontmatter, Root } from "../../effected/markdown/MarkdownNode.ts";
 import { Mdast, MdastDecodeError } from "../../effected/markdown/Mdast.ts";
@@ -191,7 +191,7 @@ describe("Mdast.fromMdast", () => {
 		if (Result.isSuccess(back)) {
 			const node = back.success.children[0];
 			assert.instanceOf(node, Frontmatter);
-			if (node instanceof Frontmatter) {
+			if (Schema.is(Frontmatter)(node)) {
 				assert.strictEqual(node.format, "yaml");
 				assert.strictEqual(node.value, "a: 1");
 			}

@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file
 // A TERM=dumb terminal cannot move the cursor or take synchronized output, so the kit's screens treat it as not
 // interactive, through CliInteractive's own decision: a live view prints its final frame once, as for a
 // pipe, and a screen is refused.

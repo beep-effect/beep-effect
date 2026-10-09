@@ -1,9 +1,10 @@
+// @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file asyncFunction:skip-file processEnv:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { Cause, Config, ConfigProvider, Context, Effect, FileSystem, Layer, References, Schema } from "effect";
 import { vi } from "vitest";
 import { Action, ActionEnvironment, ActionInput, ActionOutputs, ActionRuntime, describeCause } from "../../effected/github-actions/index.ts";
 
-class Extra extends Context.Service<Extra, { readonly describe: Effect.Effect<string, unknown> }>()("test/Extra") {}
+class Extra extends Context.Service<Extra, { readonly describe: Effect.Effect<string, unknown> }>()("@beep/scratchpad/test/github-actions/Action.test/Extra") {}
 
 class Boom extends Schema.TaggedError<Boom>()("Boom", { detail: Schema.String }) {
 	override get message(): string {
@@ -91,7 +92,7 @@ describe("describeCause", () => {
 	it("renders a typed failure as [Tag]: message", () => {
 		// What a human scanning a workflow log for the first red line actually
 		// needs: which error, and what it said.
-		assert.strictEqual(describeCause(Cause.fail(new Boom({ detail: "no token" }))), "[Boom]: it went wrong: no token");
+		assert.strictEqual(describeCause(Cause.fail(Boom.make({ detail: "no token" }))), "[Boom]: it went wrong: no token");
 	});
 
 	it("marks a defect as one, because the two need different fixes", () => {
@@ -122,7 +123,7 @@ describe("Action.run", () => {
 
 	it("renders one ::error:: line and fails the step", async () => {
 		await captured(async (lines) => {
-			await Action.run(Effect.fail(new Boom({ detail: "no token" })));
+			await Action.run(Effect.fail(Boom.make({ detail: "no token" })));
 			// The exit code is this function's job: `ActionOutputs.setFailed`
 			// deliberately does not set it, so an action that reports a failure and
 			// then recovers is not doomed by a side effect it cannot undo.
@@ -135,7 +136,7 @@ describe("Action.run", () => {
 
 	it("puts the fiddly diagnostics behind ::debug::, where the runner hides them", async () => {
 		await captured(async (lines) => {
-			await Action.run(Effect.fail(new Boom({ detail: "no token" })));
+			await Action.run(Effect.fail(Boom.make({ detail: "no token" })));
 			// A full cause render is genuinely useful and genuinely noisy. The
 			// predecessor spliced a JS stack into the VISIBLE error, which in a
 			// bundled action points at one line of `dist/main.js`.
@@ -159,7 +160,7 @@ describe("Action.run", () => {
 		await captured(async () => {
 			// Two failures — a failed step AND an unhandled rejection — and only the
 			// first is legible in a workflow log.
-			const settled = await Action.run(Effect.fail(new Boom({ detail: "x" }))).then(
+			const settled = await Action.run(Effect.fail(Boom.make({ detail: "x" }))).then(
 				() => "resolved",
 				() => "rejected",
 			);
@@ -342,7 +343,7 @@ describe("Action.run", () => {
 			// The predecessor wrapped every program in a log buffer, and an unhandled
 			// defect inside the buffer swallowed the whole transcript: the run failed
 			// and printed nothing at all. Buffering is opt-in now.
-			await Action.run(Effect.flatMap(Effect.log("halfway through"), () => Effect.fail(new Boom({ detail: "later" }))));
+			await Action.run(Effect.flatMap(Effect.log("halfway through"), () => Effect.fail(Boom.make({ detail: "later" }))));
 			assert.isTrue(lines.some((line) => line.includes("halfway through")));
 			assert.isTrue(lines.some((line) => line.startsWith("::error::")));
 			assert.strictEqual(process.exitCode, 1);

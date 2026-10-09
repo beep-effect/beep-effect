@@ -20,7 +20,7 @@ export const hooksError = (
 	cause: unknown,
 	reason?: CatalogAssemblyError["reason"],
 ): CatalogAssemblyError =>
-	new CatalogAssemblyError({ source: "hooks", path, cause, ...(reason === undefined ? {} : { reason }) });
+	CatalogAssemblyError.make({ source: "hooks", path, cause, ...(reason === undefined ? {} : { reason }) });
 
 /** The message of a cause, for splicing into ours. */
 export const messageOf = (cause: unknown): string => (cause instanceof Error ? cause.message : String(cause));

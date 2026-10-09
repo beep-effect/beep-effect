@@ -125,7 +125,7 @@ export interface PublishabilityDetectorShape {
  * @public
  */
 export class PublishabilityDetector extends Context.Service<PublishabilityDetector, PublishabilityDetectorShape>()(
-	"@effected/workspaces/PublishabilityDetector",
+	"@beep/scratchpad/effected/workspaces/Publishability/PublishabilityDetector",
 ) {
 	/**
 	 * Standard npm publishing semantics, **as a value**. Pure — no filesystem,

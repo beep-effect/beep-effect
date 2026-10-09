@@ -134,7 +134,7 @@ const make = (options: ManagedSectionOptions = {}): Effect.Effect<ManagedSection
 				Effect.catchTag("PlatformError", (error) =>
 					notFound(error)
 						? Effect.succeed("")
-						: Effect.fail(new SectionFileError({ path, operation: "read", cause: error })),
+						: Effect.fail(SectionFileError.make({ path, operation: "read", cause: error })),
 				),
 				Effect.flatMap((text) =>
 					Effect.fromResult(SectionDocument.parseResult(text, dialect)).pipe(
@@ -148,7 +148,7 @@ const make = (options: ManagedSectionOptions = {}): Effect.Effect<ManagedSection
 				.writeFileString(path, text)
 				.pipe(
 					Effect.catchTag("PlatformError", (error) =>
-						Effect.fail(new SectionFileError({ path, operation: "write", cause: error })),
+						Effect.fail(SectionFileError.make({ path, operation: "write", cause: error })),
 					),
 				);
 
@@ -257,7 +257,7 @@ const unimplemented = (member: string): never => {
  * @public
  */
 export class ManagedSection extends Context.Service<ManagedSection, ManagedSectionShape>()(
-	"@effected/templates/ManagedSection",
+	"@beep/scratchpad/effected/templates/ManagedSection",
 ) {
 	/**
 	 * The default layer, reading and writing {@link SectionDialect.default}

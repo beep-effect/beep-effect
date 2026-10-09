@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file
 // Root discovery: the ascent bounds, the carried discovery root, and the test
 // double.
 //
@@ -277,7 +278,7 @@ describe("WorkspacePackage.workspaceRoot — hand-built", () => {
 
 describe("WorkspaceRootNotFoundError — message", () => {
 	it("words the package.json marker as the field it requires, keeping `markers` raw", () => {
-		const error = new WorkspaceRootNotFoundError({ searchPath: "/solo", markers: WORKSPACE_MARKERS });
+		const error = WorkspaceRootNotFoundError.make({ searchPath: "/solo", markers: WORKSPACE_MARKERS });
 		// A single-package repo HAS a package.json; a bare "package.json" in the
 		// message claimed the probe missed a file that is plainly there.
 		assert.strictEqual(
@@ -288,7 +289,7 @@ describe("WorkspaceRootNotFoundError — message", () => {
 	});
 
 	it("renders the ceiling alongside the reworded marker", () => {
-		const error = new WorkspaceRootNotFoundError({
+		const error = WorkspaceRootNotFoundError.make({
 			searchPath: "/outer/checkout",
 			markers: WORKSPACE_MARKERS,
 			stopAt: "/outer/checkout",

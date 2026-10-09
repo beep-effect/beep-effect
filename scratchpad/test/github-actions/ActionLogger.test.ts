@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { Effect, Latch, Layer, References } from "effect";
 import { TestConsole } from "effect/testing";

@@ -36,8 +36,8 @@ export type TomlPath = ReadonlyArray<TomlSegment>;
  * @public
  */
 export class TomlRange extends Schema.Class<TomlRange>("TomlRange")({
-	offset: Schema.Number,
-	length: Schema.Number,
+	offset: Schema.Finite,
+	length: Schema.Finite,
 }) {}
 
 /**
@@ -53,8 +53,8 @@ export class TomlRange extends Schema.Class<TomlRange>("TomlRange")({
  * @public
  */
 export class TomlEdit extends Schema.Class<TomlEdit>("TomlEdit")({
-	offset: Schema.Number,
-	length: Schema.Number,
+	offset: Schema.Finite,
+	length: Schema.Finite,
 	content: Schema.String,
 }) {
 	/**

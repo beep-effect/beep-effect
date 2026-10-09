@@ -177,7 +177,7 @@ export interface LocalExecShape {
  *
  * @public
  */
-export class LocalExec extends Context.Service<LocalExec, LocalExecShape>()("@effected/commands/LocalExec") {
+export class LocalExec extends Context.Service<LocalExec, LocalExecShape>()("@beep/scratchpad/effected/commands/LocalExec") {
 	/** The exec, dlx and script-runner argv prefixes for a launcher — the single home of that knowledge. */
 	static readonly prefixes = (launcher: Launcher): LauncherPrefixes => PREFIXES[launcher];
 
@@ -202,7 +202,7 @@ export class LocalExec extends Context.Service<LocalExec, LocalExecShape>()("@ef
 	 * the reason such a consumer never installs `@effected/workspaces`.
 	 */
 	static readonly layerNone: Layer.Layer<LocalExec> = Layer.succeed(this, {
-		context: Eff.succeed(Option.none()),
+		context: Eff.succeedNone,
 	});
 
 	/** A context for a known package manager, from the static prefix table. */
@@ -224,7 +224,7 @@ export class LocalExec extends Context.Service<LocalExec, LocalExecShape>()("@ef
 
 	/** A caller-supplied context, answered verbatim. */
 	static readonly layerContext = (context: ExecContext): Layer.Layer<LocalExec> =>
-		Layer.succeed(LocalExec, { context: Eff.succeed(Option.some(context)) });
+		Layer.succeed(LocalExec, { context: Eff.succeedSome(context) });
 
 	/**
 	 * An in-memory test double.
@@ -236,7 +236,7 @@ export class LocalExec extends Context.Service<LocalExec, LocalExecShape>()("@ef
 	 * resolution gets the global-only behavior instead of a defect.
 	 */
 	static readonly makeTest = (overrides: Partial<LocalExecShape> = {}): LocalExecShape => ({
-		context: Eff.succeed(Option.none()),
+		context: Eff.succeedNone,
 		...overrides,
 	});
 

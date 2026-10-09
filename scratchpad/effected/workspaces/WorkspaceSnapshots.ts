@@ -272,7 +272,7 @@ const unstubbed = (method: string): Effect.Effect<never> =>
  * @public
  */
 export class WorkspaceSnapshots extends Context.Service<WorkspaceSnapshots, WorkspaceSnapshotsShape>()(
-	"@effected/workspaces/WorkspaceSnapshots",
+	"@beep/scratchpad/effected/workspaces/WorkspaceSnapshots",
 ) {
 	/**
 	 * Builds the service over `Git`, {@link WorkspaceRoot}, {@link WorkspaceDiscovery},
@@ -369,7 +369,7 @@ export class WorkspaceSnapshots extends Context.Service<WorkspaceSnapshots, Work
 					if (Option.isSome(pnpmWorkspaceText)) {
 						const document = yield* Yaml.parse(pnpmWorkspaceText.value).pipe(
 							Effect.mapError(
-								(cause) => new CatalogAssemblyError({ source: "manifest", path: "pnpm-workspace.yaml", cause }),
+								(cause) => CatalogAssemblyError.make({ source: "manifest", path: "pnpm-workspace.yaml", cause }),
 							),
 						);
 						const pnpmPatterns = pnpmPatternsOf(document);
@@ -422,7 +422,7 @@ export class WorkspaceSnapshots extends Context.Service<WorkspaceSnapshots, Work
 
 					const globs = yield* GlobSet.compile(patterns).pipe(
 						Effect.mapError(
-							(error) => new CatalogAssemblyError({ source: "manifest", path: error.pattern, cause: error }),
+							(error) => CatalogAssemblyError.make({ source: "manifest", path: error.pattern, cause: error }),
 						),
 					);
 

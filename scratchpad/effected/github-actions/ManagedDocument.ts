@@ -56,7 +56,7 @@ export class ManagedDocumentError extends Schema.TaggedError<ManagedDocumentErro
 		"invalidAttribute",
 	]),
 	/** 1-based line of the offending marker, for the structural kinds. */
-	line: Schema.optionalKey(Schema.Number),
+	line: Schema.optionalKey(Schema.Finite),
 	/** The region key involved, when the failure names one. */
 	key: Schema.optionalKey(Schema.String),
 	/** The offending metadata attribute's name, for `invalidAttribute`. */
@@ -90,7 +90,7 @@ const STRUCTURAL_KIND = {
 
 /** A structurally corrupt region layout, in this surface's vocabulary. */
 const structural = (failure: SectionParseError): ManagedDocumentError =>
-	new ManagedDocumentError({
+	ManagedDocumentError.make({
 		kind: STRUCTURAL_KIND[failure.reason],
 		line: failure.line,
 		...(failure.key === undefined ? {} : { key: failure.key }),
@@ -280,7 +280,7 @@ export class ManagedDocument extends Schema.Class<ManagedDocument>("ManagedDocum
 				throw new Error("ManagedDocument: the region dialect rejected its own comment style");
 			}
 			return Result.fail(
-				new ManagedDocumentError({
+				ManagedDocumentError.make({
 					kind: failure.reason,
 					key: this.regionKeyOf(failure.key),
 					...(failure.attribute === undefined ? {} : { attribute: failure.attribute }),

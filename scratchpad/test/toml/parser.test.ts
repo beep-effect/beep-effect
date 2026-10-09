@@ -18,6 +18,7 @@ import {
 	TomlTableHeader,
 	TomlTrivia,
 } from "../../effected/toml/TomlNode.ts";
+import * as Schema from "effect/Schema";
 
 /** Parse and assert the span-tiling invariant: the expression slices rebuild the source byte-exactly. */
 function tiles(src: string): ReadonlyArray<TomlExpression> {
@@ -46,7 +47,7 @@ function assertParseError(src: string, code: TomlErrorCodeRaw, offset?: number):
 /** The parsed key-value at `index`, asserted to be a TomlKeyValue. */
 function keyValueAt(exprs: ReadonlyArray<TomlExpression>, index: number): TomlKeyValue {
 	const expr = exprs[index];
-	if (!(expr instanceof TomlKeyValue)) {
+	if (!(Schema.is(TomlKeyValue)(expr))) {
 		throw new Error(`expected expression ${index} to be a TomlKeyValue, got ${expr?._tag}`);
 	}
 	return expr;
@@ -72,17 +73,17 @@ describe("parser", () => {
 			].join("\n");
 			const exprs = tiles(src);
 			// the two comment lines and the following blank line coalesce into ONE trivia
-			assert.isTrue(exprs[0] instanceof TomlTrivia);
-			assert.isFalse(exprs[1] instanceof TomlTrivia);
-			assert.strictEqual(exprs.filter((e) => e instanceof TomlTrivia).length, 3);
+			assert.isTrue(Schema.is(TomlTrivia)(exprs[0]));
+			assert.isFalse(Schema.is(TomlTrivia)(exprs[1]));
+			assert.strictEqual(exprs.filter((e) => Schema.is(TomlTrivia)(e)).length, 3);
 		});
 		it("tiles a CRLF document", () => {
 			const src = "[a]\r\n# c\r\nx = 1\r\n\r\ny = 2 # done\r\n";
 			const exprs = tiles(src);
 			assert.strictEqual(exprs.length, 5);
-			assert.isTrue(exprs[0] instanceof TomlTableHeader);
-			assert.isTrue(exprs[1] instanceof TomlTrivia);
-			assert.isTrue(exprs[3] instanceof TomlTrivia);
+			assert.isTrue(Schema.is(TomlTableHeader)(exprs[0]));
+			assert.isTrue(Schema.is(TomlTrivia)(exprs[1]));
+			assert.isTrue(Schema.is(TomlTrivia)(exprs[3]));
 			assert.strictEqual(keyValueAt(exprs, 4).comment, "done");
 		});
 		it("tiles a document with multiline strings extending their expression span", () => {
@@ -90,7 +91,7 @@ describe("parser", () => {
 			const exprs = tiles(src);
 			assert.strictEqual(exprs.length, 3);
 			const s1 = keyValueAt(exprs, 0);
-			assert.isTrue(s1.value instanceof TomlString);
+			assert.isTrue(Schema.is(TomlString)(s1.value));
 			assert.strictEqual((s1.value as TomlString).value, "multi\nline");
 			assert.strictEqual(keyValueAt(exprs, 1).comment, "after");
 		});
@@ -108,21 +109,21 @@ describe("parser", () => {
 			const exprs = tiles(src);
 			assert.strictEqual(exprs.length, 2);
 			const arr = keyValueAt(exprs, 0).value;
-			assert.isTrue(arr instanceof TomlArray);
+			assert.isTrue(Schema.is(TomlArray)(arr));
 			assert.strictEqual((arr as TomlArray).items.length, 3);
 		});
 		it("tiles a BOM-prefixed document without a trailing newline", () => {
 			const src = "\uFEFF# note\na = 1";
 			const exprs = tiles(src);
 			assert.strictEqual(exprs.length, 2);
-			assert.isTrue(exprs[0] instanceof TomlTrivia);
+			assert.isTrue(Schema.is(TomlTrivia)(exprs[0]));
 			assert.strictEqual(exprs[0]?.offset, 0);
 		});
 		it("tiles a whitespace-heavy document with quoted keys and a trailing blank run", () => {
 			const src = '\t[ a . "b c" ]\n\tx\t=\t{ p = 1, q.r = [1, [2]] }\n"" = \'empty\'\n\n   ';
 			const exprs = tiles(src);
-			assert.isTrue(exprs[0] instanceof TomlTableHeader);
-			assert.isTrue(exprs.at(-1) instanceof TomlTrivia);
+			assert.isTrue(Schema.is(TomlTableHeader)(exprs[0]));
+			assert.isTrue(Schema.is(TomlTrivia)(exprs.at(-1)));
 		});
 	});
 
@@ -137,18 +138,18 @@ describe("parser", () => {
 				kv.keyPath.map((k) => k.value),
 				["a", "b", "c d"],
 			);
-			assert.isTrue(kv.value instanceof TomlInteger);
+			assert.isTrue(Schema.is(TomlInteger)(kv.value));
 		});
 		it("parses table and array-of-tables headers", () => {
 			const exprs = parseExpressions("[t.u]\n[[t.u.v]]\n");
 			const header = exprs[0];
-			assert.isTrue(header instanceof TomlTableHeader);
+			assert.isTrue(Schema.is(TomlTableHeader)(header));
 			assert.deepStrictEqual(
 				(header as TomlTableHeader).keyPath.map((k) => k.value),
 				["t", "u"],
 			);
 			const arrayHeader = exprs[1];
-			assert.isTrue(arrayHeader instanceof TomlArrayTableHeader);
+			assert.isTrue(Schema.is(TomlArrayTableHeader)(arrayHeader));
 			assert.deepStrictEqual(
 				(arrayHeader as TomlArrayTableHeader).keyPath.map((k) => k.value),
 				["t", "u", "v"],
@@ -158,7 +159,7 @@ describe("parser", () => {
 			const kv = keyValueAt(parseExpressions("a = 1 # c"), 0);
 			assert.strictEqual(kv.comment, "c");
 			const header = parseExpressions("[t] # section\n")[0];
-			assert.isTrue(header instanceof TomlTableHeader);
+			assert.isTrue(Schema.is(TomlTableHeader)(header));
 			assert.strictEqual((header as TomlTableHeader).comment, "section");
 			const bare = keyValueAt(parseExpressions("a = 1\n"), 0);
 			assert.isFalse(Object.hasOwn(bare, "comment"));
@@ -176,15 +177,15 @@ describe("parser", () => {
 		it("parses nested arrays and inline tables", () => {
 			const kv = keyValueAt(parseExpressions("a = [[1,2],{a=1}]"), 0);
 			const outer = kv.value as TomlArray;
-			assert.isTrue(outer instanceof TomlArray);
+			assert.isTrue(Schema.is(TomlArray)(outer));
 			const inner = outer.items[0] as TomlArray;
-			assert.isTrue(inner instanceof TomlArray);
+			assert.isTrue(Schema.is(TomlArray)(inner));
 			assert.deepStrictEqual(
 				inner.items.map((i) => (i as TomlInteger).value),
 				[1, 2],
 			);
 			const table = outer.items[1] as TomlInlineTable;
-			assert.isTrue(table instanceof TomlInlineTable);
+			assert.isTrue(Schema.is(TomlInlineTable)(table));
 			assert.strictEqual(table.entries.length, 1);
 			const entryValue = table.entries[0]?.value as TomlInteger;
 			assert.strictEqual(entryValue.value, 1);
@@ -192,12 +193,12 @@ describe("parser", () => {
 		it("parses a heterogeneous array", () => {
 			const kv = keyValueAt(parseExpressions('a = [1, "two", 3.5, true, 1979-05-27]'), 0);
 			const items = (kv.value as TomlArray).items;
-			assert.isTrue(items[0] instanceof TomlInteger);
-			assert.isTrue(items[1] instanceof TomlString);
-			assert.isTrue(items[2] instanceof TomlFloat);
-			assert.isTrue(items[3] instanceof TomlBoolean);
-			assert.isTrue(items[4] instanceof TomlDateTimeLiteral);
-			assert.isTrue((items[4] as TomlDateTimeLiteral).value instanceof TomlLocalDate);
+			assert.isTrue(Schema.is(TomlInteger)(items[0]));
+			assert.isTrue(Schema.is(TomlString)(items[1]));
+			assert.isTrue(Schema.is(TomlFloat)(items[2]));
+			assert.isTrue(Schema.is(TomlBoolean)(items[3]));
+			assert.isTrue(Schema.is(TomlDateTimeLiteral)(items[4]));
+			assert.isTrue(Schema.is(TomlLocalDate)((items[4] as TomlDateTimeLiteral).value));
 		});
 		it("parses empty arrays and empty inline tables", () => {
 			const exprs = parseExpressions("a = []\nb = {}\n");
@@ -214,10 +215,10 @@ describe("parser", () => {
 		});
 		it("distinguishes integers from floats and keeps big integers as bigint", () => {
 			const exprs = parseExpressions("i = 1\nf = 1.0\ne = 1e2\nx = 0xEF\nbig = 9007199254740993\nn = nan\n");
-			assert.isTrue(keyValueAt(exprs, 0).value instanceof TomlInteger);
-			assert.isTrue(keyValueAt(exprs, 1).value instanceof TomlFloat);
-			assert.isTrue(keyValueAt(exprs, 2).value instanceof TomlFloat);
-			assert.isTrue(keyValueAt(exprs, 3).value instanceof TomlInteger);
+			assert.isTrue(Schema.is(TomlInteger)(keyValueAt(exprs, 0).value));
+			assert.isTrue(Schema.is(TomlFloat)(keyValueAt(exprs, 1).value));
+			assert.isTrue(Schema.is(TomlFloat)(keyValueAt(exprs, 2).value));
+			assert.isTrue(Schema.is(TomlInteger)(keyValueAt(exprs, 3).value));
 			assert.strictEqual((keyValueAt(exprs, 3).value as TomlInteger).value, 239);
 			assert.strictEqual((keyValueAt(exprs, 4).value as TomlInteger).value, 9007199254740993n);
 			assert.isTrue(Number.isNaN((keyValueAt(exprs, 5).value as TomlFloat).value));
@@ -299,7 +300,7 @@ describe("parser", () => {
 			for (const depth of [255, 256]) {
 				const src = `a = ${"[".repeat(depth)}${"]".repeat(depth)}`;
 				const exprs = tiles(src);
-				assert.isTrue(keyValueAt(exprs, 0).value instanceof TomlArray);
+				assert.isTrue(Schema.is(TomlArray)(keyValueAt(exprs, 0).value));
 			}
 		});
 		it("throws GuardExceeded at the 257th opening bracket", () => {

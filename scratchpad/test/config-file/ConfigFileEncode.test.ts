@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
 import { Effect, FileSystem, Layer, Option, Path, PubSub, Schema } from "effect";
@@ -34,7 +35,7 @@ const layerFor = (codec: ConfigCodecShape) =>
 	}).pipe(Layer.provideMerge(platform()));
 
 const HEADER = "#:schema https://example/schema.json";
-const value = new Doc({ name: "svc", port: 8080 });
+const value = Doc.make({ name: "svc", port: 8080 });
 
 /** Encode in memory and write to disk under the same options; return both texts. */
 const both = (target: string, options?: { readonly header?: string }) =>
@@ -106,7 +107,7 @@ describe("ConfigFile.encode", () => {
 				name: "broken",
 				parse: JsonCodec.parse,
 				stringify: () =>
-					Effect.fail(new ConfigCodecError({ codec: "broken", operation: "stringify", cause: new Error("nope") })),
+					Effect.fail(ConfigCodecError.make({ codec: "broken", operation: "stringify", cause: new Error("nope") })),
 			};
 			const program = Effect.gen(function* () {
 				const cfg = yield* DocConfig;
@@ -129,7 +130,7 @@ describe("ConfigFile.encode", () => {
 				name: "broken",
 				parse: JsonCodec.parse,
 				stringify: () =>
-					Effect.fail(new ConfigCodecError({ codec: "broken", operation: "stringify", cause: new Error("nope") })),
+					Effect.fail(ConfigCodecError.make({ codec: "broken", operation: "stringify", cause: new Error("nope") })),
 			};
 			const eventful = Layer.mergeAll(
 				ConfigEvents.layer,

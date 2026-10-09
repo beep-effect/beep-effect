@@ -1,3 +1,4 @@
+// @effect-diagnostics strictEffectProvide:skip-file nodeBuiltinImport:skip-file processEnvInEffect:skip-file
 // Real-process regression for the Critical finding on the non-interactive prompt path: core runs `Prompt.run` on the
 // answered fallback, and on the real NodeTerminal that attaches a readline to stdin, so piped bytes vanished when a
 // handler did anything before reading them. This spawns a real child with real piped stdin and the real terminal,
