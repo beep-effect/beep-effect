@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -9,6 +10,8 @@ import { detectAgent, detectCi } from "./internal/agentCi.ts";
 import { normalizeEnv, readEnv } from "./internal/envRecord.ts";
 import { allKeys } from "./internal/keys.ts";
 import { detectOsc8 } from "./internal/osc8/detect.ts";
+
+const $I = $ScratchpadId.create("effected/env/RuntimeEnv");
 
 const isProvider = (
 	source: Readonly<Record<string, string | undefined>> | ConfigProvider.ConfigProvider,
@@ -40,17 +43,17 @@ export type CiName = "github-actions" | "generic";
  *
  * @public
  */
-export class RuntimeEnv extends Schema.Class<RuntimeEnv>("@effected/env/RuntimeEnv")({
+export class RuntimeEnv extends Schema.Class<RuntimeEnv>($I`RuntimeEnv`)({
 	/**
 	 * The AI agent running the process, as its family (`claude` for Claude Code, whatever `AI_AGENT` says it is
 	 * beyond that), or `None`.
 	 */
-	agent: optionField(Schema.String),
+	agent: optionField(Schema.String).annotateKey({ description: "The AI agent running the process, as its family (`claude` for Claude Code, whatever `AI_AGENT` says it is beyond that), or `None`." }),
 	/** The CI the process runs in: {@link CiName}, so a consumer can match it exhaustively, or `None`. */
-	ci: optionField(Schema.Literals(["github-actions", "generic"])),
+	ci: optionField(Schema.Literals(["github-actions", "generic"])).annotateKey({ description: "The CI the process runs in: CiName, so a consumer can match it exhaustively, or `None`." }),
 	/** The identified terminal program and its version when it exposes one, or `None`. */
-	terminal: optionField(Schema.Struct({ name: Schema.String, version: optionField(Schema.String) })),
-}) {
+	terminal: optionField(Schema.Struct({ name: Schema.String, version: optionField(Schema.String) })).annotateKey({ description: "The identified terminal program and its version when it exposes one, or `None`." }),
+}, $I.annote("RuntimeEnv", { description: "A snapshot of who is running the program: the agent, the CI, and the terminal." })) {
 	/**
 	 * The snapshot of an environment record, as a pure function: no `Config`, no `process`, no service.
 	 *
@@ -107,7 +110,7 @@ export interface RuntimeEnvOverrides {
  * @public
  */
 export class CurrentRuntimeEnv extends Context.Service<CurrentRuntimeEnv, RuntimeEnv>()(
-	"@beep/scratchpad/effected/env/RuntimeEnv/CurrentRuntimeEnv",
+	$I`CurrentRuntimeEnv`,
 ) {
 	/**
 	 * Reads the environment through `Config` once, when the layer is built. Requires nothing: the provider is read

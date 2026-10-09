@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Config from "effect/Config";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -5,6 +6,8 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import type { RuntimeEnv } from "./RuntimeEnv.ts";
 import { CurrentRuntimeEnv } from "./RuntimeEnv.ts";
+
+const $I = $ScratchpadId.create("effected/env/Audience");
 
 /**
  * Who the output is for: a person at a terminal, an AI agent, or a CI job.
@@ -65,7 +68,7 @@ const KINDS: ReadonlyArray<AudienceKind> = ["human", "agent", "ci"];
  *
  * @public
  */
-export class Audience extends Context.Service<Audience, AudienceShape>()("@beep/scratchpad/effected/env/Audience") {
+export class Audience extends Context.Service<Audience, AudienceShape>()($I`Audience`) {
 	/**
 	 * Decide the audience from `CurrentRuntimeEnv`, and from the override variable named by `options.envVar`.
 	 *

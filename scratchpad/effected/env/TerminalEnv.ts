@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import type * as StdioModule from "effect/Stdio";
 import type * as TerminalModule from "effect/Terminal";
 import * as Context from "effect/Context";
@@ -11,6 +12,8 @@ import { colorDepth, colorKeys } from "./internal/colorDepth.ts";
 import { readEnv } from "./internal/envRecord.ts";
 import { allKeys } from "./internal/keys.ts";
 import { detectOsc8 } from "./internal/osc8/detect.ts";
+
+const $I = $ScratchpadId.create("effected/env/TerminalEnv");
 
 /**
  * What one output stream can do.
@@ -141,7 +144,7 @@ const quiet: StreamEnv = { isTerminal: false, color: "none", hyperlinks: false, 
  *
  * @public
  */
-export class TerminalEnv extends Context.Service<TerminalEnv, TerminalEnvShape>()("@beep/scratchpad/effected/env/TerminalEnv") {
+export class TerminalEnv extends Context.Service<TerminalEnv, TerminalEnvShape>()($I`TerminalEnv`) {
 	/**
 	 * Build the snapshot from `Stdio`, `Terminal` and the ambient `ConfigProvider`.
 	 *
