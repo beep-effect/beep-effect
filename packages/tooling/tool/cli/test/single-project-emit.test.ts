@@ -107,8 +107,8 @@ const compilerArguments = (words: ReadonlyArray<string>): O.Option<ReadonlyArray
       Match.when(Match.is("pnpm", "npm"), (launcher) => {
         const start = skipLauncherOptions(words, index, [
           ...directoryOptions,
-          ...packageOptions,
-          ...(launcher === "npm" ? ["--workspace", "-w"] : []),
+          ...A.filter(packageOptions, (option) => launcher !== "npm" || option !== "-p"),
+          ...(launcher === "npm" ? ["--workspace", "-w", "--loglevel"] : []),
         ]);
         const subcommand = words[start];
         if (
@@ -118,9 +118,12 @@ const compilerArguments = (words: ReadonlyArray<string>): O.Option<ReadonlyArray
         ) {
           return O.some(skipLauncherOptions(words, start + 1, packageOptions));
         }
-        return launcher === "pnpm" && subcommand !== "run" ? O.some(start) : O.some(words.length);
+        if (subcommand === "run") return O.some(words.length);
+        return launcher === "pnpm" ? O.some(start) : O.none<number>();
       }),
-      Match.when(Match.is("echo", "printf"), () => O.some(words.length)),
+      Match.when(Match.is("echo", "printf"), () =>
+        A.some(A.drop(words, index), (word) => /\$\(|`/u.test(word)) ? O.none<number>() : O.some(words.length)
+      ),
       // Unknown prefixes remain subject to the conservative lexical tripwire.
       Match.orElse(() => O.none<number>())
     );
@@ -140,8 +143,8 @@ const usesSubgraphBuilder = (script: string): boolean => {
       onNone: () => {
         const text = A.join(words, " ");
         return (
-          /(?:^|[\s/"'])(?:tsc|tsgo)(?=\s|["']|$)/u.test(text) &&
-          /(?:^|[\s"'])(?:-b|--build|--force)(?=\s|["']|$)/u.test(text)
+          /(?:^|[\s/"'(`])(?:tsc|tsgo)(?=\s|["')`]|$)/u.test(text) &&
+          /(?:^|[\s"'])(?:-b|--build|--force)(?=\s|["')`]|$)/u.test(text)
         );
       },
       onSome: (arguments_) => {
@@ -270,6 +273,11 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
         "pnpm exec tsc -b .",
         "pnpm tsc -b .",
         "npm x tsc -b",
+        "npm --loglevel silent exec tsc -b .",
+        "npm -p exec tsc -b .",
+        'echo "$(tsc -b .)"',
+        "X=$(tsc -b .)",
+        "echo `tsc -b .`",
         "bunx --bun --no-install tsgo --build",
         "bunx --package typescript tsc -b",
         "bunx -p typescript tsc --force",
