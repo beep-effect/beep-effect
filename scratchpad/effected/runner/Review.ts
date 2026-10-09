@@ -93,6 +93,10 @@ export interface RoundSubject {
   readonly round: number;
   readonly commit: string;
   readonly oracle: string;
+  /** The module's ledger stage; below 3, S2 (JSDoc) and S3 (coverage, vitest canon) have not run. */
+  readonly stage?: number;
+  /** Files to review in depth when a large module is split across several briefs. */
+  readonly focus?: ReadonlyArray<string>;
 }
 
 /**
@@ -132,9 +136,24 @@ export const reviewBrief: {
       `Previous rounds: ${previous}.`,
       "Port notes: scratchpad/effected/<module>/README.md (Port notes) and scratchpad/effected/PORT_LEDGER.json",
       "record accepted deviations and backlog; do not re-raise a recorded deviation without new evidence.",
-      "The gates are already green on this commit (tsgo with every Effect rule at error, oxlint, the four",
-      "beep laws, vitest with 100 percent coverage from S3, docgen); do not report what a gate already enforces",
-      "unless you can show the gate missed it.",
+      ...((subject.stage ?? 5) >= 3
+        ? [
+            "The gates are already green on this commit (tsgo with every Effect rule at error, oxlint, the four",
+            "beep laws, vitest with 100 percent coverage from S3, docgen); do not report what a gate already enforces",
+            "unless you can show the gate missed it.",
+          ]
+        : [
+            "The gates are already green on this commit (tsgo with every Effect rule at error, oxlint, the four",
+            "beep laws, the upstream tests); do not report what a gate already enforces unless you can show the gate",
+            "missed it. S2 (JSDoc conversion) and S3 (coverage, vitest canon, property floor) have not run yet, by",
+            "operator order: report docs, JSDoc, coverage and test-canon findings as backlog only, never required.",
+          ]),
+      ...(subject.focus === undefined || subject.focus.length === 0
+        ? []
+        : [
+            "Focus: this brief is one part of a large module. Review these files in depth and read the rest of",
+            `the module only as context: ${A.join(subject.focus, ", ")}.`,
+          ]),
       "",
       "Report findings only. Do not edit any file. Do not run commands that write.",
       "For each finding give: id, file:line, class (law|bug|type-safety|tsgo|jsdoc|schema|effect-idiom|perf|test|docs),",
@@ -166,7 +185,7 @@ export const reviewBrief: {
  * import { RunnerConfig } from "@beep/scratchpad/effected/runner/Paths"
  * import * as Effect from "effect/Effect"
  *
- * console.log(Effect.isEffect(writeBrief(RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up", upstreamCheckout: "/up", home: "/home/me" }), "jsonl", 1))) // true
+ * console.log(Effect.isEffect(writeBrief(RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up", upstreamCheckout: "/up", home: "/home/me" }), "jsonl", 1, 3))) // true
  * ```
  *
  * @category commands
@@ -175,7 +194,8 @@ export const reviewBrief: {
 export const writeBrief = Effect.fn("Review.writeBrief")(function* (
   config: RunnerConfig,
   module: ModuleName,
-  round: number
+  round: number,
+  stage: number
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -184,7 +204,7 @@ export const writeBrief = Effect.fn("Review.writeBrief")(function* (
   yield* fs.makeDirectory(path.join(config.repoRoot, directory), { recursive: true });
   yield* fs.writeFileString(
     path.join(config.repoRoot, directory, "BRIEF.md"),
-    reviewBrief(module, { round, commit, oracle: config.upstreamRoot })
+    reviewBrief(module, { round, commit, oracle: config.upstreamRoot, stage })
   );
   return { directory, commit, brief: `${directory}/BRIEF.md` };
 });

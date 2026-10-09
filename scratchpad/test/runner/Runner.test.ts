@@ -335,6 +335,15 @@ describe("review loop", () => {
     assert.strictEqual(roundDir("yaml", 3), "scratchpad/effected/yaml/.review/round-3");
     assert.strictEqual(pipe("glob", roundDir(1)), "scratchpad/effected/glob/.review/round-1");
   });
+  it("tells reviewers before S3 that docs and coverage findings are backlog, and scopes a focus part", () => {
+    const early = reviewBrief("yaml", { round: 1, commit: "abc", oracle: "/up", stage: 1, focus: ["a.ts", "b.ts"] });
+    assert.include(early, "S2 (JSDoc conversion) and S3 (coverage, vitest canon, property floor) have not run yet");
+    assert.include(early, "the module only as context: a.ts, b.ts.");
+    assert.notInclude(early, "100 percent coverage from S3");
+    const late = reviewBrief("yaml", { round: 1, commit: "abc", oracle: "/up", stage: 3 });
+    assert.include(late, "100 percent coverage from S3");
+    assert.notInclude(late, "Focus:");
+  });
   it("renders the section 12.3 brief with the previous inventory from round 2", () => {
     const first = reviewBrief("jsonl", { round: 1, commit: "abc", oracle: "/up" });
     assert.include(first, "Module: jsonl. Commit: abc. Round: 1.");

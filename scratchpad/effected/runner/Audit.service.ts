@@ -379,7 +379,8 @@ const makeAudit = Effect.fn("Audit.make")(function* () {
       return yield* applyDocBlockData(config, module, json);
     }, provide),
     reviewBrief: Effect.fn("Audit.reviewBrief")(function* (module: ModuleName, round: number) {
-      return yield* writeBrief(config, module, round);
+      const stage = (yield* findRow(yield* readLedger(config), module)).stage;
+      return yield* writeBrief(config, module, round, stage);
     }, provide),
     reviewSeats: Effect.fn("Audit.reviewSeats")(function* (module: ModuleName, round: number) {
       const result = yield* runCliSeats(config, module, round);
