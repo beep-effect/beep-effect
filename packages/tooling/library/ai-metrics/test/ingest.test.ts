@@ -54,6 +54,11 @@ import {
   forwarderRunResultToJson,
   forwarderTimerPlanToJson,
   generateAiMetricsWeeklyReport,
+  HookPulseDisarmSentinel,
+  HookPulseDisarmWindow,
+  HookPulseRefusal,
+  HookPulseV1,
+  HookPulseV1FromRawEvent,
   hashPrivateIdentifier,
   hashPublicTextSha256,
   listAiMetricsBenchmarkCases,
@@ -92,6 +97,7 @@ import {
   writeAiMetricsConfigSnapshotArtifacts,
   writeAiMetricsDerivedStorage,
 } from "@beep/repo-ai-metrics";
+import { LiteralKit, Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
@@ -99,6 +105,8 @@ import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
 import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as Exit from "effect/Exit";
@@ -111,11 +119,32 @@ import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
+import { ChildProcess } from "effect/process";
 import * as Redacted from "effect/Redacted";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
 import { TestClock } from "effect/testing";
+
+const ForwarderStampScenario = LiteralKit([
+  "qualified",
+  "mixed",
+  "unknown",
+  "missing",
+  "late",
+  "reused",
+  "mismatch",
+  "corrupt",
+  "unreadable",
+  "refused",
+  "trailing-refusal",
+  "closed-before-refusal",
+  "disarmed",
+  "prefix",
+  "empty-sentinel",
+  "custom-sentinel",
+  "future-sentinel",
+]);
 
 const encodeUnknownJsonEffect = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
@@ -165,12 +194,20 @@ const writeText = Effect.fn("AiMetricsTest.writeText")(function* (filePath: stri
 
 const makeGitRoot = Effect.fn("AiMetricsTest.makeGitRoot")(function* (repoRoot: string) {
   const path = yield* Path.Path;
+  yield* writeText(path.join(repoRoot, "AGENTS.md"), "# fixture guide\n");
   yield* writeText(path.join(repoRoot, ".git/HEAD"), "ref: refs/heads/main\n");
   yield* writeText(path.join(repoRoot, ".git/refs/heads/main"), `${pipe("a", Str.repeat(40))}\n`);
   yield* writeText(
     path.join(repoRoot, ".git/config"),
     '[remote "origin"]\n\turl = git@github.com:beep-effect/beep-effect.git\n'
   );
+  for (const args of [
+    ["init", "-q"],
+    ["add", "--", "AGENTS.md"],
+  ]) {
+    const child = yield* ChildProcess.make("git", args, { cwd: repoRoot, stdout: "ignore", stderr: "ignore" });
+    expect(yield* child.exitCode).toBe(0);
+  }
 });
 
 const relativeSnapshotPaths = (files: ReadonlyArray<{ readonly relativePath: string }>): ReadonlyArray<string> =>
@@ -386,7 +423,7 @@ it("rejects impossible line and measurement values at construction", () => {
   ).toThrow();
 });
 
-it.layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
+it.layer(NodeServices.layer, { timeout: "30 seconds" })("@beep/repo-ai-metrics", (it) => {
   it.effect(
     "summarizes Codex JSONL and counts rejected lines",
     Effect.fn(function* () {
@@ -643,6 +680,185 @@ it.layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
       );
+    })
+  );
+
+  it.effect(
+    "binds session stamps through hook namespace, storage and OTLP without borrowing ambiguous identities",
+    Effect.fnUntraced(function* () {
+      const path = yield* Path.Path;
+      const fs = yield* FileSystem.FileSystem;
+      const tmpDir = yield* fs.makeTempDirectoryScoped();
+      const repoRoot = path.join(tmpDir, "repo");
+      yield* makeGitRoot(repoRoot);
+      yield* writeText(path.join(repoRoot, "AGENTS.md"), "# stamp fixture\n");
+      const stamp = Sha256Hex.make("b".repeat(64));
+      const otherStamp = Sha256Hex.make("c".repeat(64));
+      const decodePulse = S.decodeEffect(HookPulseV1FromRawEvent);
+      const writeScenarioSentinel = Effect.fnUntraced(function* (
+        scenario: typeof ForwarderStampScenario.Type,
+        hookRoot: string
+      ) {
+        if (scenario === "empty-sentinel") yield* writeText(path.join(hookRoot, "hook-pulse.disarmed"), "");
+        if (scenario === "custom-sentinel") yield* writeText(path.join(hookRoot, "custom.disarmed"), "");
+        if (scenario === "future-sentinel")
+          yield* writeText(
+            path.join(hookRoot, "hook-pulse.disarmed"),
+            yield* HookPulseDisarmSentinel.encodeJsonEffect(
+              HookPulseDisarmSentinel.make({
+                disarmedAt: "2099-01-01T00:00:00Z",
+                reason: "fixture",
+                evidenceTier: "unknown",
+              })
+            )
+          );
+      });
+      const writeScenarioGaps = Effect.fnUntraced(function* (
+        scenario: typeof ForwarderStampScenario.Type,
+        hookRoot: string,
+        hookDir: string
+      ) {
+        if (scenario === "corrupt") yield* writeText(path.join(hookDir, "bad.ndjson"), "not JSON\n");
+        if (scenario === "unreadable") yield* fs.makeDirectory(path.join(hookDir, "bad.ndjson"));
+        if (A.contains(["refused", "trailing-refusal", "closed-before-refusal"], scenario))
+          yield* writeText(
+            path.join(hookRoot, "hook-pulse-refusals-fixture.ndjson"),
+            yield* S.encodeEffect(S.fromJsonString(HookPulseRefusal))(
+              HookPulseRefusal.make({
+                ts: DateTime.makeUnsafe(scenario === "refused" ? "2026-10-09T10:00:30Z" : "2026-10-09T10:02:00Z"),
+                agentKind: "codex-cli",
+                reason: "timeout",
+              })
+            )
+          );
+        if (scenario === "disarmed")
+          yield* writeText(
+            path.join(hookRoot, "hook-pulse-disarm-windows.ndjson"),
+            yield* HookPulseDisarmWindow.encodeJsonEffect(
+              HookPulseDisarmWindow.make({
+                disarmedAt: O.some("2026-10-09T10:00:30Z"),
+                rearmedAt: "2026-10-09T10:00:45Z",
+                reason: O.none(),
+                evidenceTier: "unknown",
+                schemaVersion: "hook-pulse-disarm-window/v1",
+              })
+            )
+          );
+        yield* writeScenarioSentinel(scenario, hookRoot);
+      });
+      for (const scenario of ForwarderStampScenario.literals) {
+        const homeDir = path.join(tmpDir, scenario, "home");
+        const sourceRoot = path.join(homeDir, ".codex/sessions");
+        const sourcePath = path.join(sourceRoot, "session.jsonl");
+        const hookRoot = path.join(tmpDir, scenario, "hooks");
+        const dataRoot = path.join(tmpDir, scenario, "data");
+        const hookDir = path.join(hookRoot, "hook-events");
+        yield* fs.makeDirectory(hookDir, { recursive: true });
+        yield* writeText(
+          sourcePath,
+          [
+            scenario === "prefix"
+              ? '{"type":"session_meta","timestamp":"2026-10-09T09:59:00Z","payload":{"id":"current"}}'
+              : '{"type":"session_meta","timestamp":"2026-10-09T10:00:00Z","payload":{"id":"current"}}',
+            '{"type":"response_item","timestamp":"2026-10-09T10:01:00Z","payload":{"type":"function_call","name":"fixture","arguments":"{}"}}',
+          ].join("\n")
+        );
+        const provider = ConfigProvider.fromUnknown({
+          BEEP_HOOK_PULSE_HASH_SALT: "hook-fixture-namespace",
+          BEEP_AGENT_EVIDENCE_ROOT: hookRoot,
+          BEEP_HOOK_PULSE_DISARM_SENTINEL: scenario === "custom-sentinel" ? path.join(hookRoot, "custom.disarmed") : "",
+        });
+        yield* Effect.gen(function* () {
+          const initial = yield* decodePulse({
+            event: {
+              hook_event_name: "SessionStart",
+              session_id: scenario === "mismatch" ? "previous" : "current",
+              transcript_path: sourcePath,
+              cwd: repoRoot,
+              source: "startup",
+            },
+            notifierRev: "fixture",
+            instrumentClass: "production",
+            agentKind: "codex-cli",
+            evidenceTier: "derived",
+            ts: "2026-10-09T10:00:00Z",
+          });
+          const start = HookPulseV1.make({
+            ...initial,
+            agentKind: "codex-cli",
+            ts: DateTime.makeUnsafe("2026-10-09T10:00:00Z"),
+            harnessHash: O.some(stamp),
+          });
+          const tool = HookPulseV1.make({
+            ...start,
+            hookEvent: "PostToolUse",
+            waitReason: "none",
+            harnessHash: O.none(),
+            sessionStartSource: O.none(),
+            ts: DateTime.makeUnsafe("2026-10-09T10:01:00Z"),
+          });
+          const rows = ForwarderStampScenario.$match(scenario, {
+            qualified: () => [start, tool],
+            mixed: () => [start, HookPulseV1.make({ ...start, harnessHash: O.some(otherStamp) })],
+            unknown: () => [HookPulseV1.make({ ...start, harnessHash: O.none() }), tool],
+            missing: () => [tool],
+            late: () => [HookPulseV1.make({ ...tool, ts: DateTime.makeUnsafe("2026-10-09T09:59:00Z") }), start],
+            reused: () => [start, HookPulseV1.make({ ...tool, sessionId: Sha256Hex.make("e".repeat(64)) })],
+            mismatch: () => [start, tool],
+            corrupt: () => [start, tool],
+            unreadable: () => [start, tool],
+            refused: () => [start, tool],
+            "trailing-refusal": () => [start, tool],
+            "closed-before-refusal": () => [
+              start,
+              tool,
+              HookPulseV1.make({ ...tool, hookEvent: "SessionEnd", ts: DateTime.makeUnsafe("2026-10-09T10:01:30Z") }),
+            ],
+            disarmed: () => [start, tool],
+            prefix: () => [start, tool],
+            "empty-sentinel": () => [start, tool],
+            "custom-sentinel": () => [start, tool],
+            "future-sentinel": () => [start, tool],
+          });
+          yield* writeText(
+            path.join(hookDir, "fixture.ndjson"),
+            (yield* Effect.forEach(rows, (row) => HookPulseV1.encodeJsonEffect(row))).join("\n")
+          );
+          yield* writeScenarioGaps(scenario, hookRoot, hookDir);
+          yield* runAiMetricsForwarder(
+            AiMetricsForwarderInput.make({
+              homeDir,
+              repoRoot,
+              codexSessionsRoot: O.some(sourceRoot),
+              claudeProjectsRoot: O.some(path.join(homeDir, "missing")),
+              dataRoot: O.some(dataRoot),
+              hashSalt: O.some("storage-fixture-namespace"),
+              includeAll: true,
+              parquetExportMode: "none",
+              rawArchiveKey: Redacted.make(Base64.encode(new Uint8Array(32).fill(7))),
+            })
+          );
+          const expected = scenario === "qualified" || scenario === "closed-before-refusal" ? stamp : null;
+          const db = yield* DuckDb;
+          expect(yield* db.query("SELECT session_harness_hash AS stamp FROM ai_metrics_sessions")).toEqual([
+            { stamp: expected },
+          ]);
+          expect(yield* db.query("SELECT session_harness_hash AS stamp FROM ai_metrics_source_files")).toEqual([
+            { stamp: expected },
+          ]);
+          const projection = yield* readAiMetricsOtlpSpanProjections;
+          expect(projection.projections.length).toBeGreaterThan(0);
+          for (const span of projection.projections)
+            expect(span.attributes["ai_metrics.session_harness_hash"]).toBe(expected ?? undefined);
+        }).pipe(
+          Effect.provideService(ConfigProvider.ConfigProvider, provider),
+          provideScopedLayer(
+            DuckDb.makeNodeLayer(
+              DuckDbConnectionOptions.make({ databasePath: path.join(dataRoot, "derived/ai-metrics.duckdb") })
+            )
+          )
+        );
+      }
     })
   );
 
@@ -1366,10 +1582,12 @@ it.layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
       expect(plan.serviceUnit).toContain("flock -n");
       expect(plan.serviceUnit).toContain('"status":"failed"');
       expect(plan.serviceUnit).toContain("json.dumps");
-      expect(plan.serviceUnit).toContain('decode("utf-8","replace")');
+      expect(plan.serviceUnit).toContain("forwarder-command-failed");
+      expect(plan.serviceUnit).toContain("2>/dev/null");
+      expect(plan.serviceUnit).not.toContain("stderr.tmp");
       expect(plan.serviceUnit).toContain("uses the resolved Bun executable");
       expect(plan.serviceUnit).toContain("'/home/example/.bun/bin/bun'");
-      expect(plan.serviceUnit).toMatch(/exit_code=0; > .*latest\.json\.stderr\.tmp.*; if flock -n/su);
+      expect(plan.serviceUnit).toMatch(/exit_code=0; if flock -n/su);
       expect(plan.serviceUnit).not.toContain("sed 's/");
       expect(plan.serviceUnit).toContain("StartLimitBurst=3\nStartLimitIntervalSec=30m\n\n[Service]");
       expect(plan.serviceUnit).toContain("Restart=on-failure");

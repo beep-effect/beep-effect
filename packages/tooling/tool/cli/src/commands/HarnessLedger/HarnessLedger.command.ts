@@ -12,6 +12,7 @@ import {
   BehavioralClaim,
   ContextSurfaceKind,
   HarnessLedgerDelta,
+  HookPulseAgentKind,
   hookPulseLedgerDir,
   LedgerDisposition,
   MechanismClass,
@@ -40,6 +41,7 @@ import {
   HarnessLedgerProposeOptions,
   HarnessLedgerPruneOptions,
   HarnessLedgerPruneReport,
+  HarnessTelemetryReconciliation,
   parseHarnessEditSpec,
   parseHarnessSurfaceSpec,
 } from "./HarnessLedger.schemas.ts";
@@ -419,6 +421,7 @@ const outcomeLine = (report: HarnessLedgerPruneReport, write: boolean): string =
     written: report.written,
     write,
     full: report.windowFull,
+    qualified: report.nonUseQualified,
     empty: A.isReadonlyArrayEmpty(report.proposals),
   }).pipe(
     Match.when(
@@ -428,8 +431,16 @@ const outcomeLine = (report: HarnessLedgerPruneReport, write: boolean): string =
     Match.when({ write: true, full: false }, () => `nothing written: window not full (${windowCount(report)}).`),
     Match.when({ empty: true }, () => "nothing written: no fresh proposals."),
     Match.when(
+      { write: true, full: true, qualified: false },
+      () => "nothing written: transcript and surface coverage are unqualified."
+    ),
+    Match.when(
       { full: false },
       () => `dry run: nothing written; partial window (${windowCount(report)}), so --write would append nothing.`
+    ),
+    Match.when(
+      { qualified: false },
+      () => "dry run: zero-touch candidates are advisory; transcript and surface coverage are unqualified."
     ),
     Match.orElse(() => "dry run: nothing written (pass --write to append these proposals).")
   );
@@ -514,6 +525,10 @@ export const harnessLedgerPruneReportLines: {
 export const harnessLedgerPruneProposalsCommand = Command.make(
   "prune-proposals",
   {
+    agentKind: Flag.String("agent-kind").pipe(
+      Flag.withDefault("claude-code"),
+      Flag.withDescription("Client to report: claude-code, codex-cli, or cursor-cli")
+    ),
     window: Flag.Int("window").pipe(
       Flag.withDefault(30),
       Flag.withDescription("Number of most recent hook-pulse sessions under the current harness hash to observe")
@@ -526,7 +541,7 @@ export const harnessLedgerPruneProposalsCommand = Command.make(
     ),
     write: Flag.Boolean("write").pipe(
       Flag.withDefault(false),
-      Flag.withDescription("Append the fresh proposals as `proposed` ledger rows (default: dry run)")
+      Flag.withDescription("Produce advisory proposals; automatic ledger persistence remains disabled")
     ),
     model: modelFlag,
     reasoningEffort: reasoningEffortFlag,
@@ -548,6 +563,9 @@ export const harnessLedgerPruneProposalsCommand = Command.make(
           repoRoot,
           stateDir,
           windowSessions: input.window,
+          agentKind: yield* S.decodeUnknownEffect(HookPulseAgentKind)(input.agentKind).pipe(
+            Effect.mapError(HarnessLedgerIoError.wrap("Unknown --agent-kind."))
+          ),
           write: input.write,
           modelId: optionalNonEmpty(input.model),
           reasoningEffort: optionalNonEmpty(input.reasoningEffort),
@@ -573,6 +591,47 @@ export const harnessLedgerPruneProposalsCommand = Command.make(
   Command.withDescription(
     "Propose retiring zero-touch skills and MCP servers over the last N sessions under the current harness hash"
   ),
+  Command.provide(HarnessLedgerServiceLive)
+);
+
+/**
+ * Read-only payload-free transcript and hook reconciliation.
+ *
+ * **Example** (Inspect the command)
+ *
+ * ```ts
+ * import { harnessLedgerReconcileCommand } from "@beep/repo-cli/commands/HarnessLedger"
+ * console.log(typeof harnessLedgerReconcileCommand)
+ * ```
+ *
+ * @category commands
+ * @since 0.0.0
+ */
+export const harnessLedgerReconcileCommand = Command.make(
+  "reconcile",
+  {
+    stateDir: Flag.String("state-dir").pipe(Flag.withDescription("Directory containing production hook-pulse shards")),
+    transcriptDir: Flag.String("transcript-dir").pipe(
+      Flag.withDescription("Transcript root, including nested workflow and subagent files")
+    ),
+    agentKind: Flag.String("agent-kind").pipe(
+      Flag.withDefault("claude-code"),
+      Flag.withDescription("Client to report: claude-code, codex-cli, or cursor-cli")
+    ),
+  },
+  Effect.fn("HarnessLedger.reconcileCommand")(function* (input) {
+    const kind = yield* S.decodeUnknownEffect(HookPulseAgentKind)(input.agentKind).pipe(
+      Effect.mapError(HarnessLedgerIoError.wrap("Unknown --agent-kind."))
+    );
+    const ledger = yield* HarnessLedgerService;
+    const report = yield* ledger.reconcile(input.stateDir, input.transcriptDir, kind);
+    const encoded = yield* S.encodeUnknownEffect(S.fromJsonString(HarnessTelemetryReconciliation))(report).pipe(
+      Effect.mapError(HarnessLedgerIoError.wrap("Cannot encode reconciliation."))
+    );
+    yield* printCommandJson(encoded);
+  })
+).pipe(
+  Command.withDescription("Read-only transcript versus hook counts, including all nested children"),
   Command.provide(HarnessLedgerServiceLive)
 );
 
@@ -605,5 +664,6 @@ export const harnessLedgerCommand = Command.make("harness-ledger", {}, () =>
     harnessLedgerDispositionCommand,
     harnessLedgerListCommand,
     harnessLedgerPruneProposalsCommand,
+    harnessLedgerReconcileCommand,
   ])
 );

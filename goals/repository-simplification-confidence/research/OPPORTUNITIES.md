@@ -513,6 +513,62 @@ The final CLI package check remains queued for more than fifteen minutes while o
   manage the submitted monitor through `yeet job` before the final handoff.
 - Prevention: help should distinguish the publish job ceiling from the
   automatically submitted monitor's lifetime, or expose a monitor ceiling.
+### 2026-10-09 — H3 admission environment
+
+- Work: admitted AI-metrics and CLI type checks.
+- Evidence: `beep-heavy` initially returned `Failed to connect to user scope bus`.
+- Cause: the worker shell lacked `XDG_RUNTIME_DIR` and `DBUS_SESSION_BUS_ADDRESS`.
+- Repair: supplied the existing user-manager environment and re-entered the queue.
+- Prevention: export that environment in the lane launch contract; no queue bypass.
+
+### 2026-10-09 — H3 direct type-check attribution
+
+- Work: direct admitted `tsgo -p` checks before package verification.
+- Evidence: CLI check produced TS6305 for workspace dependency declarations absent
+  from the fresh worktree, followed by cascading unknown/any diagnostics.
+- Attribution: environment-only precondition; the direct command does not build dependencies.
+- Prevention: use the package verifier or canonical test-tsgo lane with dependency setup.
+
+| 2026-10-09 | H3 telemetry qualification | A single package is accepted by `quality package-verify`, although its help suggests multiple package arguments. | Multi-package launch rejected before proof; each package now runs separately through admission. | Align help cardinality with the parser. |
+| 2026-10-09 | H3 independent review | The pinned Claude read-only reviewer returned no output within both 120 s and 300 s bounds. | Bounded processes exited 124; no reviewer verdict exists. | Surface transport progress and bound review chunks without weakening the gate. |
+| 2026-10-09 | H3 Cursor live workflow | The pinned Cursor Opus route rejected the model call with a usage-limit error. | SessionStart and SessionEnd hooks ran, but no tool workflow completed. | Re-run through the same authorized subscription after its quota resets; no paid top-up. |
+| 2026-10-09 | H3 forwarder credential preflight | The documented `op run --env-file` route failed because its example vault is absent from the automation account. | Suppressed preflight failed; `op-doctor` confirmed the service-account backend is healthy. The archive-key operation was stopped. | Maintain current lane-scoped secret references beside the runbook, owned by F; never request raw values. |
+| 2026-10-09 | H3 shared admission | Two admitted H3 commands remained queued while all three shared slots were occupied. | More than 20 minutes elapsed before execution; no slot bypass or other-lane cancellation. | Expose queue age and holder liveness without command environments. |
+
+### H3 proof-driver immutability
+
+Editing an executing proof driver shifted its shell read offset and emitted
+`check: command not found`; a dedicated immutable post-review driver now repeats
+the complete final gate sequence. Freeze a driver before admission and queue a
+new one for later repair waves. Earlier individual results are retained as
+intermediate evidence, not final-head proof.
+
+### H3 additive row contract
+
+Adding `sessionStartSource` exposed the writer conformance test's explicit field
+allowlist. The package audit rejected the omission; the allowlist and raw codec
+were aligned before the final proof. Schema-field additions should update the
+conformance contract in the same commit.
+
+### H3 final proof and bounded fingerprint collection
+
+The admitted final package audits rejected `Effect.asNone` and a nonexistent
+refusal decoder. The supported Option result and schema decoder now replace
+those calls; all three package inbox rows reference the repair commit. Validate
+new helper calls against the Effect reference and existing model surface before
+starting long package proofs. Independent review also found ignored-tree errors
+and stamp-deadline row loss: indexed candidates now avoid whole-tree traversal,
+and the fingerprint has its own shorter deadline that retains an unstamped row.
+
+### H3 conservative identity review
+
+Independent final review found lexical-path reuse, multiple-primary ambiguity,
+file symlink aliases, lost Bash `pipefail`, and Cursor disarm ordering. Current
+transcript identity is now required for a forwarder stamp; ambiguous primaries
+are excluded, observed positive touches are retained, aliases are deduplicated,
+and registered Cursor event metadata avoids reading disarmed payloads. Earlier
+proof output predates these fixes and is intermediate evidence only. A final
+frozen-source package/parity repeat follows the admitted current run.
 
 
 ## 2026-10-09: C CI port qualification catches pinned/reference API drift
@@ -733,6 +789,32 @@ and parity remain required before final handoff. No other lane unit was stopped.
   unpredictable wait time. A fair queue with observable position would prevent
   this delay; this lane does not alter the workstation wrapper or other jobs.
 
+### H3 storage and hook namespace boundary
+
+Final review found that a forwarder stamp join reused the storage salt instead
+of the hook namespace. Join-side session and path hashes now resolve the hook
+salt chain separately; storage pseudonyms remain unchanged. Nine isolated
+integration cases cover storage and OTLP projection plus mixed, missing, reused,
+late, mismatched, corrupt and unreadable evidence. The earlier private-schema
+import error and sentinel Result-union error were repaired before the final
+package run; CLI inbox rows reference their concrete repair commits.
+
+### H3 admission pool refresh
+
+A queued publisher retained the former three-slot pool while the machine's
+configured floor moved to four slots. All current lock owners were live. The
+owned publisher was stopped before it created a PR and re-submitted through the
+unchanged wrapper, without changing caps or cancelling another lane. Queue
+waiters should observe the current pool configuration or expose a refresh path.
+
+- H3 publication cheap gates rejected introduced Effect Vitest instances and reconciliation duplication/complexity. The independent review also found that sibling directory aliases counted one dangling entry twice. Consolidated fail-closed reads, deduplicated failure identities by canonical containing directory, and adopted scoped test harnesses. A final gate run after every source review wave would have exposed these before publication admission.
+
+- H3's admitted final proof exposed introduced codec fixture, Option callback, timestamp-filter and installed Effect Vitest API mismatches. Repaired the actual installed v4 contracts, supplied valid ordered timestamp generators, and kept every red attributed. The next independent review found unproven client filename ancestry, collection-gap stamp binding and transcript-subtree count inflation; repaired those before any push. Schema and source checks before the long admission queue would have shortened this repair cycle.
+
+- H3's latest static review found whole-second refusal precision, empty/overridden disarm sentinel handling, late opening attribution, fallback enumeration errors and alias-dependent realpath failure identities. Padded refusal uncertainty to the full recorded second, bound openings to transcript prefixes, carried canonical failure identities through selection, and made both snapshot walkers fail on inspection errors. Updated regressions to retain all historical positive touches and seed actual selected hook paths; the previous fixture expectations no longer represented the repaired contract.
+
+- H3 review friction: independent source review found corruption still allowed qualifying sessions, requested report samples could lower the shared 30-session floor, canonical alias dedup discarded known hooks, and trailing refusals could retain forwarder stamps on open sessions. Added fail-closed accounting, alias aggregation, durable-ending checks, and regression fixtures; reserving session-scope snapshot paths prevents budget starvation. Earlier acceptance fixtures covering partial and conflicting evidence would have prevented these gaps.
+
 - C publication boundary: normal `beep yeet publish` at `bc176b61fa` exits 1
   before push because collected cheap gates enforce schema-first / effect-vitest
   exception candidates delegated to B, plus the H1-owned root ONNX declaration.
@@ -830,6 +912,16 @@ Human review on PR #1568 identified that Repo Sanity's push-only hosted checks u
 
 While verifying the report push for #1568, both `gh pr view` and the complete review-thread query failed with `API rate limit already exceeded`. REST still verified the published head, ready state and existing comment history, but cannot establish thread-resolution state. Preserve unknown status and require a fresh complete GraphQL read at the orchestrator gate. A quota-aware final-read reservation would prevent publication verification from depending on an exhausted shared account budget.
 
+- H3 further review friction: transcript-path coincidence did not establish hook session identity; group endings could precede child activity, and gap checks began at transcript time rather than verified hook opening. Repaired identity bindings, supported child layouts, alias-root keys and complete intervals. Also bounded Cursor stdin and propagated registered event metadata. The suggestion to classify supported Codex/Cursor hook adapters as unsupported because ancestry is unknown was rejected: the existing role-skip counter and receipt record that qualification limit, while unknown coverage remains unknown; native metrics support is reported separately.
+
+- H3 admission drift: two queued jobs captured four slots while the operator raised the workstation floor to five. Verified both queued process command lines and lane working directories, stopped only their owned waiting units, and resubmitted through `beep-heavy` so they read the current floor. No other lane was stopped and no pool or memory limit was edited. A wrapper that refreshes operator admission settings while queued would prevent stale pool membership.
+
+- H3 admitted proof exposed outdated fixtures: files added after real Git initialization were untracked, and corrupt-evidence tests still expected qualification. Updated the fixtures to index the intended config files and assert conservative incomplete windows; replaced an Effect Option success form rejected by package conformance. Further source review expanded closure checks to explicitly linked paths and found raw stderr retained in timer failure status. The renderer now records only a stable failure diagnostic and exit code, with stderr discarded. No installed timer was changed.
+
+- H3 arm-normalization review caught a jq grammar error and the optional-field empty-output trap on scalar JSON sentinels. Eight disposable sentinel shapes now prove exactly one durable window per successful arm; a valid date retains its known start and invalid/non-object values preserve an unknown start. Both snapshot routes now reject unresolved Git metadata in ancestor directories before selecting a non-Git fallback. No evidence history or installed configuration was rewritten.
+
+- H3 full CLI proof: 290 test files passed and 18 forwarder fixtures failed because their seed helper wrote incomplete Git metadata. Replaced the partial layout with real Git initialization and indexed guidance; acknowledged the package P0 against that repair. Review also found metadata skipped by successful Git discovery and physical-path newline loss. The shell now preserves physical path bytes and both snapshot routes reject metadata between the scan root and Git's accepted toplevel. Live future-dated disarm starts become unknown, and the timestamp schema rejects calendar rollovers. Historical missing-window speculation does not apply to the production ledger: all malformed-arm experiments used isolated evidence roots and no shared arm/window history was edited.
+
 ## C Run 8 integration proof admission
 
 The five required integration checks wait at `beep-heavy: all 4 slots busy, waiting`
@@ -884,6 +976,18 @@ unchanged wrapper to observe the live budget. Dynamic configuration refresh
 while queued would prevent this stale-admission window. No running payload or
 peer service was stopped, and the worker changed no admission setting.
 
+- H3 final static review found legal carriage-return path truncation and lexical repository discovery across a symlink. Preserve exactly the Git output terminator and resolve physical ownership before searching for root guidance; stop at the nearest Git metadata even without guidance. The salt-precedence concern was adjudicated against the local Effect v4 ConfigProvider implementation: empty environment strings are missing by default, and the existing test covers empty-hook/nonempty-AI precedence. No salt or namespace was changed.
+
+- H3 independent review also tightened empty Git output handling, shell/TypeScript physical Git-root parity and stderr suppression, and UTC validation for refusal/transition timestamps. Invalid inherited attempt timestamps now fall back to the actual attempt time, and consumers reject calendar-rollover rows. This closes lower-severity findings without changing the evidence store or treating missing data as non-use.
+
+- H3 stopped only its verified admitted publication unit before push when the final review returned further defects. Shell Git output now requires successful nonempty resolution, and TypeScript checks after removing exactly one output newline. Refusal validation supports GNU/BSD date and partitions by attempt date; current regression witnesses cover calendar rejection, shard agreement and a nearer checkout without guidance. Publication was started before the final reviewer returned; a terminal-review precondition prevents that avoidable admission waste.
+
+- H3 terminal proof found a pipeable-form conformance error in the UTC filter and a renamed scoped fixture whose finalizer could no longer find its root. The filter now uses the pipeable form and the fixture restores its root before scope cleanup. Thirty-five other focused failures were attributed to pre-existing unresolved Git metadata above the workstation temporary directory; that state is outside H3 ownership. Tests must use an isolated admitted environment; no outside metadata was removed and no snapshot safety boundary was weakened.
+
+- H3 isolated proof passed 244 of 245 focused cases; the unreadable-file case showed namespace root capabilities bypassed fixture permission bits. Verified that dropping the capability bounding/inheritable/ambient sets restores permission denial, then resubmitted a capless namespace proof. The package compiler separately caught optional fixture properties, strict-boolean checks, unchecked array indexing and typed decoder/helper-form violations; all were repaired in tests. Only the affected owned proof and queued publication units were stopped for these concrete defects, not a queue timeout.
+
+- H3 identity-preserving proof startup exposed a missing device bind: Bun and Git could not open /dev/null inside the private root mount, so those results are environment failures, not verification. Explicitly bind the existing device tree; probe runtime startup, original UID, unreadable-file denial and the non-Git temp ancestry before admission. Disable core dumps for the proof process only. All mounts remain private and all temporary backing files remain lane-owned.
+
 ## C Run 9 integration admission
 
 The merge-only refresh for #1583 waits at `beep-heavy: all 5 slots busy,
@@ -901,3 +1005,5 @@ Effect v4 ChildProcessSpawner boundary preserves both runtimes and all
 assertions; rerun the affected fixtures, type and package checks. Checking
 the canonical process API before choosing the native boundary would have
 prevented this extra qualification wave. No suppression or inventory edit.
+
+- H3 final publication collected all cheap gates and refused only inherited schema-first rows in AccountsSecretsLayout.schemas.ts/ci-runner-security.test.ts and Epistemic EV015. All three files match origin/main byte-for-byte; H3 changes none of them. All other cheap lanes passed. The standing inherited-publish ruling authorizes commit-by-name and push/create fallback, with the orchestrator consolidating main reds under S11. Preventive improvement: present source-bound inherited attribution before re-running expensive global gate scans.

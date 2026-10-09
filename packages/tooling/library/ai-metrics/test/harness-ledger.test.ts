@@ -180,9 +180,9 @@ describe("harness-ledger", () => {
           harnessBaselineHash: Sha256Hex.make(hashB),
         };
         const hash = yield* deriveHarnessHash(source);
-        // `printf 'harness-hash-v1\n%s\n%s' "$session" "$baseline" | sha256sum`
-        expect(hash).toBe("f770e97d322c8b3e4cd0aabdd5d768ddf44465b676ef12faa7fe081d73755f0c");
-        expect(hash).toBe(yield* hashPublicTextSha256(`harness-hash-v1\n${hashA}\n${hashB}`));
+        // `printf 'harness-hash-v2\n%s\n%s' "$session" "$baseline" | sha256sum`
+        expect(hash).toBe("fec020c5d50deb68f02574185e8edebf6fea5a1f4576d46e57541311b76e38b6");
+        expect(hash).toBe(yield* hashPublicTextSha256(`harness-hash-v2\n${hashA}\n${hashB}`));
         pipe(isHarnessHash(hash), assertTrue);
       })
     );

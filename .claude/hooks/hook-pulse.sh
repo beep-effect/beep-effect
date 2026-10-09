@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # hook-pulse: appends exactly one privacy-safe `HookPulseV1` NDJSON row per
-# Claude Code hook event to the clone-independent XDG evidence store
+# supported client hook event to the clone-independent XDG evidence store
 # (goals/coding-agent-effectiveness-evidence-loop, P1 sequence-break
 # instrument). The binding contract is
 # `packages/tooling/library/ai-metrics/src/hook-pulse.ts`; the conformance test
@@ -11,9 +11,9 @@
 #
 # Load-bearing decisions:
 # - Kill switch first. The sentinel test runs before jq, before reading stdin,
-#   and before any parsing, so a disarm takes effect within one syscall. The
-#   hook fires on every tool call in every clone; a week-long always-on
-#   instrument with no sub-second disarm is not acceptable.
+#   and before any parsing. Disarm stops normal hook rows immediately; H3
+#   requires a payload-free disabled refusal for each refused write attempt.
+#   The sibling refusal/transition logs never read or contain hook payloads.
 # - Whitelist projection happens HERE (spike amendment 6). Raw payloads carry
 #   `prompt`, `message`, `tool_input`, `tool_response`, `last_assistant_message`,
 #   `background_tasks`, `session_crons`, `permission_suggestions`, and `error`
@@ -54,9 +54,51 @@
 # location from those exports so the two halves cannot drift apart.
 BEEP_AGENT_EVIDENCE_ROOT="${BEEP_AGENT_EVIDENCE_ROOT:-${XDG_STATE_HOME:-${HOME:-/tmp}/.local/state}/beep/agent-evidence}"
 BEEP_HOOK_PULSE_DISARM_SENTINEL="${BEEP_HOOK_PULSE_DISARM_SENTINEL:-${BEEP_AGENT_EVIDENCE_ROOT}/hook-pulse.disarmed}"
-if [ -e "${BEEP_HOOK_PULSE_DISARM_SENTINEL}" ]; then
+agent_kind="${BEEP_HOOK_PULSE_AGENT_KIND:-claude-code}"
+case "${agent_kind}" in claude-code|codex-cli|cursor-cli) ;; *) agent_kind=unknown ;; esac
+if [ "${1:-}" != "--bounded-body" ] && [ "${1:-}" != "--refuse" ]; then
+  export BEEP_HOOK_PULSE_ATTEMPT_UTC="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+fi
+refuse() {
+  local reason="$1" day ts
+  ts="${BEEP_HOOK_PULSE_ATTEMPT_UTC:-}"
+  if ! [[ "${ts}" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$ ]] || [ "$(date -u -d "${ts}" +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -j -f '%Y-%m-%dT%H:%M:%SZ' "${ts}" +%Y-%m-%dT%H:%M:%SZ 2>/dev/null)" != "${ts}" ]; then
+    ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  fi
+  day="${ts:0:10}"
+  mkdir -p "${BEEP_AGENT_EVIDENCE_ROOT}" 2>/dev/null || return 0
+  printf '{"ts":"%s","agentKind":"%s","reason":"%s"}\n' "${ts}" "${agent_kind}" "${reason}" \
+    >>"${BEEP_AGENT_EVIDENCE_ROOT}/hook-pulse-refusals-${day}.ndjson" 2>/dev/null || true
+}
+if [ "${1:-}" = "--refuse" ]; then
+  case "${2:-}" in timeout|no-timeout|no-jq|encode-failed|unknown-agent-kind) refuse "$2" ;; esac
   exit 0
 fi
+if [ -e "${BEEP_HOOK_PULSE_DISARM_SENTINEL}" ]; then
+  refuse disabled
+  exit 0
+fi
+
+# Keep our deadline below the harness deadline so timeout refusals survive.
+# Cursor owns its outer cap and marks the shared body as already bounded.
+if [ "${1:-}" != "--bounded-body" ]; then
+  if ! command -v timeout >/dev/null 2>&1; then
+    refuse no-timeout
+    exit 0
+  fi
+  result=0
+  timeout --kill-after=1s "${BEEP_HOOK_PULSE_WRITER_CAP:-3s}" "${BASH_SOURCE[0]}" --bounded-body "$@" >/dev/null 2>&1 || result=$?
+  case "${result}" in
+    # Timeout means the writer did not finish its deadline. A durable row may
+    # already exist if notification routing was interrupted after its append.
+    124|137) refuse timeout ;;
+    0) ;;
+    *) refuse encode-failed ;;
+  esac
+  exit 0
+fi
+shift
+writer_started_ms="$(date +%s%3N)"
 
 # HARD REQUIREMENT: this script must never write to stdout. `PermissionRequest`
 # is a *decision* hook — the harness feeds hook stdout into the permission
@@ -75,16 +117,16 @@ exec 1>/dev/null
 set -euo pipefail
 
 # Without jq the instrument degrades to silence rather than to noise or a block.
-command -v jq >/dev/null 2>&1 || exit 0
+command -v jq >/dev/null 2>&1 || { refuse no-jq; exit 0; }
 
 # `BEEP_HOOK_PULSE_AGENT_KIND` lets an adapter that reuses this body (the Cursor
 # adapter at `.cursor/hooks/hook-pulse.sh`) tag its rows. Only `HookPulseAgentKind`
 # literals may reach the ledger: an inherited stray value would append a row that
 # `HookPulseV1` cannot decode, so an unknown kind writes nothing and notifies no one.
-agent_kind="${BEEP_HOOK_PULSE_AGENT_KIND:-claude-code}"
+# agent_kind was normalized before the refusal logger was defined.
 case "${agent_kind}" in
   claude-code|codex-cli|cursor-cli) ;;
-  *) exit 0 ;;
+  *) refuse unknown-agent-kind; exit 0 ;;
 esac
 
 # Same degradation rule for the digest tool, and for a stronger reason: without
@@ -103,6 +145,7 @@ elif command -v shasum >/dev/null 2>&1; then
 elif command -v openssl >/dev/null 2>&1; then
   hash_stdin() { openssl dgst -sha256 -r; }
 else
+  refuse no-hash
   exit 0
 fi
 
@@ -251,9 +294,9 @@ raw_hook_event=""
   IFS= read -r -d '' raw_hook_event || raw_hook_event=""
 } < <(jq -j --arg fallbackCwd "${PWD}" "${identifier_program}" <<<"${payload}" 2>/dev/null)
 
-session_id_hash="$(sha256_private_identifier "${raw_session_id}")" || exit 0
-cwd_hash="$(sha256_private_identifier "${raw_cwd}")" || exit 0
-transcript_path_hash="$(sha256_private_identifier "${raw_transcript_path}")" || exit 0
+session_id_hash="$(sha256_private_identifier "${raw_session_id}")" || { refuse digest-failed; exit 0; }
+cwd_hash="$(sha256_private_identifier "${raw_cwd}")" || { refuse digest-failed; exit 0; }
+transcript_path_hash="$(sha256_private_identifier "${raw_transcript_path}")" || { refuse digest-failed; exit 0; }
 
 # Context surface (goals/harness-evidence-ledger, D8): which repo surface a
 # successful tool call touched, as an unsalted digest of `${kind}:${name}`. The
@@ -264,23 +307,25 @@ transcript_path_hash="$(sha256_private_identifier "${raw_transcript_path}")" || 
 # can never false-negative, since a PostToolUse payload always carries the
 # quoted event name. The raw skill name or path lives only in these locals and
 # the jq pass; the row receives the digest or nothing.
-# The repo root is the nearest ancestor of `cwd` holding BOTH `AGENTS.md` and
-# `.git`: `AGENTS.md` alone would stop at a nested app's own guide
-# (`apps/*/AGENTS.md`) and misfile every root surface. Only an absolute `cwd`
-# enters the walk (a relative one yields no surface in the jq program and the
-# codec alike), and the loop stops once a strip makes no progress, so a segment
-# without `/` can never spin forever. It sets `found_repo_root` (empty when
-# nothing matches) instead of printing, so callers pay no subshell for it.
+# Resolve an absolute cwd physically before searching for checkout ownership.
+# Stop at the nearest Git metadata, and select it only when AGENTS.md exists;
+# a missing guide never permits attribution to a farther checkout. Nested app
+# guides alone do not terminate discovery. Physical resolution uses a subshell
+# and preserves trailing path bytes. Relative paths yield no discovered root.
 find_repo_root() {
   found_repo_root=""
   local probe next_probe
   case "$1" in
-    /*) probe="$1" ;;
+    /*)
+      probe="$(cd -- "$1" 2>/dev/null && pwd -P && printf '.')" || return 0
+      probe="${probe%.}"
+      probe="${probe%$'\n'}"
+      ;;
     *) probe="" ;;
   esac
-  while [ -n "${probe}" ] && [ "${probe}" != "/" ]; do
-    if [ -e "${probe}/AGENTS.md" ] && [ -e "${probe}/.git" ]; then
-      found_repo_root="${probe}"
+  while [ -n "${probe}" ]; do
+    if [ -e "${probe}/.git" ] || [ -L "${probe}/.git" ]; then
+      [ ! -e "${probe}/AGENTS.md" ] || found_repo_root="${probe}"
       return 0
     fi
     next_probe="${probe%/*}"
@@ -325,7 +370,7 @@ def repo_relative($path):
 def classify:
   if . == null then null
   elif length == 1 and (.[0] == "AGENTS.md" or .[0] == "CLAUDE.md") then "agents-md:AGENTS.md"
-  elif length >= 4 and .[0] == ".claude" and .[1] == "skills" then "skill:" + .[2]
+  elif length >= 4 and (.[0] == ".claude" or .[0] == ".agents" or .[0] == ".codex" or .[0] == ".cursor") and .[1] == "skills" then "skill:" + .[2]
   elif length == 3 and .[0] == ".claude" and .[1] == "hooks" then "hook:" + .[2]
   elif length == 3 and .[0] == ".claude" and .[1] == "agents" then "agent-definition:" + .[2]
   elif length == 2 and .[0] == ".claude" and (.[1] | test("^settings(\\..+)?\\.json$")) then "settings:" + .[1]
@@ -374,30 +419,23 @@ esac
 # not a substring of the payload: a PreToolUse editing `settings.json` can carry
 # the text "SessionStart" in its tool input, and must not pay for a repo walk.
 #
-# Parity beats coverage. A missing stamp only keeps a session out of the
-# window; a wrong one silently corrupts evidence. So every case the shell
-# cannot prove it hashes exactly as TypeScript does drops the stamp, never the
-# row: no repo root, a missing tool (GNU `find -printf` included), any `find`
-# error (unreadable directory, symlink loop), a path outside printable ASCII
-# or holding a backslash (sort order and `sha256sum` escaping stop matching
-# JS), 1000 or more collected files (the `maxFiles` budget), more than 8 MiB of
-# included bytes (`maxTotalBytes`), and an awk that fails the decoder
-# self-tests. Files over 512 KiB are skipped, exactly as TypeScript skips them. Depth is mirrored by `-maxdepth 8`
-# (TypeScript collects a file at depth 8 but never reads a directory there),
-# and `-L` mirrors `stat`, which follows symlinks such as `CLAUDE.md`.
-#
-# The walk: repo-root `AGENTS.md`/`CLAUDE.md` at any depth (the TypeScript root
-# walk recurses with an agent-doc filter), plus every file under `.codex`,
-# `.claude`, `.ai`, and `.aiassistant`. Excluded directory names are pruned by
-# name, and a directory holding `.git` (a nested checkout such as
-# `.claude/worktrees/*`) drops out with everything beneath it. `find` cannot
-# prune on "has a .git child", so it reports each `.git` and awk drops the
-# files under those roots afterwards.
+# A missing stamp keeps a session out of the window. Unprovable parity drops
+# only the stamp: unavailable tools, unsupported included filenames, unreadable
+# included files, more than 1000 unique files, more than 8 MiB of included bytes,
+# or a failed UTF-8 decoder self-test. Files over 512 KiB are skipped.
+# Git checkouts enumerate indexed agent docs and all eight configuration roots,
+# plus .mcp.json and .claude/settings.local.json. Indexed candidates are checked
+# for excluded ancestors and nested Git roots without traversing ignored trees.
+# Non-Git fixtures use a bounded find walk. Agent docs have repo-relative depth 8;
+# configuration files have depth 8 relative to their configuration root.
+# A separate 2s stamp deadline leaves time to append an unstamped SessionStart
+# and a stamp-failed refusal before the writer's outer 3s deadline.
 #
 # THE NUL TRAP again: the per-scope preimage joins `path<NUL>hash` lines, so
 # the lines carry `\001` as a stand-in and `tr` swaps in the NUL inside the pipe.
 # Paths are printable ASCII by then, so `\001` cannot collide with one.
 harness_config_hash() (
+  set -euo pipefail
   cd -- "$1" 2>/dev/null || exit 1
   for tool in find sort awk tr od sha256sum; do
     command -v "${tool}" >/dev/null 2>&1 || exit 1
@@ -476,59 +514,114 @@ END {
     -o -name statsig -o -name target -o -name todos
   )
   config_roots=()
-  for config_root in .codex .claude .ai .aiassistant; do
+  for config_root in .codex .claude .ai .aiassistant .cursor .agents .junie .grok; do
     [ -e "${config_root}" ] && config_roots+=("${config_root}")
   done
 
-  # One record per NUL-terminated line: `RG`/`CG` name a directory holding
-  # `.git` in the root/config walk, `RF`/`CF` a collected file with its size.
-  # Newlines inside names become `\001` so they fail the printable check.
+  indexed=0
+  if [ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = true ]; then
+    git_top="$(git rev-parse --show-toplevel 2>/dev/null && printf '.')" || exit 1
+    git_top="${git_top%.}"; git_top="${git_top%$'\n'}"
+    [ -n "${git_top}" ] || exit 1
+    git_top="$(cd -- "${git_top}" 2>/dev/null && pwd -P && printf '.')" || exit 1
+    git_top="${git_top%.}"; git_top="${git_top%$'\n'}"
+    [ -n "${git_top}" ] || exit 1
+    indexed_probe="$(pwd -P && printf '.')"
+    indexed_probe="${indexed_probe%.}"; indexed_probe="${indexed_probe%$'\n'}"
+    while [ "${indexed_probe}" != "${git_top}" ]; do
+      [ ! -e "${indexed_probe}/.git" ] && [ ! -L "${indexed_probe}/.git" ] || exit 1
+      [ "${indexed_probe}" != / ] || exit 1
+      indexed_probe="${indexed_probe%/*}"
+      [ -n "${indexed_probe}" ] || indexed_probe=/
+    done
+    indexed=1
+    mapfile -d '' -t indexed_paths < <(git ls-files -z -- ':(glob)**/AGENTS.md' ':(glob)**/CLAUDE.md' .mcp.json .claude .codex .ai .aiassistant .cursor .agents .junie .grok)
+    wait "$!" || exit 1
+    [ ! -f .claude/settings.local.json ] || indexed_paths+=(.claude/settings.local.json)
+  else
+    metadata_probe="$(pwd -P && printf '.')"
+    metadata_probe="${metadata_probe%.}"
+    metadata_probe="${metadata_probe%$'\n'}"
+    while :; do
+      [ ! -e "${metadata_probe}/.git" ] && [ ! -L "${metadata_probe}/.git" ] || exit 1
+      metadata_parent="${metadata_probe%/*}"
+      [ -n "${metadata_parent}" ] || metadata_parent="/"
+      [ "${metadata_parent}" != "${metadata_probe}" ] || break
+      metadata_probe="${metadata_parent}"
+    done
+  fi
+
+  # Fallback walks prune nested checkouts before descending. Metadata is
+  # validated only for included files; unsupported included names fail closed.
   collect_program='
-/[^ -~\t]/ || index($0, "\\") { bad = 1; next }
-$1 == "RG" && NF == 2 { rg[$2] = 1; next }
-$1 == "CG" && NF == 2 { cg[$2] = 1; next }
-($1 == "RF" || $1 == "CF") && NF == 3 { n++; kind[n] = $1; size[n] = $2; path[n] = $3; next }
-{ bad = 1 }
-END {
-  if (bad) exit 1
-  kept = 0
-  for (i = 1; i <= n; i++) {
-    k = split(path[i], seg, "/")
-    prefix = seg[1]
-    nested = 0
-    for (j = 2; j < k; j++) {
-      prefix = prefix "/" seg[j]
-      if ((kind[i] == "RF" && (prefix in rg)) || (kind[i] == "CF" && (prefix in cg))) { nested = 1; break }
-    }
-    if (nested) continue
-    kept++
-    rel = path[i]
-    sub(/^\.\//, "", rel)
-    print rel "\t" size[i]
-  }
-  if (kept >= 1000) exit 1
+($1 == "RF" || $1 == "CF") && NF == 3 {
+  if ($3 ~ /[^ -~]/ || index($3, "\\")) exit 1
+  rel = $3; sub(/^\.\//, "", rel)
+  print rel "\t" $2
+  next
 }
+{ exit 1 }
 '
+  if [ "${indexed}" = "1" ]; then
+    collected="$(
+      for candidate in "${indexed_paths[@]}"; do
+        [ -n "${candidate}" ] || continue
+        IFS=/ read -r -d '' -a segments < <(printf '%s\0' "${candidate}")
+        case "${segments[0]}" in
+          .codex|.claude|.ai|.aiassistant|.cursor|.agents|.junie|.grok) limit=9 ;;
+          *) limit=8 ;;
+        esac
+        [ "${#segments[@]}" -le "${limit}" ] || continue
+        skip=0; parent=""
+        for ((part=0; part<${#segments[@]}; part++)); do
+          segment="${segments[part]}"
+          case "${segment}" in
+            .beep|.cache|.git|.idea|.next|.repos|.turbo|.venv|build|coverage|dist|ide|logs|node_modules|outputs|projects|shell-snapshots|statsig|target|todos) skip=1; break ;;
+          esac
+          parent="${parent:+${parent}/}${segment}"
+          if [ "${part}" -lt "$((${#segments[@]}-1))" ] && [ -e "${parent}/.git" ]; then skip=1; break; fi
+        done
+        [ "${skip}" = "0" ] || continue
+        inspection="$(LC_ALL=C stat --format=%F -- "${candidate}" 2>&1)" || {
+          case "${inspection}" in *": No such file or directory") continue ;; *) exit 1 ;; esac
+        }
+        case "${candidate}" in *[!\ -~]*|*\\*) exit 1 ;; esac
+        # Inspect only an indexed candidate, never its surrounding untracked tree.
+        find -L "${candidate}" -maxdepth 0 -type f -printf '%p\t%s\n' 2>/dev/null || exit 1
+      done
+    )" || exit 1
+  else
   collected="$(
     {
       find -L . -mindepth 1 -maxdepth 8 \
-        -name .git ! -type l -printf 'RG\t%h\0' -prune -o \
+        -type d ! -path . -exec test -e '{}/.git' \; -prune -o \
         \( "${excluded[@]}" \) -prune -o \
         -type f \( -name AGENTS.md -o -name CLAUDE.md \) -printf 'RF\t%s\t%p\0' &&
         if [ "${#config_roots[@]}" -gt 0 ]; then
           find -L "${config_roots[@]}" -maxdepth 8 \
-            -name .git ! -type l -printf 'CG\t%h\0' -prune -o \
+            -type d -exec test -e '{}/.git' \; -prune -o \
             \( "${excluded[@]}" \) -prune -o \
             -type f -printf 'CF\t%s\t%p\0'
         fi
     } 2>/dev/null | tr '\n\000' '\001\n' | awk -F "${tab}" "${collect_program}"
   )" || exit 1
 
-  # Sorted and deduplicated by path (the two walks overlap under `.claude`),
+  fi
+
+  if [ -f .mcp.json ]; then
+    if ! git rev-parse --git-dir >/dev/null 2>&1 || git ls-files --error-unmatch .mcp.json >/dev/null 2>&1; then
+      collected+=$'\n'".mcp.json${tab}$(wc -c < .mcp.json)"
+    fi
+  fi
+
+  # Sorted and deduplicated by path (local/index and root/config inputs overlap),
   # oversize files skipped, and the byte budget enforced over what remains.
   included="$(
     printf '%s\n' "${collected}" | sort -t "${tab}" -k1,1 -u | awk -F "${tab}" '
-NF == 2 && $2 <= 524288 { total += $2; print $1 }
+NF == 2 {
+  count++; if (count > 1000) exit 1
+  if ($2 <= 524288) { total += $2; print $1 }
+}
 END { if (total > 8388608) exit 1 }
 '
   )" || exit 1
@@ -557,7 +650,7 @@ NR == FNR { if (length($0) > 66) override[substr($0, 67)] = substr($0, 1, 64); n
   if (hash !~ /^[0-9a-f]+$/ || length(hash) != 64 || substr($0, 65, 2) != "  ") exit 1
   rel = name
   sub(/^\.\//, "", rel)
-  session = (rel == ".claude/settings.json" || rel == ".claude/settings.local.json" || rel == ".codex/config.toml" || rel == "AGENTS.md" || rel == "CLAUDE.md")
+  session = (rel == ".claude/settings.json" || rel == ".claude/settings.local.json" || rel == ".codex/config.toml" || rel == ".mcp.json" || rel == "AGENTS.md" || rel == "CLAUDE.md")
   if (session == want) print rel "\001" hash
 }
 '
@@ -567,7 +660,7 @@ NR == FNR { if (length($0) > 66) override[substr($0, 67)] = substr($0, 1, 64); n
   baseline_hash="$(printf 'ai-metrics-config-baseline-v1\n%s' "${baseline_body}" | tr '\001' '\000' | sha256sum)" || exit 1
   session_hash="${session_hash%% *}"
   baseline_hash="${baseline_hash%% *}"
-  harness_hash="$(printf 'harness-hash-v1\n%s\n%s' "${session_hash}" "${baseline_hash}" | sha256sum)" || exit 1
+  harness_hash="$(printf 'harness-hash-v2\n%s\n%s' "${session_hash}" "${baseline_hash}" | sha256sum)" || exit 1
   harness_hash="${harness_hash%% *}"
   for digest in "${session_hash}" "${baseline_hash}" "${harness_hash}"; do
     case "${digest}" in
@@ -584,7 +677,19 @@ if [ "${raw_hook_event}" = "SessionStart" ]; then
   # a wrong stamp, and no stamp is the safe failure.
   find_repo_root "${raw_cwd}"
   if [ -n "${found_repo_root}" ]; then
-    harness_hash="$(harness_config_hash "${found_repo_root}")" || harness_hash=""
+    export -f harness_config_hash
+    stamp_now_ms="$(date +%s%3N)"
+    case "${writer_started_ms}:${stamp_now_ms}" in
+      *[!0-9:]*|:*|*:) remaining_ms=0 ;;
+      *) remaining_ms=$((2200 - (stamp_now_ms - writer_started_ms))) ;;
+    esac
+    if [ "${remaining_ms}" -gt 0 ]; then
+      [ "${remaining_ms}" -le 2000 ] || remaining_ms=2000
+      printf -v stamp_cap '%d.%03ds' "$((remaining_ms / 1000))" "$((remaining_ms % 1000))"
+      harness_hash="$(timeout --kill-after=0.2s "${BEEP_HOOK_PULSE_STAMP_CAP:-${stamp_cap}}" bash -c 'harness_config_hash "$1"' _ "${found_repo_root}")" || { harness_hash=""; refuse stamp-failed; }
+    else
+      refuse stamp-failed
+    fi
   fi
 fi
 
@@ -658,6 +763,12 @@ def notification_types: [ "permission_prompt", "idle_prompt" ];
      (if $notificationTypeRaw == "idle_prompt" then "idle-input" else "unknown" end)
    else "none"
    end) as $waitReason
+| (if $agentKind == "claude-code" and (.transcript_path? | type) == "string" then
+     if (.transcript_path | test("(^|/)(subagents|workflow)(/|$)")) then "subagent"
+     elif (.transcript_path | test("(^|/)[0-9a-f-]{36}\\.jsonl$")) then "primary"
+     else null end
+   else null end) as $sessionRole
+| .source? as $sessionStartSource
 | if $sessionId == null or $cwd == null or $hookEvent == null then
     empty
   else
@@ -677,6 +788,8 @@ def notification_types: [ "permission_prompt", "idle_prompt" ];
      | put("toolUseId"; $toolUseId)
      | put("promptId"; $promptId)
      | put("transcriptPath"; $transcriptPath)
+     | put("sessionRole"; $sessionRole)
+     | put("sessionStartSource"; (if $hookEvent == "SessionStart" and ($sessionStartSource == "startup" or $sessionStartSource == "resume" or $sessionStartSource == "clear" or $sessionStartSource == "compact") then $sessionStartSource else null end))
      | put("permissionMode"; $permissionMode)
      | put("notificationType"; (if $hookEvent == "Notification" then $notificationType else null end))
      | put("durationMs"; $durationMs)
@@ -707,9 +820,10 @@ output="$(
     --arg surfaceHash "${surface_hash}" \
     --arg harnessHash "${harness_hash}" \
     "${jq_program}" <<<"${payload}" 2>/dev/null
-)" || exit 0
+)" || { refuse encode-failed; exit 0; }
 
 if [ -z "${output}" ]; then
+  refuse empty-output
   exit 0
 fi
 
@@ -718,17 +832,18 @@ row="${output#*$'\n'}"
 # A single-line or multi-document result means the projection did not produce
 # exactly one row; write nothing rather than a partial or interleaved line.
 if [ -z "${shard}" ] || [ -z "${row}" ] || [ "${shard}" = "${row}" ]; then
+  refuse invalid-output
   exit 0
 fi
 case "${row}" in
-  *$'\n'*) exit 0 ;;
+  *$'\n'*) refuse invalid-output; exit 0 ;;
 esac
 
 store="${BEEP_AGENT_EVIDENCE_ROOT}/hook-events"
 if [ ! -d "${store}" ]; then
-  mkdir -p "${store}" 2>/dev/null || exit 0
+  mkdir -p "${store}" 2>/dev/null || { refuse mkdir-failed; exit 0; }
 fi
-printf '%s\n' "${row}" >>"${store}/hook-pulse-${shard}.ndjson" 2>/dev/null || exit 0
+printf '%s\n' "${row}" >>"${store}/hook-pulse-${shard}.ndjson" 2>/dev/null || { refuse append-failed; exit 0; }
 
 # A sharp notifier revision turns a durable PermissionRequest row into a
 # content-free sequence-break worker. The worker is detached only after this
@@ -771,6 +886,10 @@ if [ "${notifier_rev}" != "log-only-0" ]; then
       # exec`) inherits its launcher's IDs; it receives that host as an
       # explicitly labeled "parent" route instead of borrowing it as its own.
       notification_uri="${BEEP_SEQUENCE_BREAK_OPEN_URI:-}"
+      if [ "${agent_kind}" = "codex-cli" ] && [ -n "${notification_uri}" ] &&
+        [ "${notification_uri}" != "codex://threads/${raw_session_id}" ]; then
+        notification_uri=""
+      fi
       notification_relation="self"
       codex_desktop_thread=""
       if [ "${CODEX_INTERNAL_ORIGINATOR_OVERRIDE:-}" = "Codex Desktop" ]; then

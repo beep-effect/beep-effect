@@ -12,6 +12,8 @@ import {
   HookPulseEvidenceTier,
   HookPulseInstrumentClass,
   HookPulseNotificationType,
+  HookPulseRawEvent,
+  HookPulseRefusal,
   HookPulseSchemaVersion,
   HookPulseV1,
   HookPulseV1Arbitrary,
@@ -31,13 +33,15 @@ import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
 import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import * as Config from "effect/Config";
 import * as ConfigProvider from "effect/ConfigProvider";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
-import { ChildProcess } from "effect/process";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
@@ -158,6 +162,8 @@ const canonicalRowKeys = [
   "isInterrupt",
   "surface",
   "harnessHash",
+  "sessionRole",
+  "sessionStartSource",
 ];
 
 // Pulls a `def <name>: [ "a", "b" ];` allowlist back out of the writer. The
@@ -177,6 +183,7 @@ const jqAllowlist = (source: string, definition: string): ReadonlyArray<string> 
 interface WriterRun {
   readonly exitCode: number;
   readonly files: ReadonlyArray<string>;
+  readonly refusals: ReadonlyArray<string>;
   readonly rows: ReadonlyArray<string>;
   readonly stderr: string;
   readonly stdout: string;
@@ -188,19 +195,74 @@ interface WriterRun {
 // exported path helpers rather than restated, so the shell writer and the
 // TypeScript reader fail this test the moment they disagree about where the
 // ledger lives.
-const runWriter = Effect.fnUntraced(function* (
-  stdin: string,
-  options: {
-    readonly agentKind?: string;
-    readonly aiMetricsHashSalt?: string;
-    readonly disarmSentinel?: string;
-    readonly hashSalt?: string;
-    readonly viaXdgFallback?: boolean;
-    readonly writerPath?: string;
-  } = {}
-) {
+const readWriterLines = Effect.fnUntraced(function* (directory: string, files: ReadonlyArray<string>) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
+  return A.flatten(
+    yield* Effect.forEach(files, (entry) =>
+      fs
+        .readFileString(path.join(directory, entry))
+        .pipe(Effect.map((contents) => A.filter(contents.split("\n"), (line) => line.length > 0)))
+    )
+  );
+});
+
+type WriterOptions = {
+  readonly agentKind?: string;
+  readonly aiMetricsHashSalt?: string;
+  readonly disarmSentinel?: string;
+  readonly hashSalt?: string;
+  readonly viaXdgFallback?: boolean;
+  readonly writerPath?: string;
+  readonly writerCap?: string;
+  readonly stampCap?: string;
+  readonly registeredEvent?: string;
+  readonly writerArgs?: ReadonlyArray<string>;
+  readonly attemptUtc?: string;
+  readonly executablePath?: string;
+};
+
+const writerEnvironment = (stateHome: string, evidenceRoot: string, options: WriterOptions) => ({
+  HOME: stateHome,
+  XDG_STATE_HOME: stateHome,
+  // The writer reads `$PWD` as its `fallbackCwd`, and `cwd` above does not rewrite
+  // the inherited `PWD` — bash would correct it at startup, but the correction is
+  // not this test's to assume now that the environment is inherited rather than
+  // rebuilt.
+  PWD: repoRoot,
+  // Empty values fall through to the writer's own `:-` defaults, so ambient
+  // developer configuration cannot change what this test asserts. Clearing
+  // BEEP_AGENT_EVIDENCE_ROOT exercises the XDG_STATE_HOME fallback rung of
+  // the precedence chain and must resolve to the same place.
+  BEEP_AGENT_EVIDENCE_ROOT: options.viaXdgFallback === true ? "" : evidenceRoot,
+  BEEP_HOOK_PULSE_DISARM_SENTINEL: "",
+  // The production fallback is now the post-baseline notifier revision.
+  // Legacy writer fixtures pin log-only explicitly so their assertion stays
+  // about projection semantics rather than the current intervention state.
+  BEEP_HOOK_PULSE_NOTIFIER_REV: "log-only-0",
+  BEEP_HOOK_PULSE_INSTRUMENT_CLASS: "",
+  // Cleared unless a case sets it, so an ambient adapter value cannot retag rows;
+  // empty falls through to the writer's `claude-code` default.
+  BEEP_HOOK_PULSE_AGENT_KIND: options.agentKind ?? "",
+  // The Cursor adapter caps the writer at 3 s. Measured 2026-09-16: at load average ~300
+  // the cap killed the writer and this suite saw no row, so the conformance run lifts it.
+  BEEP_CURSOR_HOOK_PULSE_WRITER_CAP: "60s",
+  BEEP_HOOK_PULSE_WRITER_CAP: options.writerCap ?? "60s",
+  BEEP_HOOK_PULSE_STAMP_CAP: options.stampCap ?? "60s",
+  // Both salt rungs are cleared unless a case sets one, so a developer who
+  // exports a real ai-metrics salt cannot change what these digests are.
+  // Cleared, they exercise the insecure-default fallback that keeps an
+  // unconfigured clone byte-identical to `hashPrivateIdentifier(value, O.none())`.
+  // The second rung is settable so the codec-parity cases can prove both
+  // halves walk the *same* chain rather than only its first link.
+  BEEP_HOOK_PULSE_HASH_SALT: options.hashSalt ?? "",
+  BEEP_AI_METRICS_HASH_SALT: options.aiMetricsHashSalt ?? "",
+  BEEP_HOOK_PULSE_ATTEMPT_UTC: options.attemptUtc ?? "",
+  ...(options.executablePath !== undefined ? { PATH: options.executablePath } : {}),
+});
+
+const runWriter = Effect.fnUntraced(function* (stdin: string, options: WriterOptions = {}) {
+  const fs = yield* FileSystem.FileSystem;
   const stateHome = yield* fs.makeTempDirectoryScoped({
     prefix: "beep-hook-pulse-",
   });
@@ -224,64 +286,35 @@ const runWriter = Effect.fnUntraced(function* (
   // and never the `coverage` one, so no local proof could reach it. The spawner behind
   // `ChildProcess` delivers stdin and closes it under both runtimes, and it is what the
   // repo's `nodeBuiltinImport` law names as the replacement for `node:child_process`.
-  const handle = yield* ChildProcess.make(options.writerPath ?? writerPath, [], {
-    cwd: repoRoot,
-    // Inherited, not restated. The writer shells out to `jq`, `sha256sum`, `date`, and
-    // `cat`, so it needs `PATH`, and without `extendEnv` a provided `env` *replaces* the
-    // child environment rather than extending it. Letting the spawner inherit also keeps
-    // a `process.env` read out of this file, which the repo's `processEnvInEffect` law
-    // forbids.
-    //
-    // Note for anyone debugging a future empty-store failure: an earlier revision here
-    // blamed a dropped `PATH` for exactly that symptom. That was wrong. `extendEnv` is
-    // implemented as `{ ...globalThis.process.env, ...options.env }`
-    // (`NodeChildProcessSpawner`) — the very spread the old comment accused — and it
-    // works. The real cause was that Bun's spawn never delivered stdin in this worker at
-    // all, so the writer parsed nothing and took its fail-open exit. Empty store means
-    // "the writer bailed"; it does not tell you which guard bailed. Instrument before
-    // concluding — a two-minute `cat`-echo probe settled it after two wrong theories.
-    extendEnv: true,
-    env: {
-      HOME: stateHome,
-      XDG_STATE_HOME: stateHome,
-      // The writer reads `$PWD` as its `fallbackCwd`, and `cwd` above does not rewrite
-      // the inherited `PWD` — bash would correct it at startup, but the correction is
-      // not this test's to assume now that the environment is inherited rather than
-      // rebuilt.
-      PWD: repoRoot,
-      // Empty values fall through to the writer's own `:-` defaults, so ambient
-      // developer configuration cannot change what this test asserts. Clearing
-      // BEEP_AGENT_EVIDENCE_ROOT exercises the XDG_STATE_HOME fallback rung of
-      // the precedence chain and must resolve to the same place.
-      BEEP_AGENT_EVIDENCE_ROOT: options.viaXdgFallback === true ? "" : evidenceRoot,
-      BEEP_HOOK_PULSE_DISARM_SENTINEL: "",
-      // The production fallback is now the post-baseline notifier revision.
-      // Legacy writer fixtures pin log-only explicitly so their assertion stays
-      // about projection semantics rather than the current intervention state.
-      BEEP_HOOK_PULSE_NOTIFIER_REV: "log-only-0",
-      BEEP_HOOK_PULSE_INSTRUMENT_CLASS: "",
-      // Cleared unless a case sets it, so an ambient adapter value cannot retag rows;
-      // empty falls through to the writer's `claude-code` default.
-      BEEP_HOOK_PULSE_AGENT_KIND: options.agentKind ?? "",
-      // The Cursor adapter caps the writer at 3 s. Measured 2026-09-16: at load average ~300
-      // the cap killed the writer and this suite saw no row, so the conformance run lifts it.
-      BEEP_CURSOR_HOOK_PULSE_WRITER_CAP: "60s",
-      // Both salt rungs are cleared unless a case sets one, so a developer who
-      // exports a real ai-metrics salt cannot change what these digests are.
-      // Cleared, they exercise the insecure-default fallback that keeps an
-      // unconfigured clone byte-identical to `hashPrivateIdentifier(value, O.none())`.
-      // The second rung is settable so the codec-parity cases can prove both
-      // halves walk the *same* chain rather than only its first link.
-      BEEP_HOOK_PULSE_HASH_SALT: options.hashSalt ?? "",
-      BEEP_AI_METRICS_HASH_SALT: options.aiMetricsHashSalt ?? "",
-    },
-    // `endOnDone` is stated rather than left to its `true` default: closing stdin once
-    // the payload is written is the whole reason this run terminates, so it is part of
-    // what the helper promises and not an incidental default someone may retune.
-    stdin: childStdin,
-    stdout: "pipe",
-    stderr: "pipe",
-  });
+  const handle = yield* ChildProcess.make(
+    options.writerPath ?? writerPath,
+    options.writerArgs ?? (options.registeredEvent !== undefined ? ["--event", options.registeredEvent] : []),
+    {
+      cwd: repoRoot,
+      // Inherited, not restated. The writer shells out to `jq`, `sha256sum`, `date`, and
+      // `cat`, so it needs `PATH`, and without `extendEnv` a provided `env` *replaces* the
+      // child environment rather than extending it. Letting the spawner inherit also keeps
+      // a `process.env` read out of this file, which the repo's `processEnvInEffect` law
+      // forbids.
+      //
+      // Note for anyone debugging a future empty-store failure: an earlier revision here
+      // blamed a dropped `PATH` for exactly that symptom. That was wrong. `extendEnv` is
+      // implemented as `{ ...globalThis.process.env, ...options.env }`
+      // (`NodeChildProcessSpawner`) — the very spread the old comment accused — and it
+      // works. The real cause was that Bun's spawn never delivered stdin in this worker at
+      // all, so the writer parsed nothing and took its fail-open exit. Empty store means
+      // "the writer bailed"; it does not tell you which guard bailed. Instrument before
+      // concluding — a two-minute `cat`-echo probe settled it after two wrong theories.
+      extendEnv: true,
+      env: writerEnvironment(stateHome, evidenceRoot, options),
+      // `endOnDone` is stated rather than left to its `true` default: closing stdin once
+      // the payload is written is the whole reason this run terminates, so it is part of
+      // what the helper promises and not an incidental default someone may retune.
+      stdin: childStdin,
+      stdout: "pipe",
+      stderr: "pipe",
+    }
+  );
 
   // Drained concurrently with the exit wait, never after it: a child that filled a pipe
   // buffer while the parent sat blocked on `exitCode` is the other shape of the same
@@ -297,18 +330,16 @@ const runWriter = Effect.fnUntraced(function* (
     { concurrency: "unbounded" }
   );
 
-  const storeExists = yield* fs.exists(storeDir);
-  const files = storeExists ? yield* fs.readDirectory(storeDir) : A.empty<string>();
-  const rows = yield* Effect.map(
-    Effect.forEach(files, (entry) =>
-      Effect.map(fs.readFileString(path.join(storeDir, entry)), (contents) =>
-        A.filter(contents.split("\n"), (line) => line.length > 0)
-      )
-    ),
-    A.flatten
-  );
-
-  return { exitCode, files, stderr, stdout, rows };
+  const files = yield* fs.readDirectory(storeDir).pipe(Effect.orElseSucceed(A.empty<string>));
+  const rows = yield* readWriterLines(storeDir, files);
+  const refusalFiles = yield* fs
+    .readDirectory(evidenceRoot)
+    .pipe(
+      Effect.orElseSucceed(A.empty<string>),
+      Effect.map(A.filter((name) => name.startsWith("hook-pulse-refusals-")))
+    );
+  const refusals = yield* readWriterLines(evidenceRoot, refusalFiles);
+  return { exitCode, files, stderr, stdout, rows, refusals, refusalFiles };
 });
 
 const session = "ccd-session-writer";
@@ -586,7 +617,7 @@ const makeHarnessFixtureRoot = Effect.fnUntraced(function* () {
   const write = (relative: string, content: string) => writeBytes(relative, new TextEncoder().encode(content));
   yield* write("AGENTS.md", "# Fixture guide\n");
   yield* fs.symlink("AGENTS.md", path.join(root, "CLAUDE.md"));
-  yield* write(".git/HEAD", "ref: refs/heads/main\n");
+
   yield* write("packages/foo/AGENTS.md", "# foo guide\n");
   yield* write("packages/foo/README.md", "# not an agent doc\n");
   yield* write("packages/bar/.git", "gitdir: /elsewhere/bar\n");
@@ -608,6 +639,17 @@ const makeHarnessFixtureRoot = Effect.fnUntraced(function* () {
   yield* write(".claude/node_modules/pkg/index.js", "module.exports = 1\n");
   yield* write(".claude/logs/session.log", "log line\n");
   yield* write(".codex/config.toml", 'model = "fixture"\n');
+  yield* fs.remove(path.join(root, "packages/bar/.git"));
+  yield* fs.remove(path.join(root, ".claude/worktrees/wt1/.git"));
+  for (const args of [
+    ["init", "-q"],
+    ["add", "--all"],
+  ]) {
+    const child = yield* ChildProcess.make("git", args, { cwd: root, stdout: "ignore", stderr: "ignore" });
+    expect(yield* child.exitCode).toBe(0);
+  }
+  yield* write("packages/bar/.git", "gitdir: /elsewhere/bar\n");
+  yield* write(".claude/worktrees/wt1/.git", "gitdir: /elsewhere/wt1\n");
   return root;
 });
 
@@ -629,7 +671,7 @@ const sessionStartPayload = (cwd: string) => ({
   source: "startup",
 });
 
-it.layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
+it.layer(NodeServices.layer, { timeout: "30 seconds" })("hook-pulse writer conformance", (it) => {
   it.effect("tags Codex hook rows as codex-cli", () =>
     Effect.gen(function* () {
       const run = yield* runWriter(yield* encodeJson(preToolUsePayload), { writerPath: codexWriterPath });
@@ -669,8 +711,14 @@ it.layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
   it.effect("writes nothing for an agent kind outside HookPulseAgentKind", () =>
     Effect.gen(function* () {
       const run = yield* runWriter(yield* encodeJson(preToolUsePayload), { agentKind: "other" });
-
       expectSilentRefusal(run);
+      expect(run.refusals).toHaveLength(1);
+      const refusal = yield* S.decodeEffect(S.fromJsonString(HookPulseRefusal))(
+        pipe(A.head(run.refusals), O.getOrThrow)
+      );
+      expect(refusal.agentKind).toBe("unknown");
+      expect(refusal.reason).toBe("unknown-agent-kind");
+      expect(pipe(A.head(run.refusals), O.getOrThrow)).not.toContain(CANARY);
     })
   );
 
@@ -879,6 +927,10 @@ it.layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
           payload: surfacePayload("Read", { file_path: `${baseFields.cwd}/.claude/hooks/${CANARY}.sh` }),
           key: O.some(`hook:${CANARY}.sh`),
         },
+        ...A.map([".agents", ".codex", ".cursor"], (root) => ({
+          payload: surfacePayload("Read", { file_path: `${baseFields.cwd}/${root}/skills/${CANARY}/SKILL.md` }),
+          key: O.some(`skill:${CANARY}`),
+        })),
         { payload: surfacePayload("Read", { file_path: "packages/foo/src/x.ts" }), key: O.none<string>() },
         { payload: surfacePayload("mcp__notion__search", { path: ["a", "b"] }), key: O.some("mcp-server:notion") },
         {
@@ -929,6 +981,157 @@ it.layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
     })
   );
 
+  it.effect("Codex and Cursor SessionStart adapters preserve the shared stamp", () =>
+    Effect.gen(function* () {
+      const root = yield* makeHarnessFixtureRoot();
+      const oracle = yield* typescriptHarnessHash(root);
+      const fixtures = [
+        {
+          writerPath: codexWriterPath,
+          agentKind: HookPulseAgentKind.Enum["codex-cli"],
+          payload: { ...sessionStartPayload(root), hook_event_name: "SessionStart" },
+          registeredEvent: undefined,
+          stdout: "",
+        },
+        {
+          writerPath: cursorWriterPath,
+          agentKind: HookPulseAgentKind.Enum["cursor-cli"],
+          payload: { ...sessionStartPayload(root), hook_event_name: undefined },
+          registeredEvent: "sessionStart",
+          stdout: "{}\n",
+        },
+      ];
+      for (const fixture of fixtures) {
+        const run = yield* runWriter(yield* encodeJson(fixture.payload), {
+          writerPath: fixture.writerPath,
+          ...(fixture.registeredEvent === undefined ? {} : { registeredEvent: fixture.registeredEvent }),
+        });
+        expect(run.stdout).toBe(fixture.stdout);
+        expect(run.rows).toHaveLength(1);
+        const decoded = yield* decodeHookPulseRow(pipe(A.head(run.rows), O.getOrThrow));
+        assertSome(decoded.harnessHash, oracle.harnessHash);
+        expect(decoded.agentKind).toBe(fixture.agentKind);
+      }
+    })
+  );
+
+  it.effect("preserves git stamp parity with nested docs, symlinks and unrelated quoted names", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ directory: path.join(repoRoot, ".beep"), prefix: "h3-index-" });
+      yield* fs.makeDirectory(path.join(root, "packages/foo"), { recursive: true });
+      yield* fs.makeDirectory(path.join(root, "packages/nested"), { recursive: true });
+      yield* fs.writeFileString(path.join(root, "packages/nested/AGENTS.md"), "# Nested checkout\n");
+      yield* fs.makeDirectory(path.join(root, ".ai"));
+      yield* fs.makeDirectory(path.join(root, ".aiassistant"));
+      yield* fs.makeDirectory(path.join(root, ".claude/a/b/c/d/e/f/g"), { recursive: true });
+      yield* fs.writeFileString(path.join(root, ".claude/a/b/c/d/e/f/g/config.json"), "{}\n");
+      yield* fs.writeFileString(path.join(root, "AGENTS.md"), "# Indexed fixture\n");
+      yield* fs.symlink("AGENTS.md", path.join(root, "CLAUDE.md"));
+      yield* fs.writeFileString(path.join(root, "packages/foo/AGENTS.md"), "# Nested fixture\n");
+      yield* fs.writeFileString(path.join(root, ".ai/config.json"), "{}\n");
+      yield* fs.writeFileString(path.join(root, ".aiassistant/config.json"), "{}\n");
+      yield* fs.writeFileString(path.join(root, 'unrelated"name.txt'), "fixture\n");
+      for (const args of [
+        ["init", "--quiet"],
+        ["add", "."],
+      ]) {
+        const command = yield* ChildProcess.make("git", args, { cwd: root, stdout: "ignore", stderr: "ignore" });
+        expect(yield* command.exitCode).toBe(0);
+      }
+      yield* fs.writeFileString(path.join(root, "packages/nested/.git"), "gitdir: /fixture/missing\n");
+      yield* fs.makeDirectory(path.join(root, ".claude/scratch"), { recursive: true });
+      yield* fs.writeFileString(path.join(root, ".claude/scratch/naïve.md"), "ignored fixture\n");
+      yield* Effect.forEach(
+        A.range(0, 1000),
+        (index) => fs.writeFileString(path.join(root, `.claude/scratch/noise-${index}.txt`), "ignored fixture\n"),
+        { concurrency: 4, discard: true }
+      );
+      yield* fs.makeDirectory(path.join(root, ".claude/node_modules"), { recursive: true });
+      yield* fs.writeFileString(path.join(root, '.claude/node_modules/bad"name.txt'), "excluded");
+      yield* fs.writeFileString(path.join(root, ".claude/logs"), "excluded filename");
+      yield* fs.makeDirectory(path.join(root, ".codex"), { recursive: true });
+      yield* fs.writeFileString(path.join(root, ".codex/deleted.toml"), "deleted indexed config");
+      const addExcluded = yield* ChildProcess.make(
+        "git",
+        ["add", "-f", ".claude/node_modules", ".claude/logs", ".codex/deleted.toml"],
+        { cwd: root }
+      );
+      expect(yield* addExcluded.exitCode).toBe(0);
+      yield* fs.remove(path.join(root, ".codex/deleted.toml"));
+      const decoded = yield* decodeHookPulseRow(
+        expectSingleRow(yield* runWriter(yield* encodeJson(sessionStartPayload(root))))
+      );
+      const oracle = yield* typescriptHarnessHash(root);
+      assertSome(decoded.harnessHash, oracle.harnessHash);
+      expect(oracle.snapshot.bounds.excludedNestedRootPaths).toContain("packages/nested");
+      expect(A.map(oracle.snapshot.files, (file) => file.relativePath)).not.toContain("packages/nested/AGENTS.md");
+      expect(A.map(oracle.snapshot.files, (file) => file.relativePath)).toContain("packages/foo/AGENTS.md");
+      expect(A.map(oracle.snapshot.files, (file) => file.relativePath)).toContain("CLAUDE.md");
+      expect(A.map(oracle.snapshot.files, (file) => file.relativePath)).toContain(".ai/config.json");
+      expect(A.map(oracle.snapshot.files, (file) => file.relativePath)).toContain(".claude/a/b/c/d/e/f/g/config.json");
+    })
+  );
+
+  it.effect("records a timeout refusal before the harness deadline", () =>
+    Effect.gen(function* () {
+      const run = yield* runWriter(yield* encodeJson(preToolUsePayload), { writerCap: "0.001s" });
+      expect(run.exitCode).toBe(0);
+      expect(run.stdout).toBe("");
+      expect(run.rows).toHaveLength(0);
+      const refusal = yield* pipe(
+        A.head(run.refusals),
+        O.getOrThrow,
+        S.decodeEffect(S.fromJsonString(HookPulseRefusal))
+      );
+      expect(refusal.reason).toBe("timeout");
+    })
+  );
+
+  it.effect("disarmed Cursor preserves protocol without reading its payload", () =>
+    Effect.gen(function* () {
+      for (const [registeredEvent, stdout] of [
+        ["preToolUse", '{"permission":"allow"}\n'],
+        ["beforeSubmitPrompt", '{"continue":true}\n'],
+        ["sessionStart", "{}\n"],
+      ]) {
+        const run = yield* runWriter("not JSON", {
+          writerPath: cursorWriterPath,
+          disarmSentinel: "disarmed",
+          ...(registeredEvent === undefined ? {} : { registeredEvent }),
+        });
+        expect(run.stdout).toBe(stdout);
+        expect(run.rows).toHaveLength(0);
+        expect(run.refusals).toHaveLength(1);
+      }
+    })
+  );
+
+  it.effect("preserves an unstamped startup when its fingerprint deadline expires", () =>
+    Effect.gen(function* () {
+      const run = yield* runWriter(yield* encodeJson(sessionStartPayload(repoRoot)), { stampCap: "0.001s" });
+      const row = yield* decodeHookPulseRow(expectSingleRow(run));
+      assertNone(row.harnessHash);
+      expect(run.stdout).toBe("");
+      const refusals = A.map(run.refusals, (line) => HookPulseRefusal.decodeJsonResult(line));
+      expect(
+        A.some(refusals, (decoded) => decoded._tag === "Success" && decoded.success.reason === "stamp-failed")
+      ).toBe(true);
+    })
+  );
+
+  it.effect("drops a malformed source field without dropping its event", () =>
+    Effect.gen(function* () {
+      const payload = { ...preToolUsePayload, source: 42 };
+      const raw = yield* HookPulseRawEvent.decodeEffect(payload);
+      assertNone(raw.source);
+      const decoded = yield* decodeHookPulseRow(expectSingleRow(yield* runWriter(yield* encodeJson(payload))));
+      expect(decoded.hookEvent).toBe("PreToolUse");
+      assertNone(decoded.sessionStartSource);
+    })
+  );
+
   it.effect("stamps SessionStart with the harness hash the TypeScript snapshot derives", () =>
     Effect.gen(function* () {
       const root = yield* makeHarnessFixtureRoot();
@@ -941,6 +1144,7 @@ it.layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
       const relativePaths = A.map(oracle.snapshot.files, (file) => file.relativePath);
 
       expect(decoded.hookEvent).toBe(HookPulseEvent.Enum.SessionStart);
+      assertSome(decoded.sessionStartSource, "startup");
       expect(decoded.waitReason).toBe(HookPulseWaitReason.Enum.none);
       assertSome(decoded.harnessHash, oracle.harnessHash);
       expect(row).not.toContain(CANARY);
@@ -981,6 +1185,12 @@ it.layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
       // shell refuses even though TypeScript can hash it.
       yield* fs.makeDirectory(path.join(root, ".claude", "skills", "caf\u00e9"), { recursive: true });
       yield* fs.writeFileString(path.join(root, ".claude", "skills", "caf\u00e9", "SKILL.md"), "# cafe\n");
+      const indexed1 = yield* ChildProcess.make("git", ["add", "--", ".claude/skills/café/SKILL.md"], {
+        cwd: root,
+        stdout: "ignore",
+        stderr: "ignore",
+      });
+      expect(yield* indexed1.exitCode).toBe(0);
       yield* typescriptHarnessHash(root);
       assertNone(yield* stampOf(sessionStartPayload(root)));
       yield* fs.remove(path.join(root, ".claude", "skills", "caf\u00e9"), { recursive: true });
@@ -993,8 +1203,119 @@ it.layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
         (index) => fs.writeFileString(path.join(root, ".claude", "bulk", `f${index}.md`), "x\n"),
         { concurrency: 32, discard: true }
       );
+      const indexed2 = yield* ChildProcess.make("git", ["add", "--", ".claude/bulk"], {
+        cwd: root,
+        stdout: "ignore",
+        stderr: "ignore",
+      });
+      expect(yield* indexed2.exitCode).toBe(0);
       pipe((yield* typescriptHarnessHash(root)).snapshot.bounds.truncationReason, O.isSome, assertTrue);
       assertNone(yield* stampOf(sessionStartPayload(root)));
+    })
+  );
+
+  it.effect("rejects skipped malformed Git metadata beneath an ancestor checkout through a newline path alias", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* makeHarnessFixtureRoot();
+      const invalidRoot = path.join(root, "broken\n");
+      yield* fs.makeDirectory(path.join(invalidRoot, ".git"), { recursive: true });
+      yield* fs.writeFileString(path.join(invalidRoot, ".git/HEAD"), "ref: refs/heads/main\n");
+      yield* fs.writeFileString(path.join(invalidRoot, "AGENTS.md"), "# nested fixture\n");
+      const aliasRoot = yield* fs.makeTempDirectoryScoped();
+      const alias = path.join(aliasRoot, "scan");
+      yield* fs.symlink(invalidRoot, alias);
+      const failure = yield* typescriptHarnessHash(alias).pipe(Effect.flip);
+      expect(failure.message).toContain("Git");
+      const run = yield* runWriter(yield* encodeJson(sessionStartPayload(alias)));
+      assertNone((yield* decodeHookPulseRow(expectSingleRow(run))).harnessHash);
+    })
+  );
+
+  it.effect("preserves a checkout name ending in a carriage return", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* makeHarnessFixtureRoot();
+      const parent = yield* fs.makeTempDirectoryScoped();
+      const renamed = path.join(parent, "checkout\r");
+      yield* fs.rename(root, renamed);
+      yield* Effect.gen(function* () {
+        const oracle = yield* typescriptHarnessHash(renamed);
+        const run = yield* runWriter(yield* encodeJson(sessionStartPayload(renamed)));
+        assertSome((yield* decodeHookPulseRow(expectSingleRow(run))).harnessHash, oracle.harnessHash);
+      }).pipe(Effect.ensuring(fs.rename(renamed, root).pipe(Effect.orDie)));
+    })
+  );
+
+  it.effect("discovers physical checkout ownership through a symlink in another checkout", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const outer = yield* makeHarnessFixtureRoot();
+      const inner = yield* makeHarnessFixtureRoot();
+      yield* fs.writeFileString(path.join(inner, ".claude/settings.local.json"), '{"model":"inner-fixture"}');
+      const subdirectory = path.join(inner, "nested\n");
+      yield* fs.makeDirectory(subdirectory);
+      const alias = path.join(outer, "alias");
+      yield* fs.symlink(subdirectory, alias);
+      const oracle = yield* typescriptHarnessHash(inner);
+      const run = yield* runWriter(yield* encodeJson(sessionStartPayload(alias)));
+      assertSome((yield* decodeHookPulseRow(expectSingleRow(run))).harnessHash, oracle.harnessHash);
+    })
+  );
+
+  it.effect("withholds the outer stamp when nearer Git metadata has no root guide", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const outer = yield* makeHarnessFixtureRoot();
+      const inner = path.join(outer, "nearer");
+      yield* fs.makeDirectory(path.join(inner, ".git"), { recursive: true });
+      const run = yield* runWriter(yield* encodeJson(sessionStartPayload(inner)));
+      assertNone((yield* decodeHookPulseRow(expectSingleRow(run))).harnessHash);
+    })
+  );
+
+  it.effect("rejects an invalid inherited refusal date and partitions valid dates by the attempt", () =>
+    Effect.gen(function* () {
+      const invalid = yield* runWriter("", { writerArgs: ["--refuse", "timeout"], attemptUtc: "2026-02-30T00:00:00Z" });
+      expect(invalid.refusals).toHaveLength(1);
+      const row = yield* S.decodeEffect(S.fromJsonString(HookPulseRefusal))(A.getUnsafe(invalid.refusals, 0));
+      expect(DateTime.formatIso(row.ts)).not.toBe("2026-03-02T00:00:00.000Z");
+      const valid = yield* runWriter("", { writerArgs: ["--refuse", "timeout"], attemptUtc: "2026-08-01T23:59:59Z" });
+      expect(valid.refusalFiles).toEqual(["hook-pulse-refusals-2026-08-01.ndjson"]);
+      expect(valid.refusals).toHaveLength(1);
+      const validRow = yield* S.decodeEffect(S.fromJsonString(HookPulseRefusal))(A.getUnsafe(valid.refusals, 0));
+      expect(DateTime.formatIso(validRow.ts)).toBe("2026-08-01T23:59:59.000Z");
+    })
+  );
+
+  it.effect("rejects an empty Git toplevel in both snapshot routes", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+      const root = yield* makeHarnessFixtureRoot();
+      const failure = yield* typescriptHarnessHash(root).pipe(
+        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, {
+          ...spawner,
+          string: () => Effect.succeed("\n"),
+        }),
+        Effect.flip
+      );
+      expect(failure.message).toContain("no indexed checkout root");
+      const bin = yield* fs.makeTempDirectoryScoped();
+      const git = path.join(bin, "git");
+      yield* fs.writeFileString(
+        git,
+        "#!/usr/bin/env bash\ncase \"$*\" in *--is-inside-work-tree*) printf 'true\\n';; *--show-toplevel*) printf '\\n';; esac\n"
+      );
+      yield* fs.chmod(git, 0o755);
+      const executablePath = `${bin}:${yield* Config.String("PATH")}`;
+      const run = yield* runWriter(yield* encodeJson(sessionStartPayload(root)), { executablePath });
+      assertNone((yield* decodeHookPulseRow(expectSingleRow(run))).harnessHash);
     })
   );
 
@@ -1111,6 +1432,11 @@ it.layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
       });
 
       expectSilentRefusal(run);
+      expect(run.refusals).toHaveLength(1);
+      const refusal = yield* S.decodeEffect(S.fromJsonString(HookPulseRefusal))(
+        pipe(A.head(run.refusals), O.getOrThrow)
+      );
+      expect(refusal.reason).toBe("disabled");
     })
   );
 
@@ -1396,7 +1722,7 @@ const expectSwitchOk = (run: SwitchRun): void => {
 // stderr is still expected empty on every success path: `jq` failing to parse a
 // hand-mangled sentinel is handled, and letting its diagnostics through would
 // train operators to ignore the one channel that reports real trouble.
-it.layer(NodeServices.layer)("hook-pulse kill-switch conformance", (it) => {
+it.layer(NodeServices.layer, { timeout: "30 seconds" })("hook-pulse kill-switch conformance", (it) => {
   it.effect("keeps the first disarm's window start and reason when disarm runs again", () =>
     Effect.gen(function* () {
       const store = yield* makeSwitchStore();

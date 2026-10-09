@@ -32,6 +32,10 @@ sentinel="${BEEP_HOOK_PULSE_DISARM_SENTINEL:-${BEEP_AGENT_EVIDENCE_ROOT}/hook-pu
 windows="${BEEP_AGENT_EVIDENCE_ROOT}/hook-pulse-disarm-windows.ndjson"
 
 now() { date -u +%Y-%m-%dT%H:%M:%SZ; }
+transition() {
+  mkdir -p "${BEEP_AGENT_EVIDENCE_ROOT}"
+  printf '{"ts":"%s","action":"%s"}\n' "$(now)" "$1" >>"${BEEP_AGENT_EVIDENCE_ROOT}/hook-pulse-transitions.ndjson"
+}
 
 case "${1:-status}" in
   disarm)
@@ -63,6 +67,7 @@ case "${1:-status}" in
     jq -n -c --arg disarmedAt "$(now)" --arg reason "${2:-unspecified}" \
       '{ disarmedAt: $disarmedAt, reason: $reason, evidenceTier: "unknown" }' >"${staged}"
     if ln "${staged}" "${sentinel}" 2>/dev/null; then
+      transition disarm || true
       rm -f "${staged}"
       echo "hook-pulse disarmed: ${sentinel}"
       exit 0
@@ -133,9 +138,16 @@ case "${1:-status}" in
     jq -c -n --slurpfile sentinelDoc "${claimed}" --arg rearmedAt "$(now)" \
       '{
          schemaVersion: "hook-pulse-disarm-window/v1",
-         disarmedAt: ($sentinelDoc[0].disarmedAt? // null),
+         disarmedAt: ($sentinelDoc[0] | if type == "object" then .disarmedAt else null end
+           | if type == "string" then
+               if test("^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$")
+                 and . <= $rearmedAt
+                 and ((try (fromdateiso8601 | strftime("%Y-%m-%dT%H:%M:%SZ")) catch null) == .)
+               then . else null end
+             else null end),
          rearmedAt: $rearmedAt,
-         reason: ($sentinelDoc[0].reason? // null),
+         reason: ($sentinelDoc[0] | if type == "object" then .reason else null end
+           | if type == "string" then . else null end),
          evidenceTier: "unknown"
        }' 2>/dev/null >>"${windows}" ||
       jq -c -n --arg rearmedAt "$(now)" \
@@ -148,6 +160,7 @@ case "${1:-status}" in
          }' >>"${windows}"
     # The window is durable; the claim can now be dropped rather than restored.
     trap - EXIT
+    transition arm || true
     rm -f "${claimed}"
     # A `disarm` can win the freed path between the rename above and here. The
     # appended window is still correct — the instrument really was off across it,

@@ -39,6 +39,7 @@ import {
   AgentEffectivenessEvalScoreReport,
   SkillOptTaskManifest,
 } from "../AgentEffectiveness.schemas.ts";
+import type { ChildProcessSpawner } from "effect/process";
 
 const $I = $RepoCliId.create("commands/AgentEffectiveness/internal/EvalRecord");
 const normalizePathSeparators = Str.replaceAll("\\", "/");
@@ -204,7 +205,7 @@ export const recordAgentEffectivenessEvalScore = Effect.fn("AgentEffectivenessEv
 }: RecordAgentEffectivenessEvalScoreOptions): Effect.fn.Return<
   AgentEffectivenessEvalRecordResult,
   AgentEffectivenessEvalScorerError,
-  FileSystem.FileSystem | Path.Path
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;

@@ -1,4 +1,4 @@
-import { AiMetricsOtlpSpanProjection } from "@beep/repo-ai-metrics/otlp";
+import { AiMetricsOtlpAttributeKey, AiMetricsOtlpSpanProjection } from "@beep/repo-ai-metrics/otlp";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
@@ -6,6 +6,11 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
 const encodeProjection = S.encodeUnknownEffect(AiMetricsOtlpSpanProjection);
+
+it("allowlists the session-time stamp separately from ingest configuration", () => {
+  expect(AiMetricsOtlpAttributeKey.literals).toContain("ai_metrics.session_harness_hash");
+  expect(AiMetricsOtlpAttributeKey.literals).toContain("ai_metrics.config_snapshot_id");
+});
 
 describe("@beep/repo-ai-metrics OTLP projection invariants", () => {
   it.effect("carries watermark identity independently of the exported attribute payload", () =>

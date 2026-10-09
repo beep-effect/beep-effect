@@ -12,6 +12,7 @@ import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as Config from "effect/Config";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
 import * as F from "effect/Function";
@@ -22,6 +23,7 @@ import * as S from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Str from "effect/String";
+import { AiMetricsSourceRole } from "./models.ts";
 import { hashPrivateIdentifier, hashPublicTextSha256 } from "./privacy.ts";
 import { EvidenceTier, InstrumentClass, WaitReason } from "./telemetry-v2.ts";
 
@@ -230,6 +232,156 @@ export const HookPulseAgentKind = LiteralKit(["claude-code", "codex-cli", "curso
 export type HookPulseAgentKind = typeof HookPulseAgentKind.Type;
 
 /**
+ * Collection capability of one client; absence never establishes non-use.
+ *
+ * **Example** (Inspect the domain)
+ *
+ * ```ts
+ * import { HookPulseClientCoverage } from "@beep/repo-ai-metrics"
+ * console.log(HookPulseClientCoverage.literals)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const HookPulseClientCoverage = LiteralKit([
+  "stamped",
+  "unstamped-by-design",
+  "unsupported",
+  "not-configured",
+  "disabled",
+]).pipe(
+  $I.annoteSchema("HookPulseClientCoverage", {
+    description: "Collection capability of one client; absence never establishes non-use.",
+  })
+);
+/**
+ * Decoded HookPulseClientCoverage value.
+ * @category models
+ * @since 0.0.0
+ */
+export type HookPulseClientCoverage = typeof HookPulseClientCoverage.Type;
+
+/**
+ * Payload-free reason why the writer could not collect evidence.
+ *
+ * **Example** (Inspect the domain)
+ *
+ * ```ts
+ * import { HookPulseRefusalReason } from "@beep/repo-ai-metrics"
+ * console.log(HookPulseRefusalReason.literals)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const HookPulseRefusalReason = LiteralKit([
+  "disabled",
+  "no-jq",
+  "no-timeout",
+  "unknown-agent-kind",
+  "no-hash",
+  "digest-failed",
+  "encode-failed",
+  "empty-output",
+  "invalid-output",
+  "mkdir-failed",
+  "append-failed",
+  "stamp-failed",
+  "timeout",
+]).pipe(
+  $I.annoteSchema("HookPulseRefusalReason", {
+    description: "Payload-free reason why the writer could not collect evidence.",
+  })
+);
+/**
+ * Decoded HookPulseRefusalReason value.
+ * @category models
+ * @since 0.0.0
+ */
+export type HookPulseRefusalReason = typeof HookPulseRefusalReason.Type;
+
+/**
+ * Durable collection-switch transition.
+ *
+ * **Example** (Inspect the domain)
+ *
+ * ```ts
+ * import { HookPulseSwitchAction } from "@beep/repo-ai-metrics"
+ * console.log(HookPulseSwitchAction.literals)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const HookPulseSwitchAction = LiteralKit(["arm", "disarm"]).pipe(
+  $I.annoteSchema("HookPulseSwitchAction", { description: "Durable collection-switch transition." })
+);
+/**
+ * Decoded HookPulseSwitchAction value.
+ * @category models
+ * @since 0.0.0
+ */
+export type HookPulseSwitchAction = typeof HookPulseSwitchAction.Type;
+
+const HookPulseUtcTimestamp = S.String.check(
+  S.makeFilter((input) =>
+    O.exists(
+      S.decodeOption(S.DateTimeUtcFromString)(input),
+      (date) => Str.endsWith("Z")(input) && date.pipe(DateTime.formatIso, Str.slice(0, 19)) === Str.slice(0, 19)(input)
+    )
+  )
+).pipe($I.annoteSchema("HookPulseUtcTimestamp", { description: "Canonical UTC timestamp without calendar rollover." }));
+
+const HookPulseUtcDateTime = HookPulseUtcTimestamp.pipe(S.decodeTo(S.DateTimeUtcFromString));
+
+/**
+ * Payload-free writer refusal; unknown client names are normalized to unknown.
+ *
+ * **Example** (Inspect the row constructor)
+ *
+ * ```ts
+ * import { HookPulseRefusal } from "@beep/repo-ai-metrics"
+ * console.log(typeof HookPulseRefusal.make) // "function"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class HookPulseRefusal extends S.Class<HookPulseRefusal>($I`HookPulseRefusal`)(
+  {
+    ts: HookPulseUtcDateTime,
+    agentKind: S.Literals([...HookPulseAgentKind.literals, "unknown"]),
+    reason: HookPulseRefusalReason,
+  },
+  $I.annote("HookPulseRefusal", {
+    description: "Payload-free writer refusal; unknown client names are normalized to unknown.",
+  })
+) {
+  static readonly decodeJsonResult = S.decodeUnknownResult(S.fromJsonString(HookPulseRefusal));
+}
+
+/**
+ * Payload-free durable arm or disarm transition.
+ *
+ * **Example** (Inspect the row constructor)
+ *
+ * ```ts
+ * import { HookPulseSwitchTransition } from "@beep/repo-ai-metrics"
+ * console.log(typeof HookPulseSwitchTransition.make) // "function"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class HookPulseSwitchTransition extends S.Class<HookPulseSwitchTransition>($I`HookPulseSwitchTransition`)(
+  { ts: HookPulseUtcDateTime, action: HookPulseSwitchAction },
+  $I.annote("HookPulseSwitchTransition", { description: "Payload-free durable arm or disarm transition." })
+) {
+  static readonly decodeJsonResult = S.decodeUnknownResult(S.fromJsonString(HookPulseSwitchTransition));
+}
+
+/**
  * Hook lifecycle events the sequence-break instrument records, one ledger row per event.
  *
  * **Details**
@@ -411,7 +563,7 @@ export type HookPulseEvidenceTier = typeof HookPulseEvidenceTier.Type;
  */
 export class HookPulseDisarmSentinel extends S.Class<HookPulseDisarmSentinel>($I`HookPulseDisarmSentinel`)(
   {
-    disarmedAt: S.String,
+    disarmedAt: HookPulseUtcTimestamp,
     evidenceTier: S.Literal(HookPulseEvidenceTier.Enum.unknown),
     reason: S.String,
   },
@@ -448,13 +600,24 @@ export class HookPulseDisarmSentinel extends S.Class<HookPulseDisarmSentinel>($I
  * @since 0.0.0
  */
 export class HookPulseDisarmWindow extends S.Class<HookPulseDisarmWindow>($I`HookPulseDisarmWindow`)(
-  {
-    disarmedAt: S.OptionFromNullOr(S.String),
+  S.Struct({
+    disarmedAt: S.OptionFromNullOr(HookPulseUtcTimestamp),
     evidenceTier: S.Literal(HookPulseEvidenceTier.Enum.unknown),
     reason: S.OptionFromNullOr(S.String),
-    rearmedAt: S.String,
+    rearmedAt: HookPulseUtcTimestamp,
     schemaVersion: HookPulseDisarmWindowSchemaVersion,
-  },
+  }).check(
+    S.makeFilter(
+      ({ disarmedAt, rearmedAt }) =>
+        O.match(disarmedAt, {
+          onNone: () => true,
+          onSome: (start) =>
+            DateTime.toEpochMillis(DateTime.makeUnsafe(start)) <=
+            DateTime.toEpochMillis(DateTime.makeUnsafe(rearmedAt)),
+        }),
+      { identifier: $I`HookPulseDisarmWindowOrder`, message: "Disarm start must not follow re-arm time." }
+    )
+  ),
   $I.annote("HookPulseDisarmWindow", {
     description: "One closed interval during which hook-pulse collection was disarmed.",
   })
@@ -679,6 +842,10 @@ export class HookPulseRawEvent extends S.Class<HookPulseRawEvent>($I`HookPulseRa
     tool_use_id: S.OptionFromOptionalKey(S.String),
     prompt_id: S.OptionFromOptionalKey(S.String),
     transcript_path: S.String,
+    source: S.OptionFromOptionalKey(S.String).pipe(
+      S.catchDecoding(() => Effect.succeedSome(O.none())),
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
     permission_mode: S.OptionFromOptionalKey(S.String),
     notification_type: S.OptionFromOptionalKey(S.String),
     duration_ms: S.OptionFromOptionalKey(S.Finite.check(S.isGreaterThanOrEqualTo(0))),
@@ -719,11 +886,30 @@ class HookPulseRawEventInput extends S.Class<HookPulseRawEventInput>($I`HookPuls
     // codec has no repo root to walk, so decode passes the stamp through (owned by
     // SessionStart, dropped on every other event) and absence stays absence.
     harnessHash: S.OptionFromOptionalKey(Sha256Hex),
+    sessionRole: S.OptionFromOptionalKey(AiMetricsSourceRole).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("HookPulseRawEventInput", {
     description: "Raw hook payload paired with the ambient stamps supplied by its writer.",
   })
 ) {}
+
+const ChildTranscriptPath = S.String.check(S.isPattern(/(?:^|\/)(?:subagents|workflow)(?:\/|$)/));
+const PrimaryTranscriptPath = S.String.check(S.isPattern(/(?:^|\/)[0-9a-f-]{36}\.jsonl$/));
+const isChildTranscriptPath = S.is(ChildTranscriptPath);
+const isPrimaryTranscriptPath = S.is(PrimaryTranscriptPath);
+const deriveSessionRole = (
+  agentKind: HookPulseAgentKind,
+  transcriptPath: O.Option<string>
+): O.Option<AiMetricsSourceRole> =>
+  agentKind !== "claude-code"
+    ? O.none()
+    : O.flatMap(transcriptPath, (file) =>
+        isChildTranscriptPath(file)
+          ? O.some(AiMetricsSourceRole.Enum.subagent)
+          : isPrimaryTranscriptPath(file)
+            ? O.some(AiMetricsSourceRole.Enum.primary)
+            : O.none()
+      );
 
 // Canonical context-surface keys are `${kind}:${name}` with no trailing newline,
 // hashed UNSALTED: surfaces are public repo names, and the digest must join
@@ -800,7 +986,12 @@ const classifyRepoRelativeSurface = (segments: ReadonlyArray<string>): O.Option<
       O.some(contextSurfaceKey(HookPulseContextSurfaceKind.Enum["agents-md"], "AGENTS.md"))
     ),
     Match.when(
-      { depth: (depth: number) => depth >= 4, first: ".claude", second: "skills", third: Match.string },
+      {
+        depth: (depth: number) => depth >= 4,
+        first: Match.is(".claude", ".agents", ".codex", ".cursor"),
+        second: "skills",
+        third: Match.string,
+      },
       ({ third: name }) => O.some(contextSurfaceKey(HookPulseContextSurfaceKind.Enum.skill, name))
     ),
     Match.when({ depth: 3, first: ".claude", second: "hooks", third: Match.string }, ({ third: name }) =>
@@ -1007,12 +1198,16 @@ const hookPulsePrivateReferences = Effect.fnUntraced(function* (input: {
 // `tool_name` but no `tool_use_id`, while `PreToolUse` and `PostToolUse` carry
 // both — so binding them to an event would reject legitimate future rows, and
 // rejecting rows costs real telemetry.
+const NativeSessionStartSource = LiteralKit(["startup", "resume", "clear", "compact"]);
+const decodeSessionStartSource = S.decodeUnknownOption(NativeSessionStartSource);
+
 const HookPulseEventOwnedField = LiteralKit([
   "notificationType",
   "sessionEndReason",
   "isInterrupt",
   "surface",
   "harnessHash",
+  "sessionStartSource",
 ]).pipe(
   $I.annoteSchema("HookPulseEventOwnedField", {
     description: "Canonical hook-pulse fields whose meaning is owned by exactly one hook event.",
@@ -1030,6 +1225,7 @@ const hookPulseEventOwningField = HookPulseEventOwnedField.$match({
   // The harness a session runs under is decided when it starts; a mid-session
   // stamp would describe a regime the session did not start in.
   harnessHash: F.constant(HookPulseEvent.Enum.SessionStart),
+  sessionStartSource: F.constant(HookPulseEvent.Enum.SessionStart),
 });
 
 const doesHookPulseEventOwnField = (field: HookPulseEventOwnedField, hookEvent: HookPulseEvent): boolean =>
@@ -1181,6 +1377,10 @@ export class HookPulseV1 extends S.Class<HookPulseV1>($I`HookPulseV1`)(
     // `deriveHarnessHash`), stamped by the writer on SessionStart only. Rows
     // written before the stamp existed simply lack it.
     harnessHash: S.OptionFromOptionalKey(Sha256Hex),
+    sessionStartSource: S.OptionFromOptionalKey(NativeSessionStartSource).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
+    sessionRole: S.OptionFromOptionalKey(AiMetricsSourceRole).pipe(S.withConstructorDefault(Effect.succeedNone)),
   }).check(
     S.makeFilterGroup(
       [
@@ -1270,6 +1470,11 @@ export const HookPulseV1Arbitrary = Arbitrary.schema(S.Struct(HookPulseV1.fields
       isInterrupt: filterHookPulseEventOwnedField("isInterrupt", value.hookEvent, value.isInterrupt),
       surface: filterHookPulseEventOwnedField("surface", value.hookEvent, value.surface),
       harnessHash: filterHookPulseEventOwnedField("harnessHash", value.hookEvent, value.harnessHash),
+      sessionStartSource: filterHookPulseEventOwnedField(
+        "sessionStartSource",
+        value.hookEvent,
+        value.sessionStartSource
+      ),
       waitReason: deriveWaitReason(value.hookEvent, value.toolName, notificationType),
     });
   })
@@ -1503,6 +1708,14 @@ export const HookPulseV1FromRawEvent = HookPulseRawEventInput.pipe(
                 input.event.is_interrupt
               ),
               surface,
+              sessionStartSource: filterHookPulseEventOwnedField(
+                "sessionStartSource",
+                input.event.hook_event_name,
+                O.flatMap(input.event.source, decodeSessionStartSource)
+              ),
+              sessionRole: O.orElse(input.sessionRole, () =>
+                deriveSessionRole(input.agentKind, O.some(input.event.transcript_path))
+              ),
               harnessHash: filterHookPulseEventOwnedField(
                 HookPulseEventOwnedField.Enum.harnessHash,
                 input.event.hook_event_name,
@@ -1530,6 +1743,7 @@ export const HookPulseV1FromRawEvent = HookPulseRawEventInput.pipe(
               tool_use_id: O.fromUndefinedOr(input.toolUseId),
               prompt_id: O.fromUndefinedOr(input.promptId),
               transcript_path: transcriptPath,
+              source: O.fromUndefinedOr(input.sessionStartSource),
               permission_mode: O.fromUndefinedOr(input.permissionMode),
               notification_type: filterHookPulseEventOwnedField(
                 HookPulseEventOwnedField.Enum.notificationType,
@@ -1574,6 +1788,7 @@ export const HookPulseV1FromRawEvent = HookPulseRawEventInput.pipe(
                       evidenceTier: clampDerivedEvidenceTier(input.evidenceTier),
                       ts: input.ts,
                       repoRoot: O.none(),
+                      sessionRole: O.fromUndefinedOr(input.sessionRole),
                       surface: filterHookPulseEventOwnedField(
                         HookPulseEventOwnedField.Enum.surface,
                         input.hookEvent,
