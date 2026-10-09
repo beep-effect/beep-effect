@@ -12,6 +12,7 @@ import {
   HookPulseEvidenceTier,
   HookPulseInstrumentClass,
   HookPulseNotificationType,
+  HookPulseRawEvent,
   HookPulseRefusal,
   HookPulseSchemaVersion,
   HookPulseV1,
@@ -970,6 +971,49 @@ it.layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
         expect(decoded.agentKind).toBe(writer === cursorWriterPath ? "cursor-cli" : "codex-cli");
       }
     }).pipe(Effect.scoped)
+  );
+
+  it.effect("preserves git stamp parity with nested docs, symlinks and unrelated quoted names", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ directory: path.join(repoRoot, ".beep"), prefix: "h3-index-" });
+      yield* fs.makeDirectory(path.join(root, "packages/foo"), { recursive: true });
+      yield* fs.makeDirectory(path.join(root, ".ai"));
+      yield* fs.makeDirectory(path.join(root, ".aiassistant"));
+      yield* fs.writeFileString(path.join(root, "AGENTS.md"), "# Indexed fixture\n");
+      yield* fs.symlink("AGENTS.md", path.join(root, "CLAUDE.md"));
+      yield* fs.writeFileString(path.join(root, "packages/foo/AGENTS.md"), "# Nested fixture\n");
+      yield* fs.writeFileString(path.join(root, ".ai/config.json"), "{}\n");
+      yield* fs.writeFileString(path.join(root, ".aiassistant/config.json"), "{}\n");
+      yield* fs.writeFileString(path.join(root, 'unrelated"name.txt'), "fixture\n");
+      for (const args of [
+        ["init", "--quiet"],
+        ["add", "."],
+      ]) {
+        const command = yield* ChildProcess.make("git", args, { cwd: root, stdout: "ignore", stderr: "ignore" });
+        expect(yield* command.exitCode).toBe(0);
+      }
+      const decoded = yield* decodeHookPulseRow(
+        expectSingleRow(yield* runWriter(yield* encodeJson(sessionStartPayload(root))))
+      );
+      const oracle = yield* typescriptHarnessHash(root);
+      assertSome(decoded.harnessHash, oracle.harnessHash);
+      expect(A.map(oracle.snapshot.files, (file) => file.relativePath)).toContain("packages/foo/AGENTS.md");
+      expect(A.map(oracle.snapshot.files, (file) => file.relativePath)).toContain("CLAUDE.md");
+      expect(A.map(oracle.snapshot.files, (file) => file.relativePath)).toContain(".ai/config.json");
+    }).pipe(Effect.scoped)
+  );
+
+  it.effect("drops a malformed source field without dropping its event", () =>
+    Effect.gen(function* () {
+      const payload = { ...preToolUsePayload, source: 42 };
+      const raw = yield* HookPulseRawEvent.decodeEffect(payload);
+      assertNone(raw.source);
+      const decoded = yield* decodeHookPulseRow(expectSingleRow(yield* runWriter(yield* encodeJson(payload))));
+      expect(decoded.hookEvent).toBe("PreToolUse");
+      assertNone(decoded.sessionStartSource);
+    })
   );
 
   it.effect("stamps SessionStart with the harness hash the TypeScript snapshot derives", () =>

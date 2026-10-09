@@ -13,7 +13,7 @@ import * as Clock from "effect/Clock";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { flow, pipe } from "effect/Function";
+import { flow, identity, pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as Order from "effect/Order";
@@ -1092,12 +1092,22 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
     const stamps = MutableHashMap.empty<string, HashSet.HashSet<string>>();
     const sessions = MutableHashMap.empty<string, HashSet.HashSet<string>>();
     const freshStarts = MutableHashMap.empty<string, true>();
+    let hookCollectionComplete = true;
     yield* Effect.forEach(
       A.filter(shards, Str.endsWith(".ndjson")),
       Effect.fnUntraced(function* (name) {
-        const text = yield* fs.readFileString(pathApi.join(hookDir, name)).pipe(Effect.orElseSucceed(() => ""));
+        const text = yield* fs.readFileString(pathApi.join(hookDir, name)).pipe(
+          Effect.match({
+            onFailure: () => {
+              hookCollectionComplete = false;
+              return "";
+            },
+            onSuccess: identity,
+          })
+        );
         for (const line of Str.split(text, "\n")) {
           const row = HookPulseV1.decodeJsonResult(line);
+          if (Str.isNonEmpty(line) && Result.isFailure(row)) hookCollectionComplete = false;
           if (
             Result.isSuccess(row) &&
             row.success.instrumentClass === "production" &&
@@ -1131,17 +1141,20 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
         codex: () => O.some("codex-cli"),
         openclaw: () => O.none<string>(),
       });
-      const sessionHarnessHash = O.flatMap(kind, (agentKind) => {
-        const key = `${agentKind}:${sanitized.sourcePathHash}`;
-        return pipe(
-          MutableHashMap.get(sessions, key),
-          O.filter(() => MutableHashMap.has(freshStarts, key)),
-          O.filter((values) => HashSet.size(values) === 1),
-          O.flatMap(() => MutableHashMap.get(stamps, key)),
-          O.filter((values) => HashSet.size(values) === 1 && !HashSet.has(values, "unknown")),
-          O.flatMap((values) => A.head(A.fromIterable(values)))
-        );
-      });
+      const sessionHarnessHash = O.flatMap(
+        O.filter(kind, () => hookCollectionComplete),
+        (agentKind) => {
+          const key = `${agentKind}:${sanitized.sourcePathHash}`;
+          return pipe(
+            MutableHashMap.get(sessions, key),
+            O.filter(() => MutableHashMap.has(freshStarts, key)),
+            O.filter((values) => HashSet.size(values) === 1),
+            O.flatMap(() => MutableHashMap.get(stamps, key)),
+            O.filter((values) => HashSet.size(values) === 1 && !HashSet.has(values, "unknown")),
+            O.flatMap((values) => A.head(A.fromIterable(values)))
+          );
+        }
+      );
       return AiMetricsDerivedTranscriptRecord.make({ ...record, sessionHarnessHash });
     });
     const ingestRunId = `forwarder-${startedAtEpochMillis}`;

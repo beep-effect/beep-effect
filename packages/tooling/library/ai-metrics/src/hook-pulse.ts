@@ -819,7 +819,10 @@ export class HookPulseRawEvent extends S.Class<HookPulseRawEvent>($I`HookPulseRa
     tool_use_id: S.OptionFromOptionalKey(S.String),
     prompt_id: S.OptionFromOptionalKey(S.String),
     transcript_path: S.String,
-    source: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    source: S.OptionFromOptionalKey(S.String).pipe(
+      S.catchDecoding(() => Effect.succeedSome(O.none())),
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
     permission_mode: S.OptionFromOptionalKey(S.String),
     notification_type: S.OptionFromOptionalKey(S.String),
     duration_ms: S.OptionFromOptionalKey(S.Finite.check(S.isGreaterThanOrEqualTo(0))),

@@ -1072,11 +1072,13 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       ]);
       const ledger = yield* HarnessLedgerService;
       yield* fs.symlink(transcriptDir, path.join(nested, "loop"));
+      yield* fs.symlink(path.join(root, "missing"), path.join(nested, "dangling.jsonl"));
       const report = yield* ledger.reconcile(stateDir, path.relative(".", transcriptDir), "claude-code");
       expect(report.transcriptToolEvents).toBe(2);
       expect(report.hookedToolEvents).toBe(2);
       expect(report.ratio).toStrictEqual(O.some(1));
       expect(report.qualifiedForNonUse).toBe(false);
+      expect(report.undecodableLines).toBe(1);
     }).pipe(Effect.scoped)
   );
 

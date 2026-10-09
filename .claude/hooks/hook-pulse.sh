@@ -11,9 +11,9 @@
 #
 # Load-bearing decisions:
 # - Kill switch first. The sentinel test runs before jq, before reading stdin,
-#   and before any parsing, so a disarm takes effect within one syscall. The
-#   hook fires on every tool call in every clone; a week-long always-on
-#   instrument with no sub-second disarm is not acceptable.
+#   and before any parsing. Disarm stops normal hook rows immediately; H3
+#   requires a payload-free disabled refusal for each refused write attempt.
+#   The sibling refusal/transition logs never read or contain hook payloads.
 # - Whitelist projection happens HERE (spike amendment 6). Raw payloads carry
 #   `prompt`, `message`, `tool_input`, `tool_response`, `last_assistant_message`,
 #   `background_tasks`, `session_crons`, `permission_suggestions`, and `error`
@@ -543,7 +543,8 @@ END {
   # use the same bounded fallback as the TypeScript snapshot.
   if tracked="$(git -c core.quotepath=false ls-files -- ':(glob)**/AGENTS.md' ':(glob)**/CLAUDE.md' .mcp.json .claude .codex .ai .aiassistant .cursor .agents .junie .grok 2>/dev/null)"; then
     case "${tracked}" in *'"'*) return 1 ;; esac
-    collected="$(awk -F "${tab}" 'NR == FNR { tracked[$0] = 1; next }
+    collected="$(awk -F "${tab}" -v OFS="${tab}" 'NR == FNR { tracked[$0] = 1; next }
+      { sub(/^\.\//, "", $1) }
       ($1 in tracked) || $1 == ".claude/settings.local.json" { print }' \
       <(printf '%s\n' "${tracked}") <(printf '%s\n' "${collected}"))" || exit 1
   fi
