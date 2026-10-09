@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-09T17:20:53.156Z",
+  "generatedAt": "2026-10-09T20:21:13.563Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -65,8 +65,8 @@
     "cleanPackages": 64,
     "packagesWithoutPublicSrcSurface": 3,
     "packagesNeedingRemediation": 79,
-    "publicModules": 2786,
-    "publicExports": 19213,
+    "publicModules": 2788,
+    "publicExports": 19229,
     "openModules": 360,
     "openExports": 1317,
     "missingExportExamples": 8,
@@ -383309,9 +383309,9 @@
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 353,
-        "publicModuleCount": 351,
-        "publicExportCount": 2957
+        "sourceFileCount": 355,
+        "publicModuleCount": 353,
+        "publicExportCount": 2973
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -383479,7 +383479,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 5,
+          "exportCount": 2,
           "remediationStatus": "resolved"
         },
         {
@@ -383523,7 +383523,51 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 25,
+          "exportCount": 31,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/commands/Accounts/Accounts.tui.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.tui.ts",
+          "line": 1,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-tui-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 1,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/commands/Accounts/Accounts.view.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.view.ts",
+          "line": 1,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-view-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 3,
           "remediationStatus": "resolved"
         },
         {
@@ -383545,7 +383589,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 15,
+          "exportCount": 20,
           "remediationStatus": "resolved"
         },
         {
@@ -383567,7 +383611,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 11,
+          "exportCount": 13,
           "remediationStatus": "resolved"
         },
         {
@@ -383589,7 +383633,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 5,
+          "exportCount": 7,
           "remediationStatus": "resolved"
         },
         {
@@ -391505,84 +391549,12 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "renderHours",
-          "exportKind": "const",
-          "filePath": "src/commands/Accounts/Accounts.command.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.command.ts",
-          "line": 47,
-          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-command-ts-47-renderhours",
-          "currentTags": [
-            "@param",
-            "@returns",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "renderAccountRanking",
-          "exportKind": "const",
-          "filePath": "src/commands/Accounts/Accounts.command.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.command.ts",
-          "line": 114,
-          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-command-ts-114-renderaccountranking",
-          "currentTags": [
-            "@param",
-            "@returns",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "renderAccountsStatus",
-          "exportKind": "const",
-          "filePath": "src/commands/Accounts/Accounts.command.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.command.ts",
-          "line": 156,
-          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-command-ts-156-renderaccountsstatus",
-          "currentTags": [
-            "@param",
-            "@returns",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
           "symbolName": "accountsStatusCommand",
           "exportKind": "const",
           "filePath": "src/commands/Accounts/Accounts.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.command.ts",
-          "line": 182,
-          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-command-ts-182-accountsstatuscommand",
+          "line": 50,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-command-ts-50-accountsstatuscommand",
           "currentTags": [
             "@category",
             "@since"
@@ -391603,8 +391575,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Accounts/Accounts.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.command.ts",
-          "line": 226,
-          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-command-ts-226-accountscommand",
+          "line": 98,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-command-ts-98-accountscommand",
           "currentTags": [
             "@category",
             "@since"
@@ -392039,12 +392011,102 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "AccountSection",
+          "exportKind": "const",
+          "filePath": "src/commands/Accounts/Accounts.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.schemas.ts",
+          "line": 341,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-schemas-ts-341-accountsection",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "AccountSection",
+          "exportKind": "type",
+          "filePath": "src/commands/Accounts/Accounts.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.schemas.ts",
+          "line": 353,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-schemas-ts-353-accountsection",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "accountSection",
+          "exportKind": "const",
+          "filePath": "src/commands/Accounts/Accounts.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.schemas.ts",
+          "line": 381,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-schemas-ts-381-accountsection",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "SignedInLogin",
+          "exportKind": "class",
+          "filePath": "src/commands/Accounts/Accounts.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.schemas.ts",
+          "line": 397,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-schemas-ts-397-signedinlogin",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "AccountAvailability",
           "exportKind": "const",
           "filePath": "src/commands/Accounts/Accounts.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.schemas.ts",
-          "line": 334,
-          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-schemas-ts-334-accountavailability",
+          "line": 416,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-schemas-ts-416-accountavailability",
           "currentTags": [
             "@category",
             "@since"
@@ -392065,8 +392127,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Accounts/Accounts.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.schemas.ts",
-          "line": 347,
-          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-schemas-ts-347-accountavailability",
+          "line": 429,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-schemas-ts-429-accountavailability",
           "currentTags": [
             "@category",
             "@since"
@@ -392087,8 +392149,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Accounts/Accounts.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.schemas.ts",
-          "line": 373,
-          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-schemas-ts-373-accountranking",
+          "line": 460,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-schemas-ts-460-accountranking",
           "currentTags": [
             "@category",
             "@since"
@@ -392109,8 +392171,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Accounts/Accounts.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.schemas.ts",
-          "line": 407,
-          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-schemas-ts-407-accountsnapshot",
+          "line": 496,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-schemas-ts-496-accountsnapshot",
           "currentTags": [
             "@category",
             "@since"
@@ -392131,8 +392193,30 @@
           "exportKind": "const",
           "filePath": "src/commands/Accounts/Accounts.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.schemas.ts",
-          "line": 434,
-          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-schemas-ts-434-accountsnapshotjson",
+          "line": 523,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-schemas-ts-523-accountsnapshotjson",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "AccountGroup",
+          "exportKind": "class",
+          "filePath": "src/commands/Accounts/Accounts.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.schemas.ts",
+          "line": 539,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-schemas-ts-539-accountgroup",
           "currentTags": [
             "@category",
             "@since"
@@ -392153,8 +392237,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Accounts/Accounts.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.schemas.ts",
-          "line": 450,
-          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-schemas-ts-450-accountsstatusreport",
+          "line": 558,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-schemas-ts-558-accountsstatusreport",
           "currentTags": [
             "@category",
             "@since"
@@ -392175,8 +392259,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Accounts/Accounts.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.schemas.ts",
-          "line": 474,
-          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-schemas-ts-474-accountsstatusreportjson",
+          "line": 584,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-schemas-ts-584-accountsstatusreportjson",
           "currentTags": [
             "@category",
             "@since"
@@ -392197,8 +392281,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Accounts/Accounts.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.schemas.ts",
-          "line": 554,
-          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-schemas-ts-554-rankaccount",
+          "line": 694,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-schemas-ts-694-rankaccount",
           "currentTags": [
             "@param",
             "@returns",
@@ -392221,8 +392305,126 @@
           "exportKind": "const",
           "filePath": "src/commands/Accounts/Accounts.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.schemas.ts",
-          "line": 600,
-          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-schemas-ts-600-rankaccounts",
+          "line": 747,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-schemas-ts-747-rankaccounts",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "groupAccounts",
+          "exportKind": "const",
+          "filePath": "src/commands/Accounts/Accounts.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.schemas.ts",
+          "line": 789,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-schemas-ts-789-groupaccounts",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "watchAccounts",
+          "exportKind": "const",
+          "filePath": "src/commands/Accounts/Accounts.tui.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.tui.ts",
+          "line": 107,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-tui-ts-107-watchaccounts",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "AccountsBoardLayout",
+          "exportKind": "class",
+          "filePath": "src/commands/Accounts/Accounts.view.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.view.ts",
+          "line": 50,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-view-ts-50-accountsboardlayout",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "renderHours",
+          "exportKind": "const",
+          "filePath": "src/commands/Accounts/Accounts.view.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.view.ts",
+          "line": 74,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-view-ts-74-renderhours",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "renderAccountsBoard",
+          "exportKind": "const",
+          "filePath": "src/commands/Accounts/Accounts.view.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.view.ts",
+          "line": 447,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-view-ts-447-renderaccountsboard",
           "currentTags": [
             "@param",
             "@returns",
@@ -392245,8 +392447,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Accounts/Accounts.wire.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.wire.schemas.ts",
-          "line": 40,
-          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-wire-schemas-ts-40-proxyauthfile",
+          "line": 45,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-wire-schemas-ts-45-proxyauthfile",
           "currentTags": [
             "@category",
             "@since"
@@ -392267,8 +392469,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Accounts/Accounts.wire.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.wire.schemas.ts",
-          "line": 67,
-          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-wire-schemas-ts-67-proxyauthfilejson",
+          "line": 72,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-wire-schemas-ts-72-proxyauthfilejson",
           "currentTags": [
             "@category",
             "@since"
@@ -392289,8 +392491,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Accounts/Accounts.wire.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.wire.schemas.ts",
-          "line": 105,
-          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-wire-schemas-ts-105-claudeusagebody",
+          "line": 110,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-wire-schemas-ts-110-claudeusagebody",
           "currentTags": [
             "@category",
             "@since"
@@ -392311,8 +392513,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Accounts/Accounts.wire.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.wire.schemas.ts",
-          "line": 130,
-          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-wire-schemas-ts-130-claudeusagebodyjson",
+          "line": 135,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-wire-schemas-ts-135-claudeusagebodyjson",
           "currentTags": [
             "@category",
             "@since"
@@ -392333,8 +392535,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Accounts/Accounts.wire.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.wire.schemas.ts",
-          "line": 177,
-          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-wire-schemas-ts-177-claudeusagewindows",
+          "line": 182,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-wire-schemas-ts-182-claudeusagewindows",
           "currentTags": [
             "@param",
             "@returns",
@@ -392357,8 +392559,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Accounts/Accounts.wire.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.wire.schemas.ts",
-          "line": 207,
-          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-wire-schemas-ts-207-codexusagebody",
+          "line": 212,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-wire-schemas-ts-212-codexusagebody",
           "currentTags": [
             "@category",
             "@since"
@@ -392379,8 +392581,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Accounts/Accounts.wire.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.wire.schemas.ts",
-          "line": 238,
-          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-wire-schemas-ts-238-codexusagebodyjson",
+          "line": 243,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-wire-schemas-ts-243-codexusagebodyjson",
           "currentTags": [
             "@category",
             "@since"
@@ -392401,8 +392603,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Accounts/Accounts.wire.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.wire.schemas.ts",
-          "line": 270,
-          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-wire-schemas-ts-270-codexusagewindows",
+          "line": 275,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-wire-schemas-ts-275-codexusagewindows",
           "currentTags": [
             "@param",
             "@returns",
@@ -392425,8 +392627,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Accounts/Accounts.wire.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.wire.schemas.ts",
-          "line": 306,
-          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-wire-schemas-ts-306-claudecreditbalances",
+          "line": 311,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-wire-schemas-ts-311-claudecreditbalances",
           "currentTags": [
             "@param",
             "@returns",
@@ -392449,8 +392651,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Accounts/Accounts.wire.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.wire.schemas.ts",
-          "line": 342,
-          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-wire-schemas-ts-342-codexcreditbalances",
+          "line": 347,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-wire-schemas-ts-347-codexcreditbalances",
           "currentTags": [
             "@param",
             "@returns",
@@ -392473,8 +392675,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Accounts/Accounts.wire.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.wire.schemas.ts",
-          "line": 369,
-          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-wire-schemas-ts-369-codexlimitresets",
+          "line": 374,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-wire-schemas-ts-374-codexlimitresets",
           "currentTags": [
             "@param",
             "@returns",
@@ -392497,8 +392699,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Accounts/Accounts.wire.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.wire.schemas.ts",
-          "line": 395,
-          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-wire-schemas-ts-395-musekeybody",
+          "line": 400,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-wire-schemas-ts-400-musekeybody",
           "currentTags": [
             "@category",
             "@since"
@@ -392519,8 +392721,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Accounts/Accounts.wire.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.wire.schemas.ts",
-          "line": 421,
-          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-wire-schemas-ts-421-musekeybodyjson",
+          "line": 426,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-wire-schemas-ts-426-musekeybodyjson",
           "currentTags": [
             "@category",
             "@since"
@@ -392541,8 +392743,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Accounts/Accounts.wire.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.wire.schemas.ts",
-          "line": 452,
-          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-wire-schemas-ts-452-museusagewindows",
+          "line": 457,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-wire-schemas-ts-457-museusagewindows",
           "currentTags": [
             "@param",
             "@returns",
@@ -392565,8 +392767,120 @@
           "exportKind": "const",
           "filePath": "src/commands/Accounts/Accounts.wire.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.wire.schemas.ts",
-          "line": 573,
-          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-wire-schemas-ts-573-grokusagewindows",
+          "line": 578,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-wire-schemas-ts-578-grokusagewindows",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ClaudeCliConfig",
+          "exportKind": "class",
+          "filePath": "src/commands/Accounts/Accounts.wire.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.wire.schemas.ts",
+          "line": 610,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-wire-schemas-ts-610-claudecliconfig",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ClaudeCliConfigJson",
+          "exportKind": "const",
+          "filePath": "src/commands/Accounts/Accounts.wire.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.wire.schemas.ts",
+          "line": 631,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-wire-schemas-ts-631-claudecliconfigjson",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CodexCliAuth",
+          "exportKind": "class",
+          "filePath": "src/commands/Accounts/Accounts.wire.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.wire.schemas.ts",
+          "line": 654,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-wire-schemas-ts-654-codexcliauth",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CodexCliAuthJson",
+          "exportKind": "const",
+          "filePath": "src/commands/Accounts/Accounts.wire.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.wire.schemas.ts",
+          "line": 674,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-wire-schemas-ts-674-codexcliauthjson",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "codexSignedInEmail",
+          "exportKind": "const",
+          "filePath": "src/commands/Accounts/Accounts.wire.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.wire.schemas.ts",
+          "line": 697,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accounts-wire-schemas-ts-697-codexsignedinemail",
           "currentTags": [
             "@param",
             "@returns",
@@ -392589,8 +392903,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Accounts/AccountsUsage.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/AccountsUsage.service.ts",
-          "line": 83,
-          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accountsusage-service-ts-83-accountsusageshape",
+          "line": 94,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accountsusage-service-ts-94-accountsusageshape",
           "currentTags": [
             "@category",
             "@since"
@@ -392611,8 +392925,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Accounts/AccountsUsage.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/AccountsUsage.service.ts",
-          "line": 104,
-          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accountsusage-service-ts-104-accountsusage",
+          "line": 116,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accountsusage-service-ts-116-accountsusage",
           "currentTags": [
             "@category",
             "@since"
@@ -392633,8 +392947,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Accounts/AccountsUsage.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/AccountsUsage.service.ts",
-          "line": 193,
-          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accountsusage-service-ts-193-claudeusageoutcome",
+          "line": 205,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accountsusage-service-ts-205-claudeusageoutcome",
           "currentTags": [
             "@param",
             "@returns",
@@ -392657,8 +392971,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Accounts/AccountsUsage.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/AccountsUsage.service.ts",
-          "line": 231,
-          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accountsusage-service-ts-231-codexusageoutcome",
+          "line": 243,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accountsusage-service-ts-243-codexusageoutcome",
           "currentTags": [
             "@param",
             "@returns",
@@ -392681,8 +392995,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Accounts/AccountsUsage.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/AccountsUsage.service.ts",
-          "line": 263,
-          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accountsusage-service-ts-263-museusageoutcome",
+          "line": 275,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accountsusage-service-ts-275-museusageoutcome",
           "currentTags": [
             "@param",
             "@returns",
@@ -392705,8 +393019,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Accounts/AccountsUsage.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/AccountsUsage.service.ts",
-          "line": 294,
-          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accountsusage-service-ts-294-grokusageoutcome",
+          "line": 306,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accountsusage-service-ts-306-grokusageoutcome",
           "currentTags": [
             "@param",
             "@returns",
@@ -392729,8 +393043,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Accounts/AccountsUsage.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/AccountsUsage.service.ts",
-          "line": 338,
-          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accountsusage-service-ts-338-dedupeaccountusages",
+          "line": 350,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accountsusage-service-ts-350-dedupeaccountusages",
           "currentTags": [
             "@param",
             "@returns",
@@ -392753,8 +393067,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Accounts/AccountsUsage.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/AccountsUsage.service.ts",
-          "line": 361,
-          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accountsusage-service-ts-361-resolveaccountsauthdir",
+          "line": 373,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accountsusage-service-ts-373-resolveaccountsauthdir",
           "currentTags": [
             "@category",
             "@since"
@@ -392775,8 +393089,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Accounts/AccountsUsage.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/AccountsUsage.service.ts",
-          "line": 388,
-          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accountsusage-service-ts-388-makeaccountsusagelive",
+          "line": 400,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accountsusage-service-ts-400-makeaccountsusagelive",
           "currentTags": [
             "@category",
             "@since"
@@ -392797,8 +393111,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Accounts/AccountsUsage.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/AccountsUsage.service.ts",
-          "line": 573,
-          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accountsusage-service-ts-573-layeraccountsusagelive",
+          "line": 609,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accountsusage-service-ts-609-layeraccountsusagelive",
           "currentTags": [
             "@category",
             "@since"
@@ -392819,9 +393133,57 @@
           "exportKind": "const",
           "filePath": "src/commands/Accounts/AccountsUsage.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/AccountsUsage.service.ts",
-          "line": 590,
-          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accountsusage-service-ts-590-pollaccounts",
+          "line": 626,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accountsusage-service-ts-626-pollaccounts",
           "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "retainLastGood",
+          "exportKind": "const",
+          "filePath": "src/commands/Accounts/AccountsUsage.service.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/AccountsUsage.service.ts",
+          "line": 660,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accountsusage-service-ts-660-retainlastgood",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "loadAccountsReport",
+          "exportKind": "const",
+          "filePath": "src/commands/Accounts/AccountsUsage.service.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/AccountsUsage.service.ts",
+          "line": 726,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-accountsusage-service-ts-726-loadaccountsreport",
+          "currentTags": [
+            "@param",
+            "@returns",
             "@category",
             "@since"
           ],
@@ -392903,12 +393265,56 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "export * from \"./Accounts.wire.schemas.ts\";",
+          "symbolName": "export * from \"./Accounts.tui.ts\";",
           "exportKind": "re-export",
           "filePath": "src/commands/Accounts/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/index.ts",
           "line": 34,
-          "anchor": "packages-tooling-tool-cli-src-commands-accounts-index-ts-34-export-from-accounts-wire-schemas-ts",
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-index-ts-34-export-from-accounts-tui-ts",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./Accounts.view.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/commands/Accounts/index.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/index.ts",
+          "line": 41,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-index-ts-41-export-from-accounts-view-ts",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./Accounts.wire.schemas.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/commands/Accounts/index.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/index.ts",
+          "line": 48,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-index-ts-48-export-from-accounts-wire-schemas-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -392929,8 +393335,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Accounts/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Accounts/index.ts",
-          "line": 41,
-          "anchor": "packages-tooling-tool-cli-src-commands-accounts-index-ts-41-export-from-accountsusage-service-ts",
+          "line": 55,
+          "anchor": "packages-tooling-tool-cli-src-commands-accounts-index-ts-55-export-from-accountsusage-service-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -407720,8 +408126,8 @@
           "exportKind": "const",
           "filePath": "src/commands/DeletePackage/DeletePackage.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.command.ts",
-          "line": 562,
-          "anchor": "packages-tooling-tool-cli-src-commands-deletepackage-deletepackage-command-ts-562-deletepackagebaselinewriters",
+          "line": 563,
+          "anchor": "packages-tooling-tool-cli-src-commands-deletepackage-deletepackage-command-ts-563-deletepackagebaselinewriters",
           "currentTags": [
             "@category",
             "@since"
@@ -407742,8 +408148,8 @@
           "exportKind": "const",
           "filePath": "src/commands/DeletePackage/DeletePackage.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.command.ts",
-          "line": 805,
-          "anchor": "packages-tooling-tool-cli-src-commands-deletepackage-deletepackage-command-ts-805-deletepackagecommand",
+          "line": 806,
+          "anchor": "packages-tooling-tool-cli-src-commands-deletepackage-deletepackage-command-ts-806-deletepackagecommand",
           "currentTags": [
             "@category",
             "@since"
@@ -437679,8 +438085,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/ChangesetGraph.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/ChangesetGraph.ts",
-          "line": 100,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-100-changesetgraphpackagereference",
+          "line": 101,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-101-changesetgraphpackagereference",
           "currentTags": [
             "@category",
             "@since"
@@ -437701,8 +438107,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/ChangesetGraph.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/ChangesetGraph.ts",
-          "line": 132,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-132-changesetgraphsummary",
+          "line": 133,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-133-changesetgraphsummary",
           "currentTags": [
             "@category",
             "@since"
@@ -437723,8 +438129,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/ChangesetGraph.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/ChangesetGraph.ts",
-          "line": 282,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-282-collectworkspacepackagejsonfiles",
+          "line": 283,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-283-collectworkspacepackagejsonfiles",
           "currentTags": [
             "@param",
             "@returns",
@@ -437747,8 +438153,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/ChangesetGraph.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/ChangesetGraph.ts",
-          "line": 389,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-389-changesetpackagereferencesfromtext",
+          "line": 390,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-390-changesetpackagereferencesfromtext",
           "currentTags": [
             "@category",
             "@since"
@@ -437769,8 +438175,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/ChangesetGraph.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/ChangesetGraph.ts",
-          "line": 487,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-487-findmissingchangesetpackagereferences",
+          "line": 488,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-488-findmissingchangesetpackagereferences",
           "currentTags": [
             "@param",
             "@returns",
@@ -437793,8 +438199,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/ChangesetGraph.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/ChangesetGraph.ts",
-          "line": 558,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-558-makechangesetgraphsummary",
+          "line": 559,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-559-makechangesetgraphsummary",
           "currentTags": [
             "@category",
             "@since"
@@ -437815,8 +438221,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/ChangesetGraph.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/ChangesetGraph.ts",
-          "line": 585,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-585-runchangesetgraphcheck",
+          "line": 586,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-586-runchangesetgraphcheck",
           "currentTags": [
             "@category",
             "@since"
@@ -437991,8 +438397,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/ChangesetStatus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/ChangesetStatus.ts",
-          "line": 217,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetstatus-ts-217-changesetstatusworkspacepackage",
+          "line": 218,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetstatus-ts-218-changesetstatusworkspacepackage",
           "currentTags": [
             "@category",
             "@since"
@@ -438013,8 +438419,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/ChangesetStatus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/ChangesetStatus.ts",
-          "line": 326,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetstatus-ts-326-partitionchangedfilesforstatus",
+          "line": 329,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetstatus-ts-329-partitionchangedfilesforstatus",
           "currentTags": [
             "@param",
             "@returns",
@@ -438037,8 +438443,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/ChangesetStatus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/ChangesetStatus.ts",
-          "line": 352,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetstatus-ts-352-changesetstatusverdict",
+          "line": 355,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetstatus-ts-355-changesetstatusverdict",
           "currentTags": [
             "@param",
             "@returns",
@@ -438061,8 +438467,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/ChangesetStatus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/ChangesetStatus.ts",
-          "line": 406,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetstatus-ts-406-uncoveredworkspacepackagenames",
+          "line": 410,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetstatus-ts-410-uncoveredworkspacepackagenames",
           "currentTags": [
             "@param",
             "@returns",
@@ -438085,8 +438491,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/ChangesetStatus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/ChangesetStatus.ts",
-          "line": 609,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetstatus-ts-609-runchangesetstatus",
+          "line": 617,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetstatus-ts-617-runchangesetstatus",
           "currentTags": [
             "@param",
             "@returns",
@@ -438109,8 +438515,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/ChangesetStatus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/ChangesetStatus.ts",
-          "line": 655,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetstatus-ts-655-changesetstatuscommand",
+          "line": 663,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetstatus-ts-663-changesetstatuscommand",
           "currentTags": [
             "@category",
             "@since"

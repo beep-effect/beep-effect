@@ -210,7 +210,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("gate-order handoff (TTC
 
       expect(
         findingSummary(coverage),
-        `gate-order seed does not cover the pre-push plan (unseeded: ${idsOfKind(findings, "unseeded-lane")}; orphan: ${idsOfKind(findings, "orphan-seed-row")}). Add a DEFAULT_GATE_ORDER_SEED row and a DEFAULT_GATE_ORDER_COST_SOURCES entry in packages/tooling/tool/cli/src/commands/Yeet/internal/WaveOrder.ts under the ruling 76 seeding rule (goals/time-to-certainty/research/decisions.md, round 24), then rerun this file once with vitest -u, which writes goals/time-to-certainty/research/gate-order-handoff.json when the run ends, and once without -u, which must pass; review the handoff diff.`
+        `gate-order seed does not cover the pre-push plan (unseeded: ${idsOfKind(findings, "unseeded-lane")}; orphan: ${idsOfKind(findings, "orphan-seed-row")}). Add a DEFAULT_GATE_ORDER_SEED row and a DEFAULT_GATE_ORDER_COST_SOURCES entry in packages/tooling/tool/cli/src/commands/Yeet/internal/WaveOrder.ts under the ruling 76 seeding rule (goals/time-to-certainty/research/decisions.md, round 24), then rerun this file once with vitest -u, which writes packages/tooling/tool/cli/test/fixtures/gate-order-handoff-knip-retired.json when the run ends, and once without -u, which must pass; review the handoff diff.`
       ).toEqual([]);
 
       // Must-fail: the pre-D1 seed leaves quality:cache-policy unseeded.

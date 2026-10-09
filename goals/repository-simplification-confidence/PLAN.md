@@ -296,16 +296,14 @@ bun run beep quality package-verify <@beep/package>
 
 ## A lane execution status (2026-10-09)
 
-`rsc-a-retire`: run 4 recovered all prior terminal results. All eleven transfer-package
-gates passed. The patched Knip cross-check at `8f29e3528e` contains exactly
-the documented Govinfo drift oracle; no finding row remains pending. Wave 1
-Knip retirement is implemented locally. Earlier owner regenerations pass; after
-main integration `36027982f2`, regeneration and retirement-head parity remain
-unproven. S5 is cleared for FreshBooks and the accepted transitive lock graph,
-but the final installer also reordered an existing practice-kg-mcp bin entry:
-that extra hunk awaits orchestrator/effected-port confirmation before push.
-The 182-test focused repair passes. All A gate units are terminal; no PR has
-been pushed. E/orchestrator retain the coordinated S3 job/ruleset window.
+`rsc-a-retire`: run 5 merges current main and clears the generated lockfile
+ordering hold under resume ruling 4. All 41 transferred findings have final
+dispositions: 40 fixed and one documented Govinfo drift oracle; the saved
+patched Knip cross-check reports that oracle alone. The integrated-tree
+owner/package/parity sequence is active under machine-wide admission.
+Separate GPT-6.1-Sol medium source/scope review is terminal zero findings.
+No integrated-tree gate, push or PR is claimed before its result exists.
+E/orchestrator retain the coordinated S3 job/ruleset window.
 See `history/handoffs/rsc-a-retire-2026-10-09.md` and
 `history/receipts/knip-cache-policy-review.md`. Waves 2/3 and post-merge residue
 remain open.

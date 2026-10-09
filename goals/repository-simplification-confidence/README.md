@@ -59,7 +59,7 @@ nothing was adopted or discarded. P0 Research is complete.
 
 ## Latest Evidence
 
-[A lane handoff](./history/handoffs/rsc-a-retire-2026-10-09.md): run 4 reuses all eleven passed transfer-package gates and the single-Govinfo Knip cross-check. All 41 rows have dispositions. The accepted Knip graph is cleared under S5, but a later generated bin-map ordering hunk awaits new orchestrator/effected-port confirmation. Focused repairs pass (182 tests); final integrated-tree package/parity gates remain unproven. All A gate units are terminal, and no PR is pushed (2026-10-09).
+[A lane handoff](./history/handoffs/rsc-a-retire-2026-10-09.md): run 5 clears the generated bin ordering under S5 and merges current main. Forty findings are fixed, one Govinfo oracle is documented, and the saved final Knip scan reports that oracle alone. Independent source/scope review is zero findings; the admitted integrated-tree owner/package/parity sequence is active. Publication and final proof remain pending (2026-10-09).
 
 H1 OSV wave [PR #1562](https://github.com/beep-effect/beep-effect/pull/1562) ready for review;
 Run 4 integrates main repairs #1564/#1565, corrects the stored-response cache proof

@@ -38980,6 +38980,14 @@
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.schemas.ts",
+      "symbol": "AccountGroup",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "AccountGroup",
+      "description": "One provider's accounts, most urgent to use first."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.schemas.ts",
       "symbol": "AccountProvider",
       "kind": "literal-kit",
       "owner": "@beep/repo-cli",
@@ -39001,6 +39009,14 @@
       "owner": "@beep/repo-cli",
       "identity": "AccountRef",
       "description": "An account and the file its usage comes from."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.schemas.ts",
+      "symbol": "AccountSection",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "AccountSection",
+      "description": "The provider panel an account is ranked in."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.schemas.ts",
@@ -39032,7 +39048,7 @@
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
       "identity": "AccountsStatusReport",
-      "description": "Every registered account, most urgent to use first."
+      "description": "Every registered account, one panel per provider, each ranked most urgent first."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.schemas.ts",
@@ -39052,6 +39068,14 @@
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.schemas.ts",
+      "symbol": "SignedInLogin",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "SignedInLogin",
+      "description": "The account a provider's CLI is signed in to."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.schemas.ts",
       "symbol": "UsageWindow",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -39067,12 +39091,36 @@
       "description": "Short session limit; account-wide weekly or billing-cycle limit; or one of those scoped to a model group."
     },
     {
+      "file": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.view.ts",
+      "symbol": "AccountsBoardLayout",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "AccountsBoardLayout",
+      "description": "Width, coloring, and title status of the accounts board."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.wire.schemas.ts",
+      "symbol": "ClaudeCliConfig",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "ClaudeCliConfig",
+      "description": "The account the Claude CLI is signed in to."
+    },
+    {
       "file": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.wire.schemas.ts",
       "symbol": "ClaudeUsageBody",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
       "identity": "ClaudeUsageBody",
       "description": "Claude plan-limit windows, or the error an expired login returns."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.wire.schemas.ts",
+      "symbol": "CodexCliAuth",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "CodexCliAuth",
+      "description": "The ID token of the account the Codex CLI is signed in to."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Accounts/Accounts.wire.schemas.ts",
@@ -53346,7 +53394,7 @@
       "kind": "literal-kit",
       "owner": "@beep/repo-cli",
       "identity": "DeletionNotePolicy",
-      "description": "Whether deleting this package emits the canonical `{}` deletion changeset or is ceremony-exempt by labs path."
+      "description": "Whether deleting this package emits the canonical `{}` deletion changeset or is ceremony-exempt by private manifest or labs path."
     },
     {
       "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts",

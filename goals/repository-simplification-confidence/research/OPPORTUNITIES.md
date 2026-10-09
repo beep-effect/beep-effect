@@ -352,3 +352,57 @@
   rather than keeping an ordered ticket queue, so closeout admission has
   unpredictable wait time. A fair queue with observable position would prevent
   this delay; this lane does not alter the workstation wrapper or other jobs.
+
+## 2026-10-09: run-5 owner regeneration waits for shared admission
+
+- Doing: integrated-tree regeneration before the Knip retirement publication.
+- Evidence: the first command still has no terminal result after several
+  minutes; its log contains `beep-heavy: all 3 slots busy, waiting`. Slot
+  holders change while this waiter remains queued.
+- Prevention: a visible FIFO admission position and queue-age receipt would
+  distinguish normal capacity delay from starvation. The lane preserves the
+  shared three-slot limit and leaves other owners' processes intact.
+
+## 2026-10-09: local docgen requires a full proof for retirement inputs
+
+- Doing: run the brief's `beep docgen local --base origin/main` parity gate.
+- Evidence: exit 1 with `full docgen proof required; re-run with "--full"`.
+  Root manifest, lockfile, Turbo and Docgen tooling changes trigger this
+  planner refusal before execution. All eleven package docgen gates pass.
+- Resolution: run the required full proof under a second admitted command;
+  preserve the original refusal and report the full execution separately.
+- Prevention: lane plans with global input changes select the full mode
+  explicitly rather than treating local mode's planning refusal as a source red.
+
+## 2026-10-09: full docgen has no authenticated remote cache
+
+- Doing: required full docgen proof after global retirement inputs changed.
+- Evidence: Turbo warns `Remote caching unavailable (Authentication failed)`
+  and continues with local compilation.
+- Prevention: G's approved read-only cache credential route would avoid
+  repeated package compilation. This lane continues locally and leaves
+  cache credentials with their owner; no secret value or new endpoint used.
+
+## 2026-10-09: final-main advancement requires another CLI proof
+
+- Doing: final merge and artifact regeneration before A publication.
+- Evidence: D #1566 lands while the initial integrated package/parity/coverage
+  sequence runs. The merge is blocked first by dirty packet documents, then
+  has four documentation conflicts; source merges without conflict.
+- Recovery: retained recovery stash; preserve both lanes' documents; refresh
+  CLI source proofs and generated artifacts on merge `c65a49116c`. The ten
+  other package sources stay unchanged and their completed gates are retained.
+- Prevention: a serialized final-source integration window would avoid
+  repeating the 740-second CLI audit and 748-second coverage run. This lane
+  follows S4 and does not claim old source proof on the new integrated tree.
+
+## 2026-10-09: cache review CAS input became stale after D merge
+
+- Doing: regenerate the shared qualification baseline after final main merge.
+- Evidence: `Reviewed baseline changed; refresh its digest before replacing it.`
+- Resolution: read the owner's byte-hash CAS contract and refresh only the
+  request's previous digest from the actual merged baseline. Preserve scope,
+  profile, epoch, review basis and existing D evidence references. The failed
+  log remains; only this failed step and unrun steps are resumed.
+- Prevention: calculate the review CAS digest after the main merge, just before
+  the owner command. Saved pre-merge requests are evidence, not current inputs.

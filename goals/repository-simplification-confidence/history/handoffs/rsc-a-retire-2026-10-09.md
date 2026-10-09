@@ -424,3 +424,102 @@ parity sequence, publishes wave 1, flips ready at content-final and reports
 its final head. E owns the workflow window; the orchestrator owns the ruleset
 context and serialized merge. Waves 2/3, F home cleanup, C compiler/ONNX
 handoff, H1 exact-version exit and post-merge live-clone residue remain open.
+
+### Run 4 terminal report
+
+```text
+lane: rsc-a-retire
+head: cc1d4daecfd9f3c8d57f85ce74c9efa7d8b7ceee   PR: none (local only; blocked before push)
+package-verify: @beep/box-provisioning: pass; @beep/box: pass; @beep/freshbooks: pass (default transfer gate, plus generated-reference quick lint/check); @beep/occt: pass; @beep/pdf-tools: pass; @beep/wink: pass; @beep/colors: pass; @beep/data: pass; @beep/repo-ai-metrics: pass (after introduced import-order repair); @beep/codegen-kit: pass; @beep/repo-cli: pass at transfer head, fail at first retirement audit (five introduced expectations repaired; 182 focused tests now pass), final integrated-tree default gate unproven (cancelled 130 after main changed source).
+hosted-parity: test-tsgo -> unrun; docgen local -> unrun; jsdoc-ratchet -> final integrated-head unrun; knowledge refs -> unrun; fallow audit+health -> final integrated-head unrun (earlier cheap-gate health passed; introduced unused override removed); scoped coverage -> unrun. No final-head hosted-parity pass is claimed.
+handoff: goals/repository-simplification-confidence/history/handoffs/rsc-a-retire-2026-10-09.md
+open items: BLOCKED under S5: final bun install reordered the existing practice-kg-mcp bin entry after practice-kg-verify; entries, targets, declarations and versions are unchanged. Orchestrator/shared must confirm effected-port notification for this extra generated hunk before push. Forty Knip findings are fixed, one Govinfo drift oracle is documented, no row remains pending, and the final patched Knip cross-check at 8f29e3528e reports only Govinfo. Knip retirement is committed locally; current focused fixtures pass 182/182 and the pre-integration Effect Vitest ratchet has zero introduced findings, nine resolved, inventory untouched by A. Main 36027982f2 (#1562/#1563) is integrated; owner regeneration and package/parity/coverage must complete on that tree before final publication. All A-owned gate units are terminal; the queued replacement regeneration was cancelled before admission and is unproven. No push, draft PR, ready flip, merge or residue deletion occurred. E owns the workflow window; orchestrator owns Knip ruleset context and serialized merge. Waves 2/3 remain open; F owns home-level agent cleanup, C owns compiler-pruning/ONNX move coordination, H1 owns the ONNX exact-version exit, and post-merge foreign/live-clone residue remains with the orchestrator. Later-wave unstaged groundwork and recovery stashes are preserved. Substantive handoff and packet state are committed; this terminal report is appended after the reported HEAD. Graft reported approximately 79,762 tokens saved across four calls.
+```
+
+## Run 5
+
+Resume ruling 4 clears S5 for the generated practice-kg bin ordering; no
+additional lock mutation is planned. Fetched and merged main at merge
+`8d7e9c0a5d`, preserving later-wave groundwork. Saved transfer results and
+the one-Govinfo scanner output were read before starting any command.
+
+Unit `rsc-a-run5-gates.service` runs owner regeneration, all eleven touched
+package gates and the required parity/coverage sequence with one admitted
+command at a time. The coordinator uses the amended 36G/40G unit limits;
+finite children use `beep-heavy` with its 32G floor. Terminal results append
+to `.beep/rsc-a/run5-gates-results.tsv`; individual logs have the run5 prefix.
+No running command is claimed as a pass.
+
+Separate GPT-6.1-Sol medium review returned zero actionable findings at
+`8d7e9c0a5d` (ignored receipt `.beep/rsc-a/run5-review.md`). The reviewer did
+not execute gates; S5 is cleared by the latest ruling, superseding its old
+hold observation. A subsequently corrected the gate-order test diagnostic
+to name the new generated snapshot rather than the immutable TTC packet.
+The retired-context workflow/ruleset window remains E/orchestrator-owned.
+
+### Run 5 integrated proof results so far
+
+Owner JSDoc/schema/fingerprint regeneration and all eleven full package
+verification gates pass. CLI audit: 740.4 seconds; CLI docgen: 30.2 seconds.
+`quality test-tsgo` and `ci lane jsdoc-ratchet` pass. Fallow audit passes.
+Knowledge refs exits 1 for the sole inherited SPEC line 374 pattern literal,
+explicitly non-blocking under resume ruling 4; no introduced observation.
+
+Local docgen refuses execution because global inputs and Docgen tooling
+changed; the required `--full` execution is active in the separate admitted
+run-5 docgen unit. This refusal is not counted as a successful parity gate.
+The full runner warns that remote cache authentication is unavailable and
+continues locally; credentials remain G-owned. No secret value was read.
+
+### Run 5 full docgen and downstream checks
+
+`beep docgen local --base origin/main --full` passes, including metadata
+validation, the global Turbo docgen run and docs aggregation. This satisfies
+the full proof requested by local mode's planner. JSDoc ratchet, Fallow audit
+and health pass; health reports zero findings. CIops passes seven files and
+105 tests against its frozen historical fixtures. Scoped CLI coverage remains
+active; no coverage pass is claimed until the terminal record exists.
+
+### Run 5 post-D integration
+
+All initial run-5 gate units are terminal. Scoped CLI coverage passes: 290
+files, 5,777 tests, five skipped; the owner removes the Knip baseline row.
+The initial write measures CLI only and preserves every other package row.
+A read of touched baseline rows identifies three lowered LedgerFiles values
+and three GithubChecks values; the integrated scoped rerun will retain the
+raw measurements for review, not silently claim no numerical decreases.
+
+Final fetch finds D #1566 merged at `2eefbb64af`. Integrated it at
+`c65a49116c`; resolved documentation conflicts by retaining both lanes'
+records and the new publish-enabled wording while keeping Knip retired.
+Restored all run-5 proof output and later-wave groundwork from the retained
+recovery stash; no source conflict occurred. The ten non-CLI package sources
+are unchanged by D. CLI source/parity and baseline regeneration require an
+integrated refresh, not substitution of the previous pass. D also fixes the
+SPEC prohibition literal, so knowledge refs must be checked again.
+
+Every touched package is private. The transitional A patch note is removed
+after D's policy lands, with the reason and reversal in the Decision Log.
+The final coverage invocation measures all eleven touched packages, ensuring
+the deleted Data internal files also leave the baseline through its owner.
+
+Groundwork recovery proof: four dirty tracked files and eight untracked
+later-wave drafts match retained stash
+`cae1b66654dbe232411159348fcfee0c419a0ecc` byte-for-byte after restoration.
+No later-wave file is staged for publication. Post-D regeneration remains
+queued; its coordinator has no terminal owner result yet.
+
+### Run 5 draft publication boundary
+
+All post-D owner regenerations pass: references, generated package scripts,
+cache baseline (zero stamps; 152 carried; none dropped), Box output, goal
+index, gate-order snapshot/update check, JSDoc inventory, schema catalog and
+policy fingerprint. The JSDoc open counts stay 79/1,317/360 with zero root
+policy findings. Independent merge/source review remains zero findings.
+
+Source-complete wave 1 is staged deliberately for draft publication while
+the admitted integrated CLI/parity proof continues. Ten non-CLI full package
+gates remain valid on unchanged sources; the pre-D CLI/parity/coverage pass
+is recorded above and is not substituted for the refreshed CLI tree.
+The draft remains owner-pushing until final scoped coverage and proof
+receipts are included. No later-wave groundwork enters this publication.
