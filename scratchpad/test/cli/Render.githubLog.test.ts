@@ -19,6 +19,16 @@ const plain = (doc: ReadonlyArray<Block>, overrides: Partial<RenderContext> = {}
 const linesOf = (doc: ReadonlyArray<Block>, overrides: Partial<RenderContext> = {}) =>
 	Effect.map(log(doc, overrides), (out) => out.split(LINE_BREAK));
 
+describe("Render.githubLog: verbatim whitespace fidelity", () => {
+	it.effect("keeps trailing spaces and whitespace-only indentation at top level and inside a list", () =>
+		Effect.gen(function* () {
+			const block = Doc.verbatim("x  \n  \n\ny  ", { indent: 2 });
+			assert.strictEqual(yield* log([block], { width: 1 }), "  x  \n    \n  \n  y  ");
+			assert.strictEqual(yield* log([Doc.list([block])], { width: 1 }), "-   x  \n      \n    \n    y  ");
+		}),
+	);
+});
+
 describe("Render.githubLog: groups", () => {
 	it.effect("a top-level collapsible is ::group:: title, its body, ::endgroup::", () =>
 		Effect.gen(function* () {

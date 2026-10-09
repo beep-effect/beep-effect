@@ -83,10 +83,9 @@ export class TestTerminal {
 		let subscriptions = 0;
 
 		const offer = (inputs: ReadonlyArray<Terminal.UserInput>) =>
-			Effect.suspend(() => {
-				offered += inputs.length;
-				return Queue.offerAll(queue, inputs);
-			}).pipe(Effect.asVoid);
+			Effect.map(Queue.offerAll(queue, inputs), (unaccepted) => {
+				offered += inputs.length - unaccepted.length;
+			});
 
 		const terminal = Terminal.make({
 			columns: Effect.succeed(options?.columns ?? 80),

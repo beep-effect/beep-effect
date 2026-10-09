@@ -261,7 +261,7 @@ export class Viewport {
 		started.current = start;
 		return react.createElement(
 			ink.Box,
-			{ flexDirection: "column", width: size.columns },
+			{ flexDirection: "column", marginRight: 1 },
 			...lines.map((index) => {
 				const row = A.getUnsafe(props.rows, index);
 				return react.createElement(
@@ -269,7 +269,6 @@ export class Viewport {
 					{
 						key: row._tag === "Item" ? `item:${row.key}` : `header:${index}`,
 						height: 1,
-						width: size.columns,
 						overflow: "hidden",
 					},
 					props.renderRow(row, index === selected),

@@ -1,6 +1,5 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
-import * as Data from "effect/Data";
 import { dual } from "effect/Function";
 import type { ColorLevel } from "../../../env/index.ts";
 import type * as Scope from "effect/Scope";
@@ -17,9 +16,15 @@ class InkNotLoaded extends S.TaggedError<InkNotLoaded>($I`InkNotLoaded`)("InkNot
 	message: S.String,
 }) {}
 
-class TestError extends Data.TaggedError("TestError")<{ readonly message: string; readonly cause?: unknown }> {
+class MissingInkPeersError extends S.TaggedError<MissingInkPeersError>($I`MissingInkPeersError`)(
+	"MissingInkPeersError",
+	{
+		message: S.String.annotate({ description: "The missing optional peers and installation instructions." }),
+		cause: S.optionalKey(S.Defect({ includeStack: true })).annotate({ description: "The original failure to import Ink or React." }),
+	},
+	$I.annote("MissingInkPeersError", { description: "The UI's optional Ink or React peer could not be loaded." }),
+) {
 	override readonly name = "Error";
-	constructor(message: string, options?: { readonly cause?: unknown }) { super({ message, ...options }); }
 }
 
 /**
@@ -63,7 +68,7 @@ export const loadInk: Effect.Effect<InkModules> = Effect.suspend(() => {
 			loading ??= importPeers();
 			return loading;
 		},
-		catch: (cause) => new TestError(MISSING_PEERS, { cause }),
+		catch: (cause) => MissingInkPeersError.make({ message: MISSING_PEERS, cause }),
 	}).pipe(
 		Effect.tap((loaded) =>
 			Effect.sync(() => {
@@ -121,10 +126,13 @@ const LEVELS: Record<ColorLevel, ChalkLevel> = { none: 0, basic: 1, "256": 2, tr
  */
 export const levelOf = (colour: ColorLevel): ChalkLevel => LEVELS[colour];
 
-let chalk: Promise<O.Option<InkChalk>> | undefined;
-const resolveChalk: Effect.Effect<O.Option<InkChalk>> = Effect.promise(() => {
-	chalk ??= inkChalk();
-	return chalk;
+let chalk: Effect.Effect<O.Option<InkChalk>> | undefined;
+const resolveChalk: Effect.Effect<O.Option<InkChalk>> = Effect.suspend(() => {
+	if (chalk !== undefined) return chalk;
+	return Effect.flatMap(Effect.cached(inkChalk()), (cached) => {
+		chalk = cached;
+		return cached;
+	});
 });
 
 let warned = false;

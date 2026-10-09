@@ -4,8 +4,6 @@ import * as MutableHashSet from "effect/MutableHashSet";
 import { CliOutput } from "effect/cli";
 import * as P from "effect/Predicate";
 
-type Method = Exclude<keyof Console.Console, "log" | "error">;
-
 /**
  * Run `program` so a help document printed together with parse errors goes to
  * stderr, beside the errors, instead of stdout.
@@ -41,7 +39,7 @@ export const routeHelpOnUsageError = Effect.fn("routeHelpOnUsageError")(function
 		sink.log(...help);
 	};
 
-	const recording: CliOutput.Formatter = Object.assign(Object.create(formatter), {
+	const recording = {
 		formatHelpDoc: (doc: Parameters<CliOutput.Formatter["formatHelpDoc"]>[0]) => {
 			const text = formatter.formatHelpDoc(doc);
 			MutableHashSet.add(helps, text);
@@ -52,49 +50,51 @@ export const routeHelpOnUsageError = Effect.fn("routeHelpOnUsageError")(function
 			MutableHashSet.add(errors, text);
 			return text;
 		},
-	});
+		formatCliError: (error) => formatter.formatCliError(error),
+		formatError: (error) => formatter.formatError(error),
+		formatVersion: (name, version) => formatter.formatVersion(name, version),
+	} satisfies CliOutput.Formatter;
 
 	const before = <Args extends ReadonlyArray<unknown>>(method: (...args: Args) => void) =>
 		(...args: Args): void => {
 			release();
 			return method(...args);
 		};
-	// Every other Console method is wrapped, checked against the complete service contract.
-	const others = {
-		assert: before(sink.assert.bind(sink)),
-		clear: before(sink.clear.bind(sink)),
-		count: before(sink.count.bind(sink)),
-		countReset: before(sink.countReset.bind(sink)),
-		debug: before(sink.debug.bind(sink)),
-		dir: before(sink.dir.bind(sink)),
-		dirxml: before(sink.dirxml.bind(sink)),
-		group: before(sink.group.bind(sink)),
-		groupCollapsed: before(sink.groupCollapsed.bind(sink)),
-		groupEnd: before(sink.groupEnd.bind(sink)),
-		info: before(sink.info.bind(sink)),
-		table: before(sink.table.bind(sink)),
-		time: before(sink.time.bind(sink)),
-		timeEnd: before(sink.timeEnd.bind(sink)),
-		timeLog: before(sink.timeLog.bind(sink)),
-		trace: before(sink.trace.bind(sink)),
-		warn: before(sink.warn.bind(sink)),
-	} satisfies Pick<Console.Console, Method>;
-	const routing: Console.Console = Object.assign(Object.create(sink), others);
-	routing.log = (...args: ReadonlyArray<unknown>) => {
-		release();
-		if (args.length === 1 && P.isString(args[0]) && MutableHashSet.has(helps, args[0])) held = args;
-		else sink.log(...args);
-	};
-	routing.error = (...args: ReadonlyArray<unknown>) => {
-		if (held !== undefined && args.length === 1 && P.isString(args[0]) && MutableHashSet.has(errors, args[0])) {
-			const help = held;
-			held = undefined;
-			sink.error(...help);
-		} else {
+	// Explicit argument types keep the console contract's permissive types out of the delegates.
+	const routing = {
+		assert: before((condition: boolean, ...args: ReadonlyArray<unknown>) => sink.assert(condition, ...args)),
+		clear: before(() => sink.clear()),
+		count: before((...args: readonly [label?: string]) => sink.count(...args)),
+		countReset: before((...args: readonly [label?: string]) => sink.countReset(...args)),
+		debug: before((...args: ReadonlyArray<unknown>) => sink.debug(...args)),
+		dir: before((...args: readonly [item: unknown, options?: unknown]) => sink.dir(...args)),
+		dirxml: before((...args: ReadonlyArray<unknown>) => sink.dirxml(...args)),
+		group: before((...args: ReadonlyArray<unknown>) => sink.group(...args)),
+		groupCollapsed: before((...args: ReadonlyArray<unknown>) => sink.groupCollapsed(...args)),
+		groupEnd: before(() => sink.groupEnd()),
+		info: before((...args: ReadonlyArray<unknown>) => sink.info(...args)),
+		table: before((...args: readonly [tabularData: unknown, properties?: ReadonlyArray<string>]) => sink.table(...args)),
+		time: before((...args: readonly [label?: string]) => sink.time(...args)),
+		timeEnd: before((...args: readonly [label?: string]) => sink.timeEnd(...args)),
+		timeLog: before((...args: readonly [label?: string, ...data: ReadonlyArray<unknown>]) => sink.timeLog(...args)),
+		trace: before((...args: ReadonlyArray<unknown>) => sink.trace(...args)),
+		warn: before((...args: ReadonlyArray<unknown>) => sink.warn(...args)),
+		log: (...args: ReadonlyArray<unknown>) => {
 			release();
-		}
-		sink.error(...args);
-	};
+			if (args.length === 1 && P.isString(args[0]) && MutableHashSet.has(helps, args[0])) held = args;
+			else sink.log(...args);
+		},
+		error: (...args: ReadonlyArray<unknown>) => {
+			if (held !== undefined && args.length === 1 && P.isString(args[0]) && MutableHashSet.has(errors, args[0])) {
+				const help = held;
+				held = undefined;
+				sink.error(...help);
+			} else {
+				release();
+			}
+			sink.error(...args);
+		},
+	} satisfies Console.Console;
 
 	return yield* program.pipe(
 		Effect.provideService(CliOutput.Formatter, recording),

@@ -12,6 +12,14 @@ type WriteCallback = Parameters<import("node:stream").Writable["_write"]>[2];
 abstract class MemorySocket extends Socket {
 	protected abstract receive(chunk: Buffer | string): void;
 
+	override ref(): this {
+		return this;
+	}
+
+	override unref(): this {
+		return this;
+	}
+
 	override _read(): void {
 		// Bytes arrive through receive rather than a native socket handle.
 		return undefined;
@@ -27,14 +35,31 @@ abstract class MemorySocket extends Socket {
 		callback: WriteCallback,
 	): void {
 		const remaining = chunks[Symbol.iterator]();
+		let draining = false;
+		let waiting = false;
+		let finished = false;
 		const writeNext: WriteCallback = (error) => {
+			if (finished) return;
 			if (error !== undefined && error !== null) {
+				finished = true;
 				callback(error);
 				return;
 			}
-			const next = remaining.next();
-			if (next.done === true) callback();
-			else this._write(next.value.chunk, next.value.encoding, writeNext);
+			waiting = false;
+			// Synchronous completions resume this loop; only a held callback starts a new drain.
+			if (draining) return;
+			draining = true;
+			while (waiting === false && finished === false) {
+				const next = remaining.next();
+				if (next.done === true) {
+					finished = true;
+					callback();
+				} else {
+					waiting = true;
+					this._write(next.value.chunk, next.value.encoding, writeNext);
+				}
+			}
+			draining = false;
 		};
 		writeNext();
 	}

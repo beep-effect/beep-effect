@@ -81,11 +81,14 @@ describe("Doc.counter with a plural label", () => {
 		assert.notMatch(text, /\bchange\b/);
 	});
 
-	it("a plain string label is unchanged, and the counter node stays frozen", () => {
+	it("a plain string label is unchanged, and the counter copies the label as readonly plain data", () => {
 		const one = Doc.counter(Status.core, "success", { key: "p", label: "passed", n: 1 });
 		assert.strictEqual(one.label, "passed");
-		const plural = changes(1);
+		const label = { one: "change", other: "changes" };
+		const plural = Doc.counter(Status.core, "success", { key: "changes", label, n: 1 });
 		assert.deepStrictEqual(plural.label, { one: "change", other: "changes" });
-		assert.isTrue(Object.isFrozen(plural.label));
+		assert.notStrictEqual(plural.label, label, "the counter owns a copy of the plural label");
+		label.other = "edited";
+		assert.deepStrictEqual(plural.label, { one: "change", other: "changes" }, "editing the input leaves the counter unchanged");
 	});
 });

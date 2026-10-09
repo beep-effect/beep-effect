@@ -1,4 +1,9 @@
+import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as S from "effect/Schema";
 import type { Key } from "ink";
+
+const $I = $ScratchpadId.create("effected/cli/ui/UiKey");
 
 /**
  * The named keys a screen understands and a test can press.
@@ -8,23 +13,21 @@ import type { Key } from "ink";
  *
  * @public
  */
-export type KeyName =
-	| "up"
-	| "down"
-	| "left"
-	| "right"
-	| "enter"
-	| "space"
-	| "tab"
-	| "shift+tab"
-	| "backspace"
-	| "delete"
-	| "escape"
-	| "ctrl+c"
-	| "home"
-	| "end"
-	| "pageup"
-	| "pagedown";
+export const KeyName = LiteralKit([
+	"up", "down", "left", "right", "enter", "space", "tab", "shift+tab",
+	"backspace", "delete", "escape", "ctrl+c", "home", "end", "pageup", "pagedown",
+]).annotate($I.annote("KeyName", { description: "The named keys understood by CLI screens and test input." }));
+export type KeyName = typeof KeyName.Type;
+
+const Named = S.Struct({
+	_tag: S.tag("Named"),
+	name: KeyName.annotateKey($I.annote("name", { description: "The named key reported by the terminal." })),
+}).annotate($I.annote("Named", { description: "A named terminal key as a plain payload." }));
+
+const Char = S.Struct({
+	_tag: S.tag("Char"),
+	char: S.String.annotateKey($I.annote("char", { description: "The typed text, including a whole pasted input." })),
+}).annotate($I.annote("Char", { description: "Typed terminal text as a plain payload." }));
 
 /**
  * A key as a screen sees it: a named key, or typed text.
@@ -35,11 +38,12 @@ export type KeyName =
  *
  * @public
  */
-export type UiKey =
-	| { readonly _tag: "Named"; readonly name: KeyName }
-	| { readonly _tag: "Char"; readonly char: string };
+export const UiKeyPayload = S.Union([Named, Char]).pipe(S.toTaggedUnion("_tag"))
+	.annotate($I.annote("UiKeyPayload", { description: "A plain named key or typed-text payload received by a screen." }));
+export type UiKeyPayload = typeof UiKeyPayload.Type;
+export type UiKey = UiKeyPayload;
 
-const named = (name: KeyName): UiKey => ({ _tag: "Named", name });
+const named = (name: KeyName): UiKey => Named.make({ name });
 
 // biome-ignore lint/suspicious/noControlCharactersInRegex: an input holding a control character is not typed text
 const CONTROL = /[\u0000-\u001f\u007f]/;
@@ -78,8 +82,8 @@ export const UiKey: {
 		if (key.ctrl || key.meta) return undefined;
 		if (input === " ") return named("space");
 		if (input === "" || CONTROL.test(input)) return undefined;
-		return { _tag: "Char", char: input };
+		return Char.make({ char: input });
 	},
 	named,
-	char: (char) => ({ _tag: "Char", char }),
+	char: (char) => Char.make({ char }),
 };

@@ -4,8 +4,9 @@ import * as Console from "effect/Console";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
+import * as Layer from "effect/Layer";
 import * as PubSub from "effect/PubSub";
-import { CliUi, Select } from "../../../effected/cli/ui.ts";
+import { CliUi, Select, UiStreams } from "../../../effected/cli/ui.ts";
 import { CliUiTest } from "../../../effected/cli/ui-testing.ts";
 import type { Ev } from "../helpers/live.ts";
 import { End, Start, optionsOf, tick } from "../helpers/live.ts";
@@ -102,6 +103,26 @@ const counting = (gate: Deferred.Deferred<void>) =>
 	);
 
 describe("CliUiTest.session: per-stream transcripts", () => {
+	it.effect("OSC 8 hyperlinks terminated by BEL or ST leave only their labels on every transcript", () =>
+		Effect.gen(function* () {
+			for (const terminator of ["\u0007", `${ESC}\\`]) {
+				const session = yield* CliUiTest.session();
+				const link = `${ESC}]8;;https://example.com${terminator}label${ESC}]8;;${terminator}\n`;
+				yield* Effect.scopedWith((scope) => Effect.flatMap(Layer.buildWithScope(session.layer, scope), (context) =>
+					Effect.provideContext(Effect.flatMap(UiStreams, (streams) => Effect.sync(() => {
+						streams.stdout.write(link);
+						streams.stderr.write(link);
+					})), context),
+				));
+				assert.strictEqual(yield* session.stdoutWritten, link);
+				assert.strictEqual(yield* session.stderrWritten, link);
+				assert.strictEqual(yield* session.stdoutTranscript, "label");
+				assert.strictEqual(yield* session.stderrTranscript, "label");
+				assert.strictEqual(yield* session.transcript, "label\nlabel");
+			}
+		}).pipe(Effect.scoped),
+	);
+
 	it.effect("read each stream as unpainted text, a painted counter as one contiguous string", () =>
 		Effect.gen(function* () {
 			const session = yield* CliUiTest.session({ color: "none" });

@@ -1,5 +1,8 @@
-import * as Data from "effect/Data";
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as S from "effect/Schema";
 import * as Runtime from "effect/Runtime";
+
+const $I = $ScratchpadId.create("effected/cli/internal/ExitRequested");
 
 /**
  * The failure `CliRuntime.main` raises when a successful program recorded a
@@ -8,13 +11,21 @@ import * as Runtime from "effect/Runtime";
  *
  * @internal
  */
-export class ExitRequested extends Data.TaggedError("ExitRequested")<{ readonly message: string }> {
+export class ExitRequested extends S.TaggedError<ExitRequested>($I`ExitRequested`)(
+	"ExitRequested",
+	{
+		code: S.Finite.annotate({ description: "The non-zero exit code recorded by a successful CLI program." }),
+	},
+	$I.annote("ExitRequested", { description: "A successful CLI program requested a non-zero process exit without a failure report." }),
+) {
+	override readonly name = "ExitRequested";
 	override readonly [Runtime.errorReported] = false;
-	override readonly [Runtime.errorExitCode]: number;
 
-	constructor(code: number) {
-		super({ message: `exit ${code}` });
-		this.name = "ExitRequested";
-		this[Runtime.errorExitCode] = code;
+	override get message(): string {
+		return `exit ${this.code}`;
+	}
+
+	override get [Runtime.errorExitCode](): number {
+		return this.code;
 	}
 }

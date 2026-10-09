@@ -1,10 +1,11 @@
 import { createRequire } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-
-// Effect FileSystem cannot resolve Ink's shared Chalk instance synchronously against Node's real filesystem.
-const { realpathSync } = process.getBuiltinModule("node:fs");
 
 /**
  * A chalk colour level: 0 none, 1 basic, 2 256 colours, 3 truecolor.
@@ -63,23 +64,32 @@ export const resolveInkEntry = (resolve: ((specifier: string) => string) | undef
  * own could be a different copy, and setting its level would silently change nothing. Resolving `chalk` from Ink's
  * entry ({@link resolveInkEntry}) and importing its realpath yields the very module Ink imports, because Node keys ES
  * modules by realpath. A consumer that bundles Ink leaves nothing
- * to resolve, and the answer is `None`; it never rejects.
+ * to resolve, and the answer is `None`; it never fails. Realpaths are resolved by the ambient FileSystem service,
+ * or a scoped Node FileSystem layer when the caller has no platform layer.
  *
  * @param inkEntryOf - how Ink's entry is found; {@link resolveInkEntry} by default
  *
  * @internal
  */
-export const inkChalk = (
-	inkEntryOf: () => string = () => resolveInkEntry(),
-): Promise<O.Option<InkChalk>> => {
-	try {
-		const inkEntry = inkEntryOf();
-		const chalkPath = realpathSync(createRequire(inkEntry).resolve("chalk"));
-		return import(/* @vite-ignore */ pathToFileURL(chalkPath).href).then(
-			(chalk: { readonly default?: unknown }) => isInkChalk(chalk.default) ? O.some(chalk.default) : O.none(),
-			() => O.none(),
+export const inkChalk = Effect.fn("inkChalk")(function* (
+	inkEntryOf: () => string = resolveInkEntry,
+): Effect.fn.Return<O.Option<InkChalk>> {
+	const resolve = Effect.gen(function* () {
+		const fs = yield* FileSystem.FileSystem;
+		const entry = yield* Effect.try(() => createRequire(inkEntryOf()).resolve("chalk"));
+		const chalkPath = yield* fs.realPath(entry);
+		const chalk: { readonly default?: unknown } = yield* Effect.tryPromise(() =>
+			import(/* @vite-ignore */ pathToFileURL(chalkPath).href),
 		);
-	} catch {
-		return Promise.resolve(O.none());
-	}
-};
+		return isInkChalk(chalk.default) ? O.some(chalk.default) : O.none();
+	}).pipe(Effect.catchCause(() => Effect.succeed(O.none<InkChalk>())));
+	const fs = yield* Effect.serviceOption(FileSystem.FileSystem);
+	return yield* O.match(fs, {
+		onSome: (service) => Effect.provideService(resolve, FileSystem.FileSystem, service),
+		onNone: () => Effect.scopedWith((scope) =>
+			Effect.flatMap(Layer.buildWithScope(NodeFileSystem.layer, scope), (context) =>
+				Effect.provideContext(resolve, context),
+			),
+		),
+	});
+});

@@ -17,7 +17,7 @@ const SGR = new RegExp(`${ESC}\\[[0-9;]*m`);
 
 /** Ink's own chalk, which these tests drive; resolution failing here is a broken bridge, not a skip. */
 const chalk: Effect.Effect<InkChalk> = Effect.flatMap(
-	Effect.promise(() => inkChalk()),
+	inkChalk(),
 	O.match({
 		onNone: () => Effect.die(new Error("Ink's chalk did not resolve from Ink's location")),
 		onSome: Effect.succeed,

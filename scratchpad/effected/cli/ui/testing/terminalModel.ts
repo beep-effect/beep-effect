@@ -27,7 +27,7 @@ export const screenAfter: {
 	let row = 0;
 	let column = 0;
 	const screenTop = (): number => (rows === undefined ? 0 : Math.max(0, lines.length - rows));
-	const sequence = new RegExp(`${ESC}\\[([0-9;?]*)([A-Za-z])|${ESC}\\][^\\u0007]*\\u0007|([\\s\\S])`, "g");
+	const sequence = new RegExp(`${ESC}\\[([0-9;?]*)([A-Za-z])|${ESC}\\][^\\u0007]*?(?:\\u0007|${ESC}\\\\)|([\\s\\S])`, "g");
 	for (const match of written.matchAll(sequence)) {
 		const [, params, command, character] = match;
 		if (character !== undefined) {

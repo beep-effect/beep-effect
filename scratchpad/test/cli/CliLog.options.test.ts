@@ -60,6 +60,26 @@ describe("CliLog.layer plainLogger: false (diagnostics only)", () => {
 		}),
 	);
 
+	for (const value of ["constructor", "__proto__"]) {
+		it.effect(`rejects inherited level ${value}, warns once and keeps diagnostics at None`, () =>
+			Effect.gen(function* () {
+				const { out, err } = yield* run(
+					diagnosticsOnly({ envVar: ENV }),
+					{ [ENV]: value },
+					Effect.gen(function* () {
+						assert.strictEqual(yield* CliLog.Level, "None");
+						yield* records;
+					}),
+				);
+				assert.deepStrictEqual(levelsOf(err), []);
+				assert.strictEqual(err.length, 1);
+				assert.include(err[0] ?? "", `${ENV}=${value} is not a log level`);
+				assert.include(err[0] ?? "", "; ignoring it");
+				assert.deepStrictEqual(out, []);
+			}),
+		);
+	}
+
 	it.effect("with a level set, it writes NDJSON only: one line per record, no plain duplicate", () =>
 		Effect.gen(function* () {
 			const { out, err } = yield* run(diagnosticsOnly({ level: "Info" }));

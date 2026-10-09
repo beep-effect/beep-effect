@@ -1,5 +1,10 @@
+import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import * as R from "effect/Record";
+
+const $I = $ScratchpadId.create("effected/cli/Token");
 
 /**
  * A named terminal colour: the eight ANSI colours and their bright variants.
@@ -10,24 +15,26 @@ import * as R from "effect/Record";
  *
  * @public
  */
-export type NamedColor =
-	| "black"
-	| "red"
-	| "green"
-	| "yellow"
-	| "blue"
-	| "magenta"
-	| "cyan"
-	| "white"
-	| "blackBright"
-	| "redBright"
-	| "greenBright"
-	| "yellowBright"
-	| "blueBright"
-	| "magentaBright"
-	| "cyanBright"
-	| "whiteBright"
-	| "gray";
+export const NamedColor = LiteralKit([
+	"black",
+	"red",
+	"green",
+	"yellow",
+	"blue",
+	"magenta",
+	"cyan",
+	"white",
+	"blackBright",
+	"redBright",
+	"greenBright",
+	"yellowBright",
+	"blueBright",
+	"magentaBright",
+	"cyanBright",
+	"whiteBright",
+	"gray",
+]).annotate($I.annote("NamedColor", { description: "Named ANSI colors and their bright variants." }));
+export type NamedColor = typeof NamedColor.Type;
 
 /**
  * A terminal style: an optional foreground colour and text attributes.
@@ -39,37 +46,52 @@ export type NamedColor =
  *
  * @public
  */
-export interface Style {
-	/** The foreground: a named colour or a `#rrggbb` hex. */
-	readonly fg?: NamedColor | `#${string}`;
+export const Style = S.Struct({
+	/** The foreground: a named colour or a hex spelling, including invalid hex handled by the renderer. */
+	fg: S.optionalKey(S.Union([NamedColor, S.TemplateLiteral(["#", S.String])])).annotate(
+		$I.annote("Style.fg", { description: "The fg field of Style." }),
+	),
 	/** Bold. */
-	readonly bold?: boolean;
+	bold: S.optionalKey(S.Boolean).annotate($I.annote("Style.bold", { description: "The bold field of Style." })),
 	/** Dim, or faint. */
-	readonly dim?: boolean;
+	dim: S.optionalKey(S.Boolean).annotate($I.annote("Style.dim", { description: "The dim field of Style." })),
 	/** Italic. */
-	readonly italic?: boolean;
+	italic: S.optionalKey(S.Boolean).annotate($I.annote("Style.italic", { description: "The italic field of Style." })),
 	/** Underline. */
-	readonly underline?: boolean;
-}
+	underline: S.optionalKey(S.Boolean).annotate(
+		$I.annote("Style.underline", { description: "The underline field of Style." }),
+	),
+}).annotate($I.annote("Style", { description: "A readonly terminal foreground and text attributes." }));
+export type Style = typeof Style.Type;
 
 /**
  * The semantic tokens a theme resolves to a {@link Style}.
  *
  * @public
  */
-export type TokenName = "success" | "failure" | "warning" | "info" | "error" | "muted" | "accent" | "emphasis";
+export const TokenName = LiteralKit([
+	"success",
+	"failure",
+	"warning",
+	"info",
+	"error",
+	"muted",
+	"accent",
+	"emphasis",
+]).annotate($I.annote("TokenName", { description: "Semantic tokens resolved by a CLI theme." }));
+export type TokenName = typeof TokenName.Type;
 
-/** The default style of every token. Deeply frozen: the record is shared. */
-const DEFAULTS: Readonly<Record<TokenName, Style>> = Object.freeze({
-	success: Object.freeze({ fg: "green" }),
-	failure: Object.freeze({ fg: "red" }),
-	error: Object.freeze({ fg: "red", bold: true }),
-	warning: Object.freeze({ fg: "yellow" }),
-	info: Object.freeze({ fg: "cyan" }),
-	muted: Object.freeze({ dim: true }),
-	accent: Object.freeze({ fg: "cyan" }),
-	emphasis: Object.freeze({ bold: true }),
-} as const);
+/** The default style of every token. Readonly data: the record is shared. */
+const DEFAULTS: Readonly<Record<TokenName, Style>> = {
+	success: { fg: "green" },
+	failure: { fg: "red" },
+	error: { fg: "red", bold: true },
+	warning: { fg: "yellow" },
+	info: { fg: "cyan" },
+	muted: { dim: true },
+	accent: { fg: "cyan" },
+	emphasis: { bold: true },
+} as const;
 
 /**
  * Constructors for {@link Style} values, and the pure resolution of a token to one.
@@ -80,7 +102,7 @@ export class Token {
 	private constructor() {}
 
 	/**
-	 * The default {@link Style} of every token, frozen.
+	 * The default {@link Style} of every token, readonly.
 	 *
 	 * @remarks
 	 * Data, not a service: it is what `CliTheme` starts from, and a renderer with no Effect context (an Ink
@@ -101,7 +123,8 @@ export class Token {
 	 */
 	static readonly resolve = (token: TokenName | Style, overrides?: Partial<Record<TokenName, Style>>): Style => {
 		if (!P.isString(token)) return token;
-		const own = overrides !== undefined && R.has<string, Style | undefined>(overrides, token) ? overrides[token] : undefined;
+		const own =
+			overrides !== undefined && R.has<string, Style | undefined>(overrides, token) ? overrides[token] : undefined;
 		if (own !== undefined) return own;
 		return R.has(DEFAULTS, token) ? DEFAULTS[token] : {};
 	};

@@ -24,10 +24,14 @@ const TOKENS: ReadonlyArray<TokenName> = [
 ];
 
 describe("Token.defaults and Token.resolve", () => {
-	it("defaults has exactly the eight tokens, and is frozen all the way down", () => {
+	it("defaults has exactly the eight tokens as readonly styles with the original values", () => {
 		assert.deepStrictEqual(Object.keys(Token.defaults).sort(), [...TOKENS].sort());
-		assert.isTrue(Object.isFrozen(Token.defaults));
-		for (const token of TOKENS) assert.isTrue(Object.isFrozen(Token.defaults[token]), token);
+		assert.deepStrictEqual(Token.defaults, {
+			success: { fg: "green" }, failure: { fg: "red" }, error: { fg: "red", bold: true },
+			warning: { fg: "yellow" }, info: { fg: "cyan" }, muted: { dim: true },
+			accent: { fg: "cyan" }, emphasis: { bold: true },
+		});
+		for (const token of TOKENS) assert.strictEqual(Token.resolve(token), Token.defaults[token], token);
 	});
 
 	it("a token name resolves to its default, and an explicit style resolves to itself", () => {

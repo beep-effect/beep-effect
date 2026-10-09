@@ -140,7 +140,7 @@ const init = <A>(
 	if (!choices.some((choice) => choice.disabled !== true))
 		throw NoEnabledChoiceError.make({ message: NO_ENABLED_CHOICE });
 	const height = options.height ?? 10;
-	const start = options.initial ?? 0;
+	const start = Math.min(Math.max(options.initial ?? 0, 0), choices.length - 1);
 	const first = nearest(choices, start, 1) ?? nearest(choices, start, -1) ?? 0;
 	return { choices, viewport: moveTo(Viewport.init(choices.length, height), first), submitted: false };
 };

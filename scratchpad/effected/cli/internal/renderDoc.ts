@@ -437,7 +437,7 @@ const blockLines = (walk: Walk, block: Block, width: number, compact = false): R
 		Verbatim: (block): ReadonlyArray<Line> => {
 			// Kept exactly: sanitized line by line, indented, and never wrapped or cut.
 			const indent = " ".repeat(Math.max(0, Math.floor(block.indent ?? 0)));
-			return textLines(block.text).map((line) => trimLine([span(`${indent}${line}`)]));
+			return textLines(block.text).map((line) => [{ text: `${indent}${line}`, hold: true }]);
 		},
 		Annotation: (): ReadonlyArray<Line> => [],
 		CountsTable: (block): ReadonlyArray<Line> => tableLines(walk, countsTableOf(block), width),

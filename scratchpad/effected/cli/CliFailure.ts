@@ -251,10 +251,10 @@ const stackBlock = (defect: Error, displayPath: (absolute: string) => string, mo
 /** The `Error.cause` chain below a defect as a tree of one-line messages, or none. */
 const causeTree = (defect: Error): Block | undefined => {
 	const chain: Array<string> = [];
-	const seen = new Set<unknown>([defect]);
+	const seen: Array<unknown> = [defect];
 	for (let current: unknown = defect.cause; current !== undefined && chain.length < MAX_DEPTH; ) {
-		if (seen.has(current)) break;
-		seen.add(current);
+		if (A.some(seen, (ancestor) => ancestor === current)) break;
+		seen.push(current);
 		chain.push(firstLine(describe(current)));
 		current = current instanceof Error ? current.cause : undefined;
 	}

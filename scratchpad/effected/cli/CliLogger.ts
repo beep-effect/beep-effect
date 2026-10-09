@@ -128,8 +128,9 @@ export class CliLogger {
  * @internal
  */
 export const makeCliLogger: {
-	(options?: CliLoggerOptions, underActions?: (fiber: Fiber.Fiber<unknown, unknown>) => boolean): Logger.Logger<unknown, void>;
-	(underActions?: (fiber: Fiber.Fiber<unknown, unknown>) => boolean): (options?: CliLoggerOptions) => Logger.Logger<unknown, void>;
+	(options?: CliLoggerOptions): Logger.Logger<unknown, void>;
+	(options: CliLoggerOptions | undefined, underActions: (fiber: Fiber.Fiber<unknown, unknown>) => boolean): Logger.Logger<unknown, void>;
+	(underActions: (fiber: Fiber.Fiber<unknown, unknown>) => boolean): (options?: CliLoggerOptions) => Logger.Logger<unknown, void>;
 } = dual((args) => !P.isFunction(args[0]), (
 	options: CliLoggerOptions = {},
 	underActions: (fiber: Fiber.Fiber<unknown, unknown>) => boolean = underActionsIn,

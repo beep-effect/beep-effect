@@ -52,7 +52,7 @@ export interface GlyphSelectOptions {
  * The two glyph sets: Unicode, and a plain-ASCII fallback for terminals that cannot draw it.
  *
  * @remarks
- * The sets are shared, so they and their nested values are frozen.
+ * The sets are shared, so they and their nested values have readonly types.
  *
  * @public
  */
@@ -60,16 +60,16 @@ export class Glyphs {
 	private constructor() {}
 
 	/** Unicode symbols. */
-	static readonly unicode: GlyphSet = Object.freeze({
+	static readonly unicode: GlyphSet = {
 		kind: "unicode",
 		ellipsis: "…",
-		spinner: Object.freeze(["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]),
+		spinner: ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"],
 		bullet: "•",
 		arrow: "→",
-		pathSeparator: Object.freeze({ human: "›", agent: " > " }),
+		pathSeparator: { human: "›", agent: " > " },
 		spinnerIntervalMs: 80,
-		tree: Object.freeze({ branch: "├─ ", last: "└─ ", pipe: "│  ", blank: "   " }),
-	});
+		tree: { branch: "├─ ", last: "└─ ", pipe: "│  ", blank: "   " },
+	};
 
 	/**
 	 * Pick a glyph set without a service: the one `CliTheme` uses, as a pure function.
@@ -87,14 +87,14 @@ export class Glyphs {
 	};
 
 	/** ASCII-only symbols. */
-	static readonly ascii: GlyphSet = Object.freeze({
+	static readonly ascii: GlyphSet = {
 		kind: "ascii",
 		ellipsis: "...",
-		spinner: Object.freeze(["-", "\\", "|", "/"]),
+		spinner: ["-", "\\", "|", "/"],
 		bullet: "*",
 		arrow: "->",
-		pathSeparator: Object.freeze({ human: ">", agent: " > " }),
+		pathSeparator: { human: ">", agent: " > " },
 		spinnerIntervalMs: 80,
-		tree: Object.freeze({ branch: "|-- ", last: "\\-- ", pipe: "|   ", blank: "    " }),
-	});
+		tree: { branch: "|-- ", last: "\\-- ", pipe: "|   ", blank: "    " },
+	};
 }

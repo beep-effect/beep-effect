@@ -17,6 +17,21 @@ const choices: ReadonlyArray<SelectChoice<string>> = [
 ];
 
 describe("Select reducer", () => {
+	it("clamps an out-of-range initial index before searching for an enabled choice", () => {
+		const bounded: ReadonlyArray<SelectChoice<string>> = [
+			{ label: "disabled first", value: "first", disabled: true },
+			{ label: "enabled", value: "enabled" },
+			{ label: "disabled last", value: "last", disabled: true },
+		];
+		for (const initial of [-1, bounded.length, 99]) {
+			const state = Select.init(bounded, { initial });
+			assert.strictEqual(state.viewport.cursor, 1);
+			assert.deepStrictEqual(Select.chosen(Select.step(state, "submit")), O.some("enabled"));
+		}
+		assert.strictEqual(Select.init(choices, { initial: -1 }).viewport.cursor, 0);
+		assert.strictEqual(Select.init(choices, { initial: 99 }).viewport.cursor, 3);
+	});
+
 	it("starts on the first enabled choice, or the initial one when it is enabled", () => {
 		assert.strictEqual(Select.init(choices).viewport.cursor, 0);
 		assert.strictEqual(Select.init(choices, { initial: 2 }).viewport.cursor, 2);

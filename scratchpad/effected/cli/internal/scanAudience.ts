@@ -1,4 +1,5 @@
-import type { AudienceKind } from "../../env/index.ts";
+import * as S from "effect/Schema";
+import { AudienceKind } from "../../env/Audience.ts";
 
 /**
  * The four parsed audience flags, as core hands them to a shared-flag command.
@@ -35,12 +36,11 @@ export const tallyAudience = (input: AudienceFlagValues): AudienceTally => {
 	return { given, conflict: given.length > 1 };
 };
 
-const KINDS: ReadonlyArray<string> = ["human", "agent", "ci"];
 // The spellings core's boolean parser accepts, exactly as it accepts them (and nothing else, case included).
 const TRUE_WORDS: ReadonlyArray<string> = ["true", "yes", "on", "1", "y"];
 const FALSE_WORDS: ReadonlyArray<string> = ["false", "no", "off", "0", "n"];
 
-const isKind = (value: string): value is AudienceKind => KINDS.includes(value);
+const isKind = S.is(AudienceKind);
 
 /**
  * Read the audience flags straight out of `argv`, the way core will parse them later.
@@ -57,9 +57,8 @@ const isKind = (value: string): value is AudienceKind => KINDS.includes(value);
  */
 export const scanAudience = (argv: ReadonlyArray<string>): AudienceTally => {
 	const audience: AudienceKind[] = [];
-	const booleans: Record<"human" | "agent" | "ci", boolean[]> = { human: [], agent: [], ci: [] };
-	const isBoolean = (name: string): name is "human" | "agent" | "ci" =>
-		name === "human" || name === "agent" || name === "ci";
+	const booleans: Record<AudienceKind, boolean[]> = { human: [], agent: [], ci: [] };
+	const isBoolean = S.is(AudienceKind);
 
 	for (let index = 0; index < argv.length; index++) {
 		const token = argv[index] ?? "";

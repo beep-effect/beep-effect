@@ -1,12 +1,12 @@
+import * as S from "effect/Schema";
+import * as DocModel from "../../effected/cli/Doc.ts";
 import { assert, describe, it } from "@effect/vitest";
 import type { Block, Counter, Inline } from "../../effected/cli/index.ts";
 import { Doc, Status, Token } from "../../effected/cli/index.ts";
 
-const deepFrozen = (value: unknown): boolean => {
-	if (typeof value !== "object" || value === null) return true;
-	if (!Object.isFrozen(value)) return false;
-	return Object.values(value).every(deepFrozen);
-};
+const isInlines = S.is(S.Array(DocModel.Inline));
+
+const isDocumentData = S.is(S.Union([DocModel.Inline, DocModel.Block, DocModel.Counter]));
 
 const counter = (key: string, n: number, name: "success" | "failure" | "skip", showZero?: boolean): Counter => ({
 	key,
@@ -24,13 +24,13 @@ describe("Doc inline constructors", () => {
 		assert.deepStrictEqual(Doc.text("hi", "failure"), { _tag: "Text", value: "hi", token: "failure" });
 		const style = Token.style({ bold: true });
 		assert.deepStrictEqual(Doc.text("hi", style), { _tag: "Text", value: "hi", token: style });
-		assert.isTrue(Object.isFrozen(plain));
+		assert.isTrue(S.is(DocModel.Inline)(plain));
 	});
 
 	it("code and path carry their values", () => {
 		assert.deepStrictEqual(Doc.code("x"), { _tag: "Code", value: "x" });
 		assert.deepStrictEqual(Doc.path("a", "b", "c"), { _tag: "Path", segments: ["a", "b", "c"] });
-		assert.isTrue(deepFrozen(Doc.path("a", "b")));
+		assert.isTrue(isDocumentData(Doc.path("a", "b")));
 	});
 
 	it("link takes a url or a file target and labels itself with the target when no label is given", () => {
@@ -45,7 +45,7 @@ describe("Doc inline constructors", () => {
 			label: [{ _tag: "Text", value: "a.ts" }],
 		});
 		assert.deepStrictEqual(Doc.link({ file: "src/a.ts" }).label, [{ _tag: "Text", value: "src/a.ts" }]);
-		assert.isTrue(deepFrozen(Doc.link({ file: "src/a.ts", line: 3 }, [Doc.code("a"), " there"])));
+		assert.isTrue(isDocumentData(Doc.link({ file: "src/a.ts", line: 3 }, [Doc.code("a"), " there"])));
 	});
 
 	it("status stores the resolved definition, not the vocabulary", () => {
@@ -55,7 +55,7 @@ describe("Doc inline constructors", () => {
 			name: "failure",
 			def: { glyph: "✗", ascii: "[FAIL]", token: "failure", rank: 90 },
 		});
-		assert.isTrue(deepFrozen(mark));
+		assert.isTrue(isDocumentData(mark));
 	});
 
 	it("status resolves an extended vocabulary's own names", () => {
@@ -76,7 +76,7 @@ describe("Doc inline constructors", () => {
 });
 
 describe("Doc string normalisation", () => {
-	it("a string, an Inline and a mixed array all become a frozen array of Inline", () => {
+	it("a string, an Inline and a mixed array all become a readonly schema-valid array of Inline", () => {
 		const code = Doc.code("c");
 		assert.deepStrictEqual(Doc.heading(1, "Title").content, [{ _tag: "Text", value: "Title" }]);
 		assert.deepStrictEqual(Doc.heading(2, code).content, [code]);
@@ -85,7 +85,7 @@ describe("Doc string normalisation", () => {
 			code,
 			{ _tag: "Text", value: " b" },
 		]);
-		assert.isTrue(Object.isFrozen(Doc.heading(1, "x").content));
+		assert.isTrue(isInlines(Doc.heading(1, "x").content));
 	});
 
 	it("paragraph takes its content as rest arguments of any accepted form", () => {
@@ -132,16 +132,16 @@ describe("Doc block constructors", () => {
 		assert.notProperty(bare, "overflow");
 		const capped = Doc.list([Doc.paragraph("a")], { cap: 1, overflow: (hidden) => `… ${hidden} more` });
 		assert.strictEqual(capped.cap, 1);
-		assert.isTrue(Object.isFrozen(capped));
+		assert.isTrue(S.is(DocModel.Block)(capped));
 	});
 
-	it("an overflow function returns normalised Inline, and a frozen node may hold a function", () => {
+	it("an overflow function returns normalised Inline, and a schema-valid node may hold a function", () => {
 		const list = Doc.list([], { cap: 0, overflow: (hidden) => ["… ", Doc.code(String(hidden))] });
 		assert.deepStrictEqual(list.overflow?.(12), [
 			{ _tag: "Text", value: "… " },
 			{ _tag: "Code", value: "12" },
 		]);
-		assert.isTrue(Object.isFrozen(list));
+		assert.isTrue(S.is(DocModel.Block)(list));
 	});
 
 	it("table normalises headers and every cell, and keeps align, cap and overflow", () => {
@@ -167,7 +167,7 @@ describe("Doc block constructors", () => {
 		]);
 		assert.strictEqual(t.cap, 2);
 		assert.deepStrictEqual(t.overflow?.(1), [{ _tag: "Text", value: "more" }]);
-		assert.isTrue(Object.isFrozen(t) && Object.isFrozen(t.columns) && Object.isFrozen(t.rows[0]));
+		assert.isTrue(S.is(DocModel.Block)(t));
 	});
 
 	it("tree normalises every label and defaults children to empty", () => {
@@ -188,7 +188,7 @@ describe("Doc block constructors", () => {
 				],
 			},
 		});
-		assert.isTrue(deepFrozen(t));
+		assert.isTrue(isDocumentData(t));
 	});
 
 	it("collapsible, callout, diff and section", () => {
@@ -214,7 +214,7 @@ describe("Doc block constructors", () => {
 		const titled = Doc.section("S", body);
 		assert.deepStrictEqual(titled.title, [{ _tag: "Text", value: "S" }]);
 		for (const node of [Doc.collapsible("T", body), Doc.callout("note", body), Doc.section("S", body)]) {
-			assert.isTrue(deepFrozen(node));
+			assert.isTrue(isDocumentData(node));
 		}
 	});
 });
@@ -222,11 +222,11 @@ describe("Doc block constructors", () => {
 describe("Doc.counts", () => {
 	const counters = [counter("passed", 7, "success"), counter("failed", 2, "failure"), counter("skipped", 0, "skip")];
 
-	it("builds a frozen node carrying its counters, layout and optional parts", () => {
+	it("builds a readonly plain node carrying its counters, layout and optional parts", () => {
 		const node = Doc.counts({ counters, layout: "row" });
 		assert.deepStrictEqual(node, { _tag: "Counts", counters, layout: "row" });
 		for (const key of ["label", "total", "qualifier", "durationMs"]) assert.notProperty(node, key);
-		assert.isTrue(Object.isFrozen(node) && Object.isFrozen(node.counters));
+		assert.isTrue(S.is(DocModel.Block)(node));
 		const full = Doc.counts({ label: "Tests", counters, qualifier: "(1 flaky)", durationMs: 1200, layout: "inline" });
 		assert.deepStrictEqual(full, {
 			_tag: "Counts",
@@ -274,21 +274,22 @@ describe("Doc.counts", () => {
 		assert.strictEqual(Doc.total(node), 4, "hiding never changes the total");
 	});
 
-	it("stores a frozen copy of a definition taken from the vocabulary's live entry", () => {
+	it("stores an independent copy of a definition taken from the vocabulary's live entry", () => {
 		const live = Status.core.def("failure");
 		const node = Doc.counts({
 			counters: [{ key: "f", label: "failed", n: 1, status: { name: "failure", def: live } }],
 			layout: "inline",
 		});
-		assert.isTrue(deepFrozen(node));
+		assert.isTrue(isDocumentData(node));
 		assert.notStrictEqual(node.counters[0]?.status.def, live, "the node does not share the vocabulary's entry");
-		assert.isFalse(Object.isFrozen(live), "the live entry is untouched");
+		assert.deepStrictEqual(live, { glyph: "✗", ascii: "[FAIL]", token: "failure", rank: 90 }, "the live entry is untouched");
 		const definition = node.counters[0]?.status.def;
 		assert.isDefined(definition);
 		const mutable: { rank: number } = definition;
-		assert.throws(() => {
+		assert.doesNotThrow(() => {
 			mutable.rank = 0;
-		}, TypeError);
+		});
+		assert.strictEqual(definition.rank, 0, "runtime freezing was removed from the copied definition");
 		assert.strictEqual(Status.core.def("failure").rank, 90);
 	});
 
@@ -310,7 +311,7 @@ describe("Doc.counter", () => {
 			status: { name: "failure", def: { glyph: "✗", ascii: "[FAIL]", token: "failure", rank: 90 } },
 		});
 		assert.notProperty(c, "showZero");
-		assert.isTrue(deepFrozen(c));
+		assert.isTrue(isDocumentData(c));
 	});
 
 	it("carries showZero when given, and resolves an extended vocabulary's names", () => {
@@ -340,11 +341,11 @@ describe("Doc.counter", () => {
 });
 
 describe("Doc: okfit's trial additions", () => {
-	it("link takes a suffix option, kept only when given, and stays frozen", () => {
+	it("link takes a suffix option, kept only when given, and stays schema-valid", () => {
 		const off = Doc.link({ file: "/a.md", line: 1 }, "x", { suffix: false });
 		assert.strictEqual(off._tag === "Link" ? off.suffix : undefined, false);
 		assert.notProperty(Doc.link({ url: "https://x.test" }, "x"), "suffix");
-		assert.isTrue(deepFrozen(off));
+		assert.isTrue(isDocumentData(off));
 	});
 
 	it("a link with no target is its label, never a link", () => {
@@ -353,11 +354,11 @@ describe("Doc: okfit's trial additions", () => {
 		assert.strictEqual(Doc.link(undefined, code), code);
 	});
 
-	it("verbatim keeps its text and an indent only when given, frozen", () => {
+	it("verbatim keeps its text and an indent only when given, schema-valid", () => {
 		const block = Doc.verbatim("a\n  b", { indent: 2 });
 		assert.deepStrictEqual(block, { _tag: "Verbatim", text: "a\n  b", indent: 2 });
 		assert.notProperty(Doc.verbatim("a"), "indent");
-		assert.isTrue(deepFrozen(block));
+		assert.isTrue(isDocumentData(block));
 	});
 
 	it("counts carry share and paint only when given", () => {
@@ -369,7 +370,7 @@ describe("Doc: okfit's trial additions", () => {
 		assert.notProperty(bare, "paint");
 	});
 
-	it("annotation carries its level, its position and title when given, and its message, frozen", () => {
+	it("annotation carries its level, its position and title when given, and its message, schema-valid", () => {
 		const block = Doc.annotation({ level: "error", file: "a.ts", line: 3, col: 2, title: "T" }, "boom");
 		assert.deepStrictEqual(block, {
 			_tag: "Annotation",
@@ -385,11 +386,11 @@ describe("Doc: okfit's trial additions", () => {
 			level: "notice",
 			message: "m",
 		});
-		assert.isTrue(deepFrozen(block));
+		assert.isTrue(isDocumentData(block));
 	});
 });
 
-describe("Doc: the reporter blocks are frozen plain data", () => {
+describe("Doc: the reporter blocks are readonly schema-valid plain data", () => {
 	it("strong, em, file, lines, line, countsTable, diffText, compact lists, pipe tables and counts suffix", () => {
 		const nodes: ReadonlyArray<Inline | Block> = [
 			Doc.strong("a", Doc.code("b")),
@@ -403,7 +404,7 @@ describe("Doc: the reporter blocks are frozen plain data", () => {
 			Doc.table([{ header: "h" }], [["c"]], { style: "pipe" }),
 			Doc.counts({ layout: "inline", counters: [], suffix: "across 3 files" }),
 		];
-		for (const node of nodes) assert.isTrue(deepFrozen(node), JSON.stringify(node));
+		for (const node of nodes) assert.isTrue(isDocumentData(node), JSON.stringify(node));
 		assert.deepStrictEqual(Doc.strong("a"), { _tag: "Strong", content: [{ _tag: "Text", value: "a" }] });
 		assert.deepStrictEqual(Doc.em("a"), { _tag: "Emphasis", content: [{ _tag: "Text", value: "a" }] });
 		assert.deepStrictEqual(Doc.file("/a.ts"), { _tag: "File", path: "/a.ts" });

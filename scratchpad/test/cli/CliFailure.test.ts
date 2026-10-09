@@ -285,6 +285,51 @@ describe("CliFailure.toDoc: a defect", () => {
 		assert.include(plain(CliFailure.toDoc(Cause.die(a))), "b");
 	});
 
+	it("a self-cause adds no Tree", () => {
+		const error = new Error("self");
+		error.cause = error;
+		assert.deepStrictEqual(kinds(CliFailure.toDoc(Cause.die(error))), ["Paragraph", "Collapsible"]);
+	});
+
+	it("a cycle below the defect renders each ancestor once", () => {
+		const a = new Error("a");
+		const b = new Error("b", { cause: a });
+		a.cause = b;
+		const doc = CliFailure.toDoc(Cause.die(new Error("outer", { cause: a })));
+		const tree = doc.find((block) => block._tag === "Tree");
+		assert.isDefined(tree);
+		const text = plain([tree]);
+		assert.strictEqual(text.split("\n").length, 3);
+		assert.match(text, /outer\n.*Error: a\n.*Error: b$/);
+	});
+
+	it("distinct equal-looking errors both remain in the cause chain", () => {
+		const inner = errorWithStack("repeat", []);
+		const outer = new Error("repeat", { cause: inner });
+		outer.stack = "Error: repeat";
+		assert.notStrictEqual(outer, inner);
+		assert.strictEqual(String(outer), String(inner));
+		assert.strictEqual(outer.stack, inner.stack);
+		const doc = CliFailure.toDoc(Cause.die(new Error("root", { cause: outer })));
+		const tree = doc.find((block) => block._tag === "Tree");
+		assert.isDefined(tree);
+		const text = plain([tree]);
+		assert.strictEqual(text.split("\n").length, 3);
+		assert.strictEqual(text.match(/Error: repeat/g)?.length, 2);
+	});
+
+	it("an acyclic cause chain renders at most eight descendants", () => {
+		let error = new Error("cause-9");
+		for (let index = 8; index >= 0; index--) error = new Error(`cause-${index}`, { cause: error });
+		const doc = CliFailure.toDoc(Cause.die(error));
+		const tree = doc.find((block) => block._tag === "Tree");
+		assert.isDefined(tree);
+		const text = plain([tree]);
+		assert.strictEqual(text.split("\n").length, 9);
+		assert.include(text, "cause-8");
+		assert.notInclude(text, "cause-9");
+	});
+
 	it("a defect that is not an Error is its string, with no stack", () => {
 		const doc = CliFailure.toDoc(Cause.die("just a string"));
 		assert.deepStrictEqual(kinds(doc), ["Paragraph"]);

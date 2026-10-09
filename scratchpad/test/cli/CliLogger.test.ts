@@ -3,7 +3,10 @@ import { assert, describe, it } from "@effect/vitest";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as References from "effect/References";
-import { CliLogger } from "../../effected/cli/CliLogger.ts";
+import * as Fiber from "effect/Fiber";
+import * as Layer from "effect/Layer";
+import * as Logger from "effect/Logger";
+import { CliLogger, makeCliLogger } from "../../effected/cli/CliLogger.ts";
 
 /**
  * A `Console` that keeps the two streams apart.
@@ -38,6 +41,41 @@ const capture = (
 	});
 
 describe("CliLogger", () => {
+	it.effect("dispatches data-first constructors and the required-action curried constructor", () =>
+		Effect.gen(function* () {
+			const acceptsEmptyCurriedArgs: [] extends Parameters<typeof makeCliLogger> ? true : false = false;
+			assert.isFalse(acceptsEmptyCurriedArgs);
+			const underActions = (_fiber: Fiber.Fiber<unknown, unknown>): boolean => true;
+			const curried: (options?: Parameters<typeof CliLogger.layer>[0]) => Logger.Logger<unknown, void> =
+				makeCliLogger(underActions);
+			const loggers: ReadonlyArray<Logger.Logger<unknown, void>> = [
+				makeCliLogger(),
+				makeCliLogger(undefined),
+				makeCliLogger({}),
+				makeCliLogger({}, underActions),
+				makeCliLogger(undefined, underActions),
+				curried(),
+				curried({}),
+			];
+			const expected = [
+				"::warning::literal", "::warning::literal", "::warning::literal",
+				"\u200b::warning::literal", "\u200b::warning::literal",
+				"\u200b::warning::literal", "\u200b::warning::literal",
+			];
+			const { console: double, out, err } = capturing();
+			for (const logger of loggers) {
+				yield* Effect.scopedWith((scope) =>
+					Effect.flatMap(
+						Layer.buildWithScope(Logger.layer([logger]), scope),
+						(context) => Effect.provideContext(Effect.logWarning("::warning::literal"), context),
+					),
+				).pipe(Effect.provideService(Console.Console, double));
+			}
+			assert.deepStrictEqual(out, []);
+			assert.deepStrictEqual(err, expected);
+		}),
+	);
+
 	it.effect("writes info to stderr and errors to stderr under the default stderrFrom", () =>
 		Effect.gen(function* () {
 			const { out, err } = yield* capture(

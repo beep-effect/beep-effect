@@ -19,6 +19,16 @@ const linesOf = (doc: ReadonlyArray<Block>, overrides: Partial<RenderContext> = 
 
 const BOX = /[─│┌┐└┘├┤┬┴┼═║╔╗╚╝]/;
 
+describe("Render.plain: verbatim whitespace fidelity", () => {
+	it.effect("keeps trailing spaces and whitespace-only indentation at top level and inside a list", () =>
+		Effect.gen(function* () {
+			const block = Doc.verbatim("x  \n  \n\ny  ", { indent: 2 });
+			assert.strictEqual(yield* plain([block], { width: 1 }), "  x  \n    \n  \n  y  ");
+			assert.strictEqual(yield* plain([Doc.list([block])], { width: 1 }), "-   x  \n      \n    \n    y  ");
+		}),
+	);
+});
+
 describe("Render.plain: no escapes of any kind", () => {
 	for (const [name, overrides] of [
 		["human audience, truecolor, hyperlinks available", {}],

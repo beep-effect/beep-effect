@@ -35,11 +35,11 @@ describe("Glyphs", () => {
 		}
 	});
 
-	it("the shared sets cannot be edited through their nested values", () => {
+	it("the readonly shared sets keep their nested content and exact frame order", () => {
 		for (const set of [Glyphs.unicode, Glyphs.ascii]) {
-			assert.isTrue(Object.isFrozen(set));
-			assert.isTrue(Object.isFrozen(set.pathSeparator));
-			assert.isTrue(Object.isFrozen(set.spinner));
+			assert.strictEqual(Glyphs.select({ ascii: set.kind === "ascii" }), set);
+			assert.deepStrictEqual(set.pathSeparator, { human: set.kind === "unicode" ? "›" : ">", agent: " > " });
+			assert.deepStrictEqual(set.spinner, set.kind === "unicode" ? ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"] : ["-", "\\", "|", "/"]);
 		}
 	});
 
@@ -49,7 +49,7 @@ describe("Glyphs", () => {
 		for (const set of [Glyphs.unicode, Glyphs.ascii]) {
 			const widths = Object.values(set.tree).map((g) => displayWidth(g));
 			assert.strictEqual(new Set(widths).size, 1, `${set.kind} segments share a width so branches align`);
-			assert.isTrue(Object.isFrozen(set.tree));
+			assert.strictEqual(Glyphs.select({ ascii: set.kind === "ascii" }).tree, set.tree, "selection shares the readonly tree data");
 		}
 		for (const ch of Object.values(Glyphs.ascii.tree).join("")) assert.isBelow(ch.codePointAt(0) ?? 0, 128);
 	});

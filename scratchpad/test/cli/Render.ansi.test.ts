@@ -33,6 +33,16 @@ const tokensOf = (doc: ReadonlyArray<Block>, overrides: Partial<RenderContext> =
 const CONTROL = /[\u0000-\u0009\u000B-\u001F\u007F-\u009F]/;
 const BOX = /[─│┌┐└┘├┤┬┴┼═║╔╗╚╝]/;
 
+describe("Render.ansi: verbatim whitespace fidelity", () => {
+	it.effect("keeps trailing spaces and whitespace-only indentation at top level and inside a list", () =>
+		Effect.gen(function* () {
+			const block = Doc.verbatim("x  \n  \n\ny  ", { indent: 2 });
+			assert.strictEqual(yield* ansi([block], { width: 1 }), "  x  \n    \n  \n  y  ");
+			assert.strictEqual(yield* ansi([Doc.list([block])], { width: 1 }), "-   x  \n      \n    \n    y  ");
+		}),
+	);
+});
+
 describe("Render.ansi at colour none is Render.plain (the main property)", () => {
 	for (const glyphs of [Glyphs.unicode, Glyphs.ascii]) {
 		for (const width of [14, 24, 40, 80, 200]) {

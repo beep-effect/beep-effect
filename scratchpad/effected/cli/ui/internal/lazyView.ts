@@ -1,7 +1,6 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as P from "effect/Predicate";
-import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -56,9 +55,14 @@ const NO_VIEW = (resolved: unknown): string => {
  *
  * @internal
  */
-export class LazyViewShapeError extends Data.TaggedError("LazyViewShapeError")<{ readonly message: string }> {
+export class LazyViewShapeError extends S.TaggedError<LazyViewShapeError>($I`LazyViewShapeError`)(
+	"LazyViewShapeError",
+	{ message: S.String.annotate({ description: "The resolved module's invalid view shape and the expected shape." }) },
+	$I.annote("LazyViewShapeError", { description: "A deterministic invalid lazy-view module, cached for the handle's life." }),
+) {
+	/** An identity owned by this error, used to distinguish equal-looking cached shape errors. */
+	readonly id = Symbol();
 	override readonly name = "Error";
-	constructor(message = "") { super({ message }); }
 }
 
 /** The view `load` resolved to: the value itself when it is a function (a `default` property on it is ignored), else
@@ -69,7 +73,7 @@ const pick = <S>(resolved: LiveRender<S> | { readonly default: LiveRender<S> }):
 		const fallback = resolved.default;
 		if (P.isFunction(fallback)) return fallback;
 	}
-	throw new LazyViewShapeError(NO_VIEW(resolved));
+	throw LazyViewShapeError.make({ message: NO_VIEW(resolved) });
 };
 
 /**
@@ -109,7 +113,13 @@ export const lazyView = <S>(
 };
 
 /** A typed boundary around the loader's original rejection, retained for rendering unchanged. */
-class LazyViewLoadError extends Data.TaggedError("LazyViewLoadError")<{ readonly cause: unknown }> {}
+class LazyViewLoadError extends S.TaggedError<LazyViewLoadError>($I`LazyViewLoadError`)(
+	"LazyViewLoadError",
+	{ cause: S.Defect({ includeStack: true }).annotate({ description: "The original lazy-view load rejection, including a cached shape error." }) },
+	$I.annote("LazyViewLoadError", { description: "A typed boundary retaining the lazy-view loader's original rejection." }),
+) {
+	override readonly name = "LazyViewLoadError";
+}
 
 /**
  * Load a lazy view's module before its render is first called; nothing for a render that is not lazy. Fails with what
@@ -126,6 +136,6 @@ export const loadView = (render: unknown): Effect.Effect<void, LazyViewLoadError
 				if (!P.isFunction(ensure)) throw LazyViewStateError.make({ message: "lazy view loader is not a function" });
 				return Promise.resolve(ensure());
 			},
-			catch: (cause) => new LazyViewLoadError({ cause }),
+			catch: (cause) => LazyViewLoadError.make({ cause }),
 		}));
 };

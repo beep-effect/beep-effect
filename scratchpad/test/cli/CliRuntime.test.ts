@@ -220,7 +220,7 @@ describe("CliRuntime.reportFailures and ShowHelp", () => {
 
 	it.effect("never renders the CliExit sentinel, and keeps its code", () =>
 		Effect.gen(function* () {
-			const { err, exit } = yield* F.pipe(new ExitRequested(2), Effect.fail, run);
+			const { err, exit } = yield* F.pipe(ExitRequested.make({ code: 2 }), Effect.fail, run);
 			assert.deepStrictEqual(err, []);
 			assert.strictEqual(exit.pipe(failureOf, Runtime.getErrorExitCode), 2);
 		}),

@@ -2,6 +2,7 @@ import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import type { ReactElement } from "react";
 import { createElement } from "react";
+import { Fmt } from "../../../effected/cli/index.ts";
 import type { Screen } from "../../../effected/cli/ui.ts";
 import { Confirm, KeyHelp, KeyTable, MultiSelect, Select, Tabs, TextInput } from "../../../effected/cli/ui.ts";
 import { CliUiTest } from "../../../effected/cli/ui-testing.ts";
@@ -69,6 +70,54 @@ const assertFolded = (frame: string): void => {
 };
 
 describe("widget text from data is sanitised and drawn on one line", () => {
+	it.effect("TextInput: a hostile initial value is folded for display and submitted unchanged", () =>
+		Effect.gen(function* () {
+			const validated: Array<string> = [];
+			const handle = yield* CliUiTest.render(
+				TextInput.screen({
+					message: "Name",
+					initial: HOSTILE,
+					validate: (value) => {
+						validated.push(value);
+						return undefined;
+					},
+				}),
+				{ color: "none", columns: 120 },
+			);
+			const frame = yield* handle.rawFrame;
+			assert.notInclude(frame, ESC);
+			assert.include(frame, "xRED link SECOND▏");
+			assertFolded(frame);
+			assert.lengthOf(frame.split("\n"), 3, "the input occupies one physical row");
+			yield* handle.press("enter");
+			assert.strictEqual(yield* handle.result, HOSTILE);
+			assert.deepStrictEqual(validated, [HOSTILE]);
+		}).pipe(Effect.scoped),
+	);
+
+	it.effect("TextInput: hostile value segments are sanitised before scrolling around the original cursor", () =>
+		Effect.gen(function* () {
+			const initial = `ab${ESC}[31mRED${ESC}[0m\r\nSECOND`;
+			const handle = yield* CliUiTest.render(TextInput.screen({ message: "Name", initial }), {
+				color: "none",
+				columns: 10,
+			});
+			assert.include(yield* handle.rawFrame, "… SECOND▏");
+			yield* handle.press("home");
+			assert.include(yield* handle.rawFrame, "▏abRED S…");
+			yield* handle.type("x");
+			yield* handle.press("end", "left");
+			assert.include(yield* handle.rawFrame, "SECON▏D");
+			for (const frame of yield* handle.frames) {
+				assert.notInclude(frame, ESC);
+				assert.lengthOf(frame.split("\n"), 3);
+				for (const line of frame.split("\n")) assert.isAtMost(Fmt.width(line), 9);
+			}
+			yield* handle.press("enter");
+			assert.strictEqual(yield* handle.result, `x${initial}`);
+		}).pipe(Effect.scoped),
+	);
+
 	for (const [name, screen] of screens) {
 		it.effect(`${name}: no escape at colour none, no OSC 8 at truecolor, newlines folded`, () =>
 			Effect.gen(function* () {

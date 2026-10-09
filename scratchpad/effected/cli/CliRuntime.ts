@@ -44,7 +44,7 @@ const $I = $ScratchpadId.create("effected/cli/CliRuntime");
 /** A runtime invariant failure or a non-Error value wrapped for teardown. */
 class CliRuntimeError extends S.TaggedError<CliRuntimeError>($I`CliRuntimeError`)(
 	"CliRuntimeError",
-	{ message: S.String },
+	{ message: S.String.annotate({ description: "The runtime invariant or reported failure that needs teardown handling." }) },
 	$I.annote("CliRuntimeError", { description: "A CLI runtime invariant failed or a non-Error failure was reported." }),
 ) {
 	override readonly name = "Error";
@@ -397,7 +397,7 @@ export class CliRuntime {
 					const error = Cause.squash(cause);
 
 					// Already marked by CliRuntime.main; there is nothing to render.
-					if (error instanceof ExitRequested) return yield* error;
+					if (S.is(ExitRequested)(error)) return yield* error;
 
 					// Command.runWith printed help (stdout) and any parse errors (stderr)
 					// BEFORE re-failing with ShowHelp. Rendering it again prints a stray
@@ -574,12 +574,12 @@ export class CliRuntime {
 								// never into the `CliLog` sink.
 								const { spans, invalid } = yield* readSpans(options.env?.spans, options.env?.spansEnvVar);
 								if (invalid !== undefined) {
-									yield* Effect.logWarning(invalid).pipe(
-										Effect.provideService(
-											Logger.CurrentLoggers,
-											new Set<Logger.Logger<unknown, unknown>>([makeCliLogger(envLog?.logger)]),
-										),
-									);
+									yield* Effect.scopedWith((scope) =>
+									Effect.flatMap(
+										Layer.buildWithScope(Logger.layer([makeCliLogger(envLog?.logger)]), scope),
+										(context) => Effect.provideContext(Effect.logWarning(invalid), context),
+									),
+								);
 								}
 								yield* refreshFailureTarget(undefined, {
 									displayPath: options.env?.displayPath,
@@ -604,7 +604,7 @@ export class CliRuntime {
 					CliRuntimeError.make({ message: `CliRuntime.main: CliExit code must be an integer 0..255, received ${code}` }),
 				);
 			}
-			if (code !== 0) return yield* new ExitRequested(code);
+			if (code !== 0) return yield* ExitRequested.make({ code });
 		}).pipe(
 			(self) => Effect.scopedWith((scope) => Effect.flatMap(Layer.buildWithScope(CliExit.layer, scope), (context) => Effect.provideContext(self, context))),
 			(self) => Effect.scopedWith((scope) => Effect.flatMap(Layer.buildWithScope(inside, scope), (context) => Effect.provideContext(self, context))),

@@ -9,14 +9,17 @@ import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import * as PubSub from "effect/PubSub";
 import * as Scope from "effect/Scope";
+import * as S from "effect/Schema";
 import type { ReactElement } from "react";
 import { vi } from "vitest";
 import { CliInteractive, CliTheme } from "../../../effected/cli/index.ts";
 import { inkModules } from "../../../effected/cli/ui/internal/ink.ts";
+import { LazyViewShapeError, loadView } from "../../../effected/cli/ui/internal/lazyView.ts";
 import { makeFakeStreams } from "../../../effected/cli/ui/testing/fakeStreams.ts";
 import { screenAfter } from "../../../effected/cli/ui/testing/terminalModel.ts";
 import type { LiveOptions } from "../../../effected/cli/ui.ts";
 import { CliUi, UiStreams } from "../../../effected/cli/ui.ts";
+import { deliberatelyInvalid } from "../deliberatelyInvalid.ts";
 
 // Ink's import is held open until a test opens the gate; each factory records that its package began to load.
 const { gate, loads } = vi.hoisted(() => {
@@ -25,6 +28,51 @@ const { gate, loads } = vi.hoisted(() => {
 		open = resolve;
 	});
 	return { gate: { open: () => open(), opened }, loads: Array<string>() };
+});
+
+describe("lazy-view schema errors", () => {
+	it.effect("caches a shape error by identity and gives equal-looking errors distinct primitive ids", () =>
+		Effect.gen(function* () {
+			let loads = 0;
+			const load = () => {
+				loads++;
+				return Promise.resolve(deliberatelyInvalid<{ readonly default: (state: number, frame: number) => ReactElement }>({ default: 42 }));
+			};
+			const view = CliUi.lazyView(load);
+			const first = yield* Effect.flip(loadView(view));
+			const cached = yield* Effect.flip(loadView(view));
+			const distinct = yield* Effect.flip(loadView(CliUi.lazyView(load)));
+			assert.strictEqual(loads, 2, "each handle loads once; a deterministic shape failure is not retried");
+			assert.strictEqual(cached.cause, first.cause, "later runs retain the same shape error object");
+			assert.isTrue(S.is(LazyViewShapeError)(first.cause));
+			assert.isTrue(S.is(LazyViewShapeError)(distinct.cause));
+			if (S.is(LazyViewShapeError)(first.cause) && S.is(LazyViewShapeError)(distinct.cause)) {
+				assert.strictEqual(first.cause.name, "Error");
+				assert.strictEqual(distinct.cause.message, first.cause.message, "control: the errors have equal messages");
+				assert.notStrictEqual(distinct.cause.id, first.cause.id, "distinct errors must not share warning identity");
+			}
+		}),
+	);
+
+	it.effect("retains an import rejection's cause and retries it on the next load", () =>
+		Effect.gen(function* () {
+			const failure = new Error("temporary lazy-view import failure");
+			let attempts = 0;
+			const view = CliUi.lazyView<number>(() => {
+				attempts++;
+				return attempts === 1
+					? Promise.reject(failure)
+					: Promise.resolve(() => inkModules().react.createElement(inkModules().ink.Text, null, "loaded"));
+			});
+			const rejected = yield* Effect.flip(loadView(view));
+			assert.strictEqual(rejected._tag, "LazyViewLoadError");
+			assert.strictEqual(rejected.name, "LazyViewLoadError");
+			assert.strictEqual(rejected.cause, failure);
+			yield* loadView(view);
+			yield* loadView(view);
+			assert.strictEqual(attempts, 2, "a transient rejection retries, then the successful view stays loaded");
+		}),
+	);
 });
 vi.mock("ink", async (importOriginal) => {
 	loads.push("ink");

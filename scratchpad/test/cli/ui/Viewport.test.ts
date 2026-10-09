@@ -4,6 +4,7 @@ import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
+import * as Layer from "effect/Layer";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import { Text } from "ink";
@@ -331,6 +332,30 @@ const production = Effect.fn("production")(function* (screen: Screen<never>, key
 	});
 
 describe("the production render path (Ink's own output, not debug frames)", () => {
+	it.live("an 80-to-20-column resize clips every repaint to the current layout", () =>
+		Effect.gen(function* () {
+			const session = yield* CliUiTest.session({ columns: 80, rows: 10, color: "none", renderPath: "production" });
+			const context = yield* Layer.build(session.layer);
+			const fiber = yield* Effect.forkChild(
+				CliUi.run(() => createElement(Viewport.View, {
+					rows: [{ _tag: "Item", key: "long" }],
+					state: Viewport.init(1, 1),
+					renderRow: () => createElement(Text, null, "X".repeat(100)),
+				})).pipe(Effect.provideContext(context)),
+			);
+			const handle = yield* session.next({ contains: "XXX" });
+			assert.strictEqual(yield* handle.plainFrame, "X".repeat(79));
+			const before = (yield* handle.frames).length;
+			yield* handle.resize(20, 10);
+			const repaints = (yield* handle.frames).slice(before);
+			assert.isNotEmpty(repaints, "resize captured at least one repaint");
+			for (const frame of repaints) {
+				assert.strictEqual(frame, "X".repeat(19), "even the immediate Ink repaint uses the new width");
+			}
+			yield* Fiber.interrupt(fiber);
+		}).pipe(Effect.scoped),
+	);
+
 	it.live("control: an unclamped 200-line Text on a 10-row terminal does clear the scrollback", () =>
 		Effect.gen(function* () {
 			const tall = Array.from({ length: 200 }, (_, index) => `line ${index}`).join("\n");

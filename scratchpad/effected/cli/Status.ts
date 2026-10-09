@@ -1,4 +1,5 @@
 import * as S from "effect/Schema";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as Arr from "effect/Array";
 import * as O from "effect/Option";
@@ -12,8 +13,9 @@ const $I = $ScratchpadId.create("effected/cli/Status");
 class UnknownStatusError extends S.TaggedError<UnknownStatusError>($I`UnknownStatusError`)(
 	"UnknownStatusError",
 	{
-		message: S.String,
+		message: S.String.annotate({ description: "The unknown status name and the available names in the vocabulary." }),
 	},
+	$I.annote("UnknownStatusError", { description: "A status name was not present in the CLI status vocabulary." }),
 ) {}
 
 /**
@@ -37,7 +39,10 @@ export interface StatusDef {
  *
  * @public
  */
-export type CoreStatusName = "success" | "failure" | "warning" | "info" | "skip" | "pending";
+export const CoreStatusName = LiteralKit(["success", "failure", "warning", "info", "skip", "pending"]).annotate(
+	$I.annote("CoreStatusName", { description: "The six built-in names in the CLI status vocabulary." }),
+);
+export type CoreStatusName = typeof CoreStatusName.Type;
 
 /**
  * An open vocabulary of statuses.
@@ -124,7 +129,7 @@ export class Status<Names extends string> {
 	 * The full definition of a status as an immutable snapshot, for a caller that stores it.
 	 *
 	 * @remarks
-	 * `def` answers the vocabulary's own entry. `resolve` answers a frozen copy, so a document node that holds
+	 * `def` answers the vocabulary's own entry. `resolve` answers a readonly copy, so a document node that holds
 	 * the definition stays plain data and editing it cannot change the vocabulary. The copy is shallow: a
 	 * `token` given as a `Style` keeps its own identity. Throws on an unknown name, as {@link Status.def} does;
 	 * storing an empty definition in a document instead would fail far from the cause.
@@ -132,7 +137,7 @@ export class Status<Names extends string> {
 	 * @param name - a name in this vocabulary
 	 */
 	resolve(name: Names): StatusDef {
-		return Object.freeze({ ...this.def(name) });
+		return { ...this.def(name) };
 	}
 
 	/**

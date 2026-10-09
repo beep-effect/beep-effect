@@ -126,7 +126,7 @@ export const mountsAndResolves = (fake: FakeStreams) => {
 };
 
 export const chalk: Effect.Effect<InkChalk> = Effect.flatMap(
-	Effect.promise(() => inkChalk()),
+	inkChalk(),
 	O.match({ onNone: () => Effect.die(new Error("Ink's chalk did not resolve")), onSome: Effect.succeed }),
 );
 

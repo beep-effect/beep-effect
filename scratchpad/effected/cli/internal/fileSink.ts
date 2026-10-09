@@ -33,50 +33,54 @@ const CLOSE_TIMEOUT = "2 seconds";
  *
  * @internal
  */
-export const makeFileSink = Effect.fn("append")(function* (path: string, installed: LogLevel.LogLevel, underActions: (fiber: Fiber.Fiber<unknown, unknown>) => boolean): Effect.fn.Return<Logger.Logger<unknown, void>, never, FileSystem.FileSystem | Path.Path | Scope.Scope> {
-		const fs = yield* FileSystem.FileSystem;
-		const location = yield* Path.Path;
-		const queue = yield* Queue.unbounded<string, Cause.Done>();
-		let disabled = false;
+export const makeFileSink = Effect.fn("makeFileSink")(function* (
+	path: string,
+	installed: LogLevel.LogLevel,
+	underActions: (fiber: Fiber.Fiber<unknown, unknown>) => boolean,
+): Effect.fn.Return<Logger.Logger<unknown, void>, never, FileSystem.FileSystem | Path.Path | Scope.Scope> {
+	const fs = yield* FileSystem.FileSystem;
+	const location = yield* Path.Path;
+	const queue = yield* Queue.unbounded<string, Cause.Done>();
+	let disabled = false;
 
-		// The parent directory is made once, before the first append; a failure there disables the sink like any other.
-		let directoryMade = false;
-		const append = Effect.fn("append")(function* (lines: ReadonlyArray<string>) {
-				if (!directoryMade) {
-					yield* fs.makeDirectory(location.dirname(path), { recursive: true });
-					directoryMade = true;
-				}
-				yield* fs.writeFileString(path, lines.map((line) => `${line}\n`).join(""), { flag: "a" });
-			});
-
-		const drain = Effect.gen(function* () {
-			while (true) {
-				// Fails with Done once the queue has ended and emptied, which stops the loop.
-				const batch = yield* Queue.takeAll(queue);
-				if (disabled) continue;
-				// Exit, not Effect.result: a defect from the filesystem is handled like a write error, not left to kill
-				// the drain (which would leave the queue to grow unbounded and the close to wait on it).
-				const exit = yield* Effect.exit(append(batch));
-				if (Exit.isFailure(exit)) {
-					disabled = true;
-					const error = Cause.squash(exit.cause);
-					const message = error instanceof Error ? error.message : String(error);
-					const line = sanitize(`diagnostics log file ${path} failed: ${message}; further file logging disabled`);
-					yield* Effect.withFiber((self) => Console.error(underActions(self) ? CommandNeutralizer.text(line) : line));
-				}
-			}
-		}).pipe(Effect.ignore);
-
-		const fiber = yield* Effect.forkScoped(drain);
-		// Runs before the fork's own interrupt: end the queue and give the drain a bounded time to write what is left.
-		// A hung filesystem must not hang process exit, so past the bound the drain is interrupted with the scope and
-		// whatever it had not written is lost.
-		yield* Effect.addFinalizer(() =>
-			Queue.end(queue).pipe(Effect.andThen(Fiber.join(fiber).pipe(Effect.timeout(CLOSE_TIMEOUT))), Effect.ignore),
-		);
-
-		return Logger.make<unknown, void>((record) => {
-			if (!passes(record, installed)) return;
-			Queue.offerUnsafe(queue, formatNdjson(record));
-		});
+	// The parent directory is made once, before the first append; a failure there disables the sink like any other.
+	let directoryMade = false;
+	const append = Effect.fn("append")(function* (lines: ReadonlyArray<string>) {
+		if (!directoryMade) {
+			yield* fs.makeDirectory(location.dirname(path), { recursive: true });
+			directoryMade = true;
+		}
+		yield* fs.writeFileString(path, lines.map((line) => `${line}\n`).join(""), { flag: "a" });
 	});
+
+	const drain = Effect.gen(function* () {
+		while (true) {
+			// Fails with Done once the queue has ended and emptied, which stops the loop.
+			const batch = yield* Queue.takeAll(queue);
+			if (disabled) continue;
+			// Exit, not Effect.result: a defect from the filesystem is handled like a write error, not left to kill
+			// the drain (which would leave the queue to grow unbounded and the close to wait on it).
+			const exit = yield* Effect.exit(append(batch));
+			if (Exit.isFailure(exit)) {
+				disabled = true;
+				const error = Cause.squash(exit.cause);
+				const message = error instanceof Error ? error.message : String(error);
+				const line = sanitize(`diagnostics log file ${path} failed: ${message}; further file logging disabled`);
+				yield* Effect.withFiber((self) => Console.error(underActions(self) ? CommandNeutralizer.text(line) : line));
+			}
+		}
+	}).pipe(Effect.ignore);
+
+	const fiber = yield* Effect.forkScoped(drain);
+	// Runs before the fork's own interrupt: end the queue and give the drain a bounded time to write what is left.
+	// A hung filesystem must not hang process exit, so past the bound the drain is interrupted with the scope and
+	// whatever it had not written is lost.
+	yield* Effect.addFinalizer(() =>
+		Queue.end(queue).pipe(Effect.andThen(Fiber.join(fiber).pipe(Effect.timeout(CLOSE_TIMEOUT))), Effect.ignore),
+	);
+
+	return Logger.make<unknown, void>((record) => {
+		if (!passes(record, installed)) return;
+		Queue.offerUnsafe(queue, formatNdjson(record));
+	});
+});

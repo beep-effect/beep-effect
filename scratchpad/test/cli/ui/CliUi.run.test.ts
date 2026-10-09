@@ -32,7 +32,7 @@ import { CliUi, KeyTable, Select, UiStreams, useKeys } from "../../../effected/c
 const { loads } = vi.hoisted(() => ({ loads: { count: 0 } }));
 vi.mock("../../../effected/cli/ui/internal/ink.ts", async (importOriginal) => {
 	const actual = await importOriginal<typeof import("../../../effected/cli/ui/internal/ink.ts")>();
-	const { Effect } = await import("effect");
+	const Effect = await import("effect/Effect");
 	return {
 		...actual,
 		loadInk: Effect.suspend(() => {
@@ -77,7 +77,7 @@ const OnMount = (props: { readonly onMount: () => void; readonly label?: string 
 const idle: Screen<never> = () => createElement(Text, null, "waiting");
 
 const chalk: Effect.Effect<InkChalk> = Effect.flatMap(
-	Effect.promise(() => inkChalk()),
+	inkChalk(),
 	O.match({
 		onNone: () => Effect.die(new Error("Ink's chalk did not resolve")),
 		onSome: Effect.succeed,
@@ -285,6 +285,26 @@ describe("CliUi.run", () => {
 				assert.include(fake.stdout().slice(-32), SHOW_CURSOR);
 				assert.strictEqual(instance.level, 1);
 			}),
+	);
+
+	it.effect("CliUi.lazy calls the loader immediately and rejects its synchronous exception", () =>
+		Effect.gen(function* () {
+			const failure = new Error("screen import threw");
+			let called = false;
+			const screen = CliUi.lazy(() => {
+				called = true;
+				throw failure;
+			});
+			assert.isFalse(called, "constructing a lazy screen does not invoke its loader");
+			// This call itself must not throw, and must invoke the loader before it returns its rejected promise.
+			const pending = screen({ resolve: () => undefined, cancel: () => undefined });
+			assert.isTrue(called, "invoking the screen calls its loader in the same turn");
+			const rejected = yield* Effect.promise(() => Promise.resolve(pending).then(
+				() => assert.fail("expected the lazy screen's loader to reject"),
+				(cause: unknown) => cause,
+			));
+			assert.strictEqual(rejected, failure, "the rejected promise retains the synchronous exception");
+		}),
 	);
 
 	it.live("CliUi.lazy loads the screen's module only when it mounts", () =>

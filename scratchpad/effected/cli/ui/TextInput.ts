@@ -360,7 +360,7 @@ export class TextInput {
 					: lineText(masking);
 		const [shownBefore, shownAfter] =
 			mask === undefined
-				? [state.value.slice(0, state.cursor), state.value.slice(state.cursor)]
+				? [lineText(state.value.slice(0, state.cursor)), lineText(state.value.slice(state.cursor))]
 				: maskedAround(state.value, state.cursor, mask);
 		const [before, after] = windowAround(shownBefore, shownAfter, columns - Fmt.width(cursorGlyph), glyphs.ellipsis);
 		return react.createElement(

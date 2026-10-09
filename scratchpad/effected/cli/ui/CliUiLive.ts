@@ -11,6 +11,7 @@ import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import * as Match from "effect/Match";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "@beep/utils/Option";
 import * as PubSub from "effect/PubSub";
 import * as Pull from "effect/Pull";
@@ -335,13 +336,13 @@ export const live = Effect.fn("live")(function* <E, S>(
 	 * error object for it, so a long watch session warns once for it, not once per run; any other failure is a fresh
 	 * object, and warns each time.
 	 */
-	const shapesWarned = new Set<LazyViewShapeError>();
+	const shapesWarned = MutableHashMap.empty<symbol, true>();
 
 	/** The degraded-run warning, unless it is a shape error this view has already warned about. */
 	const warning = (error: unknown): Effect.Effect<void> => {
-		if (error instanceof LazyViewShapeError) {
-			if (shapesWarned.has(error)) return Effect.void;
-			shapesWarned.add(error);
+		if (S.is(LazyViewShapeError)(error)) {
+			if (MutableHashMap.has(shapesWarned, error.id)) return Effect.void;
+			MutableHashMap.set(shapesWarned, error.id, true);
 		}
 		return Effect.logWarning(DEGRADED(error));
 	};

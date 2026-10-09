@@ -13,6 +13,7 @@ import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
 import * as Scope from "effect/Scope";
+import * as Tracer from "effect/Tracer";
 import { TestClock } from "effect/testing";
 import { CliLog } from "../../effected/cli/index.ts";
 
@@ -96,6 +97,26 @@ const program = Effect.gen(function* () {
 });
 
 describe("CliLog.layer file option", () => {
+	it.effect("traces sink construction as makeFileSink and file writes as append", () => {
+		let spans: ReadonlyArray<string> = [];
+		const tracer = Tracer.make({
+			span(options) {
+				spans = A.append(spans, options.name);
+				return Tracer.nativeTracer.span(options);
+			},
+		});
+		const sinkSpans = () => A.filter(spans, (name) => name === "makeFileSink" || name === "append");
+		return Effect.gen(function* () {
+			const h = yield* harness({ file: { path: PATH }, env: { [LEVEL_ENV]: "error" } });
+			yield* Effect.gen(function* () {
+				assert.deepStrictEqual(sinkSpans(), ["makeFileSink"]);
+				yield* h.log(Effect.logError("boom"));
+			}).pipe(Effect.ensuring(h.close));
+			assert.deepStrictEqual(sinkSpans(), ["makeFileSink", "append"]);
+			assert.isDefined(h.file(), "the append span belongs to a file write");
+		}).pipe(Effect.withTracer(tracer));
+	});
+
 	it("requires FileSystem and Path only when a file is given", () => {
 		const without: Layer.Layer<never, never, Audience | TerminalEnv> = CliLog.layer({ envVar: LEVEL_ENV });
 		assert.isDefined(without);

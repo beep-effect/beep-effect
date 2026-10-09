@@ -8,7 +8,7 @@ import * as Schedule from "effect/Schedule";
 // Root and ./ui types are named through the package's own name, so the emitted ui-testing.d.ts imports them rather
 // than carrying copies a consumer's own layers and screens could not satisfy.
 import type * as Cli from "../../index.ts";
-import type { KeyName, LiveHandle, LiveOptions, Screen, ScreenControl } from "../../ui.ts";
+import type { LiveHandle, LiveOptions, Screen, ScreenControl } from "../../ui.ts";
 import type { ColorLevel } from "../../../env/index.ts";
 import { TerminalEnv } from "../../../env/index.ts";
 import type * as Scope from "effect/Scope";
@@ -32,6 +32,7 @@ import { holder, holderSlot } from "../internal/Holder.ts";
 import { inkModules } from "../internal/ink.ts";
 import { UiRenderOptions } from "../internal/renderOptions.ts";
 import { UiStreams } from "../UiStreams.ts";
+import { KeyName } from "../UiKey.ts";
 import { makeFakeStreams } from "./fakeStreams.ts";
 import { screenAfter } from "./terminalModel.ts";
 import * as P from "effect/Predicate";
@@ -350,7 +351,7 @@ const TOKEN_BY_BLUE = HashMap.fromIterable(TOKENS.map((token, index) => [index +
 const NAMED = ["black", "red", "green", "yellow", "blue", "magenta", "cyan", "white"] as const;
 
 /** The bytes a terminal in raw mode sends for each named key, as Ink's keypress parser reads them. */
-const KEY_BYTES: Record<KeyName, string> = {
+const KEY_BYTES: Readonly<Record<KeyName, string>> = {
 	up: "\u001b[A",
 	down: "\u001b[B",
 	right: "\u001b[C",
@@ -368,6 +369,8 @@ const KEY_BYTES: Record<KeyName, string> = {
 	pageup: "\u001b[5~",
 	pagedown: "\u001b[6~",
 };
+
+const isKeyName = S.is(KeyName);
 
 // biome-ignore lint/suspicious/noControlCharactersInRegex: SGR, other CSI and OSC sequences all start with ESC
 const ESCAPES = /\u001b\[([0-9;]*)m|\u001b\[[0-9;?]*[A-Za-z]|\u001b\][^\u0007\u001b]*(?:\u0007|\u001b\\)/g;
@@ -513,7 +516,7 @@ const NOT_A_KEY = (method: string, text: string): string =>
 /** The bytes of a named key or a `{ char }`; a bare string that names no key is a defect saying how to send text. */
 const bytesOf = (key: KeyName | { readonly char: string }, method: "press" | "chunk"): Effect.Effect<string> => {
 	if (!P.isString(key)) return Effect.succeed(key.char);
-	return R.has(KEY_BYTES, key) ? Effect.succeed(KEY_BYTES[key]) : Effect.die(CliUiTestError.make({ message: NOT_A_KEY(method, key) }));
+	return isKeyName(key) ? Effect.succeed(KEY_BYTES[key]) : Effect.die(CliUiTestError.make({ message: NOT_A_KEY(method, key) }));
 };
 
 /** A `Cancelled` from the root entrypoint, matched by shape: this entry may carry its own copy of the class. */
@@ -807,14 +810,28 @@ const capturingConsole = (ambient: Console.Console) => {
 			// Formatted as data, as a console would show it: an object as JSON, never "[object Object]".
 			sink.push(`${args.map((arg) => Inspectable.toStringUnknown(arg, 0)).join(" ")}\n`);
 		};
-	// Over the ambient Console, so every method this does not keep still behaves as it did.
-	const writer: Console.Console = Object.create(ambient);
-	writer.log = line(out);
-	writer.info = line(out);
-	writer.debug = line(out);
-	writer.error = line(err);
-	writer.warn = line(err);
-	writer.trace = line(err);
+	// Resolve delegates at call time, retaining the ambient receiver and live method replacements.
+	const writer: Console.Console = {
+		assert: (...args) => ambient.assert(...args),
+		clear: () => ambient.clear(),
+		count: (...args) => ambient.count(...args),
+		countReset: (...args) => ambient.countReset(...args),
+		debug: line(out),
+		dir: (...args) => ambient.dir(...args),
+		dirxml: (...args) => ambient.dirxml(...args),
+		error: line(err),
+		group: (...args) => ambient.group(...args),
+		groupCollapsed: (...args) => ambient.groupCollapsed(...args),
+		groupEnd: () => ambient.groupEnd(),
+		info: line(out),
+		log: line(out),
+		table: (...args) => ambient.table(...args),
+		time: (...args) => ambient.time(...args),
+		timeEnd: (...args) => ambient.timeEnd(...args),
+		timeLog: (...args) => ambient.timeLog(...args),
+		trace: line(err),
+		warn: line(err),
+	};
 	return { writer, out, err };
 };
 

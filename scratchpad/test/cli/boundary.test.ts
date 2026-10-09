@@ -7,8 +7,21 @@ import { assert, describe, it, layer } from "@effect/vitest";
 import type { Offence } from "../../effected/workspaces/testing.ts";
 import { SourceBoundary } from "../../effected/workspaces/testing.ts";
 import * as Effect from "effect/Effect";
+import * as A from "effect/Array";
+import * as FileSystem from "effect/FileSystem";
 
 const SRC = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "effected", "cli");
+
+/** The lab keeps authored source at the package root; upstream scans only src, beside dist. */
+const scanSource = Effect.fn("cli.boundary.scanSource")(function* (options: Parameters<typeof SourceBoundary.scan>[0]) {
+	const fs = yield* FileSystem.FileSystem;
+	return yield* SourceBoundary.scan(options).pipe(Effect.provideService(FileSystem.FileSystem, {
+		...fs,
+		readDirectory: (directory) => fs.readDirectory(directory).pipe(Effect.map((names) =>
+			directory === SRC ? A.filter(names, (name) => name !== "dist") : names,
+		)),
+	}));
+});
 
 /** Reads a module's source text; the real tree reads the disk, the mutation control reads a map. */
 type Read = (file: string) => string;
@@ -104,13 +117,14 @@ const nodeImporters = (entry: string): ReadonlyArray<string> =>
  * lands:
  *
  * - `ui/internal/processStreams.ts`: `process` (reads the three process streams);
- * - `ui/internal/inkChalk.ts`: `forbidImports` of `node:module`, `node:url`, `node:fs`;
+ * - `ui/internal/inkChalk.ts`: `forbidImports` of `node:module`, `node:url`, `@effect/platform-node/NodeFileSystem`
+ *   (the scoped FileSystem service for realpath resolution);
  * - `ui/testing/fakeStreams.ts` (testing only): `forbidImports` of `node:stream` (it needs no `node:events`).
  */
 const NODE_LICENCE: ReadonlyArray<string> = [
 	"ui/internal/inkChalk.ts forbidImports node:module",
 	"ui/internal/inkChalk.ts forbidImports node:url",
-	"ui/internal/inkChalk.ts process process",
+	"ui/internal/inkChalk.ts forbidImports @effect/platform-node/NodeFileSystem",
 	"ui/internal/processStreams.ts process process",
 	"ui/testing/fakeStreams.ts forbidImports node:stream",
 	"ui/testing/fakeStreams.ts process process",
@@ -141,7 +155,7 @@ describe("cli boundary", () => {
 			"no source file reads process, writes to stdout, or imports node:, a platform package, mcp, engine, ink or react, outside the ./ui waivers",
 			() =>
 				Effect.gen(function* () {
-					const scan = yield* SourceBoundary.scan({
+					const scan = yield* scanSource({
 						root: SRC,
 						rules: [
 							"process",
@@ -161,7 +175,7 @@ describe("cli boundary", () => {
 						],
 						allowRules: {
 							forbidImports: ["ui.ts", "ui-testing.ts", "ui/**"],
-							process: ["ui/internal/processStreams.ts", "ui/internal/inkChalk.ts", "ui/testing/fakeStreams.ts"],
+							process: ["ui/internal/processStreams.ts", "ui/testing/fakeStreams.ts"],
 							"stdout-write": ["ui/internal/inkConsole.ts"],
 						},
 					});
@@ -187,7 +201,7 @@ describe("cli boundary", () => {
 		// stdout rules are held by the scan above.
 		it.effect("only CliLogger.ts names console, and only the console rule is waived there", () =>
 			Effect.gen(function* () {
-				const scan = yield* SourceBoundary.scan({
+				const scan = yield* scanSource({
 					root: SRC,
 					rules: ["console"],
 					allowRules: { console: ["CliLogger.ts"] },
@@ -240,6 +254,7 @@ describe("cli boundary", () => {
 		it("only the Ink loader imports ink or react as a value; every other ./ui file imports types only", () => {
 			const uiFiles = (readdirSync(SRC, { recursive: true, encoding: "utf8" }))
 				.map((file) => file.split(sep).join("/"))
+				.filter((file) => !file.startsWith("dist/"))
 				.filter((file) => file.endsWith(".ts") && isUiModule(file))
 				.sort();
 			assert.include(uiFiles, INK_LOADER, "the walk read the ui tree");
@@ -257,26 +272,33 @@ describe("cli boundary", () => {
 		it("./ui files name the package's own entrypoint through import type only, so the root types are never copied", () => {
 			const uiFiles = (readdirSync(SRC, { recursive: true, encoding: "utf8" }))
 				.map((file) => file.split(sep).join("/"))
+				.filter((file) => !file.startsWith("dist/"))
 				.filter((file) => file.endsWith(".ts") && isUiModule(file))
 				.sort();
+			const isRootReference = (file: string) => (specifier: string): boolean =>
+				isPackageSelfName(specifier) ||
+				(specifier.startsWith(".") && resolve(dirname(join(SRC, file)), specifier) === join(SRC, "index.ts"));
 			const offenders = uiFiles.flatMap((file) =>
-				valueImportsOf(readSource(join(SRC, file)), isPackageSelfName).map((spec) => `${file} ${spec}`),
+				valueImportsOf(readSource(join(SRC, file)), isRootReference(file)).map((spec) => `${file} ${spec}`),
 			);
 			assert.deepStrictEqual(offenders, []);
 			assert.include(
 				specifiersOf(join(SRC, "ui", "CliUi.ts"), readSource),
-				"@effected/cli",
-				"positive control: CliUi.ts names the root types through the package's own name",
+				"../index.ts",
+				"positive control: CliUi.ts names the lab root types through its entrypoint",
 			);
-			assert.deepStrictEqual(valueImportsOf('import { CliTheme } from "../../effected/cli/index.ts";', isPackageSelfName), [
+			assert.deepStrictEqual(valueImportsOf('import { CliTheme } from "@effected/cli";', isPackageSelfName), [
 				"@effected/cli",
 			]);
-			assert.deepStrictEqual(valueImportsOf('import type * as Cli from "../../effected/cli/index.ts";', isPackageSelfName), []);
+			assert.deepStrictEqual(valueImportsOf('import type * as Cli from "@effected/cli";', isPackageSelfName), []);
+			assert.deepStrictEqual(valueImportsOf('import { CliTheme } from "../index.ts";', isRootReference("ui/CliUi.ts")), ["../index.ts"]);
+			assert.deepStrictEqual(valueImportsOf('import type * as Cli from "../index.ts";', isRootReference("ui/CliUi.ts")), []);
 		});
 
 		it("no root module imports the package's own name, which would make the root declarations import themselves", () => {
 			const rootFiles = (readdirSync(SRC, { recursive: true, encoding: "utf8" }))
 				.map((file) => file.split(sep).join("/"))
+				.filter((file) => !file.startsWith("dist/"))
 				.filter((file) => file.endsWith(".ts") && !isUiModule(file));
 			assert.include(rootFiles, "CliRuntime.ts", "the walk read the root tree");
 			const offenders = rootFiles.flatMap((file) =>
@@ -286,12 +308,12 @@ describe("cli boundary", () => {
 			);
 			assert.deepStrictEqual(offenders, []);
 			assert.deepStrictEqual(
-				SourceBoundary.importSpecifiers('import type { CliTheme } from "../../effected/cli/index.ts";').filter(isPackageSelfName),
+				SourceBoundary.importSpecifiers('import type { CliTheme } from "@effected/cli";').filter(isPackageSelfName),
 				["@effected/cli"],
 				"mutation control: even a type-only self-import is caught",
 			);
 			assert.deepStrictEqual(
-				SourceBoundary.importSpecifiers('/** import { CliLogger } from "../../effected/cli/index.ts" */\nexport {};').filter(
+				SourceBoundary.importSpecifiers('/** import { CliLogger } from "@effected/cli" */\nexport {};').filter(
 					isPackageSelfName,
 				),
 				[],
@@ -397,7 +419,7 @@ describe("cli boundary", () => {
 					graph({
 						...tree,
 						"Cli.ts":
-							'export const lazy = () => import("../../effected/cli/ui.ts");\nexport * from "../../effected/cli/ui-testing.ts";\n',
+							'export const lazy = () => import("@effected/cli/ui");\nexport * from "@effected/cli/ui/testing";\n',
 					}),
 				),
 				["Cli.ts imports @effected/cli/ui", "Cli.ts imports @effected/cli/ui/testing"],

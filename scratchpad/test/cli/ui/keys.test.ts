@@ -1,6 +1,9 @@
 import { assert, describe, it } from "@effect/vitest";
+import { fcRuns } from "@beep/fc-runs";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { Text, useInput } from "ink";
 import type { ReactElement } from "react";
 import { createElement } from "react";
@@ -8,6 +11,7 @@ import { Glyphs } from "../../../effected/cli/index.ts";
 import type { KeyName, Screen, UiKey as UiKeyType } from "../../../effected/cli/ui.ts";
 import { KeyHelp, KeyTable, UiKey, useKeys } from "../../../effected/cli/ui.ts";
 import { CliUiTest } from "../../../effected/cli/ui-testing.ts";
+import { KeyName as KeyNameDomain, UiKeyPayload } from "../../../effected/cli/ui/UiKey.ts";
 
 /** A screen that records what `UiKey.fromInk` makes of every input Ink delivers. */
 const recording = (seen: Array<UiKeyType | undefined>): Screen<never> => {
@@ -21,6 +25,33 @@ const recording = (seen: Array<UiKeyType | undefined>): Screen<never> => {
 };
 
 const named = (name: KeyName): UiKeyType => ({ _tag: "Named", name });
+
+describe("UiKey schema ownership", () => {
+	it.effect.prop("round-trips the named-key domain", [Arbitrary.schema(KeyNameDomain)], ([name]) =>
+		Effect.gen(function* () {
+			const encoded = yield* S.encodeEffect(KeyNameDomain)(name);
+			assert.strictEqual(yield* S.decodeEffect(KeyNameDomain)(encoded), name);
+			assert.deepStrictEqual(UiKey.named(name), named(name));
+		}), { arbitrary: fcRuns(100) },
+	);
+
+	it.effect.prop("round-trips plain Named and Char payloads", [Arbitrary.schema(UiKeyPayload)], ([key]) =>
+		Effect.gen(function* () {
+			const encoded = yield* S.encodeEffect(UiKeyPayload)(key);
+			assert.deepStrictEqual(yield* S.decodeEffect(UiKeyPayload)(encoded), key);
+			assert.deepStrictEqual(key._tag === "Named" ? UiKey.named(key.name) : UiKey.char(key.char), key);
+		}), { arbitrary: fcRuns(100) },
+	);
+
+	it("rejects unknown key names and malformed payloads while preserving arbitrary typed text", () => {
+		assert.isFalse(S.is(KeyNameDomain)("unknown"));
+		assert.isFalse(S.is(UiKeyPayload)({ _tag: "Named", name: "unknown" }));
+		assert.isFalse(S.is(UiKeyPayload)({ _tag: "Char", char: 1 }));
+		for (const char of ["", " ", "pasted text", "\u0003"]) {
+			assert.deepStrictEqual(UiKey.char(char), { _tag: "Char", char });
+		}
+	});
+});
 
 describe("UiKey.fromInk", () => {
 	it.effect("names every key Ink reports, from the bytes a terminal sends", () =>

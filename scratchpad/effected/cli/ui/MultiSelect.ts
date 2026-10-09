@@ -1,4 +1,6 @@
 import { $ScratchpadId } from "@beep/identity/packages";
+import * as A from "effect/Array";
+import * as HashSet from "effect/HashSet";
 import * as Match from "effect/Match";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as MutableHashSet from "effect/MutableHashSet";
@@ -70,7 +72,7 @@ export interface MultiSelectState<A> {
 	/** The sections. */
 	readonly sections: ReadonlyArray<MultiSelectSection<A>>;
 	/** The selected items, by their number across all sections. */
-	readonly chosen: ReadonlySet<number>;
+	readonly chosen: HashSet.HashSet<number>;
 	/** The highlighted item and the window over the list; it counts items only, never headers. */
 	readonly viewport: ViewportState;
 	/** Whether enter was pressed. */
@@ -141,7 +143,7 @@ const init = <A>(
 ): MultiSelectState<A> => {
 	assertUniqueKeys(sections);
 	const items = flatten(sections);
-	const chosen = new Set(items.flatMap((entry, index) => (entry.item.selected === true ? [index] : [])));
+	const chosen = HashSet.fromIterable(items.flatMap((entry, index) => (entry.item.selected === true ? [index] : [])));
 	return { sections, chosen, viewport: Viewport.init(items.length, options.height ?? 10), submitted: false };
 };
 
@@ -153,9 +155,9 @@ const step = <A>(state: MultiSelectState<A>, action: MultiSelectAction): MultiSe
 		Match.when("submit", () => ({ ...state, submitted: true })),
 		Match.when("toggle", () => {
 			if (items.length === 0) return state;
-			const chosen = new Set(state.chosen);
-			if (chosen.has(cursor)) chosen.delete(cursor);
-			else chosen.add(cursor);
+			const chosen = HashSet.has(state.chosen, cursor)
+				? HashSet.remove(state.chosen, cursor)
+				: HashSet.add(state.chosen, cursor);
 			return { ...state, chosen };
 		}),
 		Match.when("toggleSection", () => {
@@ -163,12 +165,8 @@ const step = <A>(state: MultiSelectState<A>, action: MultiSelectAction): MultiSe
 			if (section === undefined) return state;
 			const members = items.flatMap((entry, index) => (entry.section === section ? [index] : []));
 			// Any unselected member selects the whole section; a fully selected section is cleared.
-			const fill = members.some((index) => !state.chosen.has(index));
-			const chosen = new Set(state.chosen);
-			for (const index of members) {
-				if (fill) chosen.add(index);
-				else chosen.delete(index);
-			}
+			const fill = members.some((index) => !HashSet.has(state.chosen, index));
+			const chosen = A.reduce(members, state.chosen, fill ? HashSet.add<number> : HashSet.remove<number>);
 			return { ...state, chosen };
 		}),
 		Match.orElse((move) => ({ ...state, viewport: Viewport.step(state.viewport, move) })),
@@ -176,7 +174,7 @@ const step = <A>(state: MultiSelectState<A>, action: MultiSelectAction): MultiSe
 };
 
 const selected = <A>(state: MultiSelectState<A>): ReadonlyArray<A> =>
-	flatten(state.sections).flatMap((entry, index) => (state.chosen.has(index) ? [entry.item.value] : []));
+	flatten(state.sections).flatMap((entry, index) => (HashSet.has(state.chosen, index) ? [entry.item.value] : []));
 
 /** ↑/↓ shown; the page, home and end moves bound but hidden, so the line names space, a, enter and esc at 80 columns. */
 const KEYS: KeyTable<MultiSelectAction> = KeyTable.make<MultiSelectAction>([
@@ -309,7 +307,7 @@ export class MultiSelect {
 			const index = O.getOrElse(MutableHashMap.get(numberOf, row.key), () => -1);
 			const entry = items[index];
 			const text = Fmt.truncate(
-				`${highlighted ? glyphs.arrow : blank} ${state.chosen.has(index) ? on : off} ${lineText(entry?.item.label ?? "")}`,
+				`${highlighted ? glyphs.arrow : blank} ${HashSet.has(state.chosen, index) ? on : off} ${lineText(entry?.item.label ?? "")}`,
 				columns,
 				ellipsis,
 			);

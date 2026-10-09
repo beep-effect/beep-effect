@@ -490,7 +490,7 @@ export class CliUi {
 	static readonly fallback = <A>(screen: Screen<A>, options: CliUiFallbackOptions<A>): Param.FallbackPrompt<A> => {
 		// Said once per fallback: a parse that retries must not repeat it.
 		let explained = false;
-		const fallback = Effect.fn("fallback")(function* () {
+		return Effect.gen(function* () {
 			const theme = yield* Effect.serviceOption(CliTheme);
 			if (O.isNone(theme)) {
 				if (!explained && (yield* CliInteractive)) {
@@ -507,8 +507,7 @@ export class CliUi {
 				Effect.map((answer) => Prompt.succeed(answer)),
 				Effect.catchTags({ Cancelled: Effect.die, NotInteractive: () => answerWithoutPerson(options) }),
 			);
-		});
-		return fallback();
+		}).pipe(Effect.withSpan("fallback"));
 	};
 
 	/**
@@ -519,7 +518,7 @@ export class CliUi {
 	 */
 	static readonly lazy =
 		<A>(load: () => Promise<{ readonly default: Screen<A> }>): Screen<A> =>
-		(control) => load().then((module) => module.default(control));
+		(control) => Promise.try(load).then((module) => module.default(control));
 
 	/**
 	 * A live view's `render` whose module is loaded only when a run first draws it, so importing the command that uses

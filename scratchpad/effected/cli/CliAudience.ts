@@ -19,8 +19,9 @@ const $I = $ScratchpadId.create("effected/cli/CliAudience");
 class AudienceConflictError extends S.TaggedError<AudienceConflictError>($I`AudienceConflictError`)(
 	"AudienceConflictError",
 	{
-		message: S.String,
+		message: S.String.annotate({ description: "The usage guidance for conflicting or repeated audience flags." }),
 	},
+	$I.annote("AudienceConflictError", { description: "More than one audience flag occurrence was supplied to a CLI run." }),
 ) {}
 
 const KINDS: ReadonlyArray<AudienceKind> = ["human", "agent", "ci"];

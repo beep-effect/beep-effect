@@ -88,10 +88,17 @@ describe("Status.resolve", () => {
 		assert.strictEqual(v.resolve("warning").rank, 5);
 	});
 
-	it("is an immutable snapshot, so a stored definition cannot be edited", () => {
+	it("is a readonly snapshot with copied fields and the token's own identity", () => {
 		const resolved = Status.core.resolve("info");
-		assert.isTrue(Object.isFrozen(resolved));
+		assert.deepStrictEqual(resolved, Status.core.def("info"));
 		assert.notStrictEqual(resolved, Status.core.def("info"));
+		assert.notStrictEqual(resolved, Status.core.resolve("info"));
+		const token = Token.hex("#e09a4e");
+		const vocab = Status.extend({ timeout: { glyph: "⧖", ascii: "[time]", token, rank: 85 } });
+		const snapshot = vocab.resolve("timeout");
+		assert.deepStrictEqual(snapshot, vocab.def("timeout"));
+		assert.notStrictEqual(snapshot, vocab.def("timeout"));
+		assert.strictEqual(snapshot.token, token);
 	});
 
 	it("dies on a name the vocabulary does not have, naming it and the names that exist", () => {

@@ -4,6 +4,7 @@ import { assert, describe, it } from "@effect/vitest";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import * as P from "effect/Predicate";
 import { Prompt } from "effect/cli";
 import { vi } from "vitest";
 import { CliInteractive, CliTheme } from "../../../effected/cli/index.ts";
@@ -22,7 +23,11 @@ describe("a missing optional peer", () => {
 				assert.isFalse(Cause.hasFails(exit.cause), "a missing peer is not a typed failure");
 				assert.isTrue(Cause.hasDies(exit.cause));
 				const defect = Cause.squash(exit.cause);
-				assert.instanceOf(defect, Error);
+				assert.isTrue(P.isTagged("MissingInkPeersError")(defect), "the installation defect is a tagged schema error");
+				if (defect instanceof Error) {
+					assert.strictEqual(defect.name, "Error", "the display name is preserved");
+					assert.instanceOf(defect.cause, Error, "the original import failure is retained");
+				}
 				const message = defect instanceof Error ? defect.message : "";
 				assert.include(message, "optional peers ink and react");
 				assert.include(message, "install");

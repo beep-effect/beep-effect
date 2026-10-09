@@ -15,6 +15,7 @@ import * as PathModule from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as References from "effect/References";
+import * as Str from "effect/String";
 import type { AudienceKind, RuntimeEnv } from "../env/index.ts";
 import { Audience, CurrentRuntimeEnv, TerminalEnv } from "../env/index.ts";
 import { CommandNeutralizer } from "../github-commands/index.ts";
@@ -226,7 +227,8 @@ const readLevel = Effect.fn("readLevel")(function* (
 	if (envVar === undefined) return { level: "None", invalid: undefined };
 	const raw = yield* Config.option(Config.String(envVar)).pipe(Effect.orElseSucceed(O.none<string>));
 	if (O.isNone(raw) || raw.value === "") return { level: "None", invalid: undefined };
-	const level = LEVELS[raw.value.toLowerCase()];
+	const key = Str.toLowerCase(raw.value);
+	const level = R.has(LEVELS, key) ? LEVELS[key] : undefined;
 	if (level !== undefined) return { level, invalid: undefined };
 	return {
 		level: "None",

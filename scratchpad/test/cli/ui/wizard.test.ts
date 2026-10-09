@@ -27,7 +27,7 @@ const Json = S.fromJsonString(S.Unknown);
 const { loads } = vi.hoisted(() => ({ loads: { count: 0 } }));
 vi.mock("../../../effected/cli/ui/internal/ink.ts", async (importOriginal) => {
 	const actual = await importOriginal<typeof import("../../../effected/cli/ui/internal/ink.ts")>();
-	const { Effect } = await import("effect");
+	const Effect = await import("effect/Effect");
 	return {
 		...actual,
 		loadInk: Effect.suspend(() => {

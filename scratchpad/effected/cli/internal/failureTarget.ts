@@ -1,3 +1,7 @@
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as A from "effect/Array";
+import * as Str from "effect/String";
+import * as S from "effect/Schema";
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as Cause from "effect/Cause";
 import * as Config from "effect/Config";
@@ -34,7 +38,7 @@ export interface FailureTarget {
 	/** Which stack frames a defect's report shows; `app` when absent. */
 	readonly stackFrames?: "app" | "all";
 	/** Which spans the report's `in:` trail names; `app` when absent. */
-	readonly spans?: "app" | "all" | "off";
+	readonly spans?: SpanSetting;
 	/** A module of the running program, whose package `spans: "app"` keeps. */
 	readonly appModule?: string;
 }
@@ -47,7 +51,7 @@ export interface FailureTarget {
 export interface FailureSettings {
 	readonly displayPath?: ((absolute: string) => string) | undefined;
 	readonly stackFrames?: "app" | "all" | undefined;
-	readonly spans?: "app" | "all" | "off" | undefined;
+	readonly spans?: SpanSetting | undefined;
 	readonly appModule?: string | undefined;
 }
 
@@ -62,9 +66,10 @@ export interface FailureSettings {
  *
  * @internal
  */
-export const FailureTargetCell = Context.Reference<
-	MutableRef.MutableRef<FailureTarget | undefined> | undefined
->($I`FailureTargetCell`, { defaultValue: () => undefined });
+export const FailureTargetCell = Context.Reference<MutableRef.MutableRef<FailureTarget | undefined> | undefined>(
+	$I`FailureTargetCell`,
+	{ defaultValue: () => undefined },
+);
 
 /** What a report is rendered with when nothing is known about the terminal: plain text, no limit, no escapes. */
 export const fallbackTarget: FailureTarget = {
@@ -173,8 +178,7 @@ const dropStatus = (content: ReadonlyArray<Inline>): ReadonlyArray<Inline> => {
 const withoutStatus = (doc: Document): Document =>
 	doc.map((block): Block => {
 		if (block._tag === "Paragraph") return { ...block, content: dropStatus(block.content) };
-		if (block._tag === "Tree")
-			return { ...block, root: { ...block.root, label: dropStatus(block.root.label) } };
+		if (block._tag === "Tree") return { ...block, root: { ...block.root, label: dropStatus(block.root.label) } };
 		return block;
 	});
 
@@ -187,13 +191,13 @@ export const linesOf: {
 	(
 		target: FailureTarget,
 		status?: boolean,
-		spans?: "app" | "all" | "off" | undefined,
+		spans?: SpanSetting | undefined,
 	): (cause: Cause.Cause<unknown>) => ReadonlyArray<string>;
 	(
 		cause: Cause.Cause<unknown>,
 		target: FailureTarget,
 		status?: boolean,
-		spans?: "app" | "all" | "off" | undefined,
+		spans?: SpanSetting | undefined,
 	): ReadonlyArray<string>;
 } = dual(
 	(args) => Cause.isCause(args[0]),
@@ -201,7 +205,7 @@ export const linesOf: {
 		cause: Cause.Cause<unknown>,
 		target: FailureTarget,
 		status: boolean = true,
-		spans: "app" | "all" | "off" | undefined = target.spans,
+		spans: SpanSetting | undefined = target.spans,
 	): ReadonlyArray<string> => {
 		const full = CliFailure.toDoc(cause, {
 			displayPath: target.ctx.displayPath,
@@ -232,8 +236,7 @@ export const guardConsumerLines = (lines: ReadonlyArray<string>): Effect.Effect<
 	Effect.map(currentTarget, (target) => {
 		// An agent or a CI gets no escape of any kind (the kit's own output for them is already escape-free); only a person
 		// keeps what the consumer wrote.
-		const noEscapes =
-			target.assumed !== true && (target.ctx.audience === "agent" || target.ctx.audience === "ci");
+		const noEscapes = target.assumed !== true && (target.ctx.audience === "agent" || target.ctx.audience === "ci");
 		const stripped = noEscapes ? lines.map(sanitize) : lines;
 		return target.ctx.neutralizeWorkflowCommands === true
 			? stripped.flatMap((line) => CommandNeutralizer.lines(line))
@@ -246,15 +249,19 @@ export const guardConsumerLines = (lines: ReadonlyArray<string>): Effect.Effect<
  * @internal
  */
 export const plainFailureLines: {
-	(status?: boolean, spans?: "app" | "all" | "off"): (cause: Cause.Cause<unknown>) => ReadonlyArray<string>;
-	(cause: Cause.Cause<unknown>, status?: boolean, spans?: "app" | "all" | "off"): ReadonlyArray<string>;
+	(status?: boolean, spans?: SpanSetting): (cause: Cause.Cause<unknown>) => ReadonlyArray<string>;
+	(cause: Cause.Cause<unknown>, status?: boolean, spans?: SpanSetting): ReadonlyArray<string>;
 } = dual(
 	(args) => Cause.isCause(args[0]),
-	(cause: Cause.Cause<unknown>, status = true, spans?: "app" | "all" | "off"): ReadonlyArray<string> =>
+	(cause: Cause.Cause<unknown>, status = true, spans?: SpanSetting): ReadonlyArray<string> =>
 		linesOf(cause, fallbackTarget, status, spans),
 );
 
-const SPAN_SETTINGS: ReadonlyArray<"app" | "all" | "off"> = ["app", "all", "off"];
+const SpanSetting = LiteralKit(["app", "all", "off"]).annotate(
+	$I.annote("SpanSetting", { description: "The span trail visibility setting." }),
+);
+type SpanSetting = typeof SpanSetting.Type;
+const isSpanSetting = S.is(SpanSetting);
 
 /**
  * The span trail setting, as `CliLog`'s level is read: the explicit `spans` when given (the variable is then not read
@@ -266,32 +273,29 @@ const SPAN_SETTINGS: ReadonlyArray<"app" | "all" | "off"> = ["app", "all", "off"
 export const readSpans: {
 	(
 		envVar: string | undefined,
-	): (
-		explicit: "app" | "all" | "off" | undefined,
-	) => Effect.Effect<{
-		readonly spans: "app" | "all" | "off" | undefined;
+	): (explicit: SpanSetting | undefined) => Effect.Effect<{
+		readonly spans: SpanSetting | undefined;
 		readonly invalid: string | undefined;
 	}>;
 	(
-		explicit: "app" | "all" | "off" | undefined,
+		explicit: SpanSetting | undefined,
 		envVar: string | undefined,
 	): Effect.Effect<{
-		readonly spans: "app" | "all" | "off" | undefined;
+		readonly spans: SpanSetting | undefined;
 		readonly invalid: string | undefined;
 	}>;
 } = dual(
 	2,
-	Effect.fnUntraced(function* (explicit: "app" | "all" | "off" | undefined, envVar: string | undefined) {
+	Effect.fnUntraced(function* (explicit: SpanSetting | undefined, envVar: string | undefined) {
 		if (explicit !== undefined) return { spans: explicit, invalid: undefined };
 		if (envVar === undefined) return { spans: undefined, invalid: undefined };
 		const raw = yield* Config.option(Config.String(envVar)).pipe(Effect.orElseSucceed(O.none<string>));
 		if (O.isNone(raw) || raw.value === "") return { spans: undefined, invalid: undefined };
-		const value = raw.value.toLowerCase();
-		const spans = SPAN_SETTINGS.find((setting) => setting === value);
-		if (spans !== undefined) return { spans, invalid: undefined };
+		const value = Str.toLowerCase(raw.value);
+		if (isSpanSetting(value)) return { spans: value, invalid: undefined };
 		return {
 			spans: undefined,
-			invalid: `${envVar}=${raw.value} is not a span setting (${SPAN_SETTINGS.join("|")}); ignoring it`,
+			invalid: `${envVar}=${raw.value} is not a span setting (${A.join(SpanSetting.literals, "|")}); ignoring it`,
 		};
 	}),
 );

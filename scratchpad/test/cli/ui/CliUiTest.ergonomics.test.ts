@@ -9,6 +9,7 @@ import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
+import * as Layer from "effect/Layer";
 import * as MutableRef from "effect/MutableRef";
 import * as O from "effect/Option";
 import { Command } from "effect/cli";
@@ -143,6 +144,99 @@ describe("Select's highlight marker in plainFrame (O2d)", () => {
 			const lines = plain.split("\n");
 			assert.include(lines, "→ library", plain);
 			assert.include(lines, "  software-project", plain);
+		}).pipe(Effect.scoped),
+	);
+});
+
+/** Class methods are inherited and non-enumerable, as an ambient console's members can be. */
+class RecordingConsole implements Console.Console {
+	readonly owner = this;
+	readonly calls: Array<readonly [string, ReadonlyArray<unknown>]> = [];
+
+	record(method: string, args: ReadonlyArray<unknown>): void {
+		assert.strictEqual(this, this.owner, `${method} keeps the ambient receiver`);
+		this.calls.push([method, args]);
+	}
+	assert(condition: boolean, ...args: ReadonlyArray<unknown>): void { this.record("assert", [condition, ...args]); }
+	clear(): void { this.record("clear", []); }
+	count(label?: string): void { this.record("count", [label]); }
+	countReset(label?: string): void { this.record("countReset", [label]); }
+	debug(...args: ReadonlyArray<unknown>): void { this.record("debug", args); }
+	dir(item: unknown, options?: unknown): void { this.record("dir", [item, options]); }
+	dirxml(...args: ReadonlyArray<unknown>): void { this.record("dirxml", args); }
+	error(...args: ReadonlyArray<unknown>): void { this.record("error", args); }
+	group(...args: ReadonlyArray<unknown>): void { this.record("group", args); }
+	groupCollapsed(...args: ReadonlyArray<unknown>): void { this.record("groupCollapsed", args); }
+	groupEnd(): void { this.record("groupEnd", []); }
+	info(...args: ReadonlyArray<unknown>): void { this.record("info", args); }
+	log(...args: ReadonlyArray<unknown>): void { this.record("log", args); }
+	table(tabularData: unknown, properties?: ReadonlyArray<string>): void { this.record("table", [tabularData, properties]); }
+	time(label?: string): void { this.record("time", [label]); }
+	timeEnd(label?: string): void { this.record("timeEnd", [label]); }
+	timeLog(label?: string, ...args: ReadonlyArray<unknown>): void { this.record("timeLog", [label, ...args]); }
+	trace(...args: ReadonlyArray<unknown>): void { this.record("trace", args); }
+	warn(...args: ReadonlyArray<unknown>): void { this.record("warn", args); }
+}
+
+describe("CliUiTest.session ambient Console delegation", () => {
+	it.effect("captures all six output methods and delegates every other Console member with its ambient receiver", () =>
+		Effect.gen(function* () {
+			const ambient = new RecordingConsole();
+			const session = yield* CliUiTest.session().pipe(Effect.provideService(Console.Console, ambient));
+			yield* Effect.scopedWith((scope) => Effect.flatMap(Layer.buildWithScope(session.layer, scope), (context) =>
+				Effect.provideContext(Console.consoleWith((writer) => Effect.sync(() => {
+					writer.log("log");
+					writer.info("info");
+					writer.debug("debug");
+					writer.error("error");
+					writer.warn("warn");
+					writer.trace("trace");
+					writer.assert(false, "assert", 1);
+					writer.clear();
+					writer.count("counter");
+					writer.countReset("counter");
+					writer.dir({ value: 1 }, { depth: 2 });
+					writer.dirxml("xml", 2);
+					writer.group("group", 3);
+					writer.groupCollapsed("collapsed", 4);
+					writer.groupEnd();
+					writer.table([{ value: 1 }], ["value"]);
+					writer.time("timer");
+					writer.timeEnd("timer");
+					writer.timeLog("timer", "elapsed", 5);
+				})), context),
+			));
+			assert.strictEqual(yield* session.stdout, "log\ninfo\ndebug\n");
+			assert.strictEqual(yield* session.stderr, "error\nwarn\ntrace\n");
+			assert.deepStrictEqual(ambient.calls, [
+				["assert", [false, "assert", 1]], ["clear", []], ["count", ["counter"]], ["countReset", ["counter"]],
+				["dir", [{ value: 1 }, { depth: 2 }]], ["dirxml", ["xml", 2]], ["group", ["group", 3]],
+				["groupCollapsed", ["collapsed", 4]], ["groupEnd", []], ["table", [[{ value: 1 }], ["value"]]],
+				["time", ["timer"]], ["timeEnd", ["timer"]], ["timeLog", ["timer", "elapsed", 5]],
+			]);
+		}).pipe(Effect.scoped),
+	);
+
+	it.effect("resolves a replaced ambient method at call time, including a previously obtained writer", () =>
+		Effect.gen(function* () {
+			const ambient = new RecordingConsole();
+			const session = yield* CliUiTest.session().pipe(Effect.provideService(Console.Console, ambient));
+			yield* Effect.scopedWith((scope) => Effect.flatMap(Layer.buildWithScope(session.layer, scope), (context) =>
+				Effect.provideContext(Console.consoleWith((writer) => Effect.sync(() => {
+					writer.count("before");
+					ambient.count = function(this: RecordingConsole, ...args: [label?: string]): void {
+						this.record("replacement", args);
+					};
+					writer.count("after");
+					writer.count();
+					writer.count(undefined);
+				})), context),
+			));
+			assert.deepStrictEqual(ambient.calls, [
+				["count", ["before"]], ["replacement", ["after"]], ["replacement", []], ["replacement", [undefined]],
+			]);
+			assert.strictEqual(yield* session.stdout, "");
+			assert.strictEqual(yield* session.stderr, "");
 		}).pipe(Effect.scoped),
 	);
 });

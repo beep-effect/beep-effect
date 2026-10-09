@@ -7,7 +7,7 @@ import * as Effect from "effect/Effect";
 import * as Stdio from "effect/Stdio";
 import * as Stream from "effect/Stream";
 import { Command, Flag, Prompt } from "effect/cli";
-import { CliPrompt, CliRuntime } from "../../src/index.ts";
+import { CliPrompt, CliRuntime } from "../../../effected/cli/index.ts";
 
 const profile = Flag.String("profile").pipe(
 	Flag.withFallbackPrompt(
