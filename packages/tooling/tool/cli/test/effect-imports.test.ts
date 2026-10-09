@@ -824,6 +824,44 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 
+    it.effect("keeps root star, namespace, and unmapped re-exports for manual review", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
+        Effect.gen(function* () {
+          yield* writeTsconfig;
+          const source = A.join(
+            [
+              'export * from "effect";',
+              'export * as EffectRoot from "effect";',
+              'export { Effect, FutureModule } from "effect";',
+              "",
+            ],
+            "\n"
+          );
+          yield* writeProjectFile("packages/demo/src/index.ts", source);
+
+          const summary = yield* runEffectImportRules(
+            EffectImportRulesOptions.make({
+              write: true,
+              strictCheck: true,
+              excludePaths: [],
+              promotedFamilyPrefixes: ["packages/demo"],
+            })
+          );
+
+          expect(summary.rootExportsRewritten).toBe(0);
+          expect(A.map(summary.manualReviews, (review) => review.kind)).toEqual([
+            "root-namespace",
+            "root-namespace",
+            "missing-mapping",
+          ]);
+          expect(A.map(summary.manualReviews, (review) => review.line)).toEqual([1, 2, 3]);
+          expect(summary.strictFailure).toBe(true);
+          expect(yield* readProjectFile("packages/demo/src/index.ts")).toBe(source);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
     it.effect("routes dynamic, import-type, and import-equals roots to structured manual review", () =>
       Effect.andThen(
         temporaryWorkingDirectory,
