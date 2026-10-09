@@ -8,12 +8,15 @@
 // expanded alternative, so {tools/cli,packages/*} contributes a literal AND a
 // wildcard.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { GlobPattern, GlobPatternError } from "./GlobPattern.ts";
 import { isGuardExceeded } from "./internal/limits.ts";
 import { Minimatch, braceExpand } from "./internal/minimatch.ts";
+
+const $I = $ScratchpadId.create("effected/glob/GlobSet");
 
 // Strip exactly ONE leading bang: the set-level exclusion marker. A remaining
 // bang is then ordinary minimatch whole-pattern negation inside the exclude —
@@ -75,10 +78,10 @@ interface Classified {
  *
  * @public
  */
-export class GlobSet extends S.Class<GlobSet>("GlobSet")(
+export class GlobSet extends S.Class<GlobSet>($I`GlobSet`)(
 	S.Struct({ patterns: S.Array(S.String) }).check(
 		S.makeFilter((v) => allCompileUnderDefaults(v.patterns), { title: "compilable glob pattern set" }),
-	),
+	), $I.annote("GlobSet", { description: "A compiled multi-pattern include/exclude set: `matches(candidate)` is true when some include accepts it and no exclude does. One encoded field, `patterns` — the source text of every member, preserved verbatim; the classified indexes live in a private field the schema never encodes." }),
 ) {
 	#classified: Classified | undefined;
 

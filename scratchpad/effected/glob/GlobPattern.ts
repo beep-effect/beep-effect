@@ -7,6 +7,7 @@
 // it. The engine throws raw GuardExceeded records at compile time; ONLY this
 // facade materializes them into the typed GlobPatternError.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -14,6 +15,8 @@ import * as SchemaTransformation from "effect/SchemaTransformation";
 import { EXPANSION_MAX, isGuardExceeded } from "./internal/limits.ts";
 import type { EngineOptions } from "./internal/minimatch.ts";
 import { GLOBSTAR, Minimatch, escape as engineEscape, unescape as engineUnescape } from "./internal/minimatch.ts";
+
+const $I = $ScratchpadId.create("effected/glob/GlobPattern");
 
 /**
  * Typed failure raised when a glob pattern trips a compile-time guard:
@@ -24,16 +27,16 @@ import { GLOBSTAR, Minimatch, escape as engineEscape, unescape as engineUnescape
  *
  * @public
  */
-export class GlobPatternError extends S.TaggedError<GlobPatternError>()("GlobPatternError", {
+export class GlobPatternError extends S.TaggedError<GlobPatternError>($I`GlobPatternError`)("GlobPatternError", {
 	/** The pattern source that was rejected. */
-	pattern: S.String,
+	pattern: S.String.annotateKey({ description: "The pattern source that was rejected." }),
 	/** Which guard tripped: pattern length, brace-expansion budget, or nesting depth. */
-	reason: S.Literals(["PatternTooLong", "ExpansionBudgetExceeded", "NestingDepthExceeded"]),
+	reason: S.Literals(["PatternTooLong", "ExpansionBudgetExceeded", "NestingDepthExceeded"]).annotateKey({ description: "Which guard tripped: pattern length, brace-expansion budget, or nesting depth." }),
 	/** The cap the pattern exceeded. */
-	limit: S.Finite,
+	limit: S.Finite.annotateKey({ description: "The cap the pattern exceeded." }),
 	/** The measured value that exceeded `limit`. */
-	actual: S.Finite,
-}) {
+	actual: S.Finite.annotateKey({ description: "The measured value that exceeded `limit`." }),
+}, $I.annote("GlobPatternError", { description: "Typed failure raised when a glob pattern trips a compile-time guard: over-length, brace-expansion budget exhaustion, or nesting past the depth cap. Malformed input is never a defect — this is the only failure the package's fallible boundaries (GlobPattern.compile and `GlobSet.compile`) can produce." })) {
 	override get message(): string {
 		const shown = this.pattern.length > 64 ? `${this.pattern.slice(0, 64)}…` : this.pattern;
 		return `glob pattern ${JSON.stringify(shown)} rejected: ${this.reason} (limit ${this.limit}, actual ${this.actual})`;
@@ -53,41 +56,41 @@ export class GlobPatternError extends S.TaggedError<GlobPatternError>()("GlobPat
  *
  * @public
  */
-export class GlobPatternOptions extends S.Class<GlobPatternOptions>("GlobPatternOptions")({
+export class GlobPatternOptions extends S.Class<GlobPatternOptions>($I`GlobPatternOptions`)({
 	/** Do not expand `{x,y}` style braces. */
-	nobrace: S.optionalKey(S.Boolean),
+	nobrace: S.optionalKey(S.Boolean).annotateKey({ description: "Do not expand `{x,y}` style braces." }),
 	/** Do not treat a pattern starting with `#` as a comment. */
-	nocomment: S.optionalKey(S.Boolean),
+	nocomment: S.optionalKey(S.Boolean).annotateKey({ description: "Do not treat a pattern starting with `#` as a comment." }),
 	/** Do not treat a pattern starting with `!` as a negation. */
-	nonegate: S.optionalKey(S.Boolean),
+	nonegate: S.optionalKey(S.Boolean).annotateKey({ description: "Do not treat a pattern starting with `!` as a negation." }),
 	/** Treat `**` the same as `*`. */
-	noglobstar: S.optionalKey(S.Boolean),
+	noglobstar: S.optionalKey(S.Boolean).annotateKey({ description: "Treat `**` the same as `*`." }),
 	/** Do not expand extglobs like `+(a|b)`. */
-	noext: S.optionalKey(S.Boolean),
+	noext: S.optionalKey(S.Boolean).annotateKey({ description: "Do not expand extglobs like `+(a|b)`." }),
 	/** Allow matches that start with `.` even if the pattern does not. */
-	dot: S.optionalKey(S.Boolean),
+	dot: S.optionalKey(S.Boolean).annotateKey({ description: "Allow matches that start with `.` even if the pattern does not." }),
 	/** Match case-insensitively. */
-	nocase: S.optionalKey(S.Boolean),
+	nocase: S.optionalKey(S.Boolean).annotateKey({ description: "Match case-insensitively." }),
 	/** Ignore case only in wildcard portions of the pattern. */
-	nocaseMagicOnly: S.optionalKey(S.Boolean),
+	nocaseMagicOnly: S.optionalKey(S.Boolean).annotateKey({ description: "Ignore case only in wildcard portions of the pattern." }),
 	/** Consider braces to be "magic" for the purpose of `hasMagic`. */
-	magicalBraces: S.optionalKey(S.Boolean),
+	magicalBraces: S.optionalKey(S.Boolean).annotateKey({ description: "Consider braces to be \"magic\" for the purpose of `hasMagic`." }),
 	/** Match a pattern without slashes against the basename of a path that contains slashes. */
-	matchBase: S.optionalKey(S.Boolean),
+	matchBase: S.optionalKey(S.Boolean).annotateKey({ description: "Match a pattern without slashes against the basename of a path that contains slashes." }),
 	/** Invert the results of negated matches. */
-	flipNegate: S.optionalKey(S.Boolean),
+	flipNegate: S.optionalKey(S.Boolean).annotateKey({ description: "Invert the results of negated matches." }),
 	/** Compare a partial path to the pattern: a path is a match as long as the parts present are not contradicted by the pattern. */
-	partial: S.optionalKey(S.Boolean),
+	partial: S.optionalKey(S.Boolean).annotateKey({ description: "Compare a partial path to the pattern: a path is a match as long as the parts present are not contradicted by the pattern." }),
 	/** Do not collapse multiple `/` into a single `/`. */
-	preserveMultipleSlashes: S.optionalKey(S.Boolean),
+	preserveMultipleSlashes: S.optionalKey(S.Boolean).annotateKey({ description: "Do not collapse multiple `/` into a single `/`." }),
 	/** Treat `\\` as a path separator, not an escape character. */
-	windowsPathsNoEscape: S.optionalKey(S.Boolean),
+	windowsPathsNoEscape: S.optionalKey(S.Boolean).annotateKey({ description: "Treat `\\\\` as a path separator, not an escape character." }),
 	/** For a pattern starting with a UNC path or drive letter in `nocase` mode, keep the root portions as strings instead of case-insensitive regular expressions. */
-	windowsNoMagicRoot: S.optionalKey(S.Boolean),
+	windowsNoMagicRoot: S.optionalKey(S.Boolean).annotateKey({ description: "For a pattern starting with a UNC path or drive letter in `nocase` mode, keep the root portions as strings instead of case-insensitive regular expressions." }),
 	/** The level of pre-parse pattern optimization: `0`, `1` or `2`. */
 	optimizationLevel: S.optionalKey(
 		S.Finite.check(S.isInt(), S.isBetween({ minimum: 0, maximum: 2 })),
-	),
+	).annotateKey({ description: "The level of pre-parse pattern optimization: `0`, `1` or `2`." }),
 	/** The operating system the pattern is interpreted for. Defaults to `"posix"`; only `"win32"` changes behavior, and it is never read from the ambient process. */
 	platform: S.optionalKey(
 		S.Literals([
@@ -104,16 +107,16 @@ export class GlobPatternOptions extends S.Class<GlobPatternOptions>("GlobPattern
 			"cygwin",
 			"netbsd",
 		]),
-	),
+	).annotateKey({ description: "The operating system the pattern is interpreted for. Defaults to `\"posix\"`; only `\"win32\"` changes behavior, and it is never read from the ambient process." }),
 	/** Maximum number of `{...}` expansions, from `1` to `100000` (the default and ceiling). */
 	braceExpandMax: S.optionalKey(
 		S.Finite.check(S.isInt(), S.isBetween({ minimum: 1, maximum: EXPANSION_MAX })),
-	),
+	).annotateKey({ description: "Maximum number of `{...}` expansions, from `1` to `100000` (the default and ceiling)." }),
 	/** Maximum number of non-adjacent `**` segments the matcher recursively walks down. */
-	maxGlobstarRecursion: S.optionalKey(S.Finite.check(S.isInt(), S.isGreaterThan(0))),
+	maxGlobstarRecursion: S.optionalKey(S.Finite.check(S.isInt(), S.isGreaterThan(0))).annotateKey({ description: "Maximum number of non-adjacent `**` segments the matcher recursively walks down." }),
 	/** Maximum depth to traverse for nested extglobs like `*(a|b|c)`. */
-	maxExtglobRecursion: S.optionalKey(S.Finite.check(S.isInt(), S.isGreaterThan(0))),
-}) {}
+	maxExtglobRecursion: S.optionalKey(S.Finite.check(S.isInt(), S.isGreaterThan(0))).annotateKey({ description: "Maximum depth to traverse for nested extglobs like `*(a|b|c)`." }),
+}, $I.annote("GlobPatternOptions", { description: "Matching options for a glob pattern: the full minimatch options surface, schema-validated. Invalid options are a developer wiring error and throw at `make` — a defect at construction; the typed channel stays reserved for malformed patterns." })) {}
 
 // Conditional-spread bridge: a present-but-undefined optionalKey never happens
 // through the schema, but the engine bag must not carry explicit undefined
@@ -171,10 +174,10 @@ const compilesUnderDefaults = (source: string): true | string => {
  *
  * @public
  */
-export class GlobPattern extends S.Class<GlobPattern>("GlobPattern")(
+export class GlobPattern extends S.Class<GlobPattern>($I`GlobPattern`)(
 	S.Struct({ source: S.String }).check(
 		S.makeFilter((v) => compilesUnderDefaults(v.source), { title: "compilable glob pattern" }),
-	),
+	), $I.annote("GlobPattern", { description: "A compiled glob pattern with a total `matches(candidate)` predicate, plus the metadata a directory walker needs." }),
 ) {
 	#engine: Minimatch | undefined;
 	#engineOptions: EngineOptions = {};
