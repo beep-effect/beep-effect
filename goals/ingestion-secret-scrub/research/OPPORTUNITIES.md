@@ -132,3 +132,15 @@ exact-canary count is 0 as well. No credentials or approval were required.
   barrel and remove the new subpath export. This stays inside owned files and
   avoids editing shared root alias projections. Affected package proofs rerun.
 - Prevention: include export-projection consequences in the P0 module-layout audit.
+
+## 2026-10-09 — hosted security image acquisition
+
+- Work: read completed red jobs immediately for the P1 PR head.
+- Evidence: Secret Scanning exits 125 on Docker unauthenticated pull rate limit;
+  SAST exits 125 on Docker Hub auth-endpoint timeout fetching its scanner image.
+- Attribution: environment-only; neither scanner reached source analysis.
+- Disposition: exact logs read and inbox rows acknowledged with the distinct
+  acquisition failures. Local commit-range gitleaks passes; hosted success is
+  not inferred. The next required publication starts a fresh head's checks.
+- Prevention: centrally provision scanner images or retry transient acquisition
+  in the owning CI packet. This lane changes no CI policy, credentials or plan.

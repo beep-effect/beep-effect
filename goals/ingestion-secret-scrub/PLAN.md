@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `active` — P0/P1 complete. Namespace-only export repair is qualified by all affected default package proofs; P2/P3 remain.
+Status: `active` — P0-P2 complete. Local package/parity and bounded no-canary proofs pass; P3 reflection, final support scan and content-final readiness remain.
 
 ## Phases
 
@@ -10,7 +10,7 @@ Status: `active` — P0/P1 complete. Namespace-only export repair is qualified b
 | --- | --- | --- | --- |
 | P0 Pattern-bank consolidation audit | complete | Audit `AiMetricsRedactionResult` and `CauseRedaction` rule-by-rule; deduplicate and assign one canonical owner/version; build synthetic hit, near-miss, placeholder, coverage-gap, and residue fixtures. | Both banks and consumers are accounted for; one versioned bank contract and fixture matrix are recorded; contradictions block P1. |
 | P1 Implement | complete | Add the smallest Effect-first/schema-first file-processing scrub transform, no-raw-match evidence projection, coverage/residue contract, retention behavior, and one real prompt-boundary gate. | Supported inputs sanitize with correct proof; blocked/unknown states cannot reach prompts; no raw canary enters observable or persisted output. |
-| P2 Verify | pending | Run fixture, bank-version, canary-absence, prompt-gate, retention, focused package, and repo proof. | Every `SPEC.md` acceptance item is green or a reproducible blocker is archived without weakening confidentiality/fail-closed rules. |
+| P2 Verify | complete | Run fixture, bank-version, canary-absence, prompt-gate, retention, focused package, and repo proof. | Every `SPEC.md` acceptance item is green or a reproducible blocker is archived without weakening confidentiality/fail-closed rules. |
 | P3 Close | pending | Drive the PR to mergeable through Yeet, write the closeout reflection, archive non-secret proof, and synchronize packet state. | Yeet/GitHub reports mergeable; reflection lint passes; README, PLAN, and manifest match the evidence. |
 
 ## P0 Audit Contract

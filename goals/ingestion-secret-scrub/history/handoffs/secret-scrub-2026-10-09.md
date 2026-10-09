@@ -292,3 +292,38 @@ parity are finishing. Root alias synchronization reports no drift. The P0
 publication inbox row is acknowledged by signed repair `1a2c74c8c0`. Exact-canary
 scan: 165 accumulated surfaces, each 0; commit-range secret scan: 14 commits,
 no leaks. P1 is complete again; publication retry is still one implementation wave.
+
+### 2026-10-09 — P1 published; P2 started
+
+Wave 2 is published to draft PR #1570 at `da1a9b05c7`; all 16 publication
+cheap gates and head-install preflight pass. The PR body now carries the six
+private-package release notes, the standalone Layer major compatibility note
+and the proof limit. Both Vercel deployment rows are attributed and acknowledged
+as build-rate-limit failures under the explicit repository exception. No plan
+change or purchase is needed. Updated local docgen passes; regenerated JSDoc
+ratchet and final Fallow parity are running. All six package default, test-tsgo
+and scoped coverage receipts pass for the current source or unchanged package.
+P2 scans and P3 closeout remain; no content-final or merge-ready claim is made.
+
+### 2026-10-09 — P2 verified
+
+Phase reached: P2 complete. All six default package, test-tsgo and scoped coverage
+commands pass on current source or the unchanged domain surface. Updated local
+docgen, regenerated JSDoc ratchet and Fallow audit/health pass; publication's
+16 cheap gates, Knip and root alias synchronization pass. Final source coverage
+runs include schema 483 tests, file-processing 71 and documents-server 102.
+TestClock proves the ratified raw/proof/audit eligibility boundaries and pins.
+
+Exact-canary method: rebuild three runtime-fragment canaries and count only.
+Serialized scrub results and mask-only evidence, rendered errors/redacted causes,
+captured prompts/logs/spans/failure causes and persistence assertions all pass
+zero-count checks. No TextAnchor is emitted. CLI scan covers 184 accumulated
+source, packet support and output surfaces, every count 0; PR text and branch
+commit messages are included. AC4 waits for P3 final support bytes/reflection.
+
+Hosted P1 Secret Scanning and SAST fail before analysis on Docker acquisition
+(rate limit and auth-endpoint timeout), with exact logs read and environment-only
+receipts acknowledged. No hosted pass is inferred or shared CI policy changed.
+Vercel deployment build-rate-limit rows carry the repository exception. R4 keeps
+exact-head hosted state distinct from local parity. PR #1570 is draft; P3 final
+reflection, packet flip, support scan and ready/content-final push remain.

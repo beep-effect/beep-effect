@@ -130,24 +130,24 @@ not replacement doctrine.
 
 ## Acceptance Criteria
 
-- [ ] P0 inventories both existing banks rule-by-rule, records overlap and
+- [x] P0 inventories both existing banks rule-by-rule, records overlap and
       deduplication, establishes one owner/version identifier, and prevents a
       third divergent bank.
-- [ ] A synthetic fixture corpus covers supported hits, near-misses,
+- [x] A synthetic fixture corpus covers supported hits, near-misses,
       placeholders, overlapping/partial forms, coverage gaps, and
       secret-shaped residue; every case has explicit sanitized, metadata,
       coverage/residue, and `safeForPrompt` expectations.
-- [ ] Supported hits produce sanitized text and correct categories/counts
+- [x] Supported hits produce sanitized text and correct categories/counts
       without retaining raw matches in any returned or serialized evidence.
 - [ ] Exact synthetic canary scans prove no raw secret survives into persisted
       artifacts, `TextAnchor.quote`, errors, logs, telemetry, snapshots, or
       support evidence.
-- [ ] Unknown coverage, unresolved matches, and residue cases each make
+- [x] Unknown coverage, unresolved matches, and residue cases each make
       `safeForPrompt` false, block one real prompt leg, and preserve only
       sanitized/non-secret diagnostics.
-- [ ] A clean fixture with known coverage demonstrates `safeForPrompt: true`
+- [x] A clean fixture with known coverage demonstrates `safeForPrompt: true`
       and reaches that same prompt boundary using sanitized text only.
-- [ ] Retention proof enforces transient raw deletion on success or within 7
+- [x] Retention proof enforces transient raw deletion on success or within 7
       days, scrub proof deletion within 30 days unless pinned, and audit-record
       deletion within 12 months.
 - [ ] Focused tests, repo gates, reflection lint, and Yeet PR-to-mergeable proof

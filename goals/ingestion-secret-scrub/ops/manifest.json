@@ -10,7 +10,7 @@
   },
   "packetPath": "goals/ingestion-secret-scrub",
   "lifecycle": "active",
-  "statusNote": "P0 and P1 complete. Namespace-only export repair passes affected default package proofs; implementation publication retry follows. P2 final parity and P3 pending.",
+  "statusNote": "P0-P2 complete. All local package and hosted-parity proofs pass; exact-canary scan 184 surfaces each zero. P3 reflection, final support scan and content-final readiness remain.",
   "mission": "Deliver a pre-LLM file-processing secret scrub with one canonical pattern bank, no-secret proof, honest coverage/residue, and enforced prompt gating.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -61,7 +61,7 @@
     {
       "id": "P2",
       "name": "Verify",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P3",
