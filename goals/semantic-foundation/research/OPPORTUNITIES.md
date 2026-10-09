@@ -79,3 +79,18 @@
 - **What would have prevented it:** the lane harness should carry the user-bus
   variables into every tool shell, alongside its memory and concurrency pins.
 - **Disposition:** supply command-local bus variables and the unchanged 32G cap.
+
+## 2026-10-09 — Direct package check lacks dependency declaration artifacts
+
+- **What happened:** R3 `beep-heavy bun run --cwd packages/foundation/modeling/ontology check`
+  exited 1 with TS6305 before providing a usable source verdict.
+- **Evidence:** `identity/dist/index.d.ts`, `rdf/dist/index.d.ts` and
+  `schema/dist/index.d.ts` are absent. Diagnostics span untouched Fold and M1
+  modules as well as the changed loader, with unresolved imports causing
+  downstream any/unknown errors.
+- **Attribution:** environment-only precondition; a direct package script does
+  not orchestrate dependency builds. No source repair is justified yet.
+- **What would have prevented it:** the lane preflight should qualify dependency
+  declarations, or direct package-check guidance should name the prerequisite.
+- **Disposition:** build ontology dependencies through Turbo under beep-heavy,
+  then rerun the exact check. Preserve all dependency sources and tracked wiring.
