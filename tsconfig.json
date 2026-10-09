@@ -2072,14 +2072,30 @@
       "@beep/law-practice-use-cases/DocumentIdentification": [
         "./packages/law-practice/use-cases/src/DocumentIdentification/index.ts"
       ],
-      "@beep/repo-cli/commands/AgentMessage": [
-        "./packages/tooling/tool/cli/src/commands/AgentMessage/index.ts"
+      "@beep/law-practice-domain/values/DocStructure": [
+        "./packages/law-practice/domain/src/values/DocStructure/index.ts"
+      ],
+      "@beep/law-practice-server/OfficeActionStructure": [
+        "./packages/law-practice/server/src/OfficeActionStructure/index.ts"
+      ],
+      "@beep/law-practice-use-cases/OfficeActionStructure": [
+        "./packages/law-practice/use-cases/src/OfficeActionStructure/index.ts"
       ],
       "@beep/epistemic-domain/values/ContradictionDetection": [
         "./packages/epistemic/domain/src/values/ContradictionDetection/index.ts"
       ],
+      "@beep/repo-cli/commands/AgentMessage": [
+        "./packages/tooling/tool/cli/src/commands/AgentMessage/index.ts"
+      ],
       "@beep/t3-code": ["./packages/drivers/t3-code/src/index.ts"],
       "@beep/t3-code/*": ["./packages/drivers/t3-code/src/*"]
-    }
+    },
+    "plugins": [
+      {
+        "name": "@effect/language-service",
+        "inlays": true,
+        "noExternal": true
+      }
+    ]
   }
 }

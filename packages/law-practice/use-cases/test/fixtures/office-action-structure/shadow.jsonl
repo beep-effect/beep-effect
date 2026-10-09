@@ -1,0 +1,4 @@
+{"id": "shadow-001", "fixture": "oa-001", "pitfall": "correct pair with invalid reasoning", "expected": "reject model rationale", "excludedFromV1": true}
+{"id": "shadow-002", "fixture": "oa-020", "pitfall": "replayable trace selects quoted history", "expected": "absent", "excludedFromV1": true}
+{"id": "shadow-003", "fixture": "oa-021", "pitfall": "schema-valid wrong legal role", "expected": "absent", "excludedFromV1": true}
+{"id": "shadow-004", "fixture": "oa-017", "pitfall": "correction invents period", "expected": "absent", "excludedFromV1": true}

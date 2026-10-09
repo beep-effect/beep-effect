@@ -206,6 +206,7 @@ const generatedComposers = $I.compose(
   "pdf-tools",
   "technical-drawing",
   "practice-identify",
+  "practice-m365-contacts",
   "t3-code"
 );
 
@@ -2827,6 +2828,24 @@ export const $TechnicalDrawingId: Identity.IdentityComposer<"@beep/technical-dra
  * @since 0.0.0
  */
 export const $PracticeIdentifyId: Identity.IdentityComposer<"@beep/practice-identify"> = composers.$PracticeIdentifyId;
+
+/**
+ * Identity composer for `@beep/practice-m365-contacts`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $PracticeM365ContactsId } from "@beep/identity/packages"
+ *
+ * const id = $PracticeM365ContactsId.make("PracticeM365Contacts")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $PracticeM365ContactsId: Identity.IdentityComposer<"@beep/practice-m365-contacts"> =
+  composers.$PracticeM365ContactsId;
 
 /**
  * Identity composer for `@beep/t3-code`.

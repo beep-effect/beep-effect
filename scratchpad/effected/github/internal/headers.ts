@@ -1,0 +1,129 @@
+import * as Function from "effect/Function";
+import * as P from "effect/Predicate";
+
+// Reading GitHub's response headers.
+//
+// octokit hands headers back as a plain object whose values may be `string`,
+// `number` or absent depending on the fetch implementation, so every read here
+// is defensive about both. Header names are already lowercased by octokit.
+
+/**
+ * Reads a present, non-empty header value as a string.
+ *
+ * **Details**
+ *
+ * Numeric values are converted to strings; missing headers, empty strings and
+ * values of other types yield `undefined`.
+ *
+ * **Example** (Read numeric and empty headers)
+ *
+ * ```ts
+ * import { headerString } from "@beep/scratchpad/effected/github/internal/headers";
+ *
+ * console.log(headerString({ "x-ratelimit-remaining": 5 }, "x-ratelimit-remaining")) // 5
+ * console.log(headerString({ "retry-after": "" }, "retry-after")) // undefined
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
+export const headerString: {
+	(headers: Readonly<Record<string, unknown>> | undefined, name: string): string | undefined;
+	(name: string): (headers: Readonly<Record<string, unknown>> | undefined) => string | undefined;
+} = Function.dual(2, (
+	headers: Readonly<Record<string, unknown>> | undefined,
+	name: string,
+): string | undefined => {
+	const value = headers?.[name];
+	if (P.isString(value)) return value.length > 0 ? value : undefined;
+	if (P.isNumber(value)) return String(value);
+	return undefined;
+});
+
+/**
+ * Parses a header value as a finite integer.
+ *
+ * **Details**
+ *
+ * Finite numeric input is truncated toward zero. Missing or non-finite values
+ * yield `undefined`.
+ *
+ * **Example** (Truncate a delay and reject a non-finite value)
+ *
+ * ```ts
+ * import { headerNumber } from "@beep/scratchpad/effected/github/internal/headers";
+ *
+ * console.log(headerNumber({ "retry-after": "2.9" }, "retry-after")) // 2
+ * console.log(headerNumber({ "retry-after": "Infinity" }, "retry-after")) // undefined
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
+export const headerNumber: {
+	(headers: Readonly<Record<string, unknown>> | undefined, name: string): number | undefined;
+	(name: string): (headers: Readonly<Record<string, unknown>> | undefined) => number | undefined;
+} = Function.dual(2, (
+	headers: Readonly<Record<string, unknown>> | undefined,
+	name: string,
+): number | undefined => {
+	const raw = headerString(headers, name);
+	if (raw === undefined) return undefined;
+	const parsed = Number(raw);
+	return Number.isFinite(parsed) ? Math.trunc(parsed) : undefined;
+});
+
+/**
+ * How long GitHub asked us to wait, in milliseconds, or `undefined` when it
+ * did not ask.
+ *
+ * **Details**
+ *
+ * Two mechanisms, checked in GitHub's own order of specificity:
+ *
+ * 1. `retry-after` — whole seconds, sent for secondary rate limits and abuse
+ *    detection. Authoritative when present.
+ * 2. `x-ratelimit-remaining: 0` plus `x-ratelimit-reset` — the primary rate
+ *    limit, where the reset is an absolute epoch **second**. Only meaningful
+ *    when the budget is actually exhausted: every successful response carries a
+ *    reset header too, and treating that as a delay would make every call look
+ *    rate-limited.
+ *
+ * `nowMillis` is a parameter rather than a `Date.now()` read so this stays pure
+ * and so a test can pin it.
+ *
+ * **Example** (Prefer retry-after over the primary reset)
+ *
+ * ```ts
+ * import { retryAfterMillisFrom } from "@beep/scratchpad/effected/github/internal/headers";
+ *
+ * const headers = {
+ *   "retry-after": "2",
+ *   "x-ratelimit-remaining": "0",
+ *   "x-ratelimit-reset": "60",
+ * };
+ * console.log(retryAfterMillisFrom(headers, 59000)) // 2000
+ * console.log(retryAfterMillisFrom({ "x-ratelimit-remaining": "1", "x-ratelimit-reset": "60" }, 59000)) // undefined
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
+export const retryAfterMillisFrom: {
+	(headers: Readonly<Record<string, unknown>> | undefined, nowMillis: number): number | undefined;
+	(nowMillis: number): (headers: Readonly<Record<string, unknown>> | undefined) => number | undefined;
+} = Function.dual(2, (
+	headers: Readonly<Record<string, unknown>> | undefined,
+	nowMillis: number,
+): number | undefined => {
+	const retryAfterSeconds = headerNumber(headers, "retry-after");
+	if (retryAfterSeconds !== undefined && retryAfterSeconds >= 0) {
+		return retryAfterSeconds * 1000;
+	}
+	const remaining = headerNumber(headers, "x-ratelimit-remaining");
+	const reset = headerNumber(headers, "x-ratelimit-reset");
+	if (remaining !== undefined && remaining <= 0 && reset !== undefined) {
+		return Math.max(0, reset * 1000 - nowMillis);
+	}
+	return undefined;
+});

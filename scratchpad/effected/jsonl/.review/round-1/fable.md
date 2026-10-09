@@ -1,0 +1,65 @@
+### fable-1-1
+- file: scratchpad/effected/jsonl/internal/tail.ts:121
+- class: perf   severity: required
+- standard: D11 (measured regression versus upstream); upstream src/internal/tail.ts:137 scans with the typed-array native `bytes.indexOf(LF)`   evidence: `A.findLastIndex(bytes, (byte) => byte === LF)` runs `fromIterable(self)` = `Array.from(Uint8Array)` before scanning (node_modules/effect/dist/Array.js:1412-1414, :215), so every window copies the page into an n-element Number array. Read-only bun micro-benchmark on LF-terminated buffers: 8 KiB findLastIndex 63.8 us vs bytes.lastIndexOf 0.68 us; 64 KiB 486.7 us vs 0.04 us; 256 KiB 2014 us vs 0.11 us (A.findFirstIndex at :115 iterates without copying: 0.2-0.7 us). `windowOf` runs with completeOnly on every seed window (readTailUntil widens x4 up to the oversized record), every ingest `decodeRange` (one window for the whole [consumed, size) gap, Journal.ts:672) and every paged `readPage` (Journal.ts:930-934).
+- failure: Each page or catch-up window allocates roughly eight times its byte size as a transient array and spends 100x-10,000x upstream's scan time before any decoding; a 10 MB catch-up copies 10 M elements (~80 MB) in one shot, and a paged query pays ~64 us per 8 KiB page on top of the read itself.
+- fix: Use the typed-array natives as upstream does: `const last = bytes.lastIndexOf(LF); const end = completeOnly ? (last < 0 ? 0 : last + 1) : bytes.length;` and the same with `bytes.indexOf(LF)` for the cursor at :115 (or lift both into Option with `O.liftPredicate((i) => i >= 0)`); no law names typed-array index methods.
+
+### fable-1-2
+- file: scratchpad/test/jsonl/Journal.test.ts:70
+- class: test   severity: required
+- standard: D9 (upstream tests are the contract) and section 11.1/16 (never delete a test); README.md:118 claims "optional/class payload retention" for Journal.test.ts   evidence: Upstream __test__/Journal.test.ts:532 "a partial patch INHERITS untouched fields from a class-instance base" seeds a Schema.Class payload and asserts `appendPatch("boxed", { round: 2 })` keeps `phase`. `grep -rn 'S\.Class\|Class<\|extends S\.' scratchpad/test/jsonl` matches nothing: every lab payload is an S.Struct (fixtures.ts:19, Envelope.test.ts:28). merge.test.ts:118/144 exercise canMerge/shallowMerge/isRecordLike on class instances in isolation only, and upstream's own comment (:551-558) says the class path's failure mode is visible only end to end (a decoded class instance that misses the merge is replaced by a plain object the class schema rejects). The README row is not a recorded deviation; it asserts coverage that does not exist.
+- failure: The decode -> isRecordLike (Object.prototype.toString) -> prototype-preserving shallowMerge -> encode path for an S.Class payload is untested: a regression (a toStringTag on class instances, a merge that flattens the prototype, a guard reorder) passes the suite while every partial `appendPatch` on a class payload fails InvalidData; the README misreports coverage.
+- fix: Add one case to Journal.test.ts: `class Box extends S.Class<Box>($I`Box`)({ round: S.Finite, phase: S.String }) {}`, an event `boxed` with `data: Box`, seed `{ round: 1, phase: "keep-me" }`, run `appendPatch("boxed", { round: 2 })`, assert `data.round === 2`, `data.phase === "keep-me"` and `data instanceof Box`; otherwise strike "class payload retention" from README.md:118.
+
+### fable-1-3
+- file: scratchpad/test/jsonl/Journal.test.ts:76
+- class: test   severity: required
+- standard: Section 11.1/16 (never weaken a test), D9; upstream __test__/Journal.test.ts:579 "two concurrent patches to different fields BOTH survive"   evidence: Upstream holds the first patch inside the write permit with a filesystem gate (`memfs.closeGate()`, asserts `gateWasEntered()`), forks the second, then releases, so the second patch provably reads its base after the first write. The lab case runs `Effect.all([appendPatch(round), appendPatch(label)], { concurrency: 2 })` with no gate. The filesystem double is synchronous: packages/tooling/test-kit/test-utils/src/MemoryFileSystem/MemoryFileSystem.test-kit.ts has 146 Effect.sync/succeed/fn primitives and zero promise/callback/async/yieldNow primitives, so fiber 1's whole reconcile-read-merge-encode-write completes before fiber 2 starts unless the runtime's op quota expires inside the critical section; the assertion then holds even if `latest` were read before the permit. A gate harness that suspends `writeAll` already exists in the lab at Journal.edges.test.ts:172-199.
+- failure: The "read-merge-write under one lock" guarantee documented at Journal.ts:159-166 is not proven; a regression that reads the base outside `writePermit` (the exact bug the upstream case was written for) passes the lab suite.
+- fix: Reuse the Journal.edges.test.ts:172 `writeAll` gate: arm it, fork `appendPatch("noted", { round: 2 })`, `Deferred.await(entered)`, fork `appendPatch("noted", { label: "b" })`, `Deferred.succeed(release)`, join both, then assert `latest.data` deep-equals `{ round: 2, label: "b", optional: "retained" }`.
+
+### fable-1-4
+- file: scratchpad/test/jsonl/Journal.test.ts:153
+- class: test   severity: required
+- standard: D9 and section 11.1/16 (never delete a test); JournalShape.changes JSDoc Journal.ts:253-256 documents the delivered-before-end guarantee; upstream __test__/Journal.test.ts:667 "an outer-scope subscriber sees EVERY completed append before stream end"   evidence: Upstream: capacity 1, a subscription in a scope that outlives the journal, appends A (accepted), B (blocked on capacity), C (blocked on B's baton), close the journal scope while both publishes are outstanding, drain four takes and assert three envelope chunks then the Exit, rounds [1,2,3]. Lab :153 uses the default capacity (64) with a consuming reader, so no publisher ever blocks; :168 uses capacity 1 but a subscriber that never takes and asserts only the file contents; Journal.regressions.test.ts:372 (capacity 1) tests baton hand-off after an interrupt, not close ordering. `grep -rn 'capacity: 1' scratchpad/test/jsonl` returns exactly those three sites. The README consolidation note (README.md:132-136) records Windows paths, watch fault injection and Queue recipes as limits, not this case.
+- failure: The finalizer's `pending` baton capture (Journal.ts:1347-1360), which stops the terminal Exit overtaking a completed append whose publish is still blocked, is executed for coverage but no test fails when it is removed; the documented guarantee under backpressure is unpinned.
+- fix: Port the upstream case: `open(fs, { path, capacity: 1, shutdownPublishTimeout: Duration.seconds(30) })` under its own scope, `PubSub.subscribe(journal.hub)` in the test scope, three appends with `Effect.yieldNow` between the forks, fork `Scope.close(journalScope, Exit.void)`, take four times, assert `[chunk, chunk, chunk, Exit]` and rounds `[1, 2, 3]`.
+
+### fable-1-5
+- file: scratchpad/effected/jsonl/Journal.ts:1378
+- class: jsdoc   severity: required
+- standard: .patterns/jsdoc-documentation.md "A doc block begins with exactly one lead paragraph" and section order (Details, Gotchas, Example); EFFECTED_PORT_GOAL section 10.2 "a @remarks that warns becomes **Gotchas**"   evidence: The `JournalClass.layer` block (1378-1424) has three paragraphs before `**Details**`: the lead, "**Construction can fail with a `PlatformError`, and that is deliberate.** ..." (a warning) and "**Bind the result to a const and provide that const.**" (an instruction). Gate miss shown: scratchpad/effected/runner/JsdocLaw.ts checks section order, duplicate sections, fences, titles, see-purpose, tag grammar, category and since (lines 24-122) but has no lead-paragraph rule, and docgen `enforceDescriptions` checks presence only. A read-only scan of every JSDoc block under scratchpad/effected/jsonl finds this as the only block with more than one paragraph before its first section or tag.
+- failure: The warning and the instruction render as lead prose in hovers and docgen output instead of the law's Gotchas carrier; the block violates the one-lead-paragraph grammar while the gate reports clean.
+- fix: Keep "Build the layer for this journal." as the lead; move the two bold paragraphs into a `**Gotchas**` section placed after `**Details**` and before the Example (law order), dropping the bold emphasis.
+
+### fable-1-6
+- file: scratchpad/effected/jsonl/Journal.ts:704
+- class: bug   severity: backlog
+- standard: EFFECTED_PORT_GOAL section 14 (a proposed deviation without an executed probe or law is backlog); README.md:433 Deviation 10 text   evidence: `reconcile` re-probes the BOM only when `replaced || shrank || O.isNone(identity)`; `readFrom` (:887) re-probes on every read. For a journal that exists empty at construction (identity Some, bomBytes 0, consumed 0), a foreign writer appending `﻿` plus a record is ingested with bom 0: the line decodes (ignoreBOM) as `﻿{...}`, fails JSON, is skipped, `consumed` becomes the physical size and `latest` stays None; a later `query()` re-probes (3) and returns the record at logical 0; the next local `append` reports `offset = size - 0` while `query` reports the same record at `size - 3`. Upstream has the same stale construction-time probe, so this is upstream-equivalent today; README.md:433 "re-probes the BOM for each read and reconciliation" overstates the lab.
+- failure: After a BOM lands on an existing empty journal, `latest` never seeds from the foreign record and `append` and `query` disagree by three bytes on later offsets; the README describes a reconciliation re-probe that only happens on replacement, shrink or unknown identity.
+- fix: Docs now: say "on every read, and on reconciliation after a replacement, a shrink or an unknown identity". Behaviour, once a probe reproduces it: add `|| consumed === 0` to the re-probe condition (no content consumed yet, so a BOM can still be learned) and record it as `upstream-bug:` with the probe and a pinning test.
+
+### fable-1-7
+- file: scratchpad/effected/jsonl/Journal.ts:547
+- class: docs   severity: backlog
+- standard: .patterns/jsdoc-documentation.md (a doc block documents the declaration it precedes)   evidence: The block at 547-559 describes the last-valid walk-back and `window.start` rebasing, i.e. `decodeWindow` (:562), but the next declaration is `const textEncoder = new TextEncoder();` (:560); `decodeWindow` itself has no doc. Both are module-private, so docgen does not flag it.
+- failure: Hovering `textEncoder` shows the decodeWindow prose and `decodeWindow` is undocumented; a later editor reads the rationale against the wrong symbol.
+- fix: Move `const textEncoder = new TextEncoder();` above the block (beside the imports) so the block sits directly on `decodeWindow`.
+
+### fable-1-8
+- file: scratchpad/test/jsonl/Line.test.ts:159
+- class: test   severity: backlog
+- standard: D10 "Run counts through `fcRuns(n)`"; goals/effect-vitest-canon/SPEC.md:165 (`{ arbitrary: fcRuns(n) }` for repository run floors)   evidence: Seventeen property registrations pass no `arbitrary` option: Line.test.ts:159, 162, 175, 184, 191, 197, 211 and Helpers.test.ts:23 (lab-authored), LineProperty.test.ts:119-222 (restored upstream, which carried no run counts either). Properties.test.ts (`runs = { arbitrary: fcRuns(100) }`) and JournalDeviations.test.ts:178 use the floor; `fcRuns` returns `Arbitrary.CheckOptions & { runs }` and `it.prop`/`it.effect.prop` accept it under `arbitrary` (node_modules/@effect/vitest/dist/index.d.ts:80,115), so the existing usage is correct.
+- failure: `BEEP_FC_NUM_RUNS` cannot raise these seventeen properties above fast-check's default; the module's property floor is only partly env-raisable.
+- fix: Pass `{ arbitrary: fcRuns(100) }` (the shared `runs` constant) to each registration; for the restored LineProperty suite this adds an option without touching any assertion.
+
+### fable-1-9
+- file: scratchpad/test/jsonl/Journal.integration.test.ts:24
+- class: test   severity: backlog
+- standard: goals/effect-vitest-canon/SPEC.md D6 (never a longer timeout as a fix); EFFECTED_PORT_GOAL section 11.1 (timeouts stay as upstream wrote them)   evidence: This lab-authored file (header: adapted from upstream integration/Journal.int.test.ts) restates four upstream integration scenarios (:25 concurrent appends, :50 foreign writer offsets, :70 reopen with BOM, :83 two layers observing) that the restored integration/Journal.int.test.ts now carries verbatim (all six upstream cases present by title). It is the only file setting `timeout: "10 seconds"` on `it.layer` and `15000` on the watcher case outside upstream text; the real-platform group therefore runs each scenario twice.
+- failure: Double wall-clock on the NodeFileSystem group for identical coverage, and two raised timeouts with no upstream sanction that the canon forbids as a flake remedy.
+- fix: Retire the four duplicated cases in favour of the restored upstream file (fold any lab-only assertion into it) and drop the extra timeouts; if the file is kept, list it with its reason under README "Upstream test adaptation".
+
+REQUIRED: 5
+BACKLOG: 4

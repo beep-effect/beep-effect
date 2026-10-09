@@ -12,6 +12,7 @@ import { ianaTimezonesTarget } from "./IanaTimezones.ts";
 import { iso3166Target } from "./Iso3166.ts";
 import { iso4217Target } from "./Iso4217.ts";
 import { reportersDbTarget } from "./ReportersDb.ts";
+import { sparTermsTarget } from "./SparTerms.ts";
 import { vocabTermsTarget } from "./VocabTerms.ts";
 
 /**
@@ -38,4 +39,5 @@ export const syncDataTargets = [
   reportersDbTarget,
   courtsDbTarget,
   vocabTermsTarget,
+  sparTermsTarget,
 ] as const;

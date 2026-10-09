@@ -1,0 +1,189 @@
+import { assert, describe, it } from "@effect/vitest";
+import { assertSuccess, assertFailure } from "@effect/vitest/utils";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
+import type { BlobEnvelopeError } from "../../effected/github-actions/index.ts";
+import { BlobEnvelope, UnsupportedBlobEnvelopeVersionError } from "../../effected/github-actions/index.ts";
+import { deliberatelyInvalid } from "./deliberatelyInvalid.ts";
+
+const Meta = S.Struct({ tag: S.String, durationMs: S.Finite });
+type Meta = typeof Meta.Type;
+
+const bytes = (...values: ReadonlyArray<number>) => Uint8Array.from(values);
+
+const encoded = (metadata: Meta, body: Uint8Array) => {
+	const result = BlobEnvelope.encodeResult(metadata, body, Meta);
+	assertSuccess(
+		result,
+		Result.getOrThrowWith(result, (error) => error)
+	);
+	return result.success;
+};
+
+const failure = (input: Uint8Array): BlobEnvelopeError => {
+	const result = BlobEnvelope.decodeResult(input, Meta);
+	assertFailure(
+		result,
+		Result.getOrThrowWith(Result.flip(result), (value) => value)
+	);
+	return result.failure;
+};
+
+describe("BlobEnvelope", () => {
+	describe("round trip", () => {
+		it("recovers metadata and body exactly", () => {
+			const body = bytes(1, 2, 3, 250, 0, 255);
+			const result = BlobEnvelope.decodeResult(encoded({ tag: "turbo", durationMs: 12 }, body), Meta);
+			assertSuccess(
+				result,
+				Result.getOrThrowWith(result, (error) => error)
+			);
+			assert.deepStrictEqual(result.success.metadata, { tag: "turbo", durationMs: 12 });
+			assert.deepStrictEqual([...result.success.body], [...body]);
+		});
+
+		it("handles an empty body", () => {
+			const result = BlobEnvelope.decodeResult(encoded({ tag: "t", durationMs: 0 }, bytes()), Meta);
+			assertSuccess(
+				result,
+				Result.getOrThrowWith(result, (error) => error)
+			);
+		});
+
+		it("handles metadata containing multi-byte characters", () => {
+			const result = BlobEnvelope.decodeResult(encoded({ tag: "héllo — 🎉", durationMs: 1 }, bytes(9)), Meta);
+			assertSuccess(
+				result,
+				Result.getOrThrowWith(result, (error) => error)
+			);
+			// The length prefix counts BYTES, not characters; a code-unit count
+			// would slice the body at the wrong offset here.
+			assert.strictEqual(result.success.metadata.tag, "héllo — 🎉");
+			assert.deepStrictEqual([...result.success.body], [9]);
+		});
+
+		it("does not alias the frame's buffer, so mutating the body is safe", () => {
+			const frame = encoded({ tag: "t", durationMs: 1 }, bytes(1, 2, 3));
+			const result = BlobEnvelope.decodeResult(frame, Meta);
+			assertSuccess(
+				result,
+				Result.getOrThrowWith(result, (error) => error)
+			);
+			const copy = Uint8Array.from(frame);
+			result.success.body[0] = 99;
+			assert.deepStrictEqual([...frame], [...copy], "the frame must be unchanged");
+		});
+
+		it("copies the body of a Buffer frame without sharing ownership", () => {
+			const frame = Buffer.from(encoded({ tag: "t", durationMs: 1 }, bytes(1, 2, 3)));
+			const result = BlobEnvelope.decodeResult(frame, Meta);
+			assertSuccess(
+				result,
+				Result.getOrThrowWith(result, (error) => error)
+			);
+			assert.deepStrictEqual([...result.success.body], [1, 2, 3]);
+			const copy = Uint8Array.from(frame);
+			result.success.body[0] = 99;
+			assert.deepStrictEqual([...frame], [...copy], "mutating the body must leave the Buffer frame unchanged");
+			frame[frame.length - 2] = 88;
+			assert.deepStrictEqual(
+				[...result.success.body],
+				[99, 2, 3],
+				"mutating the Buffer frame must leave the body unchanged"
+			);
+		});
+	});
+
+	describe("legacy and version handling", () => {
+		it("reports raw unframed bytes as notAnEnvelope, not as corrupt metadata", () => {
+			// This is what lets a store holding pre-envelope entries produce a
+			// clean miss instead of a garbage read.
+			assert.strictEqual(failure(bytes(1, 2, 3, 4, 5, 6, 7, 8, 9, 10))._tag, "NotABlobEnvelopeError");
+		});
+
+		it("reports an empty blob as notAnEnvelope", () => {
+			assert.strictEqual(failure(bytes())._tag, "NotABlobEnvelopeError");
+		});
+
+		it("reports a future version as unsupportedVersion, carrying the version", () => {
+			const frame = encoded({ tag: "t", durationMs: 1 }, bytes(1));
+			frame[4] = 99;
+			const error = failure(frame);
+			assert.instanceOf(error, UnsupportedBlobEnvelopeVersionError);
+			assert.strictEqual(error.version, 99);
+		});
+
+		it("keys stay stable across revisions — the version is in the blob, not the key", () => {
+			// The property the design buys: a revision is detected on READ, so a
+			// consumer never has to namespace keys by format version.
+			const frame = encoded({ tag: "t", durationMs: 1 }, bytes(1));
+			frame[4] = 2;
+			assert.strictEqual(failure(frame)._tag, "UnsupportedBlobEnvelopeVersionError");
+		});
+	});
+
+	describe("truncation", () => {
+		it("reports a frame cut off inside the header", () => {
+			assert.strictEqual(
+				failure(encoded({ tag: "t", durationMs: 1 }, bytes(1)).slice(0, 6))._tag,
+				"TruncatedBlobEnvelopeError"
+			);
+		});
+
+		it("reports a frame cut off inside the metadata", () => {
+			const frame = encoded({ tag: "a-fairly-long-tag", durationMs: 1 }, bytes(1, 2, 3));
+			assert.strictEqual(failure(frame.slice(0, frame.length - 12))._tag, "TruncatedBlobEnvelopeError");
+		});
+	});
+
+	describe("schema mismatch", () => {
+		it("reports metadata that does not satisfy the caller's schema", () => {
+			const Other = S.Struct({ completelyDifferent: S.Boolean });
+			const frame = encoded({ tag: "t", durationMs: 1 }, bytes(1));
+			const result = BlobEnvelope.decodeResult(frame, Other);
+			assertFailure(
+				result,
+				Result.getOrThrowWith(Result.flip(result), (value) => value)
+			);
+			assert.strictEqual(result.failure._tag, "BlobMetadataDecodeError");
+		});
+
+		it("reports a value that cannot be encoded", () => {
+			const result = BlobEnvelope.encodeResult(deliberatelyInvalid<never>({ tag: 1 }), bytes(), Meta);
+			assertFailure(
+				result,
+				Result.getOrThrowWith(Result.flip(result), (value) => value)
+			);
+			assert.strictEqual(result.failure._tag, "BlobMetadataEncodeError");
+		});
+	});
+
+	describe("properties", () => {
+		it.prop(
+			"any metadata and body round-trips",
+			[S.String, S.Int.check(S.isBetween({ minimum: 0, maximum: 2 ** 31 })), S.Uint8Array.check(S.isMaxLength(64))],
+			([tag, durationMs, body]) => {
+				const result = BlobEnvelope.decodeResult(encoded({ tag, durationMs }, body), Meta);
+				assertSuccess(
+					result,
+					Result.getOrThrowWith(result, (error) => error)
+				);
+				assert.strictEqual(result.success.metadata.tag, tag);
+				assert.strictEqual(result.success.metadata.durationMs, durationMs);
+				assert.deepStrictEqual([...result.success.body], [...body]);
+				return true;
+			}
+		);
+
+		it.prop("arbitrary bytes never throw — they fail typed", [S.Uint8Array.check(S.isMaxLength(128))], ([input]) => {
+			// A corrupt cache entry must be a typed miss, never a defect.
+			const result = BlobEnvelope.decodeResult(input, Meta);
+			if (Result.isSuccess(result)) {
+				assertSuccess(result, result.success);
+			} else {
+				assertFailure(result, result.failure);
+			}
+			return true;
+		});
+	});
+});

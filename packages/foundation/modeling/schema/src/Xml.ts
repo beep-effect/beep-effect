@@ -30,7 +30,7 @@ const makeXmlParser = () =>
     attributeNamePrefix: "",
     parseAttributeValue: false,
     parseTagValue: false,
-    textNodeName: "text",
+    textNodeName: "#text",
     trimValues: true,
   });
 
@@ -70,6 +70,11 @@ const decodeXmlUnknown = Effect.fn("Xml.decodeXmlUnknown")(function* (content: s
 /**
  * Schema transformation that decodes XML text into an unknown parsed document
  * using `fast-xml-parser`.
+ *
+ * **Details**
+ *
+ * Text content on nodes with attributes or child elements uses the reserved
+ * `#text` key, so an XML element named `text` remains a separate property.
  *
  * **Example** (Decode XML text document)
  *

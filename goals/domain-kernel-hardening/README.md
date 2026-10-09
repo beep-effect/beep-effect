@@ -42,13 +42,16 @@ in [`MAP.md`](../../explorations/domain-layer-hardening/MAP.md).
 
 ## Current Phase
 
-`P1 Implement` — apply the measured GeneratedByApp nullable codecs with
-constructor and decoding defaults; add the error role module and generated
-migration under the explicit SPEC contract. P0 prototype has been reverted.
+`P2 Verify` — P1 implementation and full local qualification are complete.
+The amended run-order ruling publishes P1, P2 and P3 as separate waves; lifecycle
+remains active until the P3 reflection and owner-command completion transition.
 
 ## Latest Evidence
 
-`research/p0-kernel-surface-2026-10-09.md` — completed surface map, both encoding measurements, chosen design and migration preview.
+`history/handoffs/domain-kernel-2026-10-09.md` — eleven passing package proofs,
+repaired six-server gate, 64 migration-replay tests, full local hosted-parity set,
+external bundle-schema decision D16 and mechanical fixture repair D17.
+P0 grounding remains at `research/p0-kernel-surface-2026-10-09.md`.
 
 ## Notes
 

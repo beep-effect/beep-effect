@@ -8,6 +8,7 @@
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { make } from "./Id.ts";
+import { SparTerms } from "./internal/generated/SparTerms.ts";
 
 const { $IdentityId } = make("identity");
 const $I = $IdentityId.create("Vocab");
@@ -521,3 +522,26 @@ export const SemanticFoundationVocab = mergeVocab(CoreVocab, {
  * @since 0.0.0
  */
 export type SemanticFoundationVocab = typeof SemanticFoundationVocab;
+
+/**
+ * Core vocabulary extended with byte-pinned, attributed SPAR term inventories.
+ *
+ * **Example** (Expand a SPAR section name)
+ *
+ * ```ts
+ * import { SparVocab } from "@beep/identity"
+ * console.log(`${SparVocab.doco.iri}Section`)
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const SparVocab = mergeVocab(CoreVocab, SparTerms);
+
+/**
+ * Runtime type of the merged SPAR vocabulary registry.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type SparVocab = typeof SparVocab;

@@ -1,0 +1,14 @@
+[
+  {
+    "id": "EV010:scratchpad/test/jsonl/Journal.integration.test.ts:3:@effect/platform-node@0#1",
+    "reason": "The suite's subject is the real platform filesystem (concurrent O_APPEND writes on a real file, scoped temp directories, native watch notifications between two journals), which MemoryFileSystem only simulates; the same journal behaviour is already proven on MemoryFileSystem in Journal.test.ts, Journal.regressions.test.ts, Journal.edges.test.ts and Watcher.test.ts."
+  },
+  {
+    "id": "EV010:scratchpad/test/jsonl/integration/Journal.int.test.ts:1:@effect/platform-node@0#1",
+    "reason": "Restored upstream integration suite whose stated subject is real-disk behaviour (O_APPEND atomicity under concurrent appends, a foreign writer between appends, a process-style reopen, an on-disk BOM, native watch between two layers) that a MemoryFileSystem double would only pretend to model; the double-backed cases live in the sibling jsonl suites."
+  },
+  {
+    "id": "EV009:scratchpad/test/jsonl/integration/Journal.int.test.ts:234:it.live@2#1",
+    "reason": "The test awaits a native filesystem watcher event under Effect.timeout(20 seconds); under the TestClock that timeout can never fire, so a missed notification would hang instead of failing, and the live clock is what makes the guard reachable (reason comment sits above the it.live)."
+  }
+]

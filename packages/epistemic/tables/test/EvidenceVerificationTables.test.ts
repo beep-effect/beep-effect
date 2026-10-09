@@ -95,6 +95,8 @@ describe("EvidenceVerificationTable", () => {
     expect(R.map(getColumns(EvidenceVerification.Table), (column) => column.name)).toStrictEqual({
       createdAt: "created_at",
       createdByPrincipal: "created_by_principal",
+      deletedAt: "deleted_at",
+      deletedByPrincipal: "deleted_by_principal",
       entityType: "entity_type",
       evidenceId: "evidence_id",
       id: "id",

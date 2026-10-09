@@ -1,0 +1,20 @@
+{
+  "packages/a": {
+    "bad": {},
+    "missing": {},
+    "conflicts": [],
+    "intersections": {}
+  },
+  "packages/b": {
+    "bad": {},
+    "missing": {},
+    "conflicts": [],
+    "intersections": {}
+  },
+  "packages/c": {
+    "bad": {},
+    "missing": {},
+    "conflicts": [],
+    "intersections": {}
+  }
+}

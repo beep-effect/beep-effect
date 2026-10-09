@@ -1,0 +1,264 @@
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as S from "effect/Schema";
+import { dual } from "effect/Function";
+import type { ConfigCodec } from "./ConfigCodec.ts";
+import type { CryptoFailure } from "./internal/crypto.ts";
+import { IV_LENGTH, decrypt, deriveKey, encrypt, fromBase64, randomIv, toBase64 } from "./internal/crypto.ts";
+
+const $I = $ScratchpadId.create("effected/config-file/EncryptedCodec");
+
+/** Identifies an encrypted envelope that cannot contain both an IV and ciphertext. */
+class CiphertextTooShortError extends S.TaggedError<CiphertextTooShortError>($I`CiphertextTooShortError`)("CiphertextTooShortError", {
+	message: S.String,
+}, $I.annote("CiphertextTooShortError", { description: "The encrypted envelope is too short to contain an IV and ciphertext." })) {}
+
+/**
+ * Indicates that an encryption, decryption, key-derivation or base64 step
+ * failed.
+ *
+ * **Details**
+ *
+ * Its own error rather than a value on the generic `ConfigCodecError.operation`
+ * union, so an encryption-only concern does not leak into every codec's error
+ * type. `cause` preserves the underlying host failure structurally.
+ *
+ * **Example** (Identify a decryption failure)
+ *
+ * ```ts
+ * import { ConfigEncryptionError } from "@beep/scratchpad/effected/config-file/EncryptedCodec";
+ *
+ * const error = ConfigEncryptionError.make({ phase: "decrypt", cause: new Error("Invalid ciphertext") });
+ * console.log(error.message) // Config encryption failed during decrypt
+ * ```
+ *
+ * @public
+ * @category errors
+ * @since 0.0.0
+ */
+export class ConfigEncryptionError extends S.TaggedError<ConfigEncryptionError>($I`ConfigEncryptionError`)("ConfigEncryptionError", {
+	/**
+	 * Which cryptographic stage failed.
+	 *
+	 * @since 0.0.0
+	 */
+	phase: S.Literals(["key-derivation", "encrypt", "decrypt", "encoding"]).annotateKey({ description: "Which cryptographic stage failed." }),
+	/**
+	 * The underlying failure, preserved structurally.
+	 *
+	 * @since 0.0.0
+	 */
+	cause: S.Defect().annotateKey({ description: "The underlying failure, preserved structurally." }),
+}, $I.annote("ConfigEncryptionError", { description: "Indicates that an encryption, decryption, key-derivation or base64 step failed." })) {
+	/**
+	 * Identifies the cryptographic stage that failed in a readable error message.
+	 *
+	 * **Example** (Read the cryptographic failure stage)
+	 *
+	 * ```ts
+	 * import { ConfigEncryptionError } from "@beep/scratchpad/effected/config-file/EncryptedCodec";
+	 *
+	 * const error = ConfigEncryptionError.make({ phase: "decrypt", cause: new Error("Invalid ciphertext") });
+	 * console.log(error.message) // Config encryption failed during decrypt
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
+	override get message(): string {
+		return `Config encryption failed during ${this.phase}`;
+	}
+}
+
+/** Lift `internal/crypto`'s dependency-free failure into the public error. */
+const toPublic = (failure: CryptoFailure): ConfigEncryptionError =>
+	ConfigEncryptionError.make({ phase: failure.phase, cause: failure.cause });
+
+/**
+ * Key source union for {@link EncryptedCodec}.
+ *
+ * **Details**
+ *
+ * Use {@link (EncryptedCodecKey:variable).fromCryptoKey} to supply a pre-derived
+ * `CryptoKey`, or {@link (EncryptedCodecKey:variable).fromPassphrase} to derive
+ * one via PBKDF2 at first use.
+ *
+ * @public
+ * @category type-level
+ * @since 0.0.0
+ */
+export type EncryptedCodecKey =
+	| { readonly _tag: "CryptoKey"; readonly key: Effect.Effect<CryptoKey, ConfigEncryptionError> }
+	| { readonly _tag: "Passphrase"; readonly passphrase: string; readonly salt: Uint8Array };
+
+/**
+ * Convenience constructors for {@link (EncryptedCodecKey:type)}.
+ *
+ * **Example** (Describe a lazily derived passphrase key)
+ *
+ * ```ts
+ * import { EncryptedCodecKey } from "@beep/scratchpad/effected/config-file/EncryptedCodec";
+ *
+ * const keySource = EncryptedCodecKey.fromPassphrase("correct horse", new Uint8Array(16));
+ * console.log(keySource._tag) // Passphrase
+ * ```
+ *
+ * @public
+ * @category constructors
+ * @since 0.0.0
+ */
+export const EncryptedCodecKey = {
+	/**
+	 * Use a pre-derived `CryptoKey` effect directly.
+	 *
+	 * **Details**
+	 *
+	 * The effect is resolved once per codec instance and its **success** is
+	 * reused for every encrypt/decrypt operation. A failure or an interruption
+	 * is not cached — the next operation resolves it again. Supply your own
+	 * `Effect.retry` inside this effect to bound retries; wrap it in
+	 * `Effect.cached` yourself if you want a failure to be terminal.
+	 *
+	 * A `throw` from it is a programmer bug and stays a defect; signal
+	 * recoverable failure with `Effect.fail`.
+	 *
+	 * **Example** (Supply a retryable key effect)
+	 *
+	 * ```ts
+	 * import { ConfigEncryptionError, EncryptedCodecKey } from "@beep/scratchpad/effected/config-file/EncryptedCodec";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const key = Effect.fail(ConfigEncryptionError.make({ phase: "key-derivation", cause: new Error("Key unavailable") }));
+	 * const keySource = EncryptedCodecKey.fromCryptoKey(key);
+	 * console.log(keySource._tag) // CryptoKey
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
+	 */
+	fromCryptoKey: (key: Effect.Effect<CryptoKey, ConfigEncryptionError>): EncryptedCodecKey => ({
+		_tag: "CryptoKey",
+		key,
+	}),
+
+	/**
+	 * Derive a `CryptoKey` from a passphrase and salt via PBKDF2.
+	 *
+	 * **Details**
+	 *
+	 * Derivation runs lazily on the first encrypt/decrypt call. It is resolved
+	 * once per codec instance and its **success** is reused for subsequent
+	 * operations on that instance. A failure or an interruption is not cached —
+	 * the next operation derives again.
+	 *
+	 * **Example** (Construct a passphrase key source)
+	 *
+	 * ```ts
+	 * import { EncryptedCodecKey } from "@beep/scratchpad/effected/config-file/EncryptedCodec";
+	 *
+	 * const keySource = EncryptedCodecKey.fromPassphrase("correct horse", new Uint8Array(16));
+	 * console.log(keySource._tag) // Passphrase
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
+	 */
+	fromPassphrase: (passphrase: string, salt: Uint8Array): EncryptedCodecKey => ({
+		_tag: "Passphrase",
+		passphrase,
+		salt,
+	}),
+} as const;
+
+/** The key effect a codec instance resolves against, before memoization. */
+const keyEffect = (keySource: EncryptedCodecKey): Effect.Effect<CryptoKey, ConfigEncryptionError> =>
+	keySource._tag === "CryptoKey"
+		? keySource.key
+		: Effect.mapError(deriveKey(keySource.passphrase, keySource.salt), toPublic);
+
+/**
+ * Wrap any {@link (ConfigCodec:interface)} with AES-GCM encryption.
+ *
+ * **Details**
+ *
+ * `stringify` serializes with the inner codec, generates a random 12-byte IV,
+ * encrypts, prepends the IV to the ciphertext and base64-encodes the result.
+ * `parse` reverses that: the first 12 bytes of the decoded envelope are the IV,
+ * the remainder is the ciphertext, and the plaintext is handed to the inner
+ * codec's `parse`.
+ *
+ * The error channel **widens** to `E | ConfigEncryptionError` rather than
+ * flattening — the inner codec's failures stay distinguishable from
+ * cryptographic ones.
+ *
+ * **Example** (Encrypt JSON configuration with a passphrase)
+ *
+ * ```ts
+ * import { EncryptedCodec, EncryptedCodecKey } from "@beep/scratchpad/effected/config-file/EncryptedCodec";
+ * import { JsonCodec } from "@beep/scratchpad/effected/config-file/JsonCodec";
+ *
+ * const salt = new Uint8Array(16); // use a stored, random per-deployment salt
+ * const codec = EncryptedCodec(JsonCodec, EncryptedCodecKey.fromPassphrase("correct horse", salt));
+ * console.log(codec.name) // encrypted(json)
+ * ```
+ *
+ * @public
+ * @category codecs
+ * @since 0.0.0
+ */
+export const EncryptedCodec: {
+	<E>(inner: ConfigCodec<E>, keySource: EncryptedCodecKey): ConfigCodec<E | ConfigEncryptionError>;
+	(keySource: EncryptedCodecKey): <E>(inner: ConfigCodec<E>) => ConfigCodec<E | ConfigEncryptionError>;
+} = dual(2, <E>(inner: ConfigCodec<E>,
+	keySource: EncryptedCodecKey,
+): ConfigCodec<E | ConfigEncryptionError> => {
+	const name = `encrypted(${inner.name})`;
+
+	// Memoize so the key is resolved once per codec instance, even across forked
+	// fibers.
+	//
+	// Only SUCCESS may be memoized. `Effect.cached` alone memoizes the whole
+	// `Exit`, so an interrupt — a property of whichever caller's fiber touched
+	// the key first, not of the key effect — would be replayed forever, outside
+	// this codec's declared error channel and unrecoverable via `Effect.catch`.
+	// Invalidating on any non-success exit lets the next caller resolve again.
+	// Lazy either way: nothing runs until the first parse/stringify.
+	const [resolveKey, invalidateKey] = Effect.runSync(
+		Effect.cachedInvalidateWithTTL(keyEffect(keySource), Duration.infinity),
+	);
+	const getKey: Effect.Effect<CryptoKey, ConfigEncryptionError> = Effect.onExit(resolveKey, (exit) =>
+		Exit.isSuccess(exit) ? Effect.void : invalidateKey,
+	);
+
+	return {
+		name,
+		parse: Effect.fn("parse")(function* (raw: string) {
+				// Validate the envelope before resolving the key: malformed input must
+				// not be able to force a key resolution, which may be a KMS round-trip.
+				const combined = yield* Effect.mapError(fromBase64(raw), toPublic);
+
+				if (combined.length <= IV_LENGTH) {
+					return yield* ConfigEncryptionError.make({ phase: "decrypt", cause: CiphertextTooShortError.make({ message: "Ciphertext too short to contain IV" }) });
+				}
+
+				const key = yield* getKey;
+				const iv = combined.slice(0, IV_LENGTH);
+				const ciphertext = combined.slice(IV_LENGTH);
+				const plaintext = yield* Effect.mapError(decrypt(key, iv, ciphertext), toPublic);
+
+				return yield* inner.parse(new TextDecoder().decode(plaintext));
+			}),
+		stringify: Effect.fn("stringify")(function* (value: unknown) {
+				const key = yield* getKey;
+				const serialized = yield* inner.stringify(value);
+
+				const encoded = new TextEncoder().encode(serialized);
+				const iv = randomIv();
+				const ciphertext = yield* Effect.mapError(encrypt(key, iv, encoded), toPublic);
+
+				return yield* Effect.mapError(toBase64(iv, ciphertext), toPublic);
+			}),
+	};
+});

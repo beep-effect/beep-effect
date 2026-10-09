@@ -31,7 +31,12 @@ const FilingOutcomeKind = LiteralKit(["filed", "inboxed"]);
  * @category value-objects
  * @since 0.0.0
  */
-export const InboxedFilingReason = LiteralKit(["llm-unavailable", "low-confidence", "no-match"]).pipe(
+export const InboxedFilingReason = LiteralKit([
+  "llm-unavailable",
+  "low-confidence",
+  "no-match",
+  "secret-scrub-blocked",
+]).pipe(
   $I.annoteSchema("InboxedFilingReason", {
     description: "Reason a document was routed to the intake inbox instead of a taxonomy folder.",
   })

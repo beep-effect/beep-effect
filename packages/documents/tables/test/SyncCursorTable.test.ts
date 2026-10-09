@@ -47,6 +47,8 @@ const indexConfigNamed = (name: string) =>
 
 const activeCursorRow = {
   ...productEntityFixtureInput(DocumentsIdentity.SyncCursorId.entityType, 30),
+  deletedAt: null,
+  deletedByPrincipal: null,
   lastError: null,
   lastEventId: "evt-1",
   provider: "box",
@@ -98,6 +100,8 @@ describe("SyncCursor table", () => {
       const roundTripped = yield* Effect.fromResult(
         fromSyncCursorRow({
           ...insert,
+          deletedAt: insert.deletedAt ?? null,
+          deletedByPrincipal: insert.deletedByPrincipal ?? null,
           id: 30,
           // $inferInsert types nullable columns as `value | null | undefined`; the
           // select-row converter expects `value | null`, so resolve absent
@@ -124,6 +128,8 @@ describe("SyncCursor table", () => {
       }
       const decoded = fromSyncCursorRow({
         ...insert.success,
+        deletedAt: insert.success.deletedAt ?? null,
+        deletedByPrincipal: insert.success.deletedByPrincipal ?? null,
         id: syncCursor.id,
         lastError: insert.success.lastError ?? null,
         lastEventId: insert.success.lastEventId ?? null,

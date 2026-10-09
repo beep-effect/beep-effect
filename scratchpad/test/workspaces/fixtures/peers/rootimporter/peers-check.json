@@ -1,0 +1,29 @@
+{
+  ".": {
+    "bad": {
+      "react": [
+        {
+          "parents": [
+            {
+              "name": "react-dom",
+              "version": "18.3.1"
+            }
+          ],
+          "optional": false,
+          "wantedRange": "^18.3.1",
+          "foundVersion": "17.0.2",
+          "resolvedFrom": []
+        }
+      ]
+    },
+    "missing": {},
+    "conflicts": [],
+    "intersections": {}
+  },
+  "packages/other": {
+    "bad": {},
+    "missing": {},
+    "conflicts": [],
+    "intersections": {}
+  }
+}

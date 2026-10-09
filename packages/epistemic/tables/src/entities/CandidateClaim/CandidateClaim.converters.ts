@@ -23,6 +23,8 @@ import type { Table } from "./CandidateClaim.table.ts";
  * const row = {
  *   createdAt: 1,
  *   createdByPrincipal: { kind: "System", component: "Runtime" },
+ *   deletedAt: null,
+ *   deletedByPrincipal: null,
  *   entityType: "EpistemicCandidateClaim",
  *   fixtureKey: "claim:patentability",
  *   id: 10,
@@ -99,6 +101,8 @@ const decodeCandidateClaimRow = S.decodeUnknownResult(CandidateClaim);
  * const row = {
  *   createdAt: 1,
  *   createdByPrincipal: { kind: "System", component: "Runtime" },
+ *   deletedAt: null,
+ *   deletedByPrincipal: null,
  *   entityType: "EpistemicCandidateClaim",
  *   fixtureKey: "claim:patentability",
  *   id: 10,
@@ -144,6 +148,8 @@ export const toCandidateClaimInsert = (
  * const row = {
  *   createdAt: 1,
  *   createdByPrincipal: { kind: "System", component: "Runtime" },
+ *   deletedAt: null,
+ *   deletedByPrincipal: null,
  *   entityType: "EpistemicCandidateClaim",
  *   fixtureKey: "claim:patentability",
  *   id: 10,

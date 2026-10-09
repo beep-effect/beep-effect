@@ -1,0 +1,687 @@
+import { $ScratchpadId } from "@beep/identity/packages";
+import { LocalExec, Run } from "../commands/index.ts";
+import * as A from "effect/Array";
+import * as R from "effect/Record";
+import * as Context from "effect/Context";
+import * as Crypto from "effect/Crypto";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as O from "@beep/utils/Option";
+import * as Red from "effect/Redacted";
+import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
+import * as Str from "effect/String";
+import * as Hex from "effect/encoding/Hex";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import { IntegrityHash } from "./IntegrityHash.ts";
+import { NpmExecutor } from "./NpmExecutor.ts";
+import { PublishError } from "./PublishError.ts";
+import type { RegistryCredential } from "./RegistryCredential.ts";
+import { classifyRegistry } from "./RegistryKind.ts";
+
+const $I = $ScratchpadId.create("effected/npm/PackagePublish");
+
+/** npm prints its transparency-log URL on this notice line. */
+const PROVENANCE_URL = /https:\/\/search\.sigstore\.dev\/\?logIndex=\d+/;
+
+/**
+ * The npm config key that carries a registry's auth token.
+ *
+ * **Gotchas**
+ *
+ * npm "nerf-darts" the registry: scheme stripped, **trailing slash required**.
+ * `//npm.pkg.github.com/:_authToken` matches; `//npm.pkg.github.com:_authToken`
+ * never does, and the publish goes out unauthenticated with no diagnostic. A
+ * registry path is preserved (`//host/artifactory/api/npm/repo/:_authToken`).
+ */
+const authKey = (registry: string, credential: RegistryCredential): string => {
+	const withoutScheme = Str.replace(/^https?:/, "")(registry);
+	const withSlash = Str.endsWith("/")(withoutScheme) ? withoutScheme : `${withoutScheme}/`;
+	// npm reads BOTH keys per registry, checking `_authToken` first and then
+	// `_auth` (npm-registry-fetch's `hasAuth`), so the credential's own kind
+	// picks the key and neither shadows the other.
+	return `${withSlash}:${credential.kind === "token" ? "_authToken" : "_auth"}`;
+};
+
+/** What `npm pack --json` reports for one tarball. */
+const PackJsonEntry = S.Struct({
+	name: S.String.annotateKey({ description: "The package name reported by npm." }),
+	version: S.String.annotateKey({ description: "The package version reported by npm." }),
+	filename: S.String.annotateKey({ description: "The tarball filename reported by npm." }),
+	integrity: S.optionalKey(S.String).annotateKey({ description: "The integrity reported by npm, when present." }),
+	size: S.optionalKey(S.Finite).annotateKey({ description: "The packed byte size reported by npm." }),
+	unpackedSize: S.optionalKey(S.Finite).annotateKey({ description: "The unpacked byte size reported by npm." }),
+	entryCount: S.optionalKey(S.Finite).annotateKey({ description: "The file count reported by npm." }),
+}).annotate($I.annote("PackJsonEntry", { description: "One tarball entry reported by npm pack --json." }));
+
+/**
+ * What `npm pack --json` prints, on both supported majors: npm 11 emits an
+ * array of entries, one per packed package; npm 12 emits an object keyed by
+ * package name — the 12.0.0 breaking change that made `pack` and `publish`
+ * share one `--json` shape (`lib/commands/pack.js` hands `logTar` the
+ * tarball's `name` as the key, where 11 handed it the array index). A
+ * single-package pack is one entry either way.
+ */
+const PackJson = S.Union([S.Array(PackJsonEntry), S.Record(S.String, PackJsonEntry)]).annotate(
+	$I.annote("PackJson", { description: "The npm 11 array or npm 12 package-keyed pack output." }),
+);
+
+/** `npm pack --json` stdout decoded straight to {@link PackJson}. */
+const PackJsonFromString = S.fromJsonString(PackJson);
+
+/**
+ * A packed tarball and the two digests that describe it.
+ *
+ * **Example** (Inspect a packed artifact)
+ *
+ * ```ts
+ * import { PackedTarball } from "@beep/scratchpad/effected/npm/PackagePublish";
+ *
+ * const packed = PackedTarball.make({
+ *   tarballPath: "/release/my-lib-1.0.0.tgz", name: "my-lib",
+ *   version: "1.0.0", sha256Hex: "deadbeef",
+ * });
+ * console.log(packed.tarballPath) // /release/my-lib-1.0.0.tgz
+ * ```
+ *
+ * @public
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class PackedTarball extends S.Class<PackedTarball>($I`PackedTarball`)({
+	/** Absolute path to the tarball on disk. */
+	tarballPath: S.String.annotateKey({ description: "Absolute path to the tarball on disk." }),
+	/** Package name, as npm reported it. */
+	name: S.String.annotateKey({ description: "Package name, as npm reported it." }),
+	/** Package version, as npm reported it. */
+	version: S.String.annotateKey({ description: "Package version, as npm reported it." }),
+	/**
+	 * npm's own integrity for the tarball (`sha512-<base64>`) — the value the
+	 * registry stores as `dist.integrity`, so it compares directly against
+	 * `NpmRegistry.version(...)`'s `integrity`.
+	 */
+	integrity: S.optionalKey(IntegrityHash).annotateKey({ description: "npm's own integrity for the tarball (`sha512-<base64>`) — the value the registry stores as `dist.integrity`, so it compares directly against `NpmRegistry.version(...)`'s `integrity`." }),
+	/**
+  * SHA-256 of the tarball bytes, lowercase hex, no prefix.
+  *
+  * **Gotchas**
+  *
+  * **Not interchangeable with {@link PackedTarball.integrity}**: different
+  * algorithm, different encoding. This is the digest format the GitHub
+  * attestation APIs accept as a subject; comparing the two silently fails.
+  */
+	sha256Hex: S.String.annotateKey({ description: "SHA-256 of the tarball bytes, lowercase hex, no prefix." }),
+	/** Tarball size in bytes. */
+	packedSize: S.optionalKey(S.Finite).annotateKey({ description: "Tarball size in bytes." }),
+	/** Unpacked size in bytes. */
+	unpackedSize: S.optionalKey(S.Finite).annotateKey({ description: "Unpacked size in bytes." }),
+	/** Number of files in the tarball. */
+	fileCount: S.optionalKey(S.Finite).annotateKey({ description: "Number of files in the tarball." }),
+}, $I.annote("PackedTarball", { description: "A packed tarball and the two digests that describe it." })) {}
+
+/**
+ * What one publish produced.
+ *
+ * **Example** (Read a provenance URL)
+ *
+ * ```ts
+ * import { PublishOutcome } from "@beep/scratchpad/effected/npm/PackagePublish";
+ * import * as S from "effect/Schema";
+ *
+ * const outcome = S.decodeSync(PublishOutcome)({ provenanceUrl: "https://search.sigstore.dev/?logIndex=42" });
+ * console.log(outcome.provenanceUrl) // https://search.sigstore.dev/?logIndex=42
+ * ```
+ *
+ * @public
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PublishOutcome = S.Struct({
+	/**
+	 * npm's Sigstore transparency-log URL, when it published provenance.
+	 * Absent for GitHub Packages, custom registries, and provenance-off runs.
+	 */
+	provenanceUrl: S.optional(S.String).annotateKey({ description: "The Sigstore URL, when npm published provenance." }),
+}).annotate($I.annote("PublishOutcome", { description: "The structural outcome of one publish." }));
+/**
+ * Decoded publish result represented by {@link (PublishOutcome:variable)}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PublishOutcome = typeof PublishOutcome.Type;
+
+/**
+ * What a dry run reported.
+ *
+ * **Details**
+ *
+ * `ok: false` is a **result**, not an error: "this package cannot pack" is a
+ * valid answer to "would this publish?". The error channel is reserved for a
+ * structural failure — npm could not be spawned, or its output was unreadable.
+ * `npm pack --dry-run` never contacts a registry, so `ok: true` means the
+ * package packs, **not** that a registry would accept it.
+ *
+ * **Example** (Represent an unpackable package)
+ *
+ * ```ts
+ * import { DryRunOutcome } from "@beep/scratchpad/effected/npm/PackagePublish";
+ * import * as S from "effect/Schema";
+ *
+ * const outcome = S.decodeSync(DryRunOutcome)({ ok: false, output: "Missing package.json" });
+ * console.log(outcome.ok) // false
+ * ```
+ *
+ * @public
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const DryRunOutcome = S.Struct({
+	/** Whether the package packs. `false` is an answer, not a failure. */
+	ok: S.Boolean.annotateKey({ description: "Whether the package packs; false is a normal result." }),
+	/** Tarball size in bytes, when npm reported it. */
+	packedSize: S.optional(S.Finite).annotateKey({ description: "Packed tarball size in bytes." }),
+	/** Unpacked size in bytes, when npm reported it. */
+	unpackedSize: S.optional(S.Finite).annotateKey({ description: "Unpacked size in bytes." }),
+	/** Number of files the tarball would contain, when npm reported it. */
+	fileCount: S.optional(S.Finite).annotateKey({ description: "Number of files in the tarball." }),
+	/** npm's output, for diagnostics. */
+	output: S.String.annotateKey({ description: "npm output for diagnostics." }),
+}).annotate($I.annote("DryRunOutcome", { description: "Packability and sizing from npm pack --dry-run." }));
+/**
+ * Decoded dry-run result represented by {@link (DryRunOutcome:variable)}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type DryRunOutcome = typeof DryRunOutcome.Type;
+
+/**
+ * Options shared by the packing operations.
+ *
+ * **Example** (Select ambient npm by omission)
+ *
+ * ```ts
+ * import { PackOptions } from "@beep/scratchpad/effected/npm/PackagePublish";
+ * import * as S from "effect/Schema";
+ *
+ * const options = S.decodeSync(PackOptions)({});
+ * console.log(options.executor === undefined) // true
+ * ```
+ *
+ * @public
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const PackOptions = S.Struct({
+	/** Which npm runs the command. Defaults to {@link NpmExecutor.ambient}. */
+	executor: S.instanceOf(NpmExecutor, {
+		toCodecArbitrary: () => S.link<NpmExecutor>()(S.toType(NpmExecutor), SchemaTransformation.passthrough()),
+	}).pipe(S.optional).annotateKey({ description: "The npm executor; omission selects ambient npm." }),
+}).annotate($I.annote("PackOptions", { description: "Structural options shared by packing operations." }));
+/**
+ * Decoded packing options represented by {@link (PackOptions:variable)}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PackOptions = typeof PackOptions.Type;
+
+/**
+ * Options for uploading a tarball.
+ *
+ * **Example** (Choose a registry and dist-tag)
+ *
+ * ```ts
+ * import { PublishOptions } from "@beep/scratchpad/effected/npm/PackagePublish";
+ * import * as S from "effect/Schema";
+ *
+ * const options = S.decodeSync(PublishOptions)({ registry: "https://registry.npmjs.org", tag: "next" });
+ * console.log(options.tag) // next
+ * ```
+ *
+ * @public
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const PublishOptions = S.Struct({
+	...PackOptions.fields,
+	/** The registry to publish to. Required — a defaulted registry is how packages land in the wrong place. */
+	registry: S.String.annotateKey({ description: "Explicit registry to receive the tarball." }),
+	/** dist-tag to apply. */
+	tag: S.optional(S.String).annotateKey({ description: "The dist-tag to apply." }),
+	/** Access level for a scoped package. */
+	access: S.optional(S.Literals(["public", "restricted"])).annotateKey({ description: "Access for a scoped package." }),
+	/** Request npm's native provenance. */
+	provenance: S.optional(S.Boolean).annotateKey({ description: "Whether to request npm provenance." }),
+	/**
+  * Force classic `_authToken` auth by blanking the Actions OIDC environment.
+  *
+  * **Gotchas**
+  *
+  * npm attempts tokenless trusted publishing whenever the OIDC variables are
+  * present and does **not** fall back to a configured `_authToken` when that
+  * attempt fails. Required for GitHub Packages, and as the bootstrap path for
+  * a package with no trusted publisher configured yet.
+  */
+	tokenAuth: S.optional(S.Boolean).annotateKey({ description: "Whether to blank the OIDC environment for classic token auth." }),
+}).annotate($I.annote("PublishOptions", { description: "Structural options for uploading a previously packed tarball." }));
+/**
+ * Decoded publishing options represented by {@link (PublishOptions:variable)}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PublishOptions = typeof PublishOptions.Type;
+
+/**
+ * The {@link PackagePublish} service shape.
+ *
+ * @public
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export interface PackagePublishShape {
+	/**
+  * Write a registry auth token into an npmrc.
+  *
+  * **Gotchas**
+  *
+  * The token goes to the file, **never to argv** — redaction protects this
+  * kit's error messages, not the operating system's process table. Masking
+  * the token in a CI log is the **caller's** job; this package takes a
+  * `Redacted` and has no opinion about log output.
+  *
+  * An existing npmrc is appended to, never replaced. A missing file
+  * (`NotFound`) starts empty; any other read failure — an unreadable file, a
+  * directory at the path — fails `PublishError` with kind `"auth"` and leaves
+  * the file untouched, rather than overwriting config it could not read.
+  */
+	readonly setupAuth: (options: {
+		readonly registry: string;
+		readonly credential: RegistryCredential;
+		readonly npmrcPath: string;
+	}) => Effect.Effect<void, PublishError>;
+	/** `npm pack --json` — writes the tarball and reports both digests. */
+	readonly pack: (packageDir: string, options?: PackOptions) => Effect.Effect<PackedTarball, PublishError>;
+	/** `npm publish <tarball>` — uploads bytes packed earlier, never re-packs. */
+	readonly publishTarball: (
+		tarballPath: string,
+		options: PublishOptions,
+	) => Effect.Effect<PublishOutcome, PublishError>;
+	/** `npm pack --dry-run --json` — packability and sizing only. */
+	readonly dryRun: (packageDir: string, options?: PackOptions) => Effect.Effect<DryRunOutcome, PublishError>;
+}
+
+/** Builds the service over already-resolved platform services. */
+const make = Effect.fnUntraced(function* () {
+	const fs = yield* FileSystem.FileSystem;
+	const crypto = yield* Crypto.Crypto;
+	const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+	const local = yield* LocalExec;
+
+	/**
+  * Discharges the two services the command path needs, once, here.
+  *
+  * **Details**
+  *
+  * `Run.collect` requires `ChildProcessSpawner` and `NpmExecutor.command`
+  * requires `LocalExec`. Resolving both at construction is what keeps every
+  * method's `R` at `never` — the `@effected/git` shape — so a consumer wires
+  * this service once and its methods compose anywhere.
+  */
+	const discharge = <A, E>(
+		effect: Effect.Effect<A, E, ChildProcessSpawner.ChildProcessSpawner | LocalExec>,
+	): Effect.Effect<A, E> =>
+		effect.pipe(
+			Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
+			Effect.provideService(LocalExec, local),
+		);
+
+	/** Runs an npm invocation, mapping a command failure onto `kind`. */
+	const npm = (
+		args: ReadonlyArray<string>,
+		options: {
+			readonly executor: NpmExecutor;
+			readonly cwd?: string | undefined;
+			readonly env?: Record<string, string> | undefined;
+			readonly kind: "pack" | "publish";
+			readonly subject: string;
+			readonly registry?: string | undefined;
+		},
+	) =>
+		discharge(
+			options.executor.command(args).pipe(
+				Effect.map((command) => {
+					const withCwd = options.cwd === undefined ? command : ChildProcess.setCwd(command, options.cwd);
+					// Run.extendEnv, not core setEnv: a bare setEnv spawns npm with ONLY the
+					// caller's vars — no PATH, so the executable itself fails to resolve.
+					return options.env === undefined ? withCwd : Run.extendEnv(withCwd, options.env);
+				}),
+				Effect.flatMap((command) => Run.collect(command)),
+				Effect.mapError((cause) =>
+					PublishError.make({
+						kind: options.kind,
+						subject: options.subject,
+						...O.getSomesStruct({ registry: O.fromUndefinedOr(options.registry) }),
+						cause,
+					}),
+				),
+			),
+		);
+
+	const parsePackJson = (stdout: string, subject: string) =>
+		S.decodeEffect(PackJsonFromString)(stdout).pipe(
+			Effect.mapError((cause) => PublishError.make({ kind: "output", subject, cause })),
+			Effect.flatMap((decoded) => {
+				const entries: ReadonlyArray<typeof PackJsonEntry.Type> = A.isArray<typeof decoded>(decoded)
+					? decoded
+					: R.values(decoded);
+				const entry = entries[0];
+				return entry === undefined
+					? Effect.fail(PublishError.make({ kind: "output", subject, output: stdout }))
+					: Effect.succeed(entry);
+			}),
+		);
+
+	const setupAuth = Effect.fn("PackagePublish.setupAuth")(function* (options: {
+		readonly registry: string;
+		readonly credential: RegistryCredential;
+		readonly npmrcPath: string;
+	}) {
+		yield* Effect.annotateCurrentSpan({
+			registry: options.registry,
+			npmrc: options.npmrcPath,
+			// The KIND is safe to annotate and worth annotating; the value is not.
+			credential: options.credential.kind,
+		});
+		// Only an absent file is an empty npmrc. Any other read failure (permission
+		// denied, a directory in the way) means a file exists that we cannot read;
+		// treating it as empty would overwrite it and drop its prior config lines.
+		const existing = yield* fs
+			.readFileString(options.npmrcPath)
+			.pipe(
+				Effect.catch((cause) =>
+					cause.reason._tag === "NotFound"
+						? Effect.succeed("")
+						: Effect.fail(
+								PublishError.make({ kind: "auth", registry: options.registry, subject: options.npmrcPath, cause }),
+							),
+				),
+			);
+		const secret = options.credential.kind === "token" ? options.credential.token : options.credential.encoded;
+		const line = `${authKey(options.registry, options.credential)}=${Red.value(secret)}`;
+		const separator = existing === "" || Str.endsWith("\n")(existing) ? "" : "\n";
+		yield* fs
+			.writeFileString(options.npmrcPath, `${existing}${separator}${line}\n`)
+			.pipe(
+				Effect.mapError((cause) => PublishError.make({ kind: "auth", registry: options.registry, cause })),
+			);
+	});
+
+	const pack = Effect.fn("PackagePublish.pack")(function* (packageDir: string, options?: PackOptions) {
+		yield* Effect.annotateCurrentSpan({ packageDir });
+		const output = yield* npm(["pack", "--json"], {
+			executor: options?.executor ?? NpmExecutor.ambient,
+			cwd: packageDir,
+			kind: "pack",
+			subject: packageDir,
+		});
+		if (!output.succeeded) {
+			return yield* PublishError.make({
+					kind: "pack",
+					subject: packageDir,
+					exitCode: output.exitCode,
+					output: output.stderr === "" ? output.stdout : output.stderr,
+				});
+		}
+		const entry = yield* parsePackJson(output.stdout, packageDir);
+		const tarballPath = `${packageDir}/${entry.filename}`;
+		// The sha256 is computed from the tarball's own bytes, not from npm's
+		// report: it is a different digest for a different consumer (attestation
+		// subjects), and deriving it from the file is what makes it verifiable.
+		const bytes = yield* fs
+			.readFile(tarballPath)
+			.pipe(Effect.mapError((cause) => PublishError.make({ kind: "digest", subject: tarballPath, cause })));
+		const digest = yield* crypto
+			.digest("SHA-256", bytes)
+			.pipe(Effect.mapError((cause) => PublishError.make({ kind: "digest", subject: tarballPath, cause })));
+		return PackedTarball.make({
+			tarballPath,
+			name: entry.name,
+			version: entry.version,
+			...integrityField(entry.integrity),
+			sha256Hex: Hex.encode(digest),
+			...O.getSomesStruct({ packedSize: O.fromUndefinedOr(entry.size) }),
+			...O.getSomesStruct({ unpackedSize: O.fromUndefinedOr(entry.unpackedSize) }),
+			...O.getSomesStruct({ fileCount: O.fromUndefinedOr(entry.entryCount) }),
+		});
+	});
+
+	const publishTarball = Effect.fn("PackagePublish.publishTarball")(function* (
+		tarballPath: string,
+		options: PublishOptions,
+	) {
+		yield* Effect.annotateCurrentSpan({ tarball: tarballPath, registry: options.registry });
+		// Provenance is an npm-registry feature. Passing `--provenance` to GitHub
+		// Packages or a custom registry fails the publish outright, so a caller
+		// who asks for it against a non-npm target gets the publish without it
+		// rather than a failed release: a release pipeline publishing to three
+		// registries should not lose two of them to one flag.
+		const provenance = options.provenance === true && classifyRegistry(options.registry) === "npm";
+		const args = [
+			"publish",
+			tarballPath,
+			"--registry",
+			options.registry,
+			...(options.tag === undefined ? [] : ["--tag", options.tag]),
+			...(options.access === undefined ? [] : ["--access", options.access]),
+			...(provenance ? ["--provenance"] : []),
+		];
+		const output = yield* npm(args, {
+			executor: options.executor ?? NpmExecutor.ambient,
+			kind: "publish",
+			subject: tarballPath,
+			registry: options.registry,
+			// Blanking rather than deleting: `CommandOptions.env` is an overlay on
+			// the inherited environment, so an empty value is how a variable is
+			// suppressed without replacing the whole environment.
+			...(options.tokenAuth === true
+				? { env: { ACTIONS_ID_TOKEN_REQUEST_URL: "", ACTIONS_ID_TOKEN_REQUEST_TOKEN: "" } }
+				: {}),
+		});
+		if (!output.succeeded) {
+			return yield* PublishError.make({
+					kind: "publish",
+					subject: tarballPath,
+					registry: options.registry,
+					exitCode: output.exitCode,
+					output: output.stderr === "" ? output.stdout : output.stderr,
+				});
+		}
+		const printed = `${output.stdout}\n${output.stderr}`;
+		const provenanceUrl = O.getOrUndefined(O.flatMap(Str.match(PROVENANCE_URL)(printed), A.head));
+		return {
+			...O.getSomesStruct({ provenanceUrl: O.fromUndefinedOr(provenanceUrl) }),
+		} satisfies PublishOutcome;
+	});
+
+	const dryRun = Effect.fn("PackagePublish.dryRun")(function* (packageDir: string, options?: PackOptions) {
+		yield* Effect.annotateCurrentSpan({ packageDir });
+		const output = yield* npm(["pack", "--dry-run", "--json"], {
+			executor: options?.executor ?? NpmExecutor.ambient,
+			cwd: packageDir,
+			kind: "pack",
+			subject: packageDir,
+		});
+		if (!output.succeeded) {
+			// A package that will not pack is an ANSWER, not a failure.
+			return {
+				ok: false,
+				output: output.stderr === "" ? output.stdout : output.stderr,
+			} satisfies DryRunOutcome;
+		}
+		const entry = yield* parsePackJson(output.stdout, packageDir);
+		return {
+			ok: true,
+			output: output.stdout,
+			...O.getSomesStruct({ packedSize: O.fromUndefinedOr(entry.size) }),
+			...O.getSomesStruct({ unpackedSize: O.fromUndefinedOr(entry.unpackedSize) }),
+			...O.getSomesStruct({ fileCount: O.fromUndefinedOr(entry.entryCount) }),
+		} satisfies DryRunOutcome;
+	});
+
+	return { setupAuth, pack, publishTarball, dryRun } satisfies PackagePublishShape;
+});
+
+/** The `integrity` field, present only when npm's value classifies. */
+const integrityField = (raw: string | undefined): { integrity?: typeof IntegrityHash.Type } =>
+	O.getSomesStruct({ integrity: O.flatMap(O.fromUndefinedOr(raw), S.decodeOption(IntegrityHash)) });
+
+class UnstubbedPublishMethodError extends S.TaggedError<UnstubbedPublishMethodError>($I`UnstubbedPublishMethodError`)(
+	"UnstubbedPublishMethodError",
+	{ message: S.String },
+	$I.annote("UnstubbedPublishMethodError", { description: "An unstubbed publish test-double method was invoked." }),
+) {}
+
+/** The default for an unstubbed {@link PackagePublish.makeTest} member. */
+const notStubbed = (method: string) => () =>
+	Effect.die(
+		UnstubbedPublishMethodError.make({
+			message: `PackagePublish.makeTest: ${method}() was called but not stubbed — no honest default exists for a test double; pass a \`${method}\` override.`,
+		}),
+	);
+
+/**
+ * Packs, dry-runs and publishes npm tarballs, and writes registry auth into an
+ * npmrc, by running `npm` through `@effected/commands`.
+ *
+ * **Details**
+ *
+ * Every invocation goes through `Run`, so a non-zero npm exit arrives as a
+ * typed {@link PublishError} and npm's `--json` output is schema-decoded rather
+ * than cast. The service deliberately does **not** own: log masking (the
+ * caller's job, so no Actions edge lives in a publish library), the npmrc
+ * location (caller-supplied — resolving `~` needs `node:os`), or a fused
+ * probe-then-publish (probe with `NpmRegistry`, then call `publishTarball`
+ * against an explicit registry).
+ *
+ * Every method's `R` is `never`: the live layer resolves its platform services
+ * once at construction.
+ *
+ * **Example** (Pack and publish a tarball with provenance)
+ *
+ * ```ts
+ * import { PackagePublish } from "@beep/scratchpad/effected/npm/PackagePublish";
+ * import * as Effect from "effect/Effect";
+ *
+ * const program = Effect.gen(function* () {
+ *   const publish = yield* PackagePublish;
+ *   const packed = yield* publish.pack("./packages/my-lib");
+ *   return yield* publish.publishTarball(packed.tarballPath, {
+ *     registry: "https://registry.npmjs.org",
+ *     provenance: true,
+ *   });
+ * });
+ *
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @public
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export class PackagePublish extends Context.Service<PackagePublish, PackagePublishShape>()(
+	$I`PackagePublish`,
+) {
+	/**
+	 * The live service. Requires `FileSystem`, `Crypto`, `ChildProcessSpawner`
+	 * and `LocalExec` (from `@effected/commands`), resolved once at construction.
+	 *
+	 * **Example** (Provide the live publish layer)
+	 *
+	 * ```ts
+	 * import { PackagePublish } from "@beep/scratchpad/effected/npm/PackagePublish";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = Effect.gen(function* () {
+	 *   const publish = yield* PackagePublish;
+	 *   return yield* publish.dryRun("./packages/my-lib");
+	 * }).pipe(Effect.provide(PackagePublish.layer));
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
+	 */
+	static readonly layer: Layer.Layer<
+		PackagePublish,
+		never,
+		FileSystem.FileSystem | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner | LocalExec
+	> = Layer.effect(this, make());
+
+	/**
+	 * An in-memory double: stub only what the test exercises; every other member
+	 * **dies** with a defect naming itself.
+	 *
+	 * **Example** (Stub a packability check)
+	 *
+	 * ```ts
+	 * import { PackagePublish } from "@beep/scratchpad/effected/npm/PackagePublish";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const publish = PackagePublish.makeTest({
+	 *   dryRun: () => Effect.succeed({ ok: true, output: "packable" }),
+	 * });
+	 * console.log(Effect.runSync(publish.dryRun("./my-lib")).ok) // true
+	 * ```
+	 *
+	 * @category testing
+	 * @since 0.0.0
+	 */
+	static readonly makeTest = (overrides: Partial<PackagePublishShape> = {}): PackagePublishShape => ({
+		setupAuth: notStubbed("setupAuth"),
+		pack: notStubbed("pack"),
+		publishTarball: notStubbed("publishTarball"),
+		dryRun: notStubbed("dryRun"),
+		...overrides,
+	});
+
+	/**
+	 * {@link PackagePublish.makeTest} behind `Layer.succeed`.
+	 *
+	 * **Gotchas**
+	 *
+	 * A parameterized layer factory mints a fresh reference per call and layers
+	 * memoize by reference — bind the result to a `const`.
+	 *
+	 * **Example** (Provide a shared test layer)
+	 *
+	 * ```ts
+	 * import { PackagePublish } from "@beep/scratchpad/effected/npm/PackagePublish";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const testLayer = PackagePublish.layerTest({
+	 *   dryRun: () => Effect.succeed({ ok: false, output: "cannot pack" }),
+	 * });
+	 * const program = Effect.gen(function* () {
+	 *   const publish = yield* PackagePublish;
+	 *   return yield* publish.dryRun("./my-lib");
+	 * }).pipe(Effect.provide(testLayer));
+	 * console.log(Effect.runSync(program).ok) // false
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
+	 */
+	static readonly layerTest = (overrides: Partial<PackagePublishShape> = {}): Layer.Layer<PackagePublish> =>
+		Layer.succeed(PackagePublish, PackagePublish.makeTest(overrides));
+}

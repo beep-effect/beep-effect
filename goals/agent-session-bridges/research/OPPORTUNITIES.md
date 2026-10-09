@@ -178,3 +178,12 @@ The replacement audit buffers output across approximately 298 serial isolated
 test files; process metadata showed worker turnover and progress. A quiet log
 is neither a pass nor evidence of a hang. A per-step progress marker and explicit
 audit deadline would make this verification easier to observe and recover.
+
+## 2026-10-09: integration secret scan matched a documentation header
+
+The main integration's staged secret scan reported `private-key` in
+`scratchpad/effected/github/GitHubApp.ts:120`. Inspection found only a PEM header
+quoted in JSDoc describing PKCS conversion, with no credential or key body.
+The existing exact-fingerprint ignore mechanism records that one documentation
+match; the full staged scan still runs. Prefer descriptive header names in prose
+where a literal sentinel can trigger a multi-line secret detector during merges.

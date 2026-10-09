@@ -46,7 +46,7 @@ export const IANA_MEDIA_TYPES_SOURCE_URL = "https://www.iana.org/assignments/med
 
 class IanaMediaTypeTextNode extends S.Class<IanaMediaTypeTextNode>($I`IanaMediaTypeTextNode`)(
   {
-    text: S.String,
+    "#text": S.String,
   },
   $I.annote("IanaMediaTypeTextNode", {
     description: "XML text node emitted by the registry parser for selected fields.",
@@ -138,7 +138,7 @@ type IanaMediaTypeEntryType = IanaMediaTypeEntry;
 const isTextNode = S.is(IanaMediaTypeTextNode);
 const primaryTopLevels = HashSet.make("application", "audio", "image", "text", "video");
 
-const extractName = (name: string | IanaMediaTypeTextNode): string => (isTextNode(name) ? name.text : name);
+const extractName = (name: string | IanaMediaTypeTextNode): string => (isTextNode(name) ? name["#text"] : name);
 
 const recordsArray = (record: IanaMediaTypeRegistry["record"]): ReadonlyArray<IanaMediaTypeRecord> => {
   if (record === undefined) {

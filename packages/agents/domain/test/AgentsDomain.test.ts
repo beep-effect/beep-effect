@@ -100,6 +100,8 @@ describe("@beep/agents-domain", () => {
     Effect.gen(function* () {
       const encoded = {
         ...productEntityFixtureInput("AgentsAgent", 4),
+        deletedAt: null,
+        deletedByPrincipal: null,
         fixtureKey: "agent.reviewer",
         mode: "deterministic_fixture",
         name: "Reviewer Agent",
@@ -123,6 +125,8 @@ describe("@beep/agents-domain", () => {
     Effect.gen(function* () {
       const encoded = {
         ...productEntityFixtureInput("AgentsSkill", 5),
+        deletedAt: null,
+        deletedByPrincipal: null,
         allowedTools: null,
         compatibility: null,
         description: "Reviews changed code before publication.",

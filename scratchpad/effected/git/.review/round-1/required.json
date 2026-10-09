@@ -1,0 +1,179 @@
+{
+  "module": "git",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/git/Git.ts",
+        "scratchpad/effected/git/GitCommand.ts",
+        "scratchpad/effected/git/index.ts",
+        "scratchpad/effected/git/internal/run.ts",
+        "scratchpad/effected/git/Git.ts-E"
+      ],
+      "tests": [
+        "scratchpad/test/git/Git.test.ts",
+        "scratchpad/test/git/GitLog.test.ts",
+        "scratchpad/test/git/GitCommand.test.ts",
+        "scratchpad/test/git/run.test.ts"
+      ],
+      "findings": [
+        "git-r1",
+        "git-r2",
+        "git-r3",
+        "git-r4",
+        "git-r5",
+        "git-r6",
+        "git-r7",
+        "git-r8",
+        "git-r9",
+        "git-r19"
+      ]
+    },
+    {
+      "id": "g2",
+      "files": [
+        "scratchpad/effected/git/GitConfig.ts",
+        "scratchpad/effected/git/Gitmodules.ts",
+        "scratchpad/effected/git/internal/config.ts"
+      ],
+      "tests": [
+        "scratchpad/test/git/GitConfig.test.ts",
+        "scratchpad/test/git/Gitmodules.test.ts"
+      ],
+      "findings": [
+        "git-r10",
+        "git-r11",
+        "git-r12",
+        "git-r13",
+        "git-r14",
+        "git-r15",
+        "git-r16",
+        "git-r17",
+        "git-r18",
+        "git-r20"
+      ]
+    }
+  ],
+  "findings": {
+    "git-r1": {
+      "file": "scratchpad/effected/git/Git.ts",
+      "class": "bug",
+      "summary": "configGetAll drops explicitly empty values.",
+      "fix": "Use a configGetAll-specific NUL parser that removes only the final terminator token, preserving empty values and order. Keep silent exit-1 handling for an unset key; add single-empty and mixed-empty regressions in Git.test.ts. Supply the verified upstream-bug evidence and adjusted test sites to central deviation bookkeeping."
+    },
+    "git-r2": {
+      "file": "scratchpad/effected/git/Git.ts",
+      "class": "bug",
+      "summary": "Commit-log record separators split valid pathnames.",
+      "fix": "Change GitCommand.log framing and the Git.ts parser together to use an unambiguous NUL-framed commit boundary and positional header/path parsing. Preserve record-separator bytes inside paths; extend GitCommand.test.ts and GitLog.test.ts with framing and pathname-fidelity regressions. Supply upstream-bug evidence to central bookkeeping."
+    },
+    "git-r3": {
+      "file": "scratchpad/effected/git/Git.ts",
+      "class": "schema",
+      "summary": "Classified and ClassifyKind are not schema-derived domain models.",
+      "fix": "Define an identity-annotated module-local S.TaggedUnion preserving all Classified tags/payloads and an annotated LiteralKit for ClassifyKind; derive their types. Preserve classification precedence and results, retaining existing service regressions."
+    },
+    "git-r4": {
+      "file": "scratchpad/effected/git/Git.ts",
+      "class": "schema",
+      "summary": "Reused porcelainCode must be an annotated LiteralKit.",
+      "fix": "Replace porcelainCode with an annotated module-local LiteralKit containing exactly the same ten codes and retain both field references. Preserve accepted values and upstream tests; any incidental added public export is central exportsAdded bookkeeping."
+    },
+    "git-r5": {
+      "file": "scratchpad/effected/git/Git.ts",
+      "class": "schema",
+      "summary": "Reused name-status vocabulary must be an annotated LiteralKit.",
+      "fix": "Extract an annotated module-local NameStatusCode LiteralKit with exactly the existing spellings, use it for NameStatusEntry.status, and type NAME_STATUS_CODES from its Type. Preserve T -> typeChanged and B -> broken. Do not turn the report's optional sweep of other anonymous domains into required work."
+    },
+    "git-r6": {
+      "file": "scratchpad/test/git/Git.test.ts",
+      "class": "tsgo",
+      "summary": "Three test files suppress required Effect diagnostics.",
+      "fix": "Remove the directives from Git.test.ts, GitLog.test.ts and run.test.ts; fix actual diagnostics with composed Layers and a single Layer provisioning boundary where appropriate. Keep test semantics and assertions. Do not edit repo exemptions or runner/config files; the repo-level scan request is separately backlogged."
+    },
+    "git-r7": {
+      "file": "scratchpad/effected/git/Git.ts",
+      "class": "effect-idiom",
+      "summary": "Five private helpers add unforced upstream tracing changes.",
+      "fix": "Use Effect.fnUntraced for these five helpers, preserving their bodies and upstream public Git.<method> spans. Retain or restore any upstream test lines this change rewrote; add a focused tracing regression in Git.test.ts if needed to prove no helper child spans are added."
+    },
+    "git-r8": {
+      "file": "scratchpad/effected/git/internal/run.ts",
+      "class": "effect-idiom",
+      "summary": "Scoped generator wrapper hides runCollected from the Effect.fn gate.",
+      "fix": "Wrap its generator with Effect.fnUntraced and retain Effect.scoped via the trailing pipeline form. Preserve the public signature, concurrent stdout/stderr/exit-code collection, resource scope, and available() behavior. Prefer untraced here to retain upstream tracing behavior rather than adding an unnecessary span."
+    },
+    "git-r9": {
+      "file": "scratchpad/effected/git/GitCommand.ts",
+      "class": "law",
+      "summary": "GitConfigScope lacks its required runtime LiteralKit contract.",
+      "fix": "Create an identity-annotated exported GitConfigScope LiteralKit, derive the same-name type, and change index.ts:35 from a type-only to a value/type re-export. Preserve scope argv behavior and test it in GitCommand.test.ts. New value-export bookkeeping belongs to the central codemod."
+    },
+    "git-r10": {
+      "file": "scratchpad/effected/git/Gitmodules.ts",
+      "class": "schema",
+      "summary": "NUL-containing Gitmodules fields violate codec round-trip validity.",
+      "fix": "Use one named, annotated NUL-free string schema for path, url, branch and update, preserving optionality. Add construction/encode-decode regressions in Gitmodules.test.ts; provide failing round-trip evidence to central upstream-bug bookkeeping."
+    },
+    "git-r11": {
+      "file": "scratchpad/effected/git/Gitmodules.ts",
+      "class": "schema",
+      "summary": "Duplicate typed submodule names lose entries on round-trip.",
+      "fix": "Add a case-sensitive name-uniqueness check to the entries schema. Keep last-wins duplicate-section merging for incoming text; reject duplicate names in constructed/decoded typed models. Add fidelity regressions in Gitmodules.test.ts and supply evidence to central bookkeeping."
+    },
+    "git-r12": {
+      "file": "scratchpad/effected/git/internal/config.ts",
+      "class": "bug",
+      "summary": "Dotted subsection casing disagrees with Git.",
+      "fix": "Lowercase dotted subsection names while scanning, then compare decoded subsections case-sensitively in matchesSection. Preserve quoted-name case and original source bytes. Update dotted-subsection corpus expectations in GitConfig.test.ts and add mixed-case merged-submodule coverage in Gitmodules.test.ts; provide upstream-bug evidence centrally."
+    },
+    "git-r13": {
+      "file": "scratchpad/effected/git/internal/config.ts",
+      "class": "bug",
+      "summary": "Scanner rejects valid header-line declarations.",
+      "fix": "Scan an inline declaration after closing ], with its own entry span separate from the header. Adjust GitConfig.ts edit span handling if needed; add parsing and surgical-edit regressions to GitConfig.test.ts. Preserve the header when replacing/removing the inline entry and provide upstream-bug evidence centrally."
+    },
+    "git-r14": {
+      "file": "scratchpad/effected/git/Gitmodules.ts",
+      "class": "bug",
+      "summary": "Boolean decoding rejects Git-supported integer spellings and duplicates parsing truth.",
+      "fix": "Use one named, annotated GitBoolean schema codec/transform, consumed by both boolean fields, that supports Git's verified integer syntax (zero false, nonzero true), existing word aliases and bare-key semantics; preserve on-demand handling and reject malformed numbers. Add both-field regressions in Gitmodules.test.ts and supply upstream-bug evidence centrally."
+    },
+    "git-r15": {
+      "file": "scratchpad/effected/git/internal/config.ts",
+      "class": "bug",
+      "summary": "Carriage-return handling silently discards malformed line suffixes.",
+      "fix": "Distinguish CRLF/allowed terminal CR from CR followed by non-newline text at line, header and bare-key boundaries; diagnose the latter. Add both malformed-input regressions to GitConfig.test.ts while retaining valid CRLF behavior; supply upstream-bug evidence centrally."
+    },
+    "git-r16": {
+      "file": "scratchpad/effected/git/internal/config.ts",
+      "class": "bug",
+      "summary": "Scanner rejects Git-supported initial UTF-8 BOM.",
+      "fix": "Recognize only an initial U+FEFF while preserving source text and absolute offsets. Add BOM-prefixed parse/stringify and offset regressions to GitConfig.test.ts; provide upstream-bug evidence centrally."
+    },
+    "git-r17": {
+      "file": "scratchpad/effected/git/Gitmodules.ts",
+      "class": "schema",
+      "summary": "Ignore policy schema and decoder maintain duplicate literal domains.",
+      "fix": "Define one annotated internal SubmoduleIgnore LiteralKit; use it for the field and derive decoder membership with S.is/the kit guard, preserving case folding. Delete IGNORE_VALUES and retain accepted/rejected-value tests."
+    },
+    "git-r18": {
+      "file": "scratchpad/effected/git/internal/config.ts",
+      "class": "law",
+      "summary": "Scanner and public diagnostic schema duplicate the diagnostic code domain.",
+      "fix": "Export an annotated GitConfigDiagnosticCode LiteralKit from internal/config.ts, derive RawDiagnosticCode from its Type, and use the shared kit for GitConfigDiagnostic.code in GitConfig.ts. Keep the scanner's no-import-from-facade boundary and existing error codes unchanged."
+    },
+    "git-r19": {
+      "file": "scratchpad/effected/git/Git.ts-E",
+      "class": "law",
+      "summary": "Unscanned Git.ts-E editor backup carries forbidden imports.",
+      "fix": "Remove only scratchpad/effected/git/Git.ts-E, the unreferenced editor artifact; preserve Git.ts and all real upstream source/tests. No root config or README Port-notes edits are assigned."
+    },
+    "git-r20": {
+      "file": "scratchpad/effected/git/internal/config.ts",
+      "class": "schema",
+      "summary": "Named key and section guards are handwritten rather than schema-derived.",
+      "fix": "Define annotated module-local string schemas with the existing key and section regexes and derive the exported guards through S.is. Preserve exact accepted strings and existing edit-error behavior; retain/add boundary cases in GitConfig.test.ts."
+    }
+  }
+}

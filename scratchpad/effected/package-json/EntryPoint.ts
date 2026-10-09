@@ -1,0 +1,278 @@
+import { $ScratchpadId } from "@beep/identity/packages";
+import { dual, identity } from "effect/Function";
+import * as A from "effect/Array";
+import * as Match from "effect/Match";
+import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
+import * as R from "effect/Record";
+import * as S from "effect/Schema";
+import * as Str from "effect/String";
+
+const $I = $ScratchpadId.create("effected/package-json/EntryPoint");
+
+const ConditionsJson = S.fromJsonString(S.Unknown);
+
+/**
+ * Controls condition priority when {@link resolveEntryPoint} selects a package's root export.
+ *
+ * @public
+ * @category type-level
+ * @since 0.0.0
+ */
+export interface ResolveEntryPointOptions {
+	/** Reserved for manifest arguments, so one-argument calls are unambiguous. */
+	readonly exports?: never;
+	/** Reserved for manifest arguments, so one-argument calls are unambiguous. */
+	readonly main?: never;
+	/**
+	 * The export conditions to honour, in priority order.
+	 *
+	 * **Details**
+	 *
+	 * The first condition present in the manifest wins, so the order is the
+	 * policy — `["require", "import"]` and `["import", "require"]` resolve the
+	 * same manifest to different files, on purpose.
+	 *
+	 * @defaultValue `["import", "default"]`
+	 */
+	readonly conditions?: ReadonlyArray<string>;
+}
+
+/**
+ * Raised when a manifest resolves no root entry point.
+ *
+ * **Details**
+ *
+ * The reason is discriminated rather than a bare "not found" because the three
+ * shapes call for different responses, and a caller needs to know which one it
+ * hit.
+ *
+ * **Example** (Inspect a condition mismatch)
+ *
+ * ```ts
+ * import { UnresolvedEntryPointError } from "@beep/scratchpad/effected/package-json/EntryPoint";
+ *
+ * const error = UnresolvedEntryPointError.make({ reason: "noConditionMatched", conditions: ["import"] });
+ * console.log(error.reason) // noConditionMatched
+ * ```
+ *
+ * @public
+ * @category errors
+ * @since 0.0.0
+ */
+export class UnresolvedEntryPointError extends S.TaggedError<UnresolvedEntryPointError>($I`UnresolvedEntryPointError`)(
+	"UnresolvedEntryPointError",
+	{
+		/**
+		 * `noRootExport` — `exports` is a subpath map with no `"."` entry, so the
+		 * package exports subpaths but no root. `noConditionMatched` — a root
+		 * entry exists but none of the requested conditions are present, e.g. a
+		 * `require`-only package read with `["import"]`.
+		 * `unsupportedExportsForm` — an array fallback list, or another shape this
+		 * resolver does not implement.
+		 */
+		reason: S.Literals(["noRootExport", "noConditionMatched", "unsupportedExportsForm"]).annotateKey({ description: "`noRootExport` — `exports` is a subpath map with no `\".\"` entry, so the package exports subpaths but no root. `noConditionMatched` — a root entry exists but none of the requested conditions are present, e.g. a `require`-only package read with `[\"import\"]`. `unsupportedExportsForm` — an array fallback list, or another shape this resolver does not implement." }),
+		/** The conditions that were tried, for `noConditionMatched`. */
+		conditions: S.String.pipe(S.Array, S.optionalKey).annotateKey({ description: "The conditions that were tried, for `noConditionMatched`." }),
+	}, $I.annote("UnresolvedEntryPointError", { description: "Raised when a manifest resolves no root entry point." }),
+) {
+	/**
+	 * Explains the unresolved export shape, including the tried conditions for a condition mismatch.
+	 *
+	 * **Example** (Read an unsupported-form diagnostic)
+	 *
+	 * ```ts
+	 * import { UnresolvedEntryPointError } from "@beep/scratchpad/effected/package-json/EntryPoint";
+	 *
+	 * const error = UnresolvedEntryPointError.make({ reason: "unsupportedExportsForm" });
+	 * console.log(error.message) // The manifest's "exports" uses a form this resolver does not implement
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
+	override get message(): string {
+		return Match.value(this.reason).pipe(
+			Match.when("noRootExport", () => 'The manifest\'s "exports" declares subpaths but no "." entry, so it has no root entry point'),
+			Match.when("noConditionMatched", () => `The manifest's "exports" matched none of the conditions ${Result.getOrThrowWith(S.encodeResult(ConditionsJson)(this.conditions ?? []), identity)}`),
+			Match.orElse(() => 'The manifest\'s "exports" uses a form this resolver does not implement'),
+		);
+	}
+}
+
+/**
+ * The manifest fields entry resolution reads.
+ *
+ * **Details**
+ *
+ * Deliberately structural rather than the full {@link PackageManifest}, so a
+ * caller can resolve an entry point from an arbitrary object carrying these two fields —
+ * a manifest parsed straight from a tarball, for instance, with nothing else
+ * validated yet.
+ *
+ * @public
+ * @category type-level
+ * @since 0.0.0
+ */
+export interface EntryPointManifest {
+	/** The `exports` field, in each of its legal shapes. */
+	readonly exports?: unknown;
+	/** The `main` field; consulted only when `exports` is absent. */
+	readonly main?: unknown;
+}
+
+const DEFAULT_CONDITIONS: ReadonlyArray<string> = ["import", "default"];
+
+/** A plain object — not an array, not `null`. */
+const isPlainObject = (value: unknown): value is Record<string, unknown> =>
+	P.isObjectKeyword(value) && !P.isFunction(value) && !A.isArray(value);
+
+/**
+ * Is this `exports` object a conditions map rather than a subpath map?
+ *
+ * **Details**
+ *
+ * Node's rule: the two forms cannot be mixed, and a subpath map is identified
+ * by keys starting with `"."`. So an object with no `"."`-prefixed key is
+ * conditions-only sugar for the `"."` subpath. An empty object is neither — it
+ * exports nothing.
+ */
+const isRootConditions = (exportsObject: Record<string, unknown>): boolean => {
+	const keys = R.keys(exportsObject);
+	return keys.length > 0 && !A.some(keys, Str.startsWith("."));
+};
+
+/**
+ * Resolve a conditions object to a file, honouring `conditions` in order.
+ *
+ * **Details**
+ *
+ * Recurses, because conditions nest: `{ "import": { "node": "./n.js" } }` is
+ * legal and a non-recursive reader answers an object where a path belongs.
+ */
+const resolveConditions = (
+	conditionsObject: Record<string, unknown>,
+	conditions: ReadonlyArray<string>,
+): string | undefined => {
+	for (const condition of conditions) {
+		const matched = conditionsObject[condition];
+		if (P.isString(matched)) {
+			return matched;
+		}
+		if (isPlainObject(matched)) {
+			const nested = resolveConditions(matched, conditions);
+			if (nested !== undefined) {
+				return nested;
+			}
+		}
+	}
+	return undefined;
+};
+
+/**
+ * Resolve a package's root entry point from its manifest.
+ *
+ * **Details**
+ *
+ * Answers "given a manifest, which file is the package's `"."` entry?". It is
+ * pure and IO-free by design — nothing here touches a filesystem, so it works
+ * on plain manifest objects with no package on disk, and it composes with a
+ * directory regardless of its arrival route.
+ *
+ * All three legal `exports` spellings are honoured, because all three appear in
+ * real published packages:
+ *
+ * - **String shorthand** — `"exports": "./index.js"`, sugar for `{ ".": … }`.
+ * - **Subpath map** — `{ ".": "./index.js" }`, or `{ ".": { import, … } }`.
+ * - **Root conditions** — `{ "import": "./index.js", "default": "./index.cjs" }`,
+ *   conditions at the root with no `"."` key.
+ *
+ * A one-argument object with `exports` or `main` is a manifest. Other
+ * one-argument objects are options for the pipeable form. Pass `undefined`
+ * as the second argument to resolve an empty or extension-only manifest.
+ * `resolveEntryPoint()` selects the default conditions for piping.
+ *
+ * **Gotchas**
+ *
+ * **`exports` encapsulates the package.** When it is present but nothing
+ * matches, the answer is a typed failure and `main` is **not** consulted — that
+ * is Node's rule, and the lenient reading (falling through to `main`, then to
+ * `index.js`) is the subtly wrong one: it answers a file the package
+ * deliberately does not export, which loads and behaves plausibly instead of
+ * failing. Only when `exports` is **absent** does `main`, and then the legacy
+ * `index.js` default, apply.
+ *
+ * A failure is also the answer for an `exports` form this resolver does not
+ * implement — an array fallback list, or a subpath map with no `"."` entry.
+ * Both are honest "this resolver cannot tell you", never a guess, and each
+ * carries its own {@link UnresolvedEntryPointError} reason so a caller can log
+ * which shape a package actually had rather than a flat "could not resolve".
+ *
+ * **Example** (Resolve conditions without falling through to main)
+ *
+ * ```ts
+ * import { resolveEntryPoint } from "@beep/scratchpad/effected/package-json/EntryPoint";
+ * import * as Result from "effect/Result";
+ *
+ * console.log(Result.getOrThrow(resolveEntryPoint({ exports: { import: "./esm.js", require: "./cjs.js" } }))) // ./esm.js
+ * console.log(Result.getOrThrow(resolveEntryPoint({ exports: { require: "./cjs.js" } }, { conditions: ["require"] }))) // ./cjs.js
+ * const unresolved = resolveEntryPoint({ exports: { require: "./cjs.js" }, main: "./legacy.js" });
+ * console.log(Result.isFailure(unresolved)) // true
+ * ```
+ *
+ * @param manifest - A package manifest, or an arbitrary object carrying `exports`/`main`.
+ * @param options - Which conditions to honour, in priority order.
+ * @returns The entry path as written in the manifest, relative to the package
+ *   root, or a typed {@link UnresolvedEntryPointError} naming which shape
+ *   blocked resolution.
+ *
+ * @public
+ * @category utilities
+ * @since 0.0.0
+ */
+export const resolveEntryPoint: {
+	(manifest: EntryPointManifest & { readonly exports: unknown }): Result.Result<string, UnresolvedEntryPointError>;
+	(manifest: EntryPointManifest & { readonly main: unknown }): Result.Result<string, UnresolvedEntryPointError>;
+	(options: ResolveEntryPointOptions | undefined): (manifest: EntryPointManifest) => Result.Result<string, UnresolvedEntryPointError>;
+	(): (manifest: EntryPointManifest) => Result.Result<string, UnresolvedEntryPointError>;
+	(manifest: EntryPointManifest, options: ResolveEntryPointOptions | undefined): Result.Result<string, UnresolvedEntryPointError>;
+} = dual(
+	(args) => args.length >= 2 || P.hasProperty(args[0], "exports") || P.hasProperty(args[0], "main"),
+	(manifest: EntryPointManifest, options?: ResolveEntryPointOptions): Result.Result<string, UnresolvedEntryPointError> => {
+		const conditions = options?.conditions ?? DEFAULT_CONDITIONS;
+		const exportsField = manifest.exports;
+
+		if (P.isString(exportsField)) {
+			return Result.succeed(exportsField);
+		}
+
+		if (isPlainObject(exportsField)) {
+			if (isRootConditions(exportsField)) {
+				const resolved = resolveConditions(exportsField, conditions);
+				return resolved === undefined
+					? Result.fail(UnresolvedEntryPointError.make({ reason: "noConditionMatched", conditions }))
+					: Result.succeed(resolved);
+			}
+			const dot = exportsField["."];
+			if (P.isString(dot)) {
+				return Result.succeed(dot);
+			}
+			if (isPlainObject(dot)) {
+				const resolved = resolveConditions(dot, conditions);
+				return resolved === undefined
+					? Result.fail(UnresolvedEntryPointError.make({ reason: "noConditionMatched", conditions }))
+					: Result.succeed(resolved);
+			}
+			// A subpath map with no usable "." entry exports no root entry point.
+			return Result.fail(UnresolvedEntryPointError.make({ reason: "noRootExport" }));
+		}
+
+		// An array fallback list, or any other non-string non-object value, is an
+		// `exports` this resolver does not implement — encapsulation still applies.
+		if (exportsField !== undefined) {
+			return Result.fail(UnresolvedEntryPointError.make({ reason: "unsupportedExportsForm" }));
+		}
+
+		return Result.succeed(P.isString(manifest.main) && manifest.main !== "" ? manifest.main : "index.js");
+	},
+);

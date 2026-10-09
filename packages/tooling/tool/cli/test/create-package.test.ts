@@ -211,6 +211,12 @@ const withSanctionedEcosystemDiagnosticDelta = Effect.fnUntraced(function* (
     })
   );
 });
+const NoEmitTurboConfig = {
+  $schema: "https://v2-11-7.turborepo.dev/schema.json",
+  extends: ["//"],
+  tasks: { build: { outputs: [] } },
+};
+
 const ExpectedGeneratedQualityScripts = {
   audit: "bun run --if-present beep:audit",
   babel: "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
@@ -1067,6 +1073,10 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
             expect(referencePathsOf(checkOverlay)).toEqual(referencePathsOf(canonicalTsconfig));
             expect(checkOverlay.compilerOptions).not.toHaveProperty("module");
             expect(checkOverlay.compilerOptions).not.toHaveProperty("moduleResolution");
+
+            // The service build is the noEmit check, so the scaffold declares
+            // empty build outputs or Turbo warns on every root build.
+            expect(yield* readJsonFile(path.join(packageDir, "turbo.json"))).toEqual(NoEmitTurboConfig);
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
       CreatePackageTestTimeoutMs
@@ -1108,6 +1118,7 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
             });
             expect(yield* fs.exists(path.join(packageDir, "src", "index.ts"))).toBe(true);
             expect(yield* fs.exists(path.join(packageDir, "docgen.json"))).toBe(true);
+            expect(yield* readJsonFile(path.join(packageDir, "turbo.json"))).toEqual(NoEmitTurboConfig);
 
             const rootTsconfig = yield* decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
             expect(rootTsconfig.compilerOptions.paths).toMatchObject({

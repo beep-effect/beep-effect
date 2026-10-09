@@ -88,6 +88,31 @@ The orchestrator owns the S11 merge gate: [handoff](./history/handoffs/rsc-g-sto
 (14 sweeps and 19 gap follow-ups); Knip reconciliation at `e62411d63f`
 (41 of 41 rows reproduced, `research/knip-findings-2026-10-09.md`).
 
+C implementation evidence (partial, 2026-10-09):
+[`history/handoffs/rsc-c-scripts-2026-10-09.md`](history/handoffs/rsc-c-scripts-2026-10-09.md)
+and [`history/receipts/stage-5-acceptance.md`](history/receipts/stage-5-acceptance.md).
+C includes the coordinated Ci group and pre-runtime adapters. Full
+`@beep/repo-cli` package verification and Run 4 local parity pass; those terminal
+receipts are retained. Resume ruling 4 authorizes removing the unused root ONNX
+devDependency and publishing with the push-only bypass for B-owned judgment rows.
+Run 7 retains the successful install and four installed patch markers, clears
+S5 through the orchestrator's durable notification, and passes all three required
+Knip/Fallow policy reruns. Knip has zero introduced findings; dead-code has zero
+findings; audit retains one nonblocking inherited complexity observation.
+[PR #1583](https://github.com/beep-effect/beep-effect/pull/1583) is published
+and ready for review through the authorized push/create fallback. E's workflow co-sign
+is received; Run 8 integrates its main policy and repairs the resource-adapter P2.
+All five scoped integration checks and 29 runner-security fixtures pass after the
+Config fixture repair. B/V judgment admission and updated-head hosted evidence remain open. C edits no inventory or allowlist
+and does not close program acceptance.
+
+Run 9 integrates V main `4e82f6d942`, preserving both packet contributions
+and the canonical scoped test harness. After repairing the introduced process
+API/formatting errors, merge-driver fixtures pass 5/5 on Node and Bun,
+test-tsgo passes 335 files, CI security passes 29/29, and repo-cli quick
+package verification passes. Unaffected terminal proof remains retained;
+updated-head hosted evidence and the orchestrator gate remain open.
+
 ## Notes
 
 - Orchestrator: the program's Claude Fable orchestrator session, which holds

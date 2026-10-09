@@ -1,0 +1,42 @@
+{
+  "columns": [
+    "eligible",
+    "emitted",
+    "abstained",
+    "invalid",
+    "contradicted-by-label",
+    "correct"
+  ],
+  "total": [16, 16, 18, 0, 0, 34],
+  "candidateCount": 32,
+  "vectors": {
+    "family:alpha": [4, 4, 1, 0, 0, 5],
+    "modality:public-form-language": [16, 16, 16, 0, 0, 32],
+    "structure:correct": [13, 13, 16, 0, 0, 29],
+    "lane:oracle-upstream": [7, 7, 10, 0, 0, 17],
+    "held-out:seen": [12, 12, 18, 0, 0, 30],
+    "lane:full-pipeline": [9, 9, 8, 0, 0, 17],
+    "structure:split": [3, 3, 0, 0, 0, 3],
+    "family:beta": [4, 4, 0, 0, 0, 4],
+    "family:gamma": [4, 4, 0, 0, 0, 4],
+    "held-out:held-out": [4, 4, 0, 0, 0, 4],
+    "family:cover": [3, 3, 8, 0, 0, 11],
+    "structure:many-to-many": [0, 0, 2, 0, 0, 2],
+    "family:hostile": [0, 0, 3, 0, 0, 3],
+    "family:unsupported": [0, 0, 3, 0, 0, 3],
+    "family:unknown": [0, 0, 1, 0, 0, 1],
+    "family:quality": [0, 0, 2, 0, 0, 2],
+    "modality:ocr-derived": [0, 0, 1, 0, 0, 1],
+    "modality:layout-derived": [0, 0, 1, 0, 0, 1],
+    "family:operative": [1, 1, 0, 0, 0, 1],
+    "structure:miss": [0, 0, 0, 0, 0, 0],
+    "structure:false-alarm": [0, 0, 0, 0, 0, 0],
+    "structure:merge": [0, 0, 0, 0, 0, 0]
+  },
+  "floorResult": "pass",
+  "positivePrecision": 1.0,
+  "eligiblePairRecall": 1.0,
+  "exactClosedOutcomeRate": 1.0,
+  "modalitiesWithoutEligiblePairs": ["ocr-derived", "layout-derived"],
+  "measurement": "Implemented OfficeActionStructure.extract over all 34 retained fixtures; source verification and exact raw-slice check performed per emitted member."
+}

@@ -47,19 +47,3 @@ export {
  * @since 0.0.0
  */
 export type { EcfrShape, SearchResult } from "./Ecfr.service.ts";
-
-/**
- * Package version.
- *
- * **Example** (Import and log VERSION)
- *
- * ```ts
- * import { VERSION } from "@beep/ecfr"
- *
- * console.log(VERSION)
- * ```
- *
- * @category constants
- * @since 0.0.0
- */
-export const VERSION = "0.0.0" as const;
