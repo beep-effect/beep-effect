@@ -59,6 +59,8 @@ nothing was adopted or discarded. P0 Research is complete.
 
 ## Latest Evidence
 
+Lane V preservation and integration work: [Stage 4 reconciliation](./history/receipts/stage-4-vitest-reconciliation.md). All 46 source worktrees remain unchanged; integration proof and final inventory are pending.
+
 [`research/baseline-2026-10-09.md`](./research/baseline-2026-10-09.md)
 (implementation head `e62411d63f`, 2026-10-09);
 [`research/sweeps/2026-10-09/README.md`](./research/sweeps/2026-10-09/README.md)

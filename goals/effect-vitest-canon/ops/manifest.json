@@ -5,7 +5,7 @@
     "title": "Canonical Effect Vitest idioms",
     "status": "active",
     "created": "2026-09-08",
-    "updated": "2026-10-06",
+    "updated": "2026-10-09",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/effect-vitest-canon",
@@ -17,7 +17,7 @@
     "operator": "yeet",
     "requiresPullRequest": true,
     "requiresMergeable": true,
-    "statement": "Complete only after all packet acceptance gates and Yeet merge-ready PR evidence, an empty detector baseline, timings, and same-PR reflection/state closeout. Benjamin authorizes merges.",
+    "statement": "Complete only after all packet acceptance gates and Yeet merge-ready PR evidence, an empty detector baseline, timings, and same-PR reflection/state closeout. The fleet orchestrator owns merges at the complete gate.",
     "grandfathered": false
   },
   "currentSourceOfTruth": [
@@ -117,5 +117,5 @@
     "Never merge without explicit user authorization.",
     "Do not write untouched-package coverage baselines."
   ],
-  "statusNote": "Full-goal continuation in codex/effect-vitest-canon-continuation from main 2208622aa8d0a5765769e3950c44ec9e81be9ceb. PRs #1390, #1467 and #1468 are merged; their historical migrations must not be replayed. Existing repo-cli backlog has 313 open detector and 56 actionable human rows at the continuation base; complete that backlog before current-main census delta. Installed Effect/Vitest is 4.0.1 with immutable adapter source equality verified. The 1,937-row baseline is nonempty. Current-cohort proof, complete inventory/lens reconciliation, timings, ratification and final reflection/hosted acceptance remain open. The fleet orchestrator owns merges. See history/2026-10-06-continuation-provenance.md."
+  "statusNote": "Resumed by repository-simplification-confidence lane rsc-v-vitest-canon from current main under Effect/Vitest 4.0.2. The 16 unpublished continuation commits and detector-resources WIP are preserved and transferred by three-way patch; #1506 did not publish the later e4c608f9c1 consolidation. Starting main has 1,879 findings: 741 open and 1,138 exceptions. Fresh integrated scan and full exact-head proofs pending. CLI ships alone; stronger RDF/Pacer residue ships in separate follow-up PRs. R102 continues remediation until the open detector baseline is empty and completed-retained acceptance is met. Historical proof receipts are not current-head qualification. The fleet orchestrator owns merges; no source lane may be retired before merge and liveness checks."
 }

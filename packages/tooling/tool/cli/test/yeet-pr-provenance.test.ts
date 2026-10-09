@@ -8,8 +8,8 @@ import {
   renderPrProvenance,
   toPublicPrProvenance,
 } from "@beep/repo-cli/test/Yeet";
-import { provideScopedLayer } from "@beep/test-utils";
-import { assert, describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { assert, expect } from "@effect/vitest";
 import { assertDefined, assertNone, assertSome, deepStrictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
@@ -26,7 +26,7 @@ import { makeRecord, PlatformLayer } from "./yeet-pr-fixtures.ts";
 const isPrProvenanceLabel = S.is(PrProvenanceLabel);
 const isPrProvenanceModel = S.is(PrProvenanceModel);
 
-describe("Yeet PR provenance v2", () => {
+it.layer(PlatformLayer, { timeout: "30 seconds" })("Yeet PR provenance v2", (it) => {
   it("enforces the public label allowlist", () => {
     expect(isPrProvenanceLabel("SHIP_VELOCITY")).toBe(true);
     expect(isPrProvenanceLabel("beep-effect10-69")).toBe(true);
@@ -57,7 +57,7 @@ describe("Yeet PR provenance v2", () => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const home = yield* fs.makeTempDirectory();
+      const home = yield* fs.makeTempDirectoryScoped();
       const transcript = path.join(home, "session.jsonl");
       const sessions = path.join(home, ".claude", "sessions");
       yield* fs.makeDirectory(sessions, { recursive: true });
@@ -86,14 +86,14 @@ describe("Yeet PR provenance v2", () => {
       assertSome(provenance.sessionHome, "/session/home");
       assertSome(provenance.sessionName, "FABLE");
       expect(provenance.model).toBe("claude-opus-4-1");
-    }).pipe(provideScopedLayer(PlatformLayer))
+    })
   );
 
   it.effect("degrades rejected UUID and long-hex transcript models to unknown", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const home = yield* fs.makeTempDirectory();
+      const home = yield* fs.makeTempDirectoryScoped();
       const transcript = path.join(home, "session.jsonl");
       const detectModel = Effect.fn("test.detectRejectedModel")(function* (model: string) {
         yield* fs.writeFileString(
@@ -115,14 +115,14 @@ describe("Yeet PR provenance v2", () => {
       });
       expect((yield* detectModel("550e8400-e29b-41d4-a716-446655440000")).model).toBe("unknown");
       expect((yield* detectModel("0123456789abcdef")).model).toBe("unknown");
-    }).pipe(provideScopedLayer(PlatformLayer))
+    })
   );
 
   it.effect("ignores a pid index whose session id does not match", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const home = yield* fs.makeTempDirectory();
+      const home = yield* fs.makeTempDirectoryScoped();
       const sessions = path.join(home, ".claude", "sessions");
       yield* fs.makeDirectory(sessions, { recursive: true });
       yield* fs.writeFileString(
@@ -137,7 +137,7 @@ describe("Yeet PR provenance v2", () => {
       );
       assertSome(provenance.sessionHome, "/checkout");
       expect(provenance.sessionHomeSource).toBe("checkout");
-    }).pipe(provideScopedLayer(PlatformLayer))
+    })
   );
 
   it.effect("records Codex hosted by Claude only when CODEX_THREAD_ID exists", () =>
@@ -151,8 +151,7 @@ describe("Yeet PR provenance v2", () => {
           expect(provenance.harness).toBe("codex");
           assertSome(provenance.hostHarness, "claude-code");
         })
-      ),
-      provideScopedLayer(PlatformLayer)
+      )
     )
   );
 
@@ -160,7 +159,7 @@ describe("Yeet PR provenance v2", () => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const home = yield* fs.makeTempDirectory();
+      const home = yield* fs.makeTempDirectoryScoped();
       const sessions = path.join(home, ".codex", "sessions", "2026", "09", "03");
       yield* fs.makeDirectory(sessions, { recursive: true });
       yield* fs.writeFileString(
@@ -177,13 +176,13 @@ describe("Yeet PR provenance v2", () => {
       );
       assertSome(provenance.sessionHome, "/session/home");
       expect(provenance.model).toBe("gpt-5.6-codex");
-    }).pipe(provideScopedLayer(PlatformLayer))
+    })
   );
 
   it.effect("preserves exact Codex identity when a delayed session store exceeds the detector bound", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
-      const root = yield* fs.makeTempDirectory();
+      const root = yield* fs.makeTempDirectoryScoped();
       const initialized = Bun.spawnSync(["git", "init", "-q"], { cwd: root, stderr: "pipe", stdout: "pipe" });
       if (!initialized.success) assert.fail("fixture git repository setup failed");
       const delayedFileSystem: FileSystem.FileSystem = {
@@ -207,8 +206,7 @@ describe("Yeet PR provenance v2", () => {
       Effect.provideService(
         ConfigProvider.ConfigProvider,
         ConfigProvider.fromEnv({ env: { HOME: "/fixture-home", CODEX_THREAD_ID: "exact-thread-id" } })
-      ),
-      provideScopedLayer(PlatformLayer)
+      )
     )
   );
 
@@ -216,7 +214,7 @@ describe("Yeet PR provenance v2", () => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const root = yield* fs.makeTempDirectory();
+      const root = yield* fs.makeTempDirectoryScoped();
       const publisher = path.join(root, "beep-effect10");
       const session = path.join(root, "beep-effect3");
       yield* fs.makeDirectory(publisher);
@@ -237,7 +235,7 @@ describe("Yeet PR provenance v2", () => {
       );
       expect(provenance.workspace).toBe("beep-effect10");
       assertSome(provenance.sessionWorkspace, "beep-effect3");
-    }).pipe(provideScopedLayer(PlatformLayer))
+    })
   );
 
   it("publishes valid Claude labels but never Codex names", () => {

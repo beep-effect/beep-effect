@@ -1,4 +1,5 @@
 import {
+  CodexFindingsIngestError,
   decodeCodexFindingsCapturePayload,
   decodeCodexFindingsIngestOptions,
   planPacket,
@@ -9,11 +10,11 @@ import {
 import { it } from "@beep/test-runner";
 import { A, O } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
+import { assertInstanceOf } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import { flow } from "effect/Function";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import type { CodexFindingsIngestError } from "@beep/repo-cli/test/Codex";
 
 const encodeUnknownJsonSync = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
@@ -267,9 +268,11 @@ describe("codex findings reconciliation", () => {
 
   it.effect("names neither a local path nor a captured value in a short-read message", () =>
     planFrom(payloadOf([captureFinding({ codexId: hex("aa", 32) })], { expectedCount: 26 })).pipe(
-      Effect.map(() => ""),
-      Effect.catchTag("CodexFindingsIngestError", (error: CodexFindingsIngestError) => Effect.succeed(error.message)),
-      Effect.map((message) => {
+      Effect.flip,
+      Effect.map((error) => {
+        assertInstanceOf(error, CodexFindingsIngestError);
+        expect(error.reason).toBe("short-read");
+        const message = error.message;
         expect(message).not.toMatch(/\/home\//);
         expect(message).not.toContain(hex("aa", 32));
       })

@@ -1,3 +1,10 @@
+> Integration resumed, 2026-10-09: lane `rsc-v-vitest-canon` transfers the
+> unpublished continuation delta after #1506 and the six-file detector WIP onto
+> current main under Effect/Vitest 4.0.2. #1506 merged `c921d9e11d` as
+> `705ab128c0`; local consolidation `e4c608f9c1` was never its PR head.
+> P1/P2 remain active, P3 pending. Historical proof banners below describe their
+> original bases. See [the reconciliation receipt](../repository-simplification-confidence/history/receipts/stage-4-vitest-reconciliation.md).
+
 > Continuation, 2026-10-06: work the existing repo-cli backlog in
 > `codex/effect-vitest-canon-continuation` on the installed 4.0.1 cohort.
 > PRs #1390, #1467 and #1468 are merged. P1/P2 remain in progress; P3 is pending.
@@ -13,6 +20,21 @@
 # Canonical Effect Vitest execution plan
 
 Status: `active`
+
+## Integration wave plan — 2026-10-09
+
+1. CLI-only post-#1506 integration, detector-resource WIP, coverage-followup
+   tests and regenerated 4.0.2 inventory; full repo-cli package verification
+   and selected Node/Bun proof at the new head.
+2. Separate RDF failure-assertion and Pacer logout-cleanup ports with their own
+   changesets and full package verification. Main supersedes Box WIP.
+3. Remaining open-row waves under D13, then human-lens/timing reconciliation,
+   empty actionable detector baseline, reflection and completed-retained
+   closeout. The fleet orchestrator merges; lane V never merges itself.
+
+The [Stage 4 receipt](../repository-simplification-confidence/history/receipts/stage-4-vitest-reconciliation.md)
+records preservation, recovery and the inventory transition. Historical package
+receipts below qualify their own source snapshots only.
 
 ## Identity wave complete — 2026-09-24
 

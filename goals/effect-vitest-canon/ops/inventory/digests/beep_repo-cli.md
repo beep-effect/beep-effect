@@ -1,4 +1,63 @@
+## 2026-10-06 C4 property-boundaries reconciliation (current additive receipt)
+
+Source `5ba9351314ea9bb30f9d40c196f263d60f81a55d` fixes exactly fourteen
+historical human property rows; one new native-import detector exception is
+appended. Existing detector rows remain unchanged. CLI ledger totals: detector
+3,637 (3,157 fixed, 268 exceptions, 212 open); resource 250 (48 fixed, one
+exception, 201 coverage-only open); property 250 (27 fixed, 223 open, including
+216 coverage-only); flake 251 (eight fixed, 243 open, including 238 coverage-only);
+observability 249 (seven fixed, 242 open, including 238 coverage-only). Actionable
+human rows remaining: property seven, flake five, observability four, resource
+zero. C3's seven property closures are separately qualified and stay historical
+open rows here until parent consolidation.
+
+Global baseline 1,867 (622 open, 1,245 exceptions); three wrapper reanchors remain
+open and the new person native-import exception is narrow. Node/Bun pass all919
+cases with915 originals retained; qualified typing and full audit/docgen pass.
+Strict schema/global-ID validation covers15,513 ledger rows. No lifecycle or
+whole-goal acceptance claim. See research/cli-property-boundaries-lineage.json
+and research/cli-property-boundaries-proof.md. Earlier digest sections below
+retain their dated populations and proof.
+
 # @beep/repo-cli four-lens source audit
+
+## 2026-10-06 remaining native resource batch
+
+Source `b286f35a4dcb3af444ade3ccbe6a5a9019c4cb6a` fixes the remaining nine
+historical actionable resource rows and 24 detector rows. Eighteen historical
+judgments receive individual exception reasons; eight new reviewed exceptions
+and one inherited open provider candidate are appended. The canonical baseline
+is 1,866 findings (621 open, 1,245 exceptions). Historical CLI backlog is 212
+open detector rows and 30 actionable human rows: property 21, flake five,
+observability four, resource zero. No coverage-only row changes.
+
+Node 22 and Bun each pass all 479 selected tests, retaining the original 457
+and adding 22 controls. Direct test-project typing and full package audit/docgen
+pass on the reviewed source. Independent review round two closes all three
+round-one findings with no new defects. See
+[the proof and its limits](../../../research/cli-resource-next-proof.md) and
+[the exact lineage](../../../research/cli-resource-next-lineage.json).
+These are source-batch results; full-goal and hosted acceptance remain open.
+
+## 2026-10-06 C3 observed-value property reconciliation
+
+Source `9d74894c3cceae3bccce7c1828889a8c5bb68f59` fixes seven selected
+historical property rows after R3 closes the original launcher P1. IDs,
+evidence/sketches and every unselected raw row remain unchanged. Historical CLI
+property is230 open/20 fixed, including14 actionable open rows; resource9,
+flake5 and observability4 remain actionable. Detector is253 open/3,133 fixed/
+241 exceptions. No coverage-only rows change. Baseline remains1,883 candidates
+(662 open/1,221 exceptions); all six selected live detector rows are unchanged.
+These populations and older summaries below retain distinct qualifications.
+
+Original131 cases plus six registrations pass final Node/Bun137/137; one
+ratchet title has an unchanged original callback body. R3's64 launcher controls,
+direct compiler and exact full package audit637.5s/docgen21.5s qualify the final
+hashes. Earlier R2 package pass and rejected wrapper waiver are historical.
+See [the proof](../../../research/cli-property-values-proof.md) and
+[the lineage](../../../research/cli-property-values-lineage.json). This local
+reconciliation does not close the goal, baseline or lifecycle gates.
+
 
 ## 2026-10-06 Laws, Quality and Yeet continuation
 
@@ -620,3 +679,11 @@ with its original identity retained; the new line-50 import is a reviewed
 native-subject exception. The detector still reports 1,920 current findings.
 Full package and hosted proof are pending. See
 `research/cli-post-main-merge-delta.md`.
+
+### Post-#1506 integration — 2026-10-09
+
+The unpublished resource/property ledger transitions are transferred with their
+original identities. Their prior source proofs remain historical. PR #1506's
+head was c921d9e11d, not the later e4c608f9c1 local consolidation. Fresh main
+reconciliation and acceptance live in the Stage 4 receipt; the scan must be
+regenerated under 4.0.2 and re-anchor churn must not close human coverage rows.
