@@ -1,8 +1,8 @@
 // Exact declaration excerpts from packages/effect/src/Layer.ts at
-// @effect/vitest@4.0.1 (MIT; see ../LICENSE).
-// Pinned full-file SHA-256: b68f31aa83bec6b100d1804c255c3783f2d5358f9a19d06e5a306bf2dec7248c
+// @effect/vitest@4.0.2 (MIT; see ../LICENSE).
+// Pinned full-file SHA-256: 359cc58d336e8a6eb68e8f05dd9e7b0aaf7c56dd890da3f889a3a8a31d0cfaa2
 
-// @effect-vitest-anchor Layer.mock 2306 2314
+// @effect-vitest-anchor Layer.mock 2354 2362
 export const mock: {
   <I, S extends object>(service: Context.Key<I, S>): (implementation: PartialEffectful<S>) => Layer<I>
   <I, S extends object>(service: Context.Key<I, S>, implementation: Types.NoInfer<PartialEffectful<S>>): Layer<I>

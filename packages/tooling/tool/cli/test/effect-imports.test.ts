@@ -315,6 +315,31 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 
+    it.effect("does not rewrite a nested worktree while scanning Claude-owned files", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
+        Effect.gen(function* () {
+          yield* writeTsconfig;
+          yield* writeProjectFile(".claude/skills/example.ts", demoSource);
+          yield* writeProjectFile(".claude/worktrees/other-lane/src/index.ts", demoSource);
+
+          const summary = yield* runEffectImportRules(
+            EffectImportRulesOptions.make({
+              write: true,
+              strictCheck: true,
+              excludePaths: [],
+              promotedFamilyPrefixes: [".claude"],
+            })
+          );
+
+          expect(summary.scannedFiles).toBe(1);
+          expect(summary.changedFiles).toEqual([".claude/skills/example.ts"]);
+          expect(yield* readProjectFile(".claude/skills/example.ts")).not.toContain('from "effect"');
+          expect(yield* readProjectFile(".claude/worktrees/other-lane/src/index.ts")).toBe(demoSource);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
     it.effect("gates root config files in code mode", () =>
       Effect.andThen(
         temporaryWorkingDirectory,
@@ -955,6 +980,10 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
             "\n"
           );
           yield* writeProjectFile("docs/guide.md", markdown);
+          yield* writeProjectFile("docs/generated/example.md", markdown);
+          yield* writeProjectFile("docs/_internal/example.md", markdown);
+          yield* writeProjectFile("packages/demo/docs/modules/example.ts.md", markdown);
+          yield* writeProjectFile(".claude/worktrees/other-lane/docs/guide.md", markdown);
 
           const advisory = yield* runEffectImportRules(
             EffectImportRulesOptions.make({
@@ -969,6 +998,10 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
           expect(advisory.touchedFiles).toBe(1);
           expect(advisory.strictFailure).toBe(false);
           expect(yield* readProjectFile("docs/guide.md")).toBe(markdown);
+          expect(yield* readProjectFile("docs/generated/example.md")).toBe(markdown);
+          expect(yield* readProjectFile("docs/_internal/example.md")).toBe(markdown);
+          expect(yield* readProjectFile("packages/demo/docs/modules/example.ts.md")).toBe(markdown);
+          expect(yield* readProjectFile(".claude/worktrees/other-lane/docs/guide.md")).toBe(markdown);
 
           const written = yield* runEffectImportRules(
             EffectImportRulesOptions.make({

@@ -450,7 +450,9 @@ describe("gov-legal MCP frozen contract", () => {
         );
 
         assert.isTrue(A.isReadonlyArrayNonEmpty(completed));
-        assert.isTrue(A.some(completed, (span) => Str.startsWith("http.client ")(span.name)));
+        assert.isTrue(
+          A.some(completed, (span) => A.some(span.attributes, (attribute) => attribute.key === "http.request.method"))
+        );
         const sensitiveAttributes = A.flatMap(completed, (span) =>
           pipe(
             span.attributes,

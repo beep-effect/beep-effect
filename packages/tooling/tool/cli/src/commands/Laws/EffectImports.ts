@@ -487,6 +487,7 @@ const MARKDOWN_GLOBS = [
   "scratchpad/**/*.{md,mdx}",
 ] as const;
 
+const NESTED_WORKTREE_SEGMENT = "/.claude/worktrees/";
 const GENERATED_OR_VENDOR_SEGMENTS = ["/.repos/", "/node_modules/", "/dist/", "/vendor/"] as const;
 
 const hasPathPrefix = (prefix: string, filePath: string): boolean =>
@@ -1632,6 +1633,7 @@ const isPathInActiveScope = (
   relativePath: string
 ): boolean =>
   !MutableHashSet.has(excludePaths, relativePath) &&
+  !Str.includes(NESTED_WORKTREE_SEGMENT)(`/${relativePath}`) &&
   (options.mode === "markdown" || !isDeliberatelyExcludedPath(relativePath)) &&
   (P.isUndefined(options.includePaths) && A.isReadonlyArrayEmpty(options.includePrefixes)
     ? true
@@ -1740,7 +1742,17 @@ export const runEffectImportRules = Effect.fn("EffectImports.runEffectImportRule
       ? yield* fsUtils.globFiles(MARKDOWN_GLOBS, {
           cwd: process.cwd(),
           dot: true,
-          ignore: ["**/node_modules/**", "**/.git/**", "**/.repos/**", "**/dist/**", "**/.beep/**"],
+          ignore: [
+            "**/node_modules/**",
+            "**/.git/**",
+            "**/.repos/**",
+            "**/dist/**",
+            "**/.beep/**",
+            "**/.claude/worktrees/**",
+            "**/docs/modules/**",
+            "docs/generated/**",
+            "docs/_internal/**",
+          ],
         })
       : options.includePaths;
     const markdownFiles = pipe(

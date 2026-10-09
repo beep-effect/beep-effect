@@ -116,6 +116,7 @@ export const ImplScriptName = LiteralKit([
   "beep:lint:fix",
   "beep:test",
   "beep:test:integration",
+  "beep:coverage",
   "beep:docgen",
   "beep:audit",
   "beep:doctest",
@@ -837,7 +838,12 @@ export const taskScriptRules: ReadonlyArray<TaskScriptRule> = [
   }),
   TaskScriptRule.make({ kind: "app", name: "coverage", presence: { _tag: "optional" }, binding: { _tag: "owned" } }),
   TaskScriptRule.make({ kind: "lab", name: "coverage", presence: { _tag: "absent" }, binding: { _tag: "owned" } }),
-  TaskScriptRule.make({ kind: "infra", name: "coverage", presence: { _tag: "required" }, binding: { _tag: "owned" } }),
+  TaskScriptRule.make({
+    kind: "infra",
+    name: "coverage",
+    presence: { _tag: "required" },
+    binding: { _tag: "indirection", impl: "beep:coverage", ifPresent: false },
+  }),
   TaskScriptRule.make({ kind: "exempt", name: "coverage", presence: { _tag: "optional" }, binding: { _tag: "owned" } }),
   TaskScriptRule.make({
     kind: "library",
@@ -1305,6 +1311,12 @@ export const implScriptDefaults: ReadonlyArray<ImplScriptDefault> = [
     kind: "infra",
     name: "beep:test:integration",
     value: "bunx --bun vitest run test/integration --passWithNoTests",
+  }),
+  ImplScriptDefault.make({
+    kind: "infra",
+    name: "beep:coverage",
+    value:
+      "bun run --cwd node_modules/@pulumi/gharunners build && bunx vitest run --coverage --exclude=test/integration/**",
   }),
   ImplScriptDefault.make({ kind: "infra", name: "beep:docgen", value: "bunx --bun --no-install docgen" }),
   ImplScriptDefault.make({
