@@ -281,3 +281,14 @@ root alias drift from the new bank subpath; nothing was pushed. The bank remains
 one pure module, consumed through the existing schema namespace barrel instead.
 Reason and reversal are recorded in SPEC; shared root alias files are untouched.
 Affected package proofs are rerun before retrying the single P1 publication wave.
+
+### 2026-10-09 — P1 export repair qualified
+
+The namespace-only entry point passes schema, file-processing, observability,
+repo-ai-metrics and documents-server default package audit/docgen and test-tsgo.
+Documents-domain's unchanged receipt remains passing. Schema/file-processing and
+observability/metrics coverage pass; the final documents-server coverage and repo
+parity are finishing. Root alias synchronization reports no drift. The P0
+publication inbox row is acknowledged by signed repair `1a2c74c8c0`. Exact-canary
+scan: 165 accumulated surfaces, each 0; commit-range secret scan: 14 commits,
+no leaks. P1 is complete again; publication retry is still one implementation wave.

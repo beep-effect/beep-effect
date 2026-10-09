@@ -4,7 +4,7 @@ Audit baseline: `origin/main` at `36027982f2`. Fixtures are synthetic, built at 
 
 ## Rules and canonical semantics
 
-Bank home: `@beep/schema/CredentialPatternBank`; version: `credential-pattern-bank/v1`.
+Bank home: `@beep/schema` namespace `CredentialPatternBank`; version: `credential-pattern-bank/v1`.
 Pure schema-backed rules and detect/replace/count functions; no Layer, I/O or new dependency.
 
 | Category | CauseRedaction | ai-metrics | Canonical reconciliation |

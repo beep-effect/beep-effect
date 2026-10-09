@@ -193,7 +193,7 @@ not replacement doctrine.
 
 | Decision | Reason | Reversal |
 | --- | --- | --- |
-| `@beep/schema/CredentialPatternBank`, `credential-pattern-bank/v1` | R2; existing dependency edges and pure modeling fit | Remove module/export and restore consumers |
+| `@beep/schema` namespace `CredentialPatternBank`, `credential-pattern-bank/v1` | R2; existing dependency edges and pure modeling fit | Remove module/export and restore consumers |
 | R5 union assignments and headers, longest extent, existing renderers | Preserve every existing match; metrics gains colon, fragment/digit/hyphen names, session/passwd and cookies; observability gains pass and longer comma extent; all derived redaction exports inherit this; counts and derived-UI safety change only on added matches | Restore baseline patterns and consumer calls |
 | Private tags implemented from description; no donor fetched/copied | Required category with provenance and no new dependency | Remove private-tag rule and fixtures |
 | Carried-over home paths participate in scrub clearance | Existing coverage remains enforced; no general PII claim | Exclude category from scrub under a later policy packet |

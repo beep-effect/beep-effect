@@ -34,9 +34,9 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 and P1 complete. All six edited-package default package proofs pass. Wave 2
-publishes the implemented canonical bank, scrub transform and real prompt gate
-to PR #1570. P2 final parity/scans and P3 completion/reflection remain.
+P0/P1 complete. The namespace-only export repair passes all affected default
+package proofs and clears root alias drift. The implementation publication retry
+updates PR #1570 as one wave; P2 final parity/scans and P3 closeout remain.
 
 ## Latest Evidence
 
@@ -124,3 +124,13 @@ their test-tsgo retries. All six edited-package default proofs are now green; th
 three unchanged consumer/domain proofs retain their verified run-1 receipts.
 Run-2 documents-server and repo parity receipts are recorded above. The remaining
 schema/file-processing coverage retry is running. P1 is complete; P2/P3 remain.
+
+### Qualified namespace-only entry point
+
+All five affected default package audit/docgen proofs and their test-tsgo retries
+pass using the existing schema namespace barrel. Schema/file-processing and
+observability/metrics coverage retries pass; documents-server coverage and updated
+repo parity are finishing. Documents-domain retains its unchanged passing receipt.
+Root alias synchronization reports no drift. The publication inbox row is
+acknowledged by signed repair `1a2c74c8c0`. Latest exact-canary scan: 165 surfaces,
+each 0; repaired commit-range secret scan: 14 commits, no leaks.

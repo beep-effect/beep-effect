@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `active` — P0 and P1 complete. All six edited-package default proofs pass; P2 verification and P3 closeout remain.
+Status: `active` — P0/P1 complete. Namespace-only export repair is qualified by all affected default package proofs; P2/P3 remain.
 
 ## Phases
 
