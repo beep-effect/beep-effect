@@ -13,6 +13,7 @@ import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { flow, pipe } from "effect/Function";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
@@ -664,13 +665,38 @@ const enumerateSnapshotPaths = Effect.fn("AiMetrics.enumerateConfigSnapshotPaths
           Effect.orElseSucceed(() => false)
         )
     );
-    const paths = pipe(
-      (yield* fs.exists(local).pipe(Effect.orElseSucceed(() => false))) ? A.append(existing, local) : existing,
-      A.dedupe,
-      A.sort(Order.String)
+    const excluded = yield* Ref.make(A.empty<string>());
+    const probes = MutableHashMap.empty<string, boolean>();
+    const scanRoot = pathApi.resolve(repoRoot);
+    const outsideNestedCheckout = Effect.fnUntraced(function* (file: string) {
+      let parent = pathApi.dirname(file);
+      while (parent !== scanRoot && parent !== pathApi.dirname(parent)) {
+        const dirPath = parent;
+        const nested = yield* O.match(MutableHashMap.get(probes, dirPath), {
+          onSome: Effect.succeed,
+          onNone: () =>
+            isNestedGitRoot({ dirPath, scanRoot }).pipe(
+              Effect.tap((value) => Effect.sync(() => MutableHashMap.set(probes, dirPath, value)))
+            ),
+        });
+        if (nested) {
+          yield* Ref.update(excluded, (paths) => A.append(paths, normalizeRepoPath(pathApi, repoRoot, dirPath)));
+          return false;
+        }
+        parent = pathApi.dirname(parent);
+      }
+      return true;
+    });
+    const paths = yield* Effect.filter(
+      pipe(
+        (yield* fs.exists(local).pipe(Effect.orElseSucceed(() => false))) ? A.append(existing, local) : existing,
+        A.dedupe,
+        A.sort(Order.String)
+      ),
+      outsideNestedCheckout
     );
     return {
-      excludedNestedRootPaths: A.empty<string>(),
+      excludedNestedRootPaths: pipe(yield* Ref.get(excluded), A.dedupe, A.sort(Order.String)),
       paths: A.take(paths, budget.maxFiles),
       truncationReason:
         A.length(paths) > budget.maxFiles

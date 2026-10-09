@@ -11,6 +11,7 @@ import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import * as Clock from "effect/Clock";
 import * as Config from "effect/Config";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { flow, identity, pipe } from "effect/Function";
@@ -996,6 +997,7 @@ const processSourceFile = Effect.fn("AiMetrics.forwarder.processSourceFile")(
  * } from "@beep/repo-ai-metrics"
  * import { NodeServices } from "@effect/platform-node"
  * import * as Effect from "effect/Effect";
+import * as DateTime from "effect/DateTime";
  * import * as Option from "effect/Option";
  * import * as Redacted from "effect/Redacted";
  * const dataRoot = "/home/dev/.local/state/beep/ai-metrics"
@@ -1091,7 +1093,8 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
     const shards = yield* fs.readDirectory(hookDir).pipe(Effect.orElseSucceed(A.empty<string>));
     const stamps = MutableHashMap.empty<string, HashSet.HashSet<string>>();
     const sessions = MutableHashMap.empty<string, HashSet.HashSet<string>>();
-    const freshStarts = MutableHashMap.empty<string, true>();
+    const freshStarts = MutableHashMap.empty<string, HashSet.HashSet<number>>();
+    const firstObserved = MutableHashMap.empty<string, number>();
     let hookCollectionComplete = true;
     yield* Effect.forEach(
       A.filter(shards, Str.endsWith(".ndjson")),
@@ -1114,13 +1117,27 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
             O.isSome(row.success.transcriptPath)
           ) {
             const key = `${row.success.agentKind}:${row.success.transcriptPath.value}`;
+            const observedAt = DateTime.toEpochMillis(row.success.ts);
+            MutableHashMap.set(
+              firstObserved,
+              key,
+              Math.min(
+                O.getOrElse(MutableHashMap.get(firstObserved, key), () => observedAt),
+                observedAt
+              )
+            );
             MutableHashMap.set(
               sessions,
               key,
               HashSet.add(O.getOrElse(MutableHashMap.get(sessions, key), HashSet.empty<string>), row.success.sessionId)
             );
             if (row.success.hookEvent !== "SessionStart") continue;
-            if (O.contains(row.success.sessionStartSource, "startup")) MutableHashMap.set(freshStarts, key, true);
+            if (O.contains(row.success.sessionStartSource, "startup"))
+              MutableHashMap.set(
+                freshStarts,
+                key,
+                HashSet.add(O.getOrElse(MutableHashMap.get(freshStarts, key), HashSet.empty<number>), observedAt)
+              );
             MutableHashMap.set(
               stamps,
               key,
@@ -1147,7 +1164,11 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
           const key = `${agentKind}:${sanitized.sourcePathHash}`;
           return pipe(
             MutableHashMap.get(sessions, key),
-            O.filter(() => MutableHashMap.has(freshStarts, key)),
+            O.filter(() =>
+              O.exists(MutableHashMap.get(firstObserved, key), (first) =>
+                O.exists(MutableHashMap.get(freshStarts, key), (starts) => HashSet.has(starts, first))
+              )
+            ),
             O.filter((values) => HashSet.size(values) === 1),
             O.flatMap(() => MutableHashMap.get(stamps, key)),
             O.filter((values) => HashSet.size(values) === 1 && !HashSet.has(values, "unknown")),
@@ -1220,6 +1241,7 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
  *   forwarderRunResultToJson
  * } from "@beep/repo-ai-metrics"
  * import * as Effect from "effect/Effect";
+import * as DateTime from "effect/DateTime";
  * const result = AiMetricsForwarderRunResult.make({
  *   archiveObjectCount: 0,
  *   configSnapshotId: "config-1",
@@ -1265,6 +1287,7 @@ export const forwarderRunResultToJson: (
  * ```ts
  * import { AiMetricsForwarderTimerPlan, forwarderTimerPlanToJson } from "@beep/repo-ai-metrics"
  * import * as Effect from "effect/Effect";
+import * as DateTime from "effect/DateTime";
  * const json = Effect.runSync(
  *   forwarderTimerPlanToJson(
  *     AiMetricsForwarderTimerPlan.make({

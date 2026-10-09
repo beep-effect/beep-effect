@@ -981,6 +981,8 @@ it.layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
       const path = yield* Path.Path;
       const root = yield* fs.makeTempDirectoryScoped({ directory: path.join(repoRoot, ".beep"), prefix: "h3-index-" });
       yield* fs.makeDirectory(path.join(root, "packages/foo"), { recursive: true });
+      yield* fs.makeDirectory(path.join(root, "packages/nested"), { recursive: true });
+      yield* fs.writeFileString(path.join(root, "packages/nested/AGENTS.md"), "# Nested checkout\n");
       yield* fs.makeDirectory(path.join(root, ".ai"));
       yield* fs.makeDirectory(path.join(root, ".aiassistant"));
       yield* fs.makeDirectory(path.join(root, ".claude/a/b/c/d/e/f/g"), { recursive: true });
@@ -998,6 +1000,7 @@ it.layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
         const command = yield* ChildProcess.make("git", args, { cwd: root, stdout: "ignore", stderr: "ignore" });
         expect(yield* command.exitCode).toBe(0);
       }
+      yield* fs.writeFileString(path.join(root, "packages/nested/.git"), "gitdir: /fixture/missing\n");
       yield* fs.makeDirectory(path.join(root, ".claude/scratch"), { recursive: true });
       yield* fs.writeFileString(path.join(root, ".claude/scratch/naïve.md"), "ignored fixture\n");
       yield* Effect.forEach(
@@ -1010,6 +1013,8 @@ it.layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
       );
       const oracle = yield* typescriptHarnessHash(root);
       assertSome(decoded.harnessHash, oracle.harnessHash);
+      expect(oracle.snapshot.bounds.excludedNestedRootPaths).toContain("packages/nested");
+      expect(A.map(oracle.snapshot.files, (file) => file.relativePath)).not.toContain("packages/nested/AGENTS.md");
       expect(A.map(oracle.snapshot.files, (file) => file.relativePath)).toContain("packages/foo/AGENTS.md");
       expect(A.map(oracle.snapshot.files, (file) => file.relativePath)).toContain("CLAUDE.md");
       expect(A.map(oracle.snapshot.files, (file) => file.relativePath)).toContain(".ai/config.json");
