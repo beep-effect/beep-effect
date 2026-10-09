@@ -49,13 +49,16 @@ const neutralize = (line: string): string => {
  * **Example** (Neutralize modern and legacy workflow commands in log text)
  *
  * ```ts
- * import { CommandNeutralizer } from "./index.ts";
+ * import { CommandNeutralizer } from "@beep/scratchpad/effected/github-commands/CommandNeutralizer";
  *
- * CommandNeutralizer.text("note\n::add-mask::secret\nprefix ##[error]x");
- * // the `::` line starts with a zero-width space and the `##[` has one inside it; "note" is untouched
+ * const safe = CommandNeutralizer.text("note\n::add-mask::secret\nprefix ##[error]x");
+ * // The `::` line starts with a zero-width space and the `##[` has one inside it; "note" is untouched.
+ * console.log(safe === "note\n\u200b::add-mask::secret\nprefix ##\u200b[error]x") // true
  * ```
  *
  * @public
+ * @category utilities
+ * @since 0.0.0
  */
 export class CommandNeutralizer {
 	private constructor() {}
@@ -63,8 +66,20 @@ export class CommandNeutralizer {
 	/**
 	 * Split `text` at the runner's line breaks and neutralize each line.
 	 *
+	 * **Example** (Neutralize lines separated by carriage returns)
+	 *
+	 * ```ts
+	 * import { CommandNeutralizer } from "@beep/scratchpad/effected/github-commands/CommandNeutralizer";
+	 *
+	 * const lines = CommandNeutralizer.lines("note\r::error::x");
+	 * console.log(lines.length) // 2
+	 * console.log(lines[1] === "\u200b::error::x") // true
+	 * ```
+	 *
 	 * @param text - text that is data, not a command
 	 * @returns one entry per line, in order
+	 * @category utilities
+	 * @since 0.0.0
 	 */
 	static lines(text: string): ReadonlyArray<string> {
 		return pipe(text, Str.split(LINE_BREAK), A.map(neutralize));
@@ -77,7 +92,19 @@ export class CommandNeutralizer {
   *
   * Line breaks come back as LF whatever they were, which is what the runner reads them as.
   *
+  * **Example** (Normalize line breaks without adding a second marker)
+  *
+  * ```ts
+  * import { CommandNeutralizer } from "@beep/scratchpad/effected/github-commands/CommandNeutralizer";
+  *
+  * const safe = CommandNeutralizer.text("note\r\n::error::x");
+  * console.log(safe === "note\n\u200b::error::x") // true
+  * console.log(CommandNeutralizer.text(safe) === safe) // true
+  * ```
+  *
   * @param text - text that is data, not a command
+  * @category utilities
+  * @since 0.0.0
   */
 	static text(text: string): string {
 		return pipe(CommandNeutralizer.lines(text), A.join("\n"));

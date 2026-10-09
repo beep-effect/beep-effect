@@ -1,18 +1,7 @@
 # github-commands (lab port of @effected/github-commands)
 
-[![npm](https://img.shields.io/npm/v/@effected%2Fgithub-commands?label=npm&color=cb3837)](https://www.npmjs.com/package/@effected/github-commands)
-[![License: MIT](https://img.shields.io/badge/License-MIT-4caf50.svg)](https://opensource.org/licenses/MIT)
-[![Node.js %3E%3D24.11.0](https://img.shields.io/badge/Node.js-%3E%3D24.11.0-5fa04e.svg)](https://nodejs.org/)
-[![TypeScript 7.0](https://img.shields.io/badge/TypeScript-7.0-3178c6.svg)](https://www.typescriptlang.org/)
 
 The GitHub Actions workflow-command grammar as pure functions: render a command with the runner's escaping, and neutralize text so the runner cannot read it as one. Strings in, strings out. No service, no layer, no platform, no `effect`, and no dependency at all.
-
-> **Pre-`1.0.0`.** This package is part of the `@effected/*` kit, still in `0.x`
-> development. It has no dependencies, not even `effect`.
->
-> **Stability: unstable.** This package's API surface is not yet considered
-> complete and may change across `0.x` releases. Pin an exact version. Full
-> policy: [release strategy](https://github.com/spencerbeggs/effected#release-strategy).
 
 ## Why @effected/github-commands
 
@@ -20,22 +9,10 @@ The runner reads every line a step writes, and a line it recognises as a command
 
 This package is the rule written once. `WorkflowCommand` builds the commands you mean to write, with the escaping the protocol needs. `CommandNeutralizer` defangs the text you did not mean as one.
 
-## Install
-
-```bash
-npm install @effected/github-commands
-```
-
-```bash
-pnpm add @effected/github-commands
-```
-
-Requires Node.js >=24.11.0. No dependencies and no peers. ESM-only: import it from an ES module.
-
 ## Usage
 
 ```ts
-import { CommandNeutralizer, WorkflowCommand } from "@effected/github-commands";
+import { CommandNeutralizer, WorkflowCommand } from "@beep/scratchpad/effected/github-commands/index";
 
 WorkflowCommand.error("build failed", { file: "src/main.ts", startLine: 12 });
 // "::error file=src/main.ts,line=12::build failed"

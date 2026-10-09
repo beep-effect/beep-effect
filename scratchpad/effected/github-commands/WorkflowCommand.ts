@@ -22,9 +22,9 @@ const $I = $ScratchpadId.create("effected/github-commands/WorkflowCommand");
  *
  * ```ts
  * import * as S from "effect/Schema";
- * import { AnnotationProperties } from "./index.ts";
+ * import { AnnotationProperties } from "@beep/scratchpad/effected/github-commands/WorkflowCommand";
  *
- * S.is(AnnotationProperties)({ file: "src/main.ts", startLine: 12 }); // true
+ * console.log(S.is(AnnotationProperties)({ file: "src/main.ts", startLine: 12 })) // true
  * ```
  *
  * @category schemas
@@ -45,7 +45,12 @@ export const AnnotationProperties = S.Struct({
 	endColumn: S.optionalKey(S.Finite.annotate($I.annote("endColumn", { description: "Last annotated column, 1-based." }))),
 }).annotate($I.annote("AnnotationProperties", { description: "The title and source location of a GitHub Actions notice, warning or error annotation." }));
 
-/** The readable annotation properties accepted by the workflow command helpers. */
+/**
+ * The readable annotation properties accepted by the workflow command helpers.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type AnnotationProperties = typeof AnnotationProperties.Type;
 
 /** Property values the runner accepts on a command. */
@@ -90,13 +95,14 @@ const escapeProperty = flow(escapeMessage, Str.replaceAll(":", "%3A"), Str.repla
  * **Example** (Render an error annotation with a source location)
  *
  * ```ts
- * import { WorkflowCommand } from "./index.ts";
+ * import { WorkflowCommand } from "@beep/scratchpad/effected/github-commands/WorkflowCommand";
  *
- * WorkflowCommand.error("build failed", { file: "src/main.ts", startLine: 12 });
- * // "::error file=src/main.ts,line=12::build failed"
+ * console.log(WorkflowCommand.error("build failed", { file: "src/main.ts", startLine: 12 })) // ::error file=src/main.ts,line=12::build failed
  * ```
  *
  * @public
+ * @category formatting
+ * @since 0.0.0
  */
 export class WorkflowCommand {
 	private constructor() {}
@@ -104,6 +110,13 @@ export class WorkflowCommand {
 	/**
   * Render an arbitrary command: `::name key=value::message`, with the message and
   * property values escaped. The primitive every other member uses.
+  *
+  * **Details**
+  *
+  * The property type is written out structurally rather than as the module's
+  * `CommandProperties` alias: an internal named type on a `@public` signature
+  * fails the API Extractor gate, and neither an `@internal` tag nor a second
+  * alias helps — only inlining does.
   *
   * **Gotchas**
   *
@@ -114,11 +127,16 @@ export class WorkflowCommand {
   * its legacy parser then reads the line for `##[` ANYWHERE in it: a `##[` in the data of a command with an
   * unregistered name is therefore a command. {@link CommandNeutralizer} is the tool for text that is only data.
   *
-  * @privateRemarks
-  * The property type is written out structurally rather than as the module's
-  * `CommandProperties` alias: an internal named type on a `@public` signature
-  * fails the API Extractor gate, and neither an `@internal` tag nor a second
-  * alias helps — only inlining does.
+  * **Example** (Escape message and property delimiters)
+  *
+  * ```ts
+  * import { WorkflowCommand } from "@beep/scratchpad/effected/github-commands/WorkflowCommand";
+  *
+  * console.log(WorkflowCommand.render("notice", { title: "API: v1", file: undefined }, "50%\nready")) // ::notice title=API%3A v1::50%25%0Aready
+  * ```
+  *
+  * @category formatting
+  * @since 0.0.0
   */
 	static render(
 		name: string,
@@ -135,42 +153,146 @@ export class WorkflowCommand {
 		return `${head}${escapeMessage(message)}`;
 	}
 
-	/** `::debug::` — shown only when `ACTIONS_STEP_DEBUG` is enabled. */
+	/**
+	 * Render a `::debug::` message, shown only when `ACTIONS_STEP_DEBUG` is enabled.
+	 *
+	 * **Example** (Render a debug message)
+	 *
+	 * ```ts
+	 * import { WorkflowCommand } from "@beep/scratchpad/effected/github-commands/WorkflowCommand";
+	 *
+	 * console.log(WorkflowCommand.debug("trace")) // ::debug::trace
+	 * ```
+	 *
+	 * @category formatting
+	 * @since 0.0.0
+	 */
 	static debug(message: string): string {
 		return WorkflowCommand.render("debug", {}, message);
 	}
 
-	/** `::notice::` with optional source annotation. */
+	/**
+	 * Render a `::notice::` message with optional source annotation.
+	 *
+	 * **Example** (Render a notice with a title)
+	 *
+	 * ```ts
+	 * import { WorkflowCommand } from "@beep/scratchpad/effected/github-commands/WorkflowCommand";
+	 *
+	 * console.log(WorkflowCommand.notice("ready", { title: "Build" })) // ::notice title=Build::ready
+	 * ```
+	 *
+	 * @category formatting
+	 * @since 0.0.0
+	 */
 	static notice(message: string, properties: AnnotationProperties = {}): string {
 		return WorkflowCommand.render("notice", WorkflowCommand.annotation(properties), message);
 	}
 
-	/** `::warning::` with optional source annotation. */
+	/**
+	 * Render a `::warning::` message with optional source annotation.
+	 *
+	 * **Example** (Render a warning at a source column)
+	 *
+	 * ```ts
+	 * import { WorkflowCommand } from "@beep/scratchpad/effected/github-commands/WorkflowCommand";
+	 *
+	 * console.log(WorkflowCommand.warning("deprecated", { startColumn: 3 })) // ::warning col=3::deprecated
+	 * ```
+	 *
+	 * @category formatting
+	 * @since 0.0.0
+	 */
 	static warning(message: string, properties: AnnotationProperties = {}): string {
 		return WorkflowCommand.render("warning", WorkflowCommand.annotation(properties), message);
 	}
 
-	/** `::error::` with optional source annotation. */
+	/**
+	 * Render a `::error::` message with optional source annotation.
+	 *
+	 * **Example** (Render an error at a source line)
+	 *
+	 * ```ts
+	 * import { WorkflowCommand } from "@beep/scratchpad/effected/github-commands/WorkflowCommand";
+	 *
+	 * console.log(WorkflowCommand.error("failed", { startLine: 12 })) // ::error line=12::failed
+	 * ```
+	 *
+	 * @category formatting
+	 * @since 0.0.0
+	 */
 	static error(message: string, properties: AnnotationProperties = {}): string {
 		return WorkflowCommand.render("error", WorkflowCommand.annotation(properties), message);
 	}
 
-	/** `::group::` — opens a collapsible section in the runner log. */
+	/**
+	 * Render `::group::` to open a collapsible section in the runner log.
+	 *
+	 * **Example** (Open a named log group)
+	 *
+	 * ```ts
+	 * import { WorkflowCommand } from "@beep/scratchpad/effected/github-commands/WorkflowCommand";
+	 *
+	 * console.log(WorkflowCommand.group("Build")) // ::group::Build
+	 * ```
+	 *
+	 * @category formatting
+	 * @since 0.0.0
+	 */
 	static group(name: string): string {
 		return WorkflowCommand.render("group", {}, name);
 	}
 
-	/** `::endgroup::` — closes the innermost open group. */
+	/**
+	 * Render `::endgroup::` to close the innermost open group.
+	 *
+	 * **Example** (Close the current log group)
+	 *
+	 * ```ts
+	 * import { WorkflowCommand } from "@beep/scratchpad/effected/github-commands/WorkflowCommand";
+	 *
+	 * console.log(WorkflowCommand.endGroup()) // ::endgroup::
+	 * ```
+	 *
+	 * @category formatting
+	 * @since 0.0.0
+	 */
 	static endGroup(): string {
 		return WorkflowCommand.render("endgroup", {}, "");
 	}
 
-	/** `::add-mask::` — registers a value for redaction in the runner log. */
+	/**
+	 * Render `::add-mask::` to register a value for redaction in the runner log.
+	 *
+	 * **Example** (Render a redaction registration)
+	 *
+	 * ```ts
+	 * import { WorkflowCommand } from "@beep/scratchpad/effected/github-commands/WorkflowCommand";
+	 *
+	 * console.log(WorkflowCommand.addMask("secret")) // ::add-mask::secret
+	 * ```
+	 *
+	 * @category formatting
+	 * @since 0.0.0
+	 */
 	static addMask(value: string): string {
 		return WorkflowCommand.render("add-mask", {}, value);
 	}
 
-	/** Map readable annotation fields onto GitHub's abbreviated wire names. */
+	/**
+	 * Map readable annotation fields onto GitHub's abbreviated wire names.
+	 *
+	 * **Example** (Map readable source coordinates to wire names)
+	 *
+	 * ```ts
+	 * import { WorkflowCommand } from "@beep/scratchpad/effected/github-commands/WorkflowCommand";
+	 *
+	 * console.log(WorkflowCommand.error("failed", { startLine: 2, startColumn: 3 })) // ::error line=2,col=3::failed
+	 * ```
+	 *
+	 * @category formatting
+	 * @since 0.0.0
+	 */
 	private static annotation(properties: AnnotationProperties): CommandProperties {
 		return {
 			title: properties.title,
