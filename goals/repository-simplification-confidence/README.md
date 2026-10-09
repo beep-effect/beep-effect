@@ -70,6 +70,19 @@ and repairs the census table; saved terminal parity remains attributed to its pr
 local parity has an inherited knowledge-reference blocker: [catalog receipt](./history/receipts/stage-4-h1-catalog.md#osv-exceptions)
 and [lane handoff](./history/handoffs/rsc-h1-catalog-2026-10-09.md).
 
+[G storage census and deferred retention](./history/receipts/stage-5-storage-cleanup.md)
+and [G cache evidence](./history/receipts/stage-5-cache.md), 2026-10-09:
+2,765 v3 rows across 259 checkout roots, with a sanitized per-row CSV;
+zero real cleanup. [PR #1580](https://github.com/beep-effect/beep-effect/pull/1580)
+delivers owner/terminal/citation/liveness fences and recoverable archive moves.
+All 55 focused tests, the full package audit and named local parity checks pass.
+Independent source review round 16 is terminal zero at `59e5cf879f`.
+Fresh cold/warm/linked cache fixtures have identical healthy 28-file manifests;
+changed input misses and builds all 28 outputs. Scoped coverage percentages
+exceed baseline; increased absolute uncovered counts are recorded explicitly.
+Remote auth, home changes, other harness routes and real apply remain deferred.
+The orchestrator owns the S11 merge gate: [handoff](./history/handoffs/rsc-g-storage-2026-10-09.md).
+
 [`research/baseline-2026-10-09.md`](./research/baseline-2026-10-09.md)
 (implementation head `e62411d63f`, 2026-10-09);
 [`research/sweeps/2026-10-09/README.md`](./research/sweeps/2026-10-09/README.md)
