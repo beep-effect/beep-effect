@@ -597,6 +597,7 @@ describe("descend — overload resolution", () => {
 		const plainOpts: DescendOptions = { cwd: "/x", onUnreadable: "skip" };
 		const viaPlain = descend(pattern, plainOpts);
 		const _viaPlain: SuccessOf<typeof viaPlain> = ["a.ts"];
+		void [_inline, _viaRecord, _viaPlain];
 
 		// The guard itself: "record" is not a member of DescendOptions, so it
 		// cannot reach the array-returning overload by being widened first.

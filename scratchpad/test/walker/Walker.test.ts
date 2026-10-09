@@ -1,8 +1,10 @@
 import { assert, describe, it, layer } from "@effect/vitest";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
-import { Cause, Effect, Option, Path, PlatformError, Ref } from "effect";
+import { Cause, Effect, Option, Path, PlatformError, Ref, Schema } from "effect";
 import { Walker } from "../../effected/walker/Walker.ts";
 import { platform } from "./fixtures.ts";
+
+const JsonString = Schema.fromJsonString(Schema.String);
 
 layer(Path.layer)("Walker.ascend", (it) => {
 	it.effect("yields each directory from start to the root, nearest first", () =>
@@ -87,7 +89,8 @@ layer(Path.layer)("Walker.ascend", (it) => {
 	// reported as a clean `Option.none()`.
 	it.effect("survives an absorbing caller that catches every typed failure", () =>
 		Effect.gen(function* () {
-			const absorbed = Effect.catch(Walker.ascend("/a/b/c", { stopAt: "b" }), () => Effect.succeed(["absorbed"]));
+			const absorb = <A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.orElseSucceed(effect, () => ["absorbed"]);
+			const absorbed = absorb(Walker.ascend("/a/b/c", { stopAt: "b" }));
 			const exit = yield* Effect.exit(absorbed);
 			assert.strictEqual(exit._tag, "Failure", "a relative ceiling must not be absorbable into a clean result");
 		}),
@@ -99,7 +102,7 @@ layer(Path.layer)("Walker.ascend", (it) => {
 		Effect.gen(function* () {
 			for (const stopAt of ["pkgs", "./pkgs", "../pkgs", ".", "..", ""]) {
 				const exit = yield* Effect.exit(Walker.ascend("/a/b/c", { stopAt }));
-				assert.strictEqual(exit._tag, "Failure", `expected ${JSON.stringify(stopAt)} to be refused`);
+				assert.strictEqual(exit._tag, "Failure", `expected ${yield* Schema.encodeEffect(JsonString)(stopAt)} to be refused`);
 			}
 		}),
 	);
@@ -214,12 +217,11 @@ describe("Walker.firstMatch", () => {
 	it.effect("absorbs a failing predicate per candidate and keeps scanning", () =>
 		Effect.gen(function* () {
 			const probed = yield* Ref.make<ReadonlyArray<string>>([]);
-			const predicate = (c: string) =>
-				Effect.gen(function* () {
-					yield* Ref.update(probed, (seen) => [...seen, c]);
-					if (c === "b") return yield* Effect.fail("EACCES");
-					return c === "c";
-				});
+			const predicate = Effect.fn("predicate")(function* (c: string) {
+				yield* Ref.update(probed, (seen) => [...seen, c]);
+				if (c === "b") return yield* Effect.fail("EACCES");
+				return c === "c";
+			});
 
 			const found = yield* Walker.firstMatch(["a", "b", "c"], predicate);
 
@@ -234,11 +236,10 @@ describe("Walker.firstMatch", () => {
 	it.effect("short-circuits at the first match and probes no further", () =>
 		Effect.gen(function* () {
 			const probed = yield* Ref.make<ReadonlyArray<string>>([]);
-			const predicate = (c: string) =>
-				Effect.gen(function* () {
-					yield* Ref.update(probed, (seen) => [...seen, c]);
-					return c === "b";
-				});
+			const predicate = Effect.fn("predicate")(function* (c: string) {
+				yield* Ref.update(probed, (seen) => [...seen, c]);
+				return c === "b";
+			});
 
 			const found = yield* Walker.firstMatch(["a", "b", "c"], predicate);
 
@@ -253,11 +254,10 @@ describe("Walker.firstMatch", () => {
 	it.effect("matches the very first candidate", () =>
 		Effect.gen(function* () {
 			const probed = yield* Ref.make<ReadonlyArray<string>>([]);
-			const predicate = (c: string) =>
-				Effect.gen(function* () {
-					yield* Ref.update(probed, (seen) => [...seen, c]);
-					return c === "a";
-				});
+			const predicate = Effect.fn("predicate")(function* (c: string) {
+				yield* Ref.update(probed, (seen) => [...seen, c]);
+				return c === "a";
+			});
 
 			const found = yield* Walker.firstMatch(["a", "b"], predicate);
 
@@ -415,11 +415,10 @@ describe("Walker.findRoot", () => {
 	it.effect("stops probing at the first accepting directory", () =>
 		Effect.gen(function* () {
 			const probed = yield* Ref.make<ReadonlyArray<string>>([]);
-			const isRoot = (dir: string) =>
-				Effect.gen(function* () {
-					yield* Ref.update(probed, (seen) => [...seen, dir]);
-					return dir === "/a/b";
-				});
+			const isRoot = Effect.fn("isRoot")(function* (dir: string) {
+				yield* Ref.update(probed, (seen) => [...seen, dir]);
+				return dir === "/a/b";
+			});
 
 			const found = yield* Walker.findRoot(["/a/b/c", "/a/b", "/a"], isRoot);
 

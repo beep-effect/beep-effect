@@ -1,4 +1,6 @@
-import { Effect, FileSystem, Option, Path } from "effect";
+import { Effect, FileSystem, Option, Path, Schema } from "effect";
+
+const JsonString = Schema.fromJsonString(Schema.String);
 
 /**
  * Options for {@link Walker.ascend}.
@@ -68,9 +70,11 @@ const ascend = (start: string, options?: AscendOptions): Effect.Effect<ReadonlyA
 		// category, same construct. `start` is deliberately unconstrained: a
 		// relative start still ascends to the relative root.
 		if (options?.stopAt !== undefined && !path.isAbsolute(options.stopAt)) {
+			const quotedStopAt = yield* Schema.encodeEffect(JsonString)(options.stopAt).pipe(Effect.orDie);
+			const quotedStart = yield* Schema.encodeEffect(JsonString)(start).pipe(Effect.orDie);
 			return yield* Effect.die(
 				new Error(
-					`Walker.ascend: stopAt must be an absolute path, received ${JSON.stringify(options.stopAt)} (ascending from ${JSON.stringify(start)})`,
+					`Walker.ascend: stopAt must be an absolute path, received ${quotedStopAt} (ascending from ${quotedStart})`,
 				),
 			);
 		}
@@ -116,9 +120,11 @@ const ascendToPhysical = (
 		const fs = yield* FileSystem.FileSystem;
 		const path = yield* Path.Path;
 		if (!path.isAbsolute(ceiling)) {
+			const quotedCeiling = yield* Schema.encodeEffect(JsonString)(ceiling).pipe(Effect.orDie);
+			const quotedStart = yield* Schema.encodeEffect(JsonString)(start).pipe(Effect.orDie);
 			return yield* Effect.die(
 				new Error(
-					`Walker.ascendWithin: ceiling must be an absolute path, received ${JSON.stringify(ceiling)} (ascending from ${JSON.stringify(start)})`,
+					`Walker.ascendWithin: ceiling must be an absolute path, received ${quotedCeiling} (ascending from ${quotedStart})`,
 				),
 			);
 		}
@@ -141,7 +147,7 @@ const firstMatch = <E, R>(
 ): Effect.Effect<Option.Option<string>, never, R> =>
 	Effect.gen(function* () {
 		for (const candidate of candidates) {
-			const matched = yield* Effect.catch(predicate(candidate), () => Effect.succeed(false));
+			const matched = yield* Effect.orElseSucceed(predicate(candidate), () => false);
 			if (matched) return Option.some(candidate);
 		}
 		return Option.none();

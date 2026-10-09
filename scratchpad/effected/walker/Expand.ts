@@ -15,6 +15,7 @@ import type { GlobPatternOptions } from "../glob/index.ts";
 import { GlobPattern, GlobPatternError } from "../glob/index.ts";
 import type { FileSystem, Path } from "effect";
 import { Effect, Result, Schema } from "effect";
+import { dual } from "effect/Function";
 import type { DescendOptions } from "./Descend.ts";
 import { DescendError, descend } from "./Descend.ts";
 
@@ -125,12 +126,10 @@ export class GlobExpansionError extends Schema.TaggedError<GlobExpansionError>()
  *
  * @public
  */
-export const compileAndExpand: (
-	pattern: string,
-	options: CompileAndExpandOptions,
-) => Effect.Effect<ReadonlyArray<string>, GlobExpansionError, FileSystem.FileSystem | Path.Path> = Effect.fn(
-	"Walker.compileAndExpand",
-)(function* (pattern: string, options: CompileAndExpandOptions) {
+export const compileAndExpand: {
+	(options: CompileAndExpandOptions): (pattern: string) => Effect.Effect<ReadonlyArray<string>, GlobExpansionError, FileSystem.FileSystem | Path.Path>;
+	(pattern: string, options: CompileAndExpandOptions): Effect.Effect<ReadonlyArray<string>, GlobExpansionError, FileSystem.FileSystem | Path.Path>;
+} = dual(2, Effect.fn("Walker.compileAndExpand")(function* (pattern: string, options: CompileAndExpandOptions) {
 	// compileResult is the pure primitive; there is no reason to cross an Effect
 	// boundary twice just to reach it.
 	const compiled = GlobPattern.compileResult(pattern, options.glob);
@@ -140,4 +139,4 @@ export const compileAndExpand: (
 	return yield* descend(compiled.success, options).pipe(
 		Effect.mapError((cause) => GlobExpansionError.make({ pattern, cause })),
 	);
-});
+}));

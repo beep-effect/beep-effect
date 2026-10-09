@@ -12,6 +12,7 @@
 import type { GlobPattern } from "../glob/index.ts";
 import type { PlatformError } from "effect";
 import { Effect, FileSystem, Path, Schema } from "effect";
+import { dual } from "effect/Function";
 
 /**
  * Options for `descend`.
@@ -249,17 +250,17 @@ const descendImpl: (
 	 */
 	const realPathOf = (absolute: string, relative: string): Effect.Effect<string | undefined, DescendError> =>
 		fs.realPath(absolute).pipe(
-			Effect.map((real): string | undefined => real),
 			Effect.catch((error) => {
-				if (error.reason._tag === "NotFound") return Effect.succeed(undefined);
+				if (error.reason._tag === "NotFound") return Effect.void;
 				if (onUnreadable === "fail") {
 					return Effect.fail(
 						DescendError.make({ pattern: pattern.source, reason: "unreadableDirectory", path: relative }),
 					);
 				}
 				if (onUnreadable === "record") unreadable.push({ path: relative, cause: error });
-				return Effect.succeed(undefined);
+				return Effect.void;
 			}),
+			Effect.map((real): string | undefined => real ?? undefined),
 		);
 
 	/** Wrap the walk's success value per `onUnreadable`: a plain array unless "record" asked for the pair. */
@@ -399,6 +400,9 @@ const descendImpl: (
  * @public
  */
 export function descend(
+	options: DescendRecordOptions,
+): (pattern: GlobPattern) => Effect.Effect<DescendResult, DescendError, FileSystem.FileSystem | Path.Path>;
+export function descend(
 	pattern: GlobPattern,
 	options: DescendRecordOptions,
 ): Effect.Effect<DescendResult, DescendError, FileSystem.FileSystem | Path.Path>;
@@ -466,8 +470,16 @@ export function descend(
 	options: DescendOptions,
 ): Effect.Effect<ReadonlyArray<string>, DescendError, FileSystem.FileSystem | Path.Path>;
 export function descend(
-	pattern: GlobPattern,
-	options: DescendOptions | DescendRecordOptions,
-): Effect.Effect<ReadonlyArray<string> | DescendResult, DescendError, FileSystem.FileSystem | Path.Path> {
-	return descendImpl(pattern, options);
+	options: DescendOptions,
+): (pattern: GlobPattern) => Effect.Effect<ReadonlyArray<string>, DescendError, FileSystem.FileSystem | Path.Path>;
+export function descend(
+	...args: [GlobPattern, DescendOptions | DescendRecordOptions] | [DescendOptions | DescendRecordOptions]
+):
+	| Effect.Effect<ReadonlyArray<string> | DescendResult, DescendError, FileSystem.FileSystem | Path.Path>
+	| ((pattern: GlobPattern) => Effect.Effect<ReadonlyArray<string> | DescendResult, DescendError, FileSystem.FileSystem | Path.Path>) {
+	const invoke = dual<
+		(options: DescendOptions | DescendRecordOptions) => (pattern: GlobPattern) => ReturnType<typeof descendImpl>,
+		typeof descendImpl
+	>(2, descendImpl);
+	return args.length === 1 ? invoke(args[0]) : invoke(args[0], args[1]);
 }
