@@ -41,11 +41,11 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 and P1 complete; P2/P3 stopped on contradictory private-package changeset
-requirements after publication of draft PR #1572. Fresh domain audit/docgen,
-whole-package suites, coverage and repaired golden tests have passing evidence;
-use-cases audit and full parity remain outstanding. An introduced proposal-array
-build error is retained for repair. The packet remains active.
+P0 and P1 complete; P2/P3 resumed under the run-3 qualification ruling.
+The private note is removed per #1566; the proposal tuple repair has a typed
+regression. Both package proofs, full docgen and Fallow pass; fresh coverage
+is queued. PR #1572 stays draft during
+qualification; the orchestrator owns its merge.
 
 ## Provenance
 
@@ -71,7 +71,7 @@ Back-links, not copies:
 
 P0: [`contract evidence`](./history/p0/2026-10-09-contract.md).
 P1: [`implementation and alias diff`](./history/p1/2026-10-09-implementation.md).
-P2: [`verification and run-2 stop`](./history/p2/2026-10-09-verification.md).
+P2: [`verification and run-3 qualification`](./history/p2/2026-10-09-verification.md).
 Attempted closeout: [`reflection`](./history/reflections/2026-10-09-codex.md), lint pass.
 Handoff: [`contradiction-detect`](./history/handoffs/contradiction-detect-2026-10-09.md).
 

@@ -168,3 +168,66 @@ No proof unit, readiness monitor or gate started by this run remains active.
 Packet stays active, P0/P1 complete, P2/P3 in-progress, P4 pending. Reflection
 passes but is retained as attempted closeout. No completed-retained flip, ready
 transition, final gate file, PR merge or lane retirement is claimed.
+
+## Run-3 qualification
+
+Repair head: `d6e6efe2a7`; merged main `2eefbb64af`. Run-3 rulings remove the
+private changeset under #1566 and require schema-derived non-empty proposal
+encoding. The shipped assessment field codec validates the sorted pair before
+encoding; a typed wire regression catches tuple widening and rejects empty
+proposals. No cast or shipped schema edit.
+
+- Golden file via `bun run --cwd packages/epistemic/use-cases test
+  test/ContradictionDetection.golden.test.ts`: 20/20 pass twice.
+- `bun run beep quality test-tsgo`: pass, 330 CLI files; package tests covered
+  by their package check scripts.
+- `bun run config-sync:check`: pass. Exactly one detection alias per generated
+  file; no inherited alias hunk.
+- `CI=true bun run beep knowledge refs --check`: pass, zero live gated
+  observations. Earlier inherited observation no longer reproduces on main.
+- PR #1572 review-thread query: zero threads.
+- Two final package proofs submitted through beep-heavy; shared slots queued.
+
+Initial run-3 audits reached package test compilation after successful source
+builds. Domain: TS377050 at test lines 56-60. Use-cases: strictEffectProvide
+at helper line 37, preferTypedSchemaDecoder at lines 52/55, Result/Exit pipe
+diagnostics at 94/200/201/208, heterogeneous fixture union TS2345 at 158.
+All are introduced test qualification issues; the old typed-ref diagnostic
+did not recur. Repairs: `a0dbc43e2e`, `ba29de5800`, `7f006770b9`. Inbox rows
+local-shard-05c6eec1d5c0 and local-shard-2f47ca8850e7 acknowledged with fixes.
+Acknowledgement does not imply audit success. Golden 20/20 and domain 5/5
+focused files pass after the repair; fresh audits resubmitted.
+
+`bun run beep ci lane jsdoc-ratchet`: pass, zero legacy findings.
+`bun run lint:tsgo-rules`: pass. Private changeset-status: pass, both private
+workspaces skipped by the release-note obligation.
+
+Fresh domain package-verify on source head `7f006770b9`: pass, audit 6.4s and
+docgen 4.1s. The original typed-ref diagnostic and the repaired Result assertion
+diagnostics do not recur. Full docgen/parity submitted through the freed heavy
+slot; use-cases final audit remains queued.
+
+Use-cases queued from 19:54:47Z beyond 20:14:47Z, so run-3 permits the same
+proof in the lane cgroup after stopping its confirmed queued unit. Initial
+fallback found only TS2375 at the third fixture's evidenceIds: array inference
+loses the shipped non-empty tuple. `Tuple.make(3)` repairs this in `7bb5407631`;
+inbox local-shard-55a918851b7a acknowledged with that fix.
+
+Final use-cases package-verify on source head `7bb5407631`: pass, audit 9.2s
+and docgen 4.3s. Both package audits include their full suites and test tsgo.
+Production source has not changed since `d6e6efe2a7`; domain package source
+and test tree are unchanged from its passing `7f006770b9` proof.
+Fresh domain/use-cases coverage submitted through beep-heavy; full docgen
+continues in the other owned heavy unit.
+
+Full hosted-parity pipeline through beep-heavy: all pass.
+
+- `bun run docgen:local --full`: full JSDoc metadata, package docgen/example
+  typechecking and aggregate exit 0. Additive aliases require this full form.
+- `bun run beep ci lane fallow --base origin/main`: audit and health pass;
+  advisory fix-preview zero findings.
+- `bun run beep quality test-tsgo`: heavy-routed repeat passes.
+
+No tracked generated-doc changes and no prohibited reference links. Only
+packet evidence remains dirty. Both package sources are qualified; fresh
+scoped coverage is still queued.

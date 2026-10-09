@@ -84,3 +84,25 @@ runtime golden vectors pass, while the full use-cases audit remains queued and
 is cancelled at the stop. The source error remains outstanding.
 Prevention: retain the two-proposal tuple through sorting/encoding and run the
 full use-cases package proof before claiming the build contract is qualified.
+
+## 2026-10-09 — Package test checks exposed law and fixture typing gaps
+
+Action: run both final package-verification audits after tuple repair.
+Result: domain test lines 56-60 use nested Result assertions; use-cases tests
+contain a helper-level Layer provide, typed wires decoded as unknown, nested
+Result/Exit assertions, and JSON fixture union inference at A.getUnsafe.
+The old typed-ref diagnostic did not recur. Use instrumented it.layer at the
+test entrypoint, typed decoders for encoded wires, pipe form for Results/Exits,
+and decode then encode the fixture before homogeneous array operations.
+Prevention: package test typechecking must accompany focused runtime goldens;
+root test-tsgo intentionally skips package tests covered by their own scripts.
+
+## 2026-10-09 — Run-3 heavy-admission fallback
+
+Action: resubmit repaired use-cases package proof through beep-heavy.
+Result: queued from 19:54:47Z past 20:14:47Z with no command execution.
+Verified the unit belongs to this lane, stopped it, and ran the identical
+proof in the existing lane cgroup under the run-3 explicit fallback ruling.
+TURBO_CONCURRENCY remains 2; MemoryHigh 36G / MemoryMax 40G unchanged.
+Prevention: queue starvation diagnostics and bounded admission with a documented
+cgroup fallback; neither duplicate execution nor higher caps is required.

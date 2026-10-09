@@ -50,3 +50,22 @@ monitor receipt acknowledged as observed. Hosted jobs are GitHub-owned and may
 continue; no claim is made about checks that have not settled.
 
 Graft: two discovery calls, approximately 24,329 tokens saved in run 2.
+
+## Run-3 resume — qualification in progress
+
+The superseding run-3 ruling authorizes removal of the private-package note
+under #1566 and repair of the non-empty encoded proposal tuple. Production
+repair `d6e6efe2a7` uses the shipped assessment field's type decoder and encoder.
+Regression proves the typed assessment wire retains two distinct proposals
+and empty proposals fail. Golden suite 20/20 twice; domain focused suite 5/5.
+
+First final audits built both package sources, then found introduced package
+test-law/fixture typing gaps. Repaired with `a0dbc43e2e`, `ba29de5800`, and
+`7f006770b9`; both P0 inbox rows acknowledged. Fresh audits queued through
+beep-heavy, at most two owned jobs, unchanged memory caps. The old typed-ref
+diagnostic did not recur.
+
+Config-sync, tsgo-rules, root test-tsgo, JSDoc ratchet, knowledge refs and
+reflection lint pass. Knowledge refs has zero live gated observations on the
+integrated main. PR #1572 has zero review threads in the current read.
+No final package or hosted claim is made until the remaining proof settles.

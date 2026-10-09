@@ -108,19 +108,11 @@ Before marking the packet closed (and `status` → `completed-retained`):
 
 ## Current Blockers
 
-Run-2 stopped because the brief requires private-package patch changesets,
-while merged #1566 (`2eefbb64af`) forbids them. Repo Sanity rejects the required
-note on draft PR #1572 at `a7271fb15e`. Reconcile the brief with current release
-policy before another qualification/publication wave.
-
-Storybook also exposed introduced TS2322 at detection layer line 135: proposal
-encoding must preserve the shipped non-empty array type. This is not repaired.
-Domain audit/docgen pass before test-law repair; both whole-package suites and
-coverage pass; golden suite passes twice after repair. Fresh use-cases audit,
-post-repair domain audit and full docgen parity remain outstanding. All owned
-proof units and the readiness monitor were stopped. Packet remains active;
-P2/P3 in-progress and P4 pending. Reflection is retained as an attempted-closeout
-artifact and does not imply completion.
+Run-3 supersedes the prior release-policy stop: the private note is removed
+per #1566 and the encoded proposal tuple repair is committed with a regression.
+Golden tests pass 20/20 twice. Both final package proofs pass. Full docgen and Fallow pass; fresh scoped
+coverage remains queued through beep-heavy.
+PR #1572 stays draft until content is final. Merge belongs to the orchestrator.
 
 Dependency status: Belief-view revision graduated on 2026-08-17 to `goals/belief-view-engine`,
 which is paused with P1 pending. Triage closed completed-retained in #1421
