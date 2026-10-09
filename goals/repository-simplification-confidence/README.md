@@ -61,6 +61,12 @@ nothing was adopted or discarded. P0 Research is complete.
 
 H2 implementation and historical reconciliation: [stage-4 completion receipts](./history/receipts/stage-4-completion-receipts.md). Post-merge refresh remains a clone-scoped closeout action.
 
+H1 OSV wave [PR #1562](https://github.com/beep-effect/beep-effect/pull/1562) ready for review;
+Run 4 integrates main repairs #1564/#1565, corrects the stored-response cache proof
+and repairs the census table; saved terminal parity remains attributed to its proof heads;
+local parity has an inherited knowledge-reference blocker: [catalog receipt](./history/receipts/stage-4-h1-catalog.md#osv-exceptions)
+and [lane handoff](./history/handoffs/rsc-h1-catalog-2026-10-09.md).
+
 [`research/baseline-2026-10-09.md`](./research/baseline-2026-10-09.md)
 (implementation head `e62411d63f`, 2026-10-09);
 [`research/sweeps/2026-10-09/README.md`](./research/sweeps/2026-10-09/README.md)
