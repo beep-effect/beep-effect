@@ -223,3 +223,28 @@ SPEC records every term, the freeze-manifest decision, and the P1 output authori
 - All verification units ended. Required main merge brought in 45f334e3c2 with no
   touched Corpus/libpff surface change. Its lockfile changed; frozen install passed.
   The final addressed wave is being submitted through Yeet; the live slice is unlaunched.
+
+- Final publication attempt at e28c05e49762343be2e85903d35f59cd1a92804a failed before push.
+  Fifteen of sixteen cheap gates passed; Effect-Vitest now reports zero introduced findings.
+  Only schema-first failed: five untracked inherited entries (two Accounts candidates and
+  three unrelated test advisories). All five source surfaces and the inventory have no diff
+  against origin/main. The orchestrator owns that consolidated main repair; no outside-scope
+  file or baseline was changed. Publication gates were not bypassed.
+- Remote branch PR query returns none. Active own unit count is zero. Slice ledger remains
+  absent; no launch script/run manifest/final file was created and no live run was started.
+  Both forbidden reference links remain absent, and the worktree was clean before this receipt.
+- Proof scope: package/parity measurements precede the final main-only dependency merge;
+  touched Corpus/libpff source and tests were unchanged by that merge, and frozen install passed.
+  The final cheap-gate verdict is for the exact publication-attempt head. After the shared main
+  repair, repeat step 4d's published-head checks before R2's final file. No P1 box was flipped.
+
+### Final report
+
+lane: corpus-restore
+head: e28c05e49762343be2e85903d35f59cd1a92804a (publication-attempt head; the following closeout commit changes packet receipts only)
+PR(s): none (Yeet stopped before push on inherited schema-first inventory; remote PR query empty)
+package-verify: @beep/repo-cli: pass; @beep/libpff: pass (full checks before final main-only dependency merge; owned source unchanged)
+hosted-parity: test-tsgo: pass | docgen local: pass | jsdoc-ratchet: pass | knowledge refs: pass, zero gated | fallow audit+health: pass | scoped coverage: pass, CLI 5,890 tests and libpff 71 tests, all package percentages above baseline; restoration file 100% in every metric
+handoff: goals/oppold-corpus-salvage-restoration/history/handoffs/corpus-restore-2026-10-09.md
+open items: Orchestrator must repair five inherited schema-first inventory entries on main (two Accounts candidates, three unrelated test advisories). Then merge main, publish PR1, run published-head checks, ready and write the R2 final file; wait for orchestrator merge before the frozen live slice. Decisions: budget-bound Tika capture, libpff on-disk name escape, ratio 4, attempt 7,200,000 ms, total 43,200,000 ms, total output 2,147,483,648 bytes, 100 GB free floor, R6 manifest and R7 output authority; reverse by reverting local fixes/docs before launch. Private workspaces carry release notes without changesets under #1566. P1 remains pending; no live ledger or corpus output was written. All own units ended.
+blocked: PR1 publication needs the inherited schema-first inventory repair on main; live slice unlaunched.

@@ -472,3 +472,17 @@ wholesale is an orchestrator decision; this lane never deletes it.
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
 | None | N/A | N/A | N/A | N/A |
+
+### 2026-10-09: P1 launch held at the inherited publication gate
+
+The bounded fixes, RAM probe, ceilings, freeze-record design, and output authority are retained.
+Both full package verifications and the corrected local hosted-parity set passed; restoration
+coverage is 100% in every metric. PR1 publication at `e28c05e497` failed before push: 15 of 16
+cheap gates passed, and schema-first alone failed on five untracked entries inherited from main
+(two Accounts candidates and three unrelated test advisories). All affected files and their
+inventory are unchanged by this lane. Do not widen ownership or edit an inventory baseline here;
+the orchestrator owns the consolidated main repair. No slice ledger, live launch, or PR exists.
+P1 stays pending, lifecycle active, P2/P3 pending. Resume by merging the main repair and publishing
+PR1 under R2, then complete its published-head proof and final-file gate before writing the run
+manifest or launching. Reversal: revert the bounded local fixes and packet decisions; there is no
+live output to reverse, and the append-only handoff remains evidence.
