@@ -136,3 +136,32 @@ Run 3 full package verification now passes: audit 777.6 seconds and docgen 25.2
 seconds, including the Cache relative-root repair and new fixture. Publication,
 local changed-scope policy proof and E review remain queued/open; the Ci group
 remains coordinated follow-up scope. Hosted parity is not inferred from this pass.
+
+
+## C Run 4 current boundary
+
+The Ci group is implemented together with its composite-action callers. The
+Effect service owns change-profile, job-env and runner-resources. Shared goals/
+docs pattern data belongs to Ci schemas; the minimal pre-runtime profile adapter
+reads it before Bun/dependencies exist. Setup installs dependencies before typed
+environment export, then restores Turbo using exported credentials. Secret inputs
+remain explicit trusted-caller expressions. The resource adapter retains stable
+caller and shutdown behavior, including heavy.yml's older-checkout fallback.
+
+Root-input gap accounting additions: CI runner-security fixtures explicitly
+execute the profile and resource adapters, compare typed/shim profiles, exercise
+the synthetic event/credential matrix and multiline heredocs, assert no secret
+values in logs, verify synthetic procfs counters, and cover TERM/INT/KILL,
+stdin, output-storage failure and recovered periodic-sample failure. These tests
+are outside the assumption that package source selection proves root adapters.
+Independent source review has zero actionable findings at `f0d88dd5bd`; current
+runtime/full-package proof is pending. This row does not claim hosted acceptance.
+
+R24 is resolved by the orchestrator-of-record audit. Resume ruling 3 treats locked
+historical routing and packet history/research as archival provenance. C's exact
+lossless wire and platform-test candidates are listed in its handoff for B's
+admission after V; C edits no inventory or allowlist. Initial introduced runtime-
+invocation, type, docgen and complexity findings are repaired and awaiting their
+necessary reruns. The unused root ONNX declaration remains under H1 ownership
+as explicitly ruled. No real vault, apt directory, installed unit or model endpoint
+was changed. E's workflow co-sign, publication and hosted evidence remain open.

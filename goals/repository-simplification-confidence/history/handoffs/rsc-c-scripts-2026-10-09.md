@@ -115,6 +115,8 @@ A is the sole register writer; transcribe these rows with this handoff citation.
 | Pre-runtime apt-source adapter | Ubuntu acquisition happens before a repository runtime exists. | Synthetic seam tests pass, preserving ubuntu.sources, unrelated files, nested entries and symlink targets; shell syntax passes; no live apt deletion. | Typed delegation may be added after runtime, but preserve the minimal pre-runtime boundary. |
 | Git regeneration merge adapter | Git may invoke it in an incomplete merge tree with no usable CLI. | Repeated local setup and fail-closed fixture passes; shell syntax passes; adapter path unchanged. | Worktree new/prepare owns installation; clone beep-effect16's absolute setter remains valid. Read-only linked-worktree config.worktree census found no additional regenerate setters. |
 | Graft workstation patch kit | Installed external tool needs its sanctioned dist-patch/bootstrap adapter. | Current 0.21.1 retained; 0.16/0.18/0.19 retired; two Node suites relocated to CLI fixtures with fake transports, terminal rerun pending. | Retire old patches only; no fresh install, deep build or model endpoint call. |
+| Pre-runtime change-profile adapter | Workflow lane decisions precede Bun/dependencies. | Ci schema owner supplies the shared pattern JSON; typed-vs-shim fixtures cover empty, goals-only, mixed and non-PR diffs. Runtime proof is pending in Run 4. | E co-signs the CI ordering. Retire only when every caller has a runtime or consumes admission outputs. |
+| Runner-resource shutdown adapter | Stable heavy.yml older-checkout path and explicit 130/143 shutdown/status boundary. | Effect Ci owns measurements; synthetic cases cover TERM/INT/KILL, stdin and recovered periodic failure. Independent review has zero source findings at f0d88dd5bd. | Retire only when the caller runtime owns equivalent signal/stdin behavior; keep older-checkout fallback. |
 | Declarative agent-runs systemd sources | Source of record for the existing heavy-work budget. | Adopted effective 48G MemoryHigh, 60G MemoryMax, 8G MemorySwapMax and 50% pressure limit from unowned heavy-budget drift; source verify passes with inherited CPUAccounting warning. | Operator re-sync/installation is a separate follow-up. This lane makes no host unit change. |
 
 ## Recovery
@@ -466,3 +468,100 @@ admission. Real filesystem, symlink, subprocess and installed-Graft fixtures are
 judgment candidates; C does not write inventory/allowlist entries. Every candidate
 will name a source line, class and reason. S11 allows the attributed judgment red
 at publish and the orchestrator merge gate; this is not a blanket census waiver.
+
+
+### Run 4 occurrence-specific B admission table
+
+Scanner: `beep lint effect-vitest --rows`, exit 0; rows are diagnostic identities, not admissions. Only the following open C-owned candidates are submitted. Existing admitted rows remain untouched.
+
+| File:line | Rule / review class | Justification |
+| --- | --- | --- |
+| `packages/tooling/tool/cli/src/commands/Accounts/AccountsSecretsLayout.schemas.ts:31` | schema-first / object-struct-schema | AccountsSecretField is a lossless external wire object; arbitrary future metadata participates in identity. |
+| `packages/tooling/tool/cli/src/commands/Accounts/AccountsSecretsLayout.schemas.ts:68` | schema-first / object-struct-schema | AccountsSecretsItem must preserve unknown vault-item metadata across decode/encode. |
+| `packages/tooling/tool/cli/test/setup-effect-ref.test.ts:75` | EV002 / unresolved-layer-provide | Per-invocation fake Git/PATH/config and reference root require a freshly captured fixture context. |
+| `packages/tooling/tool/cli/test/cache-remote-reads.test.ts:145` | EV004 / shorter-scope-lifetime-review | End each subprocess/resource helper scope before examining files or beginning the next invocation. |
+| `packages/tooling/tool/cli/test/cache-remote-reads.test.ts:207` | EV004 / shorter-scope-lifetime-review | End each subprocess/resource helper scope before examining files or beginning the next invocation. |
+| `packages/tooling/tool/cli/test/cache-remote-reads.test.ts:267` | EV004 / shorter-scope-lifetime-review | End each subprocess/resource helper scope before examining files or beginning the next invocation. |
+| `packages/tooling/tool/cli/test/cache-remote-reads.test.ts:326` | EV004 / shorter-scope-lifetime-review | End each subprocess/resource helper scope before examining files or beginning the next invocation. |
+| `packages/tooling/tool/cli/test/cache-remote-reads.test.ts:379` | EV004 / shorter-scope-lifetime-review | End each subprocess/resource helper scope before examining files or beginning the next invocation. |
+| `packages/tooling/tool/cli/test/setup-effect-ref.test.ts:80` | EV004 / inner-helper-scope-lifetime-review | End each subprocess/resource helper scope before examining files or beginning the next invocation. |
+| `packages/tooling/tool/cli/test/accounts-secrets-layout.test.ts:3` | EV010 / platform-resource-provenance-review | Real platform boundary verifies subprocess, symlink, permissions and physical-file behavior; memory cannot model this subject. |
+| `packages/tooling/tool/cli/test/cache-remote-reads.test.ts:8` | EV010 / platform-resource-provenance-review | Real platform boundary verifies subprocess, symlink, permissions and physical-file behavior; memory cannot model this subject. |
+| `packages/tooling/tool/cli/test/knowledge-refs-rewrite.test.ts:7` | EV010 / platform-resource-provenance-review | Real platform boundary verifies subprocess, symlink, permissions and physical-file behavior; memory cannot model this subject. |
+| `packages/tooling/tool/cli/test/regenerate-merge-driver.test.ts:4` | EV010 / platform-resource-provenance-review | Real platform boundary verifies subprocess, symlink, permissions and physical-file behavior; memory cannot model this subject. |
+| `packages/tooling/tool/cli/test/retained-script-adapters.test.ts:2` | EV010 / platform-resource-provenance-review | Real platform boundary verifies subprocess, symlink, permissions and physical-file behavior; memory cannot model this subject. |
+
+
+### Run 4 qualification attribution and review
+
+Committed source `f0d88dd5bd998fed7505e01117ef4d131aceda6e` has terminal zero
+independent actionable source findings. The reviewer accepted all three resource
+repairs and confirmed unchanged event/credential policy. No native source dirt
+followed that review; only packet receipts changed.
+
+The initial fixture batch's two failures were introduced test-invocation errors:
+Vitest runs on Node, so process.execPath cannot launch a Bun-only CLI. The explicit
+`bun` invocation is repaired. Initial full package audit rejected the composite
+JSON input missing from the package's hand-owned include; it now explicitly includes
+`src/**/*.json`, and tsconfig-sync confirms the generated fields are in sync.
+Docgen rejected missing companion-type descriptions; all three companions now carry
+the required documentation. Their P0 inbox rows have fix-sha acknowledgments.
+
+Initial Fallow audit/health found introduced environment-selection complexity.
+The implementation now uses schema-backed selections and Match, preserving the
+mode labels and redacted entries; the scoped rerun remains queued. Fallow also
+reports the known unused root ONNX declaration after deleting its duplicate test
+consumer. Resume ruling 2 assigns that declaration to H1 and explicitly forbids
+C removing it; the declaration, owner dependency, exact override, patch and regression
+remain unchanged. The adjacent renderTurboSummary complexity body is unchanged
+from main and is inherited-adjacent. Neither attributed row justifies a new ignore.
+
+JSDoc ratchet and CI=true knowledge refs --check pass in Run 4. The latter has
+zero live gated observations. Post-repair type proof passes 334 selected files;
+the later environment simplification requires the refreshed type/fixture gate.
+Full package verification and explicit package-scoped docgen are running, not
+claimed passes. Two C-owned admitted/queued commands remain under beep-heavy.
+
+### Run 4 owner regeneration, caller census and coverage read
+
+Final fetch/merge confirms origin/main is already integrated. Owner commands
+`lint package-scripts --write`, `cache profile --write`, `goals index --write`
+and `tsconfig-sync --filter @beep/repo-cli` complete with no tracked generation
+diff; package scripts report 152 manifests, zero drift and zero writes.
+The refreshed sweep-exclusion census has zero live caller matches for all ten
+removed script paths, including `scripts/ci-job-env.mjs`; receipt
+`.beep/rsc-c-run4-removed-callers.txt`. Archived packet/research observations
+and the locked routing table remain historical under resume ruling 3.
+
+The Ci additions extend the earlier scoped coverage read. Existing baseline
+percentages (lines/statements/branches/functions) are Ci.command.ts
+83.33/84.78/51.35/80.76 and internal/cli/TurboCache.ts 100/100/100/100.
+HeavyAdmission.ts and the new CiOperational files have no existing baseline
+row. This is a baseline read, not a new coverage result; no floor is lowered.
+
+Graft usage in this run reports approximately 33,668 tokens saved across the
+two C-owned queries (1,085 + 32,583); independent reviewer usage is separate.
+
+### Run 4 compatibility qualification wave
+
+The full package gate reports audit failure (816.5s) with 5,796 passing tests
+and three profile-shim failures; docgen fails (30.0s) with TS2823 on JSON import
+attributes. These are introduced compatibility defects, repaired in
+`93f78873b87f6a8452774c0527280a60fbaa9c7e`: command-scoped pattern file/key
+environment inputs remove Node/Bun eval argv differences; plain JSON imports
+retain the same schema-owned data under the CommonJS docgen example compiler.
+Both package P0 rows carry fix-sha acknowledgments. The independent reviewer
+reports terminal zero actionable findings on that exact source commit.
+
+The refreshed set has terminal ci-fixtures=0 (24 tests), test-tsgo=0,
+fallow-audit=0 and fallow-health=0. Health has zero findings. Audit retains
+two attributed observations: the H1-owned root ONNX declaration and unchanged
+renderTurboSummary complexity. Exit 0 does not mean those observations vanish.
+No inventory/allowlist edit or floor reduction is made. Receipts:
+`.beep/rsc-c-run4-refresh-result.txt` and the matching logs.
+
+The compatibility-qualified sequence is queued through beep-heavy: explicit
+package-scoped docgen, CI fixtures under bunx --bun (the actual package audit
+runtime), then full package verification. It is a rerun, not yet a pass.
+Publication proceeds through the normal cheap-gate path while that proof
+settles; E's co-sign and hosted proof remain open.

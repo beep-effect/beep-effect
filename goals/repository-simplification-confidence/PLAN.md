@@ -88,21 +88,19 @@ dated successor receipt) when it opens.
 
 ### C lane status — 2026-10-09
 
-`rsc-c-scripts`: wave 1 implemented and recovery regressions repaired. R24's
-owner audit is resolved by the orchestrator's 17:24Z ruling; draft publication is
-authorized for E's ONNX/merge-driver workflow review and Ci ordering co-sign.
-Focused fixtures, test-tsgo, package docgen and knowledge census have local passes.
-Run 3 passes full package verification (audit 777.6s, docgen 25.2s), scoped
-docgen, repaired Cache fixtures and independent zero-findings review. Draft
-publication was cancelled before admission. The broader policy proof exposed
-introduced test/schema findings and historical-path delta findings. Direct
-repairs are independently reviewed; post-repair proof was cancelled before
-admission at the blocked handoff and remains pending. B/V owns the
-reviewed-exception admission mechanism. The Ci group stays intact for its
-coordinated follow-up wave. Evidence:
+`rsc-c-scripts`: wave 1 includes all command-family ports and the coordinated Ci
+pre-runtime shim / install-export-restore ordering under resume ruling 3.
+R24 owner audit is resolved. Exact reviewed-exception candidates are recorded
+for B after V without generated-inventory edits. Main is merged at `c5787ba017`;
+independent source review has zero actionable findings at `93f78873b8`.
+JSDoc ratchet, knowledge census, refreshed CI fixtures, test-tsgo and Fallow
+audit/health pass. The introduced bootstrap/docgen compatibility findings are
+repaired; full package/docgen qualification is queued through heavy admission.
+E's workflow co-sign will occur on the draft PR. Publication/hosted proof remain
+open. Evidence:
 [`history/handoffs/rsc-c-scripts-2026-10-09.md`](history/handoffs/rsc-c-scripts-2026-10-09.md),
 [`history/receipts/stage-5-acceptance.md`](history/receipts/stage-5-acceptance.md).
-This status does not mark the Script ports or Sensitive scripts rows accepted.
+This status does not mark Script ports or Sensitive scripts accepted.
 
 ### Lane inputs
 

@@ -74,10 +74,12 @@ and [lane handoff](./history/handoffs/rsc-h1-catalog-2026-10-09.md).
 C implementation evidence (partial, 2026-10-09):
 [`history/handoffs/rsc-c-scripts-2026-10-09.md`](history/handoffs/rsc-c-scripts-2026-10-09.md)
 and [`history/receipts/stage-5-acceptance.md`](history/receipts/stage-5-acceptance.md).
-C full package verification passed before the latest policy repairs; independent
-source review reports zero findings through those repairs. Post-repair proof and
-B/V exception admission remain open alongside Ci coordination, draft publication
-and hosted proof; no C acceptance
+C now includes the coordinated Ci group and pre-runtime adapters. Independent
+source review has zero actionable findings at `93f78873b8`; JSDoc ratchet and
+knowledge census, refreshed CI fixtures, type proof and Fallow audit/health
+pass. Current full package/docgen qualification, E's workflow co-sign,
+publication and hosted proof remain open. B receives the occurrence-specific
+reviewed-exception table after V; no inventory is hand-edited and no acceptance
 row is closed.
 
 ## Notes
