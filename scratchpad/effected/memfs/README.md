@@ -360,11 +360,26 @@ This package is not deprecated. When upstream ships its own `MemoryFileSystem` m
 
 ### Added exports
 
-None.
+| Export | Facets | Why |
+| --- | --- | --- |
+| `InvalidFaultCountError` | value, type | Added by review round 1; see the deviations below. |
+| `UnknownFaultKeyError` | value, type | Added by review round 1; see the deviations below. |
 
 ### Deviations
 
-None.
+One entry per class of change (law- or ruling-forced) and one per behavioural divergence; the full test, upstream behaviour, lab behaviour and reason are on the module's ledger row.
+
+- **native-runtime** — Effect collections, Record/DateTime helpers, tagged constructors and explicit Orders replace native operations while preserving wrapper descriptors, timestamps and ordering (scratchpad/test/memfs/Handle.test.ts:143,161; Ports.test.ts:549,562,572; Volume.test.ts:331,340; VolumePathsOrder.test.ts:6; WatchRecursive.test.ts:69,90).
+- **identity-keys** — Watcher object identities become volume-owned ids in MutableHashMap with ordered delivery and independent teardown (scratchpad/test/memfs/WatchRecursive.test.ts:69,90).
+- **tagged-errors** — Schema-tagged fault, errno, NodeSync and invariant errors replace native error subclasses, adding NodeErrno tags/errno and public fault-class exports (scratchpad/test/memfs/FaultInjection.test.ts:306; Ports.test.ts:196,204; Handle.test.ts:143,161,302; Exports.test.ts:7,11; module suite scratchpad/test/memfs/**).
+- **schema-first** — Executable seed/stat/inode/glob schemas and LiteralKit domains replace handwritten models, and Resolved gains schema-tagged outcomes (module suite scratchpad/test/memfs/**).
+- **numeric-domains** — Finite numeric schemas replace unrestricted seed/stat/metadata fields and nominal numeric brands (module suite scratchpad/test/memfs/**).
+- **type-safety** — Typed wrappers, schema guards, checked indexing and deliberatelyInvalid replace unsafe casts and assumptions (scratchpad/test/memfs/Constructors.test.ts:123; Ports.test.ts:193,248,339,537; Handle.test.ts:136,295,303; integration/node-sync.int.test.ts:63; module suite scratchpad/test/memfs/**).
+- **tsgo-diagnostics** — Diagnostic-forced dual overloads replace direct-only helpers, with explicit absent errno descriptions and typed suite failures (scratchpad/test/memfs/Pipeable.test.ts:12,29,36,50; module suite scratchpad/test/memfs/**).
+- **effect-first** — Effect.fn/fnUntraced, Match and canonical Effect/Option composition replace generator wrappers and helper boilerplate (module suite scratchpad/test/memfs/**).
+- **effect-imports** — Per-module effect/* imports replace the root effect barrel in source, tests and examples (module suite scratchpad/test/memfs/**).
+- **identity-annotations** — IdentityComposer schema/field/error annotations and the Volume service key replace unannotated contracts and the literal upstream key (module suite scratchpad/test/memfs/**).
+- **test-environment** — Memfs host-oracle fixtures use TMPDIR=/tmp instead of the host default, preserving the upstream EISDIR assertion on tmpfs (scratchpad/test/memfs/ErrnoParityContract.ts:293; integration/node.int.test.ts (FileSystem errno parity (node), copyFile from a directory)).
 
 ### Dependency backlog
 

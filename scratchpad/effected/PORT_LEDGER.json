@@ -902,12 +902,164 @@
           "entry": "./node-sync"
         }
       ],
-      "exportsAdded": [],
+      "exportsAdded": [
+        {
+          "name": "InvalidFaultCountError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "UnknownFaultKeyError",
+          "kind": "both",
+          "entry": "."
+        }
+      ],
       "newDeps": [],
       "fixturesBytes": 0,
-      "deviations": [],
-      "backlog": [],
-      "reviewRounds": [],
+      "deviations": [
+        {
+          "test": "scratchpad/test/memfs/Handle.test.ts:143,161; Ports.test.ts:549,562,572; Volume.test.ts:331,340; VolumePathsOrder.test.ts:6; WatchRecursive.test.ts:69,90",
+          "upstreamBehaviour": "errno.ts, faults.ts and ports.ts construct native errors and use Object.assign/keys/entries and native Map/Set; seed.ts constructs Date; volume.ts uses native watcher/glob sets and sorting; view.ts sorts paths natively.",
+          "labBehaviour": "Tagged errors replace native constructors; Record helpers and explicit spreads construct port members; HashSet and MutableHashMap replace collections; DateTime supplies seed timestamps; Array.sort with String, locale and subscription-id Orders preserves ordering in volume.ts and view.ts.",
+          "reason": "native-runtime: Effect modules replace native Set/Map/Object methods/Date constructors/errors; the 2026-10-09 grilling ruling removes native-runtime exceptions. Enumerable/writable/configurable wrappers, invalid seed timestamps and upstream ordering remain pinned."
+        },
+        {
+          "test": "scratchpad/test/memfs/WatchRecursive.test.ts:69,90",
+          "upstreamBehaviour": "internal/volume.ts stores WatchSubscription objects in a native Set, using reference identity and insertion order for independent registration, delivery and removal.",
+          "labBehaviour": "Each volume allocates monotonically increasing subscription ids; MutableHashMap stores id-to-subscription entries, removal uses the id, and publication sorts subscriptions by id. Identical paths/options still receive independent queues and scoped teardown.",
+          "reason": "identity-keys: the 2026-10-09 grilling ruling requires subscriptions to use ids keyed in MutableHashMap, preserving identity per structure rather than applying structural equality to watcher objects."
+        },
+        {
+          "test": "scratchpad/test/memfs/FaultInjection.test.ts:306; Ports.test.ts:196,204; Handle.test.ts:143,161,302; Exports.test.ts:7,11; module suite scratchpad/test/memfs/**",
+          "upstreamBehaviour": "failTimes and unknown fault keys throw RangeError; ErrnoException extends Error; nodeErrno assigns code/syscall/path to Error with no _tag or numeric errno. NodeSync constructs RangeError, TypeError and read-only Error defects; volume invariant defects use Error.",
+          "labBehaviour": "S.TaggedError defines InvalidFaultCountError, UnknownFaultKeyError, ErrnoException, NodeErrno, VolumeInvariantError and NodeSync UnsafeIntegerError/ReadOnlyFileSystemError/InvalidPathArgumentError. NodeErrno adds _tag and POSIX errno; messages and syscall/path behavior remain. The two public fault classes are barrel exports.",
+          "reason": "tagged-errors: schema-first typed-error law and the 2026-10-09 memfs errno ruling require schema error carriers; the two no-_tag Handle assertions and RangeError expectations are retargeted. Native error subclass identity changes while failure-versus-defect channels remain."
+        },
+        {
+          "test": "module suite scratchpad/test/memfs/**",
+          "upstreamBehaviour": "MemoryFileSystem seed/stat models and internal inode/glob models are handwritten interfaces, unions and Data.taggedEnum values; errno/stat/mutation/access domains are type-only literals; ports Resolved branches on path/code property presence.",
+          "labBehaviour": "MemoryFileSystem seed/stat schemas derive the existing plain-object types; volume.ts uses inode and glob Struct/Union schemas and schema brands; errno.ts/ports.ts/volume.ts define LiteralKit domains. Resolved becomes schema-backed Success/Failure variants; schema guards and matchers replace handwritten classifications.",
+          "reason": "schema-first: executable domain contracts and named LiteralKit domains are required by schema-first laws 17/19/20 and round-1 req-1/req-3; schema-derived types and guards replace parallel handwritten models while public seed/stat payloads stay plain objects."
+        },
+        {
+          "test": "module suite scratchpad/test/memfs/**",
+          "upstreamBehaviour": "Seed modes/mtimes and volume stat fields are unrestricted number types; inode/descriptor ids use nominal number brands; inode metadata, brace offsets and test errno metadata have handwritten numeric fields.",
+          "labBehaviour": "S.Finite backs seed mode/mtime, volume stat mtimeMs/size, branded inode/descriptor ids, inode mode/uid/gid/nlink/openCount, brace offsets, NodeErrno.errno and helpers.ErrnoFields.errno. Runtime integer checks for failTimes and filesystem validation remain.",
+          "reason": "numeric-domains: finite numeric schema domains replace unrestricted handwritten numbers under schemaNumber/schema-first requirements; the fix wave applies S.Finite to the executable models without inventing integer refinements."
+        },
+        {
+          "test": "scratchpad/test/memfs/Constructors.test.ts:123; Ports.test.ts:193,248,339,537; Handle.test.ts:136,295,303; integration/node-sync.int.test.ts:63; module suite scratchpad/test/memfs/**",
+          "upstreamBehaviour": "Fault wrappers erase handlers into unknown and cast delegates/results; ports and NodeSync cast error metadata and port members; tests cast thrown errors, pending Promises and deliberate wrong-input values; volume indexing assumes entries exist.",
+          "labBehaviour": "Typed per-method fault interception preserves arguments/results without casts; Predicate property checks and ErrnoFields schema guards narrow errors; Promise construction/assertions narrow pending values; checked indexing replaces assumptions. Deliberate invalid test inputs use the module deliberatelyInvalid helper.",
+          "reason": "type-safety: D15 removes unsafe assertions from implementations and normal tests; the 2026-10-09 ruling permits the single deliberatelyInvalid helper cast for deliberate negative inputs. This entry does not claim existing negative type-test directives or diagnostic pragmas were removed."
+        },
+        {
+          "test": "scratchpad/test/memfs/Pipeable.test.ts:12,29,36,50; module suite scratchpad/test/memfs/**",
+          "upstreamBehaviour": "errnoError/nodeErrno, assertKnownFaultKeys/wrapFaulty, resolvePath/withFaults/runNode/runMutation, applyRoot and suite/errnoSuite/caseInsensitiveSuite/denied are direct-only arrow helpers; errnoError permits an omitted description; test layers erase failure types to unknown.",
+          "labBehaviour": "The 13 helpers gain dual data-first/data-last overloads, with argument-shape dispatch for optional options. errnoError requires explicit undefined for an absent description. Test suite layer failures retain generic types; diagnostic pragmas identify suite-provide, async and host-node exceptions.",
+          "reason": "tsgo-diagnostics: @effect/tsgo missingPipeableSignature and typed-error diagnostics force these shapes; repair-memfs.md restores diagnostic-required overloads after g1 removed them. Explicit errno descriptions avoid ambiguous three-string dispatch."
+        },
+        {
+          "test": "module suite scratchpad/test/memfs/**",
+          "upstreamBehaviour": "buildHandle/makeVolume/makeReadyVolume, seed application and numerous mutation/clone callbacks wrap Effect.gen in arrows; errno mappings and seeding use switch statements; nested Effect calls and simple catch callbacks remain.",
+          "labBehaviour": "Effect.fn/fnUntraced define builders, seed execution and state/clone callbacks; Match and schema variant matchers handle errno/seed outcomes. Effect.catchIf/fromOption/ignore, direct yielding of typed errors, pipe composition and Option field compaction replace helper boilerplate.",
+          "reason": "effect-first: Effect function laws 21/22, terse-effect and Effect-native helper conventions require canonical function bodies and composition in MemoryFileSystem.ts, internal/volume.ts, seed.ts and errno.ts, with matching structural test adjustments."
+        },
+        {
+          "test": "module suite scratchpad/test/memfs/**",
+          "upstreamBehaviour": "Most source files, tests and carried JSDoc examples import Effect modules from the root effect barrel.",
+          "labBehaviour": "Source, tests and rewritten JSDoc examples import each Effect module through effect/Effect, effect/FileSystem, effect/Schema and other effect/<Module> paths; dual and pipe come from effect/Function. Existing effect/testing imports remain.",
+          "reason": "effect-imports: step 3 and the no-root-effect-barrel law require per-module effect/* imports across memfs source, tests and code examples."
+        },
+        {
+          "test": "module suite scratchpad/test/memfs/**",
+          "upstreamBehaviour": "MemoryFileSystem.Volume uses the literal service key @effected/memfs/MemoryFileSystemVolume; domain types and native errors have no IdentityComposer schema/field/error annotations.",
+          "labBehaviour": "$ScratchpadId composers identify MemoryFileSystem.ts, NodeSyncFileSystem.ts, errno.ts, faults.ts, ports.ts and volume.ts; schemas, fields and tagged errors use annoteSchema/annoteKey/annoteError. MemoryFileSystem.Volume uses the composer-generated service key.",
+          "reason": "identity-annotations: step 4 requires @beep/identity $I annotations and derived keys; round-1 req-6a/req-6b complete error/field annotations, including NodeSync errors."
+        },
+        {
+          "test": "scratchpad/test/memfs/ErrnoParityContract.ts:293; integration/node.int.test.ts (FileSystem errno parity (node), copyFile from a directory)",
+          "upstreamBehaviour": "Node errno parity fixtures use the host default temporary directory; the unchanged copyFile-from-directory case expects BadResource/EISDIR, but this workstation btrfs can copy an empty directory successfully.",
+          "labBehaviour": "scratchpad/vitest.effected.config.ts selects TMPDIR=/tmp only for memfs, placing host oracle fixtures on tmpfs and retaining the upstream BadResource/EISDIR assertion and existing skips.",
+          "reason": "test-environment: D9 and the 2026-10-09 environmental-fix ruling permit tmpfs fixture placement. env-memfs.md reproduces btrfs behavior and verifies the unchanged assertion with TMPDIR=/tmp; central-notes.md:3 and the actual shared-config diff ground the lasting setting."
+        }
+      ],
+      "backlog": [
+        {
+          "seat": "grok",
+          "round": 1,
+          "finding": "back-1 — Canonical JSDoc grammar and metadata (scratchpad/effected/memfs/MemoryFileSystem.ts:59)",
+          "reason": "jsdoc: During S2 convert carriers to titled Example and Details/Gotchas sections, preserve bodies, add category/since metadata and validate with docgen."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "back-2 — Canonical container assertions with payload checks (scratchpad/test/memfs/FileSystemContract.ts:584)",
+          "reason": "test: During S3 use assertNone and payload-checking assertFailure/assertSuccess from @effect/vitest/utils."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "back-3 — Schema-derived round-trip properties (scratchpad/test/memfs/FaultInjection.test.ts:306)",
+          "reason": "test: During S3 add Arbitrary.schema encode/decode round-trip properties for the final exported schemas, using fcRuns and field-preserving assertions."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "back-4 — Stale public error names (scratchpad/effected/memfs/MemoryFileSystem.ts:1054)",
+          "reason": "docs: During S2 replace five stale RangeError references with UnknownFaultKeyError/InvalidFaultCountError; cite central deviations and keep KNOWLEDGE.md verbatim."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "back-5 — Upstream publication and installation README prose (scratchpad/effected/memfs/README.md:3)",
+          "reason": "docs: During S2 remove upstream badges, the stability/pnpm-plugin-effect block and Install section while preserving other carried prose."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "back-6 — Unmeasured per-inode tracing opportunity (scratchpad/effected/memfs/internal/volume.ts:1208)",
+          "reason": "effect-idiom: Consider Effect.fnUntraced for the three recursive copy arms after required repairs; measure before claiming a performance regression."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "back-7 — Explain behavior-preserving seed timestamp construction (scratchpad/effected/memfs/internal/seed.ts:45)",
+          "reason": "effect-idiom: Explain that makeUnsafe(0)+setTime preserves invalid mtime as typed BadArgument; avoid behavior-changing simplification."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "back-8 — Unreachable defensive branches in coverage proof (scratchpad/effected/memfs/internal/volume.ts:572)",
+          "reason": "test: During S3 model the root stack as nonempty and use nonempty accessors/direct iteration where invariants permit, preserving diagnostics and avoiding assertions."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "back-9 — Suite-level layer migration and diagnostic pragmas (scratchpad/test/memfs/Handle.test.ts:1)",
+          "reason": "test: During S3 migrate nine suite-level layers to it.layer/layer and remove strictEffectProvide pragmas; retain justified Promise and nodeBuiltinImport suppressions."
+        }
+      ],
+      "reviewRounds": [
+        {
+          "round": 1,
+          "commit": "3fa5876691901fccf3d1cd29e9324564df134b56",
+          "seats": {
+            "grok": {
+              "required": 6,
+              "backlog": 1
+            },
+            "sol": {
+              "required": 3,
+              "backlog": 3
+            },
+            "fable": {
+              "required": 8,
+              "backlog": 7
+            }
+          }
+        }
+      ],
       "commits": [
         {
           "stage": 0,
