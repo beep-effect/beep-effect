@@ -1,12 +1,15 @@
 // Port of Node v26.10.0 lib/internal/tty.js getColorDepth (MIT). Differences: the win32 branch reads OS=Windows_NT
 // rather than process.platform and the OS release, no warning side effect, TTY gate applied here.
 import { dual } from "effect/Function";
+import * as HashMap from "effect/HashMap";
+import * as Match from "effect/Match";
+import * as O from "effect/Option";
 import type { ColorLevel } from "../ColorLevel.ts";
 import type { Env } from "./types.ts";
 
 // Some entries were taken from `dircolors`. The corresponding terminals might
 // support more than 16 colours, but this was not tested for.
-const TERM_ENVS: ReadonlyMap<string, ColorLevel> = new Map<string, ColorLevel>([
+const TERM_ENVS = HashMap.fromIterable<string, ColorLevel>([
 	["eterm", "basic"],
 	["cons25", "basic"],
 	["console", "basic"],
@@ -86,16 +89,16 @@ const fromTable = (env: Env): ColorLevel => {
 		return /^(9\.(0*[1-9]\d*)\.|\d{2,}\.)/.test(env.TEAMCITY_VERSION) ? "basic" : "none";
 	}
 
-	switch (env.TERM_PROGRAM) {
-		case "iTerm.app":
+	const programLevel = Match.value(env.TERM_PROGRAM).pipe(
+		Match.when("iTerm.app", (): ColorLevel => {
 			if ((env.TERM_PROGRAM_VERSION === undefined || env.TERM_PROGRAM_VERSION === "") || /^[0-2]\./.test(env.TERM_PROGRAM_VERSION)) return "256";
 			return "truecolor";
-		case "HyperTerm":
-		case "MacTerm":
-			return "truecolor";
-		case "Apple_Terminal":
-			return "256";
-	}
+		}),
+		Match.whenOr("HyperTerm", "MacTerm", (): ColorLevel => "truecolor"),
+		Match.when("Apple_Terminal", (): ColorLevel => "256"),
+		Match.orElse(() => undefined),
+	);
+	if (programLevel !== undefined) return programLevel;
 
 	if (env.COLORTERM === "truecolor" || env.COLORTERM === "24bit") return "truecolor";
 
@@ -104,9 +107,9 @@ const fromTable = (env: Env): ColorLevel => {
 		if (/^xterm-256/.test(env.TERM)) return "256";
 
 		const term = env.TERM.toLowerCase();
-		// A Map lookup, so a TERM such as "constructor" cannot reach Object.prototype.
-		const known = TERM_ENVS.get(term);
-		if (known !== undefined) return known;
+		// A HashMap lookup, so a TERM such as "constructor" cannot reach Object.prototype.
+		const known = HashMap.get(TERM_ENVS, term);
+		if (O.isSome(known)) return known.value;
 		if (TERM_ENVS_REG_EXP.some((re) => re.test(term))) return "basic";
 	}
 	// Move 16 colour COLORTERM below 16m and 256
@@ -126,18 +129,12 @@ export const colorDepth: {
 	(env: Env, isTTY: boolean): ColorLevel;
 } = dual(2, (env: Env, isTTY: boolean): ColorLevel => {
 	if (env.FORCE_COLOR !== undefined) {
-		switch (env.FORCE_COLOR) {
-			case "":
-			case "1":
-			case "true":
-				return "basic";
-			case "2":
-				return "256";
-			case "3":
-				return "truecolor";
-			default:
-				return "none";
-		}
+		return Match.value(env.FORCE_COLOR).pipe(
+			Match.whenOr("", "1", "true", (): ColorLevel => "basic"),
+			Match.when("2", (): ColorLevel => "256"),
+			Match.when("3", (): ColorLevel => "truecolor"),
+			Match.orElse((): ColorLevel => "none"),
+		);
 	}
 	if (!isTTY) return "none";
 	return fromTable(env);

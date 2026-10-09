@@ -1,5 +1,6 @@
 // Ported from std-osc8 v0.2.0 (MIT, C. Spencer Beggs), src/env.ts. Pure: no process reads.
 import { dual } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 
 /**
  * Truthy semantics for env-var detection.
@@ -10,7 +11,7 @@ import { dual } from "effect/Function";
  */
 export type TruthySpec = "default" | "no-color";
 
-const DEFAULT_FALSY = new Set(["0", "false", "off", "no"]);
+const DEFAULT_FALSY = HashSet.make("0", "false", "off", "no");
 
 /**
  * Evaluate whether an env-var value should be considered truthy.
@@ -26,6 +27,6 @@ export const envIsTruthy: {
 	(value: string | undefined, spec: TruthySpec = "default"): boolean => {
 		if (value === undefined || value === "") return false;
 		if (spec === "no-color") return true;
-		return !DEFAULT_FALSY.has(value.toLowerCase());
+		return !HashSet.has(DEFAULT_FALSY, value.toLowerCase());
 	},
 );

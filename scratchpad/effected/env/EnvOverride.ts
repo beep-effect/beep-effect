@@ -59,11 +59,11 @@ export class EnvOverride {
 	 *   given, is where the variable is read in place of the ambient environment: a long-lived host's record, re-read
 	 *   on every call, or a `ConfigProvider`; omit it to read the fiber's `ConfigProvider`, which a test provides
 	 */
-	static readResult<const M extends Record<AudienceKind, ReadonlyArray<string>>>(options: {
+	static readonly readResult = Effect.fn("readResult")(function* <const M extends Record<AudienceKind, ReadonlyArray<string>>>(options: {
 		readonly envVar: string;
 		readonly accepts: M;
 		readonly source?: Readonly<Record<string, string | undefined>> | ConfigProvider.ConfigProvider | undefined;
-	}): Effect.Effect<
+	}): Effect.fn.Return<
 		{
 			readonly audience: AudienceKind;
 			readonly accepted: O.Option<M[AudienceKind][number]>;
@@ -76,32 +76,30 @@ export class EnvOverride {
 		never,
 		Audience
 	> {
-		return Effect.gen(function* () {
-			const { kind } = yield* Audience;
-			const config = Config.option(Config.String(options.envVar));
-			const { source } = options;
-			// A record becomes a provider on every call, so its current values are read; a provider is used as given.
-			const raw =
-				source === undefined
-					? yield* config.pipe(Effect.orElseSucceed(O.none<string>))
-					: yield* config
-							.parse(isProvider(source) ? source : ConfigProvider.fromEnvRecord({ ...source }))
-							.pipe(Effect.orElseSucceed(O.none<string>));
-			if (O.isNone(raw) || raw.value === "") {
-				return { audience: kind, accepted: O.none(), rejected: O.none() };
-			}
-			const accepts: ReadonlyArray<M[AudienceKind][number]> = options.accepts[kind];
-			const match = accepts.find((literal) => literal.toLowerCase() === raw.value.toLowerCase());
-			if (match !== undefined) {
-				return { audience: kind, accepted: O.some(match), rejected: O.none() };
-			}
-			return {
-				audience: kind,
-				accepted: O.none(),
-				rejected: O.some({ value: raw.value, audience: kind, accepts }),
-			};
-		});
-	}
+		const { kind } = yield* Audience;
+		const config = Config.option(Config.String(options.envVar));
+		const { source } = options;
+		// A record becomes a provider on every call, so its current values are read; a provider is used as given.
+		const raw =
+			source === undefined
+				? yield* config.pipe(Effect.orElseSucceed(O.none<string>))
+				: yield* config
+						.parse(isProvider(source) ? source : ConfigProvider.fromEnvRecord({ ...source }))
+						.pipe(Effect.orElseSucceed(O.none<string>));
+		if (O.isNone(raw) || raw.value === "") {
+			return { audience: kind, accepted: O.none(), rejected: O.none() };
+		}
+		const accepts: ReadonlyArray<M[AudienceKind][number]> = options.accepts[kind];
+		const match = accepts.find((literal) => literal.toLowerCase() === raw.value.toLowerCase());
+		if (match !== undefined) {
+			return { audience: kind, accepted: O.some(match), rejected: O.none() };
+		}
+		return {
+			audience: kind,
+			accepted: O.none(),
+			rejected: O.some({ value: raw.value, audience: kind, accepts }),
+		};
+	});
 
 	/**
 	 * Read `options.envVar` and accept it only when the current audience accepts it.
@@ -116,19 +114,17 @@ export class EnvOverride {
 	 *
 	 * @param options - `envVar` is the variable; `accepts` lists, per audience, the literals it accepts
 	 */
-	static read<const M extends Record<AudienceKind, ReadonlyArray<string>>>(options: {
+	static readonly read = Effect.fn("read")(function* <const M extends Record<AudienceKind, ReadonlyArray<string>>>(options: {
 		readonly envVar: string;
 		readonly accepts: M;
-	}): Effect.Effect<O.Option<M[AudienceKind][number]>, never, Audience> {
-		return Effect.gen(function* () {
-			const { accepted, rejected } = yield* EnvOverride.readResult(options);
-			if (O.isSome(rejected)) {
-				const { value, audience, accepts } = rejected.value;
-				yield* Effect.logWarning(
-					`${options.envVar}=${value} is not accepted for the ${audience} audience (accepts ${accepts.join("|")}); ignoring it`,
-				);
-			}
-			return accepted;
-		});
-	}
+	}): Effect.fn.Return<O.Option<M[AudienceKind][number]>, never, Audience> {
+		const { accepted, rejected } = yield* EnvOverride.readResult(options);
+		if (O.isSome(rejected)) {
+			const { value, audience, accepts } = rejected.value;
+			yield* Effect.logWarning(
+				`${options.envVar}=${value} is not accepted for the ${audience} audience (accepts ${accepts.join("|")}); ignoring it`,
+			);
+		}
+		return accepted;
+	});
 }

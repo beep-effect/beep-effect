@@ -1,3 +1,4 @@
+import * as A from "effect/Array";
 import { agentCiKeys } from "./agentCi.ts";
 import { colorKeys } from "./colorDepth.ts";
 import { terminalKeys } from "./osc8/detect.ts";
@@ -8,4 +9,4 @@ import { terminalKeys } from "./osc8/detect.ts";
  *
  * @internal
  */
-export const allKeys: ReadonlyArray<string> = [...new Set([...agentCiKeys, ...colorKeys, ...terminalKeys])];
+export const allKeys: ReadonlyArray<string> = A.dedupe([...agentCiKeys, ...colorKeys, ...terminalKeys]);

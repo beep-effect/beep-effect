@@ -107,18 +107,17 @@ const make = (
 };
 
 /** Read the TTY facts from `Stdio` and the environment from `Config`, with the width the caller already knows. */
-const snapshot = (
+const snapshot = Effect.fn("snapshot")(function* (
 	options: TerminalEnvOptions | undefined,
 	columns: O.Option<number>,
-): Effect.Effect<TerminalEnvShape, never, StdioModule.Stdio> =>
-	Effect.gen(function* () {
-		const stdio = yield* Stdio.Stdio;
-		const stdin = yield* stdio.stdinIsTerminal;
-		const stdout = yield* stdio.stdoutIsTerminal;
-		const stderr = yield* options?.stderrIsTerminal ?? Effect.succeed(stdout);
-		const env = yield* readEnv([...allKeys, "COLUMNS"]);
-		return make(env, { stdin, stdout, stderr }, columns);
-	});
+): Effect.fn.Return<TerminalEnvShape, never, StdioModule.Stdio> {
+	const stdio = yield* Stdio.Stdio;
+	const stdin = yield* stdio.stdinIsTerminal;
+	const stdout = yield* stdio.stdoutIsTerminal;
+	const stderr = yield* options?.stderrIsTerminal ?? Effect.succeed(stdout);
+	const env = yield* readEnv([...allKeys, "COLUMNS"]);
+	return make(env, { stdin, stdout, stderr }, columns);
+});
 
 /** The quiet terminal {@link TerminalEnv.layerTest} starts from: not a terminal, no colour, no links, no width. */
 const quiet: StreamEnv = { isTerminal: false, color: "none", hyperlinks: false, columns: O.none() };
@@ -212,13 +211,11 @@ export class TerminalEnv extends Context.Service<TerminalEnv, TerminalEnvShape>(
 	 *
 	 * @param _stream - the stream to decide for; only `stdout` is available, since `Stdio` reports no other
 	 */
-	static colorLevel(_stream: "stdout"): Effect.Effect<ColorLevel, never, StdioModule.Stdio> {
-		return Effect.gen(function* () {
-			const ambient = yield* Effect.serviceOption(TerminalEnv);
-			if (O.isSome(ambient)) return ambient.value.stdout.color;
-			const stdio = yield* Stdio.Stdio;
-			const isTTY = yield* stdio.stdoutIsTerminal;
-			return colorDepth(yield* readEnv(colorKeys), isTTY);
-		});
-	}
+	static readonly colorLevel = Effect.fn("colorLevel")(function* (_stream: "stdout"): Effect.fn.Return<ColorLevel, never, StdioModule.Stdio> {
+		const ambient = yield* Effect.serviceOption(TerminalEnv);
+		if (O.isSome(ambient)) return ambient.value.stdout.color;
+		const stdio = yield* Stdio.Stdio;
+		const isTTY = yield* stdio.stdoutIsTerminal;
+		return colorDepth(yield* readEnv(colorKeys), isTTY);
+	});
 }

@@ -1,5 +1,6 @@
 // Ported from std-osc8 v0.2.0 (MIT, C. Spencer Beggs), src/detect.ts. Pure: no process reads.
 import * as O from "effect/Option";
+import * as Match from "effect/Match";
 import { dual } from "effect/Function";
 import type { Env } from "../types.ts";
 import { envIsTruthy } from "./env.ts";
@@ -64,28 +65,18 @@ const explanationFor = (
 	terminal: KnownTerminal | null,
 	terminalVersion: string | null,
 	wrapper: WrapperInfo | null,
-): string => {
-	switch (reason) {
-		case "force-env":
-			return "FORCE_HYPERLINK env var is set";
-		case "no-hyperlink-env":
-			return "NO_HYPERLINK env var is set";
-		case "no-color-env":
-			return "NO_COLOR env var is set";
-		case "not-a-tty":
-			return "stdout is not a TTY";
-		case "wrapper-strips":
-			return `inside ${wrapper?.name ?? "wrapper"}; passthrough not verifiable without subprocess`;
-		case "terminal-known-supported":
-			return `detected ${terminal}${terminalVersion !== null && terminalVersion !== "" ? ` ${terminalVersion}` : ""}`;
-		case "terminal-known-unsupported":
-			return `detected ${terminal}; terminal does not support OSC8`;
-		case "terminal-known-too-old":
-			return `detected ${terminal} ${terminalVersion ?? ""}; below minimum version`;
-		case "terminal-unknown":
-			return "no identifying signal matched";
-	}
-};
+): string => Match.value(reason).pipe(
+	Match.when("force-env", () => "FORCE_HYPERLINK env var is set"),
+	Match.when("no-hyperlink-env", () => "NO_HYPERLINK env var is set"),
+	Match.when("no-color-env", () => "NO_COLOR env var is set"),
+	Match.when("not-a-tty", () => "stdout is not a TTY"),
+	Match.when("wrapper-strips", () => `inside ${wrapper?.name ?? "wrapper"}; passthrough not verifiable without subprocess`),
+	Match.when("terminal-known-supported", () => `detected ${terminal}${terminalVersion !== null && terminalVersion !== "" ? ` ${terminalVersion}` : ""}`),
+	Match.when("terminal-known-unsupported", () => `detected ${terminal}; terminal does not support OSC8`),
+	Match.when("terminal-known-too-old", () => `detected ${terminal} ${terminalVersion ?? ""}; below minimum version`),
+	Match.when("terminal-unknown", () => "no identifying signal matched"),
+	Match.exhaustive,
+);
 
 /** Outcome of running the precedence gate for a single stream's TTY state. */
 interface Gate {
