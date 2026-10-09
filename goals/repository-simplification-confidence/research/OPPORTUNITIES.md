@@ -121,3 +121,11 @@
   bus variables were absent. Supplying `XDG_RUNTIME_DIR=/run/user/1000` and the
   standard user bus address reached the queue; all three slots were busy.
   An environment-aware admission wrapper would prevent this startup friction.
+
+- D focused tests caught an introduced Effect v4 API mismatch: `Array.filterMap`
+  expects Result, not Option, and the graph's workspace count became zero.
+  Replaced it with `Array.getSomes` over mapped Options after reading the
+  reference API. Checking every reused helper signature before implementation
+  would prevent this regression. The initial focused Vitest launch also used
+  the root cwd against a package-relative include glob and found no tests;
+  corrected to the package cwd before proof.
