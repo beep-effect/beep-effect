@@ -38,7 +38,7 @@ const encodeRef = S.encodeResult(BeliefVersionRef);
  * import * as Result from "effect/Result"
  * import * as S from "effect/Schema"
  * import * as Str from "effect/String"
- * const ref = Result.getOrThrow(S.decodeUnknownResult(BeliefVersionRef)({ edgeVersionId: 1, logicalKey: Str.repeat(64)("a"), version: 1 }))
+ * const ref = Result.getOrThrow(S.decodeResult(BeliefVersionRef)({ edgeVersionId: 1, logicalKey: Str.repeat(64)("a"), version: 1 }))
  * const id = Result.getOrThrow(detectionProposalId(ref, { subject: "example", predicate: "status", value: "A", polarity: "asserted" }))
  * Str.length(id) // => 64
  * ```

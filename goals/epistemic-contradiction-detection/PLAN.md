@@ -15,8 +15,8 @@ does not re-earn it.
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Research | complete | Confirm the shipped contract surface and settle the conflict-class seat. | The `SPEC.md` Open Contract Question is answered on the record; every `file:line` in `SPEC.md` re-verified against the live tree. |
-| P1 Implement | pending | Schema → `Context.Service` contract → implementation, in that order. | Conflict-class `LiteralKit` + snapshot input schema, then the detection service contract, then the pure implementation; the shipped `Contradiction` surfaces are unmodified. |
-| P2 Verify | pending | Golden vectors and fixtures prove purity and contract conformance. | Golden-vector lane green, run twice with an advanced clock producing identical output; every emitted candidate decodes against `ContradictionCandidate`; `bun run beep yeet verify` SUCCESS. |
+| P1 Implement | in-progress | Schema → `Context.Service` contract → implementation, in that order. | Conflict-class `LiteralKit` + snapshot input schema, then the detection service contract, then the pure implementation; the shipped `Contradiction` surfaces are unmodified. |
+| P2 Verify | in-progress | Golden vectors and fixtures prove purity and contract conformance. | Golden-vector lane green, run twice with an advanced clock producing identical output; every emitted candidate decodes against `ContradictionCandidate`; `bun run beep yeet verify` SUCCESS. |
 | P3 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
 | P4 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
 

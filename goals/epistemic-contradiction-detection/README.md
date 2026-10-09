@@ -41,7 +41,8 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 complete. P1 implementation follows the recorded schema → service → implementation decisions.
+P0 complete. P1/P2 verification is running against committed implementation
+`c833513460`; both direct-conflict classes and their golden vectors are present.
 
 ## Provenance
 
@@ -65,7 +66,9 @@ Back-links, not copies:
 
 ## Latest Evidence
 
-Not started.
+P0: [`contract evidence`](./history/p0/2026-10-09-contract.md).
+P1: [`implementation and alias diff`](./history/p1/2026-10-09-implementation.md).
+P2: [`verification`](./history/p2/2026-10-09-verification.md), in progress.
 
 ## Notes
 

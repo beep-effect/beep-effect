@@ -258,6 +258,13 @@ edgeVersionId: one immutable version cannot carry two assertions in one view.
 Reject duplicate refs at decoding instead of order-dependent pair deduplication.
 Reversal: define an explicit merge rule and version the snapshot if needed.
 
+### 2026-10-09 — Authoritative verification route
+
+AGENTS.md makes hosted required checks authoritative; local yeet verify is
+on-demand and does not gate publication. Record final-head hosted results in
+P2 evidence. Reversal: retain that evidence if the repository later restores a
+mandatory local proof, and run the then-current owner command.
+
 ## Acceptance Criteria
 
 - [ ] The conflict-class seat question above is answered on the record in

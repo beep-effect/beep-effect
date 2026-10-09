@@ -64,7 +64,7 @@ describe("Detection input bounds and content identities", () => {
   });
   it("canonicalizes JSON keys and hashes losing ref plus whole assertion", () => {
     expect(canonicalDetectionJson({ b: 2, a: 1 })).toBe('{"a":1,"b":2}');
-    const ref = Result.getOrThrow(S.decodeUnknownResult(BeliefVersionRef)(belief.ref));
+    const ref = Result.getOrThrow(S.decodeResult(BeliefVersionRef)(belief.ref));
     const fact = { subject: "synthetic", predicate: "status", value: "A", polarity: "asserted" };
     const id = Result.getOrThrow(detectionProposalId(ref, fact));
     expect(Result.getOrThrow(detectionProposalId(fact)(ref))).toBe(id);

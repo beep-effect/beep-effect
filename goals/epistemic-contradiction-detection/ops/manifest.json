@@ -10,7 +10,7 @@
   },
   "packetPath": "goals/epistemic-contradiction-detection",
   "lifecycle": "active",
-  "statusNote": "Authored but not started: all phases remain pending. The next work is P0 contract citation re-verification when this packet is explicitly prioritized.",
+  "statusNote": "P0 complete; deterministic implementation committed. P1/P2 package verification and hosted-parity are in progress. The orchestrator owns the eventual merge under S11.",
   "mission": "Produce ContradictionCandidate records for typed direct-conflict classes as a pure, model-free function of a belief-view snapshot, against the contract epistemic-contradiction-triage already ships.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -60,13 +60,13 @@
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending",
+      "status": "in-progress",
       "exit": "Conflict-class LiteralKit, belief-view snapshot input schema, and per-class confidence constants land first, then the detection Context.Service contract, then its pure implementation; packages/epistemic/domain/src/{values,entities}/Contradiction/ is unmodified."
     },
     {
       "id": "P2",
       "name": "Verify",
-      "status": "pending",
+      "status": "in-progress",
       "exit": "Golden vectors (positive and negative) plus the purity proof are green, every emitted candidate decodes against the shipped ContradictionCandidate schema, and bun run beep yeet verify reports SUCCESS. Any determinism-tier declaration ships in this same PR."
     },
     {
