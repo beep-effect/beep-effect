@@ -145,3 +145,17 @@
 - Evidence: the bounded decoder diagnostic reports `Invalid XML input (Invalid tag name: text).` The reader sets `textNodeName: "text"`; installed fast-xml-parser 5.11.2 rejects a tag equal to that reserved key in `OrderedObjParser.js`. The pinned IPC master actually contains `<text>` elements. Current `origin/main` at `4e82f6d942` retains this configuration, and the installed parser/validator versions match the committed lockfile.
 - Attribution: inherited shared-reader limitation, exercised by the new classification path. Affected ontology fixtures: five failed, 77 passed out of 82. Package verification repeats the same failure after successful build and typecheck.
 - Boundary and prevention: repairing the shared reader is outside this lane scope; no parser bypass or dependency change was made. The orchestrator should route a compatible XML reader repair to its owner on main, with reserved-name and existing consumer tests, then let this lane merge main once and resume. A minimal actual classification XML precondition probe before drafting would have caught this earlier.
+
+
+### Resume ruling conflicts with the lane execution boundary
+
+- Work: read the full resume brief before starting PR 0.
+- Evidence: the current instruction says work only inside semantic-m2m3;
+  the appended ruling requires a new schema-xml-text-node sibling worktree
+  and work from clone beep-effect11. It also says resume through M4 while
+  the brief's mission and scope exclude M4.
+- Disposition: stop under contradictory inputs; preserve the unfinished M2
+  candidate and publish nothing. No new heavy command or gate was started.
+- Prevention: issue a coherent resume instruction that permits the separate
+  reader-fix lane and retains the explicit M4 routing boundary, or land the
+  shared-reader repair through an already authorized owner.
