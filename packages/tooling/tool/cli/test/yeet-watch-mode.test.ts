@@ -107,11 +107,13 @@ const viewJson = (
   headSha: string,
   mergeStateStatus = "CLEAN",
   reviewDecision: string | null = null,
-  labels: ReadonlyArray<string> = []
+  labels: ReadonlyArray<string> = [],
+  isCrossRepository = false
 ): string =>
   JSON.stringify({
     headRefOid: headSha,
     id: "PR_watch",
+    isCrossRepository,
     isDraft: false,
     labels: A.map(labels, (name) => ({ name, color: "0e8a16" })),
     mergeable: "MERGEABLE",
@@ -2220,6 +2222,72 @@ describe("B8 watch heavy admission", () => {
           expect(ended.reason).toBe("all-terminal");
           expect(yeetWatchExitFailure(ended)).toBe(false);
           expect(yield* Ref.get(diffs)).toBe(1);
+          expect(yield* settleRows()).toMatchObject([
+            { from: "heavy-not-admitted", to: "closeout-pending", pending: [], missing: [], gated: [] },
+          ]);
+          const lines = yield* stderr;
+          expect(lines).toContain("[yeet] heavy admission: hold → run");
+          expect(lines).not.toContain("settle-timeout");
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+  });
+
+  it.layer(
+    Layer.mergeAll(
+      TestConsole.layer,
+      scriptedSpawnerLayer(
+        [
+          {
+            ...greenScript("aaa111", [HEAVY_ADMISSION_LABEL]),
+            view: {
+              exitCode: 0,
+              output: viewJson("OPEN", "aaa111", "CLEAN", null, [HEAVY_ADMISSION_LABEL], true),
+            },
+          },
+          {
+            ...greenScript("aaa111", [HEAVY_ADMISSION_LABEL]),
+            view: {
+              exitCode: 0,
+              output: viewJson("OPEN", "aaa111", "CLEAN", null, [HEAVY_ADMISSION_LABEL], true),
+            },
+          },
+          {
+            ...greenScript("aaa111", [HEAVY_ADMISSION_LABEL, "ready-for-heavy-fork"]),
+            view: {
+              exitCode: 0,
+              output: viewJson("OPEN", "aaa111", "CLEAN", null, [HEAVY_ADMISSION_LABEL, "ready-for-heavy-fork"], true),
+            },
+            checks: {
+              exitCode: 0,
+              output: checksJson([
+                { name: "Check", bucket: "pass", state: "SUCCESS" },
+                { name: "Heavy / Check", bucket: "pass", state: "SUCCESS" },
+              ]),
+            },
+          },
+        ],
+        codeDiff,
+        MemoryLayer
+      )
+    ),
+    { timeout: "10 seconds" }
+  )((it) => {
+    it.effect("holds a fork until separate fork approval lands, then admits its heavy lane", () =>
+      inTempRepo((root) =>
+        Effect.gen(function* () {
+          const ticks = yield* Ref.make(0);
+          const ended = yield* runYeetWatchStream(contextFor(root), {
+            intervalMillis: 0,
+            settleTimeoutMs: 1000,
+            now: Ref.getAndUpdate(ticks, (value) => value + 1).pipe(
+              Effect.map((tick) => DateTime.makeUnsafe(tick * 2000))
+            ),
+            rulesetRead: heavyRuleset,
+          });
+          expect(ended.reason).toBe("all-terminal");
+          expect(yeetWatchExitFailure(ended)).toBe(false);
+          expect(yield* Ref.get(ticks)).toBe(3);
           expect(yield* settleRows()).toMatchObject([
             { from: "heavy-not-admitted", to: "closeout-pending", pending: [], missing: [], gated: [] },
           ]);
