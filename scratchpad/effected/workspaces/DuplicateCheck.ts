@@ -14,9 +14,12 @@
 // `instanceId` is OPAQUE here — looked up, never parsed. Splitting one on "@"
 // or "(" would re-introduce the format knowledge this module exists without.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import type { Lockfile, ResolvedPackage } from "../lockfiles/index.ts";
 import * as S from "effect/Schema";
 import { indexInstances, rootInstances } from "./internal/roots.ts";
+
+const $I = $ScratchpadId.create("effected/workspaces/DuplicateCheck");
 
 /**
  * Options for {@link DuplicateCheck.run}.
@@ -61,7 +64,7 @@ export const Dependent = S.Union([
 	S.TaggedStruct("importer", { path: S.NonEmptyString }),
 	/** A resolved package's dependency edge points at the instance. */
 	S.TaggedStruct("package", { name: S.NonEmptyString, version: S.String }),
-]);
+]).pipe($I.annoteSchema("Dependent", { description: "Who pulls one resolved instance into the graph." }));
 
 /**
  * The decoded form of {@link (Dependent:variable)}: who pulls one resolved
@@ -83,24 +86,24 @@ export type Dependent = typeof Dependent.Type;
  *
  * @public
  */
-export class DuplicateInstance extends S.Class<DuplicateInstance>("DuplicateInstance")({
+export class DuplicateInstance extends S.Class<DuplicateInstance>($I`DuplicateInstance`)({
 	/** The opaque instance id, as `@effected/lockfiles` records it. */
-	instanceId: S.NonEmptyString,
+	instanceId: S.NonEmptyString.annotateKey({ description: "The opaque instance id, as `@effected/lockfiles` records it." }),
 	/** Every importer and package that pulls THIS copy. */
-	dependents: S.Array(Dependent),
-}) {}
+	dependents: S.Array(Dependent).annotateKey({ description: "Every importer and package that pulls THIS copy." }),
+}, $I.annote("DuplicateInstance", { description: "One resolved instance of a duplicated version, with everything that pulls it." })) {}
 
 /**
  * One version a duplicated package resolved at.
  *
  * @public
  */
-export class DuplicatedVersion extends S.Class<DuplicatedVersion>("DuplicatedVersion")({
+export class DuplicatedVersion extends S.Class<DuplicatedVersion>($I`DuplicatedVersion`)({
 	/** The resolved version. */
-	version: S.String,
+	version: S.String.annotateKey({ description: "The resolved version." }),
 	/** Every instance at this version — more than one when peer suffixes differ. */
-	instances: S.Array(DuplicateInstance),
-}) {}
+	instances: S.Array(DuplicateInstance).annotateKey({ description: "Every instance at this version — more than one when peer suffixes differ." }),
+}, $I.annote("DuplicatedVersion", { description: "One version a duplicated package resolved at." })) {}
 
 /**
  * One package name reached at two or more distinct versions.
@@ -114,12 +117,12 @@ export class DuplicatedVersion extends S.Class<DuplicatedVersion>("DuplicatedVer
  *
  * @public
  */
-export class DuplicatedPackage extends S.Class<DuplicatedPackage>("DuplicatedPackage")({
+export class DuplicatedPackage extends S.Class<DuplicatedPackage>($I`DuplicatedPackage`)({
 	/** The package name. */
-	name: S.NonEmptyString,
+	name: S.NonEmptyString.annotateKey({ description: "The package name." }),
 	/** Every version it resolved at, in lockfile order. Never fewer than two. */
-	versions: S.Array(DuplicatedVersion),
-}) {}
+	versions: S.Array(DuplicatedVersion).annotateKey({ description: "Every version it resolved at, in lockfile order. Never fewer than two." }),
+}, $I.annote("DuplicatedPackage", { description: "One package name reached at two or more distinct versions." })) {}
 
 /**
  * The result of checking a lockfile for packages resolved at more than one
@@ -157,12 +160,12 @@ export class DuplicatedPackage extends S.Class<DuplicatedPackage>("DuplicatedPac
  *
  * @public
  */
-export class DuplicateCheck extends S.Class<DuplicateCheck>("DuplicateCheck")({
+export class DuplicateCheck extends S.Class<DuplicateCheck>($I`DuplicateCheck`)({
 	/**
 	 * Every reported name resolved at two or more distinct versions, in
 	 * lockfile order.
 	 */
-	duplicates: S.Array(DuplicatedPackage),
+	duplicates: S.Array(DuplicatedPackage).annotateKey({ description: "Every reported name resolved at two or more distinct versions, in lockfile order." }),
 	/**
 	 * Importers whose dependencies could not be resolved to instances, so
 	 * nothing reachable only through them was counted.
@@ -177,8 +180,8 @@ export class DuplicateCheck extends S.Class<DuplicateCheck>("DuplicateCheck")({
 	 * Reported rather than silently skipped: a gate that sees no duplicates is
 	 * entitled to know whether that means "clean" or "not looked at".
 	 */
-	unresolvedImporters: S.Array(S.String),
-}) {
+	unresolvedImporters: S.Array(S.String).annotateKey({ description: "Importers whose dependencies could not be resolved to instances, so nothing reachable only through them was counted." }),
+}, $I.annote("DuplicateCheck", { description: "The result of checking a lockfile for packages resolved at more than one version." })) {
 	/**
 	 * Whether no reported name is duplicated.
 	 *

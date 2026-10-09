@@ -27,6 +27,7 @@
 // hooks operate on is the plain `catalog name → dependency → range` record, and
 // the only normalization borrowed here is the prototype-safe `normalize`.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import { pathToFileURL } from "node:url";
 import { Run } from "../commands/index.ts";
 import type { PartialReleaseAgeGate } from "../npm/index.ts";
@@ -44,6 +45,8 @@ import { normalize } from "./internal/catalogs.ts";
 import { makeFetchConfigDependency } from "./internal/configDependencyFetch.ts";
 import type { ResolvedPnpmfile } from "./internal/configDependencyResolution.ts";
 import { lookupPnpmfiles, resolvePnpmfiles } from "./internal/configDependencyResolution.ts";
+
+const $I = $ScratchpadId.create("effected/workspaces/ConfigDependencyHooks");
 
 const JsonValue = S.fromJsonString(S.Unknown);
 
@@ -657,7 +660,7 @@ const replayFailureCause = (payload: { readonly message?: string; readonly stack
  * @public
  */
 export class ConfigDependencyHooks extends Context.Service<ConfigDependencyHooks, ConfigDependencyHooksShape>()(
-	"@beep/scratchpad/effected/workspaces/ConfigDependencyHooks",
+	$I`ConfigDependencyHooks`,
 ) {
 	/**
 	 * The no-op layer: `inject` returns the seed unchanged and never touches a

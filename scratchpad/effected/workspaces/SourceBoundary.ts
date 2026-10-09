@@ -1,4 +1,5 @@
 // biome-ignore-all lint/suspicious/noTemplateCurlyInString: the shipped fixtures are source text, and a template substitution inside one is the point
+import { $ScratchpadId } from "@beep/identity/packages";
 import { GlobSet } from "../glob/index.ts";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -6,6 +7,8 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { isIdentifierChar, lex, locate, references, specifierLiterals } from "./internal/sourceText.ts";
+
+const $I = $ScratchpadId.create("effected/workspaces/SourceBoundary");
 
 /**
  * One rule a source file must keep.
@@ -93,13 +96,13 @@ export interface BoundaryFixture {
  *
  * @public
  */
-export class Offence extends S.Class<Offence>("Offence")({
+export class Offence extends S.Class<Offence>($I`Offence`)({
 	/** The file, relative to the scanned root, with `/` separators. */
-	file: S.String,
+	file: S.String.annotateKey({ description: "The file, relative to the scanned root, with `/` separators." }),
 	/** The 1-based line. */
-	line: S.Finite,
+	line: S.Finite.annotateKey({ description: "The 1-based line." }),
 	/** The 1-based column, in UTF-16 code units. */
-	column: S.Finite,
+	column: S.Finite.annotateKey({ description: "The 1-based column, in UTF-16 code units." }),
 	/** The rule broken. */
 	rule: S.Literals([
 		"process",
@@ -109,10 +112,10 @@ export class Offence extends S.Class<Offence>("Offence")({
 		"console-stdout",
 		"forbidImports",
 		"forbidTokens",
-	]),
+	]).annotateKey({ description: "The rule broken." }),
 	/** What matched: the identifier, the call, the import specifier, or the token. */
-	detail: S.String,
-}) {
+	detail: S.String.annotateKey({ description: "What matched: the identifier, the call, the import specifier, or the token." }),
+}, $I.annote("Offence", { description: "One place a source file breaks a BoundaryRule." })) {
 	/** `file:line:column rule detail`, the form an assertion message reads best in. */
 	get label(): string {
 		return `${this.file}:${this.line}:${this.column} ${this.rule} ${this.detail}`;
@@ -134,20 +137,20 @@ export type OffenceRule = Offence["rule"];
  *
  * @public
  */
-export class SourceScan extends S.Class<SourceScan>("SourceScan")({
+export class SourceScan extends S.Class<SourceScan>($I`SourceScan`)({
 	/** Every source file visited, relative to the root with `/` separators, sorted. Assert it is non-empty. */
-	files: S.Array(S.String),
+	files: S.Array(S.String).annotateKey({ description: "Every source file visited, relative to the root with `/` separators, sorted. Assert it is non-empty." }),
 	/** The visited files an `allow` glob exempted from every rule. */
-	allowed: S.Array(S.String),
+	allowed: S.Array(S.String).annotateKey({ description: "The visited files an `allow` glob exempted from every rule." }),
 	/** Every offence, sorted by file, then line, then column. */
-	offences: S.Array(Offence),
+	offences: S.Array(Offence).annotateKey({ description: "Every offence, sorted by file, then line, then column." }),
 	/**
 	 * Every offence an `allowRules` glob waived, sorted like `offences`. Assert
 	 * it is exactly what you meant to waive: a waiver that no longer waives
 	 * anything, or waives more than intended, shows up here.
 	 */
-	waived: S.Array(Offence),
-}) {
+	waived: S.Array(Offence).annotateKey({ description: "Every offence an `allowRules` glob waived, sorted like `offences`. Assert it is exactly what you meant to waive: a waiver that no longer waives anything, or waives more than intended, shows up here." }),
+}, $I.annote("SourceScan", { description: "What a scan read and found." })) {
 	/** One `file:line:column rule detail` label per offence: `[]` means clean. */
 	get violations(): ReadonlyArray<string> {
 		return this.offences.map((offence) => offence.label);

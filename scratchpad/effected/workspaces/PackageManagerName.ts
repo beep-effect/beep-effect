@@ -7,6 +7,7 @@
 // parse), and because `@effected/package-json` already exports a
 // `PackageManager` class for the corepack `pnpm@10.33.0` field.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import { PackageManager } from "../package-json/index.ts";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -17,6 +18,8 @@ import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { WorkspaceManifestError } from "./WorkspacePackage.ts";
 
+const $I = $ScratchpadId.create("effected/workspaces/PackageManagerName");
+
 const JsonValue = S.fromJsonString(S.Unknown);
 
 /**
@@ -24,7 +27,7 @@ const JsonValue = S.fromJsonString(S.Unknown);
  *
  * @public
  */
-export const PackageManagerName = S.Literals(["npm", "pnpm", "yarn", "bun"]);
+export const PackageManagerName = S.Literals(["npm", "pnpm", "yarn", "bun"]).pipe($I.annoteSchema("PackageManagerName", { description: "The four package managers this package understands." }));
 
 /**
  * The decoded type of {@link (PackageManagerName:variable)}: `"npm" | "pnpm" | "yarn" | "bun"`.
@@ -67,7 +70,7 @@ export const PackageManagerEvidence = S.Literals([
 	// precedence — the same rule that orders every other member.
 	"package.json#devEngines.packageManager",
 	"package.json#packageManager",
-]);
+]).pipe($I.annoteSchema("PackageManagerEvidence", { description: "The markers PackageManagerDetector probes, in the priority order it probes them." }));
 
 /**
  * The decoded type of {@link (PackageManagerEvidence:variable)}: the marker
@@ -99,16 +102,16 @@ export type PackageManagerEvidence = typeof PackageManagerEvidence.Type;
  *
  * @public
  */
-export class DetectedPackageManager extends S.Class<DetectedPackageManager>("DetectedPackageManager")({
+export class DetectedPackageManager extends S.Class<DetectedPackageManager>($I`DetectedPackageManager`)({
 	/** The detected manager. */
-	name: PackageManagerName,
+	name: PackageManagerName.annotateKey({ description: "The detected manager." }),
 	/** Its version, when a manifest field agrees on the manager and carries one. */
-	version: S.Option(S.String),
+	version: S.Option(S.String).annotateKey({ description: "Its version, when a manifest field agrees on the manager and carries one." }),
 	/** The JavaScript runtime the manager implies. */
-	runtime: S.Literals(["node", "bun"]),
+	runtime: S.Literals(["node", "bun"]).annotateKey({ description: "The JavaScript runtime the manager implies." }),
 	/** The rung of the priority order that decided the name. */
-	evidence: PackageManagerEvidence,
-}) {}
+	evidence: PackageManagerEvidence.annotateKey({ description: "The rung of the priority order that decided the name." }),
+}, $I.annote("DetectedPackageManager", { description: "The outcome of package-manager detection at a workspace root." })) {}
 
 /**
  * A manager named by one of the two manifest fields: the name, plus the exact
@@ -178,14 +181,14 @@ const corepackHint = (manifest: Record<string, unknown>): O.Option<ManagerHint> 
  *
  * @public
  */
-export class PackageManagerDetectionError extends S.TaggedError<PackageManagerDetectionError>()(
+export class PackageManagerDetectionError extends S.TaggedError<PackageManagerDetectionError>($I`PackageManagerDetectionError`)(
 	"PackageManagerDetectionError",
 	{
 		/** The workspace root that was probed. */
-		root: S.String,
+		root: S.String.annotateKey({ description: "The workspace root that was probed." }),
 		/** The marker files probed, in the order they were probed. */
-		checked: S.Array(S.String),
-	},
+		checked: S.Array(S.String).annotateKey({ description: "The marker files probed, in the order they were probed." }),
+	}, $I.annote("PackageManagerDetectionError", { description: "Raised when a directory carries no lockfile and no workspace configuration, so no package manager can be attributed to it." }),
 ) {
 	/** Renders the root and probed markers into a one-line message. */
 	override get message(): string {
@@ -265,7 +268,7 @@ export interface PackageManagerDetectorShape {
  * @public
  */
 export class PackageManagerDetector extends Context.Service<PackageManagerDetector, PackageManagerDetectorShape>()(
-	"@beep/scratchpad/effected/workspaces/PackageManagerName/PackageManagerDetector",
+	$I`PackageManagerDetector`,
 ) {
 	/** Builds the service over core `FileSystem` and `Path`. */
 	static readonly make: Effect.Effect<

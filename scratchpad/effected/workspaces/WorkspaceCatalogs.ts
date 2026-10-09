@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import { dual } from "effect/Function";
 // pnpm catalogs: the `CatalogSet` value, the service that assembles it for a
 // workspace, and the real implementation of `@effected/npm`'s `CatalogResolver`
@@ -44,6 +45,8 @@ import { LockfileReader } from "./LockfileReader.ts";
 import type { WorkspaceRootNotFoundError } from "./WorkspaceRoot.ts";
 import { WorkspaceRoot } from "./WorkspaceRoot.ts";
 
+const $I = $ScratchpadId.create("effected/workspaces/WorkspaceCatalogs");
+
 const JsonValue = S.fromJsonString(S.Unknown);
 
 /**
@@ -80,10 +83,10 @@ export type ImporterVersions = Readonly<Record<string, Readonly<Record<string, s
  *
  * @public
  */
-export class CatalogSet extends S.Class<CatalogSet>("CatalogSet")({
+export class CatalogSet extends S.Class<CatalogSet>($I`CatalogSet`)({
 	/** Catalog name → dependency name → version range. */
-	entries: S.Record(S.String, S.Record(S.String, S.String)),
-}) {
+	entries: S.Record(S.String, S.Record(S.String, S.String)).annotateKey({ description: "Catalog name → dependency name → version range." }),
+}, $I.annote("CatalogSet", { description: "An immutable, fully-normalized catalog collection — the one catalog resolution semantic in the package." })) {
 	/** The empty set — a workspace with no catalogs. */
 	static empty(): CatalogSet {
 		return CatalogSet.make({ entries: {} });
@@ -615,7 +618,7 @@ export interface WorkspaceCatalogsOptions {
  * @public
  */
 export class WorkspaceCatalogs extends Context.Service<WorkspaceCatalogs, WorkspaceCatalogsShape>()(
-	"@beep/scratchpad/effected/workspaces/WorkspaceCatalogs",
+	$I`WorkspaceCatalogs`,
 ) {
 	/** Builds the service. */
 	static readonly make = (

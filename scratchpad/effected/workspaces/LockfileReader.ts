@@ -7,6 +7,7 @@
 // because building it requires reading every workspace `package.json`, which is
 // IO, which is precisely what a pure package cannot do.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import type { Lockfile, LockfileFramingError, LockfileParseError, ResolvedPackage } from "../lockfiles/index.ts";
 import { LockfileFormat, LockfileIntegrity, Lockfile as LockfileModel, filenameFor } from "../lockfiles/index.ts";
 import * as Context from "effect/Context";
@@ -27,6 +28,8 @@ import { WorkspaceDiscovery } from "./WorkspaceDiscovery.ts";
 import type { WorkspaceRootNotFoundError } from "./WorkspaceRoot.ts";
 import { WorkspaceRoot } from "./WorkspaceRoot.ts";
 
+const $I = $ScratchpadId.create("effected/workspaces/LockfileReader");
+
 const JsonValue = S.fromJsonString(S.Unknown);
 
 /**
@@ -38,17 +41,17 @@ const JsonValue = S.fromJsonString(S.Unknown);
  *
  * @public
  */
-export class LockfileReadError extends S.TaggedError<LockfileReadError>()("LockfileReadError", {
+export class LockfileReadError extends S.TaggedError<LockfileReadError>($I`LockfileReadError`)("LockfileReadError", {
 	/** Absolute path to the lockfile that could not be read. */
-	lockfilePath: S.String,
+	lockfilePath: S.String.annotateKey({ description: "Absolute path to the lockfile that could not be read." }),
 	// `LockfileFormat` is @effected/lockfiles' own schema, not a re-spelling of it.
 	// Hand-rolling `Schema.Literals([...])` here duplicates the source of truth and
 	// would silently disagree the day upstream adds a format.
 	/** The format the detected package manager implies. */
-	format: LockfileFormat,
+	format: LockfileFormat.annotateKey({ description: "The format the detected package manager implies." }),
 	/** The originating failure. */
-	cause: S.Defect(),
-}) {
+	cause: S.Defect().annotateKey({ description: "The originating failure." }),
+}, $I.annote("LockfileReadError", { description: "Raised when the workspace's lockfile cannot be read off disk." })) {
 	/** Renders the unreadable path into a one-line message. */
 	override get message(): string {
 		return `Cannot read ${this.format} lockfile at ${this.lockfilePath}`;
@@ -160,7 +163,7 @@ const unstubbed = (method: string): Effect.Effect<never> =>
  * @public
  */
 export class LockfileReader extends Context.Service<LockfileReader, LockfileReaderShape>()(
-	"@beep/scratchpad/effected/workspaces/LockfileReader",
+	$I`LockfileReader`,
 ) {
 	/** Builds the service. */
 	static readonly make = (

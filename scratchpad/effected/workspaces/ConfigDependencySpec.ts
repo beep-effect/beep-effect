@@ -12,6 +12,7 @@
 // with the hook-replay ladder, which keeps its lenient (unvalidated) reading of
 // the version half — see that module for why.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import { SriIntegrityHash } from "../npm/index.ts";
 import { SemVer } from "../semver/index.ts";
 import * as Effect from "effect/Effect";
@@ -22,6 +23,8 @@ import * as S from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import { splitConfigDependencySpec } from "./internal/configDependencySpecGrammar.ts";
+
+const $I = $ScratchpadId.create("effected/workspaces/ConfigDependencySpec");
 
 /**
  * Indicates that a string could not be parsed as a pnpm `configDependencies`
@@ -35,19 +38,19 @@ import { splitConfigDependencySpec } from "./internal/configDependencySpecGramma
  *
  * @public
  */
-export class InvalidConfigDependencySpecError extends S.TaggedError<InvalidConfigDependencySpecError>()(
+export class InvalidConfigDependencySpecError extends S.TaggedError<InvalidConfigDependencySpecError>($I`InvalidConfigDependencySpecError`)(
 	"InvalidConfigDependencySpecError",
 	{
 		/** The raw spec string that failed validation. */
-		input: S.String,
+		input: S.String.annotateKey({ description: "The raw spec string that failed validation." }),
 		/**
 		 * Which half of the spec failed: `version` (the text before the first
 		 * `+` is not an exact SemVer version — ranges, partial versions,
 		 * dist-tags and padded values all land here) or `integrity` (the text
 		 * after the first `+` is not an SRI `<algo>-<base64>` hash).
 		 */
-		reason: S.Literals(["version", "integrity"]),
-	},
+		reason: S.Literals(["version", "integrity"]).annotateKey({ description: "Which half of the spec failed: `version` (the text before the first `+` is not an exact SemVer version — ranges, partial versions, dist-tags and padded values all land here) or `integrity` (the text after the first `+` is not an SRI `<algo>-<base64>` hash)." }),
+	}, $I.annote("InvalidConfigDependencySpecError", { description: "Indicates that a string could not be parsed as a pnpm `configDependencies` spec (`<version>[+<integrity>]`)." }),
 ) {
 	override get message(): string {
 		return this.reason === "version"
@@ -104,21 +107,21 @@ const specVersion = SemVer.pipe(
  *
  * @public
  */
-export class ConfigDependencySpec extends S.Class<ConfigDependencySpec>("ConfigDependencySpec")({
+export class ConfigDependencySpec extends S.Class<ConfigDependencySpec>($I`ConfigDependencySpec`)({
 	/**
 	 * The exact declared version. Never carries build metadata — the spec
 	 * grammar cannot express it (see the class remarks), and a version
 	 * constructed with build identifiers is rejected at construction.
 	 */
-	version: specVersion,
+	version: specVersion.annotateKey({ description: "The exact declared version. Never carries build metadata — the spec grammar cannot express it (see the class remarks), and a version constructed with build identifiers is rejected at construction." }),
 	/**
 	 * The inline integrity (e.g. `sha512-m35m…==`): `@effected/npm`'s
 	 * `SriIntegrityHash`, the shared restriction of the `IntegrityHash` brand
 	 * to the SRI `<algo>-<base64>` form. `None` on the bare form pnpm 11+
 	 * writes.
 	 */
-	integrity: S.Option(SriIntegrityHash),
-}) {
+	integrity: S.Option(SriIntegrityHash).annotateKey({ description: "The inline integrity (e.g. `sha512-m35m…==`): `@effected/npm`'s `SriIntegrityHash`, the shared restriction of the `IntegrityHash` brand to the SRI `<algo>-<base64>` form. `None` on the bare form pnpm 11+ writes." }),
+}, $I.annote("ConfigDependencySpec", { description: "A pnpm `configDependencies` spec from `pnpm-workspace.yaml`: an exact `version` and, on the legacy inline form only, an SRI `integrity`." })) {
 	/**
 	 * Schema transformation between the `<version>[+<integrity>]` string and a
 	 * {@link ConfigDependencySpec}. Decoding parses via

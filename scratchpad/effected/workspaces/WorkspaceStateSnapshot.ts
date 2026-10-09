@@ -9,6 +9,7 @@
 // set it captured. It also hands back `@effected/npm` resolver layers bound to
 // itself, so code written to those contracts can run "as of" a ref.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import { CatalogResolver, DependencyResolutionError, DependencySpecifier, WorkspaceResolver } from "../npm/index.ts";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -18,6 +19,8 @@ import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import { unanimousVersionOf } from "./internal/importerVersions.ts";
 import { CatalogSet } from "./WorkspaceCatalogs.ts";
+
+const $I = $ScratchpadId.create("effected/workspaces/WorkspaceStateSnapshot");
 
 // A frozen, prototype-free empty map shared as the default for every absent
 // dependency record — the `WorkspacePackage` precedent, so an omitted record
@@ -63,9 +66,9 @@ const SnapshotVersion = S.optionalKey(S.String).pipe(
  *
  * @public
  */
-export class PackageStateSnapshot extends S.Class<PackageStateSnapshot>("PackageStateSnapshot")({
+export class PackageStateSnapshot extends S.Class<PackageStateSnapshot>($I`PackageStateSnapshot`)({
 	/** The package name. */
-	name: S.NonEmptyString,
+	name: S.NonEmptyString.annotateKey({ description: "The package name." }),
 	/**
 	 * The raw `version` string, as recorded at the captured moment — absent for
 	 * a manifest that declared none.
@@ -83,18 +86,18 @@ export class PackageStateSnapshot extends S.Class<PackageStateSnapshot>("Package
 	 * to `Option.none()`, and fails its snapshot-bound `WorkspaceResolver`'s
 	 * `versionOf` typed.
 	 */
-	version: SnapshotVersion,
+	version: SnapshotVersion.annotateKey({ description: "The raw `version` string, as recorded at the captured moment — absent for a manifest that declared none." }),
 	/** POSIX path relative to the workspace root; `"."` for the root package. */
-	relativePath: S.String,
+	relativePath: S.String.annotateKey({ description: "POSIX path relative to the workspace root; `\".\"` for the root package." }),
 	/** Production dependencies. */
-	dependencies: DependencyMap,
+	dependencies: DependencyMap.annotateKey({ description: "Production dependencies." }),
 	/** Development dependencies. */
-	devDependencies: DependencyMap,
+	devDependencies: DependencyMap.annotateKey({ description: "Development dependencies." }),
 	/** Peer dependencies. */
-	peerDependencies: DependencyMap,
+	peerDependencies: DependencyMap.annotateKey({ description: "Peer dependencies." }),
 	/** Optional dependencies. */
-	optionalDependencies: DependencyMap,
-}) {
+	optionalDependencies: DependencyMap.annotateKey({ description: "Optional dependencies." }),
+}, $I.annote("PackageStateSnapshot", { description: "One workspace member as captured in a WorkspaceStateSnapshot — the serializable slice a snapshot diff reads: identity, version, location, and the four dependency records." })) {
 	/**
 	 * Every dependency, merged across the four kinds.
 	 *
@@ -143,11 +146,11 @@ export class PackageStateSnapshot extends S.Class<PackageStateSnapshot>("Package
  *
  * @public
  */
-export class WorkspaceStateSnapshot extends S.Class<WorkspaceStateSnapshot>("WorkspaceStateSnapshot")({
+export class WorkspaceStateSnapshot extends S.Class<WorkspaceStateSnapshot>($I`WorkspaceStateSnapshot`)({
 	/** Every workspace package captured at this moment. */
-	packages: S.Array(PackageStateSnapshot),
+	packages: S.Array(PackageStateSnapshot).annotateKey({ description: "Every workspace package captured at this moment." }),
 	/** The catalog set assembled at this moment. */
-	catalogs: CatalogSet,
+	catalogs: CatalogSet.annotateKey({ description: "The catalog set assembled at this moment." }),
 	/**
 	 * Each importer's dependency-name → resolved-version map, as the manager's
 	 * lockfile recorded it at this moment.
@@ -157,7 +160,7 @@ export class WorkspaceStateSnapshot extends S.Class<WorkspaceStateSnapshot>("Wor
 	 * `catalog:` fallback in {@link WorkspaceStateSnapshot.resolve} inert. Only
 	 * pnpm records importer versions; bun and npm yield an empty index.
 	 */
-	importerVersions: S.optionalKey(S.Record(S.String, S.Record(S.String, S.String))),
+	importerVersions: S.optionalKey(S.Record(S.String, S.Record(S.String, S.String))).annotateKey({ description: "Each importer's dependency-name → resolved-version map, as the manager's lockfile recorded it at this moment." }),
 	/**
 	 * Which version each declared config dependency's hook was replayed from at
 	 * this moment, keyed by name.
@@ -173,7 +176,7 @@ export class WorkspaceStateSnapshot extends S.Class<WorkspaceStateSnapshot>("Wor
 	 * value that omits it. Carried through `withSeededCatalogs` and `crossSeed`
 	 * unchanged, like `importerVersions`.
 	 */
-	hookReplays: S.optionalKey(S.Record(S.String, S.String)),
+	hookReplays: S.optionalKey(S.Record(S.String, S.String)).annotateKey({ description: "Which version each declared config dependency's hook was replayed from at this moment, keyed by name." }),
 	/**
 	 * Catalogs supplied from OUTSIDE this moment, consulted only when
 	 * `catalogs` cannot answer.
@@ -198,8 +201,8 @@ export class WorkspaceStateSnapshot extends S.Class<WorkspaceStateSnapshot>("Wor
 	 *
 	 * Defaults to absent, which makes the seed inert.
 	 */
-	seededCatalogs: S.optionalKey(CatalogSet),
-}) {
+	seededCatalogs: S.optionalKey(CatalogSet).annotateKey({ description: "Catalogs supplied from OUTSIDE this moment, consulted only when `catalogs` cannot answer." }),
+}, $I.annote("WorkspaceStateSnapshot", { description: "The state of a whole workspace at one moment — its packages and its assembled catalog set — as a serializable value." })) {
 	#versionIndex: ReadonlyMap<string, string> | undefined;
 	#packageIndex: ReadonlyMap<string, PackageStateSnapshot> | undefined;
 	#catalogResolver: Layer.Layer<CatalogResolver> | undefined;

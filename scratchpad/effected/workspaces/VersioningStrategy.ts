@@ -8,12 +8,15 @@
 // entry point, `detect`, is a static over two services that already exist and
 // already have their own test doubles.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { PublishabilityDetector } from "./Publishability.ts";
 import type { TagFormatOptions, TagStyle } from "./ReleaseTag.ts";
 import { ReleaseTag } from "./ReleaseTag.ts";
 import { WorkspaceDiscovery } from "./WorkspaceDiscovery.ts";
+
+const $I = $ScratchpadId.create("effected/workspaces/VersioningStrategy");
 
 /**
  * How a workspace assigns versions across its publishable packages.
@@ -27,7 +30,7 @@ import { WorkspaceDiscovery } from "./WorkspaceDiscovery.ts";
  *
  * @public
  */
-export const VersioningStrategyType = S.Literals(["single", "fixed-group", "independent"]);
+export const VersioningStrategyType = S.Literals(["single", "fixed-group", "independent"]).pipe($I.annoteSchema("VersioningStrategyType", { description: "How a workspace assigns versions across its publishable packages." }));
 
 /**
  * The decoded type of {@link (VersioningStrategyType:variable)}.
@@ -106,14 +109,14 @@ export interface PackageRelease {
  *
  * @public
  */
-export class VersioningStrategy extends S.Class<VersioningStrategy>("VersioningStrategy")({
+export class VersioningStrategy extends S.Class<VersioningStrategy>($I`VersioningStrategy`)({
 	/** The classification. */
-	type: VersioningStrategyType,
+	type: VersioningStrategyType.annotateKey({ description: "The classification." }),
 	/** The groups classification was performed against, as supplied. */
-	fixedGroups: S.String.pipe(S.Array, S.Array),
+	fixedGroups: S.String.pipe(S.Array, S.Array).annotateKey({ description: "The groups classification was performed against, as supplied." }),
 	/** The publishable package names, sorted and de-duplicated. */
-	publishablePackages: S.Array(S.String),
-}) {
+	publishablePackages: S.Array(S.String).annotateKey({ description: "The publishable package names, sorted and de-duplicated." }),
+}, $I.annote("VersioningStrategy", { description: "How a workspace versions, and the tagging that follows from it." })) {
 	/**
 	 * Whether a release needs one tag per package rather than one shared tag.
 	 */

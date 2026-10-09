@@ -7,6 +7,7 @@
 // It is also where `@effected/npm`'s `WorkspaceResolver` contract is
 // implemented: `versionOf` is a lookup over the discovered package list.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import { GlobSet } from "../glob/index.ts";
 import { DependencyResolutionError, WorkspaceResolver } from "../npm/index.ts";
 import * as Context from "effect/Context";
@@ -26,6 +27,8 @@ import { readPatterns } from "./internal/patterns.ts";
 import { WorkspacePackage } from "./WorkspacePackage.ts";
 import type { WorkspaceRootNotFoundError } from "./WorkspaceRoot.ts";
 import { WorkspaceRoot } from "./WorkspaceRoot.ts";
+
+const $I = $ScratchpadId.create("effected/workspaces/WorkspaceDiscovery");
 
 const JsonValue = S.fromJsonString(S.Unknown);
 
@@ -47,16 +50,16 @@ const JsonValue = S.fromJsonString(S.Unknown);
  *
  * @public
  */
-export class WorkspaceDiscoveryError extends S.TaggedError<WorkspaceDiscoveryError>()("WorkspaceDiscoveryError", {
+export class WorkspaceDiscoveryError extends S.TaggedError<WorkspaceDiscoveryError>($I`WorkspaceDiscoveryError`)("WorkspaceDiscoveryError", {
 	/** The workspace root discovery was running against. */
-	root: S.String,
+	root: S.String.annotateKey({ description: "The workspace root discovery was running against." }),
 	/** The file that failed. */
-	path: S.String,
+	path: S.String.annotateKey({ description: "The file that failed." }),
 	/** What went wrong with it. */
-	kind: S.Literals(["read", "invalidJson", "invalidShape", "invalidYaml", "missingName"]),
+	kind: S.Literals(["read", "invalidJson", "invalidShape", "invalidYaml", "missingName"]).annotateKey({ description: "What went wrong with it." }),
 	/** The originating failure, if there was one. */
-	cause: S.Defect(),
-}) {
+	cause: S.Defect().annotateKey({ description: "The originating failure, if there was one." }),
+}, $I.annote("WorkspaceDiscoveryError", { description: "Raised when a workspace member's `package.json` cannot be read, parsed, or used — it is missing, malformed, or lacks a `name`." })) {
 	/** Renders the failing file and kind into a one-line message. */
 	override get message(): string {
 		return `Workspace discovery failed at ${this.path} (${this.kind})`;
@@ -70,16 +73,16 @@ export class WorkspaceDiscoveryError extends S.TaggedError<WorkspaceDiscoveryErr
  *
  * @public
  */
-export class WorkspacePatternError extends S.TaggedError<WorkspacePatternError>()("WorkspacePatternError", {
+export class WorkspacePatternError extends S.TaggedError<WorkspacePatternError>($I`WorkspacePatternError`)("WorkspacePatternError", {
 	/** The workspace root the patterns were expanded against. */
-	root: S.String,
+	root: S.String.annotateKey({ description: "The workspace root the patterns were expanded against." }),
 	/** The offending pattern, verbatim. */
-	pattern: S.String,
+	pattern: S.String.annotateKey({ description: "The offending pattern, verbatim." }),
 	/** Why it could not be enumerated. */
-	kind: S.Literals(["missingBaseDir", "uncompilable", "depthExceeded", "budgetExceeded", "unreadableDirectory"]),
+	kind: S.Literals(["missingBaseDir", "uncompilable", "depthExceeded", "budgetExceeded", "unreadableDirectory"]).annotateKey({ description: "Why it could not be enumerated." }),
 	/** A short, structured detail — the missing directory, or the bound exceeded. */
-	detail: S.String,
-}) {
+	detail: S.String.annotateKey({ description: "A short, structured detail — the missing directory, or the bound exceeded." }),
+}, $I.annote("WorkspacePatternError", { description: "Raised when a `packages:` pattern cannot be enumerated: its base directory is absent (usually a typo), the descent exceeded its depth cap, or the visit budget was exhausted." })) {
 	/** Renders the pattern and failure kind into a one-line message. */
 	override get message(): string {
 		return `Workspace pattern "${this.pattern}" could not be enumerated (${this.kind}: ${this.detail})`;
@@ -95,12 +98,12 @@ export class WorkspacePatternError extends S.TaggedError<WorkspacePatternError>(
  *
  * @public
  */
-export class PackageNotFoundError extends S.TaggedError<PackageNotFoundError>()("PackageNotFoundError", {
+export class PackageNotFoundError extends S.TaggedError<PackageNotFoundError>($I`PackageNotFoundError`)("PackageNotFoundError", {
 	/** The name that was requested. */
-	name: S.String,
+	name: S.String.annotateKey({ description: "The name that was requested." }),
 	/** Every workspace package name that does exist. */
-	available: S.Array(S.String),
-}) {
+	available: S.Array(S.String).annotateKey({ description: "Every workspace package name that does exist." }),
+}, $I.annote("PackageNotFoundError", { description: "Raised when a workspace package is requested by a name no member carries." })) {
 	/** Renders the requested name into a one-line message. */
 	override get message(): string {
 		return `No workspace package named "${this.name}"`;
@@ -113,12 +116,12 @@ export class PackageNotFoundError extends S.TaggedError<PackageNotFoundError>()(
  *
  * @public
  */
-export class WorkspaceInfo extends S.Class<WorkspaceInfo>("WorkspaceInfo")({
+export class WorkspaceInfo extends S.Class<WorkspaceInfo>($I`WorkspaceInfo`)({
 	/** Absolute path to the workspace root. */
-	root: S.String,
+	root: S.String.annotateKey({ description: "Absolute path to the workspace root." }),
 	/** The `packages:` patterns, verbatim. */
-	patterns: S.Array(S.String),
-}) {}
+	patterns: S.Array(S.String).annotateKey({ description: "The `packages:` patterns, verbatim." }),
+}, $I.annote("WorkspaceInfo", { description: "Top-level facts about a workspace: where it is, what manages it, and the patterns that define its membership." })) {}
 
 /**
  * Every failure `WorkspaceDiscovery.getPackage` can surface: the discovery
@@ -300,7 +303,7 @@ export interface WorkspaceDiscoveryShape {
  * @public
  */
 export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, WorkspaceDiscoveryShape>()(
-	"@beep/scratchpad/effected/workspaces/WorkspaceDiscovery",
+	$I`WorkspaceDiscovery`,
 ) {
 	/**
 	 * Builds the service. Root resolution is one explicit concern: `cwd` is an

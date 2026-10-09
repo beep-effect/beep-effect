@@ -99,7 +99,7 @@ describe("LayerPolicy JSON Schema export", () => {
 	it("each required edge exports its pattern", () => {
 		assert.nestedPropertyVal(
 			S.toJsonSchemaDocument(LayerPolicy),
-			"definitions.LayerPolicyEncoded.properties.requiredEdges.items.pattern",
+			"definitions.@beep/scratchpad/effected/workspaces/LayerPolicy/LayerPolicyEncoded.properties.requiredEdges.items.pattern",
 			String.raw`^\S+ -> \S+$`,
 		);
 	});

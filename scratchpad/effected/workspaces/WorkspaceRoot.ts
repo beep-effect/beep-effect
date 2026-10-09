@@ -5,6 +5,7 @@
 // absorption is load-bearing — one unreadable ancestor must not hide a valid
 // root above it.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import { Walker } from "../walker/index.ts";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -14,6 +15,8 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Result from "effect/Result";
+
+const $I = $ScratchpadId.create("effected/workspaces/WorkspaceRoot");
 
 const JsonValue = S.fromJsonString(S.Unknown);
 
@@ -69,13 +72,13 @@ export interface FindWorkspaceRootOptions {
  *
  * @public
  */
-export class WorkspaceRootNotFoundError extends S.TaggedError<WorkspaceRootNotFoundError>()(
+export class WorkspaceRootNotFoundError extends S.TaggedError<WorkspaceRootNotFoundError>($I`WorkspaceRootNotFoundError`)(
 	"WorkspaceRootNotFoundError",
 	{
 		/** The directory the ascent started from. */
-		searchPath: S.String,
+		searchPath: S.String.annotateKey({ description: "The directory the ascent started from." }),
 		/** The marker filenames probed at each ancestor. */
-		markers: S.Array(S.String),
+		markers: S.Array(S.String).annotateKey({ description: "The marker filenames probed at each ancestor." }),
 		/**
 		 * The resolved ceiling the ascent was bounded by, when one was supplied.
 		 *
@@ -85,8 +88,8 @@ export class WorkspaceRootNotFoundError extends S.TaggedError<WorkspaceRootNotFo
 		 * "there is none below the ceiling I set" — two failures that otherwise
 		 * render identically.
 		 */
-		stopAt: S.optionalKey(S.String),
-	},
+		stopAt: S.optionalKey(S.String).annotateKey({ description: "The resolved ceiling the ascent was bounded by, when one was supplied." }),
+	}, $I.annote("WorkspaceRootNotFoundError", { description: "Raised when no workspace root can be found by ascending from a directory." }),
 ) {
 	/** Renders the search path, probed markers and any ceiling into a one-line message. */
 	override get message(): string {
@@ -196,7 +199,7 @@ const isAtOrBelow = (descendant: string, ancestor: string): boolean => {
  * @public
  */
 export class WorkspaceRoot extends Context.Service<WorkspaceRoot, WorkspaceRootShape>()(
-	"@beep/scratchpad/effected/workspaces/WorkspaceRoot",
+	$I`WorkspaceRoot`,
 ) {
 	/** Builds the service over core `FileSystem` and `Path`. */
 	static readonly make: Effect.Effect<WorkspaceRootShape, never, FileSystem.FileSystem | Path.Path> = Effect.gen(

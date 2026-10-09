@@ -4,11 +4,14 @@
 // Cycle detection is ITERATIVE, so a long dependency chain cannot overflow the
 // stack.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
 import * as Graph from "effect/Graph";
 import * as S from "effect/Schema";
 import { PackageNotFoundError } from "./WorkspaceDiscovery.ts";
 import { WorkspacePackage } from "./WorkspacePackage.ts";
+
+const $I = $ScratchpadId.create("effected/workspaces/DependencyGraph");
 
 /**
  * Raised when the workspace dependency graph cannot be topologically ordered
@@ -22,10 +25,10 @@ import { WorkspacePackage } from "./WorkspacePackage.ts";
  *
  * @public
  */
-export class CyclicDependencyError extends S.TaggedError<CyclicDependencyError>()("CyclicDependencyError", {
+export class CyclicDependencyError extends S.TaggedError<CyclicDependencyError>($I`CyclicDependencyError`)("CyclicDependencyError", {
 	/** The packages participating in the cycle. */
-	cycle: S.Array(S.String),
-}) {
+	cycle: S.Array(S.String).annotateKey({ description: "The packages participating in the cycle." }),
+}, $I.annote("CyclicDependencyError", { description: "Raised when the workspace dependency graph cannot be topologically ordered because it contains a cycle." })) {
 	/** Renders the cycle members into a one-line message. */
 	override get message(): string {
 		return `Cyclic workspace dependencies among: ${this.cycle.join(", ")}`;
@@ -92,10 +95,10 @@ interface Edges {
  *
  * @public
  */
-export class DependencyGraph extends S.Class<DependencyGraph>("DependencyGraph")({
+export class DependencyGraph extends S.Class<DependencyGraph>($I`DependencyGraph`)({
 	/** The workspace packages the graph is drawn over. */
-	packages: S.Array(WorkspacePackage),
-}) {
+	packages: S.Array(WorkspacePackage).annotateKey({ description: "The workspace packages the graph is drawn over." }),
+}, $I.annote("DependencyGraph", { description: "The directed graph of dependencies **between workspace packages**. External npm dependencies are not nodes." })) {
 	#edges: Edges | undefined;
 
 	#index(): Edges {

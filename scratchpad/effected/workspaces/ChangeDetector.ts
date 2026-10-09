@@ -6,6 +6,7 @@
 // repository on disk. `Git` requires core's `ChildProcessSpawner` in `R`, which
 // the consumer's platform layer discharges at the edge.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import type { GitCommandError, NotARepositoryError, UnknownRefError } from "../git/index.ts";
 import { Git } from "../git/index.ts";
 import * as Context from "effect/Context";
@@ -16,6 +17,8 @@ import { DependencyGraph } from "./DependencyGraph.ts";
 import type { WorkspaceDiscoveryFailure } from "./WorkspaceDiscovery.ts";
 import { WorkspaceDiscovery } from "./WorkspaceDiscovery.ts";
 import type { WorkspacePackage } from "./WorkspacePackage.ts";
+
+const $I = $ScratchpadId.create("effected/workspaces/ChangeDetector");
 
 /**
  * Which git refs to compare, and whether to fold in the working tree.
@@ -30,7 +33,7 @@ import type { WorkspacePackage } from "./WorkspacePackage.ts";
  *
  * @public
  */
-export class ChangeDetectionOptions extends S.Class<ChangeDetectionOptions>("ChangeDetectionOptions")({
+export class ChangeDetectionOptions extends S.Class<ChangeDetectionOptions>($I`ChangeDetectionOptions`)({
 	/**
 	 * The ref to compare against.
 	 *
@@ -39,7 +42,7 @@ export class ChangeDetectionOptions extends S.Class<ChangeDetectionOptions>("Cha
 	base: S.String.pipe(
 		S.withDecodingDefaultKey(Effect.succeed("HEAD~1")),
 		S.withConstructorDefault(Effect.succeed("HEAD~1")),
-	),
+	).annotateKey({ description: "The ref to compare against." }),
 	/**
 	 * The ref to compare to.
 	 *
@@ -48,7 +51,7 @@ export class ChangeDetectionOptions extends S.Class<ChangeDetectionOptions>("Cha
 	head: S.String.pipe(
 		S.withDecodingDefaultKey(Effect.succeed("HEAD")),
 		S.withConstructorDefault(Effect.succeed("HEAD")),
-	),
+	).annotateKey({ description: "The ref to compare to." }),
 	/**
 	 * Whether to include staged, unstaged and untracked working-tree changes on
 	 * top of the committed range.
@@ -58,8 +61,8 @@ export class ChangeDetectionOptions extends S.Class<ChangeDetectionOptions>("Cha
 	includeUncommitted: S.Boolean.pipe(
 		S.withDecodingDefaultKey(Effect.succeed(false)),
 		S.withConstructorDefault(Effect.succeed(false)),
-	),
-}) {}
+	).annotateKey({ description: "Whether to include staged, unstaged and untracked working-tree changes on top of the committed range." }),
+}, $I.annote("ChangeDetectionOptions", { description: "Which git refs to compare, and whether to fold in the working tree." })) {}
 
 /**
  * Raised when change detection cannot proceed for a reason that is not one of
@@ -74,12 +77,12 @@ export class ChangeDetectionOptions extends S.Class<ChangeDetectionOptions>("Cha
  *
  * @public
  */
-export class ChangeDetectionError extends S.TaggedError<ChangeDetectionError>()("ChangeDetectionError", {
+export class ChangeDetectionError extends S.TaggedError<ChangeDetectionError>($I`ChangeDetectionError`)("ChangeDetectionError", {
 	/** The operation that could not run. */
-	operation: S.String,
+	operation: S.String.annotateKey({ description: "The operation that could not run." }),
 	/** The originating failure. */
-	cause: S.Defect(),
-}) {
+	cause: S.Defect().annotateKey({ description: "The originating failure." }),
+}, $I.annote("ChangeDetectionError", { description: "Raised when change detection cannot proceed for a reason that is not one of git's own typed failures — the wrapper for \"detection has no ground to stand on\"." })) {
 	/** Renders the failed operation into a one-line message. */
 	override get message(): string {
 		return `Change detection failed during ${this.operation}`;
@@ -149,7 +152,7 @@ export interface ChangeDetectorShape {
  * @public
  */
 export class ChangeDetector extends Context.Service<ChangeDetector, ChangeDetectorShape>()(
-	"@beep/scratchpad/effected/workspaces/ChangeDetector",
+	$I`ChangeDetector`,
 ) {
 	/** Builds the service over `Git` and {@link WorkspaceDiscovery}. */
 	static readonly make: Effect.Effect<ChangeDetectorShape, never, Git | WorkspaceDiscovery> = Effect.gen(function* () {

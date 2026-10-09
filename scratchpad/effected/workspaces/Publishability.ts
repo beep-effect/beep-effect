@@ -4,11 +4,14 @@
 // semantics are the default, and an organization with its own publish rules
 // replaces the layer with `Layer.succeed` instead of forking the package.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import type { WorkspacePackage } from "./WorkspacePackage.ts";
+
+const $I = $ScratchpadId.create("effected/workspaces/Publishability");
 
 /** The public npm registry, used when `publishConfig.registry` says nothing. */
 const DEFAULT_REGISTRY = "https://registry.npmjs.org/";
@@ -18,21 +21,21 @@ const DEFAULT_REGISTRY = "https://registry.npmjs.org/";
  *
  * @public
  */
-export class PublishTarget extends S.Class<PublishTarget>("PublishTarget")({
+export class PublishTarget extends S.Class<PublishTarget>($I`PublishTarget`)({
 	/** The package name being published. */
-	name: S.NonEmptyString,
+	name: S.NonEmptyString.annotateKey({ description: "The package name being published." }),
 	/** The registry URL. */
-	registry: S.NonEmptyString,
+	registry: S.NonEmptyString.annotateKey({ description: "The registry URL." }),
 	/** The directory to publish, relative to the package root; `"."` for the root itself. */
-	directory: S.String,
+	directory: S.String.annotateKey({ description: "The directory to publish, relative to the package root; `\".\"` for the root itself." }),
 	/** Scoped-package visibility. */
-	access: S.Literals(["public", "restricted"]),
+	access: S.Literals(["public", "restricted"]).annotateKey({ description: "Scoped-package visibility." }),
 	/** Whether to publish with a provenance attestation. */
 	provenance: S.Boolean.pipe(
 		S.withDecodingDefaultKey(Effect.succeed(false)),
 		S.withConstructorDefault(Effect.succeed(false)),
-	),
-}) {}
+	).annotateKey({ description: "Whether to publish with a provenance attestation." }),
+}, $I.annote("PublishTarget", { description: "A resolved publish destination for a workspace package." })) {}
 
 /**
  * The {@link PublishabilityDetector} service shape.
@@ -128,7 +131,7 @@ export interface PublishabilityDetectorShape {
  * @public
  */
 export class PublishabilityDetector extends Context.Service<PublishabilityDetector, PublishabilityDetectorShape>()(
-	"@beep/scratchpad/effected/workspaces/Publishability/PublishabilityDetector",
+	$I`PublishabilityDetector`,
 ) {
 	/**
 	 * Standard npm publishing semantics, **as a value**. Pure — no filesystem,

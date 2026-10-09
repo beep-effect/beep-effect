@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import { GlobSet } from "../glob/index.ts";
 import { DependencyField } from "../npm/index.ts";
 import * as Effect from "effect/Effect";
@@ -5,6 +6,8 @@ import * as FileSystem from "effect/FileSystem";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { ALL_DEPENDENCY_FIELDS } from "./internal/dependencyFields.ts";
+
+const $I = $ScratchpadId.create("effected/workspaces/LayerPolicy");
 
 const JsonValue = S.fromJsonString(S.Unknown);
 
@@ -21,14 +24,14 @@ const withoutKeys = (input: unknown, keys: ReadonlyArray<string>): unknown => {
  *
  * @public
  */
-export class LayerPolicyError extends S.TaggedError<LayerPolicyError>()("LayerPolicyError", {
+export class LayerPolicyError extends S.TaggedError<LayerPolicyError>($I`LayerPolicyError`)("LayerPolicyError", {
 	/** `read`: the file could not be read. `json`: it is not JSON. `decode`: it is not a `LayerPolicy`. */
-	reason: S.Literals(["read", "json", "decode"]),
+	reason: S.Literals(["read", "json", "decode"]).annotateKey({ description: "`read`: the file could not be read. `json`: it is not JSON. `decode`: it is not a `LayerPolicy`." }),
 	/** The file, when the policy came from one. */
-	path: S.optionalKey(S.String),
+	path: S.optionalKey(S.String).annotateKey({ description: "The file, when the policy came from one." }),
 	/** The originating failure. */
-	cause: S.Defect(),
-}) {
+	cause: S.Defect().annotateKey({ description: "The originating failure." }),
+}, $I.annote("LayerPolicyError", { description: "Raised when a layer policy cannot be read, parsed or decoded." })) {
 	/** Renders the failure kind and the file into one line. */
 	override get message(): string {
 		const at = this.path === undefined ? "" : ` at ${this.path}`;
@@ -81,22 +84,22 @@ export class LayerPolicyError extends S.TaggedError<LayerPolicyError>()("LayerPo
  *
  * @public
  */
-export class LayerPolicy extends S.Class<LayerPolicy>("LayerPolicy")({
+export class LayerPolicy extends S.Class<LayerPolicy>($I`LayerPolicy`)({
 	/** Exact package names (never relative paths) per layer, top layer first. */
-	layers: S.String.pipe(S.Array, S.Array),
+	layers: S.String.pipe(S.Array, S.Array).annotateKey({ description: "Exact package names (never relative paths) per layer, top layer first." }),
 	/** Exact package names (never relative paths) any layer may depend on that never depend on a layer. */
-	tooling: S.Array(S.String),
+	tooling: S.Array(S.String).annotateKey({ description: "Exact package names (never relative paths) any layer may depend on that never depend on a layer." }),
 	/** Globs matched against package names (never relative paths) for packages whose own edges are not checked. */
 	unconstrained: S.Array(S.String).check(
 		S.makeFilter((patterns) => Result.isSuccess(GlobSet.compileResult(patterns)), {
 			title: "compilable glob patterns",
 		}),
-	),
+	).annotateKey({ description: "Globs matched against package names (never relative paths) for packages whose own edges are not checked." }),
 	/** The dependency maps to check. Absent means all four. */
-	fields: DependencyField.pipe(S.Array, S.optionalKey),
+	fields: DependencyField.pipe(S.Array, S.optionalKey).annotateKey({ description: "The dependency maps to check. Absent means all four." }),
 	/** Edges that must exist, written `"a -> b"`. */
-	requiredEdges: S.String.check(S.isPattern(REQUIRED_EDGE)).pipe(S.Array, S.optionalKey),
-}) {
+	requiredEdges: S.String.check(S.isPattern(REQUIRED_EDGE)).pipe(S.Array, S.optionalKey).annotateKey({ description: "Edges that must exist, written `\"a -> b\"`." }),
+}, $I.annote("LayerPolicy", { description: "A committed dependency-layering policy (`layers.json`)." })) {
 	/** The dependency maps a check reads: `fields`, or all four. */
 	get effectiveFields(): ReadonlyArray<DependencyField> {
 		return this.fields ?? ALL_DEPENDENCY_FIELDS;

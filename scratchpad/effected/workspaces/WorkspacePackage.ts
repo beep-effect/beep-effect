@@ -7,6 +7,7 @@
 // duplicated semantically: `WorkspacePackage` is a *located member*, `Package`
 // is a *decoded manifest*.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import { GlobPattern } from "../glob/index.ts";
 import { WorkspaceManifest } from "../lockfiles/index.ts";
 import { Package } from "../package-json/index.ts";
@@ -15,6 +16,8 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("effected/workspaces/WorkspacePackage");
 
 const JsonValue = S.fromJsonString(S.Unknown);
 
@@ -37,23 +40,23 @@ const EMPTY_MANIFEST: Record<string, unknown> = Object.freeze<Record<string, unk
  *
  * @public
  */
-export class PublishConfig extends S.Class<PublishConfig>("PublishConfig")({
+export class PublishConfig extends S.Class<PublishConfig>($I`PublishConfig`)({
 	/** Scoped-package visibility. Its presence overrides `private`. */
-	access: S.optionalKey(S.Literals(["public", "restricted"])),
+	access: S.optionalKey(S.Literals(["public", "restricted"])).annotateKey({ description: "Scoped-package visibility. Its presence overrides `private`." }),
 	/** The registry to publish to. */
-	registry: S.optionalKey(S.String),
+	registry: S.optionalKey(S.String).annotateKey({ description: "The registry to publish to." }),
 	/** A subdirectory to publish instead of the package root. */
-	directory: S.optionalKey(S.String),
+	directory: S.optionalKey(S.String).annotateKey({ description: "A subdirectory to publish instead of the package root." }),
 	/**
 	 * Whether workspace links point into `directory` during local development —
 	 * pnpm symlinks the publish directory instead of the package root, so
 	 * siblings resolve the built artifact they would install from the registry.
 	 * Meaningful only alongside `directory`.
 	 */
-	linkDirectory: S.optionalKey(S.Boolean),
+	linkDirectory: S.optionalKey(S.Boolean).annotateKey({ description: "Whether workspace links point into `directory` during local development — pnpm symlinks the publish directory instead of the package root, so siblings resolve the built artifact they would install from the registry. Meaningful only alongside `directory`." }),
 	/** The dist-tag to publish under. */
-	tag: S.optionalKey(S.String),
-}) {}
+	tag: S.optionalKey(S.String).annotateKey({ description: "The dist-tag to publish under." }),
+}, $I.annote("PublishConfig", { description: "The `publishConfig` fields workspace tooling reads." })) {}
 
 const DependencyMap = S.Record(S.String, S.String).pipe(
 	S.withDecodingDefaultKey(Effect.succeed(EMPTY)),
@@ -89,14 +92,14 @@ export interface DependencyDiff {
  *
  * @public
  */
-export class WorkspaceManifestError extends S.TaggedError<WorkspaceManifestError>()("WorkspaceManifestError", {
+export class WorkspaceManifestError extends S.TaggedError<WorkspaceManifestError>($I`WorkspaceManifestError`)("WorkspaceManifestError", {
 	/** Absolute path to the `package.json` that failed. */
-	packageJsonPath: S.String,
+	packageJsonPath: S.String.annotateKey({ description: "Absolute path to the `package.json` that failed." }),
 	/** Whether the file could not be read, or read but not decoded. */
-	kind: S.Literals(["read", "decode"]),
+	kind: S.Literals(["read", "decode"]).annotateKey({ description: "Whether the file could not be read, or read but not decoded." }),
 	/** The originating failure, preserved rather than flattened to a string. */
-	cause: S.Defect(),
-}) {
+	cause: S.Defect().annotateKey({ description: "The originating failure, preserved rather than flattened to a string." }),
+}, $I.annote("WorkspaceManifestError", { description: "Raised when a workspace member's `package.json` cannot be read or decoded into the strict `@effected/package-json` `Package` model." })) {
 	/** Renders the path and failure kind into a one-line message. */
 	override get message(): string {
 		return `Failed to ${this.kind} package.json at ${this.packageJsonPath}`;
@@ -131,9 +134,9 @@ export class WorkspaceManifestError extends S.TaggedError<WorkspaceManifestError
  *
  * @public
  */
-export class WorkspacePackage extends S.Class<WorkspacePackage>("WorkspacePackage")({
+export class WorkspacePackage extends S.Class<WorkspacePackage>($I`WorkspacePackage`)({
 	/** The package name. */
-	name: S.NonEmptyString,
+	name: S.NonEmptyString.annotateKey({ description: "The package name." }),
 	/**
 	 * The raw `version` string — deliberately not semver-validated — or absent
 	 * when the manifest declares none.
@@ -151,13 +154,13 @@ export class WorkspacePackage extends S.Class<WorkspacePackage>("WorkspacePackag
 	 * Anything that needs a concrete version (`WorkspaceResolver.versionOf`,
 	 * a release tag) answers the absence itself rather than inventing one.
 	 */
-	version: S.optionalKey(S.String),
+	version: S.optionalKey(S.String).annotateKey({ description: "The raw `version` string — deliberately not semver-validated — or absent when the manifest declares none." }),
 	/** Absolute path to the package directory. */
-	path: S.NonEmptyString,
+	path: S.NonEmptyString.annotateKey({ description: "Absolute path to the package directory." }),
 	/** Absolute path to the package's `package.json`. */
-	packageJsonPath: S.NonEmptyString,
+	packageJsonPath: S.NonEmptyString.annotateKey({ description: "Absolute path to the package's `package.json`." }),
 	/** POSIX path relative to the workspace root; `"."` for the root package. */
-	relativePath: S.String,
+	relativePath: S.String.annotateKey({ description: "POSIX path relative to the workspace root; `\".\"` for the root package." }),
 	/**
 	 * Absolute path to the workspace root this package was discovered under.
 	 *
@@ -168,22 +171,22 @@ export class WorkspacePackage extends S.Class<WorkspacePackage>("WorkspacePackag
 	 *
 	 * For the root package this equals `path`, and `relativePath` is `"."`.
 	 */
-	workspaceRoot: S.NonEmptyString,
+	workspaceRoot: S.NonEmptyString.annotateKey({ description: "Absolute path to the workspace root this package was discovered under." }),
 	/** Whether the package is marked private. */
 	private: S.Boolean.pipe(
 		S.withDecodingDefaultKey(Effect.succeed(false)),
 		S.withConstructorDefault(Effect.succeed(false)),
-	),
+	).annotateKey({ description: "Whether the package is marked private." }),
 	/** Production dependencies. */
-	dependencies: DependencyMap,
+	dependencies: DependencyMap.annotateKey({ description: "Production dependencies." }),
 	/** Development dependencies. */
-	devDependencies: DependencyMap,
+	devDependencies: DependencyMap.annotateKey({ description: "Development dependencies." }),
 	/** Peer dependencies. */
-	peerDependencies: DependencyMap,
+	peerDependencies: DependencyMap.annotateKey({ description: "Peer dependencies." }),
 	/** Optional dependencies. */
-	optionalDependencies: DependencyMap,
+	optionalDependencies: DependencyMap.annotateKey({ description: "Optional dependencies." }),
 	/** The `publishConfig` block, when present. */
-	publishConfig: S.optionalKey(PublishConfig),
+	publishConfig: S.optionalKey(PublishConfig).annotateKey({ description: "The `publishConfig` block, when present." }),
 	/**
 	 * The package's `package.json` as read — tolerant access to every field
 	 * outside the typed discovery slice (`scripts`, `exports`, …) without a
@@ -199,8 +202,8 @@ export class WorkspacePackage extends S.Class<WorkspacePackage>("WorkspacePackag
 	manifestRecord: S.Record(S.String, S.Unknown).pipe(
 		S.withDecodingDefaultKey(Effect.succeed(EMPTY_MANIFEST)),
 		S.withConstructorDefault(Effect.succeed(EMPTY_MANIFEST)),
-	),
-}) {
+	).annotateKey({ description: "The package's `package.json` as read — tolerant access to every field outside the typed discovery slice (`scripts`, `exports`, …) without a second file read." }),
+}, $I.annote("WorkspacePackage", { description: "A single package inside a workspace: the discovery-relevant slice of its `package.json` plus its filesystem location." })) {
 	/** Whether this is the workspace root package. */
 	get isRootWorkspace(): boolean {
 		return this.relativePath === ".";

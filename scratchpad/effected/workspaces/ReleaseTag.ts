@@ -10,7 +10,10 @@
 // convention passes `versionPrefix: "v"` explicitly. Git tag history is not an
 // API, so changing a default here would not rewrite a consumer's existing tags.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("effected/workspaces/ReleaseTag");
 
 /**
  * Whether one shared tag names a whole release, or one tag names each package.
@@ -22,7 +25,7 @@ import * as S from "effect/Schema";
  *
  * @public
  */
-export const TagStyle = S.Literals(["single", "scoped"]);
+export const TagStyle = S.Literals(["single", "scoped"]).pipe($I.annoteSchema("TagStyle", { description: "Whether one shared tag names a whole release, or one tag names each package." }));
 
 /**
  * The decoded type of {@link (TagStyle:variable)}: `"single" | "scoped"`.
@@ -140,16 +143,16 @@ export interface TrackingTagOptions {
  *
  * @public
  */
-export class TrackingTag extends S.Class<TrackingTag>("TrackingTag")({
+export class TrackingTag extends S.Class<TrackingTag>($I`TrackingTag`)({
 	/** The tag string exactly as it appears in git. */
-	value: S.NonEmptyString,
+	value: S.NonEmptyString.annotateKey({ description: "The tag string exactly as it appears in git." }),
 	/** The package the alias namespaces; absent on a bare `v1`. */
-	packageName: S.optionalKey(S.NonEmptyString),
+	packageName: S.optionalKey(S.NonEmptyString).annotateKey({ description: "The package the alias namespaces; absent on a bare `v1`." }),
 	/** The major version the alias tracks. */
-	major: S.Int,
+	major: S.Int.annotateKey({ description: "The major version the alias tracks." }),
 	/** The minor version, on a `v1.2`-precision alias; absent on `v1`. */
-	minor: S.optionalKey(S.Int),
-}) {
+	minor: S.optionalKey(S.Int).annotateKey({ description: "The minor version, on a `v1.2`-precision alias; absent on `v1`." }),
+}, $I.annote("TrackingTag", { description: "A floating alias tag — `v1`, `v1.2` — that a repo re-points at its newest matching release." })) {
 	/** Whether this alias tracks a whole major line, or one minor line inside it. */
 	get precision(): "major" | "minor" {
 		return this.minor === undefined ? "major" : "minor";
@@ -316,16 +319,16 @@ export const classifyTag = (tag: string): TagClassification => {
  *
  * @public
  */
-export class ReleaseTag extends S.Class<ReleaseTag>("ReleaseTag")({
+export class ReleaseTag extends S.Class<ReleaseTag>($I`ReleaseTag`)({
 	/** The tag string exactly as it appears in git. */
-	value: S.NonEmptyString,
+	value: S.NonEmptyString.annotateKey({ description: "The tag string exactly as it appears in git." }),
 	/** The package the tag names; absent on a workspace-wide single tag. */
-	packageName: S.optionalKey(S.NonEmptyString),
+	packageName: S.optionalKey(S.NonEmptyString).annotateKey({ description: "The package the tag names; absent on a workspace-wide single tag." }),
 	/** The version the tag names, without any prefix. */
-	version: S.NonEmptyString,
+	version: S.NonEmptyString.annotateKey({ description: "The version the tag names, without any prefix." }),
 	/** Which style produced it. */
-	style: TagStyle,
-}) {
+	style: TagStyle.annotateKey({ description: "Which style produced it." }),
+}, $I.annote("ReleaseTag", { description: "A git tag naming a release, and the parts it was built from." })) {
 	/**
 	 * One shared tag for a whole release: `1.2.3`.
 	 *

@@ -13,6 +13,7 @@
 // `instanceId` is OPAQUE here — looked up, never parsed. Splitting one on "@"
 // or "(" would re-introduce the format knowledge this module exists without.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import type { Lockfile, ResolvedPackage } from "../lockfiles/index.ts";
 import { Range, SemVer } from "../semver/index.ts";
 import * as O from "effect/Option";
@@ -26,6 +27,8 @@ import type { ImporterRoots } from "./internal/roots.ts";
 import { indexInstances, rootInstances } from "./internal/roots.ts";
 import type { CatalogSet } from "./WorkspaceCatalogs.ts";
 import type { WorkspacePackage } from "./WorkspacePackage.ts";
+
+const $I = $ScratchpadId.create("effected/workspaces/PeerCheck");
 
 /**
  * Why a report is not a complete answer.
@@ -172,12 +175,12 @@ export interface PeerCheckOptions {
  *
  * @public
  */
-export class PeerParent extends S.Class<PeerParent>("PeerParent")({
+export class PeerParent extends S.Class<PeerParent>($I`PeerParent`)({
 	/** The package name. */
-	name: S.NonEmptyString,
+	name: S.NonEmptyString.annotateKey({ description: "The package name." }),
 	/** The resolved version of that package. */
-	version: S.String,
-}) {}
+	version: S.String.annotateKey({ description: "The resolved version of that package." }),
+}, $I.annote("PeerParent", { description: "One link in the chain from an importer to the package that declared an unsatisfied peer." })) {}
 
 /**
  * One peer dependency that is declared but not satisfied.
@@ -205,20 +208,20 @@ export class PeerParent extends S.Class<PeerParent>("PeerParent")({
  *
  * @public
  */
-export class UnsatisfiedPeer extends S.Class<UnsatisfiedPeer>("UnsatisfiedPeer")({
+export class UnsatisfiedPeer extends S.Class<UnsatisfiedPeer>($I`UnsatisfiedPeer`)({
 	/** The importer path the problem belongs to (`"."` for the root). */
-	importer: S.NonEmptyString,
+	importer: S.NonEmptyString.annotateKey({ description: "The importer path the problem belongs to (`\".\"` for the root)." }),
 	/** The peer dependency's name. */
-	dependency: S.NonEmptyString,
+	dependency: S.NonEmptyString.annotateKey({ description: "The peer dependency's name." }),
 	/** The range the declaring package asked for. */
-	wanted: S.String,
+	wanted: S.String.annotateKey({ description: "The range the declaring package asked for." }),
 	/** The version that resolved, or `null` when nothing resolved. */
-	found: S.NullOr(S.String),
+	found: S.NullOr(S.String).annotateKey({ description: "The version that resolved, or `null` when nothing resolved." }),
 	/** Whether the declaring package marked the peer optional. */
-	optional: S.Boolean,
+	optional: S.Boolean.annotateKey({ description: "Whether the declaring package marked the peer optional." }),
 	/** The path from the importer to the declaring package. */
-	parents: S.Array(PeerParent),
-}) {}
+	parents: S.Array(PeerParent).annotateKey({ description: "The path from the importer to the declaring package." }),
+}, $I.annote("UnsatisfiedPeer", { description: "One peer dependency that is declared but not satisfied." })) {}
 
 /**
  * The formats whose lockfiles record peer resolution.
@@ -663,7 +666,7 @@ interface Policy {
  *
  * @public
  */
-export class PeerCheck extends S.Class<PeerCheck>("PeerCheck")({
+export class PeerCheck extends S.Class<PeerCheck>($I`PeerCheck`)({
 	/**
 	 * Whether the lockfile's format records peer resolution at all.
 	 *
@@ -673,9 +676,9 @@ export class PeerCheck extends S.Class<PeerCheck>("PeerCheck")({
 	 * The answer is not recoverable, so it is not fabricated — `unsatisfied`
 	 * is empty and this flag says why.
 	 */
-	supported: S.Boolean,
+	supported: S.Boolean.annotateKey({ description: "Whether the lockfile's format records peer resolution at all." }),
 	/** Every unsatisfied peer found, optional ones included. */
-	unsatisfied: S.Array(UnsatisfiedPeer),
+	unsatisfied: S.Array(UnsatisfiedPeer).annotateKey({ description: "Every unsatisfied peer found, optional ones included." }),
 	/**
 	 * Importers whose dependencies could not be resolved to instances, so no
 	 * verdict was reached for them.
@@ -690,7 +693,7 @@ export class PeerCheck extends S.Class<PeerCheck>("PeerCheck")({
 	 * exists: a gate that sees no rows is entitled to know whether that means
 	 * "clean" or "not looked at".
 	 */
-	unresolvedImporters: S.Array(S.String),
+	unresolvedImporters: S.Array(S.String).annotateKey({ description: "Importers whose dependencies could not be resolved to instances, so no verdict was reached for them." }),
 	/**
 	 * Why this report is not a complete answer, or empty when it is.
 	 *
@@ -701,8 +704,8 @@ export class PeerCheck extends S.Class<PeerCheck>("PeerCheck")({
 	 */
 	unverified: S.Array(
 		S.Literals(["peerRulesNotApplied", "unresolvedEdge", "peerRangeUnresolved", "peerVersionUnresolved"]),
-	),
-}) {
+	).annotateKey({ description: "Why this report is not a complete answer, or empty when it is." }),
+}, $I.annote("PeerCheck", { description: "The result of checking a lockfile for unsatisfied peer dependencies." })) {
 	/** The unsatisfied peers a gate should act on — the non-optional ones. */
 	get required(): ReadonlyArray<UnsatisfiedPeer> {
 		return this.unsatisfied.filter((row) => !row.optional);

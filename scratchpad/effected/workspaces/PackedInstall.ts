@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import type { CommandOutput } from "../commands/index.ts";
 import { Run } from "../commands/index.ts";
 import { Yaml } from "../yaml/index.ts";
@@ -30,6 +31,8 @@ import {
 import { PackageManagerName } from "./PackageManagerName.ts";
 import { WorkspaceDiscovery } from "./WorkspaceDiscovery.ts";
 import type { WorkspacePackage } from "./WorkspacePackage.ts";
+
+const $I = $ScratchpadId.create("effected/workspaces/PackedInstall");
 
 const JsonValue = S.fromJsonString(S.Unknown);
 
@@ -216,7 +219,7 @@ export interface PackedInstallOptions extends PackedInstallClosureOptions {
  *
  * @public
  */
-export class PackedInstallError extends S.TaggedError<PackedInstallError>()("PackedInstallError", {
+export class PackedInstallError extends S.TaggedError<PackedInstallError>($I`PackedInstallError`)("PackedInstallError", {
 	/** What failed. */
 	reason: S.Literals([
 		"UnsupportedPlatform",
@@ -234,18 +237,18 @@ export class PackedInstallError extends S.TaggedError<PackedInstallError>()("Pac
 		"UnownedBin",
 		"Discovery",
 		"Io",
-	]),
+	]).annotateKey({ description: "What failed." }),
 	/** One line, naming the package or manager involved. */
-	message: S.String,
+	message: S.String.annotateKey({ description: "One line, naming the package or manager involved." }),
 	/** The package manager involved. */
-	manager: S.optionalKey(PackageManagerName),
+	manager: S.optionalKey(PackageManagerName).annotateKey({ description: "The package manager involved." }),
 	/** The workspace package involved. */
-	package: S.optionalKey(S.String),
+	package: S.optionalKey(S.String).annotateKey({ description: "The workspace package involved." }),
 	/** The tail of the failing command's output. */
-	output: S.optionalKey(S.String),
+	output: S.optionalKey(S.String).annotateKey({ description: "The tail of the failing command's output." }),
 	/** The originating failure. */
-	cause: S.optionalKey(S.Defect()),
-}) {}
+	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The originating failure." }),
+}, $I.annote("PackedInstallError", { description: "Why a packed install could not be proven." })) {}
 
 /**
  * Options for {@link InstalledConsumer.command}: how the bin's environment
@@ -323,26 +326,26 @@ export interface BinProvenance {
  *
  * @public
  */
-export class InstalledConsumer extends S.Class<InstalledConsumer>("InstalledConsumer")({
+export class InstalledConsumer extends S.Class<InstalledConsumer>($I`InstalledConsumer`)({
 	/** The package manager that installed it. */
-	manager: PackageManagerName,
+	manager: PackageManagerName.annotateKey({ description: "The package manager that installed it." }),
 	/** The version it reported and was pinned to. */
-	managerVersion: S.String,
+	managerVersion: S.String.annotateKey({ description: "The version it reported and was pinned to." }),
 	/** The consumer project directory (realpath'd). */
-	directory: S.String,
+	directory: S.String.annotateKey({ description: "The consumer project directory (realpath'd)." }),
 	/**
 	 * The scrubbed environment the install ran under, which {@link InstalledConsumer.runBin}
 	 * starts from. Redacted, so printing a consumer never prints a token.
 	 * `PackedInstall.run` always sets it; a hand-made consumer without it runs
 	 * its bins under only `RunBinOptions.env`.
 	 */
-	env: S.Record(S.String, S.String).pipe(S.Redacted, S.optionalKey),
+	env: S.Record(S.String, S.String).pipe(S.Redacted, S.optionalKey).annotateKey({ description: "The scrubbed environment the install ran under, which InstalledConsumer.runBin starts from. Redacted, so printing a consumer never prints a token. `PackedInstall.run` always sets it; a hand-made consumer without it runs its bins under only `RunBinOptions.env`." }),
 	/**
 	 * The carrier the consumer depends on, which {@link InstalledConsumer.carrierCommand}
 	 * resolves bins through. `PackedInstall.run` always sets it.
 	 */
-	carrier: S.optionalKey(S.String),
-}) {
+	carrier: S.optionalKey(S.String).annotateKey({ description: "The carrier the consumer depends on, which InstalledConsumer.carrierCommand resolves bins through. `PackedInstall.run` always sets it." }),
+}, $I.annote("InstalledConsumer", { description: "One scratch project, outside the workspace, with the carrier installed." })) {
 	/** The installed bin `name`, in `node_modules/.bin`. POSIX: `PackedInstall` runs only there. */
 	binPath(name: string): string {
 		return `${this.directory}/node_modules/.bin/${name}`;
@@ -658,21 +661,21 @@ const collectBin = (
  *
  * @public
  */
-export class PackedInstallResult extends S.Class<PackedInstallResult>("PackedInstallResult")({
+export class PackedInstallResult extends S.Class<PackedInstallResult>($I`PackedInstallResult`)({
 	/** One consumer per available manager, in the order requested. */
-	consumers: S.Array(InstalledConsumer),
+	consumers: S.Array(InstalledConsumer).annotateKey({ description: "One consumer per available manager, in the order requested." }),
 	/** The requested managers that did not answer `--version`. */
-	unavailable: S.Array(PackageManagerName),
+	unavailable: S.Array(PackageManagerName).annotateKey({ description: "The requested managers that did not answer `--version`." }),
 	/** Every packed package: name to absolute tarball path. */
-	tarballs: S.Record(S.String, S.String),
+	tarballs: S.Record(S.String, S.String).annotateKey({ description: "Every packed package: name to absolute tarball path." }),
 	/**
 	 * The scratch root (realpath'd) holding the tarballs and every consumer.
 	 * It is removed when the scope that ran `PackedInstall.run` closes, so a
 	 * directory made under it, such as an `XDG_DATA_HOME` for the bins, is
 	 * cleaned up with it.
 	 */
-	scratch: S.String,
-}) {}
+	scratch: S.String.annotateKey({ description: "The scratch root (realpath'd) holding the tarballs and every consumer. It is removed when the scope that ran `PackedInstall.run` closes, so a directory made under it, such as an `XDG_DATA_HOME` for the bins, is cleaned up with it." }),
+}, $I.annote("PackedInstallResult", { description: "What a packed install produced." })) {}
 
 /**
  * What {@link PackedInstall.timeoutBudget} adds up.

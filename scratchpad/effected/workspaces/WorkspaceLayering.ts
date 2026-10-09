@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import { GlobSet } from "../glob/index.ts";
 import { DependencyField } from "../npm/index.ts";
 import * as Effect from "effect/Effect";
@@ -9,19 +10,21 @@ import type { LayerPolicy } from "./LayerPolicy.ts";
 import { WorkspaceDiscovery } from "./WorkspaceDiscovery.ts";
 import type { WorkspacePackage } from "./WorkspacePackage.ts";
 
+const $I = $ScratchpadId.create("effected/workspaces/WorkspaceLayering");
+
 /**
  * One dependency edge between two workspace packages, in one field.
  *
  * @public
  */
-export class LayerEdge extends S.Class<LayerEdge>("LayerEdge")({
+export class LayerEdge extends S.Class<LayerEdge>($I`LayerEdge`)({
 	/** The dependent package. */
-	from: S.String,
+	from: S.String.annotateKey({ description: "The dependent package." }),
 	/** The package depended on. */
-	to: S.String,
+	to: S.String.annotateKey({ description: "The package depended on." }),
 	/** The manifest map that declares it. */
-	field: DependencyField,
-}) {
+	field: DependencyField.annotateKey({ description: "The manifest map that declares it." }),
+}, $I.annote("LayerEdge", { description: "One dependency edge between two workspace packages, in one field." })) {
 	/** `from -> to (field)`. */
 	get label(): string {
 		return `${this.from} -> ${this.to} (${this.field})`;
@@ -47,27 +50,27 @@ type OffenceReason = "upward" | "sameLayer" | "toolingReachesLayer" | "intoUncon
  *
  * @public
  */
-export class LayeringReport extends S.Class<LayeringReport>("LayeringReport")({
+export class LayeringReport extends S.Class<LayeringReport>($I`LayeringReport`)({
 	/** Packages the policy declares more than once, or declares and also matches with an unconstrained glob. */
-	duplicates: S.Array(S.String),
+	duplicates: S.Array(S.String).annotateKey({ description: "Packages the policy declares more than once, or declares and also matches with an unconstrained glob." }),
 	/** Workspace packages the policy does not classify. */
-	unclassified: S.Array(S.String),
+	unclassified: S.Array(S.String).annotateKey({ description: "Workspace packages the policy does not classify." }),
 	/** Edges that break the policy, each with why. */
 	offenders: S.Array(
 		S.Struct({
 			edge: LayerEdge,
 			reason: S.Literals(["upward", "sameLayer", "toolingReachesLayer", "intoUnconstrained", "intoUnclassified"]),
 		}),
-	),
+	).annotateKey({ description: "Edges that break the policy, each with why." }),
 	/** The members of every dependency cycle in the checked fields, or none. */
-	cycle: S.String.pipe(S.Array, S.Option),
+	cycle: S.String.pipe(S.Array, S.Option).annotateKey({ description: "The members of every dependency cycle in the checked fields, or none." }),
 	/** Packages the policy names that the workspace does not contain. */
-	missingDeclared: S.Array(S.String),
+	missingDeclared: S.Array(S.String).annotateKey({ description: "Packages the policy names that the workspace does not contain." }),
 	/** Required edges absent from the checked fields. */
-	missingRequiredEdges: S.Array(S.String),
+	missingRequiredEdges: S.Array(S.String).annotateKey({ description: "Required edges absent from the checked fields." }),
 	/** Edges in the checked fields; `0` is itself a violation. */
-	edgeCount: S.Finite,
-}) {
+	edgeCount: S.Finite.annotateKey({ description: "Edges in the checked fields; `0` is itself a violation." }),
+}, $I.annote("LayeringReport", { description: "What a layering check found." })) {
 	/** One line per violation: `[]` means the graph honours the policy and the check was not vacuous. */
 	get violations(): ReadonlyArray<string> {
 		return [

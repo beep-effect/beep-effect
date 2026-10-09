@@ -12,6 +12,7 @@
 // `worktree()` reuses `WorkspaceDiscovery` and `WorkspaceCatalogs` — the ONE
 // shared read path, never a second manifest/lockfile read.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import type { GitCommandError, NotARepositoryError, UnknownRefError } from "../git/index.ts";
 import { Git } from "../git/index.ts";
 import { GlobSet } from "../glob/index.ts";
@@ -36,6 +37,8 @@ import { WorkspaceDiscovery } from "./WorkspaceDiscovery.ts";
 import type { WorkspaceRootNotFoundError } from "./WorkspaceRoot.ts";
 import { WorkspaceRoot } from "./WorkspaceRoot.ts";
 import { PackageStateSnapshot, WorkspaceStateSnapshot } from "./WorkspaceStateSnapshot.ts";
+
+const $I = $ScratchpadId.create("effected/workspaces/WorkspaceSnapshots");
 
 /**
  * Every failure `WorkspaceSnapshots.at` can surface: git's own typed
@@ -277,7 +280,7 @@ const unstubbed = (method: string): Effect.Effect<never> =>
  * @public
  */
 export class WorkspaceSnapshots extends Context.Service<WorkspaceSnapshots, WorkspaceSnapshotsShape>()(
-	"@beep/scratchpad/effected/workspaces/WorkspaceSnapshots",
+	$I`WorkspaceSnapshots`,
 ) {
 	/**
 	 * Builds the service over `Git`, {@link WorkspaceRoot}, {@link WorkspaceDiscovery},
