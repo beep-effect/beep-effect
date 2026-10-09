@@ -1,5 +1,6 @@
 /**
  * Lossless 1Password administrative wire models with redacted field values.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
@@ -23,6 +24,7 @@ const Section = S.Struct({ id: S.NonEmptyString, label: S.NonEmptyString });
  * import * as S from "effect/Schema"
  * Effect.isEffect(S.decodeUnknownEffect(AccountsSecretField)({ id: "f1", label: "AI_KEY", type: "CONCEALED", value: "synthetic" })) // => true
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -43,6 +45,7 @@ export const AccountsSecretField = S.StructWithRest(
 );
 /**
  * Decoded administrative field, including preserved unknown attributes.
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -58,6 +61,7 @@ export type AccountsSecretField = typeof AccountsSecretField.Type;
  * import * as S from "effect/Schema"
  * Effect.isEffect(S.decodeUnknownEffect(AccountsSecretsItem)({ fields: [], sections: [] })) // => true
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -75,6 +79,7 @@ export const AccountsSecretsItem = S.StructWithRest(
 );
 /**
  * Decoded item accepted by the layout transform.
+ *
  * @category type-level
  * @since 0.0.0
  */

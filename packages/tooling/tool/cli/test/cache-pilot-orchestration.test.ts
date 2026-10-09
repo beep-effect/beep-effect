@@ -676,7 +676,7 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
   );
   const uncalled = () => Effect.die("Unexpected qualification mutation or unrelated service call");
   const service = CacheQualificationService.of({
-    remoteReads: () => Effect.die("Unexpected remote-read setup"),
+    remoteReads: Effect.fn("CacheQualificationService.remoteReads")(() => Effect.die("Unexpected remote-read setup")),
     activation: Effect.fn("PilotOrchestrationTest.activation")(() => Effect.succeed(preview)),
     audit: uncalled,
     baseline: uncalled,

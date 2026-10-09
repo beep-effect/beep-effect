@@ -1500,6 +1500,7 @@ const makeWorktreeRemovalService = Effect.fn("WorktreeRemovalService.make")(func
  * import * as Effect from "effect/Effect"
  * Effect.isEffect(installRegenerateMergeDriver("/checkout")) // => true
  * ```
+ *
  * @category commands
  * @since 0.0.0
  */
@@ -1552,6 +1553,7 @@ export const installRegenerateMergeDriver = Effect.fn("Worktree.installRegenerat
  * console.log(typeof removal) // "object"
  * ```
  *
+ *
  * @category layers
  * @since 0.0.0
  */
@@ -1571,6 +1573,7 @@ export const WorktreeRemovalServiceLayer: Layer.Layer<
  *
  * console.log(typeof WorktreeRemovalServiceLive) // "object"
  * ```
+ *
  *
  * @category layers
  * @since 0.0.0

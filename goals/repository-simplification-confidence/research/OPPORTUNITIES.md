@@ -143,3 +143,13 @@
   contracts and preserve terminal passes rather than rerunning everything.
 - Would have prevented it: a gate runner that writes each exit/result immediately
   into a compact lane index and updates the handoff before launching another gate.
+
+
+## 2026-10-09: packet squash creates add/add conflicts in pre-merge lanes
+
+- Doing: C's required merge of origin/main after the stage-1 packet squash.
+- Evidence: fourteen packet files conflict add/add despite importing the packet
+  branch earlier. Structural three-way resolution against the original packet
+  commit resolved every file cleanly and retained both sides' updates.
+- Would have prevented it: document the original packet-base SHA in each launch
+  brief so lanes can resolve squash-induced conflicts without re-deriving it.

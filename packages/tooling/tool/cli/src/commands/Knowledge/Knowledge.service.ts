@@ -1760,6 +1760,7 @@ const rewriteKnowledgeReferenceFile = Effect.fn("Knowledge.rewriteReferenceFile"
  * import * as Effect from "effect/Effect"
  * Effect.isEffect(rewriteKnowledgeReferences("/checkout", true)) // => true
  * ```
+ *
  * @category commands
  * @since 0.0.0
  */
@@ -1831,6 +1832,7 @@ const makeKnowledgeService = Effect.fn("KnowledgeService.make")(function* () {
  * ```
  *
  * @see {@link KnowledgeService} for the tag this layer satisfies.
+ *
  * @category layers
  * @since 0.0.0
  */

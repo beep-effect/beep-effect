@@ -1,5 +1,6 @@
 /**
  * Synthetic-testable vault section administration; apply remains operator-only.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
@@ -91,6 +92,7 @@ const fieldOrder = Order.mapInput(
  * import * as Effect from "effect/Effect"
  * Effect.isEffect(secretsLayoutIdentity([])) // => true
  * ```
+ *
  * @category queries
  * @since 0.0.0
  */
@@ -118,6 +120,7 @@ export const secretsLayoutIdentity = Effect.fn("Accounts.secretsLayoutIdentity")
  * import * as O from "effect/Option"
  * Effect.isEffect(layoutSecretsItem({ fields: [], sections: [], version: O.none() })) // => true
  * ```
+ *
  * @category commands
  * @since 0.0.0
  */
@@ -142,7 +145,7 @@ export const layoutSecretsItem = Effect.fn("Accounts.layoutSecretsItem")(
       ),
       (label) => ({ id: Str.toLowerCase(label), label })
     );
-    const laid = { ...item, fields, sections };
+    const laid: AccountsSecretsItem = { ...item, fields, sections };
     if ((yield* secretsLayoutIdentity(item.fields)) !== (yield* secretsLayoutIdentity(laid.fields)))
       return yield* error("Refusing: layout changed field identity.");
     return laid;
@@ -154,6 +157,7 @@ export const layoutSecretsItem = Effect.fn("Accounts.layoutSecretsItem")(
 
 /**
  * Administrative command contract; successful output contains layout metadata only.
+ *
  * @category services
  * @since 0.0.0
  */
@@ -170,6 +174,7 @@ export interface AccountsSecretsLayoutShape {
  * import * as Effect from "effect/Effect"
  * Effect.isEffect(AccountsSecretsLayout.use((service) => service.run(false))) // => true
  * ```
+ *
  * @category services
  * @since 0.0.0
  */
@@ -280,6 +285,7 @@ const make = Effect.fn("AccountsSecretsLayout.make")(function* () {
  * import * as Layer from "effect/Layer"
  * Layer.isLayer(AccountsSecretsLayoutLive) // => true
  * ```
+ *
  * @category layers
  * @since 0.0.0
  */

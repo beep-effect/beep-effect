@@ -3,12 +3,14 @@ import {
   CacheQualificationService,
   CacheRemoteReadsRequest,
 } from "@beep/repo-cli/commands/Cache";
+import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import { ChildProcess } from "effect/process";
@@ -17,7 +19,10 @@ import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { expect } from "vitest";
 
-it.layer(NodeServices.layer, { timeout: "30 seconds" })("cache remote-reads", (it) => {
+const platform = Layer.mergeAll(NodeServices.layer, FsUtilsLive.pipe(Layer.provide(NodeServices.layer)));
+const testLayer = CacheQualificationLive.pipe(Layer.provideMerge(platform));
+
+it.layer(testLayer, { timeout: "30 seconds" })("cache remote-reads", (it) => {
   it.effect(
     "creates a missing env, backs up owned-field edits, preserves quoted values, and is idempotent",
     Effect.fnUntraced(function* () {
@@ -31,9 +36,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("cache remote-reads", (i
         tokenRef: "op://fixture/item/token",
         replaceToken: false,
       });
-      const run = CacheQualificationService.use((service) => service.remoteReads(root, input)).pipe(
-        Effect.provide(CacheQualificationLive)
-      );
+      const run = CacheQualificationService.use((service) => service.remoteReads(root, input));
       yield* run;
       const first = yield* fs.readFileString(path.join(root, ".env"));
       expect(first).toContain("TURBO_TOKEN=op://fixture/item/token");
@@ -70,9 +73,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("cache remote-reads", (i
         tokenRef: "op://fixture/item/token",
         replaceToken: false,
       });
-      const run = CacheQualificationService.use((service) => service.remoteReads(root, input)).pipe(
-        Effect.provide(CacheQualificationLive)
-      );
+      const run = CacheQualificationService.use((service) => service.remoteReads(root, input));
       const text = 'TURBO_TEAM=one\nexport TURBO_TEAM = "two"\n';
       yield* fs.writeFileString(path.join(root, ".env"), text);
       expect(yield* run.pipe(Effect.isFailure)).toBe(true);
@@ -83,7 +84,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("cache remote-reads", (i
       expect(yield* run.pipe(Effect.isFailure)).toBe(true);
       expect(yield* fs.readFileString(path.join(root, "referent"))).toBe("keep");
       expect(
-        yield* S.decodeUnknownEffect(CacheRemoteReadsRequest)({ ...input, api: "http://cache.example.test" }).pipe(
+        yield* S.decodeEffect(CacheRemoteReadsRequest)({ ...input, api: "http://cache.example.test" }).pipe(
           Effect.isFailure
         )
       ).toBe(true);

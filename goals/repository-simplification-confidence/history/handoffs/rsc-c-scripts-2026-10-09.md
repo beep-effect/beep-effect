@@ -174,3 +174,29 @@ Coordination blockers remain R24 cloud packet owner audit, E's workflow review
 and Ci ordering agreement, plus the orchestrator's inherited knowledge-census
 repair on main. The Ci group remains intact for a coordinated follow-up wave.
 This is a recovery progress report, not final content or merge readiness.
+
+
+### Run 2 settled and integration evidence
+
+- `a85684d18a` repairs the initial source/docgen causes; both initial P0 inbox
+  rows are acknowledged with this fix SHA. Inbox reports zero unacknowledged.
+- Broadened focused fixtures: 16/16 pass across Accounts, Cache, Knowledge and
+  retained adapters. Fallow audit and health exit 0; audit still reports a
+  nonblocking introduced unused root ONNX development declaration. Shared owner
+  should reconcile that declaration/lockfile with H1; C did not add an exemption
+  or a artificial consumer. Details: `.beep/rsc-c-run2-results.txt` and logs.
+- Test-tsgo exposed additional new-fixture diagnostics after runtime tests passed.
+  Repairs use Accounts' test facade, compose Cache/FsUtils at the suite boundary,
+  preserve the lossless item return type, annotate the optional boolean parameter,
+  and use typed codecs, pipeable streams and Effect.fn service stubs. Final rerun
+  remains pending in `.beep/rsc-c-run2-tsgo-final.log`.
+- Required fetch/merge now includes main's packet squash `83d8967a03`. The
+  add/add packet conflicts were resolved structurally with `3dbf109066` as the
+  original packet base, retaining main's stage-1 receipt/status updates and C's
+  Decision Log/status/evidence. Merge commit: `b98d568561`.
+- CI=true knowledge refs check still fails with exactly one inherited live
+  observation in the separately owned build-pipeline RESEARCH document. The
+  orchestrator's repair must land on main; C preserves this ownership boundary.
+- Automatic docgen-local's full-required result is a planning refusal caused by
+  the root command change. The explicit package-scoped edit loop is now running;
+  it does not substitute for hosted full-repo docgen.

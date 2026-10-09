@@ -1,4 +1,4 @@
-import { AccountsSecretsItem, layoutSecretsItem, secretsLayoutIdentity } from "@beep/repo-cli/commands/Accounts";
+import { AccountsSecretsItem, layoutSecretsItem, secretsLayoutIdentity } from "@beep/repo-cli/test/Accounts";
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
@@ -19,7 +19,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("accounts secrets layout
   it.effect(
     "routes prefixes and mapped labels, keeps notes first, prunes empty sections and preserves every field attribute",
     Effect.fnUntraced(function* () {
-      const decoded = yield* S.decodeUnknownEffect(S.fromJsonString(AccountsSecretsItem))(item);
+      const decoded = yield* S.decodeEffect(S.fromJsonString(AccountsSecretsItem))(item);
       const transformed = yield* layoutSecretsItem(decoded);
       expect(A.map(transformed.fields, (field) => field.id)).toEqual(["notesPlain", "c", "a", "b"]);
       expect(transformed.sections).toEqual([
@@ -32,11 +32,11 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("accounts secrets layout
       );
       expect(transformed.urls).toEqual([{ href: "https://fixture.invalid" }]);
       expect(yield* layoutSecretsItem(transformed)).toEqual(transformed);
-      const unmapped = yield* S.decodeUnknownEffect(S.fromJsonString(AccountsSecretsItem))(
+      const unmapped = yield* S.decodeEffect(S.fromJsonString(AccountsSecretsItem))(
         '{"fields":[{"id":"x","label":"UNKNOWN","type":"STRING","value":"synthetic-only"}],"sections":[]}'
       );
       expect(yield* layoutSecretsItem(unmapped).pipe(Effect.isFailure)).toBe(true);
-      const changed = yield* S.decodeUnknownEffect(S.fromJsonString(AccountsSecretsItem))(
+      const changed = yield* S.decodeEffect(S.fromJsonString(AccountsSecretsItem))(
         Str.replace("synthetic-secret-z", "different-synthetic-value")(item)
       );
       expect(yield* secretsLayoutIdentity(changed.fields)).not.toBe(yield* secretsLayoutIdentity(decoded.fields));
@@ -74,8 +74,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("accounts secrets layout
         const [code, stdout, stderr] = yield* Effect.all(
           [
             handle.exitCode,
-            Stream.mkString(Stream.decodeText(handle.stdout)),
-            Stream.mkString(Stream.decodeText(handle.stderr)),
+            handle.stdout.pipe(Stream.decodeText, Stream.mkString),
+            handle.stderr.pipe(Stream.decodeText, Stream.mkString),
           ],
           { concurrency: "unbounded" }
         );
@@ -92,10 +92,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("accounts secrets layout
       expect(applied.code, applied.stderr).toBe(0);
       expect(applied.stdout).toContain("written version 7: 4 fields, sections: AI DEV");
       expect(yield* fs.readFileString(path.join(root, "operations"))).toBe("item get\nitem get\nitem edit\n");
-      const sent = yield* S.decodeUnknownEffect(S.fromJsonString(AccountsSecretsItem))(
+      const sent = yield* S.decodeEffect(S.fromJsonString(AccountsSecretsItem))(
         yield* fs.readFileString(path.join(root, "edited.json"))
       );
-      const original = yield* S.decodeUnknownEffect(S.fromJsonString(AccountsSecretsItem))(item);
+      const original = yield* S.decodeEffect(S.fromJsonString(AccountsSecretsItem))(item);
       expect(yield* secretsLayoutIdentity(sent.fields)).toBe(yield* secretsLayoutIdentity(original.fields));
     })
   );
