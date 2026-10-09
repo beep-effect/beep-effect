@@ -6,17 +6,20 @@
 //
 // Opt-in: absent from both presets.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
 import { YamlEdit } from "../../YamlEdit.ts";
 import type { LintContext, YamlRule } from "../../YamlLintRule.ts";
 import { StyleVote, YamlLintDiagnostic, YamlLintSeverity } from "../../YamlLintRule.ts";
 import type { YamlToken } from "../../YamlToken.ts";
 
+const $I = $ScratchpadId.create("effected/yaml/internal/rules/document-end");
+
 /** Options for `document-end`: require (`true`, default) or forbid the marker. */
 export const documentEndOptions = S.Struct({
-	severity: S.optionalKey(YamlLintSeverity),
-	present: S.optionalKey(S.Boolean),
-});
+	severity: S.optionalKey(YamlLintSeverity).annotateKey({ description: "Reporting level for document-end marker findings, defaulting to `error`" }),
+	present: S.optionalKey(S.Boolean).annotateKey({ description: "Whether the stream's final `...` marker is required (`true`, default) or forbidden (`false`)" }),
+}).pipe($I.annoteSchema("documentEndOptions", { description: "Options for `document-end`: require (`true`, default) or forbid the marker." }));
 
 const TRIVIA = new Set(["newline", "whitespace", "comment", "byte-order-mark"]);
 

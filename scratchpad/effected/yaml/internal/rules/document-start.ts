@@ -7,17 +7,20 @@
 // Opt-in: absent from both presets (many real-world corpora — workflow
 // files above all — never carry the marker).
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
 import { YamlEdit } from "../../YamlEdit.ts";
 import type { LintContext, YamlRule } from "../../YamlLintRule.ts";
 import { StyleVote, YamlLintDiagnostic, YamlLintSeverity } from "../../YamlLintRule.ts";
 import type { YamlToken } from "../../YamlToken.ts";
 
+const $I = $ScratchpadId.create("effected/yaml/internal/rules/document-start");
+
 /** Options for `document-start`: require (`true`, default) or forbid the marker. */
 export const documentStartOptions = S.Struct({
-	severity: S.optionalKey(YamlLintSeverity),
-	present: S.optionalKey(S.Boolean),
-});
+	severity: S.optionalKey(YamlLintSeverity).annotateKey({ description: "Reporting level for document-start marker findings, defaulting to `error`" }),
+	present: S.optionalKey(S.Boolean).annotateKey({ description: "Whether the stream's initial `---` marker is required (`true`, default) or forbidden (`false`)" }),
+}).pipe($I.annoteSchema("documentStartOptions", { description: "Options for `document-start`: require (`true`, default) or forbid the marker." }));
 
 const TRIVIA = new Set(["newline", "whitespace", "comment", "byte-order-mark", "directive"]);
 

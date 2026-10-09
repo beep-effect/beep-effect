@@ -7,6 +7,7 @@
 // config-file loading, no IO, no CLI — strings in, diagnostics or a fixed
 // string out. The runner is someone else's tier.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { composeFirstDocument } from "./internal/composer/document.ts";
@@ -18,6 +19,8 @@ import { YamlEdit } from "./YamlEdit.ts";
 import type { LintContext, LintLine, StyleObservation, YamlLintSeverity, YamlRule } from "./YamlLintRule.ts";
 import { YamlLintDiagnostic } from "./YamlLintRule.ts";
 import { YamlTokens } from "./YamlToken.ts";
+
+const $I = $ScratchpadId.create("effected/yaml/YamlLint");
 
 // ── Config ──────────────────────────────────────────────────────────────────
 
@@ -31,7 +34,7 @@ import { YamlTokens } from "./YamlToken.ts";
 export const YamlLintRuleSetting = S.Union([
 	S.Literals(["error", "warning", "off"]),
 	S.Record(S.String, S.Unknown),
-]);
+]).pipe($I.annoteSchema("YamlLintRuleSetting", { description: "One entry of the config `rules` map: a bare severity literal (the common case), `\"off\"` to disable, or a typed per-rule options object (the tuning case; may carry its own `severity`)." }));
 
 /**
  * The union type of one `rules`-map entry.
@@ -94,9 +97,9 @@ const validateRulesMap = (rules: { readonly [id: string]: YamlLintRuleSetting })
  *
  * @public
  */
-export class YamlLintConfig extends S.Class<YamlLintConfig>("YamlLintConfig")({
-	rules: S.Record(S.String, YamlLintRuleSetting).pipe(S.check(S.makeFilter(validateRulesMap))),
-}) {
+export class YamlLintConfig extends S.Class<YamlLintConfig>($I`YamlLintConfig`)({
+	rules: S.Record(S.String, YamlLintRuleSetting).pipe(S.check(S.makeFilter(validateRulesMap))).annotateKey({ description: "Rule identifiers mapped to severities, `off`, or per-rule options, with built-in options validated and `parse-validity` always enforced" }),
+}, $I.annote("YamlLintConfig", { description: "The lint configuration: a `rules` map keying rule ids (built-in or custom) to a severity literal or a typed per-rule options object." })) {
 	/**
 	 * The default preset: the built-in rules at their default settings. The
 	 * `quoted-strings` rule defaults to DOUBLE quotes here.
@@ -196,16 +199,16 @@ const buildContext = (text: string): LintContext => {
  *
  * @public
  */
-export class StyleVoteTally extends S.Class<StyleVoteTally>("StyleVoteTally")({
-	rule: S.String,
-	dimension: S.String,
-	value: S.Union([S.String, S.Finite, S.Boolean]),
-	count: S.Finite,
-	offset: S.Finite,
-	length: S.Finite,
-	line: S.Finite,
-	character: S.Finite,
-}) {}
+export class StyleVoteTally extends S.Class<StyleVoteTally>($I`StyleVoteTally`)({
+	rule: S.String.annotateKey({ description: "Identifier of the lint rule that supplied the accumulated style observations" }),
+	dimension: S.String.annotateKey({ description: "Rule option key whose observed choices are being tallied" }),
+	value: S.Union([S.String, S.Finite, S.Boolean]).annotateKey({ description: "Observed option choice shared by the occurrences counted in this tally" }),
+	count: S.Finite.annotateKey({ description: "Number of observations supporting this option choice for the rule and dimension" }),
+	offset: S.Finite.annotateKey({ description: "Zero-based UTF-16 source offset of the first occurrence supporting this option choice" }),
+	length: S.Finite.annotateKey({ description: "Source span length in UTF-16 code units of the first occurrence supporting this option choice" }),
+	line: S.Finite.annotateKey({ description: "Zero-based source line of the first occurrence supporting this option choice" }),
+	character: S.Finite.annotateKey({ description: "Zero-based UTF-16 column of the first occurrence supporting this option choice" }),
+}, $I.annote("StyleVoteTally", { description: "An accumulated tally of one StyleVote spelling: how many times a `value` was voted for a `(rule, dimension)` pair, and the position of the FIRST occurrence seen (merging keeps the left operand's position, so on a multi-file merge the first file that exhibited the spelling names it)." })) {}
 
 /**
  * An accumulated {@link StyleFloor} for a `(rule, dimension)` pair: the
@@ -215,11 +218,11 @@ export class StyleVoteTally extends S.Class<StyleVoteTally>("StyleVoteTally")({
  *
  * @public
  */
-export class StyleFloorTally extends S.Class<StyleFloorTally>("StyleFloorTally")({
-	rule: S.String,
-	dimension: S.String,
-	value: S.Finite,
-}) {}
+export class StyleFloorTally extends S.Class<StyleFloorTally>($I`StyleFloorTally`)({
+	rule: S.String.annotateKey({ description: "Identifier of the lint rule that supplied the measured lower bound" }),
+	dimension: S.String.annotateKey({ description: "Rule option key whose lower bound is measured from the observed sources" }),
+	value: S.Finite.annotateKey({ description: "Largest observed lower bound for the rule option; retained as evidence without setting the configured limit" }),
+}, $I.annote("StyleFloorTally", { description: "An accumulated StyleFloor for a `(rule, dimension)` pair: the largest value the observed sources prove the limit is AT LEAST. Merging takes the maximum. Floors are informational — never resolved into config options (see StyleFloor)." })) {}
 
 /** Canonical histogram key for a vote value — type-discriminating (`"2"` ≠ `2`, `"true"` ≠ `true`). */
 const valueKey = (value: string | number | boolean): string => `${typeof value}:${String(value)}`;
@@ -260,10 +263,10 @@ const byTallyOrder = (
  *
  * @public
  */
-export class StyleEvidence extends S.Class<StyleEvidence>("StyleEvidence")({
-	votes: S.Array(StyleVoteTally),
-	floors: S.Array(StyleFloorTally),
-}) {
+export class StyleEvidence extends S.Class<StyleEvidence>($I`StyleEvidence`)({
+	votes: S.Array(StyleVoteTally).annotateKey({ description: "Accumulated option-choice counts and first-seen source positions used to resolve inferred lint settings" }),
+	floors: S.Array(StyleFloorTally).annotateKey({ description: "Measured lower bounds per rule option, retained for inspection without resolving them into configuration" }),
+}, $I.annote("StyleEvidence", { description: "Per-dimension style evidence: what the observed sources say about each inferable `(rule, dimension)` — vote histograms with first-seen positions, and measured floors." })) {
 	/** The monoid identity: no observations. */
 	static readonly empty: StyleEvidence = StyleEvidence.make({ votes: [], floors: [] });
 
@@ -340,11 +343,11 @@ export class StyleEvidence extends S.Class<StyleEvidence>("StyleEvidence")({
  *
  * @public
  */
-export class StyleConflict extends S.Class<StyleConflict>("StyleConflict")({
-	rule: S.String,
-	dimension: S.String,
-	candidates: S.Array(StyleVoteTally),
-}) {}
+export class StyleConflict extends S.Class<StyleConflict>($I`StyleConflict`)({
+	rule: S.String.annotateKey({ description: "Identifier of the lint rule whose observed option choices disagree" }),
+	dimension: S.String.annotateKey({ description: "Rule option key with multiple conflicting observed choices" }),
+	candidates: S.Array(StyleVoteTally).annotateKey({ description: "All conflicting option choices with counts and first-seen positions, ordered by descending count" }),
+}, $I.annote("StyleConflict", { description: "One strict-resolution conflict: a `(rule, dimension)` whose observed spellings disagree. `candidates` carries every spelling with its count and first-seen position, ordered by count descending (dominant first)." })) {}
 
 /**
  * Raised by strict config inference when observed evidence is not unanimous:
@@ -361,9 +364,9 @@ export class StyleConflict extends S.Class<StyleConflict>("StyleConflict")({
  *
  * @public
  */
-export class YamlStyleConflictError extends S.TaggedError<YamlStyleConflictError>()("YamlStyleConflictError", {
-	conflicts: S.Array(StyleConflict),
-}) {
+export class YamlStyleConflictError extends S.TaggedError<YamlStyleConflictError>($I`YamlStyleConflictError`)("YamlStyleConflictError", {
+	conflicts: S.Array(StyleConflict).annotateKey({ description: "Every rule option with disagreeing observations that prevents strict configuration inference" }),
+}, $I.annote("YamlStyleConflictError", { description: "Raised by strict config inference when observed evidence is not unanimous: carries every conflicting `(rule, dimension)` as a structured StyleConflict — dimension, all spellings, counts and positions — never a collapsed `reason` string (the structure-preserving-errors house rule). Unobserved dimensions never conflict: they fall back to the base config's defaults." })) {
 	override get message(): string {
 		return this.conflicts
 			.map(

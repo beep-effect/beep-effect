@@ -2,10 +2,13 @@
 // a line can only be shortened by reflowing content, and reflowing is
 // formatting, not fixing.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
 import type { YamlRule } from "../../YamlLintRule.ts";
 import { StyleFloor, YamlLintDiagnostic, YamlLintSeverity } from "../../YamlLintRule.ts";
 import { nonNegativeIntegerOption } from "./util.ts";
+
+const $I = $ScratchpadId.create("effected/yaml/internal/rules/line-length");
 
 /**
  * Options for `line-length`. `max` defaults to 120 — the kit-native line
@@ -13,9 +16,9 @@ import { nonNegativeIntegerOption } from "./util.ts";
  * are ours).
  */
 export const lineLengthOptions = S.Struct({
-	severity: S.optionalKey(YamlLintSeverity),
-	max: S.optionalKey(nonNegativeIntegerOption),
-});
+	severity: S.optionalKey(YamlLintSeverity).annotateKey({ description: "Reporting level for excessive line-length findings, defaulting to `error`" }),
+	max: S.optionalKey(nonNegativeIntegerOption).annotateKey({ description: "Maximum line length in UTF-16 code units, excluding the line terminator, defaulting to 120" }),
+}).pipe($I.annoteSchema("lineLengthOptions", { description: "Options for `line-length`. `max` defaults to 120 — the kit-native line width (the yamllint id is recognizable; the option surface and defaults are ours)." }));
 
 const DEFAULT_MAX = 120;
 

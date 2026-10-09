@@ -9,11 +9,14 @@
 // reads as the string it already is. A tagged scalar (`!!bool`, `!!str`) is
 // explicit intent and never flagged.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
 import { YamlEdit } from "../../YamlEdit.ts";
 import type { LintContext, YamlRule } from "../../YamlLintRule.ts";
 import { YamlLintDiagnostic, YamlLintSeverity } from "../../YamlLintRule.ts";
 import { positionAt, walkScalars } from "./util.ts";
+
+const $I = $ScratchpadId.create("effected/yaml/internal/rules/truthy");
 
 /**
  * Options for `truthy`: the `allowed` boolean spellings (default
@@ -21,10 +24,10 @@ import { positionAt, walkScalars } from "./util.ts";
  * default `true` — the workflow `on:` key is the point).
  */
 export const truthyOptions = S.Struct({
-	severity: S.optionalKey(YamlLintSeverity),
-	allowed: S.String.pipe(S.Array, S.optionalKey),
-	checkKeys: S.optionalKey(S.Boolean),
-});
+	severity: S.optionalKey(YamlLintSeverity).annotateKey({ description: "Reporting level for disallowed boolean-spelling findings, defaulting to `error`" }),
+	allowed: S.String.pipe(S.Array, S.optionalKey).annotateKey({ description: "Case-sensitive spellings exempted from YAML 1.1 boolean-family checks, defaulting to `true` and `false`" }),
+	checkKeys: S.optionalKey(S.Boolean).annotateKey({ description: "Whether mapping keys are checked for disallowed YAML 1.1 boolean spellings, defaulting to `true`" }),
+}).pipe($I.annoteSchema("truthyOptions", { description: "Options for `truthy`: the `allowed` boolean spellings (default `[\"true\", \"false\"]`) and whether mapping keys are checked (`checkKeys`, default `true` — the workflow `on:` key is the point)." }));
 
 /** The YAML 1.1 boolean family, per spelling case the 1.1 grammar admits. */
 const TRUTHY = new Set([

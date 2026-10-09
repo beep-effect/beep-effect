@@ -7,11 +7,14 @@
 // relationships are expressed via `items`/`key`/`value`, and the recursive
 // types are handled with `Schema.suspend`.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Data from "effect/Data";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import type { YamlPath } from "./YamlEdit.ts";
 import { dual } from "effect/Function";
+
+const $I = $ScratchpadId.create("effected/yaml/YamlNode");
 
 /**
  * YAML scalar presentation styles.
@@ -24,7 +27,7 @@ export const ScalarStyle = S.Literals([
 	"double-quoted",
 	"block-literal",
 	"block-folded",
-]);
+]).pipe($I.annoteSchema("ScalarStyle", { description: "YAML scalar presentation styles." }));
 
 /**
  * The union of all scalar style string literals.
@@ -38,7 +41,7 @@ export type ScalarStyle = typeof ScalarStyle.Type;
  *
  * @public
  */
-export const CollectionStyle = S.Literals(["block", "flow"]);
+export const CollectionStyle = S.Literals(["block", "flow"]).pipe($I.annoteSchema("CollectionStyle", { description: "YAML collection presentation styles." }));
 
 /**
  * The union of all collection style string literals.
@@ -56,7 +59,7 @@ export type CollectionStyle = typeof CollectionStyle.Type;
  *
  * @public
  */
-export const QuoteStyle = S.Literals(["single", "double"]);
+export const QuoteStyle = S.Literals(["single", "double"]).pipe($I.annoteSchema("QuoteStyle", { description: "Quote characters available to the stringifier's plain-scalar fallback: the style a `plain`-styled scalar is rendered in when it turns out to require quoting. Referenced by the `quoteStyle` field of `YamlStringifyOptions`; unlike `ScalarStyle` it is a stringify-option vocabulary, never a property of a composed node." }));
 
 /**
  * The union of all fallback quote style string literals.
@@ -79,7 +82,7 @@ export type QuoteStyle = typeof QuoteStyle.Type;
  *
  * @public
  */
-export const QuoteCompat = S.Literals(["yaml-1.1"]);
+export const QuoteCompat = S.Literals(["yaml-1.1"]).pipe($I.annoteSchema("QuoteCompat", { description: "Foreign resolution dialects the stringifier's plain-scalar fallback can defend against: setting the `quoteCompat` field of `YamlStringifyOptions` to `\"yaml-1.1\"` additionally quotes every plain scalar a YAML 1.1 parser (js-yaml, PyYAML, libyaml, and the `yaml` npm package's YAML 1.1 schema, whose lenient resolvers set the outer bound) would implicitly resolve to a non-string — `yes`/`no`/`on`/`off` booleans, ISO 8601 and space-separated timestamps, sexagesimal `1:30`, underscored `1_000` and base-2/8/16 numbers. Like `QuoteStyle` it is a stringify-option vocabulary, never a property of a composed node." }));
 
 /**
  * The union of all quote-compat dialect string literals.
@@ -94,7 +97,7 @@ export type QuoteCompat = typeof QuoteCompat.Type;
  *
  * @public
  */
-export const ScalarChomp = S.Literals(["strip", "clip", "keep"]);
+export const ScalarChomp = S.Literals(["strip", "clip", "keep"]).pipe($I.annoteSchema("ScalarChomp", { description: "Block-scalar chomping indicators (`-` strip, default clip, `+` keep). Referenced by the YamlScalar `chomp` field schema." }));
 
 /**
  * The union of all block-scalar chomping indicator string literals.
@@ -131,21 +134,21 @@ export type ScalarChomp = typeof ScalarChomp.Type;
  *
  * @public
  */
-export class YamlScalar extends S.TaggedClass<YamlScalar>()("YamlScalar", {
-	value: S.Unknown,
-	tag: S.optionalKey(S.String),
-	style: ScalarStyle,
-	anchor: S.optionalKey(S.String),
-	commentBefore: S.optionalKey(S.String),
-	comment: S.optionalKey(S.String),
-	spaceBefore: S.optionalKey(S.Boolean),
-	chomp: S.optionalKey(ScalarChomp),
-	blockIndent: S.optionalKey(S.Finite),
-	raw: S.optionalKey(S.String),
-	sourceMultiline: S.optionalKey(S.Boolean),
-	offset: S.Finite,
-	length: S.Finite,
-}) {
+export class YamlScalar extends S.TaggedClass<YamlScalar>($I`YamlScalar`)("YamlScalar", {
+	value: S.Unknown.annotateKey({ description: "Resolved scalar content used when reconstructing the document's plain JavaScript value" }),
+	tag: S.optionalKey(S.String).annotateKey({ description: "Explicit YAML tag attached to the scalar, such as `!!str` or `!!int`" }),
+	style: ScalarStyle.annotateKey({ description: "Scalar presentation in YAML: plain, single-quoted, double-quoted, literal block, or folded block" }),
+	anchor: S.optionalKey(S.String).annotateKey({ description: "Anchor identifier used by aliases to reference this scalar, without the leading `&`" }),
+	commentBefore: S.optionalKey(S.String).annotateKey({ description: "Own-line comment text directly above the scalar, with consecutive comment lines joined by newlines" }),
+	comment: S.optionalKey(S.String).annotateKey({ description: "Trailing comment text on the scalar's line, including header-line comments for block scalars" }),
+	spaceBefore: S.optionalKey(S.Boolean).annotateKey({ description: "Whether a blank line precedes the scalar and any leading comment block in the source" }),
+	chomp: S.optionalKey(ScalarChomp).annotateKey({ description: "Block-scalar trailing newline handling: `strip` removes them, `clip` retains one, and `keep` retains all" }),
+	blockIndent: S.optionalKey(S.Finite).annotateKey({ description: "Explicit indentation-indicator digit from the block-scalar header, absent when indentation is automatically detected" }),
+	raw: S.optionalKey(S.String).annotateKey({ description: "Original scalar spelling retained when resolution changes its representation, preserving numeric forms such as hexadecimal or trailing zeros" }),
+	sourceMultiline: S.optionalKey(S.Boolean).annotateKey({ description: "Whether the scalar's source span contains a line break; absent on synthetic nodes" }),
+	offset: S.Finite.annotateKey({ description: "Zero-based start of the scalar's source span, measured in UTF-16 code units" }),
+	length: S.Finite.annotateKey({ description: "Extent of the scalar's source span, measured in UTF-16 code units" }),
+}, $I.annote("YamlScalar", { description: "A YAML scalar AST node, representing a leaf value such as a string, number, boolean, or null." })) {
 	/**
 	 * Navigate to a descendant by path (string segments for mapping keys,
 	 * numbers for sequence indices). `Option.none()` when any segment cannot
@@ -193,14 +196,14 @@ export class YamlScalar extends S.TaggedClass<YamlScalar>()("YamlScalar", {
  *
  * @public
  */
-export class YamlAlias extends S.TaggedClass<YamlAlias>()("YamlAlias", {
-	name: S.String,
-	offset: S.Finite,
-	length: S.Finite,
-	commentBefore: S.optionalKey(S.String),
-	comment: S.optionalKey(S.String),
-	spaceBefore: S.optionalKey(S.Boolean),
-}) {
+export class YamlAlias extends S.TaggedClass<YamlAlias>($I`YamlAlias`)("YamlAlias", {
+	name: S.String.annotateKey({ description: "Identifier of the previously defined anchor referenced by this alias, without the leading `*`" }),
+	offset: S.Finite.annotateKey({ description: "Zero-based start of the alias's source span, measured in UTF-16 code units" }),
+	length: S.Finite.annotateKey({ description: "Extent of the alias's source span, measured in UTF-16 code units" }),
+	commentBefore: S.optionalKey(S.String).annotateKey({ description: "Own-line comment text directly above the alias, with consecutive comment lines joined by newlines" }),
+	comment: S.optionalKey(S.String).annotateKey({ description: "Trailing comment text on the alias's line" }),
+	spaceBefore: S.optionalKey(S.Boolean).annotateKey({ description: "Whether a blank line precedes the alias and any leading comment block in the source" }),
+}, $I.annote("YamlAlias", { description: "A YAML alias AST node, referencing a previously defined anchor by name (without the leading `*`)." })) {
 	/** See `YamlScalar.find`. Pure. */
 	find(path: YamlPath): O.Option<YamlNode> {
 		return findByPath(this, path);
@@ -294,10 +297,10 @@ export type YamlNode = YamlScalar | YamlMap | YamlSeq | YamlAlias;
  *
  * @public
  */
-export class YamlPair extends S.TaggedClass<YamlPair>()("YamlPair", {
-	key: S.suspend((): typeof YamlNode => YamlNode),
-	value: S.NullOr(S.suspend((): typeof YamlNode => YamlNode)),
-}) {}
+export class YamlPair extends S.TaggedClass<YamlPair>($I`YamlPair`)("YamlPair", {
+	key: S.suspend((): typeof YamlNode => YamlNode).annotateKey({ description: "Node identifying the mapping entry, carrying any own-line comments above that entry" }),
+	value: S.NullOr(S.suspend((): typeof YamlNode => YamlNode)).annotateKey({ description: "Node containing the mapping entry's content, or `null` when no value follows the key" }),
+}, $I.annote("YamlPair", { description: "A YAML key-value pair AST node, representing one entry within a mapping. `value` is `null` when absent (e.g. `key:` with no value)." })) {}
 
 /**
  * A YAML mapping AST node, representing a collection of {@link YamlPair}
@@ -314,18 +317,18 @@ export class YamlPair extends S.TaggedClass<YamlPair>()("YamlPair", {
  *
  * @public
  */
-export class YamlMap extends S.TaggedClass<YamlMap>()("YamlMap", {
-	items: S.Array(S.suspend((): typeof YamlPair => YamlPair)),
-	tag: S.optionalKey(S.String),
-	anchor: S.optionalKey(S.String),
-	style: CollectionStyle,
-	commentBefore: S.optionalKey(S.String),
-	comment: S.optionalKey(S.String),
-	spaceBefore: S.optionalKey(S.Boolean),
-	sourceMultiline: S.optionalKey(S.Boolean),
-	offset: S.Finite,
-	length: S.Finite,
-}) {
+export class YamlMap extends S.TaggedClass<YamlMap>($I`YamlMap`)("YamlMap", {
+	items: S.Array(S.suspend((): typeof YamlPair => YamlPair)).annotateKey({ description: "Key-value entries in their stored order within the YAML mapping" }),
+	tag: S.optionalKey(S.String).annotateKey({ description: "Explicit YAML tag attached to the mapping and retained when emitting it" }),
+	anchor: S.optionalKey(S.String).annotateKey({ description: "Anchor identifier used by aliases to reference this mapping, without the leading `&`" }),
+	style: CollectionStyle.annotateKey({ description: "Mapping presentation as indented block entries or a flow collection enclosed in braces" }),
+	commentBefore: S.optionalKey(S.String).annotateKey({ description: "Own-line comment text directly above the mapping, with consecutive comment lines joined by newlines" }),
+	comment: S.optionalKey(S.String).annotateKey({ description: "Comment text after the last block entry at item indentation, or a same-line trailing comment for a flow mapping" }),
+	spaceBefore: S.optionalKey(S.Boolean).annotateKey({ description: "Whether a blank line precedes the mapping and any leading comment block in the source" }),
+	sourceMultiline: S.optionalKey(S.Boolean).annotateKey({ description: "Whether the mapping's source span contains a line break; used by the canonical stringifier and absent on synthetic nodes" }),
+	offset: S.Finite.annotateKey({ description: "Zero-based start of the mapping's source span, measured in UTF-16 code units" }),
+	length: S.Finite.annotateKey({ description: "Extent of the mapping's source span, measured in UTF-16 code units" }),
+}, $I.annote("YamlMap", { description: "A YAML mapping AST node, representing a collection of YamlPair entries." })) {
 	/** See `YamlScalar.find`. Pure. */
 	find(path: YamlPath): O.Option<YamlNode> {
 		return findByPath(this, path);
@@ -359,18 +362,18 @@ export class YamlMap extends S.TaggedClass<YamlMap>()("YamlMap", {
  *
  * @public
  */
-export class YamlSeq extends S.TaggedClass<YamlSeq>()("YamlSeq", {
-	items: S.Array(S.suspend((): typeof YamlNode => YamlNode)),
-	tag: S.optionalKey(S.String),
-	anchor: S.optionalKey(S.String),
-	style: CollectionStyle,
-	commentBefore: S.optionalKey(S.String),
-	comment: S.optionalKey(S.String),
-	spaceBefore: S.optionalKey(S.Boolean),
-	sourceMultiline: S.optionalKey(S.Boolean),
-	offset: S.Finite,
-	length: S.Finite,
-}) {
+export class YamlSeq extends S.TaggedClass<YamlSeq>($I`YamlSeq`)("YamlSeq", {
+	items: S.Array(S.suspend((): typeof YamlNode => YamlNode)).annotateKey({ description: "Child nodes in YAML sequence order, addressed by their zero-based positions" }),
+	tag: S.optionalKey(S.String).annotateKey({ description: "Explicit YAML tag attached to the sequence and retained when emitting it" }),
+	anchor: S.optionalKey(S.String).annotateKey({ description: "Anchor identifier used by aliases to reference this sequence, without the leading `&`" }),
+	style: CollectionStyle.annotateKey({ description: "Sequence presentation as dash-prefixed block items or a flow collection enclosed in brackets" }),
+	commentBefore: S.optionalKey(S.String).annotateKey({ description: "Own-line comment text directly above the sequence, with consecutive comment lines joined by newlines" }),
+	comment: S.optionalKey(S.String).annotateKey({ description: "Comment text after the last block item at item indentation, or a same-line trailing comment for a flow sequence" }),
+	spaceBefore: S.optionalKey(S.Boolean).annotateKey({ description: "Whether a blank line precedes the sequence and any leading comment block in the source" }),
+	sourceMultiline: S.optionalKey(S.Boolean).annotateKey({ description: "Whether the sequence's source span contains a line break; used by the canonical stringifier and absent on synthetic nodes" }),
+	offset: S.Finite.annotateKey({ description: "Zero-based start of the sequence's source span, measured in UTF-16 code units" }),
+	length: S.Finite.annotateKey({ description: "Extent of the sequence's source span, measured in UTF-16 code units" }),
+}, $I.annote("YamlSeq", { description: "A YAML sequence AST node, representing an ordered list of (YamlNode:type) values." })) {
 	/** See `YamlScalar.find`. Pure. */
 	find(path: YamlPath): O.Option<YamlNode> {
 		return findByPath(this, path);

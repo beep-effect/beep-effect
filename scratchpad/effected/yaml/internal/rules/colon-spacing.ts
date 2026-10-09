@@ -3,12 +3,15 @@
 // after it. An explicit-value `:` at the head of its line is structure, not
 // spacing, and a comment after the colon belongs to comments-spacing.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { YamlEdit } from "../../YamlEdit.ts";
 import type { YamlRule } from "../../YamlLintRule.ts";
 import { YamlLintDiagnostic, YamlLintSeverity } from "../../YamlLintRule.ts";
 import { nonNegativeIntegerOption, positiveIntegerOption } from "./util.ts";
+
+const $I = $ScratchpadId.create("effected/yaml/internal/rules/colon-spacing");
 
 /**
  * Options for `colon-spacing`: `maxSpacesBefore` (default 0) and
@@ -18,10 +21,10 @@ import { nonNegativeIntegerOption, positiveIntegerOption } from "./util.ts";
  * plain scalar, not a mapping entry.
  */
 export const colonSpacingOptions = S.Struct({
-	severity: S.optionalKey(YamlLintSeverity),
-	maxSpacesBefore: S.optionalKey(nonNegativeIntegerOption),
-	maxSpacesAfter: S.optionalKey(positiveIntegerOption),
-});
+	severity: S.optionalKey(YamlLintSeverity).annotateKey({ description: "Reporting level for colon-spacing findings, defaulting to `error`" }),
+	maxSpacesBefore: S.optionalKey(nonNegativeIntegerOption).annotateKey({ description: "Maximum spaces between preceding line content and a block-mapping `:`, defaulting to 0" }),
+	maxSpacesAfter: S.optionalKey(positiveIntegerOption).annotateKey({ description: "Maximum spaces between a block-mapping `:` and its same-line value, at least 1 and defaulting to 1" }),
+}).pipe($I.annoteSchema("colonSpacingOptions", { description: "Options for `colon-spacing`: `maxSpacesBefore` (default 0) and `maxSpacesAfter` (default 1) around the `:` indicator. `maxSpacesBefore: 0` is legal (`key:` needs no space before the colon), but at least one separation space must FOLLOW it — `0` would make the fix emit `a:val`, a plain scalar, not a mapping entry." }));
 
 /** Spacing around the block-mapping `:` indicator. */
 export const colonSpacing: YamlRule = {

@@ -3,6 +3,7 @@
 // rule's business — and a comment after the hyphen belongs to
 // comments-spacing.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { YamlEdit } from "../../YamlEdit.ts";
@@ -10,15 +11,17 @@ import type { YamlRule } from "../../YamlLintRule.ts";
 import { YamlLintDiagnostic, YamlLintSeverity } from "../../YamlLintRule.ts";
 import { positiveIntegerOption } from "./util.ts";
 
+const $I = $ScratchpadId.create("effected/yaml/internal/rules/hyphen-spacing");
+
 /**
  * Options for `hyphen-spacing`: `maxSpacesAfter` (default 1) after the `-`.
  * At least one separation space must follow the indicator — `0` would make
  * the fix emit `-item`, a plain scalar, not a sequence entry.
  */
 export const hyphenSpacingOptions = S.Struct({
-	severity: S.optionalKey(YamlLintSeverity),
-	maxSpacesAfter: S.optionalKey(positiveIntegerOption),
-});
+	severity: S.optionalKey(YamlLintSeverity).annotateKey({ description: "Reporting level for sequence-entry spacing findings, defaulting to `error`" }),
+	maxSpacesAfter: S.optionalKey(positiveIntegerOption).annotateKey({ description: "Maximum spaces between a block-sequence `-` and its same-line item, at least 1 and defaulting to 1" }),
+}).pipe($I.annoteSchema("hyphenSpacingOptions", { description: "Options for `hyphen-spacing`: `maxSpacesAfter` (default 1) after the `-`. At least one separation space must follow the indicator — `0` would make the fix emit `-item`, a plain scalar, not a sequence entry." }));
 
 /** Spacing after the block-sequence `-` indicator. */
 export const hyphenSpacing: YamlRule = {

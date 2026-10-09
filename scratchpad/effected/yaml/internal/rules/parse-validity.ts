@@ -6,15 +6,18 @@
 // overrides are rejected at config-validation time by YamlLint's config),
 // and its options schema accepts no options.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
 import type { LintContext, YamlRule } from "../../YamlLintRule.ts";
 import { YamlLintDiagnostic } from "../../YamlLintRule.ts";
+
+const $I = $ScratchpadId.create("effected/yaml/internal/rules/parse-validity");
 
 /**
  * parse-validity accepts no options; the config layer additionally rejects
  * any attempt to set a severity or `"off"` on this rule.
  */
-export const parseValidityOptions = S.Struct({});
+export const parseValidityOptions = S.Struct({}).pipe($I.annoteSchema("parseValidityOptions", { description: "parse-validity accepts no options; the config layer additionally rejects any attempt to set a severity or `\"off\"` on this rule." }));
 
 /** The always-on parse-validity rule. */
 export const parseValidity: YamlRule = {

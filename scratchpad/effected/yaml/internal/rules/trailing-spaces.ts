@@ -3,16 +3,19 @@
 // value (a recorded divergence from yamllint, which flags content too; a
 // layout rule must not corrupt values, and its fix certainly must not).
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
 import { YamlEdit } from "../../YamlEdit.ts";
 import type { YamlRule } from "../../YamlLintRule.ts";
 import { YamlLintDiagnostic, YamlLintSeverity } from "../../YamlLintRule.ts";
 import { insideScalarSpan } from "./util.ts";
 
+const $I = $ScratchpadId.create("effected/yaml/internal/rules/trailing-spaces");
+
 /** Options for `trailing-spaces` (severity only — nothing to tune). */
 export const trailingSpacesOptions = S.Struct({
-	severity: S.optionalKey(YamlLintSeverity),
-});
+	severity: S.optionalKey(YamlLintSeverity).annotateKey({ description: "Reporting level for trailing-whitespace findings, defaulting to `error`" }),
+}).pipe($I.annoteSchema("trailingSpacesOptions", { description: "Options for `trailing-spaces` (severity only — nothing to tune)." }));
 
 /** Trailing spaces or tabs at the end of a line, with a deleting fix. */
 export const trailingSpaces: YamlRule = {

@@ -3,11 +3,14 @@
 // Blank lines inside scalar content are the value's business and are
 // skipped. The fix deletes the excess lines surgically.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
 import { YamlEdit } from "../../YamlEdit.ts";
 import type { LintContext, YamlRule } from "../../YamlLintRule.ts";
 import { StyleFloor, YamlLintDiagnostic, YamlLintSeverity } from "../../YamlLintRule.ts";
 import { insideScalarSpan, nonNegativeIntegerOption } from "./util.ts";
+
+const $I = $ScratchpadId.create("effected/yaml/internal/rules/empty-lines");
 
 /**
  * Options for `empty-lines`: `max` consecutive blank lines in the body
@@ -15,11 +18,11 @@ import { insideScalarSpan, nonNegativeIntegerOption } from "./util.ts";
  * (both default 0).
  */
 export const emptyLinesOptions = S.Struct({
-	severity: S.optionalKey(YamlLintSeverity),
-	max: S.optionalKey(nonNegativeIntegerOption),
-	maxStart: S.optionalKey(nonNegativeIntegerOption),
-	maxEnd: S.optionalKey(nonNegativeIntegerOption),
-});
+	severity: S.optionalKey(YamlLintSeverity).annotateKey({ description: "Reporting level for excessive blank-line findings, defaulting to `error`" }),
+	max: S.optionalKey(nonNegativeIntegerOption).annotateKey({ description: "Maximum consecutive blank lines in the document body outside scalar content, defaulting to 2" }),
+	maxStart: S.optionalKey(nonNegativeIntegerOption).annotateKey({ description: "Maximum consecutive blank lines at the start of the input, defaulting to 0" }),
+	maxEnd: S.optionalKey(nonNegativeIntegerOption).annotateKey({ description: "Maximum consecutive blank lines at the end of the input outside scalar content, defaulting to 0" }),
+}).pipe($I.annoteSchema("emptyLinesOptions", { description: "Options for `empty-lines`: `max` consecutive blank lines in the body (default 2), `maxStart` at the document start and `maxEnd` at the end (both default 0)." }));
 
 /** Runs of blank lines beyond the configured caps, with a deleting fix. */
 export const emptyLines: YamlRule = {

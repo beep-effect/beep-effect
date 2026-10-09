@@ -14,6 +14,7 @@
 // The dependency edge runs facade → engine only, so `noImportCycles` stays
 // satisfied.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
@@ -37,6 +38,8 @@ import {
 	nodeToJsValue,
 } from "./YamlNode.ts";
 
+const $I = $ScratchpadId.create("effected/yaml/Yaml");
+
 /**
  * Options controlling parse behavior. All fields are omissible; absent fields
  * resolve to `strict` `true`, `maxAliasCount` `100` (the alias-based
@@ -57,11 +60,11 @@ import {
  *
  * @public
  */
-export class YamlParseOptions extends S.Class<YamlParseOptions>("YamlParseOptions")({
-	strict: S.optionalKey(S.Boolean),
-	maxAliasCount: S.optionalKey(S.Finite),
-	uniqueKeys: S.optionalKey(S.Boolean),
-}) {}
+export class YamlParseOptions extends S.Class<YamlParseOptions>($I`YamlParseOptions`)({
+	strict: S.optionalKey(S.Boolean).annotateKey({ description: "Parse strictness flag stored in composer options, defaulting to `true`; currently does not affect parsing behavior" }),
+	maxAliasCount: S.optionalKey(S.Finite).annotateKey({ description: "Maximum alias nodes per document, also determining the expansion budget used when extracting values; defaults to `100`" }),
+	uniqueKeys: S.optionalKey(S.Boolean).annotateKey({ description: "Whether duplicate mapping keys are reported as errors; defaults to `true`" }),
+}, $I.annote("YamlParseOptions", { description: "Options controlling parse behavior. All fields are omissible; absent fields resolve to `strict` `true`, `maxAliasCount` `100` (the alias-based denial-of-service guard) and `uniqueKeys` `true` (duplicate mapping keys are errors)." })) {}
 
 /**
  * Options controlling stringify behavior. All fields are omissible; absent
@@ -113,8 +116,8 @@ export class YamlParseOptions extends S.Class<YamlParseOptions>("YamlParseOption
  *
  * @public
  */
-export class YamlStringifyOptions extends S.Class<YamlStringifyOptions>("YamlStringifyOptions")({
-	indent: S.optionalKey(S.Finite),
+export class YamlStringifyOptions extends S.Class<YamlStringifyOptions>($I`YamlStringifyOptions`)({
+	indent: S.optionalKey(S.Finite).annotateKey({ description: "Spaces per indentation level in emitted YAML; defaults to `2`" }),
 	/**
 	 * Column at which to fold long scalars. Default `0` (and any value `<= 0`)
 	 * never wraps; a positive value folds plain, double-quoted and block-folded
@@ -129,11 +132,11 @@ export class YamlStringifyOptions extends S.Class<YamlStringifyOptions>("YamlStr
 	 * helpers built on it — threads the field into its render context but
 	 * never reads it, so it is inert there.
 	 */
-	lineWidth: S.optionalKey(S.Finite),
-	defaultScalarStyle: S.optionalKey(ScalarStyle),
-	defaultCollectionStyle: S.optionalKey(CollectionStyle),
-	sortKeys: S.optionalKey(S.Boolean),
-	indentSequences: S.optionalKey(S.Boolean),
+	lineWidth: S.optionalKey(S.Finite).annotateKey({ description: "Column at which to fold long scalars. Default `0` (and any value `<= 0`) never wraps; a positive value folds plain, double-quoted and block-folded (`>`) scalars at approximately that column, never block-literal (`|`)." }),
+	defaultScalarStyle: S.optionalKey(ScalarStyle).annotateKey({ description: "Scalar output style used when no explicit node style applies; defaults to `plain`" }),
+	defaultCollectionStyle: S.optionalKey(CollectionStyle).annotateKey({ description: "Collection output style used when no explicit node style applies; defaults to `block`" }),
+	sortKeys: S.optionalKey(S.Boolean).annotateKey({ description: "Whether emitted mapping entries are sorted alphabetically by key; defaults to `false`" }),
+	indentSequences: S.optionalKey(S.Boolean).annotateKey({ description: "Whether block sequences under mapping keys are indented one level; defaults to `false`" }),
 	/**
 	 * Quote style used when a `plain`-styled scalar requires quoting. Default
 	 * `"single"`. `"double"` renders
@@ -144,7 +147,7 @@ export class YamlStringifyOptions extends S.Class<YamlStringifyOptions>("YamlStr
 	 * plain, and an explicit `defaultScalarStyle` of `"single-quoted"` or
 	 * `"double-quoted"` is unaffected.
 	 */
-	quoteStyle: S.optionalKey(QuoteStyle),
+	quoteStyle: S.optionalKey(QuoteStyle).annotateKey({ description: "Quote style used when a `plain`-styled scalar requires quoting. Default `\"single\"`. `\"double\"` renders the same scalars double-quoted instead, matching the `yaml` npm package's `singleQuote: false` output." }),
 	/**
 	 * Additionally quote plain scalars a foreign resolution dialect would
 	 * coerce to a non-string. Absent (the default) adds no quoting beyond the
@@ -171,10 +174,10 @@ export class YamlStringifyOptions extends S.Class<YamlStringifyOptions>("YamlStr
 	 * {@link Yaml.stringifyResult}) and the node path (`YamlDocument#stringify`
 	 * and the `YamlFormat` helpers).
 	 */
-	quoteCompat: S.optionalKey(QuoteCompat),
-	finalNewline: S.optionalKey(S.Boolean),
-	forceDefaultStyles: S.optionalKey(S.Boolean),
-}) {}
+	quoteCompat: S.optionalKey(QuoteCompat).annotateKey({ description: "Additionally quote plain scalars a foreign resolution dialect would coerce to a non-string. Absent (the default) adds no quoting beyond the YAML 1.2 Core Schema rules." }),
+	finalNewline: S.optionalKey(S.Boolean).annotateKey({ description: "Whether emitted YAML ends with a newline; defaults to `true`" }),
+	forceDefaultStyles: S.optionalKey(S.Boolean).annotateKey({ description: "Whether document output uses default styles, removes comments, and normalizes tags; defaults to `false`" }),
+}, $I.annote("YamlStringifyOptions", { description: "Options controlling stringify behavior. All fields are omissible; absent fields resolve to `indent` `2`, `lineWidth` `0`, `defaultScalarStyle` `\"plain\"`, `defaultCollectionStyle` `\"block\"`, `sortKeys` `false`, `indentSequences` `false`, `quoteStyle` `\"single\"`, `quoteCompat` absent (no dialect-compat quoting), `finalNewline` `true` and `forceDefaultStyles` `false`." })) {}
 
 /**
  * Error-recovery parse failure: aggregates every fatal {@link YamlDiagnostic}
@@ -193,10 +196,10 @@ export class YamlStringifyOptions extends S.Class<YamlStringifyOptions>("YamlStr
  *
  * @public
  */
-export class YamlParseError extends S.TaggedError<YamlParseError>()("YamlParseError", {
-	diagnostics: S.Array(YamlDiagnostic),
-	input: S.String,
-}) {
+export class YamlParseError extends S.TaggedError<YamlParseError>($I`YamlParseError`)("YamlParseError", {
+	diagnostics: S.Array(YamlDiagnostic).annotateKey({ description: "Structured diagnostics responsible for the parse failure, with the primary failure first" }),
+	input: S.String.annotateKey({ description: "Original YAML source text that failed to parse" }),
+}, $I.annote("YamlParseError", { description: "Error-recovery parse failure: aggregates every fatal YamlDiagnostic encountered, so a single failure reports the whole batch. Raised by Yaml.parse, Yaml.parseAll, `YamlDocument.parse`/`parseAll` and the decode direction of the schema factories. The error itself has no `code` field: read the code from the diagnostics — `error.diagnostics[0].code` is the primary failure." })) {
 	override get message(): string {
 		const count = this.diagnostics.length;
 		const summary = this.diagnostics.map((d) => `${d.code} at ${d.line + 1}:${d.character + 1}`).join("; ");
@@ -213,10 +216,10 @@ export class YamlParseError extends S.TaggedError<YamlParseError>()("YamlParseEr
  *
  * @public
  */
-export class YamlStringifyError extends S.TaggedError<YamlStringifyError>()("YamlStringifyError", {
-	diagnostics: S.Array(YamlDiagnostic),
-	value: S.Unknown,
-}) {
+export class YamlStringifyError extends S.TaggedError<YamlStringifyError>($I`YamlStringifyError`)("YamlStringifyError", {
+	diagnostics: S.Array(YamlDiagnostic).annotateKey({ description: "Structured diagnostics explaining why YAML stringification failed" }),
+	value: S.Unknown.annotateKey({ description: "Original value or document whose YAML stringification failed" }),
+}, $I.annote("YamlStringifyError", { description: "Stringification failure (the circular-reference guard), carrying structured YamlDiagnostic entries and the offending value. Raised by Yaml.stringify, `YamlDocument#stringify` and the encode direction of the schema factories. The error itself has no `code` field: read the code from the diagnostics — `error.diagnostics[0].code` is the primary failure." })) {
 	override get message(): string {
 		const summary = this.diagnostics.map((d) => d.message).join("; ");
 		return `YAML stringify failed: ${summary}`;

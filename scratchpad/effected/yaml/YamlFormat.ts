@@ -16,6 +16,7 @@
 // violation, not a user-facing error, and is left to surface as an uncaught
 // defect.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";
 import * as P from "effect/Predicate";
@@ -40,6 +41,8 @@ import type { YamlPath } from "./YamlEdit.ts";
 import { YamlEdit, YamlRange } from "./YamlEdit.ts";
 import type { YamlNode } from "./YamlNode.ts";
 import { YamlMap, YamlPair, YamlScalar, YamlSeq } from "./YamlNode.ts";
+
+const $I = $ScratchpadId.create("effected/yaml/YamlFormat");
 
 /**
  * A range accepted at the `format`/`formatToString`/etc. call sites: either a
@@ -91,12 +94,12 @@ export type YamlRangeLike = YamlRange | { readonly offset: number; readonly leng
  *
  * @public
  */
-export class YamlFormattingOptions extends S.Class<YamlFormattingOptions>("YamlFormattingOptions")({
+export class YamlFormattingOptions extends S.Class<YamlFormattingOptions>($I`YamlFormattingOptions`)({
 	...YamlStringifyOptions.fields,
-	preserveComments: S.optionalKey(S.Boolean),
-	range: S.optionalKey(YamlRange),
-	requoteScalars: S.optionalKey(S.Boolean),
-}) {}
+	preserveComments: S.optionalKey(S.Boolean).annotateKey({ description: "Whether formatting retains node and document comments; defaults to true" }),
+	range: S.optionalKey(YamlRange).annotateKey({ description: "Source region in UTF-16 code units containing permitted formatting edits; a positional range takes precedence" }),
+	requoteScalars: S.optionalKey(S.Boolean).annotateKey({ description: "Whether formatting applies `quoteStyle` to eligible already-quoted scalars when their parsed values remain unchanged; defaults to false" }),
+}, $I.annote("YamlFormattingOptions", { description: "Options controlling formatting behavior: every YamlStringifyOptions field (derived, not hand-duplicated — including `indentSequences`, `quoteStyle` and `quoteCompat`) plus `preserveComments` (default `true`), `range` (restrict edits to a region; the positional `range` argument of YamlFormat.format takes precedence over this field) and `requoteScalars` (default `false`)." })) {}
 
 /**
  * Raised when `YamlFormat.modify` cannot navigate the requested path against
@@ -113,10 +116,10 @@ export class YamlFormattingOptions extends S.Class<YamlFormattingOptions>("YamlF
  *
  * @public
  */
-export class YamlModificationError extends S.TaggedError<YamlModificationError>()("YamlModificationError", {
-	path: S.Array(S.Union([S.String, S.Finite])),
-	diagnostics: S.Array(YamlDiagnostic),
-}) {
+export class YamlModificationError extends S.TaggedError<YamlModificationError>($I`YamlModificationError`)("YamlModificationError", {
+	path: S.Array(S.Union([S.String, S.Finite])).annotateKey({ description: "Requested modification location, expressed as mapping keys and sequence indices" }),
+	diagnostics: S.Array(YamlDiagnostic).annotateKey({ description: "Structured failure details explaining why modification failed; the first diagnostic identifies the primary failure" }),
+}, $I.annote("YamlModificationError", { description: "Raised when `YamlFormat.modify` cannot navigate the requested path against the composed AST (a structural mismatch), the source fails to parse, the source is a multi-document stream (`MultiDocumentStream` — a path names no particular document of a stream, so modify refuses rather than guessing), or the document carries `%YAML`/`%TAG` directives (`DirectiveCarryingDocument` — modify does not re-emit directive lines, and dropping a `%TAG` would orphan the shorthand tags that depend on it). Carries structured YamlDiagnostic entries — never a collapsed `reason` string (the structure-preserving-errors house rule). The error itself has no `code` field: read the code from the diagnostics — `error.diagnostics[0].code` is the primary failure." })) {
 	override get message(): string {
 		const summary = this.diagnostics.map((d) => d.message).join("; ");
 		return `Modification failed at path [${this.path.join(", ")}]: ${summary}`;

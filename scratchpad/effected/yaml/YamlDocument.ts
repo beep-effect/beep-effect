@@ -6,6 +6,7 @@
 // data on `errors`/`warnings` while fatal ones fail `parse`/`parseAll` with a
 // typed `YamlParseError`.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
@@ -21,6 +22,8 @@ import type { YamlNode as YamlNodeType } from "./YamlNode.ts";
 import { YamlNode } from "./YamlNode.ts";
 import { dual } from "effect/Function";
 
+const $I = $ScratchpadId.create("effected/yaml/YamlDocument");
+
 /**
  * A YAML directive appearing before a document (e.g. `%YAML 1.2` or
  * `%TAG ! tag:example.com,2000:`). `"YAML"` and `"TAG"` are the YAML 1.2
@@ -29,10 +32,10 @@ import { dual } from "effect/Function";
  *
  * @public
  */
-export class YamlDirective extends S.Class<YamlDirective>("YamlDirective")({
-	name: S.String,
-	parameters: S.Array(S.String),
-}) {}
+export class YamlDirective extends S.Class<YamlDirective>($I`YamlDirective`)({
+	name: S.String.annotateKey({ description: "Directive identifier without the leading `%`, such as `YAML`, `TAG`, or a reserved directive" }),
+	parameters: S.Array(S.String).annotateKey({ description: "Ordered whitespace-separated arguments following the directive identifier, excluding any trailing comment" }),
+}, $I.annote("YamlDirective", { description: "A YAML directive appearing before a document (e.g. `%YAML 1.2` or `%TAG ! tag:example.com,2000:`). `\"YAML\"` and `\"TAG\"` are the YAML 1.2 spec-defined directives; any other name is a reserved directive preserved for round-trip fidelity." })) {}
 
 /**
  * A parsed YAML document: the root {@link (YamlNode:type)} (or `null` when
@@ -62,17 +65,17 @@ export class YamlDirective extends S.Class<YamlDirective>("YamlDirective")({
  *
  * @public
  */
-export class YamlDocument extends S.Class<YamlDocument>("YamlDocument")({
-	contents: S.NullOr(S.suspend((): S.Schema<YamlNodeType> => YamlNode)),
-	errors: S.Array(YamlDiagnostic),
-	warnings: S.Array(YamlDiagnostic),
-	directives: S.Array(YamlDirective),
-	commentBefore: S.optionalKey(S.String),
-	comment: S.optionalKey(S.String),
-	hasDocumentStart: S.optionalKey(S.Boolean),
-	hasDocumentEnd: S.optionalKey(S.Boolean),
-	hasDocumentStartTab: S.optionalKey(S.Boolean),
-}) {
+export class YamlDocument extends S.Class<YamlDocument>($I`YamlDocument`)({
+	contents: S.NullOr(S.suspend((): S.Schema<YamlNodeType> => YamlNode)).annotateKey({ description: "Root YAML syntax node, or `null` for an empty document" }),
+	errors: S.Array(YamlDiagnostic).annotateKey({ description: "Error diagnostics retained during document composition; successful parsing retains only non-fatal errors" }),
+	warnings: S.Array(YamlDiagnostic).annotateKey({ description: "Warning diagnostics retained during document composition" }),
+	directives: S.Array(YamlDirective).annotateKey({ description: "Ordered directives preceding the document, including YAML version, tag declarations, and reserved directives" }),
+	commentBefore: S.optionalKey(S.String).annotateKey({ description: "Document header comment block preceding the `---` marker" }),
+	comment: S.optionalKey(S.String).annotateKey({ description: "Trailing document comment block after the contents or `...` marker" }),
+	hasDocumentStart: S.optionalKey(S.Boolean).annotateKey({ description: "Whether the document has an explicit `---` start marker; absence means `false`" }),
+	hasDocumentEnd: S.optionalKey(S.Boolean).annotateKey({ description: "Whether the document has an explicit `...` end marker; absence means `false`" }),
+	hasDocumentStartTab: S.optionalKey(S.Boolean).annotateKey({ description: "Whether a tab immediately followed the source `---` marker, prompting a terminator during canonical stringification" }),
+}, $I.annote("YamlDocument", { description: "A parsed YAML document: the root (YamlNode:type) (or `null` when empty), recovered `errors` and `warnings` as YamlDiagnostic data, the YamlDirective list, the optional document-level comments and the `---`/`...` framing flags (absent flags read as `false`)." })) {
 	/**
 	 * Parse a single YAML document, keeping the full AST, directives and
 	 * recovered diagnostics. Fails with the aggregate {@link YamlParseError}

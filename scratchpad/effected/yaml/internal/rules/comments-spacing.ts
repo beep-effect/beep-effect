@@ -5,6 +5,7 @@
 // at the source level. A shebang (`#!` at the very start of the stream) is
 // exempt.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
 import { YamlEdit } from "../../YamlEdit.ts";
 import type { LintContext, YamlRule } from "../../YamlLintRule.ts";
@@ -12,16 +13,18 @@ import { StyleVote, YamlLintDiagnostic, YamlLintSeverity } from "../../YamlLintR
 import type { YamlToken } from "../../YamlToken.ts";
 import { nonNegativeIntegerOption } from "./util.ts";
 
+const $I = $ScratchpadId.create("effected/yaml/internal/rules/comments-spacing");
+
 /**
  * Options for `comments-spacing`: `minSpacesBefore` between content and a
  * trailing `#` (default 1 — the kit's own emission spelling) and
  * `requireSpaceAfter` the `#` (default `true`).
  */
 export const commentsSpacingOptions = S.Struct({
-	severity: S.optionalKey(YamlLintSeverity),
-	minSpacesBefore: S.optionalKey(nonNegativeIntegerOption),
-	requireSpaceAfter: S.optionalKey(S.Boolean),
-});
+	severity: S.optionalKey(YamlLintSeverity).annotateKey({ description: "Reporting level for comment-spacing findings, defaulting to `error`" }),
+	minSpacesBefore: S.optionalKey(nonNegativeIntegerOption).annotateKey({ description: "Minimum spaces or tabs between line content and a trailing comment's `#`, defaulting to 1" }),
+	requireSpaceAfter: S.optionalKey(S.Boolean).annotateKey({ description: "Whether nonempty comments require a space or tab after `#`, defaulting to `true` and exempting an initial shebang" }),
+}).pipe($I.annoteSchema("commentsSpacingOptions", { description: "Options for `comments-spacing`: `minSpacesBefore` between content and a trailing `#` (default 1 — the kit's own emission spelling) and `requireSpaceAfter` the `#` (default `true`)." }));
 
 /**
  * The horizontal whitespace run directly before a comment token, and whether

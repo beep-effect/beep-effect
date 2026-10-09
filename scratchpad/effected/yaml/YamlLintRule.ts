@@ -7,10 +7,13 @@
 // model lives here, `src/internal/rules/*` import it, and `YamlLint.ts`
 // (config + facade) imports both. Nothing imports this module back.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
 import type { YamlDocument } from "./YamlDocument.ts";
 import { YamlEdit } from "./YamlEdit.ts";
 import type { YamlToken } from "./YamlToken.ts";
+
+const $I = $ScratchpadId.create("effected/yaml/YamlLintRule");
 
 /**
  * Lint diagnostic severities. `"off"` is a config-level disable only and
@@ -18,7 +21,7 @@ import type { YamlToken } from "./YamlToken.ts";
  *
  * @public
  */
-export const YamlLintSeverity = S.Literals(["error", "warning"]);
+export const YamlLintSeverity = S.Literals(["error", "warning"]).pipe($I.annoteSchema("YamlLintSeverity", { description: "Lint diagnostic severities. `\"off\"` is a config-level disable only and never reaches a diagnostic — a rule set to `\"off\"` is not run." }));
 
 /**
  * The union of lint severity string literals.
@@ -39,16 +42,16 @@ export type YamlLintSeverity = typeof YamlLintSeverity.Type;
  *
  * @public
  */
-export class YamlLintDiagnostic extends S.Class<YamlLintDiagnostic>("YamlLintDiagnostic")({
-	rule: S.String,
-	severity: YamlLintSeverity,
-	message: S.String,
-	offset: S.Finite,
-	length: S.Finite,
-	line: S.Finite,
-	character: S.Finite,
-	fix: S.optionalKey(YamlEdit),
-}) {}
+export class YamlLintDiagnostic extends S.Class<YamlLintDiagnostic>($I`YamlLintDiagnostic`)({
+	rule: S.String.annotateKey({ description: "Identifier of the lint rule reporting the finding" }),
+	severity: YamlLintSeverity.annotateKey({ description: "Effective reporting level, either `error` or `warning`; disabled rules produce no findings" }),
+	message: S.String.annotateKey({ description: "Human-readable explanation of the reported lint finding" }),
+	offset: S.Finite.annotateKey({ description: "Zero-based UTF-16 source offset where the reported span begins" }),
+	length: S.Finite.annotateKey({ description: "Length of the reported source span in UTF-16 code units" }),
+	line: S.Finite.annotateKey({ description: "Zero-based source line where the reported span begins" }),
+	character: S.Finite.annotateKey({ description: "Zero-based UTF-16 column where the reported span begins" }),
+	fix: S.optionalKey(YamlEdit).annotateKey({ description: "Optional source replacement supplied by the rule to repair the finding" }),
+}, $I.annote("YamlLintDiagnostic", { description: "A single lint finding: the reporting rule, its severity, a positioned span and optionally a surgical fix." })) {}
 
 /**
  * One source line of the linted document: its text (without the line
@@ -106,14 +109,14 @@ export interface LintContext {
  *
  * @public
  */
-export class StyleVote extends S.TaggedClass<StyleVote>()("StyleVote", {
-	dimension: S.String,
-	value: S.Union([S.String, S.Finite, S.Boolean]),
-	offset: S.Finite,
-	length: S.Finite,
-	line: S.Finite,
-	character: S.Finite,
-}) {}
+export class StyleVote extends S.TaggedClass<StyleVote>($I`StyleVote`)("StyleVote", {
+	dimension: S.String.annotateKey({ description: "Rule option key supported by this source observation, such as `quoteType`, `spaces`, or `present`" }),
+	value: S.Union([S.String, S.Finite, S.Boolean]).annotateKey({ description: "Option choice supported by this source occurrence, used when resolving inferred configuration" }),
+	offset: S.Finite.annotateKey({ description: "Zero-based UTF-16 source offset of the occurrence supporting this option choice" }),
+	length: S.Finite.annotateKey({ description: "Source span length in UTF-16 code units of the occurrence supporting this option choice" }),
+	line: S.Finite.annotateKey({ description: "Zero-based source line of the occurrence supporting this option choice" }),
+	character: S.Finite.annotateKey({ description: "Zero-based UTF-16 column of the occurrence supporting this option choice" }),
+}, $I.annote("StyleVote", { description: "One categorical style observation: a single occurrence of a style choice in the source, voting a `value` for an inference `dimension`." })) {}
 
 /**
  * One measured style floor: a value the source PROVES is at least
@@ -128,10 +131,10 @@ export class StyleVote extends S.TaggedClass<StyleVote>()("StyleVote", {
  *
  * @public
  */
-export class StyleFloor extends S.TaggedClass<StyleFloor>()("StyleFloor", {
-	dimension: S.String,
-	value: S.Finite,
-}) {}
+export class StyleFloor extends S.TaggedClass<StyleFloor>($I`StyleFloor`)("StyleFloor", {
+	dimension: S.String.annotateKey({ description: "Rule option key for which the source establishes a measured lower bound" }),
+	value: S.Finite.annotateKey({ description: "Measured lower bound established by the source, such as longest line length; never resolved into a configured limit" }),
+}, $I.annote("StyleFloor", { description: "One measured style floor: a value the source PROVES is at least `value`, without proving what the configured limit should be — the longest observed line proves `line-length.max` is at least that long, not what it is. Floors are carried in the evidence for callers that want them and are never resolved into config options; fabricating a max from the largest value one happened to see would be lying with a straight face." })) {}
 
 /**
  * What a rule's `infer` hook yields per occurrence: a categorical

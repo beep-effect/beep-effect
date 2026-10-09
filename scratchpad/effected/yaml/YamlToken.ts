@@ -8,12 +8,15 @@
 // facade's error type; nothing imports `YamlToken.ts` back except the lint
 // layer above it.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import { lexAll } from "./internal/lexer.ts";
 import type { YamlToken as InternalToken } from "./internal/token.ts";
 import type { YamlParseError } from "./Yaml.ts";
+
+const $I = $ScratchpadId.create("effected/yaml/YamlToken");
 
 /**
  * The 22 lexical token kinds produced by the YAML tokenizer.
@@ -43,7 +46,7 @@ export const YamlTokenKind = S.Literals([
 	"comment",
 	"byte-order-mark",
 	"error",
-]);
+]).pipe($I.annoteSchema("YamlTokenKind", { description: "The 22 lexical token kinds produced by the YAML tokenizer." }));
 
 /**
  * The union of all lexical token kind string literals.
@@ -64,14 +67,14 @@ export type YamlTokenKind = typeof YamlTokenKind.Type;
  *
  * @public
  */
-export class YamlToken extends S.Class<YamlToken>("YamlToken")({
-	kind: YamlTokenKind,
-	text: S.String,
-	offset: S.Finite,
-	length: S.Finite,
-	line: S.Finite,
-	character: S.Finite,
-}) {}
+export class YamlToken extends S.Class<YamlToken>($I`YamlToken`)({
+	kind: YamlTokenKind.annotateKey({ description: "Lexical category assigned by the YAML tokenizer" }),
+	text: S.String.annotateKey({ description: "Raw source slice covered by the token, preserving quotes and whitespace" }),
+	offset: S.Finite.annotateKey({ description: "Zero-based start position in the YAML source, measured in UTF-16 code units" }),
+	length: S.Finite.annotateKey({ description: "Source span covered by the token, measured in UTF-16 code units" }),
+	line: S.Finite.annotateKey({ description: "Zero-based source line where the token starts" }),
+	character: S.Finite.annotateKey({ description: "Zero-based position within the source line where the token starts, measured in UTF-16 code units" }),
+}, $I.annote("YamlToken", { description: "A single positioned YAML lexical token." })) {}
 
 /**
  * Promote the internal lexer tokens to the public shape.

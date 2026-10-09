@@ -11,6 +11,7 @@
 // is structurally identical to `JsoncParseErrorDetail` per the jsonc/yaml
 // parity convention; `message` is yaml's additive extra.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
 import {
 	YAML_COMPOSE_ERROR_CODES,
@@ -21,12 +22,14 @@ import {
 	isFatalCode,
 } from "./internal/diagnostics.ts";
 
+const $I = $ScratchpadId.create("effected/yaml/YamlDiagnostic");
+
 /**
  * Error codes emitted by the lexer stage.
  *
  * @public
  */
-export const YamlLexErrorCode = S.Literals(YAML_LEX_ERROR_CODES);
+export const YamlLexErrorCode = S.Literals(YAML_LEX_ERROR_CODES).pipe($I.annoteSchema("YamlLexErrorCode", { description: "Error codes emitted by the lexer stage." }));
 
 /**
  * The union of all lexer-stage error code string literals.
@@ -40,7 +43,7 @@ export type YamlLexErrorCode = typeof YamlLexErrorCode.Type;
  *
  * @public
  */
-export const YamlParseErrorCode = S.Literals(YAML_PARSE_ERROR_CODES);
+export const YamlParseErrorCode = S.Literals(YAML_PARSE_ERROR_CODES).pipe($I.annoteSchema("YamlParseErrorCode", { description: "Error codes emitted by the CST-parser stage." }));
 
 /**
  * The union of all parser-stage error code string literals.
@@ -54,7 +57,7 @@ export type YamlParseErrorCode = typeof YamlParseErrorCode.Type;
  *
  * @public
  */
-export const YamlComposerErrorCode = S.Literals(YAML_COMPOSE_ERROR_CODES);
+export const YamlComposerErrorCode = S.Literals(YAML_COMPOSE_ERROR_CODES).pipe($I.annoteSchema("YamlComposerErrorCode", { description: "Error codes emitted by the composer stage." }));
 
 /**
  * The union of all composer-stage error code string literals.
@@ -68,7 +71,7 @@ export type YamlComposerErrorCode = typeof YamlComposerErrorCode.Type;
  *
  * @public
  */
-export const YamlStringifyErrorCode = S.Literals(YAML_STRINGIFY_ERROR_CODES);
+export const YamlStringifyErrorCode = S.Literals(YAML_STRINGIFY_ERROR_CODES).pipe($I.annoteSchema("YamlStringifyErrorCode", { description: "Error codes emitted by the stringifier (the circular-reference guard)." }));
 
 /**
  * The union of all stringifier-stage error code string literals.
@@ -83,7 +86,7 @@ export type YamlStringifyErrorCode = typeof YamlStringifyErrorCode.Type;
  *
  * @public
  */
-export const YamlModifyErrorCode = S.Literals(YAML_MODIFY_ERROR_CODES);
+export const YamlModifyErrorCode = S.Literals(YAML_MODIFY_ERROR_CODES).pipe($I.annoteSchema("YamlModifyErrorCode", { description: "Error codes emitted by `YamlFormat.modify`'s path navigation against an already-composed AST — not raised by the parser/composer/stringifier." }));
 
 /**
  * The union of all modify-stage error code string literals.
@@ -104,7 +107,7 @@ export const YamlErrorCode = S.Union([
 	YamlComposerErrorCode,
 	YamlStringifyErrorCode,
 	YamlModifyErrorCode,
-]);
+]).pipe($I.annoteSchema("YamlErrorCode", { description: "Union of all YAML error codes across all pipeline stages. Stage discrimination lives here (in the code), not in separate error classes." }));
 
 /**
  * The union of all YAML error code string literals.
@@ -126,14 +129,14 @@ export type YamlErrorCode = typeof YamlErrorCode.Type;
  *
  * @public
  */
-export class YamlDiagnostic extends S.Class<YamlDiagnostic>("YamlDiagnostic")({
-	code: YamlErrorCode,
-	message: S.String,
-	offset: S.Finite,
-	length: S.Finite,
-	line: S.Finite,
-	character: S.Finite,
-}) {
+export class YamlDiagnostic extends S.Class<YamlDiagnostic>($I`YamlDiagnostic`)({
+	code: YamlErrorCode.annotateKey({ description: "Pipeline error identifier used to classify the diagnostic and determine whether it is fatal" }),
+	message: S.String.annotateKey({ description: "Human-readable explanation of the YAML issue" }),
+	offset: S.Finite.annotateKey({ description: "Zero-based start position of the diagnostic span in source UTF-16 code units" }),
+	length: S.Finite.annotateKey({ description: "Extent of the diagnostic span in source UTF-16 code units" }),
+	line: S.Finite.annotateKey({ description: "Zero-based source line containing the diagnostic's start" }),
+	character: S.Finite.annotateKey({ description: "Zero-based position within the source line, measured in UTF-16 code units" }),
+}, $I.annote("YamlDiagnostic", { description: "One structured diagnostic: its (YamlErrorCode:type), a human-readable `message`, and its exact position (`offset`/`length`, plus zero-based `line`/`character`). Used for both errors and warnings-as-data; fatality is a property of the code — see YamlDiagnostic.isFatal." })) {
 	/**
 	 * The single fatal-code predicate: whether diagnostics with this code
 	 * abort a parse (vs. being recoverable warnings-as-data). Declared once,

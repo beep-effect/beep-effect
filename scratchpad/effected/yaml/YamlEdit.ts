@@ -11,7 +11,10 @@
 // counterparts (same field names, types, optionality and semantics) so
 // consumer code can be written once over "a document codec's Edit/Range/Path".
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("effected/yaml/YamlEdit");
 
 /**
  * A single path segment: a `string` for mapping keys or a `number` for
@@ -36,10 +39,10 @@ export type YamlPath = ReadonlyArray<YamlSegment>;
  *
  * @public
  */
-export class YamlRange extends S.Class<YamlRange>("YamlRange")({
-	offset: S.Finite,
-	length: S.Finite,
-}) {}
+export class YamlRange extends S.Class<YamlRange>($I`YamlRange`)({
+	offset: S.Finite.annotateKey({ description: "Zero-based start of the source region to format, measured in UTF-16 code units" }),
+	length: S.Finite.annotateKey({ description: "Extent of the source region to format, measured in UTF-16 code units" }),
+}, $I.annote("YamlRange", { description: "A range within a YAML document, expressed as a zero-based character `offset` and a `length` in UTF-16 code units. Pass to `YamlFormat.format` to restrict formatting to a region." })) {}
 
 /**
  * A non-mutating text edit: replace the span `[offset, offset + length)` with
@@ -53,11 +56,11 @@ export class YamlRange extends S.Class<YamlRange>("YamlRange")({
  *
  * @public
  */
-export class YamlEdit extends S.Class<YamlEdit>("YamlEdit")({
-	offset: S.Finite,
-	length: S.Finite,
-	content: S.String,
-}) {
+export class YamlEdit extends S.Class<YamlEdit>($I`YamlEdit`)({
+	offset: S.Finite.annotateKey({ description: "Zero-based start of the replacement span in the original source, measured in UTF-16 code units" }),
+	length: S.Finite.annotateKey({ description: "Number of source UTF-16 code units to replace; `0` inserts without removing text" }),
+	content: S.String.annotateKey({ description: "Replacement text for the selected source span; an empty string deletes the span" }),
+}, $I.annote("YamlEdit", { description: "A non-mutating text edit: replace the span `[offset, offset + length)` with `content`. Set `length` to `0` to insert, `content` to `\"\"` to delete." })) {
 	/**
 	 * Apply `edits` to `text`, producing a new string. Edits are applied in
 	 * reverse-offset order so earlier offsets stay valid; the input `edits`

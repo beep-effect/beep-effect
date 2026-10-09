@@ -8,6 +8,7 @@
 // quote character of the target style in the content, no tag/anchor on the
 // node); otherwise the diagnostic ships without a fix.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
 import { YamlEdit } from "../../YamlEdit.ts";
 import type { LintContext, YamlRule } from "../../YamlLintRule.ts";
@@ -16,16 +17,18 @@ import type { YamlScalar } from "../../YamlNode.ts";
 import { requoteScalarText } from "../requote.ts";
 import { positionAt, walkScalars } from "./util.ts";
 
+const $I = $ScratchpadId.create("effected/yaml/internal/rules/quoted-strings");
+
 /**
  * Options for `quoted-strings`: the preferred `quoteType` (default
  * `"double"`) and whether plain string scalars are `required` to be quoted
  * at all (default `false` — only already-quoted scalars are policed).
  */
 export const quotedStringsOptions = S.Struct({
-	severity: S.optionalKey(YamlLintSeverity),
-	quoteType: S.optionalKey(S.Literals(["single", "double"])),
-	required: S.optionalKey(S.Boolean),
-});
+	severity: S.optionalKey(YamlLintSeverity).annotateKey({ description: "Reporting level for string-quoting findings, defaulting to `error`" }),
+	quoteType: S.optionalKey(S.Literals(["single", "double"])).annotateKey({ description: "Required quote style for quoted string values and sequence items, excluding mapping keys and defaulting to `double`" }),
+	required: S.optionalKey(S.Boolean).annotateKey({ description: "Whether plain string values and sequence items must be quoted, excluding mapping keys and defaulting to `false`" }),
+}).pipe($I.annoteSchema("quotedStringsOptions", { description: "Options for `quoted-strings`: the preferred `quoteType` (default `\"double\"`) and whether plain string scalars are `required` to be quoted at all (default `false` — only already-quoted scalars are policed)." }));
 
 /**
  * A value-preserving requote/wrap edit, or undefined when none is safe.

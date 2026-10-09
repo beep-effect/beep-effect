@@ -5,6 +5,7 @@
 // context's uniqueKeys-disabled compose so the policy is fully owned here.
 // No fix: dropping a pair changes what the document means.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
 import type { LintContext, YamlRule } from "../../YamlLintRule.ts";
 import { YamlLintDiagnostic, YamlLintSeverity } from "../../YamlLintRule.ts";
@@ -13,10 +14,12 @@ import { YamlMap, YamlScalar, YamlSeq } from "../../YamlNode.ts";
 import { keyIdentity } from "../composer/block.ts";
 import { positionAt } from "./util.ts";
 
+const $I = $ScratchpadId.create("effected/yaml/internal/rules/key-duplicates");
+
 /** Options for `key-duplicates` (severity only — duplicates are duplicates). */
 export const keyDuplicatesOptions = S.Struct({
-	severity: S.optionalKey(YamlLintSeverity),
-});
+	severity: S.optionalKey(YamlLintSeverity).annotateKey({ description: "Reporting level for duplicate mapping-key findings, defaulting to `error`" }),
+}).pipe($I.annoteSchema("keyDuplicatesOptions", { description: "Options for `key-duplicates` (severity only — duplicates are duplicates)." }));
 
 const walk = (node: YamlNode | null, text: string, out: Array<YamlLintDiagnostic>, ctx: LintContext): void => {
 	if (node === null) return;
