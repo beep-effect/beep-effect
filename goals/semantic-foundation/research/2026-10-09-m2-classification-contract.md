@@ -1,8 +1,8 @@
 # M2 pinned classification contract
 
-Draft contract only. Source and test typechecks pass, but runtime IPC loading
-is blocked by the shared XML reader rejecting `<text>` elements. No M2
-readiness or real-artifact proof is claimed; see the blocker handoff.
+Ready M2 runtime contract. Run-8 synthetic suite, package audit/docgen and full
+IPC/CPC/Nice artifact proof pass. The append-only handoff records the pinned
+archive hashes, concept counts, lookups and M1 same-manifest regression.
 
 ## Admission and identity
 

@@ -42,18 +42,17 @@ party-role vocabulary. M4 remains gated and routed to legal-document-intake P4.
 
 ## Latest Evidence
 
-### M2 candidate, resume 7 (2026-10-09)
+### M2 complete, wave 1 (2026-10-09)
 
-- The ontology consumer now reads attributed XML content through `#text` while
-  retaining literal child elements named `text`. All 88 package tests pass.
-- `@beep/ontology` package-verify passes audit and docgen; test-tsgo passes.
-  Scoped coverage exceeds the unchanged package floors; only two lane-created
-  file rows were added through the sanctioned R4 writer.
-- The real-artifact proof remains blocked on CPC repeated `CPC-specific-text`
-  siblings at `A01G9/24`. No semantic PR or publication wave exists. M2/M3
-  remain in-progress, lifecycle active, and M4 pending.
-- Exact commands, source heads, checksums and the incomplete runtime table are
-  in [the append-only handoff](./history/handoffs/semantic-m2m3-2026-10-09.md).
+- All 90 package tests, package audit/docgen and test-tsgo pass.
+- Full official editions load: IPC 2026.01 has 80,145 concepts, CPC 2026.08
+  has 254,314, and Nice 13-2026 has 10,168. CPC retains identifier/title facts.
+- Real-manifest M1 regression preserves nine concepts and the vetted FOLIO
+  email alignment; IPC/CPC identities remain distinct and Nice terms resolve.
+- Coverage remains above unchanged aggregate floors; only lane-created rows
+  are added under R4. M3 remains in progress, lifecycle active, M4 pending.
+- [Append-only handoff](./history/handoffs/semantic-m2m3-2026-10-09.md) retains
+  the proof table, checksums, source heads and publication receipts.
 
 ### Retained M1 evidence
 

@@ -18181,15 +18181,15 @@
           }
         },
         "packages/foundation/modeling/ontology/src/internal/ClassificationXml.ts": {
-          "lines": 93.27,
-          "statements": 93.23,
-          "branches": 100,
-          "functions": 87.32,
+          "lines": 97.52,
+          "statements": 97.74,
+          "branches": 96.29,
+          "functions": 95.89,
           "uncovered": {
-            "lines": 8,
-            "statements": 9,
-            "branches": 0,
-            "functions": 9
+            "lines": 3,
+            "statements": 3,
+            "branches": 1,
+            "functions": 3
           }
         },
         "packages/foundation/modeling/ontology/src/internal/Fold.ts": {

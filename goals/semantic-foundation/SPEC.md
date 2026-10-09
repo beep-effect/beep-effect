@@ -133,16 +133,16 @@ starts after M2 tests and the real-artifact proof pass. M4 remains gated.
 
 ### M2 acceptance (2026-10-09)
 
-- [ ] Pinned IPC/CPC/Nice editions resolve hierarchy with distinct scheme identities.
+- [x] Pinned IPC/CPC/Nice editions resolve hierarchy with distinct scheme identities.
 - [x] Typed failures cover mismatches, unpinned editions, unvetted rows and path escape.
 - [x] Real manifest decoder preserves M1 admission and skips classification rows (R3).
-- [ ] Real-artifact proof records edition, counts, checksums and three lookups per scheme.
+- [x] Real-artifact proof records edition, counts, checksums and three lookups per scheme.
 - [x] CPC scope and all source reuse evidence are recorded in the licence ledger (R2).
 
-M2 evidence: `Classification.test.ts` has the typed admission/CQ fixtures;
-`SemanticFoundation.test.ts` contains `decodes the real asset manifest without
-vendor bytes and preserves kind routing`. The run-7 handoff records 88 passing
-tests and qualified coverage. The full real-edition proof remains blocked.
+M2 evidence: Classification.test.ts includes replayable CQ lookup and cardinality
+fixtures. SemanticFoundation.test.ts has `decodes the real asset manifest without
+vendor bytes and preserves kind routing`. Run-8 handoff records 90 tests,
+qualified coverage, package audit/docgen and the complete real-edition/M1 table.
 
 ### M3 acceptance (2026-10-09)
 
@@ -235,3 +235,7 @@ tests and qualified coverage. The full real-edition proof remains blocked.
 | --- | --- | --- | --- |
 | 2026-10-09 | Admit singleton or repeated IPC/CPC title containers and Nice headings with ArrayEnsure; join only admitted title content. | Run-8 ruling authorizes cardinality fixes; full CPC editions contain repeated CPC-specific-text siblings. Required fields remain required; the shared XML reader is unchanged. | Revert the consumer/test repair together; M2 runtime admission becomes incomplete. |
 | 2026-10-09 | Normalize CPC section/class/subclass parents and depths by symbol, preserving XML hierarchy for groups/subgroups. | The A21 range container nests A22 in the section master, while the A22B master starts at its subclass; container nesting otherwise creates conflicting parents. | Revert the normalization and range fixture together; retain the fail-closed duplicate-parent check. |
+
+| Date | Decision | Reason | How to reverse |
+| --- | --- | --- | --- |
+| 2026-10-09 | Refresh the lane-created ClassificationXml.ts R4 row to lines 97.52, statements 97.74, branches 96.29, functions 95.89 from the sanctioned writer. | The cardinality/range fixture suite covers 90 tests; the new file retains 3 uncovered lines/statements/functions and 1 branch. Existing main rows and aggregate floors remain unchanged. | Delete this new-file row when zero uncovered units are reached. |

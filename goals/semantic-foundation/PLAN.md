@@ -16,7 +16,7 @@ M3 code waits for M2 tests and real-artifact readiness. M4 remains gated.
 | R2 Research Feed: Classification Schemes | complete | Ground IPC/CPC/Nice edition strategy and constant eligibility. | Research report decides M2 seed boundaries, edition metadata, and whether `@beep/rdf` constants are warranted. |
 | R3 Research Feed: Docketing and Party Roles | complete | Ground deadline and role vocabularies without creating domain entities. | Research report separates enduring party identity from time-bounded legal role vocabulary and names M3 prerequisites. |
 | R4 Research Feed: SHACL and Topology | complete | Decide shape-authoring needs and whether any future SPARQL/topology report is warranted. | Research report keeps `UnsupportedSparqlQueryServiceLive` unchanged for v1 or opens a separate gated topology packet. |
-| M2 Classification Schemes | in-progress | Load IPC/CPC/Nice SKOS schemes with edition tracking and hierarchy lookup. | Gate condition met: August 5 first-user metric or demo-day pull. |
+| M2 Classification Schemes | complete | Load IPC/CPC/Nice SKOS schemes with edition tracking and hierarchy lookup. | Gate condition met: August 5 first-user metric or demo-day pull. |
 | M3 Docketing and Party Roles | in-progress | Add docketing/deadline and party-role vocabulary modules. When the vocabulary stabilizes, spawn a `trademark-docketing-domain` packet to replace the removed stub. | Gate condition met and dependent trademark docketing packet can start. |
 | M4 ClaimGate Shapes | gated | Author intake/ClaimGate SHACL shapes against bounded semantic-web validator. | Gate condition met; shapes work without semantic-web contract changes. |
 
@@ -47,12 +47,12 @@ M3 code waits for M2 tests and real-artifact readiness. M4 remains gated.
 - [x] Add checksum-pinned rows and safe archive fetching.
 - [x] Author classification schemas, service contract, then XML implementation.
 - [x] Prove synthetic lookup/CQ fixtures and coverage without lowering baselines.
-- [ ] Prove real IPC/CPC/Nice editions and the M1 real-manifest regression.
-- [ ] Verify packages, add changeset and publish wave 1; record hosted checks.
+- [x] Prove real IPC/CPC/Nice editions and the M1 real-manifest regression (run-8 handoff).
+- [ ] Package-verify passes; publish wave 1 and record hosted checks. Private ontology has release notes under #1566.
 
-M2 runtime admission remains blocked: the real CPC master has repeated
-`CPC-specific-text` siblings not admitted by the current boundary. The
-2026-10-09 handoff records the repeated-blocker stop; no wave has shipped.
+M2 real-edition proof passes: IPC 80,145, CPC 254,314, Nice 10,168 concepts;
+M1 remains nine concepts with its vetted email alignment. Run-8 handoff retains
+the archive hashes and lookups. Wave 1 publication is next.
 
 ## M3 Work Items
 
