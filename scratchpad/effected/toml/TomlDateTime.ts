@@ -38,21 +38,25 @@ const isRealCalendarDate = S.makeFilter(
 		const max = daysInMonth(year, month);
 		return day <= max || `day ${day} does not exist in ${pad(year, 4)}-${pad(month, 2)} (month has ${max} days)`;
 	},
-	{ title: "a real calendar date" },
+	{
+		identifier: $I`isRealCalendarDate`,
+		title: "a real calendar date",
+		description: "The day must exist in the given Gregorian month and year, accounting for leap years.",
+	},
 );
 
 const dateFields = {
-	year: S.Int.check(S.isBetween({ minimum: 0, maximum: 9999 })),
-	month: S.Int.check(S.isBetween({ minimum: 1, maximum: 12 })),
-	day: S.Int.check(S.isBetween({ minimum: 1, maximum: 31 })),
+	year: S.Int.check(S.isBetween({ minimum: 0, maximum: 9999 })).annotateKey({ description: "Gregorian calendar year from 0000 through 9999." }),
+	month: S.Int.check(S.isBetween({ minimum: 1, maximum: 12 })).annotateKey({ description: "Gregorian calendar month from 1 (January) through 12 (December)." }),
+	day: S.Int.check(S.isBetween({ minimum: 1, maximum: 31 })).annotateKey({ description: "Day of the month from 1 through 31, additionally validated against the month and year." }),
 };
 
 const timeFields = {
-	hour: S.Int.check(S.isBetween({ minimum: 0, maximum: 23 })),
-	minute: S.Int.check(S.isBetween({ minimum: 0, maximum: 59 })),
+	hour: S.Int.check(S.isBetween({ minimum: 0, maximum: 23 })).annotateKey({ description: "Hour of the local time from 0 through 23." }),
+	minute: S.Int.check(S.isBetween({ minimum: 0, maximum: 59 })).annotateKey({ description: "Minute of the local time from 0 through 59." }),
 	// 60 tolerates the RFC 3339 leap second; TOML does not itself validate it.
-	second: S.Int.check(S.isBetween({ minimum: 0, maximum: 60 })),
-	nanosecond: S.Int.check(S.isBetween({ minimum: 0, maximum: 999_999_999 })),
+	second: S.Int.check(S.isBetween({ minimum: 0, maximum: 60 })).annotateKey({ description: "Second of the local time from 0 through 60, tolerating the RFC 3339 leap second." }),
+	nanosecond: S.Int.check(S.isBetween({ minimum: 0, maximum: 999_999_999 })).annotateKey({ description: "Fractional second expressed as nanoseconds from 0 through 999999999." }),
 };
 
 /** `YYYY-MM-DD`. */

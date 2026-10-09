@@ -8,6 +8,7 @@
 // Leaf module: imports only `effect` and `./TomlDateTime.js`.
 
 import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
@@ -15,7 +16,9 @@ import { TomlLocalDate, TomlLocalDateTime, TomlLocalTime, TomlOffsetDateTime } f
 
 const $I = $ScratchpadId.create("effected/toml/TomlNode");
 
-const NonFiniteSpelling = S.Literals(["Infinity", "-Infinity", "NaN"]);
+const NonFiniteSpelling = LiteralKit(["Infinity", "-Infinity", "NaN"]).pipe(
+	$I.annoteSchema("NonFiniteSpelling", { description: "String spellings of non-finite IEEE numbers used by the JSON and string-tree codecs." }),
+);
 const spellNonFinite = (n: number) => (Number.isNaN(n) ? "NaN" : n > 0 ? "Infinity" : "-Infinity");
 const fromJsonSpelling = SchemaTransformation.transform<number, number | typeof NonFiniteSpelling.Type>({
 	decode: (value) => (P.isNumber(value) ? value : Number(value)),
@@ -31,7 +34,7 @@ const IeeeNumber = S.declare(P.isNumber, {
 	toCodecJson: jsonLink,
 	toCodecStringTree: stringTreeLink,
 	toCodecArbitrary: jsonLink,
-});
+}).pipe($I.annoteSchema("IeeeNumber", { description: "Any JavaScript number, including NaN and positive or negative infinity, with non-finite codec spellings." }));
 
 /**
  * The three simple-key spellings: `bare`, `basic` (`"..."`) and `literal`
@@ -39,7 +42,7 @@ const IeeeNumber = S.declare(P.isNumber, {
  *
  * @public
  */
-export const TomlKeyKind = S.Literals(["bare", "basic", "literal"]).pipe($I.annoteSchema("TomlKeyKind", { description: "The three simple-key spellings: `bare`, `basic` (`\"...\"`) and `literal` (`'...'`)." }));
+export const TomlKeyKind = LiteralKit(["bare", "basic", "literal"]).pipe($I.annoteSchema("TomlKeyKind", { description: "The three simple-key spellings: `bare`, `basic` (`\"...\"`) and `literal` (`'...'`)." }));
 
 /**
  * The union of all key-kind string literals.
@@ -69,7 +72,7 @@ export class TomlKey extends S.TaggedClass<TomlKey>($I`TomlKey`)("TomlKey", {
  *
  * @public
  */
-export const TomlStringStyle = S.Literals(["basic", "literal", "multiline-basic", "multiline-literal"]).pipe($I.annoteSchema("TomlStringStyle", { description: "The four TOML string forms." }));
+export const TomlStringStyle = LiteralKit(["basic", "literal", "multiline-basic", "multiline-literal"]).pipe($I.annoteSchema("TomlStringStyle", { description: "The four TOML string forms." }));
 
 /**
  * The union of all string-style literals.
@@ -184,7 +187,7 @@ export const TomlValueNode: S.Codec<
 	TomlString | TomlInteger | TomlFloat | TomlBoolean | TomlDateTimeLiteral | TomlArray | TomlInlineTable
 > = S.suspend(() =>
 	S.Union([TomlString, TomlInteger, TomlFloat, TomlBoolean, TomlDateTimeLiteral, TomlArray, TomlInlineTable]),
-);
+).pipe($I.annoteSchema("TomlValueNode", { description: "A recursively suspended union of all seven TOML value node types, including arrays and inline tables." }));
 
 /**
  * The union of all TOML value node types.

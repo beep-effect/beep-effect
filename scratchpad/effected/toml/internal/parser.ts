@@ -10,6 +10,9 @@
 // guarded by an explicit `depth` parameter against MAX_NESTING_DEPTH
 // (GuardExceeded at the opening bracket). Everything else is a linear walk.
 
+import * as O from "@beep/utils/Option";
+import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import { TomlLocalDate, TomlLocalDateTime, TomlLocalTime, TomlOffsetDateTime } from "../TomlDateTime.ts";
 import type { TomlExpression, TomlValueNode } from "../TomlNode.ts";
 import {
@@ -44,9 +47,7 @@ import {
 	scanWhitespace,
 	skipBom,
 } from "./scanner.ts";
-import * as Schema from "effect/Schema";
-import * as P from "effect/Predicate";
-import * as O from "@beep/utils/Option";
+const isTomlDateTime = S.is(S.Union([TomlOffsetDateTime, TomlLocalDateTime, TomlLocalDate, TomlLocalTime]));
 
 const LF = 0x0a;
 const CR = 0x0d;
@@ -62,7 +63,7 @@ const LEFT_BRACE = 0x7b;
 const RIGHT_BRACE = 0x7d;
 
 const raise = (code: TomlErrorCodeRaw, message: string, offset: number, length: number): never => {
-	throw new RawTomlError({ code, message, offset, length });
+	throw RawTomlError.make({ code, message, offset, length });
 };
 
 /** A parsed piece and the position after it. */
@@ -165,7 +166,7 @@ const isFloatToken = (token: string): boolean =>
 /** An array value starting at `[`; `depth` is this array's own nesting count. */
 const parseArray = (source: string, openPos: number, depth: number): Parsed<TomlArray> => {
 	if (depth > MAX_NESTING_DEPTH) {
-		throw new GuardExceeded("NestingDepthExceeded", MAX_NESTING_DEPTH, depth, openPos);
+		throw GuardExceeded.new("NestingDepthExceeded", MAX_NESTING_DEPTH, depth, openPos);
 	}
 	const items: Array<TomlValueNode> = [];
 	let i = openPos + 1;
@@ -207,7 +208,7 @@ const parseArray = (source: string, openPos: number, depth: number): Parsed<Toml
  */
 const parseInlineTable = (source: string, openPos: number, depth: number): Parsed<TomlInlineTable> => {
 	if (depth > MAX_NESTING_DEPTH) {
-		throw new GuardExceeded("NestingDepthExceeded", MAX_NESTING_DEPTH, depth, openPos);
+		throw GuardExceeded.new("NestingDepthExceeded", MAX_NESTING_DEPTH, depth, openPos);
 	}
 	const entries: Array<TomlInlineEntry> = [];
 	let i = openPos + 1;
@@ -274,12 +275,7 @@ const scalarNode = (source: string, pos: number): Parsed<TomlValueNode> => {
 			: TomlInteger.make({ value: scalar, offset: pos, length });
 		return { node, end: token.end };
 	}
-	if (
-		Schema.is(TomlOffsetDateTime)(scalar) ||
-		Schema.is(TomlLocalDateTime)(scalar) ||
-		Schema.is(TomlLocalDate)(scalar) ||
-		Schema.is(TomlLocalTime)(scalar)
-	) {
+	if (isTomlDateTime(scalar)) {
 		return { node: TomlDateTimeLiteral.make({ value: scalar, offset: pos, length }), end: token.end };
 	}
 	// classifyValueToken never returns a plain string; unreachable backstop.

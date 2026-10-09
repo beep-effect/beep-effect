@@ -11,13 +11,16 @@
 // Edit/Range/Path".
 
 import { $ScratchpadId } from "@beep/identity/packages";
+import * as A from "effect/Array";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 
 const $I = $ScratchpadId.create("effected/toml/TomlEdit");
 
 class TomlEditInvariantError extends S.TaggedError<TomlEditInvariantError>($I`TomlEditInvariantError`)(
 	"TomlEditInvariantError",
-	{ message: S.String },
+	{ message: S.String.annotateKey({ description: "Explanation of the missing or overlapping edit that violates the application invariant." }) },
+	$I.annote("TomlEditInvariantError", { description: "A programmer defect encountered while applying TOML text edits." }),
 ) {}
 
 /**
@@ -76,7 +79,7 @@ export class TomlEdit extends S.Class<TomlEdit>($I`TomlEdit`)({
 	 * @returns The edited text.
 	 */
 	static applyAll(text: string, edits: ReadonlyArray<TomlEdit>): string {
-		const sorted = [...edits].sort((a, b) => b.offset - a.offset);
+		const sorted = A.sort(edits, Order.mapInput(Order.flip(Order.Number), (edit: TomlEdit) => edit.offset));
 		for (let i = 0; i + 1 < sorted.length; i++) {
 			const upper = sorted[i];
 			const lower = sorted[i + 1];

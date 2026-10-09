@@ -67,7 +67,7 @@ describe("TomlDiagnostic", () => {
 		assert.deepStrictEqual(intersect(parse, stringify), ["IntegerOutOfRange", "NestingDepthExceeded"]);
 	});
 	it("RawTomlError carries its diagnostic", () => {
-		const e = new RawTomlError({ code: "DuplicateKey", message: "m", offset: 0, length: 1 });
+		const e = RawTomlError.make({ code: "DuplicateKey", message: "m", offset: 0, length: 1 });
 		assert.strictEqual(e.diagnostic.code, "DuplicateKey");
 	});
 });

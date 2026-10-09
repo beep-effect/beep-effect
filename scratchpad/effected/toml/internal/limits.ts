@@ -1,5 +1,4 @@
 import { $ScratchpadId } from "@beep/identity/packages";
-import * as Data from "effect/Data";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 // The zero-dependency leaf every guard imports — no import cycle is possible
@@ -8,8 +7,8 @@ import * as S from "effect/Schema";
 const $I = $ScratchpadId.create("effected/toml/internal/limits");
 
 class TomlCapError extends S.TaggedError<TomlCapError>($I`TomlCapError`)("TomlCapError", {
-	message: S.String,
-}) {}
+	message: S.String.annotateKey({ description: "Explanation of the invalid programmer-supplied cap." }),
+}, $I.annote("TomlCapError", { description: "An invalid internal cap indicates a wiring defect." })) {}
 
 /** House parity constant for depth guards (yaml/jsonc/glob precedent). */
 export const MAX_NESTING_DEPTH = 256;
@@ -22,20 +21,21 @@ export type GuardReason = "NestingDepthExceeded";
  * it and materialize the typed error. It must never escape a public entry
  * point as a defect.
  */
-export class GuardExceeded extends Data.TaggedError("GuardExceeded")<{
-	readonly message: string;
-	readonly reason: GuardReason;
-	readonly limit: number;
-	readonly actual: number;
-	readonly offset: number;
-}> {
-	constructor(reason: GuardReason, limit: number, actual: number, offset: number) {
-		super({ reason, limit, actual, offset, message: `${reason}: limit ${limit}, actual ${actual}` });
-		this.name = "Error";
+export class GuardExceeded extends S.TaggedError<GuardExceeded>($I`GuardExceeded`)("GuardExceeded", {
+	message: S.String.annotateKey({ description: "The reason, configured limit and observed depth." }),
+	reason: S.Literal("NestingDepthExceeded").annotateKey({ description: "The engine guard that exceeded its limit." }),
+	limit: S.Finite.annotateKey({ description: "The configured nesting limit." }),
+	actual: S.Finite.annotateKey({ description: "The observed nesting depth." }),
+	offset: S.Finite.annotateKey({ description: "Source offset where the guard tripped." }),
+}, $I.annote("GuardExceeded", { description: "A raw nesting guard trip materialized into a diagnostic by the facade." })) {
+	override readonly name = "Error";
+
+	static new(reason: GuardReason, limit: number, actual: number, offset: number): GuardExceeded {
+		return GuardExceeded.make({ reason, limit, actual, offset, message: `${reason}: limit ${limit}, actual ${actual}` });
 	}
 }
 
-export const isGuardExceeded = (u: unknown): u is GuardExceeded => u instanceof GuardExceeded;
+export const isGuardExceeded = S.is(GuardExceeded);
 
 /**
  * Internal caps are programmer-supplied. A NaN or non-integer reaching a guard

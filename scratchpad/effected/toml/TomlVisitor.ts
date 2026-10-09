@@ -20,8 +20,11 @@
 // the typed `TomlParseError`, never letting a raw carrier escape as a defect.
 
 import { $ScratchpadId } from "@beep/identity/packages";
+import * as A from "effect/Array";
 import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";
+import * as Order from "effect/Order";
+import * as P from "effect/Predicate";
 import * as Stream from "effect/Stream";
 import * as S from "effect/Schema";
 import { isRawTomlError } from "./internal/diagnostics.ts";
@@ -32,14 +35,34 @@ import { analyze } from "./internal/semantic.ts";
 import { TomlParseError } from "./Toml.ts";
 import { TomlDiagnostic } from "./TomlDiagnostic.ts";
 import type { TomlArrayTableHeader, TomlTableHeader } from "./TomlNode.ts";
-import { TomlKeyValue, TomlTrivia } from "./TomlNode.ts";
+import { TomlKeyValue } from "./TomlNode.ts";
+import type { TomlTrivia } from "./TomlNode.ts";
 
 const $I = $ScratchpadId.create("effected/toml/TomlVisitor");
 
 class TomlVisitorInvariantError extends S.TaggedError<TomlVisitorInvariantError>($I`TomlVisitorInvariantError`)(
 	"TomlVisitorInvariantError",
-	{ message: S.String },
+	{ message: S.String.annotateKey({ description: "Explanation of the missing key span required to position a trailing comment." }) },
+	$I.annote("TomlVisitorInvariantError", { description: "A programmer defect encountered while positioning TOML visitor events." }),
 ) {}
+
+const visitorVariants = S.TaggedUnion({
+	TableStart: {
+		path: S.Array(S.String).annotateKey({ description: "Semantic table path, empty for the root table." }),
+	},
+	ArrayTableStart: {
+		path: S.Array(S.String).annotateKey({ description: "Semantic path of the array of tables." }),
+		index: S.Finite.annotateKey({ description: "Zero-based index of the table element starting at this header." }),
+	},
+	KeyValue: {
+		path: S.Array(S.String).annotateKey({ description: "Semantic key path including the final key." }),
+		node: TomlKeyValue.annotateKey({ description: "CST key-value expression carrying the original value and source spans." }),
+	},
+	Comment: {
+		text: S.String.annotateKey({ description: "Comment text after the hash marker with one leading space removed." }),
+		offset: S.Finite.annotateKey({ description: "Source position of the comment's hash marker in UTF-16 code units." }),
+	},
+}).annotate($I.annote("TomlVisitorEvent", { description: "Table, array-table, key-value and comment events emitted in TOML document order." }));
 
 /**
  * The discriminated union of TOML visitor events, in document order.
@@ -53,12 +76,20 @@ class TomlVisitorInvariantError extends S.TaggedError<TomlVisitorInvariantError>
  *
  * @public
  */
-export type TomlVisitorEvent = Data.TaggedEnum<{
-	TableStart: { readonly path: ReadonlyArray<string> };
-	ArrayTableStart: { readonly path: ReadonlyArray<string>; readonly index: number };
-	KeyValue: { readonly path: ReadonlyArray<string>; readonly node: TomlKeyValue };
-	Comment: { readonly text: string; readonly offset: number };
-}>;
+export type TomlVisitorEvent = typeof visitorVariants.Type;
+
+const visitorConstructors = Data.taggedEnum<TomlVisitorEvent>();
+// Widen the unused construct signature so a class can extend the union codec.
+const visitorBase: S.Codec<TomlVisitorEvent, typeof visitorVariants.Encoded> = S.Opaque<TomlVisitorEvent>()(visitorVariants);
+
+class TomlVisitorEventStatics extends visitorBase {
+	static readonly TableStart = visitorConstructors.TableStart;
+	static readonly ArrayTableStart = visitorConstructors.ArrayTableStart;
+	static readonly KeyValue = visitorConstructors.KeyValue;
+	static readonly Comment = visitorConstructors.Comment;
+	static readonly $is = visitorConstructors.$is;
+	static readonly $match = visitorConstructors.$match;
+}
 
 /**
  * Constructors and matchers for the `TomlVisitorEvent` union (e.g.
@@ -66,7 +97,7 @@ export type TomlVisitorEvent = Data.TaggedEnum<{
  *
  * @public
  */
-export const TomlVisitorEvent = Data.taggedEnum<TomlVisitorEvent>();
+export const TomlVisitorEvent = TomlVisitorEventStatics;
 
 /** An event paired with the source offset used to sort it into document order. */
 interface PositionedEvent {
@@ -88,7 +119,7 @@ const trailingCommentOffset = (
 	source: string,
 	expression: TomlKeyValue | TomlTableHeader | TomlArrayTableHeader,
 ): number => {
-	if (S.is(TomlKeyValue)(expression)) {
+	if (P.isTagged(expression, "TomlKeyValue")) {
 		return source.indexOf("#", expression.value.offset + expression.value.length);
 	}
 	const lastKey = expression.keyPath[expression.keyPath.length - 1];
@@ -143,7 +174,7 @@ const collectEvents = (text: string): Array<TomlVisitorEvent> => {
 	});
 
 	for (const expression of expressions) {
-		if (S.is(TomlTrivia)(expression)) {
+		if (P.isTagged(expression, "TomlTrivia")) {
 			positioned.push(...collectTriviaComments(expression));
 			continue;
 		}
@@ -153,8 +184,8 @@ const collectEvents = (text: string): Array<TomlVisitorEvent> => {
 		}
 	}
 
-	positioned.sort((a, b) => a.offset - b.offset);
-	return positioned.map((positionedEvent) => positionedEvent.event);
+	const sorted = A.sort(positioned, Order.mapInput(Order.Number, (event: PositionedEvent) => event.offset));
+	return sorted.map((positionedEvent) => positionedEvent.event);
 };
 
 /**

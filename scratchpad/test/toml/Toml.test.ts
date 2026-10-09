@@ -13,6 +13,7 @@ import { renderInlineValue } from "../../effected/toml/internal/stringifyValue.t
 import { Toml, TomlParseError, TomlStringifyError, TomlStringifyOptions } from "../../effected/toml/Toml.ts";
 import { TomlLocalDate } from "../../effected/toml/TomlDateTime.ts";
 import { deliberatelyInvalid } from "./deliberatelyInvalid.ts";
+import { expectFailure } from "./expectFailure.ts";
 
 describe("Toml", () => {
 	describe("parse", () => {
@@ -36,7 +37,7 @@ describe("Toml", () => {
 
 		it.effect("fails typed with a positioned diagnostic", () =>
 			Effect.gen(function* () {
-				const e = yield* Effect.result(Toml.parse("a = 1\na = 2\n")).pipe(Effect.map((result) => result.pipe(Result.flip, Result.getOrThrow)));
+				const e = yield* expectFailure(Toml.parse("a = 1\na = 2\n"));
 				assert.instanceOf(e, TomlParseError);
 				const diagnostic = e.diagnostics[0];
 				assert.isDefined(diagnostic);
@@ -47,7 +48,7 @@ describe("Toml", () => {
 
 		it.effect("fails typed on a syntactically fine but semantically illegal document", () =>
 			Effect.gen(function* () {
-				const e = yield* Effect.result(Toml.parse("[a]\nb = 1\n[a]\nc = 2\n")).pipe(Effect.map((result) => result.pipe(Result.flip, Result.getOrThrow)));
+				const e = yield* expectFailure(Toml.parse("[a]\nb = 1\n[a]\nc = 2\n"));
 				assert.instanceOf(e, TomlParseError);
 				const diagnostic = e.diagnostics[0];
 				assert.isDefined(diagnostic);
@@ -59,7 +60,7 @@ describe("Toml", () => {
 		it.effect("surfaces the nesting-depth guard as a typed parse error, never a defect", () =>
 			Effect.gen(function* () {
 				const bomb = `a = ${"[".repeat(300)}${"]".repeat(300)}\n`;
-				const e = yield* Effect.result(Toml.parse(bomb)).pipe(Effect.map((result) => result.pipe(Result.flip, Result.getOrThrow)));
+				const e = yield* expectFailure(Toml.parse(bomb));
 				assert.instanceOf(e, TomlParseError);
 				const diagnostic = e.diagnostics[0];
 				assert.isDefined(diagnostic);
@@ -69,7 +70,7 @@ describe("Toml", () => {
 
 		it.effect("carries a summarizing message", () =>
 			Effect.gen(function* () {
-				const e = yield* Effect.result(Toml.parse("a = 1\na = 2\n")).pipe(Effect.map((result) => result.pipe(Result.flip, Result.getOrThrow)));
+				const e = yield* expectFailure(Toml.parse("a = 1\na = 2\n"));
 				assert.include(e.message, "TOML parse failed");
 				assert.include(e.message, "DuplicateKey");
 			}),
@@ -77,7 +78,7 @@ describe("Toml", () => {
 
 		it.effect("renders the message position 1-based while the diagnostic fields stay 0-based", () =>
 			Effect.gen(function* () {
-				const e = yield* Effect.result(Toml.parse("[table\n")).pipe(Effect.map((result) => result.pipe(Result.flip, Result.getOrThrow)));
+				const e = yield* expectFailure(Toml.parse("[table\n"));
 				assert.instanceOf(e, TomlParseError);
 				const diagnostic = e.diagnostics[0];
 				assert.isDefined(diagnostic);
@@ -86,7 +87,7 @@ describe("Toml", () => {
 				assert.strictEqual(diagnostic.character, 6);
 				assert.include(e.message, "ExpectedTableHeaderClose at 1:7 ");
 				assert.notInclude(e.message, "at 0:6");
-				const dup = yield* Effect.result(Toml.parse("a = 1\na = 2\n")).pipe(Effect.map((result) => result.pipe(Result.flip, Result.getOrThrow)));
+				const dup = yield* expectFailure(Toml.parse("a = 1\na = 2\n"));
 				const duplicateDiagnostic = dup.diagnostics[0];
 				assert.isDefined(duplicateDiagnostic);
 				assert.strictEqual(duplicateDiagnostic.line, 1);
@@ -228,6 +229,17 @@ describe("Toml", () => {
 			}),
 		);
 
+		it.effect("renders shared but acyclic siblings independently", () =>
+			Effect.gen(function* () {
+				const shared = { n: 1 };
+				const sharedArray = [shared, 2];
+				assert.strictEqual(
+					yield* Toml.stringify({ first: sharedArray, second: sharedArray, left: shared, right: shared, rows: [shared, shared] }),
+					"first = [{ n = 1 }, 2]\nsecond = [{ n = 1 }, 2]\n\n[left]\nn = 1\n\n[right]\nn = 1\n\n[[rows]]\nn = 1\n\n[[rows]]\nn = 1\n",
+				);
+			}),
+		);
+
 		it.effect("surfaces the stringify depth guard typed, never a defect", () =>
 			Effect.gen(function* () {
 				let v: unknown = 1;
@@ -274,7 +286,7 @@ describe("Toml", () => {
 
 		it.effect("a failing decode surfaces a SchemaError carrying the parse message", () =>
 			Effect.gen(function* () {
-				const e = yield* Effect.result(S.decodeEffect(Toml.TomlFromString)("a = 1\na = 2\n")).pipe(Effect.map((result) => result.pipe(Result.flip, Result.getOrThrow)));
+				const e = yield* expectFailure(S.decodeEffect(Toml.TomlFromString)("a = 1\na = 2\n"));
 				assert.strictEqual(e._tag, "SchemaError");
 				assert.include(String(e), "TOML parse failed");
 			}),

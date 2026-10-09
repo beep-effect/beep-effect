@@ -13,10 +13,10 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
-import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { Toml, TomlParseError } from "../../../effected/toml/Toml.ts";
 import { assertMatchesTagged } from "./taggedJson.ts";
+import { expectFailure } from "../expectFailure.ts";
 
 const TaggedJson = S.fromJsonString(S.Unknown);
 
@@ -63,7 +63,7 @@ describe("toml-test compliance", () => {
 			it.effect(relPath, () =>
 				Effect.gen(function* () {
 					const source = readFileSync(join(CORPUS_DIR, "invalid", relPath), "utf8");
-					const error = yield* Effect.result(Toml.parse(source)).pipe(Effect.map((result) => result.pipe(Result.flip, Result.getOrThrow)));
+					const error = yield* expectFailure(Toml.parse(source));
 					assert.instanceOf(error, TomlParseError);
 				}),
 			);

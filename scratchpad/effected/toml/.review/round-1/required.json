@@ -1,0 +1,178 @@
+{
+  "module": "toml",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/toml/TomlNode.ts",
+        "scratchpad/effected/toml/TomlDiagnostic.ts",
+        "scratchpad/effected/toml/TomlDateTime.ts"
+      ],
+      "tests": [
+        "scratchpad/test/toml/TomlNode.test.ts",
+        "scratchpad/test/toml/TomlDiagnostic.test.ts",
+        "scratchpad/test/toml/TomlDateTime.test.ts"
+      ],
+      "findings": [
+        "r-literals",
+        "r-calendar-check",
+        "r-metadata-model"
+      ]
+    },
+    {
+      "id": "g2",
+      "files": [
+        "scratchpad/effected/toml/TomlEdit.ts",
+        "scratchpad/effected/toml/TomlFormat.ts",
+        "scratchpad/effected/toml/TomlVisitor.ts"
+      ],
+      "tests": [
+        "scratchpad/test/toml/TomlEdit.test.ts",
+        "scratchpad/test/toml/TomlFormat.test.ts",
+        "scratchpad/test/toml/TomlVisitor.test.ts"
+      ],
+      "findings": [
+        "r-metadata-facade",
+        "r-visitor-schema",
+        "r-sort",
+        "r-error-modify",
+        "r-perf-facade"
+      ]
+    },
+    {
+      "id": "g3",
+      "files": [
+        "scratchpad/effected/toml/internal/diagnostics.ts",
+        "scratchpad/effected/toml/internal/limits.ts",
+        "scratchpad/effected/toml/internal/parser.ts",
+        "scratchpad/effected/toml/internal/scanner.ts",
+        "scratchpad/effected/toml/internal/semantic.ts",
+        "scratchpad/effected/toml/internal/stringifyValue.ts"
+      ],
+      "tests": [
+        "scratchpad/test/toml/parser.test.ts",
+        "scratchpad/test/toml/scanner.test.ts",
+        "scratchpad/test/toml/semantic.test.ts",
+        "scratchpad/test/toml/Toml.test.ts",
+        "scratchpad/test/toml/TomlDocument.test.ts",
+        "scratchpad/test/toml/hostile.test.ts",
+        "scratchpad/test/toml/e2e/toml-test.e2e.test.ts"
+      ],
+      "findings": [
+        "r-metadata-engine",
+        "r-error-engine",
+        "r-schema-alias",
+        "r-match-provenance",
+        "r-match-scalar",
+        "r-match-escapes",
+        "r-perf-engine",
+        "r-restore-test-lines",
+        "allow-1"
+      ]
+    }
+  ],
+  "findings": {
+    "r-literals": {
+      "file": "scratchpad/effected/toml/TomlNode.ts",
+      "class": "schema",
+      "summary": "Named domains lack the mandated LiteralKit schema and Enum/is/$match surface.",
+      "fix": "Replace all seven named domains with LiteralKit, retaining literals, annotations, names and typeof X.Type aliases; annotate the internal NonFiniteSpelling. Pass existing const tuples directly and do not add as const to inline arrays. Keep TomlErrorCode as the union of the four kits and anonymous newline unions as S.Literals."
+    },
+    "r-calendar-check": {
+      "file": "scratchpad/effected/toml/TomlDateTime.ts",
+      "class": "schema",
+      "summary": "The reusable calendar constraint has no identifier or description.",
+      "fix": "Add an IdentityComposer-derived identifier and a meaningful description alongside the existing title. Preserve the predicate, accepted dates and user-facing failure text."
+    },
+    "r-metadata-model": {
+      "file": "scratchpad/effected/toml/TomlNode.ts",
+      "class": "schema",
+      "summary": "Identity and schema metadata are incomplete on model schemas and reused fields.",
+      "fix": "Annotate TomlValueNode and IeeeNumber with the local $I.annoteSchema/annote helpers and add meaningful annotations to shared date/time fields. Preserve suspension, IEEE codecs, arbitraries and all validation behavior. The NonFiniteSpelling metadata is owned by r-literals."
+    },
+    "r-metadata-facade": {
+      "file": "scratchpad/effected/toml/TomlEdit.ts",
+      "class": "schema",
+      "summary": "Three facade invariant schemas omit the required schema and field metadata.",
+      "fix": "Add local composer-derived annotations and meaningful message-field annotations to the three existing S.TaggedError schemas. Preserve tags, construction and failure messages; do not consolidate their error identities."
+    },
+    "r-metadata-engine": {
+      "file": "scratchpad/effected/toml/internal/limits.ts",
+      "class": "schema",
+      "summary": "Three engine invariant schemas omit required schema and field metadata.",
+      "fix": "Annotate each existing error schema with its local $I and annotate its message field, keeping current tags, messages and construction behavior. Do not replace schema metadata work with a JSDoc conversion."
+    },
+    "r-visitor-schema": {
+      "file": "scratchpad/effected/toml/TomlVisitor.ts",
+      "class": "schema",
+      "summary": "The event domain has no schema source of truth for validation, codecs or arbitraries.",
+      "fix": "Define an annotated schema tagged union for TableStart, ArrayTableStart, KeyValue and Comment, deriving the event type from it. Preserve constructors, $is, $match, payloads and document-order behavior through a compatibility facade; derive any retained Data facade from the schema type."
+    },
+    "r-sort": {
+      "file": "scratchpad/effected/toml/TomlEdit.ts",
+      "class": "law",
+      "summary": "Two production paths retain forbidden native array sorting.",
+      "fix": "Use A.sort with explicit numeric projection Orders: descending edit offsets, ascending visitor offsets. Use the returned sorted collection, keep the edit input unmodified, and preserve stable ordering for ties."
+    },
+    "r-error-modify": {
+      "file": "scratchpad/effected/toml/TomlFormat.ts",
+      "class": "law",
+      "summary": "The modification throw carrier is not schema-backed as the binding error law requires.",
+      "fix": "Convert ModifyFailure to an annotated S.TaggedError with code, message, offset and len fields; use an S.is-derived catch guard. Preserve tag, name, messages and facade error behavior. Keep a positional compatibility constructor or update failResolve within this same file; do not drop error names merely because tests omit them."
+    },
+    "r-error-engine": {
+      "file": "scratchpad/effected/toml/internal/diagnostics.ts",
+      "class": "law",
+      "summary": "Raw diagnostic and guard carriers lack required schema-backed errors and identities.",
+      "fix": "Define an annotated RawDiagnostic schema and convert RawTomlError and GuardExceeded to annotated S.TaggedError schemas with annotated fields and S.is-derived guards. Preserve positional constructor compatibility (including new RawTomlError(diagnostic) used by TomlDiagnostic.test.ts), tags, name=\"Error\", messages and facade catch behavior; alternatively adapt engine callers only within this group. Do not change the test constructor contract owned by g1."
+    },
+    "r-schema-alias": {
+      "file": "scratchpad/effected/toml/internal/parser.ts",
+      "class": "law",
+      "summary": "The production Schema namespace violates the mandatory S alias.",
+      "fix": "Rename the namespace import to S and update all four references. If r-perf-engine replaces these guards, retain the S binding only where still needed; place remaining Effect imports together."
+    },
+    "r-match-provenance": {
+      "file": "scratchpad/effected/toml/internal/semantic.ts",
+      "class": "effect-idiom",
+      "summary": "Closed-domain dispatch loses an exhaustive-match obligation and silently falls through for a new variant.",
+      "fix": "Use exhaustive Match dispatch across table-explicit, table-implicit, table-dotted, array-tables, inline, static-array and value, returning the next SemNode. Preserve mutations, error codes, precedence and the last array-table selection."
+    },
+    "r-match-scalar": {
+      "file": "scratchpad/effected/toml/internal/stringifyValue.ts",
+      "class": "effect-idiom",
+      "summary": "Scalar dispatch retains the conditional ladder prohibited by the cited Effect idiom.",
+      "fix": "Use Match for string, boolean, number, bigint and TOML datetime scalar cases with an undefined fallback. Preserve IntegerOutOfRange inside bigint handling and all rendered bytes. Coordinate with r-perf-engine so hoisted datetime guards are reused."
+    },
+    "r-match-escapes": {
+      "file": "scratchpad/effected/toml/internal/scanner.ts",
+      "class": "effect-idiom",
+      "summary": "Escape dispatch retains handwritten finite-case conditional branching.",
+      "fix": "Use Match with the existing undefined fallback or an Effect HashMap codepoint-to-character table and O.getOrUndefined. Preserve all eight mappings, including escape, quote and backslash; unknown codes must stay undefined."
+    },
+    "r-perf-facade": {
+      "file": "scratchpad/effected/toml/TomlFormat.ts",
+      "class": "perf",
+      "summary": "Facade node dispatch contributes avoidable guard compilation and allocations to the measured formatter/visitor regression.",
+      "fix": "Use allocation-free Predicate.isTagged or exhaustive Match dispatch for already-typed TomlValueNode/TomlExpression unions in TomlFormat and TomlVisitor. Preserve schema validation at unknown boundaries, error order and bytes; do not restore banned instanceof checks. Re-run the seat benchmark after integration and report the comparison (the seat proposes a 1.1x target, not a new binding gate)."
+    },
+    "r-perf-engine": {
+      "file": "scratchpad/effected/toml/internal/stringifyValue.ts",
+      "class": "perf",
+      "summary": "Repeated engine guard compilation contributes to the measured parse/stringify/format regression.",
+      "fix": "Hoist the datetime schema guard once per parser/stringifier module (a local union avoids cross-group exports), and use Predicate.isTagged or exhaustive Match for already-typed semantic CST unions. Avoid datetime checks on arrays/plain objects when preserving scalar and unsupported-value classification. Keep unknown-input validation, circular-reference checks, bytes and error order unchanged. Re-run the seat workload after all groups integrate; do not replace Effect collections with native ones."
+    },
+    "r-restore-test-lines": {
+      "file": "scratchpad/test/toml/Toml.test.ts",
+      "class": "test",
+      "summary": "Unforced upstream test rewrites change unexpected-success failure extraction and violate the operator restoration ruling.",
+      "fix": "Restore the eleven upstream Effect.flip extraction lines, retaining required import rewrites, current S.decodeEffect API names and diagnostic/D15-forced assertion guards. Remove only imports made unused by that restoration; retain legitimate Effect.result parity assertions. Preserve test names, bodies and assertions otherwise. Defer assertFailure/assertExitFailure migration to S3 (b-canon)."
+    },
+    "allow-1": {
+      "file": "scratchpad/effected/toml/internal/stringifyValue.ts",
+      "class": "law",
+      "summary": "Native identity-keyed Set cycle detection remains under an exception the operator explicitly removed.",
+      "fix": "Replace Set<object> with a ReadonlyArray<object> ancestor stack; scan using A.some(ancestors, ancestor => ancestor === value), never structural A.contains/HashSet. Pass [...ancestors, value] down recursive renderInline/emitTable branches and start with []; preserve branch-local ancestry, nesting limits and CircularReference diagnostics. Keep hostile.test.ts cycle cases and Toml.test.ts three-hop cycles unchanged and add/retain a shared-but-acyclic sibling case. The central integrator removes the allowlist entry and generated bookkeeping; this group must not edit standards or repo config."
+    }
+  }
+}

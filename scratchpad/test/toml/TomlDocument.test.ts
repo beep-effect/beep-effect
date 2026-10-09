@@ -10,10 +10,10 @@ import { join, resolve } from "node:path";
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import * as Result from "effect/Result";
 import { Toml, TomlParseError } from "../../effected/toml/Toml.ts";
 import { TomlDocument } from "../../effected/toml/TomlDocument.ts";
 import { TomlInteger, TomlKey, TomlKeyValue } from "../../effected/toml/TomlNode.ts";
+import { expectFailure } from "./expectFailure.ts";
 
 const CORPUS_VALID = resolve(import.meta.dirname, "fixtures/toml-test/valid");
 
@@ -71,7 +71,7 @@ describe("TomlDocument", () => {
 				// The document is still lossless and editable.
 				assert.strictEqual(doc.stringify(), "a=1\na=2\n");
 				// toValue refuses: it fails with the stored diagnostics.
-				const error = yield* Effect.result(doc.toValue()).pipe(Effect.map((result) => result.pipe(Result.flip, Result.getOrThrow)));
+				const error = yield* expectFailure(doc.toValue());
 				assert.instanceOf(error, TomlParseError);
 				assert.deepStrictEqual(error.diagnostics, doc.diagnostics);
 			}),

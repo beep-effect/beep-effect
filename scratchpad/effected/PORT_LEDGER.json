@@ -2037,9 +2037,156 @@
         }
       ],
       "fixturesBytes": 109021,
-      "deviations": [],
-      "backlog": [],
-      "reviewRounds": [],
+      "deviations": [
+        {
+          "test": "scratchpad/test/toml/Toml.test.ts:148,223,232; scratchpad/test/toml/semantic.test.ts:298; scratchpad/test/toml/TomlFormat.test.ts",
+          "upstreamBehaviour": "TomlFormat semantic entries and semantic.ts provenance tables use native Map; stringifyValue.ts uses Set ancestry and Object.keys; semantic.ts reads own keys with Object.hasOwn; tests construct unsupported Date inputs with new Date.",
+          "labBehaviour": "TomlFormat.ts and internal/semantic.ts use MutableHashMap and Option lookups; internal/stringifyValue.ts uses ancestor arrays and R.keys; semantic.ts uses R.has; Date inputs use DateTime.now/toDateUtc. Native error replacements are detailed in tagged-errors.",
+          "reason": "native-runtime: D5 and the native-runtime law require Effect collections and helpers; the 2026-10-09 grilling ruling removes the identity-Set exception while preserving cycle and prototype-safety behavior."
+        },
+        {
+          "test": "scratchpad/test/toml/Toml.test.ts:223,232; scratchpad/test/toml/hostile.test.ts:143,156",
+          "upstreamBehaviour": "internal/stringifyValue.ts checkCircular, renderInline and emitTable share a Set<object>, adding and deleting containers during each branch; entrypoints allocate new Set().",
+          "labBehaviour": "checkCircular scans ReadonlyArray<object> with A.some and ===; renderInline/emitTable pass fresh branch-local ancestor arrays; renderInlineValue/stringifyValue start with []. Cycles still fail and repeated acyclic references render independently.",
+          "reason": "identity-keys: the 2026-10-09 identity-keyed-structure ruling requires an ancestor stack scanned with ===, avoiding structural equality and global reference marking."
+        },
+        {
+          "test": "scratchpad/test/toml/TomlDiagnostic.test.ts:69; scratchpad/test/toml/TomlEdit.test.ts:32; scratchpad/test/toml/Toml.test.ts:40,62; module suite scratchpad/test/toml/**",
+          "upstreamBehaviour": "RawTomlError and GuardExceeded extend native Error with positional constructors; ModifyFailure extends Error; assertCap throws TypeError; overlapping edits and format invariants throw Error, and missing elements can trigger native TypeError.",
+          "labBehaviour": "RawTomlError, GuardExceeded, ModifyFailure and six cap/invariant carriers use annotated S.TaggedError. RawTomlError snapshots diagnostic fields; GuardExceeded.new supplies its message; callers use .make/static factories and S.is guards. Existing raw Error names and messages are retained.",
+          "reason": "tagged-errors: D5 and error law 7 require schema-backed typed carriers; D15/index diagnostics require explicit missing-element handling, including the sparse array-table defect carrier."
+        },
+        {
+          "test": "scratchpad/test/toml/TomlNode.test.ts:36,45,137,169; scratchpad/test/toml/TomlDiagnostic.test.ts:42,69; scratchpad/test/toml/TomlVisitor.test.ts:91",
+          "upstreamBehaviour": "RawDiagnostic is a type-only interface; TomlVisitorEvent is a Data.TaggedEnum type literal with Data constructors; TomlKeyKind, TomlStringStyle and four error-code domains are plain Schema.Literals; guards use schema-class instanceof checks; corpus expectations use JSON.parse.",
+          "labBehaviour": "RawDiagnostic is S.Struct; visitor events derive from S.TaggedUnion with an S.Opaque class retaining Data constructors/$is/$match; six existing domains and new NonFiniteSpelling use LiteralKit. Unknown values use hoisted S.is guards, typed CST uses P.isTagged, and corpus JSON uses S.fromJsonString.",
+          "reason": "schema-first: schema-first domain models, D5 LiteralKit, instanceOfSchema diagnostics and preferSchemaOverJson apply; the confirmed schema-statics ruling requires S.Opaque statics."
+        },
+        {
+          "test": "scratchpad/test/toml/TomlNode.test.ts:36,51; scratchpad/test/toml/TomlDiagnostic.test.ts:12; scratchpad/test/toml/TomlEdit.test.ts:24; module suite scratchpad/test/toml/**",
+          "upstreamBehaviour": "Schema.Number accepts non-finite numeric integer values, node spans, diagnostic positions and TomlRange/TomlEdit spans; raw diagnostic, guard and modification carriers have unchecked numeric fields; visitor numeric payloads are type-only.",
+          "labBehaviour": "S.Finite governs TomlInteger numbers and every TomlNode span, TomlDiagnostic position, TomlRange/TomlEdit span, RawDiagnostic offset/length, GuardExceeded limit/actual/offset, ModifyFailure offset/len and visitor index/offset schema. Schema construction/decode rejects NaN and infinities; floats retain IEEE support.",
+          "reason": "numeric-domains: schemaNumber and the later 2026-10-09 ruling accept S.Finite narrowing; round-1 sol-1-1 reproduces rejection of an upstream Infinity-length TomlRange and the merged inventory rejects widening it back."
+        },
+        {
+          "test": "scratchpad/test/toml/Toml.test.ts:22,421; scratchpad/test/toml/hostile.test.ts:203; scratchpad/test/toml/parser.test.ts:58; scratchpad/test/toml/semantic.test.ts:14",
+          "upstreamBehaviour": "Toml.schema double-casts codec composition; TomlFormat.modify casts its edit result; semantic output navigation and stringify tables/arrays use casts; tests cast parsed data, errors and intentionally wrong input, and access possibly missing indexed values.",
+          "labBehaviour": "Codec composition and edit results infer directly; production paths narrow objects/arrays and check missing keys/elements; tests use Predicate/schema guards and defined-value assertions. Intentionally ill-typed input goes through test/toml/deliberatelyInvalid.ts, the single operator-authorized cast.",
+          "reason": "type-safety: D15 forbids unsafe assertions except the single deliberatelyInvalid helper authorized on 2026-10-09; compiler diagnostics require indexed-value narrowing while retaining assertions."
+        },
+        {
+          "test": "scratchpad/test/toml/expectFailure.ts:6; scratchpad/test/toml/Toml.test.ts:40,289; scratchpad/test/toml/TomlDiagnostic.test.ts:70; scratchpad/test/toml/scanner.test.ts; scratchpad/test/toml/e2e/taggedJson.ts:136",
+          "upstreamBehaviour": "Scanner functions, assertCap, analyze, stringifyValue and assertMatchesTagged expose data-first calls only; classes are constructed with new; TomlFloat uses Schema.Number; failure tests flip unknown-valued parse/decode effects; tests use older decodeUnknown/encodeSync APIs.",
+          "labBehaviour": "Required dual data-last overloads cover ten scanner functions, assertCap, analyze, stringifyValue and assertMatchesTagged; schema construction uses .make/factories. TomlFloat uses declared IeeeNumber with JSON/StringTree/Arbitrary codec links. expectFailure uses Effect.match to return typed failures and fail on success; tests use current decode/encode APIs.",
+          "reason": "tsgo-diagnostics: @effect/tsgo missingPipeableSignature, newSchemaClass/overriddenSchemaConstructor, schemaNumber and TS377030 force these shapes; repair-toml.md:58-59 supersedes temporary Effect.flip restoration."
+        },
+        {
+          "test": "scratchpad/test/toml/TomlEdit.test.ts:11,36; scratchpad/test/toml/TomlVisitor.test.ts:119; scratchpad/test/toml/scanner.test.ts:77; scratchpad/test/toml/TomlFormat.test.ts:18; scratchpad/test/toml/hostile.test.ts:46",
+          "upstreamBehaviour": "Provenance, scalar and simple-escape dispatch use switch; TomlEdit.applyAll and visitor collection sort native arrays; generator bodies catch synchronous exceptions directly; modified/modifyError/parseError helpers return bare Effect.gen effects; optional comment fields use conditional spreads.",
+          "labBehaviour": "Match handles provenance, scalar and escape dispatch; A.sort with numeric Orders orders edits/events; TomlDocument.parse and TomlFormat.modify use Effect.try; test helpers use Effect.fn. Predicate, Array, Record, Option and Result helpers replace applicable native checks, spreads and catches.",
+          "reason": "effect-first: Effect laws and EF-7 require Match/helper dispatch, Effect-native sorting and error handling; effectFnOpportunity requires Effect.fn wrappers; equivalent ordering, output bytes and failure precedence are retained."
+        },
+        {
+          "test": "module suite scratchpad/test/toml/**",
+          "upstreamBehaviour": "Source files, tests and source JSDoc examples import named modules from the root effect barrel; the parser has no schema namespace import before diagnostic guard conversion.",
+          "labBehaviour": "Runtime imports and source examples use effect/Module paths, with Function.dual/identity and the S production schema alias; parser.ts imports effect/Schema as S. README examples remain deferred in the round-1 backlog.",
+          "reason": "effect-imports: operator step 3 and effect-imports laws require dedicated module imports and canonical production aliases; this entry excludes unchanged README fences."
+        },
+        {
+          "test": "module suite scratchpad/test/toml/**",
+          "upstreamBehaviour": "Schema classes use short literal identities or default tagged identities, union/literal schemas lack composer metadata, shared datetime fields have no descriptions, and the calendar filter has only a title.",
+          "labBehaviour": "$ScratchpadId-derived $I identities/annotations cover Toml, TomlDateTime, TomlDiagnostic, TomlDocument, TomlEdit, TomlFormat and TomlNode schemas plus visitor events and internal diagnostic/cap/invariant carriers. IeeeNumber, NonFiniteSpelling, suspended unions, calendar constraints and fields gain schema metadata.",
+          "reason": "identity-annotations: operator step 4, D5 and EF-12 require canonical @beep/identity schema and field annotations; fix-toml-g1/g2/g3 metadata reports describe this class despite some identity-keys labels."
+        }
+      ],
+      "backlog": [
+        {
+          "seat": "grok",
+          "round": 1,
+          "finding": "b-jsdoc — Public JSDoc carrier conversion (scratchpad/effected/toml/Toml.ts:173-182)",
+          "reason": "jsdoc: During S2, preserve upstream bodies and examples, convert to titled **Example** (Title) and **Details**/**Gotchas**, add canonical categories and @since 0.0.0, drop @public, and run example typechecks."
+        },
+        {
+          "seat": "grok",
+          "round": 1,
+          "finding": "b-readme-imports — README Effect and lab imports (scratchpad/effected/toml/README.md:50,70,85,118)",
+          "reason": "docs: During S2, use dedicated effect/Effect and effect/Schema imports (Effect and S), update examples to the intended lab entry, and retain the demonstrated outcomes."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "b-properties — Schema properties and property-run floor (scratchpad/test/toml/oracle.property.test.ts:300)",
+          "reason": "test: In S3 retain differential suites, route counts through fcRuns and add schema-derived round trips and parser/formatter fidelity and idempotence properties."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "b-stale-exception — Stale source diagnostic exception (scratchpad/effected/DIAGNOSTIC_EXCEPTIONS.md:32)",
+          "reason": "docs: Central bookkeeping should remove the stale TomlNode row or explain the IeeeNumber replacement; retain the separate live test suppression."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "b-description-links — Declaration-reference artifacts in descriptions (scratchpad/effected/toml/TomlDiagnostic.ts:116)",
+          "reason": "jsdoc: Use the plain names in schema description strings; retain proper {@link (X:type)} syntax only in JSDoc bodies."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "b-diagnostic-collection — Simplify semantic diagnostic collection (scratchpad/effected/toml/TomlDocument.ts:106-117)",
+          "reason": "effect-idiom: Consider Effect.match with onFailure returning [diagnostic] and onSuccess returning [] while preserving defect passthrough and document construction."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "b-invariant-consolidation — Optional invariant guard consolidation (scratchpad/effected/toml/TomlFormat.ts:48)",
+          "reason": "effect-idiom: Evaluate a module-local extraction only if it preserves each existing error identity, message and failure order. Do not adopt the seat's single-error replacement without a law or verified bug justifying that observable change."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "b-lookup-spelling — Consistent Effect collection lookup spelling (scratchpad/effected/toml/TomlFormat.ts:505)",
+          "reason": "effect-idiom: Consider a local lookup helper or consistent pipe form where it reduces code; retain Effect collections and do not claim the extraction removes hashing cost."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "b-canon — Canonical failure assertion helpers (scratchpad/test/toml/Toml.test.ts)",
+          "reason": "test: During S3 migrate failure assertions using Effect.exit/Effect.result and the canonical helpers, retaining all upstream assertion meaning; do not use S3 deferral to retain the unforced rewrites now."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "b-tagged-json-wrapper — Redundant tagged-JSON dual wrapper (scratchpad/test/toml/e2e/taggedJson.ts:136-146)",
+          "reason": "test: During test cleanup, expose the dual(3, ...) implementation directly with both signatures and remove the forwarding wrapper; preserve every tagged-JSON assertion and the diagnostic-required dual form."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "b-layout-newline — Import layout and optional newline domain (scratchpad/effected/toml/internal/semantic.ts:1-25)",
+          "reason": "effect-idiom: Consider regrouping imports beneath headers in Effect/@beep/relative order. Extract a shared newline domain only if reuse warrants it; keep the current anonymous S.Literals unions otherwise."
+        }
+      ],
+      "reviewRounds": [
+        {
+          "round": 1,
+          "commit": "3fa5876691901fccf3d1cd29e9324564df134b56",
+          "seats": {
+            "grok": {
+              "required": 4,
+              "backlog": 3
+            },
+            "sol": {
+              "required": 9,
+              "backlog": 3
+            },
+            "fable": {
+              "required": 6,
+              "backlog": 13
+            }
+          }
+        }
+      ],
       "commits": [
         {
           "stage": 0,

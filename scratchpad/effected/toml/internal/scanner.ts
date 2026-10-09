@@ -1,4 +1,5 @@
 import { dual } from "effect/Function";
+import * as Match from "effect/Match";
 // The character-level heart of the engine: position-based scan functions over
 // the source string, plus value-token classification. Every scan function is
 // pure and stateless — `(source, pos)` in, `ScanResult` out — and every
@@ -50,7 +51,7 @@ const LOWER_X = 0x78;
 const BOM = 0xfeff;
 
 const raise = (code: TomlErrorCodeRaw, message: string, offset: number, length: number): never => {
-	throw new RawTomlError({ code, message, offset, length });
+	throw RawTomlError.make({ code, message, offset, length });
 };
 
 /** `U+XXXX` display form of a char code. */
@@ -162,26 +163,17 @@ export const scanBareKey: {
 });
 
 /** The decoded character for a simple escape code, or undefined. */
-const simpleEscape = (code: number): string | undefined => {
-	if (code === 0x62) {
-		return "\b";
-	} else if (code === 0x74) {
-		return "\t";
-	} else if (code === 0x6e) {
-		return "\n";
-	} else if (code === 0x66) {
-		return "\f";
-	} else if (code === 0x72) {
-		return "\r";
-	} else if (code === 0x65) {
-		return "\u001b";
-	} else if (code === QUOTE) {
-		return '"';
-	} else if (code === BACKSLASH) {
-		return "\\";
-	}
-	return undefined;
-};
+const simpleEscape = Match.type<number>().pipe(
+	Match.when(0x62, () => "\b"),
+	Match.when(0x74, () => "\t"),
+	Match.when(0x6e, () => "\n"),
+	Match.when(0x66, () => "\f"),
+	Match.when(0x72, () => "\r"),
+	Match.when(0x65, () => "\u001b"),
+	Match.when(QUOTE, () => '"'),
+	Match.when(BACKSLASH, () => "\\"),
+	Match.orElse(() => undefined),
+);
 
 const HEX_DIGITS = /^[0-9A-Fa-f]+$/;
 

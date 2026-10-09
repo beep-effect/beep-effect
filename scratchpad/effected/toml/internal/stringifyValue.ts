@@ -1,6 +1,10 @@
 import { $ScratchpadId } from "@beep/identity/packages";
-import { dual } from "effect/Function";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
+import * as Match from "effect/Match";
+import * as P from "effect/Predicate";
+import * as R from "effect/Record";
+import * as S from "effect/Schema";
 // The canonical TOML document emitter over plain JavaScript values — the
 // encode side of the value pipeline. Layout contract: within a table,
 // non-table pairs emit first (document order), then sub-tables as
@@ -17,15 +21,13 @@ import { TomlLocalDate, TomlLocalDateTime, TomlLocalTime, TomlOffsetDateTime } f
 import type { TomlStringifyErrorCodeRaw } from "./diagnostics.ts";
 import { RawTomlError } from "./diagnostics.ts";
 import { GuardExceeded, MAX_NESTING_DEPTH } from "./limits.ts";
-import * as S from "effect/Schema";
-import * as P from "effect/Predicate";
-import * as R from "effect/Record";
 
 const $I = $ScratchpadId.create("effected/toml/internal/stringifyValue");
 
 class TomlStringifyInvariantError extends S.TaggedError<TomlStringifyInvariantError>($I`TomlStringifyInvariantError`)(
 	"TomlStringifyInvariantError",
-	{ message: S.String },
+	{ message: S.String.annotateKey({ description: "Explanation of the violated stringify engine invariant." }) },
+	$I.annote("TomlStringifyInvariantError", { description: "An impossible state in the TOML value emitter." }),
 ) {}
 
 const INT64_MIN = -(2n ** 63n);
@@ -39,12 +41,12 @@ const BARE_KEY = /^[A-Za-z0-9_-]+$/;
 type Path = ReadonlyArray<string | number>;
 
 const raise = (code: TomlStringifyErrorCodeRaw, message: string): never => {
-	throw new RawTomlError({ code, message, offset: 0, length: 0 });
+	throw RawTomlError.make({ code, message, offset: 0, length: 0 });
 };
 
 const guardDepth = (depth: number): void => {
 	if (depth > MAX_NESTING_DEPTH) {
-		throw new GuardExceeded("NestingDepthExceeded", MAX_NESTING_DEPTH, depth, 0);
+		throw GuardExceeded.new("NestingDepthExceeded", MAX_NESTING_DEPTH, depth, 0);
 	}
 };
 
@@ -138,13 +140,7 @@ const renderNumber = (value: number): string => {
 	return /[.eE]/.test(text) ? text : `${text}.0`;
 };
 
-const isTomlDateTime = (
-	value: unknown,
-): value is TomlLocalDate | TomlLocalDateTime | TomlLocalTime | TomlOffsetDateTime =>
-	S.is(TomlOffsetDateTime)(value) ||
-	S.is(TomlLocalDateTime)(value) ||
-	S.is(TomlLocalDate)(value) ||
-	S.is(TomlLocalTime)(value);
+const isTomlDateTime = S.is(S.Union([TomlOffsetDateTime, TomlLocalDateTime, TomlLocalDate, TomlLocalTime]));
 
 /** Plain objects only (null-prototype included) — never arrays or class instances. */
 const isPlainObject = (value: unknown): value is Record<string, unknown> => {
@@ -156,63 +152,53 @@ const isPlainObject = (value: unknown): value is Record<string, unknown> => {
 };
 
 /** Scalar rendering; `undefined` means "not a scalar" (arrays/objects/rejects). */
-const renderScalar = (value: unknown, path: Path): string | undefined => {
-	if (P.isString(value)) {
-		return renderString(value);
-	}
-	if (P.isBoolean(value)) {
-		return value ? "true" : "false";
-	}
-	if (P.isNumber(value)) {
-		return renderNumber(value);
-	}
-	if (P.isBigInt(value)) {
+const renderScalar = Match.fn((value: unknown, _path: Path) => value).pipe(
+	Match.when(P.isString, renderString),
+	Match.when(P.isBoolean, (value) => value ? "true" : "false"),
+	Match.when(P.isNumber, renderNumber),
+	Match.when(P.isBigInt, (value, _input, path) => {
 		if (value < INT64_MIN || value > INT64_MAX) {
 			raise("IntegerOutOfRange", `integer ${value} at ${renderPath(path)} is outside the 64-bit signed range`);
 		}
 		return value.toString();
-	}
-	if (isTomlDateTime(value)) {
-		return value.toString();
-	}
-	return undefined;
-};
+	}),
+	Match.when(isTomlDateTime, (value) => value.toString()),
+	Match.orElse(() => undefined),
+);
 
-const checkCircular = (value: object, ancestors: Set<object>, path: Path): void => {
-	if (ancestors.has(value)) {
+const checkCircular = (value: object, ancestors: ReadonlyArray<object>, path: Path): void => {
+	if (A.some(ancestors, (ancestor) => ancestor === value)) {
 		raise("CircularReference", `circular reference at ${renderPath(path)}`);
 	}
 };
 
 /** One value as an inline fragment: scalars, inline arrays, inline tables. */
-const renderInline = (value: unknown, path: Path, depth: number, ancestors: Set<object>): string => {
+const renderInline = (value: unknown, path: Path, depth: number, ancestors: ReadonlyArray<object>): string => {
 	// Guard on container DESCENT only, never on a scalar leaf — mirroring the
 	// parse side, which checks parseArray/parseInlineTable at the opening
 	// bracket and never guards the leaf. Guarding the leaf too would give
 	// stringify a one-level tighter effective bound than parse: a value parsed
 	// at exactly MAX_NESTING_DEPTH containers with a non-empty innermost
 	// element would fail to re-emit.
-	const scalar = renderScalar(value, path);
-	if (scalar !== undefined) {
-		return scalar;
-	}
 	if (A.isArray(value)) {
 		guardDepth(depth);
 		checkCircular(value, ancestors, path);
-		ancestors.add(value);
-		const items = value.map((item, index) => renderInline(item, [...path, index], depth + 1, ancestors));
-		ancestors.delete(value);
+		const nextAncestors = [...ancestors, value];
+		const items = value.map((item, index) => renderInline(item, [...path, index], depth + 1, nextAncestors));
 		return `[${items.join(", ")}]`;
 	}
 	if (isPlainObject(value)) {
 		guardDepth(depth);
 		checkCircular(value, ancestors, path);
-		ancestors.add(value);
+		const nextAncestors = [...ancestors, value];
 		const parts = R.keys(value).map(
-			(key) => `${renderKey(key)} = ${renderInline(value[key], [...path, key], depth + 1, ancestors)}`,
+			(key) => `${renderKey(key)} = ${renderInline(value[key], [...path, key], depth + 1, nextAncestors)}`,
 		);
-		ancestors.delete(value);
 		return parts.length === 0 ? "{}" : `{ ${parts.join(", ")} }`;
+	}
+	const scalar = renderScalar(value, path);
+	if (scalar !== undefined) {
+		return scalar;
 	}
 	return raise("UnsupportedValue", `unsupported ${jsTypeName(value)} value at ${renderPath(path)}`);
 };
@@ -222,7 +208,7 @@ const renderInline = (value: unknown, path: Path, depth: number, ancestors: Set<
  * objects all inline). The single-value seam the document modify entry point
  * rides on.
  */
-export const renderInlineValue = (value: unknown): string => renderInline(value, [], 0, new Set());
+export const renderInlineValue = (value: unknown): string => renderInline(value, [], 0, []);
 
 /** A table's entries split into the three layout groups, document order kept. */
 interface Classified {
@@ -267,14 +253,14 @@ const emitTable = (
 	errorPath: Path,
 	lines: Array<string>,
 	depth: number,
-	ancestors: Set<object>,
+	ancestors: ReadonlyArray<object>,
 ): void => {
 	guardDepth(depth);
 	checkCircular(table, ancestors, errorPath);
-	ancestors.add(table);
+	const tableAncestors = [...ancestors, table];
 	const { pairs, tables, arrayTables } = classify(table);
 	for (const key of pairs) {
-		lines.push(`${renderKey(key)} = ${renderInline(table[key], [...errorPath, key], depth + 1, ancestors)}`);
+		lines.push(`${renderKey(key)} = ${renderInline(table[key], [...errorPath, key], depth + 1, tableAncestors)}`);
 	}
 	for (const key of tables) {
 		pushHeader(lines, `[${renderHeaderPath([...headerPath, key])}]`);
@@ -288,7 +274,7 @@ const emitTable = (
 			[...errorPath, key],
 			lines,
 			depth + 1,
-			ancestors,
+			tableAncestors,
 		);
 	}
 	for (const key of arrayTables) {
@@ -296,19 +282,17 @@ const emitTable = (
 		if (!A.isArray(array) || !array.every(isPlainObject)) {
 			return raise("UnsupportedValue", `unsupported ${jsTypeName(array)} value at ${renderPath([...errorPath, key])}`);
 		}
-		checkCircular(array, ancestors, [...errorPath, key]);
-		ancestors.add(array);
+		checkCircular(array, tableAncestors, [...errorPath, key]);
+		const arrayAncestors = [...tableAncestors, array];
 		for (let index = 0; index < array.length; index++) {
 			pushHeader(lines, `[[${renderHeaderPath([...headerPath, key])}]]`);
 			const element = array[index];
 			if (element === undefined) {
 				throw TomlStringifyInvariantError.make({ message: "missing array-table element" });
 			}
-			emitTable(element, [...headerPath, key], [...errorPath, key, index], lines, depth + 1, ancestors);
+			emitTable(element, [...headerPath, key], [...errorPath, key, index], lines, depth + 1, arrayAncestors);
 		}
-		ancestors.delete(array);
 	}
-	ancestors.delete(table);
 };
 
 /**
@@ -327,6 +311,6 @@ export const stringifyValue: {
 		);
 	}
 	const lines: Array<string> = [];
-	emitTable(value, [], [], lines, 0, new Set());
+	emitTable(value, [], [], lines, 0, []);
 	return lines.length === 0 ? "" : `${lines.join(newline)}${newline}`;
 });

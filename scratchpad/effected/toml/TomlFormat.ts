@@ -16,7 +16,6 @@
 // only.
 
 import { $ScratchpadId } from "@beep/identity/packages";
-import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as MutableHashMap from "effect/MutableHashMap";
@@ -27,17 +26,16 @@ import { MAX_NESTING_DEPTH, isGuardExceeded } from "./internal/limits.ts";
 import { parseExpressions } from "./internal/parser.ts";
 import { analyze } from "./internal/semantic.ts";
 import { renderInlineValue, renderKey } from "./internal/stringifyValue.ts";
-import { TomlDiagnostic } from "./TomlDiagnostic.ts";
+import { TomlDiagnostic, TomlErrorCode } from "./TomlDiagnostic.ts";
 import { TomlDocument } from "./TomlDocument.ts";
 import type { TomlPath, TomlRange, TomlSegment } from "./TomlEdit.ts";
 import { TomlEdit } from "./TomlEdit.ts";
 import type { TomlExpression, TomlInlineEntry, TomlValueNode } from "./TomlNode.ts";
-import {
+import type {
 	TomlArray,
 	TomlArrayTableHeader,
 	TomlInlineTable,
 	TomlKeyValue,
-	TomlString,
 	TomlTableHeader,
 	TomlTrivia,
 } from "./TomlNode.ts";
@@ -47,7 +45,8 @@ const $I = $ScratchpadId.create("effected/toml/TomlFormat");
 
 class TomlFormatInvariantError extends S.TaggedError<TomlFormatInvariantError>($I`TomlFormatInvariantError`)(
 	"TomlFormatInvariantError",
-	{ message: S.String },
+	{ message: S.String.annotateKey({ description: "Explanation of the missing CST node, path segment or splice span required by formatting or modification." }) },
+	$I.annote("TomlFormatInvariantError", { description: "A programmer defect encountered while computing TOML formatting or modification edits." }),
 ) {}
 
 /**
@@ -145,19 +144,19 @@ interface TaggedEdit {
 
 /** Multi-line string value spans — the bytes formatting must never touch. */
 const collectMultilineSpans = (node: TomlValueNode, out: Array<readonly [number, number]>): void => {
-	if (S.is(TomlString)(node)) {
+	if (P.isTagged(node, "TomlString")) {
 		if (node.style === "multiline-basic" || node.style === "multiline-literal") {
 			out.push([node.offset, node.offset + node.length]);
 		}
 		return;
 	}
-	if (S.is(TomlArray)(node)) {
+	if (P.isTagged(node, "TomlArray")) {
 		for (const item of node.items) {
 			collectMultilineSpans(item, out);
 		}
 		return;
 	}
-	if (S.is(TomlInlineTable)(node)) {
+	if (P.isTagged(node, "TomlInlineTable")) {
 		for (const entry of node.entries) {
 			collectMultilineSpans(entry.value, out);
 		}
@@ -314,7 +313,7 @@ const headerContentEnd = (source: string, expr: TomlTableHeader | TomlArrayTable
 		throw TomlFormatInvariantError.make({ message: "missing TOML element" });
 	}
 	const bracket = scanWs(source, lastKey.offset + lastKey.length, expr.offset + expr.length);
-	return bracket + (S.is(TomlArrayTableHeader)(expr) ? 2 : 1);
+	return bracket + (P.isTagged(expr, "TomlArrayTableHeader") ? 2 : 1);
 };
 
 /** All six format rules over the expression list; `[]` on malformed input (never corrupt it). */
@@ -329,9 +328,9 @@ const computeFormatEdits = (source: string, options: TomlFormattingOptions | und
 	const target = options?.newline;
 	for (const expr of expressions) {
 		let protectedSpans: ReadonlyArray<readonly [number, number]> = [];
-		if (S.is(TomlTrivia)(expr)) {
+		if (P.isTagged(expr, "TomlTrivia")) {
 			formatTrivia(source, emit, expr);
-		} else if (S.is(TomlKeyValue)(expr)) {
+		} else if (P.isTagged(expr, "TomlKeyValue")) {
 			formatLeading(source, emit, expr);
 			const lastKey = expr.keyPath[expr.keyPath.length - 1];
 			if (lastKey === undefined) {
@@ -433,9 +432,9 @@ const buildSemanticIndex = (
 ): { readonly root: ResTable; readonly sections: ReadonlyArray<Section> } => {
 	const sections: Array<Section> = [{ header: undefined, insertAfter: undefined }];
 	for (const expr of expressions) {
-		if (S.is(TomlTableHeader)(expr) || S.is(TomlArrayTableHeader)(expr)) {
+		if (P.isTagged(expr, "TomlTableHeader") || P.isTagged(expr, "TomlArrayTableHeader")) {
 			sections.push({ header: expr, insertAfter: expr.offset + expr.length });
-		} else if (!(S.is(TomlTrivia)(expr))) {
+		} else if (!P.isTagged(expr, "TomlTrivia")) {
 			const section = sections[sections.length - 1];
 			if (section === undefined) {
 				throw TomlFormatInvariantError.make({ message: "missing TOML element" });
@@ -529,20 +528,19 @@ const buildSemanticIndex = (
 // ── Internal: modify — path resolution ──────────────────────────────────────
 
 /** Thrown by the pure resolution helpers; `modify` materializes {@link TomlModificationError}. */
-class ModifyFailure extends Data.TaggedError("ModifyFailure")<{
-	readonly code: TomlErrorCodeRaw;
-	readonly message: string;
-	readonly offset: number;
-	readonly len: number;
-}> {
-	constructor(code: TomlErrorCodeRaw, message: string, offset: number, len: number) {
-		super({ code, message, offset, len });
-		this.name = "ModifyFailure";
-	}
+class ModifyFailure extends S.TaggedError<ModifyFailure>($I`ModifyFailure`)("ModifyFailure", {
+	code: TomlErrorCode.annotateKey({ description: "Diagnostic category explaining why the modification path or target was rejected." }),
+	message: S.String.annotateKey({ description: "Original path-resolution or modification failure message." }),
+	offset: S.Finite.annotateKey({ description: "Starting source position of the rejected target in UTF-16 code units." }),
+	len: S.Finite.annotateKey({ description: "Length of the rejected target span in UTF-16 code units." }),
+}, $I.annote("ModifyFailure", { description: "Internal modification failure materialized as a TomlModificationError at the facade boundary." })) {
+	override readonly name = "ModifyFailure";
 }
 
+const isModifyFailure = S.is(ModifyFailure);
+
 const failResolve = (code: TomlErrorCodeRaw, message: string, offset = 0, length = 0): never => {
-	throw new ModifyFailure(code, message, offset, length);
+	throw ModifyFailure.make({ code, message, offset, len: length });
 };
 
 const requireIndex = (segment: TomlSegment, what: string, offset: number, length: number): number => {
@@ -580,7 +578,7 @@ type Cursor =
 
 /** Wrap a CST value as a cursor; inline tables open as an entry scope (dotted keys included). */
 const cstCursor = (node: TomlValueNode, del: DeleteTarget): Cursor =>
-	S.is(TomlInlineTable)(node)
+	P.isTagged(node, "TomlInlineTable")
 		? { t: "inline", table: node, candidates: node.entries.map((entry, index) => ({ entry, index })), depth: 0 }
 		: { t: "cst", node, del };
 
@@ -641,7 +639,7 @@ const step = (cur: Cursor, segment: TomlSegment): Cursor => {
 		return { t: "inline", table: cur.table, candidates: matches, depth: cur.depth + 1 };
 	}
 	const node = cur.node;
-	if (S.is(TomlArray)(node)) {
+	if (P.isTagged(node, "TomlArray")) {
 		const idx = requireIndex(segment, "an array", node.offset, node.length);
 		if (idx >= node.items.length) {
 			return failResolve("DottedKeyConflict", `array index ${idx} is out of bounds`, node.offset, node.length);
@@ -818,7 +816,7 @@ const terminal = (cur: Cursor, segment: TomlSegment, value: unknown, ctx: Modify
 		return [{ offset: full.entry.value.offset, length: full.entry.value.length, newText: renderInlineValue(value) }];
 	}
 	const node = cur.node;
-	if (S.is(TomlArray)(node)) {
+	if (P.isTagged(node, "TomlArray")) {
 		const idx = requireIndex(segment, "an array", node.offset, node.length);
 		if (value === undefined) {
 			if (idx >= node.items.length) {
@@ -982,7 +980,7 @@ export class TomlFormat {
 				return terminal(cursor, segment, value, ctx);
 			},
 			catch: (defect) => {
-				if (defect instanceof ModifyFailure) {
+				if (isModifyFailure(defect)) {
 					return failWith(defect.code, defect.message, defect.offset, defect.len);
 				}
 				if (isRawTomlError(defect)) {

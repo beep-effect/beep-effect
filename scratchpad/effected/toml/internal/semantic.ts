@@ -1,8 +1,12 @@
 import { $ScratchpadId } from "@beep/identity/packages";
+import * as A from "effect/Array";
+import { dual } from "effect/Function";
+import * as Match from "effect/Match";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
-import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
+import * as R from "effect/Record";
+import * as S from "effect/Schema";
 // The provenance state machine: every defined name records HOW it came
 // to exist (value, inline, static-array, table-explicit, table-implicit,
 // table-dotted, array-tables) and — for dotted-created tables — WHICH
@@ -21,18 +25,16 @@ import * as P from "effect/Predicate";
 // already depth-capped by the parser.
 
 import type { TomlExpression, TomlKey, TomlKeyValue, TomlValueNode } from "../TomlNode.ts";
-import { TomlArray, TomlArrayTableHeader, TomlInlineTable, TomlTableHeader, TomlTrivia } from "../TomlNode.ts";
+import type { TomlArrayTableHeader, TomlInlineTable, TomlTableHeader } from "../TomlNode.ts";
 import type { TomlSemanticErrorCodeRaw } from "./diagnostics.ts";
 import { RawTomlError } from "./diagnostics.ts";
-import * as S from "effect/Schema";
-import * as A from "effect/Array";
-import * as R from "effect/Record";
 
 const $I = $ScratchpadId.create("effected/toml/internal/semantic");
 
 class TomlSemanticInvariantError extends S.TaggedError<TomlSemanticInvariantError>($I`TomlSemanticInvariantError`)(
 	"TomlSemanticInvariantError",
-	{ message: S.String },
+	{ message: S.String.annotateKey({ description: "Explanation of the violated semantic engine invariant." }) },
+	$I.annote("TomlSemanticInvariantError", { description: "An impossible state in the TOML semantic engine." }),
 ) {}
 
 /** Semantic-pass callbacks, fired in document order after each expression validates. */
@@ -71,7 +73,7 @@ const makeNode = (kind: Provenance, sectionId = 0): SemNode => ({
 });
 
 const raise = (code: TomlSemanticErrorCodeRaw, message: string, key: TomlKey): never => {
-	throw new RawTomlError({ code, message, offset: key.offset, length: key.length });
+	throw RawTomlError.make({ code, message, offset: key.offset, length: key.length });
 };
 
 /** Per-analysis counter: document sections and inline-table scopes draw distinct ids from the same sequence. */
@@ -99,21 +101,20 @@ const navigateHeaderPrefix = (root: SemNode, keyPath: ReadonlyArray<TomlKey>): S
 			current = child;
 			continue;
 		}
-		if (existing.kind === "table-explicit" || existing.kind === "table-implicit" || existing.kind === "table-dotted") {
-			current = existing;
-		} else if (existing.kind === "array-tables") {
-			const element = existing.elements[existing.elements.length - 1];
-			if (element === undefined) {
-				throw TomlSemanticInvariantError.make({ message: "missing array-table element" });
-			}
-			current = element;
-		} else if (existing.kind === "inline") {
-			return raise("InlineTableExtended", `inline table "${key.value}" cannot be extended`, key);
-		} else if (existing.kind === "static-array") {
-			return raise("ArrayOfTablesConflict", `"${key.value}" is a static array, not an array of tables`, key);
-		} else if (existing.kind === "value") {
-			return raise("TableRedefined", `"${key.value}" is already defined as a value`, key);
-		}
+		current = Match.value(existing.kind).pipe(
+			Match.whenOr("table-explicit", "table-implicit", "table-dotted", () => existing),
+			Match.when("array-tables", () => {
+				const element = existing.elements[existing.elements.length - 1];
+				if (element === undefined) {
+					throw TomlSemanticInvariantError.make({ message: "missing array-table element" });
+				}
+				return element;
+			}),
+			Match.when("inline", () => raise("InlineTableExtended", `inline table "${key.value}" cannot be extended`, key)),
+			Match.when("static-array", () => raise("ArrayOfTablesConflict", `"${key.value}" is a static array, not an array of tables`, key)),
+			Match.when("value", () => raise("TableRedefined", `"${key.value}" is already defined as a value`, key)),
+			Match.exhaustive,
+		);
 	}
 	return current;
 };
@@ -210,10 +211,10 @@ const assignEntry = (
 
 /** The provenance node for an assigned value; validates inline tables (arrays included) on the way. */
 const nodeForValue = (value: TomlValueNode, context: Context): SemNode => {
-	if (S.is(TomlInlineTable)(value)) {
+	if (P.isTagged(value, "TomlInlineTable")) {
 		return inlineNode(value, context);
 	}
-	if (S.is(TomlArray)(value)) {
+	if (P.isTagged(value, "TomlArray")) {
 		for (const item of value.items) {
 			checkArrayItem(item, context);
 		}
@@ -224,11 +225,11 @@ const nodeForValue = (value: TomlValueNode, context: Context): SemNode => {
 
 /** Inline tables hide anywhere inside a static array; validate them all. Depth is parser-capped. */
 const checkArrayItem = (item: TomlValueNode, context: Context): void => {
-	if (S.is(TomlInlineTable)(item)) {
+	if (P.isTagged(item, "TomlInlineTable")) {
 		inlineNode(item, context);
 		return;
 	}
-	if (S.is(TomlArray)(item)) {
+	if (P.isTagged(item, "TomlArray")) {
 		for (const inner of item.items) {
 			checkArrayItem(inner, context);
 		}
@@ -265,17 +266,17 @@ export const analyze: {
 	let currentPrefix: ReadonlyArray<string> = [];
 	visitor?.onTableStart?.([], undefined);
 	for (const expression of expressions) {
-		if (S.is(TomlTrivia)(expression)) {
+		if (P.isTagged(expression, "TomlTrivia")) {
 			continue;
 		}
-		if (S.is(TomlTableHeader)(expression)) {
+		if (P.isTagged(expression, "TomlTableHeader")) {
 			currentTable = openTable(root, expression.keyPath);
 			currentSectionId = context.nextId++;
 			currentPrefix = expression.keyPath.map((key) => key.value);
 			visitor?.onTableStart?.(currentPrefix, expression);
 			continue;
 		}
-		if (S.is(TomlArrayTableHeader)(expression)) {
+		if (P.isTagged(expression, "TomlArrayTableHeader")) {
 			const { element, index } = openArrayTable(root, expression.keyPath);
 			currentTable = element;
 			currentSectionId = context.nextId++;
@@ -329,10 +330,10 @@ const navigateOutput = (target: Record<string, unknown>, path: ReadonlyArray<str
 
 /** Materialize a CST value node into a plain value. Recursion is parser-depth-capped. */
 const materialize = (value: TomlValueNode): unknown => {
-	if (S.is(TomlArray)(value)) {
+	if (P.isTagged(value, "TomlArray")) {
 		return value.items.map(materialize);
 	}
-	if (S.is(TomlInlineTable)(value)) {
+	if (P.isTagged(value, "TomlInlineTable")) {
 		const output: Record<string, unknown> = {};
 		for (const entry of value.entries) {
 			const parent = navigateOutput(

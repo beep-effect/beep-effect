@@ -7,6 +7,7 @@
 // dependency edge runs public modules → engine only.
 
 import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as S from "effect/Schema";
 import {
 	TOML_LEX_ERROR_CODES,
@@ -22,7 +23,7 @@ const $I = $ScratchpadId.create("effected/toml/TomlDiagnostic");
  *
  * @public
  */
-export const TomlLexErrorCode = S.Literals(TOML_LEX_ERROR_CODES).pipe($I.annoteSchema("TomlLexErrorCode", { description: "Error codes emitted by the lexer stage." }));
+export const TomlLexErrorCode = LiteralKit(TOML_LEX_ERROR_CODES).pipe($I.annoteSchema("TomlLexErrorCode", { description: "Error codes emitted by the lexer stage." }));
 
 /**
  * The union of all lexer-stage error code string literals.
@@ -36,7 +37,7 @@ export type TomlLexErrorCode = typeof TomlLexErrorCode.Type;
  *
  * @public
  */
-export const TomlParseErrorCode = S.Literals(TOML_PARSE_ERROR_CODES).pipe($I.annoteSchema("TomlParseErrorCode", { description: "Error codes emitted by the parser stage." }));
+export const TomlParseErrorCode = LiteralKit(TOML_PARSE_ERROR_CODES).pipe($I.annoteSchema("TomlParseErrorCode", { description: "Error codes emitted by the parser stage." }));
 
 /**
  * The union of all parser-stage error code string literals.
@@ -50,7 +51,7 @@ export type TomlParseErrorCode = typeof TomlParseErrorCode.Type;
  *
  * @public
  */
-export const TomlSemanticErrorCode = S.Literals(TOML_SEMANTIC_ERROR_CODES).pipe($I.annoteSchema("TomlSemanticErrorCode", { description: "Error codes emitted by the semantic (table/key conflict) stage." }));
+export const TomlSemanticErrorCode = LiteralKit(TOML_SEMANTIC_ERROR_CODES).pipe($I.annoteSchema("TomlSemanticErrorCode", { description: "Error codes emitted by the semantic (table/key conflict) stage." }));
 
 /**
  * The union of all semantic-stage error code string literals.
@@ -64,7 +65,7 @@ export type TomlSemanticErrorCode = typeof TomlSemanticErrorCode.Type;
  *
  * @public
  */
-export const TomlStringifyErrorCode = S.Literals(TOML_STRINGIFY_ERROR_CODES).pipe($I.annoteSchema("TomlStringifyErrorCode", { description: "Error codes emitted by the stringifier stage." }));
+export const TomlStringifyErrorCode = LiteralKit(TOML_STRINGIFY_ERROR_CODES).pipe($I.annoteSchema("TomlStringifyErrorCode", { description: "Error codes emitted by the stringifier stage." }));
 
 /**
  * The union of all stringifier-stage error code string literals.

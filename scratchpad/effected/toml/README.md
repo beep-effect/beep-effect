@@ -157,7 +157,18 @@ None.
 
 ### Deviations
 
-None.
+One entry per class of change (law- or ruling-forced) and one per behavioural divergence; the full test, upstream behaviour, lab behaviour and reason are on the module's ledger row.
+
+- **native-runtime** — Lab uses MutableHashMap, Record and DateTime helpers plus ancestor arrays where upstream used Map, Object helpers, native Date construction and Set. (scratchpad/test/toml/Toml.test.ts:148,223,232; scratchpad/test/toml/semantic.test.ts:298; scratchpad/test/toml/TomlFormat.test.ts)
+- **identity-keys** — Lab detects cycles through branch-local ancestor arrays scanned with === where upstream used a mutable identity Set. (scratchpad/test/toml/Toml.test.ts:223,232; scratchpad/test/toml/hostile.test.ts:143,156)
+- **tagged-errors** — Lab uses schema-backed tagged raw, cap and invariant errors and diagnostic snapshots where upstream used native errors and unchecked element access. (scratchpad/test/toml/TomlDiagnostic.test.ts:69; scratchpad/test/toml/TomlEdit.test.ts:32; scratchpad/test/toml/Toml.test.ts:40,62; module suite scratchpad/test/toml/**)
+- **schema-first** — Lab adds schema authority, LiteralKit domains, schema or tag guards and a JSON codec where upstream used type-only models, literal schemas, instanceof and JSON.parse. (scratchpad/test/toml/TomlNode.test.ts:36,45,137,169; scratchpad/test/toml/TomlDiagnostic.test.ts:42,69; scratchpad/test/toml/TomlVisitor.test.ts:91)
+- **numeric-domains** — Lab narrows numeric spans, positions and carrier fields to S.Finite where upstream allowed non-finite numbers or left fields unchecked. (scratchpad/test/toml/TomlNode.test.ts:36,51; scratchpad/test/toml/TomlDiagnostic.test.ts:12; scratchpad/test/toml/TomlEdit.test.ts:24; module suite scratchpad/test/toml/**)
+- **type-safety** — Lab replaces casts and unchecked indexed access with narrowing and assertions, concentrating deliberate wrong-input casts in the authorized helper. (scratchpad/test/toml/Toml.test.ts:22,421; scratchpad/test/toml/hostile.test.ts:203; scratchpad/test/toml/parser.test.ts:58; scratchpad/test/toml/semantic.test.ts:14)
+- **tsgo-diagnostics** — Lab adds diagnostic-required dual signatures, schema factories, declared IEEE codecs and typed failure extraction where upstream used simpler signatures, new, Schema.Number and Effect.flip. (scratchpad/test/toml/expectFailure.ts:6; scratchpad/test/toml/Toml.test.ts:40,289; scratchpad/test/toml/TomlDiagnostic.test.ts:70; scratchpad/test/toml/scanner.test.ts; scratchpad/test/toml/e2e/taggedJson.ts:136)
+- **effect-first** — Lab uses Match, A.sort, Effect.try, Effect.fn and Effect helpers where upstream used switches, native sorts, direct catches and generator wrappers. (scratchpad/test/toml/TomlEdit.test.ts:11,36; scratchpad/test/toml/TomlVisitor.test.ts:119; scratchpad/test/toml/scanner.test.ts:77; scratchpad/test/toml/TomlFormat.test.ts:18; scratchpad/test/toml/hostile.test.ts:46)
+- **effect-imports** — Lab source, tests and source examples import dedicated effect/Module paths where upstream imported the root effect barrel. (module suite scratchpad/test/toml/**)
+- **identity-annotations** — Lab schemas, errors, calendar constraints and fields carry composer identities and metadata where upstream used short identities or omitted annotations. (module suite scratchpad/test/toml/**)
 
 ### Dependency backlog
 

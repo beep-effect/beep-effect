@@ -27,11 +27,11 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as S from "effect/Schema";
-import * as Result from "effect/Result";
 import { Toml, TomlParseError, TomlStringifyError } from "../../effected/toml/Toml.ts";
 import { TomlDocument } from "../../effected/toml/TomlDocument.ts";
 import { TomlFormat, TomlModificationError } from "../../effected/toml/TomlFormat.ts";
 import { deliberatelyInvalid } from "./deliberatelyInvalid.ts";
+import { expectFailure } from "./expectFailure.ts";
 
 /**
  * Elapsed-time ceiling for the scale and path-depth rows. The bound is a
@@ -43,9 +43,9 @@ import { deliberatelyInvalid } from "./deliberatelyInvalid.ts";
  */
 const ELAPSED_BOUND_MS = 30_000;
 
-/** Flip a failing parse and hand back the typed error. */
+/** Assert a failing parse and hand back the typed error. */
 const parseError = Effect.fn("parseError")(function* (text: string) {
-		const error = yield* Effect.result(Toml.parse(text)).pipe(Effect.map((result) => result.pipe(Result.flip, Result.getOrThrow)));
+		const error = yield* expectFailure(Toml.parse(text));
 		assert.instanceOf(error, TomlParseError);
 		return error;
 	});
@@ -251,7 +251,7 @@ describe("hostile input", () => {
 
 		it.effect("the TomlFromString schema surfaces the bomb as a SchemaError, never a defect", () =>
 			Effect.gen(function* () {
-				const error = yield* Effect.result(S.decodeEffect(Toml.TomlFromString)(bomb)).pipe(Effect.map((result) => result.pipe(Result.flip, Result.getOrThrow)));
+				const error = yield* expectFailure(S.decodeEffect(Toml.TomlFromString)(bomb));
 				assert.strictEqual(error._tag, "SchemaError");
 				assert.include(String(error), "NestingDepthExceeded");
 			}),
