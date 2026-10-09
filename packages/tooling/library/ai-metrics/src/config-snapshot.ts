@@ -632,6 +632,21 @@ const readTrackedSnapshotPaths = Effect.fn("AiMetrics.readTrackedSnapshotPaths")
   return O.some<ReadonlyArray<string>>(pipe(text, Str.split("\0"), A.filter(Str.isNonEmpty)));
 });
 
+const hasAncestorGitMetadata = Effect.fnUntraced(function* (repoRoot: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  let directory = path.resolve(repoRoot);
+  while (true) {
+    const entries = yield* fs
+      .readDirectory(directory)
+      .pipe(Effect.mapError((cause) => configSnapshotFailure("Cannot inspect Git snapshot ancestry.", cause)));
+    if (A.contains(entries, ".git")) return true;
+    const parent = path.dirname(directory);
+    if (parent === directory) return false;
+    directory = parent;
+  }
+});
+
 const indexedSnapshotTruncation = (fileCount: number, maxFiles: number, depthTruncated: boolean) => {
   if (fileCount > maxFiles) return O.some(AiMetricsConfigSnapshotTruncationReason.Enum["max-files"]);
   return depthTruncated ? O.some(AiMetricsConfigSnapshotTruncationReason.Enum["max-depth"]) : O.none();
@@ -659,15 +674,7 @@ const enumerateSnapshotPaths = Effect.fn("AiMetrics.enumerateConfigSnapshotPaths
       })
     )
     .pipe(Effect.orElseSucceed(() => 1));
-  if (
-    gitCode !== 0 &&
-    A.contains(
-      yield* fs
-        .readDirectory(repoRoot)
-        .pipe(Effect.mapError((cause) => configSnapshotFailure("Cannot inspect Git snapshot metadata.", cause))),
-      ".git"
-    )
-  )
+  if (gitCode !== 0 && (yield* hasAncestorGitMetadata(repoRoot)))
     return yield* configSnapshotFailure("Git metadata exists but cannot be resolved.", gitCode);
   const tracked = yield* gitCode === 0
     ? Effect.scoped(readTrackedSnapshotPaths(repoRoot))

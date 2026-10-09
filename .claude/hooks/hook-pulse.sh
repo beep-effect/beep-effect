@@ -519,8 +519,14 @@ END {
     mapfile -d '' -t indexed_paths < <(git ls-files -z -- ':(glob)**/AGENTS.md' ':(glob)**/CLAUDE.md' .mcp.json .claude .codex .ai .aiassistant .cursor .agents .junie .grok)
     wait "$!" || exit 1
     [ ! -f .claude/settings.local.json ] || indexed_paths+=(.claude/settings.local.json)
-  elif [ -e .git ] || [ -L .git ]; then
-    exit 1
+  else
+    metadata_probe="$PWD"
+    while :; do
+      [ ! -e "${metadata_probe}/.git" ] && [ ! -L "${metadata_probe}/.git" ] || exit 1
+      metadata_parent="$(dirname "${metadata_probe}")"
+      [ "${metadata_parent}" != "${metadata_probe}" ] || break
+      metadata_probe="${metadata_parent}"
+    done
   fi
 
   # Fallback walks prune nested checkouts before descending. Metadata is
