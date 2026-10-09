@@ -79,9 +79,9 @@ const skipLauncherOptions = (
 };
 
 const compilerArguments = (words: ReadonlyArray<string>): O.Option<ReadonlyArray<string>> => {
-  // Shell substitutions can run before any launcher or compiler sees its operands.
+  // Shell compounds and substitutions can span separators before launcher parsing.
   // Keep those forms on the conservative lexical path regardless of the outer command.
-  if (A.some(words, (word) => /\$\(|`/u.test(word))) return O.none();
+  if (A.some(words, (word) => /[`()]/u.test(word))) return O.none();
   let index = 0;
   const packageOptions = ["-p", "--package", "--cache", "--registry", "--userconfig", "--prefix"];
   const directoryOptions = ["-C", "--dir", "--cwd", "--filter", "--filter-prod", "-F"];
@@ -282,6 +282,9 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
         'pnpm run build "$(tsc -b .)"',
         'npm run build "$(tsc -b .)"',
         'tsc -- "$(tsc -b .)"',
+        "(cd packages/foo && tsc --force)",
+        "X=$(cd packages/foo && tsc --force)",
+        "X=$(cd packages/foo && tsc -b)",
         "bunx --bun --no-install tsgo --build",
         "bunx --package typescript tsc -b",
         "bunx -p typescript tsc --force",
