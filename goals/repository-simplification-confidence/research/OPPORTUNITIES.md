@@ -395,3 +395,16 @@
   addressed publication wave. No suppression or baseline update.
 - Prevention: inspect the import line in the reference example, not only the generator
   call, and require the dedicated test compiler alongside schema-property review.
+
+## 2026-10-09 — H2 hosted markerless doctor regression
+
+- Task: read the first published head's completed red jobs immediately.
+- Evidence: Property Laws fails only the invalid Arbitrary imports; Test Unit
+  additionally fails the existing hidden-editor and inherited-baseline doctor fixtures.
+  H2 had added unconditional root discovery even when no completion evidence is eligible.
+- Recovery: move discovery into the eligible evidence reader, preserve markerless
+  read-only fallback, and assert that the hidden-editor fixture performs no root probes.
+  Retain the existing baseline and success assertions. Repeat local and hosted proof.
+- Prevention: test fixtures should observe optional evidence dependencies explicitly;
+  local temporary directories can inherit a repository marker from an ancestor and
+  hide a CI-only root-discovery regression.

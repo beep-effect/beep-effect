@@ -18,12 +18,14 @@ import { Command } from "effect/cli";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
 import { flow } from "effect/Function";
 import * as Layer from "effect/Layer";
 import { ChildProcess } from "effect/process";
 import * as Result from "effect/Result";
 import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { temporaryWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
 
 const runGoalsCommand = Command.runWith(goalsCommand, { version: "0.0.0" });
@@ -175,8 +177,21 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
         yield* temporaryWorkingDirectory;
         yield* writeProjectFile("goals/.idea/workspace.xml", "<project />\n");
         yield* writeBaseline([]);
-        const exit = yield* Effect.exit(runGoalsCommand(["doctor"]));
+        const fs = yield* FileSystem.FileSystem;
+        let rootMarkerReads = 0;
+        const observedFs = FileSystem.FileSystem.of({
+          ...fs,
+          exists: Effect.fn("GoalsDoctorTest.observeRootMarkers")((path: string) => {
+            if (Str.endsWith("/.git")(path) || Str.endsWith("/bun.lock")(path)) rootMarkerReads += 1;
+            return fs.exists(path);
+          }),
+        });
+        const exit = yield* runGoalsCommand(["doctor"]).pipe(
+          Effect.provideService(FileSystem.FileSystem, observedFs),
+          Effect.exit
+        );
         exit.pipe(Exit.isSuccess, assertTrue);
+        expect(rootMarkerReads).toBe(0);
       }),
     20_000
   );
