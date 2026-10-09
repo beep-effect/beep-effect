@@ -1,3 +1,4 @@
+/// <reference path="./raw.d.ts" />
 import * as HashMap from "effect/HashMap";
 import labels from "./labels.jsonl?raw";
 import text001 from "./oa-001.txt?raw";

@@ -157,3 +157,12 @@
 - Repair: state the exact-alignment discriminator on the deliberately inverted
   decoder input; pass only the JSON line to the fixture decoder.
 - Prevention: retain package test typechecking alongside the focused runtime loop.
+
+## 2026-10-09 — Cross-package fixture declaration context
+
+- Evidence: the server test config includes its own src/test only, while its
+  restart proof imports the immutable use-case fixture helper and raw payloads.
+- Attribution: introduced shared test fixture type boundary found during review.
+- Repair: explicitly reference the adjacent raw-module declarations from the
+  fixture registry, so consumers retain the same immutable payload types.
+- Prevention: make shared test fixture declarations travel with their registry.
