@@ -1,0 +1,1066 @@
+[
+  {
+    "name": "@beep/infra",
+    "path": "infra/package.json",
+    "private": true,
+    "version": "0.0.4",
+    "npm": 404
+  },
+  {
+    "name": "@beep/scratchpad",
+    "path": "scratchpad/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/tsgo-shim",
+    "path": "tools/tsgo-shim/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/db-admin",
+    "path": "packages/_internal/db-admin/package.json",
+    "private": true,
+    "version": "0.0.2",
+    "npm": 404
+  },
+  {
+    "name": "@beep/effect-drizzle",
+    "path": "packages/ecosystem/effect-drizzle/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/api-transport",
+    "path": "packages/foundation/capability/api-transport/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/chalk",
+    "path": "packages/foundation/capability/chalk/package.json",
+    "private": true,
+    "version": "0.0.2",
+    "npm": 404
+  },
+  {
+    "name": "@beep/colors",
+    "path": "packages/foundation/capability/colors/package.json",
+    "private": true,
+    "version": "0.0.2",
+    "npm": 404
+  },
+  {
+    "name": "@beep/file-processing",
+    "path": "packages/foundation/capability/file-processing/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/langextract",
+    "path": "packages/foundation/capability/langextract/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/mcp-kit",
+    "path": "packages/foundation/capability/mcp-kit/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/nlp-processing",
+    "path": "packages/foundation/capability/nlp-processing/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/observability",
+    "path": "packages/foundation/capability/observability/package.json",
+    "private": true,
+    "version": "0.0.3",
+    "npm": 404
+  },
+  {
+    "name": "@beep/semantic-web",
+    "path": "packages/foundation/capability/semantic-web/package.json",
+    "private": true,
+    "version": "0.0.2",
+    "npm": 404
+  },
+  {
+    "name": "@beep/technical-drawing",
+    "path": "packages/foundation/capability/technical-drawing/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/html",
+    "path": "packages/foundation/modeling/html/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/identity",
+    "path": "packages/foundation/modeling/identity/package.json",
+    "private": true,
+    "version": "0.1.1",
+    "npm": 404
+  },
+  {
+    "name": "@beep/lexical-schema",
+    "path": "packages/foundation/modeling/lexical/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/md",
+    "path": "packages/foundation/modeling/md/package.json",
+    "private": true,
+    "version": "0.0.2",
+    "npm": 404
+  },
+  {
+    "name": "@beep/nlp",
+    "path": "packages/foundation/modeling/nlp/package.json",
+    "private": true,
+    "version": "0.0.2",
+    "npm": 404
+  },
+  {
+    "name": "@beep/ontology",
+    "path": "packages/foundation/modeling/ontology/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/pandoc-ast",
+    "path": "packages/foundation/modeling/pandoc-ast/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/provenance",
+    "path": "packages/foundation/modeling/provenance/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/rdf",
+    "path": "packages/foundation/modeling/rdf/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/schema",
+    "path": "packages/foundation/modeling/schema/package.json",
+    "private": true,
+    "version": "0.1.2",
+    "npm": 404
+  },
+  {
+    "name": "@beep/skill-contract",
+    "path": "packages/foundation/modeling/skill-contract/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/utils",
+    "path": "packages/foundation/modeling/utils/package.json",
+    "private": true,
+    "version": "0.0.2",
+    "npm": 404
+  },
+  {
+    "name": "@beep/data",
+    "path": "packages/foundation/primitive/data/package.json",
+    "private": true,
+    "version": "0.0.2",
+    "npm": 404
+  },
+  {
+    "name": "@beep/types",
+    "path": "packages/foundation/primitive/types/package.json",
+    "private": true,
+    "version": "0.0.1",
+    "npm": 404
+  },
+  {
+    "name": "@beep/brand",
+    "path": "packages/foundation/ui-system/brand/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/dock-react",
+    "path": "packages/foundation/ui-system/dock-react/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/dock",
+    "path": "packages/foundation/ui-system/dock/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/editor",
+    "path": "packages/foundation/ui-system/editor/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/ui",
+    "path": "packages/foundation/ui-system/ui/package.json",
+    "private": true,
+    "version": "0.1.2",
+    "npm": 404
+  },
+  {
+    "name": "@beep/shared-domain",
+    "path": "packages/shared/domain/package.json",
+    "private": true,
+    "version": "0.0.2",
+    "npm": 404
+  },
+  {
+    "name": "@beep/shared-use-cases",
+    "path": "packages/shared/use-cases/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/shared-tables",
+    "path": "packages/shared/tables/package.json",
+    "private": true,
+    "version": "0.0.2",
+    "npm": 404
+  },
+  {
+    "name": "@beep/repo-ai-metrics",
+    "path": "packages/tooling/library/ai-metrics/package.json",
+    "private": true,
+    "version": "0.0.3",
+    "npm": 404
+  },
+  {
+    "name": "@beep/ai-sync",
+    "path": "packages/tooling/library/ai-sync/package.json",
+    "private": true,
+    "version": "0.0.2",
+    "npm": 404
+  },
+  {
+    "name": "@beep/codegen-kit",
+    "path": "packages/tooling/library/codegen-kit/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/qa-capture",
+    "path": "packages/tooling/library/qa-capture/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/repo-utils",
+    "path": "packages/tooling/library/repo-utils/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/lint-rules",
+    "path": "packages/tooling/policy-pack/lint-rules/package.json",
+    "private": true,
+    "version": "0.1.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/repo-configs",
+    "path": "packages/tooling/policy-pack/repo-configs/package.json",
+    "private": true,
+    "version": "0.1.1",
+    "npm": 404
+  },
+  {
+    "name": "@beep/fc-runs",
+    "path": "packages/tooling/test-kit/fc-runs/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/test-runner",
+    "path": "packages/tooling/test-kit/test-runner/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/test-utils",
+    "path": "packages/tooling/test-kit/test-utils/package.json",
+    "private": true,
+    "version": "0.0.2",
+    "npm": 404
+  },
+  {
+    "name": "@beep/repo-cli",
+    "path": "packages/tooling/tool/cli/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/repo-docgen",
+    "path": "packages/tooling/tool/docgen/package.json",
+    "private": true,
+    "version": "0.0.2",
+    "npm": 404
+  },
+  {
+    "name": "@beep/oip-web",
+    "path": "apps/oip-web/package.json",
+    "private": true,
+    "version": "0.1.4",
+    "npm": 404
+  },
+  {
+    "name": "@beep/professional-desktop",
+    "path": "apps/professional-desktop/package.json",
+    "private": true,
+    "version": "0.0.3",
+    "npm": 404
+  },
+  {
+    "name": "@beep/storybook",
+    "path": "apps/storybook/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/api-docs",
+    "path": "apps/labs/api-docs/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/ciops",
+    "path": "apps/labs/ciops/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/lejeune-bolt-workbench",
+    "path": "apps/labs/lejeune-bolt-workbench/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/semantica",
+    "path": "apps/labs/semantica/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/trustgraph-workbench",
+    "path": "apps/labs/trustgraph-workbench/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/agents-domain",
+    "path": "packages/agents/domain/package.json",
+    "private": true,
+    "version": "0.0.2",
+    "npm": 404
+  },
+  {
+    "name": "@beep/agents-use-cases",
+    "path": "packages/agents/use-cases/package.json",
+    "private": true,
+    "version": "0.0.2",
+    "npm": 404
+  },
+  {
+    "name": "@beep/agents-client",
+    "path": "packages/agents/client/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/agents-server",
+    "path": "packages/agents/server/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/agents-tables",
+    "path": "packages/agents/tables/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/epistemic-config",
+    "path": "packages/epistemic/config/package.json",
+    "private": true,
+    "version": "0.0.2",
+    "npm": 404
+  },
+  {
+    "name": "@beep/epistemic-client",
+    "path": "packages/epistemic/client/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/epistemic-domain",
+    "path": "packages/epistemic/domain/package.json",
+    "private": true,
+    "version": "0.0.2",
+    "npm": 404
+  },
+  {
+    "name": "@beep/epistemic-tables",
+    "path": "packages/epistemic/tables/package.json",
+    "private": true,
+    "version": "0.0.2",
+    "npm": 404
+  },
+  {
+    "name": "@beep/epistemic-ui",
+    "path": "packages/epistemic/ui/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/epistemic-use-cases",
+    "path": "packages/epistemic/use-cases/package.json",
+    "private": true,
+    "version": "0.0.2",
+    "npm": 404
+  },
+  {
+    "name": "@beep/epistemic-server",
+    "path": "packages/epistemic/server/package.json",
+    "private": true,
+    "version": "0.0.2",
+    "npm": 404
+  },
+  {
+    "name": "@beep/law-practice-domain",
+    "path": "packages/law-practice/domain/package.json",
+    "private": true,
+    "version": "0.0.2",
+    "npm": 404
+  },
+  {
+    "name": "@beep/law-practice-use-cases",
+    "path": "packages/law-practice/use-cases/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/law-practice-server",
+    "path": "packages/law-practice/server/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/law-practice-tables",
+    "path": "packages/law-practice/tables/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/documents-domain",
+    "path": "packages/documents/domain/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/documents-use-cases",
+    "path": "packages/documents/use-cases/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/documents-server",
+    "path": "packages/documents/server/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/documents-tables",
+    "path": "packages/documents/tables/package.json",
+    "private": true,
+    "version": "0.0.2",
+    "npm": 404
+  },
+  {
+    "name": "@beep/workspace-domain",
+    "path": "packages/workspace/domain/package.json",
+    "private": true,
+    "version": "0.0.2",
+    "npm": 404
+  },
+  {
+    "name": "@beep/drizzle",
+    "path": "packages/drivers/drizzle/package.json",
+    "private": true,
+    "version": "0.0.2",
+    "npm": 404
+  },
+  {
+    "name": "@beep/duckdb",
+    "path": "packages/drivers/duckdb/package.json",
+    "private": true,
+    "version": "0.0.2",
+    "npm": 404
+  },
+  {
+    "name": "@beep/face-detection",
+    "path": "packages/drivers/face-detection/package.json",
+    "private": true,
+    "version": "0.0.2",
+    "npm": 404
+  },
+  {
+    "name": "@beep/ffmpeg",
+    "path": "packages/drivers/ffmpeg/package.json",
+    "private": true,
+    "version": "0.0.2",
+    "npm": 404
+  },
+  {
+    "name": "@beep/postgres",
+    "path": "packages/drivers/postgres/package.json",
+    "private": true,
+    "version": "0.0.2",
+    "npm": 404
+  },
+  {
+    "name": "@beep/anthropic",
+    "path": "packages/drivers/anthropic/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/venice-ai",
+    "path": "packages/drivers/venice-ai/package.json",
+    "private": true,
+    "version": "0.0.3",
+    "npm": 404
+  },
+  {
+    "name": "@beep/xai",
+    "path": "packages/drivers/xai/package.json",
+    "private": true,
+    "version": "0.0.3",
+    "npm": 404
+  },
+  {
+    "name": "@beep/acp",
+    "path": "packages/drivers/acp/package.json",
+    "private": true,
+    "version": "0.0.3",
+    "npm": 404
+  },
+  {
+    "name": "@beep/openai-compat",
+    "path": "packages/drivers/openai-compat/package.json",
+    "private": true,
+    "version": "0.0.3",
+    "npm": 404
+  },
+  {
+    "name": "@beep/workspace-tables",
+    "path": "packages/workspace/tables/package.json",
+    "private": true,
+    "version": "0.0.2",
+    "npm": 404
+  },
+  {
+    "name": "@beep/workspace-use-cases",
+    "path": "packages/workspace/use-cases/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/workspace-server",
+    "path": "packages/workspace/server/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/ontology-config",
+    "path": "packages/ontology/config/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/ontology-domain",
+    "path": "packages/ontology/domain/package.json",
+    "private": true,
+    "version": "0.0.2",
+    "npm": 404
+  },
+  {
+    "name": "@beep/ontology-use-cases",
+    "path": "packages/ontology/use-cases/package.json",
+    "private": true,
+    "version": "0.0.2",
+    "npm": 404
+  },
+  {
+    "name": "@beep/ontology-server",
+    "path": "packages/ontology/server/package.json",
+    "private": true,
+    "version": "0.0.2",
+    "npm": 404
+  },
+  {
+    "name": "@beep/ontology-client",
+    "path": "packages/ontology/client/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/ontology-ui",
+    "path": "packages/ontology/ui/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/architecture-lab-domain",
+    "path": "packages/architecture-lab/domain/package.json",
+    "private": true,
+    "version": "0.0.2",
+    "npm": 404
+  },
+  {
+    "name": "@beep/architecture-lab-use-cases",
+    "path": "packages/architecture-lab/use-cases/package.json",
+    "private": true,
+    "version": "0.0.2",
+    "npm": 404
+  },
+  {
+    "name": "@beep/architecture-lab-config",
+    "path": "packages/architecture-lab/config/package.json",
+    "private": true,
+    "version": "0.0.1",
+    "npm": 404
+  },
+  {
+    "name": "@beep/architecture-lab-server",
+    "path": "packages/architecture-lab/server/package.json",
+    "private": true,
+    "version": "0.0.2",
+    "npm": 404
+  },
+  {
+    "name": "@beep/architecture-lab-tables",
+    "path": "packages/architecture-lab/tables/package.json",
+    "private": true,
+    "version": "0.0.2",
+    "npm": 404
+  },
+  {
+    "name": "@beep/architecture-lab-client",
+    "path": "packages/architecture-lab/client/package.json",
+    "private": true,
+    "version": "0.0.2",
+    "npm": 404
+  },
+  {
+    "name": "@beep/architecture-lab-ui",
+    "path": "packages/architecture-lab/ui/package.json",
+    "private": true,
+    "version": "0.0.2",
+    "npm": 404
+  },
+  {
+    "name": "@beep/architecture-lab-proof",
+    "path": "apps/architecture-lab-proof/package.json",
+    "private": true,
+    "version": "0.0.2",
+    "npm": 404
+  },
+  {
+    "name": "@beep/practice-kg-mcp",
+    "path": "apps/practice-kg-mcp/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/runpod",
+    "path": "packages/drivers/runpod/package.json",
+    "private": true,
+    "version": "0.0.2",
+    "npm": 404
+  },
+  {
+    "name": "@beep/onepassword-cli",
+    "path": "packages/drivers/onepassword-cli/package.json",
+    "private": true,
+    "version": "0.0.1",
+    "npm": 404
+  },
+  {
+    "name": "@beep/discord",
+    "path": "packages/drivers/discord/package.json",
+    "private": true,
+    "version": "0.0.1",
+    "npm": 404
+  },
+  {
+    "name": "@beep/ai-provider-cli",
+    "path": "packages/drivers/ai-provider-cli/package.json",
+    "private": true,
+    "version": "0.0.1",
+    "npm": 404
+  },
+  {
+    "name": "@beep/sanity",
+    "path": "packages/drivers/sanity/package.json",
+    "private": true,
+    "version": "0.0.2",
+    "npm": 404
+  },
+  {
+    "name": "@beep/hubspot",
+    "path": "packages/drivers/hubspot/package.json",
+    "private": true,
+    "version": "0.0.3",
+    "npm": 404
+  },
+  {
+    "name": "@beep/phoenix",
+    "path": "packages/drivers/phoenix/package.json",
+    "private": true,
+    "version": "0.0.1",
+    "npm": 404
+  },
+  {
+    "name": "@beep/nlp-mcp",
+    "path": "packages/drivers/nlp-mcp/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/rdf-canonize",
+    "path": "packages/drivers/rdf-canonize/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/cosmos",
+    "path": "packages/drivers/cosmos/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/oxigraph",
+    "path": "packages/drivers/oxigraph/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/n3",
+    "path": "packages/drivers/n3/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/shacl",
+    "path": "packages/drivers/shacl/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/wink",
+    "path": "packages/drivers/wink/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/tika",
+    "path": "packages/drivers/tika/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/doc-text",
+    "path": "packages/drivers/doc-text/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/libpff",
+    "path": "packages/drivers/libpff/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/box",
+    "path": "packages/drivers/box/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/firecrawl",
+    "path": "packages/drivers/firecrawl/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/uspto",
+    "path": "packages/drivers/uspto/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/pglite",
+    "path": "packages/drivers/pglite/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/m365",
+    "path": "packages/drivers/m365/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/m365-mcp",
+    "path": "packages/drivers/m365-mcp/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/govinfo",
+    "path": "packages/drivers/govinfo/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/ecfr",
+    "path": "packages/drivers/ecfr/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/uspto-mcp",
+    "path": "packages/drivers/uspto-mcp/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/pacer",
+    "path": "packages/drivers/pacer/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/tailscale",
+    "path": "packages/drivers/tailscale/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/pretext",
+    "path": "packages/drivers/pretext/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/graph-3d",
+    "path": "packages/drivers/graph-3d/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/openclaw",
+    "path": "packages/drivers/openclaw/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/obs",
+    "path": "packages/drivers/obs/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/exiftool",
+    "path": "packages/drivers/exiftool/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/gov-legal-mcp",
+    "path": "packages/drivers/gov-legal-mcp/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/openai",
+    "path": "packages/drivers/openai/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/todox",
+    "path": "apps/todox/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/box-provisioning",
+    "path": "packages/drivers/box-provisioning/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/freshbooks",
+    "path": "packages/drivers/freshbooks/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/xstate",
+    "path": "packages/drivers/xstate/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/tesseract",
+    "path": "packages/drivers/tesseract/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/poppler",
+    "path": "packages/drivers/poppler/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/docket-intake",
+    "path": "apps/docket-intake/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/occt",
+    "path": "packages/drivers/occt/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/pdf-tools",
+    "path": "packages/drivers/pdf-tools/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/practice-mail-tagging",
+    "path": "apps/practice-mail-tagging/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  },
+  {
+    "name": "@beep/practice-identify",
+    "path": "apps/practice-identify/package.json",
+    "private": true,
+    "version": "0.0.0",
+    "npm": 404
+  }
+]

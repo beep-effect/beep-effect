@@ -22,7 +22,8 @@ Evidence and historical red follow-ups are in
 [stage-4-completion-receipts.md](../receipts/stage-4-completion-receipts.md).
 SPEC records storage, digest, historical checks and statement scope decisions
 with reversal paths. No root/generated wiring or reference links changed.
-A patch changeset accompanies the versioned package.
+The initial H2 patch note is retired after release-policy #1566 merged;
+`@beep/repo-cli` is explicitly private and the new guard rejects private notes.
 
 Focused goal and merge-gate fixtures: 256 passed across 13 files. Independent
 Opus 5.5 medium review returned ZERO ACTIONABLE FINDINGS on 6699569ca2. Earlier

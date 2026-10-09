@@ -186,6 +186,76 @@
 - Would have prevented it: command help distinguishing the detached publication
   runner's runtime from the readiness monitor that ordinary publish submits.
 
+
+## 2026-10-09 — D release census and admission
+
+- Census consumer scan encountered a non-object `package.json` in the broader
+  corpus (`AttributeError: list has no attribute get`); corrected the scan to
+  validate the manifest object shape. A maintained read-only census command
+  with shape validation would prevent this one-off script failure.
+- First `beep-heavy` test launch failed before admission because user-session
+  bus variables were absent. Supplying `XDG_RUNTIME_DIR=/run/user/1000` and the
+  standard user bus address reached the queue; all three slots were busy.
+  An environment-aware admission wrapper would prevent this startup friction.
+
+- D focused tests caught an introduced Effect v4 API mismatch: `Array.filterMap`
+  expects Result, not Option, and the graph's workspace count became zero.
+  Replaced it with `Array.getSomes` over mapped Options after reading the
+  reference API. Checking every reused helper signature before implementation
+  would prevent this regression. The initial focused Vitest launch also used
+  the root cwd against a package-relative include glob and found no tests;
+  corrected to the package cwd before proof.
+
+- D parity `CI=true beep knowledge refs --check` failed on two host-path rows:
+  inherited `explorations/build-pipeline-simplification/RESEARCH.md:194`
+  (`external-mirror-reference`, user-local beep-heavy path) and packet-inherited
+  `SPEC.md:374` (a literal absolute-home prefix used as a prohibition example).
+  The SPEC example was reworded without weakening the rule. The build-pipeline
+  row is unchanged on origin/main; its owner/orchestrator must fix it once on
+  main, then D merges main. A literal-path-aware prohibition rule and a
+  portable command lookup in the inherited runbook would prevent these reds.
+
+- D expanded coverage cohort found one old Yeet assertion still expecting the
+  all-package patch remedy (315/316 passed). Updated the assertion to the new
+  publish-enabled/private-exempt policy and queued the same cohort again.
+  Searching the old user-facing remedy string in tests at edit time would
+  prevent this stale contract assertion.
+
+## 2026-10-09 — D crash resumption
+
+- Required main merge produced packet add/add conflicts because the original
+  packet branch was squash-merged. Three-way reconciliation against packet
+  decision commit `3dbf109066` preserved both the D records and stage-1 closure.
+  Keeping a packet merge-base receipt would prevent manual reconstruction.
+- Heavy admission initially failed before launching commands: `Failed to connect
+  to user scope bus`, because user-session variables were absent. Supplying the
+  existing user runtime and bus fixed admission; no queue bypass. A wrapper that
+  discovers the existing session bus would prevent this environment-only failure.
+
+- Run 2 scoped coverage failed before tests at Vitest startup: `ENOTEMPTY`
+  removing the package `.vitest-cache` while package-verify was auditing the
+  same workspace. This is a concurrent verification-cache collision, not a
+  source-test failure. Serialize the scoped rerun after package verification;
+  separate per-command cache directories would prevent this collision.
+
+- Yeet cheap gates found an introduced retirement dependency: four cache-baseline
+  reviews referenced `.changeset/design-figure-drivers.md`. Preserved its exact
+  bytes as `history/receipts/d-cache-review-evidence.md` and moved just those
+  review references through `beep cache baseline --request`; all non-review
+  baseline fields are unchanged. A pre-retirement reference inventory would
+  prevent retiring evidence that an independent gate still requires.
+- The publication proof unit hit its 16 GiB cgroup limit and terminated with
+  `oom-kill` before Yeet could persist the latest verdict. The retry stays in
+  beep-heavy admission with a 24 GiB cap; no slot bypass or machine-wide limit
+  change. Memory-aware sizing of the parallel cheap tier would prevent this.
+
+- Yeet's four-way cheap-gate wave also exceeded a 24 GiB unit cap while running
+  the full-workspace Effect-import and schema-first Turbo lanes concurrently.
+  Cache-policy itself passed after the evidence repair. Run the identical two
+  task families at Turbo concurrency 1 to complete their task proofs, then retry
+  the canonical publisher against those caches. This preserves every gate and
+  needs no code/policy change. Resource-aware cheap-wave scheduling would
+  prevent a second OOM.
 ## 2026-10-09 — H1 admission wrapper requires the user-session bus
 
 - Task: run the OSV wave parity commands through `beep-heavy`.
@@ -285,6 +355,14 @@
   manage the submitted monitor through `yeet job` before the final handoff.
 - Prevention: help should distinguish the publish job ceiling from the
   automatically submitted monitor's lifetime, or expose a monitor ceiling.
+
+## 2026-10-09 — D final documentation verification
+
+- Final documentation verification remained queued across heavy-slot holder
+  turnovers (`beep-heavy: all 3 slots busy, waiting`). The wrapper polls locks
+  rather than keeping an ordered ticket queue, so closeout admission has
+  unpredictable wait time. A fair queue with observable position would prevent
+  this delay; this lane does not alter the workstation wrapper or other jobs.
 
 ## 2026-10-09 — H2 test-law discovery during publication
 
