@@ -61,7 +61,8 @@ nothing was adopted or discarded. P0 Research is complete.
 
 ## Latest Evidence
 
-[A lane handoff](./history/handoffs/rsc-a-retire-2026-10-09.md): wave 1 is draft PR #1584 (`b403cd2b9b`). Forty findings are fixed and one Govinfo oracle is documented; the saved scan reports that oracle alone. D #1566 and E #1568 are integrated locally at `2f4979d2e7`, with zero source collisions. Post-E owner/CLI/parity/coverage is active. E's separate Knip workflow window and the orchestrator's required-context gate remain pending (2026-10-09).
+[A lane handoff](./history/handoffs/rsc-a-retire-2026-10-09.md): wave 1 is draft PR #1584 (`b403cd2b9b`). Forty findings are fixed and one Govinfo oracle is documented; the saved scan reports that oracle alone. D #1566 and E #1568 are integrated locally at `2f4979d2e7`, with zero source collisions. Post-E owners and semantic delta pass; full CLI verification fails the live Knip workflow parity test. Subsequent parity/coverage refresh is blocked, with first-head hosted coverage debt recorded. E's separate Knip workflow window and the orchestrator's required-context gate remain pending (2026-10-09).
+
 Lane V [PR #1575](https://github.com/beep-effect/beep-effect/pull/1575) is published and ready. [Stage 4 reconciliation](./history/receipts/stage-4-vitest-reconciliation.md) preserves all 46 source worktrees, records every disposition, and ties the generated 1,853 / 716 open / 1,137 exceptions inventory to final code. Full repo-cli verification and every local parity stage pass; independent source review is terminal zero and both actionable hosted threads are resolved. The R105 repair preview, 716-row R102 frontier, hosted merge gate and retirement remain separate open work.
 
 H1 OSV wave [PR #1562](https://github.com/beep-effect/beep-effect/pull/1562) ready for review;

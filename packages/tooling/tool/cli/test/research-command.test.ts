@@ -1,13 +1,12 @@
 import { Firecrawl } from "@beep/firecrawl";
 import {
   captureResearchUrl,
-  KnowledgeCardFrontmatter,
   ResearchCaptureOptions,
   ResearchCommandServiceLive,
   ResearchStatusOptions,
   researchStatus,
 } from "@beep/repo-cli/commands/Research";
-import { parseCard } from "@beep/repo-cli/test/Research";
+import { decodeYamlTextWith } from "@beep/repo-cli/test/SharedInternals";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
@@ -23,6 +22,7 @@ import * as Str from "effect/String";
 
 const FAKE_MARKDOWN = "Effect schemas keep invariants on the data.\n\n## Why\n\nBecause decode walls rot.";
 const FAKE_TITLE = "Schema-First Notes";
+const decodeFrontmatter = decodeYamlTextWith(S.decodeUnknownEffect(S.Record(S.String, S.Unknown)));
 
 const fakeFirecrawlClient = {
   scrape: (url: string) =>
@@ -130,7 +130,7 @@ describe("research capture", () => {
     )
   );
 
-  it.effect("round-trips card frontmatter through the schema", () =>
+  it.effect("renders schema-backed card frontmatter and body", () =>
     provideTestLayer(
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -142,23 +142,21 @@ describe("research capture", () => {
         const content = yield* fs.readFileString(path.join(vaultRoot, summary.cardPath));
         const frontmatter = content.match(/^---\n([\s\S]*?)\n---\n/);
         expect(frontmatter).not.toBeNull();
-        expect(KnowledgeCardFrontmatter.make !== undefined).toBe(true);
         expect(content).toContain(`id: ${summary.id}`);
-        const parsed = yield* parseCard(summary.cardPath, content);
-        expect(parsed.frontmatter).toBeInstanceOf(KnowledgeCardFrontmatter);
-        expect(parsed.frontmatter).toMatchObject({
+        const parsed = yield* decodeFrontmatter(frontmatter?.[1] ?? "");
+        expect(parsed).toMatchObject({
           id: summary.id,
           title: FAKE_TITLE,
-          sourceType: "article",
+          "source-type": "article",
           status: "inbox",
           tags: ["effect"],
           related: [],
           url: "https://example.com/a",
           via: "capture",
         });
-        yield* S.decodeEffect(S.DateTimeUtcFromString)(parsed.frontmatter.capturedAt);
-        expect(parsed.frontmatter.contentHash).toBe("0e8230f942f810dc1a85244c077d2a26e97c4f027f5922bcd0fda44c886d3a49");
-        expect(parsed.body).toBe(`# ${FAKE_TITLE}\n\n${FAKE_MARKDOWN}\n`);
+        yield* S.decodeUnknownEffect(S.DateTimeUtcFromString)(parsed["captured-at"]);
+        expect(parsed["content-hash"]).toBe("0e8230f942f810dc1a85244c077d2a26e97c4f027f5922bcd0fda44c886d3a49");
+        expect(Str.replace(/^---\n[\s\S]*?\n---\n\n/, "")(content)).toBe(`# ${FAKE_TITLE}\n\n${FAKE_MARKDOWN}\n`);
       })
     )
   );

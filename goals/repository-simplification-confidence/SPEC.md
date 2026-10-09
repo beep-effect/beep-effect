@@ -871,3 +871,9 @@ Move live ruleset, desktop settings and held-main reads from the contents-only v
   Reason: percentages improved while added implementation increased absolute
   uncovered counts; the existing baseline must not be refreshed to hide that.
   Reversal is the receipt commit; no coverage policy or floor changed.
+
+| 2026-10-09 | Keep the live workflow-to-descriptor contract enforced while the S3 Knip window is incomplete. | E #1568 deliberately retains the Knip job; integrated A audit has exactly that contract failure. Weakening the test or restoring the retired CLI would conceal the required coordinated change. Publish the integrated draft with explicit blocked evidence; E owns job removal and the orchestrator owns required-context removal. | Land the E-owned job removal, rerun full CLI/package/parity/coverage, then retry Yeet ready; the source retirement itself remains reversible by its PR revert. |
+
+| 2026-10-09 | Hold inherited epistemic doctest-script drift out of A retirement publication. | Global owner regeneration after #1572 adds missing keys in two unrelated manifests and stamps cache subjects under A's narrow Knip basis. Preserve generated output and restore those files from HEAD; route one main-side repair with matching package/cache evidence. | Reapply the archived owner output, run both package gates and regenerate cache review under that repair's own basis. |
+
+| 2026-10-09 | Migrate the new Research test to the retained capture-output contract. | V #1575 imports deleted parseCard; retain metadata/date/hash/body assertions using the existing schema-backed YAML decoder and remove the ghost test export. No retired parser is restored. | Revert the test-only integration repair alongside the retirement if the old capability is intentionally restored. |

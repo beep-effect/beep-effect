@@ -576,3 +576,149 @@ spans paired the later 41-finding blob with the original 73-finding report
 count. Kept the historical counts, labelled the later blob as recovery
 provenance, and explicitly separated the two censuses. All actionable
 findings remain subject to repair regardless of severity.
+
+### Run 5 hosted coverage attribution
+
+Read completed job `114017372187` immediately. First-head coverage is red:
+(1) deleted Data rows still in the baseline (the all-eleven owner refresh
+will prune them); (2) Accounts.command branches 75 < 100 and EffectImports
+functions 89.34 < 90.17, lines 92.36 < 92.52, statements 92.02 < 92.13;
+(3) local-minted Corpus, ProvenanceIndex, Drawings.layer and CLI-total rows
+exceed hosted measurements. `git diff origin/main` proves Accounts,
+EffectImports, Corpus and Drawings source unchanged by A. The first two
+surviving-file source gaps need inherited-main attribution/one main repair;
+A does not duplicate an inherited code fix. The proposed minted floors
+remain unproven and cannot establish acceptance. Source/package proof and
+coverage baseline generation are distinct from the hosted ratchet.
+
+### Run 5 blocked closeout before follow-up publication
+
+Post-E owners pass: cache baseline, Box, goal index, snapshot writer/check,
+JSDoc inventory, schema catalog and policy fingerprint. Independent source
+merge review has zero collisions. The doc-review P2 is fixed and independently
+closed at `4eea007b79`; semantic delta passes with zero introduced findings
+and 511 unchanged legacy findings. All twelve later-wave files remain
+byte-identical to retained stash `9d072549ed0cb7b6f56e05274819bf0db0234172`.
+
+Full post-E CLI package verification is terminal failed: 290 test files pass
+and one fails; 5,801 tests pass and one fails. The only failure is the live
+workflow-to-descriptor contract (`ci-runner-security.test.ts:1169`), seeing
+Knip in E-owned check.yml after A removes its descriptor. Subsequent package
+docgen and post-E hosted-parity/coverage are not run; earlier successful
+parity remains historical proof, not final integrated acceptance. Ten other
+package gates remain valid on unchanged sources.
+
+All finite run-5 proof coordinators are terminal, including cancelled
+superseded sequences; no queued writer is left behind. The blocked evidence
+and historical-reference repair are staged for one follow-up draft push.
+After that push, attempt canonical Yeet ready and record its exact result.
+The lane neither merges nor changes E's workflow, the hosted ruleset or
+foreign residue. Required next step: orchestrator routes E's separate job
+removal; shared/main owner attributes surviving Accounts/EffectImports
+coverage gaps once; A then reruns full CLI/package/parity/scoped coverage,
+reviews minted rows against hosted evidence and retries ready.
+
+Graft retrieval savings for this run: approximately 174,853 tokens across
+five parent retrieval calls; independent reviewer estimates are separate.
+
+### Run 5 latest-main publication preflight
+
+Yeet refuses the follow-up before commit/push because main advanced with
+V #1575 and epistemic #1572. Integrated main `7336224f34` at `5d0cf971b4`;
+all source auto-merges. Packet conflicts retain A/V evidence, decisions and
+friction; the shared acceptance receipt now has both contributions.
+Independent review finds zero source collisions and confirms the same S3
+workflow mismatch remains. Earlier full audit and semantic proof are
+historical after this merge. Fresh shared-owner regeneration, test TSGo,
+the focused live-workflow contract and Fallow checks run in one sequential
+admitted batch before retrying blocked-state publication. No stale-base
+bypass is used and no complete new-head package/parity pass is claimed.
+
+### Run 5 inherited generated-script drift held for main
+
+The package-script owner adds missing doctest/beep:doctest keys in the newly
+landed epistemic-domain and epistemic-use-cases manifests. This is inherited
+from #1572, outside A's retirement changes. Cache regeneration consequently
+stamps those two subjects under the narrow Knip review reason. Archived the
+exact generated diff at `.beep/rsc-a/run5-inherited-epistemic-generated.patch`
+and restored both manifests and that unintended cache output from HEAD.
+The inherited drift needs one owner/main repair with its own package proof
+and cache review; A neither hand-edits generated keys nor publishes a
+mismatched review basis. JSDoc/schema input source and package identities
+are unchanged by this metadata restoration. Cheap cache-policy proof at
+publication must validate the restored metadata state.
+
+### Run 5 integration consumer repair
+
+Current test-tsgo discovers V #1575's new parseCard test consumer after the
+clean source merge. Removed the ghost Research test-kit export and migrated
+the test to the retained capture-output contract through existing TextCodec
+YAML decoding. Assertions preserve emitted metadata, UTC date, content hash
+and exact Markdown body; no retired parser or replacement service is added.
+Focused Research tests, test compiler and generated inventories are rerun
+under admission before publication. The S3 workflow contract remains enforced.
+
+Graft retrieval savings now total approximately 194,995 tokens across six
+parent calls; independent reviewer estimates remain separate.
+
+### Run 5 G integration and queue cancellation attribution
+
+Merged G #1580 at `a1c3c99b15`; source auto-merges and append conflicts
+preserve A/V/G evidence. The queued research batch acquired a slot just
+before cancellation: all four Research tests pass, test-tsgo is interrupted
+(exit 130), and remaining owner/ref steps never start. No cancelled row is
+a pass. Resume only the compiler and unstarted owners/refs after integration.
+All older proof is revision-bound; final full CLI/parity/coverage still awaits
+S3. Independent Research repair review reports zero actionable findings.
+
+Separate read-only G integration review at `a1c3c99b15` is terminal zero
+actionable findings: Quality retains G options/forwarding and all incoming
+implementation/schema/tests; only A Knip wiring is removed. Packet headings
+and receipt anchors are distinct, and A/V/G evidence survives. Resumed
+test-tsgo exits 0 on this integrated source plus the Research repair.
+
+### Run 5 resumed integration proof before publication
+
+On G-integrated source plus the Research repair: test-tsgo, generated JSDoc
+inventory, schema catalog and CI knowledge references all exit 0. Four
+Research tests already passed before integration and their source is unchanged.
+Full CLI verification remains failed on S3, with ten other unchanged package
+proofs retained; downstream final docgen/JSDoc-ratchet/coverage are not claimed.
+Publication below is attempted inside the same admitted sequential scope.
+
+### Run 5 C integration after a second stale-base refusal
+
+G-integrated compiler, inventory/catalog and knowledge references pass;
+Yeet then refuses before push because C #1583 advances main. Merged C at
+`f4fdd6ba7e`, preserving the ported knowledge-ref command and A's Knip
+dependency/script removal. Cache baseline uses C's complete incoming owner
+output as the regeneration base; shared owners refresh it for the integrated
+tree. Opportunity conflicts preserve both append histories. Previous proof
+is historical after this merge; no new-head full CLI acceptance is claimed.
+
+C integration review finds zero source collisions; the only packet finding
+is duplicate generic package/scope anchors from C's partial receipt. Renamed
+those sections C package gates/C scope, preserving their complete bodies.
+
+C-integrated cache owner exits 0 for 2,086 executable computations. It
+stamps exactly the root and FreshBooks subjects under A's existing review
+basis and carries 150 prior reviews; no subject is dropped. The package
+script owner still writes the two inherited epistemic manifests, which are
+restored before cache review and remain outside A's changes. Independent
+review closes the C anchor finding with terminal zero remaining findings.
+The old first-head readiness monitor is cancelled, terminal and acknowledged
+as observed; a fresh bounded monitor is required after the follow-up push.
+
+The actual second parent of `f4fdd6ba7e` is `cb64e0484f`: the preceding
+fetch/merge already includes C #1583 and RDF #1588. No extra source merge
+is needed. Owners, compiler (335 test files) and CI knowledge refs pass on
+that integrated source. Fallow audit exit 128 is runner-only: the new finite
+batch omitted BEEP_PROOF_BASE and passed an empty ref. No analyzer findings
+were produced. Resume only Fallow with explicit base plus the unstarted
+publication step; no successful gate is repeated.
+
+C-integrated owner regeneration, test-tsgo, CI knowledge references and Fallow
+audit/health all exit 0. Shared cache output is refreshed from C's incoming
+base under the existing Knip review; unrelated epistemic manifests are held
+unchanged. Full CLI/package docgen/JSDoc-ratchet/coverage still remain blocked
+on S3; this generation/parity subset does not waive them.

@@ -1076,3 +1076,73 @@ Effect v4 ChildProcessSpawner boundary preserves both runtimes and all
 assertions; rerun the affected fixtures, type and package checks. Checking
 the canonical process API before choosing the native boundary would have
 prevented this extra qualification wave. No suppression or inventory edit.
+
+### A run 5: scoped writer success differs from hosted floor proof
+
+- Action: read Coverage Regression job `114017372187` after local CLI
+  baseline generation.
+- Evidence: hosted reports stale deleted Data rows, unchanged Accounts and
+  EffectImports base-floor gaps, and minted Corpus/ProvenanceIndex/Drawings
+  floors above its measurements.
+- Effect: the writer's zero exit cannot prove hosted acceptance; package-level
+  adoption can move file rows the source retirement never touched.
+- Prevention: distinguish generation from verification and support bounded
+  changed-file baseline adoption plus explicit hosted measurement input.
+
+### A run 5: live workflow contract blocks staged Knip retirement
+
+- Action: verify CLI after E #1568 integration.
+- Evidence: only `ci-runner-security.test.ts:1169` fails, seeing the retained
+  Knip workflow job absent from the retired descriptor set; 5,801 tests pass.
+- Ownership: E's separate S3 job-removal window and orchestrator ruleset gate.
+- Recovery: retain the contract, publish blocked draft evidence, then rerun
+  package/parity/coverage after the owning workflow change lands.
+- Prevention: distinguish E governance completion from the separate Knip
+  retirement window before launching a long integrated package audit.
+
+### A run 5: publish preflight catches another main advancement
+
+- Action: publish integrated blocked receipts for PR #1584.
+- Evidence: Yeet refuses stale base after V #1575 and epistemic #1572 land;
+  eleven overlapping paths are named. No follow-up commit or push occurs.
+- Recovery: preserve dirt, merge current main, retain both packet
+  contributions and re-run shared owners; independent source review is zero.
+- Prevention: serialize the final shared-file window before expensive proof
+  and publication; do not bypass the stale-base guard.
+
+### A run 5: global owner regeneration exposes inherited package drift
+
+- Evidence: package-scripts writes missing doctest keys in two epistemic
+  packages from #1572; cache regeneration stamps those subjects under A's
+  narrower Knip basis.
+- Recovery: archive generated output and restore those unrelated manifests
+  and cache output from HEAD; route one main repair with matching evidence.
+- Prevention: have new source packages run their generated-script owner
+  before landing; reject unrelated subject stamps under a lane-scoped basis.
+
+### A run 5: new-main test consumer outlives retired helper
+
+- Evidence: current test-tsgo finds V #1575 importing/re-exporting deleted
+  parseCard through the Research test kit; source merge alone was clean.
+- Recovery: remove the stale test export and assert captured YAML metadata,
+  date, hash and body through the existing TextCodec decoder.
+- Prevention: run the test compiler after cross-lane source integration;
+  review retirement consumers as well as merge-conflict markers.
+
+### A run 5: proof admission dominates final integration repair
+
+- Evidence: finite Research/test-compiler/inventory batch remains queued for
+  more than ten minutes before its first result; main advances during wait.
+- Recovery: retain the admitted request, avoid duplicate writers and refresh
+  integrated provenance before publication. No shared capacity change.
+- Prevention: serialize final shared-file integration and publish windows
+  with visible admission ownership and bounded queue-age reporting.
+
+### A run 5: finite runner omits Fallow base environment
+
+- Evidence: audit exits 128 with base-resolution-failed and an empty base ref;
+  no finding is analyzed. The coordinator omitted BEEP_PROOF_BASE.
+- Recovery: use explicit origin/main for audit/health and resume only those
+  uncompleted steps plus publication. Source/proof inputs remain unchanged.
+- Prevention: centralize admission runner environment, and record the actual
+  merge parent after fetch rather than an earlier remote-ref snapshot.

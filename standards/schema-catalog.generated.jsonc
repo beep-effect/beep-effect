@@ -14019,6 +14019,46 @@
       "description": "Human-reviewable replacement proposed for one conflicting logical lineage."
     },
     {
+      "file": "packages/epistemic/domain/src/values/ContradictionDetection/ContradictionDetection.model.ts",
+      "symbol": "ConflictClass",
+      "kind": "literal-kit",
+      "owner": "@beep/epistemic-domain",
+      "identity": "ConflictClass",
+      "description": "Direct logical conflict classes supported by detector version 1."
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/ContradictionDetection/ContradictionDetection.model.ts",
+      "symbol": "ContradictionDetectionSnapshot",
+      "kind": "schema-class",
+      "owner": "@beep/epistemic-domain",
+      "identity": "ContradictionDetectionSnapshot",
+      "description": "Complete detector input; undeclared predicates are treated as multi-valued."
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/ContradictionDetection/ContradictionDetection.model.ts",
+      "symbol": "DetectedContradiction",
+      "kind": "schema-class",
+      "owner": "@beep/epistemic-domain",
+      "identity": "DetectedContradiction",
+      "description": "Pure emitted content and seals with a valid half-open interval, ready for caller-owned stamping."
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/ContradictionDetection/ContradictionDetection.model.ts",
+      "symbol": "DetectionBelief",
+      "kind": "schema-class",
+      "owner": "@beep/epistemic-domain",
+      "identity": "DetectionBelief",
+      "description": "Validated immutable assertion; absent modality remains optional."
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/ContradictionDetection/ContradictionDetection.model.ts",
+      "symbol": "DetectionPolarity",
+      "kind": "literal-kit",
+      "owner": "@beep/epistemic-domain",
+      "identity": "DetectionPolarity",
+      "description": "Explicit assertion polarity supplied by the snapshot caller."
+    },
+    {
       "file": "packages/epistemic/domain/src/values/EdgeEndpoint/EdgeEndpoint.model.ts",
       "symbol": "EdgeEndpointKind",
       "kind": "literal-kit",
@@ -14455,6 +14495,14 @@
       "owner": "@beep/epistemic-use-cases",
       "identity": "ClaimProjection",
       "description": "Pure read-only projection from candidate-claim authority to deterministic read model."
+    },
+    {
+      "file": "packages/epistemic/use-cases/src/ContradictionDetection/ContradictionDetection.errors.ts",
+      "symbol": "ContradictionDetectionError",
+      "kind": "tagged-error",
+      "owner": "@beep/epistemic-use-cases",
+      "identity": "ContradictionDetectionError",
+      "description": "Schema failure at the pure detection boundary; no partial output is returned."
     },
     {
       "file": "packages/epistemic/use-cases/src/ContradictionTriage/ContradictionTriage.commands.ts",
@@ -21620,6 +21668,78 @@
       "owner": "@beep/provenance",
       "identity": "VerifyTextAnchorInput",
       "description": "Expected and resolved source identities, raw source text whose digest must match, and candidate anchor to verify."
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/Adapters/DocumentAnnotation.ts",
+      "symbol": "DocumentAnnotation",
+      "kind": "schema-class",
+      "owner": "@beep/rdf",
+      "identity": "DocumentAnnotation",
+      "description": "OA document annotation with stable node selector and SPAR/PROV body."
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/Adapters/DocumentAnnotation.ts",
+      "symbol": "DocumentAnnotationBody",
+      "kind": "schema-class",
+      "owner": "@beep/rdf",
+      "identity": "DocumentAnnotationBody",
+      "description": "SPAR structural/document typing with per-instance refinement and PROV."
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/Adapters/DocumentAnnotation.ts",
+      "symbol": "DocumentCitation",
+      "kind": "schema-class",
+      "owner": "@beep/rdf",
+      "identity": "DocumentCitation",
+      "description": "RDF statement carrying an optional citation intent without inference."
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/Adapters/MdSections.ts",
+      "symbol": "MdFoldDiagnostic",
+      "kind": "tagged-union",
+      "owner": "@beep/rdf",
+      "identity": "MdFoldDiagnostic",
+      "description": "Typed recovery diagnostics accompanying the section fold."
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/Adapters/MdSections.ts",
+      "symbol": "MdHeadingLevelJump",
+      "kind": "tagged-class",
+      "owner": "@beep/rdf",
+      "identity": "MdHeadingLevelJump",
+      "description": "Missing intermediate heading level recovered without dropping syntax."
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/Adapters/MdSections.ts",
+      "symbol": "MdNodeId",
+      "kind": "schema-const",
+      "owner": "@beep/rdf",
+      "identity": "MdNodeId",
+      "description": "Zero-based source block path in an immutable Md revision."
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/Adapters/MdSections.ts",
+      "symbol": "MdSection",
+      "kind": "schema-class",
+      "owner": "@beep/rdf",
+      "identity": "MdSection",
+      "description": "DOCO section containing original source nodes in depth-first order."
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/Adapters/MdSections.ts",
+      "symbol": "MdSectionFold",
+      "kind": "schema-class",
+      "owner": "@beep/rdf",
+      "identity": "MdSectionFold",
+      "description": "Ordered section forest with typed recovery diagnostics."
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/Adapters/MdSections.ts",
+      "symbol": "MdSourceBlock",
+      "kind": "schema-class",
+      "owner": "@beep/rdf",
+      "identity": "MdSourceBlock",
+      "description": "Original block with revision-scoped id and constructor PO context."
     },
     {
       "file": "packages/foundation/modeling/rdf/src/Adapters/WebAnnotation.ts",
@@ -39147,6 +39267,22 @@
       "description": "Provider, identity, and access token of one proxy stored login."
     },
     {
+      "file": "packages/tooling/tool/cli/src/commands/Accounts/AccountsSecretsLayout.schemas.ts",
+      "symbol": "AccountsSecretField",
+      "kind": "struct-const",
+      "owner": "@beep/repo-cli",
+      "identity": "AccountsSecretField",
+      "description": "Lossless administrative field; secrets are redacted while held in memory."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Accounts/AccountsSecretsLayout.schemas.ts",
+      "symbol": "AccountsSecretsItem",
+      "kind": "struct-const",
+      "owner": "@beep/repo-cli",
+      "identity": "AccountsSecretsItem",
+      "description": "1Password item metadata retained byte-semantically while fields are resectioned."
+    },
+    {
       "file": "packages/tooling/tool/cli/src/commands/AgentEffectiveness/AgentEffectiveness.errors.ts",
       "symbol": "AgentEffectivenessEvalScorerError",
       "kind": "tagged-error",
@@ -40100,6 +40236,14 @@
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Cache/Cache.schemas.ts",
+      "symbol": "CacheRemoteReadsRequest",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "CacheRemoteReadsRequest",
+      "description": "Unresolved secret-reference configuration; no secret read is authorized."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Cache/Cache.schemas.ts",
       "symbol": "CacheRunMode",
       "kind": "literal-kit",
       "owner": "@beep/repo-cli",
@@ -40327,6 +40471,38 @@
       "owner": "@beep/repo-cli",
       "identity": "PartitionedCiLane",
       "description": "CI lane whose executable package tasks have deterministic hosted partitions."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
+      "symbol": "CiChangeProfile",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "CiChangeProfile",
+      "description": "Hosted goals and Rust lane execution profile."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
+      "symbol": "CiEnvironmentSelection",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "CiEnvironmentSelection",
+      "description": "Trusted event export selection with values kept redacted."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
+      "symbol": "CiOperationalPatterns",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "CiOperationalPatterns",
+      "description": "Canonical pattern data for hosted and bootstrap CI profiles."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
+      "symbol": "CiResourceSample",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "CiResourceSample",
+      "description": "Host-wide procfs counters for runner measurement."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Ci/CiRerunRunnerLoss.ts",
@@ -45159,6 +45335,30 @@
       "owner": "@beep/repo-cli",
       "identity": "KnowledgeRename",
       "description": "A Git rename at or above the ratified 50 percent similarity threshold."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.schemas.ts",
+      "symbol": "KnowledgeRewriteReport",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "KnowledgeRewriteReport",
+      "description": "Per-rule counts and drift diagnostics; failed files remain untouched."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.schemas.ts",
+      "symbol": "KnowledgeRewriteRule",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "KnowledgeRewriteRule",
+      "description": "Exact-count literal rewrite; paths cannot escape the repository."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.schemas.ts",
+      "symbol": "KnowledgeRewriteRules",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "KnowledgeRewriteRules",
+      "description": "Versioned literal rewrite contract; rules execute in file order."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.schemas.ts",
@@ -54357,6 +54557,14 @@
     },
     {
       "file": "packages/tooling/tool/cli/src/internal/repo-run/DirectoryHandle.ts",
+      "symbol": "BoundMoveOutcome",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "BoundMoveOutcome",
+      "description": "Inode-bound archive move outcome, including destination and durability refusals."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/DirectoryHandle.ts",
       "symbol": "BoundRemovalOutcome",
       "kind": "literal-kit",
       "owner": "@beep/repo-cli",
@@ -54384,7 +54592,7 @@
       "kind": "literal-kit",
       "owner": "@beep/repo-cli",
       "identity": "DirectoryHandleOperation",
-      "description": "Descriptor-level directory operation: open, stat, list, unlink, rmdir, or close."
+      "description": "Descriptor-level directory operation including rename and mandatory parent sync."
     },
     {
       "file": "packages/tooling/tool/cli/src/internal/repo-run/DirectoryHandle.ts",
@@ -54795,6 +55003,21 @@
     },
     {
       "file": "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.schemas.ts",
+      "symbol": "ResidueArchiveError",
+      "kind": "tagged-error",
+      "owner": "@beep/repo-cli",
+      "identity": "ResidueArchiveError"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.schemas.ts",
+      "symbol": "ResidueArchiveIntent",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "ResidueArchiveIntent",
+      "description": "Inode-bound archive journal row supporting interruption recovery."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.schemas.ts",
       "symbol": "ResidueReapAction",
       "kind": "literal-kit",
       "owner": "@beep/repo-cli",
@@ -54832,6 +55055,14 @@
       "owner": "@beep/repo-cli",
       "identity": "ResidueReapSkipReason",
       "description": "Precise missing or negative safety evidence that prevented residue removal."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.schemas.ts",
+      "symbol": "ResidueRetentionRuling",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "ResidueRetentionRuling",
+      "description": "Explicit owner, terminal state, and recovery policy for checkout residue."
     },
     {
       "file": "packages/tooling/tool/cli/src/internal/repo-run/RunScope.schemas.ts",

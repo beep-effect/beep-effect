@@ -331,8 +331,10 @@ All 41 findings have final dispositions: 40 fixed and one documented Govinfo
 drift oracle; the saved patched scan reports that oracle alone. Run 5 merges
 D #1566 and E #1568 (local merge `2f4979d2e7`); source collision review is
 zero findings. E preserves the Knip workflow for the separate S3 window.
-Post-E owner/CLI/parity/coverage proof is active under admission; completed
-pre-E proof is historical. No final-head pass or ready state is inferred.
+Post-E owner regeneration and semantic delta pass. Full CLI verification
+fails only the live workflow parity test (5,801 tests pass): E still retains
+the Knip job. Subsequent post-E parity/coverage is not run. Completed pre-E
+proof is historical; final-head acceptance and ready remain blocked by S3.
 See `history/handoffs/rsc-a-retire-2026-10-09.md` and
 `history/receipts/knip-cache-policy-review.md`. E owns the job removal; the
 orchestrator owns the required context and merge gate. Waves 2/3 and

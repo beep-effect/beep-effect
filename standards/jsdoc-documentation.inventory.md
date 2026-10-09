@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-10-09T21:20:53.983Z
+Generated: 2026-10-09T22:29:04.435Z
 
 ## Scope
 
@@ -14,16 +14,16 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 64 |
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 79 |
-| publicModules | 2789 |
-| publicExports | 19237 |
+| publicModules | 2811 |
+| publicExports | 19335 |
 | openModules | 360 |
-| openExports | 1317 |
+| openExports | 1318 |
 | missingExportExamples | 8 |
 | missingExportCategories | 0 |
 | missingExportSince | 0 |
 | forbiddenTagFindings | 0 |
 | malformedConditionalTagFindings | 0 |
-| exampleImportFindings | 1289 |
+| exampleImportFindings | 1290 |
 | unsafeExampleFindings | 0 |
 | schemaAnnotationFindings | 0 |
 | undescribed-see | 11 |
@@ -40,7 +40,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | duplicate-example | 0 |
 | loose-ts-fence | 0 |
 | forbidden-remarks | 0 |
-| no-root-package-import | 1268 |
+| no-root-package-import | 1269 |
 | rootPolicyOpen | 0 |
 
 ## Root Policy
@@ -59,16 +59,16 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 1 | `@beep/fc-runs` | `packages/tooling/test-kit/fc-runs` | needs-remediation | 2 | 6 | 1 | 0 |
 | 2 | `@beep/test-runner` | `packages/tooling/test-kit/test-runner` | clean | 4 | 6 | 0 | 0 |
 | 3 | `@beep/types` | `packages/foundation/primitive/types` | needs-remediation | 5 | 12 | 1 | 12 |
-| 4 | `@beep/identity` | `packages/foundation/modeling/identity` | needs-remediation | 8 | 239 | 2 | 199 |
+| 4 | `@beep/identity` | `packages/foundation/modeling/identity` | needs-remediation | 8 | 241 | 2 | 200 |
 | 5 | `@beep/utils` | `packages/foundation/modeling/utils` | needs-remediation | 29 | 216 | 6 | 101 |
 | 6 | `@beep/data` | `packages/foundation/primitive/data` | needs-remediation | 12 | 162 | 10 | 16 |
 | 7 | `@beep/schema` | `packages/foundation/modeling/schema` | needs-remediation | 167 | 941 | 13 | 20 |
-| 8 | `@beep/pglite` | `packages/drivers/pglite` | needs-remediation | 4 | 11 | 3 | 0 |
-| 9 | `@beep/test-utils` | `packages/tooling/test-kit/test-utils` | needs-remediation | 17 | 51 | 1 | 0 |
+| 8 | `@beep/test-utils` | `packages/tooling/test-kit/test-utils` | needs-remediation | 17 | 51 | 1 | 0 |
+| 9 | `@beep/pglite` | `packages/drivers/pglite` | needs-remediation | 4 | 11 | 3 | 0 |
 | 10 | `@beep/html` | `packages/foundation/modeling/html` | needs-remediation | 16 | 546 | 9 | 28 |
-| 11 | `@beep/shared-domain` | `packages/shared/domain` | needs-remediation | 104 | 367 | 3 | 5 |
-| 12 | `@beep/md` | `packages/foundation/modeling/md` | needs-remediation | 10 | 263 | 4 | 87 |
-| 13 | `@beep/rdf` | `packages/foundation/modeling/rdf` | needs-remediation | 29 | 266 | 1 | 5 |
+| 11 | `@beep/md` | `packages/foundation/modeling/md` | needs-remediation | 10 | 263 | 4 | 87 |
+| 12 | `@beep/shared-domain` | `packages/shared/domain` | needs-remediation | 104 | 367 | 3 | 5 |
+| 13 | `@beep/rdf` | `packages/foundation/modeling/rdf` | needs-remediation | 39 | 305 | 1 | 5 |
 | 14 | `@beep/workspace-domain` | `packages/workspace/domain` | clean | 30 | 58 | 0 | 0 |
 | 15 | `@beep/provenance` | `packages/foundation/modeling/provenance` | needs-remediation | 4 | 28 | 1 | 0 |
 | 16 | `@beep/semantic-web` | `packages/foundation/capability/semantic-web` | needs-remediation | 8 | 56 | 0 | 11 |
@@ -78,7 +78,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 20 | `@beep/colors` | `packages/foundation/capability/colors` | needs-remediation | 1 | 9 | 1 | 9 |
 | 21 | `@beep/nlp` | `packages/foundation/modeling/nlp` | needs-remediation | 28 | 313 | 9 | 9 |
 | 22 | `@beep/file-processing` | `packages/foundation/capability/file-processing` | clean | 30 | 159 | 0 | 0 |
-| 23 | `@beep/epistemic-domain` | `packages/epistemic/domain` | needs-remediation | 57 | 255 | 8 | 2 |
+| 23 | `@beep/epistemic-domain` | `packages/epistemic/domain` | needs-remediation | 60 | 269 | 8 | 2 |
 | 24 | `@beep/mcp-kit` | `packages/foundation/capability/mcp-kit` | needs-remediation | 12 | 113 | 8 | 53 |
 | 25 | `@beep/ontology-domain` | `packages/ontology/domain` | clean | 6 | 41 | 0 | 0 |
 | 26 | `@beep/shacl` | `packages/drivers/shacl` | clean | 3 | 6 | 0 | 0 |
@@ -86,7 +86,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 28 | `@beep/observability` | `packages/foundation/capability/observability` | needs-remediation | 25 | 166 | 8 | 97 |
 | 29 | `@beep/law-practice-domain` | `packages/law-practice/domain` | needs-remediation | 224 | 775 | 9 | 5 |
 | 30 | `@beep/langextract` | `packages/foundation/capability/langextract` | clean | 26 | 126 | 0 | 0 |
-| 31 | `@beep/epistemic-use-cases` | `packages/epistemic/use-cases` | needs-remediation | 33 | 139 | 11 | 0 |
+| 31 | `@beep/epistemic-use-cases` | `packages/epistemic/use-cases` | needs-remediation | 38 | 149 | 11 | 0 |
 | 32 | `@beep/api-transport` | `packages/foundation/capability/api-transport` | needs-remediation | 4 | 11 | 2 | 7 |
 | 33 | `@beep/epistemic-config` | `packages/epistemic/config` | needs-remediation | 7 | 21 | 3 | 0 |
 | 34 | `@beep/postgres` | `packages/drivers/postgres` | needs-remediation | 7 | 43 | 0 | 1 |
@@ -179,7 +179,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 121 | `@beep/docket-intake` | `apps/docket-intake` | clean | 10 | 27 | 0 | 0 |
 | 122 | `@beep/gov-legal-mcp` | `packages/drivers/gov-legal-mcp` | needs-remediation | 8 | 40 | 6 | 0 |
 | 123 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | clean | 3 | 7 | 0 | 0 |
-| 124 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 354 | 2981 | 47 | 23 |
+| 124 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 358 | 3014 | 47 | 23 |
 | 125 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | clean | 10 | 87 | 0 | 0 |
 | 126 | `@beep/nlp-mcp` | `packages/drivers/nlp-mcp` | needs-remediation | 9 | 123 | 8 | 1 |
 | 127 | `@beep/lint-rules` | `packages/tooling/policy-pack/lint-rules` | needs-remediation | 9 | 32 | 1 | 0 |
@@ -300,18 +300,19 @@ Export findings:
 - `src/PnLocal.ts:429` `unescapeLocal` (const) - 1 example import violation(s)
 - `src/PnLocal.ts:451` `escapeLocal` (const) - 1 example import violation(s)
 - `src/PnLocal.ts:471` `prefixedNameOrIri` (const) - 1 example import violation(s)
-- `src/Vocab.ts:36` `VocabShape` (type) - 1 example import violation(s)
-- `src/Vocab.ts:62` `VocabEntry` (class) - 1 example import violation(s)
-- `src/Vocab.ts:88` `VocabRegistry` (const) - 1 example import violation(s)
-- `src/Vocab.ts:109` `VocabRegistry` (type) - 1 example import violation(s)
-- `src/Vocab.ts:128` `CoreVocab` (const) - 1 example import violation(s)
-- `src/Vocab.ts:376` `CoreVocab` (type) - 1 example import violation(s)
-- `src/Vocab.ts:393` `Curie` (type) - 1 example import violation(s)
-- `src/Vocab.ts:412` `Predicate` (type) - 1 example import violation(s)
-- `src/Vocab.ts:429` `Expand` (type) - 1 example import violation(s)
-- `src/Vocab.ts:471` `mergeVocab` (const) - 1 example import violation(s)
-- `src/Vocab.ts:496` `SemanticFoundationVocab` (const) - 1 example import violation(s)
-- `src/Vocab.ts:523` `SemanticFoundationVocab` (type) - 1 example import violation(s)
+- `src/Vocab.ts:37` `VocabShape` (type) - 1 example import violation(s)
+- `src/Vocab.ts:63` `VocabEntry` (class) - 1 example import violation(s)
+- `src/Vocab.ts:89` `VocabRegistry` (const) - 1 example import violation(s)
+- `src/Vocab.ts:110` `VocabRegistry` (type) - 1 example import violation(s)
+- `src/Vocab.ts:129` `CoreVocab` (const) - 1 example import violation(s)
+- `src/Vocab.ts:377` `CoreVocab` (type) - 1 example import violation(s)
+- `src/Vocab.ts:394` `Curie` (type) - 1 example import violation(s)
+- `src/Vocab.ts:413` `Predicate` (type) - 1 example import violation(s)
+- `src/Vocab.ts:430` `Expand` (type) - 1 example import violation(s)
+- `src/Vocab.ts:472` `mergeVocab` (const) - 1 example import violation(s)
+- `src/Vocab.ts:497` `SemanticFoundationVocab` (const) - 1 example import violation(s)
+- `src/Vocab.ts:524` `SemanticFoundationVocab` (type) - 1 example import violation(s)
+- `src/Vocab.ts:539` `SparVocab` (const) - 1 example import violation(s)
 - `src/index.ts:31` `export * from "./Curie.ts";` (re-export) - 1 example import violation(s)
 - `src/index.ts:56` `export * from "./Fibered.ts";` (re-export) - 1 example import violation(s)
 - `src/index.ts:72` `export * from "./Id.ts";` (re-export) - 1 example import violation(s)
@@ -632,6 +633,13 @@ Export findings:
 - `src/SemanticVersion.ts:53` `SemanticVersionSchema` (interface) - 1 documentation section/link violation(s)
 - `src/index.ts:194` `export * from "./Port.ts";` (re-export) - 1 example import violation(s)
 
+### @beep/test-utils
+
+Path: `packages/tooling/test-kit/test-utils`
+
+Module findings:
+- `src/FastCheckRuns.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
+
 ### @beep/pglite
 
 Path: `packages/drivers/pglite`
@@ -640,13 +648,6 @@ Module findings:
 - `src/Pglite.test-layer.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/PgliteClient.service.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/index.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-
-### @beep/test-utils
-
-Path: `packages/tooling/test-kit/test-utils`
-
-Module findings:
-- `src/FastCheckRuns.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 
 ### @beep/html
 
@@ -692,22 +693,6 @@ Export findings:
 - `src/Html.serialize.ts:706` `untrustedHtmlValue` (const) - 1 example import violation(s)
 - `src/Html.serialize.ts:739` `safeHtmlValue` (const) - 1 example import violation(s)
 - `src/Html.source-size.ts:829` `inspectSourceSizeList` (const) - 1 documentation section/link violation(s)
-
-### @beep/shared-domain
-
-Path: `packages/shared/domain`
-
-Module findings:
-- `src/values/ClaimLifecycle/ClaimLifecycle.model.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/values/LocalDate/LocalDate.behavior.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/values/LocalDate/LocalDate.model.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-
-Export findings:
-- `src/entity/Principal.ts:253` `PrincipalSchema` (interface) - 1 documentation section/link violation(s)
-- `src/entity/SourceKind.ts:32` `SourceKindSchema` (interface) - 1 documentation section/link violation(s)
-- `src/entity/primitives.ts:64` `Sha256` (const) - 1 example import violation(s)
-- `src/identity/index.ts:84` `isIdentityComposer` (const) - 1 example import violation(s)
-- `src/identity/index.ts:119` `AnyIdentityComposer` (const) - 1 example import violation(s)
 
 ### @beep/md
 
@@ -807,6 +792,22 @@ Export findings:
 - `src/index.ts:100` `export * from "./Md.render.ts";` (re-export) - 1 example import violation(s)
 - `src/index.ts:115` `export * from "./Md.safe.ts";` (re-export) - 1 example import violation(s)
 - `src/index.ts:131` `export * from "./Md.ts";` (re-export) - 1 example import violation(s)
+
+### @beep/shared-domain
+
+Path: `packages/shared/domain`
+
+Module findings:
+- `src/values/ClaimLifecycle/ClaimLifecycle.model.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
+- `src/values/LocalDate/LocalDate.behavior.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
+- `src/values/LocalDate/LocalDate.model.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
+
+Export findings:
+- `src/entity/Principal.ts:253` `PrincipalSchema` (interface) - 1 documentation section/link violation(s)
+- `src/entity/SourceKind.ts:32` `SourceKindSchema` (interface) - 1 documentation section/link violation(s)
+- `src/entity/primitives.ts:64` `Sha256` (const) - 1 example import violation(s)
+- `src/identity/index.ts:84` `isIdentityComposer` (const) - 1 example import violation(s)
+- `src/identity/index.ts:119` `AnyIdentityComposer` (const) - 1 example import violation(s)
 
 ### @beep/rdf
 
@@ -2299,9 +2300,9 @@ Module findings:
 - `src/index.ts:1` (packageDocumentation) - 2 documentation section/link violation(s)
 
 Export findings:
-- `src/commands/Cache/Cache.command.ts:269` `runCacheWarm` (const) - 1 example import violation(s)
-- `src/commands/Cache/Cache.command.ts:466` `buildCacheDashboard` (const) - 1 example import violation(s)
-- `src/commands/Cache/Cache.service.ts:110` `encodeCachePolicyBaselineText` (const) - 1 example import violation(s)
+- `src/commands/Cache/Cache.command.ts:271` `runCacheWarm` (const) - 1 example import violation(s)
+- `src/commands/Cache/Cache.command.ts:468` `buildCacheDashboard` (const) - 1 example import violation(s)
+- `src/commands/Cache/Cache.service.ts:111` `encodeCachePolicyBaselineText` (const) - 1 example import violation(s)
 - `src/commands/Ci/CiLane.ts:386` `CI_LANE_DESCRIPTORS` (const) - 1 documentation section/link violation(s)
 - `src/commands/Ci/CiLane.ts:1520` `ciLaneStepsForTesting` (const) - 1 documentation section/link violation(s)
 - `src/commands/Corpus/Corpus.errors.ts:303` `CorpusArchiveMoveDigestMismatchError` (class) - 1 example import violation(s)
@@ -2315,7 +2316,7 @@ Export findings:
 - `src/commands/Qa/JudgeCheck.ts:511` `extractLastJsonBlock` (const) - 1 documentation section/link violation(s)
 - `src/commands/Qa/JudgePack.ts:587` `renderTimeline` (const) - 1 documentation section/link violation(s)
 - `src/commands/Qa/JudgePack.ts:688` `selectJudgeEvidence` (const) - 1 documentation section/link violation(s)
-- `src/commands/Quality/Quality.command.ts:1017` `runBunAudit` (const) - 1 documentation section/link violation(s)
+- `src/commands/Quality/Quality.command.ts:1018` `runBunAudit` (const) - 1 documentation section/link violation(s)
 - `src/commands/Runners/Runners.schemas.ts:120` `BakeConfig` (class) - 1 example import violation(s)
 - `src/commands/Runners/Runners.schemas.ts:166` `BakeReport` (class) - 1 example import violation(s)
 - `src/commands/Runners/Runners.schemas.ts:275` `BakePlan` (class) - 1 example import violation(s)

@@ -4,7 +4,7 @@ This is a partial lane receipt, recorded 2026-10-09 with wave 1 published as dra
 
 ## Removals
 
-Wave 1: 40 Knip rows fixed and one Govinfo drift oracle documented at `8f29e3528e`; the final patched Knip 6.40.0 cross-check reports only that oracle. The local implementation, dependency/catalog/patch, config, scripts, Turbo task, baseline and CLI wiring are removed. Source-complete draft PR #1584 passes cheap gates and the clean-head install preflight. D #1566 and E #1568 are integrated locally; independent reviews find zero source collisions. E deliberately retains the Knip workflow for the separate S3 window, and the orchestrator owns required-context removal. Post-E owner/package/parity/coverage proof is active; queued or cancelled rows are not passes. Other retirement waves remain open.
+Wave 1: 40 Knip rows fixed and one Govinfo drift oracle documented at `8f29e3528e`; the final patched Knip 6.40.0 cross-check reports only that oracle. The local implementation, dependency/catalog/patch, config, scripts, Turbo task, baseline and CLI wiring are removed. Source-complete draft PR #1584 passes cheap gates and the clean-head install preflight. D #1566 and E #1568 are integrated locally; independent reviews find zero source collisions. E deliberately retains the Knip workflow for the separate S3 window, and the orchestrator owns required-context removal. Post-E owners and semantic delta pass. Full CLI verification has one failure in the live workflow/descriptor parity test (5,801 tests pass). E still owns the remaining Knip workflow job; post-E parity and scoped coverage are not run after that failure. First-head hosted coverage also identifies stale Data rows, surviving unchanged-source gaps and unproven minted floors. No acceptance is claimed. Other retirement waves remain open.
 
 ## Retained tools
 
@@ -27,7 +27,7 @@ Verification: the same hashes remain after the ignore edits; `git ls-files harne
 
 ## Package gates
 
-All eleven touched packages passed full run-5 package verification before E's main merge: box-provisioning, box, freshbooks, occt, pdf-tools, wink, colors, data, repo-ai-metrics, codegen-kit and repo-cli. The refreshed post-D CLI audit passed in 785 seconds with docgen in 28 seconds; test TSGo and full docgen also passed. E changes CLI source, so those CLI/parity passes are now historical. Ten unchanged package gates remain valid. Post-E CLI/package/parity/coverage results remain pending until terminal command output exists.
+All eleven touched packages passed full run-5 package verification before E's main merge: box-provisioning, box, freshbooks, occt, pdf-tools, wink, colors, data, repo-ai-metrics, codegen-kit and repo-cli. The refreshed post-D CLI audit passed in 785 seconds with docgen in 28 seconds; test TSGo and full docgen also passed. E changes CLI source, so those CLI/parity passes are now historical. Ten unchanged package gates remain valid. Post-E full CLI verification fails only the live Knip workflow contract. Its docgen and the subsequent post-E parity/coverage sequence are not run. This is an S3 integration blocker requiring E-owned workflow retirement, followed by a fresh CLI/package/parity/coverage run.
 
 ## Scope
 
@@ -262,7 +262,7 @@ The retained apt/systemd/cloud/Graft adapters received syntax or synthetic check
 only. No live apt directory, vault, systemd unit, reference checkout, bootstrap
 installation or model endpoint was mutated for proof.
 
-## Package gates
+## C package gates
 
 Changed versioned package: `@beep/repo-cli`, with a patch changeset.
 `beep quality package-verify @beep/repo-cli` is admitted through `beep-heavy` and
@@ -281,7 +281,7 @@ Scoped coverage baseline was read for touched files. This is a floor inventory,
 not a fresh coverage result; no baseline was lowered. New Accounts layout files
 have no pre-existing baseline floor. Exact affected floors are in the handoff.
 
-## Scope
+## C scope
 
 C owns its command-family ports, fixture tests, caller rewiring and historical
 cloud packet annotations. Shared root command/cache baseline/AGENTS/workflow
