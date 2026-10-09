@@ -163,6 +163,9 @@ type ShardScan = {
 };
 
 // Fold production rows into client/session/transcript tallies across all shards.
+const countPrimaryEvent = (pulse: HookPulseV1, event: (value: HookPulseEvent) => boolean): number =>
+  O.contains(pulse.sessionRole, "primary") && event(pulse.hookEvent) ? 1 : 0;
+
 const foldPulse = (tallies: ShardScan["tallies"], pulse: HookPulseV1): void => {
   if (pulse.instrumentClass !== "production") return;
   const ts = DateTime.toEpochMillis(pulse.ts);
@@ -192,10 +195,8 @@ const foldPulse = (tallies: ShardScan["tallies"], pulse: HookPulseV1): void => {
       ? HashSet.add(tally.freshStarts, ts)
       : tally.freshStarts,
     minTs: Math.min(tally.minTs, ts),
-    userTurns:
-      tally.userTurns + (O.contains(pulse.sessionRole, "primary") && pulse.hookEvent === "UserPromptSubmit" ? 1 : 0),
-    toolEvents:
-      tally.toolEvents + (O.contains(pulse.sessionRole, "primary") && isActivityToolEvent(pulse.hookEvent) ? 1 : 0),
+    userTurns: tally.userTurns + countPrimaryEvent(pulse, HookPulseEvent.is.UserPromptSubmit),
+    toolEvents: tally.toolEvents + countPrimaryEvent(pulse, isActivityToolEvent),
     maxTs: Math.max(tally.maxTs, ts),
     surfaces: O.match(
       O.filter(pulse.surface, () => O.isSome(pulse.sessionRole)),
