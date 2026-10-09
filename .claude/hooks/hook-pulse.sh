@@ -64,7 +64,7 @@ refuse() {
     >>"${BEEP_AGENT_EVIDENCE_ROOT}/hook-pulse-refusals-${day}.ndjson" 2>/dev/null || true
 }
 if [ "${1:-}" = "--refuse" ]; then
-  case "${2:-}" in timeout|no-jq|encode-failed|unknown-agent-kind) refuse "$2" ;; esac
+  case "${2:-}" in timeout|no-timeout|no-jq|encode-failed|unknown-agent-kind) refuse "$2" ;; esac
   exit 0
 fi
 if [ -e "${BEEP_HOOK_PULSE_DISARM_SENTINEL}" ]; then

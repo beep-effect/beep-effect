@@ -277,6 +277,7 @@ export type HookPulseClientCoverage = typeof HookPulseClientCoverage.Type;
 export const HookPulseRefusalReason = LiteralKit([
   "disabled",
   "no-jq",
+  "no-timeout",
   "unknown-agent-kind",
   "no-hash",
   "digest-failed",

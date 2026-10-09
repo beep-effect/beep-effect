@@ -828,7 +828,7 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
     }).pipe(Effect.scoped)
   );
 
-  it.effect("unknown-role companions cannot supply the root activity floor", () =>
+  it.effect("unknown-role rows on the root transcript cannot supply activity", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const root = yield* makeRepo();
@@ -839,9 +839,8 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       );
       yield* writeShard(stateDir, "2026-10-09", sessionA, [
         yield* sessionStart(sessionA, "2026-10-09T10:00:00Z", current),
-        yield* HookPulseV1.encodeJsonEffect(
-          HookPulseV1.make({ ...unknown, transcriptPath: O.some(Sha256Hex.make("e".repeat(64))) })
-        ),
+        yield* pulseRow(sessionA, "2026-10-09T10:00:30Z", "UserPromptSubmit", O.none(), O.none(), O.none()),
+        yield* HookPulseV1.encodeJsonEffect(unknown),
       ]);
       const ledger = yield* HarnessLedgerService;
       const report = yield* ledger.pruneProposals(

@@ -189,13 +189,18 @@ const foldPulse = (tallies: ShardScan["tallies"], pulse: HookPulseV1): void => {
     child: tally.child || O.contains(pulse.sessionRole, "subagent"),
     unknownStart: tally.unknownStart || isUnknownStart(pulse),
     minTs: Math.min(tally.minTs, ts),
-    userTurns: tally.userTurns + (pulse.hookEvent === "UserPromptSubmit" ? 1 : 0),
-    toolEvents: tally.toolEvents + (isActivityToolEvent(pulse.hookEvent) ? 1 : 0),
+    userTurns:
+      tally.userTurns + (O.contains(pulse.sessionRole, "primary") && pulse.hookEvent === "UserPromptSubmit" ? 1 : 0),
+    toolEvents:
+      tally.toolEvents + (O.contains(pulse.sessionRole, "primary") && isActivityToolEvent(pulse.hookEvent) ? 1 : 0),
     maxTs: Math.max(tally.maxTs, ts),
-    surfaces: O.match(pulse.surface, {
-      onNone: () => tally.surfaces,
-      onSome: (surface) => HashSet.add(tally.surfaces, surface),
-    }),
+    surfaces: O.match(
+      O.filter(pulse.surface, () => O.isSome(pulse.sessionRole)),
+      {
+        onNone: () => tally.surfaces,
+        onSome: (surface) => HashSet.add(tally.surfaces, surface),
+      }
+    ),
     stamps: O.match(pulse.harnessHash, {
       onNone: () => tally.stamps,
       onSome: (stamp) => HashSet.add(tally.stamps, stamp),

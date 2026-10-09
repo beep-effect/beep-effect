@@ -46,6 +46,10 @@ if [ -x "${shared}" ] && command -v jq >/dev/null 2>&1 && command -v timeout >/d
     BEEP_HOOK_PULSE_AGENT_KIND=cursor-cli "${shared}" --refuse encode-failed >/dev/null 2>&1
   fi
 elif [ -x "${shared}" ]; then
-  BEEP_HOOK_PULSE_AGENT_KIND=cursor-cli "${shared}" --refuse no-jq >/dev/null 2>&1
+  if command -v jq >/dev/null 2>&1; then
+    BEEP_HOOK_PULSE_AGENT_KIND=cursor-cli "${shared}" --refuse no-timeout >/dev/null 2>&1
+  else
+    BEEP_HOOK_PULSE_AGENT_KIND=cursor-cli "${shared}" --refuse no-jq >/dev/null 2>&1
+  fi
 fi
 exit 0
