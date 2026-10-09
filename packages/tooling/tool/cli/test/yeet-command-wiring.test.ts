@@ -20,10 +20,11 @@ import {
   YeetEnsuredPullRequest,
   YeetRunPlanModeOptions,
 } from "@beep/repo-cli/test/Yeet";
-import { provideScopedLayer } from "@beep/test-utils";
+import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as ConfigProvider from "effect/ConfigProvider";
@@ -391,6 +392,42 @@ describe("yeet push-first publish plan wiring", () => {
     );
     return A.join(chunks, "");
   });
+
+  it.effect("property: printed plans preserve schema-generated context and ordered command data", () =>
+    Effect.gen(function* () {
+      const result = yield* Arbitrary.checkEffect(
+        Arbitrary.all([Arbitrary.schema(RepoRunPlan)]),
+        Effect.fnUntraced(function* ([plan]) {
+          const decoded = yield* decodePlan(yield* printedPlan(plan));
+          expect(S.toEquivalence(RepoRunContext)(decoded.context, plan.context)).toBe(true);
+          expect(
+            A.map(decoded.steps, ({ id, command, args, cwd, phase, mutability, resume }) => ({
+              id,
+              command,
+              args,
+              cwd,
+              phase,
+              mutability,
+              resume,
+            }))
+          ).toEqual(
+            A.map(plan.steps, ({ id, command, args, cwd, phase, mutability, resume }) => ({
+              id,
+              command,
+              args,
+              cwd,
+              phase,
+              mutability,
+              resume,
+            }))
+          );
+          return true;
+        }),
+        fcRuns(25)
+      );
+      expect(result._tag).toBe("Passed");
+    })
+  );
 
   it("plans the default publish as cheap-gates, preflight, push, draft PR, label, stamp, detached monitor", () => {
     expect(stepIds(publishPlan({ pr: true }))).toEqual([

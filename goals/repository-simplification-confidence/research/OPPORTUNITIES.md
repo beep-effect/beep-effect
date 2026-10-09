@@ -361,3 +361,12 @@ have prevented starvation and the misleading liveness check.
   rather than keeping an ordered ticket queue, so closeout admission has
   unpredictable wait time. A fair queue with observable position would prevent
   this delay; this lane does not alter the workstation wrapper or other jobs.
+
+### V Run 4 schema-property gate after preserved source qualification
+
+Direct capped Yeet publication completed cheap gates but refused the push:
+`yeet-command-wiring.test.ts` has three Schema codec assertions without a
+schema-derived property. The integration did not previously run this full
+cheap tier. Added a generated run-plan print/decode property preserving
+context and ordered command data. Running the cheap tier before freezing the
+review snapshot would have caught the missing obligation earlier.
