@@ -5264,16 +5264,357 @@
       "wave": 3,
       "position": 4,
       "stage": 0,
-      "status": "pending",
+      "status": "in-progress",
       "provisionalHome": "foundation/modeling",
       "upstreamPaths": {
         "src": "packages/package-json/src",
         "test": "packages/package-json/__test__"
       },
-      "exportsExpected": [],
+      "exportsExpected": [
+        {
+          "name": "BinField",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "Bugs",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "Dependency",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "DependencyKind",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "DependencyMapField",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "DependencyProtocol",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "DependencySpecifier",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "DependencySpecifierBrand",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "DevEngine",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "DevEngineOrArray",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "DevEnginePackageManagerEntry",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "DevEngines",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "DevEnginesSchema",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "EntryPointManifest",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ExportsField",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "Funding",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "InvalidDependencySpecifierError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "InvalidPackageManagerRangeError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "InvalidPackageNameError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "InvalidSpdxLicenseError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "JsoncEdit",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "JsoncPath",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "LenientFieldIssue",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "LenientManifest",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "Package",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "PackageDecodeError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "PackageFieldEdit",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "PackageFormatOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "PackageFormatTextOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "PackageIndent",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "PackageJsonFile",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "PackageJsonFileShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "PackageJsonFormat",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "PackageJsonModifyError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "PackageJsonNotFoundError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "PackageJsonParseError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "PackageJsonReadError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "PackageJsonSyntaxError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "PackageJsonWriteError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "PackageManager",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "PackageManagerRange",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "PackageManifest",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "PackageName",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "PackagePatch",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "PackageValidationError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "PackageValidator",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "PeerDependenciesMetaField",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "Person",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "PublishConfigField",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "Repository",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "RepositoryField",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "ResolveEntryPointOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "RuleFailure",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ScopedPackageName",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "SpdxLicense",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "StringMapField",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "UnresolvedDependency",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "UnresolvedEntryPointError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "UnscopedPackageName",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ValidationRule",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "defaultRules",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "isUnresolvedDependency",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "isValidDependencySpecifier",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "isValidSpdx",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "licenseExpressionOf",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "noLocalDepsRule",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "noUnresolvedDepsRule",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "resolveEntryPoint",
+          "kind": "value",
+          "entry": "."
+        }
+      ],
       "exportsAdded": [],
       "newDeps": [],
-      "fixturesBytes": 0,
+      "fixturesBytes": 24438,
       "deviations": [],
       "backlog": [],
       "reviewRounds": [],
