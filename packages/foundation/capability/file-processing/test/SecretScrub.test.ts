@@ -44,7 +44,9 @@ describe("secret scrub proof and prompt admission", () => {
         expect(result.sanitizedText === fixture.expected.sanitizedText).toBe(true);
         expect(
           (yield* encodeCounts(result.proof.counts)) ===
-            (yield* encodeCounts(A.map(fixture.expected.categories, SecretScrub.SecretCategoryCount.make)))
+            (yield* encodeCounts(
+              A.map(fixture.expected.categories, (count) => SecretScrub.SecretCategoryCount.make(count))
+            ))
         ).toBe(true);
         expect(result.coverage === fixture.expected.coverage).toBe(true);
         expect(result.residue === fixture.expected.residue).toBe(true);
@@ -96,7 +98,7 @@ describe("secret scrub proof and prompt admission", () => {
   it.effect("rejects inconsistent results even when the claimed boolean is true", () =>
     Effect.gen(function* () {
       const clean = yield* SecretScrub.scrubSecretText(SecretScrub.SecretScrubInput.make({ text: "public text" }));
-      const forged = SecretScrub.SecretScrubResult.make({ ...clean, sanitizedText: secretScrubFixtures()[3].text });
+      const forged = SecretScrub.SecretScrubResult.make({ ...clean, sanitizedText: `API_KEY=${canaryBuilders[0]()}` });
       for (const result of [
         forged,
         SecretScrub.SecretScrubResult.make({ ...clean, coverage: "unknown" }),

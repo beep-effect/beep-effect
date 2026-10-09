@@ -5,7 +5,7 @@ import * as S from "effect/Schema";
 const value = () => A.join(["canary", "Alpha", "4927", "Beta"], "");
 const provider = () => A.join(["s", "k", "-", "canary", "Provider", "8271"], "");
 const jwt = () => A.join(["ey", "J", "HeaderABC", ".", "PayloadABC", ".", "SignatureABC"], "");
-export const canaryBuilders = [value, provider, jwt];
+export const canaryBuilders: A.NonEmptyReadonlyArray<() => string> = [value, provider, jwt];
 
 class ExpectedCount extends S.Class<ExpectedCount>("SecretScrubFixtureCount")({
   category: S.Literals([
@@ -145,6 +145,16 @@ export class ConsumerRedactionFixture extends S.Class<ConsumerRedactionFixture>(
   headerCount: S.Natural,
 }) {}
 export const consumerRedactionFixtures = () => [
+  ConsumerRedactionFixture.make({
+    id: "quoted-assignment-containing-header",
+    text: `APP_TOKEN="public Authorization: ${value()}"`,
+    oldCause: "APP_TOKEN=[REDACTED]",
+    newCause: "APP_TOKEN=[REDACTED]",
+    oldMetrics: "APP_TOKEN=[REDACTED]",
+    newMetrics: "APP_TOKEN=[REDACTED]",
+    assignmentCount: 2,
+    headerCount: 1,
+  }),
   ConsumerRedactionFixture.make({
     id: "header-overlap-precedence",
     text: `Authorization: Bearer ${provider()}`,
