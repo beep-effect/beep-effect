@@ -642,6 +642,12 @@
         ]
       },
       {
+        "name": "@beep/practice-m365-contacts",
+        "patterns": [
+          "apps/practice-m365-contacts/src/**"
+        ]
+      },
+      {
         "name": "@beep/practice-mail-tagging",
         "patterns": [
           "apps/practice-mail-tagging/src/**"
@@ -2380,6 +2386,7 @@
           "@beep/nlp",
           "@beep/pglite",
           "@beep/postgres",
+          "@beep/provenance",
           "@beep/schema",
           "@beep/shared-domain",
           "@beep/shared-use-cases",
@@ -2410,6 +2417,7 @@
           "@beep/nlp",
           "@beep/pglite",
           "@beep/postgres",
+          "@beep/provenance",
           "@beep/schema",
           "@beep/shared-domain",
           "@beep/shared-use-cases",
@@ -3292,6 +3300,27 @@
         ]
       },
       {
+        "from": "@beep/practice-m365-contacts",
+        "allow": [
+          "@beep/identity",
+          "@beep/law-practice-server",
+          "@beep/law-practice-use-cases",
+          "@beep/m365",
+          "@beep/practice-m365-contacts",
+          "@beep/schema",
+          "@beep/test-runner"
+        ],
+        "allowTypeOnly": [
+          "@beep/identity",
+          "@beep/law-practice-server",
+          "@beep/law-practice-use-cases",
+          "@beep/m365",
+          "@beep/practice-m365-contacts",
+          "@beep/schema",
+          "@beep/test-runner"
+        ]
+      },
+      {
         "from": "@beep/practice-mail-tagging",
         "allow": [
           "@beep/box",
@@ -3754,6 +3783,7 @@
           "@beep/drizzle",
           "@beep/effect-drizzle",
           "@beep/epistemic-domain",
+          "@beep/fc-runs",
           "@beep/file-processing",
           "@beep/identity",
           "@beep/md",
@@ -3767,11 +3797,13 @@
           "@beep/pretext",
           "@beep/provenance",
           "@beep/rdf",
+          "@beep/repo-cli",
           "@beep/repo-utils",
           "@beep/schema",
           "@beep/scratchpad",
           "@beep/semantic-web",
           "@beep/shacl",
+          "@beep/test-utils",
           "@beep/utils",
           "@beep/wink"
         ],
@@ -3781,6 +3813,7 @@
           "@beep/drizzle",
           "@beep/effect-drizzle",
           "@beep/epistemic-domain",
+          "@beep/fc-runs",
           "@beep/file-processing",
           "@beep/identity",
           "@beep/md",
@@ -3794,11 +3827,13 @@
           "@beep/pretext",
           "@beep/provenance",
           "@beep/rdf",
+          "@beep/repo-cli",
           "@beep/repo-utils",
           "@beep/schema",
           "@beep/scratchpad",
           "@beep/semantic-web",
           "@beep/shacl",
+          "@beep/test-utils",
           "@beep/utils",
           "@beep/wink"
         ]

@@ -6,13 +6,13 @@
     "title": "Practice M365 Contacts",
     "status": "active",
     "created": "2026-08-30",
-    "updated": "2026-08-30",
+    "updated": "2026-10-09",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/practice-m365-contacts",
   "lifecycle": "active",
   "mission": "Add the confidential-client auth lane and contacts write verbs to @beep/m365, then seed the attorney's contact folder from the salvaged CSVs with dedup and rollback tags",
-  "statusNote": "Graduated 2026-08-30 from explorations/practice-office-provisioning; P0 not started. First actions: operator-attended Entra registration with RBAC-for-Applications scoping; CSV header census.",
+  "statusNote": "PR 1 implementation and offline evidence qualified: all edited-package checks, test-tsgo, driver docgen, JSDoc ratchet, knowledge refs, fallow and scoped coverage pass. Inherited identity-dependent infra/Pulumi docgen red recorded under S11. Publication and live prerequisites remain.",
   "blockedBy": [],
   "executionCapable": true,
   "reflectionRequired": true,
@@ -52,17 +52,17 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Verify",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P3",

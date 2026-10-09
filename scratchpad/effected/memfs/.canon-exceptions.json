@@ -1,0 +1,130 @@
+[
+  {
+    "id": "EV002:scratchpad/test/memfs/Constructors.test.ts:130:provide@4#1",
+    "reason": "The layer build is the subject: its unknown-fault-key defect must be captured inside the test, rather than fail a setup hook."
+  },
+  {
+    "id": "EV002:scratchpad/test/memfs/Constructors.test.ts:176:provide@11#1",
+    "reason": "The first independent provide writes into one volume to test fresh-build isolation."
+  },
+  {
+    "id": "EV002:scratchpad/test/memfs/Constructors.test.ts:181:provide@11#1",
+    "reason": "The first independent provide writes into one volume to test fresh-build isolation."
+  },
+  {
+    "id": "EV002:scratchpad/test/memfs/Constructors.test.ts:194:provide@12#1",
+    "reason": "The contradictory seed's acquisition defect is the asserted outcome; hook acquisition would prevent the assertion from running."
+  },
+  {
+    "id": "EV002:scratchpad/test/memfs/FaultInjection.test.ts:278:provide@21#1",
+    "reason": "The first build establishes that the bound layer arms its transient counter."
+  },
+  {
+    "id": "EV002:scratchpad/test/memfs/FaultInjection.test.ts:279:provide@21#2",
+    "reason": "The second build of the same layer must independently re-arm its counter; sharing acquisition would change the assertion."
+  },
+  {
+    "id": "EV002:scratchpad/test/memfs/FaultInjection.test.ts:283:provide@21#1",
+    "reason": "The first build establishes that the bound layer arms its transient counter."
+  },
+  {
+    "id": "EV002:scratchpad/test/memfs/FaultInjection.test.ts:424:provide@44#1",
+    "reason": "The first layer build exercises factory invocation and its newly armed fault."
+  },
+  {
+    "id": "EV002:scratchpad/test/memfs/FaultInjection.test.ts:425:provide@44#2",
+    "reason": "The second independent build proves the factory runs twice and creates fresh faults; shared acquisition would invalidate that assertion."
+  },
+  {
+    "id": "EV004:scratchpad/test/memfs/FileSystemContract.ts:413:scoped@36#1",
+    "reason": "The shorter scope must close before stat verifies that the scoped directory and its children were removed."
+  },
+  {
+    "id": "EV004:scratchpad/test/memfs/FileSystemContract.ts:429:scoped@31#1",
+    "reason": "The shorter scope must close before stat verifies that the scoped temporary file was removed."
+  },
+  {
+    "id": "EV004:scratchpad/test/memfs/FileSystemContract.ts:954:scoped@27#1",
+    "reason": "The failing inner scope must finish cleanup before the outer test verifies that its temporary directory is absent."
+  },
+  {
+    "id": "EV002:scratchpad/test/memfs/Handle.test.ts:41:provide@11#1",
+    "reason": "handle.layer merges an already-built Layer.succeedContext with Path.layer, which is Layer.succeed; this pure provision also exercises handle stability across provides."
+  },
+  {
+    "id": "EV002:scratchpad/test/memfs/Handle.test.ts:46:provide@11#1",
+    "reason": "handle.layer merges an already-built Layer.succeedContext with Path.layer, which is Layer.succeed; this pure provision also exercises handle stability across provides."
+  },
+  {
+    "id": "EV002:scratchpad/test/memfs/Handle.test.ts:334:provide@21#1",
+    "reason": "vol.layer is a pure composition of existing service values; the first provision is part of the stable-across-provides contract."
+  },
+  {
+    "id": "EV002:scratchpad/test/memfs/Handle.test.ts:335:provide@34#1",
+    "reason": "The second pure vol.layer provision verifies that a separate program observes the first program's mutation."
+  },
+  {
+    "id": "EV002:scratchpad/test/memfs/MemoryFileSystem.test.ts:107:provide@11#1",
+    "reason": "Layer.fresh acquisition is the subject: this first build writes and reads a file in one isolated volume."
+  },
+  {
+    "id": "EV002:scratchpad/test/memfs/MemoryFileSystem.test.ts:114:provide@11#1",
+    "reason": "Layer.fresh acquisition is the subject: this first build writes and reads a file in one isolated volume."
+  },
+  {
+    "id": "EV002:scratchpad/test/memfs/Seeding.test.ts:253:provide@4#1",
+    "reason": "Failed layer acquisition is the subject; providing the invalid layer inside Effect.exit lets the test inspect its defect instead of failing a suite setup hook."
+  },
+  {
+    "id": "EV002:scratchpad/test/memfs/Volume.test.ts:54:provide@21#1",
+    "reason": "The test explicitly verifies fresh construction across separate provides; a shared layer would change the subject. Current detector ID uses line 54."
+  },
+  {
+    "id": "EV002:scratchpad/test/memfs/Volume.test.ts:55:provide@21#2",
+    "reason": "The second independent build must detect leakage from the first build. Current detector ID uses line 55."
+  },
+  {
+    "id": "EV002:scratchpad/test/memfs/Volume.test.ts:184:provide@12#1",
+    "reason": "The test captures contradictory-seed layer-construction failure inside Effect.exit; hook acquisition would fail before that assertion. Current detector ID uses line 184."
+  },
+  {
+    "id": "EV010:scratchpad/test/memfs/integration/case-insensitive.int.test.ts:7:node:fs@0#1",
+    "reason": "Real filesystem operations establish whether the host volume folds case."
+  },
+  {
+    "id": "EV010:scratchpad/test/memfs/integration/case-insensitive.int.test.ts:8:node:os@0#1",
+    "reason": "The host temporary directory is required to probe actual host-volume case behavior."
+  },
+  {
+    "id": "EV010:scratchpad/test/memfs/integration/case-insensitive.int.test.ts:10:@effect/platform-node@0#1",
+    "reason": "NodeFileSystem is the real-platform oracle for the case-insensitive contract."
+  },
+  {
+    "id": "EV001:scratchpad/test/memfs/integration/node-sync.int.test.ts:168:runSync@21#1",
+    "reason": "Synchronous execution is the explicit subject; retaining runSync detects an implementation that introduces an asynchronous boundary. Current detector ID uses line 168."
+  },
+  {
+    "id": "EV010:scratchpad/test/memfs/integration/node-sync.int.test.ts:8:node:fs@0#1",
+    "reason": "Real filesystem fixtures and reads provide the differential oracle and verify that unsupported mutators touch nothing."
+  },
+  {
+    "id": "EV010:scratchpad/test/memfs/integration/node-sync.int.test.ts:9:node:os@0#1",
+    "reason": "The differential oracle requires a real host temporary directory."
+  },
+  {
+    "id": "EV010:scratchpad/test/memfs/integration/node-sync.int.test.ts:11:@effect/platform-node@0#1",
+    "reason": "NodeFileSystem is the reference implementation against which NodeSyncFileSystem is compared."
+  },
+  {
+    "id": "EV010:scratchpad/test/memfs/integration/node.int.test.ts:10:@effect/platform-node@0#1",
+    "reason": "The contract suites intentionally exercise the real Node filesystem as the reference implementation."
+  },
+  {
+    "id": "EV010:scratchpad/test/memfs/integration/ports.int.test.ts:5:node:fs@0#1",
+    "reason": "Native synchronous filesystem calls are the differential oracle for memfs port values, errno, syscalls, and path semantics."
+  },
+  {
+    "id": "EV010:scratchpad/test/memfs/integration/ports.int.test.ts:17:node:os@0#1",
+    "reason": "Real temporary directories are required for the native-filesystem oracle."
+  }
+]

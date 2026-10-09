@@ -1,0 +1,80 @@
+{
+	"name": "@effected/workspaces",
+	"version": "0.2.1",
+	"private": true,
+	"description": "Monorepo workspace tooling as Effect services — root discovery, package enumeration, the dependency graph, package-manager detection, pnpm catalog resolution, lockfile IO and git-based change detection.",
+	"keywords": [
+		"monorepo",
+		"workspaces",
+		"pnpm",
+		"npm",
+		"yarn",
+		"bun",
+		"dependency-graph",
+		"catalog",
+		"effect",
+		"effected"
+	],
+	"homepage": "https://github.com/spencerbeggs/effected/tree/main/packages/workspaces#readme",
+	"bugs": {
+		"url": "https://github.com/spencerbeggs/effected/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/spencerbeggs/effected.git",
+		"directory": "packages/workspaces"
+	},
+	"license": "MIT",
+	"author": {
+		"name": "C. Spencer Beggs",
+		"email": "spencer@beggs.codes",
+		"url": "https://spencerbeg.gs"
+	},
+	"sideEffects": false,
+	"type": "module",
+	"exports": {
+		".": "./src/index.ts",
+		"./package.json": "./package.json"
+	},
+	"scripts": {
+		"build:dev": "node savvy.build.ts --target dev",
+		"build:prod": "node savvy.build.ts --target prod",
+		"prepare": "turbo run build:dev",
+		"types:check": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@effected/git": "workspace:*",
+		"@effected/glob": "workspace:*",
+		"@effected/lockfiles": "workspace:*",
+		"@effected/npm": "workspace:*",
+		"@effected/package-json": "workspace:*",
+		"@effected/walker": "workspace:*",
+		"@effected/yaml": "workspace:*",
+		"@pnpm/catalogs.config": "^1100.0.0",
+		"@pnpm/catalogs.protocol-parser": "^1100.0.0",
+		"@pnpm/catalogs.resolver": "^1100.0.0",
+		"@pnpm/catalogs.types": "^1100.0.0"
+	},
+	"devDependencies": {
+		"@effect/platform-node": "catalog:effect",
+		"@effect/vitest": "catalog:effect",
+		"@savvy-web/bundler": "^2.0.0",
+		"@types/node": "catalog:silk",
+		"effect": "catalog:effect",
+		"typescript": "catalog:silk"
+	},
+	"peerDependencies": {
+		"effect": "catalog:effect"
+	},
+	"engines": {
+		"node": ">=24.11.0"
+	},
+	"publishConfig": {
+		"access": "public",
+		"directory": "dist/dev/pkg",
+		"linkDirectory": true,
+		"targets": {
+			"npm": true
+		}
+	}
+}

@@ -1,0 +1,35 @@
+{
+  ".": {
+    "bad": {},
+    "missing": {},
+    "conflicts": [],
+    "intersections": {}
+  },
+  "packages/optional": {
+    "bad": {
+      "redux": [
+        {
+          "parents": [
+            {
+              "name": "react-redux",
+              "version": "9.2.0"
+            }
+          ],
+          "optional": true,
+          "wantedRange": "^5.0.0",
+          "foundVersion": "4.2.1",
+          "resolvedFrom": []
+        }
+      ]
+    },
+    "missing": {},
+    "conflicts": [],
+    "intersections": {}
+  },
+  "packages/unmet": {
+    "bad": {},
+    "missing": {},
+    "conflicts": [],
+    "intersections": {}
+  }
+}

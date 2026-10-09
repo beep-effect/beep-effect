@@ -1,0 +1,277 @@
+{
+  "module": "package-json",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/package-json/EntryPoint.ts",
+        "scratchpad/effected/package-json/internal/format.ts",
+        "scratchpad/effected/package-json/PackageJsonFormat.ts",
+        "scratchpad/effected/package-json/PackageJsonFile.ts"
+      ],
+      "tests": [
+        "scratchpad/test/package-json/EntryPoint.test.ts",
+        "scratchpad/test/package-json/Format.test.ts",
+        "scratchpad/test/package-json/PackageJsonFormat.test.ts",
+        "scratchpad/test/package-json/Package.test.ts",
+        "scratchpad/test/package-json/Modify.test.ts",
+        "scratchpad/test/package-json/integration/PackageJsonFile.int.test.ts"
+      ],
+      "findings": [
+        "fable-1-1",
+        "sol-1-2",
+        "fable-1-2",
+        "sol-1-6-format-boundary",
+        "sol-1-6-render",
+        "sol-1-6-entrypoint",
+        "fable-1-11",
+        "fable-1-12-entrypoint"
+      ]
+    },
+    {
+      "id": "g2",
+      "files": [
+        "scratchpad/effected/package-json/LenientManifest.ts",
+        "scratchpad/effected/package-json/PackageValidator.ts",
+        "scratchpad/effected/package-json/PackageManager.ts",
+        "scratchpad/effected/package-json/index.ts"
+      ],
+      "tests": [
+        "scratchpad/test/package-json/LenientManifest.test.ts",
+        "scratchpad/test/package-json/PackageValidator.test.ts",
+        "scratchpad/test/package-json/PackageManager.test.ts"
+      ],
+      "findings": [
+        "sol-1-5-lenient",
+        "sol-1-5-rule-failure",
+        "sol-1-6-lenient-boundary",
+        "fable-1-5",
+        "fable-1-7",
+        "fable-1-8",
+        "fable-1-12-lenient",
+        "fable-1-12-validator"
+      ]
+    },
+    {
+      "id": "g3",
+      "files": [
+        "scratchpad/effected/package-json/PackageName.ts",
+        "scratchpad/effected/package-json/License.ts",
+        "scratchpad/effected/package-json/Package.ts",
+        "scratchpad/effected/package-json/PackageManagerRange.ts"
+      ],
+      "tests": [
+        "scratchpad/test/package-json/PackageName.test.ts",
+        "scratchpad/test/package-json/License.test.ts",
+        "scratchpad/test/package-json/PackageManagerRange.test.ts",
+        "scratchpad/test/package-json/PackageFields.test.ts"
+      ],
+      "findings": [
+        "sol-1-3-package-name",
+        "sol-1-3-license",
+        "sol-1-3-package-fields",
+        "sol-1-4-license",
+        "sol-1-4-range",
+        "allow-2"
+      ]
+    },
+    {
+      "id": "g4",
+      "files": [
+        "scratchpad/effected/package-json/Funding.ts",
+        "scratchpad/effected/package-json/Person.ts",
+        "scratchpad/effected/package-json/Repository.ts"
+      ],
+      "tests": [
+        "scratchpad/test/package-json/Funding.test.ts",
+        "scratchpad/test/package-json/Person.test.ts",
+        "scratchpad/test/package-json/Repository.test.ts"
+      ],
+      "findings": [
+        "sol-1-6-person",
+        "sol-1-6-repository",
+        "fable-1-12-repository",
+        "fable-1-12-funding",
+        "allow-1",
+        "allow-3",
+        "allow-4"
+      ]
+    }
+  ],
+  "findings": {
+    "fable-1-1": {
+      "file": "scratchpad/effected/package-json/EntryPoint.ts",
+      "class": "bug",
+      "summary": "Restore upstream resolveEntryPoint dispatch; overlapping object bags break the added dual overload.",
+      "fix": "Restore the pinned oracle's plain data-first resolveEntryPoint(manifest, options?) signature and body; remove dual dispatch and overloads, including zero-argument currying. Restore upstream test lines and remove the added pipeable-form test at EntryPoint.test.ts:23-29; retain direct-call oracle assertions and add a conditions-extension manifest regression. Do not retain Sol's proposed zero-argument form or add another curried API in this fix."
+    },
+    "sol-1-2": {
+      "file": "scratchpad/effected/package-json/internal/format.ts",
+      "class": "bug",
+      "summary": "Default rendering silently loses a valid unknown key; nested sorted maps share the inherited prototype-setter defect.",
+      "fix": "Build both sorted records with R.fromEntries from ordered entries, preserving __proto__ as an own data property. Extend Package.test.ts through default toJsonString and add a nested sorted-map case in Format.test.ts. Supply the upstream-bug probe and adjusted test references to central deviation bookkeeping; do not edit the ledger or README Port notes."
+    },
+    "fable-1-2": {
+      "file": "scratchpad/effected/package-json/internal/format.ts",
+      "class": "law",
+      "summary": "Canonical sorting uses forbidden native in-place Array.prototype.sort.",
+      "fix": "Replace all four calls with A.sort and explicit Order values. Preserve the code-unit key comparator and numeric known-key index ordering; consume the returned sorted copies when assembling R.fromEntries. Retain byte-for-byte formatter expectations."
+    },
+    "sol-1-3-package-name": {
+      "file": "scratchpad/effected/package-json/PackageName.ts",
+      "class": "schema",
+      "summary": "Add missing identity annotations to ScopedPackageName, UnscopedPackageName and PackageName.",
+      "fix": "Apply the owning $I.annoteSchema to ScopedPackageName, UnscopedPackageName and PackageName without changing accepted inputs or encoded shapes. In PackageName.ts annotate the union used by the operator-required S.Opaque class and preserve classification statics. Verify runtime identity metadata in the owning group's tests."
+    },
+    "sol-1-3-license": {
+      "file": "scratchpad/effected/package-json/License.ts",
+      "class": "schema",
+      "summary": "Add missing identity annotations to SpdxLicense.",
+      "fix": "Apply the owning $I.annoteSchema to SpdxLicense without changing accepted inputs or encoded shapes. In PackageName.ts annotate the union used by the operator-required S.Opaque class and preserve classification statics. Verify runtime identity metadata in the owning group's tests."
+    },
+    "sol-1-3-package-fields": {
+      "file": "scratchpad/effected/package-json/Package.ts",
+      "class": "schema",
+      "summary": "Add missing identity annotations to DependencyMapField, StringMapField, PublishConfigField and PeerDependenciesMetaField.",
+      "fix": "Apply the owning $I.annoteSchema to DependencyMapField, StringMapField, PublishConfigField and PeerDependenciesMetaField without changing accepted inputs or encoded shapes. In PackageName.ts annotate the union used by the operator-required S.Opaque class and preserve classification statics. Verify runtime identity metadata in the owning group's tests."
+    },
+    "sol-1-4-license": {
+      "file": "scratchpad/effected/package-json/License.ts",
+      "class": "schema",
+      "summary": "Annotate the reusable SPDX filter check.",
+      "fix": "Add stable identifier, meaningful title and description to the SPDX filter check, retaining its predicate and user-facing failure message. Verify the check annotations without broadening validation."
+    },
+    "sol-1-4-range": {
+      "file": "scratchpad/effected/package-json/PackageManagerRange.ts",
+      "class": "schema",
+      "summary": "Annotate the reusable SemVerRangeString filter check.",
+      "fix": "Add stable identifier, meaningful title and description to the SemVerRangeString filter check, retaining its predicate and user-facing failure message. Verify the check annotations without broadening validation."
+    },
+    "sol-1-5-lenient": {
+      "file": "scratchpad/effected/package-json/LenientManifest.ts",
+      "class": "schema",
+      "summary": "The issue model has two independently maintained structural definitions.",
+      "fix": "Make the existing structural schema the annotated exported LenientFieldIssue value and derive its same-name type. Use that schema in LenientManifest.issues and re-export the value from index.ts while preserving the type and plain-object construction contract. Restore no unrelated oracle behavior; added-export bookkeeping goes to the central codemod."
+    },
+    "sol-1-5-rule-failure": {
+      "file": "scratchpad/effected/package-json/PackageValidator.ts",
+      "class": "schema",
+      "summary": "Rule-failure data has no runtime schema from which its type can be derived.",
+      "fix": "Add an identity-annotated structural RuleFailure schema with message and S.Option(S.String) path; derive the same-name type and re-export its value from index.ts. Preserve callers' current plain-object failure values. Route added-export bookkeeping to the central codemod."
+    },
+    "sol-1-6-format-boundary": {
+      "file": "scratchpad/effected/package-json/PackageJsonFormat.ts",
+      "class": "effect-idiom",
+      "summary": "The format-boundary JSON path bypasses the required schema codec.",
+      "fix": "Use synchronous S.fromJsonString(S.Unknown) Result decoding and map failures to PackageJsonSyntaxError. Keep the not-an-object branch, formatting bytes and synchronous Result signature. Remove native reparsing used to recover SyntaxError causes in modify and PackageJsonFile.readJson; map the schema issue into the existing tagged boundary errors. Where the codec cannot retain native cause identity, treat that as a law-forced deviation for central recording."
+    },
+    "sol-1-6-lenient-boundary": {
+      "file": "scratchpad/effected/package-json/LenientManifest.ts",
+      "class": "effect-idiom",
+      "summary": "The lenient-boundary JSON path bypasses the required schema codec.",
+      "fix": "Use synchronous S.fromJsonString(S.Unknown) Result decoding, preserve not-an-object and sifting behavior, and map failures to PackageJsonSyntaxError. Preserve the Result API. Any unavoidable loss of native SyntaxError cause is a law-forced deviation for central recording."
+    },
+    "sol-1-6-render": {
+      "file": "scratchpad/effected/package-json/internal/format.ts",
+      "class": "effect-idiom",
+      "summary": "The render JSON path bypasses the required schema codec.",
+      "fix": "Use a synchronous schema JSON encoder with the space option matching options.indent. Preserve JSON bytes, ordering, newline and plain string return type on valid manifest records; respect upstream invalid-value failure behavior where the codec permits it and identify unavoidable law-forced differences for central recording."
+    },
+    "sol-1-6-person": {
+      "file": "scratchpad/effected/package-json/Person.ts",
+      "class": "effect-idiom",
+      "summary": "The person JSON path bypasses the required schema codec.",
+      "fix": "Use synchronous schema JSON encoding for the rest-value comparison, preserving key-order-sensitive wire replay and nullish-to-empty-record behavior. Do not replace it with structural equality that changes the fidelity predicate; retain current failure behavior where possible and route unavoidable codec differences centrally."
+    },
+    "sol-1-6-repository": {
+      "file": "scratchpad/effected/package-json/Repository.ts",
+      "class": "effect-idiom",
+      "summary": "The repository JSON path bypasses the required schema codec.",
+      "fix": "Use synchronous schema JSON encoding for the Repository/Bugs rest-value comparison, preserving key-order-sensitive replay and nullish-to-empty-record behavior. Keep both wire-fidelity predicates; record unavoidable codec differences centrally."
+    },
+    "sol-1-6-entrypoint": {
+      "file": "scratchpad/effected/package-json/EntryPoint.ts",
+      "class": "effect-idiom",
+      "summary": "The entrypoint JSON path bypasses the required schema codec.",
+      "fix": "Use synchronous schema JSON encoding for the conditions array; preserve the exact successful message text, including quoting, order and the empty-array default."
+    },
+    "fable-1-5": {
+      "file": "scratchpad/effected/package-json/LenientManifest.ts",
+      "class": "law",
+      "summary": "Two redundant wrappers violate the direct-helper rule.",
+      "fix": "Use const isString = P.isString and const isBoolean = P.isBoolean, or direct refs at their call sites, without changing guard behavior."
+    },
+    "fable-1-7": {
+      "file": "scratchpad/effected/package-json/PackageValidator.ts",
+      "class": "effect-idiom",
+      "summary": "Restore upstream layer forwarding lambdas; remove unforced duplicate validation spans.",
+      "fix": "Restore the two pinned-oracle plain forwarding lambdas and keep runRules' existing traced generator. Restore any upstream test lines rewritten solely for the outer wrappers; the report identifies none. Do not change the upstream inner span to fnUntraced as an alternative."
+    },
+    "fable-1-8": {
+      "file": "scratchpad/effected/package-json/PackageManager.ts",
+      "class": "effect-idiom",
+      "summary": "Remove the unforced traced wrapper from PackageManager.FromString.decode.",
+      "fix": "Restore the pinned-oracle plain decode arrow with its existing Effect result and error logic. Restore upstream test lines changed solely for this wrapper if any; none are identified. Renaming the span or retaining fnUntraced is not the ruling's requested restoration."
+    },
+    "fable-1-11": {
+      "file": "scratchpad/effected/package-json/internal/format.ts",
+      "class": "effect-idiom",
+      "summary": "Restore upstream non-dual internal resolveIndent and renderJson helper shapes.",
+      "fix": "Restore both pinned-oracle two-parameter function shapes and delete unused dual imports/overloads. Keep the independent required schema-JSON and sorting repairs. Restore any upstream test lines rewritten solely for currying; the report identifies none."
+    },
+    "fable-1-12-repository": {
+      "file": "scratchpad/effected/package-json/Repository.ts",
+      "class": "effect-idiom",
+      "summary": "Use Effect Array helpers for repository domain iteration.",
+      "fix": "Replace the cited operations with A.map, A.filter, A.some and A.join from effect/Array, preserving callbacks, order, short-circuiting and results. This is a behavior-preserving idiom fix; keep existing upstream assertions."
+    },
+    "fable-1-12-lenient": {
+      "file": "scratchpad/effected/package-json/LenientManifest.ts",
+      "class": "effect-idiom",
+      "summary": "Use Effect Array helpers for lenient domain iteration.",
+      "fix": "Replace the cited operations with A.every from effect/Array, preserving callbacks, order, short-circuiting and results. This is a behavior-preserving idiom fix; keep existing upstream assertions."
+    },
+    "fable-1-12-entrypoint": {
+      "file": "scratchpad/effected/package-json/EntryPoint.ts",
+      "class": "effect-idiom",
+      "summary": "Use Effect Array helpers for entrypoint domain iteration.",
+      "fix": "Replace the cited operations with A.some from effect/Array, preserving callbacks, order, short-circuiting and results. This is a behavior-preserving idiom fix; keep existing upstream assertions."
+    },
+    "fable-1-12-validator": {
+      "file": "scratchpad/effected/package-json/PackageValidator.ts",
+      "class": "effect-idiom",
+      "summary": "Use Effect Array helpers for validator domain iteration.",
+      "fix": "Replace the cited operations with A.map, A.join and A.some from effect/Array, preserving callbacks, order, short-circuiting and results. This is a behavior-preserving idiom fix; keep existing upstream assertions."
+    },
+    "fable-1-12-funding": {
+      "file": "scratchpad/effected/package-json/Funding.ts",
+      "class": "effect-idiom",
+      "summary": "Use Effect Array helpers for funding domain iteration.",
+      "fix": "Replace the cited operations with A.map from effect/Array, preserving callbacks, order, short-circuiting and results. This is a behavior-preserving idiom fix; keep existing upstream assertions."
+    },
+    "allow-1": {
+      "file": "scratchpad/effected/package-json/Funding.ts",
+      "class": "law",
+      "summary": "Remove allowlisted new-map-set in Funding.ts.",
+      "fix": "Move remembered EntryWire and bare-field arity onto owned Funding schema instances. Remove both weak collections and route all read/write/replay decisions through those instance fields. Preserve string/object/array spelling and per-instance fidelity; provenance must not leak into encoded JSON. Retarget Funding.test.ts representation assertions and keep all oracle wire-round-trip assertions. Central bookkeeping owns the allowlist deletion and per-class ledger/README deviation entry; this group edits only its source and tests."
+    },
+    "allow-2": {
+      "file": "scratchpad/effected/package-json/PackageName.ts",
+      "class": "law",
+      "summary": "Remove allowlisted object-method in PackageName.ts.",
+      "fix": "Replace Object.assign schema augmentation with an S.Opaque class over the annotated package-name union, with static isValid, scope, unscoped and isScoped members. Preserve the upstream export name and value/type roles, validation and classification results. Retarget PackageName.test.ts representation assertions; do not substitute Object.defineProperties. Central bookkeeping owns the allowlist deletion and per-class ledger/README deviation entry; this group edits only its source and tests."
+    },
+    "allow-3": {
+      "file": "scratchpad/effected/package-json/Person.ts",
+      "class": "law",
+      "summary": "Remove allowlisted new-map-set in Person.ts.",
+      "fix": "Store remembered PersonWire on owned Person schema instances, remove wireForms, and update rememberWire and all codecs/replay checks to use the field. Preserve per-instance replay, edited-value fallback and string/object fidelity; exclude provenance from encoded JSON. Retarget Person.test.ts representation assertions while retaining oracle wire-fidelity cases. Central bookkeeping owns the allowlist deletion and per-class ledger/README deviation entry; this group edits only its source and tests."
+    },
+    "allow-4": {
+      "file": "scratchpad/effected/package-json/Repository.ts",
+      "class": "law",
+      "summary": "Remove allowlisted new-map-set in Repository.ts.",
+      "fix": "Store remembered FieldWire on the owned Repository and Bugs schema instances and remove both WeakMaps. Update every decode/encode/replay path; preserve faithful wire order, shorthand spelling and edited-value fallback and exclude provenance from encoded JSON. Retarget Repository.test.ts representation assertions and keep Repository/Bugs oracle cases. Central bookkeeping owns the allowlist deletion and per-class ledger/README deviation entry; this group edits only its source and tests."
+    }
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "module": "spdx",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/spdx/License.ts",
+        "scratchpad/effected/spdx/LicenseException.ts",
+        "scratchpad/effected/spdx/internal/licenseIds.ts",
+        "scratchpad/effected/spdx/internal/exceptions.ts",
+        "scratchpad/effected/spdx/internal/licenseMeta.ts"
+      ],
+      "tests": [
+        "scratchpad/test/spdx/License.test.ts",
+        "scratchpad/test/spdx/data.test.ts",
+        "scratchpad/test/spdx/LicenseMetadata.test.ts"
+      ],
+      "findings": [
+        "r1",
+        "r4"
+      ]
+    },
+    {
+      "id": "g2",
+      "files": [
+        "scratchpad/effected/spdx/SpdxExpression.ts"
+      ],
+      "tests": [],
+      "findings": [
+        "r2",
+        "r3",
+        "r5"
+      ]
+    }
+  ],
+  "findings": {
+    "r1": {
+      "file": "scratchpad/effected/spdx/License.ts",
+      "class": "law",
+      "summary": "Native catalog maps and id-set facades escape through MutableHashMap.backing.",
+      "fix": "Replace License.catalog, LicenseException.catalog and LICENSE_META with Effect HashMap values; replace LICENSE_IDS, DEPRECATED_LICENSE_IDS, EXCEPTION_IDS and DEPRECATED_EXCEPTION_IDS with HashSet values and delete both IdSet/readonlyIdSet facades. Build catalogs from the existing active/deprecated arrays. Update membership, size and lookup consumers to HashMap/HashSet helpers and Option handling while preserving unknown-id behavior, metadata flags and errors. Use explicit ordered sequences wherever iteration order is promised; retain the existing ordered data arrays. Retarget License.test.ts:81-86, data.test.ts:7-24 and LicenseMetadata.test.ts:10-12 to Effect collection APIs without weakening payloads or counts. Do not introduce a native-shaped collection wrapper. Deviation bookkeeping belongs to the central per-module native-runtime codemod."
+    },
+    "r2": {
+      "file": "scratchpad/effected/spdx/SpdxExpression.ts",
+      "class": "perf",
+      "summary": "Recursive walkers rebuild exhaustive matchers on every node visit.",
+      "fix": "Build serialize, materialize, collectLicenses and primaryLicense exhaustive matchers once at module scope with explicit recursive function types, using Match.type and tagsExhaustive/discriminatorsExhaustive. Preserve existing handlers, the collector accumulator, first-occurrence id deduplication, errors, ordering and formatted bytes. Recheck the reported benchmarks against the pinned oracle and run the existing SpdxExpression and oracle suites; no upstream test edits are needed. Do not fold in the optional collector rewrite from b5."
+    },
+    "r3": {
+      "file": "scratchpad/effected/spdx/SpdxExpression.ts",
+      "class": "schema",
+      "summary": "The public AST union and string codec lack composer-derived schema annotations.",
+      "fix": "Apply distinct $I.annoteSchema annotations to SpdxExpressionUnion and FromString with descriptions of the AST and string-codec contracts. Preserve parsing, encoding and public decoded/encoded types. This is a missing annotation repair, not a request merely to record an identity-key deviation."
+    },
+    "r4": {
+      "file": "scratchpad/effected/spdx/License.ts",
+      "class": "law",
+      "summary": "The reused LicenseRef grammar remains an ad-hoc regular-expression guard.",
+      "fix": "Define a module-local annotated branded LicenseRefId string schema with S.isPattern using the existing regex and composer-derived identifier/title/description metadata. Derive S.is(LicenseRefId) once and reuse it in isLicenseRef and parseResult. Keep public signatures, accepted strings and error behavior unchanged; keep License.id as S.String so License.of still accepts uncataloged ids. Existing license/parser tests remain unchanged."
+    },
+    "r5": {
+      "file": "scratchpad/effected/spdx/SpdxExpression.ts",
+      "class": "type-safety",
+      "summary": "Recursive codecs claim encoded children are decoded schema-class instances.",
+      "fix": "Specify S.Codec<SpdxExpression, SpdxNode> at the four S.suspend callbacks, using the existing structural POJO union. Preserve runtime decoding/encoding and avoid unsafe assertions. No added public export or upstream test rewrite is needed."
+    }
+  }
+}

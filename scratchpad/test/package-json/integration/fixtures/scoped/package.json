@@ -1,0 +1,8 @@
+{
+  "name": "@myorg/scoped-pkg",
+  "version": "1.0.0",
+  "description": "A scoped package",
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": "./src/index.ts"
+}

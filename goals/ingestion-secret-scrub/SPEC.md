@@ -130,28 +130,36 @@ not replacement doctrine.
 
 ## Acceptance Criteria
 
-- [ ] P0 inventories both existing banks rule-by-rule, records overlap and
+- [x] P0 inventories both existing banks rule-by-rule, records overlap and
       deduplication, establishes one owner/version identifier, and prevents a
       third divergent bank.
-- [ ] A synthetic fixture corpus covers supported hits, near-misses,
+- [x] A synthetic fixture corpus covers supported hits, near-misses,
       placeholders, overlapping/partial forms, coverage gaps, and
       secret-shaped residue; every case has explicit sanitized, metadata,
       coverage/residue, and `safeForPrompt` expectations.
-- [ ] Supported hits produce sanitized text and correct categories/counts
+- [x] Supported hits produce sanitized text and correct categories/counts
       without retaining raw matches in any returned or serialized evidence.
-- [ ] Exact synthetic canary scans prove no raw secret survives into persisted
+- [x] Exact synthetic canary scans prove no raw secret survives into persisted
       artifacts, `TextAnchor.quote`, errors, logs, telemetry, snapshots, or
       support evidence.
-- [ ] Unknown coverage, unresolved matches, and residue cases each make
+- [x] Unknown coverage, unresolved matches, and residue cases each make
       `safeForPrompt` false, block one real prompt leg, and preserve only
       sanitized/non-secret diagnostics.
-- [ ] A clean fixture with known coverage demonstrates `safeForPrompt: true`
+- [x] A clean fixture with known coverage demonstrates `safeForPrompt: true`
       and reaches that same prompt boundary using sanitized text only.
-- [ ] Retention proof enforces transient raw deletion on success or within 7
-      days, scrub proof deletion within 30 days unless pinned, and audit-record
-      deletion within 12 months.
+- [x] Retention proof covers eligibility only: a pure purge decision marks
+      transient raw text eligible on success or within 7 days, scrub proof
+      within 30 days unless pinned, and audit records within 12 months. Storage
+      deletion itself is not enforced in this packet; it belongs to the
+      persistence owner's packet (Decision Log, retention row).
 - [ ] Focused tests, repo gates, reflection lint, and Yeet PR-to-mergeable proof
       pass with no unrelated refactors or formatting churn.
+
+AC4 evidence: P3 runtime-fragment scanner reports 195 accumulated surfaces, each
+zero, including final packet evidence, reflection, PR title/body and branch commit
+messages. Final evidence edits are rechecked before publication. AC8 remains
+unticked until standard hosted readiness is established; S11 separately authorizes
+the content-final worker handoff and consolidated-red repair by the orchestrator.
 
 ## Verification Matrix
 
@@ -188,3 +196,106 @@ not replacement doctrine.
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
 | None | N/A | N/A | N/A | N/A |
+
+### 2026-10-09 — Lane decisions under the autonomy charter
+
+| Decision | Reason | Reversal |
+| --- | --- | --- |
+| `@beep/schema` namespace `CredentialPatternBank`, `credential-pattern-bank/v1` | R2; existing dependency edges and pure modeling fit | Remove module/export and restore consumers |
+| R5 union assignments and headers, longest extent, existing renderers | Preserve every existing match; metrics gains colon, fragment/digit/hyphen names, session/passwd and cookies; observability gains pass and longer comma extent; all derived redaction exports inherit this; counts and derived-UI safety change only on added matches | Restore baseline patterns and consumer calls |
+| Private tags implemented from description; no donor fetched/copied | Required category with provenance and no new dependency | Remove private-tag rule and fixtures |
+| Carried-over home paths participate in scrub clearance | Existing coverage remains enforced; no general PII claim | Exclude category from scrub under a later policy packet |
+| Branded prompt text at `FilingDecisionLlm`; blocked result inboxes | R3; one real model boundary and no authorization transitivity | Remove gate and additive inbox reason |
+| Mask-only evidence, original offsets, no TextAnchor emitted | Avoid key custody and quoted-match leakage; offset metadata is sufficient | Add separately authorized keyed-digest evidence |
+| Retention schema and pure purge decision; no storage adapter | Slice enforcement is 7-day raw, 30-day proof unless pinned, 12-month audit eligibility | Replace decision when persistence owner implements deletion |
+| Repo quality row maps to hosted exact-head CI plus hosted-parity set | R4; no default local full Yeet proof | Run on-demand local proof if needed |
+
+### P1 count-contract correction
+
+The union assignment rule also matches authorization headers through their auth name
+fragment and colon separator. Header and overlap fixtures therefore count both assignment
+and header categories independently, as specified by the raw-input overlap precedent.
+Reason: correct a P0 expectation omission, preserving the canonical union and metrics
+per-rule counts. Reversal: change the counting policy in a later explicit contract version;
+never silently exclude this overlap from the current bank.
+
+### Supported quoted-assignment residue
+
+An unterminated quoted value in the existing assignment grammar masks the remaining
+original extent and returns `residue: present`, even if the bare-value alternative
+also matched a prefix. Reason: text after the first word must not escape into a prompt.
+This adds no category or credential family and leaves legacy consumer replacement
+semantics unchanged. Reversal: remove the partial-form rule and its two regression
+fixtures; keep the gate fail-closed for any remaining residue.
+
+### Header overlap rendering precedence
+
+Metrics assignment rendering excludes complete canonical header lines so their
+colon and full value remain available to the header renderer. Counts still use
+original input and include independently overlapping categories. Reason: a colon
+normalization must not bypass complete header redaction or leak later words.
+Reversal: remove this canonical rendering adapter and restore the P0 metrics bank.
+This preserves existing complete-header output behind unchanged export types.
+
+### Explicit service requirement and release safety
+
+The standalone FilingDecisionLlmLayer now requires SecretScrubService explicitly.
+The composed DocumentsServerLlmLayer provides the default scrub layer, and the two
+standalone test compositions provide their scrub service. Reason: preserve an
+injectable fail-closed service boundary without hidden ambient fallback. The
+changed public Layer requirement carries a major compatibility note in the handoff and PR body;
+other existing redaction types remain unchanged and their stricter outputs remain
+minor. Reversal: remove the gate requirement, service wiring and additive inbox
+reason together; restore the prior layer contract before merging.
+
+### Nested assignment coverage and original counts
+
+Canonical assignment enumeration advances from each candidate key start and
+deduplicates identical value offsets with Effect HashSet. Distinct nested values
+remain matches, even when a newly supported colon prefix encloses an assignment
+that an original bank already recognized. Both consumers mask the union of value
+extents before applying their existing rendering. Metrics header protection is
+only a final formatting step after masking. Reason: preserve R5 coverage across
+quoted multiline and header overlaps. Raw counts include both distinct assignment
+value extents in the quoted-header fixture. Reversal: restore the original
+per-consumer bank and remove the overlap fixtures together.
+
+The consumer mask adapter uses complete matches only; ingestion alone additionally
+masks partial residue extents and fails prompt admission. Reason: retain the
+legacy category/rendering coverage contract while enforcing ingestion's stricter
+partial-form boundary. Reversal: restore the former adapter and its consumer
+fixtures together; the ingestion gate remains fail-closed.
+
+### Run 2 release-policy reconciliation
+
+| Decision | Reason | Reversal |
+| --- | --- | --- |
+| No changesets for the six private edited workspaces; retain six release notes and the standalone Layer major compatibility note in handoff and PR body | Orchestrator resume ruling 2026-10-09 20:30Z and main PR #1566 make manifest-aware publication policy authoritative | Restore changesets only on deliberate package publication activation with a release policy |
+
+### Run 2 bounded admission retry
+
+The final schema/file-processing proof waited 30 minutes without executing its
+first command. Replace the unstarted submission once with identical commands and
+unchanged 32 GiB budget. Reason: mitigate independent-polling starvation without
+bypassing machine-wide admission. Reversal: stop the replacement and restore the
+original submission. Canceled commands provide no proof.
+
+### Canonical bank public entry point
+
+Use the existing `@beep/schema` namespace barrel (`CredentialPatternBank`) rather
+than a new subpath export. Reason: the subpath requires two generated root alias
+updates outside the lane's owned surfaces; the existing barrel needs no new edge
+or alias. Runtime rules, version and output remain unchanged. Reversal: restore
+the subpath and synchronize its generated aliases in a packet owning those files.
+
+### Run 3 inherited-fence publication
+
+Publish the closing packet by direct branch push after the already-attributed
+`lint:effect-vitest` refusal in the unowned contradiction-detection test from main
+#1572. Restore completed-retained in that same wave. Reason: orchestrator resume
+ruling 2026-10-09 22:00Z explicitly authorizes this fallback and assigns the
+inherited repair and merge to the consolidated lane under S11. Reversal: restore
+active/P3 in-progress with a follow-up packet change if content completion is
+revoked; keep the confidentiality implementation and its qualified proofs. No
+shared gate, detector baseline or unowned test is edited. AC8 remains unticked
+until standard hosted readiness is proved.

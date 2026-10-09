@@ -8,11 +8,11 @@
 import { FilingOutcome } from "@beep/documents-domain/aggregates/Document";
 import { LegalDocumentConceptId, legalDocumentTaxonomy } from "@beep/documents-domain/values/Taxonomy";
 import * as DocumentUseCases from "@beep/documents-use-cases/server";
+import { SecretScrub } from "@beep/file-processing";
 import { $DocumentsServerId } from "@beep/identity/packages";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { A } from "@beep/utils";
 import * as LanguageModel from "effect/ai/LanguageModel";
-import * as Cause from "effect/Cause";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
@@ -43,7 +43,10 @@ const taxonomyPrompt = pipe(
   A.join("\n")
 );
 
-const promptFor = (input: DocumentUseCases.Document.FilingDecisionInput): string =>
+const promptFor = (
+  input: DocumentUseCases.Document.FilingDecisionInput,
+  excerpt: O.Option<SecretScrub.PromptAdmissibleText>
+): string =>
   pipe(
     [
       "Classify this legal document into exactly one taxonomy concept.",
@@ -54,7 +57,7 @@ const promptFor = (input: DocumentUseCases.Document.FilingDecisionInput): string
       taxonomyPrompt,
       "",
       `Filename: ${input.originalFileName}`,
-      ...O.match(input.textExcerpt, {
+      ...O.match(excerpt, {
         onNone: A.empty<string>,
         onSome: (textExcerpt) => ["", "Document text excerpt:", textExcerpt],
       }),
@@ -121,24 +124,42 @@ export const FilingDecisionLlmLayer = Layer.effect(
   Effect.gen(function* () {
     const config = yield* FilingDecisionLlmConfig;
     const languageModel = yield* LanguageModel.LanguageModel;
+    const scrubber = yield* SecretScrub.SecretScrubService;
 
     return FilingDecision.of({
       decide: Effect.fn($I`decide`)(function* (input) {
+        const scrub = yield* scrubber.scrub(
+          SecretScrub.SecretScrubInput.make({
+            text: O.getOrElse(input.textExcerpt, () => ""),
+          })
+        );
+        const admissible = SecretScrub.promptTextFromScrub(scrub);
+        const categories = A.map(scrub.proof.counts, (count) => count.category);
+        const counts = A.map(scrub.proof.counts, (count) => count.count);
+        if (O.isNone(admissible)) {
+          yield* Effect.logWarning("Filing excerpt blocked by secret scrub", { categories, counts });
+          return FilingOutcome.make({
+            kind: "inboxed",
+            reason: "secret-scrub-blocked",
+            rationale: "The extracted excerpt could not be admitted to the filing prompt; review is required.",
+          });
+        }
+        yield* Effect.logDebug("Filing excerpt scrub complete", { categories, counts });
+        const excerpt = O.isNone(input.textExcerpt) ? O.none<SecretScrub.PromptAdmissibleText>() : admissible;
         return yield* languageModel
           .generateObject({
             objectName: "filing_decision",
-            prompt: promptFor(input),
+            prompt: promptFor(input, excerpt),
             schema: FilingProposal,
           })
           .pipe(
             Effect.timeout(MODEL_TIMEOUT),
             Effect.map((response) => outcomeFromProposal(response.value, config.confidenceThreshold)),
             Effect.matchCauseEffect({
-              onFailure: (cause) =>
+              onFailure: () =>
                 Effect.logWarning("LLM filing decision unavailable; routing document to intake inbox", {
-                  cause: Cause.pretty(cause),
-                  contentDigest: input.contentDigest,
-                  originalFileName: input.originalFileName,
+                  categories,
+                  counts,
                 }).pipe(Effect.as(unavailable)),
               onSuccess: Effect.succeed,
             })

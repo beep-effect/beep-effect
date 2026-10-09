@@ -1,0 +1,81 @@
+{
+  "name": "@effected/github-actions",
+  "version": "0.20.0",
+  "private": true,
+  "description": "The GitHub Actions runtime: env, inputs, outputs, state, logging, cache, artifacts, blob storage, OIDC and the token bridge.",
+  "keywords": [
+    "github-actions",
+    "actions",
+    "runtime",
+    "cache",
+    "oidc",
+    "effect",
+    "effected"
+  ],
+  "homepage": "https://github.com/spencerbeggs/effected/tree/main/packages/github-actions#readme",
+  "bugs": {
+    "url": "https://github.com/spencerbeggs/effected/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/spencerbeggs/effected.git",
+    "directory": "packages/github-actions"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "C. Spencer Beggs",
+    "email": "spencer@beggs.codes",
+    "url": "https://spencerbeg.gs"
+  },
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": "./index.ts",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build:dev": "node savvy.build.ts --target dev",
+    "build:prod": "node savvy.build.ts --target prod",
+    "prepare": "turbo run build:dev",
+    "types:check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@azure/storage-blob": "^12.33.0",
+    "@effected/github": "workspace:^",
+    "@effected/github-commands": "workspace:^",
+    "@effected/glob": "workspace:^",
+    "@effected/markdown": "workspace:^",
+    "@effected/npm": "workspace:^",
+    "@effected/sbom": "workspace:^",
+    "@effected/semver": "workspace:^",
+    "@effected/templates": "workspace:^",
+    "@effected/walker": "workspace:^",
+    "@beep/identity": "workspace:*",
+    "@beep/schema": "workspace:*",
+    "@beep/utils": "workspace:*"
+  },
+  "devDependencies": {
+    "@effect/platform-node": "catalog:effect",
+    "@effect/vitest": "catalog:effect",
+    "@effected/memfs": "workspace:*",
+    "@savvy-web/bundler": "^2.4.22",
+    "@types/node": "catalog:build",
+    "effect": "catalog:effect",
+    "typescript": "catalog:build"
+  },
+  "peerDependencies": {
+    "@effect/platform-node": "catalog:effect:peers",
+    "effect": "catalog:effect:peers"
+  },
+  "engines": {
+    "node": ">=24.11.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "directory": "dist/dev/pkg",
+    "linkDirectory": true,
+    "targets": {
+      "npm": true
+    }
+  }
+}

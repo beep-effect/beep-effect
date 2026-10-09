@@ -1,0 +1,36 @@
+lockfileVersion: '9.0'
+
+# HAND-AUTHORED. The root importer is empty; the skew lives entirely under
+# packages/app, which takes commands 0.3.1 directly while its @effected/npm
+# holds 0.2.1.
+
+importers:
+
+  .: {}
+
+  packages/app:
+    dependencies:
+      '@effected/commands':
+        specifier: ^0.3.1
+        version: 0.3.1
+      '@effected/npm':
+        specifier: ^0.8.2
+        version: 0.8.2
+
+packages:
+
+  '@effected/commands@0.2.1': {}
+
+  '@effected/commands@0.3.1': {}
+
+  '@effected/npm@0.8.2': {}
+
+snapshots:
+
+  '@effected/commands@0.2.1': {}
+
+  '@effected/commands@0.3.1': {}
+
+  '@effected/npm@0.8.2':
+    dependencies:
+      '@effected/commands': 0.2.1

@@ -1,0 +1,176 @@
+// The kit-wide dependency-section vocabulary: one concept spelled two ways.
+//
+// A manifest declares dependencies under four *field names*
+// (`dependencies` … `optionalDependencies`); a consumer usually branches on the
+// four short *kinds* (`prod` … `optional`). Both views, and the bidirectional
+// mapping between them, live here once — instead of package-json's
+// `DependencyKind`, lockfiles' `DependencyType` and workspaces' hand-rolled
+// field names each carrying a private copy.
+//
+// `KIND_TO_FIELD` is the single source of truth; the inverse is derived from it,
+// so the correspondence is written once.
+
+import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+
+const $I = $ScratchpadId.create("effected/npm/DependencySection");
+
+/**
+ * The short dependency kind: which dependency map an entry came from, named the
+ * way consumers branch on it.
+ *
+ * **Example** (Decode a short dependency kind)
+ *
+ * ```ts
+ * import { DependencyKind } from "@beep/scratchpad/effected/npm/DependencySection";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.decodeUnknownSync(DependencyKind)("dev")) // dev
+ * ```
+ *
+ * @public
+ * @category schemas
+ * @since 0.0.0
+ */
+export const DependencyKind = LiteralKit(["prod", "dev", "peer", "optional"]).annotate($I.annote("DependencyKind", { description: "The short dependency kind: which dependency map an entry came from, named the way consumers branch on it." }));
+
+/**
+ * The union of short dependency kinds.
+ *
+ * @public
+ * @category type-level
+ * @since 0.0.0
+ */
+export type DependencyKind = typeof DependencyKind.Type;
+
+/**
+ * The manifest field name a dependency is declared under, matching the
+ * `package.json` / `package-lock.json` key exactly.
+ *
+ * **Example** (Decode a manifest dependency field)
+ *
+ * ```ts
+ * import { DependencyField } from "@beep/scratchpad/effected/npm/DependencySection";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.decodeUnknownSync(DependencyField)("peerDependencies")) // peerDependencies
+ * ```
+ *
+ * @public
+ * @category schemas
+ * @since 0.0.0
+ */
+export const DependencyField = LiteralKit([
+	"dependencies",
+	"devDependencies",
+	"peerDependencies",
+	"optionalDependencies",
+]).annotate($I.annote("DependencyField", { description: "The manifest field name a dependency is declared under, matching the `package.json` / `package-lock.json` key exactly." }));
+
+/**
+ * The union of manifest dependency-map field names.
+ *
+ * @public
+ * @category type-level
+ * @since 0.0.0
+ */
+export type DependencyField = typeof DependencyField.Type;
+
+// Single source of truth for the kind <-> field correspondence.
+const KIND_TO_FIELD = {
+	prod: "dependencies",
+	dev: "devDependencies",
+	peer: "peerDependencies",
+	optional: "optionalDependencies",
+} as const satisfies Record<DependencyKind, DependencyField>;
+
+// Inverse, derived from KIND_TO_FIELD so the mapping is written once.
+const FIELD_TO_KIND = {
+	[KIND_TO_FIELD.prod]: "prod",
+	[KIND_TO_FIELD.dev]: "dev",
+	[KIND_TO_FIELD.peer]: "peer",
+	[KIND_TO_FIELD.optional]: "optional",
+} satisfies Record<DependencyField, DependencyKind>;
+
+/**
+ * The dependency-section vocabulary: the two literal schemas
+ * ({@link (DependencyKind:variable)}, {@link (DependencyField:variable)}) plus
+ * the bidirectional mapping between a short kind and its manifest field name.
+ *
+ * **Example** (Map between dependency kinds and fields)
+ *
+ * ```ts
+ * import { DependencySection } from "@beep/scratchpad/effected/npm/DependencySection";
+ *
+ * console.log(DependencySection.fieldOf("prod")) // dependencies
+ * console.log(DependencySection.kindOf("optionalDependencies")) // optional
+ * ```
+ *
+ * @public
+ * @category utilities
+ * @since 0.0.0
+ */
+export abstract class DependencySection {
+
+	/**
+	 * The short-kind literal schema (`prod` … `optional`).
+	 *
+	 * **Example** (Validate a short dependency kind)
+	 *
+	 * ```ts
+	 * import { DependencySection } from "@beep/scratchpad/effected/npm/DependencySection";
+	 * import * as S from "effect/Schema";
+	 *
+	 * console.log(S.decodeUnknownSync(DependencySection.Kind)("optional")) // optional
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
+	static readonly Kind = DependencyKind;
+
+	/**
+	 * The manifest field-name literal schema (`dependencies` … `optionalDependencies`).
+	 *
+	 * **Example** (Validate a manifest dependency field)
+	 *
+	 * ```ts
+	 * import { DependencySection } from "@beep/scratchpad/effected/npm/DependencySection";
+	 * import * as S from "effect/Schema";
+	 *
+	 * console.log(S.decodeUnknownSync(DependencySection.Field)("devDependencies")) // devDependencies
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
+	static readonly Field = DependencyField;
+
+	/**
+	 * The manifest field name a kind is declared under. See {@link DependencySection.Kind}.
+	 *
+	 * **Example** (Find the field for a dependency kind)
+	 *
+	 * ```ts
+	 * import { DependencySection } from "@beep/scratchpad/effected/npm/DependencySection";
+	 *
+	 * console.log(DependencySection.fieldOf("peer")) // peerDependencies
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
+	static readonly fieldOf = (kind: DependencyKind): DependencyField => KIND_TO_FIELD[kind];
+
+	/**
+	 * The short kind for a manifest field name. See {@link DependencySection.Field}.
+	 *
+	 * **Example** (Find the kind for a manifest field)
+	 *
+	 * ```ts
+	 * import { DependencySection } from "@beep/scratchpad/effected/npm/DependencySection";
+	 *
+	 * console.log(DependencySection.kindOf("dependencies")) // prod
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
+	static readonly kindOf = (field: DependencyField): DependencyKind => FIELD_TO_KIND[field];
+}

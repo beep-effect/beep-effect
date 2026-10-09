@@ -1,0 +1,32 @@
+import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
+import { assert, it } from "@effect/vitest";
+import * as A from "effect/Array";
+import * as Arbitrary from "effect/Arbitrary";
+import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
+import { Doc } from "../../../effected/cli/Doc.ts";
+import { Render } from "../../../effected/cli/Render.ts";
+import { renderMarkdown } from "../../../effected/cli/internal/renderMarkdown.ts";
+import { Markdown } from "../../../effected/markdown/Markdown.ts";
+const runs = { arbitrary: fcRuns(100) };
+const text = S.Literals(["x", "*", "_", "[", "]", "<", ">", "&", "|", "`", "\\", "#", "-", "+", "=", " "]).pipe(S.Array, Arbitrary.schema, Arbitrary.map(A.join("")));
+const ctx = Render.contextOf({ audience: "agent" });
+it.effect.prop("Markdown formatter: escaping preserves reader text, and rendering recovered text is idempotent", [text], ([value]) => Effect.gen(function* () {
+  const input = `prefix ${value} suffix`;
+  const once = renderMarkdown([Doc.paragraph(input)], ctx);
+  const parsed = yield* Markdown.parse(once);
+  const recovered = A.join(A.flatMap(parsed.children, (node) => node.type === "paragraph" ? A.flatMap(node.children, (inline) => inline.type === "text" ? [inline.value] : []) : []), "");
+  assert.strictEqual(recovered, input);
+  assert.strictEqual(renderMarkdown([Doc.paragraph(recovered)], ctx), once);
+  const reparse = yield* Markdown.parse(yield* Markdown.stringify(parsed));
+  const roundtrip = A.join(A.flatMap(reparse.children, (node) => node.type === "paragraph" ? A.flatMap(node.children, (inline) => inline.type === "text" ? [inline.value] : []) : []), "");
+  assert.strictEqual(roundtrip, recovered);
+}), runs);
+it.effect.prop("Markdown verbatim fences preserve whitespace, backticks and indentation byte for byte", [text], ([value]) => Effect.gen(function* () {
+  const input = `  prefix ${value} suffix  `;
+  const once = renderMarkdown([Doc.verbatim(input, { indent: 2 })], ctx);
+  const parsed = yield* Markdown.parse(once);
+  const recovered = A.join(A.flatMap(parsed.children, (node) => node.type === "code" ? [node.value] : []), "");
+  assert.strictEqual(recovered, `  ${input}\n`);
+  assert.strictEqual(renderMarkdown([Doc.verbatim(recovered)], ctx), once);
+}), runs);

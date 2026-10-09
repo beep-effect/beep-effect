@@ -35,19 +35,3 @@ export * from "./DocText.errors.ts";
  * @since 0.0.0
  */
 export * from "./DocText.service.ts";
-
-/**
- * Package version.
- *
- * **Example** (Log package version)
- *
- * ```ts
- * import { VERSION } from "@beep/doc-text"
- *
- * console.log(VERSION)
- * ```
- *
- * @category constants
- * @since 0.0.0
- */
-export const VERSION = "0.0.0" as const;

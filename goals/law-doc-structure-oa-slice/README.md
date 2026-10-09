@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -34,17 +34,26 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research may begin now: construct the attorney-reviewed fixture corpus,
-freeze rule-family versioning/migration semantics, and define precision floors.
-P1 remains blocked until `citation-verified-span-substrate` P0/P1 proves the
-shared verified-anchor contract.
+P0-P3 content complete. PR #1573 carries the versioned pair, append-only
+replay, evidence intake, reflection and completion citation. Local proofs pass;
+final-head hosted readiness is monitored under S11 with inherited reds
+explicitly attributed. Floors use public form language; no real-OA positive
+performance is claimed.
 
 ## Latest Evidence
 
-Not started.
+Run 2: package and parity proofs pass in `history/p2/2026-10-09-verification.md`.
+Retained-inventory floors and third blind audit pass; receipts are in
+`history/p0/2026-10-09-label-reconciliation.md`. Every fixture is on the
+non-blocking `history/p0/2026-10-09-attorney-spot-check.md`. See the handoff for
+the final package gate and exact evidence commit.
 
 ## Notes
 
 This packet supplies the structure-candidate seam consumed by
 `law-docketing-patent-spine`; it does not parse citations, select PDF/OCR
 engines, stream partial results, or perform LLM-first extraction.
+
+Closeout reflection: `history/reflections/2026-10-09-codex.md` (lint 0 blocking,
+0 advisory). Publication uses the explicit inherited-only fence ruling; see
+Decision (o) and the final handoff for exact PR and monitor state.

@@ -1,0 +1,83 @@
+import { IdentityToken, IdentityTokenError } from "../sbom/index.ts";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import { OidcTokenIssuer } from "./OidcTokenIssuer.ts";
+
+/**
+ * Serves `@effected/sbom`'s `IdentityToken` contract from the runner's own OIDC
+ * token service, so signing an SBOM inside a workflow needs no further wiring.
+ *
+ * **Details**
+ *
+ * `@effected/sbom` declares `IdentityToken` — one method, one audience,
+ * one redacted token — precisely so that signing does not drag the Actions
+ * runtime into every consumer that only wants to emit an SBOM. This is the
+ * layer that closes the inversion from the other side: it serves that contract
+ * from the runner's own OIDC token service ({@link OidcTokenIssuer}), the same
+ * arrangement as `@effected/workspaces` implementing `@effected/commands`'
+ * `LocalExec`.
+ *
+ * The audience is forwarded verbatim. `SigstoreSigner` asks its identity
+ * contract for the `sigstore` audience itself (`SIGSTORE_OIDC_AUDIENCE` is the
+ * signing protocol's requirement, owned there), so nothing here — and nothing
+ * in a consumer — needs to spell it.
+ *
+ * An `OidcTokenError` is rewrapped as `IdentityTokenError` with the
+ * original preserved structurally in `cause`, so a refused exchange still says
+ * which audience it was minting for **and** why the runner declined —
+ * `reason: "unavailable"` almost always means the workflow is missing
+ * `permissions: id-token: write`.
+ *
+ * **Example** (Provide runner OIDC identity to the Sigstore signer)
+ *
+ * ```ts
+ * import { ActionsIdentityToken } from "@beep/scratchpad/effected/github-actions/ActionsIdentityToken";
+ * import { OidcTokenIssuer } from "@beep/scratchpad/effected/github-actions/OidcTokenIssuer";
+ * import { SigstoreSigner } from "@beep/scratchpad/effected/sbom/SigstoreSigner";
+ * import * as Layer from "effect/Layer";
+ *
+ * const signing = SigstoreSigner.layer.pipe(
+ *   Layer.provide(ActionsIdentityToken.layer),
+ *   Layer.provide(OidcTokenIssuer.layer),
+ * );
+ *
+ * console.log(Layer.isLayer(signing)) // true
+ * ```
+ *
+ * @public
+ * @category adapters
+ * @since 0.0.0
+ */
+export class ActionsIdentityToken {
+	private constructor() {}
+
+	/**
+ * `IdentityToken` served by the runner's OIDC token service.
+ *
+ * **Details**
+ *
+ * Requires {@link OidcTokenIssuer} rather than composing
+ * `OidcTokenIssuer.layer` in, so an action that already wired the issuer —
+ * every action using `ActionRuntime.layer` has its requirements at hand —
+ * does not construct a second one.
+ *
+ * **Example** (Inspect the identity adapter layer)
+ *
+ * ```ts
+ * import { ActionsIdentityToken } from "@beep/scratchpad/effected/github-actions/ActionsIdentityToken";
+ * import * as Layer from "effect/Layer";
+ *
+ * console.log(Layer.isLayer(ActionsIdentityToken.layer)) // true
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+	static readonly layer: Layer.Layer<IdentityToken, never, OidcTokenIssuer> = Layer.effect(
+		IdentityToken,
+		Effect.map(OidcTokenIssuer, (issuer) => ({
+			token: (audience: string) =>
+				issuer.token(audience).pipe(Effect.mapError((cause) => IdentityTokenError.make({ audience, cause }))),
+		})),
+	);
+}

@@ -1,0 +1,17 @@
+# Deploy workflow
+# maintained by hand
+name: deploy
+
+# When to run
+on:
+  push: # only main
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # check the repo out
+      - uses: actions/checkout@v4
+      - run: pnpm install # install deps

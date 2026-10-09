@@ -3,14 +3,14 @@
   "initiative": {
     "id": "ingestion-secret-scrub",
     "title": "Ingestion Secret Scrub",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-07-14",
-    "updated": "2026-07-14",
+    "updated": "2026-10-09",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/ingestion-secret-scrub",
-  "lifecycle": "active",
-  "statusNote": "P0 remains the next authorized phase: consolidate the two live redaction pattern banks and establish the synthetic fixture corpus before implementation.",
+  "lifecycle": "completed-retained",
+  "statusNote": "P0-P3 content complete; completed-retained restored per run-3 ruling. Six package/parity proofs, reflection and support scans pass. Publish final content to #1570 through the authorized direct push after the inherited Effect Vitest refusal; orchestrator owns consolidated-red repair and merge under S11. Standard hosted readiness remains separately unproved.",
   "mission": "Deliver a pre-LLM file-processing secret scrub with one canonical pattern bank, no-secret proof, honest coverage/residue, and enforced prompt gating.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -51,22 +51,22 @@
     {
       "id": "P0",
       "name": "Pattern-bank consolidation audit and fixtures",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Verify",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Close: Yeet PR to mergeable",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [

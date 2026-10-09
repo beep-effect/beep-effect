@@ -1,0 +1,76 @@
+{
+  "module": "engine",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/engine/ProcessGuard.ts",
+        "scratchpad/effected/engine/guard.ts"
+      ],
+      "tests": [
+        "scratchpad/test/engine/ProcessGuard.test.ts",
+        "scratchpad/test/engine/entrypoints.test.ts"
+      ],
+      "findings": [
+        "fable-1-1",
+        "fable-1-3",
+        "fable-1-4",
+        "allow-1"
+      ]
+    },
+    {
+      "id": "g2",
+      "files": [
+        "scratchpad/effected/engine/Distribution.ts",
+        "scratchpad/effected/engine/LaunchContext.ts",
+        "scratchpad/effected/engine/index.ts"
+      ],
+      "tests": [
+        "scratchpad/test/engine/Distribution.test.ts",
+        "scratchpad/test/engine/LaunchContext.test.ts"
+      ],
+      "findings": [
+        "sol-1-2",
+        "sol-1-3"
+      ]
+    }
+  ],
+  "findings": {
+    "fable-1-1": {
+      "file": "scratchpad/effected/engine/ProcessGuard.ts",
+      "class": "bug",
+      "summary": "An exit policy can terminate before callbacks that the upstream timers-phase injection allows to run. The lab changed scheduling without a law, diagnostic or ruling requiring that behavior change.",
+      "fix": "Restore setTimeout(callback, 0) at both sites and the upstream timing sentences at ProcessGuard.ts:133-140. Use only the narrowly justified globalTimers diagnostic exception for oracle event-loop ordering; do not retain setImmediate as a recorded deviation. Preserve the equivalent promise-chain/Promise.withResolvers rewrites. Restore any upstream test lines rewritten for this scheduler change and add the seat ordering counterexamples to ProcessGuard.test.ts. The exception reason must acknowledge that effect/* imports are now allowed; the former no-Effect premise is obsolete."
+    },
+    "sol-1-2": {
+      "file": "scratchpad/effected/engine/Distribution.ts",
+      "class": "schema",
+      "summary": "The public nullable envelope schema lacks its own identity; annotating its member does not identify the wrapper. Its runtime schema also lacks the required same-name derived type.",
+      "fix": "Keep S.NullOr(Distribution) and pipe it through $I.annoteSchema(\"DistributionField\", { description }) using the carried field description; export type DistributionField = typeof DistributionField.Type. Preserve the wire shape and verify identity plus null/non-null cases in Distribution.test.ts. Added-export and identity deviation bookkeeping belongs to the central codemod, not this group."
+    },
+    "sol-1-3": {
+      "file": "scratchpad/effected/engine/LaunchContext.ts",
+      "class": "schema",
+      "summary": "The pure input model has no runtime schema for validation, annotations or generators, contrary to the cited schema-first standard.",
+      "fix": "Define an IdentityComposer-annotated ProjectDirInput S.Struct and derive the same-name type. Preserve readonly fields, omitted or explicitly undefined argv, undefined environment values and unchanged projectDir behavior. Re-export the runtime schema from index.ts and verify the accepted shapes in LaunchContext.test.ts. Added-export bookkeeping is central codemod work."
+    },
+    "fable-1-3": {
+      "file": "scratchpad/effected/engine/ProcessGuard.ts",
+      "class": "schema",
+      "summary": "The domain shape and injection grammar have multiple manually maintained representations rather than schema-derived validation.",
+      "fix": "Use effect/Schema literal domains and annotated Struct schemas with same-name types for ProcessGuardInjection and ProcessGuardPolicy; derive isInjectedKind with S.is and validate the parsed pair with the injection schema. Preserve missing/explicit-undefined onRejection, all accepted pairs, invalid-input rejection and the rest-length check. Use effect/* only, without @beep/identity or LiteralKit package imports on this entrypoint. Re-export the new runtime schemas through guard.ts, keeping the root index separate. Retarget both source and built entrypoint tests to assert that every bare runtime import starts with effect/ and that the guard still reaches only its two local modules. Keep parser/policy cases in ProcessGuard.test.ts. Record new exports centrally."
+    },
+    "fable-1-4": {
+      "file": "scratchpad/test/engine/entrypoints.test.ts",
+      "class": "test",
+      "summary": "The built-graph contract inspects the wrong directory and remains red even after engine output is emitted beside its source; unrelated output under scratchpad/test could satisfy it.",
+      "fix": "Set BUILT = resolve(SRC, \"dist\", \"dev\", \"pkg\") and delete ROOT. Keep existsSync and graph assertions active, and combine the edit with the effect/*-only retargeting required by fable-1-3/allow-1. Do not skip or waive the test. The operator-mandated lab build must emit the module-local artifact before the S1 gate can pass; the shared build/environment lane owns emission and correction of TESTS_NOT_PASSING.md, outside this source/test dispatch."
+    },
+    "allow-1": {
+      "file": "scratchpad/effected/engine/ProcessGuard.ts",
+      "class": "native-error",
+      "summary": "The injected native Error retains a removed native-runtime exemption and blocks the required allowlist-free end state.",
+      "fix": "Replace the injected new Error with an effect/Schema S.TaggedError carrying the injected kind and message; keep listener installation before load, host event/origin delivery, handled rejection promise, policy and formatter behavior. Retarget the injected-error representation assertions in ProcessGuard.test.ts (including line 287) to the tagged error without deleting the assertions. Both source and built guard tests must permit only effect/* bare imports, with positive checks that effect/Schema is seen. Coordinate deletion of this exact allowlist entry with the shared allowlist owner; deviation/tagged-error bookkeeping is the central codemod. The guard must import no other package."
+    }
+  }
+}

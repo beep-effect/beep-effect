@@ -1,0 +1,72 @@
+{
+  "module": "github-references",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/github-references/IssueReferences.ts",
+        "scratchpad/effected/github-references/ClosingList.ts",
+        "scratchpad/effected/github-references/KeywordFamily.ts",
+        "scratchpad/effected/github-references/index.ts"
+      ],
+      "tests": [
+        "scratchpad/test/github-references/IssueReferences.test.ts",
+        "scratchpad/test/github-references/ClosingList.test.ts",
+        "scratchpad/test/github-references/KeywordFamily.test.ts"
+      ],
+      "findings": [
+        "grok-1-1",
+        "grok-1-2",
+        "grok-1-3",
+        "sol-1-1",
+        "fable-1-5",
+        "grok-1-5",
+        "fable-1-12"
+      ]
+    }
+  ],
+  "findings": {
+    "grok-1-1": {
+      "file": "scratchpad/effected/github-references/IssueReferences.ts",
+      "class": "schema",
+      "summary": "The named closing-keyword domain lacks an identity-annotated LiteralKit and is reconstructed in ClosingList.",
+      "fix": "Define annotated ClosingKeyword with LiteralKit; derive its type and CLOSING_KEYWORDS with unchanged literal order; share it with ClosingList and expose the value through index.ts if public. Apply fable-1-5's schema-derived Enum lookups on hot paths. Add kit/tuple parity and invalid-keyword cases to IssueReferences.test.ts without rewriting upstream cases. Added-export recording is central codemod work."
+    },
+    "grok-1-2": {
+      "file": "scratchpad/effected/github-references/ClosingList.ts",
+      "class": "schema",
+      "summary": "ReferenceKeyword and the combined list-keyword domain are named, reused domains without annotated literal kits.",
+      "fix": "Define annotated ReferenceKeyword and combined ListKeyword kits from the shared closing/reference literals; derive REFERENCE_KEYWORDS and same-name types without changing tuple order. Use the kits in result models and fable-1-5's Enum membership lookups; expose runtime values through index.ts if public. Add domain-parity and invalid/prototype-name cases to ClosingList.test.ts, preserving upstream assertions. Export bookkeeping is central codemod work."
+    },
+    "grok-1-3": {
+      "file": "scratchpad/effected/github-references/KeywordFamily.ts",
+      "class": "schema",
+      "summary": "KeywordFamily remains a handwritten reusable literal union without an annotated schema.",
+      "fix": "Define an identity-annotated LiteralKit for close, fix, resolve, and ref without an inline-array as const; derive KeywordFamily from its Type. Preserve the exhaustive FAMILIES record and keywordFamily results; expose the runtime value through index.ts if public. Add kit/domain parity to KeywordFamily.test.ts while retaining the twelve-keyword mapping assertions. Export bookkeeping is central codemod work."
+    },
+    "sol-1-1": {
+      "file": "scratchpad/effected/github-references/IssueReferences.ts",
+      "class": "schema",
+      "summary": "Five plain-object parser-result interfaces across IssueReferences and ClosingList lack schema definitions.",
+      "fix": "Define annotated S.Struct models and same-name Type aliases for IssueReference, BareLineReference, ClosingList, ReferenceList, and HarvestedReferenceList across IssueReferences.ts and ClosingList.ts. Use named keyword kits, S.Int issue numbers/offsets, S.Array(S.Int) lists, and S.Boolean closing; derive harvested fields from ReferenceList. Preserve readonly types and plain-object parser outputs. Expose runtime schemas through index.ts if public and add focused shape/schema assertions in the two parser test files without altering upstream expectations. Record added exports centrally."
+    },
+    "fable-1-5": {
+      "file": "scratchpad/effected/github-references/ClosingList.ts",
+      "class": "perf",
+      "summary": "Full schema membership parsing produces a measured 1.3–2.9x parser regression versus upstream.",
+      "fix": "Across ClosingList.ts and IssueReferences.ts, replace hot-path S.is membership parsing with R.get on the named kits' Enum records, obtaining canonical typed keywords without casts. Use R.has for the closing flag and O.map over closing-keyword lookup for parseClosingList. Preserve grammar, offsets, order, and unsafe-number behavior. Add invalid/prototype-name cases in both parser test files and rerun the oracle comparison and prose benchmark; do not restore native Set or broaden the regex for deferred coverage work."
+    },
+    "grok-1-5": {
+      "file": "scratchpad/effected/github-references/IssueReferences.ts",
+      "class": "effect-idiom",
+      "summary": "Domain helper absence across IssueReferences and ClosingList uses undefined sentinels despite EF-2.",
+      "fix": "Return Option<number> from safeIssueNumber and consume it at both IssueReferences call sites. In ClosingList, return Option of the existing item/unsafe variant from readItem, Option<number> from scanSeparator, and Option<ReadonlyArray<number>> from parseItems; consume them with Option combinators/guards and represent unsafeNext with Option<number>. Preserve skip/reject/scan-resumption semantics. Add malformed/unsafe-candidate continuation assertions in the two parser test files, keep upstream cases, and verify the prose benchmark with fable-1-5. An unmeasured allocation concern does not authorize a scanner exception."
+    },
+    "fable-1-12": {
+      "file": "scratchpad/effected/github-references/ClosingList.ts",
+      "class": "effect-idiom",
+      "summary": "Line splitting, trimming, and keyword normalization across the two parser modules bypass equivalent Effect String helpers.",
+      "fix": "Import effect/String as Str in ClosingList.ts and IssueReferences.ts and replace the cited line-level split, trim, and toLowerCase calls with equivalent Str helpers. Preserve newline/CRLF, whitespace, case, and order semantics, keeping the finding scoped to those calls. Add a focused mixed-case/CRLF/Unicode-whitespace parser equivalence case in the existing parser test files without changing upstream cases."
+    }
+  }
+}

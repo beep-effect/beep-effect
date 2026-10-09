@@ -14,6 +14,7 @@ import {
   projectInboxDocumentPath,
 } from "@beep/documents-domain/values/Taxonomy";
 import * as DocumentUseCases from "@beep/documents-use-cases/server";
+import { SecretScrub } from "@beep/file-processing";
 import { writeFileWithinRootAtomically } from "@beep/file-processing/PathSafety";
 import { $DocumentsServerId } from "@beep/identity/packages";
 import { sha256 } from "@noble/hashes/sha2.js";
@@ -207,5 +208,6 @@ export const DocumentsServerLayer = pipe(
  */
 export const DocumentsServerLlmLayer = pipe(
   DocumentIntakeLayer,
-  Layer.provide(Layer.merge(FilingDecisionLlmLayer, FilingTextExtractionLiveLayer))
+  Layer.provide(Layer.merge(FilingDecisionLlmLayer, FilingTextExtractionLiveLayer)),
+  Layer.provide(SecretScrub.SecretScrubLive)
 );

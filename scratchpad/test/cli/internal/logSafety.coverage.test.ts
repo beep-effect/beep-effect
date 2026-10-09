@@ -1,0 +1,20 @@
+import { assert, it } from "@effect/vitest";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import { CurrentRuntimeEnv } from "../../../effected/env/index.ts";
+import { TrustedLine, sanitizeParts, underActionsIn } from "../../../effected/cli/internal/logSafety.ts";
+it.effect("message scalars stay intact and actions detection follows the logging fiber context", () => Effect.gen(function* () {
+  assert.strictEqual(yield* TrustedLine, false);
+  const object = { text: "\u001b[31mkept as data" };
+  assert.strictEqual(sanitizeParts(object), object);
+  assert.strictEqual(sanitizeParts(12), 12);
+  assert.strictEqual(sanitizeParts("\u001b[31mred\u001b[0m"), "red");
+  assert.deepStrictEqual(sanitizeParts(["\u001b[31mred", object, null]), ["red", object, null]);
+  const inspect = Effect.withFiber((fiber) => Effect.succeed(fiber.pipe(underActionsIn)));
+  assert.strictEqual(yield* inspect, false);
+  const actions = yield* Layer.build(CurrentRuntimeEnv.layerTest({ ci: O.some("github-actions") }));
+  assert.strictEqual(yield* inspect.pipe(Effect.provideContext(actions)), true);
+  const generic = yield* Layer.build(CurrentRuntimeEnv.layerTest({ ci: O.some("generic") }));
+  assert.strictEqual(yield* inspect.pipe(Effect.provideContext(generic)), false);
+}));
