@@ -118,6 +118,7 @@ import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
+import { ChildProcess } from "effect/process";
 import * as Redacted from "effect/Redacted";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
@@ -189,12 +190,20 @@ const writeText = Effect.fn("AiMetricsTest.writeText")(function* (filePath: stri
 
 const makeGitRoot = Effect.fn("AiMetricsTest.makeGitRoot")(function* (repoRoot: string) {
   const path = yield* Path.Path;
+  yield* writeText(path.join(repoRoot, "AGENTS.md"), "# fixture guide\n");
   yield* writeText(path.join(repoRoot, ".git/HEAD"), "ref: refs/heads/main\n");
   yield* writeText(path.join(repoRoot, ".git/refs/heads/main"), `${pipe("a", Str.repeat(40))}\n`);
   yield* writeText(
     path.join(repoRoot, ".git/config"),
     '[remote "origin"]\n\turl = git@github.com:beep-effect/beep-effect.git\n'
   );
+  for (const args of [
+    ["init", "-q"],
+    ["add", "--", "AGENTS.md"],
+  ]) {
+    const child = yield* ChildProcess.make("git", args, { cwd: repoRoot, stdout: "ignore", stderr: "ignore" });
+    expect(yield* child.exitCode).toBe(0);
+  }
 });
 
 const relativeSnapshotPaths = (files: ReadonlyArray<{ readonly relativePath: string }>): ReadonlyArray<string> =>
