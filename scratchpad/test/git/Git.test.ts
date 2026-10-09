@@ -733,8 +733,9 @@ describe("Git", () => {
 					const found = Cause.findFail(exit.cause);
 					assert.isTrue(Result.isSuccess(found));
 					if (Result.isSuccess(found)) {
-						assert.instanceOf(found.success.error, UnknownRefError);
-						assert.strictEqual((found.success.error as UnknownRefError).ref, "nope...HEAD");
+						const error = found.success.error;
+						assert.instanceOf(error, UnknownRefError);
+						assert.strictEqual(error.ref, "nope...HEAD");
 					}
 				}
 			}),
@@ -1658,8 +1659,8 @@ describe("Git", () => {
 					const found = Cause.findFail(exit.cause);
 					assert.isTrue(Result.isSuccess(found));
 					if (Result.isSuccess(found)) {
-						assert.instanceOf(found.success.error, GitCommandError);
-						const error = found.success.error as GitCommandError;
+						const error = found.success.error;
+						assert.instanceOf(error, GitCommandError);
 						// The plain attempt's failure surfaces; the tag attempt's is discarded.
 						assert.include(error.stderr, "plain-attempt failed");
 						assert.isFalse(error.args.includes("tag"));
@@ -1723,8 +1724,8 @@ describe("Git", () => {
 					const found = Cause.findFail(exit.cause);
 					assert.isTrue(Result.isSuccess(found));
 					if (Result.isSuccess(found)) {
-						assert.instanceOf(found.success.error, GitCommandError);
-						const error = found.success.error as GitCommandError;
+						const error = found.success.error;
+						assert.instanceOf(error, GitCommandError);
 						assert.strictEqual(error.kind, "refused");
 						assert.deepStrictEqual([...error.args], ["--tags"]);
 					}

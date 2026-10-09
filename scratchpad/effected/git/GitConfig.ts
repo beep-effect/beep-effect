@@ -192,8 +192,8 @@ export class GitConfigInclude extends S.Class<GitConfigInclude>("GitConfigInclud
 }
 
 /** The offset of every line start in `text`, ascending — computed once per parse so mapping many diagnostics stays linear. */
-const lineStarts = (text: string): ReadonlyArray<number> => {
-  const starts = [0];
+const lineStarts = (text: string): readonly [number, ...Array<number>] => {
+  const starts: [number, ...Array<number>] = [0];
   for (let i = 0; i < text.length; i += 1) {
     if (text[i] === "\n") starts.push(i + 1);
   }
@@ -202,20 +202,21 @@ const lineStarts = (text: string): ReadonlyArray<number> => {
 
 /** Computes the zero-based line/character of `offset` against a precomputed line index (binary search). */
 const positionOf = (
-  starts: ReadonlyArray<number>,
+  starts: readonly [number, ...Array<number>],
   offset: number,
 ): { readonly line: number; readonly character: number } => {
   let low = 0;
   let high = starts.length - 1;
   while (low < high) {
     const mid = (low + high + 1) >> 1;
-    if ((starts[mid] as number) <= offset) low = mid;
+    const start = starts[mid];
+    if (start !== undefined && start <= offset) low = mid;
     else high = mid - 1;
   }
-  return { line: low, character: offset - (starts[low] as number) };
+  return { line: low, character: offset - (starts[low] ?? starts[0]) };
 };
 
-const toDiagnostic = (starts: ReadonlyArray<number>, raw: RawDiagnostic): GitConfigDiagnostic => {
+const toDiagnostic = (starts: readonly [number, ...Array<number>], raw: RawDiagnostic): GitConfigDiagnostic => {
   const { line, character } = positionOf(starts, raw.offset);
   return GitConfigDiagnostic.make({
     code: raw.code,

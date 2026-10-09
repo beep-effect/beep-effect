@@ -767,7 +767,8 @@ describe("GitCommand", () => {
 				assert.isDefined(stdin);
 				assert.isFalse(typeof stdin === "string");
 				if (stdin === undefined || typeof stdin === "string") return;
-				const chunks = yield* Stream.runCollect(stdin as Stream.Stream<Uint8Array>);
+				if ("stream" in stdin) assert.fail("expected a direct stdin stream");
+				const chunks = yield* Stream.runCollect(stdin);
 				const decoded = new TextDecoder().decode(
 					chunks.reduce((acc, chunk) => {
 						const merged = new Uint8Array(acc.length + chunk.length);

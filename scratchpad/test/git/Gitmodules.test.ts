@@ -1,4 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -12,13 +13,13 @@ const ok = <A, E>(result: Result.Result<A, E>): A => {
 		assert.fail(`expected success, got failure: ${String(result.failure)}`);
 	}
 	assert.isTrue(Result.isSuccess(result));
-	return (result as Result.Success<A, E>).success;
+	return result.success;
 };
 
 const decodeFailure = (text: string): GitmodulesParseError => {
 	const result = Gitmodules.parseResult(text);
-	assert.isTrue(Result.isFailure(result), "expected a decode failure");
-	return (result as Result.Failure<Gitmodules, GitmodulesParseError>).failure;
+	assertTrue(Result.isFailure(result), "expected a decode failure");
+	return result.failure;
 };
 
 const REAL_WORLD = `# vendored reference repos

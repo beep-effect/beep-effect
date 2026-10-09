@@ -1,4 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
@@ -11,15 +12,15 @@ const ok = <A, E>(result: Result.Result<A, E>): A => {
 		assert.fail(`expected success, got failure: ${String(result.failure)}`);
 	}
 	assert.isTrue(Result.isSuccess(result));
-	return (result as Result.Success<A, E>).success;
+	return result.success;
 };
 
 const parse = (text: string): GitConfig => ok(GitConfig.parseResult(text));
 
 const failure = (text: string): GitConfigParseError => {
 	const result = GitConfig.parseResult(text);
-	assert.isTrue(Result.isFailure(result), "expected a parse failure");
-	return (result as Result.Failure<GitConfig, GitConfigParseError>).failure;
+	assertTrue(Result.isFailure(result), "expected a parse failure");
+	return result.failure;
 };
 
 /**
@@ -462,9 +463,10 @@ describe("GitConfig", () => {
 			assert.isTrue(Result.isFailure(badSub));
 			if (Result.isFailure(badSub)) assert.strictEqual(badSub.failure.reason, "invalidSubsection");
 			const badValue = doc.set("a", undefined, "k", "nul\0byte");
-			assert.isTrue(Result.isFailure(badValue));
+			const isFailure = Result.isFailure(badValue);
+			assertTrue(isFailure);
 			if (Result.isFailure(badValue)) assert.strictEqual(badValue.failure.reason, "invalidValue");
-			assert.instanceOf((badValue as Result.Failure<GitConfig, GitConfigEditError>).failure, GitConfigEditError);
+			assert.instanceOf(badValue.failure, GitConfigEditError);
 		});
 
 		it("a hand-built GitConfig over unparseable text dies as a defect, not a typed error", () => {

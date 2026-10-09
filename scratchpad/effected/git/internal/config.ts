@@ -190,7 +190,7 @@ const scanHeader = (
 	const len = text.length;
 	let i = bracketOffset + 1;
 	const nameStart = i;
-	while (i < len && isNameChar(text[i] as string)) i += 1;
+	while (i < len && isNameChar(text.charAt(i))) i += 1;
 	let name = text.slice(nameStart, i);
 	const fail = (message: string): HeaderScan => {
 		const next = skipToLineEnd(text, i);
@@ -207,7 +207,7 @@ const scanHeader = (
 		let value = "";
 		let closed = false;
 		while (i < len) {
-			const ch = text[i] as string;
+			const ch = text.charAt(i);
 			if (ch === "\n" || ch === "\r") break;
 			if (ch === '"') {
 				closed = true;
@@ -271,7 +271,7 @@ interface EntryScan {
 const scanEntry = (text: string, lineStart: number, keyStart: number, diagnostics: Array<RawDiagnostic>): EntryScan => {
 	const len = text.length;
 	let i = keyStart;
-	if (!/[A-Za-z]/.test(text[i] as string)) {
+	if (!/[A-Za-z]/.test(text.charAt(i))) {
 		const next = skipToLineEnd(text, i);
 		diagnostics.push({
 			code: "invalidKey",
@@ -281,7 +281,7 @@ const scanEntry = (text: string, lineStart: number, keyStart: number, diagnostic
 		});
 		return { entry: undefined, next };
 	}
-	while (i < len && isKeyChar(text[i] as string)) i += 1;
+	while (i < len && isKeyChar(text.charAt(i))) i += 1;
 	const key = text.slice(keyStart, i);
 	const keyEnd = i;
 	while (isWs(text[i])) i += 1;
@@ -322,7 +322,7 @@ const scanEntry = (text: string, lineStart: number, keyStart: number, diagnostic
 	let significantEnd = valueOffset - 1;
 	let inQuotes = false;
 	while (i < len) {
-		const ch = text[i] as string;
+		const ch = text.charAt(i);
 		if (ch === "\n") break;
 		if (ch === "\r" && text[i + 1] === "\n") break;
 		if (ch === "\\") {

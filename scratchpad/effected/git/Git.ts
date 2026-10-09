@@ -631,6 +631,8 @@ const runClassified = (
 const parseNulSeparated = (output: string): ReadonlyArray<string> =>
   output.split("\0").filter((entry) => entry.length > 0);
 
+const lsTreeInput = S.Struct(LsTreeEntry.fields);
+
 /**
  * Parses `git ls-tree -r -z` output: each NUL-terminated entry is
  * `<mode> <type> <oid>\t<path>`. `path` is everything after the first tab,
@@ -641,13 +643,15 @@ const parseLsTree = (output: string): ReadonlyArray<LsTreeEntry> =>
     const tabIndex = entry.indexOf("\t");
     const header = entry.slice(0, tabIndex).split(" ");
     const path = entry.slice(tabIndex + 1);
-    return LsTreeEntry.make({
+    const parsed = {
       mode: header[0] ?? "",
       // git's own tree-entry format only ever emits these three kinds.
-      type: (header[1] ?? "blob") as "blob" | "tree" | "commit",
+      type: header[1] ?? "blob",
       oid: header[2] ?? "",
       path,
-    });
+    };
+    S.asserts(lsTreeInput, parsed);
+    return LsTreeEntry.make(parsed);
   });
 
 /** git's one-letter name-status codes, score digits stripped (`R100` → `R`). */
@@ -886,6 +890,9 @@ export class StatusEntry extends S.Class<StatusEntry>("StatusEntry")({
     entries.map((entry) => entry.toLine(options)).join("\n");
 }
 
+const commitInfoInput = S.Struct(CommitInfo.fields);
+const statusInput = S.Struct(StatusEntry.fields);
+
 /**
  * Parses `git log -1 --format=%H%x00%G?%x00%B` output: exactly two NUL
  * separators, everything after the second is the raw message, untrimmed.
@@ -895,12 +902,14 @@ export class StatusEntry extends S.Class<StatusEntry>("StatusEntry")({
 const parseCommitInfo = (output: string): CommitInfo => {
   const first = output.indexOf("\0");
   const second = output.indexOf("\0", first + 1);
-  return CommitInfo.make({
+  const parsed = {
     sha: output.slice(0, first),
     // Our own format string only ever emits git's %G? verdict letters.
-    signatureStatus: output.slice(first + 1, second) as CommitInfo["signatureStatus"],
+    signatureStatus: output.slice(first + 1, second),
     message: output.slice(second + 1),
-  });
+  };
+  S.asserts(commitInfoInput, parsed);
+  return CommitInfo.make(parsed);
 };
 
 /**
@@ -919,19 +928,23 @@ const parseStatus = (output: string): ReadonlyArray<StatusEntry> => {
       continue;
     }
     // Porcelain v1 only ever emits these axis codes.
-    const x = token.charAt(0) as StatusEntry["x"];
-    const y = token.charAt(1) as StatusEntry["y"];
+    const x = token.charAt(0);
+    const y = token.charAt(1);
     const path = token.slice(3);
     if (x === "R" || x === "C" || y === "R" || y === "C") {
-      entries.push(StatusEntry.make({
+      const parsed = {
         x,
         y,
         path,
         origPath: tokens[index + 1] ?? "",
-      }));
+      };
+      S.asserts(statusInput, parsed);
+      entries.push(StatusEntry.make(parsed));
       index += 2;
     } else {
-      entries.push(StatusEntry.make({ x, y, path }));
+      const parsed = { x, y, path };
+      S.asserts(statusInput, parsed);
+      entries.push(StatusEntry.make(parsed));
       index += 1;
     }
   }
@@ -1152,6 +1165,8 @@ export class RefEntry extends S.Class<RefEntry>("RefEntry")({
 }) {
 }
 
+const refEntryInput = S.Struct(RefEntry.fields);
+
 /**
  * Parses `git for-each-ref --format=%(refname)%00%(objectname)%00%(objecttype)`
  * output: newline-separated records (refnames cannot contain newlines) of
@@ -1164,11 +1179,13 @@ const parseForEachRef = (output: string): ReadonlyArray<RefEntry> =>
     .map((line) => {
       const [ref = "", sha = "", objectType = "commit"] = line.split("\0");
       // Our own fixed format only ever emits git's four object types.
-      return RefEntry.make({
+      const parsed = {
         ref,
         sha,
-        objectType: objectType as RefEntry["objectType"],
-      });
+        objectType,
+      };
+      S.asserts(refEntryInput, parsed);
+      return RefEntry.make(parsed);
     });
 
 /**
@@ -2453,7 +2470,8 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
         // which is the empty log, never a failure. `Git.log` takes no ref,
         // so there is no ref for an UnknownRefError to name and the error
         // is absent from this member's union by construction.
-        return [] as ReadonlyArray<CommitLogEntry>;
+        const empty: ReadonlyArray<CommitLogEntry> = [];
+        return empty;
       case "notARepository":
         return yield* NotARepositoryError.make({ cwd });
       case "failure":
