@@ -28,7 +28,19 @@ const $I = $ScratchpadId.create("effected/github-actions/ToolInstaller");
 /**
  * Raised when a tool cannot be downloaded, extracted or cached.
  *
+ *
+ * **Example** (Inspect a download failure)
+ *
+ * ```ts
+ * import { ToolInstallerError } from "@beep/scratchpad/effected/github-actions/ToolInstaller";
+ *
+ * const error = ToolInstallerError.make({ reason: "downloadFailed", subject: "https://example.com/tool", status: 429 });
+ * console.log(error.message) // Could not download https://example.com/tool (HTTP 429)
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class ToolInstallerError extends S.TaggedError<ToolInstallerError>($I`ToolInstallerError`)("ToolInstallerError", {
 	/**
@@ -46,6 +58,21 @@ export class ToolInstallerError extends S.TaggedError<ToolInstallerError>($I`Too
 	/** The underlying failure, preserved structurally. */
 	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying failure, preserved structurally." }),
 }, $I.annote("ToolInstallerError", { description: "Raised when a tool cannot be downloaded, extracted or cached." })) {
+	/**
+ * Renders the failed operation, subject and available HTTP status or extraction stderr.
+ *
+ * **Example** (Render a download message)
+ *
+ * ```ts
+ * import { ToolInstallerError } from "@beep/scratchpad/effected/github-actions/ToolInstaller";
+ *
+ * const error = ToolInstallerError.make({ reason: "downloadFailed", subject: "https://example.com/tool", status: 429 });
+ * console.log(error.message) // Could not download https://example.com/tool (HTTP 429)
+ * ```
+ *
+ * @category getters
+ * @since 0.0.0
+ */
 	override get message(): string {
 		return Match.value(this.reason).pipe(
 			Match.when("downloadFailed", () => `Could not download ${this.subject}${this.status === undefined ? "" : ` (HTTP ${this.status})`}`),
@@ -55,15 +82,27 @@ export class ToolInstallerError extends S.TaggedError<ToolInstallerError>($I`Too
 	}
 
 	/**
-  * Whether retrying could plausibly help.
-  *
-  * **Details**
-  *
-  * A derived getter rather than a field, so it cannot be set inconsistently
-  * with the status it is derived from. `408`, `429` and any `5xx` are the
-  * server saying "later"; a `404` is it saying "never", and retrying that
-  * three times just makes a broken url take longer to fail.
-  */
+ * Whether retrying could plausibly help.
+ *
+ * **Details**
+ *
+ * A derived getter rather than a field, so it cannot be set inconsistently
+ * with the status it is derived from. `408`, `429` and any `5xx` are the
+ * server saying "later"; a `404` is it saying "never", and retrying that
+ * three times just makes a broken url take longer to fail.
+ *
+ * **Example** (Retry a throttled download)
+ *
+ * ```ts
+ * import { ToolInstallerError } from "@beep/scratchpad/effected/github-actions/ToolInstaller";
+ *
+ * const error = ToolInstallerError.make({ reason: "downloadFailed", subject: "https://example.com/tool", status: 429 });
+ * console.log(error.retryable) // true
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
+ */
 	get retryable(): boolean {
 		if (this.reason !== "downloadFailed") {
 			return false;
@@ -80,7 +119,10 @@ export class ToolInstallerError extends S.TaggedError<ToolInstallerError>($I`Too
 /**
  * Where extraction should put its output.
  *
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface ExtractOptions {
 	/** The destination. A fresh temporary directory when omitted. */
@@ -102,7 +144,10 @@ export interface ExtractOptions {
 /**
  * How a {@link ToolInstallerShape.download} should behave.
  *
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface ToolDownloadOptions {
 	/**
@@ -126,7 +171,10 @@ export interface ToolDownloadOptions {
 /**
  * What {@link ToolInstallerShape.provisionFile} should provision.
  *
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface ProvisionFileOptions {
 	/** The tool-cache name the binary is provisioned under, e.g. `"biome"`. */
@@ -152,7 +200,10 @@ export interface ProvisionFileOptions {
  * single binary the two coincide: the cached directory contains exactly the
  * executable, so it IS the directory to hand to `ActionOutputs.addPath`.
  *
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface ProvisionedFile {
 	/** The cached entry: `<tool-cache>/<tool>/<version>/<arch>`. */
@@ -166,7 +217,10 @@ export interface ProvisionedFile {
  * cache tools in the runner's tool cache, each failing with
  * {@link ToolInstallerError}.
  *
+ *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export interface ToolInstallerShape {
 	/**
@@ -542,7 +596,7 @@ const testRoot = (): string => Effect.runSync(
  * **Example** (Download and cache Node on a cache miss)
  *
  * ```ts
- * import { ToolInstaller } from "./index.ts";
+ * import { ToolInstaller } from "@beep/scratchpad/effected/github-actions/ToolInstaller";
  * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option";
  *
@@ -554,21 +608,38 @@ const testRoot = (): string => Effect.runSync(
  *   const extracted = yield* installer.extractTar(archive);
  *   return yield* installer.cacheDir(extracted, "node", "22.11.0");
  * });
+ *
+ * console.log(Effect.isEffect(install)) // true
  * ```
  *
+ *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class ToolInstaller extends Context.Service<ToolInstaller, ToolInstallerShape>()(
 	$I`ToolInstaller`,
 ) {
 	/**
-  * The live installer, over the runner's tool cache, `HttpClient` and `tar`.
-  *
-  * **Details**
-  *
-  * The cache root comes from `RUNNER_TOOL_CACHE`, resolved once at layer
-  * construction.
-  */
+ * The live installer, over the runner's tool cache, `HttpClient` and `tar`.
+ *
+ * **Details**
+ *
+ * The cache root comes from `RUNNER_TOOL_CACHE`, resolved once at layer
+ * construction.
+ *
+ * **Example** (Compose the live installer)
+ *
+ * ```ts
+ * import { ToolInstaller } from "@beep/scratchpad/effected/github-actions/ToolInstaller";
+ * import * as Layer from "effect/Layer";
+ *
+ * console.log(Layer.isLayer(ToolInstaller.layer)) // true
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 	static readonly layer: Layer.Layer<
 		ToolInstaller,
 		never,
@@ -580,17 +651,29 @@ export class ToolInstaller extends Context.Service<ToolInstaller, ToolInstallerS
 	> = Layer.effect(this, make);
 
 	/**
-  * Where a tool lives in the cache.
-  *
-  * **Details**
-  *
-  * Pure, exported and tested on its own, because the layout is a **contract
-  * with the runner**: `<root>/<tool>/<version>/<arch>` is what the hosted
-  * image populates and what `@actions/tool-cache` reads, so a tool cached at
-  * any other path is invisible to every other step in the workflow. The `arch`
-  * segment uses Node's `process.arch` spelling (`x64`) rather than the
-  * runner's `RUNNER_ARCH` (`X64`) for the same reason.
-  */
+ * Where a tool lives in the cache.
+ *
+ * **Details**
+ *
+ * Pure, exported and tested on its own, because the layout is a **contract
+ * with the runner**: `<root>/<tool>/<version>/<arch>` is what the hosted
+ * image populates and what `@actions/tool-cache` reads, so a tool cached at
+ * any other path is invisible to every other step in the workflow. The `arch`
+ * segment uses Node's `process.arch` spelling (`x64`) rather than the
+ * runner's `RUNNER_ARCH` (`X64`) for the same reason.
+ *
+ * **Example** (Locate an x64 tool entry)
+ *
+ * ```ts
+ * import { ToolInstaller } from "@beep/scratchpad/effected/github-actions/ToolInstaller";
+ *
+ * const directory = ToolInstaller.cachePath({ root: "/tools", tool: "node", version: "22.11.0", arch: "x64" });
+ * console.log(directory) // /tools/node/22.11.0/x64
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
 	static readonly cachePath = (options: {
 		readonly root: string;
 		readonly tool: string;
@@ -599,19 +682,33 @@ export class ToolInstaller extends Context.Service<ToolInstaller, ToolInstallerS
 	}): string => `${options.root}/${options.tool}/${options.version}/${options.arch}`;
 
 	/**
-  * A test double. Unstubbed members die rather than reporting a tool that is
-  * not there.
-  *
-  * **Details**
-  *
-  * `cachePath` is the one member with a default rather than a death: it is
-  * pure and total, and a caller composing it into shim contents would
-  * otherwise have to stub it in every test. The default is the static layout
-  * over `RUNNER_TOOL_CACHE`, or the same off-runner root `make` resolves
-  * (`internal/runner.ts`). **That is a read of the ambient environment**,
-  * sanctioned here only because a double has no `ActionEnvironment` to ask,
-  * and limited to the test double.
-  */
+ * A test double. Unstubbed members die rather than reporting a tool that is
+ * not there.
+ *
+ * **Details**
+ *
+ * `cachePath` is the one member with a default rather than a death: it is
+ * pure and total, and a caller composing it into shim contents would
+ * otherwise have to stub it in every test. The default is the static layout
+ * over `RUNNER_TOOL_CACHE`, or the same off-runner root `make` resolves
+ * (`internal/runner.ts`). **That is a read of the ambient environment**,
+ * sanctioned here only because a double has no `ActionEnvironment` to ask,
+ * and limited to the test double.
+ *
+ * **Example** (Stub a cache lookup)
+ *
+ * ```ts
+ * import { ToolInstaller } from "@beep/scratchpad/effected/github-actions/ToolInstaller";
+ * import * as Effect from "effect/Effect";
+ * import * as O from "effect/Option";
+ *
+ * const installer = ToolInstaller.makeTest({ find: () => Effect.succeed(O.some("/tools/node")) });
+ * console.log(O.getOrNull(Effect.runSync(installer.find("node", "22.11.0")))) // /tools/node
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
 	static readonly makeTest = (overrides: Partial<ToolInstallerShape> = {}): ToolInstallerShape => ({
 		find: () => dies("find"),
 		cachePath: (tool, version) => ToolInstaller.cachePath({ root: testRoot(), tool, version, arch: process.arch }),
@@ -624,7 +721,26 @@ export class ToolInstaller extends Context.Service<ToolInstaller, ToolInstallerS
 		...overrides,
 	});
 
-	/** {@link ToolInstaller.makeTest} behind `Layer.succeed`. */
+	/**
+ * {@link ToolInstaller.makeTest} behind `Layer.succeed`.
+ *
+ * **Example** (Provide a stubbed installer)
+ *
+ * ```ts
+ * import { ToolInstaller } from "@beep/scratchpad/effected/github-actions/ToolInstaller";
+ * import * as Effect from "effect/Effect";
+ * import * as O from "effect/Option";
+ *
+ * const program = Effect.gen(function* () {
+ *   const installer = yield* ToolInstaller;
+ *   return yield* installer.find("node", "22.11.0");
+ * }).pipe(Effect.provide(ToolInstaller.layerTest({ find: () => Effect.succeed(O.none()) })));
+ * console.log(O.isNone(Effect.runSync(program))) // true
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 	static readonly layerTest = (overrides: Partial<ToolInstallerShape> = {}): Layer.Layer<ToolInstaller> =>
 		Layer.succeed(ToolInstaller, ToolInstaller.makeTest(overrides));
 }

@@ -1,23 +1,7 @@
 # github-actions (lab port of @effected/github-actions)
 
-[![npm](https://img.shields.io/npm/v/@effected%2Fgithub-actions?label=npm&color=cb3837)](https://www.npmjs.com/package/@effected/github-actions)
-[![License: MIT](https://img.shields.io/badge/License-MIT-4caf50.svg)](https://opensource.org/licenses/MIT)
-[![Node.js %3E%3D24.11.0](https://img.shields.io/badge/Node.js-%3E%3D24.11.0-5fa04e.svg)](https://nodejs.org/)
-[![TypeScript 7.0](https://img.shields.io/badge/TypeScript-7.0-3178c6.svg)](https://www.typescriptlang.org/)
 
 The GitHub Actions runtime for [Effect](https://effect.website) v4: the services an action needs to talk to the runner it is executing inside. `Action.run` composes the runtime, runs your program, renders a failure as an `::error::` annotation and sets the exit code. `ActionInput` reads workflow inputs as typed `Config` values — string, boolean, integer, redacted secret, multiline list, `key=value` pairs, or a schema-decoded JSON blob — with one absence rule shared by every accessor: unset and `""` are both missing data. `ActionOutputs`, `ActionState`, `ActionLogger` and a fiber-local `ActionEnvironment` round out the runner surface, alongside `ActionCache`, `Artifact`, a metadata-carrying `BlobStore` (S3-compatible or the runner's own cache), `OidcTokenIssuer` and `ToolInstaller` for the heavier protocols. A reporting suite — `GitHubMarkdown`, `ManagedDocument`, `CheckState` and `CheckDocument` — covers the other direction: rendering what a run did onto a pull request comment, a check run or the job summary. No `@actions/*` dependency anywhere — the cache, artifact and tool-cache protocols are implemented directly against their HTTP APIs.
-
-> **Pre-`1.0.0`.** This package is part of the `@effected/*` kit, built on stable
-> Effect v4 (`effect` `^4.0.0`) and still in `0.x` development. Stable Effect
-> makes a kit `1.0.0` possible, not automatic. To keep your `effect` and
-> `@effect/*` versions on the line the kit is built and tested against, install
-> [`@effected/pnpm-plugin-effect`](https://www.npmjs.com/package/@effected/pnpm-plugin-effect).
->
-> **Stability: unstable.** This package's API surface is not yet considered
-> complete and may change across `0.x` releases. Pin an exact version — even a
-> package marked *stable* before `1.0.0` can introduce a breaking change by
-> accident, and an exact pin turns that into a type-check error rather than a
-> runtime surprise. Full policy: [release strategy](https://github.com/spencerbeggs/effected#release-strategy).
 
 ## Why @effected/github-actions
 
@@ -27,16 +11,6 @@ It is also the **one place in the kit** where `@effect/platform-node` is a requi
 
 The line against [`@effected/github`](https://www.npmjs.com/package/@effected/github) is exact: that package talks to the GitHub API, this one talks to the runner. They meet at two seams — the token bridge (`GitHubToken`) and the `Logger` that maps `Effect.log*` onto workflow commands — and nothing here reads `process.env.GITHUB_REPOSITORY` on `github`'s behalf.
 
-## Install
-
-```bash
-npm install @effected/github-actions effect @effect/platform-node
-```
-
-```bash
-pnpm add @effected/github-actions effect @effect/platform-node
-```
-
 Requires Node.js >=24.11.0. `effect` v4 and `@effect/platform-node` are both peer dependencies.
 
 All `@effected/*` packages are ESM-only: the exports maps publish only `import` conditions, so `require()` — including tools that resolve in CJS mode — fails with Node's `ERR_PACKAGE_PATH_NOT_EXPORTED` rather than loading a CJS build that does not exist. Import from an ES module.
@@ -44,8 +18,9 @@ All `@effected/*` packages are ESM-only: the exports maps publish only `import` 
 ## Quick start
 
 ```ts
-import { Action, ActionInput, ActionOutputs } from "@effected/github-actions";
-import { Config, Effect } from "effect";
+import { Action, ActionInput, ActionOutputs } from "@beep/scratchpad/effected/github-actions/index";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
 
 const program = Effect.gen(function* () {
   const name = yield* ActionInput.string("name").pipe(Config.withDefault("world"));
@@ -55,6 +30,7 @@ const program = Effect.gen(function* () {
 
 await Action.run(program);
 // exit code reflects success/failure; failures render as an ::error:: annotation
+console.log("action completed") // action completed
 ```
 
 `Action.run` provides `ActionServices` (environment, logger, outputs, state, the Node platform and an `HttpClient`) by default. A capability with a heavier dependency — the cache, artifacts, the blob store — is one extra line: `Action.run(program, { layer: ActionCache.layer })`.
@@ -66,8 +42,9 @@ Step debugging works without wiring: when the runner sets `RUNNER_DEBUG=1`, `Act
 Every accessor shares one absence rule: the runner writes `""` for an input the workflow omitted, and this package reads that the same as unset — **missing data**, not an empty value. An optional input needs `Config.withDefault` (or `Config.option`) at the call site:
 
 ```ts
-import { ActionInput } from "@effected/github-actions";
-import { Config, Effect } from "effect";
+import { ActionInput } from "@beep/scratchpad/effected/github-actions/index";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
 
 const program = Effect.gen(function* () {
   const dryRun = yield* ActionInput.boolean("dry-run").pipe(Config.withDefault(false));
@@ -75,6 +52,7 @@ const program = Effect.gen(function* () {
   return { dryRun, paths };
 });
 // dryRun: boolean; paths: readonly string[] — [] when the input was omitted
+console.log(Effect.isEffect(program)) // true
 ```
 
 `list` accepts a JSON array, a bullet list, or comma- and newline-separated values, with full-line `#` comments dropped — whichever shape a workflow author reaches for first. A **present but malformed** value (`dry-run: yes` instead of a YAML 1.2 boolean) is a different class from an absent one: it fails carrying its `actual` and is never silently swallowed by a default.
@@ -84,13 +62,15 @@ const program = Effect.gen(function* () {
 `GitHubToken` shapes GitHub App authentication like the three-phase workflow it runs inside: mint in `pre`, use in `main`, revoke in `post`. Nothing survives between phases except what `GITHUB_STATE` carries, so an installation token — which lives about an hour — is persisted rather than held in a `Scope`:
 
 ```ts
-import { GitHubToken } from "@effected/github-actions";
-import { Effect, Redacted } from "effect";
+import { GitHubToken } from "@beep/scratchpad/effected/github-actions/index";
+import * as Effect from "effect/Effect";
+import * as Redacted from "effect/Redacted";
+import * as Layer from "effect/Layer";
 
 // pre:
 const pre = GitHubToken.provision({
   appId: "123456",
-  privateKey: Redacted.make(process.env.APP_PRIVATE_KEY as string),
+  privateKey: Redacted.make("example PEM private key"),
   owner: "acme",
   required: { contents: "write", pull_requests: "write" },
 });
@@ -100,6 +80,7 @@ const ClientLayer = GitHubToken.clientLayer();
 
 // post:
 const post = GitHubToken.dispose();
+console.log(Effect.isEffect(pre) && Layer.isLayer(ClientLayer) && Effect.isEffect(post)) // true
 ```
 
 `GitHubToken.read` fails typed with `reason: "expired"` rather than handing back a token GitHub will answer with a bare 401 — the credential that could re-mint one is the app's private key, and persisting that through a plaintext `GITHUB_STATE` file would trade a one-hour token for a permanent one.
@@ -109,16 +90,18 @@ const post = GitHubToken.dispose();
 `Secret` is the only place in this package a `Redacted` value becomes a plain string, and masking and declassification are the same call — every member registers the value with the runner's `::add-mask::` filter *before* returning plaintext:
 
 ```ts
-import { Secret } from "@effected/github-actions";
-import { Effect } from "effect";
+import { Secret } from "@beep/scratchpad/effected/github-actions/index";
+import * as Redacted from "effect/Redacted";
+import * as Effect from "effect/Effect";
 
-declare const token: import("effect/Redacted").Redacted<string>;
+const token = Redacted.make("example-token");
 
 const program = Effect.gen(function* () {
   const env = yield* Secret.forChildEnv({ MY_TOKEN: token });
   // every value in `env` is already masked in the runner log
   return env;
 });
+console.log(Effect.isEffect(program)) // true
 ```
 
 ## The runner's cache, artifacts and OIDC
@@ -126,25 +109,27 @@ const program = Effect.gen(function* () {
 `ActionCache` and `Artifact` speak the Actions Twirp v2 protocol directly — no `@actions/cache` or `@actions/artifact` dependency, and both are excluded from `ActionRuntime.layer` on purpose, so a consumer that only sets an output never links `@azure/storage-blob`:
 
 ```ts
-import { ActionCache, CacheKey } from "@effected/github-actions";
-import { Effect, Option } from "effect";
+import { Action, ActionCache, CacheKey } from "@beep/scratchpad/effected/github-actions/index";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
 
 const program = Effect.gen(function* () {
   const cache = yield* ActionCache;
   const key = CacheKey.of("Linux", "pnpm-store", "abc123");
   const hit = yield* cache.restore(["~/.pnpm-store"], key);
-  if (Option.isNone(hit)) {
+  if (O.isNone(hit)) {
     yield* cache.save(["~/.pnpm-store"], key);
   }
 });
 
-await Action.run(program, { layer: ActionCache.layer });
+const run = () => Action.run(program, { layer: ActionCache.layer });
+console.log(Effect.isEffect(program) && typeof run === "function") // true
 ```
 
 `CacheKey.withNamespace(segment)` is the cache-bust case — a run that must match nothing an unbusted run wrote, and whose own entries must be invisible to unbusted runs:
 
 ```ts
-import { CacheKey } from "@effected/github-actions";
+import { CacheKey } from "@beep/scratchpad/effected/github-actions/index";
 
 const key = CacheKey.of("Linux", "pnpm-store", "abc123").withNamespace("bust7");
 console.log(key.key, key.restoreKeys);
@@ -158,9 +143,10 @@ Two decisions make that safe for any segment value, with no prefix reasoning at 
 `ActionsProvenance.capture` turns those claims into an `@effected/sbom` `SlsaProvenance` predicate, and `ActionsIdentityToken.layer` serves that package's narrow `IdentityToken` contract from the same issuer — the inversion that keeps the Actions runtime out of every consumer that only wants to emit an SBOM:
 
 ```ts
-import { ActionsIdentityToken, ActionsProvenance, OidcTokenIssuer } from "@effected/github-actions";
-import { SigstoreSigner } from "@effected/sbom";
-import { Effect, Layer } from "effect";
+import { ActionsIdentityToken, ActionsProvenance, OidcTokenIssuer } from "@beep/scratchpad/effected/github-actions/index";
+import { SigstoreSigner } from "@beep/scratchpad/effected/sbom/index";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 
 const program = Effect.gen(function* () {
   const provenance = yield* ActionsProvenance.capture();
@@ -172,6 +158,7 @@ const SigningLayer = SigstoreSigner.layer.pipe(
   Layer.provide(ActionsIdentityToken.layer),
   Layer.provide(OidcTokenIssuer.layer),
 );
+console.log(Effect.isEffect(program) && Layer.isLayer(SigningLayer)) // true
 ```
 
 An `OidcTokenError` passes through `capture` untouched: whether an unattested publish is allowed is the action's policy, not this package's. `reason: "unavailable"` almost always means the workflow is missing `permissions: id-token: write`.
@@ -181,12 +168,12 @@ An `OidcTokenError` passes through `capture` untouched: whether an unattested pu
 The other half of an action's job is saying what happened — on a pull request comment, a check-run summary or the job summary. `GitHubMarkdown` writes those bodies. Every member takes pre-rendered markdown and returns a string, but the structure around it goes through `@effected/markdown`'s serializer rather than string joining, so a cell carrying `>=1 || <2` escapes its pipes instead of shifting every column after it. `tableFor` goes further and takes the table's whole shape from a row schema:
 
 ```ts
-import { GitHubMarkdown } from "@effected/github-actions";
-import { Schema } from "effect";
+import { GitHubMarkdown } from "@beep/scratchpad/effected/github-actions/index";
+import * as S from "effect/Schema";
 
-const Row = Schema.Struct({
-  name: Schema.String.annotate({ title: "Check" }),
-  detail: Schema.String,
+const Row = S.Struct({
+  name: S.String.annotate({ title: "Check" }),
+  detail: S.String,
 });
 
 console.log(GitHubMarkdown.tableFor(Row).render([{ name: "build", detail: "clean" }]));
@@ -200,8 +187,8 @@ Column order is field declaration order, each header is the field's `title` anno
 `ManagedDocument` owns named regions inside text a human also edits: a sentinel HTML comment identifies the document, marker comments delimit each region, and everything outside them survives byte-for-byte. Regions are replaced from current state rather than appended, which is what makes a sticky comment safe to re-render. `CheckDocument` puts a debounced reconciler on top — report a check as its state changes, and a background fiber projects the registry onto the document and writes it through a narrow sink:
 
 ```ts
-import { CheckDocument, CheckReport } from "@effected/github-actions";
-import { Effect } from "effect";
+import { CheckDocument, CheckReport } from "@beep/scratchpad/effected/github-actions/index";
+import * as Effect from "effect/Effect";
 
 const program = Effect.gen(function* () {
   const doc = yield* CheckDocument;
@@ -212,6 +199,7 @@ const program = Effect.gen(function* () {
 // "written"   — one write carrying the final state
 // "unchanged" — the render was byte-identical to the last one, so nothing was sent
 // "stale"     — a newer run owns the document; this pass was dropped (see below)
+console.log(Effect.isEffect(program)) // true
 ```
 
 The debounce is trailing with a max-wait, so a burst of reports coalesces into one write carrying the *final* state while a steady stream still surfaces progress.
@@ -221,21 +209,28 @@ A region can also carry metadata: `withRegions` takes `[key, content, meta]` tri
 `CheckDocument` uses exactly that to survive two runs writing one document — a re-run overlapping the delayed run it replaced. Give the layer this run's `stamp` and a sink that can `read` as well as `write`, and each pass reconciles against the live document instead of a private shadow of what this process last wrote:
 
 ```ts
-import { CheckDocument } from "@effected/github-actions";
-import type { Effect } from "effect";
+import { CheckDocument } from "@beep/scratchpad/effected/github-actions/index";
+import * as Effect from "effect/Effect";
+import * as A from "effect/Array";
+import * as HashMap from "effect/HashMap";
+import * as O from "effect/Option";
+import * as Layer from "effect/Layer";
 
-declare const startedAt: string;
-declare const runId: string;
-declare const readComment: Effect.Effect<string | undefined>;
-declare const writeComment: (text: string) => Effect.Effect<void>;
+const startedAt = "2026-01-01T00:00:00Z";
+const runId = "42";
+const readComment = Effect.succeed<string | undefined>(undefined);
+const writeComment = (text: string) => Effect.log(text);
 
 const layer = CheckDocument.layer({
   namespace: "release-bot",
   key: "checks",
-  render: (checks) => [...checks].map(([name, report]) => [name, report.state] as const),
+  render: ({ checks, order }) => A.map(order, (name): readonly [string, string] => [
+    name, O.match(HashMap.get(checks, name), { onNone: () => "unknown", onSome: (report) => report.state }),
+  ]),
   sink: { write: writeComment, read: readComment },
   stamp: { at: startedAt, runId }, // a per-run constant — mint it once at startup
 });
+console.log(Layer.isLayer(layer)) // true
 ```
 
 Every region the run writes then carries its `at` and `runId`, and a pass whose stamp is strictly older than the newest stamp already on the document is dropped rather than written — `flush` answers `"stale"` and the reconciler logs the drop once, at the transition. Equal stamps pass, so a run always may refine its own regions. Keeping the stamp constant is what preserves write suppression: the same run rendering the same state still produces byte-identical text.
@@ -256,14 +251,16 @@ Four failure types in this package are **tagged unions of one error class per re
 **Breaking, and how to migrate.** Code that branched on `error.reason` matches on `_tag` instead, which is what buys the split: one failure can be handled on its own with `Effect.catchTag`, and the rest stay in the error channel rather than being caught by a handler that only meant to answer one of them.
 
 ```ts
-import { CacheKey } from "@effected/github-actions";
-import { Effect, Option } from "effect";
+import { CacheKey } from "@beep/scratchpad/effected/github-actions/index";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
 
 const digest = CacheKey.hashMatching({ workspace: ".", patterns: ["**/pnpm-lock.yaml"] }).pipe(
-  Effect.catchTag("CacheKeyBadPatternError", () => Effect.succeed(Option.none<string>())),
+  Effect.catchTag("CacheKeyBadPatternError", () => Effect.succeed(O.none<string>())),
 );
 // Effect<Option<string>, CacheKeyReadError, FileSystem | Path>
 // a bad pattern becomes "no digest"; a read failure stays in the error channel
+console.log(Effect.isEffect(digest)) // true
 ```
 
 ## Testing
@@ -271,21 +268,25 @@ const digest = CacheKey.hashMatching({ workspace: ".", patterns: ["**/pnpm-lock.
 Every service ships `makeTest(overrides?)` and `layerTest(overrides?)`, with unstubbed members dying loudly and naming themselves — three recorded exceptions state why they default instead: `ActionEnvironment.makeTest` seeds the twelve `GITHUB_*`/`RUNNER_*` variables, `ActionLogger.makeTest` defaults to silent, and `DryRun.makeTest` defaults to rehearsing, the safe direction. `ActionEnvironment.makeTest`/`layerTest` also take the webhook event payload as an optional second argument, serving it directly instead of routing it through a `GITHUB_EVENT_PATH` filesystem read the stubbed filesystem could never satisfy:
 
 ```ts
-import { ActionEnvironment } from "@effected/github-actions";
+import { ActionEnvironment } from "@beep/scratchpad/effected/github-actions/index";
+import * as Layer from "effect/Layer";
 
 const layer = ActionEnvironment.layerTest(
   { GITHUB_EVENT_NAME: "pull_request" },
   { pull_request: { number: 42 } },
 );
+console.log(Layer.isLayer(layer)) // true
 ```
 
 ```ts
-import { ActionOutputs } from "@effected/github-actions";
-import { Effect } from "effect";
+import { ActionOutputs } from "@beep/scratchpad/effected/github-actions/index";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 
 const TestOutputs = ActionOutputs.layerTest({
   set: () => Effect.void,
 });
+console.log(Layer.isLayer(TestOutputs)) // true
 ```
 
 `OidcTokenIssuer.layerFor(claims)` returns a real decodable unsigned JWT built from the same claims `claims()` reports, and `BlobStore.layerMemory` runs the real envelope framing — both exist because a synthetic double previously made the provenance path structurally untestable.

@@ -1,3 +1,8 @@
+/**
+ * Issues runner OIDC tokens and exposes workflow claims for provenance.
+ *
+ * @packageDocumentation
+ */
 import * as Match from "effect/Match";
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
@@ -18,7 +23,18 @@ const $I = $ScratchpadId.create("effected/github-actions/OidcTokenIssuer");
 /**
  * Raised when an OIDC token cannot be issued or read.
  *
+ * **Example** (Inspect an unavailable token service)
+ *
+ * ```ts
+ * import { OidcTokenError } from "@beep/scratchpad/effected/github-actions/OidcTokenIssuer";
+ *
+ * const error = OidcTokenError.make({ reason: "unavailable" });
+ * console.log(error.reason) // unavailable
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class OidcTokenError extends S.TaggedError<OidcTokenError>($I`OidcTokenError`)("OidcTokenError", {
 	/**
@@ -38,6 +54,21 @@ export class OidcTokenError extends S.TaggedError<OidcTokenError>($I`OidcTokenEr
 	/** The underlying failure, preserved structurally. */
 	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying failure, preserved structurally." }),
 }, $I.annote("OidcTokenError", { description: "Raised when an OIDC token cannot be issued or read." })) {
+	/**
+	 * Explains the token failure using its reason, HTTP status, and optional detail.
+	 *
+	 * **Example** (Read a malformed-token explanation)
+	 *
+	 * ```ts
+	 * import { OidcTokenError } from "@beep/scratchpad/effected/github-actions/OidcTokenIssuer";
+	 *
+	 * const error = OidcTokenError.make({ reason: "malformedToken", detail: "missing payload" });
+	 * console.log(error.message) // The OIDC token is not a decodable JWT: missing payload
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return Match.value(this.reason).pipe(
 			Match.when("unavailable", () => "The runner published no OIDC token service; the workflow needs `permissions: id-token: write`"),
@@ -60,7 +91,31 @@ export class OidcTokenError extends S.TaggedError<OidcTokenError>($I`OidcTokenEr
  * published example of an Actions OIDC policy — and renaming them would put a
  * translation layer between a consumer and the specification they are reading.
  *
+ * **Example** (Construct workflow identity claims)
+ *
+ * ```ts
+ * import { OidcClaims } from "@beep/scratchpad/effected/github-actions/OidcTokenIssuer";
+ *
+ * const claims = OidcClaims.make({
+ *   iss: "https://token.actions.githubusercontent.com",
+ *   ref: "refs/heads/main",
+ *   sha: "abc123",
+ *   repository: "owner/repo",
+ *   event_name: "push",
+ *   job_workflow_ref: "owner/repo/.github/workflows/release.yml@refs/heads/main",
+ *   workflow_ref: "owner/repo/.github/workflows/ci.yml@refs/heads/main",
+ *   repository_id: "1",
+ *   repository_owner_id: "2",
+ *   runner_environment: "github-hosted",
+ *   run_id: "3",
+ *   run_attempt: "1",
+ * });
+ * console.log(claims.repository) // owner/repo
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class OidcClaims extends S.Class<OidcClaims>($I`OidcClaims`)({
 	/** The issuer, e.g. `https://token.actions.githubusercontent.com`. */
@@ -124,45 +179,51 @@ const readClaims = Effect.fn("readClaims")(function* (token: string) {
  * and read its decoded `claims`, both failing with {@link OidcTokenError}.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface OidcTokenIssuerShape {
 	/**
-  * Request an ID token, optionally bound to an audience.
-  *
-  * **Details**
-  *
-  * Omitting the audience sends no `audience` parameter at all, matching
-  * `@actions/core.getIDToken` — the runner's default audience is not the empty
-  * string.
-  */
+	 * Request an ID token, optionally bound to an audience.
+	 *
+	 * **Details**
+	 *
+	 * Omitting the audience sends no `audience` parameter at all, matching
+	 * `@actions/core.getIDToken` — the runner's default audience is not the empty
+	 * string.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly token: (audience?: string) => Effect.Effect<Redacted.Redacted<string>, OidcTokenError>;
 	/**
-  * The token's claims, decoded.
-  *
-  * **Gotchas**
-  *
-  * **The signature is deliberately not verified**, for three reasons that are
-  * recorded so nobody "fixes" it:
-  *
-  * 1. The token comes from the runner's own token-service endpoint over TLS.
-  *    The transport is the trust boundary, and the process asking for the
-  *    token is the process that received it.
-  * 2. The claims populate a provenance predicate, not a trust decision.
-  *    Nothing branches on them for authorization; they are recorded as
-  *    attested facts about the workflow that ran.
-  * 3. Verifying would need a JWKS fetch, which turns a decode into a network
-  *    call — untestable without a fixture server, and dependent on GitHub's
-  *    key endpoint being reachable at attestation time.
-  *
-  * A consumer that needs a *verified* token needs a different operation with a
-  * different name and a different error channel, not an option on this one.
-  *
-  * Claims are on the surface rather than left to the call site because that is
-  * what makes the provenance path reachable in a test: a double built with
-  * {@link OidcTokenIssuer.layerFor} answers with real, decodable claims, so
-  * a test cannot silently skip the path under test because the double
-  * returned a token that is not a JWT.
-  */
+	 * The token's claims, decoded.
+	 *
+	 * **Gotchas**
+	 *
+	 * **The signature is deliberately not verified**, for three reasons that are
+	 * recorded so nobody "fixes" it:
+	 *
+	 * 1. The token comes from the runner's own token-service endpoint over TLS.
+	 *    The transport is the trust boundary, and the process asking for the
+	 *    token is the process that received it.
+	 * 2. The claims populate a provenance predicate, not a trust decision.
+	 *    Nothing branches on them for authorization; they are recorded as
+	 *    attested facts about the workflow that ran.
+	 * 3. Verifying would need a JWKS fetch, which turns a decode into a network
+	 *    call — untestable without a fixture server, and dependent on GitHub's
+	 *    key endpoint being reachable at attestation time.
+	 *
+	 * A consumer that needs a *verified* token needs a different operation with a
+	 * different name and a different error channel, not an option on this one.
+	 *
+	 * Claims are on the surface rather than left to the call site because that is
+	 * what makes the provenance path reachable in a test: a double built with
+	 * {@link OidcTokenIssuer.layerFor} answers with real, decodable claims, so
+	 * a test cannot silently skip the path under test because the double
+	 * returned a token that is not a JWT.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly claims: (audience?: string) => Effect.Effect<OidcClaims, OidcTokenError>;
 }
 
@@ -228,7 +289,7 @@ const dies = unstubbed("OidcTokenIssuer.makeTest");
  * **Example** (Read the workflow reference from OIDC claims)
  *
  * ```ts
- * import { OidcTokenIssuer } from "./index.ts";
+ * import { OidcTokenIssuer } from "@beep/scratchpad/effected/github-actions/OidcTokenIssuer";
  * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
@@ -236,61 +297,165 @@ const dies = unstubbed("OidcTokenIssuer.makeTest");
  *   const claims = yield* issuer.claims("sigstore");
  *   return claims.job_workflow_ref;
  * });
+ * console.log(Effect.isEffect(program)) // true
  * ```
  *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class OidcTokenIssuer extends Context.Service<OidcTokenIssuer, OidcTokenIssuerShape>()(
 	$I`OidcTokenIssuer`,
 ) {
 	/**
-  * The live issuer, requesting tokens from the runner's token service.
-  *
-  * **Gotchas**
-  *
-  * Fails with {@link OidcTokenError} (`unavailable`) at use when the workflow
-  * lacks `permissions: id-token: write`.
-  */
+	 * The live issuer, requesting tokens from the runner's token service.
+	 *
+	 * **Gotchas**
+	 *
+	 * Fails with {@link OidcTokenError} (`unavailable`) at use when the workflow
+	 * lacks `permissions: id-token: write`.
+	 *
+	 * **Example** (Construct the live issuer layer)
+	 *
+	 * ```ts
+	 * import { OidcTokenIssuer } from "@beep/scratchpad/effected/github-actions/OidcTokenIssuer";
+	 * import * as Layer from "effect/Layer";
+	 *
+	 * console.log(Layer.isLayer(OidcTokenIssuer.layer)) // true
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layer: Layer.Layer<OidcTokenIssuer, never, ActionEnvironment | HttpClient.HttpClient> = Layer.effect(
 		this,
 		make,
 	);
 
 	/**
-  * An **unsigned** JWT carrying these claims.
-  *
-  * **Gotchas**
-  *
-  * For building test doubles, and nothing else: the signature segment is a
-  * placeholder, so this token would fail any verifier. It exists because a
-  * double returning a synthetic non-JWT would make the provenance path
-  * structurally unreachable in a test.
-  */
+	 * An **unsigned** JWT carrying these claims.
+	 *
+	 * **Gotchas**
+	 *
+	 * For building test doubles, and nothing else: the signature segment is a
+	 * placeholder, so this token would fail any verifier. It exists because a
+	 * double returning a synthetic non-JWT would make the provenance path
+	 * structurally unreachable in a test.
+	 *
+	 * **Example** (Build an unsigned token fixture)
+	 *
+	 * ```ts
+	 * import { OidcClaims, OidcTokenIssuer } from "@beep/scratchpad/effected/github-actions/OidcTokenIssuer";
+	 * import * as Redacted from "effect/Redacted";
+	 *
+	 * const claims = OidcClaims.make({
+	 *   iss: "https://token.actions.githubusercontent.com",
+	 *   ref: "refs/heads/main",
+	 *   sha: "abc123",
+	 *   repository: "owner/repo",
+	 *   event_name: "push",
+	 *   job_workflow_ref: "owner/repo/.github/workflows/release.yml@refs/heads/main",
+	 *   workflow_ref: "owner/repo/.github/workflows/ci.yml@refs/heads/main",
+	 *   repository_id: "1",
+	 *   repository_owner_id: "2",
+	 *   runner_environment: "github-hosted",
+	 *   run_id: "3",
+	 *   run_attempt: "1",
+	 * });
+	 * const token = OidcTokenIssuer.unsignedTokenFor(claims);
+	 * console.log(Redacted.isRedacted(token)) // true
+	 * ```
+	 *
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	static readonly unsignedTokenFor = (claims: OidcClaims): Redacted.Redacted<string> =>
 		Redacted.make(unsignedJwt({ alg: "RS256", typ: "JWT" }, flow(S.encodeUnknownResult(OidcClaims), Result.getOrThrow)(claims)));
 
-	/** A test double. Unstubbed members die rather than answering with a non-token. */
+	/**
+	 * A test double. Unstubbed members die rather than answering with a non-token.
+	 *
+	 * **Example** (Override token issuance in a double)
+	 *
+	 * ```ts
+	 * import { OidcTokenIssuer } from "@beep/scratchpad/effected/github-actions/OidcTokenIssuer";
+	 * import * as Effect from "effect/Effect";
+	 * import * as Redacted from "effect/Redacted";
+	 *
+	 * const issuer = OidcTokenIssuer.makeTest({
+	 *   token: () => Effect.succeed(Redacted.make("test-token")),
+	 * });
+	 * console.log(Redacted.isRedacted(Effect.runSync(issuer.token()))) // true
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	static readonly makeTest = (overrides: Partial<OidcTokenIssuerShape> = {}): OidcTokenIssuerShape => ({
 		token: () => dies("token"),
 		claims: () => dies("claims"),
 		...overrides,
 	});
 
-	/** {@link OidcTokenIssuer.makeTest} behind `Layer.succeed`. */
+	/**
+	 * {@link OidcTokenIssuer.makeTest} behind `Layer.succeed`.
+	 *
+	 * **Example** (Construct the test issuer layer)
+	 *
+	 * ```ts
+	 * import { OidcTokenIssuer } from "@beep/scratchpad/effected/github-actions/OidcTokenIssuer";
+	 * import * as Layer from "effect/Layer";
+	 *
+	 * console.log(Layer.isLayer(OidcTokenIssuer.layerTest())) // true
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layerTest = (overrides: Partial<OidcTokenIssuerShape> = {}): Layer.Layer<OidcTokenIssuer> =>
 		Layer.succeed(OidcTokenIssuer, OidcTokenIssuer.makeTest(overrides));
 
 	/**
-  * A double that answers with these claims, consistently on both members.
-  *
-  * **Details**
-  *
-  * `token()` returns a real decodable JWT built from the same claims
-  * `claims()` returns, so a consumer that decodes the token itself and a
-  * consumer that asks the service both see the same thing. A double whose two
-  * members can disagree is how a test proves a path works while production
-  * takes the other one.
-  */
+	 * A double that answers with these claims, consistently on both members.
+	 *
+	 * **Details**
+	 *
+	 * `token()` returns a real decodable JWT built from the same claims
+	 * `claims()` returns, so a consumer that decodes the token itself and a
+	 * consumer that asks the service both see the same thing. A double whose two
+	 * members can disagree is how a test proves a path works while production
+	 * takes the other one.
+	 *
+	 * **Example** (Read claims from a consistent issuer double)
+	 *
+	 * ```ts
+	 * import { OidcClaims, OidcTokenIssuer } from "@beep/scratchpad/effected/github-actions/OidcTokenIssuer";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const claims = OidcClaims.make({
+	 *   iss: "https://token.actions.githubusercontent.com",
+	 *   ref: "refs/heads/main",
+	 *   sha: "abc123",
+	 *   repository: "owner/repo",
+	 *   event_name: "push",
+	 *   job_workflow_ref: "owner/repo/.github/workflows/release.yml@refs/heads/main",
+	 *   workflow_ref: "owner/repo/.github/workflows/ci.yml@refs/heads/main",
+	 *   repository_id: "1",
+	 *   repository_owner_id: "2",
+	 *   runner_environment: "github-hosted",
+	 *   run_id: "3",
+	 *   run_attempt: "1",
+	 * });
+	 * const program = Effect.gen(function* () {
+	 *   const issuer = yield* OidcTokenIssuer;
+	 *   return (yield* issuer.claims()).repository;
+	 * }).pipe(Effect.provide(OidcTokenIssuer.layerFor(claims)));
+	 * console.log(Effect.runSync(program)) // owner/repo
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layerFor = (claims: OidcClaims): Layer.Layer<OidcTokenIssuer> =>
 		Layer.succeed(OidcTokenIssuer, {
 			token: Effect.fn("OidcTokenIssuer.token")(() => Effect.succeed(OidcTokenIssuer.unsignedTokenFor(claims))),

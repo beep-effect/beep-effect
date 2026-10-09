@@ -34,7 +34,18 @@ const $I = $ScratchpadId.create("effected/github-actions/CheckDocument");
  * for the per-check block a body region carries. A later report for the same
  * key **replaces** the whole entry — last write wins, per field and per check.
  *
+ * **Example** (Construct a successful check report)
+ *
+ * ```ts
+ * import { CheckReport } from "@beep/scratchpad/effected/github-actions/CheckDocument";
+ *
+ * const report = CheckReport.make({ state: "pass", outcome: "clean" });
+ * console.log(report.outcome) // clean
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class CheckReport extends S.Class<CheckReport>($I`CheckReport`)({
 	/** Where the check is now. The last reported state is the authoritative one. */
@@ -60,18 +71,19 @@ export class CheckReport extends S.Class<CheckReport>($I`CheckReport`)({
  * ```ts
  * import * as A from "effect/Array";
  * import * as HashMap from "effect/HashMap";
- * import { CheckDocumentSnapshot, CheckReport } from "./CheckDocument.ts";
+ * import { CheckDocumentSnapshot, CheckReport } from "@beep/scratchpad/effected/github-actions/CheckDocument";
  *
  * const snapshot = CheckDocumentSnapshot.make({
  *   checks: HashMap.make(["build", CheckReport.make({ state: "pass" })]),
  *   order: ["build"],
  * });
  * const states = A.map(snapshot.order, (key) => HashMap.getUnsafe(snapshot.checks, key).state);
+ * console.log(states.join(", ")) // pass
  * ```
  *
+ * @public
  * @category models
  * @since 0.0.0
- * @public
  */
 export class CheckDocumentSnapshot extends S.Class<CheckDocumentSnapshot>($I`CheckDocumentSnapshot`)({
 	checks: S.HashMap(S.String, CheckReport).annotateKey({ description: "The latest report for each check." }),
@@ -98,7 +110,18 @@ const KIND_PROSE = {
  * `cause`. Callers of `flush` branch on `kind`; the background reconciler
  * never fails a fiber with this — it logs and retries on the next report.
  *
+ * **Example** (Describe a failed document read)
+ *
+ * ```ts
+ * import { CheckDocumentError } from "@beep/scratchpad/effected/github-actions/CheckDocument";
+ *
+ * const error = CheckDocumentError.make({ kind: "read" });
+ * console.log(error.message) // Reading the check document's current text failed
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class CheckDocumentError extends S.TaggedError<CheckDocumentError>($I`CheckDocumentError`)("CheckDocumentError", {
 	/** Which phase failed: regenerating the document, reading it back, or writing it. */
@@ -106,6 +129,21 @@ export class CheckDocumentError extends S.TaggedError<CheckDocumentError>($I`Che
 	/** The underlying failure. */
 	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying failure." }),
 }, $I.annote("CheckDocumentError", { description: "Raised when the check document cannot be regenerated, read back or written." })) {
+	/**
+	 * Describes the failed reconciliation phase independently of its underlying cause.
+	 *
+	 * **Example** (Read the sink failure message)
+	 *
+	 * ```ts
+	 * import { CheckDocumentError } from "@beep/scratchpad/effected/github-actions/CheckDocument";
+	 *
+	 * const error = CheckDocumentError.make({ kind: "sink" });
+	 * console.log(error.message) // Writing the check document failed
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return KIND_PROSE[this.kind];
 	}
@@ -124,7 +162,18 @@ export class CheckDocumentError extends S.TaggedError<CheckDocumentError>($I`Che
  * lexically otherwise), and two equal stamps compare
  * as at-least-as-recent — a run may refine its own regions.
  *
+ * **Example** (Construct a stable run identity)
+ *
+ * ```ts
+ * import { CheckDocumentStamp } from "@beep/scratchpad/effected/github-actions/CheckDocument";
+ *
+ * const stamp = CheckDocumentStamp.make({ at: "2026-01-01T00:00:00Z", runId: "42" });
+ * console.log(stamp.runId) // 42
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class CheckDocumentStamp extends S.Class<CheckDocumentStamp>($I`CheckDocumentStamp`)({
 	/** When the run started — ideally an ISO-8601 instant. */
@@ -133,14 +182,27 @@ export class CheckDocumentStamp extends S.Class<CheckDocumentStamp>($I`CheckDocu
 	runId: S.String.annotateKey({ description: "The run's identifier — on GitHub, `GITHUB_RUN_ID`." }),
 }, $I.annote("CheckDocumentStamp", { description: "A run's identity for staleness ordering: when it started and which run it is." })) {
 	/**
-  * Is `incoming` allowed to overwrite regions stamped `existing`?
-  *
-  * **Details**
-  *
-  * Total and reflexive: equal stamps answer `true`, so a run always may
-  * rewrite what it wrote itself. Only a strictly older `incoming` answers
-  * `false`.
-  */
+	 * Is `incoming` allowed to overwrite regions stamped `existing`?
+	 *
+	 * **Details**
+	 *
+	 * Total and reflexive: equal stamps answer `true`, so a run always may
+	 * rewrite what it wrote itself. Only a strictly older `incoming` answers
+	 * `false`.
+	 *
+	 * **Example** (Break timestamp ties by run identifier)
+	 *
+	 * ```ts
+	 * import { CheckDocumentStamp } from "@beep/scratchpad/effected/github-actions/CheckDocument";
+	 *
+	 * const existing = { at: "2026-01-01T00:00:00Z", runId: "41" };
+	 * const incoming = { at: existing.at, runId: "42" };
+	 * console.log(CheckDocumentStamp.isAtLeastAsRecent(incoming, existing)) // true
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
+	 */
 	static isAtLeastAsRecent(
 		incoming: { readonly at: string; readonly runId: string },
 		existing: { readonly at: string; readonly runId: string },
@@ -228,6 +290,8 @@ const maxStampOf = (
  * set).
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type CheckFlushOutcome = "written" | "unchanged" | "stale";
 
@@ -254,6 +318,8 @@ export type CheckFlushOutcome = "written" | "unchanged" | "stale";
  * exactly `{ write }`.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type CheckDocumentSink<E = unknown> =
 	| ((rendered: string) => Effect.Effect<unknown, E>)
@@ -268,6 +334,8 @@ export type CheckDocumentSink<E = unknown> =
  * Options for {@link CheckDocument.layer}.
  *
  * @public
+ * @category configuration
+ * @since 0.0.0
  */
 export interface CheckDocumentOptions<E = unknown> {
 	/** The managed document's namespace, e.g. your action's name. */
@@ -344,6 +412,8 @@ export interface CheckDocumentOptions<E = unknown> {
  * read the `checks` registry and `flush` the document.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface CheckDocumentShape {
 	/**
@@ -394,7 +464,8 @@ export interface CheckDocumentShape {
  *
  * **Example** (Rendering a check status table)
  * ```ts
- * import { CheckDocument, CheckReport, GitHubMarkdown } from "./index.ts";
+ * import { CheckDocument, CheckReport } from "@beep/scratchpad/effected/github-actions/CheckDocument";
+ * import { GitHubMarkdown } from "@beep/scratchpad/effected/github-actions/GitHubMarkdown";
  * import * as Effect from "effect/Effect";
  * import * as A from "effect/Array";
  * import * as HashMap from "effect/HashMap";
@@ -423,24 +494,47 @@ export interface CheckDocumentShape {
  *   yield* doc.report("build", CheckReport.make({ state: "pass", outcome: "clean" }));
  *   yield* doc.flush;
  * });
+ * const provided = Effect.provide(program, layer);
+ * console.log(Effect.isEffect(provided)) // true
  * ```
  *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class CheckDocument extends Context.Service<CheckDocument, CheckDocumentShape>()(
 	$I`CheckDocument`,
 ) {
 	/**
-  * The reconciler over one document.
-  *
-  * **Details**
-  *
-  * Forks the debounce fiber into the layer's scope and registers a
-  * finalizer that flushes once more on the way out, so the scope closing
-  * mid-window cannot strand the final state. A background pass that fails
-  * logs a structured warning and leaves the registry intact — the next
-  * report retries it; only `flush` surfaces the typed error.
-  */
+	 * The reconciler over one document.
+	 *
+	 * **Details**
+	 *
+	 * Forks the debounce fiber into the layer's scope and registers a
+	 * finalizer that flushes once more on the way out, so the scope closing
+	 * mid-window cannot strand the final state. A background pass that fails
+	 * logs a structured warning and leaves the registry intact — the next
+	 * report retries it; only `flush` surfaces the typed error.
+	 *
+	 * **Example** (Construct a document reconciler layer)
+	 *
+	 * ```ts
+	 * import { CheckDocument } from "@beep/scratchpad/effected/github-actions/CheckDocument";
+	 * import * as Effect from "effect/Effect";
+	 * import * as Layer from "effect/Layer";
+	 *
+	 * const layer = CheckDocument.layer({
+	 *   namespace: "my-action",
+	 *   key: "checks",
+	 *   render: () => [["summary", "No checks yet"]],
+	 *   sink: () => Effect.void,
+	 * });
+	 * console.log(Layer.isLayer(layer)) // true
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static layer<E>(options: CheckDocumentOptions<E>): Layer.Layer<CheckDocument> {
 		return Layer.effect(
 			CheckDocument,
@@ -581,7 +675,22 @@ export class CheckDocument extends Context.Service<CheckDocument, CheckDocumentS
 		);
 	}
 
-	/** An inert double; unstubbed members die naming themselves. */
+	/**
+	 * An inert double; unstubbed members die naming themselves.
+	 *
+	 * **Example** (Stub an immediate flush)
+	 *
+	 * ```ts
+	 * import { CheckDocument } from "@beep/scratchpad/effected/github-actions/CheckDocument";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const double = CheckDocument.makeTest({ flush: Effect.succeed("unchanged") });
+	 * console.log(Effect.runSync(double.flush)) // unchanged
+	 * ```
+	 *
+	 * @category testing
+	 * @since 0.0.0
+	 */
 	static readonly makeTest = (overrides: Partial<CheckDocumentShape> = {}): CheckDocumentShape => ({
 		report: () => dies("report"),
 		checks: dies("checks"),
@@ -589,7 +698,23 @@ export class CheckDocument extends Context.Service<CheckDocument, CheckDocumentS
 		...overrides,
 	});
 
-	/** {@link CheckDocument.makeTest} behind a `Layer`. */
+	/**
+	 * {@link CheckDocument.makeTest} behind a `Layer`.
+	 *
+	 * **Example** (Provide a test document service)
+	 *
+	 * ```ts
+	 * import { CheckDocument } from "@beep/scratchpad/effected/github-actions/CheckDocument";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const layer = CheckDocument.layerTest({ flush: Effect.succeed("unchanged") });
+	 * const program = Effect.flatMap(CheckDocument, (doc) => doc.flush);
+	 * console.log(Effect.runSync(Effect.provide(program, layer))) // unchanged
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layerTest = (overrides: Partial<CheckDocumentShape> = {}): Layer.Layer<CheckDocument> =>
 		Layer.succeed(CheckDocument, CheckDocument.makeTest(overrides));
 }

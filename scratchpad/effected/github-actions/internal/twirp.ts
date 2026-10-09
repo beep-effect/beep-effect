@@ -24,11 +24,27 @@ import * as O from "@beep/utils/Option";
  * miss for a lookup — two different answers that the *caller* has to choose
  * between, so the transport hands back a sentinel rather than deciding.
  *
+ * **Example** (Recognize the shared conflict sentinel)
+ *
+ * ```ts
+ * import { CONFLICT } from "@beep/scratchpad/effected/github-actions/internal/twirp"
+ *
+ * console.log(Symbol.keyFor(CONFLICT)) // @effected/github-actions/twirp/conflict
+ * ```
+ *
  * @internal
+ * @category constants
+ * @since 0.0.0
  */
 export const CONFLICT: unique symbol = Symbol.for("@effected/github-actions/twirp/conflict");
 
-/** A decoded body, or {@link CONFLICT}. @internal */
+/**
+ * A decoded body, or {@link CONFLICT}.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type TwirpResult<T> = T | typeof CONFLICT;
 
 /**
@@ -41,6 +57,8 @@ export type TwirpResult<T> = T | typeof CONFLICT;
  * which makes a reworded message a silent policy change.
  *
  * @internal
+ * @category models
+ * @since 0.0.0
  */
 export interface TwirpFailure {
 	/** The RPC that failed, e.g. `CreateCacheEntry`. */
@@ -63,7 +81,18 @@ export interface TwirpFailure {
  * `status`, `detail` and `cause` under the same names, so each spreads this
  * and adds its own identifier.
  *
+ * **Example** (Map a refused RPC into error fields)
+ *
+ * ```ts
+ * import { twirpFailureFields } from "@beep/scratchpad/effected/github-actions/internal/twirp"
+ *
+ * const fields = twirpFailureFields({ method: "CreateCacheEntry", kind: "status", status: 403 })
+ * console.log(fields.reason) // refused
+ * ```
+ *
  * @internal
+ * @category mapping
+ * @since 0.0.0
  */
 export const twirpFailureFields = (
 	failure: TwirpFailure,
@@ -92,7 +121,18 @@ export const twirpFailureFields = (
  * body that is not JSON — is the backend saying "never", and retrying it four
  * times only makes a broken call take half a minute to fail.
  *
+ * **Example** (Distinguish transient and malformed failures)
+ *
+ * ```ts
+ * import { isRetryable } from "@beep/scratchpad/effected/github-actions/internal/twirp"
+ *
+ * console.log(isRetryable({ method: "CreateCacheEntry", kind: "status", status: 503 })) // true
+ * console.log(isRetryable({ method: "CreateCacheEntry", kind: "malformed" })) // false
+ * ```
+ *
  * @internal
+ * @category predicates
+ * @since 0.0.0
  */
 export const isRetryable = (failure: TwirpFailure): boolean => {
 	if (failure.kind === "transport") {
@@ -116,7 +156,28 @@ const RETRIES = 4;
  * without it. A non-retryable failure never sleeps, which is what keeps the
  * ordinary failure tests clock-free.
  *
+ * **Example** (Construct an authenticated Twirp call)
+ *
+ * ```ts
+ * import { twirpCall } from "@beep/scratchpad/effected/github-actions/internal/twirp"
+ * import * as Effect from "effect/Effect"
+ * import * as Redacted from "effect/Redacted"
+ * import { HttpClient } from "effect/http"
+ *
+ * const program = Effect.flatMap(HttpClient.HttpClient, (http) => twirpCall({
+ *   http,
+ *   baseUrl: "https://results.example.com/",
+ *   service: "github.actions.results.api.v1.CacheService",
+ *   token: Redacted.make("example-token"),
+ *   method: "CreateCacheEntry",
+ *   body: { key: "build-cache" }
+ * }))
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
  * @internal
+ * @category clients
+ * @since 0.0.0
  */
 export const twirpCall = (options: {
 	readonly http: HttpClient.HttpClient;
@@ -165,7 +226,17 @@ const hasField = <Key extends string>(body: object, key: Key): body is object & 
  * `signed_upload_url`. Reading both costs one function and removes a class of
  * failure that presents as "the cache silently never hits".
  *
+ * **Example** (Read a snake-case backend field)
+ *
+ * ```ts
+ * import { field } from "@beep/scratchpad/effected/github-actions/internal/twirp"
+ *
+ * console.log(field({ signed_upload_url: "https://example.com/upload" }, "signedUploadUrl")) // https://example.com/upload
+ * ```
+ *
  * @internal
+ * @category parsing
+ * @since 0.0.0
  */
 export const field: {
 	(body: unknown, name: string): unknown;
@@ -178,7 +249,22 @@ export const field: {
 	return (hasField(body, name) ? body[name] : undefined) ?? (hasField(body, snake) ? body[snake] : undefined);
 });
 
-/** {@link field}, as a string, or `undefined` when absent or empty. @internal */
+/**
+ * {@link field}, as a string, or `undefined` when absent or empty.
+ *
+ * **Example** (Reject empty strings while accepting snake case)
+ *
+ * ```ts
+ * import { stringField } from "@beep/scratchpad/effected/github-actions/internal/twirp"
+ *
+ * console.log(stringField({ signed_upload_url: "https://example.com/upload" }, "signedUploadUrl")) // https://example.com/upload
+ * console.log(stringField({ signedUploadUrl: "" }, "signedUploadUrl")) // undefined
+ * ```
+ *
+ * @internal
+ * @category parsing
+ * @since 0.0.0
+ */
 export const stringField: {
 	(body: unknown, name: string): string | undefined;
 	(name: string): (body: unknown) => string | undefined;
@@ -187,5 +273,20 @@ export const stringField: {
 	return P.isString(value) && value !== "" ? value : undefined;
 });
 
-/** Whether a Twirp response carries `ok: true`. @internal */
+/**
+ * Whether a Twirp response carries `ok: true`.
+ *
+ * **Example** (Require a literal success flag)
+ *
+ * ```ts
+ * import { isOk } from "@beep/scratchpad/effected/github-actions/internal/twirp"
+ *
+ * console.log(isOk({ ok: true })) // true
+ * console.log(isOk({ ok: "true" })) // false
+ * ```
+ *
+ * @internal
+ * @category predicates
+ * @since 0.0.0
+ */
 export const isOk = (body: unknown): boolean => field(body, "ok") === true;

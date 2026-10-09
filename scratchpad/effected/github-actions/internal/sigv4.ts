@@ -40,6 +40,17 @@ const hmac = (key: Uint8Array | string, value: string): Uint8Array =>
  * containing any of them signs one string and requests another — which fails as
  * an opaque `SignatureDoesNotMatch` rather than as anything that names the
  * character. The unreserved set is exactly `A-Za-z0-9-_.~`.
+ *
+ * **Example** (Encode reserved path characters)
+ *
+ * ```ts
+ * import { uriEncode } from "@beep/scratchpad/effected/github-actions/internal/sigv4"
+ *
+ * console.log(uriEncode("a b+c")) // a%20b%2Bc
+ * ```
+ *
+ * @category encoding
+ * @since 0.0.0
  */
 export const uriEncode = (value: string): string =>
 	encodeURIComponent(value).replace(
@@ -47,7 +58,11 @@ export const uriEncode = (value: string): string =>
 		(character) => `%${character.charCodeAt(0).toString(16).toUpperCase()}`,
 	);
 
-/** The credentials and coordinates a signature needs. */
+/**
+ * The credentials and coordinates a signature needs.
+ * @category models
+ * @since 0.0.0
+ */
 export interface SigV4Credentials {
 	readonly accessKeyId: string;
 	readonly secretAccessKey: string;
@@ -57,7 +72,11 @@ export interface SigV4Credentials {
 	readonly service: string;
 }
 
-/** One request to sign. */
+/**
+ * One request to sign.
+ * @category models
+ * @since 0.0.0
+ */
 export interface SigV4Request {
 	readonly method: string;
 	/** The raw path; every segment is encoded here, preserving empty segments. */
@@ -87,6 +106,32 @@ const timestamps = (now: Date): { readonly amzDate: string; readonly dateStamp: 
  * Exported separately from {@link sign} so a test can pin it against AWS's
  * **own documented** canonical request rather than against this
  * implementation's output.
+ *
+ * **Example** (Inspect canonical signing headers)
+ *
+ * ```ts
+ * import { canonicalize } from "@beep/scratchpad/effected/github-actions/internal/sigv4"
+ *
+ * const request = {
+ *   method: "GET",
+ *   path: "/object.txt",
+ *   host: "example.s3.amazonaws.com",
+ *   headers: {},
+ *   body: new Uint8Array(),
+ *   now: new Date("2013-05-24T00:00:00Z")
+ * }
+ * const credentials = {
+ *   accessKeyId: "example-access-key",
+ *   secretAccessKey: "example-secret-key",
+ *   region: "us-east-1",
+ *   service: "s3"
+ * }
+ *
+ * console.log(canonicalize(request, credentials).signedHeaders) // host;x-amz-content-sha256;x-amz-date
+ * ```
+ *
+ * @category encoding
+ * @since 0.0.0
  */
 export const canonicalize: {
 	(request: SigV4Request, credentials: SigV4Credentials): {
@@ -156,6 +201,18 @@ export const canonicalize: {
  *
  * Four nested HMACs over date, region, service and the literal `aws4_request`.
  * Exported so a test can reproduce AWS's documented derivation example.
+ *
+ * **Example** (Derive a SHA-256 signing key)
+ *
+ * ```ts
+ * import { signingKey } from "@beep/scratchpad/effected/github-actions/internal/sigv4"
+ *
+ * const key = signingKey("example-secret-key", "20130524", "us-east-1", "s3")
+ * console.log(key.length) // 32
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
  */
 export const signingKey: {
 	(secretAccessKey: string, dateStamp: string, region: string, service: string): Uint8Array;
@@ -172,6 +229,32 @@ export const signingKey: {
  * — `host`, `x-amz-date`, `x-amz-content-sha256`, the optional
  * `x-amz-security-token` and `authorization` — so a caller sends exactly what
  * was signed rather than assembling a second, subtly different set.
+ *
+ * **Example** (Sign a reproducible S3 request)
+ *
+ * ```ts
+ * import { sign } from "@beep/scratchpad/effected/github-actions/internal/sigv4"
+ *
+ * const request = {
+ *   method: "GET",
+ *   path: "/object.txt",
+ *   host: "example.s3.amazonaws.com",
+ *   headers: {},
+ *   body: new Uint8Array(),
+ *   now: new Date("2013-05-24T00:00:00Z")
+ * }
+ * const credentials = {
+ *   accessKeyId: "example-access-key",
+ *   secretAccessKey: "example-secret-key",
+ *   region: "us-east-1",
+ *   service: "s3"
+ * }
+ *
+ * console.log(sign(request, credentials)["x-amz-date"]) // 20130524T000000Z
+ * ```
+ *
+ * @category encoding
+ * @since 0.0.0
  */
 export const sign: {
 	(request: SigV4Request, credentials: SigV4Credentials): Record<string, string>;
@@ -189,5 +272,18 @@ export const sign: {
 	};
 });
 
-/** The hex SHA-256 of a string, for tests that pin an intermediate. */
+/**
+ * The hex SHA-256 of a string, for tests that pin an intermediate.
+ *
+ * **Example** (Hash an empty payload)
+ *
+ * ```ts
+ * import { digestHex } from "@beep/scratchpad/effected/github-actions/internal/sigv4"
+ *
+ * console.log(digestHex("")) // e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
 export { sha256Hex as digestHex };

@@ -23,7 +23,18 @@ const $I = $ScratchpadId.create("effected/github-actions/BlobStore");
 /**
  * Raised when a blob cannot be stored or retrieved.
  *
+ * **Example** (Describe a refused blob write)
+ *
+ * ```ts
+ * import { BlobStoreError } from "@beep/scratchpad/effected/github-actions/BlobStore";
+ *
+ * const error = BlobStoreError.make({ reason: "refused", key: "build/1", status: 403 });
+ * console.log(error.message) // The blob store refused "build/1" with status 403
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class BlobStoreError extends S.TaggedError<BlobStoreError>($I`BlobStoreError`)("BlobStoreError", {
 	/**
@@ -41,6 +52,21 @@ export class BlobStoreError extends S.TaggedError<BlobStoreError>($I`BlobStoreEr
 	/** The underlying failure, preserved structurally. */
 	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying failure, preserved structurally." }),
 }, $I.annote("BlobStoreError", { description: "Raised when a blob cannot be stored or retrieved." })) {
+	/**
+	 * Describes the storage failure with the available key, status and detail.
+	 *
+	 * **Example** (Read the failure message)
+	 *
+	 * ```ts
+	 * import { BlobStoreError } from "@beep/scratchpad/effected/github-actions/BlobStore";
+	 *
+	 * const error = BlobStoreError.make({ reason: "unreachable", key: "build/1" });
+	 * console.log(error.message) // The blob store could not be reached for "build/1"
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return Match.value(this.reason).pipe(
 			Match.when("unreachable", () => `The blob store could not be reached${this.key === undefined ? "" : ` for "${this.key}"`}`),
@@ -56,6 +82,8 @@ export class BlobStoreError extends S.TaggedError<BlobStoreError>($I`BlobStoreEr
  * A stored value: the caller's metadata beside the bytes it describes.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface StoredBlob<A> {
 	/** The caller's own metadata, decoded through the caller's own schema. */
@@ -69,6 +97,8 @@ export interface StoredBlob<A> {
  * blobs that carry the caller's own metadata.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface BlobStoreShape {
 	/**
@@ -97,6 +127,8 @@ export interface BlobStoreShape {
  * How to reach an S3-compatible object store.
  *
  * @public
+ * @category configuration
+ * @since 0.0.0
  */
 export interface S3Config {
 	/** The bucket name. */
@@ -143,40 +175,77 @@ export interface S3Config {
  * **Example** (Store and retrieve a blob with typed metadata)
  *
  * ```ts
- * import { BlobStore } from "./index.ts";
+ * import { BlobStore } from "@beep/scratchpad/effected/github-actions/BlobStore";
  * import * as Effect from "effect/Effect";
+ * import * as O from "effect/Option";
  * import * as S from "effect/Schema";
  *
  * class Meta extends S.Class<Meta>("Meta")({ tag: S.String, durationMs: S.Finite }) {}
- *
+ * const bytes = new Uint8Array([1, 2, 3]);
  * const program = Effect.gen(function* () {
  *   const store = yield* BlobStore;
  *   yield* store.put("build/1", { metadata: Meta.make({ tag: "x", durationMs: 12 }), body: bytes }, Meta);
- *   return yield* store.get("build/1", Meta);
+ *   const stored = yield* store.get("build/1", Meta);
+ *   return O.map(stored, (blob) => blob.metadata.tag).pipe(O.getOrElse(() => "missing"));
  * });
+ * console.log(Effect.runSync(Effect.provide(program, BlobStore.layerMemory))) // x
  * ```
  *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class BlobStore extends Context.Service<BlobStore, BlobStoreShape>()($I`BlobStore`) {
 	/**
-  * An S3-compatible backend, signed with SigV4.
-  *
-  * **Details**
-  *
-  * No `@aws-sdk/*` dependency: signing is a specified algorithm over strings
-  * and HMACs, and this package already has `node:crypto`. The SDK's weight is
-  * in credential management, retries and a service catalogue none of which
-  * this needs.
-  *
-  * A parameterized layer factory mints a fresh layer per call and layers
-  * memoize by reference — bind it to a `const` rather than calling it at each
-  * composition site.
-  */
+	 * An S3-compatible backend, signed with SigV4.
+	 *
+	 * **Details**
+	 *
+	 * No `@aws-sdk/*` dependency: signing is a specified algorithm over strings
+	 * and HMACs, and this package already has `node:crypto`. The SDK's weight is
+	 * in credential management, retries and a service catalogue none of which
+	 * this needs.
+	 *
+	 * A parameterized layer factory mints a fresh layer per call and layers
+	 * memoize by reference — bind it to a `const` rather than calling it at each
+	 * composition site.
+	 *
+	 * **Example** (Configure an S3-compatible backend)
+	 *
+	 * ```ts
+	 * import { BlobStore } from "@beep/scratchpad/effected/github-actions/BlobStore";
+	 * import * as Layer from "effect/Layer";
+	 * import * as Redacted from "effect/Redacted";
+	 *
+	 * const layer = BlobStore.layerS3({
+	 *   bucket: "build-cache",
+	 *   region: "us-east-1",
+	 *   accessKeyId: "example-key",
+	 *   secretAccessKey: Redacted.make("example-secret"),
+	 * });
+	 * console.log(Layer.isLayer(layer)) // true
+	 * ```
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layerS3 = (config: S3Config): Layer.Layer<BlobStore, never, HttpClient.HttpClient | ActionOutputs> =>
 		Layer.effect(BlobStore, makeS3(config));
 
-	/** A test double. Unstubbed members die rather than reporting a miss. */
+	/**
+	 * A test double. Unstubbed members die rather than reporting a miss.
+	 *
+	 * **Example** (Stub a key-presence check)
+	 *
+	 * ```ts
+	 * import { BlobStore } from "@beep/scratchpad/effected/github-actions/BlobStore";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const store = BlobStore.makeTest({ has: (_key) => Effect.succeed(true) });
+	 * console.log(Effect.runSync(store.has("build/1"))) // true
+	 * ```
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	static readonly makeTest = (overrides: Partial<BlobStoreShape> = {}): BlobStoreShape => ({
 		get: () => dies("get"),
 		put: () => dies("put"),
@@ -184,20 +253,56 @@ export class BlobStore extends Context.Service<BlobStore, BlobStoreShape>()($I`B
 		...overrides,
 	});
 
-	/** {@link BlobStore.makeTest} behind `Layer.succeed`. */
+	/**
+	 * {@link BlobStore.makeTest} behind `Layer.succeed`.
+	 *
+	 * **Example** (Provide a stubbed blob service)
+	 *
+	 * ```ts
+	 * import { BlobStore } from "@beep/scratchpad/effected/github-actions/BlobStore";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const layer = BlobStore.layerTest({ has: (_key) => Effect.succeed(false) });
+	 * const program = Effect.flatMap(BlobStore, (store) => store.has("build/1"));
+	 * console.log(Effect.runSync(Effect.provide(program, layer))) // false
+	 * ```
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layerTest = (overrides: Partial<BlobStoreShape> = {}): Layer.Layer<BlobStore> =>
 		Layer.succeed(BlobStore, BlobStore.makeTest(overrides));
 
 	/**
-  * An in-memory backend.
-  *
-  * **Details**
-  *
-  * Not a stub: it runs the real {@link BlobEnvelope} framing, so a round trip
-  * through it exercises encode and decode exactly as a network backend would.
-  * A test that wants to prove its metadata survives storage should use this
-  * rather than a double whose `get` returns whatever its `put` was handed.
-  */
+	 * An in-memory backend.
+	 *
+	 * **Details**
+	 *
+	 * Not a stub: it runs the real {@link BlobEnvelope} framing, so a round trip
+	 * through it exercises encode and decode exactly as a network backend would.
+	 * A test that wants to prove its metadata survives storage should use this
+	 * rather than a double whose `get` returns whatever its `put` was handed.
+	 *
+	 * **Example** (Round trip metadata through the memory backend)
+	 *
+	 * ```ts
+	 * import { BlobStore } from "@beep/scratchpad/effected/github-actions/BlobStore";
+	 * import * as Effect from "effect/Effect";
+	 * import * as O from "effect/Option";
+	 * import * as S from "effect/Schema";
+	 *
+	 * class Meta extends S.Class<Meta>("Meta")({ tag: S.String, durationMs: S.Finite }) {}
+	 * const bytes = new Uint8Array([1, 2, 3]);
+	 * const program = Effect.gen(function* () {
+	 *   const store = yield* BlobStore;
+	 *   yield* store.put("build/1", { metadata: Meta.make({ tag: "x", durationMs: 12 }), body: bytes }, Meta);
+	 *   const stored = yield* store.get("build/1", Meta);
+	 *   return O.map(stored, (blob) => blob.metadata.tag).pipe(O.getOrElse(() => "missing"));
+	 * });
+	 * console.log(Effect.runSync(Effect.provide(program, BlobStore.layerMemory))) // x
+	 * ```
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layerMemory: Layer.Layer<BlobStore> = Layer.sync(BlobStore, () => {
 		const entries = MutableHashMap.empty<string, Uint8Array>();
 		return {

@@ -12,7 +12,21 @@ import * as Effect from "effect/Effect";
 
 const $I = $ScratchpadId.create("effected/github-actions/internal/unstubbed");
 
-/** A test-double member was called without an override. */
+/**
+ * A test-double member was called without an override.
+ *
+ * **Example** (Construct an unstubbed-member error)
+ *
+ * ```ts
+ * import { UnstubbedMemberError } from "@beep/scratchpad/effected/github-actions/internal/unstubbed"
+ *
+ * const error = UnstubbedMemberError.make({ message: "Cache: save() needs an override." })
+ * console.log(error.message) // Cache: save() needs an override.
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
 export class UnstubbedMemberError extends S.TaggedError<UnstubbedMemberError>($I`UnstubbedMemberError`)("UnstubbedMemberError", {
 	message: S.String,
 }, $I.annote("UnstubbedMemberError", { description: "A test-double member was called without an override." })) {}
@@ -22,7 +36,20 @@ export class UnstubbedMemberError extends S.TaggedError<UnstubbedMemberError>($I
  * `Effect` that defects naming `save` when run. Each package double binds its
  * own name once, then lists its members.
  *
+ * **Example** (Construct a failing test-double member)
+ *
+ * ```ts
+ * import { unstubbed } from "@beep/scratchpad/effected/github-actions/internal/unstubbed"
+ * import * as Effect from "effect/Effect"
+ *
+ * const dies = unstubbed("Cache")
+ * const save = dies("save")
+ * console.log(Effect.isEffect(save)) // true
+ * ```
+ *
  * @internal
+ * @category testing
+ * @since 0.0.0
  */
 export const unstubbed =
 	(double: string) =>

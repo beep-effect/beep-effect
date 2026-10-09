@@ -67,7 +67,12 @@ const pwshLiteral = (value: string): string => `'${value.replaceAll("'", "''")}'
 const pwsh = (script: string, options?: ChildProcess.CommandOptions): ChildProcess.StandardCommand =>
 	ChildProcess.make("pwsh", ["-NoProfile", "-NonInteractive", "-Command", script], options);
 
-/** What {@link zipCommand} packs. */
+/**
+ * What {@link zipCommand} packs.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export interface ZipCommandOptions {
 	/** Whether the runner is Windows (`RUNNER_OS`), which selects the .NET `ZipFile` over `zip`. */
 	readonly windows: boolean;
@@ -115,7 +120,18 @@ const dotnetCompressionLevel = (level: number): string =>
  * entries — and this function does not check; `Artifact.zip` rejects such a
  * file as `invalidOptions`, naming it, before anything is written.
  *
+ *
+ * **Example** (Serialize archive entries)
+ *
+ * ```ts
+ * import { zipManifest } from "@beep/scratchpad/effected/github-actions/internal/archiveCommands";
+ *
+ * console.log(JSON.stringify(zipManifest(["a.txt", "dir/b.txt"]))) // "a.txt\ndir/b.txt\n"
+ * ```
+ *
  * @internal
+ * @category formatting
+ * @since 0.0.0
  */
 export const zipManifest = (files: ReadonlyArray<string>): string => files.map((file) => `${file}\n`).join("");
 
@@ -129,7 +145,19 @@ export const zipManifest = (files: ReadonlyArray<string>): string => files.map((
  * a failed entry cannot leave the handle open (the module doc says why not
  * `Compress-Archive`, and why the list travels in a file).
  *
+ *
+ * **Example** (Construct a POSIX zip command)
+ *
+ * ```ts
+ * import { zipCommand } from "@beep/scratchpad/effected/github-actions/internal/archiveCommands";
+ *
+ * const command = zipCommand({ windows: false, root: "/work", files: ["a.txt"], manifest: "/work/files.txt", destination: "/work/archive.zip", level: 6 });
+ * console.log(command.command) // zip
+ * ```
+ *
  * @internal
+ * @category commands
+ * @since 0.0.0
  */
 export const zipCommand = (options: ZipCommandOptions): ChildProcess.StandardCommand => {
 	const level = clampLevel(options.level);
@@ -159,7 +187,12 @@ export const zipCommand = (options: ZipCommandOptions): ChildProcess.StandardCom
 	);
 };
 
-/** What {@link unzipCommand} unpacks. */
+/**
+ * What {@link unzipCommand} unpacks.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export interface UnzipCommandOptions {
 	/** Whether the runner is Windows (`RUNNER_OS`), which selects the .NET `ZipFile` over `unzip`. */
 	readonly windows: boolean;
@@ -175,7 +208,19 @@ export interface UnzipCommandOptions {
  * `$ErrorActionPreference = 'Stop'` and a stderr-writing try/catch on
  * Windows (the module doc says why both halves are load-bearing).
  *
+ *
+ * **Example** (Construct a POSIX unzip command)
+ *
+ * ```ts
+ * import { unzipCommand } from "@beep/scratchpad/effected/github-actions/internal/archiveCommands";
+ *
+ * const command = unzipCommand({ windows: false, source: "/work/archive.zip", destination: "/work/output" });
+ * console.log(command.command) // unzip
+ * ```
+ *
  * @internal
+ * @category commands
+ * @since 0.0.0
  */
 export const unzipCommand = (options: UnzipCommandOptions): ChildProcess.StandardCommand =>
 	options.windows
@@ -186,7 +231,12 @@ export const unzipCommand = (options: UnzipCommandOptions): ChildProcess.Standar
 			)
 		: ChildProcess.make("unzip", ["-oq", options.source, "-d", options.destination]);
 
-/** What {@link tarExtractCommand} unpacks. */
+/**
+ * What {@link tarExtractCommand} unpacks.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export interface TarExtractCommandOptions {
 	/** The tarball. */
 	readonly archive: string;
@@ -201,7 +251,19 @@ export interface TarExtractCommandOptions {
  * every platform — bsdtar ships on the Windows runner image — so unlike the
  * zip pair there is no `windows` switch.
  *
+ *
+ * **Example** (Construct a POSIX tar command)
+ *
+ * ```ts
+ * import { tarExtractCommand } from "@beep/scratchpad/effected/github-actions/internal/archiveCommands";
+ *
+ * const command = tarExtractCommand({ archive: "/work/archive.tar.gz", destination: "/work/output" });
+ * console.log(command.command) // tar
+ * ```
+ *
  * @internal
+ * @category commands
+ * @since 0.0.0
  */
 export const tarExtractCommand = (options: TarExtractCommandOptions): ChildProcess.StandardCommand => {
 	const flags = options.flags === undefined || options.flags.length === 0 ? ["xzf"] : [...options.flags];

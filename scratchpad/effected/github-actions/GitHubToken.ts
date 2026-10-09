@@ -19,7 +19,18 @@ const $I = $ScratchpadId.create("effected/github-actions/GitHubToken");
 /**
  * Raised when the token an earlier phase persisted cannot be used.
  *
+ * **Example** (Identify an expired persisted token)
+ *
+ * ```ts
+ * import { GitHubTokenError } from "@beep/scratchpad/effected/github-actions/GitHubToken";
+ *
+ * const error = GitHubTokenError.make({ reason: "expired", expiresAt: "2026-10-09T12:00:00Z" });
+ * console.log(error.reason) // expired
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class GitHubTokenError extends S.TaggedError<GitHubTokenError>($I`GitHubTokenError`)("GitHubTokenError", {
 	/**
@@ -31,6 +42,20 @@ export class GitHubTokenError extends S.TaggedError<GitHubTokenError>($I`GitHubT
 	/** When GitHub stopped accepting it, ISO-8601. */
 	expiresAt: S.String.annotateKey({ description: "When GitHub stopped accepting it, ISO-8601." }),
 }, $I.annote("GitHubTokenError", { description: "Raised when the token an earlier phase persisted cannot be used." })) {
+	/**
+	 * Explains when the persisted token expired and why a long-running phase must provision its own.
+	 *
+	 * **Example** (Inspect expiry guidance)
+	 *
+	 * ```ts
+	 * import { GitHubTokenError } from "@beep/scratchpad/effected/github-actions/GitHubToken";
+	 *
+	 * const error = GitHubTokenError.make({ reason: "expired", expiresAt: "2026-10-09T12:00:00Z" });
+	 * console.log(error.message.includes("2026-10-09T12:00:00Z")) // true
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return `The installation token persisted by an earlier phase expired at ${this.expiresAt}. An installation token lives about an hour and no later phase can re-mint one, so a long-running phase must provision its own.`;
 	}
@@ -43,6 +68,8 @@ const DEFAULT_KEY = "githubToken";
  * What to mint a token for.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface ProvisionOptions {
 	/** The app id or client id. */
@@ -54,37 +81,49 @@ export interface ProvisionOptions {
 	/** The account whose installation to use, when `installationId` is omitted. */
 	readonly owner?: string | undefined;
 	/**
-  * The permissions the action needs.
-  *
-  * **Details**
-  *
-  * Verified against what GitHub actually granted, which can be narrower than
-  * what was asked for. Checked **before** the token is persisted, so a
-  * workflow with a misconfigured installation fails at `pre` with a message
-  * naming the missing permission rather than in the middle of `main` with a
-  * `403` on one request.
-  */
+	 * The permissions the action needs.
+	 *
+	 * **Details**
+	 *
+	 * Verified against what GitHub actually granted, which can be narrower than
+	 * what was asked for. Checked **before** the token is persisted, so a
+	 * workflow with a misconfigured installation fails at `pre` with a message
+	 * naming the missing permission rather than in the middle of `main` with a
+	 * `403` on one request.
+	 */
 	readonly required?: Readonly<Record<string, PermissionLevel>> | undefined;
 	/** The `GITHUB_STATE` key. One default, so `pre` and `post` agree without saying so. */
 	readonly stateKey?: string | undefined;
 }
 
-/** Where to read a persisted token from. @public */
+/**
+ * Where to read a persisted token from.
+ *
+ * @public
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface ReadOptions {
 	/** The `GITHUB_STATE` key. */
 	readonly stateKey?: string | undefined;
 	/**
-  * How long before the stated expiry to treat the token as spent.
-  *
-  * **Details**
-  *
-  * A minute by default. The window exists because the check and the request
-  * it guards are not the same instant.
-  */
+	 * How long before the stated expiry to treat the token as spent.
+	 *
+	 * **Details**
+	 *
+	 * A minute by default. The window exists because the check and the request
+	 * it guards are not the same instant.
+	 */
 	readonly skew?: Duration.Duration | undefined;
 }
 
-/** How to build a client from a persisted token. @public */
+/**
+ * How to build a client from a persisted token.
+ *
+ * @public
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface ClientLayerOptions extends ReadOptions {
 	/** Retry behavior. Defaults to the client's own policy; `"off"` disables it. */
 	readonly retry?: RetryPolicy | "off" | undefined;
@@ -177,10 +216,11 @@ const identified = Effect.fn("identified")(function* (app: GitHubAppShape, optio
  * **Example** (Provision a GitHub App token with write permissions)
  *
  * ```ts
- * import { GitHubToken } from "./index.ts";
+ * import { GitHubToken } from "@beep/scratchpad/effected/github-actions/GitHubToken";
  * import * as Effect from "effect/Effect";
  * import * as Redacted from "effect/Redacted";
  *
+ * const pem = "example PEM private key";
  * const pre = Effect.gen(function* () {
  *   return yield* GitHubToken.provision({
  *     appId: "123456",
@@ -189,29 +229,50 @@ const identified = Effect.fn("identified")(function* (app: GitHubAppShape, optio
  *     required: { contents: "write", pull_requests: "write" },
  *   });
  * });
+ * console.log(Effect.isEffect(pre)) // true
  * ```
  *
  * @public
+ * @category utilities
+ * @since 0.0.0
  */
 export class GitHubToken {
 	private constructor() {}
 
 	/**
-  * Mint a token, verify its scopes, mask it and persist it for later phases.
-  *
-  * **Details**
-  *
-  * An `acquireUseRelease`, and the release arm is the load-bearing part: if
-  * scope verification or persistence fails, the minted token is **revoked**
-  * rather than left live until GitHub expires it. A workflow that retries a
-  * failing `pre` would otherwise leave an hour's worth of unreferenced write
-  * tokens behind, each of which is a credential nobody is tracking.
-  *
-  * The masking happens **before** the persistence, through
-  * {@link Secret.forRunnerFile}, so the ordering is structural rather than
-  * remembered: `GITHUB_STATE` is plaintext by protocol, and the runner's log
-  * filter is the only defense available.
-  */
+	 * Mint a token, verify its scopes, mask it and persist it for later phases.
+	 *
+	 * **Details**
+	 *
+	 * An `acquireUseRelease`, and the release arm is the load-bearing part: if
+	 * scope verification or persistence fails, the minted token is **revoked**
+	 * rather than left live until GitHub expires it. A workflow that retries a
+	 * failing `pre` would otherwise leave an hour's worth of unreferenced write
+	 * tokens behind, each of which is a credential nobody is tracking.
+	 *
+	 * The masking happens **before** the persistence, through
+	 * {@link Secret.forRunnerFile}, so the ordering is structural rather than
+	 * remembered: `GITHUB_STATE` is plaintext by protocol, and the runner's log
+	 * filter is the only defense available.
+	 *
+	 * **Example** (Construct token provisioning for the pre phase)
+	 *
+	 * ```ts
+	 * import { GitHubToken } from "@beep/scratchpad/effected/github-actions/GitHubToken";
+	 * import * as Effect from "effect/Effect";
+	 * import * as Redacted from "effect/Redacted";
+	 *
+	 * const program = GitHubToken.provision({
+	 *   appId: "123456",
+	 *   privateKey: Redacted.make("example PEM private key"),
+	 *   owner: "acme",
+	 *   required: { contents: "write" },
+	 * });
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
 	static readonly provision = Effect.fn("GitHubToken.provision")(function* (options: ProvisionOptions) {
 		const app = yield* GitHubApp;
 		const state = yield* ActionState;
@@ -247,16 +308,28 @@ export class GitHubToken {
 	});
 
 	/**
-  * The token an earlier phase persisted.
-  *
-  * **Gotchas**
-  *
-  * Fails with {@link GitHubTokenError} when it is spent, and with
-  * {@link ActionStateError} when no token was persisted. Without that check a
-  * `main` phase that outlived the hour would simply start answering `401` with
-  * no explanation — the hardest failure in this lifecycle to diagnose from a
-  * workflow log.
-  */
+	 * The token an earlier phase persisted.
+	 *
+	 * **Gotchas**
+	 *
+	 * Fails with {@link GitHubTokenError} when it is spent, and with
+	 * {@link ActionStateError} when no token was persisted. Without that check a
+	 * `main` phase that outlived the hour would simply start answering `401` with
+	 * no explanation — the hardest failure in this lifecycle to diagnose from a
+	 * workflow log.
+	 *
+	 * **Example** (Construct a persisted token read)
+	 *
+	 * ```ts
+	 * import { GitHubToken } from "@beep/scratchpad/effected/github-actions/GitHubToken";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = GitHubToken.read({ stateKey: "githubToken" });
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
 	static readonly read = Effect.fn("GitHubToken.read")(function* (options: ReadOptions = {}) {
 		const state = yield* ActionState;
 		const token = yield* state.get(options.stateKey ?? DEFAULT_KEY, InstallationToken);
@@ -268,31 +341,55 @@ export class GitHubToken {
 	});
 
 	/**
-  * The committer identity a commit made with the persisted token should carry.
-  *
-  * **Details**
-  *
-  * Pure once the token is in hand — the identity fields travel with it — so
-  * this costs one state read and no request.
-  */
+	 * The committer identity a commit made with the persisted token should carry.
+	 *
+	 * **Details**
+	 *
+	 * Pure once the token is in hand — the identity fields travel with it — so
+	 * this costs one state read and no request.
+	 *
+	 * **Example** (Construct a committer identity lookup)
+	 *
+	 * ```ts
+	 * import { GitHubToken } from "@beep/scratchpad/effected/github-actions/GitHubToken";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = GitHubToken.botIdentity();
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
 	static readonly botIdentity = Effect.fn("GitHubToken.botIdentity")(function* (options: ReadOptions = {}) {
 		return (yield* GitHubToken.read(options)).botIdentity() satisfies BotIdentity;
 	});
 
 	/**
-  * A client built from the persisted token.
-  *
-  * **Details**
-  *
-  * Built with `GitHubClient.layerFromToken` rather than through `GitHubApp`,
-  * and the difference matters: the App path links a JWT signer and needs the
-  * private key, neither of which a later phase has or should have. This path
-  * needs only the token the `pre` phase already minted.
-  *
-  * A parameterized layer factory mints a fresh layer per call and layers
-  * memoize by reference — bind it to a `const` rather than calling it at each
-  * composition site.
-  */
+	 * A client built from the persisted token.
+	 *
+	 * **Details**
+	 *
+	 * Built with `GitHubClient.layerFromToken` rather than through `GitHubApp`,
+	 * and the difference matters: the App path links a JWT signer and needs the
+	 * private key, neither of which a later phase has or should have. This path
+	 * needs only the token the `pre` phase already minted.
+	 *
+	 * A parameterized layer factory mints a fresh layer per call and layers
+	 * memoize by reference — bind it to a `const` rather than calling it at each
+	 * composition site.
+	 *
+	 * **Example** (Bind a client layer for later composition)
+	 *
+	 * ```ts
+	 * import { GitHubToken } from "@beep/scratchpad/effected/github-actions/GitHubToken";
+	 * import * as Layer from "effect/Layer";
+	 *
+	 * const client = GitHubToken.clientLayer({ retry: "off" });
+	 * console.log(Layer.isLayer(client)) // true
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
 	static readonly clientLayer = (
 		options: ClientLayerOptions = {},
 	): Layer.Layer<GitHubClient, ActionStateError | GitHubTokenError, ActionState> =>
@@ -311,19 +408,31 @@ export class GitHubToken {
 		);
 
 	/**
-  * Revoke the persisted token, if there is one.
-  *
-  * **Details**
-  *
-  * `getOptional`, so a `post` phase that runs after a `pre` that never got as
-  * far as provisioning is a **no-op rather than a failure** — which is the
-  * common shape of a workflow that failed early, and the last thing it needs
-  * is a second failure on the way out.
-  *
-  * An already-expired token is not revoked either: GitHub has already stopped
-  * accepting it, so the request would fail and the only thing it could
-  * accomplish is turning a successful run into a failed one.
-  */
+	 * Revoke the persisted token, if there is one.
+	 *
+	 * **Details**
+	 *
+	 * `getOptional`, so a `post` phase that runs after a `pre` that never got as
+	 * far as provisioning is a **no-op rather than a failure** — which is the
+	 * common shape of a workflow that failed early, and the last thing it needs
+	 * is a second failure on the way out.
+	 *
+	 * An already-expired token is not revoked either: GitHub has already stopped
+	 * accepting it, so the request would fail and the only thing it could
+	 * accomplish is turning a successful run into a failed one.
+	 *
+	 * **Example** (Construct token cleanup for the post phase)
+	 *
+	 * ```ts
+	 * import { GitHubToken } from "@beep/scratchpad/effected/github-actions/GitHubToken";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = GitHubToken.dispose();
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
 	static readonly dispose = Effect.fn("GitHubToken.dispose")(function* (options: ReadOptions = {}) {
 		const app = yield* GitHubApp;
 		const state = yield* ActionState;

@@ -145,45 +145,76 @@ const make = Effect.fn("make")(function* (transfer: DataBlobTransfer) {
  * **Example** (Select the GitHub Actions cache blob backend)
  *
  * ```ts
- * import { GitHubCacheBlobStore } from "./index.ts";
+ * import { GitHubCacheBlobStore } from "@beep/scratchpad/effected/github-actions/BlobStore.githubCache";
+ * import * as Layer from "effect/Layer";
  *
  * const layer = GitHubCacheBlobStore.layer;
+ * console.log(Layer.isLayer(layer)) // true
  * ```
  *
  * @public
+ * @category layers
+ * @since 0.0.0
  */
 export class GitHubCacheBlobStore {
 	private constructor() {}
 
 	/**
-  * The backend, over the real Azure client.
-  *
-  * **Details**
-  *
-  * Requires `ActionEnvironment` for `ACTIONS_RESULTS_URL` and
-  * `ACTIONS_RUNTIME_TOKEN`; fails with `BlobStoreError` (`misconfigured`) when
-  * either is absent.
-  */
+	 * The backend, over the real Azure client.
+	 *
+	 * **Details**
+	 *
+	 * Requires `ActionEnvironment` for `ACTIONS_RESULTS_URL` and
+	 * `ACTIONS_RUNTIME_TOKEN`; fails with `BlobStoreError` (`misconfigured`) when
+	 * either is absent.
+	 *
+	 * **Example** (Construct the Azure-backed cache layer)
+	 *
+	 * ```ts
+	 * import { GitHubCacheBlobStore } from "@beep/scratchpad/effected/github-actions/BlobStore.githubCache";
+	 * import * as Layer from "effect/Layer";
+	 *
+	 * console.log(Layer.isLayer(GitHubCacheBlobStore.layer)) // true
+	 * ```
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layer: Layer.Layer<BlobStore, never, HttpClient.HttpClient | ActionEnvironment> = Layer.effect(
 		BlobStore,
 		make(azure),
 	);
 
 	/**
-  * The backend, over a supplied transport.
-  *
-  * **Details**
-  *
-  * The Twirp protocol — the RPC sequence, the conflict handling, the retry
-  * policy, the framing — is what this package owns and what a test needs to
-  * exercise; the Azure client is a pre-signed `PUT` that owns none of it. This
-  * is also the seam an integration test uses to point the same protocol at a
-  * local blob endpoint.
-  *
-  * A parameterized layer factory mints a fresh layer per call and layers
-  * memoize by reference — bind it to a `const` rather than calling it at each
-  * composition site.
-  */
+	 * The backend, over a supplied transport.
+	 *
+	 * **Details**
+	 *
+	 * The Twirp protocol — the RPC sequence, the conflict handling, the retry
+	 * policy, the framing — is what this package owns and what a test needs to
+	 * exercise; the Azure client is a pre-signed `PUT` that owns none of it. This
+	 * is also the seam an integration test uses to point the same protocol at a
+	 * local blob endpoint.
+	 *
+	 * A parameterized layer factory mints a fresh layer per call and layers
+	 * memoize by reference — bind it to a `const` rather than calling it at each
+	 * composition site.
+	 *
+	 * **Example** (Supply an in-memory blob transport)
+	 *
+	 * ```ts
+	 * import { GitHubCacheBlobStore } from "@beep/scratchpad/effected/github-actions/BlobStore.githubCache";
+	 * import * as Effect from "effect/Effect";
+	 * import * as Layer from "effect/Layer";
+	 *
+	 * const layer = GitHubCacheBlobStore.layerWith({
+	 *   uploadData: (_url, _data) => Effect.void,
+	 *   downloadToBuffer: (_url) => Effect.succeed(new Uint8Array([1, 2, 3])),
+	 * });
+	 * console.log(Layer.isLayer(layer)) // true
+	 * ```
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layerWith = (
 		transfer: DataBlobTransfer,
 	): Layer.Layer<BlobStore, never, HttpClient.HttpClient | ActionEnvironment> =>

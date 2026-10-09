@@ -13,7 +13,21 @@ import { unstubbed } from "./internal/unstubbed.ts";
 
 const $I = $ScratchpadId.create("effected/github-actions/ActionState");
 
-/** An invalid name cannot head an action-state runner-file entry. */
+/**
+ * An invalid name cannot head an action-state runner-file entry.
+ *
+ * **Example** (Describe an invalid state key)
+ *
+ * ```ts
+ * import { InvalidActionStateNameError } from "@beep/scratchpad/effected/github-actions/ActionState";
+ *
+ * const error = InvalidActionStateNameError.make({ message: "A state key cannot contain a line break" });
+ * console.log(error.message) // A state key cannot contain a line break
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
 export class InvalidActionStateNameError extends S.TaggedError<InvalidActionStateNameError>($I`InvalidActionStateNameError`)("InvalidActionStateNameError", {
 	message: S.String,
 }, $I.annote("InvalidActionStateNameError", { description: "An invalid name cannot head an action-state runner-file entry." })) {}
@@ -24,7 +38,18 @@ const Json = S.fromJsonString(S.Unknown);
  * Raised when action state cannot be saved, read or decoded across the phase
  * boundary.
  *
+ * **Example** (Describe missing phase state)
+ *
+ * ```ts
+ * import { ActionStateError } from "@beep/scratchpad/effected/github-actions/ActionState";
+ *
+ * const error = ActionStateError.make({ reason: "missing", key: "server-pid" });
+ * console.log(error.message) // No action state was saved under "server-pid"
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class ActionStateError extends S.TaggedError<ActionStateError>($I`ActionStateError`)("ActionStateError", {
 	/**
@@ -42,6 +67,21 @@ export class ActionStateError extends S.TaggedError<ActionStateError>($I`ActionS
 	/** The underlying failure, preserved structurally. */
 	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying failure, preserved structurally." }),
 }, $I.annote("ActionStateError", { description: "Raised when action state cannot be saved, read or decoded across the phase boundary." })) {
+	/**
+	 * Explains the state failure using its reason and the affected key.
+	 *
+	 * **Example** (Read a missing-state diagnostic)
+	 *
+	 * ```ts
+	 * import { ActionStateError } from "@beep/scratchpad/effected/github-actions/ActionState";
+	 *
+	 * const error = ActionStateError.make({ reason: "missing", key: "server-pid" });
+	 * console.log(error.message) // No action state was saved under "server-pid"
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return Match.value(this.reason).pipe(
 			Match.when("missing", () => `No action state was saved under "${this.key}"`),
@@ -57,6 +97,8 @@ export class ActionStateError extends S.TaggedError<ActionStateError>($I`ActionS
  * persist secrets, across the `pre` → `main` → `post` boundary.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface ActionStateShape {
 	/**
@@ -182,7 +224,7 @@ const dies = unstubbed("ActionState.makeTest");
  * **Example** (Save and retrieve a server PID across action phases)
  *
  * ```ts
- * import { ActionState } from "./index.ts";
+ * import { ActionState } from "@beep/scratchpad/effected/github-actions/ActionState";
  * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema";
  *
@@ -198,25 +240,57 @@ const dies = unstubbed("ActionState.makeTest");
  *   const pid = yield* state.get("server-pid", S.Finite);
  *   return pid;
  * });
+ *
+ * console.log(Effect.isEffect(pre) && Effect.isEffect(post)) // true
  * ```
  *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class ActionState extends Context.Service<ActionState, ActionStateShape>()(
 	$I`ActionState`,
 ) {
 	/**
-  * The live service, writing to the runner's `GITHUB_STATE` file and reading
-  * the `STATE_<key>` variables it republishes.
-  *
-  * **Details**
-  *
-  * `ActionRuntime.layer` already provides every requirement.
-  */
+ * The live service, writing to the runner's `GITHUB_STATE` file and reading
+ * the `STATE_<key>` variables it republishes.
+ *
+ * **Details**
+ *
+ * `ActionRuntime.layer` already provides every requirement.
+ *
+ * **Example** (Inspect the live state layer)
+ *
+ * ```ts
+ * import { ActionState } from "@beep/scratchpad/effected/github-actions/ActionState";
+ * import * as Layer from "effect/Layer";
+ *
+ * console.log(Layer.isLayer(ActionState.layer)) // true
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 	static readonly layer: Layer.Layer<ActionState, never, ActionEnvironment | FileSystem.FileSystem | ActionOutputs> =
 		Layer.effect(this, make);
 
-	/** A test double. Unstubbed members die rather than answering wrongly. */
+	/**
+ * A test double. Unstubbed members die rather than answering wrongly.
+ *
+ * **Example** (Stub a saved PID)
+ *
+ * ```ts
+ * import { ActionState } from "@beep/scratchpad/effected/github-actions/ActionState";
+ * import * as Effect from "effect/Effect";
+ * import * as S from "effect/Schema";
+ *
+ * const state = ActionState.makeTest({ get: (_key, schema) => S.decodeUnknownEffect(schema)(4242) });
+ * console.log(Effect.runSync(state.get("server-pid", S.Finite))) // 4242
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
 	static readonly makeTest = (overrides: Partial<ActionStateShape> = {}): ActionStateShape => ({
 		save: () => dies("save"),
 		get: () => dies("get"),
@@ -225,7 +299,24 @@ export class ActionState extends Context.Service<ActionState, ActionStateShape>(
 		...overrides,
 	});
 
-	/** {@link ActionState.makeTest} behind `Layer.succeed`. */
+	/**
+ * {@link ActionState.makeTest} behind `Layer.succeed`.
+ *
+ * **Example** (Provide a state test double)
+ *
+ * ```ts
+ * import { ActionState } from "@beep/scratchpad/effected/github-actions/ActionState";
+ * import * as Effect from "effect/Effect";
+ * import * as S from "effect/Schema";
+ *
+ * const program = Effect.flatMap(ActionState, (state) => state.get("server-pid", S.Finite));
+ * const layer = ActionState.layerTest({ get: (_key, schema) => S.decodeUnknownEffect(schema)(4242) });
+ * console.log(Effect.runSync(Effect.provide(program, layer))) // 4242
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 	static readonly layerTest = (overrides: Partial<ActionStateShape> = {}): Layer.Layer<ActionState> =>
 		Layer.succeed(ActionState, ActionState.makeTest(overrides));
 }

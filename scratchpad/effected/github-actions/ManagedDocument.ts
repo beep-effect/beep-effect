@@ -9,7 +9,21 @@ import * as Str from "effect/String";
 
 const $I = $ScratchpadId.create("effected/github-actions/ManagedDocument");
 
-/** The region dialect rejected its own comment style. */
+/**
+ * The region dialect rejected its own comment style.
+ *
+ * **Example** (Inspect a rejected region dialect)
+ *
+ * ```ts
+ * import { RejectedRegionDialectError } from "@beep/scratchpad/effected/github-actions/ManagedDocument";
+ *
+ * const error = RejectedRegionDialectError.make({ message: "Unsupported region style" });
+ * console.log(error.message) // Unsupported region style
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
 export class RejectedRegionDialectError extends S.TaggedError<RejectedRegionDialectError>($I`RejectedRegionDialectError`)("RejectedRegionDialectError", {
 	message: S.String,
 }, $I.annote("RejectedRegionDialectError", { description: "The region dialect rejected its own comment style." })) {}
@@ -24,6 +38,8 @@ export class RejectedRegionDialectError extends S.TaggedError<RejectedRegionDial
  * excluded deliberately: the three parts are joined with `.` into the marker
  * key written to the wire (`namespace.key.region`), and a dot inside a part
  * would make two different documents spell the same marker.
+ *
+ * @since 0.0.0
  */
 const NamePart = S.String.check(S.isPattern(/^[A-Za-z0-9][A-Za-z0-9_-]*$/u));
 
@@ -32,6 +48,8 @@ const NamePart = S.String.check(S.isPattern(/^[A-Za-z0-9][A-Za-z0-9_-]*$/u));
  * — the one comment style GitHub renders invisibly — and a phrase distinct
  * from `@effected/templates`' default, so a document that also carries
  * ordinary `MANAGED SECTION` blocks never has them mistaken for regions.
+ *
+ * @since 0.0.0
  */
 const REGION_DIALECT: SectionDialect = SectionDialect.make({
 	phrase: "MANAGED REGION",
@@ -56,10 +74,25 @@ const REGION_DIALECT: SectionDialect = SectionDialect.make({
  * break — either would write a marker the region scanner could not read
  * back verbatim.
  *
+ * **Example** (Describe an ambiguous region)
+ *
+ * ```ts
+ * import { ManagedDocumentError } from "@beep/scratchpad/effected/github-actions/ManagedDocument";
+ *
+ * const error = ManagedDocumentError.make({ kind: "duplicateRegion", key: "header", line: 3 });
+ * console.log(error.message) // Managed region appears twice for region "header" at line 3
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class ManagedDocumentError extends S.TaggedError<ManagedDocumentError>($I`ManagedDocumentError`)("ManagedDocumentError", {
-	/** Which ambiguity or refusal was found. */
+	/**
+	 * Which ambiguity or refusal was found.
+	 *
+	 * @since 0.0.0
+	 */
 	kind: S.Literals([
 		"unterminatedRegion",
 		"orphanedEnd",
@@ -69,13 +102,40 @@ export class ManagedDocumentError extends S.TaggedError<ManagedDocumentError>($I
 		"duplicateDeclaration",
 		"invalidAttribute",
 	]).annotateKey({ description: "Which ambiguity or refusal was found." }),
-	/** 1-based line of the offending marker, for the structural kinds. */
+	/**
+	 * 1-based line of the offending marker, for the structural kinds.
+	 *
+	 * @since 0.0.0
+	 */
 	line: S.optionalKey(S.Finite).annotateKey({ description: "1-based line of the offending marker, for the structural kinds." }),
-	/** The region key involved, when the failure names one. */
+	/**
+	 * The region key involved, when the failure names one.
+	 *
+	 * @since 0.0.0
+	 */
 	key: S.optionalKey(S.String).annotateKey({ description: "The region key involved, when the failure names one." }),
-	/** The offending metadata attribute's name, for `invalidAttribute`. */
+	/**
+	 * The offending metadata attribute's name, for `invalidAttribute`.
+	 *
+	 * @since 0.0.0
+	 */
 	attribute: S.optionalKey(S.String).annotateKey({ description: "The offending metadata attribute's name, for `invalidAttribute`." }),
 }, $I.annote("ManagedDocumentError", { description: "Raised when a managed document cannot be read or regenerated without guessing." })) {
+	/**
+	 * Explains the refusal, including the region key, attribute and line when supplied.
+	 *
+	 * **Example** (Format invalid metadata)
+	 *
+	 * ```ts
+	 * import { ManagedDocumentError } from "@beep/scratchpad/effected/github-actions/ManagedDocument";
+	 *
+	 * const error = ManagedDocumentError.make({ kind: "invalidAttribute", key: "header", attribute: "status", line: 4 });
+	 * console.log(error.message) // Region metadata has an invalid attribute name or value for region "header" (attribute "status") at line 4
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		const which = this.key === undefined ? "" : ` for region "${this.key}"`;
 		const named = this.attribute === undefined ? "" : ` (attribute "${this.attribute}")`;
@@ -94,7 +154,11 @@ const KIND_PROSE: Record<ManagedDocumentError["kind"], string> = {
 	invalidAttribute: "Region metadata has an invalid attribute name or value",
 };
 
-/** Map a templates scan failure onto this surface's vocabulary. */
+/**
+ * Map a templates scan failure onto this surface's vocabulary.
+ *
+ * @since 0.0.0
+ */
 const STRUCTURAL_KIND = {
 	unterminatedSection: "unterminatedRegion",
 	orphanedEnd: "orphanedEnd",
@@ -102,7 +166,11 @@ const STRUCTURAL_KIND = {
 	duplicateSection: "duplicateRegion",
 } as const;
 
-/** A structurally corrupt region layout, in this surface's vocabulary. */
+/**
+ * A structurally corrupt region layout, in this surface's vocabulary.
+ *
+ * @since 0.0.0
+ */
 const structural = (failure: SectionParseError): ManagedDocumentError =>
 	ManagedDocumentError.make({
 		kind: STRUCTURAL_KIND[failure.reason],
@@ -115,16 +183,28 @@ const structural = (failure: SectionParseError): ManagedDocumentError =>
  * yet.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface ManagedDocumentSource {
-	/** Whose document this is, e.g. your action's name. */
+	/**
+	 * Whose document this is, e.g. your action's name.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly namespace: string;
-	/** Which document, within that namespace. */
+	/**
+	 * Which document, within that namespace.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly key: string;
 	/**
 	 * The current text — a fetched comment body, a PR description — or absent
 	 * when there is nothing yet. An absent text and an empty one mean the same
 	 * thing: a fresh document.
+	 *
+	 * @since 0.0.0
 	 */
 	readonly text?: string | undefined;
 }
@@ -158,95 +238,207 @@ export interface ManagedDocumentSource {
  * **Example** (Parse a managed document and replace its regions)
  *
  * ```ts
- * import { ManagedDocument } from "./index.ts";
+ * import { ManagedDocument } from "@beep/scratchpad/effected/github-actions/ManagedDocument";
  * import * as Result from "effect/Result";
  *
- * const doc = ManagedDocument.parseResult({ namespace: "my-action", key: "release", text: fetched });
- * if (Result.isSuccess(doc)) {
- *   const next = doc.success.withRegionsResult([
- *     ["header", "## Validating Release"],
- *     ["footer", "generated by my-action"],
- *   ]);
- * }
+ * const doc = ManagedDocument.parseResult({ namespace: "my-action", key: "release", text: "Human notes" });
+ * const next = Result.flatMap(doc, (document) => document.withRegionsResult([
+ *   ["header", "## Validating Release"],
+ *   ["footer", "generated by my-action"],
+ * ]));
+ * console.log(Result.isSuccess(next)) // true
  * ```
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class ManagedDocument extends S.Class<ManagedDocument>($I`ManagedDocument`)({
-	/** Whose document this is. */
+	/**
+	 * Whose document this is.
+	 *
+	 * @since 0.0.0
+	 */
 	namespace: NamePart.annotateKey({ description: "Whose document this is." }),
-	/** Which document, within that namespace. */
+	/**
+	 * Which document, within that namespace.
+	 *
+	 * @since 0.0.0
+	 */
 	key: NamePart.annotateKey({ description: "Which document, within that namespace." }),
-	/** The document's full text, sentinel and regions included. */
+	/**
+	 * The document's full text, sentinel and regions included.
+	 *
+	 * @since 0.0.0
+	 */
 	text: S.String.annotateKey({ description: "The document's full text, sentinel and regions included." }),
 }, $I.annote("ManagedDocument", { description: "A marker-delimited document: named regions a tool owns, inside text a human may also edit." })) {
 	/**
-  * Read a document out of existing text, or begin a fresh one.
-  *
-  * **Details**
-  *
-  * The synchronous primitive; {@link ManagedDocument.parse} derives from it.
-  * Absent text, empty text and text that carries no sentinel are all legal —
-  * the sentinel and regions are added by the first
-  * {@link ManagedDocument.withRegionsResult}. Only a *structurally corrupt*
-  * region layout fails, because every structural ambiguity is a case where
-  * a silent choice would destroy content a human wrote.
-  */
+	 * Read a document out of existing text, or begin a fresh one.
+	 *
+	 * **Details**
+	 *
+	 * The synchronous primitive; {@link ManagedDocument.parse} derives from it.
+	 * Absent text, empty text and text that carries no sentinel are all legal —
+	 * the sentinel and regions are added by the first
+	 * {@link ManagedDocument.withRegionsResult}. Only a *structurally corrupt*
+	 * region layout fails, because every structural ambiguity is a case where
+	 * a silent choice would destroy content a human wrote.
+	 *
+	 * **Example** (Begin a fresh document)
+	 *
+	 * ```ts
+	 * import { ManagedDocument } from "@beep/scratchpad/effected/github-actions/ManagedDocument";
+	 * import * as Result from "effect/Result";
+	 *
+	 * const result = ManagedDocument.parseResult({ namespace: "my-action", key: "release" });
+	 * console.log(Result.isSuccess(result)) // true
+	 * ```
+	 *
+	 * @category parsing
+	 * @since 0.0.0
+	 */
 	static parseResult(source: ManagedDocumentSource): Result.Result<ManagedDocument, ManagedDocumentError> {
 		const document = ManagedDocument.make({ namespace: source.namespace, key: source.key, text: source.text ?? "" });
 		return Result.map(Result.mapError(document.scan(), structural), () => document);
 	}
 
 	/**
-  * Read a document out of existing text, in `Effect`.
-  *
-  * **Details**
-  *
-  * Defined in terms of {@link ManagedDocument.parseResult} — synchronous
-  * callers can use that variant directly.
-  */
+	 * Read a document out of existing text, in `Effect`.
+	 *
+	 * **Details**
+	 *
+	 * Defined in terms of {@link ManagedDocument.parseResult} — synchronous
+	 * callers can use that variant directly.
+	 *
+	 * **Example** (Parse without external services)
+	 *
+	 * ```ts
+	 * import { ManagedDocument } from "@beep/scratchpad/effected/github-actions/ManagedDocument";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const doc = Effect.runSync(ManagedDocument.parse({ namespace: "my-action", key: "release" }));
+	 * console.log(doc.namespace) // my-action
+	 * ```
+	 *
+	 * @category parsing
+	 * @since 0.0.0
+	 */
 	static readonly parse = Effect.fn("ManagedDocument.parse")((source: ManagedDocumentSource) =>
 		Effect.fromResult(ManagedDocument.parseResult(source)),
 	);
 
-	/** The HTML comment identifying this document, `<!-- namespace:key -->`. */
+	/**
+	 * The HTML comment identifying this document, `<!-- namespace:key -->`.
+	 *
+	 * **Example** (Render the identity sentinel)
+	 *
+	 * ```ts
+	 * import { ManagedDocument } from "@beep/scratchpad/effected/github-actions/ManagedDocument";
+	 *
+	 * const doc = ManagedDocument.make({ namespace: "my-action", key: "release", text: "" });
+	 * console.log(doc.sentinel) // <!-- my-action:release -->
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	get sentinel(): string {
 		return `<!-- ${this.namespace}:${this.key} -->`;
 	}
 
-	/** Does this text carry the document's sentinel? */
+	/**
+	 * Checks whether text carries this document's sentinel.
+	 *
+	 * **Example** (Match the identity sentinel)
+	 *
+	 * ```ts
+	 * import { ManagedDocument } from "@beep/scratchpad/effected/github-actions/ManagedDocument";
+	 *
+	 * const doc = ManagedDocument.make({ namespace: "my-action", key: "release", text: "" });
+	 * console.log(doc.matches("<!-- my-action:release -->")) // true
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
+	 */
 	matches(text: string): boolean {
 		return text.includes(this.sentinel);
 	}
 
-	/** The content of one region, if the document carries it. */
+	/**
+	 * The content of one region, if the document carries it.
+	 *
+	 * **Example** (Look up an absent region)
+	 *
+	 * ```ts
+	 * import { ManagedDocument } from "@beep/scratchpad/effected/github-actions/ManagedDocument";
+	 * import * as O from "effect/Option";
+	 *
+	 * const doc = ManagedDocument.make({ namespace: "my-action", key: "release", text: "" });
+	 * console.log(O.isNone(doc.region("header"))) // true
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	region(key: string): O.Option<string> {
 		return O.map(this.entry(key), (found) => found.content);
 	}
 
 	/**
-  * One region's content and metadata together, if the document carries it.
-  *
-  * **Details**
-  *
-  * `meta` is the region's `name="value"` marker attributes, empty when the
-  * marker carries none. Metadata never participates in region
-  * addressability — this looks up by key exactly as
-  * {@link ManagedDocument.region} does.
-  */
+	 * One region's content and metadata together, if the document carries it.
+	 *
+	 * **Details**
+	 *
+	 * `meta` is the region's `name="value"` marker attributes, empty when the
+	 * marker carries none. Metadata never participates in region
+	 * addressability — this looks up by key exactly as
+	 * {@link ManagedDocument.region} does.
+	 *
+	 * **Example** (Read region metadata)
+	 *
+	 * ```ts
+	 * import { ManagedDocument } from "@beep/scratchpad/effected/github-actions/ManagedDocument";
+	 * import * as O from "effect/Option";
+	 * import * as Result from "effect/Result";
+	 *
+	 * const doc = ManagedDocument.make({ namespace: "my-action", key: "release", text: "" });
+	 * const updated = Result.getOrThrow(doc.withRegionsResult([["header", "Ready", { status: "ok" }]]));
+	 * const entry = O.getOrThrow(updated.entry("header"));
+	 * console.log(entry.meta.status) // ok
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	entry(key: string): O.Option<{ readonly content: string; readonly meta: Readonly<Record<string, string>> }> {
 		const found = this.ownRegions().find((candidate) => candidate.key === key);
 		return found === undefined ? O.none() : O.some({ content: found.content, meta: found.meta });
 	}
 
 	/**
-  * Every region this document carries, in document order.
-  *
-  * **Details**
-  *
-  * `meta` is always present: a region whose marker carries no attributes
-  * reports an empty record, so callers never branch on absence.
-  */
+	 * Every region this document carries, in document order.
+	 *
+	 * **Details**
+	 *
+	 * `meta` is always present: a region whose marker carries no attributes
+	 * reports an empty record, so callers never branch on absence.
+	 *
+	 * **Example** (Read regions in document order)
+	 *
+	 * ```ts
+	 * import { ManagedDocument } from "@beep/scratchpad/effected/github-actions/ManagedDocument";
+	 * import * as Result from "effect/Result";
+	 *
+	 * const doc = ManagedDocument.make({ namespace: "my-action", key: "release", text: "" });
+	 * const updated = Result.getOrThrow(doc.withRegionsResult([["header", "Ready"], ["footer", "Done"]]));
+	 * console.log(updated.regions.map((region) => region.key).join(",")) // header,footer
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	get regions(): ReadonlyArray<{
 		readonly key: string;
 		readonly content: string;
@@ -256,32 +448,50 @@ export class ManagedDocument extends S.Class<ManagedDocument>($I`ManagedDocument
 	}
 
 	/**
-  * The document with these regions replaced from current state.
-  *
-  * **Details**
-  *
-  * The synchronous primitive; {@link ManagedDocument.withRegions} derives
-  * from it. Each entry pairs a region key with its full new content, plus
-  * optional metadata. A region already present is **replaced in place**; a
-  * region not present yet is added; regions not named are left exactly as
-  * they are; and every byte outside a managed region survives untouched.
-  * Applying entries that change nothing returns byte-identical text, which
-  * is what lets a caller compare-and-skip instead of issuing a write.
-  *
-  * `meta` becomes `name="value"` attributes on the region's BEGIN marker.
-  * It round-trips verbatim through {@link ManagedDocument.entry}, survives
-  * writes by parties that do not know about it — a region not named in a
-  * call keeps its content *and* its metadata untouched — and never
-  * participates in region addressability: a region is found by key alone,
-  * so changing metadata updates the region in place. A two-element entry
-  * supplies no metadata. Names must match
-  * `[A-Za-z][A-Za-z0-9_-]*` and values may not contain `"` or a line
-  * break; violations fail typed as `invalidAttribute`.
-  *
-  * Region keys share the name grammar `namespace` and `key` obey; a key
-  * outside it is a wiring error and throws at construction rather than
-  * surfacing in the typed channel.
-  */
+	 * The document with these regions replaced from current state.
+	 *
+	 * **Details**
+	 *
+	 * The synchronous primitive; {@link ManagedDocument.withRegions} derives
+	 * from it. Each entry pairs a region key with its full new content, plus
+	 * optional metadata. A region already present is **replaced in place**; a
+	 * region not present yet is added; regions not named are left exactly as
+	 * they are; and every byte outside a managed region survives untouched.
+	 * Applying entries that change nothing returns byte-identical text, which
+	 * is what lets a caller compare-and-skip instead of issuing a write.
+	 *
+	 * `meta` becomes `name="value"` attributes on the region's BEGIN marker.
+	 * It round-trips verbatim through {@link ManagedDocument.entry}, survives
+	 * writes by parties that do not know about it — a region not named in a
+	 * call keeps its content *and* its metadata untouched — and never
+	 * participates in region addressability: a region is found by key alone,
+	 * so changing metadata updates the region in place. A two-element entry
+	 * supplies no metadata. Names must match
+	 * `[A-Za-z][A-Za-z0-9_-]*` and values may not contain `"` or a line
+	 * break; violations fail typed as `invalidAttribute`.
+	 *
+	 * **Gotchas**
+	 *
+	 * Region keys share the name grammar `namespace` and `key` obey; a key
+	 * outside it is a wiring error and throws at construction rather than
+	 * surfacing in the typed channel.
+	 *
+	 * **Example** (Replace a region in place)
+	 *
+	 * ```ts
+	 * import { ManagedDocument } from "@beep/scratchpad/effected/github-actions/ManagedDocument";
+	 * import * as Result from "effect/Result";
+	 * import * as O from "effect/Option";
+	 *
+	 * const doc = ManagedDocument.make({ namespace: "my-action", key: "release", text: "" });
+	 * const first = Result.getOrThrow(doc.withRegionsResult([["header", "Pending"]]));
+	 * const next = Result.getOrThrow(first.withRegionsResult([["header", "Ready"]]));
+	 * console.log(O.getOrThrow(next.region("header"))) // Ready
+	 * ```
+	 *
+	 * @category combinators
+	 * @since 0.0.0
+	 */
 	withRegionsResult(
 		entries: ReadonlyArray<readonly [key: string, content: string, meta?: Readonly<Record<string, string>>]>,
 	): Result.Result<ManagedDocument, ManagedDocumentError> {
@@ -313,13 +523,28 @@ export class ManagedDocument extends S.Class<ManagedDocument>($I`ManagedDocument
 	}
 
 	/**
-  * The document with these regions replaced, in `Effect`.
-  *
-  * **Details**
-  *
-  * Defined in terms of {@link ManagedDocument.withRegionsResult} —
-  * synchronous callers can use that variant directly.
-  */
+	 * The document with these regions replaced, in `Effect`.
+	 *
+	 * **Details**
+	 *
+	 * Defined in terms of {@link ManagedDocument.withRegionsResult} —
+	 * synchronous callers can use that variant directly.
+	 *
+	 * **Example** (Update a document in Effect)
+	 *
+	 * ```ts
+	 * import { ManagedDocument } from "@beep/scratchpad/effected/github-actions/ManagedDocument";
+	 * import * as Effect from "effect/Effect";
+	 * import * as O from "effect/Option";
+	 *
+	 * const doc = ManagedDocument.make({ namespace: "my-action", key: "release", text: "" });
+	 * const updated = Effect.runSync(doc.withRegions([["header", "Ready"]]));
+	 * console.log(O.getOrThrow(updated.region("header"))) // Ready
+	 * ```
+	 *
+	 * @category combinators
+	 * @since 0.0.0
+	 */
 	withRegions(
 		entries: ReadonlyArray<readonly [key: string, content: string, meta?: Readonly<Record<string, string>>]>,
 	): Effect.Effect<ManagedDocument, ManagedDocumentError> {
@@ -329,40 +554,135 @@ export class ManagedDocument extends S.Class<ManagedDocument>($I`ManagedDocument
 	// The scan of `text`, once: the instance is immutable and every accessor
 	// reads the same layout, so `CheckDocument.reconcile`'s parse → regions →
 	// withRegions pass scans the body once rather than three times.
+	/**
+	 * Caches the region scan for this immutable instance so accessors reuse one layout.
+	 *
+	 * **Example** (Reuse an immutable document layout)
+	 *
+	 * ```ts
+	 * import { ManagedDocument } from "@beep/scratchpad/effected/github-actions/ManagedDocument";
+	 * import * as Result from "effect/Result";
+	 *
+	 * const doc = Result.getOrThrow(ManagedDocument.parseResult({ namespace: "my-action", key: "release" }));
+	 * console.log(doc.regions.length === doc.regions.length) // true
+	 * ```
+	 *
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	#scanned: Result.Result<SectionDocument, SectionParseError> | undefined;
 
+	/**
+	 * Parses and caches the full text using the managed-region dialect.
+	 *
+	 * **Example** (Validate a fresh region layout)
+	 *
+	 * ```ts
+	 * import { ManagedDocument } from "@beep/scratchpad/effected/github-actions/ManagedDocument";
+	 * import * as Result from "effect/Result";
+	 *
+	 * console.log(Result.isSuccess(ManagedDocument.parseResult({ namespace: "my-action", key: "release" }))) // true
+	 * ```
+	 *
+	 * @category parsing
+	 * @since 0.0.0
+	 */
 	private scan(): Result.Result<SectionDocument, SectionParseError> {
 		this.#scanned ??= SectionDocument.parseResult(this.text, REGION_DIALECT);
 		return this.#scanned;
 	}
 
-	/** What every wire key of this document's regions begins with. */
+	/**
+	 * What every wire key of this document's regions begins with.
+	 *
+	 * **Example** (Qualify a region marker)
+	 *
+	 * ```ts
+	 * import { ManagedDocument } from "@beep/scratchpad/effected/github-actions/ManagedDocument";
+	 * import * as Result from "effect/Result";
+	 *
+	 * const doc = ManagedDocument.make({ namespace: "my-action", key: "release", text: "" });
+	 * const updated = Result.getOrThrow(doc.withRegionsResult([["header", "Ready"]]));
+	 * console.log(updated.text.includes("my-action.release.header")) // true
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	private get wirePrefix(): string {
 		return `${this.namespace}.${this.key}.`;
 	}
 
-	/** The marker key a region is written under: `namespace.key.region`. */
+	/**
+	 * The marker key a region is written under: `namespace.key.region`.
+	 *
+	 * **Example** (Write a fully qualified region key)
+	 *
+	 * ```ts
+	 * import { ManagedDocument } from "@beep/scratchpad/effected/github-actions/ManagedDocument";
+	 * import * as Result from "effect/Result";
+	 *
+	 * const doc = ManagedDocument.make({ namespace: "my-action", key: "release", text: "" });
+	 * const updated = Result.getOrThrow(doc.withRegionsResult([["footer", "Done"]]));
+	 * console.log(updated.text.includes("my-action.release.footer")) // true
+	 * ```
+	 *
+	 * @category formatting
+	 * @since 0.0.0
+	 */
 	private wireKey(region: string): string {
 		return `${this.wirePrefix}${region}`;
 	}
 
-	/** The region key back out of a wire key, for error reporting. */
+	/**
+	 * The region key back out of a wire key, for error reporting.
+	 *
+	 * **Example** (Report the local key of a duplicate declaration)
+	 *
+	 * ```ts
+	 * import { ManagedDocument } from "@beep/scratchpad/effected/github-actions/ManagedDocument";
+	 * import * as Result from "effect/Result";
+	 *
+	 * const doc = ManagedDocument.make({ namespace: "my-action", key: "release", text: "" });
+	 * const result = doc.withRegionsResult([["header", "One"], ["header", "Two"]]);
+	 * console.log(Result.isFailure(result) ? result.failure.key : "success") // header
+	 * ```
+	 *
+	 * @category parsing
+	 * @since 0.0.0
+	 */
 	private regionKeyOf(wireKey: string): string {
 		return wireKey.startsWith(this.wirePrefix) ? wireKey.slice(this.wirePrefix.length) : wireKey;
 	}
 
 	/**
-  * This document's own regions, in document order.
-  *
-  * **Gotchas**
-  *
-  * A document a human already edited can be structurally corrupt, and a
-  * read has no error channel worth having — a corrupt document simply has
-  * no readable regions; {@link ManagedDocument.parseResult} is where
-  * corruption fails typed. Regions belonging to a *different* document in
-  * the same text (another namespace or key) are not this document's and are
-  * never reported.
-  */
+	 * This document's own regions, in document order.
+	 *
+	 * **Gotchas**
+	 *
+	 * A document a human already edited can be structurally corrupt, and a
+	 * read has no error channel worth having — a corrupt document simply has
+	 * no readable regions; {@link ManagedDocument.parseResult} is where
+	 * corruption fails typed. Regions belonging to a *different* document in
+	 * the same text (another namespace or key) are not this document's and are
+	 * never reported.
+	 *
+	 * **Example** (Read only this document regions)
+	 *
+	 * ```ts
+	 * import { ManagedDocument } from "@beep/scratchpad/effected/github-actions/ManagedDocument";
+	 *
+	 * const doc = ManagedDocument.make({
+	 *   namespace: "my-action",
+	 *   key: "release",
+	 *   text: "<!-- BEGIN MANAGED REGION other.release.header -->\nOther\n<!-- END MANAGED REGION other.release.header -->\n",
+	 * });
+	 * console.log(doc.regions.length) // 0
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	private ownRegions(): ReadonlyArray<{
 		readonly key: string;
 		readonly content: string;
@@ -383,14 +703,28 @@ export class ManagedDocument extends S.Class<ManagedDocument>($I`ManagedDocument
 	}
 
 	/**
-  * Append the sentinel when the text does not carry it yet.
-  *
-  * **Details**
-  *
-  * Appended at the end — the same position `PullRequestComment.upsert`
-  * writes its marker to — so a document rendered here and a comment written
-  * there agree about where the identity line lives.
-  */
+	 * Append the sentinel when the text does not carry it yet.
+	 *
+	 * **Details**
+	 *
+	 * Appended at the end — the same position `PullRequestComment.upsert`
+	 * writes its marker to — so a document rendered here and a comment written
+	 * there agree about where the identity line lives.
+	 *
+	 * **Example** (Append the document identity once)
+	 *
+	 * ```ts
+	 * import { ManagedDocument } from "@beep/scratchpad/effected/github-actions/ManagedDocument";
+	 * import * as Result from "effect/Result";
+	 *
+	 * const doc = ManagedDocument.make({ namespace: "my-action", key: "release", text: "" });
+	 * const updated = Result.getOrThrow(doc.withRegionsResult([]));
+	 * console.log(updated.text === "<!-- my-action:release -->\n") // true
+	 * ```
+	 *
+	 * @category formatting
+	 * @since 0.0.0
+	 */
 	private ensureSentinel(text: string, eol: "\n" | "\r\n"): string {
 		if (text.includes(this.sentinel)) {
 			return text;

@@ -31,31 +31,48 @@ import { OidcTokenIssuer } from "./OidcTokenIssuer.ts";
  * **Example** (Provide runner OIDC identity to the Sigstore signer)
  *
  * ```ts
- * import { ActionsIdentityToken, OidcTokenIssuer } from "./index.ts";
- * import { SigstoreSigner } from "../sbom/index.ts";
+ * import { ActionsIdentityToken } from "@beep/scratchpad/effected/github-actions/ActionsIdentityToken";
+ * import { OidcTokenIssuer } from "@beep/scratchpad/effected/github-actions/OidcTokenIssuer";
+ * import { SigstoreSigner } from "@beep/scratchpad/effected/sbom/SigstoreSigner";
  * import * as Layer from "effect/Layer";
  *
  * const signing = SigstoreSigner.layer.pipe(
  *   Layer.provide(ActionsIdentityToken.layer),
  *   Layer.provide(OidcTokenIssuer.layer),
  * );
+ *
+ * console.log(Layer.isLayer(signing)) // true
  * ```
  *
  * @public
+ * @category adapters
+ * @since 0.0.0
  */
 export class ActionsIdentityToken {
 	private constructor() {}
 
 	/**
-  * `IdentityToken` served by the runner's OIDC token service.
-  *
-  * **Details**
-  *
-  * Requires {@link OidcTokenIssuer} rather than composing
-  * `OidcTokenIssuer.layer` in, so an action that already wired the issuer —
-  * every action using `ActionRuntime.layer` has its requirements at hand —
-  * does not construct a second one.
-  */
+ * `IdentityToken` served by the runner's OIDC token service.
+ *
+ * **Details**
+ *
+ * Requires {@link OidcTokenIssuer} rather than composing
+ * `OidcTokenIssuer.layer` in, so an action that already wired the issuer —
+ * every action using `ActionRuntime.layer` has its requirements at hand —
+ * does not construct a second one.
+ *
+ * **Example** (Inspect the identity adapter layer)
+ *
+ * ```ts
+ * import { ActionsIdentityToken } from "@beep/scratchpad/effected/github-actions/ActionsIdentityToken";
+ * import * as Layer from "effect/Layer";
+ *
+ * console.log(Layer.isLayer(ActionsIdentityToken.layer)) // true
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 	static readonly layer: Layer.Layer<IdentityToken, never, OidcTokenIssuer> = Layer.effect(
 		IdentityToken,
 		Effect.map(OidcTokenIssuer, (issuer) => ({

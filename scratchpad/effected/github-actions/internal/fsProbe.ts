@@ -11,7 +11,20 @@ import * as Function from "effect/Function";
  * and unreadability collapse together on purpose: every caller's next move
  * (reinstall, write the shim, fail `layoutUnexpected`) is the same for both.
  *
+ * **Example** (Treat an unreadable path as absent)
+ *
+ * ```ts
+ * import { typeAt } from "@beep/scratchpad/effected/github-actions/internal/fsProbe";
+ * import * as Effect from "effect/Effect";
+ * import * as FileSystem from "effect/FileSystem";
+ *
+ * const fs = FileSystem.makeNoop({});
+ * console.log(await Effect.runPromise(typeAt(fs, "/missing"))) // undefined
+ * ```
+ *
  * @internal
+ * @category queries
+ * @since 0.0.0
  */
 export const typeAt: {
 	(fs: FileSystem.FileSystem, path: string): Effect.Effect<FileSystem.File.Type | undefined>;
@@ -24,7 +37,17 @@ export const typeAt: {
  * platform's `SystemError` keeps the raw exception as its `cause`, and codes
  * it maps to no named tag (`EXDEV`, `ESRCH`) are only recoverable from there.
  *
+ * **Example** (Recognize a cross-device errno)
+ *
+ * ```ts
+ * import { isErrno } from "@beep/scratchpad/effected/github-actions/internal/fsProbe";
+ *
+ * console.log(isErrno({ code: "EXDEV" }, "EXDEV")) // true
+ * ```
+ *
  * @internal
+ * @category predicates
+ * @since 0.0.0
  */
 export const isErrno: {
 	(cause: unknown, code: string): boolean;

@@ -30,7 +30,17 @@ const StringList = S.Array(S.String);
  * this function so no caller ever spells the variable name, which makes that
  * class of bug unrepresentable rather than merely documented.
  *
+ * **Example** (Derive a dashed runner variable)
+ *
+ * ```ts
+ * import { inputVariable } from "@beep/scratchpad/effected/github-actions/ActionInput";
+ *
+ * console.log(inputVariable("sbom-config")) // INPUT_SBOM-CONFIG
+ * ```
+ *
  * @internal
+ * @category utilities
+ * @since 0.0.0
  */
 export const inputVariable = (name: string): string => `INPUT_${name.replaceAll(" ", "_").toUpperCase()}`;
 
@@ -58,12 +68,25 @@ const FALSE = HashSet.fromIterable<string>(["false", "False", "FALSE"]);
  * Options for {@link ActionInput.pairs}.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface PairsOptions {
 	/**
 	 * Reject a pair whose value is empty (`key=`).
 	 *
+	 * **Example** (Reject empty pair values)
+	 *
+	 * ```ts
+	 * import type { PairsOptions } from "@beep/scratchpad/effected/github-actions/ActionInput";
+	 *
+	 * const options: PairsOptions = { requireValue: true };
+	 * console.log(options.requireValue) // true
+	 * ```
+	 *
 	 * @defaultValue `false` — an empty value is a legitimate empty string.
+	 * @category configuration
+	 * @since 0.0.0
 	 */
 	readonly requireValue?: boolean;
 }
@@ -100,41 +123,59 @@ const stripComment = (line: string): string => {
  * **Example** (Read a boolean flag and path list)
  *
  * ```ts
- * import { ActionInput } from "./index.ts";
+ * import { ActionInput } from "@beep/scratchpad/effected/github-actions/ActionInput";
  * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
- *   const dryRun = yield* ActionInput.boolean("dry-run");
- *   const globs = yield* ActionInput.list("paths");
+ *   return yield* Effect.gen(function* () {
+ *     const dryRun = yield* ActionInput.boolean("dry-run");
+ *     const globs = yield* ActionInput.list("paths");
+ *     return { dryRun, globs };
+ *   });
  * });
+ * const value = await Effect.runPromise(program.pipe(Effect.provide(ActionInput.layer({ "dry-run": "true", paths: "src,test" }))));
+ * console.log(JSON.stringify(value)) // {"dryRun":true,"globs":["src","test"]}
  * ```
  *
  * @public
+ * @category configuration
+ * @since 0.0.0
  */
 export class ActionInput {
 	private constructor() {}
 
 	/**
-  * The exact environment variable the runner publishes an input under.
-  *
-  * **Gotchas**
-  *
-  * `variable("biome-version")` is `"INPUT_BIOME-VERSION"` — GitHub
-  * uppercases, replaces **spaces** with underscores, and leaves every other
-  * character (**dashes included**) alone. This is the same derivation every
-  * accessor on this class resolves through, exported so a test that must
-  * spell a runner variable can derive it instead of hand-writing it: a
-  * hand-written `INPUT_BIOME_VERSION` reads as absent on a real runner, the
-  * default silently applies, and the suite goes green against the wrong
-  * value. Prefer keying the test environment by input name (see
-  * {@link ActionInput.provider}) so no variable is spelled at all.
-  */
+	 * The exact environment variable the runner publishes an input under.
+	 *
+	 * **Gotchas**
+	 *
+	 * `variable("biome-version")` is `"INPUT_BIOME-VERSION"` — GitHub
+	 * uppercases, replaces **spaces** with underscores, and leaves every other
+	 * character (**dashes included**) alone. This is the same derivation every
+	 * accessor on this class resolves through, exported so a test that must
+	 * spell a runner variable can derive it instead of hand-writing it: a
+	 * hand-written `INPUT_BIOME_VERSION` reads as absent on a real runner, the
+	 * default silently applies, and the suite goes green against the wrong
+	 * value. Prefer keying the test environment by input name (see
+	 * {@link ActionInput.provider}) so no variable is spelled at all.
+	 *
+	 * **Example** (Derive a runner key for tests)
+	 *
+	 * ```ts
+	 * import { ActionInput } from "@beep/scratchpad/effected/github-actions/ActionInput";
+	 *
+	 * console.log(ActionInput.variable("biome-version")) // INPUT_BIOME-VERSION
+	 * ```
+	 *
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	static readonly variable = (name: string): string => inputVariable(name);
 
 	/**
 	 * A required string input.
 	 *
-	 * @remarks
+	 * **Details**
 	 * Fails as *missing data* when the input is absent **or set to the empty
 	 * string** — the runner writes `""` for an unsupplied input, and both the
 	 * runtime's provider and {@link ActionInput.provider} read that as absent.
@@ -149,15 +190,12 @@ export class ActionInput {
 	 * `release-prefix: ""` disables retry, a `withDefault` read makes that
 	 * impossible. `Config.option` is the shape that distinguishes the states:
 	 *
-	 * ```ts
-	 * Config.option(ActionInput.string("release-prefix"))
-	 * // WITH a non-empty default in action.yml:
-	 * //   unsupplied     -> Some("release:")   (the manifest default, via the runner)
-	 * //   explicit ""    -> None
-	 * //   explicit value -> Some(value)
-	 * // WITHOUT a default in action.yml:
-	 * //   unsupplied     -> None               (the runner still writes the variable, empty)
-	 * ```
+	 *
+	 * With a non-empty default in `action.yml`, an unsupplied input yields
+	 * `Some("release:")` (the manifest default, via the runner), explicit `""`
+	 * yields `None`, and an explicit value yields `Some(value)`. Without a
+	 * manifest default, an unsupplied input yields `None`: the runner still
+	 * writes the variable, empty.
 	 *
 	 * Both rows matter: "the runner writes `""` for an unsupplied input" is the
 	 * no-default case, and it is the manifest default — when there is one — that
@@ -176,22 +214,56 @@ export class ActionInput {
 	 *   in a test means genuinely absent, which no runner emits, so a test named
 	 *   "unsupplied" asserts the opposite of production and passes. Arrange the
 	 *   manifest default explicitly instead of omitting the key.
+	 *
+	 * **Example** (Distinguish a manifest default from explicit empty input)
+	 *
+	 * ```ts
+	 * import { ActionInput } from "@beep/scratchpad/effected/github-actions/ActionInput";
+	 * import * as Effect from "effect/Effect";
+	 * import * as Config from "effect/Config";
+	 * import * as O from "effect/Option";
+	 *
+	 * const program = Effect.gen(function* () {
+	 *   return yield* Config.option(ActionInput.string("release-prefix"));
+	 * });
+	 * const value = await Effect.runPromise(program.pipe(Effect.provide(ActionInput.layer({ "release-prefix": "" }))));
+	 * console.log(O.isNone(value)) // true
+	 * ```
+	 *
+	 * @category configuration
+	 * @since 0.0.0
 	 */
 	static string(name: string): Config.Config<string> {
 		return Config.String(inputVariable(name));
 	}
 
 	/**
-  * A boolean input, per the runner's documented YAML 1.2 core schema.
-  *
-  * **Details**
-  *
-  * Absent or `""` is **missing data** — wrap with `Config.withDefault` for
-  * an optional flag. A **present but malformed** value (`yes`, `on`, `1`) is
-  * a different class: it fails carrying its `actual`, deliberately, so a
-  * default does NOT swallow it, so a malformed `dry-run` never quietly reads
-  * as `false`.
-  */
+	 * A boolean input, per the runner's documented YAML 1.2 core schema.
+	 *
+	 * **Details**
+	 *
+	 * Absent or `""` is **missing data** — wrap with `Config.withDefault` for
+	 * an optional flag. A **present but malformed** value (`yes`, `on`, `1`) is
+	 * a different class: it fails carrying its `actual`, deliberately, so a
+	 * default does NOT swallow it, so a malformed `dry-run` never quietly reads
+	 * as `false`.
+	 *
+	 * **Example** (Read a YAML boolean)
+	 *
+	 * ```ts
+	 * import { ActionInput } from "@beep/scratchpad/effected/github-actions/ActionInput";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = Effect.gen(function* () {
+	 *   return yield* ActionInput.boolean("dry-run");
+	 * });
+	 * const value = await Effect.runPromise(program.pipe(Effect.provide(ActionInput.layer({ "dry-run": "TRUE" }))));
+	 * console.log(value) // true
+	 * ```
+	 *
+	 * @category configuration
+	 * @since 0.0.0
+	 */
 	static boolean(name: string): Config.Config<boolean> {
 		return Config.String(inputVariable(name)).pipe(
 			Config.mapEffect((raw) => {
@@ -214,35 +286,42 @@ export class ActionInput {
 	}
 
 	/**
-  * An input that must be one of a closed set of strings, typed as their
-  * union.
-  *
-  * **Details**
-  *
-  * The match is **exact**: no trimming and no case folding, so `" pr"` and
-  * `"PR"` are both rejected for `["commit", "pr"]`. An action manifest
-  * declares the set in `options:`-style prose and the workflow author copies
-  * a value verbatim; the one thing worth tolerating there is nothing, because
-  * a tolerated near-miss is a value the manifest never named. Absent or `""`
-  * is **missing data** (see {@link ActionInput.string}) — `Config.withDefault`
-  * for an optional input. A present value outside the set fails carrying its
-  * `actual`, naming the input, the value and the allowed set, and is never
-  * swallowed by a default.
-  *
-  * Core's `Config.Literals` is the same idea over `Config.schema`; this one
-  * exists so the failure reads like every other `ActionInput` failure —
-  * naming the input by its action name, not its `INPUT_` variable.
-  *
-  * **Example** (Constrain an input to commit or pr with a default)
-  *
-  * ```ts
-  * import { ActionInput } from "./index.ts";
-  * import * as Config from "effect/Config";
-  *
-  * // Config<"commit" | "pr">
-  * const mode = ActionInput.literals("mode", ["commit", "pr"]).pipe(Config.withDefault("commit"));
-  * ```
-  */
+	 * An input that must be one of a closed set of strings, typed as their
+	 * union.
+	 *
+	 * **Details**
+	 *
+	 * The match is **exact**: no trimming and no case folding, so `" pr"` and
+	 * `"PR"` are both rejected for `["commit", "pr"]`. An action manifest
+	 * declares the set in `options:`-style prose and the workflow author copies
+	 * a value verbatim; the one thing worth tolerating there is nothing, because
+	 * a tolerated near-miss is a value the manifest never named. Absent or `""`
+	 * is **missing data** (see {@link ActionInput.string}) — `Config.withDefault`
+	 * for an optional input. A present value outside the set fails carrying its
+	 * `actual`, naming the input, the value and the allowed set, and is never
+	 * swallowed by a default.
+	 *
+	 * Core's `Config.Literals` is the same idea over `Config.schema`; this one
+	 * exists so the failure reads like every other `ActionInput` failure —
+	 * naming the input by its action name, not its `INPUT_` variable.
+	 *
+	 * **Example** (Constrain an input to commit or pr with a default)
+	 *
+	 * ```ts
+	 * import { ActionInput } from "@beep/scratchpad/effected/github-actions/ActionInput";
+	 * import * as Effect from "effect/Effect";
+	 * import * as Config from "effect/Config";
+	 *
+	 * const program = Effect.gen(function* () {
+	 *   return yield* ActionInput.literals("mode", ["commit", "pr"]).pipe(Config.withDefault("commit"));
+	 * });
+	 * const value = await Effect.runPromise(program.pipe(Effect.provide(ActionInput.layer({}))));
+	 * console.log(value) // commit
+	 * ```
+	 *
+	 * @category configuration
+	 * @since 0.0.0
+	 */
 	static literals<const L extends readonly [string, ...Array<string>]>(
 		name: string,
 		allowed: L,
@@ -257,42 +336,91 @@ export class ActionInput {
 	}
 
 	/**
-  * An integer input.
-  *
-  * **Details**
-  *
-  * Unset and `""` both fail as **missing data**; for an optional input,
-  * `.pipe(Config.withDefault(n))`.
-  */
+	 * An integer input.
+	 *
+	 * **Details**
+	 *
+	 * Unset and `""` both fail as **missing data**; for an optional input,
+	 * `.pipe(Config.withDefault(n))`.
+	 *
+	 * **Example** (Read a retry count)
+	 *
+	 * ```ts
+	 * import { ActionInput } from "@beep/scratchpad/effected/github-actions/ActionInput";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = Effect.gen(function* () {
+	 *   return yield* ActionInput.integer("retries");
+	 * });
+	 * const value = await Effect.runPromise(program.pipe(Effect.provide(ActionInput.layer({ retries: "3" }))));
+	 * console.log(value) // 3
+	 * ```
+	 *
+	 * @category configuration
+	 * @since 0.0.0
+	 */
 	static integer(name: string): Config.Config<number> {
 		return Config.Int(inputVariable(name));
 	}
 
 	/**
-  * A secret input, kept redacted.
-  *
-  * **Details**
-  *
-  * Unset and `""` both fail as **missing data**; `Config.option` is the
-  * usual shape for an optional secret, since there is rarely a meaningful
-  * default to redact.
-  */
+	 * A secret input, kept redacted.
+	 *
+	 * **Details**
+	 *
+	 * Unset and `""` both fail as **missing data**; `Config.option` is the
+	 * usual shape for an optional secret, since there is rarely a meaningful
+	 * default to redact.
+	 *
+	 * **Example** (Keep a token redacted)
+	 *
+	 * ```ts
+	 * import { ActionInput } from "@beep/scratchpad/effected/github-actions/ActionInput";
+	 * import * as Effect from "effect/Effect";
+	 * import * as Redacted from "effect/Redacted";
+	 *
+	 * const program = Effect.gen(function* () {
+	 *   return yield* ActionInput.redacted("token");
+	 * });
+	 * const value = await Effect.runPromise(program.pipe(Effect.provide(ActionInput.layer({ token: "example-token" }))));
+	 * console.log(Redacted.isRedacted(value)) // true
+	 * ```
+	 *
+	 * @category configuration
+	 * @since 0.0.0
+	 */
 	static redacted(name: string): Config.Config<Redacted.Redacted<string>> {
 		return Config.Redacted(inputVariable(name));
 	}
 
 	/**
-  * A multiline input, split on newlines.
-  *
-  * **Details**
-  *
-  * The `@actions/core`-faithful shape: blank lines are dropped and each entry
-  * is trimmed, because a YAML block scalar carries the workflow's own
-  * indentation.
-  *
-  * Absent or `""` fails as missing data (see {@link ActionInput.string}) —
-  * `Config.withDefault([])` is load-bearing for an optional multiline input.
-  */
+	 * A multiline input, split on newlines.
+	 *
+	 * **Details**
+	 *
+	 * The `@actions/core`-faithful shape: blank lines are dropped and each entry
+	 * is trimmed, because a YAML block scalar carries the workflow's own
+	 * indentation.
+	 *
+	 * Absent or `""` fails as missing data (see {@link ActionInput.string}) —
+	 * `Config.withDefault([])` is load-bearing for an optional multiline input.
+	 *
+	 * **Example** (Trim and filter multiline input)
+	 *
+	 * ```ts
+	 * import { ActionInput } from "@beep/scratchpad/effected/github-actions/ActionInput";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = Effect.gen(function* () {
+	 *   return yield* ActionInput.lines("paths");
+	 * });
+	 * const value = await Effect.runPromise(program.pipe(Effect.provide(ActionInput.layer({ paths: "  src  \n\n test " }))));
+	 * console.log(value.join(",")) // src,test
+	 * ```
+	 *
+	 * @category parsing
+	 * @since 0.0.0
+	 */
 	static lines(name: string): Config.Config<ReadonlyArray<string>> {
 		return Config.String(inputVariable(name)).pipe(
 			Config.map((raw) =>
@@ -305,38 +433,54 @@ export class ActionInput {
 	}
 
 	/**
-  * A list input, accepting the shapes workflow authors actually write.
-  *
-  * **Details**
-  *
-  * A JSON array (`["a","b"]`), a bullet list (`- a` or `* a`), or comma- and
-  * newline-separated values, with full-line `#` comments dropped — any
-  * combination of these in the same input — so a workflow author's first
-  * guess works.
-  *
-  * Parsing order, applied per newline/comma-separated item after trimming:
-  *
-  * 1. **Comment lines are dropped first.** A trimmed item whose first
-  *    character is `#` is a full-line comment and is discarded entirely,
-  *    before any bullet marker is considered. This means `- #tag` is a
-  *    value, not a comment: the check runs on the untouched, still-bulleted
-  *    item, and `-` is not `#`.
-  * 2. **Only then is a leading bullet marker stripped** — `- ` or `* `
-  *    (dash-or-asterisk followed by a space), mirroring the indentation a
-  *    YAML block scalar carries in. So `- #tag` becomes the value `#tag`.
-  * 3. Blank results (an empty line, or a comment line) are dropped from the
-  *    final list.
-  *
-  * A `#` that is not the first character of a trimmed item — a trailing or
-  * mid-value `#` — is left alone; unlike {@link ActionInput.pairs}, `list`
-  * has no trailing-comment rule, only a whole-line one.
-  *
-  * Absent or `""` fails as **missing data** (see {@link ActionInput.string}),
-  * so `Config.withDefault([])` is load-bearing at every optional-input call
-  * site — omitting an optional multi-value input otherwise fails the read
-  * outright. A *whitespace-only* value (a block scalar holding only a
-  * newline) is present, and parses to `[]`.
-  */
+	 * A list input, accepting the shapes workflow authors actually write.
+	 *
+	 * **Details**
+	 *
+	 * A JSON array (`["a","b"]`), a bullet list (`- a` or `* a`), or comma- and
+	 * newline-separated values, with full-line `#` comments dropped — any
+	 * combination of these in the same input — so a workflow author's first
+	 * guess works.
+	 *
+	 * Parsing order, applied per newline/comma-separated item after trimming:
+	 *
+	 * 1. **Comment lines are dropped first.** A trimmed item whose first
+	 *    character is `#` is a full-line comment and is discarded entirely,
+	 *    before any bullet marker is considered. This means `- #tag` is a
+	 *    value, not a comment: the check runs on the untouched, still-bulleted
+	 *    item, and `-` is not `#`.
+	 * 2. **Only then is a leading bullet marker stripped** — `- ` or `* `
+	 *    (dash-or-asterisk followed by a space), mirroring the indentation a
+	 *    YAML block scalar carries in. So `- #tag` becomes the value `#tag`.
+	 * 3. Blank results (an empty line, or a comment line) are dropped from the
+	 *    final list.
+	 *
+	 * A `#` that is not the first character of a trimmed item — a trailing or
+	 * mid-value `#` — is left alone; unlike {@link ActionInput.pairs}, `list`
+	 * has no trailing-comment rule, only a whole-line one.
+	 *
+	 * Absent or `""` fails as **missing data** (see {@link ActionInput.string}),
+	 * so `Config.withDefault([])` is load-bearing at every optional-input call
+	 * site — omitting an optional multi-value input otherwise fails the read
+	 * outright. A *whitespace-only* value (a block scalar holding only a
+	 * newline) is present, and parses to `[]`.
+	 *
+	 * **Example** (Preserve a hash after a bullet)
+	 *
+	 * ```ts
+	 * import { ActionInput } from "@beep/scratchpad/effected/github-actions/ActionInput";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = Effect.gen(function* () {
+	 *   return yield* ActionInput.list("paths");
+	 * });
+	 * const value = await Effect.runPromise(program.pipe(Effect.provide(ActionInput.layer({ paths: "# ignored\n- #tag\n* src" }))));
+	 * console.log(value.join(",")) // #tag,src
+	 * ```
+	 *
+	 * @category parsing
+	 * @since 0.0.0
+	 */
 	static list(name: string): Config.Config<ReadonlyArray<string>> {
 		return Config.String(inputVariable(name)).pipe(
 			Config.mapEffect((raw) => {
@@ -369,26 +513,41 @@ export class ActionInput {
 	}
 
 	/**
-  * A `key=value` input, one pair per line, with `#` comments stripped.
-  *
-  * **Details**
-  *
-  * Only the **first** `=` splits, so a value may contain one.
-  *
-  * An **empty key** (`=value`, or a bare `=`) is always rejected: `{ "": v }`
-  * cannot be what a workflow meant, and the damage would land far from the
-  * typo — an empty key becomes a filter that matches nothing, and the run
-  * reports zero results with no indication why. An empty **value** (`key=`)
-  * is accepted by default, because setting a property to the empty string is
-  * legitimate; pass `requireValue` to reject it. Every rejection names the
-  * offending line.
-  *
-  * Absent or `""` fails as missing data (see {@link ActionInput.string}) —
-  * `Config.withDefault({})` is the idiom for an optional pairs input.
-  *
-  * @param name - The input name, unmangled.
-  * @param options - `requireValue` rejects a pair whose value is empty.
-  */
+	 * A `key=value` input, one pair per line, with `#` comments stripped.
+	 *
+	 * **Details**
+	 *
+	 * Only the **first** `=` splits, so a value may contain one.
+	 *
+	 * An **empty key** (`=value`, or a bare `=`) is always rejected: `{ "": v }`
+	 * cannot be what a workflow meant, and the damage would land far from the
+	 * typo — an empty key becomes a filter that matches nothing, and the run
+	 * reports zero results with no indication why. An empty **value** (`key=`)
+	 * is accepted by default, because setting a property to the empty string is
+	 * legitimate; pass `requireValue` to reject it. Every rejection names the
+	 * offending line.
+	 *
+	 * Absent or `""` fails as missing data (see {@link ActionInput.string}) —
+	 * `Config.withDefault({})` is the idiom for an optional pairs input.
+	 *
+	 * **Example** (Split only the first equals sign)
+	 *
+	 * ```ts
+	 * import { ActionInput } from "@beep/scratchpad/effected/github-actions/ActionInput";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = Effect.gen(function* () {
+	 *   return yield* ActionInput.pairs("settings");
+	 * });
+	 * const value = await Effect.runPromise(program.pipe(Effect.provide(ActionInput.layer({ settings: "url=a=b # comment" }))));
+	 * console.log(value.url) // a=b
+	 * ```
+	 *
+	 * @param name - The input name, unmangled.
+	 * @param options - `requireValue` rejects a pair whose value is empty.
+	 * @category parsing
+	 * @since 0.0.0
+	 */
 	static pairs(name: string, options?: PairsOptions): Config.Config<Record<string, string>> {
 		const requireValue = options?.requireValue ?? false;
 		return Config.String(inputVariable(name)).pipe(
@@ -419,21 +578,38 @@ export class ActionInput {
 	}
 
 	/**
-  * A JSON-valued input, decoded through a schema.
-  *
-  * **Details**
-  *
-  * Absent or `""` fails as **missing data** before any JSON parsing runs
-  * (see {@link ActionInput.string}) — `Config.withDefault` or
-  * `Config.option` for an optional input. A present value that is not valid
-  * JSON, or does not satisfy the schema, fails carrying its `actual` and is
-  * never swallowed by a default.
-  *
-  * There is no `schemaOption`: `ActionInput.schema(name, S).pipe(Config.option)`
-  * yields `Config<Option<A>>` with missing → `None` and a malformed value
-  * still failing — core's `Config.option` lets validation errors propagate,
-  * which is exactly the missing-versus-malformed split above.
-  */
+	 * A JSON-valued input, decoded through a schema.
+	 *
+	 * **Details**
+	 *
+	 * Absent or `""` fails as **missing data** before any JSON parsing runs
+	 * (see {@link ActionInput.string}) — `Config.withDefault` or
+	 * `Config.option` for an optional input. A present value that is not valid
+	 * JSON, or does not satisfy the schema, fails carrying its `actual` and is
+	 * never swallowed by a default.
+	 *
+	 * There is no `schemaOption`: `ActionInput.schema(name, S).pipe(Config.option)`
+	 * yields `Config<Option<A>>` with missing → `None` and a malformed value
+	 * still failing — core's `Config.option` lets validation errors propagate,
+	 * which is exactly the missing-versus-malformed split above.
+	 *
+	 * **Example** (Decode JSON through a schema)
+	 *
+	 * ```ts
+	 * import { ActionInput } from "@beep/scratchpad/effected/github-actions/ActionInput";
+	 * import * as Effect from "effect/Effect";
+	 * import * as S from "effect/Schema";
+	 *
+	 * const program = Effect.gen(function* () {
+	 *   return yield* ActionInput.schema("settings", S.Struct({ retries: S.Number }));
+	 * });
+	 * const value = await Effect.runPromise(program.pipe(Effect.provide(ActionInput.layer({ settings: '{"retries":3}' }))));
+	 * console.log(value.retries) // 3
+	 * ```
+	 *
+	 * @category decoding
+	 * @since 0.0.0
+	 */
 	static schema<A, I>(name: string, schema: S.Codec<A, I>): Config.Config<A> {
 		return Config.String(inputVariable(name)).pipe(
 			Config.mapEffect((raw) => {
@@ -449,59 +625,78 @@ export class ActionInput {
 	}
 
 	/**
-  * A `ConfigProvider` over a record of runner variables **or input names**.
-  *
-  * **Details**
-  *
-  * The record dual-accepts, and the split is the `INPUT_` prefix:
-  *
-  * - A key already spelled as a runner variable (`INPUT_BIOME-VERSION`,
-  *   `PLAIN_VAR`) is read verbatim.
-  * - Any other key is treated as an **input name**, `with:`-block style —
-  *   `{ "biome-version": "2.3.14" }` — and serves the variable this module
-  *   derives for it (`ActionInput.variable`). This is the spelling to
-  *   prefer in tests: a hand-written `INPUT_BIOME_VERSION` (underscore where
-  *   the runner keeps the dash) reads as absent and the default silently
-  *   applies, and the input-name form makes that class of bug
-  *   unrepresentable — the mangling never leaves this module.
-  *
-  * When both spellings of the same input are present and non-empty, the
-  * explicit `INPUT_`-spelled entry wins.
-  *
-  * A **flat single-segment** lookup additionally tries the `INPUT_`
-  * derivation of the name first, mirroring the order the production runtime
-  * installs ({@link ActionInput.providerOver} via `layerDefault`) — so a
-  * bare `Config.String("biome-version")` resolves under this provider
-  * exactly as it does inside `Action.run`. Nested and numeric paths pass
-  * through as the joined spelling only.
-  *
-  * Otherwise the path is joined with `_`, spaces become underscores and the
-  * whole is uppercased; and an **empty string reads as absent**,
-  * because the runner sets unsupplied inputs to `""` and treating that as
-  * present would make every optional input look supplied. That rule applies
-  * to input-name entries too: `{ "flag": "" }` is an unsupplied input.
-  *
-  * Taking the environment as an argument rather than reading `process.env`
-  * is what makes inputs testable without mutating the test process. The
-  * `process.env` default is a sanctioned exception to the package rule
-  * stated on `ChildEnv` (ambient process state is never read behind a
-  * caller's back) — a default the caller overrides by passing a value, the
-  * same class as `DetachedProcess.spawn`'s `base`.
-  *
-  * **A bare `ConfigProvider.fromEnv` cannot serve input-name keys.** Composed
-  * beneath this provider or {@link ActionInput.providerOver}, it uppercases
-  * the config path, so `{ "target-branch": "trunk" }` is looked up as
-  * `TARGET-BRANCH`, never matches, and the read falls through to whatever
-  * default the call site supplies. It **fails green**: nothing errors, the
-  * suite passes against the default, and the test's name claims it proved the
-  * input was read.
-  *
-  * Runner-variable keys (`INPUT_TARGET-BRANCH`, `PLAIN_VAR`) are unaffected —
-  * they are already in the spelling `fromEnv` produces, and they resolve. The
-  * hazard is specific to keying a `fromEnv` record by **input name**. Passing
-  * the record to *this* function instead removes the distinction: it
-  * dual-accepts both spellings, so neither can miss.
-  */
+	 * A `ConfigProvider` over a record of runner variables **or input names**.
+	 *
+	 * **Details**
+	 *
+	 * The record dual-accepts, and the split is the `INPUT_` prefix:
+	 *
+	 * - A key already spelled as a runner variable (`INPUT_BIOME-VERSION`,
+	 *   `PLAIN_VAR`) is read verbatim.
+	 * - Any other key is treated as an **input name**, `with:`-block style —
+	 *   `{ "biome-version": "2.3.14" }` — and serves the variable this module
+	 *   derives for it (`ActionInput.variable`). This is the spelling to
+	 *   prefer in tests: a hand-written `INPUT_BIOME_VERSION` (underscore where
+	 *   the runner keeps the dash) reads as absent and the default silently
+	 *   applies, and the input-name form makes that class of bug
+	 *   unrepresentable — the mangling never leaves this module.
+	 *
+	 * When both spellings of the same input are present and non-empty, the
+	 * explicit `INPUT_`-spelled entry wins.
+	 *
+	 * A **flat single-segment** lookup additionally tries the `INPUT_`
+	 * derivation of the name first, mirroring the order the production runtime
+	 * installs ({@link ActionInput.providerOver} via `layerDefault`) — so a
+	 * bare `Config.String("biome-version")` resolves under this provider
+	 * exactly as it does inside `Action.run`. Nested and numeric paths pass
+	 * through as the joined spelling only.
+	 *
+	 * Otherwise the path is joined with `_`, spaces become underscores and the
+	 * whole is uppercased; and an **empty string reads as absent**,
+	 * because the runner sets unsupplied inputs to `""` and treating that as
+	 * present would make every optional input look supplied. That rule applies
+	 * to input-name entries too: `{ "flag": "" }` is an unsupplied input.
+	 *
+	 * Taking the environment as an argument rather than reading `process.env`
+	 * is what makes inputs testable without mutating the test process. The
+	 * `process.env` default is a sanctioned exception to the package rule
+	 * stated on `ChildEnv` (ambient process state is never read behind a
+	 * caller's back) — a default the caller overrides by passing a value, the
+	 * same class as `DetachedProcess.spawn`'s `base`.
+	 *
+	 * **A bare `ConfigProvider.fromEnv` cannot serve input-name keys.** Composed
+	 * beneath this provider or {@link ActionInput.providerOver}, it uppercases
+	 * the config path, so `{ "target-branch": "trunk" }` is looked up as
+	 * `TARGET-BRANCH`, never matches, and the read falls through to whatever
+	 * default the call site supplies. It **fails green**: nothing errors, the
+	 * suite passes against the default, and the test's name claims it proved the
+	 * input was read.
+	 *
+	 * Runner-variable keys (`INPUT_TARGET-BRANCH`, `PLAIN_VAR`) are unaffected —
+	 * they are already in the spelling `fromEnv` produces, and they resolve. The
+	 * hazard is specific to keying a `fromEnv` record by **input name**. Passing
+	 * the record to *this* function instead removes the distinction: it
+	 * dual-accepts both spellings, so neither can miss.
+	 *
+	 * **Example** (Resolve an input name through a provider)
+	 *
+	 * ```ts
+	 * import { ActionInput } from "@beep/scratchpad/effected/github-actions/ActionInput";
+	 * import * as Effect from "effect/Effect";
+	 * import * as Config from "effect/Config";
+	 * import * as ConfigProvider from "effect/ConfigProvider";
+	 *
+	 * const program = Effect.gen(function* () {
+	 *   return yield* Config.String("biome-version");
+	 * });
+	 * const provider = ActionInput.provider({ "biome-version": "2.3.14" });
+	 * const value = await Effect.runPromise(program.pipe(Effect.provide(ConfigProvider.layer(provider))));
+	 * console.log(value) // 2.3.14
+	 * ```
+	 *
+	 * @category configuration
+	 * @since 0.0.0
+	 */
 	static provider(env: Readonly<Record<string, string | undefined>> = process.env): ConfigProvider.ConfigProvider {
 		/** Unset, and the `""` the runner writes for an unsupplied input, are both absent. */
 		const present = (value: string | undefined): value is string => value !== undefined && value !== "";
@@ -531,64 +726,100 @@ export class ActionInput {
 	}
 
 	/**
-  * A layer installing {@link ActionInput.provider}.
-  *
-  * **Details**
-  *
-  * `ConfigProvider.ConfigProvider` is a `Context.Reference`, so this is a
-  * reference override rather than a service.
-  *
-  * A parameterized layer factory mints a fresh reference per call; bind it to
-  * a `const` rather than calling it at each composition site.
-  */
+	 * A layer installing {@link ActionInput.provider}.
+	 *
+	 * **Details**
+	 *
+	 * `ConfigProvider.ConfigProvider` is a `Context.Reference`, so this is a
+	 * reference override rather than a service.
+	 *
+	 * A parameterized layer factory mints a fresh reference per call; bind it to
+	 * a `const` rather than calling it at each composition site.
+	 *
+	 * **Example** (Install deterministic action inputs)
+	 *
+	 * ```ts
+	 * import { ActionInput } from "@beep/scratchpad/effected/github-actions/ActionInput";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = Effect.gen(function* () {
+	 *   return yield* ActionInput.string("branch");
+	 * });
+	 * const value = await Effect.runPromise(program.pipe(Effect.provide(ActionInput.layer({ branch: "trunk" }))));
+	 * console.log(value) // trunk
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static layer(env?: Readonly<Record<string, string | undefined>>): Layer.Layer<never> {
 		return ConfigProvider.layer(ActionInput.provider(env));
 	}
 
 	/**
-  * Inputs-first resolution layered over an existing provider.
-  *
-  * **Details**
-  *
-  * A bare `Config.String("dry-run")` resolves a **flat** name — one string
-  * segment — by first trying the variable the runner would have published for
-  * an input of that name (the `INPUT_` derivation this module owns), and only
-  * then trying the name unchanged through `ambient`. Anything the runner
-  * could not have set as an input — a nested path, a numeric segment — is
-  * passed to `ambient` untouched, so no path semantics are invented that the
-  * runner does not have.
-  *
-  * This exists because the runner exposes inputs as `INPUT_<MANGLED>`
-  * variables, so a plain-named lookup finds nothing and a bare `Config` read
-  * would silently fall back to its `withDefault`. Under this provider a bare read resolves through the same
-  * derivation `ActionInput.string` uses, so side-stepping the typed accessors
-  * degrades to the right answer instead of to the default.
-  *
-  * The documented trade: a workflow input named like an environment variable
-  * **shadows it** for bare reads — and because the derivation uppercases,
-  * any casing of the name sees the input. An unsupplied input does not
-  * shadow: the runner writes `""` for it, and the ambient provider's
-  * empty-is-absent rule (which the attempt resolves through) drops it. The
-  * `ActionInput` accessors themselves are unaffected — they read
-  * `INPUT_<MANGLED>` names, whose re-mangled form (`INPUT_INPUT_…`) never
-  * matches, so they fall through to the ambient lookup they always used.
-  *
-  * **A bare `ConfigProvider.fromEnv({ env })` here serves only runner-variable
-  * keys.** `INPUT_TARGET-BRANCH` and `PLAIN_VAR` resolve; an input-name key
-  * like `target-branch` is uppercased to `TARGET-BRANCH`, never matches, and
-  * fails green — see {@link ActionInput.provider} for the mechanism. Use
-  * `ActionInput.provider(env)`, which dual-accepts both spellings.
-  *
-  * **The single-segment retry above makes the obvious test
-  * non-discriminating**, which is worth knowing before writing one. Because a
-  * bare `Config.String("release-branch")` resolves through the same `INPUT_`
-  * derivation as `ActionInput.string("release-branch")`, a test meant to prove
-  * the accessor reads the mangled key passes just as well with the accessor
-  * swapped for a bare `Config`. Only a bare `fromEnv` underneath tells them
-  * apart — and that is the one shape you should never reach for. Test the
-  * derivation through `ActionInput.variable` instead of trying to catch it by
-  * substitution.
-  */
+	 * Inputs-first resolution layered over an existing provider.
+	 *
+	 * **Details**
+	 *
+	 * A bare `Config.String("dry-run")` resolves a **flat** name — one string
+	 * segment — by first trying the variable the runner would have published for
+	 * an input of that name (the `INPUT_` derivation this module owns), and only
+	 * then trying the name unchanged through `ambient`. Anything the runner
+	 * could not have set as an input — a nested path, a numeric segment — is
+	 * passed to `ambient` untouched, so no path semantics are invented that the
+	 * runner does not have.
+	 *
+	 * This exists because the runner exposes inputs as `INPUT_<MANGLED>`
+	 * variables, so a plain-named lookup finds nothing and a bare `Config` read
+	 * would silently fall back to its `withDefault`. Under this provider a bare read resolves through the same
+	 * derivation `ActionInput.string` uses, so side-stepping the typed accessors
+	 * degrades to the right answer instead of to the default.
+	 *
+	 * The documented trade: a workflow input named like an environment variable
+	 * **shadows it** for bare reads — and because the derivation uppercases,
+	 * any casing of the name sees the input. An unsupplied input does not
+	 * shadow: the runner writes `""` for it, and the ambient provider's
+	 * empty-is-absent rule (which the attempt resolves through) drops it. The
+	 * `ActionInput` accessors themselves are unaffected — they read
+	 * `INPUT_<MANGLED>` names, whose re-mangled form (`INPUT_INPUT_…`) never
+	 * matches, so they fall through to the ambient lookup they always used.
+	 *
+	 * **A bare `ConfigProvider.fromEnv({ env })` here serves only runner-variable
+	 * keys.** `INPUT_TARGET-BRANCH` and `PLAIN_VAR` resolve; an input-name key
+	 * like `target-branch` is uppercased to `TARGET-BRANCH`, never matches, and
+	 * fails green — see {@link ActionInput.provider} for the mechanism. Use
+	 * `ActionInput.provider(env)`, which dual-accepts both spellings.
+	 *
+	 * **The single-segment retry above makes the obvious test
+	 * non-discriminating**, which is worth knowing before writing one. Because a
+	 * bare `Config.String("release-branch")` resolves through the same `INPUT_`
+	 * derivation as `ActionInput.string("release-branch")`, a test meant to prove
+	 * the accessor reads the mangled key passes just as well with the accessor
+	 * swapped for a bare `Config`. Only a bare `fromEnv` underneath tells them
+	 * apart — and that is the one shape you should never reach for. Test the
+	 * derivation through `ActionInput.variable` instead of trying to catch it by
+	 * substitution.
+	 *
+	 * **Example** (Prefer runner inputs over ambient names)
+	 *
+	 * ```ts
+	 * import { ActionInput } from "@beep/scratchpad/effected/github-actions/ActionInput";
+	 * import * as Effect from "effect/Effect";
+	 * import * as Config from "effect/Config";
+	 * import * as ConfigProvider from "effect/ConfigProvider";
+	 *
+	 * const ambient = ActionInput.provider({ INPUT_BRANCH: "trunk", BRANCH: "main" });
+	 * const provider = ActionInput.providerOver(ambient);
+	 * const program = Effect.gen(function* () {
+	 *   return yield* Config.String("branch");
+	 * });
+	 * const value = await Effect.runPromise(program.pipe(Effect.provide(ConfigProvider.layer(provider))));
+	 * console.log(value) // trunk
+	 * ```
+	 *
+	 * @category configuration
+	 * @since 0.0.0
+	 */
 	static providerOver(ambient: ConfigProvider.ConfigProvider): ConfigProvider.ConfigProvider {
 		return ConfigProvider.orElse(
 			ConfigProvider.make((path) => {
@@ -603,36 +834,51 @@ export class ActionInput {
 	}
 
 	/**
-  * The provider the default action runtime installs: {@link ActionInput.providerOver}
-  * composed over the ambient environment lookup.
-  *
-  * **Details**
-  *
-  * Installed by `ActionRuntime.layer`, and therefore by `Action.run` — a bare
-  * `Config` read inside an action resolves through the runner's `INPUT_`
-  * derivation instead of silently missing. A caller-supplied
-  * `ConfigProvider` layer still wins by normal layer precedence.
-  *
-  * The ambient half is whatever provider is **explicitly installed** when the
-  * layer builds — which is how a test injects a deterministic environment, by
-  * providing `ConfigProvider.layer(ActionInput.provider(env))` beneath the
-  * runtime. Prefer `ActionInput.provider` over a bare
-  * `ConfigProvider.fromEnv({ env })`: `fromEnv` serves runner-variable keys
-  * fine, but uppercases the config path, so a record keyed by **input name**
-  * never matches and every such read silently takes its default while the
-  * suite stays green ({@link ActionInput.provider} has the full account).
-  * `ActionInput.provider` dual-accepts both spellings, so neither can miss.
-  *
-  * When none is installed, a **fresh** `ConfigProvider.fromEnv()`
-  * is built rather than reading the reference's default: core caches that
-  * default once per process, and a snapshot taken before the runner's
-  * variables are visible would resurrect exactly the missed-input class this
-  * layer exists to kill. An action's environment is fixed before the process
-  * starts, so production cannot tell the difference; a test mutating
-  * `process.env` around `Action.run` can.
-  *
-  * A bound constant rather than a factory: layers memoize by reference.
-  */
+	 * The provider the default action runtime installs: {@link ActionInput.providerOver}
+	 * composed over the ambient environment lookup.
+	 *
+	 * **Details**
+	 *
+	 * Installed by `ActionRuntime.layer`, and therefore by `Action.run` — a bare
+	 * `Config` read inside an action resolves through the runner's `INPUT_`
+	 * derivation instead of silently missing. A caller-supplied
+	 * `ConfigProvider` layer still wins by normal layer precedence.
+	 *
+	 * The ambient half is whatever provider is **explicitly installed** when the
+	 * layer builds — which is how a test injects a deterministic environment, by
+	 * providing `ConfigProvider.layer(ActionInput.provider(env))` beneath the
+	 * runtime. Prefer `ActionInput.provider` over a bare
+	 * `ConfigProvider.fromEnv({ env })`: `fromEnv` serves runner-variable keys
+	 * fine, but uppercases the config path, so a record keyed by **input name**
+	 * never matches and every such read silently takes its default while the
+	 * suite stays green ({@link ActionInput.provider} has the full account).
+	 * `ActionInput.provider` dual-accepts both spellings, so neither can miss.
+	 *
+	 * When none is installed, a **fresh** `ConfigProvider.fromEnv()`
+	 * is built rather than reading the reference's default: core caches that
+	 * default once per process, and a snapshot taken before the runner's
+	 * variables are visible would resurrect exactly the missed-input class this
+	 * layer exists to kill. An action's environment is fixed before the process
+	 * starts, so production cannot tell the difference; a test mutating
+	 * `process.env` around `Action.run` can.
+	 *
+	 * A bound constant rather than a factory: layers memoize by reference.
+	 *
+	 * **Example** (Construct a read with the default provider)
+	 *
+	 * ```ts
+	 * import { ActionInput } from "@beep/scratchpad/effected/github-actions/ActionInput";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = Effect.gen(function* () {
+	 *   return yield* ActionInput.string("branch");
+	 * }).pipe(Effect.provide(ActionInput.layerDefault));
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layerDefault: Layer.Layer<never> = ConfigProvider.layer(
 		Effect.map(Effect.context<never>(), (context) =>
 			ActionInput.providerOver(

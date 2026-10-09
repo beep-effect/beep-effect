@@ -16,7 +16,18 @@ const $I = $ScratchpadId.create("effected/github-actions/ActionOutputs");
 /**
  * Raised when an action cannot publish an output.
  *
+ * **Example** (Identify RunnerFileUnavailableError)
+ *
+ * ```ts
+ * import { RunnerFileUnavailableError } from "@beep/scratchpad/effected/github-actions/ActionOutputs";
+ *
+ * const error = RunnerFileUnavailableError.make({ file: "GITHUB_OUTPUT" });
+ * console.log(error._tag) // RunnerFileUnavailableError
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class RunnerFileUnavailableError extends S.TaggedError<RunnerFileUnavailableError>($I`RunnerFileUnavailableError`)(
 	"RunnerFileUnavailableError",
@@ -27,6 +38,21 @@ export class RunnerFileUnavailableError extends S.TaggedError<RunnerFileUnavaila
 		cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying failure, preserved structurally." }),
 	}, $I.annote("RunnerFileUnavailableError", { description: "Raised when an action cannot publish an output." }),
 ) {
+	/**
+	 * Describes the failure using the affected runner file.
+	 *
+	 * **Example** (Read the failure message)
+	 *
+	 * ```ts
+	 * import { RunnerFileUnavailableError } from "@beep/scratchpad/effected/github-actions/ActionOutputs";
+	 *
+	 * const error = RunnerFileUnavailableError.make({ file: "GITHUB_OUTPUT" });
+	 * console.log(error.message) // Runner file "GITHUB_OUTPUT" is not available; is this running on a GitHub runner?
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return `Runner file "${this.file}" is not available; is this running on a GitHub runner?`;
 	}
@@ -35,7 +61,18 @@ export class RunnerFileUnavailableError extends S.TaggedError<RunnerFileUnavaila
 /**
  * Raised when a runner file exists but could not be appended to.
  *
+ * **Example** (Identify RunnerFileWriteError)
+ *
+ * ```ts
+ * import { RunnerFileWriteError } from "@beep/scratchpad/effected/github-actions/ActionOutputs";
+ *
+ * const error = RunnerFileWriteError.make({ file: "GITHUB_ENV" });
+ * console.log(error._tag) // RunnerFileWriteError
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class RunnerFileWriteError extends S.TaggedError<RunnerFileWriteError>($I`RunnerFileWriteError`)("RunnerFileWriteError", {
 	/** The runner file involved, by environment variable name. */
@@ -43,6 +80,21 @@ export class RunnerFileWriteError extends S.TaggedError<RunnerFileWriteError>($I
 	/** The underlying failure, preserved structurally. */
 	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying failure, preserved structurally." }),
 }, $I.annote("RunnerFileWriteError", { description: "Raised when a runner file exists but could not be appended to." })) {
+	/**
+	 * Describes the failure using the affected runner file.
+	 *
+	 * **Example** (Read the failure message)
+	 *
+	 * ```ts
+	 * import { RunnerFileWriteError } from "@beep/scratchpad/effected/github-actions/ActionOutputs";
+	 *
+	 * const error = RunnerFileWriteError.make({ file: "GITHUB_ENV" });
+	 * console.log(error.message) // Failed to write to runner file "GITHUB_ENV"
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return `Failed to write to runner file "${this.file}"`;
 	}
@@ -51,7 +103,18 @@ export class RunnerFileWriteError extends S.TaggedError<RunnerFileWriteError>($I
 /**
  * Raised when a name would corrupt the runner file's block structure.
  *
+ * **Example** (Identify InvalidOutputNameError)
+ *
+ * ```ts
+ * import { InvalidOutputNameError } from "@beep/scratchpad/effected/github-actions/ActionOutputs";
+ *
+ * const error = InvalidOutputNameError.make({ name: "bad=name" });
+ * console.log(error._tag) // InvalidOutputNameError
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class InvalidOutputNameError extends S.TaggedError<InvalidOutputNameError>($I`InvalidOutputNameError`)("InvalidOutputNameError", {
 	/** The offending name. */
@@ -61,6 +124,21 @@ export class InvalidOutputNameError extends S.TaggedError<InvalidOutputNameError
 	/** The underlying failure, preserved structurally. */
 	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying failure, preserved structurally." }),
 }, $I.annote("InvalidOutputNameError", { description: "Raised when a name would corrupt the runner file's block structure." })) {
+	/**
+	 * Describes the failure using the affected name.
+	 *
+	 * **Example** (Read the failure message)
+	 *
+	 * ```ts
+	 * import { InvalidOutputNameError } from "@beep/scratchpad/effected/github-actions/ActionOutputs";
+	 *
+	 * const error = InvalidOutputNameError.make({ name: "bad=name" });
+	 * console.log(error.message) // "bad=name" is not a usable output name
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return `"${this.name}" is not a usable output name`;
 	}
@@ -69,7 +147,18 @@ export class InvalidOutputNameError extends S.TaggedError<InvalidOutputNameError
 /**
  * Raised when a value did not satisfy its schema.
  *
+ * **Example** (Identify OutputEncodeError)
+ *
+ * ```ts
+ * import { OutputEncodeError } from "@beep/scratchpad/effected/github-actions/ActionOutputs";
+ *
+ * const error = OutputEncodeError.make({ name: "packages" });
+ * console.log(error._tag) // OutputEncodeError
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class OutputEncodeError extends S.TaggedError<OutputEncodeError>($I`OutputEncodeError`)("OutputEncodeError", {
 	/** The output or variable name whose value would not encode. */
@@ -77,6 +166,21 @@ export class OutputEncodeError extends S.TaggedError<OutputEncodeError>($I`Outpu
 	/** The underlying failure, preserved structurally. */
 	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying failure, preserved structurally." }),
 }, $I.annote("OutputEncodeError", { description: "Raised when a value did not satisfy its schema." })) {
+	/**
+	 * Describes the failure using the affected name.
+	 *
+	 * **Example** (Read the failure message)
+	 *
+	 * ```ts
+	 * import { OutputEncodeError } from "@beep/scratchpad/effected/github-actions/ActionOutputs";
+	 *
+	 * const error = OutputEncodeError.make({ name: "packages" });
+	 * console.log(error.message) // Failed to encode the value for "packages"
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return `Failed to encode the value for "${this.name}"`;
 	}
@@ -86,7 +190,18 @@ export class OutputEncodeError extends S.TaggedError<OutputEncodeError>($I`Outpu
  * Raised when an output member was called under
  * {@link ActionOutputs.layerDetached}.
  *
+ * **Example** (Identify DetachedOutputError)
+ *
+ * ```ts
+ * import { DetachedOutputError } from "@beep/scratchpad/effected/github-actions/ActionOutputs";
+ *
+ * const error = DetachedOutputError.make({ file: "GITHUB_OUTPUT" });
+ * console.log(error._tag) // DetachedOutputError
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class DetachedOutputError extends S.TaggedError<DetachedOutputError>($I`DetachedOutputError`)("DetachedOutputError", {
 	/** The runner file involved, by environment variable name. */
@@ -96,6 +211,21 @@ export class DetachedOutputError extends S.TaggedError<DetachedOutputError>($I`D
 	/** The underlying failure, preserved structurally. */
 	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying failure, preserved structurally." }),
 }, $I.annote("DetachedOutputError", { description: "Raised when an output member was called under ActionOutputs.layerDetached." })) {
+	/**
+	 * Explains why publishing must happen in the parent process.
+	 *
+	 * **Example** (Read the failure message)
+	 *
+	 * ```ts
+	 * import { DetachedOutputError } from "@beep/scratchpad/effected/github-actions/ActionOutputs";
+	 *
+	 * const error = DetachedOutputError.make({ file: "GITHUB_OUTPUT" });
+	 * console.log(error.message.includes("Publish this from the parent process instead.")) // true
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return `Runner file "${this.file}" cannot be reached from a detached worker — it configures the parent job's later steps, and a worker has none and may outlive the job. Publish this from the parent process instead.`;
 	}
@@ -112,6 +242,8 @@ export class DetachedOutputError extends S.TaggedError<DetachedOutputError>($I`D
  * than a message reading `"undefined"`.
  *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export type ActionOutputError =
 	| RunnerFileUnavailableError
@@ -171,7 +303,18 @@ const encodeJson = <A, I>(
  * members that take one (`set`, `setJson`, `exportVariable`) and absent
  * otherwise.
  *
+ * **Example** (Inspect a recorded step output)
+ *
+ * ```ts
+ * import { RecordedOutput } from "@beep/scratchpad/effected/github-actions/ActionOutputs";
+ *
+ * const entry = RecordedOutput.make({ member: "set", name: "version", value: "1.2.3" });
+ * console.log(entry.value) // 1.2.3
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class RecordedOutput extends S.Class<RecordedOutput>($I`RecordedOutput`)({
 	/** Which {@link ActionOutputsShape} member was called. */
@@ -186,6 +329,8 @@ export class RecordedOutput extends S.Class<RecordedOutput>($I`RecordedOutput`)(
  * The member names a {@link RecordedOutput} can carry.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type RecordedOutputMember = RecordedOutput["member"];
 
@@ -194,6 +339,8 @@ export type RecordedOutputMember = RecordedOutput["member"];
  * journal it fills.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface RecordingOutputs {
 	/** An {@link ActionOutputs} whose every member records into this journal. */
@@ -208,6 +355,8 @@ export interface RecordingOutputs {
  * annotations.
  *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export interface ActionOutputsShape {
 	/** Publish a step output. */
@@ -223,17 +372,17 @@ export interface ActionOutputsShape {
 	/** Export an environment variable to **subsequent** steps. */
 	readonly exportVariable: (name: string, value: string) => Effect.Effect<void, ActionOutputError>;
 	/**
-  * Prepend a directory to `PATH` for **subsequent** steps.
-  *
-  * **Gotchas**
-  *
-  * This appends to the `GITHUB_PATH` runner file and does **nothing else** —
-  * unlike `@actions/core`, it does NOT mutate the live `process.env.PATH` of
-  * the current process. A same-process probe of a tool that was just added
-  * (`pnpm --version`, a shim, a binary) will not find it by name; probe by
-  * absolute path instead. The runner applies the addition when the next step
-  * starts, exactly as it does for {@link ActionOutputsShape.exportVariable}.
-  */
+	 * Prepend a directory to `PATH` for **subsequent** steps.
+	 *
+	 * **Gotchas**
+	 *
+	 * This appends to the `GITHUB_PATH` runner file and does **nothing else** —
+	 * unlike `@actions/core`, it does NOT mutate the live `process.env.PATH` of
+	 * the current process. A same-process probe of a tool that was just added
+	 * (`pnpm --version`, a shim, a binary) will not find it by name; probe by
+	 * absolute path instead. The runner applies the addition when the next step
+	 * starts, exactly as it does for {@link ActionOutputsShape.exportVariable}.
+	 */
 	readonly addPath: (path: string) => Effect.Effect<void, ActionOutputError>;
 	/** Emit an error annotation. Does not itself set the exit code. */
 	readonly setFailed: (message: string) => Effect.Effect<void>;
@@ -290,7 +439,7 @@ const dies = unstubbed("ActionOutputs.makeTest");
  * **Example** (Publish string and schema-encoded JSON outputs)
  *
  * ```ts
- * import { ActionOutputs } from "./index.ts";
+ * import { ActionOutputs } from "@beep/scratchpad/effected/github-actions/ActionOutputs";
  * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema";
  *
@@ -299,63 +448,96 @@ const dies = unstubbed("ActionOutputs.makeTest");
  *   yield* outputs.set("version", "1.2.3");
  *   yield* outputs.setJson("packages", ["a", "b"], S.Array(S.String));
  * });
+ *
+ * console.log(Effect.isEffect(program)) // true
  * ```
  *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class ActionOutputs extends Context.Service<ActionOutputs, ActionOutputsShape>()(
 	$I`ActionOutputs`,
 ) {
 	/**
-  * The live service, appending to the runner's `GITHUB_OUTPUT`, `GITHUB_ENV`,
-  * `GITHUB_PATH` and `GITHUB_STEP_SUMMARY` files.
-  *
-  * **Details**
-  *
-  * `ActionRuntime.layer` already provides every requirement.
-  */
+	 * The live service, appending to the runner's `GITHUB_OUTPUT`, `GITHUB_ENV`,
+	 * `GITHUB_PATH` and `GITHUB_STEP_SUMMARY` files.
+	 *
+	 * **Details**
+	 *
+	 * `ActionRuntime.layer` already provides every requirement.
+	 *
+	 * **Example** (Construct a live output layer)
+	 *
+	 * ```ts
+	 * import { ActionOutputs } from "@beep/scratchpad/effected/github-actions/ActionOutputs";
+	 * import * as Layer from "effect/Layer";
+	 *
+	 * console.log(Layer.isLayer(ActionOutputs.layer)) // true
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layer: Layer.Layer<ActionOutputs, never, ActionEnvironment | FileSystem.FileSystem> = Layer.effect(
 		this,
 		make,
 	);
 
 	/**
-  * The outputs surface that is correct inside a **detached worker**.
-  *
-  * **Gotchas**
-  *
-  * The masking model assumes the runner parses stdout. A detached worker's
-  * stdout is a **log file no runner parses**, so under the real layer
-  * `setSecret` emits `::add-mask::<plaintext>` into that file — a command
-  * that is simultaneously **inert** (nothing reads it, so nothing is masked)
-  * and a **secret leak** (the plaintext is now sitting verbatim in a log).
-  * This layer is the worker-side guard; the parent-side rule is that every
-  * secret a worker will hold is masked **before** the spawn, by
-  * `Secret.forChildEnv` under the real layer.
-  *
-  * The layer needs no environment and no filesystem — its `R` is `never` —
-  * so a worker composing it structurally *cannot* write a runner file.
-  * Per-member behavior:
-  *
-  * - **`setSecret` — silent no-op.** The value must not be written
-  *   *anywhere*: there is no runner on this channel to hand it to, and any
-  *   spelling of it in the log IS the leak. Masking is the parent's job,
-  *   before the worker exists.
-  * - **`set`, `setJson`, `exportVariable`, `addPath`, `summary` — fail
-  *   typed** with {@link DetachedOutputError}, naming the file. Each writes a runner
-  *   file that configures the parent job's *later steps* — `GITHUB_OUTPUT`,
-  *   `GITHUB_ENV`, `GITHUB_PATH` — or is collected when the step completes
-  *   (`GITHUB_STEP_SUMMARY`). A detached worker has no later steps, may
-  *   outlive the job entirely, and even an inherited file path would be
-  *   read at a moment unrelated to the write — so a worker calling one of
-  *   these is a program error worth surfacing, not a write to degrade
-  *   silently.
-  * - **`setFailed` — degrades to a plain log line** (`Console.error`,
-  *   without the `::error::` syntax nothing here would parse). Unlike the
-  *   file members it is log-like: "record that something failed" still
-  *   means something in a worker's log, and its signature carries no error
-  *   channel to fail through.
-  */
+	 * The outputs surface that is correct inside a **detached worker**.
+	 *
+	 * **Gotchas**
+	 *
+	 * The masking model assumes the runner parses stdout. A detached worker's
+	 * stdout is a **log file no runner parses**, so under the real layer
+	 * `setSecret` emits `::add-mask::<plaintext>` into that file — a command
+	 * that is simultaneously **inert** (nothing reads it, so nothing is masked)
+	 * and a **secret leak** (the plaintext is now sitting verbatim in a log).
+	 * This layer is the worker-side guard; the parent-side rule is that every
+	 * secret a worker will hold is masked **before** the spawn, by
+	 * `Secret.forChildEnv` under the real layer.
+	 *
+	 * The layer needs no environment and no filesystem — its `R` is `never` —
+	 * so a worker composing it structurally *cannot* write a runner file.
+	 * Per-member behavior:
+	 *
+	 * - **`setSecret` — silent no-op.** The value must not be written
+	 *   *anywhere*: there is no runner on this channel to hand it to, and any
+	 *   spelling of it in the log IS the leak. Masking is the parent's job,
+	 *   before the worker exists.
+	 * - **`set`, `setJson`, `exportVariable`, `addPath`, `summary` — fail
+	 *   typed** with {@link DetachedOutputError}, naming the file. Each writes a runner
+	 *   file that configures the parent job's *later steps* — `GITHUB_OUTPUT`,
+	 *   `GITHUB_ENV`, `GITHUB_PATH` — or is collected when the step completes
+	 *   (`GITHUB_STEP_SUMMARY`). A detached worker has no later steps, may
+	 *   outlive the job entirely, and even an inherited file path would be
+	 *   read at a moment unrelated to the write — so a worker calling one of
+	 *   these is a program error worth surfacing, not a write to degrade
+	 *   silently.
+	 * - **`setFailed` — degrades to a plain log line** (`Console.error`,
+	 *   without the `::error::` syntax nothing here would parse). Unlike the
+	 *   file members it is log-like: "record that something failed" still
+	 *   means something in a worker's log, and its signature carries no error
+	 *   channel to fail through.
+	 *
+	 * **Example** (Reject a detached worker output)
+	 *
+	 * ```ts
+	 * import { ActionOutputs } from "@beep/scratchpad/effected/github-actions/ActionOutputs";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = Effect.gen(function* () {
+	 *   const outputs = yield* ActionOutputs;
+	 *   return yield* outputs.set("version", "1.2.3");
+	 * }).pipe(Effect.provide(ActionOutputs.layerDetached), Effect.flip);
+	 *
+	 * console.log(Effect.runSync(program)._tag) // DetachedOutputError
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layerDetached: Layer.Layer<ActionOutputs> = Layer.succeed(this, {
 		set: (name) => Effect.fail(DetachedOutputError.make({ file: RUNNER_FILE.set, name })),
 		setJson: (name) => Effect.fail(DetachedOutputError.make({ file: RUNNER_FILE.setJson, name })),
@@ -367,21 +549,35 @@ export class ActionOutputs extends Context.Service<ActionOutputs, ActionOutputsS
 	} satisfies ActionOutputsShape);
 
 	/**
-  * A test double. Unstubbed members die rather than silently succeeding.
-  *
-  * **Details**
-  *
-  * **`setJson` always encodes first.** The value is encoded through its
-  * schema exactly as the real layer does — failing typed with
-  * {@link OutputEncodeError} — and only then is a supplied `setJson`
-  * override called, with the original `(name, value, schema)`. An override
-  * that accepts `schema` and ignores it therefore **cannot disable
-  * output-schema checking**: a value/schema drift is a typed failure under
-  * this double whether or not the override looks at the schema. Without an
-  * override, a valid value still dies unimplemented as every other unstubbed
-  * member does. Most tests want neither: reach for
-  * {@link ActionOutputs.recording} instead.
-  */
+	 * A test double. Unstubbed members die rather than silently succeeding.
+	 *
+	 * **Details**
+	 *
+	 * **`setJson` always encodes first.** The value is encoded through its
+	 * schema exactly as the real layer does — failing typed with
+	 * {@link OutputEncodeError} — and only then is a supplied `setJson`
+	 * override called, with the original `(name, value, schema)`. An override
+	 * that accepts `schema` and ignores it therefore **cannot disable
+	 * output-schema checking**: a value/schema drift is a typed failure under
+	 * this double whether or not the override looks at the schema. Without an
+	 * override, a valid value still dies unimplemented as every other unstubbed
+	 * member does. Most tests want neither: reach for
+	 * {@link ActionOutputs.recording} instead.
+	 *
+	 * **Example** (Stub a summary write)
+	 *
+	 * ```ts
+	 * import { ActionOutputs } from "@beep/scratchpad/effected/github-actions/ActionOutputs";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const outputs = ActionOutputs.makeTest({ summary: () => Effect.void });
+	 * const program = outputs.summary("Build succeeded").pipe(Effect.as("published"));
+	 * console.log(Effect.runSync(program)) // published
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	static readonly makeTest = (overrides: Partial<ActionOutputsShape> = {}): ActionOutputsShape => {
 		const setJson: ActionOutputsShape["setJson"] = overrides.setJson ?? (() => dies("setJson"));
 		return {
@@ -397,35 +593,75 @@ export class ActionOutputs extends Context.Service<ActionOutputs, ActionOutputsS
 		};
 	};
 
-	/** {@link ActionOutputs.makeTest} behind `Layer.succeed`. */
+	/**
+	 * {@link ActionOutputs.makeTest} behind `Layer.succeed`.
+	 *
+	 * **Example** (Provide a stubbed output service)
+	 *
+	 * ```ts
+	 * import { ActionOutputs } from "@beep/scratchpad/effected/github-actions/ActionOutputs";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = Effect.gen(function* () {
+	 *   const outputs = yield* ActionOutputs;
+	 *   yield* outputs.summary("Build succeeded");
+	 *   return "published";
+	 * }).pipe(Effect.provide(ActionOutputs.layerTest({ summary: () => Effect.void })));
+	 *
+	 * console.log(Effect.runSync(program)) // published
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layerTest = (overrides: Partial<ActionOutputsShape> = {}): Layer.Layer<ActionOutputs> =>
 		Layer.succeed(ActionOutputs, ActionOutputs.makeTest(overrides));
 
 	/**
-  * A recording double: every member appends a {@link RecordedOutput} to a
-  * journal the test reads back, in call order.
-  *
-  * **Details**
-  *
-  * This is the double most tests of an action want — "what did it publish?"
-  * — shipped so that nobody hand-writes a `setJson` override that drops the
-  * schema encode (a trap `makeTest` closes too). `setJson` encodes
-  * through its schema exactly as the real layer does, failing typed with
-  * {@link OutputEncodeError} and recording nothing on a drift, and records
-  * the **encoded JSON text** — what the runner would have read — not the
-  * decoded value. `set`, `exportVariable` and `setJson` refuse an unusable
-  * name with {@link InvalidOutputNameError}, as the real layer does, rather
-  * than recording it.
-  *
-  * `setSecret` records the secret's **plaintext** under
-  * `member: "setSecret"`. That is deliberate for a recording double: the
-  * journal never leaves the test, and a test asserting that a value *was*
-  * masked needs to see which one. Do not hand this journal to anything that
-  * logs.
-  *
-  * Each call returns a fresh, independent journal — there is no state shared
-  * between two `recording()` calls.
-  */
+	 * A recording double: every member appends a {@link RecordedOutput} to a
+	 * journal the test reads back, in call order.
+	 *
+	 * **Details**
+	 *
+	 * This is the double most tests of an action want — "what did it publish?"
+	 * — shipped so that nobody hand-writes a `setJson` override that drops the
+	 * schema encode (a trap `makeTest` closes too). `setJson` encodes
+	 * through its schema exactly as the real layer does, failing typed with
+	 * {@link OutputEncodeError} and recording nothing on a drift, and records
+	 * the **encoded JSON text** — what the runner would have read — not the
+	 * decoded value. `set`, `exportVariable` and `setJson` refuse an unusable
+	 * name with {@link InvalidOutputNameError}, as the real layer does, rather
+	 * than recording it.
+	 *
+	 * `setSecret` records the secret's **plaintext** under
+	 * `member: "setSecret"`. That is deliberate for a recording double: the
+	 * journal never leaves the test, and a test asserting that a value *was*
+	 * masked needs to see which one. Do not hand this journal to anything that
+	 * logs.
+	 *
+	 * Each call returns a fresh, independent journal — there is no state shared
+	 * between two `recording()` calls.
+	 *
+	 * **Example** (Read schema-encoded JSON from the journal)
+	 *
+	 * ```ts
+	 * import { ActionOutputs } from "@beep/scratchpad/effected/github-actions/ActionOutputs";
+	 * import * as Effect from "effect/Effect";
+	 * import * as S from "effect/Schema";
+	 *
+	 * const recording = ActionOutputs.recording();
+	 * const program = Effect.gen(function* () {
+	 *   const outputs = yield* ActionOutputs;
+	 *   yield* outputs.setJson("packages", ["a", "b"], S.Array(S.String));
+	 * }).pipe(Effect.provide(recording.layer));
+	 *
+	 * Effect.runSync(program);
+	 * console.log(recording.entries().map((entry) => entry.value).join("")) // ["a","b"]
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	static readonly recording = (): RecordingOutputs => {
 		const entries: Array<RecordedOutput> = [];
 		const record = (member: RecordedOutputMember, value: string, name?: string): Effect.Effect<void> =>

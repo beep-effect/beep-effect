@@ -4,6 +4,8 @@ import * as R from "effect/Record";
  * entry, keyed by the spelling of `PATH` the base environment already uses.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface PathPrependEnv {
 	/** The additions to hand a child, ready to merge over the parent's block. */
@@ -20,6 +22,8 @@ export interface PathPrependEnv {
  * What {@link ChildEnv.prependPath} derives the additions from.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface PathPrependOptions {
 	/**
@@ -77,66 +81,95 @@ export interface PathPrependOptions {
  * *defaults a caller can override by passing the value*: `ActionInput.provider`'s
  * `env = process.env` and `DetachedProcess.spawn`'s `base`.
  *
+ * **Example** (Build a child PATH without losing inherited entries)
+ *
+ * ```ts
+ * import { ChildEnv } from "@beep/scratchpad/effected/github-actions/ChildEnv";
+ *
+ * const additions = ChildEnv.prependPath(["/opt/pnpm/bin"], {
+ *   base: { PATH: "/usr/bin" },
+ *   platform: "linux",
+ * });
+ * console.log(additions.env.PATH) // /opt/pnpm/bin:/usr/bin
+ * ```
+ *
  * @public
+ * @category utilities
+ * @since 0.0.0
  */
 export class ChildEnv {
 	private constructor() {}
 
 	/**
-  * The key `base` spells `PATH` with — `Path` on a typical Windows block,
-  * `PATH` elsewhere, and `PATH` when the base has no entry at all.
-  *
-  * **Details**
-  *
-  * The lookup is case-insensitive because the Windows environment block is;
-  * the answer preserves the base's own casing because that is the spelling a
-  * merged block must write through (trap 2 above).
-  */
+	 * The key `base` spells `PATH` with — `Path` on a typical Windows block,
+	 * `PATH` elsewhere, and `PATH` when the base has no entry at all.
+	 *
+	 * **Details**
+	 *
+	 * The lookup is case-insensitive because the Windows environment block is;
+	 * the answer preserves the base's own casing because that is the spelling a
+	 * merged block must write through (trap 2 above).
+	 *
+	 * **Example** (Preserve Windows PATH casing)
+	 *
+	 * ```ts
+	 * import { ChildEnv } from "@beep/scratchpad/effected/github-actions/ChildEnv";
+	 *
+	 * console.log(ChildEnv.pathKeyOf({ Path: "C:\\Windows" })) // Path
+	 * ```
+	 *
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	static pathKeyOf(base: Readonly<Record<string, string | undefined>>): string {
 		return R.keys(base).find((key) => key.toUpperCase() === "PATH") ?? "PATH";
 	}
 
 	/**
-  * The environment additions that prepend `dirs` to the child's `PATH`,
-  * paired with the `extendEnv: true` that keeps them a *prepend*.
-  *
-  * **Details**
-  *
-  * `dirs` are joined ahead of the inherited value **in the order given** —
-  * order is the caller's policy, because the first directory wins any name
-  * collision (a package manager's shim directory leads so it beats a runtime
-  * of the same name). The entry is written under the base's own `PATH`
-  * spelling ({@link ChildEnv.pathKeyOf}), so a Windows child never receives
-  * `PATH` beside its inherited `Path`. An absent or empty inherited value
-  * appends nothing — deliberately not an empty trailing entry, which both
-  * platforms historically read as "the current directory".
-  *
-  * Two consumers, two compositions, and the difference is exactly trap 1:
-  *
-  * - A spawner call takes the **whole pair** — spread it into the command
-  *   options, as in the example below, so the `extendEnv: true` that makes
-  *   `env` a merge rather than a replacement cannot be forgotten.
-  * - An API that already merges additions over the parent itself —
-  *   `DetachedProcess.spawn`, whose `env` is documented as merged — takes
-  *   `.env` alone; `extendEnv` would be meaningless there.
-  *
-  * On a runner, pass `{ base: process.env, platform: process.platform }`.
-  *
-  * **Example** (Prepend a pnpm directory to the child environment)
-  *
-  * ```ts
-  * import { ChildEnv } from "./index.ts";
-  * import { ChildProcess } from "effect/process";
-  *
-  * const command = ChildProcess.make("pnpm", ["install"], {
-  *   ...ChildEnv.prependPath(["/opt/hostedtoolcache/pnpm/10.13.1/x64/bin"], {
-  *     base: process.env,
-  *     platform: process.platform,
-  *   }),
-  *   ...(ChildEnv.needsShell(process.platform) ? { shell: true } : {}),
-  * });
-  * ```
-  */
+	 * The environment additions that prepend `dirs` to the child's `PATH`,
+	 * paired with the `extendEnv: true` that keeps them a *prepend*.
+	 *
+	 * **Details**
+	 *
+	 * `dirs` are joined ahead of the inherited value **in the order given** —
+	 * order is the caller's policy, because the first directory wins any name
+	 * collision (a package manager's shim directory leads so it beats a runtime
+	 * of the same name). The entry is written under the base's own `PATH`
+	 * spelling ({@link ChildEnv.pathKeyOf}), so a Windows child never receives
+	 * `PATH` beside its inherited `Path`. An absent or empty inherited value
+	 * appends nothing — deliberately not an empty trailing entry, which both
+	 * platforms historically read as "the current directory".
+	 *
+	 * Two consumers, two compositions, and the difference is exactly trap 1:
+	 *
+	 * - A spawner call takes the **whole pair** — spread it into the command
+	 *   options, as in the example below, so the `extendEnv: true` that makes
+	 *   `env` a merge rather than a replacement cannot be forgotten.
+	 * - An API that already merges additions over the parent itself —
+	 *   `DetachedProcess.spawn`, whose `env` is documented as merged — takes
+	 *   `.env` alone; `extendEnv` would be meaningless there.
+	 *
+	 * On a runner, pass `{ base: process.env, platform: process.platform }`.
+	 *
+	 * **Example** (Prepend a pnpm directory to the child environment)
+	 *
+	 * ```ts
+	 * import { ChildEnv } from "@beep/scratchpad/effected/github-actions/ChildEnv";
+	 * import { ChildProcess } from "effect/process";
+	 *
+	 * const command = ChildProcess.make("pnpm", ["install"], {
+	 *   ...ChildEnv.prependPath(["/opt/hostedtoolcache/pnpm/10.13.1/x64/bin"], {
+	 *     base: { PATH: "/usr/bin" },
+	 *     platform: "linux",
+	 *   }),
+	 *   ...(ChildEnv.needsShell("linux") ? { shell: true } : {}),
+	 * });
+	 * console.log(command.options.extendEnv) // true
+	 * ```
+	 *
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	static prependPath(dirs: readonly [string, ...ReadonlyArray<string>], options: PathPrependOptions): PathPrependEnv {
 		const delimiter = options.platform === "win32" ? ";" : ":";
 		const key = ChildEnv.pathKeyOf(options.base);
@@ -146,27 +179,39 @@ export class ChildEnv {
 	}
 
 	/**
-  * Whether a bare-name command must be launched through a shell on this
-  * platform.
-  *
-  * **Gotchas**
-  *
-  * On Windows every npm-installed tool on `PATH` is a `.cmd` batch shim, not
-  * an executable: `CreateProcess` cannot run one, and since CVE-2024-27980
-  * Node refuses to hand `.cmd`/`.bat` files to it at all unless a shell is
-  * asked for — so the spawn fails at launch, before the tool ever runs.
-  * Under `shell: true`, `cmd.exe` resolves the bare name off the **child's**
-  * `PATH` — the one {@link ChildEnv.prependPath} builds — through `PATHEXT`,
-  * where `.EXE` precedes `.CMD`, so a real binary of the same name is still
-  * found first and the prepends keep working exactly as they do without a
-  * shell.
-  *
-  * POSIX answers `false`: the direct spawn already works, and a shell would
-  * only add a quoting hazard between the caller and the exit code. Note the
-  * hazard `true` carries: under a shell Node concatenates the command line
-  * rather than passing an argv, so arguments must be static literals, never
-  * derived from input.
-  */
+	 * Whether a bare-name command must be launched through a shell on this
+	 * platform.
+	 *
+	 * **Gotchas**
+	 *
+	 * On Windows every npm-installed tool on `PATH` is a `.cmd` batch shim, not
+	 * an executable: `CreateProcess` cannot run one, and since CVE-2024-27980
+	 * Node refuses to hand `.cmd`/`.bat` files to it at all unless a shell is
+	 * asked for — so the spawn fails at launch, before the tool ever runs.
+	 * Under `shell: true`, `cmd.exe` resolves the bare name off the **child's**
+	 * `PATH` — the one {@link ChildEnv.prependPath} builds — through `PATHEXT`,
+	 * where `.EXE` precedes `.CMD`, so a real binary of the same name is still
+	 * found first and the prepends keep working exactly as they do without a
+	 * shell.
+	 *
+	 * POSIX answers `false`: the direct spawn already works, and a shell would
+	 * only add a quoting hazard between the caller and the exit code. Note the
+	 * hazard `true` carries: under a shell Node concatenates the command line
+	 * rather than passing an argv, so arguments must be static literals, never
+	 * derived from input.
+	 *
+	 * **Example** (Choose shell launch behavior by platform)
+	 *
+	 * ```ts
+	 * import { ChildEnv } from "@beep/scratchpad/effected/github-actions/ChildEnv";
+	 *
+	 * console.log(ChildEnv.needsShell("win32")) // true
+	 * console.log(ChildEnv.needsShell("linux")) // false
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
+	 */
 	static needsShell(platform: string): boolean {
 		return platform === "win32";
 	}

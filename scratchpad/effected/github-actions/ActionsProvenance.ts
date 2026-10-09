@@ -42,49 +42,66 @@ const DEFAULT_SERVER_URL = "https://github.com";
  * **Example** (Capture workflow provenance and read its builder ID)
  *
  * ```ts
- * import { ActionsProvenance } from "./index.ts";
+ * import { ActionsProvenance } from "@beep/scratchpad/effected/github-actions/ActionsProvenance";
  * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   const provenance = yield* ActionsProvenance.capture();
  *   return provenance.runDetails.builder.id;
  * });
+ *
+ * console.log(Effect.isEffect(program)) // true
  * ```
  *
  * @public
+ * @category adapters
+ * @since 0.0.0
  */
 export class ActionsProvenance {
 	private constructor() {}
 
 	/**
-  * The current run's SLSA provenance, built from the runner's OIDC claims.
-  *
-  * **Details**
-  *
-  * Every field `GitHubWorkflowProvenance` declares is populated from
-  * {@link OidcClaims}, except `serverUrl`, which is read from
-  * `GITHUB_SERVER_URL` through {@link ActionEnvironment}'s `getOptional`
-  * with `https://github.com` as the default — **not** through the
-  * `GitHubContext` projection. The projection fails typed when a `GITHUB_*`
-  * variable is missing, and a missing server URL is not a failure: it has a
-  * correct default. GHES consumers set the variable, github.com consumers
-  * never should have to, and neither should think about it. (Upstream
-  * `@actions/attest` reads the same variable with no default and writes the
-  * literal string `undefined` into every URL it builds — the hazard
-  * `GitHubWorkflowProvenance.serverUrl` being a required field exists to
-  * prevent.)
-  *
-  * The audience is forwarded to {@link OidcTokenIssuerShape.claims}
-  * verbatim; the claims a provenance reads do not depend on it, so omitting
-  * it is fine and spends no extra token mint.
-  *
-  * An {@link OidcTokenError} passes through **untouched** — not caught, not
-  * defaulted, not wrapped. Whether attestation is mandatory or best-effort
-  * is the consumer's policy: an action that must not publish unattested
-  * lets the error propagate, and one that publishes anyway catches it at
-  * its own boundary. `reason: "unavailable"` almost always means the
-  * workflow is missing `permissions: id-token: write`.
-  */
+ * The current run's SLSA provenance, built from the runner's OIDC claims.
+ *
+ * **Details**
+ *
+ * Every field `GitHubWorkflowProvenance` declares is populated from
+ * {@link OidcClaims}, except `serverUrl`, which is read from
+ * `GITHUB_SERVER_URL` through {@link ActionEnvironment}'s `getOptional`
+ * with `https://github.com` as the default — **not** through the
+ * `GitHubContext` projection. The projection fails typed when a `GITHUB_*`
+ * variable is missing, and a missing server URL is not a failure: it has a
+ * correct default. GHES consumers set the variable, github.com consumers
+ * never should have to, and neither should think about it. (Upstream
+ * `@actions/attest` reads the same variable with no default and writes the
+ * literal string `undefined` into every URL it builds — the hazard
+ * `GitHubWorkflowProvenance.serverUrl` being a required field exists to
+ * prevent.)
+ *
+ * The audience is forwarded to {@link OidcTokenIssuerShape.claims}
+ * verbatim; the claims a provenance reads do not depend on it, so omitting
+ * it is fine and spends no extra token mint.
+ *
+ * An {@link OidcTokenError} passes through **untouched** — not caught, not
+ * defaulted, not wrapped. Whether attestation is mandatory or best-effort
+ * is the consumer's policy: an action that must not publish unattested
+ * lets the error propagate, and one that publishes anyway catches it at
+ * its own boundary. `reason: "unavailable"` almost always means the
+ * workflow is missing `permissions: id-token: write`.
+ *
+ * **Example** (Construct a provenance capture for an audience)
+ *
+ * ```ts
+ * import { ActionsProvenance } from "@beep/scratchpad/effected/github-actions/ActionsProvenance";
+ * import * as Effect from "effect/Effect";
+ *
+ * const program = ActionsProvenance.capture("sigstore");
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
 	static readonly capture: (
 		audience?: string,
 	) => Effect.Effect<SlsaProvenance, OidcTokenError, OidcTokenIssuer | ActionEnvironment> = Effect.fn(

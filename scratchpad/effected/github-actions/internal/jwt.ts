@@ -18,7 +18,13 @@ import * as Base64Url from "effect/encoding/Base64Url";
 
 const Json = S.fromJsonString(S.Unknown);
 
-/** Why a token's payload could not be read. @internal */
+/**
+ * Why a token's payload could not be read.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type JwtPayloadFailure =
 	| { readonly kind: "segments"; readonly detail: string }
 	| { readonly kind: "payload"; readonly detail: string; readonly cause: unknown };
@@ -27,7 +33,19 @@ export type JwtPayloadFailure =
  * The decoded payload of `token` — the middle segment, base64url JSON —
  * without any check on the signature.
  *
+ * **Example** (Read claims from an unsigned fixture)
+ *
+ * ```ts
+ * import { payloadOf, unsignedJwt } from "@beep/scratchpad/effected/github-actions/internal/jwt";
+ * import * as Result from "effect/Result";
+ *
+ * const token = unsignedJwt({ alg: "none" }, { sub: "test" });
+ * console.log(JSON.stringify(Result.getOrThrow(payloadOf(token)))) // {"sub":"test"}
+ * ```
+ *
  * @internal
+ * @category parsing
+ * @since 0.0.0
  */
 export const payloadOf = (token: string): Result.Result<unknown, JwtPayloadFailure> => {
 	const segments = token.split(".");
@@ -51,7 +69,17 @@ export const payloadOf = (token: string): Result.Result<unknown, JwtPayloadFailu
  * base64url-encoded. For building test doubles and nothing else — the
  * signature segment is a placeholder, so this token fails any verifier.
  *
+ * **Example** (Build a token with a placeholder signature)
+ *
+ * ```ts
+ * import { unsignedJwt } from "@beep/scratchpad/effected/github-actions/internal/jwt";
+ *
+ * console.log(unsignedJwt({}, {})) // e30.e30.unsigned
+ * ```
+ *
  * @internal
+ * @category fixtures
+ * @since 0.0.0
  */
 export const unsignedJwt: {
 	(header: unknown, payload: unknown): string;

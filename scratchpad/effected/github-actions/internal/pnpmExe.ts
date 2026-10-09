@@ -18,7 +18,21 @@ import * as Function from "effect/Function";
 import * as Base64 from "effect/encoding/Base64";
 import * as Hex from "effect/encoding/Hex";
 
-/** The prefix every native-binary package name carries. @internal */
+/**
+ * The prefix every native-binary package name carries.
+ *
+ * **Example** (Recognize the native package prefix)
+ *
+ * ```ts
+ * import { PNPM_EXE_PREFIX } from "@beep/scratchpad/effected/github-actions/internal/pnpmExe";
+ *
+ * console.log(PNPM_EXE_PREFIX) // @pnpm/exe.
+ * ```
+ *
+ * @internal
+ * @category constants
+ * @since 0.0.0
+ */
 export const PNPM_EXE_PREFIX = "@pnpm/exe.";
 
 /**
@@ -54,11 +68,25 @@ const RUNNER_OS_TO_PLATFORM: Readonly<Record<string, string>> = {
  * The `@pnpm/exe.*` target for a runner platform, or `None` when pnpm
  * publishes no native binary for it.
  *
+ * **Details**
+ *
  * `musl` only distinguishes on linux; an arch released for glibc alone
  * (riscv64, ppc64, s390x) answers `None` on a musl host, as upstream does —
  * the glibc binary cannot run there.
  *
+ * **Example** (Select a Linux musl executable)
+ *
+ * ```ts
+ * import { pnpmExeTarget } from "@beep/scratchpad/effected/github-actions/internal/pnpmExe";
+ * import * as O from "effect/Option";
+ *
+ * console.log(O.getOrUndefined(pnpmExeTarget("Linux", "x64", true))) // linux-x64-musl
+ * console.log(O.isNone(pnpmExeTarget("Linux", "riscv64", true))) // true
+ * ```
+ *
  * @internal
+ * @category queries
+ * @since 0.0.0
  */
 export const pnpmExeTarget: {
 	(runnerOs: string, arch: string, musl: boolean): O.Option<string>;
@@ -79,10 +107,23 @@ export const pnpmExeTarget: {
  * linux host; anything unprobeable counts as glibc, which is what every
  * hosted runner is.
  *
+ * **Details**
+ *
  * `process.report` is a global, not a `node:` import, so this stays inside
  * the package's closed `node:` list.
  *
+ * **Example** (Probe the host libc)
+ *
+ * ```ts
+ * import { detectMusl } from "@beep/scratchpad/effected/github-actions/internal/pnpmExe";
+ *
+ * const usesMusl = detectMusl();
+ * console.log(typeof usesMusl) // boolean
+ * ```
+ *
  * @internal
+ * @category predicates
+ * @since 0.0.0
  */
 export const detectMusl = (): boolean => {
 	if (process.platform !== "linux") {
@@ -112,7 +153,19 @@ const SRI_ALGORITHMS: ReadonlyArray<string> = ["sha512", "sha384", "sha256", "sh
  * corepack pin uses, so a mismatch reports both sides the same way. `None`
  * when nothing parseable is there.
  *
+ * **Example** (Prefer the strongest parseable integrity entry)
+ *
+ * ```ts
+ * import { strongestSri } from "@beep/scratchpad/effected/github-actions/internal/pnpmExe";
+ * import * as O from "effect/Option";
+ *
+ * const sri = strongestSri("sha1-YQ== sha512-Yg==");
+ * console.log(O.getOrUndefined(O.map(sri, (entry) => `${entry.algorithm}:${entry.hex}`))) // sha512:62
+ * ```
+ *
  * @internal
+ * @category parsing
+ * @since 0.0.0
  */
 export const strongestSri = (
 	integrity: string,
@@ -143,5 +196,20 @@ export const strongestSri = (
 	return O.none();
 };
 
-/** Whether a bin target is a Node script (run with `node`) rather than an executable run directly. @internal */
+/**
+ * Whether a bin target is a Node script (run with `node`) rather than an executable run directly.
+ *
+ * **Example** (Distinguish Node scripts from native binaries)
+ *
+ * ```ts
+ * import { isNodeScript } from "@beep/scratchpad/effected/github-actions/internal/pnpmExe";
+ *
+ * console.log(isNodeScript("bin/pnpm.cjs")) // true
+ * console.log(isNodeScript("bin/pnpm")) // false
+ * ```
+ *
+ * @internal
+ * @category predicates
+ * @since 0.0.0
+ */
 export const isNodeScript = (target: string): boolean => /\.[cm]?js$/i.test(target);

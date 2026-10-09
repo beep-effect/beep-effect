@@ -20,7 +20,23 @@ const jsonLink = () => S.link<number>()(S.Union([S.Finite, NonFiniteSpelling]), 
 const stringTreeLink = () =>
 	S.link<number>()(S.Union([S.String.check(S.isStringFinite()), NonFiniteSpelling]), SchemaTransformation.numberFromString);
 
-/** Any JavaScript number, including `NaN`, `Infinity` and `-Infinity`. @internal */
+/**
+ * Accepts every JavaScript number, including `NaN`, `Infinity` and `-Infinity`.
+ *
+ * **Example** (Accept non-finite numbers)
+ *
+ * ```ts
+ * import { IeeeNumber } from "@beep/scratchpad/effected/github-actions/internal/ieeeNumber";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(IeeeNumber)(Infinity)) // true
+ * console.log(S.is(IeeeNumber)(NaN)) // true
+ * ```
+ *
+ * @internal
+ * @category schemas
+ * @since 0.0.0
+ */
 export const IeeeNumber = S.declare(P.isNumber, {
 	expected: "number",
 	toCodecJson: jsonLink,
@@ -32,4 +48,10 @@ export const IeeeNumber = S.declare(P.isNumber, {
 	}),
 );
 
+/**
+ * The number type accepted by the {@link IeeeNumber} runtime schema.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type IeeeNumber = typeof IeeeNumber.Type;

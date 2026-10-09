@@ -7,12 +7,38 @@ const $I = $ScratchpadId.create("effected/github-actions/BlobEnvelope");
 /**
  * Raised when bytes cannot be read as an envelope.
  *
+ * **Example** (Inspect the NotABlobEnvelopeError message)
+ *
+ * ```ts
+ * import { NotABlobEnvelopeError } from "@beep/scratchpad/effected/github-actions/BlobEnvelope";
+ *
+ * const error = NotABlobEnvelopeError.make({});
+ * console.log(error.message) // Bytes are not an @effected/github-actions blob envelope
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class NotABlobEnvelopeError extends S.TaggedError<NotABlobEnvelopeError>($I`NotABlobEnvelopeError`)("NotABlobEnvelopeError", {
 	/** The underlying failure, preserved structurally. */
 	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying failure, preserved structurally." }),
 }, $I.annote("NotABlobEnvelopeError", { description: "Raised when bytes cannot be read as an envelope." })) {
+	/**
+	 * Explains that the bytes lack a recognized blob-envelope prefix.
+	 *
+	 * **Example** (Read the failure message)
+	 *
+	 * ```ts
+	 * import { NotABlobEnvelopeError } from "@beep/scratchpad/effected/github-actions/BlobEnvelope";
+	 *
+	 * const error = NotABlobEnvelopeError.make({});
+	 * console.log(error.message) // Bytes are not an @effected/github-actions blob envelope
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return "Bytes are not an @effected/github-actions blob envelope";
 	}
@@ -21,7 +47,18 @@ export class NotABlobEnvelopeError extends S.TaggedError<NotABlobEnvelopeError>(
 /**
  * Raised when the frame ends mid-header or mid-metadata.
  *
+ * **Example** (Inspect the TruncatedBlobEnvelopeError message)
+ *
+ * ```ts
+ * import { TruncatedBlobEnvelopeError } from "@beep/scratchpad/effected/github-actions/BlobEnvelope";
+ *
+ * const error = TruncatedBlobEnvelopeError.make({});
+ * console.log(error.message) // Blob envelope is truncated
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class TruncatedBlobEnvelopeError extends S.TaggedError<TruncatedBlobEnvelopeError>($I`TruncatedBlobEnvelopeError`)(
 	"TruncatedBlobEnvelopeError",
@@ -30,6 +67,21 @@ export class TruncatedBlobEnvelopeError extends S.TaggedError<TruncatedBlobEnvel
 		cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying failure, preserved structurally." }),
 	}, $I.annote("TruncatedBlobEnvelopeError", { description: "Raised when the frame ends mid-header or mid-metadata." }),
 ) {
+	/**
+	 * Explains that the frame ended before its header or metadata was complete.
+	 *
+	 * **Example** (Read the failure message)
+	 *
+	 * ```ts
+	 * import { TruncatedBlobEnvelopeError } from "@beep/scratchpad/effected/github-actions/BlobEnvelope";
+	 *
+	 * const error = TruncatedBlobEnvelopeError.make({});
+	 * console.log(error.message) // Blob envelope is truncated
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return "Blob envelope is truncated";
 	}
@@ -38,7 +90,18 @@ export class TruncatedBlobEnvelopeError extends S.TaggedError<TruncatedBlobEnvel
 /**
  * Raised when the envelope came from a newer revision of the format.
  *
+ * **Example** (Inspect the UnsupportedBlobEnvelopeVersionError message)
+ *
+ * ```ts
+ * import { UnsupportedBlobEnvelopeVersionError } from "@beep/scratchpad/effected/github-actions/BlobEnvelope";
+ *
+ * const error = UnsupportedBlobEnvelopeVersionError.make({ version: 2 });
+ * console.log(error.message) // Blob envelope version 2 is not supported
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class UnsupportedBlobEnvelopeVersionError extends S.TaggedError<UnsupportedBlobEnvelopeVersionError>($I`UnsupportedBlobEnvelopeVersionError`)(
 	"UnsupportedBlobEnvelopeVersionError",
@@ -49,6 +112,21 @@ export class UnsupportedBlobEnvelopeVersionError extends S.TaggedError<Unsupport
 		cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying failure, preserved structurally." }),
 	}, $I.annote("UnsupportedBlobEnvelopeVersionError", { description: "Raised when the envelope came from a newer revision of the format." }),
 ) {
+	/**
+	 * Reports the unsupported envelope version found in the frame.
+	 *
+	 * **Example** (Read the failure message)
+	 *
+	 * ```ts
+	 * import { UnsupportedBlobEnvelopeVersionError } from "@beep/scratchpad/effected/github-actions/BlobEnvelope";
+	 *
+	 * const error = UnsupportedBlobEnvelopeVersionError.make({ version: 2 });
+	 * console.log(error.message) // Blob envelope version 2 is not supported
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return `Blob envelope version ${this.version} is not supported`;
 	}
@@ -57,12 +135,38 @@ export class UnsupportedBlobEnvelopeVersionError extends S.TaggedError<Unsupport
 /**
  * Raised when well-framed metadata does not satisfy the caller's schema.
  *
+ * **Example** (Inspect the BlobMetadataDecodeError message)
+ *
+ * ```ts
+ * import { BlobMetadataDecodeError } from "@beep/scratchpad/effected/github-actions/BlobEnvelope";
+ *
+ * const error = BlobMetadataDecodeError.make({});
+ * console.log(error.message) // Blob envelope metadata did not satisfy the schema
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class BlobMetadataDecodeError extends S.TaggedError<BlobMetadataDecodeError>($I`BlobMetadataDecodeError`)("BlobMetadataDecodeError", {
 	/** The underlying failure, preserved structurally. */
 	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying failure, preserved structurally." }),
 }, $I.annote("BlobMetadataDecodeError", { description: "Raised when well-framed metadata does not satisfy the caller's schema." })) {
+	/**
+	 * Explains that the stored metadata failed the caller's schema.
+	 *
+	 * **Example** (Read the failure message)
+	 *
+	 * ```ts
+	 * import { BlobMetadataDecodeError } from "@beep/scratchpad/effected/github-actions/BlobEnvelope";
+	 *
+	 * const error = BlobMetadataDecodeError.make({});
+	 * console.log(error.message) // Blob envelope metadata did not satisfy the schema
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return "Blob envelope metadata did not satisfy the schema";
 	}
@@ -71,12 +175,38 @@ export class BlobMetadataDecodeError extends S.TaggedError<BlobMetadataDecodeErr
 /**
  * Raised when the value being stored does not satisfy its schema.
  *
+ * **Example** (Inspect the BlobMetadataEncodeError message)
+ *
+ * ```ts
+ * import { BlobMetadataEncodeError } from "@beep/scratchpad/effected/github-actions/BlobEnvelope";
+ *
+ * const error = BlobMetadataEncodeError.make({});
+ * console.log(error.message) // Blob metadata could not be encoded
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class BlobMetadataEncodeError extends S.TaggedError<BlobMetadataEncodeError>($I`BlobMetadataEncodeError`)("BlobMetadataEncodeError", {
 	/** The underlying failure, preserved structurally. */
 	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying failure, preserved structurally." }),
 }, $I.annote("BlobMetadataEncodeError", { description: "Raised when the value being stored does not satisfy its schema." })) {
+	/**
+	 * Explains that metadata could not be encoded for storage.
+	 *
+	 * **Example** (Read the failure message)
+	 *
+	 * ```ts
+	 * import { BlobMetadataEncodeError } from "@beep/scratchpad/effected/github-actions/BlobEnvelope";
+	 *
+	 * const error = BlobMetadataEncodeError.make({});
+	 * console.log(error.message) // Blob metadata could not be encoded
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return "Blob metadata could not be encoded";
 	}
@@ -93,6 +223,8 @@ export class BlobMetadataEncodeError extends S.TaggedError<BlobMetadataEncodeErr
  * compile error rather than a message reading `"undefined"`.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type BlobEnvelopeError =
 	| NotABlobEnvelopeError
@@ -117,9 +249,7 @@ const HEADER_BYTES = MAGIC.length + 1 + 4;
  *
  * Layout:
  *
- * ```text
- * [4B magic "EFBS"][1B version][4B metadata length, big-endian][metadata JSON][body]
- * ```
+ * `[4B magic "EFBS"][1B version][4B metadata length, big-endian][metadata JSON][body]`
  *
  * Three properties earn the format:
  *
@@ -141,32 +271,56 @@ const HEADER_BYTES = MAGIC.length + 1 + 4;
  * **Example** (Encode and decode a blob with typed metadata)
  *
  * ```ts
- * import { BlobEnvelope } from "./index.ts";
+ * import { BlobEnvelope } from "@beep/scratchpad/effected/github-actions/BlobEnvelope";
  * import * as Result from "effect/Result";
  * import * as S from "effect/Schema";
  *
  * const Meta = S.Struct({ tag: S.String });
- *
  * const framed = BlobEnvelope.encodeResult({ tag: "v1" }, new Uint8Array([1, 2, 3]), Meta);
- * if (Result.isSuccess(framed)) {
- *   const read = BlobEnvelope.decodeResult(framed.success, Meta);
- *   // => Result.succeed({ metadata: { tag: "v1" }, body: Uint8Array [1, 2, 3] })
- * }
+ * const read = Result.flatMap(framed, (bytes) => BlobEnvelope.decodeResult(bytes, Meta));
+ * console.log(Result.map(read, (blob) => blob.metadata.tag).pipe(Result.getOrElse(() => "failed"))) // v1
  * ```
  *
  * @public
+ * @category codecs
+ * @since 0.0.0
  */
 export class BlobEnvelope {
 	private constructor() {}
 
-	/** The envelope version this build writes and accepts. */
+	/**
+	 * The envelope version this build writes and accepts.
+	 *
+	 * **Example** (Inspect the accepted envelope version)
+	 *
+	 * ```ts
+	 * import { BlobEnvelope } from "@beep/scratchpad/effected/github-actions/BlobEnvelope";
+	 *
+	 * console.log(BlobEnvelope.version) // 1
+	 * ```
+	 * @category constants
+	 * @since 0.0.0
+	 */
 	static readonly version: number = VERSION;
 
 	/**
 	 * Frame metadata and a body into a single blob.
 	 *
+	 * **Example** (Frame typed metadata and payload bytes)
+	 *
+	 * ```ts
+	 * import { BlobEnvelope } from "@beep/scratchpad/effected/github-actions/BlobEnvelope";
+	 * import * as Result from "effect/Result";
+	 * import * as S from "effect/Schema";
+	 *
+	 * const framed = BlobEnvelope.encodeResult({ tag: "v1" }, new Uint8Array([1, 2, 3]), S.Struct({ tag: S.String }));
+	 * console.log(Result.isSuccess(framed)) // true
+	 * ```
+	 *
 	 * @returns a `Result` holding the framed bytes, or a
 	 * {@link BlobMetadataEncodeError} when `metadata` does not satisfy `schema`
+	 * @category encoding
+	 * @since 0.0.0
 	 */
 	static encodeResult<A, I>(
 		metadata: A,
@@ -190,11 +344,26 @@ export class BlobEnvelope {
 	/**
 	 * Read a framed blob back into its metadata and body.
 	 *
+	 * **Example** (Recover metadata from a framed blob)
+	 *
+	 * ```ts
+	 * import { BlobEnvelope } from "@beep/scratchpad/effected/github-actions/BlobEnvelope";
+	 * import * as Result from "effect/Result";
+	 * import * as S from "effect/Schema";
+	 *
+	 * const Meta = S.Struct({ tag: S.String });
+	 * const framed = BlobEnvelope.encodeResult({ tag: "v1" }, new Uint8Array([1, 2, 3]), Meta);
+	 * const read = Result.flatMap(framed, (bytes) => BlobEnvelope.decodeResult(bytes, Meta));
+	 * console.log(Result.map(read, (blob) => blob.metadata.tag).pipe(Result.getOrElse(() => "failed"))) // v1
+	 * ```
+	 *
 	 * @returns a `Result` holding the decoded metadata and a copy of the body, or
 	 * a {@link BlobEnvelopeError}: {@link NotABlobEnvelopeError} for unframed
 	 * bytes, {@link TruncatedBlobEnvelopeError},
 	 * {@link UnsupportedBlobEnvelopeVersionError}, or
 	 * {@link BlobMetadataDecodeError} when the metadata fails `schema`
+	 * @category decoding
+	 * @since 0.0.0
 	 */
 	static decodeResult<A, I>(
 		bytes: Uint8Array,

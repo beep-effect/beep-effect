@@ -17,7 +17,23 @@ import type { ActionEnvironmentShape } from "../ActionEnvironment.ts";
  * Whether `RUNNER_OS` says Windows. `false` when unset — off a runner, the
  * POSIX shape is the honest default.
  *
+ * **Example** (Compose a runner-platform lookup)
+ *
+ * ```ts
+ * import { isWindowsRunner } from "@beep/scratchpad/effected/github-actions/internal/runner";
+ * import { ActionEnvironment } from "@beep/scratchpad/effected/github-actions/ActionEnvironment";
+ * import * as Effect from "effect/Effect";
+ *
+ * const program = Effect.gen(function* () {
+ *   const env = yield* ActionEnvironment;
+ *   return yield* isWindowsRunner(env);
+ * });
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
  * @internal
+ * @category predicates
+ * @since 0.0.0
  */
 export const isWindowsRunner = (env: ActionEnvironmentShape): Effect.Effect<boolean> =>
 	Effect.map(env.getOptional("RUNNER_OS"), (found) =>
@@ -37,7 +53,25 @@ export const isWindowsRunner = (env: ActionEnvironmentShape): Effect.Effect<bool
  * path (`PackageManagerInstaller`, for its shims) asks the installer's own
  * `cachePath` member rather than resolving the root a second time.
  *
+ * **Example** (Compose a tool-cache lookup)
+ *
+ * ```ts
+ * import { toolCacheRoot } from "@beep/scratchpad/effected/github-actions/internal/runner";
+ * import { ActionEnvironment } from "@beep/scratchpad/effected/github-actions/ActionEnvironment";
+ * import * as Effect from "effect/Effect";
+ * import * as Path from "effect/Path";
+ *
+ * const program = Effect.gen(function* () {
+ *   const env = yield* ActionEnvironment;
+ *   const path = yield* Path.Path;
+ *   return yield* toolCacheRoot(env, path);
+ * });
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
  * @internal
+ * @category queries
+ * @since 0.0.0
  */
 export const toolCacheRoot: {
 	(env: ActionEnvironmentShape, path: Path.Path): Effect.Effect<string>;

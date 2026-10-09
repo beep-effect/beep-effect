@@ -34,7 +34,18 @@ const Json = S.fromJsonString(S.Unknown);
 /**
  * Raised when an artifact cannot be uploaded, listed, downloaded or deleted.
  *
+ * **Example** (Describe a missing artifact)
+ *
+ * ```ts
+ * import { ArtifactError } from "@beep/scratchpad/effected/github-actions/Artifact";
+ *
+ * const error = ArtifactError.make({ reason: "notFound", artifact: "logs" });
+ * console.log(error.message) // No artifact "logs" exists in this run
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class ArtifactError extends S.TaggedError<ArtifactError>($I`ArtifactError`)("ArtifactError", {
 	/**
@@ -67,6 +78,21 @@ export class ArtifactError extends S.TaggedError<ArtifactError>($I`ArtifactError
 	/** The underlying failure, preserved structurally. */
 	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying failure, preserved structurally." }),
 }, $I.annote("ArtifactError", { description: "Raised when an artifact cannot be uploaded, listed, downloaded or deleted." })) {
+	/**
+	 * Explains the artifact failure with the available identifier, status and diagnostic details.
+	 *
+	 * **Example** (Read an artifact diagnostic)
+	 *
+	 * ```ts
+	 * import { ArtifactError } from "@beep/scratchpad/effected/github-actions/Artifact";
+	 *
+	 * const error = ArtifactError.make({ reason: "notFound", artifact: "logs" });
+	 * console.log(error.message) // No artifact "logs" exists in this run
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		const about = this.artifact === undefined ? "" : ` "${this.artifact}"`;
 		const detail = this.detail === undefined ? "" : `: ${this.detail}`;
@@ -86,7 +112,19 @@ export class ArtifactError extends S.TaggedError<ArtifactError>($I`ArtifactError
 /**
  * One artifact, as the backend describes it.
  *
+ * **Example** (Decode an artifact listing row)
+ *
+ * ```ts
+ * import { ArtifactItem } from "@beep/scratchpad/effected/github-actions/Artifact";
+ * import * as S from "effect/Schema";
+ *
+ * const item = S.decodeUnknownSync(ArtifactItem)({ id: 42, name: "logs", size: 128 });
+ * console.log(item.name) // logs
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 // A boundary struct preserves the backend's plain-record public representation.
 export const ArtifactItem = S.Struct({
@@ -100,12 +138,21 @@ export const ArtifactItem = S.Struct({
 	createdAt: S.String.pipe(S.UndefinedOr, S.optionalKey).annotateKey({ description: "When it was created, ISO-8601, when the backend says." }),
 }).pipe($I.annoteSchema("ArtifactItem", { description: "One artifact, as the backend describes it." }));
 
+/**
+ * The decoded plain-record representation of an artifact listing row.
+ *
+ * @see {@link ArtifactItem} for the runtime schema used to validate backend rows.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ArtifactItem = typeof ArtifactItem.Type;
 
 /**
  * How to pack an upload.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface UploadOptions {
 	/**
@@ -135,6 +182,8 @@ export interface UploadOptions {
  * What an upload produced.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface UploadResult {
 	/** The new artifact's database id, which `download` takes. */
@@ -147,6 +196,8 @@ export interface UploadResult {
  * Where a download should land.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface DownloadOptions {
 	/** The destination directory. A fresh temporary directory when omitted. */
@@ -157,6 +208,8 @@ export interface DownloadOptions {
  * What a download produced.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface DownloadResult {
 	/** The directory the artifact's contents were extracted into. */
@@ -167,6 +220,8 @@ export interface DownloadResult {
  * The id of an artifact that `delete` removed.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface ArtifactRef {
 	/** The deleted artifact's database id. */
@@ -178,6 +233,8 @@ export interface ArtifactRef {
  * delete, each failing with {@link ArtifactError}.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface ArtifactShape {
 	/**
@@ -585,19 +642,37 @@ const dies = unstubbed("Artifact.makeTest");
  * **Example** (Upload a build log as an artifact)
  *
  * ```ts
- * import { Artifact } from "./index.ts";
+ * import { Artifact } from "@beep/scratchpad/effected/github-actions/Artifact";
  * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   const artifacts = yield* Artifact;
  *   return yield* artifacts.upload("logs", ["/tmp/build/log.txt"], "/tmp/build");
  * });
+ *
+ * console.log(Effect.isEffect(program)) // true
  * ```
  *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class Artifact extends Context.Service<Artifact, ArtifactShape>()($I`Artifact`) {
-	/** The service, over the real Azure client and the real `zip`. */
+	/**
+ * The service, over the real Azure client and the real `zip`.
+ *
+ * **Example** (Inspect the live artifact layer)
+ *
+ * ```ts
+ * import { Artifact } from "@beep/scratchpad/effected/github-actions/Artifact";
+ * import * as Layer from "effect/Layer";
+ *
+ * console.log(Layer.isLayer(Artifact.layer)) // true
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 	static readonly layer: Layer.Layer<
 		Artifact,
 		never,
@@ -609,18 +684,35 @@ export class Artifact extends Context.Service<Artifact, ArtifactShape>()($I`Arti
 	> = Layer.effect(this, make(azure));
 
 	/**
-  * The service, over a supplied transport.
-  *
-  * **Details**
-  *
-  * The protocol, the zip, the digest and the conflict handling are what this
-  * package owns; the pre-signed `PUT` is not. Supplying the transport is what
-  * lets a test exercise all of the first group without the second.
-  *
-  * A parameterized layer factory mints a fresh layer per call and layers
-  * memoize by reference — bind it to a `const` rather than calling it at each
-  * composition site.
-  */
+ * The service, over a supplied transport.
+ *
+ * **Details**
+ *
+ * The protocol, the zip, the digest and the conflict handling are what this
+ * package owns; the pre-signed `PUT` is not. Supplying the transport is what
+ * lets a test exercise all of the first group without the second.
+ *
+ * A parameterized layer factory mints a fresh layer per call and layers
+ * memoize by reference — bind it to a `const` rather than calling it at each
+ * composition site.
+ *
+ * **Example** (Bind an artifact layer to a supplied transfer)
+ *
+ * ```ts
+ * import { Artifact } from "@beep/scratchpad/effected/github-actions/Artifact";
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
+ *
+ * const layer = Artifact.layerWith({
+ *   uploadFile: (_url, _file) => Effect.void,
+ *   downloadToFile: (_url, _file) => Effect.void,
+ * });
+ * console.log(Layer.isLayer(layer)) // true
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 	static readonly layerWith = (
 		transfer: FileBlobTransfer,
 	): Layer.Layer<
@@ -633,7 +725,22 @@ export class Artifact extends Context.Service<Artifact, ArtifactShape>()($I`Arti
 		| ChildProcessSpawner.ChildProcessSpawner
 	> => Layer.effect(Artifact, make(transfer));
 
-	/** A test double. Unstubbed members die rather than reporting an empty run. */
+	/**
+ * A test double. Unstubbed members die rather than reporting an empty run.
+ *
+ * **Example** (Stub an empty artifact listing)
+ *
+ * ```ts
+ * import { Artifact } from "@beep/scratchpad/effected/github-actions/Artifact";
+ * import * as Effect from "effect/Effect";
+ *
+ * const artifacts = Artifact.makeTest({ list: Effect.succeed([]) });
+ * console.log(Effect.runSync(artifacts.list).length) // 0
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
 	static readonly makeTest = (overrides: Partial<ArtifactShape> = {}): ArtifactShape => ({
 		upload: () => dies("upload"),
 		list: Effect.suspend(() => dies("list")),
@@ -643,7 +750,23 @@ export class Artifact extends Context.Service<Artifact, ArtifactShape>()($I`Arti
 		...overrides,
 	});
 
-	/** {@link Artifact.makeTest} behind `Layer.succeed`. */
+	/**
+ * {@link Artifact.makeTest} behind `Layer.succeed`.
+ *
+ * **Example** (Provide an artifact listing test double)
+ *
+ * ```ts
+ * import { Artifact } from "@beep/scratchpad/effected/github-actions/Artifact";
+ * import * as Effect from "effect/Effect";
+ *
+ * const program = Effect.flatMap(Artifact, (artifacts) => artifacts.list);
+ * const layer = Artifact.layerTest({ list: Effect.succeed([]) });
+ * console.log(Effect.runSync(Effect.provide(program, layer)).length) // 0
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 	static readonly layerTest = (overrides: Partial<ArtifactShape> = {}): Layer.Layer<Artifact> =>
 		Layer.succeed(Artifact, Artifact.makeTest(overrides));
 }

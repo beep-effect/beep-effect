@@ -7,7 +7,18 @@ const $I = $ScratchpadId.create("effected/github-actions/BlobTransfer");
 /**
  * Raised when bytes could not be moved to or from a signed blob url.
  *
+ * **Example** (Identify a failed upload)
+ *
+ * ```ts
+ * import { BlobTransferError } from "@beep/scratchpad/effected/github-actions/BlobTransfer";
+ *
+ * const error = BlobTransferError.make({ reason: "uploadFailed" });
+ * console.log(error.message) // Could not upload to the signed blob url
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class BlobTransferError extends S.TaggedError<BlobTransferError>($I`BlobTransferError`)("BlobTransferError", {
 	/** Which direction failed. */
@@ -15,6 +26,20 @@ export class BlobTransferError extends S.TaggedError<BlobTransferError>($I`BlobT
 	/** The underlying failure, preserved structurally. */
 	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying failure, preserved structurally." }),
 }, $I.annote("BlobTransferError", { description: "Raised when bytes could not be moved to or from a signed blob url." })) {
+	/**
+	 * Describes whether uploading or downloading the signed blob failed.
+	 *
+	 * **Example** (Describe a failed download)
+	 *
+	 * ```ts
+	 * import { BlobTransferError } from "@beep/scratchpad/effected/github-actions/BlobTransfer";
+	 *
+	 * const error = BlobTransferError.make({ reason: "downloadFailed" });
+	 * console.log(error.message) // Could not download from the signed blob url
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return this.reason === "uploadFailed"
 			? "Could not upload to the signed blob url"
@@ -41,6 +66,8 @@ export class BlobTransferError extends S.TaggedError<BlobTransferError>($I`BlobT
  * error.
  *
  * @public
+ * @category ports
+ * @since 0.0.0
  */
 export interface FileBlobTransfer {
 	/** Upload a file's contents to the url. */
@@ -61,6 +88,8 @@ export interface FileBlobTransfer {
  * never be asked for.
  *
  * @public
+ * @category ports
+ * @since 0.0.0
  */
 export interface DataBlobTransfer {
 	/** Upload bytes to the url. */

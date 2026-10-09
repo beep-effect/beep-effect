@@ -170,19 +170,33 @@ const flush = (state: BufferState): Effect.Effect<void> =>
  * Options for {@link ActionLoggerShape.withBuffer}.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface WithBufferOptions {
 	/**
-  * What happens to the captured transcript when the step **succeeds**.
-  *
-  * **Details**
-  *
-  * `"flush"` — the default — replays it, so a clean run still prints what it
-  * did. `"discard"` drops it, which is what keeps a green release log to one
-  * line per step: the transcript exists only as the failure report. A failure,
-  * a defect or an interruption flushes under either setting — the choice is
-  * only about what a success is worth in the log.
-  */
+	 * What happens to the captured transcript when the step **succeeds**.
+	 *
+	 * **Details**
+	 *
+	 * `"flush"` — the default — replays it, so a clean run still prints what it
+	 * did. `"discard"` drops it, which is what keeps a green release log to one
+	 * line per step: the transcript exists only as the failure report. A failure,
+	 * a defect or an interruption flushes under either setting — the choice is
+	 * only about what a success is worth in the log.
+	 *
+	 * **Example** (Discard successful transcripts)
+	 *
+	 * ```ts
+	 * import type { WithBufferOptions } from "@beep/scratchpad/effected/github-actions/ActionLogger";
+	 *
+	 * const options: WithBufferOptions = { onSuccess: "discard" };
+	 * console.log(options.onSuccess) // discard
+	 * ```
+	 *
+	 * @category configuration
+	 * @since 0.0.0
+	 */
 	readonly onSuccess?: "flush" | "discard";
 }
 
@@ -190,16 +204,30 @@ export interface WithBufferOptions {
  * Options for {@link ActionLoggerShape.withStep}.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface WithStepOptions {
 	/**
-  * The info line emitted when the step **succeeds**.
-  *
-  * **Details**
-  *
-  * Defaults to `✅ <name>`. This is the line the buffered transcript is traded
-  * for: a green step reports that it happened and nothing else.
-  */
+	 * The info line emitted when the step **succeeds**.
+	 *
+	 * **Details**
+	 *
+	 * Defaults to `✅ <name>`. This is the line the buffered transcript is traded
+	 * for: a green step reports that it happened and nothing else.
+	 *
+	 * **Example** (Customize the success summary)
+	 *
+	 * ```ts
+	 * import type { WithStepOptions } from "@beep/scratchpad/effected/github-actions/ActionLogger";
+	 *
+	 * const options: WithStepOptions = { summary: "Published" };
+	 * console.log(options.summary) // Published
+	 * ```
+	 *
+	 * @category configuration
+	 * @since 0.0.0
+	 */
 	readonly summary?: string;
 }
 
@@ -208,93 +236,166 @@ export interface WithStepOptions {
  * notices and source annotations.
  *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export interface ActionLoggerShape {
-	/** Run an effect inside a collapsible log group. */
+	/**
+	 * Run an effect inside a collapsible log group.
+	 *
+	 * **Example** (Preserve a grouped result)
+	 *
+	 * ```ts
+	 * import { ActionLogger } from "@beep/scratchpad/effected/github-actions/ActionLogger";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const logger = ActionLogger.makeTest();
+	 * const program = logger.group("install", Effect.succeed(42));
+	 * console.log(Effect.runSync(program)) // 42
+	 * ```
+	 *
+	 * @category combinators
+	 * @since 0.0.0
+	 */
 	readonly group: <A, E, R>(name: string, effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, R>;
 	/**
-  * Run an effect with its verbose output captured and replayed on exit.
-  *
-  * **Details**
-  *
-  * Warnings and errors are **not** buffered — they go out as they happen, so a
-  * long step still reports trouble while it is running. Everything at `Info`
-  * and below is held and flushed on every exit path, including a defect or an
-  * interruption, so a clean run still prints its transcript. A step that
-  * should be **quiet** when it succeeds passes
-  * `{ onSuccess: "discard" }` ({@link WithBufferOptions}); failure still
-  * spills the transcript either way.
-  *
-  * Buffering is skipped entirely when the runner has step debugging enabled or
-  * the ambient minimum log level is already `Debug` or lower — someone asking
-  * for verbose output wants it live, and that overrides
-  * `onSuccess: "discard"` too: asking for debug output means wanting to see
-  * what a green step did. Under `Action.run` the two conditions coincide,
-  * because step debugging is what lowers the ambient level to `Debug`; the
-  * step-debug check still stands on its own for a program that opted out
-  * with `stepDebugLogLevel: false` or runs outside `Action.run`.
-  */
+	 * Run an effect with its verbose output captured and replayed on exit.
+	 *
+	 * **Details**
+	 *
+	 * Warnings and errors are **not** buffered — they go out as they happen, so a
+	 * long step still reports trouble while it is running. Everything at `Info`
+	 * and below is held and flushed on every exit path, including a defect or an
+	 * interruption, so a clean run still prints its transcript. A step that
+	 * should be **quiet** when it succeeds passes
+	 * `{ onSuccess: "discard" }` ({@link WithBufferOptions}); failure still
+	 * spills the transcript either way.
+	 *
+	 * Buffering is skipped entirely when the runner has step debugging enabled or
+	 * the ambient minimum log level is already `Debug` or lower — someone asking
+	 * for verbose output wants it live, and that overrides
+	 * `onSuccess: "discard"` too: asking for debug output means wanting to see
+	 * what a green step did. Under `Action.run` the two conditions coincide,
+	 * because step debugging is what lowers the ambient level to `Debug`; the
+	 * step-debug check still stands on its own for a program that opted out
+	 * with `stepDebugLogLevel: false` or runs outside `Action.run`.
+	 *
+	 * **Example** (Discard a successful buffer in a test)
+	 *
+	 * ```ts
+	 * import { ActionLogger } from "@beep/scratchpad/effected/github-actions/ActionLogger";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const logger = ActionLogger.makeTest();
+	 * const program = logger.withBuffer("install", Effect.succeed(42), { onSuccess: "discard" });
+	 * console.log(Effect.runSync(program)) // 42
+	 * ```
+	 *
+	 * @category combinators
+	 * @since 0.0.0
+	 */
 	readonly withBuffer: <A, E, R>(
 		label: string,
 		effect: Effect.Effect<A, E, R>,
 		options?: WithBufferOptions,
 	) => Effect.Effect<A, E, R>;
 	/**
-  * Run a named step: quiet when it succeeds, its full transcript when it does
-  * not.
-  *
-  * **Details**
-  *
-  * The composition a release log actually wants, and the one
-  * {@link ActionLoggerShape.withBuffer} alone does not reach. Buffering with
-  * `{ onSuccess: "discard" }` gets a green step to *zero* lines; this trades
-  * that transcript for exactly one:
-  *
-  * 1. verbose output is captured rather than printed live,
-  * 2. on success the transcript is dropped and a single info line — `summary`,
-  *    default `✅ <name>` ({@link WithStepOptions}) — goes out in its place,
-  * 3. on failure a `❌ <name>` header lands **first**, then the transcript
-  *    spills beneath it.
-  *
-  * The ordering in (3) is a property of the **buffered** path. With step
-  * debugging on, nothing is buffered — verbose output has already gone out
-  * live by the time the failure fires — so the header lands *after* the
-  * transcript it would otherwise introduce. That is the honest trade of
-  * asking for live output, not a defect, and both orderings are pinned by
-  * test.
-  *
-  * The header and the summary are the whole difference from `withBuffer`, and
-  * they are why this is a member rather than a documented recipe: `group` +
-  * `withBuffer` looks like complete parity until you notice nothing emits the
-  * success line.
-  *
-  * The summary survives step debugging. Buffering is skipped when the runner
-  * asks for verbose output, but the line naming what succeeded is still the
-  * cheapest thing in the log.
-  */
+	 * Run a named step: quiet when it succeeds, its full transcript when it does
+	 * not.
+	 *
+	 * **Details**
+	 *
+	 * The composition a release log actually wants, and the one
+	 * {@link ActionLoggerShape.withBuffer} alone does not reach. Buffering with
+	 * `{ onSuccess: "discard" }` gets a green step to *zero* lines; this trades
+	 * that transcript for exactly one:
+	 *
+	 * 1. verbose output is captured rather than printed live,
+	 * 2. on success the transcript is dropped and a single info line — `summary`,
+	 *    default `✅ <name>` ({@link WithStepOptions}) — goes out in its place,
+	 * 3. on failure a `❌ <name>` header lands **first**, then the transcript
+	 *    spills beneath it.
+	 *
+	 * The ordering in (3) is a property of the **buffered** path. With step
+	 * debugging on, nothing is buffered — verbose output has already gone out
+	 * live by the time the failure fires — so the header lands *after* the
+	 * transcript it would otherwise introduce. That is the honest trade of
+	 * asking for live output, not a defect, and both orderings are pinned by
+	 * test.
+	 *
+	 * The header and the summary are the whole difference from `withBuffer`, and
+	 * they are why this is a member rather than a documented recipe: `group` +
+	 * `withBuffer` looks like complete parity until you notice nothing emits the
+	 * success line.
+	 *
+	 * The summary survives step debugging. Buffering is skipped when the runner
+	 * asks for verbose output, but the line naming what succeeded is still the
+	 * cheapest thing in the log.
+	 *
+	 * **Example** (Preserve a named step result)
+	 *
+	 * ```ts
+	 * import { ActionLogger } from "@beep/scratchpad/effected/github-actions/ActionLogger";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const logger = ActionLogger.makeTest();
+	 * const program = logger.withStep("install", Effect.succeed(42), { summary: "Installed" });
+	 * console.log(Effect.runSync(program)) // 42
+	 * ```
+	 *
+	 * @category combinators
+	 * @since 0.0.0
+	 */
 	readonly withStep: <A, E, R>(
 		name: string,
 		effect: Effect.Effect<A, E, R>,
 		options?: WithStepOptions,
 	) => Effect.Effect<A, E, R>;
 	/**
-  * Emit a `::notice::` annotation.
-  *
-  * **Details**
-  *
-  * A dedicated member rather than a log level, because Effect has no level
-  * between `Info` and `Warn` to map onto notices.
-  */
+	 * Emit a `::notice::` annotation.
+	 *
+	 * **Details**
+	 *
+	 * A dedicated member rather than a log level, because Effect has no level
+	 * between `Info` and `Warn` to map onto notices.
+	 *
+	 * **Example** (Construct a notice effect)
+	 *
+	 * ```ts
+	 * import { ActionLogger } from "@beep/scratchpad/effected/github-actions/ActionLogger";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = ActionLogger.makeTest().notice("Published", { title: "Release" });
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @category observability
+	 * @since 0.0.0
+	 */
 	readonly notice: (message: string, properties?: AnnotationProperties) => Effect.Effect<void>;
 	/**
-  * Attach source annotations to every `Effect.log*` inside an effect.
-  *
-  * **Details**
-  *
-  * The point is that a caller never spells an annotation key: the fields go in
-  * as `AnnotationProperties` (from `@effected/github-commands`) and come out as `file=`/`line=` on the
-  * rendered command.
-  */
+	 * Attach source annotations to every `Effect.log*` inside an effect.
+	 *
+	 * **Details**
+	 *
+	 * The point is that a caller never spells an annotation key: the fields go in
+	 * as `AnnotationProperties` (from `@effected/github-commands`) and come out as `file=`/`line=` on the
+	 * rendered command.
+	 *
+	 * **Example** (Attach source fields to an effect)
+	 *
+	 * ```ts
+	 * import { ActionLogger } from "@beep/scratchpad/effected/github-actions/ActionLogger";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const logger = ActionLogger.makeTest();
+	 * const program = logger.annotated({ file: "src/index.ts", startLine: 1 }, Effect.succeed(42));
+	 * console.log(Effect.runSync(program)) // 42
+	 * ```
+	 *
+	 * @category combinators
+	 * @since 0.0.0
+	 */
 	readonly annotated: <A, E, R>(
 		properties: AnnotationProperties,
 		effect: Effect.Effect<A, E, R>,
@@ -392,66 +493,124 @@ const make = Effect.gen(function* () {
  * **Example** (Group and buffer installation logs)
  *
  * ```ts
- * import { ActionLogger } from "./index.ts";
+ * import { ActionLogger } from "@beep/scratchpad/effected/github-actions/ActionLogger";
  * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   const logger = yield* ActionLogger;
  *   yield* logger.group("install", logger.withBuffer("pnpm", Effect.logInfo("resolving")));
  * });
+ * console.log(Effect.isEffect(program)) // true
  * ```
  *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class ActionLogger extends Context.Service<ActionLogger, ActionLoggerShape>()(
 	$I`ActionLogger`,
 ) {
 	/**
-  * The service: groups, the buffered step renderer, notices and annotations.
-  *
-  * **Gotchas**
-  *
-  * This installs no `Logger`. Without {@link ActionLogger.layerLogger} (or `Action.run`, which installs it) Effect's
-  * default logger writes `Effect.log*` text raw, so a message carrying `::add-mask::` or `##[` is a workflow command
-  * to the runner. Install both: the service for its structure, the logger for its neutralizing of every log line.
-  */
+	 * The service: groups, the buffered step renderer, notices and annotations.
+	 *
+	 * **Gotchas**
+	 *
+	 * This installs no `Logger`. Without {@link ActionLogger.layerLogger} (or `Action.run`, which installs it) Effect's
+	 * default logger writes `Effect.log*` text raw, so a message carrying `::add-mask::` or `##[` is a workflow command
+	 * to the runner. Install both: the service for its structure, the logger for its neutralizing of every log line.
+	 *
+	 * **Example** (Construct the live logger service)
+	 *
+	 * ```ts
+	 * import { ActionLogger } from "@beep/scratchpad/effected/github-actions/ActionLogger";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = Effect.gen(function* () {
+	 *   const logger = yield* ActionLogger;
+	 *   yield* logger.notice("Published");
+	 * }).pipe(Effect.provide(ActionLogger.layer));
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layer: Layer.Layer<ActionLogger, never, ActionEnvironment> = Layer.effect(this, make);
 
 	/**
-  * The `Logger` that maps Effect log levels onto workflow commands.
-  *
-  * **Details**
-  *
-  * `Error` and `Fatal` render `::error::`, `Warn` renders `::warning::`,
-  * `Debug` and `Trace` render `::debug::`, and `Info` renders as plain text.
-  * Annotations set by `annotated` travel with the entry.
-  *
-  * It writes through core `Console`, which is what makes its output
-  * observable in a test without a runner.
-  */
+	 * The `Logger` that maps Effect log levels onto workflow commands.
+	 *
+	 * **Details**
+	 *
+	 * `Error` and `Fatal` render `::error::`, `Warn` renders `::warning::`,
+	 * `Debug` and `Trace` render `::debug::`, and `Info` renders as plain text.
+	 * Annotations set by `annotated` travel with the entry.
+	 *
+	 * It writes through core `Console`, which is what makes its output
+	 * observable in a test without a runner.
+	 *
+	 * **Example** (Inspect the workflow logger)
+	 *
+	 * ```ts
+	 * import { ActionLogger } from "@beep/scratchpad/effected/github-actions/ActionLogger";
+	 * import * as Logger from "effect/Logger";
+	 *
+	 * console.log(Logger.isLogger(ActionLogger.logger)) // true
+	 * ```
+	 *
+	 * @category observability
+	 * @since 0.0.0
+	 */
 	static readonly logger: Logger.Logger<unknown, void> = commandLogger;
 
 	/**
-  * {@link ActionLogger.logger} installed as the only logger.
-  *
-  * **Details**
-  *
-  * Bound to a constant so every composition site shares one layer;
-  * `ActionRuntime.layer` already includes it.
-  */
+	 * {@link ActionLogger.logger} installed as the only logger.
+	 *
+	 * **Details**
+	 *
+	 * Bound to a constant so every composition site shares one layer;
+	 * `ActionRuntime.layer` already includes it.
+	 *
+	 * **Example** (Construct logging with workflow rendering)
+	 *
+	 * ```ts
+	 * import { ActionLogger } from "@beep/scratchpad/effected/github-actions/ActionLogger";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = Effect.logWarning("Check the release").pipe(Effect.provide(ActionLogger.layerLogger));
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layerLogger: Layer.Layer<never> = Logger.layer([ActionLogger.logger]);
 
 	/**
-  * A silent double.
-  *
-  * **Details**
-  *
-  * **A recorded exception to the die-on-unstubbed rule**, alongside
-  * {@link ActionEnvironment.makeTest}. A logger that dies when a suite logs
-  * would make every double unusable, and silence is the honest default for a
-  * service whose whole job is output. Group and buffer wrappers pass their
-  * effect through unchanged.
-  */
+	 * A silent double.
+	 *
+	 * **Details**
+	 *
+	 * **A recorded exception to the die-on-unstubbed rule**, alongside
+	 * {@link ActionEnvironment.makeTest}. A logger that dies when a suite logs
+	 * would make every double unusable, and silence is the honest default for a
+	 * service whose whole job is output. Group and buffer wrappers pass their
+	 * effect through unchanged.
+	 *
+	 * **Example** (Pass a grouped test effect through unchanged)
+	 *
+	 * ```ts
+	 * import { ActionLogger } from "@beep/scratchpad/effected/github-actions/ActionLogger";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const logger = ActionLogger.makeTest();
+	 * const program = logger.group("test", Effect.succeed(42));
+	 * console.log(Effect.runSync(program)) // 42
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	static readonly makeTest = (overrides: Partial<ActionLoggerShape> = {}): ActionLoggerShape => ({
 		group: <A, E, R>(_name: string, effect: Effect.Effect<A, E, R>) => effect,
 		withBuffer: <A, E, R>(_label: string, effect: Effect.Effect<A, E, R>) => effect,
@@ -461,18 +620,54 @@ export class ActionLogger extends Context.Service<ActionLogger, ActionLoggerShap
 		...overrides,
 	});
 
-	/** {@link ActionLogger.makeTest} behind `Layer.succeed`. */
+	/**
+	 * {@link ActionLogger.makeTest} behind `Layer.succeed`.
+	 *
+	 * **Example** (Provide a silent service double)
+	 *
+	 * ```ts
+	 * import { ActionLogger } from "@beep/scratchpad/effected/github-actions/ActionLogger";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = Effect.gen(function* () {
+	 *   const logger = yield* ActionLogger;
+	 *   return yield* logger.withStep("test", Effect.succeed(42));
+	 * }).pipe(Effect.provide(ActionLogger.layerTest()));
+	 * console.log(Effect.runSync(program)) // 42
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layerTest = (overrides: Partial<ActionLoggerShape> = {}): Layer.Layer<ActionLogger> =>
 		Layer.succeed(ActionLogger, ActionLogger.makeTest(overrides));
 
 	/**
-  * A silent service **and** a silent `Effect.log*`.
-  *
-  * **Details**
-  *
-  * This one layer stands in for a bare `Effect.provide(Logger.layer([]))`
-  * repeated in every suite just to keep test output quiet. Bound to a
-  * constant rather than exposed as a factory, so composing it twice is free.
-  */
+	 * A silent service **and** a silent `Effect.log*`.
+	 *
+	 * **Details**
+	 *
+	 * This one layer stands in for a bare `Effect.provide(Logger.layer([]))`
+	 * repeated in every suite just to keep test output quiet. Bound to a
+	 * constant rather than exposed as a factory, so composing it twice is free.
+	 *
+	 * **Example** (Silence the service and Effect logging)
+	 *
+	 * ```ts
+	 * import { ActionLogger } from "@beep/scratchpad/effected/github-actions/ActionLogger";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = Effect.gen(function* () {
+	 *   const logger = yield* ActionLogger;
+	 *   yield* logger.notice("Hidden notice");
+	 *   yield* Effect.logInfo("Hidden log");
+	 *   return 42;
+	 * }).pipe(Effect.provide(ActionLogger.layerSilent));
+	 * console.log(Effect.runSync(program)) // 42
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layerSilent: Layer.Layer<ActionLogger> = Layer.mergeAll(ActionLogger.layerTest(), Logger.layer([]));
 }

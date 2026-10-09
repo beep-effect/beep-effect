@@ -29,6 +29,8 @@ import { ActionState } from "./ActionState.ts";
  * says so before the runner does.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type ActionServices =
 	| ActionEnvironment
@@ -54,21 +56,44 @@ export type ActionServices =
  * this layer, so taking one costs a caller exactly one line:
  * `Action.run(program, { layer: ActionCache.layer })`.
  *
+ * **Example** (Inspect the default action runtime)
+ *
+ * ```ts
+ * import { ActionRuntime } from "@beep/scratchpad/effected/github-actions/Action";
+ * import * as Layer from "effect/Layer";
+ *
+ * console.log(Layer.isLayer(ActionRuntime.layer)) // true
+ * ```
+ *
  * @public
+ * @category layers
+ * @since 0.0.0
  */
 export class ActionRuntime {
 	private constructor() {}
 
 	/**
-  * The composed default: the runner services, the platform, an HTTP client
-  * and the workflow-command `Logger`.
-  *
-  * **Details**
-  *
-  * A bound constant rather than a factory. A layer-returning function mints a
-  * fresh layer per call, and layers memoize by reference — a factory here
-  * would rebuild the environment snapshot for every composition site.
-  */
+	 * The composed default: the runner services, the platform, an HTTP client
+	 * and the workflow-command `Logger`.
+	 *
+	 * **Details**
+	 *
+	 * A bound constant rather than a factory. A layer-returning function mints a
+	 * fresh layer per call, and layers memoize by reference — a factory here
+	 * would rebuild the environment snapshot for every composition site.
+	 *
+	 * **Example** (Compose the default runner services)
+	 *
+	 * ```ts
+	 * import { ActionRuntime } from "@beep/scratchpad/effected/github-actions/Action";
+	 * import * as Layer from "effect/Layer";
+	 *
+	 * const runtime = ActionRuntime.layer;
+	 * console.log(Layer.isLayer(runtime)) // true
+	 * ```
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layer: Layer.Layer<ActionServices> = Layer.mergeAll(
 		ActionLogger.layer,
 		// The named constant, not a second spelling of it: two `Logger.layer([...])`
@@ -100,35 +125,39 @@ export class ActionRuntime {
  * How to run an action.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface ActionRunOptions<R> {
 	/**
-  * Services the program needs beyond {@link ActionServices}.
-  *
-  * **Details**
-  *
-  * It may require anything {@link ActionRuntime.layer} provides — which is
-  * what makes `{ layer: ActionCache.layer }` compile with no further wiring.
-  */
+	 * Services the program needs beyond {@link ActionServices}.
+	 *
+	 * **Details**
+	 *
+	 * It may require anything {@link ActionRuntime.layer} provides — which is
+	 * what makes `{ layer: ActionCache.layer }` compile with no further wiring.
+	 * @since 0.0.0
+	 */
 	readonly layer?: Layer.Layer<R, never, ActionServices> | undefined;
 	/**
-  * Whether step debugging lowers the minimum log level to `Debug`.
-  *
-  * **Details**
-  *
-  * Defaults to `true`. With step debugging on (`RUNNER_DEBUG=1`, read through
-  * {@link ActionEnvironmentShape.isDebug}), `Action.run` lowers core's
-  * `References.MinimumLogLevel` — `Info` by default — to `Debug` for the whole
-  * program, so `Effect.logDebug` calls reach the runner as `::debug::` lines
-  * instead of being filtered before any logger sees them. It only ever
-  * **lowers**: a level already at `Debug` or below, from the `layer` option,
-  * is left alone.
-  *
-  * Pass `false` to keep the ambient level regardless of step debugging — an
-  * action whose debug output is too heavy to show even to someone who asked
-  * for it. A program can still provide its own `MinimumLogLevel` either way;
-  * the innermost provision wins.
-  */
+	 * Whether step debugging lowers the minimum log level to `Debug`.
+	 *
+	 * **Details**
+	 *
+	 * Defaults to `true`. With step debugging on (`RUNNER_DEBUG=1`, read through
+	 * {@link ActionEnvironmentShape.isDebug}), `Action.run` lowers core's
+	 * `References.MinimumLogLevel` — `Info` by default — to `Debug` for the whole
+	 * program, so `Effect.logDebug` calls reach the runner as `::debug::` lines
+	 * instead of being filtered before any logger sees them. It only ever
+	 * **lowers**: a level already at `Debug` or below, from the `layer` option,
+	 * is left alone.
+	 *
+	 * Pass `false` to keep the ambient level regardless of step debugging — an
+	 * action whose debug output is too heavy to show even to someone who asked
+	 * for it. A program can still provide its own `MinimumLogLevel` either way;
+	 * the innermost provision wins.
+	 * @since 0.0.0
+	 */
 	readonly stepDebugLogLevel?: boolean | undefined;
 }
 
@@ -157,7 +186,18 @@ const withStepDebugLogLevel = Effect.fn("withStepDebugLogLevel")(function* <A, E
  *
  * An interruption has neither, and `Cause.pretty` is the honest answer for it.
  *
+ * **Example** (Render a tagged action failure)
+ *
+ * ```ts
+ * import { describeCause } from "@beep/scratchpad/effected/github-actions/Action";
+ * import * as Cause from "effect/Cause";
+ *
+ * console.log(describeCause(Cause.fail({ _tag: "BuildError", message: "build failed" }))) // [BuildError]: build failed
+ * ```
+ *
  * @public
+ * @category formatting
+ * @since 0.0.0
  */
 export const describeCause = (cause: Cause.Cause<unknown>): string => {
 	const failure = Cause.findErrorOption(cause);
@@ -172,7 +212,9 @@ export const describeCause = (cause: Cause.Cause<unknown>): string => {
 	return pretty.trim() === "" ? "the action failed with no diagnostic information" : pretty;
 };
 
-/** The `[Tag]: message` half, over anything a failure or a defect can be. */
+/**
+ * The `[Tag]: message` half, over anything a failure or a defect can be.
+ */
 const describeError = (error: unknown): string => {
 	if (P.isObjectOrArray(error) && "_tag" in error) {
 		const tagged = error;
@@ -227,28 +269,62 @@ const describeError = (error: unknown): string => {
  * **Example** (Run an action with the cache layer)
  *
  * ```ts
- * import { Action, ActionCache } from "./index.ts";
+ * import { Action } from "@beep/scratchpad/effected/github-actions/Action";
+ * import { ActionCache } from "@beep/scratchpad/effected/github-actions/ActionCache";
+ * import * as Effect from "effect/Effect";
  *
- * await Action.run(program, { layer: ActionCache.layer });
+ * const program = Effect.gen(function* () {
+ *   const cache = yield* ActionCache;
+ *   yield* cache.save(["dist"], "build-v1");
+ * });
+ * const run = () => Action.run(program, { layer: ActionCache.layer });
+ * console.log(Effect.isEffect(program) && typeof run === "function") // true
  * ```
  *
  * @public
+ * @category workflows
+ * @since 0.0.0
  */
 export class Action {
 	private constructor() {}
 
-	/** {@link describeCause}, so an action can render its own failures the same way. */
+	/**
+	 * {@link describeCause}, so an action can render its own failures the same way.
+	 *
+	 * **Example** (Render a failure through the action entry point)
+	 *
+	 * ```ts
+	 * import { Action } from "@beep/scratchpad/effected/github-actions/Action";
+	 * import * as Cause from "effect/Cause";
+	 *
+	 * console.log(Action.describeCause(Cause.fail(new Error("build failed")))) // [Error]: build failed
+	 * ```
+	 * @category formatting
+	 * @since 0.0.0
+	 */
 	static readonly describeCause = describeCause;
 
 	/**
-  * Run an action program to completion.
-  *
-  * **Details**
-  *
-  * Never rejects: the promise resolves whether the program succeeded or not,
-  * so read `process.exitCode` for the verdict. Requirements beyond
-  * {@link ActionServices} come from `options.layer`.
-  */
+	 * Run an action program to completion.
+	 *
+	 * **Details**
+	 *
+	 * Never rejects: the promise resolves whether the program succeeded or not,
+	 * so read `process.exitCode` for the verdict. Requirements beyond
+	 * {@link ActionServices} come from `options.layer`.
+	 *
+	 * **Example** (Run a successful action program)
+	 *
+	 * ```ts
+	 * import { Action } from "@beep/scratchpad/effected/github-actions/Action";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * await Action.run(Effect.void);
+	 * console.log("action completed") // action completed
+	 * ```
+	 * @category workflows
+	 * @since 0.0.0
+	 */
 	static readonly run = <E, R = never>(
 		program: Effect.Effect<void, E, ActionServices | R>,
 		options: ActionRunOptions<R> = {},

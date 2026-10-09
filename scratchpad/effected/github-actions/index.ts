@@ -2,6 +2,8 @@
  * The GitHub Actions runtime for Effect: the services an action needs to talk
  * to the runner it executes inside.
  *
+ * **Details**
+ *
  * {@link Action.run} composes the default runtime ({@link ActionRuntime}), runs
  * your program, renders a failure as an `::error::` annotation and sets the exit
  * code. {@link ActionInput} reads workflow inputs as typed `Config` values, and

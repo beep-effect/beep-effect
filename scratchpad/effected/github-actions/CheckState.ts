@@ -5,7 +5,21 @@ import * as S from "effect/Schema";
 
 const $I = $ScratchpadId.create("effected/github-actions/CheckState");
 
-/** A check state outside the vocabulary was projected. */
+/**
+ * A check state outside the vocabulary was projected.
+ *
+ * **Example** (Construct a vocabulary projection error)
+ *
+ * ```ts
+ * import { UnhandledCheckStateError } from "@beep/scratchpad/effected/github-actions/CheckState";
+ *
+ * const error = UnhandledCheckStateError.make({ message: "Unhandled check state" });
+ * console.log(error.message) // Unhandled check state
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
 export class UnhandledCheckStateError extends S.TaggedError<UnhandledCheckStateError>($I`UnhandledCheckStateError`)("UnhandledCheckStateError", {
 	message: S.String,
 }, $I.annote("UnhandledCheckStateError", { description: "A check state outside the vocabulary was projected." })) {}
@@ -27,7 +41,18 @@ export class UnhandledCheckStateError extends S.TaggedError<UnhandledCheckStateE
  * counterpart here on purpose: cancellation is something the runner does *to*
  * a run, not a state a pipeline reports about its own checks.
  *
+ * **Example** (Decode a running check state)
+ *
+ * ```ts
+ * import { CheckState } from "@beep/scratchpad/effected/github-actions/CheckState";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.decodeUnknownSync(CheckState)("running")) // running
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const CheckState = LiteralKit([
 	"running",
@@ -43,6 +68,8 @@ export const CheckState = LiteralKit([
  * The type of `CheckState`.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type CheckState = typeof CheckState.Type;
 
@@ -58,6 +85,8 @@ export type CheckState = typeof CheckState.Type;
  * so drift between the two spellings fails a test rather than a consumer.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type CheckRunConclusion = "success" | "failure" | "neutral" | "skipped" | "timed_out" | "action_required";
 
@@ -72,6 +101,8 @@ export type CheckRunConclusion = "success" | "failure" | "neutral" | "skipped" |
  * conclusion, and a completed one always does.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type CheckRunProjection =
 	| { readonly status: "in_progress" }
@@ -88,7 +119,17 @@ export type CheckRunProjection =
  * non-success verdict), `user_interaction_required → action_required`,
  * `skipped → skipped` and `timeout → timed_out`.
  *
+ * **Example** (Project a warning onto GitHub conclusions)
+ *
+ * ```ts
+ * import { projectCheckState } from "@beep/scratchpad/effected/github-actions/CheckState";
+ *
+ * console.log(JSON.stringify(projectCheckState("warn"))) // {"status":"completed","conclusion":"neutral"}
+ * ```
+ *
  * @public
+ * @category mapping
+ * @since 0.0.0
  */
 export const projectCheckState = (state: CheckState): CheckRunProjection =>
 	Match.value(state).pipe(

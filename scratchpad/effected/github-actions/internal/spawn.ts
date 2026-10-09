@@ -22,7 +22,11 @@ import * as Stream from "effect/Stream";
 import * as Function from "effect/Function";
 import type { ChildProcess, ChildProcessSpawner } from "effect/process";
 
-/** What one run produced: stdout and stderr interleaved, and the exit code. */
+/**
+ * What one run produced: stdout and stderr interleaved, and the exit code.
+ * @category models
+ * @since 0.0.0
+ */
 export interface SpawnOnceResult {
 	readonly output: string;
 	readonly code: number;
@@ -32,6 +36,22 @@ export interface SpawnOnceResult {
  * Spawn `command` once, drain `stdout`+`stderr`, then read the exit code from
  * the same handle. Never fails on a non-zero exit — that is the caller's
  * policy.
+ *
+ * **Example** (Construct a single-spawn program)
+ *
+ * ```ts
+ * import { spawnOnce } from "@beep/scratchpad/effected/github-actions/internal/spawn"
+ * import * as Effect from "effect/Effect"
+ * import { ChildProcess, ChildProcessSpawner } from "effect/process"
+ *
+ * const program = Effect.flatMap(ChildProcessSpawner.ChildProcessSpawner, (spawner) =>
+ *   spawnOnce(spawner, ChildProcess.make("tar", ["--version"]))
+ * )
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @category processes
+ * @since 0.0.0
  */
 export const spawnOnce: {
 	(spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], command: ChildProcess.Command): Effect.Effect<SpawnOnceResult, PlatformError.PlatformError>;

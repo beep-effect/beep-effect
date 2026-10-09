@@ -13,7 +13,21 @@
 /** The base delimiter for a heredoc block. */
 const BASE_DELIMITER = "EFFECTED_EOF";
 
-/** A delimiter guaranteed absent from `value`. @internal */
+/**
+ * A delimiter guaranteed absent from `value`.
+ *
+ * **Example** (Avoid an existing delimiter run)
+ *
+ * ```ts
+ * import { delimiterFor } from "@beep/scratchpad/effected/github-actions/internal/runnerFile";
+ *
+ * console.log(delimiterFor("EFFECTED_EOF__")) // EFFECTED_EOF___
+ * ```
+ *
+ * @internal
+ * @category formatting
+ * @since 0.0.0
+ */
 export const delimiterFor = (value: string): string => {
 	let longestRun = -1;
 	let occurrence = value.indexOf(BASE_DELIMITER);
@@ -57,7 +71,19 @@ export const delimiterFor = (value: string): string => {
  * (`a<b` still composes a header that splits exactly at the marker), so
  * only the trailing position is refused.
  *
+ * **Example** (Reject runner-file separators)
+ *
+ * ```ts
+ * import { isUsableName } from "@beep/scratchpad/effected/github-actions/internal/runnerFile";
+ *
+ * console.log(isUsableName("a<b")) // true
+ * console.log(isUsableName("a=")) // false
+ * console.log(isUsableName("a<")) // false
+ * ```
+ *
  * @internal
+ * @category predicates
+ * @since 0.0.0
  */
 export const isUsableName = (name: string): boolean =>
 	name !== "" && /[\r\n=]|<<|<$/.test(name) === false;
@@ -66,7 +92,21 @@ export const isUsableName = (name: string): boolean =>
  * One heredoc block, ready to append. The caller has checked the name with
  * {@link isUsableName}.
  *
+ * **Example** (Frame a validated output name)
+ *
+ * ```ts
+ * import { heredocBlock, isUsableName } from "@beep/scratchpad/effected/github-actions/internal/runnerFile";
+ *
+ * const name = "answer";
+ * if (isUsableName(name)) {
+ *   const block = heredocBlock({ name, value: "42" });
+ *   console.log(JSON.stringify(block)) // "answer<<EFFECTED_EOF\n42\nEFFECTED_EOF\n"
+ * }
+ * ```
+ *
  * @internal
+ * @category formatting
+ * @since 0.0.0
  */
 export const heredocBlock = ({ name, value }: { readonly name: string; readonly value: string }): string => {
 	const delimiter = delimiterFor(value);
