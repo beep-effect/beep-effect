@@ -980,23 +980,32 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("hook-pulse writer confo
     Effect.gen(function* () {
       const root = yield* makeHarnessFixtureRoot();
       const oracle = yield* typescriptHarnessHash(root);
-      for (const writer of [codexWriterPath, cursorWriterPath]) {
-        const hook_event_name = writer === cursorWriterPath ? "sessionStart" : "SessionStart";
-        const run = yield* runWriter(
-          yield* encodeJson({
-            ...sessionStartPayload(root),
-            hook_event_name: writer === cursorWriterPath ? undefined : hook_event_name,
-          }),
-          {
-            writerPath: writer,
-            registeredEvent: writer === cursorWriterPath ? "sessionStart" : undefined,
-          }
-        );
-        expect(run.stdout).toBe(writer === cursorWriterPath ? "{}\n" : "");
+      const fixtures = [
+        {
+          writerPath: codexWriterPath,
+          agentKind: HookPulseAgentKind.Enum["codex-cli"],
+          payload: { ...sessionStartPayload(root), hook_event_name: "SessionStart" },
+          registeredEvent: undefined,
+          stdout: "",
+        },
+        {
+          writerPath: cursorWriterPath,
+          agentKind: HookPulseAgentKind.Enum["cursor-cli"],
+          payload: { ...sessionStartPayload(root), hook_event_name: undefined },
+          registeredEvent: "sessionStart",
+          stdout: "{}\n",
+        },
+      ];
+      for (const fixture of fixtures) {
+        const run = yield* runWriter(yield* encodeJson(fixture.payload), {
+          writerPath: fixture.writerPath,
+          registeredEvent: fixture.registeredEvent,
+        });
+        expect(run.stdout).toBe(fixture.stdout);
         expect(run.rows).toHaveLength(1);
         const decoded = yield* decodeHookPulseRow(pipe(A.head(run.rows), O.getOrThrow));
         assertSome(decoded.harnessHash, oracle.harnessHash);
-        expect(decoded.agentKind).toBe(writer === cursorWriterPath ? "cursor-cli" : "codex-cli");
+        expect(decoded.agentKind).toBe(fixture.agentKind);
       }
     })
   );

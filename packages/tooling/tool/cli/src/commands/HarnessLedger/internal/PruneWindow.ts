@@ -806,6 +806,29 @@ const readTranscriptCounts = Effect.fn("HarnessLedger.readTranscriptCounts")(fun
   });
 });
 
+const matchingTranscriptHooks = (
+  counts: TranscriptFileCounts,
+  hookKeys: ReadonlyArray<string>,
+  bindings: MutableHashMap.MutableHashMap<string, ReconciliationHookBinding>
+): number =>
+  counts.identityConflict
+    ? 0
+    : A.reduce(
+        hookKeys,
+        0,
+        (sum, key) =>
+          sum +
+          O.getOrElse(
+            O.filter(
+              MutableHashMap.get(bindings, key),
+              (binding) =>
+                A.length(binding.identities) === 1 &&
+                O.exists(counts.bindingHash, (identity) => A.contains(binding.identities, identity))
+            ).pipe(O.map((binding) => binding.count)),
+            () => 0
+          )
+      );
+
 const reconciliationBasis = HookPulseAgentKind.$match({
   "codex-cli": F.constant(
     "failed-or-interrupted: exec wrappers are not one-to-one with inner hook calls; non-use unqualified"
@@ -862,23 +885,7 @@ export const reconcileTranscripts = Effect.fn("HarnessLedger.reconcileTranscript
       O.getOrElse(MutableHashMap.get(sessions, counts.sessionHash), () => 0) + counts.calls
     );
     MutableHashMap.set(transcriptPaths, counts.pathHash, counts.calls);
-    const hookCount = counts.identityConflict
-      ? 0
-      : A.reduce(
-          file.hookKeys,
-          0,
-          (sum, key) =>
-            sum +
-            O.getOrElse(
-              O.filter(
-                MutableHashMap.get(bindings, key),
-                (binding) =>
-                  A.length(binding.identities) === 1 &&
-                  O.exists(counts.bindingHash, (identity) => A.contains(binding.identities, identity))
-              ).pipe(O.map((binding) => binding.count)),
-              () => 0
-            )
-        );
+    const hookCount = matchingTranscriptHooks(counts, file.hookKeys, bindings);
     if (hookCount > 0) {
       MutableHashMap.set(selectedPathHooks, counts.pathHash, hookCount);
       MutableHashMap.set(

@@ -693,6 +693,40 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("@beep/repo-ai-metrics",
       const stamp = Sha256Hex.make("b".repeat(64));
       const otherStamp = Sha256Hex.make("c".repeat(64));
       const decodePulse = S.decodeEffect(HookPulseV1FromRawEvent);
+      const writeScenarioGaps = Effect.fnUntraced(function* (
+        scenario: typeof ForwarderStampScenario.Type,
+        hookRoot: string,
+        hookDir: string
+      ) {
+        if (scenario === "corrupt") yield* writeText(path.join(hookDir, "bad.ndjson"), "not JSON\n");
+        if (scenario === "unreadable") yield* fs.makeDirectory(path.join(hookDir, "bad.ndjson"));
+        if (A.contains(["refused", "trailing-refusal", "closed-before-refusal"], scenario))
+          yield* writeText(
+            path.join(hookRoot, "hook-pulse-refusals-fixture.ndjson"),
+            yield* S.encodeEffect(S.fromJsonString(HookPulseRefusal))(
+              HookPulseRefusal.make({
+                ts: DateTime.makeUnsafe(scenario === "refused" ? "2026-10-09T10:00:30Z" : "2026-10-09T10:02:00Z"),
+                agentKind: "codex-cli",
+                reason: "timeout",
+              })
+            )
+          );
+        if (scenario === "disarmed")
+          yield* writeText(
+            path.join(hookRoot, "hook-pulse-disarm-windows.ndjson"),
+            yield* HookPulseDisarmWindow.encodeJsonEffect(
+              HookPulseDisarmWindow.make({
+                disarmedAt: O.some("2026-10-09T10:00:30Z"),
+                rearmedAt: "2026-10-09T10:00:45Z",
+                reason: O.none(),
+                evidenceTier: "unknown",
+                schemaVersion: "hook-pulse-disarm-window/v1",
+              })
+            )
+          );
+        if (scenario === "empty-sentinel") yield* writeText(path.join(hookRoot, "hook-pulse.disarmed"), "");
+        if (scenario === "custom-sentinel") yield* writeText(path.join(hookRoot, "custom.disarmed"), "");
+      });
       for (const scenario of ForwarderStampScenario.literals) {
         const homeDir = path.join(tmpDir, scenario, "home");
         const sourceRoot = path.join(homeDir, ".codex/sessions");
@@ -770,34 +804,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("@beep/repo-ai-metrics",
             path.join(hookDir, "fixture.ndjson"),
             (yield* Effect.forEach(rows, (row) => HookPulseV1.encodeJsonEffect(row))).join("\n")
           );
-          if (scenario === "corrupt") yield* writeText(path.join(hookDir, "bad.ndjson"), "not JSON\n");
-          if (scenario === "unreadable") yield* fs.makeDirectory(path.join(hookDir, "bad.ndjson"));
-          if (scenario === "refused" || scenario === "trailing-refusal" || scenario === "closed-before-refusal")
-            yield* writeText(
-              path.join(hookRoot, "hook-pulse-refusals-fixture.ndjson"),
-              yield* S.encodeEffect(S.fromJsonString(HookPulseRefusal))(
-                HookPulseRefusal.make({
-                  ts: DateTime.makeUnsafe(scenario === "refused" ? "2026-10-09T10:00:30Z" : "2026-10-09T10:02:00Z"),
-                  agentKind: "codex-cli",
-                  reason: "timeout",
-                })
-              )
-            );
-          if (scenario === "disarmed")
-            yield* writeText(
-              path.join(hookRoot, "hook-pulse-disarm-windows.ndjson"),
-              yield* HookPulseDisarmWindow.encodeJsonEffect(
-                HookPulseDisarmWindow.make({
-                  disarmedAt: O.some("2026-10-09T10:00:30Z"),
-                  rearmedAt: "2026-10-09T10:00:45Z",
-                  reason: O.none(),
-                  evidenceTier: "unknown",
-                  schemaVersion: "hook-pulse-disarm-window/v1",
-                })
-              )
-            );
-          if (scenario === "empty-sentinel") yield* writeText(path.join(hookRoot, "hook-pulse.disarmed"), "");
-          if (scenario === "custom-sentinel") yield* writeText(path.join(hookRoot, "custom.disarmed"), "");
+          yield* writeScenarioGaps(scenario, hookRoot, hookDir);
           yield* runAiMetricsForwarder(
             AiMetricsForwarderInput.make({
               homeDir,

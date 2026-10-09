@@ -150,6 +150,34 @@ const readOptionalEvidence = Effect.fnUntraced(function* (file: string) {
     )
   );
 });
+const readRefusalStampGaps = Effect.fnUntraced(function* (evidenceRoot: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const gaps = A.empty<SessionStampGap>();
+  const files = yield* fs.readDirectory(evidenceRoot).pipe(
+    Effect.catchIf(
+      (cause) => cause.reason._tag === "NotFound",
+      () => Effect.succeed(A.empty<string>())
+    )
+  );
+  for (const name of A.filter(files, Str.startsWith("hook-pulse-refusals-"))) {
+    const text = yield* fs.readFileString(path.join(evidenceRoot, name));
+    for (const line of A.filter(Str.split(text, "\n"), Str.isNonEmpty)) {
+      const refusal = yield* S.decodeEffect(S.fromJsonString(HookPulseRefusal))(line);
+      if (refusal.reason === HookPulseRefusalReason.Enum["stamp-failed"]) continue;
+      const at = O.some(refusal.ts.pipe(DateTime.toEpochMillis));
+      gaps.push(
+        SessionStampGap.make({
+          start: at,
+          end: O.map(at, (value) => value + 999),
+          client: refusal.agentKind === "unknown" ? O.none() : O.some(refusal.agentKind),
+          eventLoss: true,
+        })
+      );
+    }
+  }
+  return gaps;
+});
 const readStampGaps = Effect.fnUntraced(function* (evidenceRoot: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -183,28 +211,7 @@ const readStampGaps = Effect.fnUntraced(function* (evidenceRoot: string) {
       })
     );
   }
-  const files = yield* fs.readDirectory(evidenceRoot).pipe(
-    Effect.catchIf(
-      (cause) => cause.reason._tag === "NotFound",
-      () => Effect.succeed(A.empty<string>())
-    )
-  );
-  for (const name of A.filter(files, Str.startsWith("hook-pulse-refusals-"))) {
-    const text = yield* fs.readFileString(path.join(evidenceRoot, name));
-    for (const line of A.filter(Str.split(text, "\n"), Str.isNonEmpty)) {
-      const refusal = yield* S.decodeEffect(S.fromJsonString(HookPulseRefusal))(line);
-      if (refusal.reason === HookPulseRefusalReason.Enum["stamp-failed"]) continue;
-      const at = O.some(refusal.ts.pipe(DateTime.toEpochMillis));
-      gaps.push(
-        SessionStampGap.make({
-          start: at,
-          end: O.map(at, (value) => value + 999),
-          client: refusal.agentKind === "unknown" ? O.none() : O.some(refusal.agentKind),
-          eventLoss: true,
-        })
-      );
-    }
-  }
+  gaps.push(...(yield* readRefusalStampGaps(evidenceRoot)));
   return gaps;
 });
 const recordAvoidsStampGaps = (

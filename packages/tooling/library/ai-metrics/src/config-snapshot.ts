@@ -632,6 +632,11 @@ const readTrackedSnapshotPaths = Effect.fn("AiMetrics.readTrackedSnapshotPaths")
   return O.some<ReadonlyArray<string>>(pipe(text, Str.split("\0"), A.filter(Str.isNonEmpty)));
 });
 
+const indexedSnapshotTruncation = (fileCount: number, maxFiles: number, depthTruncated: boolean) => {
+  if (fileCount > maxFiles) return O.some(AiMetricsConfigSnapshotTruncationReason.Enum["max-files"]);
+  return depthTruncated ? O.some(AiMetricsConfigSnapshotTruncationReason.Enum["max-depth"]) : O.none();
+};
+
 const enumerateSnapshotPaths = Effect.fn("AiMetrics.enumerateConfigSnapshotPaths")(function* (
   repoRoot: string,
   budget: AiMetricsConfigSnapshotBudget
@@ -733,12 +738,11 @@ const enumerateSnapshotPaths = Effect.fn("AiMetrics.enumerateConfigSnapshotPaths
     return {
       excludedNestedRootPaths: pipe(yield* Ref.get(excluded), A.dedupe, A.sort(Order.String)),
       paths: pipe(prioritized, A.take(budget.maxFiles), A.sort(Order.String)),
-      truncationReason:
-        A.length(paths) > budget.maxFiles
-          ? O.some(AiMetricsConfigSnapshotTruncationReason.Enum["max-files"])
-          : A.length(bounded) < A.length(selected)
-            ? O.some(AiMetricsConfigSnapshotTruncationReason.Enum["max-depth"])
-            : O.none(),
+      truncationReason: indexedSnapshotTruncation(
+        A.length(paths),
+        budget.maxFiles,
+        A.length(bounded) < A.length(selected)
+      ),
     };
   }
   const pathsRef = yield* Ref.make(A.empty<string>());
