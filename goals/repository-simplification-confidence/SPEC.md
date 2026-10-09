@@ -371,7 +371,7 @@ Reproduced from brief section 1.
   owner in `history/receipts/stage-3-a-local-residue.md`.
 - Repository-relative paths in every packet record; `~` or `$HOME` for a
   home-relative path wherever a home file must be named (never an absolute
-  `/home/` path); never a secret, token, client name, tenant id, or mailbox
+  home-directory path); never a secret, token, client name, tenant id, or mailbox
   address. This repository is public.
 - Use the existing friction ledger
   ([`research/OPPORTUNITIES.md`](./research/OPPORTUNITIES.md)) at the point

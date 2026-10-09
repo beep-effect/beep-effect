@@ -129,3 +129,12 @@
   would prevent this regression. The initial focused Vitest launch also used
   the root cwd against a package-relative include glob and found no tests;
   corrected to the package cwd before proof.
+
+- D parity `CI=true beep knowledge refs --check` failed on two host-path rows:
+  inherited `explorations/build-pipeline-simplification/RESEARCH.md:194`
+  (`external-mirror-reference`, user-local beep-heavy path) and packet-inherited
+  `SPEC.md:374` (a literal absolute-home prefix used as a prohibition example).
+  The SPEC example was reworded without weakening the rule. The build-pipeline
+  row is unchanged on origin/main; its owner/orchestrator must fix it once on
+  main, then D merges main. A literal-path-aware prohibition rule and a
+  portable command lookup in the inherited runbook would prevent these reds.

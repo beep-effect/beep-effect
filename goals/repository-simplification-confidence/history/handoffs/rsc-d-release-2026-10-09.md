@@ -68,3 +68,19 @@ geometry tests added. Heavy tests and package verification are admitted through
 beep-heavy with the user-session bus; currently queued. Hosted parity, coverage,
 independent claude-opus-5-5 medium review and hosted run are pending.
 No unrelated refactoring is intended. Generated task/script manifests untouched.
+
+## Live inherited blocker (2026-10-09)
+
+Knowledge refs parity failed at
+`explorations/build-pipeline-simplification/RESEARCH.md:194`: user-local
+beep-heavy executable reference, identical on origin/main. The build-pipeline
+owner/orchestrator must repair it once on main; D then merges main. Suggested
+portable wording retains `/usr/bin/bash` but resolves beep-heavy from PATH.
+D does not copy that unrelated fix into this release-policy PR. The second
+knowledge observation, a literal absolute-home example in packet SPEC:374,
+was reworded in D without changing the prohibition.
+
+Passes so far: test-tsgo, docgen local (2312 examples), jsdoc-ratchet, fallow audit.
+Fallow health, coverage, focused rerun and package verification remain running
+or queued. Independent Opus source review returned terminal zero actionable
+findings at aeed1cb6a2. This is not a merge-ready or completed claim.
