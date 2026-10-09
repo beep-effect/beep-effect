@@ -126,6 +126,6 @@ export class WorkspaceResolver extends Context.Service<
 	 * const so it memoizes by reference.
 	 */
 	static readonly noop: Layer.Layer<WorkspaceResolver> = Layer.succeed(WorkspaceResolver, {
-		versionOf: () => Effect.succeedNone,
+		versionOf: Effect.fn("WorkspaceResolver.versionOf")(() => Effect.succeedNone),
 	});
 }

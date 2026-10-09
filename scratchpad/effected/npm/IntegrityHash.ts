@@ -261,7 +261,7 @@ const decodeBase64 = (value: string): ReadonlyArray<number> | undefined => {
 		const code = body.charCodeAt(index);
 		if (code >= BASE64_INDEX.length) return undefined;
 		const sextet = BASE64_INDEX[code];
-		if (sextet === BASE64_INVALID) return undefined;
+		if (sextet === undefined || sextet === BASE64_INVALID) return undefined;
 		buffer = (buffer << 6) | sextet;
 		bits += 6;
 		if (bits >= 8) {

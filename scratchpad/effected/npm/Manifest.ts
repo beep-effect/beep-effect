@@ -11,7 +11,7 @@
 // fields are validated; every other top-level field rides through `rest`
 // untouched and flattens back to the top level on encode.
 
-import { Effect, Option, Schema, SchemaTransformation } from "effect";
+import { Effect, Option, Result, Schema, SchemaTransformation } from "effect";
 import type { CatalogAssemblyError } from "./CatalogAssemblyError.ts";
 import { CatalogResolver } from "./CatalogResolver.ts";
 import { DependencyField } from "./DependencySection.ts";
@@ -236,7 +236,7 @@ export class Manifest extends Schema.Class<Manifest>("Manifest")({
 	 * @returns the manifest as an open record
 	 */
 	toRecord(): Record<string, unknown> {
-		return Schema.encodeUnknownSync(Manifest.schema)(this) as Record<string, unknown>;
+		return Result.getOrThrow(Schema.encodeUnknownResult(Manifest.schema)(this));
 	}
 }
 

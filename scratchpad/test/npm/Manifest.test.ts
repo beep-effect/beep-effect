@@ -118,13 +118,16 @@ const versions = new Map<string, string>([
 ]);
 const StubResolvers = Layer.mergeAll(
 	Layer.succeed(CatalogResolver, {
-		rangeOf: (packageName, catalog) =>
+		rangeOf: Effect.fn("CatalogResolver.rangeOf")((packageName: string, catalog: Option.Option<string>) =>
 			Effect.succeed(
 				Option.fromUndefinedOr(catalogs.get(Option.getOrElse(catalog, () => "default"))?.get(packageName)),
 			),
+		),
 	}),
 	Layer.succeed(WorkspaceResolver, {
-		versionOf: (packageName) => Effect.succeed(Option.fromUndefinedOr(versions.get(packageName))),
+		versionOf: Effect.fn("WorkspaceResolver.versionOf")((packageName: string) =>
+			Effect.succeed(Option.fromUndefinedOr(versions.get(packageName))),
+		),
 	}),
 );
 
@@ -250,9 +253,11 @@ describe("Manifest.resolve", () => {
 		cause: new Error("unreadable"),
 	});
 	const FailingResolvers = Layer.mergeAll(
-		Layer.succeed(CatalogResolver, { rangeOf: () => Effect.fail(assemblyFailure) }),
+		Layer.succeed(CatalogResolver, { rangeOf: Effect.fn("CatalogResolver.rangeOf")(() => Effect.fail(assemblyFailure)) }),
 		Layer.succeed(WorkspaceResolver, {
-			versionOf: () => Effect.fail(DependencyResolutionError.make({ specifier: "workspace:*", cause: "broken" })),
+			versionOf: Effect.fn("WorkspaceResolver.versionOf")(() =>
+				Effect.fail(DependencyResolutionError.make({ specifier: "workspace:*", cause: "broken" })),
+			),
 		}),
 	);
 

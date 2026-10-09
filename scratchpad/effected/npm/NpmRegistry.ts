@@ -245,8 +245,8 @@ const make = Effect.fnUntraced(function* () {
 				headers: authorizationHeader(target?.credential),
 			})
 			.pipe(
-				Effect.catch((cause: HttpClientError.HttpClientError) =>
-					Effect.fail(RegistryReadError.make({ kind: "transport", package: name, registry, cause })),
+				Effect.mapError((cause: HttpClientError.HttpClientError) =>
+					RegistryReadError.make({ kind: "transport", package: name, registry, cause }),
 				),
 				Effect.flatMap((response) => {
 					if (response.status === 404) return Effect.succeed(Option.none<A>());
@@ -257,9 +257,9 @@ const make = Effect.fnUntraced(function* () {
 					}
 					return response.json.pipe(
 						Effect.flatMap((body) => Schema.decodeUnknownEffect(schema)(body)),
-						Effect.map(Option.some),
-						Effect.catch((cause) =>
-							Effect.fail(RegistryReadError.make({ kind: "decode", package: name, registry, cause })),
+						Effect.asSome,
+						Effect.mapError((cause) =>
+							RegistryReadError.make({ kind: "decode", package: name, registry, cause }),
 						),
 					);
 				}),
@@ -295,9 +295,9 @@ const make = Effect.fnUntraced(function* () {
 					return Effect.succeed(Option.none<typeof VersionManifest.Type>());
 				}
 				return Schema.decodeUnknownEffect(VersionManifest)(published[versionNumber]).pipe(
-					Effect.map(Option.some),
-					Effect.catch((cause) =>
-						Effect.fail(RegistryReadError.make({ kind: "decode", package: name, registry, cause })),
+					Effect.asSome,
+					Effect.mapError((cause) =>
+						RegistryReadError.make({ kind: "decode", package: name, registry, cause }),
 					),
 				);
 			}),
@@ -313,10 +313,9 @@ const make = Effect.fnUntraced(function* () {
 		const manifest = yield* classifyRegistry(registry) === "github-packages"
 			? versionFromPackument(name, versionNumber, registry, target)
 			: read(VersionManifest, packageUrl(registry, name, versionNumber), name, registry, target).pipe(
-					Effect.catch((error) =>
-						error.kind === "status" && error.status === 405
-							? versionFromPackument(name, versionNumber, registry, target)
-							: Effect.fail(error),
+					Effect.catchIf(
+						(error) => error.kind === "status" && error.status === 405,
+						() => versionFromPackument(name, versionNumber, registry, target),
 					),
 				);
 		return Option.map(manifest, (found) =>

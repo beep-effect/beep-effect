@@ -48,6 +48,7 @@ const PackJsonEntry = Schema.Struct({
  * single-package pack is one entry either way.
  */
 const PackJson = Schema.Union([Schema.Array(PackJsonEntry), Schema.Record(Schema.String, PackJsonEntry)]);
+const PackJsonString = Schema.fromJsonString(Schema.Unknown);
 
 /**
  * A packed tarball and the two digests that describe it.
@@ -244,27 +245,23 @@ const make = Effect.fnUntraced(function* () {
 					return options.env === undefined ? withCwd : Run.extendEnv(withCwd, options.env);
 				}),
 				Effect.flatMap((command) => Run.collect(command)),
-				Effect.catch((cause) =>
-					Effect.fail(
-						PublishError.make({
-							kind: options.kind,
-							subject: options.subject,
-							...(options.registry === undefined ? {} : { registry: options.registry }),
-							cause,
-						}),
-					),
+				Effect.mapError((cause) =>
+					PublishError.make({
+						kind: options.kind,
+						subject: options.subject,
+						...(options.registry === undefined ? {} : { registry: options.registry }),
+						cause,
+					}),
 				),
 			),
 		);
 
 	const parsePackJson = (stdout: string, subject: string) =>
-		Effect.try({
-			try: () => JSON.parse(stdout) as unknown,
-			catch: (cause) => PublishError.make({ kind: "output", subject, cause }),
-		}).pipe(
+		Schema.decodeEffect(PackJsonString)(stdout).pipe(
+			Effect.mapError((cause) => PublishError.make({ kind: "output", subject, cause })),
 			Effect.flatMap((parsed) =>
 				Schema.decodeUnknownEffect(PackJson)(parsed).pipe(
-					Effect.catch((cause) => Effect.fail(PublishError.make({ kind: "output", subject, cause }))),
+					Effect.mapError((cause) => PublishError.make({ kind: "output", subject, cause })),
 				),
 			),
 			Effect.flatMap((decoded) => {
@@ -313,7 +310,7 @@ const make = Effect.fnUntraced(function* () {
 		yield* fs
 			.writeFileString(options.npmrcPath, `${existing}${separator}${line}\n`)
 			.pipe(
-				Effect.catch((cause) => Effect.fail(PublishError.make({ kind: "auth", registry: options.registry, cause }))),
+				Effect.mapError((cause) => PublishError.make({ kind: "auth", registry: options.registry, cause })),
 			);
 	});
 
@@ -340,10 +337,10 @@ const make = Effect.fnUntraced(function* () {
 		// subjects), and deriving it from the file is what makes it verifiable.
 		const bytes = yield* fs
 			.readFile(tarballPath)
-			.pipe(Effect.catch((cause) => Effect.fail(PublishError.make({ kind: "digest", subject: tarballPath, cause }))));
+			.pipe(Effect.mapError((cause) => PublishError.make({ kind: "digest", subject: tarballPath, cause })));
 		const digest = yield* crypto
 			.digest("SHA-256", bytes)
-			.pipe(Effect.catch((cause) => Effect.fail(PublishError.make({ kind: "digest", subject: tarballPath, cause }))));
+			.pipe(Effect.mapError((cause) => PublishError.make({ kind: "digest", subject: tarballPath, cause })));
 		return PackedTarball.make({
 			tarballPath,
 			name: entry.name,

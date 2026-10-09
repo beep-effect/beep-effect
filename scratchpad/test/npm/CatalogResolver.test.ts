@@ -30,10 +30,11 @@ describe("CatalogResolver", () => {
 			["build", new Map([["typescript", "^5.9.0"]])],
 		]);
 		const StubCatalogResolver = Layer.succeed(CatalogResolver, {
-			rangeOf: (packageName, catalog) =>
+			rangeOf: Effect.fn("CatalogResolver.rangeOf")((packageName: string, catalog: Option.Option<string>) =>
 				Effect.succeed(
 					Option.fromUndefinedOr(catalogs.get(Option.getOrElse(catalog, () => "default"))?.get(packageName)),
 				),
+			),
 		});
 
 		layer(StubCatalogResolver)((it) => {

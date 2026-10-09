@@ -70,9 +70,7 @@ const npmrcOf = (h: Harness): string => {
 	return text;
 };
 
-const publisher = Effect.gen(function* () {
-	return yield* PackagePublish;
-});
+const publisher = Effect.service(PackagePublish);
 
 describe("NpmExecutor", () => {
 	it.effect("ambient runs the runner's own npm", () =>

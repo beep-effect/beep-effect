@@ -1,5 +1,5 @@
 import { assert, describe, it, layer } from "@effect/vitest";
-import { Effect, Layer, Option, Schema } from "effect";
+import { Effect, Layer, Option, Result, Schema } from "effect";
 import { DependencyResolutionError, WorkspaceResolver } from "../../effected/npm/index.ts";
 
 describe("WorkspaceResolver", () => {
@@ -21,7 +21,9 @@ describe("WorkspaceResolver", () => {
 			["@effected/jsonc", "0.2.0"],
 		]);
 		const StubWorkspaceResolver = Layer.succeed(WorkspaceResolver, {
-			versionOf: (packageName) => Effect.succeed(Option.fromUndefinedOr(versions.get(packageName))),
+			versionOf: Effect.fn("WorkspaceResolver.versionOf")((packageName: string) =>
+				Effect.succeed(Option.fromUndefinedOr(versions.get(packageName))),
+			),
 		});
 
 		layer(StubWorkspaceResolver)((it) => {
@@ -103,11 +105,11 @@ describe("WorkspaceResolver", () => {
 		});
 
 		it("decodes an error encoded before reason existed as a mechanism failure", () => {
-			const decoded = Schema.decodeSync(DependencyResolutionError)({
+			const decoded = Result.getOrThrow(Schema.decodeResult(DependencyResolutionError)({
 				_tag: "DependencyResolutionError",
 				specifier: "catalog:",
 				cause: "unresolved",
-			});
+			}));
 			assert.strictEqual(decoded.reason, "mechanism");
 		});
 	});

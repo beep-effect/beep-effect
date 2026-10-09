@@ -1,7 +1,7 @@
 // @effect-diagnostics strictEffectProvide:skip-file nodeBuiltinImport:skip-file
 import { readFileSync } from "node:fs";
 import { assert, describe, it } from "@effect/vitest";
-import { DateTime, Effect, Exit, Layer, Option, Redacted, Schema } from "effect";
+import { DateTime, Effect, Exit, Layer, Option, Redacted, Result, Schema } from "effect";
 import { HttpClient, HttpClientError, HttpClientResponse } from "effect/http";
 import { NpmRegistry, PublishedVersion, RegistryReadError } from "../../effected/npm/NpmRegistry.ts";
 
@@ -12,6 +12,8 @@ interface Stub {
 	readonly layer: Layer.Layer<HttpClient.HttpClient>;
 	readonly requests: ReadonlyArray<{ readonly url: string; readonly authorization: string | undefined }>;
 }
+
+const JsonBody = Schema.fromJsonString(Schema.Unknown);
 
 /** A scripted `HttpClient` plus the log of what it was asked for. */
 const stub = (route: (url: string) => Route): Stub => {
@@ -30,7 +32,7 @@ const stub = (route: (url: string) => Route): Stub => {
 						}),
 					);
 				}
-				const body = result.raw ?? JSON.stringify(result.body ?? {});
+				const body = result.raw ?? Result.getOrThrow(Schema.encodeResult(JsonBody)(result.body ?? {}));
 				return Effect.succeed(HttpClientResponse.fromWeb(request, new Response(body, { status: result.status })));
 			}),
 		),
@@ -41,9 +43,7 @@ const stub = (route: (url: string) => Route): Stub => {
 const run = <A, E>(program: Effect.Effect<A, E, NpmRegistry>, client: Stub) =>
 	Effect.provide(program, NpmRegistry.layer.pipe(Layer.provide(client.layer)));
 
-const registry = Effect.gen(function* () {
-	return yield* NpmRegistry;
-});
+const registry = Effect.service(NpmRegistry);
 
 /** A minimal version manifest as the registry serves it. */
 const versionManifest = {

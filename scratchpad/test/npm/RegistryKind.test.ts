@@ -1,4 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
+import { Clock, Effect } from "effect";
 import { classifyRegistry, registryDisplayName, registryHost, registryShortLabel } from "../../effected/npm/RegistryKind.ts";
 
 describe("classifyRegistry", () => {
@@ -58,9 +59,9 @@ describe("registryHost", () => {
 		// npmrc and package.json). CodeQL flagged it on exactly this line. The
 		// scan-based form answers the same thing without the exposure.
 		const pathological = `evil.test/${"/".repeat(20000)}`;
-		const started = Date.now();
+		const started = Effect.runSync(Clock.currentTimeMillis);
 		assert.strictEqual(registryHost(pathological), "evil.test");
-		assert.isBelow(Date.now() - started, 250, "must not backtrack");
+		assert.isBelow(Effect.runSync(Clock.currentTimeMillis) - started, 250, "must not backtrack");
 	});
 
 	it("strips the scheme and path from a value that does not parse as a URL", () => {

@@ -61,6 +61,6 @@ export class CatalogResolver extends Context.Service<
 	 * reference to `CatalogResolver.noop`.
 	 */
 	static readonly noop: Layer.Layer<CatalogResolver> = Layer.succeed(CatalogResolver, {
-		rangeOf: () => Effect.succeedNone,
+		rangeOf: Effect.fn("CatalogResolver.rangeOf")(() => Effect.succeedNone),
 	});
 }

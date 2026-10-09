@@ -130,7 +130,7 @@ export class NpmExecutor extends Schema.Class<NpmExecutor>("NpmExecutor")({
 		return Effect.gen(function* () {
 			const local = yield* LocalExec;
 			const context = yield* local.context.pipe(
-				Effect.catch((cause) => Effect.fail(PublishError.make({ kind: "executor", cause }))),
+				Effect.mapError((cause) => PublishError.make({ kind: "executor", cause })),
 			);
 			if (Option.isNone(context)) {
 				return yield* PublishError.make({ kind: "executor" });

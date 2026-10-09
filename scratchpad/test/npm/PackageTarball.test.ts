@@ -1,7 +1,7 @@
 // @effect-diagnostics strictEffectProvide:skip-file asyncFunction:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
-import { Crypto, Effect, Layer, PlatformError, Schema } from "effect";
+import { Crypto, Effect, Layer, PlatformError, Result, Schema } from "effect";
 import { HttpClient, HttpClientError, HttpClientResponse } from "effect/http";
 import type { TarballError } from "../../effected/npm/index.ts";
 import { PackageTarball, PublishedVersion } from "../../effected/npm/index.ts";
@@ -48,7 +48,7 @@ const http = (result: { status: number; body?: Uint8Array } | "transport"): Laye
 	);
 
 const published = (fields: { tarball?: string; integrity?: string }) =>
-	Schema.decodeSync(PublishedVersion)({ name: "some-pkg", version: "1.2.3", ...fields });
+	Result.getOrThrow(Schema.decodeResult(PublishedVersion)({ name: "some-pkg", version: "1.2.3", ...fields }));
 
 const WITH_TARBALL = { tarball: "https://registry.test/some-pkg/-/some-pkg-1.2.3.tgz" };
 
@@ -58,11 +58,10 @@ const scenario = (response: { status: number; body?: Uint8Array } | "transport",
 	const layer = PackageTarball.layer.pipe(
 		Layer.provide(Layer.mergeAll(spawner.layer, MemoryFileSystem.layer, liveCrypto, http(response))),
 	);
-	const extract = (version: PublishedVersion) =>
-		Effect.gen(function* () {
-			const tarball = yield* PackageTarball;
-			return yield* tarball.extract(version);
-		}).pipe(Effect.scoped, Effect.provide(layer));
+	const extract = Effect.fn("extract")(function* (version: PublishedVersion) {
+		const tarball = yield* PackageTarball;
+		return yield* tarball.extract(version);
+	}, Effect.scoped, Effect.provide(layer));
 	return { extract, spawns: spawner.spawns };
 };
 

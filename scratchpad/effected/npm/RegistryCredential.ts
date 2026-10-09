@@ -1,5 +1,6 @@
 import { Redacted } from "effect";
 import * as Base64 from "effect/encoding/Base64";
+import { dual } from "effect/Function";
 
 /**
  * A bearer token — npm's `_authToken`, and the form every modern registry
@@ -69,7 +70,10 @@ export type RegistryCredential = TokenCredential | BasicCredential;
  *
  * @public
  */
-export const basicCredentialFromPair = (username: string, password: Redacted.Redacted<string>): BasicCredential => {
+export const basicCredentialFromPair: {
+	(username: string, password: Redacted.Redacted<string>): BasicCredential;
+	(password: Redacted.Redacted<string>): (username: string) => BasicCredential;
+} = dual(2, (username: string, password: Redacted.Redacted<string>): BasicCredential => {
 	if (username.includes(":")) {
 		// The separator is positional and unescapable: a colon in the user half
 		// would re-split into a different pair on the server. Failing loudly beats
@@ -80,4 +84,4 @@ export const basicCredentialFromPair = (username: string, password: Redacted.Red
 		kind: "basic",
 		encoded: Redacted.make(Base64.encode(`${username}:${Redacted.value(password)}`)),
 	};
-};
+});
