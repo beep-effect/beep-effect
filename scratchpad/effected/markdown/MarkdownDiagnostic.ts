@@ -7,7 +7,7 @@
 // against the source text. The dependency edge runs public modules ->
 // engine only (toml src/TomlDiagnostic.ts precedent).
 
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 import { MARKDOWN_PARSE_ERROR_CODES } from "./internal/carriers.ts";
 
 /**
@@ -17,7 +17,7 @@ import { MARKDOWN_PARSE_ERROR_CODES } from "./internal/carriers.ts";
  *
  * @public
  */
-export const MarkdownParseErrorCode = Schema.Literals(MARKDOWN_PARSE_ERROR_CODES);
+export const MarkdownParseErrorCode = S.Literals(MARKDOWN_PARSE_ERROR_CODES);
 
 /**
  * The union of all markdown parse-error code string literals.
@@ -43,13 +43,13 @@ export type MarkdownParseErrorCode = typeof MarkdownParseErrorCode.Type;
  *
  * @public
  */
-export class MarkdownDiagnostic extends Schema.Class<MarkdownDiagnostic>("MarkdownDiagnostic")({
+export class MarkdownDiagnostic extends S.Class<MarkdownDiagnostic>("MarkdownDiagnostic")({
 	code: MarkdownParseErrorCode,
-	message: Schema.String,
-	offset: Schema.Finite,
-	length: Schema.Finite,
-	line: Schema.Finite,
-	character: Schema.Finite,
+	message: S.String,
+	offset: S.Finite,
+	length: S.Finite,
+	line: S.Finite,
+	character: S.Finite,
 }) {
 	/**
 	 * Materialize an engine record, deriving zero-based `line`/`character`

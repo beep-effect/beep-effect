@@ -1,8 +1,9 @@
-import { Data } from "effect";
+import * as Data from "effect/Data";
 import { dual } from "effect/Function";
 import type { ColorLevel } from "../../../env/index.ts";
-import type { Scope } from "effect";
-import { Effect, Option } from "effect";
+import type * as Scope from "effect/Scope";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
 import type * as Ink from "ink";
 import type React from "react";
 import type { ChalkLevel, InkChalk } from "./inkChalk.ts";
@@ -112,8 +113,8 @@ const LEVELS: Record<ColorLevel, ChalkLevel> = { none: 0, basic: 1, "256": 2, tr
  */
 export const levelOf = (colour: ColorLevel): ChalkLevel => LEVELS[colour];
 
-let chalk: Promise<Option.Option<InkChalk>> | undefined;
-const resolveChalk: Effect.Effect<Option.Option<InkChalk>> = Effect.promise(() => {
+let chalk: Promise<O.Option<InkChalk>> | undefined;
+const resolveChalk: Effect.Effect<O.Option<InkChalk>> = Effect.promise(() => {
 	chalk ??= inkChalk();
 	return chalk;
 });
@@ -127,13 +128,13 @@ let warned = false;
  * @internal
  */
 export const holdChalkLevel: {
-	(colour: ColorLevel): (found: Option.Option<InkChalk>) => Effect.Effect<void, never, Scope.Scope>;
-	(found: Option.Option<InkChalk>, colour: ColorLevel): Effect.Effect<void, never, Scope.Scope>;
+	(colour: ColorLevel): (found: O.Option<InkChalk>) => Effect.Effect<void, never, Scope.Scope>;
+	(found: O.Option<InkChalk>, colour: ColorLevel): Effect.Effect<void, never, Scope.Scope>;
 } = dual(2, (
-	found: Option.Option<InkChalk>,
+	found: O.Option<InkChalk>,
 	colour: ColorLevel,
 ): Effect.Effect<void, never, Scope.Scope> =>
-	Option.match(found, {
+	O.match(found, {
 		onNone: () =>
 			Effect.suspend(() => {
 				if (warned) return Effect.void;

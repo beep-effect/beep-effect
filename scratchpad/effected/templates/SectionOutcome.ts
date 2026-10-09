@@ -1,4 +1,4 @@
-import { Data } from "effect";
+import * as Data from "effect/Data";
 import type { Section, SectionId } from "./Section.ts";
 
 /**

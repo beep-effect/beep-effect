@@ -5,7 +5,9 @@
 // `PublishabilityDetector`, so nothing here touches a filesystem.
 
 import { assert, describe, it, layer } from "@effect/vitest";
-import { Effect, Layer, Ref } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Ref from "effect/Ref";
 import {
 	PublishTarget,
 	PublishabilityDetector,

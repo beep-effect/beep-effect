@@ -12,7 +12,10 @@
 
 import { assert, describe, it } from "@effect/vitest";
 import { Lockfile } from "../../effected/lockfiles/index.ts";
-import { Effect, Option, Schema, Result } from "effect";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import * as Result from "effect/Result";
 import { CatalogSet, WorkspaceStateSnapshot } from "../../effected/workspaces/index.ts";
 import { importerVersionsOf, unanimousVersionOf } from "../../effected/workspaces/internal/importerVersions.ts";
 
@@ -122,22 +125,22 @@ describe("WorkspaceStateSnapshot.resolve — the hook-injected catalog fallback"
 		const from = before.resolve("effect", "catalog:effect:peers");
 		const to = after.resolve("effect", "catalog:effect:peers");
 
-		assert.deepStrictEqual(from, Option.some("4.0.0-beta.99"));
-		assert.deepStrictEqual(to, Option.some("4.0.0-beta.101"));
+		assert.deepStrictEqual(from, O.some("4.0.0-beta.99"));
+		assert.deepStrictEqual(to, O.some("4.0.0-beta.101"));
 		// The whole point: the two sides must now DIFFER, so a diff emits a row.
-		assert.notStrictEqual(Option.getOrNull(from), Option.getOrNull(to));
+		assert.notStrictEqual(O.getOrNull(from), O.getOrNull(to));
 	});
 
 	it("abstains when importers disagree rather than inventing an answer", () => {
 		const divergent = snapshot({ ".": { effect: "1.0.0" }, "packages/a": { effect: "2.0.0" } });
-		assert.isTrue(Option.isNone(divergent.resolve("effect", "catalog:effect:peers")));
+		assert.isTrue(O.isNone(divergent.resolve("effect", "catalog:effect:peers")));
 	});
 
 	it("leaves a plain range alone — it is already its own answer", () => {
 		// The consumer falls back to the raw specifier for these; a fallback here
 		// would replace a declared RANGE with an installed VERSION in the table.
 		const state = snapshot({ ".": { effect: "4.0.0-beta.99" } });
-		assert.isTrue(Option.isNone(state.resolve("effect", "^4.0.0")));
+		assert.isTrue(O.isNone(state.resolve("effect", "^4.0.0")));
 	});
 
 	it("prefers the catalog set when it can answer", () => {
@@ -146,20 +149,20 @@ describe("WorkspaceStateSnapshot.resolve — the hook-injected catalog fallback"
 			catalogs: CatalogSet.fromCatalogs({ default: { effect: "1.0.0" } }),
 			importerVersions: { ".": { effect: "9.9.9" } },
 		});
-		assert.deepStrictEqual(state.resolve("effect", "catalog:"), Option.some("1.0.0"));
+		assert.deepStrictEqual(state.resolve("effect", "catalog:"), O.some("1.0.0"));
 	});
 });
 
 describe("WorkspaceStateSnapshot.resolveIn", () => {
 	it("answers precisely where resolve must abstain", () => {
 		const divergent = snapshot({ ".": { effect: "1.0.0" }, "packages/a": { effect: "2.0.0" } });
-		assert.deepStrictEqual(divergent.resolveIn(".", "effect", "catalog:effect:peers"), Option.some("1.0.0"));
-		assert.deepStrictEqual(divergent.resolveIn("packages/a", "effect", "catalog:effect:peers"), Option.some("2.0.0"));
+		assert.deepStrictEqual(divergent.resolveIn(".", "effect", "catalog:effect:peers"), O.some("1.0.0"));
+		assert.deepStrictEqual(divergent.resolveIn("packages/a", "effect", "catalog:effect:peers"), O.some("2.0.0"));
 	});
 
 	it("answers nothing for an unknown importer", () => {
 		const state = snapshot({ ".": { effect: "1.0.0" } });
-		assert.isTrue(Option.isNone(state.resolveIn("packages/nope", "effect", "catalog:effect:peers")));
+		assert.isTrue(O.isNone(state.resolveIn("packages/nope", "effect", "catalog:effect:peers")));
 	});
 });
 
@@ -168,10 +171,10 @@ describe("WorkspaceStateSnapshot — wire compatibility", () => {
 		// The field is optional precisely so older serialized snapshots survive; an
 		// absent index simply makes the fallback inert, which is the behavior those
 		// values were captured under.
-		const decoded = Result.getOrThrow(Schema.decodeResult(WorkspaceStateSnapshot)({
+		const decoded = Result.getOrThrow(S.decodeResult(WorkspaceStateSnapshot)({
 			packages: [],
 			catalogs: { entries: {} },
 		}));
-		assert.isTrue(Option.isNone(decoded.resolve("effect", "catalog:effect:peers")));
+		assert.isTrue(O.isNone(decoded.resolve("effect", "catalog:effect:peers")));
 	});
 });

@@ -10,11 +10,14 @@
 import { assert, describe, it } from "@effect/vitest";
 import { CorepackIntegrityHash, IntegrityHash } from "../../effected/npm/index.ts";
 import { SemVer } from "../../effected/semver/index.ts";
-import { Effect, Option, Result, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { PackageManager } from "../../effected/package-json/PackageManager.ts";
 
-const decode = Schema.decodeUnknownEffect(PackageManager.FromString);
-const encode = Schema.encodeUnknownEffect(PackageManager.FromString);
+const decode = S.decodeUnknownEffect(PackageManager.FromString);
+const encode = S.encodeUnknownEffect(PackageManager.FromString);
 
 describe("PackageManager.FromString", () => {
 	it.effect("parses name, version and integrity", () =>
@@ -22,7 +25,7 @@ describe("PackageManager.FromString", () => {
 			const pm = yield* decode("pnpm@10.33.0+sha512.abc");
 			assert.strictEqual(pm.name, "pnpm");
 			assert.strictEqual(pm.version, "10.33.0");
-			assert.deepStrictEqual(pm.integrity, Option.some("sha512.abc"));
+			assert.deepStrictEqual(pm.integrity, O.some("sha512.abc"));
 			assert.isTrue(pm.hasIntegrity);
 		}),
 	);
@@ -30,7 +33,7 @@ describe("PackageManager.FromString", () => {
 	it.effect("parses without integrity", () =>
 		Effect.gen(function* () {
 			const pm = yield* decode("pnpm@10.33.0");
-			assert.deepStrictEqual(pm.integrity, Option.none());
+			assert.deepStrictEqual(pm.integrity, O.none());
 			assert.isFalse(pm.hasIntegrity);
 		}),
 	);
@@ -82,7 +85,7 @@ describe("PackageManager.FromString", () => {
 	it.effect("accepts a real corepack sha512.<hex> integrity", () =>
 		Effect.gen(function* () {
 			const pm = yield* decode("pnpm@10.33.0+sha512.deadbeef");
-			assert.deepStrictEqual(pm.integrity, Option.some("sha512.deadbeef"));
+			assert.deepStrictEqual(pm.integrity, O.some("sha512.deadbeef"));
 			assert.isTrue(pm.hasIntegrity);
 		}),
 	);
@@ -104,7 +107,7 @@ describe("PackageManager.FromString", () => {
 		Effect.gen(function* () {
 			const pm = yield* decode("pnpm@10.33.0+sha512.abc");
 			assert.strictEqual(pm.version, "10.33.0");
-			assert.deepStrictEqual(pm.integrity, Option.some("sha512.abc"));
+			assert.deepStrictEqual(pm.integrity, O.some("sha512.abc"));
 		}),
 	);
 
@@ -169,17 +172,17 @@ describe("PackageManager.FromString version rejection matrix", () => {
 	// bad version is bad wiring, and must not produce a manifest string that
 	// re-parses differently (or not at all).
 	it("a malformed version is rejected at construction", () => {
-		assert.throws(() => PackageManager.make({ name: "pnpm", version: "01.2.3", integrity: Option.none() }));
-		assert.throws(() => PackageManager.make({ name: "pnpm", version: "latest", integrity: Option.none() }));
+		assert.throws(() => PackageManager.make({ name: "pnpm", version: "01.2.3", integrity: O.none() }));
+		assert.throws(() => PackageManager.make({ name: "pnpm", version: "latest", integrity: O.none() }));
 		// Build metadata is inexpressible in the grammar — the `+` position is
 		// spoken for by the integrity — so it is refused at construction rather
 		// than encoding to a string that re-parses as an invalid integrity.
-		assert.throws(() => PackageManager.make({ name: "pnpm", version: "1.2.3+build", integrity: Option.none() }));
+		assert.throws(() => PackageManager.make({ name: "pnpm", version: "1.2.3+build", integrity: O.none() }));
 		// Padding is refused at construction too — the shared schema's whitespace
 		// posture, not just the codec's.
-		assert.throws(() => PackageManager.make({ name: "pnpm", version: " 1.2.3", integrity: Option.none() }));
+		assert.throws(() => PackageManager.make({ name: "pnpm", version: " 1.2.3", integrity: O.none() }));
 		// The control: the same construction with an exact version succeeds.
-		const pm = PackageManager.make({ name: "pnpm", version: "1.2.3", integrity: Option.none() });
+		const pm = PackageManager.make({ name: "pnpm", version: "1.2.3", integrity: O.none() });
 		assert.strictEqual(pm.version, "1.2.3");
 	});
 });
@@ -241,7 +244,7 @@ describe("PackageManager consolidation", () => {
 		// The control: the assertion discriminates against the two neighbours a
 		// faithful re-derivation would plausibly reach for.
 		assert.notStrictEqual(PackageManager.fields.version, SemVer.ExactVersionString);
-		assert.notStrictEqual(PackageManager.fields.version, Schema.String);
+		assert.notStrictEqual(PackageManager.fields.version, S.String);
 	});
 
 	// The equivalence corpus stays as the BEHAVIOURAL guard: whatever this

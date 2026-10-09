@@ -1,14 +1,14 @@
 // eof-newline: a non-empty document must end with a newline. The fix
 // inserts one — a zero-length surgical edit at end-of-input.
 
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 import { YamlEdit } from "../../YamlEdit.ts";
 import type { YamlRule } from "../../YamlLintRule.ts";
 import { YamlLintDiagnostic, YamlLintSeverity } from "../../YamlLintRule.ts";
 
 /** Options for `eof-newline` (severity only — nothing to tune). */
-export const eofNewlineOptions = Schema.Struct({
-	severity: Schema.optionalKey(YamlLintSeverity),
+export const eofNewlineOptions = S.Struct({
+	severity: S.optionalKey(YamlLintSeverity),
 });
 
 /** A missing final newline, with an inserting fix. */

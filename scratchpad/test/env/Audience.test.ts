@@ -1,6 +1,10 @@
 // @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
-import { ConfigProvider, Effect, Layer, Logger, Option } from "effect";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Logger from "effect/Logger";
+import * as O from "effect/Option";
 import type { AudienceOptions } from "../../effected/env/Audience.ts";
 import { Audience } from "../../effected/env/Audience.ts";
 import { CurrentRuntimeEnv, RuntimeEnv } from "../../effected/env/RuntimeEnv.ts";
@@ -18,9 +22,9 @@ const capture = (lines: Array<{ readonly level: string; readonly text: string }>
 
 const runtime = (fields: { agent?: string; ci?: "github-actions" | "generic" }) =>
 	RuntimeEnv.make({
-		agent: Option.fromNullishOr(fields.agent),
-		ci: Option.fromNullishOr(fields.ci),
-		terminal: Option.none(),
+		agent: O.fromNullishOr(fields.agent),
+		ci: O.fromNullishOr(fields.ci),
+		terminal: O.none(),
 	});
 
 /** `Audience.layer` fed by the real `CurrentRuntimeEnv.layer`, so the whole chain reads one environment. */

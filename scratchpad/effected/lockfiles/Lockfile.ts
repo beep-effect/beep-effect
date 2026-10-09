@@ -1,4 +1,6 @@
-import { Effect, Option, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { dual } from "effect/Function";
 import { BunExtension } from "./BunExtension.ts";
 import { parseBun } from "./internal/bun.ts";
@@ -32,13 +34,13 @@ const EMPTY_IMPORTERS: ReadonlyArray<LockfileImporter> = [];
  *
  * @public
  */
-export class LockfileParseError extends Schema.TaggedError<LockfileParseError>()("LockfileParseError", {
+export class LockfileParseError extends S.TaggedError<LockfileParseError>()("LockfileParseError", {
 	/** The lockfile format that was being parsed. */
 	format: LockfileFormat,
 	/** Whether the text itself failed to parse (`"syntax"`) or parsed but had the wrong shape (`"validation"`). */
-	stage: Schema.Literals(["syntax", "validation"]),
+	stage: S.Literals(["syntax", "validation"]),
 	/** The underlying engine or schema failure, preserved structurally. */
-	cause: Schema.Defect(),
+	cause: S.Defect(),
 }) {
 	override get message(): string {
 		return this.stage === "syntax"
@@ -88,13 +90,13 @@ export class LockfileParseError extends Schema.TaggedError<LockfileParseError>()
  *
  * @public
  */
-export class LockfileFramingError extends Schema.TaggedError<LockfileFramingError>()("LockfileFramingError", {
+export class LockfileFramingError extends S.TaggedError<LockfileFramingError>()("LockfileFramingError", {
 	/** The lockfile format that was being parsed. */
 	format: LockfileFormat,
 	/** Which framing check failed; see the class remarks for each. */
-	reason: Schema.Literals(["noLockfileDocument", "noImporters", "unexpectedDocuments"]),
+	reason: S.Literals(["noLockfileDocument", "noImporters", "unexpectedDocuments"]),
 	/** How many YAML documents the stream carried. */
-	documents: Schema.Int,
+	documents: S.Int,
 }) {
 	override get message(): string {
 		const detail =
@@ -168,19 +170,19 @@ const dispatch = (
  *
  * @public
  */
-export class Lockfile extends Schema.Class<Lockfile>("Lockfile")({
+export class Lockfile extends S.Class<Lockfile>("Lockfile")({
 	format: LockfileFormat,
-	lockfileVersion: Schema.String,
-	packages: Schema.Array(ResolvedPackage),
-	workspaceDependencies: Schema.Array(WorkspaceDependency),
-	importers: Schema.Array(LockfileImporter).pipe(
+	lockfileVersion: S.String,
+	packages: S.Array(ResolvedPackage),
+	workspaceDependencies: S.Array(WorkspaceDependency),
+	importers: S.Array(LockfileImporter).pipe(
 		// The decoding default is the *encoded* empty array (a fresh `[]` literal,
 		// which is assignable to the encoded side); the constructor default is the
 		// decoded empty array. Both are empty, so the runtime value is identical.
-		Schema.withDecodingDefaultKey(Effect.succeed([])),
-		Schema.withConstructorDefault(Effect.succeed(EMPTY_IMPORTERS)),
+		S.withDecodingDefaultKey(Effect.succeed([])),
+		S.withConstructorDefault(Effect.succeed(EMPTY_IMPORTERS)),
 	),
-	extension: Schema.optionalKey(Schema.Union([PnpmExtension, BunExtension])),
+	extension: S.optionalKey(S.Union([PnpmExtension, BunExtension])),
 }) {
 	/** Lazily built name → packages index; deliberately outside the schema, never encodes. */
 	#nameIndex: ReadonlyMap<string, ReadonlyArray<ResolvedPackage>> | undefined;
@@ -318,13 +320,13 @@ export class Lockfile extends Schema.Class<Lockfile>("Lockfile")({
 	 * @param path - The importer path to look up.
 	 * @returns The matching {@link LockfileImporter}, or `Option.none()`.
 	 */
-	importer(path: string): Option.Option<LockfileImporter> {
+	importer(path: string): O.Option<LockfileImporter> {
 		if (this.#importerIndex === undefined) {
 			const index = new Map<string, LockfileImporter>();
 			for (const imp of this.importers) index.set(imp.path, imp);
 			this.#importerIndex = index;
 		}
-		return Option.fromUndefinedOr(this.#importerIndex.get(path));
+		return O.fromUndefinedOr(this.#importerIndex.get(path));
 	}
 
 	/**
@@ -344,7 +346,7 @@ export class Lockfile extends Schema.Class<Lockfile>("Lockfile")({
 	 * @param instanceId - The instance id to look up.
 	 * @returns The matching {@link ResolvedPackage}, or `Option.none()`.
 	 */
-	packageByInstanceId(instanceId: string): Option.Option<ResolvedPackage> {
+	packageByInstanceId(instanceId: string): O.Option<ResolvedPackage> {
 		if (this.#instanceIndex === undefined) {
 			const index = new Map<string, ResolvedPackage>();
 			// First wins, so the answer is stable if a malformed lockfile repeats
@@ -354,7 +356,7 @@ export class Lockfile extends Schema.Class<Lockfile>("Lockfile")({
 			}
 			this.#instanceIndex = index;
 		}
-		return Option.fromUndefinedOr(this.#instanceIndex.get(instanceId));
+		return O.fromUndefinedOr(this.#instanceIndex.get(instanceId));
 	}
 
 	/** The workspace-local packages. */

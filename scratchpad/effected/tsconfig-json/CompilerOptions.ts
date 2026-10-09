@@ -20,7 +20,8 @@
 //     one ("decodes enum values case-insensitively" / "rejects an unknown
 //     enum value").
 
-import { Schema, SchemaTransformation } from "effect";
+import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 
 /**
  * Case-insensitive literal-union decode; canonical lowercase encode. Module-
@@ -28,9 +29,9 @@ import { Schema, SchemaTransformation } from "effect";
  * from it, but the helper itself is not part of the public surface.
  */
 const caseInsensitiveLiterals = <const L extends ReadonlyArray<string>>(literals: L) =>
-	Schema.String.pipe(
-		Schema.decodeTo(
-			Schema.Literals(literals),
+	S.String.pipe(
+		S.decodeTo(
+			S.Literals(literals),
 			SchemaTransformation.transform({
 				decode: (s: string) => s.toLowerCase(),
 				encode: (s: string) => s,
@@ -228,15 +229,15 @@ export const Lib = caseInsensitiveLiterals([
 // `compilerOptions.ignoreDeprecations` — the values are version strings, not
 // case-varying identifiers, so this stays a plain (non-case-insensitive)
 // literal schema and is not exported by name.
-const IgnoreDeprecations = Schema.Literals(["5.0", "6.0"]);
+const IgnoreDeprecations = S.Literals(["5.0", "6.0"]);
 
 /**
  * One `compilerOptions.plugins[]` entry: `name` is required and typed; every
  * other key is preserved verbatim (ts-plugin authors attach arbitrary extra
  * configuration).
  */
-const PluginEntry = Schema.StructWithRest(Schema.Struct({ name: Schema.String }), [
-	Schema.Record(Schema.String, Schema.Unknown),
+const PluginEntry = S.StructWithRest(S.Struct({ name: S.String }), [
+	S.Record(S.String, S.Unknown),
 ]);
 
 /**
@@ -247,143 +248,143 @@ const PluginEntry = Schema.StructWithRest(Schema.Struct({ name: Schema.String })
  *
  * @public
  */
-export const CompilerOptions = Schema.StructWithRest(
-	Schema.Struct({
+export const CompilerOptions = S.StructWithRest(
+	S.Struct({
 		// ── Enum-valued options ─────────────────────────────────────
-		target: Schema.optionalKey(Target),
-		module: Schema.optionalKey(Module),
-		moduleResolution: Schema.optionalKey(ModuleResolution),
-		jsx: Schema.optionalKey(Jsx),
-		newLine: Schema.optionalKey(NewLine),
-		moduleDetection: Schema.optionalKey(ModuleDetection),
-		lib: Schema.optionalKey(Schema.Array(Lib)),
-		ignoreDeprecations: Schema.optionalKey(IgnoreDeprecations),
+		target: S.optionalKey(Target),
+		module: S.optionalKey(Module),
+		moduleResolution: S.optionalKey(ModuleResolution),
+		jsx: S.optionalKey(Jsx),
+		newLine: S.optionalKey(NewLine),
+		moduleDetection: S.optionalKey(ModuleDetection),
+		lib: Lib.pipe(S.Array, S.optionalKey),
+		ignoreDeprecations: S.optionalKey(IgnoreDeprecations),
 
 		// ── Boolean options — live typed set ─────
-		strict: Schema.optionalKey(Schema.Boolean),
-		noImplicitAny: Schema.optionalKey(Schema.Boolean),
-		strictNullChecks: Schema.optionalKey(Schema.Boolean),
-		strictFunctionTypes: Schema.optionalKey(Schema.Boolean),
-		strictBindCallApply: Schema.optionalKey(Schema.Boolean),
-		strictPropertyInitialization: Schema.optionalKey(Schema.Boolean),
-		strictBuiltinIteratorReturn: Schema.optionalKey(Schema.Boolean),
-		noImplicitThis: Schema.optionalKey(Schema.Boolean),
-		useUnknownInCatchVariables: Schema.optionalKey(Schema.Boolean),
+		strict: S.optionalKey(S.Boolean),
+		noImplicitAny: S.optionalKey(S.Boolean),
+		strictNullChecks: S.optionalKey(S.Boolean),
+		strictFunctionTypes: S.optionalKey(S.Boolean),
+		strictBindCallApply: S.optionalKey(S.Boolean),
+		strictPropertyInitialization: S.optionalKey(S.Boolean),
+		strictBuiltinIteratorReturn: S.optionalKey(S.Boolean),
+		noImplicitThis: S.optionalKey(S.Boolean),
+		useUnknownInCatchVariables: S.optionalKey(S.Boolean),
 		/** @deprecated Deprecated in TypeScript 6.0 when set to `false`. */
-		alwaysStrict: Schema.optionalKey(Schema.Boolean),
-		noUnusedLocals: Schema.optionalKey(Schema.Boolean),
-		noUnusedParameters: Schema.optionalKey(Schema.Boolean),
-		exactOptionalPropertyTypes: Schema.optionalKey(Schema.Boolean),
-		noImplicitReturns: Schema.optionalKey(Schema.Boolean),
-		noFallthroughCasesInSwitch: Schema.optionalKey(Schema.Boolean),
-		noUncheckedIndexedAccess: Schema.optionalKey(Schema.Boolean),
-		noImplicitOverride: Schema.optionalKey(Schema.Boolean),
-		noPropertyAccessFromIndexSignature: Schema.optionalKey(Schema.Boolean),
-		allowUnusedLabels: Schema.optionalKey(Schema.Boolean),
-		allowUnreachableCode: Schema.optionalKey(Schema.Boolean),
-		noUncheckedSideEffectImports: Schema.optionalKey(Schema.Boolean),
-		allowJs: Schema.optionalKey(Schema.Boolean),
-		checkJs: Schema.optionalKey(Schema.Boolean),
-		resolveJsonModule: Schema.optionalKey(Schema.Boolean),
-		allowArbitraryExtensions: Schema.optionalKey(Schema.Boolean),
-		allowImportingTsExtensions: Schema.optionalKey(Schema.Boolean),
-		rewriteRelativeImportExtensions: Schema.optionalKey(Schema.Boolean),
-		resolvePackageJsonExports: Schema.optionalKey(Schema.Boolean),
-		resolvePackageJsonImports: Schema.optionalKey(Schema.Boolean),
+		alwaysStrict: S.optionalKey(S.Boolean),
+		noUnusedLocals: S.optionalKey(S.Boolean),
+		noUnusedParameters: S.optionalKey(S.Boolean),
+		exactOptionalPropertyTypes: S.optionalKey(S.Boolean),
+		noImplicitReturns: S.optionalKey(S.Boolean),
+		noFallthroughCasesInSwitch: S.optionalKey(S.Boolean),
+		noUncheckedIndexedAccess: S.optionalKey(S.Boolean),
+		noImplicitOverride: S.optionalKey(S.Boolean),
+		noPropertyAccessFromIndexSignature: S.optionalKey(S.Boolean),
+		allowUnusedLabels: S.optionalKey(S.Boolean),
+		allowUnreachableCode: S.optionalKey(S.Boolean),
+		noUncheckedSideEffectImports: S.optionalKey(S.Boolean),
+		allowJs: S.optionalKey(S.Boolean),
+		checkJs: S.optionalKey(S.Boolean),
+		resolveJsonModule: S.optionalKey(S.Boolean),
+		allowArbitraryExtensions: S.optionalKey(S.Boolean),
+		allowImportingTsExtensions: S.optionalKey(S.Boolean),
+		rewriteRelativeImportExtensions: S.optionalKey(S.Boolean),
+		resolvePackageJsonExports: S.optionalKey(S.Boolean),
+		resolvePackageJsonImports: S.optionalKey(S.Boolean),
 		/** @deprecated Deprecated in TypeScript 6.0 when set to `false`. */
-		allowSyntheticDefaultImports: Schema.optionalKey(Schema.Boolean),
+		allowSyntheticDefaultImports: S.optionalKey(S.Boolean),
 		/** @deprecated Deprecated in TypeScript 6.0 when set to `false`. */
-		esModuleInterop: Schema.optionalKey(Schema.Boolean),
-		preserveSymlinks: Schema.optionalKey(Schema.Boolean),
-		allowUmdGlobalAccess: Schema.optionalKey(Schema.Boolean),
-		verbatimModuleSyntax: Schema.optionalKey(Schema.Boolean),
-		isolatedModules: Schema.optionalKey(Schema.Boolean),
-		isolatedDeclarations: Schema.optionalKey(Schema.Boolean),
-		erasableSyntaxOnly: Schema.optionalKey(Schema.Boolean),
-		forceConsistentCasingInFileNames: Schema.optionalKey(Schema.Boolean),
-		declaration: Schema.optionalKey(Schema.Boolean),
-		declarationMap: Schema.optionalKey(Schema.Boolean),
-		emitDeclarationOnly: Schema.optionalKey(Schema.Boolean),
-		sourceMap: Schema.optionalKey(Schema.Boolean),
-		inlineSourceMap: Schema.optionalKey(Schema.Boolean),
-		inlineSources: Schema.optionalKey(Schema.Boolean),
-		removeComments: Schema.optionalKey(Schema.Boolean),
-		importHelpers: Schema.optionalKey(Schema.Boolean),
+		esModuleInterop: S.optionalKey(S.Boolean),
+		preserveSymlinks: S.optionalKey(S.Boolean),
+		allowUmdGlobalAccess: S.optionalKey(S.Boolean),
+		verbatimModuleSyntax: S.optionalKey(S.Boolean),
+		isolatedModules: S.optionalKey(S.Boolean),
+		isolatedDeclarations: S.optionalKey(S.Boolean),
+		erasableSyntaxOnly: S.optionalKey(S.Boolean),
+		forceConsistentCasingInFileNames: S.optionalKey(S.Boolean),
+		declaration: S.optionalKey(S.Boolean),
+		declarationMap: S.optionalKey(S.Boolean),
+		emitDeclarationOnly: S.optionalKey(S.Boolean),
+		sourceMap: S.optionalKey(S.Boolean),
+		inlineSourceMap: S.optionalKey(S.Boolean),
+		inlineSources: S.optionalKey(S.Boolean),
+		removeComments: S.optionalKey(S.Boolean),
+		importHelpers: S.optionalKey(S.Boolean),
 		/** @deprecated Deprecated in TypeScript 6.0. */
-		downlevelIteration: Schema.optionalKey(Schema.Boolean),
-		emitBOM: Schema.optionalKey(Schema.Boolean),
-		noEmit: Schema.optionalKey(Schema.Boolean),
-		noEmitHelpers: Schema.optionalKey(Schema.Boolean),
-		noEmitOnError: Schema.optionalKey(Schema.Boolean),
-		preserveConstEnums: Schema.optionalKey(Schema.Boolean),
-		stripInternal: Schema.optionalKey(Schema.Boolean),
-		experimentalDecorators: Schema.optionalKey(Schema.Boolean),
-		emitDecoratorMetadata: Schema.optionalKey(Schema.Boolean),
-		useDefineForClassFields: Schema.optionalKey(Schema.Boolean),
-		noCheck: Schema.optionalKey(Schema.Boolean),
-		composite: Schema.optionalKey(Schema.Boolean),
-		incremental: Schema.optionalKey(Schema.Boolean),
-		disableSourceOfProjectReferenceRedirect: Schema.optionalKey(Schema.Boolean),
-		disableSolutionSearching: Schema.optionalKey(Schema.Boolean),
-		disableReferencedProjectLoad: Schema.optionalKey(Schema.Boolean),
-		assumeChangesOnlyAffectDirectDependencies: Schema.optionalKey(Schema.Boolean),
-		noErrorTruncation: Schema.optionalKey(Schema.Boolean),
-		noLib: Schema.optionalKey(Schema.Boolean),
-		noResolve: Schema.optionalKey(Schema.Boolean),
-		skipDefaultLibCheck: Schema.optionalKey(Schema.Boolean),
-		skipLibCheck: Schema.optionalKey(Schema.Boolean),
-		diagnostics: Schema.optionalKey(Schema.Boolean),
-		extendedDiagnostics: Schema.optionalKey(Schema.Boolean),
-		listFiles: Schema.optionalKey(Schema.Boolean),
-		listFilesOnly: Schema.optionalKey(Schema.Boolean),
-		listEmittedFiles: Schema.optionalKey(Schema.Boolean),
-		explainFiles: Schema.optionalKey(Schema.Boolean),
-		traceResolution: Schema.optionalKey(Schema.Boolean),
-		preserveWatchOutput: Schema.optionalKey(Schema.Boolean),
-		pretty: Schema.optionalKey(Schema.Boolean),
-		disableSizeLimit: Schema.optionalKey(Schema.Boolean),
-		libReplacement: Schema.optionalKey(Schema.Boolean),
-		stableTypeOrdering: Schema.optionalKey(Schema.Boolean),
+		downlevelIteration: S.optionalKey(S.Boolean),
+		emitBOM: S.optionalKey(S.Boolean),
+		noEmit: S.optionalKey(S.Boolean),
+		noEmitHelpers: S.optionalKey(S.Boolean),
+		noEmitOnError: S.optionalKey(S.Boolean),
+		preserveConstEnums: S.optionalKey(S.Boolean),
+		stripInternal: S.optionalKey(S.Boolean),
+		experimentalDecorators: S.optionalKey(S.Boolean),
+		emitDecoratorMetadata: S.optionalKey(S.Boolean),
+		useDefineForClassFields: S.optionalKey(S.Boolean),
+		noCheck: S.optionalKey(S.Boolean),
+		composite: S.optionalKey(S.Boolean),
+		incremental: S.optionalKey(S.Boolean),
+		disableSourceOfProjectReferenceRedirect: S.optionalKey(S.Boolean),
+		disableSolutionSearching: S.optionalKey(S.Boolean),
+		disableReferencedProjectLoad: S.optionalKey(S.Boolean),
+		assumeChangesOnlyAffectDirectDependencies: S.optionalKey(S.Boolean),
+		noErrorTruncation: S.optionalKey(S.Boolean),
+		noLib: S.optionalKey(S.Boolean),
+		noResolve: S.optionalKey(S.Boolean),
+		skipDefaultLibCheck: S.optionalKey(S.Boolean),
+		skipLibCheck: S.optionalKey(S.Boolean),
+		diagnostics: S.optionalKey(S.Boolean),
+		extendedDiagnostics: S.optionalKey(S.Boolean),
+		listFiles: S.optionalKey(S.Boolean),
+		listFilesOnly: S.optionalKey(S.Boolean),
+		listEmittedFiles: S.optionalKey(S.Boolean),
+		explainFiles: S.optionalKey(S.Boolean),
+		traceResolution: S.optionalKey(S.Boolean),
+		preserveWatchOutput: S.optionalKey(S.Boolean),
+		pretty: S.optionalKey(S.Boolean),
+		disableSizeLimit: S.optionalKey(S.Boolean),
+		libReplacement: S.optionalKey(S.Boolean),
+		stableTypeOrdering: S.optionalKey(S.Boolean),
 
 		// ── Path strings ─────────────────────────────────────────────
 		/** @deprecated Deprecated in TypeScript 6.0. */
-		outFile: Schema.optionalKey(Schema.String),
-		outDir: Schema.optionalKey(Schema.String),
-		rootDir: Schema.optionalKey(Schema.String),
-		declarationDir: Schema.optionalKey(Schema.String),
-		sourceRoot: Schema.optionalKey(Schema.String),
-		mapRoot: Schema.optionalKey(Schema.String),
-		tsBuildInfoFile: Schema.optionalKey(Schema.String),
+		outFile: S.optionalKey(S.String),
+		outDir: S.optionalKey(S.String),
+		rootDir: S.optionalKey(S.String),
+		declarationDir: S.optionalKey(S.String),
+		sourceRoot: S.optionalKey(S.String),
+		mapRoot: S.optionalKey(S.String),
+		tsBuildInfoFile: S.optionalKey(S.String),
 		/** @deprecated Deprecated in TypeScript 6.0. */
-		baseUrl: Schema.optionalKey(Schema.String),
-		generateCpuProfile: Schema.optionalKey(Schema.String),
-		generateTrace: Schema.optionalKey(Schema.String),
+		baseUrl: S.optionalKey(S.String),
+		generateCpuProfile: S.optionalKey(S.String),
+		generateTrace: S.optionalKey(S.String),
 
 		// ── Path lists ───────────────────────────────────────────────
-		typeRoots: Schema.optionalKey(Schema.Array(Schema.String)),
-		rootDirs: Schema.optionalKey(Schema.Array(Schema.String)),
+		typeRoots: S.String.pipe(S.Array, S.optionalKey),
+		rootDirs: S.String.pipe(S.Array, S.optionalKey),
 
 		// ── Plain strings ────────────────────────────────────────────
-		jsxFactory: Schema.optionalKey(Schema.String),
-		jsxFragmentFactory: Schema.optionalKey(Schema.String),
-		jsxImportSource: Schema.optionalKey(Schema.String),
-		reactNamespace: Schema.optionalKey(Schema.String),
+		jsxFactory: S.optionalKey(S.String),
+		jsxFragmentFactory: S.optionalKey(S.String),
+		jsxImportSource: S.optionalKey(S.String),
+		reactNamespace: S.optionalKey(S.String),
 
 		// ── String lists ─────────────────────────────────────────────
-		types: Schema.optionalKey(Schema.Array(Schema.String)),
-		customConditions: Schema.optionalKey(Schema.Array(Schema.String)),
-		moduleSuffixes: Schema.optionalKey(Schema.Array(Schema.String)),
+		types: S.String.pipe(S.Array, S.optionalKey),
+		customConditions: S.String.pipe(S.Array, S.optionalKey),
+		moduleSuffixes: S.String.pipe(S.Array, S.optionalKey),
 
 		// ── Record ────────────────────────────────────────────────────
-		paths: Schema.optionalKey(Schema.Record(Schema.String, Schema.Array(Schema.String))),
+		paths: S.optionalKey(S.Record(S.String, S.Array(S.String))),
 
 		// ── Objects ───────────────────────────────────────────────────
-		plugins: Schema.optionalKey(Schema.Array(PluginEntry)),
+		plugins: PluginEntry.pipe(S.Array, S.optionalKey),
 
 		// ── Number ────────────────────────────────────────────────────
-		maxNodeModuleJsDepth: Schema.optionalKey(Schema.Finite),
+		maxNodeModuleJsDepth: S.optionalKey(S.Finite),
 	}),
-	[Schema.Record(Schema.String, Schema.Unknown)],
+	[S.Record(S.String, S.Unknown)],
 );
 
 /**

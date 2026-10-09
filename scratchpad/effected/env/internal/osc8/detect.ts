@@ -1,5 +1,5 @@
 // Ported from std-osc8 v0.2.0 (MIT, C. Spencer Beggs), src/detect.ts. Pure: no process reads.
-import { Option } from "effect";
+import * as O from "effect/Option";
 import { dual } from "effect/Function";
 import type { Env } from "../types.ts";
 import { envIsTruthy } from "./env.ts";
@@ -169,7 +169,7 @@ export const detect = (snap: ProcessSnapshot): Osc8Info => {
 export interface Osc8Detection {
 	readonly stdout: boolean;
 	readonly stderr: boolean;
-	readonly terminal: Option.Option<{ readonly name: string; readonly version: Option.Option<string> }>;
+	readonly terminal: O.Option<{ readonly name: string; readonly version: O.Option<string> }>;
 }
 
 /**
@@ -185,9 +185,9 @@ export const detectOsc8: {
 	return {
 		stdout: info.supported,
 		stderr: info.supportedForStderr,
-		terminal: Option.map(Option.fromNullishOr(info.terminal), (name) => ({
+		terminal: O.map(O.fromNullishOr(info.terminal), (name) => ({
 			name,
-			version: Option.fromNullishOr(info.terminalVersion),
+			version: O.fromNullishOr(info.terminalVersion),
 		})),
 	};
 });

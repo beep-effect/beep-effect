@@ -1,7 +1,14 @@
-import type { Layer, Redacted } from "effect";
-import { Config, ConfigProvider, Context, Effect, Schema, SchemaIssue, Result } from "effect";
+import type * as Layer from "effect/Layer";
+import type * as Redacted from "effect/Redacted";
+import * as Config from "effect/Config";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
+import * as Result from "effect/Result";
 
-const Json = Schema.fromJsonString(Schema.Unknown);
+const Json = S.fromJsonString(S.Unknown);
 
 /**
  * The variable name the runner publishes an input under.
@@ -33,7 +40,7 @@ export const inputVariable = (name: string): string => `INPUT_${name.replaceAll(
  * so the rendered error names it.
  */
 const configError = (message: string, actual: unknown): Config.ConfigError =>
-	new Config.ConfigError(new Schema.SchemaError(new SchemaIssue.InvalidValue({ message }, actual)));
+	new Config.ConfigError(new S.SchemaError(new SchemaIssue.InvalidValue({ message }, actual)));
 
 /** YAML 1.2 core-schema booleans, which is what the runner documents. */
 const TRUE = new Set(["true", "True", "TRUE"]);
@@ -321,7 +328,7 @@ export class ActionInput {
 				}
 				if (trimmed.startsWith("[")) {
 					try {
-						const parsed: unknown = Result.getOrThrowWith(Schema.decodeResult(Json)(trimmed), (error) => error);
+						const parsed: unknown = Result.getOrThrowWith(S.decodeResult(Json)(trimmed), (error) => error);
 						if (Array.isArray(parsed) && parsed.every((item) => typeof item === "string")) {
 							return Effect.succeed<ReadonlyArray<string>>(parsed as ReadonlyArray<string>);
 						}
@@ -408,16 +415,16 @@ export class ActionInput {
 	 * still failing — core's `Config.option` lets validation errors propagate,
 	 * which is exactly the missing-versus-malformed split above.
 	 */
-	static schema<A, I>(name: string, schema: Schema.Codec<A, I>): Config.Config<A> {
+	static schema<A, I>(name: string, schema: S.Codec<A, I>): Config.Config<A> {
 		return Config.String(inputVariable(name)).pipe(
 			Config.mapEffect((raw) => {
 				let parsed: unknown;
 				try {
-					parsed = Result.getOrThrowWith(Schema.decodeResult(Json)(raw), (error) => error);
+					parsed = Result.getOrThrowWith(S.decodeResult(Json)(raw), (error) => error);
 				} catch {
 					return Effect.fail(configError(`Input "${name}" is not valid JSON`, raw));
 				}
-				return Schema.decodeUnknownEffect(schema)(parsed).pipe(
+				return S.decodeUnknownEffect(schema)(parsed).pipe(
 					Effect.mapError(() => configError(`Input "${name}" did not satisfy its schema`, parsed)),
 				);
 			}),

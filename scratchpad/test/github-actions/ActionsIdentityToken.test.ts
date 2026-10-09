@@ -1,7 +1,12 @@
 // @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { IdentityToken, IdentityTokenError } from "../../effected/sbom/index.ts";
-import { Cause, Effect, Equal, Exit, Layer, Redacted } from "effect";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import * as Exit from "effect/Exit";
+import * as Layer from "effect/Layer";
+import * as Redacted from "effect/Redacted";
 import { ActionsIdentityToken, OidcClaims, OidcTokenError, OidcTokenIssuer } from "../../effected/github-actions/index.ts";
 
 const CLAIMS = OidcClaims.make({

@@ -1,13 +1,20 @@
-import { Data } from "effect";
-import { Schema } from "effect";
-import { Result } from "effect";
+import * as Data from "effect/Data";
+import * as S from "effect/Schema";
+import * as Result from "effect/Result";
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
-import { Cause, Console, Context, Effect, Exit, Layer, MutableRef, Runtime } from "effect";
+import * as Cause from "effect/Cause";
+import * as Console from "effect/Console";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Layer from "effect/Layer";
+import * as MutableRef from "effect/MutableRef";
+import * as Runtime from "effect/Runtime";
 import { CliError, Command } from "effect/cli";
 import { CliExit, CliRuntime } from "../../effected/cli/index.ts";
 
-const Json = Schema.fromJsonString(Schema.Unknown);
+const Json = S.fromJsonString(S.Unknown);
 
 class TestError extends Data.TaggedError("TestError")<{ readonly message: string; readonly cause?: unknown }> {
 	override readonly name = "Error";
@@ -27,7 +34,7 @@ const capturing = () => {
 };
 
 const codeOf = <A>(exit: Exit.Exit<A, unknown>): number | undefined =>
-	Exit.isFailure(exit) ? Runtime.getErrorExitCode(Cause.squash(exit.cause)) : undefined;
+	Exit.isFailure(exit) ? exit.cause.pipe(Cause.squash, Runtime.getErrorExitCode) : undefined;
 
 describe("CliRuntime.main", () => {
 	it.effect("a program that succeeds with no findings succeeds", () =>
@@ -64,7 +71,7 @@ describe("CliRuntime.main", () => {
 			// the runtime stays quiet, and the teardown turns it into exit 1.
 			assert.isTrue(Exit.isFailure(exit));
 			if (Exit.isFailure(exit)) {
-				assert.strictEqual(Runtime.getErrorReported(Cause.squash(exit.cause)), false);
+				assert.strictEqual(exit.cause.pipe(Cause.squash, Runtime.getErrorReported), false);
 			}
 			const codes: number[] = [];
 			Runtime.defaultTeardown(exit, (code) => codes.push(code));
@@ -153,7 +160,7 @@ describe("CliRuntime.main and a UserError raised through Command.runWith", () =>
 			const exit = yield* CliRuntime.main(Command.runWith(deploy, { version: "1.0.0" })([]), {
 				platform: NodeServices.layer,
 			}).pipe(Effect.exit, Effect.provideService(Console.Console, double));
-			assert.strictEqual(err.length, 1, `expected one stderr entry, got ${Result.getOrThrow(Schema.encodeUnknownResult(Json)(err))}`);
+			assert.strictEqual(err.length, 1, `expected one stderr entry, got ${Result.getOrThrow(S.encodeUnknownResult(Json)(err))}`);
 			assert.include(err[0], "unknown target: moon");
 			assert.deepStrictEqual(out, []);
 			assert.strictEqual(codeOf(exit), 64);
@@ -171,7 +178,7 @@ describe("CliRuntime.main and a UserError raised through Command.runWith", () =>
 			const exit = yield* CliRuntime.main(Command.runWith(deploy, { version: "1.0.0", renderErrors: false })([]), {
 				platform: NodeServices.layer,
 			}).pipe(Effect.exit, Effect.provideService(Console.Console, double));
-			assert.strictEqual(err.length, 1, `expected one stderr entry, got ${Result.getOrThrow(Schema.encodeUnknownResult(Json)(err))}`);
+			assert.strictEqual(err.length, 1, `expected one stderr entry, got ${Result.getOrThrow(S.encodeUnknownResult(Json)(err))}`);
 			// Rendered here like any other failure, so it takes the fallback exit
 			// code, not the usage code.
 			assert.strictEqual(codeOf(exit), 1);
@@ -195,7 +202,7 @@ describe("CliRuntime.main and a UserError raised through Command.runWith", () =>
 			const exit = yield* CliRuntime.main(Command.runWith(marked, { version: "1.0.0" })([]), {
 				platform: NodeServices.layer,
 			}).pipe(Effect.exit, Effect.provideService(Console.Console, double));
-			assert.strictEqual(err.length, 1, `expected one stderr entry, got ${Result.getOrThrow(Schema.encodeUnknownResult(Json)(err))}`);
+			assert.strictEqual(err.length, 1, `expected one stderr entry, got ${Result.getOrThrow(S.encodeUnknownResult(Json)(err))}`);
 			assert.strictEqual(codeOf(exit), 3);
 		}),
 	);

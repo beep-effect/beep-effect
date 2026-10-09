@@ -5,7 +5,7 @@
 // at the source level. A shebang (`#!` at the very start of the stream) is
 // exempt.
 
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 import { YamlEdit } from "../../YamlEdit.ts";
 import type { LintContext, YamlRule } from "../../YamlLintRule.ts";
 import { StyleVote, YamlLintDiagnostic, YamlLintSeverity } from "../../YamlLintRule.ts";
@@ -17,10 +17,10 @@ import { nonNegativeIntegerOption } from "./util.ts";
  * trailing `#` (default 1 — the kit's own emission spelling) and
  * `requireSpaceAfter` the `#` (default `true`).
  */
-export const commentsSpacingOptions = Schema.Struct({
-	severity: Schema.optionalKey(YamlLintSeverity),
-	minSpacesBefore: Schema.optionalKey(nonNegativeIntegerOption),
-	requireSpaceAfter: Schema.optionalKey(Schema.Boolean),
+export const commentsSpacingOptions = S.Struct({
+	severity: S.optionalKey(YamlLintSeverity),
+	minSpacesBefore: S.optionalKey(nonNegativeIntegerOption),
+	requireSpaceAfter: S.optionalKey(S.Boolean),
 });
 
 interface CommentsSpacingOptions {

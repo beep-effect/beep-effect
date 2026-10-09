@@ -11,7 +11,7 @@
 // tested.
 
 import { assert, describe, it } from "@effect/vitest";
-import { Result } from "effect";
+import * as Result from "effect/Result";
 import type { YamlLintRuleSetting, YamlRule } from "../../../effected/yaml/index.ts";
 import { StyleEvidence, YamlLint, YamlLintConfig, YamlLintDiagnostic } from "../../../effected/yaml/index.ts";
 import { dual } from "effect/Function";

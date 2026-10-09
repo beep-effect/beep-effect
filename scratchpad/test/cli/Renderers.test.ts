@@ -1,27 +1,29 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Result, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { ConfigIssueRenderer } from "../../effected/cli/ConfigIssueRenderer.ts";
 import { SchemaIssueRenderer } from "../../effected/cli/SchemaIssueRenderer.ts";
 
 /** Decode strictly and hand back the raw issue tree. */
-const issueFrom = <A, I>(schema: Schema.Codec<A, I>, input: unknown): unknown => {
+const issueFrom = <A, I>(schema: S.Codec<A, I>, input: unknown): unknown => {
 	const result = Effect.runSync(
-		Schema.decodeUnknownEffect(schema)(input, { onExcessProperty: "error", errors: "all" }).pipe(Effect.result),
+		S.decodeUnknownEffect(schema)(input, { onExcessProperty: "error", errors: "all" }).pipe(Effect.result),
 	);
 	if (Result.isSuccess(result)) throw new Error("expected the decode to fail");
 	return (result.failure as { readonly issue: unknown }).issue;
 };
 
-const Config = Schema.Struct({
-	owner: Schema.optional(Schema.String),
-	groups: Schema.Record(Schema.String, Schema.Struct({ repos: Schema.Array(Schema.String) })),
+const Config = S.Struct({
+	owner: S.optional(S.String),
+	groups: S.Record(S.String, S.Struct({ repos: S.Array(S.String) })),
 });
 
 /** The shape a config group has: exactly one of three keys. */
-const Group = Schema.Union([
-	Schema.Struct({ file: Schema.Record(Schema.String, Schema.String) }),
-	Schema.Struct({ value: Schema.Record(Schema.String, Schema.String) }),
-	Schema.Struct({ resolved: Schema.Record(Schema.String, Schema.String) }),
+const Group = S.Union([
+	S.Struct({ file: S.Record(S.String, S.String) }),
+	S.Struct({ value: S.Record(S.String, S.String) }),
+	S.Struct({ resolved: S.Record(S.String, S.String) }),
 ]);
 
 describe("SchemaIssueRenderer", () => {

@@ -20,7 +20,7 @@
  */
 
 import { assert, describe, it } from "@effect/vitest";
-import { Result } from "effect";
+import * as Result from "effect/Result";
 import { Yaml, YamlFormat } from "../../../effected/yaml/index.ts";
 import { loadAllTestCases } from "./support/suite.ts";
 

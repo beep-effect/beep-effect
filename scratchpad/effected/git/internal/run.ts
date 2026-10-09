@@ -1,5 +1,6 @@
-import type { PlatformError } from "effect";
-import { Effect, Stream } from "effect";
+import type * as PlatformError from "effect/PlatformError";
+import * as Effect from "effect/Effect";
+import * as Stream from "effect/Stream";
 import type { ChildProcess } from "effect/process";
 import { ChildProcessSpawner } from "effect/process";
 
@@ -44,8 +45,8 @@ export const runCollected = (
 			// option; a large-output-on-one-stream case does not.
 			const [stdout, stderr, exitCode] = yield* Effect.all(
 				[
-					Stream.mkString(Stream.decodeText(handle.stdout)),
-					Stream.mkString(Stream.decodeText(handle.stderr)),
+					handle.stdout.pipe(Stream.decodeText, Stream.mkString),
+					handle.stderr.pipe(Stream.decodeText, Stream.mkString),
 					handle.exitCode,
 				],
 				{ concurrency: "unbounded" },

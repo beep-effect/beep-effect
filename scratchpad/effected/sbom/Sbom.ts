@@ -4,7 +4,9 @@
 // there is no third-party serializer whose failure they would need to surface.
 // Only `write` has an error channel, and it is the filesystem's.
 
-import { Effect, FileSystem, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as S from "effect/Schema";
 import type { Component } from "./SbomDocument.ts";
 import { BOM_FORMAT, SPEC_VERSION, SbomDocument, SbomMetadata, documentJson } from "./SbomDocument.ts";
 
@@ -41,11 +43,11 @@ export interface SbomJsonOptions {
  *
  * @public
  */
-export class SbomWriteError extends Schema.TaggedError<SbomWriteError>()("SbomWriteError", {
+export class SbomWriteError extends S.TaggedError<SbomWriteError>()("SbomWriteError", {
 	/** The path that could not be written. */
-	path: Schema.String,
+	path: S.String,
 	/** The underlying failure, preserved structurally. */
-	cause: Schema.Defect(),
+	cause: S.Defect(),
 }) {
 	override get message(): string {
 		return `Failed to write the SBOM to ${this.path}`;

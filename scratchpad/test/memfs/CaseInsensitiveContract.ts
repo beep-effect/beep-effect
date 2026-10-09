@@ -7,8 +7,9 @@
 
 import { dual } from "effect/Function";
 import { assert, describe, it } from "@effect/vitest";
-import type { Layer } from "effect";
-import { Effect, FileSystem } from "effect";
+import type * as Layer from "effect/Layer";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 
 export const caseInsensitiveSuite: {
 	<E>(layer: Layer.Layer<FileSystem.FileSystem, E>, options?: { readonly skip?: boolean }): (name: string) => ReturnType<typeof describe>;

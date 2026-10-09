@@ -1,8 +1,14 @@
 // @effect-diagnostics strictEffectProvide:skip-file
 import { dual } from "effect/Function";
 // Shared by the CliUi.live tests: a small event model, its fold and frame, and the fake-terminal runner.
-import type { Cause, PubSub } from "effect";
-import { Console, Effect, Option, Queue, Schedule, Stream } from "effect";
+import type * as Cause from "effect/Cause";
+import type * as PubSub from "effect/PubSub";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
+import * as Queue from "effect/Queue";
+import * as Schedule from "effect/Schedule";
+import * as Stream from "effect/Stream";
 import { Box, Text } from "ink";
 import type { ReactElement } from "react";
 import { createElement, useEffect } from "react";
@@ -121,7 +127,7 @@ export const mountsAndResolves = (fake: FakeStreams) => {
 
 export const chalk: Effect.Effect<InkChalk> = Effect.flatMap(
 	Effect.promise(() => inkChalk()),
-	Option.match({ onNone: () => Effect.die(new Error("Ink's chalk did not resolve")), onSome: Effect.succeed }),
+	O.match({ onNone: () => Effect.die(new Error("Ink's chalk did not resolve")), onSome: Effect.succeed }),
 );
 
 export const queueOf = Effect.fnUntraced(function* () { return yield* Queue.unbounded<Ev, Cause.Done>(); });

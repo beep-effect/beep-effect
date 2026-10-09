@@ -10,7 +10,9 @@
 // the bytes between the two RPCs stays in the three modules licensed to import
 // it (`__test__/reachability.test.ts`).
 
-import { Effect, Option, Function } from "effect";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
+import * as Function from "effect/Function";
 import type { TwirpResult } from "./twirp.ts";
 import { CONFLICT, isOk, stringField } from "./twirp.ts";
 
@@ -36,13 +38,13 @@ export interface CacheServiceClient<E> {
  * @internal
  */
 export const reserveUpload: {
-	<E>(client: CacheServiceClient<E>, key: string, version: string): Effect.Effect<Option.Option<string>, E>;
-	(key: string, version: string): <E>(client: CacheServiceClient<E>) => Effect.Effect<Option.Option<string>, E>;
+	<E>(client: CacheServiceClient<E>, key: string, version: string): Effect.Effect<O.Option<string>, E>;
+	(key: string, version: string): <E>(client: CacheServiceClient<E>) => Effect.Effect<O.Option<string>, E>;
 } = Function.dual(3, <E>(
 	client: CacheServiceClient<E>,
 	key: string,
 	version: string,
-): Effect.Effect<Option.Option<string>, E> =>
+): Effect.Effect<O.Option<string>, E> =>
 	Effect.flatMap(client.call("CreateCacheEntry", { key, version }), (created) => {
 		if (created === CONFLICT) {
 			return Effect.succeedNone;
@@ -91,18 +93,18 @@ export interface CacheHit {
  * @internal
  */
 export const lookupDownload: {
-	<E>(client: CacheServiceClient<E>, key: string, restoreKeys: ReadonlyArray<string>, version: string): Effect.Effect<Option.Option<CacheHit>, E>;
-	(key: string, restoreKeys: ReadonlyArray<string>, version: string): <E>(client: CacheServiceClient<E>) => Effect.Effect<Option.Option<CacheHit>, E>;
+	<E>(client: CacheServiceClient<E>, key: string, restoreKeys: ReadonlyArray<string>, version: string): Effect.Effect<O.Option<CacheHit>, E>;
+	(key: string, restoreKeys: ReadonlyArray<string>, version: string): <E>(client: CacheServiceClient<E>) => Effect.Effect<O.Option<CacheHit>, E>;
 } = Function.dual(4, <E>(
 	client: CacheServiceClient<E>,
 	key: string,
 	restoreKeys: ReadonlyArray<string>,
 	version: string,
-): Effect.Effect<Option.Option<CacheHit>, E> =>
+): Effect.Effect<O.Option<CacheHit>, E> =>
 	Effect.map(client.call("GetCacheEntryDownloadURL", { key, restore_keys: [...restoreKeys], version }), (found) => {
 		if (found === CONFLICT || !isOk(found)) {
-			return Option.none();
+			return O.none();
 		}
 		const url = stringField(found, "signedDownloadUrl");
-		return url === undefined ? Option.none() : Option.some({ url, matchedKey: stringField(found, "matchedKey") });
+		return url === undefined ? O.none() : O.some({ url, matchedKey: stringField(found, "matchedKey") });
 	}));

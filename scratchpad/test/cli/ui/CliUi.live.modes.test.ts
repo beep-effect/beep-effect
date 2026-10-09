@@ -1,8 +1,12 @@
 // @effect-diagnostics strictEffectProvide:skip-file asyncFunction:skip-file globalTimers:skip-file newPromise:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { Audience } from "../../../effected/env/index.ts";
-import type { Console } from "effect";
-import { Effect, Exit, Fiber, Queue, Stream } from "effect";
+import type * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Fiber from "effect/Fiber";
+import * as Queue from "effect/Queue";
+import * as Stream from "effect/Stream";
 import { TestClock } from "effect/testing";
 import { Box, Text } from "ink";
 import type { ReactElement } from "react";
@@ -101,9 +105,7 @@ describe("CliUi.live: the tick, an Effect schedule in the run's scope", () => {
 	it.effect("a tick that is not a positive number of milliseconds is a defect, before anything is pulled", () =>
 		Effect.gen(function* () {
 			for (const tickMillis of [0, -1, Number.NaN, Number.POSITIVE_INFINITY]) {
-				const exit = yield* Effect.exit(
-					Effect.scoped(liveOn(makeFakeStreams(), optionsOf(Stream.fromIterable([Start]), { tickMillis }))),
-				);
+				const exit = yield* liveOn(makeFakeStreams(), optionsOf(Stream.fromIterable([Start]), { tickMillis })).pipe(Effect.scoped, Effect.exit);
 				assert.isTrue(Exit.isFailure(exit), String(tickMillis));
 				assert.include(String(exit), "tickMillis", String(tickMillis));
 			}
@@ -318,7 +320,7 @@ describe("CliUi.live: a render that fails degrades the run, unmounting before it
 				}),
 				{ onUnmount: () => timeline.push("unmount") },
 			);
-			const done = yield* Effect.forkChild(Effect.exit(handle.done));
+			const done = yield* handle.done.pipe(Effect.exit, Effect.forkChild);
 			yield* Queue.offerAll(queue, [Start, tick(1)]);
 			yield* until(() => screenAfter(fake.stdout()).includes("tick 1"));
 			yield* Queue.offer(queue, tick(2));

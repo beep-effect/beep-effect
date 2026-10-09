@@ -1,5 +1,7 @@
 import { assert, describe, layer } from "@effect/vitest";
-import { Effect, Layer, Option } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import { LockfileReadError, LockfileReader, WorkspaceDiscovery, Workspaces } from "../../effected/workspaces/index.ts";
 import type { Tree } from "./fixtures.ts";
 import { manifest, platform } from "./fixtures.ts";
@@ -73,14 +75,14 @@ describe("LockfileReader — a multi-document pnpm lockfile", () => {
 			Effect.gen(function* () {
 				const reader = yield* LockfileReader;
 				const found = yield* reader.resolvedVersion("@x/a");
-				assert.isTrue(Option.isSome(found));
+				assert.isTrue(O.isSome(found));
 			}),
 		);
 
 		it.effect("resolvedVersion is none for a package the lockfile does not record", () =>
 			Effect.gen(function* () {
 				const reader = yield* LockfileReader;
-				assert.isTrue(Option.isNone(yield* reader.resolvedVersion("not-in-the-lockfile")));
+				assert.isTrue(O.isNone(yield* reader.resolvedVersion("not-in-the-lockfile")));
 			}),
 		);
 
@@ -173,7 +175,7 @@ describe("LockfileReader — a config-dependency-only workspace (no root package
 				assert.deepStrictEqual(lockfile.packages, []);
 				assert.deepStrictEqual(lockfile.importers, []);
 				// The preamble's config dependency is not a workspace package.
-				assert.isTrue(Option.isNone(yield* reader.resolvedVersion("@effected/pnpm-plugin-effect")));
+				assert.isTrue(O.isNone(yield* reader.resolvedVersion("@effected/pnpm-plugin-effect")));
 			}),
 		);
 	});

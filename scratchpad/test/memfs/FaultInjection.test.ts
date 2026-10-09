@@ -6,7 +6,15 @@
 // deny-by-default and an empty tree (savvy-web-systems round-1 request).
 
 import { assert, describe, it } from "@effect/vitest";
-import { Cause, Effect, Exit, Fiber, FileSystem, Layer, PlatformError, Sink, Stream } from "effect";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Fiber from "effect/Fiber";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as PlatformError from "effect/PlatformError";
+import * as Sink from "effect/Sink";
+import * as Stream from "effect/Stream";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
 import { denied } from "./helpers.ts";
 
@@ -158,7 +166,7 @@ describe("MemoryFileSystem.layerFaulty", () => {
 				assert.strictEqual((yield* Effect.flip(faulty.readFileString("/f.txt"))).reason._tag, "PermissionDenied");
 				assert.strictEqual((yield* Effect.flip(faulty.writeFileString("/f.txt", "x"))).reason._tag, "PermissionDenied");
 				assert.strictEqual(
-					(yield* Effect.flip(Stream.runCollect(faulty.stream("/f.txt")))).reason._tag,
+					(yield* faulty.stream("/f.txt").pipe(Stream.runCollect, Effect.flip)).reason._tag,
 					"PermissionDenied",
 				);
 				const sinkError = yield* Effect.flip(Stream.make(new Uint8Array([1])).pipe(Stream.run(faulty.sink("/f.txt"))));

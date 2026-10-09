@@ -1,7 +1,12 @@
 import { Octokit } from "@octokit/core";
 import { composePaginateRest } from "@octokit/plugin-paginate-rest";
 import type { OctokitResponse } from "@octokit/types";
-import { Clock, Data, Effect, Option, Redacted, Ref } from "effect";
+import * as Clock from "effect/Clock";
+import * as Data from "effect/Data";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
+import * as Redacted from "effect/Redacted";
+import * as Ref from "effect/Ref";
 import { GitHubError, readRateLimitHeaders } from "../GitHubError.ts";
 import { GitHubGraphQLError } from "../GraphQL.ts";
 import type { RetryPolicy, RetryableFailure } from "../Resilience.ts";
@@ -53,7 +58,7 @@ export interface Transport {
 		variables: Record<string, unknown>,
 	) => Effect.Effect<unknown, GitHubGraphQLError>;
 	/** The most recent rate-limit headers seen, if any. */
-	readonly rateLimit: Effect.Effect<Option.Option<RateLimitSnapshot>>;
+	readonly rateLimit: Effect.Effect<O.Option<RateLimitSnapshot>>;
 }
 
 class TransportFailure extends Data.TaggedError("TransportFailure")<{ readonly error: unknown }> {}
@@ -99,12 +104,12 @@ const makeOctokit = (options: TransportOptions): Octokit =>
 export const makeTransport = (options: TransportOptions): Effect.Effect<Transport> =>
 	Effect.gen(function* () {
 		const octokit = makeOctokit(options);
-		const snapshot = yield* Ref.make(Option.none<RateLimitSnapshot>());
+		const snapshot = yield* Ref.make(O.none<RateLimitSnapshot>());
 		const policy = options.retry;
 
 		const record = (headers: Readonly<Record<string, unknown>> | undefined): Effect.Effect<void> => {
 			const parsed = readRateLimitHeaders(headers);
-			return parsed === undefined ? Effect.void : Ref.set(snapshot, Option.some(RateLimitSnapshot.make(parsed)));
+			return parsed === undefined ? Effect.void : Ref.set(snapshot, O.some(RateLimitSnapshot.make(parsed)));
 		};
 
 		/**
@@ -164,7 +169,7 @@ export const makeTransport = (options: TransportOptions): Effect.Effect<Transpor
 			return {
 				next: Effect.suspend(() =>
 					finished
-						? Effect.succeed(Option.none<ReadonlyArray<A>>())
+						? Effect.succeed(O.none<ReadonlyArray<A>>())
 						: withRetry(
 								operation,
 								attempt(
@@ -174,10 +179,10 @@ export const makeTransport = (options: TransportOptions): Effect.Effect<Transpor
 									Effect.flatMap((result) => {
 										if (result.done === true || result.value === undefined) {
 											finished = true;
-											return Effect.succeed(Option.none<ReadonlyArray<A>>());
+											return Effect.succeed(O.none<ReadonlyArray<A>>());
 										}
 										const response = result.value as OctokitResponse<ReadonlyArray<A>>;
-										return record(response.headers).pipe(Effect.as(Option.some(response.data)));
+										return record(response.headers).pipe(Effect.as(O.some(response.data)));
 									}),
 								),
 							),

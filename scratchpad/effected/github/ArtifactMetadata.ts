@@ -1,4 +1,7 @@
-import { Context, Effect, Layer, Schema } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as S from "effect/Schema";
 import { GitHubClient } from "./GitHubClient.ts";
 import type { GitHubError } from "./GitHubError.ts";
 import { Repo } from "./Repo.ts";
@@ -11,19 +14,19 @@ import { Repo } from "./Repo.ts";
  *
  * @public
  */
-export class StorageRecordInput extends Schema.Class<StorageRecordInput>("StorageRecordInput")({
+export class StorageRecordInput extends S.Class<StorageRecordInput>("StorageRecordInput")({
 	/** The artifact's package URL (purl). */
-	name: Schema.NonEmptyString,
+	name: S.NonEmptyString,
 	/** Its content digest, as `algorithm:hex`. */
-	digest: Schema.NonEmptyString,
+	digest: S.NonEmptyString,
 	/** The registry's base URL. */
-	registryUrl: Schema.NonEmptyString,
+	registryUrl: S.NonEmptyString,
 	/** The repository name **within the registry**. */
-	repository: Schema.NonEmptyString,
+	repository: S.NonEmptyString,
 	/** Where the artifact is stored, when there is a direct URL. */
-	artifactUrl: Schema.optionalKey(Schema.String),
+	artifactUrl: S.optionalKey(S.String),
 	/** The artifact's path within the registry, when there is one. */
-	path: Schema.optionalKey(Schema.String),
+	path: S.optionalKey(S.String),
 }) {}
 
 /**

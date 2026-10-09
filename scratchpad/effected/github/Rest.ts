@@ -1,6 +1,6 @@
 import type { PaginatingEndpoints } from "@octokit/plugin-paginate-rest";
 import type { Endpoints, RequestHeaders } from "@octokit/types";
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 
 /**
  * Every REST route GitHub documents, as a `"<METHOD> <path>"` literal — for
@@ -113,11 +113,11 @@ export type Item<R extends PaginatingRoute> =
  *
  * @public
  */
-export class PageOptions extends Schema.Class<PageOptions>("PageOptions")({
+export class PageOptions extends S.Class<PageOptions>("PageOptions")({
 	/** Items requested per page. GitHub's ceiling is 100. */
-	perPage: Schema.optionalKey(Schema.Int.check(Schema.isBetween({ minimum: 1, maximum: 100 }))),
+	perPage: S.optionalKey(S.Int.check(S.isBetween({ minimum: 1, maximum: 100 }))),
 	/** Stop after this many pages. Absent means "until GitHub stops". */
-	maxPages: Schema.optionalKey(Schema.Int.check(Schema.isGreaterThan(0))),
+	maxPages: S.optionalKey(S.Int.check(S.isGreaterThan(0))),
 }) {
 	/** Reads every page, 100 at a time — GitHub's maximum page size. */
 	static readonly all: PageOptions = PageOptions.make({ perPage: 100 });

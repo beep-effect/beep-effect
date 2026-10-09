@@ -8,7 +8,9 @@
 // expanded alternative, so {tools/cli,packages/*} contributes a literal AND a
 // wildcard.
 
-import { Effect, Result, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { GlobPattern, GlobPatternError } from "./GlobPattern.ts";
 import { isGuardExceeded } from "./internal/limits.ts";
 import { Minimatch, braceExpand } from "./internal/minimatch.ts";
@@ -72,9 +74,9 @@ interface Classified {
  *
  * @public
  */
-export class GlobSet extends Schema.Class<GlobSet>("GlobSet")(
-	Schema.Struct({ patterns: Schema.Array(Schema.String) }).check(
-		Schema.makeFilter((v) => allCompileUnderDefaults(v.patterns), { title: "compilable glob pattern set" }),
+export class GlobSet extends S.Class<GlobSet>("GlobSet")(
+	S.Struct({ patterns: S.Array(S.String) }).check(
+		S.makeFilter((v) => allCompileUnderDefaults(v.patterns), { title: "compilable glob pattern set" }),
 	),
 ) {
 	#classified: Classified | undefined;

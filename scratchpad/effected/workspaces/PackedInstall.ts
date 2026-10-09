@@ -1,8 +1,17 @@
 import type { CommandOutput } from "../commands/index.ts";
 import { Run } from "../commands/index.ts";
 import { Yaml } from "../yaml/index.ts";
-import type { PlatformError } from "effect";
-import { Config, Duration, Effect, FileSystem, Option, Path, Redacted, Result, Schema, Stream } from "effect";
+import type * as PlatformError from "effect/PlatformError";
+import * as Config from "effect/Config";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as Redacted from "effect/Redacted";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import type { ChildProcessSpawner } from "effect/process";
 import { ChildProcess } from "effect/process";
 import type { PackedManifest } from "./internal/packedInstallPlan.ts";
@@ -22,7 +31,7 @@ import { PackageManagerName } from "./PackageManagerName.ts";
 import { WorkspaceDiscovery } from "./WorkspaceDiscovery.ts";
 import type { WorkspacePackage } from "./WorkspacePackage.ts";
 
-const JsonValue = Schema.fromJsonString(Schema.Unknown);
+const JsonValue = S.fromJsonString(S.Unknown);
 
 /**
  * Where each closure package is packed from.
@@ -207,9 +216,9 @@ export interface PackedInstallOptions extends PackedInstallClosureOptions {
  *
  * @public
  */
-export class PackedInstallError extends Schema.TaggedError<PackedInstallError>()("PackedInstallError", {
+export class PackedInstallError extends S.TaggedError<PackedInstallError>()("PackedInstallError", {
 	/** What failed. */
-	reason: Schema.Literals([
+	reason: S.Literals([
 		"UnsupportedPlatform",
 		"NoManagerAvailable",
 		"ManagerUnavailable",
@@ -227,15 +236,15 @@ export class PackedInstallError extends Schema.TaggedError<PackedInstallError>()
 		"Io",
 	]),
 	/** One line, naming the package or manager involved. */
-	message: Schema.String,
+	message: S.String,
 	/** The package manager involved. */
-	manager: Schema.optionalKey(PackageManagerName),
+	manager: S.optionalKey(PackageManagerName),
 	/** The workspace package involved. */
-	package: Schema.optionalKey(Schema.String),
+	package: S.optionalKey(S.String),
 	/** The tail of the failing command's output. */
-	output: Schema.optionalKey(Schema.String),
+	output: S.optionalKey(S.String),
 	/** The originating failure. */
-	cause: Schema.optionalKey(Schema.Defect()),
+	cause: S.optionalKey(S.Defect()),
 }) {}
 
 /**
@@ -314,25 +323,25 @@ export interface BinProvenance {
  *
  * @public
  */
-export class InstalledConsumer extends Schema.Class<InstalledConsumer>("InstalledConsumer")({
+export class InstalledConsumer extends S.Class<InstalledConsumer>("InstalledConsumer")({
 	/** The package manager that installed it. */
 	manager: PackageManagerName,
 	/** The version it reported and was pinned to. */
-	managerVersion: Schema.String,
+	managerVersion: S.String,
 	/** The consumer project directory (realpath'd). */
-	directory: Schema.String,
+	directory: S.String,
 	/**
 	 * The scrubbed environment the install ran under, which {@link InstalledConsumer.runBin}
 	 * starts from. Redacted, so printing a consumer never prints a token.
 	 * `PackedInstall.run` always sets it; a hand-made consumer without it runs
 	 * its bins under only `RunBinOptions.env`.
 	 */
-	env: Schema.optionalKey(Schema.Redacted(Schema.Record(Schema.String, Schema.String))),
+	env: S.Record(S.String, S.String).pipe(S.Redacted, S.optionalKey),
 	/**
 	 * The carrier the consumer depends on, which {@link InstalledConsumer.carrierCommand}
 	 * resolves bins through. `PackedInstall.run` always sets it.
 	 */
-	carrier: Schema.optionalKey(Schema.String),
+	carrier: S.optionalKey(S.String),
 }) {
 	/** The installed bin `name`, in `node_modules/.bin`. POSIX: `PackedInstall` runs only there. */
 	binPath(name: string): string {
@@ -385,7 +394,7 @@ export class InstalledConsumer extends Schema.Class<InstalledConsumer>("Installe
 						? Effect.succeed(false)
 						: error.reason._tag === "NotFound"
 							? Effect.fail(missing("does not exist"))
-							: Effect.fail(io(`could not read the link ${bin}`)(error)),
+							: error.pipe(io(`could not read the link ${bin}`), Effect.fail),
 				),
 			);
 			if (!linked) {
@@ -400,7 +409,7 @@ export class InstalledConsumer extends Schema.Class<InstalledConsumer>("Installe
 					Effect.catch((error) =>
 						error.reason._tag === "NotFound"
 							? Effect.fail(missing("is a link to nothing"))
-							: Effect.fail(io(`could not resolve ${bin}`)(error)),
+							: error.pipe(io(`could not resolve ${bin}`), Effect.fail),
 					),
 				);
 			const root = yield* fs.realPath(directory).pipe(Effect.mapError(io(`could not resolve ${directory}`)));
@@ -408,7 +417,7 @@ export class InstalledConsumer extends Schema.Class<InstalledConsumer>("Installe
 				const manifest = path.join(dir, "package.json");
 				if (!(yield* fs.exists(manifest).pipe(Effect.mapError(io(`could not inspect ${manifest}`))))) continue;
 				const text = yield* fs.readFileString(manifest).pipe(Effect.mapError(io(`could not read ${manifest}`)));
-				const parsed: unknown = yield* Schema.decodeEffect(JsonValue)(text).pipe(Effect.mapError(io(`${manifest} is not JSON`)));
+				const parsed: unknown = yield* S.decodeEffect(JsonValue)(text).pipe(Effect.mapError(io(`${manifest} is not JSON`)));
 				const named =
 					typeof parsed === "object" && parsed !== null ? (parsed as { readonly name?: unknown }).name : undefined;
 				if (typeof named === "string") return { package: named, target };
@@ -649,20 +658,20 @@ const collectBin = (
  *
  * @public
  */
-export class PackedInstallResult extends Schema.Class<PackedInstallResult>("PackedInstallResult")({
+export class PackedInstallResult extends S.Class<PackedInstallResult>("PackedInstallResult")({
 	/** One consumer per available manager, in the order requested. */
-	consumers: Schema.Array(InstalledConsumer),
+	consumers: S.Array(InstalledConsumer),
 	/** The requested managers that did not answer `--version`. */
-	unavailable: Schema.Array(PackageManagerName),
+	unavailable: S.Array(PackageManagerName),
 	/** Every packed package: name to absolute tarball path. */
-	tarballs: Schema.Record(Schema.String, Schema.String),
+	tarballs: S.Record(S.String, S.String),
 	/**
 	 * The scratch root (realpath'd) holding the tarballs and every consumer.
 	 * It is removed when the scope that ran `PackedInstall.run` closes, so a
 	 * directory made under it, such as an `XDG_DATA_HOME` for the bins, is
 	 * cleaned up with it.
 	 */
-	scratch: Schema.String,
+	scratch: S.String,
 }) {}
 
 /**
@@ -752,7 +761,7 @@ const UNTIMED_SLACK: Duration.Input = "30 seconds";
 const CLEANUP_ALLOWANCE: Duration.Input = "1 minute";
 /** A ceiling as a person reads it: `"4m"` for `"4 minutes"`, the raw input if it does not decode. */
 const describeDuration = (input: Duration.Input): string =>
-	Option.match(Duration.fromInput(input), { onNone: () => String(input), onSome: Duration.format });
+	O.match(Duration.fromInput(input), { onNone: () => String(input), onSome: Duration.format });
 
 const failure = (
 	reason: PackedInstallError["reason"],
@@ -1164,8 +1173,8 @@ export class PackedInstall {
 	static readonly gate = (preflight: PackedInstallPreflight): Effect.Effect<PackedInstallGate> =>
 		Effect.gen(function* () {
 			if (preflight.ready) return { action: "run", message: "" } satisfies PackedInstallGate;
-			const ci = yield* Config.option(Config.String("CI")).pipe(Effect.orElseSucceed(() => Option.none<string>()));
-			const underCi = Option.isSome(ci) && !["", "0", "false"].includes(ci.value.toLowerCase());
+			const ci = yield* Config.option(Config.String("CI")).pipe(Effect.orElseSucceed(() => O.none<string>()));
+			const underCi = O.isSome(ci) && !["", "0", "false"].includes(ci.value.toLowerCase());
 			const message = `the pack source is missing: ${preflight.missing.join(", ")}; run the prod build (build:prod) before the packed-install tests`;
 			return (
 				underCi
@@ -1400,7 +1409,7 @@ export class PackedInstall {
 				});
 				for (const bin of options.bins) {
 					const info = yield* Effect.option(fs.stat(consumer.binPath(bin)));
-					if (Option.isNone(info) || (info.value.mode & 0o111) === 0) {
+					if (O.isNone(info) || (info.value.mode & 0o111) === 0) {
 						// What .bin DOES hold separates a wrong bin name from a link that never happened.
 						const listing = yield* fs.readDirectory(path.join(directory, "node_modules", ".bin")).pipe(
 							Effect.map((names) =>

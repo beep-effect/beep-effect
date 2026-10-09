@@ -16,7 +16,7 @@
 // timestamp is an argument, and so is the copyright year.
 
 import type { Package, Person } from "../package-json/index.ts";
-import { Option } from "effect";
+import * as O from "effect/Option";
 import type { ComponentType } from "./SbomDocument.ts";
 import { Component, Contact, ExternalReference, SbomMetadata, Supplier } from "./SbomDocument.ts";
 
@@ -134,8 +134,8 @@ const documentationUrl = (pkg: Package, options: SbomMetadataOptions | undefined
 const externalReferences = (pkg: Package, options?: SbomMetadataOptions): ReadonlyArray<ExternalReference> => {
 	const references: Array<ExternalReference> = [];
 
-	const vcs = pkg.repository === undefined ? Option.none<string>() : pkg.repository.browseUrl;
-	if (Option.isSome(vcs)) references.push(ExternalReference.make({ type: "vcs", url: vcs.value }));
+	const vcs = pkg.repository === undefined ? O.none<string>() : pkg.repository.browseUrl;
+	if (O.isSome(vcs)) references.push(ExternalReference.make({ type: "vcs", url: vcs.value }));
 
 	// An email-only `bugs` entry is legal npm and carries no URL to point at.
 	if (pkg.bugs?.url !== undefined) {

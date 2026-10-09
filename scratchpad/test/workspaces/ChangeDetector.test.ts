@@ -1,6 +1,7 @@
 import { assert, describe, layer } from "@effect/vitest";
 import { Git, GitCommandError, NotARepositoryError } from "../../effected/git/index.ts";
-import { Effect, Layer } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import {
 	ChangeDetectionOptions,
 	ChangeDetector,

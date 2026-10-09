@@ -6,7 +6,9 @@
 // bare-tree entry points agree exactly on what is a typed failure and what is
 // a defect.
 
-import { Effect, Result, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { scanFrontmatter } from "./internal/blocks/frontmatter.ts";
 import { MAX_NESTING_DEPTH } from "./internal/limits.ts";
 import { preprocessLines } from "./internal/preprocess.ts";
@@ -317,11 +319,11 @@ const phrasingText = (nodes: ReadonlyArray<PhrasingContent>): string => {
  *
  * @public
  */
-export class MarkdownDocument extends Schema.Class<MarkdownDocument>("MarkdownDocument")({
-	source: Schema.String,
+export class MarkdownDocument extends S.Class<MarkdownDocument>("MarkdownDocument")({
+	source: S.String,
 	root: Root,
-	diagnostics: Schema.Array(MarkdownDiagnostic),
-	definitions: Schema.ReadonlyMap(Schema.String, Definition),
+	diagnostics: S.Array(MarkdownDiagnostic),
+	definitions: S.ReadonlyMap(S.String, Definition),
 }) {
 	/**
 	 * The document's frontmatter capture, or `undefined` when there is none.

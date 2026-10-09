@@ -20,8 +20,13 @@
 
 import { dual } from "effect/Function";
 import { assert, describe, layer } from "@effect/vitest";
-import type { Layer, Scope } from "effect";
-import { Cause, Effect, Exit, Result, Stream } from "effect";
+import type * as Layer from "effect/Layer";
+import type * as Scope from "effect/Scope";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Result from "effect/Result";
+import * as Stream from "effect/Stream";
 import * as FileSystem from "effect/FileSystem";
 import type * as PlatformError from "effect/PlatformError";
 
@@ -602,7 +607,7 @@ export const errnoSuite: {
 							const root = yield* fs.makeTempDirectoryScoped({ prefix: "effect-filesystem-errno-" });
 							const p = (...segments: ReadonlyArray<string>) => [root, ...segments].join("/");
 							yield* seedTree(fs, p);
-							const exit = yield* Effect.exit(Effect.scoped(testCase.run(fs, p)));
+							const exit = yield* testCase.run(fs, p).pipe(Effect.scoped, Effect.exit);
 							assertOutcome(exit, resolveExpectation(testCase.expect, implementation));
 							if (testCase.check !== undefined && Exit.isSuccess(exit)) {
 								yield* testCase.check(exit.value, fs, p);

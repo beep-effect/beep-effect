@@ -30,7 +30,7 @@
 //    (`"\n  1\n"`).
 
 import { assert, describe, it } from "@effect/vitest";
-import { Result } from "effect";
+import * as Result from "effect/Result";
 import { Markdown, MarkdownParseOptions } from "../../../effected/markdown/Markdown.ts";
 import { Mdast } from "../../../effected/markdown/Mdast.ts";
 import { loadMdastFixturePairs } from "./support/corpus.ts";

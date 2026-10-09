@@ -8,7 +8,7 @@
 // is worse than not existing. This one can.
 
 import { assert, describe, layer } from "@effect/vitest";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { readPatterns } from "../../effected/workspaces/internal/patterns.ts";
 import type { Tree } from "./fixtures.ts";
 import { platform } from "./fixtures.ts";

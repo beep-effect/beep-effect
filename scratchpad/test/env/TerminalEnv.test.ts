@@ -1,6 +1,11 @@
 // @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
-import { ConfigProvider, Effect, Layer, Option, Stdio, Terminal } from "effect";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Stdio from "effect/Stdio";
+import * as Terminal from "effect/Terminal";
 import type { ColorLevel } from "../../effected/env/ColorLevel.ts";
 import type { Env } from "../../effected/env/internal/types.ts";
 import type { TerminalEnvOptions, TerminalEnvTestOptions } from "../../effected/env/TerminalEnv.ts";
@@ -107,7 +112,7 @@ describe("TerminalEnv.layer", () => {
 		Effect.map(
 			read({}, { stdout: true, columns: 0 }, (t) => [t.stdout.columns, t.width()] as const),
 			([columns, width]) => {
-				assert.deepStrictEqual(columns, Option.none());
+				assert.deepStrictEqual(columns, O.none());
 				assert.strictEqual(width, 80);
 			},
 		),
@@ -159,7 +164,7 @@ describe("TerminalEnv.layer", () => {
 		Effect.map(
 			read({ COLUMNS: "100" }, { stdout: true, columns: 120 }, (t) => [t.stdout.columns, t.width(60)] as const),
 			([columns, width]) => {
-				assert.deepStrictEqual(columns, Option.some(120));
+				assert.deepStrictEqual(columns, O.some(120));
 				assert.strictEqual(width, 120);
 			},
 		),
@@ -181,8 +186,8 @@ describe("TerminalEnv.layerStdio", () => {
 		Effect.map(
 			readStdio({}, { stdout: true }, (t) => t),
 			(t) => {
-				assert.isTrue(Option.isNone(t.stdout.columns));
-				assert.isTrue(Option.isNone(t.stderr.columns));
+				assert.isTrue(O.isNone(t.stdout.columns));
+				assert.isTrue(O.isNone(t.stderr.columns));
 				assert.strictEqual(t.width(), 80);
 			},
 		),
@@ -202,14 +207,14 @@ describe("TerminalEnv.layerStdio", () => {
 			const full = yield* read(env, { stdin: true, stdout: true, columns: 120 }, (t) => t);
 			assert.strictEqual(stdioOnly.stdinIsTerminal, full.stdinIsTerminal);
 			assert.deepStrictEqual(
-				{ ...stdioOnly.stdout, columns: Option.none() },
-				{ ...full.stdout, columns: Option.none() },
+				{ ...stdioOnly.stdout, columns: O.none() },
+				{ ...full.stdout, columns: O.none() },
 			);
 			assert.deepStrictEqual(
-				{ ...stdioOnly.stderr, columns: Option.none() },
-				{ ...full.stderr, columns: Option.none() },
+				{ ...stdioOnly.stderr, columns: O.none() },
+				{ ...full.stderr, columns: O.none() },
 			);
-			assert.isTrue(Option.isSome(full.stdout.columns), "the control reads columns, so the difference is real");
+			assert.isTrue(O.isSome(full.stdout.columns), "the control reads columns, so the difference is real");
 		}),
 	);
 
@@ -234,7 +239,7 @@ describe("TerminalEnv.layerTest", () => {
 			const t = yield* TerminalEnv;
 			assert.strictEqual(t.stdinIsTerminal, false);
 			for (const stream of [t.stdout, t.stderr]) {
-				assert.deepStrictEqual(stream, { isTerminal: false, color: "none", hyperlinks: false, columns: Option.none() });
+				assert.deepStrictEqual(stream, { isTerminal: false, color: "none", hyperlinks: false, columns: O.none() });
 			}
 			assert.strictEqual(t.width(), 80);
 		}).pipe(Effect.provide(TerminalEnv.layerTest())),
@@ -245,11 +250,11 @@ describe("TerminalEnv.layerTest", () => {
 			const t = yield* TerminalEnv;
 			assert.strictEqual(t.stdout.color, "truecolor");
 			assert.strictEqual(t.stderr.color, "none");
-			assert.deepStrictEqual(t.stdout.columns, Option.some(90));
+			assert.deepStrictEqual(t.stdout.columns, O.some(90));
 			assert.strictEqual(t.width(), 90);
 		}).pipe(
 			Effect.provide(
-				TerminalEnv.layerTest({ stdout: { color: "truecolor", columns: Option.some(90) }, stderr: { color: "none" } }),
+				TerminalEnv.layerTest({ stdout: { color: "truecolor", columns: O.some(90) }, stderr: { color: "none" } }),
 			),
 		),
 	);

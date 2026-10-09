@@ -8,14 +8,16 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Option, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { Lockfile } from "../../effected/lockfiles/Lockfile.ts";
 import type { LockfileFormat } from "../../effected/lockfiles/LockfileFormat.ts";
 import { filenameFor } from "../../effected/lockfiles/LockfileFormat.ts";
 import { ResolvedPackage } from "../../effected/lockfiles/ResolvedPackage.ts";
 import { isUnsupportedLockfileVersion } from "../../effected/lockfiles/UnsupportedLockfileVersion.ts";
 
-const JsonString = Schema.fromJsonString(Schema.Unknown);
+const JsonString = S.fromJsonString(S.Unknown);
 
 const fixture = (relative: string): string => readFileSync(join(import.meta.dirname, "fixtures", relative), "utf8");
 
@@ -67,13 +69,13 @@ describe("Lockfile.parse", () => {
 				// The instance-id index answers the same object a scan would, so a
 				// consumer walking resolved edges need not rebuild the map itself.
 				const byId = lockfile.packageByInstanceId(chalk[0]?.instanceId ?? "");
-				assert.isTrue(Option.isSome(byId));
-				assert.strictEqual(Option.getOrUndefined(byId)?.name, "chalk");
+				assert.isTrue(O.isSome(byId));
+				assert.strictEqual(O.getOrUndefined(byId)?.name, "chalk");
 
 				// A miss is None, not a throw and not a stray object member.
-				assert.isTrue(Option.isNone(lockfile.packageByInstanceId("nope@0.0.0")));
-				assert.isTrue(Option.isNone(lockfile.packageByInstanceId("__proto__")));
-				assert.isTrue(Option.isNone(lockfile.packageByInstanceId("constructor")));
+				assert.isTrue(O.isNone(lockfile.packageByInstanceId("nope@0.0.0")));
+				assert.isTrue(O.isNone(lockfile.packageByInstanceId("__proto__")));
+				assert.isTrue(O.isNone(lockfile.packageByInstanceId("constructor")));
 
 				assert.strictEqual(lockfile.workspaceDependencies.length, 1);
 				const edge = lockfile.workspaceDependencies[0];
@@ -1402,7 +1404,7 @@ describe("peer suffixes on protocol versions", () => {
 
 	it.effect("splits the importer versions likewise, and leaves an unsuffixed link: whole", () =>
 		Effect.gen(function* () {
-			const host = Option.getOrThrow((yield* load()).importer("packages/host"));
+			const host = O.getOrThrow((yield* load()).importer("packages/host"));
 			const dep = (name: string) => host.dependencies.find((d) => d.name === name);
 			assert.strictEqual(dep("lib")?.version, "file:vendor/lib");
 			assert.strictEqual(dep("lib")?.peerSuffix, "(react-dom@18.3.1(react@18.3.1))(react@18.3.1)");
@@ -1456,7 +1458,7 @@ describe("peer suffixes on protocol versions", () => {
 			// part of the trailing run.
 			const lockfile = yield* edges();
 			assert.strictEqual(lockfile.packagesNamed("mid")[0]?.version, "file:vendor/a(b)/mid");
-			const root = Option.getOrThrow(lockfile.importer("."));
+			const root = O.getOrThrow(lockfile.importer("."));
 			assert.strictEqual(root.dependencies.find((d) => d.name === "mid")?.version, "file:vendor/a(b)/mid");
 			assert.strictEqual(root.dependencies.find((d) => d.name === "mid")?.peerSuffix, "(react@18.3.1)");
 		}),
@@ -1472,7 +1474,7 @@ describe("peer suffixes on protocol versions", () => {
 
 	it.effect("leaves a link: whole, since pnpm never suffixes one", () =>
 		Effect.gen(function* () {
-			const root = Option.getOrThrow((yield* edges()).importer("."));
+			const root = O.getOrThrow((yield* edges()).importer("."));
 			const stub = root.dependencies.find((d) => d.name === "stub");
 			assert.strictEqual(stub?.version, "link:vendor/stub(x)");
 			assert.isFalse(Object.hasOwn(stub ?? {}, "peerSuffix"));
@@ -1521,7 +1523,7 @@ describe("supported lockfile versions", () => {
 
 			// And a shape failure, which shares the "validation" stage with the
 			// version gate — so stage alone cannot tell them apart, only the tag.
-			const shape = yield* Effect.flip(Lockfile.parse(yield* Schema.encodeEffect(JsonString)({ lockfileVersion: 3 }), { format: "npm" }));
+			const shape = yield* Effect.flip(Lockfile.parse(yield* S.encodeEffect(JsonString)({ lockfileVersion: 3 }), { format: "npm" }));
 			assert.strictEqual(shape._tag, "LockfileParseError");
 			if (shape._tag !== "LockfileParseError") return;
 			assert.strictEqual(shape.stage, "validation");

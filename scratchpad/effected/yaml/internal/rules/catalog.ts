@@ -6,7 +6,7 @@
 // Rules accrete here batch by batch; `indentation` lands last (see the
 // design doc).
 
-import type { Schema } from "effect";
+import type * as S from "effect/Schema";
 import type { YamlRule } from "../../YamlLintRule.ts";
 import { colonSpacing, colonSpacingOptions } from "./colon-spacing.ts";
 import { commentsSpacing, commentsSpacingOptions } from "./comments-spacing.ts";
@@ -27,7 +27,7 @@ import { truthy, truthyOptions } from "./truthy.ts";
 // from it makes a schema-less built-in unrepresentable — a rule registered
 // in one list only would otherwise validate as a CUSTOM rule with opaque
 // options, and a typo'd option would decode silently.
-const catalog: ReadonlyArray<readonly [YamlRule, Schema.Top]> = [
+const catalog: ReadonlyArray<readonly [YamlRule, S.Top]> = [
 	[parseValidity, parseValidityOptions],
 	[lineLength, lineLengthOptions],
 	[trailingSpaces, trailingSpacesOptions],
@@ -48,6 +48,6 @@ const catalog: ReadonlyArray<readonly [YamlRule, Schema.Top]> = [
 export const builtinRules: ReadonlyArray<YamlRule> = catalog.map(([rule]) => rule);
 
 /** Per-rule options schemas — the rule-aware half of config validation. */
-export const builtinOptionsSchemas: ReadonlyMap<string, Schema.Top> = new Map(
+export const builtinOptionsSchemas: ReadonlyMap<string, S.Top> = new Map(
 	catalog.map(([rule, options]) => [rule.id, options] as const),
 );

@@ -16,7 +16,8 @@
 // rightly treats as the closing fence — fence semantics, not a codec defect.
 
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
 import {
 	FrontmatterEncodeError,
 	FrontmatterFormatMismatchError,
@@ -33,9 +34,9 @@ import { YamlFrontmatter } from "../../effected/markdown/YamlFrontmatter.ts";
 const withFrontmatter = MarkdownParseOptions.make({ frontmatter: true });
 const parseDoc = (source: string) => MarkdownDocument.parse(source, withFrontmatter);
 
-const Meta = Schema.Struct({
-	title: Schema.String,
-	count: Schema.Finite,
+const Meta = S.Struct({
+	title: S.String,
+	count: S.Finite,
 });
 
 describe("codec encode", () => {
@@ -152,7 +153,7 @@ describe("MarkdownFrontmatter.set", () => {
 		Effect.gen(function* () {
 			const document = yield* parseDoc("# Body\n");
 			const error = yield* Effect.flip(
-				MarkdownFrontmatter.set(Schema.Unknown, JsonFrontmatter)(document, { big: BigInt(1) }),
+				MarkdownFrontmatter.set(S.Unknown, JsonFrontmatter)(document, { big: BigInt(1) }),
 			);
 			assert.instanceOf(error, FrontmatterEncodeError);
 			assert.strictEqual(error.format, "json");
@@ -161,7 +162,7 @@ describe("MarkdownFrontmatter.set", () => {
 });
 
 describe("MarkdownFrontmatter.setToString", () => {
-	const Empty = Schema.Struct({});
+	const Empty = S.Struct({});
 
 	it.effect("pins the empty-object block per codec on an empty document", () =>
 		Effect.gen(function* () {
@@ -205,10 +206,10 @@ describe("MarkdownFrontmatter.setToString", () => {
 describe("frontmatter write round-trip property", () => {
 	// Newline-free strings only — see the file header for why. The count stays
 	// in the 32-bit range every frontmatter codec represents exactly.
-	const Scalar = Schema.String.check(Schema.makeFilter((s) => !s.includes("\n") && !s.includes("\r")));
-	const MetaArb = Schema.Struct({
+	const Scalar = S.String.check(S.makeFilter((s) => !s.includes("\n") && !s.includes("\r")));
+	const MetaArb = S.Struct({
 		title: Scalar,
-		count: Schema.Int.check(Schema.isBetween({ minimum: -(2 ** 31), maximum: 2 ** 31 - 1 })),
+		count: S.Int.check(S.isBetween({ minimum: -(2 ** 31), maximum: 2 ** 31 - 1 })),
 	});
 	const bodyDoc = "# Title\n\nsome *emphasis* text\n";
 

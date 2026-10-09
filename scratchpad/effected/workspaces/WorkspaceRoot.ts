@@ -6,9 +6,16 @@
 // root above it.
 
 import { Walker } from "../walker/index.ts";
-import { Context, Effect, FileSystem, Layer, Option, Path, Schema, Result } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as S from "effect/Schema";
+import * as Result from "effect/Result";
 
-const JsonValue = Schema.fromJsonString(Schema.Unknown);
+const JsonValue = S.fromJsonString(S.Unknown);
 
 /**
  * The marker filenames {@link WorkspaceRoot} probes for, in priority order.
@@ -62,13 +69,13 @@ export interface FindWorkspaceRootOptions {
  *
  * @public
  */
-export class WorkspaceRootNotFoundError extends Schema.TaggedError<WorkspaceRootNotFoundError>()(
+export class WorkspaceRootNotFoundError extends S.TaggedError<WorkspaceRootNotFoundError>()(
 	"WorkspaceRootNotFoundError",
 	{
 		/** The directory the ascent started from. */
-		searchPath: Schema.String,
+		searchPath: S.String,
 		/** The marker filenames probed at each ancestor. */
-		markers: Schema.Array(Schema.String),
+		markers: S.Array(S.String),
 		/**
 		 * The resolved ceiling the ascent was bounded by, when one was supplied.
 		 *
@@ -78,7 +85,7 @@ export class WorkspaceRootNotFoundError extends Schema.TaggedError<WorkspaceRoot
 		 * "there is none below the ceiling I set" — two failures that otherwise
 		 * render identically.
 		 */
-		stopAt: Schema.optionalKey(Schema.String),
+		stopAt: S.optionalKey(S.String),
 	},
 ) {
 	/** Renders the search path, probed markers and any ceiling into a one-line message. */
@@ -118,7 +125,7 @@ const isWorkspaceRoot = (dir: string): Effect.Effect<boolean, never, FileSystem.
 		// defect, so it is wrapped at the point it can throw rather than trusted
 		// to a catch further out.
 		const parsed = yield* Effect.try({
-			try: () => Result.getOrThrow(Schema.decodeResult(JsonValue)(content)) as Record<string, unknown>,
+			try: () => Result.getOrThrow(S.decodeResult(JsonValue)(content)) as Record<string, unknown>,
 			catch: () => undefined,
 		}).pipe(Effect.orElseSucceed(() => ({}) as Record<string, unknown>));
 
@@ -209,7 +216,7 @@ export class WorkspaceRoot extends Context.Service<WorkspaceRoot, WorkspaceRootS
 					...(options?.maxDepth === undefined ? {} : { maxDepth: options.maxDepth }),
 				});
 				const found = yield* Walker.findRoot(chain, isWorkspaceRoot);
-				if (Option.isNone(found)) {
+				if (O.isNone(found)) {
 					return yield* WorkspaceRootNotFoundError.make({
 							searchPath: start,
 							markers: WORKSPACE_MARKERS,

@@ -1,5 +1,6 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Result, Schema } from "effect";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { APIReference } from "../../effected/schema-org/APIReference.ts";
 import { CreativeWork, CreativeWorkFields } from "../../effected/schema-org/CreativeWork.ts";
 import { JsonLdDocument } from "../../effected/schema-org/JsonLdDocument.ts";
@@ -148,7 +149,7 @@ describe("NodeRef", () => {
 	});
 
 	it("encodes to the {'@id'} form and nothing else", () => {
-		assert.deepStrictEqual(Result.getOrThrow(Schema.encodeResult(NodeRef)(NodeRef.to("x"))), { "@id": "x" });
+		assert.deepStrictEqual(Result.getOrThrow(S.encodeResult(NodeRef)(NodeRef.to("x"))), { "@id": "x" });
 	});
 
 	it("rejects C1 control characters, not only the C0 block", () => {
@@ -180,7 +181,7 @@ describe("NodeRef", () => {
 			"nel\u0085here",
 			"c1\u0090here",
 		]) {
-			const schemaAccepts = Result.isSuccess(Schema.decodeResult(NodeId)(id));
+			const schemaAccepts = Result.isSuccess(S.decodeResult(NodeId)(id));
 			assert.strictEqual(
 				NodeRef.isValidId(id),
 				schemaAccepts,

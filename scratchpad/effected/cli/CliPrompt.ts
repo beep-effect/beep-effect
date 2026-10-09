@@ -1,5 +1,9 @@
-import type { Cause } from "effect";
-import { Context, Effect, Layer, Queue, Terminal } from "effect";
+import type * as Cause from "effect/Cause";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Queue from "effect/Queue";
+import * as Terminal from "effect/Terminal";
 import type { Param } from "effect/cli";
 import { CliConfig, GlobalFlag, Prompt } from "effect/cli";
 import { Cancelled } from "./Cancelled.ts";

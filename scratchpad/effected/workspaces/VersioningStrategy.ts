@@ -8,7 +8,8 @@
 // entry point, `detect`, is a static over two services that already exist and
 // already have their own test doubles.
 
-import { Effect, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
 import { PublishabilityDetector } from "./Publishability.ts";
 import type { TagFormatOptions, TagStyle } from "./ReleaseTag.ts";
 import { ReleaseTag } from "./ReleaseTag.ts";
@@ -26,7 +27,7 @@ import { WorkspaceDiscovery } from "./WorkspaceDiscovery.ts";
  *
  * @public
  */
-export const VersioningStrategyType = Schema.Literals(["single", "fixed-group", "independent"]);
+export const VersioningStrategyType = S.Literals(["single", "fixed-group", "independent"]);
 
 /**
  * The decoded type of {@link (VersioningStrategyType:variable)}.
@@ -105,13 +106,13 @@ export interface PackageRelease {
  *
  * @public
  */
-export class VersioningStrategy extends Schema.Class<VersioningStrategy>("VersioningStrategy")({
+export class VersioningStrategy extends S.Class<VersioningStrategy>("VersioningStrategy")({
 	/** The classification. */
 	type: VersioningStrategyType,
 	/** The groups classification was performed against, as supplied. */
-	fixedGroups: Schema.Array(Schema.Array(Schema.String)),
+	fixedGroups: S.String.pipe(S.Array, S.Array),
 	/** The publishable package names, sorted and de-duplicated. */
-	publishablePackages: Schema.Array(Schema.String),
+	publishablePackages: S.Array(S.String),
 }) {
 	/**
 	 * Whether a release needs one tag per package rather than one shared tag.

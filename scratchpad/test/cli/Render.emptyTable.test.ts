@@ -1,5 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import type { Block } from "../../effected/cli/index.ts";
 import { Doc, Render } from "../../effected/cli/index.ts";
 import { contextOf } from "./helpers/renderContext.ts";

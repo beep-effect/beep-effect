@@ -2,8 +2,13 @@
 // (kept external by dtsExternals) instead of carrying copies a consumer's root layers cannot satisfy.
 import type * as Cli from "../index.ts";
 import { Audience } from "../../env/index.ts";
-import type { Scope } from "effect";
-import { Cause, Deferred, Effect, Exit, Option, Semaphore } from "effect";
+import type * as Scope from "effect/Scope";
+import * as Cause from "effect/Cause";
+import * as Deferred from "effect/Deferred";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as O from "effect/Option";
+import * as Semaphore from "effect/Semaphore";
 import type { Param } from "effect/cli";
 import { Prompt } from "effect/cli";
 import type { ReactElement, ReactNode } from "react";
@@ -96,7 +101,7 @@ const audienceTheme: Effect.Effect<Cli.StreamTheme, never, Cli.CliTheme> = Effec
 	const audience = yield* Effect.serviceOption(Audience);
 	return CliTheme.forAudience(
 		(yield* CliTheme).forStream("stdout"),
-		Option.isSome(audience) ? audience.value.kind : undefined,
+		O.isSome(audience) ? audience.value.kind : undefined,
 	);
 });
 
@@ -273,11 +278,10 @@ export class CliUi {
 			const theme = yield* audienceTheme;
 			const neutralize = yield* underGithubActions;
 			const crash: CrashCell = { current: undefined };
-			const exit = yield* Effect.exit(
-				Semaphore.withPermit(
-					mountPermit,
-					Effect.scoped(mount(screen, theme, options?.clear === true, crash, neutralize)),
-				),
+			const exit = yield* mount(screen, theme, options?.clear === true, crash, neutralize).pipe(
+				Effect.scoped,
+				Semaphore.withPermit(mountPermit),
+				Effect.exit,
 			);
 			// A tree that crashed is a defect however the screen ended: a cancel or a resolve in the same tick, which
 			// settled the result first, must not hide it. An interrupt stays an interrupt. The interrupt check is
@@ -477,7 +481,7 @@ export class CliUi {
 		let explained = false;
 		return Effect.gen(function* () {
 			const theme = yield* Effect.serviceOption(CliTheme);
-			if (Option.isNone(theme)) {
+			if (O.isNone(theme)) {
 				if (!explained && (yield* CliInteractive)) {
 					explained = true;
 					const name = "flag" in options ? `--${options.flag}` : `<${options.argument}>`;

@@ -9,7 +9,8 @@
 // there); these fixtures can.
 
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
 import { PackageJsonFormat, PackageJsonModifyError, PackageJsonSyntaxError } from "../../effected/package-json/PackageJsonFormat.ts";
 
 // Keys deliberately out of canonical order: dependencies before name,
@@ -104,7 +105,7 @@ describe("PackageJsonFormat.modifyToString", () => {
 	it.effect("fails with PackageJsonSyntaxError on invalid JSON", () =>
 		Effect.gen(function* () {
 			const error = yield* Effect.flip(PackageJsonFormat.modifyToString("{ nope", ["a"], 1));
-			if (!(Schema.is(PackageJsonSyntaxError)(error))) {
+			if (!(S.is(PackageJsonSyntaxError)(error))) {
 				return assert.fail(`expected PackageJsonSyntaxError, got ${error._tag}`);
 			}
 			assert.strictEqual(error.reason, "invalid-json");
@@ -114,7 +115,7 @@ describe("PackageJsonFormat.modifyToString", () => {
 	it.effect("fails with PackageJsonSyntaxError on a non-object document", () =>
 		Effect.gen(function* () {
 			const error = yield* Effect.flip(PackageJsonFormat.modifyToString("[1, 2]", ["a"], 1));
-			if (!(Schema.is(PackageJsonSyntaxError)(error))) {
+			if (!(S.is(PackageJsonSyntaxError)(error))) {
 				return assert.fail(`expected PackageJsonSyntaxError, got ${error._tag}`);
 			}
 			assert.strictEqual(error.reason, "not-an-object");
@@ -125,7 +126,7 @@ describe("PackageJsonFormat.modifyToString", () => {
 		Effect.gen(function* () {
 			// `name` is a string; descending into it as an object is a mismatch.
 			const error = yield* Effect.flip(PackageJsonFormat.modifyToString(UNSORTED, ["name", "sub"], 1));
-			if (!(Schema.is(PackageJsonModifyError)(error))) {
+			if (!(S.is(PackageJsonModifyError)(error))) {
 				return assert.fail(`expected PackageJsonModifyError, got ${error._tag}`);
 			}
 			assert.deepStrictEqual(error.path, ["name", "sub"]);

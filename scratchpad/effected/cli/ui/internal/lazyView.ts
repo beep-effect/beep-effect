@@ -1,5 +1,5 @@
-import { Data } from "effect";
-import { Effect } from "effect";
+import * as Data from "effect/Data";
+import * as Effect from "effect/Effect";
 import type { ReactElement } from "react";
 
 /** Where a lazy view keeps its loader: a `Symbol.for` key, so two copies of the package agree on it. */

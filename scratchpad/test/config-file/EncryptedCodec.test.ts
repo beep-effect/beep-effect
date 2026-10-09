@@ -1,5 +1,8 @@
 import { afterEach, assert, describe, it, vi } from "@effect/vitest";
-import { Cause, Effect, Exit, Option } from "effect";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as O from "effect/Option";
 import type { ConfigCodec } from "../../effected/config-file/ConfigCodec.ts";
 import { ConfigEncryptionError, EncryptedCodec, EncryptedCodecKey } from "../../effected/config-file/EncryptedCodec.ts";
 import { JsonCodec } from "../../effected/config-file/JsonCodec.ts";
@@ -64,7 +67,7 @@ describe("EncryptedCodec", () => {
 	it.effect("fails with ConfigEncryptionError when the ciphertext is too short for an IV", () =>
 		Effect.gen(function* () {
 			const codec = EncryptedCodec(JsonCodec, key());
-			const error = yield* Effect.flip(Effect.asVoid(codec.parse(btoa("short"))));
+			const error = yield* codec.parse(btoa("short")).pipe(Effect.asVoid, Effect.flip);
 			assert.instanceOf(error, ConfigEncryptionError);
 			assert.strictEqual(error._tag, "ConfigEncryptionError");
 			assert.strictEqual((error as ConfigEncryptionError).phase, "decrypt");
@@ -77,8 +80,8 @@ describe("EncryptedCodec", () => {
 			const exit = yield* Effect.exit(codec.parse(btoa("short")));
 			assert.isTrue(Exit.isFailure(exit));
 			const cause = Exit.getCause(exit);
-			assert.isTrue(Option.isSome(cause));
-			if (Option.isSome(cause)) {
+			assert.isTrue(O.isSome(cause));
+			if (O.isSome(cause)) {
 				assert.isTrue(Cause.hasFails(cause.value));
 				assert.isFalse(Cause.hasDies(cause.value));
 			}
@@ -88,7 +91,7 @@ describe("EncryptedCodec", () => {
 	it.effect("fails with phase encoding when the input is not valid base64", () =>
 		Effect.gen(function* () {
 			const codec = EncryptedCodec(JsonCodec, key());
-			const error = yield* Effect.flip(Effect.asVoid(codec.parse("!!! not base64 !!!")));
+			const error = yield* codec.parse("!!! not base64 !!!").pipe(Effect.asVoid, Effect.flip);
 			assert.instanceOf(error, ConfigEncryptionError);
 			assert.strictEqual((error as ConfigEncryptionError).phase, "encoding");
 			// The caught host failure rides along structurally — never String(e).
@@ -100,7 +103,7 @@ describe("EncryptedCodec", () => {
 		Effect.gen(function* () {
 			const ciphertext = yield* EncryptedCodec(JsonCodec, key()).stringify({ port: 1 });
 			const wrong = EncryptedCodec(JsonCodec, EncryptedCodecKey.fromPassphrase("wrong", salt));
-			const error = yield* Effect.flip(Effect.asVoid(wrong.parse(ciphertext)));
+			const error = yield* wrong.parse(ciphertext).pipe(Effect.asVoid, Effect.flip);
 			assert.instanceOf(error, ConfigEncryptionError);
 			assert.strictEqual((error as ConfigEncryptionError).phase, "decrypt");
 		}),
@@ -113,8 +116,8 @@ describe("EncryptedCodec", () => {
 			const exit = yield* Effect.exit(wrong.parse(ciphertext));
 			assert.isTrue(Exit.isFailure(exit));
 			const cause = Exit.getCause(exit);
-			assert.isTrue(Option.isSome(cause));
-			if (Option.isSome(cause)) {
+			assert.isTrue(O.isSome(cause));
+			if (O.isSome(cause)) {
 				assert.isTrue(Cause.hasFails(cause.value));
 				assert.isFalse(Cause.hasDies(cause.value));
 			}
@@ -125,7 +128,7 @@ describe("EncryptedCodec", () => {
 		Effect.gen(function* () {
 			// Encrypt invalid JSON with a raw passthrough codec, then decrypt with json.
 			const ciphertext = yield* EncryptedCodec(passthrough, key()).stringify("{ not json");
-			const error = yield* Effect.flip(Effect.asVoid(EncryptedCodec(JsonCodec, key()).parse(ciphertext)));
+			const error = yield* EncryptedCodec(JsonCodec, key()).parse(ciphertext).pipe(Effect.asVoid, Effect.flip);
 			// The inner codec's error, widened not flattened.
 			assert.strictEqual(error._tag, "ConfigCodecError");
 			assert.notInstanceOf(error, ConfigEncryptionError);
@@ -220,7 +223,7 @@ describe("EncryptedCodec", () => {
 			const first = yield* Effect.flip(codec.stringify({ a: 1 }));
 			// A well-formed envelope: parse validates it before resolving the key, so
 			// this reaches the key rather than short-circuiting on the too-short guard.
-			const second = yield* Effect.flip(Effect.asVoid(codec.parse(btoa("x".repeat(32)))));
+			const second = yield* codec.parse(btoa("x".repeat(32))).pipe(Effect.asVoid, Effect.flip);
 			// The deterministic failure still fails, by identity, every time...
 			assert.strictEqual(first, boom);
 			assert.strictEqual(second, boom);
@@ -289,8 +292,8 @@ describe("EncryptedCodec", () => {
 			const exit = yield* Effect.exit(EncryptedCodec(JsonCodec, throwing).stringify({ a: 1 }));
 			assert.isTrue(Exit.isFailure(exit));
 			const cause = Exit.getCause(exit);
-			assert.isTrue(Option.isSome(cause));
-			if (Option.isSome(cause)) {
+			assert.isTrue(O.isSome(cause));
+			if (O.isSome(cause)) {
 				assert.isTrue(Cause.hasDies(cause.value));
 				assert.isFalse(Cause.hasFails(cause.value));
 			}

@@ -16,7 +16,16 @@ import {
 	ReleaseAgeGate,
 } from "../npm/index.ts";
 import { Yaml } from "../yaml/index.ts";
-import { Context, Duration, Effect, Exit, FileSystem, Layer, Option, Path, PlatformError, Schema } from "effect";
+import * as Context from "effect/Context";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as PlatformError from "effect/PlatformError";
+import * as S from "effect/Schema";
 import type { ChildProcessSpawner } from "effect/process";
 import type {
 	ConfigDependencyHooksShape,
@@ -36,7 +45,7 @@ import { LockfileReader } from "./LockfileReader.ts";
 import type { WorkspaceRootNotFoundError } from "./WorkspaceRoot.ts";
 import { WorkspaceRoot } from "./WorkspaceRoot.ts";
 
-const JsonValue = Schema.fromJsonString(Schema.Unknown);
+const JsonValue = S.fromJsonString(S.Unknown);
 
 /**
  * Each importer's dependency-name → resolved-version map, keyed by importer path
@@ -72,9 +81,9 @@ export type ImporterVersions = Readonly<Record<string, Readonly<Record<string, s
  *
  * @public
  */
-export class CatalogSet extends Schema.Class<CatalogSet>("CatalogSet")({
+export class CatalogSet extends S.Class<CatalogSet>("CatalogSet")({
 	/** Catalog name → dependency name → version range. */
-	entries: Schema.Record(Schema.String, Schema.Record(Schema.String, Schema.String)),
+	entries: S.Record(S.String, S.Record(S.String, S.String)),
 }) {
 	/** The empty set — a workspace with no catalogs. */
 	static empty(): CatalogSet {
@@ -162,7 +171,7 @@ export class CatalogSet extends Schema.Class<CatalogSet>("CatalogSet")({
 	 * @param text - The raw root `package.json` text.
 	 */
 	static readonly fromManifestWorkspaces = Effect.fn("CatalogSet.fromManifestWorkspaces")(function* (text: string) {
-		const manifest = yield* Schema.decodeEffect(JsonValue)(text).pipe(Effect.mapError((cause) => CatalogAssemblyError.make({ source: "manifest", path: "package.json", cause })));
+		const manifest = yield* S.decodeEffect(JsonValue)(text).pipe(Effect.mapError((cause) => CatalogAssemblyError.make({ source: "manifest", path: "package.json", cause })));
 		if (!isObject(manifest)) {
 			return yield* CatalogAssemblyError.make({
 					source: "manifest",
@@ -196,9 +205,9 @@ export class CatalogSet extends Schema.Class<CatalogSet>("CatalogSet")({
 	 * @param dependency - The package name being resolved.
 	 * @param specifier - The declared specifier, e.g. `catalog:` or `catalog:build`.
 	 */
-	resolveSpecifier(dependency: string, specifier: string): Option.Option<string> {
+	resolveSpecifier(dependency: string, specifier: string): O.Option<string> {
 		const resolved = rangeOf(this.entries as Catalogs, dependency, specifier);
-		return typeof resolved === "string" ? Option.some(resolved) : Option.none();
+		return typeof resolved === "string" ? O.some(resolved) : O.none();
 	}
 
 	/**
@@ -208,9 +217,9 @@ export class CatalogSet extends Schema.Class<CatalogSet>("CatalogSet")({
 	 * @remarks
 	 * The shape `@effected/npm`'s `CatalogResolver` contract asks for.
 	 */
-	rangeOf(dependency: string, catalog: Option.Option<string>): Option.Option<string> {
-		const name = Option.getOrElse(catalog, () => "default");
-		return Option.fromUndefinedOr(this.entries[name]?.[dependency]);
+	rangeOf(dependency: string, catalog: O.Option<string>): O.Option<string> {
+		const name = O.getOrElse(catalog, () => "default");
+		return O.fromUndefinedOr(this.entries[name]?.[dependency]);
 	}
 }
 
@@ -266,7 +275,7 @@ const inlineReleaseAge = (document: unknown): Effect.Effect<PartialReleaseAgeGat
 		raw.exclude = document.minimumReleaseAgeExclude;
 	}
 	if (Object.keys(raw).length === 0) return Effect.succeed({});
-	return Schema.decodeEffect(PartialReleaseAgeGate)(raw).pipe(
+	return S.decodeEffect(PartialReleaseAgeGate)(raw).pipe(
 		Effect.catchTag(
 			"SchemaError",
 			(cause) => CatalogAssemblyError.make({ source: "manifest", path: "pnpm-workspace.yaml", cause }),
@@ -463,7 +472,7 @@ export interface WorkspaceCatalogsShape {
 	readonly resolveSpecifier: (
 		dependency: string,
 		specifier: string,
-	) => Effect.Effect<Option.Option<string>, CatalogAssemblyFailure>;
+	) => Effect.Effect<O.Option<string>, CatalogAssemblyFailure>;
 	/**
 	 * The effective pnpm release-age gate for the workspace, combined
 	 * strictest-wins from the inline `pnpm-workspace.yaml` keys
@@ -976,12 +985,12 @@ export class WorkspaceCatalogs extends Context.Service<WorkspaceCatalogs, Worksp
 		Effect.gen(function* () {
 			const catalogs = yield* WorkspaceCatalogs;
 			return {
-				rangeOf: Effect.fn("CatalogResolver.rangeOf")((packageName: string, catalog: Option.Option<string>) => catalogs.set.pipe(
+				rangeOf: Effect.fn("CatalogResolver.rangeOf")((packageName: string, catalog: O.Option<string>) => catalogs.set.pipe(
 						Effect.map((set) => set.rangeOf(packageName, catalog)),
 						Effect.catchTag("WorkspaceRootNotFoundError", (cause) =>
 							Effect.fail(
 								DependencyResolutionError.make({
-									specifier: Option.match(catalog, {
+									specifier: O.match(catalog, {
 										onNone: () => "catalog:",
 										onSome: (name) => `catalog:${name}`,
 									}),

@@ -48,7 +48,9 @@ import { Run } from "../../commands/index.ts";
 import type { ConfigDependencyLock, LockfileFramingError, LockfileParseError } from "../../lockfiles/index.ts";
 import { IntegrityHash } from "../../npm/index.ts";
 import { Yaml } from "../../yaml/index.ts";
-import { Duration, Effect, Predicate } from "effect";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as P from "effect/Predicate";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import type { HookReplayContext } from "../ConfigDependencyHooks.ts";
 import { carries, manifestVersion, messageOf, sideLabel } from "./configDependencyShared.ts";
@@ -194,9 +196,9 @@ export interface RegistrySettings {
 
 /** The {@link RegistrySettings} of a parsed `pnpm-workspace.yaml` document. */
 export const registrySettingsOf = (document: unknown): RegistrySettings => {
-	if (!Predicate.isObject(document)) return { registries: {} };
+	if (!P.isObject(document)) return { registries: {} };
 	const registries: Record<string, string> = {};
-	if (Predicate.isObject(document.registries)) {
+	if (P.isObject(document.registries)) {
 		for (const [scope, url] of Object.entries(document.registries)) {
 			if (typeof url === "string") registries[scope] = url;
 		}
@@ -229,7 +231,7 @@ export const scratchWorkspaceYaml: {
 });
 
 /** Whether `error` is a node filesystem "no such file" failure. */
-const isNotFound = (error: unknown): boolean => Predicate.isObject(error) && error.code === "ENOENT";
+const isNotFound = (error: unknown): boolean => P.isObject(error) && error.code === "ENOENT";
 
 /**
  * The scratch workspace's `pnpm-lock.yaml`: the env preamble pnpm 11 and 12

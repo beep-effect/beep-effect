@@ -1,5 +1,7 @@
 import { Jsonc } from "../../jsonc/index.ts";
-import { Effect, Exit, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as S from "effect/Schema";
 import { BunExtension } from "../BunExtension.ts";
 import { LockfileImporter } from "../LockfileImporter.ts";
 import { ResolvedPackage } from "../ResolvedPackage.ts";
@@ -16,13 +18,13 @@ import {
 
 // ── Raw schema (permissive validation scaffolding, not API) ────────────────
 
-const DepRecord = Schema.optionalKey(Schema.Record(Schema.String, Schema.String));
+const DepRecord = S.optionalKey(S.Record(S.String, S.String));
 
-const OptionalPeers = Schema.optionalKey(Schema.Array(Schema.String));
+const OptionalPeers = S.String.pipe(S.Array, S.optionalKey);
 
-const BunWorkspaceEntry = Schema.Struct({
-	name: Schema.optionalKey(Schema.String),
-	version: Schema.optionalKey(Schema.String),
+const BunWorkspaceEntry = S.Struct({
+	name: S.optionalKey(S.String),
+	version: S.optionalKey(S.String),
 	dependencies: DepRecord,
 	devDependencies: DepRecord,
 	peerDependencies: DepRecord,
@@ -40,7 +42,7 @@ const BunWorkspaceEntry = Schema.Struct({
  *
  * @internal
  */
-const BunPackageInfo = Schema.Struct({
+const BunPackageInfo = S.Struct({
 	dependencies: DepRecord,
 	devDependencies: DepRecord,
 	optionalDependencies: DepRecord,
@@ -48,21 +50,21 @@ const BunPackageInfo = Schema.Struct({
 	optionalPeers: OptionalPeers,
 });
 
-const decodeBunPackageInfo = Schema.decodeUnknownExit(BunPackageInfo);
+const decodeBunPackageInfo = S.decodeUnknownExit(BunPackageInfo);
 
 const readBunPackageInfo = (value: unknown): typeof BunPackageInfo.Type | undefined => {
 	const exit = decodeBunPackageInfo(value);
 	return Exit.isSuccess(exit) ? exit.value : undefined;
 };
 
-const BunLockfileRaw = Schema.Struct({
-	lockfileVersion: Schema.Finite,
-	workspaces: Schema.optionalKey(Schema.Record(Schema.String, BunWorkspaceEntry)),
-	packages: Schema.optionalKey(Schema.Record(Schema.String, Schema.Array(Schema.Unknown))),
-	catalog: Schema.optionalKey(Schema.Record(Schema.String, Schema.Unknown)),
-	catalogs: Schema.optionalKey(Schema.Record(Schema.String, Schema.Record(Schema.String, Schema.Unknown))),
-	overrides: Schema.optionalKey(Schema.Record(Schema.String, Schema.String)),
-	trustedDependencies: Schema.optionalKey(Schema.Array(Schema.String)),
+const BunLockfileRaw = S.Struct({
+	lockfileVersion: S.Finite,
+	workspaces: S.optionalKey(S.Record(S.String, BunWorkspaceEntry)),
+	packages: S.optionalKey(S.Record(S.String, S.Array(S.Unknown))),
+	catalog: S.optionalKey(S.Record(S.String, S.Unknown)),
+	catalogs: S.optionalKey(S.Record(S.String, S.Record(S.String, S.Unknown))),
+	overrides: S.optionalKey(S.Record(S.String, S.String)),
+	trustedDependencies: S.String.pipe(S.Array, S.optionalKey),
 });
 
 type BunLockfileRawType = typeof BunLockfileRaw.Type;
@@ -78,7 +80,7 @@ type BunLockfileRawType = typeof BunLockfileRaw.Type;
 export const parseBun = (content: string): Effect.Effect<LockfileFields, ParseFailure> =>
 	Effect.gen(function* () {
 		const parsed = yield* Jsonc.parse(content).pipe(Effect.mapError(syntaxFailure));
-		const validated = yield* Schema.decodeUnknownEffect(BunLockfileRaw)(parsed).pipe(
+		const validated = yield* S.decodeUnknownEffect(BunLockfileRaw)(parsed).pipe(
 			Effect.mapError(validationFailure),
 		);
 		return yield* toFields(validated);

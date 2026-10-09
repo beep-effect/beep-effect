@@ -5,14 +5,20 @@
 // (compose `Package.resolve` explicitly).
 
 import type { JsoncPath, JsoncStringifyError } from "../jsonc/index.ts";
-import { Context, Effect, FileSystem, Layer, Path, Result, Schema } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import type { PackageDecodeError, PackageFormatOptions } from "./Package.ts";
 import { Package } from "./Package.ts";
 import type { PackageJsonModifyError } from "./PackageJsonFormat.ts";
 import { PackageJsonFormat } from "./PackageJsonFormat.ts";
 import { PackageManifest } from "./PackageManifest.ts";
 
-const Json = Schema.fromJsonString(Schema.Unknown);
+const Json = S.fromJsonString(S.Unknown);
 
 // ── Errors ────────────────────────────────────────────────────────────────────
 
@@ -22,11 +28,11 @@ const Json = Schema.fromJsonString(Schema.Unknown);
  *
  * @public
  */
-export class PackageJsonReadError extends Schema.TaggedError<PackageJsonReadError>()("PackageJsonReadError", {
+export class PackageJsonReadError extends S.TaggedError<PackageJsonReadError>()("PackageJsonReadError", {
 	/** The path that could not be read. */
-	path: Schema.String,
+	path: S.String,
 	/** The underlying failure, preserved structurally. */
-	cause: Schema.Defect(),
+	cause: S.Defect(),
 }) {
 	override get message(): string {
 		return `Failed to read package.json from "${this.path}"`;
@@ -39,11 +45,11 @@ export class PackageJsonReadError extends Schema.TaggedError<PackageJsonReadErro
  *
  * @public
  */
-export class PackageJsonNotFoundError extends Schema.TaggedError<PackageJsonNotFoundError>()(
+export class PackageJsonNotFoundError extends S.TaggedError<PackageJsonNotFoundError>()(
 	"PackageJsonNotFoundError",
 	{
 		/** The path where package.json was expected. */
-		path: Schema.String,
+		path: S.String,
 	},
 ) {
 	override get message(): string {
@@ -56,11 +62,11 @@ export class PackageJsonNotFoundError extends Schema.TaggedError<PackageJsonNotF
  *
  * @public
  */
-export class PackageJsonParseError extends Schema.TaggedError<PackageJsonParseError>()("PackageJsonParseError", {
+export class PackageJsonParseError extends S.TaggedError<PackageJsonParseError>()("PackageJsonParseError", {
 	/** The path whose contents failed to parse as JSON. */
-	path: Schema.String,
+	path: S.String,
 	/** The underlying `SyntaxError`, preserved structurally. */
-	cause: Schema.Defect(),
+	cause: S.Defect(),
 }) {
 	override get message(): string {
 		return `Failed to parse package.json at "${this.path}"`;
@@ -74,11 +80,11 @@ export class PackageJsonParseError extends Schema.TaggedError<PackageJsonParseEr
  *
  * @public
  */
-export class PackageJsonWriteError extends Schema.TaggedError<PackageJsonWriteError>()("PackageJsonWriteError", {
+export class PackageJsonWriteError extends S.TaggedError<PackageJsonWriteError>()("PackageJsonWriteError", {
 	/** The path that could not be written. */
-	path: Schema.String,
+	path: S.String,
 	/** The underlying filesystem failure, preserved structurally. Narrowed to the write failure only. */
-	cause: Schema.Defect(),
+	cause: S.Defect(),
 }) {
 	override get message(): string {
 		return `Failed to write package.json to "${this.path}"`;
@@ -228,7 +234,7 @@ export class PackageJsonFile extends Context.Service<PackageJsonFile, PackageJso
 
 			const readJson = Effect.fn("readJson")(function* (target: string) {
 				const content = yield* readText(target);
-				return yield* Schema.decodeEffect(Json)(content).pipe(
+				return yield* S.decodeEffect(Json)(content).pipe(
 					Effect.mapError((cause) => {
 						const parsed = PackageJsonFormat.formatToString(content);
 						return PackageJsonParseError.make({

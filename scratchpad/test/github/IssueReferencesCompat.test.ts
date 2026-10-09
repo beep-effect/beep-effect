@@ -1,5 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Option } from "effect";
+import * as O from "effect/Option";
 import type { BareLineReference, ClosingKeyword, IssueReference } from "../../effected/github/index.ts";
 import { CLOSING_KEYWORDS, harvestIssueReferences, parseBareLineReference } from "../../effected/github/index.ts";
 
@@ -15,15 +15,15 @@ describe("IssueReferences compatibility re-exports", () => {
 			["close", "closes", "closed", "fix", "fixes", "fixed", "resolve", "resolves", "resolved"],
 		);
 		assert.strictEqual(harvestIssueReferences("fixes #12")[0]?.issueNumber, 12);
-		assert.strictEqual(Option.getOrThrow(parseBareLineReference("Closes: #7")).issueNumber, 7);
+		assert.strictEqual(O.getOrThrow(parseBareLineReference("Closes: #7")).issueNumber, 7);
 	});
 
 	it("the three type exports still resolve from the entrypoint", () => {
 		// Compiling is the assertion: each moved type annotates a value.
 		const keyword: ClosingKeyword = "fixes";
 		const inline: IssueReference | undefined = harvestIssueReferences(`${keyword} #1`)[0];
-		const bare: Option.Option<BareLineReference> = parseBareLineReference(`${keyword} #1`);
+		const bare: O.Option<BareLineReference> = parseBareLineReference(`${keyword} #1`);
 		assert.strictEqual(inline?.keyword, keyword);
-		assert.strictEqual(Option.getOrThrow(bare).keyword, keyword);
+		assert.strictEqual(O.getOrThrow(bare).keyword, keyword);
 	});
 });

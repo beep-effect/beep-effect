@@ -1,5 +1,6 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Stream } from "effect";
+import * as Effect from "effect/Effect";
+import * as Stream from "effect/Stream";
 import { Yaml, YamlParseOptions } from "../../effected/yaml/Yaml.ts";
 import { YamlVisitor, YamlVisitorEvent } from "../../effected/yaml/YamlVisitor.ts";
 

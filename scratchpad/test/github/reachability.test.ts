@@ -70,7 +70,7 @@ const reachableBareImports = (entry: string): ReadonlySet<string> => {
 			if (specifier.startsWith(".")) {
 				queue.push(resolve(dirname(file), specifier.replace(/\.js$/, ".ts")));
 			} else {
-				bare.add(specifier);
+				bare.add(specifier.startsWith("effect/") ? "effect" : specifier);
 			}
 		}
 	}

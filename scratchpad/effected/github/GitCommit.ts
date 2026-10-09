@@ -1,4 +1,7 @@
-import { Context, Effect, Layer, Schema } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as S from "effect/Schema";
 import { GitHubClient } from "./GitHubClient.ts";
 import type { GitHubError } from "./GitHubError.ts";
 import { Repo } from "./Repo.ts";
@@ -8,20 +11,20 @@ import { Repo } from "./Repo.ts";
  *
  * @public
  */
-export const FileMode = Schema.Literals(["100644", "100755", "120000"]);
+export const FileMode = S.Literals(["100644", "100755", "120000"]);
 
 /**
  * A file to write in a commit.
  *
  * @public
  */
-export class FileContent extends Schema.TaggedClass<FileContent>()("FileContent", {
+export class FileContent extends S.TaggedClass<FileContent>()("FileContent", {
 	/** Repository-relative path. */
-	path: Schema.NonEmptyString,
+	path: S.NonEmptyString,
 	/** The file's new contents. */
-	content: Schema.String,
+	content: S.String,
 	/** Defaults to a regular file. */
-	mode: Schema.optionalKey(FileMode),
+	mode: S.optionalKey(FileMode),
 }) {}
 
 /**
@@ -29,9 +32,9 @@ export class FileContent extends Schema.TaggedClass<FileContent>()("FileContent"
  *
  * @public
  */
-export class FileDeletion extends Schema.TaggedClass<FileDeletion>()("FileDeletion", {
+export class FileDeletion extends S.TaggedClass<FileDeletion>()("FileDeletion", {
 	/** Repository-relative path. */
-	path: Schema.NonEmptyString,
+	path: S.NonEmptyString,
 }) {}
 
 /**
@@ -39,7 +42,7 @@ export class FileDeletion extends Schema.TaggedClass<FileDeletion>()("FileDeleti
  *
  * @public
  */
-export const FileChange = Schema.Union([FileContent, FileDeletion]);
+export const FileChange = S.Union([FileContent, FileDeletion]);
 
 /** One change in a commit. @public */
 export type FileChange = FileContent | FileDeletion;
@@ -53,13 +56,13 @@ export type FileChange = FileContent | FileDeletion;
  *
  * @public
  */
-export class CommitRef extends Schema.Class<CommitRef>("CommitRef")({
+export class CommitRef extends S.Class<CommitRef>("CommitRef")({
 	/** The commit's own sha. */
-	sha: Schema.String,
+	sha: S.String,
 	/** The tree the commit points at — what `baseTree` wants. */
-	treeSha: Schema.String,
+	treeSha: S.String,
 	/** Parent commit shas, in order. */
-	parents: Schema.Array(Schema.String),
+	parents: S.Array(S.String),
 }) {}
 
 /**

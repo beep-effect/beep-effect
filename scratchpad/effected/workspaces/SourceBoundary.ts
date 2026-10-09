@@ -1,6 +1,10 @@
 // biome-ignore-all lint/suspicious/noTemplateCurlyInString: the shipped fixtures are source text, and a template substitution inside one is the point
 import { GlobSet } from "../glob/index.ts";
-import { Effect, FileSystem, Option, Path, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as S from "effect/Schema";
 import { isIdentifierChar, lex, locate, references, specifierLiterals } from "./internal/sourceText.ts";
 
 /**
@@ -89,15 +93,15 @@ export interface BoundaryFixture {
  *
  * @public
  */
-export class Offence extends Schema.Class<Offence>("Offence")({
+export class Offence extends S.Class<Offence>("Offence")({
 	/** The file, relative to the scanned root, with `/` separators. */
-	file: Schema.String,
+	file: S.String,
 	/** The 1-based line. */
-	line: Schema.Finite,
+	line: S.Finite,
 	/** The 1-based column, in UTF-16 code units. */
-	column: Schema.Finite,
+	column: S.Finite,
 	/** The rule broken. */
-	rule: Schema.Literals([
+	rule: S.Literals([
 		"process",
 		"node:process",
 		"stdout-write",
@@ -107,7 +111,7 @@ export class Offence extends Schema.Class<Offence>("Offence")({
 		"forbidTokens",
 	]),
 	/** What matched: the identifier, the call, the import specifier, or the token. */
-	detail: Schema.String,
+	detail: S.String,
 }) {
 	/** `file:line:column rule detail`, the form an assertion message reads best in. */
 	get label(): string {
@@ -130,19 +134,19 @@ export type OffenceRule = Offence["rule"];
  *
  * @public
  */
-export class SourceScan extends Schema.Class<SourceScan>("SourceScan")({
+export class SourceScan extends S.Class<SourceScan>("SourceScan")({
 	/** Every source file visited, relative to the root with `/` separators, sorted. Assert it is non-empty. */
-	files: Schema.Array(Schema.String),
+	files: S.Array(S.String),
 	/** The visited files an `allow` glob exempted from every rule. */
-	allowed: Schema.Array(Schema.String),
+	allowed: S.Array(S.String),
 	/** Every offence, sorted by file, then line, then column. */
-	offences: Schema.Array(Offence),
+	offences: S.Array(Offence),
 	/**
 	 * Every offence an `allowRules` glob waived, sorted like `offences`. Assert
 	 * it is exactly what you meant to waive: a waiver that no longer waives
 	 * anything, or waives more than intended, shows up here.
 	 */
-	waived: Schema.Array(Offence),
+	waived: S.Array(Offence),
 }) {
 	/** One `file:line:column rule detail` label per offence: `[]` means clean. */
 	get violations(): ReadonlyArray<string> {
@@ -663,12 +667,12 @@ export class SourceBoundary {
 					Effect.asSome,
 					Effect.catchIf((error) => error.reason._tag === "NotFound", (error) =>
 						fs.readLink(full).pipe(
-									Effect.as(Option.none<FileSystem.File.Info>()),
+									Effect.as(O.none<FileSystem.File.Info>()),
 									Effect.mapError(() => error),
 							),
 					),
 				);
-				if (Option.isNone(found)) continue;
+				if (O.isNone(found)) continue;
 				const info = found.value;
 				if (info.type === "Directory") {
 					if (name !== "node_modules") pending.push(full);

@@ -3,7 +3,7 @@
 // after it. An explicit-value `:` at the head of its line is structure, not
 // spacing, and a comment after the colon belongs to comments-spacing.
 
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 import { YamlEdit } from "../../YamlEdit.ts";
 import type { YamlRule } from "../../YamlLintRule.ts";
 import { YamlLintDiagnostic, YamlLintSeverity } from "../../YamlLintRule.ts";
@@ -16,10 +16,10 @@ import { nonNegativeIntegerOption, positiveIntegerOption } from "./util.ts";
  * separation space must FOLLOW it — `0` would make the fix emit `a:val`, a
  * plain scalar, not a mapping entry.
  */
-export const colonSpacingOptions = Schema.Struct({
-	severity: Schema.optionalKey(YamlLintSeverity),
-	maxSpacesBefore: Schema.optionalKey(nonNegativeIntegerOption),
-	maxSpacesAfter: Schema.optionalKey(positiveIntegerOption),
+export const colonSpacingOptions = S.Struct({
+	severity: S.optionalKey(YamlLintSeverity),
+	maxSpacesBefore: S.optionalKey(nonNegativeIntegerOption),
+	maxSpacesAfter: S.optionalKey(positiveIntegerOption),
 });
 
 interface ColonSpacingOptions {

@@ -1,6 +1,8 @@
 // @effect-diagnostics strictEffectProvide:skip-file asyncFunction:skip-file
 import { assert, describe, it } from "@effect/vitest";
-import { Cause, Effect, Exit } from "effect";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import { vi } from "vitest";
 
 // Ink whose waitUntilExit rejects at once, as it does when the app crashes outside any boundary.

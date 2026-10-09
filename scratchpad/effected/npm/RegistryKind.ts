@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 
 /**
  * Which well-known registry a URL points at.
@@ -12,7 +12,7 @@ import { Schema } from "effect";
  *
  * @public
  */
-export const RegistryKind = Schema.Literals(["npm", "github-packages", "jsr", "custom"]);
+export const RegistryKind = S.Literals(["npm", "github-packages", "jsr", "custom"]);
 
 /**
  * The decoded type of {@link (RegistryKind:variable)}.

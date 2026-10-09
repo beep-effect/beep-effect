@@ -5,7 +5,9 @@
 // thrown-defect posture on an over-deep foreign tree.
 
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Result, Stream } from "effect";
+import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
+import * as Stream from "effect/Stream";
 import { MAX_NESTING_DEPTH } from "../../effected/markdown/internal/limits.ts";
 import { MarkdownDocument } from "../../effected/markdown/MarkdownDocument.ts";
 import { MarkdownFormat } from "../../effected/markdown/MarkdownFormat.ts";
@@ -103,7 +105,7 @@ describe("MarkdownDocument.findAll", () => {
 
 	it("matches the visitor's Enter order node for node, root included", () => {
 		const document = parseDoc(source);
-		const events = Effect.runSync(Stream.runCollect(MarkdownVisitor.visit(document.root)));
+		const events = MarkdownVisitor.visit(document.root).pipe(Stream.runCollect, Effect.runSync);
 		const entered = [...events].filter((event) => event._tag === "Enter").map((event) => event.node);
 		assert.deepStrictEqual(
 			document.findAll(() => true),

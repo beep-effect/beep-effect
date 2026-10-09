@@ -4,7 +4,10 @@
 // contract (error-kind tokens in the success array, never a failure).
 
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Result, Schema, Stream } from "effect";
+import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import { YamlToken, YamlTokens } from "../../effected/yaml/index.ts";
 
 const tokensOf = (text: string): ReadonlyArray<YamlToken> => {
@@ -86,8 +89,8 @@ describe("YamlTokens", () => {
 	describe("YamlToken schema", () => {
 		it("decodes and re-encodes through the class codec", () => {
 			const token = YamlToken.make({ kind: "scalar", text: "a", offset: 0, length: 1, line: 0, character: 0 });
-			const encoded = Result.getOrThrow(Schema.encodeResult(YamlToken)(token));
-			const decoded = Result.getOrThrow(Schema.decodeResult(YamlToken)(encoded));
+			const encoded = Result.getOrThrow(S.encodeResult(YamlToken)(token));
+			const decoded = Result.getOrThrow(S.decodeResult(YamlToken)(encoded));
 			assert.deepStrictEqual(decoded, token);
 		});
 	});

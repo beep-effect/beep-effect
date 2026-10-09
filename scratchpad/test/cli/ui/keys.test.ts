@@ -1,5 +1,6 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Option } from "effect";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
 import { Text, useInput } from "ink";
 import type { ReactElement } from "react";
 import { createElement } from "react";
@@ -86,12 +87,12 @@ const table = KeyTable.make<Action>([
 
 describe("KeyTable", () => {
 	it("matches the first binding for a key, and nothing for an unbound one", () => {
-		assert.deepStrictEqual(table.match(named("space")), Option.some("toggle"));
-		assert.deepStrictEqual(table.match({ _tag: "Char", char: "x" }), Option.some("toggle"));
-		assert.deepStrictEqual(table.match({ _tag: "Char", char: "q" }), Option.some("quit"));
-		assert.deepStrictEqual(table.match(named("tab")), Option.some("secret"), "hidden bindings still match");
-		assert.isTrue(Option.isNone(table.match(named("enter"))));
-		assert.isTrue(Option.isNone(table.match({ _tag: "Char", char: "Q" })), "characters match exactly");
+		assert.deepStrictEqual(table.match(named("space")), O.some("toggle"));
+		assert.deepStrictEqual(table.match({ _tag: "Char", char: "x" }), O.some("toggle"));
+		assert.deepStrictEqual(table.match({ _tag: "Char", char: "q" }), O.some("quit"));
+		assert.deepStrictEqual(table.match(named("tab")), O.some("secret"), "hidden bindings still match");
+		assert.isTrue(O.isNone(table.match(named("enter"))));
+		assert.isTrue(O.isNone(table.match({ _tag: "Char", char: "Q" })), "characters match exactly");
 	});
 
 	it("labels help from the glyph set: arrows under Unicode, words under ASCII, hidden bindings omitted", () => {
@@ -129,14 +130,14 @@ describe("KeyTable", () => {
 
 	it("normalises a typed space to the named space key, which is the only one Ink input ever gives", () => {
 		const spaced = KeyTable.make([{ keys: [{ char: " " }], action: "toggle", help: "toggle" }]);
-		assert.deepStrictEqual(spaced.match(named("space")), Option.some("toggle"));
+		assert.deepStrictEqual(spaced.match(named("space")), O.some("toggle"));
 		assert.deepStrictEqual(spaced.help(Glyphs.unicode), [{ label: "space", help: "toggle" }]);
 	});
 
 	it("the root table cancels with escape on Esc (help: cancel) and interrupt on Ctrl-C (hidden)", () => {
-		assert.deepStrictEqual(KeyTable.root.match(named("escape")), Option.some("escape"));
-		assert.deepStrictEqual(KeyTable.root.match(named("ctrl+c")), Option.some("interrupt"));
-		assert.isTrue(Option.isNone(KeyTable.root.match({ _tag: "Char", char: "q" })), "q is never a root key");
+		assert.deepStrictEqual(KeyTable.root.match(named("escape")), O.some("escape"));
+		assert.deepStrictEqual(KeyTable.root.match(named("ctrl+c")), O.some("interrupt"));
+		assert.isTrue(O.isNone(KeyTable.root.match({ _tag: "Char", char: "q" })), "q is never a root key");
 		assert.deepStrictEqual(KeyTable.root.help(Glyphs.unicode), [{ label: "esc", help: "cancel" }]);
 	});
 });

@@ -12,16 +12,21 @@
 
 import { assert, describe, it } from "@effect/vitest";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
-import type { FileSystem } from "effect";
-import { Effect, Layer, Option, Path, Schema, Result } from "effect";
+import type * as FileSystem from "effect/FileSystem";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as S from "effect/Schema";
+import * as Result from "effect/Result";
 import { ConfigCodecError } from "../../effected/config-file/ConfigCodec.ts";
 import { ConfigFile, ConfigFileReadError, ConfigValidationError } from "../../effected/config-file/ConfigFile.ts";
 import { JsonCodec } from "../../effected/config-file/JsonCodec.ts";
 import { JsoncCodec } from "../../effected/config-file/JsoncCodec.ts";
 
-const JsonValue = Schema.fromJsonString(Schema.Unknown);
+const JsonValue = S.fromJsonString(S.Unknown);
 
-class AppShape extends Schema.Class<AppShape>("AppShape")({ port: Schema.Finite }) {}
+class AppShape extends S.Class<AppShape>("AppShape")({ port: S.Finite }) {}
 
 const platform = (files: Record<string, string>): Layer.Layer<FileSystem.FileSystem | Path.Path> =>
 	Layer.mergeAll(MemoryFileSystem.layerWith(files), Path.layer);
@@ -78,7 +83,7 @@ describe("ConfigFile.read", () => {
 			assert.instanceOf(error, ConfigValidationError);
 			// `Option.some(path)` — a one-shot read always knows where it read from,
 			// unlike `validate`, which decodes an in-memory value and has no path.
-			assert.deepStrictEqual(error.path, Option.some("/app/.apprc"));
+			assert.deepStrictEqual(error.path, O.some("/app/.apprc"));
 		}).pipe(Effect.provide(platform({ "/app/.apprc": `{"port":"nope"}` }))),
 	);
 
@@ -96,7 +101,7 @@ describe("ConfigFile.read", () => {
 		// The shape `ConfigFile.layer` cannot express without a second service class:
 		// schema is per CALL here, not per layer.
 		Effect.gen(function* () {
-			class NameShape extends Schema.Class<NameShape>("NameShape")({ name: Schema.String }) {}
+			class NameShape extends S.Class<NameShape>("NameShape")({ name: S.String }) {}
 			const asPort = yield* ConfigFile.read("/app/.apprc", { schema: AppShape, codec: JsonCodec });
 			const asName = yield* ConfigFile.read("/app/.apprc", { schema: NameShape, codec: JsonCodec });
 			assert.strictEqual(asPort.port, 8080);
@@ -126,7 +131,7 @@ describe("ConfigFile.read", () => {
 					}),
 				);
 				assert.instanceOf(error, ConfigValidationError);
-				assert.include(Result.getOrThrow(Schema.encodeResult(JsonValue)(error.issue)), "removedCredential");
+				assert.include(Result.getOrThrow(S.encodeResult(JsonValue)(error.issue)), "removedCredential");
 			}).pipe(Effect.provide(platform(withExtra))),
 		);
 
@@ -146,8 +151,8 @@ describe("ConfigFile.read", () => {
 				// The half that decides whether this is usable: a schema that
 				// deliberately admits a pass-through section must keep working under
 				// "error", or strictness would break a documented feature.
-				const Passthrough = Schema.StructWithRest(Schema.Struct({ port: Schema.Finite }), [
-					Schema.Record(Schema.String, Schema.Unknown),
+				const Passthrough = S.StructWithRest(S.Struct({ port: S.Finite }), [
+					S.Record(S.String, S.Unknown),
 				]);
 				const value = yield* ConfigFile.read("/app/.apprc", {
 					schema: Passthrough,

@@ -1,7 +1,13 @@
 // @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file asyncFunction:skip-file
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
-import { Cause, Console, Effect, Exit, Fiber, Layer, Runtime } from "effect";
+import * as Cause from "effect/Cause";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Fiber from "effect/Fiber";
+import * as Layer from "effect/Layer";
+import * as Runtime from "effect/Runtime";
 import { Command, Flag } from "effect/cli";
 import { Cancelled, CliInteractive, CliPrompt, CliRuntime, CliTheme } from "../../../effected/cli/index.ts";
 import { TestTerminal } from "../../../effected/cli/testing.ts";
@@ -13,7 +19,7 @@ import { CliUiTest } from "../../../effected/cli/ui-testing.ts";
 const proceed: Screen<boolean> = CliUi.map(Confirm.screen({ message: "Publish?" }), (result) => result.confirmed);
 
 const exitCode = (exit: Exit.Exit<unknown, unknown>): number =>
-	Exit.isFailure(exit) ? Runtime.getErrorExitCode(Cause.squash(exit.cause)) : 0;
+	Exit.isFailure(exit) ? exit.cause.pipe(Cause.squash, Runtime.getErrorExitCode) : 0;
 
 /** The "confirm, or pass --yes" shape: a boolean flag whose fallback is a mapped Confirm. */
 const app = Command.make("tool").pipe(

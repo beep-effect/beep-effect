@@ -1,6 +1,9 @@
 // @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Layer, Option, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Schema from "effect/Schema";
 import { FileContent, FileDeletion, GitCommit } from "../../effected/github/GitCommit.ts";
 import type { GitHubClient } from "../../effected/github/GitHubClient.ts";
 import { GitHubCommit } from "../../effected/github/GitHubCommit.ts";
@@ -200,14 +203,14 @@ describe("GitTag", () => {
 				(tag) => tag.latestSemver(),
 			);
 			// 1.10.0 > 1.9.0 — the comparison is semver's, not the string's.
-			assert.strictEqual(Option.getOrThrow(value).tag, "v1.10.0");
+			assert.strictEqual(O.getOrThrow(value).tag, "v1.10.0");
 		}),
 	);
 
 	it.effect("latestSemver skips prereleases by default", () =>
 		Effect.gen(function* () {
 			const { value } = yield* drive([tags(["v1.0.0", "v2.0.0-rc.1"])], GitTag, GitTag, (tag) => tag.latestSemver());
-			assert.strictEqual(Option.getOrThrow(value).tag, "v1.0.0");
+			assert.strictEqual(O.getOrThrow(value).tag, "v1.0.0");
 		}),
 	);
 
@@ -216,7 +219,7 @@ describe("GitTag", () => {
 			const { value } = yield* drive([tags(["v1.0.0", "v2.0.0-rc.1"])], GitTag, GitTag, (tag) =>
 				tag.latestSemver({ includePrerelease: true }),
 			);
-			assert.strictEqual(Option.getOrThrow(value).tag, "v2.0.0-rc.1");
+			assert.strictEqual(O.getOrThrow(value).tag, "v2.0.0-rc.1");
 		}),
 	);
 
@@ -225,31 +228,31 @@ describe("GitTag", () => {
 			const { value } = yield* drive([tags(["@scope/pkg@1.2.3", "@scope/pkg@1.3.0"])], GitTag, GitTag, (tag) =>
 				tag.latestSemver({ prefix: "@scope/pkg@" }),
 			);
-			assert.strictEqual(Option.getOrThrow(value).version.minor, 3);
+			assert.strictEqual(O.getOrThrow(value).version.minor, 3);
 		}),
 	);
 
 	it.effect("latestSemver is none when nothing is version-shaped", () =>
 		Effect.gen(function* () {
 			const { value } = yield* drive([tags(["nightly", "latest"])], GitTag, GitTag, (tag) => tag.latestSemver());
-			assert.isTrue(Option.isNone(value));
+			assert.isTrue(O.isNone(value));
 		}),
 	);
 });
 
 describe("versionFromTag", () => {
 	it("reads the three tag shapes the kit cuts", () => {
-		assert.deepStrictEqual(versionFromTag("v1.2.3"), Option.some("1.2.3"));
-		assert.deepStrictEqual(versionFromTag("pkg@v1.2.3"), Option.some("1.2.3"));
-		assert.deepStrictEqual(versionFromTag("@scope/pkg@1.2.3"), Option.some("1.2.3"));
+		assert.deepStrictEqual(versionFromTag("v1.2.3"), O.some("1.2.3"));
+		assert.deepStrictEqual(versionFromTag("pkg@v1.2.3"), O.some("1.2.3"));
+		assert.deepStrictEqual(versionFromTag("@scope/pkg@1.2.3"), O.some("1.2.3"));
 	});
 
 	it("takes the LAST @, so a scope does not confuse it", () => {
-		assert.deepStrictEqual(versionFromTag("@a/b@2.0.0"), Option.some("2.0.0"));
+		assert.deepStrictEqual(versionFromTag("@a/b@2.0.0"), O.some("2.0.0"));
 	});
 
 	it("has nothing to say about an empty name", () => {
-		assert.isTrue(Option.isNone(versionFromTag("v")));
+		assert.isTrue(O.isNone(versionFromTag("v")));
 	});
 });
 
@@ -356,7 +359,7 @@ describe("GitHubContent", () => {
 				GitHubContent,
 				(content) => content.getFileOption("missing.md"),
 			);
-			assert.isTrue(Option.isNone(value));
+			assert.isTrue(O.isNone(value));
 		}),
 	);
 });

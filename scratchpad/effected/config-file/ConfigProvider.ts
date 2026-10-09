@@ -1,5 +1,7 @@
-import type { Layer } from "effect";
-import { ConfigProvider, Context, Effect } from "effect";
+import type * as Layer from "effect/Layer";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import type { ConfigFileShape, ConfigLoadError } from "./ConfigFile.ts";
 

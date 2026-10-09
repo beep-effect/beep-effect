@@ -6,14 +6,17 @@
 // control.
 
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Option, Result, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { DevEngine } from "../../effected/package-json/DevEngines.ts";
 import { PackageManager } from "../../effected/package-json/PackageManager.ts";
 import { InvalidPackageManagerRangeError, PackageManagerRange } from "../../effected/package-json/PackageManagerRange.ts";
 
-const decode = Schema.decodeUnknownEffect(PackageManagerRange.FromString);
-const encode = Schema.encodeUnknownEffect(PackageManagerRange.FromString);
-const decodeStrict = Schema.decodeUnknownEffect(PackageManager.FromString);
+const decode = S.decodeUnknownEffect(PackageManagerRange.FromString);
+const encode = S.encodeUnknownEffect(PackageManagerRange.FromString);
+const decodeStrict = S.decodeUnknownEffect(PackageManager.FromString);
 
 describe("PackageManagerRange.FromString", () => {
 	it.effect("parses a caret range and reports it inexact", () =>
@@ -47,7 +50,7 @@ describe("PackageManagerRange.FromString", () => {
 	it.effect("parses an integrity suffix", () =>
 		Effect.gen(function* () {
 			const pm = yield* decode("pnpm@11.2.0+sha512.abc");
-			assert.deepStrictEqual(pm.integrity, Option.some("sha512.abc"));
+			assert.deepStrictEqual(pm.integrity, O.some("sha512.abc"));
 			assert.isTrue(pm.hasIntegrity);
 		}),
 	);
@@ -143,7 +146,7 @@ describe("PackageManagerRange.fromDevEngine", () => {
 		assert.isTrue(Result.isSuccess(read));
 		if (Result.isSuccess(read)) {
 			assert.strictEqual(read.success.range, "^12.6.0");
-			assert.deepStrictEqual(read.success.integrity, Option.some(HEX));
+			assert.deepStrictEqual(read.success.integrity, O.some(HEX));
 			assert.strictEqual(read.success.bare, "pnpm@^12.6.0");
 			assert.strictEqual(read.success.toString(), `pnpm@^12.6.0+${HEX}`);
 		}
@@ -216,15 +219,15 @@ describe("PackageManagerRange operator, baseVersion and withVersion", () => {
 			["~12.6.0", "~"],
 			[`^12.6.0+${HEX}`, "^"],
 		] as const) {
-			assert.deepStrictEqual(range(text).operator, Option.some(operator), text);
-			assert.deepStrictEqual(range(text).baseVersion, Option.some("12.6.0"), text);
+			assert.deepStrictEqual(range(text).operator, O.some(operator), text);
+			assert.deepStrictEqual(range(text).baseVersion, O.some("12.6.0"), text);
 		}
 	});
 
 	it("answers none for ranges whose operator cannot be carried onto a new version", () => {
 		for (const text of [">=12.0.0 <13.0.0", "12.x", "^12", "=12.6.0", ">=12.0.0 <12.7.0 || >12.7.0 <13.0.0"]) {
-			assert.isTrue(Option.isNone(range(text).operator), text);
-			assert.isTrue(Option.isNone(range(text).baseVersion), text);
+			assert.isTrue(O.isNone(range(text).operator), text);
+			assert.isTrue(O.isNone(range(text).baseVersion), text);
 		}
 	});
 

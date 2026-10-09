@@ -1,6 +1,12 @@
 import { BlobClient, BlockBlobClient } from "@azure/storage-blob";
 import { GlobPattern, GlobSet } from "../glob/index.ts";
-import { Context, Effect, FileSystem, Layer, Option, Path, Schema } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as S from "effect/Schema";
 import { HttpClient } from "effect/http";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import { ActionEnvironment } from "./ActionEnvironment.ts";
@@ -21,7 +27,7 @@ import { unstubbed } from "./internal/unstubbed.ts";
  *
  * @public
  */
-export class ActionCacheError extends Schema.TaggedError<ActionCacheError>()("ActionCacheError", {
+export class ActionCacheError extends S.TaggedError<ActionCacheError>()("ActionCacheError", {
 	/**
 	 * `misconfigured` — the results backend is not reachable from here (see
 	 * {@link ActionCache}). `unreachable` — it could not be contacted, or
@@ -29,17 +35,17 @@ export class ActionCacheError extends Schema.TaggedError<ActionCacheError>()("Ac
 	 * unhappily. `archiveFailed` — `tar` would not pack or unpack the paths.
 	 * `transferFailed` — the archive itself did not move.
 	 */
-	reason: Schema.Literals(["misconfigured", "unreachable", "refused", "archiveFailed", "transferFailed"]),
+	reason: S.Literals(["misconfigured", "unreachable", "refused", "archiveFailed", "transferFailed"]),
 	/** The cache key involved. A stable identifier, never a value. */
-	key: Schema.optionalKey(Schema.String),
+	key: S.optionalKey(S.String),
 	/** The HTTP status, when the backend answered. */
-	status: Schema.optionalKey(Schema.Finite),
+	status: S.optionalKey(S.Finite),
 	/** What went wrong, when the reason alone does not say. */
-	detail: Schema.optionalKey(Schema.String),
+	detail: S.optionalKey(S.String),
 	/** `tar`'s own complaint, which is the only useful part of an archive failure. */
-	stderr: Schema.optionalKey(Schema.String),
+	stderr: S.optionalKey(S.String),
 	/** The underlying failure, preserved structurally. */
-	cause: Schema.optionalKey(Schema.Defect()),
+	cause: S.optionalKey(S.Defect()),
 }) {
 	override get message(): string {
 		const about = this.key === undefined ? "" : ` for "${this.key}"`;
@@ -114,7 +120,7 @@ export interface ActionCacheShape {
 		paths: ReadonlyArray<string>,
 		key: string | CacheKey,
 		restoreKeys?: ReadonlyArray<string>,
-	) => Effect.Effect<Option.Option<string>, ActionCacheError>;
+	) => Effect.Effect<O.Option<string>, ActionCacheError>;
 }
 
 /**
@@ -291,7 +297,7 @@ const make = (
 				// The toolkit roots relative patterns at the process working directory
 				// and relativizes matches against GITHUB_WORKSPACE; on a runner the two
 				// are the same directory, and the variable is the one a test controls.
-				const workspace = Option.getOrElse(yield* env.getOptional("GITHUB_WORKSPACE"), () => ".");
+				const workspace = O.getOrElse(yield* env.getOptional("GITHUB_WORKSPACE"), () => ".");
 				const base = posix(path.resolve(workspace));
 
 				const rooted: Array<string> = [];
@@ -300,10 +306,10 @@ const make = (
 					let target = excluded ? pattern.slice(1) : pattern;
 					if (target === "~" || target.startsWith("~/")) {
 						let home = yield* env.getOptional("HOME");
-						if (Option.isNone(home)) {
+						if (O.isNone(home)) {
 							home = yield* env.getOptional("USERPROFILE");
 						}
-						if (Option.isNone(home)) {
+						if (O.isNone(home)) {
 							return yield* failed(`cannot expand "~" in "${pattern}" — neither HOME nor USERPROFILE is set`);
 						}
 						target = `${GlobPattern.escape(posix(path.resolve(home.value)))}${target.slice(1)}`;
@@ -373,7 +379,7 @@ const make = (
 					// nothing, exactly as the toolkit's globber skips an ENOENT search
 					// path. `stat` follows symlinks, so a broken link is also nothing.
 					const info = yield* fs.stat(root).pipe(Effect.option);
-					if (Option.isNone(info)) {
+					if (O.isNone(info)) {
 						continue;
 					}
 					admit(root);
@@ -437,7 +443,7 @@ const make = (
 						// None: another job saved this key first, and the cache already
 						// holds what the caller wanted.
 						const url = yield* reserveUpload(service, primary, version);
-						if (Option.isNone(url)) {
+						if (O.isNone(url)) {
 							return;
 						}
 						yield* transfer.uploadFile(url.value, archive).pipe(moved(primary));
@@ -454,8 +460,8 @@ const make = (
 				const { primary, fallbacks } = ladder(key, restoreKeys);
 				yield* Effect.annotateCurrentSpan({ key: primary });
 				const hit = yield* lookupDownload(cacheService(primary), primary, fallbacks, versionOf(paths));
-				if (Option.isNone(hit)) {
-					return Option.none<string>();
+				if (O.isNone(hit)) {
+					return O.none<string>();
 				}
 				yield* withArchive(primary, (archive) =>
 					Effect.gen(function* () {
@@ -466,7 +472,7 @@ const make = (
 				// The matched key is what the caller branches on: a hit on a restore
 				// key is a partial hit, and re-saving under the primary key is the
 				// whole point of knowing the difference.
-				return Option.some(hit.value.matchedKey ?? primary);
+				return O.some(hit.value.matchedKey ?? primary);
 			}),
 		} satisfies ActionCacheShape;
 	});

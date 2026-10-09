@@ -13,13 +13,15 @@
 // string round-trips as that exact string.
 
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Option, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { Bugs, Person, Repository } from "../../effected/package-json/index.ts";
 
-const Json = Schema.fromJsonString(Schema.Unknown);
+const Json = S.fromJsonString(S.Unknown);
 
-const decode = <A, I>(schema: Schema.Codec<A, I>, input: I) => Schema.decodeUnknownEffect(schema)(input);
-const encode = <A, I>(schema: Schema.Codec<A, I>, value: A) => Schema.encodeUnknownEffect(schema)(value);
+const decode = <A, I>(schema: S.Codec<A, I>, input: I) => S.decodeUnknownEffect(schema)(input);
+const encode = <A, I>(schema: S.Codec<A, I>, value: A) => S.encodeUnknownEffect(schema)(value);
 
 describe("Repository — the npm shorthands", () => {
 	it.effect("a bare `user/repo` browses to GitHub", () =>
@@ -28,7 +30,7 @@ describe("Repository — the npm shorthands", () => {
 			// the string unchanged, so a consumer got `"user/repo"` where it wanted
 			// a URL.
 			const repo = yield* decode(Repository.FromValue, "effected/kit");
-			assert.deepStrictEqual(repo.browseUrl, Option.some("https://github.com/effected/kit"));
+			assert.deepStrictEqual(repo.browseUrl, O.some("https://github.com/effected/kit"));
 		}),
 	);
 
@@ -42,7 +44,7 @@ describe("Repository — the npm shorthands", () => {
 			] as const;
 			for (const [input, expected] of cases) {
 				const repo = yield* decode(Repository.FromValue, input);
-				assert.deepStrictEqual(repo.browseUrl, Option.some(expected), input);
+				assert.deepStrictEqual(repo.browseUrl, O.some(expected), input);
 			}
 		}),
 	);
@@ -60,7 +62,7 @@ describe("Repository — git URL normalization", () => {
 			] as const;
 			for (const input of cases) {
 				const repo = yield* decode(Repository.FromValue, input);
-				assert.deepStrictEqual(repo.browseUrl, Option.some("https://github.com/effected/kit"), input);
+				assert.deepStrictEqual(repo.browseUrl, O.some("https://github.com/effected/kit"), input);
 			}
 		}),
 	);
@@ -71,21 +73,21 @@ describe("Repository — git URL normalization", () => {
 			// scheme intact, because the `git@host:` rewrite only matched the scp
 			// form.
 			const repo = yield* decode(Repository.FromValue, "git+ssh://git@github.com/effected/kit.git");
-			assert.deepStrictEqual(repo.browseUrl, Option.some("https://github.com/effected/kit"));
+			assert.deepStrictEqual(repo.browseUrl, O.some("https://github.com/effected/kit"));
 		}),
 	);
 
 	it.effect("a non-GitHub host keeps its host", () =>
 		Effect.gen(function* () {
 			const repo = yield* decode(Repository.FromValue, "git@git.example.com:team/thing.git");
-			assert.deepStrictEqual(repo.browseUrl, Option.some("https://git.example.com/team/thing"));
+			assert.deepStrictEqual(repo.browseUrl, O.some("https://git.example.com/team/thing"));
 		}),
 	);
 
 	it.effect("`gitUrl` is the canonical clone URL", () =>
 		Effect.gen(function* () {
 			const repo = yield* decode(Repository.FromValue, "git@github.com:effected/kit.git");
-			assert.deepStrictEqual(repo.gitUrl, Option.some("https://github.com/effected/kit.git"));
+			assert.deepStrictEqual(repo.gitUrl, O.some("https://github.com/effected/kit.git"));
 		}),
 	);
 
@@ -95,8 +97,8 @@ describe("Repository — git URL normalization", () => {
 			// cannot interpret is a missing answer, not a failure — the same
 			// posture the rest of the kit takes on absence.
 			const repo = yield* decode(Repository.FromValue, "not a url at all");
-			assert.isTrue(Option.isNone(repo.browseUrl));
-			assert.isTrue(Option.isNone(repo.gitUrl));
+			assert.isTrue(O.isNone(repo.browseUrl));
+			assert.isTrue(O.isNone(repo.gitUrl));
 			// The raw value is still there for a caller that knows better.
 			assert.strictEqual(repo.url, "not a url at all");
 		}),
@@ -113,7 +115,7 @@ describe("Repository — the object form", () => {
 			});
 			assert.strictEqual(repo.type, "git");
 			assert.strictEqual(repo.directory, "packages/package-json");
-			assert.deepStrictEqual(repo.browseUrl, Option.some("https://github.com/effected/kit"));
+			assert.deepStrictEqual(repo.browseUrl, O.some("https://github.com/effected/kit"));
 		}),
 	);
 
@@ -225,7 +227,7 @@ describe("Repository — directoryUrl", () => {
 			] as const;
 			for (const [url, expected] of cases) {
 				const repo = yield* decode(Repository.FromValue, { url, directory: "packages/spdx" });
-				assert.deepStrictEqual(repo.directoryUrl, Option.some(expected), url);
+				assert.deepStrictEqual(repo.directoryUrl, O.some(expected), url);
 			}
 		}),
 	);
@@ -244,7 +246,7 @@ describe("Repository — directoryUrl", () => {
 	it.effect("without `directory` the package is the root, and that is an answer", () =>
 		Effect.gen(function* () {
 			const repo = yield* decode(Repository.FromValue, "effected/kit");
-			assert.deepStrictEqual(repo.directoryUrl, Option.some("https://github.com/effected/kit"));
+			assert.deepStrictEqual(repo.directoryUrl, O.some("https://github.com/effected/kit"));
 			assert.deepStrictEqual(repo.directoryUrl, repo.browseUrl);
 		}),
 	);
@@ -253,7 +255,7 @@ describe("Repository — directoryUrl", () => {
 		Effect.gen(function* () {
 			for (const directory of [".", "/", "", "./"]) {
 				const repo = yield* decode(Repository.FromValue, { url: "effected/kit", directory });
-				assert.deepStrictEqual(repo.directoryUrl, Option.some("https://github.com/effected/kit"), directory);
+				assert.deepStrictEqual(repo.directoryUrl, O.some("https://github.com/effected/kit"), directory);
 			}
 		}),
 	);
@@ -267,15 +269,15 @@ describe("Repository — directoryUrl", () => {
 				url: "https://git.example.com/team/thing",
 				directory: "packages/spdx",
 			});
-			assert.deepStrictEqual(repo.browseUrl, Option.some("https://git.example.com/team/thing"));
-			assert.isTrue(Option.isNone(repo.directoryUrl));
+			assert.deepStrictEqual(repo.browseUrl, O.some("https://git.example.com/team/thing"));
+			assert.isTrue(O.isNone(repo.directoryUrl));
 		}),
 	);
 
 	it.effect("a gist has no subdirectories to descend into", () =>
 		Effect.gen(function* () {
 			const repo = yield* decode(Repository.FromValue, { url: "gist:abc123def", directory: "packages/spdx" });
-			assert.isTrue(Option.isNone(repo.directoryUrl));
+			assert.isTrue(O.isNone(repo.directoryUrl));
 		}),
 	);
 
@@ -283,7 +285,7 @@ describe("Repository — directoryUrl", () => {
 		Effect.gen(function* () {
 			for (const directory of ["../elsewhere", "packages/../../elsewhere", ".."]) {
 				const repo = yield* decode(Repository.FromValue, { url: "effected/kit", directory });
-				assert.isTrue(Option.isNone(repo.directoryUrl), directory);
+				assert.isTrue(O.isNone(repo.directoryUrl), directory);
 			}
 		}),
 	);
@@ -296,7 +298,7 @@ describe("Repository — directoryUrl", () => {
 			});
 			assert.deepStrictEqual(
 				repo.directoryUrl,
-				Option.some("https://github.com/effected/kit/tree/HEAD/packages/my%20package"),
+				O.some("https://github.com/effected/kit/tree/HEAD/packages/my%20package"),
 			);
 		}),
 	);
@@ -304,7 +306,7 @@ describe("Repository — directoryUrl", () => {
 	it.effect("an uninterpretable url stays uninterpretable", () =>
 		Effect.gen(function* () {
 			const repo = yield* decode(Repository.FromValue, { url: "", directory: "packages/spdx" });
-			assert.isTrue(Option.isNone(repo.directoryUrl));
+			assert.isTrue(O.isNone(repo.directoryUrl));
 		}),
 	);
 
@@ -313,7 +315,7 @@ describe("Repository — directoryUrl", () => {
 			// Wire fidelity holds for the derived getters, same as browseUrl.
 			const input = { url: "effected/kit", directory: "packages/spdx" };
 			const repo = yield* decode(Repository.FromValue, input);
-			assert.isTrue(Option.isSome(repo.directoryUrl));
+			assert.isTrue(O.isSome(repo.directoryUrl));
 			assert.deepStrictEqual(yield* encode(Repository.FromValue, repo), input);
 		}),
 	);
@@ -358,7 +360,7 @@ describe("Repository and Bugs — the object wire is replayed only while it is f
 			const repo = yield* decode(Repository.FromValue, input);
 			const encoded = yield* encode(Repository.FromValue, repo);
 			assert.deepStrictEqual(encoded, input);
-			assert.strictEqual((yield* Schema.encodeEffect(Json)(encoded)), (yield* Schema.encodeEffect(Json)(input)));
+			assert.strictEqual((yield* S.encodeEffect(Json)(encoded)), (yield* S.encodeEffect(Json)(input)));
 		}),
 	);
 

@@ -16,7 +16,9 @@ import { fileURLToPath } from "node:url";
 import { NodeChildProcessSpawner, NodeFileSystem, NodePath } from "@effect/platform-node";
 import { afterAll, assert, beforeAll, describe, it } from "@effect/vitest";
 import { CatalogAssemblyError } from "../../../effected/npm/index.ts";
-import { Effect, Layer, Option } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import { ConfigDependencyHooks, WorkspaceCatalogs, Workspaces } from "../../../effected/workspaces/index.ts";
 import type { Tree } from "../fixtures.ts";
 import { manifest, platform } from "../fixtures.ts";
@@ -551,8 +553,8 @@ describe("ConfigDependencyHooks.layerFrom — replays caller-supplied files, res
 		const appLayer = Layer.mergeAll(core, catalogs).pipe(Layer.provideMerge(platform(tree)));
 		return Effect.gen(function* () {
 			const set = yield* (yield* WorkspaceCatalogs).set;
-			assert.deepStrictEqual(set.rangeOf("effect", Option.none()), Option.some("^4.0.0"));
-			assert.deepStrictEqual(set.rangeOf("hooked-dep", Option.none()), Option.some("^9.9.9"));
+			assert.deepStrictEqual(set.rangeOf("effect", O.none()), O.some("^4.0.0"));
+			assert.deepStrictEqual(set.rangeOf("hooked-dep", O.none()), O.some("^9.9.9"));
 		}).pipe(Effect.provide(appLayer));
 	});
 });

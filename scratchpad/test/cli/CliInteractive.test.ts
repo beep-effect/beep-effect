@@ -2,7 +2,10 @@
 import { assert, describe, it } from "@effect/vitest";
 import type { AudienceKind } from "../../effected/env/index.ts";
 import { Audience, TerminalEnv } from "../../effected/env/index.ts";
-import { ConfigProvider, Effect, Fiber, Layer } from "effect";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
+import * as Layer from "effect/Layer";
 import { CliInteractive } from "../../effected/cli/index.ts";
 
 const decide = (
@@ -96,14 +99,14 @@ describe("CliInteractive.unless", () => {
 
 	it.effect("restores the outer value when the scoped effect fails", () =>
 		Effect.gen(function* () {
-			yield* Effect.ignore(CliInteractive.unless(true)(Effect.fail("boom")));
+			yield* Effect.fail("boom").pipe(CliInteractive.unless(true), Effect.ignore);
 			assert.strictEqual(yield* read, true);
 		}).pipe(Effect.provide(CliInteractive.layerTest(true))),
 	);
 
 	it.effect("an interrupted unless scope still restores the outer value", () =>
 		Effect.gen(function* () {
-			const fiber = yield* Effect.forkChild(CliInteractive.unless(true)(Effect.never));
+			const fiber = yield* Effect.never.pipe(CliInteractive.unless(true), Effect.forkChild);
 			yield* Effect.yieldNow;
 			yield* Fiber.interrupt(fiber);
 			assert.strictEqual(yield* read, true);

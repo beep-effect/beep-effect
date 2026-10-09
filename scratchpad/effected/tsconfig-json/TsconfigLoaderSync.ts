@@ -15,7 +15,14 @@
 // layers, so there is no memoization to poison across calls with different
 // options).
 
-import { Cause, Effect, Exit, FileSystem, Option, Path, PlatformError, Result } from "effect";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
+import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as PlatformError from "effect/PlatformError";
+import * as Result from "effect/Result";
 import type { CompilerOptions } from "./CompilerOptions.ts";
 import type { ResolvedTsconfig } from "./ResolvedTsconfig.ts";
 import type { TsconfigJson } from "./TsconfigJson.ts";
@@ -172,7 +179,7 @@ const runWith = <A, E>(
 	);
 	if (Exit.isSuccess(exit)) return exit.value;
 	const failure = Cause.findErrorOption(exit.cause);
-	if (Option.isSome(failure)) throw failure.value;
+	if (O.isSome(failure)) throw failure.value;
 	const defect = Cause.findDefect(exit.cause);
 	if (Result.isSuccess(defect)) throw defect.success;
 	throw Cause.squash(exit.cause);

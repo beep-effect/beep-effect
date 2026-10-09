@@ -1,5 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Equal } from "effect";
+import * as Equal from "effect/Equal";
 import type { TomlSemanticErrorCodeRaw } from "../../effected/toml/internal/diagnostics.ts";
 import { isRawTomlError } from "../../effected/toml/internal/diagnostics.ts";
 import { parseExpressions } from "../../effected/toml/internal/parser.ts";

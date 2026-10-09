@@ -1,15 +1,6 @@
 // This engine adapter is an internal test helper with a direct-call contract.
 // @effect-diagnostics missingPipeableSignature:skip-file
-/**
- * Facade-shaped adapter over the internal engine, used by the compliance
- * harness while the public `Yaml` facade is being built. Reproduces the v3
- * `parse`/`parseDocument`/`parseAllDocuments` wrapper semantics exactly:
- * fatal-code filtering (now via the single `isFatalCode` predicate),
- * DuplicateKey promotion under `uniqueKeys`, and incremental anchor
- * resolution for value extraction.
- */
-
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { buildAnchorMap, getNodeValue } from "../../../../effected/yaml/internal/composer/anchors.ts";
 import { composeAllDocuments, composeFirstDocument } from "../../../../effected/yaml/internal/composer/document.ts";
 import type { RawDiagnostic } from "../../../../effected/yaml/internal/diagnostics.ts";

@@ -1,7 +1,12 @@
 import type { AudienceKind, ColorLevel, StreamEnv } from "../env/index.ts";
 import { Audience, CurrentRuntimeEnv, TerminalEnv } from "../env/index.ts";
-import type { Effect, Layer, Stdio, Terminal } from "effect";
-import { ConfigProvider, Layer as LayerModule, Option } from "effect";
+import type * as Effect from "effect/Effect";
+import type * as Layer from "effect/Layer";
+import type * as Stdio from "effect/Stdio";
+import type * as Terminal from "effect/Terminal";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as LayerModule from "effect/Layer";
+import * as O from "effect/Option";
 import type { CliOutput } from "effect/cli";
 import { CliInteractive } from "./CliInteractive.ts";
 import type { CliLinks, EditorLinks } from "./CliLinks.ts";
@@ -223,7 +228,7 @@ export class CliEnv {
 		const stream: Partial<StreamEnv> = {
 			isTerminal: tty,
 			color: options.color ?? "none",
-			columns: options.columns === undefined ? Option.none() : Option.some(options.columns),
+			columns: options.columns === undefined ? O.none() : O.some(options.columns),
 		};
 		const facts = LayerModule.mergeAll(
 			TerminalEnv.layerTest({ stdinIsTerminal: tty, stdout: stream, stderr: stream }),

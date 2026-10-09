@@ -3,7 +3,10 @@
 // handler answering `undefined` delegates to the wrapped filesystem.
 
 import { dual } from "effect/Function";
-import { Effect, FileSystem, PlatformError, Scope } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as PlatformError from "effect/PlatformError";
+import * as Scope from "effect/Scope";
 import type {
 	MemoryFileSystemFaultMethod,
 	MemoryFileSystemFaults,

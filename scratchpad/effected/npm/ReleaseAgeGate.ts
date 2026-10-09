@@ -16,7 +16,7 @@
 // replayed `updateConfig` hooks is a consumer concern (config IO), not this
 // pure-tier module's.
 
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 
 // pnpm's release-age is measured in minutes; the filter converts to ms.
 const MS_PER_MINUTE = 60_000;
@@ -35,11 +35,11 @@ const MS_PER_MINUTE = 60_000;
  *
  * @public
  */
-export const PartialReleaseAgeGate = Schema.Struct({
+export const PartialReleaseAgeGate = S.Struct({
 	/** Minutes a release must age; absent means this source sets no age. */
-	ageMinutes: Schema.optionalKey(Schema.Finite),
+	ageMinutes: S.optionalKey(S.Finite),
 	/** Exempt package-name patterns; absent means this source adds no exemptions. */
-	exclude: Schema.optionalKey(Schema.Array(Schema.String)),
+	exclude: S.String.pipe(S.Array, S.optionalKey),
 });
 
 /**
@@ -55,7 +55,7 @@ export type PartialReleaseAgeGate = typeof PartialReleaseAgeGate.Type;
 // integer of minutes, but `combine` takes `Math.max` of arbitrary finite
 // contributions, and requiring an integer here would make a fractional
 // contribution throw at construction, breaking `combine`'s totality.
-const AgeMinutes = Schema.Finite.check(Schema.isGreaterThanOrEqualTo(0), Schema.isFinite());
+const AgeMinutes = S.Finite.check(S.isGreaterThanOrEqualTo(0), S.isFinite());
 
 // Match a package name against a single pattern with pnpm `@pnpm/matcher`
 // semantics: an exact-name match, or a `*`-glob where `*` matches ANY run of
@@ -128,11 +128,11 @@ const matchesExclude = (name: string, patterns: readonly string[]): boolean =>
  *
  * @public
  */
-export class ReleaseAgeGate extends Schema.Class<ReleaseAgeGate>("ReleaseAgeGate")({
+export class ReleaseAgeGate extends S.Class<ReleaseAgeGate>("ReleaseAgeGate")({
 	/** Minutes a published version must age before it is eligible (non-negative, finite). */
 	ageMinutes: AgeMinutes,
 	/** Package-name patterns exempt from the gate (exact names or `*`-globs). */
-	exclude: Schema.Array(Schema.String),
+	exclude: S.Array(S.String),
 }) {
 	/**
 	 * Combine partial contributions from multiple sources into one effective

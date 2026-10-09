@@ -2,8 +2,10 @@
 // @effect-diagnostics nodeBuiltinImport:skip-file
 import { spawn as spawnChild } from "node:child_process";
 import { closeSync, openSync } from "node:fs";
-import type { Duration } from "effect";
-import { Effect, Schedule, Schema } from "effect";
+import type * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Schedule from "effect/Schedule";
+import * as S from "effect/Schema";
 import { HttpClient } from "effect/http";
 import { ChildProcessSpawner } from "effect/process";
 import { isErrno } from "./internal/fsProbe.ts";
@@ -14,13 +16,13 @@ import { unstubbed } from "./internal/unstubbed.ts";
  *
  * @public
  */
-export class DetachedLogUnavailableError extends Schema.TaggedError<DetachedLogUnavailableError>()(
+export class DetachedLogUnavailableError extends S.TaggedError<DetachedLogUnavailableError>()(
 	"DetachedLogUnavailableError",
 	{
 		/** The log file that could not be opened. */
-		path: Schema.String,
+		path: S.String,
 		/** The underlying failure, preserved structurally. */
-		cause: Schema.optionalKey(Schema.Defect()),
+		cause: S.optionalKey(S.Defect()),
 	},
 ) {
 	override get message(): string {
@@ -33,11 +35,11 @@ export class DetachedLogUnavailableError extends Schema.TaggedError<DetachedLogU
  *
  * @public
  */
-export class DetachedSpawnFailedError extends Schema.TaggedError<DetachedSpawnFailedError>()(
+export class DetachedSpawnFailedError extends S.TaggedError<DetachedSpawnFailedError>()(
 	"DetachedSpawnFailedError",
 	{
 		/** The underlying failure, preserved structurally. */
-		cause: Schema.optionalKey(Schema.Defect()),
+		cause: S.optionalKey(S.Defect()),
 	},
 ) {
 	override get message(): string {
@@ -54,13 +56,13 @@ export class DetachedSpawnFailedError extends Schema.TaggedError<DetachedSpawnFa
  *
  * @public
  */
-export class InvalidPidError extends Schema.TaggedError<InvalidPidError>()("InvalidPidError", {
+export class InvalidPidError extends S.TaggedError<InvalidPidError>()("InvalidPidError", {
 	/** The pid that was refused. */
 	// The error reports the pid it refused, which may be NaN or infinite.
 	// @effect-diagnostics-next-line schemaNumber:off
-	pid: Schema.Number,
+	pid: S.Number,
 	/** The underlying failure, preserved structurally. */
-	cause: Schema.optionalKey(Schema.Defect()),
+	cause: S.optionalKey(S.Defect()),
 }) {
 	override get message(): string {
 		return `Refusing to signal pid ${this.pid}: a non-positive pid targets a process group, not a process`;
@@ -72,15 +74,15 @@ export class InvalidPidError extends Schema.TaggedError<InvalidPidError>()("Inva
  *
  * @public
  */
-export class DetachedSignalFailedError extends Schema.TaggedError<DetachedSignalFailedError>()(
+export class DetachedSignalFailedError extends S.TaggedError<DetachedSignalFailedError>()(
 	"DetachedSignalFailedError",
 	{
 		/** The pid that could not be signalled. */
 		// The error reports the pid it refused, which may be NaN or infinite.
 		// @effect-diagnostics-next-line schemaNumber:off
-		pid: Schema.Number,
+		pid: S.Number,
 		/** The underlying failure, preserved structurally. */
-		cause: Schema.optionalKey(Schema.Defect()),
+		cause: S.optionalKey(S.Defect()),
 	},
 ) {
 	override get message(): string {
@@ -93,9 +95,9 @@ export class DetachedSignalFailedError extends Schema.TaggedError<DetachedSignal
  *
  * @public
  */
-export class DetachedNotReadyError extends Schema.TaggedError<DetachedNotReadyError>()("DetachedNotReadyError", {
+export class DetachedNotReadyError extends S.TaggedError<DetachedNotReadyError>()("DetachedNotReadyError", {
 	/** The underlying failure, preserved structurally. */
-	cause: Schema.optionalKey(Schema.Defect()),
+	cause: S.optionalKey(S.Defect()),
 }) {
 	override get message(): string {
 		return "The detached child never became ready";
@@ -156,13 +158,13 @@ export type DetachedProcessError =
  */
 // The integer check in the pipe rejects NaN and the infinities itself, with its own message.
 // @effect-diagnostics-next-line schemaNumber:off
-export const ProcessId = Schema.Number.pipe(
-	Schema.check(
-		Schema.makeFilter((value) =>
+export const ProcessId = S.Number.pipe(
+	S.check(
+		S.makeFilter((value) =>
 			Number.isInteger(value) && value > 0 ? undefined : "Expected a positive integer process id",
 		),
 	),
-	Schema.brand("ProcessId"),
+	S.brand("ProcessId"),
 );
 
 /**

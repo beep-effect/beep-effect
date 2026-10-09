@@ -14,8 +14,11 @@
 
 import { Jsonc } from "../../jsonc/index.ts";
 import { Walker } from "../../walker/index.ts";
-import type { PlatformError } from "effect";
-import { Effect, FileSystem, Option, Path } from "effect";
+import type * as PlatformError from "effect/PlatformError";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import { dual } from "effect/Function";
 
 /** Conditions honored in an `exports` condition object, plus the always-eligible `default`. */
@@ -128,13 +131,13 @@ const resolveConditionValue = (value: unknown, depth: number): string | undefine
  * and probes it.
  */
 export const resolveExports: {
-	(exports: unknown, subpath: string): Option.Option<string>;
-	(subpath: string): (exports: unknown) => Option.Option<string>;
-} = dual(2, (exports: unknown, subpath: string): Option.Option<string> => {
+	(exports: unknown, subpath: string): O.Option<string>;
+	(subpath: string): (exports: unknown) => O.Option<string>;
+} = dual(2, (exports: unknown, subpath: string): O.Option<string> => {
 	const matched = matchExportKey(exports, subpath);
-	if (matched === undefined) return Option.none();
+	if (matched === undefined) return O.none();
 	const resolved = resolveConditionValue(matched, 0);
-	return resolved === undefined ? Option.none() : Option.some(resolved);
+	return resolved === undefined ? O.none() : O.some(resolved);
 });
 
 /**
@@ -153,7 +156,7 @@ const readManifest = (
 		if (!(yield* fs.exists(manifestPath))) return {};
 		const text = yield* fs.readFileString(manifestPath);
 		const parsed = yield* Effect.option(Jsonc.parse(text));
-		if (Option.isNone(parsed)) return {};
+		if (O.isNone(parsed)) return {};
 		const value = parsed.value;
 		return typeof value === "object" && value !== null && !Array.isArray(value)
 			? (value as Record<string, unknown>)
@@ -174,15 +177,15 @@ const resolveRelative = (
 	path: Path.Path,
 	fromDir: string,
 	spec: string,
-): Effect.Effect<Option.Option<string>, PlatformError.PlatformError> =>
+): Effect.Effect<O.Option<string>, PlatformError.PlatformError> =>
 	Effect.gen(function* () {
 		const abs = path.resolve(fromDir, spec);
-		if (yield* fs.exists(abs)) return Option.some(abs);
+		if (yield* fs.exists(abs)) return O.some(abs);
 		if (!abs.endsWith(".json")) {
 			const withJson = `${abs}.json`;
-			if (yield* fs.exists(withJson)) return Option.some(withJson);
+			if (yield* fs.exists(withJson)) return O.some(withJson);
 		}
-		return Option.none();
+		return O.none();
 	});
 
 /**
@@ -200,7 +203,7 @@ const tryCandidate = (
 	dir: string,
 	pkg: string,
 	subpath: string,
-): Effect.Effect<Option.Option<string>, PlatformError.PlatformError> =>
+): Effect.Effect<O.Option<string>, PlatformError.PlatformError> =>
 	Effect.gen(function* () {
 		const pkgDir = path.join(dir, "node_modules", pkg);
 		const record = yield* readManifest(fs, path.join(pkgDir, "package.json"));
@@ -210,20 +213,20 @@ const tryCandidate = (
 		const exports = ownProp(record, "exports");
 		if (exports !== undefined) {
 			const target = resolveExports(exports, subpath === "" ? "." : `./${subpath}`);
-			if (Option.isNone(target)) return Option.none();
+			if (O.isNone(target)) return O.none();
 			const abs = path.resolve(pkgDir, target.value);
-			return (yield* fs.exists(abs)) ? Option.some(abs) : Option.none();
+			return (yield* fs.exists(abs)) ? O.some(abs) : O.none();
 		}
 
 		// (b) subpath: exact file, then the .json retry.
 		if (subpath !== "") {
 			const exact = path.resolve(pkgDir, subpath);
-			if (yield* fs.exists(exact)) return Option.some(exact);
+			if (yield* fs.exists(exact)) return O.some(exact);
 			if (!subpath.endsWith(".json")) {
 				const withJson = `${exact}.json`;
-				if (yield* fs.exists(withJson)) return Option.some(withJson);
+				if (yield* fs.exists(withJson)) return O.some(withJson);
 			}
-			return Option.none();
+			return O.none();
 		}
 
 		// (c) bare package: the "tsconfig" field (resolved against the package
@@ -236,10 +239,10 @@ const tryCandidate = (
 		const tsField = ownProp(record, "tsconfig");
 		if (typeof tsField === "string" && tsField !== "") {
 			const abs = path.resolve(pkgDir, tsField);
-			if (yield* fs.exists(abs)) return Option.some(abs);
+			if (yield* fs.exists(abs)) return O.some(abs);
 		}
 		const fallback = path.join(pkgDir, "tsconfig.json");
-		return (yield* fs.exists(fallback)) ? Option.some(fallback) : Option.none();
+		return (yield* fs.exists(fallback)) ? O.some(fallback) : O.none();
 	});
 
 /**
@@ -253,12 +256,12 @@ const tryCandidate = (
  * `PlatformError` from the underlying IO flows through.
  */
 export const resolveExtendsTarget: {
-	(spec: string, fromConfigPath: string): Effect.Effect<Option.Option<string>, PlatformError.PlatformError, FileSystem.FileSystem | Path.Path>;
-	(fromConfigPath: string): (spec: string) => Effect.Effect<Option.Option<string>, PlatformError.PlatformError, FileSystem.FileSystem | Path.Path>;
+	(spec: string, fromConfigPath: string): Effect.Effect<O.Option<string>, PlatformError.PlatformError, FileSystem.FileSystem | Path.Path>;
+	(fromConfigPath: string): (spec: string) => Effect.Effect<O.Option<string>, PlatformError.PlatformError, FileSystem.FileSystem | Path.Path>;
 } = dual(2, (
 	spec: string,
 	fromConfigPath: string,
-): Effect.Effect<Option.Option<string>, PlatformError.PlatformError, FileSystem.FileSystem | Path.Path> =>
+): Effect.Effect<O.Option<string>, PlatformError.PlatformError, FileSystem.FileSystem | Path.Path> =>
 	Effect.gen(function* () {
 		const fs = yield* FileSystem.FileSystem;
 		const path = yield* Path.Path;
@@ -276,7 +279,7 @@ export const resolveExtendsTarget: {
 		for (const dir of ancestors) {
 			if (path.basename(dir) === "node_modules") continue;
 			const candidate = yield* tryCandidate(fs, path, dir, pkg, subpath);
-			if (Option.isSome(candidate)) return candidate;
+			if (O.isSome(candidate)) return candidate;
 		}
-		return Option.none();
+		return O.none();
 	}));

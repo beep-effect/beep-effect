@@ -14,7 +14,13 @@
 
 import { SriIntegrityHash } from "../npm/index.ts";
 import { SemVer } from "../semver/index.ts";
-import { Effect, Exit, Option, Result, Schema, SchemaIssue, SchemaTransformation } from "effect";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as O from "effect/Option";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import { splitConfigDependencySpec } from "./internal/configDependencySpecGrammar.ts";
 
 /**
@@ -29,18 +35,18 @@ import { splitConfigDependencySpec } from "./internal/configDependencySpecGramma
  *
  * @public
  */
-export class InvalidConfigDependencySpecError extends Schema.TaggedError<InvalidConfigDependencySpecError>()(
+export class InvalidConfigDependencySpecError extends S.TaggedError<InvalidConfigDependencySpecError>()(
 	"InvalidConfigDependencySpecError",
 	{
 		/** The raw spec string that failed validation. */
-		input: Schema.String,
+		input: S.String,
 		/**
 		 * Which half of the spec failed: `version` (the text before the first
 		 * `+` is not an exact SemVer version — ranges, partial versions,
 		 * dist-tags and padded values all land here) or `integrity` (the text
 		 * after the first `+` is not an SRI `<algo>-<base64>` hash).
 		 */
-		reason: Schema.Literals(["version", "integrity"]),
+		reason: S.Literals(["version", "integrity"]),
 	},
 ) {
 	override get message(): string {
@@ -56,8 +62,8 @@ export class InvalidConfigDependencySpecError extends Schema.TaggedError<Invalid
 // that re-parses differently. Rejecting it at the field keeps decode/encode
 // sound — the same rule `@effected/npm`'s `PackageManagerPin` applies.
 const specVersion = SemVer.pipe(
-	Schema.check(
-		Schema.makeFilter((version: SemVer) =>
+	S.check(
+		S.makeFilter((version: SemVer) =>
 			version.build.length === 0 ? undefined : "Expected a version without build metadata",
 		),
 	),
@@ -98,7 +104,7 @@ const specVersion = SemVer.pipe(
  *
  * @public
  */
-export class ConfigDependencySpec extends Schema.Class<ConfigDependencySpec>("ConfigDependencySpec")({
+export class ConfigDependencySpec extends S.Class<ConfigDependencySpec>("ConfigDependencySpec")({
 	/**
 	 * The exact declared version. Never carries build metadata — the spec
 	 * grammar cannot express it (see the class remarks), and a version
@@ -111,7 +117,7 @@ export class ConfigDependencySpec extends Schema.Class<ConfigDependencySpec>("Co
 	 * to the SRI `<algo>-<base64>` form. `None` on the bare form pnpm 11+
 	 * writes.
 	 */
-	integrity: Schema.Option(SriIntegrityHash),
+	integrity: S.Option(SriIntegrityHash),
 }) {
 	/**
 	 * Schema transformation between the `<version>[+<integrity>]` string and a
@@ -119,9 +125,9 @@ export class ConfigDependencySpec extends Schema.Class<ConfigDependencySpec>("Co
 	 * {@link ConfigDependencySpec.parseResult} (the surfaces share one grammar);
 	 * encoding prints `toString()`, the form that was parsed.
 	 */
-	static readonly FromString: Schema.Codec<ConfigDependencySpec, string> = Schema.String.pipe(
-		Schema.decodeTo(
-			Schema.instanceOf(ConfigDependencySpec),
+	static readonly FromString: S.Codec<ConfigDependencySpec, string> = S.String.pipe(
+		S.decodeTo(
+			S.instanceOf(ConfigDependencySpec),
 			SchemaTransformation.transformEffect({
 				decode: (input: string) => {
 					const parsed = ConfigDependencySpec.parseResult(input);
@@ -162,14 +168,14 @@ export class ConfigDependencySpec extends Schema.Class<ConfigDependencySpec>("Co
 			return Result.fail(InvalidConfigDependencySpecError.make({ input, reason: "version" }));
 		}
 		if (parts.integrity === undefined) {
-			return Result.succeed(ConfigDependencySpec.make({ version: version.success, integrity: Option.none() }));
+			return Result.succeed(ConfigDependencySpec.make({ version: version.success, integrity: O.none() }));
 		}
-		const integrity = Schema.decodeExit(SriIntegrityHash)(parts.integrity);
+		const integrity = S.decodeExit(SriIntegrityHash)(parts.integrity);
 		if (Exit.isFailure(integrity)) {
 			return Result.fail(InvalidConfigDependencySpecError.make({ input, reason: "integrity" }));
 		}
 		return Result.succeed(
-			ConfigDependencySpec.make({ version: version.success, integrity: Option.some(integrity.value) }),
+			ConfigDependencySpec.make({ version: version.success, integrity: O.some(integrity.value) }),
 		);
 	}
 
@@ -188,7 +194,7 @@ export class ConfigDependencySpec extends Schema.Class<ConfigDependencySpec>("Co
 
 	/** Whether the spec carries an inline integrity (the legacy form). */
 	get hasIntegrity(): boolean {
-		return Option.isSome(this.integrity);
+		return O.isSome(this.integrity);
 	}
 
 	/**
@@ -204,7 +210,7 @@ export class ConfigDependencySpec extends Schema.Class<ConfigDependencySpec>("Co
 	 * direction of {@link ConfigDependencySpec.FromString} prints exactly this.
 	 */
 	override toString(): string {
-		return Option.match(this.integrity, {
+		return O.match(this.integrity, {
 			onNone: () => this.bare,
 			onSome: (integrity) => `${this.bare}+${integrity}`,
 		});

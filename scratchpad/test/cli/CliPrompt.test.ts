@@ -2,7 +2,14 @@
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
 import { Audience, TerminalEnv } from "../../effected/env/index.ts";
-import { Cause, Console, Effect, Exit, Layer, Queue, Runtime, Terminal } from "effect";
+import * as Cause from "effect/Cause";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Layer from "effect/Layer";
+import * as Queue from "effect/Queue";
+import * as Runtime from "effect/Runtime";
+import * as Terminal from "effect/Terminal";
 import { Command, Flag, Prompt } from "effect/cli";
 import { CliInteractive, CliPrompt, CliRuntime } from "../../effected/cli/index.ts";
 import type { TestTerminalHandle } from "../../effected/cli/testing.ts";
@@ -55,7 +62,7 @@ const run = Effect.fn("run")(function* (root: ReturnType<typeof app>, argv: Read
 			Effect.provideService(Console.Console, double),
 		);
 		const exit = yield* program;
-		const code = Exit.isFailure(exit) ? Runtime.getErrorExitCode(Cause.squash(exit.cause)) : 0;
+		const code = Exit.isFailure(exit) ? exit.cause.pipe(Cause.squash, Runtime.getErrorExitCode) : 0;
 		return { out, err, code };
 	});
 
@@ -205,7 +212,7 @@ describe("CliPrompt.gateTerminal", () => {
 			assert.strictEqual(yield* terminal.columns, 120);
 			assert.strictEqual(yield* terminal.rows, 40);
 			// The input is an already-ended queue: a prompt reading it is quit, and no key of the real one is taken.
-			const exit = yield* Effect.exit(Effect.scoped(Effect.flatMap(terminal.readInput, (queue) => Queue.take(queue))));
+			const exit = yield* Effect.flatMap(terminal.readInput, (queue) => Queue.take(queue)).pipe(Effect.scoped, Effect.exit);
 			assert.isTrue(Exit.isFailure(exit));
 			const line = yield* Effect.exit(terminal.readLine);
 			assert.isTrue(Exit.isFailure(line));

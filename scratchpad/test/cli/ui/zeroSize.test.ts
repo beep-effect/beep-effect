@@ -1,6 +1,8 @@
 // @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Fiber, Schedule } from "effect";
+import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
+import * as Schedule from "effect/Schedule";
 import { CliInteractive } from "../../../effected/cli/CliInteractive.ts";
 import { CliTheme } from "../../../effected/cli/index.ts";
 import { stripAnsi } from "../../../effected/cli/internal/displayWidth.ts";

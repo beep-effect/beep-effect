@@ -1,8 +1,14 @@
 import type { AudienceKind } from "../env/index.ts";
 import { CurrentRuntimeEnv } from "../env/index.ts";
 import { Walker } from "../walker/index.ts";
-import type { Layer as LayerType } from "effect";
-import { Config, Context, Effect, FileSystem, Layer, Option, Path } from "effect";
+import type * as LayerType from "effect/Layer";
+import * as Config from "effect/Config";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import type { LinkTarget } from "./Doc.ts";
 import { sanitize } from "./Fmt.ts";
 import { isAllowedLinkUrl } from "./internal/linkScheme.ts";
@@ -35,7 +41,7 @@ export interface CliLinksShape {
 	 * `file://<path>`, with the path URL-encoded; `off` gives it none, and so does a relative path when the layer
 	 * has no working directory to resolve it against. A column needs a line.
 	 */
-	readonly target: (target: LinkTarget) => Option.Option<string>;
+	readonly target: (target: LinkTarget) => O.Option<string>;
 }
 
 /**
@@ -78,20 +84,20 @@ const cleanUrl = (url: string): string => sanitize(url).replace(/[\r\n]/g, "");
 
 const makeTarget =
 	(mode: "vscode" | "file" | "off", absolute: (file: string) => string | undefined) =>
-	(target: LinkTarget): Option.Option<string> => {
+	(target: LinkTarget): O.Option<string> => {
 		if ("url" in target) {
 			const url = cleanUrl(target.url);
-			return url === "" || !isAllowedLinkUrl(url) ? Option.none() : Option.some(url);
+			return url === "" || !isAllowedLinkUrl(url) ? O.none() : O.some(url);
 		}
-		if (mode === "off") return Option.none();
+		if (mode === "off") return O.none();
 		const resolved = absolute(target.file);
-		if (resolved === undefined) return Option.none();
+		if (resolved === undefined) return O.none();
 		const path = fileUrlPath(resolved);
-		if (path === undefined) return Option.none();
-		if (mode === "file") return Option.some(`file://${path}`);
+		if (path === undefined) return O.none();
+		if (mode === "file") return O.some(`file://${path}`);
 		const position =
 			target.line === undefined ? "" : target.col === undefined ? `:${target.line}` : `:${target.line}:${target.col}`;
-		return Option.some(`vscode://file${path}${position}`);
+		return O.some(`vscode://file${path}${position}`);
 	};
 
 const isDirectory = (fs: FileSystem.FileSystem, path: string): Effect.Effect<boolean> =>
@@ -110,7 +116,7 @@ const exists = (fs: FileSystem.FileSystem, path: string): Effect.Effect<boolean>
  * where `dirname` reaches a fixpoint (the filesystem root). `Walker.findRoot` absorbs a failed probe as "not a root",
  * so one unreadable directory never hides a root above it. `None` when there is none.
  */
-const findRoot = (fs: FileSystem.FileSystem, path: Path.Path, cwd: string): Effect.Effect<Option.Option<string>> =>
+const findRoot = (fs: FileSystem.FileSystem, path: Path.Path, cwd: string): Effect.Effect<O.Option<string>> =>
 	Walker.ascend(cwd, { maxDepth: MAX_ASCENT + 1 }).pipe(
 		Effect.provideService(Path.Path, path),
 		Effect.flatMap((directories) =>
@@ -125,19 +131,19 @@ const findRoot = (fs: FileSystem.FileSystem, path: Path.Path, cwd: string): Effe
 		),
 	);
 
-const readOption = (name: string): Effect.Effect<Option.Option<string>> =>
-	Config.option(Config.String(name)).pipe(Effect.orElseSucceed(() => Option.none<string>()));
+const readOption = (name: string): Effect.Effect<O.Option<string>> =>
+	Config.option(Config.String(name)).pipe(Effect.orElseSucceed(() => O.none<string>()));
 
 interface Ambient {
-	readonly fs: Option.Option<FileSystem.FileSystem>;
-	readonly path: Option.Option<Path.Path>;
+	readonly fs: O.Option<FileSystem.FileSystem>;
+	readonly path: O.Option<Path.Path>;
 }
 
 const build = (options: CliLinksOptions, ambient: Ambient): Effect.Effect<CliLinksShape, never, CurrentRuntimeEnv> =>
 	Effect.gen(function* () {
 		const runtime = yield* CurrentRuntimeEnv;
 		const raw =
-			options.envVar === undefined ? "" : Option.getOrElse(yield* readOption(options.envVar), () => "").trim();
+			options.envVar === undefined ? "" : O.getOrElse(yield* readOption(options.envVar), () => "").trim();
 		const fromEnv = parseSetting(raw);
 		// A value that is not a mode warns once, as the audience override does, and the option is used.
 		if (options.envVar !== undefined && raw !== "" && fromEnv === undefined) {
@@ -146,12 +152,12 @@ const build = (options: CliLinksOptions, ambient: Ambient): Effect.Effect<CliLin
 		const setting = fromEnv ?? options.editorLinks ?? "auto";
 
 		// The working directory: the option, else PWD, else where the path service resolves ".".
-		const pwd = options.cwd === undefined ? yield* readOption("PWD") : Option.none<string>();
+		const pwd = options.cwd === undefined ? yield* readOption("PWD") : O.none<string>();
 		const cwd =
 			options.cwd ??
-			Option.getOrUndefined(pwd) ??
-			(Option.isSome(ambient.path) ? ambient.path.value.resolve(".") : undefined);
-		const path = Option.getOrUndefined(ambient.path);
+			O.getOrUndefined(pwd) ??
+			(O.isSome(ambient.path) ? ambient.path.value.resolve(".") : undefined);
+		const path = O.getOrUndefined(ambient.path);
 		const absolute = (file: string): string | undefined => {
 			// A UNC path is not on this machine: it must not be resolved against the working directory as a filename.
 			if (UNC.test(file)) return undefined;
@@ -163,11 +169,11 @@ const build = (options: CliLinksOptions, ambient: Ambient): Effect.Effect<CliLin
 
 		let mode: "vscode" | "file" | "off";
 		if (setting !== "auto") mode = setting;
-		else if (Option.exists(runtime.terminal, (terminal) => terminal.name === "vscode")) mode = "vscode";
-		else if (Option.isNone(ambient.fs) || path === undefined || cwd === undefined) mode = "file";
+		else if (O.exists(runtime.terminal, (terminal) => terminal.name === "vscode")) mode = "vscode";
+		else if (O.isNone(ambient.fs) || path === undefined || cwd === undefined) mode = "file";
 		else {
 			const root = yield* findRoot(ambient.fs.value, path, cwd);
-			const base = Option.getOrElse(root, () => cwd);
+			const base = O.getOrElse(root, () => cwd);
 			mode = (yield* isDirectory(ambient.fs.value, path.join(base, ".vscode"))) ? "vscode" : "file";
 		}
 		return { mode, target: makeTarget(mode, absolute) };
@@ -204,7 +210,7 @@ export class CliLinks extends Context.Service<CliLinks, CliLinksShape>()("@beep/
 			Effect.gen(function* () {
 				const fs = yield* FileSystem.FileSystem;
 				const path = yield* Path.Path;
-				return yield* build(options, { fs: Option.some(fs), path: Option.some(path) });
+				return yield* build(options, { fs: O.some(fs), path: O.some(path) });
 			}),
 		);
 
@@ -237,7 +243,7 @@ export class CliLinks extends Context.Service<CliLinks, CliLinksShape>()("@beep/
 		(target: LinkTarget, label: string): string => {
 			if (!options.hyperlinks || options.audience === "agent") return label;
 			const url = options.links.target(target);
-			if (Option.isNone(url)) return label;
+			if (O.isNone(url)) return label;
 			const written = encodeForOsc8(cleanUrl(url.value));
 			if (!isAllowedLinkUrl(written)) return label;
 			return `\u001B]8;;${written}\u001B\\${label}\u001B]8;;\u001B\\`;

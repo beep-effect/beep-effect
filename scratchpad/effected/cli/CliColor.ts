@@ -1,6 +1,7 @@
 import { TerminalEnv } from "../env/index.ts";
-import type { Stdio } from "effect";
-import { Effect, Layer } from "effect";
+import type * as Stdio from "effect/Stdio";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import { CliOutput } from "effect/cli";
 
 /**

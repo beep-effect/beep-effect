@@ -1,5 +1,6 @@
 import { IdentityToken, IdentityTokenError } from "../sbom/index.ts";
-import { Effect, Layer } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import { OidcTokenIssuer } from "./OidcTokenIssuer.ts";
 
 /**

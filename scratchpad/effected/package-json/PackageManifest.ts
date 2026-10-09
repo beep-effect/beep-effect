@@ -21,7 +21,9 @@
 //   PackageJsonFormat  — decode-free text path: anything syntactically JSON.
 
 import { SemVer } from "../semver/index.ts";
-import { Effect, Result, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { renderJson, resolveFormatOptions } from "./internal/format.ts";
 import { makeWire } from "./internal/wire.ts";
 import type { PackageFormatOptions } from "./Package.ts";
@@ -72,18 +74,18 @@ import { PackageName } from "./PackageName.ts";
  *
  * @public
  */
-export class PackageManifest extends Schema.Class<PackageManifest>("PackageManifest")({
+export class PackageManifest extends S.Class<PackageManifest>("PackageManifest")({
 	...Package.fields,
-	name: Schema.optionalKey(PackageName),
-	version: Schema.optionalKey(SemVer.FromString),
-	packageManager: Schema.optionalKey(PackageManagerRange.FromString),
+	name: S.optionalKey(PackageName),
+	version: S.optionalKey(SemVer.FromString),
+	packageManager: S.optionalKey(PackageManagerRange.FromString),
 }) {
 	/**
 	 * The wire codec: an open JSON object ↔ a {@link PackageManifest} instance,
 	 * partitioning unknown keys into `rest` and flattening them back on encode —
 	 * the same transform {@link Package.schema} uses, over this class's fields.
 	 */
-	static readonly schema: Schema.Codec<PackageManifest, { readonly [k: string]: unknown }> = makeWire(PackageManifest);
+	static readonly schema: S.Codec<PackageManifest, { readonly [k: string]: unknown }> = makeWire(PackageManifest);
 
 	/**
 	 * Decode an unknown JSON value into a {@link PackageManifest}, normalizing
@@ -94,7 +96,7 @@ export class PackageManifest extends Schema.Class<PackageManifest>("PackageManif
 	 * {@link PackageDecodeError} when a present field does not satisfy its codec
 	 */
 	static readonly decode = Effect.fn("PackageManifest.decode")(function* (input: unknown) {
-		return yield* Schema.decodeUnknownEffect(PackageManifest.schema)(input).pipe(
+		return yield* S.decodeUnknownEffect(PackageManifest.schema)(input).pipe(
 			Effect.catchTag("SchemaError", (cause) => PackageDecodeError.make({ cause })),
 		);
 	});
@@ -112,7 +114,7 @@ export class PackageManifest extends Schema.Class<PackageManifest>("PackageManif
 	 * Absent `name` / `version` keys stay absent — nothing is invented.
 	 */
 	toJsonString(options?: PackageFormatOptions): string {
-		const raw = Result.getOrThrowWith(Schema.encodeUnknownResult(PackageManifest.schema)(this), (error) => error);
+		const raw = Result.getOrThrowWith(S.encodeUnknownResult(PackageManifest.schema)(this), (error) => error);
 		return renderJson(raw, resolveFormatOptions(options));
 	}
 }

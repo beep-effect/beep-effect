@@ -1,4 +1,6 @@
-import { Effect, Result, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { APIReference } from "./APIReference.ts";
 import { CreativeWork } from "./CreativeWork.ts";
 import { InvalidNodeIdError, NodeRef } from "./NodeRef.ts";
@@ -16,9 +18,9 @@ import { TechArticle } from "./TechArticle.ts";
  *
  * @public
  */
-export class DuplicateNodeIdError extends Schema.TaggedError<DuplicateNodeIdError>()("DuplicateNodeIdError", {
+export class DuplicateNodeIdError extends S.TaggedError<DuplicateNodeIdError>()("DuplicateNodeIdError", {
 	/** The `@id` claimed by more than one node. */
-	id: Schema.String,
+	id: S.String,
 }) {
 	override get message(): string {
 		return `Two nodes claim the same @id: ${JSON.stringify(this.id)}`;
@@ -34,11 +36,11 @@ export class DuplicateNodeIdError extends Schema.TaggedError<DuplicateNodeIdErro
  *
  * @public
  */
-export class ConflictingTermError extends Schema.TaggedError<ConflictingTermError>()("ConflictingTermError", {
+export class ConflictingTermError extends S.TaggedError<ConflictingTermError>()("ConflictingTermError", {
 	/** The `@id` of the node carrying the collision. */
-	nodeId: Schema.String,
+	nodeId: S.String,
 	/** The colliding term. */
-	term: Schema.String,
+	term: S.String,
 }) {
 	override get message(): string {
 		return `Node ${JSON.stringify(this.nodeId)} sets ${JSON.stringify(this.term)} in both a typed field and \`additional\``;
@@ -50,7 +52,7 @@ export class ConflictingTermError extends Schema.TaggedError<ConflictingTermErro
  *
  * @public
  */
-export const JsonLdNode = Schema.Union([
+export const JsonLdNode = S.Union([
 	SoftwareSourceCode,
 	TechArticle,
 	APIReference,
@@ -85,8 +87,8 @@ const referencedIds = (node: JsonLdNode): ReadonlyArray<string> => {
 	const ids: Array<string> = [];
 	const values: ReadonlyArray<unknown> = Object.values(node);
 	for (const value of values) {
-		if (Schema.is(NodeRef)(value)) ids.push(value["@id"]);
-		else if (Array.isArray(value)) for (const item of value) if (Schema.is(NodeRef)(item)) ids.push(item["@id"]);
+		if (S.is(NodeRef)(value)) ids.push(value["@id"]);
+		else if (Array.isArray(value)) for (const item of value) if (S.is(NodeRef)(item)) ids.push(item["@id"]);
 	}
 	return ids;
 };
@@ -152,11 +154,11 @@ const withoutUndefined = (value: Record<string, unknown>): Record<string, unknow
  *
  * @public
  */
-export class JsonLdDocument extends Schema.Class<JsonLdDocument>("JsonLdDocument")({
+export class JsonLdDocument extends S.Class<JsonLdDocument>("JsonLdDocument")({
 	/** The JSON-LD context, fixed at `https://schema.org` and populated automatically. */
-	"@context": Schema.tag("https://schema.org"),
+	"@context": S.tag("https://schema.org"),
 	/** The nodes in the document. */
-	"@graph": Schema.Array(JsonLdNode),
+	"@graph": S.Array(JsonLdNode),
 }) {
 	/**
 	 * Assembles nodes into a graph, checking identity.
@@ -248,8 +250,8 @@ export class JsonLdDocument extends Schema.Class<JsonLdDocument>("JsonLdDocument
 	 * to attach that warning to it. Its legitimate use is handing an object to
 	 * a framework that serializes JSON-LD itself.
 	 */
-	toJsonLd(): Schema.Json {
-		const encoded = Result.getOrThrow(Schema.encodeResult(JsonLdDocument)(this)) as {
+	toJsonLd(): S.Json {
+		const encoded = Result.getOrThrow(S.encodeResult(JsonLdDocument)(this)) as {
 			readonly "@context": string;
 			readonly "@graph": ReadonlyArray<Record<string, unknown>>;
 		};
@@ -265,7 +267,7 @@ export class JsonLdDocument extends Schema.Class<JsonLdDocument>("JsonLdDocument
 					...withoutUndefined(rest),
 					...(additional as Record<string, unknown> | undefined),
 				};
-				return flattened as Schema.Json;
+				return flattened as S.Json;
 			}),
 		};
 	}

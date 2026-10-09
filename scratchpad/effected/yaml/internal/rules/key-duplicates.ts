@@ -5,7 +5,7 @@
 // context's uniqueKeys-disabled compose so the policy is fully owned here.
 // No fix: dropping a pair changes what the document means.
 
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 import type { LintContext, YamlRule } from "../../YamlLintRule.ts";
 import { YamlLintDiagnostic, YamlLintSeverity } from "../../YamlLintRule.ts";
 import type { YamlNode } from "../../YamlNode.ts";
@@ -14,16 +14,16 @@ import { keyIdentity } from "../composer/block.ts";
 import { positionAt } from "./util.ts";
 
 /** Options for `key-duplicates` (severity only — duplicates are duplicates). */
-export const keyDuplicatesOptions = Schema.Struct({
-	severity: Schema.optionalKey(YamlLintSeverity),
+export const keyDuplicatesOptions = S.Struct({
+	severity: S.optionalKey(YamlLintSeverity),
 });
 
 const walk = (node: YamlNode | null, text: string, out: Array<YamlLintDiagnostic>, ctx: LintContext): void => {
 	if (node === null) return;
-	if (Schema.is(YamlMap)(node)) {
+	if (S.is(YamlMap)(node)) {
 		const seen = new Set<string>();
 		for (const pair of node.items) {
-			if (Schema.is(YamlScalar)(pair.key)) {
+			if (S.is(YamlScalar)(pair.key)) {
 				const id = keyIdentity(pair.key, text);
 				if (seen.has(id)) {
 					const pos = positionAt(ctx.lines, pair.key.offset);
@@ -46,7 +46,7 @@ const walk = (node: YamlNode | null, text: string, out: Array<YamlLintDiagnostic
 		}
 		return;
 	}
-	if (Schema.is(YamlSeq)(node)) {
+	if (S.is(YamlSeq)(node)) {
 		for (const item of node.items) walk(item, text, out, ctx);
 	}
 };

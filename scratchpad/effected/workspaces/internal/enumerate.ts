@@ -8,7 +8,9 @@ import { dual } from "effect/Function";
 // budget, and by an unconditional node_modules / .git prune.
 
 import type { GlobPattern, GlobSet } from "../../glob/index.ts";
-import { Effect, FileSystem, Path } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Path from "effect/Path";
 import { MAX_ENUMERATION_DEPTH } from "./limits.ts";
 import { Traversal, badMaxDepthMessage, isPruned, isValidMaxDepth, joinRelative } from "./traverse.ts";
 

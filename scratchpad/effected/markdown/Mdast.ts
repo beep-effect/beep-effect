@@ -2,7 +2,9 @@
 // node classes and plain mdast JSON. The emission conventions are documented on
 // the exported `Mdast` class.
 
-import { Effect, Result, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { unescapeString } from "./internal/unescape.ts";
 import type {
 	FlowContent,
@@ -43,9 +45,9 @@ export interface MdastNode {
  *
  * @public
  */
-export class MdastDecodeError extends Schema.TaggedError<MdastDecodeError>()("MdastDecodeError", {
+export class MdastDecodeError extends S.TaggedError<MdastDecodeError>()("MdastDecodeError", {
 	/** The structured schema issue. Never a string. */
-	issue: Schema.Defect(),
+	issue: S.Defect(),
 }) {
 	override get message(): string {
 		return "mdast input failed to decode into markdown nodes";
@@ -425,7 +427,7 @@ const normalizeMdxAttribute = (value: unknown): unknown => {
 	return value;
 };
 
-const decodeRoot = Schema.decodeUnknownResult(Root);
+const decodeRoot = S.decodeUnknownResult(Root);
 
 /**
  * Projects parsed markdown trees to plain mdast JSON and admits foreign mdast

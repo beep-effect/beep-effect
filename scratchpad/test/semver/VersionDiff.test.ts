@@ -1,5 +1,6 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
 import { SemVer, VersionDiff } from "../../effected/semver/index.ts";
 
 describe("VersionDiff", () => {
@@ -33,8 +34,8 @@ describe("VersionDiff", () => {
 		it.effect("round-trips through its encoded form with the tag preserved", () =>
 			Effect.gen(function* () {
 				const diff = VersionDiff.between(SemVer.of(1, 0, 0), SemVer.of(2, 0, 0));
-				const encoded = yield* Schema.encodeUnknownEffect(VersionDiff)(diff);
-				const decoded = yield* Schema.decodeEffect(VersionDiff)(encoded);
+				const encoded = yield* S.encodeUnknownEffect(VersionDiff)(diff);
+				const decoded = yield* S.decodeEffect(VersionDiff)(encoded);
 				assert.strictEqual(decoded._tag, "VersionDiff");
 				assert.strictEqual(decoded.type, "major");
 				assert.instanceOf(decoded.from, SemVer);

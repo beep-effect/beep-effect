@@ -1,7 +1,11 @@
 // @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
-import { Effect, Layer, Option, Path, PlatformError } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as PlatformError from "effect/PlatformError";
 import { ConfigResolver } from "../../effected/config-file/ConfigResolver.ts";
 
 /** The typed failure a node adapter raises for EACCES. */
@@ -39,7 +43,7 @@ describe("ConfigResolver error absorption", () => {
 		Effect.gen(function* () {
 			const resolver = ConfigResolver.explicitPath("/a/.apprc");
 			const result = yield* resolver.resolve;
-			assert.isTrue(Option.isNone(result));
+			assert.isTrue(O.isNone(result));
 		}).pipe(Effect.provide(HostilePlatform)),
 	);
 
@@ -47,7 +51,7 @@ describe("ConfigResolver error absorption", () => {
 		Effect.gen(function* () {
 			const resolver = ConfigResolver.staticDir({ dir: "/a", filename: ".apprc" });
 			const result = yield* resolver.resolve;
-			assert.isTrue(Option.isNone(result));
+			assert.isTrue(O.isNone(result));
 		}).pipe(Effect.provide(HostilePlatform)),
 	);
 
@@ -55,7 +59,7 @@ describe("ConfigResolver error absorption", () => {
 		Effect.gen(function* () {
 			const resolver = ConfigResolver.upwardWalk({ filename: ".apprc", cwd: "/a/b" });
 			const result = yield* resolver.resolve;
-			assert.isTrue(Option.isNone(result));
+			assert.isTrue(O.isNone(result));
 		}).pipe(Effect.provide(HostilePlatform)),
 	);
 
@@ -63,7 +67,7 @@ describe("ConfigResolver error absorption", () => {
 		Effect.gen(function* () {
 			const resolver = ConfigResolver.workspaceRoot({ filename: ".apprc", cwd: "/a/b" });
 			const result = yield* resolver.resolve;
-			assert.isTrue(Option.isNone(result));
+			assert.isTrue(O.isNone(result));
 		}).pipe(Effect.provide(HostilePlatform)),
 	);
 
@@ -71,7 +75,7 @@ describe("ConfigResolver error absorption", () => {
 		Effect.gen(function* () {
 			const resolver = ConfigResolver.gitRoot({ filename: ".apprc", cwd: "/a/b" });
 			const result = yield* resolver.resolve;
-			assert.isTrue(Option.isNone(result));
+			assert.isTrue(O.isNone(result));
 		}).pipe(Effect.provide(HostilePlatform)),
 	);
 
@@ -79,7 +83,7 @@ describe("ConfigResolver error absorption", () => {
 		Effect.gen(function* () {
 			const resolver = ConfigResolver.systemEtc({ app: "acme", filename: ".apprc" });
 			const result = yield* resolver.resolve;
-			assert.isTrue(Option.isNone(result));
+			assert.isTrue(O.isNone(result));
 		}).pipe(Effect.provide(HostilePlatform)),
 	);
 
@@ -115,14 +119,14 @@ describe("ConfigResolver — an unreadable ancestor must not abort root discover
 	it.effect("gitRoot finds the root above an unreadable ancestor", () =>
 		Effect.gen(function* () {
 			const found = yield* ConfigResolver.gitRoot({ filename: ".apprc", cwd: "/a/b/c" }).resolve;
-			assert.strictEqual(Option.getOrNull(found), "/a/.apprc");
+			assert.strictEqual(O.getOrNull(found), "/a/.apprc");
 		}).pipe(Effect.provide(Layer.mergeAll(flakyFs, Path.layer))),
 	);
 
 	it.effect("upwardWalk skips an unreadable directory and keeps ascending", () =>
 		Effect.gen(function* () {
 			const found = yield* ConfigResolver.upwardWalk({ filename: ".apprc", cwd: "/a/b/c" }).resolve;
-			assert.strictEqual(Option.getOrNull(found), "/a/.apprc");
+			assert.strictEqual(O.getOrNull(found), "/a/.apprc");
 		}).pipe(Effect.provide(Layer.mergeAll(flakyFs, Path.layer))),
 	);
 });

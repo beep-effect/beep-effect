@@ -1,6 +1,7 @@
 import { assert, describe, it, layer } from "@effect/vitest";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
-import { Effect, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
 import { LayerPolicy } from "../../effected/workspaces/testing.ts";
 
 const VALID = { layers: [["app"], ["core"]], tooling: [], unconstrained: ["@e2e/*"] };
@@ -97,7 +98,7 @@ describe("LayerPolicy.load", () => {
 describe("LayerPolicy JSON Schema export", () => {
 	it("each required edge exports its pattern", () => {
 		assert.nestedPropertyVal(
-			Schema.toJsonSchemaDocument(LayerPolicy),
+			S.toJsonSchemaDocument(LayerPolicy),
 			"definitions.LayerPolicyEncoded.properties.requiredEdges.items.pattern",
 			String.raw`^\S+ -> \S+$`,
 		);

@@ -13,7 +13,8 @@
 import { join } from "node:path";
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Stream } from "effect";
+import * as Effect from "effect/Effect";
+import * as Stream from "effect/Stream";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 
 const FIXTURES = join(import.meta.dirname, "fixtures");
@@ -28,7 +29,7 @@ const run = (args: ReadonlyArray<string>, stdin: string) =>
 				{ env: { PATH: process.env.PATH ?? "", NO_COLOR: "1" }, stdin: Stream.make(new TextEncoder().encode(stdin)) },
 			);
 			const handle = yield* spawner.spawn(command);
-			const text = <E>(stream: Stream.Stream<Uint8Array, E>) => Stream.mkString(Stream.decodeText(stream));
+			const text = <E>(stream: Stream.Stream<Uint8Array, E>) => stream.pipe(Stream.decodeText, Stream.mkString);
 			const [stdout, stderr, exitCode] = yield* Effect.all(
 				[text(handle.stdout), text(handle.stderr), handle.exitCode],
 				{

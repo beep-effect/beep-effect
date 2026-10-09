@@ -5,11 +5,13 @@
 // the delegated typed failures actually surface through Lockfile.parse.
 
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Option, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { Lockfile, LockfileParseError } from "../../effected/lockfiles/Lockfile.ts";
 import type { LockfileFormat } from "../../effected/lockfiles/LockfileFormat.ts";
 
-const JsonString = Schema.fromJsonString(Schema.Unknown);
+const JsonString = S.fromJsonString(S.Unknown);
 
 /** Flip a failing parse and hand back the typed error. */
 const parseError = Effect.fn("parseError")(function*(content: string, format: LockfileFormat) {
@@ -158,7 +160,7 @@ describe("hostile input", () => {
 
 		it.effect("__proto__ npm package keys and dependency maps neither pollute nor crash", () =>
 			Effect.gen(function* () {
-				const content = yield* Schema.encodeEffect(JsonString)({
+				const content = yield* S.encodeEffect(JsonString)({
 					lockfileVersion: 3,
 					packages: {
 						"": { name: "root" },
@@ -211,13 +213,13 @@ describe("hostile input", () => {
 
 				// The importer index is Map-backed, so a hostile path is honest data,
 				// not a prototype write.
-				const evil = Option.getOrThrow(lockfile.importer("__proto__"));
+				const evil = O.getOrThrow(lockfile.importer("__proto__"));
 				assert.strictEqual(evil.path, "__proto__");
 				const dep = evil.dependencies.find((d) => d.name === "__proto__");
 				assert.strictEqual(dep?.specifier.raw, "1.0.0");
 				assert.strictEqual(dep?.specifier._tag, "range");
 
-				assert.isTrue(Option.isSome(lockfile.importer(".")));
+				assert.isTrue(O.isSome(lockfile.importer(".")));
 			}),
 		);
 
@@ -232,7 +234,7 @@ describe("hostile input", () => {
 				]);
 				const hostileMeta = Object.fromEntries([["__proto__", { optional: true }]]);
 
-				const npmContent = yield* Schema.encodeEffect(JsonString)({
+				const npmContent = yield* S.encodeEffect(JsonString)({
 					lockfileVersion: 3,
 					packages: {
 						"": { name: "root" },
@@ -245,7 +247,7 @@ describe("hostile input", () => {
 				});
 				assert.include(npmContent, '"__proto__":"^1.0.0"'); // the hostile key survived serialization
 
-				const bunContent = yield* Schema.encodeEffect(JsonString)({
+				const bunContent = yield* S.encodeEffect(JsonString)({
 					lockfileVersion: 1,
 					workspaces: { "": { name: "root" } },
 					packages: {
@@ -277,7 +279,7 @@ describe("hostile input", () => {
 
 		it.effect("a __proto__ bun workspace neither pollutes nor crashes", () =>
 			Effect.gen(function* () {
-				const content = yield* Schema.encodeEffect(JsonString)({
+				const content = yield* S.encodeEffect(JsonString)({
 					lockfileVersion: 1,
 					workspaces: {
 						"": { name: "root" },
@@ -315,7 +317,7 @@ describe("hostile input", () => {
 
 		it.effect("bun: malformed and non-string package tuples", () =>
 			Effect.gen(function* () {
-				const content = yield* Schema.encodeEffect(JsonString)({
+				const content = yield* S.encodeEffect(JsonString)({
 					lockfileVersion: 1,
 					packages: {
 						a: [], // empty tuple
@@ -362,7 +364,7 @@ describe("hostile input", () => {
 
 		it.effect("npm: a corrupt package integrity", () =>
 			Effect.gen(function* () {
-				const content = yield* Schema.encodeEffect(JsonString)({
+				const content = yield* S.encodeEffect(JsonString)({
 					lockfileVersion: 3,
 					packages: {
 						"": { name: "root" },
@@ -406,7 +408,7 @@ describe("hostile input", () => {
 
 		it.effect("bun: a corrupt package-tuple integrity", () =>
 			Effect.gen(function* () {
-				const content = yield* Schema.encodeEffect(JsonString)({
+				const content = yield* S.encodeEffect(JsonString)({
 					lockfileVersion: 1,
 					packages: { foo: ["foo@1.0.0", "", {}, CORRUPT] },
 				});
@@ -417,7 +419,7 @@ describe("hostile input", () => {
 
 		it.effect("an absent integrity is omitted and the parse succeeds", () =>
 			Effect.gen(function* () {
-				const content = yield* Schema.encodeEffect(JsonString)({
+				const content = yield* S.encodeEffect(JsonString)({
 					lockfileVersion: 3,
 					packages: {
 						"": { name: "root" },
@@ -437,7 +439,7 @@ describe("hostile input", () => {
 		// construction — the same total-skip discipline as malformed name keys.
 		it.effect("npm: a link entry with an empty resolved path is skipped, parse succeeds", () =>
 			Effect.gen(function* () {
-				const content = yield* Schema.encodeEffect(JsonString)({
+				const content = yield* S.encodeEffect(JsonString)({
 					lockfileVersion: 3,
 					packages: {
 						"": { name: "root" },
@@ -446,8 +448,8 @@ describe("hostile input", () => {
 				});
 				const lockfile = yield* Lockfile.parse(content, { format: "npm" });
 				// The empty-path importer is not represented; the "." root importer is.
-				assert.isTrue(Option.isNone(lockfile.importer("")));
-				assert.isTrue(Option.isSome(lockfile.importer(".")));
+				assert.isTrue(O.isNone(lockfile.importer("")));
+				assert.isTrue(O.isSome(lockfile.importer(".")));
 			}),
 		);
 
@@ -455,8 +457,8 @@ describe("hostile input", () => {
 			Effect.gen(function* () {
 				const content = ["lockfileVersion: '9.0'", "importers:", "  '': {}", "  .: {}"].join("\n");
 				const lockfile = yield* Lockfile.parse(content, { format: "pnpm" });
-				assert.isTrue(Option.isNone(lockfile.importer("")));
-				assert.isTrue(Option.isSome(lockfile.importer(".")));
+				assert.isTrue(O.isNone(lockfile.importer("")));
+				assert.isTrue(O.isSome(lockfile.importer(".")));
 			}),
 		);
 	});

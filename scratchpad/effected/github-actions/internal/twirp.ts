@@ -6,8 +6,10 @@
 // `TwirpFailure` into its own typed error, because the failure a caller
 // reports is about *its* operation, not about HTTP.
 
-import type { Redacted } from "effect";
-import { Effect, Schedule, Function } from "effect";
+import type * as Redacted from "effect/Redacted";
+import * as Effect from "effect/Effect";
+import * as Schedule from "effect/Schedule";
+import * as Function from "effect/Function";
 import type { HttpClient } from "effect/http";
 import { HttpClientRequest } from "effect/http";
 

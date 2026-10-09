@@ -27,8 +27,12 @@
 // stat-and-isFile probe) would require rewriting the tsc-cited `extendsTarget`
 // engine and its fixtures for a case no supported test can reach.
 
-import type { PlatformError } from "effect";
-import { Effect, FileSystem, Option, Path, Schema } from "effect";
+import type * as PlatformError from "effect/PlatformError";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as S from "effect/Schema";
 import type { CompilerOptions } from "./CompilerOptions.ts";
 import { resolveExtendsTarget } from "./internal/extendsTarget.ts";
 import { ResolvedTsconfig } from "./ResolvedTsconfig.ts";
@@ -53,15 +57,15 @@ const MAX_EXTENDS_DEPTH = 32;
  *
  * @public
  */
-export class TsconfigExtendsError extends Schema.TaggedError<TsconfigExtendsError>()("TsconfigExtendsError", {
+export class TsconfigExtendsError extends S.TaggedError<TsconfigExtendsError>()("TsconfigExtendsError", {
 	/** The config whose `extends` could not be resolved. */
-	path: Schema.String,
+	path: S.String,
 	/** The target that failed: the spec, the re-entered path, or the refused path. */
-	target: Schema.String,
+	target: S.String,
 	/** Why resolution failed. */
-	reason: Schema.Literals(["not-found", "cycle", "depth", "empty"]),
+	reason: S.Literals(["not-found", "cycle", "depth", "empty"]),
 	/** The full resolution chain of normalized absolute config paths. */
-	chain: Schema.Array(Schema.String),
+	chain: S.Array(S.String),
 }) {
 	override get message(): string {
 		return this.reason === "not-found"
@@ -78,7 +82,7 @@ export class TsconfigExtendsError extends Schema.TaggedError<TsconfigExtendsErro
 const normalizeSlashes = (p: string): string => p.replace(/\\/g, "/");
 
 /** The shared JSONC decode entrypoint (`TsconfigJsonFromString` is already the shared codec instance). */
-const decodeConfig = Schema.decodeEffect(TsconfigJsonFromString);
+const decodeConfig = S.decodeEffect(TsconfigJsonFromString);
 
 /** Normalize a config's `extends` field (absent / string / array) to an ordered spec list. */
 const extendsSpecs = (doc: TsconfigJson.Type): ReadonlyArray<string> => {
@@ -143,7 +147,7 @@ const collect = (
 				return yield* TsconfigExtendsError.make({ path: abs, target: "", reason: "empty", chain: newChain });
 			}
 			const target = yield* resolveExtendsTarget(spec, abs);
-			if (Option.isNone(target)) {
+			if (O.isNone(target)) {
 				return yield* TsconfigExtendsError.make({ path: abs, target: spec, reason: "not-found", chain: newChain });
 			}
 			const normTarget = normalizeSlashes(target.value);

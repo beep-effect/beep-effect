@@ -9,7 +9,15 @@
 
 import type { Lockfile, LockfileFramingError, LockfileParseError, ResolvedPackage } from "../lockfiles/index.ts";
 import { LockfileFormat, LockfileIntegrity, Lockfile as LockfileModel, filenameFor } from "../lockfiles/index.ts";
-import { Context, Duration, Effect, Exit, FileSystem, Layer, Option, Path, Schema } from "effect";
+import * as Context from "effect/Context";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as S from "effect/Schema";
 import { findLayerRoot } from "./internal/layerRoot.ts";
 import type { PackageManagerDetectionFailure } from "./PackageManagerName.ts";
 import { PackageManagerDetector } from "./PackageManagerName.ts";
@@ -18,7 +26,7 @@ import { WorkspaceDiscovery } from "./WorkspaceDiscovery.ts";
 import type { WorkspaceRootNotFoundError } from "./WorkspaceRoot.ts";
 import { WorkspaceRoot } from "./WorkspaceRoot.ts";
 
-const JsonValue = Schema.fromJsonString(Schema.Unknown);
+const JsonValue = S.fromJsonString(S.Unknown);
 
 /**
  * Raised when the workspace's lockfile cannot be read off disk.
@@ -29,16 +37,16 @@ const JsonValue = Schema.fromJsonString(Schema.Unknown);
  *
  * @public
  */
-export class LockfileReadError extends Schema.TaggedError<LockfileReadError>()("LockfileReadError", {
+export class LockfileReadError extends S.TaggedError<LockfileReadError>()("LockfileReadError", {
 	/** Absolute path to the lockfile that could not be read. */
-	lockfilePath: Schema.String,
+	lockfilePath: S.String,
 	// `LockfileFormat` is @effected/lockfiles' own schema, not a re-spelling of it.
 	// Hand-rolling `Schema.Literals([...])` here duplicates the source of truth and
 	// would silently disagree the day upstream adds a format.
 	/** The format the detected package manager implies. */
 	format: LockfileFormat,
 	/** The originating failure. */
-	cause: Schema.Defect(),
+	cause: S.Defect(),
 }) {
 	/** Renders the unreadable path into a one-line message. */
 	override get message(): string {
@@ -83,7 +91,7 @@ export interface LockfileReaderShape {
 	 * that must see every resolution should read `lockfile.packagesNamed(name)`
 	 * off `read()` directly.
 	 */
-	readonly resolvedVersion: (packageName: string) => Effect.Effect<Option.Option<ResolvedPackage>, LockfileReadFailure>;
+	readonly resolvedVersion: (packageName: string) => Effect.Effect<O.Option<ResolvedPackage>, LockfileReadFailure>;
 	/**
 	 * Whether the lockfile agrees with the workspace manifests on disk — the
 	 * pure `LockfileIntegrity.compare`, fed the manifests this package reads.
@@ -224,23 +232,23 @@ export class LockfileReader extends Context.Service<LockfileReader, LockfileRead
 				);
 				const names = new Map<string, string>();
 				for (const [relativePath, name] of resolved) {
-					if (Option.isSome(name)) names.set(relativePath, name.value);
+					if (O.isSome(name)) names.set(relativePath, name.value);
 				}
 				return lockfile.withImporterNames(names);
 			});
 
 			/** A workspace member's name, or none — an unreadable manifest is a miss, not a failure. */
-			const readName = (manifestPath: string): Effect.Effect<Option.Option<string>> =>
+			const readName = (manifestPath: string): Effect.Effect<O.Option<string>> =>
 				Effect.gen(function* () {
 					const content = yield* fs.readFileString(manifestPath).pipe(Effect.orElseSucceed(() => ""));
-					if (content === "") return Option.none<string>();
+					if (content === "") return O.none<string>();
 					// `JSON.parse` returns `undefined` for nothing: a manifest of `null`
 					// parses to `null`, and reading `.name` off it would throw a TypeError
 					// as an unhandled DEFECT. Narrow to a plain object before touching it.
-					const parsed = yield* Schema.decodeEffect(JsonValue)(content).pipe(Effect.orElseSucceed(() => undefined));
-					if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return Option.none<string>();
+					const parsed = yield* S.decodeEffect(JsonValue)(content).pipe(Effect.orElseSucceed(() => undefined));
+					if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return O.none<string>();
 					const name = (parsed as Record<string, unknown>).name;
-					return typeof name === "string" && name.length > 0 ? Option.some(name) : Option.none<string>();
+					return typeof name === "string" && name.length > 0 ? O.some(name) : O.none<string>();
 				});
 
 			const [resolveOnce, invalidate] = yield* Effect.cachedInvalidateWithTTL(init, Duration.infinity);
@@ -254,7 +262,7 @@ export class LockfileReader extends Context.Service<LockfileReader, LockfileRead
 				resolvedVersion: Effect.fn("LockfileReader.resolvedVersion")(function* (packageName: string) {
 					const lockfile = yield* memo;
 					const matches = lockfile.packagesNamed(packageName);
-					return Option.fromUndefinedOr(matches[0]);
+					return O.fromUndefinedOr(matches[0]);
 				}),
 
 				integrity: Effect.suspend(Effect.fn("LockfileReader.integrity")(function* () {
@@ -335,7 +343,7 @@ export class LockfileReader extends Context.Service<LockfileReader, LockfileRead
 			resolvedVersion:
 				read !== undefined
 					? (packageName: string) =>
-							Effect.map(read, (lockfile) => Option.fromUndefinedOr(lockfile.packagesNamed(packageName)[0]))
+							Effect.map(read, (lockfile) => O.fromUndefinedOr(lockfile.packagesNamed(packageName)[0]))
 					: () => unstubbed("resolvedVersion"),
 			integrity: Effect.suspend(() => unstubbed("integrity")),
 			refresh: Effect.suspend(() => Effect.void),

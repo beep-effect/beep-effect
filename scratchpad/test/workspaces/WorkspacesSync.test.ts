@@ -30,7 +30,8 @@ import nodePath, { join } from "node:path";
 import { afterAll, afterEach, assert, beforeAll, describe, it, vi } from "@effect/vitest";
 import type { MemoryFileSystemHandle } from "../../effected/memfs/index.ts";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
-import { Effect, Layer } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import type { SyncFileSystem, WorkspacePackage, WorkspacesSyncOptions } from "../../effected/workspaces/index.ts";
 import {
 	WorkspaceDiscovery,

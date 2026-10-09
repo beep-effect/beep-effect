@@ -1,4 +1,7 @@
-import { Context, Effect, Layer, MutableRef } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as MutableRef from "effect/MutableRef";
 import { isExitCode } from "./internal/isExitCode.ts";
 
 /**

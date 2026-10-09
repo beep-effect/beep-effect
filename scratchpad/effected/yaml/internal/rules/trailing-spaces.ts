@@ -3,15 +3,15 @@
 // value (a recorded divergence from yamllint, which flags content too; a
 // layout rule must not corrupt values, and its fix certainly must not).
 
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 import { YamlEdit } from "../../YamlEdit.ts";
 import type { YamlRule } from "../../YamlLintRule.ts";
 import { YamlLintDiagnostic, YamlLintSeverity } from "../../YamlLintRule.ts";
 import { insideScalarSpan } from "./util.ts";
 
 /** Options for `trailing-spaces` (severity only — nothing to tune). */
-export const trailingSpacesOptions = Schema.Struct({
-	severity: Schema.optionalKey(YamlLintSeverity),
+export const trailingSpacesOptions = S.Struct({
+	severity: S.optionalKey(YamlLintSeverity),
 });
 
 /** Trailing spaces or tabs at the end of a line, with a deleting fix. */

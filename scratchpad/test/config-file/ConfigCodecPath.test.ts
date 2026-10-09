@@ -1,8 +1,11 @@
 // @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
-import type { FileSystem } from "effect";
-import { Effect, Layer, Path, Schema } from "effect";
+import type * as FileSystem from "effect/FileSystem";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
+import * as S from "effect/Schema";
 import { ConfigCodecError } from "../../effected/config-file/ConfigCodec.ts";
 import { ConfigFile } from "../../effected/config-file/ConfigFile.ts";
 import { ConfigResolver } from "../../effected/config-file/ConfigResolver.ts";
@@ -12,7 +15,7 @@ import { MergeStrategy } from "../../effected/config-file/MergeStrategy.ts";
 const platform = (files: Record<string, string>): Layer.Layer<FileSystem.FileSystem | Path.Path> =>
 	Layer.mergeAll(MemoryFileSystem.layerWith(files), Path.layer);
 
-const Doc = Schema.Struct({ from: Schema.String });
+const Doc = S.Struct({ from: S.String });
 
 class DocConfig extends ConfigFile.Service<DocConfig, typeof Doc.Type>()("test/CodecPathConfig") {}
 
@@ -82,7 +85,7 @@ describe("ConfigCodecError.path", () => {
 	);
 
 	it("is absent when a codec is driven directly, outside the pipeline", () => {
-		const error = Effect.runSync(Effect.flip(Effect.asVoid(JsonCodec.parse("{ not json"))));
+		const error = JsonCodec.parse("{ not json").pipe(Effect.asVoid, Effect.flip, Effect.runSync);
 		assert.instanceOf(error, ConfigCodecError);
 		assert.strictEqual(error.path, undefined);
 		assert.strictEqual(error.message, "json parse failed");

@@ -1,6 +1,7 @@
 import { CurrentRuntimeEnv } from "../../env/index.ts";
-import type { Fiber } from "effect";
-import { Context, Option } from "effect";
+import type * as Fiber from "effect/Fiber";
+import * as Context from "effect/Context";
+import * as O from "effect/Option";
 import { sanitize } from "../Fmt.ts";
 
 /**
@@ -23,8 +24,8 @@ export const TrustedLine = Context.Reference<boolean>("@effected/cli/TrustedLine
  */
 export const underActionsIn = (fiber: Fiber.Fiber<unknown, unknown>): boolean => {
 	const runtime = Context.getOption(fiber.context, CurrentRuntimeEnv);
-	return Option.contains(
-		Option.flatMap(runtime, (env) => env.ci),
+	return O.contains(
+		O.flatMap(runtime, (env) => env.ci),
 		"github-actions",
 	);
 };

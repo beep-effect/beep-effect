@@ -7,7 +7,7 @@ import { dual } from "effect/Function";
 // disagree about which root a layer's options name — discovery refusing an
 // enclosing workspace while the lockfile and catalog reads adopt it.
 
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import type { WorkspaceRootNotFoundError, WorkspaceRootShape } from "../WorkspaceRoot.ts";
 
 /** The layer-level options every root-consuming service reads its root from. */

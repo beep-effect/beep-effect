@@ -1,6 +1,14 @@
 import type { AnnotationProperties } from "../github-commands/index.ts";
 import { CommandNeutralizer, WorkflowCommand } from "../github-commands/index.ts";
-import { Console, Context, Effect, Exit, Inspectable, Layer, LogLevel, Logger, References } from "effect";
+import * as Console from "effect/Console";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Inspectable from "effect/Inspectable";
+import * as Layer from "effect/Layer";
+import * as LogLevel from "effect/LogLevel";
+import * as Logger from "effect/Logger";
+import * as References from "effect/References";
 import { ActionEnvironment } from "./ActionEnvironment.ts";
 
 /**

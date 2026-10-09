@@ -16,13 +16,14 @@
 // out of ITS scope rather than out of the model.
 
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
 import { Package } from "../../effected/package-json/index.ts";
 
 const base = { name: "@scope/pkg", version: "1.0.0" };
 
-const decode = (extra: Record<string, unknown>) => Schema.decodeEffect(Package.schema)({ ...base, ...extra });
-const encode = (pkg: Package) => Schema.encodeUnknownEffect(Package.schema)(pkg);
+const decode = (extra: Record<string, unknown>) => S.decodeEffect(Package.schema)({ ...base, ...extra });
+const encode = (pkg: Package) => S.encodeUnknownEffect(Package.schema)(pkg);
 
 describe("maintainers", () => {
 	it.effect("decodes the object form into People", () =>

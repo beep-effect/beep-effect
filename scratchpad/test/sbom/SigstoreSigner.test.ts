@@ -11,7 +11,9 @@
 import { assert, describe, it } from "@effect/vitest";
 import { BUNDLE_V03_MEDIA_TYPE } from "@sigstore/bundle";
 import type { Signer, Witness } from "@sigstore/sign";
-import { Effect, Layer, Redacted } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Redacted from "effect/Redacted";
 import type { Sha256Digest } from "../../effected/sbom/index.ts";
 import {
 	IN_TOTO_PAYLOAD_TYPE,

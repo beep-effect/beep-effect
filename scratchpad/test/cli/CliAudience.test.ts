@@ -3,7 +3,11 @@ import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
 import type { AudienceShape } from "../../effected/env/index.ts";
 import { Audience } from "../../effected/env/index.ts";
-import { Cause, Console, Effect, Exit, Runtime } from "effect";
+import * as Cause from "effect/Cause";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Runtime from "effect/Runtime";
 import { Argument, Command } from "effect/cli";
 import { CliAudience, CliInteractive, CliRuntime } from "../../effected/cli/index.ts";
 
@@ -40,7 +44,7 @@ const run = Effect.fn("run")(function* (argv: ReadonlyArray<string>, options?: {
 			// The ambient audience, as env's detection would have left it.
 			Effect.provide(Audience.layerTest("human", "detected")),
 		);
-		const code = Exit.isFailure(exit) ? Runtime.getErrorExitCode(Cause.squash(exit.cause)) : 0;
+		const code = Exit.isFailure(exit) ? exit.cause.pipe(Cause.squash, Runtime.getErrorExitCode) : 0;
 		return { code, seen, out, err };
 	});
 

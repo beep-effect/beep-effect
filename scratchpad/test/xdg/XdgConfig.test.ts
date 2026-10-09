@@ -2,11 +2,16 @@
 import { assert, describe, it } from "@effect/vitest";
 import { ConfigFile, JsonCodec, MergeStrategy } from "../../effected/config-file/index.ts";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
-import { Effect, Layer, Option, Path, PlatformError, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as PlatformError from "effect/PlatformError";
+import * as S from "effect/Schema";
 import type { XdgPlatform } from "../../effected/xdg/index.ts";
 import { AppDirs, CurrentPlatform, Xdg, XdgConfig, XdgPaths } from "../../effected/xdg/index.ts";
 
-const JsonValue = Schema.fromJsonString(Schema.Unknown);
+const JsonValue = S.fromJsonString(S.Unknown);
 
 const paths = XdgPaths.make({
 	home: "/home/ada",
@@ -64,41 +69,41 @@ const context = (options: Parameters<typeof fsFixture>[0], platform: XdgPlatform
 	return Layer.provideMerge(AppDirs.layer({ namespace: "myapp" }), base);
 };
 
-const resolve = <R>(resolver: { readonly resolve: Effect.Effect<Option.Option<string>, never, R> }) => resolver.resolve;
+const resolve = <R>(resolver: { readonly resolve: Effect.Effect<O.Option<string>, never, R> }) => resolver.resolve;
 
 describe("XdgConfig.resolver", () => {
 	it.effect("finds the file in the app's own config directory", () =>
 		Effect.gen(function* () {
 			const found = yield* resolve(XdgConfig.resolver({ filename: "rc.json" }));
-			assert.deepStrictEqual(found, Option.some("/home/ada/.config/myapp/rc.json"));
+			assert.deepStrictEqual(found, O.some("/home/ada/.config/myapp/rc.json"));
 		}).pipe(Effect.provide(context({ present: ["/home/ada/.config/myapp/rc.json"] }))),
 	);
 
 	it.effect("falls through to a system config dir — the search path v3 never had", () =>
 		Effect.gen(function* () {
 			const found = yield* resolve(XdgConfig.resolver({ filename: "rc.json" }));
-			assert.deepStrictEqual(found, Option.some("/etc/xdg/myapp/rc.json"));
+			assert.deepStrictEqual(found, O.some("/etc/xdg/myapp/rc.json"));
 		}).pipe(Effect.provide(context({ present: ["/etc/xdg/myapp/rc.json"] }))),
 	);
 
 	it.effect("finds a file present ONLY in the last system dir", () =>
 		Effect.gen(function* () {
 			const found = yield* resolve(XdgConfig.resolver({ filename: "rc.json" }));
-			assert.deepStrictEqual(found, Option.some("/opt/xdg/myapp/rc.json"));
+			assert.deepStrictEqual(found, O.some("/opt/xdg/myapp/rc.json"));
 		}).pipe(Effect.provide(context({ present: ["/opt/xdg/myapp/rc.json"] }))),
 	);
 
 	it.effect("earlier entries in XDG_CONFIG_DIRS win over later ones", () =>
 		Effect.gen(function* () {
 			const found = yield* resolve(XdgConfig.resolver({ filename: "rc.json" }));
-			assert.deepStrictEqual(found, Option.some("/etc/xdg/myapp/rc.json"));
+			assert.deepStrictEqual(found, O.some("/etc/xdg/myapp/rc.json"));
 		}).pipe(Effect.provide(context({ present: ["/etc/xdg/myapp/rc.json", "/opt/xdg/myapp/rc.json"] }))),
 	);
 
 	it.effect("the app's own directory beats every system dir", () =>
 		Effect.gen(function* () {
 			const found = yield* resolve(XdgConfig.resolver({ filename: "rc.json" }));
-			assert.deepStrictEqual(found, Option.some("/home/ada/.config/myapp/rc.json"));
+			assert.deepStrictEqual(found, O.some("/home/ada/.config/myapp/rc.json"));
 		}).pipe(
 			Effect.provide(
 				context({
@@ -124,7 +129,7 @@ describe("XdgConfig.resolver", () => {
 			// `catchAll`, so an EACCES on the first candidate returned `none` and the
 			// remaining search path was never consulted.
 			const found = yield* resolve(XdgConfig.resolver({ filename: "rc.json" }));
-			assert.deepStrictEqual(found, Option.some("/etc/xdg/myapp/rc.json"));
+			assert.deepStrictEqual(found, O.some("/etc/xdg/myapp/rc.json"));
 		}).pipe(
 			Effect.provide(
 				context({
@@ -138,7 +143,7 @@ describe("XdgConfig.resolver", () => {
 	it.effect("is None when the file is nowhere on the search path", () =>
 		Effect.gen(function* () {
 			const found = yield* resolve(XdgConfig.resolver({ filename: "rc.json" }));
-			assert.isTrue(Option.isNone(found));
+			assert.isTrue(O.isNone(found));
 		}).pipe(Effect.provide(context({}))),
 	);
 });
@@ -147,7 +152,7 @@ describe("XdgConfig.nativeResolver", () => {
 	it.effect("probes the macOS Application Support directory", () =>
 		Effect.gen(function* () {
 			const found = yield* resolve(XdgConfig.nativeResolver({ namespace: "myapp", filename: "rc.json" }));
-			assert.deepStrictEqual(found, Option.some("/home/ada/Library/Application Support/myapp/rc.json"));
+			assert.deepStrictEqual(found, O.some("/home/ada/Library/Application Support/myapp/rc.json"));
 		}).pipe(Effect.provide(context({ present: ["/home/ada/Library/Application Support/myapp/rc.json"] }, "darwin"))),
 	);
 
@@ -157,7 +162,7 @@ describe("XdgConfig.nativeResolver", () => {
 			const found = yield* resolve(XdgConfig.nativeResolver({ namespace: "myapp", filename: "rc.json" })).pipe(
 				Effect.provide(context({ probed }, "linux")),
 			);
-			assert.isTrue(Option.isNone(found));
+			assert.isTrue(O.isNone(found));
 			assert.deepStrictEqual(probed, []);
 		}),
 	);
@@ -165,7 +170,7 @@ describe("XdgConfig.nativeResolver", () => {
 	it.effect("absorbs an unreadable native directory into None", () =>
 		Effect.gen(function* () {
 			const found = yield* resolve(XdgConfig.nativeResolver({ namespace: "myapp", filename: "rc.json" }));
-			assert.isTrue(Option.isNone(found));
+			assert.isTrue(O.isNone(found));
 		}).pipe(Effect.provide(context({ denied: ["/home/ada/Library/Application Support/myapp/rc.json"] }, "darwin"))),
 	);
 });
@@ -183,7 +188,7 @@ describe("XdgConfig.savePath", () => {
 			// The end-to-end proof that resolving at layer-construction time was the
 			// right call: `defaultPath` is typed `Effect<string, never, RR>`, so a
 			// fallible savePath simply would not fit here without an `orDie`.
-			const AppShape = Schema.Struct({ port: Schema.Finite });
+			const AppShape = S.Struct({ port: S.Finite });
 			class AppConfig extends ConfigFile.Service<AppConfig, typeof AppShape.Type>()("test/AppConfig") {}
 
 			const configLayer = ConfigFile.layer(AppConfig, {
@@ -202,7 +207,7 @@ describe("XdgConfig.savePath", () => {
 				// Same provide, same volume: the save really landed.
 				const volume = yield* MemoryFileSystem.Volume;
 				assert.deepStrictEqual(
-					yield* Schema.decodeEffect(JsonValue)(volume.text(target) ?? "null"),
+					yield* S.decodeEffect(JsonValue)(volume.text(target) ?? "null"),
 					{ port: 8080 },
 				);
 				return target;

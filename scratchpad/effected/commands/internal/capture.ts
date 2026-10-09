@@ -1,5 +1,8 @@
-import type { PlatformError } from "effect";
-import { Data, Effect, Ref, Stream } from "effect";
+import type * as PlatformError from "effect/PlatformError";
+import * as Data from "effect/Data";
+import * as Effect from "effect/Effect";
+import * as Ref from "effect/Ref";
+import * as Stream from "effect/Stream";
 import { dual } from "effect/Function";
 
 /**
@@ -40,5 +43,5 @@ export const collectBounded: {
 				(total) => (total > limit ? Effect.fail(new OutputTooLarge({ limit })) : Effect.succeed(chunk)),
 			),
 		);
-		return yield* Stream.mkString(Stream.decodeText(bounded));
+		return yield* bounded.pipe(Stream.decodeText, Stream.mkString);
 	}));

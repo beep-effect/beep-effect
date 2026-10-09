@@ -1,4 +1,4 @@
-import { Option } from "effect";
+import * as O from "effect/Option";
 import {
 	DOMAIN_PROPERTIES,
 	PROPERTY_INDEX,
@@ -66,10 +66,10 @@ function propertyIndices(index: number): ReadonlySet<number> {
 }
 
 /** Resolve a superseding index against its name table. */
-function supersedingName(index: number | undefined, names: readonly string[]): Option.Option<string> {
-	if (index === undefined) return Option.none();
+function supersedingName(index: number | undefined, names: readonly string[]): O.Option<string> {
+	if (index === undefined) return O.none();
 	const name = names[index];
-	return name === undefined ? Option.none() : Option.some(name);
+	return name === undefined ? O.none() : O.some(name);
 }
 
 /**
@@ -207,11 +207,11 @@ export class Vocabulary {
 	 * disjoint in release 30.0 — every class name begins uppercase and every property
 	 * name lowercase,, and no name appears in both tables.
 	 */
-	static supersededBy(term: string): Option.Option<string> {
+	static supersededBy(term: string): O.Option<string> {
 		const typeIdx = TYPE_INDEX.get(term);
 		if (typeIdx !== undefined) return supersedingName(SUPERSEDED_TYPE_MAP.get(typeIdx), TYPE_NAMES);
 		const propertyIdx = PROPERTY_INDEX.get(term);
 		if (propertyIdx !== undefined) return supersedingName(SUPERSEDED_PROPERTY_MAP.get(propertyIdx), PROPERTY_NAMES);
-		return Option.none();
+		return O.none();
 	}
 }

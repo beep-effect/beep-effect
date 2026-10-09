@@ -1,5 +1,5 @@
 import { Jsonc } from "../jsonc/index.ts";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import type { ConfigCodec } from "./ConfigCodec.ts";
 import { ConfigCodecError } from "./ConfigCodec.ts";
 

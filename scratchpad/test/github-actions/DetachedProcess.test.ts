@@ -6,7 +6,12 @@ import type { AddressInfo } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { assert, describe, it } from "@effect/vitest";
-import { Cause, Effect, Exit, Fiber, Schema, Result } from "effect";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Fiber from "effect/Fiber";
+import * as S from "effect/Schema";
+import * as Result from "effect/Result";
 import { FetchHttpClient } from "effect/http";
 import { TestClock } from "effect/testing";
 import { vi } from "vitest";
@@ -20,7 +25,7 @@ import {
 	ProcessId,
 } from "../../effected/github-actions/index.ts";
 
-const Json = Schema.fromJsonString(Schema.Unknown);
+const Json = S.fromJsonString(S.Unknown);
 
 /** A fresh scratch directory per use, removed by the test that made it. */
 const scratch = () => mkdtempSync(join(tmpdir(), "effected-detached-"));
@@ -156,14 +161,14 @@ describe("DetachedProcess", () => {
 		it("refuses the zero a truncated state file decodes to", () => {
 			// Both defenses matter and this is the first: the bad value never reaches
 			// reap, because it never leaves ActionState.
-			assert.strictEqual(Schema.decodeExit(ProcessId)(0)._tag, "Failure");
-			assert.strictEqual(Schema.decodeExit(ProcessId)(-1)._tag, "Failure");
-			assert.strictEqual(Schema.decodeExit(ProcessId)(1.5)._tag, "Failure");
+			assert.strictEqual(S.decodeExit(ProcessId)(0)._tag, "Failure");
+			assert.strictEqual(S.decodeExit(ProcessId)(-1)._tag, "Failure");
+			assert.strictEqual(S.decodeExit(ProcessId)(1.5)._tag, "Failure");
 		});
 
 		it.effect("accepts a real pid", () =>
 			Effect.gen(function* () {
-				assert.strictEqual(yield* Schema.decodeEffect(ProcessId)(4242), 4242);
+				assert.strictEqual(yield* S.decodeEffect(ProcessId)(4242), 4242);
 			}),
 		);
 	});
@@ -201,8 +206,9 @@ describe("DetachedProcess", () => {
 
 		it.effect("fails typed once the attempts are exhausted", () =>
 			Effect.gen(function* () {
-				const fiber = yield* Effect.forkChild(
-					Effect.flip(DetachedProcess.awaitReady(Effect.succeed(false), { interval: "10 millis", attempts: 2 })),
+				const fiber = yield* DetachedProcess.awaitReady(Effect.succeed(false), { interval: "10 millis", attempts: 2 }).pipe(
+					Effect.flip,
+					Effect.forkChild,
 				);
 				yield* TestClock.adjust("10 millis");
 				yield* TestClock.adjust("10 millis");
@@ -443,7 +449,7 @@ describe("DetachedProcess", () => {
 					}),
 				);
 				assert.isTrue(wrote, "the child must have printed its environment");
-				const seen = Result.getOrThrowWith(Schema.decodeResult(Json)(readFileSync(logFile, "utf8")), (error) => error) as Record<string, string>;
+				const seen = Result.getOrThrowWith(S.decodeResult(Json)(readFileSync(logFile, "utf8")), (error) => error) as Record<string, string>;
 				assert.strictEqual(seen.ONLY, "1");
 				assert.strictEqual(seen.X, "y");
 				assert.strictEqual(seen.PATH, process.env.PATH);
@@ -483,7 +489,7 @@ describe("DetachedProcess", () => {
 					}),
 				);
 				assert.isTrue(wrote, "the child must have printed its environment");
-				const seen = Result.getOrThrowWith(Schema.decodeResult(Json)(readFileSync(logFile, "utf8")), (error) => error) as Record<string, string>;
+				const seen = Result.getOrThrowWith(S.decodeResult(Json)(readFileSync(logFile, "utf8")), (error) => error) as Record<string, string>;
 				assert.strictEqual(seen.KEY, "from-env");
 			}).pipe(Effect.ensuring(Effect.sync(() => rmSync(directory, { recursive: true, force: true }))));
 		});

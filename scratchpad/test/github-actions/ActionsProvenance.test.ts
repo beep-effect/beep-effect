@@ -2,7 +2,8 @@
 import { assert, describe, it } from "@effect/vitest";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
 import { SlsaProvenance } from "../../effected/sbom/index.ts";
-import { Effect, Layer } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import { ActionEnvironment, ActionsProvenance, OidcClaims, OidcTokenError, OidcTokenIssuer } from "../../effected/github-actions/index.ts";
 
 // Every value distinct, and `workflow_ref` ≠ `job_workflow_ref` (a reusable

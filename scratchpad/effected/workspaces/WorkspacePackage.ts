@@ -10,10 +10,13 @@
 import { GlobPattern } from "../glob/index.ts";
 import { WorkspaceManifest } from "../lockfiles/index.ts";
 import { Package } from "../package-json/index.ts";
-import type { PlatformError } from "effect";
-import { Effect, FileSystem, Option, Schema } from "effect";
+import type * as PlatformError from "effect/PlatformError";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
 
-const JsonValue = Schema.fromJsonString(Schema.Unknown);
+const JsonValue = S.fromJsonString(S.Unknown);
 
 const EMPTY: Record<string, string> = Object.freeze(Object.create(null) as Record<string, string>);
 
@@ -34,27 +37,27 @@ const EMPTY_MANIFEST: Record<string, unknown> = Object.freeze(Object.create(null
  *
  * @public
  */
-export class PublishConfig extends Schema.Class<PublishConfig>("PublishConfig")({
+export class PublishConfig extends S.Class<PublishConfig>("PublishConfig")({
 	/** Scoped-package visibility. Its presence overrides `private`. */
-	access: Schema.optionalKey(Schema.Literals(["public", "restricted"])),
+	access: S.optionalKey(S.Literals(["public", "restricted"])),
 	/** The registry to publish to. */
-	registry: Schema.optionalKey(Schema.String),
+	registry: S.optionalKey(S.String),
 	/** A subdirectory to publish instead of the package root. */
-	directory: Schema.optionalKey(Schema.String),
+	directory: S.optionalKey(S.String),
 	/**
 	 * Whether workspace links point into `directory` during local development —
 	 * pnpm symlinks the publish directory instead of the package root, so
 	 * siblings resolve the built artifact they would install from the registry.
 	 * Meaningful only alongside `directory`.
 	 */
-	linkDirectory: Schema.optionalKey(Schema.Boolean),
+	linkDirectory: S.optionalKey(S.Boolean),
 	/** The dist-tag to publish under. */
-	tag: Schema.optionalKey(Schema.String),
+	tag: S.optionalKey(S.String),
 }) {}
 
-const DependencyMap = Schema.Record(Schema.String, Schema.String).pipe(
-	Schema.withDecodingDefaultKey(Effect.succeed(EMPTY)),
-	Schema.withConstructorDefault(Effect.succeed(EMPTY)),
+const DependencyMap = S.Record(S.String, S.String).pipe(
+	S.withDecodingDefaultKey(Effect.succeed(EMPTY)),
+	S.withConstructorDefault(Effect.succeed(EMPTY)),
 );
 
 /**
@@ -86,13 +89,13 @@ export interface DependencyDiff {
  *
  * @public
  */
-export class WorkspaceManifestError extends Schema.TaggedError<WorkspaceManifestError>()("WorkspaceManifestError", {
+export class WorkspaceManifestError extends S.TaggedError<WorkspaceManifestError>()("WorkspaceManifestError", {
 	/** Absolute path to the `package.json` that failed. */
-	packageJsonPath: Schema.String,
+	packageJsonPath: S.String,
 	/** Whether the file could not be read, or read but not decoded. */
-	kind: Schema.Literals(["read", "decode"]),
+	kind: S.Literals(["read", "decode"]),
 	/** The originating failure, preserved rather than flattened to a string. */
-	cause: Schema.Defect(),
+	cause: S.Defect(),
 }) {
 	/** Renders the path and failure kind into a one-line message. */
 	override get message(): string {
@@ -128,9 +131,9 @@ export class WorkspaceManifestError extends Schema.TaggedError<WorkspaceManifest
  *
  * @public
  */
-export class WorkspacePackage extends Schema.Class<WorkspacePackage>("WorkspacePackage")({
+export class WorkspacePackage extends S.Class<WorkspacePackage>("WorkspacePackage")({
 	/** The package name. */
-	name: Schema.NonEmptyString,
+	name: S.NonEmptyString,
 	/**
 	 * The raw `version` string — deliberately not semver-validated — or absent
 	 * when the manifest declares none.
@@ -148,13 +151,13 @@ export class WorkspacePackage extends Schema.Class<WorkspacePackage>("WorkspaceP
 	 * Anything that needs a concrete version (`WorkspaceResolver.versionOf`,
 	 * a release tag) answers the absence itself rather than inventing one.
 	 */
-	version: Schema.optionalKey(Schema.String),
+	version: S.optionalKey(S.String),
 	/** Absolute path to the package directory. */
-	path: Schema.NonEmptyString,
+	path: S.NonEmptyString,
 	/** Absolute path to the package's `package.json`. */
-	packageJsonPath: Schema.NonEmptyString,
+	packageJsonPath: S.NonEmptyString,
 	/** POSIX path relative to the workspace root; `"."` for the root package. */
-	relativePath: Schema.String,
+	relativePath: S.String,
 	/**
 	 * Absolute path to the workspace root this package was discovered under.
 	 *
@@ -165,11 +168,11 @@ export class WorkspacePackage extends Schema.Class<WorkspacePackage>("WorkspaceP
 	 *
 	 * For the root package this equals `path`, and `relativePath` is `"."`.
 	 */
-	workspaceRoot: Schema.NonEmptyString,
+	workspaceRoot: S.NonEmptyString,
 	/** Whether the package is marked private. */
-	private: Schema.Boolean.pipe(
-		Schema.withDecodingDefaultKey(Effect.succeed(false)),
-		Schema.withConstructorDefault(Effect.succeed(false)),
+	private: S.Boolean.pipe(
+		S.withDecodingDefaultKey(Effect.succeed(false)),
+		S.withConstructorDefault(Effect.succeed(false)),
 	),
 	/** Production dependencies. */
 	dependencies: DependencyMap,
@@ -180,7 +183,7 @@ export class WorkspacePackage extends Schema.Class<WorkspacePackage>("WorkspaceP
 	/** Optional dependencies. */
 	optionalDependencies: DependencyMap,
 	/** The `publishConfig` block, when present. */
-	publishConfig: Schema.optionalKey(PublishConfig),
+	publishConfig: S.optionalKey(PublishConfig),
 	/**
 	 * The package's `package.json` as read — tolerant access to every field
 	 * outside the typed discovery slice (`scripts`, `exports`, …) without a
@@ -193,9 +196,9 @@ export class WorkspacePackage extends Schema.Class<WorkspacePackage>("WorkspaceP
 	 * refresh this captured record cannot provide. Defaults to `{}` for
 	 * values constructed or decoded without the field.
 	 */
-	manifestRecord: Schema.Record(Schema.String, Schema.Unknown).pipe(
-		Schema.withDecodingDefaultKey(Effect.succeed(EMPTY_MANIFEST)),
-		Schema.withConstructorDefault(Effect.succeed(EMPTY_MANIFEST)),
+	manifestRecord: S.Record(S.String, S.Unknown).pipe(
+		S.withDecodingDefaultKey(Effect.succeed(EMPTY_MANIFEST)),
+		S.withConstructorDefault(Effect.succeed(EMPTY_MANIFEST)),
 	),
 }) {
 	/** Whether this is the workspace root package. */
@@ -209,9 +212,9 @@ export class WorkspacePackage extends Schema.Class<WorkspacePackage>("WorkspaceP
 	}
 
 	/** The npm scope (`@org`), or `Option.none()` for an unscoped name. */
-	get scope(): Option.Option<string> {
+	get scope(): O.Option<string> {
 		const match = /^(@[^/]+)\//.exec(this.name);
-		return Option.fromUndefinedOr(match?.[1]);
+		return O.fromUndefinedOr(match?.[1]);
 	}
 
 	/** The name with any scope stripped. */
@@ -268,7 +271,7 @@ export class WorkspacePackage extends Schema.Class<WorkspacePackage>("WorkspaceP
 	}
 
 	/** The declared specifier for `name`, searched across all four kinds. */
-	dependencyVersion(name: string): Option.Option<string> {
+	dependencyVersion(name: string): O.Option<string> {
 		// `Object.hasOwn`, not bracket access — and every sibling predicate above
 		// already gets this right, which is what makes the inconsistency the tell.
 		// A plain-object dependency map inherits from `Object.prototype`, so a bare
@@ -283,7 +286,7 @@ export class WorkspacePackage extends Schema.Class<WorkspacePackage>("WorkspaceP
 			own(this.devDependencies) ??
 			own(this.peerDependencies) ??
 			own(this.optionalDependencies);
-		return version === undefined ? Option.none() : Option.some(version);
+		return version === undefined ? O.none() : O.some(version);
 	}
 
 	/**
@@ -364,7 +367,7 @@ export class WorkspacePackage extends Schema.Class<WorkspacePackage>("WorkspaceP
 						WorkspaceManifestError.make({ packageJsonPath: self.packageJsonPath, kind: "read", cause }),
 				),
 			);
-		const raw = yield* Schema.decodeEffect(JsonValue)(content).pipe(Effect.mapError((cause) => WorkspaceManifestError.make({ packageJsonPath: self.packageJsonPath, kind: "decode", cause })));
+		const raw = yield* S.decodeEffect(JsonValue)(content).pipe(Effect.mapError((cause) => WorkspaceManifestError.make({ packageJsonPath: self.packageJsonPath, kind: "decode", cause })));
 		return yield* Package.decode(raw).pipe(
 			Effect.mapError(
 				(cause) => WorkspaceManifestError.make({ packageJsonPath: self.packageJsonPath, kind: "decode", cause }),

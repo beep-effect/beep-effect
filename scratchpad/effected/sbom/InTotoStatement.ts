@@ -6,8 +6,10 @@
 // loading Fulcio's transport. It is also what lets a caller build, inspect and
 // serialize a statement in a test with no layers at all.
 
-import type { Brand } from "effect";
-import { Effect, Result, Schema } from "effect";
+import type * as Brand from "effect/Brand";
+import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 
 /**
  * The in-toto Statement v1 type URI, stamped onto every statement this package
@@ -45,11 +47,11 @@ export type PredicateType = string;
  *
  * @public
  */
-export class InvalidSha256DigestError extends Schema.TaggedError<InvalidSha256DigestError>()(
+export class InvalidSha256DigestError extends S.TaggedError<InvalidSha256DigestError>()(
 	"InvalidSha256DigestError",
 	{
 		/** The offending input, preserved verbatim. */
-		input: Schema.String,
+		input: S.String,
 	},
 ) {
 	override get message(): string {
@@ -99,7 +101,7 @@ const parseResult = (value: string): Result.Result<Sha256Digest, InvalidSha256Di
  * @public
  */
 export const Sha256Digest = Object.assign(
-	Schema.String.pipe(Schema.check(Schema.isPattern(SHA256_RE)), Schema.brand("Sha256Digest")),
+	S.String.pipe(S.check(S.isPattern(SHA256_RE)), S.brand("Sha256Digest")),
 	{
 		isValid: (value: string): boolean => SHA256_RE.test(normalizeDigest(value)),
 		parseResult,
@@ -125,11 +127,11 @@ export type Sha256Digest = string & Brand.Brand<"Sha256Digest">;
  *
  * @public
  */
-export class InTotoSubject extends Schema.Class<InTotoSubject>("InTotoSubject")({
+export class InTotoSubject extends S.Class<InTotoSubject>("InTotoSubject")({
 	/** How the subject is identified — a purl for an npm package. */
-	name: Schema.String,
+	name: S.String,
 	/** Algorithm to hex digest. */
-	digest: Schema.Record(Schema.String, Schema.String),
+	digest: S.Record(S.String, S.String),
 }) {
 	/**
 	 * A subject identified by a SHA-256 digest.
@@ -211,15 +213,15 @@ export interface InTotoSubjectInput {
  *
  * @public
  */
-export class InTotoStatement extends Schema.Class<InTotoStatement>("InTotoStatement")({
+export class InTotoStatement extends S.Class<InTotoStatement>("InTotoStatement")({
 	/** Always the in-toto Statement v1 URI. */
-	_type: Schema.Literal(IN_TOTO_STATEMENT_V1),
+	_type: S.Literal(IN_TOTO_STATEMENT_V1),
 	/** The artifacts attested. */
-	subject: Schema.Array(InTotoSubject),
+	subject: S.Array(InTotoSubject),
 	/** What is being asserted about them. */
-	predicateType: Schema.String,
+	predicateType: S.String,
 	/** The assertion body. */
-	predicate: Schema.Unknown,
+	predicate: S.Unknown,
 }) {
 	/** A statement over any number of subjects. **Total.** */
 	static of(input: InTotoStatementInput): InTotoStatement {

@@ -6,7 +6,10 @@
 // data on `errors`/`warnings` while fatal ones fail `parse`/`parseAll` with a
 // typed `YamlParseError`.
 
-import { Effect, Schema, SchemaIssue, SchemaTransformation } from "effect";
+import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import { composeAllDocuments, composeFirstDocument } from "./internal/composer/document.ts";
 import { isFatalCode } from "./internal/diagnostics.ts";
 import type { RawYamlDocument } from "./internal/raw-document.ts";
@@ -26,9 +29,9 @@ import { dual } from "effect/Function";
  *
  * @public
  */
-export class YamlDirective extends Schema.Class<YamlDirective>("YamlDirective")({
-	name: Schema.String,
-	parameters: Schema.Array(Schema.String),
+export class YamlDirective extends S.Class<YamlDirective>("YamlDirective")({
+	name: S.String,
+	parameters: S.Array(S.String),
 }) {}
 
 /**
@@ -59,16 +62,16 @@ export class YamlDirective extends Schema.Class<YamlDirective>("YamlDirective")(
  *
  * @public
  */
-export class YamlDocument extends Schema.Class<YamlDocument>("YamlDocument")({
-	contents: Schema.NullOr(Schema.suspend((): Schema.Schema<YamlNodeType> => YamlNode)),
-	errors: Schema.Array(YamlDiagnostic),
-	warnings: Schema.Array(YamlDiagnostic),
-	directives: Schema.Array(YamlDirective),
-	commentBefore: Schema.optionalKey(Schema.String),
-	comment: Schema.optionalKey(Schema.String),
-	hasDocumentStart: Schema.optionalKey(Schema.Boolean),
-	hasDocumentEnd: Schema.optionalKey(Schema.Boolean),
-	hasDocumentStartTab: Schema.optionalKey(Schema.Boolean),
+export class YamlDocument extends S.Class<YamlDocument>("YamlDocument")({
+	contents: S.NullOr(S.suspend((): S.Schema<YamlNodeType> => YamlNode)),
+	errors: S.Array(YamlDiagnostic),
+	warnings: S.Array(YamlDiagnostic),
+	directives: S.Array(YamlDirective),
+	commentBefore: S.optionalKey(S.String),
+	comment: S.optionalKey(S.String),
+	hasDocumentStart: S.optionalKey(S.Boolean),
+	hasDocumentEnd: S.optionalKey(S.Boolean),
+	hasDocumentStartTab: S.optionalKey(S.Boolean),
 }) {
 	/**
 	 * Parse a single YAML document, keeping the full AST, directives and
@@ -132,10 +135,10 @@ export class YamlDocument extends Schema.Class<YamlDocument>("YamlDocument")({
 	 * @param options - Optional {@link YamlParseOptions} applied on decode.
 	 * @returns A `Schema.Codec<YamlDocument, string>`.
 	 */
-	static schema(options?: YamlParseOptions): Schema.Codec<YamlDocument, string> {
-		return Schema.String.pipe(
-			Schema.decodeTo(
-				Schema.instanceOf(YamlDocument),
+	static schema(options?: YamlParseOptions): S.Codec<YamlDocument, string> {
+		return S.String.pipe(
+			S.decodeTo(
+				S.instanceOf(YamlDocument),
 				SchemaTransformation.transformEffect({
 					decode: (input: string) =>
 						YamlDocument.parse(input, options).pipe(

@@ -1,6 +1,7 @@
 import { assert, describe, it, layer } from "@effect/vitest";
 import type { DependencyField } from "../../effected/npm/index.ts";
-import { Effect, Option } from "effect";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
 import { DependencyGraph, WorkspaceDiscovery, WorkspacePackage } from "../../effected/workspaces/index.ts";
 import type { LayeringGraph } from "../../effected/workspaces/testing.ts";
 import { LayerEdge, LayerPolicy, WorkspaceLayering } from "../../effected/workspaces/testing.ts";
@@ -71,7 +72,7 @@ describe("WorkspaceLayering.check", () => {
 			{ names: ["a", "b", "c"], edges: [edge("a", "b"), edge("b", "c"), edge("c", "a")] },
 			policy,
 		);
-		assert.deepStrictEqual(report.cycle, Option.some(["a", "b", "c"]));
+		assert.deepStrictEqual(report.cycle, O.some(["a", "b", "c"]));
 		assert.include(report.violations, "dependency cycle among: a, b, c");
 		assert.deepStrictEqual(
 			offences({ names: ["a", "b", "c"], edges: [edge("a", "b"), edge("b", "c"), edge("c", "a")] }, policy),
@@ -142,10 +143,10 @@ describe("WorkspaceLayering.check", () => {
 	it("sees a cycle closed only by a devDependency exactly when devDependencies are checked", () => {
 		const graph: LayeringGraph = { names: ["a", "b"], edges: [edge("a", "b"), edge("b", "a", "devDependencies")] };
 		const all = LayerPolicy.make({ layers: [["a"], ["b"]], tooling: [], unconstrained: [] });
-		assert.deepStrictEqual(WorkspaceLayering.check(graph, all).cycle, Option.some(["a", "b"]));
+		assert.deepStrictEqual(WorkspaceLayering.check(graph, all).cycle, O.some(["a", "b"]));
 		const runtime = LayerPolicy.make({ ...all, fields: ["dependencies"] });
 		const report = WorkspaceLayering.check(graph, runtime);
-		assert.deepStrictEqual(report.cycle, Option.none());
+		assert.deepStrictEqual(report.cycle, O.none());
 		assert.deepStrictEqual(report.violations, []);
 		assert.strictEqual(report.edgeCount, 1);
 	});

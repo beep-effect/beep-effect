@@ -8,7 +8,9 @@
 // pin that choice.
 
 import { assert, describe, it } from "@effect/vitest";
-import { Arbitrary, Equal, Schema } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
+import * as Equal from "effect/Equal";
+import * as S from "effect/Schema";
 import { MarkdownEdit, MarkdownRange } from "../../effected/markdown/MarkdownEdit.ts";
 
 describe("MarkdownRange", () => {
@@ -80,12 +82,12 @@ describe("MarkdownEdit", () => {
 		assert.strictEqual(MarkdownEdit.applyAll("unchanged", []), "unchanged");
 	});
 
-	const Nat = (max: number) => Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: max }));
+	const Nat = (max: number) => S.Int.check(S.isBetween({ minimum: 0, maximum: max }));
 	const disjointEdits = Arbitrary.schema(
-		Schema.Tuple([
-			Schema.String.check(Schema.isBetweenLength(8, 64)),
-			Schema.Array(Schema.Tuple([Nat(7), Nat(3), Schema.String.check(Schema.isMaxLength(5))])).check(
-				Schema.isMaxLength(4),
+		S.Tuple([
+			S.String.check(S.isBetweenLength(8, 64)),
+			S.Array(S.Tuple([Nat(7), Nat(3), S.String.check(S.isMaxLength(5))])).check(
+				S.isMaxLength(4),
 			),
 		]),
 	).pipe(

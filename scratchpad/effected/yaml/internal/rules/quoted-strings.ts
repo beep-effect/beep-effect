@@ -8,7 +8,7 @@
 // quote character of the target style in the content, no tag/anchor on the
 // node); otherwise the diagnostic ships without a fix.
 
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 import { YamlEdit } from "../../YamlEdit.ts";
 import type { LintContext, YamlRule } from "../../YamlLintRule.ts";
 import { StyleVote, YamlLintDiagnostic, YamlLintSeverity } from "../../YamlLintRule.ts";
@@ -21,10 +21,10 @@ import { positionAt, walkScalars } from "./util.ts";
  * `"double"`) and whether plain string scalars are `required` to be quoted
  * at all (default `false` — only already-quoted scalars are policed).
  */
-export const quotedStringsOptions = Schema.Struct({
-	severity: Schema.optionalKey(YamlLintSeverity),
-	quoteType: Schema.optionalKey(Schema.Literals(["single", "double"])),
-	required: Schema.optionalKey(Schema.Boolean),
+export const quotedStringsOptions = S.Struct({
+	severity: S.optionalKey(YamlLintSeverity),
+	quoteType: S.optionalKey(S.Literals(["single", "double"])),
+	required: S.optionalKey(S.Boolean),
 });
 
 interface QuotedStringsOptions {

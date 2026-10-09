@@ -1,6 +1,8 @@
 // @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Redacted, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as Redacted from "effect/Redacted";
+import * as S from "effect/Schema";
 import * as Base64 from "effect/encoding/Base64";
 import type { RecordedCall } from "../../effected/github/GitHubClient.ts";
 import { GitHubClient } from "../../effected/github/GitHubClient.ts";
@@ -8,7 +10,7 @@ import { Repo, RepoRef } from "../../effected/github/Repo.ts";
 import type { SecretScope } from "../../effected/github/RepositorySecret.ts";
 import { RepositorySecret } from "../../effected/github/RepositorySecret.ts";
 
-const JsonValue = Schema.fromJsonString(Schema.Unknown);
+const JsonValue = S.fromJsonString(S.Unknown);
 
 /** A base64 Curve25519 public key, so the seal has something real to work against. */
 const PUBLIC_KEY = { key: Base64.encode(new Uint8Array(32).fill(7)), key_id: "key-123" };
@@ -54,7 +56,7 @@ describe("RepositorySecret, per store", () => {
 				// The plaintext must never appear in the request, on any path.
 				assert.notStrictEqual(put?.params.encrypted_value, "plaintext");
 				assert.strictEqual(typeof put?.params.encrypted_value, "string");
-				assert.notInclude((yield* Schema.encodeEffect(JsonValue)(put?.params)), "plaintext");
+				assert.notInclude((yield* S.encodeEffect(JsonValue)(put?.params)), "plaintext");
 			}),
 		);
 
@@ -114,7 +116,7 @@ describe("RepositorySecret, per environment", () => {
 			]);
 			assert.strictEqual(requested[1]?.params.environment_name, "prod");
 			assert.strictEqual(requested[1]?.params.secret_name, "TOKEN");
-			assert.notInclude((yield* Schema.encodeEffect(JsonValue)(requested[1]?.params)), "plaintext");
+			assert.notInclude((yield* S.encodeEffect(JsonValue)(requested[1]?.params)), "plaintext");
 		}),
 	);
 
@@ -154,9 +156,9 @@ describe("RepositorySecret, when the public key is unusable", () => {
 				},
 			).pipe(Effect.exit);
 
-			assert.include((yield* Schema.encodeEffect(JsonValue)(exit)), "public key");
+			assert.include((yield* S.encodeEffect(JsonValue)(exit)), "public key");
 			// And nothing was written.
-			assert.notInclude((yield* Schema.encodeEffect(JsonValue)(exit)), "plaintext");
+			assert.notInclude((yield* S.encodeEffect(JsonValue)(exit)), "plaintext");
 		}),
 	);
 });

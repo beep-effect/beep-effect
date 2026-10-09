@@ -3,7 +3,10 @@
 // and mtimes, directories, symlinks) and the seed options (root).
 
 import { assert, describe, it } from "@effect/vitest";
-import { Cause, Effect, Exit, FileSystem } from "effect";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
 
 describe("MemoryFileSystem.makeWith", () => {

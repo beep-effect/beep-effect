@@ -1,18 +1,21 @@
 // @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { CatalogAssemblyError, CatalogResolver, Default as NpmDefault, WorkspaceResolver } from "../../effected/npm/index.ts";
-import { Effect, HashMap, Layer, Option } from "effect";
+import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import { Package } from "../../effected/package-json/Package.ts";
 
 const workspaceOf = (versions: Record<string, string>): Layer.Layer<WorkspaceResolver> =>
 	Layer.succeed(WorkspaceResolver, {
-		versionOf: Effect.fn("WorkspaceResolver.versionOf")((name) => Effect.succeed(Option.fromUndefinedOr(versions[name]))),
+		versionOf: Effect.fn("WorkspaceResolver.versionOf")((name) => Effect.succeed(O.fromUndefinedOr(versions[name]))),
 	});
 
 const catalogOf = (ranges: Record<string, string>): Layer.Layer<CatalogResolver> =>
 	Layer.succeed(CatalogResolver, {
-		rangeOf: Effect.fn("CatalogResolver.rangeOf")((name: string, catalog: Option.Option<string>) =>
-			Effect.succeed(Option.fromUndefinedOr(ranges[Option.getOrElse(catalog, () => "")] ?? ranges[name]))),
+		rangeOf: Effect.fn("CatalogResolver.rangeOf")((name: string, catalog: O.Option<string>) =>
+			Effect.succeed(O.fromUndefinedOr(ranges[O.getOrElse(catalog, () => "")] ?? ranges[name]))),
 	});
 
 const decodeDeps = (deps: Record<string, string>) =>
@@ -25,9 +28,9 @@ describe("Package.resolve", () => {
 			const resolved = yield* Package.resolve(pkg).pipe(
 				Effect.provide(Layer.mergeAll(workspaceOf({ lib: "1.2.3" }), catalogOf({ effect: "^3.10.0" }))),
 			);
-			assert.deepStrictEqual(HashMap.get(resolved.dependencies, "lib"), Option.some("^1.2.3"));
-			assert.deepStrictEqual(HashMap.get(resolved.dependencies, "effect"), Option.some("^3.10.0"));
-			assert.deepStrictEqual(HashMap.get(resolved.dependencies, "lodash"), Option.some("^4.0.0"));
+			assert.deepStrictEqual(HashMap.get(resolved.dependencies, "lib"), O.some("^1.2.3"));
+			assert.deepStrictEqual(HashMap.get(resolved.dependencies, "effect"), O.some("^3.10.0"));
+			assert.deepStrictEqual(HashMap.get(resolved.dependencies, "lodash"), O.some("^4.0.0"));
 		}),
 	);
 
@@ -35,7 +38,7 @@ describe("Package.resolve", () => {
 		Effect.gen(function* () {
 			const pkg = yield* decodeDeps({ lib: "workspace:*" });
 			const resolved = yield* Package.resolve(pkg).pipe(Effect.provide(NpmDefault));
-			assert.deepStrictEqual(HashMap.get(resolved.dependencies, "lib"), Option.some("workspace:*"));
+			assert.deepStrictEqual(HashMap.get(resolved.dependencies, "lib"), O.some("workspace:*"));
 		}),
 	);
 
@@ -55,10 +58,10 @@ describe("Package.resolve", () => {
 					),
 				),
 			);
-			assert.deepStrictEqual(HashMap.get(resolved.dependencies, "star"), Option.some("1.2.3"));
-			assert.deepStrictEqual(HashMap.get(resolved.dependencies, "tilde"), Option.some("~1.2.3"));
-			assert.deepStrictEqual(HashMap.get(resolved.dependencies, "caret"), Option.some("^1.2.3"));
-			assert.deepStrictEqual(HashMap.get(resolved.dependencies, "explicit"), Option.some("2.5.0"));
+			assert.deepStrictEqual(HashMap.get(resolved.dependencies, "star"), O.some("1.2.3"));
+			assert.deepStrictEqual(HashMap.get(resolved.dependencies, "tilde"), O.some("~1.2.3"));
+			assert.deepStrictEqual(HashMap.get(resolved.dependencies, "caret"), O.some("^1.2.3"));
+			assert.deepStrictEqual(HashMap.get(resolved.dependencies, "explicit"), O.some("2.5.0"));
 		}),
 	);
 
@@ -68,7 +71,7 @@ describe("Package.resolve", () => {
 			const resolved = yield* Package.resolve(pkg).pipe(
 				Effect.provide(Layer.mergeAll(WorkspaceResolver.noop, catalogOf({ react17: "^17.0.0" }))),
 			);
-			assert.deepStrictEqual(HashMap.get(resolved.dependencies, "react"), Option.some("^17.0.0"));
+			assert.deepStrictEqual(HashMap.get(resolved.dependencies, "react"), O.some("^17.0.0"));
 		}),
 	);
 
@@ -81,8 +84,8 @@ describe("Package.resolve", () => {
 			const resolved = yield* Package.resolve(pkg).pipe(
 				Effect.provide(Layer.mergeAll(workspaceOf({ "@x/charts": "2.0.0", charts: "1.5.0" }), CatalogResolver.noop)),
 			);
-			assert.deepStrictEqual(HashMap.get(resolved.dependencies, "viz"), Option.some("npm:@x/charts@2.0.0"));
-			assert.deepStrictEqual(HashMap.get(resolved.dependencies, "plot"), Option.some("npm:charts@^1.5.0"));
+			assert.deepStrictEqual(HashMap.get(resolved.dependencies, "viz"), O.some("npm:@x/charts@2.0.0"));
+			assert.deepStrictEqual(HashMap.get(resolved.dependencies, "plot"), O.some("npm:charts@^1.5.0"));
 		}),
 	);
 

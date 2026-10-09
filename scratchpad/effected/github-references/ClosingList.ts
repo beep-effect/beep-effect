@@ -1,4 +1,4 @@
-import { Option } from "effect";
+import * as O from "effect/Option";
 import type { ClosingKeyword } from "./IssueReferences.ts";
 import { CLOSING_KEYWORDS } from "./IssueReferences.ts";
 
@@ -218,20 +218,20 @@ const parseItems = (line: string, from: number): ReadonlyArray<number> | undefin
  *
  * @public
  */
-export const parseReferenceList = (line: string): Option.Option<ReferenceList> => {
+export const parseReferenceList = (line: string): O.Option<ReferenceList> => {
 	const trimmed = line.trim();
 	let letters = 0;
 	while (letters < trimmed.length && isAsciiLetter(trimmed.charCodeAt(letters))) letters += 1;
-	if (letters === 0) return Option.none();
+	if (letters === 0) return O.none();
 	const keyword = trimmed.slice(0, letters).toLowerCase();
-	if (!ALL_KEYWORDS.has(keyword)) return Option.none();
+	if (!ALL_KEYWORDS.has(keyword)) return O.none();
 	let cursor = letters;
 	if (trimmed.charCodeAt(cursor) === COLON) cursor += 1;
 	const afterWhitespace = skipSpaceTab(trimmed, cursor);
-	if (afterWhitespace === cursor) return Option.none();
+	if (afterWhitespace === cursor) return O.none();
 	const issueNumbers = parseItems(trimmed, afterWhitespace);
-	if (issueNumbers === undefined) return Option.none();
-	return Option.some({
+	if (issueNumbers === undefined) return O.none();
+	return O.some({
 		keyword: keyword as ClosingKeyword | ReferenceKeyword,
 		closing: CLOSING_SET.has(keyword),
 		issueNumbers,
@@ -261,7 +261,7 @@ export const collectReferenceLists = (text: string): ReadonlyArray<ReferenceList
 	const lists: Array<ReferenceList> = [];
 	for (const line of text.split("\n")) {
 		const whole = parseReferenceList(line);
-		if (Option.isSome(whole)) {
+		if (O.isSome(whole)) {
 			lists.push(whole.value);
 			continue;
 		}
@@ -283,12 +283,12 @@ export const collectReferenceLists = (text: string): ReadonlyArray<ReferenceList
  *
  * @public
  */
-export const parseClosingList = (line: string): Option.Option<ClosingList> =>
-	Option.flatMap(parseReferenceList(line), (list) =>
+export const parseClosingList = (line: string): O.Option<ClosingList> =>
+	O.flatMap(parseReferenceList(line), (list) =>
 		list.closing
 			? // Safe: `closing` is exactly membership in CLOSING_KEYWORDS.
-				Option.some({ keyword: list.keyword as ClosingKeyword, issueNumbers: list.issueNumbers })
-			: Option.none(),
+				O.some({ keyword: list.keyword as ClosingKeyword, issueNumbers: list.issueNumbers })
+			: O.none(),
 	);
 
 /**
@@ -308,7 +308,7 @@ export const parseReferenceLists = (text: string): ReadonlyArray<ReferenceList> 
 	const lists: Array<ReferenceList> = [];
 	for (const line of text.split("\n")) {
 		const parsed = parseReferenceList(line);
-		if (Option.isSome(parsed)) lists.push(parsed.value);
+		if (O.isSome(parsed)) lists.push(parsed.value);
 	}
 	return lists;
 };
@@ -328,7 +328,7 @@ export const parseClosingLists = (text: string): ReadonlyArray<ClosingList> => {
 	const lists: Array<ClosingList> = [];
 	for (const line of text.split("\n")) {
 		const parsed = parseClosingList(line);
-		if (Option.isSome(parsed)) lists.push(parsed.value);
+		if (O.isSome(parsed)) lists.push(parsed.value);
 	}
 	return lists;
 };

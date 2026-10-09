@@ -6,7 +6,7 @@
 // overrides are rejected at config-validation time by YamlLint's config),
 // and its options schema accepts no options.
 
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 import type { LintContext, YamlRule } from "../../YamlLintRule.ts";
 import { YamlLintDiagnostic } from "../../YamlLintRule.ts";
 
@@ -14,7 +14,7 @@ import { YamlLintDiagnostic } from "../../YamlLintRule.ts";
  * parse-validity accepts no options; the config layer additionally rejects
  * any attempt to set a severity or `"off"` on this rule.
  */
-export const parseValidityOptions = Schema.Struct({});
+export const parseValidityOptions = S.Struct({});
 
 /** The always-on parse-validity rule. */
 export const parseValidity: YamlRule = {

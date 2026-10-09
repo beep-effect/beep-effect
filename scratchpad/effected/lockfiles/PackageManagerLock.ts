@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 
 /**
  * The package manager a `pnpm-lock.yaml` pins, with the integrity pnpm
@@ -29,10 +29,10 @@ import { Schema } from "effect";
  *
  * @public
  */
-export class PackageManagerLock extends Schema.Class<PackageManagerLock>("PackageManagerLock")({
-	name: Schema.Literal("pnpm"),
-	specifier: Schema.String,
-	version: Schema.String,
-	integrity: Schema.String,
-	nativeIntegrity: Schema.Record(Schema.String, Schema.String),
+export class PackageManagerLock extends S.Class<PackageManagerLock>("PackageManagerLock")({
+	name: S.Literal("pnpm"),
+	specifier: S.String,
+	version: S.String,
+	integrity: S.String,
+	nativeIntegrity: S.Record(S.String, S.String),
 }) {}

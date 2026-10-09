@@ -1,5 +1,7 @@
 import { LocalExec } from "../commands/index.ts";
-import { Effect, Option, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { ChildProcess } from "effect/process";
 import { PublishError } from "./PublishError.ts";
 
@@ -17,21 +19,21 @@ import { PublishError } from "./PublishError.ts";
  *
  * @public
  */
-export class NpmExecutor extends Schema.Class<NpmExecutor>("NpmExecutor")({
+export class NpmExecutor extends S.Class<NpmExecutor>("NpmExecutor")({
 	/**
 	 * The npm package spec to fetch and run (`"npm@11"`). Absent means the
 	 * ambient `npm` on `PATH`.
 	 */
-	spec: Schema.optionalKey(Schema.String),
+	spec: S.optionalKey(S.String),
 	/**
 	 * The npm cache directory, emitted as `--cache <dir>` on every invocation.
 	 * Absent uses npm's own default (`~/.npm`).
 	 */
-	cacheDir: Schema.optionalKey(Schema.String),
+	cacheDir: S.optionalKey(S.String),
 	/**
 	 * Extra flags appended to every generated invocation, after `--cache`.
 	 */
-	extraArgs: Schema.optionalKey(Schema.Array(Schema.String)),
+	extraArgs: S.String.pipe(S.Array, S.optionalKey),
 }) {
 	/** The runner's own `npm`. */
 	static readonly ambient: NpmExecutor = NpmExecutor.make({});
@@ -132,7 +134,7 @@ export class NpmExecutor extends Schema.Class<NpmExecutor>("NpmExecutor")({
 			const context = yield* local.context.pipe(
 				Effect.mapError((cause) => PublishError.make({ kind: "executor", cause })),
 			);
-			if (Option.isNone(context)) {
+			if (O.isNone(context)) {
 				return yield* PublishError.make({ kind: "executor" });
 			}
 			const dlx = context.value.applyDlx(ChildProcess.make(spec, all));

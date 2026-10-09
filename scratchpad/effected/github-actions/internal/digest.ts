@@ -10,8 +10,11 @@
 // multi-gigabyte toolchain archive needs — from being re-derived per caller.
 
 import { createHash } from "node:crypto";
-import type { FileSystem, PlatformError } from "effect";
-import { Effect, Stream, Function } from "effect";
+import type * as FileSystem from "effect/FileSystem";
+import type * as PlatformError from "effect/PlatformError";
+import * as Effect from "effect/Effect";
+import * as Stream from "effect/Stream";
+import * as Function from "effect/Function";
 import * as Hex from "effect/encoding/Hex";
 
 /** The raw SHA-256 of a string or byte array held in memory. @internal */

@@ -1,7 +1,12 @@
 // @effect-diagnostics strictEffectProvide:skip-file asyncFunction:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
-import { Crypto, Effect, Layer, PlatformError, Result, Schema } from "effect";
+import * as Crypto from "effect/Crypto";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as PlatformError from "effect/PlatformError";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { HttpClient, HttpClientError, HttpClientResponse } from "effect/http";
 import type { TarballError } from "../../effected/npm/index.ts";
 import { PackageTarball, PublishedVersion } from "../../effected/npm/index.ts";
@@ -48,7 +53,7 @@ const http = (result: { status: number; body?: Uint8Array } | "transport"): Laye
 	);
 
 const published = (fields: { tarball?: string; integrity?: string }) =>
-	Result.getOrThrow(Schema.decodeResult(PublishedVersion)({ name: "some-pkg", version: "1.2.3", ...fields }));
+	Result.getOrThrow(S.decodeResult(PublishedVersion)({ name: "some-pkg", version: "1.2.3", ...fields }));
 
 const WITH_TARBALL = { tarball: "https://registry.test/some-pkg/-/some-pkg-1.2.3.tgz" };
 

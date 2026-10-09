@@ -3,7 +3,9 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { assert, describe, it } from "@effect/vitest";
-import { ConfigProvider, Effect, Redacted } from "effect";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Effect from "effect/Effect";
+import * as Redacted from "effect/Redacted";
 import { ActionOutputs, Secret } from "../../effected/github-actions/index.ts";
 
 /** Records what was masked, so ordering can be asserted. */

@@ -1,4 +1,4 @@
-import { SchemaIssue } from "effect";
+import * as SchemaIssue from "effect/SchemaIssue";
 
 /**
  * Core's structured formatter, with one phrasing override.

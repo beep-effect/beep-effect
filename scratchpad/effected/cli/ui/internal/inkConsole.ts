@@ -1,6 +1,7 @@
-import { Clock } from "effect";
-import type { Console } from "effect";
-import { Effect, Inspectable } from "effect";
+import * as Clock from "effect/Clock";
+import type * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as Inspectable from "effect/Inspectable";
 import type { FunctionComponent, ReactNode } from "react";
 import { UiStreams } from "../UiStreams.ts";
 import { inkModules } from "./ink.ts";

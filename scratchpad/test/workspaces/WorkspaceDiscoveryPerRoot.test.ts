@@ -10,7 +10,11 @@
 // roots hold the same packages.
 
 import { assert, describe, it, layer } from "@effect/vitest";
-import { Cause, Effect, Exit, Layer, Option } from "effect";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import { WorkspaceDiscovery, WorkspaceRoot, WorkspaceRootNotFoundError } from "../../effected/workspaces/index.ts";
 import type { Tree } from "./fixtures.ts";
 import { manifest, platform, rootManifest } from "./fixtures.ts";
@@ -273,8 +277,8 @@ describe("WorkspaceDiscovery.resolveFile — unchanged by the per-root memos", (
 				const discovery = yield* WorkspaceDiscovery;
 				yield* discovery.listPackagesIn("/worktree");
 				const owner = yield* discovery.resolveFile("/primary/packages/beta/src/index.ts");
-				assert.isTrue(Option.isSome(owner));
-				assert.strictEqual(Option.getOrThrow(owner).name, "@x/beta");
+				assert.isTrue(O.isSome(owner));
+				assert.strictEqual(O.getOrThrow(owner).name, "@x/beta");
 			}),
 		);
 	});

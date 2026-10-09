@@ -1,6 +1,7 @@
 import { DependencyField } from "../npm/index.ts";
 import { Range, SemVer } from "../semver/index.ts";
-import { Exit, Schema } from "effect";
+import * as Exit from "effect/Exit";
+import * as S from "effect/Schema";
 import { DEP_TYPES, isWorkspaceSpecifier } from "./internal/shared.ts";
 import type { Lockfile } from "./Lockfile.ts";
 
@@ -15,16 +16,16 @@ import type { Lockfile } from "./Lockfile.ts";
  *
  * @public
  */
-export class WorkspaceManifest extends Schema.Class<WorkspaceManifest>("WorkspaceManifest")({
-	name: Schema.NonEmptyString,
-	dependencies: Schema.optionalKey(Schema.Record(Schema.String, Schema.String)),
-	devDependencies: Schema.optionalKey(Schema.Record(Schema.String, Schema.String)),
-	peerDependencies: Schema.optionalKey(Schema.Record(Schema.String, Schema.String)),
-	optionalDependencies: Schema.optionalKey(Schema.Record(Schema.String, Schema.String)),
+export class WorkspaceManifest extends S.Class<WorkspaceManifest>("WorkspaceManifest")({
+	name: S.NonEmptyString,
+	dependencies: S.optionalKey(S.Record(S.String, S.String)),
+	devDependencies: S.optionalKey(S.Record(S.String, S.String)),
+	peerDependencies: S.optionalKey(S.Record(S.String, S.String)),
+	optionalDependencies: S.optionalKey(S.Record(S.String, S.String)),
 }) {}
 
-const decodeRange = Schema.decodeUnknownExit(Range.FromString);
-const decodeSemVer = Schema.decodeUnknownExit(SemVer.FromString);
+const decodeRange = S.decodeUnknownExit(Range.FromString);
+const decodeSemVer = S.decodeUnknownExit(SemVer.FromString);
 
 /**
  * Result of checking a parsed lockfile against the workspace's declared
@@ -44,16 +45,16 @@ const decodeSemVer = Schema.decodeUnknownExit(SemVer.FromString);
  *
  * @public
  */
-export class LockfileIntegrity extends Schema.Class<LockfileIntegrity>("LockfileIntegrity")({
-	valid: Schema.Boolean,
-	missingWorkspaces: Schema.Array(Schema.String),
-	extraWorkspaces: Schema.Array(Schema.String),
-	unsatisfiedConstraints: Schema.Array(
-		Schema.Struct({
-			workspace: Schema.String,
-			dependency: Schema.String,
-			constraint: Schema.String,
-			resolved: Schema.String,
+export class LockfileIntegrity extends S.Class<LockfileIntegrity>("LockfileIntegrity")({
+	valid: S.Boolean,
+	missingWorkspaces: S.Array(S.String),
+	extraWorkspaces: S.Array(S.String),
+	unsatisfiedConstraints: S.Array(
+		S.Struct({
+			workspace: S.String,
+			dependency: S.String,
+			constraint: S.String,
+			resolved: S.String,
 			depType: DependencyField,
 		}),
 	),

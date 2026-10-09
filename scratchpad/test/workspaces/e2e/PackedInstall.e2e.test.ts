@@ -26,14 +26,18 @@ import { dirname, join } from "node:path";
 import { NodeServices } from "@effect/platform-node";
 import { afterAll, assert, describe, layer } from "@effect/vitest";
 import { Run } from "../../../effected/commands/index.ts";
-import { Duration, Effect, Layer, Result, Schema } from "effect";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { ChildProcess } from "effect/process";
 import type { PackageManagerName } from "../../../effected/workspaces/index.ts";
 import { Workspaces } from "../../../effected/workspaces/index.ts";
 import type { InstalledConsumer, PackedInstallBudget } from "../../../effected/workspaces/testing.ts";
 import { PackedInstall } from "../../../effected/workspaces/testing.ts";
 
-const JsonValue = Schema.fromJsonString(Schema.Record(Schema.String, Schema.Unknown));
+const JsonValue = S.fromJsonString(S.Record(S.String, S.Unknown));
 
 const CARRIER = "@effected/packed-install-fixture-carrier";
 const LIB = "@effected/packed-install-fixture-lib";
@@ -386,7 +390,7 @@ describe("PackedInstall against a real fixture workspace", () => {
 							const carrierTarball = result.tarballs[CARRIER] ?? "";
 							const packed = spawnSync("tar", ["-xzOf", carrierTarball, "package/package.json"], { encoding: "utf8" });
 							assert.strictEqual(packed.status, 0, packed.stderr);
-							assert.deepStrictEqual(Result.getOrThrow(Schema.decodeResult(JsonValue)(packed.stdout)).dependencies, { [LIB]: VERSION });
+							assert.deepStrictEqual(Result.getOrThrow(S.decodeResult(JsonValue)(packed.stdout)).dependencies, { [LIB]: VERSION });
 							for (const consumer of result.consumers) yield* assertConsumer(consumer, result.tarballs);
 							const scratch = dirname(result.consumers[0]?.directory ?? "");
 							assert.isTrue(existsSync(scratch), "the scratch directory exists while the scope is open");
@@ -419,7 +423,7 @@ describe("PackedInstall against a real fixture workspace", () => {
 					});
 					assert.strictEqual(packed.status, 0, packed.stderr);
 					// pnpm rewrote workspace:^ to the lib's version.
-					assert.deepStrictEqual(Result.getOrThrow(Schema.decodeResult(JsonValue)(packed.stdout)).dependencies, { [LIB]: `^${VERSION}` });
+					assert.deepStrictEqual(Result.getOrThrow(S.decodeResult(JsonValue)(packed.stdout)).dependencies, { [LIB]: `^${VERSION}` });
 					assert.deepStrictEqual(
 						result.consumers.map((consumer) => consumer.manager),
 						[...sourceManagers],

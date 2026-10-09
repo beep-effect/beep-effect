@@ -1,8 +1,14 @@
 // @effect-diagnostics strictEffectProvide:skip-file asyncFunction:skip-file globalTimers:skip-file
-import { Clock } from "effect";
+import * as Clock from "effect/Clock";
 import { assert, describe, it } from "@effect/vitest";
-import type { Scope } from "effect";
-import { Cause, Effect, Exit, Fiber, Option, Schedule, Schema } from "effect";
+import type * as Scope from "effect/Scope";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Fiber from "effect/Fiber";
+import * as O from "effect/Option";
+import * as Schedule from "effect/Schedule";
+import * as S from "effect/Schema";
 import { Text, useApp } from "ink";
 import type { ReactElement } from "react";
 import { createElement, useEffect, useState } from "react";
@@ -68,7 +74,7 @@ const idle: Screen<never> = () => createElement(Text, null, "waiting");
 
 const chalk: Effect.Effect<InkChalk> = Effect.flatMap(
 	Effect.promise(() => inkChalk()),
-	Option.match({
+	O.match({
 		onNone: () => Effect.die(new Error("Ink's chalk did not resolve")),
 		onSome: Effect.succeed,
 	}),
@@ -127,9 +133,9 @@ describe("CliUi.run", () => {
 			const fiber = yield* Effect.forkChild(runOn(fake, idle));
 			yield* until(() => fake.rawModes.includes(true));
 			fake.input("\u0003");
-			const error = yield* Effect.flip(Fiber.join(fiber));
+			const error = yield* fiber.pipe(Fiber.join, Effect.flip);
 			assert.instanceOf(error, Cancelled);
-			assert.strictEqual(Schema.is(Cancelled)(error) ? error.reason : undefined, "interrupt");
+			assert.strictEqual(S.is(Cancelled)(error) ? error.reason : undefined, "interrupt");
 		}),
 	);
 
@@ -140,10 +146,10 @@ describe("CliUi.run", () => {
 			yield* until(() => fake.rawModes.includes(true));
 			const pressed = Clock.Clock.defaultValue().currentTimeMillisUnsafe();
 			fake.input(ESC);
-			const error = yield* Effect.flip(Fiber.join(fiber));
+			const error = yield* fiber.pipe(Fiber.join, Effect.flip);
 			assert.isAtLeast(Clock.Clock.defaultValue().currentTimeMillisUnsafe() - pressed, 15, "Ink holds a lone ESC for its flush before reporting it");
 			assert.instanceOf(error, Cancelled);
-			assert.strictEqual(Schema.is(Cancelled)(error) ? error.reason : undefined, "escape");
+			assert.strictEqual(S.is(Cancelled)(error) ? error.reason : undefined, "escape");
 		}),
 	);
 
@@ -356,7 +362,7 @@ describe("bracketed paste is switched off however a screen ends (production path
 			yield* until(() => fake.rawModes.includes(true));
 			yield* until(() => fake.stdout().includes(`${ESC}[?2004h`));
 			fake.input(ESC);
-			const exit = yield* Effect.exit(Fiber.join(fiber));
+			const exit = yield* fiber.pipe(Fiber.join, Effect.exit);
 			assert.isTrue(Exit.isFailure(exit), "Esc cancels");
 			assert.strictEqual(lastPasteMode(fake.stdout()), "l");
 		}),
@@ -377,7 +383,7 @@ describe("bracketed paste is switched off however a screen ends (production path
 			const fiber = yield* Effect.forkChild(runOn(fake, () => createElement(Fuse)));
 			yield* until(() => explode !== undefined && fake.stdout().includes(`${ESC}[?2004h`));
 			explode?.();
-			const exit = yield* Effect.exit(Fiber.join(fiber));
+			const exit = yield* fiber.pipe(Fiber.join, Effect.exit);
 			const defect = defectOf(exit);
 			assert.strictEqual(defect instanceof Error ? defect.message : "", "kaboom");
 			assert.strictEqual(lastPasteMode(fake.stdout()), "l");
@@ -418,7 +424,7 @@ describe("a throwing input handler is a defect, never an uncaught exception or a
 			);
 			yield* until(() => fake.stdout().includes(`${ESC}[?2004h`));
 			fake.input("x");
-			const exit = yield* Effect.exit(Fiber.join(fiber));
+			const exit = yield* fiber.pipe(Fiber.join, Effect.exit);
 			const defect = defectOf(exit);
 			assert.strictEqual(defect instanceof Error ? defect.message : String(defect), "key handler threw");
 			restored(fake);
@@ -442,7 +448,7 @@ describe("a throwing input handler is a defect, never an uncaught exception or a
 			);
 			yield* until(() => fake.stdout().includes(`${ESC}[?2004h`));
 			fake.input(`${ESC}[200~pasted${ESC}[201~`);
-			const exit = yield* Effect.exit(Fiber.join(fiber));
+			const exit = yield* fiber.pipe(Fiber.join, Effect.exit);
 			const defect = defectOf(exit);
 			assert.strictEqual(defect instanceof Error ? defect.message : String(defect), "paste handler threw");
 			restored(fake);

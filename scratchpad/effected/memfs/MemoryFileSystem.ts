@@ -4,8 +4,12 @@
 // node-shaped ports (ports.ts), fault injection (faults.ts) and errno
 // (errno.ts) — all extensions beyond the vendored port.
 
-import type { PlatformError } from "effect";
-import { Context, Effect, FileSystem, Layer, Path } from "effect";
+import type * as PlatformError from "effect/PlatformError";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
 import { ErrnoException, errnoError, nodeErrno } from "./internal/errno.ts";
 import { wrapFaulty } from "./internal/faults.ts";
 import {
@@ -1154,7 +1158,7 @@ export class MemoryFileSystem {
 	 * layer providing more is assignable to `Layer<FileSystem.FileSystem>`.
 	 */
 	static readonly layer: Layer.Layer<FileSystem.FileSystem | MemoryFileSystemVolume> = Layer.effectContext(
-		Effect.map(Effect.orDie(buildHandle({}, undefined)), handleContext),
+		buildHandle({}, undefined).pipe(Effect.orDie, Effect.map(handleContext)),
 	);
 
 	/**
@@ -1210,7 +1214,7 @@ export class MemoryFileSystem {
 		seed: MemoryFileSystemSeed = {},
 		options?: MemoryFileSystemOptions,
 	): Layer.Layer<FileSystem.FileSystem | MemoryFileSystemVolume> =>
-		Layer.effectContext(Effect.map(Effect.orDie(buildHandle(seed, options)), handleContext));
+		buildHandle(seed, options).pipe(Effect.orDie, Effect.map(handleContext), Layer.effectContext);
 
 	/**
 	 * The context key for {@link MemoryFileSystemVolume}, mirroring the shape

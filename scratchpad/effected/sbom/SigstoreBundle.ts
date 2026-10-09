@@ -6,7 +6,7 @@
 // the shape. The media-type constants are therefore written out rather than
 // re-exported from `@sigstore/bundle`.
 
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 
 /**
  * The Sigstore bundle media type this package produces.
@@ -44,11 +44,11 @@ export const IN_TOTO_PAYLOAD_TYPE = "application/vnd.in-toto+json" as const;
  *
  * @public
  */
-export class SigstoreBundle extends Schema.Class<SigstoreBundle>("SigstoreBundle")({
+export class SigstoreBundle extends S.Class<SigstoreBundle>("SigstoreBundle")({
 	/** The bundle's media type, usually {@link SIGSTORE_BUNDLE_V0_3_MEDIA_TYPE}. */
-	mediaType: Schema.String,
+	mediaType: S.String,
 	/** The certificate and transparency-log entries a verifier checks. */
-	verificationMaterial: Schema.Unknown,
+	verificationMaterial: S.Unknown,
 	/** The signed DSSE envelope carrying the statement. */
-	dsseEnvelope: Schema.Unknown,
+	dsseEnvelope: S.Unknown,
 }) {}

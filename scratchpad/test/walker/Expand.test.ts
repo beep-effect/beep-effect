@@ -2,7 +2,7 @@
 
 import { assert, layer } from "@effect/vitest";
 import { GlobPatternError, GlobPatternOptions } from "../../effected/glob/index.ts";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { DescendError } from "../../effected/walker/Descend.ts";
 import { GlobExpansionError, compileAndExpand } from "../../effected/walker/Expand.ts";
 import { platform } from "./fixtures.ts";

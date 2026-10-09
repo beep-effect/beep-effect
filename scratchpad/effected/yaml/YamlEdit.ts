@@ -11,7 +11,7 @@
 // counterparts (same field names, types, optionality and semantics) so
 // consumer code can be written once over "a document codec's Edit/Range/Path".
 
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 
 /**
  * A single path segment: a `string` for mapping keys or a `number` for
@@ -36,9 +36,9 @@ export type YamlPath = ReadonlyArray<YamlSegment>;
  *
  * @public
  */
-export class YamlRange extends Schema.Class<YamlRange>("YamlRange")({
-	offset: Schema.Finite,
-	length: Schema.Finite,
+export class YamlRange extends S.Class<YamlRange>("YamlRange")({
+	offset: S.Finite,
+	length: S.Finite,
 }) {}
 
 /**
@@ -53,10 +53,10 @@ export class YamlRange extends Schema.Class<YamlRange>("YamlRange")({
  *
  * @public
  */
-export class YamlEdit extends Schema.Class<YamlEdit>("YamlEdit")({
-	offset: Schema.Finite,
-	length: Schema.Finite,
-	content: Schema.String,
+export class YamlEdit extends S.Class<YamlEdit>("YamlEdit")({
+	offset: S.Finite,
+	length: S.Finite,
+	content: S.String,
 }) {
 	/**
 	 * Apply `edits` to `text`, producing a new string. Edits are applied in

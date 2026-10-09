@@ -14,7 +14,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { assert, describe, it } from "@effect/vitest";
 import { Lockfile } from "../../effected/lockfiles/index.ts";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import type { Dependent, DuplicatedPackage } from "../../effected/workspaces/DuplicateCheck.ts";
 import { DuplicateCheck } from "../../effected/workspaces/DuplicateCheck.ts";
 

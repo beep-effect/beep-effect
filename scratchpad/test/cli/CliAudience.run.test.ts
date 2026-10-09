@@ -1,6 +1,6 @@
 // @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file
-import { Schema } from "effect";
-import { Result } from "effect";
+import * as S from "effect/Schema";
+import * as Result from "effect/Result";
 // The audience flag must be known BEFORE core parses, because a fallback prompt fires during the parse: core parses
 // the root flags into a local context (Command.ts:922-925) and only wraps the subcommand HANDLER with what
 // `provideEffect` resolves (Command.ts:941), so the prompt in `sub.parse` (Param.ts:1478-1485) cannot see them.
@@ -8,12 +8,18 @@ import { Result } from "effect";
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
 import { Audience, TerminalEnv } from "../../effected/env/index.ts";
-import { Cause, ConfigProvider, Console, Effect, Exit, Layer, Runtime } from "effect";
+import * as Cause from "effect/Cause";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Layer from "effect/Layer";
+import * as Runtime from "effect/Runtime";
 import { CliConfig, Command, Flag, GlobalFlag, Prompt } from "effect/cli";
 import { CliAudience, CliInteractive, CliPrompt, CliRuntime } from "../../effected/cli/index.ts";
 import { TestTerminal } from "../../effected/cli/testing.ts";
 
-const Json = Schema.fromJsonString(Schema.Unknown);
+const Json = S.fromJsonString(S.Unknown);
 
 const capturing = () => {
 	const out: string[] = [];
@@ -67,7 +73,7 @@ const run = Effect.fn("run")(function* (argv: ReadonlyArray<string>, via: "runWi
 			Effect.provide(CliInteractive.layerTest(true)),
 			Effect.provide(Audience.layerTest("human", "detected")),
 		);
-		const code = Exit.isFailure(exit) ? Runtime.getErrorExitCode(Cause.squash(exit.cause)) : 0;
+		const code = Exit.isFailure(exit) ? exit.cause.pipe(Cause.squash, Runtime.getErrorExitCode) : 0;
 		return { out, err, code, reads: yield* terminal.reads };
 	});
 
@@ -240,7 +246,7 @@ describe("CliAudience: a flag decides CliInteractive from the TTY facts", () => 
 				Effect.provide(Audience.layerTest(facts.detected, "detected")),
 				Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(env)),
 			);
-			const code = Exit.isFailure(exit) ? Runtime.getErrorExitCode(Cause.squash(exit.cause)) : 0;
+			const code = Exit.isFailure(exit) ? exit.cause.pipe(Cause.squash, Runtime.getErrorExitCode) : 0;
 			return { out, err, code, reads: yield* terminal.reads };
 		});
 
@@ -264,8 +270,8 @@ describe("CliAudience: a flag decides CliInteractive from the TTY facts", () => 
 				{ ...agentOnTtys, stdin: false, stdout: false },
 			]) {
 				const { out, reads } = yield* runUnder(facts, ["--human", "init"]);
-				assert.deepStrictEqual(out, ["profile=x audience=human/flag"], Result.getOrThrow(Schema.encodeUnknownResult(Json)(facts)));
-				assert.deepStrictEqual(reads, QUIET, Result.getOrThrow(Schema.encodeUnknownResult(Json)(facts)));
+				assert.deepStrictEqual(out, ["profile=x audience=human/flag"], Result.getOrThrow(S.encodeUnknownResult(Json)(facts)));
+				assert.deepStrictEqual(reads, QUIET, Result.getOrThrow(S.encodeUnknownResult(Json)(facts)));
 			}
 		}),
 	);

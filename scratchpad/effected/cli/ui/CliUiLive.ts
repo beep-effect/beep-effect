@@ -2,24 +2,22 @@
 import type * as Cli from "../index.ts";
 import { Audience, TerminalEnv } from "../../env/index.ts";
 import { CommandNeutralizer } from "../../github-commands/index.ts";
-import type { Console } from "effect";
-import {
-	Cause,
-	Clock,
-	Duration,
-	Effect,
-	Exit,
-	Fiber,
-	Option,
-	PubSub,
-	Pull,
-	Queue,
-	Result,
-	Schedule,
-	Scheduler,
-	Scope,
-	Stream,
-} from "effect";
+import type * as Console from "effect/Console";
+import * as Cause from "effect/Cause";
+import * as Clock from "effect/Clock";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Fiber from "effect/Fiber";
+import * as O from "effect/Option";
+import * as PubSub from "effect/PubSub";
+import * as Pull from "effect/Pull";
+import * as Queue from "effect/Queue";
+import * as Result from "effect/Result";
+import * as Schedule from "effect/Schedule";
+import * as Scheduler from "effect/Scheduler";
+import * as Scope from "effect/Scope";
+import * as Stream from "effect/Stream";
 import type { FunctionComponent, ReactElement, ReactNode } from "react";
 import { CliInteractive } from "../CliInteractive.ts";
 import { CliLinks } from "../CliLinks.ts";
@@ -272,7 +270,7 @@ export const live = <E, S>(
 		const cliTheme = yield* CliTheme;
 		const theme = CliTheme.forAudience(
 			cliTheme.forStream("stdout"),
-			Option.isSome(audience) ? audience.value.kind : undefined,
+			O.isSome(audience) ? audience.value.kind : undefined,
 		);
 		const colour = theme.color;
 		// Under the GitHub Actions runner, text from data must not form a workflow command: a DocView neutralizes its own
@@ -397,7 +395,7 @@ export const live = <E, S>(
 		const finalContext: Effect.Effect<RenderContext> = Effect.gen(function* () {
 			const terminal = yield* Effect.serviceOption(TerminalEnv);
 			const links = yield* Effect.serviceOption(CliLinks);
-			if (Option.isSome(terminal) && Option.isSome(links) && Option.isSome(audience)) {
+			if (O.isSome(terminal) && O.isSome(links) && O.isSome(audience)) {
 				return yield* Render.context("stdout").pipe(
 					Effect.provideService(CliTheme, cliTheme),
 					Effect.provideService(TerminalEnv, terminal.value),
@@ -407,7 +405,7 @@ export const live = <E, S>(
 			}
 			// No environment: what the view already knows. A run with nobody watching has no width to honour.
 			return Render.contextOf({
-				audience: Option.isSome(audience) ? audience.value.kind : "human",
+				audience: O.isSome(audience) ? audience.value.kind : "human",
 				color: theme.color,
 				glyphs: theme.glyphs,
 				...(neutralize ? { neutralizeWorkflowCommands: true } : {}),
@@ -668,9 +666,9 @@ export const live = <E, S>(
 		const takeQueued = (sub: PubSub.Subscription<E>): Effect.Effect<ReadonlyArray<E>> =>
 			Effect.suspend(() => {
 				const queued = PubSub.remainingUnsafe(sub);
-				if (Option.isNone(queued)) return Effect.succeed([]);
+				if (O.isNone(queued)) return Effect.succeed([]);
 				const ended = sub.ended.current;
-				const final: ReadonlyArray<E> = Option.isSome(ended) && !finalTaken ? [ended.value] : [];
+				const final: ReadonlyArray<E> = O.isSome(ended) && !finalTaken ? [ended.value] : [];
 				if (final.length > 0) finalTaken = true;
 				return queued.value > 0
 					? Effect.map(PubSub.takeUpTo(sub, queued.value), (taken): ReadonlyArray<E> => [...taken, ...final])
@@ -741,14 +739,14 @@ export const live = <E, S>(
 		const subscriptionStep = (sub: PubSub.Subscription<E>): Effect.Effect<boolean> =>
 			Effect.uninterruptibleMask((restore) =>
 				Effect.suspend(() => {
-					if (Option.isNone(PubSub.remainingUnsafe(sub))) return Effect.succeed(true);
+					if (sub.pipe(PubSub.remainingUnsafe, O.isNone)) return Effect.succeed(true);
 					// Ended: core's final message is sticky (every later take returns it again), so take what is buffered and
 					// the final message once, and end.
-					if (Option.isSome(sub.ended.current)) return Effect.as(Effect.flatMap(takeQueued(sub), offerEvents), true);
+					if (O.isSome(sub.ended.current)) return Effect.as(Effect.flatMap(takeQueued(sub), offerEvents), true);
 					return restore(PubSub.takeAll(sub)).pipe(
 						// A take the shutdown interrupted ends the events; an interrupt of this fiber (`close`) stays one.
 						Effect.catchCause((cause) =>
-							Option.isNone(PubSub.remainingUnsafe(sub)) ? Effect.void : Effect.failCause(cause),
+							sub.pipe(PubSub.remainingUnsafe, O.isNone) ? Effect.void : Effect.failCause(cause),
 						),
 						Effect.flatMap((chunk) => {
 							if (chunk === undefined) return Effect.succeed(true);
@@ -756,10 +754,10 @@ export const live = <E, S>(
 							// a PubSub has ended and its subscriber is waiting).
 							const ended = sub.ended.current;
 							const final =
-								Option.isSome(ended) &&
+								O.isSome(ended) &&
 								chunk.length === 1 &&
 								chunk[0] === ended.value &&
-								Option.getOrElse(PubSub.remainingUnsafe(sub), () => 0) === 0;
+								O.getOrElse(PubSub.remainingUnsafe(sub), () => 0) === 0;
 							if (final) finalTaken = true;
 							return Effect.as(offerEvents(chunk), final);
 						}),
@@ -797,8 +795,11 @@ export const live = <E, S>(
 		// Once, however many callers: stop taking events, then end. The pump is stopped first, so the controller, which
 		// takes what a subscription still queues when it ends, never races it for a message. After an earlier end the
 		// controller has returned, and this `Ended` sits in the inbox unread.
-		const ending = yield* Effect.cached(
-			Effect.uninterruptible(Effect.andThen(Fiber.interrupt(pumping), Queue.offer(inbox, { _tag: "Ended" }))),
+		const ending = yield* pumping.pipe(
+			Fiber.interrupt,
+			Effect.andThen(Queue.offer(inbox, { _tag: "Ended" })),
+			Effect.uninterruptible,
+			Effect.cached,
 		);
 		return {
 			state: Effect.sync(() => state),

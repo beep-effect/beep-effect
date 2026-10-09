@@ -4,7 +4,9 @@
 // Cycle detection is ITERATIVE, so a long dependency chain cannot overflow the
 // stack.
 
-import { Effect, Graph, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as Graph from "effect/Graph";
+import * as S from "effect/Schema";
 import { PackageNotFoundError } from "./WorkspaceDiscovery.ts";
 import { WorkspacePackage } from "./WorkspacePackage.ts";
 
@@ -20,9 +22,9 @@ import { WorkspacePackage } from "./WorkspacePackage.ts";
  *
  * @public
  */
-export class CyclicDependencyError extends Schema.TaggedError<CyclicDependencyError>()("CyclicDependencyError", {
+export class CyclicDependencyError extends S.TaggedError<CyclicDependencyError>()("CyclicDependencyError", {
 	/** The packages participating in the cycle. */
-	cycle: Schema.Array(Schema.String),
+	cycle: S.Array(S.String),
 }) {
 	/** Renders the cycle members into a one-line message. */
 	override get message(): string {
@@ -90,9 +92,9 @@ interface Edges {
  *
  * @public
  */
-export class DependencyGraph extends Schema.Class<DependencyGraph>("DependencyGraph")({
+export class DependencyGraph extends S.Class<DependencyGraph>("DependencyGraph")({
 	/** The workspace packages the graph is drawn over. */
-	packages: Schema.Array(WorkspacePackage),
+	packages: S.Array(WorkspacePackage),
 }) {
 	#edges: Edges | undefined;
 

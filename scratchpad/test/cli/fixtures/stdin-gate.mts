@@ -2,7 +2,10 @@
 // that falls back to a prompt, and a handler that waits before it reads stdin. The wait is the point: a prompt
 // runner that attached to stdin in the meantime would have eaten the piped bytes.
 import { NodeRuntime, NodeServices } from "@effect/platform-node";
-import { Console, Effect, Stdio, Stream } from "effect";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as Stdio from "effect/Stdio";
+import * as Stream from "effect/Stream";
 import { Command, Flag, Prompt } from "effect/cli";
 import { CliPrompt, CliRuntime } from "../../src/index.ts";
 

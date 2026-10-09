@@ -12,7 +12,7 @@
 // markdown inside it is ours.
 
 import { assert, describe, it } from "@effect/vitest";
-import { Result } from "effect";
+import * as Result from "effect/Result";
 import { Markdown } from "../../effected/markdown/Markdown.ts";
 import { MarkdownDocument } from "../../effected/markdown/MarkdownDocument.ts";
 import {

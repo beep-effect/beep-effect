@@ -2,7 +2,7 @@
 // grammar without parsing anything, and join back byte-exactly.
 
 import { assert, describe, it } from "@effect/vitest";
-import { Result } from "effect";
+import * as Result from "effect/Result";
 import { FrontmatterSource, FrontmatterSourceBlock, FrontmatterSourceSplit } from "../../effected/markdown/FrontmatterSource.ts";
 import { Markdown } from "../../effected/markdown/Markdown.ts";
 

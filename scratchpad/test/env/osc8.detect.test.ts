@@ -1,5 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Option } from "effect";
+import * as O from "effect/Option";
 import type { ProcessSnapshot } from "../../effected/env/internal/osc8/detect.ts";
 import { detect, detectOsc8 } from "../../effected/env/internal/osc8/detect.ts";
 import type { Env } from "../../effected/env/internal/types.ts";
@@ -208,15 +208,15 @@ describe("detectOsc8 — projection", () => {
 		const r = detectOsc8(envFor.iterm({ version: "3.5.0" }), true, false);
 		assert.strictEqual(r.stdout, true);
 		assert.strictEqual(r.stderr, false);
-		assert.deepStrictEqual(r.terminal, Option.some({ name: "iTerm.app", version: Option.some("3.5.0") }));
+		assert.deepStrictEqual(r.terminal, O.some({ name: "iTerm.app", version: O.some("3.5.0") }));
 	});
 	it("projects an unidentified terminal to None", () => {
 		const r = detectOsc8(envFor.unknown(), true, true);
 		assert.strictEqual(r.stdout, false);
-		assert.deepStrictEqual(r.terminal, Option.none());
+		assert.deepStrictEqual(r.terminal, O.none());
 	});
 	it("keeps a terminal with no version as Some with a None version", () => {
 		const r = detectOsc8(envFor.kitty(), true, true);
-		assert.deepStrictEqual(r.terminal, Option.some({ name: "kitty", version: Option.none() }));
+		assert.deepStrictEqual(r.terminal, O.some({ name: "kitty", version: O.none() }));
 	});
 });

@@ -1,5 +1,5 @@
-import { Data } from "effect";
-import { Runtime } from "effect";
+import * as Data from "effect/Data";
+import * as Runtime from "effect/Runtime";
 
 /**
  * The failure `CliRuntime.main` raises when a successful program recorded a

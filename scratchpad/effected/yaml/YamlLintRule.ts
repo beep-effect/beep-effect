@@ -7,7 +7,7 @@
 // model lives here, `src/internal/rules/*` import it, and `YamlLint.ts`
 // (config + facade) imports both. Nothing imports this module back.
 
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 import type { YamlDocument } from "./YamlDocument.ts";
 import { YamlEdit } from "./YamlEdit.ts";
 import type { YamlToken } from "./YamlToken.ts";
@@ -18,7 +18,7 @@ import type { YamlToken } from "./YamlToken.ts";
  *
  * @public
  */
-export const YamlLintSeverity = Schema.Literals(["error", "warning"]);
+export const YamlLintSeverity = S.Literals(["error", "warning"]);
 
 /**
  * The union of lint severity string literals.
@@ -39,15 +39,15 @@ export type YamlLintSeverity = typeof YamlLintSeverity.Type;
  *
  * @public
  */
-export class YamlLintDiagnostic extends Schema.Class<YamlLintDiagnostic>("YamlLintDiagnostic")({
-	rule: Schema.String,
+export class YamlLintDiagnostic extends S.Class<YamlLintDiagnostic>("YamlLintDiagnostic")({
+	rule: S.String,
 	severity: YamlLintSeverity,
-	message: Schema.String,
-	offset: Schema.Finite,
-	length: Schema.Finite,
-	line: Schema.Finite,
-	character: Schema.Finite,
-	fix: Schema.optionalKey(YamlEdit),
+	message: S.String,
+	offset: S.Finite,
+	length: S.Finite,
+	line: S.Finite,
+	character: S.Finite,
+	fix: S.optionalKey(YamlEdit),
 }) {}
 
 /**
@@ -106,13 +106,13 @@ export interface LintContext {
  *
  * @public
  */
-export class StyleVote extends Schema.TaggedClass<StyleVote>()("StyleVote", {
-	dimension: Schema.String,
-	value: Schema.Union([Schema.String, Schema.Finite, Schema.Boolean]),
-	offset: Schema.Finite,
-	length: Schema.Finite,
-	line: Schema.Finite,
-	character: Schema.Finite,
+export class StyleVote extends S.TaggedClass<StyleVote>()("StyleVote", {
+	dimension: S.String,
+	value: S.Union([S.String, S.Finite, S.Boolean]),
+	offset: S.Finite,
+	length: S.Finite,
+	line: S.Finite,
+	character: S.Finite,
 }) {}
 
 /**
@@ -128,9 +128,9 @@ export class StyleVote extends Schema.TaggedClass<StyleVote>()("StyleVote", {
  *
  * @public
  */
-export class StyleFloor extends Schema.TaggedClass<StyleFloor>()("StyleFloor", {
-	dimension: Schema.String,
-	value: Schema.Finite,
+export class StyleFloor extends S.TaggedClass<StyleFloor>()("StyleFloor", {
+	dimension: S.String,
+	value: S.Finite,
 }) {}
 
 /**

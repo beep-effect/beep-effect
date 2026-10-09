@@ -1,4 +1,4 @@
-import { Context } from "effect";
+import * as Context from "effect/Context";
 
 /**
  * Overrides of Ink's render options that only the screen harness sets.

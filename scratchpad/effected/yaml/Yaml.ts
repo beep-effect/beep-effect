@@ -14,7 +14,11 @@
 // The dependency edge runs facade → engine only, so `noImportCycles` stays
 // satisfied.
 
-import { Effect, Result, Schema, SchemaIssue, SchemaTransformation } from "effect";
+import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import { composeAllDocuments, composeFirstDocument } from "./internal/composer/document.ts";
 import type { RawDiagnostic } from "./internal/diagnostics.ts";
 import { isFatalCode } from "./internal/diagnostics.ts";
@@ -52,10 +56,10 @@ import {
  *
  * @public
  */
-export class YamlParseOptions extends Schema.Class<YamlParseOptions>("YamlParseOptions")({
-	strict: Schema.optionalKey(Schema.Boolean),
-	maxAliasCount: Schema.optionalKey(Schema.Finite),
-	uniqueKeys: Schema.optionalKey(Schema.Boolean),
+export class YamlParseOptions extends S.Class<YamlParseOptions>("YamlParseOptions")({
+	strict: S.optionalKey(S.Boolean),
+	maxAliasCount: S.optionalKey(S.Finite),
+	uniqueKeys: S.optionalKey(S.Boolean),
 }) {}
 
 /**
@@ -108,8 +112,8 @@ export class YamlParseOptions extends Schema.Class<YamlParseOptions>("YamlParseO
  *
  * @public
  */
-export class YamlStringifyOptions extends Schema.Class<YamlStringifyOptions>("YamlStringifyOptions")({
-	indent: Schema.optionalKey(Schema.Finite),
+export class YamlStringifyOptions extends S.Class<YamlStringifyOptions>("YamlStringifyOptions")({
+	indent: S.optionalKey(S.Finite),
 	/**
 	 * Column at which to fold long scalars. Default `0` (and any value `<= 0`)
 	 * never wraps; a positive value folds plain, double-quoted and block-folded
@@ -124,11 +128,11 @@ export class YamlStringifyOptions extends Schema.Class<YamlStringifyOptions>("Ya
 	 * helpers built on it — threads the field into its render context but
 	 * never reads it, so it is inert there.
 	 */
-	lineWidth: Schema.optionalKey(Schema.Finite),
-	defaultScalarStyle: Schema.optionalKey(ScalarStyle),
-	defaultCollectionStyle: Schema.optionalKey(CollectionStyle),
-	sortKeys: Schema.optionalKey(Schema.Boolean),
-	indentSequences: Schema.optionalKey(Schema.Boolean),
+	lineWidth: S.optionalKey(S.Finite),
+	defaultScalarStyle: S.optionalKey(ScalarStyle),
+	defaultCollectionStyle: S.optionalKey(CollectionStyle),
+	sortKeys: S.optionalKey(S.Boolean),
+	indentSequences: S.optionalKey(S.Boolean),
 	/**
 	 * Quote style used when a `plain`-styled scalar requires quoting. Default
 	 * `"single"`. `"double"` renders
@@ -139,7 +143,7 @@ export class YamlStringifyOptions extends Schema.Class<YamlStringifyOptions>("Ya
 	 * plain, and an explicit `defaultScalarStyle` of `"single-quoted"` or
 	 * `"double-quoted"` is unaffected.
 	 */
-	quoteStyle: Schema.optionalKey(QuoteStyle),
+	quoteStyle: S.optionalKey(QuoteStyle),
 	/**
 	 * Additionally quote plain scalars a foreign resolution dialect would
 	 * coerce to a non-string. Absent (the default) adds no quoting beyond the
@@ -166,9 +170,9 @@ export class YamlStringifyOptions extends Schema.Class<YamlStringifyOptions>("Ya
 	 * {@link Yaml.stringifyResult}) and the node path (`YamlDocument#stringify`
 	 * and the `YamlFormat` helpers).
 	 */
-	quoteCompat: Schema.optionalKey(QuoteCompat),
-	finalNewline: Schema.optionalKey(Schema.Boolean),
-	forceDefaultStyles: Schema.optionalKey(Schema.Boolean),
+	quoteCompat: S.optionalKey(QuoteCompat),
+	finalNewline: S.optionalKey(S.Boolean),
+	forceDefaultStyles: S.optionalKey(S.Boolean),
 }) {}
 
 /**
@@ -188,9 +192,9 @@ export class YamlStringifyOptions extends Schema.Class<YamlStringifyOptions>("Ya
  *
  * @public
  */
-export class YamlParseError extends Schema.TaggedError<YamlParseError>()("YamlParseError", {
-	diagnostics: Schema.Array(YamlDiagnostic),
-	input: Schema.String,
+export class YamlParseError extends S.TaggedError<YamlParseError>()("YamlParseError", {
+	diagnostics: S.Array(YamlDiagnostic),
+	input: S.String,
 }) {
 	override get message(): string {
 		const count = this.diagnostics.length;
@@ -208,9 +212,9 @@ export class YamlParseError extends Schema.TaggedError<YamlParseError>()("YamlPa
  *
  * @public
  */
-export class YamlStringifyError extends Schema.TaggedError<YamlStringifyError>()("YamlStringifyError", {
-	diagnostics: Schema.Array(YamlDiagnostic),
-	value: Schema.Unknown,
+export class YamlStringifyError extends S.TaggedError<YamlStringifyError>()("YamlStringifyError", {
+	diagnostics: S.Array(YamlDiagnostic),
+	value: S.Unknown,
 }) {
 	override get message(): string {
 		const summary = this.diagnostics.map((d) => d.message).join("; ");
@@ -427,11 +431,11 @@ const stringifyOrFail = (value: unknown, options?: YamlStringifyOptions): Effect
  */
 export interface YamlBoundCodec<T, RD = never, RE = never> {
 	/** The composed codec decoding a YAML `string` straight into `T`. */
-	readonly schema: Schema.Codec<T, string, RD, RE>;
+	readonly schema: S.Codec<T, string, RD, RE>;
 	/** Decode a single-document YAML string into a validated `T`. */
-	readonly decode: (text: string) => Effect.Effect<T, Schema.SchemaError, RD>;
+	readonly decode: (text: string) => Effect.Effect<T, S.SchemaError, RD>;
 	/** Encode a `T` back to YAML text with default stringify options. */
-	readonly encode: (value: T) => Effect.Effect<string, Schema.SchemaError, RE>;
+	readonly encode: (value: T) => Effect.Effect<string, S.SchemaError, RE>;
 }
 
 // ── Facade ──────────────────────────────────────────────────────────────────
@@ -761,10 +765,10 @@ export class Yaml {
 	 * caches are not shared across calls. Bind the result to a `const` on hot
 	 * paths; for the default-options case use {@link Yaml.YamlFromString}.
 	 */
-	static fromString(options?: YamlParseOptions): Schema.Codec<unknown, string> {
-		return Schema.String.pipe(
-			Schema.decodeTo(
-				Schema.Unknown,
+	static fromString(options?: YamlParseOptions): S.Codec<unknown, string> {
+		return S.String.pipe(
+			S.decodeTo(
+				S.Unknown,
 				SchemaTransformation.transformEffect({
 					decode: (input: string) =>
 						Yaml.parse(input, options).pipe(
@@ -784,7 +788,7 @@ export class Yaml {
 	 * default options, pre-bound so the common case needs no memoization
 	 * discipline.
 	 */
-	static readonly YamlFromString: Schema.Codec<unknown, string> = Yaml.fromString();
+	static readonly YamlFromString: S.Codec<unknown, string> = Yaml.fromString();
 
 	/**
 	 * A `Schema<ReadonlyArray<unknown>, string>` decoding a multi-document
@@ -794,10 +798,10 @@ export class Yaml {
 	 * Schema-producing: bind the result to a `const` on hot paths (see
 	 * {@link Yaml.fromString}).
 	 */
-	static allFromString(options?: YamlParseOptions): Schema.Codec<ReadonlyArray<unknown>, string> {
-		return Schema.String.pipe(
-			Schema.decodeTo(
-				Schema.Array(Schema.Unknown),
+	static allFromString(options?: YamlParseOptions): S.Codec<ReadonlyArray<unknown>, string> {
+		return S.String.pipe(
+			S.decodeTo(
+				S.Array(S.Unknown),
 				SchemaTransformation.transformEffect({
 					decode: (input: string) =>
 						Yaml.parseAll(input, options).pipe(
@@ -832,12 +836,12 @@ export class Yaml {
 	 * @returns A `Schema.Codec<T, string>` decoding YAML text straight into `T`.
 	 */
 	static schema<T, E, RD = never, RE = never>(
-		target: Schema.Codec<T, E, RD, RE>,
+		target: S.Codec<T, E, RD, RE>,
 		options?: YamlParseOptions,
-	): Schema.Codec<T, string, RD, RE> {
+	): S.Codec<T, string, RD, RE> {
 		return Yaml.fromString(options).pipe(
-			Schema.decodeTo(target as unknown as Schema.Codec<T, unknown, RD, RE>),
-		) as unknown as Schema.Codec<T, string, RD, RE>;
+			S.decodeTo(target as unknown as S.Codec<T, unknown, RD, RE>),
+		) as unknown as S.Codec<T, string, RD, RE>;
 	}
 
 	/**
@@ -877,12 +881,12 @@ export class Yaml {
 	 * @returns A {@link YamlBoundCodec} carrying the composed schema and its
 	 *   two pre-bound directions.
 	 */
-	static bind<T, E, RD = never, RE = never>(target: Schema.Codec<T, E, RD, RE>): YamlBoundCodec<T, RD, RE> {
+	static bind<T, E, RD = never, RE = never>(target: S.Codec<T, E, RD, RE>): YamlBoundCodec<T, RD, RE> {
 		const schema = Yaml.schema(target);
 		return {
 			schema,
-			decode: Schema.decodeEffect(schema),
-			encode: Schema.encodeEffect(schema),
+			decode: S.decodeEffect(schema),
+			encode: S.encodeEffect(schema),
 		};
 	}
 }

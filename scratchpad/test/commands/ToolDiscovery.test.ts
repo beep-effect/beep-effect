@@ -1,6 +1,9 @@
 // @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Layer, Option, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { ChildProcess } from "effect/process";
 import { ExecContext, LocalExec } from "../../effected/commands/LocalExec.ts";
 import type { ScriptResult } from "../../effected/commands/ScriptedSpawner.ts";
@@ -59,9 +62,9 @@ describe("ToolDiscovery.resolve — source requirements", () => {
 			const resolved = yield* run(resolve(Tool.named("biome")), world({ global: "1.0.0", local: "2.0.0" })).effect;
 			assert.instanceOf(resolved, ResolvedTool);
 			assert.strictEqual(resolved.source, "local");
-			assert.deepStrictEqual(resolved.version, Option.some("2.0.0"));
-			assert.deepStrictEqual(resolved.globalVersion, Option.some("1.0.0"));
-			assert.deepStrictEqual(resolved.localVersion, Option.some("2.0.0"));
+			assert.deepStrictEqual(resolved.version, O.some("2.0.0"));
+			assert.deepStrictEqual(resolved.globalVersion, O.some("1.0.0"));
+			assert.deepStrictEqual(resolved.localVersion, O.some("2.0.0"));
 			assert.isTrue(resolved.mismatch);
 		}),
 	);
@@ -78,7 +81,7 @@ describe("ToolDiscovery.resolve — source requirements", () => {
 		Effect.gen(function* () {
 			const error = yield* Effect.flip(run(resolve(Tool.named("biome")), world({})).effect);
 			assert.instanceOf(error, ToolNotFoundError);
-			if (Schema.is(ToolNotFoundError)(error)) {
+			if (S.is(ToolNotFoundError)(error)) {
 				assert.strictEqual(error.tool, "biome");
 				assert.deepStrictEqual([...error.searched], ["global", "local"]);
 			}
@@ -91,7 +94,7 @@ describe("ToolDiscovery.resolve — source requirements", () => {
 				run(resolve(Tool.named("biome", { source: "local" })), world({ global: "1.0.0" })).effect,
 			);
 			assert.instanceOf(error, ToolNotFoundError);
-			if (Schema.is(ToolNotFoundError)(error)) {
+			if (S.is(ToolNotFoundError)(error)) {
 				assert.deepStrictEqual([...error.searched], ["local"]);
 			}
 		}),
@@ -128,7 +131,7 @@ describe("ToolDiscovery.resolve — source requirements", () => {
 				LocalExec.layerNone,
 			).effect;
 			assert.strictEqual(resolved.source, "global");
-			assert.isTrue(Option.isNone(resolved.localVersion));
+			assert.isTrue(O.isNone(resolved.localVersion));
 		}),
 	);
 });
@@ -148,7 +151,7 @@ describe("ToolDiscovery.resolve — mismatch policy", () => {
 		Effect.gen(function* () {
 			const resolved = yield* run(resolve(Tool.named("biome", { onMismatch: "preferGlobal" })), both).effect;
 			assert.strictEqual(resolved.source, "global");
-			assert.deepStrictEqual(resolved.version, Option.some("1.0.0"));
+			assert.deepStrictEqual(resolved.version, O.some("1.0.0"));
 		}),
 	);
 
@@ -156,7 +159,7 @@ describe("ToolDiscovery.resolve — mismatch policy", () => {
 		Effect.gen(function* () {
 			const error = yield* Effect.flip(run(resolve(Tool.named("biome", { onMismatch: "fail" })), both).effect);
 			assert.instanceOf(error, ToolVersionMismatchError);
-			if (Schema.is(ToolVersionMismatchError)(error)) {
+			if (S.is(ToolVersionMismatchError)(error)) {
 				assert.strictEqual(error.globalVersion, "1.0.0");
 				assert.strictEqual(error.localVersion, "2.0.0");
 			}
@@ -181,14 +184,14 @@ describe("ToolDiscovery.resolve — version extraction", () => {
 				stdout: "Version: 2.3.1 (build abc)",
 				exit: 0,
 			})).effect;
-			assert.deepStrictEqual(resolved.version, Option.some("2.3.1"));
+			assert.deepStrictEqual(resolved.version, O.some("2.3.1"));
 		}),
 	);
 
 	it.effect("extracts a prerelease version", () =>
 		Effect.gen(function* () {
 			const resolved = yield* run(resolve(Tool.named("node")), () => ({ stdout: "v22.1.0-nightly.3", exit: 0 })).effect;
-			assert.deepStrictEqual(resolved.version, Option.some("22.1.0-nightly.3"));
+			assert.deepStrictEqual(resolved.version, O.some("22.1.0-nightly.3"));
 		}),
 	);
 
@@ -196,7 +199,7 @@ describe("ToolDiscovery.resolve — version extraction", () => {
 		Effect.gen(function* () {
 			const tool = Tool.named("weird", { version: VersionFlag.make({ flag: "-V", pattern: "build-(\\w+)" }) });
 			const resolved = yield* run(resolve(tool), () => ({ stdout: "build-deadbeef", exit: 0 })).effect;
-			assert.deepStrictEqual(resolved.version, Option.some("deadbeef"));
+			assert.deepStrictEqual(resolved.version, O.some("deadbeef"));
 		}),
 	);
 
@@ -207,14 +210,14 @@ describe("ToolDiscovery.resolve — version extraction", () => {
 				stdout: JSON.stringify({ deno: { version: "1.44.0" } }),
 				exit: 0,
 			})).effect;
-			assert.deepStrictEqual(resolved.version, Option.some("1.44.0"));
+			assert.deepStrictEqual(resolved.version, O.some("1.44.0"));
 		}),
 	);
 
 	it.effect("a tool that reports no parseable version still resolves, with no version", () =>
 		Effect.gen(function* () {
 			const resolved = yield* run(resolve(Tool.named("tar")), () => ({ stdout: "bsdtar (unknown)", exit: 0 })).effect;
-			assert.isTrue(Option.isNone(resolved.version));
+			assert.isTrue(O.isNone(resolved.version));
 			assert.strictEqual(resolved.source, "local");
 		}),
 	);
@@ -223,7 +226,7 @@ describe("ToolDiscovery.resolve — version extraction", () => {
 		Effect.gen(function* () {
 			const tool = Tool.named("tar", { version: VersionNone.make({}) });
 			const resolved = yield* run(resolve(tool), () => ({ stdout: "", exit: 0 })).effect;
-			assert.isTrue(Option.isNone(resolved.version));
+			assert.isTrue(O.isNone(resolved.version));
 		}),
 	);
 
@@ -444,9 +447,9 @@ describe("ToolDiscovery test double", () => {
 							ResolvedTool.make({
 								name: "stubbed",
 								source: "global",
-								version: Option.none(),
-								globalVersion: Option.none(),
-								localVersion: Option.none(),
+								version: O.none(),
+								globalVersion: O.none(),
+								localVersion: O.none(),
 								mismatch: false,
 							}),
 						),

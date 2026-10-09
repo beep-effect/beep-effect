@@ -14,7 +14,7 @@
 //
 // @see https://www.ntia.gov/files/ntia/publications/sbom_minimum_elements_report.pdf
 
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 import type { SbomDocument } from "./SbomDocument.ts";
 
 /**
@@ -26,7 +26,7 @@ import type { SbomDocument } from "./SbomDocument.ts";
  *
  * @public
  */
-export const NtiaElementId = Schema.Literals([
+export const NtiaElementId = S.Literals([
 	"supplierName",
 	"componentName",
 	"componentVersion",
@@ -48,13 +48,13 @@ export type NtiaElementId = typeof NtiaElementId.Type;
  *
  * @public
  */
-export class NtiaElement extends Schema.Class<NtiaElement>("NtiaElement")({
+export class NtiaElement extends S.Class<NtiaElement>("NtiaElement")({
 	/** Which element this is. */
 	id: NtiaElementId,
 	/** Whether the document satisfies it. */
-	satisfied: Schema.Boolean,
+	satisfied: S.Boolean,
 	/** The value that satisfied it, when one did. */
-	value: Schema.optionalKey(Schema.String),
+	value: S.optionalKey(S.String),
 }) {}
 
 const element = (id: NtiaElementId, value: string | undefined): NtiaElement =>
@@ -154,9 +154,9 @@ const timestamp = (document: SbomDocument): NtiaElement => {
  *
  * @public
  */
-export class NtiaReport extends Schema.Class<NtiaReport>("NtiaReport")({
+export class NtiaReport extends S.Class<NtiaReport>("NtiaReport")({
 	/** One verdict per element, in the published order. */
-	elements: Schema.Array(NtiaElement),
+	elements: S.Array(NtiaElement),
 }) {
 	/** Whether every element is satisfied. */
 	get compliant(): boolean {

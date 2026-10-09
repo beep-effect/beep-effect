@@ -1,9 +1,10 @@
 // @effect-diagnostics strictEffectProvide:skip-file asyncFunction:skip-file
-import { Schema } from "effect";
-import { Result } from "effect";
+import * as S from "effect/Schema";
+import * as Result from "effect/Result";
 import { assert, describe, it } from "@effect/vitest";
 import { Audience } from "../../../effected/env/index.ts";
-import { Console, Effect } from "effect";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
 import type { Document } from "../../../effected/cli/index.ts";
 import { Doc } from "../../../effected/cli/index.ts";
 import { CliUi } from "../../../effected/cli/ui.ts";
@@ -11,7 +12,7 @@ import { CliUiTest } from "../../../effected/cli/ui-testing.ts";
 import type { Ev, State } from "../helpers/live.ts";
 import { End, Start, frameOf, reduce, tick } from "../helpers/live.ts";
 
-const Json = Schema.fromJsonString(Schema.Unknown);
+const Json = S.fromJsonString(S.Unknown);
 
 const ESC = String.fromCharCode(0x1b);
 
@@ -239,7 +240,7 @@ describe("CliUi.lazyView", () => {
 			assert.include(yield* view.plainFrame, "RUN 1");
 			assert.isTrue(
 				seen.some(([run, frame]) => run === 1 && frame === 3),
-				`the tick's frame index reached the view: ${Result.getOrThrow(Schema.encodeUnknownResult(Json)(seen))}`,
+				`the tick's frame index reached the view: ${Result.getOrThrow(S.encodeUnknownResult(Json)(seen))}`,
 			);
 			yield* view.publish(End);
 			yield* view.end;

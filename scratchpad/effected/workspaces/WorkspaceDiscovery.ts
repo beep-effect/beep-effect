@@ -9,7 +9,15 @@
 
 import { GlobSet } from "../glob/index.ts";
 import { DependencyResolutionError, WorkspaceResolver } from "../npm/index.ts";
-import { Context, Duration, Effect, Exit, FileSystem, Layer, Option, Path, Schema } from "effect";
+import * as Context from "effect/Context";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as S from "effect/Schema";
 import type { EnumerationFailureKind } from "./internal/enumerate.ts";
 import { enumerate } from "./internal/enumerate.ts";
 import { findLayerRoot } from "./internal/layerRoot.ts";
@@ -18,7 +26,7 @@ import { WorkspacePackage } from "./WorkspacePackage.ts";
 import type { WorkspaceRootNotFoundError } from "./WorkspaceRoot.ts";
 import { WorkspaceRoot } from "./WorkspaceRoot.ts";
 
-const JsonValue = Schema.fromJsonString(Schema.Unknown);
+const JsonValue = S.fromJsonString(S.Unknown);
 
 /**
  * Raised when a workspace member's `package.json` cannot be read, parsed, or
@@ -38,15 +46,15 @@ const JsonValue = Schema.fromJsonString(Schema.Unknown);
  *
  * @public
  */
-export class WorkspaceDiscoveryError extends Schema.TaggedError<WorkspaceDiscoveryError>()("WorkspaceDiscoveryError", {
+export class WorkspaceDiscoveryError extends S.TaggedError<WorkspaceDiscoveryError>()("WorkspaceDiscoveryError", {
 	/** The workspace root discovery was running against. */
-	root: Schema.String,
+	root: S.String,
 	/** The file that failed. */
-	path: Schema.String,
+	path: S.String,
 	/** What went wrong with it. */
-	kind: Schema.Literals(["read", "invalidJson", "invalidShape", "invalidYaml", "missingName"]),
+	kind: S.Literals(["read", "invalidJson", "invalidShape", "invalidYaml", "missingName"]),
 	/** The originating failure, if there was one. */
-	cause: Schema.Defect(),
+	cause: S.Defect(),
 }) {
 	/** Renders the failing file and kind into a one-line message. */
 	override get message(): string {
@@ -61,15 +69,15 @@ export class WorkspaceDiscoveryError extends Schema.TaggedError<WorkspaceDiscove
  *
  * @public
  */
-export class WorkspacePatternError extends Schema.TaggedError<WorkspacePatternError>()("WorkspacePatternError", {
+export class WorkspacePatternError extends S.TaggedError<WorkspacePatternError>()("WorkspacePatternError", {
 	/** The workspace root the patterns were expanded against. */
-	root: Schema.String,
+	root: S.String,
 	/** The offending pattern, verbatim. */
-	pattern: Schema.String,
+	pattern: S.String,
 	/** Why it could not be enumerated. */
-	kind: Schema.Literals(["missingBaseDir", "uncompilable", "depthExceeded", "budgetExceeded", "unreadableDirectory"]),
+	kind: S.Literals(["missingBaseDir", "uncompilable", "depthExceeded", "budgetExceeded", "unreadableDirectory"]),
 	/** A short, structured detail — the missing directory, or the bound exceeded. */
-	detail: Schema.String,
+	detail: S.String,
 }) {
 	/** Renders the pattern and failure kind into a one-line message. */
 	override get message(): string {
@@ -86,11 +94,11 @@ export class WorkspacePatternError extends Schema.TaggedError<WorkspacePatternEr
  *
  * @public
  */
-export class PackageNotFoundError extends Schema.TaggedError<PackageNotFoundError>()("PackageNotFoundError", {
+export class PackageNotFoundError extends S.TaggedError<PackageNotFoundError>()("PackageNotFoundError", {
 	/** The name that was requested. */
-	name: Schema.String,
+	name: S.String,
 	/** Every workspace package name that does exist. */
-	available: Schema.Array(Schema.String),
+	available: S.Array(S.String),
 }) {
 	/** Renders the requested name into a one-line message. */
 	override get message(): string {
@@ -104,11 +112,11 @@ export class PackageNotFoundError extends Schema.TaggedError<PackageNotFoundErro
  *
  * @public
  */
-export class WorkspaceInfo extends Schema.Class<WorkspaceInfo>("WorkspaceInfo")({
+export class WorkspaceInfo extends S.Class<WorkspaceInfo>("WorkspaceInfo")({
 	/** Absolute path to the workspace root. */
-	root: Schema.String,
+	root: S.String,
 	/** The `packages:` patterns, verbatim. */
-	patterns: Schema.Array(Schema.String),
+	patterns: S.Array(S.String),
 }) {}
 
 /**
@@ -195,7 +203,7 @@ export interface WorkspaceDiscoveryShape {
 	/** A single package by name. */
 	readonly getPackage: (name: string) => Effect.Effect<WorkspacePackage, WorkspaceLookupFailure>;
 	/** The package owning an absolute file path, by longest-prefix match. */
-	readonly resolveFile: (filePath: string) => Effect.Effect<Option.Option<WorkspacePackage>, WorkspaceDiscoveryFailure>;
+	readonly resolveFile: (filePath: string) => Effect.Effect<O.Option<WorkspacePackage>, WorkspaceDiscoveryFailure>;
 	/** The distinct packages owning any of `filePaths`. */
 	readonly resolveFiles: (
 		filePaths: ReadonlyArray<string>,
@@ -320,7 +328,7 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 								(cause) => WorkspaceDiscoveryError.make({ root, path: packageJsonPath, kind: "read", cause }),
 							),
 						);
-					const parsed = yield* Schema.decodeEffect(JsonValue)(content).pipe(Effect.mapError((cause) => WorkspaceDiscoveryError.make({ root, path: packageJsonPath, kind: "invalidJson", cause })));
+					const parsed = yield* S.decodeEffect(JsonValue)(content).pipe(Effect.mapError((cause) => WorkspaceDiscoveryError.make({ root, path: packageJsonPath, kind: "invalidJson", cause })));
 
 					// `JSON.parse` never returns `undefined`, so a guard on `undefined`
 					// alone does not cover a manifest whose entire content is `null`, `42`
@@ -379,7 +387,7 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 					// rides through as the manifest has it: absent stays absent (pnpm
 					// accepts a version-less private package; a private root without one
 					// is the ordinary shape), a non-empty string verbatim.
-					return yield* Schema.decodeEffect(WorkspacePackage)({
+					return yield* S.decodeEffect(WorkspacePackage)({
 						name,
 						...(version !== undefined ? { version } : {}),
 						path: directory,
@@ -571,11 +579,11 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 			const ownerOf = (
 				filePath: string,
 				index: ReadonlyArray<{ readonly prefix: string; readonly package: WorkspacePackage }>,
-			): Option.Option<WorkspacePackage> => {
+			): O.Option<WorkspacePackage> => {
 				for (const entry of index) {
-					if (filePath.startsWith(entry.prefix)) return Option.some(entry.package);
+					if (filePath.startsWith(entry.prefix)) return O.some(entry.package);
 				}
-				return Option.none();
+				return O.none();
 			};
 
 			const packageIndexes = new WeakMap<ReadonlyArray<WorkspacePackage>, ReadonlyMap<string, WorkspacePackage>>();
@@ -636,7 +644,7 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 					const seen = new Map<string, WorkspacePackage>();
 					for (const filePath of filePaths) {
 						const owner = ownerOf(filePath, index);
-						if (Option.isSome(owner)) seen.set(owner.value.name, owner.value);
+						if (O.isSome(owner)) seen.set(owner.value.name, owner.value);
 					}
 					return [...seen.values()].sort((a, b) => a.name.localeCompare(b.name));
 				}),
@@ -732,7 +740,7 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 
 		// POSIX-terminated longest-prefix ownership, mirroring the live
 		// `resolveFile` semantics minus the platform `Path` service.
-		const ownerOf = (filePath: string, all: ReadonlyArray<WorkspacePackage>): Option.Option<WorkspacePackage> => {
+		const ownerOf = (filePath: string, all: ReadonlyArray<WorkspacePackage>): O.Option<WorkspacePackage> => {
 			let best: WorkspacePackage | undefined;
 			let bestLength = 0;
 			for (const pkg of all) {
@@ -742,7 +750,7 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 					bestLength = prefix.length;
 				}
 			}
-			return Option.fromUndefinedOr(best);
+			return O.fromUndefinedOr(best);
 		};
 
 		return {
@@ -767,7 +775,7 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 					const seen = new Map<string, WorkspacePackage>();
 					for (const filePath of filePaths) {
 						const owner = ownerOf(filePath, all);
-						if (Option.isSome(owner)) seen.set(owner.value.name, owner.value);
+						if (O.isSome(owner)) seen.set(owner.value.name, owner.value);
 					}
 					return [...seen.values()].sort((a, b) => a.name.localeCompare(b.name));
 				}),
@@ -874,7 +882,7 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 						Effect.mapError((cause) => DependencyResolutionError.make({ specifier, cause })),
 						Effect.flatMap((all) => {
 							const index = versionsByName(all);
-							if (!index.has(packageName)) return Effect.succeed(Option.none<string>());
+							if (!index.has(packageName)) return Effect.succeed(O.none<string>());
 							const version = index.get(packageName);
 							return version === undefined
 								? Effect.fail(

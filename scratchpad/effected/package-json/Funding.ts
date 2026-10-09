@@ -24,8 +24,10 @@
 // tiers normalize to `PackageDecodeError` at their decode boundary — rather
 // than as a degradation, which is `LenientManifest`'s job alone.
 
-import type { SchemaIssue } from "effect";
-import { Effect, Schema, SchemaTransformation } from "effect";
+import type * as SchemaIssue from "effect/SchemaIssue";
+import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 
 /** The wire value a single funding entry was decoded from. */
 type EntryWire = string | { readonly [k: string]: unknown };
@@ -48,12 +50,12 @@ const KNOWN_FUNDING_KEYS: ReadonlySet<string> = new Set(["type", "url"]);
 // Validated by the same route `Person.schema` uses: the struct produces the
 // issue tree, so a missing or non-string `url` reads exactly as it would from
 // decoding the class directly.
-const FundingFields = Schema.Struct({
-	type: Schema.optionalKey(Schema.String),
-	url: Schema.String,
+const FundingFields = S.Struct({
+	type: S.optionalKey(S.String),
+	url: S.String,
 });
 
-const decodeFundingFields = Schema.decodeUnknownEffect(FundingFields);
+const decodeFundingFields = S.decodeUnknownEffect(FundingFields);
 
 const restOf = (raw: { readonly [k: string]: unknown }): Record<string, unknown> => {
 	const rest: Record<string, unknown> = {};
@@ -118,8 +120,8 @@ const decodeEntry = (input: EntryWire): Effect.Effect<Funding, SchemaIssue.Issue
 	);
 };
 
-const EntryValue = Schema.Union([Schema.Record(Schema.String, Schema.Unknown), Schema.String]);
-const FieldValue = Schema.Union([EntryValue, Schema.Array(EntryValue)]);
+const EntryValue = S.Union([S.Record(S.String, S.Unknown), S.String]);
+const FieldValue = S.Union([EntryValue, S.Array(EntryValue)]);
 
 /**
  * Where to send money for a package: one funding entry.
@@ -145,13 +147,13 @@ const FieldValue = Schema.Union([EntryValue, Schema.Array(EntryValue)]);
  *
  * @public
  */
-export class Funding extends Schema.Class<Funding>("Funding")({
+export class Funding extends S.Class<Funding>("Funding")({
 	/** The funding platform, when the object form carried one (`"github"`, …). */
-	type: Schema.optionalKey(Schema.String),
+	type: S.optionalKey(S.String),
 	/** Where the money goes, exactly as the manifest wrote it. */
-	url: Schema.String,
+	url: S.String,
 	/** Keys outside the documented set, preserved so encoding does not drop them. */
-	rest: Schema.optionalKey(Schema.Record(Schema.String, Schema.Unknown)),
+	rest: S.optionalKey(S.Record(S.String, S.Unknown)),
 }) {
 	/**
 	 * A single `funding` entry: the bare URL string or the object form, always
@@ -162,9 +164,9 @@ export class Funding extends Schema.Class<Funding>("Funding")({
 	 * Provenance belongs to the instance, so an entry that is *rebuilt* rather
 	 * than carried through has none and encodes in the canonical object form.
 	 */
-	static readonly FromValue: Schema.Codec<Funding, string | { readonly [k: string]: unknown }> = EntryValue.pipe(
-		Schema.decodeTo(
-			Schema.instanceOf(Funding),
+	static readonly FromValue: S.Codec<Funding, string | { readonly [k: string]: unknown }> = EntryValue.pipe(
+		S.decodeTo(
+			S.instanceOf(Funding),
 			// `transformEffect` rather than `transform`: this transform constructs
 			// the instance itself — the only way to associate the raw wire value
 			// with the result — so it must carry the field validation the class
@@ -189,12 +191,12 @@ export class Funding extends Schema.Class<Funding>("Funding")({
 	 * the addition. An entry built by hand has no provenance, so an array of
 	 * such entries encodes as an array.
 	 */
-	static readonly FromField: Schema.Codec<
+	static readonly FromField: S.Codec<
 		ReadonlyArray<Funding>,
 		string | { readonly [k: string]: unknown } | ReadonlyArray<string | { readonly [k: string]: unknown }>
 	> = FieldValue.pipe(
-		Schema.decodeTo(
-			Schema.Array(Schema.instanceOf(Funding)),
+		S.decodeTo(
+			Funding.pipe(S.instanceOf, S.Array),
 			SchemaTransformation.transformEffect({
 				decode: (
 					input: string | { readonly [k: string]: unknown } | ReadonlyArray<string | { readonly [k: string]: unknown }>,

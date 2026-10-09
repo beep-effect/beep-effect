@@ -15,7 +15,7 @@
 // `attestProvenance`, because a verifier must see the same structure whichever
 // path produced the attestation.
 
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 import type { PredicateType } from "./InTotoStatement.ts";
 
 /**
@@ -44,42 +44,42 @@ export const GITHUB_BUILD_TYPE = "https://actions.github.io/buildtypes/workflow/
  *
  * @public
  */
-export class SlsaBuildDefinition extends Schema.Class<SlsaBuildDefinition>("SlsaBuildDefinition")({
+export class SlsaBuildDefinition extends S.Class<SlsaBuildDefinition>("SlsaBuildDefinition")({
 	/** The build type URI — {@link GITHUB_BUILD_TYPE} for an Actions workflow. */
-	buildType: Schema.String,
+	buildType: S.String,
 	/** Parameters an external party controls: for Actions, the workflow itself. */
-	externalParameters: Schema.Struct({
+	externalParameters: S.Struct({
 		/** The workflow the build ran. */
-		workflow: Schema.Struct({
+		workflow: S.Struct({
 			/** The git ref the workflow ran on. */
-			ref: Schema.String,
+			ref: S.String,
 			/** The repository's browsable URL. */
-			repository: Schema.String,
+			repository: S.String,
 			/** The workflow file's path within the repository. */
-			path: Schema.String,
+			path: S.String,
 		}),
 	}),
 	/** Parameters the build platform controls. */
-	internalParameters: Schema.Struct({
+	internalParameters: S.Struct({
 		/** The Actions-specific half, spelled in the claim names the platform uses. */
-		github: Schema.Struct({
+		github: S.Struct({
 			/** The event that triggered the workflow. */
-			event_name: Schema.String,
+			event_name: S.String,
 			/** The repository's numeric id. */
-			repository_id: Schema.String,
+			repository_id: S.String,
 			/** The repository owner's numeric id. */
-			repository_owner_id: Schema.String,
+			repository_owner_id: S.String,
 			/** `github-hosted` or `self-hosted`. */
-			runner_environment: Schema.String,
+			runner_environment: S.String,
 		}),
 	}),
 	/** The artifacts the build consumed — for Actions, the commit it built. */
-	resolvedDependencies: Schema.Array(
-		Schema.Struct({
+	resolvedDependencies: S.Array(
+		S.Struct({
 			/** A URI naming the dependency. */
-			uri: Schema.String,
+			uri: S.String,
 			/** Algorithm to digest; `gitCommit` for a repository. */
-			digest: Schema.Record(Schema.String, Schema.String),
+			digest: S.Record(S.String, S.String),
 		}),
 	),
 }) {}
@@ -89,16 +89,16 @@ export class SlsaBuildDefinition extends Schema.Class<SlsaBuildDefinition>("Slsa
  *
  * @public
  */
-export class SlsaRunDetails extends Schema.Class<SlsaRunDetails>("SlsaRunDetails")({
+export class SlsaRunDetails extends S.Class<SlsaRunDetails>("SlsaRunDetails")({
 	/** The build platform's identity. */
-	builder: Schema.Struct({
+	builder: S.Struct({
 		/** A URI identifying the builder — the reusable workflow, for Actions. */
-		id: Schema.String,
+		id: S.String,
 	}),
 	/** Metadata about this particular run. */
-	metadata: Schema.Struct({
+	metadata: S.Struct({
 		/** A URI locating the run that produced the artifact. */
-		invocationId: Schema.String,
+		invocationId: S.String,
 	}),
 }) {}
 
@@ -178,7 +178,7 @@ const workflowPathOf = (input: GitHubWorkflowProvenance): string =>
  *
  * @public
  */
-export class SlsaProvenance extends Schema.Class<SlsaProvenance>("SlsaProvenance")({
+export class SlsaProvenance extends S.Class<SlsaProvenance>("SlsaProvenance")({
 	/** What was built, and from what. */
 	buildDefinition: SlsaBuildDefinition,
 	/** Who built it, and when. */

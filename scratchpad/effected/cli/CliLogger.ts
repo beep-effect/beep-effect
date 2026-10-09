@@ -1,7 +1,11 @@
 import { dual } from "effect/Function";
 import { CommandNeutralizer } from "../github-commands/index.ts";
-import type { Fiber, Layer } from "effect";
-import { Console, LogLevel, Logger, References } from "effect";
+import type * as Fiber from "effect/Fiber";
+import type * as Layer from "effect/Layer";
+import * as Console from "effect/Console";
+import * as LogLevel from "effect/LogLevel";
+import * as Logger from "effect/Logger";
+import * as References from "effect/References";
 import { sanitize } from "./Fmt.ts";
 import { TrustedLine, sanitizeParts, underActionsIn } from "./internal/logSafety.ts";
 

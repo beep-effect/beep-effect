@@ -1,6 +1,10 @@
 // @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
-import { Cause, Effect, Exit, Layer, PlatformError } from "effect";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Layer from "effect/Layer";
+import * as PlatformError from "effect/PlatformError";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import { available, runCollected } from "../../effected/git/internal/run.ts";
 import { scripted } from "./fixtures.ts";
@@ -31,7 +35,7 @@ describe("runCollected", () => {
 	it.effect("propagates a PlatformError from the spawner", () =>
 		Effect.gen(function* () {
 			const failure = PlatformError.systemError({ _tag: "NotFound", module: "ChildProcess", method: "spawn" });
-			const exit = yield* Effect.exit(runCollected(command).pipe(Effect.provide(scripted(() => failure))));
+			const exit = yield* command.pipe(runCollected, Effect.provide(scripted(() => failure)), Effect.exit);
 			assert.strictEqual(exit._tag, "Failure");
 		}),
 	);
@@ -59,7 +63,7 @@ describe("available", () => {
 				ChildProcessSpawner.ChildProcessSpawner,
 				ChildProcessSpawner.make(() => Effect.die(new Error("boom"))),
 			);
-			const exit = yield* Effect.exit(available(command).pipe(Effect.provide(dying)));
+			const exit = yield* command.pipe(available, Effect.provide(dying), Effect.exit);
 			if (Exit.isFailure(exit)) {
 				assert.isTrue(Cause.hasDies(exit.cause));
 				assert.isFalse(Cause.hasFails(exit.cause));

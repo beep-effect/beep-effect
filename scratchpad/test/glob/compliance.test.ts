@@ -10,14 +10,17 @@
 // are tested separately and excluded from oracle comparison.
 
 import { assert, describe, it } from "@effect/vitest";
-import { Arbitrary, Effect, Result, Schema } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
+import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import type { MinimatchOptions } from "minimatch";
 import { Minimatch as OracleMinimatch, minimatch as oracle } from "minimatch";
 import type { EngineOptions } from "../../effected/glob/internal/minimatch.ts";
 import { Minimatch, escape as escapePattern } from "../../effected/glob/internal/minimatch.ts";
 
-const JsonOptions = Schema.fromJsonString(Schema.Unknown);
-const JsonString = Schema.fromJsonString(Schema.String);
+const JsonOptions = S.fromJsonString(S.Unknown);
+const JsonString = S.fromJsonString(S.String);
 
 type Row = readonly [pattern: string, candidate: string, expected: boolean, options?: EngineOptions];
 
@@ -223,8 +226,8 @@ describe("engine compliance: behavioral table", () => {
 // Literals unions, not one flat list), so the pattern mix stays balanced
 // between plain paths and paths that exercise the dialect.
 
-const literalSeg = Schema.Literals(["a", "b", "abc", "x-y", "a.b+c", ".hidden", "..", ""]);
-const magicSeg = Schema.Literals([
+const literalSeg = S.Literals(["a", "b", "abc", "x-y", "a.b+c", ".hidden", "..", ""]);
+const magicSeg = S.Literals([
 	"*",
 	"?",
 	"**",
@@ -244,36 +247,36 @@ const magicSeg = Schema.Literals([
 	"!x",
 ]);
 const patternArb = Arbitrary.schema(
-	Schema.Array(Schema.Union([literalSeg, magicSeg])).check(Schema.isBetweenLength(1, 5)),
+	S.Array(S.Union([literalSeg, magicSeg])).check(S.isBetweenLength(1, 5)),
 ).pipe(Arbitrary.map((xs) => xs.join("/")));
 const candidateArb = Arbitrary.schema(
-	Schema.Array(Schema.Literals(["a", "b", "abc", ".hidden", "x", "a.b+c", ""])).check(Schema.isBetweenLength(1, 6)),
+	S.Array(S.Literals(["a", "b", "abc", ".hidden", "x", "a.b+c", ""])).check(S.isBetweenLength(1, 6)),
 ).pipe(Arbitrary.map((xs) => xs.join("/")));
 // Every key is optional so the bag ranges from `{}` to fully specified — the
 // generator draws a random subset of the optional keys per run.
 const optionBagArb = Arbitrary.schema(
-	Schema.Struct({
-		dot: Schema.optionalKey(Schema.Boolean),
-		nocase: Schema.optionalKey(Schema.Boolean),
-		matchBase: Schema.optionalKey(Schema.Boolean),
-		noglobstar: Schema.optionalKey(Schema.Boolean),
-		noext: Schema.optionalKey(Schema.Boolean),
-		nobrace: Schema.optionalKey(Schema.Boolean),
-		nonegate: Schema.optionalKey(Schema.Boolean),
-		flipNegate: Schema.optionalKey(Schema.Boolean),
-		preserveMultipleSlashes: Schema.optionalKey(Schema.Boolean),
-		optimizationLevel: Schema.optionalKey(Schema.Literals([0, 1, 2])),
-		platform: Schema.optionalKey(Schema.Literals(["posix", "win32"])),
+	S.Struct({
+		dot: S.optionalKey(S.Boolean),
+		nocase: S.optionalKey(S.Boolean),
+		matchBase: S.optionalKey(S.Boolean),
+		noglobstar: S.optionalKey(S.Boolean),
+		noext: S.optionalKey(S.Boolean),
+		nobrace: S.optionalKey(S.Boolean),
+		nonegate: S.optionalKey(S.Boolean),
+		flipNegate: S.optionalKey(S.Boolean),
+		preserveMultipleSlashes: S.optionalKey(S.Boolean),
+		optimizationLevel: S.optionalKey(S.Literals([0, 1, 2])),
+		platform: S.optionalKey(S.Literals(["posix", "win32"])),
 	}),
 );
 // Printable ASCII only, as the property's name promises; the pattern also
 // keeps `/` and `\` out constructively instead of by residual filtering. The
 // class is spelled as the four spans printable ASCII splits into around those
 // two characters so the exclusions read as such.
-const printableNoSlashArb = Arbitrary.schema(Schema.String.check(Schema.isPattern(/^[ -.0-9:-@A-Z[\]-~]{1,30}$/)));
+const printableNoSlashArb = Arbitrary.schema(S.String.check(S.isPattern(/^[ -.0-9:-@A-Z[\]-~]{1,30}$/)));
 const braceSegArb = Arbitrary.schema(
-	Schema.Array(Schema.Literals(["a", "{b,c}", "{1..4}", "x{y,z}w", "{a,{b,c}}", "plain"])).check(
-		Schema.isBetweenLength(1, 4),
+	S.Array(S.Literals(["a", "{b,c}", "{1..4}", "x{y,z}w", "{a,{b,c}}", "plain"])).check(
+		S.isBetweenLength(1, 4),
 	),
 ).pipe(Arbitrary.map((xs) => xs.join("/")));
 
@@ -302,7 +305,7 @@ describe("engine compliance: oracle properties", () => {
 				assert.strictEqual(
 					new Minimatch(pattern, opts).match(candidate),
 					oracle(candidate, pattern, oracleOpts(opts)),
-					`${pattern} vs ${candidate} (${Result.getOrThrow(Schema.encodeResult(JsonOptions)(options))})`,
+					`${pattern} vs ${candidate} (${Result.getOrThrow(S.encodeResult(JsonOptions)(options))})`,
 				);
 			}),
 		{ arbitrary: { runs: 500 } },
@@ -320,7 +323,7 @@ describe("engine compliance: oracle properties", () => {
 				// oracle-confirmed upstream semantics.
 				const opts: EngineOptions = { platform: "posix", nocomment: true, nonegate: true };
 				const m = new Minimatch(escapePattern(s, { magicalBraces: true }), opts);
-				assert.isTrue(m.match(s), `escape(${Result.getOrThrow(Schema.encodeResult(JsonString)(s))}) must match its own literal`);
+				assert.isTrue(m.match(s), `escape(${Result.getOrThrow(S.encodeResult(JsonString)(s))}) must match its own literal`);
 				assert.strictEqual(m.match(s), oracle(s, oracle.escape(s, { magicalBraces: true }), oracleOpts(opts)));
 			}),
 		{ arbitrary: { runs: 300 } },

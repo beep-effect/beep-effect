@@ -1,4 +1,4 @@
-import { Semaphore } from "effect";
+import * as Semaphore from "effect/Semaphore";
 
 /**
  * One Ink mount at a time, process-wide: a `CliUi.run` screen, or one run of a live view.

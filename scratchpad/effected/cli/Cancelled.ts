@@ -1,4 +1,5 @@
-import { Runtime, Schema } from "effect";
+import * as Runtime from "effect/Runtime";
+import * as S from "effect/Schema";
 
 /**
  * A person backed out of an interactive prompt: they pressed escape, or the
@@ -14,8 +15,8 @@ import { Runtime, Schema } from "effect";
  *
  * @public
  */
-export class Cancelled extends Schema.TaggedError<Cancelled>()("Cancelled", {
-	reason: Schema.Literals(["escape", "interrupt"]),
+export class Cancelled extends S.TaggedError<Cancelled>()("Cancelled", {
+	reason: S.Literals(["escape", "interrupt"]),
 }) {
 	/**
 	 * The one line, `cancelled; nothing written`.

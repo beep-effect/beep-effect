@@ -8,11 +8,13 @@
 
 import { assert, describe, it } from "@effect/vitest";
 import { SemVer } from "../../effected/semver/index.ts";
-import { Effect, Result, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { InvalidPackageManagerPinError, PackageManagerPin } from "../../effected/npm/index.ts";
 
-const decode = Schema.decodeUnknownEffect(PackageManagerPin.FromString);
-const encode = Schema.encodeUnknownEffect(PackageManagerPin.FromString);
+const decode = S.decodeUnknownEffect(PackageManagerPin.FromString);
+const encode = S.encodeUnknownEffect(PackageManagerPin.FromString);
 
 const flipParse = (input: string) => Effect.flip(PackageManagerPin.parse(input));
 

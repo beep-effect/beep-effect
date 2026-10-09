@@ -1,6 +1,14 @@
-import { Result } from "effect";
+import * as F from "effect/Function";
+import * as Result from "effect/Result";
 import { assert, describe, it } from "@effect/vitest";
-import { Cause, Console, Effect, Equal, Exit, Layer, Runtime, Schema } from "effect";
+import * as Cause from "effect/Cause";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import * as Exit from "effect/Exit";
+import * as Layer from "effect/Layer";
+import * as Runtime from "effect/Runtime";
+import * as S from "effect/Schema";
 import { Cancelled, CliRuntime, NotInteractive } from "../../effected/cli/index.ts";
 
 const capturing = () => {
@@ -19,8 +27,8 @@ const run = Effect.fn("run")(function*<E> (failure: E, render?: (error: unknown)
 			Effect.exit,
 			Effect.provideService(Console.Console, double),
 		);
-		const code = Exit.isFailure(exit) ? Runtime.getErrorExitCode(Cause.squash(exit.cause)) : undefined;
-		const reported = Exit.isFailure(exit) ? Runtime.getErrorReported(Cause.squash(exit.cause)) : undefined;
+		const code = Exit.isFailure(exit) ? exit.cause.pipe(Cause.squash, Runtime.getErrorExitCode) : undefined;
+		const reported = Exit.isFailure(exit) ? exit.cause.pipe(Cause.squash, Runtime.getErrorReported) : undefined;
 		return { code, reported, out, err };
 	});
 
@@ -55,7 +63,7 @@ describe("Cancelled", () => {
 	});
 
 	it("a decoded instance keeps its exit code, and two equal ones are equal", () => {
-		const decoded = Result.getOrThrow(Schema.decodeResult(Cancelled)({ _tag: "Cancelled", reason: "interrupt" }));
+		const decoded = Result.getOrThrow(S.decodeResult(Cancelled)({ _tag: "Cancelled", reason: "interrupt" }));
 		assert.strictEqual(Runtime.getErrorExitCode(decoded), 130);
 		assert.isTrue(Equal.equals(Cancelled.make({ reason: "escape" }), Cancelled.make({ reason: "escape" })));
 		assert.isFalse(Equal.equals(Cancelled.make({ reason: "escape" }), Cancelled.make({ reason: "interrupt" })));
@@ -65,10 +73,10 @@ describe("Cancelled", () => {
 		const a = Cancelled.make({ reason: "escape" });
 		assert.strictEqual(a._tag, "Cancelled");
 		assert.strictEqual(a.reason, "escape");
-		assert.deepStrictEqual(Result.getOrThrow(Schema.encodeResult(Cancelled)(a)), { _tag: "Cancelled", reason: "escape" });
+		assert.deepStrictEqual(F.pipe(a, S.encodeResult(Cancelled), Result.getOrThrow), { _tag: "Cancelled", reason: "escape" });
 		assert.isTrue(a instanceof Error);
 		assert.strictEqual(Runtime.getErrorExitCode(a), 130);
-		assert.throws(() => Result.getOrThrow(Schema.decodeUnknownResult(Cancelled)({ _tag: "Cancelled", reason: "nope" })));
+		assert.throws(() => Result.getOrThrow(S.decodeUnknownResult(Cancelled)({ _tag: "Cancelled", reason: "nope" })));
 	});
 });
 
@@ -110,9 +118,9 @@ describe("the fixed lines are the errors' own message", () => {
 	});
 
 	it("a decoded instance has the message too, and it is not part of the encoded form or equality", () => {
-		const decoded = Result.getOrThrow(Schema.decodeResult(Cancelled)({ _tag: "Cancelled", reason: "escape" }));
+		const decoded = Result.getOrThrow(S.decodeResult(Cancelled)({ _tag: "Cancelled", reason: "escape" }));
 		assert.strictEqual(decoded.message, CANCELLED);
-		assert.deepStrictEqual(Result.getOrThrow(Schema.encodeResult(Cancelled)(decoded)), { _tag: "Cancelled", reason: "escape" });
+		assert.deepStrictEqual(F.pipe(decoded, S.encodeResult(Cancelled), Result.getOrThrow), { _tag: "Cancelled", reason: "escape" });
 		assert.notInclude(JSON.stringify(decoded), CANCELLED);
 		assert.isTrue(Equal.equals(decoded, Cancelled.make({ reason: "escape" })));
 		assert.notInclude(Object.keys(NotInteractive.make()).join(","), "message");
@@ -149,7 +157,7 @@ describe("NotInteractive", () => {
 	it("is a tagged error with no fields", () => {
 		const e = NotInteractive.make();
 		assert.strictEqual(e._tag, "NotInteractive");
-		assert.deepStrictEqual(Result.getOrThrow(Schema.encodeResult(NotInteractive)(e)), { _tag: "NotInteractive" });
+		assert.deepStrictEqual(F.pipe(e, S.encodeResult(NotInteractive), Result.getOrThrow), { _tag: "NotInteractive" });
 	});
 });
 
@@ -169,7 +177,7 @@ describe("CliRuntime.defaultRender", () => {
 
 	it.effect("a consumer render can hand the two prompt failures back and keep its own line for the rest", () => Effect.gen(function* () {
 			const render = (error: unknown, d: { readonly cause: Cause.Cause<unknown>; readonly isDefect: boolean }) =>
-				Schema.is(Cancelled)(error) || Schema.is(NotInteractive)(error)
+				S.is(Cancelled)(error) || S.is(NotInteractive)(error)
 					? CliRuntime.defaultRender(error, d)
 					: `tool: ${String(error)}`;
 			const run2 = Effect.fn("run2")(function*<E> (failure: E) {

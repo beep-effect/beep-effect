@@ -10,7 +10,10 @@
 
 import { readFileSync } from "node:fs";
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Schema, Result, Stream } from "effect";
+import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
+import * as Result from "effect/Result";
+import * as Stream from "effect/Stream";
 import { Yaml, YamlDocument, YamlFormat, YamlMap, YamlScalar, YamlSeq, YamlVisitor } from "../../effected/yaml/index.ts";
 
 const firstMap = (doc: YamlDocument): YamlMap => {
@@ -18,7 +21,7 @@ const firstMap = (doc: YamlDocument): YamlMap => {
 	return doc.contents as YamlMap;
 };
 
-const JsonString = Schema.fromJsonString(Schema.String);
+const JsonString = S.fromJsonString(S.String);
 
 describe("comment fidelity (#127)", () => {
 	describe("composer attribution", () => {
@@ -104,7 +107,7 @@ describe("comment fidelity (#127)", () => {
 				assert.strictEqual(pair?.key.comment, " kc");
 				assert.strictEqual(pair?.value?.comment, " vc");
 				const out = yield* doc.stringify();
-				assert.strictEqual((out.match(/#/g) ?? []).length, 2, `a comment was dropped: ${(yield* Schema.encodeEffect(JsonString)(out))}`);
+				assert.strictEqual((out.match(/#/g) ?? []).length, 2, `a comment was dropped: ${(yield* S.encodeEffect(JsonString)(out))}`);
 				assert.strictEqual(YamlFormat.formatToString(out), out);
 			}),
 		);

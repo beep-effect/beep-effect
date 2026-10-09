@@ -1,4 +1,5 @@
-import { Runtime, Schema } from "effect";
+import * as Runtime from "effect/Runtime";
+import * as S from "effect/Schema";
 
 /**
  * A command needed to prompt, but there is no terminal to prompt on.
@@ -12,7 +13,7 @@ import { Runtime, Schema } from "effect";
  *
  * @public
  */
-export class NotInteractive extends Schema.TaggedError<NotInteractive>()("NotInteractive", {}) {
+export class NotInteractive extends S.TaggedError<NotInteractive>()("NotInteractive", {}) {
 	/**
 	 * The one line, `not interactive: run in a terminal or pass the flag`.
 	 *

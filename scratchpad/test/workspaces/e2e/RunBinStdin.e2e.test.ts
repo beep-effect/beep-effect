@@ -7,7 +7,10 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { NodeServices } from "@effect/platform-node";
 import { afterAll, assert, layer } from "@effect/vitest";
-import { Config, Effect, Redacted, Stream } from "effect";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
+import * as Redacted from "effect/Redacted";
+import * as Stream from "effect/Stream";
 import { InstalledConsumer } from "../../../effected/workspaces/testing.ts";
 
 const DIR = realpathSync(mkdtempSync(join(tmpdir(), "run-bin-stdin-")));

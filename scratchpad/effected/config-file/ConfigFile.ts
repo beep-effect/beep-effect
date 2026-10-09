@@ -1,5 +1,14 @@
-import type { SchemaAST } from "effect";
-import { Context, DateTime, Effect, FileSystem, Layer, Option, Path, PubSub, Schema, Semaphore } from "effect";
+import type * as SchemaAST from "effect/SchemaAST";
+import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as PubSub from "effect/PubSub";
+import * as Schema from "effect/Schema";
+import * as Semaphore from "effect/Semaphore";
 import type { ConfigCodec } from "./ConfigCodec.ts";
 import { ConfigCodecError } from "./ConfigCodec.ts";
 import type { ConfigEventPayload, ConfigEvents, ConfigEventsShape } from "./ConfigEvent.ts";
@@ -119,7 +128,7 @@ export class ConfigValidationError extends Schema.TaggedError<ConfigValidationEr
 	issue: Schema.Defect(),
 }) {
 	override get message(): string {
-		const at = Option.match(this.path, { onNone: () => "", onSome: (p) => ` at "${p}"` });
+		const at = O.match(this.path, { onNone: () => "", onSome: (p) => ` at "${p}"` });
 		return `Config validation failed${at}`;
 	}
 }
@@ -412,7 +421,7 @@ const makeImpl = <A, I, RR>(
 			? Effect.void
 			: Effect.serviceOption(options.events).pipe(
 					Effect.flatMap(
-						Option.match({
+						O.match({
 							onNone: () => Effect.void,
 							onSome: Effect.fn("onSome")(function* (svc) {
 									const timestamp = yield* DateTime.now;
@@ -429,7 +438,7 @@ const makeImpl = <A, I, RR>(
 	): ReadonlyArray<{ readonly path: string; readonly resolver: string }> =>
 		sources.map((s) => ({ path: s.path, resolver: s.resolver }));
 
-	const decode = (parsed: unknown, at: Option.Option<string>): Effect.Effect<A, ConfigValidationError> =>
+	const decode = (parsed: unknown, at: O.Option<string>): Effect.Effect<A, ConfigValidationError> =>
 		Schema.decodeUnknownEffect(options.schema)(parsed, options.parseOptions).pipe(
 			// Normalize the schema failure at the boundary. Never leak SchemaError
 			// deeper, never stringify it — carry its structured issue tree instead.
@@ -455,7 +464,7 @@ const makeImpl = <A, I, RR>(
 		// Schema decoding and the caller's `validate` are one validation step from a
 		// subscriber's point of view: both answer "is this document acceptable?".
 		const validated = yield* Effect.gen(function* () {
-			const decoded = yield* decode(parsed, Option.some(target));
+			const decoded = yield* decode(parsed, O.some(target));
 			return yield* runValidate(decoded);
 		}).pipe(Effect.tapError((error) => emit({ _tag: "ValidationFailed", path: target, error })));
 		yield* emit({ _tag: "Validated", path: target });
@@ -472,21 +481,21 @@ const makeImpl = <A, I, RR>(
 			// paths it checked; a resolver that omits it degrades to `resolveMatch`,
 			// then to a bare-path match, contributing no candidates — the mirror of
 			// `ConfigSource.match` degrading when `resolveMatch` is absent.
-			let found: Option.Option<ConfigMatch>;
+			let found: O.Option<ConfigMatch>;
 			if (resolver.resolveProbe !== undefined) {
 				const probe: ConfigProbe = yield* Effect.provide(resolver.resolveProbe, resolverEnv);
 				found = probe.match;
 				// Only a miss consumes the probe list: on a hit the prefix says which
 				// candidate won, which `ConfigMatch` already reports in full.
-				if (Option.isNone(found)) {
+				if (O.isNone(found)) {
 					candidates.push(...probe.probed);
 				}
 			} else if (resolver.resolveMatch !== undefined) {
 				found = yield* Effect.provide(resolver.resolveMatch, resolverEnv);
 			} else {
-				found = Option.map(yield* Effect.provide(resolver.resolve, resolverEnv), (path) => ({ path }));
+				found = O.map(yield* Effect.provide(resolver.resolve, resolverEnv), (path) => ({ path }));
 			}
-			if (Option.isSome(found)) {
+			if (O.isSome(found)) {
 				const match = found.value;
 				const target = match.path;
 				// Emitted before the read, so a corrupt file is still reported as found.
@@ -536,7 +545,7 @@ const makeImpl = <A, I, RR>(
 	});
 
 	const validate = Effect.fn("ConfigFile.validate")(function* (value: unknown) {
-		const decoded = yield* decode(value, Option.none());
+		const decoded = yield* decode(value, O.none());
 		return yield* runValidate(decoded);
 	});
 
@@ -551,7 +560,7 @@ const makeImpl = <A, I, RR>(
 	 */
 	const encodeTo = (
 		value: A,
-		target: Option.Option<string>,
+		target: O.Option<string>,
 		encodeOptions?: ConfigEncodeOptions,
 	): Effect.Effect<string, ConfigEncodeError> =>
 		Effect.gen(function* () {
@@ -565,7 +574,7 @@ const makeImpl = <A, I, RR>(
 				.stringify(encoded)
 				.pipe(
 					Effect.mapError((error) =>
-						Option.match(target, { onNone: () => error, onSome: (file) => withCodecPath(error, file) }),
+						O.match(target, { onNone: () => error, onSome: (file) => withCodecPath(error, file) }),
 					),
 				);
 			return prependHeader(serialized, encodeOptions?.header);
@@ -584,7 +593,7 @@ const makeImpl = <A, I, RR>(
 		encodeOptions?: ConfigEncodeOptions,
 	): Effect.Effect<void, ConfigWriteError> =>
 		Effect.gen(function* () {
-			const serialized = yield* encodeTo(value, Option.some(target), encodeOptions).pipe(
+			const serialized = yield* encodeTo(value, O.some(target), encodeOptions).pipe(
 				Effect.tapError((error) =>
 					error._tag === "ConfigCodecError"
 						? emit({ _tag: "StringifyFailed", codec: options.codec.name, error })
@@ -598,7 +607,7 @@ const makeImpl = <A, I, RR>(
 
 	// No event: nothing was written.
 	const encode = Effect.fn("ConfigFile.encode")(function* (value: A, encodeOptions?: ConfigEncodeOptions) {
-		return yield* encodeTo(value, Option.none(), encodeOptions);
+		return yield* encodeTo(value, O.none(), encodeOptions);
 	});
 
 	/**
@@ -831,7 +840,7 @@ const read = <A, I>(
 			// The same boundary normalization the service performs: never leak a
 			// SchemaError outward, and carry its issue tree rather than a string.
 			Effect.catchTag("SchemaError", (error) =>
-				Effect.fail(ConfigValidationError.make({ path: Option.some(path), issue: error.issue })),
+				Effect.fail(ConfigValidationError.make({ path: O.some(path), issue: error.issue })),
 			),
 		);
 	}).pipe(Effect.withSpan("ConfigFile.read", { attributes: { path } }));

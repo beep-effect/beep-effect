@@ -13,8 +13,10 @@ import * as nodeOs from "node:os";
 import * as nodePath from "node:path";
 import { NodeFileSystem } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
-import type { Scope } from "effect";
-import { Effect, FileSystem, Option } from "effect";
+import type * as Scope from "effect/Scope";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as O from "effect/Option";
 import { CommentStyle, ManagedSection, SectionId } from "../../../effected/templates/index.ts";
 
 const tempDir = Effect.acquireRelease(
@@ -60,7 +62,7 @@ describe("ManagedSection (real filesystem)", () => {
 					const dir = yield* tempDir;
 					const sections = yield* ManagedSection;
 					const path = nodePath.join(dir, "absent");
-					assert.isTrue(Option.isNone(yield* sections.read(path, id("example-tool"))));
+					assert.isTrue(O.isNone(yield* sections.read(path, id("example-tool"))));
 					assert.isFalse(yield* sections.isManaged(path, id("example-tool")));
 					assert.isFalse(yield* sections.remove(path, id("example-tool")));
 				}),

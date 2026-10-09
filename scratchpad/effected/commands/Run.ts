@@ -1,5 +1,12 @@
-import type { Duration, Redacted } from "effect";
-import { Effect, Function as Fn, PlatformError, Result, Schema, Stdio, Stream } from "effect";
+import type * as Duration from "effect/Duration";
+import type * as Redacted from "effect/Redacted";
+import * as Effect from "effect/Effect";
+import * as Fn from "effect/Function";
+import * as PlatformError from "effect/PlatformError";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
+import * as Stdio from "effect/Stdio";
+import * as Stream from "effect/Stream";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import { OutputTooLarge, collectBounded } from "./internal/capture.ts";
 import { REDACTED, Redaction } from "./Redaction.ts";
@@ -19,7 +26,7 @@ export const DEFAULT_MAX_OUTPUT_BYTES = 16 * 1024 * 1024;
 /** Characters shown from the tail of captured output in an error message. */
 const MAX_MESSAGE_CHARS = 2000;
 
-const JsonOutput = Schema.fromJsonString(Schema.Unknown);
+const JsonOutput = S.fromJsonString(S.Unknown);
 
 /**
  * Policy for one run.
@@ -66,13 +73,13 @@ export interface RunOptions {
  *
  * @public
  */
-export class CommandOutput extends Schema.Class<CommandOutput>("CommandOutput")({
+export class CommandOutput extends S.Class<CommandOutput>("CommandOutput")({
 	/** Captured standard output, redacted. */
-	stdout: Schema.String,
+	stdout: S.String,
 	/** Captured standard error, redacted. */
-	stderr: Schema.String,
+	stderr: S.String,
 	/** The process exit code. A non-zero value is NOT an error at this level. */
-	exitCode: Schema.Finite,
+	exitCode: S.Finite,
 }) {
 	/** Whether the process exited zero. */
 	get succeeded(): boolean {
@@ -123,21 +130,21 @@ const tail = (text: string): string => {
  *
  * @public
  */
-export class CommandFailedError extends Schema.TaggedError<CommandFailedError>()("CommandFailedError", {
+export class CommandFailedError extends S.TaggedError<CommandFailedError>()("CommandFailedError", {
 	/** Why it failed. */
-	kind: Schema.Literals(["nonZero", "spawn", "timeout"]),
+	kind: S.Literals(["nonZero", "spawn", "timeout"]),
 	/** The executable (or `"a | b"` for a pipeline). */
-	command: Schema.String,
+	command: S.String,
 	/** argv, redacted. */
-	args: Schema.Array(Schema.String),
+	args: S.Array(S.String),
 	/** The exit code, when the process ran. */
-	exitCode: Schema.optionalKey(Schema.Finite),
+	exitCode: S.optionalKey(S.Finite),
 	/** Captured standard error, redacted, when the process ran. */
-	stderr: Schema.optionalKey(Schema.String),
+	stderr: S.optionalKey(S.String),
 	/** Captured standard output, redacted, when the process ran. */
-	stdout: Schema.optionalKey(Schema.String),
+	stdout: S.optionalKey(S.String),
 	/** The absorbed platform failure, for `"spawn"`. */
-	cause: Schema.optionalKey(Schema.Defect()),
+	cause: S.optionalKey(S.Defect()),
 }) {
 	/** The process ran and exited non-zero. */
 	static readonly nonZero = (
@@ -231,19 +238,19 @@ export class CommandFailedError extends Schema.TaggedError<CommandFailedError>()
  *
  * @public
  */
-export class CommandOutputError extends Schema.TaggedError<CommandOutputError>()("CommandOutputError", {
+export class CommandOutputError extends S.TaggedError<CommandOutputError>()("CommandOutputError", {
 	/** Which way the output was unusable. */
-	kind: Schema.Literals(["notJson", "schema", "tooLarge"]),
+	kind: S.Literals(["notJson", "schema", "tooLarge"]),
 	/** The executable that produced it. */
-	command: Schema.String,
+	command: S.String,
 	/** The underlying parse or decode failure. */
-	cause: Schema.optionalKey(Schema.Defect()),
+	cause: S.optionalKey(S.Defect()),
 	/** The exit code, when the combinator parses independently of it. */
-	exitCode: Schema.optionalKey(Schema.Finite),
+	exitCode: S.optionalKey(S.Finite),
 	/** Captured standard error, redacted, when the process ran. */
-	stderr: Schema.optionalKey(Schema.String),
+	stderr: S.optionalKey(S.String),
 	/** Captured standard output, redacted, when the process ran. */
-	stdout: Schema.optionalKey(Schema.String),
+	stdout: S.optionalKey(S.String),
 }) {
 	override get message(): string {
 		const parts: Array<string> = [];
@@ -365,17 +372,17 @@ const lines = Effect.fn("Run.lines")(function* (command: ChildProcess.Command, o
 // Implementation of Run.json; the public contract lives on the static.
 const json = Effect.fn("Run.json")(function* <A, I>(
 	command: ChildProcess.Command,
-	schema: Schema.Codec<A, I>,
+	schema: S.Codec<A, I>,
 	options?: RunOptions,
 ) {
 	yield* annotate(command);
 	const described = describeCommand(command);
 	const output = yield* collectClassified(command, options, undefined);
 	const checked = yield* requireZero(command, output, options);
-	const parsed = yield* Schema.decodeEffect(JsonOutput)(checked.stdout).pipe(
+	const parsed = yield* S.decodeEffect(JsonOutput)(checked.stdout).pipe(
 		Effect.mapError((cause) => CommandOutputError.make({ kind: "notJson", command: described.command, cause })),
 	);
-	return yield* Schema.decodeUnknownEffect(schema)(parsed).pipe(
+	return yield* S.decodeUnknownEffect(schema)(parsed).pipe(
 		Effect.mapError((cause) => CommandOutputError.make({ kind: "schema", command: described.command, cause })),
 	);
 });
@@ -383,7 +390,7 @@ const json = Effect.fn("Run.json")(function* <A, I>(
 // Implementation of Run.jsonLine; the public contract lives on the static.
 const jsonLine = Effect.fn("Run.jsonLine")(function* <A, I>(
 	command: ChildProcess.Command,
-	schema: Schema.Codec<A, I>,
+	schema: S.Codec<A, I>,
 	options?: RunOptions,
 ) {
 	yield* annotate(command);
@@ -412,12 +419,12 @@ const jsonLine = Effect.fn("Run.jsonLine")(function* <A, I>(
 	for (let index = candidates.length - 1; index >= 0; index--) {
 		const candidate = candidates[index];
 		if (candidate === undefined) continue;
-		const parsed = yield* Effect.result(Schema.decodeEffect(JsonOutput)(candidate));
+		const parsed = yield* Effect.result(S.decodeEffect(JsonOutput)(candidate));
 		if (Result.isFailure(parsed)) {
 			notJsonCause ??= parsed.failure;
 			continue;
 		}
-		const decoded = yield* Effect.result(Schema.decodeUnknownEffect(schema)(parsed.success));
+		const decoded = yield* Effect.result(S.decodeUnknownEffect(schema)(parsed.success));
 		if (Result.isSuccess(decoded)) return decoded.success;
 		schemaCause ??= decoded.failure;
 	}

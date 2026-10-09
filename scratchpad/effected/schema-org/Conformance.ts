@@ -1,4 +1,7 @@
-import { Effect, Option, Result, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { FOREIGN_PREFIX_SET } from "./internal/vocabulary.ts";
 import type { JsonLdDocument, JsonLdNode } from "./JsonLdDocument.ts";
 import { NodeRef } from "./NodeRef.ts";
@@ -9,7 +12,7 @@ import { Vocabulary } from "./Vocabulary.ts";
  *
  * @public
  */
-export const TermKind = Schema.Literals(["type", "property"]);
+export const TermKind = S.Literals(["type", "property"]);
 
 /**
  * Which kind of term a {@link UnknownTerm} issue is about.
@@ -33,13 +36,13 @@ export type TermKind = typeof TermKind.Type;
  *
  * @public
  */
-export class UnknownTerm extends Schema.TaggedClass<UnknownTerm>()("UnknownTerm", {
+export class UnknownTerm extends S.TaggedClass<UnknownTerm>()("UnknownTerm", {
 	/** The `@id` of the node carrying the term. */
-	nodeId: Schema.String,
+	nodeId: S.String,
 	/** The `@type` of the node carrying the term. */
-	nodeType: Schema.String,
+	nodeType: S.String,
 	/** The unrecognized term. */
-	term: Schema.String,
+	term: S.String,
 	/** Whether the term was used as a type or as a property. */
 	kind: TermKind,
 }) {
@@ -63,13 +66,13 @@ export class UnknownTerm extends Schema.TaggedClass<UnknownTerm>()("UnknownTerm"
  *
  * @public
  */
-export class PropertyNotOnType extends Schema.TaggedClass<PropertyNotOnType>()("PropertyNotOnType", {
+export class PropertyNotOnType extends S.TaggedClass<PropertyNotOnType>()("PropertyNotOnType", {
 	/** The `@id` of the node carrying the property. */
-	nodeId: Schema.String,
+	nodeId: S.String,
 	/** The `@type` of the node carrying the property. */
-	nodeType: Schema.String,
+	nodeType: S.String,
 	/** The property that is not legal on that type. */
-	property: Schema.String,
+	property: S.String,
 }) {
 	/** A one-line description of the issue. */
 	get message(): string {
@@ -85,13 +88,13 @@ export class PropertyNotOnType extends Schema.TaggedClass<PropertyNotOnType>()("
  *
  * @public
  */
-export class DeprecatedType extends Schema.TaggedClass<DeprecatedType>()("DeprecatedType", {
+export class DeprecatedType extends S.TaggedClass<DeprecatedType>()("DeprecatedType", {
 	/** The `@id` of the node. */
-	nodeId: Schema.String,
+	nodeId: S.String,
 	/** The deprecated `@type`. */
-	nodeType: Schema.String,
+	nodeType: S.String,
 	/** The type schema.org replaced it with. */
-	supersededBy: Schema.String,
+	supersededBy: S.String,
 }) {
 	/** A one-line description of the issue. */
 	get message(): string {
@@ -105,15 +108,15 @@ export class DeprecatedType extends Schema.TaggedClass<DeprecatedType>()("Deprec
  *
  * @public
  */
-export class DeprecatedProperty extends Schema.TaggedClass<DeprecatedProperty>()("DeprecatedProperty", {
+export class DeprecatedProperty extends S.TaggedClass<DeprecatedProperty>()("DeprecatedProperty", {
 	/** The `@id` of the node carrying the property. */
-	nodeId: Schema.String,
+	nodeId: S.String,
 	/** The `@type` of the node carrying the property. */
-	nodeType: Schema.String,
+	nodeType: S.String,
 	/** The deprecated property. */
-	property: Schema.String,
+	property: S.String,
 	/** The property schema.org replaced it with. */
-	supersededBy: Schema.String,
+	supersededBy: S.String,
 }) {
 	/** A one-line description of the issue. */
 	get message(): string {
@@ -130,15 +133,15 @@ export class DeprecatedProperty extends Schema.TaggedClass<DeprecatedProperty>()
  *
  * @public
  */
-export class DanglingReference extends Schema.TaggedClass<DanglingReference>()("DanglingReference", {
+export class DanglingReference extends S.TaggedClass<DanglingReference>()("DanglingReference", {
 	/** The `@id` of the node holding the reference. */
-	nodeId: Schema.String,
+	nodeId: S.String,
 	/** The `@type` of the node holding the reference. */
-	nodeType: Schema.String,
+	nodeType: S.String,
 	/** The property the reference sits in. */
-	property: Schema.String,
+	property: S.String,
 	/** The `@id` that no node in this graph defines. */
-	reference: Schema.String,
+	reference: S.String,
 }) {
 	/** A one-line description of the issue. */
 	get message(): string {
@@ -156,7 +159,7 @@ export class DanglingReference extends Schema.TaggedClass<DanglingReference>()("
  *
  * @public
  */
-export const ConformanceIssue = Schema.Union([
+export const ConformanceIssue = S.Union([
 	UnknownTerm,
 	PropertyNotOnType,
 	DeprecatedType,
@@ -181,9 +184,9 @@ export type ConformanceIssue = typeof ConformanceIssue.Type;
  *
  * @public
  */
-export class NonConformantGraphError extends Schema.TaggedError<NonConformantGraphError>()("NonConformantGraphError", {
+export class NonConformantGraphError extends S.TaggedError<NonConformantGraphError>()("NonConformantGraphError", {
 	/** Every issue found in the graph, failing or not. */
-	issues: Schema.Array(ConformanceIssue),
+	issues: S.Array(ConformanceIssue),
 }) {
 	override get message(): string {
 		const first = this.issues[0];
@@ -274,9 +277,9 @@ function referencesOf(node: JsonLdNode): ReadonlyArray<readonly [property: strin
 	const out: Array<readonly [string, string]> = [];
 	const entries: ReadonlyArray<readonly [string, unknown]> = Object.entries(node);
 	for (const [property, value] of entries) {
-		if (Schema.is(NodeRef)(value)) out.push([property, value["@id"]]);
+		if (S.is(NodeRef)(value)) out.push([property, value["@id"]]);
 		else if (Array.isArray(value)) {
-			for (const item of value) if (Schema.is(NodeRef)(item)) out.push([property, item["@id"]]);
+			for (const item of value) if (S.is(NodeRef)(item)) out.push([property, item["@id"]]);
 		}
 	}
 	return out;
@@ -364,7 +367,7 @@ export class Conformance {
 					issues.push(UnknownTerm.make({ nodeId, nodeType, term: nodeType, kind: "type" }));
 				} else {
 					const superseded = Vocabulary.supersededBy(typeTerm);
-					if (Option.isSome(superseded)) {
+					if (O.isSome(superseded)) {
 						issues.push(DeprecatedType.make({ nodeId, nodeType, supersededBy: superseded.value }));
 					}
 				}
@@ -382,7 +385,7 @@ export class Conformance {
 					continue;
 				}
 				const superseded = Vocabulary.supersededBy(term);
-				if (Option.isSome(superseded)) {
+				if (O.isSome(superseded)) {
 					issues.push(DeprecatedProperty.make({ nodeId, nodeType, property: written, supersededBy: superseded.value }));
 				}
 			}

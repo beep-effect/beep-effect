@@ -1,6 +1,9 @@
 // @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
-import { Cause, Effect, Exit, MutableRef } from "effect";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as MutableRef from "effect/MutableRef";
 import { CliExit } from "../../effected/cli/index.ts";
 
 describe("CliExit", () => {

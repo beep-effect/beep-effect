@@ -1,4 +1,6 @@
-import { Config, Effect, Redacted } from "effect";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
+import * as Redacted from "effect/Redacted";
 import { ActionOutputs } from "./ActionOutputs.ts";
 
 /**

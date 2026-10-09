@@ -6,14 +6,21 @@ import { tmpdir } from "node:os";
 import { basename, dirname, join } from "node:path";
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Layer, Option, Sink, Stream, Schema, Result, Clock } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Sink from "effect/Sink";
+import * as Stream from "effect/Stream";
+import * as S from "effect/Schema";
+import * as Result from "effect/Result";
+import * as Clock from "effect/Clock";
 import { FetchHttpClient } from "effect/http";
 import { ChildProcessSpawner } from "effect/process";
 import type { FileBlobTransfer } from "../../effected/github-actions/index.ts";
 import { Artifact, ArtifactError, BlobTransferError } from "../../effected/github-actions/index.ts";
 import { json, resultsEnv, runtimeToken, twirpFetch } from "./results.ts";
 
-const Json = Schema.fromJsonString(Schema.Unknown);
+const Json = S.fromJsonString(S.Unknown);
 
 const fileTransfer = () => {
 	const blobs = new Map<string, Uint8Array>();
@@ -191,10 +198,10 @@ describe("Artifact", () => {
 			});
 			const layer = live(fetch, transfer);
 			const found = yield* Effect.flatMap(Artifact, (artifacts) => artifacts.get("logs")).pipe(Effect.provide(layer));
-			assert.strictEqual(Option.isSome(found) ? found.value.id : undefined, 7);
+			assert.strictEqual(O.isSome(found) ? found.value.id : undefined, 7);
 			// Absent is an answer, not a failure — the same convention as a cache miss.
 			assert.isTrue(
-				Option.isNone(
+				O.isNone(
 					yield* Effect.flatMap(Artifact, (artifacts) => artifacts.get("other")).pipe(Effect.provide(layer)),
 				),
 			);
@@ -260,7 +267,7 @@ describe("Artifact", () => {
 					),
 				);
 				assert.strictEqual(error.reason, "invalidOptions");
-				assert.include(error.message, Result.getOrThrowWith(Schema.encodeResult(Json)("a\nb.txt"), (error) => error));
+				assert.include(error.message, Result.getOrThrowWith(S.encodeResult(Json)("a\nb.txt"), (error) => error));
 				assert.lengthOf(calls, 0);
 			}),
 		),

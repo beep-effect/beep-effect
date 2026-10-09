@@ -5,8 +5,11 @@
 // signature has.
 
 import { dual } from "effect/Function";
-import type { PlatformError } from "effect";
-import { Cause, Effect, Exit, Option } from "effect";
+import type * as PlatformError from "effect/PlatformError";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as O from "effect/Option";
 import type {
 	MemoryFileSystemDirent,
 	MemoryFileSystemPortStats,
@@ -265,7 +268,7 @@ export const runNode: {
 	const exit = Effect.runSyncExit(effect);
 	if (Exit.isSuccess(exit)) return exit.value;
 	const error = Cause.findErrorOption(exit.cause);
-	if (Option.isNone(error)) throw Cause.squash(exit.cause);
+	if (O.isNone(error)) throw Cause.squash(exit.cause);
 	const reason = error.value.reason;
 	const code =
 		reason._tag === "BadArgument"

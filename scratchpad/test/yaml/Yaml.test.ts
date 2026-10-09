@@ -1,7 +1,9 @@
 // @effect-diagnostics nodeBuiltinImport:skip-file
 import { readFileSync } from "node:fs";
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Result, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import {
 	Yaml,
 	YamlDocument,
@@ -14,7 +16,7 @@ import {
 	YamlStringifyOptions,
 } from "../../effected/yaml/index.ts";
 
-const JsonString = Schema.fromJsonString(Schema.String);
+const JsonString = S.fromJsonString(S.String);
 
 describe("Yaml", () => {
 	describe("parse", () => {
@@ -903,7 +905,7 @@ describe("Yaml", () => {
 						const scalar = text.slice("key: ".length).trimEnd();
 						assert.ok(
 							scalar.startsWith('"') || scalar.startsWith("'"),
-							`expected a quoted scalar for ${label}, got plain: ${(yield* Schema.encodeEffect(JsonString)(scalar))}`,
+							`expected a quoted scalar for ${label}, got plain: ${(yield* S.encodeEffect(JsonString)(scalar))}`,
 						);
 						assert.deepStrictEqual(yield* Yaml.parse(text), { key: value });
 					}),
@@ -916,7 +918,7 @@ describe("Yaml", () => {
 					// plain path. Block scalars can carry tabs and must keep doing so.
 					const value = { key: "line one\n\tindented line\n" };
 					const text = yield* Yaml.stringify(value);
-					assert.ok(text.includes("|"), `expected a block scalar, got: ${(yield* Schema.encodeEffect(JsonString)(text))}`);
+					assert.ok(text.includes("|"), `expected a block scalar, got: ${(yield* S.encodeEffect(JsonString)(text))}`);
 					assert.deepStrictEqual(yield* Yaml.parse(text), value);
 				}),
 			);
@@ -1282,11 +1284,11 @@ describe("Yaml", () => {
 	});
 
 	describe("schema pipeline", () => {
-		const Config = Schema.Struct({ host: Schema.String, port: Schema.Finite });
+		const Config = S.Struct({ host: S.String, port: S.Finite });
 
 		it.effect("YamlFromString decodes YAML to unknown", () =>
 			Effect.gen(function* () {
-				const value = yield* Schema.decodeEffect(Yaml.YamlFromString)("host: localhost\nport: 3000");
+				const value = yield* S.decodeEffect(Yaml.YamlFromString)("host: localhost\nport: 3000");
 				assert.deepStrictEqual(value, { host: "localhost", port: 3000 });
 			}),
 		);
@@ -1294,14 +1296,14 @@ describe("Yaml", () => {
 		it.effect("schema(Target) decodes YAML straight into a domain value", () =>
 			Effect.gen(function* () {
 				const ConfigFromYaml = Yaml.schema(Config);
-				const config = yield* Schema.decodeEffect(ConfigFromYaml)("host: localhost\nport: 3000");
+				const config = yield* S.decodeEffect(ConfigFromYaml)("host: localhost\nport: 3000");
 				assert.deepStrictEqual(config, { host: "localhost", port: 3000 });
 			}),
 		);
 
 		it.effect("encodes a value back to YAML text", () =>
 			Effect.gen(function* () {
-				const encoded = yield* Schema.encodeUnknownEffect(Yaml.YamlFromString)({ a: 1 });
+				const encoded = yield* S.encodeUnknownEffect(Yaml.YamlFromString)({ a: 1 });
 				assert.strictEqual(encoded, "a: 1\n");
 			}),
 		);
@@ -1309,11 +1311,11 @@ describe("Yaml", () => {
 		it.effect("allFromString decodes and encodes multi-document streams", () =>
 			Effect.gen(function* () {
 				const codec = Yaml.allFromString();
-				const values = yield* Schema.decodeEffect(codec)("a: 1\n---\nb: 2");
+				const values = yield* S.decodeEffect(codec)("a: 1\n---\nb: 2");
 				assert.deepStrictEqual(values, [{ a: 1 }, { b: 2 }]);
-				const encoded = yield* Schema.encodeUnknownEffect(codec)([{ a: 1 }, { b: 2 }]);
+				const encoded = yield* S.encodeUnknownEffect(codec)([{ a: 1 }, { b: 2 }]);
 				assert.strictEqual(encoded, "a: 1\n---\nb: 2\n");
-				const roundTripped = yield* Schema.decodeEffect(codec)(encoded);
+				const roundTripped = yield* S.decodeEffect(codec)(encoded);
 				assert.deepStrictEqual(roundTripped, [{ a: 1 }, { b: 2 }]);
 			}),
 		);
@@ -1327,7 +1329,7 @@ describe("Yaml", () => {
 
 		it.effect("schema decode surfaces a SchemaError carrying the aggregate parse message", () =>
 			Effect.gen(function* () {
-				const error = yield* Effect.matchEffect(Schema.decodeEffect(Yaml.YamlFromString)("a: *missing"), { onFailure: Effect.succeed, onSuccess: Effect.die });
+				const error = yield* Effect.matchEffect(S.decodeEffect(Yaml.YamlFromString)("a: *missing"), { onFailure: Effect.succeed, onSuccess: Effect.die });
 				assert.strictEqual(error._tag, "SchemaError");
 				assert.include(String(error), "YAML parse failed");
 			}),
@@ -1335,7 +1337,7 @@ describe("Yaml", () => {
 	});
 
 	describe("bind", () => {
-		const Config = Schema.Struct({ host: Schema.String, port: Schema.Finite });
+		const Config = S.Struct({ host: S.String, port: S.Finite });
 		const config = Yaml.bind(Config);
 
 		it.effect("decode parses YAML straight into a validated domain value", () =>
@@ -1372,7 +1374,7 @@ describe("Yaml", () => {
 
 		it.effect("schema is the Yaml.schema composition, usable with generic Schema machinery", () =>
 			Effect.gen(function* () {
-				const value = yield* Schema.decodeEffect(config.schema)("host: localhost\nport: 3000");
+				const value = yield* S.decodeEffect(config.schema)("host: localhost\nport: 3000");
 				assert.deepStrictEqual(value, { host: "localhost", port: 3000 });
 			}),
 		);
@@ -1382,11 +1384,11 @@ describe("Yaml", () => {
 		// `-0` is a valid `Int` the native generator does emit, and neither JSON nor
 		// YAML can carry it (`JSON.stringify(-0) === "0"`), so the round-trip domain
 		// excludes it explicitly rather than letting `deepStrictEqual` fail on +0/-0.
-		const Sample = Schema.Struct({
-			name: Schema.String,
-			count: Schema.Int.check(Schema.makeFilter((n) => !Object.is(n, -0))),
-			enabled: Schema.Boolean,
-			tags: Schema.Array(Schema.String),
+		const Sample = S.Struct({
+			name: S.String,
+			count: S.Int.check(S.makeFilter((n) => !Object.is(n, -0))),
+			enabled: S.Boolean,
+			tags: S.Array(S.String),
 		});
 
 		it.effect.prop("parse recovers what stringify produced", [Sample], ([value]) =>

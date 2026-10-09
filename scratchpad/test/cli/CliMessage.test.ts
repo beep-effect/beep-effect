@@ -2,7 +2,11 @@
 import { assert, describe, it } from "@effect/vitest";
 import type { AudienceKind } from "../../effected/env/index.ts";
 import { Audience, CurrentRuntimeEnv } from "../../effected/env/index.ts";
-import { Console, Effect, Layer, Option, References } from "effect";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as References from "effect/References";
 import { CliMessage, CliTheme, Status, Token } from "../../effected/cli/index.ts";
 import { commandLines } from "./helpers/runnerCommands.ts";
 
@@ -38,7 +42,7 @@ const run = Effect.fn("run")(function* (program: Effect.Effect<void, never, CliT
 			Effect.provide(
 				options.ci === undefined
 					? Layer.empty
-					: CurrentRuntimeEnv.layerTest({ ci: options.ci === "none" ? Option.none() : Option.some(options.ci) }),
+					: CurrentRuntimeEnv.layerTest({ ci: options.ci === "none" ? O.none() : O.some(options.ci) }),
 			),
 			Effect.provideService(Console.Console, double),
 		);

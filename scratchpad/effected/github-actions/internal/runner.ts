@@ -7,8 +7,10 @@
 // the host default rather than a failure, so merely composing a layer outside
 // Actions never fails.
 
-import type { Path } from "effect";
-import { Effect, Option, Function } from "effect";
+import type * as Path from "effect/Path";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
+import * as Function from "effect/Function";
 import type { ActionEnvironmentShape } from "../ActionEnvironment.ts";
 
 /**
@@ -19,7 +21,7 @@ import type { ActionEnvironmentShape } from "../ActionEnvironment.ts";
  */
 export const isWindowsRunner = (env: ActionEnvironmentShape): Effect.Effect<boolean> =>
 	Effect.map(env.getOptional("RUNNER_OS"), (found) =>
-		Option.match(found, { onNone: () => false, onSome: (os) => os.toLowerCase() === "windows" }),
+		O.match(found, { onNone: () => false, onSome: (os) => os.toLowerCase() === "windows" }),
 	);
 
 /**
@@ -41,5 +43,5 @@ export const toolCacheRoot: {
 	(path: Path.Path): (env: ActionEnvironmentShape) => Effect.Effect<string>;
 } = Function.dual(2, (env: ActionEnvironmentShape, path: Path.Path): Effect.Effect<string> =>
 	Effect.map(env.getOptional("RUNNER_TOOL_CACHE"), (found) =>
-		Option.getOrElse(found, () => path.join("/tmp", "runner-tool-cache")),
+		O.getOrElse(found, () => path.join("/tmp", "runner-tool-cache")),
 	));

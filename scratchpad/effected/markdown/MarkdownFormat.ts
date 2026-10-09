@@ -29,7 +29,9 @@
 // parseResult`/`Markdown.stringifyResult`) and the node classes; it never
 // imports the engine.
 
-import { Effect, Result, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { Markdown, MarkdownDialect, MarkdownParseOptions } from "./Markdown.ts";
 import type { MarkdownDocument } from "./MarkdownDocument.ts";
 import type { MarkdownRange } from "./MarkdownEdit.ts";
@@ -67,7 +69,7 @@ export type MarkdownRangeLike = MarkdownRange | { readonly offset: number; reado
  *
  * @public
  */
-export const CodeBlockStyle = Schema.Literals(["fenced", "indented"]);
+export const CodeBlockStyle = S.Literals(["fenced", "indented"]);
 
 /**
  * The union of all code-block-style string literals.
@@ -106,15 +108,15 @@ export type CodeBlockStyle = typeof CodeBlockStyle.Type;
  *
  * @public
  */
-export class MarkdownFormattingOptions extends Schema.Class<MarkdownFormattingOptions>("MarkdownFormattingOptions")({
-	dialect: Schema.optionalKey(MarkdownDialect),
-	frontmatter: Schema.optionalKey(Schema.Boolean),
-	headingStyle: Schema.optionalKey(HeadingStyle),
-	bulletChar: Schema.optionalKey(BulletChar),
-	emphasisChar: Schema.optionalKey(EmphasisChar),
-	fenceChar: Schema.optionalKey(FenceChar),
-	thematicBreakChar: Schema.optionalKey(ThematicBreakChar),
-	codeBlockStyle: Schema.optionalKey(CodeBlockStyle),
+export class MarkdownFormattingOptions extends S.Class<MarkdownFormattingOptions>("MarkdownFormattingOptions")({
+	dialect: S.optionalKey(MarkdownDialect),
+	frontmatter: S.optionalKey(S.Boolean),
+	headingStyle: S.optionalKey(HeadingStyle),
+	bulletChar: S.optionalKey(BulletChar),
+	emphasisChar: S.optionalKey(EmphasisChar),
+	fenceChar: S.optionalKey(FenceChar),
+	thematicBreakChar: S.optionalKey(ThematicBreakChar),
+	codeBlockStyle: S.optionalKey(CodeBlockStyle),
 }) {}
 
 /**
@@ -122,7 +124,7 @@ export class MarkdownFormattingOptions extends Schema.Class<MarkdownFormattingOp
  *
  * @public
  */
-export const MarkdownModificationErrorCode = Schema.Literals([
+export const MarkdownModificationErrorCode = S.Literals([
 	"NodeNotInDocument",
 	"UnsupportedTarget",
 	"FragmentCategoryMismatch",
@@ -148,13 +150,13 @@ export type MarkdownModificationErrorCode = typeof MarkdownModificationErrorCode
  *
  * @public
  */
-export class MarkdownModificationError extends Schema.TaggedError<MarkdownModificationError>()(
+export class MarkdownModificationError extends S.TaggedError<MarkdownModificationError>()(
 	"MarkdownModificationError",
 	{
 		code: MarkdownModificationErrorCode,
-		detail: Schema.String,
-		offset: Schema.Finite,
-		length: Schema.Finite,
+		detail: S.String,
+		offset: S.Finite,
+		length: S.Finite,
 	},
 ) {
 	override get message(): string {

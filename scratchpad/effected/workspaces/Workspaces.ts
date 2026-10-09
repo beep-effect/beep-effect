@@ -14,8 +14,11 @@ import type {
 	UnresolvedDependencyError,
 	WorkspaceResolver,
 } from "../npm/index.ts";
-import type { FileSystem, Path } from "effect";
-import { Effect, Layer, Option } from "effect";
+import type * as FileSystem from "effect/FileSystem";
+import type * as Path from "effect/Path";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import type { ChildProcessSpawner } from "effect/process";
 import { ChangeDetector } from "./ChangeDetector.ts";
 import { ConfigDependencyHooks } from "./ConfigDependencyHooks.ts";
@@ -235,10 +238,9 @@ const resolveManifest: (
 	CatalogAssemblyError | DependencyResolutionError | UnresolvedDependencyError,
 	FileSystem.FileSystem | Path.Path
 > = Effect.fn("Workspaces.resolveManifest")(function* (manifest: Manifest, options?: WorkspacesOptions) {
-	return yield* Effect.scoped(
-		Layer.build(resolverLayer(options)).pipe(
-			Effect.flatMap((context) => manifest.resolve().pipe(Effect.provideContext(context))),
-		),
+	return yield* Layer.build(resolverLayer(options)).pipe(
+		Effect.flatMap((context) => manifest.resolve().pipe(Effect.provideContext(context))),
+		Effect.scoped,
 	);
 });
 
@@ -265,8 +267,8 @@ const localExecLayer = (options?: {
 				// other absent root: nothing project-local to run here.
 				const root = yield* roots
 					.find(cwd, stopAt === undefined ? undefined : { stopAt })
-					.pipe(Effect.asSome, Effect.orElseSucceed(Option.none<string>));
-				if (Option.isNone(root)) return Option.none<ExecContext>();
+					.pipe(Effect.asSome, Effect.orElseSucceed(O.none<string>));
+				if (O.isNone(root)) return O.none<ExecContext>();
 
 				const detected = yield* detector.detect(root.value).pipe(
 					Effect.asSome,
@@ -274,16 +276,16 @@ const localExecLayer = (options?: {
 					// found no evidence and declined to guess, which is exactly "no
 					// identifiable project-local launcher" — the None case. A
 					// WorkspaceManifestError is different in kind and must escape.
-					Effect.catchTag("PackageManagerDetectionError", () => Effect.succeed(Option.none<DetectedPackageManager>())),
+					Effect.catchTag("PackageManagerDetectionError", () => Effect.succeed(O.none<DetectedPackageManager>())),
 					// Everything left is a broken manifest. Wrap it in the contract's
 					// error, preserving the original structurally rather than
 					// flattening it to a message.
 					Effect.mapError((cause) => LocalExecError.make({ directory: root.value, cause })),
 				);
-				if (Option.isNone(detected)) return Option.none<ExecContext>();
+				if (O.isNone(detected)) return O.none<ExecContext>();
 
 				const { prefix, dlxPrefix, scriptPrefix } = LocalExec.prefixes(detected.value.name);
-				return Option.some(
+				return O.some(
 					ExecContext.make({
 						label: detected.value.name,
 						prefix,

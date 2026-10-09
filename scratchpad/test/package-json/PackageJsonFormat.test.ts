@@ -4,12 +4,14 @@
 // shape" mirror the `sort-package-json` call sites a consumer is replacing.
 
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Result, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { Package } from "../../effected/package-json/Package.ts";
 import type { PackageJsonSyntaxError } from "../../effected/package-json/PackageJsonFormat.ts";
 import { PackageJsonFormat } from "../../effected/package-json/PackageJsonFormat.ts";
 
-const Json = Schema.fromJsonString(Schema.Unknown);
+const Json = S.fromJsonString(S.Unknown);
 
 const format = (source: string, options?: Parameters<typeof PackageJsonFormat.formatToString>[1]): string => {
 	const result = PackageJsonFormat.formatToString(source, options);
@@ -121,7 +123,7 @@ describe("PackageJsonFormat.formatToString accepts any syntactically valid JSON 
 		Effect.gen(function* () {
 			for (const input of [{ private: true }, { name: "root", workspaces: ["packages/*"] }]) {
 				const result = yield* Effect.result(Package.decode(input));
-				assert.isTrue(result._tag === "Failure", `expected ${(yield* Schema.encodeEffect(Json)(input))} to fail strict decode`);
+				assert.isTrue(result._tag === "Failure", `expected ${(yield* S.encodeEffect(Json)(input))} to fail strict decode`);
 			}
 		}),
 	);
@@ -230,7 +232,7 @@ describe("PackageJsonFormat.formatToString syntactic failures", () => {
 
 	it("lifts into an Effect through Effect.fromResult", () =>
 		assert.strictEqual(
-			Effect.runSync(Effect.fromResult(PackageJsonFormat.formatToString('{"name": "p"}'))),
+			PackageJsonFormat.formatToString('{"name": "p"}').pipe(Effect.fromResult, Effect.runSync),
 			'{\n  "name": "p"\n}\n',
 		));
 });

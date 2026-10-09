@@ -1,7 +1,15 @@
 // @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file asyncFunction:skip-file
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
-import { Cause, Console, Effect, Exit, Fiber, Layer, Logger, References, Runtime } from "effect";
+import * as Cause from "effect/Cause";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Fiber from "effect/Fiber";
+import * as Layer from "effect/Layer";
+import * as Logger from "effect/Logger";
+import * as References from "effect/References";
+import * as Runtime from "effect/Runtime";
 import { Command, Flag, Prompt } from "effect/cli";
 import { vi } from "vitest";
 import { CliInteractive, CliPrompt, CliRuntime, CliTheme, NotInteractive } from "../../../effected/cli/index.ts";
@@ -59,7 +67,7 @@ const app = (options: { readonly otherwise?: string } = {}) =>
 	);
 
 const exitCode = (exit: Exit.Exit<unknown, unknown>): number =>
-	Exit.isFailure(exit) ? Runtime.getErrorExitCode(Cause.squash(exit.cause)) : 0;
+	Exit.isFailure(exit) ? exit.cause.pipe(Cause.squash, Runtime.getErrorExitCode) : 0;
 
 const platform = Effect.map(TestTerminal.make(), (terminal) =>
 	Layer.mergeAll(NodeServices.layer, CliPrompt.gateTerminal.pipe(Layer.provide(terminal.layer))),

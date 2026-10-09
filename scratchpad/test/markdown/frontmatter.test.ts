@@ -9,7 +9,9 @@
 // exactly as CommonMark says they do unless a consumer opts in.
 
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Result, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { parseBlocks } from "../../effected/markdown/internal/blockParser.ts";
 import { Markdown, MarkdownParseOptions } from "../../effected/markdown/Markdown.ts";
 import { MarkdownDocument } from "../../effected/markdown/MarkdownDocument.ts";
@@ -215,7 +217,7 @@ describe("frontmatter capture", () => {
 
 		it("a frontmatter head survives a Root decode round-trip", () => {
 			const root = parseOn("---\na: 1\n---\nrest\n");
-			const decoded = Result.getOrThrow(Schema.decodeResult(Root)(Result.getOrThrow(Schema.encodeUnknownResult(Root)(root))));
+			const decoded = S.encodeUnknownResult(Root)(root).pipe(Result.getOrThrow, S.decodeResult(Root), Result.getOrThrow);
 			assert.deepStrictEqual(decoded, root);
 		});
 

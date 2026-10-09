@@ -1,17 +1,22 @@
 // @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
-import { Config, ConfigProvider, Effect, Layer, Path, Schema } from "effect";
+import * as Config from "effect/Config";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
+import * as S from "effect/Schema";
 import { ConfigFile } from "../../effected/config-file/ConfigFile.ts";
 import { asConfigProvider, layerConfigProvider } from "../../effected/config-file/ConfigProvider.ts";
 import { ConfigResolver } from "../../effected/config-file/ConfigResolver.ts";
 import { JsonCodec } from "../../effected/config-file/JsonCodec.ts";
 import { MergeStrategy } from "../../effected/config-file/MergeStrategy.ts";
 
-class DbShape extends Schema.Class<DbShape>("DbShape")({ host: Schema.String }) {}
-class AppShape extends Schema.Class<AppShape>("AppShape")({
-	port: Schema.Finite,
-	host: Schema.String,
+class DbShape extends S.Class<DbShape>("DbShape")({ host: S.String }) {}
+class AppShape extends S.Class<AppShape>("AppShape")({
+	port: S.Finite,
+	host: S.String,
 	db: DbShape,
 }) {}
 class AppConfig extends ConfigFile.Service<AppConfig, AppShape>()("test/ProviderConfig") {}

@@ -1,5 +1,6 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
 import { Cancelled, Fmt } from "../../../effected/cli/index.ts";
 import type { UiKey } from "../../../effected/cli/ui.ts";
 import { TextInput } from "../../../effected/cli/ui.ts";
@@ -66,8 +67,8 @@ describe("TextInput reducer", () => {
 	it.prop(
 		"any edit sequence over astral text leaves it well formed, with the cursor on a code-point boundary",
 		{
-			initial: Schema.Array(Schema.Literals(["a", "😀", "𝒳", "é", "中"])),
-			edits: Schema.Array(Schema.Literals(["a", "😀", "𝒳", "left", "right", "home", "end", "backspace", "delete"])),
+			initial: S.Array(S.Literals(["a", "😀", "𝒳", "é", "中"])),
+			edits: S.Array(S.Literals(["a", "😀", "𝒳", "left", "right", "home", "end", "backspace", "delete"])),
 		},
 		({ initial, edits }) => {
 			const keys = edits.map(
@@ -101,7 +102,7 @@ describe("TextInput.screen under CliUiTest", () => {
 			yield* handle.type("ab");
 			yield* handle.press("escape");
 			const error = yield* Effect.flip(handle.result);
-			assert.strictEqual(Schema.is(Cancelled)(error) ? error.reason : undefined, "escape");
+			assert.strictEqual(S.is(Cancelled)(error) ? error.reason : undefined, "escape");
 		}).pipe(Effect.scoped),
 	);
 
@@ -110,7 +111,7 @@ describe("TextInput.screen under CliUiTest", () => {
 			const handle = yield* CliUiTest.render(TextInput.screen({ message: "Name" }));
 			yield* handle.press("ctrl+c");
 			const error = yield* Effect.flip(handle.result);
-			assert.strictEqual(Schema.is(Cancelled)(error) ? error.reason : undefined, "interrupt");
+			assert.strictEqual(S.is(Cancelled)(error) ? error.reason : undefined, "interrupt");
 		}).pipe(Effect.scoped),
 	);
 

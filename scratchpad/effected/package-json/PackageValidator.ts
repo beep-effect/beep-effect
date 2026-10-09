@@ -3,7 +3,13 @@
 // `PackageValidationError`. Ships `PackageValidator.layer` (the default rule
 // set) and the genuinely-parameterized `PackageValidator.layerRules` factory.
 
-import { Context, Effect, HashMap, Layer, Option, Result, Schema } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import type { Package } from "./Package.ts";
 
 /**
@@ -15,7 +21,7 @@ export interface RuleFailure {
 	/** A human-readable description of the failure. */
 	readonly message: string;
 	/** The JSON path where the failure occurred; `Option.none()` when not applicable. */
-	readonly path: Option.Option<string>;
+	readonly path: O.Option<string>;
 }
 
 /**
@@ -39,19 +45,19 @@ export interface ValidationRule {
  *
  * @public
  */
-export class PackageValidationError extends Schema.TaggedError<PackageValidationError>()("PackageValidationError", {
+export class PackageValidationError extends S.TaggedError<PackageValidationError>()("PackageValidationError", {
 	/** The aggregated rule failures. */
-	failures: Schema.Array(
-		Schema.Struct({
-			rule: Schema.String,
-			message: Schema.String,
-			path: Schema.Option(Schema.String),
+	failures: S.Array(
+		S.Struct({
+			rule: S.String,
+			message: S.String,
+			path: S.Option(S.String),
 		}),
 	),
 }) {
 	override get message(): string {
 		const lines = this.failures.map((failure) => {
-			const path = Option.match(failure.path, { onNone: () => "", onSome: (value) => ` (at ${value})` });
+			const path = O.match(failure.path, { onNone: () => "", onSome: (value) => ` (at ${value})` });
 			return `  - [${failure.rule}]${path}: ${failure.message}`;
 		});
 		return `package.json validation failed:\n${lines.join("\n")}`;
@@ -65,7 +71,7 @@ const hasLicense: ValidationRule = {
 	validate: (pkg) =>
 		pkg.license !== undefined
 			? Effect.void
-			: Effect.fail({ message: "Missing license field", path: Option.some("license") }),
+			: Effect.fail({ message: "Missing license field", path: O.some("license") }),
 };
 
 const hasDescription: ValidationRule = {
@@ -73,7 +79,7 @@ const hasDescription: ValidationRule = {
 	validate: (pkg) =>
 		pkg.description !== undefined
 			? Effect.void
-			: Effect.fail({ message: "Missing description field", path: Option.some("description") }),
+			: Effect.fail({ message: "Missing description field", path: O.some("description") }),
 };
 
 const hasRepository: ValidationRule = {
@@ -82,13 +88,13 @@ const hasRepository: ValidationRule = {
 	validate: (pkg) =>
 		pkg.repository !== undefined
 			? Effect.void
-			: Effect.fail({ message: "Missing repository field", path: Option.some("repository") }),
+			: Effect.fail({ message: "Missing repository field", path: O.some("repository") }),
 };
 
 const notPrivate: ValidationRule = {
 	name: "not-private",
 	validate: (pkg) =>
-		pkg.isPrivate ? Effect.fail({ message: "Package is private", path: Option.some("private") }) : Effect.void,
+		pkg.isPrivate ? Effect.fail({ message: "Package is private", path: O.some("private") }) : Effect.void,
 };
 
 const anyDependencyMatches = (pkg: Package, predicate: (specifier: string) => boolean): boolean =>
@@ -106,7 +112,7 @@ export const noUnresolvedDepsRule: ValidationRule = {
 	name: "no-unresolved-deps",
 	validate: (pkg) =>
 		anyDependencyMatches(pkg, (specifier) => specifier.startsWith("workspace:") || specifier.startsWith("catalog:"))
-			? Effect.fail({ message: "Unresolved workspace:/catalog: dependency", path: Option.none() })
+			? Effect.fail({ message: "Unresolved workspace:/catalog: dependency", path: O.none() })
 			: Effect.void,
 };
 
@@ -123,7 +129,7 @@ export const noLocalDepsRule: ValidationRule = {
 			pkg,
 			(specifier) => specifier.startsWith("file:") || specifier.startsWith("link:") || specifier.startsWith("portal:"),
 		)
-			? Effect.fail({ message: "Local file:/link:/portal: dependency", path: Option.none() })
+			? Effect.fail({ message: "Local file:/link:/portal: dependency", path: O.none() })
 			: Effect.void,
 };
 
@@ -136,7 +142,7 @@ export const noLocalDepsRule: ValidationRule = {
 export const defaultRules: ReadonlyArray<ValidationRule> = [hasLicense, hasDescription, hasRepository, notPrivate];
 
 const runRules = Effect.fn("PackageValidator.validate")(function* (pkg: Package, rules: ReadonlyArray<ValidationRule>) {
-	const failures: Array<{ readonly rule: string; readonly message: string; readonly path: Option.Option<string> }> = [];
+	const failures: Array<{ readonly rule: string; readonly message: string; readonly path: O.Option<string> }> = [];
 	for (const rule of rules) {
 		const result = yield* Effect.result(rule.validate(pkg));
 		if (Result.isFailure(result)) {

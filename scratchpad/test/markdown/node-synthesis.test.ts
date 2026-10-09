@@ -6,7 +6,9 @@
 // spans, so the interop corpus's exact-emission contract is untouched.
 
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Result, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { Markdown } from "../../effected/markdown/Markdown.ts";
 import { MarkdownDocument } from "../../effected/markdown/MarkdownDocument.ts";
 import { MarkdownFormat } from "../../effected/markdown/MarkdownFormat.ts";
@@ -105,7 +107,7 @@ describe("synthesized trees flow through the render surfaces", () => {
 
 describe("the default is make-only (controls)", () => {
 	it("decode still requires a full position", () => {
-		const decoded = Schema.decodeUnknownResult(Text)({ type: "text", value: "x" });
+		const decoded = S.decodeUnknownResult(Text)({ type: "text", value: "x" });
 		assert.isTrue(Result.isFailure(decoded));
 	});
 
@@ -119,7 +121,7 @@ describe("the default is make-only (controls)", () => {
 	});
 
 	it("encode of a synthesized node still emits the position", () => {
-		const encoded = Schema.encodeUnknownResult(Text)(Text.make({ value: "x" }));
+		const encoded = S.encodeUnknownResult(Text)(Text.make({ value: "x" }));
 		assert.isTrue(Result.isSuccess(encoded));
 		const plain = Result.getOrThrow(encoded) as { position?: unknown };
 		assert.deepStrictEqual(plain.position, {

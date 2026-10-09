@@ -1,8 +1,10 @@
 // KIT EXTENSION (seeding). The seed applier and the `root` option, kept out of
 // the facade so every seeded constructor shares one path.
 import { dual } from "effect/Function";
-import type { FileSystem } from "effect";
-import { DateTime, Effect, Result } from "effect";
+import type * as FileSystem from "effect/FileSystem";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
 import type { PlatformError } from "effect/PlatformError";
 import { badArgument } from "effect/PlatformError";
 import type { MemoryFileSystemOptions, MemoryFileSystemSeed, MemoryFileSystemSeedEntry } from "../MemoryFileSystem.ts";

@@ -16,8 +16,10 @@
 // cannot deadlock on a full pipe; the stream ends at exit. The caller applies
 // its own exit-code policy (the cache tolerates `tar -k`'s exit 1) and maps
 // the `PlatformError` into its own error class.
-import type { PlatformError } from "effect";
-import { Effect, Stream, Function } from "effect";
+import type * as PlatformError from "effect/PlatformError";
+import * as Effect from "effect/Effect";
+import * as Stream from "effect/Stream";
+import * as Function from "effect/Function";
 import type { ChildProcess, ChildProcessSpawner } from "effect/process";
 
 /** What one run produced: stdout and stderr interleaved, and the exit code. */
@@ -41,7 +43,7 @@ export const spawnOnce: {
 	Effect.scoped(
 		Effect.gen(function* () {
 			const handle = yield* spawner.spawn(command);
-			const output = yield* Stream.mkString(Stream.decodeText(handle.all));
+			const output = yield* handle.all.pipe(Stream.decodeText, Stream.mkString);
 			const code = yield* handle.exitCode;
 			return { output, code };
 		}),

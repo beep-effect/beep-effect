@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 import { NodeRef } from "./NodeRef.ts";
 import { ThingFields } from "./Thing.ts";
 
@@ -23,12 +23,12 @@ import { ThingFields } from "./Thing.ts";
  *
  * @public
  */
-export class Person extends Schema.Class<Person>("Person")({
+export class Person extends S.Class<Person>("Person")({
 	...ThingFields,
 	/** The JSON-LD type discriminator, populated automatically. */
-	"@type": Schema.tag("Person"),
+	"@type": S.tag("Person"),
 	/** An email address for the person. Single-valued. */
-	email: Schema.optional(Schema.String),
+	email: S.optional(S.String),
 	/** Organizations the person is affiliated with, by reference. Repeatable. */
-	affiliation: Schema.optional(Schema.Array(NodeRef)),
+	affiliation: NodeRef.pipe(S.Array, S.optional),
 }) {}

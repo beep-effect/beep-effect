@@ -9,8 +9,14 @@
 // instead of `effect/MemoryFileSystem`. The suite body is upstream's.
 
 import { assert, describe, layer } from "@effect/vitest";
-import type { PlatformError } from "effect";
-import { Effect, Fiber, FileSystem, Layer, Option, Result, Stream } from "effect";
+import type * as PlatformError from "effect/PlatformError";
+import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Result from "effect/Result";
+import * as Stream from "effect/Stream";
 import { TestClock } from "effect/testing";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
 
@@ -174,10 +180,10 @@ layer(MemoryFileSystem.layer)("FileSystem (memory-specific)", (it) => {
 
 			const info = yield* fs.stat("/metadata.txt");
 			assert.strictEqual(info.mode & 0o7777, 0o000);
-			assert.strictEqual(Option.getOrThrow(info.uid), 42);
-			assert.strictEqual(Option.getOrThrow(info.gid), 84);
-			assert.strictEqual(Option.getOrThrow(info.atime).getTime(), 1_000);
-			assert.strictEqual(Option.getOrThrow(info.mtime).getTime(), 2_000);
+			assert.strictEqual(O.getOrThrow(info.uid), 42);
+			assert.strictEqual(O.getOrThrow(info.gid), 84);
+			assert.strictEqual(O.getOrThrow(info.atime).getTime(), 1_000);
+			assert.strictEqual(O.getOrThrow(info.mtime).getTime(), 2_000);
 
 			yield* fs.access("/metadata.txt", { readable: true, writable: true });
 		}),

@@ -1,6 +1,6 @@
 // Agent and CI detection from a pure env record. The agent table is transcribed, in order, from std-env 4.3.0
 // (dist/index.mjs); CI detection is deliberately narrower than std-env's provider table.
-import { Option } from "effect";
+import * as O from "effect/Option";
 import type { Env } from "./types.ts";
 
 type AgentRule =
@@ -50,10 +50,10 @@ const familyOf = (value: string): string =>
  *
  * @internal
  */
-export const detectAgent = (env: Env): Option.Option<string> => {
+export const detectAgent = (env: Env): O.Option<string> => {
 	if (env.AI_AGENT !== undefined && env.AI_AGENT !== "") {
 		const name = env.AI_AGENT.toLowerCase();
-		return Option.some(
+		return O.some(
 			name === "github_copilot_vscode_agent" || name === "github_copilot_cloud_agent" ? "copilot" : familyOf(name),
 		);
 	}
@@ -61,9 +61,9 @@ export const detectAgent = (env: Env): Option.Option<string> => {
 		if (typeof rule === "function" ? rule(env) : rule.some((key) => {
 			const value = env[key];
 			return value !== undefined && value !== "";
-		})) return Option.some(name);
+		})) return O.some(name);
 	}
-	return Option.none();
+	return O.none();
 };
 
 // "" is falsy, as in detectAgent and std-env: an empty variable is an unset one.
@@ -76,10 +76,10 @@ const isFalsy = (value: string | undefined): boolean =>
  *
  * @internal
  */
-export const detectCi = (env: Env): Option.Option<"github-actions" | "generic"> => {
-	if (!isFalsy(env.GITHUB_ACTIONS)) return Option.some("github-actions");
-	if (!isFalsy(env.CI) || !isFalsy(env.CONTINUOUS_INTEGRATION)) return Option.some("generic");
-	return Option.none();
+export const detectCi = (env: Env): O.Option<"github-actions" | "generic"> => {
+	if (!isFalsy(env.GITHUB_ACTIONS)) return O.some("github-actions");
+	if (!isFalsy(env.CI) || !isFalsy(env.CONTINUOUS_INTEGRATION)) return O.some("generic");
+	return O.none();
 };
 
 /**

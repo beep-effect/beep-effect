@@ -4,7 +4,12 @@
 // but never in which block a marker names.
 
 import { assert, describe, it } from "@effect/vitest";
-import { Arbitrary, Effect, Equal, Option, Result, Schema } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import * as O from "effect/Option";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import type { Section, SectionDocument, SectionRenderError } from "../../effected/templates/index.ts";
 import { CommentStyle, ManagedSection, SectionDialect, SectionId } from "../../effected/templates/index.ts";
 import { begin, block, end, id, lines, memoryFs, parse, parseFailure, section } from "./fixtures.ts";
@@ -67,8 +72,8 @@ describe("marker attributes", () => {
 			const first = reconcile(parse("user line\n"), [id("example-tool").section("echo hi", attrs)]);
 			const doc = parse(first.text);
 			const found = doc.read(id("example-tool"));
-			assert.isTrue(Option.isSome(found));
-			assert.deepStrictEqual(Option.getOrThrow(found).attributes, attrs);
+			assert.isTrue(O.isSome(found));
+			assert.deepStrictEqual(O.getOrThrow(found).attributes, attrs);
 			// The second pass is the byte-identity proof: what was written is
 			// exactly what reads back, so nothing re-renders.
 			const second = reconcile(doc, [id("example-tool").section("echo hi", attrs)]);
@@ -84,8 +89,8 @@ describe("marker attributes", () => {
 			const attrs = { note: "a --- b" };
 			const first = reconcile(parse(""), [id("k").section("x", attrs)]);
 			const found = parse(first.text).read(id("k"));
-			assert.isTrue(Option.isSome(found));
-			assert.deepStrictEqual(Option.getOrThrow(found).attributes, attrs);
+			assert.isTrue(O.isSome(found));
+			assert.deepStrictEqual(O.getOrThrow(found).attributes, attrs);
 			const second = reconcile(parse(first.text), [id("k").section("x", attrs)]);
 			assert.isFalse(second.changed);
 		});
@@ -93,7 +98,7 @@ describe("marker attributes", () => {
 		it("parses an old marker without attributes to an empty record, byte-identically", () => {
 			const text = lines("#!/bin/sh", block("example-tool", "echo hi"), "");
 			const doc = parse(text);
-			assert.deepStrictEqual(Option.getOrThrow(doc.read(id("example-tool"))).attributes, {});
+			assert.deepStrictEqual(O.getOrThrow(doc.read(id("example-tool"))).attributes, {});
 			const result = reconcile(doc, [section("example-tool", "echo hi")]);
 			assert.strictEqual(result.text, text);
 			assert.isFalse(result.changed);
@@ -101,7 +106,7 @@ describe("marker attributes", () => {
 
 		it("tolerates extra whitespace between pairs on read, normalizes on write", () => {
 			const doc = parse(`${blockWith("k", 'a="1"   b="2"', "x")}\n`);
-			assert.deepStrictEqual(Option.getOrThrow(doc.read(id("k"))).attributes, { a: "1", b: "2" });
+			assert.deepStrictEqual(O.getOrThrow(doc.read(id("k"))).attributes, { a: "1", b: "2" });
 			const result = reconcile(doc, [id("k").section("x", { a: "1", b: "2" })]);
 			assert.include(result.text, 'a="1" b="2"');
 			assert.deepStrictEqual(
@@ -221,10 +226,10 @@ describe("marker attributes", () => {
 		it("finds, probes and removes an attributed section by key and style alone", () => {
 			const doc = parse(lines("user", blockWith("k", 'a="1"', "x"), "tail", ""));
 			assert.isTrue(doc.has(id("k")));
-			assert.isTrue(Option.isSome(doc.read(id("k"))));
+			assert.isTrue(O.isSome(doc.read(id("k"))));
 			const removed = doc.remove(id("k"));
-			assert.isTrue(Option.isSome(removed));
-			assert.notInclude(Option.getOrThrow(removed), "BEGIN");
+			assert.isTrue(O.isSome(removed));
+			assert.notInclude(O.getOrThrow(removed), "BEGIN");
 		});
 
 		it("still rejects two blocks with one identity, attributes notwithstanding", () => {
@@ -279,7 +284,7 @@ describe("marker attributes", () => {
 			assert.isFalse(/[^\r]\n/.test(first.text), "output must not contain a lone LF");
 			assert.include(first.text, 'owner="tool"');
 			const doc = parse(first.text);
-			assert.deepStrictEqual(Option.getOrThrow(doc.read(id("k"))).attributes, { owner: "tool" });
+			assert.deepStrictEqual(O.getOrThrow(doc.read(id("k"))).attributes, { owner: "tool" });
 			const second = reconcile(doc, [declared]);
 			assert.strictEqual(second.text, first.text);
 			assert.isFalse(second.changed);
@@ -313,18 +318,18 @@ describe("marker attributes", () => {
 			"//": CommentStyle.make({ prefix: "//" }),
 			"<!--": CommentStyle.make({ prefix: "<!--", suffix: "-->" }),
 		};
-		const styleArb = Arbitrary.schema(Schema.Literals(["#", "//", "<!--"])).pipe(
+		const styleArb = Arbitrary.schema(S.Literals(["#", "//", "<!--"])).pipe(
 			Arbitrary.map((prefix) => styles[prefix]),
 		);
-		const Name = Schema.Literals(["name", "other", "x1", "a-b", "c_d", "Z"]);
-		const Value = Schema.Literals(["", "v", "1.2.3", "spaced value", "a --- b", "-->"]);
+		const Name = S.Literals(["name", "other", "x1", "a-b", "c_d", "Z"]);
+		const Value = S.Literals(["", "v", "1.2.3", "spaced value", "a --- b", "-->"]);
 		// Unique by name, or the pairs would collapse into fewer entries than
 		// were generated and the round trip would compare against the wrong map.
 		const attrsArb = Arbitrary.schema(
-			Schema.Array(Schema.Tuple([Name, Value])).check(Schema.isUniqueKey(), Schema.isMaxLength(3)),
+			S.Array(S.Tuple([Name, Value])).check(S.isUniqueKey(), S.isMaxLength(3)),
 		).pipe(Arbitrary.map((pairs) => Object.fromEntries(pairs) as Record<string, string>));
-		const Content = Schema.Literals(["", "echo hi", "a\nb", "  indented"]);
-		const Document = Schema.Literals(["", "#!/bin/sh\n", "user line\nsecond\n"]);
+		const Content = S.Literals(["", "echo hi", "a\nb", "  indented"]);
+		const Document = S.Literals(["", "#!/bin/sh\n", "user line\nsecond\n"]);
 
 		it.prop(
 			"attributes survive a reconcile round trip and reach a fixed point",
@@ -335,8 +340,8 @@ describe("marker attributes", () => {
 				const first = reconcile(parse(text), [declared]);
 				const doc = parse(first.text);
 				const found = doc.read(sectionId);
-				assert.isTrue(Option.isSome(found));
-				assert.deepStrictEqual(Option.getOrThrow(found).attributes, attributes);
+				assert.isTrue(O.isSome(found));
+				assert.deepStrictEqual(O.getOrThrow(found).attributes, attributes);
 				assert.strictEqual(doc.check(declared)._tag, "UpToDate");
 				const second = reconcile(doc, [declared]);
 				assert.strictEqual(second.text, first.text);

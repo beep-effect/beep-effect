@@ -29,7 +29,11 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { NodeServices } from "@effect/platform-node";
 import { afterAll, assert, beforeAll, describe, it } from "@effect/vitest";
-import { ConfigProvider, Effect, Layer, Option, Schema } from "effect";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import type { ChildProcessSpawner } from "effect/process";
 import { ChildProcess } from "effect/process";
 import { Git, NotARepositoryError } from "../../../effected/git/Git.ts";
@@ -37,7 +41,7 @@ import { runCollected } from "../../../effected/git/internal/run.ts";
 
 /** Resolves both `Git` and every Node platform service (including the real `ChildProcessSpawner`). */
 const TestLayer = Git.layer.pipe(Layer.provideMerge(NodeServices.layer));
-const encodeSshArgvJson = Schema.encodeEffect(Schema.fromJsonString(Schema.Array(Schema.String)));
+const encodeSshArgvJson = S.encodeEffect(S.fromJsonString(S.Array(S.String)));
 
 const run = <A, E>(effect: Effect.Effect<A, E, Git | ChildProcessSpawner.ChildProcessSpawner>) =>
 	effect.pipe(Effect.provide(TestLayer));
@@ -177,7 +181,7 @@ describe("Git — real repository integration", () => {
 
 	beforeAll(async () => {
 		fixtureDir = await mkdtemp(join(tmpdir(), "effected-git-int-"));
-		fixture = await Effect.runPromise(run(buildFixture(fixtureDir)));
+		fixture = await buildFixture(fixtureDir).pipe(run, Effect.runPromise);
 	}, 30_000);
 
 	afterAll(async () => {
@@ -190,8 +194,8 @@ describe("Git — real repository integration", () => {
 				const git = yield* Git;
 				const atCommit1 = yield* git.show(fixture.dir, fixture.commit1, "a.txt");
 				const atCommit2 = yield* git.show(fixture.dir, fixture.commit2, "a.txt");
-				assert.deepStrictEqual(atCommit1, Option.some("one\n"));
-				assert.deepStrictEqual(atCommit2, Option.some("two\n"));
+				assert.deepStrictEqual(atCommit1, O.some("one\n"));
+				assert.deepStrictEqual(atCommit2, O.some("two\n"));
 				assert.notDeepEqual(atCommit1, atCommit2);
 			}),
 		),
@@ -203,8 +207,8 @@ describe("Git — real repository integration", () => {
 				const git = yield* Git;
 				const beforeDeletion = yield* git.show(fixture.dir, fixture.commit1, "deleted.txt");
 				const afterDeletion = yield* git.show(fixture.dir, fixture.commit2, "deleted.txt");
-				assert.deepStrictEqual(beforeDeletion, Option.some("will be deleted\n"));
-				assert.deepStrictEqual(afterDeletion, Option.none());
+				assert.deepStrictEqual(beforeDeletion, O.some("will be deleted\n"));
+				assert.deepStrictEqual(afterDeletion, O.none());
 			}),
 		),
 	);
@@ -243,7 +247,7 @@ describe("Git — real repository integration", () => {
 				assert.strictEqual(base, fixture.commit1);
 				// The probe sibling answers the same sha, wrapped.
 				const probed = yield* git.mergeBaseOption(fixture.dir, "main", "feature/git");
-				assert.deepStrictEqual(probed, Option.some(fixture.forkPoint));
+				assert.deepStrictEqual(probed, O.some(fixture.forkPoint));
 			}),
 		),
 	);
@@ -284,8 +288,8 @@ describe("Git — real repository integration", () => {
 				Effect.gen(function* () {
 					const git = yield* Git;
 					const shown = yield* git.show(fixture.dir, fixture.commit3, "big.txt");
-					assert.isTrue(Option.isSome(shown));
-					const content = Option.getOrThrow(shown);
+					assert.isTrue(O.isSome(shown));
+					const content = O.getOrThrow(shown);
 					assert.strictEqual(content.length, fixture.bigContent.length);
 					assert.strictEqual(content.slice(0, 200), fixture.bigContent.slice(0, 200));
 					assert.strictEqual(content.slice(-200), fixture.bigContent.slice(-200));
@@ -331,34 +335,30 @@ describe("Git — real repository integration", () => {
 
 		beforeAll(async () => {
 			dirtyDir = await mkdtemp(join(tmpdir(), "effected-git-int-dirty-"));
-			await Effect.runPromise(
-				run(
-					Effect.gen(function* () {
-						const raw = (args: ReadonlyArray<string>) => runFixtureGit(dirtyDir, args);
-						yield* raw(["-c", "init.defaultBranch=main", "init"]);
-						yield* raw(["config", "user.email", "git-integration@example.com"]);
-						yield* raw(["config", "user.name", "Git Integration"]);
-						// Pin diff.relative=true on this repo: this is the adverse config Fix 1
-						// guards against. Without the explicit --relative/--no-relative flags the
-						// diffs would silently follow this config and desync from ls-files'
-						// repo-root base — proven by the nested-cwd case below.
-						yield* raw(["config", "diff.relative", "true"]);
-						yield* Effect.promise(() => writeFile(join(dirtyDir, "tracked.txt"), "one\n"));
-						// A tracked file in a NESTED subdirectory, so a cwd nested under the
-						// repo root discriminates repo-root-relative from cwd-relative output.
-						yield* Effect.promise(() => mkdir(join(dirtyDir, "pkg"), { recursive: true }));
-						yield* Effect.promise(() => writeFile(join(dirtyDir, "pkg", "mod.txt"), "one\n"));
-						yield* raw(["add", "-A"]);
-						yield* raw(["-c", "commit.gpgsign=false", "commit", "-m", "base"]);
-						// Dirty the tree three distinct ways so the union covers each source.
-						yield* Effect.promise(() => writeFile(join(dirtyDir, "tracked.txt"), "two\n")); // unstaged
-						yield* Effect.promise(() => writeFile(join(dirtyDir, "pkg", "mod.txt"), "two\n")); // unstaged, nested
-						yield* Effect.promise(() => writeFile(join(dirtyDir, "staged.txt"), "new\n"));
-						yield* raw(["add", "staged.txt"]); // staged
-						yield* Effect.promise(() => writeFile(join(dirtyDir, "untracked.txt"), "loose\n")); // untracked
-					}),
-				),
-			);
+			await Effect.gen(function* () {
+				const raw = (args: ReadonlyArray<string>) => runFixtureGit(dirtyDir, args);
+				yield* raw(["-c", "init.defaultBranch=main", "init"]);
+				yield* raw(["config", "user.email", "git-integration@example.com"]);
+				yield* raw(["config", "user.name", "Git Integration"]);
+				// Pin diff.relative=true on this repo: this is the adverse config Fix 1
+				// guards against. Without the explicit --relative/--no-relative flags the
+				// diffs would silently follow this config and desync from ls-files'
+				// repo-root base — proven by the nested-cwd case below.
+				yield* raw(["config", "diff.relative", "true"]);
+				yield* Effect.promise(() => writeFile(join(dirtyDir, "tracked.txt"), "one\n"));
+				// A tracked file in a NESTED subdirectory, so a cwd nested under the
+				// repo root discriminates repo-root-relative from cwd-relative output.
+				yield* Effect.promise(() => mkdir(join(dirtyDir, "pkg"), { recursive: true }));
+				yield* Effect.promise(() => writeFile(join(dirtyDir, "pkg", "mod.txt"), "one\n"));
+				yield* raw(["add", "-A"]);
+				yield* raw(["-c", "commit.gpgsign=false", "commit", "-m", "base"]);
+				// Dirty the tree three distinct ways so the union covers each source.
+				yield* Effect.promise(() => writeFile(join(dirtyDir, "tracked.txt"), "two\n")); // unstaged
+				yield* Effect.promise(() => writeFile(join(dirtyDir, "pkg", "mod.txt"), "two\n")); // unstaged, nested
+				yield* Effect.promise(() => writeFile(join(dirtyDir, "staged.txt"), "new\n"));
+				yield* raw(["add", "staged.txt"]); // staged
+				yield* Effect.promise(() => writeFile(join(dirtyDir, "untracked.txt"), "loose\n")); // untracked
+			}).pipe(run, Effect.runPromise);
 		}, 30_000);
 
 		afterAll(async () => {
@@ -403,7 +403,7 @@ describe("Git — real repository integration", () => {
 
 		beforeAll(async () => {
 			cloneDir = await mkdtemp(join(tmpdir(), "effected-git-int-clone-"));
-			await Effect.runPromise(run(runFixtureGit(tmpdir(), ["clone", fixture.dir, cloneDir])));
+			await runFixtureGit(tmpdir(), ["clone", fixture.dir, cloneDir]).pipe(run, Effect.runPromise);
 		}, 30_000);
 
 		afterAll(async () => {

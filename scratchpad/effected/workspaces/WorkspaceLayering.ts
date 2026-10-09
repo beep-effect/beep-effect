@@ -1,6 +1,9 @@
 import { GlobSet } from "../glob/index.ts";
 import { DependencyField } from "../npm/index.ts";
-import { Effect, Graph, Option, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as Graph from "effect/Graph";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { ALL_DEPENDENCY_FIELDS } from "./internal/dependencyFields.ts";
 import type { LayerPolicy } from "./LayerPolicy.ts";
 import { WorkspaceDiscovery } from "./WorkspaceDiscovery.ts";
@@ -11,11 +14,11 @@ import type { WorkspacePackage } from "./WorkspacePackage.ts";
  *
  * @public
  */
-export class LayerEdge extends Schema.Class<LayerEdge>("LayerEdge")({
+export class LayerEdge extends S.Class<LayerEdge>("LayerEdge")({
 	/** The dependent package. */
-	from: Schema.String,
+	from: S.String,
 	/** The package depended on. */
-	to: Schema.String,
+	to: S.String,
 	/** The manifest map that declares it. */
 	field: DependencyField,
 }) {
@@ -44,26 +47,26 @@ type OffenceReason = "upward" | "sameLayer" | "toolingReachesLayer" | "intoUncon
  *
  * @public
  */
-export class LayeringReport extends Schema.Class<LayeringReport>("LayeringReport")({
+export class LayeringReport extends S.Class<LayeringReport>("LayeringReport")({
 	/** Packages the policy declares more than once, or declares and also matches with an unconstrained glob. */
-	duplicates: Schema.Array(Schema.String),
+	duplicates: S.Array(S.String),
 	/** Workspace packages the policy does not classify. */
-	unclassified: Schema.Array(Schema.String),
+	unclassified: S.Array(S.String),
 	/** Edges that break the policy, each with why. */
-	offenders: Schema.Array(
-		Schema.Struct({
+	offenders: S.Array(
+		S.Struct({
 			edge: LayerEdge,
-			reason: Schema.Literals(["upward", "sameLayer", "toolingReachesLayer", "intoUnconstrained", "intoUnclassified"]),
+			reason: S.Literals(["upward", "sameLayer", "toolingReachesLayer", "intoUnconstrained", "intoUnclassified"]),
 		}),
 	),
 	/** The members of every dependency cycle in the checked fields, or none. */
-	cycle: Schema.Option(Schema.Array(Schema.String)),
+	cycle: S.String.pipe(S.Array, S.Option),
 	/** Packages the policy names that the workspace does not contain. */
-	missingDeclared: Schema.Array(Schema.String),
+	missingDeclared: S.Array(S.String),
 	/** Required edges absent from the checked fields. */
-	missingRequiredEdges: Schema.Array(Schema.String),
+	missingRequiredEdges: S.Array(S.String),
 	/** Edges in the checked fields; `0` is itself a violation. */
-	edgeCount: Schema.Finite,
+	edgeCount: S.Finite,
 }) {
 	/** One line per violation: `[]` means the graph honours the policy and the check was not vacuous. */
 	get violations(): ReadonlyArray<string> {
@@ -71,7 +74,7 @@ export class LayeringReport extends Schema.Class<LayeringReport>("LayeringReport
 			...this.duplicates.map((name) => `classified more than once: ${name}`),
 			...this.unclassified.map((name) => `not classified by the policy: ${name}`),
 			...this.offenders.map(({ edge, reason }) => `${reason}: ${edge.label}`),
-			...Option.match(this.cycle, {
+			...O.match(this.cycle, {
 				onNone: () => [],
 				onSome: (members) => [`dependency cycle among: ${members.join(", ")}`],
 			}),
@@ -101,7 +104,7 @@ const offence = (from: Place, to: Place): OffenceReason | undefined => {
 const cycleOf = (
 	names: ReadonlyArray<string>,
 	edges: ReadonlyArray<LayerEdge>,
-): Option.Option<ReadonlyArray<string>> => {
+): O.Option<ReadonlyArray<string>> => {
 	const sorted = [...new Set([...names, ...edges.flatMap((e) => [e.from, e.to])])].sort();
 	const graph = Graph.directed<string, string>((mutable) => {
 		const index = new Map<string, Graph.NodeIndex>();
@@ -120,7 +123,7 @@ const cycleOf = (
 			if (name !== undefined) members.add(name);
 		}
 	}
-	return members.size === 0 ? Option.none() : Option.some([...members].sort());
+	return members.size === 0 ? O.none() : O.some([...members].sort());
 };
 
 /**

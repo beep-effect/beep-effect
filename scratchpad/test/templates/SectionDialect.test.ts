@@ -1,5 +1,6 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Result, Schema } from "effect";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import type { SectionRenderError } from "../../effected/templates/index.ts";
 import { CommentStyle, SectionDialect, SectionId } from "../../effected/templates/index.ts";
 
@@ -145,7 +146,7 @@ describe("SectionDialect", () => {
 	describe("JSON Schema export", () => {
 		it("phrase exports its pattern", () => {
 			assert.nestedPropertyVal(
-				Schema.toJsonSchemaDocument(SectionDialect),
+				S.toJsonSchemaDocument(SectionDialect),
 				"definitions.SectionDialectEncoded.properties.phrase.pattern",
 				"^[A-Za-z0-9][A-Za-z0-9 _]*$",
 			);

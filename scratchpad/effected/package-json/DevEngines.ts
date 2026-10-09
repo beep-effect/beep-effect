@@ -2,20 +2,20 @@
 // package-manager constraint) and the `DevEnginesSchema` struct grouping the
 // `packageManager` / `runtime` / `os` / `cpu` / `libc` constraint slots.
 
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 
 /**
  * A single `devEngines` constraint with a name and optional `version` / `onFail`.
  *
  * @public
  */
-export class DevEngine extends Schema.Class<DevEngine>("DevEngine")({
+export class DevEngine extends S.Class<DevEngine>("DevEngine")({
 	/** The engine name (e.g. `node`, `pnpm`). */
-	name: Schema.String,
+	name: S.String,
 	/** The optional version constraint. */
-	version: Schema.optionalKey(Schema.String),
+	version: S.optionalKey(S.String),
 	/** The optional behavior when the constraint is unmet. */
-	onFail: Schema.optionalKey(Schema.Literals(["warn", "error", "ignore"])),
+	onFail: S.optionalKey(S.Literals(["warn", "error", "ignore"])),
 }) {}
 
 /**
@@ -23,9 +23,9 @@ export class DevEngine extends Schema.Class<DevEngine>("DevEngine")({
  *
  * @public
  */
-export const DevEngineOrArray: Schema.Union<[typeof DevEngine, Schema.$Array<typeof DevEngine>]> = Schema.Union([
+export const DevEngineOrArray: S.Union<[typeof DevEngine, S.$Array<typeof DevEngine>]> = S.Union([
 	DevEngine,
-	Schema.Array(DevEngine),
+	S.Array(DevEngine),
 ]);
 
 /**
@@ -34,18 +34,18 @@ export const DevEngineOrArray: Schema.Union<[typeof DevEngine, Schema.$Array<typ
  *
  * @public
  */
-export const DevEnginesSchema: Schema.Struct<{
-	readonly packageManager: Schema.optionalKey<typeof DevEngineOrArray>;
-	readonly runtime: Schema.optionalKey<typeof DevEngineOrArray>;
-	readonly os: Schema.optionalKey<typeof DevEngineOrArray>;
-	readonly cpu: Schema.optionalKey<typeof DevEngineOrArray>;
-	readonly libc: Schema.optionalKey<typeof DevEngineOrArray>;
-}> = Schema.Struct({
-	packageManager: Schema.optionalKey(DevEngineOrArray),
-	runtime: Schema.optionalKey(DevEngineOrArray),
-	os: Schema.optionalKey(DevEngineOrArray),
-	cpu: Schema.optionalKey(DevEngineOrArray),
-	libc: Schema.optionalKey(DevEngineOrArray),
+export const DevEnginesSchema: S.Struct<{
+	readonly packageManager: S.optionalKey<typeof DevEngineOrArray>;
+	readonly runtime: S.optionalKey<typeof DevEngineOrArray>;
+	readonly os: S.optionalKey<typeof DevEngineOrArray>;
+	readonly cpu: S.optionalKey<typeof DevEngineOrArray>;
+	readonly libc: S.optionalKey<typeof DevEngineOrArray>;
+}> = S.Struct({
+	packageManager: S.optionalKey(DevEngineOrArray),
+	runtime: S.optionalKey(DevEngineOrArray),
+	os: S.optionalKey(DevEngineOrArray),
+	cpu: S.optionalKey(DevEngineOrArray),
+	libc: S.optionalKey(DevEngineOrArray),
 });
 
 /**

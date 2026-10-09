@@ -7,7 +7,8 @@
 // signer's whole suite, relies on.
 
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Redacted } from "effect";
+import * as Effect from "effect/Effect";
+import * as Redacted from "effect/Redacted";
 import { IdentityToken, IdentityTokenError } from "../../effected/sbom/index.ts";
 
 /** One instance, so a test can assert identity rather than equality. */

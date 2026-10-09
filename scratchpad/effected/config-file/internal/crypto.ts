@@ -1,18 +1,4 @@
-/**
- * AES-GCM primitives over WebCrypto.
- *
- * @remarks
- * This module imports nothing from the rest of the package. `EncryptedCodec.ts`
- * imports these helpers, so a back-import of `ConfigEncryptionError` would close
- * a cycle that Biome's error-level `noImportCycles` rule rejects. Staying
- * dependency-free also keeps the module cheap to extract later.
- *
- * Failures surface as the plain {@link CryptoFailure} record; the public module
- * lifts them into `ConfigEncryptionError`.
- *
- * @internal
- */
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 
 /** AES-GCM's standard IV length, in bytes. @internal */

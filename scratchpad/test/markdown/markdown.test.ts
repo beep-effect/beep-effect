@@ -9,7 +9,10 @@
 // `hardening.test.ts` at the carrier layer.
 
 import { assert, describe, it } from "@effect/vitest";
-import { Arbitrary, Effect, Result, Schema } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
+import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { MAX_NESTING_DEPTH } from "../../effected/markdown/internal/limits.ts";
 import { Markdown, MarkdownParseError, MarkdownParseOptions } from "../../effected/markdown/Markdown.ts";
 import type { MarkdownNode } from "../../effected/markdown/MarkdownNode.ts";
@@ -223,7 +226,7 @@ describe("MarkdownParseOptions", () => {
 	});
 
 	it("admits both dialect literals and rejects anything else, typed", () => {
-		const decode = Schema.decodeUnknownResult(MarkdownParseOptions);
+		const decode = S.decodeUnknownResult(MarkdownParseOptions);
 		assert.isTrue(Result.isSuccess(decode({ dialect: "gfm" })));
 		assert.isTrue(Result.isSuccess(decode({ dialect: "commonmark" })));
 		assert.isTrue(Result.isFailure(decode({ dialect: "markdown-extra" })));
@@ -231,8 +234,8 @@ describe("MarkdownParseOptions", () => {
 });
 
 describe("Markdown.MarkdownFromString", () => {
-	const decode = Schema.decodeUnknownEffect(Markdown.MarkdownFromString);
-	const encode = Schema.encodeEffect(Markdown.MarkdownFromString);
+	const decode = S.decodeUnknownEffect(Markdown.MarkdownFromString);
+	const encode = S.encodeEffect(Markdown.MarkdownFromString);
 
 	it.effect("decodes markdown source into a Root", () =>
 		Effect.gen(function* () {
@@ -270,17 +273,17 @@ describe("Markdown parse invariants", () => {
 	 * which reach the astral code points the ASCII string generator never
 	 * emits. `size` lifts the length scale to the 40-part cap.
 	 */
-	const ScalarValue = Schema.Union([
-		Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: 0xd7ff })),
-		Schema.Int.check(Schema.isBetween({ minimum: 0xe000, maximum: 0x10ffff })),
+	const ScalarValue = S.Union([
+		S.Int.check(S.isBetween({ minimum: 0, maximum: 0xd7ff })),
+		S.Int.check(S.isBetween({ minimum: 0xe000, maximum: 0x10ffff })),
 	]);
-	const HostilePart = Schema.Union([
-		Schema.Literals(["\u0000", "\uD800", "\uDFFF", "\uFFFD", "\r\n", "\r", "\n", "\t", " "]),
-		Schema.Literals(["#", "*", "_", "`", ">", "-", "[", "]", "(", ")", "!", "\\", "~", "<", "&", "|"]),
-		Schema.String.check(Schema.isMaxLength(8)),
-		Schema.Array(ScalarValue).check(Schema.isMaxLength(8)),
+	const HostilePart = S.Union([
+		S.Literals(["\u0000", "\uD800", "\uDFFF", "\uFFFD", "\r\n", "\r", "\n", "\t", " "]),
+		S.Literals(["#", "*", "_", "`", ">", "-", "[", "]", "(", ")", "!", "\\", "~", "<", "&", "|"]),
+		S.String.check(S.isMaxLength(8)),
+		S.Array(ScalarValue).check(S.isMaxLength(8)),
 	]);
-	const hostileText = Arbitrary.schema(Schema.Array(HostilePart).check(Schema.isMaxLength(40))).pipe(
+	const hostileText = Arbitrary.schema(S.Array(HostilePart).check(S.isMaxLength(40))).pipe(
 		Arbitrary.map((parts) =>
 			parts
 				.map((part) =>

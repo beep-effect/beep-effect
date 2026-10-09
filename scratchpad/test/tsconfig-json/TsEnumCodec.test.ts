@@ -1,5 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Option } from "effect";
+import * as O from "effect/Option";
 import type { CompilerOptions } from "../../effected/tsconfig-json/CompilerOptions.ts";
 import { TsEnumCodec } from "../../effected/tsconfig-json/TsEnumCodec.ts";
 
@@ -113,13 +113,13 @@ describe("TsEnumCodec", () => {
 				for (const { name, value, canonical } of rows) {
 					assert.deepStrictEqual(
 						TsEnumCodec.encode(family, name),
-						Option.some(value),
+						O.some(value),
 						`encode(${family}, ${name}) should be Option.some(${value})`,
 					);
 					if (canonical) {
 						assert.deepStrictEqual(
 							TsEnumCodec.decode(family, value),
-							Option.some(name),
+							O.some(name),
 							`decode(${family}, ${value}) should be Option.some(${name})`,
 						);
 					}
@@ -130,23 +130,23 @@ describe("TsEnumCodec", () => {
 
 	describe("aliases", () => {
 		it("collapse on encode and canonicalize on decode", () => {
-			assert.deepStrictEqual(TsEnumCodec.encode("target", "es6"), Option.some(2));
-			assert.deepStrictEqual(TsEnumCodec.decode("target", 2), Option.some("es2015"));
-			assert.deepStrictEqual(TsEnumCodec.decode("moduleResolution", 2), Option.some("node10"));
+			assert.deepStrictEqual(TsEnumCodec.encode("target", "es6"), O.some(2));
+			assert.deepStrictEqual(TsEnumCodec.decode("target", 2), O.some("es2015"));
+			assert.deepStrictEqual(TsEnumCodec.decode("moduleResolution", 2), O.some("node10"));
 		});
 	});
 
 	describe("unknown values", () => {
 		it("encode of an unknown string returns Option.none()", () => {
-			assert.isTrue(Option.isNone(TsEnumCodec.encode("target", "es9999")));
-			assert.isTrue(Option.isNone(TsEnumCodec.encode("jsx", "none")));
+			assert.isTrue(O.isNone(TsEnumCodec.encode("target", "es9999")));
+			assert.isTrue(O.isNone(TsEnumCodec.encode("jsx", "none")));
 		});
 
 		it("decode of an unknown/future numeric member returns Option.none()", () => {
-			assert.isTrue(Option.isNone(TsEnumCodec.decode("target", 0))); // es3 — decode-only, no table entry
-			assert.isTrue(Option.isNone(TsEnumCodec.decode("target", 100))); // JSON — decode-only, no table entry
-			assert.isTrue(Option.isNone(TsEnumCodec.decode("jsx", 0))); // JsxEmit.None — no tsconfig string
-			assert.isTrue(Option.isNone(TsEnumCodec.decode("target", 12345)));
+			assert.isTrue(O.isNone(TsEnumCodec.decode("target", 0))); // es3 — decode-only, no table entry
+			assert.isTrue(O.isNone(TsEnumCodec.decode("target", 100))); // JSON — decode-only, no table entry
+			assert.isTrue(O.isNone(TsEnumCodec.decode("jsx", 0))); // JsxEmit.None — no tsconfig string
+			assert.isTrue(O.isNone(TsEnumCodec.decode("target", 12345)));
 		});
 	});
 

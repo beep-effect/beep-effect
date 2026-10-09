@@ -5,7 +5,7 @@
 // runs public modules -> engine only (toml src/internal/diagnostics.ts and
 // src/internal/limits.ts precedent, collapsed into one file).
 
-import { Data } from "effect";
+import * as Data from "effect/Data";
 
 /**
  * The engine's error-code vocabulary: currently exactly one, the

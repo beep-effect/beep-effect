@@ -1,6 +1,9 @@
 import type { ConfigResolver } from "../config-file/index.ts";
 import { Walker } from "../walker/index.ts";
-import { Effect, FileSystem, Option, Path } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import { AppDirs } from "./AppDirs.ts";
 import { NativeDirs } from "./NativeDirs.ts";
 import { CurrentPlatform, Xdg } from "./Xdg.ts";
@@ -32,7 +35,7 @@ const nativeResolver = (options: {
 		const fs = yield* FileSystem.FileSystem;
 
 		const native = NativeDirs.resolve({ platform, namespace: options.namespace, paths, path });
-		if (Option.isNone(native)) return Option.none();
+		if (O.isNone(native)) return O.none();
 
 		// One candidate, but still through `firstMatch`: the absorption contract is
 		// what `ConfigResolver` requires, and it lives in exactly one place.

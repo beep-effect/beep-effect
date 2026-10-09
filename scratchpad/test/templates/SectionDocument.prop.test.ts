@@ -1,5 +1,7 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Arbitrary, Result, Schema } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import type { Section, SectionReconciliation } from "../../effected/templates/index.ts";
 import { CommentStyle, SectionDialect, SectionDocument, SectionId } from "../../effected/templates/index.ts";
 
@@ -12,17 +14,17 @@ const styles = [
 	CommentStyle.make({ prefix: "<!--", suffix: "-->" }),
 ] as const;
 
-const Key = Schema.Literals(["alpha", "beta", "gamma", "delta"]);
+const Key = S.Literals(["alpha", "beta", "gamma", "delta"]);
 // The style is generated as an index into `styles` — a literal can name a
 // position, not an object — and resolved after generation.
-const StyleIndex = Schema.Literals([0, 1, 2]);
+const StyleIndex = S.Literals([0, 1, 2]);
 
 /** Content lines that can never accidentally form a marker. */
-const Content = Schema.Array(
-	Schema.Literals(["", "a", "echo hi", "  indented", "# an ordinary comment", "trailing  "]),
-).check(Schema.isMaxLength(4));
+const Content = S.Array(
+	S.Literals(["", "a", "echo hi", "  indented", "# an ordinary comment", "trailing  "]),
+).check(S.isMaxLength(4));
 
-const Declared = Schema.Array(Schema.Tuple([Key, StyleIndex, Content])).check(Schema.isBetweenLength(1, 4));
+const Declared = S.Array(S.Tuple([Key, StyleIndex, Content])).check(S.isBetweenLength(1, 4));
 
 /** Declared sets must be unique by identity, or reconciliation refuses by design. */
 const declaredArb = Arbitrary.schema(Declared).pipe(
@@ -44,8 +46,8 @@ const declaredArb = Arbitrary.schema(Declared).pipe(
 
 /** Plain user documents, with no markers in them. */
 const documentArb = Arbitrary.schema(
-	Schema.Array(Schema.Literals(["", "#!/bin/sh", "user line", "  spaced", "## heading", "set -e"])).check(
-		Schema.isMaxLength(6),
+	S.Array(S.Literals(["", "#!/bin/sh", "user line", "  spaced", "## heading", "set -e"])).check(
+		S.isMaxLength(6),
 	),
 ).pipe(Arbitrary.map((parts) => parts.join("\n")));
 

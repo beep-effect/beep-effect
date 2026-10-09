@@ -1,5 +1,8 @@
 import { dual } from "effect/Function";
-import { Context, LogLevel, Logger, References } from "effect";
+import * as Context from "effect/Context";
+import * as LogLevel from "effect/LogLevel";
+import * as Logger from "effect/Logger";
+import * as References from "effect/References";
 
 /**
  * The diagnostics threshold reference behind `CliLog.Level`. Lives here so the stderr sink and the file sink share

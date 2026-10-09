@@ -8,17 +8,23 @@
 // `PackageManager` class for the corepack `pnpm@10.33.0` field.
 
 import { PackageManager } from "../package-json/index.ts";
-import { Context, Effect, FileSystem, Layer, Option, Path, Schema } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as S from "effect/Schema";
 import { WorkspaceManifestError } from "./WorkspacePackage.ts";
 
-const JsonValue = Schema.fromJsonString(Schema.Unknown);
+const JsonValue = S.fromJsonString(S.Unknown);
 
 /**
  * The four package managers this package understands.
  *
  * @public
  */
-export const PackageManagerName = Schema.Literals(["npm", "pnpm", "yarn", "bun"]);
+export const PackageManagerName = S.Literals(["npm", "pnpm", "yarn", "bun"]);
 
 /**
  * The decoded type of {@link (PackageManagerName:variable)}: `"npm" | "pnpm" | "yarn" | "bun"`.
@@ -45,7 +51,7 @@ export type PackageManagerName = typeof PackageManagerName.Type;
  *
  * @public
  */
-export const PackageManagerEvidence = Schema.Literals([
+export const PackageManagerEvidence = S.Literals([
 	// The workspace tier: which manager runs this WORKSPACE.
 	"pnpm-workspace.yaml",
 	"bun.lock",
@@ -93,13 +99,13 @@ export type PackageManagerEvidence = typeof PackageManagerEvidence.Type;
  *
  * @public
  */
-export class DetectedPackageManager extends Schema.Class<DetectedPackageManager>("DetectedPackageManager")({
+export class DetectedPackageManager extends S.Class<DetectedPackageManager>("DetectedPackageManager")({
 	/** The detected manager. */
 	name: PackageManagerName,
 	/** Its version, when a manifest field agrees on the manager and carries one. */
-	version: Schema.Option(Schema.String),
+	version: S.Option(S.String),
 	/** The JavaScript runtime the manager implies. */
-	runtime: Schema.Literals(["node", "bun"]),
+	runtime: S.Literals(["node", "bun"]),
 	/** The rung of the priority order that decided the name. */
 	evidence: PackageManagerEvidence,
 }) {}
@@ -110,7 +116,7 @@ export class DetectedPackageManager extends Schema.Class<DetectedPackageManager>
  */
 interface ManagerHint {
 	readonly name: string;
-	readonly version: Option.Option<string>;
+	readonly version: O.Option<string>;
 }
 
 /** Whether `value` is a non-null, non-array object — corepack's own shape test. */
@@ -127,8 +133,8 @@ const isPlainObject = (value: unknown): value is Record<string, unknown> =>
  * top-level field reports — and a *range* (`^11`, `11.x`) yields none, because a
  * range is not a version and corepack will not run one either.
  */
-const exactVersionOf = (name: string, version: string): Option.Option<string> =>
-	Schema.decodeOption(PackageManager.FromString)(`${name}@${version}`).pipe(Option.map((pm) => pm.version));
+const exactVersionOf = (name: string, version: string): O.Option<string> =>
+	S.decodeOption(PackageManager.FromString)(`${name}@${version}`).pipe(O.map((pm) => pm.version));
 
 /**
  * The `devEngines.packageManager` hint, or none.
@@ -140,29 +146,29 @@ const exactVersionOf = (name: string, version: string): Option.Option<string> =>
  * `name` containing `@`. A version that is not an exact version is dropped on its
  * own, keeping the name — the name is still a valid disambiguator.
  */
-const devEnginesHint = (manifest: Record<string, unknown>): Option.Option<ManagerHint> => {
+const devEnginesHint = (manifest: Record<string, unknown>): O.Option<ManagerHint> => {
 	const devEngines = manifest.devEngines;
-	if (!isPlainObject(devEngines)) return Option.none();
+	if (!isPlainObject(devEngines)) return O.none();
 
 	const slot = devEngines.packageManager;
-	if (!isPlainObject(slot)) return Option.none();
+	if (!isPlainObject(slot)) return O.none();
 
 	const name = slot.name;
-	if (typeof name !== "string" || name === "" || name.includes("@")) return Option.none();
+	if (typeof name !== "string" || name === "" || name.includes("@")) return O.none();
 
 	const version = slot.version;
-	return Option.some({
+	return O.some({
 		name,
-		version: typeof version === "string" && version !== "" ? exactVersionOf(name, version) : Option.none<string>(),
+		version: typeof version === "string" && version !== "" ? exactVersionOf(name, version) : O.none<string>(),
 	});
 };
 
 /** The corepack top-level `packageManager` hint, or none when absent or malformed. */
-const corepackHint = (manifest: Record<string, unknown>): Option.Option<ManagerHint> => {
+const corepackHint = (manifest: Record<string, unknown>): O.Option<ManagerHint> => {
 	const raw = manifest.packageManager;
-	if (typeof raw !== "string") return Option.none();
-	return Schema.decodeOption(PackageManager.FromString)(raw).pipe(
-		Option.map((pm) => ({ name: pm.name, version: Option.some(pm.version) })),
+	if (typeof raw !== "string") return O.none();
+	return S.decodeOption(PackageManager.FromString)(raw).pipe(
+		O.map((pm) => ({ name: pm.name, version: O.some(pm.version) })),
 	);
 };
 
@@ -172,13 +178,13 @@ const corepackHint = (manifest: Record<string, unknown>): Option.Option<ManagerH
  *
  * @public
  */
-export class PackageManagerDetectionError extends Schema.TaggedError<PackageManagerDetectionError>()(
+export class PackageManagerDetectionError extends S.TaggedError<PackageManagerDetectionError>()(
 	"PackageManagerDetectionError",
 	{
 		/** The workspace root that was probed. */
-		root: Schema.String,
+		root: S.String,
 		/** The marker files probed, in the order they were probed. */
-		checked: Schema.Array(Schema.String),
+		checked: S.Array(S.String),
 	},
 ) {
 	/** Renders the root and probed markers into a one-line message. */
@@ -282,17 +288,17 @@ export class PackageManagerDetector extends Context.Service<PackageManagerDetect
 		 * corrupt-manifest conditions, and swallowing them would report "no manager
 		 * declared" for a repo whose manifest is simply broken.
 		 */
-		const manifestOf = (root: string): Effect.Effect<Option.Option<Record<string, unknown>>, WorkspaceManifestError> =>
+		const manifestOf = (root: string): Effect.Effect<O.Option<Record<string, unknown>>, WorkspaceManifestError> =>
 			Effect.gen(function* () {
 				const packageJsonPath = path.join(root, "package.json");
 				const exists = yield* fs.exists(packageJsonPath).pipe(Effect.orElseSucceed(() => false));
-				if (!exists) return Option.none<Record<string, unknown>>();
+				if (!exists) return O.none<Record<string, unknown>>();
 
 				const content = yield* fs
 					.readFileString(packageJsonPath)
 					.pipe(Effect.mapError((cause) => WorkspaceManifestError.make({ packageJsonPath, kind: "read", cause })));
 
-				const parsed = yield* Schema.decodeEffect(JsonValue)(content).pipe(Effect.mapError((cause) => WorkspaceManifestError.make({ packageJsonPath, kind: "decode", cause })));
+				const parsed = yield* S.decodeEffect(JsonValue)(content).pipe(Effect.mapError((cause) => WorkspaceManifestError.make({ packageJsonPath, kind: "decode", cause })));
 
 				if (!isPlainObject(parsed)) {
 					return yield* WorkspaceManifestError.make({
@@ -301,7 +307,7 @@ export class PackageManagerDetector extends Context.Service<PackageManagerDetect
 							cause: new Error("package.json is not a JSON object"),
 						});
 				}
-				return Option.some(parsed);
+				return O.some(parsed);
 			});
 
 		/**
@@ -311,19 +317,19 @@ export class PackageManagerDetector extends Context.Service<PackageManagerDetect
 		 * when the top-level field contradicts it.
 		 */
 		const declaredName = (hints: {
-			readonly devEngines: Option.Option<ManagerHint>;
-			readonly corepack: Option.Option<ManagerHint>;
-		}): Option.Option<string> =>
-			Option.map(
-				Option.orElse(hints.devEngines, () => hints.corepack),
+			readonly devEngines: O.Option<ManagerHint>;
+			readonly corepack: O.Option<ManagerHint>;
+		}): O.Option<string> =>
+			O.map(
+				O.orElse(hints.devEngines, () => hints.corepack),
 				(hint) => hint.name,
 			);
 
 		/** Whether the manifest declares `name` as its manager. */
 		const namesManager = (
-			hints: { readonly devEngines: Option.Option<ManagerHint>; readonly corepack: Option.Option<ManagerHint> },
+			hints: { readonly devEngines: O.Option<ManagerHint>; readonly corepack: O.Option<ManagerHint> },
 			name: PackageManagerName,
-		): boolean => Option.contains(declaredName(hints), name);
+		): boolean => O.contains(declaredName(hints), name);
 
 		/**
 		 * The version to report for the manager that was detected — none unless a
@@ -334,23 +340,23 @@ export class PackageManagerDetector extends Context.Service<PackageManagerDetect
 		 * when it does not.
 		 */
 		const versionFor = (
-			hints: { readonly devEngines: Option.Option<ManagerHint>; readonly corepack: Option.Option<ManagerHint> },
+			hints: { readonly devEngines: O.Option<ManagerHint>; readonly corepack: O.Option<ManagerHint> },
 			name: PackageManagerName,
-		): Option.Option<string> => {
-			if (!namesManager(hints, name)) return Option.none();
-			const fromCorepack = Option.flatMap(hints.corepack, (hint) =>
-				hint.name === name ? hint.version : Option.none<string>(),
+		): O.Option<string> => {
+			if (!namesManager(hints, name)) return O.none();
+			const fromCorepack = O.flatMap(hints.corepack, (hint) =>
+				hint.name === name ? hint.version : O.none<string>(),
 			);
-			return Option.orElse(fromCorepack, () =>
-				Option.flatMap(hints.devEngines, (hint) => (hint.name === name ? hint.version : Option.none<string>())),
+			return O.orElse(fromCorepack, () =>
+				O.flatMap(hints.devEngines, (hint) => (hint.name === name ? hint.version : O.none<string>())),
 			);
 		};
 
 		const detect = Effect.fn("PackageManagerDetector.detect")(function* (root: string) {
 			const manifest = yield* manifestOf(root);
 			const hints = {
-				devEngines: Option.flatMap(manifest, devEnginesHint),
-				corepack: Option.flatMap(manifest, corepackHint),
+				devEngines: O.flatMap(manifest, devEnginesHint),
+				corepack: O.flatMap(manifest, corepackHint),
 			};
 
 			if (yield* has(root, "pnpm-workspace.yaml")) {
@@ -365,12 +371,12 @@ export class PackageManagerDetector extends Context.Service<PackageManagerDetect
 			// Which bun lockfile is present, probed in priority order — the marker
 			// itself is the evidence a success reports, so the OR is not collapsed
 			// into a bare boolean.
-			const bunLock: Option.Option<"bun.lock" | "bun.lockb"> = (yield* has(root, "bun.lock"))
-				? Option.some("bun.lock")
+			const bunLock: O.Option<"bun.lock" | "bun.lockb"> = (yield* has(root, "bun.lock"))
+				? O.some("bun.lock")
 				: (yield* has(root, "bun.lockb"))
-					? Option.some("bun.lockb")
-					: Option.none();
-			if (Option.isSome(bunLock) && namesManager(hints, "bun")) {
+					? O.some("bun.lockb")
+					: O.none();
+			if (O.isSome(bunLock) && namesManager(hints, "bun")) {
 				return DetectedPackageManager.make({
 					name: "bun",
 					version: versionFor(hints, "bun"),
@@ -388,8 +394,8 @@ export class PackageManagerDetector extends Context.Service<PackageManagerDetect
 				});
 			}
 
-			const workspaces = Option.map(manifest, (fields) => fields.workspaces);
-			if (Option.isSome(workspaces) && workspaces.value !== undefined && workspaces.value !== null) {
+			const workspaces = O.map(manifest, (fields) => fields.workspaces);
+			if (O.isSome(workspaces) && workspaces.value !== undefined && workspaces.value !== null) {
 				return DetectedPackageManager.make({
 					name: "npm",
 					version: versionFor(hints, "npm"),
@@ -422,7 +428,7 @@ export class PackageManagerDetector extends Context.Service<PackageManagerDetect
 				});
 			}
 
-			if (Option.isSome(bunLock) && namesManager(hints, "bun")) {
+			if (O.isSome(bunLock) && namesManager(hints, "bun")) {
 				return DetectedPackageManager.make({
 					name: "bun",
 					version: versionFor(hints, "bun"),
@@ -456,7 +462,7 @@ export class PackageManagerDetector extends Context.Service<PackageManagerDetect
 			// run — weaker evidence than a lockfile, which is why it is consulted
 			// last, but evidence nonetheless.
 			const declared = declaredName(hints);
-			if (Option.isSome(declared)) {
+			if (O.isSome(declared)) {
 				const name = declared.value;
 				if (name === "pnpm" || name === "npm" || name === "yarn" || name === "bun") {
 					return DetectedPackageManager.make({
@@ -465,7 +471,7 @@ export class PackageManagerDetector extends Context.Service<PackageManagerDetect
 						runtime: name === "bun" ? "bun" : "node",
 						// The field that supplied the name — `declaredName` believes
 						// devEngines first, so the evidence mirrors that precedence.
-						evidence: Option.isSome(hints.devEngines)
+						evidence: O.isSome(hints.devEngines)
 							? "package.json#devEngines.packageManager"
 							: "package.json#packageManager",
 					});

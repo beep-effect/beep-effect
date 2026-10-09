@@ -1,6 +1,14 @@
 // @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
-import { Arbitrary, Duration, Effect, Exit, Fiber, Latch, Layer, Option, Schema } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Fiber from "effect/Fiber";
+import * as Latch from "effect/Latch";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Schema from "effect/Schema";
 import { TestClock } from "effect/testing";
 import { Attestation } from "../../effected/github/Attestation.ts";
 import { Annotation, CheckRun, CheckRunOutput } from "../../effected/github/CheckRun.ts";
@@ -366,7 +374,7 @@ describe("PullRequestComment", () => {
 				(comments) => comments.find(5, marker),
 			);
 			// The version this replaces read one page of 100 and stopped.
-			assert.strictEqual(Option.getOrThrow(value).id, 3);
+			assert.strictEqual(O.getOrThrow(value).id, 3);
 			assert.strictEqual(script.count(), 2);
 		}),
 	);
@@ -428,7 +436,7 @@ describe("PullRequest", () => {
 				(pulls) => pulls.listAssociatedWithCommit("abc123"),
 			);
 			assert.strictEqual(value[0]?.number, 12);
-			assert.isTrue(Option.isSome(value[0]?.mergedAt ?? Option.none()));
+			assert.isTrue(O.isSome(value[0]?.mergedAt ?? O.none()));
 			assert.include(script.calls[0]?.path ?? "", "/commits/abc123/pulls");
 		}),
 	);
@@ -475,7 +483,7 @@ describe("PullRequest", () => {
 			const { value } = yield* drive([{ status: 200, body: pull(1) }], PullRequest, PullRequest, (pulls) =>
 				pulls.get(1),
 			);
-			assert.isTrue(Option.isNone(value.mergedAt));
+			assert.isTrue(O.isNone(value.mergedAt));
 			assert.isFalse(value.merged);
 		}),
 	);
@@ -583,7 +591,7 @@ describe("PullRequest", () => {
 		baseSha: "base-sha",
 		draft: false,
 		merged: false,
-		mergedAt: Option.none(),
+		mergedAt: O.none(),
 	});
 
 	it.effect("setAutoMerge is its own call, carrying the GraphQL merge method", () =>
@@ -882,7 +890,7 @@ describe("GitHubRelease", () => {
 				GitHubRelease,
 				(releases) => releases.getByTagOption("v9.9.9"),
 			);
-			assert.isTrue(Option.isNone(value));
+			assert.isTrue(O.isNone(value));
 		}),
 	);
 
@@ -1002,17 +1010,15 @@ describe("WorkflowDispatch", () => {
 	it.effect("fails typed when the run never finishes", () =>
 		Effect.gen(function* () {
 			const { base } = harness([{ status: 204 }, run("in_progress")]);
-			const fiber = yield* Effect.forkChild(
-				Effect.flip(
-					Effect.provide(
-						Effect.flatMap(WorkflowDispatch, (workflows) =>
-							workflows.dispatchAndWait("ci.yml", "main", {
-								poll: { interval: Duration.seconds(1), timeout: Duration.seconds(3) },
-							}),
-						),
-						WorkflowDispatch.layer.pipe(Layer.provideMerge(base)),
-					),
+			const fiber = yield* WorkflowDispatch.pipe(
+				Effect.flatMap((workflows) =>
+					workflows.dispatchAndWait("ci.yml", "main", {
+						poll: { interval: Duration.seconds(1), timeout: Duration.seconds(3) },
+					}),
 				),
+				Effect.provide(WorkflowDispatch.layer.pipe(Layer.provideMerge(base))),
+				Effect.flip,
+				Effect.forkChild,
 			);
 			yield* TestClock.adjust(Duration.seconds(30));
 			const error = yield* Fiber.join(fiber);

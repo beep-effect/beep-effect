@@ -1,5 +1,5 @@
 import { Yaml } from "../../yaml/index.ts";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import type { ParseFailure } from "./shared.ts";
 import { framingFailure, syntaxFailure } from "./shared.ts";
 

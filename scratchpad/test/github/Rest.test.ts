@@ -1,5 +1,6 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
 import { PageOptions } from "../../effected/github/Rest.ts";
 
 describe("PageOptions", () => {
@@ -35,7 +36,7 @@ describe("PageOptions", () => {
 
 	it.effect("surfaces an out-of-range page size as a SchemaError when decoded", () =>
 		Effect.gen(function* () {
-			const error = yield* Effect.flip(Schema.decodeEffect(PageOptions)({ perPage: 101 }));
+			const error = yield* Effect.flip(S.decodeEffect(PageOptions)({ perPage: 101 }));
 			assert.strictEqual(error._tag, "SchemaError");
 		}),
 	);

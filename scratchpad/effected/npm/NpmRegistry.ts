@@ -1,4 +1,10 @@
-import { Context, DateTime, Effect, Layer, Option, Redacted, Schema } from "effect";
+import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Redacted from "effect/Redacted";
+import * as S from "effect/Schema";
 import type { HttpClientError } from "effect/http";
 import { HttpClient } from "effect/http";
 import { IntegrityHash } from "./IntegrityHash.ts";
@@ -58,15 +64,15 @@ export interface RegistryTarget {
  *
  * @public
  */
-export class PublishedVersion extends Schema.Class<PublishedVersion>("PublishedVersion")({
+export class PublishedVersion extends S.Class<PublishedVersion>("PublishedVersion")({
 	/** The package name as the registry reports it. */
-	name: Schema.String,
+	name: S.String,
 	/** The version as the registry reports it. */
-	version: Schema.String,
+	version: S.String,
 	/** The published integrity, when the registry recorded one. */
-	integrity: Schema.optionalKey(IntegrityHash),
+	integrity: S.optionalKey(IntegrityHash),
 	/** The tarball URL, when the registry recorded one. */
-	tarball: Schema.optionalKey(Schema.String),
+	tarball: S.optionalKey(S.String),
 }) {}
 
 /**
@@ -80,11 +86,11 @@ export class PublishedVersion extends Schema.Class<PublishedVersion>("PublishedV
  *
  * @public
  */
-export class PublishTime extends Schema.Class<PublishTime>("PublishTime")({
+export class PublishTime extends S.Class<PublishTime>("PublishTime")({
 	/** The version this timestamp belongs to. */
-	version: Schema.String,
+	version: S.String,
 	/** When it was published. */
-	publishedAt: Schema.DateTimeUtc,
+	publishedAt: S.DateTimeUtc,
 }) {}
 
 /**
@@ -100,17 +106,17 @@ export class PublishTime extends Schema.Class<PublishTime>("PublishTime")({
  *
  * @public
  */
-export class RegistryReadError extends Schema.TaggedError<RegistryReadError>()("RegistryReadError", {
+export class RegistryReadError extends S.TaggedError<RegistryReadError>()("RegistryReadError", {
 	/** Why the read failed. */
-	kind: Schema.Literals(["transport", "status", "decode"]),
+	kind: S.Literals(["transport", "status", "decode"]),
 	/** The package that was being read. */
-	package: Schema.String,
+	package: S.String,
 	/** The registry that was being read from. */
-	registry: Schema.String,
+	registry: S.String,
 	/** The HTTP status, for `kind: "status"`. */
-	status: Schema.optionalKey(Schema.Finite),
+	status: S.optionalKey(S.Finite),
 	/** The underlying failure. */
-	cause: Schema.optionalKey(Schema.Defect()),
+	cause: S.optionalKey(S.Defect()),
 }) {
 	override get message(): string {
 		const where = `${this.package} on ${this.registry}`;
@@ -141,22 +147,22 @@ const authorizationHeader = (credential: RegistryCredential | undefined): Record
 };
 
 /** The version-manifest fields this package reads. Unknown keys are ignored. */
-const VersionManifest = Schema.Struct({
-	name: Schema.String,
-	version: Schema.String,
-	dist: Schema.optionalKey(
-		Schema.Struct({
-			integrity: Schema.optionalKey(Schema.String),
-			tarball: Schema.optionalKey(Schema.String),
+const VersionManifest = S.Struct({
+	name: S.String,
+	version: S.String,
+	dist: S.optionalKey(
+		S.Struct({
+			integrity: S.optionalKey(S.String),
+			tarball: S.optionalKey(S.String),
 		}),
 	),
 });
 
 /** The packument fields this package reads. Unknown keys are ignored. */
-const Packument = Schema.Struct({
-	"dist-tags": Schema.optionalKey(Schema.Record(Schema.String, Schema.String)),
-	versions: Schema.optionalKey(Schema.Record(Schema.String, Schema.Unknown)),
-	time: Schema.optionalKey(Schema.Record(Schema.String, Schema.String)),
+const Packument = S.Struct({
+	"dist-tags": S.optionalKey(S.Record(S.String, S.String)),
+	versions: S.optionalKey(S.Record(S.String, S.Unknown)),
+	time: S.optionalKey(S.Record(S.String, S.String)),
 });
 
 /** The two `time` keys that are not versions. */
@@ -176,7 +182,7 @@ const NON_VERSION_TIME_KEYS = new Set(["created", "modified"]);
 const integrityField = (raw: string | undefined): { integrity?: typeof IntegrityHash.Type } =>
 	raw === undefined
 		? {}
-		: Option.match(Schema.decodeOption(IntegrityHash)(raw), {
+		: O.match(S.decodeOption(IntegrityHash)(raw), {
 				onNone: () => ({}),
 				onSome: (integrity) => ({ integrity }),
 			});
@@ -207,7 +213,7 @@ export interface NpmRegistryShape {
 		name: string,
 		version: string,
 		target?: RegistryTarget,
-	) => Effect.Effect<Option.Option<PublishedVersion>, RegistryReadError>;
+	) => Effect.Effect<O.Option<PublishedVersion>, RegistryReadError>;
 	/** Every published version. Empty when the package is not on that registry. */
 	readonly versions: (name: string, target?: RegistryTarget) => Effect.Effect<ReadonlyArray<string>, RegistryReadError>;
 	/** The dist-tag map (`latest`, `next`, …). Empty when the package is absent. */
@@ -234,12 +240,12 @@ const make = Effect.fnUntraced(function* () {
 	 * than by matching the wording of a CLI's stderr.
 	 */
 	const read = <A, I>(
-		schema: Schema.Codec<A, I>,
+		schema: S.Codec<A, I>,
 		url: string,
 		name: string,
 		registry: string,
 		target: RegistryTarget | undefined,
-	): Effect.Effect<Option.Option<A>, RegistryReadError> =>
+	): Effect.Effect<O.Option<A>, RegistryReadError> =>
 		client
 			.get(url, {
 				headers: authorizationHeader(target?.credential),
@@ -249,14 +255,14 @@ const make = Effect.fnUntraced(function* () {
 					RegistryReadError.make({ kind: "transport", package: name, registry, cause }),
 				),
 				Effect.flatMap((response) => {
-					if (response.status === 404) return Effect.succeed(Option.none<A>());
+					if (response.status === 404) return Effect.succeed(O.none<A>());
 					if (response.status < 200 || response.status >= 300) {
 						return Effect.fail(
 							RegistryReadError.make({ kind: "status", package: name, registry, status: response.status }),
 						);
 					}
 					return response.json.pipe(
-						Effect.flatMap((body) => Schema.decodeUnknownEffect(schema)(body)),
+						Effect.flatMap((body) => S.decodeUnknownEffect(schema)(body)),
 						Effect.asSome,
 						Effect.mapError((cause) =>
 							RegistryReadError.make({ kind: "decode", package: name, registry, cause }),
@@ -284,17 +290,17 @@ const make = Effect.fnUntraced(function* () {
 		versionNumber: string,
 		registry: string,
 		target: RegistryTarget | undefined,
-	): Effect.Effect<Option.Option<typeof VersionManifest.Type>, RegistryReadError> =>
+	): Effect.Effect<O.Option<typeof VersionManifest.Type>, RegistryReadError> =>
 		read(Packument, packageUrl(registry, name), name, registry, target).pipe(
 			Effect.flatMap((document) => {
-				if (Option.isNone(document)) return Effect.succeed(Option.none<typeof VersionManifest.Type>());
+				if (O.isNone(document)) return Effect.succeed(O.none<typeof VersionManifest.Type>());
 				const published = document.value.versions;
 				// `hasOwn` rather than a bare index: the version number is caller
 				// input, and a key like `constructor` must not read the prototype.
 				if (published === undefined || !Object.hasOwn(published, versionNumber)) {
-					return Effect.succeed(Option.none<typeof VersionManifest.Type>());
+					return Effect.succeed(O.none<typeof VersionManifest.Type>());
 				}
-				return Schema.decodeUnknownEffect(VersionManifest)(published[versionNumber]).pipe(
+				return S.decodeUnknownEffect(VersionManifest)(published[versionNumber]).pipe(
 					Effect.asSome,
 					Effect.mapError((cause) =>
 						RegistryReadError.make({ kind: "decode", package: name, registry, cause }),
@@ -318,7 +324,7 @@ const make = Effect.fnUntraced(function* () {
 						() => versionFromPackument(name, versionNumber, registry, target),
 					),
 				);
-		return Option.map(manifest, (found) =>
+		return O.map(manifest, (found) =>
 			PublishedVersion.make({
 				name: found.name,
 				version: found.version,
@@ -331,7 +337,7 @@ const make = Effect.fnUntraced(function* () {
 	const versions = Effect.fn("NpmRegistry.versions")(function* (name: string, target?: RegistryTarget) {
 		yield* Effect.annotateCurrentSpan({ package: name, registry: target?.registry ?? DEFAULT_REGISTRY });
 		const document = yield* packument(name, target);
-		return Option.match(document, {
+		return O.match(document, {
 			onNone: () => [] as ReadonlyArray<string>,
 			onSome: (found) => Object.keys(found.versions ?? {}),
 		});
@@ -340,7 +346,7 @@ const make = Effect.fnUntraced(function* () {
 	const distTags = Effect.fn("NpmRegistry.distTags")(function* (name: string, target?: RegistryTarget) {
 		yield* Effect.annotateCurrentSpan({ package: name, registry: target?.registry ?? DEFAULT_REGISTRY });
 		const document = yield* packument(name, target);
-		return Option.match(document, {
+		return O.match(document, {
 			onNone: () => ({}) as Record<string, string>,
 			onSome: (found) => ({ ...(found["dist-tags"] ?? {}) }),
 		});
@@ -349,7 +355,7 @@ const make = Effect.fnUntraced(function* () {
 	const publishTimes = Effect.fn("NpmRegistry.publishTimes")(function* (name: string, target?: RegistryTarget) {
 		yield* Effect.annotateCurrentSpan({ package: name, registry: target?.registry ?? DEFAULT_REGISTRY });
 		const document = yield* packument(name, target);
-		return Option.match(document, {
+		return O.match(document, {
 			onNone: () => [] as ReadonlyArray<PublishTime>,
 			onSome: (found) => {
 				const entries: Array<PublishTime> = [];
@@ -359,7 +365,7 @@ const make = Effect.fnUntraced(function* () {
 					// read: the caller's question is "when were these published", and
 					// one malformed row is not a reason to answer nothing.
 					const parsed = DateTime.make(value);
-					if (Option.isNone(parsed)) continue;
+					if (O.isNone(parsed)) continue;
 					entries.push(PublishTime.make({ version: key, publishedAt: parsed.value }));
 				}
 				return entries;
@@ -480,8 +486,8 @@ export class NpmRegistry extends Context.Service<NpmRegistry, NpmRegistryShape>(
 				const found = at(target)[name]?.[version];
 				return Effect.succeed(
 					found === undefined
-						? Option.none()
-						: Option.some(
+						? O.none()
+						: O.some(
 								PublishedVersion.make({
 									name,
 									version,
@@ -498,7 +504,7 @@ export class NpmRegistry extends Context.Service<NpmRegistry, NpmRegistryShape>(
 					Object.entries(at(target)[name] ?? {}).flatMap(([version, facts]) => {
 						if (facts.publishedAt === undefined) return [];
 						const parsed = DateTime.make(facts.publishedAt);
-						return Option.isNone(parsed) ? [] : [PublishTime.make({ version, publishedAt: parsed.value })];
+						return O.isNone(parsed) ? [] : [PublishTime.make({ version, publishedAt: parsed.value })];
 					}),
 				),
 		};

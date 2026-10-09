@@ -1,5 +1,8 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Equal, Result, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { Comparator, InvalidComparatorError, SemVer } from "../../effected/semver/index.ts";
 
 describe("Comparator", () => {
@@ -39,17 +42,17 @@ describe("Comparator", () => {
 	describe("FromString", () => {
 		it.effect("decodes and encodes canonically", () =>
 			Effect.gen(function* () {
-				const c = yield* Schema.decodeEffect(Comparator.FromString)("<=2.0.0");
+				const c = yield* S.decodeEffect(Comparator.FromString)("<=2.0.0");
 				assert.instanceOf(c, Comparator);
-				const encoded = yield* Schema.encodeUnknownEffect(Comparator.FromString)(c);
+				const encoded = yield* S.encodeUnknownEffect(Comparator.FromString)(c);
 				assert.strictEqual(encoded, "<=2.0.0");
 			}),
 		);
 
 		it.effect.prop("round-trips decode(encode(c))", [Comparator], ([c]) =>
 			Effect.gen(function* () {
-				const encoded = yield* Schema.encodeUnknownEffect(Comparator.FromString)(c);
-				const decoded = yield* Schema.decodeEffect(Comparator.FromString)(encoded);
+				const encoded = yield* S.encodeUnknownEffect(Comparator.FromString)(c);
+				const decoded = yield* S.decodeEffect(Comparator.FromString)(encoded);
 				assert.isTrue(Equal.equals(decoded, c), `expected ${decoded.toString()} to equal ${c.toString()}`);
 				assert.deepStrictEqual([...decoded.version.build], [...c.version.build]);
 			}),

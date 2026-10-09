@@ -1,7 +1,12 @@
 // @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
-import { Effect, Layer, Option, Path, PubSub, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as PubSub from "effect/PubSub";
+import * as S from "effect/Schema";
 import type { ConfigEvent } from "../../effected/config-file/ConfigEvent.ts";
 import { ConfigEventPayload, ConfigEvents } from "../../effected/config-file/ConfigEvent.ts";
 import { ConfigFile } from "../../effected/config-file/ConfigFile.ts";
@@ -11,7 +16,7 @@ import { MergeStrategy } from "../../effected/config-file/MergeStrategy.ts";
 import type { RecordingFs } from "./helpers.ts";
 import { recordingFs } from "./helpers.ts";
 
-class AppShape extends Schema.Class<AppShape>("AppShape")({ port: Schema.Finite }) {}
+class AppShape extends S.Class<AppShape>("AppShape")({ port: S.Finite }) {}
 class AppConfig extends ConfigFile.Service<AppConfig, AppShape>()("test/EventConfig") {}
 
 /**
@@ -62,7 +67,7 @@ describe("ConfigEventPayload", () => {
 	it.effect("does not define the never-emitted v3 variants", () =>
 		Effect.gen(function* () {
 			for (const tag of ["Stringified", "ResolutionFailed"] as const) {
-				const result = yield* Effect.result(Schema.decodeUnknownEffect(ConfigEventPayload)({ _tag: tag }));
+				const result = yield* Effect.result(S.decodeUnknownEffect(ConfigEventPayload)({ _tag: tag }));
 				assert.strictEqual(result._tag, "Failure", `"${tag}" must not be a ConfigEventPayload variant`);
 			}
 		}),
@@ -70,7 +75,7 @@ describe("ConfigEventPayload", () => {
 
 	it.effect("still defines the variants the pipeline does emit", () =>
 		Effect.gen(function* () {
-			const result = yield* Effect.result(Schema.decodeEffect(ConfigEventPayload)({ _tag: "NotFound" }));
+			const result = yield* Effect.result(S.decodeEffect(ConfigEventPayload)({ _tag: "NotFound" }));
 			assert.strictEqual(result._tag, "Success");
 		}),
 	);
@@ -266,7 +271,7 @@ describe("ConfigEvents opt-in", () => {
 		Effect.gen(function* () {
 			// If `emit` required the service rather than short-circuiting, this
 			// would fail to build: nothing provides ConfigEvents here.
-			assert.isTrue(Option.isNone(yield* Effect.serviceOption(ConfigEvents)));
+			assert.isTrue(O.isNone(yield* Effect.serviceOption(ConfigEvents)));
 
 			const cfg = yield* AppConfig;
 			const value = yield* cfg.load;

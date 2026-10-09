@@ -1,6 +1,13 @@
 // @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
-import { ConfigProvider, Duration, Effect, Exit, Option, Redacted, Schema, Stream } from "effect";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as O from "effect/Option";
+import * as Redacted from "effect/Redacted";
+import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import type { RecordedCall } from "../../effected/github/GitHubClient.ts";
 import { GitHubClient } from "../../effected/github/GitHubClient.ts";
 import { GitHubError } from "../../effected/github/GitHubError.ts";
@@ -167,12 +174,12 @@ describe("GitHubClient.request", () => {
 			[{ status: 200, body: {}, headers: rateLimitHeaders({ remaining: 4_321, resetEpochSeconds: 1_700_000_090 }) }],
 			(client) =>
 				Effect.gen(function* () {
-					assert.isTrue(Option.isNone(yield* client.rateLimit), "nothing observed before the first call");
+					assert.isTrue(O.isNone(yield* client.rateLimit), "nothing observed before the first call");
 					yield* client.request("GET /repos/{owner}/{repo}", { owner: "o", repo: "r" });
 					const snapshot = yield* client.rateLimit;
 					assert.deepStrictEqual(
 						snapshot,
-						Option.some(RateLimitSnapshot.make({ remaining: 4_321, limit: 5_000, resetEpochSeconds: 1_700_000_090 })),
+						O.some(RateLimitSnapshot.make({ remaining: 4_321, limit: 5_000, resetEpochSeconds: 1_700_000_090 })),
 					);
 				}),
 		),
@@ -191,8 +198,8 @@ describe("GitHubClient.request", () => {
 				Effect.gen(function* () {
 					yield* Effect.flip(client.request("GET /repos/{owner}/{repo}", { owner: "o", repo: "r" }));
 					const snapshot = yield* client.rateLimit;
-					assert.isTrue(Option.isSome(snapshot));
-					assert.isTrue(Option.getOrThrow(snapshot).isExhausted);
+					assert.isTrue(O.isSome(snapshot));
+					assert.isTrue(O.getOrThrow(snapshot).isExhausted);
 				}),
 		),
 	);
@@ -397,7 +404,7 @@ describe("GitHubClient.paginate", () => {
 });
 
 describe("GitHubClient.requestDecoded", () => {
-	const Payload = Schema.Struct({ id: Schema.Int, name: Schema.String });
+	const Payload = S.Struct({ id: S.Int, name: S.String });
 
 	it.effect("decodes an undocumented route through its schema", () =>
 		withClient([{ status: 200, body: { id: 7, name: "seven" } }], (client) =>
@@ -436,7 +443,7 @@ describe("GitHubClient.graphql", () => {
 	const Viewer = GraphQLDocument.make({
 		name: "viewerLogin",
 		document: "query { viewer { login } }",
-		response: Schema.Struct({ viewer: Schema.Struct({ login: Schema.String }) }),
+		response: S.Struct({ viewer: S.Struct({ login: S.String }) }),
 	})<Record<string, never>>();
 
 	it.effect("decodes the document's response", () =>
@@ -552,7 +559,7 @@ describe("GitHubClient.makeTest", () => {
 
 	it.effect("reports no rate-limit observation by default", () =>
 		Effect.gen(function* () {
-			assert.isTrue(Option.isNone(yield* GitHubClient.makeTest({}).rateLimit));
+			assert.isTrue(O.isNone(yield* GitHubClient.makeTest({}).rateLimit));
 		}),
 	);
 });
@@ -670,7 +677,7 @@ describe("GitHubClient.layerFixture", () => {
 			const doc = GraphQLDocument.make({
 				name: "ProbeDocument",
 				document: "query ProbeDocument($login:String!){ user(login:$login){ id } }",
-				response: Schema.Struct({ user: Schema.Struct({ id: Schema.String }) }),
+				response: S.Struct({ user: S.Struct({ id: S.String }) }),
 			})<{ readonly login: string }>();
 
 			yield* Effect.provide(
@@ -763,7 +770,7 @@ describe("GitHubClient.layerFixture", () => {
 				Effect.flatMap(GitHubClient, (client) => client.rateLimit),
 				GitHubClient.layerFixture({ rateLimit: snapshot }),
 			);
-			assert.deepStrictEqual(observed, Option.some(snapshot));
+			assert.deepStrictEqual(observed, O.some(snapshot));
 		}),
 	);
 });

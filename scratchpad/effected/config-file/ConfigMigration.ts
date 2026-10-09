@@ -1,4 +1,5 @@
-import { Effect, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
 import type { ConfigCodec, ConfigCodecError } from "./ConfigCodec.ts";
 
 /**
@@ -11,15 +12,15 @@ import type { ConfigCodec, ConfigCodecError } from "./ConfigCodec.ts";
  *
  * @public
  */
-export class ConfigMigrationError extends Schema.TaggedError<ConfigMigrationError>()("ConfigMigrationError", {
+export class ConfigMigrationError extends S.TaggedError<ConfigMigrationError>()("ConfigMigrationError", {
 	/** The target version of the step that failed. `0` when reading the version failed. */
-	version: Schema.Finite,
+	version: S.Finite,
 	/** The name of the step that failed; empty when reading the version failed. */
-	name: Schema.String,
+	name: S.String,
 	/** Which stage of a migration step failed. */
-	phase: Schema.Literals(["read-version", "apply", "write-version"]),
+	phase: S.Literals(["read-version", "apply", "write-version"]),
 	/** The underlying failure, preserved structurally. */
-	cause: Schema.Defect(),
+	cause: S.Defect(),
 }) {
 	override get message(): string {
 		return this.phase === "read-version"
@@ -56,7 +57,7 @@ export interface VersionAccess<E = unknown> {
 	readonly set: (raw: unknown, version: number) => Effect.Effect<unknown, E>;
 }
 
-class VersionAccessError extends Schema.TaggedError<VersionAccessError>()("VersionAccessError", { message: Schema.String }) {
+class VersionAccessError extends S.TaggedError<VersionAccessError>()("VersionAccessError", { message: S.String }) {
 	override name = "Error";
 }
 

@@ -1,6 +1,9 @@
 import { assert, describe, it } from "@effect/vitest";
 import { YamlParseError } from "../../effected/yaml/index.ts";
-import { Cause, Effect, Exit, Option } from "effect";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as O from "effect/Option";
 import { ConfigCodecError } from "../../effected/config-file/ConfigCodec.ts";
 import { YamlCodec } from "../../effected/config-file/YamlCodec.ts";
 
@@ -14,7 +17,7 @@ describe("YamlCodec", () => {
 
 	it.effect("wraps a yaml parse failure as ConfigCodecError with the cause preserved structurally", () =>
 		Effect.gen(function* () {
-			const error = yield* Effect.flip(Effect.asVoid(YamlCodec.parse("port: [unclosed")));
+			const error = yield* YamlCodec.parse("port: [unclosed").pipe(Effect.asVoid, Effect.flip);
 			assert.instanceOf(error, ConfigCodecError);
 			assert.strictEqual(error.codec, "yaml");
 			assert.strictEqual(error.operation, "parse");
@@ -46,15 +49,15 @@ describe("YamlCodec", () => {
 			assert.isTrue(Exit.isFailure(exit));
 			if (Exit.isFailure(exit)) {
 				const cause = Exit.getCause(exit);
-				assert.isTrue(Option.isSome(cause));
-				if (Option.isSome(cause)) {
+				assert.isTrue(O.isSome(cause));
+				if (O.isSome(cause)) {
 					assert.isTrue(Cause.hasFails(cause.value));
 					assert.isFalse(Cause.hasDies(cause.value));
 				}
 			}
 			// Confirm this trips the depth guard specifically, not some unrelated
 			// syntax failure.
-			const error = yield* Effect.flip(Effect.asVoid(YamlCodec.parse(hostile)));
+			const error = yield* YamlCodec.parse(hostile).pipe(Effect.asVoid, Effect.flip);
 			assert.instanceOf(error.cause, YamlParseError);
 			const cause = error.cause as YamlParseError;
 			assert.isTrue(cause.diagnostics.some((d) => d.code === "NestingDepthExceeded"));
@@ -86,14 +89,14 @@ describe("YamlCodec", () => {
 			assert.isTrue(Exit.isFailure(exit));
 			if (Exit.isFailure(exit)) {
 				const cause = Exit.getCause(exit);
-				assert.isTrue(Option.isSome(cause));
-				if (Option.isSome(cause)) {
+				assert.isTrue(O.isSome(cause));
+				if (O.isSome(cause)) {
 					// A defect here would mean the guard threw instead of failing typed.
 					assert.isTrue(Cause.hasFails(cause.value));
 					assert.isFalse(Cause.hasDies(cause.value));
 				}
 			}
-			const error = yield* Effect.flip(Effect.asVoid(YamlCodec.parse(bomb)));
+			const error = yield* YamlCodec.parse(bomb).pipe(Effect.asVoid, Effect.flip);
 			assert.instanceOf(error, ConfigCodecError);
 			assert.strictEqual(error.codec, "yaml");
 			// Both the composer's raw alias-token guard and the value-extraction

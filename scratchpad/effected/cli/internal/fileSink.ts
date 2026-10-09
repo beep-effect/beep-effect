@@ -1,6 +1,15 @@
 import { CommandNeutralizer } from "../../github-commands/index.ts";
-import type { LogLevel, Scope } from "effect";
-import { Cause, Console, Effect, Exit, Fiber, FileSystem, Logger, Path, Queue } from "effect";
+import type * as LogLevel from "effect/LogLevel";
+import type * as Scope from "effect/Scope";
+import * as Cause from "effect/Cause";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Fiber from "effect/Fiber";
+import * as FileSystem from "effect/FileSystem";
+import * as Logger from "effect/Logger";
+import * as Path from "effect/Path";
+import * as Queue from "effect/Queue";
 import { sanitize } from "../Fmt.ts";
 import { formatNdjson, passes } from "./diagnostics.ts";
 

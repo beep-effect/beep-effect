@@ -38,7 +38,10 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { isDeepStrictEqual } from "node:util";
 import { assert, describe, it } from "@effect/vitest";
-import { Arbitrary, Effect, Schema, Result } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
+import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
+import * as Result from "effect/Result";
 import { parse as oracleParse, stringify as oracleStringify } from "smol-toml";
 import { Toml } from "../../effected/toml/Toml.ts";
 import { TomlLocalDate, TomlLocalDateTime, TomlLocalTime, TomlOffsetDateTime } from "../../effected/toml/TomlDateTime.ts";
@@ -124,7 +127,7 @@ const canon = (value: unknown): unknown => {
 		default:
 			break;
 	}
-	if (Schema.is(TomlOffsetDateTime)(value)) {
+	if (S.is(TomlOffsetDateTime)(value)) {
 		return {
 			$dt: "datetime",
 			year: value.year,
@@ -137,7 +140,7 @@ const canon = (value: unknown): unknown => {
 			offset: value.offsetMinutes === 0 ? 0 : value.offsetMinutes,
 		};
 	}
-	if (Schema.is(TomlLocalDateTime)(value)) {
+	if (S.is(TomlLocalDateTime)(value)) {
 		return {
 			$dt: "datetime-local",
 			year: value.year,
@@ -149,10 +152,10 @@ const canon = (value: unknown): unknown => {
 			ms: Math.floor(value.nanosecond / 1_000_000),
 		};
 	}
-	if (Schema.is(TomlLocalDate)(value)) {
+	if (S.is(TomlLocalDate)(value)) {
 		return { $dt: "date-local", year: value.year, month: value.month, day: value.day };
 	}
-	if (Schema.is(TomlLocalTime)(value)) {
+	if (S.is(TomlLocalTime)(value)) {
 		return {
 			$dt: "time-local",
 			hour: value.hour,
@@ -194,7 +197,7 @@ function weighted<A>(
 	...rest: ReadonlyArray<readonly [weight: number, arbitrary: Arbitrary.Arbitrary<A>]>
 ): Arbitrary.Arbitrary<A> {
 	const total = rest.reduce((sum, [weight]) => sum + weight, first[0]);
-	return Arbitrary.schema(Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: total - 1 }))).pipe(
+	return Arbitrary.schema(S.Int.check(S.isBetween({ minimum: 0, maximum: total - 1 }))).pipe(
 		Arbitrary.flatMap((ticket) => {
 			let remaining = ticket - first[0];
 			for (const [weight, arbitrary] of rest) {
@@ -212,31 +215,31 @@ function arrayOf<A>(
 	item: Arbitrary.Arbitrary<A>,
 	{ minLength = 0, maxLength }: { readonly minLength?: number; readonly maxLength: number },
 ): Arbitrary.Arbitrary<Array<A>> {
-	return Arbitrary.schema(Schema.Int.check(Schema.isBetween({ minimum: minLength, maximum: maxLength }))).pipe(
+	return Arbitrary.schema(S.Int.check(S.isBetween({ minimum: minLength, maximum: maxLength }))).pipe(
 		Arbitrary.flatMap((length) => Arbitrary.all(Array.from({ length }, () => item))),
 	);
 }
 
 /** Any Unicode scalar value from space upward (escaping handled by emitters). */
-const scalarCharArb = Arbitrary.schema(Schema.Int.check(Schema.isBetween({ minimum: 0x20, maximum: 0x10ffff }))).pipe(
+const scalarCharArb = Arbitrary.schema(S.Int.check(S.isBetween({ minimum: 0x20, maximum: 0x10ffff }))).pipe(
 	Arbitrary.filter((codePoint) => codePoint < 0xd800 || codePoint > 0xdfff),
 	Arbitrary.map((codePoint) => String.fromCodePoint(codePoint)),
 );
 
 /** The characters that stress escaping: quotes, backslashes, controls, DEL. */
 const nastyCharArb = Arbitrary.schema(
-	Schema.Literals(['"', "\\", "\n", "\r", "\t", "\b", "\f", "\u0000", "\u001f", "\u007f", "'", " "]),
+	S.Literals(['"', "\\", "\n", "\r", "\t", "\b", "\f", "\u0000", "\u001f", "\u007f", "'", " "]),
 );
 
 const stringArb = arrayOf(weighted([5, scalarCharArb], [3, nastyCharArb]), { maxLength: 12 }).pipe(
 	Arbitrary.map((chars) => chars.join("")),
 );
 
-const bareKeyArb = Arbitrary.schema(Schema.String.check(Schema.isPattern(/^[abzAZ_\-019]{1,8}$/)));
+const bareKeyArb = Arbitrary.schema(S.String.check(S.isPattern(/^[abzAZ_\-019]{1,8}$/)));
 
 /** Keys that force quoting: dots, spaces, the empty key, quotes, unicode. */
 const quotedKeyArb = weighted<string>(
-	[1, Arbitrary.schema(Schema.Literals(["", "a.b", "a b", 'quo"te', "back\\slash", "uni é中", "\ttab", "new\nline"]))],
+	[1, Arbitrary.schema(S.Literals(["", "a.b", "a b", 'quo"te', "back\\slash", "uni é中", "\ttab", "new\nline"]))],
 	[1, stringArb],
 );
 
@@ -244,29 +247,29 @@ const keyArb = weighted([3, bareKeyArb], [2, quotedKeyArb]);
 
 /** Half 32-bit integers (fast-check's default range), half the full safe range. */
 const integerArb = Arbitrary.schema(
-	Schema.Union([
-		Schema.Int.check(Schema.isBetween({ minimum: -(2 ** 31), maximum: 2 ** 31 - 1 })),
-		Schema.Int.check(Schema.isBetween({ minimum: Number.MIN_SAFE_INTEGER, maximum: Number.MAX_SAFE_INTEGER })),
+	S.Union([
+		S.Int.check(S.isBetween({ minimum: -(2 ** 31), maximum: 2 ** 31 - 1 })),
+		S.Int.check(S.isBetween({ minimum: Number.MIN_SAFE_INTEGER, maximum: Number.MAX_SAFE_INTEGER })),
 	]),
 );
 
 const INT64_MAX = 2n ** 63n - 1n;
 
 const bigintArb = Arbitrary.schema(
-	Schema.BigInt.check(Schema.isBetweenBigInt({ minimum: -INT64_MAX, maximum: INT64_MAX })),
+	S.BigInt.check(S.isBetweenBigInt({ minimum: -INT64_MAX, maximum: INT64_MAX })),
 );
 
 /** Finite-or-infinite doubles — NaN stays out of the equality properties. */
 // TOML float round-trip properties must include infinities, as the scalar tests require.
 // @effect-diagnostics-next-line schemaNumber:off
-const floatArb = Arbitrary.schema(Schema.Number.check(Schema.makeFilter((n) => !Number.isNaN(n))));
+const floatArb = Arbitrary.schema(S.Number.check(S.makeFilter((n) => !Number.isNaN(n))));
 
 const leafArb: Arbitrary.Arbitrary<unknown> = weighted<unknown>(
 	[3, stringArb],
 	[2, integerArb],
 	[2, floatArb],
 	[1, bigintArb],
-	[1, Arbitrary.schema(Schema.Boolean)],
+	[1, Arbitrary.schema(S.Boolean)],
 );
 
 function valueArb(depth: number): Arbitrary.Arbitrary<unknown> {

@@ -1,9 +1,18 @@
 // @effect-diagnostics strictEffectProvide:skip-file asyncFunction:skip-file
-import { Schema } from "effect";
-import { Result } from "effect";
+import * as S from "effect/Schema";
+import * as Result from "effect/Result";
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
-import { Cause, ConfigProvider, Console, Effect, Exit, Fiber, Layer, Runtime, Stdio, Terminal } from "effect";
+import * as Cause from "effect/Cause";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Fiber from "effect/Fiber";
+import * as Layer from "effect/Layer";
+import * as Runtime from "effect/Runtime";
+import * as Stdio from "effect/Stdio";
+import * as Terminal from "effect/Terminal";
 import { Command } from "effect/cli";
 import { vi } from "vitest";
 import { CliPrompt, CliRuntime } from "../../../effected/cli/index.ts";
@@ -12,7 +21,7 @@ import { CliUi, Select, TextInput } from "../../../effected/cli/ui.ts";
 import type { CliUiTestSession } from "../../../effected/cli/ui-testing.ts";
 import { CliUiTest } from "../../../effected/cli/ui-testing.ts";
 
-const Json = Schema.fromJsonString(Schema.Unknown);
+const Json = S.fromJsonString(S.Unknown);
 
 // Count loads of the peers through the kit's one loader, without changing what it does.
 const { loads } = vi.hoisted(() => ({ loads: { count: 0 } }));
@@ -57,12 +66,12 @@ const init = Command.make("init", {}, () =>
 			}),
 			{ otherwise: found.location },
 		);
-		yield* Console.log(Result.getOrThrow(Schema.encodeUnknownResult(Json)({ profile, dir, location })));
+		yield* S.encodeUnknownResult(Json)({ profile, dir, location }).pipe(Result.getOrThrow, Console.log);
 	}),
 );
 
 const exitCode = (exit: Exit.Exit<unknown, unknown>): number =>
-	Exit.isFailure(exit) ? Runtime.getErrorExitCode(Cause.squash(exit.cause)) : 0;
+	Exit.isFailure(exit) ? exit.cause.pipe(Cause.squash, Runtime.getErrorExitCode) : 0;
 
 /** okfit's init through `CliRuntime.main`, under a session: its streams, theme, interactivity and console. */
 const run = Effect.fn("run")(function* (session: CliUiTestSession) {
@@ -87,7 +96,7 @@ describe("okfit's init wizard through CliUi.prompt, driven by CliUiTest.session"
 			assert.strictEqual(yield* Fiber.join(program), 0, yield* session.stderr);
 			assert.strictEqual(
 				yield* session.stdout,
-				`${Result.getOrThrow(Schema.encodeUnknownResult(Json)({ profile: "software-project", dir: "docs/okf2", location: ".config/okfit.toml" }))}\n`,
+				`${Result.getOrThrow(S.encodeUnknownResult(Json)({ profile: "software-project", dir: "docs/okf2", location: ".config/okfit.toml" }))}\n`,
 			);
 			assert.strictEqual(yield* session.mounts, 3);
 		}).pipe(Effect.scoped),
@@ -98,7 +107,7 @@ describe("okfit's init wizard through CliUi.prompt, driven by CliUiTest.session"
 			const before = loads.count;
 			const session = yield* CliUiTest.session({ interactive: false });
 			assert.strictEqual(yield* run(session), 0);
-			assert.strictEqual(yield* session.stdout, `${Result.getOrThrow(Schema.encodeUnknownResult(Json)(yield* discover))}\n`);
+			assert.strictEqual(yield* session.stdout, `${Result.getOrThrow(S.encodeUnknownResult(Json)(yield* discover))}\n`);
 			assert.strictEqual(yield* session.mounts, 0);
 			assert.strictEqual(loads.count, before);
 		}).pipe(Effect.scoped),
@@ -157,7 +166,7 @@ describe("CliUi.prompt under okfit's production wiring (CliRuntime.main with env
 			yield* (yield* session.next({ contains: "Bundle directory" })).press("enter");
 			yield* (yield* session.next({ contains: "Config location" })).press("enter");
 			assert.strictEqual(yield* Fiber.join(program), 0, yield* session.stderr);
-			assert.strictEqual(yield* session.stdout, `${Result.getOrThrow(Schema.encodeUnknownResult(Json)(yield* discover))}\n`);
+			assert.strictEqual(yield* session.stdout, `${Result.getOrThrow(S.encodeUnknownResult(Json)(yield* discover))}\n`);
 		}).pipe(Effect.scoped),
 	);
 
@@ -166,7 +175,7 @@ describe("CliUi.prompt under okfit's production wiring (CliRuntime.main with env
 			const before = loads.count;
 			const session = yield* CliUiTest.session();
 			assert.strictEqual(yield* production(session, false), 0, yield* session.stderr);
-			assert.strictEqual(yield* session.stdout, `${Result.getOrThrow(Schema.encodeUnknownResult(Json)(yield* discover))}\n`);
+			assert.strictEqual(yield* session.stdout, `${Result.getOrThrow(S.encodeUnknownResult(Json)(yield* discover))}\n`);
 			assert.strictEqual(yield* session.mounts, 0);
 			assert.strictEqual(loads.count, before);
 		}).pipe(Effect.scoped),

@@ -1,5 +1,8 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Option, Result, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { ManagedDocument, ManagedDocumentError } from "../../effected/github-actions/ManagedDocument.ts";
 
 const NS = "savvy-web";
@@ -33,15 +36,15 @@ describe("ManagedDocument", () => {
 			assert.include(doc.text, marker("BEGIN", "header"));
 			assert.include(doc.text, marker("END", "footer"));
 			assert.strictEqual(doc.text.split(doc.sentinel).length - 1, 1, "exactly one sentinel");
-			assert.deepStrictEqual(doc.region("header"), Option.some("## Validating Release"));
-			assert.deepStrictEqual(doc.region("body"), Option.some(""));
-			assert.deepStrictEqual(doc.region("missing"), Option.none());
+			assert.deepStrictEqual(doc.region("header"), O.some("## Validating Release"));
+			assert.deepStrictEqual(doc.region("body"), O.some(""));
+			assert.deepStrictEqual(doc.region("missing"), O.none());
 		});
 
 		it("re-parsing rendered text reads the same regions back — no branch on existence", () => {
 			const first = apply(fresh(), [["header", "v1"]]);
 			const reread = Result.getOrThrow(ManagedDocument.parseResult({ namespace: NS, key: KEY, text: first.text }));
-			assert.deepStrictEqual(reread.region("header"), Option.some("v1"));
+			assert.deepStrictEqual(reread.region("header"), O.some("v1"));
 			assert.deepStrictEqual(
 				reread.regions.map((entry) => entry.key),
 				["header"],
@@ -65,7 +68,7 @@ describe("ManagedDocument", () => {
 		it("a second application replaces the region in place", () => {
 			const v1 = apply(fresh(), [["header", "state: pass"]]);
 			const v2 = apply(v1, [["header", "state: fail"]]);
-			assert.deepStrictEqual(v2.region("header"), Option.some("state: fail"));
+			assert.deepStrictEqual(v2.region("header"), O.some("state: fail"));
 			assert.notInclude(v2.text, "state: pass", "the stale render must be gone");
 			assert.strictEqual(v2.text.split(marker("BEGIN", "header")).length - 1, 1, "one region, not two");
 		});
@@ -76,8 +79,8 @@ describe("ManagedDocument", () => {
 				["footer", "the run link"],
 			]);
 			const updated = apply(both, [["header", "the NEW table"]]);
-			assert.deepStrictEqual(updated.region("header"), Option.some("the NEW table"));
-			assert.deepStrictEqual(updated.region("footer"), Option.some("the run link"));
+			assert.deepStrictEqual(updated.region("header"), O.some("the NEW table"));
+			assert.deepStrictEqual(updated.region("footer"), O.some("the run link"));
 		});
 	});
 
@@ -89,7 +92,7 @@ describe("ManagedDocument", () => {
 			const regenerated = apply(doc, [["notes", "regenerated notes"]]);
 			assert.include(regenerated.text, "A human wrote this line.");
 			assert.include(regenerated.text, "And this trailing thought.");
-			assert.deepStrictEqual(regenerated.region("notes"), Option.some("regenerated notes"));
+			assert.deepStrictEqual(regenerated.region("notes"), O.some("regenerated notes"));
 		});
 
 		it("a hand-written body without a sentinel is adopted, not clobbered", () => {
@@ -98,7 +101,7 @@ describe("ManagedDocument", () => {
 			const managed = apply(doc, [["squash", "```proposed-squash-commit\nrelease: 2.0.0\n```"]]);
 			assert.include(managed.text, human);
 			assert.include(managed.text, doc.sentinel);
-			assert.deepStrictEqual(managed.region("squash"), Option.some("```proposed-squash-commit\nrelease: 2.0.0\n```"));
+			assert.deepStrictEqual(managed.region("squash"), O.some("```proposed-squash-commit\nrelease: 2.0.0\n```"));
 		});
 
 		it("another document's regions in the same text are preserved and never reported", () => {
@@ -111,7 +114,7 @@ describe("ManagedDocument", () => {
 			assert.deepStrictEqual(doc.regions, []);
 			const ours = apply(doc, [["header", "our block"]]);
 			assert.include(ours.text, "someone else's block");
-			assert.deepStrictEqual(ours.region("header"), Option.some("our block"));
+			assert.deepStrictEqual(ours.region("header"), O.some("our block"));
 		});
 
 		it("a CRLF document stays CRLF", () => {
@@ -181,19 +184,19 @@ describe("ManagedDocument", () => {
 				doc.regions.map((region) => ({ key: region.key, meta: region.meta })),
 				[{ key: "header", meta }],
 			);
-			assert.deepStrictEqual(doc.entry("header"), Option.some({ content: "the table", meta }));
-			assert.deepStrictEqual(doc.entry("missing"), Option.none());
+			assert.deepStrictEqual(doc.entry("header"), O.some({ content: "the table", meta }));
+			assert.deepStrictEqual(doc.entry("missing"), O.none());
 			// Addressability is untouched: content-only reads see the same region.
-			assert.deepStrictEqual(doc.region("header"), Option.some("the table"));
+			assert.deepStrictEqual(doc.region("header"), O.some("the table"));
 			// And a re-parse of the rendered text reads the same metadata back.
 			const reread = Result.getOrThrow(ManagedDocument.parseResult({ namespace: NS, key: KEY, text: doc.text }));
-			assert.deepStrictEqual(reread.entry("header"), Option.some({ content: "the table", meta }));
+			assert.deepStrictEqual(reread.entry("header"), O.some({ content: "the table", meta }));
 		});
 
 		it("a two-tuple keeps today's behavior exactly, reporting empty meta", () => {
 			const doc = apply(fresh(), [["header", "plain"]]);
 			assert.include(doc.text, marker("BEGIN", "header"));
-			assert.deepStrictEqual(doc.entry("header"), Option.some({ content: "plain", meta: {} }));
+			assert.deepStrictEqual(doc.entry("header"), O.some({ content: "plain", meta: {} }));
 			// A triple with empty meta renders the identical document.
 			const withEmpty = apply(fresh(), [["header", "plain", {}]]);
 			assert.strictEqual(withEmpty.text, doc.text);
@@ -207,8 +210,8 @@ describe("ManagedDocument", () => {
 			]);
 			// A later caller updates ONLY the footer, never mentioning metadata.
 			const updated = apply(seeded, [["footer", "the NEW link"]]);
-			assert.deepStrictEqual(updated.entry("header"), Option.some({ content: "the table", meta }));
-			assert.deepStrictEqual(updated.region("footer"), Option.some("the NEW link"));
+			assert.deepStrictEqual(updated.entry("header"), O.some({ content: "the table", meta }));
+			assert.deepStrictEqual(updated.region("footer"), O.some("the NEW link"));
 		});
 
 		it("applying identical triples is byte-identical — suppression holds with meta", () => {
@@ -252,7 +255,7 @@ describe("ManagedDocument", () => {
 			Effect.gen(function* () {
 				const doc = yield* ManagedDocument.parse({ namespace: NS, key: KEY });
 				const next = yield* doc.withRegions([["header", "v1"]]);
-				assert.deepStrictEqual(next.region("header"), Option.some("v1"));
+				assert.deepStrictEqual(next.region("header"), O.some("v1"));
 				assert.isTrue(next.matches(next.text));
 			}),
 		);
@@ -279,7 +282,7 @@ describe("ManagedDocument", () => {
 
 	describe("JSON Schema export", () => {
 		it("namespace and key export their name-part pattern", () => {
-			const document = Schema.toJsonSchemaDocument(ManagedDocument);
+			const document = S.toJsonSchemaDocument(ManagedDocument);
 			for (const field of ["namespace", "key"]) {
 				assert.nestedPropertyVal(
 					document,

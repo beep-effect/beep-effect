@@ -4,14 +4,14 @@
 // map and the inline `peerDependencyRules` seed. One implementation, so the
 // two sides of a diff cannot disagree about what a ref declared.
 
-import { Predicate } from "effect";
+import * as P from "effect/Predicate";
 import type { PeerDependencyRules } from "../ConfigDependencyHooks.ts";
 import { NoPeerDependencyRules } from "../ConfigDependencyHooks.ts";
 import { stringsOf } from "./patterns.ts";
 
 /** The `configDependencies` map (name → version+integrity) of a parsed pnpm-workspace document. */
 export const configDependenciesOf = (document: unknown): Record<string, string> => {
-	if (!Predicate.isObject(document) || !Predicate.isObject(document.configDependencies)) return {};
+	if (!P.isObject(document) || !P.isObject(document.configDependencies)) return {};
 	const out: Record<string, string> = {};
 	for (const [name, spec] of Object.entries(document.configDependencies)) {
 		if (typeof spec === "string") out[name] = spec;
@@ -36,10 +36,10 @@ export const configDependenciesOf = (document: unknown): Record<string, string> 
  * discard a well-formed `allowedVersions`.
  */
 export const inlinePeerDependencyRules = (document: unknown): PeerDependencyRules => {
-	if (!Predicate.isObject(document) || !Predicate.isObject(document.peerDependencyRules)) return NoPeerDependencyRules;
+	if (!P.isObject(document) || !P.isObject(document.peerDependencyRules)) return NoPeerDependencyRules;
 	const block = document.peerDependencyRules;
 	const allowedVersions: Record<string, string> = {};
-	if (Predicate.isObject(block.allowedVersions)) {
+	if (P.isObject(block.allowedVersions)) {
 		for (const [key, value] of Object.entries(block.allowedVersions)) {
 			if (typeof value === "string") allowedVersions[key] = value;
 		}

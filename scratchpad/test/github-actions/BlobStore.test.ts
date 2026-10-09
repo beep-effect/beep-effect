@@ -1,12 +1,17 @@
 // @effect-diagnostics strictEffectProvide:skip-file asyncFunction:skip-file
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Layer, Option, Redacted, Schema, DateTime } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Redacted from "effect/Redacted";
+import * as S from "effect/Schema";
+import * as DateTime from "effect/DateTime";
 import { FetchHttpClient } from "effect/http";
 import type { S3Config } from "../../effected/github-actions/index.ts";
 import { ActionOutputs, BlobStore, BlobStoreError, NotABlobEnvelopeError } from "../../effected/github-actions/index.ts";
 import { canonicalize, digestHex, sign, signingKey, uriEncode } from "../../effected/github-actions/internal/sigv4.ts";
 
-class Meta extends Schema.Class<Meta>("Meta")({ tag: Schema.String, durationMs: Schema.Finite }) {}
+class Meta extends S.Class<Meta>("Meta")({ tag: S.String, durationMs: S.Finite }) {}
 
 const CONFIG: S3Config = {
 	bucket: "cache",
@@ -172,7 +177,7 @@ describe("BlobStore", () => {
 				const found = yield* Effect.gen(function* () {
 					return yield* (yield* BlobStore).get("absent", Meta);
 				}).pipe(Effect.provide(s3(fake)));
-				assert.isTrue(Option.isNone(found));
+				assert.isTrue(O.isNone(found));
 			}),
 		);
 
@@ -225,8 +230,8 @@ describe("BlobStore", () => {
 						Meta,
 					);
 					const found = yield* store.get("k", Meta);
-					assert.isTrue(Option.isSome(found));
-					if (Option.isSome(found)) {
+					assert.isTrue(O.isSome(found));
+					if (O.isSome(found)) {
 						assert.deepStrictEqual(found.value.metadata, Meta.make({ tag: "turbo", durationMs: 4200 }));
 						assert.deepStrictEqual([...found.value.body], [1, 2, 3]);
 					}
@@ -272,8 +277,8 @@ describe("BlobStore", () => {
 				yield* store.put("k", { metadata: Meta.make({ tag: "t", durationMs: 1 }), body: new Uint8Array([7]) }, Meta);
 				assert.isTrue(yield* store.has("k"));
 				const found = yield* store.get("k", Meta);
-				assert.isTrue(Option.isSome(found));
-				if (Option.isSome(found)) {
+				assert.isTrue(O.isSome(found));
+				if (O.isSome(found)) {
 					assert.strictEqual(found.value.metadata.tag, "t");
 					assert.deepStrictEqual([...found.value.body], [7]);
 				}
@@ -282,7 +287,7 @@ describe("BlobStore", () => {
 
 		it.effect("reports an absent key as nothing", () =>
 			Effect.gen(function* () {
-				assert.isTrue(Option.isNone(yield* (yield* BlobStore).get("absent", Meta)));
+				assert.isTrue(O.isNone(yield* (yield* BlobStore).get("absent", Meta)));
 			}).pipe(Effect.provide(BlobStore.layerMemory)),
 		);
 	});

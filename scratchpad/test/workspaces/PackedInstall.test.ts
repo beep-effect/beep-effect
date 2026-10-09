@@ -3,11 +3,19 @@ import type { SpawnScript } from "../../effected/commands/index.ts";
 import { ScriptedSpawner } from "../../effected/commands/index.ts";
 import type { MemoryFileSystemSeed } from "../../effected/memfs/index.ts";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
-import { Duration, Effect, FileSystem, Layer, Path, PlatformError, Redacted, Result, Schema } from "effect";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
+import * as PlatformError from "effect/PlatformError";
+import * as Redacted from "effect/Redacted";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { WorkspaceDiscovery, WorkspaceInfo, WorkspacePackage } from "../../effected/workspaces/index.ts";
 import { InstalledConsumer, PackedInstall } from "../../effected/workspaces/testing.ts";
 
-const JsonValue = Schema.fromJsonString(Schema.Unknown);
+const JsonValue = S.fromJsonString(S.Unknown);
 
 const carrier = WorkspacePackage.make({
 	name: "@x/carrier",
@@ -367,7 +375,7 @@ describe("PackedInstall.run past the pack", () => {
 				}
 
 				const fs = yield* FileSystem.FileSystem;
-				const npmManifest = Result.getOrThrow(Schema.decodeResult(JsonValue)(yield* fs.readFileString("/scratch/consumer-npm/package.json"))) as Record<
+				const npmManifest = Result.getOrThrow(S.decodeResult(JsonValue)(yield* fs.readFileString("/scratch/consumer-npm/package.json"))) as Record<
 					string,
 					unknown
 				>;
@@ -611,7 +619,7 @@ describe("PackedInstall.run past the pack", () => {
 		);
 	const readManifest = Effect.fn("readManifest")(function* (file: string) {
 			const fs = yield* FileSystem.FileSystem;
-			return Result.getOrThrow(Schema.decodeResult(JsonValue)(yield* fs.readFileString(file))) as Record<string, Record<string, string>>;
+			return Result.getOrThrow(S.decodeResult(JsonValue)(yield* fs.readFileString(file))) as Record<string, Record<string, string>>;
 		});
 
 	const overridden = ScriptedSpawner.make(packedManifests());

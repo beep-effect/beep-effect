@@ -1,5 +1,5 @@
 import { DependencyField } from "../npm/index.ts";
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 
 /**
  * A directed dependency edge between two workspace packages as recorded in
@@ -15,9 +15,9 @@ import { Schema } from "effect";
  *
  * @public
  */
-export class WorkspaceDependency extends Schema.Class<WorkspaceDependency>("WorkspaceDependency")({
-	from: Schema.NonEmptyString,
-	to: Schema.NonEmptyString,
+export class WorkspaceDependency extends S.Class<WorkspaceDependency>("WorkspaceDependency")({
+	from: S.NonEmptyString,
+	to: S.NonEmptyString,
 	depType: DependencyField,
-	constraint: Schema.String,
+	constraint: S.String,
 }) {}

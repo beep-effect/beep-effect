@@ -1,16 +1,16 @@
-import type { Effect } from "effect";
-import { Schema } from "effect";
+import type * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
 
 /**
  * Raised when bytes could not be moved to or from a signed blob url.
  *
  * @public
  */
-export class BlobTransferError extends Schema.TaggedError<BlobTransferError>()("BlobTransferError", {
+export class BlobTransferError extends S.TaggedError<BlobTransferError>()("BlobTransferError", {
 	/** Which direction failed. */
-	reason: Schema.Literals(["uploadFailed", "downloadFailed"]),
+	reason: S.Literals(["uploadFailed", "downloadFailed"]),
 	/** The underlying failure, preserved structurally. */
-	cause: Schema.optionalKey(Schema.Defect()),
+	cause: S.optionalKey(S.Defect()),
 }) {
 	override get message(): string {
 		return this.reason === "uploadFailed"

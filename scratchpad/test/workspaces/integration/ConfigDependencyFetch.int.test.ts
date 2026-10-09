@@ -21,7 +21,9 @@ import { delimiter, dirname, join } from "node:path";
 import { NodeServices } from "@effect/platform-node";
 import { afterAll, assert, beforeAll, beforeEach, describe, it } from "@effect/vitest";
 import { CatalogAssemblyError } from "../../../effected/npm/index.ts";
-import { Effect, Layer, Option } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import { ConfigDependencyHooks, WorkspaceSnapshots, Workspaces } from "../../../effected/workspaces/index.ts";
 import { installConfigDependency, writeFakePnpm, writeModulesYaml } from "./utils/configDependencyFixtures.ts";
 
@@ -193,8 +195,8 @@ describe("effected#842 — the base side of a config-dependency bump", () => {
 			const base = yield* snapshots.at("base");
 			const head = yield* snapshots.at("head");
 			// Each side replays ITS OWN pinned version: the bump is a visible row.
-			assert.deepStrictEqual(base.catalogs.rangeOf("hooked-dep", Option.none()), Option.some("^0.11.1"));
-			assert.deepStrictEqual(head.catalogs.rangeOf("hooked-dep", Option.none()), Option.some("^0.11.2"));
+			assert.deepStrictEqual(base.catalogs.rangeOf("hooked-dep", O.none()), O.some("^0.11.1"));
+			assert.deepStrictEqual(head.catalogs.rangeOf("hooked-dep", O.none()), O.some("^0.11.2"));
 			assert.deepStrictEqual(base.hookReplays, { [NAME]: "0.11.1" });
 
 			// Exactly one fetch, pinned to the BASE lockfile's integrity, writing to
@@ -283,7 +285,7 @@ describe("effected#842 — the base side of a config-dependency bump", () => {
 		Effect.gen(function* () {
 			const snapshots = yield* WorkspaceSnapshots;
 			const snapshot = yield* snapshots.at("inline-only");
-			assert.deepStrictEqual(snapshot.catalogs.rangeOf("hooked-dep", Option.none()), Option.some("^0.11.1"));
+			assert.deepStrictEqual(snapshot.catalogs.rangeOf("hooked-dep", O.none()), O.some("^0.11.1"));
 			assert.include(pnpmRuns()[0]?.lockfile, BASE_SRI);
 		}).pipe(Effect.provide(Subprocess())),
 	);

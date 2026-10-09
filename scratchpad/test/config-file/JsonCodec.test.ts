@@ -1,9 +1,14 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Cause, Effect, Exit, Option, Result, Schema } from "effect";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as O from "effect/Option";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { ConfigCodecError } from "../../effected/config-file/ConfigCodec.ts";
 import { JsonCodec } from "../../effected/config-file/JsonCodec.ts";
 
-const JsonValue = Schema.fromJsonString(Schema.Unknown);
+const JsonValue = S.fromJsonString(S.Unknown);
 
 describe("JsonCodec", () => {
 	it.effect("parses valid JSON to an unknown value", () =>
@@ -16,13 +21,13 @@ describe("JsonCodec", () => {
 	it.effect("stringifies a value back to JSON text", () =>
 		Effect.gen(function* () {
 			const text = yield* JsonCodec.stringify({ port: 8080 });
-			assert.deepStrictEqual(Result.getOrThrow(Schema.decodeResult(JsonValue)(text)), { port: 8080 });
+			assert.deepStrictEqual(Result.getOrThrow(S.decodeResult(JsonValue)(text)), { port: 8080 });
 		}),
 	);
 
 	it.effect("fails with ConfigCodecError carrying a structured cause, not a string", () =>
 		Effect.gen(function* () {
-			const error = yield* Effect.flip(Effect.asVoid(JsonCodec.parse("{ not json")));
+			const error = yield* JsonCodec.parse("{ not json").pipe(Effect.asVoid, Effect.flip);
 			assert.instanceOf(error, ConfigCodecError);
 			assert.strictEqual(error._tag, "ConfigCodecError");
 			assert.strictEqual(error.codec, "json");
@@ -50,8 +55,8 @@ describe("JsonCodec", () => {
 			// cause is a genuine Fail reason, not a Die reason.
 			if (Exit.isFailure(exit)) {
 				const cause = Exit.getCause(exit);
-				assert.isTrue(Option.isSome(cause));
-				if (Option.isSome(cause)) {
+				assert.isTrue(O.isSome(cause));
+				if (O.isSome(cause)) {
 					assert.isTrue(Cause.hasFails(cause.value));
 					assert.isFalse(Cause.hasDies(cause.value));
 				}

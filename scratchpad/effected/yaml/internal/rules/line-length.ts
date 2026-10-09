@@ -2,7 +2,7 @@
 // a line can only be shortened by reflowing content, and reflowing is
 // formatting, not fixing.
 
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 import type { YamlRule } from "../../YamlLintRule.ts";
 import { StyleFloor, YamlLintDiagnostic, YamlLintSeverity } from "../../YamlLintRule.ts";
 import { nonNegativeIntegerOption } from "./util.ts";
@@ -12,9 +12,9 @@ import { nonNegativeIntegerOption } from "./util.ts";
  * width (the yamllint id is recognizable; the option surface and defaults
  * are ours).
  */
-export const lineLengthOptions = Schema.Struct({
-	severity: Schema.optionalKey(YamlLintSeverity),
-	max: Schema.optionalKey(nonNegativeIntegerOption),
+export const lineLengthOptions = S.Struct({
+	severity: S.optionalKey(YamlLintSeverity),
+	max: S.optionalKey(nonNegativeIntegerOption),
 });
 
 const DEFAULT_MAX = 120;

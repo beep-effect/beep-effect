@@ -1,8 +1,12 @@
 // @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file asyncFunction:skip-file globalTimers:skip-file newPromise:skip-file
-import { Schema } from "effect";
-import { Result } from "effect";
+import * as S from "effect/Schema";
+import * as Result from "effect/Result";
 import { assert, describe, it } from "@effect/vitest";
-import { Cause, Effect, Exit, Fiber, Option } from "effect";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Fiber from "effect/Fiber";
+import * as O from "effect/Option";
 import { Text } from "ink";
 import type { ReactElement } from "react";
 import { createElement, useContext, useEffect, useState } from "react";
@@ -13,7 +17,7 @@ import { CliUi, KeyTable, useKeys } from "../../../effected/cli/ui.ts";
 import type { CliUiTestScreen } from "../../../effected/cli/ui-testing.ts";
 import { CliUiTest } from "../../../effected/cli/ui-testing.ts";
 
-const Json = Schema.fromJsonString(Schema.Unknown);
+const Json = S.fromJsonString(S.Unknown);
 
 const messageOf = (exit: Exit.Exit<unknown, unknown>): string => {
 	if (Exit.isSuccess(exit)) return "<succeeded>";
@@ -171,7 +175,7 @@ describe("a crash in the same tick as a cancel wins", () => {
 			const handle = yield* CliUiTest.render(() => createElement(Text, null, "calm"));
 			yield* handle.press("escape");
 			const result = yield* Effect.exit(handle.result);
-			assert.isTrue(Option.isSome(CliUiTest.cancelReason(result)), messageOf(result));
+			assert.isTrue(O.isSome(CliUiTest.cancelReason(result)), messageOf(result));
 			assert.include(yield* handle.plainFrame, "calm");
 		}).pipe(Effect.scoped, Effect.timeout("2 seconds")),
 	);
@@ -252,13 +256,13 @@ describe("a crash and an interrupt, and the cause run keeps", () => {
 				: [];
 			assert.isTrue(
 				defects.some((defect) => defect.includes("crashed with the cancel")),
-				`the recorded crash is kept: ${Result.getOrThrow(Schema.encodeUnknownResult(Json)(defects))}`,
+				`the recorded crash is kept: ${Result.getOrThrow(S.encodeUnknownResult(Json)(defects))}`,
 			);
 			assert.isTrue(
 				defects.some((defect) => defect.includes("finalizer failed")),
-				`the finalizer's defect is kept: ${Result.getOrThrow(Schema.encodeUnknownResult(Json)(defects))}`,
+				`the finalizer's defect is kept: ${Result.getOrThrow(S.encodeUnknownResult(Json)(defects))}`,
 			);
-			assert.isTrue(Option.isNone(CliUiTest.cancelReason(exit)), "a crash beats the cancel in the same tick");
+			assert.isTrue(O.isNone(CliUiTest.cancelReason(exit)), "a crash beats the cancel in the same tick");
 		}).pipe(Effect.scoped, Effect.timeout("2 seconds")),
 	);
 
@@ -282,11 +286,11 @@ describe("a crash and an interrupt, and the cause run keeps", () => {
 			assert.strictEqual(
 				defects.filter((defect) => defect.includes("component crashed")).length,
 				1,
-				`the crash once, never doubled: ${Result.getOrThrow(Schema.encodeUnknownResult(Json)(defects))}`,
+				`the crash once, never doubled: ${Result.getOrThrow(S.encodeUnknownResult(Json)(defects))}`,
 			);
 			assert.isTrue(
 				defects.some((defect) => defect.includes("finalizer failed")),
-				Result.getOrThrow(Schema.encodeUnknownResult(Json)(defects)),
+				Result.getOrThrow(S.encodeUnknownResult(Json)(defects)),
 			);
 		}).pipe(Effect.scoped, Effect.timeout("2 seconds")),
 	);

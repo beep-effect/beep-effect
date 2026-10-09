@@ -1,7 +1,7 @@
 // Shared rule helpers: span queries over the eager token array, the
 // scalar walk the style rules share, and the bounded numeric option schema.
 
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 import type { LintLine } from "../../YamlLintRule.ts";
 import type { YamlNode, YamlScalar } from "../../YamlNode.ts";
 import { YamlScalar as Scalar, YamlMap, YamlSeq } from "../../YamlNode.ts";
@@ -16,8 +16,8 @@ import { dual } from "effect/Function";
 // The check below rejects NaN and the infinities itself and names the option domain in its message;
 // a finite-only base would answer first with a different message.
 // @effect-diagnostics-next-line schemaNumber:off
-export const nonNegativeIntegerOption = Schema.Number.check(
-	Schema.makeFilter((n) => (Number.isInteger(n) && n >= 0 ? undefined : "Expected a non-negative integer")),
+export const nonNegativeIntegerOption = S.Number.check(
+	S.makeFilter((n) => (Number.isInteger(n) && n >= 0 ? undefined : "Expected a non-negative integer")),
 );
 
 /**
@@ -28,8 +28,8 @@ export const nonNegativeIntegerOption = Schema.Number.check(
  */
 // Same as above: the check owns the rejection and its message.
 // @effect-diagnostics-next-line schemaNumber:off
-export const positiveIntegerOption = Schema.Number.check(
-	Schema.makeFilter((n) =>
+export const positiveIntegerOption = S.Number.check(
+	S.makeFilter((n) =>
 		Number.isInteger(n) && n >= 1 ? undefined : "Expected an integer greater than or equal to 1",
 	),
 );
@@ -46,18 +46,18 @@ export function walkScalars(...args: [node: YamlNode | null, role: ScalarRole, v
 		(node: YamlNode | null, role: ScalarRole, visit: (scalar: YamlScalar, role: ScalarRole) => void) => void
 	>(3, function walkScalars(node: YamlNode | null, role: ScalarRole, visit: (scalar: YamlScalar, role: ScalarRole) => void): void {
 	if (node === null) return;
-	if (Schema.is(Scalar)(node)) {
+	if (S.is(Scalar)(node)) {
 		visit(node, role);
 		return;
 	}
-	if (Schema.is(YamlMap)(node)) {
+	if (S.is(YamlMap)(node)) {
 		for (const pair of node.items) {
 			walkScalars(pair.key, "key", visit);
 			walkScalars(pair.value, "value", visit);
 		}
 		return;
 	}
-	if (Schema.is(YamlSeq)(node)) {
+	if (S.is(YamlSeq)(node)) {
 		for (const item of node.items) walkScalars(item, "item", visit);
 	}
 })(...args);

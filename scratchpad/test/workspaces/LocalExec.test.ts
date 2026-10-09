@@ -16,7 +16,9 @@
 
 import { assert, describe, it } from "@effect/vitest";
 import { ExecContext, LocalExec, LocalExecError } from "../../effected/commands/index.ts";
-import { Effect, Layer, Option } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import type { PackageManagerName } from "../../effected/workspaces/index.ts";
 import {
 	DetectedPackageManager,
@@ -33,7 +35,7 @@ const detects = (name: PackageManagerName, runtime: "node" | "bun" = "node") =>
 	Layer.succeed(PackageManagerDetector, {
 		detect: Effect.fn("PackageManagerDetector.detect")(() => Effect.succeed(
 				// The declaration-tier evidence is the one rung valid for every manager.
-				DetectedPackageManager.make({ name, version: Option.none(), runtime, evidence: "package.json#packageManager" }),
+				DetectedPackageManager.make({ name, version: O.none(), runtime, evidence: "package.json#packageManager" }),
 			)),
 	});
 
@@ -58,8 +60,8 @@ describe("Workspaces.localExecLayer — a detected workspace", () => {
 	it.effect("answers a context built from the detected manager's prefixes", () =>
 		Effect.gen(function* () {
 			const context = yield* contextOf(workspaceAt("/repo", detects("pnpm")));
-			assert.isTrue(Option.isSome(context));
-			if (Option.isNone(context)) return;
+			assert.isTrue(O.isSome(context));
+			if (O.isNone(context)) return;
 			assert.instanceOf(context.value, ExecContext);
 			assert.strictEqual(context.value.label, "pnpm");
 			// Asserted against the contract's own table, never a copy of it: the
@@ -77,7 +79,7 @@ describe("Workspaces.localExecLayer — a detected workspace", () => {
 			// The cwd handed in is a nested package directory; the context must point
 			// at the resolved root, which is the whole reason this layer resolves one.
 			const context = yield* contextOf(workspaceAt("/repo", detects("pnpm")));
-			if (Option.isNone(context)) {
+			if (O.isNone(context)) {
 				assert.fail("expected a context");
 			}
 			assert.strictEqual(context.value.directory, "/repo");
@@ -88,7 +90,7 @@ describe("Workspaces.localExecLayer — a detected workspace", () => {
 		Effect.gen(function* () {
 			for (const name of ["npm", "pnpm", "yarn", "bun"] as const) {
 				const context = yield* contextOf(workspaceAt("/repo", detects(name, name === "bun" ? "bun" : "node")));
-				if (Option.isNone(context)) {
+				if (O.isNone(context)) {
 					assert.fail(`expected a context for ${name}`);
 				}
 				const expected = LocalExec.prefixes(name);
@@ -109,7 +111,7 @@ describe("Workspaces.localExecLayer — NONE is success, not failure", () => {
 			// error for MECHANISM failure. Failing here would force every consumer
 			// outside a monorepo to catch an error to learn a normal fact.
 			const context = yield* contextOf(Layer.mergeAll(noRoot, detects("pnpm")));
-			assert.isTrue(Option.isNone(context));
+			assert.isTrue(O.isNone(context));
 		}),
 	);
 
@@ -124,7 +126,7 @@ describe("Workspaces.localExecLayer — NONE is success, not failure", () => {
 					detectorFailing(PackageManagerDetectionError.make({ root: "/repo", checked: ["pnpm-workspace.yaml"] })),
 				),
 			);
-			assert.isTrue(Option.isNone(context));
+			assert.isTrue(O.isNone(context));
 		}),
 	);
 });
@@ -136,40 +138,32 @@ describe("Workspaces.localExecLayer — mechanism failure IS the typed error", (
 			// read or parsed is something BROKEN, not an absence — reporting None
 			// would tell the caller "no local tooling here" when the truth is "your
 			// repository is damaged".
-			const error = yield* Effect.flip(
-				contextOf(
-					workspaceAt(
-						"/repo",
-						detectorFailing(
-							WorkspaceManifestError.make({
-								packageJsonPath: "/repo/package.json",
-								kind: "decode",
-								cause: new Error("Unexpected token"),
-							}),
-						),
-					),
+			const error = yield* workspaceAt(
+				"/repo",
+				detectorFailing(
+					WorkspaceManifestError.make({
+						packageJsonPath: "/repo/package.json",
+						kind: "decode",
+						cause: new Error("Unexpected token"),
+					}),
 				),
-			);
+			).pipe(contextOf, Effect.flip);
 			assert.instanceOf(error, LocalExecError);
 		}),
 	);
 
 	it.effect("the failure names the directory it was resolving for", () =>
 		Effect.gen(function* () {
-			const error = yield* Effect.flip(
-				contextOf(
-					workspaceAt(
-						"/repo",
-						detectorFailing(
-							WorkspaceManifestError.make({
-								packageJsonPath: "/repo/package.json",
-								kind: "read",
-								cause: new Error("EACCES"),
-							}),
-						),
-					),
+			const error = yield* workspaceAt(
+				"/repo",
+				detectorFailing(
+					WorkspaceManifestError.make({
+						packageJsonPath: "/repo/package.json",
+						kind: "read",
+						cause: new Error("EACCES"),
+					}),
 				),
-			);
+			).pipe(contextOf, Effect.flip);
 			assert.instanceOf(error, LocalExecError);
 			assert.strictEqual(error.directory, "/repo");
 		}),
@@ -182,7 +176,7 @@ describe("Workspaces.localExecLayer — mechanism failure IS the typed error", (
 				kind: "decode",
 				cause: new Error("Unexpected token"),
 			});
-			const error = yield* Effect.flip(contextOf(workspaceAt("/repo", detectorFailing(underlying))));
+			const error = yield* workspaceAt("/repo", detectorFailing(underlying)).pipe(contextOf, Effect.flip);
 			assert.instanceOf(error, LocalExecError);
 			// Carried, not stringified — a consumer can still reach the original
 			// error's own fields.
@@ -210,7 +204,7 @@ describe("Workspaces.localExecLayer — cwd", () => {
 					),
 				),
 			);
-			assert.isTrue(Option.isSome(context));
+			assert.isTrue(O.isSome(context));
 			assert.deepStrictEqual(seen, ["/somewhere/else"]);
 		}),
 	);

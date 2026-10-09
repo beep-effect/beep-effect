@@ -4,7 +4,8 @@ import { dual } from "effect/Function";
 // project looks like, and how each spells "skip lifecycle scripts". Pure, so
 // every per-manager trap is pinned without spawning one.
 
-import { Predicate, Result } from "effect";
+import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import type { PackageManagerName } from "../PackageManagerName.ts";
 import type { WorkspacePackage } from "../WorkspacePackage.ts";
 import { RUNTIME_DEPENDENCY_FIELDS } from "./dependencyFields.ts";
@@ -265,12 +266,12 @@ export const binTargetOf: {
 	} catch {
 		return undefined;
 	}
-	if (!Predicate.isObject(manifest) || Array.isArray(manifest)) return undefined;
+	if (!P.isObject(manifest) || Array.isArray(manifest)) return undefined;
 	const bin = manifest.bin;
 	if (typeof bin === "string") {
 		return typeof manifest.name === "string" && manifest.name.replace(/^@[^/]+\//, "") === name ? bin : undefined;
 	}
-	if (!Predicate.isObject(bin) || Array.isArray(bin)) return undefined;
+	if (!P.isObject(bin) || Array.isArray(bin)) return undefined;
 	const target = (bin as Record<string, unknown>)[name];
 	return typeof target === "string" && Object.hasOwn(bin, name) ? target : undefined;
 });
@@ -314,7 +315,7 @@ const BARE_NAME = /^(?:@[^/@\s>]+\/)?[^/@\s>]+$/;
  */
 export const fileOverridesOf = (document: unknown): Record<string, string> => {
 	const out: Record<string, string> = Object.create(null);
-	if (!Predicate.isObject(document) || !Predicate.isObject(document.overrides) || Array.isArray(document.overrides))
+	if (!P.isObject(document) || !P.isObject(document.overrides) || Array.isArray(document.overrides))
 		return out;
 	for (const [name, spec] of Object.entries(document.overrides)) {
 		if (name === "__proto__") continue;

@@ -6,7 +6,7 @@
 // deriving `line`/`character` from `offset` against the source text. The
 // dependency edge runs public modules → engine only.
 
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 import {
 	TOML_LEX_ERROR_CODES,
 	TOML_PARSE_ERROR_CODES,
@@ -19,7 +19,7 @@ import {
  *
  * @public
  */
-export const TomlLexErrorCode = Schema.Literals(TOML_LEX_ERROR_CODES);
+export const TomlLexErrorCode = S.Literals(TOML_LEX_ERROR_CODES);
 
 /**
  * The union of all lexer-stage error code string literals.
@@ -33,7 +33,7 @@ export type TomlLexErrorCode = typeof TomlLexErrorCode.Type;
  *
  * @public
  */
-export const TomlParseErrorCode = Schema.Literals(TOML_PARSE_ERROR_CODES);
+export const TomlParseErrorCode = S.Literals(TOML_PARSE_ERROR_CODES);
 
 /**
  * The union of all parser-stage error code string literals.
@@ -47,7 +47,7 @@ export type TomlParseErrorCode = typeof TomlParseErrorCode.Type;
  *
  * @public
  */
-export const TomlSemanticErrorCode = Schema.Literals(TOML_SEMANTIC_ERROR_CODES);
+export const TomlSemanticErrorCode = S.Literals(TOML_SEMANTIC_ERROR_CODES);
 
 /**
  * The union of all semantic-stage error code string literals.
@@ -61,7 +61,7 @@ export type TomlSemanticErrorCode = typeof TomlSemanticErrorCode.Type;
  *
  * @public
  */
-export const TomlStringifyErrorCode = Schema.Literals(TOML_STRINGIFY_ERROR_CODES);
+export const TomlStringifyErrorCode = S.Literals(TOML_STRINGIFY_ERROR_CODES);
 
 /**
  * The union of all stringifier-stage error code string literals.
@@ -76,7 +76,7 @@ export type TomlStringifyErrorCode = typeof TomlStringifyErrorCode.Type;
  *
  * @public
  */
-export const TomlErrorCode = Schema.Union([
+export const TomlErrorCode = S.Union([
 	TomlLexErrorCode,
 	TomlParseErrorCode,
 	TomlSemanticErrorCode,
@@ -103,13 +103,13 @@ export type TomlErrorCode = typeof TomlErrorCode.Type;
  *
  * @public
  */
-export class TomlDiagnostic extends Schema.Class<TomlDiagnostic>("TomlDiagnostic")({
+export class TomlDiagnostic extends S.Class<TomlDiagnostic>("TomlDiagnostic")({
 	code: TomlErrorCode,
-	message: Schema.String,
-	offset: Schema.Finite,
-	length: Schema.Finite,
-	line: Schema.Finite,
-	character: Schema.Finite,
+	message: S.String,
+	offset: S.Finite,
+	length: S.Finite,
+	line: S.Finite,
+	character: S.Finite,
 }) {
 	/**
 	 * Materialize an engine record, deriving `line`/`character` (0-based)

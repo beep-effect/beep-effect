@@ -1,13 +1,16 @@
 import { assert, describe, it } from "@effect/vitest";
-import type { FileSystem, Layer, Path } from "effect";
-import { Context, Schema } from "effect";
+import type * as FileSystem from "effect/FileSystem";
+import type * as Layer from "effect/Layer";
+import type * as Path from "effect/Path";
+import * as Context from "effect/Context";
+import * as S from "effect/Schema";
 import type { ConfigFileShape } from "../../effected/config-file/ConfigFile.ts";
 import { ConfigFile } from "../../effected/config-file/ConfigFile.ts";
 import { ConfigResolver } from "../../effected/config-file/ConfigResolver.ts";
 import { JsonCodec } from "../../effected/config-file/JsonCodec.ts";
 import { MergeStrategy } from "../../effected/config-file/MergeStrategy.ts";
 
-class Settings extends Schema.Class<Settings>("Settings")({ port: Schema.Finite }) {}
+class Settings extends S.Class<Settings>("Settings")({ port: S.Finite }) {}
 type SettingsEncoded = typeof Settings.Encoded;
 class SettingsFile extends ConfigFile.Service<SettingsFile, Settings>()("key-typing/SettingsFile") {}
 // A key over a WIDER shape: the layer could never supply `extra`.
@@ -18,9 +21,9 @@ class WiderFile extends Context.Service<WiderFile, ConfigFileShape<Settings> & {
 // The downstream regression shape: optional fields and a bare `firstMatch()`, whose
 // `A` comes only from the call's context. The tag must keep `A` inferable, or it
 // falls to `unknown` and the correctly shaped key below is rejected.
-class Optional extends Schema.Class<Optional>("Optional")({
-	cacheDir: Schema.optional(Schema.String),
-	projectKey: Schema.optional(Schema.String),
+class Optional extends S.Class<Optional>("Optional")({
+	cacheDir: S.optional(S.String),
+	projectKey: S.optional(S.String),
 }) {}
 class OptionalFile extends ConfigFile.Service<OptionalFile, Optional>()("key-typing/OptionalFile") {}
 

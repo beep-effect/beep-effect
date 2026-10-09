@@ -1,18 +1,19 @@
 // @effect-diagnostics strictEffectProvide:skip-file
-import { Schema } from "effect";
-import { Result } from "effect";
+import * as S from "effect/Schema";
+import * as Result from "effect/Result";
 // scanAudience reads argv by hand, mirroring core's lexer. This differential test is what pins that mirror: it runs
 // core's REAL parser over a set of edge argvs, reads the parsed audience flags back out, and requires the scan to
 // agree. A change in core's lexer or boolean spellings fails here instead of silently drifting.
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
-import { Console, Effect } from "effect";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
 import { Argument, Command } from "effect/cli";
 import { CliAudience } from "../../effected/cli/index.ts";
 import type { AudienceFlagValues } from "../../effected/cli/internal/scanAudience.ts";
 import { scanAudience, tallyAudience } from "../../effected/cli/internal/scanAudience.ts";
 
-const Json = Schema.fromJsonString(Schema.Unknown);
+const Json = S.fromJsonString(S.Unknown);
 
 /** Parse `argv` with core and return the audience flags it saw, or `undefined` when core rejects the argv. */
 const parsedBy = Effect.fn("parsedBy")(function* (argv: ReadonlyArray<string>) {
@@ -81,9 +82,9 @@ describe("scanAudience agrees with core's parser", () => {
 			Effect.gen(function* () {
 				const parsed = yield* parsedBy(argv);
 				// Every argv in this list is one core parses, so a rejection here is itself a finding.
-				assert.isDefined(parsed, `core rejected ${Result.getOrThrow(Schema.encodeUnknownResult(Json)(argv))}`);
+				assert.isDefined(parsed, `core rejected ${Result.getOrThrow(S.encodeUnknownResult(Json)(argv))}`);
 				if (parsed === undefined) return;
-				assert.deepStrictEqual(scanAudience(argv), tallyAudience(parsed), Result.getOrThrow(Schema.encodeUnknownResult(Json)(parsed)));
+				assert.deepStrictEqual(scanAudience(argv), tallyAudience(parsed), Result.getOrThrow(S.encodeUnknownResult(Json)(parsed)));
 			}),
 		);
 	}

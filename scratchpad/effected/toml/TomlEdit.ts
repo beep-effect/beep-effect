@@ -10,7 +10,7 @@
 // semantics) so consumer code can be written once over "a document codec's
 // Edit/Range/Path".
 
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 
 /**
  * A single path segment: a `string` for table keys or a `number` for array
@@ -35,9 +35,9 @@ export type TomlPath = ReadonlyArray<TomlSegment>;
  *
  * @public
  */
-export class TomlRange extends Schema.Class<TomlRange>("TomlRange")({
-	offset: Schema.Finite,
-	length: Schema.Finite,
+export class TomlRange extends S.Class<TomlRange>("TomlRange")({
+	offset: S.Finite,
+	length: S.Finite,
 }) {}
 
 /**
@@ -52,10 +52,10 @@ export class TomlRange extends Schema.Class<TomlRange>("TomlRange")({
  *
  * @public
  */
-export class TomlEdit extends Schema.Class<TomlEdit>("TomlEdit")({
-	offset: Schema.Finite,
-	length: Schema.Finite,
-	content: Schema.String,
+export class TomlEdit extends S.Class<TomlEdit>("TomlEdit")({
+	offset: S.Finite,
+	length: S.Finite,
+	content: S.String,
 }) {
 	/**
 	 * Apply `edits` to `text`, producing a new string. Edits are applied in

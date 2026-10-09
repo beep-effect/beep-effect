@@ -1,5 +1,7 @@
 import { assert, describe, layer } from "@effect/vitest";
-import { Effect, Equal, Option } from "effect";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import * as O from "effect/Option";
 import {
 	EmptyCacheError,
 	Range,
@@ -150,10 +152,10 @@ layer(VersionCache.layer)("VersionCache", (it) => {
 			Effect.gen(function* () {
 				const cache = yield* VersionCache;
 				yield* cache.load([SemVer.of(1, 0, 0), SemVer.of(2, 0, 0), SemVer.of(3, 0, 0)]);
-				assert.deepStrictEqual((yield* cache.next(SemVer.of(2, 0, 0))).pipe(Option.map(String)), Option.some("3.0.0"));
-				assert.deepStrictEqual((yield* cache.prev(SemVer.of(2, 0, 0))).pipe(Option.map(String)), Option.some("1.0.0"));
-				assert.isTrue(Option.isNone(yield* cache.next(SemVer.of(3, 0, 0))));
-				assert.isTrue(Option.isNone(yield* cache.prev(SemVer.of(1, 0, 0))));
+				assert.deepStrictEqual((yield* cache.next(SemVer.of(2, 0, 0))).pipe(O.map(String)), O.some("3.0.0"));
+				assert.deepStrictEqual((yield* cache.prev(SemVer.of(2, 0, 0))).pipe(O.map(String)), O.some("1.0.0"));
+				assert.isTrue(O.isNone(yield* cache.next(SemVer.of(3, 0, 0))));
+				assert.isTrue(O.isNone(yield* cache.prev(SemVer.of(1, 0, 0))));
 				const error = yield* Effect.flip(cache.next(SemVer.of(9, 9, 9)));
 				assert.strictEqual(error._tag, "VersionNotFoundError");
 			}),

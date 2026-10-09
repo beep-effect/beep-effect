@@ -6,7 +6,7 @@
 // stringifier's own, which is exactly what self-consistency is about.
 
 import { assert, describe, it } from "@effect/vitest";
-import { Result } from "effect";
+import * as Result from "effect/Result";
 import { StyleEvidence, Yaml, YamlLint } from "../../../effected/yaml/index.ts";
 
 const values: ReadonlyArray<unknown> = [

@@ -1,5 +1,8 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Duration, Effect, Fiber, Ref } from "effect";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
+import * as Ref from "effect/Ref";
 import { TestClock } from "effect/testing";
 import { GitHubError } from "../../effected/github/GitHubError.ts";
 import type { RetryableFailure } from "../../effected/github/Resilience.ts";
@@ -111,13 +114,11 @@ describe("RetryPolicy.schedule under Effect.retry", () => {
 	it.effect("retries a retryable failure up to maxRetries, then surfaces it", () =>
 		Effect.gen(function* () {
 			const attempts = yield* Ref.make(0);
-			const fiber = yield* Effect.forkChild(
-				Effect.flip(
-					Ref.update(attempts, (n) => n + 1).pipe(
-						Effect.andThen(Effect.fail(rateLimited)),
-						Effect.retry(policy.schedule<GitHubError>()),
-					),
-				),
+			const fiber = yield* Ref.update(attempts, (n) => n + 1).pipe(
+				Effect.andThen(Effect.fail(rateLimited)),
+				Effect.retry(policy.schedule<GitHubError>()),
+				Effect.flip,
+				Effect.forkChild,
 			);
 			// Four attempts, three 1s sleeps between them.
 			yield* TestClock.adjust(Duration.seconds(10));
@@ -164,13 +165,11 @@ describe("RetryPolicy.schedule under Effect.retry", () => {
 	it.effect("waits the server-advised delay, not the computed backoff", () =>
 		Effect.gen(function* () {
 			const attempts = yield* Ref.make(0);
-			const fiber = yield* Effect.forkChild(
-				Effect.flip(
-					Ref.update(attempts, (n) => n + 1).pipe(
-						Effect.andThen(Effect.fail(rateLimited)),
-						Effect.retry(policy.schedule<GitHubError>()),
-					),
-				),
+			const fiber = yield* Ref.update(attempts, (n) => n + 1).pipe(
+				Effect.andThen(Effect.fail(rateLimited)),
+				Effect.retry(policy.schedule<GitHubError>()),
+				Effect.flip,
+				Effect.forkChild,
 			);
 			yield* TestClock.adjust(Duration.millis(999));
 			assert.strictEqual(yield* Ref.get(attempts), 1, "must not retry before the advised delay elapses");

@@ -1,5 +1,10 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Equal, Hash, Option, Result, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import * as Hash from "effect/Hash";
+import * as O from "effect/Option";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { InvalidVersionError, SemVer } from "../../effected/semver/index.ts";
 
 describe("SemVer", () => {
@@ -37,7 +42,7 @@ describe("SemVer", () => {
 	describe("FromString", () => {
 		it.effect("decodes a version string to a SemVer instance", () =>
 			Effect.gen(function* () {
-				const v = yield* Schema.decodeEffect(SemVer.FromString)("2.0.0-rc.1");
+				const v = yield* S.decodeEffect(SemVer.FromString)("2.0.0-rc.1");
 				assert.instanceOf(v, SemVer);
 				assert.strictEqual(v.major, 2);
 				assert.deepStrictEqual([...v.prerelease], ["rc", 1]);
@@ -47,22 +52,22 @@ describe("SemVer", () => {
 		it.effect("encodes back to the canonical string", () =>
 			Effect.gen(function* () {
 				const v = yield* SemVer.parse("1.2.3-beta.1+build.42");
-				const encoded = yield* Schema.encodeUnknownEffect(SemVer.FromString)(v);
+				const encoded = yield* S.encodeUnknownEffect(SemVer.FromString)(v);
 				assert.strictEqual(encoded, "1.2.3-beta.1+build.42");
 			}),
 		);
 
 		it.effect("fails decoding invalid input with a SchemaError", () =>
 			Effect.gen(function* () {
-				const error = yield* Effect.flip(Schema.decodeEffect(SemVer.FromString)("nope"));
+				const error = yield* Effect.flip(S.decodeEffect(SemVer.FromString)("nope"));
 				assert.strictEqual(error._tag, "SchemaError");
 			}),
 		);
 
 		it.effect.prop("round-trips decode(encode(v))", [SemVer], ([v]) =>
 			Effect.gen(function* () {
-				const encoded = yield* Schema.encodeUnknownEffect(SemVer.FromString)(v);
-				const decoded = yield* Schema.decodeEffect(SemVer.FromString)(encoded);
+				const encoded = yield* S.encodeUnknownEffect(SemVer.FromString)(v);
+				const decoded = yield* S.decodeEffect(SemVer.FromString)(encoded);
 				assert.isTrue(Equal.equals(decoded, v), `expected ${decoded.toString()} to equal ${v.toString()}`);
 				assert.deepStrictEqual([...decoded.build], [...v.build]);
 			}),
@@ -260,10 +265,10 @@ describe("SemVer", () => {
 		});
 
 		it("max / min return Options", () => {
-			assert.deepStrictEqual(SemVer.max(versions).pipe(Option.map(String)), Option.some("2.0.0"));
-			assert.deepStrictEqual(SemVer.min(versions).pipe(Option.map(String)), Option.some("1.0.0-alpha"));
-			assert.isTrue(Option.isNone(SemVer.max([])));
-			assert.isTrue(Option.isNone(SemVer.min([])));
+			assert.deepStrictEqual(SemVer.max(versions).pipe(O.map(String)), O.some("2.0.0"));
+			assert.deepStrictEqual(SemVer.min(versions).pipe(O.map(String)), O.some("1.0.0-alpha"));
+			assert.isTrue(O.isNone(SemVer.max([])));
+			assert.isTrue(O.isNone(SemVer.min([])));
 		});
 
 		it("groupBy returns an immutable record keyed by strategy", () => {
@@ -391,8 +396,8 @@ describe("SemVer", () => {
 	});
 
 	describe("ExactVersionString and PinnableVersionString", () => {
-		const decodeExact = Schema.decodeUnknownResult(SemVer.ExactVersionString);
-		const decodePinnable = Schema.decodeUnknownResult(SemVer.PinnableVersionString);
+		const decodeExact = S.decodeUnknownResult(SemVer.ExactVersionString);
+		const decodePinnable = S.decodeUnknownResult(SemVer.PinnableVersionString);
 
 		it("ExactVersionString accepts exactly what isValid accepts, and the type stays string", () => {
 			const accepted = decodeExact("1.2.3+build.42");
@@ -419,7 +424,7 @@ describe("SemVer", () => {
 
 	describe("JSON Schema export", () => {
 		it("prerelease and build identifiers export their patterns", () => {
-			const document = Schema.toJsonSchemaDocument(SemVer);
+			const document = S.toJsonSchemaDocument(SemVer);
 			assert.nestedPropertyVal(
 				document,
 				"definitions.SemVerEncoded.properties.prerelease.items.anyOf[0].pattern",

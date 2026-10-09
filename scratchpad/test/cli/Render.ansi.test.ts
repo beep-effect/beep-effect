@@ -1,7 +1,8 @@
-import { Schema } from "effect";
-import { Result } from "effect";
+import * as S from "effect/Schema";
+import * as Result from "effect/Result";
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Option } from "effect";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
 import type { Block, CliLinksShape, RenderContext } from "../../effected/cli/index.ts";
 import { Doc, Glyphs, Render, Status } from "../../effected/cli/index.ts";
 import { displayWidth, stripAnsi } from "../../effected/cli/internal/displayWidth.ts";
@@ -9,7 +10,7 @@ import { composite } from "./helpers/hostileDoc.ts";
 import { contextOf, decodeTokens, link, linksOf, sgrProblems, tokenPaint } from "./helpers/renderContext.ts";
 import { LINE_BREAK, isCommand } from "./helpers/runnerCommands.ts";
 
-const Json = Schema.fromJsonString(Schema.Unknown);
+const Json = S.fromJsonString(S.Unknown);
 
 const ansi = (doc: ReadonlyArray<Block>, overrides: Partial<RenderContext> = {}) =>
 	Effect.map(contextOf(overrides), (ctx) => Render.ansi(doc, ctx));
@@ -395,8 +396,8 @@ describe("Render.ansi: layout under colour (paint after cut)", () => {
 						Doc.counts({ counters: [Doc.counter(Status.core, "failure", { key: "f", label, n: 1 })], layout }),
 					];
 					const a = yield* ansi(doc, OFF);
-					assert.notMatch(a, /[\r\n]/, `${layout} ${Result.getOrThrow(Schema.encodeUnknownResult(Json)(label))}: one line`);
-					assert.strictEqual(a, yield* plain(doc, OFF), `${layout} ${Result.getOrThrow(Schema.encodeUnknownResult(Json)(label))}`);
+					assert.notMatch(a, /[\r\n]/, `${layout} ${Result.getOrThrow(S.encodeUnknownResult(Json)(label))}: one line`);
+					assert.strictEqual(a, yield* plain(doc, OFF), `${layout} ${Result.getOrThrow(S.encodeUnknownResult(Json)(label))}`);
 				}
 			}
 		}),
@@ -415,7 +416,7 @@ describe("Render.ansi: layout under colour (paint after cut)", () => {
 			assert.strictEqual(out, "docs (https://example.test/ab)");
 			assert.isTrue(
 				seen.every((url) => url === "https://example.test/ab"),
-				Result.getOrThrow(Schema.encodeUnknownResult(Json)(seen)),
+				Result.getOrThrow(S.encodeUnknownResult(Json)(seen)),
 			);
 		}),
 	);
@@ -507,7 +508,7 @@ describe("Render.ansi reporter blocks: contextOf, strong and em, diffText, pipe 
 	];
 	const links: CliLinksShape = {
 		mode: "file",
-		target: (target) => Option.some("url" in target ? target.url : "file:///x"),
+		target: (target) => O.some("url" in target ? target.url : "file:///x"),
 	};
 
 	it("Render.contextOf with defaults is escape-free, and an agent stays escape-free at truecolor with links on", () => {

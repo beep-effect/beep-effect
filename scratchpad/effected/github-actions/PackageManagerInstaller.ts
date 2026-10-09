@@ -1,6 +1,13 @@
 import type { IntegrityHashBrand } from "../npm/index.ts";
 import { CorepackIntegrityHash, DEFAULT_REGISTRY, PackageManagerPin, PackageManagerPinName } from "../npm/index.ts";
-import { Context, Effect, FileSystem, Layer, Option, Path, Schema, Result } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as S from "effect/Schema";
+import * as Result from "effect/Result";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import { ActionEnvironment } from "./ActionEnvironment.ts";
 import { digestFileHex } from "./internal/digest.ts";
@@ -11,14 +18,14 @@ import { unstubbed } from "./internal/unstubbed.ts";
 import type { ToolInstallerError } from "./ToolInstaller.ts";
 import { ToolInstaller } from "./ToolInstaller.ts";
 
-const Json = Schema.fromJsonString(Schema.Unknown);
+const Json = S.fromJsonString(S.Unknown);
 
 /**
  * Raised when a package manager cannot be provisioned on the runner.
  *
  * @public
  */
-export class PackageManagerInstallerError extends Schema.TaggedError<PackageManagerInstallerError>()(
+export class PackageManagerInstallerError extends S.TaggedError<PackageManagerInstallerError>()(
 	"PackageManagerInstallerError",
 	{
 		/**
@@ -42,7 +49,7 @@ export class PackageManagerInstallerError extends Schema.TaggedError<PackageMana
 		 * extracted, but its contents are not shaped like the package manager it
 		 * claims to be.
 		 */
-		reason: Schema.Literals([
+		reason: S.Literals([
 			"downloadFailed",
 			"extractFailed",
 			"integrityMismatch",
@@ -54,15 +61,15 @@ export class PackageManagerInstallerError extends Schema.TaggedError<PackageMana
 		/** The package manager being installed. */
 		name: PackageManagerPinName,
 		/** The exact version being installed, in string form. */
-		version: Schema.String,
+		version: S.String,
 		/** What was being worked on — a url, a path, or an OS/arch pair. */
-		subject: Schema.optionalKey(Schema.String),
+		subject: S.optionalKey(S.String),
 		/** The integrity the pin declares (`<algo>.<hex>`), on a mismatch. */
-		expected: Schema.optionalKey(Schema.String),
+		expected: S.optionalKey(S.String),
 		/** The integrity the artifact actually hashed to, on a mismatch. */
-		actual: Schema.optionalKey(Schema.String),
+		actual: S.optionalKey(S.String),
 		/** The underlying failure, preserved structurally. */
-		cause: Schema.optionalKey(Schema.Defect()),
+		cause: S.optionalKey(S.Defect()),
 	},
 ) {
 	override get message(): string {
@@ -197,15 +204,15 @@ export interface PackageManagerInstallOptions {
  *
  * @public
  */
-export class AmbientPackageManager extends Schema.Class<AmbientPackageManager>("AmbientPackageManager")({
+export class AmbientPackageManager extends S.Class<AmbientPackageManager>("AmbientPackageManager")({
 	/** The discriminant: the runner's own toolchain answered. */
-	source: Schema.tag("ambient"),
+	source: S.tag("ambient"),
 	/** The package-manager name (`npm`, `pnpm`, `yarn` or `bun`). */
 	name: PackageManagerPinName,
 	/** The exact installed version, in string form. */
-	version: Schema.String,
+	version: S.String,
 	/** Bin name → the ambient command name that invokes it. */
-	bins: Schema.Record(Schema.String, Schema.String),
+	bins: S.Record(S.String, S.String),
 }) {}
 
 /**
@@ -231,19 +238,19 @@ export class AmbientPackageManager extends Schema.Class<AmbientPackageManager>("
  *
  * @public
  */
-export class CachedPackageManager extends Schema.Class<CachedPackageManager>("CachedPackageManager")({
+export class CachedPackageManager extends S.Class<CachedPackageManager>("CachedPackageManager")({
 	/** The discriminant: the manager lives in the tool cache. */
-	source: Schema.tag("tool-cache"),
+	source: S.tag("tool-cache"),
 	/** The package-manager name (`npm`, `pnpm`, `yarn` or `bun`). */
 	name: PackageManagerPinName,
 	/** The exact installed version, in string form. */
-	version: Schema.String,
+	version: S.String,
 	/** The cached entry: `<tool-cache>/<name>/<version>/<arch>`. */
-	directory: Schema.String,
+	directory: S.String,
 	/** The directory to `addPath` — executable shims, or bun's own directory. */
-	binDir: Schema.String,
+	binDir: S.String,
 	/** Bin name → the absolute path of the underlying entry point. */
-	bins: Schema.Record(Schema.String, Schema.String),
+	bins: S.Record(S.String, S.String),
 }) {}
 
 /**
@@ -264,7 +271,7 @@ export class CachedPackageManager extends Schema.Class<CachedPackageManager>("Ca
  *
  * @public
  */
-export const InstalledPackageManager = Schema.Union([AmbientPackageManager, CachedPackageManager]);
+export const InstalledPackageManager = S.Union([AmbientPackageManager, CachedPackageManager]);
 
 /**
  * The decoded type of {@link (InstalledPackageManager:variable)}:
@@ -343,10 +350,10 @@ const PNPM_NATIVE_BIN_NAMES: ReadonlyArray<string> = ["pnpm", "pn", "pnpx", "pnx
  */
 const BUN_OS: Readonly<Record<string, string>> = { linux: "linux", macos: "darwin", windows: "windows" };
 const BUN_CPU: Readonly<Record<string, string>> = { x64: "x64", arm64: "aarch64" };
-const bunTarget = (runnerOs: string, arch: string): Option.Option<string> => {
+const bunTarget = (runnerOs: string, arch: string): O.Option<string> => {
 	const os = BUN_OS[runnerOs.toLowerCase()];
 	const cpu = BUN_CPU[arch];
-	return os === undefined || cpu === undefined ? Option.none() : Option.some(`bun-${os}-${cpu}`);
+	return os === undefined || cpu === undefined ? O.none() : O.some(`bun-${os}-${cpu}`);
 };
 
 /**
@@ -362,21 +369,21 @@ const registryTarballUrl = (name: string, version: string, major: number, regist
 		: `${registry}/${name}/-/${name}-${version}.tgz`;
 
 /** Normalize a package.json `bin` value into name → relative path entries. */
-const normalizeBins = (bin: unknown, fallbackName: string): Option.Option<Record<string, string>> => {
+const normalizeBins = (bin: unknown, fallbackName: string): O.Option<Record<string, string>> => {
 	if (typeof bin === "string") {
-		return Option.some({ [fallbackName]: bin.replace(/^\.\//, "") });
+		return O.some({ [fallbackName]: bin.replace(/^\.\//, "") });
 	}
 	if (typeof bin !== "object" || bin === null) {
-		return Option.none();
+		return O.none();
 	}
 	const entries: Record<string, string> = {};
 	for (const [name, value] of Object.entries(bin)) {
 		if (typeof value !== "string") {
-			return Option.none();
+			return O.none();
 		}
 		entries[name] = value.replace(/^\.\//, "");
 	}
-	return Object.keys(entries).length === 0 ? Option.none() : Option.some(entries);
+	return Object.keys(entries).length === 0 ? O.none() : O.some(entries);
 };
 
 /** Map a `RUNNER_ARCH` value (`X64`, `ARM64`) onto the Node arch spelling. */
@@ -399,9 +406,9 @@ const make = Effect.gen(function* () {
 	// Off a runner `RUNNER_ARCH` is absent and the host's `process.arch` is the
 	// honest fallback; that read exists only for the fallback, everything else
 	// routes through ActionEnvironment.
-	const runnerOs = yield* Effect.map(env.getOptional("RUNNER_OS"), (found) => Option.getOrElse(found, () => ""));
+	const runnerOs = yield* Effect.map(env.getOptional("RUNNER_OS"), (found) => O.getOrElse(found, () => ""));
 	const arch = yield* Effect.map(env.getOptional("RUNNER_ARCH"), (found) =>
-		Option.match(found, { onNone: () => process.arch as string, onSome: archFromRunner }),
+		O.match(found, { onNone: () => process.arch as string, onSome: archFromRunner }),
 	);
 	const windows = yield* isWindowsRunner(env);
 	// The host libc, read once here beside the platform: it decides between
@@ -481,9 +488,9 @@ const make = Effect.gen(function* () {
 	 * A failed probe is not an error — there is nothing a caller could do about
 	 * it that the dist path does not already do.
 	 */
-	const ambientNpmVersion: Effect.Effect<Option.Option<string>> = Effect.map(
+	const ambientNpmVersion: Effect.Effect<O.Option<string>> = Effect.map(
 		Effect.result(spawner.string(ChildProcess.make("npm", ["--version"]))),
-		(result) => (result._tag === "Success" ? Option.some(result.success.trim()) : Option.none()),
+		(result) => (result._tag === "Success" ? O.some(result.success.trim()) : O.none()),
 	);
 
 	const assertFile = (
@@ -521,10 +528,10 @@ const make = Effect.gen(function* () {
 					Effect.mapError((cause) => errorFor(pin)({ reason: "layoutUnexpected", subject: "no package.json", cause })),
 				);
 			const manifest = yield* Effect.try({
-				try: () => Result.getOrThrowWith(Schema.decodeResult(Json)(raw), (error) => error) as { readonly bin?: unknown; readonly optionalDependencies?: unknown },
+				try: () => Result.getOrThrowWith(S.decodeResult(Json)(raw), (error) => error) as { readonly bin?: unknown; readonly optionalDependencies?: unknown },
 				catch: (cause) => errorFor(pin)({ reason: "layoutUnexpected", subject: "unparseable package.json", cause }),
 			});
-			const bins = Option.getOrUndefined(normalizeBins(manifest.bin, pin.name));
+			const bins = O.getOrUndefined(normalizeBins(manifest.bin, pin.name));
 			if (bins === undefined) {
 				return yield* errorFor(pin)({ reason: "layoutUnexpected", subject: "package.json names no bin" });
 			}
@@ -589,7 +596,7 @@ const make = Effect.gen(function* () {
 	const isPlaceholder = (file: string): Effect.Effect<boolean> =>
 		Effect.scoped(Effect.flatMap(fs.open(file), (handle) => handle.readAlloc(2))).pipe(
 			Effect.map((head) =>
-				Option.match(head, {
+				O.match(head, {
 					onNone: () => false,
 					onSome: (bytes) => bytes.length >= 1 && bytes[0] === 0x23 && bytes[1] !== 0x21,
 				}),
@@ -651,12 +658,12 @@ const make = Effect.gen(function* () {
 	const cachedRecord = (
 		pin: PackageManagerPin,
 		directory: string,
-	): Effect.Effect<Option.Option<InstalledPackageManager>, PackageManagerInstallerError> =>
+	): Effect.Effect<O.Option<InstalledPackageManager>, PackageManagerInstallerError> =>
 		Effect.gen(function* () {
 			if (pin.name === "bun") {
 				const binary = path.join(directory, bunBinaryName);
 				yield* assertFile(pin, binary, `cached bun binary (${bunBinaryName}) is missing`);
-				return Option.some(
+				return O.some(
 					CachedPackageManager.make({
 						name: pin.name,
 						version: pin.version.toString(),
@@ -682,7 +689,7 @@ const make = Effect.gen(function* () {
 					yield* Effect.logInfo(
 						`The cached ${pin.name}@${pin.version.toString()} still holds pnpm's placeholder bin; reinstalling it over.`,
 					);
-					return Option.none();
+					return O.none();
 				}
 				if (windows) {
 					bins = nativeWindowsBins(bins);
@@ -694,7 +701,7 @@ const make = Effect.gen(function* () {
 			// but a failure to write is a typed cacheFailed, not a silent hole in
 			// the PATH contract.
 			yield* writeShims(pin, directory, directory, bins, { skipExisting: true });
-			return Option.some(
+			return O.some(
 				CachedPackageManager.make({
 					name: pin.name,
 					version: pin.version.toString(),
@@ -715,7 +722,7 @@ const make = Effect.gen(function* () {
 		sri: unknown,
 		subject: string,
 	): Effect.Effect<ExpectedDigest, PackageManagerInstallerError> =>
-		Effect.fromOption(typeof sri === "string" ? strongestSri(sri) : Option.none(), () => errorFor(pin)({ reason: "integrityMismatch", subject }));
+		Effect.fromOption(typeof sri === "string" ? strongestSri(sri) : O.none(), () => errorFor(pin)({ reason: "integrityMismatch", subject }));
 
 	/**
 	 * The expected integrity of a native package as its registry packument
@@ -738,7 +745,7 @@ const make = Effect.gen(function* () {
 				Effect.mapError(unverifiable),
 				Effect.flatMap((raw) =>
 					Effect.try({
-						try: () => Result.getOrThrowWith(Schema.decodeResult(Json)(raw), (error) => error) as { readonly dist?: { readonly integrity?: unknown } },
+						try: () => Result.getOrThrowWith(S.decodeResult(Json)(raw), (error) => error) as { readonly dist?: { readonly integrity?: unknown } },
 						catch: unverifiable,
 					}),
 				),
@@ -785,7 +792,7 @@ const make = Effect.gen(function* () {
 		{ registry, nativeIntegrity }: RegistrySource,
 	): Effect.Effect<Record<string, string>, PackageManagerInstallerError> =>
 		Effect.gen(function* () {
-			const target = Option.getOrUndefined(pnpmExeTarget(runnerOs, arch, musl));
+			const target = O.getOrUndefined(pnpmExeTarget(runnerOs, arch, musl));
 			const packageName = target === undefined ? undefined : `${PNPM_EXE_PREFIX}${target}`;
 			const nativeVersion = packageName === undefined ? undefined : nativePackages[packageName];
 			if (target === undefined || packageName === undefined || nativeVersion === undefined) {
@@ -869,7 +876,7 @@ const make = Effect.gen(function* () {
 	const installBun = (pin: PackageManagerPin): Effect.Effect<InstalledPackageManager, PackageManagerInstallerError> =>
 		Effect.gen(function* () {
 			const version = pin.version.toString();
-			const target = Option.getOrUndefined(bunTarget(runnerOs, arch));
+			const target = O.getOrUndefined(bunTarget(runnerOs, arch));
 			if (target === undefined) {
 				return yield* errorFor(pin)({ reason: "unsupportedPlatform", subject: `${runnerOs || "unknown"}/${arch}` });
 			}
@@ -978,7 +985,7 @@ const make = Effect.gen(function* () {
 			if (integrity === undefined) {
 				return pin;
 			}
-			const option = yield* Schema.decodeEffect(CorepackIntegrityHash)(integrity).pipe(
+			const option = yield* S.decodeEffect(CorepackIntegrityHash)(integrity).pipe(
 				Effect.mapError((cause) =>
 					errorFor(pin)({
 						reason: "integrityMismatch",
@@ -1017,9 +1024,9 @@ const make = Effect.gen(function* () {
 		}
 
 		const cached = yield* installer.find(effective.name, version);
-		if (Option.isSome(cached)) {
+		if (O.isSome(cached)) {
 			const record = yield* cachedRecord(effective, cached.value);
-			if (Option.isSome(record)) {
+			if (O.isSome(record)) {
 				return record.value;
 			}
 			// A hit that cannot be answered as-is (a pnpm 12 wrapper still holding
@@ -1034,7 +1041,7 @@ const make = Effect.gen(function* () {
 		// that will execute (see PackageManagerInstallOptions.allowAmbient).
 		if (effective.name === "npm" && options?.allowAmbient !== false) {
 			const probed = yield* ambientNpmVersion;
-			if (Option.isSome(probed) && probed.value === version) {
+			if (O.isSome(probed) && probed.value === version) {
 				return AmbientPackageManager.make({
 					name: effective.name,
 					version,

@@ -7,7 +7,9 @@
 // relationships are expressed via `items`/`key`/`value`, and the recursive
 // types are handled with `Schema.suspend`.
 
-import { Data, Option, Schema } from "effect";
+import * as Data from "effect/Data";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import type { YamlPath } from "./YamlEdit.ts";
 import { dual } from "effect/Function";
 
@@ -16,7 +18,7 @@ import { dual } from "effect/Function";
  *
  * @public
  */
-export const ScalarStyle = Schema.Literals([
+export const ScalarStyle = S.Literals([
 	"plain",
 	"single-quoted",
 	"double-quoted",
@@ -36,7 +38,7 @@ export type ScalarStyle = typeof ScalarStyle.Type;
  *
  * @public
  */
-export const CollectionStyle = Schema.Literals(["block", "flow"]);
+export const CollectionStyle = S.Literals(["block", "flow"]);
 
 /**
  * The union of all collection style string literals.
@@ -54,7 +56,7 @@ export type CollectionStyle = typeof CollectionStyle.Type;
  *
  * @public
  */
-export const QuoteStyle = Schema.Literals(["single", "double"]);
+export const QuoteStyle = S.Literals(["single", "double"]);
 
 /**
  * The union of all fallback quote style string literals.
@@ -77,7 +79,7 @@ export type QuoteStyle = typeof QuoteStyle.Type;
  *
  * @public
  */
-export const QuoteCompat = Schema.Literals(["yaml-1.1"]);
+export const QuoteCompat = S.Literals(["yaml-1.1"]);
 
 /**
  * The union of all quote-compat dialect string literals.
@@ -92,7 +94,7 @@ export type QuoteCompat = typeof QuoteCompat.Type;
  *
  * @public
  */
-export const ScalarChomp = Schema.Literals(["strip", "clip", "keep"]);
+export const ScalarChomp = S.Literals(["strip", "clip", "keep"]);
 
 /**
  * The union of all block-scalar chomping indicator string literals.
@@ -129,27 +131,27 @@ export type ScalarChomp = typeof ScalarChomp.Type;
  *
  * @public
  */
-export class YamlScalar extends Schema.TaggedClass<YamlScalar>()("YamlScalar", {
-	value: Schema.Unknown,
-	tag: Schema.optionalKey(Schema.String),
+export class YamlScalar extends S.TaggedClass<YamlScalar>()("YamlScalar", {
+	value: S.Unknown,
+	tag: S.optionalKey(S.String),
 	style: ScalarStyle,
-	anchor: Schema.optionalKey(Schema.String),
-	commentBefore: Schema.optionalKey(Schema.String),
-	comment: Schema.optionalKey(Schema.String),
-	spaceBefore: Schema.optionalKey(Schema.Boolean),
-	chomp: Schema.optionalKey(ScalarChomp),
-	blockIndent: Schema.optionalKey(Schema.Finite),
-	raw: Schema.optionalKey(Schema.String),
-	sourceMultiline: Schema.optionalKey(Schema.Boolean),
-	offset: Schema.Finite,
-	length: Schema.Finite,
+	anchor: S.optionalKey(S.String),
+	commentBefore: S.optionalKey(S.String),
+	comment: S.optionalKey(S.String),
+	spaceBefore: S.optionalKey(S.Boolean),
+	chomp: S.optionalKey(ScalarChomp),
+	blockIndent: S.optionalKey(S.Finite),
+	raw: S.optionalKey(S.String),
+	sourceMultiline: S.optionalKey(S.Boolean),
+	offset: S.Finite,
+	length: S.Finite,
 }) {
 	/**
 	 * Navigate to a descendant by path (string segments for mapping keys,
 	 * numbers for sequence indices). `Option.none()` when any segment cannot
 	 * be resolved. Pure.
 	 */
-	find(path: YamlPath): Option.Option<YamlNode> {
+	find(path: YamlPath): O.Option<YamlNode> {
 		return findByPath(this, path);
 	}
 
@@ -157,7 +159,7 @@ export class YamlScalar extends Schema.TaggedClass<YamlScalar>()("YamlScalar", {
 	 * Find the deepest node whose span contains `offset` (half-open interval),
 	 * or `Option.none()` when the offset falls outside this subtree. Pure.
 	 */
-	findAtOffset(offset: number): Option.Option<YamlNode> {
+	findAtOffset(offset: number): O.Option<YamlNode> {
 		return findDeepestAtOffset(this, offset);
 	}
 
@@ -166,7 +168,7 @@ export class YamlScalar extends Schema.TaggedClass<YamlScalar>()("YamlScalar", {
 	 * reference identity), or `Option.none()` when it is not in this subtree.
 	 * The inverse of {@link YamlScalar.find}. Pure.
 	 */
-	pathOf(node: YamlNode): Option.Option<YamlPath> {
+	pathOf(node: YamlNode): O.Option<YamlPath> {
 		return pathToNode(this, node);
 	}
 
@@ -191,26 +193,26 @@ export class YamlScalar extends Schema.TaggedClass<YamlScalar>()("YamlScalar", {
  *
  * @public
  */
-export class YamlAlias extends Schema.TaggedClass<YamlAlias>()("YamlAlias", {
-	name: Schema.String,
-	offset: Schema.Finite,
-	length: Schema.Finite,
-	commentBefore: Schema.optionalKey(Schema.String),
-	comment: Schema.optionalKey(Schema.String),
-	spaceBefore: Schema.optionalKey(Schema.Boolean),
+export class YamlAlias extends S.TaggedClass<YamlAlias>()("YamlAlias", {
+	name: S.String,
+	offset: S.Finite,
+	length: S.Finite,
+	commentBefore: S.optionalKey(S.String),
+	comment: S.optionalKey(S.String),
+	spaceBefore: S.optionalKey(S.Boolean),
 }) {
 	/** See `YamlScalar.find`. Pure. */
-	find(path: YamlPath): Option.Option<YamlNode> {
+	find(path: YamlPath): O.Option<YamlNode> {
 		return findByPath(this, path);
 	}
 
 	/** See `YamlScalar.findAtOffset`. Pure. */
-	findAtOffset(offset: number): Option.Option<YamlNode> {
+	findAtOffset(offset: number): O.Option<YamlNode> {
 		return findDeepestAtOffset(this, offset);
 	}
 
 	/** See `YamlScalar.pathOf`. Pure. */
-	pathOf(node: YamlNode): Option.Option<YamlPath> {
+	pathOf(node: YamlNode): O.Option<YamlPath> {
 		return pathToNode(this, node);
 	}
 
@@ -227,7 +229,7 @@ export class YamlAlias extends Schema.TaggedClass<YamlAlias>()("YamlAlias", {
  *
  * @public
  */
-export interface YamlScalarEncoded extends Schema.Codec.Encoded<typeof YamlScalar> {}
+export interface YamlScalarEncoded extends S.Codec.Encoded<typeof YamlScalar> {}
 
 /**
  * The encoded (plain-object) form of a {@link YamlMap}. See
@@ -235,7 +237,7 @@ export interface YamlScalarEncoded extends Schema.Codec.Encoded<typeof YamlScala
  *
  * @public
  */
-export interface YamlMapEncoded extends Schema.Codec.Encoded<typeof YamlMap> {}
+export interface YamlMapEncoded extends S.Codec.Encoded<typeof YamlMap> {}
 
 /**
  * The encoded (plain-object) form of a {@link YamlSeq}. See
@@ -243,7 +245,7 @@ export interface YamlMapEncoded extends Schema.Codec.Encoded<typeof YamlMap> {}
  *
  * @public
  */
-export interface YamlSeqEncoded extends Schema.Codec.Encoded<typeof YamlSeq> {}
+export interface YamlSeqEncoded extends S.Codec.Encoded<typeof YamlSeq> {}
 
 /**
  * The encoded (plain-object) form of a {@link YamlAlias}. See
@@ -251,7 +253,7 @@ export interface YamlSeqEncoded extends Schema.Codec.Encoded<typeof YamlSeq> {}
  *
  * @public
  */
-export interface YamlAliasEncoded extends Schema.Codec.Encoded<typeof YamlAlias> {}
+export interface YamlAliasEncoded extends S.Codec.Encoded<typeof YamlAlias> {}
 
 /**
  * A discriminated-union schema covering all four YAML AST value node types:
@@ -267,10 +269,10 @@ export interface YamlAliasEncoded extends Schema.Codec.Encoded<typeof YamlAlias>
  *
  * @public
  */
-export const YamlNode: Schema.Codec<
+export const YamlNode: S.Codec<
 	YamlScalar | YamlMap | YamlSeq | YamlAlias,
 	YamlScalarEncoded | YamlMapEncoded | YamlSeqEncoded | YamlAliasEncoded
-> = Schema.suspend(() => Schema.Union([YamlScalar, YamlMap, YamlSeq, YamlAlias]));
+> = S.suspend(() => S.Union([YamlScalar, YamlMap, YamlSeq, YamlAlias]));
 
 /**
  * The union of all YAML AST value node types.
@@ -292,9 +294,9 @@ export type YamlNode = YamlScalar | YamlMap | YamlSeq | YamlAlias;
  *
  * @public
  */
-export class YamlPair extends Schema.TaggedClass<YamlPair>()("YamlPair", {
-	key: Schema.suspend((): typeof YamlNode => YamlNode),
-	value: Schema.NullOr(Schema.suspend((): typeof YamlNode => YamlNode)),
+export class YamlPair extends S.TaggedClass<YamlPair>()("YamlPair", {
+	key: S.suspend((): typeof YamlNode => YamlNode),
+	value: S.NullOr(S.suspend((): typeof YamlNode => YamlNode)),
 }) {}
 
 /**
@@ -312,30 +314,30 @@ export class YamlPair extends Schema.TaggedClass<YamlPair>()("YamlPair", {
  *
  * @public
  */
-export class YamlMap extends Schema.TaggedClass<YamlMap>()("YamlMap", {
-	items: Schema.Array(Schema.suspend((): typeof YamlPair => YamlPair)),
-	tag: Schema.optionalKey(Schema.String),
-	anchor: Schema.optionalKey(Schema.String),
+export class YamlMap extends S.TaggedClass<YamlMap>()("YamlMap", {
+	items: S.Array(S.suspend((): typeof YamlPair => YamlPair)),
+	tag: S.optionalKey(S.String),
+	anchor: S.optionalKey(S.String),
 	style: CollectionStyle,
-	commentBefore: Schema.optionalKey(Schema.String),
-	comment: Schema.optionalKey(Schema.String),
-	spaceBefore: Schema.optionalKey(Schema.Boolean),
-	sourceMultiline: Schema.optionalKey(Schema.Boolean),
-	offset: Schema.Finite,
-	length: Schema.Finite,
+	commentBefore: S.optionalKey(S.String),
+	comment: S.optionalKey(S.String),
+	spaceBefore: S.optionalKey(S.Boolean),
+	sourceMultiline: S.optionalKey(S.Boolean),
+	offset: S.Finite,
+	length: S.Finite,
 }) {
 	/** See `YamlScalar.find`. Pure. */
-	find(path: YamlPath): Option.Option<YamlNode> {
+	find(path: YamlPath): O.Option<YamlNode> {
 		return findByPath(this, path);
 	}
 
 	/** See `YamlScalar.findAtOffset`. Pure. */
-	findAtOffset(offset: number): Option.Option<YamlNode> {
+	findAtOffset(offset: number): O.Option<YamlNode> {
 		return findDeepestAtOffset(this, offset);
 	}
 
 	/** See `YamlScalar.pathOf`. Pure. */
-	pathOf(node: YamlNode): Option.Option<YamlPath> {
+	pathOf(node: YamlNode): O.Option<YamlPath> {
 		return pathToNode(this, node);
 	}
 
@@ -357,30 +359,30 @@ export class YamlMap extends Schema.TaggedClass<YamlMap>()("YamlMap", {
  *
  * @public
  */
-export class YamlSeq extends Schema.TaggedClass<YamlSeq>()("YamlSeq", {
-	items: Schema.Array(Schema.suspend((): typeof YamlNode => YamlNode)),
-	tag: Schema.optionalKey(Schema.String),
-	anchor: Schema.optionalKey(Schema.String),
+export class YamlSeq extends S.TaggedClass<YamlSeq>()("YamlSeq", {
+	items: S.Array(S.suspend((): typeof YamlNode => YamlNode)),
+	tag: S.optionalKey(S.String),
+	anchor: S.optionalKey(S.String),
 	style: CollectionStyle,
-	commentBefore: Schema.optionalKey(Schema.String),
-	comment: Schema.optionalKey(Schema.String),
-	spaceBefore: Schema.optionalKey(Schema.Boolean),
-	sourceMultiline: Schema.optionalKey(Schema.Boolean),
-	offset: Schema.Finite,
-	length: Schema.Finite,
+	commentBefore: S.optionalKey(S.String),
+	comment: S.optionalKey(S.String),
+	spaceBefore: S.optionalKey(S.Boolean),
+	sourceMultiline: S.optionalKey(S.Boolean),
+	offset: S.Finite,
+	length: S.Finite,
 }) {
 	/** See `YamlScalar.find`. Pure. */
-	find(path: YamlPath): Option.Option<YamlNode> {
+	find(path: YamlPath): O.Option<YamlNode> {
 		return findByPath(this, path);
 	}
 
 	/** See `YamlScalar.findAtOffset`. Pure. */
-	findAtOffset(offset: number): Option.Option<YamlNode> {
+	findAtOffset(offset: number): O.Option<YamlNode> {
 		return findDeepestAtOffset(this, offset);
 	}
 
 	/** See `YamlScalar.pathOf`. Pure. */
-	pathOf(node: YamlNode): Option.Option<YamlPath> {
+	pathOf(node: YamlNode): O.Option<YamlPath> {
 		return pathToNode(this, node);
 	}
 
@@ -394,40 +396,40 @@ export class YamlSeq extends Schema.TaggedClass<YamlSeq>()("YamlSeq", {
 // Module-level so the four union classes share one body each. Declared after
 // the classes; function declarations hoist.
 
-function findByPath(root: YamlNode, path: YamlPath): Option.Option<YamlNode> {
+function findByPath(root: YamlNode, path: YamlPath): O.Option<YamlNode> {
 	let current: YamlNode | null = root;
 
 	for (const segment of path) {
 		if (current === null) {
-			return Option.none();
+			return O.none();
 		}
 
 		if (typeof segment === "string") {
 			// Navigate by key — requires a YamlMap
-			if (!(Schema.is(YamlMap)(current))) {
-				return Option.none();
+			if (!(S.is(YamlMap)(current))) {
+				return O.none();
 			}
 			const pair: YamlPair | undefined = current.items.find(
-				(p: YamlPair) => Schema.is(YamlScalar)(p.key) && typeof p.key.value === "string" && p.key.value === segment,
+				(p: YamlPair) => S.is(YamlScalar)(p.key) && typeof p.key.value === "string" && p.key.value === segment,
 			);
 			if (pair === undefined || pair.value === null) {
-				return Option.none();
+				return O.none();
 			}
 			current = pair.value;
 		} else {
 			// Navigate by index — requires a YamlSeq
-			if (!(Schema.is(YamlSeq)(current))) {
-				return Option.none();
+			if (!(S.is(YamlSeq)(current))) {
+				return O.none();
 			}
 			const item: YamlNode | undefined = current.items[segment];
 			if (item === undefined) {
-				return Option.none();
+				return O.none();
 			}
 			current = item;
 		}
 	}
 
-	return current === null ? Option.none() : Option.some(current);
+	return current === null ? O.none() : O.some(current);
 }
 
 /**
@@ -438,36 +440,36 @@ function containsOffset(node: YamlNode, offset: number): boolean {
 	return offset >= node.offset && offset < node.offset + node.length;
 }
 
-function findDeepestAtOffset(node: YamlNode, offset: number): Option.Option<YamlNode> {
+function findDeepestAtOffset(node: YamlNode, offset: number): O.Option<YamlNode> {
 	if (!containsOffset(node, offset)) {
-		return Option.none();
+		return O.none();
 	}
 
-	if (Schema.is(YamlMap)(node)) {
+	if (S.is(YamlMap)(node)) {
 		for (const pair of node.items) {
 			const keyResult = findDeepestAtOffset(pair.key, offset);
-			if (Option.isSome(keyResult)) return keyResult;
+			if (O.isSome(keyResult)) return keyResult;
 			if (pair.value !== null) {
 				const valResult = findDeepestAtOffset(pair.value, offset);
-				if (Option.isSome(valResult)) return valResult;
+				if (O.isSome(valResult)) return valResult;
 			}
 		}
 	}
 
-	if (Schema.is(YamlSeq)(node)) {
+	if (S.is(YamlSeq)(node)) {
 		for (const item of node.items) {
 			const itemResult = findDeepestAtOffset(item, offset);
-			if (Option.isSome(itemResult)) return itemResult;
+			if (O.isSome(itemResult)) return itemResult;
 		}
 	}
 
 	// This node contains the offset but no child does — this is the deepest
-	return Option.some(node);
+	return O.some(node);
 }
 
-function pathToNode(root: YamlNode, target: YamlNode): Option.Option<YamlPath> {
+function pathToNode(root: YamlNode, target: YamlNode): O.Option<YamlPath> {
 	const path: Array<string | number> = [];
-	return descendToNode(root, target, path) ? Option.some(path) : Option.none();
+	return descendToNode(root, target, path) ? O.some(path) : O.none();
 }
 
 /**
@@ -481,9 +483,9 @@ function descendToNode(node: YamlNode, target: YamlNode, path: Array<string | nu
 		return true;
 	}
 
-	if (Schema.is(YamlMap)(node)) {
+	if (S.is(YamlMap)(node)) {
 		for (const pair of node.items) {
-			if (Schema.is(YamlScalar)(pair.key) && typeof pair.key.value === "string") {
+			if (S.is(YamlScalar)(pair.key) && typeof pair.key.value === "string") {
 				if (pair.key === target) {
 					path.push(pair.key.value);
 					return true;
@@ -499,7 +501,7 @@ function descendToNode(node: YamlNode, target: YamlNode, path: Array<string | nu
 		}
 	}
 
-	if (Schema.is(YamlSeq)(node)) {
+	if (S.is(YamlSeq)(node)) {
 		for (let i = 0; i < node.items.length; i++) {
 			const item = node.items[i] as YamlNode;
 			path.push(i);
@@ -610,21 +612,21 @@ function nodeToValue(
 	// Register this node's anchor incrementally so aliases resolve to the most
 	// recent anchor at the point of reference (not the last definition in the
 	// entire document).
-	if (anchors !== undefined && !(Schema.is(YamlAlias)(node)) && node.anchor !== undefined) {
+	if (anchors !== undefined && !(S.is(YamlAlias)(node)) && node.anchor !== undefined) {
 		anchors.set(node.anchor, node);
 	}
-	if (Schema.is(YamlScalar)(node)) return node.value;
-	if (Schema.is(YamlMap)(node)) {
+	if (S.is(YamlScalar)(node)) return node.value;
+	if (S.is(YamlMap)(node)) {
 		const result: Record<string, unknown> = {};
 		for (const pair of node.items) {
 			let key: string;
-			if (Schema.is(YamlScalar)(pair.key)) {
+			if (S.is(YamlScalar)(pair.key)) {
 				// Register key anchor before resolving value
 				if (anchors !== undefined && pair.key.anchor !== undefined) {
 					anchors.set(pair.key.anchor, pair.key);
 				}
 				key = String(pair.key.value ?? "");
-			} else if (Schema.is(YamlAlias)(pair.key)) {
+			} else if (S.is(YamlAlias)(pair.key)) {
 				const resolved = anchors?.get(pair.key.name);
 				// Resolving an alias key enters alias expansion → count its subtree.
 				key = resolved !== undefined ? String(nodeToValue(resolved, anchors, budget, true) ?? "") : "";
@@ -635,8 +637,8 @@ function nodeToValue(
 		}
 		return result;
 	}
-	if (Schema.is(YamlSeq)(node)) return node.items.map((item) => nodeToValue(item, anchors, budget, counting));
-	if (Schema.is(YamlAlias)(node)) {
+	if (S.is(YamlSeq)(node)) return node.items.map((item) => nodeToValue(item, anchors, budget, counting));
+	if (S.is(YamlAlias)(node)) {
 		const resolved = anchors?.get(node.name);
 		// Resolving an alias enters alias expansion → count the resolved subtree.
 		return resolved !== undefined ? nodeToValue(resolved, anchors, budget, true) : null;

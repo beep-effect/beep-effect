@@ -3,7 +3,8 @@
 // contract: a "tidied" path here is a cache that silently never hits.
 
 import { assert, describe, it } from "@effect/vitest";
-import { Result, Schema } from "effect";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { CachingPackageManager, PackageManagerCache } from "../../effected/npm/index.ts";
 
 const HOME = "/home/ci";
@@ -60,7 +61,7 @@ describe("PackageManagerCache", () => {
 	it("the manager literal schema decodes its rows and refuses a bare `yarn`", () => {
 		// A bare `yarn` is exactly the question this vocabulary refuses to guess
 		// at: nothing about the name says which major's cache location applies.
-		assert.strictEqual(Result.getOrThrow(Schema.decodeResult(CachingPackageManager)("yarn-berry")), "yarn-berry");
-		assert.throws(() => Result.getOrThrow(Schema.decodeUnknownResult(CachingPackageManager)("yarn")));
+		assert.strictEqual(Result.getOrThrow(S.decodeResult(CachingPackageManager)("yarn-berry")), "yarn-berry");
+		assert.throws(() => Result.getOrThrow(S.decodeUnknownResult(CachingPackageManager)("yarn")));
 	});
 });

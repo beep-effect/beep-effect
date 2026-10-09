@@ -8,13 +8,16 @@
 // backend-id decoder rejects, and the divergence would only show up in
 // production.
 
-import { Effect, Fiber, Schema, Result } from "effect";
+import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
+import * as S from "effect/Schema";
+import * as Result from "effect/Result";
 import { ActionEnvironment } from "../../effected/github-actions/index.ts";
 
-const Json = Schema.fromJsonString(Schema.Unknown);
+const Json = S.fromJsonString(S.Unknown);
 
 /** A base64url segment, as a JWT carries them. */
-const segment = (value: unknown): string => Buffer.from(Result.getOrThrowWith(Schema.encodeResult(Json)(value), (error) => error)).toString("base64url");
+const segment = (value: unknown): string => Buffer.from(Result.getOrThrowWith(S.encodeResult(Json)(value), (error) => error)).toString("base64url");
 
 /**
  * A runtime token shaped like the one the runner injects: a three-segment JWT
@@ -46,7 +49,7 @@ export interface Rpc {
 
 /** A JSON body, as the backend answers one. */
 export const json = (value: unknown, status = 200): Response =>
-	new Response(Result.getOrThrowWith(Schema.encodeResult(Json)(value), (error) => error), { status, headers: { "content-type": "application/json" } });
+	new Response(Result.getOrThrowWith(S.encodeResult(Json)(value), (error) => error), { status, headers: { "content-type": "application/json" } });
 
 /**
  * A `fetch` that routes on the Twirp method — the last path segment — and

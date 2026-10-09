@@ -1,6 +1,7 @@
 // @effect-diagnostics asyncFunction:skip-file
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Schedule } from "effect";
+import * as Effect from "effect/Effect";
+import * as Schedule from "effect/Schedule";
 import { Text, render } from "ink";
 import { createElement } from "react";
 import { holder, holderSlot } from "../../../effected/cli/ui/internal/Holder.ts";

@@ -1,5 +1,7 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Equal, Result, Schema } from "effect";
+import * as Equal from "effect/Equal";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { TomlLocalDate } from "../../effected/toml/TomlDateTime.ts";
 import {
 	TomlArray,
@@ -67,7 +69,7 @@ describe("TomlNode", () => {
 				length: 10,
 			});
 			assert.strictEqual(node._tag, "TomlDateTimeLiteral");
-			assert.isTrue(Schema.is(TomlLocalDate)(node.value));
+			assert.isTrue(S.is(TomlLocalDate)(node.value));
 		});
 		it("constructs TomlArray, TomlInlineEntry and TomlInlineTable", () => {
 			const entry = TomlInlineEntry.make({
@@ -157,19 +159,19 @@ describe("TomlNode", () => {
 				offset: 4,
 				length: 23,
 			});
-			const encoded = Result.getOrThrow(Schema.encodeResult(TomlArray)(array));
-			const decoded = Result.getOrThrow(Schema.decodeResult(TomlArray)(encoded));
-			assert.isTrue(Schema.is(TomlArray)(decoded));
-			assert.isTrue(Schema.is(TomlArray)(decoded.items[1]));
-			assert.isTrue(Schema.is(TomlInlineTable)(decoded.items[2]));
+			const encoded = Result.getOrThrow(S.encodeResult(TomlArray)(array));
+			const decoded = Result.getOrThrow(S.decodeResult(TomlArray)(encoded));
+			assert.isTrue(S.is(TomlArray)(decoded));
+			assert.isTrue(S.is(TomlArray)(decoded.items[1]));
+			assert.isTrue(S.is(TomlInlineTable)(decoded.items[2]));
 			assert.isTrue(Equal.equals(decoded, array));
 		});
 		it("decodes each expression variant through the TomlExpression union", () => {
 			const trivia = TomlTrivia.make({ text: "\n", offset: 0, length: 1 });
-			const decoded = Result.getOrThrow(Schema.decodeResult(TomlExpression)(Result.getOrThrow(Schema.encodeResult(TomlExpression)(trivia))));
-			assert.isTrue(Schema.is(TomlTrivia)(decoded));
-			const kv = Result.getOrThrow(Schema.decodeResult(TomlExpression)(Result.getOrThrow(Schema.encodeResult(TomlExpression)(sampleKeyValue()))));
-			assert.isTrue(Schema.is(TomlKeyValue)(kv));
+			const decoded = S.encodeResult(TomlExpression)(trivia).pipe(Result.getOrThrow, S.decodeResult(TomlExpression), Result.getOrThrow);
+			assert.isTrue(S.is(TomlTrivia)(decoded));
+			const kv = S.encodeResult(TomlExpression)(sampleKeyValue()).pipe(Result.getOrThrow, S.decodeResult(TomlExpression), Result.getOrThrow);
+			assert.isTrue(S.is(TomlKeyValue)(kv));
 		});
 	});
 });

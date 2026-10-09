@@ -1,7 +1,12 @@
 // @effect-diagnostics strictEffectProvide:skip-file
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
-import { Cause, Console, Effect, Exit, Layer, Runtime } from "effect";
+import * as Cause from "effect/Cause";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Layer from "effect/Layer";
+import * as Runtime from "effect/Runtime";
 import { CliError, CliOutput, Command, Flag } from "effect/cli";
 import { CliRuntime } from "../../effected/cli/index.ts";
 
@@ -29,7 +34,7 @@ const capturing = () => {
 };
 
 const codeOf = (exit: Exit.Exit<unknown, unknown>): number =>
-	Exit.isFailure(exit) ? Runtime.getErrorExitCode(Cause.squash(exit.cause)) : 0;
+	Exit.isFailure(exit) ? exit.cause.pipe(Cause.squash, Runtime.getErrorExitCode) : 0;
 
 const run = Effect.fn("run")(function* (args: ReadonlyArray<string>, helpOnUsageError?: "stdout" | "stderr", platform: Layer.Layer<NodeServices.NodeServices> = NodeServices.layer) {
 		const { double, out, err } = capturing();

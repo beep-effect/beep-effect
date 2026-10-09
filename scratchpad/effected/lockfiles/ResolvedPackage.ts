@@ -1,5 +1,6 @@
 import { IntegrityHash } from "../npm/index.ts";
-import { Effect, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
 
 const EMPTY_DEPENDENCIES: { readonly [name: string]: string } = {};
 
@@ -79,31 +80,31 @@ const EMPTY_EDGE_NAMES: ReadonlyArray<string> = [];
  *
  * @public
  */
-export class ResolvedPackage extends Schema.Class<ResolvedPackage>("ResolvedPackage")({
-	name: Schema.NonEmptyString,
-	version: Schema.String,
-	instanceId: Schema.NonEmptyString,
-	integrity: Schema.optionalKey(IntegrityHash),
-	isWorkspace: Schema.Boolean,
-	relativePath: Schema.optionalKey(Schema.String),
-	dependencies: Schema.Record(Schema.String, Schema.String).pipe(
-		Schema.withDecodingDefaultKey(Effect.succeed(EMPTY_DEPENDENCIES)),
-		Schema.withConstructorDefault(Effect.succeed(EMPTY_DEPENDENCIES)),
+export class ResolvedPackage extends S.Class<ResolvedPackage>("ResolvedPackage")({
+	name: S.NonEmptyString,
+	version: S.String,
+	instanceId: S.NonEmptyString,
+	integrity: S.optionalKey(IntegrityHash),
+	isWorkspace: S.Boolean,
+	relativePath: S.optionalKey(S.String),
+	dependencies: S.Record(S.String, S.String).pipe(
+		S.withDecodingDefaultKey(Effect.succeed(EMPTY_DEPENDENCIES)),
+		S.withConstructorDefault(Effect.succeed(EMPTY_DEPENDENCIES)),
 	),
-	peerDependencies: Schema.Record(Schema.String, Schema.String).pipe(
-		Schema.withDecodingDefaultKey(Effect.succeed(EMPTY_DEPENDENCIES)),
-		Schema.withConstructorDefault(Effect.succeed(EMPTY_DEPENDENCIES)),
+	peerDependencies: S.Record(S.String, S.String).pipe(
+		S.withDecodingDefaultKey(Effect.succeed(EMPTY_DEPENDENCIES)),
+		S.withConstructorDefault(Effect.succeed(EMPTY_DEPENDENCIES)),
 	),
-	peerDependenciesMeta: Schema.Record(Schema.String, Schema.Struct({ optional: Schema.Boolean })).pipe(
-		Schema.withDecodingDefaultKey(Effect.succeed(EMPTY_PEER_META)),
-		Schema.withConstructorDefault(Effect.succeed(EMPTY_PEER_META)),
+	peerDependenciesMeta: S.Record(S.String, S.Struct({ optional: S.Boolean })).pipe(
+		S.withDecodingDefaultKey(Effect.succeed(EMPTY_PEER_META)),
+		S.withConstructorDefault(Effect.succeed(EMPTY_PEER_META)),
 	),
-	resolved: Schema.Record(Schema.String, Schema.String).pipe(
-		Schema.withDecodingDefaultKey(Effect.succeed(EMPTY_DEPENDENCIES)),
-		Schema.withConstructorDefault(Effect.succeed(EMPTY_DEPENDENCIES)),
+	resolved: S.Record(S.String, S.String).pipe(
+		S.withDecodingDefaultKey(Effect.succeed(EMPTY_DEPENDENCIES)),
+		S.withConstructorDefault(Effect.succeed(EMPTY_DEPENDENCIES)),
 	),
-	unresolvedEdges: Schema.Array(Schema.String).pipe(
-		Schema.withDecodingDefaultKey(Effect.succeed(EMPTY_EDGE_NAMES)),
-		Schema.withConstructorDefault(Effect.succeed(EMPTY_EDGE_NAMES)),
+	unresolvedEdges: S.Array(S.String).pipe(
+		S.withDecodingDefaultKey(Effect.succeed(EMPTY_EDGE_NAMES)),
+		S.withConstructorDefault(Effect.succeed(EMPTY_EDGE_NAMES)),
 	),
 }) {}

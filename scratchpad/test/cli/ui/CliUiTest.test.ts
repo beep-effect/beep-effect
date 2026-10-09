@@ -1,7 +1,10 @@
 // @effect-diagnostics globalTimers:skip-file
-import { Clock } from "effect";
+import * as Clock from "effect/Clock";
 import { assert, describe, it } from "@effect/vitest";
-import { Cause, Effect, Exit, Schema } from "effect";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as S from "effect/Schema";
 import { Text, useInput } from "ink";
 import type { ReactElement } from "react";
 import { createElement, useEffect, useState } from "react";
@@ -115,7 +118,7 @@ describe("CliUiTest.render", () => {
 				}),
 			);
 			assert.instanceOf(escaped, Cancelled);
-			assert.strictEqual(Schema.is(Cancelled)(escaped) ? escaped.reason : undefined, "escape");
+			assert.strictEqual(S.is(Cancelled)(escaped) ? escaped.reason : undefined, "escape");
 			const interrupted = yield* Effect.scoped(
 				Effect.gen(function* () {
 					const handle = yield* CliUiTest.render(showing(() => createElement(Echo)));
@@ -123,7 +126,7 @@ describe("CliUiTest.render", () => {
 					return yield* Effect.flip(handle.result);
 				}),
 			);
-			assert.strictEqual(Schema.is(Cancelled)(interrupted) ? interrupted.reason : undefined, "interrupt");
+			assert.strictEqual(S.is(Cancelled)(interrupted) ? interrupted.reason : undefined, "interrupt");
 		}),
 	);
 
@@ -319,7 +322,7 @@ describe("CliUiTest.render", () => {
 				);
 				return createElement(Text, null, "tracked");
 			};
-			yield* Effect.scoped(Effect.asVoid(CliUiTest.render(showing(() => createElement(Tracked)))));
+			yield* CliUiTest.render(showing(() => createElement(Tracked))).pipe(Effect.asVoid, Effect.scoped);
 			assert.isTrue(unmounted);
 		}),
 	);

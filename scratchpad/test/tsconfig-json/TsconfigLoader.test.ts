@@ -1,5 +1,6 @@
 import { assert, describe, it, layer } from "@effect/vitest";
-import { Effect, Option } from "effect";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
 import { resolveExports, resolveExtendsTarget } from "../../effected/tsconfig-json/internal/extendsTarget.ts";
 import { TsconfigLoader } from "../../effected/tsconfig-json/TsconfigLoader.ts";
 import { fixtureLayer } from "./fixtures.ts";
@@ -17,7 +18,7 @@ layer(fixtureLayer(tree(["/proj/base.json", EMPTY])))("resolveExtendsTarget, rel
 	it.effect("appends .json when the extensionless file is absent", () =>
 		Effect.gen(function* () {
 			const result = yield* resolveExtendsTarget("./base", "/proj/tsconfig.json");
-			assert.deepStrictEqual(result, Option.some("/proj/base.json"));
+			assert.deepStrictEqual(result, O.some("/proj/base.json"));
 		}),
 	);
 });
@@ -28,7 +29,7 @@ layer(fixtureLayer(tree(["/proj/base", EMPTY], ["/proj/base.json", "SHADOWED"]))
 		it.effect("accepts an existing extensionless file verbatim, before the .json retry", () =>
 			Effect.gen(function* () {
 				const result = yield* resolveExtendsTarget("./base", "/proj/tsconfig.json");
-				assert.deepStrictEqual(result, Option.some("/proj/base"));
+				assert.deepStrictEqual(result, O.some("/proj/base"));
 			}),
 		);
 	},
@@ -46,7 +47,7 @@ layer(fixtureLayer(tree(["/proj/dir/tsconfig.json", EMPTY])))("resolveExtendsTar
 			// that no `<dir>/tsconfig.json` fallback was tried — tsc would have
 			// retried `./dir.json`, and we resolve neither.
 			const result = yield* resolveExtendsTarget("./dir", "/proj/tsconfig.json");
-			assert.deepStrictEqual(result, Option.some("/proj/dir"));
+			assert.deepStrictEqual(result, O.some("/proj/dir"));
 		}),
 	);
 });
@@ -55,7 +56,7 @@ layer(fixtureLayer(tree(["/proj/base.json", EMPTY])))("resolveExtendsTarget, par
 	it.effect("resolves a ../ target against the extending config directory", () =>
 		Effect.gen(function* () {
 			const result = yield* resolveExtendsTarget("../base", "/proj/sub/tsconfig.json");
-			assert.deepStrictEqual(result, Option.some("/proj/base.json"));
+			assert.deepStrictEqual(result, O.some("/proj/base.json"));
 		}),
 	);
 });
@@ -64,7 +65,7 @@ layer(fixtureLayer(tree(["/abs/base.json", EMPTY])))("resolveExtendsTarget, root
 	it.effect("accepts an absolute target verbatim", () =>
 		Effect.gen(function* () {
 			const result = yield* resolveExtendsTarget("/abs/base.json", "/proj/tsconfig.json");
-			assert.deepStrictEqual(result, Option.some("/abs/base.json"));
+			assert.deepStrictEqual(result, O.some("/abs/base.json"));
 		}),
 	);
 });
@@ -79,7 +80,7 @@ layer(fixtureLayer(tree(["/proj/node_modules/foo/package.json", EMPTY], ["/proj/
 		it.effect("resolves a slash-bearing spec with no ./ through node_modules", () =>
 			Effect.gen(function* () {
 				const result = yield* resolveExtendsTarget("foo/bar.json", "/proj/tsconfig.json");
-				assert.deepStrictEqual(result, Option.some("/proj/node_modules/foo/bar.json"));
+				assert.deepStrictEqual(result, O.some("/proj/node_modules/foo/bar.json"));
 			}),
 		);
 	},
@@ -91,7 +92,7 @@ layer(
 	it.effect("finds the package two ancestors up when nearer dirs have no node_modules", () =>
 		Effect.gen(function* () {
 			const result = yield* resolveExtendsTarget("pkg", "/proj/a/b/tsconfig.json");
-			assert.deepStrictEqual(result, Option.some("/proj/node_modules/pkg/tsconfig.json"));
+			assert.deepStrictEqual(result, O.some("/proj/node_modules/pkg/tsconfig.json"));
 		}),
 	);
 });
@@ -107,7 +108,7 @@ layer(
 	it.effect("does not probe under an ancestor literally named node_modules", () =>
 		Effect.gen(function* () {
 			const result = yield* resolveExtendsTarget("pkg", "/proj/node_modules/tsconfig.json");
-			assert.deepStrictEqual(result, Option.none());
+			assert.deepStrictEqual(result, O.none());
 		}),
 	);
 });
@@ -123,7 +124,7 @@ layer(
 	it.effect("resolves @tsconfig/node20/tsconfig.json to the exact file", () =>
 		Effect.gen(function* () {
 			const result = yield* resolveExtendsTarget("@tsconfig/node20/tsconfig.json", "/proj/tsconfig.json");
-			assert.deepStrictEqual(result, Option.some("/proj/node_modules/@tsconfig/node20/tsconfig.json"));
+			assert.deepStrictEqual(result, O.some("/proj/node_modules/@tsconfig/node20/tsconfig.json"));
 		}),
 	);
 });
@@ -134,7 +135,7 @@ layer(fixtureLayer(tree(["/proj/node_modules/pkg/package.json", EMPTY], ["/proj/
 		it.effect("pkg/base resolves to node_modules/pkg/base.json", () =>
 			Effect.gen(function* () {
 				const result = yield* resolveExtendsTarget("pkg/base", "/proj/tsconfig.json");
-				assert.deepStrictEqual(result, Option.some("/proj/node_modules/pkg/base.json"));
+				assert.deepStrictEqual(result, O.some("/proj/node_modules/pkg/base.json"));
 			}),
 		);
 	},
@@ -152,7 +153,7 @@ layer(
 	it.effect("respects the package.json tsconfig field over the default tsconfig.json", () =>
 		Effect.gen(function* () {
 			const result = yield* resolveExtendsTarget("withfield", "/proj/tsconfig.json");
-			assert.deepStrictEqual(result, Option.some("/proj/node_modules/withfield/tsconfigs/base.json"));
+			assert.deepStrictEqual(result, O.some("/proj/node_modules/withfield/tsconfigs/base.json"));
 		}),
 	);
 });
@@ -165,7 +166,7 @@ layer(
 	it.effect("falls back to <pkg>/tsconfig.json when there is no tsconfig field", () =>
 		Effect.gen(function* () {
 			const result = yield* resolveExtendsTarget("plain", "/proj/tsconfig.json");
-			assert.deepStrictEqual(result, Option.some("/proj/node_modules/plain/tsconfig.json"));
+			assert.deepStrictEqual(result, O.some("/proj/node_modules/plain/tsconfig.json"));
 		}),
 	);
 });
@@ -186,7 +187,7 @@ layer(
 	it.effect("an exports map redirects the subpath and beats the plain file", () =>
 		Effect.gen(function* () {
 			const result = yield* resolveExtendsTarget("exp/tsconfig.json", "/proj/tsconfig.json");
-			assert.deepStrictEqual(result, Option.some("/proj/node_modules/exp/cfg/base.json"));
+			assert.deepStrictEqual(result, O.some("/proj/node_modules/exp/cfg/base.json"));
 		}),
 	);
 });
@@ -202,7 +203,7 @@ layer(
 	it.effect("an exports map that fails to resolve the subpath yields none, no tsconfig.json probe", () =>
 		Effect.gen(function* () {
 			const result = yield* resolveExtendsTarget("exp", "/proj/tsconfig.json");
-			assert.deepStrictEqual(result, Option.none());
+			assert.deepStrictEqual(result, O.none());
 		}),
 	);
 });
@@ -217,7 +218,7 @@ layer(
 			// tsc's readJson (typescript.js:21176) coerces an unparseable
 			// manifest to {} and the manifest-less lookups still run.
 			const result = yield* resolveExtendsTarget("bad", "/proj/tsconfig.json");
-			assert.deepStrictEqual(result, Option.some("/proj/node_modules/bad/tsconfig.json"));
+			assert.deepStrictEqual(result, O.some("/proj/node_modules/bad/tsconfig.json"));
 		}),
 	);
 });
@@ -235,7 +236,7 @@ layer(
 			// tsc parity: a falsy packageFileResult falls through to
 			// loadModuleFromFile(indexPath) — typescript.js:45943-45945.
 			const result = yield* resolveExtendsTarget("badfield", "/proj/tsconfig.json");
-			assert.deepStrictEqual(result, Option.some("/proj/node_modules/badfield/tsconfig.json"));
+			assert.deepStrictEqual(result, O.some("/proj/node_modules/badfield/tsconfig.json"));
 		}),
 	);
 });
@@ -262,7 +263,7 @@ layer(
 			// `<pkg>/tsconfig.json` probe (typescript.js:45943-45945, same
 			// citation as the "field pointing at a missing file" case above).
 			const result = yield* resolveExtendsTarget("emptyfield", "/proj/tsconfig.json");
-			assert.deepStrictEqual(result, Option.some("/proj/node_modules/emptyfield/tsconfig.json"));
+			assert.deepStrictEqual(result, O.some("/proj/node_modules/emptyfield/tsconfig.json"));
 		}),
 	);
 });
@@ -273,7 +274,7 @@ layer(
 	it.effect("a non-object package.json falls through to the tsconfig.json probe", () =>
 		Effect.gen(function* () {
 			const result = yield* resolveExtendsTarget("arr", "/proj/tsconfig.json");
-			assert.deepStrictEqual(result, Option.some("/proj/node_modules/arr/tsconfig.json"));
+			assert.deepStrictEqual(result, O.some("/proj/node_modules/arr/tsconfig.json"));
 		}),
 	);
 });
@@ -284,7 +285,7 @@ layer(fixtureLayer(tree(["/proj/node_modules/nomanifest/tsconfig.json", EMPTY]))
 		it.effect("probes tsconfig.json even when the manifest is absent", () =>
 			Effect.gen(function* () {
 				const result = yield* resolveExtendsTarget("nomanifest", "/proj/tsconfig.json");
-				assert.deepStrictEqual(result, Option.some("/proj/node_modules/nomanifest/tsconfig.json"));
+				assert.deepStrictEqual(result, O.some("/proj/node_modules/nomanifest/tsconfig.json"));
 			}),
 		);
 	},
@@ -304,7 +305,7 @@ layer(
 			// tsc's ancestor walk only stops on a defined result
 			// (forEachAncestorDirectoryStoppingAtGlobalCache, typescript.js:46466).
 			const result = yield* resolveExtendsTarget("dual", "/proj/a/tsconfig.json");
-			assert.deepStrictEqual(result, Option.some("/proj/node_modules/dual/tsconfig.json"));
+			assert.deepStrictEqual(result, O.some("/proj/node_modules/dual/tsconfig.json"));
 		}),
 	);
 });
@@ -315,58 +316,58 @@ layer(
 
 describe("resolveExports", () => {
 	it("resolves a bare string exports target for the root subpath", () => {
-		assert.deepStrictEqual(resolveExports("./tsconfig.json", "."), Option.some("./tsconfig.json"));
+		assert.deepStrictEqual(resolveExports("./tsconfig.json", "."), O.some("./tsconfig.json"));
 	});
 
 	it("matches conditions in map insertion order (require before default)", () => {
 		const exports = { ".": { require: "./r.json", default: "./d.json" } };
-		assert.deepStrictEqual(resolveExports(exports, "."), Option.some("./r.json"));
+		assert.deepStrictEqual(resolveExports(exports, "."), O.some("./r.json"));
 	});
 
 	it("walks a fallback array to the first resolvable entry", () => {
 		const exports = { ".": [{ unknowncond: "./a.json" }, "./b.json"] };
-		assert.deepStrictEqual(resolveExports(exports, "."), Option.some("./b.json"));
+		assert.deepStrictEqual(resolveExports(exports, "."), O.some("./b.json"));
 	});
 
 	it("substitutes a single-star subpath pattern", () => {
 		const exports = { "./*": "./cfg/*" };
-		assert.deepStrictEqual(resolveExports(exports, "./node20.json"), Option.some("./cfg/node20.json"));
+		assert.deepStrictEqual(resolveExports(exports, "./node20.json"), O.some("./cfg/node20.json"));
 	});
 
 	it("rejects a non-.json target", () => {
-		assert.deepStrictEqual(resolveExports({ ".": "./tsconfig" }, "."), Option.none());
+		assert.deepStrictEqual(resolveExports({ ".": "./tsconfig" }, "."), O.none());
 	});
 
 	it("reads a top-level fallback array as the root target", () => {
-		assert.deepStrictEqual(resolveExports(["./a.json"], "."), Option.some("./a.json"));
+		assert.deepStrictEqual(resolveExports(["./a.json"], "."), O.some("./a.json"));
 	});
 
 	it("returns none for a non-object, non-string exports value", () => {
-		assert.deepStrictEqual(resolveExports(42, "."), Option.none());
+		assert.deepStrictEqual(resolveExports(42, "."), O.none());
 	});
 
 	it("returns none when a subpath map has no matching key or pattern", () => {
-		assert.deepStrictEqual(resolveExports({ "./a.json": "./x.json" }, "./b.json"), Option.none());
+		assert.deepStrictEqual(resolveExports({ "./a.json": "./x.json" }, "./b.json"), O.none());
 	});
 
 	it("substitutes a wildcard into a nested condition object", () => {
 		const exports = { "./*": { types: "./cfg/*.json" } };
-		assert.deepStrictEqual(resolveExports(exports, "./node20"), Option.some("./cfg/node20.json"));
+		assert.deepStrictEqual(resolveExports(exports, "./node20"), O.some("./cfg/node20.json"));
 	});
 
 	it("substitutes a wildcard into a fallback array target", () => {
 		const exports = { "./*": ["./cfg/*.json"] };
-		assert.deepStrictEqual(resolveExports(exports, "./node20"), Option.some("./cfg/node20.json"));
+		assert.deepStrictEqual(resolveExports(exports, "./node20"), O.some("./cfg/node20.json"));
 	});
 
 	it("picks the pattern with the longest base prefix, not the first in key order", () => {
 		const exports = { "./*.json": "./generic/*.json", "./cfg/*.json": "./specific/*.json" };
-		assert.deepStrictEqual(resolveExports(exports, "./cfg/node20.json"), Option.some("./specific/node20.json"));
+		assert.deepStrictEqual(resolveExports(exports, "./cfg/node20.json"), O.some("./specific/node20.json"));
 	});
 
 	it("skips a __proto__ condition key", () => {
 		const exports = JSON.parse('{".":{"__proto__":"./evil.json","default":"./safe.json"}}');
-		assert.deepStrictEqual(resolveExports(exports, "."), Option.some("./safe.json"));
+		assert.deepStrictEqual(resolveExports(exports, "."), O.some("./safe.json"));
 	});
 
 	const deepConditions = (depth: number): unknown => {
@@ -376,11 +377,11 @@ describe("resolveExports", () => {
 	};
 
 	it("resolves shallow condition nesting", () => {
-		assert.deepStrictEqual(resolveExports(deepConditions(5), "."), Option.some("./deep.json"));
+		assert.deepStrictEqual(resolveExports(deepConditions(5), "."), O.some("./deep.json"));
 	});
 
 	it("returns none past the depth guard", () => {
-		assert.deepStrictEqual(resolveExports(deepConditions(100), "."), Option.none());
+		assert.deepStrictEqual(resolveExports(deepConditions(100), "."), O.none());
 	});
 });
 

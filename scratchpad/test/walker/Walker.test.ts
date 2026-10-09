@@ -1,10 +1,16 @@
 import { assert, describe, it, layer } from "@effect/vitest";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
-import { Cause, Effect, Option, Path, PlatformError, Ref, Schema } from "effect";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as PlatformError from "effect/PlatformError";
+import * as Ref from "effect/Ref";
+import * as S from "effect/Schema";
 import { Walker } from "../../effected/walker/Walker.ts";
 import { platform } from "./fixtures.ts";
 
-const JsonString = Schema.fromJsonString(Schema.String);
+const JsonString = S.fromJsonString(S.String);
 
 layer(Path.layer)("Walker.ascend", (it) => {
 	it.effect("yields each directory from start to the root, nearest first", () =>
@@ -72,7 +78,7 @@ layer(Path.layer)("Walker.ascend", (it) => {
 			// `catchCause` reaches the defect without narrowing an Exit union; the
 			// success branch never runs, so anything it yields is unreachable.
 			const defect = yield* Effect.catchCause(Walker.ascend("/a/b/c", { stopAt: "b" }), (cause) =>
-				Effect.succeed(Cause.squash(cause)),
+				cause.pipe(Cause.squash, Effect.succeed),
 			);
 			assert.instanceOf(defect, Error);
 			assert.match(defect.message, /stopAt must be an absolute path/);
@@ -102,7 +108,7 @@ layer(Path.layer)("Walker.ascend", (it) => {
 		Effect.gen(function* () {
 			for (const stopAt of ["pkgs", "./pkgs", "../pkgs", ".", "..", ""]) {
 				const exit = yield* Effect.exit(Walker.ascend("/a/b/c", { stopAt }));
-				assert.strictEqual(exit._tag, "Failure", `expected ${yield* Schema.encodeEffect(JsonString)(stopAt)} to be refused`);
+				assert.strictEqual(exit._tag, "Failure", `expected ${yield* S.encodeEffect(JsonString)(stopAt)} to be refused`);
 			}
 		}),
 	);
@@ -194,21 +200,21 @@ describe("Walker.firstMatch", () => {
 	it.effect("returns the first candidate whose predicate reports true", () =>
 		Effect.gen(function* () {
 			const found = yield* Walker.firstMatch(["a", "b", "c"], (c) => Effect.succeed(c === "b"));
-			assert.deepStrictEqual(found, Option.some("b"));
+			assert.deepStrictEqual(found, O.some("b"));
 		}),
 	);
 
 	it.effect("returns none when nothing matches", () =>
 		Effect.gen(function* () {
 			const found = yield* Walker.firstMatch(["a", "b"], () => Effect.succeed(false));
-			assert.deepStrictEqual(found, Option.none());
+			assert.deepStrictEqual(found, O.none());
 		}),
 	);
 
 	it.effect("returns none for an empty candidate list", () =>
 		Effect.gen(function* () {
 			const found = yield* Walker.firstMatch([], () => Effect.succeed(true));
-			assert.deepStrictEqual(found, Option.none());
+			assert.deepStrictEqual(found, O.none());
 		}),
 	);
 
@@ -225,7 +231,7 @@ describe("Walker.firstMatch", () => {
 
 			const found = yield* Walker.firstMatch(["a", "b", "c"], predicate);
 
-			assert.deepStrictEqual(found, Option.some("c"));
+			assert.deepStrictEqual(found, O.some("c"));
 			assert.deepStrictEqual(yield* Ref.get(probed), ["a", "b", "c"]);
 		}),
 	);
@@ -243,7 +249,7 @@ describe("Walker.firstMatch", () => {
 
 			const found = yield* Walker.firstMatch(["a", "b", "c"], predicate);
 
-			assert.deepStrictEqual(found, Option.some("b"));
+			assert.deepStrictEqual(found, O.some("b"));
 			assert.deepStrictEqual(yield* Ref.get(probed), ["a", "b"]);
 		}),
 	);
@@ -261,7 +267,7 @@ describe("Walker.firstMatch", () => {
 
 			const found = yield* Walker.firstMatch(["a", "b"], predicate);
 
-			assert.deepStrictEqual(found, Option.some("a"));
+			assert.deepStrictEqual(found, O.some("a"));
 			assert.deepStrictEqual(yield* Ref.get(probed), ["a"]);
 		}),
 	);
@@ -312,7 +318,7 @@ layer(FsWith(["/a/b/.apprc", "/a/.apprc"]))("findUpward, config in both director
 	it.effect("prefers the nearer directory", () =>
 		Effect.gen(function* () {
 			const found = yield* Walker.findUpward(["/a/b", "/a"], (dir) => [`${dir}/.apprc`]);
-			assert.deepStrictEqual(found, Option.some("/a/b/.apprc"));
+			assert.deepStrictEqual(found, O.some("/a/b/.apprc"));
 		}),
 	);
 });
@@ -321,7 +327,7 @@ layer(FsWith(["/a/.apprc"]))("findUpward, config only in the further directory",
 	it.effect("falls through to the further directory", () =>
 		Effect.gen(function* () {
 			const found = yield* Walker.findUpward(["/a/b", "/a"], (dir) => [`${dir}/.apprc`]);
-			assert.deepStrictEqual(found, Option.some("/a/.apprc"));
+			assert.deepStrictEqual(found, O.some("/a/.apprc"));
 		}),
 	);
 });
@@ -330,7 +336,7 @@ layer(FsWith(["/a/second.json"]))("findUpward, only the second candidate exists"
 	it.effect("honours candidate order within a single directory", () =>
 		Effect.gen(function* () {
 			const found = yield* Walker.findUpward(["/a"], (dir) => [`${dir}/first.json`, `${dir}/second.json`]);
-			assert.deepStrictEqual(found, Option.some("/a/second.json"));
+			assert.deepStrictEqual(found, O.some("/a/second.json"));
 		}),
 	);
 });
@@ -339,7 +345,7 @@ layer(FsWith([]))("findUpward, empty filesystem", (it) => {
 	it.effect("returns none when no candidate exists", () =>
 		Effect.gen(function* () {
 			const found = yield* Walker.findUpward(["/a/b", "/a"], (dir) => [`${dir}/.apprc`]);
-			assert.deepStrictEqual(found, Option.none());
+			assert.deepStrictEqual(found, O.none());
 		}),
 	);
 });
@@ -353,7 +359,7 @@ layer(FsWith(["/a/b/config/.apprc", "/a/.apprc"]))("findUpward, near subpath vs 
 	it.effect("exhausts the nearer directory's candidates before ascending", () =>
 		Effect.gen(function* () {
 			const found = yield* Walker.findUpward(["/a/b", "/a"], (dir) => [`${dir}/.apprc`, `${dir}/config/.apprc`]);
-			assert.deepStrictEqual(found, Option.some("/a/b/config/.apprc"));
+			assert.deepStrictEqual(found, O.some("/a/b/config/.apprc"));
 		}),
 	);
 });
@@ -368,7 +374,7 @@ layer(FsDenying("/a/b/.apprc", ["/a/b/.apprc", "/a/.apprc"]))("findUpward, unrea
 	it.effect("absorbs a denied probe and keeps ascending", () =>
 		Effect.gen(function* () {
 			const found = yield* Walker.findUpward(["/a/b", "/a"], (dir) => [`${dir}/.apprc`]);
-			assert.deepStrictEqual(found, Option.some("/a/.apprc"));
+			assert.deepStrictEqual(found, O.some("/a/.apprc"));
 		}),
 	);
 });
@@ -377,7 +383,7 @@ describe("Walker.findRoot", () => {
 	it.effect("returns the nearest directory the marker predicate accepts", () =>
 		Effect.gen(function* () {
 			const found = yield* Walker.findRoot(["/a/b/c", "/a/b", "/a"], (dir) => Effect.succeed(dir === "/a/b"));
-			assert.deepStrictEqual(found, Option.some("/a/b"));
+			assert.deepStrictEqual(found, O.some("/a/b"));
 		}),
 	);
 
@@ -386,14 +392,14 @@ describe("Walker.findRoot", () => {
 		Effect.gen(function* () {
 			const isRoot = (dir: string) => (dir === "/a/b" ? Effect.fail("EACCES" as const) : Effect.succeed(dir === "/a"));
 			const found = yield* Walker.findRoot(["/a/b/c", "/a/b", "/a", "/"], isRoot);
-			assert.deepStrictEqual(found, Option.some("/a"));
+			assert.deepStrictEqual(found, O.some("/a"));
 		}),
 	);
 
 	it.effect("returns none when no directory is a root", () =>
 		Effect.gen(function* () {
 			const found = yield* Walker.findRoot(["/a/b", "/a"], () => Effect.succeed(false));
-			assert.deepStrictEqual(found, Option.none());
+			assert.deepStrictEqual(found, O.none());
 		}),
 	);
 
@@ -404,7 +410,7 @@ describe("Walker.findRoot", () => {
 	it.effect("prefers the nearest directory when multiple directories accept", () =>
 		Effect.gen(function* () {
 			const found = yield* Walker.findRoot(["/a/b", "/a"], () => Effect.succeed(true));
-			assert.deepStrictEqual(found, Option.some("/a/b"));
+			assert.deepStrictEqual(found, O.some("/a/b"));
 		}),
 	);
 
@@ -422,7 +428,7 @@ describe("Walker.findRoot", () => {
 
 			const found = yield* Walker.findRoot(["/a/b/c", "/a/b", "/a"], isRoot);
 
-			assert.deepStrictEqual(found, Option.some("/a/b"));
+			assert.deepStrictEqual(found, O.some("/a/b"));
 			assert.deepStrictEqual(yield* Ref.get(probed), ["/a/b/c", "/a/b"]);
 		}),
 	);
@@ -444,42 +450,42 @@ layer(linkedRepo)("Walker.ascendWithin", (it) => {
 
 	it.effect("stops at the lexical ancestor whose real path is the physical ceiling", () =>
 		Effect.gen(function* () {
-			const dirs = yield* Walker.ascendWithin("/link/repo/packages/foo", Option.some("/real/repo"));
+			const dirs = yield* Walker.ascendWithin("/link/repo/packages/foo", O.some("/real/repo"));
 			assert.deepStrictEqual(dirs, ["/link/repo/packages/foo", "/link/repo/packages", "/link/repo"]);
 		}),
 	);
 
 	it.effect("stops at a ceiling spelled lexically, like ascend", () =>
 		Effect.gen(function* () {
-			const dirs = yield* Walker.ascendWithin("/link/repo/packages/foo", Option.some("/link/repo/"));
+			const dirs = yield* Walker.ascendWithin("/link/repo/packages/foo", O.some("/link/repo/"));
 			assert.deepStrictEqual(dirs, ["/link/repo/packages/foo", "/link/repo/packages", "/link/repo"]);
 		}),
 	);
 
 	it.effect("stops at the ceiling when no symlink is involved", () =>
 		Effect.gen(function* () {
-			const dirs = yield* Walker.ascendWithin("/real/repo/packages/foo", Option.some("/real/repo"));
+			const dirs = yield* Walker.ascendWithin("/real/repo/packages/foo", O.some("/real/repo"));
 			assert.deepStrictEqual(dirs, ["/real/repo/packages/foo", "/real/repo/packages", "/real/repo"]);
 		}),
 	);
 
 	it.effect("runs to the root when the ceiling names no ancestor", () =>
 		Effect.gen(function* () {
-			const dirs = yield* Walker.ascendWithin("/link/repo/packages/foo", Option.some("/elsewhere"));
+			const dirs = yield* Walker.ascendWithin("/link/repo/packages/foo", O.some("/elsewhere"));
 			assert.deepStrictEqual(dirs, ["/link/repo/packages/foo", "/link/repo/packages", "/link/repo", "/link", "/"]);
 		}),
 	);
 
 	it.effect("truncates a chain longer than maxDepth", () =>
 		Effect.gen(function* () {
-			const dirs = yield* Walker.ascendWithin("/link/repo/packages/foo", Option.some("/real/repo"), { maxDepth: 2 });
+			const dirs = yield* Walker.ascendWithin("/link/repo/packages/foo", O.some("/real/repo"), { maxDepth: 2 });
 			assert.deepStrictEqual(dirs, ["/link/repo/packages/foo", "/link/repo/packages"]);
 		}),
 	);
 
 	it.effect("ascends to the root, exactly as ascend does, when there is no ceiling", () =>
 		Effect.gen(function* () {
-			const dirs = yield* Walker.ascendWithin("/link/repo/packages/foo", Option.none());
+			const dirs = yield* Walker.ascendWithin("/link/repo/packages/foo", O.none());
 			assert.deepStrictEqual(dirs, yield* Walker.ascend("/link/repo/packages/foo"));
 			assert.strictEqual(dirs.at(-1), "/");
 		}),
@@ -487,14 +493,14 @@ layer(linkedRepo)("Walker.ascendWithin", (it) => {
 
 	it.effect("honours maxDepth when there is no ceiling", () =>
 		Effect.gen(function* () {
-			const dirs = yield* Walker.ascendWithin("/link/repo/packages/foo", Option.none(), { maxDepth: 2 });
+			const dirs = yield* Walker.ascendWithin("/link/repo/packages/foo", O.none(), { maxDepth: 2 });
 			assert.deepStrictEqual(dirs, ["/link/repo/packages/foo", "/link/repo/packages"]);
 		}),
 	);
 
 	it.effect("dies on a relative ceiling, like ascend", () =>
 		Effect.gen(function* () {
-			const exit = yield* Effect.exit(Walker.ascendWithin("/link/repo/packages/foo", Option.some("real/repo")));
+			const exit = yield* Effect.exit(Walker.ascendWithin("/link/repo/packages/foo", O.some("real/repo")));
 			assert.isTrue(exit._tag === "Failure" && Cause.hasDies(exit.cause));
 		}),
 	);
@@ -508,7 +514,7 @@ layer(
 )("Walker.ascendWithin, an ancestor that cannot be resolved", (it) => {
 	it.effect("absorbs the failed probe and still stops at the ceiling above it", () =>
 		Effect.gen(function* () {
-			const dirs = yield* Walker.ascendWithin("/link/repo/packages/foo", Option.some("/real/repo"));
+			const dirs = yield* Walker.ascendWithin("/link/repo/packages/foo", O.some("/real/repo"));
 			assert.deepStrictEqual(dirs, ["/link/repo/packages/foo", "/link/repo/packages", "/link/repo"]);
 		}),
 	);

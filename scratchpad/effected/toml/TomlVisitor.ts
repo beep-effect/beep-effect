@@ -19,7 +19,10 @@
 // throws raw carriers (`RawTomlError`, `GuardExceeded`); this module builds
 // the typed `TomlParseError`, never letting a raw carrier escape as a defect.
 
-import { Data, Effect, Stream, Schema } from "effect";
+import * as Data from "effect/Data";
+import * as Effect from "effect/Effect";
+import * as Stream from "effect/Stream";
+import * as S from "effect/Schema";
 import { isRawTomlError } from "./internal/diagnostics.ts";
 import { isGuardExceeded } from "./internal/limits.ts";
 import { parseExpressions } from "./internal/parser.ts";
@@ -77,7 +80,7 @@ const trailingCommentOffset = (
 	source: string,
 	expression: TomlKeyValue | TomlTableHeader | TomlArrayTableHeader,
 ): number => {
-	if (Schema.is(TomlKeyValue)(expression)) {
+	if (S.is(TomlKeyValue)(expression)) {
 		return source.indexOf("#", expression.value.offset + expression.value.length);
 	}
 	const lastKey = expression.keyPath[expression.keyPath.length - 1];
@@ -132,7 +135,7 @@ const collectEvents = (text: string): Array<TomlVisitorEvent> => {
 	});
 
 	for (const expression of expressions) {
-		if (Schema.is(TomlTrivia)(expression)) {
+		if (S.is(TomlTrivia)(expression)) {
 			positioned.push(...collectTriviaComments(expression));
 			continue;
 		}

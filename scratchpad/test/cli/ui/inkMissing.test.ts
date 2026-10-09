@@ -1,7 +1,9 @@
 // @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
-import { Cause, Effect, Exit } from "effect";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import { Prompt } from "effect/cli";
 import { vi } from "vitest";
 import { CliInteractive, CliTheme } from "../../../effected/cli/index.ts";

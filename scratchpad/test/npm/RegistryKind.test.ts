@@ -1,5 +1,6 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Clock, Effect } from "effect";
+import * as Clock from "effect/Clock";
+import * as Effect from "effect/Effect";
 import { classifyRegistry, registryDisplayName, registryHost, registryShortLabel } from "../../effected/npm/RegistryKind.ts";
 
 describe("classifyRegistry", () => {

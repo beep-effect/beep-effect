@@ -2,11 +2,17 @@
 import { assert, describe, it } from "@effect/vitest";
 import type { GitHubAppShape } from "../../effected/github/index.ts";
 import { AppIdentity, GitHubApp, GitHubAppError, GitHubClient, InstallationToken } from "../../effected/github/index.ts";
-import { DateTime, Duration, Effect, Layer, Redacted, Schema, Result } from "effect";
+import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Redacted from "effect/Redacted";
+import * as S from "effect/Schema";
+import * as Result from "effect/Result";
 import { TestClock } from "effect/testing";
 import { ActionOutputs, ActionState, ActionStateError, GitHubToken, GitHubTokenError } from "../../effected/github-actions/index.ts";
 
-const Json = Schema.fromJsonString(Schema.Unknown);
+const Json = S.fromJsonString(S.Unknown);
 
 /** A fixed instant to reason about expiry from — the clock starts at the epoch otherwise. */
 const NOW = Date.parse("2026-07-25T12:00:00.000Z");
@@ -54,21 +60,21 @@ const rig = (
 	const state = ActionState.layerTest({
 		save: Effect.fn("save")(function*(key, value, schema) {
 				events.push(`save:${key}`);
-				saved.set(key, Result.getOrThrowWith(Schema.encodeResult(Json)(yield* Schema.encodeUnknownEffect(schema)(value)), (error) => error));
+				saved.set(key, Result.getOrThrowWith(S.encodeResult(Json)(yield* S.encodeUnknownEffect(schema)(value)), (error) => error));
 			}, Effect.orDie),
 		get: (key, schema) =>
 			Effect.suspend(() => {
 				const found = saved.get(key);
 				return found === undefined
 					? Effect.die(new Error(`nothing saved under ${key}`))
-					: Effect.orDie(Schema.decodeUnknownEffect(schema)(Result.getOrThrowWith(Schema.decodeResult(Json)(found), (error) => error)));
+					: S.decodeUnknownEffect(schema)(Result.getOrThrowWith(S.decodeResult(Json)(found), (error) => error)).pipe(Effect.orDie);
 			}),
 		getOptional: (key, schema) =>
 			Effect.suspend(() => {
 				const found = saved.get(key);
 				return found === undefined
 					? Effect.succeedNone
-					: Effect.asSome(Effect.orDie(Schema.decodeUnknownEffect(schema)(Result.getOrThrowWith(Schema.decodeResult(Json)(found), (error) => error))));
+					: S.decodeUnknownEffect(schema)(Result.getOrThrowWith(S.decodeResult(Json)(found), (error) => error)).pipe(Effect.orDie, Effect.asSome);
 			}),
 	});
 	return { events, saved, revoked, layer: Layer.mergeAll(app, outputs, state) };

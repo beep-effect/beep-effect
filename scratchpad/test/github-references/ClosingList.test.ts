@@ -1,5 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Option } from "effect";
+import * as O from "effect/Option";
 import {
 	REFERENCE_KEYWORDS,
 	collectReferenceLists,
@@ -24,8 +24,8 @@ describe("ClosingList.parseClosingList", () => {
 		for (const keyword of CLOSING_KEYWORDS) {
 			for (const line of [`${keyword} #7`, `${keyword}: #7`]) {
 				const parsed = parseClosingList(line);
-				assert.isTrue(Option.isSome(parsed), line);
-				const list = Option.getOrThrow(parsed);
+				assert.isTrue(O.isSome(parsed), line);
+				const list = O.getOrThrow(parsed);
 				assert.strictEqual(list.keyword, keyword, line);
 				assert.deepStrictEqual([...list.issueNumbers], [7], line);
 			}
@@ -34,7 +34,7 @@ describe("ClosingList.parseClosingList", () => {
 
 	it("lowercases the keyword to canonical form, whatever the case", () => {
 		for (const line of ["CLOSES: #1, #2", "Closes: #1, #2", "cLoSeS #1, #2"]) {
-			const list = Option.getOrThrow(parseClosingList(line));
+			const list = O.getOrThrow(parseClosingList(line));
 			assert.strictEqual(list.keyword, "closes", line);
 			assert.deepStrictEqual([...list.issueNumbers], [1, 2], line);
 		}
@@ -49,18 +49,18 @@ describe("ClosingList.parseClosingList", () => {
 		];
 		for (const [line, expected] of cases) {
 			const parsed = parseClosingList(line);
-			assert.isTrue(Option.isSome(parsed), line);
-			assert.deepStrictEqual([...Option.getOrThrow(parsed).issueNumbers], expected, line);
+			assert.isTrue(O.isSome(parsed), line);
+			assert.deepStrictEqual([...O.getOrThrow(parsed).issueNumbers], expected, line);
 		}
 	});
 
 	it("keeps duplicates, in line order — dedup is the caller's business", () => {
-		const list = Option.getOrThrow(parseClosingList("closes #1, #1, and #2"));
+		const list = O.getOrThrow(parseClosingList("closes #1, #1, and #2"));
 		assert.deepStrictEqual([...list.issueNumbers], [1, 1, 2]);
 	});
 
 	it("trims surrounding whitespace before parsing", () => {
-		const list = Option.getOrThrow(parseClosingList("   Closes: #12, #13\t "));
+		const list = O.getOrThrow(parseClosingList("   Closes: #12, #13\t "));
 		assert.deepStrictEqual([...list.issueNumbers], [12, 13]);
 	});
 
@@ -84,43 +84,43 @@ describe("ClosingList.parseClosingList", () => {
 			"", // an empty line carries nothing
 			"complete garbage", // not the grammar at all
 		];
-		for (const line of negatives) assert.isTrue(Option.isNone(parseClosingList(line)), line);
+		for (const line of negatives) assert.isTrue(O.isNone(parseClosingList(line)), line);
 	});
 
 	it("rejects the WHOLE line when any item exceeds Number.MAX_SAFE_INTEGER", () => {
 		// Contrast the harvest dialect, which skips the one bad match: a list is
 		// a single claim about a set of issues, and a partial list misrepresents.
-		assert.isTrue(Option.isNone(parseClosingList("closes #1, #9007199254740993, #2")));
-		assert.isTrue(Option.isNone(parseClosingList("closes #9007199254740993")));
+		assert.isTrue(O.isNone(parseClosingList("closes #1, #9007199254740993, #2")));
+		assert.isTrue(O.isNone(parseClosingList("closes #9007199254740993")));
 	});
 
 	it("keeps Number.MAX_SAFE_INTEGER itself — the guard is strict, not fuzzy", () => {
-		const list = Option.getOrThrow(parseClosingList(`closes #${Number.MAX_SAFE_INTEGER}`));
+		const list = O.getOrThrow(parseClosingList(`closes #${Number.MAX_SAFE_INTEGER}`));
 		assert.deepStrictEqual([...list.issueNumbers], [Number.MAX_SAFE_INTEGER]);
 	});
 
 	it("returns none for a Refs line — reference keywords are not closing", () => {
 		for (const keyword of REFERENCE_KEYWORDS) {
-			assert.isTrue(Option.isNone(parseClosingList(`${keyword}: #1, #2`)), keyword);
+			assert.isTrue(O.isNone(parseClosingList(`${keyword}: #1, #2`)), keyword);
 		}
 	});
 
 	it("keeps the separator case-sensitive while the keyword is not", () => {
 		// The keyword head lowercases; the `and` separator is grammar, not prose.
-		assert.isTrue(Option.isSome(parseClosingList("CLOSES #1 and #2")));
-		assert.isTrue(Option.isNone(parseClosingList("closes #1 AND #2")));
-		assert.isTrue(Option.isNone(parseClosingList("closes #1, And #2")));
+		assert.isTrue(O.isSome(parseClosingList("CLOSES #1 and #2")));
+		assert.isTrue(O.isNone(parseClosingList("closes #1 AND #2")));
+		assert.isTrue(O.isNone(parseClosingList("closes #1, And #2")));
 	});
 
 	it("stays linear on hostile input — long runs of tabs and huge lists", () => {
 		// The scan is a single pass with no regex engine behind it; these would
 		// hang a backtracking list pattern and must simply answer, fast.
 		const tabs = "\t".repeat(100_000);
-		assert.isTrue(Option.isNone(parseClosingList(`closes${tabs}x`)));
-		assert.isTrue(Option.isNone(parseClosingList(`closes #1,${tabs}and#2`)));
-		assert.isTrue(Option.isNone(parseClosingList(`closes #1${tabs}x`)));
+		assert.isTrue(O.isNone(parseClosingList(`closes${tabs}x`)));
+		assert.isTrue(O.isNone(parseClosingList(`closes #1,${tabs}and#2`)));
+		assert.isTrue(O.isNone(parseClosingList(`closes #1${tabs}x`)));
 		const wide = `closes ${Array.from({ length: 5_000 }, (_, index) => `#${index + 1}`).join(", ")}`;
-		const list = Option.getOrThrow(parseClosingList(wide));
+		const list = O.getOrThrow(parseClosingList(wide));
 		assert.strictEqual(list.issueNumbers.length, 5_000);
 		assert.strictEqual(list.issueNumbers[4_999], 5_000);
 	});
@@ -131,8 +131,8 @@ describe("ClosingList.parseReferenceList", () => {
 		for (const keyword of REFERENCE_KEYWORDS) {
 			for (const line of [`${keyword} #7`, `${keyword}: #7, #8`, `${capitalized(keyword)}: #7`]) {
 				const parsed = parseReferenceList(line);
-				assert.isTrue(Option.isSome(parsed), line);
-				const list = Option.getOrThrow(parsed);
+				assert.isTrue(O.isSome(parsed), line);
+				const list = O.getOrThrow(parsed);
 				assert.strictEqual(list.keyword, keyword, line);
 				assert.isFalse(list.closing, line);
 			}
@@ -141,7 +141,7 @@ describe("ClosingList.parseReferenceList", () => {
 
 	it("accepts every closing keyword too, and reports closing: true", () => {
 		for (const keyword of CLOSING_KEYWORDS) {
-			const list = Option.getOrThrow(parseReferenceList(`${keyword}: #1 and #2`));
+			const list = O.getOrThrow(parseReferenceList(`${keyword}: #1 and #2`));
 			assert.strictEqual(list.keyword, keyword);
 			assert.isTrue(list.closing);
 			assert.deepStrictEqual([...list.issueNumbers], [1, 2]);
@@ -157,7 +157,7 @@ describe("ClosingList.parseReferenceList", () => {
 			"reference #1", // not a listed keyword spelling
 			"", // an empty line carries nothing
 		];
-		for (const line of negatives) assert.isTrue(Option.isNone(parseReferenceList(line)), line);
+		for (const line of negatives) assert.isTrue(O.isNone(parseReferenceList(line)), line);
 	});
 });
 
@@ -273,8 +273,8 @@ describe("ClosingList.harvestReferenceLists", () => {
 		// The same contrast harvestIssueReferences pins: GitHub's prose scanner
 		// does not read `closes: #1`, but the whole-line dialects do.
 		assert.deepStrictEqual(harvestReferenceLists("closes: #1"), []);
-		assert.isTrue(Option.isSome(parseReferenceList("closes: #1")));
-		assert.isTrue(Option.isSome(parseClosingList("closes: #1")));
+		assert.isTrue(O.isSome(parseReferenceList("closes: #1")));
+		assert.isTrue(O.isSome(parseClosingList("closes: #1")));
 	});
 
 	it("requires whitespace between keyword and first item", () => {

@@ -1,4 +1,4 @@
-import { Context } from "effect";
+import * as Context from "effect/Context";
 import type { CliConfig } from "effect/cli";
 
 /** The shape of the ambient config, as `CliConfig.make` returns it. */

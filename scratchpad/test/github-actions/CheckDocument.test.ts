@@ -1,7 +1,13 @@
 // @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
-import type { Duration } from "effect";
-import { Effect, Fiber, Logger, Option, Ref, Result, MutableRef } from "effect";
+import type * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
+import * as Logger from "effect/Logger";
+import * as O from "effect/Option";
+import * as Ref from "effect/Ref";
+import * as Result from "effect/Result";
+import * as MutableRef from "effect/MutableRef";
 import { TestClock } from "effect/testing";
 import { CheckDocument, CheckDocumentError, CheckDocumentStamp, CheckReport } from "../../effected/github-actions/CheckDocument.ts";
 import { ManagedDocument } from "../../effected/github-actions/ManagedDocument.ts";
@@ -131,7 +137,7 @@ describe("CheckDocument", () => {
 						"one region for the check, not one per resolution",
 					);
 					const parsed = Result.getOrThrow(ManagedDocument.parseResult({ namespace: NS, key: KEY, text: final }));
-					assert.deepStrictEqual(parsed.region("check-build"), Option.some("fail"));
+					assert.deepStrictEqual(parsed.region("check-build"), O.some("fail"));
 				}).pipe(Effect.provide(layer));
 			}),
 		);
@@ -264,7 +270,7 @@ describe("CheckDocument", () => {
 				yield* Effect.gen(function* () {
 					const doc = yield* CheckDocument;
 					yield* doc.report("build", CheckReport.make({ state: "pass" }));
-					const flipped = yield* Effect.forkChild(Effect.flip(doc.flush));
+					const flipped = yield* doc.flush.pipe(Effect.flip, Effect.forkChild);
 					yield* TestClock.adjust("1 second");
 					const failure = yield* Fiber.join(flipped);
 					assert.instanceOf(failure, CheckDocumentError);
@@ -389,7 +395,7 @@ describe("CheckDocument", () => {
 				const parsed = Result.getOrThrow(
 					ManagedDocument.parseResult({ namespace: NS, key: KEY, text: afterNewer ?? "" }),
 				);
-				assert.deepStrictEqual(parsed.region("check-build"), Option.some("pass — newer run"));
+				assert.deepStrictEqual(parsed.region("check-build"), O.some("pass — newer run"));
 			}),
 		);
 
@@ -445,10 +451,10 @@ describe("CheckDocument", () => {
 
 				const final = (yield* Ref.get(remote)) ?? "";
 				const parsed = Result.getOrThrow(ManagedDocument.parseResult({ namespace: NS, key: KEY, text: final }));
-				assert.deepStrictEqual(parsed.region("check-build"), Option.some("pass — newer run"));
+				assert.deepStrictEqual(parsed.region("check-build"), O.some("pass — newer run"));
 				assert.deepStrictEqual(
 					parsed.entry("check-build"),
-					Option.some({ content: "pass — newer run", meta: { at: NEWER.at, runId: NEWER.runId } }),
+					O.some({ content: "pass — newer run", meta: { at: NEWER.at, runId: NEWER.runId } }),
 				);
 			}),
 		);

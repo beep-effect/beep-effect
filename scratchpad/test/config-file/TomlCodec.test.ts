@@ -1,6 +1,9 @@
 import { assert, describe, it } from "@effect/vitest";
 import { TomlParseError, TomlStringifyError } from "../../effected/toml/index.ts";
-import { Cause, Effect, Exit, Option } from "effect";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as O from "effect/Option";
 import { ConfigCodecError } from "../../effected/config-file/ConfigCodec.ts";
 import { TomlCodec } from "../../effected/config-file/TomlCodec.ts";
 
@@ -14,7 +17,7 @@ describe("TomlCodec", () => {
 
 	it.effect("wraps a toml parse failure as ConfigCodecError with the cause preserved structurally", () =>
 		Effect.gen(function* () {
-			const error = yield* Effect.flip(Effect.asVoid(TomlCodec.parse("port = [unclosed")));
+			const error = yield* TomlCodec.parse("port = [unclosed").pipe(Effect.asVoid, Effect.flip);
 			assert.instanceOf(error, ConfigCodecError);
 			assert.strictEqual(error.codec, "toml");
 			assert.strictEqual(error.operation, "parse");
@@ -61,8 +64,8 @@ describe("TomlCodec", () => {
 			assert.isTrue(Exit.isFailure(exit));
 			if (Exit.isFailure(exit)) {
 				const cause = Exit.getCause(exit);
-				assert.isTrue(Option.isSome(cause));
-				if (Option.isSome(cause)) {
+				assert.isTrue(O.isSome(cause));
+				if (O.isSome(cause)) {
 					// A defect here would mean the guard threw instead of failing typed.
 					assert.isTrue(Cause.hasFails(cause.value));
 					assert.isFalse(Cause.hasDies(cause.value));
@@ -70,7 +73,7 @@ describe("TomlCodec", () => {
 			}
 			// Confirm this trips the depth guard specifically, not some unrelated
 			// syntax failure.
-			const error = yield* Effect.flip(Effect.asVoid(TomlCodec.parse(hostile)));
+			const error = yield* TomlCodec.parse(hostile).pipe(Effect.asVoid, Effect.flip);
 			assert.instanceOf(error.cause, TomlParseError);
 			const cause = error.cause as TomlParseError;
 			assert.isTrue(cause.diagnostics.some((d) => d.code === "NestingDepthExceeded"));

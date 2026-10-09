@@ -1,10 +1,14 @@
 // @effect-diagnostics strictEffectProvide:skip-file asyncFunction:skip-file
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Layer, Redacted, Schema, Result } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Redacted from "effect/Redacted";
+import * as S from "effect/Schema";
+import * as Result from "effect/Result";
 import { FetchHttpClient } from "effect/http";
 import { ActionEnvironment, OidcClaims, OidcTokenIssuer } from "../../effected/github-actions/index.ts";
 
-const Json = Schema.fromJsonString(Schema.Unknown);
+const Json = S.fromJsonString(S.Unknown);
 
 const TOKEN_ENV = {
 	ACTIONS_ID_TOKEN_REQUEST_TOKEN: "runner-bearer",
@@ -28,12 +32,12 @@ const CLAIMS = OidcClaims.make({
 
 /** A JWT whose payload is `claims`, built the way the runner would. */
 const jwtFor = (claims: unknown, signature = "sig"): string => {
-	const segment = (value: unknown): string => Buffer.from(Result.getOrThrowWith(Schema.encodeResult(Json)(value), (error) => error), "utf8").toString("base64url");
+	const segment = (value: unknown): string => Buffer.from(Result.getOrThrowWith(S.encodeResult(Json)(value), (error) => error), "utf8").toString("base64url");
 	return `${segment({ alg: "RS256", typ: "JWT" })}.${segment(claims)}.${signature}`;
 };
 
 const json = (body: unknown, init: ResponseInit = {}): Response =>
-	new Response(Result.getOrThrowWith(Schema.encodeResult(Json)(body), (error) => error), { status: 200, headers: { "content-type": "application/json" }, ...init });
+	new Response(Result.getOrThrowWith(S.encodeResult(Json)(body), (error) => error), { status: 200, headers: { "content-type": "application/json" }, ...init });
 
 /**
  * The test seam: a fake `fetch` under the real client, so request construction,
@@ -259,7 +263,7 @@ describe("OidcTokenIssuer", () => {
 				// same claims the service reports, or the path stays untested while
 				// looking tested.
 				const payload = Redacted.value(token).split(".")[1] ?? "";
-				const decoded = Result.getOrThrowWith(Schema.decodeResult(Json)(Buffer.from(payload, "base64url").toString("utf8")), (error) => error) as {
+				const decoded = Result.getOrThrowWith(S.decodeResult(Json)(Buffer.from(payload, "base64url").toString("utf8")), (error) => error) as {
 					job_workflow_ref?: string;
 				};
 				assert.strictEqual(decoded.job_workflow_ref, CLAIMS.job_workflow_ref);

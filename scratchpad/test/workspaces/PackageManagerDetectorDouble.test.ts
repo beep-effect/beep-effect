@@ -14,12 +14,15 @@
 // it convenient".
 
 import { assert, describe, it } from "@effect/vitest";
-import { Cause, Effect, Exit, Option } from "effect";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as O from "effect/Option";
 import { DetectedPackageManager, PackageManagerDetectionError, PackageManagerDetector } from "../../effected/workspaces/index.ts";
 
 const pnpm = DetectedPackageManager.make({
 	name: "pnpm",
-	version: Option.some("10.33.0"),
+	version: O.some("10.33.0"),
 	runtime: "node",
 	evidence: "pnpm-workspace.yaml",
 });
@@ -30,7 +33,7 @@ describe("PackageManagerDetector.makeTest", () => {
 			const double = PackageManagerDetector.makeTest({ detect: () => Effect.succeed(pnpm) });
 			const detected = yield* double.detect("/repo");
 			assert.strictEqual(detected.name, "pnpm");
-			assert.deepStrictEqual(detected.version, Option.some("10.33.0"));
+			assert.deepStrictEqual(detected.version, O.some("10.33.0"));
 		}),
 	);
 
@@ -94,7 +97,7 @@ describe("PackageManagerDetector.layerTest", () => {
 						Effect.succeed(
 							DetectedPackageManager.make({
 								name: "bun",
-								version: Option.none(),
+								version: O.none(),
 								runtime: "bun",
 								evidence: "bun.lock",
 							}),

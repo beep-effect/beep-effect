@@ -9,7 +9,10 @@
 import { assert, describe, it, layer } from "@effect/vitest";
 import { Lockfile, ResolvedPackage } from "../../effected/lockfiles/index.ts";
 import { ReleaseAgeGate } from "../../effected/npm/index.ts";
-import { Cause, Effect, Exit, Option } from "effect";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as O from "effect/Option";
 import {
 	CatalogSet,
 	LockfileReader,
@@ -73,11 +76,11 @@ describe("WorkspaceCatalogs.makeTest — resolveSpecifier derives from a supplie
 			// The shape value directly — no layer needed to use a double inline.
 			const double = WorkspaceCatalogs.makeTest({ set: Effect.suspend(() => Effect.succeed(stubbedSet)) });
 			assert.strictEqual((yield* double.set).entries.default?.effect, "4.0.0-beta.101");
-			assert.deepStrictEqual(yield* double.resolveSpecifier("effect", "catalog:"), Option.some("4.0.0-beta.101"));
-			assert.deepStrictEqual(yield* double.resolveSpecifier("typescript", "catalog:build"), Option.some("^5.9.0"));
+			assert.deepStrictEqual(yield* double.resolveSpecifier("effect", "catalog:"), O.some("4.0.0-beta.101"));
+			assert.deepStrictEqual(yield* double.resolveSpecifier("typescript", "catalog:build"), O.some("^5.9.0"));
 			// Misses stay misses, never a fabricated answer.
-			assert.isTrue(Option.isNone(yield* double.resolveSpecifier("left-pad", "catalog:")));
-			assert.isTrue(Option.isNone(yield* double.resolveSpecifier("effect", "catalog:missing")));
+			assert.isTrue(O.isNone(yield* double.resolveSpecifier("left-pad", "catalog:")));
+			assert.isTrue(O.isNone(yield* double.resolveSpecifier("effect", "catalog:missing")));
 		}),
 	);
 
@@ -96,7 +99,7 @@ describe("WorkspaceCatalogs.makeTest — resolveSpecifier derives from a supplie
 				resolveSpecifier: () => Effect.succeedSome("pinned"),
 				releaseAgeGate: Effect.suspend(() => Effect.succeed(ReleaseAgeGate.combine())),
 			});
-			assert.deepStrictEqual(yield* double.resolveSpecifier("effect", "catalog:"), Option.some("pinned"));
+			assert.deepStrictEqual(yield* double.resolveSpecifier("effect", "catalog:"), O.some("pinned"));
 			assert.strictEqual((yield* double.releaseAgeGate).ageMinutes, 0);
 		}),
 	);
@@ -213,10 +216,10 @@ describe("LockfileReader.makeTest — resolvedVersion derives from a supplied re
 			const double = LockfileReader.makeTest({ read: Effect.suspend(() => Effect.succeed(stubbedLockfile)) });
 			assert.strictEqual((yield* double.read).packages.length, 3);
 			const first = yield* double.resolvedVersion("left-pad");
-			assert.isTrue(Option.isSome(first));
-			if (Option.isSome(first)) assert.strictEqual(first.value.version, "1.0.0");
+			assert.isTrue(O.isSome(first));
+			if (O.isSome(first)) assert.strictEqual(first.value.version, "1.0.0");
 			// A miss is a miss, never a fabricated resolution.
-			assert.isTrue(Option.isNone(yield* double.resolvedVersion("right-pad")));
+			assert.isTrue(O.isNone(yield* double.resolvedVersion("right-pad")));
 			// `integrity` needs the workspace manifests discovery enumerates — a
 			// lockfile alone cannot honestly answer it, so it stays dead.
 			assertDies(yield* Effect.exit(double.integrity), "integrity() was called but not stubbed");
@@ -236,8 +239,8 @@ describe("LockfileReader.makeTest — resolvedVersion derives from a supplied re
 							})),
 			});
 			const resolved = yield* double.resolvedVersion("left-pad");
-			assert.isTrue(Option.isSome(resolved));
-			if (Option.isSome(resolved)) assert.strictEqual(resolved.value.version, "9.9.9");
+			assert.isTrue(O.isSome(resolved));
+			if (O.isSome(resolved)) assert.strictEqual(resolved.value.version, "9.9.9");
 		}),
 	);
 });
@@ -254,7 +257,7 @@ describe("LockfileReader.layerTest — provides the service", () => {
 			Effect.gen(function* () {
 				const reader = yield* LockfileReader;
 				assert.strictEqual((yield* reader.read).packages.length, 0);
-				assert.isTrue(Option.isNone(yield* reader.resolvedVersion("effect")));
+				assert.isTrue(O.isNone(yield* reader.resolvedVersion("effect")));
 			}),
 		);
 	});

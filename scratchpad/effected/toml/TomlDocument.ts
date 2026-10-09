@@ -9,7 +9,10 @@
 // `TomlDiagnostic` instances and the tagged `TomlParseError`. The dependency
 // edge runs facade → engine only.
 
-import { Effect, Schema, SchemaIssue, SchemaTransformation } from "effect";
+import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import { isRawTomlError } from "./internal/diagnostics.ts";
 import { isGuardExceeded } from "./internal/limits.ts";
 import { parseExpressions } from "./internal/parser.ts";
@@ -75,10 +78,10 @@ const materializeError = (text: string, defect: unknown): TomlParseError => {
  *
  * @public
  */
-export class TomlDocument extends Schema.Class<TomlDocument>("TomlDocument")({
-	source: Schema.String,
-	expressions: Schema.Array(TomlExpression),
-	diagnostics: Schema.Array(TomlDiagnostic),
+export class TomlDocument extends S.Class<TomlDocument>("TomlDocument")({
+	source: S.String,
+	expressions: S.Array(TomlExpression),
+	diagnostics: S.Array(TomlDiagnostic),
 }) {
 	/**
 	 * Parse TOML text into a lossless document. Fails with
@@ -121,10 +124,10 @@ export class TomlDocument extends Schema.Class<TomlDocument>("TomlDocument")({
 	 * caches are not shared across calls; bind the result to a `const` on hot
 	 * paths.
 	 */
-	static schema(): Schema.Codec<TomlDocument, string> {
-		return Schema.String.pipe(
-			Schema.decodeTo(
-				Schema.instanceOf(TomlDocument),
+	static schema(): S.Codec<TomlDocument, string> {
+		return S.String.pipe(
+			S.decodeTo(
+				S.instanceOf(TomlDocument),
 				SchemaTransformation.transformEffect({
 					decode: (input: string) =>
 						TomlDocument.parse(input).pipe(

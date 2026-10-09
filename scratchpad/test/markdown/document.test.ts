@@ -3,7 +3,9 @@
 // parity and guard-materialization contract the bare-tree facade holds.
 
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Result, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { MAX_NESTING_DEPTH } from "../../effected/markdown/internal/limits.ts";
 import { MarkdownDiagnostic } from "../../effected/markdown/MarkdownDiagnostic.ts";
 import { MarkdownDocument } from "../../effected/markdown/MarkdownDocument.ts";
@@ -173,8 +175,8 @@ describe("MarkdownDocument schema", () => {
 		if (Result.isFailure(result)) {
 			assert.fail("expected the document to parse");
 		}
-		const encoded = Result.getOrThrow(Schema.encodeUnknownResult(MarkdownDocument)(result.success));
-		const decoded = Result.getOrThrow(Schema.decodeResult(MarkdownDocument)(encoded));
+		const encoded = Result.getOrThrow(S.encodeUnknownResult(MarkdownDocument)(result.success));
+		const decoded = Result.getOrThrow(S.decodeResult(MarkdownDocument)(encoded));
 		assert.strictEqual(decoded.source, result.success.source);
 		assert.strictEqual(decoded.definitions.size, result.success.definitions.size);
 		assert.deepStrictEqual(

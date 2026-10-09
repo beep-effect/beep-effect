@@ -1,5 +1,15 @@
-import type { Scope } from "effect";
-import { Clock, Context, DateTime, Duration, Effect, Layer, Option, Redacted, Ref, Schema, Stream } from "effect";
+import type * as Scope from "effect/Scope";
+import * as Clock from "effect/Clock";
+import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Redacted from "effect/Redacted";
+import * as Ref from "effect/Ref";
+import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import githubAppJwt from "universal-github-app-jwt";
 import type { GitHubClientShape } from "./GitHubClient.ts";
 import { GitHubClient, makeClientShape } from "./GitHubClient.ts";
@@ -19,13 +29,13 @@ import type { RetryPolicy } from "./Resilience.ts";
  *
  * @public
  */
-export class GitHubAppError extends Schema.TaggedError<GitHubAppError>()("GitHubAppError", {
+export class GitHubAppError extends S.TaggedError<GitHubAppError>()("GitHubAppError", {
 	/** Which step failed. */
-	kind: Schema.Literals(["jwt", "token", "revoke", "identity", "installation"]),
+	kind: S.Literals(["jwt", "token", "revoke", "identity", "installation"]),
 	/** Human-readable cause. */
-	reason: Schema.String,
+	reason: S.String,
 	/** The underlying failure, when there is one. */
-	cause: Schema.optionalKey(Schema.Defect()),
+	cause: S.optionalKey(S.Defect()),
 }) {
 	override get message(): string {
 		return `GitHub App ${this.kind} failed: ${this.reason}`;
@@ -96,21 +106,21 @@ export interface TokenRequest extends AppCredentials {
  *
  * @public
  */
-export class InstallationToken extends Schema.Class<InstallationToken>("InstallationToken")({
+export class InstallationToken extends S.Class<InstallationToken>("InstallationToken")({
 	/** The token. Decodes to `Redacted`, encodes back to the raw string. */
-	token: Schema.RedactedFromValue(Schema.String),
+	token: S.RedactedFromValue(S.String),
 	/** When GitHub will stop accepting it — about an hour out. */
-	expiresAt: Schema.DateTimeUtcFromString,
+	expiresAt: S.DateTimeUtcFromString,
 	/** The installation it is scoped to. */
-	installationId: Schema.Int,
+	installationId: S.Int,
 	/** The permissions GitHub actually granted, which may be narrower than requested. */
-	permissions: Schema.Record(Schema.String, Schema.String),
+	permissions: S.Record(S.String, S.String),
 	/** The app's slug, when identity was resolved. */
-	appSlug: Schema.optionalKey(Schema.String),
+	appSlug: S.optionalKey(S.String),
 	/** The app's bot user id, when identity was resolved. */
-	appUserId: Schema.optionalKey(Schema.Int),
+	appUserId: S.optionalKey(S.Int),
 	/** The app's display name, when identity was resolved. */
-	appName: Schema.optionalKey(Schema.String),
+	appName: S.optionalKey(S.String),
 }) {
 	/**
 	 * Whether this token is spent, `skew` before its stated expiry.
@@ -148,11 +158,11 @@ const DEFAULT_SKEW = Duration.seconds(60);
  *
  * @public
  */
-export class BotIdentity extends Schema.Class<BotIdentity>("BotIdentity")({
+export class BotIdentity extends S.Class<BotIdentity>("BotIdentity")({
 	/** The git author/committer name, e.g. `"my-app[bot]"`. */
-	name: Schema.String,
+	name: S.String,
 	/** The no-reply address GitHub attributes to that account. */
-	email: Schema.String,
+	email: S.String,
 }) {
 	/** The identity for an app, given whatever of its identity is known. */
 	static forApp(source: { readonly appSlug: string; readonly appUserId?: number | undefined }): BotIdentity {
@@ -195,13 +205,13 @@ export class BotIdentity extends Schema.Class<BotIdentity>("BotIdentity")({
  *
  * @public
  */
-export class AppIdentity extends Schema.Class<AppIdentity>("AppIdentity")({
+export class AppIdentity extends S.Class<AppIdentity>("AppIdentity")({
 	/** The URL slug, e.g. `"my-app"`. */
-	slug: Schema.String,
+	slug: S.String,
 	/** The display name. */
-	name: Schema.String,
+	name: S.String,
 	/** The bot user's numeric id, when it could be resolved. */
-	userId: Schema.optionalKey(Schema.Int),
+	userId: S.optionalKey(S.Int),
 }) {
 	/** The committer identity for this app. */
 	botIdentity(): BotIdentity {
@@ -217,11 +227,11 @@ export class AppIdentity extends Schema.Class<AppIdentity>("AppIdentity")({
  *
  * @public
  */
-export class Installation extends Schema.Class<Installation>("Installation")({
+export class Installation extends S.Class<Installation>("Installation")({
 	/** The installation id, which is what a token is minted against. */
-	id: Schema.Int,
+	id: S.Int,
 	/** The account the app is installed on, when GitHub reported one. */
-	account: Schema.optionalKey(Schema.String),
+	account: S.optionalKey(S.String),
 }) {}
 
 /**
@@ -458,7 +468,7 @@ function makeApp(options: GitHubAppOptions): Effect.Effect<GitHubAppShape> {
 			const minted = yield* client
 				.request("POST /app/installations/{installation_id}/access_tokens", { installation_id: installationId })
 				.pipe(Effect.catch(appFailure("token")));
-			return yield* Schema.decodeEffect(InstallationToken)({
+			return yield* S.decodeEffect(InstallationToken)({
 				token: minted.token,
 				expiresAt: minted.expires_at,
 				installationId,
@@ -476,7 +486,7 @@ function makeApp(options: GitHubAppOptions): Effect.Effect<GitHubAppShape> {
 		});
 
 		const scopedToken = (request: TokenRequest): Effect.Effect<InstallationToken, GitHubAppError, Scope.Scope> =>
-			Effect.acquireRelease(token(request), (minted) => Effect.ignore(revoke(minted.token)));
+			Effect.acquireRelease(token(request), (minted) => minted.token.pipe(revoke, Effect.ignore));
 
 		const identity = Effect.fn("GitHubApp.identity")(function* (
 			request: AppCredentials & { readonly installationToken?: Redacted.Redacted<string> | undefined },
@@ -496,7 +506,7 @@ function makeApp(options: GitHubAppOptions): Effect.Effect<GitHubAppShape> {
 			return AppIdentity.make({
 				slug,
 				name,
-				...(Option.isSome(user) ? { userId: numericId(user.value.id) } : {}),
+				...(O.isSome(user) ? { userId: numericId(user.value.id) } : {}),
 			});
 		});
 
@@ -529,17 +539,17 @@ const makeRotatingClient = (
 	options: GitHubAppOptions,
 ): Effect.Effect<GitHubClientShape, GitHubAppError, Scope.Scope> =>
 	Effect.gen(function* () {
-		const held = yield* Ref.make(Option.none<{ token: InstallationToken; client: GitHubClientShape }>());
+		const held = yield* Ref.make(O.none<{ token: InstallationToken; client: GitHubClientShape }>());
 
 		const revokeHeld = Effect.flatMap(Ref.get(held), (current) =>
-			Option.isSome(current) ? Effect.ignore(app.revoke(current.value.token.token)) : Effect.void,
+			O.isSome(current) ? Effect.ignore(app.revoke(current.value.token.token)) : Effect.void,
 		);
 
 		const rotate = Effect.gen(function* () {
 			yield* revokeHeld;
 			const minted = yield* app.token(request);
 			const client = yield* makeClientShape({ ...options, token: minted.token });
-			yield* Ref.set(held, Option.some({ token: minted, client }));
+			yield* Ref.set(held, O.some({ token: minted, client }));
 			return client;
 		});
 
@@ -553,7 +563,7 @@ const makeRotatingClient = (
 		const fresh: Effect.Effect<GitHubClientShape, GitHubAppError> = Effect.gen(function* () {
 			const now = yield* Clock.currentTimeMillis;
 			const state = yield* Ref.get(held);
-			if (Option.isSome(state) && !state.value.token.isExpired(now)) return state.value.client;
+			if (O.isSome(state) && !state.value.token.isExpired(now)) return state.value.client;
 			return yield* rotate;
 		});
 
@@ -600,7 +610,7 @@ const makeRotatingClient = (
 			graphql: (document, variables) =>
 				Effect.flatMap(currentForGraphQL, (client) => client.graphql(document, variables)),
 			rateLimit: Effect.flatMap(Ref.get(held), (state) =>
-				Option.isSome(state) ? state.value.client.rateLimit : Effect.succeedNone,
+				O.isSome(state) ? state.value.client.rateLimit : Effect.succeedNone,
 			),
 		} satisfies GitHubClientShape;
 	});

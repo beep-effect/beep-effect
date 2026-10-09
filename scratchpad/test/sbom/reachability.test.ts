@@ -121,8 +121,10 @@ describe("bundle reachability", () => {
 		// `SigstoreBundle` and `IdentityToken` are their own modules precisely so a
 		// verifier — or anything that merely stores or forwards a bundle — can name
 		// the shape without loading Fulcio's transport.
-		assert.deepStrictEqual([...reachableBareImports("SigstoreBundle.ts")].sort(), ["effect"]);
-		assert.deepStrictEqual([...reachableBareImports("IdentityToken.ts")].sort(), ["effect"]);
+		assert.deepStrictEqual([...reachableBareImports("SigstoreBundle.ts")].sort(), ["effect/Schema"]);
+		assert.deepStrictEqual([...reachableBareImports("IdentityToken.ts")].sort(), [
+			"effect/Context", "effect/Effect", "effect/Layer", "effect/Redacted", "effect/Schema",
+		]);
 	});
 
 	it("the SBOM half reaches only effect and the kit packages it derives from", () => {
@@ -137,7 +139,10 @@ describe("bundle reachability", () => {
 	it("the statement and provenance models reach nothing but effect", () => {
 		// This is what lets a VERIFIER depend on the shapes alone.
 		for (const entry of ["InTotoStatement.ts", "SlsaProvenance.ts", "NtiaReport.ts"]) {
-			assert.deepStrictEqual([...reachableBareImports(entry)].sort(), ["effect"], entry);
+			const expected = entry === "InTotoStatement.ts"
+				? ["effect/Effect", "effect/Result", "effect/Schema"]
+				: ["effect/Schema"];
+			assert.deepStrictEqual([...reachableBareImports(entry)].sort(), expected, entry);
 		}
 	});
 

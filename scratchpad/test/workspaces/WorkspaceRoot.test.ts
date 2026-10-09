@@ -8,7 +8,11 @@
 // is exactly the silent escape `stopAt` exists to refuse.
 
 import { assert, describe, it, layer } from "@effect/vitest";
-import { Cause, Effect, Exit, Layer, Path } from "effect";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
 import {
 	WORKSPACE_MARKERS,
 	WorkspaceDiscovery,

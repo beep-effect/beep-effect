@@ -1,7 +1,11 @@
 // @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { TerminalEnv } from "../../../effected/env/index.ts";
-import { Cause, Effect, Exit, Layer, Option } from "effect";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import { Box, Text, render, renderToString } from "ink";
 import type { ReactElement, ReactNode } from "react";
 import { createElement } from "react";
@@ -29,8 +33,8 @@ const themeLayer = CliTheme.layer({ tokens: { accent: { fg: "#123456" } }, glyph
 	Layer.provide(
 		TerminalEnv.layerTest({
 			stdinIsTerminal: true,
-			stdout: { isTerminal: true, color: "truecolor", hyperlinks: false, columns: Option.some(80) },
-			stderr: { isTerminal: true, color: "truecolor", hyperlinks: false, columns: Option.some(80) },
+			stdout: { isTerminal: true, color: "truecolor", hyperlinks: false, columns: O.some(80) },
+			stderr: { isTerminal: true, color: "truecolor", hyperlinks: false, columns: O.some(80) },
 		}),
 	),
 );
@@ -194,7 +198,7 @@ describe("a UiProvider nested in a CliUi.run screen keeps the screen (review I1)
 			assert.include(yield* handle.plainFrame, "Pick", "control: it drew first");
 			yield* handle.press({ char: "q" });
 			const result = yield* Effect.exit(handle.result.pipe(Effect.timeout("1 second")));
-			assert.deepStrictEqual(CliUiTest.cancelReason(result), Option.some("escape"), messageOf(result));
+			assert.deepStrictEqual(CliUiTest.cancelReason(result), O.some("escape"), messageOf(result));
 		}).pipe(Effect.scoped, Effect.timeout("3 seconds")),
 	);
 });

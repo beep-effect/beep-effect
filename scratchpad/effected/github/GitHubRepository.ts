@@ -1,4 +1,7 @@
-import { Context, Effect, Layer, Schema } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as S from "effect/Schema";
 import { GitHubClient } from "./GitHubClient.ts";
 import type { GitHubError } from "./GitHubError.ts";
 import type { GitHubGraphQLError } from "./GraphQL.ts";
@@ -192,9 +195,9 @@ export const transformSecurityAndAnalysis = (value: unknown): Record<string, unk
 };
 
 /** The mutation's answer. Only its shape matters — the id is never read. */
-const UpdateRepositoryResponse = Schema.Struct({
-	updateRepository: Schema.Struct({
-		repository: Schema.Struct({ id: Schema.String }),
+const UpdateRepositoryResponse = S.Struct({
+	updateRepository: S.Struct({
+		repository: S.Struct({ id: S.String }),
 	}),
 });
 

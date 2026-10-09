@@ -1,4 +1,8 @@
-import { Context, Effect, Layer, Option, Schema } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { GitHubClient } from "./GitHubClient.ts";
 import { GitHubError } from "./GitHubError.ts";
 import { Repo } from "./Repo.ts";
@@ -9,17 +13,17 @@ import type { PageOptions } from "./Rest.ts";
  *
  * @public
  */
-export class ReleaseInfo extends Schema.Class<ReleaseInfo>("ReleaseInfo")({
-	id: Schema.Int,
-	tag: Schema.String,
-	name: Schema.String,
-	body: Schema.String,
-	draft: Schema.Boolean,
-	prerelease: Schema.Boolean,
+export class ReleaseInfo extends S.Class<ReleaseInfo>("ReleaseInfo")({
+	id: S.Int,
+	tag: S.String,
+	name: S.String,
+	body: S.String,
+	draft: S.Boolean,
+	prerelease: S.Boolean,
 	/** The web URL. */
-	url: Schema.String,
+	url: S.String,
 	/** The templated upload endpoint GitHub hands back for assets. */
-	uploadUrl: Schema.String,
+	uploadUrl: S.String,
 }) {}
 
 /**
@@ -27,13 +31,13 @@ export class ReleaseInfo extends Schema.Class<ReleaseInfo>("ReleaseInfo")({
  *
  * @public
  */
-export class ReleaseAsset extends Schema.Class<ReleaseAsset>("ReleaseAsset")({
-	id: Schema.Int,
-	name: Schema.String,
+export class ReleaseAsset extends S.Class<ReleaseAsset>("ReleaseAsset")({
+	id: S.Int,
+	name: S.String,
 	/** The browser download URL. */
-	url: Schema.String,
+	url: S.String,
 	/** Size in bytes. */
-	size: Schema.Int,
+	size: S.Int,
 }) {}
 
 /**
@@ -54,7 +58,7 @@ export interface GitHubReleaseShape {
 	/** Read the release for `tag`. Fails `notFound` when there is none. */
 	readonly getByTag: (tag: string) => Effect.Effect<ReleaseInfo, GitHubError, Repo>;
 	/** As {@link GitHubReleaseShape.getByTag}, with absence as `Option.none`. */
-	readonly getByTagOption: (tag: string) => Effect.Effect<Option.Option<ReleaseInfo>, GitHubError, Repo>;
+	readonly getByTagOption: (tag: string) => Effect.Effect<O.Option<ReleaseInfo>, GitHubError, Repo>;
 	/** List releases, paginated. */
 	readonly list: (options?: {
 		readonly page?: PageOptions | undefined;
@@ -177,11 +181,11 @@ const project = (raw: RawRelease): ReleaseInfo =>
 		uploadUrl: raw.upload_url,
 	});
 
-const AssetResponse = Schema.Struct({
-	id: Schema.Int,
-	name: Schema.String,
-	browser_download_url: Schema.String,
-	size: Schema.Int,
+const AssetResponse = S.Struct({
+	id: S.Int,
+	name: S.String,
+	browser_download_url: S.String,
+	size: S.Int,
 });
 
 const assetOf = (raw: { id: number; name: string; browser_download_url: string; size: number }): ReleaseAsset =>
@@ -224,7 +228,7 @@ const make = (client: GitHubClient["Service"]): GitHubReleaseShape => {
 		getByTagOption: Effect.fn("GitHubRelease.getByTagOption")(function* (tag: string) {
 			return yield* getByTag(tag).pipe(
 				Effect.asSome,
-				Effect.catchIf(GitHubError.hasKind("notFound"), () => Effect.succeed(Option.none<ReleaseInfo>())),
+				Effect.catchIf(GitHubError.hasKind("notFound"), () => Effect.succeed(O.none<ReleaseInfo>())),
 			);
 		}),
 

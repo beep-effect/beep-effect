@@ -21,7 +21,8 @@ import { assert, describe, it } from "@effect/vitest";
 import { Jsonc } from "../../effected/jsonc/index.ts";
 import { Toml } from "../../effected/toml/index.ts";
 import { Yaml } from "../../effected/yaml/index.ts";
-import { Effect, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
 import { FrontmatterMissingError, FrontmatterValidationError, MarkdownFrontmatter } from "../../effected/markdown/Frontmatter.ts";
 import { JsonFrontmatter } from "../../effected/markdown/JsonFrontmatter.ts";
 import { MarkdownParseOptions } from "../../effected/markdown/Markdown.ts";
@@ -31,9 +32,9 @@ import { YamlFrontmatter } from "../../effected/markdown/YamlFrontmatter.ts";
 
 const withFrontmatter = MarkdownParseOptions.make({ frontmatter: true });
 
-const Meta = Schema.Struct({
-	title: Schema.String,
-	count: Schema.Finite,
+const Meta = S.Struct({
+	title: S.String,
+	count: S.Finite,
 });
 
 const parseDoc = (source: string) => MarkdownDocument.parse(source, withFrontmatter);
@@ -210,10 +211,10 @@ describe("MarkdownDocument.hasFrontmatterBlock", () => {
 describe("frontmatter round-trip property", () => {
 	// Newline-free strings only — see the file header for why. The count stays
 	// in the 32-bit range every frontmatter codec represents exactly.
-	const Scalar = Schema.String.check(Schema.makeFilter((s) => !s.includes("\n") && !s.includes("\r")));
-	const MetaArb = Schema.Struct({
+	const Scalar = S.String.check(S.makeFilter((s) => !s.includes("\n") && !s.includes("\r")));
+	const MetaArb = S.Struct({
 		title: Scalar,
-		count: Schema.Int.check(Schema.isBetween({ minimum: -(2 ** 31), maximum: 2 ** 31 - 1 })),
+		count: S.Int.check(S.isBetween({ minimum: -(2 ** 31), maximum: 2 ** 31 - 1 })),
 	});
 
 	/** Fence a stringified block, normalizing a missing trailing newline. */

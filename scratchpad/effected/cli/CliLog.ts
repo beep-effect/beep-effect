@@ -2,20 +2,19 @@ import { dual } from "effect/Function";
 import type { AudienceKind, RuntimeEnv } from "../env/index.ts";
 import { Audience, CurrentRuntimeEnv, TerminalEnv } from "../env/index.ts";
 import { CommandNeutralizer } from "../github-commands/index.ts";
-import type { Fiber, FileSystem } from "effect";
-import {
-	Cause,
-	Config,
-	Console,
-	Context,
-	Effect,
-	Layer,
-	LogLevel,
-	Logger,
-	Option,
-	Path as PathModule,
-	References,
-} from "effect";
+import type * as Fiber from "effect/Fiber";
+import type * as FileSystem from "effect/FileSystem";
+import * as Cause from "effect/Cause";
+import * as Config from "effect/Config";
+import * as Console from "effect/Console";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as LogLevel from "effect/LogLevel";
+import * as Logger from "effect/Logger";
+import * as O from "effect/Option";
+import * as PathModule from "effect/Path";
+import * as References from "effect/References";
 import type { CliLoggerOptions } from "./CliLogger.ts";
 import { makeCliLogger } from "./CliLogger.ts";
 import { CliTheme } from "./CliTheme.ts";
@@ -223,8 +222,8 @@ const readLevel = (
 	Effect.gen(function* () {
 		if (explicit !== undefined) return { level: explicit, invalid: undefined };
 		if (envVar === undefined) return { level: "None", invalid: undefined };
-		const raw = yield* Config.option(Config.String(envVar)).pipe(Effect.orElseSucceed(() => Option.none<string>()));
-		if (Option.isNone(raw) || raw.value === "") return { level: "None", invalid: undefined };
+		const raw = yield* Config.option(Config.String(envVar)).pipe(Effect.orElseSucceed(() => O.none<string>()));
+		if (O.isNone(raw) || raw.value === "") return { level: "None", invalid: undefined };
 		const level = LEVELS[raw.value.toLowerCase()];
 		if (level !== undefined) return { level, invalid: undefined };
 		return {
@@ -238,13 +237,13 @@ const readLevel = (
  * fiber's `CurrentRuntimeEnv`, or `fallback` where the fiber has none, says GitHub Actions.
  */
 const actionsDecision =
-	(neutralize: boolean | "auto", fallback: Option.Option<RuntimeEnv>) =>
+	(neutralize: boolean | "auto", fallback: O.Option<RuntimeEnv>) =>
 	(fiber: Fiber.Fiber<unknown, unknown>): boolean => {
 		if (neutralize !== "auto") return neutralize;
 		const inFiber = Context.getOption(fiber.context, CurrentRuntimeEnv);
-		const runtime = Option.isSome(inFiber) ? inFiber : fallback;
-		return Option.contains(
-			Option.flatMap(runtime, (env) => env.ci),
+		const runtime = O.isSome(inFiber) ? inFiber : fallback;
+		return O.contains(
+			O.flatMap(runtime, (env) => env.ci),
 			"github-actions",
 		);
 	};
@@ -427,7 +426,7 @@ export class CliLog {
 				// Captured here, not required: the fallback for a record whose own fiber has no CurrentRuntimeEnv.
 				const captured = yield* Effect.serviceOption(CurrentRuntimeEnv);
 				// The option beats the capture: a host that names its environment means it.
-				const fallback = options.runtimeEnv === undefined ? captured : Option.some(options.runtimeEnv);
+				const fallback = options.runtimeEnv === undefined ? captured : O.some(options.runtimeEnv);
 				const underActionsIn = actionsDecision(options.neutralize ?? "auto", fallback);
 
 				const color = terminal?.stderr.color ?? "none";
@@ -437,7 +436,7 @@ export class CliLog {
 				const isPretty = (record: Logger.Options<unknown>): boolean => {
 					if (format !== "auto") return format === "pretty";
 					const inForce = Context.getOption(record.fiber.context, Audience);
-					const kind = Option.isSome(inForce) ? inForce.value.kind : audience?.kind;
+					const kind = O.isSome(inForce) ? inForce.value.kind : audience?.kind;
 					// The audience alone decides, as it does at build time: stderr's terminal state is never consulted.
 					return kind === "human";
 				};
@@ -462,7 +461,7 @@ export class CliLog {
 					);
 					const name = record.logLevel.toUpperCase();
 					const levelText = paintStyle(LEVEL_STYLES[name] ?? {}, color, name);
-					const cause = record.cause.reasons.length > 0 ? `\n${sanitize(Cause.pretty(record.cause))}` : "";
+					const cause = record.cause.reasons.length > 0 ? `\n${record.cause.pipe(Cause.pretty, sanitize)}` : "";
 					const line = `${record.date.toISOString().slice(11, 23)} ${levelText}${component} ${message}${cause}`;
 					return underActions ? CommandNeutralizer.text(line) : line;
 				};
@@ -507,11 +506,11 @@ export class CliLog {
 							if (file !== undefined) {
 								const target =
 									"path" in file
-										? Option.some(file.path)
+										? O.some(file.path)
 										: yield* Config.option(Config.String(file.envVar)).pipe(
-												Effect.orElseSucceed(() => Option.none<string>()),
+												Effect.orElseSucceed(() => O.none<string>()),
 											);
-								if (Option.isSome(target) && target.value !== "") {
+								if (O.isSome(target) && target.value !== "") {
 									const location = yield* PathModule.Path;
 									loggers.push(yield* makeFileSink(location.resolve(target.value), lowered, underActionsIn));
 								}
@@ -568,7 +567,7 @@ export class CliLog {
 			const audience = yield* Effect.serviceOption(Audience);
 			const theme = CliTheme.forAudience(
 				(yield* CliTheme).forStream("stderr"),
-				Option.isSome(audience) ? audience.value.kind : undefined,
+				O.isSome(audience) ? audience.value.kind : undefined,
 			);
 			const line = `${indentOf(options?.indent)}${theme.status(vocab, name, sanitize(text))}`;
 			// Every vocabulary is built from Status.core, so both names are there; the cast only widens the name.
@@ -671,7 +670,7 @@ export const platformLogLayer: {
 			}
 			return Layer.merge(
 				Logger.layer([
-					makeCliLogger(options.logger, actionsDecision(options.neutralize ?? "auto", Option.some(runtimeEnv))),
+					makeCliLogger(options.logger, actionsDecision(options.neutralize ?? "auto", O.some(runtimeEnv))),
 				]),
 				LogLevel.isLessThan(level, ambient) ? Layer.succeed(References.MinimumLogLevel, level) : Layer.empty,
 			);
@@ -702,7 +701,7 @@ export const envBuildLogLayer: {
 	Layer.unwrap(
 		Effect.gen(function* () {
 			const { ndjson, runtimeEnv } = yield* buildTimeDecision(options, audienceEnvVar);
-			const underActions = actionsDecision(options.neutralize ?? "auto", Option.some(runtimeEnv));
+			const underActions = actionsDecision(options.neutralize ?? "auto", O.some(runtimeEnv));
 			// A configuration warning is never program output: whatever `stderrFrom` the program's logger raises, every
 			// line the environment build writes goes to stderr.
 			if (!ndjson) return Logger.layer([makeCliLogger({ ...options.logger, stderrFrom: "All" }, underActions)]);

@@ -13,7 +13,10 @@
 // here as the posture link.
 
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Equal, Result, Stream } from "effect";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import * as Result from "effect/Result";
+import * as Stream from "effect/Stream";
 import { Markdown } from "../../effected/markdown/Markdown.ts";
 import { Blockquote, Paragraph, Point, Position, Root, Text } from "../../effected/markdown/MarkdownNode.ts";
 import { MarkdownVisitor, MarkdownVisitorEvent } from "../../effected/markdown/MarkdownVisitor.ts";
@@ -25,7 +28,7 @@ const parse = (text: string, options?: Parameters<typeof Markdown.parseResult>[1
 	return Result.getOrThrow(result);
 };
 
-const collect = (root: Root) => Effect.runSync(Stream.runCollect(MarkdownVisitor.visit(root)));
+const collect = (root: Root) => MarkdownVisitor.visit(root).pipe(Stream.runCollect, Effect.runSync);
 
 /** A plain-mdast tree of `depth` nested blockquotes around one paragraph. */
 const deepForeignTree = (depth: number): unknown => {
@@ -126,7 +129,7 @@ describe("MarkdownVisitor", () => {
 
 	it("terminates early under Stream.take without walking the rest", () => {
 		const root = parse("a\n\nb\n\nc\n");
-		const events = Effect.runSync(Stream.runCollect(MarkdownVisitor.visit(root).pipe(Stream.take(3))));
+		const events = MarkdownVisitor.visit(root).pipe(Stream.take(3), Stream.runCollect, Effect.runSync);
 		assert.strictEqual(events.length, 3);
 		assert.strictEqual(events[0]?._tag, "Enter");
 	});
@@ -143,7 +146,7 @@ describe("MarkdownVisitor", () => {
 		// below the cap: 254 blockquotes puts text at depth 256 == cap, legal.
 		const result = Mdast.fromMdastResult(deepForeignTree(254));
 		assert.isTrue(Result.isSuccess(result));
-		const events = collect(Result.getOrThrow(result));
+		const events = result.pipe(Result.getOrThrow, collect);
 		assert.isFalse(events.some((event) => event._tag === "Error"));
 	});
 

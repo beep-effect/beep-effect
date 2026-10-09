@@ -4,7 +4,10 @@
 // semantics are the default, and an organization with its own publish rules
 // replaces the layer with `Layer.succeed` instead of forking the package.
 
-import { Context, Effect, Layer, Schema } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as S from "effect/Schema";
 import type { WorkspacePackage } from "./WorkspacePackage.ts";
 
 /** The public npm registry, used when `publishConfig.registry` says nothing. */
@@ -15,19 +18,19 @@ const DEFAULT_REGISTRY = "https://registry.npmjs.org/";
  *
  * @public
  */
-export class PublishTarget extends Schema.Class<PublishTarget>("PublishTarget")({
+export class PublishTarget extends S.Class<PublishTarget>("PublishTarget")({
 	/** The package name being published. */
-	name: Schema.NonEmptyString,
+	name: S.NonEmptyString,
 	/** The registry URL. */
-	registry: Schema.NonEmptyString,
+	registry: S.NonEmptyString,
 	/** The directory to publish, relative to the package root; `"."` for the root itself. */
-	directory: Schema.String,
+	directory: S.String,
 	/** Scoped-package visibility. */
-	access: Schema.Literals(["public", "restricted"]),
+	access: S.Literals(["public", "restricted"]),
 	/** Whether to publish with a provenance attestation. */
-	provenance: Schema.Boolean.pipe(
-		Schema.withDecodingDefaultKey(Effect.succeed(false)),
-		Schema.withConstructorDefault(Effect.succeed(false)),
+	provenance: S.Boolean.pipe(
+		S.withDecodingDefaultKey(Effect.succeed(false)),
+		S.withConstructorDefault(Effect.succeed(false)),
 	),
 }) {}
 

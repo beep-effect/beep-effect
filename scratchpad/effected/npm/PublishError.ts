@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 
 /**
  * A publish-workflow step failed.
@@ -19,19 +19,19 @@ import { Schema } from "effect";
  *
  * @public
  */
-export class PublishError extends Schema.TaggedError<PublishError>()("PublishError", {
+export class PublishError extends S.TaggedError<PublishError>()("PublishError", {
 	/** Which step failed. */
-	kind: Schema.Literals(["auth", "pack", "publish", "output", "digest", "executor"]),
+	kind: S.Literals(["auth", "pack", "publish", "output", "digest", "executor"]),
 	/** The package directory or tarball the step was working on. */
-	subject: Schema.optionalKey(Schema.String),
+	subject: S.optionalKey(S.String),
 	/** The registry involved, for `"auth"` and `"publish"`. */
-	registry: Schema.optionalKey(Schema.String),
+	registry: S.optionalKey(S.String),
 	/** npm's exit code, when npm ran and failed. */
-	exitCode: Schema.optionalKey(Schema.Finite),
+	exitCode: S.optionalKey(S.Finite),
 	/** npm's output, already redacted by the runner. */
-	output: Schema.optionalKey(Schema.String),
+	output: S.optionalKey(S.String),
 	/** The underlying failure. */
-	cause: Schema.optionalKey(Schema.Defect()),
+	cause: S.optionalKey(S.Defect()),
 }) {
 	override get message(): string {
 		const where = this.subject === undefined ? "" : ` for ${this.subject}`;

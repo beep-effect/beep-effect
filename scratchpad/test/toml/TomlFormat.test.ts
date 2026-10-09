@@ -5,7 +5,7 @@
 // left open, and every modified document is proven to reparse cleanly.
 
 import { assert, describe, it } from "@effect/vitest";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { Toml, TomlParseError } from "../../effected/toml/Toml.ts";
 import type { TomlPath } from "../../effected/toml/TomlEdit.ts";
 import { TomlFormat, TomlFormattingOptions, TomlModificationError } from "../../effected/toml/TomlFormat.ts";

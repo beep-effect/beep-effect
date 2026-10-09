@@ -1,6 +1,6 @@
 // @effect-diagnostics strictEffectProvide:skip-file
 import { dual } from "effect/Function";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import type { RenderContext } from "../../../effected/cli/index.ts";
 import { CliTheme } from "../../../effected/cli/index.ts";
 import { stripAnsi } from "../../../effected/cli/internal/displayWidth.ts";

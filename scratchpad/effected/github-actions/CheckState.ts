@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 
 /**
  * The kit's check-state vocabulary.
@@ -18,7 +18,7 @@ import { Schema } from "effect";
  *
  * @public
  */
-export const CheckState = Schema.Literals([
+export const CheckState = S.Literals([
 	"running",
 	"pass",
 	"fail",

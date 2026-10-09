@@ -1,13 +1,14 @@
-import { Result, Schema } from "effect";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 
 /**
  * Raised when bytes cannot be read as an envelope.
  *
  * @public
  */
-export class NotABlobEnvelopeError extends Schema.TaggedError<NotABlobEnvelopeError>()("NotABlobEnvelopeError", {
+export class NotABlobEnvelopeError extends S.TaggedError<NotABlobEnvelopeError>()("NotABlobEnvelopeError", {
 	/** The underlying failure, preserved structurally. */
-	cause: Schema.optionalKey(Schema.Defect()),
+	cause: S.optionalKey(S.Defect()),
 }) {
 	override get message(): string {
 		return "Bytes are not an @effected/github-actions blob envelope";
@@ -19,11 +20,11 @@ export class NotABlobEnvelopeError extends Schema.TaggedError<NotABlobEnvelopeEr
  *
  * @public
  */
-export class TruncatedBlobEnvelopeError extends Schema.TaggedError<TruncatedBlobEnvelopeError>()(
+export class TruncatedBlobEnvelopeError extends S.TaggedError<TruncatedBlobEnvelopeError>()(
 	"TruncatedBlobEnvelopeError",
 	{
 		/** The underlying failure, preserved structurally. */
-		cause: Schema.optionalKey(Schema.Defect()),
+		cause: S.optionalKey(S.Defect()),
 	},
 ) {
 	override get message(): string {
@@ -36,13 +37,13 @@ export class TruncatedBlobEnvelopeError extends Schema.TaggedError<TruncatedBlob
  *
  * @public
  */
-export class UnsupportedBlobEnvelopeVersionError extends Schema.TaggedError<UnsupportedBlobEnvelopeVersionError>()(
+export class UnsupportedBlobEnvelopeVersionError extends S.TaggedError<UnsupportedBlobEnvelopeVersionError>()(
 	"UnsupportedBlobEnvelopeVersionError",
 	{
 		/** The envelope version found. */
-		version: Schema.Finite,
+		version: S.Finite,
 		/** The underlying failure, preserved structurally. */
-		cause: Schema.optionalKey(Schema.Defect()),
+		cause: S.optionalKey(S.Defect()),
 	},
 ) {
 	override get message(): string {
@@ -55,9 +56,9 @@ export class UnsupportedBlobEnvelopeVersionError extends Schema.TaggedError<Unsu
  *
  * @public
  */
-export class BlobMetadataDecodeError extends Schema.TaggedError<BlobMetadataDecodeError>()("BlobMetadataDecodeError", {
+export class BlobMetadataDecodeError extends S.TaggedError<BlobMetadataDecodeError>()("BlobMetadataDecodeError", {
 	/** The underlying failure, preserved structurally. */
-	cause: Schema.optionalKey(Schema.Defect()),
+	cause: S.optionalKey(S.Defect()),
 }) {
 	override get message(): string {
 		return "Blob envelope metadata did not satisfy the schema";
@@ -69,9 +70,9 @@ export class BlobMetadataDecodeError extends Schema.TaggedError<BlobMetadataDeco
  *
  * @public
  */
-export class BlobMetadataEncodeError extends Schema.TaggedError<BlobMetadataEncodeError>()("BlobMetadataEncodeError", {
+export class BlobMetadataEncodeError extends S.TaggedError<BlobMetadataEncodeError>()("BlobMetadataEncodeError", {
 	/** The underlying failure, preserved structurally. */
-	cause: Schema.optionalKey(Schema.Defect()),
+	cause: S.optionalKey(S.Defect()),
 }) {
 	override get message(): string {
 		return "Blob metadata could not be encoded";
@@ -163,9 +164,9 @@ export class BlobEnvelope {
 	static encodeResult<A, I>(
 		metadata: A,
 		body: Uint8Array,
-		schema: Schema.Codec<A, I>,
+		schema: S.Codec<A, I>,
 	): Result.Result<Uint8Array, BlobEnvelopeError> {
-		const encoded = Schema.encodeUnknownResult(Schema.fromJsonString(schema))(metadata);
+		const encoded = S.encodeUnknownResult(S.fromJsonString(schema))(metadata);
 		if (Result.isFailure(encoded)) {
 			return Result.fail(BlobMetadataEncodeError.make({ cause: encoded.failure }));
 		}
@@ -190,7 +191,7 @@ export class BlobEnvelope {
 	 */
 	static decodeResult<A, I>(
 		bytes: Uint8Array,
-		schema: Schema.Codec<A, I>,
+		schema: S.Codec<A, I>,
 	): Result.Result<{ readonly metadata: A; readonly body: Uint8Array }, BlobEnvelopeError> {
 		if (bytes.length < MAGIC.length || !MAGIC.every((byte, index) => bytes[index] === byte)) {
 			return Result.fail(NotABlobEnvelopeError.make({}));
@@ -207,7 +208,7 @@ export class BlobEnvelope {
 			return Result.fail(TruncatedBlobEnvelopeError.make({}));
 		}
 		const metaText = new TextDecoder().decode(bytes.subarray(HEADER_BYTES, HEADER_BYTES + metaLength));
-		const decoded = Schema.decodeResult(Schema.fromJsonString(schema))(metaText);
+		const decoded = S.decodeResult(S.fromJsonString(schema))(metaText);
 		if (Result.isFailure(decoded)) {
 			return Result.fail(BlobMetadataDecodeError.make({ cause: decoded.failure }));
 		}

@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 import { ImporterDependency } from "./ImporterDependency.ts";
 
 /**
@@ -19,7 +19,7 @@ import { ImporterDependency } from "./ImporterDependency.ts";
  *
  * @public
  */
-export class LockfileImporter extends Schema.Class<LockfileImporter>("LockfileImporter")({
-	path: Schema.NonEmptyString,
-	dependencies: Schema.Array(ImporterDependency),
+export class LockfileImporter extends S.Class<LockfileImporter>("LockfileImporter")({
+	path: S.NonEmptyString,
+	dependencies: S.Array(ImporterDependency),
 }) {}

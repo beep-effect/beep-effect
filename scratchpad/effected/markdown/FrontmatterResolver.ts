@@ -10,7 +10,9 @@
 // Resolution is EXACT version-segment equality. Prefix resolution (`skill@2`
 // selecting the highest registered `2.y.z`) is not offered.
 
-import { Effect, Result, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 
 /**
  * A `$schema` declaration referencing a schema by URL — any string containing
@@ -23,9 +25,9 @@ import { Effect, Result, Schema } from "effect";
  *
  * @public
  */
-export class SchemaDeclarationByUrl extends Schema.TaggedClass<SchemaDeclarationByUrl>()("ByUrl", {
+export class SchemaDeclarationByUrl extends S.TaggedClass<SchemaDeclarationByUrl>()("ByUrl", {
 	/** The URL as written in the declaration. */
-	url: Schema.String,
+	url: S.String,
 }) {}
 
 /**
@@ -37,9 +39,9 @@ export class SchemaDeclarationByUrl extends Schema.TaggedClass<SchemaDeclaration
  *
  * @public
  */
-export class SchemaDeclarationByPath extends Schema.TaggedClass<SchemaDeclarationByPath>()("ByPath", {
+export class SchemaDeclarationByPath extends S.TaggedClass<SchemaDeclarationByPath>()("ByPath", {
 	/** The path as written in the declaration. */
-	path: Schema.String,
+	path: S.String,
 }) {}
 
 /**
@@ -54,9 +56,9 @@ export class SchemaDeclarationByPath extends Schema.TaggedClass<SchemaDeclaratio
  *
  * @public
  */
-export class SchemaDeclarationInline extends Schema.TaggedClass<SchemaDeclarationInline>()("Inline", {
+export class SchemaDeclarationInline extends S.TaggedClass<SchemaDeclarationInline>()("Inline", {
 	/** The inline schema document, exactly as decoded from the frontmatter. */
-	document: Schema.Unknown,
+	document: S.Unknown,
 }) {}
 
 /**
@@ -73,11 +75,11 @@ export class SchemaDeclarationInline extends Schema.TaggedClass<SchemaDeclaratio
  *
  * @public
  */
-export class SchemaDeclarationByName extends Schema.TaggedClass<SchemaDeclarationByName>()("ByName", {
+export class SchemaDeclarationByName extends S.TaggedClass<SchemaDeclarationByName>()("ByName", {
 	/** The name as written, scope included. */
-	name: Schema.String,
+	name: S.String,
 	/** The version as written, when the declaration carries one. */
-	version: Schema.optionalKey(Schema.String),
+	version: S.optionalKey(S.String),
 }) {}
 
 /**
@@ -86,7 +88,7 @@ export class SchemaDeclarationByName extends Schema.TaggedClass<SchemaDeclaratio
  *
  * @public
  */
-export const SchemaDeclaration = Schema.Union([
+export const SchemaDeclaration = S.Union([
 	SchemaDeclarationByUrl,
 	SchemaDeclarationByPath,
 	SchemaDeclarationInline,
@@ -111,13 +113,13 @@ export type SchemaDeclaration =
  *
  * @public
  */
-export class SchemaDeclarationInvalidError extends Schema.TaggedError<SchemaDeclarationInvalidError>()(
+export class SchemaDeclarationInvalidError extends S.TaggedError<SchemaDeclarationInvalidError>()(
 	"SchemaDeclarationInvalidError",
 	{
 		/** Why the value failed to classify. */
-		reason: Schema.String,
+		reason: S.String,
 		/** The offending value, preserved structurally. */
-		value: Schema.Defect(),
+		value: S.Defect(),
 	},
 ) {
 	override get message(): string {
@@ -132,7 +134,7 @@ export class SchemaDeclarationInvalidError extends Schema.TaggedError<SchemaDecl
  *
  * @public
  */
-export class SchemaDeclarationMissingError extends Schema.TaggedError<SchemaDeclarationMissingError>()(
+export class SchemaDeclarationMissingError extends S.TaggedError<SchemaDeclarationMissingError>()(
 	"SchemaDeclarationMissingError",
 	{},
 ) {
@@ -148,9 +150,9 @@ export class SchemaDeclarationMissingError extends Schema.TaggedError<SchemaDecl
  *
  * @public
  */
-export class SchemaNameUnknownError extends Schema.TaggedError<SchemaNameUnknownError>()("SchemaNameUnknownError", {
+export class SchemaNameUnknownError extends S.TaggedError<SchemaNameUnknownError>()("SchemaNameUnknownError", {
 	/** The declaration that failed to resolve, when one exists. */
-	declaration: Schema.optionalKey(SchemaDeclaration),
+	declaration: S.optionalKey(SchemaDeclaration),
 }) {
 	override get message(): string {
 		return "the $schema declaration names no registered schema";
@@ -166,13 +168,13 @@ export class SchemaNameUnknownError extends Schema.TaggedError<SchemaNameUnknown
  *
  * @public
  */
-export class SchemaVersionUnresolvableError extends Schema.TaggedError<SchemaVersionUnresolvableError>()(
+export class SchemaVersionUnresolvableError extends S.TaggedError<SchemaVersionUnresolvableError>()(
 	"SchemaVersionUnresolvableError",
 	{
 		/** The registered name whose version could not be satisfied. */
-		name: Schema.String,
+		name: S.String,
 		/** The requested version, when the declaration carried one. */
-		version: Schema.optionalKey(Schema.String),
+		version: S.optionalKey(S.String),
 	},
 ) {
 	override get message(): string {
@@ -210,7 +212,7 @@ export interface FrontmatterSchemaResolver<E = never> {
 	readonly resolve: (
 		declaration: SchemaDeclaration | undefined,
 		data: unknown,
-	) => Effect.Effect<Schema.Top, FrontmatterResolveError | E>;
+	) => Effect.Effect<S.Top, FrontmatterResolveError | E>;
 }
 
 // The committed version grammar: one to three dot-separated non-negative
@@ -337,17 +339,17 @@ export class SchemaResolver {
 	 * @param registrations - Schemas keyed by `name[@version]`.
 	 * @returns The registry-backed resolver.
 	 */
-	static fromRegistry(registrations: Readonly<Record<string, Schema.Top>>): FrontmatterSchemaResolver {
+	static fromRegistry(registrations: Readonly<Record<string, S.Top>>): FrontmatterSchemaResolver {
 		// A real Map keyed by name: registration names are configuration, not
 		// attacker data, but the prototype-pollution guard costs nothing here.
-		const byName = new Map<string, { versionless?: Schema.Top; versions: Map<string, Schema.Top> }>();
+		const byName = new Map<string, { versionless?: S.Top; versions: Map<string, S.Top> }>();
 		for (const [key, schema] of Object.entries(registrations)) {
 			const classified = SchemaResolver.classify(key);
-			if (Result.isFailure(classified) || !(Schema.is(SchemaDeclarationByName)(classified.success))) {
+			if (Result.isFailure(classified) || !(S.is(SchemaDeclarationByName)(classified.success))) {
 				throw new Error(`SchemaResolver.fromRegistry: registration key "${key}" is outside the name[@version] grammar`);
 			}
 			const declaration = classified.success;
-			const entry = byName.get(declaration.name) ?? { versions: new Map<string, Schema.Top>() };
+			const entry = byName.get(declaration.name) ?? { versions: new Map<string, S.Top>() };
 			if (declaration.version === undefined) {
 				if (entry.versionless !== undefined) {
 					throw new Error(`SchemaResolver.fromRegistry: duplicate versionless registration for "${declaration.name}"`);
@@ -369,11 +371,11 @@ export class SchemaResolver {
 			byName.set(declaration.name, entry);
 		}
 		return {
-			resolve: Effect.fn("resolve")((declaration: SchemaDeclaration | undefined, _data: unknown): Effect.Effect<Schema.Top, FrontmatterResolveError> => {
+			resolve: Effect.fn("resolve")((declaration: SchemaDeclaration | undefined, _data: unknown): Effect.Effect<S.Top, FrontmatterResolveError> => {
 				if (declaration === undefined) {
 					return Effect.fail(SchemaDeclarationMissingError.make());
 				}
-				if (!(Schema.is(SchemaDeclarationByName)(declaration))) {
+				if (!(S.is(SchemaDeclarationByName)(declaration))) {
 					return Effect.fail(SchemaNameUnknownError.make({ declaration }));
 				}
 				const entry = byName.get(declaration.name);

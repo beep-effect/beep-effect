@@ -18,7 +18,7 @@
 // The `format` range-filter posture still diverges: this module and toml use
 // owning-node/expression intersection, yaml requires edits fully within range.
 
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 
 /**
  * A single path segment: a `number` for child indices in the node tree, or a
@@ -43,9 +43,9 @@ export type MarkdownPath = ReadonlyArray<MarkdownSegment>;
  *
  * @public
  */
-export class MarkdownRange extends Schema.Class<MarkdownRange>("MarkdownRange")({
-	offset: Schema.Finite,
-	length: Schema.Finite,
+export class MarkdownRange extends S.Class<MarkdownRange>("MarkdownRange")({
+	offset: S.Finite,
+	length: S.Finite,
 }) {}
 
 /**
@@ -60,10 +60,10 @@ export class MarkdownRange extends Schema.Class<MarkdownRange>("MarkdownRange")(
  *
  * @public
  */
-export class MarkdownEdit extends Schema.Class<MarkdownEdit>("MarkdownEdit")({
-	offset: Schema.Finite,
-	length: Schema.Finite,
-	content: Schema.String,
+export class MarkdownEdit extends S.Class<MarkdownEdit>("MarkdownEdit")({
+	offset: S.Finite,
+	length: S.Finite,
+	content: S.String,
 }) {
 	/**
 	 * Apply `edits` to `text`, producing a new string. Edits are applied in

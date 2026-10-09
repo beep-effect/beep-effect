@@ -5,9 +5,12 @@
 // `{ packages: [...] }` object form). The YAML is parsed with `@effected/yaml`.
 
 import { Yaml } from "../../yaml/index.ts";
-import { Effect, FileSystem, Path, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Path from "effect/Path";
+import * as S from "effect/Schema";
 
-const JsonValue = Schema.fromJsonString(Schema.Unknown);
+const JsonValue = S.fromJsonString(S.Unknown);
 
 /** The reason a pattern read failed, with the file it failed on. */
 export interface PatternReadFailure {
@@ -76,6 +79,6 @@ export const readPatterns = (
 		const content = yield* fs
 			.readFileString(manifestPath)
 			.pipe(Effect.mapError((cause): PatternReadFailure => ({ path: manifestPath, kind: "read", cause })));
-		const manifest = yield* Schema.decodeEffect(JsonValue)(content).pipe(Effect.mapError((cause): PatternReadFailure => ({ path: manifestPath, kind: "invalidJson", cause })));
+		const manifest = yield* S.decodeEffect(JsonValue)(content).pipe(Effect.mapError((cause): PatternReadFailure => ({ path: manifestPath, kind: "invalidJson", cause })));
 		return manifestPatternsOf(manifest);
 	});

@@ -1,5 +1,7 @@
 import { assert, describe, it, layer } from "@effect/vitest";
-import { Effect, Layer, Option } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import {
 	CatalogAssemblyError,
 	CatalogResolver,
@@ -118,15 +120,15 @@ const versions = new Map<string, string>([
 ]);
 const StubResolvers = Layer.mergeAll(
 	Layer.succeed(CatalogResolver, {
-		rangeOf: Effect.fn("CatalogResolver.rangeOf")((packageName: string, catalog: Option.Option<string>) =>
+		rangeOf: Effect.fn("CatalogResolver.rangeOf")((packageName: string, catalog: O.Option<string>) =>
 			Effect.succeed(
-				Option.fromUndefinedOr(catalogs.get(Option.getOrElse(catalog, () => "default"))?.get(packageName)),
+				O.fromUndefinedOr(catalogs.get(O.getOrElse(catalog, () => "default"))?.get(packageName)),
 			),
 		),
 	}),
 	Layer.succeed(WorkspaceResolver, {
 		versionOf: Effect.fn("WorkspaceResolver.versionOf")((packageName: string) =>
-			Effect.succeed(Option.fromUndefinedOr(versions.get(packageName))),
+			Effect.succeed(O.fromUndefinedOr(versions.get(packageName))),
 		),
 	}),
 );

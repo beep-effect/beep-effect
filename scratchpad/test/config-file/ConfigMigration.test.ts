@@ -1,5 +1,9 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Cause, Effect, Exit, Option, Schema } from "effect";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import type { VersionAccess } from "../../effected/config-file/ConfigMigration.ts";
 import { ConfigMigration, ConfigMigrationError } from "../../effected/config-file/ConfigMigration.ts";
 import { JsonCodec } from "../../effected/config-file/JsonCodec.ts";
@@ -40,7 +44,7 @@ describe("ConfigMigration.make", () => {
 				codec: JsonCodec,
 				migrations: [{ version: 2, name: "add-b", up: () => Effect.fail(boom) }],
 			});
-			const error = yield* Effect.flip(Effect.asVoid(codec.parse(`{"version":1}`)));
+			const error = yield* codec.parse(`{"version":1}`).pipe(Effect.asVoid, Effect.flip);
 			assert.instanceOf(error, ConfigMigrationError);
 			assert.strictEqual(error._tag, "ConfigMigrationError");
 			assert.strictEqual((error as ConfigMigrationError).name, "add-b");
@@ -57,8 +61,8 @@ describe("ConfigMigration.make", () => {
 				codec: JsonCodec,
 				migrations: [bump(2, "add-b", (r) => r)],
 			});
-			const error = yield* Effect.flip(Effect.asVoid(codec.parse(`{"a":1}`)));
-			if (!Schema.is(ConfigMigrationError)(error)) throw error;
+			const error = yield* codec.parse(`{"a":1}`).pipe(Effect.asVoid, Effect.flip);
+			if (!S.is(ConfigMigrationError)(error)) throw error;
 			assert.strictEqual(error.phase, "read-version");
 		}),
 	);
@@ -66,7 +70,7 @@ describe("ConfigMigration.make", () => {
 	it.effect("a codec failure surfaces as ConfigCodecError, not ConfigMigrationError", () =>
 		Effect.gen(function* () {
 			const codec = ConfigMigration.make({ codec: JsonCodec, migrations: [bump(2, "x", (r) => r)] });
-			const error = yield* Effect.flip(Effect.asVoid(codec.parse("{ not json")));
+			const error = yield* codec.parse("{ not json").pipe(Effect.asVoid, Effect.flip);
 			assert.strictEqual(error._tag, "ConfigCodecError");
 			// The SyntaxError JSON.parse threw must survive structurally through the
 			// decorator. Asserting the tag alone would still pass if a regression
@@ -99,8 +103,8 @@ describe("ConfigMigration.make", () => {
 			const exit = yield* Effect.exit(codec.parse(`{"version":1}`));
 			assert.isTrue(Exit.isFailure(exit));
 			const cause = Exit.getCause(exit);
-			assert.isTrue(Option.isSome(cause));
-			if (Option.isSome(cause)) {
+			assert.isTrue(O.isSome(cause));
+			if (O.isSome(cause)) {
 				// A throw from caller-supplied migration code is a programmer bug: it stays a
 				// defect so catchTag("ConfigMigrationError") cannot silently swallow it.
 				assert.isTrue(Cause.hasDies(cause.value));
@@ -127,13 +131,13 @@ describe("ConfigMigration.make", () => {
 			const exit = yield* Effect.exit(codec.parse(`{"version":1}`));
 			assert.isTrue(Exit.isFailure(exit));
 			const cause = Exit.getCause(exit);
-			assert.isTrue(Option.isSome(cause));
-			if (Option.isSome(cause)) assert.isTrue(Cause.hasDies(cause.value));
+			assert.isTrue(O.isSome(cause));
+			if (O.isSome(cause)) assert.isTrue(Cause.hasDies(cause.value));
 		}),
 	);
 });
 
-class VersionAccessError extends Schema.TaggedError<VersionAccessError>()("VersionAccessError", { message: Schema.String }) {
+class VersionAccessError extends S.TaggedError<VersionAccessError>()("VersionAccessError", { message: S.String }) {
 	override name = "Error";
 }
 
@@ -213,7 +217,7 @@ describe("ConfigMigration.make with a custom versionAccess", () => {
 			});
 			// The document satisfies the DEFAULT accessor (top-level version) but not the
 			// custom one — the failure proves the custom get was the one consulted.
-			const error = yield* Effect.flip(Effect.asVoid(codec.parse(`{"version":1,"a":1}`)));
+			const error = yield* codec.parse(`{"version":1,"a":1}`).pipe(Effect.asVoid, Effect.flip);
 			assert.instanceOf(error, ConfigMigrationError);
 			assert.strictEqual((error as ConfigMigrationError).phase, "read-version");
 			assert.strictEqual((error as ConfigMigrationError).version, 0);
@@ -233,7 +237,7 @@ describe("ConfigMigration.make with a custom versionAccess", () => {
 				migrations: [bump(2, "add-b", (r) => r)],
 				versionAccess: metaAccess,
 			});
-			const error = yield* Effect.flip(Effect.asVoid(codec.parse(`{"meta":{"schemaVersion":"two"}}`)));
+			const error = yield* codec.parse(`{"meta":{"schemaVersion":"two"}}`).pipe(Effect.asVoid, Effect.flip);
 			assert.instanceOf(error, ConfigMigrationError);
 			assert.strictEqual((error as ConfigMigrationError).phase, "read-version");
 		}),
@@ -247,7 +251,7 @@ describe("ConfigMigration.make with a custom versionAccess", () => {
 				migrations: [bump(2, "add-b", (r) => ({ ...r, b: 2 }))],
 				versionAccess: { get: metaAccess.get, set: () => Effect.fail(boom) },
 			});
-			const error = yield* Effect.flip(Effect.asVoid(codec.parse(`{"meta":{"schemaVersion":1}}`)));
+			const error = yield* codec.parse(`{"meta":{"schemaVersion":1}}`).pipe(Effect.asVoid, Effect.flip);
 			assert.instanceOf(error, ConfigMigrationError);
 			assert.strictEqual((error as ConfigMigrationError).phase, "write-version");
 			assert.strictEqual((error as ConfigMigrationError).version, 2);
@@ -271,8 +275,8 @@ describe("ConfigMigration.make with a custom versionAccess", () => {
 			const exit = yield* Effect.exit(codec.parse(`{"meta":{"schemaVersion":1}}`));
 			assert.isTrue(Exit.isFailure(exit));
 			const cause = Exit.getCause(exit);
-			assert.isTrue(Option.isSome(cause));
-			if (Option.isSome(cause)) {
+			assert.isTrue(O.isSome(cause));
+			if (O.isSome(cause)) {
 				// A throw from a caller-supplied VersionAccess is a contract violation — it
 				// must NOT be laundered into ConfigMigrationError.
 				assert.isTrue(Cause.hasDies(cause.value));
@@ -297,8 +301,8 @@ describe("ConfigMigration.make with a custom versionAccess", () => {
 			const exit = yield* Effect.exit(codec.parse(`{"meta":{"schemaVersion":1}}`));
 			assert.isTrue(Exit.isFailure(exit));
 			const cause = Exit.getCause(exit);
-			assert.isTrue(Option.isSome(cause));
-			if (Option.isSome(cause)) {
+			assert.isTrue(O.isSome(cause));
+			if (O.isSome(cause)) {
 				assert.isTrue(Cause.hasDies(cause.value));
 				assert.isFalse(Cause.hasFails(cause.value));
 			}

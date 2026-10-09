@@ -1,6 +1,8 @@
 import { BlobClient, BlockBlobClient } from "@azure/storage-blob";
-import type { Schema } from "effect";
-import { Effect, Layer, Option } from "effect";
+import type * as S from "effect/Schema";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import { HttpClient } from "effect/http";
 import { ActionEnvironment } from "./ActionEnvironment.ts";
 import { BlobEnvelope } from "./BlobEnvelope.ts";
@@ -82,37 +84,37 @@ const make = (
 		const download = (key: string) =>
 			Effect.map(
 				lookupDownload(cacheService(key), key, [], VERSION),
-				Option.map((hit) => hit.url),
+				O.map((hit) => hit.url),
 			);
 
 		const moved = (key: string) =>
 			Effect.mapError((cause: BlobTransferError) => BlobStoreError.make({ reason: "unreachable", key, cause }));
 
 		return {
-			get: Effect.fn("get")(function*<A, I>(key: string, schema: Schema.Codec<A, I>) {
+			get: Effect.fn("get")(function*<A, I>(key: string, schema: S.Codec<A, I>) {
 					const url = yield* download(key);
-					if (Option.isNone(url)) {
-						return Option.none<StoredBlob<A>>();
+					if (O.isNone(url)) {
+						return O.none<StoredBlob<A>>();
 					}
 					const bytes = yield* transfer.downloadToBuffer(url.value).pipe(moved(key));
-					return Option.some(yield* Effect.fromResult(BlobEnvelope.decodeResult(bytes, schema)));
+					return O.some(yield* Effect.fromResult(BlobEnvelope.decodeResult(bytes, schema)));
 				}),
 
-			put: Effect.fn("put")(function*<A, I>(key: string, blob: StoredBlob<A>, schema: Schema.Codec<A, I>) {
+			put: Effect.fn("put")(function*<A, I>(key: string, blob: StoredBlob<A>, schema: S.Codec<A, I>) {
 					const framed = yield* Effect.fromResult(BlobEnvelope.encodeResult(blob.metadata, blob.body, schema));
 					const service = cacheService(key);
 					// None: another job wrote this key first. The entry is immutable,
 					// so the write has already happened and the caller got what it
 					// asked for.
 					const url = yield* reserveUpload(service, key, VERSION);
-					if (Option.isNone(url)) {
+					if (O.isNone(url)) {
 						return;
 					}
 					yield* transfer.uploadData(url.value, framed).pipe(moved(key));
 					yield* finalizeUpload(service, key, VERSION, framed.byteLength);
 				}),
 
-			has: (key: string) => Effect.map(download(key), Option.isSome),
+			has: (key: string) => Effect.map(download(key), O.isSome),
 		} satisfies BlobStoreShape;
 	});
 

@@ -22,7 +22,7 @@ import {
 import type { StringifyOptionsInput } from "./options.ts";
 import type { RawDirective, RawYamlDocument } from "./raw-document.ts";
 import * as Schema from "effect/Schema";
-import { Data } from "effect";
+import * as Data from "effect/Data";
 import { dual } from "effect/Function";
 
 /**

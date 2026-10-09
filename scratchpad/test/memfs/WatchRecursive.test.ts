@@ -2,7 +2,7 @@
 // upstream ignored it.
 
 import { assert, describe, it } from "@effect/vitest";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
 import { collectWatch } from "./helpers.ts";
 

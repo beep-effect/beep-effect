@@ -34,7 +34,8 @@
 //    programmer error and dies as a TypeError defect.
 
 import { dual } from "effect/Function";
-import { Effect, Random } from "effect";
+import * as Effect from "effect/Effect";
+import * as Random from "effect/Random";
 import { balanced } from "./balancedMatch.ts";
 import { EXPANSION_MAX, GuardExceeded, MAX_NESTING_DEPTH, assertCap } from "./limits.ts";
 

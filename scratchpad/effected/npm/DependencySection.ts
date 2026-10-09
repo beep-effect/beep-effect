@@ -10,7 +10,7 @@
 // `KIND_TO_FIELD` is the single source of truth; the inverse is derived from it,
 // so the correspondence is written once.
 
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 
 /**
  * The short dependency kind: which dependency map an entry came from, named the
@@ -18,7 +18,7 @@ import { Schema } from "effect";
  *
  * @public
  */
-export const DependencyKind = Schema.Literals(["prod", "dev", "peer", "optional"]);
+export const DependencyKind = S.Literals(["prod", "dev", "peer", "optional"]);
 
 /**
  * The union of short dependency kinds.
@@ -33,7 +33,7 @@ export type DependencyKind = typeof DependencyKind.Type;
  *
  * @public
  */
-export const DependencyField = Schema.Literals([
+export const DependencyField = S.Literals([
 	"dependencies",
 	"devDependencies",
 	"peerDependencies",

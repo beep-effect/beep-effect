@@ -14,7 +14,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { assert, describe, it } from "@effect/vitest";
 import { Lockfile } from "../../effected/lockfiles/index.ts";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { NoPeerDependencyRules } from "../../effected/workspaces/ConfigDependencyHooks.ts";
 import { peerNameMatcher } from "../../effected/workspaces/internal/peerPatterns.ts";
 import type { UnsatisfiedPeer } from "../../effected/workspaces/PeerCheck.ts";

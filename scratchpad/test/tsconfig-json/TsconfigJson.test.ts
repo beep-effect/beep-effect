@@ -1,5 +1,6 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
 import {
 	Reference,
 	TsconfigJson,
@@ -56,7 +57,7 @@ const ROOT_TSCONFIG = `{
 describe("TsconfigJsonFromString", () => {
 	it.effect("decodes a realistic JSONC document with comments and trailing commas", () =>
 		Effect.gen(function* () {
-			const decoded = yield* Schema.decodeEffect(TsconfigJsonFromString)(REALISTIC_TSCONFIG);
+			const decoded = yield* S.decodeEffect(TsconfigJsonFromString)(REALISTIC_TSCONFIG);
 			assert.strictEqual(decoded.$schema, "https://json.schemastore.org/tsconfig.json");
 			assert.strictEqual(decoded.compilerOptions?.target, "es2023");
 			assert.strictEqual(decoded.compilerOptions?.module, "nodenext");
@@ -78,7 +79,7 @@ describe("TsconfigJsonFromString", () => {
 
 	it.effect("decodes this repo's own root tsconfig.json content", () =>
 		Effect.gen(function* () {
-			const decoded = yield* Schema.decodeEffect(TsconfigJsonFromString)(ROOT_TSCONFIG);
+			const decoded = yield* S.decodeEffect(TsconfigJsonFromString)(ROOT_TSCONFIG);
 			assert.strictEqual(decoded.extends, "@savvy-web/silk/tsconfig/node/root.json");
 			assert.strictEqual(decoded.$schema, "https://json.schemastore.org/tsconfig.json");
 		}),
@@ -86,34 +87,34 @@ describe("TsconfigJsonFromString", () => {
 
 	it.effect("extends accepts a bare string", () =>
 		Effect.gen(function* () {
-			const decoded = yield* Schema.decodeEffect(TsconfigJsonFromString)(`{ "extends": "./base.json" }`);
+			const decoded = yield* S.decodeEffect(TsconfigJsonFromString)(`{ "extends": "./base.json" }`);
 			assert.strictEqual(decoded.extends, "./base.json");
 		}),
 	);
 
 	it.effect("extends accepts an array of strings", () =>
 		Effect.gen(function* () {
-			const decoded = yield* Schema.decodeEffect(TsconfigJsonFromString)(`{ "extends": ["./a.json", "pkg/b"] }`);
+			const decoded = yield* S.decodeEffect(TsconfigJsonFromString)(`{ "extends": ["./a.json", "pkg/b"] }`);
 			assert.deepStrictEqual(decoded.extends, ["./a.json", "pkg/b"]);
 		}),
 	);
 
 	it.effect("malformed JSONC fails decode with a schema issue, never throws", () =>
 		Effect.gen(function* () {
-			const result = yield* Effect.result(Schema.decodeEffect(TsconfigJsonFromString)("{ not json "));
+			const result = yield* Effect.result(S.decodeEffect(TsconfigJsonFromString)("{ not json "));
 			assert.strictEqual(result._tag, "Failure");
 		}),
 	);
 
 	it.effect("top-level unknown keys survive decode and encode", () =>
 		Effect.gen(function* () {
-			const decoded = yield* Schema.decodeEffect(TsconfigJsonFromString)(
+			const decoded = yield* S.decodeEffect(TsconfigJsonFromString)(
 				`{ "ts-node": { "esm": true }, "buildOptions": { "verbose": true }, "$schema": "x" }`,
 			);
 			assert.deepStrictEqual((decoded as Record<string, unknown>)["ts-node"], { esm: true });
 			assert.deepStrictEqual((decoded as Record<string, unknown>).buildOptions, { verbose: true });
 
-			const encoded = yield* Schema.encodeUnknownEffect(TsconfigJson)(decoded);
+			const encoded = yield* S.encodeUnknownEffect(TsconfigJson)(decoded);
 			assert.deepStrictEqual((encoded as Record<string, unknown>)["ts-node"], { esm: true });
 			assert.deepStrictEqual((encoded as Record<string, unknown>).buildOptions, { verbose: true });
 		}),
@@ -123,14 +124,14 @@ describe("TsconfigJsonFromString", () => {
 describe("Reference", () => {
 	it.effect("rejects an empty path", () =>
 		Effect.gen(function* () {
-			const result = yield* Effect.result(Schema.decodeEffect(Reference)({ path: "" }));
+			const result = yield* Effect.result(S.decodeEffect(Reference)({ path: "" }));
 			assert.strictEqual(result._tag, "Failure");
 		}),
 	);
 
 	it.effect("keeps extra keys on a reference entry", () =>
 		Effect.gen(function* () {
-			const decoded = yield* Schema.decodeEffect(Reference)({ path: "../a", circular: true });
+			const decoded = yield* S.decodeEffect(Reference)({ path: "../a", circular: true });
 			assert.strictEqual(decoded.path, "../a");
 			assert.strictEqual((decoded as unknown as Record<string, unknown>).circular, true);
 		}),
@@ -140,7 +141,7 @@ describe("Reference", () => {
 describe("WatchOptions", () => {
 	it.effect("decodes watchFile/watchDirectory/fallbackPolling case-insensitively", () =>
 		Effect.gen(function* () {
-			const decoded = yield* Schema.decodeEffect(WatchOptions)({
+			const decoded = yield* S.decodeEffect(WatchOptions)({
 				watchFile: "FixedPollingInterval",
 				watchDirectory: "UseFsEvents",
 				fallbackPolling: "FixedInterval",
@@ -153,7 +154,7 @@ describe("WatchOptions", () => {
 
 	it.effect("passes phantom keys through", () =>
 		Effect.gen(function* () {
-			const decoded = yield* Schema.decodeEffect(WatchOptions)({ force: true });
+			const decoded = yield* S.decodeEffect(WatchOptions)({ force: true });
 			assert.strictEqual((decoded as unknown as Record<string, unknown>).force, true);
 		}),
 	);
@@ -162,7 +163,7 @@ describe("WatchOptions", () => {
 describe("TypeAcquisition", () => {
 	it.effect("decodes the typed fields and preserves passthrough", () =>
 		Effect.gen(function* () {
-			const decoded = yield* Schema.decodeEffect(TypeAcquisition)({
+			const decoded = yield* S.decodeEffect(TypeAcquisition)({
 				enable: true,
 				include: ["jquery"],
 				exclude: ["lodash"],

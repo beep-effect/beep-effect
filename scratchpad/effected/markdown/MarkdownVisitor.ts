@@ -18,7 +18,8 @@
 // ends, never a defect and never a stream failure (the yaml visitor's
 // diagnostics-as-events precedent).
 
-import { Data, Stream } from "effect";
+import * as Data from "effect/Data";
+import * as Stream from "effect/Stream";
 import { MAX_NESTING_DEPTH } from "./internal/limits.ts";
 import { MarkdownDiagnostic } from "./MarkdownDiagnostic.ts";
 import type { MarkdownPath } from "./MarkdownEdit.ts";

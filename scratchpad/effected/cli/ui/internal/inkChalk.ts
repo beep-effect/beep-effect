@@ -3,7 +3,7 @@
 import { realpathSync } from "node:fs";
 import { createRequire } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { Option } from "effect";
+import * as O from "effect/Option";
 
 /**
  * A chalk colour level: 0 none, 1 basic, 2 256 colours, 3 truecolor.
@@ -70,15 +70,15 @@ export const resolveInkEntry = (resolve: ((specifier: string) => string) | undef
  */
 export const inkChalk = (
 	inkEntryOf: () => string = () => resolveInkEntry(),
-): Promise<Option.Option<InkChalk>> => {
+): Promise<O.Option<InkChalk>> => {
 	try {
 		const inkEntry = inkEntryOf();
 		const chalkPath = realpathSync(createRequire(inkEntry).resolve("chalk"));
 		return import(/* @vite-ignore */ pathToFileURL(chalkPath).href).then(
-			(chalk: { readonly default?: unknown }) => isInkChalk(chalk.default) ? Option.some(chalk.default) : Option.none(),
-			() => Option.none(),
+			(chalk: { readonly default?: unknown }) => isInkChalk(chalk.default) ? O.some(chalk.default) : O.none(),
+			() => O.none(),
 		);
 	} catch {
-		return Promise.resolve(Option.none());
+		return Promise.resolve(O.none());
 	}
 };

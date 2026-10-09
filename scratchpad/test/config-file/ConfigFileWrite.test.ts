@@ -2,7 +2,12 @@
 import { assert, describe, it } from "@effect/vitest";
 import type { MemoryFileSystemSeed } from "../../effected/memfs/index.ts";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
-import { Effect, Layer, Path, PlatformError, Schema, Result } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
+import * as PlatformError from "effect/PlatformError";
+import * as S from "effect/Schema";
+import * as Result from "effect/Result";
 import type { ConfigCodec as ConfigCodecShape } from "../../effected/config-file/ConfigCodec.ts";
 import { ConfigCodecError } from "../../effected/config-file/ConfigCodec.ts";
 import type { ConfigSaveError, ConfigUpdateError, ConfigWriteError } from "../../effected/config-file/ConfigFile.ts";
@@ -13,9 +18,9 @@ import { MergeStrategy } from "../../effected/config-file/MergeStrategy.ts";
 import type { RecordingFs } from "./helpers.ts";
 import { hostileFs, recordingFs } from "./helpers.ts";
 
-const JsonValue = Schema.fromJsonString(Schema.Unknown);
+const JsonValue = S.fromJsonString(S.Unknown);
 
-class AppShape extends Schema.Class<AppShape>("AppShape")({ port: Schema.Finite }) {}
+class AppShape extends S.Class<AppShape>("AppShape")({ port: S.Finite }) {}
 class AppConfig extends ConfigFile.Service<AppConfig, AppShape>()("test/WriteConfig") {}
 
 const layerFor = (host: RecordingFs, defaultPath?: string, codec: ConfigCodecShape = JsonCodec) =>
@@ -37,7 +42,7 @@ describe("ConfigFile.write", () => {
 				yield* cfg.write(AppShape.make({ port: 9090 }), "/explicit/.apprc");
 			}).pipe(Effect.provide(layerFor(host)));
 
-			assert.deepStrictEqual(Result.getOrThrow(Schema.decodeResult(JsonValue)(host.volume.text("/explicit/.apprc") as string)), { port: 9090 });
+			assert.deepStrictEqual(Result.getOrThrow(S.decodeResult(JsonValue)(host.volume.text("/explicit/.apprc") as string)), { port: 9090 });
 			// `write` never mkdirs — the documented distinction from `save`.
 			assert.deepStrictEqual(host.mkdirs, []);
 		}),
@@ -97,7 +102,7 @@ describe("ConfigFile.save", () => {
 
 			assert.strictEqual(written, "/home/u/.config/app/.apprc");
 			assert.deepStrictEqual(host.mkdirs, ["/home/u/.config/app"]);
-			assert.deepStrictEqual(Result.getOrThrow(Schema.decodeResult(JsonValue)(host.volume.text("/home/u/.config/app/.apprc") as string)), { port: 7070 });
+			assert.deepStrictEqual(Result.getOrThrow(S.decodeResult(JsonValue)(host.volume.text("/home/u/.config/app/.apprc") as string)), { port: 7070 });
 		}),
 	);
 
@@ -149,7 +154,7 @@ describe("ConfigFile.update", () => {
 			}).pipe(Effect.provide(layerFor(host, "/app/.apprc")));
 
 			assert.strictEqual(updated.port, 2);
-			assert.deepStrictEqual(Result.getOrThrow(Schema.decodeResult(JsonValue)(host.volume.text("/app/.apprc") as string)), { port: 2 });
+			assert.deepStrictEqual(Result.getOrThrow(S.decodeResult(JsonValue)(host.volume.text("/app/.apprc") as string)), { port: 2 });
 		}),
 	);
 
@@ -162,7 +167,7 @@ describe("ConfigFile.update", () => {
 			}).pipe(Effect.provide(layerFor(host, "/app/.apprc")));
 
 			assert.strictEqual(updated.port, 11);
-			assert.deepStrictEqual(Result.getOrThrow(Schema.decodeResult(JsonValue)(host.volume.text("/app/.apprc") as string)), { port: 11 });
+			assert.deepStrictEqual(Result.getOrThrow(S.decodeResult(JsonValue)(host.volume.text("/app/.apprc") as string)), { port: 11 });
 		}),
 	);
 
@@ -233,7 +238,7 @@ describe("ConfigFile.layer with an empty resolver chain", () => {
 
 			assert.strictEqual(written, "/write-only/.apprc");
 			assert.deepStrictEqual(host.mkdirs, ["/write-only"]);
-			assert.deepStrictEqual(Result.getOrThrow(Schema.decodeResult(JsonValue)(host.volume.text("/write-only/.apprc") as string)), { port: 42 });
+			assert.deepStrictEqual(Result.getOrThrow(S.decodeResult(JsonValue)(host.volume.text("/write-only/.apprc") as string)), { port: 42 });
 		}),
 	);
 });
@@ -278,7 +283,7 @@ describe("ConfigFile.update — concurrency", () => {
 				yield* Effect.all([bump, bump], { concurrency: 2 });
 			}).pipe(Effect.provide(layer));
 
-			const final = Result.getOrThrow(Schema.decodeResult(JsonValue)(host.volume.text("/app/.apprc") as string)) as { port: number };
+			const final = Result.getOrThrow(S.decodeResult(JsonValue)(host.volume.text("/app/.apprc") as string)) as { port: number };
 			assert.strictEqual(final.port, 2, "both increments must survive");
 		}),
 	);

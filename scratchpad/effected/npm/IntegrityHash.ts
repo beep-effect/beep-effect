@@ -27,8 +27,12 @@
 // `ConfigDependencySpec.integrity` (the legacy inline `configDependencies`
 // integrity) is its first consumer.
 
-import type { Brand } from "effect";
-import { Effect, Option, Schema, SchemaIssue, SchemaTransformation } from "effect";
+import type * as Brand from "effect/Brand";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 
 /**
  * A supported integrity hash algorithm.
@@ -68,10 +72,10 @@ export const isValidIntegrityHash = (value: string): boolean =>
 
 // The algorithm is the prefix before the first `-` (SRI) or `.` (corepack). The
 // yarn form does not name its algorithm, so it has none to read.
-const algorithmOf = (value: string): Option.Option<IntegrityAlgorithm> => {
-	if (isSri(value)) return Option.some(value.slice(0, value.indexOf("-")) as IntegrityAlgorithm);
-	if (isCorepack(value)) return Option.some(value.slice(0, value.indexOf(".")) as IntegrityAlgorithm);
-	return Option.none();
+const algorithmOf = (value: string): O.Option<IntegrityAlgorithm> => {
+	if (isSri(value)) return O.some(value.slice(0, value.indexOf("-")) as IntegrityAlgorithm);
+	if (isCorepack(value)) return O.some(value.slice(0, value.indexOf(".")) as IntegrityAlgorithm);
+	return O.none();
 };
 
 /**
@@ -82,11 +86,11 @@ const algorithmOf = (value: string): Option.Option<IntegrityAlgorithm> => {
  *
  * @public
  */
-export class InvalidIntegrityHashError extends Schema.TaggedError<InvalidIntegrityHashError>()(
+export class InvalidIntegrityHashError extends S.TaggedError<InvalidIntegrityHashError>()(
 	"InvalidIntegrityHashError",
 	{
 		/** The raw input string that failed validation. */
-		input: Schema.String,
+		input: S.String,
 	},
 ) {
 	override get message(): string {
@@ -108,7 +112,7 @@ interface IntegrityHashStatics {
 	 * The algorithm prefix. `None` when the string is not a valid integrity
 	 * hash, and also `None` for the yarn form, which does not name its algorithm.
 	 */
-	readonly algorithmOf: (value: string) => Option.Option<IntegrityAlgorithm>;
+	readonly algorithmOf: (value: string) => O.Option<IntegrityAlgorithm>;
 	/** Validate a string, failing with a typed {@link InvalidIntegrityHashError}. */
 	readonly decode: (input: string) => Effect.Effect<IntegrityHashBrand, InvalidIntegrityHashError>;
 }
@@ -121,17 +125,17 @@ interface IntegrityHashStatics {
  */
 export type IntegrityHashBrand = string & Brand.Brand<"IntegrityHash">;
 
-const brandedIntegrity = Schema.String.pipe(
-	Schema.check(
-		Schema.makeFilter((value) =>
+const brandedIntegrity = S.String.pipe(
+	S.check(
+		S.makeFilter((value) =>
 			isValidIntegrityHash(value) ? undefined : "Expected an SRI, corepack or yarn integrity hash",
 		),
 	),
-	Schema.brand("IntegrityHash"),
+	S.brand("IntegrityHash"),
 );
 
 const decode = (input: string): Effect.Effect<IntegrityHashBrand, InvalidIntegrityHashError> =>
-	Schema.decodeEffect(brandedIntegrity)(input).pipe(
+	S.decodeEffect(brandedIntegrity)(input).pipe(
 		Effect.mapError(() => InvalidIntegrityHashError.make({ input })),
 	);
 
@@ -153,14 +157,14 @@ export const IntegrityHash = Object.assign(brandedIntegrity, {
 } satisfies IntegrityHashStatics);
 
 const corepackRestricted = brandedIntegrity.pipe(
-	Schema.check(
-		Schema.makeFilter((value) => (isCorepack(value) ? undefined : "Expected a corepack (<algo>.<hex>) integrity hash")),
+	S.check(
+		S.makeFilter((value) => (isCorepack(value) ? undefined : "Expected a corepack (<algo>.<hex>) integrity hash")),
 	),
 );
 
 const sriRestricted = brandedIntegrity.pipe(
-	Schema.check(
-		Schema.makeFilter((value) => (isSri(value) ? undefined : "Expected an SRI (<algo>-<base64>) integrity hash")),
+	S.check(
+		S.makeFilter((value) => (isSri(value) ? undefined : "Expected an SRI (<algo>-<base64>) integrity hash")),
 	),
 );
 
@@ -200,7 +204,7 @@ const sriRestricted = brandedIntegrity.pipe(
  *
  * @public
  */
-export const SriIntegrityHash: Schema.brand<Schema.String, "IntegrityHash"> = sriRestricted;
+export const SriIntegrityHash: S.brand<S.String, "IntegrityHash"> = sriRestricted;
 
 // --- The SRI → corepack bridge ---------------------------------------------
 //
@@ -337,8 +341,8 @@ const sriOfCorepack = (value: string): string | undefined =>
 // The codec: decode converts and then validates through the corepack-restricted
 // schema, so the result carries the same brand every other integrity field
 // uses; encode is the exact inverse (canonical padded base64, no re-quoting).
-const corepackFromSri: Schema.Codec<IntegrityHashBrand, string> = Schema.String.pipe(
-	Schema.decodeTo(
+const corepackFromSri: S.Codec<IntegrityHashBrand, string> = S.String.pipe(
+	S.decodeTo(
 		corepackRestricted,
 		SchemaTransformation.transformEffect<string, string>({
 			decode: (input) => {
@@ -379,11 +383,11 @@ const corepackFromSri: Schema.Codec<IntegrityHashBrand, string> = Schema.String.
  *
  * @public
  */
-export class InvalidSriIntegrityHashError extends Schema.TaggedError<InvalidSriIntegrityHashError>()(
+export class InvalidSriIntegrityHashError extends S.TaggedError<InvalidSriIntegrityHashError>()(
 	"InvalidSriIntegrityHashError",
 	{
 		/** The raw input string that failed conversion. */
-		input: Schema.String,
+		input: S.String,
 	},
 ) {
 	override get message(): string {
@@ -392,7 +396,7 @@ export class InvalidSriIntegrityHashError extends Schema.TaggedError<InvalidSriI
 }
 
 const fromSri = (input: string): Effect.Effect<IntegrityHashBrand, InvalidSriIntegrityHashError> =>
-	Schema.decodeEffect(corepackFromSri)(input).pipe(
+	S.decodeEffect(corepackFromSri)(input).pipe(
 		Effect.mapError(() => InvalidSriIntegrityHashError.make({ input })),
 	);
 
@@ -406,7 +410,7 @@ interface CorepackIntegrityHashStatics {
 	 * already in corepack form (the conversion is one-way from SRI). Encoding
 	 * emits the canonical padded SRI spelling.
 	 */
-	readonly FromSri: Schema.Codec<IntegrityHashBrand, string>;
+	readonly FromSri: S.Codec<IntegrityHashBrand, string>;
 	/**
 	 * Convert npm's SRI `sha512-<base64>` form to the corepack `sha512.<hex>`
 	 * form, failing with a typed {@link InvalidSriIntegrityHashError}. The

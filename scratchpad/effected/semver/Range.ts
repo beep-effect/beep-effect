@@ -1,4 +1,10 @@
-import { Effect, Function as Fn, Option, Result, Schema, SchemaIssue, SchemaTransformation } from "effect";
+import * as Effect from "effect/Effect";
+import * as Fn from "effect/Function";
+import * as O from "effect/Option";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import { Comparator } from "./Comparator.ts";
 import { formatRange, parseRange } from "./internal/grammar.ts";
 import { normalizeSets } from "./internal/normalize.ts";
@@ -14,11 +20,11 @@ import { SemVer } from "./SemVer.ts";
  *
  * @public
  */
-export class InvalidRangeError extends Schema.TaggedError<InvalidRangeError>()("InvalidRangeError", {
+export class InvalidRangeError extends S.TaggedError<InvalidRangeError>()("InvalidRangeError", {
 	/** The raw input string that failed to parse. */
-	input: Schema.String,
+	input: S.String,
 	/** The character position where parsing failed, if available. */
-	position: Schema.optionalKey(Schema.Finite),
+	position: S.optionalKey(S.Finite),
 }) {
 	override get message(): string {
 		const base = `Invalid range expression: "${this.input}"`;
@@ -57,9 +63,9 @@ export type ComparatorSet = ReadonlyArray<Comparator>;
  *
  * @public
  */
-export class Range extends Schema.Class<Range>("Range")({
+export class Range extends S.Class<Range>("Range")({
 	/** Comparator sets combined with OR semantics; a version matches when it satisfies any set. */
-	sets: Schema.Array(Schema.Array(Comparator)),
+	sets: Comparator.pipe(S.Array, S.Array),
 }) {
 	// ── Schema ──────────────────────────────────────────────────────────
 
@@ -68,8 +74,8 @@ export class Range extends Schema.Class<Range>("Range")({
 	 * {@link Range}: decoding parses, desugars and normalizes; encoding
 	 * prints `a b || c d`.
 	 */
-	static readonly FromString: Schema.Codec<Range, string> = Schema.String.pipe(
-		Schema.decodeTo(
+	static readonly FromString: S.Codec<Range, string> = S.String.pipe(
+		S.decodeTo(
 			Range,
 			SchemaTransformation.transformEffect({
 				decode: (input: string) => {
@@ -187,14 +193,14 @@ export class Range extends Schema.Class<Range>("Range")({
 	 * for why the order is spelled out.
 	 */
 	static readonly maxSatisfying: {
-		(range: Range): (versions: ReadonlyArray<SemVer>) => Option.Option<SemVer>;
-		(versions: ReadonlyArray<SemVer>, range: Range): Option.Option<SemVer>;
-	} = Fn.dual(2, (versions: ReadonlyArray<SemVer>, range: Range): Option.Option<SemVer> => {
+		(range: Range): (versions: ReadonlyArray<SemVer>) => O.Option<SemVer>;
+		(versions: ReadonlyArray<SemVer>, range: Range): O.Option<SemVer>;
+	} = Fn.dual(2, (versions: ReadonlyArray<SemVer>, range: Range): O.Option<SemVer> => {
 		let best: SemVer | undefined;
 		for (const v of versions) {
 			if (range.test(v) && (best === undefined || v.gt(best))) best = v;
 		}
-		return best === undefined ? Option.none() : Option.some(best);
+		return best === undefined ? O.none() : O.some(best);
 	});
 
 	/**
@@ -205,14 +211,14 @@ export class Range extends Schema.Class<Range>("Range")({
 	 * for why the order is spelled out.
 	 */
 	static readonly minSatisfying: {
-		(range: Range): (versions: ReadonlyArray<SemVer>) => Option.Option<SemVer>;
-		(versions: ReadonlyArray<SemVer>, range: Range): Option.Option<SemVer>;
-	} = Fn.dual(2, (versions: ReadonlyArray<SemVer>, range: Range): Option.Option<SemVer> => {
+		(range: Range): (versions: ReadonlyArray<SemVer>) => O.Option<SemVer>;
+		(versions: ReadonlyArray<SemVer>, range: Range): O.Option<SemVer>;
+	} = Fn.dual(2, (versions: ReadonlyArray<SemVer>, range: Range): O.Option<SemVer> => {
 		let best: SemVer | undefined;
 		for (const v of versions) {
 			if (range.test(v) && (best === undefined || v.lt(best))) best = v;
 		}
-		return best === undefined ? Option.none() : Option.some(best);
+		return best === undefined ? O.none() : O.some(best);
 	});
 
 	// ── Algebra statics ─────────────────────────────────────────────────
@@ -377,11 +383,11 @@ export class Range extends Schema.Class<Range>("Range")({
  *
  * @public
  */
-export class UnsatisfiableConstraintError extends Schema.TaggedError<UnsatisfiableConstraintError>()(
+export class UnsatisfiableConstraintError extends S.TaggedError<UnsatisfiableConstraintError>()(
 	"UnsatisfiableConstraintError",
 	{
 		/** The ranges whose intersection is empty. */
-		constraints: Schema.Array(Range),
+		constraints: S.Array(Range),
 	},
 ) {
 	override get message(): string {

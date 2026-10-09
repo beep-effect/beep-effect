@@ -12,7 +12,10 @@ import {
 	TableCell,
 	TableRow,
 } from "../markdown/index.ts";
-import { Result, Schema, SchemaAST, flow } from "effect";
+import * as Result from "effect/Result";
+import * as Schema from "effect/Schema";
+import * as SchemaAST from "effect/SchemaAST";
+import { flow } from "effect/Function";
 
 /**
  * A heading level GitHub renders, `1` through `6`.

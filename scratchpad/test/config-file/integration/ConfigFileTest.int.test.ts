@@ -3,12 +3,15 @@ import * as nodeFs from "node:fs/promises";
 import * as nodePath from "node:path";
 import { NodeFileSystem } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Layer, Path, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
+import * as S from "effect/Schema";
 import { ConfigFile } from "../../../effected/config-file/ConfigFile.ts";
 import { JsonCodec } from "../../../effected/config-file/JsonCodec.ts";
 import { MergeStrategy } from "../../../effected/config-file/MergeStrategy.ts";
 
-class AppShape extends Schema.Class<AppShape>("AppShape")({ port: Schema.Finite }) {}
+class AppShape extends S.Class<AppShape>("AppShape")({ port: S.Finite }) {}
 class AppConfig extends ConfigFile.Service<AppConfig, AppShape>()("test/SeededConfig") {}
 
 const Platform = Layer.mergeAll(NodeFileSystem.layer, Path.layer);

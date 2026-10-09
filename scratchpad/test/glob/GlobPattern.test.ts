@@ -3,7 +3,10 @@
 // options surface, the FromString codec and the escape statics.
 
 import { assert, describe, it } from "@effect/vitest";
-import { Arbitrary, Effect, Result, Schema } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
+import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { minimatch as oracle } from "minimatch";
 import { GlobPattern, GlobPatternError, GlobPatternOptions } from "../../effected/glob/index.ts";
 
@@ -172,34 +175,34 @@ describe("GlobPattern construction and schema", () => {
 
 	it.effect("class decode produces a working instance and encode emits only source", () =>
 		Effect.gen(function* () {
-			const p = yield* Schema.decodeEffect(GlobPattern)({ source: "@scope/*" });
+			const p = yield* S.decodeEffect(GlobPattern)({ source: "@scope/*" });
 			assert.instanceOf(p, GlobPattern);
 			assert.isFalse(p.matches("somepkg"));
 			assert.isTrue(p.matches("@scope/x"));
-			const encoded = yield* Schema.encodeEffect(GlobPattern)(p);
+			const encoded = yield* S.encodeEffect(GlobPattern)(p);
 			assert.deepStrictEqual(encoded, { source: "@scope/*" });
 		}),
 	);
 
 	it.effect("class decode rejects an uncompilable pattern as SchemaError", () =>
 		Effect.gen(function* () {
-			const e = yield* Effect.flip(Schema.decodeEffect(GlobPattern)({ source: "{a,b}".repeat(17) }));
+			const e = yield* Effect.flip(S.decodeEffect(GlobPattern)({ source: "{a,b}".repeat(17) }));
 			assert.strictEqual(e._tag, "SchemaError");
 		}),
 	);
 
 	it.effect("FromString decodes a bare string into a working instance and encodes back to source", () =>
 		Effect.gen(function* () {
-			const p = yield* Schema.decodeEffect(GlobPattern.FromString)("@scope/*");
+			const p = yield* S.decodeEffect(GlobPattern.FromString)("@scope/*");
 			assert.instanceOf(p, GlobPattern);
 			assert.isFalse(p.matches("somepkg"));
-			assert.strictEqual(yield* Schema.encodeEffect(GlobPattern.FromString)(p), "@scope/*");
+			assert.strictEqual(yield* S.encodeEffect(GlobPattern.FromString)(p), "@scope/*");
 		}),
 	);
 
 	it.effect("FromString surfaces uncompilable input as SchemaError", () =>
 		Effect.gen(function* () {
-			const e = yield* Effect.flip(Schema.decodeEffect(GlobPattern.FromString)("{a,b}".repeat(17)));
+			const e = yield* Effect.flip(S.decodeEffect(GlobPattern.FromString)("{a,b}".repeat(17)));
 			assert.strictEqual(e._tag, "SchemaError");
 		}),
 	);
@@ -277,13 +280,13 @@ describe("GlobPattern oracle (public seam)", () => {
 	// Literal and magic segments are two equal-weight groups (a Union of two
 	// Literals unions, not one flat list), so the pattern mix stays balanced
 	// between plain paths and paths that exercise the dialect.
-	const literalSeg = Schema.Literals(["a", "b", "abc", "x-y", "a.b+c", ".hidden", ""]);
-	const magicSeg = Schema.Literals(["*", "?", "**", "*.js", "a*", "+(a|b)", "[abc]", "{a,b}", "!x"]);
+	const literalSeg = S.Literals(["a", "b", "abc", "x-y", "a.b+c", ".hidden", ""]);
+	const magicSeg = S.Literals(["*", "?", "**", "*.js", "a*", "+(a|b)", "[abc]", "{a,b}", "!x"]);
 	const patternArb = Arbitrary.schema(
-		Schema.Array(Schema.Union([literalSeg, magicSeg])).check(Schema.isBetweenLength(1, 4)),
+		S.Array(S.Union([literalSeg, magicSeg])).check(S.isBetweenLength(1, 4)),
 	).pipe(Arbitrary.map((xs) => xs.join("/")));
 	const candidateArb = Arbitrary.schema(
-		Schema.Array(Schema.Literals(["a", "b", "abc", ".hidden", "x", ""])).check(Schema.isBetweenLength(1, 5)),
+		S.Array(S.Literals(["a", "b", "abc", ".hidden", "x", ""])).check(S.isBetweenLength(1, 5)),
 	).pipe(Arbitrary.map((xs) => xs.join("/")));
 
 	it.effect.prop(
@@ -324,7 +327,7 @@ describe("GlobPattern.compileResult", () => {
 	it("carries the same typed error as compile for every guard", () => {
 		for (const source of ["a".repeat(65_537), "{a,b}".repeat(17), `${"{".repeat(300)}a,b${"}".repeat(300)}`]) {
 			const sync = GlobPattern.compileResult(source);
-			const eff = Effect.runSync(Effect.result(GlobPattern.compile(source)));
+			const eff = GlobPattern.compile(source).pipe(Effect.result, Effect.runSync);
 			assert.isTrue(Result.isFailure(sync));
 			assert.isTrue(Result.isFailure(eff));
 			if (!Result.isFailure(sync) || !Result.isFailure(eff)) continue;

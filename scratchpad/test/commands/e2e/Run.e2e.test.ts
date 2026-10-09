@@ -8,7 +8,8 @@
 
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import { CommandFailedError, Run } from "../../../effected/commands/Run.ts";
 
@@ -45,9 +46,9 @@ describe("Run against real processes", () => {
 
 	it.effect("a real non-zero exit fails typed with the real code", () =>
 		Effect.gen(function* () {
-			const error = yield* Effect.flip(live(Run.text(node("process.stderr.write('bad'); process.exit(3)"))));
+			const error = yield* Run.text(node("process.stderr.write('bad'); process.exit(3)")).pipe(live, Effect.flip);
 			assert.instanceOf(error, CommandFailedError);
-			if (Schema.is(CommandFailedError)(error)) {
+			if (S.is(CommandFailedError)(error)) {
 				assert.strictEqual(error.kind, "nonZero");
 				assert.strictEqual(error.exitCode, 3);
 				assert.include(error.stderr ?? "", "bad");
@@ -62,9 +63,9 @@ describe("Run against real processes", () => {
 		// availability answer in this package silently inverts — so it is tested
 		// against a real spawn, not a fixture.
 		Effect.gen(function* () {
-			const error = yield* Effect.flip(live(Run.text(ChildProcess.make("effected-no-such-binary-xyz", []))));
+			const error = yield* Run.text(ChildProcess.make("effected-no-such-binary-xyz", [])).pipe(live, Effect.flip);
 			assert.instanceOf(error, CommandFailedError);
-			if (Schema.is(CommandFailedError)(error)) {
+			if (S.is(CommandFailedError)(error)) {
 				assert.strictEqual(error.kind, "spawn");
 				assert.isTrue(error.notFound, "ENOENT from a real spawn must classify as notFound");
 			}
@@ -110,7 +111,7 @@ describe("Run against real processes", () => {
 	it.effect("json decodes real tool output through a schema", () =>
 		Effect.gen(function* () {
 			const parsed = yield* live(
-				Run.json(node("process.stdout.write(JSON.stringify({ ok: true }))"), Schema.Struct({ ok: Schema.Boolean })),
+				Run.json(node("process.stdout.write(JSON.stringify({ ok: true }))"), S.Struct({ ok: S.Boolean })),
 			);
 			assert.deepStrictEqual(parsed, { ok: true });
 		}),
@@ -174,15 +175,11 @@ describe("Run.detach lifecycle", () => {
 			// scope close never killed anything, "still alive" would prove nothing
 			// about unref. This is what makes the pair discriminating.
 			Effect.gen(function* () {
-				const pid = yield* live(
-					Effect.scoped(
-						Effect.gen(function* () {
-							const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-							const handle = yield* spawner.spawn(node("setTimeout(() => {}, 60_000)"));
-							return handle.pid;
-						}),
-					),
-				);
+				const pid = yield* Effect.gen(function* () {
+					const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+					const handle = yield* spawner.spawn(node("setTimeout(() => {}, 60_000)"));
+					return handle.pid;
+				}).pipe(Effect.scoped, live);
 				yield* realDelay(250);
 				assert.isFalse(isAlive(Number(pid)), "a referenced child must not survive its scope");
 			}),

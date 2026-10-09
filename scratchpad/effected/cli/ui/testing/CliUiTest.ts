@@ -1,12 +1,23 @@
-import { Clock, Duration, Schedule } from "effect";
+import * as Clock from "effect/Clock";
+import * as Duration from "effect/Duration";
+import * as Schedule from "effect/Schedule";
 // Root and ./ui types are named through the package's own name, so the emitted ui-testing.d.ts imports them rather
 // than carrying copies a consumer's own layers and screens could not satisfy.
 import type * as Cli from "../../index.ts";
 import type { KeyName, LiveHandle, LiveOptions, Screen, ScreenControl } from "../../ui.ts";
 import type { ColorLevel } from "../../../env/index.ts";
 import { TerminalEnv } from "../../../env/index.ts";
-import type { Scope } from "effect";
-import { Cause, Console, Effect, Exit, Fiber, Inspectable, Layer, Option, Queue, Stream } from "effect";
+import type * as Scope from "effect/Scope";
+import * as Cause from "effect/Cause";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Fiber from "effect/Fiber";
+import * as Inspectable from "effect/Inspectable";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Queue from "effect/Queue";
+import * as Stream from "effect/Stream";
 import { TestClock } from "effect/testing";
 import type { ReactElement } from "react";
 import { CliInteractive } from "../../CliInteractive.ts";
@@ -564,7 +575,7 @@ const makeTerminal = (
 	});
 	// The two streams stay apart, so each one's bytes can be read; `fake.written` is both in order, one terminal.
 	const streams = fake.streams;
-	const stream = { isTerminal: true, color, hyperlinks: false, columns: Option.some(columns) };
+	const stream = { isTerminal: true, color, hyperlinks: false, columns: O.some(columns) };
 	const terminal = TerminalEnv.layerTest({ stdinIsTerminal: true, stdout: stream, stderr: stream });
 	const layer = Layer.mergeAll(
 		CliTheme.layer({ tokens: MARKER_STYLES, glyphs: options.glyphs ?? "unicode" }).pipe(Layer.provide(terminal)),
@@ -648,7 +659,7 @@ const makeTerminal = (
 		const surfaced = <X>(effect: Effect.Effect<X>): Effect.Effect<X> =>
 			Effect.suspend(() => {
 				const cause = failed();
-				return cause === undefined ? effect : Effect.die(Cause.squash(cause));
+				return cause === undefined ? effect : cause.pipe(Cause.squash, Effect.die);
 			});
 		const raws = (): ReadonlyArray<string> => capture()?.raws ?? [];
 		const after = (before: number, since: number) => settle(raws, ended, before, since);
@@ -729,7 +740,7 @@ const mount = Effect.fn("mount")(function*<A> (screen: Screen<A>, options: CliUi
 						if (
 							Exit.isFailure(exit) &&
 							!Cause.hasInterruptsOnly(exit.cause) &&
-							(exit.cause.reasons.some(Cause.isDieReason) || cancelledReason(Cause.squash(exit.cause)) === undefined)
+							(exit.cause.reasons.some(Cause.isDieReason) || exit.cause.pipe(Cause.squash, cancelledReason) === undefined)
 						) {
 							failure = exit.cause;
 						}
@@ -1123,7 +1134,7 @@ export class CliUiTest {
 	 */
 	static readonly cancelReason = (
 		exitOrCause: Exit.Exit<unknown, unknown> | Cause.Cause<unknown>,
-	): Option.Option<"escape" | "interrupt"> => {
+	): O.Option<"escape" | "interrupt"> => {
 		const cause = Exit.isExit(exitOrCause)
 			? Exit.isFailure(exitOrCause)
 				? exitOrCause.cause
@@ -1133,9 +1144,9 @@ export class CliUiTest {
 			const found = cancelledReason(
 				reason._tag === "Fail" ? reason.error : reason._tag === "Die" ? reason.defect : undefined,
 			);
-			if (found !== undefined) return Option.some(found);
+			if (found !== undefined) return O.some(found);
 		}
-		return Option.none();
+		return O.none();
 	};
 
 	/**

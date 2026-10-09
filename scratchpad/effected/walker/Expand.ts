@@ -13,8 +13,11 @@
 
 import type { GlobPatternOptions } from "../glob/index.ts";
 import { GlobPattern, GlobPatternError } from "../glob/index.ts";
-import type { FileSystem, Path } from "effect";
-import { Effect, Result, Schema } from "effect";
+import type * as FileSystem from "effect/FileSystem";
+import type * as Path from "effect/Path";
+import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { dual } from "effect/Function";
 import type { DescendOptions } from "./Descend.ts";
 import { DescendError, descend } from "./Descend.ts";
@@ -60,11 +63,11 @@ export interface CompileAndExpandOptions extends DescendOptions {
  *
  * @public
  */
-export class GlobExpansionError extends Schema.TaggedError<GlobExpansionError>()("GlobExpansionError", {
+export class GlobExpansionError extends S.TaggedError<GlobExpansionError>()("GlobExpansionError", {
 	/** The glob pattern's source text, as handed to {@link compileAndExpand}. */
-	pattern: Schema.String,
+	pattern: S.String,
 	/** The underlying typed failure, intact: a compile guard trip or a descent failure. */
-	cause: Schema.Union([GlobPatternError, DescendError]),
+	cause: S.Union([GlobPatternError, DescendError]),
 }) {
 	/**
 	 * Which phase failed — `"compile"` when the pattern itself was rejected,

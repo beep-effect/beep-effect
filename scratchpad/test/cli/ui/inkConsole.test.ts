@@ -1,7 +1,8 @@
-import { Schema } from "effect";
-import { Result } from "effect";
+import * as S from "effect/Schema";
+import * as Result from "effect/Result";
 import { assert, describe, it } from "@effect/vitest";
-import { Console, Effect } from "effect";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
 import type { Instance } from "ink";
 import { Box, Text, render } from "ink";
 import type { ReactElement } from "react";
@@ -15,7 +16,7 @@ import { screenAfter } from "../../../effected/cli/ui/testing/terminalModel.ts";
 import type { UiStreamsShape } from "../../../effected/cli/ui.ts";
 import { UiStreams } from "../../../effected/cli/ui.ts";
 
-const Json = Schema.fromJsonString(Schema.Unknown);
+const Json = S.fromJsonString(S.Unknown);
 
 /** A two-row frame, so a torn repaint shows as a stranded header. */
 const frame = (tick: number): ReactElement =>
@@ -122,7 +123,7 @@ describe("the console bridge writes above a live Ink frame (production path; okf
 			// Torn: the repaint erases lines it did not write, so log lines go missing or a stale header stays behind.
 			const missing = LOGS.filter((line) => !shown.includes(line));
 			const headers = shown.filter((line) => line === "LIVE HEADER").length;
-			assert.isTrue(missing.length > 0 || headers > 1, `torn: ${Result.getOrThrow(Schema.encodeUnknownResult(Json)(shown))}`);
+			assert.isTrue(missing.length > 0 || headers > 1, `torn: ${Result.getOrThrow(S.encodeUnknownResult(Json)(shown))}`);
 		}),
 	);
 
@@ -213,7 +214,7 @@ describe("the console bridge writes above a live Ink frame (production path; okf
 			const shown = screenAfter(fake.stdout());
 			const at = shown.indexOf("out line 3");
 			const added = shown.slice(shown.indexOf("err line 3") + 1, shown.indexOf("out line 4"));
-			assert.isAbove(at, -1, `the run wrote: ${Result.getOrThrow(Schema.encodeUnknownResult(Json)(shown))}`);
+			assert.isAbove(at, -1, `the run wrote: ${Result.getOrThrow(S.encodeUnknownResult(Json)(shown))}`);
 			assert.deepStrictEqual(added.slice(0, 11), [
 				"| (index) | name | n |",
 				"| 0       | a    | 1 |",

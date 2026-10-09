@@ -1,4 +1,4 @@
-import { Stream } from "effect";
+import * as Stream from "effect/Stream";
 import { ChildProcess } from "effect/process";
 
 /**

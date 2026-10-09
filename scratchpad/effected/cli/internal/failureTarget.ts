@@ -2,8 +2,12 @@ import { dual } from "effect/Function";
 import type { AudienceShape } from "../../env/index.ts";
 import { Audience, TerminalEnv } from "../../env/index.ts";
 import { CommandNeutralizer } from "../../github-commands/index.ts";
-import { Cause } from "effect";
-import { Config, Context, Effect, MutableRef, Option } from "effect";
+import * as Cause from "effect/Cause";
+import * as Config from "effect/Config";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as MutableRef from "effect/MutableRef";
+import * as O from "effect/Option";
 import { CliFailure } from "../CliFailure.ts";
 import { CliLinks } from "../CliLinks.ts";
 import { CliTheme } from "../CliTheme.ts";
@@ -91,8 +95,8 @@ const build = (audience?: AudienceShape, settings: FailureSettings = {}): Effect
 		const terminal = yield* Effect.serviceOption(TerminalEnv);
 		const current = yield* Effect.serviceOption(Audience);
 		const links = yield* Effect.serviceOption(CliLinks);
-		if (Option.isNone(theme) || Option.isNone(terminal) || Option.isNone(links)) return undefined;
-		const shape = audience ?? (Option.isSome(current) ? current.value : undefined);
+		if (O.isNone(theme) || O.isNone(terminal) || O.isNone(links)) return undefined;
+		const shape = audience ?? (O.isSome(current) ? current.value : undefined);
 		if (shape === undefined) return undefined;
 		const { displayPath, stackFrames, spans, appModule } = settings;
 		const ctx = yield* Render.context("stderr", displayPath === undefined ? undefined : { displayPath }).pipe(
@@ -249,8 +253,8 @@ export const readSpans: {
 	Effect.gen(function* () {
 		if (explicit !== undefined) return { spans: explicit, invalid: undefined };
 		if (envVar === undefined) return { spans: undefined, invalid: undefined };
-		const raw = yield* Config.option(Config.String(envVar)).pipe(Effect.orElseSucceed(() => Option.none<string>()));
-		if (Option.isNone(raw) || raw.value === "") return { spans: undefined, invalid: undefined };
+		const raw = yield* Config.option(Config.String(envVar)).pipe(Effect.orElseSucceed(() => O.none<string>()));
+		if (O.isNone(raw) || raw.value === "") return { spans: undefined, invalid: undefined };
 		const value = raw.value.toLowerCase();
 		const spans = SPAN_SETTINGS.find((setting) => setting === value);
 		if (spans !== undefined) return { spans, invalid: undefined };

@@ -1,5 +1,9 @@
-import type { Effect } from "effect";
-import { Context, Effect as Eff, Layer, Option, Schema } from "effect";
+import type * as Effect from "effect/Effect";
+import * as Context from "effect/Context";
+import * as Eff from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { ChildProcess } from "effect/process";
 
 /**
@@ -14,7 +18,7 @@ import { ChildProcess } from "effect/process";
  *
  * @public
  */
-export const Launcher = Schema.Literals(["npm", "pnpm", "yarn", "bun"]);
+export const Launcher = S.Literals(["npm", "pnpm", "yarn", "bun"]);
 
 /**
  * The decoded type of {@link (Launcher:variable)}.
@@ -67,17 +71,17 @@ const PREFIXES: Readonly<Record<Launcher, LauncherPrefixes>> = {
  *
  * @public
  */
-export class ExecContext extends Schema.Class<ExecContext>("ExecContext")({
+export class ExecContext extends S.Class<ExecContext>("ExecContext")({
 	/** Human label of the launcher, e.g. `"pnpm"`. Reporting only. */
-	label: Schema.String,
+	label: S.String,
 	/** argv prefix that runs a project-local binary, e.g. `["pnpm", "exec"]`. */
-	prefix: Schema.Array(Schema.String),
+	prefix: S.Array(S.String),
 	/** argv prefix that fetch-and-runs a package binary, e.g. `["pnpm", "dlx"]`. */
-	dlxPrefix: Schema.Array(Schema.String),
+	dlxPrefix: S.Array(S.String),
 	/** argv prefix that runs a `package.json` script, e.g. `["pnpm", "run"]`. */
-	scriptPrefix: Schema.Array(Schema.String),
+	scriptPrefix: S.Array(S.String),
 	/** Directory the prefix must run in. Omitted means "wherever the caller is". */
-	directory: Schema.optionalKey(Schema.String),
+	directory: S.optionalKey(S.String),
 }) {
 	/** Prefixes `command` with `prefix` and applies `directory`, returning a core `Command`. */
 	apply(command: ChildProcess.StandardCommand): ChildProcess.Command {
@@ -125,11 +129,11 @@ export class ExecContext extends Schema.Class<ExecContext>("ExecContext")({
  *
  * @public
  */
-export class LocalExecError extends Schema.TaggedError<LocalExecError>()("LocalExecError", {
+export class LocalExecError extends S.TaggedError<LocalExecError>()("LocalExecError", {
 	/** The directory whose context could not be determined, when one is known. */
-	directory: Schema.optionalKey(Schema.String),
+	directory: S.optionalKey(S.String),
 	/** The underlying failure. */
-	cause: Schema.optionalKey(Schema.Defect()),
+	cause: S.optionalKey(S.Defect()),
 }) {
 	override get message(): string {
 		return this.directory === undefined
@@ -156,7 +160,7 @@ export interface LocalExecShape {
 	 * A value that *is* an `Effect`, because yielding is the natural verb —
 	 * core writes `ChildProcessHandle.exitCode` the same way.
 	 */
-	readonly context: Effect.Effect<Option.Option<ExecContext>, LocalExecError>;
+	readonly context: Effect.Effect<O.Option<ExecContext>, LocalExecError>;
 }
 
 /**

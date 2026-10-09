@@ -1,5 +1,14 @@
 import { BlobClient, BlockBlobClient } from "@azure/storage-blob";
-import { Context, Effect, FileSystem, Layer, Option, Path, Result, Schema, Clock, DateTime } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
+import * as Clock from "effect/Clock";
+import * as DateTime from "effect/DateTime";
 import { HttpClient } from "effect/http";
 import type { ChildProcess } from "effect/process";
 import { ChildProcessSpawner } from "effect/process";
@@ -15,14 +24,14 @@ import { spawnOnce } from "./internal/spawn.ts";
 import { CONFLICT, field, isOk, stringField, twirpCall, twirpFailureFields } from "./internal/twirp.ts";
 import { unstubbed } from "./internal/unstubbed.ts";
 
-const Json = Schema.fromJsonString(Schema.Unknown);
+const Json = S.fromJsonString(S.Unknown);
 
 /**
  * Raised when an artifact cannot be uploaded, listed, downloaded or deleted.
  *
  * @public
  */
-export class ArtifactError extends Schema.TaggedError<ArtifactError>()("ArtifactError", {
+export class ArtifactError extends S.TaggedError<ArtifactError>()("ArtifactError", {
 	/**
 	 * `misconfigured` — the results backend is not reachable from here (see
 	 * {@link Artifact}). `unreachable` — it could not be contacted, or answered
@@ -33,7 +42,7 @@ export class ArtifactError extends Schema.TaggedError<ArtifactError>()("Artifact
 	 * `transferFailed` — the archive itself did not move. `invalidOptions` — the
 	 * call cannot be made as asked.
 	 */
-	reason: Schema.Literals([
+	reason: S.Literals([
 		"misconfigured",
 		"unreachable",
 		"refused",
@@ -43,15 +52,15 @@ export class ArtifactError extends Schema.TaggedError<ArtifactError>()("Artifact
 		"invalidOptions",
 	]),
 	/** The artifact's name or id. A stable identifier, never a value. */
-	artifact: Schema.optionalKey(Schema.String),
+	artifact: S.optionalKey(S.String),
 	/** The HTTP status, when the backend answered. */
-	status: Schema.optionalKey(Schema.Finite),
+	status: S.optionalKey(S.Finite),
 	/** What went wrong, when the reason alone does not say. */
-	detail: Schema.optionalKey(Schema.String),
+	detail: S.optionalKey(S.String),
 	/** `zip`'s own complaint, which is the only useful part of an archive failure. */
-	stderr: Schema.optionalKey(Schema.String),
+	stderr: S.optionalKey(S.String),
 	/** The underlying failure, preserved structurally. */
-	cause: Schema.optionalKey(Schema.Defect()),
+	cause: S.optionalKey(S.Defect()),
 }) {
 	override get message(): string {
 		const about = this.artifact === undefined ? "" : ` "${this.artifact}"`;
@@ -185,7 +194,7 @@ export interface ArtifactShape {
 	/** Every artifact in the current run. */
 	readonly list: Effect.Effect<ReadonlyArray<ArtifactItem>, ArtifactError>;
 	/** One artifact by name, or nothing — absent is not a failure. */
-	readonly get: (name: string) => Effect.Effect<Option.Option<ArtifactItem>, ArtifactError>;
+	readonly get: (name: string) => Effect.Effect<O.Option<ArtifactItem>, ArtifactError>;
 	/** Download an artifact by id and unzip it. Answers with where it landed. */
 	readonly download: (artifactId: number, options?: DownloadOptions) => Effect.Effect<DownloadResult, ArtifactError>;
 	/** Delete an artifact by name, answering with the id that is now gone. */
@@ -369,7 +378,7 @@ const make = (
 					return yield* ArtifactError.make({
 							reason: "invalidOptions",
 							artifact,
-							detail: `a file path may not contain a line break: ${Result.getOrThrowWith(Schema.encodeResult(Json)(unrepresentable), (error) => error)}`,
+							detail: `a file path may not contain a line break: ${Result.getOrThrowWith(S.encodeResult(Json)(unrepresentable), (error) => error)}`,
 						});
 				}
 				// Beside the archive inside the scratch directory, so `scratch`'s
@@ -478,7 +487,7 @@ const make = (
 			get: Effect.fn("Artifact.get")(function* (name: string) {
 				yield* Effect.annotateCurrentSpan({ name });
 				const all = yield* listAll(name);
-				return Option.fromNullishOr(all.find((item) => item.name === name));
+				return O.fromNullishOr(all.find((item) => item.name === name));
 			}),
 
 			download: Effect.fn("Artifact.download")(function* (artifactId: number, options?: DownloadOptions) {

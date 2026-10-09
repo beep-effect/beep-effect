@@ -9,7 +9,7 @@
 // reads as the string it already is. A tagged scalar (`!!bool`, `!!str`) is
 // explicit intent and never flagged.
 
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 import { YamlEdit } from "../../YamlEdit.ts";
 import type { LintContext, YamlRule } from "../../YamlLintRule.ts";
 import { YamlLintDiagnostic, YamlLintSeverity } from "../../YamlLintRule.ts";
@@ -20,10 +20,10 @@ import { positionAt, walkScalars } from "./util.ts";
  * `["true", "false"]`) and whether mapping keys are checked (`checkKeys`,
  * default `true` — the workflow `on:` key is the point).
  */
-export const truthyOptions = Schema.Struct({
-	severity: Schema.optionalKey(YamlLintSeverity),
-	allowed: Schema.optionalKey(Schema.Array(Schema.String)),
-	checkKeys: Schema.optionalKey(Schema.Boolean),
+export const truthyOptions = S.Struct({
+	severity: S.optionalKey(YamlLintSeverity),
+	allowed: S.String.pipe(S.Array, S.optionalKey),
+	checkKeys: S.optionalKey(S.Boolean),
 });
 
 interface TruthyOptions {

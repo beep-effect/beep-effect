@@ -1,4 +1,9 @@
-import { Context, Effect, Layer, Option, Schema, Stream } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import { GitHubClient } from "./GitHubClient.ts";
 import type { GitHubError } from "./GitHubError.ts";
 import type { PageSource } from "./internal/paginate.ts";
@@ -11,17 +16,17 @@ import type { PageOptions } from "./Rest.ts";
  *
  * @public
  */
-export class CommitSummary extends Schema.Class<CommitSummary>("CommitSummary")({
+export class CommitSummary extends S.Class<CommitSummary>("CommitSummary")({
 	/** The commit sha. */
-	sha: Schema.String,
+	sha: S.String,
 	/** The full commit message, untrimmed — this package does not decide what "the message" means. */
-	message: Schema.String,
+	message: S.String,
 	/** The author's name as git recorded it, or `"Unknown"` when GitHub reports none. */
-	author: Schema.String,
+	author: S.String,
 	/** The GitHub login of the authoring account, when GitHub could attribute one. */
-	authorLogin: Schema.optionalKey(Schema.String),
+	authorLogin: S.optionalKey(S.String),
 	/** The web URL for the commit. */
-	url: Schema.String,
+	url: S.String,
 	/**
 	 * The parent commit shas, in the order GitHub lists them.
 	 *
@@ -30,7 +35,7 @@ export class CommitSummary extends Schema.Class<CommitSummary>("CommitSummary")(
 	 * not an optional one: every commit endpoint this package reads reports
 	 * `parents`, so "which commit(s) did this come from" never needs a raw route.
 	 */
-	parents: Schema.Array(Schema.String),
+	parents: S.Array(S.String),
 }) {
 	/** The message's first line. */
 	get subject(): string {
@@ -43,7 +48,7 @@ export class CommitSummary extends Schema.Class<CommitSummary>("CommitSummary")(
  *
  * @public
  */
-export const FileStatus = Schema.Literals([
+export const FileStatus = S.Literals([
 	"added",
 	"removed",
 	"modified",
@@ -58,17 +63,17 @@ export const FileStatus = Schema.Literals([
  *
  * @public
  */
-export class CommitFile extends Schema.Class<CommitFile>("CommitFile")({
+export class CommitFile extends S.Class<CommitFile>("CommitFile")({
 	/** Repository-relative path, after any rename. */
-	path: Schema.String,
+	path: S.String,
 	/** What happened to it. */
 	status: FileStatus,
 	/** Lines added. */
-	additions: Schema.Int,
+	additions: S.Int,
 	/** Lines removed. */
-	deletions: Schema.Int,
+	deletions: S.Int,
 	/** The path before a rename or copy. */
-	previousPath: Schema.optionalKey(Schema.String),
+	previousPath: S.optionalKey(S.String),
 }) {}
 
 /**
@@ -76,17 +81,17 @@ export class CommitFile extends Schema.Class<CommitFile>("CommitFile")({
  *
  * @public
  */
-export class CommitComparison extends Schema.Class<CommitComparison>("CommitComparison")({
+export class CommitComparison extends S.Class<CommitComparison>("CommitComparison")({
 	/** How head relates to base. */
-	status: Schema.Literals(["diverged", "ahead", "behind", "identical"]),
+	status: S.Literals(["diverged", "ahead", "behind", "identical"]),
 	/** Commits head has that base does not. */
-	aheadBy: Schema.Int,
+	aheadBy: S.Int,
 	/** Commits base has that head does not. */
-	behindBy: Schema.Int,
+	behindBy: S.Int,
 	/** The commits in the range. */
-	commits: Schema.Array(CommitSummary),
+	commits: S.Array(CommitSummary),
 	/** The files that differ, subject to GitHub's own 300-file cap on this endpoint. */
-	files: Schema.Array(CommitFile),
+	files: S.Array(CommitFile),
 }) {}
 
 /**
@@ -284,7 +289,7 @@ const make = (client: GitHubClient["Service"]): GitHubCommitShape => ({
 			let finished = false;
 			return {
 				next: Effect.suspend(() => {
-					if (finished) return Effect.succeed(Option.none<ReadonlyArray<CommitFile>>());
+					if (finished) return Effect.succeed(O.none<ReadonlyArray<CommitFile>>());
 					page += 1;
 					return client
 						.request("GET /repos/{owner}/{repo}/commits/{ref}", { owner, repo, ref, page, per_page: perPage })
@@ -292,7 +297,7 @@ const make = (client: GitHubClient["Service"]): GitHubCommitShape => ({
 							Effect.map((commit) => {
 								const files = commit.files ?? [];
 								if (files.length < perPage) finished = true;
-								return files.length === 0 ? Option.none<ReadonlyArray<CommitFile>>() : Option.some(files.map(fileOf));
+								return files.length === 0 ? O.none<ReadonlyArray<CommitFile>>() : O.some(files.map(fileOf));
 							}),
 						);
 				}),

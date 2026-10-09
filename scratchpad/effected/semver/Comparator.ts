@@ -1,4 +1,8 @@
-import { Effect, Result, Schema, SchemaIssue, SchemaTransformation } from "effect";
+import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import { formatComparator, parseComparator } from "./internal/grammar.ts";
 import { SemVer } from "./SemVer.ts";
 
@@ -11,11 +15,11 @@ import { SemVer } from "./SemVer.ts";
  *
  * @public
  */
-export class InvalidComparatorError extends Schema.TaggedError<InvalidComparatorError>()("InvalidComparatorError", {
+export class InvalidComparatorError extends S.TaggedError<InvalidComparatorError>()("InvalidComparatorError", {
 	/** The raw input string that failed to parse. */
-	input: Schema.String,
+	input: S.String,
 	/** The character position where parsing failed, if available. */
-	position: Schema.optionalKey(Schema.Finite),
+	position: S.optionalKey(S.Finite),
 }) {
 	override get message(): string {
 		const base = `Invalid comparator: "${this.input}"`;
@@ -46,9 +50,9 @@ export class InvalidComparatorError extends Schema.TaggedError<InvalidComparator
  *
  * @public
  */
-export class Comparator extends Schema.Class<Comparator>("Comparator")({
+export class Comparator extends S.Class<Comparator>("Comparator")({
 	/** The relational operator applied to `version`; a missing prefix in the source string means `=`. */
-	operator: Schema.Literals(["=", ">", ">=", "<", "<="]),
+	operator: S.Literals(["=", ">", ">=", "<", "<="]),
 	/** The version the operator is applied against. */
 	version: SemVer,
 }) {
@@ -58,8 +62,8 @@ export class Comparator extends Schema.Class<Comparator>("Comparator")({
 	 * Schema transformation between the comparator string (e.g. `">=1.2.3"`)
 	 * and {@link Comparator}.
 	 */
-	static readonly FromString: Schema.Codec<Comparator, string> = Schema.String.pipe(
-		Schema.decodeTo(
+	static readonly FromString: S.Codec<Comparator, string> = S.String.pipe(
+		S.decodeTo(
 			Comparator,
 			SchemaTransformation.transformEffect({
 				decode: (input: string) => {

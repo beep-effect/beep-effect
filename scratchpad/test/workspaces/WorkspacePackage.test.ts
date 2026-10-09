@@ -1,6 +1,8 @@
 import { assert, describe, it } from "@effect/vitest";
 import { GlobPattern } from "../../effected/glob/index.ts";
-import { Option, Schema, Result } from "effect";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import * as Result from "effect/Result";
 import { PublishConfig, WorkspacePackage } from "../../effected/workspaces/index.ts";
 
 const base = {
@@ -41,8 +43,8 @@ describe("WorkspacePackage", () => {
 	});
 
 	it("scope extracts the npm scope, or none", () => {
-		assert.deepStrictEqual(utils.scope, Option.some("@my-org"));
-		assert.deepStrictEqual(WorkspacePackage.make({ name: "plain", ...base }).scope, Option.none());
+		assert.deepStrictEqual(utils.scope, O.some("@my-org"));
+		assert.deepStrictEqual(WorkspacePackage.make({ name: "plain", ...base }).scope, O.none());
 	});
 
 	it("unscopedName strips the scope and leaves an unscoped name alone", () => {
@@ -90,9 +92,9 @@ describe("WorkspacePackage", () => {
 	});
 
 	it("dependencyVersion searches all four kinds", () => {
-		assert.deepStrictEqual(utils.dependencyVersion("effect"), Option.some("^4.0.0"));
-		assert.deepStrictEqual(utils.dependencyVersion("fsevents"), Option.some("^2.0.0"));
-		assert.deepStrictEqual(utils.dependencyVersion("react"), Option.none());
+		assert.deepStrictEqual(utils.dependencyVersion("effect"), O.some("^4.0.0"));
+		assert.deepStrictEqual(utils.dependencyVersion("fsevents"), O.some("^2.0.0"));
+		assert.deepStrictEqual(utils.dependencyVersion("react"), O.none());
 	});
 
 	// ── matchesDependency: the minimatch call site, now over @effected/glob ────
@@ -178,18 +180,18 @@ describe("WorkspacePackage", () => {
 	it("publishConfig.linkDirectory round-trips through decode and encode", () => {
 		// The pnpm dist-linking field: `directory` says what publishes,
 		// `linkDirectory` says workspace links point there during development.
-		const decoded = Result.getOrThrow(Schema.decodeResult(PublishConfig)({ directory: "dist/dev/pkg", linkDirectory: true }));
+		const decoded = Result.getOrThrow(S.decodeResult(PublishConfig)({ directory: "dist/dev/pkg", linkDirectory: true }));
 		assert.isTrue(decoded.linkDirectory);
 		assert.strictEqual(decoded.directory, "dist/dev/pkg");
 
-		const encoded = Result.getOrThrow(Schema.encodeUnknownResult(PublishConfig)(decoded));
+		const encoded = Result.getOrThrow(S.encodeUnknownResult(PublishConfig)(decoded));
 		assert.deepStrictEqual(encoded, { directory: "dist/dev/pkg", linkDirectory: true });
 	});
 
 	it("publishConfig.linkDirectory is an optionalKey — absent stays absent, never explicit undefined", () => {
-		const absent = Result.getOrThrow(Schema.decodeResult(PublishConfig)({ access: "public" }));
+		const absent = Result.getOrThrow(S.decodeResult(PublishConfig)({ access: "public" }));
 		assert.isFalse("linkDirectory" in absent);
-		assert.isFalse("linkDirectory" in Result.getOrThrow(Schema.encodeUnknownResult(PublishConfig)(absent)));
+		assert.isFalse("linkDirectory" in Result.getOrThrow(S.encodeUnknownResult(PublishConfig)(absent)));
 
 		const explicit = PublishConfig.make({ linkDirectory: false });
 		assert.isFalse(explicit.linkDirectory);
@@ -218,7 +220,7 @@ describe("WorkspacePackage.dependencyVersion — inherited names are not depende
 	// back Option.some(<Function>) and lie about its own type.
 	for (const inherited of ["constructor", "toString", "valueOf", "hasOwnProperty", "__proto__"]) {
 		it(`dependencyVersion(${JSON.stringify(inherited)}) is none`, () => {
-			assert.isTrue(Option.isNone(pkg.dependencyVersion(inherited)));
+			assert.isTrue(O.isNone(pkg.dependencyVersion(inherited)));
 		});
 
 		it(`hasAnyDependencyOn(${JSON.stringify(inherited)}) is false`, () => {
@@ -227,7 +229,7 @@ describe("WorkspacePackage.dependencyVersion — inherited names are not depende
 	}
 
 	it("a real declared dependency still resolves", () => {
-		assert.deepStrictEqual(pkg.dependencyVersion("effect"), Option.some("^4.0.0"));
+		assert.deepStrictEqual(pkg.dependencyVersion("effect"), O.some("^4.0.0"));
 	});
 });
 
@@ -253,8 +255,8 @@ describe("WorkspacePackage.manifestRecord", () => {
 				sideEffects: false,
 			},
 		});
-		const wire = JSON.parse(JSON.stringify(Result.getOrThrow(Schema.encodeUnknownResult(WorkspacePackage)(pkg)))) as unknown;
-		const decoded = Result.getOrThrow(Schema.decodeUnknownResult(WorkspacePackage)(wire));
+		const wire = JSON.parse(JSON.stringify(Result.getOrThrow(S.encodeUnknownResult(WorkspacePackage)(pkg)))) as unknown;
+		const decoded = Result.getOrThrow(S.decodeUnknownResult(WorkspacePackage)(wire));
 		assert.deepStrictEqual(decoded.manifestRecord, pkg.manifestRecord);
 		assert.deepStrictEqual(decoded.dependencies, { effect: "^4.0.0" });
 	});
@@ -270,7 +272,7 @@ describe("WorkspacePackage.manifestRecord", () => {
 			relativePath: "packages/old",
 			workspaceRoot: "/repo",
 		};
-		const decoded = Result.getOrThrow(Schema.decodeResult(WorkspacePackage)(legacy));
+		const decoded = Result.getOrThrow(S.decodeResult(WorkspacePackage)(legacy));
 		assert.deepStrictEqual(decoded.manifestRecord, {});
 	});
 
@@ -290,6 +292,6 @@ describe("WorkspacePackage.manifestRecord", () => {
 			packageJsonPath: "/repo/packages/old/package.json",
 			relativePath: "packages/old",
 		};
-		assert.throws(() => Result.getOrThrow(Schema.decodeUnknownResult(WorkspacePackage)(preField)));
+		assert.throws(() => Result.getOrThrow(S.decodeUnknownResult(WorkspacePackage)(preField)));
 	});
 });

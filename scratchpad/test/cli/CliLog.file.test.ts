@@ -1,13 +1,21 @@
-import { Schema } from "effect";
-import { Result } from "effect";
+import * as S from "effect/Schema";
+import * as Result from "effect/Result";
 import { assert, describe, it } from "@effect/vitest";
 import { Audience, CurrentRuntimeEnv, TerminalEnv } from "../../effected/env/index.ts";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
-import { ConfigProvider, Console, Effect, Exit, Fiber, Layer, Option, PlatformError, Scope } from "effect";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Fiber from "effect/Fiber";
+import * as Layer from "effect/Layer";
+import * as Option from "effect/Option";
+import * as PlatformError from "effect/PlatformError";
+import * as Scope from "effect/Scope";
 import { TestClock } from "effect/testing";
 import { CliLog } from "../../effected/cli/index.ts";
 
-const Json = Schema.fromJsonString(Schema.Unknown);
+const Json = S.fromJsonString(S.Unknown);
 
 const LEVEL_ENV = "TOOL_LOG_LEVEL";
 const FILE_ENV = "TOOL_LOG_FILE";
@@ -186,7 +194,7 @@ describe("CliLog.layer file option", () => {
 						while (plain(h.err).length === 0 && spins++ < 1000) yield* Effect.yieldNow;
 						yield* h.close;
 						const printed = failureLines(h.err);
-						for (const line of printed) assert.notInclude(line, ESC, Result.getOrThrow(Schema.encodeUnknownResult(Json)(line)));
+						for (const line of printed) assert.notInclude(line, ESC, Result.getOrThrow(S.encodeUnknownResult(Json)(line)));
 						const commands = printed.filter((line) => /^[\s\u0085]*::/.test(line) || line.includes("##["));
 						if (ci === "github-actions") assert.deepStrictEqual(commands, []);
 						else assert.isAbove(commands.length, 0, "control: outside Actions the text is not neutralized");

@@ -11,7 +11,11 @@
 // fields are validated; every other top-level field rides through `rest`
 // untouched and flattens back to the top level on encode.
 
-import { Effect, Option, Result, Schema, SchemaTransformation } from "effect";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import type { CatalogAssemblyError } from "./CatalogAssemblyError.ts";
 import { CatalogResolver } from "./CatalogResolver.ts";
 import { DependencyField } from "./DependencySection.ts";
@@ -30,9 +34,9 @@ import { WorkspaceResolver } from "./WorkspaceResolver.ts";
  *
  * @public
  */
-export class ManifestDecodeError extends Schema.TaggedError<ManifestDecodeError>()("ManifestDecodeError", {
+export class ManifestDecodeError extends S.TaggedError<ManifestDecodeError>()("ManifestDecodeError", {
 	/** The underlying `SchemaError`, preserved structurally rather than stringified. */
-	cause: Schema.Defect(),
+	cause: S.Defect(),
 }) {
 	/** Summarizes the decode failure in one line. */
 	override get message(): string {
@@ -50,17 +54,17 @@ export class ManifestDecodeError extends Schema.TaggedError<ManifestDecodeError>
  *
  * @public
  */
-export class UnresolvedDependencyError extends Schema.TaggedError<UnresolvedDependencyError>()(
+export class UnresolvedDependencyError extends S.TaggedError<UnresolvedDependencyError>()(
 	"UnresolvedDependencyError",
 	{
 		/** The manifest field the dependency is declared under. */
 		field: DependencyField,
 		/** The dependency's package name. */
-		dependency: Schema.String,
+		dependency: S.String,
 		/** The raw specifier that resolved to nothing. */
-		specifier: Schema.String,
+		specifier: S.String,
 		/** Why resolution came back empty. */
-		reason: Schema.Literals(["catalog-entry-missing", "workspace-package-missing"]),
+		reason: S.Literals(["catalog-entry-missing", "workspace-package-missing"]),
 	},
 ) {
 	/** Renders the missing entry into a one-line message. */
@@ -71,7 +75,7 @@ export class UnresolvedDependencyError extends Schema.TaggedError<UnresolvedDepe
 	}
 }
 
-const RawManifest = Schema.Record(Schema.String, Schema.Unknown);
+const RawManifest = S.Record(S.String, S.Unknown);
 
 // The keys the wire codec partitions into typed members; everything else
 // rides through `rest`.
@@ -84,10 +88,10 @@ const DEPENDENCY_FIELDS: ReadonlySet<string> = new Set(DependencyField.literals)
 // transform at a smaller scale, without taking the dependency.
 const makeWire = (
 	// biome-ignore lint/suspicious/noExplicitAny: invariant Encoded slot — a concrete type is rejected by the class-factory generics
-	Class: Schema.Codec<Manifest, any, any, any>,
-): Schema.Codec<Manifest, { readonly [k: string]: unknown }> => {
+	Class: S.Codec<Manifest, any, any, any>,
+): S.Codec<Manifest, { readonly [k: string]: unknown }> => {
 	const wire = RawManifest.pipe(
-		Schema.decodeTo(
+		S.decodeTo(
 			Class,
 			SchemaTransformation.transform({
 				decode: (raw: { readonly [k: string]: unknown }) => {
@@ -109,7 +113,7 @@ const makeWire = (
 			}),
 		),
 	);
-	return wire as unknown as Schema.Codec<Manifest, { readonly [k: string]: unknown }>;
+	return wire as unknown as S.Codec<Manifest, { readonly [k: string]: unknown }>;
 };
 
 /**
@@ -148,24 +152,24 @@ const makeWire = (
  *
  * @public
  */
-export class Manifest extends Schema.Class<Manifest>("Manifest")({
+export class Manifest extends S.Class<Manifest>("Manifest")({
 	/** Production dependencies, when present. */
-	dependencies: Schema.optionalKey(Schema.Record(Schema.String, Schema.String)),
+	dependencies: S.optionalKey(S.Record(S.String, S.String)),
 	/** Development dependencies, when present. */
-	devDependencies: Schema.optionalKey(Schema.Record(Schema.String, Schema.String)),
+	devDependencies: S.optionalKey(S.Record(S.String, S.String)),
 	/** Peer dependencies, when present. */
-	peerDependencies: Schema.optionalKey(Schema.Record(Schema.String, Schema.String)),
+	peerDependencies: S.optionalKey(S.Record(S.String, S.String)),
 	/** Optional dependencies, when present. */
-	optionalDependencies: Schema.optionalKey(Schema.Record(Schema.String, Schema.String)),
+	optionalDependencies: S.optionalKey(S.Record(S.String, S.String)),
 	/** Every non-dependency top-level field, preserved verbatim for round-trip fidelity. */
-	rest: Schema.optionalKey(Schema.Record(Schema.String, Schema.Unknown)),
+	rest: S.optionalKey(S.Record(S.String, S.Unknown)),
 }) {
 	/**
 	 * The tolerant wire codec: an open record ↔ a {@link Manifest} instance,
 	 * partitioning the four dependency field names into typed members and
 	 * everything else into `rest`, flattened back to the top level on encode.
 	 */
-	static readonly schema: Schema.Codec<Manifest, { readonly [k: string]: unknown }> = makeWire(Manifest);
+	static readonly schema: S.Codec<Manifest, { readonly [k: string]: unknown }> = makeWire(Manifest);
 
 	/**
 	 * Decode an unknown value into a {@link Manifest}, normalizing any
@@ -177,7 +181,7 @@ export class Manifest extends Schema.Class<Manifest>("Manifest")({
 	 * string→string record, or the input is not a record at all
 	 */
 	static readonly decode = Effect.fn("Manifest.decode")(function* (input: unknown) {
-		return yield* Schema.decodeUnknownEffect(Manifest.schema)(input).pipe(
+		return yield* S.decodeUnknownEffect(Manifest.schema)(input).pipe(
 			Effect.catchTag("SchemaError", (cause) => ManifestDecodeError.make({ cause })),
 		);
 	});
@@ -236,7 +240,7 @@ export class Manifest extends Schema.Class<Manifest>("Manifest")({
 	 * @returns the manifest as an open record
 	 */
 	toRecord(): Record<string, unknown> {
-		return Result.getOrThrow(Schema.encodeUnknownResult(Manifest.schema)(this));
+		return Result.getOrThrow(S.encodeUnknownResult(Manifest.schema)(this));
 	}
 }
 
@@ -256,7 +260,7 @@ const resolveManifest = Effect.fn("Manifest.resolve")(function* (manifest: Manif
 		for (const [dependency, specifier] of Object.entries(section)) {
 			if (DependencySpecifier.isCatalog(specifier)) {
 				const range = yield* catalogs.rangeOf(dependency, DependencySpecifier.catalogNameOf(specifier));
-				if (Option.isNone(range)) {
+				if (O.isNone(range)) {
 					return yield* UnresolvedDependencyError.make({ field, dependency, specifier, reason: "catalog-entry-missing" });
 				}
 				resolved[dependency] = range.value;
@@ -267,9 +271,9 @@ const resolveManifest = Effect.fn("Manifest.resolve")(function* (manifest: Manif
 				// package's version; the plain form resolves the map key's. The error
 				// names whichever package the lookup actually missed, with the
 				// original specifier preserved.
-				const target = Option.getOrElse(DependencySpecifier.workspaceTargetOf(specifier), () => dependency);
+				const target = O.getOrElse(DependencySpecifier.workspaceTargetOf(specifier), () => dependency);
 				const version = yield* workspaces.versionOf(target);
-				if (Option.isNone(version)) {
+				if (O.isNone(version)) {
 					return yield* UnresolvedDependencyError.make({
 							field,
 							dependency: target,

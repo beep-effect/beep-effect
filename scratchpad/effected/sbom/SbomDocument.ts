@@ -9,7 +9,7 @@
 // option.
 
 import { License, isValidExpression } from "../spdx/index.ts";
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 
 /** The BOM format discriminator. CycloneDX requires this exact string. */
 export const BOM_FORMAT = "CycloneDX" as const;
@@ -27,7 +27,7 @@ export const SPEC_VERSION = "1.6" as const;
  *
  * @public
  */
-export const ComponentType = Schema.Literals(["library", "application", "framework"]);
+export const ComponentType = S.Literals(["library", "application", "framework"]);
 
 /**
  * The decoded type of {@link (ComponentType:variable)}.
@@ -46,7 +46,7 @@ export type ComponentType = typeof ComponentType.Type;
  *
  * @public
  */
-export const ExternalReferenceType = Schema.Literals(["vcs", "issue-tracker", "website", "documentation"]);
+export const ExternalReferenceType = S.Literals(["vcs", "issue-tracker", "website", "documentation"]);
 
 /**
  * The decoded type of {@link (ExternalReferenceType:variable)}.
@@ -60,11 +60,11 @@ export type ExternalReferenceType = typeof ExternalReferenceType.Type;
  *
  * @public
  */
-export class ExternalReference extends Schema.Class<ExternalReference>("ExternalReference")({
+export class ExternalReference extends S.Class<ExternalReference>("ExternalReference")({
 	/** The reference kind. */
 	type: ExternalReferenceType,
 	/** The URL it points at, passed through exactly as supplied. */
-	url: Schema.String,
+	url: S.String,
 }) {}
 
 /**
@@ -72,13 +72,13 @@ export class ExternalReference extends Schema.Class<ExternalReference>("External
  *
  * @public
  */
-export class Contact extends Schema.Class<Contact>("Contact")({
+export class Contact extends S.Class<Contact>("Contact")({
 	/** The contact's name. */
-	name: Schema.optionalKey(Schema.String),
+	name: S.optionalKey(S.String),
 	/** Their email address. */
-	email: Schema.optionalKey(Schema.String),
+	email: S.optionalKey(S.String),
 	/** Their telephone number. */
-	phone: Schema.optionalKey(Schema.String),
+	phone: S.optionalKey(S.String),
 }) {}
 
 /**
@@ -90,13 +90,13 @@ export class Contact extends Schema.Class<Contact>("Contact")({
  *
  * @public
  */
-export class Supplier extends Schema.Class<Supplier>("Supplier")({
+export class Supplier extends S.Class<Supplier>("Supplier")({
 	/** The supplier organization's name. */
-	name: Schema.String,
+	name: S.String,
 	/** Its URLs. */
-	url: Schema.optionalKey(Schema.Array(Schema.String)),
+	url: S.String.pipe(S.Array, S.optionalKey),
 	/** Its points of contact. */
-	contact: Schema.optionalKey(Schema.Array(Contact)),
+	contact: Contact.pipe(S.Array, S.optionalKey),
 }) {}
 
 /**
@@ -109,31 +109,31 @@ export class Supplier extends Schema.Class<Supplier>("Supplier")({
  *
  * @public
  */
-export class Component extends Schema.Class<Component>("Component")({
+export class Component extends S.Class<Component>("Component")({
 	/** What kind of component this is. */
 	type: ComponentType,
 	/** The component's name — NTIA minimum element 2. */
-	name: Schema.String,
+	name: S.String,
 	/** Its version — NTIA minimum element 3. */
-	version: Schema.optionalKey(Schema.String),
+	version: S.optionalKey(S.String),
 	/** The package URL uniquely identifying it — NTIA minimum element 4. */
-	purl: Schema.optionalKey(Schema.String),
+	purl: S.optionalKey(S.String),
 	/** The identifier other parts of the document reference it by. */
-	bomRef: Schema.optionalKey(Schema.String),
+	bomRef: S.optionalKey(S.String),
 	/** A short description. */
-	description: Schema.optionalKey(Schema.String),
+	description: S.optionalKey(S.String),
 	/** SPDX license identifiers or expressions. */
-	licenses: Schema.optionalKey(Schema.Array(Schema.String)),
+	licenses: S.String.pipe(S.Array, S.optionalKey),
 	/** Links out of the BOM. */
-	externalReferences: Schema.optionalKey(Schema.Array(ExternalReference)),
+	externalReferences: ExternalReference.pipe(S.Array, S.optionalKey),
 	/** Discovery keywords — CycloneDX 1.6's `tags`, from the manifest's `keywords`. */
-	tags: Schema.optionalKey(Schema.Array(Schema.String)),
+	tags: S.String.pipe(S.Array, S.optionalKey),
 	/** The component's authors. */
-	authors: Schema.optionalKey(Schema.Array(Contact)),
+	authors: Contact.pipe(S.Array, S.optionalKey),
 	/** The entity that published it. */
-	publisher: Schema.optionalKey(Schema.String),
+	publisher: S.optionalKey(S.String),
 	/** A copyright statement. */
-	copyright: Schema.optionalKey(Schema.String),
+	copyright: S.optionalKey(S.String),
 }) {}
 
 /**
@@ -141,15 +141,15 @@ export class Component extends Schema.Class<Component>("Component")({
  *
  * @public
  */
-export class SbomMetadata extends Schema.Class<SbomMetadata>("SbomMetadata")({
+export class SbomMetadata extends S.Class<SbomMetadata>("SbomMetadata")({
 	/** When the BOM was assembled — NTIA minimum element 7. */
-	timestamp: Schema.optionalKey(Schema.String),
+	timestamp: S.optionalKey(S.String),
 	/** Who created the BOM — NTIA minimum element 6. */
-	authors: Schema.optionalKey(Schema.Array(Contact)),
+	authors: Contact.pipe(S.Array, S.optionalKey),
 	/** The component the BOM describes. */
-	component: Schema.optionalKey(Component),
+	component: S.optionalKey(Component),
 	/** Who supplied that component — NTIA minimum element 1. */
-	supplier: Schema.optionalKey(Supplier),
+	supplier: S.optionalKey(Supplier),
 }) {}
 
 /**
@@ -162,17 +162,17 @@ export class SbomMetadata extends Schema.Class<SbomMetadata>("SbomMetadata")({
  *
  * @public
  */
-export class SbomDocument extends Schema.Class<SbomDocument>("SbomDocument")({
+export class SbomDocument extends S.Class<SbomDocument>("SbomDocument")({
 	/** Always `"CycloneDX"`. */
-	bomFormat: Schema.Literal(BOM_FORMAT),
+	bomFormat: S.Literal(BOM_FORMAT),
 	/** Always `"1.6"`. */
-	specVersion: Schema.Literal(SPEC_VERSION),
+	specVersion: S.Literal(SPEC_VERSION),
 	/** The document revision, `1` for a freshly assembled BOM. */
-	version: Schema.Finite,
+	version: S.Finite,
 	/** Document metadata. */
-	metadata: Schema.optionalKey(SbomMetadata),
+	metadata: S.optionalKey(SbomMetadata),
 	/** The components the BOM describes, sorted by name. */
-	components: Schema.Array(Component),
+	components: S.Array(Component),
 }) {}
 
 /** Drop absent keys so the emitted JSON omits them rather than carrying nulls. */

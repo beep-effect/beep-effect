@@ -15,7 +15,9 @@ import { dual } from "effect/Function";
 
 import { GlobSet } from "../glob/index.ts";
 import { Yaml } from "../yaml/index.ts";
-import { Effect, Exit, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as S from "effect/Schema";
 import { MAX_ENUMERATION_DEPTH } from "./internal/limits.ts";
 import { manifestPatternsOf, pnpmPatternsOf } from "./internal/patterns.ts";
 import { Traversal, badMaxDepthMessage, isPruned, isValidMaxDepth, joinRelative } from "./internal/traverse.ts";
@@ -509,7 +511,7 @@ const readPackageSync = (
 	const publishConfig = raw.publishConfig;
 	const config =
 		publishConfig !== null && typeof publishConfig === "object"
-			? Effect.runSyncExit(Schema.decodeEffect(PublishConfig)(publishConfig))
+			? Effect.runSyncExit(S.decodeEffect(PublishConfig)(publishConfig))
 			: undefined;
 
 	return WorkspacePackage.make({
@@ -700,7 +702,7 @@ export const getWorkspacePackagesSync: {
 
 	const members: Array<WorkspacePackage> = [];
 	const admit = (read: WorkspacePackage | WorkspaceDiscoverySkip): void => {
-		if (Schema.is(WorkspacePackage)(read)) members.push(read);
+		if (S.is(WorkspacePackage)(read)) members.push(read);
 		else options.onSkip?.(read);
 	};
 	for (const [relativePath, absolute] of [...included.entries()].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))) {
@@ -709,7 +711,7 @@ export const getWorkspacePackagesSync: {
 	}
 
 	const rootPackage = readPackageSync(options, root, root, ".");
-	if (Schema.is(WorkspacePackage)(rootPackage)) return [rootPackage, ...members];
+	if (S.is(WorkspacePackage)(rootPackage)) return [rootPackage, ...members];
 	options.onSkip?.(rootPackage);
 	return members;
 });

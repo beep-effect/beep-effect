@@ -1,6 +1,8 @@
 // @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
-import { Console, Effect, References } from "effect";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as References from "effect/References";
 import { CliLogger } from "../../effected/cli/CliLogger.ts";
 
 /**

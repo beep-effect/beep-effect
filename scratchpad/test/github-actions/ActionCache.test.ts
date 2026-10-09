@@ -6,7 +6,10 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Option } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import { FetchHttpClient } from "effect/http";
 import { ChildProcessSpawner } from "effect/process";
 import type { FileBlobTransfer } from "../../effected/github-actions/index.ts";
@@ -91,8 +94,8 @@ describe("ActionCache", () => {
 					return yield* cache.restore([file], "the-key");
 				}).pipe(Effect.provide(live(fetch, transfer)));
 
-				assert.isTrue(Option.isSome(matched));
-				assert.strictEqual(Option.getOrNull(matched), "the-key");
+				assert.isTrue(O.isSome(matched));
+				assert.strictEqual(O.getOrNull(matched), "the-key");
 				assert.strictEqual(blobs.size, 1);
 				// gzip's magic: what was uploaded is an archive, not a description of one.
 				assert.deepStrictEqual([...(blobs.get(url) ?? []).slice(0, 2)], [0x1f, 0x8b]);
@@ -199,7 +202,7 @@ describe("ActionCache", () => {
 			const found = yield* Effect.flatMap(ActionCache, (cache) => cache.restore(["x"], "k")).pipe(
 				Effect.provide(live(fetch, transfer)),
 			);
-			assert.isTrue(Option.isNone(found));
+			assert.isTrue(O.isNone(found));
 		}),
 	);
 
@@ -223,7 +226,7 @@ describe("ActionCache", () => {
 				).pipe(Effect.provide(live(fetch, transfer)));
 				// A hit on a restore key is a PARTIAL hit; a caller that cannot tell it
 				// from an exact hit never re-saves and the cache never warms.
-				assert.strictEqual(Option.getOrNull(matched), "Linux-pnpm-store-");
+				assert.strictEqual(O.getOrNull(matched), "Linux-pnpm-store-");
 			}),
 		),
 	);

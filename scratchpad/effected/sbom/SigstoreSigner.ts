@@ -13,7 +13,11 @@ import type { Bundle, SerializedBundle } from "@sigstore/bundle";
 import { bundleToJSON } from "@sigstore/bundle";
 import type { IdentityProvider, Signer, Witness } from "@sigstore/sign";
 import { DSSEBundleBuilder, FulcioSigner, RekorWitness } from "@sigstore/sign";
-import { Context, Effect, Layer, Redacted, Schema } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Redacted from "effect/Redacted";
+import * as S from "effect/Schema";
 import type { IdentityTokenShape } from "./IdentityToken.ts";
 import { IdentityToken } from "./IdentityToken.ts";
 import type { InTotoStatement } from "./InTotoStatement.ts";
@@ -37,7 +41,7 @@ export const SIGSTORE_OIDC_AUDIENCE = "sigstore" as const;
  *
  * @public
  */
-export const SigningErrorKind = Schema.Literals(["identity", "certificate", "transparencyLog", "bundle"]);
+export const SigningErrorKind = S.Literals(["identity", "certificate", "transparencyLog", "bundle"]);
 
 /**
  * The decoded type of {@link (SigningErrorKind:variable)}.
@@ -57,11 +61,11 @@ export type SigningErrorKind = typeof SigningErrorKind.Type;
  *
  * @public
  */
-export class SigningError extends Schema.TaggedError<SigningError>()("SigningError", {
+export class SigningError extends S.TaggedError<SigningError>()("SigningError", {
 	/** Which step failed. */
 	kind: SigningErrorKind,
 	/** The underlying failure, preserved structurally. */
-	cause: Schema.Defect(),
+	cause: S.Defect(),
 }) {
 	override get message(): string {
 		return `Failed to sign the statement (${this.kind})`;

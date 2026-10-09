@@ -1,4 +1,4 @@
-import { Redacted } from "effect";
+import * as Redacted from "effect/Redacted";
 import * as Base64 from "effect/encoding/Base64";
 import { dual } from "effect/Function";
 

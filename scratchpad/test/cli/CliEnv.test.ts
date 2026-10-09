@@ -1,10 +1,20 @@
 // @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file
-import { Data } from "effect";
+import * as Data from "effect/Data";
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
 import { Audience, CurrentRuntimeEnv, TerminalEnv } from "../../effected/env/index.ts";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
-import { Cause, ConfigProvider, Console, Effect, Exit, Layer, Path, Queue, Runtime, Stdio, Terminal } from "effect";
+import * as Cause from "effect/Cause";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
+import * as Queue from "effect/Queue";
+import * as Runtime from "effect/Runtime";
+import * as Stdio from "effect/Stdio";
+import * as Terminal from "effect/Terminal";
 import { CliConfig, Command, GlobalFlag, Prompt } from "effect/cli";
 import type { CliEnvOptions } from "../../effected/cli/index.ts";
 import { CliEnv, CliInteractive, CliLinks, CliRuntime, CliTheme } from "../../effected/cli/index.ts";
@@ -159,7 +169,7 @@ describe("CliRuntime.main with the env option", () => {
 			assert.strictEqual(err[0], "[FAIL] Error: tty broke");
 			assert.deepStrictEqual(out, []);
 			assert.isTrue(Exit.isFailure(exit));
-			if (Exit.isFailure(exit)) assert.strictEqual(Runtime.getErrorExitCode(Cause.squash(exit.cause)), 3);
+			if (Exit.isFailure(exit)) assert.strictEqual(exit.cause.pipe(Cause.squash, Runtime.getErrorExitCode), 3);
 		}),
 	);
 
@@ -239,7 +249,7 @@ describe("CliRuntime.main with the env option", () => {
 			// A defect: the status line first, then its cleaned stack.
 			assert.strictEqual(err[0], "[FAIL] Error: tty broke");
 			assert.deepStrictEqual(out, []);
-			if (Exit.isFailure(exit)) assert.strictEqual(Runtime.getErrorExitCode(Cause.squash(exit.cause)), 3);
+			if (Exit.isFailure(exit)) assert.strictEqual(exit.cause.pipe(Cause.squash, Runtime.getErrorExitCode), 3);
 			else assert.fail("expected a failure");
 		}),
 	);
@@ -276,7 +286,7 @@ describe("CliRuntime.main with the env option", () => {
 					columns = yield* terminal.columns;
 					// Reading input on the gated terminal is quit at once, and display writes nothing.
 					ended = Exit.isFailure(
-						yield* Effect.exit(Effect.scoped(Effect.flatMap(terminal.readInput, (queue) => Queue.take(queue)))),
+						yield* Effect.flatMap(terminal.readInput, (queue) => Queue.take(queue)).pipe(Effect.scoped, Effect.exit),
 					);
 					yield* terminal.display("never shown");
 				}),

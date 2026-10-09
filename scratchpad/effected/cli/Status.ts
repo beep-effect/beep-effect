@@ -1,4 +1,5 @@
-import { Array as Arr, Option } from "effect";
+import * as Arr from "effect/Array";
+import * as O from "effect/Option";
 import { sanitize } from "./Fmt.ts";
 import type { GlyphSet } from "./Glyphs.ts";
 import type { Style, TokenName } from "./Token.ts";
@@ -168,7 +169,7 @@ export class Status<Names extends string> {
 	 *
 	 * @param names - the statuses to compare
 	 */
-	worstOption(names: ReadonlyArray<Names>): Option.Option<Names> {
-		return Arr.isReadonlyArrayNonEmpty(names) ? Option.some(this.worst(names)) : Option.none();
+	worstOption(names: ReadonlyArray<Names>): O.Option<Names> {
+		return Arr.isReadonlyArrayNonEmpty(names) ? O.some(this.worst(names)) : O.none();
 	}
 }

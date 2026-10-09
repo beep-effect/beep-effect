@@ -9,7 +9,11 @@
 // TomlParseError / TomlStringifyError. The dependency edge runs facade →
 // engine only, so `noImportCycles` stays satisfied.
 
-import { Effect, Result, Schema, SchemaIssue, SchemaTransformation } from "effect";
+import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import { isRawTomlError } from "./internal/diagnostics.ts";
 import { isGuardExceeded } from "./internal/limits.ts";
 import { parseExpressions } from "./internal/parser.ts";
@@ -30,8 +34,8 @@ import { TomlDiagnostic } from "./TomlDiagnostic.ts";
  *
  * @public
  */
-export class TomlStringifyOptions extends Schema.Class<TomlStringifyOptions>("TomlStringifyOptions")({
-	newline: Schema.optionalKey(Schema.Literals(["\n", "\r\n"])),
+export class TomlStringifyOptions extends S.Class<TomlStringifyOptions>("TomlStringifyOptions")({
+	newline: S.optionalKey(S.Literals(["\n", "\r\n"])),
 }) {}
 
 /**
@@ -49,8 +53,8 @@ export class TomlStringifyOptions extends Schema.Class<TomlStringifyOptions>("To
  *
  * @public
  */
-export class TomlParseError extends Schema.TaggedError<TomlParseError>()("TomlParseError", {
-	diagnostics: Schema.Array(TomlDiagnostic),
+export class TomlParseError extends S.TaggedError<TomlParseError>()("TomlParseError", {
+	diagnostics: S.Array(TomlDiagnostic),
 }) {
 	override get message(): string {
 		const count = this.diagnostics.length;
@@ -69,7 +73,7 @@ export class TomlParseError extends Schema.TaggedError<TomlParseError>()("TomlPa
  *
  * @public
  */
-export class TomlStringifyError extends Schema.TaggedError<TomlStringifyError>()("TomlStringifyError", {
+export class TomlStringifyError extends S.TaggedError<TomlStringifyError>()("TomlStringifyError", {
 	diagnostic: TomlDiagnostic,
 }) {
 	override get message(): string {
@@ -150,11 +154,11 @@ const stringifyToResult = (
  */
 export interface TomlBoundCodec<T, RD = never, RE = never> {
 	/** The composed codec decoding a TOML `string` straight into `T`. */
-	readonly schema: Schema.Codec<T, string, RD, RE>;
+	readonly schema: S.Codec<T, string, RD, RE>;
 	/** Decode TOML text into a validated `T`. */
-	readonly decode: (text: string) => Effect.Effect<T, Schema.SchemaError, RD>;
+	readonly decode: (text: string) => Effect.Effect<T, S.SchemaError, RD>;
 	/** Encode a `T` back to canonical TOML text. */
-	readonly encode: (value: T) => Effect.Effect<string, Schema.SchemaError, RE>;
+	readonly encode: (value: T) => Effect.Effect<string, S.SchemaError, RE>;
 }
 
 // ── Facade ──────────────────────────────────────────────────────────────────
@@ -306,10 +310,10 @@ export class Toml {
 	 * caches are not shared across calls. Bind the result to a `const` on hot
 	 * paths; the pre-bound {@link Toml.TomlFromString} covers the common case.
 	 */
-	static fromString(): Schema.Codec<unknown, string> {
-		return Schema.String.pipe(
-			Schema.decodeTo(
-				Schema.Unknown,
+	static fromString(): S.Codec<unknown, string> {
+		return S.String.pipe(
+			S.decodeTo(
+				S.Unknown,
 				SchemaTransformation.transformEffect({
 					decode: (input: string) =>
 						Toml.parse(input).pipe(
@@ -328,7 +332,7 @@ export class Toml {
 	 * The zero-config `Schema<unknown, string>` — `Toml.fromString()`
 	 * pre-bound so the common case needs no memoization discipline.
 	 */
-	static readonly TomlFromString: Schema.Codec<unknown, string> = Toml.fromString();
+	static readonly TomlFromString: S.Codec<unknown, string> = Toml.fromString();
 
 	/**
 	 * Compose {@link Toml.fromString} with a target schema, yielding a
@@ -341,10 +345,10 @@ export class Toml {
 	 * @param target - The domain schema decoded values must satisfy.
 	 * @returns A `Schema.Codec<T, string>` decoding TOML text straight into `T`.
 	 */
-	static schema<T, E, RD = never, RE = never>(target: Schema.Codec<T, E, RD, RE>): Schema.Codec<T, string, RD, RE> {
+	static schema<T, E, RD = never, RE = never>(target: S.Codec<T, E, RD, RE>): S.Codec<T, string, RD, RE> {
 		return Toml.TomlFromString.pipe(
-			Schema.decodeTo(target as unknown as Schema.Codec<T, unknown, RD, RE>),
-		) as unknown as Schema.Codec<T, string, RD, RE>;
+			S.decodeTo(target as unknown as S.Codec<T, unknown, RD, RE>),
+		) as unknown as S.Codec<T, string, RD, RE>;
 	}
 
 	/**
@@ -382,12 +386,12 @@ export class Toml {
 	 * @returns A {@link TomlBoundCodec} carrying the composed schema and its
 	 *   two pre-bound directions.
 	 */
-	static bind<T, E, RD = never, RE = never>(target: Schema.Codec<T, E, RD, RE>): TomlBoundCodec<T, RD, RE> {
+	static bind<T, E, RD = never, RE = never>(target: S.Codec<T, E, RD, RE>): TomlBoundCodec<T, RD, RE> {
 		const schema = Toml.schema(target);
 		return {
 			schema,
-			decode: Schema.decodeEffect(schema),
-			encode: Schema.encodeEffect(schema),
+			decode: S.decodeEffect(schema),
+			encode: S.encodeEffect(schema),
 		};
 	}
 }

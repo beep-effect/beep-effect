@@ -1,7 +1,7 @@
 // The zero-dependency leaf every guard imports — no import cycle is possible
 // through here (jsonc/yaml precedent).
 
-import { Data } from "effect";
+import * as Data from "effect/Data";
 import { dual } from "effect/Function";
 
 /** Hard cap on pattern length. Upstream minimatch's MAX_PATTERN_LENGTH (64KB). */

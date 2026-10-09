@@ -18,7 +18,9 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { NodeServices } from "@effect/platform-node";
 import { afterAll, assert, beforeAll, describe, it } from "@effect/vitest";
-import { Effect, Layer, Option } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import { ConfigDependencyHooks, WorkspaceSnapshots, WorkspaceStateSnapshot, Workspaces } from "../../../effected/workspaces/index.ts";
 import { installConfigDependency, storeConfigDependency, writeModulesYaml } from "./utils/configDependencyFixtures.ts";
 
@@ -106,12 +108,12 @@ describe("Workspaces.layerWithGitAndConfigDependencies — at(ref) replays the r
 			const after = yield* snapshots.at("after");
 			// `before` declares 1.0.0 → the INSTALLED pnpmfile; `after` declares
 			// 2.0.0 → the STORE pnpmfile. Each ref's OWN catalogs carry its range.
-			assert.deepStrictEqual(before.catalogs.rangeOf("hooked-dep", Option.none()), Option.some("^1.0.0"));
-			assert.deepStrictEqual(after.catalogs.rangeOf("hooked-dep", Option.none()), Option.some("^2.0.0"));
+			assert.deepStrictEqual(before.catalogs.rangeOf("hooked-dep", O.none()), O.some("^1.0.0"));
+			assert.deepStrictEqual(after.catalogs.rangeOf("hooked-dep", O.none()), O.some("^2.0.0"));
 			// The diff shape a consumer reads: cross-seeding does not blur it.
 			const [seededBefore, seededAfter] = WorkspaceStateSnapshot.crossSeed(before, after);
-			assert.deepStrictEqual(seededBefore.resolve("hooked-dep", "catalog:"), Option.some("^1.0.0"));
-			assert.deepStrictEqual(seededAfter.resolve("hooked-dep", "catalog:"), Option.some("^2.0.0"));
+			assert.deepStrictEqual(seededBefore.resolve("hooked-dep", "catalog:"), O.some("^1.0.0"));
+			assert.deepStrictEqual(seededAfter.resolve("hooked-dep", "catalog:"), O.some("^2.0.0"));
 			// The control: the committed inline catalog reads the same on both.
 			assert.deepStrictEqual(before.resolve("effect", "catalog:"), after.resolve("effect", "catalog:"));
 			// And each side records WHICH version it replayed (the installed copy
@@ -131,7 +133,7 @@ describe("Workspaces.layerWithGitAndConfigDependencies — at(ref) replays the r
 			const head = yield* snapshots.at("HEAD");
 			const live = yield* snapshots.worktree;
 			assert.deepStrictEqual(live.resolve("hooked-dep", "catalog:"), head.resolve("hooked-dep", "catalog:"));
-			assert.deepStrictEqual(live.resolve("hooked-dep", "catalog:"), Option.some("^2.0.0"));
+			assert.deepStrictEqual(live.resolve("hooked-dep", "catalog:"), O.some("^2.0.0"));
 			// worktree() carries the record too, off WorkspaceCatalogs' one memo.
 			assert.deepStrictEqual(live.hookReplays, { [NAME]: "2.0.0" });
 			assert.deepStrictEqual(live.hookReplays, head.hookReplays);
@@ -154,15 +156,15 @@ describe("Workspaces.layerWithGitAndHooks — the hermetic seam reaches at(ref) 
 			const snapshots = yield* WorkspaceSnapshots;
 			const before = yield* snapshots.at("before");
 			const after = yield* snapshots.at("after");
-			assert.deepStrictEqual(before.catalogs.rangeOf("hooked-dep", Option.none()), Option.some("^2.0.0"));
-			assert.deepStrictEqual(after.catalogs.rangeOf("hooked-dep", Option.none()), Option.some("^1.0.0"));
+			assert.deepStrictEqual(before.catalogs.rangeOf("hooked-dep", O.none()), O.some("^2.0.0"));
+			assert.deepStrictEqual(after.catalogs.rangeOf("hooked-dep", O.none()), O.some("^1.0.0"));
 			// The record still carries the DECLARED version — provenance is on the
 			// injection (`supplied`), never on the snapshot.
 			assert.deepStrictEqual(before.hookReplays, { [NAME]: "1.0.0" });
 			assert.deepStrictEqual(after.hookReplays, { [NAME]: "2.0.0" });
 			// And worktree() runs through the same supplied map as at(HEAD).
 			const live = yield* snapshots.worktree;
-			assert.deepStrictEqual(live.resolve("hooked-dep", "catalog:"), Option.some("^1.0.0"));
+			assert.deepStrictEqual(live.resolve("hooked-dep", "catalog:"), O.some("^1.0.0"));
 		}).pipe(Effect.provide(Live));
 	});
 });
@@ -177,12 +179,12 @@ describe("Workspaces.layerWithGit — the default composite executes no config-d
 			const after = yield* snapshots.at("after");
 			const live = yield* snapshots.worktree;
 			// Assembly ran — the committed catalog is there on every side.
-			assert.deepStrictEqual(before.resolve("effect", "catalog:"), Option.some("^4.0.0"));
+			assert.deepStrictEqual(before.resolve("effect", "catalog:"), O.some("^4.0.0"));
 			// ...and no pnpmfile executed on any side: the ref reads, or the live one.
 			assert.isFalse(existsSync(markerPath));
-			assert.deepStrictEqual(before.resolve("hooked-dep", "catalog:"), Option.none());
-			assert.deepStrictEqual(after.resolve("hooked-dep", "catalog:"), Option.none());
-			assert.deepStrictEqual(live.resolve("hooked-dep", "catalog:"), Option.none());
+			assert.deepStrictEqual(before.resolve("hooked-dep", "catalog:"), O.none());
+			assert.deepStrictEqual(after.resolve("hooked-dep", "catalog:"), O.none());
+			assert.deepStrictEqual(live.resolve("hooked-dep", "catalog:"), O.none());
 			// Empty on every side: the no-op layer resolved nothing.
 			assert.deepStrictEqual(before.hookReplays, {});
 			assert.deepStrictEqual(live.hookReplays, {});

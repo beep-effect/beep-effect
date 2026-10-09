@@ -1,5 +1,9 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Cause, Effect, Exit, Option, Schema } from "effect";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { Cancelled, Fmt } from "../../../effected/cli/index.ts";
 import type { SelectChoice } from "../../../effected/cli/ui.ts";
 import { Select } from "../../../effected/cli/ui.ts";
@@ -34,8 +38,8 @@ describe("Select reducer", () => {
 
 	it("submit marks the highlighted value chosen", () => {
 		const state = Select.step(Select.step(Select.init(choices), "down"), "submit");
-		assert.deepStrictEqual(Select.chosen(state), Option.some("c"));
-		assert.isTrue(Option.isNone(Select.chosen(Select.init(choices))), "nothing is chosen before submit");
+		assert.deepStrictEqual(Select.chosen(state), O.some("c"));
+		assert.isTrue(O.isNone(Select.chosen(Select.init(choices))), "nothing is chosen before submit");
 	});
 
 	it("needs at least one enabled choice: none, or only disabled ones, is a programming error", () => {
@@ -44,9 +48,9 @@ describe("Select reducer", () => {
 	});
 
 	it("binds q to cancel, enter to submit, and the viewport's moves", () => {
-		assert.deepStrictEqual(Select.keys.match({ _tag: "Char", char: "q" }), Option.some("cancel"));
-		assert.deepStrictEqual(Select.keys.match({ _tag: "Named", name: "enter" }), Option.some("submit"));
-		assert.deepStrictEqual(Select.keys.match({ _tag: "Named", name: "pagedown" }), Option.some("pagedown"));
+		assert.deepStrictEqual(Select.keys.match({ _tag: "Char", char: "q" }), O.some("cancel"));
+		assert.deepStrictEqual(Select.keys.match({ _tag: "Named", name: "enter" }), O.some("submit"));
+		assert.deepStrictEqual(Select.keys.match({ _tag: "Named", name: "pagedown" }), O.some("pagedown"));
 	});
 });
 
@@ -119,7 +123,7 @@ describe("Select.screen under CliUiTest", () => {
 			assert.include(help, "enter choose");
 			assert.isTrue(help.endsWith("q/esc cancel"), help);
 			assert.notInclude(help, "pgup");
-			assert.deepStrictEqual(Select.keys.match({ _tag: "Named", name: "end" }), Option.some("end"), "still bound");
+			assert.deepStrictEqual(Select.keys.match({ _tag: "Named", name: "end" }), O.some("end"), "still bound");
 		}).pipe(Effect.scoped),
 	);
 
@@ -129,7 +133,7 @@ describe("Select.screen under CliUiTest", () => {
 			yield* handle.type("q");
 			const error = yield* Effect.flip(handle.result);
 			assert.instanceOf(error, Cancelled);
-			assert.strictEqual(Schema.is(Cancelled)(error) ? error.reason : undefined, "escape");
+			assert.strictEqual(S.is(Cancelled)(error) ? error.reason : undefined, "escape");
 		}).pipe(Effect.scoped),
 	);
 

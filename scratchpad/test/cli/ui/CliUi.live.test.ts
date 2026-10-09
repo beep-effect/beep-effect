@@ -1,6 +1,14 @@
 // @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Exit, Fiber, PubSub, Queue, Scheduler, Scope, Semaphore, Stream } from "effect";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Fiber from "effect/Fiber";
+import * as PubSub from "effect/PubSub";
+import * as Queue from "effect/Queue";
+import * as Scheduler from "effect/Scheduler";
+import * as Scope from "effect/Scope";
+import * as Semaphore from "effect/Semaphore";
+import * as Stream from "effect/Stream";
 import { Box, Text, render } from "ink";
 import { createElement } from "react";
 import { CliInteractive, CliTheme } from "../../../effected/cli/index.ts";

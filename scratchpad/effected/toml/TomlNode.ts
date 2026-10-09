@@ -7,7 +7,7 @@
 //
 // Leaf module: imports only `effect` and `./TomlDateTime.js`.
 
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 import { TomlLocalDate, TomlLocalDateTime, TomlLocalTime, TomlOffsetDateTime } from "./TomlDateTime.ts";
 
 /**
@@ -16,7 +16,7 @@ import { TomlLocalDate, TomlLocalDateTime, TomlLocalTime, TomlOffsetDateTime } f
  *
  * @public
  */
-export const TomlKeyKind = Schema.Literals(["bare", "basic", "literal"]);
+export const TomlKeyKind = S.Literals(["bare", "basic", "literal"]);
 
 /**
  * The union of all key-kind string literals.
@@ -34,11 +34,11 @@ export type TomlKeyKind = typeof TomlKeyKind.Type;
  *
  * @public
  */
-export class TomlKey extends Schema.TaggedClass<TomlKey>()("TomlKey", {
-	value: Schema.String,
+export class TomlKey extends S.TaggedClass<TomlKey>()("TomlKey", {
+	value: S.String,
 	kind: TomlKeyKind,
-	offset: Schema.Finite,
-	length: Schema.Finite,
+	offset: S.Finite,
+	length: S.Finite,
 }) {}
 
 /**
@@ -46,7 +46,7 @@ export class TomlKey extends Schema.TaggedClass<TomlKey>()("TomlKey", {
  *
  * @public
  */
-export const TomlStringStyle = Schema.Literals(["basic", "literal", "multiline-basic", "multiline-literal"]);
+export const TomlStringStyle = S.Literals(["basic", "literal", "multiline-basic", "multiline-literal"]);
 
 /**
  * The union of all string-style literals.
@@ -61,11 +61,11 @@ export type TomlStringStyle = typeof TomlStringStyle.Type;
  *
  * @public
  */
-export class TomlString extends Schema.TaggedClass<TomlString>()("TomlString", {
-	value: Schema.String,
+export class TomlString extends S.TaggedClass<TomlString>()("TomlString", {
+	value: S.String,
 	style: TomlStringStyle,
-	offset: Schema.Finite,
-	length: Schema.Finite,
+	offset: S.Finite,
+	length: S.Finite,
 }) {}
 
 /**
@@ -74,10 +74,10 @@ export class TomlString extends Schema.TaggedClass<TomlString>()("TomlString", {
  *
  * @public
  */
-export class TomlInteger extends Schema.TaggedClass<TomlInteger>()("TomlInteger", {
-	value: Schema.Union([Schema.Finite, Schema.BigInt]),
-	offset: Schema.Finite,
-	length: Schema.Finite,
+export class TomlInteger extends S.TaggedClass<TomlInteger>()("TomlInteger", {
+	value: S.Union([S.Finite, S.BigInt]),
+	offset: S.Finite,
+	length: S.Finite,
 }) {}
 
 /**
@@ -85,12 +85,12 @@ export class TomlInteger extends Schema.TaggedClass<TomlInteger>()("TomlInteger"
  *
  * @public
  */
-export class TomlFloat extends Schema.TaggedClass<TomlFloat>()("TomlFloat", {
+export class TomlFloat extends S.TaggedClass<TomlFloat>()("TomlFloat", {
 	// A TOML float may be `inf` or `nan`, so the finite-only schema would reject valid documents.
 	// @effect-diagnostics-next-line schemaNumber:off
-	value: Schema.Number,
-	offset: Schema.Finite,
-	length: Schema.Finite,
+	value: S.Number,
+	offset: S.Finite,
+	length: S.Finite,
 }) {}
 
 /**
@@ -98,10 +98,10 @@ export class TomlFloat extends Schema.TaggedClass<TomlFloat>()("TomlFloat", {
  *
  * @public
  */
-export class TomlBoolean extends Schema.TaggedClass<TomlBoolean>()("TomlBoolean", {
-	value: Schema.Boolean,
-	offset: Schema.Finite,
-	length: Schema.Finite,
+export class TomlBoolean extends S.TaggedClass<TomlBoolean>()("TomlBoolean", {
+	value: S.Boolean,
+	offset: S.Finite,
+	length: S.Finite,
 }) {}
 
 /**
@@ -109,10 +109,10 @@ export class TomlBoolean extends Schema.TaggedClass<TomlBoolean>()("TomlBoolean"
  *
  * @public
  */
-export class TomlDateTimeLiteral extends Schema.TaggedClass<TomlDateTimeLiteral>()("TomlDateTimeLiteral", {
-	value: Schema.Union([TomlOffsetDateTime, TomlLocalDateTime, TomlLocalDate, TomlLocalTime]),
-	offset: Schema.Finite,
-	length: Schema.Finite,
+export class TomlDateTimeLiteral extends S.TaggedClass<TomlDateTimeLiteral>()("TomlDateTimeLiteral", {
+	value: S.Union([TomlOffsetDateTime, TomlLocalDateTime, TomlLocalDate, TomlLocalTime]),
+	offset: S.Finite,
+	length: S.Finite,
 }) {}
 
 /**
@@ -121,10 +121,10 @@ export class TomlDateTimeLiteral extends Schema.TaggedClass<TomlDateTimeLiteral>
  *
  * @public
  */
-export class TomlArray extends Schema.TaggedClass<TomlArray>()("TomlArray", {
-	items: Schema.Array(Schema.suspend((): Schema.Codec<TomlValueNode> => TomlValueNode)),
-	offset: Schema.Finite,
-	length: Schema.Finite,
+export class TomlArray extends S.TaggedClass<TomlArray>()("TomlArray", {
+	items: S.Array(S.suspend((): S.Codec<TomlValueNode> => TomlValueNode)),
+	offset: S.Finite,
+	length: S.Finite,
 }) {}
 
 /**
@@ -133,11 +133,11 @@ export class TomlArray extends Schema.TaggedClass<TomlArray>()("TomlArray", {
  *
  * @public
  */
-export class TomlInlineEntry extends Schema.TaggedClass<TomlInlineEntry>()("TomlInlineEntry", {
-	keyPath: Schema.Array(TomlKey),
-	value: Schema.suspend((): Schema.Codec<TomlValueNode> => TomlValueNode),
-	offset: Schema.Finite,
-	length: Schema.Finite,
+export class TomlInlineEntry extends S.TaggedClass<TomlInlineEntry>()("TomlInlineEntry", {
+	keyPath: S.Array(TomlKey),
+	value: S.suspend((): S.Codec<TomlValueNode> => TomlValueNode),
+	offset: S.Finite,
+	length: S.Finite,
 }) {}
 
 /**
@@ -146,10 +146,10 @@ export class TomlInlineEntry extends Schema.TaggedClass<TomlInlineEntry>()("Toml
  *
  * @public
  */
-export class TomlInlineTable extends Schema.TaggedClass<TomlInlineTable>()("TomlInlineTable", {
-	entries: Schema.Array(TomlInlineEntry),
-	offset: Schema.Finite,
-	length: Schema.Finite,
+export class TomlInlineTable extends S.TaggedClass<TomlInlineTable>()("TomlInlineTable", {
+	entries: S.Array(TomlInlineEntry),
+	offset: S.Finite,
+	length: S.Finite,
 }) {}
 
 /**
@@ -159,10 +159,10 @@ export class TomlInlineTable extends Schema.TaggedClass<TomlInlineTable>()("Toml
  *
  * @public
  */
-export const TomlValueNode: Schema.Codec<
+export const TomlValueNode: S.Codec<
 	TomlString | TomlInteger | TomlFloat | TomlBoolean | TomlDateTimeLiteral | TomlArray | TomlInlineTable
-> = Schema.suspend(() =>
-	Schema.Union([TomlString, TomlInteger, TomlFloat, TomlBoolean, TomlDateTimeLiteral, TomlArray, TomlInlineTable]),
+> = S.suspend(() =>
+	S.Union([TomlString, TomlInteger, TomlFloat, TomlBoolean, TomlDateTimeLiteral, TomlArray, TomlInlineTable]),
 );
 
 /**
@@ -187,12 +187,12 @@ export type TomlValueNode =
  *
  * @public
  */
-export class TomlKeyValue extends Schema.TaggedClass<TomlKeyValue>()("TomlKeyValue", {
-	keyPath: Schema.Array(TomlKey),
-	value: Schema.suspend((): Schema.Codec<TomlValueNode> => TomlValueNode),
-	comment: Schema.optionalKey(Schema.String),
-	offset: Schema.Finite,
-	length: Schema.Finite,
+export class TomlKeyValue extends S.TaggedClass<TomlKeyValue>()("TomlKeyValue", {
+	keyPath: S.Array(TomlKey),
+	value: S.suspend((): S.Codec<TomlValueNode> => TomlValueNode),
+	comment: S.optionalKey(S.String),
+	offset: S.Finite,
+	length: S.Finite,
 }) {}
 
 /**
@@ -200,11 +200,11 @@ export class TomlKeyValue extends Schema.TaggedClass<TomlKeyValue>()("TomlKeyVal
  *
  * @public
  */
-export class TomlTableHeader extends Schema.TaggedClass<TomlTableHeader>()("TomlTableHeader", {
-	keyPath: Schema.Array(TomlKey),
-	comment: Schema.optionalKey(Schema.String),
-	offset: Schema.Finite,
-	length: Schema.Finite,
+export class TomlTableHeader extends S.TaggedClass<TomlTableHeader>()("TomlTableHeader", {
+	keyPath: S.Array(TomlKey),
+	comment: S.optionalKey(S.String),
+	offset: S.Finite,
+	length: S.Finite,
 }) {}
 
 /**
@@ -213,11 +213,11 @@ export class TomlTableHeader extends Schema.TaggedClass<TomlTableHeader>()("Toml
  *
  * @public
  */
-export class TomlArrayTableHeader extends Schema.TaggedClass<TomlArrayTableHeader>()("TomlArrayTableHeader", {
-	keyPath: Schema.Array(TomlKey),
-	comment: Schema.optionalKey(Schema.String),
-	offset: Schema.Finite,
-	length: Schema.Finite,
+export class TomlArrayTableHeader extends S.TaggedClass<TomlArrayTableHeader>()("TomlArrayTableHeader", {
+	keyPath: S.Array(TomlKey),
+	comment: S.optionalKey(S.String),
+	offset: S.Finite,
+	length: S.Finite,
 }) {}
 
 /**
@@ -226,10 +226,10 @@ export class TomlArrayTableHeader extends Schema.TaggedClass<TomlArrayTableHeade
  *
  * @public
  */
-export class TomlTrivia extends Schema.TaggedClass<TomlTrivia>()("TomlTrivia", {
-	text: Schema.String,
-	offset: Schema.Finite,
-	length: Schema.Finite,
+export class TomlTrivia extends S.TaggedClass<TomlTrivia>()("TomlTrivia", {
+	text: S.String,
+	offset: S.Finite,
+	length: S.Finite,
 }) {}
 
 /**
@@ -238,7 +238,7 @@ export class TomlTrivia extends Schema.TaggedClass<TomlTrivia>()("TomlTrivia", {
  *
  * @public
  */
-export const TomlExpression = Schema.Union([TomlKeyValue, TomlTableHeader, TomlArrayTableHeader, TomlTrivia]);
+export const TomlExpression = S.Union([TomlKeyValue, TomlTableHeader, TomlArrayTableHeader, TomlTrivia]);
 
 /**
  * The union of all expression node types.

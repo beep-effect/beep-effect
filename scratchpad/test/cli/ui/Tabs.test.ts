@@ -1,6 +1,9 @@
 // @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Fiber, Option, Schedule } from "effect";
+import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
+import * as O from "effect/Option";
+import * as Schedule from "effect/Schedule";
 import { Text } from "ink";
 import type { ReactElement } from "react";
 import { createElement, useState } from "react";
@@ -38,15 +41,15 @@ describe("Tabs reducer and keys", () => {
 
 	it("binds the arrows, tab and shift+tab, and plain digits with 0 as the tenth", () => {
 		const match = (key: Parameters<typeof Tabs.keys.match>[0]) => Tabs.keys.match(key);
-		assert.deepStrictEqual(match({ _tag: "Named", name: "right" }), Option.some("next"));
-		assert.deepStrictEqual(match({ _tag: "Named", name: "left" }), Option.some("prev"));
-		assert.deepStrictEqual(match({ _tag: "Named", name: "tab" }), Option.some("next"));
-		assert.deepStrictEqual(match({ _tag: "Named", name: "shift+tab" }), Option.some("prev"));
-		assert.deepStrictEqual(match({ _tag: "Char", char: "2" }), Option.some({ jump: 1 }));
-		assert.deepStrictEqual(match({ _tag: "Char", char: "0" }), Option.some({ jump: 9 }));
-		assert.isTrue(Option.isNone(match({ _tag: "Named", name: "down" })), "↓ is a column key");
-		assert.deepStrictEqual(Tabs.columnKeys.match({ _tag: "Named", name: "down" }), Option.some("next"));
-		assert.deepStrictEqual(Tabs.columnKeys.match({ _tag: "Named", name: "up" }), Option.some("prev"));
+		assert.deepStrictEqual(match({ _tag: "Named", name: "right" }), O.some("next"));
+		assert.deepStrictEqual(match({ _tag: "Named", name: "left" }), O.some("prev"));
+		assert.deepStrictEqual(match({ _tag: "Named", name: "tab" }), O.some("next"));
+		assert.deepStrictEqual(match({ _tag: "Named", name: "shift+tab" }), O.some("prev"));
+		assert.deepStrictEqual(match({ _tag: "Char", char: "2" }), O.some({ jump: 1 }));
+		assert.deepStrictEqual(match({ _tag: "Char", char: "0" }), O.some({ jump: 9 }));
+		assert.isTrue(O.isNone(match({ _tag: "Named", name: "down" })), "↓ is a column key");
+		assert.deepStrictEqual(Tabs.columnKeys.match({ _tag: "Named", name: "down" }), O.some("next"));
+		assert.deepStrictEqual(Tabs.columnKeys.match({ _tag: "Named", name: "up" }), O.some("prev"));
 	});
 });
 

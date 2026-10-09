@@ -1,6 +1,7 @@
 import type { AudienceKind } from "../../env/index.ts";
 import { CurrentRuntimeEnv } from "../../env/index.ts";
-import { Effect, Option } from "effect";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
 
 /**
  * Whether the environment says the program runs under GitHub Actions, whose runner reads workflow commands out of
@@ -13,8 +14,8 @@ import { Effect, Option } from "effect";
  */
 export const underGithubActions: Effect.Effect<boolean> = Effect.gen(function* () {
 	const runtime = yield* Effect.serviceOption(CurrentRuntimeEnv);
-	return Option.contains(
-		Option.flatMap(runtime, (env) => env.ci),
+	return O.contains(
+		O.flatMap(runtime, (env) => env.ci),
 		"github-actions",
 	);
 });

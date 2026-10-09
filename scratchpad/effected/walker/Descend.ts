@@ -10,8 +10,11 @@
 // `crossesSegments` and calls `matches`.
 
 import type { GlobPattern } from "../glob/index.ts";
-import type { PlatformError } from "effect";
-import { Effect, FileSystem, Path, Schema } from "effect";
+import type * as PlatformError from "effect/PlatformError";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Path from "effect/Path";
+import * as S from "effect/Schema";
 import { dual } from "effect/Function";
 
 /**
@@ -131,15 +134,15 @@ export interface DescendResult {
  *
  * @public
  */
-export class DescendError extends Schema.TaggedError<DescendError>()("DescendError", {
+export class DescendError extends S.TaggedError<DescendError>()("DescendError", {
 	/** The glob pattern's source text. */
-	pattern: Schema.String,
+	pattern: S.String,
 	/** Why the walk failed: a directory could not be read, or the walk went past `maxDepth`. */
-	reason: Schema.Literals(["unreadableDirectory", "depthExceeded"]),
+	reason: S.Literals(["unreadableDirectory", "depthExceeded"]),
 	/** The offending directory, relative to `cwd` (`""` is the walk's base). */
-	path: Schema.String,
+	path: S.String,
 	/** The depth cap, present when `reason` is `"depthExceeded"`. */
-	limit: Schema.optionalKey(Schema.Finite),
+	limit: S.optionalKey(S.Finite),
 }) {
 	override get message(): string {
 		const where = this.path === "" ? "the base directory" : JSON.stringify(this.path);

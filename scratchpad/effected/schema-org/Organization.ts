@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 import { ThingFields } from "./Thing.ts";
 
 /**
@@ -22,12 +22,12 @@ import { ThingFields } from "./Thing.ts";
  *
  * @public
  */
-export class Organization extends Schema.Class<Organization>("Organization")({
+export class Organization extends S.Class<Organization>("Organization")({
 	...ThingFields,
 	/** The JSON-LD type discriminator, populated automatically. */
-	"@type": Schema.tag("Organization"),
+	"@type": S.tag("Organization"),
 	/** The organization's registered legal name. Single-valued. */
-	legalName: Schema.optional(Schema.String),
+	legalName: S.optional(S.String),
 	/** A URL for the organization's logo. Single-valued. */
-	logo: Schema.optional(Schema.String),
+	logo: S.optional(S.String),
 }) {}

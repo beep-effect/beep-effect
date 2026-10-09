@@ -1,6 +1,11 @@
 // @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
-import { Cause, ConfigProvider, Effect, Exit, Layer, Option } from "effect";
+import * as Cause from "effect/Cause";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import { Xdg, XdgEnvError, XdgPaths } from "../../effected/xdg/index.ts";
 
 /** Drive `Config` from a record instead of mutating the real environment. */
@@ -61,8 +66,8 @@ describe("Xdg", () => {
 			Effect.gen(function* () {
 				const exit = yield* Effect.exit(Effect.provide(Effect.void, env({})));
 				const cause = Exit.getCause(exit);
-				assert.isTrue(Option.isSome(cause));
-				const reasons = Option.getOrThrow(cause).reasons;
+				assert.isTrue(O.isSome(cause));
+				const reasons = O.getOrThrow(cause).reasons;
 				assert.isTrue(reasons.some(Cause.isFailReason));
 				assert.isFalse(reasons.some(Cause.isDieReason));
 			}),

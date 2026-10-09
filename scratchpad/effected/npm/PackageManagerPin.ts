@@ -11,7 +11,12 @@
 // fallback to build-metadata parsing.
 
 import { SemVer } from "../semver/index.ts";
-import { Effect, Exit, Result, Schema, SchemaIssue, SchemaTransformation } from "effect";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import { CorepackIntegrityHash } from "./IntegrityHash.ts";
 
 /**
@@ -26,11 +31,11 @@ import { CorepackIntegrityHash } from "./IntegrityHash.ts";
  *
  * @public
  */
-export class InvalidPackageManagerPinError extends Schema.TaggedError<InvalidPackageManagerPinError>()(
+export class InvalidPackageManagerPinError extends S.TaggedError<InvalidPackageManagerPinError>()(
 	"InvalidPackageManagerPinError",
 	{
 		/** The raw input string that failed validation. */
-		input: Schema.String,
+		input: S.String,
 		/**
 		 * Which component of the pin failed: `format` (no `@` separator at all),
 		 * `name` (not one of the four supported package managers), `version` (not
@@ -38,7 +43,7 @@ export class InvalidPackageManagerPinError extends Schema.TaggedError<InvalidPac
 		 * all land here), or `integrity` (the tail after `+` is not a corepack
 		 * `<algo>.<hex>` hash).
 		 */
-		reason: Schema.Literals(["format", "name", "version", "integrity"]),
+		reason: S.Literals(["format", "name", "version", "integrity"]),
 	},
 ) {
 	override get message(): string {
@@ -81,7 +86,7 @@ export class InvalidPackageManagerPinError extends Schema.TaggedError<InvalidPac
  *
  * @public
  */
-export const PackageManagerPinName = Schema.Literals(["npm", "pnpm", "yarn", "bun"]);
+export const PackageManagerPinName = S.Literals(["npm", "pnpm", "yarn", "bun"]);
 
 /**
  * The decoded type of {@link (PackageManagerPinName:variable)}:
@@ -99,8 +104,8 @@ const isPinName = (value: string): value is PackageManagerPinName =>
 // constructed version carrying build identifiers would encode to a string that
 // re-parses differently. Rejecting it at the field keeps decode/encode sound.
 const pinVersion = SemVer.pipe(
-	Schema.check(
-		Schema.makeFilter((version: SemVer) =>
+	S.check(
+		S.makeFilter((version: SemVer) =>
 			version.build.length === 0 ? undefined : "Expected a version without build metadata",
 		),
 	),
@@ -141,7 +146,7 @@ const pinVersion = SemVer.pipe(
  *
  * @public
  */
-export class PackageManagerPin extends Schema.Class<PackageManagerPin>("PackageManagerPin")({
+export class PackageManagerPin extends S.Class<PackageManagerPin>("PackageManagerPin")({
 	/** The package-manager name (`npm`, `pnpm`, `yarn` or `bun`). */
 	name: PackageManagerPinName,
 	/**
@@ -156,7 +161,7 @@ export class PackageManagerPin extends Schema.Class<PackageManagerPin>("PackageM
 	 * `IntegrityHash` brand to the corepack `<algo>.<hex>` form. Absent when the
 	 * pin carries no `+<integrity>` tail — never present-but-`undefined`.
 	 */
-	integrity: Schema.optionalKey(CorepackIntegrityHash),
+	integrity: S.optionalKey(CorepackIntegrityHash),
 }) {
 	/**
 	 * Schema transformation between the `<name>@<version>[+<integrity>]` string
@@ -164,9 +169,9 @@ export class PackageManagerPin extends Schema.Class<PackageManagerPin>("PackageM
 	 * {@link PackageManagerPin.parseResult} (the three surfaces share one
 	 * grammar and cannot diverge); encoding prints the canonical pin string.
 	 */
-	static readonly FromString: Schema.Codec<PackageManagerPin, string> = Schema.String.pipe(
-		Schema.decodeTo(
-			Schema.instanceOf(PackageManagerPin),
+	static readonly FromString: S.Codec<PackageManagerPin, string> = S.String.pipe(
+		S.decodeTo(
+			S.instanceOf(PackageManagerPin),
 			SchemaTransformation.transformEffect({
 				decode: (input: string) => {
 					const parsed = PackageManagerPin.parseResult(input);
@@ -230,7 +235,7 @@ export class PackageManagerPin extends Schema.Class<PackageManagerPin>("PackageM
 		if (plus === -1) {
 			return Result.succeed(PackageManagerPin.make({ name, version: version.success }));
 		}
-		const integrity = Schema.decodeExit(CorepackIntegrityHash)(rest.slice(plus + 1));
+		const integrity = S.decodeExit(CorepackIntegrityHash)(rest.slice(plus + 1));
 		if (Exit.isFailure(integrity)) {
 			return Result.fail(InvalidPackageManagerPinError.make({ input, reason: "integrity" }));
 		}

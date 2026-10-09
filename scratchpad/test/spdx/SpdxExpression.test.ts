@@ -1,5 +1,12 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Arbitrary, Cause, Effect, Equal, Exit, Option, Result, Schema } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import * as Exit from "effect/Exit";
+import * as O from "effect/Option";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { InvalidSpdxExpressionError, License } from "../../effected/spdx/License.ts";
 import type { SpdxExpression as SpdxExpressionAst } from "../../effected/spdx/SpdxExpression.ts";
 import {
@@ -22,29 +29,29 @@ import {
 // that re-decodes to an equal AST.
 const KNOWN_LICENSES = ["MIT", "Apache-2.0", "BSD-3-Clause", "ISC", "GPL-2.0-or-later", "MPL-2.0"] as const;
 const KNOWN_EXCEPTIONS = ["Classpath-exception-2.0", "Bison-exception-2.2", "GCC-exception-2.0"] as const;
-const idstring = Schema.String.check(Schema.isPattern(/^[A-Za-z0-9.-]{1,12}$/));
+const idstring = S.String.check(S.isPattern(/^[A-Za-z0-9.-]{1,12}$/));
 /** A uniform choice between arbitraries — the native module only unions Schemas. */
 const oneOf = <A>(
 	first: Arbitrary.Arbitrary<A>,
 	...rest: ReadonlyArray<Arbitrary.Arbitrary<A>>
 ): Arbitrary.Arbitrary<A> =>
-	Arbitrary.schema(Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: rest.length }))).pipe(
+	Arbitrary.schema(S.Int.check(S.isBetween({ minimum: 0, maximum: rest.length }))).pipe(
 		Arbitrary.flatMap((index) => (index === 0 ? first : (rest[index - 1] ?? first))),
 	);
-const licenseNode = Arbitrary.schema(Schema.Struct({ id: Schema.Literals(KNOWN_LICENSES), plus: Schema.Boolean })).pipe(
+const licenseNode = Arbitrary.schema(S.Struct({ id: S.Literals(KNOWN_LICENSES), plus: S.Boolean })).pipe(
 	Arbitrary.map(({ id, plus }) => LicenseNode.make({ id, plus })),
 );
 // `documentRef` is an `optionalKey`, so the generator either draws it or
 // leaves the key absent — the value passes straight to `make` with no
 // explicit `undefined` ever reaching the optional field.
 const licenseRefNode = Arbitrary.schema(
-	Schema.Struct({ documentRef: Schema.optionalKey(idstring), ref: idstring }),
+	S.Struct({ documentRef: S.optionalKey(idstring), ref: idstring }),
 ).pipe(Arbitrary.map((fields) => LicenseRefNode.make(fields)));
 // `WITH` binds to any simple expression — a license id (optionally `+`) OR a
 // `LicenseRef` reference — so the arbitrary generates both license shapes.
 const withExceptionNode = Arbitrary.all({
 	license: oneOf<LicenseNode | LicenseRefNode>(licenseNode, licenseRefNode),
-	exception: Arbitrary.schema(Schema.Literals(KNOWN_EXCEPTIONS)),
+	exception: Arbitrary.schema(S.Literals(KNOWN_EXCEPTIONS)),
 }).pipe(Arbitrary.map(({ license, exception }) => WithExceptionNode.make({ license, exception })));
 const simpleExpression = oneOf<SpdxExpressionAst>(licenseNode, licenseRefNode, withExceptionNode);
 // Compound expressions nest AND/OR at most four levels deep (the old
@@ -124,7 +131,7 @@ describe("SpdxExpression", () => {
 	);
 	it.effect("FromString decodes a string to the AST that re-serializes to canonical form", () =>
 		Effect.gen(function* () {
-			const ast = yield* Schema.decodeEffect(SpdxExpression.FromString)("(MIT OR Apache-2.0)");
+			const ast = yield* S.decodeEffect(SpdxExpression.FromString)("(MIT OR Apache-2.0)");
 			assert.strictEqual(ast._tag, "Or");
 			// the decoded AST is the same tree the sync parser produces
 			assert.strictEqual(ast.toString(), "(MIT OR Apache-2.0)");
@@ -143,13 +150,13 @@ describe("SpdxExpression", () => {
 	]) {
 		it.effect(`FromString encode round-trips ${s}`, () =>
 			Effect.gen(function* () {
-				const ast = yield* Schema.decodeEffect(SpdxExpression.FromString)(s);
-				const encoded = yield* Schema.encodeEffect(SpdxExpression.FromString)(ast);
+				const ast = yield* S.decodeEffect(SpdxExpression.FromString)(s);
+				const encoded = yield* S.encodeEffect(SpdxExpression.FromString)(ast);
 				// encode emits the canonical string the input already is
 				assert.strictEqual(encoded, s);
 				// decode∘encode is identity: the string re-decodes and re-encodes to itself
-				const reAst = yield* Schema.decodeEffect(SpdxExpression.FromString)(encoded);
-				const reEncoded = yield* Schema.encodeEffect(SpdxExpression.FromString)(reAst);
+				const reAst = yield* S.decodeEffect(SpdxExpression.FromString)(encoded);
+				const reEncoded = yield* S.encodeEffect(SpdxExpression.FromString)(reAst);
 				assert.strictEqual(reEncoded, encoded);
 			}),
 		);
@@ -158,7 +165,7 @@ describe("SpdxExpression", () => {
 		Effect.gen(function* () {
 			const expr = yield* SpdxExpression.parse("LicenseRef-Foo WITH Bison-exception-2.2");
 			assert.instanceOf(expr, WithExceptionNode);
-			if (Schema.is(WithExceptionNode)(expr)) {
+			if (S.is(WithExceptionNode)(expr)) {
 				assert.instanceOf(expr.license, LicenseRefNode);
 				assert.strictEqual(expr.exception, "Bison-exception-2.2");
 			}
@@ -198,10 +205,10 @@ describe("SpdxExpression", () => {
 	// equal AST, and re-encoding that AST reproduces the same string.
 	it.effect.prop("FromString round-trips decode(encode(e))", [spdxExpressionArb], ([e]) =>
 		Effect.gen(function* () {
-			const encoded = yield* Schema.encodeUnknownEffect(SpdxExpression.FromString)(e);
-			const decoded = yield* Schema.decodeEffect(SpdxExpression.FromString)(encoded);
+			const encoded = yield* S.encodeUnknownEffect(SpdxExpression.FromString)(e);
+			const decoded = yield* S.decodeEffect(SpdxExpression.FromString)(encoded);
 			assert.isTrue(Equal.equals(decoded, e), `expected ${decoded.toString()} to equal ${e.toString()}`);
-			const reEncoded = yield* Schema.encodeUnknownEffect(SpdxExpression.FromString)(decoded);
+			const reEncoded = yield* S.encodeUnknownEffect(SpdxExpression.FromString)(decoded);
 			assert.strictEqual(reEncoded, encoded);
 		}),
 	);
@@ -215,14 +222,14 @@ describe("SpdxExpression — collapsing an expression to licenses", () => {
 	};
 
 	it("a simple license is its own primary", () => {
-		assert.deepStrictEqual(SpdxExpression.primaryLicense(parse("MIT")), Option.some(License.of("MIT")));
+		assert.deepStrictEqual(SpdxExpression.primaryLicense(parse("MIT")), O.some(License.of("MIT")));
 	});
 
 	it("OR takes the leftmost — the choice the author wrote first", () => {
-		assert.deepStrictEqual(SpdxExpression.primaryLicense(parse("MIT OR Apache-2.0")), Option.some(License.of("MIT")));
+		assert.deepStrictEqual(SpdxExpression.primaryLicense(parse("MIT OR Apache-2.0")), O.some(License.of("MIT")));
 		assert.deepStrictEqual(
 			SpdxExpression.primaryLicense(parse("(GPL-3.0-only OR MIT) OR Apache-2.0")),
-			Option.some(License.of("GPL-3.0-only")),
+			O.some(License.of("GPL-3.0-only")),
 		);
 	});
 
@@ -230,41 +237,41 @@ describe("SpdxExpression — collapsing an expression to licenses", () => {
 		// The whole reason this returns an Option: a conjunction binds every
 		// term at once, so answering with one of them is a legal claim that is
 		// simply false.
-		assert.isTrue(Option.isNone(SpdxExpression.primaryLicense(parse("MIT AND Apache-2.0"))));
+		assert.isTrue(O.isNone(SpdxExpression.primaryLicense(parse("MIT AND Apache-2.0"))));
 	});
 
 	it("an OR whose left branch is an AND has no primary either", () => {
 		// Recursion must not sidestep the AND rule by descending past it.
-		assert.isTrue(Option.isNone(SpdxExpression.primaryLicense(parse("(MIT AND Apache-2.0) OR GPL-3.0-only"))));
+		assert.isTrue(O.isNone(SpdxExpression.primaryLicense(parse("(MIT AND Apache-2.0) OR GPL-3.0-only"))));
 	});
 
 	it("an exception qualifies its license, and the license is the primary", () => {
 		assert.deepStrictEqual(
 			SpdxExpression.primaryLicense(parse("GPL-2.0-only WITH Bison-exception-2.2")),
-			Option.some(License.of("GPL-2.0-only")),
+			O.some(License.of("GPL-2.0-only")),
 		);
 	});
 
 	it("the `+` marker qualifies a catalog entry, it does not name another", () => {
-		assert.deepStrictEqual(SpdxExpression.primaryLicense(parse("AFL-2.0+")), Option.some(License.of("AFL-2.0")));
+		assert.deepStrictEqual(SpdxExpression.primaryLicense(parse("AFL-2.0+")), O.some(License.of("AFL-2.0")));
 	});
 
 	it("a LicenseRef resolves as a reference", () => {
 		assert.deepStrictEqual(
 			SpdxExpression.primaryLicense(parse("LicenseRef-Proprietary")),
-			Option.some(License.of("LicenseRef-Proprietary")),
+			O.some(License.of("LicenseRef-Proprietary")),
 		);
 		assert.deepStrictEqual(
 			SpdxExpression.primaryLicense(parse("DocumentRef-spdx-tool:LicenseRef-Proprietary")),
-			Option.some(License.of("DocumentRef-spdx-tool:LicenseRef-Proprietary")),
+			O.some(License.of("DocumentRef-spdx-tool:LicenseRef-Proprietary")),
 		);
 	});
 
 	it("a deprecated id keeps its deprecated flag through the collapse", () => {
 		const primary = SpdxExpression.primaryLicense(parse("GPL-3.0"));
-		assert.isTrue(Option.isSome(primary));
-		assert.strictEqual((primary as Option.Some<License>).value.id, "GPL-3.0");
-		assert.isTrue((primary as Option.Some<License>).value.deprecated);
+		assert.isTrue(O.isSome(primary));
+		assert.strictEqual((primary as O.Some<License>).value.id, "GPL-3.0");
+		assert.isTrue((primary as O.Some<License>).value.deprecated);
 	});
 
 	it("licensesOf keeps every term, in written order", () => {
@@ -282,7 +289,7 @@ describe("SpdxExpression — collapsing an expression to licenses", () => {
 		// The pairing the API depends on: AND yields none from one accessor and
 		// the full set from the other.
 		const expr = parse("MIT AND Apache-2.0");
-		assert.isTrue(Option.isNone(SpdxExpression.primaryLicense(expr)));
+		assert.isTrue(O.isNone(SpdxExpression.primaryLicense(expr)));
 		assert.strictEqual(SpdxExpression.licensesOf(expr).length, 2);
 	});
 

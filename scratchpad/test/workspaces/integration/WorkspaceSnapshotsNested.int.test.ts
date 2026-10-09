@@ -25,7 +25,9 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { NodeServices } from "@effect/platform-node";
 import { afterAll, assert, beforeAll, describe, it } from "@effect/vitest";
-import { Effect, Layer, Option } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import { WorkspaceSnapshots, Workspaces } from "../../../effected/workspaces/index.ts";
 
 let root: string;
@@ -97,10 +99,10 @@ describe("WorkspaceSnapshots.at — a workspace root nested inside a larger git 
 			assert.deepStrictEqual(names, ["@inner/a", "@inner/b", "inner-root"]);
 
 			// The inner catalog. The un-prefixed reader carries the OUTER `^3.0.0`.
-			assert.deepStrictEqual(snapshot.resolve("effect", "catalog:"), Option.some("^4.0.0"));
+			assert.deepStrictEqual(snapshot.resolve("effect", "catalog:"), O.some("^4.0.0"));
 
 			// The inner workspace: specifier resolves against the inner member's version.
-			assert.deepStrictEqual(snapshot.resolve("@inner/a", "workspace:*"), Option.some("1.1.0"));
+			assert.deepStrictEqual(snapshot.resolve("@inner/a", "workspace:*"), O.some("1.1.0"));
 		}).pipe(Effect.provide(Live));
 	});
 });

@@ -5,7 +5,9 @@
 // live in their own module rather than inside the signer.
 
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Result, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import {
 	IN_TOTO_STATEMENT_V1,
 	InTotoStatement,
@@ -184,6 +186,6 @@ describe("InTotoStatement", () => {
 
 describe("Sha256Digest JSON Schema export", () => {
 	it("exports its 64-hex pattern", () => {
-		assert.nestedPropertyVal(Schema.toJsonSchemaDocument(Sha256Digest), "schema.pattern", "^[0-9a-f]{64}$");
+		assert.nestedPropertyVal(S.toJsonSchemaDocument(Sha256Digest), "schema.pattern", "^[0-9a-f]{64}$");
 	});
 });

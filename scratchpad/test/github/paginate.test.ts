@@ -1,5 +1,8 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Option, Ref, Stream } from "effect";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
+import * as Ref from "effect/Ref";
+import * as Stream from "effect/Stream";
 import { GitHubError } from "../../effected/github/GitHubError.ts";
 import type { PageSource } from "../../effected/github/internal/paginate.ts";
 import { fromArray, paginate } from "../../effected/github/internal/paginate.ts";
@@ -9,7 +12,7 @@ const recordedPages = <A>(pages: ReadonlyArray<ReadonlyArray<A>>, calls: Ref.Ref
 	let index = 0;
 	return {
 		next: Ref.update(calls, (n) => n + 1).pipe(
-			Effect.map(() => (index < pages.length ? Option.some(pages[index++] as ReadonlyArray<A>) : Option.none())),
+			Effect.map(() => (index < pages.length ? O.some(pages[index++] as ReadonlyArray<A>) : O.none())),
 		),
 	};
 };
@@ -79,7 +82,7 @@ describe("paginate", () => {
 			const source = (): PageSource<number> => ({
 				next: Effect.suspend(() => (index++ === 0 ? Effect.succeedSome([1, 2]) : Effect.fail(boom))),
 			});
-			const error = yield* Effect.flip(Stream.runCollect(paginate(source, undefined)));
+			const error = yield* paginate(source, undefined).pipe(Stream.runCollect, Effect.flip);
 			assert.strictEqual(error.reason, "page two exploded");
 		}),
 	);

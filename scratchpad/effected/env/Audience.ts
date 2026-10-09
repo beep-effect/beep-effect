@@ -1,4 +1,8 @@
-import { Config, Context, Effect, Layer, Option } from "effect";
+import * as Config from "effect/Config";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import type { RuntimeEnv } from "./RuntimeEnv.ts";
 import { CurrentRuntimeEnv } from "./RuntimeEnv.ts";
 
@@ -85,8 +89,8 @@ export class Audience extends Context.Service<Audience, AudienceShape>()("@beep/
 				const envVar = options?.envVar;
 				if (envVar === undefined) return detected;
 
-				const raw = yield* Config.option(Config.String(envVar)).pipe(Effect.orElseSucceed(() => Option.none<string>()));
-				if (Option.isNone(raw) || raw.value === "") return detected;
+				const raw = yield* Config.option(Config.String(envVar)).pipe(Effect.orElseSucceed(() => O.none<string>()));
+				if (O.isNone(raw) || raw.value === "") return detected;
 
 				const value = raw.value.toLowerCase();
 				const kind = KINDS.find((candidate) => candidate === value);
@@ -120,5 +124,5 @@ export class Audience extends Context.Service<Audience, AudienceShape>()("@beep/
 	 * @param env - the runtime snapshot to decide from
 	 */
 	static readonly detect = (env: RuntimeEnv): AudienceKind =>
-		Option.isSome(env.agent) ? "agent" : Option.isSome(env.ci) ? "ci" : "human";
+		O.isSome(env.agent) ? "agent" : O.isSome(env.ci) ? "ci" : "human";
 }

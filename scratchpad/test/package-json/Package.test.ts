@@ -1,9 +1,13 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Equal, HashMap, Option, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import * as HashMap from "effect/HashMap";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { Dependency } from "../../effected/package-json/Dependency.ts";
 import { Package, PackageDecodeError } from "../../effected/package-json/Package.ts";
 
-const Json = Schema.fromJsonString(Schema.Unknown);
+const Json = S.fromJsonString(S.Unknown);
 
 const minimal = { name: "my-pkg", version: "1.0.0" };
 const full = {
@@ -65,16 +69,16 @@ describe("Package.decode + getters", () => {
 				peerDependenciesMeta: { effect: { optional: true } },
 				optionalDependencies: { fsevents: "^2.0.0" },
 			});
-			const lodash = Option.getOrThrow(HashMap.get(pkg.getDependencies(), "lodash"));
+			const lodash = O.getOrThrow(HashMap.get(pkg.getDependencies(), "lodash"));
 			assert.instanceOf(lodash, Dependency);
 			assert.strictEqual(lodash.kind, "prod");
-			const local = Option.getOrThrow(HashMap.get(pkg.getDependencies(), "local"));
+			const local = O.getOrThrow(HashMap.get(pkg.getDependencies(), "local"));
 			assert.isTrue(local.isWorkspace);
 			assert.isTrue(local.isUnresolved);
-			const peer = Option.getOrThrow(HashMap.get(pkg.getPeerDependencies(), "effect"));
+			const peer = O.getOrThrow(HashMap.get(pkg.getPeerDependencies(), "effect"));
 			assert.strictEqual(peer.kind, "peer");
 			assert.isTrue(peer.isOptional);
-			const opt = Option.getOrThrow(HashMap.get(pkg.getOptionalDependencies(), "fsevents"));
+			const opt = O.getOrThrow(HashMap.get(pkg.getOptionalDependencies(), "fsevents"));
 			assert.strictEqual(opt.kind, "optional");
 		}),
 	);
@@ -140,7 +144,7 @@ describe("Package mutation statics", () => {
 			assert.isTrue(HashMap.has(withOpt.optionalDependencies, "fsevents"));
 
 			const withScript = Package.setScript(base, "build", "tsc");
-			assert.deepStrictEqual(HashMap.get(withScript.scripts, "build"), Option.some("tsc"));
+			assert.deepStrictEqual(HashMap.get(withScript.scripts, "build"), O.some("tsc"));
 			const removedScript = Package.removeScript(withScript, "build");
 			assert.isTrue(HashMap.has(removedScript.scripts, "build") === false);
 		}),
@@ -160,7 +164,7 @@ describe("Package wire transform + rest", () => {
 		Effect.gen(function* () {
 			const decoded = yield* Package.decode({ name: "p", version: "1.0.0", customField: "kept", arr: [1, 2, 3] });
 			assert.deepStrictEqual(decoded.rest, { customField: "kept", arr: [1, 2, 3] });
-			const encoded = (yield* Schema.encodeUnknownEffect(Package.schema)(decoded)) as Record<string, unknown>;
+			const encoded = (yield* S.encodeUnknownEffect(Package.schema)(decoded)) as Record<string, unknown>;
 			assert.strictEqual(encoded.customField, "kept");
 			assert.deepStrictEqual(encoded.arr, [1, 2, 3]);
 			assert.isFalse("rest" in encoded);
@@ -173,7 +177,7 @@ describe("Package wire transform + rest", () => {
 			// a hostile or merely odd manifest on disk produces. The wire transform
 			// must store it as data (null-prototype rest record), never assign it
 			// (which on a plain object MUTATES the prototype and loses the key).
-			const raw = (yield* Schema.decodeEffect(Json)(
+			const raw = (yield* S.decodeEffect(Json)(
 				'{"name":"proto-carrier","version":"1.0.0","__proto__":{"polluted":true},"custom":"kept"}',
 			)) as Record<string, unknown>;
 
@@ -184,13 +188,13 @@ describe("Package wire transform + rest", () => {
 			assert.isFalse("polluted" in {});
 			assert.isUndefined(({} as Record<string, unknown>).polluted);
 
-			const encoded = (yield* Schema.encodeUnknownEffect(Package.schema)(decoded)) as Record<string, unknown>;
+			const encoded = (yield* S.encodeUnknownEffect(Package.schema)(decoded)) as Record<string, unknown>;
 			const encodedProto = Object.getOwnPropertyDescriptor(encoded, "__proto__");
 			assert.deepStrictEqual(encodedProto?.value, { polluted: true });
 			assert.strictEqual(encoded.custom, "kept");
 			assert.isFalse("rest" in encoded);
 			// Byte-level: the serialized manifest still carries the key as data.
-			assert.include((yield* Schema.encodeEffect(Json)(encoded)), '"__proto__":{"polluted":true}');
+			assert.include((yield* S.encodeEffect(Json)(encoded)), '"__proto__":{"polluted":true}');
 		}),
 	);
 
@@ -200,7 +204,7 @@ describe("Package wire transform + rest", () => {
 			// A decode never lands a known key in `rest`; only a hand-built patch
 			// can smuggle one. The typed member must win on encode.
 			const smuggled = decoded.copyWith({ rest: { description: "shadow", other: 1 } });
-			const encoded = (yield* Schema.encodeUnknownEffect(Package.schema)(smuggled)) as Record<string, unknown>;
+			const encoded = (yield* S.encodeUnknownEffect(Package.schema)(smuggled)) as Record<string, unknown>;
 			assert.strictEqual(encoded.description, "real");
 			assert.strictEqual(encoded.other, 1);
 			assert.isFalse("rest" in encoded);
@@ -218,10 +222,10 @@ describe("Package wire transform + rest", () => {
 	it.effect("supports .extend() pulling a typed field out of rest", () =>
 		Effect.gen(function* () {
 			class ToolPackage extends Package.extend<ToolPackage>("ToolPackage")({
-				myTool: Schema.optionalKey(Schema.String),
+				myTool: S.optionalKey(S.String),
 			}) {}
 			const wire = Package.wireFor(ToolPackage);
-			const decoded = yield* Schema.decodeEffect(wire)({
+			const decoded = yield* S.decodeEffect(wire)({
 				name: "p",
 				version: "1.0.0",
 				myTool: "configured",
@@ -229,7 +233,7 @@ describe("Package wire transform + rest", () => {
 			});
 			assert.strictEqual(decoded.myTool, "configured");
 			assert.deepStrictEqual(decoded.rest, { other: 1 });
-			const encoded = (yield* Schema.encodeUnknownEffect(wire)(decoded)) as Record<string, unknown>;
+			const encoded = (yield* S.encodeUnknownEffect(wire)(decoded)) as Record<string, unknown>;
 			assert.strictEqual(encoded.myTool, "configured");
 			assert.strictEqual(encoded.other, 1);
 		}),
@@ -253,7 +257,7 @@ describe("Package.toJsonString", () => {
 			const pkg = yield* Package.decode(full);
 			const json = pkg.toJsonString();
 			assert.isTrue(json.endsWith("\n"));
-			const parsed = (yield* Schema.decodeEffect(Json)(json)) as Record<string, unknown>;
+			const parsed = (yield* S.decodeEffect(Json)(json)) as Record<string, unknown>;
 			const keys = Object.keys(parsed);
 			assert.isTrue(keys.indexOf("name") < keys.indexOf("version"));
 			assert.isTrue(keys.indexOf("version") < keys.indexOf("description"));

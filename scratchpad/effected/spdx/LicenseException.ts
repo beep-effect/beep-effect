@@ -1,4 +1,6 @@
-import { Effect, Result, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { DEPRECATED_EXCEPTION_IDS, EXCEPTION_IDS } from "./internal/exceptions.ts";
 import { InvalidSpdxExpressionError } from "./License.ts";
 
@@ -31,11 +33,11 @@ import { InvalidSpdxExpressionError } from "./License.ts";
  * @see {@link https://spdx.org/licenses/exceptions-index.html | SPDX Exceptions List}
  * @public
  */
-export class LicenseException extends Schema.Class<LicenseException>("LicenseException")({
+export class LicenseException extends S.Class<LicenseException>("LicenseException")({
 	/** The SPDX exception short identifier (e.g. `"Classpath-exception-2.0"`). */
-	id: Schema.String,
+	id: S.String,
 	/** Whether `id` is a deprecated SPDX exception identifier. */
-	deprecated: Schema.Boolean,
+	deprecated: S.Boolean,
 }) {
 	// ── Catalog ─────────────────────────────────────────────────────────
 

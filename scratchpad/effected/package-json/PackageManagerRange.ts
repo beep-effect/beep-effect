@@ -25,7 +25,13 @@
 
 import { CorepackIntegrityHash } from "../npm/index.ts";
 import { Range, SemVer } from "../semver/index.ts";
-import { Effect, Exit, Option, Result, Schema, SchemaIssue, SchemaTransformation } from "effect";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as O from "effect/Option";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import type { DevEngine } from "./DevEngines.ts";
 
 /**
@@ -49,12 +55,12 @@ const SINGLE_COMPARATOR_RE = /^([\^~]?)(.+)$/;
 
 const singleComparator = (
 	range: string,
-): Option.Option<{ readonly operator: "" | "^" | "~"; readonly version: string }> => {
+): O.Option<{ readonly operator: "" | "^" | "~"; readonly version: string }> => {
 	const match = SINGLE_COMPARATOR_RE.exec(range);
-	if (match === null) return Option.none();
+	if (match === null) return O.none();
 	const operator = match[1] as "" | "^" | "~";
 	const version = match[2] as string;
-	return SemVer.isPinnable(version) ? Option.some({ operator, version }) : Option.none();
+	return SemVer.isPinnable(version) ? O.some({ operator, version }) : O.none();
 };
 
 // The name half of the grammar — identical latitude to `PackageManager`'s
@@ -62,9 +68,9 @@ const singleComparator = (
 const PACKAGE_MANAGER_NAME_RE = /^[a-z]+$/;
 
 /** `Schema.String` refined to parse as a semver range (`Range.parseResult` succeeds). The check is erased from the built type. */
-const SemVerRangeString: Schema.String = Schema.String.pipe(
-	Schema.check(
-		Schema.makeFilter((value) =>
+const SemVerRangeString: S.String = S.String.pipe(
+	S.check(
+		S.makeFilter((value) =>
 			value.length > 0 && Result.isSuccess(Range.parseResult(value))
 				? undefined
 				: "Expected a semver range (an exact version, a caret/tilde range, a comparator set, ...)",
@@ -85,7 +91,7 @@ const SemVerRangeString: Schema.String = Schema.String.pipe(
  *
  * @public
  */
-export class InvalidPackageManagerRangeError extends Schema.TaggedError<InvalidPackageManagerRangeError>()(
+export class InvalidPackageManagerRangeError extends S.TaggedError<InvalidPackageManagerRangeError>()(
 	"InvalidPackageManagerRangeError",
 	{
 		/**
@@ -93,14 +99,14 @@ export class InvalidPackageManagerRangeError extends Schema.TaggedError<InvalidP
 		 * `devEngines` entry its `name` and `version` joined as
 		 * `<name>@<version>` (just `<name>` when `version` is absent).
 		 */
-		input: Schema.String,
+		input: S.String,
 		/**
 		 * Which component failed: `format` (a `packageManager` string with no
 		 * `@`), `name` (not a lowercase name), `range` (absent, empty, or not a
 		 * semver range) or `integrity` (the tail after the first `+` is not a
 		 * corepack `<algo>.<hex>` hash).
 		 */
-		reason: Schema.Literals(["format", "name", "range", "integrity"]),
+		reason: S.Literals(["format", "name", "range", "integrity"]),
 	},
 ) {
 	override get message(): string {
@@ -137,16 +143,16 @@ const fromParts = (
 		return Result.fail(InvalidPackageManagerRangeError.make({ input, reason: "range" }));
 	}
 	if (plus === -1) {
-		return Result.succeed(PackageManagerRange.make({ name, range, integrity: Option.none() }));
+		return Result.succeed(PackageManagerRange.make({ name, range, integrity: O.none() }));
 	}
 	// Validate the integrity through the corepack-restricted schema so a
 	// malformed hash is a typed failure, not the defect `make` would throw on
 	// a value the field schema rejects.
-	const decoded = Schema.decodeExit(CorepackIntegrityHash)(tail.slice(plus + 1));
+	const decoded = S.decodeExit(CorepackIntegrityHash)(tail.slice(plus + 1));
 	if (Exit.isFailure(decoded)) {
 		return Result.fail(InvalidPackageManagerRangeError.make({ input, reason: "integrity" }));
 	}
-	return Result.succeed(PackageManagerRange.make({ name, range, integrity: Option.some(decoded.value) }));
+	return Result.succeed(PackageManagerRange.make({ name, range, integrity: O.some(decoded.value) }));
 };
 
 /**
@@ -186,9 +192,9 @@ const fromParts = (
  *
  * @public
  */
-export class PackageManagerRange extends Schema.Class<PackageManagerRange>("PackageManagerRange")({
+export class PackageManagerRange extends S.Class<PackageManagerRange>("PackageManagerRange")({
 	/** The package-manager name (e.g. `pnpm`). Any lowercase name — the same latitude as {@link PackageManager}, for the same evidence. */
-	name: Schema.String,
+	name: S.String,
 	/**
 	 * The version position, verbatim: a semver range (`^11.20.0`,
 	 * `>=10 <12`, ...) or an exact version (`11.2.0`). Validated to parse
@@ -202,7 +208,7 @@ export class PackageManagerRange extends Schema.Class<PackageManagerRange>("Pack
 	 * an integrity pins one artifact — but carried whenever the manifest
 	 * carries it, because fidelity outranks plausibility in a field model.
 	 */
-	integrity: Schema.Option(CorepackIntegrityHash),
+	integrity: S.Option(CorepackIntegrityHash),
 }) {
 	/**
 	 * Schema transformation between the `"name@range[+integrity]"` string and a
@@ -214,9 +220,9 @@ export class PackageManagerRange extends Schema.Class<PackageManagerRange>("Pack
 	 * Encoding prints `toString()`, reconstructed from the verbatim parts, so
 	 * it is byte-identical to any input this codec accepts.
 	 */
-	static readonly FromString: Schema.Codec<PackageManagerRange, string> = Schema.String.pipe(
-		Schema.decodeTo(
-			Schema.instanceOf(PackageManagerRange),
+	static readonly FromString: S.Codec<PackageManagerRange, string> = S.String.pipe(
+		S.decodeTo(
+			S.instanceOf(PackageManagerRange),
 			SchemaTransformation.transformEffect({
 				decode: (input: string) => {
 					const parsed = PackageManagerRange.parseResult(input);
@@ -324,7 +330,7 @@ export class PackageManagerRange extends Schema.Class<PackageManagerRange>("Pack
 	 * exactly this.
 	 */
 	override toString(): string {
-		return Option.match(this.integrity, {
+		return O.match(this.integrity, {
 			onNone: () => this.bare,
 			onSome: (integrity) => `${this.bare}+${integrity}`,
 		});
@@ -348,8 +354,8 @@ export class PackageManagerRange extends Schema.Class<PackageManagerRange>("Pack
 	 * `=12.6.0`, `^12`), whose operator cannot be carried onto a new version
 	 * unambiguously.
 	 */
-	get operator(): Option.Option<"" | "^" | "~"> {
-		return Option.map(singleComparator(this.range), (parts) => parts.operator);
+	get operator(): O.Option<"" | "^" | "~"> {
+		return O.map(singleComparator(this.range), (parts) => parts.operator);
 	}
 
 	/**
@@ -357,8 +363,8 @@ export class PackageManagerRange extends Schema.Class<PackageManagerRange>("Pack
 	 * (`^12.6.0` → `12.6.0`); `Option.none()` exactly when
 	 * {@link PackageManagerRange.operator} is.
 	 */
-	get baseVersion(): Option.Option<string> {
-		return Option.map(singleComparator(this.range), (parts) => parts.version);
+	get baseVersion(): O.Option<string> {
+		return O.map(singleComparator(this.range), (parts) => parts.version);
 	}
 
 	/**
@@ -379,7 +385,7 @@ export class PackageManagerRange extends Schema.Class<PackageManagerRange>("Pack
 	 */
 	withVersionResult(version: string): Result.Result<PackageManagerRange, InvalidPackageManagerRangeError> {
 		const parts = singleComparator(this.range);
-		if (Option.isNone(parts) || !SemVer.isPinnable(version)) {
+		if (O.isNone(parts) || !SemVer.isPinnable(version)) {
 			return Result.fail(
 				InvalidPackageManagerRangeError.make({ input: `${this.name}@${this.range} -> ${version}`, reason: "range" }),
 			);
@@ -388,7 +394,7 @@ export class PackageManagerRange extends Schema.Class<PackageManagerRange>("Pack
 			PackageManagerRange.make({
 				name: this.name,
 				range: `${parts.value.operator}${version}`,
-				integrity: Option.none(),
+				integrity: O.none(),
 			}),
 		);
 	}
@@ -408,6 +414,6 @@ export class PackageManagerRange extends Schema.Class<PackageManagerRange>("Pack
 
 	/** Whether an integrity hash is present. */
 	get hasIntegrity(): boolean {
-		return Option.isSome(this.integrity);
+		return O.isSome(this.integrity);
 	}
 }

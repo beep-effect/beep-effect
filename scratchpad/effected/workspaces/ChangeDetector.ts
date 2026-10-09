@@ -8,7 +8,10 @@
 
 import type { GitCommandError, NotARepositoryError, UnknownRefError } from "../git/index.ts";
 import { Git } from "../git/index.ts";
-import { Context, Effect, Layer, Schema } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as S from "effect/Schema";
 import { DependencyGraph } from "./DependencyGraph.ts";
 import type { WorkspaceDiscoveryFailure } from "./WorkspaceDiscovery.ts";
 import { WorkspaceDiscovery } from "./WorkspaceDiscovery.ts";
@@ -27,24 +30,24 @@ import type { WorkspacePackage } from "./WorkspacePackage.ts";
  *
  * @public
  */
-export class ChangeDetectionOptions extends Schema.Class<ChangeDetectionOptions>("ChangeDetectionOptions")({
+export class ChangeDetectionOptions extends S.Class<ChangeDetectionOptions>("ChangeDetectionOptions")({
 	/**
 	 * The ref to compare against.
 	 *
 	 * @defaultValue `"HEAD~1"`
 	 */
-	base: Schema.String.pipe(
-		Schema.withDecodingDefaultKey(Effect.succeed("HEAD~1")),
-		Schema.withConstructorDefault(Effect.succeed("HEAD~1")),
+	base: S.String.pipe(
+		S.withDecodingDefaultKey(Effect.succeed("HEAD~1")),
+		S.withConstructorDefault(Effect.succeed("HEAD~1")),
 	),
 	/**
 	 * The ref to compare to.
 	 *
 	 * @defaultValue `"HEAD"`
 	 */
-	head: Schema.String.pipe(
-		Schema.withDecodingDefaultKey(Effect.succeed("HEAD")),
-		Schema.withConstructorDefault(Effect.succeed("HEAD")),
+	head: S.String.pipe(
+		S.withDecodingDefaultKey(Effect.succeed("HEAD")),
+		S.withConstructorDefault(Effect.succeed("HEAD")),
 	),
 	/**
 	 * Whether to include staged, unstaged and untracked working-tree changes on
@@ -52,9 +55,9 @@ export class ChangeDetectionOptions extends Schema.Class<ChangeDetectionOptions>
 	 *
 	 * @defaultValue `false`
 	 */
-	includeUncommitted: Schema.Boolean.pipe(
-		Schema.withDecodingDefaultKey(Effect.succeed(false)),
-		Schema.withConstructorDefault(Effect.succeed(false)),
+	includeUncommitted: S.Boolean.pipe(
+		S.withDecodingDefaultKey(Effect.succeed(false)),
+		S.withConstructorDefault(Effect.succeed(false)),
 	),
 }) {}
 
@@ -71,11 +74,11 @@ export class ChangeDetectionOptions extends Schema.Class<ChangeDetectionOptions>
  *
  * @public
  */
-export class ChangeDetectionError extends Schema.TaggedError<ChangeDetectionError>()("ChangeDetectionError", {
+export class ChangeDetectionError extends S.TaggedError<ChangeDetectionError>()("ChangeDetectionError", {
 	/** The operation that could not run. */
-	operation: Schema.String,
+	operation: S.String,
 	/** The originating failure. */
-	cause: Schema.Defect(),
+	cause: S.Defect(),
 }) {
 	/** Renders the failed operation into a one-line message. */
 	override get message(): string {

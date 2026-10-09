@@ -1,5 +1,7 @@
-import type { Schedule } from "effect";
-import { Duration, PlatformError, Schedule as Sched } from "effect";
+import type * as Schedule from "effect/Schedule";
+import * as Duration from "effect/Duration";
+import * as PlatformError from "effect/PlatformError";
+import * as Sched from "effect/Schedule";
 import type { CommandFailedError } from "./Run.ts";
 
 /**
@@ -63,7 +65,7 @@ const transient = (options?: {
 	const extra = options?.also ?? [];
 	return {
 		while: (error: CommandFailedError) => isTransient(error) || (error.kind !== "timeout" && matches(error, extra)),
-		schedule: Sched.jittered(Sched.exponential(Duration.millis(200))),
+		schedule: Duration.millis(200).pipe(Sched.exponential, Sched.jittered),
 		times: options?.times ?? 2,
 	};
 };

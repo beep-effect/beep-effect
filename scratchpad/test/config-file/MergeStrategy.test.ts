@@ -1,9 +1,12 @@
 import { assert, describe, it } from "@effect/vitest";
-import { DateTime, Effect, Schema, Result } from "effect";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
+import * as Result from "effect/Result";
 import type { ConfigSource } from "../../effected/config-file/MergeStrategy.ts";
 import { MergeStrategy } from "../../effected/config-file/MergeStrategy.ts";
 
-const JsonValue = Schema.fromJsonString(Schema.Unknown);
+const JsonValue = S.fromJsonString(S.Unknown);
 
 const src = <A>(path: string, resolver: string, value: A): ConfigSource<A> => ({ path, resolver, value });
 
@@ -59,7 +62,7 @@ describe("MergeStrategy.layeredMerge", () => {
 	it.effect("ignores inherited and __proto__ keys", () =>
 		Effect.gen(function* () {
 			const strategy = MergeStrategy.layeredMerge<Record<string, unknown>>();
-			const malicious = Result.getOrThrow(Schema.decodeResult(JsonValue)(`{"__proto__":{"polluted":true}}`)) as Record<string, unknown>;
+			const malicious = Result.getOrThrow(S.decodeResult(JsonValue)(`{"__proto__":{"polluted":true}}`)) as Record<string, unknown>;
 			const value = yield* strategy.resolve([src("/a", "walk", { ok: 1 }), src("/etc", "system", malicious)]);
 			// Assert on the merged value's own prototype chain, not a fresh `{}` —
 			// the attack repoints the merged object's own [[Prototype]], it does
@@ -74,7 +77,7 @@ describe("MergeStrategy.layeredMerge", () => {
 });
 
 describe("MergeStrategy.layeredMerge — value identity", () => {
-	class Doc extends Schema.Class<Doc>("Doc")({ port: Schema.Finite, host: Schema.String }) {
+	class Doc extends S.Class<Doc>("Doc")({ port: S.Finite, host: S.String }) {
 		get origin(): string {
 			return `http://${this.host}:${this.port}`;
 		}
@@ -106,7 +109,7 @@ describe("MergeStrategy.layeredMerge — value identity", () => {
 
 	it.effect("a nested class instance is atomic — higher priority wins it whole", () =>
 		Effect.gen(function* () {
-			class Section extends Schema.Class<Section>("Section")({ a: Schema.Finite, b: Schema.Finite }) {}
+			class Section extends S.Class<Section>("Section")({ a: S.Finite, b: S.Finite }) {}
 			const strategy = MergeStrategy.layeredMerge<Record<string, unknown>>();
 			const value = yield* strategy.resolve([
 				src("/a", "walk", { db: Section.make({ a: 1, b: 1 }) }),
@@ -135,7 +138,7 @@ describe("MergeStrategy.layeredMerge — prototype pollution via the higher-prio
 		Effect.gen(function* () {
 			const strategy = MergeStrategy.layeredMerge<Record<string, unknown>>();
 			// `deepMerge(higher, merged)` passes the highest-priority document as `target`.
-			const hostile = Result.getOrThrow(Schema.decodeResult(JsonValue)(`{"ok":1,"__proto__":{"polluted":true}}`)) as Record<string, unknown>;
+			const hostile = Result.getOrThrow(S.decodeResult(JsonValue)(`{"ok":1,"__proto__":{"polluted":true}}`)) as Record<string, unknown>;
 			const value = yield* strategy.resolve([src("/a", "walk", hostile), src("/etc", "system", { other: 2 })]);
 
 			const proto = Object.getPrototypeOf(value) as Record<string, unknown> | null;
@@ -149,7 +152,7 @@ describe("MergeStrategy.layeredMerge — prototype pollution via the higher-prio
 		Effect.gen(function* () {
 			const strategy = MergeStrategy.layeredMerge<Record<string, unknown>>();
 			// `section` exists only on the lower-priority source, so it is copied wholesale.
-			const lower = Result.getOrThrow(Schema.decodeResult(JsonValue)(`{"section":{"__proto__":{"polluted":true}}}`)) as Record<string, unknown>;
+			const lower = Result.getOrThrow(S.decodeResult(JsonValue)(`{"section":{"__proto__":{"polluted":true}}}`)) as Record<string, unknown>;
 			const value = yield* strategy.resolve([src("/a", "walk", { ok: 1 }), src("/etc", "system", lower)]);
 
 			const section = value.section as Record<string, unknown>;

@@ -1,4 +1,6 @@
-import { Context, Option, Schema } from "effect";
+import * as Context from "effect/Context";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
 
 /**
  * The carrier package a tool's bins were installed through.
@@ -11,9 +13,9 @@ import { Context, Option, Schema } from "effect";
  *
  * @public
  */
-export const Distribution = Schema.Struct({
-	name: Schema.String,
-	version: Schema.String,
+export const Distribution = S.Struct({
+	name: S.String,
+	version: S.String,
 });
 
 /**
@@ -29,7 +31,7 @@ export type Distribution = typeof Distribution.Type;
  *
  * @public
  */
-export const DistributionField = Schema.NullOr(Distribution);
+export const DistributionField = S.NullOr(Distribution);
 
 /**
  * The carrier this run was installed through, read anywhere without
@@ -43,9 +45,9 @@ export const DistributionField = Schema.NullOr(Distribution);
  *
  * @public
  */
-export const CurrentDistribution: Context.Reference<Option.Option<Distribution>> = Context.Reference(
+export const CurrentDistribution: Context.Reference<O.Option<Distribution>> = Context.Reference(
 	"@effected/engine/CurrentDistribution",
-	{ defaultValue: () => Option.none() },
+	{ defaultValue: () => O.none() },
 );
 
 /**
@@ -54,8 +56,8 @@ export const CurrentDistribution: Context.Reference<Option.Option<Distribution>>
  *
  * @public
  */
-export const distributionSuffix = (distribution: Option.Option<Distribution>): string =>
-	Option.match(distribution, {
+export const distributionSuffix = (distribution: O.Option<Distribution>): string =>
+	O.match(distribution, {
 		onNone: () => "",
 		onSome: ({ name, version }) => ` via ${name} ${version}`,
 	});

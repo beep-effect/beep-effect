@@ -1,5 +1,8 @@
 import { assert, describe, it, layer } from "@effect/vitest";
-import { Cause, Effect, Exit, Option } from "effect";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as O from "effect/Option";
 import { Git, LsTreeEntry } from "../../effected/git/Git.ts";
 
 const cwd = "/repo";
@@ -62,7 +65,7 @@ describe("Git.makeTest", () => {
 // memoize by reference.
 const TestGit = Git.layerTest({
 	show: (_cwd: string, _ref: string, path: string) =>
-		Effect.succeed(path === "package.json" ? Option.some("{}") : Option.none()),
+		Effect.succeed(path === "package.json" ? O.some("{}") : O.none()),
 	lsTree: () =>
 		Effect.succeed([LsTreeEntry.make({ mode: "100644", type: "blob", oid: "0".repeat(40), path: "package.json" })]),
 });
@@ -73,7 +76,7 @@ describe("Git.layerTest", () => {
 			Effect.gen(function* () {
 				const git = yield* Git;
 				const shown = yield* git.show(cwd, "HEAD", "package.json");
-				assert.deepStrictEqual(shown, Option.some("{}"));
+				assert.deepStrictEqual(shown, O.some("{}"));
 				const entries = yield* git.lsTree(cwd, "HEAD");
 				assert.deepStrictEqual(
 					entries.map((entry) => entry.path),

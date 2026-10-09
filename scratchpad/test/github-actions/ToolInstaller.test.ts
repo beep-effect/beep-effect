@@ -5,7 +5,13 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Option, PlatformError, Sink, Stream } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as PlatformError from "effect/PlatformError";
+import * as Sink from "effect/Sink";
+import * as Stream from "effect/Stream";
 import { FetchHttpClient } from "effect/http";
 import { badArgument } from "effect/PlatformError";
 import { ChildProcessSpawner } from "effect/process";
@@ -225,7 +231,7 @@ describe("ToolInstaller", () => {
 				Effect.gen(function* () {
 					const expected = ToolInstaller.cachePath({ root, tool: "node", version: "22.11.0", arch: process.arch });
 					mkdirSync(expected, { recursive: true });
-					assert.deepStrictEqual(yield* (yield* ToolInstaller).find("node", "22.11.0"), Option.some(expected));
+					assert.deepStrictEqual(yield* (yield* ToolInstaller).find("node", "22.11.0"), O.some(expected));
 				}),
 			),
 		);
@@ -233,7 +239,7 @@ describe("ToolInstaller", () => {
 		it.live("reports nothing for a tool that is not there", () =>
 			withRoot(() =>
 				Effect.gen(function* () {
-					assert.isTrue(Option.isNone(yield* (yield* ToolInstaller).find("node", "0.0.1")));
+					assert.isTrue(O.isNone(yield* (yield* ToolInstaller).find("node", "0.0.1")));
 				}),
 			),
 		);
@@ -246,7 +252,7 @@ describe("ToolInstaller", () => {
 					const expected = ToolInstaller.cachePath({ root, tool: "node", version: "1.0.0", arch: process.arch });
 					mkdirSync(join(expected, ".."), { recursive: true });
 					writeFileSync(expected, "not a directory");
-					assert.isTrue(Option.isNone(yield* (yield* ToolInstaller).find("node", "1.0.0")));
+					assert.isTrue(O.isNone(yield* (yield* ToolInstaller).find("node", "1.0.0")));
 				}),
 			),
 		);
@@ -267,7 +273,7 @@ describe("ToolInstaller", () => {
 						ToolInstaller.cachePath({ root, tool: "node", version: "22.11.0", arch: process.arch }),
 					);
 					assert.strictEqual(readFileSync(join(cached, "bin"), "utf8"), "#!/bin/sh\n");
-					assert.deepStrictEqual(yield* installer.find("node", "22.11.0"), Option.some(cached));
+					assert.deepStrictEqual(yield* installer.find("node", "22.11.0"), O.some(cached));
 					// The contract: `cacheDir` CONSUMES its source. On one filesystem the
 					// tree is renamed into the cache, so nothing is left at the source path.
 					assert.isFalse(existsSync(source), "cacheDir must consume its source");
@@ -289,7 +295,7 @@ describe("ToolInstaller", () => {
 				assert.strictEqual(refused, 1, "exactly the source rename is refused; the swap into the cache stays real");
 				assert.strictEqual(readFileSync(join(cached, "bin"), "utf8"), "#!/bin/sh\n");
 				assert.strictEqual(readFileSync(join(cached, "nested", "lib.js"), "utf8"), "module.exports = 1;\n");
-				assert.deepStrictEqual(yield* installer.find("node", "22.11.0"), Option.some(cached));
+				assert.deepStrictEqual(yield* installer.find("node", "22.11.0"), O.some(cached));
 				assert.isFalse(existsSync(source), "the copy path must consume the source too");
 			}).pipe(
 				Effect.provide(
@@ -327,7 +333,7 @@ describe("ToolInstaller", () => {
 				// A copy fallback here would mask a real failure (a permission
 				// problem, say) as a slow success — and would have consumed the source.
 				assert.isTrue(existsSync(join(source, "bin")), "a non-EXDEV failure must leave the source untouched");
-				assert.isTrue(Option.isNone(yield* installer.find("node", "22.11.0")));
+				assert.isTrue(O.isNone(yield* installer.find("node", "22.11.0")));
 			}).pipe(
 				Effect.provide(
 					liveWithFileSystem(
@@ -370,7 +376,7 @@ describe("ToolInstaller", () => {
 
 					const destination = ToolInstaller.cachePath({ root, tool: "node", version: "22.11.0", arch: process.arch });
 					assert.isFalse(existsSync(destination), "a failed install must not leave a partial tool behind");
-					assert.isTrue(Option.isNone(yield* installer.find("node", "22.11.0")));
+					assert.isTrue(O.isNone(yield* installer.find("node", "22.11.0")));
 				}),
 			),
 		);
@@ -715,7 +721,7 @@ describe("ToolInstaller", () => {
 				// The failure happened BEFORE caching, so the cache must not contain
 				// a non-executable binary for every later run to find.
 				const found = yield* Effect.flatMap(ToolInstaller, (installer) => installer.find("biome", "2.3.4"));
-				assert.isTrue(Option.isNone(found));
+				assert.isTrue(O.isNone(found));
 			}).pipe(
 				Effect.provide(liveWithFileSystem(root, failing, Object.assign(async () => new Response(binaryBody, { status: 200 }), { preconnect: () => {} }))),
 				Effect.ensuring(Effect.sync(() => rmSync(root, { recursive: true, force: true }))),
@@ -734,7 +740,7 @@ describe("ToolInstaller", () => {
 		it.effect("an override wins", () =>
 			Effect.gen(function* () {
 				const found = yield* Effect.flatMap(ToolInstaller, (installer) => installer.find("node", "1"));
-				assert.deepStrictEqual(found, Option.some("/cached"));
+				assert.deepStrictEqual(found, O.some("/cached"));
 			}).pipe(Effect.provide(ToolInstaller.layerTest({ find: () => Effect.succeedSome("/cached") }))),
 		);
 

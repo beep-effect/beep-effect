@@ -1,4 +1,4 @@
-import { Option } from "effect";
+import * as O from "effect/Option";
 
 // GitHub's closing-keyword issue-reference grammar, as pure functions.
 //
@@ -172,12 +172,12 @@ export const harvestIssueReferences = (text: string): ReadonlyArray<IssueReferen
  *
  * @public
  */
-export const parseBareLineReference = (line: string): Option.Option<BareLineReference> => {
+export const parseBareLineReference = (line: string): O.Option<BareLineReference> => {
 	const match = BARE_LINE_PATTERN.exec(line.trim());
-	if (match === null) return Option.none();
+	if (match === null) return O.none();
 	const issueNumber = safeIssueNumber(match[2] ?? "");
-	if (issueNumber === undefined) return Option.none();
-	return Option.some({ issueNumber, keyword: (match[1] ?? "").toLowerCase() as ClosingKeyword });
+	if (issueNumber === undefined) return O.none();
+	return O.some({ issueNumber, keyword: (match[1] ?? "").toLowerCase() as ClosingKeyword });
 };
 
 /**
@@ -198,7 +198,7 @@ export const parseBareLines = (text: string): ReadonlyArray<BareLineReference> =
 	const references: Array<BareLineReference> = [];
 	for (const line of text.split("\n")) {
 		const parsed = parseBareLineReference(line);
-		if (Option.isSome(parsed)) references.push(parsed.value);
+		if (O.isSome(parsed)) references.push(parsed.value);
 	}
 	return references;
 };

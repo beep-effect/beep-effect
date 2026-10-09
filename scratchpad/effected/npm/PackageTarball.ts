@@ -1,6 +1,12 @@
 import { Run } from "../commands/index.ts";
-import type { Scope } from "effect";
-import { Context, Crypto, Effect, FileSystem, Layer, Option, Schema } from "effect";
+import type * as Scope from "effect/Scope";
+import * as Context from "effect/Context";
+import * as Crypto from "effect/Crypto";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import * as Base64 from "effect/encoding/Base64";
 import { HttpClient } from "effect/http";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
@@ -12,7 +18,7 @@ import type { PublishedVersion } from "./NpmRegistry.ts";
  *
  * @public
  */
-export class TarballError extends Schema.TaggedError<TarballError>()("TarballError", {
+export class TarballError extends S.TaggedError<TarballError>()("TarballError", {
 	/**
 	 * `notFound` — the registry recorded no tarball for this version, or the
 	 * tarball URL answered 404. `http` — any other transport or non-2xx
@@ -30,19 +36,19 @@ export class TarballError extends Schema.TaggedError<TarballError>()("TarballErr
 	 * `integrityUnverifiable` — the registry vouched for an integrity but no
 	 * digest could be computed to check it, so nothing was compared.
 	 */
-	reason: Schema.Literals(["notFound", "http", "integrityMismatch", "integrityUnverifiable", "extractFailed"]),
+	reason: S.Literals(["notFound", "http", "integrityMismatch", "integrityUnverifiable", "extractFailed"]),
 	/** The package being fetched. */
-	package: Schema.String,
+	package: S.String,
 	/** The version being fetched. */
-	version: Schema.String,
+	version: S.String,
 	/** The HTTP status, for `reason: "http"` and a 404 `notFound`. */
-	status: Schema.optionalKey(Schema.Finite),
+	status: S.optionalKey(S.Finite),
 	/** The integrity the registry vouched for, for `reason: "integrityMismatch"`. */
-	expected: Schema.optionalKey(Schema.String),
+	expected: S.optionalKey(S.String),
 	/** The integrity the downloaded bytes actually have. */
-	actual: Schema.optionalKey(Schema.String),
+	actual: S.optionalKey(S.String),
 	/** The underlying failure, preserved structurally. */
-	cause: Schema.optionalKey(Schema.Defect()),
+	cause: S.optionalKey(S.Defect()),
 }) {
 	override get message(): string {
 		const what = `${this.package}@${this.version}`;
@@ -140,10 +146,10 @@ const make = Effect.fnUntraced(function* () {
 				`PackageTarball: the registry published no integrity for ${name}@${version}; the download is unverified`,
 			);
 		} else {
-			const algorithm = Option.flatMap(IntegrityHash.algorithmOf(expected), (found) =>
-				Option.fromUndefinedOr(digestAlgorithmOf(found)),
+			const algorithm = O.flatMap(IntegrityHash.algorithmOf(expected), (found) =>
+				O.fromUndefinedOr(digestAlgorithmOf(found)),
 			);
-			if (!IntegrityHash.isSri(expected) || Option.isNone(algorithm)) {
+			if (!IntegrityHash.isSri(expected) || O.isNone(algorithm)) {
 				// Not a form this can check (the yarn form names no algorithm).
 				// Saying so is the point: a silent skip here is indistinguishable
 				// from a passed verification.

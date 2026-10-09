@@ -1,6 +1,6 @@
 // @effect-diagnostics asyncFunction:skip-file globalTimers:skip-file newPromise:skip-file
 import { assert, describe, it } from "@effect/vitest";
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 import type { ProcessGuardHost, ProcessGuardOptions, ProcessGuardPolicy } from "../../effected/engine/guard.ts";
 import { ProcessGuard } from "../../effected/engine/guard.ts";
 
@@ -11,8 +11,8 @@ export const nodeFits = (): ProcessGuardOptions => ({
 	load: async () => undefined,
 });
 
-class ExitCalled extends Schema.TaggedError<ExitCalled>()("ExitCalled", {
-	code: Schema.UndefinedOr(Schema.Finite),
+class ExitCalled extends S.TaggedError<ExitCalled>()("ExitCalled", {
+	code: S.UndefinedOr(S.Finite),
 }) {
 	override readonly name = "Error";
 	override get message() {
@@ -40,7 +40,7 @@ const fakeHost = () => {
 		try {
 			listeners[event]?.(value, "uncaughtException");
 		} catch (error) {
-			if (!Schema.is(ExitCalled)(error)) throw error;
+			if (!S.is(ExitCalled)(error)) throw error;
 		}
 	};
 	return { host, stderr, exits, fire, listeners };
@@ -52,7 +52,7 @@ const settle = () => new Promise((resolve) => setTimeout(resolve, 20));
 const runGuard = (options: ProcessGuardOptions) =>
 	ProcessGuard.run(options).then(
 		() => "resolved" as const,
-		(error: unknown) => (Schema.is(ExitCalled)(error) ? ("exited" as const) : Promise.reject(error)),
+		(error: unknown) => (S.is(ExitCalled)(error) ? ("exited" as const) : Promise.reject(error)),
 	);
 
 describe("ProcessGuard.parseInjectCrash", () => {

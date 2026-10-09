@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 
 /**
  * One config dependency a `pnpm-lock.yaml` records, with the integrity pnpm
@@ -24,9 +24,9 @@ import { Schema } from "effect";
  *
  * @public
  */
-export class ConfigDependencyLock extends Schema.Class<ConfigDependencyLock>("ConfigDependencyLock")({
-	name: Schema.String,
-	specifier: Schema.String,
-	version: Schema.String,
-	integrity: Schema.String,
+export class ConfigDependencyLock extends S.Class<ConfigDependencyLock>("ConfigDependencyLock")({
+	name: S.String,
+	specifier: S.String,
+	version: S.String,
+	integrity: S.String,
 }) {}

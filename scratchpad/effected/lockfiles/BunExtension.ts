@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 
 /**
  * Extension data specific to bun lockfiles, attached to `Lockfile.extension`
@@ -12,10 +12,10 @@ import { Schema } from "effect";
  *
  * @public
  */
-export class BunExtension extends Schema.Class<BunExtension>("BunExtension")({
-	_tag: Schema.tag("bun"),
-	catalog: Schema.optionalKey(Schema.Record(Schema.String, Schema.Unknown)),
-	catalogs: Schema.optionalKey(Schema.Record(Schema.String, Schema.Record(Schema.String, Schema.Unknown))),
-	overrides: Schema.optionalKey(Schema.Record(Schema.String, Schema.String)),
-	trustedDependencies: Schema.optionalKey(Schema.Array(Schema.String)),
+export class BunExtension extends S.Class<BunExtension>("BunExtension")({
+	_tag: S.tag("bun"),
+	catalog: S.optionalKey(S.Record(S.String, S.Unknown)),
+	catalogs: S.optionalKey(S.Record(S.String, S.Record(S.String, S.Unknown))),
+	overrides: S.optionalKey(S.Record(S.String, S.String)),
+	trustedDependencies: S.String.pipe(S.Array, S.optionalKey),
 }) {}

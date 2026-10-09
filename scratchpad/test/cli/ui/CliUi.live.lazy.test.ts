@@ -1,10 +1,14 @@
 // @effect-diagnostics strictEffectProvide:skip-file asyncFunction:skip-file newPromise:skip-file
-import { Context } from "effect";
+import * as Context from "effect/Context";
 // CliUi.live hands its handle back without loading Ink: a run's first mount loads it, so a
 // host holds the handle, and can close it, before Ink has resolved. No static ink or react import here: the mock
 // below gates Ink's load, and a static import would open it.
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Exit, Fiber, PubSub, Scope } from "effect";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Fiber from "effect/Fiber";
+import * as PubSub from "effect/PubSub";
+import * as Scope from "effect/Scope";
 import type { ReactElement } from "react";
 import { vi } from "vitest";
 import { CliInteractive, CliTheme } from "../../../effected/cli/index.ts";

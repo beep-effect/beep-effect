@@ -7,9 +7,10 @@
 //
 // Private implementation module — never re-exported from `index.ts`.
 
-import { Schema, SchemaTransformation } from "effect";
+import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 
-const RawJson = Schema.Record(Schema.String, Schema.Unknown);
+const RawJson = S.Record(S.String, S.Unknown);
 
 /**
  * Build the open-JSON ↔ class wire codec for a `Schema.Class` carrying a
@@ -19,11 +20,11 @@ const RawJson = Schema.Record(Schema.String, Schema.Unknown);
  */
 export const makeWire = <Self>(
 	// biome-ignore lint/suspicious/noExplicitAny: invariant Encoded slot — a concrete type is rejected by the class-factory generics
-	Class: Schema.Codec<Self, any, any, any> & { readonly fields: Record<string, unknown> },
-): Schema.Codec<Self, { readonly [k: string]: unknown }> => {
+	Class: S.Codec<Self, any, any, any> & { readonly fields: Record<string, unknown> },
+): S.Codec<Self, { readonly [k: string]: unknown }> => {
 	const knownKeys = new Set(Object.keys(Class.fields).filter((k) => k !== "rest"));
 	const wire = RawJson.pipe(
-		Schema.decodeTo(
+		S.decodeTo(
 			Class,
 			SchemaTransformation.transform({
 				decode: (raw: { readonly [k: string]: unknown }) => {
@@ -54,5 +55,5 @@ export const makeWire = <Self>(
 			}),
 		),
 	);
-	return wire as unknown as Schema.Codec<Self, { readonly [k: string]: unknown }>;
+	return wire as unknown as S.Codec<Self, { readonly [k: string]: unknown }>;
 };

@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 import { headerNumber, headerString, retryAfterMillisFrom } from "./internal/headers.ts";
 
 /**
@@ -11,7 +11,7 @@ import { headerNumber, headerString, retryAfterMillisFrom } from "./internal/hea
  *
  * @public
  */
-export const GitHubErrorKind = Schema.Literals([
+export const GitHubErrorKind = S.Literals([
 	/** The resource is not there (404). Often not an error at all — see the `*Option` reads. */
 	"notFound",
 	/** The resource already exists (422/409 saying so). What makes `upsert` implementable. */
@@ -44,7 +44,7 @@ export const GitHubErrorKind = Schema.Literals([
  *
  * @public
  */
-export const GitHubValidationCode = Schema.Literals([
+export const GitHubValidationCode = S.Literals([
 	/** A resource the request referred to does not exist. */
 	"missing",
 	/** A required parameter was not sent. */
@@ -72,15 +72,15 @@ export const GitHubValidationCode = Schema.Literals([
  *
  * @public
  */
-export class GitHubValidationEntry extends Schema.Class<GitHubValidationEntry>("GitHubValidationEntry")({
+export class GitHubValidationEntry extends S.Class<GitHubValidationEntry>("GitHubValidationEntry")({
 	/** The resource type GitHub validated, e.g. `"Release"`. */
-	resource: Schema.optionalKey(Schema.String),
+	resource: S.optionalKey(S.String),
 	/** The parameter at fault, e.g. `"tag_name"`. */
-	field: Schema.optionalKey(Schema.String),
+	field: S.optionalKey(S.String),
 	/** GitHub's validation code — one of {@link GitHubValidationCode} when documented. */
-	code: Schema.optionalKey(Schema.String),
+	code: S.optionalKey(S.String),
 	/** GitHub's prose, when it sent any. */
-	message: Schema.optionalKey(Schema.String),
+	message: S.optionalKey(S.String),
 }) {}
 
 /**
@@ -93,15 +93,15 @@ export class GitHubValidationEntry extends Schema.Class<GitHubValidationEntry>("
  *
  * @public
  */
-export class GitHubError extends Schema.TaggedError<GitHubError>()("GitHubError", {
+export class GitHubError extends S.TaggedError<GitHubError>()("GitHubError", {
 	/** Structural routing. Branch on this, never on the rendered message. */
 	kind: GitHubErrorKind,
 	/** What was attempted: a resource method (`"GitBranch.upsert"`) or a raw route. */
-	operation: Schema.String,
+	operation: S.String,
 	/** Human-readable cause, for logs and messages. Never a routing surface. */
-	reason: Schema.String,
+	reason: S.String,
 	/** GitHub's HTTP status, when the request reached GitHub at all. */
-	status: Schema.optionalKey(Schema.Int),
+	status: S.optionalKey(S.Int),
 	/**
 	 * A server-advised delay before retrying, in milliseconds.
 	 *
@@ -111,7 +111,7 @@ export class GitHubError extends Schema.TaggedError<GitHubError>()("GitHubError"
 	 * information for a caller. Whether a failure is worth retrying at all is the
 	 * derived `retryable` getter.
 	 */
-	retryAfterMillis: Schema.optionalKey(Schema.Int),
+	retryAfterMillis: S.optionalKey(S.Int),
 	/**
 	 * GitHub's validation entries, when the failed response carried any.
 	 *
@@ -120,9 +120,9 @@ export class GitHubError extends Schema.TaggedError<GitHubError>()("GitHubError"
 	 * rather than on `reason`. Absent when GitHub sent no `errors` array — some
 	 * 422s ("Update is not a fast forward") are prose only.
 	 */
-	validation: Schema.optionalKey(Schema.Array(GitHubValidationEntry)),
+	validation: GitHubValidationEntry.pipe(S.Array, S.optionalKey),
 	/** The underlying throwable, when one exists. */
-	cause: Schema.optionalKey(Schema.Defect()),
+	cause: S.optionalKey(S.Defect()),
 }) {
 	/** `"GitBranch.upsert failed (422): Reference already exists"`. */
 	override get message(): string {

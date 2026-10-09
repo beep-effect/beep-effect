@@ -1,10 +1,16 @@
-import { Context, Effect, FileSystem, Layer, Option, Schema, Result } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import * as Result from "effect/Result";
 import { ActionEnvironment } from "./ActionEnvironment.ts";
 import { ActionOutputs } from "./ActionOutputs.ts";
 import { heredocBlock, isUsableName } from "./internal/runnerFile.ts";
 import { unstubbed } from "./internal/unstubbed.ts";
 
-const Json = Schema.fromJsonString(Schema.Unknown);
+const Json = S.fromJsonString(S.Unknown);
 
 /**
  * Raised when action state cannot be saved, read or decoded across the phase
@@ -12,7 +18,7 @@ const Json = Schema.fromJsonString(Schema.Unknown);
  *
  * @public
  */
-export class ActionStateError extends Schema.TaggedError<ActionStateError>()("ActionStateError", {
+export class ActionStateError extends S.TaggedError<ActionStateError>()("ActionStateError", {
 	/**
 	 * `missing` — no value was saved under this key in an earlier phase.
 	 * `malformed` — a value is there but is not JSON, or does not satisfy the
@@ -22,11 +28,11 @@ export class ActionStateError extends Schema.TaggedError<ActionStateError>()("Ac
 	 * no pointer to the cause. `writeFailed` — the state file could not be
 	 * appended to.
 	 */
-	reason: Schema.Literals(["missing", "malformed", "notPlainJson", "writeFailed"]),
+	reason: S.Literals(["missing", "malformed", "notPlainJson", "writeFailed"]),
 	/** The state key that was being saved or read. */
-	key: Schema.String,
+	key: S.String,
 	/** The underlying failure, preserved structurally. */
-	cause: Schema.optionalKey(Schema.Defect()),
+	cause: S.optionalKey(S.Defect()),
 }) {
 	override get message(): string {
 		switch (this.reason) {
@@ -67,14 +73,14 @@ export interface ActionStateShape {
 	 * `main` believed it saved. Action state is small by protocol, so the
 	 * per-save round-trip costs effectively nothing.
 	 */
-	readonly save: <A, I>(key: string, value: A, schema: Schema.Codec<A, I>) => Effect.Effect<void, ActionStateError>;
+	readonly save: <A, I>(key: string, value: A, schema: S.Codec<A, I>) => Effect.Effect<void, ActionStateError>;
 	/** Read a value saved by an earlier phase. */
-	readonly get: <A, I>(key: string, schema: Schema.Codec<A, I>) => Effect.Effect<A, ActionStateError>;
+	readonly get: <A, I>(key: string, schema: S.Codec<A, I>) => Effect.Effect<A, ActionStateError>;
 	/** Read a value that may not have been saved. */
 	readonly getOptional: <A, I>(
 		key: string,
-		schema: Schema.Codec<A, I>,
-	) => Effect.Effect<Option.Option<A>, ActionStateError>;
+		schema: S.Codec<A, I>,
+	) => Effect.Effect<O.Option<A>, ActionStateError>;
 	/**
 	 * Persist a secret, masking it in the runner log first.
 	 *
@@ -106,20 +112,20 @@ const make = Effect.gen(function* () {
 			yield* fs.writeFileString(path, heredocBlock(key, serialized), { flag: "a" }).pipe(Effect.mapError(writeFailed));
 		});
 
-	const read = <A, I>(key: string, schema: Schema.Codec<A, I>): Effect.Effect<Option.Option<A>, ActionStateError> =>
+	const read = <A, I>(key: string, schema: S.Codec<A, I>): Effect.Effect<O.Option<A>, ActionStateError> =>
 		Effect.gen(function* () {
 			const raw = yield* env.getOptional(stateVariable(key));
-			if (Option.isNone(raw)) {
-				return Option.none<A>();
+			if (O.isNone(raw)) {
+				return O.none<A>();
 			}
-			const decoded = yield* Schema.decodeEffect(Schema.fromJsonString(schema))(raw.value).pipe(
+			const decoded = yield* S.decodeEffect(S.fromJsonString(schema))(raw.value).pipe(
 				Effect.mapError((cause) => ActionStateError.make({ reason: "malformed", key, cause })),
 			);
-			return Option.some(decoded);
+			return O.some(decoded);
 		});
 
-	const save = Effect.fn("save")(function*<A, I>(key: string, value: A, schema: Schema.Codec<A, I>) {
-			const encoded = yield* Schema.encodeUnknownEffect(schema)(value).pipe(
+	const save = Effect.fn("save")(function*<A, I>(key: string, value: A, schema: S.Codec<A, I>) {
+			const encoded = yield* S.encodeUnknownEffect(schema)(value).pipe(
 				Effect.mapError((cause) => ActionStateError.make({ reason: "malformed", key, cause })),
 			);
 			// Prove at save time that the encoded form survives the boundary it is
@@ -131,12 +137,12 @@ const make = Effect.gen(function* () {
 			// noise next to the file append.
 			const { parsed, serialized } = yield* Effect.try({
 				try: () => {
-					const serialized = Result.getOrThrowWith(Schema.encodeResult(Json)(encoded), (error) => error);
-					return { parsed: Result.getOrThrowWith(Schema.decodeResult(Json)(serialized), (error) => error) as unknown, serialized };
+					const serialized = Result.getOrThrowWith(S.encodeResult(Json)(encoded), (error) => error);
+					return { parsed: Result.getOrThrowWith(S.decodeResult(Json)(serialized), (error) => error) as unknown, serialized };
 				},
 				catch: (cause) => ActionStateError.make({ reason: "notPlainJson", key, cause }),
 			});
-			yield* Schema.decodeUnknownEffect(schema)(parsed).pipe(
+			yield* S.decodeUnknownEffect(schema)(parsed).pipe(
 				Effect.mapError((cause) => ActionStateError.make({ reason: "notPlainJson", key, cause })),
 			);
 			yield* write(key, serialized);
@@ -145,13 +151,13 @@ const make = Effect.gen(function* () {
 	return {
 		save,
 		getOptional: read,
-		get: <A, I>(key: string, schema: Schema.Codec<A, I>) =>
+		get: <A, I>(key: string, schema: S.Codec<A, I>) =>
 			Effect.flatMap(read(key, schema), (found) =>
 				Effect.fromOption(found, () => ActionStateError.make({ reason: "missing", key })),
 			),
 		saveSecret: (key: string, secret: string) =>
 			// Mask first, then persist. The ordering is the guarantee.
-			Effect.flatMap(outputs.setSecret(secret), () => write(key, Result.getOrThrowWith(Schema.encodeResult(Json)(secret), (error) => error))),
+			Effect.flatMap(outputs.setSecret(secret), () => write(key, Result.getOrThrowWith(S.encodeResult(Json)(secret), (error) => error))),
 	} satisfies ActionStateShape;
 });
 

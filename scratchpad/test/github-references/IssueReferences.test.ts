@@ -1,5 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Option } from "effect";
+import * as O from "effect/Option";
 import {
 	CLOSING_KEYWORDS,
 	harvestIssueReferences,
@@ -91,8 +91,8 @@ describe("IssueReferences.parseBareLineReference", () => {
 				`${keyword.toUpperCase()} #7`,
 			]) {
 				const parsed = parseBareLineReference(line);
-				assert.isTrue(Option.isSome(parsed), line);
-				const reference = Option.getOrThrow(parsed);
+				assert.isTrue(O.isSome(parsed), line);
+				const reference = O.getOrThrow(parsed);
 				assert.strictEqual(reference.keyword, keyword, line);
 				assert.strictEqual(reference.issueNumber, 7, line);
 			}
@@ -101,7 +101,7 @@ describe("IssueReferences.parseBareLineReference", () => {
 
 	it("trims surrounding whitespace before parsing", () => {
 		const parsed = parseBareLineReference("   Closes: #12\t ");
-		assert.strictEqual(Option.getOrThrow(parsed).issueNumber, 12);
+		assert.strictEqual(O.getOrThrow(parsed).issueNumber, 12);
 	});
 
 	it("rejects everything that is not exactly one bare reference", () => {
@@ -117,12 +117,12 @@ describe("IssueReferences.parseBareLineReference", () => {
 			"fixes\n#12", // an embedded newline means this was never one line
 			"", // an empty line carries nothing
 		];
-		for (const line of negatives) assert.isTrue(Option.isNone(parseBareLineReference(line)), line);
+		for (const line of negatives) assert.isTrue(O.isNone(parseBareLineReference(line)), line);
 	});
 
 	it("rejects a number past Number.MAX_SAFE_INTEGER rather than rounding it", () => {
-		assert.isTrue(Option.isNone(parseBareLineReference("fixes #9007199254740993")));
-		assert.isTrue(Option.isSome(parseBareLineReference(`fixes #${Number.MAX_SAFE_INTEGER}`)));
+		assert.isTrue(O.isNone(parseBareLineReference("fixes #9007199254740993")));
+		assert.isTrue(O.isSome(parseBareLineReference(`fixes #${Number.MAX_SAFE_INTEGER}`)));
 	});
 });
 

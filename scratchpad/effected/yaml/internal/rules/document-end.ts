@@ -6,16 +6,16 @@
 //
 // Opt-in: absent from both presets.
 
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 import { YamlEdit } from "../../YamlEdit.ts";
 import type { LintContext, YamlRule } from "../../YamlLintRule.ts";
 import { StyleVote, YamlLintDiagnostic, YamlLintSeverity } from "../../YamlLintRule.ts";
 import type { YamlToken } from "../../YamlToken.ts";
 
 /** Options for `document-end`: require (`true`, default) or forbid the marker. */
-export const documentEndOptions = Schema.Struct({
-	severity: Schema.optionalKey(YamlLintSeverity),
-	present: Schema.optionalKey(Schema.Boolean),
+export const documentEndOptions = S.Struct({
+	severity: S.optionalKey(YamlLintSeverity),
+	present: S.optionalKey(S.Boolean),
 });
 
 const TRIVIA = new Set(["newline", "whitespace", "comment", "byte-order-mark"]);

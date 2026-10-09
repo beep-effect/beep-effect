@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 
 /**
  * The pnpm `catalogs:` record shape as it appears in `pnpm-lock.yaml`:
@@ -27,22 +27,22 @@ export type PnpmCatalogs = Record<
  *
  * @public
  */
-export class PnpmExtension extends Schema.Class<PnpmExtension>("PnpmExtension")({
-	_tag: Schema.tag("pnpm"),
-	catalogs: Schema.optionalKey(
-		Schema.Record(
-			Schema.String,
-			Schema.Record(
-				Schema.String,
-				Schema.Union([Schema.String, Schema.Struct({ specifier: Schema.String, version: Schema.String })]),
+export class PnpmExtension extends S.Class<PnpmExtension>("PnpmExtension")({
+	_tag: S.tag("pnpm"),
+	catalogs: S.optionalKey(
+		S.Record(
+			S.String,
+			S.Record(
+				S.String,
+				S.Union([S.String, S.Struct({ specifier: S.String, version: S.String })]),
 			),
 		),
 	),
-	overrides: Schema.optionalKey(Schema.Record(Schema.String, Schema.String)),
-	settings: Schema.optionalKey(
-		Schema.Struct({
-			autoInstallPeers: Schema.optionalKey(Schema.Boolean),
-			excludeLinksFromLockfile: Schema.optionalKey(Schema.Boolean),
+	overrides: S.optionalKey(S.Record(S.String, S.String)),
+	settings: S.optionalKey(
+		S.Struct({
+			autoInstallPeers: S.optionalKey(S.Boolean),
+			excludeLinksFromLockfile: S.optionalKey(S.Boolean),
 		}),
 	),
 }) {}

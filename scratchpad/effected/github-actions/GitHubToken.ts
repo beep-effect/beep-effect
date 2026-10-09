@@ -1,7 +1,14 @@
 import type { BotIdentity, GitHubAppShape, PermissionLevel, RetryPolicy } from "../github/index.ts";
 import { GitHubApp, GitHubClient, InstallationToken, TokenPermissions } from "../github/index.ts";
-import type { Redacted } from "effect";
-import { DateTime, Duration, Effect, Exit, Layer, Option, Result, Schema } from "effect";
+import type * as Redacted from "effect/Redacted";
+import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import type { ActionStateError } from "./ActionState.ts";
 import { ActionState } from "./ActionState.ts";
 import { Secret } from "./Secret.ts";
@@ -11,15 +18,15 @@ import { Secret } from "./Secret.ts";
  *
  * @public
  */
-export class GitHubTokenError extends Schema.TaggedError<GitHubTokenError>()("GitHubTokenError", {
+export class GitHubTokenError extends S.TaggedError<GitHubTokenError>()("GitHubTokenError", {
 	/**
 	 * One reason, deliberately: everything else that can go wrong here already
 	 * has an owner — persistence is an `ActionStateError`, minting is a
 	 * `GitHubAppError`, and scope verification is a `TokenPermissionError`.
 	 */
-	reason: Schema.Literals(["expired"]),
+	reason: S.Literals(["expired"]),
 	/** When GitHub stopped accepting it, ISO-8601. */
-	expiresAt: Schema.String,
+	expiresAt: S.String,
 }) {
 	override get message(): string {
 		return `The installation token persisted by an earlier phase expired at ${this.expiresAt}. An installation token lives about an hour and no later phase can re-mint one, so a long-running phase must provision its own.`;
@@ -309,7 +316,7 @@ export class GitHubToken {
 		const app = yield* GitHubApp;
 		const state = yield* ActionState;
 		const found = yield* state.getOptional(options.stateKey ?? DEFAULT_KEY, InstallationToken);
-		if (Option.isNone(found)) {
+		if (O.isNone(found)) {
 			return;
 		}
 		const now = yield* DateTime.now;

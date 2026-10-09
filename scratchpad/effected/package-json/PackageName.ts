@@ -4,8 +4,9 @@
 // `PackageName.isScoped`), and the `InvalidPackageNameError` the concept
 // raises.
 
-import type { Brand } from "effect";
-import { Option, Schema } from "effect";
+import type * as Brand from "effect/Brand";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
 
 /**
  * Indicates that a string could not be used as a valid npm package name.
@@ -15,9 +16,9 @@ import { Option, Schema } from "effect";
  *
  * @public
  */
-export class InvalidPackageNameError extends Schema.TaggedError<InvalidPackageNameError>()("InvalidPackageNameError", {
+export class InvalidPackageNameError extends S.TaggedError<InvalidPackageNameError>()("InvalidPackageNameError", {
 	/** The raw input string that failed validation. */
-	input: Schema.String,
+	input: S.String,
 }) {
 	override get message(): string {
 		return `Invalid package name "${this.input}": does not satisfy npm naming rules`;
@@ -38,9 +39,9 @@ const MAX_LENGTH = 214;
  *
  * @public
  */
-export const ScopedPackageName = Schema.String.pipe(
-	Schema.check(Schema.isPattern(SCOPED_RE), Schema.isMaxLength(MAX_LENGTH)),
-	Schema.brand("ScopedPackageName"),
+export const ScopedPackageName = S.String.pipe(
+	S.check(S.isPattern(SCOPED_RE), S.isMaxLength(MAX_LENGTH)),
+	S.brand("ScopedPackageName"),
 );
 
 /**
@@ -55,9 +56,9 @@ export type ScopedPackageName = string & Brand.Brand<"ScopedPackageName">;
  *
  * @public
  */
-export const UnscopedPackageName = Schema.String.pipe(
-	Schema.check(Schema.isPattern(UNSCOPED_RE), Schema.isMaxLength(MAX_LENGTH)),
-	Schema.brand("UnscopedPackageName"),
+export const UnscopedPackageName = S.String.pipe(
+	S.check(S.isPattern(UNSCOPED_RE), S.isMaxLength(MAX_LENGTH)),
+	S.brand("UnscopedPackageName"),
 );
 
 /**
@@ -79,7 +80,7 @@ interface PackageNameStatics {
 	/** Whether the string satisfies npm's package-name rules. */
 	readonly isValid: (name: string) => boolean;
 	/** The scope of a scoped name (`@scope/x` → `Some("scope")`), else `None`. */
-	readonly scope: (name: string) => Option.Option<string>;
+	readonly scope: (name: string) => O.Option<string>;
 	/** The unscoped portion of a name (`@scope/x` → `"x"`; `x` → `"x"`). */
 	readonly unscoped: (name: string) => string;
 	/** Whether the name is scoped (starts with `@`). */
@@ -89,10 +90,10 @@ interface PackageNameStatics {
 const isValid = (name: string): boolean =>
 	name.length > 0 && name.length <= MAX_LENGTH && (UNSCOPED_RE.test(name) || SCOPED_RE.test(name));
 
-const scope = (name: string): Option.Option<string> => {
-	if (!name.startsWith("@")) return Option.none();
+const scope = (name: string): O.Option<string> => {
+	if (!name.startsWith("@")) return O.none();
 	const slash = name.indexOf("/");
-	return slash === -1 ? Option.none() : Option.some(name.slice(1, slash));
+	return slash === -1 ? O.none() : O.some(name.slice(1, slash));
 };
 
 const unscoped = (name: string): string => {
@@ -121,7 +122,7 @@ const isScoped = (name: string): boolean => name.startsWith("@");
  *
  * @public
  */
-export const PackageName = Object.assign(Schema.Union([ScopedPackageName, UnscopedPackageName]), {
+export const PackageName = Object.assign(S.Union([ScopedPackageName, UnscopedPackageName]), {
 	isValid,
 	scope,
 	unscoped,

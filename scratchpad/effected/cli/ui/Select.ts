@@ -1,4 +1,4 @@
-import { Option } from "effect";
+import * as O from "effect/Option";
 import type { ReactElement } from "react";
 import { Fmt } from "../Fmt.ts";
 import type { Screen } from "./CliUi.ts";
@@ -221,9 +221,9 @@ export class Select {
 	 *
 	 * @param state - where the select is
 	 */
-	static readonly chosen = <A>(state: SelectState<A>): Option.Option<A> => {
+	static readonly chosen = <A>(state: SelectState<A>): O.Option<A> => {
 		const choice = state.choices[state.viewport.cursor];
-		return state.submitted && choice !== undefined ? Option.some(choice.value) : Option.none();
+		return state.submitted && choice !== undefined ? O.some(choice.value) : O.none();
 	};
 
 	/** The keys: the viewport's moves, enter choose, q cancel. */

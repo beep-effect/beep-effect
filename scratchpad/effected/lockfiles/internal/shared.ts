@@ -1,6 +1,8 @@
 import type { DependencyField, IntegrityHashBrand } from "../../npm/index.ts";
 import { DependencySpecifier, IntegrityHash } from "../../npm/index.ts";
-import { Effect, Exit, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as S from "effect/Schema";
 import { dual } from "effect/Function";
 import type { BunExtension } from "../BunExtension.ts";
 import { ImporterDependency } from "../ImporterDependency.ts";
@@ -42,10 +44,10 @@ export const toIntegrityHash = (
 	raw: string | undefined,
 ): Effect.Effect<IntegrityHashBrand | undefined, ParseFailure> => {
 	if (raw === undefined) return Effect.as(Effect.void, undefined);
-	return Schema.decodeEffect(IntegrityHash)(raw).pipe(Effect.mapError(validationFailure));
+	return S.decodeEffect(IntegrityHash)(raw).pipe(Effect.mapError(validationFailure));
 };
 
-const decodeSpecifier = Schema.decodeUnknownExit(DependencySpecifier.FromString);
+const decodeSpecifier = S.decodeUnknownExit(DependencySpecifier.FromString);
 
 /**
  * Split pnpm's peer-disambiguation suffix off a recorded string: the suffix is
@@ -293,8 +295,8 @@ export const requireLockfileVersion: {
  *
  * @internal
  */
-const PnpmVersionProbe = Schema.Struct({
-	lockfileVersion: Schema.Union([Schema.String, Schema.Finite]),
+const PnpmVersionProbe = S.Struct({
+	lockfileVersion: S.Union([S.String, S.Finite]),
 });
 
 /**
@@ -309,7 +311,7 @@ const PnpmVersionProbe = Schema.Struct({
  * @internal
  */
 export const gatePnpmVersion = (document: unknown): Effect.Effect<string, ParseFailure> =>
-	Schema.decodeUnknownEffect(PnpmVersionProbe)(document).pipe(
+	S.decodeUnknownEffect(PnpmVersionProbe)(document).pipe(
 		Effect.mapError(validationFailure),
 		Effect.flatMap((probe) =>
 			requireLockfileVersion("pnpm", probe.lockfileVersion).pipe(Effect.as(String(probe.lockfileVersion))),

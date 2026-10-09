@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 
 /**
  * Where a tool must be found for a resolution to succeed.
@@ -10,7 +10,7 @@ import { Schema } from "effect";
  *
  * @public
  */
-export const ToolSource = Schema.Literals(["any", "global", "local", "both"]);
+export const ToolSource = S.Literals(["any", "global", "local", "both"]);
 
 /**
  * The decoded type of {@link (ToolSource:variable)}.
@@ -30,7 +30,7 @@ export type ToolSource = typeof ToolSource.Type;
  *
  * @public
  */
-export const MismatchPolicy = Schema.Literals(["preferLocal", "preferGlobal", "fail"]);
+export const MismatchPolicy = S.Literals(["preferLocal", "preferGlobal", "fail"]);
 
 /**
  * The decoded type of {@link (MismatchPolicy:variable)}.
@@ -44,9 +44,9 @@ export type MismatchPolicy = typeof MismatchPolicy.Type;
  *
  * @public
  */
-export class VersionFlag extends Schema.TaggedClass<VersionFlag>()("VersionFlag", {
+export class VersionFlag extends S.TaggedClass<VersionFlag>()("VersionFlag", {
 	/** The flag to pass, e.g. `"--version"`. Split on spaces into argv. */
-	flag: Schema.String,
+	flag: S.String,
 	/**
 	 * A regular-expression source whose **first capture group** is the version.
 	 *
@@ -56,7 +56,7 @@ export class VersionFlag extends Schema.TaggedClass<VersionFlag>()("VersionFlag"
 	 * `v22.1.0`) without configuration. The pattern is developer-supplied and
 	 * therefore trusted; it is never built from a tool's output.
 	 */
-	pattern: Schema.optionalKey(Schema.String),
+	pattern: S.optionalKey(S.String),
 }) {}
 
 /**
@@ -64,11 +64,11 @@ export class VersionFlag extends Schema.TaggedClass<VersionFlag>()("VersionFlag"
  *
  * @public
  */
-export class VersionJson extends Schema.TaggedClass<VersionJson>()("VersionJson", {
+export class VersionJson extends S.TaggedClass<VersionJson>()("VersionJson", {
 	/** The flag(s) to pass, e.g. `"info --json"`. Split on spaces into argv. */
-	flag: Schema.String,
+	flag: S.String,
 	/** Dotted path to the version, e.g. `"deno.version"`. */
-	path: Schema.String,
+	path: S.String,
 }) {}
 
 /**
@@ -76,7 +76,7 @@ export class VersionJson extends Schema.TaggedClass<VersionJson>()("VersionJson"
  *
  * @public
  */
-export class VersionNone extends Schema.TaggedClass<VersionNone>()("VersionNone", {}) {}
+export class VersionNone extends S.TaggedClass<VersionNone>()("VersionNone", {}) {}
 
 /**
  * How to learn a tool's version.
@@ -88,7 +88,7 @@ export class VersionNone extends Schema.TaggedClass<VersionNone>()("VersionNone"
  *
  * @public
  */
-export const VersionProbe = Schema.Union([VersionFlag, VersionJson, VersionNone]);
+export const VersionProbe = S.Union([VersionFlag, VersionJson, VersionNone]);
 
 /**
  * The decoded type of {@link (VersionProbe:variable)}.
@@ -102,9 +102,9 @@ export type VersionProbe = typeof VersionProbe.Type;
  *
  * @public
  */
-export class Tool extends Schema.Class<Tool>("Tool")({
+export class Tool extends S.Class<Tool>("Tool")({
 	/** The executable name, e.g. `"biome"`. */
-	name: Schema.String,
+	name: S.String,
 	/** How to learn its version. */
 	version: VersionProbe,
 	/** Where it must be found. */

@@ -3,7 +3,10 @@
 // scope): every view over one volume, and the node-shaped mutators.
 
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, FileSystem, Path, PlatformError } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Path from "effect/Path";
+import * as PlatformError from "effect/PlatformError";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
 import { runMutation } from "../../effected/memfs/internal/ports.ts";
 import { denied, thrown } from "./helpers.ts";

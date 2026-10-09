@@ -1,6 +1,10 @@
 // @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
-import { Console, Deferred, Effect, Fiber, PubSub } from "effect";
+import * as Console from "effect/Console";
+import * as Deferred from "effect/Deferred";
+import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
+import * as PubSub from "effect/PubSub";
 import { CliUi, Select } from "../../../effected/cli/ui.ts";
 import { CliUiTest } from "../../../effected/cli/ui-testing.ts";
 import type { Ev } from "../helpers/live.ts";
@@ -37,7 +41,7 @@ describe("CliUiTest.session: transcript and written", () => {
 		Effect.gen(function* () {
 			const session = yield* CliUiTest.session({ color: "none" });
 			const gate = yield* Deferred.make<void>();
-			const fiber = yield* Effect.forkScoped(syncing(gate).pipe(Effect.provide(session.layer)));
+			const fiber = yield* gate.pipe(syncing, Effect.provide(session.layer), Effect.forkScoped);
 			const view = yield* session.next({ contains: "RUN 1" });
 			assert.include(yield* view.plainFrame, "started");
 			yield* Deferred.succeed(gate, undefined);
@@ -102,7 +106,7 @@ describe("CliUiTest.session: per-stream transcripts", () => {
 		Effect.gen(function* () {
 			const session = yield* CliUiTest.session({ color: "none" });
 			const gate = yield* Deferred.make<void>();
-			const fiber = yield* Effect.forkScoped(counting(gate).pipe(Effect.provide(session.layer)));
+			const fiber = yield* gate.pipe(counting, Effect.provide(session.layer), Effect.forkScoped);
 			yield* session.next({ contains: "RUN 1" });
 			yield* Deferred.succeed(gate, undefined);
 			yield* Fiber.join(fiber);

@@ -6,7 +6,7 @@ import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it, layer } from "@effect/vitest";
 import type { Offence } from "../../effected/workspaces/testing.ts";
 import { SourceBoundary } from "../../effected/workspaces/testing.ts";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 
 const SRC = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "effected", "cli");
 

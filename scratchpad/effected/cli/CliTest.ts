@@ -1,5 +1,9 @@
-import type { PlatformError, Scope } from "effect";
-import { Effect, FileSystem, Path, Stream } from "effect";
+import type * as PlatformError from "effect/PlatformError";
+import type * as Scope from "effect/Scope";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Path from "effect/Path";
+import * as Stream from "effect/Stream";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 
 /**
@@ -59,7 +63,7 @@ export interface RunResult {
 }
 
 const text = <E, R>(stream: Stream.Stream<Uint8Array, E, R>): Effect.Effect<string, E, R> =>
-	Stream.mkString(Stream.decodeText(stream));
+	stream.pipe(Stream.decodeText, Stream.mkString);
 
 /**
  * Spawn a built CLI bin hermetically and read its exit code and streams as data.

@@ -31,7 +31,10 @@
 import { assert, describe, it } from "@effect/vitest";
 import type { IntegrityHashBrand } from "../../effected/npm/index.ts";
 import { DependencySpecifier } from "../../effected/npm/index.ts";
-import { Arbitrary, Effect, Result, Schema } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
+import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
+import * as Schema from "effect/Schema";
 import { ImporterDependency } from "../../effected/lockfiles/ImporterDependency.ts";
 import { Lockfile } from "../../effected/lockfiles/Lockfile.ts";
 import { LockfileImporter } from "../../effected/lockfiles/LockfileImporter.ts";

@@ -3,7 +3,8 @@
 // another is written a throttle period later, which can land after the harness's settle has already read the screen.
 // The harness raises Ink's maxFps so that cannot happen; this pins the option it mounts with, on both production paths.
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Fiber } from "effect";
+import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
 import { vi } from "vitest";
 import { CliUi, Select } from "../../../effected/cli/ui.ts";
 import { CliUiTest } from "../../../effected/cli/ui-testing.ts";

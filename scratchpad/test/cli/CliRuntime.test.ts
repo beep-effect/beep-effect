@@ -1,7 +1,12 @@
 // @effect-diagnostics strictEffectProvide:skip-file
-import { Data } from "effect";
+import * as F from "effect/Function";
+import * as Data from "effect/Data";
 import { assert, describe, it } from "@effect/vitest";
-import { Cause, Console, Effect, Exit, Runtime } from "effect";
+import * as Cause from "effect/Cause";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Runtime from "effect/Runtime";
 import { CliError } from "effect/cli";
 import { CliLogger } from "../../effected/cli/CliLogger.ts";
 import { CliRuntime } from "../../effected/cli/CliRuntime.ts";
@@ -45,7 +50,7 @@ const failureOf = <A>(exit: Exit.Exit<A, Error>): unknown =>
 describe("CliRuntime.reportFailures", () => {
 	it.effect("reports through the program's own logger, on stderr", () =>
 		Effect.gen(function* () {
-			const { out, err, exit } = yield* run(Effect.fail(new TestError("boom")));
+			const { out, err, exit } = yield* F.pipe(new TestError("boom"), Effect.fail, run);
 
 			assert.deepStrictEqual(err, ["[FAIL] Error: boom"]);
 			// The bug this exists to prevent is the report landing on stdout.
@@ -56,14 +61,14 @@ describe("CliRuntime.reportFailures", () => {
 
 	it.effect("re-fails rather than swallowing, so a broken run cannot exit zero", () =>
 		Effect.gen(function* () {
-			const { exit } = yield* run(Effect.fail(new TestError("boom")));
+			const { exit } = yield* F.pipe(new TestError("boom"), Effect.fail, run);
 			assert.strictEqual(Exit.isSuccess(exit), false);
 		}),
 	);
 
 	it.effect("marks the error so the runtime does NOT report it a second time", () =>
 		Effect.gen(function* () {
-			const { exit } = yield* run(Effect.fail(new TestError("boom")));
+			const { exit } = yield* F.pipe(new TestError("boom"), Effect.fail, run);
 			const error = failureOf(exit);
 
 			// Read through core's own getter, not our property. The polarity is
@@ -95,7 +100,7 @@ describe("CliRuntime.reportFailures", () => {
 			const kept = yield* run(Effect.fail(explicitlyOne), { exitCode: 7 });
 			const defaulted = yield* run(Effect.fail(unmarked), { exitCode: 7 });
 
-			const codeOf = (exit: Exit.Exit<never, Error>): number => Runtime.getErrorExitCode(failureOf(exit));
+			const codeOf = (exit: Exit.Exit<never, Error>): number => exit.pipe(failureOf, Runtime.getErrorExitCode);
 
 			// `getErrorExitCode` answers 1 for both an error marked 1 and an unmarked
 			// one, so reading it alone would let the option override a deliberate 1.
@@ -150,7 +155,7 @@ describe("CliRuntime.reportFailures", () => {
 		Effect.gen(function* () {
 			const flags: Array<[unknown, boolean]> = [];
 			const typed = new Error("typed");
-			yield* run(Effect.failCause(Cause.combine(Cause.die(new TestError("bug")), Cause.fail(typed))), {
+			yield* run(F.pipe(new TestError("bug"), Cause.die, Cause.combine(Cause.fail(typed)), Effect.failCause), {
 				render: (error, { isDefect }) => {
 					flags.push([error, isDefect]);
 					return String(error);
@@ -186,7 +191,7 @@ describe("CliRuntime.reportFailures and ShowHelp", () => {
 	it.effect("never renders a ShowHelp: runWith already printed help", () =>
 		Effect.gen(function* () {
 			const help = CliError.ShowHelp.make({ commandPath: ["tool"], errors: [] });
-			const { out, err } = yield* run(Effect.fail(help));
+			const { out, err } = yield* F.pipe(help, Effect.fail, run);
 			assert.deepStrictEqual(err, []);
 			assert.deepStrictEqual(out, []);
 		}),
@@ -195,8 +200,8 @@ describe("CliRuntime.reportFailures and ShowHelp", () => {
 	it.effect("a bare-root ShowHelp (no errors) exits 0", () =>
 		Effect.gen(function* () {
 			const help = CliError.ShowHelp.make({ commandPath: ["tool"], errors: [] });
-			const { exit } = yield* run(Effect.fail(help));
-			assert.strictEqual(Runtime.getErrorExitCode(failureOf(exit)), 0);
+			const { exit } = yield* F.pipe(help, Effect.fail, run);
+			assert.strictEqual(exit.pipe(failureOf, Runtime.getErrorExitCode), 0);
 		}),
 	);
 
@@ -206,18 +211,18 @@ describe("CliRuntime.reportFailures and ShowHelp", () => {
 				commandPath: ["tool"],
 				errors: [CliError.UnrecognizedOption.make({ option: "--nope", suggestions: [] })],
 			});
-			const { exit } = yield* run(Effect.fail(help));
-			assert.strictEqual(Runtime.getErrorExitCode(failureOf(exit)), 64);
+			const { exit } = yield* F.pipe(help, Effect.fail, run);
+			assert.strictEqual(exit.pipe(failureOf, Runtime.getErrorExitCode), 64);
 			const custom = yield* run(Effect.fail(help), { usageExitCode: 2 });
-			assert.strictEqual(Runtime.getErrorExitCode(failureOf(custom.exit)), 2);
+			assert.strictEqual(custom.exit.pipe(failureOf, Runtime.getErrorExitCode), 2);
 		}),
 	);
 
 	it.effect("never renders the CliExit sentinel, and keeps its code", () =>
 		Effect.gen(function* () {
-			const { err, exit } = yield* run(Effect.fail(new ExitRequested(2)));
+			const { err, exit } = yield* F.pipe(new ExitRequested(2), Effect.fail, run);
 			assert.deepStrictEqual(err, []);
-			assert.strictEqual(Runtime.getErrorExitCode(failureOf(exit)), 2);
+			assert.strictEqual(exit.pipe(failureOf, Runtime.getErrorExitCode), 2);
 		}),
 	);
 

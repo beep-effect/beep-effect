@@ -1,10 +1,20 @@
 // @effect-diagnostics strictEffectProvide:skip-file
-import { Data } from "effect";
+import * as Data from "effect/Data";
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
 import type { AudienceKind, StreamEnv } from "../../effected/env/index.ts";
 import { Audience, TerminalEnv } from "../../effected/env/index.ts";
-import { Cause, ConfigProvider, Console, Context, Effect, Exit, Layer, Runtime, Schema, Stdio, Terminal } from "effect";
+import * as Cause from "effect/Cause";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Console from "effect/Console";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Layer from "effect/Layer";
+import * as Runtime from "effect/Runtime";
+import * as S from "effect/Schema";
+import * as Stdio from "effect/Stdio";
+import * as Terminal from "effect/Terminal";
 import { Command } from "effect/cli";
 import type { Block, Document, RenderContext } from "../../effected/cli/index.ts";
 import {
@@ -142,14 +152,12 @@ describe("CliFailure.toDoc: who writes the document", () => {
 });
 
 describe("CliFailure.toDoc: a schema failure", () => {
-	const Config = Schema.Struct({
-		owner: Schema.String,
-		groups: Schema.Record(Schema.String, Schema.Struct({ repos: Schema.Array(Schema.String) })),
+	const Config = S.Struct({
+		owner: S.String,
+		groups: S.Record(S.String, S.Struct({ repos: S.Array(S.String) })),
 	});
 	const decode = (input: unknown) =>
-		Effect.runSync(
-			Effect.exit(Schema.decodeUnknownEffect(Config)(input, { onExcessProperty: "error", errors: "all" })),
-		);
+		S.decodeUnknownEffect(Config)(input, { onExcessProperty: "error", errors: "all" }).pipe(Effect.exit, Effect.runSync);
 	const failureOf = (input: unknown): { readonly issue: unknown } => {
 		const exit = decode(input);
 		if (!Exit.isFailure(exit)) throw new Error("expected a failure");
@@ -407,7 +415,7 @@ describe("CliRuntime: the default failure path", () => {
 				Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(env)),
 				Effect.provideService(Console.Console, double),
 			);
-			const code = Exit.isFailure(exit) ? Runtime.getErrorExitCode(Cause.squash(exit.cause)) : 0;
+			const code = Exit.isFailure(exit) ? exit.cause.pipe(Cause.squash, Runtime.getErrorExitCode) : 0;
 			return { err, out, code };
 		});
 

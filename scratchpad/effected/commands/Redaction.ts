@@ -1,4 +1,4 @@
-import { Redacted } from "effect";
+import * as Redacted from "effect/Redacted";
 
 /**
  * The placeholder every redaction writes in place of a secret.

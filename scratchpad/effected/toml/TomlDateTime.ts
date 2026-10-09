@@ -7,7 +7,7 @@
 // Leaf module: imports only `effect`. The scanner constructs these, value
 // stringify prints them, and the corpus harness compares them.
 
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 
 /** Zero-pad `value` to `width` digits (never truncates a wider value). */
 function pad(value: number, width: number): string {
@@ -30,7 +30,7 @@ function daysInMonth(year: number, month: number): number {
 }
 
 /** Class-level filter shared by every class carrying a `{ year, month, day }` triple. */
-const isRealCalendarDate = Schema.makeFilter(
+const isRealCalendarDate = S.makeFilter(
 	({ year, month, day }: { readonly year: number; readonly month: number; readonly day: number }) => {
 		const max = daysInMonth(year, month);
 		return day <= max || `day ${day} does not exist in ${pad(year, 4)}-${pad(month, 2)} (month has ${max} days)`;
@@ -39,17 +39,17 @@ const isRealCalendarDate = Schema.makeFilter(
 );
 
 const dateFields = {
-	year: Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: 9999 })),
-	month: Schema.Int.check(Schema.isBetween({ minimum: 1, maximum: 12 })),
-	day: Schema.Int.check(Schema.isBetween({ minimum: 1, maximum: 31 })),
+	year: S.Int.check(S.isBetween({ minimum: 0, maximum: 9999 })),
+	month: S.Int.check(S.isBetween({ minimum: 1, maximum: 12 })),
+	day: S.Int.check(S.isBetween({ minimum: 1, maximum: 31 })),
 };
 
 const timeFields = {
-	hour: Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: 23 })),
-	minute: Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: 59 })),
+	hour: S.Int.check(S.isBetween({ minimum: 0, maximum: 23 })),
+	minute: S.Int.check(S.isBetween({ minimum: 0, maximum: 59 })),
 	// 60 tolerates the RFC 3339 leap second; TOML does not itself validate it.
-	second: Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: 60 })),
-	nanosecond: Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: 999_999_999 })),
+	second: S.Int.check(S.isBetween({ minimum: 0, maximum: 60 })),
+	nanosecond: S.Int.check(S.isBetween({ minimum: 0, maximum: 999_999_999 })),
 };
 
 /** `YYYY-MM-DD`. */
@@ -93,8 +93,8 @@ function formatOffset(offsetMinutes: number): string {
  *
  * @public
  */
-export class TomlLocalDate extends Schema.Class<TomlLocalDate>("TomlLocalDate")(
-	Schema.Struct(dateFields).check(isRealCalendarDate),
+export class TomlLocalDate extends S.Class<TomlLocalDate>("TomlLocalDate")(
+	S.Struct(dateFields).check(isRealCalendarDate),
 ) {
 	override toString(): string {
 		return formatDate(this);
@@ -107,7 +107,7 @@ export class TomlLocalDate extends Schema.Class<TomlLocalDate>("TomlLocalDate")(
  *
  * @public
  */
-export class TomlLocalTime extends Schema.Class<TomlLocalTime>("TomlLocalTime")(timeFields) {
+export class TomlLocalTime extends S.Class<TomlLocalTime>("TomlLocalTime")(timeFields) {
 	override toString(): string {
 		return formatTime(this);
 	}
@@ -119,8 +119,8 @@ export class TomlLocalTime extends Schema.Class<TomlLocalTime>("TomlLocalTime")(
  *
  * @public
  */
-export class TomlLocalDateTime extends Schema.Class<TomlLocalDateTime>("TomlLocalDateTime")(
-	Schema.Struct({ ...dateFields, ...timeFields }).check(isRealCalendarDate),
+export class TomlLocalDateTime extends S.Class<TomlLocalDateTime>("TomlLocalDateTime")(
+	S.Struct({ ...dateFields, ...timeFields }).check(isRealCalendarDate),
 ) {
 	override toString(): string {
 		return `${formatDate(this)}T${formatTime(this)}`;
@@ -134,11 +134,11 @@ export class TomlLocalDateTime extends Schema.Class<TomlLocalDateTime>("TomlLoca
  *
  * @public
  */
-export class TomlOffsetDateTime extends Schema.Class<TomlOffsetDateTime>("TomlOffsetDateTime")(
-	Schema.Struct({
+export class TomlOffsetDateTime extends S.Class<TomlOffsetDateTime>("TomlOffsetDateTime")(
+	S.Struct({
 		...dateFields,
 		...timeFields,
-		offsetMinutes: Schema.Int.check(Schema.isBetween({ minimum: -1439, maximum: 1439 })),
+		offsetMinutes: S.Int.check(S.isBetween({ minimum: -1439, maximum: 1439 })),
 	}).check(isRealCalendarDate),
 ) {
 	override toString(): string {

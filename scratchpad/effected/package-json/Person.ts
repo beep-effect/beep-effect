@@ -12,7 +12,10 @@
 // object form land in `rest` and flatten back on encode, instead of being
 // silently dropped.
 
-import { Effect, Option, Schema, SchemaTransformation } from "effect";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 
 const parsePersonString = (input: string): Person => {
 	const emailMatch = input.match(/<([^>]+)>/);
@@ -99,13 +102,13 @@ const isFaithful = (wire: PersonWire, person: Person): boolean => {
 // through this rather than the class keeps the issue tree identical to what a
 // direct class decode produced, while leaving instance construction to the
 // transform so the raw object can be remembered.
-const PersonFields = Schema.Struct({
-	name: Schema.String,
-	email: Schema.optionalKey(Schema.String),
-	url: Schema.optionalKey(Schema.String),
+const PersonFields = S.Struct({
+	name: S.String,
+	email: S.optionalKey(S.String),
+	url: S.optionalKey(S.String),
 });
 
-const decodePersonFields = Schema.decodeUnknownEffect(PersonFields);
+const decodePersonFields = S.decodeUnknownEffect(PersonFields);
 
 const restOf = (raw: { readonly [k: string]: unknown }): Record<string, unknown> => {
 	const rest: Record<string, unknown> = {};
@@ -143,27 +146,27 @@ const encodePersonObject = (person: Person): { readonly [k: string]: unknown } =
  *
  * @public
  */
-export class Person extends Schema.Class<Person>("Person")({
+export class Person extends S.Class<Person>("Person")({
 	/** The person's name. */
-	name: Schema.String,
+	name: S.String,
 	/** The optional email address. */
-	email: Schema.optionalKey(Schema.String),
+	email: S.optionalKey(S.String),
 	/** The optional homepage URL. */
-	url: Schema.optionalKey(Schema.String),
+	url: S.optionalKey(S.String),
 	/** Any additional keys, preserved verbatim and flattened back on encode. */
-	rest: Schema.optionalKey(Schema.Record(Schema.String, Schema.Unknown)),
+	rest: S.optionalKey(S.Record(S.String, S.Unknown)),
 }) {
 	/**
 	 * The object wire codec: an open JSON object ↔ a {@link Person}, partitioning
 	 * unknown keys into `rest` and flattening them back on encode so the on-disk
 	 * shape never carries a literal `rest` key.
 	 */
-	static readonly schema: Schema.Codec<Person, { readonly [k: string]: unknown }> = Schema.Record(
-		Schema.String,
-		Schema.Unknown,
+	static readonly schema: S.Codec<Person, { readonly [k: string]: unknown }> = S.Record(
+		S.String,
+		S.Unknown,
 	).pipe(
-		Schema.decodeTo(
-			Schema.instanceOf(Person),
+		S.decodeTo(
+			S.instanceOf(Person),
 			// `transformEffect` rather than `transform` because this transform
 			// constructs the instance itself — the only way to associate the raw
 			// wire object with the resulting `Person` — and so must carry the
@@ -189,9 +192,9 @@ export class Person extends Schema.Class<Person>("Person")({
 	 * and a {@link Person}. Decoding remembers the input text so that encoding
 	 * reproduces it verbatim; see {@link Person.wireStringOf}.
 	 */
-	static readonly FromString: Schema.Codec<Person, string> = Schema.String.pipe(
-		Schema.decodeTo(
-			Schema.instanceOf(Person),
+	static readonly FromString: S.Codec<Person, string> = S.String.pipe(
+		S.decodeTo(
+			S.instanceOf(Person),
 			SchemaTransformation.transform({
 				decode: (input: string) => rememberWire(parsePersonString(input), input),
 				encode: (person: Person) => {
@@ -217,12 +220,12 @@ export class Person extends Schema.Class<Person>("Person")({
 	 * object form. Editing an unrelated field of the surrounding `Package`
 	 * carries the same person instance through and preserves its encoding.
 	 */
-	static readonly FromValue: Schema.Codec<Person, string | { readonly [k: string]: unknown }> = Schema.Union([
+	static readonly FromValue: S.Codec<Person, string | { readonly [k: string]: unknown }> = S.Union([
 		Person.schema,
-		Schema.String,
+		S.String,
 	]).pipe(
-		Schema.decodeTo(
-			Schema.instanceOf(Person),
+		S.decodeTo(
+			S.instanceOf(Person),
 			SchemaTransformation.transform({
 				decode: (input: Person | string) =>
 					typeof input === "string" ? rememberWire(parsePersonString(input), input) : input,
@@ -258,8 +261,8 @@ export class Person extends Schema.Class<Person>("Person")({
 	 * @param person - the person to inspect
 	 * @returns the original shorthand text, or `None`
 	 */
-	static wireStringOf(person: Person): Option.Option<string> {
+	static wireStringOf(person: Person): O.Option<string> {
 		const wire = wireForms.get(person);
-		return typeof wire === "string" && isFaithful(wire, person) ? Option.some(wire) : Option.none();
+		return typeof wire === "string" && isFaithful(wire, person) ? O.some(wire) : O.none();
 	}
 }

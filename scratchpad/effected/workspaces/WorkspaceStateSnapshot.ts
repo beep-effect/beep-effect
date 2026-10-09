@@ -10,7 +10,12 @@
 // itself, so code written to those contracts can run "as of" a ref.
 
 import { CatalogResolver, DependencyResolutionError, DependencySpecifier, WorkspaceResolver } from "../npm/index.ts";
-import { Effect, Exit, Layer, Option, Schema, SchemaTransformation } from "effect";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import { unanimousVersionOf } from "./internal/importerVersions.ts";
 import { CatalogSet } from "./WorkspaceCatalogs.ts";
 
@@ -19,9 +24,9 @@ import { CatalogSet } from "./WorkspaceCatalogs.ts";
 // round-trips as `{}` rather than `undefined`.
 const EMPTY: Record<string, string> = Object.freeze(Object.create(null) as Record<string, string>);
 
-const DependencyMap = Schema.Record(Schema.String, Schema.String).pipe(
-	Schema.withDecodingDefaultKey(Effect.succeed(EMPTY)),
-	Schema.withConstructorDefault(Effect.succeed(EMPTY)),
+const DependencyMap = S.Record(S.String, S.String).pipe(
+	S.withDecodingDefaultKey(Effect.succeed(EMPTY)),
+	S.withConstructorDefault(Effect.succeed(EMPTY)),
 );
 
 /**
@@ -34,11 +39,11 @@ const DependencyMap = Schema.Record(Schema.String, Schema.String).pipe(
  * `""` still decodes, to the absent key it meant — a stored value and a fresh
  * capture of the same manifest compare equal.
  */
-const SnapshotVersion = Schema.optionalKey(Schema.String).pipe(
-	Schema.decodeTo(
-		Schema.optionalKey(Schema.NonEmptyString),
+const SnapshotVersion = S.optionalKey(S.String).pipe(
+	S.decodeTo(
+		S.optionalKey(S.NonEmptyString),
 		SchemaTransformation.transformOptional({
-			decode: (encoded) => Option.filter(encoded, (version) => version !== ""),
+			decode: (encoded) => O.filter(encoded, (version) => version !== ""),
 			encode: (version) => version,
 		}),
 	),
@@ -58,9 +63,9 @@ const SnapshotVersion = Schema.optionalKey(Schema.String).pipe(
  *
  * @public
  */
-export class PackageStateSnapshot extends Schema.Class<PackageStateSnapshot>("PackageStateSnapshot")({
+export class PackageStateSnapshot extends S.Class<PackageStateSnapshot>("PackageStateSnapshot")({
 	/** The package name. */
-	name: Schema.NonEmptyString,
+	name: S.NonEmptyString,
 	/**
 	 * The raw `version` string, as recorded at the captured moment — absent for
 	 * a manifest that declared none.
@@ -80,7 +85,7 @@ export class PackageStateSnapshot extends Schema.Class<PackageStateSnapshot>("Pa
 	 */
 	version: SnapshotVersion,
 	/** POSIX path relative to the workspace root; `"."` for the root package. */
-	relativePath: Schema.String,
+	relativePath: S.String,
 	/** Production dependencies. */
 	dependencies: DependencyMap,
 	/** Development dependencies. */
@@ -138,9 +143,9 @@ export class PackageStateSnapshot extends Schema.Class<PackageStateSnapshot>("Pa
  *
  * @public
  */
-export class WorkspaceStateSnapshot extends Schema.Class<WorkspaceStateSnapshot>("WorkspaceStateSnapshot")({
+export class WorkspaceStateSnapshot extends S.Class<WorkspaceStateSnapshot>("WorkspaceStateSnapshot")({
 	/** Every workspace package captured at this moment. */
-	packages: Schema.Array(PackageStateSnapshot),
+	packages: S.Array(PackageStateSnapshot),
 	/** The catalog set assembled at this moment. */
 	catalogs: CatalogSet,
 	/**
@@ -152,7 +157,7 @@ export class WorkspaceStateSnapshot extends Schema.Class<WorkspaceStateSnapshot>
 	 * `catalog:` fallback in {@link WorkspaceStateSnapshot.resolve} inert. Only
 	 * pnpm records importer versions; bun and npm yield an empty index.
 	 */
-	importerVersions: Schema.optionalKey(Schema.Record(Schema.String, Schema.Record(Schema.String, Schema.String))),
+	importerVersions: S.optionalKey(S.Record(S.String, S.Record(S.String, S.String))),
 	/**
 	 * Which version each declared config dependency's hook was replayed from at
 	 * this moment, keyed by name.
@@ -168,7 +173,7 @@ export class WorkspaceStateSnapshot extends Schema.Class<WorkspaceStateSnapshot>
 	 * value that omits it. Carried through `withSeededCatalogs` and `crossSeed`
 	 * unchanged, like `importerVersions`.
 	 */
-	hookReplays: Schema.optionalKey(Schema.Record(Schema.String, Schema.String)),
+	hookReplays: S.optionalKey(S.Record(S.String, S.String)),
 	/**
 	 * Catalogs supplied from OUTSIDE this moment, consulted only when
 	 * `catalogs` cannot answer.
@@ -193,7 +198,7 @@ export class WorkspaceStateSnapshot extends Schema.Class<WorkspaceStateSnapshot>
 	 *
 	 * Defaults to absent, which makes the seed inert.
 	 */
-	seededCatalogs: Schema.optionalKey(CatalogSet),
+	seededCatalogs: S.optionalKey(CatalogSet),
 }) {
 	#versionIndex: ReadonlyMap<string, string> | undefined;
 	#packageIndex: ReadonlyMap<string, PackageStateSnapshot> | undefined;
@@ -233,8 +238,8 @@ export class WorkspaceStateSnapshot extends Schema.Class<WorkspaceStateSnapshot>
 	}
 
 	/** A single captured package by name, or `Option.none()`. Total. */
-	package(name: string): Option.Option<PackageStateSnapshot> {
-		return Option.fromUndefinedOr(this.#packages().get(name));
+	package(name: string): O.Option<PackageStateSnapshot> {
+		return O.fromUndefinedOr(this.#packages().get(name));
 	}
 
 	/**
@@ -272,9 +277,9 @@ export class WorkspaceStateSnapshot extends Schema.Class<WorkspaceStateSnapshot>
 	 *   `catalog:` resolve for).
 	 * @param specifier - The raw specifier string.
 	 */
-	resolve(dependency: string, specifier: string): Option.Option<string> {
+	resolve(dependency: string, specifier: string): O.Option<string> {
 		return this.#resolveWith(dependency, specifier, () =>
-			Option.fromUndefinedOr(unanimousVersionOf(this.importerVersions ?? {}, dependency)),
+			O.fromUndefinedOr(unanimousVersionOf(this.importerVersions ?? {}, dependency)),
 		);
 	}
 
@@ -299,9 +304,9 @@ export class WorkspaceStateSnapshot extends Schema.Class<WorkspaceStateSnapshot>
 	 * @param dependency - The dependency's package name.
 	 * @param specifier - The raw specifier string.
 	 */
-	resolveIn(importerPath: string, dependency: string, specifier: string): Option.Option<string> {
+	resolveIn(importerPath: string, dependency: string, specifier: string): O.Option<string> {
 		return this.#resolveWith(dependency, specifier, () =>
-			Option.fromUndefinedOr(this.importerVersions?.[importerPath]?.[dependency]),
+			O.fromUndefinedOr(this.importerVersions?.[importerPath]?.[dependency]),
 		);
 	}
 
@@ -314,24 +319,24 @@ export class WorkspaceStateSnapshot extends Schema.Class<WorkspaceStateSnapshot>
 	#resolveWith(
 		dependency: string,
 		specifier: string,
-		onUnresolvedCatalog: () => Option.Option<string>,
-	): Option.Option<string> {
-		const exit = Schema.decodeExit(DependencySpecifier.FromString)(specifier);
-		if (!Exit.isSuccess(exit)) return Option.none();
+		onUnresolvedCatalog: () => O.Option<string>,
+	): O.Option<string> {
+		const exit = S.decodeExit(DependencySpecifier.FromString)(specifier);
+		if (!Exit.isSuccess(exit)) return O.none();
 		const classified = exit.value;
 		switch (classified._tag) {
 			case "catalog": {
 				const fromCatalogs = this.#catalogRange(dependency, classified.name);
-				return Option.isSome(fromCatalogs) ? fromCatalogs : onUnresolvedCatalog();
+				return O.isSome(fromCatalogs) ? fromCatalogs : onUnresolvedCatalog();
 			}
 			case "workspace": {
 				// A version-less member is absent from the index, so it resolves to
 				// `none` exactly as a non-member does — there is nothing to substitute
 				// for `workspace:^`.
-				return Option.fromUndefinedOr(this.#versions().get(dependency));
+				return O.fromUndefinedOr(this.#versions().get(dependency));
 			}
 			default:
-				return Option.none();
+				return O.none();
 		}
 	}
 
@@ -345,10 +350,10 @@ export class WorkspaceStateSnapshot extends Schema.Class<WorkspaceStateSnapshot>
 	 * ADD an answer where there was none — which is why seeding is safe to do
 	 * unconditionally and why an over-broad seed cannot corrupt a diff.
 	 */
-	#catalogRange(dependency: string, catalog: Option.Option<string>): Option.Option<string> {
+	#catalogRange(dependency: string, catalog: O.Option<string>): O.Option<string> {
 		const own = this.catalogs.rangeOf(dependency, catalog);
-		if (Option.isSome(own)) return own;
-		return this.seededCatalogs === undefined ? Option.none() : this.seededCatalogs.rangeOf(dependency, catalog);
+		if (O.isSome(own)) return own;
+		return this.seededCatalogs === undefined ? O.none() : this.seededCatalogs.rangeOf(dependency, catalog);
 	}
 
 	/**
@@ -495,7 +500,7 @@ export class WorkspaceStateSnapshot extends Schema.Class<WorkspaceStateSnapshot>
 				// The same precedence `resolve` applies — own catalogs, then the seed.
 				// A resolver that ignored the seed would answer differently from
 				// `resolve` on the very snapshot it is bound to.
-				rangeOf: Effect.fn("CatalogResolver.rangeOf")((packageName: string, catalog: Option.Option<string>) => Effect.succeed(this.#catalogRange(packageName, catalog))),
+				rangeOf: Effect.fn("CatalogResolver.rangeOf")((packageName: string, catalog: O.Option<string>) => Effect.succeed(this.#catalogRange(packageName, catalog))),
 			});
 		}
 		return this.#catalogResolver;
@@ -512,9 +517,9 @@ export class WorkspaceStateSnapshot extends Schema.Class<WorkspaceStateSnapshot>
 				// The contract reserves `none` for a NON-member, so a known member that
 				// declared no version fails typed — the same answer the discovery-backed
 				// resolver gives.
-				versionOf: Effect.fn("WorkspaceResolver.versionOf")((packageName: string): Effect.Effect<Option.Option<string>, DependencyResolutionError> => {
+				versionOf: Effect.fn("WorkspaceResolver.versionOf")((packageName: string): Effect.Effect<O.Option<string>, DependencyResolutionError> => {
 					const member = this.#packages().get(packageName);
-					if (member === undefined) return Effect.succeed(Option.none<string>());
+					if (member === undefined) return Effect.succeed(O.none<string>());
 					const version = member.version;
 					if (version === undefined) {
 						return Effect.fail(

@@ -8,7 +8,7 @@
 // both resolver modules must be able to reference it without creating an
 // import cycle (`noImportCycles` is an error here).
 
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 
 /** The message a cause carries, if it carries a non-empty one: an `Error`'s `message`, or a thrown string. */
 const causeMessage = (cause: unknown): string | undefined => {
@@ -37,17 +37,17 @@ const causeMessage = (cause: unknown): string | undefined => {
  *
  * @public
  */
-export class CatalogAssemblyError extends Schema.TaggedError<CatalogAssemblyError>()("CatalogAssemblyError", {
+export class CatalogAssemblyError extends S.TaggedError<CatalogAssemblyError>()("CatalogAssemblyError", {
 	/**
 	 * Which input failed: `manifest` for a file-level or top-level shape problem,
 	 * `catalog` for a malformed catalog block or the double-default duplication,
 	 * `hooks` for a config-dependency `pnpmfile.cjs` load or replay failure.
 	 */
-	source: Schema.Literals(["manifest", "catalog", "hooks"]),
+	source: S.Literals(["manifest", "catalog", "hooks"]),
 	/** The file, the catalog name, or the config dependency name. */
-	path: Schema.String,
+	path: S.String,
 	/** The originating failure. */
-	cause: Schema.Defect(),
+	cause: S.Defect(),
 	/**
 	 * Why a `hooks`-source failure could not resolve a config dependency at its
 	 * declared version, when that is what failed. Absent for every other
@@ -69,8 +69,8 @@ export class CatalogAssemblyError extends Schema.TaggedError<CatalogAssemblyErro
 	 *   no integrity to verify it against (no inline integrity, and no lockfile
 	 *   entry, or a lockfile that could not be read), so nothing was fetched.
 	 */
-	reason: Schema.optionalKey(
-		Schema.Literals(["notInstalled", "ambiguous", "fetchFailed", "integrityMismatch", "integrityUnavailable"]),
+	reason: S.optionalKey(
+		S.Literals(["notInstalled", "ambiguous", "fetchFailed", "integrityMismatch", "integrityUnavailable"]),
 	),
 }) {
 	/**
@@ -86,7 +86,7 @@ export class CatalogAssemblyError extends Schema.TaggedError<CatalogAssemblyErro
 	 * summary, so its message is used as-is rather than prefixed a second time.
 	 */
 	override get message(): string {
-		if (Schema.is(CatalogAssemblyError)(this.cause)) return this.cause.message;
+		if (S.is(CatalogAssemblyError)(this.cause)) return this.cause.message;
 		const summary = `Failed to assemble catalogs from ${this.source} ${this.path}`;
 		const detail = causeMessage(this.cause);
 		return detail === undefined ? summary : `${summary}: ${detail}`;

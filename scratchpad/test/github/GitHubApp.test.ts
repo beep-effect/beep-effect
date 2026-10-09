@@ -1,7 +1,12 @@
 // @effect-diagnostics strictEffectProvide:skip-file nodeBuiltinImport:skip-file
 import { generateKeyPairSync } from "node:crypto";
 import { assert, describe, it } from "@effect/vitest";
-import { DateTime, Duration, Effect, Option, Redacted, Schema } from "effect";
+import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
+import * as Redacted from "effect/Redacted";
+import * as S from "effect/Schema";
 import { TestClock } from "effect/testing";
 import { AppIdentity, BotIdentity, GitHubApp, InstallationToken } from "../../effected/github/GitHubApp.ts";
 import { GitHubClient } from "../../effected/github/GitHubClient.ts";
@@ -200,7 +205,7 @@ describe("GitHubApp.revoke and scopedToken", () => {
 		withApp([tokenReply(), { status: 500, body: { message: "boom" } }], (app) =>
 			// Best-effort by design: a token GitHub would not revoke expires on its
 			// own within the hour, and failing the caller's program over it is worse.
-			Effect.asVoid(Effect.scoped(app.scopedToken({ ...CREDENTIALS, installationId: 42 }))),
+			app.scopedToken({ ...CREDENTIALS, installationId: 42 }).pipe(Effect.scoped, Effect.asVoid),
 		),
 	);
 });
@@ -360,14 +365,14 @@ describe("InstallationToken", () => {
 		Effect.gen(function* () {
 			// @effected/github-actions persists this through GITHUB_STATE, which is
 			// plaintext by GitHub's protocol — hence the raw string on the wire.
-			const encoded = yield* Schema.encodeUnknownEffect(InstallationToken)(token);
+			const encoded = yield* S.encodeUnknownEffect(InstallationToken)(token);
 			assert.deepStrictEqual(encoded, {
 				token: "ghs_x",
 				expiresAt: "2026-01-01T00:00:00.000Z",
 				installationId: 1,
 				permissions: { contents: "write" },
 			});
-			const decoded = yield* Schema.decodeEffect(InstallationToken)(encoded);
+			const decoded = yield* S.decodeEffect(InstallationToken)(encoded);
 			assert.strictEqual(Redacted.value(decoded.token), "ghs_x");
 			assert.isTrue(DateTime.toEpochMillis(decoded.expiresAt) === DateTime.toEpochMillis(token.expiresAt));
 		}),
@@ -463,7 +468,7 @@ describe("Option is not needed to read a missing installation account", () => {
 				const all = yield* app.installations(CREDENTIALS);
 				assert.strictEqual(all[0]?.id, 3);
 				assert.strictEqual(all[0]?.account, undefined);
-				assert.isTrue(Option.isNone(Option.fromUndefinedOr(all[0]?.account)));
+				assert.isTrue(O.isNone(O.fromUndefinedOr(all[0]?.account)));
 			}),
 		),
 	);

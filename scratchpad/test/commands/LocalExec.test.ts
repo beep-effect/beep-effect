@@ -1,6 +1,7 @@
 // @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Option } from "effect";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
 import { ChildProcess } from "effect/process";
 import { ExecContext, LocalExec, LocalExecError } from "../../effected/commands/LocalExec.ts";
 
@@ -116,7 +117,7 @@ describe("LocalExec layers", () => {
 		Effect.gen(function* () {
 			const local = yield* LocalExec;
 			const context = yield* local.context;
-			assert.isTrue(Option.isNone(context));
+			assert.isTrue(O.isNone(context));
 		}).pipe(Effect.provide(LocalExec.layerNone)),
 	);
 
@@ -124,7 +125,7 @@ describe("LocalExec layers", () => {
 		Effect.gen(function* () {
 			const local = yield* LocalExec;
 			const context = yield* local.context;
-			if (Option.isNone(context)) assert.fail("expected a context");
+			if (O.isNone(context)) assert.fail("expected a context");
 			assert.strictEqual(context.value.label, "pnpm");
 			assert.deepStrictEqual(argv(context.value.apply(ChildProcess.make("biome", []))), ["pnpm", "exec", "biome"]);
 			assert.deepStrictEqual(argv(context.value.applyScript(ChildProcess.make("ci:build", []))), [
@@ -139,7 +140,7 @@ describe("LocalExec layers", () => {
 		Effect.gen(function* () {
 			const local = yield* LocalExec;
 			const context = yield* local.context;
-			if (Option.isNone(context)) assert.fail("expected a context");
+			if (O.isNone(context)) assert.fail("expected a context");
 			assert.strictEqual(context.value.label, "custom");
 		}).pipe(
 			Effect.provide(
@@ -153,7 +154,7 @@ describe("LocalExec layers", () => {
 	it.effect("layerTest defaults to None and accepts an override", () =>
 		Effect.gen(function* () {
 			const local = yield* LocalExec;
-			assert.isTrue(Option.isNone(yield* local.context));
+			assert.isTrue(O.isNone(yield* local.context));
 		}).pipe(Effect.provide(LocalExec.layerTest())),
 	);
 

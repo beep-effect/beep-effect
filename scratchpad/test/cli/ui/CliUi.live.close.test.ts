@@ -1,8 +1,14 @@
-import { Context } from "effect";
+import * as Context from "effect/Context";
 // LiveHandle.close and a PubSub subscription as `events`: the kit ends a view cleanly, folding the tail of a run that
 // was published but not yet pulled.
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Exit, Fiber, PubSub, Scheduler, Scope, Stream } from "effect";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Fiber from "effect/Fiber";
+import * as PubSub from "effect/PubSub";
+import * as Scheduler from "effect/Scheduler";
+import * as Scope from "effect/Scope";
+import * as Stream from "effect/Stream";
 import { makeFakeStreams } from "../../../effected/cli/ui/testing/fakeStreams.ts";
 import { screenAfter } from "../../../effected/cli/ui/testing/terminalModel.ts";
 import type { LiveHandle } from "../../../effected/cli/ui.ts";
@@ -21,9 +27,9 @@ describe("PubSub.shutdown drops what a subscriber has not pulled (why close drai
 			yield* PubSub.publishAll(pubsub, [1, 2, 3, 4, 5, 6, 7]);
 			assert.strictEqual(yield* PubSub.remaining(subscription), 7, "control: all seven are queued before the shutdown");
 			yield* PubSub.shutdown(pubsub);
-			const collected = yield* Stream.runCollect(Stream.fromSubscription(subscription));
+			const collected = yield* subscription.pipe(Stream.fromSubscription, Stream.runCollect);
 			assert.deepStrictEqual(collected, []);
-			const remaining = yield* Effect.exit(PubSub.remaining(subscription));
+			const remaining = yield* subscription.pipe(PubSub.remaining, Effect.exit);
 			assert.isTrue(Exit.hasInterrupts(remaining), "remaining interrupts once the PubSub is shut down");
 		}).pipe(Effect.scoped),
 	);
@@ -171,9 +177,7 @@ describe("LiveHandle.close with a plain stream", () => {
 		Effect.gen(function* () {
 			const fake = makeFakeStreams({ columns: 40, rows: 20 });
 			const events = Stream.concat(Stream.fromIterable(runOf(1)), Stream.never);
-			const fiber = yield* Effect.forkChild(
-				Effect.scoped(Effect.flatMap(liveOn(fake, optionsOf(events)), (handle) => handle.close)),
-			);
+			const fiber = yield* Effect.flatMap(liveOn(fake, optionsOf(events)), (handle) => handle.close).pipe(Effect.scoped, Effect.forkChild);
 			yield* Fiber.join(fiber).pipe(Effect.timeout("2 seconds"));
 			assert.strictEqual(yield* mountsAndResolves(makeFakeStreams()), "mounted", "the permit was released");
 		}),

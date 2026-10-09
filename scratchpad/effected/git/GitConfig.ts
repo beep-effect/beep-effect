@@ -1,4 +1,7 @@
-import { Effect, Option, Result, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import type {
   RawDiagnostic,
   RawEntry,
@@ -30,9 +33,9 @@ import {
  *
  * @public
  */
-export class GitConfigDiagnostic extends Schema.Class<GitConfigDiagnostic>("GitConfigDiagnostic")({
+export class GitConfigDiagnostic extends S.Class<GitConfigDiagnostic>("GitConfigDiagnostic")({
   /** What kind of malformation this is. */
-  code: Schema.Literals([
+  code: S.Literals([
     "invalidSectionHeader",
     "invalidKey",
     "invalidLine",
@@ -41,15 +44,15 @@ export class GitConfigDiagnostic extends Schema.Class<GitConfigDiagnostic>("GitC
     "unexpectedCharacter",
   ]),
   /** A human-readable description of the problem. */
-  message: Schema.String,
+  message: S.String,
   /** The character offset where the problem starts. */
-  offset: Schema.Finite,
+  offset: S.Finite,
   /** The length of the problematic span. */
-  length: Schema.Finite,
+  length: S.Finite,
   /** Zero-based line of `offset`. */
-  line: Schema.Finite,
+  line: S.Finite,
   /** Zero-based character-in-line of `offset`. */
-  character: Schema.Finite,
+  character: S.Finite,
 }) {
 }
 
@@ -63,11 +66,11 @@ export class GitConfigDiagnostic extends Schema.Class<GitConfigDiagnostic>("GitC
  *
  * @public
  */
-export class GitConfigParseError extends Schema.TaggedError<GitConfigParseError>()("GitConfigParseError", {
+export class GitConfigParseError extends S.TaggedError<GitConfigParseError>()("GitConfigParseError", {
   /** The raw input that failed to parse. */
-  input: Schema.String,
+  input: S.String,
   /** Every structural problem found, in document order. */
-  diagnostics: Schema.Array(GitConfigDiagnostic),
+  diagnostics: S.Array(GitConfigDiagnostic),
 }) {
   /** Renders the first diagnostic and the total count into a one-line message. */
   override get message(): string {
@@ -82,11 +85,11 @@ export class GitConfigParseError extends Schema.TaggedError<GitConfigParseError>
  *
  * @public
  */
-export class GitConfigEditError extends Schema.TaggedError<GitConfigEditError>()("GitConfigEditError", {
+export class GitConfigEditError extends S.TaggedError<GitConfigEditError>()("GitConfigEditError", {
   /** The edit operation that was refused. */
-  op: Schema.Literals(["set", "append", "unset", "unsetAll", "addSection", "removeSection", "renameSection"]),
+  op: S.Literals(["set", "append", "unset", "unsetAll", "addSection", "removeSection", "renameSection"]),
   /** Why it was refused. */
-  reason: Schema.Literals([
+  reason: S.Literals([
     "missingSection",
     "missingKey",
     "invalidSectionName",
@@ -95,11 +98,11 @@ export class GitConfigEditError extends Schema.TaggedError<GitConfigEditError>()
     "invalidValue",
   ]),
   /** The section name the edit addressed. */
-  section: Schema.String,
+  section: S.String,
   /** The subsection name the edit addressed, when it had one. */
-  subsection: Schema.optionalKey(Schema.String),
+  subsection: S.optionalKey(S.String),
   /** The variable name the edit addressed, when it had one. */
-  key: Schema.optionalKey(Schema.String),
+  key: S.optionalKey(S.String),
 }) {
   /** Renders the refused operation into a one-line message. */
   override get message(): string {
@@ -130,15 +133,15 @@ export class GitConfigEditError extends Schema.TaggedError<GitConfigEditError>()
  *
  * @public
  */
-export class GitConfigEntry extends Schema.Class<GitConfigEntry>("GitConfigEntry")({
+export class GitConfigEntry extends S.Class<GitConfigEntry>("GitConfigEntry")({
   /** The variable name, raw spelling preserved (names compare case-insensitively). */
-  key: Schema.String,
+  key: S.String,
   /** The decoded value; absent for the bare boolean-true shorthand. */
-  value: Schema.optionalKey(Schema.String),
+  value: S.optionalKey(S.String),
   /** Character offset of the entry's line start. */
-  offset: Schema.Finite,
+  offset: S.Finite,
   /** Length through the entry's final newline (continuation lines included). */
-  length: Schema.Finite,
+  length: S.Finite,
 }) {
 }
 
@@ -155,17 +158,17 @@ export class GitConfigEntry extends Schema.Class<GitConfigEntry>("GitConfigEntry
  *
  * @public
  */
-export class GitConfigSection extends Schema.Class<GitConfigSection>("GitConfigSection")({
+export class GitConfigSection extends S.Class<GitConfigSection>("GitConfigSection")({
   /** The section name, raw spelling preserved. */
-  name: Schema.String,
+  name: S.String,
   /** The decoded subsection name, when present. */
-  subsection: Schema.optionalKey(Schema.String),
+  subsection: S.optionalKey(S.String),
   /** Character offset of the header's line start. */
-  offset: Schema.Finite,
+  offset: S.Finite,
   /** Length of the whole section span (header through the next header's line start). */
-  length: Schema.Finite,
+  length: S.Finite,
   /** The section's variable lines, in document order. */
-  entries: Schema.Array(GitConfigEntry),
+  entries: S.Array(GitConfigEntry),
 }) {
 }
 
@@ -180,11 +183,11 @@ export class GitConfigSection extends Schema.Class<GitConfigSection>("GitConfigS
  *
  * @public
  */
-export class GitConfigInclude extends Schema.Class<GitConfigInclude>("GitConfigInclude")({
+export class GitConfigInclude extends S.Class<GitConfigInclude>("GitConfigInclude")({
   /** The include path exactly as written (not resolved, not expanded). */
-  path: Schema.String,
+  path: S.String,
   /** The `includeIf` condition, when this came from an `includeIf` section. */
-  condition: Schema.optionalKey(Schema.String),
+  condition: S.optionalKey(S.String),
 }) {
 }
 
@@ -321,11 +324,11 @@ const appendAtEof = (text: string, content: string): string =>
  *
  * @public
  */
-export class GitConfig extends Schema.Class<GitConfig>("GitConfig")({
+export class GitConfig extends S.Class<GitConfig>("GitConfig")({
   /** The document's source text — `stringify` returns exactly this. */
-  text: Schema.String,
+  text: S.String,
   /** The sections scanned from `text`, in document order. */
-  sections: Schema.Array(GitConfigSection),
+  sections: S.Array(GitConfigSection),
 }) {
   /**
    * Parses git-config text into a lossless document — the pure, synchronous
@@ -375,10 +378,10 @@ export class GitConfig extends Schema.Class<GitConfig>("GitConfig")({
    * semantics for a value-less variable; the entry model
    * (`GitConfigEntry.value`) preserves the distinction.
    */
-  get(section: string, subsection: string | undefined, key: string): Option.Option<string> {
+  get(section: string, subsection: string | undefined, key: string): O.Option<string> {
     const values = this.getAll(section, subsection, key);
     const last = values[values.length - 1];
-    return last === undefined ? Option.none() : Option.some(last);
+    return last === undefined ? O.none() : O.some(last);
   }
 
   /** Every value of `key` in matching sections, in document order (multi-valued keys). */

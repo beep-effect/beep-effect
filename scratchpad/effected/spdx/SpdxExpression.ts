@@ -1,4 +1,9 @@
-import { Effect, Option, Result, Schema, SchemaIssue, SchemaTransformation } from "effect";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import type { RawExpression, RawSimpleLicense } from "./internal/parser.ts";
 import { parse as parseRaw } from "./internal/parser.ts";
 import { InvalidSpdxExpressionError, License } from "./License.ts";
@@ -48,11 +53,11 @@ function serialize(node: SpdxNode): string {
  *
  * @public
  */
-export class LicenseNode extends Schema.TaggedClass<LicenseNode>()("License", {
+export class LicenseNode extends S.TaggedClass<LicenseNode>()("License", {
 	/** The SPDX short identifier, e.g. `"MIT"` or `"Apache-2.0"`. */
-	id: Schema.String,
+	id: S.String,
 	/** Whether the trailing `+` "or later" marker is present. */
-	plus: Schema.Boolean,
+	plus: S.Boolean,
 }) {
 	/** The canonical string form: the id, suffixed with `+` when `plus` is set. */
 	override toString(): string {
@@ -68,11 +73,11 @@ export class LicenseNode extends Schema.TaggedClass<LicenseNode>()("License", {
  *
  * @public
  */
-export class LicenseRefNode extends Schema.TaggedClass<LicenseRefNode>()("LicenseRef", {
+export class LicenseRefNode extends S.TaggedClass<LicenseRefNode>()("LicenseRef", {
 	/** The `DocumentRef-` idstring when the reference is document-scoped; absent otherwise. */
-	documentRef: Schema.optionalKey(Schema.String),
+	documentRef: S.optionalKey(S.String),
 	/** The `LicenseRef-` idstring. */
-	ref: Schema.String,
+	ref: S.String,
 }) {
 	/** The canonical string form, re-attaching the `DocumentRef-…:` prefix when present. */
 	override toString(): string {
@@ -88,11 +93,11 @@ export class LicenseRefNode extends Schema.TaggedClass<LicenseRefNode>()("Licens
  *
  * @public
  */
-export class WithExceptionNode extends Schema.TaggedClass<WithExceptionNode>()("WithException", {
+export class WithExceptionNode extends S.TaggedClass<WithExceptionNode>()("WithException", {
 	/** The license the exception applies to: a simple license (which may carry the `+` marker) or a `LicenseRef` reference. */
-	license: Schema.Union([LicenseNode, LicenseRefNode]),
+	license: S.Union([LicenseNode, LicenseRefNode]),
 	/** The SPDX exception short identifier, e.g. `"Bison-exception-2.2"`. */
-	exception: Schema.String,
+	exception: S.String,
 }) {
 	/** The canonical string form: the license, then `WITH`, then the exception id. */
 	override toString(): string {
@@ -106,11 +111,11 @@ export class WithExceptionNode extends Schema.TaggedClass<WithExceptionNode>()("
  *
  * @public
  */
-export class AndNode extends Schema.TaggedClass<AndNode>()("And", {
+export class AndNode extends S.TaggedClass<AndNode>()("And", {
 	/** The left operand. */
-	left: Schema.suspend((): Schema.Codec<SpdxExpression> => SpdxExpressionUnion),
+	left: S.suspend((): S.Codec<SpdxExpression> => SpdxExpressionUnion),
 	/** The right operand. */
-	right: Schema.suspend((): Schema.Codec<SpdxExpression> => SpdxExpressionUnion),
+	right: S.suspend((): S.Codec<SpdxExpression> => SpdxExpressionUnion),
 }) {
 	/** The canonical, fully-parenthesized string form `(left AND right)`. */
 	override toString(): string {
@@ -124,11 +129,11 @@ export class AndNode extends Schema.TaggedClass<AndNode>()("And", {
  *
  * @public
  */
-export class OrNode extends Schema.TaggedClass<OrNode>()("Or", {
+export class OrNode extends S.TaggedClass<OrNode>()("Or", {
 	/** The left operand. */
-	left: Schema.suspend((): Schema.Codec<SpdxExpression> => SpdxExpressionUnion),
+	left: S.suspend((): S.Codec<SpdxExpression> => SpdxExpressionUnion),
 	/** The right operand. */
-	right: Schema.suspend((): Schema.Codec<SpdxExpression> => SpdxExpressionUnion),
+	right: S.suspend((): S.Codec<SpdxExpression> => SpdxExpressionUnion),
 }) {
 	/** The canonical, fully-parenthesized string form `(left OR right)`. */
 	override toString(): string {
@@ -148,7 +153,7 @@ export type SpdxExpression = LicenseNode | LicenseRefNode | WithExceptionNode | 
 // The union schema. Declared after the member classes it names, and referenced
 // from `AndNode`/`OrNode` only through a `Schema.suspend` thunk, so no member's
 // static initializer touches it before it is defined.
-const SpdxExpressionUnion = Schema.Union([LicenseNode, LicenseRefNode, WithExceptionNode, AndNode, OrNode]);
+const SpdxExpressionUnion = S.Union([LicenseNode, LicenseRefNode, WithExceptionNode, AndNode, OrNode]);
 
 // Materialize a raw simple-expression leaf — the shape a `WITH` clause binds
 // to — into its typed node. The `licenseRef` arm uses a conditional spread:
@@ -229,8 +234,8 @@ export function isValidExpression(input: string): boolean {
 
 const parseEffect = Effect.fn("SpdxExpression.parse")((input: string) => Effect.fromResult(parseResult(input)));
 
-const FromString: Schema.Codec<SpdxExpression, string> = Schema.String.pipe(
-	Schema.decodeTo(
+const FromString: S.Codec<SpdxExpression, string> = S.String.pipe(
+	S.decodeTo(
 		SpdxExpressionUnion,
 		SchemaTransformation.transformEffect({
 			decode: (input: string) => {
@@ -259,7 +264,7 @@ const FromString: Schema.Codec<SpdxExpression, string> = Schema.String.pipe(
  * yields none — unreachable for a parser-built AST, whose ids are already
  * validated, but a hand-built node can carry anything.
  */
-const licenseOfLeaf = (leaf: LicenseNode | LicenseRefNode): Option.Option<License> =>
+const licenseOfLeaf = (leaf: LicenseNode | LicenseRefNode): O.Option<License> =>
 	Result.getSuccess(License.parseResult(leaf._tag === "License" ? leaf.id : serialize(leaf)));
 
 /** Append every license leaf, left to right, skipping ids that do not resolve. */
@@ -268,7 +273,7 @@ const collectLicenses = (expr: SpdxExpression, into: Array<License>): void => {
 		case "License":
 		case "LicenseRef": {
 			const license = licenseOfLeaf(expr);
-			if (Option.isSome(license)) into.push(license.value);
+			if (O.isSome(license)) into.push(license.value);
 			return;
 		}
 		case "WithException":
@@ -354,7 +359,7 @@ const licensesOf = (expr: SpdxExpression): ReadonlyArray<License> => {
  * @param expr - the expression to read
  * @returns the primary license, or none when the expression has no single one
  */
-const primaryLicense = (expr: SpdxExpression): Option.Option<License> => {
+const primaryLicense = (expr: SpdxExpression): O.Option<License> => {
 	switch (expr._tag) {
 		case "License":
 		case "LicenseRef":
@@ -364,7 +369,7 @@ const primaryLicense = (expr: SpdxExpression): Option.Option<License> => {
 		case "Or":
 			return primaryLicense(expr.left);
 		case "And":
-			return Option.none();
+			return O.none();
 	}
 };
 

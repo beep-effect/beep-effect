@@ -1,7 +1,9 @@
 // @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { Audience, CurrentRuntimeEnv } from "../../../effected/env/index.ts";
-import { Effect, Option, Stream } from "effect";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
+import * as Stream from "effect/Stream";
 import { Box, Text } from "ink";
 import type { ReactElement } from "react";
 import { createElement } from "react";
@@ -245,7 +247,7 @@ describe("DocView inside a live view (okf/decisions/live-height-clamp-not-width.
 });
 
 describe("DocView and the live view under GitHub Actions: no workflow command from data", () => {
-	const actions = CurrentRuntimeEnv.layerTest({ ci: Option.some("github-actions") });
+	const actions = CurrentRuntimeEnv.layerTest({ ci: O.some("github-actions") });
 	const injected = [Doc.lines([[Doc.text("::error::injected from test data")], [Doc.text("a ##[warning]legacy one")]])];
 	const printed = Effect.fn("printed")(function* (render: () => ReactElement, underActions: boolean) {
 			const fake = makeFakeStreams({ columns: 80, rows: 20 });

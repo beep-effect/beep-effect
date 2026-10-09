@@ -3,7 +3,7 @@
 // rule's business — and a comment after the hyphen belongs to
 // comments-spacing.
 
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 import { YamlEdit } from "../../YamlEdit.ts";
 import type { YamlRule } from "../../YamlLintRule.ts";
 import { YamlLintDiagnostic, YamlLintSeverity } from "../../YamlLintRule.ts";
@@ -14,9 +14,9 @@ import { positiveIntegerOption } from "./util.ts";
  * At least one separation space must follow the indicator — `0` would make
  * the fix emit `-item`, a plain scalar, not a sequence entry.
  */
-export const hyphenSpacingOptions = Schema.Struct({
-	severity: Schema.optionalKey(YamlLintSeverity),
-	maxSpacesAfter: Schema.optionalKey(positiveIntegerOption),
+export const hyphenSpacingOptions = S.Struct({
+	severity: S.optionalKey(YamlLintSeverity),
+	maxSpacesAfter: S.optionalKey(positiveIntegerOption),
 });
 
 interface HyphenSpacingOptions {

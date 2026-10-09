@@ -3,8 +3,12 @@
 import { assert } from "@effect/vitest";
 import type { MemoryFileSystemSeed, MemoryFileSystemVolume } from "../../effected/memfs/index.ts";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
-import type { FileSystem, Layer } from "effect";
-import { Effect, PlatformError, Predicate, Result } from "effect";
+import type * as FileSystem from "effect/FileSystem";
+import type * as Layer from "effect/Layer";
+import * as Effect from "effect/Effect";
+import * as PlatformError from "effect/PlatformError";
+import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import { dual } from "effect/Function";
 import type { Section, SectionParseError } from "../../effected/templates/index.ts";
 import { CommentStyle, SectionDialect, SectionDocument, SectionId } from "../../effected/templates/index.ts";
@@ -101,7 +105,7 @@ export const crlf = (text: string) => text.replace(/\n/g, "\r\n");
 export const parse: {
 	(text: string, dialect?: SectionDialect): SectionDocument;
 	(dialect?: SectionDialect): (text: string) => SectionDocument;
-} = dual((args) => Predicate.isString(args[0]), (text: string, dialect: SectionDialect = SectionDialect.default): SectionDocument => {
+} = dual((args) => P.isString(args[0]), (text: string, dialect: SectionDialect = SectionDialect.default): SectionDocument => {
 	const result = SectionDocument.parseResult(text, dialect);
 	if (!Result.isSuccess(result)) {
 		assert.fail(`expected a parseable document, got ${result.failure.reason} at line ${result.failure.line}`);
@@ -112,7 +116,7 @@ export const parse: {
 export const parseFailure: {
 	(text: string, dialect?: SectionDialect): SectionParseError;
 	(dialect?: SectionDialect): (text: string) => SectionParseError;
-} = dual((args) => Predicate.isString(args[0]), (text: string, dialect: SectionDialect = SectionDialect.default): SectionParseError => {
+} = dual((args) => P.isString(args[0]), (text: string, dialect: SectionDialect = SectionDialect.default): SectionParseError => {
 	const result = SectionDocument.parseResult(text, dialect);
 	if (!Result.isFailure(result)) {
 		assert.fail("expected the document to be rejected");

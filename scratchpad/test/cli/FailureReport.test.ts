@@ -1,16 +1,24 @@
 // @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file
-import { Data } from "effect";
-import { Schema } from "effect";
-import { Result } from "effect";
+import * as Data from "effect/Data";
+import * as S from "effect/Schema";
+import * as Result from "effect/Result";
 import { assert, describe, it } from "@effect/vitest";
 import type { AudienceKind } from "../../effected/env/index.ts";
 import { Audience, TerminalEnv } from "../../effected/env/index.ts";
-import { Cause, ConfigProvider, Console, Effect, Exit, Layer, Option, Stdio, Terminal } from "effect";
+import * as Cause from "effect/Cause";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Stdio from "effect/Stdio";
+import * as Terminal from "effect/Terminal";
 import type { Document, FailureDetails, ReportFailuresOptions } from "../../effected/cli/index.ts";
 import { CliDoc, CliLinks, CliLogger, CliRuntime, CliTheme, Doc, Render } from "../../effected/cli/index.ts";
 import { commandLines } from "./helpers/runnerCommands.ts";
 
-const Json = Schema.fromJsonString(Schema.Unknown);
+const Json = S.fromJsonString(S.Unknown);
 
 class TestError extends Data.TaggedError("TestError")<{ readonly message: string; readonly cause?: unknown }> {
 	override readonly name = "Error";
@@ -97,11 +105,11 @@ describe("the report's last resort keeps the output policy", () => {
 					Effect.provideService(Console.Console, double),
 				);
 				const text = err.join("\n");
-				assert.isAbove(err.length, 0, Result.getOrThrow(Schema.encodeUnknownResult(Json)(env)));
-				assert.notInclude(text, ESC, Result.getOrThrow(Schema.encodeUnknownResult(Json)(env)));
-				assert.notInclude(text, "\u0007", Result.getOrThrow(Schema.encodeUnknownResult(Json)(env)));
-				assert.notInclude(text, "evil", Result.getOrThrow(Schema.encodeUnknownResult(Json)(env)));
-				assert.deepStrictEqual(commandLines(text), [], Result.getOrThrow(Schema.encodeUnknownResult(Json)(env)));
+				assert.isAbove(err.length, 0, Result.getOrThrow(S.encodeUnknownResult(Json)(env)));
+				assert.notInclude(text, ESC, Result.getOrThrow(S.encodeUnknownResult(Json)(env)));
+				assert.notInclude(text, "\u0007", Result.getOrThrow(S.encodeUnknownResult(Json)(env)));
+				assert.notInclude(text, "evil", Result.getOrThrow(S.encodeUnknownResult(Json)(env)));
+				assert.deepStrictEqual(commandLines(text), [], Result.getOrThrow(S.encodeUnknownResult(Json)(env)));
 				assert.include(text, "injected", "the text itself is kept");
 			}
 		}),
@@ -157,8 +165,8 @@ describe("main's env.displayPath is the default report's path display", () => {
 					Effect.provideService(Console.Console, double),
 				);
 				const text = err.join("\n");
-				assert.include(text, "src/run.ts:3:4", Result.getOrThrow(Schema.encodeUnknownResult(Json)(env)));
-				assert.notInclude(text, "/repo/", Result.getOrThrow(Schema.encodeUnknownResult(Json)(env)));
+				assert.include(text, "src/run.ts:3:4", Result.getOrThrow(S.encodeUnknownResult(Json)(env)));
+				assert.notInclude(text, "/repo/", Result.getOrThrow(S.encodeUnknownResult(Json)(env)));
 			}
 			const { double, err } = capturing();
 			yield* CliRuntime.main(dying("kaboom"), { platform, env: {} }).pipe(
@@ -212,7 +220,7 @@ describe("a consumer render's output is untrusted text", () => {
 				{ GITHUB_ACTIONS: "true" },
 			]) {
 				const err = yield* reportWith(env);
-				assert.deepStrictEqual(commandLines(err.join("\n")), [], Result.getOrThrow(Schema.encodeUnknownResult(Json)(env)));
+				assert.deepStrictEqual(commandLines(err.join("\n")), [], Result.getOrThrow(S.encodeUnknownResult(Json)(env)));
 				assert.isAbove(err.length, 0);
 				assert.include(err.join("\n"), "secret", "the text itself is kept");
 			}
@@ -240,9 +248,9 @@ describe("a consumer render's output is untrusted text", () => {
 				for (const env of [{ GITHUB_ACTIONS: "true" }, { TEST_AUDIENCE: "ci" }, { CI: "true", TEST_AUDIENCE: "ci" }]) {
 					const err = yield* reportWith(env);
 					const text = err.join("\n");
-					assert.notInclude(text, ESC, Result.getOrThrow(Schema.encodeUnknownResult(Json)(env)));
-					assert.notInclude(text, BEL, Result.getOrThrow(Schema.encodeUnknownResult(Json)(env)));
-					assert.notInclude(text, "evil", Result.getOrThrow(Schema.encodeUnknownResult(Json)(env)));
+					assert.notInclude(text, ESC, Result.getOrThrow(S.encodeUnknownResult(Json)(env)));
+					assert.notInclude(text, BEL, Result.getOrThrow(S.encodeUnknownResult(Json)(env)));
+					assert.notInclude(text, "evil", Result.getOrThrow(S.encodeUnknownResult(Json)(env)));
 					assert.include(text, "red", "the text itself is kept");
 					if (env.GITHUB_ACTIONS !== undefined) assert.deepStrictEqual(commandLines(text), [], "and still neutralized");
 				}
@@ -448,7 +456,7 @@ describe("a report target that cannot be built falls back to plain", () => {
 		() =>
 			Effect.gen(function* () {
 				const { double, err } = capturing();
-				const stream = { isTerminal: true, color: "none" as const, hyperlinks: false, columns: Option.none<number>() };
+				const stream = { isTerminal: true, color: "none" as const, hyperlinks: false, columns: O.none<number>() };
 				const hostileTerminal = Layer.succeed(TerminalEnv, {
 					stdinIsTerminal: true,
 					stdout: stream,

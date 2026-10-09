@@ -1,9 +1,13 @@
-import { Context, Effect, Layer, Option, Schema } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { GitHubClient } from "./GitHubClient.ts";
 import { GitHubError } from "./GitHubError.ts";
 import { Repo } from "./Repo.ts";
 
-const JsonValue = Schema.fromJsonString(Schema.String);
+const JsonValue = S.fromJsonString(S.String);
 
 /**
  * Read a text file out of a repository at a ref.
@@ -28,7 +32,7 @@ export interface GitHubContentShape {
 	readonly getFileOption: (
 		path: string,
 		options?: { readonly ref?: string | undefined },
-	) => Effect.Effect<Option.Option<string>, GitHubError, Repo>;
+	) => Effect.Effect<O.Option<string>, GitHubError, Repo>;
 }
 
 /**
@@ -107,7 +111,7 @@ const make = (client: GitHubClient["Service"]): GitHubContentShape => {
 				GitHubError.rejected(
 					"GitHubContent.getFile",
 					422,
-					`${path} came back with encoding ${(yield* Schema.encodeEffect(JsonValue)(content.encoding).pipe(Effect.orDie))} — it is probably too large for the contents API`,
+					`${path} came back with encoding ${(yield* S.encodeEffect(JsonValue)(content.encoding).pipe(Effect.orDie))} — it is probably too large for the contents API`,
 				);
 		}
 		return Buffer.from(content.content.replace(/\s/g, ""), "base64").toString("utf8");
@@ -121,7 +125,7 @@ const make = (client: GitHubClient["Service"]): GitHubContentShape => {
 		) {
 			return yield* getFile(path, options).pipe(
 				Effect.asSome,
-				Effect.catchIf(GitHubError.hasKind("notFound"), () => Effect.succeed(Option.none<string>())),
+				Effect.catchIf(GitHubError.hasKind("notFound"), () => Effect.succeed(O.none<string>())),
 			);
 		}),
 	};

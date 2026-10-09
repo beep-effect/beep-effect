@@ -13,7 +13,8 @@
 // yaml and toml engines into their bundle (the config-file tree-shaking
 // rule, applied verbatim).
 
-import { Effect, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
 import type { MarkdownDocument } from "./MarkdownDocument.ts";
 import { MarkdownEdit } from "./MarkdownEdit.ts";
 import type { Frontmatter as FrontmatterNode } from "./MarkdownNode.ts";
@@ -30,7 +31,7 @@ import { FrontmatterFormat } from "./MarkdownNode.ts";
  *
  * @public
  */
-export class FrontmatterFormatMismatchError extends Schema.TaggedError<FrontmatterFormatMismatchError>()(
+export class FrontmatterFormatMismatchError extends S.TaggedError<FrontmatterFormatMismatchError>()(
 	"FrontmatterFormatMismatchError",
 	{
 		/** The format the codec decodes. */
@@ -56,11 +57,11 @@ export class FrontmatterFormatMismatchError extends Schema.TaggedError<Frontmatt
  *
  * @public
  */
-export class FrontmatterDecodeError extends Schema.TaggedError<FrontmatterDecodeError>()("FrontmatterDecodeError", {
+export class FrontmatterDecodeError extends S.TaggedError<FrontmatterDecodeError>()("FrontmatterDecodeError", {
 	/** The format that failed to parse. */
 	format: FrontmatterFormat,
 	/** The underlying format-package failure, preserved structurally. */
-	cause: Schema.Defect(),
+	cause: S.Defect(),
 }) {
 	override get message(): string {
 		return `frontmatter ${this.format} content failed to parse`;
@@ -79,11 +80,11 @@ export class FrontmatterDecodeError extends Schema.TaggedError<FrontmatterDecode
  *
  * @public
  */
-export class FrontmatterEncodeError extends Schema.TaggedError<FrontmatterEncodeError>()("FrontmatterEncodeError", {
+export class FrontmatterEncodeError extends S.TaggedError<FrontmatterEncodeError>()("FrontmatterEncodeError", {
 	/** The format that failed to serialize. */
 	format: FrontmatterFormat,
 	/** The underlying format-package failure, preserved structurally. */
-	cause: Schema.Defect(),
+	cause: S.Defect(),
 }) {
 	override get message(): string {
 		return `frontmatter ${this.format} content failed to serialize`;
@@ -141,7 +142,7 @@ export interface FrontmatterCodec {
  *
  * @public
  */
-export const FrontmatterMissingReason = Schema.Literals(["absent", "captureDisabled"]);
+export const FrontmatterMissingReason = S.Literals(["absent", "captureDisabled"]);
 
 /**
  * Why a frontmatter decoder found no capture on a document.
@@ -170,7 +171,7 @@ export type FrontmatterMissingReason = typeof FrontmatterMissingReason.Type;
  *
  * @public
  */
-export class FrontmatterMissingError extends Schema.TaggedError<FrontmatterMissingError>()("FrontmatterMissingError", {
+export class FrontmatterMissingError extends S.TaggedError<FrontmatterMissingError>()("FrontmatterMissingError", {
 	/** Why there is no capture: no block at all, or capture left off. */
 	reason: FrontmatterMissingReason,
 }) {
@@ -193,11 +194,11 @@ export class FrontmatterMissingError extends Schema.TaggedError<FrontmatterMissi
  *
  * @public
  */
-export class FrontmatterValidationError extends Schema.TaggedError<FrontmatterValidationError>()(
+export class FrontmatterValidationError extends S.TaggedError<FrontmatterValidationError>()(
 	"FrontmatterValidationError",
 	{
 		/** The structured schema issue. Never a string. */
-		issue: Schema.Defect(),
+		issue: S.Defect(),
 	},
 ) {
 	override get message(): string {
@@ -309,7 +310,7 @@ export class MarkdownFrontmatter {
 	 *   frontmatter data.
 	 */
 	static schema<T, E, RD = never, RE = never>(
-		schema: Schema.Codec<T, E, RD, RE>,
+		schema: S.Codec<T, E, RD, RE>,
 		codec: FrontmatterCodec,
 	): (document: MarkdownDocument) => Effect.Effect<T, FrontmatterSchemaError, RD> {
 		return (document) => {
@@ -324,7 +325,7 @@ export class MarkdownFrontmatter {
 					)
 				: codec.decode(node).pipe(
 						Effect.flatMap((data) =>
-							Schema.decodeUnknownEffect(schema)(data).pipe(
+							S.decodeUnknownEffect(schema)(data).pipe(
 								// Normalize the schema failure at the boundary. Never leak
 								// SchemaError deeper, never stringify it — carry its
 								// structured issue tree instead.
@@ -378,7 +379,7 @@ export class MarkdownFrontmatter {
 	 *   `Effect` of the edits that install the block.
 	 */
 	static set<T, E, RD = never, RE = never>(
-		schema: Schema.Codec<T, E, RD, RE>,
+		schema: S.Codec<T, E, RD, RE>,
 		codec: FrontmatterCodec,
 	): (document: MarkdownDocument, data: T) => Effect.Effect<ReadonlyArray<MarkdownEdit>, FrontmatterWriteError, RE> {
 		return (document, data) => {
@@ -386,7 +387,7 @@ export class MarkdownFrontmatter {
 			if (node !== undefined && node.format !== codec.format) {
 				return Effect.fail(FrontmatterFormatMismatchError.make({ expected: codec.format, actual: node.format }));
 			}
-			return Schema.encodeUnknownEffect(schema)(data).pipe(
+			return S.encodeUnknownEffect(schema)(data).pipe(
 				// Normalize the schema failure at the boundary, exactly as the
 				// decode side does: carry the structured issue tree, never a string.
 				Effect.catchTag("SchemaError", (error) => Effect.fail(FrontmatterValidationError.make({ issue: error.issue }))),
@@ -426,7 +427,7 @@ export class MarkdownFrontmatter {
 	 *   `Effect` of the updated source text.
 	 */
 	static setToString<T, E, RD = never, RE = never>(
-		schema: Schema.Codec<T, E, RD, RE>,
+		schema: S.Codec<T, E, RD, RE>,
 		codec: FrontmatterCodec,
 	): (document: MarkdownDocument, data: T) => Effect.Effect<string, FrontmatterWriteError, RE> {
 		const write = MarkdownFrontmatter.set(schema, codec);

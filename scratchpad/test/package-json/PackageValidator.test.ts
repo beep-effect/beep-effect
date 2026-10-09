@@ -1,5 +1,5 @@
 import { assert, describe, layer } from "@effect/vitest";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { Package } from "../../effected/package-json/Package.ts";
 import {
 	PackageValidationError,

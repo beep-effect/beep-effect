@@ -1,5 +1,8 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Option, Result, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import {
 	Yaml,
 	YamlAlias,
@@ -195,17 +198,17 @@ describe("YamlDocument", () => {
 		it.effect("decodes text into a document and encodes it back", () =>
 			Effect.gen(function* () {
 				const codec = YamlDocument.schema();
-				const doc = yield* Schema.decodeEffect(codec)("key: value\n");
+				const doc = yield* S.decodeEffect(codec)("key: value\n");
 				assert.instanceOf(doc, YamlDocument);
 				assert.deepStrictEqual(doc.toValue(), { key: "value" });
-				const text = yield* Schema.encodeUnknownEffect(codec)(doc);
+				const text = yield* S.encodeUnknownEffect(codec)(doc);
 				assert.strictEqual(text, "key: value\n");
 			}),
 		);
 
 		it.effect("decode failures surface as SchemaError carrying the aggregate message", () =>
 			Effect.gen(function* () {
-				const error = yield* Effect.flip(Schema.decodeEffect(YamlDocument.schema())("a: *missing"));
+				const error = yield* Effect.flip(S.decodeEffect(YamlDocument.schema())("a: *missing"));
 				assert.strictEqual(error._tag, "SchemaError");
 				assert.include(String(error), "YAML parse failed");
 			}),
@@ -218,17 +221,17 @@ describe("YamlDocument", () => {
 				const text = "a: &anc 1\nb: *anc\n";
 				const doc = yield* YamlDocument.parse(text);
 				const root = doc.contents;
-				if (!(Schema.is(YamlMap)(root))) {
+				if (!(S.is(YamlMap)(root))) {
 					return assert.fail("expected a mapping root");
 				}
 				const alias = root.items[1]?.value;
-				if (!(Schema.is(YamlAlias)(alias))) {
+				if (!(S.is(YamlAlias)(alias))) {
 					return assert.fail("expected an alias value");
 				}
 				assert.strictEqual(text.slice(alias.offset, alias.offset + alias.length), "*anc");
 				const lastNameChar = text.indexOf("*anc") + "*anc".length - 1;
 				const found = root.findAtOffset(lastNameChar);
-				if (Option.isNone(found)) {
+				if (O.isNone(found)) {
 					return assert.fail("findAtOffset missed the last character of the alias");
 				}
 				assert.strictEqual(found.value, alias);
@@ -240,11 +243,11 @@ describe("YamlDocument", () => {
 				const text = "key: first line\n  second line\n";
 				const doc = yield* YamlDocument.parse(text);
 				const root = doc.contents;
-				if (!(Schema.is(YamlMap)(root))) {
+				if (!(S.is(YamlMap)(root))) {
 					return assert.fail("expected a mapping root");
 				}
 				const scalar = root.items[0]?.value;
-				if (!(Schema.is(YamlScalar)(scalar))) {
+				if (!(S.is(YamlScalar)(scalar))) {
 					return assert.fail("expected a scalar value");
 				}
 				assert.strictEqual(scalar.value, "first line second line");
@@ -252,7 +255,7 @@ describe("YamlDocument", () => {
 				assert.strictEqual(scalar.offset + scalar.length, text.indexOf("second line") + "second line".length);
 				assert.strictEqual(scalar.sourceMultiline, true);
 				const found = root.findAtOffset(text.indexOf("second"));
-				if (Option.isNone(found)) {
+				if (O.isNone(found)) {
 					return assert.fail("findAtOffset missed the second line of the folded scalar");
 				}
 				assert.strictEqual(found.value, scalar);
@@ -264,11 +267,11 @@ describe("YamlDocument", () => {
 				const text = "- first\n  second\n";
 				const doc = yield* YamlDocument.parse(text);
 				const root = doc.contents;
-				if (!(Schema.is(YamlSeq)(root))) {
+				if (!(S.is(YamlSeq)(root))) {
 					return assert.fail("expected a sequence root");
 				}
 				const scalar = root.items[0];
-				if (!(Schema.is(YamlScalar)(scalar))) {
+				if (!(S.is(YamlScalar)(scalar))) {
 					return assert.fail("expected a scalar item");
 				}
 				assert.strictEqual(scalar.value, "first second");
@@ -276,7 +279,7 @@ describe("YamlDocument", () => {
 				assert.strictEqual(scalar.offset + scalar.length, text.indexOf("second") + "second".length);
 				assert.strictEqual(scalar.sourceMultiline, true);
 				const found = root.findAtOffset(text.indexOf("second"));
-				if (Option.isNone(found)) {
+				if (O.isNone(found)) {
 					return assert.fail("findAtOffset missed the second line of the folded scalar");
 				}
 				assert.strictEqual(found.value, scalar);
@@ -288,11 +291,11 @@ describe("YamlDocument", () => {
 				const text = "[ first\n  second ]\n";
 				const doc = yield* YamlDocument.parse(text);
 				const root = doc.contents;
-				if (!(Schema.is(YamlSeq)(root))) {
+				if (!(S.is(YamlSeq)(root))) {
 					return assert.fail("expected a flow sequence root");
 				}
 				const scalar = root.items[0];
-				if (!(Schema.is(YamlScalar)(scalar))) {
+				if (!(S.is(YamlScalar)(scalar))) {
 					return assert.fail("expected a scalar item");
 				}
 				assert.strictEqual(scalar.value, "first second");
@@ -300,7 +303,7 @@ describe("YamlDocument", () => {
 				assert.strictEqual(scalar.offset + scalar.length, text.indexOf("second") + "second".length);
 				assert.strictEqual(scalar.sourceMultiline, true);
 				const found = root.findAtOffset(text.indexOf("second"));
-				if (Option.isNone(found)) {
+				if (O.isNone(found)) {
 					return assert.fail("findAtOffset missed the second line of the folded scalar");
 				}
 				assert.strictEqual(found.value, scalar);
@@ -312,11 +315,11 @@ describe("YamlDocument", () => {
 				const text = "key: value\n";
 				const doc = yield* YamlDocument.parse(text);
 				const root = doc.contents;
-				if (!(Schema.is(YamlMap)(root))) {
+				if (!(S.is(YamlMap)(root))) {
 					return assert.fail("expected a mapping root");
 				}
 				const scalar = root.items[0]?.value;
-				if (!(Schema.is(YamlScalar)(scalar))) {
+				if (!(S.is(YamlScalar)(scalar))) {
 					return assert.fail("expected a scalar value");
 				}
 				assert.strictEqual(scalar.offset, text.indexOf("value"));
@@ -346,11 +349,11 @@ describe("YamlDocument", () => {
 					"verified:\n  - by: human:spencer\n    at: 2026-09-01T00:00:00Z\n# reviewed before release\nstatus: stable\n";
 				const doc = yield* YamlDocument.parse(text);
 				const root = doc.contents;
-				if (!(Schema.is(YamlMap)(root))) {
+				if (!(S.is(YamlMap)(root))) {
 					return assert.fail("expected a mapping root");
 				}
 				const seq = root.items[0]?.value;
-				if (!(Schema.is(YamlSeq)(seq))) {
+				if (!(S.is(YamlSeq)(seq))) {
 					return assert.fail("expected a sequence value");
 				}
 				const commentStart = text.indexOf("# reviewed before release");
@@ -364,7 +367,7 @@ describe("YamlDocument", () => {
 				// The last item — the mapping the comment was swallowed into —
 				// ends there too.
 				const item = seq.items[0];
-				if (!(Schema.is(YamlMap)(item))) {
+				if (!(S.is(YamlMap)(item))) {
 					return assert.fail("expected a mapping item");
 				}
 				assert.strictEqual(item.offset + item.length, commentStart);
@@ -378,7 +381,7 @@ describe("YamlDocument", () => {
 				});
 				// Attribution is unchanged: the comment still leads the next key.
 				const statusKey = root.items[1]?.key;
-				if (!(Schema.is(YamlScalar)(statusKey))) {
+				if (!(S.is(YamlScalar)(statusKey))) {
 					return assert.fail("expected a scalar key");
 				}
 				assert.strictEqual(statusKey.commentBefore, " reviewed before release");
@@ -394,18 +397,18 @@ describe("YamlDocument", () => {
 				const text = "verified:\n  - by: a\n  # kept\nstatus: stable\n";
 				const doc = yield* YamlDocument.parse(text);
 				const root = doc.contents;
-				if (!(Schema.is(YamlMap)(root))) {
+				if (!(S.is(YamlMap)(root))) {
 					return assert.fail("expected a mapping root");
 				}
 				const seq = root.items[0]?.value;
-				if (!(Schema.is(YamlSeq)(seq))) {
+				if (!(S.is(YamlSeq)(seq))) {
 					return assert.fail("expected a sequence value");
 				}
 				assert.strictEqual(seq.offset + seq.length, text.indexOf("status"));
 				// The nested mapping's content column IS deeper than the comment,
 				// so the item disowns it and its span stops at the comment line.
 				const item = seq.items[0];
-				if (!(Schema.is(YamlMap)(item))) {
+				if (!(S.is(YamlMap)(item))) {
 					return assert.fail("expected a mapping item");
 				}
 				assert.strictEqual(item.offset + item.length, text.indexOf("  # kept"));
@@ -417,11 +420,11 @@ describe("YamlDocument", () => {
 				const text = "outer:\n  inner: 1\n# tail\nstatus: stable\n";
 				const doc = yield* YamlDocument.parse(text);
 				const root = doc.contents;
-				if (!(Schema.is(YamlMap)(root))) {
+				if (!(S.is(YamlMap)(root))) {
 					return assert.fail("expected a mapping root");
 				}
 				const inner = root.items[0]?.value;
-				if (!(Schema.is(YamlMap)(inner))) {
+				if (!(S.is(YamlMap)(inner))) {
 					return assert.fail("expected a mapping value");
 				}
 				assert.strictEqual(inner.offset + inner.length, text.indexOf("# tail"));
@@ -436,11 +439,11 @@ describe("YamlDocument", () => {
 				const text = "verified:\n  - by: a\n\n# tail\nstatus: s\n";
 				const doc = yield* YamlDocument.parse(text);
 				const root = doc.contents;
-				if (!(Schema.is(YamlMap)(root))) {
+				if (!(S.is(YamlMap)(root))) {
 					return assert.fail("expected a mapping root");
 				}
 				const seq = root.items[0]?.value;
-				if (!(Schema.is(YamlSeq)(seq))) {
+				if (!(S.is(YamlSeq)(seq))) {
 					return assert.fail("expected a sequence value");
 				}
 				// End of `  - by: a\n` — the blank line separating the entry from

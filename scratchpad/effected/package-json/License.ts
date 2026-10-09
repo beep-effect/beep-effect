@@ -4,8 +4,10 @@
 
 import type { SpdxExpression } from "../spdx/index.ts";
 import { SpdxExpression as SpdxExpressionOps, isValidExpression } from "../spdx/index.ts";
-import type { Brand, Option } from "effect";
-import { Result, Schema } from "effect";
+import type * as Brand from "effect/Brand";
+import type * as O from "effect/Option";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 
 /**
  * Indicates that a string is not a valid SPDX license identifier or expression.
@@ -15,9 +17,9 @@ import { Result, Schema } from "effect";
  *
  * @public
  */
-export class InvalidSpdxLicenseError extends Schema.TaggedError<InvalidSpdxLicenseError>()("InvalidSpdxLicenseError", {
+export class InvalidSpdxLicenseError extends S.TaggedError<InvalidSpdxLicenseError>()("InvalidSpdxLicenseError", {
 	/** The raw input string that failed validation. */
-	input: Schema.String,
+	input: S.String,
 }) {
 	override get message(): string {
 		return `Invalid SPDX license "${this.input}": not a recognized identifier or expression`;
@@ -53,11 +55,11 @@ export const isValidSpdx = (value: string): boolean => {
  *
  * @public
  */
-export const SpdxLicense = Schema.String.pipe(
-	Schema.check(
-		Schema.makeFilter((value) => (isValidSpdx(value) ? undefined : "Expected a valid SPDX license expression")),
+export const SpdxLicense = S.String.pipe(
+	S.check(
+		S.makeFilter((value) => (isValidSpdx(value) ? undefined : "Expected a valid SPDX license expression")),
 	),
-	Schema.brand("SpdxLicense"),
+	S.brand("SpdxLicense"),
 );
 
 /**
@@ -101,7 +103,7 @@ export type SpdxLicense = string & Brand.Brand<"SpdxLicense">;
  *
  * @public
  */
-export const licenseExpressionOf = (license: SpdxLicense): Option.Option<SpdxExpression> =>
+export const licenseExpressionOf = (license: SpdxLicense): O.Option<SpdxExpression> =>
 	// No explicit screen for npm's two spellings: the grammar already declines
 	// them, so discarding the parse failure IS the screen. The absence is
 	// load-bearing — it is why a future third npm special case needs no change

@@ -1,5 +1,6 @@
 import { assert, describe, it } from "@effect/vitest";
-import { ConfigProvider, Effect } from "effect";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Effect from "effect/Effect";
 import { readEnv } from "../../effected/env/internal/envRecord.ts";
 
 describe("readEnv", () => {

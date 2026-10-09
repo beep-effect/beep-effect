@@ -1,7 +1,11 @@
 // @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it, layer } from "@effect/vitest";
 import { WorkspaceResolver } from "../../effected/npm/index.ts";
-import { Cause, Effect, Exit, Layer, Option } from "effect";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import {
 	PackageNotFoundError,
 	WorkspaceDiscovery,
@@ -110,15 +114,15 @@ describe("WorkspaceDiscovery — one-level patterns", () => {
 				// The root package's path is a PREFIX of every member's, so a naive
 				// first-match index would attribute this to `root`.
 				const owner = yield* discovery.resolveFile("/repo/packages/alpha/src/index.ts");
-				assert.isTrue(Option.isSome(owner));
-				assert.strictEqual(Option.getOrThrow(owner).name, "@x/alpha");
+				assert.isTrue(O.isSome(owner));
+				assert.strictEqual(O.getOrThrow(owner).name, "@x/alpha");
 			}),
 		);
 
 		it.effect("a file outside every package resolves to none", () =>
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
-				assert.isTrue(Option.isNone(yield* discovery.resolveFile("/elsewhere/x.ts")));
+				assert.isTrue(O.isNone(yield* discovery.resolveFile("/elsewhere/x.ts")));
 			}),
 		);
 
@@ -385,9 +389,9 @@ describe("WorkspaceDiscovery — a manifest without a version is discovered (#47
 			Effect.gen(function* () {
 				const resolver = yield* WorkspaceResolver;
 				// Positive control first: the versioned sibling still resolves.
-				assert.deepStrictEqual(yield* resolver.versionOf("@x/versioned"), Option.some("1.0.0"));
+				assert.deepStrictEqual(yield* resolver.versionOf("@x/versioned"), O.some("1.0.0"));
 				// A non-member is still `none`, per the contract.
-				assert.deepStrictEqual(yield* resolver.versionOf("react"), Option.none());
+				assert.deepStrictEqual(yield* resolver.versionOf("react"), O.none());
 				// The version-less member is a MEMBER with nothing to resolve to, which
 				// the contract reserves for the typed channel rather than `none`.
 				const error = yield* Effect.flip(resolver.versionOf("@x/bare"));
@@ -796,11 +800,11 @@ describe("WorkspaceDiscovery.layerTest — one stubbed method", () => {
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
 				const owner = yield* discovery.resolveFile("/repo/packages/utils/extra/src/index.ts");
-				assert.isTrue(Option.isSome(owner));
-				assert.strictEqual(Option.isSome(owner) ? owner.value.name : "", "@x/utils-extra");
+				assert.isTrue(O.isSome(owner));
+				assert.strictEqual(O.isSome(owner) ? owner.value.name : "", "@x/utils-extra");
 
 				const outside = yield* discovery.resolveFile("/elsewhere/file.ts");
-				assert.isTrue(Option.isNone(outside));
+				assert.isTrue(O.isNone(outside));
 			}),
 		);
 
@@ -832,7 +836,7 @@ describe("WorkspaceDiscovery.makeTest — the empty-workspace defaults", () => {
 				assert.deepStrictEqual(yield* discovery.listPackages, []);
 				assert.strictEqual((yield* discovery.importerMap).size, 0);
 				assert.deepStrictEqual(yield* discovery.resolveFiles(["/repo/a.ts"]), []);
-				assert.isTrue(Option.isNone(yield* discovery.resolveFile("/repo/a.ts")));
+				assert.isTrue(O.isNone(yield* discovery.resolveFile("/repo/a.ts")));
 				yield* discovery.refresh;
 			}),
 		);
@@ -899,7 +903,7 @@ describe("WorkspaceDiscovery — duplicate package names", () => {
 		it.effect("versionOf resolves the first package's version", () =>
 			Effect.gen(function* () {
 				const resolver = yield* WorkspaceResolver;
-				assert.deepStrictEqual(yield* resolver.versionOf("@x/dup"), Option.some("1.0.0"));
+				assert.deepStrictEqual(yield* resolver.versionOf("@x/dup"), O.some("1.0.0"));
 			}).pipe(Effect.provide(WorkspaceDiscovery.workspaceResolver)),
 		);
 	});

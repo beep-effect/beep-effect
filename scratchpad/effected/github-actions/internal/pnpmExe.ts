@@ -10,7 +10,9 @@
 // `@pnpm/exe.*` package), never by major version — pnpm 11 and earlier ship
 // no such dependency and keep their Node entry points.
 
-import { Option, Result, Function } from "effect";
+import * as O from "effect/Option";
+import * as Result from "effect/Result";
+import * as Function from "effect/Function";
 import * as Base64 from "effect/encoding/Base64";
 import * as Hex from "effect/encoding/Hex";
 
@@ -57,15 +59,15 @@ const RUNNER_OS_TO_PLATFORM: Readonly<Record<string, string>> = {
  * @internal
  */
 export const pnpmExeTarget: {
-	(runnerOs: string, arch: string, musl: boolean): Option.Option<string>;
-	(arch: string, musl: boolean): (runnerOs: string) => Option.Option<string>;
-} = Function.dual(3, (runnerOs: string, arch: string, musl: boolean): Option.Option<string> => {
+	(runnerOs: string, arch: string, musl: boolean): O.Option<string>;
+	(arch: string, musl: boolean): (runnerOs: string) => O.Option<string>;
+} = Function.dual(3, (runnerOs: string, arch: string, musl: boolean): O.Option<string> => {
 	const platform = RUNNER_OS_TO_PLATFORM[runnerOs.toLowerCase()];
 	if (platform === undefined) {
-		return Option.none();
+		return O.none();
 	}
 	const target = `${platform}-${arch}${platform === "linux" && musl ? "-musl" : ""}`;
-	return PNPM_EXE_TARGETS.has(target) ? Option.some(target) : Option.none();
+	return PNPM_EXE_TARGETS.has(target) ? O.some(target) : O.none();
 });
 
 /**
@@ -108,7 +110,7 @@ const SRI_ALGORITHMS: ReadonlyArray<string> = ["sha512", "sha384", "sha256", "sh
  */
 export const strongestSri = (
 	integrity: string,
-): Option.Option<{ readonly algorithm: string; readonly hex: string }> => {
+): O.Option<{ readonly algorithm: string; readonly hex: string }> => {
 	const entries = integrity
 		.split(/\s+/)
 		.filter((entry) => entry.length > 0)
@@ -129,10 +131,10 @@ export const strongestSri = (
 	for (const algorithm of SRI_ALGORITHMS) {
 		const found = entries.find((entry) => entry.algorithm === algorithm);
 		if (found !== undefined) {
-			return Option.some(found);
+			return O.some(found);
 		}
 	}
-	return Option.none();
+	return O.none();
 };
 
 /** Whether a bin target is a Node script (run with `node`) rather than an executable run directly. @internal */

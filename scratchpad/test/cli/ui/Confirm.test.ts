@@ -1,5 +1,9 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Cause, Effect, Exit, Option, Schema } from "effect";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { createElement } from "react";
 import { Cancelled, Fmt } from "../../../effected/cli/index.ts";
 import type { ConfirmResult, ConfirmToggle } from "../../../effected/cli/ui.ts";
@@ -16,11 +20,11 @@ describe("Confirm reducer", () => {
 		assert.isFalse(Confirm.step(Confirm.step(start, "yes"), "no").confirmed);
 		assert.isTrue(Confirm.step(start, "flip").confirmed);
 		assert.isFalse(Confirm.step(Confirm.step(start, "flip"), "flip").confirmed);
-		assert.deepStrictEqual(Confirm.keys.match({ _tag: "Named", name: "left" }), Option.some("flip"));
-		assert.deepStrictEqual(Confirm.keys.match({ _tag: "Named", name: "right" }), Option.some("flip"));
-		assert.deepStrictEqual(Confirm.keys.match({ _tag: "Char", char: "y" }), Option.some("yes"));
-		assert.deepStrictEqual(Confirm.keys.match({ _tag: "Char", char: "n" }), Option.some("no"));
-		assert.deepStrictEqual(Confirm.keys.match({ _tag: "Char", char: "q" }), Option.some("cancel"));
+		assert.deepStrictEqual(Confirm.keys.match({ _tag: "Named", name: "left" }), O.some("flip"));
+		assert.deepStrictEqual(Confirm.keys.match({ _tag: "Named", name: "right" }), O.some("flip"));
+		assert.deepStrictEqual(Confirm.keys.match({ _tag: "Char", char: "y" }), O.some("yes"));
+		assert.deepStrictEqual(Confirm.keys.match({ _tag: "Char", char: "n" }), O.some("no"));
+		assert.deepStrictEqual(Confirm.keys.match({ _tag: "Char", char: "q" }), O.some("cancel"));
 	});
 
 	it("space toggles only a toggle row: on the yes/no row it changes nothing", () => {
@@ -115,7 +119,7 @@ describe("Confirm.screen under CliUiTest", () => {
 			const handle = yield* CliUiTest.render(Confirm.screen({ message: "Go?", toggles: promote(1) }));
 			yield* handle.type("q");
 			const error = yield* Effect.flip(handle.result);
-			assert.strictEqual(Schema.is(Cancelled)(error) ? error.reason : undefined, "escape");
+			assert.strictEqual(S.is(Cancelled)(error) ? error.reason : undefined, "escape");
 		}).pipe(Effect.scoped),
 	);
 

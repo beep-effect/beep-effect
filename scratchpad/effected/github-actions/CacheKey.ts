@@ -1,6 +1,10 @@
 import { GlobSet } from "../glob/index.ts";
 import { descend } from "../walker/index.ts";
-import { Effect, FileSystem, Option, Path, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as S from "effect/Schema";
 import { sha256, sha256Hex } from "./internal/digest.ts";
 
 /**
@@ -9,11 +13,11 @@ import { sha256, sha256Hex } from "./internal/digest.ts";
  *
  * @public
  */
-export class CacheKeyReadError extends Schema.TaggedError<CacheKeyReadError>()("CacheKeyReadError", {
+export class CacheKeyReadError extends S.TaggedError<CacheKeyReadError>()("CacheKeyReadError", {
 	/** The path being read when it went wrong. */
-	path: Schema.String,
+	path: S.String,
 	/** The underlying failure, preserved structurally. */
-	cause: Schema.optionalKey(Schema.Defect()),
+	cause: S.optionalKey(S.Defect()),
 }) {
 	override get message(): string {
 		return `Could not read "${this.path}" while deriving a cache key`;
@@ -25,11 +29,11 @@ export class CacheKeyReadError extends Schema.TaggedError<CacheKeyReadError>()("
  *
  * @public
  */
-export class CacheKeyBadPatternError extends Schema.TaggedError<CacheKeyBadPatternError>()("CacheKeyBadPatternError", {
+export class CacheKeyBadPatternError extends S.TaggedError<CacheKeyBadPatternError>()("CacheKeyBadPatternError", {
 	/** The pattern that would not compile. */
-	pattern: Schema.String,
+	pattern: S.String,
 	/** The underlying failure, preserved structurally. */
-	cause: Schema.optionalKey(Schema.Defect()),
+	cause: S.optionalKey(S.Defect()),
 }) {
 	override get message(): string {
 		return `"${this.pattern}" is not a usable glob pattern`;
@@ -72,10 +76,10 @@ const MAX_KEY_LENGTH = 512;
  * Commas and newlines are refused because the runner uses both to delimit the
  * restore-key list — a segment carrying one would silently become two keys.
  */
-const Segment = Schema.String.check(Schema.isPattern(/^[^,\n\r]+$/u));
+const Segment = S.String.check(S.isPattern(/^[^,\n\r]+$/u));
 
-const Segments = Schema.NonEmptyArray(Segment).check(
-	Schema.makeFilter((values) => values.join(SEPARATOR).length <= MAX_KEY_LENGTH, {
+const Segments = S.NonEmptyArray(Segment).check(
+	S.makeFilter((values) => values.join(SEPARATOR).length <= MAX_KEY_LENGTH, {
 		title: `a cache key of at most ${MAX_KEY_LENGTH} characters`,
 	}),
 );
@@ -84,9 +88,9 @@ const Segments = Schema.NonEmptyArray(Segment).check(
  * One explicit rung: how many leading segments it keeps. The upper bound is
  * cross-field (`segments.length - 1`) and lives on the class schema.
  */
-const RestoreDepth = Schema.Finite.check(
-	Schema.isInt(),
-	Schema.isBetween({ minimum: 1, maximum: Number.MAX_SAFE_INTEGER }),
+const RestoreDepth = S.Finite.check(
+	S.isInt(),
+	S.isBetween({ minimum: 1, maximum: Number.MAX_SAFE_INTEGER }),
 );
 
 /**
@@ -94,7 +98,7 @@ const RestoreDepth = Schema.Finite.check(
  * exact-match-only restores, spelled by {@link CacheKey.withoutRestoreKeys}.
  * Only *absence* means the default every-prefix ladder.
  */
-const RestoreDepths = Schema.Array(RestoreDepth);
+const RestoreDepths = S.Array(RestoreDepth);
 
 /**
  * A GitHub Actions cache key and the restore-key ladder that goes with it.
@@ -124,8 +128,8 @@ const RestoreDepths = Schema.Array(RestoreDepth);
  *
  * @public
  */
-export class CacheKey extends Schema.Class<CacheKey>("CacheKey")(
-	Schema.Struct({
+export class CacheKey extends S.Class<CacheKey>("CacheKey")(
+	S.Struct({
 		/** The components, most general first. */
 		segments: Segments,
 		/**
@@ -135,9 +139,9 @@ export class CacheKey extends Schema.Class<CacheKey>("CacheKey")(
 		 * exact-match-only. See {@link CacheKey.withRestoreDepths} and
 		 * {@link CacheKey.withoutRestoreKeys}.
 		 */
-		restoreDepths: Schema.optionalKey(RestoreDepths),
+		restoreDepths: S.optionalKey(RestoreDepths),
 	}).check(
-		Schema.makeFilter((key) =>
+		S.makeFilter((key) =>
 			key.restoreDepths === undefined || key.restoreDepths.every((depth) => depth <= key.segments.length - 1)
 				? undefined
 				: "every restore depth must be between 1 and segments.length - 1 — a rung keeping every segment would just repeat the primary key",
@@ -377,7 +381,7 @@ export class CacheKey extends Schema.Class<CacheKey>("CacheKey")(
 		const fs = yield* FileSystem.FileSystem;
 		const ordered = [...new Set(files)].sort();
 		if (ordered.length === 0) {
-			return Option.none<string>();
+			return O.none<string>();
 		}
 		const digests = yield* Effect.forEach(
 			ordered, (path) =>
@@ -394,7 +398,7 @@ export class CacheKey extends Schema.Class<CacheKey>("CacheKey")(
 			{ concurrency: 8 },
 		);
 		// The digest of the concatenated raw digests — the runner's own `hashFiles()` shape.
-		return Option.some(sha256Hex(Uint8Array.from(digests.flatMap((digest) => [...digest]))));
+		return O.some(sha256Hex(Uint8Array.from(digests.flatMap((digest) => [...digest]))));
 	});
 
 	/**
@@ -482,7 +486,7 @@ export class CacheKey extends Schema.Class<CacheKey>("CacheKey")(
 				),
 				Effect.mapError((cause) => CacheKeyReadError.make({ path: target, cause })),
 			);
-			if (Option.isSome(info) && info.value.type === "File") {
+			if (O.isSome(info) && info.value.type === "File") {
 				candidates.add(literal);
 			}
 		}

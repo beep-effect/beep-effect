@@ -11,7 +11,7 @@
 // deliberately not offered day one.
 
 import { assert, describe, it } from "@effect/vitest";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { Markdown } from "../../effected/markdown/Markdown.ts";
 import { MarkdownDocument } from "../../effected/markdown/MarkdownDocument.ts";
 import { MarkdownEdit } from "../../effected/markdown/MarkdownEdit.ts";

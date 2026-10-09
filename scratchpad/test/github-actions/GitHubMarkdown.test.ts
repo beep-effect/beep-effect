@@ -1,5 +1,6 @@
 import { assert, describe, it } from "@effect/vitest";
-import { DateTime, Schema } from "effect";
+import * as DateTime from "effect/DateTime";
+import * as S from "effect/Schema";
 import { GitHubMarkdown } from "../../effected/github-actions/GitHubMarkdown.ts";
 
 describe("GitHubMarkdown", () => {
@@ -103,9 +104,9 @@ describe("GitHubMarkdown", () => {
 
 	describe("tableFor — the schema is the single authority for the table's shape", () => {
 		it("headers come from title annotations, falling back to the field name", () => {
-			const Row = Schema.Struct({
-				name: Schema.String.annotate({ title: "Check" }),
-				detail: Schema.String,
+			const Row = S.Struct({
+				name: S.String.annotate({ title: "Check" }),
+				detail: S.String,
 			});
 			assert.strictEqual(
 				GitHubMarkdown.tableFor(Row).render([{ name: "build", detail: "clean" }]),
@@ -114,7 +115,7 @@ describe("GitHubMarkdown", () => {
 		});
 
 		it("a per-column header override beats the annotation", () => {
-			const Row = Schema.Struct({ name: Schema.String.annotate({ title: "Check" }) });
+			const Row = S.Struct({ name: S.String.annotate({ title: "Check" }) });
 			assert.strictEqual(
 				GitHubMarkdown.tableFor(Row, { columns: { name: { header: "Step" } } }).render([{ name: "build" }]),
 				"| Step |\n| --- |\n| build |",
@@ -122,10 +123,10 @@ describe("GitHubMarkdown", () => {
 		});
 
 		it("column order is field declaration order, not row-object key order", () => {
-			const Row = Schema.Struct({
-				first: Schema.String,
-				second: Schema.String,
-				third: Schema.String,
+			const Row = S.Struct({
+				first: S.String,
+				second: S.String,
+				third: S.String,
 			});
 			// The row object deliberately spells its keys in a different order:
 			// a typed row cannot transpose columns, which is the hazard this
@@ -135,10 +136,10 @@ describe("GitHubMarkdown", () => {
 		});
 
 		it("a typed field projects through its own codec", () => {
-			const Row = Schema.Struct({
-				name: Schema.String,
-				at: Schema.DateTimeUtcFromString.annotate({ title: "When" }),
-				outcome: Schema.Literals(["passed", "failed"]),
+			const Row = S.Struct({
+				name: S.String,
+				at: S.DateTimeUtcFromString.annotate({ title: "When" }),
+				outcome: S.Literals(["passed", "failed"]),
 			});
 			assert.strictEqual(
 				GitHubMarkdown.tableFor(Row).render([
@@ -152,7 +153,7 @@ describe("GitHubMarkdown", () => {
 			// v4's Schema.DateTimeUtc encodes to DateTime.Utc itself — the string
 			// serialization moved out of the declare — so it has no string
 			// projection to borrow and the type of `options` demands a format.
-			const Row = Schema.Struct({ at: Schema.DateTimeUtc });
+			const Row = S.Struct({ at: S.DateTimeUtc });
 			const table = GitHubMarkdown.tableFor(Row, {
 				columns: { at: { format: (value) => DateTime.formatIso(value) } },
 			});
@@ -169,7 +170,7 @@ describe("GitHubMarkdown", () => {
 		});
 
 		it("escaping is inherited from table — a cell carrying pipes cannot shift columns", () => {
-			const Row = Schema.Struct({ range: Schema.String, outcome: Schema.String });
+			const Row = S.Struct({ range: S.String, outcome: S.String });
 			assert.strictEqual(
 				GitHubMarkdown.tableFor(Row).render([{ range: ">=1 || <2", outcome: "ok" }]),
 				"| range | outcome |\n| --- | --- |\n| >=1 \\|\\| <2 | ok |",
@@ -177,7 +178,7 @@ describe("GitHubMarkdown", () => {
 		});
 
 		it("an absent optional field renders as an empty cell", () => {
-			const Row = Schema.Struct({ name: Schema.String, note: Schema.optionalKey(Schema.String) });
+			const Row = S.Struct({ name: S.String, note: S.optionalKey(S.String) });
 			assert.strictEqual(
 				GitHubMarkdown.tableFor(Row).render([{ name: "build" }, { name: "test", note: "flaky" }]),
 				"| name | note |\n| --- | --- |\n| build |  |\n| test | flaky |",
@@ -185,7 +186,7 @@ describe("GitHubMarkdown", () => {
 		});
 
 		it("re-rendering from current state is just calling render again", () => {
-			const Row = Schema.Struct({ name: Schema.String, outcome: Schema.Literals(["queued", "passed"]) });
+			const Row = S.Struct({ name: S.String, outcome: S.Literals(["queued", "passed"]) });
 			const table = GitHubMarkdown.tableFor(Row);
 			const rows: Array<typeof Row.Type> = [{ name: "build", outcome: "queued" }];
 			const before = table.render(rows);
@@ -242,7 +243,7 @@ describe("GitHubMarkdown", () => {
 		});
 
 		it("the one reachable throw is the CODEC, and only for a value smuggled past the types", () => {
-			const Row = Schema.Struct({ name: Schema.String });
+			const Row = S.Struct({ name: S.String });
 			const table = GitHubMarkdown.tableFor(Row);
 			// A well-typed row is total...
 			assert.include(table.render([{ name: "build" }]), "| build |");
@@ -264,7 +265,7 @@ describe("GitHubMarkdown", () => {
 		});
 
 		it("a user-supplied format function is the other way a render can throw", () => {
-			const Row = Schema.Struct({ count: Schema.Finite });
+			const Row = S.Struct({ count: S.Finite });
 			// `format` bypasses the codec entirely, so its totality is the caller's
 			// to guarantee — the no-wrapping guidance covers the writer's own
 			// machinery, not arbitrary user code the writer calls.

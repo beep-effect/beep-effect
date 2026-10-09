@@ -1,5 +1,6 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
 import { DependencyField, DependencyKind, DependencySection } from "../../effected/npm/index.ts";
 
 describe("DependencySection", () => {
@@ -29,9 +30,9 @@ describe("DependencySection", () => {
 	it.effect("DependencyKind schema accepts the four kinds and rejects a field name", () =>
 		Effect.gen(function* () {
 			for (const kind of ["prod", "dev", "peer", "optional"]) {
-				assert.strictEqual(yield* Schema.decodeUnknownEffect(DependencyKind)(kind), kind);
+				assert.strictEqual(yield* S.decodeUnknownEffect(DependencyKind)(kind), kind);
 			}
-			const error = yield* Effect.flip(Schema.decodeUnknownEffect(DependencyKind)("dependencies"));
+			const error = yield* Effect.flip(S.decodeUnknownEffect(DependencyKind)("dependencies"));
 			assert.strictEqual(error._tag, "SchemaError");
 		}),
 	);
@@ -39,9 +40,9 @@ describe("DependencySection", () => {
 	it.effect("DependencyField schema accepts the four field names and rejects a kind", () =>
 		Effect.gen(function* () {
 			for (const field of ["dependencies", "devDependencies", "peerDependencies", "optionalDependencies"]) {
-				assert.strictEqual(yield* Schema.decodeUnknownEffect(DependencyField)(field), field);
+				assert.strictEqual(yield* S.decodeUnknownEffect(DependencyField)(field), field);
 			}
-			const error = yield* Effect.flip(Schema.decodeUnknownEffect(DependencyField)("prod"));
+			const error = yield* Effect.flip(S.decodeUnknownEffect(DependencyField)("prod"));
 			assert.strictEqual(error._tag, "SchemaError");
 		}),
 	);

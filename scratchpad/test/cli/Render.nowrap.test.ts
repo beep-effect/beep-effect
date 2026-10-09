@@ -2,7 +2,10 @@
 import { assert, describe, it } from "@effect/vitest";
 import type { AudienceKind } from "../../effected/env/index.ts";
 import { Audience, TerminalEnv } from "../../effected/env/index.ts";
-import { Console, Effect, Layer, Option } from "effect";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import { CliLinks, CliTheme, Doc, Render, Status } from "../../effected/cli/index.ts";
 
 const ESC = String.fromCharCode(0x1b);
@@ -24,7 +27,7 @@ const env = (audience: AudienceKind, isTerminal: boolean, color: "none" | "truec
 		isTerminal,
 		color,
 		hyperlinks: false,
-		columns: isTerminal ? Option.some(40) : Option.none<number>(),
+		columns: isTerminal ? O.some(40) : O.none<number>(),
 	};
 	const terminal = TerminalEnv.layerTest({ stdinIsTerminal: isTerminal, stdout: stream, stderr: stream });
 	return Layer.mergeAll(
@@ -77,8 +80,8 @@ describe("Render.context's width follows the stream's terminal for a human", () 
 		Effect.gen(function* () {
 			const terminal = TerminalEnv.layerTest({
 				stdinIsTerminal: true,
-				stdout: { isTerminal: false, columns: Option.some(40) },
-				stderr: { isTerminal: true, columns: Option.some(40) },
+				stdout: { isTerminal: false, columns: O.some(40) },
+				stderr: { isTerminal: true, columns: O.some(40) },
 			});
 			const layer = Layer.mergeAll(
 				terminal,

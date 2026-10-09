@@ -10,7 +10,7 @@ import { dual } from "effect/Function";
 // fields means same value.
 
 import { assert } from "@effect/vitest";
-import { Equal } from "effect";
+import * as Equal from "effect/Equal";
 import { classifyValueToken } from "../../../effected/toml/internal/scanner.ts";
 import { TomlLocalDate, TomlLocalDateTime, TomlLocalTime, TomlOffsetDateTime } from "../../../effected/toml/TomlDateTime.ts";
 

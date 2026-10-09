@@ -1,4 +1,8 @@
-import { Context, Effect, Layer, Option, Schema } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { GitHubClient } from "./GitHubClient.ts";
 import type { GitHubError } from "./GitHubError.ts";
 import { numericId } from "./internal/ids.ts";
@@ -15,11 +19,11 @@ import type { PageOptions } from "./Rest.ts";
  *
  * @public
  */
-export class CommentMarker extends Schema.Class<CommentMarker>("CommentMarker")({
+export class CommentMarker extends S.Class<CommentMarker>("CommentMarker")({
 	/** Whose comments these are, e.g. your action's name. */
-	namespace: Schema.NonEmptyString,
+	namespace: S.NonEmptyString,
 	/** Which comment, within that namespace. */
-	key: Schema.NonEmptyString,
+	key: S.NonEmptyString,
 }) {
 	/** The HTML comment appended to a body so the comment can be found again. */
 	get html(): string {
@@ -37,10 +41,10 @@ export class CommentMarker extends Schema.Class<CommentMarker>("CommentMarker")(
  *
  * @public
  */
-export class CommentRecord extends Schema.Class<CommentRecord>("CommentRecord")({
-	id: Schema.Int,
-	body: Schema.String,
-	url: Schema.String,
+export class CommentRecord extends S.Class<CommentRecord>("CommentRecord")({
+	id: S.Int,
+	body: S.String,
+	url: S.String,
 }) {}
 
 /**
@@ -75,7 +79,7 @@ export interface PullRequestCommentShape {
 		issueNumber: number,
 		marker: CommentMarker,
 		options?: { readonly page?: PageOptions | undefined },
-	) => Effect.Effect<Option.Option<CommentRecord>, GitHubError, Repo>;
+	) => Effect.Effect<O.Option<CommentRecord>, GitHubError, Repo>;
 	/** Delete a comment by id. */
 	readonly delete: (commentId: number) => Effect.Effect<void, GitHubError, Repo>;
 }
@@ -159,7 +163,7 @@ const make = (client: GitHubClient["Service"]): PullRequestCommentShape => {
 			options?.page,
 		);
 		const found = comments.find((comment) => marker.matches(comment.body ?? ""));
-		return found === undefined ? Option.none() : Option.some(recordOf(found));
+		return found === undefined ? O.none() : O.some(recordOf(found));
 	});
 
 	return {
@@ -174,7 +178,7 @@ const make = (client: GitHubClient["Service"]): PullRequestCommentShape => {
 			const { owner, repo } = yield* Repo;
 			const marked = `${body}\n\n${marker.html}`;
 			const existing = yield* find(issueNumber, marker);
-			if (Option.isNone(existing)) {
+			if (O.isNone(existing)) {
 				return yield* create(issueNumber, marked);
 			}
 			const updated = yield* client.request("PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}", {

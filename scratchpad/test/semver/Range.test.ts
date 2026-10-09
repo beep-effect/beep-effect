@@ -1,5 +1,8 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Option, Result, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { InvalidRangeError, Range, SemVer, UnsatisfiableConstraintError } from "../../effected/semver/index.ts";
 
 describe("Range", () => {
@@ -47,10 +50,10 @@ describe("Range", () => {
 	describe("FromString", () => {
 		it.effect("decodes and encodes canonically", () =>
 			Effect.gen(function* () {
-				const range = yield* Schema.decodeEffect(Range.FromString)("^1.0.0 || 2.x");
+				const range = yield* S.decodeEffect(Range.FromString)("^1.0.0 || 2.x");
 				assert.instanceOf(range, Range);
-				const encoded = yield* Schema.encodeUnknownEffect(Range.FromString)(range);
-				const reparsed = yield* Schema.decodeEffect(Range.FromString)(encoded);
+				const encoded = yield* S.encodeUnknownEffect(Range.FromString)(range);
+				const reparsed = yield* S.decodeEffect(Range.FromString)(encoded);
 				assert.strictEqual(reparsed.toString(), range.toString());
 			}),
 		);
@@ -83,9 +86,9 @@ describe("Range", () => {
 			Effect.gen(function* () {
 				const versions = yield* Effect.forEach(["0.9.0", "1.0.0", "1.5.0", "1.9.9", "2.0.0"], (s) => SemVer.parse(s));
 				const range = yield* Range.parse("^1.0.0");
-				assert.deepStrictEqual(Range.maxSatisfying(versions, range).pipe(Option.map(String)), Option.some("1.9.9"));
-				assert.deepStrictEqual(Range.minSatisfying(versions, range).pipe(Option.map(String)), Option.some("1.0.0"));
-				assert.isTrue(Option.isNone(Range.maxSatisfying(versions, yield* Range.parse(">=3.0.0"))));
+				assert.deepStrictEqual(Range.maxSatisfying(versions, range).pipe(O.map(String)), O.some("1.9.9"));
+				assert.deepStrictEqual(Range.minSatisfying(versions, range).pipe(O.map(String)), O.some("1.0.0"));
+				assert.isTrue(O.isNone(Range.maxSatisfying(versions, yield* Range.parse(">=3.0.0"))));
 			}),
 		);
 	});

@@ -2,7 +2,7 @@
 // exists: a path nothing arranged is NotFound, never fabricated content.
 
 import { assert, describe, it } from "@effect/vitest";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
 
 describe("honest absence — the effected#249 contract", () => {
@@ -27,7 +27,7 @@ describe("honest absence — the effected#249 contract", () => {
 			const statError = yield* Effect.flip(fs.stat("/absent.txt"));
 			assert.strictEqual(statError.reason._tag, "NotFound");
 
-			const openError = yield* Effect.flip(Effect.scoped(fs.open("/absent.txt", { flag: "r" })));
+			const openError = yield* fs.open("/absent.txt", { flag: "r" }).pipe(Effect.scoped, Effect.flip);
 			assert.strictEqual(openError.reason._tag, "NotFound");
 
 			// The seeded path still answers — absence is per-path, not global.

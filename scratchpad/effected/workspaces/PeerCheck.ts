@@ -15,7 +15,9 @@
 
 import type { Lockfile, ResolvedPackage } from "../lockfiles/index.ts";
 import { Range, SemVer } from "../semver/index.ts";
-import { Option, Result, Schema } from "effect";
+import * as O from "effect/Option";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import type { PeerDependencyRules } from "./ConfigDependencyHooks.ts";
 import type { PeerNameMatcher } from "./internal/peerPatterns.ts";
 import { peerNameMatcher } from "./internal/peerPatterns.ts";
@@ -169,11 +171,11 @@ export interface PeerCheckOptions {
  *
  * @public
  */
-export class PeerParent extends Schema.Class<PeerParent>("PeerParent")({
+export class PeerParent extends S.Class<PeerParent>("PeerParent")({
 	/** The package name. */
-	name: Schema.NonEmptyString,
+	name: S.NonEmptyString,
 	/** The resolved version of that package. */
-	version: Schema.String,
+	version: S.String,
 }) {}
 
 /**
@@ -202,19 +204,19 @@ export class PeerParent extends Schema.Class<PeerParent>("PeerParent")({
  *
  * @public
  */
-export class UnsatisfiedPeer extends Schema.Class<UnsatisfiedPeer>("UnsatisfiedPeer")({
+export class UnsatisfiedPeer extends S.Class<UnsatisfiedPeer>("UnsatisfiedPeer")({
 	/** The importer path the problem belongs to (`"."` for the root). */
-	importer: Schema.NonEmptyString,
+	importer: S.NonEmptyString,
 	/** The peer dependency's name. */
-	dependency: Schema.NonEmptyString,
+	dependency: S.NonEmptyString,
 	/** The range the declaring package asked for. */
-	wanted: Schema.String,
+	wanted: S.String,
 	/** The version that resolved, or `null` when nothing resolved. */
-	found: Schema.NullOr(Schema.String),
+	found: S.NullOr(S.String),
 	/** Whether the declaring package marked the peer optional. */
-	optional: Schema.Boolean,
+	optional: S.Boolean,
 	/** The path from the importer to the declaring package. */
-	parents: Schema.Array(PeerParent),
+	parents: S.Array(PeerParent),
 }) {}
 
 /**
@@ -511,8 +513,8 @@ const CATALOG_PREFIX = "catalog:";
 const resolvePeerRange = (catalogs: CatalogSet | undefined, peer: string, wanted: string): string | undefined => {
 	let range = wanted;
 	if (wanted.startsWith(CATALOG_PREFIX)) {
-		const resolved = catalogs === undefined ? Option.none() : catalogs.resolveSpecifier(peer, wanted);
-		if (Option.isNone(resolved)) return undefined;
+		const resolved = catalogs === undefined ? O.none() : catalogs.resolveSpecifier(peer, wanted);
+		if (O.isNone(resolved)) return undefined;
 		range = resolved.value;
 	}
 	return isProtocolSpecifier(range) ? undefined : range;
@@ -660,7 +662,7 @@ interface Policy {
  *
  * @public
  */
-export class PeerCheck extends Schema.Class<PeerCheck>("PeerCheck")({
+export class PeerCheck extends S.Class<PeerCheck>("PeerCheck")({
 	/**
 	 * Whether the lockfile's format records peer resolution at all.
 	 *
@@ -670,9 +672,9 @@ export class PeerCheck extends Schema.Class<PeerCheck>("PeerCheck")({
 	 * The answer is not recoverable, so it is not fabricated — `unsatisfied`
 	 * is empty and this flag says why.
 	 */
-	supported: Schema.Boolean,
+	supported: S.Boolean,
 	/** Every unsatisfied peer found, optional ones included. */
-	unsatisfied: Schema.Array(UnsatisfiedPeer),
+	unsatisfied: S.Array(UnsatisfiedPeer),
 	/**
 	 * Importers whose dependencies could not be resolved to instances, so no
 	 * verdict was reached for them.
@@ -687,7 +689,7 @@ export class PeerCheck extends Schema.Class<PeerCheck>("PeerCheck")({
 	 * exists: a gate that sees no rows is entitled to know whether that means
 	 * "clean" or "not looked at".
 	 */
-	unresolvedImporters: Schema.Array(Schema.String),
+	unresolvedImporters: S.Array(S.String),
 	/**
 	 * Why this report is not a complete answer, or empty when it is.
 	 *
@@ -696,8 +698,8 @@ export class PeerCheck extends Schema.Class<PeerCheck>("PeerCheck")({
 	 * as **not proven clean** rather than as a pass: every reason means some
 	 * finding may be missing or spurious, and failing closed is the requirement.
 	 */
-	unverified: Schema.Array(
-		Schema.Literals(["peerRulesNotApplied", "unresolvedEdge", "peerRangeUnresolved", "peerVersionUnresolved"]),
+	unverified: S.Array(
+		S.Literals(["peerRulesNotApplied", "unresolvedEdge", "peerRangeUnresolved", "peerVersionUnresolved"]),
 	),
 }) {
 	/** The unsatisfied peers a gate should act on — the non-optional ones. */

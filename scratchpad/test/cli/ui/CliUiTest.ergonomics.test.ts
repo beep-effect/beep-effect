@@ -1,8 +1,16 @@
 // @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file
-import { Data } from "effect";
+import * as Data from "effect/Data";
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
-import { Cause, Config, ConfigProvider, Console, Effect, Exit, Fiber, MutableRef, Option } from "effect";
+import * as Cause from "effect/Cause";
+import * as Config from "effect/Config";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Fiber from "effect/Fiber";
+import * as MutableRef from "effect/MutableRef";
+import * as O from "effect/Option";
 import { Command } from "effect/cli";
 import { Cancelled, CliExit } from "../../../effected/cli/index.ts";
 import type { KeyName } from "../../../effected/cli/ui.ts";
@@ -49,30 +57,30 @@ describe("CliUiTest.cancelReason (O2b)", () => {
 			const handle = yield* CliUiTest.render(TextInput.screen({ message: "Name" }));
 			yield* handle.press("escape");
 			const exit = yield* Effect.exit(handle.result);
-			assert.deepStrictEqual(CliUiTest.cancelReason(exit), Option.some("escape"));
+			assert.deepStrictEqual(CliUiTest.cancelReason(exit), O.some("escape"));
 		}).pipe(Effect.scoped),
 	);
 
 	it("finds one as a defect, and in a bare Cause", () => {
 		assert.deepStrictEqual(
 			CliUiTest.cancelReason(Exit.die(Cancelled.make({ reason: "interrupt" }))),
-			Option.some("interrupt"),
+			O.some("interrupt"),
 		);
 		assert.deepStrictEqual(
 			CliUiTest.cancelReason(Cause.fail(Cancelled.make({ reason: "escape" }))),
-			Option.some("escape"),
+			O.some("escape"),
 		);
 		assert.deepStrictEqual(
 			CliUiTest.cancelReason(Cause.die(Cancelled.make({ reason: "interrupt" }))),
-			Option.some("interrupt"),
+			O.some("interrupt"),
 		);
 	});
 
 	it("is None for a success, another failure, or an interrupt", () => {
-		assert.deepStrictEqual(CliUiTest.cancelReason(Exit.succeed(1)), Option.none());
-		assert.deepStrictEqual(CliUiTest.cancelReason(Exit.fail(new TestError("boom"))), Option.none());
-		assert.deepStrictEqual(CliUiTest.cancelReason(Cause.die("x")), Option.none());
-		assert.deepStrictEqual(CliUiTest.cancelReason(Cause.interrupt()), Option.none());
+		assert.deepStrictEqual(CliUiTest.cancelReason(Exit.succeed(1)), O.none());
+		assert.deepStrictEqual(CliUiTest.cancelReason(Exit.fail(new TestError("boom"))), O.none());
+		assert.deepStrictEqual(CliUiTest.cancelReason(Cause.die("x")), O.none());
+		assert.deepStrictEqual(CliUiTest.cancelReason(Cause.interrupt()), O.none());
 	});
 });
 

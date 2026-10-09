@@ -1,5 +1,9 @@
 import { assert, describe, it, layer } from "@effect/vitest";
-import { Effect, Layer, Option, Result, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { DependencyResolutionError, WorkspaceResolver } from "../../effected/npm/index.ts";
 
 describe("WorkspaceResolver", () => {
@@ -8,7 +12,7 @@ describe("WorkspaceResolver", () => {
 			Effect.gen(function* () {
 				const resolver = yield* WorkspaceResolver;
 				const version = yield* resolver.versionOf("@effected/semver");
-				assert.isTrue(Option.isNone(version));
+				assert.isTrue(O.isNone(version));
 			}),
 		);
 	});
@@ -22,7 +26,7 @@ describe("WorkspaceResolver", () => {
 		]);
 		const StubWorkspaceResolver = Layer.succeed(WorkspaceResolver, {
 			versionOf: Effect.fn("WorkspaceResolver.versionOf")((packageName: string) =>
-				Effect.succeed(Option.fromUndefinedOr(versions.get(packageName))),
+				Effect.succeed(O.fromUndefinedOr(versions.get(packageName))),
 			),
 		});
 
@@ -31,7 +35,7 @@ describe("WorkspaceResolver", () => {
 				Effect.gen(function* () {
 					const resolver = yield* WorkspaceResolver;
 					const version = yield* resolver.versionOf("@effected/semver");
-					assert.deepStrictEqual(version, Option.some("0.1.0"));
+					assert.deepStrictEqual(version, O.some("0.1.0"));
 				}),
 			);
 
@@ -39,7 +43,7 @@ describe("WorkspaceResolver", () => {
 				Effect.gen(function* () {
 					const resolver = yield* WorkspaceResolver;
 					const version = yield* resolver.versionOf("@effected/nope");
-					assert.isTrue(Option.isNone(version));
+					assert.isTrue(O.isNone(version));
 				}),
 			);
 		});
@@ -70,8 +74,9 @@ describe("WorkspaceResolver", () => {
 
 		it.effect("fails an effect through the typed error channel", () =>
 			Effect.gen(function* () {
-				const result = yield* Effect.flip(
-					Effect.fail(DependencyResolutionError.make({ specifier: "catalog:", cause: "unresolved" })),
+				const result = yield* DependencyResolutionError.make({ specifier: "catalog:", cause: "unresolved" }).pipe(
+					Effect.fail,
+					Effect.flip,
 				);
 				assert.strictEqual(result._tag, "DependencyResolutionError");
 				assert.strictEqual(result.cause, "unresolved");
@@ -105,7 +110,7 @@ describe("WorkspaceResolver", () => {
 		});
 
 		it("decodes an error encoded before reason existed as a mechanism failure", () => {
-			const decoded = Result.getOrThrow(Schema.decodeResult(DependencyResolutionError)({
+			const decoded = Result.getOrThrow(S.decodeResult(DependencyResolutionError)({
 				_tag: "DependencyResolutionError",
 				specifier: "catalog:",
 				cause: "unresolved",

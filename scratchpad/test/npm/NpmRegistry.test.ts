@@ -1,7 +1,14 @@
 // @effect-diagnostics strictEffectProvide:skip-file nodeBuiltinImport:skip-file
 import { readFileSync } from "node:fs";
 import { assert, describe, it } from "@effect/vitest";
-import { DateTime, Effect, Exit, Layer, Option, Redacted, Result, Schema } from "effect";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Redacted from "effect/Redacted";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { HttpClient, HttpClientError, HttpClientResponse } from "effect/http";
 import { NpmRegistry, PublishedVersion, RegistryReadError } from "../../effected/npm/NpmRegistry.ts";
 
@@ -13,7 +20,7 @@ interface Stub {
 	readonly requests: ReadonlyArray<{ readonly url: string; readonly authorization: string | undefined }>;
 }
 
-const JsonBody = Schema.fromJsonString(Schema.Unknown);
+const JsonBody = S.fromJsonString(S.Unknown);
 
 /** A scripted `HttpClient` plus the log of what it was asked for. */
 const stub = (route: (url: string) => Route): Stub => {
@@ -32,7 +39,7 @@ const stub = (route: (url: string) => Route): Stub => {
 						}),
 					);
 				}
-				const body = result.raw ?? Result.getOrThrow(Schema.encodeResult(JsonBody)(result.body ?? {}));
+				const body = result.raw ?? Result.getOrThrow(S.encodeResult(JsonBody)(result.body ?? {}));
 				return Effect.succeed(HttpClientResponse.fromWeb(request, new Response(body, { status: result.status })));
 			}),
 		),
@@ -73,7 +80,7 @@ describe("NpmRegistry.version", () => {
 				Effect.flatMap(registry, (r) => r.version("pkg", "1.1.0")),
 				client,
 			);
-			if (Option.isNone(found)) assert.fail("expected the version to be published");
+			if (O.isNone(found)) assert.fail("expected the version to be published");
 			assert.instanceOf(found.value, PublishedVersion);
 			assert.strictEqual(found.value.version, "1.1.0");
 			assert.strictEqual(found.value.integrity, "sha512-abc123==");
@@ -91,7 +98,7 @@ describe("NpmRegistry.version", () => {
 				Effect.flatMap(registry, (r) => r.version("pkg", "9.9.9")),
 				client,
 			);
-			assert.isTrue(Option.isNone(found));
+			assert.isTrue(O.isNone(found));
 		}),
 	);
 
@@ -105,7 +112,7 @@ describe("NpmRegistry.version", () => {
 				),
 			);
 			assert.instanceOf(error, RegistryReadError);
-			if (Schema.is(RegistryReadError)(error)) {
+			if (S.is(RegistryReadError)(error)) {
 				assert.strictEqual(error.kind, "status");
 				assert.strictEqual(error.status, 500);
 				assert.strictEqual(error.package, "pkg");
@@ -122,7 +129,7 @@ describe("NpmRegistry.version", () => {
 					client,
 				),
 			);
-			if (Schema.is(RegistryReadError)(error)) {
+			if (S.is(RegistryReadError)(error)) {
 				assert.strictEqual(error.kind, "transport");
 				assert.strictEqual(error.status, undefined);
 			}
@@ -138,7 +145,7 @@ describe("NpmRegistry.version", () => {
 					client,
 				),
 			);
-			if (Schema.is(RegistryReadError)(error)) {
+			if (S.is(RegistryReadError)(error)) {
 				assert.strictEqual(error.kind, "decode");
 			}
 		}),
@@ -151,7 +158,7 @@ describe("NpmRegistry.version", () => {
 				Effect.flatMap(registry, (r) => r.version("pkg", "1.1.0")),
 				client,
 			);
-			if (Option.isNone(found)) assert.fail("expected the version to be published");
+			if (O.isNone(found)) assert.fail("expected the version to be published");
 			assert.strictEqual(found.value.integrity, undefined);
 			assert.strictEqual(found.value.tarball, undefined);
 		}),
@@ -291,7 +298,7 @@ describe("NpmRegistry.version — registries without the per-version endpoint", 
 				),
 				client,
 			);
-			if (Option.isNone(found)) assert.fail("expected the version to be published");
+			if (O.isNone(found)) assert.fail("expected the version to be published");
 			assert.strictEqual(found.value.name, "@savvy-web/standalone-package");
 			assert.strictEqual(found.value.version, "0.10.9");
 			assert.strictEqual(found.value.integrity, "sha512-abc123==");
@@ -313,7 +320,7 @@ describe("NpmRegistry.version — registries without the per-version endpoint", 
 				),
 				client,
 			);
-			assert.isTrue(Option.isNone(found));
+			assert.isTrue(O.isNone(found));
 		}),
 	);
 
@@ -328,7 +335,7 @@ describe("NpmRegistry.version — registries without the per-version endpoint", 
 				Effect.flatMap(registry, (r) => r.version("pkg", "1.1.0", { registry: "https://registry.example.com" })),
 				client,
 			);
-			if (Option.isNone(found)) assert.fail("expected the version to be published");
+			if (O.isNone(found)) assert.fail("expected the version to be published");
 			assert.strictEqual(found.value.version, "1.1.0");
 			assert.strictEqual(client.requests.length, 2);
 			assert.include(client.requests[0]?.url ?? "", "1.1.0");
@@ -349,7 +356,7 @@ describe("NpmRegistry.version — registries without the per-version endpoint", 
 				),
 			);
 			assert.instanceOf(error, RegistryReadError);
-			if (Schema.is(RegistryReadError)(error)) {
+			if (S.is(RegistryReadError)(error)) {
 				assert.strictEqual(error.kind, "decode");
 			}
 		}),
@@ -467,10 +474,10 @@ describe("NpmRegistry test doubles", () => {
 			const onGitHub = yield* r.version("pkg", "1.1.0", { registry: "https://npm.pkg.github.com" });
 			const otherVersion = yield* r.version("pkg", "1.0.0", { registry: "https://registry.npmjs.org" });
 
-			assert.isTrue(Option.isSome(onNpm), "seeded on npm");
-			assert.isTrue(Option.isNone(onGitHub), "NOT seeded on GitHub Packages — the registry axis");
-			assert.isTrue(Option.isSome(otherVersion), "a second version of the same package — the version axis");
-			if (Option.isSome(onNpm) && Option.isSome(otherVersion)) {
+			assert.isTrue(O.isSome(onNpm), "seeded on npm");
+			assert.isTrue(O.isNone(onGitHub), "NOT seeded on GitHub Packages — the registry axis");
+			assert.isTrue(O.isSome(otherVersion), "a second version of the same package — the version axis");
+			if (O.isSome(onNpm) && O.isSome(otherVersion)) {
 				assert.notStrictEqual(onNpm.value.tarball, otherVersion.value.tarball, "distinct tarballs per version");
 			}
 		}).pipe(

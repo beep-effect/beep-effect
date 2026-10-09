@@ -1,4 +1,4 @@
-import { Data } from "effect";
+import * as Data from "effect/Data";
 import { dual } from "effect/Function";
 // The zero-dependency leaf every guard imports — no import cycle is possible
 // through here (jsonc/yaml/glob precedent).

@@ -1,4 +1,5 @@
-import { Effect, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
 import { LockfileImporter } from "../LockfileImporter.ts";
 import { ResolvedPackage } from "../ResolvedPackage.ts";
 import type { LockfileFields, ParseFailure, WorkspaceEntry } from "./shared.ts";
@@ -14,19 +15,19 @@ import {
 
 // ── Raw schema (permissive validation scaffolding, not API) ────────────────
 
-const DepRecord = Schema.optionalKey(Schema.Record(Schema.String, Schema.String));
+const DepRecord = S.optionalKey(S.Record(S.String, S.String));
 
-const PeerMetaRecord = Schema.optionalKey(
-	Schema.Record(Schema.String, Schema.Struct({ optional: Schema.optionalKey(Schema.Boolean) })),
+const PeerMetaRecord = S.optionalKey(
+	S.Record(S.String, S.Struct({ optional: S.optionalKey(S.Boolean) })),
 );
 
-const NpmPackageEntry = Schema.Struct({
-	name: Schema.optionalKey(Schema.String),
-	version: Schema.optionalKey(Schema.String),
-	resolved: Schema.optionalKey(Schema.String),
-	integrity: Schema.optionalKey(Schema.String),
-	link: Schema.optionalKey(Schema.Boolean),
-	dev: Schema.optionalKey(Schema.Boolean),
+const NpmPackageEntry = S.Struct({
+	name: S.optionalKey(S.String),
+	version: S.optionalKey(S.String),
+	resolved: S.optionalKey(S.String),
+	integrity: S.optionalKey(S.String),
+	link: S.optionalKey(S.Boolean),
+	dev: S.optionalKey(S.Boolean),
 	dependencies: DepRecord,
 	devDependencies: DepRecord,
 	peerDependencies: DepRecord,
@@ -46,16 +47,16 @@ const NpmPackageEntry = Schema.Struct({
  *
  * @internal
  */
-const NpmVersionProbe = Schema.Struct({
-	lockfileVersion: Schema.Union([Schema.Finite, Schema.String]),
+const NpmVersionProbe = S.Struct({
+	lockfileVersion: S.Union([S.Finite, S.String]),
 });
 
-const NpmLockfileRaw = Schema.Struct({
-	name: Schema.optionalKey(Schema.String),
-	version: Schema.optionalKey(Schema.String),
-	lockfileVersion: Schema.Union([Schema.Finite, Schema.String]),
-	requires: Schema.optionalKey(Schema.Boolean),
-	packages: Schema.Record(Schema.String, NpmPackageEntry),
+const NpmLockfileRaw = S.Struct({
+	name: S.optionalKey(S.String),
+	version: S.optionalKey(S.String),
+	lockfileVersion: S.Union([S.Finite, S.String]),
+	requires: S.optionalKey(S.Boolean),
+	packages: S.Record(S.String, NpmPackageEntry),
 });
 
 type NpmLockfileRawType = typeof NpmLockfileRaw.Type;
@@ -158,9 +159,9 @@ export const parseNpm = (content: string): Effect.Effect<LockfileFields, ParseFa
 		// `packages` object at all, so decoding first would report the oldest
 		// format we reject as merely malformed. "Too old" is the more specific
 		// true statement, and the only one a consumer can act on.
-		const probe = yield* Schema.decodeUnknownEffect(NpmVersionProbe)(raw).pipe(Effect.mapError(validationFailure));
+		const probe = yield* S.decodeUnknownEffect(NpmVersionProbe)(raw).pipe(Effect.mapError(validationFailure));
 		yield* requireLockfileVersion("npm", probe.lockfileVersion);
-		const validated = yield* Schema.decodeUnknownEffect(NpmLockfileRaw)(raw).pipe(Effect.mapError(validationFailure));
+		const validated = yield* S.decodeUnknownEffect(NpmLockfileRaw)(raw).pipe(Effect.mapError(validationFailure));
 		return yield* toFields(validated);
 	});
 

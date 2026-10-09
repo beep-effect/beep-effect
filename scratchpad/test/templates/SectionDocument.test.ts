@@ -1,5 +1,7 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Equal, Option } from "effect";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import * as O from "effect/Option";
 import { CommentStyle, SectionDialect, SectionDocument, SectionId } from "../../effected/templates/index.ts";
 import { begin, block, crlf, end, id, lines, parse, parseFailure, section } from "./fixtures.ts";
 
@@ -156,21 +158,21 @@ describe("SectionDocument.parseResult", () => {
 
 		it("reads a present section", () => {
 			const found = doc.read(id("example-tool"));
-			assert.isTrue(Option.isSome(found));
-			assert.strictEqual(Option.getOrThrow(found).content, "echo hi");
+			assert.isTrue(O.isSome(found));
+			assert.strictEqual(O.getOrThrow(found).content, "echo hi");
 		});
 
 		it("answers none for an absent section", () => {
-			assert.isTrue(Option.isNone(doc.read(id("other"))));
+			assert.isTrue(O.isNone(doc.read(id("other"))));
 		});
 
 		it("does not match a different comment style", () => {
 			const slash = SectionId.make({ key: "example-tool", commentStyle: CommentStyle.slash });
-			assert.isTrue(Option.isNone(doc.read(slash)));
+			assert.isTrue(O.isNone(doc.read(slash)));
 		});
 
 		it("is case-sensitive", () => {
-			assert.isTrue(Option.isNone(doc.read(id("EXAMPLE-TOOL"))));
+			assert.isTrue(O.isNone(doc.read(id("EXAMPLE-TOOL"))));
 		});
 
 		it("has answers the same question as read", () => {
@@ -221,30 +223,30 @@ describe("SectionDocument.parseResult", () => {
 
 	describe("remove", () => {
 		it("answers none when the section is not present", () => {
-			assert.isTrue(Option.isNone(parse("nothing here\n").remove(id("example-tool"))));
+			assert.isTrue(O.isNone(parse("nothing here\n").remove(id("example-tool"))));
 		});
 
 		it("drops the block and collapses the surrounding blank lines", () => {
 			const doc = parse(lines("header", "", block("example-tool", "body"), "", "footer", ""));
-			const next = Option.getOrThrow(doc.remove(id("example-tool")));
+			const next = O.getOrThrow(doc.remove(id("example-tool")));
 			assert.strictEqual(next, lines("header", "", "footer", ""));
 		});
 
 		it("does not accumulate gaps across repeated removals", () => {
 			const doc = parse(lines("header", "", block("a", "1"), "", block("b", "2"), "", "footer", ""));
-			const once = Option.getOrThrow(doc.remove(id("a")));
-			const twice = Option.getOrThrow(parse(once).remove(id("b")));
+			const once = O.getOrThrow(doc.remove(id("a")));
+			const twice = O.getOrThrow(parse(once).remove(id("b")));
 			assert.strictEqual(twice, lines("header", "", "footer", ""));
 		});
 
 		it("leaves a lone section's file empty rather than newline-littered", () => {
 			const doc = parse(`${block("only", "body")}\n`);
-			assert.strictEqual(Option.getOrThrow(doc.remove(id("only"))), "");
+			assert.strictEqual(O.getOrThrow(doc.remove(id("only"))), "");
 		});
 
 		it("preserves the document's line endings", () => {
 			const doc = parse(crlf(lines("header", "", block("example-tool", "body"), "", "footer", "")));
-			const next = Option.getOrThrow(doc.remove(id("example-tool")));
+			const next = O.getOrThrow(doc.remove(id("example-tool")));
 			assert.strictEqual(next, crlf(lines("header", "", "footer", "")));
 		});
 	});

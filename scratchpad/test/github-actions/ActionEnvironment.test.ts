@@ -1,10 +1,15 @@
 // @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file processEnvInEffect:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
-import { Effect, Latch, Layer, Option, Schema, Result } from "effect";
+import * as Effect from "effect/Effect";
+import * as Latch from "effect/Latch";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import * as Result from "effect/Result";
 import { ActionEnvironment, ActionEnvironmentError } from "../../effected/github-actions/index.ts";
 
-const Json = Schema.fromJsonString(Schema.Unknown);
+const Json = S.fromJsonString(S.Unknown);
 
 const BASE = {
 	GITHUB_REPOSITORY: "owner/repo",
@@ -67,7 +72,7 @@ describe("ActionEnvironment", () => {
 			live(
 				Effect.gen(function* () {
 					const env = yield* ActionEnvironment;
-					assert.isTrue(Option.isNone(yield* env.getOptional("EMPTY")));
+					assert.isTrue(O.isNone(yield* env.getOptional("EMPTY")));
 					assert.strictEqual((yield* Effect.flip(env.get("EMPTY"))).reason, "missing");
 				}),
 				{ ...BASE, EMPTY: "" },
@@ -78,8 +83,8 @@ describe("ActionEnvironment", () => {
 			live(
 				Effect.gen(function* () {
 					const env = yield* ActionEnvironment;
-					assert.isTrue(Option.isNone(yield* env.getOptional("NOPE")));
-					assert.deepStrictEqual(yield* env.getOptional("GITHUB_JOB"), Option.some("build"));
+					assert.isTrue(O.isNone(yield* env.getOptional("NOPE")));
+					assert.deepStrictEqual(yield* env.getOptional("GITHUB_JOB"), O.some("build"));
 				}),
 			),
 		);
@@ -126,7 +131,7 @@ describe("ActionEnvironment", () => {
 			live(
 				Effect.gen(function* () {
 					const ctx = yield* (yield* ActionEnvironment).github;
-					assert.deepStrictEqual(ctx.headRef, Option.some("feat/topic"));
+					assert.deepStrictEqual(ctx.headRef, O.some("feat/topic"));
 					// On a PR the short ref is the useless merge ref; branch is the
 					// human's branch — the headRef.
 					assert.strictEqual(ctx.branch, "feat/topic");
@@ -139,7 +144,7 @@ describe("ActionEnvironment", () => {
 			live(
 				Effect.gen(function* () {
 					const ctx = yield* (yield* ActionEnvironment).github;
-					assert.isTrue(Option.isNone(ctx.headRef));
+					assert.isTrue(O.isNone(ctx.headRef));
 					assert.strictEqual(ctx.branch, "main");
 				}),
 			),
@@ -151,7 +156,7 @@ describe("ActionEnvironment", () => {
 					const ctx = yield* (yield* ActionEnvironment).github;
 					// The trap: a raw env read reports "" as present, and a cache key
 					// built from it gains an empty branch segment. The type refuses it.
-					assert.isTrue(Option.isNone(ctx.headRef));
+					assert.isTrue(O.isNone(ctx.headRef));
 					assert.strictEqual(ctx.branch, "main");
 				}),
 				{ ...BASE, GITHUB_HEAD_REF: "" },
@@ -199,14 +204,14 @@ describe("ActionEnvironment", () => {
 					assert.strictEqual(value.action, "opened");
 				}),
 				{ ...BASE, GITHUB_EVENT_PATH: "/event.json" },
-				{ "/event.json": Result.getOrThrowWith(Schema.encodeResult(Json)({ action: "opened" }), (error) => error) },
+				{ "/event.json": Result.getOrThrowWith(S.encodeResult(Json)({ action: "opened" }), (error) => error) },
 			),
 		);
 
 		it.effect("fails typed when the payload file is not valid JSON", () =>
 			live(
 				Effect.gen(function* () {
-					const error = yield* Effect.flip(Effect.asVoid((yield* ActionEnvironment).payload));
+					const error = yield* (yield* ActionEnvironment).payload.pipe(Effect.asVoid, Effect.flip);
 					assert.strictEqual(error.reason, "malformed");
 					assert.strictEqual(error.name, "GITHUB_EVENT_PATH");
 				}),
@@ -218,7 +223,7 @@ describe("ActionEnvironment", () => {
 		it.effect("fails typed when GITHUB_EVENT_PATH is not set", () =>
 			live(
 				Effect.gen(function* () {
-					const error = yield* Effect.flip(Effect.asVoid((yield* ActionEnvironment).payload));
+					const error = yield* (yield* ActionEnvironment).payload.pipe(Effect.asVoid, Effect.flip);
 					assert.strictEqual(error.name, "GITHUB_EVENT_PATH");
 				}),
 			),
@@ -257,7 +262,7 @@ describe("ActionEnvironment", () => {
 				Effect.gen(function* () {
 					const env = yield* ActionEnvironment;
 					assert.strictEqual(yield* env.withEnv({ NEW: "v" }, env.get("NEW")), "v");
-					assert.isTrue(Option.isNone(yield* env.getOptional("NEW")));
+					assert.isTrue(O.isNone(yield* env.getOptional("NEW")));
 				}),
 			),
 		);
@@ -369,7 +374,7 @@ describe("ActionEnvironment", () => {
 				// TEST_DEFAULTS omits GITHUB_EVENT_PATH on purpose: a suite that forgot
 				// to arrange a payload gets a loud failure naming what is missing, not a
 				// plausible empty object.
-				const error = yield* Effect.flip(Effect.asVoid((yield* ActionEnvironment).payload));
+				const error = yield* (yield* ActionEnvironment).payload.pipe(Effect.asVoid, Effect.flip);
 				assert.strictEqual(error.name, "GITHUB_EVENT_PATH");
 			}).pipe(Effect.provide(ActionEnvironment.layerTest())),
 		);
@@ -390,7 +395,7 @@ describe("ActionEnvironment", () => {
 			const layer = Layer.effect(
 				ActionEnvironment,
 				ActionEnvironment.makeTest({ GITHUB_EVENT_PATH: "/event.json" }),
-			).pipe(Layer.provide(MemoryFileSystem.layerWith({ "/event.json": Result.getOrThrowWith(Schema.encodeResult(Json)({ action: "opened" }), (error) => error) })));
+			).pipe(Layer.provide(MemoryFileSystem.layerWith({ "/event.json": Result.getOrThrowWith(S.encodeResult(Json)({ action: "opened" }), (error) => error) })));
 			return Effect.gen(function* () {
 				const env = yield* ActionEnvironment;
 				assert.deepStrictEqual(yield* env.payload, { action: "opened" });
@@ -406,7 +411,7 @@ describe("ActionEnvironment", () => {
 				ActionEnvironment.makeTest({ GITHUB_EVENT_PATH: "/event.json" }),
 			).pipe(Layer.provide(MemoryFileSystem.layer));
 			return Effect.gen(function* () {
-				const error = yield* Effect.flip(Effect.asVoid((yield* ActionEnvironment).payload));
+				const error = yield* (yield* ActionEnvironment).payload.pipe(Effect.asVoid, Effect.flip);
 				assert.strictEqual(error.reason, "malformed");
 				assert.strictEqual(error.name, "GITHUB_EVENT_PATH");
 			}).pipe(Effect.provide(layer));

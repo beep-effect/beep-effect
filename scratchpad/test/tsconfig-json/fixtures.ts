@@ -1,6 +1,7 @@
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
-import type { FileSystem } from "effect";
-import { Layer, Path } from "effect";
+import type * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
 
 /**
  * An in-memory fixture filesystem for the resolution suites. The map is

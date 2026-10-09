@@ -11,7 +11,8 @@
 // discipline (`Jsonc.schema` derives fresh caches per call).
 
 import { Jsonc } from "../jsonc/index.ts";
-import { Schema, SchemaTransformation } from "effect";
+import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import { CompilerOptions } from "./CompilerOptions.ts";
 
 /**
@@ -21,9 +22,9 @@ import { CompilerOptions } from "./CompilerOptions.ts";
  * module's public schemas to CompilerOptions.ts's internals).
  */
 const caseInsensitiveLiterals = <const L extends ReadonlyArray<string>>(literals: L) =>
-	Schema.String.pipe(
-		Schema.decodeTo(
-			Schema.Literals(literals),
+	S.String.pipe(
+		S.decodeTo(
+			S.Literals(literals),
 			SchemaTransformation.transform({
 				decode: (s: string) => s.toLowerCase(),
 				encode: (s: string) => s,
@@ -63,11 +64,11 @@ export const FallbackPolling = caseInsensitiveLiterals([
  *
  * @public
  */
-export const Reference = Schema.StructWithRest(
-	Schema.Struct({
-		path: Schema.String.check(Schema.isMinLength(1)),
+export const Reference = S.StructWithRest(
+	S.Struct({
+		path: S.String.check(S.isMinLength(1)),
 	}),
-	[Schema.Record(Schema.String, Schema.Unknown)],
+	[S.Record(S.String, S.Unknown)],
 );
 
 /**
@@ -96,16 +97,16 @@ export declare namespace Reference {
  *
  * @public
  */
-export const WatchOptions = Schema.StructWithRest(
-	Schema.Struct({
-		watchFile: Schema.optionalKey(WatchFile),
-		watchDirectory: Schema.optionalKey(WatchDirectory),
-		fallbackPolling: Schema.optionalKey(FallbackPolling),
-		synchronousWatchDirectory: Schema.optionalKey(Schema.Boolean),
-		excludeDirectories: Schema.optionalKey(Schema.Array(Schema.String)),
-		excludeFiles: Schema.optionalKey(Schema.Array(Schema.String)),
+export const WatchOptions = S.StructWithRest(
+	S.Struct({
+		watchFile: S.optionalKey(WatchFile),
+		watchDirectory: S.optionalKey(WatchDirectory),
+		fallbackPolling: S.optionalKey(FallbackPolling),
+		synchronousWatchDirectory: S.optionalKey(S.Boolean),
+		excludeDirectories: S.String.pipe(S.Array, S.optionalKey),
+		excludeFiles: S.String.pipe(S.Array, S.optionalKey),
 	}),
-	[Schema.Record(Schema.String, Schema.Unknown)],
+	[S.Record(S.String, S.Unknown)],
 );
 
 /**
@@ -133,14 +134,14 @@ export declare namespace WatchOptions {
  *
  * @public
  */
-export const TypeAcquisition = Schema.StructWithRest(
-	Schema.Struct({
-		enable: Schema.optionalKey(Schema.Boolean),
-		include: Schema.optionalKey(Schema.Array(Schema.String)),
-		exclude: Schema.optionalKey(Schema.Array(Schema.String)),
-		disableFilenameBasedTypeAcquisition: Schema.optionalKey(Schema.Boolean),
+export const TypeAcquisition = S.StructWithRest(
+	S.Struct({
+		enable: S.optionalKey(S.Boolean),
+		include: S.String.pipe(S.Array, S.optionalKey),
+		exclude: S.String.pipe(S.Array, S.optionalKey),
+		disableFilenameBasedTypeAcquisition: S.optionalKey(S.Boolean),
 	}),
-	[Schema.Record(Schema.String, Schema.Unknown)],
+	[S.Record(S.String, S.Unknown)],
 );
 
 /**
@@ -171,20 +172,20 @@ export declare namespace TypeAcquisition {
  *
  * @public
  */
-export const TsconfigJson = Schema.StructWithRest(
-	Schema.Struct({
-		compilerOptions: Schema.optionalKey(CompilerOptions),
-		extends: Schema.optionalKey(Schema.Union([Schema.String, Schema.Array(Schema.String)])),
-		files: Schema.optionalKey(Schema.Array(Schema.String)),
-		include: Schema.optionalKey(Schema.Array(Schema.String)),
-		exclude: Schema.optionalKey(Schema.Array(Schema.String)),
-		references: Schema.optionalKey(Schema.Array(Reference)),
-		watchOptions: Schema.optionalKey(WatchOptions),
-		typeAcquisition: Schema.optionalKey(TypeAcquisition),
-		compileOnSave: Schema.optionalKey(Schema.Boolean),
-		$schema: Schema.optionalKey(Schema.String),
+export const TsconfigJson = S.StructWithRest(
+	S.Struct({
+		compilerOptions: S.optionalKey(CompilerOptions),
+		extends: S.optionalKey(S.Union([S.String, S.Array(S.String)])),
+		files: S.String.pipe(S.Array, S.optionalKey),
+		include: S.String.pipe(S.Array, S.optionalKey),
+		exclude: S.String.pipe(S.Array, S.optionalKey),
+		references: Reference.pipe(S.Array, S.optionalKey),
+		watchOptions: S.optionalKey(WatchOptions),
+		typeAcquisition: S.optionalKey(TypeAcquisition),
+		compileOnSave: S.optionalKey(S.Boolean),
+		$schema: S.optionalKey(S.String),
 	}),
-	[Schema.Record(Schema.String, Schema.Unknown)],
+	[S.Record(S.String, S.Unknown)],
 );
 
 /**
@@ -217,7 +218,7 @@ export declare namespace TsconfigJson {
  *
  * @public
  */
-export const TsconfigJsonFromString: Schema.Codec<typeof TsconfigJson.Type, string> = Jsonc.schema(TsconfigJson);
+export const TsconfigJsonFromString: S.Codec<typeof TsconfigJson.Type, string> = Jsonc.schema(TsconfigJson);
 
 /**
  * Raised when a tsconfig.json document fails to parse or decode. `path` is
@@ -227,11 +228,11 @@ export const TsconfigJsonFromString: Schema.Codec<typeof TsconfigJson.Type, stri
  *
  * @public
  */
-export class TsconfigParseError extends Schema.TaggedError<TsconfigParseError>()("TsconfigParseError", {
+export class TsconfigParseError extends S.TaggedError<TsconfigParseError>()("TsconfigParseError", {
 	/** The file path that failed to parse, or `""` when not file-bound. */
-	path: Schema.String,
+	path: S.String,
 	/** The underlying decode failure. */
-	cause: Schema.Defect(),
+	cause: S.Defect(),
 }) {
 	override get message(): string {
 		return this.path.length > 0 ? `failed to parse tsconfig.json at "${this.path}"` : "failed to parse tsconfig.json";

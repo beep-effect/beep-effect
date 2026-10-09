@@ -1,14 +1,20 @@
 // @effect-diagnostics strictEffectProvide:skip-file
-import { Schema } from "effect";
-import { Result } from "effect";
+import * as S from "effect/Schema";
+import * as Result from "effect/Result";
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
-import { ConfigProvider, Console, Effect, Layer, Logger, Stdio, Terminal } from "effect";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Logger from "effect/Logger";
+import * as Stdio from "effect/Stdio";
+import * as Terminal from "effect/Terminal";
 import { Command } from "effect/cli";
 import { CliRuntime } from "../../effected/cli/index.ts";
 import { LINE_BREAK, isCommand } from "./helpers/runnerCommands.ts";
 
-const Json = Schema.fromJsonString(Schema.Unknown);
+const Json = S.fromJsonString(S.Unknown);
 
 const capturing = () => {
 	const out: string[] = [];
@@ -46,7 +52,7 @@ describe("CliRuntime.main: the platform is built under the logger", () => {
 			assert.deepStrictEqual(out, []);
 			assert.isTrue(
 				err.some((line) => line.includes("platform built")),
-				Result.getOrThrow(Schema.encodeUnknownResult(Json)(err)),
+				Result.getOrThrow(S.encodeUnknownResult(Json)(err)),
 			);
 		}),
 	);
@@ -59,7 +65,7 @@ describe("CliRuntime.main: the platform is built under the logger", () => {
 			assert.deepStrictEqual(out, []);
 			assert.isTrue(
 				err.some((line) => line.includes("platform built")),
-				Result.getOrThrow(Schema.encodeUnknownResult(Json)(err)),
+				Result.getOrThrow(S.encodeUnknownResult(Json)(err)),
 			);
 		}),
 	);
@@ -104,8 +110,8 @@ describe("CliRuntime.main: the log level applies while the platform builds", () 
 			}).pipe(Effect.provideService(Console.Console, double));
 			assert.deepStrictEqual(out, []);
 			const records = err.filter((line) => line.includes("migration ran"));
-			assert.lengthOf(records, 1, Result.getOrThrow(Schema.encodeUnknownResult(Json)(err)));
-			const record = Result.getOrThrow(Schema.decodeResult(Json)(records[0] as string)) as { readonly level: string; readonly message: unknown };
+			assert.lengthOf(records, 1, Result.getOrThrow(S.encodeUnknownResult(Json)(err)));
+			const record = Result.getOrThrow(S.decodeResult(Json)(records[0] as string)) as { readonly level: string; readonly message: unknown };
 			assert.strictEqual(record.level, "DEBUG");
 			assert.strictEqual(record.message, "migration ran");
 		}),
@@ -126,7 +132,7 @@ describe("CliRuntime.main: the log level applies while the platform builds", () 
 			);
 			assert.isTrue(
 				err.some((line) => line.includes("migration ran")),
-				Result.getOrThrow(Schema.encodeUnknownResult(Json)(err)),
+				Result.getOrThrow(S.encodeUnknownResult(Json)(err)),
 			);
 		}),
 	);
@@ -164,7 +170,7 @@ describe("CliRuntime.main: format auto decides the build-time lines from env and
 			);
 			assert.deepStrictEqual(out, []);
 			const built = err.find((line) => line.includes("migration ran"));
-			assert.isDefined(built, Result.getOrThrow(Schema.encodeUnknownResult(Json)(err)));
+			assert.isDefined(built, Result.getOrThrow(S.encodeUnknownResult(Json)(err)));
 			return { err, built: built as string };
 		});
 
@@ -279,9 +285,9 @@ describe("CliRuntime.main: build-time lines are neutralized under GitHub Actions
 				const err = yield* run(format, { GITHUB_ACTIONS: "true", CI: "true" });
 				assert.isTrue(
 					err.some((line) => line.includes("injected")),
-					`the build line was written: ${Result.getOrThrow(Schema.encodeUnknownResult(Json)(err))}`,
+					`the build line was written: ${Result.getOrThrow(S.encodeUnknownResult(Json)(err))}`,
 				);
-				assert.deepStrictEqual(commands(err), [], Result.getOrThrow(Schema.encodeUnknownResult(Json)(err)));
+				assert.deepStrictEqual(commands(err), [], Result.getOrThrow(S.encodeUnknownResult(Json)(err)));
 			}),
 		);
 	}
@@ -317,9 +323,9 @@ describe("CliRuntime.main: the audience-override warning is neutralized under Gi
 				});
 				assert.isTrue(
 					err.some((line) => line.includes("TOOL_AUDIENCE")),
-					`the warning was written: ${Result.getOrThrow(Schema.encodeUnknownResult(Json)(err))}`,
+					`the warning was written: ${Result.getOrThrow(S.encodeUnknownResult(Json)(err))}`,
 				);
-				assert.deepStrictEqual(commands(err), [], Result.getOrThrow(Schema.encodeUnknownResult(Json)(err)));
+				assert.deepStrictEqual(commands(err), [], Result.getOrThrow(S.encodeUnknownResult(Json)(err)));
 			}),
 		);
 	}
@@ -327,7 +333,7 @@ describe("CliRuntime.main: the audience-override warning is neutralized under Gi
 	it.effect("control: off GitHub Actions the warning keeps the value as given", () =>
 		Effect.gen(function* () {
 			const err = yield* run("pretty", { TOOL_AUDIENCE: "##[error]injected" });
-			assert.isNotEmpty(commands(err), Result.getOrThrow(Schema.encodeUnknownResult(Json)(err)));
+			assert.isNotEmpty(commands(err), Result.getOrThrow(S.encodeUnknownResult(Json)(err)));
 		}),
 	);
 });
@@ -359,7 +365,7 @@ describe("CliRuntime.main: the audience-override warning is written exactly once
 		it.effect(`agent, plainLogger ${plainLogger}: one NDJSON warning line`, () =>
 			Effect.gen(function* () {
 				const err = yield* run({ ...AGENT, TOOL_AUDIENCE: "bogus" }, { plainLogger });
-				assert.lengthOf(err, 1, Result.getOrThrow(Schema.encodeUnknownResult(Json)(err)));
+				assert.lengthOf(err, 1, Result.getOrThrow(S.encodeUnknownResult(Json)(err)));
 				assert.isTrue(isJson(err[0] as string), err[0]);
 				assert.include(err[0], "TOOL_AUDIENCE=bogus");
 			}),
@@ -368,7 +374,7 @@ describe("CliRuntime.main: the audience-override warning is written exactly once
 		it.effect(`human, plainLogger ${plainLogger}: one plain warning line`, () =>
 			Effect.gen(function* () {
 				const err = yield* run({ TOOL_AUDIENCE: "bogus" }, { plainLogger });
-				assert.lengthOf(err, 1, Result.getOrThrow(Schema.encodeUnknownResult(Json)(err)));
+				assert.lengthOf(err, 1, Result.getOrThrow(S.encodeUnknownResult(Json)(err)));
 				assert.isFalse(isJson(err[0] as string), err[0]);
 				assert.include(err[0], "TOOL_AUDIENCE=bogus");
 			}),
@@ -379,7 +385,7 @@ describe("CliRuntime.main: the audience-override warning is written exactly once
 		Effect.gen(function* () {
 			const err = yield* run({ ...AGENT, TOOL_AUDIENCE: "bogus" }, { level: "Debug" });
 			const warnings = err.filter((line) => line.includes("TOOL_AUDIENCE=bogus"));
-			assert.lengthOf(warnings, 1, Result.getOrThrow(Schema.encodeUnknownResult(Json)(err)));
+			assert.lengthOf(warnings, 1, Result.getOrThrow(S.encodeUnknownResult(Json)(err)));
 			assert.isTrue(isJson(warnings[0] as string), warnings[0]);
 		}),
 	);
@@ -415,10 +421,10 @@ describe("CliRuntime.main: the audience-override warning goes to stderr alone", 
 					Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(env)),
 				);
 				assert.deepStrictEqual(out, []);
-				assert.strictEqual(err.filter((line) => line.includes("TOOL_AUDIENCE=bogus")).length, 1, Result.getOrThrow(Schema.encodeUnknownResult(Json)(err)));
+				assert.strictEqual(err.filter((line) => line.includes("TOOL_AUDIENCE=bogus")).length, 1, Result.getOrThrow(S.encodeUnknownResult(Json)(err)));
 				assert.isFalse(
 					seen.some((line) => line.includes("TOOL_AUDIENCE")),
-					`not on the extra logger: ${Result.getOrThrow(Schema.encodeUnknownResult(Json)(seen))}`,
+					`not on the extra logger: ${Result.getOrThrow(S.encodeUnknownResult(Json)(seen))}`,
 				);
 				// Control: the extra logger is installed and live for the run's own records.
 				yield* CliRuntime.main(Effect.logError("run record"), {
@@ -427,7 +433,7 @@ describe("CliRuntime.main: the audience-override warning goes to stderr alone", 
 				}).pipe(Effect.provideService(Console.Console, capturing().double));
 				assert.isTrue(
 					seen.some((line) => line.includes("run record")),
-					`control: the extra logger saw the run: ${Result.getOrThrow(Schema.encodeUnknownResult(Json)(seen))}`,
+					`control: the extra logger saw the run: ${Result.getOrThrow(S.encodeUnknownResult(Json)(seen))}`,
 				);
 			}),
 		);
@@ -448,13 +454,13 @@ describe("CliRuntime.main: only the env build is pinned to stderr; the platform'
 			);
 			assert.isTrue(
 				err.some((line) => line.includes("TOOL_AUDIENCE=bogus")),
-				`the override warning is on stderr: ${Result.getOrThrow(Schema.encodeUnknownResult(Json)({ out, err }))}`,
+				`the override warning is on stderr: ${Result.getOrThrow(S.encodeUnknownResult(Json)({ out, err }))}`,
 			);
 			assert.isFalse(out.some((line) => line.includes("TOOL_AUDIENCE")));
 			// The host chose to route warnings below Error to stdout, and the platform's own build-time line honours it.
 			assert.isTrue(
 				out.some((line) => line.includes("platform warned")),
-				`the platform warning follows stderrFrom: ${Result.getOrThrow(Schema.encodeUnknownResult(Json)({ out, err }))}`,
+				`the platform warning follows stderrFrom: ${Result.getOrThrow(S.encodeUnknownResult(Json)({ out, err }))}`,
 			);
 			assert.isFalse(err.some((line) => line.includes("platform warned")));
 		}),

@@ -1,7 +1,11 @@
 import { dual } from "effect/Function";
 import type { AudienceKind, ColorLevel } from "../env/index.ts";
 import { TerminalEnv } from "../env/index.ts";
-import { Config, Context, Effect, Layer, Option } from "effect";
+import * as Config from "effect/Config";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import { Prompt } from "effect/cli";
 import type { GlyphSet } from "./Glyphs.ts";
 import { Glyphs } from "./Glyphs.ts";
@@ -171,8 +175,8 @@ export class CliTheme extends Context.Service<CliTheme, CliThemeShape>()("@beep/
 				// TERM is read through Config (never process) only when it can matter, and handed to the pure selection.
 				const term =
 					choice === "auto"
-						? Option.getOrUndefined(
-								yield* Config.option(Config.String("TERM")).pipe(Effect.orElseSucceed(() => Option.none<string>())),
+						? O.getOrUndefined(
+								yield* Config.option(Config.String("TERM")).pipe(Effect.orElseSucceed(() => O.none<string>())),
 							)
 						: undefined;
 				const glyphs = Glyphs.select({

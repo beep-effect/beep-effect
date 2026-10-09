@@ -10,7 +10,8 @@
 // must precede the tool block" by listing them in that order and have it be
 // true even in a file a user reordered by hand.
 
-import { Equal, Result } from "effect";
+import * as Equal from "effect/Equal";
+import * as Result from "effect/Result";
 import type { PlacedSection, Section } from "../Section.ts";
 import type { Eol, SectionDialect } from "../SectionDialect.ts";
 import { SectionRenderError } from "../SectionDialect.ts";

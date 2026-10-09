@@ -11,7 +11,7 @@
 // is structurally identical to `JsoncParseErrorDetail` per the jsonc/yaml
 // parity convention; `message` is yaml's additive extra.
 
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 import {
 	YAML_COMPOSE_ERROR_CODES,
 	YAML_LEX_ERROR_CODES,
@@ -26,7 +26,7 @@ import {
  *
  * @public
  */
-export const YamlLexErrorCode = Schema.Literals(YAML_LEX_ERROR_CODES);
+export const YamlLexErrorCode = S.Literals(YAML_LEX_ERROR_CODES);
 
 /**
  * The union of all lexer-stage error code string literals.
@@ -40,7 +40,7 @@ export type YamlLexErrorCode = typeof YamlLexErrorCode.Type;
  *
  * @public
  */
-export const YamlParseErrorCode = Schema.Literals(YAML_PARSE_ERROR_CODES);
+export const YamlParseErrorCode = S.Literals(YAML_PARSE_ERROR_CODES);
 
 /**
  * The union of all parser-stage error code string literals.
@@ -54,7 +54,7 @@ export type YamlParseErrorCode = typeof YamlParseErrorCode.Type;
  *
  * @public
  */
-export const YamlComposerErrorCode = Schema.Literals(YAML_COMPOSE_ERROR_CODES);
+export const YamlComposerErrorCode = S.Literals(YAML_COMPOSE_ERROR_CODES);
 
 /**
  * The union of all composer-stage error code string literals.
@@ -68,7 +68,7 @@ export type YamlComposerErrorCode = typeof YamlComposerErrorCode.Type;
  *
  * @public
  */
-export const YamlStringifyErrorCode = Schema.Literals(YAML_STRINGIFY_ERROR_CODES);
+export const YamlStringifyErrorCode = S.Literals(YAML_STRINGIFY_ERROR_CODES);
 
 /**
  * The union of all stringifier-stage error code string literals.
@@ -83,7 +83,7 @@ export type YamlStringifyErrorCode = typeof YamlStringifyErrorCode.Type;
  *
  * @public
  */
-export const YamlModifyErrorCode = Schema.Literals(YAML_MODIFY_ERROR_CODES);
+export const YamlModifyErrorCode = S.Literals(YAML_MODIFY_ERROR_CODES);
 
 /**
  * The union of all modify-stage error code string literals.
@@ -98,7 +98,7 @@ export type YamlModifyErrorCode = typeof YamlModifyErrorCode.Type;
  *
  * @public
  */
-export const YamlErrorCode = Schema.Union([
+export const YamlErrorCode = S.Union([
 	YamlLexErrorCode,
 	YamlParseErrorCode,
 	YamlComposerErrorCode,
@@ -126,13 +126,13 @@ export type YamlErrorCode = typeof YamlErrorCode.Type;
  *
  * @public
  */
-export class YamlDiagnostic extends Schema.Class<YamlDiagnostic>("YamlDiagnostic")({
+export class YamlDiagnostic extends S.Class<YamlDiagnostic>("YamlDiagnostic")({
 	code: YamlErrorCode,
-	message: Schema.String,
-	offset: Schema.Finite,
-	length: Schema.Finite,
-	line: Schema.Finite,
-	character: Schema.Finite,
+	message: S.String,
+	offset: S.Finite,
+	length: S.Finite,
+	line: S.Finite,
+	character: S.Finite,
 }) {
 	/**
 	 * The single fatal-code predicate: whether diagnostics with this code

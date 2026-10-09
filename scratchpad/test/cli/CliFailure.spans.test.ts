@@ -1,9 +1,18 @@
 // @effect-diagnostics strictEffectProvide:skip-file
-import { Data } from "effect";
+import * as Data from "effect/Data";
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
-import { Cause, ConfigProvider, Console, Context, Effect, Exit, Layer, Path, Stdio, Terminal } from "effect";
+import * as Cause from "effect/Cause";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Console from "effect/Console";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
+import * as Stdio from "effect/Stdio";
+import * as Terminal from "effect/Terminal";
 import { Command } from "effect/cli";
 import type { CliFailureOptions, CliLogOptions, FailureDetails } from "../../effected/cli/index.ts";
 import { CliAudience, CliFailure, CliRuntime, Render } from "../../effected/cli/index.ts";

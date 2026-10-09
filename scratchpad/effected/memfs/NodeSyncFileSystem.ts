@@ -14,8 +14,15 @@
  */
 
 import * as NFS from "node:fs";
-import type { PlatformError as PlatformErrorNs } from "effect";
-import { BigInt as BI, ByteSize, Effect, FileSystem, Layer, Option, PlatformError, Stream } from "effect";
+import type * as PlatformErrorNs from "effect/PlatformError";
+import * as BI from "effect/BigInt";
+import * as ByteSize from "effect/ByteSize";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as PlatformError from "effect/PlatformError";
+import * as Stream from "effect/Stream";
 import { errnoTag } from "./internal/errno.ts";
 
 type PlatformErrorType = PlatformErrorNs.PlatformError;
@@ -63,8 +70,8 @@ const bigintToNumber = (value: bigint, field: string): number => {
 	return number;
 };
 
-const bigintToNumberOption = (value: bigint | undefined): Option.Option<number> =>
-	Option.flatMap(Option.fromNullishOr(value), BI.toNumber);
+const bigintToNumberOption = (value: bigint | undefined): O.Option<number> =>
+	O.flatMap(O.fromNullishOr(value), BI.toNumber);
 
 // The node adapter's `makeFileInfo`, field for field.
 const fileInfo = (stat: NFS.BigIntStats): FileSystem.File.Info => ({
@@ -83,9 +90,9 @@ const fileInfo = (stat: NFS.BigIntStats): FileSystem.File.Info => ({
 							: stat.isSocket()
 								? "Socket"
 								: "Unknown",
-	mtime: Option.fromNullishOr(stat.mtime),
-	atime: Option.fromNullishOr(stat.atime),
-	birthtime: Option.fromNullishOr(stat.birthtime),
+	mtime: O.fromNullishOr(stat.mtime),
+	atime: O.fromNullishOr(stat.atime),
+	birthtime: O.fromNullishOr(stat.birthtime),
 	dev: bigintToNumber(stat.dev, "dev"),
 	rdev: bigintToNumberOption(stat.rdev),
 	ino: bigintToNumberOption(stat.ino),
@@ -94,7 +101,7 @@ const fileInfo = (stat: NFS.BigIntStats): FileSystem.File.Info => ({
 	uid: bigintToNumberOption(stat.uid),
 	gid: bigintToNumberOption(stat.gid),
 	size: ByteSize.bytes(stat.size),
-	blksize: stat.blksize !== undefined ? Option.some(ByteSize.bytes(stat.blksize)) : Option.none(),
+	blksize: stat.blksize !== undefined ? O.some(ByteSize.bytes(stat.blksize)) : O.none(),
 	blocks: bigintToNumberOption(stat.blocks),
 });
 

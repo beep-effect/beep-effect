@@ -1,4 +1,5 @@
-import { Layer, Redacted } from "effect";
+import * as Layer from "effect/Layer";
+import * as Redacted from "effect/Redacted";
 import { GitHubClient } from "../../effected/github/GitHubClient.ts";
 import { Repo, RepoRef } from "../../effected/github/Repo.ts";
 import { RetryPolicy } from "../../effected/github/Resilience.ts";

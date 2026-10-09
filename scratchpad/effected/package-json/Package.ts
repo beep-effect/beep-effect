@@ -8,7 +8,14 @@
 import { CatalogResolver, DependencySpecifier, WorkspaceResolver } from "../npm/index.ts";
 import type { InvalidVersionError } from "../semver/index.ts";
 import { SemVer } from "../semver/index.ts";
-import { Effect, Function as Fn, HashMap, Option, Pipeable, Result, Schema, SchemaTransformation } from "effect";
+import * as Effect from "effect/Effect";
+import * as Fn from "effect/Function";
+import * as HashMap from "effect/HashMap";
+import * as O from "effect/Option";
+import * as Pipeable from "effect/Pipeable";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import { Dependency } from "./Dependency.ts";
 import { DevEnginesSchema } from "./DevEngines.ts";
 import { Funding } from "./Funding.ts";
@@ -37,9 +44,9 @@ const toHashMap = SchemaTransformation.transform({
  *
  * @public
  */
-export const DependencyMapField = Schema.Record(Schema.String, Schema.String).pipe(
-	Schema.withDecodingDefaultKey(Effect.succeed({} as { readonly [x: string]: string })),
-	Schema.decodeTo(Schema.HashMap(Schema.String, Schema.String), toHashMap),
+export const DependencyMapField = S.Record(S.String, S.String).pipe(
+	S.withDecodingDefaultKey(Effect.succeed({} as { readonly [x: string]: string })),
+	S.decodeTo(S.HashMap(S.String, S.String), toHashMap),
 );
 
 /**
@@ -49,8 +56,8 @@ export const DependencyMapField = Schema.Record(Schema.String, Schema.String).pi
  *
  * @public
  */
-export const StringMapField = Schema.Record(Schema.String, Schema.String).pipe(
-	Schema.decodeTo(Schema.HashMap(Schema.String, Schema.String), toHashMap),
+export const StringMapField = S.Record(S.String, S.String).pipe(
+	S.decodeTo(S.HashMap(S.String, S.String), toHashMap),
 );
 
 /**
@@ -59,7 +66,7 @@ export const StringMapField = Schema.Record(Schema.String, Schema.String).pipe(
  *
  * @public
  */
-export const BinField = Schema.Union([Schema.String, StringMapField]);
+export const BinField = S.Union([S.String, StringMapField]);
 
 /**
  * The `exports` field: a single string entry point or an open object of
@@ -67,7 +74,7 @@ export const BinField = Schema.Union([Schema.String, StringMapField]);
  *
  * @public
  */
-export const ExportsField = Schema.Union([Schema.String, Schema.Record(Schema.String, Schema.Unknown)]);
+export const ExportsField = S.Union([S.String, S.Record(S.String, S.Unknown)]);
 
 /**
  * The `publishConfig` field: an open record preserving known npm keys
@@ -76,7 +83,7 @@ export const ExportsField = Schema.Union([Schema.String, Schema.Record(Schema.St
  *
  * @public
  */
-export const PublishConfigField = Schema.Record(Schema.String, Schema.Unknown);
+export const PublishConfigField = S.Record(S.String, S.Unknown);
 
 /**
  * The `peerDependenciesMeta` field: a map of package name to `{ optional? }`.
@@ -84,9 +91,9 @@ export const PublishConfigField = Schema.Record(Schema.String, Schema.Unknown);
  *
  * @public
  */
-export const PeerDependenciesMetaField = Schema.Record(
-	Schema.String,
-	Schema.Struct({ optional: Schema.optionalKey(Schema.Boolean) }),
+export const PeerDependenciesMetaField = S.Record(
+	S.String,
+	S.Struct({ optional: S.optionalKey(S.Boolean) }),
 );
 
 /**
@@ -99,7 +106,7 @@ export const PeerDependenciesMetaField = Schema.Record(
  *
  * @public
  */
-export const RepositoryField = Schema.Union([Schema.String, Schema.Record(Schema.String, Schema.Unknown)]);
+export const RepositoryField = S.Union([S.String, S.Record(S.String, S.Unknown)]);
 
 // ── Errors ──────────────────────────────────────────────────────────────────
 
@@ -112,9 +119,9 @@ export const RepositoryField = Schema.Union([Schema.String, Schema.Record(Schema
  *
  * @public
  */
-export class PackageDecodeError extends Schema.TaggedError<PackageDecodeError>()("PackageDecodeError", {
+export class PackageDecodeError extends S.TaggedError<PackageDecodeError>()("PackageDecodeError", {
 	/** The underlying `SchemaError`, preserved structurally rather than stringified. */
-	cause: Schema.Defect(),
+	cause: S.Defect(),
 }) {
 	override get message(): string {
 		return "Failed to decode package.json";
@@ -188,35 +195,35 @@ export type PackagePatch = Partial<{
  *
  * @public
  */
-export class Package extends Schema.Class<Package>("Package")({
+export class Package extends S.Class<Package>("Package")({
 	name: PackageName,
 	version: SemVer.FromString,
-	description: Schema.optionalKey(Schema.String),
-	private: Schema.optionalKey(Schema.Boolean),
-	type: Schema.optionalKey(Schema.Literals(["module", "commonjs"])),
-	main: Schema.optionalKey(Schema.String),
-	license: Schema.optionalKey(SpdxLicense),
-	author: Schema.optionalKey(Person.FromValue),
-	contributors: Schema.optionalKey(Schema.Array(Person.FromValue)),
-	maintainers: Schema.optionalKey(Schema.Array(Person.FromValue)),
-	keywords: Schema.optionalKey(Schema.Array(Schema.String)),
-	repository: Schema.optionalKey(Repository.FromValue),
-	bugs: Schema.optionalKey(Bugs.FromValue),
-	funding: Schema.optionalKey(Funding.FromField),
-	homepage: Schema.optionalKey(Schema.String),
+	description: S.optionalKey(S.String),
+	private: S.optionalKey(S.Boolean),
+	type: S.optionalKey(S.Literals(["module", "commonjs"])),
+	main: S.optionalKey(S.String),
+	license: S.optionalKey(SpdxLicense),
+	author: S.optionalKey(Person.FromValue),
+	contributors: Person.FromValue.pipe(S.Array, S.optionalKey),
+	maintainers: Person.FromValue.pipe(S.Array, S.optionalKey),
+	keywords: S.String.pipe(S.Array, S.optionalKey),
+	repository: S.optionalKey(Repository.FromValue),
+	bugs: S.optionalKey(Bugs.FromValue),
+	funding: S.optionalKey(Funding.FromField),
+	homepage: S.optionalKey(S.String),
 	dependencies: DependencyMapField,
 	devDependencies: DependencyMapField,
 	peerDependencies: DependencyMapField,
 	optionalDependencies: DependencyMapField,
-	peerDependenciesMeta: Schema.optionalKey(PeerDependenciesMetaField),
+	peerDependenciesMeta: S.optionalKey(PeerDependenciesMetaField),
 	scripts: DependencyMapField,
-	bin: Schema.optionalKey(BinField),
-	engines: Schema.optionalKey(StringMapField),
-	exports: Schema.optionalKey(ExportsField),
-	publishConfig: Schema.optionalKey(PublishConfigField),
-	packageManager: Schema.optionalKey(PackageManager.FromString),
-	devEngines: Schema.optionalKey(DevEnginesSchema),
-	rest: Schema.optionalKey(Schema.Record(Schema.String, Schema.Unknown)),
+	bin: S.optionalKey(BinField),
+	engines: S.optionalKey(StringMapField),
+	exports: S.optionalKey(ExportsField),
+	publishConfig: S.optionalKey(PublishConfigField),
+	packageManager: S.optionalKey(PackageManager.FromString),
+	devEngines: S.optionalKey(DevEnginesSchema),
+	rest: S.optionalKey(S.Record(S.String, S.Unknown)),
 }) {
 	// ── Pipeable ──────────────────────────────────────────────────────────
 	// `Schema.Class` instances are not `Pipeable` out of the box, so this manual
@@ -239,7 +246,7 @@ export class Package extends Schema.Class<Package>("Package")({
 	 * The default wire codec: an open JSON object ↔ a {@link Package} instance,
 	 * partitioning unknown keys into `rest` and flattening them back on encode.
 	 */
-	static readonly schema: Schema.Codec<Package, { readonly [k: string]: unknown }> = makeWire(Package);
+	static readonly schema: S.Codec<Package, { readonly [k: string]: unknown }> = makeWire(Package);
 
 	/**
 	 * Build the wire codec for a `.extend()`ed subclass, so its custom fields
@@ -250,8 +257,8 @@ export class Package extends Schema.Class<Package>("Package")({
 	 */
 	static wireFor<Self extends Package>(
 		// biome-ignore lint/suspicious/noExplicitAny: invariant Encoded slot — see makeWire
-		Class: Schema.Codec<Self, any, any, any> & { readonly fields: Record<string, unknown> },
-	): Schema.Codec<Self, { readonly [k: string]: unknown }> {
+		Class: S.Codec<Self, any, any, any> & { readonly fields: Record<string, unknown> },
+	): S.Codec<Self, { readonly [k: string]: unknown }> {
 		return makeWire(Class);
 	}
 
@@ -266,7 +273,7 @@ export class Package extends Schema.Class<Package>("Package")({
 	 * {@link PackageDecodeError} when `input` does not satisfy the schema
 	 */
 	static readonly decode = Effect.fn("Package.decode")(function* (input: unknown) {
-		return yield* Schema.decodeUnknownEffect(Package.schema)(input).pipe(
+		return yield* S.decodeUnknownEffect(Package.schema)(input).pipe(
 			Effect.catchTag("SchemaError", (cause) => PackageDecodeError.make({ cause })),
 		);
 	});
@@ -497,14 +504,14 @@ export class Package extends Schema.Class<Package>("Package")({
 				if (DependencySpecifier.isWorkspace(specifier)) {
 					// The alias form resolves the TARGET package's version; the plain
 					// form resolves the map key's.
-					const target = Option.getOrElse(DependencySpecifier.workspaceTargetOf(specifier), () => name);
+					const target = O.getOrElse(DependencySpecifier.workspaceTargetOf(specifier), () => name);
 					const version = yield* workspace.versionOf(target);
-					if (Option.isSome(version)) {
+					if (O.isSome(version)) {
 						next = HashMap.set(next, name, DependencySpecifier.resolveWorkspace(specifier, version.value));
 					}
 				} else if (DependencySpecifier.isCatalog(specifier)) {
 					const range = yield* catalog.rangeOf(name, DependencySpecifier.catalogNameOf(specifier));
-					if (Option.isSome(range)) {
+					if (O.isSome(range)) {
 						next = HashMap.set(next, name, range.value);
 					}
 				}
@@ -528,7 +535,7 @@ export class Package extends Schema.Class<Package>("Package")({
 	 * sorting and empty-map stripping unless the options opt out. Pure.
 	 */
 	toJsonString(options?: PackageFormatOptions): string {
-		const raw = Result.getOrThrowWith(Schema.encodeUnknownResult(Package.schema)(this), (error) => error);
+		const raw = Result.getOrThrowWith(S.encodeUnknownResult(Package.schema)(this), (error) => error);
 		return renderJson(raw, resolveFormatOptions(options));
 	}
 }

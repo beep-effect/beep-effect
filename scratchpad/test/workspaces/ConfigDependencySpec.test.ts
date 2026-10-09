@@ -7,7 +7,10 @@
 import { assert, describe, it } from "@effect/vitest";
 import { IntegrityHash, SriIntegrityHash } from "../../effected/npm/index.ts";
 import { SemVer } from "../../effected/semver/index.ts";
-import { Effect, Option, Result, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { ConfigDependencySpec, InvalidConfigDependencySpecError } from "../../effected/workspaces/ConfigDependencySpec.ts";
 import { lookupPnpmfiles } from "../../effected/workspaces/internal/configDependencyResolution.ts";
 
@@ -25,7 +28,7 @@ describe("ConfigDependencySpec.parseResult", () => {
 		assert.isTrue(Result.isSuccess(parsed));
 		if (Result.isSuccess(parsed)) {
 			assert.strictEqual(parsed.success.version.toString(), "0.11.1");
-			assert.deepStrictEqual(parsed.success.integrity, Option.some(SRI));
+			assert.deepStrictEqual(parsed.success.integrity, O.some(SRI));
 			assert.isTrue(parsed.success.hasIntegrity);
 			assert.strictEqual(parsed.success.bare, "0.11.1");
 			assert.strictEqual(parsed.success.toString(), `0.11.1+${SRI}`);
@@ -37,7 +40,7 @@ describe("ConfigDependencySpec.parseResult", () => {
 		assert.isTrue(Result.isSuccess(parsed));
 		if (Result.isSuccess(parsed)) {
 			assert.strictEqual(parsed.success.bare, "0.44.0");
-			assert.deepStrictEqual(parsed.success.integrity, Option.some(SRI_WITH_PLUS));
+			assert.deepStrictEqual(parsed.success.integrity, O.some(SRI_WITH_PLUS));
 		}
 	});
 
@@ -45,7 +48,7 @@ describe("ConfigDependencySpec.parseResult", () => {
 		const parsed = ConfigDependencySpec.parseResult("0.11.1");
 		assert.isTrue(Result.isSuccess(parsed));
 		if (Result.isSuccess(parsed)) {
-			assert.isTrue(Option.isNone(parsed.success.integrity));
+			assert.isTrue(O.isNone(parsed.success.integrity));
 			assert.isFalse(parsed.success.hasIntegrity);
 			assert.strictEqual(parsed.success.bare, "0.11.1");
 			assert.strictEqual(parsed.success.toString(), "0.11.1");
@@ -107,8 +110,8 @@ describe("ConfigDependencySpec.parse", () => {
 });
 
 describe("ConfigDependencySpec.FromString", () => {
-	const decode = Schema.decodeUnknownEffect(ConfigDependencySpec.FromString);
-	const encode = Schema.encodeUnknownEffect(ConfigDependencySpec.FromString);
+	const decode = S.decodeUnknownEffect(ConfigDependencySpec.FromString);
+	const encode = S.encodeUnknownEffect(ConfigDependencySpec.FromString);
 
 	it.effect("round-trips encode(decode) byte-identically", () =>
 		Effect.gen(function* () {
@@ -129,7 +132,7 @@ describe("ConfigDependencySpec.FromString", () => {
 describe("ConfigDependencySpec construction", () => {
 	it("rejects a version carrying build metadata, which the grammar cannot encode", () => {
 		assert.throws(() =>
-			ConfigDependencySpec.make({ version: SemVer.of(1, 2, 3, [], ["build"]), integrity: Option.none() }),
+			ConfigDependencySpec.make({ version: SemVer.of(1, 2, 3, [], ["build"]), integrity: O.none() }),
 		);
 	});
 });

@@ -1,4 +1,4 @@
-import { Function } from "effect";
+import * as Function from "effect/Function";
 
 // Reading GitHub's response headers.
 //

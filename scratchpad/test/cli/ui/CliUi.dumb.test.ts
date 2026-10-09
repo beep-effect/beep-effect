@@ -4,7 +4,10 @@
 // pipe, and a screen is refused.
 import { assert, describe, it } from "@effect/vitest";
 import { Audience, TerminalEnv } from "../../../effected/env/index.ts";
-import { ConfigProvider, Effect, Layer, Stream } from "effect";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Stream from "effect/Stream";
 import { Text } from "ink";
 import { createElement } from "react";
 import { CliInteractive, CliTheme, NotInteractive } from "../../../effected/cli/index.ts";

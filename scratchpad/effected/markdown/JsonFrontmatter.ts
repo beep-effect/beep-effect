@@ -1,5 +1,5 @@
 import { Jsonc } from "../jsonc/index.ts";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import type { FrontmatterCodec } from "./Frontmatter.ts";
 import { FrontmatterDecodeError, FrontmatterEncodeError, FrontmatterFormatMismatchError } from "./Frontmatter.ts";
 

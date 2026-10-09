@@ -1,4 +1,8 @@
-import { Effect, Result, Schema, SchemaIssue, SchemaTransformation } from "effect";
+import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import type { GitConfigEditError, GitConfigParseError } from "./GitConfig.ts";
 import { GitConfig } from "./GitConfig.ts";
 import { serializeHeader, serializeValue } from "./internal/config.ts";
@@ -9,7 +13,7 @@ import { serializeHeader, serializeValue } from "./internal/config.ts";
  *
  * @public
  */
-export class GitmodulesEntry extends Schema.Class<GitmodulesEntry>("GitmodulesEntry")({
+export class GitmodulesEntry extends S.Class<GitmodulesEntry>("GitmodulesEntry")({
 	/**
 	 * The submodule's logical name — the section's subsection, case-sensitive.
 	 *
@@ -22,26 +26,26 @@ export class GitmodulesEntry extends Schema.Class<GitmodulesEntry>("GitmodulesEn
 	 * lines — so the check bites only on hand-built entries, matching
 	 * `GitConfig.addSection`'s refusal of `[\n\r\0]` subsections.
 	 */
-	name: Schema.String.check(Schema.isPattern(/^[^\n\r\0]*$/u)),
+	name: S.String.check(S.isPattern(/^[^\n\r\0]*$/u)),
 	/** The submodule's path relative to the superproject root (`submodule.<name>.path`). */
-	path: Schema.String,
+	path: S.String,
 	/** The submodule's remote URL (`submodule.<name>.url`). */
-	url: Schema.String,
+	url: S.String,
 	/** The branch the submodule tracks (`submodule.<name>.branch`), when recorded. */
-	branch: Schema.optionalKey(Schema.String),
+	branch: S.optionalKey(S.String),
 	/** Whether the submodule clones shallow (`submodule.<name>.shallow`), when recorded. */
-	shallow: Schema.optionalKey(Schema.Boolean),
+	shallow: S.optionalKey(S.Boolean),
 	/**
 	 * The update strategy (`submodule.<name>.update`), when recorded. Kept as a
 	 * raw string deliberately: beyond `checkout`/`rebase`/`merge`/`none` git
 	 * accepts arbitrary `!command` values, so a literal union would reject
 	 * valid documents.
 	 */
-	update: Schema.optionalKey(Schema.String),
+	update: S.optionalKey(S.String),
 	/** The status-ignore policy (`submodule.<name>.ignore`), when recorded. */
-	ignore: Schema.optionalKey(Schema.Literals(["all", "dirty", "untracked", "none"])),
+	ignore: S.optionalKey(S.Literals(["all", "dirty", "untracked", "none"])),
 	/** Whether fetch recurses into the submodule (`submodule.<name>.fetchRecurseSubmodules`), when recorded. */
-	fetchRecurseSubmodules: Schema.optionalKey(Schema.Union([Schema.Boolean, Schema.Literal("on-demand")])),
+	fetchRecurseSubmodules: S.optionalKey(S.Union([S.Boolean, S.Literal("on-demand")])),
 }) {}
 
 /**
@@ -49,15 +53,15 @@ export class GitmodulesEntry extends Schema.Class<GitmodulesEntry>("GitmodulesEn
  *
  * @public
  */
-export class GitmodulesDecodeError extends Schema.TaggedError<GitmodulesDecodeError>()("GitmodulesDecodeError", {
+export class GitmodulesDecodeError extends S.TaggedError<GitmodulesDecodeError>()("GitmodulesDecodeError", {
 	/** The submodule name (the section's subsection) that failed to decode. */
-	name: Schema.String,
+	name: S.String,
 	/** The field the failure is about, when it is field-specific. */
-	field: Schema.optionalKey(Schema.String),
+	field: S.optionalKey(S.String),
 	/** The offending raw value, when there was one. */
-	value: Schema.optionalKey(Schema.String),
+	value: S.optionalKey(S.String),
 	/** What went wrong. */
-	reason: Schema.Literals(["missingPath", "missingUrl", "invalidValue"]),
+	reason: S.Literals(["missingPath", "missingUrl", "invalidValue"]),
 }) {
 	/** Renders the failing submodule and field into a one-line message. */
 	override get message(): string {
@@ -128,9 +132,9 @@ const render = (fields: (typeof Gitmodules)["Encoded"]): string => {
  *
  * @public
  */
-export class Gitmodules extends Schema.Class<Gitmodules>("Gitmodules")({
+export class Gitmodules extends S.Class<Gitmodules>("Gitmodules")({
 	/** The decoded submodule entries, in first-appearance order. */
-	entries: Schema.Array(GitmodulesEntry),
+	entries: S.Array(GitmodulesEntry),
 }) {
 	/**
 	 * Decodes an already-parsed git-config document into submodule entries —
@@ -262,8 +266,8 @@ export class Gitmodules extends Schema.Class<Gitmodules>("Gitmodules")({
 	 * decoding parses (and fails on the first undecodable entry), encoding
 	 * renders the canonical document per {@link Gitmodules.stringify}.
 	 */
-	static readonly FromString: Schema.Codec<Gitmodules, string> = Schema.String.pipe(
-		Schema.decodeTo(
+	static readonly FromString: S.Codec<Gitmodules, string> = S.String.pipe(
+		S.decodeTo(
 			Gitmodules,
 			// The type parameters are pinned to the ENCODED side explicitly:
 			// `decodeTo` unifies the transformation against the target's Encoded

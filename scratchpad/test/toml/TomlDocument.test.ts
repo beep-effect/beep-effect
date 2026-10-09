@@ -8,7 +8,9 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Schema, Result } from "effect";
+import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
+import * as Result from "effect/Result";
 import { Toml, TomlParseError } from "../../effected/toml/Toml.ts";
 import { TomlDocument } from "../../effected/toml/TomlDocument.ts";
 import { TomlInteger, TomlKey, TomlKeyValue } from "../../effected/toml/TomlNode.ts";
@@ -69,7 +71,7 @@ describe("TomlDocument", () => {
 				// The document is still lossless and editable.
 				assert.strictEqual(doc.stringify(), "a=1\na=2\n");
 				// toValue refuses: it fails with the stored diagnostics.
-				const error = yield* Effect.result(doc.toValue()).pipe(Effect.map((result) => Result.getOrThrow(Result.flip(result))));
+				const error = yield* Effect.result(doc.toValue()).pipe(Effect.map((result) => result.pipe(Result.flip, Result.getOrThrow)));
 				assert.instanceOf(error, TomlParseError);
 				assert.deepStrictEqual(error.diagnostics, doc.diagnostics);
 			}),
@@ -119,7 +121,7 @@ describe("TomlDocument", () => {
 
 		it.effect("decodes TOML text into a TomlDocument", () =>
 			Effect.gen(function* () {
-				const doc = yield* Schema.decodeEffect(codec)('a = "b"\n');
+				const doc = yield* S.decodeEffect(codec)('a = "b"\n');
 				assert.instanceOf(doc, TomlDocument);
 				assert.strictEqual(doc.source, 'a = "b"\n');
 				const value = yield* doc.toValue();
@@ -130,14 +132,14 @@ describe("TomlDocument", () => {
 		it.effect("encodes a TomlDocument back to the same text", () =>
 			Effect.gen(function* () {
 				const doc = yield* TomlDocument.parse(MIXED);
-				const encoded = yield* Schema.encodeUnknownEffect(codec)(doc);
+				const encoded = yield* S.encodeUnknownEffect(codec)(doc);
 				assert.strictEqual(encoded, MIXED);
 			}),
 		);
 
 		it.effect("a failing decode surfaces a SchemaError carrying the parse message", () =>
 			Effect.gen(function* () {
-				const error = yield* Effect.flip(Schema.decodeEffect(codec)("a = [1\n"));
+				const error = yield* Effect.flip(S.decodeEffect(codec)("a = [1\n"));
 				assert.include(String(error), "TOML parse failed");
 			}),
 		);

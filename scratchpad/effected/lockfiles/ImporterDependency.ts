@@ -1,5 +1,5 @@
 import { DependencyField, DependencySpecifier } from "../npm/index.ts";
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 
 /**
  * One declared dependency of one workspace importer, as the lockfile records it.
@@ -32,10 +32,10 @@ import { Schema } from "effect";
  *
  * @public
  */
-export class ImporterDependency extends Schema.Class<ImporterDependency>("ImporterDependency")({
-	name: Schema.NonEmptyString,
+export class ImporterDependency extends S.Class<ImporterDependency>("ImporterDependency")({
+	name: S.NonEmptyString,
 	specifier: DependencySpecifier.FromString,
-	version: Schema.optionalKey(Schema.String),
-	peerSuffix: Schema.optionalKey(Schema.String),
+	version: S.optionalKey(S.String),
+	peerSuffix: S.optionalKey(S.String),
 	depType: DependencyField,
 }) {}

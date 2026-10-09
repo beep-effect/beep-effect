@@ -1,5 +1,6 @@
 import { IntegrityHash } from "../../npm/index.ts";
-import { Effect, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
 import { ConfigDependencyLock } from "../ConfigDependencyLock.ts";
 import { PackageManagerLock } from "../PackageManagerLock.ts";
 import { splitPnpmStream } from "./documents.ts";
@@ -8,33 +9,33 @@ import { gatePnpmVersion, validationFailure } from "./shared.ts";
 
 // ── Raw schema (permissive validation scaffolding, not API) ────────────────
 
-const PnpmEnvImporterDeps = Schema.optionalKey(
-	Schema.Record(Schema.String, Schema.Struct({ specifier: Schema.String, version: Schema.String })),
+const PnpmEnvImporterDeps = S.optionalKey(
+	S.Record(S.String, S.Struct({ specifier: S.String, version: S.String })),
 );
 
-const PnpmEnvRaw = Schema.Struct({
-	importers: Schema.optionalKey(
-		Schema.Record(
-			Schema.String,
-			Schema.Struct({
+const PnpmEnvRaw = S.Struct({
+	importers: S.optionalKey(
+		S.Record(
+			S.String,
+			S.Struct({
 				packageManagerDependencies: PnpmEnvImporterDeps,
 				configDependencies: PnpmEnvImporterDeps,
 			}),
 		),
 	),
-	packages: Schema.optionalKey(
-		Schema.Record(
-			Schema.String,
-			Schema.Struct({
-				resolution: Schema.optionalKey(Schema.Struct({ integrity: Schema.optionalKey(Schema.String) })),
+	packages: S.optionalKey(
+		S.Record(
+			S.String,
+			S.Struct({
+				resolution: S.optionalKey(S.Struct({ integrity: S.optionalKey(S.String) })),
 			}),
 		),
 	),
-	snapshots: Schema.optionalKey(
-		Schema.Record(
-			Schema.String,
-			Schema.Struct({
-				optionalDependencies: Schema.optionalKey(Schema.Record(Schema.String, Schema.String)),
+	snapshots: S.optionalKey(
+		S.Record(
+			S.String,
+			S.Struct({
+				optionalDependencies: S.optionalKey(S.Record(S.String, S.String)),
 			}),
 		),
 	),
@@ -48,7 +49,7 @@ const PNPM = "pnpm";
 /** The importer pnpm records `packageManagerDependencies` under. */
 const ROOT_IMPORTER = ".";
 
-const JsonString = Schema.fromJsonString(Schema.String);
+const JsonString = S.fromJsonString(S.String);
 
 /**
  * Own-property read of a decoded record. The records come from YAML, so a key
@@ -111,7 +112,7 @@ const decodePreamble = (content: string): Effect.Effect<PnpmEnvRawType | undefin
 		const { preamble } = yield* splitPnpmStream(content);
 		if (preamble === undefined) return undefined;
 		yield* gatePnpmVersion(preamble);
-		return yield* Schema.decodeUnknownEffect(PnpmEnvRaw)(preamble).pipe(Effect.mapError(validationFailure));
+		return yield* S.decodeUnknownEffect(PnpmEnvRaw)(preamble).pipe(Effect.mapError(validationFailure));
 	});
 
 /**
@@ -140,7 +141,7 @@ export const readPnpmPackageManager = (content: string): Effect.Effect<PackageMa
 		const key = `${PNPM}@${declared.version}`;
 		const snapshot = own(raw.snapshots, key);
 		if (snapshot === undefined) {
-			return yield* Effect.fail(unaccounted(`snapshots[${yield* Schema.encodeEffect(JsonString)(key).pipe(Effect.mapError(validationFailure))}] is missing`));
+			return yield* Effect.fail(unaccounted(`snapshots[${yield* S.encodeEffect(JsonString)(key).pipe(Effect.mapError(validationFailure))}] is missing`));
 		}
 		const natives: Array<readonly [string, string]> = [];
 		for (const [name, version] of Object.entries(snapshot.optionalDependencies ?? {})) {
@@ -179,7 +180,7 @@ export const readPnpmConfigDependencies = (
 		const locks = new Map<string, ConfigDependencyLock>();
 		if (raw === undefined || declared === undefined) return locks;
 		for (const [name, entry] of Object.entries(declared)) {
-			const integrity = yield* recordedIntegrity(raw, `config dependency ${yield* Schema.encodeEffect(JsonString)(name).pipe(Effect.mapError(validationFailure))}`, name, entry.version);
+			const integrity = yield* recordedIntegrity(raw, `config dependency ${yield* S.encodeEffect(JsonString)(name).pipe(Effect.mapError(validationFailure))}`, name, entry.version);
 			locks.set(
 				name,
 				ConfigDependencyLock.make({ name, specifier: entry.specifier, version: entry.version, integrity }),

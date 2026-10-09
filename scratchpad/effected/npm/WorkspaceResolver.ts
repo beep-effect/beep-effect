@@ -8,7 +8,11 @@
 // dependency edge runs `CatalogResolver -> WorkspaceResolver` one way and
 // `noImportCycles` stays satisfied.
 
-import { Context, Effect, Layer, Option, Schema } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
 
 /**
  * Raised when a `catalog:` or `workspace:` specifier cannot be resolved
@@ -49,10 +53,10 @@ import { Context, Effect, Layer, Option, Schema } from "effect";
  *
  * @public
  */
-export class DependencyResolutionError extends Schema.TaggedError<DependencyResolutionError>()(
+export class DependencyResolutionError extends S.TaggedError<DependencyResolutionError>()(
 	"DependencyResolutionError",
 	{
-		specifier: Schema.String,
+		specifier: S.String,
 		/**
 		 * Why the specifier could not be resolved.
 		 *
@@ -65,11 +69,11 @@ export class DependencyResolutionError extends Schema.TaggedError<DependencyReso
 		 * Defaults to `"mechanism"` when omitted, at construction and when decoding
 		 * an error encoded before the field existed.
 		 */
-		reason: Schema.Literals(["mechanism", "no-version"]).pipe(
-			Schema.withDecodingDefaultKey(Effect.succeed("mechanism" as const)),
-			Schema.withConstructorDefault(Effect.succeed("mechanism" as const)),
+		reason: S.Literals(["mechanism", "no-version"]).pipe(
+			S.withDecodingDefaultKey(Effect.succeed("mechanism" as const)),
+			S.withConstructorDefault(Effect.succeed("mechanism" as const)),
 		),
-		cause: Schema.Defect(),
+		cause: S.Defect(),
 	},
 ) {
 	/** Renders `specifier` and `reason` into a one-line failure message. */
@@ -117,7 +121,7 @@ export class DependencyResolutionError extends Schema.TaggedError<DependencyReso
 export class WorkspaceResolver extends Context.Service<
 	WorkspaceResolver,
 	{
-		readonly versionOf: (packageName: string) => Effect.Effect<Option.Option<string>, DependencyResolutionError>;
+		readonly versionOf: (packageName: string) => Effect.Effect<O.Option<string>, DependencyResolutionError>;
 	}
 >()("@beep/scratchpad/effected/npm/WorkspaceResolver") {
 	/**

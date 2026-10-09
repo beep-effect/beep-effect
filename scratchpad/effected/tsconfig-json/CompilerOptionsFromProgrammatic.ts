@@ -26,7 +26,8 @@
 // runtime while `TsEnumCodec` type-imports it back — a conceptual inversion and
 // a `noImportCycles` risk. This module imports both; nothing imports it.
 
-import { Schema, SchemaTransformation } from "effect";
+import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import { CompilerOptions } from "./CompilerOptions.ts";
 import { TsEnumCodec } from "./TsEnumCodec.ts";
 
@@ -95,9 +96,9 @@ const encodeOut = (encoded: typeof CompilerOptions.Encoded): ProgrammaticRecord 
  *
  * @public
  */
-export const CompilerOptionsFromProgrammatic: Schema.Codec<typeof CompilerOptions.Type, ProgrammaticRecord> =
-	Schema.Record(Schema.String, Schema.Unknown).pipe(
-		Schema.decodeTo(
+export const CompilerOptionsFromProgrammatic: S.Codec<typeof CompilerOptions.Type, ProgrammaticRecord> =
+	S.Record(S.String, S.Unknown).pipe(
+		S.decodeTo(
 			CompilerOptions,
 			SchemaTransformation.transform({
 				decode: normalizeIn,

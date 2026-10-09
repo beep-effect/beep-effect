@@ -1,4 +1,11 @@
-import { Cache, Context, Duration, Effect, Exit, Layer, Option, Schema } from "effect";
+import * as Cache from "effect/Cache";
+import * as Context from "effect/Context";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import type { LocalExecError } from "./LocalExec.ts";
 import { ExecContext, LocalExec } from "./LocalExec.ts";
@@ -17,7 +24,7 @@ const DEFAULT_VERSION_PATTERN = /(\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?)/;
  *
  * @public
  */
-export const ResolvedSource = Schema.Literals(["global", "local"]);
+export const ResolvedSource = S.Literals(["global", "local"]);
 
 /**
  * The decoded type of {@link (ResolvedSource:variable)}.
@@ -31,21 +38,21 @@ export type ResolvedSource = typeof ResolvedSource.Type;
  *
  * @public
  */
-export class ResolvedTool extends Schema.Class<ResolvedTool>("ResolvedTool")({
+export class ResolvedTool extends S.Class<ResolvedTool>("ResolvedTool")({
 	/** The executable name. */
-	name: Schema.String,
+	name: S.String,
 	/** Which copy this resolution selected. */
 	source: ResolvedSource,
 	/** The selected copy's version, when one could be read. */
-	version: Schema.Option(Schema.String),
+	version: S.Option(S.String),
 	/** The global copy's version, when it exists and reports one. */
-	globalVersion: Schema.Option(Schema.String),
+	globalVersion: S.Option(S.String),
 	/** The project-local copy's version, when it exists and reports one. */
-	localVersion: Schema.Option(Schema.String),
+	localVersion: S.Option(S.String),
 	/** Whether the two copies reported different versions. */
-	mismatch: Schema.Boolean,
+	mismatch: S.Boolean,
 	/** The project-local execution context, when {@link ResolvedTool.source} is `"local"`. */
-	context: Schema.optionalKey(ExecContext),
+	context: S.optionalKey(ExecContext),
 }) {
 	/**
 	 * A core `Command` that runs this tool — bare for a global resolution,
@@ -73,11 +80,11 @@ export class ResolvedTool extends Schema.Class<ResolvedTool>("ResolvedTool")({
  *
  * @public
  */
-export class ToolNotFoundError extends Schema.TaggedError<ToolNotFoundError>()("ToolNotFoundError", {
+export class ToolNotFoundError extends S.TaggedError<ToolNotFoundError>()("ToolNotFoundError", {
 	/** The tool that was looked for. */
-	tool: Schema.String,
+	tool: S.String,
 	/** The locations its `source` requirement demanded. */
-	searched: Schema.Array(ResolvedSource),
+	searched: S.Array(ResolvedSource),
 }) {
 	override get message(): string {
 		return `Tool not found: ${this.tool} (required ${this.searched.join(" and ")})`;
@@ -90,15 +97,15 @@ export class ToolNotFoundError extends Schema.TaggedError<ToolNotFoundError>()("
  *
  * @public
  */
-export class ToolVersionMismatchError extends Schema.TaggedError<ToolVersionMismatchError>()(
+export class ToolVersionMismatchError extends S.TaggedError<ToolVersionMismatchError>()(
 	"ToolVersionMismatchError",
 	{
 		/** The tool. */
-		tool: Schema.String,
+		tool: S.String,
 		/** The global copy's version. */
-		globalVersion: Schema.String,
+		globalVersion: S.String,
 		/** The project-local copy's version. */
-		localVersion: Schema.String,
+		localVersion: S.String,
 	},
 ) {
 	override get message(): string {
@@ -118,9 +125,9 @@ export class ToolVersionMismatchError extends Schema.TaggedError<ToolVersionMism
  *
  * @public
  */
-export class ToolRefusedError extends Schema.TaggedError<ToolRefusedError>()("ToolRefusedError", {
+export class ToolRefusedError extends S.TaggedError<ToolRefusedError>()("ToolRefusedError", {
 	/** The refused name. */
-	tool: Schema.String,
+	tool: S.String,
 }) {
 	override get message(): string {
 		return this.tool === ""
@@ -139,14 +146,14 @@ export type ToolResolutionFailure = ToolNotFoundError | ToolVersionMismatchError
 /** What one probe learned about one location. */
 interface Probe {
 	readonly found: boolean;
-	readonly version: Option.Option<string>;
+	readonly version: O.Option<string>;
 }
 
 /** What probing learned about a tool. Cached; policy is applied to it per call. */
 interface Evidence {
 	readonly global: Probe;
 	readonly local: Probe;
-	readonly context: Option.Option<ExecContext>;
+	readonly context: O.Option<ExecContext>;
 }
 
 /**
@@ -159,8 +166,8 @@ interface Evidence {
  * lookup needs no side table. Policy fields are deliberately absent: they are
  * applied to the evidence per call.
  */
-class EvidenceKey extends Schema.Class<EvidenceKey>("EvidenceKey")({
-	name: Schema.String,
+class EvidenceKey extends S.Class<EvidenceKey>("EvidenceKey")({
+	name: S.String,
 	probe: VersionProbe,
 }) {}
 
@@ -169,23 +176,23 @@ const probeArgs = (probe: VersionProbe): ReadonlyArray<string> =>
 	probe._tag === "VersionNone" ? ["--version"] : probe.flag.split(/\s+/).filter((part) => part.length > 0);
 
 /** Reads a version out of one probe's captured stdout. */
-const extractVersion = (probe: VersionProbe, stdout: string): Option.Option<string> => {
-	if (probe._tag === "VersionNone") return Option.none();
+const extractVersion = (probe: VersionProbe, stdout: string): O.Option<string> => {
+	if (probe._tag === "VersionNone") return O.none();
 	if (probe._tag === "VersionFlag") {
 		const pattern = probe.pattern === undefined ? DEFAULT_VERSION_PATTERN : new RegExp(probe.pattern);
 		const match = pattern.exec(stdout);
 		// Group 1 when the pattern captures, else the whole match.
-		return Option.fromUndefinedOr(match?.[1] ?? match?.[0]);
+		return O.fromUndefinedOr(match?.[1] ?? match?.[0]);
 	}
 	try {
 		let current: unknown = JSON.parse(stdout);
 		for (const key of probe.path.split(".")) {
-			if (current === null || typeof current !== "object") return Option.none();
+			if (current === null || typeof current !== "object") return O.none();
 			current = (current as Record<string, unknown>)[key];
 		}
-		return typeof current === "string" ? Option.some(current) : Option.none();
+		return typeof current === "string" ? O.some(current) : O.none();
 	} catch {
-		return Option.none();
+		return O.none();
 	}
 };
 
@@ -205,7 +212,7 @@ const probeLocation = (
 ): Effect.Effect<Probe, never, ChildProcessSpawner.ChildProcessSpawner> =>
 	Run.collect(command).pipe(
 		Effect.map((output) => ({ found: true, version: extractVersion(probe, output.stdout) })),
-		Effect.orElseSucceed(() => ({ found: false, version: Option.none<string>() })),
+		Effect.orElseSucceed(() => ({ found: false, version: O.none<string>() })),
 	);
 
 /**
@@ -249,8 +256,8 @@ const make = Effect.fnUntraced(function* () {
 				const context = yield* local.context;
 				const args = probeArgs(key.probe);
 				const globalProbe = yield* probeLocation(ChildProcess.make(key.name, args), key.probe);
-				const localProbe = Option.isNone(context)
-					? { found: false, version: Option.none<string>() }
+				const localProbe = O.isNone(context)
+					? { found: false, version: O.none<string>() }
 					: yield* probeLocation(context.value.apply(ChildProcess.make(key.name, args)), key.probe);
 				return { global: globalProbe, local: localProbe, context } satisfies Evidence;
 			}),
@@ -306,15 +313,15 @@ const make = Effect.fnUntraced(function* () {
 		const bothFound = evidence.global.found && evidence.local.found;
 		const mismatch =
 			bothFound &&
-			Option.isSome(evidence.global.version) &&
-			Option.isSome(evidence.local.version) &&
+			O.isSome(evidence.global.version) &&
+			O.isSome(evidence.local.version) &&
 			evidence.global.version.value !== evidence.local.version.value;
 
 		if (mismatch && tool.onMismatch === "fail") {
 			return yield* ToolVersionMismatchError.make({
 					tool: tool.name,
-					globalVersion: Option.getOrElse(evidence.global.version, () => ""),
-					localVersion: Option.getOrElse(evidence.local.version, () => ""),
+					globalVersion: O.getOrElse(evidence.global.version, () => ""),
+					localVersion: O.getOrElse(evidence.local.version, () => ""),
 				});
 		}
 
@@ -332,7 +339,7 @@ const make = Effect.fnUntraced(function* () {
 							? "local"
 							: "global";
 
-		const context = selected === "local" ? Option.getOrUndefined(evidence.context) : undefined;
+		const context = selected === "local" ? O.getOrUndefined(evidence.context) : undefined;
 		return ResolvedTool.make({
 			name: tool.name,
 			source: selected,

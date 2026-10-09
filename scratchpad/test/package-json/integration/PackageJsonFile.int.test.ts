@@ -4,11 +4,15 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { NodeFileSystem, NodePath } from "@effect/platform-node";
 import { assert, describe, layer } from "@effect/vitest";
-import { Effect, HashMap, Layer, Option, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { Package } from "../../../effected/package-json/Package.ts";
 import { PackageJsonFile } from "../../../effected/package-json/PackageJsonFile.ts";
 
-const Json = Schema.fromJsonString(Schema.Unknown);
+const Json = S.fromJsonString(S.Unknown);
 
 const FIXTURES = resolve(import.meta.dirname, "fixtures");
 const fixturePath = (name: string) => resolve(FIXTURES, name, "package.json");
@@ -44,7 +48,7 @@ describe("PackageJsonFile", () => {
 				assert.strictEqual(HashMap.size(pkg.devDependencies), 2);
 				assert.strictEqual(HashMap.size(pkg.peerDependencies), 1);
 				assert.strictEqual(HashMap.size(pkg.optionalDependencies), 1);
-				assert.deepStrictEqual(HashMap.get(pkg.scripts, "test"), Option.some("vitest run"));
+				assert.deepStrictEqual(HashMap.get(pkg.scripts, "test"), O.some("vitest run"));
 			}),
 		);
 
@@ -100,7 +104,7 @@ describe("PackageJsonFile round-trip", () => {
 			const outPath = join(dir, "package.json");
 			const pkg = yield* file.read(fixturePath(fixture));
 			yield* file.write(outPath, pkg);
-			const written = (yield* Schema.decodeEffect(Json)(readFileSync(outPath, "utf-8"))) as Record<string, unknown>;
+			const written = (yield* S.decodeEffect(Json)(readFileSync(outPath, "utf-8"))) as Record<string, unknown>;
 			rmSync(dir, { recursive: true, force: true });
 			return written;
 		});
@@ -162,7 +166,7 @@ describe("PackageJsonFile round-trip", () => {
 					dependencies: { lib: "workspace:*" },
 				});
 				yield* file.write(outPath, pkg);
-				const written = (yield* Schema.decodeEffect(Json)(readFileSync(outPath, "utf-8"))) as Record<string, unknown>;
+				const written = (yield* S.decodeEffect(Json)(readFileSync(outPath, "utf-8"))) as Record<string, unknown>;
 				rmSync(dir, { recursive: true, force: true });
 				assert.strictEqual(written.customX, "preserved");
 				assert.deepStrictEqual(written.dependencies, { lib: "workspace:*" });
@@ -256,7 +260,7 @@ describe("PackageJsonFile manifest and modify", () => {
 				writeFileSync(path, PRIVATE_ROOT_TEXT);
 				const manifest = yield* file.readManifest(path);
 				yield* file.writeManifest(path, manifest, { indent: "preserve" });
-				const written = (yield* Schema.decodeEffect(Json)(readFileSync(path, "utf-8"))) as Record<string, unknown>;
+				const written = (yield* S.decodeEffect(Json)(readFileSync(path, "utf-8"))) as Record<string, unknown>;
 				const raw = readFileSync(path, "utf-8");
 				rmSync(dir, { recursive: true, force: true });
 				assert.isFalse("name" in written);

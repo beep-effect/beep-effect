@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 import { SemVer } from "./SemVer.ts";
 
 const arraysEqual = (a: ReadonlyArray<string | number>, b: ReadonlyArray<string | number>): boolean =>
@@ -40,19 +40,19 @@ const classifyDiff = (a: SemVer, b: SemVer): "major" | "minor" | "patch" | "prer
  *
  * @public
  */
-export class VersionDiff extends Schema.TaggedClass<VersionDiff>()("VersionDiff", {
+export class VersionDiff extends S.TaggedClass<VersionDiff>()("VersionDiff", {
 	/** The highest-precedence field that differs between `from` and `to`; see the class doc for the classification order. */
-	type: Schema.Literals(["major", "minor", "patch", "prerelease", "build", "none"]),
+	type: S.Literals(["major", "minor", "patch", "prerelease", "build", "none"]),
 	/** The earlier version being compared. */
 	from: SemVer,
 	/** The later version being compared. */
 	to: SemVer,
 	/** Signed delta of the major component (`to.major - from.major`). */
-	major: Schema.Finite,
+	major: S.Finite,
 	/** Signed delta of the minor component (`to.minor - from.minor`). */
-	minor: Schema.Finite,
+	minor: S.Finite,
 	/** Signed delta of the patch component (`to.patch - from.patch`). */
-	patch: Schema.Finite,
+	patch: S.Finite,
 }) {
 	/**
 	 * Compute the diff from `a` to `b`.

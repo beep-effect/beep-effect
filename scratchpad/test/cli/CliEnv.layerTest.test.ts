@@ -3,7 +3,11 @@
 // host environment.
 import { assert, describe, it } from "@effect/vitest";
 import { Audience, TerminalEnv } from "../../effected/env/index.ts";
-import { Config, ConfigProvider, Effect, Layer, Option } from "effect";
+import * as Config from "effect/Config";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import type { CliEnvTestOptions } from "../../effected/cli/index.ts";
 import { CliEnv, CliInteractive, CliTheme } from "../../effected/cli/index.ts";
 
@@ -110,7 +114,7 @@ describe("CliEnv.layerTest", () => {
 			const term = yield* Effect.provide(Config.option(Config.String("TERM")), CliEnv.layerTest({ term: "dumb" })).pipe(
 				host({ TERM: "xterm" }),
 			);
-			assert.deepStrictEqual(term, Option.some("xterm"));
+			assert.deepStrictEqual(term, O.some("xterm"));
 		}),
 	);
 });

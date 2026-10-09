@@ -1,5 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Result } from "effect";
+import * as Result from "effect/Result";
 import { JsonLdDocument } from "../../effected/schema-org/JsonLdDocument.ts";
 import { NodeRef } from "../../effected/schema-org/NodeRef.ts";
 import { Person } from "../../effected/schema-org/Person.ts";

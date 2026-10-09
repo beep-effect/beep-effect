@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 import { CreativeWorkFields } from "./CreativeWork.ts";
 
 /**
@@ -12,13 +12,13 @@ import { CreativeWorkFields } from "./CreativeWork.ts";
 export const TechArticleFields = {
 	...CreativeWorkFields,
 	/** The article's headline. Single-valued. */
-	headline: Schema.optional(Schema.String),
+	headline: S.optional(S.String),
 	/** Sections the article belongs to. Repeatable. */
-	articleSection: Schema.optional(Schema.Array(Schema.String)),
+	articleSection: S.String.pipe(S.Array, S.optional),
 	/** Prior knowledge the article assumes. Single-valued. */
-	proficiencyLevel: Schema.optional(Schema.String),
+	proficiencyLevel: S.optional(S.String),
 	/** Prerequisites the article depends on. Single-valued. */
-	dependencies: Schema.optional(Schema.String),
+	dependencies: S.optional(S.String),
 } as const;
 
 /**
@@ -38,8 +38,8 @@ export const TechArticleFields = {
  *
  * @public
  */
-export class TechArticle extends Schema.Class<TechArticle>("TechArticle")({
+export class TechArticle extends S.Class<TechArticle>("TechArticle")({
 	...TechArticleFields,
 	/** The JSON-LD type discriminator, populated automatically. */
-	"@type": Schema.tag("TechArticle"),
+	"@type": S.tag("TechArticle"),
 }) {}

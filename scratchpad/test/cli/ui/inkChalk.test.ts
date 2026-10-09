@@ -1,7 +1,9 @@
 // @effect-diagnostics nodeBuiltinImport:skip-file
 import { realpathSync } from "node:fs";
 import { assert, describe, it } from "@effect/vitest";
-import { Console, Effect, Option } from "effect";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
 import { holdChalkLevel } from "../../../effected/cli/ui/internal/ink.ts";
 import { inkChalk, resolveInkEntry } from "../../../effected/cli/ui/internal/inkChalk.ts";
 import { capturing } from "../helpers/live.ts";
@@ -23,9 +25,9 @@ describe("resolving Ink's chalk where import.meta.resolve is unavailable", () =>
 		Effect.gen(function* () {
 			const native = yield* Effect.promise(() => inkChalk());
 			const fallback = yield* Effect.promise(() => inkChalk(() => resolveInkEntry(unsupported)));
-			assert.isTrue(Option.isSome(native), "control: the native path resolves it");
-			assert.isTrue(Option.isSome(fallback), "the fallback resolves it too");
-			assert.strictEqual(Option.getOrUndefined(fallback), Option.getOrUndefined(native), "one chalk, not a copy");
+			assert.isTrue(O.isSome(native), "control: the native path resolves it");
+			assert.isTrue(O.isSome(fallback), "the fallback resolves it too");
+			assert.strictEqual(O.getOrUndefined(fallback), O.getOrUndefined(native), "one chalk, not a copy");
 		}),
 	);
 
@@ -41,10 +43,10 @@ describe("resolving Ink's chalk where import.meta.resolve is unavailable", () =>
 	it.effect("control: with nothing resolved, holding the level does warn, once", () =>
 		Effect.gen(function* () {
 			const log = capturing();
-			yield* Effect.scoped(holdChalkLevel(Option.none(), "none")).pipe(
+			yield* Effect.scoped(holdChalkLevel(O.none(), "none")).pipe(
 				Effect.provideService(Console.Console, log.console),
 			);
-			yield* Effect.scoped(holdChalkLevel(Option.none(), "none")).pipe(
+			yield* Effect.scoped(holdChalkLevel(O.none(), "none")).pipe(
 				Effect.provideService(Console.Console, log.console),
 			);
 			assert.strictEqual(log.lines.filter((line) => line.includes("could not resolve the chalk")).length, 1);

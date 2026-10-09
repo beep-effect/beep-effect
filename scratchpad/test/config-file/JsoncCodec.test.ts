@@ -1,6 +1,9 @@
 import { assert, describe, it } from "@effect/vitest";
 import { JsoncParseError } from "../../effected/jsonc/index.ts";
-import { Cause, Effect, Exit, Option } from "effect";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as O from "effect/Option";
 import { ConfigCodecError } from "../../effected/config-file/ConfigCodec.ts";
 import { JsoncCodec } from "../../effected/config-file/JsoncCodec.ts";
 
@@ -17,7 +20,7 @@ describe("JsoncCodec", () => {
 
 	it.effect("wraps a jsonc parse failure as ConfigCodecError with the cause preserved structurally", () =>
 		Effect.gen(function* () {
-			const error = yield* Effect.flip(Effect.asVoid(JsoncCodec.parse("{ not jsonc")));
+			const error = yield* JsoncCodec.parse("{ not jsonc").pipe(Effect.asVoid, Effect.flip);
 			assert.instanceOf(error, ConfigCodecError);
 			assert.strictEqual(error.codec, "jsonc");
 			assert.strictEqual(error.operation, "parse");
@@ -44,8 +47,8 @@ describe("JsoncCodec", () => {
 			assert.isTrue(Exit.isFailure(exit));
 			if (Exit.isFailure(exit)) {
 				const cause = Exit.getCause(exit);
-				assert.isTrue(Option.isSome(cause));
-				if (Option.isSome(cause)) {
+				assert.isTrue(O.isSome(cause));
+				if (O.isSome(cause)) {
 					assert.isTrue(Cause.hasFails(cause.value));
 					assert.isFalse(Cause.hasDies(cause.value));
 				}

@@ -1,6 +1,7 @@
 // @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, FileSystem } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
 import { caseInsensitiveSuite } from "./CaseInsensitiveContract.ts";
 import { firstEvent } from "./helpers.ts";

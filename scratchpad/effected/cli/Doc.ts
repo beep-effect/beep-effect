@@ -1,5 +1,6 @@
 import type { Audience, TerminalEnv } from "../env/index.ts";
-import { Console, Effect } from "effect";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
 import type { CliLinks } from "./CliLinks.ts";
 import type { CliTheme } from "./CliTheme.ts";
 import { autoFormat } from "./internal/autoFormat.ts";

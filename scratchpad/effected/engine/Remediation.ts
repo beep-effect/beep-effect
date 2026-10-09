@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 
 /**
  * What a caller — usually an agent — should do after a failure.
@@ -23,10 +23,10 @@ import { Schema } from "effect";
  *
  * @public
  */
-export const Remediation = Schema.Struct({
-	hint: Schema.String,
-	suggestedTool: Schema.optionalKey(Schema.String),
-	suggestedArgs: Schema.optionalKey(Schema.Record(Schema.String, Schema.Unknown)),
+export const Remediation = S.Struct({
+	hint: S.String,
+	suggestedTool: S.optionalKey(S.String),
+	suggestedArgs: S.optionalKey(S.Record(S.String, S.Unknown)),
 });
 
 /**

@@ -15,7 +15,7 @@
 // or "(" would re-introduce the format knowledge this module exists without.
 
 import type { Lockfile, ResolvedPackage } from "../lockfiles/index.ts";
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 import { indexInstances, rootInstances } from "./internal/roots.ts";
 
 /**
@@ -56,11 +56,11 @@ export interface DuplicateCheckOptions {
  *
  * @public
  */
-export const Dependent = Schema.Union([
+export const Dependent = S.Union([
 	/** A workspace importer takes the instance directly. */
-	Schema.TaggedStruct("importer", { path: Schema.NonEmptyString }),
+	S.TaggedStruct("importer", { path: S.NonEmptyString }),
 	/** A resolved package's dependency edge points at the instance. */
-	Schema.TaggedStruct("package", { name: Schema.NonEmptyString, version: Schema.String }),
+	S.TaggedStruct("package", { name: S.NonEmptyString, version: S.String }),
 ]);
 
 /**
@@ -83,11 +83,11 @@ export type Dependent = typeof Dependent.Type;
  *
  * @public
  */
-export class DuplicateInstance extends Schema.Class<DuplicateInstance>("DuplicateInstance")({
+export class DuplicateInstance extends S.Class<DuplicateInstance>("DuplicateInstance")({
 	/** The opaque instance id, as `@effected/lockfiles` records it. */
-	instanceId: Schema.NonEmptyString,
+	instanceId: S.NonEmptyString,
 	/** Every importer and package that pulls THIS copy. */
-	dependents: Schema.Array(Dependent),
+	dependents: S.Array(Dependent),
 }) {}
 
 /**
@@ -95,11 +95,11 @@ export class DuplicateInstance extends Schema.Class<DuplicateInstance>("Duplicat
  *
  * @public
  */
-export class DuplicatedVersion extends Schema.Class<DuplicatedVersion>("DuplicatedVersion")({
+export class DuplicatedVersion extends S.Class<DuplicatedVersion>("DuplicatedVersion")({
 	/** The resolved version. */
-	version: Schema.String,
+	version: S.String,
 	/** Every instance at this version — more than one when peer suffixes differ. */
-	instances: Schema.Array(DuplicateInstance),
+	instances: S.Array(DuplicateInstance),
 }) {}
 
 /**
@@ -114,11 +114,11 @@ export class DuplicatedVersion extends Schema.Class<DuplicatedVersion>("Duplicat
  *
  * @public
  */
-export class DuplicatedPackage extends Schema.Class<DuplicatedPackage>("DuplicatedPackage")({
+export class DuplicatedPackage extends S.Class<DuplicatedPackage>("DuplicatedPackage")({
 	/** The package name. */
-	name: Schema.NonEmptyString,
+	name: S.NonEmptyString,
 	/** Every version it resolved at, in lockfile order. Never fewer than two. */
-	versions: Schema.Array(DuplicatedVersion),
+	versions: S.Array(DuplicatedVersion),
 }) {}
 
 /**
@@ -157,12 +157,12 @@ export class DuplicatedPackage extends Schema.Class<DuplicatedPackage>("Duplicat
  *
  * @public
  */
-export class DuplicateCheck extends Schema.Class<DuplicateCheck>("DuplicateCheck")({
+export class DuplicateCheck extends S.Class<DuplicateCheck>("DuplicateCheck")({
 	/**
 	 * Every reported name resolved at two or more distinct versions, in
 	 * lockfile order.
 	 */
-	duplicates: Schema.Array(DuplicatedPackage),
+	duplicates: S.Array(DuplicatedPackage),
 	/**
 	 * Importers whose dependencies could not be resolved to instances, so
 	 * nothing reachable only through them was counted.
@@ -177,7 +177,7 @@ export class DuplicateCheck extends Schema.Class<DuplicateCheck>("DuplicateCheck
 	 * Reported rather than silently skipped: a gate that sees no duplicates is
 	 * entitled to know whether that means "clean" or "not looked at".
 	 */
-	unresolvedImporters: Schema.Array(Schema.String),
+	unresolvedImporters: S.Array(S.String),
 }) {
 	/**
 	 * Whether no reported name is duplicated.

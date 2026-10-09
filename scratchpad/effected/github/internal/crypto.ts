@@ -1,5 +1,5 @@
 import blakejs from "blakejs";
-import { Result } from "effect";
+import * as Result from "effect/Result";
 import { dual } from "effect/Function";
 import * as Base64 from "effect/encoding/Base64";
 import type * as EncodingError from "effect/encoding/EncodingError";

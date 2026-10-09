@@ -13,7 +13,7 @@
 // or flow collections are skipped — their layout is value or flow syntax,
 // not block indentation. No fix: reindenting is formatting.
 
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 import type { LintContext, LintLine, YamlRule } from "../../YamlLintRule.ts";
 import { StyleVote, YamlLintDiagnostic, YamlLintSeverity } from "../../YamlLintRule.ts";
 import { coveringToken, isScalarContinuationLine, nonNegativeIntegerOption } from "./util.ts";
@@ -23,10 +23,10 @@ import { coveringToken, isScalarContinuationLine, nonNegativeIntegerOption } fro
  * default "consistent") and `indentSequences` (boolean or "consistent",
  * default "consistent").
  */
-export const indentationOptions = Schema.Struct({
-	severity: Schema.optionalKey(YamlLintSeverity),
-	spaces: Schema.optionalKey(Schema.Union([nonNegativeIntegerOption, Schema.Literals(["consistent"])])),
-	indentSequences: Schema.optionalKey(Schema.Union([Schema.Boolean, Schema.Literals(["consistent"])])),
+export const indentationOptions = S.Struct({
+	severity: S.optionalKey(YamlLintSeverity),
+	spaces: S.optionalKey(S.Union([nonNegativeIntegerOption, S.Literals(["consistent"])])),
+	indentSequences: S.optionalKey(S.Union([S.Boolean, S.Literals(["consistent"])])),
 });
 
 interface IndentationOptions {

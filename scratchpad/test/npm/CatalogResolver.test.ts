@@ -1,5 +1,7 @@
 import { assert, describe, layer } from "@effect/vitest";
-import { Effect, Layer, Option } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import { CatalogResolver } from "../../effected/npm/index.ts";
 
 describe("CatalogResolver", () => {
@@ -7,16 +9,16 @@ describe("CatalogResolver", () => {
 		it.effect("rangeOf returns none for the default catalog", () =>
 			Effect.gen(function* () {
 				const resolver = yield* CatalogResolver;
-				const range = yield* resolver.rangeOf("effect", Option.none());
-				assert.isTrue(Option.isNone(range));
+				const range = yield* resolver.rangeOf("effect", O.none());
+				assert.isTrue(O.isNone(range));
 			}),
 		);
 
 		it.effect("rangeOf returns none for a named catalog", () =>
 			Effect.gen(function* () {
 				const resolver = yield* CatalogResolver;
-				const range = yield* resolver.rangeOf("typescript", Option.some("build"));
-				assert.isTrue(Option.isNone(range));
+				const range = yield* resolver.rangeOf("typescript", O.some("build"));
+				assert.isTrue(O.isNone(range));
 			}),
 		);
 	});
@@ -30,9 +32,9 @@ describe("CatalogResolver", () => {
 			["build", new Map([["typescript", "^5.9.0"]])],
 		]);
 		const StubCatalogResolver = Layer.succeed(CatalogResolver, {
-			rangeOf: Effect.fn("CatalogResolver.rangeOf")((packageName: string, catalog: Option.Option<string>) =>
+			rangeOf: Effect.fn("CatalogResolver.rangeOf")((packageName: string, catalog: O.Option<string>) =>
 				Effect.succeed(
-					Option.fromUndefinedOr(catalogs.get(Option.getOrElse(catalog, () => "default"))?.get(packageName)),
+					O.fromUndefinedOr(catalogs.get(O.getOrElse(catalog, () => "default"))?.get(packageName)),
 				),
 			),
 		});
@@ -41,24 +43,24 @@ describe("CatalogResolver", () => {
 			it.effect("resolves a package in the default catalog", () =>
 				Effect.gen(function* () {
 					const resolver = yield* CatalogResolver;
-					const range = yield* resolver.rangeOf("effect", Option.none());
-					assert.deepStrictEqual(range, Option.some("^4.0.0"));
+					const range = yield* resolver.rangeOf("effect", O.none());
+					assert.deepStrictEqual(range, O.some("^4.0.0"));
 				}),
 			);
 
 			it.effect("resolves a package in a named catalog", () =>
 				Effect.gen(function* () {
 					const resolver = yield* CatalogResolver;
-					const range = yield* resolver.rangeOf("typescript", Option.some("build"));
-					assert.deepStrictEqual(range, Option.some("^5.9.0"));
+					const range = yield* resolver.rangeOf("typescript", O.some("build"));
+					assert.deepStrictEqual(range, O.some("^5.9.0"));
 				}),
 			);
 
 			it.effect("returns none for an unknown package", () =>
 				Effect.gen(function* () {
 					const resolver = yield* CatalogResolver;
-					const range = yield* resolver.rangeOf("does-not-exist", Option.none());
-					assert.isTrue(Option.isNone(range));
+					const range = yield* resolver.rangeOf("does-not-exist", O.none());
+					assert.isTrue(O.isNone(range));
 				}),
 			);
 		});

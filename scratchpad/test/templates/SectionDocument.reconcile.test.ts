@@ -1,5 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Result } from "effect";
+import * as Result from "effect/Result";
 import type { Section, SectionDialect, SectionReconciliation, SectionRenderError } from "../../effected/templates/index.ts";
 import { CommentStyle, SectionDialect as Dialect, SectionId } from "../../effected/templates/index.ts";
 import { block, crlf, lines, parse, section } from "./fixtures.ts";

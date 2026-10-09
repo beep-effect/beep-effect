@@ -11,7 +11,7 @@
 // heading is a parsed node or it is not one.
 
 import { assert, describe, it } from "@effect/vitest";
-import { Result } from "effect";
+import * as Result from "effect/Result";
 import { MarkdownDocument } from "../../effected/markdown/MarkdownDocument.ts";
 
 const parse = (source: string): MarkdownDocument => {

@@ -2,7 +2,7 @@
 import { join } from "node:path";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, describe, it } from "@effect/vitest";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { CliTest } from "../../effected/cli/testing.ts";
 
 const BIN = join(import.meta.dirname, "fixtures", "exit3.mjs");

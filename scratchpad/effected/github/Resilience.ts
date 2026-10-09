@@ -1,4 +1,8 @@
-import { Duration, Effect, Random, Schedule, Schema } from "effect";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Random from "effect/Random";
+import * as Schedule from "effect/Schedule";
+import * as S from "effect/Schema";
 
 /**
  * What GitHub's rate-limit headers said on the most recent REST response.
@@ -14,13 +18,13 @@ import { Duration, Effect, Random, Schedule, Schema } from "effect";
  *
  * @public
  */
-export class RateLimitSnapshot extends Schema.Class<RateLimitSnapshot>("RateLimitSnapshot")({
+export class RateLimitSnapshot extends S.Class<RateLimitSnapshot>("RateLimitSnapshot")({
 	/** Requests left in the current window. */
-	remaining: Schema.Int,
+	remaining: S.Int,
 	/** The window's ceiling. */
-	limit: Schema.Int,
+	limit: S.Int,
 	/** When the window resets, as epoch **seconds** — GitHub's own unit. */
-	resetEpochSeconds: Schema.Int,
+	resetEpochSeconds: S.Int,
 }) {
 	/** Milliseconds until the window resets, relative to `nowMillis`, floored at zero. */
 	millisUntilReset(nowMillis: number): number {
@@ -75,15 +79,15 @@ export interface RetryableFailure {
  *
  * @public
  */
-export class RetryPolicy extends Schema.Class<RetryPolicy>("RetryPolicy")({
+export class RetryPolicy extends S.Class<RetryPolicy>("RetryPolicy")({
 	/** Retries after the first attempt. `0` disables retrying. */
-	maxRetries: Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: 10 })),
+	maxRetries: S.Int.check(S.isBetween({ minimum: 0, maximum: 10 })),
 	/** The first backoff step; doubles per attempt. */
-	baseDelay: Schema.DurationFromMillis,
+	baseDelay: S.DurationFromMillis,
 	/** The computed backoff never exceeds this. */
-	maxDelay: Schema.DurationFromMillis,
+	maxDelay: S.DurationFromMillis,
 	/** Prefer GitHub's `retry-after` / rate-limit reset over the computed backoff. */
-	respectRetryAfter: Schema.Boolean,
+	respectRetryAfter: S.Boolean,
 	/**
 	 * Refuse to wait longer than this for a server-advised delay.
 	 *
@@ -92,7 +96,7 @@ export class RetryPolicy extends Schema.Class<RetryPolicy>("RetryPolicy")({
 	 * through it converts a failure into a hang, so past this ceiling the error
 	 * is re-failed immediately and the caller decides what to do.
 	 */
-	maxServerAdvisedDelay: Schema.DurationFromMillis,
+	maxServerAdvisedDelay: S.DurationFromMillis,
 }) {
 	/** Four retries, 1s base, 30s cap, honoring server-advised delays up to a minute. */
 	static readonly default: RetryPolicy = RetryPolicy.make({

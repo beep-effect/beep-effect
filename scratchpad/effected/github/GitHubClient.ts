@@ -1,5 +1,11 @@
-import type { Redacted } from "effect";
-import { Config, Context, Effect, Layer, Option, Schema, Stream } from "effect";
+import type * as Redacted from "effect/Redacted";
+import * as Config from "effect/Config";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import { GitHubError } from "./GitHubError.ts";
 import type { GraphQLDocument } from "./GraphQL.ts";
 import { GitHubGraphQLError } from "./GraphQL.ts";
@@ -61,7 +67,7 @@ export interface GitHubClientShape {
 	readonly requestDecoded: <A, I>(
 		route: string,
 		params: Record<string, unknown> & Rest.RequestExtras,
-		schema: Schema.Codec<A, I>,
+		schema: S.Codec<A, I>,
 	) => Effect.Effect<A, GitHubError>;
 
 	/**
@@ -103,7 +109,7 @@ export interface GitHubClientShape {
 	 * client retries a rate-limited failure with GitHub's own advised delay, and
 	 * a caller that wants to pace itself proactively reads this.
 	 */
-	readonly rateLimit: Effect.Effect<Option.Option<RateLimitSnapshot>>;
+	readonly rateLimit: Effect.Effect<O.Option<RateLimitSnapshot>>;
 }
 
 /**
@@ -369,11 +375,11 @@ export const makeClientShape = (
 		const requestDecoded = Effect.fn("GitHubClient.requestDecoded")(function* <A, I>(
 			route: string,
 			params: Record<string, unknown> & Rest.RequestExtras,
-			schema: Schema.Codec<A, I>,
+			schema: S.Codec<A, I>,
 		) {
 			yield* Effect.annotateCurrentSpan({ route });
 			const response = yield* transport.request<unknown>(route, route, params);
-			return yield* Schema.decodeUnknownEffect(schema)(response.data).pipe(
+			return yield* S.decodeUnknownEffect(schema)(response.data).pipe(
 				Effect.catchTag("SchemaError", (error) =>
 					Effect.fail(GitHubError.decode(route, "response did not match its schema", error)),
 				),
@@ -444,7 +450,7 @@ const makeFixture = (fixtures: GitHubFixtures): GitHubClientShape => {
 		requested?.push({ kind: "paginate", route, params: _params as Record<string, unknown>, perPage });
 
 		const recorded = fixtures.paginate?.[route];
-		if (Schema.is(GitHubError)(recorded)) return Stream.fail(recorded);
+		if (S.is(GitHubError)(recorded)) return Stream.fail(recorded);
 		const items = recorded;
 		if (items === undefined) {
 			switch (fixtures.unstubbed ?? "die") {
@@ -478,14 +484,14 @@ const makeFixture = (fixtures: GitHubFixtures): GitHubClientShape => {
 			if (data === undefined) return missing<Rest.Data<R>>("GitHubClient.request", route);
 			// A recorded GitHubError IS the response: this is how a suite stubs a
 			// 404 deliberately, rather than relying on a route's absence.
-			return Schema.is(GitHubError)(data) ? Effect.fail(data) : Effect.succeed(data as Rest.Data<R>);
+			return S.is(GitHubError)(data) ? Effect.fail(data) : Effect.succeed(data as Rest.Data<R>);
 		},
-		requestDecoded: <A, I>(route: string, params: Record<string, unknown>, schema: Schema.Codec<A, I>) => {
+		requestDecoded: <A, I>(route: string, params: Record<string, unknown>, schema: S.Codec<A, I>) => {
 			requested?.push({ kind: "requestDecoded", route, params });
 			const data = fixtures.request?.[route];
 			if (data === undefined) return missing<A>("GitHubClient.requestDecoded", route);
-			if (Schema.is(GitHubError)(data)) return Effect.fail(data);
-			return Schema.decodeUnknownEffect(schema)(data).pipe(
+			if (S.is(GitHubError)(data)) return Effect.fail(data);
+			return S.decodeUnknownEffect(schema)(data).pipe(
 				Effect.catchTag("SchemaError", (error) =>
 					Effect.fail(GitHubError.decode(route, "fixture did not match its schema", error)),
 				),
@@ -506,6 +512,6 @@ const makeFixture = (fixtures: GitHubFixtures): GitHubClientShape => {
 							),
 						);
 		},
-		rateLimit: Effect.succeed(Option.fromUndefinedOr(fixtures.rateLimit)),
+		rateLimit: Effect.succeed(O.fromUndefinedOr(fixtures.rateLimit)),
 	};
 };

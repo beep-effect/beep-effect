@@ -22,11 +22,15 @@ import { pathToFileURL } from "node:url";
 import { afterAll, assert, beforeAll, describe, it } from "@effect/vitest";
 import { ScriptedSpawner } from "../../effected/commands/index.ts";
 import { CatalogAssemblyError } from "../../effected/npm/index.ts";
-import { Effect, Fiber, Layer, Result, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
+import * as Layer from "effect/Layer";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { TestClock } from "effect/testing";
 import { ConfigDependencyHooks } from "../../effected/workspaces/index.ts";
 
-const JsonValue = Schema.fromJsonString(Schema.Unknown);
+const JsonValue = S.fromJsonString(S.Unknown);
 
 let ROOT: string;
 const SEED = { default: { effect: "^4.0.0" }, named: { "left-pad": "^1.0.0" } } as const;
@@ -119,10 +123,10 @@ describe("ConfigDependencyHooks.layerSubprocess — the argv contract", () => {
 			// as argv.
 			assert.isFalse(script?.includes(ROOT));
 			assert.isFalse(script?.includes("dep-a"));
-			assert.deepStrictEqual(Result.getOrThrow(Schema.decodeResult(JsonValue)(spawn.args[3] ?? "")), SEED);
+			assert.deepStrictEqual(Result.getOrThrow(S.decodeResult(JsonValue)(spawn.args[3] ?? "")), SEED);
 			// The rules seed rides the same argv channel, in its own slot ahead of
 			// the pairs — never spliced into the program text either.
-			assert.deepStrictEqual(Result.getOrThrow(Schema.decodeResult(JsonValue)(spawn.args[4] ?? "")), {
+			assert.deepStrictEqual(Result.getOrThrow(S.decodeResult(JsonValue)(spawn.args[4] ?? "")), {
 				allowedVersions: {},
 				ignoreMissing: [],
 				allowAny: [],
@@ -130,7 +134,7 @@ describe("ConfigDependencyHooks.layerSubprocess — the argv contract", () => {
 			// The PARENT resolved each declared version to a pnpmfile and converted
 			// it to a `file:` URL; the child receives `[name, fileUrl]` pairs as ONE
 			// JSON argument and performs no lookup or path conversion of its own.
-			assert.deepStrictEqual(Result.getOrThrow(Schema.decodeResult(JsonValue)(spawn.args[5] ?? "")), [
+			assert.deepStrictEqual(Result.getOrThrow(S.decodeResult(JsonValue)(spawn.args[5] ?? "")), [
 				["dep-a", pnpmfileUrlOf("dep-a")],
 				["@scope/dep-b", pnpmfileUrlOf("@scope/dep-b")],
 			]);
@@ -162,7 +166,7 @@ describe("ConfigDependencyHooks.layerSubprocess — the argv contract", () => {
 			// Seeded, not merged by us: the workspace file's rules go INTO the
 			// threaded config so the hooks merge onto them, exactly as pnpm seeds
 			// its own config.
-			assert.deepStrictEqual(Result.getOrThrow(Schema.decodeResult(JsonValue)(spawn.args[4] ?? "")), rules);
+			assert.deepStrictEqual(Result.getOrThrow(S.decodeResult(JsonValue)(spawn.args[4] ?? "")), rules);
 			assert.isFalse(spawn.args[2]?.includes("1.2.3"));
 		}).pipe(Effect.provide(layer));
 	});
@@ -214,7 +218,7 @@ describe("ConfigDependencyHooks.layerSubprocess — transport failures are typed
 		const { spawner, layer } = harness(() => ({ hang: true }));
 		return Effect.gen(function* () {
 			const hooks = yield* ConfigDependencyHooks;
-			const fiber = yield* Effect.forkChild(Effect.flip(hooks.inject(ROOT, { dep: "1.0.0" }, SEED)));
+			const fiber = yield* hooks.inject(ROOT, { dep: "1.0.0" }, SEED).pipe(Effect.flip, Effect.forkChild);
 			// The parent resolves the declared version over REAL async fs before it
 			// spawns, and the virtual clock cannot advance that — so let the event
 			// loop turn until the spawn has happened, THEN jump past the ceiling.

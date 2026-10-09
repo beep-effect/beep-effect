@@ -18,8 +18,13 @@
 // `Schema.decodeUnknownExit` — no `Effect.runSync` inside a getter.
 
 import { Range } from "../semver/index.ts";
-import type { Brand } from "effect";
-import { Effect, Exit, Option, Schema, SchemaIssue, SchemaTransformation } from "effect";
+import type * as Brand from "effect/Brand";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 
 /**
  * Indicates that a string could not be parsed as a valid dependency specifier.
@@ -29,11 +34,11 @@ import { Effect, Exit, Option, Schema, SchemaIssue, SchemaTransformation } from 
  *
  * @public
  */
-export class InvalidDependencySpecifierError extends Schema.TaggedError<InvalidDependencySpecifierError>()(
+export class InvalidDependencySpecifierError extends S.TaggedError<InvalidDependencySpecifierError>()(
 	"InvalidDependencySpecifierError",
 	{
 		/** The raw input string that failed validation. */
-		input: Schema.String,
+		input: S.String,
 	},
 ) {
 	override get message(): string {
@@ -92,12 +97,12 @@ const isUrl = (value: string): boolean => value.startsWith("http://") || value.s
 
 // Pure Option-returning range parse: decode `Range.FromString` synchronously via
 // an Exit, never running an Effect inside a getter.
-const parseRange = (value: string): Option.Option<Range> => {
-	const exit = Schema.decodeExit(Range.FromString)(value);
-	return Exit.isSuccess(exit) ? Option.some(exit.value) : Option.none();
+const parseRange = (value: string): O.Option<Range> => {
+	const exit = S.decodeExit(Range.FromString)(value);
+	return Exit.isSuccess(exit) ? O.some(exit.value) : O.none();
 };
 
-const isRange = (value: string): boolean => Option.isSome(parseRange(value));
+const isRange = (value: string): boolean => O.isSome(parseRange(value));
 
 const protocolOf = (value: string): DependencyProtocol => {
 	if (value.startsWith(CATALOG_PREFIX)) return "catalog";
@@ -118,10 +123,10 @@ const isTag = (value: string): boolean => protocolOf(value) === "tag";
 // The one catalog-name extraction: shared by `classify` and the public
 // `catalogNameOf` static so the two can never disagree. Empty (after
 // trimming) selects the default catalog.
-const catalogNameOf = (specifier: string): Option.Option<string> => {
-	if (!isCatalog(specifier)) return Option.none();
+const catalogNameOf = (specifier: string): O.Option<string> => {
+	if (!isCatalog(specifier)) return O.none();
 	const rest = specifier.slice(CATALOG_PREFIX.length).trim();
-	return rest.length === 0 ? Option.none() : Option.some(rest);
+	return rest.length === 0 ? O.none() : O.some(rest);
 };
 
 // The range-modifier projection pnpm applies at publish time: `*` (or an
@@ -157,10 +162,10 @@ const resolveWorkspace = (specifier: string, version: string): string =>
 // the plain form and for non-workspace input. Shared by `Manifest.resolve`
 // and `@effected/package-json`'s `Package.resolve`, which must look up the
 // TARGET's version before projecting.
-const workspaceTargetOf = (specifier: string): Option.Option<string> => {
-	if (!isWorkspace(specifier)) return Option.none();
+const workspaceTargetOf = (specifier: string): O.Option<string> => {
+	if (!isWorkspace(specifier)) return O.none();
 	const { target } = splitWorkspaceRest(specifier.slice(WORKSPACE_PREFIX.length));
-	return target === undefined ? Option.none() : Option.some(target);
+	return target === undefined ? O.none() : O.some(target);
 };
 
 /**
@@ -179,11 +184,11 @@ export const isValidDependencySpecifier = (value: string): boolean =>
  *
  * @public
  */
-export class CatalogSpecifier extends Schema.TaggedClass<CatalogSpecifier>()("catalog", {
+export class CatalogSpecifier extends S.TaggedClass<CatalogSpecifier>()("catalog", {
 	/** The original specifier string. */
-	raw: Schema.String,
+	raw: S.String,
 	/** The catalog name, or `Option.none()` for the default catalog. */
-	name: Schema.Option(Schema.String),
+	name: S.Option(S.String),
 }) {}
 
 /**
@@ -192,11 +197,11 @@ export class CatalogSpecifier extends Schema.TaggedClass<CatalogSpecifier>()("ca
  *
  * @public
  */
-export class WorkspaceSpecifier extends Schema.TaggedClass<WorkspaceSpecifier>()("workspace", {
+export class WorkspaceSpecifier extends S.TaggedClass<WorkspaceSpecifier>()("workspace", {
 	/** The original specifier string. */
-	raw: Schema.String,
+	raw: S.String,
 	/** The part after `workspace:` (e.g. `*`, `^1.2.3`, or an alias form). */
-	range: Schema.String,
+	range: S.String,
 }) {
 	/**
 	 * The pnpm publish-time projection of this specifier against a concrete
@@ -225,9 +230,9 @@ export class WorkspaceSpecifier extends Schema.TaggedClass<WorkspaceSpecifier>()
  *
  * @public
  */
-export class RangeSpecifier extends Schema.TaggedClass<RangeSpecifier>()("range", {
+export class RangeSpecifier extends S.TaggedClass<RangeSpecifier>()("range", {
 	/** The original specifier string. */
-	raw: Schema.String,
+	raw: S.String,
 }) {}
 
 /**
@@ -235,9 +240,9 @@ export class RangeSpecifier extends Schema.TaggedClass<RangeSpecifier>()("range"
  *
  * @public
  */
-export class DistTagSpecifier extends Schema.TaggedClass<DistTagSpecifier>()("dist-tag", {
+export class DistTagSpecifier extends S.TaggedClass<DistTagSpecifier>()("dist-tag", {
 	/** The original specifier string (also the tag name). */
-	raw: Schema.String,
+	raw: S.String,
 }) {}
 
 /**
@@ -246,9 +251,9 @@ export class DistTagSpecifier extends Schema.TaggedClass<DistTagSpecifier>()("di
  *
  * @public
  */
-export class RawSpecifier extends Schema.TaggedClass<RawSpecifier>()("raw", {
+export class RawSpecifier extends S.TaggedClass<RawSpecifier>()("raw", {
 	/** The original specifier string. */
-	raw: Schema.String,
+	raw: S.String,
 }) {}
 
 /**
@@ -265,7 +270,7 @@ export type ClassifiedSpecifier =
 	| DistTagSpecifier
 	| RawSpecifier;
 
-const Classified = Schema.Union([CatalogSpecifier, WorkspaceSpecifier, RangeSpecifier, DistTagSpecifier, RawSpecifier]);
+const Classified = S.Union([CatalogSpecifier, WorkspaceSpecifier, RangeSpecifier, DistTagSpecifier, RawSpecifier]);
 
 // Group a *valid* specifier into one of the five coarse cases, reusing the
 // taxonomy predicates above. Order matters: catalog/workspace prefixes first,
@@ -283,8 +288,8 @@ const classify = (value: string): ClassifiedSpecifier => {
 	return RawSpecifier.make({ raw: value });
 };
 
-const fromString: Schema.Codec<ClassifiedSpecifier, string> = Schema.String.pipe(
-	Schema.decodeTo(
+const fromString: S.Codec<ClassifiedSpecifier, string> = S.String.pipe(
+	S.decodeTo(
 		Classified,
 		// Pinned to the union's ENCODED side (plain records, without instance
 		// methods like WorkspaceSpecifier#resolve): letting inference unify the
@@ -304,7 +309,7 @@ interface DependencySpecifierStatics {
 	/** Classify a specifier into a single protocol; `"unknown"` for unrecognized input. */
 	readonly protocolOf: (value: string) => DependencyProtocol;
 	/** Parse the specifier as a semver `Range`, `None` when it is not a range. Pure. */
-	readonly parseRange: (value: string) => Option.Option<Range>;
+	readonly parseRange: (value: string) => O.Option<Range>;
 	/** Whether the specifier is a parseable semver range. */
 	readonly isRange: (value: string) => boolean;
 	/** Whether the specifier is a dist-tag (`latest`, `next`, ...). */
@@ -329,7 +334,7 @@ interface DependencySpecifierStatics {
 	 * prefix). The result is only meaningful when `isCatalog(specifier)` is
 	 * true — non-catalog input also returns `None`.
 	 */
-	readonly catalogNameOf: (specifier: string) => Option.Option<string>;
+	readonly catalogNameOf: (specifier: string) => O.Option<string>;
 	/**
 	 * The pnpm publish-time projection of a `workspace:` specifier against a
 	 * concrete version: `workspace:*` (or a bare `workspace:`) becomes
@@ -352,7 +357,7 @@ interface DependencySpecifierStatics {
 	 * this package's version (not the dependency-map key's) before projecting
 	 * with `resolveWorkspace`.
 	 */
-	readonly workspaceTargetOf: (specifier: string) => Option.Option<string>;
+	readonly workspaceTargetOf: (specifier: string) => O.Option<string>;
 	/** Whether the string is a valid dependency specifier. */
 	readonly isValid: (value: string) => boolean;
 	/** Validate a string, failing with a typed {@link InvalidDependencySpecifierError}. */
@@ -362,7 +367,7 @@ interface DependencySpecifierStatics {
 	 * union. Decoding classifies; encoding returns the original `raw` string
 	 * byte-for-byte.
 	 */
-	readonly FromString: Schema.Codec<ClassifiedSpecifier, string>;
+	readonly FromString: S.Codec<ClassifiedSpecifier, string>;
 }
 
 /**
@@ -373,17 +378,17 @@ interface DependencySpecifierStatics {
  */
 export type DependencySpecifierBrand = string & Brand.Brand<"DependencySpecifier">;
 
-const brandedSpecifier = Schema.String.pipe(
-	Schema.check(
-		Schema.makeFilter((value) =>
+const brandedSpecifier = S.String.pipe(
+	S.check(
+		S.makeFilter((value) =>
 			isValidDependencySpecifier(value) ? undefined : "Expected a valid dependency specifier",
 		),
 	),
-	Schema.brand("DependencySpecifier"),
+	S.brand("DependencySpecifier"),
 );
 
 const decode = (input: string): Effect.Effect<DependencySpecifierBrand, InvalidDependencySpecifierError> =>
-	Schema.decodeEffect(brandedSpecifier)(input).pipe(
+	S.decodeEffect(brandedSpecifier)(input).pipe(
 		Effect.mapError(() => InvalidDependencySpecifierError.make({ input })),
 	);
 

@@ -7,7 +7,8 @@
 // them there). `"preserve"` and `"react-native"` leave JSX untransformed, so
 // they project to `Option.none()` alongside an absent `jsx`.
 
-import { Option, Schema } from "effect";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import type { CompilerOptions } from "./CompilerOptions.ts";
 
 /**
@@ -18,11 +19,11 @@ import type { CompilerOptions } from "./CompilerOptions.ts";
  *
  * @public
  */
-export class JsxConfig extends Schema.Class<JsxConfig>("JsxConfig")({
+export class JsxConfig extends S.Class<JsxConfig>("JsxConfig")({
 	/** The JSX transform runtime: `"automatic"` (`react-jsx` / `react-jsxdev`) or `"classic"` (`react`). */
-	runtime: Schema.Literals(["automatic", "classic"]),
+	runtime: S.Literals(["automatic", "classic"]),
 	/** The automatic runtime's import source (`jsxImportSource`, defaulted to `"react"`); absent for classic. */
-	importSource: Schema.optionalKey(Schema.String),
+	importSource: S.optionalKey(S.String),
 }) {
 	/**
 	 * Project decoded compiler options to their implied JSX transform
@@ -33,20 +34,20 @@ export class JsxConfig extends Schema.Class<JsxConfig>("JsxConfig")({
 	 * yield `Option.none()` — JSX is left untransformed (or absent entirely),
 	 * so there is nothing for a bundler to configure.
 	 */
-	static fromCompilerOptions(options: CompilerOptions.Type): Option.Option<JsxConfig> {
+	static fromCompilerOptions(options: CompilerOptions.Type): O.Option<JsxConfig> {
 		switch (options.jsx) {
 			case "react-jsx":
 			case "react-jsxdev":
-				return Option.some(
+				return O.some(
 					JsxConfig.make({
 						runtime: "automatic",
 						importSource: options.jsxImportSource ?? "react",
 					}),
 				);
 			case "react":
-				return Option.some(JsxConfig.make({ runtime: "classic" }));
+				return O.some(JsxConfig.make({ runtime: "classic" }));
 			default:
-				return Option.none();
+				return O.none();
 		}
 	}
 }

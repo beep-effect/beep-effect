@@ -1,4 +1,7 @@
-import { Context, Effect, Layer, Schema } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as S from "effect/Schema";
 import { GitHubClient } from "./GitHubClient.ts";
 import type { GitHubError } from "./GitHubError.ts";
 import type { GitHubGraphQLError } from "./GraphQL.ts";
@@ -14,15 +17,15 @@ import type { PageOptions } from "./Rest.ts";
  *
  * @public
  */
-export class IssueInfo extends Schema.Class<IssueInfo>("IssueInfo")({
-	number: Schema.Int,
-	title: Schema.String,
-	state: Schema.Literals(["open", "closed"]),
+export class IssueInfo extends S.Class<IssueInfo>("IssueInfo")({
+	number: S.Int,
+	title: S.String,
+	state: S.Literals(["open", "closed"]),
 	/** Label names, normalized from GitHub's `string | { name }` union. */
-	labels: Schema.Array(Schema.String),
-	url: Schema.String,
+	labels: S.Array(S.String),
+	url: S.String,
 	/** The GraphQL node id. */
-	nodeId: Schema.String,
+	nodeId: S.String,
 }) {}
 
 /**
@@ -30,12 +33,12 @@ export class IssueInfo extends Schema.Class<IssueInfo>("IssueInfo")({
  *
  * @public
  */
-export class LinkedIssue extends Schema.Class<LinkedIssue>("LinkedIssue")({
-	number: Schema.Int,
-	title: Schema.String,
-	state: Schema.String,
-	url: Schema.String,
-	nodeId: Schema.String,
+export class LinkedIssue extends S.Class<LinkedIssue>("LinkedIssue")({
+	number: S.Int,
+	title: S.String,
+	state: S.String,
+	url: S.String,
+	nodeId: S.String,
 	/**
 	 * Whether a human wrote the link, rather than GitHub inferring it from the
 	 * branch or commit messages.
@@ -44,7 +47,7 @@ export class LinkedIssue extends Schema.Class<LinkedIssue>("LinkedIssue")({
 	 * Resolved by querying the pull request's closing references twice, once with
 	 * `userLinkedOnly`, and marking the issues present in the second result.
 	 */
-	userLinked: Schema.Boolean,
+	userLinked: S.Boolean,
 }) {}
 
 /**
@@ -57,26 +60,26 @@ export class LinkedIssue extends Schema.Class<LinkedIssue>("LinkedIssue")({
  *
  * @public
  */
-export class CommentOnceResult extends Schema.Class<CommentOnceResult>("CommentOnceResult")({
+export class CommentOnceResult extends S.Class<CommentOnceResult>("CommentOnceResult")({
 	/** Did this call post the comment (`true`), or find it already there (`false`)? */
-	wrote: Schema.Boolean,
+	wrote: S.Boolean,
 	/** The marked comment — the one created, or the one that made us skip. */
 	comment: CommentRecord,
 }) {}
 
-const IssueNodes = Schema.Struct({
-	id: Schema.String,
-	number: Schema.Int,
-	title: Schema.String,
-	state: Schema.String,
-	url: Schema.String,
+const IssueNodes = S.Struct({
+	id: S.String,
+	number: S.Int,
+	title: S.String,
+	state: S.String,
+	url: S.String,
 });
 
-const LinkedIssuesResponse = Schema.Struct({
-	repository: Schema.Struct({
-		pullRequest: Schema.Struct({
-			allLinked: Schema.Struct({ nodes: Schema.Array(IssueNodes) }),
-			manuallyLinked: Schema.Struct({ nodes: Schema.Array(IssueNodes) }),
+const LinkedIssuesResponse = S.Struct({
+	repository: S.Struct({
+		pullRequest: S.Struct({
+			allLinked: S.Struct({ nodes: S.Array(IssueNodes) }),
+			manuallyLinked: S.Struct({ nodes: S.Array(IssueNodes) }),
 		}),
 	}),
 });
@@ -94,16 +97,16 @@ const LinkedIssuesDocument = GraphQLDocument.make({
 	response: LinkedIssuesResponse,
 })<{ readonly owner: string; readonly repo: string; readonly prNumber: number }>();
 
-const CrossReferencedResponse = Schema.Struct({
-	repository: Schema.Struct({
-		issue: Schema.Struct({
-			timelineItems: Schema.Struct({
-				nodes: Schema.Array(
-					Schema.Struct({
-						source: Schema.optionalKey(
-							Schema.Struct({
-								__typename: Schema.optionalKey(Schema.String),
-								number: Schema.optionalKey(Schema.Int),
+const CrossReferencedResponse = S.Struct({
+	repository: S.Struct({
+		issue: S.Struct({
+			timelineItems: S.Struct({
+				nodes: S.Array(
+					S.Struct({
+						source: S.optionalKey(
+							S.Struct({
+								__typename: S.optionalKey(S.String),
+								number: S.optionalKey(S.Int),
 							}),
 						),
 					}),

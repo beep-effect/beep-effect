@@ -1,13 +1,17 @@
 // @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Exit, Layer, Option, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { FetchHttpClient } from "effect/http";
 import { TestClock } from "effect/testing";
 import type { DataBlobTransfer } from "../../effected/github-actions/index.ts";
 import { BlobStore, BlobStoreError, BlobTransferError, GitHubCacheBlobStore } from "../../effected/github-actions/index.ts";
 import { json, resultsEnv, settle, twirpFetch } from "./results.ts";
 
-class Meta extends Schema.Class<Meta>("Meta")({ tag: Schema.String, durationMs: Schema.Finite }) {}
+class Meta extends S.Class<Meta>("Meta")({ tag: S.String, durationMs: S.Finite }) {}
 
 /** A transport that keeps what it was given, keyed by the url it was given it at. */
 const memoryTransfer = () => {
@@ -136,8 +140,8 @@ describe("GitHubCacheBlobStore", () => {
 					Meta,
 				);
 				const found = yield* blobStore.get("k", Meta);
-				assert.isTrue(Option.isSome(found));
-				if (Option.isSome(found)) {
+				assert.isTrue(O.isSome(found));
+				if (O.isSome(found)) {
 					assert.deepStrictEqual(found.value.metadata, Meta.make({ tag: "turbo", durationMs: 4200 }));
 					assert.deepStrictEqual([...found.value.body], [7, 8]);
 				}
@@ -213,7 +217,7 @@ describe("GitHubCacheBlobStore", () => {
 		Effect.gen(function* () {
 			const miss = twirpFetch({ GetCacheEntryDownloadURL: () => json({ ok: false }) });
 			assert.isTrue(
-				Option.isNone(
+				O.isNone(
 					yield* Effect.flatMap(BlobStore, (blobStore) => blobStore.get("absent", Meta)).pipe(
 						Effect.provide(store(miss.fetch, memoryTransfer().transfer)),
 					),

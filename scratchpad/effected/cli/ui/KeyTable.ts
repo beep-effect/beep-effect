@@ -1,6 +1,6 @@
 import { dual } from "effect/Function";
 import type * as Cli from "../index.ts";
-import { Option } from "effect";
+import * as O from "effect/Option";
 import { graphemes } from "../internal/displayWidth.ts";
 import { inkModules } from "./internal/ink.ts";
 import { useScreenGuard } from "./internal/ScreenContext.ts";
@@ -127,11 +127,11 @@ export class KeyTable<Action> {
 	 *
 	 * @param key - the key pressed
 	 */
-	readonly match = (key: UiKey): Option.Option<Action> => {
+	readonly match = (key: UiKey): O.Option<Action> => {
 		for (const binding of this.bindings) {
-			if (binding.keys.some((candidate) => bound(candidate, key))) return Option.some(binding.action);
+			if (binding.keys.some((candidate) => bound(candidate, key))) return O.some(binding.action);
 		}
-		return Option.none();
+		return O.none();
 	};
 
 	/**
@@ -246,7 +246,7 @@ export const useKeys: {
 		guard((input, key) => {
 			for (const pressed of keysOf(input, key)) {
 				const action = table.match(pressed);
-				if (Option.isSome(action)) dispatch(action.value);
+				if (O.isSome(action)) dispatch(action.value);
 			}
 		}),
 		{ isActive: options.isActive ?? true },

@@ -1,5 +1,6 @@
 import { SlsaProvenance } from "../sbom/index.ts";
-import { Effect, Option } from "effect";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
 import { ActionEnvironment } from "./ActionEnvironment.ts";
 import type { OidcTokenError } from "./OidcTokenIssuer.ts";
 import { OidcTokenIssuer } from "./OidcTokenIssuer.ts";
@@ -88,7 +89,7 @@ export class ActionsProvenance {
 		const issuer = yield* OidcTokenIssuer;
 		const env = yield* ActionEnvironment;
 		const claims = yield* issuer.claims(audience);
-		const serverUrl = Option.getOrElse(yield* env.getOptional("GITHUB_SERVER_URL"), () => DEFAULT_SERVER_URL);
+		const serverUrl = O.getOrElse(yield* env.getOptional("GITHUB_SERVER_URL"), () => DEFAULT_SERVER_URL);
 		return SlsaProvenance.forGitHubWorkflow({
 			serverUrl,
 			repository: claims.repository,

@@ -5,10 +5,12 @@
 // inherited glob-core behavioral table with issue #62 INVERTED: ** is real.
 
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Result, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { GlobPattern, GlobPatternError, GlobSet } from "../../effected/glob/index.ts";
 
-const JsonString = Schema.fromJsonString(Schema.String);
+const JsonString = S.fromJsonString(S.String);
 
 describe("GlobSet: the workspaces contract (inherited glob-core table)", () => {
 	it.effect("1. classifies literals and wildcards", () =>
@@ -215,14 +217,14 @@ describe("GlobSet: construction and failure", () => {
 	it.effect("encode round-trips the patterns array", () =>
 		Effect.gen(function* () {
 			const set = yield* GlobSet.compile(["a/*", "!a/x"]);
-			const encoded = yield* Schema.encodeEffect(GlobSet)(set);
+			const encoded = yield* S.encodeEffect(GlobSet)(set);
 			assert.deepStrictEqual(encoded, { patterns: ["a/*", "!a/x"] });
 		}),
 	);
 
 	it.effect("class decode produces a working instance", () =>
 		Effect.gen(function* () {
-			const set = yield* Schema.decodeEffect(GlobSet)({ patterns: ["x/*"] });
+			const set = yield* S.decodeEffect(GlobSet)({ patterns: ["x/*"] });
 			assert.instanceOf(set, GlobSet);
 			assert.isTrue(set.matches("x/y"));
 		}),
@@ -278,7 +280,7 @@ describe("GlobSet: literals key on the effective unescaped path", () => {
 				assert.strictEqual(
 					set.matches(candidate),
 					members.some((m) => m.matches(candidate)),
-					`candidate ${yield* Schema.encodeEffect(JsonString)(candidate)}`,
+					`candidate ${yield* S.encodeEffect(JsonString)(candidate)}`,
 				);
 			}
 		}),
@@ -305,7 +307,7 @@ describe("GlobSet.compileResult", () => {
 	it("names the offending member, bang included, exactly as compile does", () => {
 		const patterns = ["ok/*", `!${"{a,b}".repeat(17)}`];
 		const sync = GlobSet.compileResult(patterns);
-		const eff = Effect.runSync(Effect.result(GlobSet.compile(patterns)));
+		const eff = GlobSet.compile(patterns).pipe(Effect.result, Effect.runSync);
 		assert.isTrue(Result.isFailure(sync));
 		assert.isTrue(Result.isFailure(eff));
 		if (!Result.isFailure(sync) || !Result.isFailure(eff)) return;

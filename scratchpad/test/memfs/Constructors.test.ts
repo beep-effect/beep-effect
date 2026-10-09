@@ -5,8 +5,11 @@
 // publishes MemoryFileSystem.Volume.
 
 import { assert, describe, it } from "@effect/vitest";
-import type { Layer } from "effect";
-import { Cause, Effect, Exit, FileSystem } from "effect";
+import type * as Layer from "effect/Layer";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
 import { denied } from "./helpers.ts";
 

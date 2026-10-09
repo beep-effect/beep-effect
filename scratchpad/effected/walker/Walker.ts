@@ -1,6 +1,10 @@
-import { Effect, FileSystem, Option, Path, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as S from "effect/Schema";
 
-const JsonString = Schema.fromJsonString(Schema.String);
+const JsonString = S.fromJsonString(S.String);
 
 /**
  * Options for {@link Walker.ascend}.
@@ -70,8 +74,8 @@ const ascend = (start: string, options?: AscendOptions): Effect.Effect<ReadonlyA
 		// category, same construct. `start` is deliberately unconstrained: a
 		// relative start still ascends to the relative root.
 		if (options?.stopAt !== undefined && !path.isAbsolute(options.stopAt)) {
-			const quotedStopAt = yield* Schema.encodeEffect(JsonString)(options.stopAt).pipe(Effect.orDie);
-			const quotedStart = yield* Schema.encodeEffect(JsonString)(start).pipe(Effect.orDie);
+			const quotedStopAt = yield* S.encodeEffect(JsonString)(options.stopAt).pipe(Effect.orDie);
+			const quotedStart = yield* S.encodeEffect(JsonString)(start).pipe(Effect.orDie);
 			return yield* Effect.die(
 				new Error(
 					`Walker.ascend: stopAt must be an absolute path, received ${quotedStopAt} (ascending from ${quotedStart})`,
@@ -100,13 +104,13 @@ const ascend = (start: string, options?: AscendOptions): Effect.Effect<ReadonlyA
 // Implementation of Walker.ascendWithin; the public contract lives on the static.
 const ascendWithin = (
 	start: string,
-	ceiling: Option.Option<string>,
+	ceiling: O.Option<string>,
 	options?: Pick<AscendOptions, "maxDepth">,
 ): Effect.Effect<ReadonlyArray<string>, never, FileSystem.FileSystem | Path.Path> =>
 	Effect.gen(function* () {
 		// Absence is explicit: `Option.none()` is the only way to ask for an
 		// unbounded walk, so a stray `undefined` cannot become one by accident.
-		if (Option.isNone(ceiling)) return yield* ascend(start, options);
+		if (O.isNone(ceiling)) return yield* ascend(start, options);
 		return yield* ascendToPhysical(start, ceiling.value, options);
 	});
 
@@ -120,8 +124,8 @@ const ascendToPhysical = (
 		const fs = yield* FileSystem.FileSystem;
 		const path = yield* Path.Path;
 		if (!path.isAbsolute(ceiling)) {
-			const quotedCeiling = yield* Schema.encodeEffect(JsonString)(ceiling).pipe(Effect.orDie);
-			const quotedStart = yield* Schema.encodeEffect(JsonString)(start).pipe(Effect.orDie);
+			const quotedCeiling = yield* S.encodeEffect(JsonString)(ceiling).pipe(Effect.orDie);
+			const quotedStart = yield* S.encodeEffect(JsonString)(start).pipe(Effect.orDie);
 			return yield* Effect.die(
 				new Error(
 					`Walker.ascendWithin: ceiling must be an absolute path, received ${quotedCeiling} (ascending from ${quotedStart})`,
@@ -135,29 +139,29 @@ const ascendToPhysical = (
 		// A ceiling that cannot be resolved names nothing physical to match; the
 		// lexical answer stands, exactly as `ascend` would give it.
 		const physical = yield* Effect.option(fs.realPath(ceiling));
-		if (Option.isNone(physical)) return dirs;
+		if (O.isNone(physical)) return dirs;
 		const hit = yield* findRoot(dirs, (dir) => Effect.map(fs.realPath(dir), (real) => real === physical.value));
-		return Option.isSome(hit) ? dirs.slice(0, dirs.indexOf(hit.value) + 1) : dirs;
+		return O.isSome(hit) ? dirs.slice(0, dirs.indexOf(hit.value) + 1) : dirs;
 	});
 
 // Implementation of Walker.firstMatch; the public contract lives on the static.
 const firstMatch = <E, R>(
 	candidates: ReadonlyArray<string>,
 	predicate: (candidate: string) => Effect.Effect<boolean, E, R>,
-): Effect.Effect<Option.Option<string>, never, R> =>
+): Effect.Effect<O.Option<string>, never, R> =>
 	Effect.gen(function* () {
 		for (const candidate of candidates) {
 			const matched = yield* Effect.orElseSucceed(predicate(candidate), () => false);
-			if (matched) return Option.some(candidate);
+			if (matched) return O.some(candidate);
 		}
-		return Option.none();
+		return O.none();
 	});
 
 // Implementation of Walker.findUpward; the public contract lives on the static.
 const findUpward = (
 	dirs: ReadonlyArray<string>,
 	candidatesFor: (dir: string) => ReadonlyArray<string>,
-): Effect.Effect<Option.Option<string>, never, FileSystem.FileSystem> =>
+): Effect.Effect<O.Option<string>, never, FileSystem.FileSystem> =>
 	Effect.gen(function* () {
 		const fs = yield* FileSystem.FileSystem;
 		const candidates: Array<string> = [];
@@ -169,7 +173,7 @@ const findUpward = (
 const findRoot = <E, R>(
 	dirs: ReadonlyArray<string>,
 	isRoot: (dir: string) => Effect.Effect<boolean, E, R>,
-): Effect.Effect<Option.Option<string>, never, R> => firstMatch(dirs, isRoot);
+): Effect.Effect<O.Option<string>, never, R> => firstMatch(dirs, isRoot);
 
 /**
  * Upward path traversal primitives: the directory chain from a start path to the

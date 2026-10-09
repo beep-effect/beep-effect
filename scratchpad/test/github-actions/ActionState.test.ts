@@ -1,13 +1,17 @@
 // @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
-import { Effect, Layer, Option, Schema, Result } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import * as Result from "effect/Result";
 import { TestConsole } from "effect/testing";
 import { ActionEnvironment, ActionOutputs, ActionState } from "../../effected/github-actions/index.ts";
 
-const Json = Schema.fromJsonString(Schema.Unknown);
+const Json = S.fromJsonString(S.Unknown);
 
-const Token = Schema.Struct({ value: Schema.String, expires: Schema.Finite });
+const Token = S.Struct({ value: S.String, expires: S.Finite });
 
 /**
  * A real in-memory volume for the runner files, fresh per test — the shape
@@ -107,7 +111,7 @@ describe("ActionState", () => {
 		() =>
 			live(
 				Effect.gen(function* () {
-					assert.isTrue(Option.isNone(yield* (yield* ActionState).getOptional("absent", Token)));
+					assert.isTrue(O.isNone(yield* (yield* ActionState).getOptional("absent", Token)));
 				}),
 			).run,
 	);
@@ -160,7 +164,7 @@ describe("ActionState", () => {
 			const { files, run } = live(
 				Effect.gen(function* () {
 					return yield* Effect.flip(
-						(yield* ActionState).save("choice", Option.some("x"), Schema.Option(Schema.String)),
+						(yield* ActionState).save("choice", O.some("x"), S.Option(S.String)),
 					);
 				}),
 			);
@@ -179,8 +183,8 @@ describe("ActionState", () => {
 			const { files, run } = live(
 				Effect.gen(function* () {
 					const state = yield* ActionState;
-					yield* state.save("some", Option.some("x"), Schema.OptionFromNullOr(Schema.String));
-					yield* state.save("none", Option.none<string>(), Schema.OptionFromNullOr(Schema.String));
+					yield* state.save("some", O.some("x"), S.OptionFromNullOr(S.String));
+					yield* state.save("none", O.none<string>(), S.OptionFromNullOr(S.String));
 				}),
 			);
 			return Effect.map(run, () => {
@@ -197,7 +201,7 @@ describe("ActionState", () => {
 					Effect.gen(function* () {
 						// JSON.stringify THROWS on a bigint; before the round-trip that
 						// left `save` through the defect channel, not the typed one.
-						const error = yield* Effect.flip((yield* ActionState).save("big", { n: 1n }, Schema.Any));
+						const error = yield* Effect.flip((yield* ActionState).save("big", { n: 1n }, S.Any));
 						assert.strictEqual(error.reason, "notPlainJson");
 						assert.strictEqual(error.key, "big");
 					}),
@@ -214,7 +218,7 @@ describe("ActionState", () => {
 			);
 			return Effect.gen(function* () {
 				yield* run;
-				const lines = Result.getOrThrowWith(Schema.encodeResult(Json)(yield* TestConsole.logLines), (error) => error);
+				const lines = Result.getOrThrowWith(S.encodeResult(Json)(yield* TestConsole.logLines), (error) => error);
 				assert.include(lines, "::add-mask::ghs_abc123");
 				// GITHUB_STATE is plaintext by GitHub's protocol; the mask is the only
 				// available defense, so it must have happened.

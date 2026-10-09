@@ -23,7 +23,8 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Option } from "effect";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
 import { ConfigDependencyLock } from "../../effected/lockfiles/ConfigDependencyLock.ts";
 import { LockfileFramingError, LockfileParseError } from "../../effected/lockfiles/Lockfile.ts";
 import { PackageManagerLock } from "../../effected/lockfiles/PackageManagerLock.ts";
@@ -96,8 +97,8 @@ const preamble = (options: PreambleOptions = {}): string => {
 
 const lockOf = Effect.fn("lockOf")(function*(content: string) {
 	const result = yield* PnpmEnvLockfile.packageManager(content);
-	assert.isTrue(Option.isSome(result), "expected the lockfile to record a package manager");
-	return Option.getOrThrow(result);
+	assert.isTrue(O.isSome(result), "expected the lockfile to record a package manager");
+	return O.getOrThrow(result);
 });
 
 const validationError = Effect.fn("validationError")(function*(content: string) {
@@ -153,7 +154,7 @@ describe("PnpmEnvLockfile.packageManager", () => {
 		it.effect("a single-document lockfile has no preamble", () =>
 			Effect.gen(function* () {
 				const result = yield* PnpmEnvLockfile.packageManager(fixture("v1"));
-				assert.isTrue(Option.isNone(result));
+				assert.isTrue(O.isNone(result));
 			}),
 		);
 
@@ -164,14 +165,14 @@ describe("PnpmEnvLockfile.packageManager", () => {
 				const onlyPreamble = preamble().split("\n---\n")[0] ?? "";
 				assert.include(onlyPreamble, "packageManagerDependencies");
 				const result = yield* PnpmEnvLockfile.packageManager(onlyPreamble);
-				assert.isTrue(Option.isNone(result));
+				assert.isTrue(O.isNone(result));
 			}),
 		);
 
 		it.effect("a preamble holding only configDependencies", () =>
 			Effect.gen(function* () {
 				const result = yield* PnpmEnvLockfile.packageManager(fixture("multidoc"));
-				assert.isTrue(Option.isNone(result));
+				assert.isTrue(O.isNone(result));
 			}),
 		);
 
@@ -186,14 +187,14 @@ describe("PnpmEnvLockfile.packageManager", () => {
 					].join("\n"),
 				});
 				const result = yield* PnpmEnvLockfile.packageManager(content);
-				assert.isTrue(Option.isNone(result));
+				assert.isTrue(O.isNone(result));
 			}),
 		);
 
 		it.effect("empty content", () =>
 			Effect.gen(function* () {
 				const result = yield* PnpmEnvLockfile.packageManager("");
-				assert.isTrue(Option.isNone(result));
+				assert.isTrue(O.isNone(result));
 			}),
 		);
 	});
@@ -355,7 +356,7 @@ describe("PnpmEnvLockfile.configDependencies", () => {
 					assert.deepStrictEqual([...locks.keys()], ["@effected/pnpm-plugin-effect"]);
 					assert.strictEqual(locks.get("@effected/pnpm-plugin-effect")?.integrity, PLUGIN_0_11_1_SRI);
 					// No devEngines, so the preamble records no package manager.
-					assert.isTrue(Option.isNone(yield* PnpmEnvLockfile.packageManager(content)));
+					assert.isTrue(O.isNone(yield* PnpmEnvLockfile.packageManager(content)));
 				}),
 			);
 		}

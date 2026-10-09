@@ -2,8 +2,14 @@
 import { assert, describe, it } from "@effect/vitest";
 import type { MemoryFileSystemOptions, MemoryFileSystemSeedEntry } from "../../effected/memfs/index.ts";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
-import type { FileSystem } from "effect";
-import { Effect, Layer, Option, Path, Schema, Result, flow } from "effect";
+import type * as FileSystem from "effect/FileSystem";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as S from "effect/Schema";
+import * as Result from "effect/Result";
+import { flow } from "effect/Function";
 import { systemError } from "effect/PlatformError";
 import { CacheKey, CacheKeyBadPatternError, CacheKeyReadError } from "../../effected/github-actions/index.ts";
 
@@ -128,8 +134,8 @@ describe("CacheKey", () => {
 		it("survives a schema round-trip without regaining a ladder", () => {
 			// The policy is a plain field, so a key that crossed a serialization
 			// boundary (state, JSON output) keeps meaning "exact match only".
-			const encoded = flow(Schema.encodeResult(CacheKey), Result.getOrThrowWith((error) => error))(CacheKey.of("Linux", "pnpm-store").withoutRestoreKeys());
-			const decoded = flow(Schema.decodeResult(CacheKey), Result.getOrThrowWith((error) => error))(encoded);
+			const encoded = flow(S.encodeResult(CacheKey), Result.getOrThrowWith((error) => error))(CacheKey.of("Linux", "pnpm-store").withoutRestoreKeys());
+			const decoded = flow(S.decodeResult(CacheKey), Result.getOrThrowWith((error) => error))(encoded);
 			assert.deepStrictEqual(decoded.restoreKeys, []);
 			assert.strictEqual(decoded.key, "Linux-pnpm-store");
 		});
@@ -249,7 +255,7 @@ describe("CacheKey", () => {
 			hashing(
 				Effect.gen(function* () {
 					const digest = yield* CacheKey.hashFiles(["/w/alpha.txt", "/w/beta.txt"]);
-					assert.deepStrictEqual(digest, Option.some(ALPHA_BETA));
+					assert.deepStrictEqual(digest, O.some(ALPHA_BETA));
 				}),
 			),
 		);
@@ -258,7 +264,7 @@ describe("CacheKey", () => {
 			hashing(
 				Effect.gen(function* () {
 					const digest = yield* CacheKey.hashFiles(["/w/beta.txt", "/w/alpha.txt"]);
-					assert.deepStrictEqual(digest, Option.some(ALPHA_BETA));
+					assert.deepStrictEqual(digest, O.some(ALPHA_BETA));
 				}),
 			),
 		);
@@ -267,7 +273,7 @@ describe("CacheKey", () => {
 			hashing(
 				Effect.gen(function* () {
 					const digest = yield* CacheKey.hashFiles(["/w/alpha.txt", "/w/beta.txt", "/w/alpha.txt"]);
-					assert.deepStrictEqual(digest, Option.some(ALPHA_BETA));
+					assert.deepStrictEqual(digest, O.some(ALPHA_BETA));
 				}),
 			),
 		);
@@ -288,7 +294,7 @@ describe("CacheKey", () => {
 					// A digest of nothing would be a constant, so every run would key
 					// against the same value and the cache would always hit with the
 					// wrong contents.
-					assert.isTrue(Option.isNone(yield* CacheKey.hashFiles([])));
+					assert.isTrue(O.isNone(yield* CacheKey.hashFiles([])));
 				}),
 			),
 		);
@@ -333,7 +339,7 @@ describe("CacheKey", () => {
 				assert.isTrue(overlapped, "the two reads never overlapped — Effect.all ran sequentially");
 				// And concurrency did not cost correctness: the digest still folds the
 				// per-file digests in sorted order, not completion order.
-				assert.deepStrictEqual(digest, Option.some(ALPHA_BETA));
+				assert.deepStrictEqual(digest, O.some(ALPHA_BETA));
 			}),
 		);
 
@@ -422,7 +428,7 @@ describe("CacheKey", () => {
 		it.effect("reports nothing rather than a digest when the patterns match nothing", () =>
 			walking((root) =>
 				Effect.gen(function* () {
-					assert.isTrue(Option.isNone(yield* CacheKey.hashMatching({ workspace: root, patterns: ["**/*.absent"] })));
+					assert.isTrue(O.isNone(yield* CacheKey.hashMatching({ workspace: root, patterns: ["**/*.absent"] })));
 				}),
 			),
 		);
@@ -546,7 +552,7 @@ describe("CacheKey", () => {
 
 	describe("JSON Schema export", () => {
 		it("each segment exports its pattern", () => {
-			const document = Schema.toJsonSchemaDocument(CacheKey);
+			const document = S.toJsonSchemaDocument(CacheKey);
 			assert.nestedPropertyVal(
 				document,
 				"definitions.CacheKeyEncoded.properties.segments.items.pattern",

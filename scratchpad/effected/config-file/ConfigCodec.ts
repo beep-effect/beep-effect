@@ -1,5 +1,5 @@
-import type { Effect } from "effect";
-import { Schema } from "effect";
+import type * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
 
 /**
  * Indicates that a codec failed to parse or stringify configuration content.
@@ -19,13 +19,13 @@ import { Schema } from "effect";
  *
  * @public
  */
-export class ConfigCodecError extends Schema.TaggedError<ConfigCodecError>()("ConfigCodecError", {
+export class ConfigCodecError extends S.TaggedError<ConfigCodecError>()("ConfigCodecError", {
 	/** The codec that failed, e.g. `"json"`. */
-	codec: Schema.String,
+	codec: S.String,
 	/** Which direction failed. */
-	operation: Schema.Literals(["parse", "stringify"]),
+	operation: S.Literals(["parse", "stringify"]),
 	/** The underlying failure, preserved structurally. */
-	cause: Schema.Defect(),
+	cause: S.Defect(),
 	/**
 	 * The file the content came from, when a caller knew it.
 	 *
@@ -36,7 +36,7 @@ export class ConfigCodecError extends Schema.TaggedError<ConfigCodecError>()("Co
 	 * pass over several candidates still names the file that failed. Absent
 	 * only when a codec was driven directly, outside that pipeline.
 	 */
-	path: Schema.optionalKey(Schema.String),
+	path: S.optionalKey(S.String),
 }) {
 	override get message(): string {
 		return `${this.codec} ${this.operation} failed`;

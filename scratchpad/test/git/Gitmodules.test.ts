@@ -1,5 +1,7 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Result, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { GitConfig } from "../../effected/git/GitConfig.ts";
 import type { GitmodulesParseError } from "../../effected/git/Gitmodules.ts";
 import { Gitmodules, GitmodulesEntry } from "../../effected/git/Gitmodules.ts";
@@ -158,18 +160,18 @@ describe("Gitmodules", () => {
 	describe("FromString codec", () => {
 		it.effect("decodes text and re-encodes the canonical document", () =>
 			Effect.gen(function* () {
-				const modules = yield* Schema.decodeEffect(Gitmodules.FromString)(REAL_WORLD);
+				const modules = yield* S.decodeEffect(Gitmodules.FromString)(REAL_WORLD);
 				assert.strictEqual(modules.entries.length, 2);
-				const encoded = yield* Schema.encodeUnknownEffect(Gitmodules.FromString)(modules);
+				const encoded = yield* S.encodeUnknownEffect(Gitmodules.FromString)(modules);
 				// Canonical rendering, then a decode of it, must agree with the original decode.
-				const again = yield* Schema.decodeEffect(Gitmodules.FromString)(encoded);
+				const again = yield* S.decodeEffect(Gitmodules.FromString)(encoded);
 				assert.deepStrictEqual(again, modules);
 			}),
 		);
 
 		it.effect("a malformed document fails schema decode", () =>
 			Effect.gen(function* () {
-				const exit = yield* Effect.result(Schema.decodeEffect(Gitmodules.FromString)('[submodule "a"]\n'));
+				const exit = yield* Effect.result(S.decodeEffect(Gitmodules.FromString)('[submodule "a"]\n'));
 				assert.isTrue(Result.isFailure(exit));
 			}),
 		);
@@ -285,7 +287,7 @@ describe("Gitmodules", () => {
 
 	describe("JSON Schema export", () => {
 		it("GitmodulesEntry exports its name pattern", () => {
-			const document = Schema.toJsonSchemaDocument(GitmodulesEntry);
+			const document = S.toJsonSchemaDocument(GitmodulesEntry);
 			assert.nestedPropertyVal(
 				document,
 				"definitions.GitmodulesEntryEncoded.properties.name.pattern",

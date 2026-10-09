@@ -18,7 +18,12 @@ import { GlobSet } from "../glob/index.ts";
 import { Lockfile as LockfileModel, filenameFor } from "../lockfiles/index.ts";
 import { CatalogAssemblyError } from "../npm/index.ts";
 import { Yaml } from "../yaml/index.ts";
-import { Context, Duration, Effect, Exit, Layer, Option } from "effect";
+import * as Context from "effect/Context";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import type { HookReplay } from "./ConfigDependencyHooks.ts";
 import { ConfigDependencyHooks } from "./ConfigDependencyHooks.ts";
 import { importerVersionsOf } from "./internal/importerVersions.ts";
@@ -187,16 +192,16 @@ const parseJsonObject = (text: string): Record<string, unknown> => {
  * {@link PackageStateSnapshot}. An absent path, unparseable content, or a
  * manifest with no usable name is skipped — never an error.
  */
-const snapshotOf = (content: Option.Option<string>, relativePath: string): Option.Option<PackageStateSnapshot> => {
-	if (Option.isNone(content)) return Option.none();
+const snapshotOf = (content: O.Option<string>, relativePath: string): O.Option<PackageStateSnapshot> => {
+	if (O.isNone(content)) return O.none();
 	const parsed = parseJsonObject(content.value);
 	const name = parsed.name;
-	if (typeof name !== "string" || name.length === 0) return Option.none();
+	if (typeof name !== "string" || name.length === 0) return O.none();
 	// Absent stays absent. At-ref content is not ours to fix, so a present but
 	// unusable `version` (a non-string, or `""`) degrades to absent rather than
 	// failing the snapshot — the tolerance this projection applies throughout.
 	const version = parsed.version;
-	return Option.some(
+	return O.some(
 		PackageStateSnapshot.make({
 			name,
 			...(typeof version === "string" && version !== "" ? { version } : {}),
@@ -311,7 +316,7 @@ export class WorkspaceSnapshots extends Context.Service<WorkspaceSnapshots, Work
 				root: string,
 				ref: string,
 				format: "pnpm" | "bun",
-			): Effect.Effect<Option.Option<string>, GitCommandError | NotARepositoryError | UnknownRefError> =>
+			): Effect.Effect<O.Option<string>, GitCommandError | NotARepositoryError | UnknownRefError> =>
 				// `./`-prefixed so git resolves the lockfile relative to `cwd` (the
 				// workspace root), NOT the git repo top-level — see `computeAt`.
 				git.show(root, ref, `./${filenameFor(format)}`);
@@ -321,8 +326,8 @@ export class WorkspaceSnapshots extends Context.Service<WorkspaceSnapshots, Work
 			 * importer versions, from ONE parse. Empty on both counts when the
 			 * lockfile is absent or malformed.
 			 */
-			const lockfileRecord = (content: Option.Option<string>, format: "pnpm" | "bun"): Effect.Effect<LockfileRecord> =>
-				Option.match(content, {
+			const lockfileRecord = (content: O.Option<string>, format: "pnpm" | "bun"): Effect.Effect<LockfileRecord> =>
+				O.match(content, {
 					onNone: () => Effect.succeed(EMPTY_LOCKFILE_RECORD),
 					onSome: (text) =>
 						LockfileModel.parse(text, { format }).pipe(
@@ -353,7 +358,7 @@ export class WorkspaceSnapshots extends Context.Service<WorkspaceSnapshots, Work
 						[git.show(root, ref, "./pnpm-workspace.yaml"), git.show(root, ref, "./package.json")],
 						{ concurrency: 2 },
 					);
-					const rootManifest = Option.match(rootManifestText, {
+					const rootManifest = O.match(rootManifestText, {
 						onNone: () => ({}) as Record<string, unknown>,
 						onSome: parseJsonObject,
 					});
@@ -366,7 +371,7 @@ export class WorkspaceSnapshots extends Context.Service<WorkspaceSnapshots, Work
 					// empty on the bun one (config dependencies are a pnpm feature).
 					let hookReplays: Readonly<Record<string, HookReplay>> = {};
 
-					if (Option.isSome(pnpmWorkspaceText)) {
+					if (O.isSome(pnpmWorkspaceText)) {
 						const document = yield* Yaml.parse(pnpmWorkspaceText.value).pipe(
 							Effect.mapError(
 								(cause) => CatalogAssemblyError.make({ source: "manifest", path: "pnpm-workspace.yaml", cause }),
@@ -389,7 +394,7 @@ export class WorkspaceSnapshots extends Context.Service<WorkspaceSnapshots, Work
 						// checked against the base side's pins, never the working tree's.
 						const lockfile = yield* lockfileText(root, ref, "pnpm");
 						const replayed = yield* injectFromDocument(hooks, root, document, inline, {
-							lockfile: Option.getOrUndefined(lockfile),
+							lockfile: O.getOrUndefined(lockfile),
 							ref,
 						});
 						injected = replayed.injected;
@@ -451,11 +456,11 @@ export class WorkspaceSnapshots extends Context.Service<WorkspaceSnapshots, Work
 						{ concurrency: 10 },
 					);
 
-					const rootPackage = hasRootManifest ? snapshotOf(rootManifestText, ".") : Option.none<PackageStateSnapshot>();
+					const rootPackage = hasRootManifest ? snapshotOf(rootManifestText, ".") : O.none<PackageStateSnapshot>();
 					const packages: Array<PackageStateSnapshot> = [];
-					if (Option.isSome(rootPackage)) packages.push(rootPackage.value);
+					if (O.isSome(rootPackage)) packages.push(rootPackage.value);
 					for (const member of members) {
-						if (Option.isSome(member)) packages.push(member.value);
+						if (O.isSome(member)) packages.push(member.value);
 					}
 
 					return seeded(

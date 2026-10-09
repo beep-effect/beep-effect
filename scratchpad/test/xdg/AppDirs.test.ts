@@ -1,7 +1,13 @@
 // @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
-import { Cause, Effect, Exit, Layer, Option, Path, PlatformError } from "effect";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as PlatformError from "effect/PlatformError";
 import type { AppDirsOptions, XdgPlatform } from "../../effected/xdg/index.ts";
 import { AppDirs, AppDirsError, CurrentPlatform, Xdg, XdgPaths } from "../../effected/xdg/index.ts";
 
@@ -287,7 +293,7 @@ describe("AppDirs", () => {
 						),
 					),
 				);
-				assert.isTrue(Option.isNone(runtime));
+				assert.isTrue(O.isNone(runtime));
 				assert.deepStrictEqual(made, []);
 			}),
 		);
@@ -330,8 +336,8 @@ describe("AppDirs", () => {
 				Effect.gen(function* () {
 					const exit = yield* Effect.exit(build(namespace));
 					const cause = Exit.getCause(exit);
-					assert.isTrue(Option.isSome(cause));
-					const reasons = Option.getOrThrow(cause).reasons;
+					assert.isTrue(O.isSome(cause));
+					const reasons = O.getOrThrow(cause).reasons;
 					// The discriminating assertion: it is a DEFECT, not laundered into E.
 					// Without this line, an implementation that raised a typed error would
 					// still pass every other assertion here.

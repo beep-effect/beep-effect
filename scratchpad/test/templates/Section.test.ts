@@ -1,5 +1,6 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Equal, Schema } from "effect";
+import * as Equal from "effect/Equal";
+import * as S from "effect/Schema";
 import { CommentStyle, Section, SectionId, SectionKey } from "../../effected/templates/index.ts";
 
 describe("SectionId", () => {
@@ -85,9 +86,9 @@ describe("Section", () => {
 describe("SectionKey JSON Schema export", () => {
 	it("exports its key pattern, standalone and inside SectionId", () => {
 		const pattern = "^[A-Za-z0-9][A-Za-z0-9._-]*$";
-		assert.nestedPropertyVal(Schema.toJsonSchemaDocument(SectionKey), "schema.pattern", pattern);
+		assert.nestedPropertyVal(S.toJsonSchemaDocument(SectionKey), "schema.pattern", pattern);
 		assert.nestedPropertyVal(
-			Schema.toJsonSchemaDocument(SectionId),
+			S.toJsonSchemaDocument(SectionId),
 			"definitions.SectionIdEncoded.properties.key.pattern",
 			pattern,
 		);

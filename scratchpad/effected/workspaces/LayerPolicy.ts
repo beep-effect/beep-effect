@@ -1,9 +1,12 @@
 import { GlobSet } from "../glob/index.ts";
 import { DependencyField } from "../npm/index.ts";
-import { Effect, FileSystem, Result, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { ALL_DEPENDENCY_FIELDS } from "./internal/dependencyFields.ts";
 
-const JsonValue = Schema.fromJsonString(Schema.Unknown);
+const JsonValue = S.fromJsonString(S.Unknown);
 
 const REQUIRED_EDGE = /^\S+ -> \S+$/u;
 
@@ -18,13 +21,13 @@ const withoutKeys = (input: unknown, keys: ReadonlyArray<string>): unknown => {
  *
  * @public
  */
-export class LayerPolicyError extends Schema.TaggedError<LayerPolicyError>()("LayerPolicyError", {
+export class LayerPolicyError extends S.TaggedError<LayerPolicyError>()("LayerPolicyError", {
 	/** `read`: the file could not be read. `json`: it is not JSON. `decode`: it is not a `LayerPolicy`. */
-	reason: Schema.Literals(["read", "json", "decode"]),
+	reason: S.Literals(["read", "json", "decode"]),
 	/** The file, when the policy came from one. */
-	path: Schema.optionalKey(Schema.String),
+	path: S.optionalKey(S.String),
 	/** The originating failure. */
-	cause: Schema.Defect(),
+	cause: S.Defect(),
 }) {
 	/** Renders the failure kind and the file into one line. */
 	override get message(): string {
@@ -78,21 +81,21 @@ export class LayerPolicyError extends Schema.TaggedError<LayerPolicyError>()("La
  *
  * @public
  */
-export class LayerPolicy extends Schema.Class<LayerPolicy>("LayerPolicy")({
+export class LayerPolicy extends S.Class<LayerPolicy>("LayerPolicy")({
 	/** Exact package names (never relative paths) per layer, top layer first. */
-	layers: Schema.Array(Schema.Array(Schema.String)),
+	layers: S.String.pipe(S.Array, S.Array),
 	/** Exact package names (never relative paths) any layer may depend on that never depend on a layer. */
-	tooling: Schema.Array(Schema.String),
+	tooling: S.Array(S.String),
 	/** Globs matched against package names (never relative paths) for packages whose own edges are not checked. */
-	unconstrained: Schema.Array(Schema.String).check(
-		Schema.makeFilter((patterns) => Result.isSuccess(GlobSet.compileResult(patterns)), {
+	unconstrained: S.Array(S.String).check(
+		S.makeFilter((patterns) => Result.isSuccess(GlobSet.compileResult(patterns)), {
 			title: "compilable glob patterns",
 		}),
 	),
 	/** The dependency maps to check. Absent means all four. */
-	fields: Schema.optionalKey(Schema.Array(DependencyField)),
+	fields: DependencyField.pipe(S.Array, S.optionalKey),
 	/** Edges that must exist, written `"a -> b"`. */
-	requiredEdges: Schema.optionalKey(Schema.Array(Schema.String.check(Schema.isPattern(REQUIRED_EDGE)))),
+	requiredEdges: S.String.check(S.isPattern(REQUIRED_EDGE)).pipe(S.Array, S.optionalKey),
 }) {
 	/** The dependency maps a check reads: `fields`, or all four. */
 	get effectiveFields(): ReadonlyArray<DependencyField> {
@@ -113,7 +116,7 @@ export class LayerPolicy extends Schema.Class<LayerPolicy>("LayerPolicy")({
 			options?: { readonly path?: string | undefined; readonly allowKeys?: ReadonlyArray<string> | undefined },
 		): Effect.Effect<LayerPolicy, LayerPolicyError> => {
 			const path = options?.path;
-			return Schema.decodeUnknownEffect(LayerPolicy)(withoutKeys(input, ["$schema", ...(options?.allowKeys ?? [])]), {
+			return S.decodeUnknownEffect(LayerPolicy)(withoutKeys(input, ["$schema", ...(options?.allowKeys ?? [])]), {
 				onExcessProperty: "error",
 				errors: "all",
 			}).pipe(
@@ -133,7 +136,7 @@ export class LayerPolicy extends Schema.Class<LayerPolicy>("LayerPolicy")({
 		const text = yield* fs
 			.readFileString(path)
 			.pipe(Effect.mapError((cause) => LayerPolicyError.make({ reason: "read", path, cause })));
-		const json = yield* Schema.decodeEffect(JsonValue)(text).pipe(Effect.mapError((cause) => LayerPolicyError.make({ reason: "json", path, cause })));
+		const json = yield* S.decodeEffect(JsonValue)(text).pipe(Effect.mapError((cause) => LayerPolicyError.make({ reason: "json", path, cause })));
 		return yield* LayerPolicy.decode(json, { path, allowKeys: options?.allowKeys });
 	});
 }

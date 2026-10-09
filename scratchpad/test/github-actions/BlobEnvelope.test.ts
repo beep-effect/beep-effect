@@ -1,9 +1,10 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Result, Schema } from "effect";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import type { BlobEnvelopeError } from "../../effected/github-actions/index.ts";
 import { BlobEnvelope, UnsupportedBlobEnvelopeVersionError } from "../../effected/github-actions/index.ts";
 
-const Meta = Schema.Struct({ tag: Schema.String, durationMs: Schema.Finite });
+const Meta = S.Struct({ tag: S.String, durationMs: S.Finite });
 type Meta = typeof Meta.Type;
 
 const bytes = (...values: ReadonlyArray<number>) => Uint8Array.from(values);
@@ -108,7 +109,7 @@ describe("BlobEnvelope", () => {
 
 	describe("schema mismatch", () => {
 		it("reports metadata that does not satisfy the caller's schema", () => {
-			const Other = Schema.Struct({ completelyDifferent: Schema.Boolean });
+			const Other = S.Struct({ completelyDifferent: S.Boolean });
 			const frame = encoded({ tag: "t", durationMs: 1 }, bytes(1));
 			const result = BlobEnvelope.decodeResult(frame, Other);
 			if (!Result.isFailure(result)) {
@@ -130,9 +131,9 @@ describe("BlobEnvelope", () => {
 		it.prop(
 			"any metadata and body round-trips",
 			[
-				Schema.String,
-				Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: 2 ** 31 })),
-				Schema.Uint8Array.check(Schema.isMaxLength(64)),
+				S.String,
+				S.Int.check(S.isBetween({ minimum: 0, maximum: 2 ** 31 })),
+				S.Uint8Array.check(S.isMaxLength(64)),
 			],
 			([tag, durationMs, body]) => {
 				const result = BlobEnvelope.decodeResult(encoded({ tag, durationMs }, body), Meta);
@@ -148,7 +149,7 @@ describe("BlobEnvelope", () => {
 
 		it.prop(
 			"arbitrary bytes never throw — they fail typed",
-			[Schema.Uint8Array.check(Schema.isMaxLength(128))],
+			[S.Uint8Array.check(S.isMaxLength(128))],
 			([input]) => {
 				// A corrupt cache entry must be a typed miss, never a defect.
 				const result = BlobEnvelope.decodeResult(input, Meta);

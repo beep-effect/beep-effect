@@ -7,7 +7,8 @@
 import type { DependencyProtocol } from "../npm/index.ts";
 import { DependencyKind, DependencySpecifier } from "../npm/index.ts";
 import type { Range } from "../semver/index.ts";
-import { Option, Schema } from "effect";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
 
 /**
  * A resolved dependency entry pairing a package name with its version
@@ -16,22 +17,22 @@ import { Option, Schema } from "effect";
  *
  * @public
  */
-export class Dependency extends Schema.Class<Dependency>("Dependency")({
+export class Dependency extends S.Class<Dependency>("Dependency")({
 	/** The package name. */
-	name: Schema.String,
+	name: S.String,
 	/** The raw version specifier. */
-	specifier: Schema.String,
+	specifier: S.String,
 	/** Which dependency map this entry came from. */
 	kind: DependencyKind,
 	/** For `peer` dependencies, whether the peer is optional (from `peerDependenciesMeta`). */
-	isOptional: Schema.optionalKey(Schema.Boolean),
+	isOptional: S.optionalKey(S.Boolean),
 }) {
 	/** The classified protocol, or `None` for an empty specifier. */
-	get protocol(): Option.Option<DependencyProtocol> {
-		return this.specifier.length === 0 ? Option.none() : Option.some(DependencySpecifier.protocolOf(this.specifier));
+	get protocol(): O.Option<DependencyProtocol> {
+		return this.specifier.length === 0 ? O.none() : O.some(DependencySpecifier.protocolOf(this.specifier));
 	}
 	/** Parse the specifier as a semver `Range`, `None` when it is not a range. */
-	get range(): Option.Option<Range> {
+	get range(): O.Option<Range> {
 		return DependencySpecifier.parseRange(this.specifier);
 	}
 	/** Whether the specifier points to a local path. */

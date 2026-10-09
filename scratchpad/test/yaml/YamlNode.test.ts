@@ -1,5 +1,7 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Equal, Option } from "effect";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import * as O from "effect/Option";
 import { Yaml, YamlAlias, YamlMap, YamlPair, YamlScalar, YamlSeq } from "../../effected/yaml/index.ts";
 
 const scalar = (value: unknown, offset: number, length: number) =>
@@ -43,20 +45,20 @@ describe("YamlNode", () => {
 		it("navigates string segments through mappings and numeric segments through sequences", () => {
 			const root = tree();
 			const port = root.find(["ports", 1]);
-			assert.isTrue(Option.isSome(port));
-			assert.strictEqual((Option.getOrThrow(port) as YamlScalar).value, 8443);
+			assert.isTrue(O.isSome(port));
+			assert.strictEqual((O.getOrThrow(port) as YamlScalar).value, 8443);
 		});
 
 		it("returns none for unresolvable segments and wrong container kinds", () => {
 			const root = tree();
-			assert.isTrue(Option.isNone(root.find(["missing"])));
-			assert.isTrue(Option.isNone(root.find(["host", 0])));
-			assert.isTrue(Option.isNone(root.find(["ports", 5])));
+			assert.isTrue(O.isNone(root.find(["missing"])));
+			assert.isTrue(O.isNone(root.find(["host", 0])));
+			assert.isTrue(O.isNone(root.find(["ports", 5])));
 		});
 
 		it("returns the node itself for the empty path", () => {
 			const root = tree();
-			assert.strictEqual(Option.getOrThrow(root.find([])), root);
+			assert.strictEqual(O.getOrThrow(root.find([])), root);
 		});
 	});
 
@@ -64,27 +66,27 @@ describe("YamlNode", () => {
 		it("finds the deepest node covering the offset with half-open spans", () => {
 			const root = tree();
 			const atHost = root.findAtOffset(7);
-			assert.strictEqual((Option.getOrThrow(atHost) as YamlScalar).value, "localhost");
+			assert.strictEqual((O.getOrThrow(atHost) as YamlScalar).value, "localhost");
 			// End offset is exclusive: offset 40 is outside the root span [0, 40).
-			assert.isTrue(Option.isNone(root.findAtOffset(40)));
+			assert.isTrue(O.isNone(root.findAtOffset(40)));
 		});
 
 		it("returns none outside the subtree", () => {
-			assert.isTrue(Option.isNone(tree().findAtOffset(99)));
+			assert.isTrue(O.isNone(tree().findAtOffset(99)));
 		});
 	});
 
 	describe("pathOf", () => {
 		it("returns the path to a descendant matched by reference identity", () => {
 			const root = tree();
-			const port = Option.getOrThrow(root.find(["ports", 0]));
-			assert.deepStrictEqual(Option.getOrThrow(root.pathOf(port)), ["ports", 0]);
-			assert.deepStrictEqual(Option.getOrThrow(root.pathOf(root)), []);
+			const port = O.getOrThrow(root.find(["ports", 0]));
+			assert.deepStrictEqual(O.getOrThrow(root.pathOf(port)), ["ports", 0]);
+			assert.deepStrictEqual(O.getOrThrow(root.pathOf(root)), []);
 		});
 
 		it("returns none for nodes outside the subtree", () => {
 			const stranger = scalar("stranger", 0, 8);
-			assert.isTrue(Option.isNone(tree().pathOf(stranger)));
+			assert.isTrue(O.isNone(tree().pathOf(stranger)));
 		});
 	});
 

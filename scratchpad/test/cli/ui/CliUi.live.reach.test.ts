@@ -4,7 +4,10 @@
 // and the fixture counts its own.
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
-import { Console, Effect, Layer, Stream } from "effect";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Stream from "effect/Stream";
 import { Command } from "effect/cli";
 import { vi } from "vitest";
 import type { Document } from "../../../effected/cli/index.ts";

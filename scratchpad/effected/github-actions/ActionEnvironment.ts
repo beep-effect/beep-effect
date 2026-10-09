@@ -1,6 +1,12 @@
-import { Context, Effect, FileSystem, Layer, Option, Schema, Result } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import * as Result from "effect/Result";
 
-const Json = Schema.fromJsonString(Schema.Unknown);
+const Json = S.fromJsonString(S.Unknown);
 
 /**
  * Raised when the runner environment does not say what an action needs.
@@ -14,13 +20,13 @@ const Json = Schema.fromJsonString(Schema.Unknown);
  *
  * @public
  */
-export class ActionEnvironmentError extends Schema.TaggedError<ActionEnvironmentError>()("ActionEnvironmentError", {
+export class ActionEnvironmentError extends S.TaggedError<ActionEnvironmentError>()("ActionEnvironmentError", {
 	/** `missing` — absent or empty; `malformed` — present but unusable. */
-	reason: Schema.Literals(["missing", "malformed"]),
+	reason: S.Literals(["missing", "malformed"]),
 	/** The environment variable involved. */
-	name: Schema.String,
+	name: S.String,
 	/** What was wrong, when the reason is `malformed`. */
-	detail: Schema.optionalKey(Schema.String),
+	detail: S.optionalKey(S.String),
 }) {
 	override get message(): string {
 		return this.reason === "missing"
@@ -34,15 +40,15 @@ export class ActionEnvironmentError extends Schema.TaggedError<ActionEnvironment
  *
  * @public
  */
-export class GitHubContext extends Schema.Class<GitHubContext>("GitHubContext")({
+export class GitHubContext extends S.Class<GitHubContext>("GitHubContext")({
 	/** `owner/repo`. */
-	repository: Schema.String,
+	repository: S.String,
 	/** The repository owner's login. */
-	repositoryOwner: Schema.String,
+	repositoryOwner: S.String,
 	/** The full ref, e.g. `refs/heads/main`. */
-	ref: Schema.String,
+	ref: S.String,
 	/** The short ref, e.g. `main`. */
-	refName: Schema.String,
+	refName: S.String,
 	/**
 	 * The source branch of the pull request, when the event has one.
 	 *
@@ -58,29 +64,29 @@ export class GitHubContext extends Schema.Class<GitHubContext>("GitHubContext")(
 	 * The encoded form is `string | null` rather than a serialized `Option`, so
 	 * an encoded context stays plain JSON.
 	 */
-	headRef: Schema.OptionFromNullOr(Schema.String),
+	headRef: S.OptionFromNullOr(S.String),
 	/** The commit SHA that triggered the workflow. */
-	sha: Schema.String,
+	sha: S.String,
 	/** The workflow's name. */
-	workflow: Schema.String,
+	workflow: S.String,
 	/** The current job's id. */
-	job: Schema.String,
+	job: S.String,
 	/** The run's unique number, decoded from `GITHUB_RUN_ID`. */
-	runId: Schema.Finite,
+	runId: S.Finite,
 	/** The attempt number of this run, starting at 1. */
-	runAttempt: Schema.Finite,
+	runAttempt: S.Finite,
 	/** The name of the event that triggered the workflow, e.g. `push`. */
-	eventName: Schema.String,
+	eventName: S.String,
 	/** The login of the user that triggered the run. */
-	actor: Schema.String,
+	actor: S.String,
 	/** The GitHub server URL, e.g. `https://github.com`. */
-	serverUrl: Schema.String,
+	serverUrl: S.String,
 	/** The REST API URL, e.g. `https://api.github.com`. */
-	apiUrl: Schema.String,
+	apiUrl: S.String,
 	/** The GraphQL API URL. */
-	graphqlUrl: Schema.String,
+	graphqlUrl: S.String,
 	/** The default working directory on the runner for steps. */
-	workspace: Schema.String,
+	workspace: S.String,
 }) {
 	/**
 	 * The branch a human means: `headRef` when present (a pull request, where
@@ -94,7 +100,7 @@ export class GitHubContext extends Schema.Class<GitHubContext>("GitHubContext")(
 	 * branch; a consumer that must distinguish still has the full `ref`.
 	 */
 	get branch(): string {
-		return Option.getOrElse(this.headRef, () => this.refName);
+		return O.getOrElse(this.headRef, () => this.refName);
 	}
 }
 
@@ -103,17 +109,17 @@ export class GitHubContext extends Schema.Class<GitHubContext>("GitHubContext")(
  *
  * @public
  */
-export class RunnerContext extends Schema.Class<RunnerContext>("RunnerContext")({
+export class RunnerContext extends S.Class<RunnerContext>("RunnerContext")({
 	/** The runner's operating system: `Linux`, `Windows` or `macOS`. */
-	os: Schema.String,
+	os: S.String,
 	/** The runner's architecture, e.g. `X64` or `ARM64`. */
-	arch: Schema.String,
+	arch: S.String,
 	/** The runner's name. */
-	name: Schema.String,
+	name: S.String,
 	/** A scratch directory emptied between jobs. */
-	temp: Schema.String,
+	temp: S.String,
 	/** Where `ToolInstaller` caches toolchains. */
-	toolCache: Schema.String,
+	toolCache: S.String,
 }) {}
 
 /**
@@ -141,7 +147,7 @@ export interface ActionEnvironmentShape {
 	/** A required variable. Absent or empty fails typed. */
 	readonly get: (name: string) => Effect.Effect<string, ActionEnvironmentError>;
 	/** An optional variable. Empty reads as absent, as the runner treats it. */
-	readonly getOptional: (name: string) => Effect.Effect<Option.Option<string>>;
+	readonly getOptional: (name: string) => Effect.Effect<O.Option<string>>;
 	/** The `GITHUB_*` context. */
 	readonly github: Effect.Effect<GitHubContext, ActionEnvironmentError>;
 	/** The `RUNNER_*` context. */
@@ -188,12 +194,12 @@ const make = (
 	Effect.gen(function* () {
 		const fs = yield* FileSystem.FileSystem;
 
-		const lookup = (name: string): Effect.Effect<Option.Option<string>> =>
+		const lookup = (name: string): Effect.Effect<O.Option<string>> =>
 			Effect.map(EnvOverrides, (overrides) => {
 				const value = overrides[name] ?? base[name];
 				// The runner sets absent inputs to the empty string; treating "" as
 				// present would make every unset optional input look supplied.
-				return value === undefined || value === "" ? Option.none() : Option.some(value);
+				return value === undefined || value === "" ? O.none() : O.some(value);
 			});
 
 		const get = (name: string): Effect.Effect<string, ActionEnvironmentError> =>
@@ -204,7 +210,7 @@ const make = (
 		return {
 			get,
 			getOptional: lookup,
-			isDebug: Effect.map(lookup("RUNNER_DEBUG"), (value) => Option.isSome(value) && value.value === "1"),
+			isDebug: Effect.map(lookup("RUNNER_DEBUG"), (value) => O.isSome(value) && value.value === "1"),
 
 			github: Effect.map(
 				Effect.all({
@@ -254,7 +260,7 @@ const make = (
 					),
 				);
 				return yield* Effect.try({
-					try: () => Result.getOrThrowWith(Schema.decodeResult(Json)(raw), (error) => error) as unknown,
+					try: () => Result.getOrThrowWith(S.decodeResult(Json)(raw), (error) => error) as unknown,
 					catch: (cause) =>
 						ActionEnvironmentError.make({
 							reason: "malformed",

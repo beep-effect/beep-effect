@@ -12,7 +12,7 @@
 // member), not lifted from folklore (pnpm's macOS store is NOT the Linux XDG
 // path, and yarn Classic's cache is not `~/.yarn/cache`).
 
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 
 /**
  * The package managers the default-cache table has a row for.
@@ -27,7 +27,7 @@ import { Schema } from "effect";
  *
  * @public
  */
-export const CachingPackageManager = Schema.Literals(["npm", "pnpm", "yarn-classic", "yarn-berry", "bun"]);
+export const CachingPackageManager = S.Literals(["npm", "pnpm", "yarn-classic", "yarn-berry", "bun"]);
 
 /**
  * The union of managers the default-cache table covers.

@@ -1,8 +1,12 @@
 // @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import type { ColorLevel } from "../../../effected/env/index.ts";
-import type { Scope } from "effect";
-import { Deferred, Effect, Fiber, Logger, Option } from "effect";
+import type * as Scope from "effect/Scope";
+import * as Deferred from "effect/Deferred";
+import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
+import * as Logger from "effect/Logger";
+import * as O from "effect/Option";
 import { holdChalkLevel, levelOf, loadInk, withInkColour } from "../../../effected/cli/ui/internal/ink.ts";
 import type { ChalkLevel, InkChalk } from "../../../effected/cli/ui/internal/inkChalk.ts";
 import { inkChalk } from "../../../effected/cli/ui/internal/inkChalk.ts";
@@ -13,7 +17,7 @@ const SGR = new RegExp(`${ESC}\\[[0-9;]*m`);
 /** Ink's own chalk, which these tests drive; resolution failing here is a broken bridge, not a skip. */
 const chalk: Effect.Effect<InkChalk> = Effect.flatMap(
 	Effect.promise(() => inkChalk()),
-	Option.match({
+	O.match({
 		onNone: () => Effect.die(new Error("Ink's chalk did not resolve from Ink's location")),
 		onSome: Effect.succeed,
 	}),
@@ -94,15 +98,11 @@ describe("the Ink bridge", () => {
 		Effect.gen(function* () {
 			const instance = yield* forceLevel(3);
 			const held = yield* Deferred.make<void>();
-			const fiber = yield* Effect.forkChild(
-				Effect.scoped(
-					Effect.gen(function* () {
-						yield* withInkColour("none");
-						yield* Deferred.succeed(held, undefined);
-						return yield* Effect.never;
-					}),
-				),
-			);
+			const fiber = yield* Effect.gen(function* () {
+				yield* withInkColour("none");
+				yield* Deferred.succeed(held, undefined);
+				return yield* Effect.never;
+			}).pipe(Effect.scoped, Effect.forkChild);
 			yield* Deferred.await(held);
 			assert.strictEqual(instance.level, 0, "the level is held while the fiber runs");
 			yield* Fiber.interrupt(fiber);
@@ -121,8 +121,8 @@ describe("the Ink bridge", () => {
 			]);
 			yield* Effect.scoped(
 				Effect.gen(function* () {
-					yield* holdChalkLevel(Option.none(), "none");
-					yield* holdChalkLevel(Option.none(), "none");
+					yield* holdChalkLevel(O.none(), "none");
+					yield* holdChalkLevel(O.none(), "none");
 					assert.strictEqual(instance.level, 2);
 				}),
 			).pipe(Effect.provide(capture));

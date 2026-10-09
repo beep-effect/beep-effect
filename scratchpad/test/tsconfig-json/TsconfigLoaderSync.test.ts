@@ -2,7 +2,8 @@
 import * as nodePath from "node:path";
 import { assert, describe, it, layer } from "@effect/vitest";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
-import { Effect, PlatformError } from "effect";
+import * as Effect from "effect/Effect";
+import * as PlatformError from "effect/PlatformError";
 import { TsconfigExtendsError, TsconfigLoader } from "../../effected/tsconfig-json/TsconfigLoader.ts";
 import type { SyncFileSystem, TsconfigLoaderSyncOptions } from "../../effected/tsconfig-json/TsconfigLoaderSync.ts";
 import { TsconfigLoaderSync } from "../../effected/tsconfig-json/TsconfigLoaderSync.ts";

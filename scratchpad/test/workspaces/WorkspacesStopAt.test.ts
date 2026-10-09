@@ -13,7 +13,9 @@
 import { assert, describe, it, layer, vi } from "@effect/vitest";
 import { LocalExec, ScriptedSpawner } from "../../effected/commands/index.ts";
 import { Git, LsTreeEntry } from "../../effected/git/index.ts";
-import { Effect, Layer, Option } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import {
 	ConfigDependencyHooks,
 	LockfileReader,
@@ -66,7 +68,7 @@ const outerAtHead: Readonly<Record<string, string>> = {
 const outerGit: Layer.Layer<Git> = Git.layerTest({
 	show: (_cwd: string, _ref: string, path: string) => {
 		const content = outerAtHead[path.startsWith("./") ? path.slice(2) : path];
-		return Effect.succeed(content === undefined ? Option.none() : Option.some(content));
+		return Effect.succeed(content === undefined ? O.none() : O.some(content));
 	},
 	lsTree: () =>
 		Effect.succeed(
@@ -234,10 +236,10 @@ describe("stopAt — Workspaces.localExecLayer reads a refused root as None", ()
 	layer(platform(nestedCheckout))((it) => {
 		it.effect("bounded: no project-local launcher; unbounded: the outer workspace's pnpm", () =>
 			Effect.gen(function* () {
-				assert.isTrue(Option.isNone(yield* contextUnder(bounded)));
+				assert.isTrue(O.isNone(yield* contextUnder(bounded)));
 				const unbounded = yield* contextUnder({ cwd: CWD });
-				assert.isTrue(Option.isSome(unbounded));
-				if (Option.isSome(unbounded)) assert.strictEqual(unbounded.value.directory, "/outer");
+				assert.isTrue(O.isSome(unbounded));
+				if (O.isSome(unbounded)) assert.strictEqual(unbounded.value.directory, "/outer");
 			}),
 		);
 	});

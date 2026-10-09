@@ -41,7 +41,7 @@
 //     `encodeCompilerOptions({ target: "es2023", strict: true, lib: ["esnext"] })`
 //     → `{ target: 10, strict: true, lib: ["lib.esnext.d.ts"] }`.
 
-import { Option } from "effect";
+import * as O from "effect/Option";
 import type { CompilerOptions } from "./CompilerOptions.ts";
 
 /**
@@ -191,12 +191,12 @@ const TABLES: Record<EnumFamily, FamilyTable> = {
 };
 
 // Implementation of TsEnumCodec.encode; the public contract lives on the static.
-const encode = (family: EnumFamily, value: string): Option.Option<number> =>
-	Option.fromNullishOr(TABLES[family].forward.get(value));
+const encode = (family: EnumFamily, value: string): O.Option<number> =>
+	O.fromNullishOr(TABLES[family].forward.get(value));
 
 // Implementation of TsEnumCodec.decode; the public contract lives on the static.
-const decode = (family: EnumFamily, value: number): Option.Option<string> =>
-	Option.fromNullishOr(TABLES[family].reverse.get(value));
+const decode = (family: EnumFamily, value: number): O.Option<string> =>
+	O.fromNullishOr(TABLES[family].reverse.get(value));
 
 // Implementation of TsEnumCodec.normalizeLibReference; the public contract lives on the static.
 const normalizeLibReference = (lib: string): string => {
@@ -309,7 +309,7 @@ const encodeCompilerOptions = (options: CompilerOptions.Type): ProgrammaticCompi
 		const value = source[key];
 		if (typeof value === "string") {
 			const encoded = encode(family, value);
-			if (Option.isSome(encoded)) result[key] = encoded.value;
+			if (O.isSome(encoded)) result[key] = encoded.value;
 		}
 	}
 
@@ -332,7 +332,7 @@ const decodeCompilerOptions = (numeric: Readonly<Record<string, unknown>>): Reco
 		const value = numeric[key];
 		if (typeof value === "number") {
 			const decoded = decode(family, value);
-			if (Option.isSome(decoded)) result[key] = decoded.value;
+			if (O.isSome(decoded)) result[key] = decoded.value;
 		}
 	}
 

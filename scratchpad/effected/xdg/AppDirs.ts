@@ -1,4 +1,10 @@
-import { Context, Effect, FileSystem, Layer, Option, Path, Schema } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as S from "effect/Schema";
 import { NativeDirs } from "./NativeDirs.ts";
 import type { XdgPaths, XdgPlatform } from "./Xdg.ts";
 import { CurrentPlatform, Xdg } from "./Xdg.ts";
@@ -8,7 +14,7 @@ import { CurrentPlatform, Xdg } from "./Xdg.ts";
  *
  * @public
  */
-export const AppDirKind = Schema.Literals(["config", "data", "cache", "state", "runtime"]);
+export const AppDirKind = S.Literals(["config", "data", "cache", "state", "runtime"]);
 
 /**
  * The decoded form of {@link (AppDirKind:variable)}.
@@ -29,13 +35,13 @@ export type AppDirKind = typeof AppDirKind.Type;
  *
  * @public
  */
-export class AppDirsError extends Schema.TaggedError<AppDirsError>()("AppDirsError", {
+export class AppDirsError extends S.TaggedError<AppDirsError>()("AppDirsError", {
 	/** Which directory kind failed. */
 	directory: AppDirKind,
 	/** The path that could not be created. */
-	path: Schema.String,
+	path: S.String,
 	/** The underlying failure, preserved structurally. */
-	cause: Schema.Defect(),
+	cause: S.Defect(),
 }) {
 	override get message(): string {
 		return `Failed to create the ${this.directory} directory at "${this.path}"`;
@@ -47,15 +53,15 @@ export class AppDirsError extends Schema.TaggedError<AppDirsError>()("AppDirsErr
  *
  * @public
  */
-export class ResolvedAppDirs extends Schema.Class<ResolvedAppDirs>("ResolvedAppDirs")({
+export class ResolvedAppDirs extends S.Class<ResolvedAppDirs>("ResolvedAppDirs")({
 	/** The app's configuration directory. */
-	config: Schema.String,
+	config: S.String,
 	/** The app's data directory. */
-	data: Schema.String,
+	data: S.String,
 	/** The app's cache directory. */
-	cache: Schema.String,
+	cache: S.String,
 	/** The app's state directory. */
-	state: Schema.String,
+	state: S.String,
 	/**
 	 * The app's runtime directory.
 	 *
@@ -65,7 +71,7 @@ export class ResolvedAppDirs extends Schema.Class<ResolvedAppDirs>("ResolvedAppD
 	 * user-owned, mode 0700 and cleaned on logout — so inventing one would be a
 	 * lie, and the key is simply absent.
 	 */
-	runtime: Schema.optionalKey(Schema.String),
+	runtime: S.optionalKey(S.String),
 	/**
 	 * Where to **look** for configuration, in priority order.
 	 *
@@ -74,9 +80,9 @@ export class ResolvedAppDirs extends Schema.Class<ResolvedAppDirs>("ResolvedAppD
 	 * namespaced. It is what makes {@link XdgConfig.resolver} a real search
 	 * rather than a single stat.
 	 */
-	configSearchPath: Schema.Array(Schema.String),
+	configSearchPath: S.Array(S.String),
 	/** Where to look for data files, in priority order. */
-	dataSearchPath: Schema.Array(Schema.String),
+	dataSearchPath: S.Array(S.String),
 }) {}
 
 /**
@@ -168,7 +174,7 @@ export interface AppDirsShape {
 	 * `Option.none()` when no runtime directory is configured — nothing is created
 	 * and nothing fails.
 	 */
-	readonly ensureRuntime: Effect.Effect<Option.Option<string>, AppDirsError>;
+	readonly ensureRuntime: Effect.Effect<O.Option<string>, AppDirsError>;
 	/** Create every directory that exists in the resolution, and return them all. */
 	readonly ensure: Effect.Effect<ResolvedAppDirs, AppDirsError>;
 }
@@ -189,7 +195,7 @@ export interface AppDirsShape {
 const resolveDir = (input: {
 	readonly override: string | undefined;
 	readonly xdgHome: string | undefined;
-	readonly native: Option.Option<string>;
+	readonly native: O.Option<string>;
 	readonly options: AppDirsOptions;
 	readonly home: string;
 	readonly path: Path.Path;
@@ -197,7 +203,7 @@ const resolveDir = (input: {
 	const { override, xdgHome, native, options, home, path } = input;
 	if (override !== undefined) return override;
 	if (xdgHome !== undefined) return path.join(xdgHome, options.namespace);
-	if (Option.isSome(native)) return native.value;
+	if (O.isSome(native)) return native.value;
 	if (options.fallbackDir !== undefined) return path.join(home, options.fallbackDir);
 	return path.join(home, `.${options.namespace}`);
 };
@@ -211,13 +217,13 @@ const searchPath = (own: string, systemDirs: ReadonlyArray<string>, namespace: s
 const resolveAll = (options: AppDirsOptions, paths: XdgPaths, platform: XdgPlatform, path: Path.Path) => {
 	const native = options.native === true
 		? NativeDirs.resolve({ platform, namespace: options.namespace, paths, path })
-		: Option.none<NativeDirs>();
+		: O.none<NativeDirs>();
 
 	const forKind = (xdgHome: string | undefined, nativeDir: (n: NativeDirs) => string, override: string | undefined) =>
 		resolveDir({
 			override,
 			xdgHome,
-			native: Option.map(native, nativeDir),
+			native: O.map(native, nativeDir),
 			options,
 			home: paths.home,
 			path,
@@ -321,9 +327,9 @@ export class AppDirs extends Context.Service<AppDirs, AppDirsShape>()("@beep/scr
 					);
 
 				const runtimeDir = dirs.runtime;
-				const ensureRuntime: Effect.Effect<Option.Option<string>, AppDirsError> = (
+				const ensureRuntime: Effect.Effect<O.Option<string>, AppDirsError> = (
 					runtimeDir === undefined
-						? Effect.succeed(Option.none<string>())
+						? Effect.succeed(O.none<string>())
 						: Effect.asSome(makeDir("runtime", runtimeDir))
 				).pipe(Effect.withSpan("AppDirs.ensureRuntime"));
 

@@ -1,7 +1,9 @@
 // @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { TerminalEnv } from "../../effected/env/index.ts";
-import { ConfigProvider, Effect, Stdio } from "effect";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Effect from "effect/Effect";
+import * as Stdio from "effect/Stdio";
 import { CliError, CliOutput } from "effect/cli";
 import { CliColor } from "../../effected/cli/index.ts";
 

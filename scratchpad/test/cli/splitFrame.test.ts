@@ -1,5 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Cause } from "effect";
+import * as Cause from "effect/Cause";
 import { CliFailure } from "../../effected/cli/index.ts";
 import { splitFrame } from "../../effected/cli/internal/splitFrame.ts";
 

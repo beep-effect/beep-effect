@@ -1,11 +1,20 @@
 // @effect-diagnostics strictEffectProvide:skip-file
-import { Data } from "effect";
+import * as Data from "effect/Data";
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
 import type { AudienceKind } from "../../effected/env/index.ts";
 import { Audience, CurrentRuntimeEnv, RuntimeEnv, TerminalEnv } from "../../effected/env/index.ts";
-import type { FileSystem, Path } from "effect";
-import { Cause, ConfigProvider, Console, Effect, Exit, Layer, Logger, Option, Runtime } from "effect";
+import type * as FileSystem from "effect/FileSystem";
+import type * as Path from "effect/Path";
+import * as Cause from "effect/Cause";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Layer from "effect/Layer";
+import * as Logger from "effect/Logger";
+import * as O from "effect/Option";
+import * as Runtime from "effect/Runtime";
 import { Command } from "effect/cli";
 import type { CliLogFile, CliLoggerOptions } from "../../effected/cli/index.ts";
 import { CliLog, CliLogger, CliRuntime } from "../../effected/cli/index.ts";
@@ -302,7 +311,7 @@ describe("CliLog owns the logger set", () => {
 				Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(env)),
 				Effect.provideService(Console.Console, double),
 			);
-			const code = Exit.isFailure(exit) ? Runtime.getErrorExitCode(Cause.squash(exit.cause)) : 0;
+			const code = Exit.isFailure(exit) ? exit.cause.pipe(Cause.squash, Runtime.getErrorExitCode) : 0;
 			return { out, err, code };
 		});
 
@@ -487,7 +496,7 @@ describe("CliLog.layer under GitHub Actions captured when it was built", () => {
 			format: "json",
 			plainLogger: false,
 			...(neutralize === undefined ? {} : { neutralize }),
-		}).pipe(Layer.provide(CurrentRuntimeEnv.layerTest({ ci: Option.some("github-actions") })));
+		}).pipe(Layer.provide(CurrentRuntimeEnv.layerTest({ ci: O.some("github-actions") })));
 	const commands = (lines: ReadonlyArray<string>) => lines.flatMap((line) => line.split(LINE_BREAK)).filter(isCommand);
 	const written = Effect.fn("written")(function* (layer: Layer.Layer<never>) {
 			const { double, err } = capturing();
@@ -538,7 +547,7 @@ describe("CliLog.layer's runtimeEnv option (A9)", () => {
 
 	it.effect("it beats the captured service", () =>
 		Effect.gen(function* () {
-			const captured = CurrentRuntimeEnv.layerTest({ ci: Option.some("github-actions") });
+			const captured = CurrentRuntimeEnv.layerTest({ ci: O.some("github-actions") });
 			const overridden = CliLog.layer({ level: "Info", format: "json", runtimeEnv: local }).pipe(
 				Layer.provide(captured),
 			);
@@ -592,7 +601,7 @@ describe("CliLog.layer's own plain CliLogger neutralizes as its sink does", () =
 		Effect.gen(function* () {
 			const { double, err } = capturing();
 			const hosted = CliLog.layer({ level: "Info", format: "json" }).pipe(
-				Layer.provide(CurrentRuntimeEnv.layerTest({ ci: Option.some("github-actions") })),
+				Layer.provide(CurrentRuntimeEnv.layerTest({ ci: O.some("github-actions") })),
 			);
 			yield* Effect.logWarning("::error::injected").pipe(
 				Effect.provide(hosted),
@@ -607,7 +616,7 @@ describe("CliLog.layer's own plain CliLogger neutralizes as its sink does", () =
 		Effect.gen(function* () {
 			const { double, err } = capturing();
 			const hosted = CliLog.layer({ level: "Info", format: "json", neutralize: false }).pipe(
-				Layer.provide(CurrentRuntimeEnv.layerTest({ ci: Option.some("github-actions") })),
+				Layer.provide(CurrentRuntimeEnv.layerTest({ ci: O.some("github-actions") })),
 			);
 			yield* Effect.logWarning("::error::injected").pipe(
 				Effect.provide(hosted),

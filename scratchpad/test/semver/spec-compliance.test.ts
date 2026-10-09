@@ -1,5 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { Range, SemVer } from "../../effected/semver/index.ts";
 import {
 	comparisonPairs,

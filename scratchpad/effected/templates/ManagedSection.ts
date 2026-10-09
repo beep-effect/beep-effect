@@ -1,5 +1,10 @@
-import type { Option, PlatformError } from "effect";
-import { Context, Effect, FileSystem, Layer, Schema } from "effect";
+import type * as O from "effect/Option";
+import type * as PlatformError from "effect/PlatformError";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as S from "effect/Schema";
 import type { Section, SectionId } from "./Section.ts";
 import type { SectionRenderError } from "./SectionDialect.ts";
 import { SectionDialect } from "./SectionDialect.ts";
@@ -21,13 +26,13 @@ import type { CheckOutcome, SyncOutcome } from "./SectionOutcome.ts";
  *
  * @public
  */
-export class SectionFileError extends Schema.TaggedError<SectionFileError>()("SectionFileError", {
+export class SectionFileError extends S.TaggedError<SectionFileError>()("SectionFileError", {
 	/** The file the operation was against. */
-	path: Schema.String,
+	path: S.String,
 	/** Which half of the read-modify-write failed. */
-	operation: Schema.Literals(["read", "write"]),
+	operation: S.Literals(["read", "write"]),
 	/** The underlying failure, preserved structurally. */
-	cause: Schema.Defect(),
+	cause: S.Defect(),
 }) {
 	override get message(): string {
 		return `Failed to ${this.operation} managed sections in "${this.path}"`;
@@ -53,7 +58,7 @@ export interface ManagedSectionShape {
 	readonly read: (
 		path: string,
 		id: SectionId,
-	) => Effect.Effect<Option.Option<Section>, SectionParseError | SectionFileError>;
+	) => Effect.Effect<O.Option<Section>, SectionParseError | SectionFileError>;
 
 	/** Every managed section in the file, in document order. */
 	readonly readAll: (path: string) => Effect.Effect<ReadonlyArray<Section>, SectionParseError | SectionFileError>;

@@ -1,4 +1,4 @@
-import { Data } from "effect";
+import * as Data from "effect/Data";
 // The engine's raw diagnostic vocabulary. Public modules materialize these
 // into TomlDiagnostic (adding line/character); the engine never imports
 // public modules. See src/TomlDiagnostic.ts for the public side of the

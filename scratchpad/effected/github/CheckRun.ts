@@ -1,11 +1,18 @@
-import { Cause, Context, DateTime, Effect, Exit, Layer, Ref, Schema } from "effect";
+import * as Cause from "effect/Cause";
+import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Layer from "effect/Layer";
+import * as Ref from "effect/Ref";
+import * as S from "effect/Schema";
 import { GitHubClient } from "./GitHubClient.ts";
 import type { GitHubError } from "./GitHubError.ts";
 import { numericId } from "./internal/ids.ts";
 import { Repo } from "./Repo.ts";
 
 /** How a check run finished. @public */
-export const CheckConclusion = Schema.Literals([
+export const CheckConclusion = S.Literals([
   "success",
   "failure",
   "neutral",
@@ -16,23 +23,23 @@ export const CheckConclusion = Schema.Literals([
 ]);
 
 /** How serious an annotation is. @public */
-export const AnnotationLevel = Schema.Literals(["notice", "warning", "failure"]);
+export const AnnotationLevel = S.Literals(["notice", "warning", "failure"]);
 
 /**
  * One annotation on a check run.
  *
  * @public
  */
-export class Annotation extends Schema.Class<Annotation>("Annotation")({
+export class Annotation extends S.Class<Annotation>("Annotation")({
   /** Repository-relative path. */
-  path: Schema.String,
+  path: S.String,
   /** First line of the range, 1-based. */
-  startLine: Schema.Int,
+  startLine: S.Int,
   /** Last line of the range, 1-based. */
-  endLine: Schema.Int,
+  endLine: S.Int,
   level: AnnotationLevel,
-  message: Schema.String,
-  title: Schema.optionalKey(Schema.String),
+  message: S.String,
+  title: S.optionalKey(S.String),
 }) {
 }
 
@@ -48,14 +55,14 @@ export class Annotation extends Schema.Class<Annotation>("Annotation")({
  *
  * @public
  */
-export class CheckRunOutput extends Schema.Class<CheckRunOutput>("CheckRunOutput")({
-  title: Schema.String,
+export class CheckRunOutput extends S.Class<CheckRunOutput>("CheckRunOutput")({
+  title: S.String,
   /** Markdown shown under the title. Capped at 65535 **bytes**. */
-  summary: Schema.String,
+  summary: S.String,
   /** Longer markdown. Capped at 65535 **bytes**. */
-  text: Schema.optionalKey(Schema.String),
+  text: S.optionalKey(S.String),
   /** At most 50 per request; the rest are dropped by {@link CheckRunOutput.truncated}. */
-  annotations: Schema.optionalKey(Schema.Array(Annotation)),
+  annotations: Annotation.pipe(S.Array, S.optionalKey),
 }) {
   /** GitHub's cap on `summary` and `text`, in UTF-8 bytes. */
   static readonly LIMIT_BYTES = 65_535;
@@ -104,12 +111,12 @@ const capBytes = (value: string): string => {
  *
  * @public
  */
-export class CheckRunRef extends Schema.Class<CheckRunRef>("CheckRunRef")({
-  id: Schema.Int,
-  name: Schema.String,
+export class CheckRunRef extends S.Class<CheckRunRef>("CheckRunRef")({
+  id: S.Int,
+  name: S.String,
   /** The web URL. */
-  url: Schema.String,
-  status: Schema.String,
+  url: S.String,
+  status: S.String,
 }) {
 }
 

@@ -1,4 +1,8 @@
-import { Context, Effect, Layer, PubSub, Schema } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as PubSub from "effect/PubSub";
+import * as S from "effect/Schema";
 
 /**
  * A reference to one configuration source that contributed to a load.
@@ -9,11 +13,11 @@ import { Context, Effect, Layer, PubSub, Schema } from "effect";
  *
  * @public
  */
-export const ConfigSourceRef = Schema.Struct({
+export const ConfigSourceRef = S.Struct({
 	/** The filesystem path the value was read from. */
-	path: Schema.String,
+	path: S.String,
 	/** The name of the resolver that found it. */
-	resolver: Schema.String,
+	resolver: S.String,
 });
 
 /**
@@ -32,19 +36,19 @@ export const ConfigSourceRef = Schema.Struct({
  *
  * @public
  */
-export const ConfigEventPayload = Schema.Union([
+export const ConfigEventPayload = S.Union([
 	/** A resolver matched a path. Emitted before the file is read. */
-	Schema.TaggedStruct("Discovered", { path: Schema.String, resolver: Schema.String }),
+	S.TaggedStruct("Discovered", { path: S.String, resolver: S.String }),
 	/** The resolver chain matched nothing. */
-	Schema.TaggedStruct("NotFound", {}),
+	S.TaggedStruct("NotFound", {}),
 	/** The codec turned file content into a document. */
-	Schema.TaggedStruct("Parsed", { path: Schema.String, codec: Schema.String }),
+	S.TaggedStruct("Parsed", { path: S.String, codec: S.String }),
 	/** The codec could not parse the file's content. */
-	Schema.TaggedStruct("ParseFailed", { path: Schema.String, codec: Schema.String, error: Schema.Defect() }),
+	S.TaggedStruct("ParseFailed", { path: S.String, codec: S.String, error: S.Defect() }),
 	/** The document satisfied the schema and any caller-supplied `validate`. */
-	Schema.TaggedStruct("Validated", { path: Schema.String }),
+	S.TaggedStruct("Validated", { path: S.String }),
 	/** The document did not satisfy the schema, or `validate` rejected it. */
-	Schema.TaggedStruct("ValidationFailed", { path: Schema.String, error: Schema.Defect() }),
+	S.TaggedStruct("ValidationFailed", { path: S.String, error: S.Defect() }),
 	/**
 	 * The merge strategy combined the discovered sources into one value.
 	 *
@@ -52,17 +56,17 @@ export const ConfigEventPayload = Schema.Union([
 	 * Carries EVERY contributing source — under `layeredMerge` all of them
 	 * contributed, not just the first.
 	 */
-	Schema.TaggedStruct("Resolved", { sources: Schema.Array(ConfigSourceRef), strategy: Schema.String }),
+	S.TaggedStruct("Resolved", { sources: S.Array(ConfigSourceRef), strategy: S.String }),
 	/** The load completed. Carries every contributing source, as `Resolved` does. */
-	Schema.TaggedStruct("Loaded", { sources: Schema.Array(ConfigSourceRef) }),
+	S.TaggedStruct("Loaded", { sources: S.Array(ConfigSourceRef) }),
 	/** The codec could not serialize the value. */
-	Schema.TaggedStruct("StringifyFailed", { codec: Schema.String, error: Schema.Defect() }),
+	S.TaggedStruct("StringifyFailed", { codec: S.String, error: S.Defect() }),
 	/** `write` persisted a value to an explicit path. */
-	Schema.TaggedStruct("Written", { path: Schema.String }),
+	S.TaggedStruct("Written", { path: S.String }),
 	/** `save` persisted a value to the configured `defaultPath`. */
-	Schema.TaggedStruct("Saved", { path: Schema.String }),
+	S.TaggedStruct("Saved", { path: S.String }),
 	/** `update` loaded, transformed and persisted a value. Emitted alone. */
-	Schema.TaggedStruct("Updated", { path: Schema.String }),
+	S.TaggedStruct("Updated", { path: S.String }),
 ]);
 
 /**
@@ -78,9 +82,9 @@ export type ConfigEventPayload = typeof ConfigEventPayload.Type;
  *
  * @public
  */
-export class ConfigEvent extends Schema.Class<ConfigEvent>("ConfigEvent")({
+export class ConfigEvent extends S.Class<ConfigEvent>("ConfigEvent")({
 	/** When the event occurred. */
-	timestamp: Schema.DateTimeUtc,
+	timestamp: S.DateTimeUtc,
 	/** What happened. */
 	event: ConfigEventPayload,
 }) {}

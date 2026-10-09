@@ -1,4 +1,5 @@
-import { Effect, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
 import { CommentStyle } from "./CommentStyle.ts";
 
 /**
@@ -21,7 +22,7 @@ import { CommentStyle } from "./CommentStyle.ts";
  *
  * @public
  */
-export const SectionKey = Schema.String.check(Schema.isPattern(/^[A-Za-z0-9][A-Za-z0-9._-]*$/u));
+export const SectionKey = S.String.check(S.isPattern(/^[A-Za-z0-9][A-Za-z0-9._-]*$/u));
 
 /**
  * What identifies a managed section inside a document: its key and the
@@ -46,7 +47,7 @@ export const SectionKey = Schema.String.check(Schema.isPattern(/^[A-Za-z0-9][A-Z
  *
  * @public
  */
-export class SectionId extends Schema.Class<SectionId>("SectionId")({
+export class SectionId extends S.Class<SectionId>("SectionId")({
 	/** The section's name, exactly as it appears in the markers. */
 	key: SectionKey,
 	/** How this section's markers are commented out. */
@@ -99,15 +100,15 @@ export class SectionId extends Schema.Class<SectionId>("SectionId")({
  *
  * @public
  */
-export class Section extends Schema.Class<Section>("Section")({
+export class Section extends S.Class<Section>("Section")({
 	/** The section's name, exactly as it appears in the markers. */
 	key: SectionKey,
 	/** How this section's markers are commented out. */
 	commentStyle: CommentStyle,
 	/** Everything between the markers, exclusive of the boundary line breaks. */
-	content: Schema.String,
+	content: S.String,
 	/** The BEGIN marker's `name="value"` pairs. Empty when the marker carries none. */
-	attributes: Schema.Record(Schema.String, Schema.String).pipe(Schema.withConstructorDefault(Effect.succeed({}))),
+	attributes: S.Record(S.String, S.String).pipe(S.withConstructorDefault(Effect.succeed({}))),
 }) {
 	/** This section's identity, without its content. */
 	get id(): SectionId {
@@ -131,13 +132,13 @@ export class Section extends Schema.Class<Section>("Section")({
  *
  * @public
  */
-export class PlacedSection extends Schema.Class<PlacedSection>("PlacedSection")({
+export class PlacedSection extends S.Class<PlacedSection>("PlacedSection")({
 	/** The section, with line endings already normalized to `\n`. */
 	section: Section,
 	/** Offset of the begin marker's first character. */
-	start: Schema.Finite,
+	start: S.Finite,
 	/** Offset one past the end marker's last character. */
-	end: Schema.Finite,
+	end: S.Finite,
 	/** 1-based line of the begin marker. */
-	line: Schema.Finite,
+	line: S.Finite,
 }) {}

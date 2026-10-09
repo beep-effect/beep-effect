@@ -1,5 +1,7 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Option, Result } from "effect";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import type { GitConfigParseError } from "../../effected/git/GitConfig.ts";
 import { GitConfig, GitConfigEditError } from "../../effected/git/GitConfig.ts";
 
@@ -214,7 +216,7 @@ describe("GitConfig", () => {
 		it.effect("the Effect form derives from parseResult behind its span", () =>
 			Effect.gen(function* () {
 				const doc = yield* GitConfig.parse("[core]\n\tbare = false\n");
-				assert.deepStrictEqual(doc.get("core", undefined, "bare"), Option.some("false"));
+				assert.deepStrictEqual(doc.get("core", undefined, "bare"), O.some("false"));
 				const error = yield* Effect.flip(GitConfig.parse("[unclosed\n"));
 				assert.strictEqual(error._tag, "GitConfigParseError");
 			}),
@@ -222,14 +224,14 @@ describe("GitConfig", () => {
 
 		it("get is last-wins, getAll is in order", () => {
 			const doc = parse("[a]\n\tk = one\n[a]\n\tk = two\n");
-			assert.deepStrictEqual(doc.get("a", undefined, "k"), Option.some("two"));
+			assert.deepStrictEqual(doc.get("a", undefined, "k"), O.some("two"));
 			assert.deepStrictEqual(doc.getAll("a", undefined, "k"), ["one", "two"]);
 		});
 
 		it("a missing key answers Option.none", () => {
 			const doc = parse("[a]\n\tk = v\n");
-			assert.deepStrictEqual(doc.get("a", undefined, "other"), Option.none());
-			assert.deepStrictEqual(doc.get("b", undefined, "k"), Option.none());
+			assert.deepStrictEqual(doc.get("a", undefined, "other"), O.none());
+			assert.deepStrictEqual(doc.get("b", undefined, "k"), O.none());
 		});
 
 		it("the entry model preserves the bare-key / explicit-value distinction", () => {
@@ -360,7 +362,7 @@ describe("GitConfig", () => {
 		it("a written value round-trips through parse", () => {
 			const hostile = ' spaced "quoted" \\slashed\ttabbed\nnewlined ';
 			const doc = ok(parse("").set("test", undefined, "value", hostile));
-			assert.deepStrictEqual(parse(doc.stringify()).get("test", undefined, "value"), Option.some(hostile));
+			assert.deepStrictEqual(parse(doc.stringify()).get("test", undefined, "value"), O.some(hostile));
 		});
 
 		it("append adds a second value after the last occurrence", () => {
@@ -445,7 +447,7 @@ describe("GitConfig", () => {
 			// The same address expressed as (name, subsection) works and round-trips.
 			const edited = ok(doc.addSection("a", "b"));
 			assert.strictEqual(edited.stringify(), '[a "b"]\n');
-			assert.deepStrictEqual(ok(edited.set("a", "b", "k", "v")).get("a", "b", "k"), Option.some("v"));
+			assert.deepStrictEqual(ok(edited.set("a", "b", "k", "v")).get("a", "b", "k"), O.some("v"));
 		});
 
 		it("invalid names and values are refused typed", () => {

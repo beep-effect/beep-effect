@@ -1,4 +1,9 @@
-import { ConfigProvider, Context, Effect, Layer, Option, Schema } from "effect";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Schema from "effect/Schema";
 import { detectAgent, detectCi } from "./internal/agentCi.ts";
 import { normalizeEnv, readEnv } from "./internal/envRecord.ts";
 import { allKeys } from "./internal/keys.ts";
@@ -68,11 +73,11 @@ export class RuntimeEnv extends Schema.Class<RuntimeEnv>("@effected/env/RuntimeE
  */
 export interface RuntimeEnvOverrides {
 	/** Replaces the detected agent. */
-	readonly agent?: Option.Option<string>;
+	readonly agent?: O.Option<string>;
 	/** Replaces the detected CI. */
-	readonly ci?: Option.Option<CiName>;
+	readonly ci?: O.Option<CiName>;
 	/** Replaces the detected terminal. */
-	readonly terminal?: Option.Option<{ readonly name: string; readonly version: Option.Option<string> }>;
+	readonly terminal?: O.Option<{ readonly name: string; readonly version: O.Option<string> }>;
 }
 
 /**
@@ -154,9 +159,9 @@ export class CurrentRuntimeEnv extends Context.Service<CurrentRuntimeEnv, Runtim
 		Layer.succeed(
 			CurrentRuntimeEnv,
 			RuntimeEnv.make({
-				agent: overrides.agent ?? Option.none(),
-				ci: overrides.ci ?? Option.none(),
-				terminal: overrides.terminal ?? Option.none(),
+				agent: overrides.agent ?? O.none(),
+				ci: overrides.ci ?? O.none(),
+				terminal: overrides.terminal ?? O.none(),
 			}),
 		);
 }

@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 import { CreativeWorkFields } from "./CreativeWork.ts";
 import { NodeRef } from "./NodeRef.ts";
 
@@ -28,16 +28,16 @@ import { NodeRef } from "./NodeRef.ts";
  *
  * @public
  */
-export class SoftwareSourceCode extends Schema.Class<SoftwareSourceCode>("SoftwareSourceCode")({
+export class SoftwareSourceCode extends S.Class<SoftwareSourceCode>("SoftwareSourceCode")({
 	...CreativeWorkFields,
 	/** The JSON-LD type discriminator, populated automatically. */
-	"@type": Schema.tag("SoftwareSourceCode"),
+	"@type": S.tag("SoftwareSourceCode"),
 	/** The repository the code lives in. Single-valued. */
-	codeRepository: Schema.optional(Schema.String),
+	codeRepository: S.optional(S.String),
 	/** The languages the code is written in. Repeatable. */
-	programmingLanguage: Schema.optional(Schema.Array(Schema.String)),
+	programmingLanguage: S.String.pipe(S.Array, S.optional),
 	/** Runtime platforms the code targets. Repeatable. */
-	runtimePlatform: Schema.optional(Schema.Array(Schema.String)),
+	runtimePlatform: S.String.pipe(S.Array, S.optional),
 	/** Products this code produces, by reference. Repeatable. */
-	targetProduct: Schema.optional(Schema.Array(NodeRef)),
+	targetProduct: NodeRef.pipe(S.Array, S.optional),
 }) {}

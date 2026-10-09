@@ -3,7 +3,7 @@
 // Blank lines inside scalar content are the value's business and are
 // skipped. The fix deletes the excess lines surgically.
 
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 import { YamlEdit } from "../../YamlEdit.ts";
 import type { LintContext, YamlRule } from "../../YamlLintRule.ts";
 import { StyleFloor, YamlLintDiagnostic, YamlLintSeverity } from "../../YamlLintRule.ts";
@@ -14,11 +14,11 @@ import { insideScalarSpan, nonNegativeIntegerOption } from "./util.ts";
  * (default 2), `maxStart` at the document start and `maxEnd` at the end
  * (both default 0).
  */
-export const emptyLinesOptions = Schema.Struct({
-	severity: Schema.optionalKey(YamlLintSeverity),
-	max: Schema.optionalKey(nonNegativeIntegerOption),
-	maxStart: Schema.optionalKey(nonNegativeIntegerOption),
-	maxEnd: Schema.optionalKey(nonNegativeIntegerOption),
+export const emptyLinesOptions = S.Struct({
+	severity: S.optionalKey(YamlLintSeverity),
+	max: S.optionalKey(nonNegativeIntegerOption),
+	maxStart: S.optionalKey(nonNegativeIntegerOption),
+	maxEnd: S.optionalKey(nonNegativeIntegerOption),
 });
 
 interface EmptyLinesOptions {

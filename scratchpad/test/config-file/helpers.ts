@@ -1,7 +1,9 @@
 import type { MemoryFileSystemSeed, MemoryFileSystemVolume } from "../../effected/memfs/index.ts";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
-import type { FileSystem, Layer } from "effect";
-import { Effect, PlatformError } from "effect";
+import type * as FileSystem from "effect/FileSystem";
+import type * as Layer from "effect/Layer";
+import * as Effect from "effect/Effect";
+import * as PlatformError from "effect/PlatformError";
 
 /**
  * A memfs volume the write-path tests can inspect after the program has run,

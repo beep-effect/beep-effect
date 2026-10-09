@@ -1,5 +1,7 @@
 import { assert, describe, layer } from "@effect/vitest";
-import { Effect, Option, Path } from "effect";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import type { XdgPlatform } from "../../effected/xdg/index.ts";
 import { NativeDirs, XdgPaths } from "../../effected/xdg/index.ts";
 
@@ -28,8 +30,8 @@ describe("NativeDirs.resolve", () => {
 		it.effect("maps darwin onto Application Support and Caches", () =>
 			Effect.gen(function* () {
 				const native = yield* resolve("darwin");
-				assert.isTrue(Option.isSome(native));
-				const dirs = Option.getOrThrow(native);
+				assert.isTrue(O.isSome(native));
+				const dirs = O.getOrThrow(native);
 				assert.strictEqual(dirs.config, "/home/ada/Library/Application Support/myapp");
 				assert.strictEqual(dirs.data, "/home/ada/Library/Application Support/myapp");
 				assert.strictEqual(dirs.state, "/home/ada/Library/Application Support/myapp");
@@ -41,7 +43,7 @@ describe("NativeDirs.resolve", () => {
 		it.effect("maps win32 onto APPDATA and LOCALAPPDATA when both are set", () =>
 			Effect.gen(function* () {
 				const native = yield* resolve("win32", paths({ appData: "/R", localAppData: "/L" }));
-				const dirs = Option.getOrThrow(native);
+				const dirs = O.getOrThrow(native);
 				assert.strictEqual(dirs.config, "/R/myapp");
 				assert.strictEqual(dirs.data, "/R/myapp");
 				assert.strictEqual(dirs.cache, "/L/myapp/Cache");
@@ -52,7 +54,7 @@ describe("NativeDirs.resolve", () => {
 		it.effect("falls back to AppData/Roaming and AppData/Local when NEITHER var is set", () =>
 			Effect.gen(function* () {
 				const native = yield* resolve("win32");
-				const dirs = Option.getOrThrow(native);
+				const dirs = O.getOrThrow(native);
 				assert.strictEqual(dirs.config, "/home/ada/AppData/Roaming/myapp");
 				assert.strictEqual(dirs.cache, "/home/ada/AppData/Local/myapp/Cache");
 				assert.strictEqual(dirs.state, "/home/ada/AppData/Local/myapp");
@@ -65,7 +67,7 @@ describe("NativeDirs.resolve", () => {
 				// while the local one does not. An all-or-nothing branch passes the two
 				// tests above and fails this one.
 				const native = yield* resolve("win32", paths({ localAppData: "/L" }));
-				const dirs = Option.getOrThrow(native);
+				const dirs = O.getOrThrow(native);
 				assert.strictEqual(dirs.config, "/home/ada/AppData/Roaming/myapp");
 				assert.strictEqual(dirs.cache, "/L/myapp/Cache");
 			}),
@@ -73,15 +75,15 @@ describe("NativeDirs.resolve", () => {
 
 		it.effect("has no native mapping on linux — XDG is the native convention there", () =>
 			Effect.gen(function* () {
-				assert.isTrue(Option.isNone(yield* resolve("linux")));
+				assert.isTrue(O.isNone(yield* resolve("linux")));
 			}),
 		);
 
 		it.effect("has no native mapping on other unix platforms", () =>
 			Effect.gen(function* () {
-				assert.isTrue(Option.isNone(yield* resolve("freebsd")));
-				assert.isTrue(Option.isNone(yield* resolve("openbsd")));
-				assert.isTrue(Option.isNone(yield* resolve("sunos")));
+				assert.isTrue(O.isNone(yield* resolve("freebsd")));
+				assert.isTrue(O.isNone(yield* resolve("openbsd")));
+				assert.isTrue(O.isNone(yield* resolve("sunos")));
 			}),
 		);
 	});

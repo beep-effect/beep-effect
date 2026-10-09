@@ -2,7 +2,10 @@
 import { assert, describe, it } from "@effect/vitest";
 import type { AudienceKind } from "../../effected/env/index.ts";
 import { Audience } from "../../effected/env/index.ts";
-import { Console, Effect, Layer, Logger } from "effect";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Logger from "effect/Logger";
 import { CliLog, CliLogger, CliMessage, CliTheme, Doc, Glyphs, Render, Status } from "../../effected/cli/index.ts";
 
 const ESC = String.fromCharCode(0x1b);

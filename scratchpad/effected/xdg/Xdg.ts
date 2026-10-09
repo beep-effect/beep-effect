@@ -1,4 +1,9 @@
-import { Config, Context, Effect, Layer, Option, Schema } from "effect";
+import * as Config from "effect/Config";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
 
 /**
  * The operating system the path decisions are taken against.
@@ -10,7 +15,7 @@ import { Config, Context, Effect, Layer, Option, Schema } from "effect";
  *
  * @public
  */
-export const XdgPlatform = Schema.Literals([
+export const XdgPlatform = S.Literals([
 	"aix",
 	"android",
 	"darwin",
@@ -35,7 +40,7 @@ const detectPlatform = (): XdgPlatform => {
 	const platform = globalThis.process?.platform;
 	// A platform Node does not report — or no `process` at all, as in a browser
 	// or a worker — behaves as Linux: XDG is the convention, no native override.
-	return Schema.is(XdgPlatform)(platform) ? platform : "linux";
+	return S.is(XdgPlatform)(platform) ? platform : "linux";
 };
 
 /**
@@ -65,11 +70,11 @@ export const CurrentPlatform: Context.Reference<XdgPlatform> = Context.Reference
  *
  * @public
  */
-export class XdgEnvError extends Schema.TaggedError<XdgEnvError>()("XdgEnvError", {
+export class XdgEnvError extends S.TaggedError<XdgEnvError>()("XdgEnvError", {
 	/** The environment variable that was required and not found. */
-	variable: Schema.String,
+	variable: S.String,
 	/** The underlying failure, preserved structurally. */
-	cause: Schema.Defect(),
+	cause: S.Defect(),
 }) {
 	override get message(): string {
 		return `The ${this.variable} environment variable is not set`;
@@ -91,27 +96,27 @@ export class XdgEnvError extends Schema.TaggedError<XdgEnvError>()("XdgEnvError"
  *
  * @public
  */
-export class XdgPaths extends Schema.Class<XdgPaths>("XdgPaths")({
+export class XdgPaths extends S.Class<XdgPaths>("XdgPaths")({
 	/** `$HOME`. The one variable that must be set. */
-	home: Schema.String,
+	home: S.String,
 	/** `$XDG_CONFIG_HOME`. */
-	configHome: Schema.optionalKey(Schema.String),
+	configHome: S.optionalKey(S.String),
 	/** `$XDG_DATA_HOME`. */
-	dataHome: Schema.optionalKey(Schema.String),
+	dataHome: S.optionalKey(S.String),
 	/** `$XDG_CACHE_HOME`. */
-	cacheHome: Schema.optionalKey(Schema.String),
+	cacheHome: S.optionalKey(S.String),
 	/** `$XDG_STATE_HOME`. */
-	stateHome: Schema.optionalKey(Schema.String),
+	stateHome: S.optionalKey(S.String),
 	/** `$XDG_RUNTIME_DIR`. Absent on most non-Linux systems. */
-	runtimeDir: Schema.optionalKey(Schema.String),
+	runtimeDir: S.optionalKey(S.String),
 	/** `%APPDATA%`, on Windows. */
-	appData: Schema.optionalKey(Schema.String),
+	appData: S.optionalKey(S.String),
 	/** `%LOCALAPPDATA%`, on Windows. */
-	localAppData: Schema.optionalKey(Schema.String),
+	localAppData: S.optionalKey(S.String),
 	/** `$XDG_CONFIG_DIRS`, split on `:`. Defaults to `["/etc/xdg"]`. */
-	configDirs: Schema.Array(Schema.String),
+	configDirs: S.Array(S.String),
 	/** `$XDG_DATA_DIRS`, split on `:`. Defaults to `["/usr/local/share", "/usr/share"]`. */
-	dataDirs: Schema.Array(Schema.String),
+	dataDirs: S.Array(S.String),
 }) {}
 
 /**
@@ -166,7 +171,7 @@ export class Xdg extends Context.Service<Xdg, XdgPaths>()("@beep/scratchpad/effe
 			 * read), not a missing key — so it is mapped rather than swallowed.
 			 */
 			const read = (name: string): Effect.Effect<string | undefined, XdgEnvError> =>
-				Effect.map(asEnvError(name, Config.option(Config.String(name))), Option.getOrUndefined<string>);
+				Effect.map(asEnvError(name, Config.option(Config.String(name))), O.getOrUndefined<string>);
 
 			const configHome = yield* read("XDG_CONFIG_HOME");
 			const dataHome = yield* read("XDG_DATA_HOME");

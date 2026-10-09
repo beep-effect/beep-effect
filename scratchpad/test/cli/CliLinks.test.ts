@@ -1,15 +1,19 @@
 // @effect-diagnostics strictEffectProvide:skip-file
-import { Schema } from "effect";
-import { Result } from "effect";
+import * as S from "effect/Schema";
+import * as Result from "effect/Result";
 import { assert, describe, it } from "@effect/vitest";
 import { CurrentRuntimeEnv } from "../../effected/env/index.ts";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
-import { ConfigProvider, Effect, Layer, Option, Path } from "effect";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import type { CliLinksShape, EditorLinks } from "../../effected/cli/index.ts";
 import { CliLinks } from "../../effected/cli/index.ts";
 import { linksOf } from "./helpers/renderContext.ts";
 
-const Json = Schema.fromJsonString(Schema.Unknown);
+const Json = S.fromJsonString(S.Unknown);
 
 const dir = MemoryFileSystem.directory();
 const file = MemoryFileSystem.file("");
@@ -30,7 +34,7 @@ interface Setup {
 /** Build `CliLinks` over a memfs volume with a fixed runtime and environment. */
 const links = (setup: Setup): Effect.Effect<CliLinksShape> => {
 	const runtime = CurrentRuntimeEnv.layerTest(
-		setup.terminal === undefined ? {} : { terminal: Option.some({ name: setup.terminal, version: Option.none() }) },
+		setup.terminal === undefined ? {} : { terminal: O.some({ name: setup.terminal, version: O.none() }) },
 	);
 	const layer = CliLinks.layer(setup.options).pipe(
 		Layer.provide(Layer.mergeAll(MemoryFileSystem.layerWith(setup.seed ?? {}), Path.layer, runtime)),
@@ -188,14 +192,14 @@ describe("CliLinks: the target of a link", () => {
 			const l = yield* target("vscode");
 			assert.deepStrictEqual(
 				l.target({ file: "/repo/src/a.ts", line: 3, col: 4 }),
-				Option.some("vscode://file/repo/src/a.ts:3:4"),
+				O.some("vscode://file/repo/src/a.ts:3:4"),
 			);
 			assert.deepStrictEqual(
 				l.target({ file: "/repo/src/a.ts", line: 3 }),
-				Option.some("vscode://file/repo/src/a.ts:3"),
+				O.some("vscode://file/repo/src/a.ts:3"),
 			);
-			assert.deepStrictEqual(l.target({ file: "/repo/src/a.ts" }), Option.some("vscode://file/repo/src/a.ts"));
-			assert.deepStrictEqual(l.target({ file: "/repo/src/a.ts", col: 4 }), Option.some("vscode://file/repo/src/a.ts"));
+			assert.deepStrictEqual(l.target({ file: "/repo/src/a.ts" }), O.some("vscode://file/repo/src/a.ts"));
+			assert.deepStrictEqual(l.target({ file: "/repo/src/a.ts", col: 4 }), O.some("vscode://file/repo/src/a.ts"));
 		}),
 	);
 
@@ -204,7 +208,7 @@ describe("CliLinks: the target of a link", () => {
 			const l = yield* target("file");
 			assert.deepStrictEqual(
 				l.target({ file: "/repo/src/a.ts", line: 3, col: 4 }),
-				Option.some("file:///repo/src/a.ts"),
+				O.some("file:///repo/src/a.ts"),
 			);
 		}),
 	);
@@ -212,25 +216,25 @@ describe("CliLinks: the target of a link", () => {
 	it.effect("off has no file target, but a URL is a URL", () =>
 		Effect.gen(function* () {
 			const l = yield* target("off");
-			assert.deepStrictEqual(l.target({ file: "/repo/src/a.ts", line: 3 }), Option.none());
-			assert.deepStrictEqual(l.target({ url: "https://example.test/x" }), Option.some("https://example.test/x"));
+			assert.deepStrictEqual(l.target({ file: "/repo/src/a.ts", line: 3 }), O.none());
+			assert.deepStrictEqual(l.target({ url: "https://example.test/x" }), O.some("https://example.test/x"));
 			const v = yield* target("vscode");
-			assert.deepStrictEqual(v.target({ url: "https://example.test/x" }), Option.some("https://example.test/x"));
+			assert.deepStrictEqual(v.target({ url: "https://example.test/x" }), O.some("https://example.test/x"));
 		}),
 	);
 
 	it.effect("a relative path resolves against cwd", () =>
 		Effect.gen(function* () {
 			const l = yield* target("vscode", "/repo/pkg");
-			assert.deepStrictEqual(l.target({ file: "src/a.ts", line: 1 }), Option.some("vscode://file/repo/pkg/src/a.ts:1"));
-			assert.deepStrictEqual(l.target({ file: "../x.ts" }), Option.some("vscode://file/repo/x.ts"));
+			assert.deepStrictEqual(l.target({ file: "src/a.ts", line: 1 }), O.some("vscode://file/repo/pkg/src/a.ts:1"));
+			assert.deepStrictEqual(l.target({ file: "../x.ts" }), O.some("vscode://file/repo/x.ts"));
 		}),
 	);
 
 	it.effect("the path is URL-encoded per RFC 3986 with its slashes kept: spaces, #, %, ?, unicode, brackets", () =>
 		Effect.gen(function* () {
 			const l = yield* target("file");
-			const enc = (file: string) => Option.getOrThrow(l.target({ file }));
+			const enc = (file: string) => O.getOrThrow(l.target({ file }));
 			assert.strictEqual(enc("/repo/my dir/a b.ts"), "file:///repo/my%20dir/a%20b.ts");
 			assert.strictEqual(enc("/repo/a#b.ts"), "file:///repo/a%23b.ts");
 			assert.strictEqual(enc("/repo/100%.ts"), "file:///repo/100%25.ts");
@@ -245,7 +249,7 @@ describe("CliLinks: the target of a link", () => {
 			const v = yield* target("vscode");
 			assert.deepStrictEqual(
 				v.target({ file: "/repo/my dir/a.ts", line: 2, col: 3 }),
-				Option.some("vscode://file/repo/my%20dir/a.ts:2:3"),
+				O.some("vscode://file/repo/my%20dir/a.ts:2:3"),
 			);
 		}),
 	);
@@ -256,19 +260,19 @@ describe("CliLinks: the target of a link", () => {
 			const vscode = yield* target("vscode");
 			for (const path of ["C:\\x\\y.ts", "C:/x/y.ts", "c:\\x\\y.ts"]) {
 				const drive = path.slice(0, 1);
-				assert.deepStrictEqual(file.target({ file: path, line: 3 }), Option.some(`file:///${drive}:/x/y.ts`), path);
+				assert.deepStrictEqual(file.target({ file: path, line: 3 }), O.some(`file:///${drive}:/x/y.ts`), path);
 				assert.deepStrictEqual(
 					vscode.target({ file: path, line: 3, col: 4 }),
-					Option.some(`vscode://file/${drive}:/x/y.ts:3:4`),
+					O.some(`vscode://file/${drive}:/x/y.ts:3:4`),
 					path,
 				);
 			}
-			assert.deepStrictEqual(file.target({ file: "C:\\my dir\\a#b.ts" }), Option.some("file:///C:/my%20dir/a%23b.ts"));
+			assert.deepStrictEqual(file.target({ file: "C:\\my dir\\a#b.ts" }), O.some("file:///C:/my%20dir/a%23b.ts"));
 			// The same through layerTest, which has no filesystem and no Path.
 			const test = yield* CliLinks.pipe(Effect.provide(CliLinks.layerTest("file")));
-			assert.deepStrictEqual(test.target({ file: "D:\\a\\b.ts" }), Option.some("file:///D:/a/b.ts"));
+			assert.deepStrictEqual(test.target({ file: "D:\\a\\b.ts" }), O.some("file:///D:/a/b.ts"));
 			// A drive-relative path ("C:x.ts") is not absolute, so it has no link without a Path to resolve it.
-			assert.deepStrictEqual(test.target({ file: "C:x.ts" }), Option.none());
+			assert.deepStrictEqual(test.target({ file: "C:x.ts" }), O.none());
 		}),
 	);
 
@@ -279,10 +283,10 @@ describe("CliLinks: the target of a link", () => {
 				assert.strictEqual(l.mode, mode);
 			}
 			const v = yield* CliLinks.pipe(Effect.provide(CliLinks.layerTest("vscode")));
-			assert.deepStrictEqual(v.target({ file: "/a/b.ts", line: 1 }), Option.some("vscode://file/a/b.ts:1"));
+			assert.deepStrictEqual(v.target({ file: "/a/b.ts", line: 1 }), O.some("vscode://file/a/b.ts:1"));
 			assert.deepStrictEqual(
 				v.target({ file: "relative.ts" }),
-				Option.none(),
+				O.none(),
 				"with no cwd, a relative path has no link",
 			);
 		}),
@@ -362,12 +366,12 @@ describe("CliLinks.linker: the RenderContext.link policy", () => {
 					"ftp://files.test/x",
 					"ssh://host/repo",
 				]) {
-					assert.strictEqual(human({ url }, "label"), "label", Result.getOrThrow(Schema.encodeUnknownResult(Json)(url)));
+					assert.strictEqual(human({ url }, "label"), "label", Result.getOrThrow(S.encodeUnknownResult(Json)(url)));
 				}
 				// The service itself has no target for one either, so no other caller of `target` gets one.
 				const l = yield* CliLinks.pipe(Effect.provide(CliLinks.layerTest("vscode")));
-				assert.deepStrictEqual(l.target({ url: "javascript:alert(1)" }), Option.none());
-				assert.deepStrictEqual(l.target({ url: "data:text/html,x" }), Option.none());
+				assert.deepStrictEqual(l.target({ url: "javascript:alert(1)" }), O.none());
+				assert.deepStrictEqual(l.target({ url: "data:text/html,x" }), O.none());
 			}),
 	);
 
@@ -386,7 +390,7 @@ describe("CliLinks.linker: the RenderContext.link policy", () => {
 				"#fragment",
 				"relative/path.html",
 			]) {
-				assert.strictEqual(linksOf(human({ url }, "label")).pairs, 1, Result.getOrThrow(Schema.encodeUnknownResult(Json)(url)));
+				assert.strictEqual(linksOf(human({ url }, "label")).pairs, 1, Result.getOrThrow(S.encodeUnknownResult(Json)(url)));
 			}
 		}),
 	);
@@ -395,7 +399,7 @@ describe("CliLinks.linker: the RenderContext.link policy", () => {
 		"a custom service that hands back an unsafe URL still gets the label: the linker checks what it writes",
 		() =>
 			Effect.gen(function* () {
-				const hostile: CliLinksShape = { mode: "vscode", target: () => Option.some("javascript:alert(1)") };
+				const hostile: CliLinksShape = { mode: "vscode", target: () => O.some("javascript:alert(1)") };
 				const out = CliLinks.linker({ links: hostile, hyperlinks: true, audience: "human" })(
 					{ file: "/a.ts" },
 					"label",
@@ -419,13 +423,13 @@ describe("CliLinks.linker: the RenderContext.link policy", () => {
 			];
 			for (const out of outs) {
 				const links = linksOf(out);
-				assert.strictEqual(links.pairs, 1, Result.getOrThrow(Schema.encodeUnknownResult(Json)(out)));
-				assert.isTrue(links.balanced, Result.getOrThrow(Schema.encodeUnknownResult(Json)(out)));
+				assert.strictEqual(links.pairs, 1, Result.getOrThrow(S.encodeUnknownResult(Json)(out)));
+				assert.isTrue(links.balanced, Result.getOrThrow(S.encodeUnknownResult(Json)(out)));
 				assert.strictEqual(links.wrapped, "label");
 				// Four ESC in all: the open and close sequences' introducer and ST each. Nothing else.
-				assert.strictEqual(out.split("\u001B").length - 1, 4, Result.getOrThrow(Schema.encodeUnknownResult(Json)(out)));
+				assert.strictEqual(out.split("\u001B").length - 1, 4, Result.getOrThrow(S.encodeUnknownResult(Json)(out)));
 				// biome-ignore lint/suspicious/noControlCharactersInRegex: asserting their absence is the point
-				assert.notMatch(out.replace(/\u001B\]8;;|\u001B\\/g, ""), /[\u0000-\u001F\u007F-\u009F]/, Result.getOrThrow(Schema.encodeUnknownResult(Json)(out)));
+				assert.notMatch(out.replace(/\u001B\]8;;|\u001B\\/g, ""), /[\u0000-\u001F\u007F-\u009F]/, Result.getOrThrow(S.encodeUnknownResult(Json)(out)));
 			}
 		}),
 	);

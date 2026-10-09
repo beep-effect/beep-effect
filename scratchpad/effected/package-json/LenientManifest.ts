@@ -14,7 +14,11 @@
 //   @effected/npm Manifest — shape-blind outside the four dependency fields.
 //   PackageJsonFormat — decode-free text path.
 
-import { Cause, Effect, Exit, Result, Schema } from "effect";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { ExportsField, PackageDecodeError, PublishConfigField } from "./Package.ts";
 import { PackageJsonSyntaxError } from "./PackageJsonFormat.ts";
 
@@ -40,17 +44,17 @@ export interface LenientFieldIssue {
 	readonly value: unknown;
 }
 
-const LenientFieldIssueSchema = Schema.Struct({
-	field: Schema.String,
-	expected: Schema.String,
-	value: Schema.Unknown,
+const LenientFieldIssueSchema = S.Struct({
+	field: S.String,
+	expected: S.String,
+	value: S.Unknown,
 });
 
 // ── Permissive field shapes ─────────────────────────────────────────────────
 
-const StringRecord = Schema.Record(Schema.String, Schema.String);
-const UnknownRecord = Schema.Record(Schema.String, Schema.Unknown);
-const StringOrRecord = Schema.Union([Schema.String, UnknownRecord]);
+const StringRecord = S.Record(S.String, S.String);
+const UnknownRecord = S.Record(S.String, S.Unknown);
+const StringOrRecord = S.Union([S.String, UnknownRecord]);
 
 // ── The permissive-shape guards backing the sift ────────────────────────────
 
@@ -144,7 +148,7 @@ const sift = (raw: Record<string, unknown>): LenientManifest => {
 	return LenientManifest.make({ ...known, rest, issues } as Parameters<typeof LenientManifest.make>[0]);
 };
 
-const decodeRecord = Schema.decodeUnknownExit(UnknownRecord);
+const decodeRecord = S.decodeUnknownExit(UnknownRecord);
 
 // ── Model ───────────────────────────────────────────────────────────────────
 
@@ -196,41 +200,41 @@ const decodeRecord = Schema.decodeUnknownExit(UnknownRecord);
  *
  * @public
  */
-export class LenientManifest extends Schema.Class<LenientManifest>("LenientManifest")({
-	name: Schema.optionalKey(Schema.String),
-	version: Schema.optionalKey(Schema.String),
-	description: Schema.optionalKey(Schema.String),
-	private: Schema.optionalKey(Schema.Boolean),
-	type: Schema.optionalKey(Schema.String),
-	main: Schema.optionalKey(Schema.String),
-	license: Schema.optionalKey(Schema.String),
-	author: Schema.optionalKey(StringOrRecord),
-	contributors: Schema.optionalKey(Schema.Array(StringOrRecord)),
-	maintainers: Schema.optionalKey(Schema.Array(StringOrRecord)),
-	keywords: Schema.optionalKey(Schema.Array(Schema.String)),
-	repository: Schema.optionalKey(StringOrRecord),
-	bugs: Schema.optionalKey(StringOrRecord),
-	funding: Schema.optionalKey(Schema.Union([StringOrRecord, Schema.Array(StringOrRecord)])),
-	homepage: Schema.optionalKey(Schema.String),
-	dependencies: Schema.optionalKey(StringRecord),
-	devDependencies: Schema.optionalKey(StringRecord),
-	peerDependencies: Schema.optionalKey(StringRecord),
-	optionalDependencies: Schema.optionalKey(StringRecord),
-	peerDependenciesMeta: Schema.optionalKey(UnknownRecord),
-	scripts: Schema.optionalKey(StringRecord),
-	bin: Schema.optionalKey(Schema.Union([Schema.String, StringRecord])),
-	engines: Schema.optionalKey(StringRecord),
-	exports: Schema.optionalKey(ExportsField),
-	publishConfig: Schema.optionalKey(PublishConfigField),
-	packageManager: Schema.optionalKey(Schema.String),
-	devEngines: Schema.optionalKey(UnknownRecord),
+export class LenientManifest extends S.Class<LenientManifest>("LenientManifest")({
+	name: S.optionalKey(S.String),
+	version: S.optionalKey(S.String),
+	description: S.optionalKey(S.String),
+	private: S.optionalKey(S.Boolean),
+	type: S.optionalKey(S.String),
+	main: S.optionalKey(S.String),
+	license: S.optionalKey(S.String),
+	author: S.optionalKey(StringOrRecord),
+	contributors: StringOrRecord.pipe(S.Array, S.optionalKey),
+	maintainers: StringOrRecord.pipe(S.Array, S.optionalKey),
+	keywords: S.String.pipe(S.Array, S.optionalKey),
+	repository: S.optionalKey(StringOrRecord),
+	bugs: S.optionalKey(StringOrRecord),
+	funding: S.optionalKey(S.Union([StringOrRecord, S.Array(StringOrRecord)])),
+	homepage: S.optionalKey(S.String),
+	dependencies: S.optionalKey(StringRecord),
+	devDependencies: S.optionalKey(StringRecord),
+	peerDependencies: S.optionalKey(StringRecord),
+	optionalDependencies: S.optionalKey(StringRecord),
+	peerDependenciesMeta: S.optionalKey(UnknownRecord),
+	scripts: S.optionalKey(StringRecord),
+	bin: S.optionalKey(S.Union([S.String, StringRecord])),
+	engines: S.optionalKey(StringRecord),
+	exports: S.optionalKey(ExportsField),
+	publishConfig: S.optionalKey(PublishConfigField),
+	packageManager: S.optionalKey(S.String),
+	devEngines: S.optionalKey(UnknownRecord),
 	/**
 	 * Unknown top-level keys, plus every degraded known field's raw value,
 	 * verbatim. Always present after a lenient decode (possibly empty).
 	 */
-	rest: Schema.optionalKey(UnknownRecord),
+	rest: S.optionalKey(UnknownRecord),
 	/** The degradations collected by the decode — empty when nothing degraded. */
-	issues: Schema.Array(LenientFieldIssueSchema),
+	issues: S.Array(LenientFieldIssueSchema),
 }) {
 	/**
 	 * Decode an unknown JSON value leniently, degrading malformed fields instead

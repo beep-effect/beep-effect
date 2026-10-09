@@ -10,7 +10,7 @@
 // convention passes `versionPrefix: "v"` explicitly. Git tag history is not an
 // API, so changing a default here would not rewrite a consumer's existing tags.
 
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 
 /**
  * Whether one shared tag names a whole release, or one tag names each package.
@@ -22,7 +22,7 @@ import { Schema } from "effect";
  *
  * @public
  */
-export const TagStyle = Schema.Literals(["single", "scoped"]);
+export const TagStyle = S.Literals(["single", "scoped"]);
 
 /**
  * The decoded type of {@link (TagStyle:variable)}: `"single" | "scoped"`.
@@ -140,15 +140,15 @@ export interface TrackingTagOptions {
  *
  * @public
  */
-export class TrackingTag extends Schema.Class<TrackingTag>("TrackingTag")({
+export class TrackingTag extends S.Class<TrackingTag>("TrackingTag")({
 	/** The tag string exactly as it appears in git. */
-	value: Schema.NonEmptyString,
+	value: S.NonEmptyString,
 	/** The package the alias namespaces; absent on a bare `v1`. */
-	packageName: Schema.optionalKey(Schema.NonEmptyString),
+	packageName: S.optionalKey(S.NonEmptyString),
 	/** The major version the alias tracks. */
-	major: Schema.Int,
+	major: S.Int,
 	/** The minor version, on a `v1.2`-precision alias; absent on `v1`. */
-	minor: Schema.optionalKey(Schema.Int),
+	minor: S.optionalKey(S.Int),
 }) {
 	/** Whether this alias tracks a whole major line, or one minor line inside it. */
 	get precision(): "major" | "minor" {
@@ -316,13 +316,13 @@ export const classifyTag = (tag: string): TagClassification => {
  *
  * @public
  */
-export class ReleaseTag extends Schema.Class<ReleaseTag>("ReleaseTag")({
+export class ReleaseTag extends S.Class<ReleaseTag>("ReleaseTag")({
 	/** The tag string exactly as it appears in git. */
-	value: Schema.NonEmptyString,
+	value: S.NonEmptyString,
 	/** The package the tag names; absent on a workspace-wide single tag. */
-	packageName: Schema.optionalKey(Schema.NonEmptyString),
+	packageName: S.optionalKey(S.NonEmptyString),
 	/** The version the tag names, without any prefix. */
-	version: Schema.NonEmptyString,
+	version: S.NonEmptyString,
 	/** Which style produced it. */
 	style: TagStyle,
 }) {

@@ -1,4 +1,8 @@
-import { Context, Effect, Layer, Option, Schema } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { GitHubClient } from "./GitHubClient.ts";
 import { GitHubError } from "./GitHubError.ts";
 import type { GitHubGraphQLError } from "./GraphQL.ts";
@@ -12,7 +16,7 @@ const CreateLinkedBranch = GraphQLDocument.make({
     linkedBranch { id }
   }
 }`,
-  response: Schema.Struct({}),
+  response: S.Struct({}),
 })<{
   readonly issueId: string;
   readonly name: string;
@@ -68,7 +72,7 @@ export interface GitBranchShape {
   /** The commit the branch points at. Fails `notFound` when it does not exist. */
   readonly sha: (name: string) => Effect.Effect<string, GitHubError, Repo>;
   /** As {@link GitBranchShape.sha}, with absence as `Option.none`. */
-  readonly shaOption: (name: string) => Effect.Effect<Option.Option<string>, GitHubError, Repo>;
+  readonly shaOption: (name: string) => Effect.Effect<O.Option<string>, GitHubError, Repo>;
   /** Force the branch to `sha`. Fails `notFound` when it does not exist. */
   readonly reset: (name: string, sha: string) => Effect.Effect<void, GitHubError, Repo>;
   /** Delete the branch. */
@@ -237,8 +241,8 @@ const make = (client: GitHubClient["Service"]): GitBranchShape => {
   const shaOption = Effect.fn("GitBranch.shaOption")(function* (branch: string) {
     yield* Effect.annotateCurrentSpan({ branch });
     return yield* readRef("GitBranch.shaOption", branch).pipe(
-      Effect.map((ref) => Option.some(ref.object.sha)),
-      Effect.catchIf(GitHubError.hasKind("notFound"), () => Effect.succeed(Option.none<string>())),
+      Effect.map((ref) => O.some(ref.object.sha)),
+      Effect.catchIf(GitHubError.hasKind("notFound"), () => Effect.succeed(O.none<string>())),
     );
   });
 
@@ -248,7 +252,7 @@ const make = (client: GitHubClient["Service"]): GitBranchShape => {
     reset,
     exists: Effect.fn("GitBranch.exists")(function* (branch: string) {
       yield* Effect.annotateCurrentSpan({ branch });
-      return yield* Effect.map(shaOption(branch), Option.isSome);
+      return yield* Effect.map(shaOption(branch), O.isSome);
     }),
     sha: Effect.fn("GitBranch.sha")(function* (branch: string) {
       yield* Effect.annotateCurrentSpan({ branch });

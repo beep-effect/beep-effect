@@ -1,15 +1,13 @@
-import {
-  Config,
-  Context,
-  DateTime,
-  Duration,
-  Effect,
-  Layer,
-  Option,
-  PlatformError,
-  Result,
-  Schema,
-} from "effect";
+import * as Config from "effect/Config";
+import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as PlatformError from "effect/PlatformError";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import type { GitConfigScope, GitInvocation } from "./GitCommand.ts";
 import { GitCommand } from "./GitCommand.ts";
@@ -18,7 +16,7 @@ import { runCollected } from "./internal/run.ts";
 
 /** git's own ceiling: a run that has not answered in 30s is not going to. */
 const GIT_TIMEOUT = Duration.seconds(30);
-const encodeJsonString = Schema.encodeEffect(Schema.fromJsonString(Schema.String));
+const encodeJsonString = S.encodeEffect(S.fromJsonString(S.String));
 
 /**
  * The environment EVERY `Git` invocation is spawned with. A network-touching
@@ -158,13 +156,13 @@ const sshProgram = (command: string): string | undefined => {
  *   caller's decision stands and no pin is applied — a caller who explicitly
  *   asked to be prompted owns the resulting wait.
  */
-const withBatchMode = (command: string): Option.Option<string> => {
+const withBatchMode = (command: string): O.Option<string> => {
   const trimmed = command.trim();
   const program = sshProgram(trimmed);
   if (program === undefined || !OPENSSH_PROGRAM.test(program) || DECIDES_BATCH_MODE.test(trimmed)) {
-    return Option.none();
+    return O.none();
   }
-  return Option.some(`${trimmed} ${BATCH_MODE}`);
+  return O.some(`${trimmed} ${BATCH_MODE}`);
 };
 
 /**
@@ -192,7 +190,7 @@ const withBatchMode = (command: string): Option.Option<string> => {
  * only the ssh-level pin is skipped.
  */
 const sshEnv = (resolved: string): Record<string, string> =>
-  Option.match(withBatchMode(resolved), {
+  O.match(withBatchMode(resolved), {
     onNone: () => ({ ...BASE_ENV }),
     onSome: (pinned) => ({ ...BASE_ENV, GIT_SSH_COMMAND: pinned }),
   });
@@ -225,7 +223,7 @@ const sshEnv = (resolved: string): Record<string, string> =>
  *
  * @public
  */
-export class GitCommandError extends Schema.TaggedError<GitCommandError>()("GitCommandError", {
+export class GitCommandError extends S.TaggedError<GitCommandError>()("GitCommandError", {
   /**
    * Discriminates a pre-spawn guard rejection from a genuine git failure.
    * `"refused"` — a pre-spawn guard (an option-like ref) rejected the
@@ -233,7 +231,7 @@ export class GitCommandError extends Schema.TaggedError<GitCommandError>()("GitC
    * and exited non-zero, or the spawn/IO itself failed. Composed retry/fallback
    * logic routes on this instead of matching `detail` prose.
    */
-  kind: Schema.Literals(["refused", "failed"]),
+  kind: S.Literals(["refused", "failed"]),
   /**
    * The REDACTED argument vector, without the leading `git`.
    *
@@ -244,20 +242,20 @@ export class GitCommandError extends Schema.TaggedError<GitCommandError>()("GitC
    * `userinfo@`). The raw argv is never persisted in an error value, and
    * `message` renders this redacted vector.
    */
-  args: Schema.Array(Schema.String),
+  args: S.Array(S.String),
   /** The working directory the command ran in. */
-  cwd: Schema.String,
+  cwd: S.String,
   /** git's exit code, when it produced one. */
-  exitCode: Schema.optionalKey(Schema.Finite),
+  exitCode: S.optionalKey(S.Finite),
   /** git's stderr, captured under `LC_ALL=C`. */
-  stderr: Schema.String,
+  stderr: S.String,
   /**
    * A human-readable reason, set whenever an exit code does not sum up the
    * failure: an absorbed spawn failure, a timeout, a pre-spawn guard refusal,
    * or output git produced that the member could not parse. `message` renders
    * it verbatim when present.
    */
-  detail: Schema.optionalKey(Schema.String),
+  detail: S.optionalKey(S.String),
 }) {
   /** Renders the invocation and its failure into a one-line message. */
   override get message(): string {
@@ -272,9 +270,9 @@ export class GitCommandError extends Schema.TaggedError<GitCommandError>()("GitC
  *
  * @public
  */
-export class NotARepositoryError extends Schema.TaggedError<NotARepositoryError>()("NotARepositoryError", {
+export class NotARepositoryError extends S.TaggedError<NotARepositoryError>()("NotARepositoryError", {
   /** The working directory that is not a git repository. */
-  cwd: Schema.String,
+  cwd: S.String,
 }) {
   /** Renders the failing directory into a one-line message. */
   override get message(): string {
@@ -287,11 +285,11 @@ export class NotARepositoryError extends Schema.TaggedError<NotARepositoryError>
  *
  * @public
  */
-export class UnknownRefError extends Schema.TaggedError<UnknownRefError>()("UnknownRefError", {
+export class UnknownRefError extends S.TaggedError<UnknownRefError>()("UnknownRefError", {
   /** The ref (or ref range) that failed to resolve. */
-  ref: Schema.String,
+  ref: S.String,
   /** The working directory the ref was resolved against. */
-  cwd: Schema.String,
+  cwd: S.String,
 }) {
   /** Renders the unresolvable ref into a one-line message. */
   override get message(): string {
@@ -311,11 +309,11 @@ export class UnknownRefError extends Schema.TaggedError<UnknownRefError>()("Unkn
  *
  * @public
  */
-export class NonFastForwardError extends Schema.TaggedError<NonFastForwardError>()("NonFastForwardError", {
+export class NonFastForwardError extends S.TaggedError<NonFastForwardError>()("NonFastForwardError", {
   /** The working directory the push ran in. */
-  cwd: Schema.String,
+  cwd: S.String,
   /** The refspec that was rejected, when the caller passed one. */
-  refspec: Schema.optionalKey(Schema.String),
+  refspec: S.optionalKey(S.String),
 }) {
   /** Renders the rejected push into a one-line message. */
   override get message(): string {
@@ -338,9 +336,9 @@ export class NonFastForwardError extends Schema.TaggedError<NonFastForwardError>
  *
  * @public
  */
-export class MergeConflictError extends Schema.TaggedError<MergeConflictError>()("MergeConflictError", {
+export class MergeConflictError extends S.TaggedError<MergeConflictError>()("MergeConflictError", {
   /** The working directory the merge ran in. */
-  cwd: Schema.String,
+  cwd: S.String,
 }) {
   /** Renders the conflicted merge into a one-line message. */
   override get message(): string {
@@ -361,9 +359,9 @@ export class MergeConflictError extends Schema.TaggedError<MergeConflictError>()
  *
  * @public
  */
-export class DirtyWorktreeError extends Schema.TaggedError<DirtyWorktreeError>()("DirtyWorktreeError", {
+export class DirtyWorktreeError extends S.TaggedError<DirtyWorktreeError>()("DirtyWorktreeError", {
   /** The working directory whose local changes blocked the operation. */
-  cwd: Schema.String,
+  cwd: S.String,
 }) {
   /** Renders the blocked operation into a one-line message. */
   override get message(): string {
@@ -376,15 +374,15 @@ export class DirtyWorktreeError extends Schema.TaggedError<DirtyWorktreeError>()
  *
  * @public
  */
-export class LsTreeEntry extends Schema.Class<LsTreeEntry>("LsTreeEntry")({
+export class LsTreeEntry extends S.Class<LsTreeEntry>("LsTreeEntry")({
   /** The entry's file mode, e.g. `100644`. */
-  mode: Schema.String,
+  mode: S.String,
   /** The kind of object the entry points at. */
-  type: Schema.Literals(["blob", "tree", "commit"]),
+  type: S.Literals(["blob", "tree", "commit"]),
   /** The object id the entry points at. */
-  oid: Schema.String,
+  oid: S.String,
   /** The entry's path, relative to the tree root. May contain spaces or newlines. */
-  path: Schema.String,
+  path: S.String,
 }) {
 }
 
@@ -399,13 +397,13 @@ export class LsTreeEntry extends Schema.Class<LsTreeEntry>("LsTreeEntry")({
  *
  * @public
  */
-export class NameStatusEntry extends Schema.Class<NameStatusEntry>("NameStatusEntry")({
+export class NameStatusEntry extends S.Class<NameStatusEntry>("NameStatusEntry")({
   /**
    * The change kind, decoded from git's one-letter status code. `T` decodes
    * to `"typeChanged"` and `B` to `"broken"` — this package's spelling, not
    * porcelain's `"typechange"`.
    */
-  status: Schema.Literals([
+  status: S.Literals([
     "added",
     "modified",
     "deleted",
@@ -417,9 +415,9 @@ export class NameStatusEntry extends Schema.Class<NameStatusEntry>("NameStatusEn
     "broken",
   ]),
   /** The entry's path — for a rename or copy, the NEW path. */
-  path: Schema.String,
+  path: S.String,
   /** The pre-rename/pre-copy path; present only for renamed/copied entries. */
-  oldPath: Schema.optionalKey(Schema.String),
+  oldPath: S.optionalKey(S.String),
 }) {
 }
 
@@ -707,13 +705,13 @@ const parseNameStatus = (output: string): ReadonlyArray<NameStatusEntry> => {
  *
  * @public
  */
-export class CommitInfo extends Schema.Class<CommitInfo>("CommitInfo")({
+export class CommitInfo extends S.Class<CommitInfo>("CommitInfo")({
   /** The commit's full object id (`%H`). */
-  sha: Schema.String,
+  sha: S.String,
   /** git's `%G?` signature verdict: Good, Bad, Unknown validity, eXpired, expired-key (Y), Revoked, cannot-check (E), None. */
-  signatureStatus: Schema.Literals(["G", "B", "U", "X", "Y", "R", "E", "N"]),
+  signatureStatus: S.Literals(["G", "B", "U", "X", "Y", "R", "E", "N"]),
   /** The raw commit message (`%B`), untrimmed — includes git's trailing format newline. */
-  message: Schema.String,
+  message: S.String,
 }) {
 }
 
@@ -738,19 +736,19 @@ export class CommitInfo extends Schema.Class<CommitInfo>("CommitInfo")({
  *
  * @public
  */
-export class CommitLogEntry extends Schema.Class<CommitLogEntry>("CommitLogEntry")({
+export class CommitLogEntry extends S.Class<CommitLogEntry>("CommitLogEntry")({
   /** The commit's full object id (`%H`). */
-  sha: Schema.String,
+  sha: S.String,
   /** When the change was authored (`%aI`), as a UTC instant. */
-  authoredAt: Schema.DateTimeUtcFromString,
+  authoredAt: S.DateTimeUtcFromString,
   /** When the commit object was written (`%cI`), as a UTC instant. */
-  committedAt: Schema.DateTimeUtcFromString,
+  committedAt: S.DateTimeUtcFromString,
   /** The author's name (`%an`). */
-  authorName: Schema.String,
+  authorName: S.String,
   /** The author's email address (`%ae`). */
-  authorEmail: Schema.String,
+  authorEmail: S.String,
   /** The paths this commit touched, root-relative and raw; empty when it touched none. */
-  paths: Schema.Array(Schema.String),
+  paths: S.Array(S.String),
 }) {
 }
 
@@ -790,7 +788,7 @@ const parseLog = (output: string): Result.Result<ReadonlyArray<CommitLogEntry>, 
     }
     const authoredAt = DateTime.make(authoredAtIso);
     const committedAt = DateTime.make(committedAtIso);
-    if (Option.isNone(authoredAt) || Option.isNone(committedAt)) {
+    if (O.isNone(authoredAt) || O.isNone(committedAt)) {
       return Result.fail(`a log record carried an undecodable date ("${authoredAtIso}", "${committedAtIso}")`);
     }
     const rest = tokens.slice(5);
@@ -815,7 +813,7 @@ const parseLog = (output: string): Result.Result<ReadonlyArray<CommitLogEntry>, 
 };
 
 /** One two-letter porcelain v1 status axis code. */
-const porcelainCode = Schema.Literals([" ", "M", "T", "A", "D", "R", "C", "U", "?", "!"]);
+const porcelainCode = S.Literals([" ", "M", "T", "A", "D", "R", "C", "U", "?", "!"]);
 
 /**
  * Options for {@link StatusEntry.toLine} / {@link StatusEntry.format}: how a
@@ -838,15 +836,15 @@ export interface StatusRenderOptions {
  *
  * @public
  */
-export class StatusEntry extends Schema.Class<StatusEntry>("StatusEntry")({
+export class StatusEntry extends S.Class<StatusEntry>("StatusEntry")({
   /** The index-side status code (first porcelain column). */
   x: porcelainCode,
   /** The working-tree-side status code (second porcelain column). */
   y: porcelainCode,
   /** The entry's path — for a rename or copy, the NEW path. */
-  path: Schema.String,
+  path: S.String,
   /** The original path; present only on rename/copy entries. */
-  origPath: Schema.optionalKey(Schema.String),
+  origPath: S.optionalKey(S.String),
 }) {
   /**
    * Renders this entry back to one porcelain-shaped line: `XY <path>`.
@@ -953,15 +951,15 @@ const parseStatus = (output: string): ReadonlyArray<StatusEntry> => {
  *
  * @public
  */
-export class SubmoduleStatusEntry extends Schema.Class<SubmoduleStatusEntry>("SubmoduleStatusEntry")({
+export class SubmoduleStatusEntry extends S.Class<SubmoduleStatusEntry>("SubmoduleStatusEntry")({
   /** The decoded state prefix. */
-  state: Schema.Literals(["current", "uninitialized", "outOfSync", "conflict"]),
+  state: S.Literals(["current", "uninitialized", "outOfSync", "conflict"]),
   /** The submodule's checked-out (or, uninitialized, gitlink) commit sha. */
-  sha: Schema.String,
+  sha: S.String,
   /** The submodule's path relative to the superproject root. */
-  path: Schema.String,
+  path: S.String,
   /** The `git describe` suffix, present only for initialized submodules. */
-  describe: Schema.optionalKey(Schema.String),
+  describe: S.optionalKey(S.String),
 }) {
 }
 
@@ -1013,11 +1011,11 @@ const parseSubmoduleStatus = (output: string): ReadonlyArray<SubmoduleStatusEntr
  *
  * @public
  */
-export class LsRemoteEntry extends Schema.Class<LsRemoteEntry>("LsRemoteEntry")({
+export class LsRemoteEntry extends S.Class<LsRemoteEntry>("LsRemoteEntry")({
   /** The sha the advertised ref points at. */
-  sha: Schema.String,
+  sha: S.String,
   /** The full advertised refname, `^{}` peel suffix included. */
-  ref: Schema.String,
+  ref: S.String,
 }) {
   /**
    * The human-facing short name of an advertised refname: the
@@ -1084,13 +1082,13 @@ const parseLsRemote = (output: string): ReadonlyArray<LsRemoteEntry> =>
  *
  * @public
  */
-export class StashEntry extends Schema.Class<StashEntry>("StashEntry")({
+export class StashEntry extends S.Class<StashEntry>("StashEntry")({
   /** The reflog selector (`stash@{0}`) — the index other stash methods take. */
-  ref: Schema.String,
+  ref: S.String,
   /** The stash commit's sha. */
-  sha: Schema.String,
+  sha: S.String,
   /** The reflog subject: `WIP on <branch>: ...` or `On <branch>: <message>`. */
-  message: Schema.String,
+  message: S.String,
 }) {
 }
 
@@ -1110,13 +1108,13 @@ const parseStashList = (output: string): ReadonlyArray<StashEntry> =>
  *
  * @public
  */
-export class BranchEntry extends Schema.Class<BranchEntry>("BranchEntry")({
+export class BranchEntry extends S.Class<BranchEntry>("BranchEntry")({
   /** The short branch name (`main`, or `origin/main` for a remote branch). */
-  name: Schema.String,
+  name: S.String,
   /** The branch tip's sha. */
-  sha: Schema.String,
+  sha: S.String,
   /** Whether this branch is checked out in the current working tree. */
-  current: Schema.Boolean,
+  current: S.Boolean,
 }) {
 }
 
@@ -1141,16 +1139,16 @@ const parseBranchList = (output: string): ReadonlyArray<BranchEntry> =>
  *
  * @public
  */
-export class RefEntry extends Schema.Class<RefEntry>("RefEntry")({
+export class RefEntry extends S.Class<RefEntry>("RefEntry")({
   /** The full refname (`refs/tags/v1`). */
-  ref: Schema.String,
+  ref: S.String,
   /** The sha of the object the ref points at. */
-  sha: Schema.String,
+  sha: S.String,
   /**
    * The pointed-at object's type. An annotated tag is `tag` (the tag
    * object itself, not its target commit).
    */
-  objectType: Schema.Literals(["commit", "tag", "tree", "blob"]),
+  objectType: S.Literals(["commit", "tag", "tree", "blob"]),
 }) {
 }
 
@@ -1178,15 +1176,15 @@ const parseForEachRef = (output: string): ReadonlyArray<RefEntry> =>
  *
  * @public
  */
-export class ConfigListEntry extends Schema.Class<ConfigListEntry>("ConfigListEntry")({
+export class ConfigListEntry extends S.Class<ConfigListEntry>("ConfigListEntry")({
   /** The canonical dotted key (`section.subsection.key`). */
-  key: Schema.String,
+  key: S.String,
   /**
    * The raw value. A valueless key (git's boolean-true shorthand,
    * `[section]` + bare `key`) surfaces as the empty string — distinguish it
    * with `configGetAll` if the difference matters.
    */
-  value: Schema.String,
+  value: S.String,
 }) {
 }
 
@@ -1212,21 +1210,21 @@ const parseConfigList = (output: string): ReadonlyArray<ConfigListEntry> =>
  *
  * @public
  */
-export class WorktreeEntry extends Schema.Class<WorktreeEntry>("WorktreeEntry")({
+export class WorktreeEntry extends S.Class<WorktreeEntry>("WorktreeEntry")({
   /** The working tree's absolute path. */
-  path: Schema.String,
+  path: S.String,
   /** The checked-out commit sha; absent for a bare repository entry. */
-  head: Schema.optionalKey(Schema.String),
+  head: S.optionalKey(S.String),
   /** The checked-out branch's full refname; absent when detached or bare. */
-  branch: Schema.optionalKey(Schema.String),
+  branch: S.optionalKey(S.String),
   /** Whether the working tree is in detached-HEAD state. */
-  detached: Schema.Boolean,
+  detached: S.Boolean,
   /** Whether the entry is the bare repository itself. */
-  bare: Schema.Boolean,
+  bare: S.Boolean,
   /** Present when the worktree is locked; holds the lock reason (possibly empty). */
-  locked: Schema.optionalKey(Schema.String),
+  locked: S.optionalKey(S.String),
   /** Present when the worktree is prunable; holds the reason (possibly empty). */
-  prunable: Schema.optionalKey(Schema.String),
+  prunable: S.optionalKey(S.String),
 }) {
 }
 
@@ -1300,15 +1298,15 @@ const parseWorktreeList = (output: string): ReadonlyArray<WorktreeEntry> => {
  *
  * @public
  */
-export class LsFilesEntry extends Schema.Class<LsFilesEntry>("LsFilesEntry")({
+export class LsFilesEntry extends S.Class<LsFilesEntry>("LsFilesEntry")({
   /** The entry's file mode, e.g. `100644` — `160000` for a gitlink. */
-  mode: Schema.String,
+  mode: S.String,
   /** The staged object id. */
-  oid: Schema.String,
+  oid: S.String,
   /** The merge stage: `0` normally; `1`/`2`/`3` during an unresolved merge. */
-  stage: Schema.Finite,
+  stage: S.Finite,
   /** The entry's path, relative to `cwd`. May contain spaces or newlines. */
-  path: Schema.String,
+  path: S.String,
 }) {
 }
 
@@ -1411,11 +1409,11 @@ const rejectNonNaturalNumber = (
  */
 interface SshFromEnv {
   /** `GIT_SSH_COMMAND` — a full command line; the first rung. */
-  readonly command: Option.Option<string>;
+  readonly command: O.Option<string>;
   /** `GIT_SSH` — a program name with no argument support; the third rung. */
-  readonly program: Option.Option<string>;
+  readonly program: O.Option<string>;
   /** `GIT_SSH_VARIANT` — overrides git's basename inference of the grammar. */
-  readonly variant: Option.Option<string>;
+  readonly variant: O.Option<string>;
 }
 
 /** Builds the `Git.Service` shape over an already-resolved `ChildProcessSpawner`. */
@@ -1451,8 +1449,8 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
   const resolveSshEnv = Effect.fn("resolveSshEnv")(function* (cwd: string) {
     const [fromConfig, variantFromConfig] = yield* Effect.all(
       [
-        Option.isSome(ssh.command) ? Effect.succeed("") : readConfig(cwd, "core.sshCommand"),
-        Option.isSome(ssh.variant) ? Effect.succeed("") : readConfig(cwd, "ssh.variant"),
+        O.isSome(ssh.command) ? Effect.succeed("") : readConfig(cwd, "core.sshCommand"),
+        O.isSome(ssh.variant) ? Effect.succeed("") : readConfig(cwd, "ssh.variant"),
       ],
       { concurrency: "unbounded" },
     );
@@ -1460,21 +1458,21 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
     // The variant decides the argument GRAMMAR, so it is checked first: a
     // non-OpenSSH variant means `-o BatchMode=yes` is not a thing git's ssh
     // invocation understands, whatever the command happens to be named.
-    const variant = Option.getOrElse(ssh.variant, () => variantFromConfig)
+    const variant = O.getOrElse(ssh.variant, () => variantFromConfig)
       .trim()
       .toLowerCase();
     if (!OPENSSH_VARIANTS.has(variant)) {
       return { ...BASE_ENV };
     }
 
-    const command = Option.getOrElse(ssh.command, () => fromConfig).trim();
+    const command = O.getOrElse(ssh.command, () => fromConfig).trim();
     if (command !== "") {
       return sshEnv(command);
     }
     // No COMMAND anywhere, so GIT_SSH is the deciding rung if it is set. It
     // names a program and takes no arguments, so pinning anything here would
     // displace it rather than extend it — decline instead.
-    if (Option.isSome(ssh.program)) {
+    if (O.isSome(ssh.program)) {
       return { ...BASE_ENV };
     }
     return sshEnv("ssh");
@@ -1498,9 +1496,9 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
     const classified = yield* runFor(GitCommand.show(ref, path), cwd, "show");
     switch (classified._tag) {
       case "success":
-        return Option.some(classified.output);
+        return O.some(classified.output);
       case "absent":
-        return Option.none();
+        return O.none();
       case "notARepository":
         return yield* NotARepositoryError.make({ cwd });
       case "unknownRef":
@@ -1588,9 +1586,9 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
     const classified = yield* runFor(GitCommand.mergeBase(a, b), cwd, "quiet");
     switch (classified._tag) {
       case "success":
-        return Option.some(classified.output.trim());
+        return O.some(classified.output.trim());
       case "absent":
-        return Option.none();
+        return O.none();
       case "notARepository":
         return yield* NotARepositoryError.make({ cwd });
       case "unknownRef":
@@ -2242,10 +2240,10 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
       case "success": {
         const short = classified.output.trim();
         const prefix = `${remote}/`;
-        return Option.some(short.startsWith(prefix) ? short.slice(prefix.length) : short);
+        return O.some(short.startsWith(prefix) ? short.slice(prefix.length) : short);
       }
       case "absent":
-        return Option.none();
+        return O.none();
       case "notARepository":
         return yield* NotARepositoryError.make({ cwd });
       case "unknownRef":
@@ -2268,7 +2266,7 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
         const name = classified.output.trim();
         // A detached HEAD answers with the literal string "HEAD" (exit 0) —
         // "no current branch" is the honest typed answer, not a fake name.
-        return name === "HEAD" ? Option.none() : Option.some(name);
+        return name === "HEAD" ? O.none() : O.some(name);
       }
       case "notARepository":
         return yield* NotARepositoryError.make({ cwd });
@@ -2348,9 +2346,9 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
     const classified = yield* runFor(GitCommand.configGet(key, options?.scope), cwd, "quiet");
     switch (classified._tag) {
       case "success":
-        return Option.some(classified.output.trim());
+        return O.some(classified.output.trim());
       case "absent":
-        return Option.none();
+        return O.none();
       case "notARepository":
         return yield* NotARepositoryError.make({ cwd });
       case "unknownRef":
@@ -2371,9 +2369,9 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
     const classified = yield* runFor(GitCommand.remoteUrl(remote), cwd, "noSuchRemote");
     switch (classified._tag) {
       case "success":
-        return Option.some(classified.output.trim());
+        return O.some(classified.output.trim());
       case "absent":
-        return Option.none();
+        return O.none();
       case "notARepository":
         return yield* NotARepositoryError.make({ cwd });
       case "unknownRef":
@@ -3422,7 +3420,7 @@ export interface GitShape {
     cwd: string,
     ref: string,
     path: string,
-  ) => Effect.Effect<Option.Option<string>, GitCommandError | NotARepositoryError | UnknownRefError>;
+  ) => Effect.Effect<O.Option<string>, GitCommandError | NotARepositoryError | UnknownRefError>;
   /**
    * `git ls-tree -r -z <ref> [-- <pathspec>...]` — every path in the tree at
    * `ref`, recursively, optionally scoped to `pathspec`.
@@ -3463,7 +3461,7 @@ export interface GitShape {
     cwd: string,
     a: string,
     b: string,
-  ) => Effect.Effect<Option.Option<string>, GitCommandError | NotARepositoryError | UnknownRefError>;
+  ) => Effect.Effect<O.Option<string>, GitCommandError | NotARepositoryError | UnknownRefError>;
   /**
    * `git diff --name-only -z [--relative] <base>...<head>` — the paths that
    * differ. Pass `relative: true` to report paths relative to `cwd` and
@@ -3913,7 +3911,7 @@ export interface GitShape {
   readonly defaultBranch: (
     cwd: string,
     options?: { readonly remote?: string },
-  ) => Effect.Effect<Option.Option<string>, GitCommandError | NotARepositoryError | UnknownRefError>;
+  ) => Effect.Effect<O.Option<string>, GitCommandError | NotARepositoryError | UnknownRefError>;
   /**
    * `git rev-parse --abbrev-ref HEAD` — the current branch name, or
    * `Option.none` when `HEAD` is detached (the literal answer `"HEAD"`
@@ -3921,7 +3919,7 @@ export interface GitShape {
    */
   readonly currentBranch: (
     cwd: string,
-  ) => Effect.Effect<Option.Option<string>, GitCommandError | NotARepositoryError | UnknownRefError>;
+  ) => Effect.Effect<O.Option<string>, GitCommandError | NotARepositoryError | UnknownRefError>;
   /**
    * `git rev-parse --show-toplevel` — the absolute repository root path, trimmed.
    *
@@ -3966,12 +3964,12 @@ export interface GitShape {
     cwd: string,
     key: string,
     options?: { readonly scope?: GitConfigScope },
-  ) => Effect.Effect<Option.Option<string>, GitCommandError | NotARepositoryError | UnknownRefError>;
+  ) => Effect.Effect<O.Option<string>, GitCommandError | NotARepositoryError | UnknownRefError>;
   /** `git remote get-url <remote>` — the trimmed URL, or `Option.none` when the remote does not exist. */
   readonly remoteUrl: (
     cwd: string,
     options?: { readonly remote?: string },
-  ) => Effect.Effect<Option.Option<string>, GitCommandError | NotARepositoryError | UnknownRefError>;
+  ) => Effect.Effect<O.Option<string>, GitCommandError | NotARepositoryError | UnknownRefError>;
   /**
    * `git log -1 --format=%H%x00%G?%x00%B <ref>` — a single commit's sha,
    * signature verdict and raw (untrimmed) message. `ref` defaults to `HEAD`.
@@ -4511,10 +4509,10 @@ export class Git extends Context.Service<Git, GitShape>()("@beep/scratchpad/effe
       const read = (name: string) =>
         Config.String(name).pipe(
           Config.option,
-          Effect.orElseSucceed(() => Option.none<string>()),
+          Effect.orElseSucceed(() => O.none<string>()),
           // A blank value is treated as absent — an exported-but-empty
           // variable is not a configuration worth preserving.
-          Effect.map(Option.filter((value) => value.trim() !== "")),
+          Effect.map(O.filter((value) => value.trim() !== "")),
         );
       const [command, program, variant] = yield* Effect.all(
         [read("GIT_SSH_COMMAND"), read("GIT_SSH"), read("GIT_SSH_VARIANT")],

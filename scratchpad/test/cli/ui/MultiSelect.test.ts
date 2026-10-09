@@ -1,5 +1,9 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Cause, Effect, Exit, Option, Schema } from "effect";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { Cancelled, Fmt } from "../../../effected/cli/index.ts";
 import type { MultiSelectSection } from "../../../effected/cli/ui.ts";
 import { MultiSelect } from "../../../effected/cli/ui.ts";
@@ -80,11 +84,11 @@ describe("MultiSelect reducer", () => {
 
 	it("binds space, a, enter and q, and keeps page, home and end out of the help line", () => {
 		const named = (name: "space" | "enter" | "pagedown") => MultiSelect.keys.match({ _tag: "Named", name });
-		assert.deepStrictEqual(named("space"), Option.some("toggle"));
-		assert.deepStrictEqual(MultiSelect.keys.match({ _tag: "Char", char: "a" }), Option.some("toggleSection"));
-		assert.deepStrictEqual(named("enter"), Option.some("submit"));
-		assert.deepStrictEqual(MultiSelect.keys.match({ _tag: "Char", char: "q" }), Option.some("cancel"));
-		assert.deepStrictEqual(named("pagedown"), Option.some("pagedown"), "bound, though not shown");
+		assert.deepStrictEqual(named("space"), O.some("toggle"));
+		assert.deepStrictEqual(MultiSelect.keys.match({ _tag: "Char", char: "a" }), O.some("toggleSection"));
+		assert.deepStrictEqual(named("enter"), O.some("submit"));
+		assert.deepStrictEqual(MultiSelect.keys.match({ _tag: "Char", char: "q" }), O.some("cancel"));
+		assert.deepStrictEqual(named("pagedown"), O.some("pagedown"), "bound, though not shown");
 	});
 });
 
@@ -139,7 +143,7 @@ describe("MultiSelect.screen under CliUiTest", () => {
 			const handle = yield* CliUiTest.render(MultiSelect.screen({ message: "Promote which?", sections }));
 			yield* handle.type("q");
 			const error = yield* Effect.flip(handle.result);
-			assert.strictEqual(Schema.is(Cancelled)(error) ? error.reason : undefined, "escape");
+			assert.strictEqual(S.is(Cancelled)(error) ? error.reason : undefined, "escape");
 		}).pipe(Effect.scoped),
 	);
 

@@ -1,4 +1,10 @@
-import { Context, Effect, Layer, Redacted, Schema, Result, flow } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Redacted from "effect/Redacted";
+import * as S from "effect/Schema";
+import * as Result from "effect/Result";
+import { flow } from "effect/Function";
 import { HttpClient, HttpClientRequest } from "effect/http";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import { ActionEnvironment } from "./ActionEnvironment.ts";
@@ -10,7 +16,7 @@ import { unstubbed } from "./internal/unstubbed.ts";
  *
  * @public
  */
-export class OidcTokenError extends Schema.TaggedError<OidcTokenError>()("OidcTokenError", {
+export class OidcTokenError extends S.TaggedError<OidcTokenError>()("OidcTokenError", {
 	/**
 	 * `unavailable` — the runner did not publish the token-service variables,
 	 * which almost always means the workflow is missing `permissions: id-token:
@@ -20,13 +26,13 @@ export class OidcTokenError extends Schema.TaggedError<OidcTokenError>()("OidcTo
 	 * `missingClaims` — it decoded, but without the claims a provenance statement
 	 * needs.
 	 */
-	reason: Schema.Literals(["unavailable", "requestFailed", "malformedResponse", "malformedToken", "missingClaims"]),
+	reason: S.Literals(["unavailable", "requestFailed", "malformedResponse", "malformedToken", "missingClaims"]),
 	/** What was wrong, in one line. */
-	detail: Schema.optionalKey(Schema.String),
+	detail: S.optionalKey(S.String),
 	/** The HTTP status, when the token service answered. */
-	status: Schema.optionalKey(Schema.Finite),
+	status: S.optionalKey(S.Finite),
 	/** The underlying failure, preserved structurally. */
-	cause: Schema.optionalKey(Schema.Defect()),
+	cause: S.optionalKey(S.Defect()),
 }) {
 	override get message(): string {
 		switch (this.reason) {
@@ -56,37 +62,37 @@ export class OidcTokenError extends Schema.TaggedError<OidcTokenError>()("OidcTo
  *
  * @public
  */
-export class OidcClaims extends Schema.Class<OidcClaims>("OidcClaims")({
+export class OidcClaims extends S.Class<OidcClaims>("OidcClaims")({
 	/** The issuer, e.g. `https://token.actions.githubusercontent.com`. */
-	iss: Schema.String,
+	iss: S.String,
 	/** The full ref the workflow ran on. */
-	ref: Schema.String,
+	ref: S.String,
 	/** The commit. */
-	sha: Schema.String,
+	sha: S.String,
 	/** `owner/repo`. */
-	repository: Schema.String,
+	repository: S.String,
 	/** The event that triggered the run. */
-	event_name: Schema.String,
+	event_name: S.String,
 	/** The reusable-workflow ref, which is what a verifier pins against. */
-	job_workflow_ref: Schema.String,
+	job_workflow_ref: S.String,
 	/** The calling workflow's ref. */
-	workflow_ref: Schema.String,
+	workflow_ref: S.String,
 	/** The numeric repository id, as a string. */
-	repository_id: Schema.String,
+	repository_id: S.String,
 	/** The numeric owner id, as a string. */
-	repository_owner_id: Schema.String,
+	repository_owner_id: S.String,
 	/** `github-hosted` or `self-hosted`. */
-	runner_environment: Schema.String,
+	runner_environment: S.String,
 	/** The run id, as a string. */
-	run_id: Schema.String,
+	run_id: S.String,
 	/** The run attempt, as a string. */
-	run_attempt: Schema.String,
+	run_attempt: S.String,
 }) {}
 
 /** The token envelope the runner's token service answers with. */
-const TokenEnvelope = Schema.Struct({
-	value: Schema.String,
-	count: Schema.optionalKey(Schema.Finite),
+const TokenEnvelope = S.Struct({
+	value: S.String,
+	count: S.optionalKey(S.Finite),
 });
 
 const REQUEST_TOKEN = "ACTIONS_ID_TOKEN_REQUEST_TOKEN";
@@ -108,7 +114,7 @@ const readClaims = (token: string): Effect.Effect<OidcClaims, OidcTokenError> =>
 					: OidcTokenError.make({ reason: "malformedToken", detail: failure.detail, cause: failure.cause }),
 			),
 		);
-		return yield* Schema.decodeUnknownEffect(OidcClaims)(decoded).pipe(
+		return yield* S.decodeUnknownEffect(OidcClaims)(decoded).pipe(
 			Effect.mapError((cause) => OidcTokenError.make({ reason: "missingClaims", cause })),
 		);
 	});
@@ -254,7 +260,7 @@ export class OidcTokenIssuer extends Context.Service<OidcTokenIssuer, OidcTokenI
 	 * structurally unreachable in a test.
 	 */
 	static readonly unsignedTokenFor = (claims: OidcClaims): Redacted.Redacted<string> =>
-		Redacted.make(unsignedJwt({ alg: "RS256", typ: "JWT" }, flow(Schema.encodeUnknownResult(OidcClaims), Result.getOrThrowWith((error) => error))(claims)));
+		Redacted.make(unsignedJwt({ alg: "RS256", typ: "JWT" }, flow(S.encodeUnknownResult(OidcClaims), Result.getOrThrowWith((error) => error))(claims)));
 
 	/** A test double. Unstubbed members die rather than answering with a non-token. */
 	static readonly makeTest = (overrides: Partial<OidcTokenIssuerShape> = {}): OidcTokenIssuerShape => ({

@@ -6,7 +6,7 @@
 // the double, the member and the override that fixes it, and it is spelled
 // here once so a wording change is one edit rather than ten.
 
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 
 /**
  * The die-on-call members of `<double>.makeTest`: `dies("save")` is an

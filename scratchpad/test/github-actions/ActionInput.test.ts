@@ -1,6 +1,10 @@
 // @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
-import { Config, ConfigProvider, Effect, Redacted, Schema } from "effect";
+import * as Config from "effect/Config";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Effect from "effect/Effect";
+import * as Redacted from "effect/Redacted";
+import * as S from "effect/Schema";
 import { ActionInput } from "../../effected/github-actions/index.ts";
 
 /** Read a config against a fixed runner environment. */
@@ -353,20 +357,20 @@ describe("ActionInput", () => {
 
 		it.effect("decodes a JSON input through its schema", () =>
 			Effect.gen(function* () {
-				const Cfg = Schema.Struct({ level: Schema.Finite });
+				const Cfg = S.Struct({ level: S.Finite });
 				const value = yield* readOk(ActionInput.schema("cfg", Cfg), { INPUT_CFG: '{"level":3}' });
 				assert.deepStrictEqual(value, { level: 3 });
 			}),
 		);
 
 		it.effect("rejects a JSON input that does not satisfy its schema", () =>
-			readFails(ActionInput.schema("cfg", Schema.Struct({ level: Schema.Finite })), {
+			readFails(ActionInput.schema("cfg", S.Struct({ level: S.Finite })), {
 				INPUT_CFG: '{"level":"three"}',
 			}),
 		);
 
 		it.effect("rejects an input that is not JSON at all", () =>
-			readFails(ActionInput.schema("cfg", Schema.Struct({ level: Schema.Finite })), { INPUT_CFG: "nope" }),
+			readFails(ActionInput.schema("cfg", S.Struct({ level: S.Finite })), { INPUT_CFG: "nope" }),
 		);
 
 		it.effect("reads an integer input", () =>

@@ -6,7 +6,11 @@
 // a heavy import leaks into a light module's graph, so the one piece those
 // three modules share is the piece with no dependencies.
 
-import { Effect, Option, Redacted, Result, Function } from "effect";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
+import * as Redacted from "effect/Redacted";
+import * as Result from "effect/Result";
+import * as Function from "effect/Function";
 import type { ActionEnvironmentShape } from "../ActionEnvironment.ts";
 import { payloadOf } from "./jwt.ts";
 
@@ -126,10 +130,10 @@ export const resultsBackend = (env: ActionEnvironmentShape): Effect.Effect<Resul
 	Effect.gen(function* () {
 		const url = yield* env.getOptional(RESULTS_URL);
 		const token = yield* env.getOptional(RUNTIME_TOKEN);
-		if (Option.isNone(url)) {
+		if (O.isNone(url)) {
 			return yield* Effect.fail(RESULTS_URL);
 		}
-		if (Option.isNone(token)) {
+		if (O.isNone(token)) {
 			return yield* Effect.fail(RUNTIME_TOKEN);
 		}
 		return {

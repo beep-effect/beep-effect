@@ -1,5 +1,7 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Result, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { APIReference } from "../../effected/schema-org/APIReference.ts";
 import {
 	Conformance,
@@ -90,7 +92,7 @@ describe("Conformance.check", () => {
 		const [issue] = issues;
 		assert.instanceOf(issue, PropertyNotOnType);
 		// The issue quotes the term as the author wrote it.
-		if (Schema.is(PropertyNotOnType)(issue)) assert.strictEqual(issue.property, "schema:softwareVersion");
+		if (S.is(PropertyNotOnType)(issue)) assert.strictEqual(issue.property, "schema:softwareVersion");
 
 		const invented = graphOf(CreativeWork.make({ "@id": PKG, additional: { "schema:notATerm": "x" } }));
 		assert.strictEqual(Conformance.check(invented).length, 1);
@@ -107,7 +109,7 @@ describe("Conformance.check", () => {
 		assert.strictEqual(issues.length, 1);
 		const [issue] = issues;
 		assert.instanceOf(issue, UnknownTerm);
-		if (Schema.is(UnknownTerm)(issue)) assert.strictEqual(issue.term, "bogus:telephone");
+		if (S.is(UnknownTerm)(issue)) assert.strictEqual(issue.term, "bogus:telephone");
 	});
 
 	it("skips every prefix the document declares, not just the one in the fixture", () => {
@@ -144,7 +146,7 @@ describe("Conformance.check", () => {
 		const [issue] = issues;
 		assert.instanceOf(issue, PropertyNotOnType);
 		assert.strictEqual(issue?._tag, "PropertyNotOnType");
-		assert.deepStrictEqual(Schema.is(PropertyNotOnType)(issue) ? [issue.nodeId, issue.nodeType, issue.property] : [], [
+		assert.deepStrictEqual(S.is(PropertyNotOnType)(issue) ? [issue.nodeId, issue.nodeType, issue.property] : [], [
 			PKG,
 			"SoftwareSourceCode",
 			"softwareVersion",
@@ -157,7 +159,7 @@ describe("Conformance.check", () => {
 		assert.strictEqual(issues.length, 1);
 		const [issue] = issues;
 		assert.instanceOf(issue, UnknownTerm);
-		if (Schema.is(UnknownTerm)(issue)) {
+		if (S.is(UnknownTerm)(issue)) {
 			assert.strictEqual(issue.kind, "property");
 			assert.strictEqual(issue.term, "codeRepositoryUrl");
 		}
@@ -174,7 +176,7 @@ describe("Conformance.check", () => {
 		assert.strictEqual(issues.length, 1);
 		const [issue] = issues;
 		assert.instanceOf(issue, UnknownTerm);
-		if (Schema.is(UnknownTerm)(issue)) assert.strictEqual(issue.kind, "type");
+		if (S.is(UnknownTerm)(issue)) assert.strictEqual(issue.kind, "type");
 	});
 
 	it("flags a deprecated property with its successor rather than rejecting it", () => {
@@ -186,7 +188,7 @@ describe("Conformance.check", () => {
 		assert.strictEqual(issues.length, 1);
 		const [issue] = issues;
 		assert.instanceOf(issue, DeprecatedProperty);
-		if (Schema.is(DeprecatedProperty)(issue)) {
+		if (S.is(DeprecatedProperty)(issue)) {
 			assert.strictEqual(issue.property, "runtime");
 			assert.strictEqual(issue.supersededBy, "runtimePlatform");
 		}
@@ -201,7 +203,7 @@ describe("Conformance.check", () => {
 		assert.strictEqual(issues.length, 1);
 		const [issue] = issues;
 		assert.instanceOf(issue, DanglingReference);
-		if (Schema.is(DanglingReference)(issue)) {
+		if (S.is(DanglingReference)(issue)) {
 			assert.strictEqual(issue.property, "author");
 			assert.strictEqual(issue.reference, "https://example.com/#alice");
 		}

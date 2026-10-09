@@ -1,7 +1,10 @@
 // @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
-import { Cause, Effect, Exit, Option } from "effect";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as O from "effect/Option";
 import { ManagedSection } from "../../effected/templates/index.ts";
 import { block, id, lines, memoryFs, section } from "./fixtures.ts";
 
@@ -22,8 +25,8 @@ describe("ManagedSection", () => {
 				Effect.gen(function* () {
 					const service = yield* ManagedSection;
 					const found = yield* service.read(HOOK, id("example-tool"));
-					assert.isTrue(Option.isSome(found));
-					assert.strictEqual(Option.getOrThrow(found).content, "echo hi");
+					assert.isTrue(O.isSome(found));
+					assert.strictEqual(O.getOrThrow(found).content, "echo hi");
 				}),
 			);
 		});
@@ -34,7 +37,7 @@ describe("ManagedSection", () => {
 				fs,
 				Effect.gen(function* () {
 					const service = yield* ManagedSection;
-					assert.isTrue(Option.isNone(yield* service.read(HOOK, id("example-tool"))));
+					assert.isTrue(O.isNone(yield* service.read(HOOK, id("example-tool"))));
 					assert.isFalse(yield* service.isManaged(HOOK, id("example-tool")));
 				}),
 			);

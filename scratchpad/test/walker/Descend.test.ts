@@ -1,6 +1,7 @@
 import { assert, describe, it, layer } from "@effect/vitest";
 import { GlobPattern, GlobPatternOptions } from "../../effected/glob/index.ts";
-import { Cause, Effect } from "effect";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
 import type { DescendOptions, DescendRecordOptions, DescendResult } from "../../effected/walker/Descend.ts";
 import { descend } from "../../effected/walker/Descend.ts";
 import { platform } from "./fixtures.ts";

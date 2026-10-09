@@ -1,6 +1,8 @@
 import { assert, describe, it } from "@effect/vitest";
 import type { SpdxExpression } from "../../effected/spdx/index.ts";
-import { Effect, Option, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { InvalidSpdxLicenseError, SpdxLicense, isValidSpdx, licenseExpressionOf } from "../../effected/package-json/License.ts";
 
 describe("isValidSpdx", () => {
@@ -20,8 +22,8 @@ describe("isValidSpdx", () => {
 describe("SpdxLicense schema", () => {
 	it.effect("decodes a valid license and rejects an invalid one", () =>
 		Effect.gen(function* () {
-			assert.strictEqual(yield* Schema.decodeEffect(SpdxLicense)("MIT"), "MIT");
-			const error = yield* Effect.flip(Schema.decodeEffect(SpdxLicense)("NOT-A-LICENSE"));
+			assert.strictEqual(yield* S.decodeEffect(SpdxLicense)("MIT"), "MIT");
+			const error = yield* Effect.flip(S.decodeEffect(SpdxLicense)("NOT-A-LICENSE"));
 			assert.strictEqual(error._tag, "SchemaError");
 		}),
 	);
@@ -40,26 +42,26 @@ describe("licenseExpressionOf — the brand/grammar seam", () => {
 
 	it("parses an ordinary identifier", () => {
 		const expr = licenseExpressionOf(brand("MIT"));
-		assert.isTrue(Option.isSome(expr));
-		assert.strictEqual(String((expr as Option.Some<SpdxExpression>).value), "MIT");
+		assert.isTrue(O.isSome(expr));
+		assert.strictEqual(String((expr as O.Some<SpdxExpression>).value), "MIT");
 	});
 
 	it("parses a compound expression", () => {
 		const expr = licenseExpressionOf(brand("MIT OR Apache-2.0"));
-		assert.isTrue(Option.isSome(expr));
+		assert.isTrue(O.isSome(expr));
 		// SpdxExpression round-trips fully parenthesized; that is canonical here.
-		assert.strictEqual(String((expr as Option.Some<SpdxExpression>).value), "(MIT OR Apache-2.0)");
+		assert.strictEqual(String((expr as O.Some<SpdxExpression>).value), "(MIT OR Apache-2.0)");
 	});
 
 	it("UNLICENSED is a legal manifest value and not an expression", () => {
 		// The whole reason this accessor exists: the brand admits it, the
 		// grammar does not, and every consumer was hand-rolling this screen.
-		assert.isTrue(Option.isNone(licenseExpressionOf(brand("UNLICENSED"))));
+		assert.isTrue(O.isNone(licenseExpressionOf(brand("UNLICENSED"))));
 	});
 
 	it("SEE LICENSE IN <file> is likewise legal and not an expression", () => {
-		assert.isTrue(Option.isNone(licenseExpressionOf(brand("SEE LICENSE IN LICENSE.txt"))));
-		assert.isTrue(Option.isNone(licenseExpressionOf(brand("SEE LICENSE IN vendor/terms.md"))));
+		assert.isTrue(O.isNone(licenseExpressionOf(brand("SEE LICENSE IN LICENSE.txt"))));
+		assert.isTrue(O.isNone(licenseExpressionOf(brand("SEE LICENSE IN vendor/terms.md"))));
 	});
 
 	it("agrees with the brand: everything isValidSpdx admits either parses or is one of the two", () => {
@@ -78,18 +80,18 @@ describe("licenseExpressionOf — the brand/grammar seam", () => {
 			assert.isTrue(isValidSpdx(value), `isValidSpdx should admit ${value}`);
 			const expr = licenseExpressionOf(brand(value));
 			const isSpecial = value === "UNLICENSED" || value.startsWith("SEE LICENSE IN ");
-			assert.strictEqual(Option.isNone(expr), isSpecial, `${value}: none iff a non-SPDX spelling`);
+			assert.strictEqual(O.isNone(expr), isSpecial, `${value}: none iff a non-SPDX spelling`);
 		}
 	});
 
 	it("a LicenseRef parses — it is grammatical, unlike the two npm spellings", () => {
 		const expr = licenseExpressionOf(brand("LicenseRef-Acme"));
-		assert.isTrue(Option.isSome(expr));
+		assert.isTrue(O.isSome(expr));
 	});
 
 	it("an unparseable string the brand would reject yields none rather than throwing", () => {
 		// Total by construction: a caller holding an unbranded cast still gets
 		// an answer instead of a defect.
-		assert.isTrue(Option.isNone(licenseExpressionOf(brand("MIT AND"))));
+		assert.isTrue(O.isNone(licenseExpressionOf(brand("MIT AND"))));
 	});
 });

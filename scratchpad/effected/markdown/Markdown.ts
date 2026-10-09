@@ -13,7 +13,11 @@
 
 import { dual } from "effect/Function";
 import { isString } from "effect/Predicate";
-import { Effect, Result, Schema, SchemaIssue, SchemaTransformation } from "effect";
+import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import type { BlockPassResult } from "./internal/blockParser.ts";
 import { parseBlocks } from "./internal/blockParser.ts";
 import { isGuardExceeded, isRawMarkdownError } from "./internal/carriers.ts";
@@ -33,7 +37,7 @@ import { Root } from "./MarkdownNode.ts";
  *
  * @public
  */
-export const MarkdownDialect = Schema.Literals(["commonmark", "gfm"]);
+export const MarkdownDialect = S.Literals(["commonmark", "gfm"]);
 
 /**
  * The union of all markdown dialect string literals.
@@ -59,9 +63,9 @@ export type MarkdownDialect = typeof MarkdownDialect.Type;
  *
  * @public
  */
-export class MarkdownParseOptions extends Schema.Class<MarkdownParseOptions>("MarkdownParseOptions")({
-	dialect: Schema.optionalKey(MarkdownDialect),
-	frontmatter: Schema.optionalKey(Schema.Boolean),
+export class MarkdownParseOptions extends S.Class<MarkdownParseOptions>("MarkdownParseOptions")({
+	dialect: S.optionalKey(MarkdownDialect),
+	frontmatter: S.optionalKey(S.Boolean),
 }) {}
 
 /**
@@ -83,7 +87,7 @@ export class MarkdownParseOptions extends Schema.Class<MarkdownParseOptions>("Ma
  *
  * @public
  */
-export class MarkdownParseError extends Schema.TaggedError<MarkdownParseError>()("MarkdownParseError", {
+export class MarkdownParseError extends S.TaggedError<MarkdownParseError>()("MarkdownParseError", {
 	diagnostic: MarkdownDiagnostic,
 }) {
 	override get message(): string {
@@ -107,7 +111,7 @@ export class MarkdownParseError extends Schema.TaggedError<MarkdownParseError>()
  *
  * @public
  */
-export class MarkdownStringifyError extends Schema.TaggedError<MarkdownStringifyError>()("MarkdownStringifyError", {
+export class MarkdownStringifyError extends S.TaggedError<MarkdownStringifyError>()("MarkdownStringifyError", {
 	diagnostic: MarkdownDiagnostic,
 }) {
 	override get message(): string {
@@ -476,9 +480,9 @@ export class Markdown {
 	 *   decode.
 	 * @returns A `Schema.Codec<Root, string>`.
 	 */
-	static fromString(options?: MarkdownParseOptions): Schema.Codec<Root, string> {
-		return Schema.String.pipe(
-			Schema.decodeTo(
+	static fromString(options?: MarkdownParseOptions): S.Codec<Root, string> {
+		return S.String.pipe(
+			S.decodeTo(
 				Root,
 				SchemaTransformation.transformEffect({
 					decode: (input: string) =>
@@ -500,5 +504,5 @@ export class Markdown {
 	 * The zero-config `Schema<Root, string>` — `Markdown.fromString()`
 	 * pre-bound so the common case needs no memoization discipline.
 	 */
-	static readonly MarkdownFromString: Schema.Codec<Root, string> = Markdown.fromString();
+	static readonly MarkdownFromString: S.Codec<Root, string> = Markdown.fromString();
 }

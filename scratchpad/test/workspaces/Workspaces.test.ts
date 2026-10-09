@@ -9,7 +9,9 @@
 
 import { assert, describe, it, layer } from "@effect/vitest";
 import { CatalogResolver, Manifest, UnresolvedDependencyError, WorkspaceResolver } from "../../effected/npm/index.ts";
-import { Effect, Layer, Option } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import { PublishTarget, PublishabilityDetector, WorkspacePackage, Workspaces } from "../../effected/workspaces/index.ts";
 import type { Tree } from "./fixtures.ts";
 import { platform } from "./fixtures.ts";
@@ -106,11 +108,11 @@ describe("Workspaces.resolverLayer", () => {
 			Effect.gen(function* () {
 				const catalogs = yield* CatalogResolver;
 				const workspaces = yield* WorkspaceResolver;
-				assert.deepStrictEqual(yield* catalogs.rangeOf("effect", Option.none()), Option.some("^4.0.0"));
-				assert.deepStrictEqual(yield* catalogs.rangeOf("react", Option.some("react18")), Option.some("^18.2.0"));
-				assert.deepStrictEqual(yield* workspaces.versionOf("@x/a"), Option.some("1.2.3"));
+				assert.deepStrictEqual(yield* catalogs.rangeOf("effect", O.none()), O.some("^4.0.0"));
+				assert.deepStrictEqual(yield* catalogs.rangeOf("react", O.some("react18")), O.some("^18.2.0"));
+				assert.deepStrictEqual(yield* workspaces.versionOf("@x/a"), O.some("1.2.3"));
 				// An unmatched name is none, not an error — the contract's convention.
-				assert.deepStrictEqual(yield* catalogs.rangeOf("nothing", Option.none()), Option.none());
+				assert.deepStrictEqual(yield* catalogs.rangeOf("nothing", O.none()), O.none());
 			}),
 		);
 	});

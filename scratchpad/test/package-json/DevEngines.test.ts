@@ -1,5 +1,6 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
 import { DevEngine, DevEnginesSchema } from "../../effected/package-json/DevEngines.ts";
 
 describe("DevEngine", () => {
@@ -14,7 +15,7 @@ describe("DevEngine", () => {
 describe("DevEnginesSchema", () => {
 	it.effect("decodes a single packageManager constraint and a runtime array", () =>
 		Effect.gen(function* () {
-			const decoded = yield* Schema.decodeEffect(DevEnginesSchema)({
+			const decoded = yield* S.decodeEffect(DevEnginesSchema)({
 				packageManager: { name: "pnpm", version: "10.33.0", onFail: "ignore" },
 				runtime: [{ name: "node", version: "24.11.0", onFail: "ignore" }],
 			});

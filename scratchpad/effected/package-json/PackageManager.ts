@@ -22,7 +22,12 @@
 
 import { CorepackIntegrityHash } from "../npm/index.ts";
 import { SemVer } from "../semver/index.ts";
-import { Effect, Exit, Option, Schema, SchemaIssue, SchemaTransformation } from "effect";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 
 // The name half of the grammar, deliberately looser than
 // `PackageManagerPin`'s four literals — see the class remarks for why.
@@ -79,9 +84,9 @@ const invalid = (input: string, message: string) => Effect.fail(new SchemaIssue.
  *
  * @public
  */
-export class PackageManager extends Schema.Class<PackageManager>("PackageManager")({
+export class PackageManager extends S.Class<PackageManager>("PackageManager")({
 	/** The package-manager name (e.g. `pnpm`). Any lowercase name — see the class remarks. */
-	name: Schema.String,
+	name: S.String,
 	/**
 	 * The version (e.g. `10.33.0`): `@effected/semver`'s
 	 * `SemVer.PinnableVersionString` — an exact SemVer 2.0.0 version with no
@@ -97,7 +102,7 @@ export class PackageManager extends Schema.Class<PackageManager>("PackageManager
 	 * `CorepackIntegrityHash`, the shared restriction of the `IntegrityHash`
 	 * brand to the corepack `<algo>.<hex>` form.
 	 */
-	integrity: Schema.Option(CorepackIntegrityHash),
+	integrity: S.Option(CorepackIntegrityHash),
 }) {
 	/**
 	 * Schema transformation between the `"name@version+integrity"` string and a
@@ -112,9 +117,9 @@ export class PackageManager extends Schema.Class<PackageManager>("PackageManager
 	 * the component that failed. Encoding prints the canonical string, which is
 	 * byte-identical to any input this codec accepts.
 	 */
-	static readonly FromString: Schema.Codec<PackageManager, string> = Schema.String.pipe(
-		Schema.decodeTo(
-			Schema.instanceOf(PackageManager),
+	static readonly FromString: S.Codec<PackageManager, string> = S.String.pipe(
+		S.decodeTo(
+			S.instanceOf(PackageManager),
 			SchemaTransformation.transformEffect({
 				decode: Effect.fn("decode")((input: string): Effect.Effect<PackageManager, SchemaIssue.Issue> => {
 					const at = input.indexOf("@");
@@ -140,22 +145,22 @@ export class PackageManager extends Schema.Class<PackageManager>("PackageManager
 						return invalid(input, `Invalid packageManager version: "${version}"`);
 					}
 					if (plus === -1) {
-						return Effect.succeed(PackageManager.make({ name, version, integrity: Option.none() }));
+						return Effect.succeed(PackageManager.make({ name, version, integrity: O.none() }));
 					}
 					// Validate the integrity through the corepack-restricted schema so a
 					// malformed hash — or a valid SRI/yarn form the `packageManager`
 					// field never legitimately carries — is a typed failure, not the
 					// defect `make` would throw on a value the field schema rejects.
 					const rawIntegrity = rest.slice(plus + 1);
-					const decoded = Schema.decodeExit(CorepackIntegrityHash)(rawIntegrity);
+					const decoded = S.decodeExit(CorepackIntegrityHash)(rawIntegrity);
 					if (Exit.isFailure(decoded)) {
 						return invalid(input, `Invalid packageManager integrity: "${rawIntegrity}"`);
 					}
-					return Effect.succeed(PackageManager.make({ name, version, integrity: Option.some(decoded.value) }));
+					return Effect.succeed(PackageManager.make({ name, version, integrity: O.some(decoded.value) }));
 				}),
 				encode: (pm: PackageManager) =>
 					Effect.succeed(
-						Option.match(pm.integrity, {
+						O.match(pm.integrity, {
 							onNone: () => `${pm.name}@${pm.version}`,
 							onSome: (integrity) => `${pm.name}@${pm.version}+${integrity}`,
 						}),
@@ -166,6 +171,6 @@ export class PackageManager extends Schema.Class<PackageManager>("PackageManager
 
 	/** Whether an integrity hash is present. */
 	get hasIntegrity(): boolean {
-		return Option.isSome(this.integrity);
+		return O.isSome(this.integrity);
 	}
 }

@@ -24,7 +24,14 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { NodeServices } from "@effect/platform-node";
 import { afterAll, assert, beforeAll, describe, it } from "@effect/vitest";
-import { Cause, DateTime, Effect, Exit, Layer, Option, Result, Schema } from "effect";
+import * as Cause from "effect/Cause";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import type { ChildProcessSpawner } from "effect/process";
 import { ChildProcess } from "effect/process";
 import { Git, NotARepositoryError, UnknownRefError } from "../../../effected/git/Git.ts";
@@ -121,32 +128,28 @@ describe("Git surface — introspection repository (fixture A)", () => {
 	 */
 	beforeAll(async () => {
 		dirA = await mkdtemp(join(tmpdir(), "effected-git-surface-a-"));
-		commit1Sha = await Effect.runPromise(
-			run(
-				Effect.gen(function* () {
-					const raw = (args: ReadonlyArray<string>) => runFixtureGit(dirA, args);
+		commit1Sha = await Effect.gen(function* () {
+			const raw = (args: ReadonlyArray<string>) => runFixtureGit(dirA, args);
 
-					yield* raw(["-c", "init.defaultBranch=main", "init"]);
-					yield* raw(["config", "user.email", "git-integration@example.com"]);
-					yield* raw(["config", "user.name", "Git Integration"]);
+			yield* raw(["-c", "init.defaultBranch=main", "init"]);
+			yield* raw(["config", "user.email", "git-integration@example.com"]);
+			yield* raw(["config", "user.name", "Git Integration"]);
 
-					yield* Effect.promise(() => writeFile(join(dirA, "a.txt"), "one\n"));
-					yield* Effect.promise(() => mkdir(join(dirA, "sub"), { recursive: true }));
-					yield* Effect.promise(() => writeFile(join(dirA, "sub", "c.txt"), "c\n"));
-					yield* raw(["add", "-A"]);
-					yield* raw(["-c", "commit.gpgsign=false", "commit", "-m", "commit1"]);
-					const commit1 = (yield* raw(["rev-parse", "HEAD"])).trim();
+			yield* Effect.promise(() => writeFile(join(dirA, "a.txt"), "one\n"));
+			yield* Effect.promise(() => mkdir(join(dirA, "sub"), { recursive: true }));
+			yield* Effect.promise(() => writeFile(join(dirA, "sub", "c.txt"), "c\n"));
+			yield* raw(["add", "-A"]);
+			yield* raw(["-c", "commit.gpgsign=false", "commit", "-m", "commit1"]);
+			const commit1 = (yield* raw(["rev-parse", "HEAD"])).trim();
 
-					yield* raw(["mv", "sub/c.txt", "renamed.txt"]);
-					yield* Effect.promise(() => writeFile(join(dirA, "a.txt"), "two\n"));
-					yield* Effect.promise(() => writeFile(join(dirA, "staged.txt"), "staged\n"));
-					yield* raw(["add", "staged.txt"]);
-					yield* Effect.promise(() => writeFile(join(dirA, "untracked.txt"), "loose\n"));
+			yield* raw(["mv", "sub/c.txt", "renamed.txt"]);
+			yield* Effect.promise(() => writeFile(join(dirA, "a.txt"), "two\n"));
+			yield* Effect.promise(() => writeFile(join(dirA, "staged.txt"), "staged\n"));
+			yield* raw(["add", "staged.txt"]);
+			yield* Effect.promise(() => writeFile(join(dirA, "untracked.txt"), "loose\n"));
 
-					return commit1;
-				}),
-			),
-		);
+			return commit1;
+		}).pipe(run, Effect.runPromise);
 	}, 30_000);
 
 	afterAll(async () => {
@@ -237,8 +240,8 @@ describe("Git surface — introspection repository (fixture A)", () => {
 				const git = yield* Git;
 
 				yield* git.configSet(dirA, "test.kit", "yes");
-				assert.deepStrictEqual(yield* git.configGet(dirA, "test.kit"), Option.some("yes"));
-				assert.deepStrictEqual(yield* git.configGet(dirA, "test.unset"), Option.none());
+				assert.deepStrictEqual(yield* git.configGet(dirA, "test.kit"), O.some("yes"));
+				assert.deepStrictEqual(yield* git.configGet(dirA, "test.unset"), O.none());
 
 				yield* git.configSet(dirA, "submodule.x.shallow", "true", { file: "modcfg" });
 				const written = yield* runFixtureGit(dirA, ["config", "-f", "modcfg", "--get", "submodule.x.shallow"]);
@@ -251,10 +254,10 @@ describe("Git surface — introspection repository (fixture A)", () => {
 		run(
 			Effect.gen(function* () {
 				const git = yield* Git;
-				assert.deepStrictEqual(yield* git.remoteUrl(dirA), Option.none());
+				assert.deepStrictEqual(yield* git.remoteUrl(dirA), O.none());
 
 				yield* runFixtureGit(dirA, ["remote", "add", "origin", "https://example.com/o/r.git"]);
-				assert.deepStrictEqual(yield* git.remoteUrl(dirA), Option.some("https://example.com/o/r.git"));
+				assert.deepStrictEqual(yield* git.remoteUrl(dirA), O.some("https://example.com/o/r.git"));
 			}),
 		),
 	);
@@ -263,12 +266,12 @@ describe("Git surface — introspection repository (fixture A)", () => {
 		run(
 			Effect.gen(function* () {
 				const git = yield* Git;
-				assert.deepStrictEqual(yield* git.defaultBranch(dirA), Option.none());
+				assert.deepStrictEqual(yield* git.defaultBranch(dirA), O.none());
 
 				yield* runFixtureGit(dirA, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
 				yield* runFixtureGit(dirA, ["symbolic-ref", "refs/remotes/origin/HEAD", "refs/remotes/origin/main"]);
 
-				assert.deepStrictEqual(yield* git.defaultBranch(dirA), Option.some("main"));
+				assert.deepStrictEqual(yield* git.defaultBranch(dirA), O.some("main"));
 			}),
 		),
 	);
@@ -277,7 +280,7 @@ describe("Git surface — introspection repository (fixture A)", () => {
 		run(
 			Effect.gen(function* () {
 				const git = yield* Git;
-				assert.deepStrictEqual(yield* git.currentBranch(dirA), Option.some("main"));
+				assert.deepStrictEqual(yield* git.currentBranch(dirA), O.some("main"));
 
 				const root = yield* git.repoRoot(dirA);
 				const expected = (yield* runFixtureGit(dirA, ["rev-parse", "--show-toplevel"])).trim();
@@ -321,30 +324,26 @@ describe("Git surface — submodule/fetch pair (fixture B)", () => {
 	beforeAll(async () => {
 		libDir = await mkdtemp(join(tmpdir(), "effected-git-surface-lib-"));
 		superDir = await mkdtemp(join(tmpdir(), "effected-git-surface-super-"));
-		libTagSha = await Effect.runPromise(
-			run(
-				Effect.gen(function* () {
-					const rawLib = (args: ReadonlyArray<string>) => runFixtureGit(libDir, args);
-					const rawSuper = (args: ReadonlyArray<string>) => runFixtureGit(superDir, args);
+		libTagSha = await Effect.gen(function* () {
+			const rawLib = (args: ReadonlyArray<string>) => runFixtureGit(libDir, args);
+			const rawSuper = (args: ReadonlyArray<string>) => runFixtureGit(superDir, args);
 
-					yield* rawLib(["-c", "init.defaultBranch=main", "init"]);
-					yield* rawLib(["config", "user.email", "git-integration@example.com"]);
-					yield* rawLib(["config", "user.name", "Git Integration"]);
-					yield* Effect.promise(() => writeFile(join(libDir, "lib.txt"), "library\n"));
-					yield* rawLib(["add", "-A"]);
-					yield* rawLib(["-c", "commit.gpgsign=false", "commit", "-m", "lib commit"]);
-					yield* rawLib(["tag", "v1.0.0"]);
-					const tagSha = (yield* rawLib(["rev-parse", "v1.0.0"])).trim();
+			yield* rawLib(["-c", "init.defaultBranch=main", "init"]);
+			yield* rawLib(["config", "user.email", "git-integration@example.com"]);
+			yield* rawLib(["config", "user.name", "Git Integration"]);
+			yield* Effect.promise(() => writeFile(join(libDir, "lib.txt"), "library\n"));
+			yield* rawLib(["add", "-A"]);
+			yield* rawLib(["-c", "commit.gpgsign=false", "commit", "-m", "lib commit"]);
+			yield* rawLib(["tag", "v1.0.0"]);
+			const tagSha = (yield* rawLib(["rev-parse", "v1.0.0"])).trim();
 
-					yield* rawSuper(["-c", "init.defaultBranch=main", "init"]);
-					yield* rawSuper(["config", "user.email", "git-integration@example.com"]);
-					yield* rawSuper(["config", "user.name", "Git Integration"]);
-					yield* rawSuper(["config", "protocol.file.allow", "always"]);
+			yield* rawSuper(["-c", "init.defaultBranch=main", "init"]);
+			yield* rawSuper(["config", "user.email", "git-integration@example.com"]);
+			yield* rawSuper(["config", "user.name", "Git Integration"]);
+			yield* rawSuper(["config", "protocol.file.allow", "always"]);
 
-					return tagSha;
-				}),
-			),
-		);
+			return tagSha;
+		}).pipe(run, Effect.runPromise);
 	}, 30_000);
 
 	afterAll(async () => {
@@ -390,7 +389,7 @@ describe("Git surface — submodule/fetch pair (fixture B)", () => {
 				yield* git.fetch(subDir(), { ref: "v1.0.0", tag: true });
 				yield* git.checkout(subDir(), "FETCH_HEAD", { detach: true });
 
-				assert.deepStrictEqual(yield* git.currentBranch(subDir()), Option.none());
+				assert.deepStrictEqual(yield* git.currentBranch(subDir()), O.none());
 				assert.strictEqual(yield* git.revParse(subDir(), "HEAD"), libTagSha);
 			}),
 		),
@@ -405,7 +404,7 @@ describe("Git surface — submodule/fetch pair (fixture B)", () => {
 				if (Exit.isFailure(exit)) {
 					// Cause.failureOption does not exist at beta.98 — findFail returns a Result.
 					const found = Cause.findFail(exit.cause);
-					assert.isTrue(Result.isSuccess(found) && Schema.is(UnknownRefError)(found.success.error));
+					assert.isTrue(Result.isSuccess(found) && S.is(UnknownRefError)(found.success.error));
 				}
 			}),
 		),
@@ -416,7 +415,7 @@ describe("Git surface — submodule/fetch pair (fixture B)", () => {
 			Effect.gen(function* () {
 				const git = yield* Git;
 				yield* git.sparseCheckoutSet(subDir(), ["src"], { cone: false });
-				assert.deepStrictEqual(yield* git.configGet(subDir(), "core.sparseCheckout"), Option.some("true"));
+				assert.deepStrictEqual(yield* git.configGet(subDir(), "core.sparseCheckout"), O.some("true"));
 				// The narrowing must be real, not just configured: lib.txt sits at the
 				// tree root, outside the "src" pattern, so it leaves the working tree.
 				const libGone = yield* Effect.promise(() =>
@@ -436,13 +435,11 @@ describe("Git surface — submodule/fetch pair (fixture B)", () => {
 		beforeAll(async () => {
 			// The superproject needs a commit between add and clone so the clone
 			// has something to check out — fixture setup, so raw, not the service.
-			await Effect.runPromise(
-				run(runFixtureGit(superDir, ["-c", "commit.gpgsign=false", "commit", "-m", "vendor lib"])),
-			);
+			await runFixtureGit(superDir, ["-c", "commit.gpgsign=false", "commit", "-m", "vendor lib"]).pipe(run, Effect.runPromise);
 			cloneDir = await mkdtemp(join(tmpdir(), "effected-git-surface-clone-"));
-			await Effect.runPromise(run(runFixtureGit(tmpdir(), ["clone", superDir, cloneDir])));
+			await runFixtureGit(tmpdir(), ["clone", superDir, cloneDir]).pipe(run, Effect.runPromise);
 			// Any clone needs protocol.file.allow set BEFORE submoduleUpdate --init too.
-			await Effect.runPromise(run(runFixtureGit(cloneDir, ["config", "protocol.file.allow", "always"])));
+			await runFixtureGit(cloneDir, ["config", "protocol.file.allow", "always"]).pipe(run, Effect.runPromise);
 		}, 30_000);
 
 		afterAll(async () => {
@@ -484,58 +481,54 @@ describe("Git.log — history repository (fixture C)", () => {
 	beforeAll(async () => {
 		dirC = await mkdtemp(join(tmpdir(), "effected-git-log-c-"));
 		emptyDir = await mkdtemp(join(tmpdir(), "effected-git-log-empty-"));
-		await Effect.runPromise(
-			run(
-				Effect.gen(function* () {
-					const raw = (args: ReadonlyArray<string>) => runFixtureGit(dirC, args);
-					const commit = (message: string) => raw(["-c", "commit.gpgsign=false", "commit", "-m", message]);
+		await Effect.gen(function* () {
+			const raw = (args: ReadonlyArray<string>) => runFixtureGit(dirC, args);
+			const commit = (message: string) => raw(["-c", "commit.gpgsign=false", "commit", "-m", message]);
 
-					yield* raw(["-c", "init.defaultBranch=main", "init"]);
-					yield* raw(["config", "user.email", "log-integration@example.com"]);
-					yield* raw(["config", "user.name", "Log Integration"]);
+			yield* raw(["-c", "init.defaultBranch=main", "init"]);
+			yield* raw(["config", "user.email", "log-integration@example.com"]);
+			yield* raw(["config", "user.name", "Log Integration"]);
 
-					yield* Effect.promise(() => mkdir(join(dirC, "tracked"), { recursive: true }));
-					yield* Effect.promise(() => writeFile(join(dirC, "tracked", "old.txt"), "one\n"));
-					yield* Effect.promise(() => writeFile(join(dirC, "other.txt"), "other\n"));
-					// A path with a space, to prove -z leaves names unquoted.
-					yield* Effect.promise(() => writeFile(join(dirC, "a name.txt"), "spaced\n"));
-					yield* raw(["add", "-A"]);
-					yield* commit("c1");
+			yield* Effect.promise(() => mkdir(join(dirC, "tracked"), { recursive: true }));
+			yield* Effect.promise(() => writeFile(join(dirC, "tracked", "old.txt"), "one\n"));
+			yield* Effect.promise(() => writeFile(join(dirC, "other.txt"), "other\n"));
+			// A path with a space, to prove -z leaves names unquoted.
+			yield* Effect.promise(() => writeFile(join(dirC, "a name.txt"), "spaced\n"));
+			yield* raw(["add", "-A"]);
+			yield* commit("c1");
 
-					yield* raw(["mv", "tracked/old.txt", "tracked/new.txt"]);
-					yield* commit("c2");
-					const branchPoint = (yield* raw(["rev-parse", "HEAD"])).trim();
+			yield* raw(["mv", "tracked/old.txt", "tracked/new.txt"]);
+			yield* commit("c2");
+			const branchPoint = (yield* raw(["rev-parse", "HEAD"])).trim();
 
-					yield* Effect.promise(() => writeFile(join(dirC, "other.txt"), "other again\n"));
-					yield* raw(["add", "-A"]);
-					yield* commit("c3");
+			yield* Effect.promise(() => writeFile(join(dirC, "other.txt"), "other again\n"));
+			yield* raw(["add", "-A"]);
+			yield* commit("c3");
 
-					yield* Effect.promise(() => writeFile(join(dirC, "tracked", "new.txt"), "main\n"));
-					yield* raw(["add", "-A"]);
-					yield* commit("c4");
+			yield* Effect.promise(() => writeFile(join(dirC, "tracked", "new.txt"), "main\n"));
+			yield* raw(["add", "-A"]);
+			yield* commit("c4");
 
-					yield* raw(["checkout", "-b", "side", branchPoint]);
-					yield* Effect.promise(() => writeFile(join(dirC, "tracked", "new.txt"), "side\n"));
-					yield* raw(["add", "-A"]);
-					yield* commit("side");
+			yield* raw(["checkout", "-b", "side", branchPoint]);
+			yield* Effect.promise(() => writeFile(join(dirC, "tracked", "new.txt"), "side\n"));
+			yield* raw(["add", "-A"]);
+			yield* commit("side");
 
-					yield* raw(["checkout", "main"]);
-					// The merge conflicts on purpose; the resolution is what makes the
-					// merge commit differ from its first parent.
-					yield* runCollected(
-						ChildProcess.setCwd(
-							ChildProcess.make("git", ["merge", "side"], { env: FIXTURE_ENV, extendEnv: true }),
-							dirC,
-						),
-					).pipe(Effect.orDie);
-					yield* Effect.promise(() => writeFile(join(dirC, "tracked", "new.txt"), "resolved\n"));
-					yield* raw(["add", "-A"]);
-					yield* commit("merge side");
+			yield* raw(["checkout", "main"]);
+			// The merge conflicts on purpose; the resolution is what makes the
+			// merge commit differ from its first parent.
+			yield* runCollected(
+				ChildProcess.setCwd(
+					ChildProcess.make("git", ["merge", "side"], { env: FIXTURE_ENV, extendEnv: true }),
+					dirC,
+				),
+			).pipe(Effect.orDie);
+			yield* Effect.promise(() => writeFile(join(dirC, "tracked", "new.txt"), "resolved\n"));
+			yield* raw(["add", "-A"]);
+			yield* commit("merge side");
 
-					yield* runFixtureGit(emptyDir, ["-c", "init.defaultBranch=main", "init"]);
-				}),
-			),
-		);
+			yield* runFixtureGit(emptyDir, ["-c", "init.defaultBranch=main", "init"]);
+		}).pipe(run, Effect.runPromise);
 	}, 60_000);
 
 	afterAll(async () => {
@@ -668,7 +661,7 @@ describe("Git.log — history repository (fixture C)", () => {
 			Effect.gen(function* () {
 				const git = yield* Git;
 				const error = yield* Effect.flip(git.log(tmpdir()));
-				assert.isTrue(Schema.is(NotARepositoryError)(error));
+				assert.isTrue(S.is(NotARepositoryError)(error));
 			}),
 		),
 	);
@@ -700,28 +693,24 @@ describe("Git surface — repository identity across worktrees (commonDir)", () 
 		outside = join(base, "outside");
 		await mkdir(join(main, "sub"), { recursive: true });
 		await mkdir(outside);
-		await Effect.runPromise(
-			run(
-				Effect.gen(function* () {
-					yield* runFixtureGit(main, ["-c", "init.defaultBranch=main", "init"]);
-					yield* runFixtureGit(main, [
-						"-c",
-						"user.email=git-integration@example.com",
-						"-c",
-						"user.name=Git Integration",
-						"-c",
-						"commit.gpgsign=false",
-						"commit",
-						"--allow-empty",
-						"-m",
-						"init",
-					]);
-					yield* runFixtureGit(main, ["worktree", "add", "-b", "side", worktree]);
-					yield* runFixtureGit(base, ["init", "--bare", bare]);
-					yield* runFixtureGit(base, ["init", "--bare", spaced]);
-				}),
-			),
-		);
+		await Effect.gen(function* () {
+			yield* runFixtureGit(main, ["-c", "init.defaultBranch=main", "init"]);
+			yield* runFixtureGit(main, [
+				"-c",
+				"user.email=git-integration@example.com",
+				"-c",
+				"user.name=Git Integration",
+				"-c",
+				"commit.gpgsign=false",
+				"commit",
+				"--allow-empty",
+				"-m",
+				"init",
+			]);
+			yield* runFixtureGit(main, ["worktree", "add", "-b", "side", worktree]);
+			yield* runFixtureGit(base, ["init", "--bare", bare]);
+			yield* runFixtureGit(base, ["init", "--bare", spaced]);
+		}).pipe(run, Effect.runPromise);
 		await symlink(main, linked, "dir");
 	});
 

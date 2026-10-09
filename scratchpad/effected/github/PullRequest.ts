@@ -1,4 +1,9 @@
-import { Context, DateTime, Effect, Layer, Option, Schema } from "effect";
+import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { GitHubClient } from "./GitHubClient.ts";
 import type { CommitFile } from "./GitHubCommit.ts";
 import { fileOf } from "./GitHubCommit.ts";
@@ -9,7 +14,7 @@ import { Repo } from "./Repo.ts";
 import { PageOptions } from "./Rest.ts";
 
 /** How a pull request is merged. @public */
-export const MergeMethod = Schema.Literals(["merge", "squash", "rebase"]);
+export const MergeMethod = S.Literals(["merge", "squash", "rebase"]);
 
 /**
  * A pull request, projected to what callers read.
@@ -22,25 +27,25 @@ export const MergeMethod = Schema.Literals(["merge", "squash", "rebase"]);
  *
  * @public
  */
-export class PullRequestInfo extends Schema.Class<PullRequestInfo>("PullRequestInfo")({
+export class PullRequestInfo extends S.Class<PullRequestInfo>("PullRequestInfo")({
 	/** The number in `#123`. */
-	number: Schema.Int,
+	number: S.Int,
 	/** The GraphQL node id, which the auto-merge mutations need. */
-	nodeId: Schema.String,
+	nodeId: S.String,
 	/** The web URL. */
-	url: Schema.String,
-	title: Schema.String,
-	state: Schema.Literals(["open", "closed"]),
+	url: S.String,
+	title: S.String,
+	state: S.Literals(["open", "closed"]),
 	/** The source branch name. */
-	head: Schema.String,
+	head: S.String,
 	/** The sha the source branch pointed at when GitHub answered. */
-	headSha: Schema.String,
+	headSha: S.String,
 	/** The target branch name. */
-	base: Schema.String,
+	base: S.String,
 	/** The sha the target branch pointed at when GitHub answered — the commit the pull request branches from. */
-	baseSha: Schema.String,
-	draft: Schema.Boolean,
-	merged: Schema.Boolean,
+	baseSha: S.String,
+	draft: S.Boolean,
+	merged: S.Boolean,
 	/**
 	 * When it merged, if it did.
 	 *
@@ -49,11 +54,11 @@ export class PullRequestInfo extends Schema.Class<PullRequestInfo>("PullRequestI
 	 * fact GitHub always reports, so modelling it as "maybe absent" would be
 	 * modelling a gap in our fixtures rather than a gap in the domain.
 	 */
-	mergedAt: Schema.Option(Schema.DateTimeUtcFromString),
+	mergedAt: S.Option(S.DateTimeUtcFromString),
 	/** The description, when GitHub sent one. */
-	body: Schema.optionalKey(Schema.String),
+	body: S.optionalKey(S.String),
 	/** The merge commit, once there is one. */
-	mergeCommitSha: Schema.optionalKey(Schema.String),
+	mergeCommitSha: S.optionalKey(S.String),
 }) {}
 
 /**
@@ -68,7 +73,7 @@ export interface UpsertedPullRequest {
 	readonly created: boolean;
 }
 
-const AutoMergeResponse = Schema.Struct({});
+const AutoMergeResponse = S.Struct({});
 
 const EnableAutoMerge = GraphQLDocument.make({
 	name: "enablePullRequestAutoMerge",
@@ -310,7 +315,7 @@ const project = (raw: RawPull): Effect.Effect<PullRequestInfo, GitHubError> =>
 				// and GitHub's wire form is a nullable ISO string — two different
 				// shapes, so the conversion belongs here rather than in a codec that
 				// would have to describe GitHub's encoding as if it were ours.
-				mergedAt: raw.merged_at == null ? Option.none() : Option.some(DateTime.makeUnsafe(raw.merged_at)),
+				mergedAt: raw.merged_at == null ? O.none() : O.some(DateTime.makeUnsafe(raw.merged_at)),
 				...(raw.body != null ? { body: raw.body } : {}),
 				...(raw.merge_commit_sha != null ? { mergeCommitSha: raw.merge_commit_sha } : {}),
 			}),

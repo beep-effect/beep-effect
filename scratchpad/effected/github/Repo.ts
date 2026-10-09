@@ -1,13 +1,18 @@
-import { Config, Context, Effect, Layer, Result, Schema } from "effect";
+import * as Config from "effect/Config";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 
 /**
  * A repository slug was not `owner/repo`.
  *
  * @public
  */
-export class InvalidRepoRefError extends Schema.TaggedError<InvalidRepoRefError>()("InvalidRepoRefError", {
+export class InvalidRepoRefError extends S.TaggedError<InvalidRepoRefError>()("InvalidRepoRefError", {
 	/** What was handed in. */
-	input: Schema.String,
+	input: S.String,
 }) {
 	override get message(): string {
 		return `not an owner/repo slug: ${JSON.stringify(this.input)}`;
@@ -19,11 +24,11 @@ export class InvalidRepoRefError extends Schema.TaggedError<InvalidRepoRefError>
  *
  * @public
  */
-export class RepoRef extends Schema.Class<RepoRef>("RepoRef")({
+export class RepoRef extends S.Class<RepoRef>("RepoRef")({
 	/** The user or organization. */
-	owner: Schema.NonEmptyString,
+	owner: S.NonEmptyString,
 	/** The repository name, without the owner. */
-	repo: Schema.NonEmptyString,
+	repo: S.NonEmptyString,
 }) {
 	/**
 	 * Parse `"owner/repo"`, synchronously.

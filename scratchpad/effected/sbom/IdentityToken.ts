@@ -13,7 +13,11 @@
 // (`ActionsIdentityToken.layer`, over its `OidcTokenIssuer`), and a consumer
 // already holding a token uses `IdentityToken.layerStatic`.
 
-import { Context, Effect, Layer, Redacted, Schema } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Redacted from "effect/Redacted";
+import * as S from "effect/Schema";
 
 /**
  * Raised when an identity token cannot be obtained.
@@ -25,11 +29,11 @@ import { Context, Effect, Layer, Redacted, Schema } from "effect";
  *
  * @public
  */
-export class IdentityTokenError extends Schema.TaggedError<IdentityTokenError>()("IdentityTokenError", {
+export class IdentityTokenError extends S.TaggedError<IdentityTokenError>()("IdentityTokenError", {
 	/** The audience the token was requested for. */
-	audience: Schema.String,
+	audience: S.String,
 	/** The underlying failure, preserved structurally. */
-	cause: Schema.Defect(),
+	cause: S.Defect(),
 }) {
 	override get message(): string {
 		return `Could not obtain an identity token for the "${this.audience}" audience`;

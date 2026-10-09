@@ -2,7 +2,7 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { assert, describe, it } from "@effect/vitest";
-import { Option } from "effect";
+import * as O from "effect/Option";
 import {
 	DOMAIN_PROPERTIES,
 	PROPERTY_NAMES,
@@ -161,9 +161,9 @@ describe("Vocabulary", () => {
 	});
 
 	it("flags a deprecated term with its successor rather than rejecting it", () => {
-		assert.deepStrictEqual(Vocabulary.supersededBy("episodes"), Option.some("episode"));
-		assert.isTrue(Option.isNone(Vocabulary.supersededBy("license")));
-		assert.isTrue(Option.isNone(Vocabulary.supersededBy("NotATerm")));
+		assert.deepStrictEqual(Vocabulary.supersededBy("episodes"), O.some("episode"));
+		assert.isTrue(O.isNone(Vocabulary.supersededBy("license")));
+		assert.isTrue(O.isNone(Vocabulary.supersededBy("NotATerm")));
 		// A superseded term stays a member of the vocabulary and stays legal.
 		assert.isTrue(Vocabulary.hasProperty("episodes"));
 		assert.isTrue(Vocabulary.isPropertyOn("episodes", "TVSeries"));

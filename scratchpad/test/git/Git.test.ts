@@ -1,6 +1,17 @@
 // @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
-import { Cause, ConfigProvider, Effect, Exit, Fiber, Layer, Option, PlatformError, Result, Sink, Stream, Schema } from "effect";
+import * as Cause from "effect/Cause";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Fiber from "effect/Fiber";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as PlatformError from "effect/PlatformError";
+import * as Result from "effect/Result";
+import * as Sink from "effect/Sink";
+import * as Stream from "effect/Stream";
+import * as S from "effect/Schema";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import { TestClock } from "effect/testing";
 import {
@@ -87,7 +98,7 @@ describe("Git", () => {
 					return yield* git.show(cwd, "HEAD", "package.json");
 				});
 				const result = yield* run(program, () => ({ stdout: '{ "name": "pkg" }\n', exit: 0 }));
-				assert.deepStrictEqual(result, Option.some('{ "name": "pkg" }\n'));
+				assert.deepStrictEqual(result, O.some('{ "name": "pkg" }\n'));
 			}),
 		);
 
@@ -101,7 +112,7 @@ describe("Git", () => {
 					stderr: "fatal: path 'missing.txt' does not exist in 'HEAD'\n",
 					exit: 128,
 				}));
-				assert.deepStrictEqual(result, Option.none());
+				assert.deepStrictEqual(result, O.none());
 			}),
 		);
 	});
@@ -197,7 +208,7 @@ describe("Git", () => {
 				});
 				const failure = yield* Effect.flip(run(program, () => ({ exit: 1 })));
 				assert.instanceOf(failure, GitCommandError);
-				if (Schema.is(GitCommandError)(failure)) {
+				if (S.is(GitCommandError)(failure)) {
 					assert.strictEqual(failure.exitCode, 1);
 				}
 			}),
@@ -212,7 +223,7 @@ describe("Git", () => {
 					return yield* git.mergeBaseOption(cwd, "main", "feat/git");
 				});
 				const result = yield* run(program, () => ({ stdout: "abc123\n", exit: 0 }));
-				assert.deepStrictEqual(result, Option.some("abc123"));
+				assert.deepStrictEqual(result, O.some("abc123"));
 			}),
 		);
 
@@ -225,7 +236,7 @@ describe("Git", () => {
 					return yield* git.mergeBaseOption(cwd, "main", "orphan");
 				});
 				const result = yield* run(program, () => ({ exit: 1 }));
-				assert.deepStrictEqual(result, Option.none());
+				assert.deepStrictEqual(result, O.none());
 			}),
 		);
 
@@ -477,7 +488,7 @@ describe("Git", () => {
 					run(program, () => ({ stderr: "fatal: something unrecognized went wrong\n", exit: 2 })),
 				);
 				assert.instanceOf(failure, GitCommandError);
-				if (Schema.is(GitCommandError)(failure)) {
+				if (S.is(GitCommandError)(failure)) {
 					assert.strictEqual(failure.kind, "failed");
 					assert.strictEqual(failure.exitCode, 2);
 					assert.strictEqual(failure.stderr, "fatal: something unrecognized went wrong\n");
@@ -495,7 +506,7 @@ describe("Git", () => {
 					run(program, () => PlatformError.systemError({ _tag: "NotFound", module: "ChildProcess", method: "spawn" })),
 				);
 				assert.instanceOf(failure, GitCommandError);
-				if (Schema.is(GitCommandError)(failure)) {
+				if (S.is(GitCommandError)(failure)) {
 					assert.strictEqual(failure.detail, "git is not installed (or the working directory does not exist)");
 				}
 			}),
@@ -518,7 +529,7 @@ describe("Git", () => {
 					),
 				);
 				assert.instanceOf(failure, GitCommandError);
-				if (Schema.is(GitCommandError)(failure)) {
+				if (S.is(GitCommandError)(failure)) {
 					assert.isDefined(failure.detail);
 					assert.isTrue(failure.detail?.startsWith("spawn failed: PermissionDenied:"));
 					assert.include(failure.detail ?? "", "EACCES on git binary");
@@ -535,11 +546,11 @@ describe("Git", () => {
 				// The mock's exitCode effect is Effect.never — the operation only
 				// resolves once Effect.timeoutOrElse's own duration elapses. Fork so
 				// the current fiber can drive the virtual clock forward past it.
-				const fiber = yield* Effect.forkChild(Effect.flip(run(program, () => ({ hang: true }))));
+				const fiber = yield* run(program, () => ({ hang: true })).pipe(Effect.flip, Effect.forkChild);
 				yield* TestClock.adjust("31 seconds");
 				const failure = yield* Fiber.join(fiber);
 				assert.instanceOf(failure, GitCommandError);
-				if (Schema.is(GitCommandError)(failure)) {
+				if (S.is(GitCommandError)(failure)) {
 					assert.strictEqual(failure.detail, "timed out after 30s");
 				}
 			}),
@@ -562,7 +573,7 @@ describe("Git", () => {
 				});
 				const failure = yield* Effect.flip(run(program, neverSpawn));
 				assert.instanceOf(failure, GitCommandError);
-				if (Schema.is(GitCommandError)(failure)) {
+				if (S.is(GitCommandError)(failure)) {
 					assert.include(failure.detail ?? "", "parse as an option");
 					assert.deepStrictEqual([...failure.args], ["-b"]);
 				}
@@ -577,7 +588,7 @@ describe("Git", () => {
 				});
 				const failure = yield* Effect.flip(run(program, neverSpawn));
 				assert.instanceOf(failure, GitCommandError);
-				if (Schema.is(GitCommandError)(failure)) {
+				if (S.is(GitCommandError)(failure)) {
 					assert.include(failure.detail ?? "", "parse as an option");
 				}
 			}),
@@ -591,7 +602,7 @@ describe("Git", () => {
 				});
 				const failure = yield* Effect.flip(run(program, neverSpawn));
 				assert.instanceOf(failure, GitCommandError);
-				if (Schema.is(GitCommandError)(failure)) {
+				if (S.is(GitCommandError)(failure)) {
 					assert.deepStrictEqual([...failure.args], ["--fork-point"]);
 				}
 			}),
@@ -634,7 +645,7 @@ describe("Git", () => {
 				);
 				assert.isFalse(spawned);
 				assert.instanceOf(failure, GitCommandError);
-				if (Schema.is(GitCommandError)(failure)) {
+				if (S.is(GitCommandError)(failure)) {
 					assert.strictEqual(failure.kind, "refused");
 				}
 			}),
@@ -803,7 +814,7 @@ describe("Git", () => {
 					assert.deepStrictEqual(args, ["symbolic-ref", "--quiet", "--short", "refs/remotes/origin/HEAD"]);
 					return { stdout: "origin/main\n", exit: 0 };
 				});
-				assert.deepStrictEqual(result, Option.some("main"));
+				assert.deepStrictEqual(result, O.some("main"));
 			}),
 		);
 
@@ -814,7 +825,7 @@ describe("Git", () => {
 					return yield* git.defaultBranch(cwd);
 				});
 				const result = yield* run(program, () => ({ exit: 1 }));
-				assert.deepStrictEqual(result, Option.none());
+				assert.deepStrictEqual(result, O.none());
 			}),
 		);
 
@@ -841,7 +852,7 @@ describe("Git", () => {
 					assert.deepStrictEqual(args, ["rev-parse", "--abbrev-ref", "HEAD"]);
 					return { stdout: "feat/git-updates\n", exit: 0 };
 				});
-				assert.deepStrictEqual(result, Option.some("feat/git-updates"));
+				assert.deepStrictEqual(result, O.some("feat/git-updates"));
 			}),
 		);
 
@@ -852,7 +863,7 @@ describe("Git", () => {
 					return yield* git.currentBranch(cwd);
 				});
 				const result = yield* run(program, () => ({ stdout: "HEAD\n", exit: 0 }));
-				assert.deepStrictEqual(result, Option.none());
+				assert.deepStrictEqual(result, O.none());
 			}),
 		);
 	});
@@ -912,7 +923,7 @@ describe("Git", () => {
 				});
 				const failure = yield* Effect.flip(run(program, () => ({ stdout: "--path-format=absolute\n.git\n", exit: 0 })));
 				assert.instanceOf(failure, GitCommandError);
-				if (Schema.is(GitCommandError)(failure)) {
+				if (S.is(GitCommandError)(failure)) {
 					assert.strictEqual(failure.kind, "failed");
 					assert.include(failure.detail ?? "", "2.31");
 				}
@@ -947,7 +958,7 @@ describe("Git", () => {
 					assert.deepStrictEqual(args, ["config", "--get", "user.signingkey"]);
 					return { stdout: "ABC123\n", exit: 0 };
 				});
-				assert.deepStrictEqual(result, Option.some("ABC123"));
+				assert.deepStrictEqual(result, O.some("ABC123"));
 			}),
 		);
 
@@ -958,7 +969,7 @@ describe("Git", () => {
 					return yield* git.configGet(cwd, "user.signingkey");
 				});
 				const result = yield* run(program, () => ({ exit: 1 }));
-				assert.deepStrictEqual(result, Option.none());
+				assert.deepStrictEqual(result, O.none());
 			}),
 		);
 
@@ -992,7 +1003,7 @@ describe("Git", () => {
 					assert.deepStrictEqual(args, ["remote", "get-url", "origin"]);
 					return { stdout: "git@github.com:o/r.git\n", exit: 0 };
 				});
-				assert.deepStrictEqual(result, Option.some("git@github.com:o/r.git"));
+				assert.deepStrictEqual(result, O.some("git@github.com:o/r.git"));
 			}),
 		);
 
@@ -1003,7 +1014,7 @@ describe("Git", () => {
 					return yield* git.remoteUrl(cwd, { remote: "upstream" });
 				});
 				const result = yield* run(program, () => ({ stderr: "error: No such remote 'upstream'\n", exit: 2 }));
-				assert.deepStrictEqual(result, Option.none());
+				assert.deepStrictEqual(result, O.none());
 			}),
 		);
 	});
@@ -1171,7 +1182,7 @@ describe("Git", () => {
 				});
 				const failure = yield* Effect.flip(run(program, () => ({ stderr: "fatal: bad boom\n", exit: 128 })));
 				assert.instanceOf(failure, GitCommandError);
-				if (Schema.is(GitCommandError)(failure)) {
+				if (S.is(GitCommandError)(failure)) {
 					assert.strictEqual(failure.kind, "failed");
 					assert.strictEqual(failure.exitCode, 128);
 				}
@@ -1186,7 +1197,7 @@ describe("Git", () => {
 				});
 				const failure = yield* Effect.flip(run(program, neverSpawn));
 				assert.instanceOf(failure, GitCommandError);
-				if (Schema.is(GitCommandError)(failure)) {
+				if (S.is(GitCommandError)(failure)) {
 					assert.strictEqual(failure.kind, "refused");
 				}
 			}),
@@ -1213,7 +1224,7 @@ describe("Git", () => {
 				});
 				const failure = yield* Effect.flip(run(program, () => ({ stderr: "fatal: cannot clean\n", exit: 1 })));
 				assert.instanceOf(failure, GitCommandError);
-				if (Schema.is(GitCommandError)(failure)) {
+				if (S.is(GitCommandError)(failure)) {
 					assert.strictEqual(failure.kind, "failed");
 				}
 			}),
@@ -1248,7 +1259,7 @@ describe("Git", () => {
 				});
 				const failure = yield* Effect.flip(run(guarded, neverSpawn));
 				assert.instanceOf(failure, GitCommandError);
-				if (Schema.is(GitCommandError)(failure)) {
+				if (S.is(GitCommandError)(failure)) {
 					assert.strictEqual(failure.kind, "refused");
 				}
 			}),
@@ -1313,7 +1324,7 @@ describe("Git", () => {
 				});
 				const failure = yield* Effect.flip(run(guarded, neverSpawn));
 				assert.instanceOf(failure, GitCommandError);
-				if (Schema.is(GitCommandError)(failure)) {
+				if (S.is(GitCommandError)(failure)) {
 					assert.strictEqual(failure.kind, "refused");
 				}
 			}),
@@ -1333,7 +1344,7 @@ describe("Git", () => {
 				});
 				const startFailure = yield* Effect.flip(run(badStart, neverSpawn));
 				assert.instanceOf(startFailure, GitCommandError);
-				if (Schema.is(GitCommandError)(startFailure)) {
+				if (S.is(GitCommandError)(startFailure)) {
 					assert.strictEqual(startFailure.kind, "refused");
 				}
 			}),
@@ -1374,7 +1385,7 @@ describe("Git", () => {
 					run(program, () => ({ stderr: "error: the branch 'feat/x' is not fully merged\n", exit: 1 })),
 				);
 				assert.instanceOf(failure, GitCommandError);
-				if (Schema.is(GitCommandError)(failure)) {
+				if (S.is(GitCommandError)(failure)) {
 					assert.strictEqual(failure.kind, "failed");
 				}
 			}),
@@ -1427,7 +1438,7 @@ describe("Git", () => {
 					})),
 				);
 				assert.instanceOf(failure, GitCommandError);
-				if (Schema.is(GitCommandError)(failure)) {
+				if (S.is(GitCommandError)(failure)) {
 					assert.strictEqual(failure.kind, "failed");
 					assert.strictEqual(failure.exitCode, 128);
 				}
@@ -1442,7 +1453,7 @@ describe("Git", () => {
 				});
 				const failure = yield* Effect.flip(run(program, () => ({ stderr: "fatal: nope\n", exit: 128 })));
 				assert.instanceOf(failure, GitCommandError);
-				if (Schema.is(GitCommandError)(failure)) {
+				if (S.is(GitCommandError)(failure)) {
 					assert.deepStrictEqual([...failure.args], ["fetch", "--unshallow", "https://<redacted>@github.com/a/r.git"]);
 					assert.notInclude(failure.message, "ghp_secret");
 				}
@@ -1461,7 +1472,7 @@ describe("Git", () => {
 					}),
 				);
 				assert.instanceOf(failure, GitCommandError);
-				if (Schema.is(GitCommandError)(failure)) {
+				if (S.is(GitCommandError)(failure)) {
 					assert.strictEqual(failure.kind, "refused");
 				}
 			}),
@@ -1551,7 +1562,7 @@ describe("Git", () => {
 					}),
 				);
 				assert.instanceOf(failure, GitCommandError);
-				if (Schema.is(GitCommandError)(failure)) {
+				if (S.is(GitCommandError)(failure)) {
 					assert.strictEqual(failure.kind, "refused");
 				}
 				assert.isFalse(spawned);
@@ -1571,7 +1582,7 @@ describe("Git", () => {
 				if (Exit.isFailure(exit)) {
 					// Cause.failureOption does not exist at beta.98 — findFail returns a Result.
 					const found = Cause.findFail(exit.cause);
-					assert.isTrue(Result.isSuccess(found) && Schema.is(UnknownRefError)(found.success.error));
+					assert.isTrue(Result.isSuccess(found) && S.is(UnknownRefError)(found.success.error));
 				}
 			}),
 		);
@@ -1674,7 +1685,7 @@ describe("Git", () => {
 				assert.isTrue(Exit.isFailure(exit));
 				if (Exit.isFailure(exit)) {
 					const found = Cause.findFail(exit.cause);
-					assert.isTrue(Result.isSuccess(found) && Schema.is(NotARepositoryError)(found.success.error));
+					assert.isTrue(Result.isSuccess(found) && S.is(NotARepositoryError)(found.success.error));
 				}
 			}),
 		);
@@ -1820,7 +1831,7 @@ describe("Git", () => {
 				});
 				const updateFailure = yield* Effect.flip(run(updateProgram, record));
 				assert.instanceOf(updateFailure, GitCommandError);
-				if (Schema.is(GitCommandError)(updateFailure)) {
+				if (S.is(GitCommandError)(updateFailure)) {
 					assert.strictEqual(updateFailure.kind, "refused");
 				}
 				const addProgram = Effect.gen(function* () {
@@ -1829,7 +1840,7 @@ describe("Git", () => {
 				});
 				const addFailure = yield* Effect.flip(run(addProgram, record));
 				assert.instanceOf(addFailure, GitCommandError);
-				if (Schema.is(GitCommandError)(addFailure)) {
+				if (S.is(GitCommandError)(addFailure)) {
 					assert.strictEqual(addFailure.kind, "refused");
 				}
 				assert.isFalse(spawned);
@@ -1985,7 +1996,7 @@ describe("Git", () => {
 				);
 				assert.isFalse(spawned);
 				assert.instanceOf(failure, GitCommandError);
-				if (Schema.is(GitCommandError)(failure)) {
+				if (S.is(GitCommandError)(failure)) {
 					assert.strictEqual(failure.kind, "refused");
 					assert.include(failure.detail ?? "", "non-negative integer");
 				}
@@ -2007,7 +2018,7 @@ describe("Git", () => {
 				);
 				assert.isFalse(spawned);
 				assert.instanceOf(failure, GitCommandError);
-				if (Schema.is(GitCommandError)(failure)) {
+				if (S.is(GitCommandError)(failure)) {
 					assert.strictEqual(failure.kind, "refused");
 				}
 			}),
@@ -2090,7 +2101,7 @@ describe("Git", () => {
 				});
 				const failure = yield* Effect.flip(run(program, neverSpawn));
 				assert.instanceOf(failure, GitCommandError);
-				if (Schema.is(GitCommandError)(failure)) {
+				if (S.is(GitCommandError)(failure)) {
 					assert.strictEqual(failure.kind, "refused");
 					assert.include(failure.detail ?? "", "paths or all");
 				}
@@ -2138,7 +2149,7 @@ describe("Git", () => {
 					}),
 				);
 				assert.instanceOf(failure, GitCommandError);
-				if (Schema.is(GitCommandError)(failure)) {
+				if (S.is(GitCommandError)(failure)) {
 					assert.notInclude(failure.args.join(" "), "ghp_secret");
 					assert.include(failure.args.join(" "), "https://<redacted>@github.com/a/r.git");
 					assert.notInclude(failure.message, "ghp_secret");
@@ -2155,7 +2166,7 @@ describe("Git", () => {
 				});
 				const failure = yield* Effect.flip(run(program, () => ({ stderr: "error: cannot write\n", exit: 255 })));
 				assert.instanceOf(failure, GitCommandError);
-				if (Schema.is(GitCommandError)(failure)) {
+				if (S.is(GitCommandError)(failure)) {
 					assert.notInclude(failure.args.join(" "), "tok123");
 					assert.deepStrictEqual([...failure.args], ["config", "http.extraheader", "<redacted>"]);
 					assert.notInclude(failure.message, "tok123");
@@ -2171,7 +2182,7 @@ describe("Git", () => {
 				});
 				const failure = yield* Effect.flip(run(program, neverSpawn));
 				assert.instanceOf(failure, GitCommandError);
-				if (Schema.is(GitCommandError)(failure)) {
+				if (S.is(GitCommandError)(failure)) {
 					assert.strictEqual(failure.kind, "refused");
 					assert.deepStrictEqual([...failure.args], ["<redacted>"]);
 					assert.notInclude(failure.detail ?? "", "--secret-looking-value");
@@ -2187,7 +2198,7 @@ describe("Git", () => {
 				});
 				const failure = yield* Effect.flip(run(program, neverSpawn));
 				assert.instanceOf(failure, GitCommandError);
-				if (Schema.is(GitCommandError)(failure)) {
+				if (S.is(GitCommandError)(failure)) {
 					assert.strictEqual(failure.kind, "refused");
 				}
 			}),
@@ -2241,7 +2252,7 @@ describe("Git", () => {
 				});
 				const failure = yield* Effect.flip(run(program, neverSpawn));
 				assert.instanceOf(failure, GitCommandError);
-				if (Schema.is(GitCommandError)(failure)) {
+				if (S.is(GitCommandError)(failure)) {
 					assert.strictEqual(failure.kind, "refused");
 				}
 			}),
@@ -2257,7 +2268,7 @@ describe("Git", () => {
 					run(program, () => ({ stderr: "error: the following file has local modifications\n", exit: 1 })),
 				);
 				assert.instanceOf(failure, GitCommandError);
-				if (Schema.is(GitCommandError)(failure)) {
+				if (S.is(GitCommandError)(failure)) {
 					assert.strictEqual(failure.kind, "failed");
 					assert.strictEqual(failure.exitCode, 1);
 					assert.include(failure.stderr, "local modifications");
@@ -2347,7 +2358,7 @@ describe("Git — remaining tiers (round 2)", () => {
 				});
 				const failure = yield* Effect.flip(run(program, () => ({ stderr: "fatal: boom\n", exit: 128 })));
 				assert.instanceOf(failure, GitCommandError);
-				if (Schema.is(GitCommandError)(failure)) {
+				if (S.is(GitCommandError)(failure)) {
 					assert.deepStrictEqual([...failure.args], ["ls-remote", "https://<redacted>@example.com/r.git"]);
 					assert.notInclude(failure.message, "user:tok");
 				}
@@ -2362,7 +2373,7 @@ describe("Git — remaining tiers (round 2)", () => {
 				});
 				const failure = yield* Effect.flip(run(program, neverSpawn));
 				assert.instanceOf(failure, GitCommandError);
-				if (Schema.is(GitCommandError)(failure)) {
+				if (S.is(GitCommandError)(failure)) {
 					assert.strictEqual(failure.kind, "refused");
 				}
 			}),
@@ -2380,7 +2391,7 @@ describe("Git — remaining tiers (round 2)", () => {
 					run(program, () => ({ stderr: "error: remote up already exists\n", exit: 3 })),
 				);
 				assert.instanceOf(failure, GitCommandError);
-				if (Schema.is(GitCommandError)(failure)) {
+				if (S.is(GitCommandError)(failure)) {
 					assert.deepStrictEqual([...failure.args], ["remote", "add", "up", "https://<redacted>@example.com/r.git"]);
 				}
 			}),
@@ -2407,7 +2418,7 @@ describe("Git — remaining tiers (round 2)", () => {
 				});
 				const failure = yield* Effect.flip(run(program, neverSpawn));
 				assert.instanceOf(failure, GitCommandError);
-				if (Schema.is(GitCommandError)(failure)) {
+				if (S.is(GitCommandError)(failure)) {
 					assert.strictEqual(failure.kind, "refused");
 				}
 			}),
@@ -2484,7 +2495,7 @@ describe("Git — remaining tiers (round 2)", () => {
 				});
 				const failure = yield* Effect.flip(run(program, neverSpawn));
 				assert.instanceOf(failure, GitCommandError);
-				if (Schema.is(GitCommandError)(failure)) {
+				if (S.is(GitCommandError)(failure)) {
 					assert.strictEqual(failure.kind, "refused");
 					assert.include(failure.detail ?? "", "non-negative integer");
 				}
@@ -2560,7 +2571,7 @@ describe("Git — remaining tiers (round 2)", () => {
 				});
 				const failure = yield* Effect.flip(run(guarded, neverSpawn));
 				assert.instanceOf(failure, GitCommandError);
-				if (Schema.is(GitCommandError)(failure)) {
+				if (S.is(GitCommandError)(failure)) {
 					assert.strictEqual(failure.kind, "refused");
 				}
 			}),
@@ -2574,7 +2585,7 @@ describe("Git — remaining tiers (round 2)", () => {
 				});
 				const failure = yield* Effect.flip(run(program, neverSpawn));
 				assert.instanceOf(failure, GitCommandError);
-				if (Schema.is(GitCommandError)(failure)) {
+				if (S.is(GitCommandError)(failure)) {
 					assert.strictEqual(failure.kind, "refused");
 				}
 			}),
@@ -2607,7 +2618,7 @@ describe("Git — remaining tiers (round 2)", () => {
 					})),
 				);
 				assert.instanceOf(failure, NonFastForwardError);
-				if (Schema.is(NonFastForwardError)(failure)) {
+				if (S.is(NonFastForwardError)(failure)) {
 					assert.strictEqual(failure.refspec, "main");
 				}
 			}),
@@ -2650,7 +2661,7 @@ describe("Git — remaining tiers (round 2)", () => {
 				});
 				const failure = yield* Effect.flip(run(program, () => ({ stderr: "fatal: boom\n", exit: 128 })));
 				assert.instanceOf(failure, GitCommandError);
-				if (Schema.is(GitCommandError)(failure)) {
+				if (S.is(GitCommandError)(failure)) {
 					assert.deepStrictEqual([...failure.args], ["push", "https://<redacted>@github.com/a/r.git", "main"]);
 					assert.notInclude(failure.message, "x:tok");
 				}
@@ -2781,7 +2792,7 @@ describe("Git — remaining tiers (round 2)", () => {
 				});
 				const failure = yield* Effect.flip(run(program, () => ({ exit: 5 })));
 				assert.instanceOf(failure, GitCommandError);
-				if (Schema.is(GitCommandError)(failure)) {
+				if (S.is(GitCommandError)(failure)) {
 					assert.strictEqual(failure.exitCode, 5);
 				}
 			}),
@@ -2818,7 +2829,7 @@ describe("Git — remaining tiers (round 2)", () => {
 					run(program, () => ({ stderr: "fatal: no such section: submodule.phantom\n", exit: 128 })),
 				);
 				assert.instanceOf(failure, GitCommandError);
-				if (Schema.is(GitCommandError)(failure)) {
+				if (S.is(GitCommandError)(failure)) {
 					assert.strictEqual(failure.exitCode, 128);
 				}
 			}),
@@ -2857,7 +2868,7 @@ describe("Git — remaining tiers (round 2)", () => {
 				});
 				const removeFailure = yield* Effect.flip(run(removeProgram, record));
 				assert.instanceOf(removeFailure, GitCommandError);
-				if (Schema.is(GitCommandError)(removeFailure)) {
+				if (S.is(GitCommandError)(removeFailure)) {
 					assert.strictEqual(removeFailure.kind, "refused");
 				}
 				const renameProgram = Effect.gen(function* () {
@@ -2866,7 +2877,7 @@ describe("Git — remaining tiers (round 2)", () => {
 				});
 				const renameFailure = yield* Effect.flip(run(renameProgram, record));
 				assert.instanceOf(renameFailure, GitCommandError);
-				if (Schema.is(GitCommandError)(renameFailure)) {
+				if (S.is(GitCommandError)(renameFailure)) {
 					assert.strictEqual(renameFailure.kind, "refused");
 				}
 				const fileProgram = Effect.gen(function* () {
@@ -2875,7 +2886,7 @@ describe("Git — remaining tiers (round 2)", () => {
 				});
 				const fileFailure = yield* Effect.flip(run(fileProgram, record));
 				assert.instanceOf(fileFailure, GitCommandError);
-				if (Schema.is(GitCommandError)(fileFailure)) {
+				if (S.is(GitCommandError)(fileFailure)) {
 					assert.strictEqual(fileFailure.kind, "refused");
 				}
 				assert.isFalse(spawned);
@@ -2927,7 +2938,7 @@ describe("Git — remaining tiers (round 2)", () => {
 				});
 				const failure = yield* Effect.flip(run(program, neverSpawn));
 				assert.instanceOf(failure, GitCommandError);
-				if (Schema.is(GitCommandError)(failure)) {
+				if (S.is(GitCommandError)(failure)) {
 					assert.strictEqual(failure.kind, "refused");
 				}
 			}),

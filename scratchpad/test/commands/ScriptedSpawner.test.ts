@@ -6,7 +6,11 @@
 // path, hang, unref observation, and the loud pipeline refusal.
 
 import { assert, describe, it } from "@effect/vitest";
-import { Cause, Effect, Exit, Fiber, Schema } from "effect";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Fiber from "effect/Fiber";
+import * as S from "effect/Schema";
 import { ChildProcess } from "effect/process";
 import { TestClock } from "effect/testing";
 import { CommandFailedError, Run } from "../../effected/commands/Run.ts";
@@ -74,7 +78,7 @@ describe("ScriptedSpawner.make", () => {
 			const spawner = ScriptedSpawner.make((command) => ScriptedSpawner.notFound(command));
 			const error = yield* Effect.flip(Run.collect(cmd("missing")).pipe(Effect.provide(spawner.layer)));
 			assert.instanceOf(error, CommandFailedError);
-			if (Schema.is(CommandFailedError)(error)) {
+			if (S.is(CommandFailedError)(error)) {
 				assert.strictEqual(error.kind, "spawn");
 				assert.isTrue(error.notFound, "a NotFound system error must classify as absent");
 			}
@@ -87,7 +91,7 @@ describe("ScriptedSpawner.make", () => {
 			const spawner = ScriptedSpawner.make((command) => ScriptedSpawner.permissionDenied(command));
 			const error = yield* Effect.flip(Run.collect(cmd("blocked")).pipe(Effect.provide(spawner.layer)));
 			assert.instanceOf(error, CommandFailedError);
-			if (Schema.is(CommandFailedError)(error)) {
+			if (S.is(CommandFailedError)(error)) {
 				assert.strictEqual(error.kind, "spawn");
 				assert.isFalse(error.notFound);
 			}
@@ -97,13 +101,13 @@ describe("ScriptedSpawner.make", () => {
 	it.effect("hang never resolves exitCode, so an opted-in timeout fires", () =>
 		Effect.gen(function* () {
 			const spawner = ScriptedSpawner.make(() => ({ hang: true }));
-			const fiber = yield* Effect.forkChild(
-				Effect.flip(Run.collect(cmd(), { timeout: "30 seconds" }).pipe(Effect.provide(spawner.layer))),
+			const fiber = yield* Run.collect(cmd(), { timeout: "30 seconds" }).pipe(
+				Effect.provide(spawner.layer), Effect.flip, Effect.forkChild,
 			);
 			yield* TestClock.adjust("31 seconds");
 			const error = yield* Fiber.join(fiber);
 			assert.instanceOf(error, CommandFailedError);
-			if (Schema.is(CommandFailedError)(error)) {
+			if (S.is(CommandFailedError)(error)) {
 				assert.strictEqual(error.kind, "timeout");
 			}
 		}),

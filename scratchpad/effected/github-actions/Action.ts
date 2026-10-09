@@ -1,6 +1,15 @@
 import { NodeServices } from "@effect/platform-node";
 import { WorkflowCommand } from "../github-commands/index.ts";
-import { Cause, Console, Context, Effect, Exit, Layer, LogLevel, Option, References, Result } from "effect";
+import * as Cause from "effect/Cause";
+import * as Console from "effect/Console";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Layer from "effect/Layer";
+import * as LogLevel from "effect/LogLevel";
+import * as O from "effect/Option";
+import * as References from "effect/References";
+import * as Result from "effect/Result";
 import type { HttpClient } from "effect/http";
 import { FetchHttpClient } from "effect/http";
 import { ActionEnvironment } from "./ActionEnvironment.ts";
@@ -146,7 +155,7 @@ const withStepDebugLogLevel = <A, E, R>(program: Effect.Effect<A, E, R>): Effect
  */
 export const describeCause = (cause: Cause.Cause<unknown>): string => {
 	const failure = Cause.findErrorOption(cause);
-	if (Option.isSome(failure)) {
+	if (O.isSome(failure)) {
 		return describeError(failure.value);
 	}
 	const defect = Cause.findDefect(cause);

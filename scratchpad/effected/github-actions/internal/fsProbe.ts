@@ -1,8 +1,9 @@
 // "Is there a file / a directory at this path?" — the probe the installers
 // ask before deciding whether to reinstall, skip or fail typed.
 
-import type { FileSystem } from "effect";
-import { Effect, Function } from "effect";
+import type * as FileSystem from "effect/FileSystem";
+import * as Effect from "effect/Effect";
+import * as Function from "effect/Function";
 
 /**
  * The entry's type, or `undefined` when nothing readable is there. Absence

@@ -1,6 +1,8 @@
 import { Walker } from "../walker/index.ts";
-import type { FileSystem, Option } from "effect";
-import { Effect, Path } from "effect";
+import type * as FileSystem from "effect/FileSystem";
+import type * as O from "effect/Option";
+import * as Effect from "effect/Effect";
+import * as Path from "effect/Path";
 
 /**
  * Options for {@link TsconfigDiscovery.findNearest}.
@@ -18,7 +20,7 @@ export interface FindNearestOptions {
 const findNearest = (
 	start: string,
 	options?: FindNearestOptions,
-): Effect.Effect<Option.Option<string>, never, FileSystem.FileSystem | Path.Path> =>
+): Effect.Effect<O.Option<string>, never, FileSystem.FileSystem | Path.Path> =>
 	Effect.gen(function* () {
 		const path = yield* Path.Path;
 		const filename = options?.filename ?? "tsconfig.json";

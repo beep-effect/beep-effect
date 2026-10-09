@@ -7,7 +7,7 @@
 // at all.
 
 import { assert, describe, it } from "@effect/vitest";
-import { SchemaIssue } from "effect";
+import * as SchemaIssue from "effect/SchemaIssue";
 import { ReleaseTag } from "../../effected/workspaces/index.ts";
 
 // beta.105 gives construction throws the generic message "Schema validation

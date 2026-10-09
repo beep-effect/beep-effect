@@ -1,5 +1,7 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Option, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import {
 	CatalogSpecifier,
 	DependencySpecifier,
@@ -38,7 +40,7 @@ describe("DependencySpecifier schema", () => {
 	it.effect("accepts every recognized specifier", () =>
 		Effect.gen(function* () {
 			for (const specifier of valid) {
-				assert.strictEqual(yield* Schema.decodeEffect(DependencySpecifier)(specifier), specifier);
+				assert.strictEqual(yield* S.decodeEffect(DependencySpecifier)(specifier), specifier);
 			}
 		}),
 	);
@@ -46,7 +48,7 @@ describe("DependencySpecifier schema", () => {
 	it.effect("rejects garbage, unknown protocols and empty string", () =>
 		Effect.gen(function* () {
 			for (const specifier of ["!!garbage", "patch:lodash", ""]) {
-				const error = yield* Effect.flip(Schema.decodeEffect(DependencySpecifier)(specifier));
+				const error = yield* Effect.flip(S.decodeEffect(DependencySpecifier)(specifier));
 				assert.strictEqual(error._tag, "SchemaError", specifier);
 			}
 		}),
@@ -94,31 +96,31 @@ describe("DependencySpecifier.protocolOf", () => {
 		assert.isTrue(DependencySpecifier.isRange(">=1.0.0 <2.0.0"));
 		assert.isFalse(DependencySpecifier.isRange("latest"));
 		assert.isFalse(DependencySpecifier.isRange("workspace:*"));
-		assert.isTrue(Option.isSome(DependencySpecifier.parseRange("^1.0.0")));
-		assert.isTrue(Option.isNone(DependencySpecifier.parseRange("latest")));
+		assert.isTrue(O.isSome(DependencySpecifier.parseRange("^1.0.0")));
+		assert.isTrue(O.isNone(DependencySpecifier.parseRange("latest")));
 	});
 });
 
 describe("DependencySpecifier.catalogNameOf", () => {
 	it("is Some(name) for a named catalog", () => {
-		assert.deepStrictEqual(DependencySpecifier.catalogNameOf("catalog:react18"), Option.some("react18"));
-		assert.deepStrictEqual(DependencySpecifier.catalogNameOf("catalog:build"), Option.some("build"));
+		assert.deepStrictEqual(DependencySpecifier.catalogNameOf("catalog:react18"), O.some("react18"));
+		assert.deepStrictEqual(DependencySpecifier.catalogNameOf("catalog:build"), O.some("build"));
 	});
 
 	it("is None for the default catalog — bare and whitespace-only", () => {
-		assert.isTrue(Option.isNone(DependencySpecifier.catalogNameOf("catalog:")));
-		assert.isTrue(Option.isNone(DependencySpecifier.catalogNameOf("catalog:  ")));
+		assert.isTrue(O.isNone(DependencySpecifier.catalogNameOf("catalog:")));
+		assert.isTrue(O.isNone(DependencySpecifier.catalogNameOf("catalog:  ")));
 	});
 
 	it("is None for non-catalog input (only meaningful when isCatalog is true)", () => {
-		assert.isTrue(Option.isNone(DependencySpecifier.catalogNameOf("workspace:*")));
-		assert.isTrue(Option.isNone(DependencySpecifier.catalogNameOf("^1.0.0")));
-		assert.isTrue(Option.isNone(DependencySpecifier.catalogNameOf("")));
+		assert.isTrue(O.isNone(DependencySpecifier.catalogNameOf("workspace:*")));
+		assert.isTrue(O.isNone(DependencySpecifier.catalogNameOf("^1.0.0")));
+		assert.isTrue(O.isNone(DependencySpecifier.catalogNameOf("")));
 	});
 
 	it.effect("agrees with FromString's CatalogSpecifier classification (one extraction, not two)", () =>
 		Effect.gen(function* () {
-			const decode = Schema.decodeUnknownEffect(DependencySpecifier.FromString);
+			const decode = S.decodeUnknownEffect(DependencySpecifier.FromString);
 			for (const specifier of ["catalog:", "catalog:react18"]) {
 				const classified = yield* decode(specifier);
 				assert.instanceOf(classified, CatalogSpecifier, specifier);
@@ -175,25 +177,25 @@ describe("DependencySpecifier.resolveWorkspace", () => {
 
 describe("DependencySpecifier.workspaceTargetOf", () => {
 	it("extracts the target package name of an alias form", () => {
-		assert.deepStrictEqual(DependencySpecifier.workspaceTargetOf("workspace:foo@*"), Option.some("foo"));
-		assert.deepStrictEqual(DependencySpecifier.workspaceTargetOf("workspace:foo@^1.0.0"), Option.some("foo"));
-		assert.deepStrictEqual(DependencySpecifier.workspaceTargetOf("workspace:@scope/foo@~"), Option.some("@scope/foo"));
+		assert.deepStrictEqual(DependencySpecifier.workspaceTargetOf("workspace:foo@*"), O.some("foo"));
+		assert.deepStrictEqual(DependencySpecifier.workspaceTargetOf("workspace:foo@^1.0.0"), O.some("foo"));
+		assert.deepStrictEqual(DependencySpecifier.workspaceTargetOf("workspace:@scope/foo@~"), O.some("@scope/foo"));
 	});
 
 	it("is None for the plain form and for non-workspace input", () => {
-		assert.deepStrictEqual(DependencySpecifier.workspaceTargetOf("workspace:*"), Option.none());
-		assert.deepStrictEqual(DependencySpecifier.workspaceTargetOf("workspace:^1.0.0"), Option.none());
+		assert.deepStrictEqual(DependencySpecifier.workspaceTargetOf("workspace:*"), O.none());
+		assert.deepStrictEqual(DependencySpecifier.workspaceTargetOf("workspace:^1.0.0"), O.none());
 		// A lone scoped name has its only `@` at index 0 — not the alias form.
-		assert.deepStrictEqual(DependencySpecifier.workspaceTargetOf("workspace:@scope/foo"), Option.none());
-		assert.deepStrictEqual(DependencySpecifier.workspaceTargetOf("^1.0.0"), Option.none());
-		assert.deepStrictEqual(DependencySpecifier.workspaceTargetOf("catalog:"), Option.none());
+		assert.deepStrictEqual(DependencySpecifier.workspaceTargetOf("workspace:@scope/foo"), O.none());
+		assert.deepStrictEqual(DependencySpecifier.workspaceTargetOf("^1.0.0"), O.none());
+		assert.deepStrictEqual(DependencySpecifier.workspaceTargetOf("catalog:"), O.none());
 	});
 });
 
 describe("WorkspaceSpecifier#resolve", () => {
 	it.effect("applies the same projection to the decoded range", () =>
 		Effect.gen(function* () {
-			const decode = Schema.decodeUnknownEffect(DependencySpecifier.FromString);
+			const decode = S.decodeUnknownEffect(DependencySpecifier.FromString);
 			const cases: ReadonlyArray<[string, string]> = [
 				["workspace:*", "1.2.3"],
 				["workspace:^", "^1.2.3"],
@@ -233,16 +235,16 @@ describe("DependencySpecifier.decode", () => {
 describe("DependencySpecifier.FromString", () => {
 	it.effect("classifies each case and preserves the raw string", () =>
 		Effect.gen(function* () {
-			const decode = Schema.decodeUnknownEffect(DependencySpecifier.FromString);
+			const decode = S.decodeUnknownEffect(DependencySpecifier.FromString);
 
 			const defaultCatalog = yield* decode("catalog:");
 			assert.instanceOf(defaultCatalog, CatalogSpecifier);
 			assert.strictEqual(defaultCatalog._tag, "catalog");
-			assert.isTrue(Option.isNone((defaultCatalog as CatalogSpecifier).name));
+			assert.isTrue(O.isNone((defaultCatalog as CatalogSpecifier).name));
 			assert.strictEqual(defaultCatalog.raw, "catalog:");
 
 			const namedCatalog = yield* decode("catalog:react18");
-			assert.deepStrictEqual((namedCatalog as CatalogSpecifier).name, Option.some("react18"));
+			assert.deepStrictEqual((namedCatalog as CatalogSpecifier).name, O.some("react18"));
 
 			const ws = yield* decode("workspace:^1.2.3");
 			assert.instanceOf(ws, WorkspaceSpecifier);
@@ -275,7 +277,7 @@ describe("DependencySpecifier.FromString", () => {
 	it.effect("fails decoding an invalid specifier", () =>
 		Effect.gen(function* () {
 			for (const bad of ["", "!!garbage", "patch:lodash"]) {
-				const error = yield* Effect.flip(Schema.decodeEffect(DependencySpecifier.FromString)(bad));
+				const error = yield* Effect.flip(S.decodeEffect(DependencySpecifier.FromString)(bad));
 				assert.strictEqual(error._tag, "SchemaError", bad);
 			}
 		}),
@@ -284,7 +286,7 @@ describe("DependencySpecifier.FromString", () => {
 	it.effect.prop(
 		"encode(decode(s)) === s for every recognized specifier (byte-for-byte round-trip)",
 		[
-			Schema.Literals([
+			S.Literals([
 				"catalog:",
 				"catalog:react18",
 				"workspace:*",
@@ -307,8 +309,8 @@ describe("DependencySpecifier.FromString", () => {
 		],
 		([specifier]) =>
 			Effect.gen(function* () {
-				const decoded = yield* Schema.decodeEffect(DependencySpecifier.FromString)(specifier);
-				const encoded = yield* Schema.encodeUnknownEffect(DependencySpecifier.FromString)(decoded);
+				const decoded = yield* S.decodeEffect(DependencySpecifier.FromString)(specifier);
+				const encoded = yield* S.encodeUnknownEffect(DependencySpecifier.FromString)(decoded);
 				assert.strictEqual(encoded, specifier);
 			}),
 	);

@@ -1,5 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Result } from "effect";
+import * as Result from "effect/Result";
 import { WorkspacePackage } from "../../effected/workspaces/index.ts";
 import {
 	binConflict,

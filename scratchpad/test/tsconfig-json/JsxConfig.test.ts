@@ -1,12 +1,12 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Option } from "effect";
+import * as O from "effect/Option";
 import type { CompilerOptions } from "../../effected/tsconfig-json/CompilerOptions.ts";
 import { JsxConfig } from "../../effected/tsconfig-json/JsxConfig.ts";
 
 /** Unwrap a `Some`, failing the test on `None`. */
-const expectSome = (result: Option.Option<JsxConfig>): JsxConfig => {
-	assert.isTrue(Option.isSome(result), "expected Some(JsxConfig)");
-	return (result as Option.Some<JsxConfig>).value;
+const expectSome = (result: O.Option<JsxConfig>): JsxConfig => {
+	assert.isTrue(O.isSome(result), "expected Some(JsxConfig)");
+	return (result as O.Some<JsxConfig>).value;
 };
 
 describe("JsxConfig.fromCompilerOptions", () => {
@@ -31,14 +31,14 @@ describe("JsxConfig.fromCompilerOptions", () => {
 	});
 
 	it("preserve leaves JSX untransformed: nothing for a bundler to configure", () => {
-		assert.isTrue(Option.isNone(JsxConfig.fromCompilerOptions({ jsx: "preserve" })));
+		assert.isTrue(O.isNone(JsxConfig.fromCompilerOptions({ jsx: "preserve" })));
 	});
 
 	it("react-native leaves JSX untransformed: nothing for a bundler to configure", () => {
-		assert.isTrue(Option.isNone(JsxConfig.fromCompilerOptions({ jsx: "react-native" })));
+		assert.isTrue(O.isNone(JsxConfig.fromCompilerOptions({ jsx: "react-native" })));
 	});
 
 	it("an absent jsx option projects to None", () => {
-		assert.isTrue(Option.isNone(JsxConfig.fromCompilerOptions({})));
+		assert.isTrue(O.isNone(JsxConfig.fromCompilerOptions({})));
 	});
 });

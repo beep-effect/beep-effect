@@ -18,10 +18,12 @@
 
 import type { JsoncPath } from "../jsonc/index.ts";
 import { JsoncEdit, JsoncModifier } from "../jsonc/index.ts";
-import { Effect, Result, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { detectIndent, renderJson, resolveIndent, sortKeys } from "./internal/format.ts";
 
-const Json = Schema.fromJsonString(Schema.Unknown);
+const Json = S.fromJsonString(S.Unknown);
 
 /**
  * Indicates that a text input could not be treated as a package.json document:
@@ -35,11 +37,11 @@ const Json = Schema.fromJsonString(Schema.Unknown);
  *
  * @public
  */
-export class PackageJsonSyntaxError extends Schema.TaggedError<PackageJsonSyntaxError>()("PackageJsonSyntaxError", {
+export class PackageJsonSyntaxError extends S.TaggedError<PackageJsonSyntaxError>()("PackageJsonSyntaxError", {
 	/** Which syntactic precondition failed. */
-	reason: Schema.Literals(["invalid-json", "not-an-object"]),
+	reason: S.Literals(["invalid-json", "not-an-object"]),
 	/** The underlying `SyntaxError` for `"invalid-json"`, preserved structurally. */
-	cause: Schema.optionalKey(Schema.Defect()),
+	cause: S.optionalKey(S.Defect()),
 }) {
 	override get message(): string {
 		return this.reason === "invalid-json"
@@ -93,11 +95,11 @@ const isJsonObject = (value: unknown): value is Record<string, unknown> =>
  *
  * @public
  */
-export class PackageJsonModifyError extends Schema.TaggedError<PackageJsonModifyError>()("PackageJsonModifyError", {
+export class PackageJsonModifyError extends S.TaggedError<PackageJsonModifyError>()("PackageJsonModifyError", {
 	/** The field path whose navigation failed. */
-	path: Schema.Array(Schema.Union([Schema.String, Schema.Finite])),
+	path: S.Array(S.Union([S.String, S.Finite])),
 	/** The underlying `JsoncModificationError`, preserved structurally. */
-	cause: Schema.Defect(),
+	cause: S.Defect(),
 }) {
 	override get message(): string {
 		return `Failed to modify package.json at path [${this.path.join(", ")}]`;
@@ -253,7 +255,7 @@ export class PackageJsonFormat {
 	) {
 		// package.json is strict JSON; a syntactic precondition keeps garbage
 		// input a typed failure instead of undefined scanner behavior.
-		const parsed = yield* Schema.decodeEffect(Json)(source).pipe(
+		const parsed = yield* S.decodeEffect(Json)(source).pipe(
 			Effect.mapError((cause) => {
 				const formatted = PackageJsonFormat.formatToString(source);
 				return Result.isFailure(formatted)

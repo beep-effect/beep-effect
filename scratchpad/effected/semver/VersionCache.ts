@@ -1,4 +1,10 @@
-import { Array as Arr, Context, Effect, Layer, Option, Ref, Schema } from "effect";
+import * as Arr from "effect/Array";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Ref from "effect/Ref";
+import * as S from "effect/Schema";
 import type { InvalidRangeError } from "./Range.ts";
 import { Range } from "./Range.ts";
 import { SemVer } from "./SemVer.ts";
@@ -10,7 +16,7 @@ import { VersionDiff } from "./VersionDiff.ts";
  *
  * @public
  */
-export class EmptyCacheError extends Schema.TaggedError<EmptyCacheError>()("EmptyCacheError", {}) {
+export class EmptyCacheError extends S.TaggedError<EmptyCacheError>()("EmptyCacheError", {}) {
 	override get message(): string {
 		return "Version cache is empty";
 	}
@@ -22,7 +28,7 @@ export class EmptyCacheError extends Schema.TaggedError<EmptyCacheError>()("Empt
  *
  * @public
  */
-export class VersionNotFoundError extends Schema.TaggedError<VersionNotFoundError>()("VersionNotFoundError", {
+export class VersionNotFoundError extends S.TaggedError<VersionNotFoundError>()("VersionNotFoundError", {
 	/** The version that was not found. */
 	version: SemVer,
 }) {
@@ -38,11 +44,11 @@ export class VersionNotFoundError extends Schema.TaggedError<VersionNotFoundErro
  *
  * @public
  */
-export class UnsatisfiedRangeError extends Schema.TaggedError<UnsatisfiedRangeError>()("UnsatisfiedRangeError", {
+export class UnsatisfiedRangeError extends S.TaggedError<UnsatisfiedRangeError>()("UnsatisfiedRangeError", {
 	/** The range that could not be satisfied. */
 	range: Range,
 	/** The versions that were available for matching. */
-	available: Schema.Array(SemVer),
+	available: S.Array(SemVer),
 }) {
 	override get message(): string {
 		const count = this.available.length;
@@ -88,9 +94,9 @@ export interface VersionCacheShape {
 	/** Diff two cached versions. Fails with {@link VersionNotFoundError} when either is missing. */
 	readonly diff: (a: SemVer, b: SemVer) => Effect.Effect<VersionDiff, VersionNotFoundError>;
 	/** The next higher cached version, `Option.none()` at the upper boundary. */
-	readonly next: (version: SemVer) => Effect.Effect<Option.Option<SemVer>, VersionNotFoundError>;
+	readonly next: (version: SemVer) => Effect.Effect<O.Option<SemVer>, VersionNotFoundError>;
 	/** The next lower cached version, `Option.none()` at the lower boundary. */
-	readonly prev: (version: SemVer) => Effect.Effect<Option.Option<SemVer>, VersionNotFoundError>;
+	readonly prev: (version: SemVer) => Effect.Effect<O.Option<SemVer>, VersionNotFoundError>;
 }
 
 // Membership and ordering follow SemVer precedence (build metadata ignored):
@@ -172,7 +178,7 @@ export class VersionCache extends Context.Service<VersionCache, VersionCacheShap
 
 			const locate = (arr: ReadonlyArray<SemVer>, version: SemVer) => {
 				const result = search(arr, version);
-				return result.found ? Option.some(result.index) : Option.none();
+				return result.found ? O.some(result.index) : O.none();
 			};
 
 			return {
@@ -215,10 +221,10 @@ export class VersionCache extends Context.Service<VersionCache, VersionCacheShap
 
 				diff: Effect.fn("VersionCache.diff")(function* (a: SemVer, b: SemVer) {
 					const arr = yield* Ref.get(ref);
-					if (Option.isNone(locate(arr, a))) {
+					if (O.isNone(locate(arr, a))) {
 						return yield* VersionNotFoundError.make({ version: a });
 					}
-					if (Option.isNone(locate(arr, b))) {
+					if (O.isNone(locate(arr, b))) {
 						return yield* VersionNotFoundError.make({ version: b });
 					}
 					return VersionDiff.between(a, b);
@@ -227,7 +233,7 @@ export class VersionCache extends Context.Service<VersionCache, VersionCacheShap
 				next: Effect.fn("VersionCache.next")(function* (version: SemVer) {
 					const arr = yield* Ref.get(ref);
 					const index = locate(arr, version);
-					if (Option.isNone(index)) {
+					if (O.isNone(index)) {
 						return yield* VersionNotFoundError.make({ version });
 					}
 					return Arr.get(arr, index.value + 1);
@@ -236,7 +242,7 @@ export class VersionCache extends Context.Service<VersionCache, VersionCacheShap
 				prev: Effect.fn("VersionCache.prev")(function* (version: SemVer) {
 					const arr = yield* Ref.get(ref);
 					const index = locate(arr, version);
-					if (Option.isNone(index)) {
+					if (O.isNone(index)) {
 						return yield* VersionNotFoundError.make({ version });
 					}
 					return Arr.get(arr, index.value - 1);

@@ -11,10 +11,12 @@
 // strict about the alphabet where Node's decoder is forgiving, which is why
 // there is a test whose payload actually contains `-` and `_`.
 
-import { Result, Schema, Function } from "effect";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
+import * as Function from "effect/Function";
 import * as Base64Url from "effect/encoding/Base64Url";
 
-const Json = Schema.fromJsonString(Schema.Unknown);
+const Json = S.fromJsonString(S.Unknown);
 
 /** Why a token's payload could not be read. @internal */
 export type JwtPayloadFailure =
@@ -38,7 +40,7 @@ export const payloadOf = (token: string): Result.Result<unknown, JwtPayloadFailu
 		return Result.fail({ kind: "payload", detail: "the payload is not base64url JSON", cause: json.failure });
 	}
 	try {
-		return Result.succeed(Result.getOrThrowWith(Schema.decodeResult(Json)(json.success), (error) => error) as unknown);
+		return Result.succeed(Result.getOrThrowWith(S.decodeResult(Json)(json.success), (error) => error) as unknown);
 	} catch (cause) {
 		return Result.fail({ kind: "payload", detail: "the payload is not base64url JSON", cause });
 	}
@@ -55,6 +57,6 @@ export const unsignedJwt: {
 	(header: unknown, payload: unknown): string;
 	(payload: unknown): (header: unknown) => string;
 } = Function.dual(2, (header: unknown, payload: unknown): string => {
-	const segment = (value: unknown): string => Base64Url.encode(Result.getOrThrowWith(Schema.encodeResult(Json)(value), (error) => error));
+	const segment = (value: unknown): string => Base64Url.encode(Result.getOrThrowWith(S.encodeResult(Json)(value), (error) => error));
 	return `${segment(header)}.${segment(payload)}.unsigned`;
 });

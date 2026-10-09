@@ -8,7 +8,9 @@
 // facade's error type; nothing imports `YamlToken.ts` back except the lint
 // layer above it.
 
-import { Result, Schema, Stream } from "effect";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import { lexAll } from "./internal/lexer.ts";
 import type { YamlToken as InternalToken } from "./internal/token.ts";
 import type { YamlParseError } from "./Yaml.ts";
@@ -18,7 +20,7 @@ import type { YamlParseError } from "./Yaml.ts";
  *
  * @public
  */
-export const YamlTokenKind = Schema.Literals([
+export const YamlTokenKind = S.Literals([
 	"document-start",
 	"document-end",
 	"directive",
@@ -62,13 +64,13 @@ export type YamlTokenKind = typeof YamlTokenKind.Type;
  *
  * @public
  */
-export class YamlToken extends Schema.Class<YamlToken>("YamlToken")({
+export class YamlToken extends S.Class<YamlToken>("YamlToken")({
 	kind: YamlTokenKind,
-	text: Schema.String,
-	offset: Schema.Finite,
-	length: Schema.Finite,
-	line: Schema.Finite,
-	character: Schema.Finite,
+	text: S.String,
+	offset: S.Finite,
+	length: S.Finite,
+	line: S.Finite,
+	character: S.Finite,
 }) {}
 
 /**

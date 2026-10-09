@@ -13,7 +13,9 @@
 // rewriting the field. A caller that wants a browsable link asks for one; a
 // caller that wants the bytes it read keeps them.
 
-import { Option, Schema, SchemaTransformation } from "effect";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 
 /** The shorthand hosts npm resolves without a scheme. */
 const SHORTHAND_HOSTS: ReadonlyMap<string, string> = new Map([
@@ -53,20 +55,20 @@ const stripGitSuffix = (value: string): string => (value.endsWith(".git") ? valu
  * Total by construction: `repository` is caller data, and a value that cannot
  * be interpreted is a missing answer rather than a failure.
  */
-const browseUrlOf = (raw: string): Option.Option<string> => {
+const browseUrlOf = (raw: string): O.Option<string> => {
 	const url = raw.trim();
-	if (url === "") return Option.none();
+	if (url === "") return O.none();
 
 	// `owner/name` — GitHub is npm's default host for the bare form.
-	if (BARE_SHORTHAND.test(url)) return Option.some(`https://github.com/${url}`);
+	if (BARE_SHORTHAND.test(url)) return O.some(`https://github.com/${url}`);
 
 	const prefixed = PREFIXED_SHORTHAND.exec(url);
 	if (prefixed !== null) {
 		const [, scheme, rest] = prefixed;
 		// `gist:id` resolves to a different host than the code-forge shorthands.
-		if (scheme === "gist") return Option.some(`https://gist.github.com/${stripGitSuffix(rest ?? "")}`);
+		if (scheme === "gist") return O.some(`https://gist.github.com/${stripGitSuffix(rest ?? "")}`);
 		const host = SHORTHAND_HOSTS.get(scheme ?? "");
-		if (host !== undefined) return Option.some(`${host}/${stripGitSuffix(rest ?? "")}`);
+		if (host !== undefined) return O.some(`${host}/${stripGitSuffix(rest ?? "")}`);
 	}
 
 	// Anything with a scheme: normalize the transport away and keep host + path.
@@ -78,7 +80,7 @@ const browseUrlOf = (raw: string): Option.Option<string> => {
 		const authorityAndPath = schemeMatch[2] ?? "";
 		// Drop any `user@` credential prefix — it is transport, not identity.
 		const withoutCredentials = authorityAndPath.replace(/^[^/@]+@/, "");
-		return withoutCredentials === "" ? Option.none() : Option.some(`https://${stripGitSuffix(withoutCredentials)}`);
+		return withoutCredentials === "" ? O.none() : O.some(`https://${stripGitSuffix(withoutCredentials)}`);
 	}
 
 	// The scp-like form has no scheme: `git@github.com:owner/name.git`.
@@ -86,11 +88,11 @@ const browseUrlOf = (raw: string): Option.Option<string> => {
 	if (scp !== null) {
 		const [, , host, path] = scp;
 		if (host !== undefined && path !== undefined && path !== "") {
-			return Option.some(`https://${host}/${stripGitSuffix(path)}`);
+			return O.some(`https://${host}/${stripGitSuffix(path)}`);
 		}
 	}
 
-	return Option.none();
+	return O.none();
 };
 
 /** The wire value a repository or bugs entry was decoded from. */
@@ -176,27 +178,27 @@ const isFaithfulBugs = (wire: { readonly [k: string]: unknown }, bugs: Bugs): bo
  *
  * @public
  */
-export class Repository extends Schema.Class<Repository>("Repository")({
+export class Repository extends S.Class<Repository>("Repository")({
 	/** The `type` field, when the object form carried one (`"git"`, …). */
-	type: Schema.optionalKey(Schema.String),
+	type: S.optionalKey(S.String),
 	/** The reference exactly as written: a shorthand, a git URL, or an https URL. */
-	url: Schema.String,
+	url: S.String,
 	/** The subdirectory within the repository, for a monorepo member. */
-	directory: Schema.optionalKey(Schema.String),
+	directory: S.optionalKey(S.String),
 	/** Keys outside the documented set, preserved so encoding does not drop them. */
-	rest: Schema.optionalKey(Schema.Record(Schema.String, Schema.Unknown)),
+	rest: S.optionalKey(S.Record(S.String, S.Unknown)),
 }) {
 	/**
 	 * The browsable `https://` URL, or `Option.none()` when `url` is not a form
 	 * this model recognizes.
 	 */
-	get browseUrl(): Option.Option<string> {
+	get browseUrl(): O.Option<string> {
 		return browseUrlOf(this.url);
 	}
 
 	/** The canonical https clone URL, or none when it cannot be derived. */
-	get gitUrl(): Option.Option<string> {
-		return Option.map(this.browseUrl, (url) => `${url}.git`);
+	get gitUrl(): O.Option<string> {
+		return O.map(this.browseUrl, (url) => `${url}.git`);
 	}
 
 	/**
@@ -247,7 +249,7 @@ export class Repository extends Schema.Class<Repository>("Repository")({
 	 * // => Option.some("https://github.com/effected/kit/tree/HEAD/packages/spdx")
 	 * ```
 	 */
-	get directoryUrl(): Option.Option<string> {
+	get directoryUrl(): O.Option<string> {
 		const directory = this.directory;
 		if (directory === undefined) return this.browseUrl;
 
@@ -256,15 +258,15 @@ export class Repository extends Schema.Class<Repository>("Repository")({
 			.map((segment) => segment.trim())
 			.filter((segment) => segment !== "" && segment !== ".");
 		// `..` would climb out of the repository the manifest names.
-		if (segments.some((segment) => segment === "..")) return Option.none();
+		if (segments.some((segment) => segment === "..")) return O.none();
 		// `"."`, `"/"`, `""` — the member is the root after all.
 		if (segments.length === 0) return this.browseUrl;
 
-		return Option.flatMap(this.browseUrl, (url) => {
+		return O.flatMap(this.browseUrl, (url) => {
 			const host = /^https:\/\/([^/]+)/.exec(url)?.[1];
 			const path = host === undefined ? undefined : DIRECTORY_PATHS.get(host);
-			if (path === undefined) return Option.none();
-			return Option.some(`${url}/${path}/${segments.map((segment) => encodeURIComponent(segment)).join("/")}`);
+			if (path === undefined) return O.none();
+			return O.some(`${url}/${path}/${segments.map((segment) => encodeURIComponent(segment)).join("/")}`);
 		});
 	}
 
@@ -273,12 +275,12 @@ export class Repository extends Schema.Class<Repository>("Repository")({
 	 * decoded to a {@link Repository}, and always re-encoded in the form it was
 	 * read from.
 	 */
-	static readonly FromValue: Schema.Codec<Repository, string | { readonly [k: string]: unknown }> = Schema.Union([
-		Schema.Record(Schema.String, Schema.Unknown),
-		Schema.String,
+	static readonly FromValue: S.Codec<Repository, string | { readonly [k: string]: unknown }> = S.Union([
+		S.Record(S.String, S.Unknown),
+		S.String,
 	]).pipe(
-		Schema.decodeTo(
-			Schema.instanceOf(Repository),
+		S.decodeTo(
+			S.instanceOf(Repository),
 			SchemaTransformation.transform({
 				decode: (input: string | { readonly [k: string]: unknown }): Repository => {
 					if (typeof input === "string") {
@@ -327,21 +329,21 @@ export class Repository extends Schema.Class<Repository>("Repository")({
  *
  * @public
  */
-export class Bugs extends Schema.Class<Bugs>("Bugs")({
+export class Bugs extends S.Class<Bugs>("Bugs")({
 	/** The issue-tracker URL. */
-	url: Schema.optionalKey(Schema.String),
+	url: S.optionalKey(S.String),
 	/** The address to mail instead of, or alongside, filing an issue. */
-	email: Schema.optionalKey(Schema.String),
+	email: S.optionalKey(S.String),
 	/** Keys outside the documented set, preserved so encoding does not drop them. */
-	rest: Schema.optionalKey(Schema.Record(Schema.String, Schema.Unknown)),
+	rest: S.optionalKey(S.Record(S.String, S.Unknown)),
 }) {
 	/** The `bugs` field: a URL string or the object form. */
-	static readonly FromValue: Schema.Codec<Bugs, string | { readonly [k: string]: unknown }> = Schema.Union([
-		Schema.Record(Schema.String, Schema.Unknown),
-		Schema.String,
+	static readonly FromValue: S.Codec<Bugs, string | { readonly [k: string]: unknown }> = S.Union([
+		S.Record(S.String, S.Unknown),
+		S.String,
 	]).pipe(
-		Schema.decodeTo(
-			Schema.instanceOf(Bugs),
+		S.decodeTo(
+			S.instanceOf(Bugs),
 			SchemaTransformation.transform({
 				decode: (input: string | { readonly [k: string]: unknown }): Bugs => {
 					if (typeof input === "string") {

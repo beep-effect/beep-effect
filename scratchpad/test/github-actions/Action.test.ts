@@ -1,12 +1,20 @@
 // @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file asyncFunction:skip-file processEnv:skip-file
 import { assert, describe, it } from "@effect/vitest";
-import { Cause, Config, ConfigProvider, Context, Effect, FileSystem, Layer, References, Schema } from "effect";
+import * as Cause from "effect/Cause";
+import * as Config from "effect/Config";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as References from "effect/References";
+import * as S from "effect/Schema";
 import { vi } from "vitest";
 import { Action, ActionEnvironment, ActionEnvironmentError, ActionInput, ActionOutputs, ActionRuntime, describeCause } from "../../effected/github-actions/index.ts";
 
 class Extra extends Context.Service<Extra, { readonly describe: Effect.Effect<string, ActionEnvironmentError> }>()("@beep/scratchpad/test/github-actions/Action.test/Extra") {}
 
-class Boom extends Schema.TaggedError<Boom>()("Boom", { detail: Schema.String }) {
+class Boom extends S.TaggedError<Boom>()("Boom", { detail: S.String }) {
 	override get message(): string {
 		return `it went wrong: ${this.detail}`;
 	}
@@ -92,7 +100,7 @@ describe("describeCause", () => {
 	it("renders a typed failure as [Tag]: message", () => {
 		// What a human scanning a workflow log for the first red line actually
 		// needs: which error, and what it said.
-		assert.strictEqual(describeCause(Cause.fail(Boom.make({ detail: "no token" }))), "[Boom]: it went wrong: no token");
+		assert.strictEqual(Boom.make({ detail: "no token" }).pipe(Cause.fail, describeCause), "[Boom]: it went wrong: no token");
 	});
 
 	it("marks a defect as one, because the two need different fixes", () => {

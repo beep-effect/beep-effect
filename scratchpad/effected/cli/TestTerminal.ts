@@ -1,5 +1,9 @@
-import type { Cause } from "effect";
-import { Effect, Layer, Option, Queue, Terminal } from "effect";
+import type * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Queue from "effect/Queue";
+import * as Terminal from "effect/Terminal";
 
 /**
  * One key press for {@link TestTerminal}.
@@ -102,14 +106,14 @@ export class TestTerminal {
 				input: (keys) =>
 					offer(
 						keys.map((key) => ({
-							input: Option.none<string>(),
+							input: O.none<string>(),
 							key: { name: key.name, ctrl: key.ctrl ?? false, meta: key.meta ?? false, shift: key.shift ?? false },
 						})),
 					),
 				type: (text) =>
 					offer(
 						Array.from(text, (char) => ({
-							input: Option.some(char),
+							input: O.some(char),
 							key: { name: char, ctrl: false, meta: false, shift: false },
 						})),
 					),

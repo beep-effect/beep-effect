@@ -1,7 +1,9 @@
 // A real process for CliUi.live.exit.test.ts: an interactive live view on in-memory streams, its tick running, inside a
 // scope that closes after 200 ms. The parent measures how long the process takes to exit once the scope has closed:
 // a tick left running on a ref'd timer would hold it open (okf/decisions/live-tick-is-a-scoped-schedule.md), so a prompt exit is the proof that it was not.
-import { Effect, Queue, Stream } from "effect";
+import * as Effect from "effect/Effect";
+import * as Queue from "effect/Queue";
+import * as Stream from "effect/Stream";
 import { Text } from "ink";
 import { createElement } from "react";
 import { CliInteractive, CliTheme } from "../../src/index.ts";

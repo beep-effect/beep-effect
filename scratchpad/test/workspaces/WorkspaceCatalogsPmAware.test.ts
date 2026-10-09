@@ -1,12 +1,16 @@
 import { assert, describe, it, layer } from "@effect/vitest";
 import { Lockfile } from "../../effected/lockfiles/index.ts";
 import { CatalogAssemblyError } from "../../effected/npm/index.ts";
-import { Effect, Layer, Option, Result, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { CatalogSet, WorkspaceCatalogs, Workspaces } from "../../effected/workspaces/index.ts";
 import type { Tree } from "./fixtures.ts";
 import { manifest, platform } from "./fixtures.ts";
 
-const JsonValue = Schema.fromJsonString(Schema.Unknown);
+const JsonValue = S.fromJsonString(S.Unknown);
 
 /** The full workspaces stack over a virtual tree, rooted at `/repo`. */
 const workspacesOver = (tree: Tree) => Workspaces.layer({ cwd: "/repo" }).pipe(Layer.provideMerge(platform(tree)));
@@ -16,21 +20,21 @@ const workspacesOver = (tree: Tree) => Workspaces.layer({ cwd: "/repo" }).pipe(L
 describe("CatalogSet.fromManifestWorkspaces", () => {
 	it.effect("an absent workspaces field yields the empty set", () =>
 		Effect.gen(function* () {
-			const set = yield* CatalogSet.fromManifestWorkspaces(Result.getOrThrow(Schema.encodeResult(JsonValue)({ name: "root" })));
+			const set = yield* CatalogSet.fromManifestWorkspaces(Result.getOrThrow(S.encodeResult(JsonValue)({ name: "root" })));
 			assert.isTrue(set.isEmpty);
 		}),
 	);
 
 	it.effect("an explicitly null workspaces field yields the empty set", () =>
 		Effect.gen(function* () {
-			const set = yield* CatalogSet.fromManifestWorkspaces(Result.getOrThrow(Schema.encodeResult(JsonValue)({ workspaces: null })));
+			const set = yield* CatalogSet.fromManifestWorkspaces(Result.getOrThrow(S.encodeResult(JsonValue)({ workspaces: null })));
 			assert.isTrue(set.isEmpty);
 		}),
 	);
 
 	it.effect("the plain array (npm/yarn) form carries no catalogs", () =>
 		Effect.gen(function* () {
-			const set = yield* CatalogSet.fromManifestWorkspaces(Result.getOrThrow(Schema.encodeResult(JsonValue)({ workspaces: ["packages/*"] })));
+			const set = yield* CatalogSet.fromManifestWorkspaces(Result.getOrThrow(S.encodeResult(JsonValue)({ workspaces: ["packages/*"] })));
 			assert.isTrue(set.isEmpty);
 		}),
 	);
@@ -38,7 +42,7 @@ describe("CatalogSet.fromManifestWorkspaces", () => {
 	it.effect("bun's workspaces.catalog and workspaces.catalogs assemble", () =>
 		Effect.gen(function* () {
 			const set = yield* CatalogSet.fromManifestWorkspaces(
-				Result.getOrThrow(Schema.encodeResult(JsonValue)({
+				Result.getOrThrow(S.encodeResult(JsonValue)({
 					workspaces: {
 						packages: ["packages/*"],
 						catalog: { effect: "^4.0.0" },
@@ -46,17 +50,17 @@ describe("CatalogSet.fromManifestWorkspaces", () => {
 					},
 				})),
 			);
-			assert.deepStrictEqual(set.rangeOf("effect", Option.none()), Option.some("^4.0.0"));
+			assert.deepStrictEqual(set.rangeOf("effect", O.none()), O.some("^4.0.0"));
 			// The named catalog, not just the default — a bug keeping only one passes on the other.
-			assert.deepStrictEqual(set.rangeOf("typescript", Option.some("build")), Option.some("^6.0.0"));
+			assert.deepStrictEqual(set.rangeOf("typescript", O.some("build")), O.some("^6.0.0"));
 		}),
 	);
 
 	it.effect("a number workspaces field fails typed, never as a defect", () =>
 		Effect.gen(function* () {
-			const result = yield* Effect.result(CatalogSet.fromManifestWorkspaces(Result.getOrThrow(Schema.encodeResult(JsonValue)({ workspaces: 42 }))));
+			const result = yield* Effect.result(CatalogSet.fromManifestWorkspaces(Result.getOrThrow(S.encodeResult(JsonValue)({ workspaces: 42 }))));
 			assert.strictEqual(result._tag, "Failure");
-			const error = yield* Effect.flip(CatalogSet.fromManifestWorkspaces(Result.getOrThrow(Schema.encodeResult(JsonValue)({ workspaces: 42 }))));
+			const error = yield* Effect.flip(CatalogSet.fromManifestWorkspaces(Result.getOrThrow(S.encodeResult(JsonValue)({ workspaces: 42 }))));
 			assert.instanceOf(error, CatalogAssemblyError);
 			assert.strictEqual(error.source, "manifest");
 		}),
@@ -65,7 +69,7 @@ describe("CatalogSet.fromManifestWorkspaces", () => {
 	it.effect("a malformed workspaces.catalog fails typed", () =>
 		Effect.gen(function* () {
 			const error = yield* Effect.flip(
-				CatalogSet.fromManifestWorkspaces(Result.getOrThrow(Schema.encodeResult(JsonValue)({ workspaces: { catalog: "not-an-object" } }))),
+				CatalogSet.fromManifestWorkspaces(Result.getOrThrow(S.encodeResult(JsonValue)({ workspaces: { catalog: "not-an-object" } }))),
 			);
 			assert.instanceOf(error, CatalogAssemblyError);
 			assert.strictEqual(error.source, "catalog");
@@ -75,7 +79,7 @@ describe("CatalogSet.fromManifestWorkspaces", () => {
 
 	it.effect("the default catalog declared twice is rejected — even when empty (structural)", () =>
 		Effect.gen(function* () {
-			const text = Result.getOrThrow(Schema.encodeResult(JsonValue)({ workspaces: { catalog: {}, catalogs: { default: {} } } }));
+			const text = Result.getOrThrow(S.encodeResult(JsonValue)({ workspaces: { catalog: {}, catalogs: { default: {} } } }));
 			const error = yield* Effect.flip(CatalogSet.fromManifestWorkspaces(text));
 			assert.instanceOf(error, CatalogAssemblyError);
 			assert.strictEqual(error.source, "catalog");
@@ -90,7 +94,7 @@ describe("CatalogSet.fromLockfile", () => {
 	it.effect("assembles a bun lockfile's BunExtension catalogs", () =>
 		Effect.gen(function* () {
 			const lockfile = yield* Lockfile.parse(
-				Result.getOrThrow(Schema.encodeResult(JsonValue)({
+				Result.getOrThrow(S.encodeResult(JsonValue)({
 					lockfileVersion: 1,
 					catalog: { react: "^18.0.0" },
 					catalogs: { build: { typescript: "^5.0.0" } },
@@ -99,8 +103,8 @@ describe("CatalogSet.fromLockfile", () => {
 			);
 			const set = CatalogSet.fromLockfile(lockfile);
 			// The bun default catalog normalizes under "default".
-			assert.deepStrictEqual(set.rangeOf("react", Option.none()), Option.some("^18.0.0"));
-			assert.deepStrictEqual(set.rangeOf("typescript", Option.some("build")), Option.some("^5.0.0"));
+			assert.deepStrictEqual(set.rangeOf("react", O.none()), O.some("^18.0.0"));
+			assert.deepStrictEqual(set.rangeOf("typescript", O.some("build")), O.some("^5.0.0"));
 		}),
 	);
 
@@ -113,7 +117,7 @@ describe("CatalogSet.fromLockfile", () => {
 				{ format: "pnpm" },
 			);
 			const set = CatalogSet.fromLockfile(lockfile);
-			assert.deepStrictEqual(set.rangeOf("effect", Option.none()), Option.some("^4.0.0"));
+			assert.deepStrictEqual(set.rangeOf("effect", O.none()), O.some("^4.0.0"));
 		}),
 	);
 });
@@ -200,7 +204,7 @@ describe("WorkspaceCatalogs.set — a bun workspace with no pnpm-workspace.yaml"
 			Effect.gen(function* () {
 				const catalogs = yield* WorkspaceCatalogs;
 				const set = yield* catalogs.set;
-				assert.deepStrictEqual(set.rangeOf("effect", Option.none()), Option.some("^4.0.0"));
+				assert.deepStrictEqual(set.rangeOf("effect", O.none()), O.some("^4.0.0"));
 			}),
 		);
 
@@ -209,7 +213,7 @@ describe("WorkspaceCatalogs.set — a bun workspace with no pnpm-workspace.yaml"
 				const catalogs = yield* WorkspaceCatalogs;
 				const set = yield* catalogs.set;
 				// react comes only from bun.lock — proof the BunExtension is assembled.
-				assert.deepStrictEqual(set.rangeOf("react", Option.none()), Option.some("^18.0.0"));
+				assert.deepStrictEqual(set.rangeOf("react", O.none()), O.some("^18.0.0"));
 			}),
 		);
 
@@ -217,7 +221,7 @@ describe("WorkspaceCatalogs.set — a bun workspace with no pnpm-workspace.yaml"
 			Effect.gen(function* () {
 				const catalogs = yield* WorkspaceCatalogs;
 				const set = yield* catalogs.set;
-				assert.deepStrictEqual(set.rangeOf("typescript", Option.some("build")), Option.some("^6.0.0"));
+				assert.deepStrictEqual(set.rangeOf("typescript", O.some("build")), O.some("^6.0.0"));
 			}),
 		);
 	});

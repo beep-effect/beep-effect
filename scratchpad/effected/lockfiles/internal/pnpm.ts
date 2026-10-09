@@ -1,4 +1,5 @@
-import { Effect, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
 import { dual } from "effect/Function";
 import { LockfileImporter } from "../LockfileImporter.ts";
 import { PnpmExtension } from "../PnpmExtension.ts";
@@ -19,11 +20,11 @@ import {
 
 // ── Raw schema (permissive validation scaffolding, not API) ────────────────
 
-const PnpmImporterDeps = Schema.optionalKey(
-	Schema.Record(Schema.String, Schema.Struct({ specifier: Schema.String, version: Schema.String })),
+const PnpmImporterDeps = S.optionalKey(
+	S.Record(S.String, S.Struct({ specifier: S.String, version: S.String })),
 );
 
-const PnpmImporter = Schema.Struct({
+const PnpmImporter = S.Struct({
 	dependencies: PnpmImporterDeps,
 	devDependencies: PnpmImporterDeps,
 	peerDependencies: PnpmImporterDeps,
@@ -32,52 +33,52 @@ const PnpmImporter = Schema.Struct({
 	// workspace package's links actually point AT, importer-relative. It is the
 	// exact evidence that lets a `link:<importer>/<publishDirectory>` edge name
 	// its importer.
-	publishDirectory: Schema.optionalKey(Schema.String),
+	publishDirectory: S.optionalKey(S.String),
 });
 
-const PnpmLockfileRaw = Schema.Struct({
-	lockfileVersion: Schema.Union([Schema.String, Schema.Finite]),
-	settings: Schema.optionalKey(
-		Schema.Struct({
-			autoInstallPeers: Schema.optionalKey(Schema.Boolean),
-			excludeLinksFromLockfile: Schema.optionalKey(Schema.Boolean),
+const PnpmLockfileRaw = S.Struct({
+	lockfileVersion: S.Union([S.String, S.Finite]),
+	settings: S.optionalKey(
+		S.Struct({
+			autoInstallPeers: S.optionalKey(S.Boolean),
+			excludeLinksFromLockfile: S.optionalKey(S.Boolean),
 		}),
 	),
-	overrides: Schema.optionalKey(Schema.Record(Schema.String, Schema.String)),
-	catalogs: Schema.optionalKey(
-		Schema.Record(
-			Schema.String,
-			Schema.Record(
-				Schema.String,
-				Schema.Union([Schema.String, Schema.Struct({ specifier: Schema.String, version: Schema.String })]),
+	overrides: S.optionalKey(S.Record(S.String, S.String)),
+	catalogs: S.optionalKey(
+		S.Record(
+			S.String,
+			S.Record(
+				S.String,
+				S.Union([S.String, S.Struct({ specifier: S.String, version: S.String })]),
 			),
 		),
 	),
-	importers: Schema.Record(Schema.String, PnpmImporter),
-	packages: Schema.optionalKey(
-		Schema.Record(
-			Schema.String,
-			Schema.Struct({
-				resolution: Schema.optionalKey(Schema.Struct({ integrity: Schema.optionalKey(Schema.String) })),
-				peerDependencies: Schema.optionalKey(Schema.Record(Schema.String, Schema.String)),
-				peerDependenciesMeta: Schema.optionalKey(
-					Schema.Record(Schema.String, Schema.Struct({ optional: Schema.optionalKey(Schema.Boolean) })),
+	importers: S.Record(S.String, PnpmImporter),
+	packages: S.optionalKey(
+		S.Record(
+			S.String,
+			S.Struct({
+				resolution: S.optionalKey(S.Struct({ integrity: S.optionalKey(S.String) })),
+				peerDependencies: S.optionalKey(S.Record(S.String, S.String)),
+				peerDependenciesMeta: S.optionalKey(
+					S.Record(S.String, S.Struct({ optional: S.optionalKey(S.Boolean) })),
 				),
 				// Pre-v9 lockfiles carry resolution inline here, since they have no
 				// `snapshots:` section to carry it.
-				dependencies: Schema.optionalKey(Schema.Record(Schema.String, Schema.String)),
-				optionalDependencies: Schema.optionalKey(Schema.Record(Schema.String, Schema.String)),
+				dependencies: S.optionalKey(S.Record(S.String, S.String)),
+				optionalDependencies: S.optionalKey(S.Record(S.String, S.String)),
 			}),
 		),
 	),
 	// Lockfile v9 split per-*instance* resolution out of `packages:` into its
 	// own section; earlier versions carry both in `packages:`.
-	snapshots: Schema.optionalKey(
-		Schema.Record(
-			Schema.String,
-			Schema.Struct({
-				dependencies: Schema.optionalKey(Schema.Record(Schema.String, Schema.String)),
-				optionalDependencies: Schema.optionalKey(Schema.Record(Schema.String, Schema.String)),
+	snapshots: S.optionalKey(
+		S.Record(
+			S.String,
+			S.Struct({
+				dependencies: S.optionalKey(S.Record(S.String, S.String)),
+				optionalDependencies: S.optionalKey(S.Record(S.String, S.String)),
 			}),
 		),
 	),
@@ -145,7 +146,7 @@ export const parsePnpm: {
 		// too-old lockfile as malformed — losing the distinction the
 		// `UnsupportedLockfileVersion` cause exists to carry.
 		yield* gatePnpmVersion(document);
-		const validated = yield* Schema.decodeUnknownEffect(PnpmLockfileRaw)(document).pipe(
+		const validated = yield* S.decodeUnknownEffect(PnpmLockfileRaw)(document).pipe(
 			Effect.mapError(validationFailure),
 		);
 		// pnpm always records at least the root importer ".", so a lockfile

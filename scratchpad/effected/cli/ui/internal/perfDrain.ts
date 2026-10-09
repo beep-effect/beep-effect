@@ -1,4 +1,5 @@
-import { Config, Effect } from "effect";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
 
 /**
  * Whether a drain mode drains: `true` and `false` as given, and `"auto"` unless `NODE_ENV` is exactly `"production"`.

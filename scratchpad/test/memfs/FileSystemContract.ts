@@ -16,8 +16,14 @@
 
 import { dual } from "effect/Function";
 import { assert, describe, layer } from "@effect/vitest";
-import type { Layer } from "effect";
-import { ByteSize, DateTime, Effect, Option, Ref, Result, Stream } from "effect";
+import type * as Layer from "effect/Layer";
+import * as ByteSize from "effect/ByteSize";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
+import * as Ref from "effect/Ref";
+import * as Result from "effect/Result";
+import * as Stream from "effect/Stream";
 import * as FileSystem from "effect/FileSystem";
 import * as PlatformError from "effect/PlatformError";
 
@@ -52,7 +58,7 @@ const readAllocUpTo = Effect.fnUntraced(function* (file: FileSystem.File, size: 
 	let offset = 0;
 	while (offset < size) {
 		const chunk = yield* file.readAlloc(size - offset);
-		if (Option.isNone(chunk)) {
+		if (O.isNone(chunk)) {
 			break;
 		}
 		assert.isTrue(chunk.value.length > 0);
@@ -576,7 +582,7 @@ export const suite: {
 
 					const contents = yield* readAllocUpTo(file, 10);
 					assert.strictEqual(decoder.decode(contents), "abc");
-					assert.isTrue(Option.isNone(yield* file.readAlloc(1)));
+					assert.isTrue(O.isNone(yield* file.readAlloc(1)));
 				}),
 			);
 
@@ -1092,13 +1098,13 @@ export const suite: {
 					assert.strictEqual(yield* fs.readFileString(source), "linked");
 					const sourceInfo = yield* fs.stat(source);
 					const linkedInfo = yield* fs.stat(linked);
-					if (Option.isSome(sourceInfo.ino) && Option.isSome(linkedInfo.ino)) {
+					if (O.isSome(sourceInfo.ino) && O.isSome(linkedInfo.ino)) {
 						assert.strictEqual(sourceInfo.ino.value, linkedInfo.ino.value);
 					}
-					if (Option.isSome(sourceInfo.nlink)) {
+					if (O.isSome(sourceInfo.nlink)) {
 						assert.strictEqual(sourceInfo.nlink.value, 2);
 					}
-					if (Option.isSome(linkedInfo.nlink)) {
+					if (O.isSome(linkedInfo.nlink)) {
 						assert.strictEqual(linkedInfo.nlink.value, 2);
 					}
 				}),
@@ -1118,7 +1124,7 @@ export const suite: {
 					assert.isFalse(yield* fs.exists(source));
 					assert.strictEqual(yield* fs.readFileString(alias), "original");
 					const linkedInfo = yield* fs.stat(alias);
-					if (Option.isSome(linkedInfo.nlink)) {
+					if (O.isSome(linkedInfo.nlink)) {
 						assert.strictEqual(linkedInfo.nlink.value, 1);
 					}
 
@@ -1181,10 +1187,10 @@ export const suite: {
 					yield* fs.utimes(file, atime, mtime);
 					const info = yield* fs.stat(file);
 
-					if (Option.isSome(info.atime)) {
+					if (O.isSome(info.atime)) {
 						assert.strictEqual(info.atime.value.getTime(), atime.getTime());
 					}
-					if (Option.isSome(info.mtime)) {
+					if (O.isSome(info.mtime)) {
 						assert.strictEqual(info.mtime.value.getTime(), mtime.getTime());
 					}
 				}),
@@ -1204,7 +1210,7 @@ export const suite: {
 					yield* fs.copy(source, destination, { preserveTimestamps: true });
 					const info = yield* fs.stat(destination);
 
-					if (Option.isSome(info.mtime)) {
+					if (O.isSome(info.mtime)) {
 						assert.strictEqual(info.mtime.value.getTime(), mtime.getTime());
 					}
 				}),

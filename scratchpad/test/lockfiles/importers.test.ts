@@ -9,7 +9,8 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Option } from "effect";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
 import { Lockfile } from "../../effected/lockfiles/Lockfile.ts";
 import type { LockfileFormat } from "../../effected/lockfiles/LockfileFormat.ts";
 
@@ -24,10 +25,10 @@ describe("Lockfile.importers", () => {
 
 				// The root importer "." is present and declares nothing.
 				const root = lockfile.importer(".");
-				assert.isTrue(Option.isSome(root));
-				assert.strictEqual(Option.getOrThrow(root).dependencies.length, 0);
+				assert.isTrue(O.isSome(root));
+				assert.strictEqual(O.getOrThrow(root).dependencies.length, 0);
 
-				const core = Option.getOrThrow(lockfile.importer("packages/core"));
+				const core = O.getOrThrow(lockfile.importer("packages/core"));
 				assert.strictEqual(core.path, "packages/core");
 				// dependencies (2) + devDependencies (1)
 				assert.strictEqual(core.dependencies.length, 3);
@@ -52,7 +53,7 @@ describe("Lockfile.importers", () => {
 		it.effect("v3: a `catalog:` specifier classifies as catalog and round-trips its raw", () =>
 			Effect.gen(function* () {
 				const lockfile = yield* parseFixture("pnpm/v3/pnpm-lock.yaml", "pnpm");
-				const core = Option.getOrThrow(lockfile.importer("packages/core"));
+				const core = O.getOrThrow(lockfile.importer("packages/core"));
 				const lodash = core.dependencies.find((d) => d.name === "lodash");
 				assert.strictEqual(lodash?.specifier._tag, "catalog");
 				assert.strictEqual(lodash?.specifier.raw, "catalog:");
@@ -63,7 +64,7 @@ describe("Lockfile.importers", () => {
 		it.effect("v2: a peer-suffixed version splits into a plain version and peerSuffix", () =>
 			Effect.gen(function* () {
 				const lockfile = yield* parseFixture("pnpm/v2/pnpm-lock.yaml", "pnpm");
-				const utils = Option.getOrThrow(lockfile.importer("packages/utils"));
+				const utils = O.getOrThrow(lockfile.importer("packages/utils"));
 				const platform = utils.dependencies.find((d) => d.name === "@effect/platform");
 				assert.strictEqual(platform?.version, "0.96.0");
 				assert.strictEqual(platform?.peerSuffix, "(effect@3.21.0)");
@@ -93,7 +94,7 @@ describe("Lockfile.importers", () => {
 					"",
 				].join("\n");
 				const lockfile = yield* Lockfile.parse(content, { format: "pnpm" });
-				const root = Option.getOrThrow(lockfile.importer("."));
+				const root = O.getOrThrow(lockfile.importer("."));
 
 				const experimental = root.dependencies.find((d) => d.name === "@effect/experimental");
 				assert.strictEqual(experimental?.version, "4.0.0-beta.101");
@@ -122,10 +123,10 @@ describe("Lockfile.importers", () => {
 				const lockfile = yield* parseFixture("bun/v1/bun.lock", "bun");
 
 				// The root workspace ("") becomes the "." importer.
-				const root = Option.getOrThrow(lockfile.importer("."));
+				const root = O.getOrThrow(lockfile.importer("."));
 				assert.strictEqual(root.dependencies.length, 0);
 
-				const core = Option.getOrThrow(lockfile.importer("packages/core"));
+				const core = O.getOrThrow(lockfile.importer("packages/core"));
 				// 3 dependencies + 1 devDependency
 				assert.strictEqual(core.dependencies.length, 4);
 				assert.isTrue(core.dependencies.every((d) => d.version === undefined));
@@ -142,14 +143,14 @@ describe("Lockfile.importers", () => {
 			Effect.gen(function* () {
 				const lockfile = yield* parseFixture("npm/v2/package-lock.json", "npm");
 
-				const root = Option.getOrThrow(lockfile.importer("."));
+				const root = O.getOrThrow(lockfile.importer("."));
 				const ts = root.dependencies.find((d) => d.name === "typescript");
 				assert.strictEqual(ts?.depType, "devDependencies");
 				assert.strictEqual(ts?.specifier.raw, "^5.3.0");
 				assert.strictEqual(ts?.version, undefined);
 
 				// 3 dependencies + 1 peerDependency + 1 optionalDependency.
-				const core = Option.getOrThrow(lockfile.importer("packages/core"));
+				const core = O.getOrThrow(lockfile.importer("packages/core"));
 				assert.strictEqual(core.dependencies.length, 5);
 				assert.isTrue(core.dependencies.every((d) => d.version === undefined));
 				assert.strictEqual(core.dependencies.find((d) => d.name === "react")?.depType, "peerDependencies");
@@ -163,7 +164,7 @@ describe("Lockfile.importers", () => {
 			Effect.gen(function* () {
 				const lockfile = yield* parseFixture("yarn/v1/yarn.lock", "yarn");
 				assert.strictEqual(lockfile.importers.length, 0);
-				assert.isTrue(Option.isNone(lockfile.importer(".")));
+				assert.isTrue(O.isNone(lockfile.importer(".")));
 			}),
 		);
 	});
@@ -171,7 +172,7 @@ describe("Lockfile.importers", () => {
 	it.effect("importer(path) is None for an unknown path", () =>
 		Effect.gen(function* () {
 			const lockfile = yield* parseFixture("pnpm/v1/pnpm-lock.yaml", "pnpm");
-			assert.isTrue(Option.isNone(lockfile.importer("packages/does-not-exist")));
+			assert.isTrue(O.isNone(lockfile.importer("packages/does-not-exist")));
 		}),
 	);
 });

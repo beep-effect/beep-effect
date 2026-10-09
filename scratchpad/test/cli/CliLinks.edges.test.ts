@@ -1,15 +1,20 @@
 // @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file
-import { Schema } from "effect";
-import { Result } from "effect";
+import * as S from "effect/Schema";
+import * as Result from "effect/Result";
 import { assert, describe, it } from "@effect/vitest";
 import { CurrentRuntimeEnv } from "../../effected/env/index.ts";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
-import { ConfigProvider, Effect, Layer, Logger, Option, Path } from "effect";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Logger from "effect/Logger";
+import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import type { CliLinksShape, EditorLinks, LinkTarget } from "../../effected/cli/index.ts";
 import { CliLinks, Doc, Render } from "../../effected/cli/index.ts";
 import { contextOf } from "./helpers/renderContext.ts";
 
-const Json = Schema.fromJsonString(Schema.Unknown);
+const Json = S.fromJsonString(S.Unknown);
 
 const ESC = String.fromCharCode(0x1b);
 const BEL = String.fromCharCode(7);
@@ -57,8 +62,8 @@ describe("a UNC path has no link target, never a link to a file that does not ex
 				const ambient = yield* links({ editorLinks: mode });
 				const test = yield* fixed(mode);
 				for (const path of UNC) {
-					assert.deepStrictEqual(ambient.target({ file: path, line: 1 }), Option.none(), `${mode} ${path}`);
-					assert.deepStrictEqual(test.target({ file: path, line: 1 }), Option.none(), `${mode} test ${path}`);
+					assert.deepStrictEqual(ambient.target({ file: path, line: 1 }), O.none(), `${mode} ${path}`);
+					assert.deepStrictEqual(test.target({ file: path, line: 1 }), O.none(), `${mode} test ${path}`);
 				}
 			}
 		}),
@@ -67,8 +72,8 @@ describe("a UNC path has no link target, never a link to a file that does not ex
 	it.effect("control: a path with one leading slash, and a drive path, still link", () =>
 		Effect.gen(function* () {
 			const l = yield* links({ editorLinks: "file" });
-			assert.deepStrictEqual(l.target({ file: "/server/share/a.ts" }), Option.some("file:///server/share/a.ts"));
-			assert.deepStrictEqual(l.target({ file: "C:\\x\\y.ts" }), Option.some("file:///C:/x/y.ts"));
+			assert.deepStrictEqual(l.target({ file: "/server/share/a.ts" }), O.some("file:///server/share/a.ts"));
+			assert.deepStrictEqual(l.target({ file: "C:\\x\\y.ts" }), O.some("file:///C:/x/y.ts"));
 		}),
 	);
 });
@@ -77,18 +82,18 @@ describe("a colon in a POSIX path is data, not a drive", () => {
 	it.effect("keeps it encoded in the path, wherever it sits", () =>
 		Effect.gen(function* () {
 			const l = yield* links({ editorLinks: "file" });
-			assert.deepStrictEqual(l.target({ file: "/a/C:b" }), Option.some("file:///a/C%3Ab"));
-			assert.deepStrictEqual(l.target({ file: "./C:x" }), Option.some("file:///repo/C%3Ax"));
-			assert.deepStrictEqual(l.target({ file: "src/C:/x.ts" }), Option.some("file:///repo/src/C%3A/x.ts"));
-			assert.deepStrictEqual(l.target({ file: "/C:/x" }), Option.some("file:///C%3A/x"));
+			assert.deepStrictEqual(l.target({ file: "/a/C:b" }), O.some("file:///a/C%3Ab"));
+			assert.deepStrictEqual(l.target({ file: "./C:x" }), O.some("file:///repo/C%3Ax"));
+			assert.deepStrictEqual(l.target({ file: "src/C:/x.ts" }), O.some("file:///repo/src/C%3A/x.ts"));
+			assert.deepStrictEqual(l.target({ file: "/C:/x" }), O.some("file:///C%3A/x"));
 		}),
 	);
 
 	it.effect("a drive-relative C:x.ts and a two-letter prefix are not absolute drive paths", () =>
 		Effect.gen(function* () {
 			const l = yield* links({ editorLinks: "file" });
-			assert.deepStrictEqual(l.target({ file: "C:x.ts" }), Option.some("file:///repo/C%3Ax.ts"));
-			assert.deepStrictEqual(l.target({ file: "CC:\\x" }), Option.some("file:///repo/CC%3A%5Cx"));
+			assert.deepStrictEqual(l.target({ file: "C:x.ts" }), O.some("file:///repo/C%3Ax.ts"));
+			assert.deepStrictEqual(l.target({ file: "CC:\\x" }), O.some("file:///repo/CC%3A%5Cx"));
 		}),
 	);
 });
@@ -111,9 +116,9 @@ describe("Render.markdown builds file links with the same builder as CliLinks", 
 			const file = yield* fixed("file");
 			for (const path of paths) {
 				const url = file.target({ file: path });
-				assert.isTrue(Option.isSome(url), path);
+				assert.isTrue(O.isSome(url), path);
 				const out = Render.markdown([Doc.paragraph(Doc.link({ file: path }, "label"))], ctx);
-				assert.strictEqual(out, `[label](${Option.getOrThrow(url)})`, path);
+				assert.strictEqual(out, `[label](${O.getOrThrow(url)})`, path);
 			}
 		}),
 	);
@@ -134,7 +139,7 @@ describe("CliLinks.linker writes a URL as OSC 8 wants it: bytes outside 32 to 12
 	const write = (url: string): string => {
 		const l: CliLinksShape = {
 			mode: "file",
-			target: (target: LinkTarget) => ("url" in target ? Option.some(target.url) : Option.none()),
+			target: (target: LinkTarget) => ("url" in target ? O.some(target.url) : O.none()),
 		};
 		return CliLinks.linker({ links: l, hyperlinks: true, audience: "human" })({ url }, "label");
 	};
@@ -196,7 +201,7 @@ describe("an invalid editor-links value is warned about once, like the audience 
 			for (const env of [{ TOOL_EDITOR_LINKS: "FILE" }, {}, { TOOL_EDITOR_LINKS: "" }]) {
 				const sink: Array<string> = [];
 				yield* links({ envVar: "TOOL_EDITOR_LINKS" }, env, sink);
-				assert.deepStrictEqual(sink, [], Result.getOrThrow(Schema.encodeUnknownResult(Json)(env)));
+				assert.deepStrictEqual(sink, [], Result.getOrThrow(S.encodeUnknownResult(Json)(env)));
 			}
 		}),
 	);

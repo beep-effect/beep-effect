@@ -1,7 +1,7 @@
 import type { AudienceKind, ColorLevel } from "../env/index.ts";
 import { Audience, TerminalEnv } from "../env/index.ts";
 import { CommandNeutralizer } from "../github-commands/index.ts";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import type { CliLinksShape } from "./CliLinks.ts";
 import { CliLinks } from "./CliLinks.ts";
 import { CliTheme } from "./CliTheme.ts";

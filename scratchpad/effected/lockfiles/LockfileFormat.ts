@@ -1,4 +1,5 @@
-import { Option, Schema } from "effect";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
 
 /**
  * The lockfile formats this package parses: bun's `bun.lock` (JSONC), npm's
@@ -17,7 +18,7 @@ import { Option, Schema } from "effect";
  *
  * @public
  */
-export const LockfileFormat = Schema.Literals(["bun", "npm", "pnpm", "yarn"]);
+export const LockfileFormat = S.Literals(["bun", "npm", "pnpm", "yarn"]);
 
 /**
  * The union of supported lockfile format names.
@@ -81,9 +82,9 @@ export const filenamesFor = (format: LockfileFormat): readonly [string, ...Reado
  *
  * @public
  */
-export const fromFilename = (name: string): Option.Option<LockfileFormat> => {
+export const fromFilename = (name: string): O.Option<LockfileFormat> => {
 	for (const format of LockfileFormat.literals) {
-		if (FILENAMES[format][0] === name) return Option.some(format);
+		if (FILENAMES[format][0] === name) return O.some(format);
 	}
-	return Option.none();
+	return O.none();
 };

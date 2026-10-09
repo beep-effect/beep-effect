@@ -1,6 +1,9 @@
 import { assert, describe, it, layer } from "@effect/vitest";
 import { CatalogAssemblyError, CatalogResolver, WorkspaceResolver } from "../../effected/npm/index.ts";
-import { Effect, FileSystem, Layer, Option } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import {
 	CatalogSet,
 	LockfileReadError,
@@ -32,7 +35,7 @@ describe("CatalogSet", () => {
 			Effect.gen(function* () {
 				const set = yield* CatalogSet.fromWorkspaceYaml("catalog:\n  effect: ^4.0.0\n");
 				assert.deepStrictEqual(Object.keys(set.entries), ["default"]);
-				assert.deepStrictEqual(set.rangeOf("effect", Option.none()), Option.some("^4.0.0"));
+				assert.deepStrictEqual(set.rangeOf("effect", O.none()), O.some("^4.0.0"));
 			}),
 		));
 
@@ -44,8 +47,8 @@ describe("CatalogSet", () => {
 				);
 				assert.deepStrictEqual(Object.keys(set.entries).sort(), ["build", "test"]);
 				// The SECOND named catalog — a bug that keeps only the first passes on `build`.
-				assert.deepStrictEqual(set.rangeOf("vitest", Option.some("test")), Option.some("^3.0.0"));
-				assert.deepStrictEqual(set.rangeOf("typescript", Option.some("build")), Option.some("^6.0.0"));
+				assert.deepStrictEqual(set.rangeOf("vitest", O.some("test")), O.some("^3.0.0"));
+				assert.deepStrictEqual(set.rangeOf("typescript", O.some("build")), O.some("^6.0.0"));
 			}),
 		));
 
@@ -53,8 +56,8 @@ describe("CatalogSet", () => {
 		Effect.runSync(
 			Effect.gen(function* () {
 				const set = yield* CatalogSet.fromWorkspaceYaml("catalog:\n  effect: ^4.0.0\n");
-				assert.deepStrictEqual(set.rangeOf("react", Option.none()), Option.none());
-				assert.deepStrictEqual(set.rangeOf("effect", Option.some("nope")), Option.none());
+				assert.deepStrictEqual(set.rangeOf("react", O.none()), O.none());
+				assert.deepStrictEqual(set.rangeOf("effect", O.some("nope")), O.none());
 			}),
 		));
 
@@ -64,8 +67,8 @@ describe("CatalogSet", () => {
 				const set = yield* CatalogSet.fromWorkspaceYaml(
 					"catalog:\n  effect: ^4.0.0\ncatalogs:\n  build:\n    effect: ^3.0.0\n",
 				);
-				assert.deepStrictEqual(set.resolveSpecifier("effect", "catalog:"), Option.some("^4.0.0"));
-				assert.deepStrictEqual(set.resolveSpecifier("effect", "catalog:build"), Option.some("^3.0.0"));
+				assert.deepStrictEqual(set.resolveSpecifier("effect", "catalog:"), O.some("^4.0.0"));
+				assert.deepStrictEqual(set.resolveSpecifier("effect", "catalog:build"), O.some("^3.0.0"));
 			}),
 		));
 
@@ -73,7 +76,7 @@ describe("CatalogSet", () => {
 		Effect.runSync(
 			Effect.gen(function* () {
 				const set = yield* CatalogSet.fromWorkspaceYaml("catalog:\n  effect: ^4.0.0\n");
-				assert.deepStrictEqual(set.resolveSpecifier("effect", "^4.0.0"), Option.none());
+				assert.deepStrictEqual(set.resolveSpecifier("effect", "^4.0.0"), O.none());
 			}),
 		));
 
@@ -93,16 +96,16 @@ describe("CatalogSet", () => {
 		});
 		// The SPECIFIER is the declared range, which is what a catalog resolves to;
 		// taking `version` would silently pin every consumer to an exact build.
-		assert.deepStrictEqual(set.rangeOf("effect", Option.none()), Option.some("^4.0.0"));
+		assert.deepStrictEqual(set.rangeOf("effect", O.none()), O.some("^4.0.0"));
 	});
 
 	it("merge lets a later set win per dependency", () => {
 		const older = CatalogSet.fromLockfileCatalogs({ default: { effect: "^3.0.0", react: "^18.0.0" } });
 		const newer = CatalogSet.fromLockfileCatalogs({ default: { effect: "^4.0.0" } });
 		const merged = CatalogSet.merge(older, newer);
-		assert.deepStrictEqual(merged.rangeOf("effect", Option.none()), Option.some("^4.0.0"));
+		assert.deepStrictEqual(merged.rangeOf("effect", O.none()), O.some("^4.0.0"));
 		// The un-overridden key must SURVIVE the merge — a naive replace drops it.
-		assert.deepStrictEqual(merged.rangeOf("react", Option.none()), Option.some("^18.0.0"));
+		assert.deepStrictEqual(merged.rangeOf("react", O.none()), O.some("^18.0.0"));
 	});
 
 	it("a __proto__ catalog key lands as an own property, not on the prototype", () => {
@@ -168,7 +171,7 @@ describe("WorkspaceCatalogs — assembly precedence", () => {
 			Effect.gen(function* () {
 				const catalogs = yield* WorkspaceCatalogs;
 				const set = yield* catalogs.set;
-				assert.deepStrictEqual(set.rangeOf("effect", Option.none()), Option.some("^4.0.0"));
+				assert.deepStrictEqual(set.rangeOf("effect", O.none()), O.some("^4.0.0"));
 			}),
 		);
 
@@ -176,7 +179,7 @@ describe("WorkspaceCatalogs — assembly precedence", () => {
 			Effect.gen(function* () {
 				const catalogs = yield* WorkspaceCatalogs;
 				const set = yield* catalogs.set;
-				assert.deepStrictEqual(set.rangeOf("react", Option.none()), Option.some("^18.0.0"));
+				assert.deepStrictEqual(set.rangeOf("react", O.none()), O.some("^18.0.0"));
 			}),
 		);
 
@@ -184,14 +187,14 @@ describe("WorkspaceCatalogs — assembly precedence", () => {
 			Effect.gen(function* () {
 				const catalogs = yield* WorkspaceCatalogs;
 				const set = yield* catalogs.set;
-				assert.deepStrictEqual(set.rangeOf("typescript", Option.some("build")), Option.some("^6.0.0"));
+				assert.deepStrictEqual(set.rangeOf("typescript", O.some("build")), O.some("^6.0.0"));
 			}),
 		);
 
 		it.effect("resolveSpecifier resolves a member's catalog: dependency", () =>
 			Effect.gen(function* () {
 				const catalogs = yield* WorkspaceCatalogs;
-				assert.deepStrictEqual(yield* catalogs.resolveSpecifier("effect", "catalog:"), Option.some("^4.0.0"));
+				assert.deepStrictEqual(yield* catalogs.resolveSpecifier("effect", "catalog:"), O.some("^4.0.0"));
 			}),
 		);
 	});
@@ -210,29 +213,29 @@ describe("the @effected/npm resolver contracts", () => {
 			Effect.gen(function* () {
 				const resolver = yield* CatalogResolver;
 				// The no-op layer @effected/npm ships would return none here.
-				assert.deepStrictEqual(yield* resolver.rangeOf("effect", Option.none()), Option.some("^4.0.0"));
-				assert.deepStrictEqual(yield* resolver.rangeOf("typescript", Option.some("build")), Option.some("^6.0.0"));
+				assert.deepStrictEqual(yield* resolver.rangeOf("effect", O.none()), O.some("^4.0.0"));
+				assert.deepStrictEqual(yield* resolver.rangeOf("typescript", O.some("build")), O.some("^6.0.0"));
 			}),
 		);
 
 		it.effect("CatalogResolver.rangeOf is none — not an error — for an unmatched name", () =>
 			Effect.gen(function* () {
 				const resolver = yield* CatalogResolver;
-				assert.deepStrictEqual(yield* resolver.rangeOf("nothing-here", Option.none()), Option.none());
+				assert.deepStrictEqual(yield* resolver.rangeOf("nothing-here", O.none()), O.none());
 			}),
 		);
 
 		it.effect("WorkspaceResolver.versionOf resolves against the discovered packages", () =>
 			Effect.gen(function* () {
 				const resolver = yield* WorkspaceResolver;
-				assert.deepStrictEqual(yield* resolver.versionOf("@x/a"), Option.some("1.0.0"));
+				assert.deepStrictEqual(yield* resolver.versionOf("@x/a"), O.some("1.0.0"));
 			}),
 		);
 
 		it.effect("WorkspaceResolver.versionOf is none for a non-member", () =>
 			Effect.gen(function* () {
 				const resolver = yield* WorkspaceResolver;
-				assert.deepStrictEqual(yield* resolver.versionOf("react"), Option.none());
+				assert.deepStrictEqual(yield* resolver.versionOf("react"), O.none());
 			}),
 		);
 	});
@@ -250,7 +253,7 @@ describe("the @effected/npm resolver contracts", () => {
 		it.effect("CatalogResolver.rangeOf surfaces a failed assembly typed as CatalogAssemblyError", () =>
 			Effect.gen(function* () {
 				const resolver = yield* CatalogResolver;
-				const error = yield* Effect.flip(resolver.rangeOf("effect", Option.none()));
+				const error = yield* Effect.flip(resolver.rangeOf("effect", O.none()));
 				assert.instanceOf(error, CatalogAssemblyError);
 				assert.strictEqual(error._tag, "CatalogAssemblyError");
 				assert.strictEqual(error.source, "manifest");

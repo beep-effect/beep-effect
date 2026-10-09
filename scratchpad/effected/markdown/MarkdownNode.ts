@@ -25,7 +25,8 @@
 //
 // Leaf module: imports only `effect`.
 
-import { Effect, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
 
 /**
  * A single point in a source document: 1-based `line` and `column`, 0-based
@@ -37,10 +38,10 @@ import { Effect, Schema } from "effect";
  *
  * @public
  */
-export class Point extends Schema.Class<Point>("Point")({
-	line: Schema.Finite,
-	column: Schema.Finite,
-	offset: Schema.Finite,
+export class Point extends S.Class<Point>("Point")({
+	line: S.Finite,
+	column: S.Finite,
+	offset: S.Finite,
 }) {}
 
 /**
@@ -48,7 +49,7 @@ export class Point extends Schema.Class<Point>("Point")({
  *
  * @public
  */
-export class Position extends Schema.Class<Position>("Position")({
+export class Position extends S.Class<Position>("Position")({
 	start: Point,
 	end: Point,
 }) {
@@ -88,7 +89,7 @@ export class Position extends Schema.Class<Position>("Position")({
 // depends on which happened — `Position` is an immutable value class with
 // structural equality — but never assert a synthesized node's position by
 // reference; use `deepStrictEqual`/`Equal.equals`.
-const NodePosition = Position.pipe(Schema.withConstructorDefault(Effect.succeed(Position.synthetic)));
+const NodePosition = Position.pipe(S.withConstructorDefault(Effect.succeed(Position.synthetic)));
 
 /**
  * The explicitness of a reference, per mdast's `referenceType` enum.
@@ -99,7 +100,7 @@ const NodePosition = Position.pipe(Schema.withConstructorDefault(Effect.succeed(
  *
  * @public
  */
-export const ReferenceType = Schema.Literals(["shortcut", "collapsed", "full"]);
+export const ReferenceType = S.Literals(["shortcut", "collapsed", "full"]);
 
 /**
  * The union of all reference-type string literals.
@@ -114,7 +115,7 @@ export type ReferenceType = typeof ReferenceType.Type;
  *
  * @public
  */
-export const HeadingStyle = Schema.Literals(["atx", "setext"]);
+export const HeadingStyle = S.Literals(["atx", "setext"]);
 
 /**
  * The union of all heading-style string literals.
@@ -129,7 +130,7 @@ export type HeadingStyle = typeof HeadingStyle.Type;
  *
  * @public
  */
-export const BreakStyle = Schema.Literals(["backslash", "spaces"]);
+export const BreakStyle = S.Literals(["backslash", "spaces"]);
 
 /**
  * The union of all break-style string literals.
@@ -143,7 +144,7 @@ export type BreakStyle = typeof BreakStyle.Type;
  *
  * @public
  */
-export const FenceChar = Schema.Literals(["`", "~"]);
+export const FenceChar = S.Literals(["`", "~"]);
 
 /**
  * The union of all fence-character literals.
@@ -157,7 +158,7 @@ export type FenceChar = typeof FenceChar.Type;
  *
  * @public
  */
-export const BulletChar = Schema.Literals(["-", "*", "+"]);
+export const BulletChar = S.Literals(["-", "*", "+"]);
 
 /**
  * The union of all bullet-character literals.
@@ -171,7 +172,7 @@ export type BulletChar = typeof BulletChar.Type;
  *
  * @public
  */
-export const ListDelimiter = Schema.Literals([".", ")"]);
+export const ListDelimiter = S.Literals([".", ")"]);
 
 /**
  * The union of all ordered-list delimiter literals.
@@ -185,7 +186,7 @@ export type ListDelimiter = typeof ListDelimiter.Type;
  *
  * @public
  */
-export const ThematicBreakChar = Schema.Literals(["-", "_", "*"]);
+export const ThematicBreakChar = S.Literals(["-", "_", "*"]);
 
 /**
  * The union of all thematic-break character literals.
@@ -199,7 +200,7 @@ export type ThematicBreakChar = typeof ThematicBreakChar.Type;
  *
  * @public
  */
-export const EmphasisChar = Schema.Literals(["*", "_"]);
+export const EmphasisChar = S.Literals(["*", "_"]);
 
 /**
  * The union of all emphasis-marker character literals.
@@ -213,7 +214,7 @@ export type EmphasisChar = typeof EmphasisChar.Type;
  *
  * @public
  */
-export const HeadingDepth = Schema.Literals([1, 2, 3, 4, 5, 6]);
+export const HeadingDepth = S.Literals([1, 2, 3, 4, 5, 6]);
 
 /**
  * The union of all legal heading depths.
@@ -228,7 +229,7 @@ export type HeadingDepth = typeof HeadingDepth.Type;
  *
  * @public
  */
-export const TableAlign = Schema.Literals(["left", "right", "center"]);
+export const TableAlign = S.Literals(["left", "right", "center"]);
 
 /**
  * The union of all table-alignment string literals.
@@ -293,10 +294,10 @@ export type TableAlign = typeof TableAlign.Type;
  *
  * @public
  */
-export class Text extends Schema.Class<Text>("Text")({
-	type: Schema.tag("text"),
-	value: Schema.String,
-	escapeStyle: Schema.optionalKey(Schema.Literals(["canonical", "literal"])),
+export class Text extends S.Class<Text>("Text")({
+	type: S.tag("text"),
+	value: S.String,
+	escapeStyle: S.optionalKey(S.Literals(["canonical", "literal"])),
 	position: NodePosition,
 }) {}
 
@@ -307,9 +308,9 @@ export class Text extends Schema.Class<Text>("Text")({
  *
  * @public
  */
-export class InlineCode extends Schema.Class<InlineCode>("InlineCode")({
-	type: Schema.tag("inlineCode"),
-	value: Schema.String,
+export class InlineCode extends S.Class<InlineCode>("InlineCode")({
+	type: S.tag("inlineCode"),
+	value: S.String,
 	position: NodePosition,
 }) {}
 
@@ -320,9 +321,9 @@ export class InlineCode extends Schema.Class<InlineCode>("InlineCode")({
  *
  * @public
  */
-export class Html extends Schema.Class<Html>("Html")({
-	type: Schema.tag("html"),
-	value: Schema.String,
+export class Html extends S.Class<Html>("Html")({
+	type: S.tag("html"),
+	value: S.String,
 	position: NodePosition,
 }) {}
 
@@ -334,10 +335,10 @@ export class Html extends Schema.Class<Html>("Html")({
  *
  * @public
  */
-export class Break extends Schema.Class<Break>("Break")({
-	type: Schema.tag("break"),
+export class Break extends S.Class<Break>("Break")({
+	type: S.tag("break"),
 	position: NodePosition,
-	breakStyle: Schema.optionalKey(BreakStyle),
+	breakStyle: S.optionalKey(BreakStyle),
 }) {}
 
 /**
@@ -345,11 +346,11 @@ export class Break extends Schema.Class<Break>("Break")({
  *
  * @public
  */
-export class Image extends Schema.Class<Image>("Image")({
-	type: Schema.tag("image"),
-	url: Schema.String,
-	title: Schema.optionalKey(Schema.String),
-	alt: Schema.optionalKey(Schema.String),
+export class Image extends S.Class<Image>("Image")({
+	type: S.tag("image"),
+	url: S.String,
+	title: S.optionalKey(S.String),
+	alt: S.optionalKey(S.String),
 	position: NodePosition,
 }) {}
 
@@ -362,12 +363,12 @@ export class Image extends Schema.Class<Image>("Image")({
  *
  * @public
  */
-export class ImageReference extends Schema.Class<ImageReference>("ImageReference")({
-	type: Schema.tag("imageReference"),
-	identifier: Schema.String,
-	label: Schema.optionalKey(Schema.String),
+export class ImageReference extends S.Class<ImageReference>("ImageReference")({
+	type: S.tag("imageReference"),
+	identifier: S.String,
+	label: S.optionalKey(S.String),
 	referenceType: ReferenceType,
-	alt: Schema.optionalKey(Schema.String),
+	alt: S.optionalKey(S.String),
 	position: NodePosition,
 }) {}
 
@@ -378,11 +379,11 @@ export class ImageReference extends Schema.Class<ImageReference>("ImageReference
  *
  * @public
  */
-export class Emphasis extends Schema.Class<Emphasis>("Emphasis")({
-	type: Schema.tag("emphasis"),
-	children: Schema.Array(Schema.suspend((): Schema.Codec<PhrasingContent> => PhrasingContent)),
+export class Emphasis extends S.Class<Emphasis>("Emphasis")({
+	type: S.tag("emphasis"),
+	children: S.Array(S.suspend((): S.Codec<PhrasingContent> => PhrasingContent)),
 	position: NodePosition,
-	markerChar: Schema.optionalKey(EmphasisChar),
+	markerChar: S.optionalKey(EmphasisChar),
 }) {}
 
 /**
@@ -392,11 +393,11 @@ export class Emphasis extends Schema.Class<Emphasis>("Emphasis")({
  *
  * @public
  */
-export class Strong extends Schema.Class<Strong>("Strong")({
-	type: Schema.tag("strong"),
-	children: Schema.Array(Schema.suspend((): Schema.Codec<PhrasingContent> => PhrasingContent)),
+export class Strong extends S.Class<Strong>("Strong")({
+	type: S.tag("strong"),
+	children: S.Array(S.suspend((): S.Codec<PhrasingContent> => PhrasingContent)),
 	position: NodePosition,
-	markerChar: Schema.optionalKey(EmphasisChar),
+	markerChar: S.optionalKey(EmphasisChar),
 }) {}
 
 /**
@@ -409,9 +410,9 @@ export class Strong extends Schema.Class<Strong>("Strong")({
  *
  * @public
  */
-export class Delete extends Schema.Class<Delete>("Delete")({
-	type: Schema.tag("delete"),
-	children: Schema.Array(Schema.suspend((): Schema.Codec<PhrasingContent> => PhrasingContent)),
+export class Delete extends S.Class<Delete>("Delete")({
+	type: S.tag("delete"),
+	children: S.Array(S.suspend((): S.Codec<PhrasingContent> => PhrasingContent)),
 	position: NodePosition,
 }) {}
 
@@ -420,11 +421,11 @@ export class Delete extends Schema.Class<Delete>("Delete")({
  *
  * @public
  */
-export class Link extends Schema.Class<Link>("Link")({
-	type: Schema.tag("link"),
-	url: Schema.String,
-	title: Schema.optionalKey(Schema.String),
-	children: Schema.Array(Schema.suspend((): Schema.Codec<PhrasingContent> => PhrasingContent)),
+export class Link extends S.Class<Link>("Link")({
+	type: S.tag("link"),
+	url: S.String,
+	title: S.optionalKey(S.String),
+	children: S.Array(S.suspend((): S.Codec<PhrasingContent> => PhrasingContent)),
 	position: NodePosition,
 }) {}
 
@@ -436,12 +437,12 @@ export class Link extends Schema.Class<Link>("Link")({
  *
  * @public
  */
-export class LinkReference extends Schema.Class<LinkReference>("LinkReference")({
-	type: Schema.tag("linkReference"),
-	identifier: Schema.String,
-	label: Schema.optionalKey(Schema.String),
+export class LinkReference extends S.Class<LinkReference>("LinkReference")({
+	type: S.tag("linkReference"),
+	identifier: S.String,
+	label: S.optionalKey(S.String),
 	referenceType: ReferenceType,
-	children: Schema.Array(Schema.suspend((): Schema.Codec<PhrasingContent> => PhrasingContent)),
+	children: S.Array(S.suspend((): S.Codec<PhrasingContent> => PhrasingContent)),
 	position: NodePosition,
 }) {}
 
@@ -456,10 +457,10 @@ export class LinkReference extends Schema.Class<LinkReference>("LinkReference")(
  *
  * @public
  */
-export class FootnoteReference extends Schema.Class<FootnoteReference>("FootnoteReference")({
-	type: Schema.tag("footnoteReference"),
-	identifier: Schema.String,
-	label: Schema.optionalKey(Schema.String),
+export class FootnoteReference extends S.Class<FootnoteReference>("FootnoteReference")({
+	type: S.tag("footnoteReference"),
+	identifier: S.String,
+	label: S.optionalKey(S.String),
 	position: NodePosition,
 }) {}
 
@@ -472,8 +473,8 @@ export class FootnoteReference extends Schema.Class<FootnoteReference>("Footnote
  *
  * @public
  */
-export const PhrasingContent: Schema.Codec<PhrasingContent> = Schema.suspend(() =>
-	Schema.Union([
+export const PhrasingContent: S.Codec<PhrasingContent> = S.suspend(() =>
+	S.Union([
 		Break,
 		Delete,
 		Emphasis,
@@ -524,10 +525,10 @@ export type PhrasingContent =
  *
  * @public
  */
-export class ThematicBreak extends Schema.Class<ThematicBreak>("ThematicBreak")({
-	type: Schema.tag("thematicBreak"),
+export class ThematicBreak extends S.Class<ThematicBreak>("ThematicBreak")({
+	type: S.tag("thematicBreak"),
 	position: NodePosition,
-	markerChar: Schema.optionalKey(ThematicBreakChar),
+	markerChar: S.optionalKey(ThematicBreakChar),
 }) {}
 
 /**
@@ -546,14 +547,14 @@ export class ThematicBreak extends Schema.Class<ThematicBreak>("ThematicBreak")(
  *
  * @public
  */
-export class Code extends Schema.Class<Code>("Code")({
-	type: Schema.tag("code"),
-	value: Schema.String,
-	lang: Schema.optionalKey(Schema.String),
-	meta: Schema.optionalKey(Schema.String),
+export class Code extends S.Class<Code>("Code")({
+	type: S.tag("code"),
+	value: S.String,
+	lang: S.optionalKey(S.String),
+	meta: S.optionalKey(S.String),
 	position: NodePosition,
-	fenceChar: Schema.optionalKey(FenceChar),
-	fenceLength: Schema.optionalKey(Schema.Finite),
+	fenceChar: S.optionalKey(FenceChar),
+	fenceLength: S.optionalKey(S.Finite),
 }) {}
 
 /**
@@ -565,12 +566,12 @@ export class Code extends Schema.Class<Code>("Code")({
  *
  * @public
  */
-export class Definition extends Schema.Class<Definition>("Definition")({
-	type: Schema.tag("definition"),
-	identifier: Schema.String,
-	label: Schema.optionalKey(Schema.String),
-	url: Schema.String,
-	title: Schema.optionalKey(Schema.String),
+export class Definition extends S.Class<Definition>("Definition")({
+	type: S.tag("definition"),
+	identifier: S.String,
+	label: S.optionalKey(S.String),
+	url: S.String,
+	title: S.optionalKey(S.String),
 	position: NodePosition,
 }) {}
 
@@ -584,11 +585,11 @@ export class Definition extends Schema.Class<Definition>("Definition")({
  *
  * @public
  */
-export class FootnoteDefinition extends Schema.Class<FootnoteDefinition>("FootnoteDefinition")({
-	type: Schema.tag("footnoteDefinition"),
-	identifier: Schema.String,
-	label: Schema.optionalKey(Schema.String),
-	children: Schema.Array(Schema.suspend((): Schema.Codec<FlowContent> => FlowContent)),
+export class FootnoteDefinition extends S.Class<FootnoteDefinition>("FootnoteDefinition")({
+	type: S.tag("footnoteDefinition"),
+	identifier: S.String,
+	label: S.optionalKey(S.String),
+	children: S.Array(S.suspend((): S.Codec<FlowContent> => FlowContent)),
 	position: NodePosition,
 }) {}
 
@@ -597,9 +598,9 @@ export class FootnoteDefinition extends Schema.Class<FootnoteDefinition>("Footno
  *
  * @public
  */
-export class Paragraph extends Schema.Class<Paragraph>("Paragraph")({
-	type: Schema.tag("paragraph"),
-	children: Schema.Array(Schema.suspend((): Schema.Codec<PhrasingContent> => PhrasingContent)),
+export class Paragraph extends S.Class<Paragraph>("Paragraph")({
+	type: S.tag("paragraph"),
+	children: S.Array(S.suspend((): S.Codec<PhrasingContent> => PhrasingContent)),
 	position: NodePosition,
 }) {}
 
@@ -611,12 +612,12 @@ export class Paragraph extends Schema.Class<Paragraph>("Paragraph")({
  *
  * @public
  */
-export class Heading extends Schema.Class<Heading>("Heading")({
-	type: Schema.tag("heading"),
+export class Heading extends S.Class<Heading>("Heading")({
+	type: S.tag("heading"),
 	depth: HeadingDepth,
-	children: Schema.Array(Schema.suspend((): Schema.Codec<PhrasingContent> => PhrasingContent)),
+	children: S.Array(S.suspend((): S.Codec<PhrasingContent> => PhrasingContent)),
 	position: NodePosition,
-	headingStyle: Schema.optionalKey(HeadingStyle),
+	headingStyle: S.optionalKey(HeadingStyle),
 }) {}
 
 /**
@@ -632,12 +633,12 @@ export class Heading extends Schema.Class<Heading>("Heading")({
  *
  * @public
  */
-export class ListItem extends Schema.Class<ListItem>("ListItem")({
-	type: Schema.tag("listItem"),
-	spread: Schema.optionalKey(Schema.Boolean),
-	children: Schema.Array(Schema.suspend((): Schema.Codec<FlowContent> => FlowContent)),
+export class ListItem extends S.Class<ListItem>("ListItem")({
+	type: S.tag("listItem"),
+	spread: S.optionalKey(S.Boolean),
+	children: S.Array(S.suspend((): S.Codec<FlowContent> => FlowContent)),
 	position: NodePosition,
-	checked: Schema.optionalKey(Schema.Boolean),
+	checked: S.optionalKey(S.Boolean),
 }) {}
 
 /**
@@ -652,15 +653,15 @@ export class ListItem extends Schema.Class<ListItem>("ListItem")({
  *
  * @public
  */
-export class List extends Schema.Class<List>("List")({
-	type: Schema.tag("list"),
-	ordered: Schema.optionalKey(Schema.Boolean),
-	start: Schema.optionalKey(Schema.Finite),
-	spread: Schema.optionalKey(Schema.Boolean),
-	children: Schema.Array(Schema.suspend((): Schema.Codec<ListContent> => ListContent)),
+export class List extends S.Class<List>("List")({
+	type: S.tag("list"),
+	ordered: S.optionalKey(S.Boolean),
+	start: S.optionalKey(S.Finite),
+	spread: S.optionalKey(S.Boolean),
+	children: S.Array(S.suspend((): S.Codec<ListContent> => ListContent)),
 	position: NodePosition,
-	bulletChar: Schema.optionalKey(BulletChar),
-	delimiter: Schema.optionalKey(ListDelimiter),
+	bulletChar: S.optionalKey(BulletChar),
+	delimiter: S.optionalKey(ListDelimiter),
 }) {}
 
 /**
@@ -668,9 +669,9 @@ export class List extends Schema.Class<List>("List")({
  *
  * @public
  */
-export class Blockquote extends Schema.Class<Blockquote>("Blockquote")({
-	type: Schema.tag("blockquote"),
-	children: Schema.Array(Schema.suspend((): Schema.Codec<FlowContent> => FlowContent)),
+export class Blockquote extends S.Class<Blockquote>("Blockquote")({
+	type: S.tag("blockquote"),
+	children: S.Array(S.suspend((): S.Codec<FlowContent> => FlowContent)),
 	position: NodePosition,
 }) {}
 
@@ -688,9 +689,9 @@ export class Blockquote extends Schema.Class<Blockquote>("Blockquote")({
  *
  * @public
  */
-export class TableCell extends Schema.Class<TableCell>("TableCell")({
-	type: Schema.tag("tableCell"),
-	children: Schema.Array(Schema.suspend((): Schema.Codec<PhrasingContent> => PhrasingContent)),
+export class TableCell extends S.Class<TableCell>("TableCell")({
+	type: S.tag("tableCell"),
+	children: S.Array(S.suspend((): S.Codec<PhrasingContent> => PhrasingContent)),
 	position: NodePosition,
 }) {}
 
@@ -710,7 +711,7 @@ export class TableCell extends Schema.Class<TableCell>("TableCell")({
  *
  * @public
  */
-export const RowContent: Schema.Codec<RowContent> = Schema.suspend(() => Schema.Union([TableCell]));
+export const RowContent: S.Codec<RowContent> = S.suspend(() => S.Union([TableCell]));
 
 /**
  * The union of all row-content node types.
@@ -725,9 +726,9 @@ export type RowContent = TableCell;
  *
  * @public
  */
-export class TableRow extends Schema.Class<TableRow>("TableRow")({
-	type: Schema.tag("tableRow"),
-	children: Schema.Array(Schema.suspend((): Schema.Codec<RowContent> => RowContent)),
+export class TableRow extends S.Class<TableRow>("TableRow")({
+	type: S.tag("tableRow"),
+	children: S.Array(S.suspend((): S.Codec<RowContent> => RowContent)),
 	position: NodePosition,
 }) {}
 
@@ -739,7 +740,7 @@ export class TableRow extends Schema.Class<TableRow>("TableRow")({
  *
  * @public
  */
-export const TableContent: Schema.Codec<TableContent> = Schema.suspend(() => Schema.Union([TableRow]));
+export const TableContent: S.Codec<TableContent> = S.suspend(() => S.Union([TableRow]));
 
 /**
  * The union of all table-content node types.
@@ -758,10 +759,10 @@ export type TableContent = TableRow;
  *
  * @public
  */
-export class Table extends Schema.Class<Table>("Table")({
-	type: Schema.tag("table"),
-	align: Schema.optionalKey(Schema.Array(Schema.NullOr(TableAlign))),
-	children: Schema.Array(Schema.suspend((): Schema.Codec<TableContent> => TableContent)),
+export class Table extends S.Class<Table>("Table")({
+	type: S.tag("table"),
+	align: TableAlign.pipe(S.NullOr, S.Array, S.optionalKey),
+	children: S.Array(S.suspend((): S.Codec<TableContent> => TableContent)),
 	position: NodePosition,
 }) {}
 
@@ -776,8 +777,8 @@ export class Table extends Schema.Class<Table>("Table")({
  *
  * @public
  */
-export const FlowContent: Schema.Codec<FlowContent> = Schema.suspend(() =>
-	Schema.Union([
+export const FlowContent: S.Codec<FlowContent> = S.suspend(() =>
+	S.Union([
 		Blockquote,
 		Code,
 		Definition,
@@ -825,7 +826,7 @@ export type FlowContent =
  *
  * @public
  */
-export const ListContent: Schema.Codec<ListContent> = Schema.suspend(() => Schema.Union([ListItem]));
+export const ListContent: S.Codec<ListContent> = S.suspend(() => S.Union([ListItem]));
 
 /**
  * The union of all list-content node types.
@@ -858,11 +859,11 @@ export type ListContent = ListItem;
  *
  * @public
  */
-export class MdxJsxAttributeValueExpression extends Schema.Class<MdxJsxAttributeValueExpression>(
+export class MdxJsxAttributeValueExpression extends S.Class<MdxJsxAttributeValueExpression>(
 	"MdxJsxAttributeValueExpression",
 )({
-	type: Schema.tag("mdxJsxAttributeValueExpression"),
-	value: Schema.String,
+	type: S.tag("mdxJsxAttributeValueExpression"),
+	value: S.String,
 	position: NodePosition,
 }) {}
 
@@ -879,15 +880,15 @@ export class MdxJsxAttributeValueExpression extends Schema.Class<MdxJsxAttribute
  *
  * @public
  */
-export class MdxJsxAttribute extends Schema.Class<MdxJsxAttribute>("MdxJsxAttribute")(
-	Schema.Struct({
-		type: Schema.tag("mdxJsxAttribute"),
-		name: Schema.String,
-		value: Schema.optionalKey(Schema.NullOr(Schema.Union([MdxJsxAttributeValueExpression, Schema.String]))),
+export class MdxJsxAttribute extends S.Class<MdxJsxAttribute>("MdxJsxAttribute")(
+	S.Struct({
+		type: S.tag("mdxJsxAttribute"),
+		name: S.String,
+		value: S.Union([MdxJsxAttributeValueExpression, S.String]).pipe(S.NullOr, S.optionalKey),
 		position: NodePosition,
 	}).pipe(
-		Schema.check(
-			Schema.makeFilter((attribute) =>
+		S.check(
+			S.makeFilter((attribute) =>
 				attribute.name.length === 0 ? "an MDX JSX attribute requires a non-empty name" : undefined,
 			),
 		),
@@ -901,9 +902,9 @@ export class MdxJsxAttribute extends Schema.Class<MdxJsxAttribute>("MdxJsxAttrib
  *
  * @public
  */
-export class MdxJsxExpressionAttribute extends Schema.Class<MdxJsxExpressionAttribute>("MdxJsxExpressionAttribute")({
-	type: Schema.tag("mdxJsxExpressionAttribute"),
-	value: Schema.String,
+export class MdxJsxExpressionAttribute extends S.Class<MdxJsxExpressionAttribute>("MdxJsxExpressionAttribute")({
+	type: S.tag("mdxJsxExpressionAttribute"),
+	value: S.String,
 	position: NodePosition,
 }) {}
 
@@ -920,7 +921,7 @@ export class MdxJsxExpressionAttribute extends Schema.Class<MdxJsxExpressionAttr
  *
  * @public
  */
-export const MdxJsxAttributeContent: Schema.Codec<MdxJsxAttributeContent> = Schema.Union([
+export const MdxJsxAttributeContent: S.Codec<MdxJsxAttributeContent> = S.Union([
 	MdxJsxAttribute,
 	MdxJsxExpressionAttribute,
 ]);
@@ -946,16 +947,16 @@ export type MdxJsxAttributeContent = MdxJsxAttribute | MdxJsxExpressionAttribute
  *
  * @public
  */
-export class MdxJsxFlowElement extends Schema.Class<MdxJsxFlowElement>("MdxJsxFlowElement")(
-	Schema.Struct({
-		type: Schema.tag("mdxJsxFlowElement"),
-		name: Schema.NullOr(Schema.String),
-		attributes: Schema.Array(MdxJsxAttributeContent),
-		children: Schema.Array(Schema.suspend((): Schema.Codec<FlowContent> => FlowContent)),
+export class MdxJsxFlowElement extends S.Class<MdxJsxFlowElement>("MdxJsxFlowElement")(
+	S.Struct({
+		type: S.tag("mdxJsxFlowElement"),
+		name: S.NullOr(S.String),
+		attributes: S.Array(MdxJsxAttributeContent),
+		children: S.Array(S.suspend((): S.Codec<FlowContent> => FlowContent)),
 		position: NodePosition,
 	}).pipe(
-		Schema.check(
-			Schema.makeFilter((element) => {
+		S.check(
+			S.makeFilter((element) => {
 				if (element.name !== null && element.name.length === 0) {
 					return "an MDX JSX element requires a non-empty name (`null` is the fragment spelling)";
 				}
@@ -975,16 +976,16 @@ export class MdxJsxFlowElement extends Schema.Class<MdxJsxFlowElement>("MdxJsxFl
  *
  * @public
  */
-export class MdxJsxTextElement extends Schema.Class<MdxJsxTextElement>("MdxJsxTextElement")(
-	Schema.Struct({
-		type: Schema.tag("mdxJsxTextElement"),
-		name: Schema.NullOr(Schema.String),
-		attributes: Schema.Array(MdxJsxAttributeContent),
-		children: Schema.Array(Schema.suspend((): Schema.Codec<PhrasingContent> => PhrasingContent)),
+export class MdxJsxTextElement extends S.Class<MdxJsxTextElement>("MdxJsxTextElement")(
+	S.Struct({
+		type: S.tag("mdxJsxTextElement"),
+		name: S.NullOr(S.String),
+		attributes: S.Array(MdxJsxAttributeContent),
+		children: S.Array(S.suspend((): S.Codec<PhrasingContent> => PhrasingContent)),
 		position: NodePosition,
 	}).pipe(
-		Schema.check(
-			Schema.makeFilter((element) => {
+		S.check(
+			S.makeFilter((element) => {
 				if (element.name !== null && element.name.length === 0) {
 					return "an MDX JSX element requires a non-empty name (`null` is the fragment spelling)";
 				}
@@ -1003,9 +1004,9 @@ export class MdxJsxTextElement extends Schema.Class<MdxJsxTextElement>("MdxJsxTe
  *
  * @public
  */
-export class MdxFlowExpression extends Schema.Class<MdxFlowExpression>("MdxFlowExpression")({
-	type: Schema.tag("mdxFlowExpression"),
-	value: Schema.String,
+export class MdxFlowExpression extends S.Class<MdxFlowExpression>("MdxFlowExpression")({
+	type: S.tag("mdxFlowExpression"),
+	value: S.String,
 	position: NodePosition,
 }) {}
 
@@ -1015,9 +1016,9 @@ export class MdxFlowExpression extends Schema.Class<MdxFlowExpression>("MdxFlowE
  *
  * @public
  */
-export class MdxTextExpression extends Schema.Class<MdxTextExpression>("MdxTextExpression")({
-	type: Schema.tag("mdxTextExpression"),
-	value: Schema.String,
+export class MdxTextExpression extends S.Class<MdxTextExpression>("MdxTextExpression")({
+	type: S.tag("mdxTextExpression"),
+	value: S.String,
 	position: NodePosition,
 }) {}
 
@@ -1032,9 +1033,9 @@ export class MdxTextExpression extends Schema.Class<MdxTextExpression>("MdxTextE
  *
  * @public
  */
-export class MdxjsEsm extends Schema.Class<MdxjsEsm>("MdxjsEsm")({
-	type: Schema.tag("mdxjsEsm"),
-	value: Schema.String,
+export class MdxjsEsm extends S.Class<MdxjsEsm>("MdxjsEsm")({
+	type: S.tag("mdxjsEsm"),
+	value: S.String,
 	position: NodePosition,
 }) {}
 
@@ -1046,7 +1047,7 @@ export class MdxjsEsm extends Schema.Class<MdxjsEsm>("MdxjsEsm")({
  *
  * @public
  */
-export const FrontmatterFormat = Schema.Literals(["yaml", "toml", "json"]);
+export const FrontmatterFormat = S.Literals(["yaml", "toml", "json"]);
 
 /**
  * The union of all frontmatter format string literals.
@@ -1075,10 +1076,10 @@ export type FrontmatterFormat = typeof FrontmatterFormat.Type;
  *
  * @public
  */
-export class Frontmatter extends Schema.Class<Frontmatter>("Frontmatter")({
-	type: Schema.tag("frontmatter"),
+export class Frontmatter extends S.Class<Frontmatter>("Frontmatter")({
+	type: S.tag("frontmatter"),
 	format: FrontmatterFormat,
-	value: Schema.String,
+	value: S.String,
 	position: NodePosition,
 }) {}
 
@@ -1089,7 +1090,7 @@ export class Frontmatter extends Schema.Class<Frontmatter>("Frontmatter")({
  *
  * @public
  */
-export const FrontmatterContent: Schema.Codec<FrontmatterContent> = Schema.suspend(() => Frontmatter);
+export const FrontmatterContent: S.Codec<FrontmatterContent> = S.suspend(() => Frontmatter);
 
 /**
  * The union of all frontmatter-content node types.
@@ -1111,11 +1112,11 @@ export type FrontmatterContent = Frontmatter;
  *
  * @public
  */
-export class Root extends Schema.Class<Root>("Root")({
-	type: Schema.tag("root"),
-	children: Schema.Array(
-		Schema.suspend(
-			(): Schema.Codec<Frontmatter | MdxjsEsm | FlowContent> => Schema.Union([Frontmatter, MdxjsEsm, FlowContent]),
+export class Root extends S.Class<Root>("Root")({
+	type: S.tag("root"),
+	children: S.Array(
+		S.suspend(
+			(): S.Codec<Frontmatter | MdxjsEsm | FlowContent> => S.Union([Frontmatter, MdxjsEsm, FlowContent]),
 		),
 	),
 	position: NodePosition,
@@ -1142,8 +1143,8 @@ export type MarkdownNode =
  *
  * @public
  */
-export const MarkdownNode: Schema.Codec<MarkdownNode> = Schema.suspend(() =>
-	Schema.Union([
+export const MarkdownNode: S.Codec<MarkdownNode> = S.suspend(() =>
+	S.Union([
 		Root,
 		FrontmatterContent,
 		FlowContent,

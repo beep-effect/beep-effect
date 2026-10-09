@@ -1,4 +1,6 @@
-import { Equal, Result, Schema } from "effect";
+import * as Equal from "effect/Equal";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { CommentStyle } from "./CommentStyle.ts";
 import { ATTRIBUTE_NAME_PATTERN, isValidAttributeValue, parseAttributeRun } from "./internal/attributes.ts";
 import type { Section, SectionId } from "./Section.ts";
@@ -20,7 +22,7 @@ export type Eol = "\n" | "\r\n";
  *
  * @public
  */
-export class SectionRenderError extends Schema.TaggedError<SectionRenderError>()("SectionRenderError", {
+export class SectionRenderError extends S.TaggedError<SectionRenderError>()("SectionRenderError", {
 	/**
 	 * `markerInContent` — the content carries a line the scanner would read as
 	 * a marker, which would move the block boundary and let the next sync
@@ -36,11 +38,11 @@ export class SectionRenderError extends Schema.TaggedError<SectionRenderError>()
 	 * break; either would render a marker the scanner could not read back
 	 * verbatim, and there is no escaping mechanism by design.
 	 */
-	reason: Schema.Literals(["markerInContent", "unknownCommentStyle", "duplicateDeclaration", "invalidAttribute"]),
+	reason: S.Literals(["markerInContent", "unknownCommentStyle", "duplicateDeclaration", "invalidAttribute"]),
 	/** The key of the section that could not be rendered. */
-	key: Schema.String,
+	key: S.String,
 	/** The offending attribute's name, when the refusal names one. */
-	attribute: Schema.optionalKey(Schema.String),
+	attribute: S.optionalKey(S.String),
 }) {
 	override get message(): string {
 		switch (this.reason) {
@@ -91,7 +93,7 @@ const matcherCache = new WeakMap<
  *
  * @public
  */
-export class SectionDialect extends Schema.Class<SectionDialect>("SectionDialect")({
+export class SectionDialect extends S.Class<SectionDialect>("SectionDialect")({
 	/**
 	 * The phrase between the key and the closing rule.
 	 *
@@ -100,9 +102,9 @@ export class SectionDialect extends Schema.Class<SectionDialect>("SectionDialect
 	 * phrase can never contain the `---` rule and make a marker ambiguous
 	 * against itself.
 	 */
-	phrase: Schema.String.check(Schema.isPattern(/^[A-Za-z0-9][A-Za-z0-9 _]*$/u)),
+	phrase: S.String.check(S.isPattern(/^[A-Za-z0-9][A-Za-z0-9 _]*$/u)),
 	/** Which comment styles the document scanner recognizes. At least one. */
-	styles: Schema.Array(CommentStyle).check(Schema.isMinLength(1)),
+	styles: S.Array(CommentStyle).check(S.isMinLength(1)),
 }) {
 	/**
 	 * The zero-configuration dialect: the phrase `MANAGED SECTION` and every

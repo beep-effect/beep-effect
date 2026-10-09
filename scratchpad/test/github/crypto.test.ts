@@ -1,7 +1,7 @@
 // @effect-diagnostics asyncFunction:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import blakejs from "blakejs";
-import { Result } from "effect";
+import * as Result from "effect/Result";
 import * as Base64 from "effect/encoding/Base64";
 import nacl from "tweetnacl";
 import { encryptSecret } from "../../effected/github/internal/crypto.ts";

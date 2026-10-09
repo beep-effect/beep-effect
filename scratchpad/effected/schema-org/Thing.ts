@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 
 /**
  * The fields every schema.org node in this package carries, spread into each
@@ -27,17 +27,17 @@ export const ThingFields = {
 	 * `JsonLdDocument.buildResult`, so a malformed `@id` fails typed rather than
 	 * throwing out of `make`.
 	 */
-	"@id": Schema.String,
+	"@id": S.String,
 	/** The node's name. Single-valued: a node with two names has an authoring bug. */
-	name: Schema.optional(Schema.String),
+	name: S.optional(S.String),
 	/** The canonical URL for the node. Single-valued. */
-	url: Schema.optional(Schema.String),
+	url: S.optional(S.String),
 	/** A description of the node. Single-valued. */
-	description: Schema.optional(Schema.String),
+	description: S.optional(S.String),
 	/** External identifiers for the node. Repeatable. */
-	identifier: Schema.optional(Schema.Array(Schema.String)),
+	identifier: S.String.pipe(S.Array, S.optional),
 	/** URLs of pages that unambiguously identify the node. Repeatable. */
-	sameAs: Schema.optional(Schema.Array(Schema.String)),
+	sameAs: S.String.pipe(S.Array, S.optional),
 	/**
 	 * schema.org terms this package does not model as typed fields, flattened
 	 * into the node's JSON object at serialization.
@@ -50,5 +50,5 @@ export const ThingFields = {
 	 * A key here that collides with a typed field, with `@id` or with `@type`
 	 * is caller error and fails at `JsonLdDocument.buildResult`.
 	 */
-	additional: Schema.optional(Schema.Record(Schema.String, Schema.Json)),
+	additional: S.optional(S.Record(S.String, S.Json)),
 } as const;

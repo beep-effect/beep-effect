@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 import { TechArticleFields } from "./TechArticle.ts";
 
 /**
@@ -21,16 +21,16 @@ import { TechArticleFields } from "./TechArticle.ts";
  *
  * @public
  */
-export class APIReference extends Schema.Class<APIReference>("APIReference")({
+export class APIReference extends S.Class<APIReference>("APIReference")({
 	...TechArticleFields,
 	/** The JSON-LD type discriminator, populated automatically. */
-	"@type": Schema.tag("APIReference"),
+	"@type": S.tag("APIReference"),
 	/** The version of the assembly the reference documents. Single-valued. */
-	assemblyVersion: Schema.optional(Schema.String),
+	assemblyVersion: S.optional(S.String),
 	/** The programming model the API follows. Single-valued. */
-	programmingModel: Schema.optional(Schema.String),
+	programmingModel: S.optional(S.String),
 	/** The platform the API targets. Single-valued. */
-	targetPlatform: Schema.optional(Schema.String),
+	targetPlatform: S.optional(S.String),
 	/** The library file that exposes the API. Single-valued. */
-	executableLibraryName: Schema.optional(Schema.String),
+	executableLibraryName: S.optional(S.String),
 }) {}

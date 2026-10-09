@@ -1,4 +1,12 @@
-import { Clock, Context, Duration, Effect, Latch, Layer, Ref, Schema, Semaphore } from "effect";
+import * as Clock from "effect/Clock";
+import * as Context from "effect/Context";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Latch from "effect/Latch";
+import * as Layer from "effect/Layer";
+import * as Ref from "effect/Ref";
+import * as S from "effect/Schema";
+import * as Semaphore from "effect/Semaphore";
 import { CheckState } from "./CheckState.ts";
 import { unstubbed } from "./internal/unstubbed.ts";
 import { ManagedDocument } from "./ManagedDocument.ts";
@@ -16,17 +24,17 @@ import { ManagedDocument } from "./ManagedDocument.ts";
  *
  * @public
  */
-export class CheckReport extends Schema.Class<CheckReport>("CheckReport")({
+export class CheckReport extends S.Class<CheckReport>("CheckReport")({
 	/** Where the check is now. The last reported state is the authoritative one. */
 	state: CheckState,
 	/** Display name, when it differs from the registry key. */
-	title: Schema.optionalKey(Schema.String),
+	title: S.optionalKey(S.String),
 	/** A one-line verdict, e.g. `in progress...` or `3 packages ready`. */
-	outcome: Schema.optionalKey(Schema.String),
+	outcome: S.optionalKey(S.String),
 	/** A pre-rendered markdown block of per-check detail. */
-	detail: Schema.optionalKey(Schema.String),
+	detail: S.optionalKey(S.String),
 	/** Where the check's name should link. */
-	url: Schema.optionalKey(Schema.String),
+	url: S.optionalKey(S.String),
 }) {}
 
 /** What each {@link CheckDocumentError} kind reads as. */
@@ -50,11 +58,11 @@ const KIND_PROSE = {
  *
  * @public
  */
-export class CheckDocumentError extends Schema.TaggedError<CheckDocumentError>()("CheckDocumentError", {
+export class CheckDocumentError extends S.TaggedError<CheckDocumentError>()("CheckDocumentError", {
 	/** Which phase failed: regenerating the document, reading it back, or writing it. */
-	kind: Schema.Literals(["render", "read", "sink"]),
+	kind: S.Literals(["render", "read", "sink"]),
 	/** The underlying failure. */
-	cause: Schema.optionalKey(Schema.Defect()),
+	cause: S.optionalKey(S.Defect()),
 }) {
 	override get message(): string {
 		return KIND_PROSE[this.kind];
@@ -75,11 +83,11 @@ export class CheckDocumentError extends Schema.TaggedError<CheckDocumentError>()
  *
  * @public
  */
-export class CheckDocumentStamp extends Schema.Class<CheckDocumentStamp>("CheckDocumentStamp")({
+export class CheckDocumentStamp extends S.Class<CheckDocumentStamp>("CheckDocumentStamp")({
 	/** When the run started — ideally an ISO-8601 instant. */
-	at: Schema.String,
+	at: S.String,
 	/** The run's identifier — on GitHub, `GITHUB_RUN_ID`. */
-	runId: Schema.String,
+	runId: S.String,
 }) {
 	/**
 	 * Is `incoming` allowed to overwrite regions stamped `existing`?

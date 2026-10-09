@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import * as S from "effect/Schema";
 
 /**
  * A comment delimiter: non-empty, and free of control characters.
@@ -15,7 +15,7 @@ import { Schema } from "effect";
  * The pattern is a negated character class with a single quantifier, so it
  * cannot backtrack on hostile input.
  */
-const Delimiter = Schema.String.check(Schema.isPattern(/^\P{Cc}+$/u));
+const Delimiter = S.String.check(S.isPattern(/^\P{Cc}+$/u));
 
 /**
  * How a managed section's markers are commented out in a given file format.
@@ -39,11 +39,11 @@ const Delimiter = Schema.String.check(Schema.isPattern(/^\P{Cc}+$/u));
  *
  * @public
  */
-export class CommentStyle extends Schema.Class<CommentStyle>("CommentStyle")({
+export class CommentStyle extends S.Class<CommentStyle>("CommentStyle")({
 	/** Opens the comment. Non-empty, single-line. */
 	prefix: Delimiter,
 	/** Closes the comment, for wrapped styles. Omitted for line styles. */
-	suffix: Schema.optionalKey(Delimiter),
+	suffix: S.optionalKey(Delimiter),
 }) {
 	/** Shell, YAML, TOML, Python, Dockerfile, `.env`. */
 	static readonly hash: CommentStyle = CommentStyle.make({ prefix: "#" });

@@ -1,4 +1,6 @@
-import { Effect, Result, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 
 /**
  * Indicates that a string is not usable as a JSON-LD node identifier: it is
@@ -16,9 +18,9 @@ import { Effect, Result, Schema } from "effect";
  *
  * @public
  */
-export class InvalidNodeIdError extends Schema.TaggedError<InvalidNodeIdError>()("InvalidNodeIdError", {
+export class InvalidNodeIdError extends S.TaggedError<InvalidNodeIdError>()("InvalidNodeIdError", {
 	/** The string that could not be used as an `@id`. */
-	input: Schema.String,
+	input: S.String,
 }) {
 	override get message(): string {
 		return `Invalid JSON-LD node id: ${JSON.stringify(this.input)}`;
@@ -51,7 +53,7 @@ const NODE_ID_PATTERN = /^[^\s\p{Cc}]+$/u;
  *
  * @public
  */
-export const NodeId = Schema.String.check(Schema.isPattern(NODE_ID_PATTERN));
+export const NodeId = S.String.check(S.isPattern(NODE_ID_PATTERN));
 
 /**
  * Anything carrying an `@id`. Every node class in this package satisfies it.
@@ -91,9 +93,9 @@ export interface HasNodeId {
  *
  * @public
  */
-export class NodeRef extends Schema.Class<NodeRef>("NodeRef")({
+export class NodeRef extends S.Class<NodeRef>("NodeRef")({
 	/** The identifier of the referenced node. */
-	"@id": Schema.String,
+	"@id": S.String,
 }) {
 	/**
 	 * Builds a reference to a node you are already holding, or to a bare

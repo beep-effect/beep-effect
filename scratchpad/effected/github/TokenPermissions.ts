@@ -1,11 +1,12 @@
-import { Effect, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
 
 /**
  * How much access a permission grants.
  *
  * @public
  */
-export const PermissionLevel = Schema.Literals(["read", "write", "admin"]);
+export const PermissionLevel = S.Literals(["read", "write", "admin"]);
 
 /** How much access a permission grants. @public */
 export type PermissionLevel = (typeof PermissionLevel.literals)[number];
@@ -18,13 +19,13 @@ const RANK: Record<PermissionLevel, number> = { read: 1, write: 2, admin: 3 };
  *
  * @public
  */
-export class PermissionGap extends Schema.Class<PermissionGap>("PermissionGap")({
+export class PermissionGap extends S.Class<PermissionGap>("PermissionGap")({
   /** The permission's name, e.g. `"contents"`. */
-  permission: Schema.String,
+  permission: S.String,
   /** What was asked for. */
   required: PermissionLevel,
   /** What the token has, when it has any at all. */
-  granted: Schema.optionalKey(PermissionLevel),
+  granted: S.optionalKey(PermissionLevel),
 }) {
 }
 
@@ -33,13 +34,13 @@ export class PermissionGap extends Schema.Class<PermissionGap>("PermissionGap")(
  *
  * @public
  */
-export class ExtraPermission extends Schema.Class<ExtraPermission>("ExtraPermission")({
+export class ExtraPermission extends S.Class<ExtraPermission>("ExtraPermission")({
   /** The permission's name, e.g. `"contents"`. */
-  permission: Schema.String,
+  permission: S.String,
   /** What the token has. */
   granted: PermissionLevel,
   /** What was asked for, when anything was. */
-  required: Schema.optionalKey(PermissionLevel),
+  required: S.optionalKey(PermissionLevel),
 }) {
 }
 
@@ -48,11 +49,11 @@ export class ExtraPermission extends Schema.Class<ExtraPermission>("ExtraPermiss
  *
  * @public
  */
-export class PermissionResult extends Schema.Class<PermissionResult>("PermissionResult")({
+export class PermissionResult extends S.Class<PermissionResult>("PermissionResult")({
   /** Permissions that are missing or too weak. */
-  missing: Schema.Array(PermissionGap),
+  missing: S.Array(PermissionGap),
   /** Permissions granted beyond what was asked for. */
-  extra: Schema.Array(ExtraPermission),
+  extra: S.Array(ExtraPermission),
 }) {
   /** Nothing missing. */
   get satisfied(): boolean {
@@ -70,9 +71,9 @@ export class PermissionResult extends Schema.Class<PermissionResult>("Permission
  *
  * @public
  */
-export class TokenPermissionError extends Schema.TaggedError<TokenPermissionError>()("TokenPermissionError", {
+export class TokenPermissionError extends S.TaggedError<TokenPermissionError>()("TokenPermissionError", {
   /** Which assertion failed. */
-  kind: Schema.Literals(["insufficient", "excess"]),
+  kind: S.Literals(["insufficient", "excess"]),
   /** The comparison that produced it. */
   result: PermissionResult,
 }) {
@@ -109,9 +110,9 @@ export class TokenPermissionError extends Schema.TaggedError<TokenPermissionErro
  *
  * @public
  */
-export class TokenPermissions extends Schema.Class<TokenPermissions>("TokenPermissions")({
+export class TokenPermissions extends S.Class<TokenPermissions>("TokenPermissions")({
   /** Permission name to level. */
-  granted: Schema.Record(Schema.String, PermissionLevel),
+  granted: S.Record(S.String, PermissionLevel),
 }) {
   /**
    * Read GitHub's permission map, ignoring anything unrecognized.

@@ -1,4 +1,5 @@
-import { Effect, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
 import { ResolvedPackage } from "../ResolvedPackage.ts";
 import { selectSoleDocument } from "./documents.ts";
 import type { LockfileFields, ParseFailure, WorkspaceEntry } from "./shared.ts";
@@ -9,30 +10,30 @@ import { extractWorkspaceDeps, peerDeclarations, toIntegrityHash, validationFail
 // The top-level shape must be a string-keyed map. Classic (v1) yarn.lock
 // content that happens to YAML-parse produces scalar entry values, which
 // fail YarnEntry validation — Berry-only support exits typed either way.
-const YarnLockfileRaw = Schema.Record(Schema.String, Schema.Unknown);
+const YarnLockfileRaw = S.Record(S.String, S.Unknown);
 
-const DepRecord = Schema.optionalKey(Schema.Record(Schema.String, Schema.String));
+const DepRecord = S.optionalKey(S.Record(S.String, S.String));
 
-const YarnEntry = Schema.Struct({
-	version: Schema.optionalKey(Schema.String),
-	resolution: Schema.optionalKey(Schema.String),
+const YarnEntry = S.Struct({
+	version: S.optionalKey(S.String),
+	resolution: S.optionalKey(S.String),
 	dependencies: DepRecord,
 	devDependencies: DepRecord,
 	peerDependencies: DepRecord,
-	peerDependenciesMeta: Schema.optionalKey(
-		Schema.Record(Schema.String, Schema.Struct({ optional: Schema.optionalKey(Schema.Boolean) })),
+	peerDependenciesMeta: S.optionalKey(
+		S.Record(S.String, S.Struct({ optional: S.optionalKey(S.Boolean) })),
 	),
 	optionalDependencies: DepRecord,
-	checksum: Schema.optionalKey(Schema.String),
-	languageName: Schema.optionalKey(Schema.String),
-	linkType: Schema.optionalKey(Schema.String),
-	bin: Schema.optionalKey(Schema.Unknown),
+	checksum: S.optionalKey(S.String),
+	languageName: S.optionalKey(S.String),
+	linkType: S.optionalKey(S.String),
+	bin: S.optionalKey(S.Unknown),
 });
 
 type YarnEntryType = typeof YarnEntry.Type;
 
-const YarnMetadata = Schema.Struct({
-	version: Schema.optionalKey(Schema.Union([Schema.String, Schema.Finite])),
+const YarnMetadata = S.Struct({
+	version: S.optionalKey(S.Union([S.String, S.Finite])),
 });
 
 /**
@@ -49,20 +50,20 @@ export const parseYarn = (content: string): Effect.Effect<LockfileFields, ParseF
 		// yarn defines no document framing, so a multi-document yarn.lock fails
 		// typed rather than being silently truncated to its first document.
 		const { document } = yield* selectSoleDocument(content);
-		const raw = yield* Schema.decodeUnknownEffect(YarnLockfileRaw)(document).pipe(Effect.mapError(validationFailure));
+		const raw = yield* S.decodeUnknownEffect(YarnLockfileRaw)(document).pipe(Effect.mapError(validationFailure));
 
 		// Extract the lockfile version from __metadata; skip it during iteration.
 		const metadata =
 			raw.__metadata === undefined
 				? undefined
-				: yield* Schema.decodeUnknownEffect(YarnMetadata)(raw.__metadata).pipe(Effect.mapError(validationFailure));
+				: yield* S.decodeUnknownEffect(YarnMetadata)(raw.__metadata).pipe(Effect.mapError(validationFailure));
 		const lockfileVersion = metadata?.version === undefined ? "unknown" : String(metadata.version);
 
 		// Decode each entry once and cache in a Map.
 		const decoded = new Map<string, YarnEntryType>();
 		for (const [key, value] of Object.entries(raw)) {
 			if (key === "__metadata") continue;
-			const entry = yield* Schema.decodeUnknownEffect(YarnEntry)(value).pipe(Effect.mapError(validationFailure));
+			const entry = yield* S.decodeUnknownEffect(YarnEntry)(value).pipe(Effect.mapError(validationFailure));
 			decoded.set(key, entry);
 		}
 

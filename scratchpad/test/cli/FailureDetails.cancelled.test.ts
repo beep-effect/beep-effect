@@ -1,6 +1,11 @@
 // @effect-diagnostics strictEffectProvide:skip-file
+import * as F from "effect/Function";
 import { assert, describe, it } from "@effect/vitest";
-import { Cause, Console, Effect, Exit, Runtime } from "effect";
+import * as Cause from "effect/Cause";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Runtime from "effect/Runtime";
 import type { FailureDetails } from "../../effected/cli/index.ts";
 import { Cancelled, CliLogger, CliRuntime, NotInteractive } from "../../effected/cli/index.ts";
 
@@ -32,12 +37,12 @@ const run = Effect.fn("run")(function*<A, E> (program: Effect.Effect<A, E>) {
 	});
 
 const codeOf = <A>(exit: Exit.Exit<A, unknown>): number | undefined =>
-	Exit.isFailure(exit) ? Runtime.getErrorExitCode(Cause.squash(exit.cause)) : undefined;
+	Exit.isFailure(exit) ? exit.cause.pipe(Cause.squash, Runtime.getErrorExitCode) : undefined;
 
 describe("FailureDetails.isCancelled / isNotInteractive", () => {
 	it.effect("a cancel that arrives as a defect (a fallback prompt) is flagged, and isDefect keeps its meaning", () =>
 		Effect.gen(function* () {
-			const { seen, err, exit } = yield* run(Effect.die(Cancelled.make({ reason: "interrupt" })));
+			const { seen, err, exit } = yield* F.pipe(Cancelled.make({ reason: "interrupt" }), Effect.die, run);
 			assert.deepStrictEqual(
 				seen.map((d) => [d.isDefect, d.isCancelled, d.isNotInteractive]),
 				[[true, true, false]],
@@ -50,7 +55,7 @@ describe("FailureDetails.isCancelled / isNotInteractive", () => {
 
 	it.effect("a cancel that arrives as a typed failure (a screen) is flagged the same way", () =>
 		Effect.gen(function* () {
-			const { seen, err } = yield* run(Effect.fail(Cancelled.make({ reason: "interrupt" })));
+			const { seen, err } = yield* F.pipe(Cancelled.make({ reason: "interrupt" }), Effect.fail, run);
 			assert.deepStrictEqual(
 				seen.map((d) => [d.isDefect, d.isCancelled, d.isNotInteractive]),
 				[[false, true, false]],
@@ -61,8 +66,8 @@ describe("FailureDetails.isCancelled / isNotInteractive", () => {
 
 	it.effect("NotInteractive is flagged on its own, through either channel", () =>
 		Effect.gen(function* () {
-			const asDefect = yield* run(Effect.die(NotInteractive.make()));
-			const asFailure = yield* run(Effect.fail(NotInteractive.make()));
+			const asDefect = yield* F.pipe(NotInteractive.make(), Effect.die, run);
+			const asFailure = yield* F.pipe(NotInteractive.make(), Effect.fail, run);
 			for (const { seen, err } of [asDefect, asFailure]) {
 				assert.deepStrictEqual(
 					seen.map((d) => [d.isCancelled, d.isNotInteractive]),
@@ -89,9 +94,7 @@ describe("FailureDetails.isCancelled / isNotInteractive", () => {
 	it.effect("a typed failure beside a cancel defect is judged by the squashed error: the failure wins", () =>
 		Effect.gen(function* () {
 			const typed = new Error("typed");
-			const { seen } = yield* run(
-				Effect.failCause(Cause.combine(Cause.die(Cancelled.make({ reason: "interrupt" })), Cause.fail(typed))),
-			);
+			const { seen } = yield* Cause.combine(Cause.die(Cancelled.make({ reason: "interrupt" })), Cause.fail(typed)).pipe(Effect.failCause, run);
 			assert.deepStrictEqual(
 				seen.map((d) => [d.isDefect, d.isCancelled]),
 				[[false, false]],

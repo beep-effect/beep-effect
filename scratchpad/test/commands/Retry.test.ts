@@ -1,5 +1,7 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Fiber, Ref } from "effect";
+import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
+import * as Ref from "effect/Ref";
 import { ChildProcess } from "effect/process";
 import { TestClock } from "effect/testing";
 import { Retry } from "../../effected/commands/Retry.ts";
@@ -82,7 +84,7 @@ describe("Retry.transient", () => {
 				yield* Ref.update(attempts, (c) => c + 1);
 				return yield* failedWith("EPUBLISHCONFLICT");
 			});
-			const fiber = yield* Effect.forkChild(Effect.flip(Effect.retry(doomed, Retry.transient())));
+			const fiber = yield* doomed.pipe(Effect.retry(Retry.transient()), Effect.flip, Effect.forkChild);
 			yield* TestClock.adjust("1 minute");
 			yield* Fiber.join(fiber);
 			assert.strictEqual(yield* Ref.get(attempts), 1, "a permanent failure must not be retried at all");
@@ -96,7 +98,7 @@ describe("Retry.transient", () => {
 				yield* Ref.update(attempts, (c) => c + 1);
 				return yield* failedWith("ECONNRESET");
 			});
-			const fiber = yield* Effect.forkChild(Effect.flip(Effect.retry(alwaysTransient, Retry.transient({ times: 2 }))));
+			const fiber = yield* alwaysTransient.pipe(Effect.retry(Retry.transient({ times: 2 })), Effect.flip, Effect.forkChild);
 			yield* TestClock.adjust("1 minute");
 			const error = yield* Fiber.join(fiber);
 			assert.instanceOf(error, CommandFailedError);

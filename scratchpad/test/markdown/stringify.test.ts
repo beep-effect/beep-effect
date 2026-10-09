@@ -9,7 +9,9 @@
 // `__test__/e2e/stringify-roundtrip.e2e.test.ts`.
 
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Result, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { Markdown, MarkdownStringifyError } from "../../effected/markdown/Markdown.ts";
 import {
 	Blockquote,
@@ -969,8 +971,8 @@ describe("Markdown.stringify", () => {
 			}).pipe(Effect.runPromise));
 
 		it("encode through MarkdownFromString round-trips", () => {
-			const encode = Schema.encodeEffect(Markdown.MarkdownFromString);
-			const decode = Schema.decodeUnknownEffect(Markdown.MarkdownFromString);
+			const encode = S.encodeEffect(Markdown.MarkdownFromString);
+			const decode = S.decodeUnknownEffect(Markdown.MarkdownFromString);
 			return Effect.gen(function* () {
 				const root = yield* decode("# Title\n\npara *em* text\n\n- a\n- b\n");
 				const emitted = yield* encode(root);

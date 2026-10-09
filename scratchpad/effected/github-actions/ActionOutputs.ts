@@ -1,5 +1,10 @@
 import { CommandNeutralizer, WorkflowCommand } from "../github-commands/index.ts";
-import { Console, Context, Effect, FileSystem, Layer, Schema } from "effect";
+import * as Console from "effect/Console";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as S from "effect/Schema";
 import { ActionEnvironment } from "./ActionEnvironment.ts";
 import { heredocBlock, isUsableName } from "./internal/runnerFile.ts";
 import { unstubbed } from "./internal/unstubbed.ts";
@@ -9,13 +14,13 @@ import { unstubbed } from "./internal/unstubbed.ts";
  *
  * @public
  */
-export class RunnerFileUnavailableError extends Schema.TaggedError<RunnerFileUnavailableError>()(
+export class RunnerFileUnavailableError extends S.TaggedError<RunnerFileUnavailableError>()(
 	"RunnerFileUnavailableError",
 	{
 		/** The runner file involved, by environment variable name. */
-		file: Schema.String,
+		file: S.String,
 		/** The underlying failure, preserved structurally. */
-		cause: Schema.optionalKey(Schema.Defect()),
+		cause: S.optionalKey(S.Defect()),
 	},
 ) {
 	override get message(): string {
@@ -28,11 +33,11 @@ export class RunnerFileUnavailableError extends Schema.TaggedError<RunnerFileUna
  *
  * @public
  */
-export class RunnerFileWriteError extends Schema.TaggedError<RunnerFileWriteError>()("RunnerFileWriteError", {
+export class RunnerFileWriteError extends S.TaggedError<RunnerFileWriteError>()("RunnerFileWriteError", {
 	/** The runner file involved, by environment variable name. */
-	file: Schema.String,
+	file: S.String,
 	/** The underlying failure, preserved structurally. */
-	cause: Schema.optionalKey(Schema.Defect()),
+	cause: S.optionalKey(S.Defect()),
 }) {
 	override get message(): string {
 		return `Failed to write to runner file "${this.file}"`;
@@ -44,13 +49,13 @@ export class RunnerFileWriteError extends Schema.TaggedError<RunnerFileWriteErro
  *
  * @public
  */
-export class InvalidOutputNameError extends Schema.TaggedError<InvalidOutputNameError>()("InvalidOutputNameError", {
+export class InvalidOutputNameError extends S.TaggedError<InvalidOutputNameError>()("InvalidOutputNameError", {
 	/** The offending name. */
-	name: Schema.String,
+	name: S.String,
 	/** The runner file involved, by environment variable name. */
-	file: Schema.optionalKey(Schema.String),
+	file: S.optionalKey(S.String),
 	/** The underlying failure, preserved structurally. */
-	cause: Schema.optionalKey(Schema.Defect()),
+	cause: S.optionalKey(S.Defect()),
 }) {
 	override get message(): string {
 		return `"${this.name}" is not a usable output name`;
@@ -62,11 +67,11 @@ export class InvalidOutputNameError extends Schema.TaggedError<InvalidOutputName
  *
  * @public
  */
-export class OutputEncodeError extends Schema.TaggedError<OutputEncodeError>()("OutputEncodeError", {
+export class OutputEncodeError extends S.TaggedError<OutputEncodeError>()("OutputEncodeError", {
 	/** The output or variable name whose value would not encode. */
-	name: Schema.String,
+	name: S.String,
 	/** The underlying failure, preserved structurally. */
-	cause: Schema.optionalKey(Schema.Defect()),
+	cause: S.optionalKey(S.Defect()),
 }) {
 	override get message(): string {
 		return `Failed to encode the value for "${this.name}"`;
@@ -79,13 +84,13 @@ export class OutputEncodeError extends Schema.TaggedError<OutputEncodeError>()("
  *
  * @public
  */
-export class DetachedOutputError extends Schema.TaggedError<DetachedOutputError>()("DetachedOutputError", {
+export class DetachedOutputError extends S.TaggedError<DetachedOutputError>()("DetachedOutputError", {
 	/** The runner file involved, by environment variable name. */
-	file: Schema.String,
+	file: S.String,
 	/** The output or variable name, when one is involved. */
-	name: Schema.optionalKey(Schema.String),
+	name: S.optionalKey(S.String),
 	/** The underlying failure, preserved structurally. */
-	cause: Schema.optionalKey(Schema.Defect()),
+	cause: S.optionalKey(S.Defect()),
 }) {
 	override get message(): string {
 		return `Runner file "${this.file}" cannot be reached from a detached worker — it configures the parent job's later steps, and a worker has none and may outlive the job. Publish this from the parent process instead.`;
@@ -143,9 +148,9 @@ const withUsableName = <A, E, R>(
 const encodeJson = <A, I>(
 	name: string,
 	value: A,
-	schema: Schema.Codec<A, I>,
+	schema: S.Codec<A, I>,
 ): Effect.Effect<string, OutputEncodeError> =>
-	Schema.encodeUnknownEffect(Schema.fromJsonString(schema))(value).pipe(
+	S.encodeUnknownEffect(S.fromJsonString(schema))(value).pipe(
 		Effect.mapError((cause) => OutputEncodeError.make({ name, cause })),
 	);
 
@@ -162,13 +167,13 @@ const encodeJson = <A, I>(
  *
  * @public
  */
-export class RecordedOutput extends Schema.Class<RecordedOutput>("RecordedOutput")({
+export class RecordedOutput extends S.Class<RecordedOutput>("RecordedOutput")({
 	/** Which {@link ActionOutputsShape} member was called. */
-	member: Schema.Literals(["set", "setJson", "summary", "exportVariable", "addPath", "setFailed", "setSecret"]),
+	member: S.Literals(["set", "setJson", "summary", "exportVariable", "addPath", "setFailed", "setSecret"]),
 	/** The output or variable name, for the members that take one. */
-	name: Schema.optionalKey(Schema.String),
+	name: S.optionalKey(S.String),
 	/** What was published — value, message, path, content or secret — as the runner would have read it. */
-	value: Schema.String,
+	value: S.String,
 }) {}
 
 /**
@@ -205,7 +210,7 @@ export interface ActionOutputsShape {
 	readonly setJson: <A, I>(
 		name: string,
 		value: A,
-		schema: Schema.Codec<A, I>,
+		schema: S.Codec<A, I>,
 	) => Effect.Effect<void, ActionOutputError>;
 	/** Append to the job summary. */
 	readonly summary: (content: string) => Effect.Effect<void, ActionOutputError>;
@@ -248,7 +253,7 @@ const make = Effect.gen(function* () {
 
 	return {
 		set,
-		setJson: <A, I>(name: string, value: A, schema: Schema.Codec<A, I>) =>
+		setJson: <A, I>(name: string, value: A, schema: S.Codec<A, I>) =>
 			encodeJson(name, value, schema).pipe(Effect.flatMap((json) => set(name, json))),
 		summary: (content: string) => append(RUNNER_FILE.summary, content),
 		exportVariable: (name: string, value: string) => appendBlock(RUNNER_FILE.exportVariable, name, value),
@@ -375,7 +380,7 @@ export class ActionOutputs extends Context.Service<ActionOutputs, ActionOutputsS
 			setFailed: () => dies("setFailed"),
 			setSecret: () => dies("setSecret"),
 			...overrides,
-			setJson: <A, I>(name: string, value: A, schema: Schema.Codec<A, I>) =>
+			setJson: <A, I>(name: string, value: A, schema: S.Codec<A, I>) =>
 				encodeJson(name, value, schema).pipe(Effect.flatMap(() => setJson(name, value, schema))),
 		};
 	};
@@ -416,7 +421,7 @@ export class ActionOutputs extends Context.Service<ActionOutputs, ActionOutputsS
 			});
 		const layer = Layer.succeed(ActionOutputs, {
 			set: (name, value) => withUsableName(RUNNER_FILE.set, name, record("set", value, name)),
-			setJson: <A, I>(name: string, value: A, schema: Schema.Codec<A, I>) =>
+			setJson: <A, I>(name: string, value: A, schema: S.Codec<A, I>) =>
 				withUsableName(
 					RUNNER_FILE.setJson,
 					name,

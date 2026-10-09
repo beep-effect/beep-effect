@@ -18,13 +18,14 @@
 
 import { readFileSync } from "node:fs";
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
 import { Funding, LenientManifest, Package, PackageManifest } from "../../effected/package-json/index.ts";
 
-const Json = Schema.fromJsonString(Schema.Unknown);
+const Json = S.fromJsonString(S.Unknown);
 
-const decode = <A, I>(schema: Schema.Codec<A, I>, input: unknown) => Schema.decodeUnknownEffect(schema)(input);
-const encode = <A, I>(schema: Schema.Codec<A, I>, value: A) => Schema.encodeUnknownEffect(schema)(value);
+const decode = <A, I>(schema: S.Codec<A, I>, input: unknown) => S.decodeUnknownEffect(schema)(input);
+const encode = <A, I>(schema: S.Codec<A, I>, value: A) => S.encodeUnknownEffect(schema)(value);
 
 const field = Funding.FromField;
 
@@ -119,7 +120,7 @@ describe("Funding.FromField — wire fidelity", () => {
 		Effect.gen(function* () {
 			// `url` before `type` is legal and a formatter must not reorder it.
 			const wire = [{ url: "https://a.example", type: "github" }];
-			assert.deepStrictEqual<unknown>((yield* Schema.encodeEffect(Json)(yield* roundTrip(wire))), (yield* Schema.encodeEffect(Json)(wire)));
+			assert.deepStrictEqual<unknown>((yield* S.encodeEffect(Json)(yield* roundTrip(wire))), (yield* S.encodeEffect(Json)(wire)));
 		}),
 	);
 
@@ -281,7 +282,7 @@ describe("funding — the manifest tiers", () => {
 				license: "MIT",
 				repository: "dee/pkg",
 			})).toJsonString();
-			const keys = Object.keys((yield* Schema.decodeEffect(Json)(json)) as Record<string, unknown>);
+			const keys = Object.keys((yield* S.decodeEffect(Json)(json)) as Record<string, unknown>);
 			assert.isTrue(keys.indexOf("funding") > keys.indexOf("repository"));
 			assert.isTrue(keys.indexOf("funding") < keys.indexOf("license"));
 		}),

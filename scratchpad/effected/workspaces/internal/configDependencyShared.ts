@@ -14,10 +14,13 @@ import { dual } from "effect/Function";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { CatalogAssemblyError } from "../../npm/index.ts";
-import { Effect, Option, Predicate, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
+import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import type { HookReplayContext } from "../ConfigDependencyHooks.ts";
 
-const JsonValue = Schema.fromJsonString(Schema.Unknown);
+const JsonValue = S.fromJsonString(S.Unknown);
 
 /** The typed `hooks`-source failure every rung of the ladder reports through. */
 // A string cause overlaps the path argument, so optional reason makes the two call forms ambiguous.
@@ -38,7 +41,7 @@ export const sideLabel = (side: HookReplayContext): string =>
 
 /** Whether a `node:fs` rejection means "nothing there" (as opposed to a real IO failure). */
 const isAbsent = (cause: unknown): boolean =>
-	Predicate.isObject(cause) && (cause.code === "ENOENT" || cause.code === "ENOTDIR");
+	P.isObject(cause) && (cause.code === "ENOENT" || cause.code === "ENOTDIR");
 
 /**
  * Run a `node:fs/promises` call, mapping an absent target to `Option.none()`
@@ -46,12 +49,12 @@ const isAbsent = (cause: unknown): boolean =>
  * attributed to `path` — never a silent skip.
  */
 export const ioOrNone: {
-	<A>(run: () => Promise<A>): (path: string) => Effect.Effect<Option.Option<A>, CatalogAssemblyError>;
-	<A>(path: string, run: () => Promise<A>): Effect.Effect<Option.Option<A>, CatalogAssemblyError>;
+	<A>(run: () => Promise<A>): (path: string) => Effect.Effect<O.Option<A>, CatalogAssemblyError>;
+	<A>(path: string, run: () => Promise<A>): Effect.Effect<O.Option<A>, CatalogAssemblyError>;
 } = dual(2, <A>(
 	path: string,
 	run: () => Promise<A>,
-): Effect.Effect<Option.Option<A>, CatalogAssemblyError> =>
+): Effect.Effect<O.Option<A>, CatalogAssemblyError> =>
 	Effect.tryPromise({ try: run, catch: (cause) => hooksError(path, cause) }).pipe(
 		Effect.asSome,
 		Effect.catchIf((error) => isAbsent(error.cause), () => Effect.succeedNone),
@@ -89,12 +92,12 @@ export const manifestVersion: {
 } = dual(2, (name: string, dir: string): Effect.Effect<ManifestVersion, CatalogAssemblyError> =>
 	ioOrNone(name, () => readFile(join(dir, "package.json"), "utf8")).pipe(
 		Effect.flatMap((text) => {
-			if (Option.isNone(text)) return Effect.succeed(ABSENT);
-			return Schema.decodeEffect(JsonValue)(text.value).pipe(
+			if (O.isNone(text)) return Effect.succeed(ABSENT);
+			return S.decodeEffect(JsonValue)(text.value).pipe(
 				Effect.mapError((cause) => hooksError(name, cause)),
 				Effect.map(
 					(parsed): ManifestVersion =>
-						Predicate.isObject(parsed) && typeof parsed.version === "string" && parsed.version !== ""
+						P.isObject(parsed) && typeof parsed.version === "string" && parsed.version !== ""
 							? { _tag: "version", version: parsed.version }
 							: UNVERSIONED,
 				),

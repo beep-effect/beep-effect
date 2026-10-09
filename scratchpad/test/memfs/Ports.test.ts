@@ -1,5 +1,6 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Predicate } from "effect";
+import * as Effect from "effect/Effect";
+import * as P from "effect/Predicate";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
 import { thrown } from "./helpers.ts";
 
@@ -354,7 +355,7 @@ describe("promises port", () => {
 				Effect.tryPromise({
 					try: () => pending,
 					catch: (e) => {
-						if (!Predicate.hasProperty(e, "code") || typeof e.code !== "string") {
+						if (!P.hasProperty(e, "code") || typeof e.code !== "string") {
 							return assert.fail("expected an errno with a string code");
 						}
 						return { code: e.code };

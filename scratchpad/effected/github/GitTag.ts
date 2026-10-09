@@ -1,5 +1,11 @@
 import { SemVer } from "../semver/index.ts";
-import { Context, Effect, Layer, Option, Result, Schema, Stream } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import { GitHubClient } from "./GitHubClient.ts";
 import { GitHubError } from "./GitHubError.ts";
 import { Repo } from "./Repo.ts";
@@ -13,11 +19,11 @@ const MAX_TAG_PEEL = 5;
  *
  * @public
  */
-export class TagRef extends Schema.Class<TagRef>("TagRef")({
+export class TagRef extends S.Class<TagRef>("TagRef")({
 	/** The tag name, without `refs/tags/`. */
-	tag: Schema.NonEmptyString,
+	tag: S.NonEmptyString,
 	/** The **commit** sha, with annotated tags already dereferenced. */
-	sha: Schema.String,
+	sha: S.String,
 }) {}
 
 /**
@@ -25,11 +31,11 @@ export class TagRef extends Schema.Class<TagRef>("TagRef")({
  *
  * @public
  */
-export class SemverTag extends Schema.Class<SemverTag>("SemverTag")({
+export class SemverTag extends S.Class<SemverTag>("SemverTag")({
 	/** The tag name as GitHub has it. */
-	tag: Schema.NonEmptyString,
+	tag: S.NonEmptyString,
 	/** The commit sha. */
-	sha: Schema.String,
+	sha: S.String,
 	/** The version read out of the name. */
 	version: SemVer,
 }) {}
@@ -45,14 +51,14 @@ export class SemverTag extends Schema.Class<SemverTag>("SemverTag")({
  *
  * @public
  */
-export type VersionFromTag = (tag: string) => Option.Option<string>;
+export type VersionFromTag = (tag: string) => O.Option<string>;
 
 /** The default {@link VersionFromTag}. @public */
 export const versionFromTag: VersionFromTag = (tag) => {
 	const at = tag.lastIndexOf("@");
 	const candidate = at > 0 ? tag.slice(at + 1) : tag;
 	const stripped = candidate.startsWith("v") ? candidate.slice(1) : candidate;
-	return stripped === "" ? Option.none() : Option.some(stripped);
+	return stripped === "" ? O.none() : O.some(stripped);
 };
 
 /**
@@ -113,7 +119,7 @@ export interface GitTagShape {
 	 * package's tag prefix (see {@link LatestSemverOptions}) so the comparison
 	 * runs within one version line, or order by tagged-commit date instead.
 	 */
-	readonly latestSemver: (options?: LatestSemverOptions) => Effect.Effect<Option.Option<SemverTag>, GitHubError, Repo>;
+	readonly latestSemver: (options?: LatestSemverOptions) => Effect.Effect<O.Option<SemverTag>, GitHubError, Repo>;
 }
 
 /**
@@ -278,7 +284,7 @@ const make = (client: GitHubClient["Service"]): GitTagShape => {
 				Effect.sync(() => {
 					if (options?.prefix !== undefined && !entry.name.startsWith(options.prefix)) return;
 					const raw = extract(entry.name);
-					if (Option.isNone(raw)) return;
+					if (O.isNone(raw)) return;
 					const parsed = SemVer.parseResult(raw.value);
 					if (Result.isFailure(parsed)) return;
 					const version = parsed.success;
@@ -288,7 +294,7 @@ const make = (client: GitHubClient["Service"]): GitTagShape => {
 					}
 				}),
 			);
-			return Option.fromUndefinedOr(best);
+			return O.fromUndefinedOr(best);
 		}),
 	};
 };

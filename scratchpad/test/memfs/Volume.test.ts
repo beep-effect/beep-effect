@@ -5,7 +5,11 @@
 // routing every assertion through an Effect read.
 
 import { assert, describe, it } from "@effect/vitest";
-import { DateTime, Effect, FileSystem, Layer, Option } from "effect";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import { TestClock } from "effect/testing";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
 import * as internal from "../../effected/memfs/internal/volume.ts";
@@ -292,7 +296,7 @@ describe("MemoryFileSystemVolume.mtime", () => {
 			});
 			const info = yield* fileSystem.stat("/a.txt");
 			// One clock, two views — the sync accessor must not drift from `stat`.
-			const fromStat = Option.getOrThrow(info.mtime).getTime();
+			const fromStat = O.getOrThrow(info.mtime).getTime();
 			assert.strictEqual(volume.mtime("/a.txt"), fromStat);
 		}),
 	);

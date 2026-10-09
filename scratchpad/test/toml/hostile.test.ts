@@ -21,7 +21,11 @@
 //   proves Object.prototype stays unpolluted).
 
 import { assert, describe, it } from "@effect/vitest";
-import { Cause, Effect, Exit, Schema, Result } from "effect";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as S from "effect/Schema";
+import * as Result from "effect/Result";
 import { Toml, TomlParseError, TomlStringifyError } from "../../effected/toml/Toml.ts";
 import { TomlDocument } from "../../effected/toml/TomlDocument.ts";
 import { TomlFormat, TomlModificationError } from "../../effected/toml/TomlFormat.ts";
@@ -38,7 +42,7 @@ const ELAPSED_BOUND_MS = 30_000;
 
 /** Flip a failing parse and hand back the typed error. */
 const parseError = Effect.fn("parseError")(function* (text: string) {
-		const error = yield* Effect.result(Toml.parse(text)).pipe(Effect.map((result) => Result.getOrThrow(Result.flip(result))));
+		const error = yield* Effect.result(Toml.parse(text)).pipe(Effect.map((result) => result.pipe(Result.flip, Result.getOrThrow)));
 		assert.instanceOf(error, TomlParseError);
 		return error;
 	});
@@ -228,7 +232,7 @@ describe("hostile input", () => {
 
 		it.effect("the TomlFromString schema surfaces the bomb as a SchemaError, never a defect", () =>
 			Effect.gen(function* () {
-				const error = yield* Effect.result(Schema.decodeEffect(Toml.TomlFromString)(bomb)).pipe(Effect.map((result) => Result.getOrThrow(Result.flip(result))));
+				const error = yield* Effect.result(S.decodeEffect(Toml.TomlFromString)(bomb)).pipe(Effect.map((result) => result.pipe(Result.flip, Result.getOrThrow)));
 				assert.strictEqual(error._tag, "SchemaError");
 				assert.include(String(error), "NestingDepthExceeded");
 			}),

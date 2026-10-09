@@ -1,6 +1,11 @@
 // @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it, vi } from "@effect/vitest";
-import { Cause, Effect, Exit, Fiber, Schedule, Schema } from "effect";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Fiber from "effect/Fiber";
+import * as Schedule from "effect/Schedule";
+import * as S from "effect/Schema";
 import { Text } from "ink";
 import type { ReactElement } from "react";
 import { createElement, useState } from "react";
@@ -29,9 +34,9 @@ const holds = (state: ViewportState): boolean => {
 	);
 };
 
-const Count = Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: 300 }));
-const Height = Schema.Int.check(Schema.isBetween({ minimum: 1, maximum: 40 }));
-const Moves = Schema.Array(Schema.Literals(MOVES));
+const Count = S.Int.check(S.isBetween({ minimum: 0, maximum: 300 }));
+const Height = S.Int.check(S.isBetween({ minimum: 1, maximum: 40 }));
+const Moves = S.Array(S.Literals(MOVES));
 
 describe("Viewport reducer", () => {
 	it.prop(

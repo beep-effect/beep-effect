@@ -11,7 +11,9 @@
 // added to a skip list. There is no skip list in this file, by design.
 
 import { assert, describe, it } from "@effect/vitest";
-import { Arbitrary, Result, Schema } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { Markdown } from "../../effected/markdown/Markdown.ts";
 import { loadSpecExamples } from "./e2e/support/corpus.ts";
 import { renderHtml } from "./e2e/support/htmlWriter.ts";
@@ -68,9 +70,9 @@ const correctOracleDefect = (html: string): string => html.replaceAll("<p></p>",
  * actually disagree.
  */
 const markdownish = Arbitrary.schema(
-	Schema.Array(
-		Schema.Union([
-			Schema.Literals([
+	S.Array(
+		S.Union([
+			S.Literals([
 				"# heading",
 				"## heading",
 				"###### heading",
@@ -97,7 +99,7 @@ const markdownish = Arbitrary.schema(
 				"    ",
 				"\ttab",
 			]),
-			Schema.Literals([
+			S.Literals([
 				"*em* and **strong**",
 				"_em_ and __strong__",
 				"***both***",
@@ -124,9 +126,9 @@ const markdownish = Arbitrary.schema(
 				"*unclosed emphasis",
 				"a > b < c",
 			]),
-			Schema.String.check(Schema.isMaxLength(12)),
+			S.String.check(S.isMaxLength(12)),
 		]),
-	).check(Schema.isMaxLength(12)),
+	).check(S.isMaxLength(12)),
 ).pipe(Arbitrary.map((lines) => `${lines.join("\n")}\n`));
 
 describe("differential oracle: commonmark.js 0.31.2", () => {

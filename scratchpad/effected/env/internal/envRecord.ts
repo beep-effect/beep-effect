@@ -1,4 +1,6 @@
-import { Config, Effect, Option } from "effect";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
 import type { Env } from "./types.ts";
 
 /**
@@ -23,13 +25,13 @@ export const normalizeEnv = (record: Env): Env =>
 export const readEnv = (keys: ReadonlyArray<string>): Effect.Effect<Env> =>
 	Effect.forEach(keys, (key) =>
 		Config.option(Config.String(key)).pipe(
-			Effect.orElseSucceed(() => Option.none<string>()),
+			Effect.orElseSucceed(() => O.none<string>()),
 			Effect.map((value) => [key, value] as const),
 		),
 	).pipe(
 		Effect.map((entries) =>
 			Object.fromEntries(
-				entries.flatMap(([key, value]) => (Option.isSome(value) && value.value !== "" ? [[key, value.value]] : [])),
+				entries.flatMap(([key, value]) => (O.isSome(value) && value.value !== "" ? [[key, value.value]] : [])),
 			),
 		),
 	);

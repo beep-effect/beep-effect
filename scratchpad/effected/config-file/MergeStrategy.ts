@@ -1,4 +1,4 @@
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import type { ConfigMatch } from "./ConfigResolver.ts";
 import { canMerge, deepMerge } from "./internal/deepMerge.ts";
 

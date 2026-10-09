@@ -1,5 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Option } from "effect";
+import * as O from "effect/Option";
 import { Dependency, isUnresolvedDependency } from "../../effected/package-json/Dependency.ts";
 
 describe("Dependency protocol getters", () => {
@@ -8,8 +8,8 @@ describe("Dependency protocol getters", () => {
 		assert.isTrue(dep.isRange);
 		assert.isFalse(dep.isWorkspace);
 		assert.isFalse(dep.isUnresolved);
-		assert.deepStrictEqual(dep.protocol, Option.some("range"));
-		assert.isTrue(Option.isSome(dep.range));
+		assert.deepStrictEqual(dep.protocol, O.some("range"));
+		assert.isTrue(O.isSome(dep.range));
 	});
 
 	it("classifies workspace/catalog as unresolved", () => {
@@ -32,7 +32,7 @@ describe("Dependency protocol getters", () => {
 
 	it("empty specifier has no protocol", () => {
 		const dep = Dependency.make({ name: "a", specifier: "", kind: "prod" });
-		assert.isTrue(Option.isNone(dep.protocol));
+		assert.isTrue(O.isNone(dep.protocol));
 	});
 
 	it("peer dependencies carry isOptional", () => {

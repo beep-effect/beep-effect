@@ -1,4 +1,8 @@
-import { Effect, Equal, Option, Result, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import * as O from "effect/Option";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { reconcile } from "./internal/reconcile.ts";
 import { SCAN_FAILURE_REASONS, detectEol, identityOf, normalizeEol, scan } from "./internal/scan.ts";
 import type { Section, SectionId } from "./Section.ts";
@@ -22,15 +26,15 @@ import { CheckOutcome } from "./SectionOutcome.ts";
  *
  * @public
  */
-export class SectionParseError extends Schema.TaggedError<SectionParseError>()("SectionParseError", {
+export class SectionParseError extends S.TaggedError<SectionParseError>()("SectionParseError", {
 	/** Which ambiguity was found. */
-	reason: Schema.Literals(SCAN_FAILURE_REASONS),
+	reason: S.Literals(SCAN_FAILURE_REASONS),
 	/** 1-based line of the offending marker. */
-	line: Schema.Finite,
+	line: S.Finite,
 	/** The section key involved, when the failure names one. */
-	key: Schema.optionalKey(Schema.String),
+	key: S.optionalKey(S.String),
 	/** The file the document came from. Absent for a document parsed from a string. */
-	path: Schema.optionalKey(Schema.String),
+	path: S.optionalKey(S.String),
 }) {
 	override get message(): string {
 		const where = this.path === undefined ? `line ${this.line}` : `${this.path}:${this.line}`;
@@ -107,15 +111,15 @@ export interface SectionReconciliation {
  *
  * @public
  */
-export class SectionDocument extends Schema.Class<SectionDocument>("SectionDocument")({
+export class SectionDocument extends S.Class<SectionDocument>("SectionDocument")({
 	/** The document's source text, exactly as parsed. */
-	text: Schema.String,
+	text: S.String,
 	/** The marker vocabulary this document was read with. */
 	dialect: SectionDialect,
 	/** Every managed section found, in document order. */
-	sections: Schema.Array(PlacedSection),
+	sections: S.Array(PlacedSection),
 	/** The document's dominant line ending. */
-	eol: Schema.Literals(["\n", "\r\n"]),
+	eol: S.Literals(["\n", "\r\n"]),
 }) {
 	/**
 	 * Parse a document. The synchronous primitive.
@@ -151,17 +155,17 @@ export class SectionDocument extends Schema.Class<SectionDocument>("SectionDocum
 	);
 
 	/** The section with this identity, if the document has one. */
-	read(id: SectionId): Option.Option<Section> {
+	read(id: SectionId): O.Option<Section> {
 		const identity = identityOf(id.key, id.commentStyle);
 		const found = this.sections.find(
 			(placed) => identityOf(placed.section.key, placed.section.commentStyle) === identity,
 		);
-		return found === undefined ? Option.none() : Option.some(found.section);
+		return found === undefined ? O.none() : O.some(found.section);
 	}
 
 	/** Whether the document carries a section with this identity. */
 	has(id: SectionId): boolean {
-		return Option.isSome(this.read(id));
+		return O.isSome(this.read(id));
 	}
 
 	/**
@@ -175,7 +179,7 @@ export class SectionDocument extends Schema.Class<SectionDocument>("SectionDocum
 	check(section: Section): CheckOutcome {
 		const expected = section.withContent(normalizeEol(section.content));
 		const current = this.read(section.id);
-		if (Option.isNone(current)) {
+		if (O.isNone(current)) {
 			return CheckOutcome.Absent({ id: section.id });
 		}
 		return Equal.equals(current.value, expected)
@@ -211,23 +215,23 @@ export class SectionDocument extends Schema.Class<SectionDocument>("SectionDocum
 	 * The blank lines around the removed block collapse into a single
 	 * separator, so repeated removals never accumulate gaps.
 	 */
-	remove(id: SectionId): Option.Option<string> {
+	remove(id: SectionId): O.Option<string> {
 		const identity = identityOf(id.key, id.commentStyle);
 		const found = this.sections.find(
 			(placed) => identityOf(placed.section.key, placed.section.commentStyle) === identity,
 		);
 		if (found === undefined) {
-			return Option.none();
+			return O.none();
 		}
 		const eol: Eol = this.eol;
 		const before = this.text.slice(0, found.start).replace(/(?:\r?\n)+$/, "");
 		const after = this.text.slice(found.end).replace(/^(?:\r?\n)+/, "");
 		if (before !== "" && after !== "") {
-			return Option.some(`${before}${eol}${eol}${after}`);
+			return O.some(`${before}${eol}${eol}${after}`);
 		}
 		if (before !== "") {
-			return Option.some(`${before}${eol}`);
+			return O.some(`${before}${eol}`);
 		}
-		return Option.some(after);
+		return O.some(after);
 	}
 }

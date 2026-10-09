@@ -17,8 +17,11 @@
 
 import type { MemoryFileSystemSeedEntry } from "../../effected/memfs/index.ts";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
-import type { FileSystem } from "effect";
-import { Effect, Layer, Path, PlatformError } from "effect";
+import type * as FileSystem from "effect/FileSystem";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
+import * as PlatformError from "effect/PlatformError";
 
 /** A virtual tree: absolute path → file contents. Directories are implied by their files. */
 export type Tree = Readonly<Record<string, string>>;

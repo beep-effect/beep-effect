@@ -11,7 +11,8 @@
 // frontmatter value or the body: string level only, decoding is the codec
 // modules' business.
 
-import { Effect, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
 import { scanRawFrontmatter } from "./internal/blocks/frontmatter.ts";
 import { FrontmatterFormat } from "./MarkdownNode.ts";
 
@@ -22,7 +23,7 @@ import { FrontmatterFormat } from "./MarkdownNode.ts";
  *
  * @public
  */
-export const FrontmatterNewline = Schema.Literals(["\n", "\r\n", "\r"]);
+export const FrontmatterNewline = S.Literals(["\n", "\r\n", "\r"]);
 
 /**
  * The union of all fence line-terminator literals.
@@ -53,10 +54,10 @@ export type FrontmatterNewline = typeof FrontmatterNewline.Type;
  *
  * @public
  */
-export class FrontmatterSourceBlock extends Schema.Class<FrontmatterSourceBlock>("FrontmatterSourceBlock")({
+export class FrontmatterSourceBlock extends S.Class<FrontmatterSourceBlock>("FrontmatterSourceBlock")({
 	format: FrontmatterFormat,
-	value: Schema.String,
-	newline: Schema.optionalKey(FrontmatterNewline),
+	value: S.String,
+	newline: S.optionalKey(FrontmatterNewline),
 }) {}
 
 /**
@@ -78,10 +79,10 @@ export class FrontmatterSourceBlock extends Schema.Class<FrontmatterSourceBlock>
  *
  * @public
  */
-export class FrontmatterSourceSplit extends Schema.Class<FrontmatterSourceSplit>("FrontmatterSourceSplit")({
-	frontmatter: Schema.optionalKey(FrontmatterSourceBlock),
-	body: Schema.String,
-	bodyOffset: Schema.Finite.pipe(Schema.withConstructorDefault(Effect.succeed(0))),
+export class FrontmatterSourceSplit extends S.Class<FrontmatterSourceSplit>("FrontmatterSourceSplit")({
+	frontmatter: S.optionalKey(FrontmatterSourceBlock),
+	body: S.String,
+	bodyOffset: S.Finite.pipe(S.withConstructorDefault(Effect.succeed(0))),
 }) {}
 
 /** The opening fence line per format (the closed grammar's spellings). */

@@ -7,7 +7,8 @@
 // config-file loading, no IO, no CLI — strings in, diagnostics or a fixed
 // string out. The runner is someone else's tier.
 
-import { Result, Schema } from "effect";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { composeFirstDocument } from "./internal/composer/document.ts";
 import { isFatalCode } from "./internal/diagnostics.ts";
 import { builtinOptionsSchemas, builtinRules } from "./internal/rules/catalog.ts";
@@ -27,9 +28,9 @@ import { YamlTokens } from "./YamlToken.ts";
  *
  * @public
  */
-export const YamlLintRuleSetting = Schema.Union([
-	Schema.Literals(["error", "warning", "off"]),
-	Schema.Record(Schema.String, Schema.Unknown),
+export const YamlLintRuleSetting = S.Union([
+	S.Literals(["error", "warning", "off"]),
+	S.Record(S.String, S.Unknown),
 ]);
 
 /**
@@ -64,7 +65,7 @@ const validateRulesMap = (rules: { readonly [id: string]: YamlLintRuleSetting })
 				// onExcessProperty: "error" — a typo'd option KEY fails loudly with
 				// an UnexpectedKey issue naming the key, instead of decoding to {}
 				// (v4 Structs strip unknown keys by default).
-				const decoded = Schema.decodeResult(optionsSchema as Schema.Codec<unknown, unknown>, {
+				const decoded = S.decodeResult(optionsSchema as S.Codec<unknown, unknown>, {
 					onExcessProperty: "error",
 				})(entry);
 				if (Result.isFailure(decoded)) {
@@ -93,8 +94,8 @@ const validateRulesMap = (rules: { readonly [id: string]: YamlLintRuleSetting })
  *
  * @public
  */
-export class YamlLintConfig extends Schema.Class<YamlLintConfig>("YamlLintConfig")({
-	rules: Schema.Record(Schema.String, YamlLintRuleSetting).pipe(Schema.check(Schema.makeFilter(validateRulesMap))),
+export class YamlLintConfig extends S.Class<YamlLintConfig>("YamlLintConfig")({
+	rules: S.Record(S.String, YamlLintRuleSetting).pipe(S.check(S.makeFilter(validateRulesMap))),
 }) {
 	/**
 	 * The default preset: the built-in rules at their default settings. The
@@ -195,15 +196,15 @@ const buildContext = (text: string): LintContext => {
  *
  * @public
  */
-export class StyleVoteTally extends Schema.Class<StyleVoteTally>("StyleVoteTally")({
-	rule: Schema.String,
-	dimension: Schema.String,
-	value: Schema.Union([Schema.String, Schema.Finite, Schema.Boolean]),
-	count: Schema.Finite,
-	offset: Schema.Finite,
-	length: Schema.Finite,
-	line: Schema.Finite,
-	character: Schema.Finite,
+export class StyleVoteTally extends S.Class<StyleVoteTally>("StyleVoteTally")({
+	rule: S.String,
+	dimension: S.String,
+	value: S.Union([S.String, S.Finite, S.Boolean]),
+	count: S.Finite,
+	offset: S.Finite,
+	length: S.Finite,
+	line: S.Finite,
+	character: S.Finite,
 }) {}
 
 /**
@@ -214,10 +215,10 @@ export class StyleVoteTally extends Schema.Class<StyleVoteTally>("StyleVoteTally
  *
  * @public
  */
-export class StyleFloorTally extends Schema.Class<StyleFloorTally>("StyleFloorTally")({
-	rule: Schema.String,
-	dimension: Schema.String,
-	value: Schema.Finite,
+export class StyleFloorTally extends S.Class<StyleFloorTally>("StyleFloorTally")({
+	rule: S.String,
+	dimension: S.String,
+	value: S.Finite,
 }) {}
 
 /** Canonical histogram key for a vote value — type-discriminating (`"2"` ≠ `2`, `"true"` ≠ `true`). */
@@ -259,9 +260,9 @@ const byTallyOrder = (
  *
  * @public
  */
-export class StyleEvidence extends Schema.Class<StyleEvidence>("StyleEvidence")({
-	votes: Schema.Array(StyleVoteTally),
-	floors: Schema.Array(StyleFloorTally),
+export class StyleEvidence extends S.Class<StyleEvidence>("StyleEvidence")({
+	votes: S.Array(StyleVoteTally),
+	floors: S.Array(StyleFloorTally),
 }) {
 	/** The monoid identity: no observations. */
 	static readonly empty: StyleEvidence = StyleEvidence.make({ votes: [], floors: [] });
@@ -339,10 +340,10 @@ export class StyleEvidence extends Schema.Class<StyleEvidence>("StyleEvidence")(
  *
  * @public
  */
-export class StyleConflict extends Schema.Class<StyleConflict>("StyleConflict")({
-	rule: Schema.String,
-	dimension: Schema.String,
-	candidates: Schema.Array(StyleVoteTally),
+export class StyleConflict extends S.Class<StyleConflict>("StyleConflict")({
+	rule: S.String,
+	dimension: S.String,
+	candidates: S.Array(StyleVoteTally),
 }) {}
 
 /**
@@ -360,8 +361,8 @@ export class StyleConflict extends Schema.Class<StyleConflict>("StyleConflict")(
  *
  * @public
  */
-export class YamlStyleConflictError extends Schema.TaggedError<YamlStyleConflictError>()("YamlStyleConflictError", {
-	conflicts: Schema.Array(StyleConflict),
+export class YamlStyleConflictError extends S.TaggedError<YamlStyleConflictError>()("YamlStyleConflictError", {
+	conflicts: S.Array(StyleConflict),
 }) {
 	override get message(): string {
 		return this.conflicts

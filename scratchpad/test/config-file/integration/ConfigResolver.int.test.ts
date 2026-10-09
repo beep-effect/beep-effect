@@ -4,10 +4,15 @@ import * as nodeOs from "node:os";
 import * as nodePath from "node:path";
 import { NodeFileSystem } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Layer, Option, Path, Result, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { ConfigResolver } from "../../../effected/config-file/ConfigResolver.ts";
 
-const JsonValue = Schema.fromJsonString(Schema.Unknown);
+const JsonValue = S.fromJsonString(S.Unknown);
 
 const Platform = Layer.mergeAll(NodeFileSystem.layer, Path.layer);
 
@@ -31,7 +36,7 @@ describe("ConfigResolver against a real filesystem", () => {
 				const resolver = ConfigResolver.upwardWalk({ filename: ".apprc", cwd: deep, stopAt: root });
 				const found = yield* resolver.resolve;
 
-				assert.strictEqual(Option.getOrNull(found), nodePath.join(root, "a", ".apprc"));
+				assert.strictEqual(O.getOrNull(found), nodePath.join(root, "a", ".apprc"));
 			}),
 		).pipe(Effect.provide(Platform)),
 	);
@@ -46,7 +51,7 @@ describe("ConfigResolver against a real filesystem", () => {
 
 				const found = yield* ConfigResolver.gitRoot({ filename: ".apprc", cwd: deep }).resolve;
 
-				assert.strictEqual(Option.getOrNull(found), nodePath.join(root, ".apprc"));
+				assert.strictEqual(O.getOrNull(found), nodePath.join(root, ".apprc"));
 			}),
 		).pipe(Effect.provide(Platform)),
 	);
@@ -63,7 +68,7 @@ describe("ConfigResolver against a real filesystem", () => {
 
 				const found = yield* ConfigResolver.gitRoot({ filename: ".apprc", cwd: deep }).resolve;
 
-				assert.strictEqual(Option.getOrNull(found), nodePath.join(root, ".apprc"));
+				assert.strictEqual(O.getOrNull(found), nodePath.join(root, ".apprc"));
 			}),
 		).pipe(Effect.provide(Platform)),
 	);
@@ -80,7 +85,7 @@ describe("ConfigResolver against a real filesystem", () => {
 
 				const found = yield* ConfigResolver.workspaceRoot({ filename: ".apprc", cwd: deep }).resolve;
 
-				assert.strictEqual(Option.getOrNull(found), nodePath.join(root, ".apprc"));
+				assert.strictEqual(O.getOrNull(found), nodePath.join(root, ".apprc"));
 			}),
 		).pipe(Effect.provide(Platform)),
 	);
@@ -91,13 +96,13 @@ describe("ConfigResolver against a real filesystem", () => {
 				const deep = nodePath.join(root, "packages", "pkg");
 				yield* Effect.promise(() => nodeFs.mkdir(deep, { recursive: true }));
 				yield* Effect.promise(() =>
-					nodeFs.writeFile(nodePath.join(root, "package.json"), Result.getOrThrow(Schema.encodeResult(JsonValue)({ workspaces: ["packages/*"] }))),
+					nodeFs.writeFile(nodePath.join(root, "package.json"), Result.getOrThrow(S.encodeResult(JsonValue)({ workspaces: ["packages/*"] }))),
 				);
 				yield* Effect.promise(() => nodeFs.writeFile(nodePath.join(root, ".apprc"), "{}"));
 
 				const found = yield* ConfigResolver.workspaceRoot({ filename: ".apprc", cwd: deep }).resolve;
 
-				assert.strictEqual(Option.getOrNull(found), nodePath.join(root, ".apprc"));
+				assert.strictEqual(O.getOrNull(found), nodePath.join(root, ".apprc"));
 			}),
 		).pipe(Effect.provide(Platform)),
 	);
@@ -106,7 +111,7 @@ describe("ConfigResolver against a real filesystem", () => {
 		withTempDir((root) =>
 			Effect.gen(function* () {
 				const found = yield* ConfigResolver.upwardWalk({ filename: ".missing", cwd: root, stopAt: root }).resolve;
-				assert.isTrue(Option.isNone(found));
+				assert.isTrue(O.isNone(found));
 			}),
 		).pipe(Effect.provide(Platform)),
 	);
@@ -124,7 +129,7 @@ describe("ConfigResolver against a real filesystem", () => {
 
 				const found = yield* ConfigResolver.upwardWalk({ filename: ".apprc", cwd: leaf, stopAt: mid }).resolve;
 
-				assert.isTrue(Option.isNone(found));
+				assert.isTrue(O.isNone(found));
 			}),
 		).pipe(Effect.provide(Platform)),
 	);
@@ -143,7 +148,7 @@ describe("ConfigResolver against a real filesystem", () => {
 
 				const found = yield* ConfigResolver.systemEtc({ app: "acme", filename: ".apprc", dir: root }).resolve;
 
-				assert.strictEqual(Option.getOrNull(found), nodePath.join(appDir, ".apprc"));
+				assert.strictEqual(O.getOrNull(found), nodePath.join(appDir, ".apprc"));
 			}),
 		).pipe(Effect.provide(Platform)),
 	);
@@ -164,7 +169,7 @@ describe("ConfigResolver against a real filesystem", () => {
 
 				const found = yield* ConfigResolver.gitRoot({ filename: ".apprc", cwd: deep }).resolve;
 
-				assert.isTrue(Option.isNone(found));
+				assert.isTrue(O.isNone(found));
 			}),
 		).pipe(Effect.provide(Platform)),
 	);
@@ -184,7 +189,7 @@ describe("ConfigResolver against a real filesystem", () => {
 
 				const found = yield* ConfigResolver.gitRoot({ filename: ".apprc", cwd: deep }).resolve;
 
-				assert.strictEqual(Option.getOrNull(found), nodePath.join(inner, ".apprc"));
+				assert.strictEqual(O.getOrNull(found), nodePath.join(inner, ".apprc"));
 			}),
 		).pipe(Effect.provide(Platform)),
 	);
@@ -204,7 +209,7 @@ describe("ConfigResolver against a real filesystem", () => {
 				});
 				const found = yield* resolver.resolve;
 
-				assert.strictEqual(Option.getOrNull(found), nodePath.join(root, ".config", ".apprc"));
+				assert.strictEqual(O.getOrNull(found), nodePath.join(root, ".config", ".apprc"));
 			}),
 		).pipe(Effect.provide(Platform)),
 	);
@@ -219,7 +224,7 @@ describe("ConfigResolver against a real filesystem", () => {
 				const resolver = ConfigResolver.upwardWalk({ filename: ".apprc", cwd: deep, stopAt: root });
 				const found = yield* resolver.resolve;
 
-				assert.strictEqual(Option.getOrNull(found), nodePath.join(root, ".apprc"));
+				assert.strictEqual(O.getOrNull(found), nodePath.join(root, ".apprc"));
 			}),
 		).pipe(Effect.provide(Platform)),
 	);
@@ -238,7 +243,7 @@ describe("ConfigResolver against a real filesystem", () => {
 
 				const found = yield* ConfigResolver.workspaceRoot({ filename: ".apprc", cwd: deep }).resolve;
 
-				assert.strictEqual(Option.getOrNull(found), nodePath.join(root, ".apprc"));
+				assert.strictEqual(O.getOrNull(found), nodePath.join(root, ".apprc"));
 			}),
 		).pipe(Effect.provide(Platform)),
 	);
@@ -250,16 +255,16 @@ describe("ConfigResolver against a real filesystem", () => {
 				const deep = nodePath.join(decoyDir, "deep");
 				yield* Effect.promise(() => nodeFs.mkdir(deep, { recursive: true }));
 				yield* Effect.promise(() =>
-					nodeFs.writeFile(nodePath.join(decoyDir, "package.json"), Result.getOrThrow(Schema.encodeResult(JsonValue)({ name: "decoy" }))),
+					nodeFs.writeFile(nodePath.join(decoyDir, "package.json"), Result.getOrThrow(S.encodeResult(JsonValue)({ name: "decoy" }))),
 				);
 				yield* Effect.promise(() =>
-					nodeFs.writeFile(nodePath.join(root, "package.json"), Result.getOrThrow(Schema.encodeResult(JsonValue)({ workspaces: ["packages/*"] }))),
+					nodeFs.writeFile(nodePath.join(root, "package.json"), Result.getOrThrow(S.encodeResult(JsonValue)({ workspaces: ["packages/*"] }))),
 				);
 				yield* Effect.promise(() => nodeFs.writeFile(nodePath.join(root, ".apprc"), "{}"));
 
 				const found = yield* ConfigResolver.workspaceRoot({ filename: ".apprc", cwd: deep }).resolve;
 
-				assert.strictEqual(Option.getOrNull(found), nodePath.join(root, ".apprc"));
+				assert.strictEqual(O.getOrNull(found), nodePath.join(root, ".apprc"));
 			}),
 		).pipe(Effect.provide(Platform)),
 	);

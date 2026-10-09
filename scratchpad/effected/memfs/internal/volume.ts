@@ -40,22 +40,20 @@
 //   bytes, glob roots, negative truncate).
 // - Case folding: State.caseSensitive, lookupEntry, case-only rename.
 
-import type { Cause } from "effect";
-import {
-	Brand,
-	ByteSize,
-	Data,
-	DateTime,
-	Effect,
-	FileSystem,
-	HashMap,
-	Layer,
-	Option,
-	PlatformError as PlatformErrorNs,
-	Queue,
-	Semaphore,
-	Stream,
-} from "effect";
+import type * as Cause from "effect/Cause";
+import * as Brand from "effect/Brand";
+import * as ByteSize from "effect/ByteSize";
+import * as Data from "effect/Data";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as HashMap from "effect/HashMap";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as PlatformErrorNs from "effect/PlatformError";
+import * as Queue from "effect/Queue";
+import * as Semaphore from "effect/Semaphore";
+import * as Stream from "effect/Stream";
 
 import type { ErrnoCode } from "./errno.ts";
 import { ErrnoException, errnoError } from "./errno.ts";
@@ -249,7 +247,7 @@ const argumentError = (method: string, description: string): PlatformError =>
 const nullBytePath = (method: string): PlatformError => argumentError(method, "path must not contain null bytes");
 
 const findInode = (state: State, inode: Inode): InodeEntry | undefined =>
-	Option.getOrUndefined(HashMap.get(state.inodes, inode));
+	O.getOrUndefined(HashMap.get(state.inodes, inode));
 
 // KIT EXTENSION (case folding): a case-insensitive,
 // case-preserving volume looks a name up exactly first, then by folded
@@ -257,7 +255,7 @@ const findInode = (state: State, inode: Inode): InodeEntry | undefined =>
 // an existing entry keys on that stored name, so removal and rekeying hit the
 // real entry; path spellings a caller sees keep the queried component.
 const lookupEntry = (state: State, directory: DirectoryInode, name: string): readonly [string, Inode] | undefined => {
-	const exact = Option.getOrUndefined(HashMap.get(directory.entries, name));
+	const exact = O.getOrUndefined(HashMap.get(directory.entries, name));
 	if (exact !== undefined) return [name, exact];
 	if (state.caseSensitive) return undefined;
 	const folded = name.toLowerCase();
@@ -677,7 +675,7 @@ const getOpenFile = (
 	access?: "readable" | "writable",
 ): Effect.Effect<readonly [OpenFileDescriptor, FileInode], PlatformError> =>
 	Effect.suspend(() => {
-		const descriptor = Option.getOrUndefined(HashMap.get(state.descriptors, fd));
+		const descriptor = O.getOrUndefined(HashMap.get(state.descriptors, fd));
 		if (descriptor === undefined) {
 			return Effect.fail(descriptorError(fd, method, "EBADF", "File descriptor is closed"));
 		}
@@ -1722,7 +1720,7 @@ const openDescriptor: (
 });
 
 const closeDescriptorUnlocked = (state: State, fd: FileDescriptor): State => {
-	const descriptor = Option.getOrUndefined(HashMap.get(state.descriptors, fd));
+	const descriptor = O.getOrUndefined(HashMap.get(state.descriptors, fd));
 	if (descriptor === undefined) return state;
 	let nextState = {
 		...state,
@@ -1745,16 +1743,16 @@ const closeDescriptor = Effect.fnUntraced(function* (volume: Volume, fd: FileDes
 
 const fileInfo = (entry: InodeEntry): FileSystem.File.Info => ({
 	type: entry._tag,
-	mtime: Option.some(DateTime.toDateUtc(entry.mtime)),
-	atime: Option.some(DateTime.toDateUtc(entry.atime)),
-	birthtime: Option.some(DateTime.toDateUtc(entry.birthtime)),
+	mtime: entry.mtime.pipe(DateTime.toDateUtc, O.some),
+	atime: entry.atime.pipe(DateTime.toDateUtc, O.some),
+	birthtime: entry.birthtime.pipe(DateTime.toDateUtc, O.some),
 	dev: 0,
-	ino: Option.some(entry.ino),
+	ino: O.some(entry.ino),
 	mode: entry.mode,
-	nlink: Option.some(entry.nlink),
-	uid: Option.some(entry.uid),
-	gid: Option.some(entry.gid),
-	rdev: Option.some(0),
+	nlink: O.some(entry.nlink),
+	uid: O.some(entry.uid),
+	gid: O.some(entry.gid),
+	rdev: O.some(0),
 	size: ByteSize.bytes(
 		entry._tag === "File"
 			? entry.data.length
@@ -1762,8 +1760,8 @@ const fileInfo = (entry: InodeEntry): FileSystem.File.Info => ({
 				? new TextEncoder().encode(entry.target).length
 				: 0,
 	),
-	blksize: Option.none(),
-	blocks: Option.none(),
+	blksize: O.none(),
+	blocks: O.none(),
 });
 
 const readDescriptorUnlocked = Effect.fnUntraced(function* (
@@ -1858,7 +1856,7 @@ const writeDescriptor = (volume: Volume, fd: FileDescriptor, buffer: Uint8Array,
 		Effect.gen(function* () {
 			const [nextState, written] = yield* writeDescriptorUnlocked(state, fd, buffer, method);
 			if (written === 0) return transitionResult(nextState, written);
-			const descriptor = Option.getOrUndefined(HashMap.get(nextState.descriptors, fd));
+			const descriptor = O.getOrUndefined(HashMap.get(nextState.descriptors, fd));
 			return transitionResult(
 				nextState,
 				written,
@@ -1894,7 +1892,7 @@ class MemoryFile implements FileSystem.File {
 	seek(offset: bigint, from: FileSystem.SeekMode): Effect.Effect<bigint, PlatformError> {
 		return this.volume.mutate((state) =>
 			Effect.suspend(() => {
-				const descriptor = Option.getOrUndefined(HashMap.get(state.descriptors, this.fd));
+				const descriptor = O.getOrUndefined(HashMap.get(state.descriptors, this.fd));
 				if (descriptor === undefined) return Effect.succeed(transitionResult(state, BigInt(0)));
 				const position = from === "start" ? offset : descriptor.position + offset;
 				if (position < BigInt(0)) {
@@ -1920,13 +1918,13 @@ class MemoryFile implements FileSystem.File {
 		return readDescriptor(this.volume, this.fd, buffer, "read");
 	}
 
-	readAlloc(size: number): Effect.Effect<Option.Option<Uint8Array>, PlatformError> {
+	readAlloc(size: number): Effect.Effect<O.Option<Uint8Array>, PlatformError> {
 		if (!Number.isSafeInteger(size) || size < 0) {
 			return Effect.fail(argumentError("readAlloc", "size must be a non-negative safe integer"));
 		}
 		return Effect.flatMap(allocateBytes(size, this.fd, "readAlloc"), (buffer) =>
 			Effect.map(readDescriptor(this.volume, this.fd, buffer, "readAlloc"), (bytesRead) =>
-				bytesRead === 0 ? Option.none() : Option.some(bytesRead === size ? buffer : buffer.slice(0, bytesRead)),
+				bytesRead === 0 ? O.none() : O.some(bytesRead === size ? buffer : buffer.slice(0, bytesRead)),
 			),
 		);
 	}

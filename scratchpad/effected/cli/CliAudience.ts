@@ -1,7 +1,9 @@
 import type { AudienceKind, AudienceShape } from "../env/index.ts";
 import { Audience, TerminalEnv } from "../env/index.ts";
-import type { Terminal } from "effect";
-import { Effect, Option, Stdio } from "effect";
+import type * as Terminal from "effect/Terminal";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
+import * as Stdio from "effect/Stdio";
 import type { Command } from "effect/cli";
 import { CliConfig, CliError, Command as CommandModule, Flag, GlobalFlag } from "effect/cli";
 import { CliInteractive } from "./CliInteractive.ts";
@@ -24,7 +26,7 @@ const KINDS: ReadonlyArray<AudienceKind> = ["human", "agent", "ci"];
 const interactiveWhenFlagged = (kind: AudienceKind, current: boolean): Effect.Effect<boolean> =>
 	Effect.flatMap(Effect.serviceOption(TerminalEnv), (terminal) => {
 		if (kind !== "human") return Effect.succeed(false);
-		return Option.isSome(terminal) ? canPrompt(terminal.value) : Effect.succeed(current);
+		return O.isSome(terminal) ? canPrompt(terminal.value) : Effect.succeed(current);
 	});
 
 /**

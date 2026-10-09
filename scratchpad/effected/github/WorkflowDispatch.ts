@@ -1,13 +1,11 @@
-import {
-  DateTime,
-  Context,
-  Duration,
-  Effect,
-  Layer,
-  Option,
-  Schedule,
-  Schema,
-} from "effect";
+import * as DateTime from "effect/DateTime";
+import * as Context from "effect/Context";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Schedule from "effect/Schedule";
+import * as S from "effect/Schema";
 import { GitHubClient } from "./GitHubClient.ts";
 import { GitHubError } from "./GitHubError.ts";
 import { numericId } from "./internal/ids.ts";
@@ -19,15 +17,15 @@ import { PageOptions } from "./Rest.ts";
  *
  * @public
  */
-export class WorkflowRunStatus extends Schema.Class<WorkflowRunStatus>("WorkflowRunStatus")({
+export class WorkflowRunStatus extends S.Class<WorkflowRunStatus>("WorkflowRunStatus")({
   /** The run's numeric id. */
-  id: Schema.Int,
+  id: S.Int,
   /** `queued`, `in_progress`, `completed`, … */
-  status: Schema.String,
+  status: S.String,
   /** Set once `status` is `completed`. */
-  conclusion: Schema.optionalKey(Schema.String),
+  conclusion: S.optionalKey(S.String),
   /** The run's web URL. */
-  url: Schema.String,
+  url: S.String,
 }) {
   /** Has the run finished, whatever the outcome? */
   get isDone(): boolean {
@@ -277,18 +275,18 @@ const make = (client: GitHubClient["Service"]): WorkflowDispatchShape => {
           PageOptions.make({ perPage: 10, maxPages: 1 }),
         );
         const match = runs.find((run) => run.path?.endsWith(workflow) ?? true);
-        return match === undefined ? Option.none<WorkflowRunStatus>() : Option.some(statusOf(match));
+        return match === undefined ? O.none<WorkflowRunStatus>() : O.some(statusOf(match));
       });
 
       const settled = yield* Effect.repeat(findRun, {
         // Repeat WHILE the answer is "not yet" — a predicate over the success
         // value, so "pending" never has to masquerade as an error.
-        while: (found) => Option.isNone(found) || !found.value.isDone,
+        while: (found) => O.isNone(found) || !found.value.isDone,
         schedule: Schedule.spaced(interval),
         times: attempts,
       });
 
-      if (Option.isNone(settled) || !settled.value.isDone) {
+      if (O.isNone(settled) || !settled.value.isDone) {
         return yield*
           GitHubError.rejected(
             "WorkflowDispatch.dispatchAndWait",

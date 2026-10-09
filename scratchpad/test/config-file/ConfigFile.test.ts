@@ -1,7 +1,12 @@
 // @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
-import { Effect, Layer, Option, Path, PlatformError, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as PlatformError from "effect/PlatformError";
+import * as S from "effect/Schema";
 import { ConfigCodecError } from "../../effected/config-file/ConfigCodec.ts";
 import type { ConfigLoadError, ConfigReadError } from "../../effected/config-file/ConfigFile.ts";
 import { ConfigFile, ConfigFileNotFoundError, ConfigFileReadError, ConfigValidationError } from "../../effected/config-file/ConfigFile.ts";
@@ -9,7 +14,7 @@ import { ConfigResolver } from "../../effected/config-file/ConfigResolver.ts";
 import { JsonCodec } from "../../effected/config-file/JsonCodec.ts";
 import { MergeStrategy } from "../../effected/config-file/MergeStrategy.ts";
 
-class AppShape extends Schema.Class<AppShape>("AppShape")({ port: Schema.Finite }) {}
+class AppShape extends S.Class<AppShape>("AppShape")({ port: S.Finite }) {}
 class AppConfig extends ConfigFile.Service<AppConfig, AppShape>()("test/AppConfig") {}
 
 const layerFor = (
@@ -52,7 +57,7 @@ describe("ConfigFile.load", () => {
 		Effect.gen(function* () {
 			const cfg = yield* AppConfig;
 			const error = yield* Effect.flip(cfg.load);
-			if (!Schema.is(ConfigFileNotFoundError)(error)) throw error;
+			if (!S.is(ConfigFileNotFoundError)(error)) throw error;
 			assert.deepStrictEqual(error.searched, ["explicit", "walk:project"]);
 			assert.deepStrictEqual(error.candidates, [
 				"/app/.apprc",
@@ -83,7 +88,7 @@ describe("ConfigFile.load", () => {
 		Effect.gen(function* () {
 			const cfg = yield* AppConfig;
 			const error = yield* Effect.flip(cfg.load);
-			if (!Schema.is(ConfigFileNotFoundError)(error)) throw error;
+			if (!S.is(ConfigFileNotFoundError)(error)) throw error;
 			assert.deepStrictEqual(error.searched, ["hand-rolled", "explicit"]);
 			// The hand-rolled tier is opaque; the built-in still reports its probe.
 			assert.deepStrictEqual(error.candidates, ["/app/.apprc"]);
@@ -127,7 +132,7 @@ describe("ConfigFile.load", () => {
 			const cfg = yield* AppConfig;
 			const error = yield* Effect.flip(cfg.load);
 			assert.instanceOf(error, ConfigValidationError);
-			assert.deepStrictEqual((error as ConfigValidationError).path, Option.some("/app/.apprc"));
+			assert.deepStrictEqual((error as ConfigValidationError).path, O.some("/app/.apprc"));
 		}).pipe(Effect.provide(layerFor({ "/app/.apprc": `{"port":"nope"}` }))),
 	);
 
@@ -241,7 +246,7 @@ describe("ConfigFile.loadFrom / validate", () => {
 			const cfg = yield* AppConfig;
 			const error = yield* Effect.flip(cfg.validate({ port: "nope" }));
 			assert.instanceOf(error, ConfigValidationError);
-			assert.isTrue(Option.isNone(error.path));
+			assert.isTrue(O.isNone(error.path));
 		}).pipe(Effect.provide(layerFor({}))),
 	);
 });
@@ -249,7 +254,7 @@ describe("ConfigFile.loadFrom / validate", () => {
 describe("ConfigFile options.validate", () => {
 	const rejectPort0 = (value: AppShape): Effect.Effect<AppShape, ConfigValidationError> =>
 		value.port === 0
-			? Effect.fail(ConfigValidationError.make({ path: Option.none(), issue: "port must not be 0" }))
+			? Effect.fail(ConfigValidationError.make({ path: O.none(), issue: "port must not be 0" }))
 			: Effect.succeed(value);
 
 	it.effect("cfg.load fails with ConfigValidationError when the caller hook rejects a schema-valid document", () =>

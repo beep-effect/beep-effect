@@ -1,16 +1,14 @@
-import {
-	Array as Arr,
-	Effect,
-	Equal,
-	Function as Fn,
-	Hash,
-	Option,
-	Order,
-	Result,
-	Schema,
-	SchemaIssue,
-	SchemaTransformation,
-} from "effect";
+import * as Arr from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import * as Fn from "effect/Function";
+import * as Hash from "effect/Hash";
+import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import { formatVersion, parseVersion } from "./internal/grammar.ts";
 import { compareBuild, comparePrereleaseIdentifier } from "./internal/order.ts";
 
@@ -25,11 +23,11 @@ import { compareBuild, comparePrereleaseIdentifier } from "./internal/order.ts";
  * @see {@link https://semver.org | SemVer 2.0.0 Specification}
  * @public
  */
-export class InvalidVersionError extends Schema.TaggedError<InvalidVersionError>()("InvalidVersionError", {
+export class InvalidVersionError extends S.TaggedError<InvalidVersionError>()("InvalidVersionError", {
 	/** The raw input string that failed to parse. */
-	input: Schema.String,
+	input: S.String,
 	/** The character position where parsing failed, if available. */
-	position: Schema.optionalKey(Schema.Finite),
+	position: S.optionalKey(S.Finite),
 }) {
 	override get message(): string {
 		const base = `Invalid version string: "${this.input}"`;
@@ -39,22 +37,22 @@ export class InvalidVersionError extends Schema.TaggedError<InvalidVersionError>
 
 // Non-negative safe integer schema shared by the `major`/`minor`/`patch`
 // fields.
-const nonNegativeInteger = Schema.Finite.check(
-	Schema.isInt(),
-	Schema.isBetween({ minimum: 0, maximum: Number.MAX_SAFE_INTEGER }),
+const nonNegativeInteger = S.Finite.check(
+	S.isInt(),
+	S.isBetween({ minimum: 0, maximum: Number.MAX_SAFE_INTEGER }),
 );
 
 // String prerelease identifiers must contain at least one non-digit:
 // all-numeric identifiers are numbers (the grammar parses them as such), so
 // requiring a non-digit keeps decode/encode round-trips canonical. Written
 // without lookahead so `Arbitrary.schema` can derive a generator.
-const prereleaseIdentifier = Schema.Union([
-	Schema.String.check(Schema.isPattern(/^[0-9]*[A-Za-z-][0-9A-Za-z-]*$/u)),
+const prereleaseIdentifier = S.Union([
+	S.String.check(S.isPattern(/^[0-9]*[A-Za-z-][0-9A-Za-z-]*$/u)),
 	nonNegativeInteger,
 ]);
 
 // Build identifiers allow leading zeros and all-digit tokens (SemVer §10).
-const buildIdentifier = Schema.String.check(Schema.isPattern(/^[0-9A-Za-z-]+$/u));
+const buildIdentifier = S.String.check(S.isPattern(/^[0-9A-Za-z-]+$/u));
 
 /**
  * A parsed SemVer 2.0.0 version: an Effect `Schema.Class` whose fields are
@@ -83,7 +81,7 @@ const buildIdentifier = Schema.String.check(Schema.isPattern(/^[0-9A-Za-z-]+$/u)
  * @see {@link https://semver.org | SemVer 2.0.0 Specification}
  * @public
  */
-export class SemVer extends Schema.Class<SemVer>("SemVer")({
+export class SemVer extends S.Class<SemVer>("SemVer")({
 	/** The major version component; incompatible API changes. */
 	major: nonNegativeInteger,
 	/** The minor version component; backward-compatible functionality. */
@@ -91,9 +89,9 @@ export class SemVer extends Schema.Class<SemVer>("SemVer")({
 	/** The patch version component; backward-compatible fixes. */
 	patch: nonNegativeInteger,
 	/** Prerelease identifiers, most-significant first; `[]` for a stable version. */
-	prerelease: Schema.Array(prereleaseIdentifier),
+	prerelease: S.Array(prereleaseIdentifier),
 	/** Build metadata identifiers; ignored by precedence comparisons (§10). */
-	build: Schema.Array(buildIdentifier),
+	build: S.Array(buildIdentifier),
 }) {
 	// ── Schema ──────────────────────────────────────────────────────────
 
@@ -102,8 +100,8 @@ export class SemVer extends Schema.Class<SemVer>("SemVer")({
 	 * {@link SemVer}: decoding parses with the strict grammar, encoding
 	 * prints `major.minor.patch[-prerelease][+build]`.
 	 */
-	static readonly FromString: Schema.Codec<SemVer, string> = Schema.String.pipe(
-		Schema.decodeTo(
+	static readonly FromString: S.Codec<SemVer, string> = S.String.pipe(
+		S.decodeTo(
 			SemVer,
 			SchemaTransformation.transformEffect({
 				decode: (input: string) => {
@@ -136,9 +134,9 @@ export class SemVer extends Schema.Class<SemVer>("SemVer")({
 	 * Decode to a {@link SemVer} instance with {@link SemVer.FromString}
 	 * instead when the parsed components are wanted.
 	 */
-	static readonly ExactVersionString: Schema.String = Schema.String.pipe(
-		Schema.check(
-			Schema.makeFilter((value) =>
+	static readonly ExactVersionString: S.String = S.String.pipe(
+		S.check(
+			S.makeFilter((value) =>
 				SemVer.isValid(value)
 					? undefined
 					: "Expected an exact SemVer 2.0.0 version string (ranges, partial versions, dist-tags and surrounding whitespace are not valid)",
@@ -157,9 +155,9 @@ export class SemVer extends Schema.Class<SemVer>("SemVer")({
 	 * always begins the integrity component. `@effected/package-json`'s
 	 * `PackageManager` field model uses this schema directly.
 	 */
-	static readonly PinnableVersionString: Schema.String = Schema.String.pipe(
-		Schema.check(
-			Schema.makeFilter((value) =>
+	static readonly PinnableVersionString: S.String = S.String.pipe(
+		S.check(
+			S.makeFilter((value) =>
 				SemVer.isPinnable(value)
 					? undefined
 					: "Expected an exact SemVer version with no build metadata (ranges, partial versions, dist-tags and surrounding whitespace are not pinnable)",
@@ -395,21 +393,21 @@ export class SemVer extends Schema.Class<SemVer>("SemVer")({
 	}
 
 	/** Highest version, or `Option.none()` if the array is empty. */
-	static max(versions: ReadonlyArray<SemVer>): Option.Option<SemVer> {
+	static max(versions: ReadonlyArray<SemVer>): O.Option<SemVer> {
 		let best: SemVer | undefined;
 		for (const v of versions) {
 			if (best === undefined || v.gt(best)) best = v;
 		}
-		return best === undefined ? Option.none() : Option.some(best);
+		return best === undefined ? O.none() : O.some(best);
 	}
 
 	/** Lowest version, or `Option.none()` if the array is empty. */
-	static min(versions: ReadonlyArray<SemVer>): Option.Option<SemVer> {
+	static min(versions: ReadonlyArray<SemVer>): O.Option<SemVer> {
 		let best: SemVer | undefined;
 		for (const v of versions) {
 			if (best === undefined || v.lt(best)) best = v;
 		}
-		return best === undefined ? Option.none() : Option.some(best);
+		return best === undefined ? O.none() : O.some(best);
 	}
 
 	/**
@@ -541,7 +539,7 @@ export class SemVer extends Schema.Class<SemVer>("SemVer")({
 	// Equal.equals short-circuits on hash mismatch.
 
 	[Equal.symbol](that: unknown): boolean {
-		if (!(Schema.is(SemVer)(that))) return false;
+		if (!(S.is(SemVer)(that))) return false;
 		return (
 			this.major === that.major &&
 			this.minor === that.minor &&

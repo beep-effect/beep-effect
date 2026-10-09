@@ -16,7 +16,9 @@ import nodePath, { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { NodeFileSystem, NodePath } from "@effect/platform-node";
 import { assert, describe, layer } from "@effect/vitest";
-import { Effect, Layer, Option } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import type { WorkspacesSyncOptions } from "../../../effected/workspaces/index.ts";
 import {
 	DependencyGraph,
@@ -73,8 +75,8 @@ describe("the effected repository, discovered by the package that lives in it", 
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
 				const owner = yield* discovery.resolveFile(fileURLToPath(import.meta.url));
-				assert.isTrue(Option.isSome(owner));
-				assert.strictEqual(Option.getOrThrow(owner).name, "@effected/workspaces");
+				assert.isTrue(O.isSome(owner));
+				assert.strictEqual(O.getOrThrow(owner).name, "@effected/workspaces");
 			}),
 		);
 
@@ -110,9 +112,9 @@ describe("the effected repository, discovered by the package that lives in it", 
 				const set = yield* catalogs.set;
 				// This repo pins `effect` in a named `effect` catalog, and every
 				// package depends on `catalog:effect`.
-				const range = set.rangeOf("effect", Option.some("effect"));
-				assert.isTrue(Option.isSome(range), "the effect catalog must resolve");
-				assert.match(Option.getOrThrow(range), /^\^?4\./);
+				const range = set.rangeOf("effect", O.some("effect"));
+				assert.isTrue(O.isSome(range), "the effect catalog must resolve");
+				assert.match(O.getOrThrow(range), /^\^?4\./);
 			}),
 		);
 

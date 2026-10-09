@@ -1,5 +1,8 @@
-import type { Cause as CauseType } from "effect";
-import { Cause, Context, SchemaIssue, Schema } from "effect";
+import type * as CauseType from "effect/Cause";
+import * as Cause from "effect/Cause";
+import * as Context from "effect/Context";
+import * as SchemaIssue from "effect/SchemaIssue";
+import * as S from "effect/Schema";
 import { Cancelled } from "./Cancelled.ts";
 import type { Block, Document, InlineOf, TreeInput } from "./Doc.ts";
 import { Doc } from "./Doc.ts";
@@ -266,7 +269,7 @@ const dieBlocks = (
 	mode: "app" | "all",
 ): ReadonlyArray<Block> => {
 	// A prompt that was cancelled, or refused for want of a terminal, is a defect to the runtime and a fixed line to a person.
-	if (Schema.is(Cancelled)(defect) || Schema.is(NotInteractive)(defect)) return [Doc.paragraph(defect.message)];
+	if (S.is(Cancelled)(defect) || S.is(NotInteractive)(defect)) return [Doc.paragraph(defect.message)];
 	const header = failureBlocks(describe(defect));
 	if (!(defect instanceof Error)) return [...header, ...spans];
 	const chain = causeTree(defect);
@@ -297,7 +300,7 @@ const failBlocks = (
 			// Likewise.
 		}
 	}
-	if (Schema.is(Cancelled)(error) || Schema.is(NotInteractive)(error)) return [Doc.paragraph(error.message)];
+	if (S.is(Cancelled)(error) || S.is(NotInteractive)(error)) return [Doc.paragraph(error.message)];
 	const schema = schemaBlocks(error);
 	if (schema !== undefined) return [...schema, ...spans];
 	return [...failureBlocks(describe(error)), ...spans];

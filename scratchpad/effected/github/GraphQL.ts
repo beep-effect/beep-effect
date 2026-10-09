@@ -1,5 +1,5 @@
-import type { Effect } from "effect";
-import { Schema } from "effect";
+import type * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
 import { retryAfterMillisFrom } from "./internal/headers.ts";
 
 /**
@@ -7,11 +7,11 @@ import { retryAfterMillisFrom } from "./internal/headers.ts";
  *
  * @public
  */
-export class GraphQLErrorEntry extends Schema.Class<GraphQLErrorEntry>("GraphQLErrorEntry")({
+export class GraphQLErrorEntry extends S.Class<GraphQLErrorEntry>("GraphQLErrorEntry")({
   /** GitHub's prose. */
-  message: Schema.String,
+  message: S.String,
   /** GitHub's own classification, e.g. `"NOT_FOUND"` or `"FORBIDDEN"`. */
-  type: Schema.optionalKey(Schema.String),
+  type: S.optionalKey(S.String),
 }) {
 }
 
@@ -25,7 +25,7 @@ export class GraphQLErrorEntry extends Schema.Class<GraphQLErrorEntry>("GraphQLE
  *
  * @public
  */
-export class GitHubGraphQLError extends Schema.TaggedError<GitHubGraphQLError>()("GitHubGraphQLError", {
+export class GitHubGraphQLError extends S.TaggedError<GitHubGraphQLError>()("GitHubGraphQLError", {
   /**
    * Structural routing, mirroring `GitHubError`'s.
    *
@@ -34,7 +34,7 @@ export class GitHubGraphQLError extends Schema.TaggedError<GitHubGraphQLError>()
    * error: it lets a caller make a create idempotent without lowercasing the
    * message and grepping it.
    */
-  kind: Schema.Literals([
+  kind: S.Literals([
     "alreadyExists",
     "notFound",
     "rejected",
@@ -44,15 +44,15 @@ export class GitHubGraphQLError extends Schema.TaggedError<GitHubGraphQLError>()
     "decode",
   ]),
   /** The document's name, e.g. `"linkedIssues"` — never the literal `"graphql"`. */
-  operation: Schema.String,
+  operation: S.String,
   /** Human-readable cause, for logs. */
-  reason: Schema.String,
+  reason: S.String,
   /** Everything GitHub reported, in order. */
-  errors: Schema.Array(GraphQLErrorEntry),
+  errors: S.Array(GraphQLErrorEntry),
   /** A server-advised delay in milliseconds, read only by the retry schedule. */
-  retryAfterMillis: Schema.optionalKey(Schema.Int),
+  retryAfterMillis: S.optionalKey(S.Int),
   /** The underlying throwable, when one exists. */
-  cause: Schema.optionalKey(Schema.Defect()),
+  cause: S.optionalKey(S.Defect()),
 }) {
   override get message(): string {
     return `${this.operation} failed: ${this.reason}`;
@@ -186,7 +186,7 @@ export class GraphQLDocument<A, V extends Record<string, unknown>> {
   /** The document text sent to GitHub. */
   readonly document: string;
   /** Decodes the raw `data` payload into the domain value. */
-  readonly decode: (raw: unknown) => Effect.Effect<A, Schema.SchemaError>;
+  readonly decode: (raw: unknown) => Effect.Effect<A, S.SchemaError>;
   /**
    * Turns the caller's variables into the wire object.
    *
@@ -204,7 +204,7 @@ export class GraphQLDocument<A, V extends Record<string, unknown>> {
     /** The document text sent to GitHub. */
     document: string,
     /** Decodes the raw `data` payload into the domain value. */
-    decode: (raw: unknown) => Effect.Effect<A, Schema.SchemaError>,
+    decode: (raw: unknown) => Effect.Effect<A, S.SchemaError>,
     /**
      * Turns the caller's variables into the wire object.
      *
@@ -233,11 +233,11 @@ export class GraphQLDocument<A, V extends Record<string, unknown>> {
   static make<A, I>(options: {
     readonly name: string;
     readonly document: string;
-    readonly response: Schema.Codec<A, I>;
+    readonly response: S.Codec<A, I>;
   }): <V extends Record<string, unknown>>(
     encodeVariables?: (variables: V) => Record<string, unknown>,
   ) => GraphQLDocument<A, V> {
-    const decode = Schema.decodeUnknownEffect(options.response);
+    const decode = S.decodeUnknownEffect(options.response);
     return <V extends Record<string, unknown>>(encodeVariables?: (variables: V) => Record<string, unknown>) =>
       new GraphQLDocument<A, V>(
         options.name,

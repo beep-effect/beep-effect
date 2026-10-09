@@ -1,5 +1,6 @@
-import type { Path } from "effect";
-import { Option, Schema } from "effect";
+import type * as Path from "effect/Path";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import type { XdgPaths, XdgPlatform } from "./Xdg.ts";
 
 /**
@@ -12,15 +13,15 @@ import type { XdgPaths, XdgPlatform } from "./Xdg.ts";
  *
  * @public
  */
-export class NativeDirs extends Schema.Class<NativeDirs>("NativeDirs")({
+export class NativeDirs extends S.Class<NativeDirs>("NativeDirs")({
 	/** Where configuration lives. */
-	config: Schema.String,
+	config: S.String,
 	/** Where application data lives. */
-	data: Schema.String,
+	data: S.String,
 	/** Where discardable cached data lives. */
-	cache: Schema.String,
+	cache: S.String,
 	/** Where persistent-but-regenerable state lives. */
-	state: Schema.String,
+	state: S.String,
 }) {
 	/**
 	 * Map a platform and an environment onto the native directories for a namespace.
@@ -47,12 +48,12 @@ export class NativeDirs extends Schema.Class<NativeDirs>("NativeDirs")({
 		readonly namespace: string;
 		readonly paths: XdgPaths;
 		readonly path: Path.Path;
-	}): Option.Option<NativeDirs> {
+	}): O.Option<NativeDirs> {
 		const { platform, namespace, paths, path } = input;
 
 		if (platform === "darwin") {
 			const appSupport = path.join(paths.home, "Library", "Application Support", namespace);
-			return Option.some(
+			return O.some(
 				NativeDirs.make({
 					config: appSupport,
 					data: appSupport,
@@ -65,7 +66,7 @@ export class NativeDirs extends Schema.Class<NativeDirs>("NativeDirs")({
 		if (platform === "win32") {
 			const roaming = paths.appData ?? path.join(paths.home, "AppData", "Roaming");
 			const local = paths.localAppData ?? path.join(paths.home, "AppData", "Local");
-			return Option.some(
+			return O.some(
 				NativeDirs.make({
 					config: path.join(roaming, namespace),
 					data: path.join(roaming, namespace),
@@ -75,6 +76,6 @@ export class NativeDirs extends Schema.Class<NativeDirs>("NativeDirs")({
 			);
 		}
 
-		return Option.none();
+		return O.none();
 	}
 }

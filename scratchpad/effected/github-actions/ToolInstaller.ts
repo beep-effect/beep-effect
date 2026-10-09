@@ -1,5 +1,16 @@
-import type { Duration, PlatformError } from "effect";
-import { Config, ConfigProvider, Context, Effect, FileSystem, Layer, Option, Path, Schedule, Schema, Stream } from "effect";
+import type * as Duration from "effect/Duration";
+import type * as PlatformError from "effect/PlatformError";
+import * as Config from "effect/Config";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as Schedule from "effect/Schedule";
+import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import { HttpClient } from "effect/http";
 import type { ChildProcess } from "effect/process";
 import { ChildProcessSpawner } from "effect/process";
@@ -15,21 +26,21 @@ import { unstubbed } from "./internal/unstubbed.ts";
  *
  * @public
  */
-export class ToolInstallerError extends Schema.TaggedError<ToolInstallerError>()("ToolInstallerError", {
+export class ToolInstallerError extends S.TaggedError<ToolInstallerError>()("ToolInstallerError", {
 	/**
 	 * `downloadFailed` — the archive could not be fetched. `extractFailed` — the
 	 * extraction tool refused the archive or is not installed. `cacheFailed` —
 	 * the tool could not be written into the runner's tool cache.
 	 */
-	reason: Schema.Literals(["downloadFailed", "extractFailed", "cacheFailed"]),
+	reason: S.Literals(["downloadFailed", "extractFailed", "cacheFailed"]),
 	/** The HTTP status, when there was one. Drives the retry decision. */
-	status: Schema.optionalKey(Schema.Finite),
+	status: S.optionalKey(S.Finite),
 	/** What was being worked on — a url, an archive path, or a tool name. */
-	subject: Schema.String,
+	subject: S.String,
 	/** The extraction tool's own complaint, which is the only useful part of a tar failure. */
-	stderr: Schema.optionalKey(Schema.String),
+	stderr: S.optionalKey(S.String),
 	/** The underlying failure, preserved structurally. */
-	cause: Schema.optionalKey(Schema.Defect()),
+	cause: S.optionalKey(S.Defect()),
 }) {
 	override get message(): string {
 		switch (this.reason) {
@@ -170,7 +181,7 @@ export interface ToolInstallerShape {
 	 * assumption from your own install path (an archive-wrapper subdirectory,
 	 * say) may not hold for a foreign entry.
 	 */
-	readonly find: (tool: string, version: string) => Effect.Effect<Option.Option<string>>;
+	readonly find: (tool: string, version: string) => Effect.Effect<O.Option<string>>;
 	/**
 	 * Where this installer's `cacheDir` / `cacheFile` will land `tool@version`:
 	 * the final `<root>/<tool>/<version>/<arch>`, over the root this layer
@@ -351,8 +362,10 @@ const make = Effect.gen(function* () {
 			// (and on many platforms not permitted at all), so the staging area has
 			// to live under the cache root rather than in the system temp directory.
 			yield* fs.makeDirectory(root, { recursive: true });
-			const staging = yield* fs.makeTempDirectory({ directory: root, prefix: ".staging-" });
-			return staging;
+      return yield * fs.makeTempDirectory({
+        directory: root,
+        prefix: ".staging-"
+      });
 		}).pipe(
 			Effect.mapError((cause) => ToolInstallerError.make({ reason: "cacheFailed", subject: tool, cause })),
 			Effect.flatMap((staging) =>
@@ -400,9 +413,9 @@ const make = Effect.gen(function* () {
 		);
 	});
 
-	const find = (tool: string, version: string): Effect.Effect<Option.Option<string>> =>
+	const find = (tool: string, version: string): Effect.Effect<O.Option<string>> =>
 		Effect.map(typeAt(fs, cachePath(tool, version)), (type) =>
-			type === "Directory" ? Option.some(cachePath(tool, version)) : Option.none(),
+			type === "Directory" ? O.some(cachePath(tool, version)) : O.none(),
 		);
 
 	const cacheFile = Effect.fn("ToolInstaller.cacheFile")(function* (
@@ -458,7 +471,7 @@ const make = Effect.gen(function* () {
 		provisionFile: Effect.fn("ToolInstaller.provisionFile")(function* (options: ProvisionFileOptions) {
 			yield* Effect.annotateCurrentSpan({ tool: options.tool, version: options.version });
 			const cached = yield* find(options.tool, options.version);
-			if (Option.isSome(cached)) {
+			if (O.isSome(cached)) {
 				// The hit is validated, per find's shared-cache warning: the entry may
 				// have been written by the runner image or a setup-* action, and a hit
 				// without the named binary is a directory that cannot run the tool.

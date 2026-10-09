@@ -6,7 +6,7 @@
 // grammar, desugar and normalize pipeline and the `SemVer` class itself all
 // consume it.
 
-import { Array as Arr } from "effect";
+import * as Arr from "effect/Array";
 import { dual } from "effect/Function";
 
 /** Structural fields of a parsed version, shared by the parser pipeline. */

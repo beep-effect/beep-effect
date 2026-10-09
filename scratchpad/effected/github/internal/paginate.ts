@@ -1,4 +1,6 @@
-import { Effect, Option, Stream } from "effect";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
+import * as Stream from "effect/Stream";
 import { dual } from "effect/Function";
 import type { GitHubError } from "../GitHubError.ts";
 
@@ -18,7 +20,7 @@ import type { GitHubError } from "../GitHubError.ts";
  * @internal
  */
 export interface PageSource<A> {
-	readonly next: Effect.Effect<Option.Option<ReadonlyArray<A>>, GitHubError>;
+	readonly next: Effect.Effect<O.Option<ReadonlyArray<A>>, GitHubError>;
 }
 
 /**
@@ -46,12 +48,12 @@ export const paginate: {
 		const source = openSource();
 		return Stream.paginate(0, (pagesTaken: number) =>
 			Effect.map(source.next, (page) => {
-				if (Option.isNone(page)) {
-					return [[] as ReadonlyArray<A>, Option.none<number>()] as const;
+				if (O.isNone(page)) {
+					return [[] as ReadonlyArray<A>, O.none<number>()] as const;
 				}
 				const taken = pagesTaken + 1;
 				const exhausted = maxPages !== undefined && taken >= maxPages;
-				return [page.value, exhausted ? Option.none<number>() : Option.some(taken)] as const;
+				return [page.value, exhausted ? O.none<number>() : O.some(taken)] as const;
 			}),
 		);
 	}));
@@ -75,12 +77,12 @@ export const fromArray: {
 	let finished = false;
 	return {
 		next: Effect.sync(() => {
-			if (finished) return Option.none();
+			if (finished) return O.none();
 			const page = items.slice(offset, offset + perPage);
 			offset += perPage;
 			// A short page is GitHub's own end-of-collection signal.
 			if (page.length < perPage) finished = true;
-			return page.length === 0 ? Option.none() : Option.some(page);
+			return page.length === 0 ? O.none() : O.some(page);
 		}),
 	};
 });

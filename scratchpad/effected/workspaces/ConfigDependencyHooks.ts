@@ -31,7 +31,13 @@ import { pathToFileURL } from "node:url";
 import { Run } from "../commands/index.ts";
 import type { PartialReleaseAgeGate } from "../npm/index.ts";
 import { CatalogAssemblyError } from "../npm/index.ts";
-import { Context, Duration, Effect, Layer, Predicate, Schema, Result } from "effect";
+import * as Context from "effect/Context";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
+import * as Result from "effect/Result";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import type { CatalogEntries } from "./internal/catalogs.ts";
 import { normalize } from "./internal/catalogs.ts";
@@ -39,7 +45,7 @@ import { makeFetchConfigDependency } from "./internal/configDependencyFetch.ts";
 import type { ResolvedPnpmfile } from "./internal/configDependencyResolution.ts";
 import { lookupPnpmfiles, resolvePnpmfiles } from "./internal/configDependencyResolution.ts";
 
-const JsonValue = Schema.fromJsonString(Schema.Unknown);
+const JsonValue = S.fromJsonString(S.Unknown);
 
 /**
  * The pnpm config surface a `pnpmfile.cjs` `updateConfig` hook reads and
@@ -318,10 +324,10 @@ const stringArrayOr = (value: unknown, fallback: readonly string[] | undefined):
  * write wins**, exactly as pnpm's single mutable config object behaves.
  */
 const configOf = (value: unknown, fallback: HookConfig): HookConfig => {
-	if (!Predicate.isObject(value)) return fallback;
+	if (!P.isObject(value)) return fallback;
 	return {
-		catalog: Predicate.isObject(value.catalog) ? (value.catalog as Record<string, string>) : fallback.catalog,
-		catalogs: Predicate.isObject(value.catalogs)
+		catalog: P.isObject(value.catalog) ? (value.catalog as Record<string, string>) : fallback.catalog,
+		catalogs: P.isObject(value.catalogs)
 			? (value.catalogs as Record<string, Record<string, string>>)
 			: fallback.catalogs,
 		minimumReleaseAge: finiteNumberOr(value.minimumReleaseAge, fallback.minimumReleaseAge),
@@ -341,12 +347,12 @@ const stringRecordOr = (
 	value: unknown,
 	fallback: Readonly<Record<string, string>> | undefined,
 ): Readonly<Record<string, string>> | undefined =>
-	Predicate.isObject(value) && Object.values(value).every((entry) => typeof entry === "string")
+	P.isObject(value) && Object.values(value).every((entry) => typeof entry === "string")
 		? (value as Record<string, string>)
 		: fallback;
 
 const peerRulesOr = (value: unknown, fallback: PeerDependencyRules | undefined): PeerDependencyRules | undefined => {
-	if (!Predicate.isObject(value)) return fallback;
+	if (!P.isObject(value)) return fallback;
 	// Every entry must be a string, not merely the block an object: the public
 	// contract is name→RANGE, and a non-string value reaches range parsing as a
 	// rule nobody can evaluate. The same all-entries rule `stringArrayOr`
@@ -380,7 +386,7 @@ const releaseAgeOf = (config: HookConfig): PartialReleaseAgeGate => ({
 const configToEntries = (config: HookConfig): CatalogEntries => {
 	const raw: Record<string, unknown> = { ...config.catalogs };
 	if (Object.keys(config.catalog).length > 0) {
-		raw.default = { ...(Predicate.isObject(raw.default) ? raw.default : {}), ...config.catalog };
+		raw.default = { ...(P.isObject(raw.default) ? raw.default : {}), ...config.catalog };
 	}
 	return normalize(raw);
 };
@@ -390,12 +396,12 @@ type UpdateConfig = (config: HookConfig) => unknown;
 
 /** Locate the `updateConfig` hook across the CJS/ESM export shapes a `pnpmfile.cjs` can present. */
 const updateConfigOf = (mod: unknown): UpdateConfig | undefined => {
-	for (const candidate of [mod, Predicate.isObject(mod) ? mod.default : undefined]) {
-		if (!Predicate.isObject(candidate)) continue;
+	for (const candidate of [mod, P.isObject(mod) ? mod.default : undefined]) {
+		if (!P.isObject(candidate)) continue;
 		const hooks = candidate.hooks;
-		if (Predicate.isObject(hooks) && Predicate.isFunction(hooks.updateConfig))
+		if (P.isObject(hooks) && P.isFunction(hooks.updateConfig))
 			return hooks.updateConfig as UpdateConfig;
-		if (Predicate.isFunction(candidate.updateConfig)) return candidate.updateConfig as UpdateConfig;
+		if (P.isFunction(candidate.updateConfig)) return candidate.updateConfig as UpdateConfig;
 	}
 	return undefined;
 };
@@ -605,13 +611,13 @@ const REPLAY_TIMEOUT = Duration.seconds(30);
  * success stays `Unknown` because a hook's returned *data* is tolerantly
  * threaded (`configOf`), never fatal.
  */
-const ReplayPayload = Schema.Union([
-	Schema.Struct({ ok: Schema.Literal(true), config: Schema.Unknown }),
-	Schema.Struct({
-		ok: Schema.Literal(false),
-		name: Schema.optionalKey(Schema.String),
-		message: Schema.optionalKey(Schema.String),
-		stack: Schema.optionalKey(Schema.String),
+const ReplayPayload = S.Union([
+	S.Struct({ ok: S.Literal(true), config: S.Unknown }),
+	S.Struct({
+		ok: S.Literal(false),
+		name: S.optionalKey(S.String),
+		message: S.optionalKey(S.String),
+		stack: S.optionalKey(S.String),
 	}),
 ]);
 
@@ -863,13 +869,13 @@ export class ConfigDependencyHooks extends Context.Service<ConfigDependencyHooks
 								"--input-type=module",
 								"-e",
 								REPLAY_SCRIPT,
-								Result.getOrThrow(Schema.encodeResult(JsonValue)(seed)),
+								Result.getOrThrow(S.encodeResult(JsonValue)(seed)),
 								// The rules seed rides the same argv channel as the catalog seed —
 								// never spliced into the program text, which must stay a static
 								// string (a bundler compiles an interpolated dynamic import into an
 								// unresolvable context module).
-								Result.getOrThrow(Schema.encodeResult(JsonValue)(rules ?? NO_PEER_RULES)),
-								Result.getOrThrow(Schema.encodeResult(JsonValue)(loadable)),
+								Result.getOrThrow(S.encodeResult(JsonValue)(rules ?? NO_PEER_RULES)),
+								Result.getOrThrow(S.encodeResult(JsonValue)(loadable)),
 							]);
 							// The replay executes arbitrary config-dependency code; bound it, or a
 							// spinning pnpmfile hangs catalog assembly for the whole program. On

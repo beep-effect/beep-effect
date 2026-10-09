@@ -1,7 +1,7 @@
-import { Schema } from "effect";
-import { Result } from "effect";
+import * as S from "effect/Schema";
+import * as Result from "effect/Result";
 import { assert, describe, it } from "@effect/vitest";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { sanitize } from "../../effected/cli/Fmt.ts";
 import type { Inline, RenderContext } from "../../effected/cli/index.ts";
 import { Doc, Glyphs, Status } from "../../effected/cli/index.ts";
@@ -10,7 +10,7 @@ import type { Span } from "../../effected/cli/internal/layout.ts";
 import { flatten, paintSpans, truncateSpans, widthOf, wrapSpans } from "../../effected/cli/internal/layout.ts";
 import { contextOf, linksOf, sgrProblems } from "./helpers/renderContext.ts";
 
-const Json = Schema.fromJsonString(Schema.Unknown);
+const Json = S.fromJsonString(S.Unknown);
 
 const CASES: ReadonlyArray<readonly [string, string]> = [
 	["ascii", "a long coloured linked label"],
@@ -204,16 +204,16 @@ describe("flatten under hostile input: nothing can reassemble into a live sequen
 					if (found.length > 0 && failures.length < 5) failures.push(`${label} ${JSON.stringify(found)}`);
 				};
 				for (const one of upTo(3)) {
-					check([Doc.text(one)], Result.getOrThrow(Schema.encodeUnknownResult(Json)([one])));
-					check([Doc.code(one)], Result.getOrThrow(Schema.encodeUnknownResult(Json)(["code", one])));
+					check([Doc.text(one)], Result.getOrThrow(S.encodeUnknownResult(Json)([one])));
+					check([Doc.code(one)], Result.getOrThrow(S.encodeUnknownResult(Json)(["code", one])));
 				}
 				const short = upTo(2);
 				for (const first of short) {
-					for (const second of short) check([Doc.text(first), Doc.code(second)], Result.getOrThrow(Schema.encodeUnknownResult(Json)([first, second])));
+					for (const second of short) check([Doc.text(first), Doc.code(second)], Result.getOrThrow(S.encodeUnknownResult(Json)([first, second])));
 				}
 				for (const a of ALPHABET) {
 					for (const b of ALPHABET) {
-						for (const c of ALPHABET) check([Doc.text(a), Doc.code(b), Doc.text(c)], Result.getOrThrow(Schema.encodeUnknownResult(Json)([a, b, c])));
+						for (const c of ALPHABET) check([Doc.text(a), Doc.code(b), Doc.text(c)], Result.getOrThrow(S.encodeUnknownResult(Json)([a, b, c])));
 					}
 				}
 				assert.isAbove(cases, 60_000, "the enumeration ran");

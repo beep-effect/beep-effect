@@ -5,7 +5,8 @@
 // of its `#` marker in the source text.
 
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Stream } from "effect";
+import * as Effect from "effect/Effect";
+import * as Stream from "effect/Stream";
 import { TomlParseError } from "../../effected/toml/Toml.ts";
 import { TomlVisitor, TomlVisitorEvent } from "../../effected/toml/TomlVisitor.ts";
 
@@ -67,7 +68,7 @@ describe("TomlVisitor", () => {
 
 		it.effect("fails the stream typed on a semantically invalid document", () =>
 			Effect.gen(function* () {
-				const error = yield* Effect.flip(Stream.runCollect(TomlVisitor.visit("a=1\na=2\n")));
+				const error = yield* TomlVisitor.visit("a=1\na=2\n").pipe(Stream.runCollect, Effect.flip);
 				assert.instanceOf(error, TomlParseError);
 				assert.strictEqual(error.diagnostics[0]?.code, "DuplicateKey");
 			}),
@@ -75,7 +76,7 @@ describe("TomlVisitor", () => {
 
 		it.effect("fails the stream typed on a syntactically invalid document", () =>
 			Effect.gen(function* () {
-				const error = yield* Effect.flip(Stream.runCollect(TomlVisitor.visit("a = [1\n")));
+				const error = yield* TomlVisitor.visit("a = [1\n").pipe(Stream.runCollect, Effect.flip);
 				assert.instanceOf(error, TomlParseError);
 			}),
 		);
@@ -161,7 +162,7 @@ describe("TomlVisitor", () => {
 		it.effect("an adversarial nesting-depth bomb fails the stream typed, not as a defect", () =>
 			Effect.gen(function* () {
 				const bomb = `a = ${"[".repeat(10_000)}`;
-				const error = yield* Effect.flip(Stream.runCollect(TomlVisitor.visit(bomb)));
+				const error = yield* TomlVisitor.visit(bomb).pipe(Stream.runCollect, Effect.flip);
 				assert.instanceOf(error, TomlParseError);
 				assert.strictEqual(error.diagnostics[0]?.code, "NestingDepthExceeded");
 			}),

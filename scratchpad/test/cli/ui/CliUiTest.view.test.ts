@@ -1,5 +1,8 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Cause, Effect, Exit, Schema } from "effect";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as S from "effect/Schema";
 import { Text, useInput } from "ink";
 import type { ReactElement } from "react";
 import { createElement, useState } from "react";
@@ -92,7 +95,9 @@ describe("CliUiTest.view surfaces an element that crashes or is refused", () => 
 
 	it.live("a throwing element: view dies with the thrown message, within 2 s", () =>
 		Effect.gen(function* () {
-			const exit = yield* Effect.exit(Effect.scoped(CliUiTest.view(createElement(Boom)))).pipe(
+			const exit = yield* CliUiTest.view(createElement(Boom)).pipe(
+				Effect.scoped,
+				Effect.exit,
 				Effect.timeout("2 seconds"),
 			);
 			assert.include(messageOf(exit), "element crashed");
@@ -120,12 +125,10 @@ describe("CliUiTest.view surfaces an element that crashes or is refused", () => 
 
 	it.live("interactive: false: view dies with NotInteractive's message", () =>
 		Effect.gen(function* () {
-			const exit = yield* Effect.exit(
-				Effect.scoped(CliUiTest.view(createElement(Text, null, "x"), { interactive: false })),
-			);
+			const exit = yield* CliUiTest.view(createElement(Text, null, "x"), { interactive: false }).pipe(Effect.scoped, Effect.exit);
 			assert.isTrue(Exit.isFailure(exit), "control: it did not succeed");
 			assert.notInclude(messageOf(exit), "<succeeded>");
-			assert.isTrue(Exit.isFailure(exit) && Schema.is(NotInteractive)(Cause.squash(exit.cause)), messageOf(exit));
+			assert.isTrue(Exit.isFailure(exit) && exit.cause.pipe(Cause.squash, S.is(NotInteractive)), messageOf(exit));
 		}),
 	);
 });

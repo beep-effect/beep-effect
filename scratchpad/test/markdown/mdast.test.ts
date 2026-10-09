@@ -4,7 +4,9 @@
 // sentinel positions, frontmatter literal mapping, and typed failure.
 
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Result, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { Markdown, MarkdownParseOptions } from "../../effected/markdown/Markdown.ts";
 import { Frontmatter, Root } from "../../effected/markdown/MarkdownNode.ts";
 import { Mdast, MdastDecodeError } from "../../effected/markdown/Mdast.ts";
@@ -191,7 +193,7 @@ describe("Mdast.fromMdast", () => {
 		if (Result.isSuccess(back)) {
 			const node = back.success.children[0];
 			assert.instanceOf(node, Frontmatter);
-			if (Schema.is(Frontmatter)(node)) {
+			if (S.is(Frontmatter)(node)) {
 				assert.strictEqual(node.format, "yaml");
 				assert.strictEqual(node.value, "a: 1");
 			}
@@ -242,8 +244,8 @@ describe("Mdast.fromMdast", () => {
 	it("agrees with the Effect twin on both channels", () => {
 		const good = { type: "root", children: [] };
 		const bad = { type: "widget" };
-		assert.deepStrictEqual(Effect.runSync(Effect.result(Mdast.fromMdast(good))), Mdast.fromMdastResult(good) as never);
-		const effectFailure = Effect.runSync(Effect.result(Effect.flip(Mdast.fromMdast(bad))));
+		assert.deepStrictEqual(Mdast.fromMdast(good).pipe(Effect.result, Effect.runSync), Mdast.fromMdastResult(good) as never);
+		const effectFailure = Mdast.fromMdast(bad).pipe(Effect.flip, Effect.result, Effect.runSync);
 		assert.isTrue(Result.isSuccess(effectFailure));
 	});
 });

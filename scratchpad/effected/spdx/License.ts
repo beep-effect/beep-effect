@@ -1,4 +1,7 @@
-import { Effect, Option, Result, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { DEPRECATED_LICENSE_IDS, LICENSE_IDS } from "./internal/licenseIds.ts";
 import { LICENSE_META, META_FLAG_FSF_LIBRE, META_FLAG_OSI_APPROVED } from "./internal/licenseMeta.ts";
 
@@ -16,11 +19,11 @@ import { LICENSE_META, META_FLAG_FSF_LIBRE, META_FLAG_OSI_APPROVED } from "./int
  * @see {@link https://spdx.github.io/spdx-spec/v2.3/SPDX-license-expressions/ | SPDX License Expressions}
  * @public
  */
-export class InvalidSpdxExpressionError extends Schema.TaggedError<InvalidSpdxExpressionError>()(
+export class InvalidSpdxExpressionError extends S.TaggedError<InvalidSpdxExpressionError>()(
 	"InvalidSpdxExpressionError",
 	{
 		/** The raw input string that failed to validate. */
-		input: Schema.String,
+		input: S.String,
 	},
 ) {
 	override get message(): string {
@@ -69,17 +72,17 @@ const LICENSE_REF_PATTERN = /^(?:DocumentRef-[A-Za-z0-9.-]+:)?LicenseRef-[A-Za-z
  * @see {@link https://spdx.org/licenses/ | SPDX License List}
  * @public
  */
-export class License extends Schema.Class<License>("License")({
+export class License extends S.Class<License>("License")({
 	/**
 	 * The SPDX short identifier (e.g. `"MIT"`) or a `LicenseRef-`/`DocumentRef-`
 	 * reference string.
 	 */
-	id: Schema.String,
+	id: S.String,
 	/**
 	 * Whether `id` is a deprecated SPDX identifier. Always `false` for a
 	 * `LicenseRef`/`DocumentRef` reference.
 	 */
-	deprecated: Schema.Boolean,
+	deprecated: S.Boolean,
 }) {
 	// ── Catalog ─────────────────────────────────────────────────────────
 
@@ -196,11 +199,11 @@ export class License extends Schema.Class<License>("License")({
 	 * // => null
 	 * ```
 	 */
-	get referenceUrl(): Option.Option<string> {
+	get referenceUrl(): O.Option<string> {
 		// Templated rather than vendored: every upstream entry's `reference` is
 		// exactly this form, and lib/scripts/generate-data.ts asserts that for every
 		// id on regeneration, so the template is a checked invariant.
-		return LICENSE_META.has(this.id) ? Option.some(`https://spdx.org/licenses/${this.id}.html`) : Option.none();
+		return LICENSE_META.has(this.id) ? O.some(`https://spdx.org/licenses/${this.id}.html`) : O.none();
 	}
 
 	/**
@@ -208,9 +211,9 @@ export class License extends Schema.Class<License>("License")({
 	 * `MIT` — or `Option.none()` when `id` is not a catalog member, including
 	 * every `LicenseRef-`/`DocumentRef-` reference.
 	 */
-	get name(): Option.Option<string> {
+	get name(): O.Option<string> {
 		const meta = LICENSE_META.get(this.id);
-		return meta === undefined ? Option.none() : Option.some(meta[1]);
+		return meta === undefined ? O.none() : O.some(meta[1]);
 	}
 
 	/**

@@ -1,5 +1,10 @@
-import type { Redacted } from "effect";
-import { Context, Effect, Layer, Option, Schema, DateTime } from "effect";
+import type * as Redacted from "effect/Redacted";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import * as DateTime from "effect/DateTime";
 import { HttpClient, HttpClientRequest } from "effect/http";
 import type { ActionOutputs } from "./ActionOutputs.ts";
 import type { BlobEnvelopeError } from "./BlobEnvelope.ts";
@@ -13,21 +18,21 @@ import { Secret } from "./Secret.ts";
  *
  * @public
  */
-export class BlobStoreError extends Schema.TaggedError<BlobStoreError>()("BlobStoreError", {
+export class BlobStoreError extends S.TaggedError<BlobStoreError>()("BlobStoreError", {
 	/**
 	 * `unreachable` — the store could not be contacted. `refused` — it answered,
 	 * unhappily; `status` says how. `misconfigured` — the layer was built with
 	 * settings the store cannot use.
 	 */
-	reason: Schema.Literals(["unreachable", "refused", "misconfigured"]),
+	reason: S.Literals(["unreachable", "refused", "misconfigured"]),
 	/** The key involved. A stable identifier, never a value. */
-	key: Schema.optionalKey(Schema.String),
+	key: S.optionalKey(S.String),
 	/** The HTTP status, when the store answered. */
-	status: Schema.optionalKey(Schema.Finite),
+	status: S.optionalKey(S.Finite),
 	/** What is wrong, when the reason alone does not say. */
-	detail: Schema.optionalKey(Schema.String),
+	detail: S.optionalKey(S.String),
 	/** The underlying failure, preserved structurally. */
-	cause: Schema.optionalKey(Schema.Defect()),
+	cause: S.optionalKey(S.Defect()),
 }) {
 	override get message(): string {
 		switch (this.reason) {
@@ -71,13 +76,13 @@ export interface BlobStoreShape {
 	 */
 	readonly get: <A, I>(
 		key: string,
-		schema: Schema.Codec<A, I>,
-	) => Effect.Effect<Option.Option<StoredBlob<A>>, BlobStoreError | BlobEnvelopeError>;
+		schema: S.Codec<A, I>,
+	) => Effect.Effect<O.Option<StoredBlob<A>>, BlobStoreError | BlobEnvelopeError>;
 	/** Write a blob. */
 	readonly put: <A, I>(
 		key: string,
 		blob: StoredBlob<A>,
-		schema: Schema.Codec<A, I>,
+		schema: S.Codec<A, I>,
 	) => Effect.Effect<void, BlobStoreError | BlobEnvelopeError>;
 	/** Whether a key is present, without transferring the body. */
 	readonly has: (key: string) => Effect.Effect<boolean, BlobStoreError>;
@@ -185,14 +190,14 @@ export class BlobStore extends Context.Service<BlobStore, BlobStoreShape>()("@be
 	static readonly layerMemory: Layer.Layer<BlobStore> = Layer.sync(BlobStore, () => {
 		const entries = new Map<string, Uint8Array>();
 		return {
-			get: Effect.fn("BlobStore.get")(<A, I>(key: string, schema: Schema.Codec<A, I>) =>
+			get: Effect.fn("BlobStore.get")(<A, I>(key: string, schema: S.Codec<A, I>) =>
 				Effect.suspend(() => {
 					const stored = entries.get(key);
 					return stored === undefined
-						? Effect.succeed(Option.none<StoredBlob<A>>())
-						: Effect.asSome(Effect.fromResult(BlobEnvelope.decodeResult(stored, schema)));
+						? Effect.succeed(O.none<StoredBlob<A>>())
+						: BlobEnvelope.decodeResult(stored, schema).pipe(Effect.fromResult, Effect.asSome);
 				})),
-			put: Effect.fn("BlobStore.put")(<A, I>(key: string, blob: StoredBlob<A>, schema: Schema.Codec<A, I>) =>
+			put: Effect.fn("BlobStore.put")(<A, I>(key: string, blob: StoredBlob<A>, schema: S.Codec<A, I>) =>
 				Effect.suspend(() =>
 					Effect.map(Effect.fromResult(BlobEnvelope.encodeResult(blob.metadata, blob.body, schema)), (framed) => {
 						entries.set(key, framed);
@@ -257,20 +262,20 @@ const makeS3 = (config: S3Config): Effect.Effect<BlobStoreShape, never, HttpClie
 			status < 200 || status >= 300 ? Effect.fail(BlobStoreError.make({ reason: "refused", key, status })) : Effect.void;
 
 		return {
-			get: Effect.fn("get")(function*<A, I>(key: string, schema: Schema.Codec<A, I>) {
+			get: Effect.fn("get")(function*<A, I>(key: string, schema: S.Codec<A, I>) {
 					const response = yield* send("GET", key, new Uint8Array(0));
 					// A miss is not a failure: it is the answer the caller asked for.
 					if (response.status === 404) {
-						return Option.none<StoredBlob<A>>();
+						return O.none<StoredBlob<A>>();
 					}
 					yield* accepted(key, response.status);
 					const buffer = yield* response.arrayBuffer.pipe(
 						Effect.mapError((cause) => BlobStoreError.make({ reason: "unreachable", key, cause })),
 					);
-					return Option.some(yield* Effect.fromResult(BlobEnvelope.decodeResult(new Uint8Array(buffer), schema)));
+					return O.some(yield* Effect.fromResult(BlobEnvelope.decodeResult(new Uint8Array(buffer), schema)));
 				}),
 
-			put: Effect.fn("put")(function*<A, I>(key: string, blob: StoredBlob<A>, schema: Schema.Codec<A, I>) {
+			put: Effect.fn("put")(function*<A, I>(key: string, blob: StoredBlob<A>, schema: S.Codec<A, I>) {
 					const framed = yield* Effect.fromResult(BlobEnvelope.encodeResult(blob.metadata, blob.body, schema));
 					const response = yield* send("PUT", key, framed);
 					yield* accepted(key, response.status);

@@ -1,6 +1,9 @@
 import type { SectionParseError } from "../templates/index.ts";
 import { CommentStyle, SectionDialect, SectionDocument, SectionId } from "../templates/index.ts";
-import { Effect, Option, Result, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 
 /**
  * The grammar shared by a document's `namespace`, its `key` and every region
@@ -12,7 +15,7 @@ import { Effect, Option, Result, Schema } from "effect";
  * key written to the wire (`namespace.key.region`), and a dot inside a part
  * would make two different documents spell the same marker.
  */
-const NamePart = Schema.String.check(Schema.isPattern(/^[A-Za-z0-9][A-Za-z0-9_-]*$/u));
+const NamePart = S.String.check(S.isPattern(/^[A-Za-z0-9][A-Za-z0-9_-]*$/u));
 
 /**
  * The marker vocabulary every managed document is written with: HTML comments
@@ -44,9 +47,9 @@ const REGION_DIALECT: SectionDialect = SectionDialect.make({
  *
  * @public
  */
-export class ManagedDocumentError extends Schema.TaggedError<ManagedDocumentError>()("ManagedDocumentError", {
+export class ManagedDocumentError extends S.TaggedError<ManagedDocumentError>()("ManagedDocumentError", {
 	/** Which ambiguity or refusal was found. */
-	kind: Schema.Literals([
+	kind: S.Literals([
 		"unterminatedRegion",
 		"orphanedEnd",
 		"overlappingRegions",
@@ -56,11 +59,11 @@ export class ManagedDocumentError extends Schema.TaggedError<ManagedDocumentErro
 		"invalidAttribute",
 	]),
 	/** 1-based line of the offending marker, for the structural kinds. */
-	line: Schema.optionalKey(Schema.Finite),
+	line: S.optionalKey(S.Finite),
 	/** The region key involved, when the failure names one. */
-	key: Schema.optionalKey(Schema.String),
+	key: S.optionalKey(S.String),
 	/** The offending metadata attribute's name, for `invalidAttribute`. */
-	attribute: Schema.optionalKey(Schema.String),
+	attribute: S.optionalKey(S.String),
 }) {
 	override get message(): string {
 		const which = this.key === undefined ? "" : ` for region "${this.key}"`;
@@ -156,13 +159,13 @@ export interface ManagedDocumentSource {
  *
  * @public
  */
-export class ManagedDocument extends Schema.Class<ManagedDocument>("ManagedDocument")({
+export class ManagedDocument extends S.Class<ManagedDocument>("ManagedDocument")({
 	/** Whose document this is. */
 	namespace: NamePart,
 	/** Which document, within that namespace. */
 	key: NamePart,
 	/** The document's full text, sentinel and regions included. */
-	text: Schema.String,
+	text: S.String,
 }) {
 	/**
 	 * Read a document out of existing text, or begin a fresh one.
@@ -202,8 +205,8 @@ export class ManagedDocument extends Schema.Class<ManagedDocument>("ManagedDocum
 	}
 
 	/** The content of one region, if the document carries it. */
-	region(key: string): Option.Option<string> {
-		return Option.map(this.entry(key), (found) => found.content);
+	region(key: string): O.Option<string> {
+		return O.map(this.entry(key), (found) => found.content);
 	}
 
 	/**
@@ -215,9 +218,9 @@ export class ManagedDocument extends Schema.Class<ManagedDocument>("ManagedDocum
 	 * addressability — this looks up by key exactly as
 	 * {@link ManagedDocument.region} does.
 	 */
-	entry(key: string): Option.Option<{ readonly content: string; readonly meta: Readonly<Record<string, string>> }> {
+	entry(key: string): O.Option<{ readonly content: string; readonly meta: Readonly<Record<string, string>> }> {
 		const found = this.ownRegions().find((candidate) => candidate.key === key);
-		return found === undefined ? Option.none() : Option.some({ content: found.content, meta: found.meta });
+		return found === undefined ? O.none() : O.some({ content: found.content, meta: found.meta });
 	}
 
 	/**
@@ -266,7 +269,7 @@ export class ManagedDocument extends Schema.Class<ManagedDocument>("ManagedDocum
 	): Result.Result<ManagedDocument, ManagedDocumentError> {
 		const parsed = this.scan();
 		if (Result.isFailure(parsed)) {
-			return Result.fail(structural(parsed.failure));
+			return parsed.failure.pipe(structural, Result.fail);
 		}
 		const declared = entries.map(([key, content, meta]) =>
 			SectionId.make({ key: this.wireKey(key), commentStyle: CommentStyle.html }).section(content, meta),

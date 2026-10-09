@@ -7,7 +7,8 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { NodeFileSystem, NodePath } from "@effect/platform-node";
 import { assert, describe, layer } from "@effect/vitest";
-import { Effect, Layer } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import { SourceBoundary } from "../../../effected/workspaces/testing.ts";
 
 const SRC = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "effected", "workspaces");

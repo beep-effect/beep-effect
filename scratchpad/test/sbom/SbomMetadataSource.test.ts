@@ -16,7 +16,7 @@
 
 import { assert, describe, it } from "@effect/vitest";
 import { Package } from "../../effected/package-json/index.ts";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { Contact, SbomMetadata, SbomMetadataSource, Supplier } from "../../effected/sbom/index.ts";
 
 const manifest = {

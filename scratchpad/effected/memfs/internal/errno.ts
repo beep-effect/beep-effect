@@ -14,7 +14,7 @@
 // - Thrown errors (the ports, `makeSync`): `nodeErrno` builds what a sync
 //   `node:fs` call throws — `code`, `syscall`, and `path` when the syscall is
 //   path-based — with node's message format.
-import { Data } from "effect";
+import * as Data from "effect/Data";
 import { dual } from "effect/Function";
 import type { PlatformError, SystemErrorTag } from "effect/PlatformError";
 import { systemError } from "effect/PlatformError";

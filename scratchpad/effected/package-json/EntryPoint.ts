@@ -1,4 +1,5 @@
-import { Result, Schema } from "effect";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 
 /**
  * Options for {@link resolveEntryPoint}.
@@ -29,7 +30,7 @@ export interface ResolveEntryPointOptions {
  *
  * @public
  */
-export class UnresolvedEntryPointError extends Schema.TaggedError<UnresolvedEntryPointError>()(
+export class UnresolvedEntryPointError extends S.TaggedError<UnresolvedEntryPointError>()(
 	"UnresolvedEntryPointError",
 	{
 		/**
@@ -40,9 +41,9 @@ export class UnresolvedEntryPointError extends Schema.TaggedError<UnresolvedEntr
 		 * `unsupportedExportsForm` — an array fallback list, or another shape this
 		 * resolver does not implement.
 		 */
-		reason: Schema.Literals(["noRootExport", "noConditionMatched", "unsupportedExportsForm"]),
+		reason: S.Literals(["noRootExport", "noConditionMatched", "unsupportedExportsForm"]),
 		/** The conditions that were tried, for `noConditionMatched`. */
-		conditions: Schema.optionalKey(Schema.Array(Schema.String)),
+		conditions: S.String.pipe(S.Array, S.optionalKey),
 	},
 ) {
 	override get message(): string {

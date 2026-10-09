@@ -13,7 +13,9 @@
 // prefix so the package index stays collision-free.
 
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Result, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import type { FrontmatterSchemaResolver } from "../../effected/markdown/FrontmatterResolver.ts";
 import {
 	SchemaDeclarationByName,
@@ -27,8 +29,8 @@ import {
 	SchemaVersionUnresolvableError,
 } from "../../effected/markdown/FrontmatterResolver.ts";
 
-const Skill = Schema.Struct({ $schema: Schema.optionalKey(Schema.String), title: Schema.String });
-const BlogPost = Schema.Struct({ slug: Schema.String });
+const Skill = S.Struct({ $schema: S.optionalKey(S.String), title: S.String });
+const BlogPost = S.Struct({ slug: S.String });
 
 describe("SchemaResolver.classify", () => {
 	it("classifies a string containing :// as ByUrl", () => {
@@ -138,7 +140,7 @@ describe("SchemaResolver.classify", () => {
 
 	it.prop(
 		"classification totality: any string classifies without throwing, to exactly one shape",
-		[Schema.String],
+		[S.String],
 		([s]) => {
 			const result = SchemaResolver.classify(s);
 			if (Result.isSuccess(result)) {
@@ -155,8 +157,8 @@ describe("SchemaResolver.classify", () => {
 		{ arbitrary: { runs: 300 } },
 	);
 
-	const Segments = Schema.Array(Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: 9999 }))).check(
-		Schema.isBetweenLength(1, 3),
+	const Segments = S.Array(S.Int.check(S.isBetween({ minimum: 0, maximum: 9999 }))).check(
+		S.isBetweenLength(1, 3),
 	);
 
 	it.prop(
@@ -169,7 +171,7 @@ describe("SchemaResolver.classify", () => {
 			if (Result.isSuccess(result)) {
 				const declaration = result.success;
 				assert.instanceOf(declaration, SchemaDeclarationByName);
-				if (Schema.is(SchemaDeclarationByName)(declaration)) {
+				if (S.is(SchemaDeclarationByName)(declaration)) {
 					assert.strictEqual(declaration.version, version);
 				}
 			}
@@ -260,7 +262,7 @@ describe("SchemaResolver.fromRegistry", () => {
 			// documented prefix-resolution future minor must NOT fire.
 			const failure = yield* Effect.flip(resolver.resolve(declare("skill@2"), {}));
 			assert.instanceOf(failure, SchemaVersionUnresolvableError);
-			if (Schema.is(SchemaVersionUnresolvableError)(failure)) {
+			if (S.is(SchemaVersionUnresolvableError)(failure)) {
 				assert.strictEqual(failure.name, "skill");
 				assert.strictEqual(failure.version, "2");
 			}
@@ -281,7 +283,7 @@ describe("SchemaResolver.fromRegistry", () => {
 			Effect.gen(function* () {
 				const failure = yield* Effect.flip(resolver.resolve(declare("skill"), {}));
 				assert.instanceOf(failure, SchemaVersionUnresolvableError);
-				if (Schema.is(SchemaVersionUnresolvableError)(failure)) {
+				if (S.is(SchemaVersionUnresolvableError)(failure)) {
 					assert.strictEqual(failure.name, "skill");
 					assert.isFalse(Object.hasOwn(failure, "version"));
 				}

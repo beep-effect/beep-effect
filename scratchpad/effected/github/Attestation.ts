@@ -1,4 +1,7 @@
-import { Context, Effect, Layer, Schema } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as S from "effect/Schema";
 import { GitHubClient } from "./GitHubClient.ts";
 import type { GitHubError } from "./GitHubError.ts";
 import { Repo } from "./Repo.ts";
@@ -19,11 +22,11 @@ const API_VERSION = "2026-03-10";
  *
  * @public
  */
-export class AttestationRecord extends Schema.Class<AttestationRecord>("AttestationRecord")({
+export class AttestationRecord extends S.Class<AttestationRecord>("AttestationRecord")({
 	/** GitHub's id for it, when the response carried one. */
-	id: Schema.optionalKey(Schema.Int),
+	id: S.optionalKey(S.Int),
 	/** Where a human can look at it. */
-	url: Schema.String,
+	url: S.String,
 }) {}
 
 /**
@@ -31,25 +34,21 @@ export class AttestationRecord extends Schema.Class<AttestationRecord>("Attestat
  *
  * @public
  */
-export class AttestationListEntry extends Schema.Class<AttestationListEntry>("AttestationListEntry")({
+export class AttestationListEntry extends S.Class<AttestationListEntry>("AttestationListEntry")({
 	/** Where the bundle lives. */
-	url: Schema.String,
+	url: S.String,
 	/** The in-toto predicate type, when the listing reported one. */
-	predicateType: Schema.optionalKey(Schema.String),
+	predicateType: S.optionalKey(S.String),
 }) {}
 
-const UploadResponse = Schema.Struct({ id: Schema.optionalKey(Schema.Int) });
+const UploadResponse = S.Struct({ id: S.optionalKey(S.Int) });
 
-const ListResponse = Schema.Struct({
-	attestations: Schema.optionalKey(
-		Schema.Array(
-			Schema.Struct({
-				id: Schema.optionalKey(Schema.Int),
-				bundle_url: Schema.optionalKey(Schema.String),
-				predicate_type: Schema.optionalKey(Schema.String),
-			}),
-		),
-	),
+const ListResponse = S.Struct({
+	attestations: S.Struct({
+		id: S.optionalKey(S.Int),
+		bundle_url: S.optionalKey(S.String),
+		predicate_type: S.optionalKey(S.String),
+	}).pipe(S.Array, S.optionalKey),
 });
 
 /**

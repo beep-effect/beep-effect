@@ -10,7 +10,8 @@
 //     non-object document stay typed errors.
 
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Result } from "effect";
+import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
 import { LenientManifest } from "../../effected/package-json/LenientManifest.ts";
 import type { PackageJsonSyntaxError } from "../../effected/package-json/PackageJsonFormat.ts";
 import { PackageManifest } from "../../effected/package-json/PackageManifest.ts";

@@ -2,8 +2,11 @@
 // MemoryFileSystem.test.ts keeps its own watch collector.
 
 import { dual } from "effect/Function";
-import type { FileSystem } from "effect";
-import { Effect, Fiber, PlatformError, Stream } from "effect";
+import type * as FileSystem from "effect/FileSystem";
+import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
+import * as PlatformError from "effect/PlatformError";
+import * as Stream from "effect/Stream";
 
 /** Runs `f`, which must throw, and returns what it threw. */
 export const thrown = (f: () => unknown): { code?: string; syscall?: string; path?: string; name?: string } => {

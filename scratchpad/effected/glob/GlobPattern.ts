@@ -7,7 +7,10 @@
 // it. The engine throws raw GuardExceeded records at compile time; ONLY this
 // facade materializes them into the typed GlobPatternError.
 
-import { Effect, Result, Schema, SchemaTransformation } from "effect";
+import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import { EXPANSION_MAX, isGuardExceeded } from "./internal/limits.ts";
 import type { EngineOptions } from "./internal/minimatch.ts";
 import { GLOBSTAR, Minimatch, escape as engineEscape, unescape as engineUnescape } from "./internal/minimatch.ts";
@@ -21,15 +24,15 @@ import { GLOBSTAR, Minimatch, escape as engineEscape, unescape as engineUnescape
  *
  * @public
  */
-export class GlobPatternError extends Schema.TaggedError<GlobPatternError>()("GlobPatternError", {
+export class GlobPatternError extends S.TaggedError<GlobPatternError>()("GlobPatternError", {
 	/** The pattern source that was rejected. */
-	pattern: Schema.String,
+	pattern: S.String,
 	/** Which guard tripped: pattern length, brace-expansion budget, or nesting depth. */
-	reason: Schema.Literals(["PatternTooLong", "ExpansionBudgetExceeded", "NestingDepthExceeded"]),
+	reason: S.Literals(["PatternTooLong", "ExpansionBudgetExceeded", "NestingDepthExceeded"]),
 	/** The cap the pattern exceeded. */
-	limit: Schema.Finite,
+	limit: S.Finite,
 	/** The measured value that exceeded `limit`. */
-	actual: Schema.Finite,
+	actual: S.Finite,
 }) {
 	override get message(): string {
 		const shown = this.pattern.length > 64 ? `${this.pattern.slice(0, 64)}…` : this.pattern;
@@ -50,44 +53,44 @@ export class GlobPatternError extends Schema.TaggedError<GlobPatternError>()("Gl
  *
  * @public
  */
-export class GlobPatternOptions extends Schema.Class<GlobPatternOptions>("GlobPatternOptions")({
+export class GlobPatternOptions extends S.Class<GlobPatternOptions>("GlobPatternOptions")({
 	/** Do not expand `{x,y}` style braces. */
-	nobrace: Schema.optionalKey(Schema.Boolean),
+	nobrace: S.optionalKey(S.Boolean),
 	/** Do not treat a pattern starting with `#` as a comment. */
-	nocomment: Schema.optionalKey(Schema.Boolean),
+	nocomment: S.optionalKey(S.Boolean),
 	/** Do not treat a pattern starting with `!` as a negation. */
-	nonegate: Schema.optionalKey(Schema.Boolean),
+	nonegate: S.optionalKey(S.Boolean),
 	/** Treat `**` the same as `*`. */
-	noglobstar: Schema.optionalKey(Schema.Boolean),
+	noglobstar: S.optionalKey(S.Boolean),
 	/** Do not expand extglobs like `+(a|b)`. */
-	noext: Schema.optionalKey(Schema.Boolean),
+	noext: S.optionalKey(S.Boolean),
 	/** Allow matches that start with `.` even if the pattern does not. */
-	dot: Schema.optionalKey(Schema.Boolean),
+	dot: S.optionalKey(S.Boolean),
 	/** Match case-insensitively. */
-	nocase: Schema.optionalKey(Schema.Boolean),
+	nocase: S.optionalKey(S.Boolean),
 	/** Ignore case only in wildcard portions of the pattern. */
-	nocaseMagicOnly: Schema.optionalKey(Schema.Boolean),
+	nocaseMagicOnly: S.optionalKey(S.Boolean),
 	/** Consider braces to be "magic" for the purpose of `hasMagic`. */
-	magicalBraces: Schema.optionalKey(Schema.Boolean),
+	magicalBraces: S.optionalKey(S.Boolean),
 	/** Match a pattern without slashes against the basename of a path that contains slashes. */
-	matchBase: Schema.optionalKey(Schema.Boolean),
+	matchBase: S.optionalKey(S.Boolean),
 	/** Invert the results of negated matches. */
-	flipNegate: Schema.optionalKey(Schema.Boolean),
+	flipNegate: S.optionalKey(S.Boolean),
 	/** Compare a partial path to the pattern: a path is a match as long as the parts present are not contradicted by the pattern. */
-	partial: Schema.optionalKey(Schema.Boolean),
+	partial: S.optionalKey(S.Boolean),
 	/** Do not collapse multiple `/` into a single `/`. */
-	preserveMultipleSlashes: Schema.optionalKey(Schema.Boolean),
+	preserveMultipleSlashes: S.optionalKey(S.Boolean),
 	/** Treat `\\` as a path separator, not an escape character. */
-	windowsPathsNoEscape: Schema.optionalKey(Schema.Boolean),
+	windowsPathsNoEscape: S.optionalKey(S.Boolean),
 	/** For a pattern starting with a UNC path or drive letter in `nocase` mode, keep the root portions as strings instead of case-insensitive regular expressions. */
-	windowsNoMagicRoot: Schema.optionalKey(Schema.Boolean),
+	windowsNoMagicRoot: S.optionalKey(S.Boolean),
 	/** The level of pre-parse pattern optimization: `0`, `1` or `2`. */
-	optimizationLevel: Schema.optionalKey(
-		Schema.Finite.check(Schema.isInt(), Schema.isBetween({ minimum: 0, maximum: 2 })),
+	optimizationLevel: S.optionalKey(
+		S.Finite.check(S.isInt(), S.isBetween({ minimum: 0, maximum: 2 })),
 	),
 	/** The operating system the pattern is interpreted for. Defaults to `"posix"`; only `"win32"` changes behavior, and it is never read from the ambient process. */
-	platform: Schema.optionalKey(
-		Schema.Literals([
+	platform: S.optionalKey(
+		S.Literals([
 			"posix",
 			"aix",
 			"android",
@@ -103,13 +106,13 @@ export class GlobPatternOptions extends Schema.Class<GlobPatternOptions>("GlobPa
 		]),
 	),
 	/** Maximum number of `{...}` expansions, from `1` to `100000` (the default and ceiling). */
-	braceExpandMax: Schema.optionalKey(
-		Schema.Finite.check(Schema.isInt(), Schema.isBetween({ minimum: 1, maximum: EXPANSION_MAX })),
+	braceExpandMax: S.optionalKey(
+		S.Finite.check(S.isInt(), S.isBetween({ minimum: 1, maximum: EXPANSION_MAX })),
 	),
 	/** Maximum number of non-adjacent `**` segments the matcher recursively walks down. */
-	maxGlobstarRecursion: Schema.optionalKey(Schema.Finite.check(Schema.isInt(), Schema.isGreaterThan(0))),
+	maxGlobstarRecursion: S.optionalKey(S.Finite.check(S.isInt(), S.isGreaterThan(0))),
 	/** Maximum depth to traverse for nested extglobs like `*(a|b|c)`. */
-	maxExtglobRecursion: Schema.optionalKey(Schema.Finite.check(Schema.isInt(), Schema.isGreaterThan(0))),
+	maxExtglobRecursion: S.optionalKey(S.Finite.check(S.isInt(), S.isGreaterThan(0))),
 }) {}
 
 // Conditional-spread bridge: a present-but-undefined optionalKey never happens
@@ -168,9 +171,9 @@ const compilesUnderDefaults = (source: string): true | string => {
  *
  * @public
  */
-export class GlobPattern extends Schema.Class<GlobPattern>("GlobPattern")(
-	Schema.Struct({ source: Schema.String }).check(
-		Schema.makeFilter((v) => compilesUnderDefaults(v.source), { title: "compilable glob pattern" }),
+export class GlobPattern extends S.Class<GlobPattern>("GlobPattern")(
+	S.Struct({ source: S.String }).check(
+		S.makeFilter((v) => compilesUnderDefaults(v.source), { title: "compilable glob pattern" }),
 	),
 ) {
 	#engine: Minimatch | undefined;
@@ -351,8 +354,8 @@ export class GlobPattern extends Schema.Class<GlobPattern>("GlobPattern")(
 	 * decode failures surface as `SchemaError` for the embedding boundary to
 	 * normalize.
 	 */
-	static readonly FromString: Schema.Codec<GlobPattern, string> = Schema.String.pipe(
-		Schema.decodeTo(
+	static readonly FromString: S.Codec<GlobPattern, string> = S.String.pipe(
+		S.decodeTo(
 			GlobPattern,
 			// The transformation bridges string <-> GlobPattern's ENCODED side;
 			// the class decode then runs the compilability check and constructs

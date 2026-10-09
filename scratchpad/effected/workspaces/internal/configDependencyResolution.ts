@@ -34,7 +34,13 @@ import { PnpmEnvLockfile } from "../../lockfiles/index.ts";
 import type { CatalogAssemblyError } from "../../npm/index.ts";
 import { PackageManagerCache } from "../../npm/index.ts";
 import { Yaml } from "../../yaml/index.ts";
-import { Array as Arr, Duration, Effect, Exit, Option, Predicate, Result } from "effect";
+import * as Arr from "effect/Array";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as O from "effect/Option";
+import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import type { HookReplayContext, HookReplaySource } from "../ConfigDependencyHooks.ts";
 import type { FetchConfigDependency, FetchFailure, RecordedLocks } from "./configDependencyFetch.ts";
 import type { ManifestVersion } from "./configDependencyShared.ts";
@@ -111,7 +117,7 @@ const declaredEntries = (
 
 /** Directory entries of `dir`, or `[]` when it is absent; typed on any other failure. */
 const entriesOf = (path: string, dir: string): Effect.Effect<ReadonlyArray<string>, CatalogAssemblyError> =>
-	ioOrNone(path, () => readdir(dir)).pipe(Effect.map(Option.getOrElse((): ReadonlyArray<string> => [])));
+	ioOrNone(path, () => readdir(dir)).pipe(Effect.map(O.getOrElse((): ReadonlyArray<string> => [])));
 
 /** The `<root>/node_modules/.pnpm-config` directory. */
 const pnpmConfigDir = (root: string): string => join(root, "node_modules", ".pnpm-config");
@@ -121,12 +127,12 @@ const pnpmConfigDir = (root: string): string => join(root, "node_modules", ".pnp
  * parent of the ancestor directory named `links`. `None` when the resolved
  * path is not under a `links` tree (a non-store installation).
  */
-const storeOfLinkedPath = (resolved: string): Option.Option<string> => {
+const storeOfLinkedPath = (resolved: string): O.Option<string> => {
 	let current = resolved;
 	for (;;) {
 		const parent = dirname(current);
-		if (parent === current) return Option.none();
-		if (basename(current) === "links") return Option.some(parent);
+		if (parent === current) return O.none();
+		if (basename(current) === "links") return O.some(parent);
 		current = parent;
 	}
 };
@@ -141,11 +147,11 @@ const storeOfLinkedPath = (resolved: string): Option.Option<string> => {
 const storeFromModulesYaml = (root: string): Effect.Effect<ReadonlyArray<string>, CatalogAssemblyError> =>
 	ioOrNone(root, () => readFile(join(root, "node_modules", ".modules.yaml"), "utf8")).pipe(
 		Effect.map((text) => {
-			if (Option.isNone(text)) return [];
+			if (O.isNone(text)) return [];
 			const parsed = Yaml.parseResult(text.value);
 			if (Result.isFailure(parsed)) return [];
 			const document = parsed.success;
-			return Predicate.isObject(document) && typeof document.storeDir === "string" && document.storeDir.length > 0
+			return P.isObject(document) && typeof document.storeDir === "string" && document.storeDir.length > 0
 				? [document.storeDir]
 				: [];
 		}),
@@ -170,9 +176,9 @@ const storesFromLinks = (root: string): Effect.Effect<ReadonlyArray<string>, Cat
 		const stores: Array<string> = [];
 		for (const candidate of candidates) {
 			const resolved = yield* ioOrNone(root, () => realpath(join(base, candidate)));
-			if (Option.isNone(resolved)) continue;
+			if (O.isNone(resolved)) continue;
 			const store = storeOfLinkedPath(resolved.value);
-			if (Option.isSome(store)) stores.push(store.value);
+			if (O.isSome(store)) stores.push(store.value);
 		}
 		return stores;
 	});
@@ -235,7 +241,7 @@ const discoverStores = (root: string): Effect.Effect<ReadonlyArray<string>, Cata
 		const canonical: Array<string> = [];
 		for (const store of [...fromYaml, ...fromLinks, ...fromEnvironment]) {
 			const resolved = yield* ioOrNone(root, () => realpath(store));
-			if (Option.isSome(resolved) && !canonical.includes(resolved.value)) canonical.push(resolved.value);
+			if (O.isSome(resolved) && !canonical.includes(resolved.value)) canonical.push(resolved.value);
 		}
 		return canonical;
 	});
@@ -302,7 +308,7 @@ const notInstalledMessage = (
 	installed: ManifestVersion,
 	stores: ReadonlyArray<string>,
 	side: HookReplayContext,
-	fetch: Option.Option<FetchFailure>,
+	fetch: O.Option<FetchFailure>,
 ): string => {
 	const holds =
 		installed._tag === "absent"
@@ -323,7 +329,7 @@ const notInstalledMessage = (
 			? "This side declares a different version from the installed one, as the base side of a diff across a " +
 				"config-dependency bump does: that version was never installed in this checkout."
 			: "";
-	const tried = Option.match(fetch, {
+	const tried = O.match(fetch, {
 		onNone: () =>
 			"This replay layer does not fetch; ConfigDependencyHooks.layerSubprocess, which the *Subprocess Workspaces " +
 			"composites use, fetches the declared version, verified, into the store.",
@@ -333,7 +339,7 @@ const notInstalledMessage = (
 	// Two recorded integrities that disagree are the one case where populating
 	// the store by hand is the wrong advice: the fetch message says to
 	// reconcile the pins instead.
-	const remedy = Option.exists(fetch, (failure) => failure.reason === "integrityMismatch")
+	const remedy = O.exists(fetch, (failure) => failure.reason === "integrityMismatch")
 		? ""
 		: `Run \`pnpm add --config ${name}@${declared}\` in a throwaway workspace to populate the store, then retry.`;
 	return [found, why, tried, remedy].filter((sentence) => sentence !== "").join(" ");
@@ -346,10 +352,10 @@ const notInstalledMessage = (
  * typed at `import()` time — it never reads as "this dependency ships no
  * hook".
  */
-const pnpmfileIn = (name: string, dir: string): Effect.Effect<Option.Option<string>, CatalogAssemblyError> =>
+const pnpmfileIn = (name: string, dir: string): Effect.Effect<O.Option<string>, CatalogAssemblyError> =>
 	entriesOf(name, dir).pipe(
 		Effect.map((entries) =>
-			Option.map(
+			O.map(
 				Arr.findFirst(PNPMFILE_CANDIDATES, (candidate) => entries.includes(candidate)),
 				(filename) => join(dir, filename),
 			),
@@ -395,19 +401,19 @@ const resolveDirectory = (
 		// guess about which code to execute. Fail closed and say why.
 		if (only !== undefined)
 			return yield* hooksError(name, new Error(ambiguousMessage(name, declared, store, matches)), "ambiguous");
-		const notInstalled = (fetch: Option.Option<FetchFailure>) => {
+		const notInstalled = (fetch: O.Option<FetchFailure>) => {
 			const message = notInstalledMessage(name, declared, installed, searched, side, fetch);
-			const cause = Option.getOrUndefined(fetch)?.cause;
+			const cause = O.getOrUndefined(fetch)?.cause;
 			return hooksError(
 				name,
 				cause === undefined ? new Error(message) : new Error(message, { cause }),
-				Option.match(fetch, { onNone: () => "notInstalled" as const, onSome: (failure) => failure.reason }),
+				O.match(fetch, { onNone: () => "notInstalled" as const, onSome: (failure) => failure.reason }),
 			);
 		};
-		if (options.fetch === undefined) return yield* notInstalled(Option.none());
+		if (options.fetch === undefined) return yield* notInstalled(O.none());
 		const fetched = yield* options
 			.fetch({ root, name, version: declared, spec: entry.spec, stores: searched, side, locks })
-			.pipe(Effect.mapError((failure) => notInstalled(Option.some(failure))));
+			.pipe(Effect.mapError((failure) => notInstalled(O.some(failure))));
 		return { dir: fetched, source: "fetched" };
 	});
 
@@ -465,7 +471,7 @@ export const resolvePnpmfiles: {
 					const { name, version } = entry;
 					const { dir, source } = yield* resolveDirectory(root, entry, stores, locks, options);
 					const pnpmfile = yield* pnpmfileIn(name, dir);
-					return { name, version, source, path: Option.getOrUndefined(pnpmfile) } satisfies ResolvedPnpmfile;
+					return { name, version, source, path: O.getOrUndefined(pnpmfile) } satisfies ResolvedPnpmfile;
 				}),
 			{ concurrency: "unbounded" },
 		);

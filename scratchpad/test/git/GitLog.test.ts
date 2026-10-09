@@ -5,7 +5,11 @@
 // meets a real git binary, a real rename and a real merge.
 
 import { assert, describe, it } from "@effect/vitest";
-import { DateTime, Effect, Exit, PlatformError, Schema } from "effect";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as PlatformError from "effect/PlatformError";
+import * as S from "effect/Schema";
 import type { GitShape } from "../../effected/git/Git.ts";
 import { CommitLogEntry, Git, GitCommandError, NotARepositoryError } from "../../effected/git/Git.ts";
 import type { ScriptResult } from "./fixtures.ts";
@@ -51,7 +55,7 @@ describe("Git.log", () => {
 			);
 			assert.strictEqual(entries.length, 1);
 			const entry = entries[0];
-			assert.isTrue(Schema.is(CommitLogEntry)(entry));
+			assert.isTrue(S.is(CommitLogEntry)(entry));
 			assert.strictEqual(entry?.sha, SHA_A);
 			assert.strictEqual(entry?.authorName, "Ada");
 			assert.strictEqual(entry?.authorEmail, "ada@example.com");
@@ -141,7 +145,7 @@ describe("Git.log", () => {
 			const error = yield* Effect.flip(
 				run(log(), (): ScriptResult => ({ stderr: "fatal: not a git repository\n", exit: 128 })),
 			);
-			assert.isTrue(Schema.is(NotARepositoryError)(error));
+			assert.isTrue(S.is(NotARepositoryError)(error));
 		}),
 	);
 
@@ -150,8 +154,8 @@ describe("Git.log", () => {
 			const error = yield* Effect.flip(
 				run(log(), (): ScriptResult => ({ stderr: "fatal: something else entirely\n", exit: 128 })),
 			);
-			assert.isTrue(Schema.is(GitCommandError)(error));
-			assert.strictEqual(Schema.is(GitCommandError)(error) ? error.kind : undefined, "failed");
+			assert.isTrue(S.is(GitCommandError)(error));
+			assert.strictEqual(S.is(GitCommandError)(error) ? error.kind : undefined, "failed");
 		}),
 	);
 
@@ -160,8 +164,8 @@ describe("Git.log", () => {
 			const exit = yield* Effect.exit(run(log(), (): ScriptResult => ({ stdout: "not a record at all\n" })));
 			assert.isTrue(Exit.isFailure(exit));
 			const error = yield* Effect.flip(run(log(), (): ScriptResult => ({ stdout: "not a record at all\n" })));
-			assert.isTrue(Schema.is(GitCommandError)(error));
-			assert.include(Schema.is(GitCommandError)(error) ? (error.detail ?? "") : "", "unparseable log output");
+			assert.isTrue(S.is(GitCommandError)(error));
+			assert.include(S.is(GitCommandError)(error) ? (error.detail ?? "") : "", "unparseable log output");
 		}),
 	);
 
@@ -175,8 +179,8 @@ describe("Git.log", () => {
 					}),
 				),
 			);
-			assert.isTrue(Schema.is(GitCommandError)(error));
-			assert.include(Schema.is(GitCommandError)(error) ? (error.detail ?? "") : "", "undecodable date");
+			assert.isTrue(S.is(GitCommandError)(error));
+			assert.include(S.is(GitCommandError)(error) ? (error.detail ?? "") : "", "undecodable date");
 		}),
 	);
 
@@ -188,9 +192,9 @@ describe("Git.log", () => {
 						throw new Error("Git.log spawned git despite the --follow guard");
 					}),
 				);
-				assert.isTrue(Schema.is(GitCommandError)(error));
-				assert.strictEqual(Schema.is(GitCommandError)(error) ? error.kind : undefined, "refused");
-				assert.include(Schema.is(GitCommandError)(error) ? (error.detail ?? "") : "", "refused --follow");
+				assert.isTrue(S.is(GitCommandError)(error));
+				assert.strictEqual(S.is(GitCommandError)(error) ? error.kind : undefined, "refused");
+				assert.include(S.is(GitCommandError)(error) ? (error.detail ?? "") : "", "refused --follow");
 			}
 		}),
 	);
@@ -203,7 +207,7 @@ describe("Git.log", () => {
 						throw new Error("Git.log spawned git despite the limit guard");
 					}),
 				);
-				assert.strictEqual(Schema.is(GitCommandError)(error) ? error.kind : undefined, "refused");
+				assert.strictEqual(S.is(GitCommandError)(error) ? error.kind : undefined, "refused");
 			}
 		}),
 	);
@@ -234,7 +238,7 @@ describe("Git.log", () => {
 			const error = yield* Effect.flip(
 				run(log(), () => PlatformError.systemError({ _tag: "NotFound", module: "ChildProcess", method: "spawn" })),
 			);
-			assert.isTrue(Schema.is(GitCommandError)(error));
+			assert.isTrue(S.is(GitCommandError)(error));
 		}),
 	);
 
@@ -248,7 +252,7 @@ describe("Git.log", () => {
 				authorEmail: "ada@example.com",
 				paths: ["f.txt"],
 			});
-			const encoded = yield* Schema.encodeEffect(CommitLogEntry)(entry);
+			const encoded = yield* S.encodeEffect(CommitLogEntry)(entry);
 			// The class IS the schema, so this is the shape a consumer persisting a
 			// CommitLogEntry gets: -04:00 has become Z, and the offset is gone.
 			assert.strictEqual(encoded.authoredAt, "2026-09-08T00:25:41.000Z");

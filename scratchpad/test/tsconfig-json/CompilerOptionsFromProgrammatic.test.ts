@@ -1,9 +1,11 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Result, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { CompilerOptionsFromProgrammatic } from "../../effected/tsconfig-json/CompilerOptionsFromProgrammatic.ts";
 import { TsEnumCodec } from "../../effected/tsconfig-json/TsEnumCodec.ts";
 
-const decode = Schema.decodeUnknownEffect(CompilerOptionsFromProgrammatic);
+const decode = S.decodeUnknownEffect(CompilerOptionsFromProgrammatic);
 
 // One numeric value per family, with the canonical string it must decode to.
 // `module: 5` and `moduleResolution: 2` are deliberately the alias-carrying
@@ -89,7 +91,7 @@ describe("CompilerOptionsFromProgrammatic", () => {
 	it.effect("encodes back to the programmatic form", () =>
 		Effect.gen(function* () {
 			const decoded = yield* decode({ target: 12, module: 199, lib: ["esnext"], strict: true });
-			const encoded = yield* Schema.encodeUnknownEffect(CompilerOptionsFromProgrammatic)(decoded);
+			const encoded = yield* S.encodeUnknownEffect(CompilerOptionsFromProgrammatic)(decoded);
 			assert.strictEqual(encoded.target, 12);
 			assert.strictEqual(encoded.module, 199);
 			assert.deepStrictEqual(encoded.lib, ["lib.esnext.d.ts"]);
@@ -100,11 +102,11 @@ describe("CompilerOptionsFromProgrammatic", () => {
 	// The consumer path this codec exists for: a synchronous caller holding the
 	// programmatic spelling gets a validated result with no cast and no Effect.
 	it("decodes synchronously through Result for a non-Effect caller", () => {
-		const ok = Schema.decodeResult(CompilerOptionsFromProgrammatic)({ target: 12, strict: true });
+		const ok = S.decodeResult(CompilerOptionsFromProgrammatic)({ target: 12, strict: true });
 		assert.isTrue(Result.isSuccess(ok));
 		if (Result.isSuccess(ok)) assert.strictEqual(ok.success.target, "es2025");
 
-		const bad = Schema.decodeResult(CompilerOptionsFromProgrammatic)({ target: 9999 });
+		const bad = S.decodeResult(CompilerOptionsFromProgrammatic)({ target: 9999 });
 		assert.isTrue(Result.isFailure(bad));
 	});
 });
@@ -113,17 +115,17 @@ describe("CompilerOptionsFromProgrammatic idempotence", () => {
 	// Canonical input must survive decode untouched — the property that lets a
 	// caller run mixed and already-normalized options through the same door.
 	// Every key optional, so the generator walks subsets of the canonical fields.
-	const Canonical = Schema.Struct({
-		target: Schema.optionalKey(Schema.Literals(["es5", "es2015", "es2023", "esnext"])),
-		module: Schema.optionalKey(Schema.Literals(["commonjs", "es2015", "nodenext", "preserve"])),
-		moduleResolution: Schema.optionalKey(Schema.Literals(["classic", "node10", "bundler"])),
-		jsx: Schema.optionalKey(Schema.Literals(["preserve", "react", "react-jsx"])),
-		newLine: Schema.optionalKey(Schema.Literals(["crlf", "lf"])),
-		moduleDetection: Schema.optionalKey(Schema.Literals(["auto", "legacy", "force"])),
-		lib: Schema.optionalKey(
-			Schema.Array(Schema.Literals(["esnext", "dom", "dom.iterable"])).check(Schema.isMaxLength(3)),
+	const Canonical = S.Struct({
+		target: S.optionalKey(S.Literals(["es5", "es2015", "es2023", "esnext"])),
+		module: S.optionalKey(S.Literals(["commonjs", "es2015", "nodenext", "preserve"])),
+		moduleResolution: S.optionalKey(S.Literals(["classic", "node10", "bundler"])),
+		jsx: S.optionalKey(S.Literals(["preserve", "react", "react-jsx"])),
+		newLine: S.optionalKey(S.Literals(["crlf", "lf"])),
+		moduleDetection: S.optionalKey(S.Literals(["auto", "legacy", "force"])),
+		lib: S.optionalKey(
+			S.Array(S.Literals(["esnext", "dom", "dom.iterable"])).check(S.isMaxLength(3)),
 		),
-		strict: Schema.optionalKey(Schema.Boolean),
+		strict: S.optionalKey(S.Boolean),
 	});
 
 	it.effect.prop("decode leaves already-canonical options unchanged", [Canonical], ([canonical]) =>

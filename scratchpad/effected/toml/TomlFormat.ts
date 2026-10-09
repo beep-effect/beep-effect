@@ -15,7 +15,9 @@
 // tagged TomlModificationError. The dependency edge runs facade → engine
 // only.
 
-import { Data, Effect, Schema } from "effect";
+import * as Data from "effect/Data";
+import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
 import type { TomlErrorCodeRaw } from "./internal/diagnostics.ts";
 import { isRawTomlError } from "./internal/diagnostics.ts";
 import { MAX_NESTING_DEPTH, isGuardExceeded } from "./internal/limits.ts";
@@ -54,8 +56,8 @@ export type TomlRangeLike = TomlRange | { readonly offset: number; readonly leng
  *
  * @public
  */
-export class TomlFormattingOptions extends Schema.Class<TomlFormattingOptions>("TomlFormattingOptions")({
-	newline: Schema.optionalKey(Schema.Literals(["\n", "\r\n"])),
+export class TomlFormattingOptions extends S.Class<TomlFormattingOptions>("TomlFormattingOptions")({
+	newline: S.optionalKey(S.Literals(["\n", "\r\n"])),
 }) {}
 
 /**
@@ -67,7 +69,7 @@ export class TomlFormattingOptions extends Schema.Class<TomlFormattingOptions>("
  *
  * @public
  */
-export class TomlModificationError extends Schema.TaggedError<TomlModificationError>()("TomlModificationError", {
+export class TomlModificationError extends S.TaggedError<TomlModificationError>()("TomlModificationError", {
 	diagnostic: TomlDiagnostic,
 }) {
 	override get message(): string {
@@ -132,19 +134,19 @@ interface TaggedEdit {
 
 /** Multi-line string value spans — the bytes formatting must never touch. */
 const collectMultilineSpans = (node: TomlValueNode, out: Array<readonly [number, number]>): void => {
-	if (Schema.is(TomlString)(node)) {
+	if (S.is(TomlString)(node)) {
 		if (node.style === "multiline-basic" || node.style === "multiline-literal") {
 			out.push([node.offset, node.offset + node.length]);
 		}
 		return;
 	}
-	if (Schema.is(TomlArray)(node)) {
+	if (S.is(TomlArray)(node)) {
 		for (const item of node.items) {
 			collectMultilineSpans(item, out);
 		}
 		return;
 	}
-	if (Schema.is(TomlInlineTable)(node)) {
+	if (S.is(TomlInlineTable)(node)) {
 		for (const entry of node.entries) {
 			collectMultilineSpans(entry.value, out);
 		}
@@ -301,7 +303,7 @@ const headerContentEnd = (source: string, expr: TomlTableHeader | TomlArrayTable
 		throw new TypeError("missing TOML element");
 	}
 	const bracket = scanWs(source, lastKey.offset + lastKey.length, expr.offset + expr.length);
-	return bracket + (Schema.is(TomlArrayTableHeader)(expr) ? 2 : 1);
+	return bracket + (S.is(TomlArrayTableHeader)(expr) ? 2 : 1);
 };
 
 /** All six format rules over the expression list; `[]` on malformed input (never corrupt it). */
@@ -316,9 +318,9 @@ const computeFormatEdits = (source: string, options: TomlFormattingOptions | und
 	const target = options?.newline;
 	for (const expr of expressions) {
 		let protectedSpans: ReadonlyArray<readonly [number, number]> = [];
-		if (Schema.is(TomlTrivia)(expr)) {
+		if (S.is(TomlTrivia)(expr)) {
 			formatTrivia(source, emit, expr);
-		} else if (Schema.is(TomlKeyValue)(expr)) {
+		} else if (S.is(TomlKeyValue)(expr)) {
 			formatLeading(source, emit, expr);
 			const lastKey = expr.keyPath[expr.keyPath.length - 1];
 			if (lastKey === undefined) {
@@ -420,9 +422,9 @@ const buildSemanticIndex = (
 ): { readonly root: ResTable; readonly sections: ReadonlyArray<Section> } => {
 	const sections: Array<Section> = [{ header: undefined, insertAfter: undefined }];
 	for (const expr of expressions) {
-		if (Schema.is(TomlTableHeader)(expr) || Schema.is(TomlArrayTableHeader)(expr)) {
+		if (S.is(TomlTableHeader)(expr) || S.is(TomlArrayTableHeader)(expr)) {
 			sections.push({ header: expr, insertAfter: expr.offset + expr.length });
-		} else if (!(Schema.is(TomlTrivia)(expr))) {
+		} else if (!(S.is(TomlTrivia)(expr))) {
 			const section = sections[sections.length - 1];
 			if (section === undefined) {
 				throw new TypeError("missing TOML element");
@@ -567,7 +569,7 @@ type Cursor =
 
 /** Wrap a CST value as a cursor; inline tables open as an entry scope (dotted keys included). */
 const cstCursor = (node: TomlValueNode, del: DeleteTarget): Cursor =>
-	Schema.is(TomlInlineTable)(node)
+	S.is(TomlInlineTable)(node)
 		? { t: "inline", table: node, candidates: node.entries.map((entry, index) => ({ entry, index })), depth: 0 }
 		: { t: "cst", node, del };
 
@@ -628,7 +630,7 @@ const step = (cur: Cursor, segment: TomlSegment): Cursor => {
 		return { t: "inline", table: cur.table, candidates: matches, depth: cur.depth + 1 };
 	}
 	const node = cur.node;
-	if (Schema.is(TomlArray)(node)) {
+	if (S.is(TomlArray)(node)) {
 		const idx = requireIndex(segment, "an array", node.offset, node.length);
 		if (idx >= node.items.length) {
 			return failResolve("DottedKeyConflict", `array index ${idx} is out of bounds`, node.offset, node.length);
@@ -805,7 +807,7 @@ const terminal = (cur: Cursor, segment: TomlSegment, value: unknown, ctx: Modify
 		return [{ offset: full.entry.value.offset, length: full.entry.value.length, newText: renderInlineValue(value) }];
 	}
 	const node = cur.node;
-	if (Schema.is(TomlArray)(node)) {
+	if (S.is(TomlArray)(node)) {
 		const idx = requireIndex(segment, "an array", node.offset, node.length);
 		if (value === undefined) {
 			if (idx >= node.items.length) {

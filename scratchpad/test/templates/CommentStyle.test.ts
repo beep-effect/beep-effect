@@ -1,5 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Equal } from "effect";
+import * as Equal from "effect/Equal";
 import { CommentStyle } from "../../effected/templates/index.ts";
 
 describe("CommentStyle", () => {

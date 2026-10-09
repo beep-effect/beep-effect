@@ -2,7 +2,8 @@
 // paragraph's inline content, with positions correct relative to the input.
 
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Result } from "effect";
+import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
 import { MAX_NESTING_DEPTH } from "../../effected/markdown/internal/limits.ts";
 import { Markdown } from "../../effected/markdown/Markdown.ts";
 import type { PhrasingContent } from "../../effected/markdown/MarkdownNode.ts";

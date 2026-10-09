@@ -7,7 +7,9 @@ import { afterAll, assert, beforeAll, describe, it } from "@effect/vitest";
 import { ScriptedSpawner } from "../../../effected/commands/index.ts";
 import { Git } from "../../../effected/git/index.ts";
 import { CatalogAssemblyError } from "../../../effected/npm/index.ts";
-import { Effect, Layer, Option } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import {
 	CatalogSet,
 	ChangeDetector,
@@ -259,7 +261,7 @@ describe("Workspaces.layer default — provably never executes a config dependen
 			const catalogs = yield* WorkspaceCatalogs;
 			const set = yield* catalogs.set;
 			// The inline catalog assembled — proof the default catalog path actually ran.
-			assert.deepStrictEqual(set.rangeOf("effect", Option.none()), Option.some("^4.0.0"));
+			assert.deepStrictEqual(set.rangeOf("effect", O.none()), O.some("^4.0.0"));
 			// ...and the config dependency's real pnpmfile never executed.
 			assert.isFalse(existsSync(markerPath));
 		}).pipe(
@@ -316,10 +318,10 @@ describe("Workspaces.layerWithGitAndConfigDependencies", () => {
 			const catalogs = yield* WorkspaceCatalogs;
 			const set = yield* catalogs.set;
 			// The inline catalog — the control proving assembly ran at all.
-			assert.deepStrictEqual(set.rangeOf("effect", Option.none()), Option.some("^4.0.0"));
+			assert.deepStrictEqual(set.rangeOf("effect", O.none()), O.some("^4.0.0"));
 			// The hook-injected one — proof the REPLAYING catalogs layer is wired,
 			// not the no-op `layerWithGit` uses.
-			assert.deepStrictEqual(set.rangeOf("hooked-dep", Option.none()), Option.some("^9.9.9"));
+			assert.deepStrictEqual(set.rangeOf("hooked-dep", O.none()), O.some("^9.9.9"));
 			// ...and the three services the git composite adds are all reachable from
 			// the same layer. Resolving them is the whole point: before this
 			// composite existed, having both halves at once meant hand-composing.
@@ -337,10 +339,10 @@ describe("Workspaces.layerWithGitAndConfigDependencies", () => {
 		return Effect.gen(function* () {
 			const catalogs = yield* WorkspaceCatalogs;
 			const set = yield* catalogs.set;
-			assert.deepStrictEqual(set.rangeOf("effect", Option.none()), Option.some("^4.0.0"));
+			assert.deepStrictEqual(set.rangeOf("effect", O.none()), O.some("^4.0.0"));
 			// The default composite executes no config-dependency code, and this is
 			// the assertion that keeps it that way.
-			assert.deepStrictEqual(set.rangeOf("hooked-dep", Option.none()), Option.none());
+			assert.deepStrictEqual(set.rangeOf("hooked-dep", O.none()), O.none());
 		}).pipe(Effect.provide(appLayer));
 	});
 
@@ -356,7 +358,7 @@ describe("Workspaces.layerWithGitAndConfigDependencies", () => {
 		return Effect.gen(function* () {
 			const snapshots = yield* WorkspaceSnapshots;
 			const live = yield* snapshots.worktree;
-			assert.deepStrictEqual(live.resolve("seeded-dep", "catalog:"), Option.some("^1.0.0"));
+			assert.deepStrictEqual(live.resolve("seeded-dep", "catalog:"), O.some("^1.0.0"));
 		}).pipe(Effect.provide(appLayer));
 	});
 });

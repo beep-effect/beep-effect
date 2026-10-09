@@ -2,7 +2,10 @@
 import { assert, describe, it } from "@effect/vitest";
 import type { AudienceKind, StreamEnv } from "../../effected/env/index.ts";
 import { Audience, CurrentRuntimeEnv, TerminalEnv } from "../../effected/env/index.ts";
-import { Console, Effect, Layer, Option } from "effect";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import type { Document } from "../../effected/cli/index.ts";
 import { CliLinks, CliTheme, Doc, Glyphs, Render } from "../../effected/cli/index.ts";
 import { composite } from "./helpers/hostileDoc.ts";
@@ -43,7 +46,7 @@ const layers = (setup: Setup) => {
 		CliLinks.layerTest("vscode"),
 		setup.ci === undefined
 			? Layer.empty
-			: CurrentRuntimeEnv.layerTest({ ci: setup.ci === "none" ? Option.none() : Option.some(setup.ci) }),
+			: CurrentRuntimeEnv.layerTest({ ci: setup.ci === "none" ? O.none() : O.some(setup.ci) }),
 	);
 };
 
@@ -359,12 +362,12 @@ describe("the width", () => {
 	it.effect("a human's default is TerminalEnv.width(): the terminal's columns, else COLUMNS or 80", () =>
 		Effect.gen(function* () {
 			const narrow = (yield* under(
-				{ audience: "human", stdout: { columns: Option.some(40) } },
+				{ audience: "human", stdout: { columns: O.some(40) } },
 				Render.context("stdout"),
 			)).value;
 			assert.strictEqual(narrow.width, 40);
 			const unknown = (yield* under(
-				{ audience: "human", stdout: { columns: Option.none() } },
+				{ audience: "human", stdout: { columns: O.none() } },
 				Render.context("stdout"),
 			)).value;
 			assert.strictEqual(unknown.width, 80);
@@ -373,10 +376,10 @@ describe("the width", () => {
 
 	it.effect("a human's output is laid out at that width", () =>
 		Effect.gen(function* () {
-			const { out } = yield* print({ audience: "human", stdout: { columns: Option.some(40), color: "none" } });
+			const { out } = yield* print({ audience: "human", stdout: { columns: O.some(40), color: "none" } });
 			assert.isAtMost(longest(out[0] ?? ""), 40);
 			// Control: the same document is wider when unbounded, so the cut above is the width at work.
-			const unbounded = yield* print({ audience: "agent", stdout: { columns: Option.some(40) } });
+			const unbounded = yield* print({ audience: "agent", stdout: { columns: O.some(40) } });
 			assert.isAbove(longest(unbounded.out[0] ?? ""), 40);
 		}),
 	);
@@ -384,7 +387,7 @@ describe("the width", () => {
 	it.effect("an agent's and a ci's width is unbounded: nothing wraps or truncates, whatever the terminal says", () =>
 		Effect.gen(function* () {
 			for (const audience of ["agent", "ci"] as const) {
-				const setup: Setup = { audience, stdout: { columns: Option.some(30) } };
+				const setup: Setup = { audience, stdout: { columns: O.some(30) } };
 				const ctx = (yield* under(setup, Render.context("stdout"))).value;
 				assert.strictEqual(ctx.width, Number.POSITIVE_INFINITY, audience);
 				const { out } = yield* print(setup);

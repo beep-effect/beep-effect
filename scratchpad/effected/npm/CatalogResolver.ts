@@ -6,7 +6,10 @@
 // `CatalogAssemblyError` in its own module), so the only runtime edge runs
 // `CatalogResolver -> WorkspaceResolver`, keeping `noImportCycles` satisfied.
 
-import { Context, Effect, Layer, Option } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import type { CatalogAssemblyError } from "./CatalogAssemblyError.ts";
 import type { DependencyResolutionError } from "./WorkspaceResolver.ts";
 
@@ -50,8 +53,8 @@ export class CatalogResolver extends Context.Service<
 	{
 		readonly rangeOf: (
 			packageName: string,
-			catalog: Option.Option<string>,
-		) => Effect.Effect<Option.Option<string>, CatalogAssemblyError | DependencyResolutionError>;
+			catalog: O.Option<string>,
+		) => Effect.Effect<O.Option<string>, CatalogAssemblyError | DependencyResolutionError>;
 	}
 >()("@beep/scratchpad/effected/npm/CatalogResolver") {
 	/**

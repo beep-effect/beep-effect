@@ -1,5 +1,12 @@
 import { LocalExec, Run } from "../commands/index.ts";
-import { Context, Crypto, Effect, FileSystem, Layer, Option, Redacted as Red, Schema } from "effect";
+import * as Context from "effect/Context";
+import * as Crypto from "effect/Crypto";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Red from "effect/Redacted";
+import * as S from "effect/Schema";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import { IntegrityHash } from "./IntegrityHash.ts";
 import { NpmExecutor } from "./NpmExecutor.ts";
@@ -29,14 +36,14 @@ const authKey = (registry: string, credential: RegistryCredential): string => {
 };
 
 /** What `npm pack --json` reports for one tarball. */
-const PackJsonEntry = Schema.Struct({
-	name: Schema.String,
-	version: Schema.String,
-	filename: Schema.String,
-	integrity: Schema.optionalKey(Schema.String),
-	size: Schema.optionalKey(Schema.Finite),
-	unpackedSize: Schema.optionalKey(Schema.Finite),
-	entryCount: Schema.optionalKey(Schema.Finite),
+const PackJsonEntry = S.Struct({
+	name: S.String,
+	version: S.String,
+	filename: S.String,
+	integrity: S.optionalKey(S.String),
+	size: S.optionalKey(S.Finite),
+	unpackedSize: S.optionalKey(S.Finite),
+	entryCount: S.optionalKey(S.Finite),
 });
 
 /**
@@ -47,27 +54,27 @@ const PackJsonEntry = Schema.Struct({
  * tarball's `name` as the key, where 11 handed it the array index). A
  * single-package pack is one entry either way.
  */
-const PackJson = Schema.Union([Schema.Array(PackJsonEntry), Schema.Record(Schema.String, PackJsonEntry)]);
-const PackJsonString = Schema.fromJsonString(Schema.Unknown);
+const PackJson = S.Union([S.Array(PackJsonEntry), S.Record(S.String, PackJsonEntry)]);
+const PackJsonString = S.fromJsonString(S.Unknown);
 
 /**
  * A packed tarball and the two digests that describe it.
  *
  * @public
  */
-export class PackedTarball extends Schema.Class<PackedTarball>("PackedTarball")({
+export class PackedTarball extends S.Class<PackedTarball>("PackedTarball")({
 	/** Absolute path to the tarball on disk. */
-	tarballPath: Schema.String,
+	tarballPath: S.String,
 	/** Package name, as npm reported it. */
-	name: Schema.String,
+	name: S.String,
 	/** Package version, as npm reported it. */
-	version: Schema.String,
+	version: S.String,
 	/**
 	 * npm's own integrity for the tarball (`sha512-<base64>`) — the value the
 	 * registry stores as `dist.integrity`, so it compares directly against
 	 * `NpmRegistry.version(...)`'s `integrity`.
 	 */
-	integrity: Schema.optionalKey(IntegrityHash),
+	integrity: S.optionalKey(IntegrityHash),
 	/**
 	 * SHA-256 of the tarball bytes, lowercase hex, no prefix.
 	 *
@@ -76,13 +83,13 @@ export class PackedTarball extends Schema.Class<PackedTarball>("PackedTarball")(
 	 * algorithm, different encoding. This is the digest format the GitHub
 	 * attestation APIs accept as a subject; comparing the two silently fails.
 	 */
-	sha256Hex: Schema.String,
+	sha256Hex: S.String,
 	/** Tarball size in bytes. */
-	packedSize: Schema.optionalKey(Schema.Finite),
+	packedSize: S.optionalKey(S.Finite),
 	/** Unpacked size in bytes. */
-	unpackedSize: Schema.optionalKey(Schema.Finite),
+	unpackedSize: S.optionalKey(S.Finite),
 	/** Number of files in the tarball. */
-	fileCount: Schema.optionalKey(Schema.Finite),
+	fileCount: S.optionalKey(S.Finite),
 }) {}
 
 /**
@@ -257,10 +264,10 @@ const make = Effect.fnUntraced(function* () {
 		);
 
 	const parsePackJson = (stdout: string, subject: string) =>
-		Schema.decodeEffect(PackJsonString)(stdout).pipe(
+		S.decodeEffect(PackJsonString)(stdout).pipe(
 			Effect.mapError((cause) => PublishError.make({ kind: "output", subject, cause })),
 			Effect.flatMap((parsed) =>
-				Schema.decodeUnknownEffect(PackJson)(parsed).pipe(
+				S.decodeUnknownEffect(PackJson)(parsed).pipe(
 					Effect.mapError((cause) => PublishError.make({ kind: "output", subject, cause })),
 				),
 			),
@@ -433,7 +440,7 @@ const make = Effect.fnUntraced(function* () {
 const integrityField = (raw: string | undefined): { integrity?: typeof IntegrityHash.Type } =>
 	raw === undefined
 		? {}
-		: Option.match(Schema.decodeOption(IntegrityHash)(raw), {
+		: O.match(S.decodeOption(IntegrityHash)(raw), {
 				onNone: () => ({}),
 				onSome: (integrity) => ({ integrity }),
 			});
