@@ -269,21 +269,26 @@ const windowReport = (
           onSome: (start) => tally.maxTs >= DateTime.toEpochMillis(DateTime.makeUnsafe(start)),
         })
     );
-  // A parent's first transcript is the root; nested transcripts contribute
-  // touches to that root but never create extra qualifying sessions.
-  const parentStamps = (tally: SessionTally) =>
+  // Group once: summaries and root selection never scan the complete history
+  // from inside a per-transcript predicate.
+  const groups = A.groupBy(ranked, (tally) => tally.parent);
+  const roots = R.map(groups, (group) =>
+    pipe(
+      A.filter(group, (tally) => tally.primary && !tally.child),
+      A.sort(Order.struct({ minTs: Order.Number, key: Order.String })),
+      A.head
+    )
+  );
+  const isChild = (tally: SessionTally) =>
+    O.exists(O.flatten(R.get(roots, tally.parent)), (root) => root.key !== tally.key);
+  const missingOpening = (tally: SessionTally) =>
+    tally.primary && !tally.child && !isChild(tally) && !HashSet.has(tally.freshStarts, tally.minTs);
+  const summaries = R.map(groups, (group) =>
     A.reduce(
-      A.filter(ranked, (other) => other.parent === tally.parent),
-      HashSet.empty<string>(),
-      (acc, other) => HashSet.union(acc, other.stamps)
-    );
-  const parentSummary = (tally: SessionTally) => {
-    const group = A.filter(ranked, (other) => other.parent === tally.parent);
-    return A.reduce(
       group,
       {
-        ...tally,
-        stamps: parentStamps(tally),
+        ...A.headNonEmpty(group),
+        stamps: A.reduce(group, HashSet.empty<string>(), (acc, other) => HashSet.union(acc, other.stamps)),
         primary: A.some(group, (other) => other.primary && !other.child),
         child: A.every(group, (other) => other.child),
         unknownStart: A.some(group, (other) => other.unknownStart || missingOpening(other)),
@@ -297,29 +302,13 @@ const windowReport = (
         userTurns: acc.userTurns + (other.primary && !other.child ? other.userTurns : 0),
         toolEvents: acc.toolEvents + (other.primary && !other.child ? other.toolEvents : 0),
       })
-    );
-  };
+    )
+  );
+  const parentSummary = (tally: SessionTally): SessionTally => O.getOrElse(R.get(summaries, tally.parent), () => tally);
   const parentRegime = (tally: SessionTally) => regimeOf(parentSummary(tally), harnessHash);
-  const isChild = (tally: SessionTally) =>
-    A.some(
-      ranked,
-      (other) =>
-        other.parent === tally.parent &&
-        other.primary &&
-        !other.child &&
-        (other.minTs < tally.minTs || (other.minTs === tally.minTs && other.key < tally.key))
-    );
-  const missingOpening = (tally: SessionTally) =>
-    tally.primary && !tally.child && !isChild(tally) && !HashSet.has(tally.freshStarts, tally.minTs);
   const active = (tally: SessionTally) => {
-    const activity = A.filter(ranked, (other) => other.parent === tally.parent && other.primary && !other.child);
-    return (
-      tally.primary &&
-      !tally.child &&
-      A.some(activity, (other) => other.userTurns >= 1) &&
-      A.some(activity, (other) => other.toolEvents >= 1) &&
-      !isChild(tally)
-    );
+    const summary = parentSummary(tally);
+    return tally.primary && !tally.child && summary.userTurns >= 1 && summary.toolEvents >= 1 && !isChild(tally);
   };
   const qualifying = pipe(
     A.filter(
@@ -356,16 +345,8 @@ const windowReport = (
         )
       )
     : inRegime;
-  const selectedRanked = A.filter(ranked, (tally) => tally.agentKind === agentKind);
-  const selectedGrouped = A.map(
-    A.filter(selectedRanked, (tally) =>
-      O.exists(
-        A.findFirst(selectedRanked, (other) => other.parent === tally.parent),
-        (first) => first.key === tally.key
-      )
-    ),
-    parentSummary
-  );
+  const selectedGrouped = A.filter(R.values(summaries), (tally) => tally.agentKind === agentKind);
+  const touchParents = HashSet.fromIterable(A.map(rootsForTouches, (root) => root.parent));
   const oldest = A.length(inRegime) < window ? O.none<SessionTally>() : A.last(inRegime);
   return ObservedSessionWindow.make({
     harnessHash,
@@ -393,14 +374,7 @@ const windowReport = (
       O.map((tally) => DateTime.makeUnsafe(tally.maxTs))
     ),
     touched: A.reduce(
-      A.filter(
-        ranked,
-        (tally) =>
-          (tally.primary || tally.child) &&
-          parentRegime(tally) === "in-regime" &&
-          !overlapsDisarm(parentSummary(tally)) &&
-          A.some(rootsForTouches, (root) => root.parent === tally.parent)
-      ),
+      A.filter(ranked, (tally) => (tally.primary || tally.child) && HashSet.has(touchParents, tally.parent)),
       HashSet.empty<string>(),
       (acc, tally) => HashSet.union(acc, tally.surfaces)
     ),
