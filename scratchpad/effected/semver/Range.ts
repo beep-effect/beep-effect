@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
 import * as Fn from "effect/Function";
 import * as O from "effect/Option";
@@ -10,6 +11,8 @@ import { formatRange, parseRange } from "./internal/grammar.ts";
 import { normalizeSets } from "./internal/normalize.ts";
 import { SemVer } from "./SemVer.ts";
 
+const $I = $ScratchpadId.create("effected/semver/Range");
+
 /**
  * Indicates that a string could not be parsed as a range expression.
  *
@@ -20,12 +23,12 @@ import { SemVer } from "./SemVer.ts";
  *
  * @public
  */
-export class InvalidRangeError extends S.TaggedError<InvalidRangeError>()("InvalidRangeError", {
+export class InvalidRangeError extends S.TaggedError<InvalidRangeError>($I`InvalidRangeError`)("InvalidRangeError", {
 	/** The raw input string that failed to parse. */
-	input: S.String,
+	input: S.String.annotateKey({ description: "The raw input string that failed to parse." }),
 	/** The character position where parsing failed, if available. */
-	position: S.optionalKey(S.Finite),
-}) {
+	position: S.optionalKey(S.Finite).annotateKey({ description: "The character position where parsing failed, if available." }),
+}, $I.annote("InvalidRangeError", { description: "Indicates that a string could not be parsed as a range expression." })) {
 	override get message(): string {
 		const base = `Invalid range expression: "${this.input}"`;
 		return this.position !== undefined ? `${base} at position ${this.position}` : base;
@@ -63,10 +66,10 @@ export type ComparatorSet = ReadonlyArray<Comparator>;
  *
  * @public
  */
-export class Range extends S.Class<Range>("Range")({
+export class Range extends S.Class<Range>($I`Range`)({
 	/** Comparator sets combined with OR semantics; a version matches when it satisfies any set. */
-	sets: Comparator.pipe(S.Array, S.Array),
-}) {
+	sets: Comparator.pipe(S.Array, S.Array).annotateKey({ description: "Comparator sets combined with OR semantics; a version matches when it satisfies any set." }),
+}, $I.annote("Range", { description: "A SemVer range expression: a union (OR) of ComparatorSets. Supports node-semver syntax — hyphen ranges (`1.0.0 - 2.0.0`), X-ranges (`1.x`, `*`), tilde (`~1.2.3`), caret (`^1.2.3`) and `||` unions — which parsing desugars into primitive comparators and normalizes." })) {
 	// ── Schema ──────────────────────────────────────────────────────────
 
 	/**
@@ -383,12 +386,12 @@ export class Range extends S.Class<Range>("Range")({
  *
  * @public
  */
-export class UnsatisfiableConstraintError extends S.TaggedError<UnsatisfiableConstraintError>()(
+export class UnsatisfiableConstraintError extends S.TaggedError<UnsatisfiableConstraintError>($I`UnsatisfiableConstraintError`)(
 	"UnsatisfiableConstraintError",
 	{
 		/** The ranges whose intersection is empty. */
-		constraints: S.Array(Range),
-	},
+		constraints: S.Array(Range).annotateKey({ description: "The ranges whose intersection is empty." }),
+	}, $I.annote("UnsatisfiableConstraintError", { description: "Indicates that intersecting ranges produced no satisfiable comparator set." }),
 ) {
 	override get message(): string {
 		const count = this.constraints.length;

@@ -101,9 +101,9 @@ export const desugarCaret = (p: PartialParts): ReadonlyArray<ComparatorParts> =>
  * given `operator`.
  */
 export const desugarXRange: {
-	(p: PartialParts): (operator: string | null) => ReadonlyArray<ComparatorParts>;
-	(operator: string | null, p: PartialParts): ReadonlyArray<ComparatorParts>;
-} = dual(2, (operator: string | null, p: PartialParts): ReadonlyArray<ComparatorParts> => {
+	(p: PartialParts): (operator: ComparatorOperator | null) => ReadonlyArray<ComparatorParts>;
+	(operator: ComparatorOperator | null, p: PartialParts): ReadonlyArray<ComparatorParts>;
+} = dual(2, (operator: ComparatorOperator | null, p: PartialParts): ReadonlyArray<ComparatorParts> => {
 	const major = p.major;
 	const minor = p.minor;
 	const patch = p.patch;
@@ -114,7 +114,7 @@ export const desugarXRange: {
 		if (operator === null || operator === "=") {
 			return [comp("=", version)];
 		}
-		return [comp(operator as ">" | ">=" | "<" | "<=", version)];
+		return [comp(operator, version)];
 	}
 
 	// Has wildcards

@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -5,6 +6,8 @@ import * as SchemaIssue from "effect/SchemaIssue";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import { formatComparator, parseComparator } from "./internal/grammar.ts";
 import { SemVer } from "./SemVer.ts";
+
+const $I = $ScratchpadId.create("effected/semver/Comparator");
 
 /**
  * Indicates that a string could not be parsed as a single comparator.
@@ -15,12 +18,12 @@ import { SemVer } from "./SemVer.ts";
  *
  * @public
  */
-export class InvalidComparatorError extends S.TaggedError<InvalidComparatorError>()("InvalidComparatorError", {
+export class InvalidComparatorError extends S.TaggedError<InvalidComparatorError>($I`InvalidComparatorError`)("InvalidComparatorError", {
 	/** The raw input string that failed to parse. */
-	input: S.String,
+	input: S.String.annotateKey({ description: "The raw input string that failed to parse." }),
 	/** The character position where parsing failed, if available. */
-	position: S.optionalKey(S.Finite),
-}) {
+	position: S.optionalKey(S.Finite).annotateKey({ description: "The character position where parsing failed, if available." }),
+}, $I.annote("InvalidComparatorError", { description: "Indicates that a string could not be parsed as a single comparator." })) {
 	override get message(): string {
 		const base = `Invalid comparator: "${this.input}"`;
 		return this.position !== undefined ? `${base} at position ${this.position}` : base;
@@ -50,12 +53,12 @@ export class InvalidComparatorError extends S.TaggedError<InvalidComparatorError
  *
  * @public
  */
-export class Comparator extends S.Class<Comparator>("Comparator")({
+export class Comparator extends S.Class<Comparator>($I`Comparator`)({
 	/** The relational operator applied to `version`; a missing prefix in the source string means `=`. */
-	operator: S.Literals(["=", ">", ">=", "<", "<="]),
+	operator: S.Literals(["=", ">", ">=", "<", "<="]).annotateKey({ description: "The relational operator applied to `version`; a missing prefix in the source string means `=`." }),
 	/** The version the operator is applied against. */
-	version: SemVer,
-}) {
+	version: SemVer.annotateKey({ description: "The version the operator is applied against." }),
+}, $I.annote("Comparator", { description: "A single version constraint: a comparison operator applied to a version. Comparator strings accept an optional operator prefix (`=`, `>`, `>=`, `<`, `<=`) followed by a complete version; a missing operator means `=`. Wildcards and range sugar are not allowed — those belong to `Range`." })) {
 	// ── Schema ──────────────────────────────────────────────────────────
 
 	/**

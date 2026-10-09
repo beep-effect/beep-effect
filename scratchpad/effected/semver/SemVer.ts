@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Arr from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
@@ -12,6 +13,8 @@ import * as SchemaTransformation from "effect/SchemaTransformation";
 import { formatVersion, parseVersion } from "./internal/grammar.ts";
 import { compareBuild, comparePrereleaseIdentifier } from "./internal/order.ts";
 
+const $I = $ScratchpadId.create("effected/semver/SemVer");
+
 /**
  * Indicates that a string could not be parsed as a valid SemVer 2.0.0 version.
  *
@@ -23,12 +26,12 @@ import { compareBuild, comparePrereleaseIdentifier } from "./internal/order.ts";
  * @see {@link https://semver.org | SemVer 2.0.0 Specification}
  * @public
  */
-export class InvalidVersionError extends S.TaggedError<InvalidVersionError>()("InvalidVersionError", {
+export class InvalidVersionError extends S.TaggedError<InvalidVersionError>($I`InvalidVersionError`)("InvalidVersionError", {
 	/** The raw input string that failed to parse. */
-	input: S.String,
+	input: S.String.annotateKey({ description: "The raw input string that failed to parse." }),
 	/** The character position where parsing failed, if available. */
-	position: S.optionalKey(S.Finite),
-}) {
+	position: S.optionalKey(S.Finite).annotateKey({ description: "The character position where parsing failed, if available." }),
+}, $I.annote("InvalidVersionError", { description: "Indicates that a string could not be parsed as a valid SemVer 2.0.0 version." })) {
 	override get message(): string {
 		const base = `Invalid version string: "${this.input}"`;
 		return this.position !== undefined ? `${base} at position ${this.position}` : base;
@@ -81,18 +84,18 @@ const buildIdentifier = S.String.check(S.isPattern(/^[0-9A-Za-z-]+$/u));
  * @see {@link https://semver.org | SemVer 2.0.0 Specification}
  * @public
  */
-export class SemVer extends S.Class<SemVer>("SemVer")({
+export class SemVer extends S.Class<SemVer>($I`SemVer`)({
 	/** The major version component; incompatible API changes. */
-	major: nonNegativeInteger,
+	major: nonNegativeInteger.annotateKey({ description: "The major version component; incompatible API changes." }),
 	/** The minor version component; backward-compatible functionality. */
-	minor: nonNegativeInteger,
+	minor: nonNegativeInteger.annotateKey({ description: "The minor version component; backward-compatible functionality." }),
 	/** The patch version component; backward-compatible fixes. */
-	patch: nonNegativeInteger,
+	patch: nonNegativeInteger.annotateKey({ description: "The patch version component; backward-compatible fixes." }),
 	/** Prerelease identifiers, most-significant first; `[]` for a stable version. */
-	prerelease: S.Array(prereleaseIdentifier),
+	prerelease: S.Array(prereleaseIdentifier).annotateKey({ description: "Prerelease identifiers, most-significant first; `[]` for a stable version." }),
 	/** Build metadata identifiers; ignored by precedence comparisons (§10). */
-	build: S.Array(buildIdentifier),
-}) {
+	build: S.Array(buildIdentifier).annotateKey({ description: "Build metadata identifiers; ignored by precedence comparisons (§10)." }),
+}, $I.annote("SemVer", { description: "A parsed SemVer 2.0.0 version: an Effect `Schema.Class` whose fields are validated in-schema (non-negative integer components, well-formed identifiers), so `SemVer.make` only produces valid versions." })) {
 	// ── Schema ──────────────────────────────────────────────────────────
 
 	/**

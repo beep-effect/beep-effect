@@ -1,5 +1,8 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
 import { SemVer } from "./SemVer.ts";
+
+const $I = $ScratchpadId.create("effected/semver/VersionDiff");
 
 const arraysEqual = (a: ReadonlyArray<string | number>, b: ReadonlyArray<string | number>): boolean =>
 	a.length === b.length && a.every((v, i) => v === b[i]);
@@ -40,20 +43,20 @@ const classifyDiff = (a: SemVer, b: SemVer): "major" | "minor" | "patch" | "prer
  *
  * @public
  */
-export class VersionDiff extends S.TaggedClass<VersionDiff>()("VersionDiff", {
+export class VersionDiff extends S.TaggedClass<VersionDiff>($I`VersionDiff`)("VersionDiff", {
 	/** The highest-precedence field that differs between `from` and `to`; see the class doc for the classification order. */
-	type: S.Literals(["major", "minor", "patch", "prerelease", "build", "none"]),
+	type: S.Literals(["major", "minor", "patch", "prerelease", "build", "none"]).annotateKey({ description: "The highest-precedence field that differs between `from` and `to`; see the class doc for the classification order." }),
 	/** The earlier version being compared. */
-	from: SemVer,
+	from: SemVer.annotateKey({ description: "The earlier version being compared." }),
 	/** The later version being compared. */
-	to: SemVer,
+	to: SemVer.annotateKey({ description: "The later version being compared." }),
 	/** Signed delta of the major component (`to.major - from.major`). */
-	major: S.Finite,
+	major: S.Finite.annotateKey({ description: "Signed delta of the major component (`to.major - from.major`)." }),
 	/** Signed delta of the minor component (`to.minor - from.minor`). */
-	minor: S.Finite,
+	minor: S.Finite.annotateKey({ description: "Signed delta of the minor component (`to.minor - from.minor`)." }),
 	/** Signed delta of the patch component (`to.patch - from.patch`). */
-	patch: S.Finite,
-}) {
+	patch: S.Finite.annotateKey({ description: "Signed delta of the patch component (`to.patch - from.patch`)." }),
+}, $I.annote("VersionDiff", { description: "The difference between two SemVer versions: the classification of the change plus signed numeric deltas. A `Schema.TaggedClass`, so a serialized diff carries a `_tag` discriminator." })) {
 	/**
 	 * Compute the diff from `a` to `b`.
 	 *

@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Arr from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -10,13 +11,15 @@ import { Range } from "./Range.ts";
 import { SemVer } from "./SemVer.ts";
 import { VersionDiff } from "./VersionDiff.ts";
 
+const $I = $ScratchpadId.create("effected/semver/VersionCache");
+
 /**
  * Indicates that an extremum (`latest`/`oldest`) was requested from an empty
  * cache.
  *
  * @public
  */
-export class EmptyCacheError extends S.TaggedError<EmptyCacheError>()("EmptyCacheError", {}) {
+export class EmptyCacheError extends S.TaggedError<EmptyCacheError>($I`EmptyCacheError`)("EmptyCacheError", {}, $I.annote("EmptyCacheError", { description: "Indicates that an extremum (`latest`/`oldest`) was requested from an empty cache." })) {
 	override get message(): string {
 		return "Version cache is empty";
 	}
@@ -28,10 +31,10 @@ export class EmptyCacheError extends S.TaggedError<EmptyCacheError>()("EmptyCach
  *
  * @public
  */
-export class VersionNotFoundError extends S.TaggedError<VersionNotFoundError>()("VersionNotFoundError", {
+export class VersionNotFoundError extends S.TaggedError<VersionNotFoundError>($I`VersionNotFoundError`)("VersionNotFoundError", {
 	/** The version that was not found. */
-	version: SemVer,
-}) {
+	version: SemVer.annotateKey({ description: "The version that was not found." }),
+}, $I.annote("VersionNotFoundError", { description: "Indicates that a navigation operation (`diff`/`next`/`prev`) referenced a version that is not in the cache." })) {
 	override get message(): string {
 		return `Version not found in cache: ${this.version.toString()}`;
 	}
@@ -44,12 +47,12 @@ export class VersionNotFoundError extends S.TaggedError<VersionNotFoundError>()(
  *
  * @public
  */
-export class UnsatisfiedRangeError extends S.TaggedError<UnsatisfiedRangeError>()("UnsatisfiedRangeError", {
+export class UnsatisfiedRangeError extends S.TaggedError<UnsatisfiedRangeError>($I`UnsatisfiedRangeError`)("UnsatisfiedRangeError", {
 	/** The range that could not be satisfied. */
-	range: Range,
+	range: Range.annotateKey({ description: "The range that could not be satisfied." }),
 	/** The versions that were available for matching. */
-	available: S.Array(SemVer),
-}) {
+	available: S.Array(SemVer).annotateKey({ description: "The versions that were available for matching." }),
+}, $I.annote("UnsatisfiedRangeError", { description: "Indicates that the cache contains versions but none satisfies the requested range. Carries the range and the versions that were available, and is fully serializable — both payload fields are schema classes." })) {
 	override get message(): string {
 		const count = this.available.length;
 		return `No version satisfies range ${this.range.toString()} (${count} version${count === 1 ? "" : "s"} available)`;
@@ -146,7 +149,7 @@ const dedupeSorted = (versions: ReadonlyArray<SemVer>): ReadonlyArray<SemVer> =>
  *
  * @public
  */
-export class VersionCache extends Context.Service<VersionCache, VersionCacheShape>()("@beep/scratchpad/effected/semver/VersionCache") {
+export class VersionCache extends Context.Service<VersionCache, VersionCacheShape>()($I`VersionCache`) {
 	/**
 	 * Live implementation backed by a `Ref` of a sorted, deduplicated array.
 	 * Requires nothing: range strings are parsed with {@link Range.parse}

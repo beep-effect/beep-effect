@@ -427,10 +427,10 @@ describe("SemVer", () => {
 			const document = S.toJsonSchemaDocument(SemVer);
 			assert.nestedPropertyVal(
 				document,
-				"definitions.SemVerEncoded.properties.prerelease.items.anyOf[0].pattern",
+				"definitions.@beep/scratchpad/effected/semver/SemVer/SemVerEncoded.properties.prerelease.items.anyOf[0].pattern",
 				"^[0-9]*[A-Za-z-][0-9A-Za-z-]*$",
 			);
-			assert.nestedPropertyVal(document, "definitions.SemVerEncoded.properties.build.items.pattern", "^[0-9A-Za-z-]+$");
+			assert.nestedPropertyVal(document, "definitions.@beep/scratchpad/effected/semver/SemVer/SemVerEncoded.properties.build.items.pattern", "^[0-9A-Za-z-]+$");
 		});
 	});
 });
