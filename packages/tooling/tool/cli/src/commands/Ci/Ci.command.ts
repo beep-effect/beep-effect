@@ -23,6 +23,7 @@ import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { formatDurationSeconds, makeTaggedLogger, printLines } from "../../internal/cli/Printer.ts";
 import { CiCommandError } from "./Ci.errors.ts";
 import { ciAdmissionCommand } from "./CiAdmission.ts";
+import { ciGovernanceCommands } from "./CiGovernance.ts";
 import { ciLaneCommand, ciLocalCommand } from "./CiLane.ts";
 import { ciRerunRunnerLossCommand } from "./CiRerunRunnerLoss.ts";
 import { ciLaneTimingsCommand } from "./LaneTimings.ts";
@@ -350,6 +351,11 @@ export const ciCommand = Command.make("ci", {}, () =>
     "CI commands:",
     "- bun run beep ci admission [--event-name n] [--event-path p] [--base b] [--no-json] [--github-output]",
     "- bun run beep ci append-turbo-summary",
+    "- bun run beep ci ruleset [--capture|--check]",
+    "- bun run beep ci settings [--check]",
+    "- bun run beep ci held-group",
+    "- bun run beep ci pr-size <number>",
+    "- bun run beep ci workflow-lint",
     "- bun run beep ci lane <id> [flags] (or --list)",
     "- bun run beep ci lane-timings [--runs n] [--tsv] or --window --since ISO --until ISO [--preview] [filters]",
     "- bun run beep ci local [--lanes ids] [--fast] [--affected]",
@@ -358,6 +364,7 @@ export const ciCommand = Command.make("ci", {}, () =>
 ).pipe(
   Command.withDescription("Continuous integration helper commands"),
   Command.withSubcommands([
+    ...ciGovernanceCommands,
     ciAdmissionCommand,
     appendTurboSummaryCommand,
     ciLaneCommand,

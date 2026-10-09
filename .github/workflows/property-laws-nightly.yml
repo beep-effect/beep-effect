@@ -26,27 +26,31 @@ concurrency:
 
 permissions:
   contents: read
-  issues: write
 
 jobs:
   property-sweep:
     name: Property Laws Sweep
     runs-on: ubuntu-24.04
     timeout-minutes: 180
-    env:
-      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-      TURBO_TEAM: ${{ vars.TURBO_TEAM || secrets.TURBO_TEAM }}
+    permissions:
+      contents: read
+      issues: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Setup monorepo CI
         uses: ./.github/actions/setup-monorepo-ci
         with:
           cache-turbo: "true"
           cache-write: "false"
+          turbo-remote-cache: "true"
+          turbo-api: ${{ vars.TURBO_API }}
+          turbo-team: ${{ vars.TURBO_TEAM }}
+          turbo-read-token: ${{ secrets.TURBO_READ_TOKEN }}
 
       - name: Run full property sweep
         shell: bash

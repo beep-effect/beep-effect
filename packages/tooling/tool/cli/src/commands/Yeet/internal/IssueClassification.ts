@@ -334,7 +334,7 @@ const knownSubLaneHints: ReadonlyArray<KnownSubLaneHint> = [
     subCategory: "changeset-status",
     category: "changeset-policy",
     remediation:
-      "Run `bun run beep quality changeset-status --since origin/main`. Write a changeset listing each changed package with `patch`; packages on the changesets config `ignore` list are exempt.",
+      "Run `bun run beep quality changeset-status --since origin/main`. Write a changeset listing each changed publish-enabled, versioned product package with `patch`; private workspaces and changesets config `ignore` names are exempt. Remove notes naming private workspaces.",
   },
   {
     needle: "typos",

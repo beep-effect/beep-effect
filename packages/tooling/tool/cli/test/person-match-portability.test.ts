@@ -1,6 +1,7 @@
 import {
   defaultPersonMatchBackendForPlatform,
   MatchPersonOptions,
+  PersonMatchModel,
   PersonMatchModelArtifactVerifier,
   PersonMatchWorkerPolicyForTest,
   trustedUvExecutableNameForPlatform,
@@ -10,10 +11,14 @@ import {
 import { it } from "@beep/test-runner";
 import { provideScopedLayer } from "@beep/test-utils";
 import { A } from "@beep/utils";
+import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
 import type { PersonMatchWorkerErrorCode } from "@beep/repo-cli/test/Files";
 
@@ -75,13 +80,73 @@ describe("person-match backend portability", () => {
     );
   });
 
-  it.effect("keeps physical model verification fail-closed by default", () =>
-    Effect.gen(function* () {
-      const verifier = yield* PersonMatchModelArtifactVerifier;
+  it.layer(NodeServices.layer, { timeout: "5 seconds" })((it) => {
+    it.effect("keeps physical model verification fail-closed by default", () =>
+      Effect.gen(function* () {
+        const verifier = yield* PersonMatchModelArtifactVerifier;
+        expect(typeof verifier).toBe("function");
 
-      expect(typeof verifier).toBe("function");
-    })
-  );
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped();
+        const installed = path.join(root, "models", "beep_buffalo_l_v1");
+        const detector = path.join(installed, "det_10g.onnx");
+        yield* fs.makeDirectory(installed, { recursive: true });
+        yield* fs.writeFile(detector, Uint8Array.of(1, 2, 3));
+        const source = "https://github.com/deepinsight/insightface/releases/download/v0.7/buffalo_l.zip";
+        const licenseNotice =
+          "InsightFace pretrained-model terms: https://github.com/deepinsight/insightface/blob/master/server/LICENSING.md";
+        const detectorSha256 = "5838f7fe053675b1c7a08b633df49e7af5495cee0493c7dcf6697200b85b5b91";
+        const model = yield* S.decodeEffect(PersonMatchModel)({
+          backend: "buffalo-l",
+          name: "buffalo_l",
+          packageName: "insightface",
+          packageVersion: "1.0.1",
+          runtime: {
+            framework: "onnxruntime",
+            packageVersion: "1.23.2",
+            actualCompute: "cpu",
+            precision: "fp32",
+            providers: ["CPUExecutionProvider"],
+            devices: [],
+            warnings: [],
+          },
+          root,
+          allowedModules: ["detection", "recognition"],
+          components: [
+            {
+              role: "detector",
+              name: "insightface-det_10g",
+              revision: "v0.7",
+              source,
+              licenseNotice,
+              artifacts: [{ name: "det_10g.onnx", path: detector, sizeBytes: 16_923_827, sha256: detectorSha256 }],
+            },
+            {
+              role: "recognizer",
+              name: "insightface-w600k_r50",
+              revision: "v0.7",
+              source,
+              licenseNotice,
+              artifacts: [
+                {
+                  name: "w600k_r50.onnx",
+                  path: path.join(installed, "w600k_r50.onnx"),
+                  sizeBytes: 174_383_860,
+                  sha256: "4c06341c33c2ca1f86781dab0e829f88ad5b64be9fba56e56bc9ebdefc619e43",
+                },
+              ],
+            },
+          ],
+        });
+        const failure = yield* Effect.flip(verifier(model, root));
+        expect(failure._tag).toBe("MatchPersonModelIntegrityError");
+        expect(failure.message).toBe(
+          `Model artifact integrity mismatch for detector: expected 16923827 bytes and SHA-256 ${detectorSha256}.`
+        );
+      })
+    );
+  });
 
   it("retries only automatic AdaFace compute failures that can be served by the CPU distribution", () => {
     const automatic = makePersonMatchOptions("adaface-kprpe", "auto");
