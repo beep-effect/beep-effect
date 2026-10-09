@@ -3,6 +3,8 @@ import { Effect, Equal, HashMap, Option, Schema } from "effect";
 import { Dependency } from "../../effected/package-json/Dependency.ts";
 import { Package, PackageDecodeError } from "../../effected/package-json/Package.ts";
 
+const Json = Schema.fromJsonString(Schema.Unknown);
+
 const minimal = { name: "my-pkg", version: "1.0.0" };
 const full = {
 	name: "@scope/my-pkg",
@@ -158,7 +160,7 @@ describe("Package wire transform + rest", () => {
 		Effect.gen(function* () {
 			const decoded = yield* Package.decode({ name: "p", version: "1.0.0", customField: "kept", arr: [1, 2, 3] });
 			assert.deepStrictEqual(decoded.rest, { customField: "kept", arr: [1, 2, 3] });
-			const encoded = Schema.encodeUnknownSync(Package.schema)(decoded) as Record<string, unknown>;
+			const encoded = (yield* Schema.encodeUnknownEffect(Package.schema)(decoded)) as Record<string, unknown>;
 			assert.strictEqual(encoded.customField, "kept");
 			assert.deepStrictEqual(encoded.arr, [1, 2, 3]);
 			assert.isFalse("rest" in encoded);
@@ -171,9 +173,9 @@ describe("Package wire transform + rest", () => {
 			// a hostile or merely odd manifest on disk produces. The wire transform
 			// must store it as data (null-prototype rest record), never assign it
 			// (which on a plain object MUTATES the prototype and loses the key).
-			const raw = JSON.parse(
+			const raw = (yield* Schema.decodeEffect(Json)(
 				'{"name":"proto-carrier","version":"1.0.0","__proto__":{"polluted":true},"custom":"kept"}',
-			) as Record<string, unknown>;
+			)) as Record<string, unknown>;
 
 			const decoded = yield* Package.decode(raw);
 			const restProto = Object.getOwnPropertyDescriptor(decoded.rest, "__proto__");
@@ -182,13 +184,13 @@ describe("Package wire transform + rest", () => {
 			assert.isFalse("polluted" in {});
 			assert.isUndefined(({} as Record<string, unknown>).polluted);
 
-			const encoded = Schema.encodeUnknownSync(Package.schema)(decoded) as Record<string, unknown>;
+			const encoded = (yield* Schema.encodeUnknownEffect(Package.schema)(decoded)) as Record<string, unknown>;
 			const encodedProto = Object.getOwnPropertyDescriptor(encoded, "__proto__");
 			assert.deepStrictEqual(encodedProto?.value, { polluted: true });
 			assert.strictEqual(encoded.custom, "kept");
 			assert.isFalse("rest" in encoded);
 			// Byte-level: the serialized manifest still carries the key as data.
-			assert.include(JSON.stringify(encoded), '"__proto__":{"polluted":true}');
+			assert.include((yield* Schema.encodeEffect(Json)(encoded)), '"__proto__":{"polluted":true}');
 		}),
 	);
 
@@ -198,7 +200,7 @@ describe("Package wire transform + rest", () => {
 			// A decode never lands a known key in `rest`; only a hand-built patch
 			// can smuggle one. The typed member must win on encode.
 			const smuggled = decoded.copyWith({ rest: { description: "shadow", other: 1 } });
-			const encoded = Schema.encodeUnknownSync(Package.schema)(smuggled) as Record<string, unknown>;
+			const encoded = (yield* Schema.encodeUnknownEffect(Package.schema)(smuggled)) as Record<string, unknown>;
 			assert.strictEqual(encoded.description, "real");
 			assert.strictEqual(encoded.other, 1);
 			assert.isFalse("rest" in encoded);
@@ -227,7 +229,7 @@ describe("Package wire transform + rest", () => {
 			});
 			assert.strictEqual(decoded.myTool, "configured");
 			assert.deepStrictEqual(decoded.rest, { other: 1 });
-			const encoded = Schema.encodeUnknownSync(wire)(decoded) as Record<string, unknown>;
+			const encoded = (yield* Schema.encodeUnknownEffect(wire)(decoded)) as Record<string, unknown>;
 			assert.strictEqual(encoded.myTool, "configured");
 			assert.strictEqual(encoded.other, 1);
 		}),
@@ -251,7 +253,7 @@ describe("Package.toJsonString", () => {
 			const pkg = yield* Package.decode(full);
 			const json = pkg.toJsonString();
 			assert.isTrue(json.endsWith("\n"));
-			const parsed = JSON.parse(json) as Record<string, unknown>;
+			const parsed = (yield* Schema.decodeEffect(Json)(json)) as Record<string, unknown>;
 			const keys = Object.keys(parsed);
 			assert.isTrue(keys.indexOf("name") < keys.indexOf("version"));
 			assert.isTrue(keys.indexOf("version") < keys.indexOf("description"));

@@ -21,6 +21,8 @@ import { assert, describe, it } from "@effect/vitest";
 import { Effect, Schema } from "effect";
 import { Funding, LenientManifest, Package, PackageManifest } from "../../effected/package-json/index.ts";
 
+const Json = Schema.fromJsonString(Schema.Unknown);
+
 const decode = <A, I>(schema: Schema.Codec<A, I>, input: unknown) => Schema.decodeUnknownEffect(schema)(input);
 const encode = <A, I>(schema: Schema.Codec<A, I>, value: A) => Schema.encodeUnknownEffect(schema)(value);
 
@@ -117,7 +119,7 @@ describe("Funding.FromField — wire fidelity", () => {
 		Effect.gen(function* () {
 			// `url` before `type` is legal and a formatter must not reorder it.
 			const wire = [{ url: "https://a.example", type: "github" }];
-			assert.deepStrictEqual<unknown>(JSON.stringify(yield* roundTrip(wire)), JSON.stringify(wire));
+			assert.deepStrictEqual<unknown>((yield* Schema.encodeEffect(Json)(yield* roundTrip(wire))), (yield* Schema.encodeEffect(Json)(wire)));
 		}),
 	);
 
@@ -279,7 +281,7 @@ describe("funding — the manifest tiers", () => {
 				license: "MIT",
 				repository: "dee/pkg",
 			})).toJsonString();
-			const keys = Object.keys(JSON.parse(json) as Record<string, unknown>);
+			const keys = Object.keys((yield* Schema.decodeEffect(Json)(json)) as Record<string, unknown>);
 			assert.isTrue(keys.indexOf("funding") > keys.indexOf("repository"));
 			assert.isTrue(keys.indexOf("funding") < keys.indexOf("license"));
 		}),

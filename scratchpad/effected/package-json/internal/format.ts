@@ -1,3 +1,5 @@
+import { dual } from "effect/Function";
+
 // Pure package.json serialization helpers: canonical top-level key ordering
 // (the `sort-package-json` order), map-field alphabetization and
 // empty-map stripping. These are pure `Record → Record` steps, surfaced
@@ -245,7 +247,10 @@ export const detectIndent = (source: string): string | undefined => {
  * detected from `sourceText` (falling back to the two-space default when no
  * source text or no indented line is available), and a number passes through.
  */
-export const resolveIndent = (
+export const resolveIndent: {
+	(sourceText: string | undefined): (indent: number | "tab" | "preserve" | undefined) => string | number;
+	(indent: number | "tab" | "preserve" | undefined, sourceText: string | undefined): string | number;
+} = dual(2, (
 	indent: number | "tab" | "preserve" | undefined,
 	sourceText: string | undefined,
 ): string | number => {
@@ -254,7 +259,7 @@ export const resolveIndent = (
 		return sourceText === undefined ? DEFAULT_INDENT : (detectIndent(sourceText) ?? DEFAULT_INDENT);
 	}
 	return indent ?? DEFAULT_INDENT;
-};
+});
 
 /**
  * Resolve the public `PackageFormatOptions` bag (mirrored structurally here —
@@ -285,7 +290,20 @@ export const resolveFormatOptions = (options?: {
  * empty-map strip, canonical key ordering and a trailing newline unless the
  * corresponding options opt out.
  */
-export const renderJson = (
+export const renderJson: {
+	(options: {
+		readonly indent: string | number;
+		readonly sort: boolean;
+		readonly stripEmpty: boolean;
+		readonly newline: boolean;
+	}): (raw: Record<string, unknown>) => string;
+	(raw: Record<string, unknown>, options: {
+		readonly indent: string | number;
+		readonly sort: boolean;
+		readonly stripEmpty: boolean;
+		readonly newline: boolean;
+	}): string;
+} = dual(2, (
 	raw: Record<string, unknown>,
 	options: {
 		readonly indent: string | number;
@@ -298,4 +316,4 @@ export const renderJson = (
 	if (options.sort) record = sortKeys(record);
 	const json = JSON.stringify(record, null, options.indent);
 	return options.newline ? `${json}\n` : json;
-};
+});

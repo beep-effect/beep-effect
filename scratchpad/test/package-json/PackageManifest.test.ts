@@ -13,6 +13,8 @@ import { Effect, HashMap, Schema } from "effect";
 import { Package } from "../../effected/package-json/Package.ts";
 import { PackageManifest } from "../../effected/package-json/PackageManifest.ts";
 
+const Json = Schema.fromJsonString(Schema.Unknown);
+
 const PRIVATE_ROOT = {
 	private: true,
 	packageManager: "pnpm@11.2.0",
@@ -111,7 +113,7 @@ describe("PackageManifest wire fidelity", () => {
 				customField: "kept",
 			});
 			assert.deepStrictEqual(manifest.rest?.customField, "kept");
-			const encoded = Schema.encodeUnknownSync(PackageManifest.schema)(manifest) as Record<string, unknown>;
+			const encoded = (yield* Schema.encodeUnknownEffect(PackageManifest.schema)(manifest)) as Record<string, unknown>;
 			assert.strictEqual(encoded.customField, "kept");
 			assert.isFalse("rest" in encoded);
 		}),
@@ -122,7 +124,7 @@ describe("PackageManifest wire fidelity", () => {
 	it.effect("encodes the private root without inventing name or version", () =>
 		Effect.gen(function* () {
 			const manifest = yield* PackageManifest.decode({ private: true, packageManager: "pnpm@^11.20.0" });
-			const encoded = Schema.encodeUnknownSync(PackageManifest.schema)(manifest) as Record<string, unknown>;
+			const encoded = (yield* Schema.encodeUnknownEffect(PackageManifest.schema)(manifest)) as Record<string, unknown>;
 			assert.isFalse("name" in encoded);
 			assert.isFalse("version" in encoded);
 			assert.strictEqual(encoded.packageManager, "pnpm@^11.20.0");
@@ -134,7 +136,7 @@ describe("PackageManifest wire fidelity", () => {
 		Effect.gen(function* () {
 			const manifest = yield* PackageManifest.decode(PRIVATE_ROOT);
 			const text = manifest.toJsonString();
-			const parsed = JSON.parse(text) as Record<string, unknown>;
+			const parsed = (yield* Schema.decodeEffect(Json)(text)) as Record<string, unknown>;
 			assert.strictEqual(parsed.packageManager, "pnpm@11.2.0");
 			assert.isFalse("name" in parsed);
 			assert.isFalse("dependencies" in parsed);

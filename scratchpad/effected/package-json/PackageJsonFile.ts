@@ -4,13 +4,15 @@
 // (`@effect/platform-node`) at the edge. Resolution is not fused into `write`
 // (compose `Package.resolve` explicitly).
 
-import type { JsoncPath } from "../jsonc/index.ts";
-import { Context, Effect, FileSystem, Layer, Path, Schema } from "effect";
+import type { JsoncPath, JsoncStringifyError } from "../jsonc/index.ts";
+import { Context, Effect, FileSystem, Layer, Path, Result, Schema } from "effect";
 import type { PackageDecodeError, PackageFormatOptions } from "./Package.ts";
 import { Package } from "./Package.ts";
 import type { PackageJsonModifyError } from "./PackageJsonFormat.ts";
 import { PackageJsonFormat } from "./PackageJsonFormat.ts";
 import { PackageManifest } from "./PackageManifest.ts";
+
+const Json = Schema.fromJsonString(Schema.Unknown);
 
 // ── Errors ────────────────────────────────────────────────────────────────────
 
@@ -173,6 +175,7 @@ export interface PackageJsonFileShape {
 		| PackageJsonNotFoundError
 		| PackageJsonParseError
 		| PackageJsonModifyError
+		| JsoncStringifyError
 		| PackageJsonWriteError
 	>;
 }
@@ -223,39 +226,37 @@ export class PackageJsonFile extends Context.Service<PackageJsonFile, PackageJso
 						),
 					);
 
-			const readJson = (target: string) =>
-				Effect.gen(function* () {
-					const content = yield* readText(target);
-					return yield* Effect.try({
-						try: () => JSON.parse(content) as unknown,
-						catch: (cause) => PackageJsonParseError.make({ path: target, cause }),
-					});
-				});
+			const readJson = Effect.fn("readJson")(function* (target: string) {
+				const content = yield* readText(target);
+				return yield* Schema.decodeEffect(Json)(content).pipe(
+					Effect.mapError((cause) => {
+						const parsed = PackageJsonFormat.formatToString(content);
+						return PackageJsonParseError.make({
+							path: target,
+							cause: Result.isFailure(parsed) ? parsed.failure.cause : cause,
+						});
+					}),
+				);
+			});
 
 			// `indent: "preserve"` with no source text in hand: detect the
 			// indentation from the file being overwritten. Any read failure (most
 			// commonly a fresh file) falls back to the default indent.
-			const withPreservedSource = (target: string, options?: PackageFormatOptions) =>
-				Effect.gen(function* () {
-					if (options?.indent !== "preserve" || options.sourceText !== undefined) {
-						return options;
-					}
-					const existing = yield* fs
-						.readFileString(target)
-						.pipe(Effect.catch(() => Effect.succeed<string | undefined>(undefined)));
-					return existing === undefined ? options : { ...options, sourceText: existing };
-				});
+			const withPreservedSource = Effect.fn("withPreservedSource")(function* (target: string, options?: PackageFormatOptions) {
+				if (options?.indent !== "preserve" || options.sourceText !== undefined) {
+					return options;
+				}
+				const existing = yield* fs
+					.readFileString(target)
+					.pipe(Effect.orElseSucceed((): string | undefined => undefined));
+				return existing === undefined ? options : { ...options, sourceText: existing };
+			});
 
-			const writeText = (target: string, json: string) =>
-				Effect.gen(function* () {
-					const directory = path.dirname(target);
-					yield* fs
-						.makeDirectory(directory, { recursive: true })
-						.pipe(Effect.mapError((cause) => PackageJsonWriteError.make({ path: target, cause })));
-					yield* fs
-						.writeFileString(target, json)
-						.pipe(Effect.mapError((cause) => PackageJsonWriteError.make({ path: target, cause })));
-				});
+			const writeText = Effect.fn("writeText")(function* (target: string, json: string) {
+				const directory = path.dirname(target);
+				yield* fs.makeDirectory(directory, { recursive: true });
+				yield* fs.writeFileString(target, json);
+			}, (effect, target) => effect.pipe(Effect.mapError((cause) => PackageJsonWriteError.make({ path: target, cause }))));
 
 			const read = Effect.fn("PackageJsonFile.read")(function* (target: string) {
 				return yield* Package.decode(yield* readJson(target));

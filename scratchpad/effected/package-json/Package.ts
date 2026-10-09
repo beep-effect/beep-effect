@@ -8,7 +8,7 @@
 import { CatalogResolver, DependencySpecifier, WorkspaceResolver } from "../npm/index.ts";
 import type { InvalidVersionError } from "../semver/index.ts";
 import { SemVer } from "../semver/index.ts";
-import { Effect, Function as Fn, HashMap, Option, Pipeable, Schema, SchemaTransformation } from "effect";
+import { Effect, Function as Fn, HashMap, Option, Pipeable, Result, Schema, SchemaTransformation } from "effect";
 import { Dependency } from "./Dependency.ts";
 import { DevEnginesSchema } from "./DevEngines.ts";
 import { Funding } from "./Funding.ts";
@@ -528,7 +528,7 @@ export class Package extends Schema.Class<Package>("Package")({
 	 * sorting and empty-map stripping unless the options opt out. Pure.
 	 */
 	toJsonString(options?: PackageFormatOptions): string {
-		const raw = Schema.encodeUnknownSync(Package.schema)(this) as Record<string, unknown>;
+		const raw = Result.getOrThrowWith(Schema.encodeUnknownResult(Package.schema)(this), (error) => error);
 		return renderJson(raw, resolveFormatOptions(options));
 	}
 }

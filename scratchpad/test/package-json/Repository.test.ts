@@ -16,6 +16,8 @@ import { assert, describe, it } from "@effect/vitest";
 import { Effect, Option, Schema } from "effect";
 import { Bugs, Person, Repository } from "../../effected/package-json/index.ts";
 
+const Json = Schema.fromJsonString(Schema.Unknown);
+
 const decode = <A, I>(schema: Schema.Codec<A, I>, input: I) => Schema.decodeUnknownEffect(schema)(input);
 const encode = <A, I>(schema: Schema.Codec<A, I>, value: A) => Schema.encodeUnknownEffect(schema)(value);
 
@@ -356,7 +358,7 @@ describe("Repository and Bugs — the object wire is replayed only while it is f
 			const repo = yield* decode(Repository.FromValue, input);
 			const encoded = yield* encode(Repository.FromValue, repo);
 			assert.deepStrictEqual(encoded, input);
-			assert.strictEqual(JSON.stringify(encoded), JSON.stringify(input));
+			assert.strictEqual((yield* Schema.encodeEffect(Json)(encoded)), (yield* Schema.encodeEffect(Json)(input)));
 		}),
 	);
 

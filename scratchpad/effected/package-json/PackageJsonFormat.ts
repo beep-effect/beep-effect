@@ -21,6 +21,8 @@ import { JsoncEdit, JsoncModifier } from "../jsonc/index.ts";
 import { Effect, Result, Schema } from "effect";
 import { detectIndent, renderJson, resolveIndent, sortKeys } from "./internal/format.ts";
 
+const Json = Schema.fromJsonString(Schema.Unknown);
+
 /**
  * Indicates that a text input could not be treated as a package.json document:
  * either it is not valid JSON (`"invalid-json"`, carrying the underlying
@@ -251,12 +253,14 @@ export class PackageJsonFormat {
 	) {
 		// package.json is strict JSON; a syntactic precondition keeps garbage
 		// input a typed failure instead of undefined scanner behavior.
-		let parsed: unknown;
-		try {
-			parsed = JSON.parse(source) as unknown;
-		} catch (cause) {
-			return yield* PackageJsonSyntaxError.make({ reason: "invalid-json", cause });
-		}
+		const parsed = yield* Schema.decodeEffect(Json)(source).pipe(
+			Effect.mapError((cause) => {
+				const formatted = PackageJsonFormat.formatToString(source);
+				return Result.isFailure(formatted)
+					? formatted.failure
+					: PackageJsonSyntaxError.make({ reason: "invalid-json", cause });
+			}),
+		);
 		if (!isJsonObject(parsed)) {
 			return yield* PackageJsonSyntaxError.make({ reason: "not-an-object" });
 		}

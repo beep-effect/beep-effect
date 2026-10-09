@@ -4,10 +4,12 @@
 // shape" mirror the `sort-package-json` call sites a consumer is replacing.
 
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Result } from "effect";
+import { Effect, Result, Schema } from "effect";
 import { Package } from "../../effected/package-json/Package.ts";
 import type { PackageJsonSyntaxError } from "../../effected/package-json/PackageJsonFormat.ts";
 import { PackageJsonFormat } from "../../effected/package-json/PackageJsonFormat.ts";
+
+const Json = Schema.fromJsonString(Schema.Unknown);
 
 const format = (source: string, options?: Parameters<typeof PackageJsonFormat.formatToString>[1]): string => {
 	const result = PackageJsonFormat.formatToString(source, options);
@@ -119,7 +121,7 @@ describe("PackageJsonFormat.formatToString accepts any syntactically valid JSON 
 		Effect.gen(function* () {
 			for (const input of [{ private: true }, { name: "root", workspaces: ["packages/*"] }]) {
 				const result = yield* Effect.result(Package.decode(input));
-				assert.isTrue(result._tag === "Failure", `expected ${JSON.stringify(input)} to fail strict decode`);
+				assert.isTrue(result._tag === "Failure", `expected ${(yield* Schema.encodeEffect(Json)(input))} to fail strict decode`);
 			}
 		}),
 	);

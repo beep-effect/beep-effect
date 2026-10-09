@@ -176,7 +176,7 @@ export class PackageValidator extends Context.Service<
 >()("@beep/scratchpad/effected/package-json/PackageValidator") {
 	/** The default layer, backed by {@link defaultRules}. */
 	static readonly layer: Layer.Layer<PackageValidator> = Layer.succeed(PackageValidator, {
-		validate: (pkg) => runRules(pkg, defaultRules),
+		validate: Effect.fn("PackageValidator.validate")((pkg) => runRules(pkg, defaultRules)),
 	});
 
 	/**
@@ -186,6 +186,6 @@ export class PackageValidator extends Context.Service<
 	 * @returns a layer providing `PackageValidator` backed by `config.rules`
 	 */
 	static layerRules(config: { readonly rules: ReadonlyArray<ValidationRule> }): Layer.Layer<PackageValidator> {
-		return Layer.succeed(PackageValidator, { validate: (pkg) => runRules(pkg, config.rules) });
+		return Layer.succeed(PackageValidator, { validate: Effect.fn("PackageValidator.validate")((pkg) => runRules(pkg, config.rules)) });
 	}
 }

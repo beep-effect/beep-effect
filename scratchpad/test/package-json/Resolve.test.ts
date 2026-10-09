@@ -6,13 +6,13 @@ import { Package } from "../../effected/package-json/Package.ts";
 
 const workspaceOf = (versions: Record<string, string>): Layer.Layer<WorkspaceResolver> =>
 	Layer.succeed(WorkspaceResolver, {
-		versionOf: (name) => Effect.succeed(Option.fromUndefinedOr(versions[name])),
+		versionOf: Effect.fn("WorkspaceResolver.versionOf")((name) => Effect.succeed(Option.fromUndefinedOr(versions[name]))),
 	});
 
 const catalogOf = (ranges: Record<string, string>): Layer.Layer<CatalogResolver> =>
 	Layer.succeed(CatalogResolver, {
-		rangeOf: (name, catalog) =>
-			Effect.succeed(Option.fromUndefinedOr(ranges[Option.getOrElse(catalog, () => "")] ?? ranges[name])),
+		rangeOf: Effect.fn("CatalogResolver.rangeOf")((name: string, catalog: Option.Option<string>) =>
+			Effect.succeed(Option.fromUndefinedOr(ranges[Option.getOrElse(catalog, () => "")] ?? ranges[name]))),
 	});
 
 const decodeDeps = (deps: Record<string, string>) =>
@@ -101,7 +101,7 @@ describe("Package.resolve", () => {
 				Effect.provide(
 					Layer.mergeAll(
 						WorkspaceResolver.noop,
-						Layer.succeed(CatalogResolver, { rangeOf: () => Effect.fail(assemblyFailure) }),
+						Layer.succeed(CatalogResolver, { rangeOf: Effect.fn("CatalogResolver.rangeOf")(() => Effect.fail(assemblyFailure)) }),
 					),
 				),
 				Effect.flip,

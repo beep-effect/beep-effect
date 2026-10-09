@@ -21,7 +21,7 @@
 //   PackageJsonFormat  — decode-free text path: anything syntactically JSON.
 
 import { SemVer } from "../semver/index.ts";
-import { Effect, Schema } from "effect";
+import { Effect, Result, Schema } from "effect";
 import { renderJson, resolveFormatOptions } from "./internal/format.ts";
 import { makeWire } from "./internal/wire.ts";
 import type { PackageFormatOptions } from "./Package.ts";
@@ -112,7 +112,7 @@ export class PackageManifest extends Schema.Class<PackageManifest>("PackageManif
 	 * Absent `name` / `version` keys stay absent — nothing is invented.
 	 */
 	toJsonString(options?: PackageFormatOptions): string {
-		const raw = Schema.encodeUnknownSync(PackageManifest.schema)(this) as Record<string, unknown>;
+		const raw = Result.getOrThrowWith(Schema.encodeUnknownResult(PackageManifest.schema)(this), (error) => error);
 		return renderJson(raw, resolveFormatOptions(options));
 	}
 }
