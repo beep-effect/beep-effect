@@ -1,4 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
@@ -217,8 +218,8 @@ describe("SpdxExpression", () => {
 describe("SpdxExpression — collapsing an expression to licenses", () => {
 	const parse = (input: string) => {
 		const result = SpdxExpression.parseResult(input);
-		assert.isTrue(Result.isSuccess(result), input);
-		return (result as Result.Success<SpdxExpressionAst, never>).success;
+		assertTrue(Result.isSuccess(result), input);
+		return result.success;
 	};
 
 	it("a simple license is its own primary", () => {
@@ -269,9 +270,10 @@ describe("SpdxExpression — collapsing an expression to licenses", () => {
 
 	it("a deprecated id keeps its deprecated flag through the collapse", () => {
 		const primary = SpdxExpression.primaryLicense(parse("GPL-3.0"));
-		assert.isTrue(O.isSome(primary));
-		assert.strictEqual((primary as O.Some<License>).value.id, "GPL-3.0");
-		assert.isTrue((primary as O.Some<License>).value.deprecated);
+		const isSome = O.isSome(primary);
+		assertTrue(isSome);
+		assert.strictEqual(primary.value.id, "GPL-3.0");
+		assert.isTrue(primary.value.deprecated);
 	});
 
 	it("licensesOf keeps every term, in written order", () => {

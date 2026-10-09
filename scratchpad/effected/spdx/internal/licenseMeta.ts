@@ -776,10 +776,10 @@ export const LICENSE_META_ROWS: readonly string[] = [
  * @internal
  */
 export const LICENSE_META: ReadonlyMap<string, LicenseMetaEntry> = new Map(
-	LICENSE_META_ROWS.map((row) => {
+	LICENSE_META_ROWS.map((row): readonly [string, LicenseMetaEntry] => {
 		const tab = row.indexOf("\t");
 		const last = row.lastIndexOf("\t");
 		const id = row.slice(0, tab);
-		return [id, [id, row.slice(tab + 1, last), Number(row.slice(last + 1))] as LicenseMetaEntry] as const;
+		return [id, [id, row.slice(tab + 1, last), Number(row.slice(last + 1))]];
 	}),
 );
