@@ -64,7 +64,7 @@ describe("EncryptedCodec", () => {
 	it.effect("fails with ConfigEncryptionError when the ciphertext is too short for an IV", () =>
 		Effect.gen(function* () {
 			const codec = EncryptedCodec(JsonCodec, key());
-			const error = yield* Effect.flip(codec.parse(btoa("short")));
+			const error = yield* Effect.flip(Effect.asVoid(codec.parse(btoa("short"))));
 			assert.instanceOf(error, ConfigEncryptionError);
 			assert.strictEqual(error._tag, "ConfigEncryptionError");
 			assert.strictEqual((error as ConfigEncryptionError).phase, "decrypt");
@@ -88,7 +88,7 @@ describe("EncryptedCodec", () => {
 	it.effect("fails with phase encoding when the input is not valid base64", () =>
 		Effect.gen(function* () {
 			const codec = EncryptedCodec(JsonCodec, key());
-			const error = yield* Effect.flip(codec.parse("!!! not base64 !!!"));
+			const error = yield* Effect.flip(Effect.asVoid(codec.parse("!!! not base64 !!!")));
 			assert.instanceOf(error, ConfigEncryptionError);
 			assert.strictEqual((error as ConfigEncryptionError).phase, "encoding");
 			// The caught host failure rides along structurally — never String(e).
@@ -100,7 +100,7 @@ describe("EncryptedCodec", () => {
 		Effect.gen(function* () {
 			const ciphertext = yield* EncryptedCodec(JsonCodec, key()).stringify({ port: 1 });
 			const wrong = EncryptedCodec(JsonCodec, EncryptedCodecKey.fromPassphrase("wrong", salt));
-			const error = yield* Effect.flip(wrong.parse(ciphertext));
+			const error = yield* Effect.flip(Effect.asVoid(wrong.parse(ciphertext)));
 			assert.instanceOf(error, ConfigEncryptionError);
 			assert.strictEqual((error as ConfigEncryptionError).phase, "decrypt");
 		}),
@@ -125,7 +125,7 @@ describe("EncryptedCodec", () => {
 		Effect.gen(function* () {
 			// Encrypt invalid JSON with a raw passthrough codec, then decrypt with json.
 			const ciphertext = yield* EncryptedCodec(passthrough, key()).stringify("{ not json");
-			const error = yield* Effect.flip(EncryptedCodec(JsonCodec, key()).parse(ciphertext));
+			const error = yield* Effect.flip(Effect.asVoid(EncryptedCodec(JsonCodec, key()).parse(ciphertext)));
 			// The inner codec's error, widened not flattened.
 			assert.strictEqual(error._tag, "ConfigCodecError");
 			assert.notInstanceOf(error, ConfigEncryptionError);
@@ -220,7 +220,7 @@ describe("EncryptedCodec", () => {
 			const first = yield* Effect.flip(codec.stringify({ a: 1 }));
 			// A well-formed envelope: parse validates it before resolving the key, so
 			// this reaches the key rather than short-circuiting on the too-short guard.
-			const second = yield* Effect.flip(codec.parse(btoa("x".repeat(32))));
+			const second = yield* Effect.flip(Effect.asVoid(codec.parse(btoa("x".repeat(32)))));
 			// The deterministic failure still fails, by identity, every time...
 			assert.strictEqual(first, boom);
 			assert.strictEqual(second, boom);

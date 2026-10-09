@@ -82,7 +82,7 @@ describe("ConfigCodecError.path", () => {
 	);
 
 	it("is absent when a codec is driven directly, outside the pipeline", () => {
-		const error = Effect.runSync(Effect.flip(JsonCodec.parse("{ not json")));
+		const error = Effect.runSync(Effect.flip(Effect.asVoid(JsonCodec.parse("{ not json"))));
 		assert.instanceOf(error, ConfigCodecError);
 		assert.strictEqual(error.path, undefined);
 		assert.strictEqual(error.message, "json parse failed");

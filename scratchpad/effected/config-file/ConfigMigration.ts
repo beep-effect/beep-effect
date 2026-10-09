@@ -36,7 +36,7 @@ export class ConfigMigrationError extends Schema.TaggedError<ConfigMigrationErro
  *
  * @public
  */
-export interface ConfigFileMigration {
+export interface ConfigFileMigration<E = unknown> {
 	/** The version this step migrates the config to. Steps run in ascending order. */
 	readonly version: number;
 	/** A label for the step, carried on {@link ConfigMigrationError} when it fails. */
@@ -45,39 +45,43 @@ export interface ConfigFileMigration {
 	 * Transforms the parsed config. Signal recoverable failure with `Effect.fail`;
 	 * a synchronous `throw` is treated as a defect, not a `ConfigMigrationError`.
 	 */
-	readonly up: (raw: unknown) => Effect.Effect<unknown, unknown>;
+	readonly up: (raw: unknown) => Effect.Effect<unknown, E>;
 }
 
 /** How the version number is read from and written to the parsed config. @public */
-export interface VersionAccess {
+export interface VersionAccess<E = unknown> {
 	/** Read the current version from the parsed config. */
-	readonly get: (raw: unknown) => Effect.Effect<number, unknown>;
+	readonly get: (raw: unknown) => Effect.Effect<number, E>;
 	/** Return the config with `version` written back. */
-	readonly set: (raw: unknown, version: number) => Effect.Effect<unknown, unknown>;
+	readonly set: (raw: unknown, version: number) => Effect.Effect<unknown, E>;
 }
 
-const defaultVersionAccess: VersionAccess = {
-	get: (raw) => {
-		if (typeof raw !== "object" || raw === null) return Effect.fail(new Error("config is not an object"));
+class VersionAccessError extends Schema.TaggedError<VersionAccessError>()("VersionAccessError", { message: Schema.String }) {
+	override name = "Error";
+}
+
+const defaultVersionAccess = {
+	get: (raw: unknown) => {
+		if (typeof raw !== "object" || raw === null) return Effect.fail(VersionAccessError.make({ message: "config is not an object" }));
 		const version = (raw as Record<string, unknown>).version;
 		return typeof version === "number"
 			? Effect.succeed(version)
-			: Effect.fail(new Error("version field is missing or not a number"));
+			: Effect.fail(VersionAccessError.make({ message: "version field is missing or not a number" }));
 	},
-	set: (raw, version) => Effect.succeed({ ...(raw as Record<string, unknown>), version }),
+	set: (raw: unknown, version: number) => Effect.succeed({ ...(raw as Record<string, unknown>), version }),
 };
 
 /** Reads and writes a top-level `version` field. @public */
 export const VersionAccess = { default: defaultVersionAccess } as const;
 
 /** Options for {@link ConfigMigration.make}. @public */
-export interface ConfigMigrationOptions {
+export interface ConfigMigrationOptions<EM = unknown, EV = unknown> {
 	/** The codec being wrapped. */
 	readonly codec: ConfigCodec;
 	/** The migration steps; they run in ascending `version` order. */
-	readonly migrations: ReadonlyArray<ConfigFileMigration>;
+	readonly migrations: ReadonlyArray<ConfigFileMigration<EM>>;
 	/** How the version is read and written; defaults to {@link (VersionAccess:variable).default}, a top-level `version` field. */
-	readonly versionAccess?: VersionAccess;
+	readonly versionAccess?: VersionAccess<EV>;
 }
 
 /**
@@ -92,28 +96,27 @@ export interface ConfigMigrationOptions {
  * swallow it. `Effect.suspend` ensures a throw raised while constructing the
  * effect dies exactly like a throw raised while running it.
  */
-const runPhase = <A>(
+const runPhase = <A, E>(
 	phase: "read-version" | "apply" | "write-version",
 	version: number,
 	name: string,
-	run: () => Effect.Effect<A, unknown>,
+	run: () => Effect.Effect<A, E>,
 ): Effect.Effect<A, ConfigMigrationError> =>
 	Effect.suspend(run).pipe(Effect.mapError((cause) => ConfigMigrationError.make({ version, name, phase, cause })));
 
 // Implementation of ConfigMigration.make; the public contract lives on the static.
-const make = (options: ConfigMigrationOptions): ConfigCodec<ConfigCodecError | ConfigMigrationError> => {
+const make: (options: ConfigMigrationOptions) => ConfigCodec<ConfigCodecError | ConfigMigrationError> = <EM, EV>(options: ConfigMigrationOptions<EM, EV>): ConfigCodec<ConfigCodecError | ConfigMigrationError> => {
 	const access = options.versionAccess ?? VersionAccess.default;
 	const sorted = [...options.migrations].sort((a, b) => a.version - b.version);
 
 	return {
 		name: options.codec.name,
 		stringify: options.codec.stringify,
-		parse: (raw) =>
-			Effect.gen(function* () {
+		parse: Effect.fn("parse")(function* (raw: string) {
 				let parsed = yield* options.codec.parse(raw);
 				if (sorted.length === 0) return parsed;
 
-				const current = yield* runPhase("read-version", 0, "", () => access.get(parsed));
+				const current = yield* runPhase<number, EV | VersionAccessError>("read-version", 0, "", () => access.get(parsed));
 
 				for (const migration of sorted.filter((m) => m.version > current)) {
 					parsed = yield* runPhase("apply", migration.version, migration.name, () => migration.up(parsed));

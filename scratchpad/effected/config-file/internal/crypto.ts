@@ -13,6 +13,7 @@
  * @internal
  */
 import { Effect } from "effect";
+import { dual } from "effect/Function";
 
 /** AES-GCM's standard IV length, in bytes. @internal */
 export const IV_LENGTH = 12;
@@ -52,14 +53,16 @@ export function toArrayBufferView(src: Uint8Array): Uint8Array<ArrayBuffer> {
  *
  * @internal
  */
-export const deriveKey = (passphrase: string, salt: Uint8Array): Effect.Effect<CryptoKey, CryptoFailure> =>
+export const deriveKey: {
+	(salt: Uint8Array): (passphrase: string) => Effect.Effect<CryptoKey, CryptoFailure>;
+	(passphrase: string, salt: Uint8Array): Effect.Effect<CryptoKey, CryptoFailure>;
+} = dual(2, (passphrase: string, salt: Uint8Array): Effect.Effect<CryptoKey, CryptoFailure> =>
 	Effect.tryPromise({
-		try: async () => {
+		try: () => {
 			const enc = new TextEncoder();
-			const keyMaterial = await globalThis.crypto.subtle.importKey("raw", enc.encode(passphrase), "PBKDF2", false, [
+			return globalThis.crypto.subtle.importKey("raw", enc.encode(passphrase), "PBKDF2", false, [
 				"deriveKey",
-			]);
-			return await globalThis.crypto.subtle.deriveKey(
+			]).then((keyMaterial) => globalThis.crypto.subtle.deriveKey(
 				{
 					name: "PBKDF2",
 					// Copy into ArrayBuffer-backed Uint8Array — required by PBKDF2Params.salt
@@ -73,10 +76,10 @@ export const deriveKey = (passphrase: string, salt: Uint8Array): Effect.Effect<C
 				{ name: "AES-GCM", length: 256 },
 				false,
 				["encrypt", "decrypt"],
-			);
+			));
 		},
 		catch: fail("key-derivation"),
-	});
+	}));
 
 /**
  * Decode base64 into bytes.
@@ -105,7 +108,10 @@ export const fromBase64 = (raw: string): Effect.Effect<Uint8Array<ArrayBuffer>, 
  *
  * @internal
  */
-export const toBase64 = (iv: Uint8Array, ciphertext: ArrayBuffer): Effect.Effect<string, CryptoFailure> =>
+export const toBase64: {
+	(ciphertext: ArrayBuffer): (iv: Uint8Array) => Effect.Effect<string, CryptoFailure>;
+	(iv: Uint8Array, ciphertext: ArrayBuffer): Effect.Effect<string, CryptoFailure>;
+} = dual(2, (iv: Uint8Array, ciphertext: ArrayBuffer): Effect.Effect<string, CryptoFailure> =>
 	Effect.try({
 		try: () => {
 			const ciphertextBytes = new Uint8Array(ciphertext);
@@ -116,10 +122,13 @@ export const toBase64 = (iv: Uint8Array, ciphertext: ArrayBuffer): Effect.Effect
 			return btoa(Array.from(result, (b) => String.fromCharCode(b)).join(""));
 		},
 		catch: fail("encoding"),
-	});
+	}));
 
 /** Decrypt AES-GCM ciphertext under `iv`. @internal */
-export const decrypt = (
+export const decrypt: {
+	(iv: Uint8Array<ArrayBuffer>, ciphertext: Uint8Array<ArrayBuffer>): (key: CryptoKey) => Effect.Effect<ArrayBuffer, CryptoFailure>;
+	(key: CryptoKey, iv: Uint8Array<ArrayBuffer>, ciphertext: Uint8Array<ArrayBuffer>): Effect.Effect<ArrayBuffer, CryptoFailure>;
+} = dual(3, (
 	key: CryptoKey,
 	iv: Uint8Array<ArrayBuffer>,
 	ciphertext: Uint8Array<ArrayBuffer>,
@@ -127,10 +136,13 @@ export const decrypt = (
 	Effect.tryPromise({
 		try: () => globalThis.crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, ciphertext),
 		catch: fail("decrypt"),
-	});
+	}));
 
 /** Encrypt `plaintext` with AES-GCM under `iv`. @internal */
-export const encrypt = (
+export const encrypt: {
+	(iv: Uint8Array<ArrayBuffer>, plaintext: Uint8Array<ArrayBuffer>): (key: CryptoKey) => Effect.Effect<ArrayBuffer, CryptoFailure>;
+	(key: CryptoKey, iv: Uint8Array<ArrayBuffer>, plaintext: Uint8Array<ArrayBuffer>): Effect.Effect<ArrayBuffer, CryptoFailure>;
+} = dual(3, (
 	key: CryptoKey,
 	iv: Uint8Array<ArrayBuffer>,
 	plaintext: Uint8Array<ArrayBuffer>,
@@ -138,7 +150,7 @@ export const encrypt = (
 	Effect.tryPromise({
 		try: () => globalThis.crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, plaintext),
 		catch: fail("encrypt"),
-	});
+	}));
 
 /** A fresh cryptographically random 12-byte IV. @internal */
 export const randomIv = (): Uint8Array<ArrayBuffer> =>

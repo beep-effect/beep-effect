@@ -1,5 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Cause, Effect, Exit, Option } from "effect";
+import { Cause, Effect, Exit, Option, Schema } from "effect";
 import type { VersionAccess } from "../../effected/config-file/ConfigMigration.ts";
 import { ConfigMigration, ConfigMigrationError } from "../../effected/config-file/ConfigMigration.ts";
 import { JsonCodec } from "../../effected/config-file/JsonCodec.ts";
@@ -40,7 +40,7 @@ describe("ConfigMigration.make", () => {
 				codec: JsonCodec,
 				migrations: [{ version: 2, name: "add-b", up: () => Effect.fail(boom) }],
 			});
-			const error = yield* Effect.flip(codec.parse(`{"version":1}`));
+			const error = yield* Effect.flip(Effect.asVoid(codec.parse(`{"version":1}`)));
 			assert.instanceOf(error, ConfigMigrationError);
 			assert.strictEqual(error._tag, "ConfigMigrationError");
 			assert.strictEqual((error as ConfigMigrationError).name, "add-b");
@@ -57,15 +57,16 @@ describe("ConfigMigration.make", () => {
 				codec: JsonCodec,
 				migrations: [bump(2, "add-b", (r) => r)],
 			});
-			const error = yield* Effect.flip(codec.parse(`{"a":1}`));
-			assert.strictEqual((error as ConfigMigrationError).phase, "read-version");
+			const error = yield* Effect.flip(Effect.asVoid(codec.parse(`{"a":1}`)));
+			if (!Schema.is(ConfigMigrationError)(error)) throw error;
+			assert.strictEqual(error.phase, "read-version");
 		}),
 	);
 
 	it.effect("a codec failure surfaces as ConfigCodecError, not ConfigMigrationError", () =>
 		Effect.gen(function* () {
 			const codec = ConfigMigration.make({ codec: JsonCodec, migrations: [bump(2, "x", (r) => r)] });
-			const error = yield* Effect.flip(codec.parse("{ not json"));
+			const error = yield* Effect.flip(Effect.asVoid(codec.parse("{ not json")));
 			assert.strictEqual(error._tag, "ConfigCodecError");
 			// The SyntaxError JSON.parse threw must survive structurally through the
 			// decorator. Asserting the tag alone would still pass if a regression
@@ -132,13 +133,17 @@ describe("ConfigMigration.make", () => {
 	);
 });
 
+class VersionAccessError extends Schema.TaggedError<VersionAccessError>()("VersionAccessError", { message: Schema.String }) {
+	override name = "Error";
+}
+
 /** Reads and writes the version at `meta.schemaVersion` instead of the default top-level `version`. */
-const metaAccess: VersionAccess = {
+const metaAccess: VersionAccess<VersionAccessError> = {
 	get: (raw) => {
 		const meta = (raw as { readonly meta?: { readonly schemaVersion?: unknown } }).meta;
 		return typeof meta?.schemaVersion === "number"
 			? Effect.succeed(meta.schemaVersion)
-			: Effect.fail(new Error("meta.schemaVersion is missing or not a number"));
+			: Effect.fail(VersionAccessError.make({ message: "meta.schemaVersion is missing or not a number" }));
 	},
 	set: (raw, version) => {
 		const doc = raw as Record<string, unknown>;
@@ -166,7 +171,7 @@ describe("ConfigMigration.make with a custom versionAccess", () => {
 		Effect.gen(function* () {
 			const setVersions: Array<number> = [];
 			const seenByUp: Array<unknown> = [];
-			const recordingAccess: VersionAccess = {
+			const recordingAccess: VersionAccess<VersionAccessError> = {
 				get: metaAccess.get,
 				set: (raw, version) => {
 					setVersions.push(version);
@@ -208,7 +213,7 @@ describe("ConfigMigration.make with a custom versionAccess", () => {
 			});
 			// The document satisfies the DEFAULT accessor (top-level version) but not the
 			// custom one — the failure proves the custom get was the one consulted.
-			const error = yield* Effect.flip(codec.parse(`{"version":1,"a":1}`));
+			const error = yield* Effect.flip(Effect.asVoid(codec.parse(`{"version":1,"a":1}`)));
 			assert.instanceOf(error, ConfigMigrationError);
 			assert.strictEqual((error as ConfigMigrationError).phase, "read-version");
 			assert.strictEqual((error as ConfigMigrationError).version, 0);
@@ -228,7 +233,7 @@ describe("ConfigMigration.make with a custom versionAccess", () => {
 				migrations: [bump(2, "add-b", (r) => r)],
 				versionAccess: metaAccess,
 			});
-			const error = yield* Effect.flip(codec.parse(`{"meta":{"schemaVersion":"two"}}`));
+			const error = yield* Effect.flip(Effect.asVoid(codec.parse(`{"meta":{"schemaVersion":"two"}}`)));
 			assert.instanceOf(error, ConfigMigrationError);
 			assert.strictEqual((error as ConfigMigrationError).phase, "read-version");
 		}),
@@ -242,7 +247,7 @@ describe("ConfigMigration.make with a custom versionAccess", () => {
 				migrations: [bump(2, "add-b", (r) => ({ ...r, b: 2 }))],
 				versionAccess: { get: metaAccess.get, set: () => Effect.fail(boom) },
 			});
-			const error = yield* Effect.flip(codec.parse(`{"meta":{"schemaVersion":1}}`));
+			const error = yield* Effect.flip(Effect.asVoid(codec.parse(`{"meta":{"schemaVersion":1}}`)));
 			assert.instanceOf(error, ConfigMigrationError);
 			assert.strictEqual((error as ConfigMigrationError).phase, "write-version");
 			assert.strictEqual((error as ConfigMigrationError).version, 2);

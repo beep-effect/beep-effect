@@ -11,7 +11,7 @@ import { MergeStrategy } from "../../effected/config-file/MergeStrategy.ts";
 import type { RecordingFs } from "./helpers.ts";
 import { recordingFs } from "./helpers.ts";
 
-class AppShape extends Schema.Class<AppShape>("AppShape")({ port: Schema.Number }) {}
+class AppShape extends Schema.Class<AppShape>("AppShape")({ port: Schema.Finite }) {}
 class AppConfig extends ConfigFile.Service<AppConfig, AppShape>()("test/EventConfig") {}
 
 /**

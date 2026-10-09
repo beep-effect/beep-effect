@@ -1,5 +1,6 @@
-import type { Context, Layer } from "effect";
-import { ConfigProvider, Effect } from "effect";
+import type { Layer } from "effect";
+import { ConfigProvider, Context, Effect } from "effect";
+import { dual } from "effect/Function";
 import type { ConfigFileShape, ConfigLoadError } from "./ConfigFile.ts";
 
 /**
@@ -104,7 +105,10 @@ export interface LayerConfigProviderOptions {
  *
  * @public
  */
-export const layerConfigProvider = <Self, A>(
+export const layerConfigProvider: {
+	(options?: LayerConfigProviderOptions): <Self, A>(tag: Context.Key<Self, ConfigFileShape<A>>) => Layer.Layer<never, ConfigLoadError, Self>;
+	<Self, A>(tag: Context.Key<Self, ConfigFileShape<A>>, options?: LayerConfigProviderOptions): Layer.Layer<never, ConfigLoadError, Self>;
+} = dual((args) => Context.isKey(args[0]), <Self, A>(
 	tag: Context.Key<Self, ConfigFileShape<A>>,
 	options?: LayerConfigProviderOptions,
 ): Layer.Layer<never, ConfigLoadError, Self> => {
@@ -117,4 +121,4 @@ export const layerConfigProvider = <Self, A>(
 	// have: `layerAdd` reads the field with `?.`, so an explicit `undefined` and
 	// an omitted key are identical here.
 	return ConfigProvider.layerAdd(provider, { asPrimary: options?.asPrimary });
-};
+});

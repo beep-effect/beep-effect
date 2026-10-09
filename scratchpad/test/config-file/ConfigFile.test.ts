@@ -9,7 +9,7 @@ import { ConfigResolver } from "../../effected/config-file/ConfigResolver.ts";
 import { JsonCodec } from "../../effected/config-file/JsonCodec.ts";
 import { MergeStrategy } from "../../effected/config-file/MergeStrategy.ts";
 
-class AppShape extends Schema.Class<AppShape>("AppShape")({ port: Schema.Number }) {}
+class AppShape extends Schema.Class<AppShape>("AppShape")({ port: Schema.Finite }) {}
 class AppConfig extends ConfigFile.Service<AppConfig, AppShape>()("test/AppConfig") {}
 
 const layerFor = (
@@ -51,7 +51,8 @@ describe("ConfigFile.load", () => {
 	it.effect("ConfigFileNotFoundError.candidates carries the full walk, in probe order", () =>
 		Effect.gen(function* () {
 			const cfg = yield* AppConfig;
-			const error = (yield* Effect.flip(cfg.load)) as ConfigFileNotFoundError;
+			const error = yield* Effect.flip(cfg.load);
+			if (!Schema.is(ConfigFileNotFoundError)(error)) throw error;
 			assert.deepStrictEqual(error.searched, ["explicit", "walk:project"]);
 			assert.deepStrictEqual(error.candidates, [
 				"/app/.apprc",
@@ -81,7 +82,8 @@ describe("ConfigFile.load", () => {
 	it.effect("a resolver without resolveProbe contributes no candidates but still names itself", () =>
 		Effect.gen(function* () {
 			const cfg = yield* AppConfig;
-			const error = (yield* Effect.flip(cfg.load)) as ConfigFileNotFoundError;
+			const error = yield* Effect.flip(cfg.load);
+			if (!Schema.is(ConfigFileNotFoundError)(error)) throw error;
 			assert.deepStrictEqual(error.searched, ["hand-rolled", "explicit"]);
 			// The hand-rolled tier is opaque; the built-in still reports its probe.
 			assert.deepStrictEqual(error.candidates, ["/app/.apprc"]);
@@ -146,10 +148,12 @@ describe("ConfigFile.load", () => {
 			const cfg = yield* AppConfig;
 			const label = yield* cfg.load.pipe(
 				Effect.as("ok"),
-				Effect.catchTag("ConfigFileNotFoundError", () => Effect.succeed("not-found")),
-				Effect.catchTag("ConfigCodecError", () => Effect.succeed("bad-syntax")),
-				Effect.catchTag("ConfigValidationError", () => Effect.succeed("bad-shape")),
-				Effect.catchTag("ConfigFileReadError", () => Effect.succeed("unreadable")),
+				Effect.catchTags({
+					ConfigFileNotFoundError: () => Effect.succeed("not-found"),
+					ConfigCodecError: () => Effect.succeed("bad-syntax"),
+					ConfigValidationError: () => Effect.succeed("bad-shape"),
+					ConfigFileReadError: () => Effect.succeed("unreadable"),
+				}),
 			);
 			assert.strictEqual(label, "bad-syntax");
 		}).pipe(Effect.provide(layerFor({ "/app/.apprc": "{ not json" }))),

@@ -7,7 +7,7 @@ import { ConfigResolver } from "../../effected/config-file/ConfigResolver.ts";
 import { JsonCodec } from "../../effected/config-file/JsonCodec.ts";
 import { MergeStrategy } from "../../effected/config-file/MergeStrategy.ts";
 
-class Settings extends Schema.Class<Settings>("Settings")({ port: Schema.Number }) {}
+class Settings extends Schema.Class<Settings>("Settings")({ port: Schema.Finite }) {}
 type SettingsEncoded = typeof Settings.Encoded;
 class SettingsFile extends ConfigFile.Service<SettingsFile, Settings>()("key-typing/SettingsFile") {}
 // A key over a WIDER shape: the layer could never supply `extra`.

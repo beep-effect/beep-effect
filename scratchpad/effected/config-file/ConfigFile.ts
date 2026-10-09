@@ -414,8 +414,7 @@ const makeImpl = <A, I, RR>(
 					Effect.flatMap(
 						Option.match({
 							onNone: () => Effect.void,
-							onSome: (svc) =>
-								Effect.gen(function* () {
+							onSome: Effect.fn("onSome")(function* (svc) {
 									const timestamp = yield* DateTime.now;
 									yield* PubSub.publish(svc.events, ConfigEvent.make({ timestamp, event: payload }));
 								}),
@@ -440,7 +439,7 @@ const makeImpl = <A, I, RR>(
 		);
 
 	const runValidate = (value: A): Effect.Effect<A, ConfigValidationError> =>
-		options.validate ? options.validate(value) : Effect.succeed(value);
+		options.validate !== undefined ? options.validate(value) : Effect.succeed(value);
 
 	const loadFrom = Effect.fn("ConfigFile.loadFrom")(function* (target: string) {
 		const raw = yield* fs

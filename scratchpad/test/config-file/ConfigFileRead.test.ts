@@ -13,13 +13,15 @@
 import { assert, describe, it } from "@effect/vitest";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
 import type { FileSystem } from "effect";
-import { Effect, Layer, Option, Path, Schema } from "effect";
+import { Effect, Layer, Option, Path, Schema, Result } from "effect";
 import { ConfigCodecError } from "../../effected/config-file/ConfigCodec.ts";
 import { ConfigFile, ConfigFileReadError, ConfigValidationError } from "../../effected/config-file/ConfigFile.ts";
 import { JsonCodec } from "../../effected/config-file/JsonCodec.ts";
 import { JsoncCodec } from "../../effected/config-file/JsoncCodec.ts";
 
-class AppShape extends Schema.Class<AppShape>("AppShape")({ port: Schema.Number }) {}
+const JsonValue = Schema.fromJsonString(Schema.Unknown);
+
+class AppShape extends Schema.Class<AppShape>("AppShape")({ port: Schema.Finite }) {}
 
 const platform = (files: Record<string, string>): Layer.Layer<FileSystem.FileSystem | Path.Path> =>
 	Layer.mergeAll(MemoryFileSystem.layerWith(files), Path.layer);
@@ -124,7 +126,7 @@ describe("ConfigFile.read", () => {
 					}),
 				);
 				assert.instanceOf(error, ConfigValidationError);
-				assert.include(JSON.stringify(error.issue), "removedCredential");
+				assert.include(Result.getOrThrow(Schema.encodeResult(JsonValue)(error.issue)), "removedCredential");
 			}).pipe(Effect.provide(platform(withExtra))),
 		);
 
@@ -144,7 +146,7 @@ describe("ConfigFile.read", () => {
 				// The half that decides whether this is usable: a schema that
 				// deliberately admits a pass-through section must keep working under
 				// "error", or strictness would break a documented feature.
-				const Passthrough = Schema.StructWithRest(Schema.Struct({ port: Schema.Number }), [
+				const Passthrough = Schema.StructWithRest(Schema.Struct({ port: Schema.Finite }), [
 					Schema.Record(Schema.String, Schema.Unknown),
 				]);
 				const value = yield* ConfigFile.read("/app/.apprc", {

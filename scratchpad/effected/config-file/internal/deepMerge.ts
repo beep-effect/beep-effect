@@ -1,3 +1,4 @@
+import { dual } from "effect/Function";
 /**
  * A true plain object: `{}` or `Object.create(null)`. Class instances, `Date`,
  * `Map`, `Set`, `RegExp` and arrays are values, not merge targets.
@@ -33,8 +34,11 @@ const isRecordLike = (value: unknown): value is Record<string, unknown> =>
  * decoded through `Schema.Class` merges with another of the same class and
  * keeps its identity, and nothing else is ever silently reshaped.
  */
-export const canMerge = (a: unknown, b: unknown): boolean =>
-	isRecordLike(a) && isRecordLike(b) && Object.getPrototypeOf(a) === Object.getPrototypeOf(b);
+export const canMerge: {
+	(b: unknown): (a: unknown) => boolean;
+	(a: unknown, b: unknown): boolean;
+} = dual(2, (a: unknown, b: unknown): boolean =>
+	isRecordLike(a) && isRecordLike(b) && Object.getPrototypeOf(a) === Object.getPrototypeOf(b));
 
 const FORBIDDEN = new Set(["__proto__", "constructor", "prototype"]);
 
@@ -52,7 +56,10 @@ const FORBIDDEN = new Set(["__proto__", "constructor", "prototype"]);
  * Only own enumerable keys are consulted (`Object.hasOwn`), so a prototype
  * getter on `target` never shadows a real key on `source`.
  */
-export const deepMerge = (
+export const deepMerge: {
+	(source: Record<string, unknown>): (target: Record<string, unknown>) => Record<string, unknown>;
+	(target: Record<string, unknown>, source: Record<string, unknown>): Record<string, unknown>;
+} = dual(2, (
 	target: Record<string, unknown>,
 	source: Record<string, unknown>,
 ): Record<string, unknown> => {
@@ -78,7 +85,7 @@ export const deepMerge = (
 		}
 	}
 	return result;
-};
+});
 
 /** Create an own data property, never invoking a setter inherited from the prototype chain. */
 const define = (target: Record<string, unknown>, key: string, value: unknown): void => {

@@ -8,7 +8,7 @@ import { ConfigFile } from "../../../effected/config-file/ConfigFile.ts";
 import { JsonCodec } from "../../../effected/config-file/JsonCodec.ts";
 import { MergeStrategy } from "../../../effected/config-file/MergeStrategy.ts";
 
-class AppShape extends Schema.Class<AppShape>("AppShape")({ port: Schema.Number }) {}
+class AppShape extends Schema.Class<AppShape>("AppShape")({ port: Schema.Finite }) {}
 class AppConfig extends ConfigFile.Service<AppConfig, AppShape>()("test/SeededConfig") {}
 
 const Platform = Layer.mergeAll(NodeFileSystem.layer, Path.layer);

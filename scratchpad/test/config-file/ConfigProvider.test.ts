@@ -10,7 +10,7 @@ import { MergeStrategy } from "../../effected/config-file/MergeStrategy.ts";
 
 class DbShape extends Schema.Class<DbShape>("DbShape")({ host: Schema.String }) {}
 class AppShape extends Schema.Class<AppShape>("AppShape")({
-	port: Schema.Number,
+	port: Schema.Finite,
 	host: Schema.String,
 	db: DbShape,
 }) {}

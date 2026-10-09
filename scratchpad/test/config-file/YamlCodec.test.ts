@@ -14,7 +14,7 @@ describe("YamlCodec", () => {
 
 	it.effect("wraps a yaml parse failure as ConfigCodecError with the cause preserved structurally", () =>
 		Effect.gen(function* () {
-			const error = yield* Effect.flip(YamlCodec.parse("port: [unclosed"));
+			const error = yield* Effect.flip(Effect.asVoid(YamlCodec.parse("port: [unclosed")));
 			assert.instanceOf(error, ConfigCodecError);
 			assert.strictEqual(error.codec, "yaml");
 			assert.strictEqual(error.operation, "parse");
@@ -54,7 +54,7 @@ describe("YamlCodec", () => {
 			}
 			// Confirm this trips the depth guard specifically, not some unrelated
 			// syntax failure.
-			const error = yield* Effect.flip(YamlCodec.parse(hostile));
+			const error = yield* Effect.flip(Effect.asVoid(YamlCodec.parse(hostile)));
 			assert.instanceOf(error.cause, YamlParseError);
 			const cause = error.cause as YamlParseError;
 			assert.isTrue(cause.diagnostics.some((d) => d.code === "NestingDepthExceeded"));
@@ -93,7 +93,7 @@ describe("YamlCodec", () => {
 					assert.isFalse(Cause.hasDies(cause.value));
 				}
 			}
-			const error = yield* Effect.flip(YamlCodec.parse(bomb));
+			const error = yield* Effect.flip(Effect.asVoid(YamlCodec.parse(bomb)));
 			assert.instanceOf(error, ConfigCodecError);
 			assert.strictEqual(error.codec, "yaml");
 			// Both the composer's raw alias-token guard and the value-extraction

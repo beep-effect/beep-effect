@@ -1,4 +1,5 @@
 import { Duration, Effect, Exit, Schema } from "effect";
+import { dual } from "effect/Function";
 import type { ConfigCodec } from "./ConfigCodec.ts";
 import type { CryptoFailure } from "./internal/crypto.ts";
 import { IV_LENGTH, decrypt, deriveKey, encrypt, fromBase64, randomIv, toBase64 } from "./internal/crypto.ts";
@@ -113,10 +114,18 @@ const keyEffect = (keySource: EncryptedCodecKey): Effect.Effect<CryptoKey, Confi
  *
  * @public
  */
-export function EncryptedCodec<E>(
-	inner: ConfigCodec<E>,
+export function EncryptedCodec(keySource: EncryptedCodecKey): <E>(inner: ConfigCodec<E>) => ConfigCodec<E | ConfigEncryptionError>;
+export function EncryptedCodec<E>(inner: ConfigCodec<E>, keySource: EncryptedCodecKey): ConfigCodec<E | ConfigEncryptionError>;
+export function EncryptedCodec<E>(...args: [EncryptedCodecKey] | [ConfigCodec<E>, EncryptedCodecKey]): ConfigCodec<E | ConfigEncryptionError> | ((inner: ConfigCodec<E>) => ConfigCodec<E | ConfigEncryptionError>) {
+	return args.length === 1 ? makeEncryptedCodec(args[0]) : makeEncryptedCodec(args[0], args[1]);
+}
+
+const makeEncryptedCodec: {
+	(keySource: EncryptedCodecKey): <E>(inner: ConfigCodec<E>) => ConfigCodec<E | ConfigEncryptionError>;
+	<E>(inner: ConfigCodec<E>, keySource: EncryptedCodecKey): ConfigCodec<E | ConfigEncryptionError>;
+} = dual(2, <E>(inner: ConfigCodec<E>,
 	keySource: EncryptedCodecKey,
-): ConfigCodec<E | ConfigEncryptionError> {
+): ConfigCodec<E | ConfigEncryptionError> => {
 	const name = `encrypted(${inner.name})`;
 
 	// Memoize so the key is resolved once per codec instance, even across forked
@@ -137,8 +146,7 @@ export function EncryptedCodec<E>(
 
 	return {
 		name,
-		parse: (raw) =>
-			Effect.gen(function* () {
+		parse: Effect.fn("parse")(function* (raw: string) {
 				// Validate the envelope before resolving the key: malformed input must
 				// not be able to force a key resolution, which may be a KMS round-trip.
 				const combined = yield* Effect.mapError(fromBase64(raw), toPublic);
@@ -154,8 +162,7 @@ export function EncryptedCodec<E>(
 
 				return yield* inner.parse(new TextDecoder().decode(plaintext));
 			}),
-		stringify: (value) =>
-			Effect.gen(function* () {
+		stringify: Effect.fn("stringify")(function* (value: unknown) {
 				const key = yield* getKey;
 				const serialized = yield* inner.stringify(value);
 
@@ -166,4 +173,4 @@ export function EncryptedCodec<E>(
 				return yield* Effect.mapError(toBase64(iv, ciphertext), toPublic);
 			}),
 	};
-}
+});

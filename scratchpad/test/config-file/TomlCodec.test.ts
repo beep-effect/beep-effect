@@ -14,7 +14,7 @@ describe("TomlCodec", () => {
 
 	it.effect("wraps a toml parse failure as ConfigCodecError with the cause preserved structurally", () =>
 		Effect.gen(function* () {
-			const error = yield* Effect.flip(TomlCodec.parse("port = [unclosed"));
+			const error = yield* Effect.flip(Effect.asVoid(TomlCodec.parse("port = [unclosed")));
 			assert.instanceOf(error, ConfigCodecError);
 			assert.strictEqual(error.codec, "toml");
 			assert.strictEqual(error.operation, "parse");
@@ -70,7 +70,7 @@ describe("TomlCodec", () => {
 			}
 			// Confirm this trips the depth guard specifically, not some unrelated
 			// syntax failure.
-			const error = yield* Effect.flip(TomlCodec.parse(hostile));
+			const error = yield* Effect.flip(Effect.asVoid(TomlCodec.parse(hostile)));
 			assert.instanceOf(error.cause, TomlParseError);
 			const cause = error.cause as TomlParseError;
 			assert.isTrue(cause.diagnostics.some((d) => d.code === "NestingDepthExceeded"));

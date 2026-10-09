@@ -17,7 +17,7 @@ describe("JsoncCodec", () => {
 
 	it.effect("wraps a jsonc parse failure as ConfigCodecError with the cause preserved structurally", () =>
 		Effect.gen(function* () {
-			const error = yield* Effect.flip(JsoncCodec.parse("{ not jsonc"));
+			const error = yield* Effect.flip(Effect.asVoid(JsoncCodec.parse("{ not jsonc")));
 			assert.instanceOf(error, ConfigCodecError);
 			assert.strictEqual(error.codec, "jsonc");
 			assert.strictEqual(error.operation, "parse");

@@ -4,8 +4,10 @@ import * as nodeOs from "node:os";
 import * as nodePath from "node:path";
 import { NodeFileSystem } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Layer, Option, Path } from "effect";
+import { Effect, Layer, Option, Path, Result, Schema } from "effect";
 import { ConfigResolver } from "../../../effected/config-file/ConfigResolver.ts";
+
+const JsonValue = Schema.fromJsonString(Schema.Unknown);
 
 const Platform = Layer.mergeAll(NodeFileSystem.layer, Path.layer);
 
@@ -89,7 +91,7 @@ describe("ConfigResolver against a real filesystem", () => {
 				const deep = nodePath.join(root, "packages", "pkg");
 				yield* Effect.promise(() => nodeFs.mkdir(deep, { recursive: true }));
 				yield* Effect.promise(() =>
-					nodeFs.writeFile(nodePath.join(root, "package.json"), JSON.stringify({ workspaces: ["packages/*"] })),
+					nodeFs.writeFile(nodePath.join(root, "package.json"), Result.getOrThrow(Schema.encodeResult(JsonValue)({ workspaces: ["packages/*"] }))),
 				);
 				yield* Effect.promise(() => nodeFs.writeFile(nodePath.join(root, ".apprc"), "{}"));
 
@@ -248,10 +250,10 @@ describe("ConfigResolver against a real filesystem", () => {
 				const deep = nodePath.join(decoyDir, "deep");
 				yield* Effect.promise(() => nodeFs.mkdir(deep, { recursive: true }));
 				yield* Effect.promise(() =>
-					nodeFs.writeFile(nodePath.join(decoyDir, "package.json"), JSON.stringify({ name: "decoy" })),
+					nodeFs.writeFile(nodePath.join(decoyDir, "package.json"), Result.getOrThrow(Schema.encodeResult(JsonValue)({ name: "decoy" }))),
 				);
 				yield* Effect.promise(() =>
-					nodeFs.writeFile(nodePath.join(root, "package.json"), JSON.stringify({ workspaces: ["packages/*"] })),
+					nodeFs.writeFile(nodePath.join(root, "package.json"), Result.getOrThrow(Schema.encodeResult(JsonValue)({ workspaces: ["packages/*"] }))),
 				);
 				yield* Effect.promise(() => nodeFs.writeFile(nodePath.join(root, ".apprc"), "{}"));
 

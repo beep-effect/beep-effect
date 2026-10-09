@@ -1,6 +1,8 @@
 import { Walker } from "../walker/index.ts";
 import type { PlatformError } from "effect";
-import { Effect, FileSystem, Option, Path } from "effect";
+import { Effect, FileSystem, Option, Path, Result, Schema } from "effect";
+
+const JsonValue = Schema.fromJsonString(Schema.Unknown);
 
 /**
  * A composable config file resolver: one lookup strategy.
@@ -131,8 +133,8 @@ const fromProbe = <R>(name: string, resolveProbe: Effect.Effect<ConfigProbe, nev
 });
 
 /** Absorb any failure into an empty probe — the resolver contract. */
-const absorb = <R>(effect: Effect.Effect<ConfigProbe, unknown, R>): Effect.Effect<ConfigProbe, never, R> =>
-	Effect.catch(effect, (): Effect.Effect<ConfigProbe> => Effect.succeed({ match: Option.none(), probed: [] }));
+const absorb = <E, R>(effect: Effect.Effect<ConfigProbe, E, R>): Effect.Effect<ConfigProbe, never, R> =>
+	Effect.orElseSucceed(effect, (): ConfigProbe => ({ match: Option.none(), probed: [] }));
 
 const cwdOf = (given: string | undefined): string => given ?? globalThis.process?.cwd?.() ?? "/";
 
@@ -349,12 +351,8 @@ const isWorkspaceRoot = (
 		const pkgPath = path.join(dir, "package.json");
 		if (yield* fs.exists(pkgPath)) {
 			const content = yield* fs.readFileString(pkgPath);
-			try {
-				const pkg = JSON.parse(content) as Record<string, unknown>;
-				if ("workspaces" in pkg) return true;
-			} catch {
-				// Not valid JSON, skip.
-			}
+			const pkg = Schema.decodeResult(JsonValue)(content);
+			if (Result.isSuccess(pkg) && typeof pkg.success === "object" && pkg.success !== null && "workspaces" in pkg.success) return true;
 		}
 		return false;
 	});

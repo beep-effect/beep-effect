@@ -1,7 +1,7 @@
 // @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
-import { Effect, FileSystem, Layer, Option, Path, PubSub, Schema } from "effect";
+import { Effect, FileSystem, Layer, Option, Path, PubSub, Schema, Result } from "effect";
 import type { ConfigCodec as ConfigCodecShape } from "../../effected/config-file/ConfigCodec.ts";
 import { ConfigCodecError } from "../../effected/config-file/ConfigCodec.ts";
 import { ConfigEvents } from "../../effected/config-file/ConfigEvent.ts";
@@ -10,6 +10,8 @@ import { ConfigFile, ConfigValidationError } from "../../effected/config-file/Co
 import { JsonCodec } from "../../effected/config-file/JsonCodec.ts";
 import { MergeStrategy } from "../../effected/config-file/MergeStrategy.ts";
 import { TomlCodec } from "../../effected/config-file/TomlCodec.ts";
+
+const JsonValue = Schema.fromJsonString(Schema.Unknown);
 
 const platform = (): Layer.Layer<FileSystem.FileSystem | Path.Path> =>
 	Layer.mergeAll(
@@ -22,7 +24,7 @@ const platform = (): Layer.Layer<FileSystem.FileSystem | Path.Path> =>
 		Path.layer,
 	);
 
-class Doc extends Schema.Class<Doc>("Doc")({ name: Schema.String, port: Schema.Number }) {}
+class Doc extends Schema.Class<Doc>("Doc")({ name: Schema.String, port: Schema.Finite }) {}
 class DocConfig extends ConfigFile.Service<DocConfig, Doc>()("test/EncodeConfig") {}
 
 const layerFor = (codec: ConfigCodecShape) =>
@@ -38,8 +40,7 @@ const HEADER = "#:schema https://example/schema.json";
 const value = Doc.make({ name: "svc", port: 8080 });
 
 /** Encode in memory and write to disk under the same options; return both texts. */
-const both = (target: string, options?: { readonly header?: string }) =>
-	Effect.gen(function* () {
+const both = Effect.fn("both")(function* (target: string, options?: { readonly header?: string }) {
 		const cfg = yield* DocConfig;
 		const fs = yield* FileSystem.FileSystem;
 		const encoded = yield* cfg.encode(value, options);
@@ -62,7 +63,7 @@ describe("ConfigFile.encode", () => {
 		Effect.gen(function* () {
 			const { encoded, written } = yield* both("/out/config.json");
 			assert.strictEqual(encoded, written);
-			assert.deepStrictEqual(JSON.parse(encoded), { name: "svc", port: 8080 });
+			assert.deepStrictEqual(Result.getOrThrow(Schema.decodeResult(JsonValue)(encoded)), { name: "svc", port: 8080 });
 		}).pipe(Effect.provide(layerFor(JsonCodec))),
 	);
 
@@ -177,7 +178,7 @@ describe("ConfigFile.encode", () => {
 			const _encode: (value: Doc) => Effect.Effect<string, ConfigEncodeError> = cfg.encode;
 			yield* _write(value, "/legacy/config.json");
 			const fs = yield* FileSystem.FileSystem;
-			assert.deepStrictEqual(JSON.parse(yield* fs.readFileString("/legacy/config.json")), { name: "svc", port: 8080 });
+			assert.deepStrictEqual(Result.getOrThrow(Schema.decodeResult(JsonValue)(yield* fs.readFileString("/legacy/config.json"))), { name: "svc", port: 8080 });
 			assert.strictEqual(yield* _encode(value), yield* fs.readFileString("/legacy/config.json"));
 		}).pipe(Effect.provide(layerFor(JsonCodec))),
 	);
