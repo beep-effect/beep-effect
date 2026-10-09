@@ -43,11 +43,24 @@ The orchestrator records the post-merge SHA here (R34).
 
 ## Validation
 
-Implementation committed at `ec2080bb68`, with review repairs on this branch. Focused/heavy tests, package verification, hosted parity and
-coverage are pending admission (see lane handoff). The package-version diff
-from the reset parent is empty. Hosted evidence remains pending.
+Implementation and note retirement are committed at `ec2080bb68`, with
+review repairs on this branch. The package-version diff from the reset parent
+is empty; exactly 939 deleted notes match its enumeration and tree.
 
-Full-directory recovery restores the historical config and README as well as
-notes. Revert the reset policy PR (including the graph guard) with this rollback;
-restoring private notes alone intentionally fails the current guard. `ls-tree`
-and `git show` inspect history without altering the checkout.
+Earlier source-snapshot passes: test-tsgo, docgen local (2312 examples),
+jsdoc-ratchet, Fallow audit and health. These precede the latest test-only
+commits and are not final-head proof of those new assertions. The initial
+131-test scoped coverage run passed; the expanded 316-test cohort found one
+old Yeet remedy assertion (315 passed), updated at `fde1791bfe`; rerun queued.
+Package verification is admitted and running, with no terminal result. Hosted evidence and PR are absent.
+Details and live-job logs are in the [lane handoff](../handoffs/rsc-d-release-2026-10-09.md).
+
+Knowledge refs rerun has exactly one red: inherited build-pipeline RESEARCH:194
+host-path reference, identical on origin/main. Its owner/orchestrator fixes it
+once on main, then D merges main. Packet SPEC's literal prohibition example
+was repaired and no longer appears. The lane is blocked, not merge-ready.
+
+Full-directory recovery restores historical config and README as well as notes.
+Pair it with a revert of the reset policy PR (including the graph guard);
+restoring private notes alone fails the current guard. `ls-tree` and `git show`
+inspect history without altering the checkout.

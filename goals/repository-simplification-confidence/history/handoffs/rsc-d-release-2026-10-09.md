@@ -1,43 +1,110 @@
 lane: rsc-d-release
-head: 38bba76b73 (review snapshot; later report commits may follow)   PR: pending
+head: fde1791bfe43980d3138a0fcfd8038f9ed7a7c9d (pre-handoff snapshot)   PR: none (not published)
 retired: 939 notes; parent da1a85157d7c8cc6b72fe43f12d01389db811ce9; tree d839776128c29c6c4cc7c2937329942d873b973c
-package-verify: @beep/repo-cli pending admission
-hosted-parity: test-tsgo / docgen local / jsdoc-ratchet / knowledge refs / fallow / coverage -> pending
+package-verify: @beep/repo-cli pending; admitted and running, no terminal result
+hosted-parity: test-tsgo pass earlier / docgen local pass earlier / jsdoc-ratchet pass earlier / knowledge refs fail (one inherited main reference) / fallow audit+health pass / coverage 131-test snapshot pass; expanded 316-test run had one stale assertion, repaired; final rerun queued
 handoff: goals/repository-simplification-confidence/history/handoffs/rsc-d-release-2026-10-09.md
-open: GitHub Packages blocked by missing read:packages; external local consumer scan negative, private mirrors/deploys not establishable; E-09 pending E-owned verification; AGENTS.md replacement awaits rsc-shared; final proof and independent review pending
+open: BLOCKED on inherited main knowledge-ref correction; GitHub Packages lacks read:packages; local external-consumer census negative, remote mirrors/deploys not establishable; E-09 pending E-owned verification; AGENTS.md exact replacement awaits rsc-shared; final package/test/coverage proof and publication pending
 
-## Work and provenance
+## Work and decisions
 
-Census committed first (`da1a85157d`), with per-workspace npm results and the
-61,378-manifest unbounded local consumer census. Reset parent and tree are in
-`standards/changesets.reset-baseline.json`; retirement removes all 939 pending
-Markdown notes except README in one commit with the gate and policy change (`ec2080bb68`); subsequent review
-fixes preserve the one-commit retirement.
-Package manifests and all versions remain unchanged; 60 changelogs retained.
-No version command was run. `@beep/repo-cli` is private and already ignored;
-this PR establishes D policy and adds no changeset.
+Census committed first at `da1a85157d`, before the single retirement commit
+`ec2080bb68`. All 939 pending Markdown notes except README were removed in
+that commit together with the gate, policy and reset baseline. Original counts:
+784 package notes, 148 empty-object notes, 7 empty-frontmatter notes.
+`standards/changesets.reset-baseline.json` records the parent, original tree,
+counts by kind/month and recovery commands. All package manifests/versions
+remain unchanged (`git diff da1a85157d HEAD -- '**/package.json'` is empty).
+The 60 historical changelogs and dormant Changesets config/dependencies/
+changelog adapter remain. No version command was run. The live ontology name
+was removed from the retired registry; the five other entries remain reuse
+guards. `@beep/repo-cli` is private and already ignored; this D-policy PR adds
+no changeset.
 
-Status decodes `private`, derives publishEnabled and logs private_skipped.
-Absent/false private remains publish-enabled. Graph fails on notes naming live
-private workspaces even if a stale registry entry permits the name. Deletion
-adds private-exempt with pending key pruning but no empty deletion note; labs
-and explicitly publish-enabled deletion behavior remain compatible. Deleting a
-manifest with an absent private field is now refused as published unless the
-existing override is supplied; all 152 live workspaces explicitly declare
-private true in the committed census. Root/unowned paths
-intentionally carry no independent note requirement.
+Status decodes private, derives publishEnabled and logs private_skipped.
+Absent/false private is publish-enabled; existing version/ignore and lab
+exemptions remain. Graph fails private-named notes before any stale registry
+allowance. Private deletion prunes keys without emitting an empty note. Labs
+and explicit-public deletion behavior remain compatible. A missing private
+field now invokes the existing published-deletion refusal/override; all 152
+live manifests explicitly declare private true. Root/unowned paths intentionally
+carry no independent note obligation. Decisions and reversals are in SPEC.
 
-Dormant config explicitly disables private versioning/tagging. Changesets
-config/dependencies and changelog adapter are retained. Activation policy
-establishes external contract/versioning obligations, reconciles ignore names,
-flips private false and restores workflow/allowlist and changeset requirements.
-E-19: no publication path is kept; E removes unused changesets/action allowlist
-entry after D merges. Desktop execution is unchanged; explanatory comment only.
-Manual npm/Tauri versions are 0.0.3; Cargo 0.0.0 drift recorded, not repaired.
+Activation establishes release/versioning/compatibility and consumer policy,
+reconciles ignore/public-access/provenance, flips private false and restores
+appropriate notes, publication workflow and hosted action allowlist if E-19
+removed it. E-19: no publish path is kept; E removes the unused changesets/action
+entry after D merges (R36). Desktop workflow execution is unchanged; only an
+explanatory comment changed. Manual npm/Tauri versions remain 0.0.3; Cargo
+0.0.0 drift is recorded, not repaired. E owns final desktop verification (R35).
+
+## Census
+
+[Release-policy receipt](../receipts/stage-2-policy.md#external-contracts):
+152 npm HTTP404 probes, explicit private manifests; registry config only Buf;
+approved gh Packages query HTTP403 missing read:packages (R32; no credential
+or scope modification); 61,378 local manifests at unbounded depth across four
+roots, no external Beep version/git pins and no directory errors; remote tags
+only six evidence tags; gh release list empty; no desktop tags. Private remote
+mirrors/deploys are explicitly not establishable. APIs and versions preserved.
+
+## Evidence and proof boundaries
+
+All heavy local verification was admitted through beep-heavy; no queue bypass.
+Earlier source-snapshot passes below preceded test-only commits `60f78a541b`
+and `fde1791bfe`; they are NOT final-head proof of those new assertions.
+
+| Command / check | Result | Evidence |
+| --- | --- | --- |
+| `beep quality test-tsgo` | pass on earlier source snapshot | `.beep/rsc-d-test-tsgo.log` |
+| `beep docgen local --base origin/main` | pass; 2312 examples typechecked | `.beep/rsc-d-docgen.log` |
+| `beep ci lane jsdoc-ratchet` | pass | `.beep/rsc-d-jsdoc-ratchet.log` |
+| `CI=true beep knowledge refs --check` | red; rerun confirms exactly one inherited main finding | `.beep/rsc-d-knowledge-rerun.log` |
+| `beep quality fallow audit --check` | pass; zero introduced findings, one inherited-adjacent advisory | `.beep/rsc-d-fallow-audit.log` |
+| `beep quality fallow health --check` | pass, zero findings | `.beep/rsc-d-fallow-health.log` |
+| scoped coverage, 8 files / 131 tests | pass; all release-specific status/graph/deletion tests passed | [normalized snapshot](../receipts/d-coverage-snapshot.json) |
+| expanded coverage, 10 files / 316 tests | 315 passed, one stale Yeet remedy assertion; fixed at fde1791bfe; rerun queued | `.beep/rsc-d-coverage-rerun-first.log`, `.beep/rsc-d-final-rerun-admission.log` |
+| `beep quality package-verify @beep/repo-cli` | admitted and running, no terminal result | `.beep/rsc-d-package-verify.log` |
+| live status / graph | private_skipped=1; 152 workspaces, zero notes/references | command output captured during this lane |
+| reset provenance / scope | 939 deletions match parent enumeration, tree matches, manifest diff empty, diff-check clean | baseline and git checks |
+| independent Opus review | terminal zero at aeed1cb6a2; later incremental provenance finding addressed by the explicit earlier-snapshot qualifications above | [review receipt](../receipts/d-source-review-2026-10-09.md) |
+| hosted run / PR readiness | not run; no PR | publication remains pending |
+
+Source coverage reads: status 95.14/95.37/81.81/93.54 and graph
+91.91/92.02/63.33/87.80 (lines/statements/branches/functions), above their
+recorded baselines. Full per-file metrics are in the normalized snapshot.
+This scoped cohort is not a full repository coverage-floor claim. The initial
+geometry forward branch gap led to a new explicit forward-private test; its
+fresh coverage is queued. Existing Yeet remedy assertions were updated to the
+new publish-enabled/private-exempt policy without weakening them.
+
+The first focused command used an incorrect Vitest cwd and found no tests;
+the next caught an introduced filterMap/Option v4 mismatch, fixed at
+8800e1545b. The subsequent successful 131-test coverage cohort includes those
+same focused tests. Its superseded queued focused-only rerun was cancelled.
+Friction and attribution were recorded when encountered in OPPORTUNITIES.
+
+## Blocker and live jobs
+
+`explorations/build-pipeline-simplification/RESEARCH.md:194` has a user-local
+beep-heavy executable reference identical on origin/main. Its owner/orchestrator
+must fix it once on main; D then merges main. Suggested portable wording:
+resolve beep-heavy from PATH while retaining the documented /usr/bin/bash
+requirement. This unrelated correction is not copied into D. Packet SPEC's
+literal absolute-home prohibition example was reworded, and the knowledge
+rerun confirms that row is gone.
+
+Publication was planned and queued through Yeet, then the D publication unit
+was stopped before execution while parity is blocked. No push/PR/ready/merge
+was performed. The read-only package-verify is admitted and running; the final
+test/coverage/knowledge rerun remains queued; inspect their lane-local logs and collect
+terminal exit status before claiming a package handoff gate. They may finish
+after this blocked report. Resume by merging the owner's main fix, collecting
+those results, rerunning any affected proof, and using Yeet publish/ready/reply.
+Never merge the PR from this lane; the orchestrator gates it. Retire the lane
+worktree only after its merge and explicit orchestrator direction.
 
 ## Exact AGENTS.md replacement for rsc-shared (R33)
-
-Replace the release-note law at the orchestrator-owned target with:
 
 > Private internal workspaces (`private: true`) require no changeset and must
 > not accumulate pending release notes. Changed, versioned, publish-enabled
@@ -47,40 +114,16 @@ Replace the release-note law at the orchestrator-owned target with:
 > changeset requirements and publication workflow/hosted allowlist wiring.
 > Desktop versioning and releases remain separate.
 
-The orchestrator applies this on the same PR through rsc-shared; this lane
-has not edited AGENTS.md. R38 also requires its shared-policy review of
-.changeset/config.json and standards/changesets.retired-packages.json.
+The orchestrator applies this on the same PR through rsc-shared. AGENTS.md
+was not edited by D. R38 requires its shared-policy review of changeset config
+and the retired-name registry. No generated manifests or inventories were
+hand-edited. Main was merged twice; neither merge introduced pending notes.
 
 ## Recovery
 
-Restore notes with `git checkout da1a85157d7c8cc6b72fe43f12d01389db811ce9 -- .changeset`.
-Inspect the original tree with `git ls-tree --name-only d839776128c29c6c4cc7c2937329942d873b973c`.
-The full-directory checkout also restores historical config/README. Restore
-code/policy by reverting the PR with it, including the private-note graph guard;
-restored private notes alone deliberately fail the current guard. The orchestrator records merge SHA
-in stage-2-policy.md after merge (R34). Do not merge the PR from this lane. Retire the lane worktree only after the
-orchestrator merges the PR and explicitly directs worktree retirement.
-
-## Verification and scope
-
-Focused private/public/mixed status, graph private rejection and deletion/
-geometry tests added. Heavy tests and package verification are admitted through
-beep-heavy with the user-session bus; currently queued. Hosted parity, coverage,
-independent claude-opus-5-5 medium review and hosted run are pending.
-No unrelated refactoring is intended. Generated task/script manifests untouched.
-
-## Live inherited blocker (2026-10-09)
-
-Knowledge refs parity failed at
-`explorations/build-pipeline-simplification/RESEARCH.md:194`: user-local
-beep-heavy executable reference, identical on origin/main. The build-pipeline
-owner/orchestrator must repair it once on main; D then merges main. Suggested
-portable wording retains `/usr/bin/bash` but resolves beep-heavy from PATH.
-D does not copy that unrelated fix into this release-policy PR. The second
-knowledge observation, a literal absolute-home example in packet SPEC:374,
-was reworded in D without changing the prohibition.
-
-Passes so far: test-tsgo, docgen local (2312 examples), jsdoc-ratchet, fallow audit.
-Fallow health, coverage, focused rerun and package verification remain running
-or queued. Independent Opus source review returned terminal zero actionable
-findings at aeed1cb6a2. This is not a merge-ready or completed claim.
+`git checkout da1a85157d7c8cc6b72fe43f12d01389db811ce9 -- .changeset` restores
+notes AND historical config/README. Pair it with a revert of the reset policy
+PR, including the private-note graph guard; restored private notes alone fail
+current validation deliberately. `git ls-tree --name-only d839776128c29c6c4cc7c2937329942d873b973c`
+and `git show <parent>:.changeset/<name>.md` inspect history without changing it.
+The orchestrator records the post-merge SHA (R34).

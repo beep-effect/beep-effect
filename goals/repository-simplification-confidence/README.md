@@ -79,7 +79,8 @@ state are recorded; stage 1 closes when every lane owner and recovery path in
   including P2 and below; the round-2 review cap does not apply (SPEC.md
   Exception Ledger).
 
-D latest evidence: [external-contract census and reset policy](history/receipts/stage-2-policy.md)
-and [release lane handoff](history/handoffs/rsc-d-release-2026-10-09.md).
-The census preceded the committed note retirement (`ec2080bb68`); final gates
-and E-09 remain pending.
+D latest evidence: [release policy and census](history/receipts/stage-2-policy.md)
+and [blocked lane handoff](history/handoffs/rsc-d-release-2026-10-09.md).
+The census preceded the committed 939-note reset. D is blocked on an inherited
+main knowledge-reference correction; package/latest-test and hosted proof remain
+pending, and E owns desktop verification.
