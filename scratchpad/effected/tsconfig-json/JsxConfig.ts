@@ -9,6 +9,7 @@
 
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as O from "effect/Option";
+import * as Match from "effect/Match";
 import * as S from "effect/Schema";
 import type { CompilerOptions } from "./CompilerOptions.ts";
 
@@ -38,19 +39,17 @@ export class JsxConfig extends S.Class<JsxConfig>($I`JsxConfig`)({
 	 * so there is nothing for a bundler to configure.
 	 */
 	static fromCompilerOptions(options: CompilerOptions.Type): O.Option<JsxConfig> {
-		switch (options.jsx) {
-			case "react-jsx":
-			case "react-jsxdev":
-				return O.some(
+		return Match.value(options.jsx).pipe(
+			Match.whenOr("react-jsx", "react-jsxdev", () =>
+				O.some(
 					JsxConfig.make({
 						runtime: "automatic",
 						importSource: options.jsxImportSource ?? "react",
 					}),
-				);
-			case "react":
-				return O.some(JsxConfig.make({ runtime: "classic" }));
-			default:
-				return O.none();
-		}
+				),
+			),
+			Match.when("react", () => O.some(JsxConfig.make({ runtime: "classic" }))),
+			Match.orElse(O.none<JsxConfig>),
+		);
 	}
 }

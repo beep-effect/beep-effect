@@ -19,6 +19,7 @@ import type { Reference, TsconfigJson, TypeAcquisition, WatchOptions } from "./T
 import * as A from "effect/Array";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as HashSet from "effect/HashSet";
 import * as O from "@beep/utils/Option";
 
 /**
@@ -158,7 +159,7 @@ const transformCompilerOptionPaths = (
 	}
 	if (includePathsValues) {
 		const paths = out.paths;
-		if (paths !== null && typeof paths === "object") {
+		if (P.isObjectKeyword(paths) && !P.isFunction(paths)) {
 			out.paths = rebuildRecord(paths, (_key, arr) =>
 				A.isArray(arr) ? arr.map((entry) => (P.isString(entry) ? transform(entry) : entry)) : arr,
 			);
@@ -183,7 +184,7 @@ const absolutize = (
 
 // Top-level keys consumed by name from a derived `TsconfigJson.Type` — everything
 // else is passthrough. `extends` is consumed and dropped (never data).
-const DERIVED_CONSUMED_KEYS: ReadonlySet<string> = new Set([
+const DERIVED_CONSUMED_KEYS: HashSet.HashSet<string> = HashSet.fromIterable([
 	"compilerOptions",
 	"extends",
 	"files",
@@ -197,7 +198,7 @@ const DERIVED_CONSUMED_KEYS: ReadonlySet<string> = new Set([
 
 // Structural keys consumed by name from a base `ResolvedTsconfig` when lifting
 // its passthrough — everything else is its accumulated passthrough.
-const RESOLVED_STRUCTURAL_KEYS: ReadonlySet<string> = new Set([
+const RESOLVED_STRUCTURAL_KEYS: HashSet.HashSet<string> = HashSet.fromIterable([
 	"configPath",
 	"extendedPaths",
 	"compilerOptions",
@@ -214,11 +215,11 @@ const RESOLVED_STRUCTURAL_KEYS: ReadonlySet<string> = new Set([
 
 const extractPassthrough = (
 	source: Record<string, unknown>,
-	consumed: ReadonlySet<string>,
+	consumed: HashSet.HashSet<string>,
 ): Record<string, unknown> => {
 	const out: Record<string, unknown> = {};
 	for (const key of R.keys(source)) {
-		if (consumed.has(key)) continue;
+		if (HashSet.has(consumed, key)) continue;
 		Object.defineProperty(out, key, { value: source[key], enumerable: true, writable: true, configurable: true });
 	}
 	return out;

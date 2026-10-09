@@ -43,6 +43,7 @@
 //     → `{ target: 10, strict: true, lib: ["lib.esnext.d.ts"] }`.
 
 import * as O from "effect/Option";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as S from "effect/Schema";
 import type { CompilerOptions } from "./CompilerOptions.ts";
 import * as A from "effect/Array";
@@ -66,8 +67,8 @@ export type EnumFamily =
 
 /** One family's forward (string→number, aliases included) and reverse (number→canonical string) maps. */
 interface FamilyTable {
-	readonly forward: ReadonlyMap<string, number>;
-	readonly reverse: ReadonlyMap<number, string>;
+	readonly forward: MutableHashMap.MutableHashMap<string, number>;
+	readonly reverse: MutableHashMap.MutableHashMap<number, string>;
 }
 
 /**
@@ -76,11 +77,11 @@ interface FamilyTable {
  * for a value is canonical.
  */
 const buildTable = (rows: ReadonlyArray<readonly [name: string, value: number]>): FamilyTable => {
-	const forward = new Map<string, number>();
-	const reverse = new Map<number, string>();
+	const forward = MutableHashMap.empty<string, number>();
+	const reverse = MutableHashMap.empty<number, string>();
 	for (const [name, value] of rows) {
-		forward.set(name, value);
-		reverse.set(value, name);
+		MutableHashMap.set(forward, name, value);
+		MutableHashMap.set(reverse, value, name);
 	}
 	return { forward, reverse };
 };
@@ -196,11 +197,11 @@ const TABLES: Record<EnumFamily, FamilyTable> = {
 
 // Implementation of TsEnumCodec.encode; the public contract lives on the static.
 const encode = (family: EnumFamily, value: string): O.Option<number> =>
-	O.fromNullishOr(TABLES[family].forward.get(value));
+	MutableHashMap.get(TABLES[family].forward, value);
 
 // Implementation of TsEnumCodec.decode; the public contract lives on the static.
 const decode = (family: EnumFamily, value: number): O.Option<string> =>
-	O.fromNullishOr(TABLES[family].reverse.get(value));
+	MutableHashMap.get(TABLES[family].reverse, value);
 
 // Implementation of TsEnumCodec.normalizeLibReference; the public contract lives on the static.
 const normalizeLibReference = (lib: string): string => {

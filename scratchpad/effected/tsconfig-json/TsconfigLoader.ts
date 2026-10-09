@@ -96,14 +96,13 @@ const extendsSpecs = (doc: TsconfigJson.Type): ReadonlyArray<string> => {
 };
 
 /** Read + decode one config at an already-absolute, normalized path; wrap decode failures with that path. */
-const loadAbs = (
+const loadAbs = Effect.fn("loadAbs")(function* (
 	abs: string,
-): Effect.Effect<TsconfigJson.Type, TsconfigParseError | PlatformError.PlatformError, FileSystem.FileSystem> =>
-	Effect.gen(function* () {
-		const fs = yield* FileSystem.FileSystem;
-		const text = yield* fs.readFileString(abs);
-		return yield* decodeConfig(text).pipe(Effect.mapError((cause) => TsconfigParseError.make({ path: abs, cause })));
-	});
+): Effect.fn.Return<TsconfigJson.Type, TsconfigParseError | PlatformError.PlatformError, FileSystem.FileSystem> {
+	const fs = yield* FileSystem.FileSystem;
+	const text = yield* fs.readFileString(abs);
+	return yield* decodeConfig(text).pipe(Effect.mapError((cause) => TsconfigParseError.make({ path: abs, cause })));
+});
 
 // Implementation of TsconfigLoader.load; the public contract lives on the static.
 const load = Effect.fn("TsconfigLoader.load")(function* (configPath: string) {
@@ -123,55 +122,54 @@ interface ConfigLayer {
  * already-visited normalized absolute paths on THIS branch (copied per branch,
  * so a diamond is legal); it excludes `configPath` itself until it is admitted.
  */
-const collect = (
+const collect = Effect.fn("collect")(function* (
 	configPath: string,
 	chain: ReadonlyArray<string>,
-): Effect.Effect<
+): Effect.fn.Return<
 	ReadonlyArray<ConfigLayer>,
 	TsconfigParseError | TsconfigExtendsError | PlatformError.PlatformError,
 	FileSystem.FileSystem | Path.Path
-> =>
-	Effect.gen(function* () {
-		const path = yield* Path.Path;
-		const abs = normalizeSlashes(path.resolve(configPath));
+> {
+	const path = yield* Path.Path;
+	const abs = normalizeSlashes(path.resolve(configPath));
 
-		// Depth guard (hardening): refuse to descend past MAX_EXTENDS_DEPTH levels.
-		if (chain.length >= MAX_EXTENDS_DEPTH) {
-			return yield* TsconfigExtendsError.make({ path: abs, target: abs, reason: "depth", chain: [...chain, abs] });
+	// Depth guard (hardening): refuse to descend past MAX_EXTENDS_DEPTH levels.
+	if (chain.length >= MAX_EXTENDS_DEPTH) {
+		return yield* TsconfigExtendsError.make({ path: abs, target: abs, reason: "depth", chain: [...chain, abs] });
+	}
+
+	const doc = yield* loadAbs(abs);
+	// Parse phase: absolutize this config's path options against its own dir.
+	const absolutized = ResolvedTsconfig.absolutize(doc, path.dirname(abs), path.resolve);
+	const newChain = [...chain, abs];
+
+	const layers: Array<ConfigLayer> = [];
+	for (const spec of extendsSpecs(absolutized)) {
+		if (spec === "") {
+			return yield* TsconfigExtendsError.make({ path: abs, target: "", reason: "empty", chain: newChain });
 		}
-
-		const doc = yield* loadAbs(abs);
-		// Parse phase: absolutize this config's path options against its own dir.
-		const absolutized = ResolvedTsconfig.absolutize(doc, path.dirname(abs), path.resolve);
-		const newChain = [...chain, abs];
-
-		const layers: Array<ConfigLayer> = [];
-		for (const spec of extendsSpecs(absolutized)) {
-			if (spec === "") {
-				return yield* TsconfigExtendsError.make({ path: abs, target: "", reason: "empty", chain: newChain });
-			}
-			const target = yield* resolveExtendsTarget(spec, abs);
-			if (O.isNone(target)) {
-				return yield* TsconfigExtendsError.make({ path: abs, target: spec, reason: "not-found", chain: newChain });
-			}
-			const normTarget = normalizeSlashes(target.value);
-			// Cycle guard: the target already sits on this branch's stack.
-			if (newChain.includes(normTarget)) {
-				return yield* TsconfigExtendsError.make({
-						path: abs,
-						target: normTarget,
-						reason: "cycle",
-						chain: [...newChain, normTarget],
-					});
-			}
-			// Depth-first: fully flatten this entry's nested chain before the sibling.
-			const subLayers = yield* collect(normTarget, newChain);
-			for (const sub of subLayers) layers.push(sub);
+		const target = yield* resolveExtendsTarget(spec, abs);
+		if (O.isNone(target)) {
+			return yield* TsconfigExtendsError.make({ path: abs, target: spec, reason: "not-found", chain: newChain });
 		}
-		// Own config last: it wins over everything it extends.
-		layers.push({ doc: absolutized, path: abs });
-		return layers;
-	});
+		const normTarget = normalizeSlashes(target.value);
+		// Cycle guard: the target already sits on this branch's stack.
+		if (newChain.includes(normTarget)) {
+			return yield* TsconfigExtendsError.make({
+					path: abs,
+					target: normTarget,
+					reason: "cycle",
+					chain: [...newChain, normTarget],
+				});
+		}
+		// Depth-first: fully flatten this entry's nested chain before the sibling.
+		const subLayers = yield* collect(normTarget, newChain);
+		for (const sub of subLayers) layers.push(sub);
+	}
+	// Own config last: it wins over everything it extends.
+	layers.push({ doc: absolutized, path: abs });
+	return layers;
+});
 
 // Implementation of TsconfigLoader.resolve; the public contract lives on the static.
 const resolve = Effect.fn("TsconfigLoader.resolve")(function* (configPath: string) {

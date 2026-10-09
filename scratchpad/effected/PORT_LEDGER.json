@@ -3,10 +3,10 @@
   "effectedCommit": "af7566a9da2eff169cb74955efcc5ede1e5de9f8",
   "startedAt": "2026-10-07T06:36:54.420Z",
   "lastCheckpoint": {
-    "module": "toml",
+    "module": "tsconfig-json",
     "stage": 1,
     "commit": null,
-    "at": "2026-10-09T11:20:17.651Z"
+    "at": "2026-10-09T11:20:19.315Z"
   },
   "rows": [
     {
@@ -4906,7 +4906,7 @@
       "module": "tsconfig-json",
       "wave": 3,
       "position": 2,
-      "stage": 0,
+      "stage": 1,
       "status": "in-progress",
       "provisionalHome": "foundation/modeling",
       "upstreamPaths": {
@@ -5096,9 +5096,16 @@
       "deviations": [],
       "backlog": [],
       "reviewRounds": [],
-      "commits": [],
+      "commits": [
+        {
+          "stage": 0,
+          "sha": null
+        }
+      ],
       "blocked": null,
-      "notes": [],
+      "notes": [
+        "2026-10-09T11:20:19.315Z S1: green under tsgo, oxlint and the four beep laws; upstream tests pass; audit green (parity strict)"
+      ],
       "closedAt": null
     },
     {

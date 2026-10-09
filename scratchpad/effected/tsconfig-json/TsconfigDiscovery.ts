@@ -17,16 +17,15 @@ export interface FindNearestOptions {
 }
 
 // Implementation of TsconfigDiscovery.findNearest; the public contract lives on the static.
-const findNearest = (
+const findNearest = Effect.fn("findNearest")(function* (
 	start: string,
 	options?: FindNearestOptions,
-): Effect.Effect<O.Option<string>, never, FileSystem.FileSystem | Path.Path> =>
-	Effect.gen(function* () {
-		const path = yield* Path.Path;
-		const filename = options?.filename ?? "tsconfig.json";
-		const dirs = yield* Walker.ascend(start, options?.stopAt === undefined ? {} : { stopAt: options.stopAt });
-		return yield* Walker.findUpward(dirs, (dir) => [path.join(dir, filename)]);
-	});
+): Effect.fn.Return<O.Option<string>, never, FileSystem.FileSystem | Path.Path> {
+	const path = yield* Path.Path;
+	const filename = options?.filename ?? "tsconfig.json";
+	const dirs = yield* Walker.ascend(start, options?.stopAt === undefined ? {} : { stopAt: options.stopAt });
+	return yield* Walker.findUpward(dirs, (dir) => [path.join(dir, filename)]);
+});
 
 /**
  * Nearest-config upward discovery for `tsconfig.json`.

@@ -15,6 +15,7 @@
 // layers, so there is no memoization to poison across calls with different
 // options).
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -23,10 +24,22 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
 import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import type { CompilerOptions } from "./CompilerOptions.ts";
 import type { ResolvedTsconfig } from "./ResolvedTsconfig.ts";
 import type { TsconfigJson } from "./TsconfigJson.ts";
 import { TsconfigLoader } from "./TsconfigLoader.ts";
+
+const $I = $ScratchpadId.create("effected/tsconfig-json/TsconfigLoaderSync");
+
+/** Defect raised when the sync path adapter receives an unsupported operation. */
+class UnsupportedPathOperationError extends S.TaggedError<UnsupportedPathOperationError>($I`UnsupportedPathOperationError`)(
+	"UnsupportedPathOperationError",
+	{ message: S.String },
+	$I.annote("UnsupportedPathOperationError", {
+		description: "A path operation outside the synchronous loader adapter's supported operations was invoked.",
+	}),
+) {}
 
 /**
  * The synchronous file operations {@link TsconfigLoaderSync} needs, supplied
@@ -104,9 +117,9 @@ export interface TsconfigLoaderSyncOptions {
 
 /** A `Path.Path` member the loader pipeline never calls: throw an informative defect if something reaches it. */
 const unsupported = (member: string): never => {
-	throw new Error(
-		`Path.${member} is not supported by TsconfigLoaderSync — its SyncPath adapter only carries resolve/dirname/join/isAbsolute/basename`,
-	);
+	throw UnsupportedPathOperationError.make({
+		message: `Path.${member} is not supported by TsconfigLoaderSync — its SyncPath adapter only carries resolve/dirname/join/isAbsolute/basename`,
+	});
 };
 
 /** Adapt the consumer's `SyncPath` into a core `Path.Path` service value. */

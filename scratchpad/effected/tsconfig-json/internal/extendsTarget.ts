@@ -23,12 +23,13 @@ import * as Path from "effect/Path";
 import { dual } from "effect/Function";
 import * as A from "effect/Array";
 import * as R from "effect/Record";
+import * as HashSet from "effect/HashSet";
 
 /** Conditions honored in an `exports` condition object, plus the always-eligible `default`. */
-const CONDITIONS = new Set(["require", "types", "node"]);
+const CONDITIONS = HashSet.make("require", "types", "node");
 
 /** Keys that are never data on a plain object. Skipped on every untrusted read. */
-const DUNDER_KEYS = new Set(["__proto__", "constructor", "prototype"]);
+const DUNDER_KEYS = HashSet.make("__proto__", "constructor", "prototype");
 
 /** Depth guard for the recursive exports walk (condition nesting, fallback arrays, wildcard substitution). */
 const MAX_EXPORTS_DEPTH = 32;
@@ -62,7 +63,7 @@ const substituteWildcard = (value: unknown, captured: string, depth: number): un
 	if (P.isObject(value)) {
 		const result: Record<string, unknown> = { __proto__: null };
 		for (const key of R.keys(value)) {
-			if (DUNDER_KEYS.has(key) || !R.has(value, key)) continue;
+			if (HashSet.has(DUNDER_KEYS, key) || !R.has(value, key)) continue;
 			result[key] = substituteWildcard(value[key], captured, depth + 1);
 		}
 		return result;
@@ -81,12 +82,12 @@ const matchExportKey = (exports: unknown, subpath: string): unknown => {
 	// root-level condition object (sugar for the "." target).
 	const isSubpathMap = keys.length > 0 && keys.every((key) => key.startsWith("."));
 	if (!isSubpathMap) return subpath === "." ? obj : undefined;
-	if (!DUNDER_KEYS.has(subpath) && R.has(obj, subpath)) return obj[subpath];
+	if (!HashSet.has(DUNDER_KEYS, subpath) && R.has(obj, subpath)) return obj[subpath];
 	// Node/tsc pattern selection: among matching `*` patterns the LONGEST base
 	// prefix (the text before the star) wins — most specific, not first-in-order.
 	let best: { readonly pattern: string; readonly captured: string; readonly prefixLength: number } | undefined;
 	for (const pattern of keys) {
-		if (DUNDER_KEYS.has(pattern) || !pattern.includes("*") || !R.has(obj, pattern)) continue;
+		if (HashSet.has(DUNDER_KEYS, pattern) || !pattern.includes("*") || !R.has(obj, pattern)) continue;
 		const captured = matchWildcard(pattern, subpath);
 		if (captured === null) continue;
 		const prefixLength = pattern.indexOf("*");
@@ -116,8 +117,8 @@ const resolveConditionValue = (value: unknown, depth: number): string | undefine
 	if (P.isObject(value)) {
 		const obj = value;
 		for (const key of R.keys(obj)) {
-			if (DUNDER_KEYS.has(key) || !R.has(obj, key)) continue;
-			if (CONDITIONS.has(key) || key === "default") {
+			if (HashSet.has(DUNDER_KEYS, key) || !R.has(obj, key)) continue;
+			if (HashSet.has(CONDITIONS, key) || key === "default") {
 				const resolved = resolveConditionValue(obj[key], depth + 1);
 				if (resolved !== undefined) return resolved;
 			}
@@ -151,43 +152,41 @@ export const resolveExports: {
  * manifest-less lookups (no exports, no tsconfig field) rather than deciding
  * the candidate. A `PlatformError` from `exists` flows through.
  */
-const readManifest = (
+const readManifest = Effect.fn("readManifest")(function* (
 	fs: FileSystem.FileSystem,
 	manifestPath: string,
-): Effect.Effect<Record<string, unknown>, PlatformError.PlatformError> =>
-	Effect.gen(function* () {
-		if (!(yield* fs.exists(manifestPath))) return {};
-		const text = yield* fs.readFileString(manifestPath);
-		const parsed = yield* Effect.option(Jsonc.parse(text));
-		if (O.isNone(parsed)) return {};
-		const value = parsed.value;
-		return P.isObject(value) ? value : {};
-	});
+): Effect.fn.Return<Record<string, unknown>, PlatformError.PlatformError> {
+	if (!(yield* fs.exists(manifestPath))) return {};
+	const text = yield* fs.readFileString(manifestPath);
+	const parsed = yield* Effect.option(Jsonc.parse(text));
+	if (O.isNone(parsed)) return {};
+	const value = parsed.value;
+	return P.isObject(value) ? value : {};
+});
 
 /** Read an own property of an untrusted record, guarding dunder keys and inherited members. */
 const ownProp = (record: Record<string, unknown>, key: string): unknown =>
-	!DUNDER_KEYS.has(key) && R.has(record, key) ? record[key] : undefined;
+	!HashSet.has(DUNDER_KEYS, key) && R.has(record, key) ? record[key] : undefined;
 
 /**
  * Resolve relative/rooted targets: the exact file wins verbatim (even
  * extensionless); otherwise, if the target does not already end in `.json`, the
  * `.json`-appended path is tried. There is no directory fallback.
  */
-const resolveRelative = (
+const resolveRelative = Effect.fn("resolveRelative")(function* (
 	fs: FileSystem.FileSystem,
 	path: Path.Path,
 	fromDir: string,
 	spec: string,
-): Effect.Effect<O.Option<string>, PlatformError.PlatformError> =>
-	Effect.gen(function* () {
-		const abs = path.resolve(fromDir, spec);
-		if (yield* fs.exists(abs)) return O.some(abs);
-		if (!abs.endsWith(".json")) {
-			const withJson = `${abs}.json`;
-			if (yield* fs.exists(withJson)) return O.some(withJson);
-		}
-		return O.none();
-	});
+): Effect.fn.Return<O.Option<string>, PlatformError.PlatformError> {
+	const abs = path.resolve(fromDir, spec);
+	if (yield* fs.exists(abs)) return O.some(abs);
+	if (!abs.endsWith(".json")) {
+		const withJson = `${abs}.json`;
+		if (yield* fs.exists(withJson)) return O.some(withJson);
+	}
+	return O.none();
+});
 
 /**
  * Probe one candidate package under an ancestor's `node_modules`. `none` means
@@ -198,53 +197,52 @@ const resolveRelative = (
  * tsc probes `<pkg>/tsconfig.json` even when the manifest is absent
  * (loadNodeModuleFromDirectoryWorker, typescript.js:45943).
  */
-const tryCandidate = (
+const tryCandidate = Effect.fn("tryCandidate")(function* (
 	fs: FileSystem.FileSystem,
 	path: Path.Path,
 	dir: string,
 	pkg: string,
 	subpath: string,
-): Effect.Effect<O.Option<string>, PlatformError.PlatformError> =>
-	Effect.gen(function* () {
-		const pkgDir = path.join(dir, "node_modules", pkg);
-		const record = yield* readManifest(fs, path.join(pkgDir, "package.json"));
+): Effect.fn.Return<O.Option<string>, PlatformError.PlatformError> {
+	const pkgDir = path.join(dir, "node_modules", pkg);
+	const record = yield* readManifest(fs, path.join(pkgDir, "package.json"));
 
-		// (a) exports present blocks every same-package fallback, even when it
-		// fails to resolve — but the ancestor walk still continues afterwards.
-		const exports = ownProp(record, "exports");
-		if (exports !== undefined) {
-			const target = resolveExports(exports, subpath === "" ? "." : `./${subpath}`);
-			if (O.isNone(target)) return O.none();
-			const abs = path.resolve(pkgDir, target.value);
-			return (yield* fs.exists(abs)) ? O.some(abs) : O.none();
-		}
+	// (a) exports present blocks every same-package fallback, even when it
+	// fails to resolve — but the ancestor walk still continues afterwards.
+	const exports = ownProp(record, "exports");
+	if (exports !== undefined) {
+		const target = resolveExports(exports, subpath === "" ? "." : `./${subpath}`);
+		if (O.isNone(target)) return O.none();
+		const abs = path.resolve(pkgDir, target.value);
+		return (yield* fs.exists(abs)) ? O.some(abs) : O.none();
+	}
 
-		// (b) subpath: exact file, then the .json retry.
-		if (subpath !== "") {
-			const exact = path.resolve(pkgDir, subpath);
-			if (yield* fs.exists(exact)) return O.some(exact);
-			if (!subpath.endsWith(".json")) {
-				const withJson = `${exact}.json`;
-				if (yield* fs.exists(withJson)) return O.some(withJson);
-			}
-			return O.none();
+	// (b) subpath: exact file, then the .json retry.
+	if (subpath !== "") {
+		const exact = path.resolve(pkgDir, subpath);
+		if (yield* fs.exists(exact)) return O.some(exact);
+		if (!subpath.endsWith(".json")) {
+			const withJson = `${exact}.json`;
+			if (yield* fs.exists(withJson)) return O.some(withJson);
 		}
+		return O.none();
+	}
 
-		// (c) bare package: the "tsconfig" field (resolved against the package
-		// dir) is tried first; on a miss tsc falls through to the
-		// `<pkg>/tsconfig.json` probe (typescript.js:45943-45945 — a falsy
-		// packageFileResult falls to loadModuleFromFile(indexPath)). tsc treats
-		// `""` as falsy too (`packageFile && loader(...)`), so an empty-string
-		// field must also fall through rather than resolve to `path.resolve(pkgDir, "")`,
-		// which is the package directory itself.
-		const tsField = ownProp(record, "tsconfig");
-		if (P.isString(tsField) && tsField !== "") {
-			const abs = path.resolve(pkgDir, tsField);
-			if (yield* fs.exists(abs)) return O.some(abs);
-		}
-		const fallback = path.join(pkgDir, "tsconfig.json");
-		return (yield* fs.exists(fallback)) ? O.some(fallback) : O.none();
-	});
+	// (c) bare package: the "tsconfig" field (resolved against the package
+	// dir) is tried first; on a miss tsc falls through to the
+	// `<pkg>/tsconfig.json` probe (typescript.js:45943-45945 — a falsy
+	// packageFileResult falls to loadModuleFromFile(indexPath)). tsc treats
+	// `""` as falsy too (`packageFile && loader(...)`), so an empty-string
+	// field must also fall through rather than resolve to `path.resolve(pkgDir, "")`,
+	// which is the package directory itself.
+	const tsField = ownProp(record, "tsconfig");
+	if (P.isString(tsField) && tsField !== "") {
+		const abs = path.resolve(pkgDir, tsField);
+		if (yield* fs.exists(abs)) return O.some(abs);
+	}
+	const fallback = path.join(pkgDir, "tsconfig.json");
+	return (yield* fs.exists(fallback)) ? O.some(fallback) : O.none();
+});
 
 /**
  * Resolve an `extends` target to an absolute config path. Relative and rooted
@@ -259,28 +257,27 @@ const tryCandidate = (
 export const resolveExtendsTarget: {
 	(spec: string, fromConfigPath: string): Effect.Effect<O.Option<string>, PlatformError.PlatformError, FileSystem.FileSystem | Path.Path>;
 	(fromConfigPath: string): (spec: string) => Effect.Effect<O.Option<string>, PlatformError.PlatformError, FileSystem.FileSystem | Path.Path>;
-} = dual(2, (
+} = dual(2, Effect.fnUntraced(function* (
 	spec: string,
 	fromConfigPath: string,
-): Effect.Effect<O.Option<string>, PlatformError.PlatformError, FileSystem.FileSystem | Path.Path> =>
-	Effect.gen(function* () {
-		const fs = yield* FileSystem.FileSystem;
-		const path = yield* Path.Path;
-		const fromDir = path.dirname(fromConfigPath);
-		// tsc normalizes slashes once and uses the normalized name throughout
-		// (typescript.js:43745) — the normalized spec is what resolves.
-		const normalized = spec.replace(/\\/g, "/");
+): Effect.fn.Return<O.Option<string>, PlatformError.PlatformError, FileSystem.FileSystem | Path.Path> {
+	const fs = yield* FileSystem.FileSystem;
+	const path = yield* Path.Path;
+	const fromDir = path.dirname(fromConfigPath);
+	// tsc normalizes slashes once and uses the normalized name throughout
+	// (typescript.js:43745) — the normalized spec is what resolves.
+	const normalized = spec.replace(/\\/g, "/");
 
-		if (normalized.startsWith("./") || normalized.startsWith("../") || path.isAbsolute(normalized)) {
-			return yield* resolveRelative(fs, path, fromDir, normalized);
-		}
+	if (normalized.startsWith("./") || normalized.startsWith("../") || path.isAbsolute(normalized)) {
+		return yield* resolveRelative(fs, path, fromDir, normalized);
+	}
 
-		const { pkg, subpath } = parseSpecifier(normalized);
-		const ancestors = yield* Walker.ascend(fromDir);
-		for (const dir of ancestors) {
-			if (path.basename(dir) === "node_modules") continue;
-			const candidate = yield* tryCandidate(fs, path, dir, pkg, subpath);
-			if (O.isSome(candidate)) return candidate;
-		}
-		return O.none();
-	}));
+	const { pkg, subpath } = parseSpecifier(normalized);
+	const ancestors = yield* Walker.ascend(fromDir);
+	for (const dir of ancestors) {
+		if (path.basename(dir) === "node_modules") continue;
+		const candidate = yield* tryCandidate(fs, path, dir, pkg, subpath);
+		if (O.isSome(candidate)) return candidate;
+	}
+	return O.none();
+}));
