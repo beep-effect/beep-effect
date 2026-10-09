@@ -59,6 +59,12 @@ nothing was adopted or discarded. P0 Research is complete.
 
 ## Latest Evidence
 
+[G storage census and deferred retention preview](./history/receipts/stage-5-storage-cleanup.md)
+and [G cache probes](./history/receipts/stage-5-cache.md), 2026-10-09:
+202 checkouts, 1,528 surveyed entries; no cleanup or cache-hit acceptance
+claimed. G is blocked on the read-only reference and its launch path scope;
+[handoff](./history/handoffs/rsc-g-storage-2026-10-09.md).
+
 [`research/baseline-2026-10-09.md`](./research/baseline-2026-10-09.md)
 (implementation head `e62411d63f`, 2026-10-09);
 [`research/sweeps/2026-10-09/README.md`](./research/sweeps/2026-10-09/README.md)

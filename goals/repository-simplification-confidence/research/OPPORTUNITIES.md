@@ -110,3 +110,93 @@
 - Would have prevented it: a review-lens contract that separates material
   defects from wording findings up front, and a mechanical verbatim-section
   checker against the brief so copy drift is caught by a validator.
+
+## G storage launch friction — 2026-10-09
+
+- At source revision `9914e98a86`, `bun run beep cache census --json`
+  emits `cache-executable-census/v1`, an executable-task census rather than
+  storage bytes. The G brief names it as the storage census. Preserve it as
+  task evidence and pair it with `du` and btrfs measurements; a documented
+  storage-specific census command would prevent this mismatch.
+- `beep-heavy true` initially could not connect to the user bus because
+  the launch omitted `XDG_RUNTIME_DIR` and `DBUS_SESSION_BUS_ADDRESS`.
+  Command-local user-session variables restored admission; all three slots
+  were occupied. The diagnostic queued unit was explicitly stopped, with
+  no workload left running. Forwarding the user bus variables in the lane
+  launcher would prevent this failure. No heavy proof bypassed admission.
+- The Connect `op run --env-file=<lane-private-refs> -- true >/dev/null`
+  failed with `Found 0 vaults with title` on the pre-existing read-only Turbo
+  token reference. `op-doctor` ran once and found a service-account identity
+  plus a user-bus environment limitation. No secret was printed and that
+  path stopped. An agent-visible read-only reference is the prerequisite
+  for the authenticated artifact probes; the write token is excluded.
+- The worker instruction confines writes to its lane; G mechanics require
+  a historical fixture in the sibling worktree root, a disposable second
+  clone in the home cache, and home configuration changes. These dependent
+  steps are deferred to the orchestrator with the scope conflict recorded.
+  Passing a consistent explicit path allowlist at launch would prevent this
+  contradiction.
+
+## G resume friction — 2026-10-09
+
+- The authorized default service-account retry failed with `"BEEP_CI" isn't a
+  vault in this account.` The exact operation was `env -u OP_AGENT_BACKEND op
+  run --env-file=<lane-private-refs> -- true >/dev/null`. `op-doctor` ran once;
+  no credential values were emitted. The remote fixture remains an unsupported
+  external condition under resume ruling 1. An agent-visible read-only reference
+  would allow the authenticated HEAD and cold-read probes.
+- Direct package `tsgo -p` produced missing dependency-output errors (`TS6305`)
+  and cascading diagnostics. This invocation does not establish source parity;
+  use the source-aware hosted-parity command and the admitted package verifier.
+  The raw log remains private.
+
+## G retention review and qualification — 2026-10-09
+
+- The separate Opus 5.5 medium review identified 15 actionable findings in the
+  first archive draft. Future-clock fixtures masked journal-directory writes
+  renewing checkout liveness, and a self-asserted sidecar did not bind its
+  terminal claim to tracked evidence. Fixes require real-clock regressions,
+  tracked schema-equal owner rulings, complete citation matching, nested
+  checkout protection, strict directory fsync, and recovery-row attribution.
+  A crash/clock/citation checklist before implementation would prevent this.
+- The first admitted package verifier reported introduced source diagnostics:
+  missing ancestry import, a pinned FileSystem API without `noFollow`, an
+  unavailable string join, lost function argument inference, and service
+  dependency leakage. Its audit/docgen inbox rows were acknowledged against
+  repair commit `4decfe96d3`; acknowledgement is not a successful rerun.
+  Use the pinned installed Effect types alongside the reference checkout and
+  capture service dependencies at construction. No suppression was added.
+
+### G shared-admission queue and second review
+
+The retention suite and package rerun remained queued for more than thirty
+minutes behind the three-slot machine-wide budget. The worker preserved the
+admission limit and used the wait for review fixes and synthetic configuration
+checks. A fair queued admission policy with visible queue age would prevent
+longer-running lanes from repeatedly winning slots while older jobs wait.
+
+The second independent implementation review confirmed the prior fifteen
+findings addressed, then found sibling mtime lockout, archive census growth,
+foreign-owner fleet destinations, Unicode citation listing, mistyped recovery
+side effects, loss of failure causes, and stale documentation. The corrective
+wave adds regressions and limits fleet archive apply to the owning checkout.
+The rerun and terminal review remain required; queued commands are not proof.
+
+### G admitted test command and signal contract
+
+The first admitted residue test command selected no tests because the package
+Vitest config was used from the repository root. The package-relative rerun
+executed 39 tests: 36 passed; one expected the old class domain, and two
+SIGKILL fixtures assumed an integer exit code. The Effect process adapter
+correctly represents signal termination as a typed error. The fixtures now
+accept that error and verify persisted plan/intent checkpoint state before
+recovery. Future test command guidance should give package cwd explicitly and
+use the installed process adapter's signal contract.
+
+The third review identified overwritten recovery proof, vendored operational
+state in the safety walk, literal evidence path validation, nested clone linked
+worktrees, foreign lock writes, directory-creation races, formatted draft
+emptiness, ambiguous move outcomes and missing regression coverage. The
+correction preserves immutable plan/outcome reports, writes separate recovery
+receipts, prunes embedded/dependency trees, validates literal canonical evidence,
+and adds nested/fence/sync/PID/symlink/recovery regression fixtures.

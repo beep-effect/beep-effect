@@ -698,9 +698,52 @@ without claiming completion.
 | 2026-10-09 | The required `Knip` status-check context is removed from the `main` ruleset by the orchestrator at the gate of the A PR that deletes the `check.yml` job, after exporting the prior ruleset to the E receipt; the two land in one window. | A head without the Knip job can never satisfy a ruleset that still requires it, and removing the context first would let other PRs merge without Knip for the whole window. | Re-add the context from the exported ruleset JSON (`gh api -X PUT repos/<o>/<r>/rulesets/<id>`). |
 | 2026-10-09 | Lanes may start before this packet PR merges: step 0 merges `origin/main` and, if the packet is absent, the packet branch itself. | Identical additions merge cleanly after the squash; waiting for the merge would idle twelve lanes for the review window. | Relaunch any conflicted lane from a fresh worktree cut after the merge. |
 
+### G resumed implementation decisions — 2026-10-09
+
+| Decision | Reason | Reversal |
+| --- | --- | --- |
+| Use seven days as the recent `.beep` write liveness floor; retention and archive-journal writes do not renew operational activity. | Preserve recently active checkouts even when cwd and PID observations happen between operations. | Increase the floor or revert the policy constant by PR; no archival ran without the same apply-time reassessment. |
+| Require a `residue-retention/v1` owner ruling with schema-equal tracked JSON evidence, terminal state and regeneration description before archiving checkout derivatives. | Old files do not establish ownership or terminal state; missing and paused rulings fail closed. | Remove or change the owner ruling; restore any archived row using its persisted run id. |
+| Archive checkout residue by fsynced intent and same-filesystem inode-bound rename; count physical reclamation as zero while the archive remains. | Keep recovery possible after interruption and avoid presenting moved bytes as freed blocks. | Run `quality residue-reap --restore <run-id>`; occupied sources are refused. |
+| Retry the existing read-only Turbo reference once on the default service-account backend, then record unavailable remote evidence. | Resume ruling 1 authorizes this exact retry; the vault remains inaccessible. The write token is excluded. | Supply an agent-visible read-only reference through the orchestrator and rerun the HEAD and historical fixtures. |
+| Defer all home configuration writes and deliver an idempotent dry-run-first environment script in the handoff. | Resume ruling 1 supersedes the earlier home-write instruction. | Operator runs the script with backups, then restores its printed backup to reverse it. |
+
 ## Exception Ledger
 
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
 | Review-loop cap override | Every PR of this program | Program orchestrator | Brief section 1 item 7: resolve every in-scope actionable finding, including lower severity; do not defer one merely to stop a review loop. Overrides AGENTS.md "Autonomy" round-2 rule for this program only. | Program closeout (packet reaches `completed-retained`). |
 | Three-model panel IDs | Workstream F final review | Program orchestrator | `gpt-6-astra`, `claude-fable-5-1`, and `grok-4.7` at xhigh are named by the brief; AGENTS.md otherwise forbids substituting non-default models silently. This is an explicit, recorded use. | Terminal zero-actionable-findings verdicts from all three reviewers are recorded in `history/receipts/stage-5-panel.md` on the final workstream F revision and configuration fingerprints, and no F configuration change follows them; any later change keeps the exception for the re-review. |
+
+### G launch decisions — 2026-10-09
+
+| Date | Decision | Reason | How to reverse |
+| --- | --- | --- | --- |
+| 2026-10-09 | Confine mutations to `rsc-g-storage`; defer G's sibling fixture, second clone, and home configuration writes. | The worker request explicitly restricts work to this lane, overriding the brief's broader workstation scope. Census probes are read-only. The orchestrator receives the contradiction and dependent work remains blocked. | Relaunch with an explicit path allowlist covering the brief's required fixture and home paths. |
+| 2026-10-09 | Test only the existing read-only Turbo reference through Connect; stop after its vault-resolution failure. No resolvable replacement reference is available. | R59 requires Connect first; neither the write token nor Desktop sign-in is an allowed repair. Authenticated artifact evidence remains blocked. | The orchestrator supplies an agent-visible read-only reference; rerun the exact suppressed verification, then HEAD probes before any fixture. |
+| 2026-10-09 | Use a conservative seven-day recent-write liveness window in the pending retention design; no age-based eligibility is granted in this preparation report. | Recent `.beep` writes can represent active or paused ownership even with no cwd holder. Age alone never proves terminal state. | Change the window in the implementation and rerun the dry run; never reinterpret this blocked census as an apply plan. |
+| 2026-10-09 | Retain every surveyed entry and preserve raw census/config artifacts in the lane's ignored `.beep`. | Owner and terminal state are not verified; production v3 journaling and interruption proof are not implemented. Zero apply is recoverable without moving any source. | Resume the source work and publish a v3 dry run; receive orchestrator acknowledgement and owner notices before apply. |
+
+### G review refinements — 2026-10-09
+
+- Checkout archive classes observe foreign fleet owners but apply only from the
+  invoking owner checkout. This prevents lane retirement from taking another
+  checkout's archive. Reversal: revert the implementation PR; future fleet
+  apply requires durable per-owner reports and recovery entry points.
+- Only operational non-directory writes renew seven-day liveness; rename-induced
+  directory mtimes do not prevent later sibling archives. Archive and ruling
+  trees are pruned before the operational census cap. Existing run reports and
+  archives remain durable proof pending a separate owner retention ruling.
+- Citation listings use NUL separators, preserving Unicode filenames. Bounded
+  listings fail closed on truncation; apply rereads protection before each move.
+- The deferred environment writer passed synthetic dry-run, idempotence, backup,
+  unowned-field and symlink-refusal checks. No home configuration was applied.
+
+- G recovery preserves immutable `plan.json` and the initial `report.json`;
+  each recovery writes a new receipt and reconciles the original plan plus
+  durable intent phases. Reversal is the implementation PR; keep existing
+  archive data and original reports during any rollback.
+- G's operational scan treats embedded Git/dependency trees as opaque and
+  counts links without following them. A bounded mutable stack avoids
+  quadratic immutable-array copies; candidate-specific Git gates still
+  preserve dirty and linked nested worktrees.
