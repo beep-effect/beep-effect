@@ -235,3 +235,13 @@
   the pipeable-signature check. Export a unary `Effect.fn` decoding boundary
   beside the schema. It drops the unrelated callback index deliberately while
   retaining the exact fixture codec; keep API checks in package verification.
+
+## 2026-10-09 — hosted Heavy bootstrap lacks Node
+
+While closing PR #1573 wave 2, all seven Heavy jobs failed before executing
+package commands: `scripts/ci-change-profile.sh: line 27: node: command not found`.
+The script and workflow match main; this lane changes neither. Read each completed
+job log immediately via `gh api --allow-escape-sequences .../actions/jobs/<id>/logs`.
+A setup-order prerequisite or schema-owned change-profile reader available before
+profile evaluation would prevent the failure. S11 owns consolidated repair;
+local package proof is retained without presenting it as a hosted execution.
