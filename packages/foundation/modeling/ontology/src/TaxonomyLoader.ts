@@ -664,7 +664,7 @@ const parseManifest = Effect.fn("TaxonomyLoader.parseManifest")(function* (path:
  * console.log(program)
  * ```
  *
- * @category filesystem
+ * @category resources
  * @since 0.0.0
  */
 export const resolveVendorPath = Effect.fn("TaxonomyLoader.resolveVendorPath")(function* (
@@ -718,7 +718,7 @@ export const resolveVendorPath = Effect.fn("TaxonomyLoader.resolveVendorPath")(f
  * console.log(program)
  * ```
  *
- * @category filesystem
+ * @category resources
  * @since 0.0.0
  */
 export const readVendorContent = Effect.fn("TaxonomyLoader.readVendorContent")(function* (

@@ -171,3 +171,17 @@
   slot or memory configuration changed.
 - Prevention: document that the wrapper has no help flag and initialize the
   user-systemd environment in headless lane launchers.
+
+## Candidate JSDoc category admission (2026-10-09)
+
+- Work: independently compile/check M2 public documentation while waiting for
+  the owner XML-reader branch.
+- Evidence: scoped `docgen:local -- --package @beep/ontology` rejected four
+  exports using the unknown categories `identity` and `filesystem`.
+- Attribution: introduced in the M2 candidate; category validation was not
+  reached by the earlier package-audit stop.
+- Response: use the binding category inventory's `identifiers` and `resources`
+  categories. Rerun the same scoped gate; do not infer docgen admission from
+  package JSDoc lint alone.
+- Prevention: validate categories against `.patterns/jsdoc-documentation.md`
+  before the first runtime audit, so a dependency blocker does not hide docs reds.

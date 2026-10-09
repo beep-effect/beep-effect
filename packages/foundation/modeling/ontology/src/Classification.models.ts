@@ -384,7 +384,7 @@ const classificationComposer = (pin: ClassificationPin) =>
  *
  * @param pin - A schema-validated scheme and edition.
  * @returns The repository-owned IRI of the pinned concept scheme.
- * @category identity
+ * @category identifiers
  * @since 0.0.0
  */
 export const classificationSchemeIri = (pin: ClassificationPin): IRIReference =>
@@ -404,7 +404,7 @@ export const classificationSchemeIri = (pin: ClassificationPin): IRIReference =>
  * @param pin - A schema-validated scheme and edition.
  * @param notation - A canonical designation from the authority-specific symbol schema.
  * @returns The notation identity within the pinned scheme.
- * @category identity
+ * @category identifiers
  * @since 0.0.0
  */
 export const classificationConceptIri: {
