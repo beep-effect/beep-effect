@@ -1643,15 +1643,91 @@
       "wave": 1,
       "position": 6,
       "stage": 0,
-      "status": "pending",
+      "status": "in-progress",
       "provisionalHome": "foundation/modeling",
       "upstreamPaths": {
         "src": "packages/spdx/src",
         "test": "packages/spdx/__test__"
       },
-      "exportsExpected": [],
+      "exportsExpected": [
+        {
+          "name": "AndNode",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "InvalidSpdxExpressionError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "License",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "LicenseException",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "LicenseNode",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "LicenseRefNode",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "OrNode",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "SpdxExpression",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "WithExceptionNode",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "isValidExpression",
+          "kind": "value",
+          "entry": "."
+        }
+      ],
       "exportsAdded": [],
-      "newDeps": [],
+      "newDeps": [
+        {
+          "name": "oxc-parser",
+          "kind": "dev",
+          "spec": "^0.152.0",
+          "replacement": null
+        },
+        {
+          "name": "spdx-exceptions",
+          "kind": "dev",
+          "spec": "2.5.0",
+          "replacement": null
+        },
+        {
+          "name": "spdx-expression-parse",
+          "kind": "dev",
+          "spec": "5.0.0",
+          "replacement": null
+        },
+        {
+          "name": "spdx-license-ids",
+          "kind": "dev",
+          "spec": "3.0.24",
+          "replacement": null
+        }
+      ],
       "fixturesBytes": 0,
       "deviations": [],
       "backlog": [],
