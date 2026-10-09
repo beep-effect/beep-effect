@@ -174,3 +174,15 @@ main; #1565 fixed only the build-pipeline observation. V reports the remaining
 row to the orchestrator's packet lane for one main repair, then will merge
 main and rerun that gate. A full-corpus local check on the coordinating
 packet before its stage-1 publication would have caught this second row.
+
+## 2026-10-09 — V publication admission stalled after qualification
+
+V completed full repo-cli verification (757.718 s) and final source parity,
+then queued canonical Yeet publication. For more than 45 minutes all three
+slots remained occupied; newly arriving peer work obtained freed slots while
+V waited. The wrapper uses nonblocking flock polling at five-second intervals,
+not a FIFO queue. It starts the capped user service before admission, so an
+active unit alone is not evidence that the command started. V stopped only its
+two unadmitted services before the blocked handoff; no peer job was stopped.
+A fair admission order and separate queued/admitted state in the wrapper would
+have prevented starvation and the misleading liveness check.

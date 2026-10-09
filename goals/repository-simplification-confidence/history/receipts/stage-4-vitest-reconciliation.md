@@ -124,8 +124,9 @@ No second worktree is created and no other session's checkout is edited.
 
 Starting main snapshot: **1,879 total / 741 open / 1,138 exceptions** under
 Effect/Vitest **4.0.2**. Fresh final-source scan: **1,853 total / 716 open / 1,137 exceptions**.
-The generated snapshot is tied to source `a0b0df414732a07b4449f07e1cafd397cf995af0`
-and merged main `7febc0287bed98ae84659ee7278e3fe8f2e28b65`.
+The generated snapshot is tied to merged source `5a79cbc49a8cd76145db5ead3157f8e0dcc18242`
+and main `51740fd5e6e1bb39fbb943137afc06c7cea1db96` (#1563). The 37 reviewed
+owned files remain byte-identical to the terminal-zero source snapshot.
 Re-anchors from #1552 import layout and #1555 primitive pin shifts are counted
 separately from resolved semantic rows. Inventory is generated, never merged.
 
@@ -150,17 +151,16 @@ hosted check or publication is claimed.
 
 Selected CLI cohort: 35 files / 1,248 cases passed on Node (164.512 s) and Bun
 (108.154 s). The final parser was subsequently re-proved independently on both
-runtimes (3.522 s / 1.968 s); other cohort sources did not change. Final-source
-test-tsgo passed (18.096 s), Fallow audit passed (7.226 s). Docgen local passed
-(36.580 s), JSDoc ratchet passed (285.965 s), and Fallow health passed (5.424 s);
-their relevant production/export surfaces remained unchanged afterward.
+runtimes (3.522 s / 1.968 s); other cohort sources did not change. Merged-source
+test-tsgo passed (21.854 s), Fallow audit passed (10.732 s), local docgen passed
+(37.484 s), JSDoc ratchet passed (284.152 s), and Fallow health passed (4.070 s).
 
 Scoped coverage did not regress either touched baseline row: RatchetDiff lines
 90%, statements 90.9%, branches 100%, functions 85.71%; Research.test-kit is a
 100% reexport row with zero executable statements. No untouched floor was
 rewritten. This is scoped evidence, not repository-wide coverage.
 
-Knowledge refs failed (exit 1, 26.710 s) after #1565: packet SPEC line 374's
+Knowledge refs failed again at merged source (exit 1, 24.958 s) after #1565: packet SPEC line 374's
 literal home-absolute-prefix example remains on main and is classified as a
 live host reference. The orchestrator must fix the inherited row once on main.
 V preserves that ownership boundary. Full repo-cli verification passed at the reviewed source head in 770.804 s
@@ -223,3 +223,32 @@ heads. Sources and their pending state remain available unchanged.
 | `codex/effect-vitest-wave-d-cosmos` | `d4ef8af2e6f8feae3a0008638f2c15724be8c560` |
 | `codex/effect-vitest-wave-d-pglite` | `6f899d5d773b8ec56292857770d1d5a5c52d4e12` |
 | `fix/vitest-alias-dock-css` | `744760f8116ebaf2c165abbbeb638f96e5685422` |
+
+Merged-source full repo-cli verification **passed in 757.718 s** at
+`5a79cbc49a8cd76145db5ead3157f8e0dcc18242` (audit 729.9 s, docgen 26.2 s).
+Yeet publication could not obtain admission for more than 45 minutes. The
+wrapper starts its capped service before waiting for a slot; service existence
+therefore does not prove payload admission. Only V's two unadmitted queue
+services were stopped; no peer or executing payload was stopped. Cheap gates,
+push, PR creation and hosted readiness did not run. No program-completion
+claim is made.
+
+### R105 review and repair preview
+
+Separate read-only Opus review of the original prepared patch found one P2
+duplication/function-size risk and no semantic defect. It is retained in
+[rsc-v-noncli-source-review.md](./rsc-v-noncli-source-review.md). The repair
+preview is [rsc-v-noncli-repair-preview.patch](./rsc-v-noncli-repair-preview.patch),
+SHA256 `4ef6960fecf46fc898dc34ec347fb8a594a07220dca4fd508c7615fb162b1d10`.
+It extracts the fourteen repeated blocks into one private RDF test helper,
+using Cause.map to preserve every reason and annotation. Exit.mapError in the
+4.0.2 reference collapses mixed causes to their first typed failure and is
+unsuitable here. Two schema-derived pure properties protect mixed causes and
+success payloads with 25 runs each; every existing sample floor remains.
+
+The standalone helper success/mixed-cause runtime check passed. The preview
+passes git-apply context checking against the unchanged RDF/Pacer baseline.
+Its type check could not obtain admission. No repaired-preview package proof,
+full runtime cohort, Fallow proof or terminal-zero re-review is claimed. The
+original patch and its earlier package/runtime results remain preserved as
+separate evidence. Actual RDF/Pacer package files remain unchanged in V.

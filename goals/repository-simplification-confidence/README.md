@@ -59,7 +59,7 @@ nothing was adopted or discarded. P0 Research is complete.
 
 ## Latest Evidence
 
-Lane V preservation and integration work: [Stage 4 reconciliation](./history/receipts/stage-4-vitest-reconciliation.md). All 46 source worktrees remain unchanged. Final-source inventory is 1,853 / 716 open / 1,137 exceptions; CLI code review returned terminal zero. Local qualification and the inherited packet knowledge-reference blocker are recorded in the V handoff.
+Lane V preservation and integration work: [Stage 4 reconciliation](./history/receipts/stage-4-vitest-reconciliation.md). All 46 source worktrees remain unchanged. Final-source inventory is 1,853 / 716 open / 1,137 exceptions; CLI code review returned terminal zero. Full local CLI qualification passed. Publication is blocked on heavy admission; the inherited knowledge-reference row and unqualified R105 repair preview are separately recorded in the V handoff.
 
 [`research/baseline-2026-10-09.md`](./research/baseline-2026-10-09.md)
 (implementation head `e62411d63f`, 2026-10-09);

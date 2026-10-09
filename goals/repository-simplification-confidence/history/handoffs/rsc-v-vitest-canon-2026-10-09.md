@@ -116,3 +116,65 @@ done through the canonical ledger service, probing only read-only git facts
 from that source. Its files/index/branch remain untouched. Main subsequently
 advanced with #1563 (accounts screen); it does not overlap the 37 reviewed
 files. Final merge and regeneration precede publication.
+
+### Merged-main requalification
+
+Source merge head `5a79cbc49a8cd76145db5ead3157f8e0dcc18242` includes main
+#1563, which changes Accounts code/tests and six inventory anchors but none of
+V's 37 reviewed source files. Every owned source hash still matches terminal
+zero. The main-generated inventory was restored as input for the owning scan;
+no automerged projection is accepted as the final scan. A fresh parity/scan
+collector and full package check are queued through beep-heavy (at most two
+V jobs). The earlier full package pass remains qualified at its recorded head;
+it is not labelled a pass of the newly merged Accounts source. The R102
+follow-up frontier is recorded in canon PLAN. No V PR exists yet.
+
+### Content-final CLI publication wave
+
+- lane: `rsc-v-vitest-canon`; source head `5a79cbc49a8cd76145db5ead3157f8e0dcc18242`.
+- PR(s): Yeet publication is starting; no PR is claimed by this pre-publication row.
+- package-verify: repo-cli PASS 770.804 s at a0b0df4147; merged-source rerun running. RDF PASS 12.064 s and Pacer PASS 10.024 s qualify only the preserved follow-up patch.
+- hosted-parity (local commands at merged source): test-tsgo PASS 21.854 s; docgen local PASS 37.484 s; jsdoc-ratchet PASS 284.152 s; knowledge refs FAIL 24.958 s, one inherited SPEC prefix-example observation; Fallow audit PASS 10.732 s / health PASS 4.070 s; scoped coverage retained unchanged (RatchetDiff 90/90.9/100/85.71, reexport zero executable statements). No hosted-head check is claimed.
+- inventory before→after: 1,879 / 741 open / 1,138 exceptions → 1,853 / 716 open / 1,137 exceptions. The owning scan ran after the final main merge; 15,513 historical IDs remain unchanged.
+- disposition counts: 5 port / 41 superseded / 0 discarded worktrees; stale Pacer changeset separately discarded as an artifact.
+- handoff: `history/handoffs/rsc-v-vitest-canon-2026-10-09.md`.
+- retirement list: all 46 source rows, inventory-next residue and 22 remote candidates are in the Stage 4 receipt. Nothing removed; orchestrator liveness/archive/notification gates remain.
+- open items: publication/ready and review closure; merged package terminal result; R105 second PR; inherited main knowledge-reference fix; 716-row R102 follow-up frontier, timing/reflection/completed-retained gates.
+
+All 37 reviewed files re-hash identically after #1563. Source gates use the
+recorded code SHA; the publication commit additionally contains authored
+receipts and regenerated inventory. The package job and this publication are
+the only two active V heavy commands.
+
+## Run 3 final report — blocked on heavy admission
+
+This supersedes all earlier in-progress rows in Run 3. Historical reports stay
+retained. No PR was created and the program/canon goal is not completed.
+
+- **lane:** `rsc-v-vitest-canon`, branch `chore/rsc-v-vitest-canon`.
+- **head sha:** qualified code snapshot `5a79cbc49a8cd76145db5ead3157f8e0dcc18242`; the commit containing this report adds receipts only. Owned source remains byte-identical to terminal-zero review snapshot `a0b0df414732a07b4449f07e1cafd397cf995af0`.
+- **PR(s):** none. Canonical Yeet publication was submitted through beep-heavy but waited over 45 minutes without payload admission. V stopped only its two capped queue services, whose processes were still shell/sleep waiters. Cheap gates, push, PR creation, readiness and hosted-head checks did not execute. No peer job was stopped.
+- **package-verify per package:** `@beep/repo-cli` PASS 757.718 s on merged source (audit 729.9 s, docgen 26.2 s); prior source PASS 770.804 s retained. `@beep/rdf` PASS 12.064 s and `@beep/pacer` PASS 10.024 s qualify only original preserved patch `b0f087e9…4a92`, not the repair preview or a future PR.
+- **hosted-parity results (local commands):** test-tsgo PASS 21.854 s; docgen local PASS 37.484 s; jsdoc-ratchet PASS 284.152 s; knowledge refs FAIL 24.958 s with one inherited packet SPEC line-374 prefix-example observation; Fallow audit PASS 10.732 s / health PASS 4.070 s. Scoped coverage did not regress: RatchetDiff lines 90%, statements 90.9%, branches 100%, functions 85.71%; Research.test-kit is a zero-executable-statement reexport. No untouched floor changed and no repository-wide coverage is claimed.
+- **runtime cohorts:** 35 CLI files / 1,248 cases passed on Node (164.512 s) and Bun (108.154 s). The final parser was separately re-proved on both runtimes (3.522 / 1.968 s); the other owned cohort sources remained unchanged. Original prepared RDF patch Node/Bun PASS 3.375 / 1.827 s; Pacer PASS 3.065 / 1.734 s.
+- **inventory before→after:** 1,879 / 741 open / 1,138 exceptions → 1,853 / 716 open / 1,137 exceptions, Effect/Vitest 4.0.2. The owner command ran after merging main #1563. 1,756 stable IDs, 61 re-anchors, 50 unmatched old and 24 unmatched new occurrence keys; 1,172 live historical links, 270 exact historical IDs. All 15,513 historical IDs and human-lens statuses remain unchanged.
+- **disposition counts:** 5 port / 41 superseded / 0 discarded worktrees across 46 source rows; the stale Pacer changeset is a separate discarded artifact. All 17 export digests were verified, including the two Stage 1 pending-state digests.
+- **handoff path:** `goals/repository-simplification-confidence/history/handoffs/rsc-v-vitest-canon-2026-10-09.md`.
+- **retirement list:** all 46 source worktrees and their heads/evidence, inventory-next residue, and 22 remote candidates are enumerated in `history/receipts/stage-4-vitest-reconciliation.md`. Nothing removed. The orchestrator must first land the relevant work, notify the live build-pipeline owner, confirm liveness/tips, and archive under R106. The integration lane remains retained.
+- **open items:** obtain heavy admission and resume canonical publication/ready; apply the R105 repair preview on a separate package scope, typecheck/run both runtimes/full package-verify/Fallow and obtain terminal-zero re-review before its second PR; orchestrator consolidated fix for the inherited knowledge-reference row; R102's 716-row remediation frontier, timing/reference receipts, reflection and completed-retained acceptance; conditional retirement. S13's mid-run final-file gate cannot be armed without a PR.
+
+R105 review found one P2 duplication/function-size risk and no semantic defect
+in the original patch. The nine-file repair preview is
+`history/receipts/rsc-v-noncli-repair-preview.patch`, SHA256
+`4ef6960fecf46fc898dc34ec347fb8a594a07220dca4fd508c7615fb162b1d10`.
+It extracts fourteen Cause blocks using Cause.map and adds two schema-derived
+pure properties at 25 runs each. A standalone success/mixed-cause check passed;
+the preview's type check never received admission. No preview package/runtime/
+Fallow pass or terminal-zero re-review is claimed. Original prepared-patch
+proofs remain separate. Actual RDF/Pacer files are unchanged in this branch.
+
+Resume from this lane without replaying preserved source migrations or passed
+CLI source gates. If main advances, merge it and regenerate shared projections;
+requalify only affected surfaces. First command needing heavy admission is
+`beep-heavy bun run beep yeet publish --message "test(cli): integrate preserved vitest canon work"`.
+Do not bypass the queue, change its caps, stop peers, or retire legacy sources.

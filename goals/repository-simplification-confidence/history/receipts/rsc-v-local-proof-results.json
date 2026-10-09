@@ -138,5 +138,71 @@
     "exit": 0,
     "durationSeconds": 770.804,
     "head": "a0b0df414732a07b4449f07e1cafd397cf995af0"
+  },
+  "mergedSourceHead": "5a79cbc49a8cd76145db5ead3157f8e0dcc18242",
+  "mergedSourceParity": [
+    {
+      "lane": "scan",
+      "exit": 0,
+      "durationSeconds": 12.036,
+      "head": "5a79cbc49a8cd76145db5ead3157f8e0dcc18242"
+    },
+    {
+      "lane": "test-tsgo",
+      "exit": 0,
+      "durationSeconds": 21.854,
+      "head": "5a79cbc49a8cd76145db5ead3157f8e0dcc18242"
+    },
+    {
+      "lane": "fallow-audit",
+      "exit": 0,
+      "durationSeconds": 10.732,
+      "head": "5a79cbc49a8cd76145db5ead3157f8e0dcc18242"
+    },
+    {
+      "lane": "fallow-health",
+      "exit": 0,
+      "durationSeconds": 4.07,
+      "head": "5a79cbc49a8cd76145db5ead3157f8e0dcc18242"
+    },
+    {
+      "lane": "docgen-local",
+      "exit": 0,
+      "durationSeconds": 37.484,
+      "head": "5a79cbc49a8cd76145db5ead3157f8e0dcc18242"
+    },
+    {
+      "lane": "jsdoc-ratchet",
+      "exit": 0,
+      "durationSeconds": 284.152,
+      "head": "5a79cbc49a8cd76145db5ead3157f8e0dcc18242"
+    },
+    {
+      "lane": "knowledge-refs",
+      "exit": 1,
+      "durationSeconds": 24.958,
+      "head": "5a79cbc49a8cd76145db5ead3157f8e0dcc18242"
+    }
+  ],
+  "mergedPackageVerify": {
+    "lane": "package-repo-cli",
+    "exit": 0,
+    "durationSeconds": 757.718,
+    "head": "5a79cbc49a8cd76145db5ead3157f8e0dcc18242"
+  },
+  "publication": {
+    "status": "not-admitted",
+    "pr": null,
+    "reason": "All three machine-wide heavy slots remained occupied; publication waited over 45 minutes and was cancelled before its payload started.",
+    "cheapGates": "not-run",
+    "peerJobsStopped": 0
+  },
+  "nonCliRepairPreview": {
+    "sha256": "4ef6960fecf46fc898dc34ec347fb8a594a07220dca4fd508c7615fb162b1d10",
+    "files": 9,
+    "review": "R1 one P2 duplication finding; extraction prepared, final re-review pending",
+    "typecheck": "not-admitted",
+    "packageVerify": "not-run on repaired preview",
+    "runtime": "standalone success and mixed-cause helper checks passed; package runtime cohorts not run on this preview"
   }
 }

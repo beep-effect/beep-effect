@@ -804,3 +804,37 @@ coverage pass (189 tests across 16 files), and all 15 cheap gates pass. Timing
 records preserve source hashes and workstation pressure; runtime/test-population
 changes preclude a causal speedup claim. Hosted checks, review closure and the
 runner prerequisite merge remain pending. This is not goal completion.
+
+## 2026-10-09 — RSC resumed frontier
+
+The first R102 wave preserves the unpublished continuation and detector WIP,
+integrates CLI-only code, and supplies the serialized 4.0.2 inventory. The
+source-qualified scan at `a0b0df4147` has 716 open rows: 609 in repo-cli and
+107 elsewhere. This is a planning snapshot; use the final regenerated scan
+after the integration lands, not historical ledger totals, to admit a wave.
+The reconciliation JSON preserves historical IDs and human-lens judgments.
+
+1. Land the CLI integration through the orchestrator shared-file gate. Retain
+   all legacy worktrees until the orchestrator checks liveness and archives
+   them under R106. V never merges or retires them.
+2. Apply the preserved RDF/Pacer follow-up patch in a separate PR under R105,
+   with current main, package changesets, both runtimes and each full package
+   verification. Preserve the main property populations and exact cleanup and
+   failure witnesses. The current prepared-patch proofs are reusable evidence,
+   not qualification of that eventual PR head.
+3. Admit bounded CLI waves from the final scan. Largest current file cohorts
+   are proof-shadow (36 rows), yeet-sweep-retire (33), harness-ledger (30),
+   ci-lane-timings (27), and turbo-lane-digest (26). These are candidate counts,
+   not commitments to mechanical rewrites. Inspect semantics and existing
+   helpers before choosing a primitive; keep titles, samples, branch oracles,
+   defects, interruption witnesses and environmental boundaries intact.
+   Tooling ships alone and each wave stays below D13's roughly 150-file cap.
+4. Continue dependency-ordered non-CLI cohorts separately. Largest current
+   groups are law-practice-server (26), editor (24), test-runner (9), then
+   several four-row packages. V owns remediation; B reviews exceptions.
+   Regenerate after each final merge and preserve occurrence lineage instead
+   of inferring fixes from missing IDs.
+5. Complete timing/reference receipts, independent review, final inventory,
+   reflection and same-PR lifecycle state only after the open baseline is
+   empty and every completion gate is evidenced. The integration and this
+   plan do not mark the goal completed-retained.

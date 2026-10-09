@@ -1,7 +1,7 @@
 {
-  "sourceHead": "a0b0df414732a07b4449f07e1cafd397cf995af0",
-  "mainHead": "7febc0287bed98ae84659ee7278e3fe8f2e28b65",
-  "inventorySha256": "fb760729a080388724f8f14c3a1202b33d37a9b2807650eb7ca8d7a45f6d9864",
+  "sourceHead": "5a79cbc49a8cd76145db5ead3157f8e0dcc18242",
+  "mainHead": "51740fd5e6e1bb39fbb943137afc06c7cea1db96",
+  "inventorySha256": "0694e97b26e95f4b2b6125b0301cc4c7d015033787d6195c1465faf25283a94f",
   "effectVitestVersion": "4.0.2",
   "historicalRowCount": 15513,
   "historicalIdsRemainImmutable": true,
@@ -25,17 +25,17 @@
     "liveRowsWithExactHistoricalId": 270
   },
   "unmatchedOldByRule": {
-    "EV003": 2,
     "EV002": 35,
-    "EV001": 4,
-    "EV014": 9
+    "EV014": 9,
+    "EV003": 2,
+    "EV001": 4
   },
   "unmatchedNewByRule": {
-    "EV014": 1,
     "EV004": 11,
     "EV002": 10,
     "EV015": 1,
-    "EV010": 1
+    "EV010": 1,
+    "EV014": 1
   },
   "rows": [
     {
@@ -8373,9 +8373,9 @@
       "disposition": "historical-link"
     },
     {
-      "liveId": "EV010:packages/tooling/tool/cli/test/accounts-usage.test.ts:32:@effect/platform-node@0#1",
+      "liveId": "EV010:packages/tooling/tool/cli/test/accounts-usage.test.ts:42:@effect/platform-node@0#1",
       "historicalIds": [],
-      "mainId": "EV010:packages/tooling/tool/cli/test/accounts-usage.test.ts:32:@effect/platform-node@0#1",
+      "mainId": "EV010:packages/tooling/tool/cli/test/accounts-usage.test.ts:42:@effect/platform-node@0#1",
       "disposition": "new-live-candidate"
     },
     {
