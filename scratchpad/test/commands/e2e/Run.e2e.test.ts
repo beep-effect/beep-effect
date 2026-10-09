@@ -1,4 +1,3 @@
-// @effect-diagnostics strictEffectProvide:skip-file globalTimers:skip-file newPromise:skip-file
 // Real processes, through @effect/platform-node's real ChildProcessSpawner.
 //
 // Everything here exercises behavior a mocked spawner cannot reproduce: OS pipe
@@ -9,22 +8,31 @@
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
-import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as ChildProcess from "effect/process/ChildProcess";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import { CommandFailedError, Run } from "../../../effected/commands/Run.ts";
+
+/** Builds each test layer under the program's scope, with fresh per-invocation state. */
+const withLayer = <R, E2, R2>(layer: Layer.Layer<R, E2, R2>) => <A, E, R3>(program: Effect.Effect<A, E, R3>) =>
+ Effect.scopedWith((scope) => Effect.flatMap(
+  Layer.buildWithScope(layer, scope),
+  (context) => Effect.provideContext(program, context),
+ ));
 
 /** The real platform services, built once for the file. */
 const Platform = NodeServices.layer;
 
 /** Runs a program against the real spawner. */
 const live = <A, E>(program: Effect.Effect<A, E, ChildProcessSpawner.ChildProcessSpawner>): Effect.Effect<A, E> =>
-	Effect.provide(program, Platform);
+	withLayer(Platform)(program);
 
 /** `node -e "<script>"` — the one binary guaranteed to exist wherever these tests run. */
 const node = (script: string) => ChildProcess.make(process.execPath, ["-e", script]);
 
-/** A real (not virtual) pause; `Effect.sleep` would wait on the TestClock forever. */
-const realDelay = (millis: number) => Effect.promise(() => new Promise((resolve) => setTimeout(resolve, millis)));
+/** A pause on the live clock used by the real-process tests. */
+const realDelay = (millis: number) => Effect.sleep(millis);
 
 /** Whether a pid is still alive, without signalling it. */
 const isAlive = (pid: number): boolean => {
@@ -145,7 +153,7 @@ describe("environment extension against a real spawn", () => {
 });
 
 describe("Run.detach lifecycle", () => {
-	it.effect(
+	it.live(
 		"an unref'd child SURVIVES its scope closing",
 		() =>
 			Effect.gen(function* () {
@@ -168,7 +176,7 @@ describe("Run.detach lifecycle", () => {
 		15_000,
 	);
 
-	it.effect(
+	it.live(
 		"a child spawned WITHOUT unref is killed when its scope closes — the mirror case",
 		() =>
 			// Without this half, the test above could pass for the wrong reason: if

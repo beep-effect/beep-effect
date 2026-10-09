@@ -4,11 +4,13 @@ import type * as Redacted from "effect/Redacted";
 import * as Effect from "effect/Effect";
 import * as Fn from "effect/Function";
 import * as PlatformError from "effect/PlatformError";
+import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Stdio from "effect/Stdio";
 import * as Stream from "effect/Stream";
-import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as ChildProcess from "effect/process/ChildProcess";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import { OutputTooLarge, collectBounded } from "./internal/capture.ts";
 import { REDACTED, Redaction } from "./Redaction.ts";
 
@@ -38,6 +40,27 @@ const MAX_MESSAGE_CHARS = 2000;
 
 const JsonOutput = S.fromJsonString(S.Unknown);
 
+/** Numeric policy inputs preserve the upstream number domain, including infinity. */
+const PolicyNumber = S.declare(P.isNumber).pipe($I.annoteSchema("PolicyNumber", { description: "An upstream numeric policy value without additional refinement." }));
+
+/** All input representations accepted by Effect Duration, without normalization. */
+const DurationInput = S.Union([
+ S.Duration,
+ PolicyNumber,
+ S.BigInt,
+ S.Tuple([PolicyNumber, PolicyNumber]),
+ S.TemplateLiteral([S.Finite, " ", S.Literals(["nano", "nanos", "micro", "micros", "milli", "millis", "second", "seconds", "minute", "minutes", "hour", "hours", "day", "days", "week", "weeks"])]),
+ S.Literals(["Infinity", "-Infinity"]),
+ S.Struct({
+  weeks: S.optional(PolicyNumber), days: S.optional(PolicyNumber), hours: S.optional(PolicyNumber),
+  minutes: S.optional(PolicyNumber), seconds: S.optional(PolicyNumber), milliseconds: S.optional(PolicyNumber),
+  microseconds: S.optional(PolicyNumber), nanoseconds: S.optional(PolicyNumber),
+ }),
+]).pipe(S.is, S.declare<Duration.Input>, $I.annoteSchema("DurationInput", { description: "Opaque Effect duration input preserving its original representation." }));
+
+/** Integer process status reused by output and both errors. */
+const ExitCode = S.Int.pipe($I.annoteSchema("ExitCode", { description: "An integer process exit code." }));
+
 /**
  * Policy for one run.
  *
@@ -53,7 +76,7 @@ const JsonOutput = S.fromJsonString(S.Unknown);
  *
  * @public
  */
-export interface RunOptions {
+export const RunOptions = S.Struct({
 	/**
 	 * Ceiling for the whole run.
 	 *
@@ -64,7 +87,7 @@ export interface RunOptions {
 	 * {@link CommandFailedError} of kind `"timeout"` rather than core's
 	 * `TimeoutError`, so a caller's error channel stays this package's taxonomy.
 	 */
-	readonly timeout?: Duration.Input | undefined;
+	timeout: S.optional(DurationInput).annotateKey({ description: "Optional ceiling for the whole run." }),
 	/**
 	 * Values scrubbed from captured output and from any error this run raises.
 	 *
@@ -73,10 +96,11 @@ export interface RunOptions {
 	 * whichever flag carried it, and inside a larger string. The flag heuristic
 	 * in {@link Redaction.scrubArgs} runs in addition, never instead.
 	 */
-	readonly redact?: ReadonlyArray<Redacted.Redacted<string>> | undefined;
+	redact: S.String.pipe(S.Redacted, S.Array, S.optional).annotateKey({ description: "Secret values scrubbed from output and errors." }),
 	/** Per-stream captured-byte ceiling. Defaults to {@link DEFAULT_MAX_OUTPUT_BYTES}. */
-	readonly maxOutputBytes?: number | undefined;
-}
+	maxOutputBytes: S.optional(PolicyNumber).annotateKey({ description: "Optional per-stream byte ceiling." }),
+}).pipe($I.annoteSchema("RunOptions", { description: "Timeout, redaction and byte-budget policy for a run." }));
+export type RunOptions = typeof RunOptions.Type;
 
 /**
  * What one completed run produced.
@@ -89,7 +113,7 @@ export class CommandOutput extends S.Class<CommandOutput>($I`CommandOutput`)({
 	/** Captured standard error, redacted. */
 	stderr: S.String.annotateKey({ description: "Captured standard error, redacted." }),
 	/** The process exit code. A non-zero value is NOT an error at this level. */
-	exitCode: S.Finite.annotateKey({ description: "The process exit code. A non-zero value is NOT an error at this level." }),
+	exitCode: ExitCode.annotateKey({ description: "The process exit code. A non-zero value is NOT an error at this level." }),
 }, $I.annote("CommandOutput", { description: "What one completed run produced." })) {
 	/** Whether the process exited zero. */
 	get succeeded(): boolean {
@@ -148,7 +172,7 @@ export class CommandFailedError extends S.TaggedError<CommandFailedError>($I`Com
 	/** argv, redacted. */
 	args: S.Array(S.String).annotateKey({ description: "argv, redacted." }),
 	/** The exit code, when the process ran. */
-	exitCode: S.optionalKey(S.Finite).annotateKey({ description: "The exit code, when the process ran." }),
+	exitCode: S.optionalKey(ExitCode).annotateKey({ description: "The exit code, when the process ran." }),
 	/** Captured standard error, redacted, when the process ran. */
 	stderr: S.optionalKey(S.String).annotateKey({ description: "Captured standard error, redacted, when the process ran." }),
 	/** Captured standard output, redacted, when the process ran. */
@@ -256,7 +280,7 @@ export class CommandOutputError extends S.TaggedError<CommandOutputError>($I`Com
 	/** The underlying parse or decode failure. */
 	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying parse or decode failure." }),
 	/** The exit code, when the combinator parses independently of it. */
-	exitCode: S.optionalKey(S.Finite).annotateKey({ description: "The exit code, when the combinator parses independently of it." }),
+	exitCode: S.optionalKey(ExitCode).annotateKey({ description: "The exit code, when the combinator parses independently of it." }),
 	/** Captured standard error, redacted, when the process ran. */
 	stderr: S.optionalKey(S.String).annotateKey({ description: "Captured standard error, redacted, when the process ran." }),
 	/** Captured standard output, redacted, when the process ran. */
@@ -320,7 +344,7 @@ const collectClassified = (
 	const described = describeCommand(command);
 	const classified = collectRaw(command, options, tee).pipe(
 		Effect.mapError((error) =>
-			error instanceof OutputTooLarge
+			S.is(OutputTooLarge)(error)
 				? CommandOutputError.make({ kind: "tooLarge", command: described.command, cause: error })
 				: CommandFailedError.spawn(command, error, options?.redact),
 		),

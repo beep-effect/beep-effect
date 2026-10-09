@@ -1,11 +1,15 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as P from "effect/Predicate";
+import { RunOptions } from "./Run.ts";
 import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
-import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as ChildProcess from "effect/process/ChildProcess";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 const $I = $ScratchpadId.create("effected/commands/ScriptedSpawner");
 
@@ -30,9 +34,16 @@ class ScriptedPipelineError extends S.TaggedError<ScriptedPipelineError>($I`Scri
  *
  * @public
  */
-export type ScriptResult =
-	| { readonly stdout?: string; readonly stderr?: string; readonly exit?: number; readonly hang?: boolean }
-	| PlatformError.PlatformError;
+export const ScriptResult = S.Union([
+ S.instanceOf(PlatformError.PlatformError),
+ S.Struct({
+  stdout: S.optional(S.String).annotateKey({ description: "Scripted standard output." }),
+  stderr: S.optional(S.String).annotateKey({ description: "Scripted standard error." }),
+  exit: S.optional(S.declare(P.isNumber)).annotateKey({ description: "Scripted exit number, preserving the upstream domain." }),
+  hang: S.optional(S.Boolean).annotateKey({ description: "Whether exitCode remains unresolved." }),
+ }),
+]).pipe($I.annoteSchema("ScriptResult", { description: "A scripted completed run or an opaque platform spawn failure." }));
+export type ScriptResult = typeof ScriptResult.Type;
 
 /**
  * The script a {@link ScriptedSpawner} answers spawns from: the executable and
@@ -41,6 +52,43 @@ export type ScriptResult =
  * @public
  */
 export type SpawnScript = (command: string, args: ReadonlyArray<string>) => ScriptResult;
+
+/** Platform stream/sink carriers validate their runtime identity; generic channels remain opaque. */
+const InputStream = S.declare<Stream.Stream<Uint8Array, PlatformError.PlatformError>>(
+ (input): input is Stream.Stream<Uint8Array, PlatformError.PlatformError> => Stream.isStream(input),
+).pipe($I.annoteSchema("InputStream", { description: "Opaque platform byte input stream." }));
+const OutputSink = S.declare<Sink.Sink<Uint8Array, Uint8Array, never, PlatformError.PlatformError>>(
+ (input): input is Sink.Sink<Uint8Array, Uint8Array, never, PlatformError.PlatformError> => Sink.isSink(input),
+).pipe($I.annoteSchema("OutputSink", { description: "Opaque platform byte output sink." }));
+const StdioMode = LiteralKit(["pipe", "inherit", "ignore", "overlapped"]).pipe(
+ $I.annoteSchema("StdioMode", { description: "Platform standard-stream modes." }),
+);
+const CommandInput = S.Union([StdioMode, InputStream]).pipe($I.annoteSchema("CommandInput", { description: "Platform stdin carrier." }));
+const CommandOutput = S.Union([StdioMode, OutputSink]).pipe($I.annoteSchema("CommandOutput", { description: "Platform stdout/stderr carrier." }));
+const Encoding = LiteralKit(["ascii", "utf8", "utf-8", "utf16le", "utf-16le", "ucs2", "ucs-2", "base64", "base64url", "latin1", "binary", "hex"]).pipe(
+ $I.annoteSchema("Encoding", { description: "Platform buffer encodings." }),
+);
+const Signal = LiteralKit(["SIGABRT", "SIGALRM", "SIGBUS", "SIGCHLD", "SIGCONT", "SIGFPE", "SIGHUP", "SIGILL", "SIGINT", "SIGIO", "SIGIOT", "SIGKILL", "SIGPIPE", "SIGPOLL", "SIGPROF", "SIGPWR", "SIGQUIT", "SIGSEGV", "SIGSTKFLT", "SIGSTOP", "SIGSYS", "SIGTERM", "SIGTRAP", "SIGTSTP", "SIGTTIN", "SIGTTOU", "SIGUNUSED", "SIGURG", "SIGUSR1", "SIGUSR2", "SIGVTALRM", "SIGWINCH", "SIGXCPU", "SIGXFSZ", "SIGBREAK", "SIGLOST", "SIGINFO"]).pipe(
+ $I.annoteSchema("Signal", { description: "Platform process termination signals." }),
+);
+/** Mutable environment records match core CommandOptions rather than a readonly replacement. */
+const Environment = S.Record(S.String, S.UndefinedOr(S.String)).pipe(
+ $I.annoteSchema("Environment", { description: "Platform environment values, including explicitly undefined entries." }),
+);
+/** Validate all known platform options while retaining the original external object. */
+const CommandOptions = S.Struct({
+ killSignal: S.optional(Signal),
+ forceKillAfter: RunOptions.fields.timeout,
+ cwd: S.optional(S.String), env: S.optional(Environment), extendEnv: S.optional(S.Boolean),
+ shell: S.optional(S.Union([S.Boolean, S.String])), detached: S.optional(S.Boolean), windowsHide: S.optional(S.Boolean),
+ stdin: S.optional(S.Union([CommandInput, S.Struct({ stream: CommandInput, endOnDone: S.optional(S.Boolean), encoding: S.optional(Encoding) })])),
+ stdout: S.optional(S.Union([CommandOutput, S.Struct({ stream: S.optional(CommandOutput) })])),
+ stderr: S.optional(S.Union([CommandOutput, S.Struct({ stream: S.optional(CommandOutput) })])),
+ additionalFds: S.optional(S.Record(S.TemplateLiteral(["fd", S.Finite]), S.Union([
+  S.Struct({ type: S.Literal("input"), stream: S.optional(InputStream) }),
+  S.Struct({ type: S.Literal("output"), sink: S.optional(OutputSink) }),
+ ]))),
+}).pipe(S.is, S.declare<ChildProcess.CommandOptions>, $I.annoteSchema("CommandOptions", { description: "Opaque complete platform command options checked against their known shape." }));
 
 /**
  * What the scripted spawner observed for one spawn, in call order.
@@ -54,22 +102,23 @@ export type SpawnScript = (command: string, args: ReadonlyArray<string>) => Scri
  *
  * @public
  */
-export interface SpawnRecord {
-	/** The executable. */
-	readonly command: string;
-	/** The argv, exactly as spawned. */
-	readonly args: ReadonlyArray<string>;
-	/** `options.cwd`, when one was set. */
-	readonly cwd: string | undefined;
-	/** `options.env`, when one was set. */
-	readonly env: Record<string, string | undefined> | undefined;
-	/** `options.extendEnv`, when one was set. */
-	readonly extendEnv: boolean | undefined;
-	/** The full `ChildProcess.CommandOptions` as the spawner received them. */
-	readonly options: ChildProcess.CommandOptions;
-	/** Set when the handle's `unref` effect actually RAN (not merely was built). */
-	readonly unrefed: boolean;
-}
+export const SpawnRecord = S.Struct({
+ /** The executable. */
+ command: S.String.annotateKey({ description: "The spawned executable." }),
+ /** The argv, exactly as spawned. */
+ args: S.Array(S.String).annotateKey({ description: "Arguments exactly as spawned." }),
+ /** The working directory, when set. */
+ cwd: S.UndefinedOr(S.String).annotateKey({ description: "The working directory, when set." }),
+ /** The environment, when set. */
+ env: S.UndefinedOr(Environment).annotateKey({ description: "The environment, when set." }),
+ /** Whether parent environment extension was requested. */
+ extendEnv: S.UndefinedOr(S.Boolean).annotateKey({ description: "Whether parent environment extension was requested." }),
+ /** The full options exactly as received. */
+ options: CommandOptions.annotateKey({ description: "The complete platform command options." }),
+ /** Set when the handle's unref effect actually runs. */
+ unrefed: S.Boolean.annotateKey({ description: "Live state set when unref actually runs." }),
+}).pipe($I.annoteSchema("SpawnRecord", { description: "An observed spawn with its full options and live unref state." }));
+export type SpawnRecord = typeof SpawnRecord.Type;
 
 // Implementation of the byte streams a handle serves; one UTF-8 chunk.
 const bytes = (text: string): Stream.Stream<Uint8Array, PlatformError.PlatformError> =>

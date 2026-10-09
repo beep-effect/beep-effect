@@ -1,8 +1,9 @@
 import { assert, describe, it } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
+import * as HashSet from "effect/HashSet";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
-import { REDACTED, Redaction } from "../../effected/commands/Redaction.ts";
+import { REDACTED, Redaction, SECRET_FLAGS } from "../../effected/commands/Redaction.ts";
 
 const secret = (value: string) => Redacted.make(value);
 
@@ -88,6 +89,20 @@ describe("Redaction.scrubArgs (heuristic backstop)", () => {
 
 	it("accepts extra caller-supplied flags", () => {
 		assert.deepStrictEqual(Redaction.scrubArgs(["--my-key", "v"], { flags: ["--my-key"] }), ["--my-key", REDACTED]);
+	});
+
+	it("keeps subsequent scrubbing unchanged when a derived flag set changes", () => {
+		const args = ["--totally-public", "visible", "--token", "secret", "--token=secret"];
+		const expected = ["--totally-public", "visible", "--token", REDACTED, `--token=${REDACTED}`];
+		assert.strictEqual(Redaction.SECRET_FLAGS, SECRET_FLAGS);
+		assert.deepStrictEqual(Redaction.scrubArgs(args), expected);
+
+		const derived = HashSet.remove(HashSet.add(Redaction.SECRET_FLAGS, "--totally-public"), "--token");
+		assert.isTrue(HashSet.has(derived, "--totally-public"));
+		assert.isFalse(HashSet.has(derived, "--token"));
+		assert.isFalse(HashSet.has(SECRET_FLAGS, "--totally-public"));
+		assert.isTrue(HashSet.has(SECRET_FLAGS, "--token"));
+		assert.deepStrictEqual(Redaction.scrubArgs(args), expected);
 	});
 });
 

@@ -108,7 +108,17 @@ None.
 
 ### Deviations
 
-None.
+One entry per class of change (law- or ruling-forced) and one per behavioural divergence; the full test, upstream behaviour, lab behaviour and reason are on the module's ledger row.
+
+- **native-runtime** — Redaction uses persistent HashSet and Effect Array/Order helpers in place of native Set, and native Error sites become schema-tagged errors with their original messages. (scratchpad/test/commands/Redaction.test.ts:94; scratchpad/test/commands/ScriptedSpawner.test.ts:135; scratchpad/test/commands/Run.test.ts:343; scratchpad/test/commands/ToolDiscovery.test.ts:476)
+- **tagged-errors** — Capture failures and empty-output/pipeline/unstubbed errors have owning S.TaggedError schemas instead of Data.TaggedError or native Error, retaining the existing failure/defect channels. (scratchpad/test/commands/Run.test.ts:98; scratchpad/test/commands/Run.test.ts:343; scratchpad/test/commands/ScriptedSpawner.test.ts:135; scratchpad/test/commands/ToolDiscovery.test.ts:476)
+- **schema-first** — Named literal domains and erased data types gain LiteralKit/schema values, while Schema JSON codecs replace native parsing and expose SchemaError causes with the existing notJson classification. (scratchpad/test/commands/LocalExec.test.ts:179; scratchpad/test/commands/Run.test.ts:244,362,808; scratchpad/test/commands/ScriptedSpawner.test.ts:154,169; scratchpad/test/commands/ToolDiscovery.test.ts:481,494)
+- **numeric-domains** — Process exit fields use shared S.Int and capture-error limits use S.Finite instead of upstream numeric shapes, while policy inputs and scripted exits retain their numeric domain. (scratchpad/test/commands/Run.test.ts:793; scratchpad/test/commands/Run.test.ts:98; scratchpad/test/commands/Run.test.ts:808; scratchpad/test/commands/ScriptedSpawner.test.ts:154)
+- **type-safety** — Predicate/schema narrowing and scoped service provision replace upstream casts and the Sink callback suppression while preserving oracle assertions. (scratchpad/test/commands/ScriptedSpawner.test.ts:135; scratchpad/test/commands/e2e/Run.e2e.test.ts:28; scratchpad/test/commands/Run.test.ts:631; module suite scratchpad/test/commands/**)
+- **tsgo-diagnostics** — Dual capture overloads, scoped Context provision and live-clock lifecycle tests replace upstream generator-only, Layer-provide and Promise/timer forms to satisfy Effect diagnostics. (module suite scratchpad/test/commands/**; scratchpad/test/commands/Run.test.ts:98; scratchpad/test/commands/e2e/Run.e2e.test.ts:156,179)
+- **effect-first** — Effect.fn/fnUntraced and native Effect/Option helpers replace equivalent generator wrappers, re-failing catch handlers, Option constructors and conditional spreads. (module suite scratchpad/test/commands/**; scratchpad/test/commands/Run.test.ts:666; scratchpad/test/commands/ToolDiscovery.test.ts:58; scratchpad/test/commands/Retry.test.ts:67)
+- **effect-imports** — Executable Effect imports use dedicated effect/Module paths instead of root/process/testing barrels, with remaining process imports in examples deferred to S2. (module suite scratchpad/test/commands/**)
+- **identity-annotations** — Commands schemas and service keys use $ScratchpadId-derived identities, descriptions and field annotations instead of upstream short identifiers and unannotated fields. (module suite scratchpad/test/commands/**)
 
 ### Dependency backlog
 

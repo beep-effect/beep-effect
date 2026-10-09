@@ -3866,9 +3866,144 @@
       "exportsAdded": [],
       "newDeps": [],
       "fixturesBytes": 0,
-      "deviations": [],
-      "backlog": [],
-      "reviewRounds": [],
+      "deviations": [
+        {
+          "test": "scratchpad/test/commands/Redaction.test.ts:94; scratchpad/test/commands/ScriptedSpawner.test.ts:135; scratchpad/test/commands/Run.test.ts:343; scratchpad/test/commands/ToolDiscovery.test.ts:476",
+          "upstreamBehaviour": "Redaction.ts constructs native Set for SECRET_FLAGS, extra flags and secret deduplication. Run.jsonLine, ScriptedSpawner and ToolDiscovery use native Error for empty output, refused pipelines and unstubbed members.",
+          "labBehaviour": "Redaction.SECRET_FLAGS and extra flags use persistent HashSet; prepare uses Array.dedupe/filter/sort and Order. Run.EmptyJsonLineError, ScriptedSpawner.ScriptedPipelineError and ToolDiscovery.ToolDiscoveryUnstubbedError replace native Error with schema-tagged errors, retaining messages and failure/defect placement.",
+          "reason": "native-runtime: laws 6 and 7 require Effect collections/helpers and schema-backed errors; the 2026-10-09 grilling ruling permits public API changes to empty the allowlist. The fable-1-4 repair restores persistent redaction policy rather than retaining the intermediate MutableHashSet API."
+        },
+        {
+          "test": "scratchpad/test/commands/Run.test.ts:98; scratchpad/test/commands/Run.test.ts:343; scratchpad/test/commands/ScriptedSpawner.test.ts:135; scratchpad/test/commands/ToolDiscovery.test.ts:476",
+          "upstreamBehaviour": "OutputTooLarge in internal/capture.ts extends Data.TaggedError with a type-only limit. Empty-output causes and pipeline/unstubbed defects are native Error. Public command/discovery errors already extend Schema.TaggedError and are constructed with new or wrapped in Effect.fail.",
+          "labBehaviour": "OutputTooLarge and the new EmptyJsonLineError, ScriptedPipelineError and ToolDiscoveryUnstubbedError extend S.TaggedError with owning schemas. Error creation uses .make and direct yielding where appropriate; the capture tag, mapped limit payload, messages and existing failure/defect channels remain.",
+          "reason": "tagged-errors: D5, D11, law 7 and EF-1 require schema-backed typed errors; sol-1-5 establishes that OutputTooLarge escapes through CommandOutputError.cause. Inventory codemod-2 also requires recording the three native Error replacements."
+        },
+        {
+          "test": "scratchpad/test/commands/LocalExec.test.ts:179; scratchpad/test/commands/Run.test.ts:244,362,808; scratchpad/test/commands/ScriptedSpawner.test.ts:154,169; scratchpad/test/commands/ToolDiscovery.test.ts:481,494",
+          "upstreamBehaviour": "ToolSource, MismatchPolicy, Launcher and ResolvedSource are named Schema.Literals. RunOptions, LauncherPrefixes, ToolResolutionFailure, ScriptResult, SpawnRecord, Probe and Evidence are erased data types. Run.json/jsonLine and ToolDiscovery.extractVersion parse JSON natively, exposing SyntaxError causes for invalid Run output.",
+          "labBehaviour": "Named domains use LiteralKit; data models have owning schemas and derived types, with opaque Duration/CommandOptions/platform carriers and schema guards. Run.json/jsonLine use fromJsonString codecs, so invalid-JSON causes are SchemaError rather than SyntaxError while notJson remains. ToolDiscovery uses an Option codec and guarded dotted-path traversal, preserving None outcomes.",
+          "reason": "schema-first: D5/D11, law 19 and EF-12b/EF-33 require LiteralKit, owning schemas and derived guards; EF-3 requires Schema JSON codecs. Required sol-1-2/3/4 and fable-1-7 plus codemod-4 cover these changes; the native JSON.parse restoration was rejected."
+        },
+        {
+          "test": "scratchpad/test/commands/Run.test.ts:793; scratchpad/test/commands/Run.test.ts:98; scratchpad/test/commands/Run.test.ts:808; scratchpad/test/commands/ScriptedSpawner.test.ts:154",
+          "upstreamBehaviour": "CommandOutput.exitCode and optional exitCode fields in CommandFailedError/CommandOutputError use Schema.Number. OutputTooLarge.limit is an unrestricted number type. Numeric policy inputs and scripted exits are also number types.",
+          "labBehaviour": "Run.ts shares ExitCode = S.Int across output and both errors, rejecting fractions and non-finite values while retaining optional error fields. internal/capture.ts validates OutputTooLarge.limit with S.Finite. RunOptions.maxOutputBytes and ScriptResult.exit retain the upstream numeric domain through S.declare(P.isNumber).",
+          "reason": "numeric-domains: effect(schemaNumber) forces a finite capture-limit schema; law 17 and fable-1-5 require a shared integer exit-code domain. Inventory codemod-1 and fix-commands-g1.md:62-63 establish the refinements; no extra numeric narrowing is applied to policy inputs or scripted result carriers."
+        },
+        {
+          "test": "scratchpad/test/commands/ScriptedSpawner.test.ts:135; scratchpad/test/commands/e2e/Run.e2e.test.ts:28; scratchpad/test/commands/Run.test.ts:631; module suite scratchpad/test/commands/**",
+          "upstreamBehaviour": "ToolDiscovery.extractVersion casts traversed JSON to Record<string, unknown>; Run JSON parsing uses as unknown. ScriptedSpawner.test.ts casts a narrowed defect to Error, e2e live casts its provided Effect, and Run.test.ts suppresses an iterable-callback lint diagnostic.",
+          "labBehaviour": "ToolDiscovery uses Predicate object/function/property checks and Option traversal; JSON codecs eliminate parse casts. Assert-based narrowing accesses defect.message directly, scoped Context provision removes the e2e Effect cast, and the Sink callback retains its body without a biome-ignore directive; temporary diagnostic skip-file directives are also removed.",
+          "reason": "type-safety: D15 forbids unsafe assertions and unadmitted directives. Step-2 cast removal and required fable-1-6 replace assertions/suppressions with proved narrowing and scoped service provision, preserving oracle assertions."
+        },
+        {
+          "test": "module suite scratchpad/test/commands/**; scratchpad/test/commands/Run.test.ts:98; scratchpad/test/commands/e2e/Run.e2e.test.ts:156,179",
+          "upstreamBehaviour": "collectBounded is a data-first function returning Effect.gen; the discovery test resolve helper also returns Effect.gen. Unit/e2e helpers use Effect.provide with Layers, realDelay uses Promise/setTimeout, and detach yields handle.unref directly.",
+          "labBehaviour": "internal/capture.ts exposes dual data-first/data-last overloads and fnUntraced. The resolve helper uses Effect.fn; test Layers build scoped Contexts provided with provideContext. E2e lifecycle cases use it.live/Effect.sleep, cleanup uses ensuring, and detach discards unref results with asVoid; diagnostic skip-file directives do not remain.",
+          "reason": "tsgo-diagnostics: step-2 @effect/tsgo requirements force pipeable signatures, effectFnOpportunity, strictEffectProvide, globalTimers/newPromise and explicit result handling. The 9e8a4cc81a diagnostic commit and required fable-1-6 ground the adaptations; process-lifecycle assertions and 250 ms delays remain."
+        },
+        {
+          "test": "module suite scratchpad/test/commands/**; scratchpad/test/commands/Run.test.ts:666; scratchpad/test/commands/ToolDiscovery.test.ts:58; scratchpad/test/commands/Retry.test.ts:67",
+          "upstreamBehaviour": "capture and cache lookup wrap generators in lambdas; error-only catch handlers re-fail or succeed constants. LocalExec constructs success Options explicitly, optional object fields use conditional spreads, Retry nests schedule helpers, and tests wrap tagged errors in Effect.fail.",
+          "labBehaviour": "capture.collectBounded and ToolDiscovery cache lookup use fnUntraced; tests resolve through Effect.fn. Run/ToolDiscovery use mapError/orElseSucceed, LocalExec uses succeedNone/succeedSome, optional fields use Option.getSomesStruct, Retry composes helpers with pipe, and tagged errors yield directly.",
+          "reason": "effect-first: effect-fn and terse-effect laws plus Effect helper conventions force generator wrappers, direct error yielding and terser equivalent helpers. Step-2 diagnostics and the 1f841176a4 S1 law commit ground these structural changes without changing cache policy, retry limits or command outcomes."
+        },
+        {
+          "test": "module suite scratchpad/test/commands/**",
+          "upstreamBehaviour": "Executable source/tests import Effect APIs from the root effect barrel and ChildProcess/ChildProcessSpawner/TestClock from effect/process or effect/testing; source examples also import Effect/Layer from the root barrel.",
+          "labBehaviour": "Executable imports use dedicated effect/Module namespace paths, including effect/process/ChildProcess, effect/process/ChildProcessSpawner and effect/testing/TestClock, with type-only imports retained. Effect/Layer root imports in source examples are converted; their deferred effect/process example imports remain backlog.",
+          "reason": "effect-imports: operator step 3 and law 2 require per-module Effect imports; required sol-1-6 completes executable process/testing conversion. S2 example-import cleanup remains deferred, so this entry does not claim every documentation import is compliant."
+        },
+        {
+          "test": "module suite scratchpad/test/commands/**",
+          "upstreamBehaviour": "Schemas use short class names and unannotated fields; LocalExec and ToolDiscovery Context.Service keys are @effected/commands paths. No $ScratchpadId-derived annotation namespace identifies commands models.",
+          "labBehaviour": "LocalExec.ts, Run.ts, Tool.ts, ToolDiscovery.ts, ScriptedSpawner.ts and internal/capture.ts derive $I from $ScratchpadId. Schema/class/error identifiers, schema annotations, field descriptions and LocalExec/ToolDiscovery service keys use that namespace, including new literal domains and schema carriers.",
+          "reason": "identity-annotations: operator step 4 and D5 require @beep/identity $I schema/service identities and annotations. The e40af7df43 step-4 commit and fix-wave schema additions establish the metadata and key changes; Redaction and Retry introduce no owning schemas to annotate."
+        }
+      ],
+      "backlog": [
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "sol-1-1 — Clarify partial-evidence cache invalidation (scratchpad/effected/commands/ToolDiscovery.ts:291)",
+          "reason": "docs: In S2, document that only wholly absent evidence expires immediately; adding another copy requires invalidate. Preserve upstream TTL/probe counts and track partial-evidence refresh as a separate proposal."
+        },
+        {
+          "seat": "grok",
+          "round": 1,
+          "finding": "sol-1-7 — Convert exported documentation to beep JSDoc carriers (scratchpad/effected/commands/Run.ts:27)",
+          "reason": "jsdoc: In S2, preserve upstream prose/examples while converting to titled Example/Details/Gotchas sections, canonical category/since metadata and compiling dedicated-path Effect examples."
+        },
+        {
+          "seat": "grok",
+          "round": 1,
+          "finding": "fable-1-11 — Adapt README imports and repair attribution (scratchpad/effected/commands/README.md:3)",
+          "reason": "docs: In S2, adapt README prose/examples to the lab and remove obsolete install/release material. Route deletion of the stray Port-notes attribution line to the central bookkeeping owner."
+        },
+        {
+          "seat": "grok",
+          "round": 1,
+          "finding": "sol-1-10 — Add the per-exported-schema round-trip property floor (scratchpad/effected/commands/Tool.ts:16)",
+          "reason": "test: In S3, add a schema-derived round-trip property per exported schema with schema equivalence and fcRuns; retain upstream oracle tests and include newly exported schema values."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "sol-1-11 — Configure Redaction property run count and seed (scratchpad/test/commands/Redaction.test.ts:103)",
+          "reason": "test: In S3, give both Redaction properties explicit arbitrary: fcRuns(400) options for the required run floor and seed."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "sol-1-12 — Use canonical Option and Exit assertions (scratchpad/test/commands/LocalExec.test.ts:120)",
+          "reason": "test: In S3, use assertNone/assertSome and public Exit/failure helpers, preserving payload assertions and type narrowing."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "sol-1-13 — Migrate effectful-layer scenarios to it.layer (scratchpad/test/commands/ToolDiscovery.test.ts:51)",
+          "reason": "test: In S3, use scenario-specific it.layer for effectful production Layers with fresh scripted state/cache isolation; preserve permitted pure-stub provision and coordinate with diagnostic repair."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "fable-1-8 — Scope a coordinated discriminated error-union migration (scratchpad/effected/commands/Run.ts:143)",
+          "reason": "schema: Plan a separately scoped per-kind tagged-error union migration retaining export names and updating workspaces consumers and oracle assertions together; commands fix groups cannot edit those consumers."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "fable-1-14 — Consolidate duplicate Effect and Schedule aliases (scratchpad/effected/commands/LocalExec.ts:2)",
+          "reason": "effect-idiom: Optionally consolidate LocalExec Effect/Eff and Retry Schedule/Sched to one namespace import each in a scheduled cleanup."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "fable-1-15 — Consider exhaustive matching for policy and error branches (scratchpad/effected/commands/ToolDiscovery.ts:307)",
+          "reason": "effect-idiom: Optionally replace policy/error ternary chains with LiteralKit $match or exhaustive Match after the literal-domain repair, preserving message bytes and resolution behavior."
+        }
+      ],
+      "reviewRounds": [
+        {
+          "round": 1,
+          "commit": "3fa5876691901fccf3d1cd29e9324564df134b56",
+          "seats": {
+            "grok": {
+              "required": 4,
+              "backlog": 4
+            },
+            "sol": {
+              "required": 6,
+              "backlog": 7
+            },
+            "fable": {
+              "required": 7,
+              "backlog": 10
+            }
+          }
+        }
+      ],
       "commits": [
         {
           "stage": 0,

@@ -1,19 +1,27 @@
-// @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import type * as PlatformError from "effect/PlatformError";
 import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as Fiber from "effect/Fiber";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Stdio from "effect/Stdio";
 import * as Stream from "effect/Stream";
-import type { ChildProcessSpawner } from "effect/process";
-import { ChildProcess } from "effect/process";
-import { TestClock } from "effect/testing";
-import { CommandFailedError, CommandOutput, CommandOutputError, Run } from "../../effected/commands/Run.ts";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import * as ChildProcess from "effect/process/ChildProcess";
+import * as TestClock from "effect/testing/TestClock";
+import { CommandFailedError, CommandOutput, CommandOutputError, Run, RunOptions } from "../../effected/commands/Run.ts";
+import { OutputTooLarge } from "../../effected/commands/internal/capture.ts";
 import type { ScriptResult } from "../../effected/commands/ScriptedSpawner.ts";
 import { ScriptedSpawner } from "../../effected/commands/ScriptedSpawner.ts";
+
+/** Builds each test layer under the program's scope, with fresh per-invocation state. */
+const withLayer = <R, E2, R2>(layer: Layer.Layer<R, E2, R2>) => <A, E, R3>(program: Effect.Effect<A, E, R3>) =>
+ Effect.scopedWith((scope) => Effect.flatMap(
+  Layer.buildWithScope(layer, scope),
+  (context) => Effect.provideContext(program, context),
+ ));
 
 const cmd = (executable = "tool", args: ReadonlyArray<string> = []) => ChildProcess.make(executable, args);
 
@@ -21,7 +29,7 @@ const cmd = (executable = "tool", args: ReadonlyArray<string> = []) => ChildProc
 const withScript = <A, E>(
 	program: () => Effect.Effect<A, E, ChildProcessSpawner.ChildProcessSpawner>,
 	script: (command: string, args: ReadonlyArray<string>) => ScriptResult,
-): Effect.Effect<A, E> => Effect.provide(program(), ScriptedSpawner.make(script).layer);
+): Effect.Effect<A, E> => withLayer(ScriptedSpawner.make(script).layer)(program());
 
 describe("Run.collect", () => {
 	it.effect("returns stdout, stderr and exit code", () =>
@@ -98,6 +106,10 @@ describe("Run.collect", () => {
 			assert.instanceOf(error, CommandOutputError);
 			if (S.is(CommandOutputError)(error)) {
 				assert.strictEqual(error.kind, "tooLarge");
+				assert.instanceOf(error.cause, OutputTooLarge);
+				if (!S.is(OutputTooLarge)(error.cause)) assert.fail("expected the mapped capture error");
+				assert.strictEqual(error.cause._tag, "OutputTooLarge");
+				assert.strictEqual(error.cause.limit, 8);
 			}
 		}),
 	);
@@ -620,14 +632,13 @@ describe("Run.collectTee", () => {
 		Effect.gen(function* () {
 			const seen: Array<string> = [];
 			const capture = (): Sink.Sink<void, string | Uint8Array, never, PlatformError.PlatformError> =>
-				// biome-ignore lint/suspicious/useIterableCallbackReturn: Sink.forEach is Effect's sink constructor, not Array#forEach — its callback must return an Effect
 				Sink.forEach((chunk: string | Uint8Array) =>
 					Effect.sync(() => {
 						seen.push(typeof chunk === "string" ? chunk : new TextDecoder().decode(chunk));
 					}),
 				);
 			const output = yield* withScript(
-				() => Run.collectTee(cmd()).pipe(Effect.provide(Stdio.layerTest({ stdout: capture, stderr: capture }))),
+				() => Run.collectTee(cmd()).pipe(withLayer(Stdio.layerTest({ stdout: capture, stderr: capture }))),
 				() => ({ stdout: "hello", stderr: "warn", exit: 0 }),
 			);
 
@@ -655,7 +666,7 @@ describe("Run.detach", () => {
 	it.effect("unrefs the handle and returns the pid", () =>
 		Effect.gen(function* () {
 			const spawner = ScriptedSpawner.make(() => ({ exit: 0 }));
-			const pid = yield* Effect.provide(Run.detach(cmd("server")), spawner.layer);
+			const pid = yield* withLayer(spawner.layer)(Run.detach(cmd("server")));
 			assert.strictEqual(Number(pid), 4242);
 			// The invariant the helper exists to encode: unref RAN. Without it the
 			// scope's release kills the child and nothing outlives this process.
@@ -686,7 +697,7 @@ describe("Run.extendEnv", () => {
 			const command = ChildProcess.make("tool", ["x"], { env: { FROM_CONSTRUCTION: "a" } }).pipe(
 				Run.extendEnv({ FROM_COMBINATOR: "b" }),
 			);
-			yield* Effect.provide(Run.collect(command), spawner.layer);
+			yield* withLayer(spawner.layer)(Run.collect(command));
 			const record = spawner.spawns[0];
 			assert.deepStrictEqual(record?.options.env, { FROM_CONSTRUCTION: "a", FROM_COMBINATOR: "b" });
 			assert.strictEqual(record?.options.extendEnv, true);
@@ -744,7 +755,7 @@ describe("Run.extendEnv", () => {
 			// setEnv started extending — re-evaluate this combinator's raison d'être.
 			const spawner = ScriptedSpawner.make(() => ({ stdout: "ok", exit: 0 }));
 			const command = ChildProcess.make("tool", []).pipe(ChildProcess.setEnv({ MARKER: "x" }));
-			yield* Effect.provide(Run.collect(command), spawner.layer);
+			yield* withLayer(spawner.layer)(Run.collect(command));
 			const record = spawner.spawns[0];
 			assert.deepStrictEqual(record?.options.env, { MARKER: "x" });
 			assert.isUndefined(record?.options.extendEnv);
@@ -775,4 +786,36 @@ describe("Run over core Command combinators", () => {
 			assert.strictEqual(output.stdout, "ok");
 		}),
 	);
+});
+
+
+describe("Run schema shapes", () => {
+ it("owns an integer exit-code domain across output and both errors", () => {
+  for (const exitCode of [0, 42, -1]) {
+   assert.strictEqual(CommandOutput.make({ stdout: "", stderr: "", exitCode }).exitCode, exitCode);
+   assert.strictEqual(CommandFailedError.make({ kind: "nonZero", command: "tool", args: [], exitCode }).exitCode, exitCode);
+   assert.strictEqual(CommandOutputError.make({ kind: "notJson", command: "tool", exitCode }).exitCode, exitCode);
+  }
+  for (const exitCode of [1.5, Number.NaN, Number.POSITIVE_INFINITY]) {
+   assert.throws(() => CommandOutput.make({ stdout: "", stderr: "", exitCode }));
+   assert.throws(() => CommandFailedError.make({ kind: "nonZero", command: "tool", args: [], exitCode }));
+   assert.throws(() => CommandOutputError.make({ kind: "notJson", command: "tool", exitCode }));
+  }
+  assert.isUndefined(CommandFailedError.make({ kind: "spawn", command: "tool", args: [] }).exitCode);
+  assert.isUndefined(CommandOutputError.make({ kind: "notJson", command: "tool" }).exitCode);
+ });
+
+ it("preserves duration inputs, redacted values, undefined options and numeric policy", () => {
+  const secret = Redacted.make("secret");
+  const options: RunOptions = { timeout: { seconds: 1 }, redact: [secret], maxOutputBytes: Number.POSITIVE_INFINITY };
+  assert.isTrue(S.is(RunOptions)(options));
+  for (const timeout of [1, 1n, [1, 2], "1 second", "Infinity", "-Infinity", { milliseconds: 2 }]) {
+   assert.isTrue(S.is(RunOptions)({ timeout }));
+  }
+  assert.isTrue(S.is(RunOptions)({ timeout: undefined, redact: undefined, maxOutputBytes: undefined }));
+  assert.isTrue(S.is(RunOptions)({ maxOutputBytes: 1.5 }));
+  assert.isFalse(S.is(RunOptions)({ redact: ["unwrapped"] }));
+  assert.isFalse(S.is(RunOptions)({ timeout: "not a duration" }));
+  assert.isFalse(S.is(RunOptions)({ maxOutputBytes: "8" }));
+ });
 });

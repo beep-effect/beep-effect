@@ -1,3 +1,4 @@
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
 
@@ -13,7 +14,7 @@ const $I = $ScratchpadId.create("effected/commands/Tool");
  *
  * @public
  */
-export const ToolSource = S.Literals(["any", "global", "local", "both"]).pipe($I.annoteSchema("ToolSource", { description: "Where a tool must be found for a resolution to succeed." }));
+export const ToolSource = LiteralKit(["any", "global", "local", "both"]).pipe($I.annoteSchema("ToolSource", { description: "Where a tool must be found for a resolution to succeed." }));
 
 /**
  * The decoded type of {@link (ToolSource:variable)}.
@@ -33,7 +34,7 @@ export type ToolSource = typeof ToolSource.Type;
  *
  * @public
  */
-export const MismatchPolicy = S.Literals(["preferLocal", "preferGlobal", "fail"]).pipe($I.annoteSchema("MismatchPolicy", { description: "What to do when the global and project-local copies report different versions." }));
+export const MismatchPolicy = LiteralKit(["preferLocal", "preferGlobal", "fail"]).pipe($I.annoteSchema("MismatchPolicy", { description: "What to do when the global and project-local copies report different versions." }));
 
 /**
  * The decoded type of {@link (MismatchPolicy:variable)}.

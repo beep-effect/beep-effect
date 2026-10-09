@@ -1,4 +1,7 @@
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import { $ScratchpadId } from "@beep/identity/packages";
+import * as A from "effect/Array";
+import * as Str from "effect/String";
 import * as Cache from "effect/Cache";
 import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
@@ -8,9 +11,9 @@ import * as Layer from "effect/Layer";
 import * as O from "@beep/utils/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { ChildProcess, ChildProcessSpawner } from "effect/process";
-import type { LocalExecError } from "./LocalExec.ts";
-import { ExecContext, LocalExec } from "./LocalExec.ts";
+import * as ChildProcess from "effect/process/ChildProcess";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import { ExecContext, LocalExec, LocalExecError } from "./LocalExec.ts";
 import { Run } from "./Run.ts";
 import type { Tool } from "./Tool.ts";
 import { VersionProbe } from "./Tool.ts";
@@ -35,7 +38,7 @@ const DEFAULT_VERSION_PATTERN = /(\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?)/;
  *
  * @public
  */
-export const ResolvedSource = S.Literals(["global", "local"]).pipe($I.annoteSchema("ResolvedSource", { description: "Where a tool was resolved from." }));
+export const ResolvedSource = LiteralKit(["global", "local"]).pipe($I.annoteSchema("ResolvedSource", { description: "Where a tool was resolved from." }));
 
 /**
  * The decoded type of {@link (ResolvedSource:variable)}.
@@ -152,20 +155,25 @@ export class ToolRefusedError extends S.TaggedError<ToolRefusedError>($I`ToolRef
  *
  * @public
  */
-export type ToolResolutionFailure = ToolNotFoundError | ToolVersionMismatchError | ToolRefusedError | LocalExecError;
+export const ToolResolutionFailure = S.Union([ToolNotFoundError, ToolVersionMismatchError, ToolRefusedError, LocalExecError]).pipe(
+ $I.annoteSchema("ToolResolutionFailure", { description: "Every typed failure of tool resolution." }),
+);
+export type ToolResolutionFailure = typeof ToolResolutionFailure.Type;
 
-/** What one probe learned about one location. */
-interface Probe {
-	readonly found: boolean;
-	readonly version: O.Option<string>;
-}
+/** What one probe learned about one location; retains its plain-object representation. */
+const Probe = S.Struct({
+ found: S.Boolean.annotateKey({ description: "Whether the executable ran." }),
+ version: S.Option(S.String).annotateKey({ description: "The extracted version, if available." }),
+}).pipe($I.annoteSchema("Probe", { description: "Discovery evidence for one location." }));
+type Probe = typeof Probe.Type;
 
-/** What probing learned about a tool. Cached; policy is applied to it per call. */
-interface Evidence {
-	readonly global: Probe;
-	readonly local: Probe;
-	readonly context: O.Option<ExecContext>;
-}
+/** Cached evidence before each call applies its own resolution policy. */
+const Evidence = S.Struct({
+ global: Probe.annotateKey({ description: "Global probe evidence." }),
+ local: Probe.annotateKey({ description: "Project-local probe evidence." }),
+ context: S.Option(ExecContext).annotateKey({ description: "The local launcher context, if available." }),
+}).pipe($I.annoteSchema("Evidence", { description: "Cached discovery evidence independent of policy." }));
+type Evidence = typeof Evidence.Type;
 
 /**
  * The cache key: everything the probe outcome depends on, and nothing else.
@@ -186,6 +194,10 @@ class EvidenceKey extends S.Class<EvidenceKey>($I`EvidenceKey`)({
 const probeArgs = (probe: VersionProbe): ReadonlyArray<string> =>
 	probe._tag === "VersionNone" ? ["--version"] : probe.flag.split(/\s+/).filter((part) => part.length > 0);
 
+/** Non-throwing JSON boundary over unknown input. */
+const UnknownJson = S.fromJsonString(S.Unknown);
+const decodeJson = (stdout: unknown) => S.decodeUnknownOption(UnknownJson)(stdout);
+
 /** Reads a version out of one probe's captured stdout. */
 const extractVersion = (probe: VersionProbe, stdout: string): O.Option<string> => {
 	if (probe._tag === "VersionNone") return O.none();
@@ -195,16 +207,13 @@ const extractVersion = (probe: VersionProbe, stdout: string): O.Option<string> =
 		// Group 1 when the pattern captures, else the whole match.
 		return O.fromUndefinedOr(match?.[1] ?? match?.[0]);
 	}
-	try {
-		let current: unknown = JSON.parse(stdout);
-		for (const key of probe.path.split(".")) {
-			if (!P.isObjectKeyword(current) || P.isFunction(current) || !P.hasProperty(current, key)) return O.none();
-			current = current[key];
-		}
-		return P.isString(current) ? O.some(current) : O.none();
-	} catch {
-		return O.none();
-	}
+ return A.reduce(
+  Str.split(probe.path, "."),
+  decodeJson(stdout),
+  (current, key) => O.flatMap(current, (value) =>
+   P.isObjectKeyword(value) && !P.isFunction(value) && P.hasProperty(value, key)
+    ? O.some(value[key]) : O.none()),
+ ).pipe(O.filter(P.isString));
 };
 
 /**

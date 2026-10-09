@@ -1,9 +1,17 @@
-// @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as S from "effect/Schema";
 import * as O from "effect/Option";
-import { ChildProcess } from "effect/process";
-import { ExecContext, LocalExec, LocalExecError } from "../../effected/commands/LocalExec.ts";
+import * as ChildProcess from "effect/process/ChildProcess";
+import { ExecContext, Launcher, LauncherPrefixes, LocalExec, LocalExecError } from "../../effected/commands/LocalExec.ts";
+
+/** Builds each test layer under the program's scope, with fresh per-invocation state. */
+const withLayer = <R, E2, R2>(layer: Layer.Layer<R, E2, R2>) => <A, E, R3>(program: Effect.Effect<A, E, R3>) =>
+ Effect.scopedWith((scope) => Effect.flatMap(
+  Layer.buildWithScope(layer, scope),
+  (context) => Effect.provideContext(program, context),
+ ));
 
 /** The argv a command would actually spawn with. */
 const argv = (command: ChildProcess.Command): ReadonlyArray<string> => {
@@ -118,7 +126,7 @@ describe("LocalExec layers", () => {
 			const local = yield* LocalExec;
 			const context = yield* local.context;
 			assert.isTrue(O.isNone(context));
-		}).pipe(Effect.provide(LocalExec.layerNone)),
+		}).pipe(withLayer(LocalExec.layerNone)),
 	);
 
 	it.effect("layerFor answers a context built from the static prefix table", () =>
@@ -133,7 +141,7 @@ describe("LocalExec layers", () => {
 				"run",
 				"ci:build",
 			]);
-		}).pipe(Effect.provide(LocalExec.layerFor("pnpm", { directory: "/repo" }))),
+		}).pipe(withLayer(LocalExec.layerFor("pnpm", { directory: "/repo" }))),
 	);
 
 	it.effect("layerContext answers a caller-supplied context verbatim", () =>
@@ -143,7 +151,7 @@ describe("LocalExec layers", () => {
 			if (O.isNone(context)) assert.fail("expected a context");
 			assert.strictEqual(context.value.label, "custom");
 		}).pipe(
-			Effect.provide(
+			withLayer(
 				LocalExec.layerContext(
 					ExecContext.make({ label: "custom", prefix: ["exec"], dlxPrefix: ["fetch"], scriptPrefix: ["script"] }),
 				),
@@ -155,7 +163,7 @@ describe("LocalExec layers", () => {
 		Effect.gen(function* () {
 			const local = yield* LocalExec;
 			assert.isTrue(O.isNone(yield* local.context));
-		}).pipe(Effect.provide(LocalExec.layerTest())),
+		}).pipe(withLayer(LocalExec.layerTest())),
 	);
 
 	it.effect("layerTest can answer a failure, so consumers can exercise the error path", () =>
@@ -163,6 +171,15 @@ describe("LocalExec layers", () => {
 			const local = yield* LocalExec;
 			const error = yield* Effect.flip(local.context);
 			assert.instanceOf(error, LocalExecError);
-		}).pipe(Effect.provide(LocalExec.layerTest({ context: Effect.fail(LocalExecError.make({})) }))),
+		}).pipe(withLayer(LocalExec.layerTest({ context: Effect.fail(LocalExecError.make({})) }))),
 	);
+});
+
+
+it("LauncherPrefixes validates the existing plain string-array record", () => {
+ for (const launcher of Launcher.literals) {
+  assert.isTrue(S.is(LauncherPrefixes)(LocalExec.prefixes(launcher)));
+ }
+ assert.isFalse(S.is(LauncherPrefixes)({ prefix: [1], dlxPrefix: [], scriptPrefix: [] }));
+ assert.isFalse(S.is(LauncherPrefixes)({ prefix: [], dlxPrefix: [] }));
 });

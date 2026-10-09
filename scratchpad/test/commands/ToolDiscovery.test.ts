@@ -1,11 +1,10 @@
-// @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { ChildProcess } from "effect/process";
-import { ExecContext, LocalExec } from "../../effected/commands/LocalExec.ts";
+import * as ChildProcess from "effect/process/ChildProcess";
+import { ExecContext, LocalExec, LocalExecError } from "../../effected/commands/LocalExec.ts";
 import type { ScriptResult } from "../../effected/commands/ScriptedSpawner.ts";
 import { ScriptedSpawner } from "../../effected/commands/ScriptedSpawner.ts";
 import { Tool, VersionFlag, VersionJson, VersionNone } from "../../effected/commands/Tool.ts";
@@ -14,8 +13,16 @@ import {
 	ToolDiscovery,
 	ToolNotFoundError,
 	ToolRefusedError,
+	ToolResolutionFailure,
 	ToolVersionMismatchError,
 } from "../../effected/commands/ToolDiscovery.ts";
+
+/** Builds each test layer under the program's scope, with fresh per-invocation state. */
+const withLayer = <R, E2, R2>(layer: Layer.Layer<R, E2, R2>) => <A, E, R3>(program: Effect.Effect<A, E, R3>) =>
+ Effect.scopedWith((scope) => Effect.flatMap(
+  Layer.buildWithScope(layer, scope),
+  (context) => Effect.provideContext(program, context),
+ ));
 
 /** A local context: `pnpm exec <tool>` in /repo. */
 const pnpmLocal = LocalExec.layerContext(
@@ -48,7 +55,7 @@ const run = <A, E>(
 ) => {
 	const spawner = ScriptedSpawner.make(script);
 	const layer = ToolDiscovery.layer.pipe(Layer.provide(Layer.mergeAll(spawner.layer, local)));
-	return { effect: Effect.provide(program, layer), spawner };
+	return { effect: withLayer(layer)(program), spawner };
 };
 
 const resolve = Effect.fn("resolve")(function* (tool: Tool) {
@@ -440,7 +447,7 @@ describe("ToolDiscovery test double", () => {
 			const resolved = yield* discovery.resolve(Tool.named("biome"));
 			assert.strictEqual(resolved.name, "stubbed");
 		}).pipe(
-			Effect.provide(
+			withLayer(
 				ToolDiscovery.layerTest({
 					resolve: () =>
 						Effect.succeed(
@@ -466,6 +473,30 @@ describe("ToolDiscovery test double", () => {
 				assert.fail("expected a defect from an unstubbed member");
 			}
 			assert.isTrue(exit.cause.reasons.some((reason) => reason._tag === "Die"));
-		}).pipe(Effect.provide(ToolDiscovery.layerTest())),
+		}).pipe(withLayer(ToolDiscovery.layerTest())),
 	);
+});
+
+
+it.effect("VersionJson keeps presence but no version for malformed JSON and unusable paths", () =>
+ Effect.gen(function* () {
+  for (const stdout of ["{", "null", "42", '{}', '{"deno":null}', '{"deno":{}}', '{"deno":{"version":42}}']) {
+   const tool = Tool.named("deno", { version: VersionJson.make({ flag: "info --json", path: "deno.version" }) });
+   const resolved = yield* run(resolve(tool), world({ global: stdout }), LocalExec.layerNone).effect;
+   assert.strictEqual(resolved.source, "global");
+   assert.deepStrictEqual(resolved.version, O.none());
+  }
+  const inheritedFunction = Tool.named("deno", { version: VersionJson.make({ flag: "info --json", path: "toString.name" }) });
+  assert.deepStrictEqual((yield* run(resolve(inheritedFunction), world({ global: "{}" }), LocalExec.layerNone).effect).version, O.none());
+ }),
+);
+
+it("ToolResolutionFailure owns exactly the four existing error variants", () => {
+ for (const error of [
+  ToolNotFoundError.make({ tool: "tool", searched: ["global"] }),
+  ToolVersionMismatchError.make({ tool: "tool", globalVersion: "1.0.0", localVersion: "2.0.0" }),
+  ToolRefusedError.make({ tool: "-rf" }),
+  LocalExecError.make({}),
+ ]) assert.isTrue(S.is(ToolResolutionFailure)(error));
+ assert.isFalse(S.is(ToolResolutionFailure)({ _tag: "OtherError" }));
 });

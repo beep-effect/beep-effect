@@ -1,5 +1,5 @@
 import * as A from "effect/Array";
-import * as MutableHashSet from "effect/MutableHashSet";
+import * as HashSet from "effect/HashSet";
 import * as Order from "effect/Order";
 import * as Redacted from "effect/Redacted";
 
@@ -22,7 +22,7 @@ export const REDACTED = "***";
  *
  * @public
  */
-export const SECRET_FLAGS: MutableHashSet.MutableHashSet<string> = MutableHashSet.fromIterable([
+export const SECRET_FLAGS: HashSet.HashSet<string> = HashSet.fromIterable([
 	"--access-token",
 	"--api-key",
 	"--auth",
@@ -80,9 +80,9 @@ const applyArgs = (
 };
 
 /** Whether `name` introduces a credential value. */
-const isSecretName = (name: string, extra: MutableHashSet.MutableHashSet<string>): boolean => {
+const isSecretName = (name: string, extra: HashSet.HashSet<string>): boolean => {
 	const lower = name.toLowerCase();
-	return MutableHashSet.has(SECRET_FLAGS, lower) || MutableHashSet.has(extra, lower) || AUTH_KEY.test(name);
+	return HashSet.has(SECRET_FLAGS, lower) || HashSet.has(extra, lower) || AUTH_KEY.test(name);
 };
 
 // Implementation of Redaction.scrubArgs; the public contract lives on the static.
@@ -90,7 +90,7 @@ const scrubArgs = (
 	args: ReadonlyArray<string>,
 	options?: { readonly flags?: ReadonlyArray<string> | undefined },
 ): ReadonlyArray<string> => {
-	const extra = MutableHashSet.fromIterable((options?.flags ?? []).map((flag) => flag.toLowerCase()));
+	const extra = HashSet.fromIterable((options?.flags ?? []).map((flag) => flag.toLowerCase()));
 	const out: Array<string> = [];
 	for (let index = 0; index < args.length; index++) {
 		const arg = args[index] ?? "";

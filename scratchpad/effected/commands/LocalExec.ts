@@ -1,3 +1,4 @@
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import { $ScratchpadId } from "@beep/identity/packages";
 import type * as Effect from "effect/Effect";
 import * as Context from "effect/Context";
@@ -5,7 +6,7 @@ import * as Eff from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "@beep/utils/Option";
 import * as S from "effect/Schema";
-import { ChildProcess } from "effect/process";
+import * as ChildProcess from "effect/process/ChildProcess";
 
 const $I = $ScratchpadId.create("effected/commands/LocalExec");
 
@@ -21,7 +22,7 @@ const $I = $ScratchpadId.create("effected/commands/LocalExec");
  *
  * @public
  */
-export const Launcher = S.Literals(["npm", "pnpm", "yarn", "bun"]).pipe($I.annoteSchema("Launcher", { description: "The package managers whose project-local exec argv this package knows." }));
+export const Launcher = LiteralKit(["npm", "pnpm", "yarn", "bun"]).pipe($I.annoteSchema("Launcher", { description: "The package managers whose project-local exec argv this package knows." }));
 
 /**
  * The decoded type of {@link (Launcher:variable)}.
@@ -39,14 +40,15 @@ export type Launcher = typeof Launcher.Type;
  *
  * @public
  */
-export interface LauncherPrefixes {
-	/** argv prefix that runs a project-local binary, e.g. `["pnpm", "exec"]`. */
-	readonly prefix: ReadonlyArray<string>;
-	/** argv prefix that fetch-and-runs a package binary, e.g. `["pnpm", "dlx"]`. */
-	readonly dlxPrefix: ReadonlyArray<string>;
-	/** argv prefix that runs a `package.json` script, e.g. `["pnpm", "run"]`. */
-	readonly scriptPrefix: ReadonlyArray<string>;
-}
+export const LauncherPrefixes = S.Struct({
+ /** argv prefix that runs a project-local binary. */
+ prefix: S.Array(S.String).annotateKey({ description: "argv for project-local execution." }),
+ /** argv prefix that fetches and runs a package binary. */
+ dlxPrefix: S.Array(S.String).annotateKey({ description: "argv for package fetch and execution." }),
+ /** argv prefix that runs a package.json script. */
+ scriptPrefix: S.Array(S.String).annotateKey({ description: "argv for package script execution." }),
+}).pipe($I.annoteSchema("LauncherPrefixes", { description: "Per-launcher exec, dlx and script argv prefixes." }));
+export type LauncherPrefixes = typeof LauncherPrefixes.Type;
 
 /** The argv prefixes for each launcher. The one place this knowledge lives. */
 const PREFIXES: Readonly<Record<Launcher, LauncherPrefixes>> = {

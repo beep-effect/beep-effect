@@ -1,21 +1,17 @@
 import type * as PlatformError from "effect/PlatformError";
-import * as Data from "effect/Data";
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as S from "effect/Schema";
 import * as Effect from "effect/Effect";
 import * as Ref from "effect/Ref";
 import * as Stream from "effect/Stream";
 import { dual } from "effect/Function";
 
-/**
- * Raised when a captured stream exceeds its byte budget.
- *
- * @remarks
- * Internal and never exported from the package: `Run` maps it to the public
- * `CommandOutputError`. `Data.TaggedError` is appropriate precisely because it
- * never escapes — it is an in-process signal, not a contract.
- */
-export class OutputTooLarge extends Data.TaggedError("OutputTooLarge")<{
-	readonly limit: number;
-}> {}
+const $I = $ScratchpadId.create("effected/commands/internal/capture");
+
+/** Raised when a captured stream exceeds its byte budget; mapped by Run. */
+export class OutputTooLarge extends S.TaggedError<OutputTooLarge>($I`OutputTooLarge`)("OutputTooLarge", {
+ limit: S.Finite.annotateKey({ description: "The configured byte budget for this stream." }),
+}, $I.annote("OutputTooLarge", { description: "A captured stream exceeded its byte budget." })) {}
 
 /**
  * Collects a byte stream into a string, failing once more than `limit` bytes
@@ -38,7 +34,7 @@ export const collectBounded: {
 		const bounded = Stream.mapEffect(stream, (chunk) =>
 			Effect.flatMap(
 				Ref.updateAndGet(seen, (total) => total + chunk.length),
-				(total) => (total > limit ? Effect.fail(new OutputTooLarge({ limit })) : Effect.succeed(chunk)),
+				(total) => (total > limit ? Effect.fail(OutputTooLarge.make({ limit })) : Effect.succeed(chunk)),
 			),
 		);
 		return yield* bounded.pipe(Stream.decodeText, Stream.mkString);
