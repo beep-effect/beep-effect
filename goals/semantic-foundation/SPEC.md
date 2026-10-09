@@ -134,10 +134,15 @@ starts after M2 tests and the real-artifact proof pass. M4 remains gated.
 ### M2 acceptance (2026-10-09)
 
 - [ ] Pinned IPC/CPC/Nice editions resolve hierarchy with distinct scheme identities.
-- [ ] Typed failures cover mismatches, unpinned editions, unvetted rows and path escape.
-- [ ] Real manifest decoder preserves M1 admission and skips classification rows (R3).
+- [x] Typed failures cover mismatches, unpinned editions, unvetted rows and path escape.
+- [x] Real manifest decoder preserves M1 admission and skips classification rows (R3).
 - [ ] Real-artifact proof records edition, counts, checksums and three lookups per scheme.
-- [ ] CPC scope and all source reuse evidence are recorded in the licence ledger (R2).
+- [x] CPC scope and all source reuse evidence are recorded in the licence ledger (R2).
+
+M2 evidence: `Classification.test.ts` has the typed admission/CQ fixtures;
+`SemanticFoundation.test.ts` contains `decodes the real asset manifest without
+vendor bytes and preserves kind routing`. The run-7 handoff records 88 passing
+tests and qualified coverage. The full real-edition proof remains blocked.
 
 ### M3 acceptance (2026-10-09)
 
@@ -199,7 +204,7 @@ starts after M2 tests and the real-artifact proof pass. M4 remains gated.
 
 | 2026-10-09 | Adapt classification element content to the landed `#text` reader contract (run-6 ruling); retain child elements named `text`. | Nice attributed heading/label content and attributed IPC/CPC text nodes use the reserved content key. | Revert the consumer adaptation only if the shared reader contract is also reversed; never add a fallback conflating content and child elements. |
 | 2026-10-09 | R4 adds the new `ClassificationRegistry.ts` row: lines 95.61, statements 95.72, branches 86.36, functions 91.93. | The sanctioned scoped coverage writer measured these error paths; existing rows and package totals remain unchanged. | Delete this row once the file has zero uncovered units. |
-| 2026-10-09 | R4 adds the new `internal/ClassificationXml.ts` row: lines 93.22, statements 93.18, branches 100, functions 87.14. | The sanctioned scoped coverage writer measured these parser paths; existing rows and package totals remain unchanged. | Delete this row once the file has zero uncovered units. |
+| 2026-10-09 | R4 adds the new `internal/ClassificationXml.ts` row: lines 93.27, statements 93.23, branches 100, functions 87.32. | The sanctioned scoped coverage writer measured these parser paths; existing rows and package totals remain unchanged. | Delete this row once the file has zero uncovered units. |
 
 ## Exception Ledger
 

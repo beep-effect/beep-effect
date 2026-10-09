@@ -41,14 +41,18 @@ M3 code waits for M2 tests and real-artifact readiness. M4 remains gated.
 
 ## M2 Work Items
 
-- [ ] Record edition pins, scheme identities, bounded seed and deferred schemes.
-- [ ] Check reuse terms and retain a licence ledger before code or manifest rows.
-- [ ] Commit R3 loader kind admission and real-manifest tests before rows.
-- [ ] Add checksum-pinned rows and safe archive fetching.
-- [ ] Author classification schemas, service contract, then XML implementation.
-- [ ] Prove synthetic lookup/CQ fixtures and coverage without lowering baselines.
+- [x] Record edition pins, scheme identities, bounded seed and deferred schemes.
+- [x] Check reuse terms and retain a licence ledger before code or manifest rows.
+- [x] Commit R3 loader kind admission and real-manifest tests before rows.
+- [x] Add checksum-pinned rows and safe archive fetching.
+- [x] Author classification schemas, service contract, then XML implementation.
+- [x] Prove synthetic lookup/CQ fixtures and coverage without lowering baselines.
 - [ ] Prove real IPC/CPC/Nice editions and the M1 real-manifest regression.
 - [ ] Verify packages, add changeset and publish wave 1; record hosted checks.
+
+M2 runtime admission remains blocked: the real CPC master has repeated
+`CPC-specific-text` siblings not admitted by the current boundary. The
+2026-10-09 handoff records the repeated-blocker stop; no wave has shipped.
 
 ## M3 Work Items
 

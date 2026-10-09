@@ -42,6 +42,21 @@ party-role vocabulary. M4 remains gated and routed to legal-document-intake P4.
 
 ## Latest Evidence
 
+### M2 candidate, resume 7 (2026-10-09)
+
+- The ontology consumer now reads attributed XML content through `#text` while
+  retaining literal child elements named `text`. All 88 package tests pass.
+- `@beep/ontology` package-verify passes audit and docgen; test-tsgo passes.
+  Scoped coverage exceeds the unchanged package floors; only two lane-created
+  file rows were added through the sanctioned R4 writer.
+- The real-artifact proof remains blocked on CPC repeated `CPC-specific-text`
+  siblings at `A01G9/24`. No semantic PR or publication wave exists. M2/M3
+  remain in-progress, lifecycle active, and M4 pending.
+- Exact commands, source heads, checksums and the incomplete runtime table are
+  in [the append-only handoff](./history/handoffs/semantic-m2m3-2026-10-09.md).
+
+### Retained M1 evidence
+
 - The repo-owned seed contains nine legal-intake concepts, all six required
   document classes, and local-vault plus Box-mirror filing roots.
 - The exploration asset pack contains 17 checksum-pinned rows. Its exact FOLIO

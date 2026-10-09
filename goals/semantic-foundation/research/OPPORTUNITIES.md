@@ -308,3 +308,10 @@ blocker was attributed; its partial full-docgen replay is not a green proof.
 - **Evidence:** the diagnostic identified a missing `text` key in a `CPC-specific-text` title-part child of `cpc-scheme-A.xml`. This is distinct from the repeated-title mismatch; a wrapper may carry only excluded reference content.
 - **What would have prevented it:** a synthetic attributed wrapper with no admitted title child.
 - **Disposition:** default the absent child list to empty at the XML boundary and retain the facts-only field projection.
+
+## 2026-10-09 — CPC real-artifact parser remains blocked after repeated attempts
+
+- **What happened:** three real-artifact attempts returned `ClassificationError` with `source-parse / Invalid CPC XML` while synthetic tests passed.
+- **Evidence:** after repeated title children and empty admitted child lists were handled, the remaining diagnostic points to `cpc-scheme-A01G.xml`, notation `A01G9/24`: one title part has two `CPC-specific-text` siblings, while the boundary expects one object.
+- **What would have prevented it:** a census of cardinality variants across all official scheme files, turned into synthetic fixtures before runtime admission.
+- **Disposition:** stop under the brief's repeated-blocker rule; keep M2/M3 in progress and publish no incomplete wave. Resume requires the orchestrator's next ruling; preserve the bounded, package-verified candidate.
