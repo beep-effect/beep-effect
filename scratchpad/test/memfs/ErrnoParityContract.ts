@@ -18,6 +18,7 @@
 // FIRST path argument of a two-path operation (rename, copy, copyFile, link,
 // symlink), memfs the one the conflict concerns.
 
+import { dual } from "effect/Function";
 import { assert, describe, layer } from "@effect/vitest";
 import type { Layer, Scope } from "effect";
 import { Cause, Effect, Exit, Result, Stream } from "effect";
@@ -572,12 +573,10 @@ const assertOutcome = (exit: Exit.Exit<unknown, PlatformError.PlatformError>, ex
 	}
 	if (Exit.isSuccess(exit)) {
 		assert.fail(`expected a ${expected.tag} failure, got success`);
-		return;
 	}
 	const found = Cause.findError(exit.cause);
 	if (Result.isFailure(found)) {
 		assert.fail(`expected a typed failure, got ${String(exit.cause)}`);
-		return;
 	}
 	const error = found.success;
 	assert.strictEqual(error._tag, "PlatformError");
@@ -589,7 +588,10 @@ const assertOutcome = (exit: Exit.Exit<unknown, PlatformError.PlatformError>, ex
 	}
 };
 
-export const errnoSuite = (implementation: Implementation, fsLayer: Layer.Layer<FileSystem.FileSystem, unknown>) =>
+export const errnoSuite: {
+	<E>(fsLayer: Layer.Layer<FileSystem.FileSystem, E>): (implementation: Implementation) => void;
+	<E>(implementation: Implementation, fsLayer: Layer.Layer<FileSystem.FileSystem, E>): void;
+} = dual(2, <E>(implementation: Implementation, fsLayer: Layer.Layer<FileSystem.FileSystem, E>) =>
 	layer(fsLayer, { timeout: { seconds: 30 } })(`FileSystem errno parity (${implementation})`, (it) => {
 		describe("failure shape matches the node adapter", () => {
 			for (const testCase of cases) {
@@ -610,4 +612,4 @@ export const errnoSuite = (implementation: Implementation, fsLayer: Layer.Layer<
 				);
 			}
 		});
-	});
+	}));

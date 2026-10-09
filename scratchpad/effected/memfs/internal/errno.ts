@@ -14,6 +14,8 @@
 // - Thrown errors (the ports, `makeSync`): `nodeErrno` builds what a sync
 //   `node:fs` call throws — `code`, `syscall`, and `path` when the syscall is
 //   path-based — with node's message format.
+import { Data } from "effect";
+import { dual } from "effect/Function";
 import type { PlatformError, SystemErrorTag } from "effect/PlatformError";
 import { systemError } from "effect/PlatformError";
 import type { MemoryFileSystemErrnoError } from "../MemoryFileSystem.ts";
@@ -92,13 +94,14 @@ export const fallbackErrnoForTag = (tag: string): string => {
 };
 
 /** The `cause` of an errno-backed failure: an `Error` carrying node's `code` (and `path` for path operations). */
-export class ErrnoException extends Error {
-	readonly code: ErrnoCode;
-	readonly path: string | undefined;
+export class ErrnoException extends Data.TaggedError("ErrnoException")<{ readonly code: ErrnoCode; readonly path: string | undefined; readonly message: string }> {
 	constructor(code: ErrnoCode, pathOrDescriptor: string | number | undefined) {
-		super(`${code}: ${errnoMessages[code]}${typeof pathOrDescriptor === "string" ? `, '${pathOrDescriptor}'` : ""}`);
-		this.code = code;
-		this.path = typeof pathOrDescriptor === "string" ? pathOrDescriptor : undefined;
+		super({
+			message: `${code}: ${errnoMessages[code]}${typeof pathOrDescriptor === "string" ? `, '${pathOrDescriptor}'` : ""}`,
+			code,
+			path: typeof pathOrDescriptor === "string" ? pathOrDescriptor : undefined,
+		});
+		this.name = "Error";
 	}
 }
 
@@ -123,8 +126,11 @@ export const errnoError = (
  * properties. A descriptor-based syscall (`read`) has no path, and neither does
  * its error — pass `undefined`. An unmapped code's description is `"error"`.
  */
-export const nodeErrno = (code: string, syscall: string, path: string | undefined): MemoryFileSystemErrnoError => {
+export const nodeErrno: {
+	(syscall: string, path: string | undefined): (code: string) => MemoryFileSystemErrnoError;
+	(code: string, syscall: string, path: string | undefined): MemoryFileSystemErrnoError;
+} = dual(3, (code: string, syscall: string, path: string | undefined): MemoryFileSystemErrnoError => {
 	const description = (errnoMessages as Record<string, string | undefined>)[code] ?? "error";
 	const message = `${code}: ${description}, ${syscall}${path === undefined ? "" : ` '${path}'`}`;
 	return Object.assign(new Error(message), { code, syscall }, path === undefined ? {} : { path });
-};
+});

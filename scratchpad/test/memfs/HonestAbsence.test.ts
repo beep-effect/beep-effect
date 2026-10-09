@@ -19,7 +19,6 @@ describe("honest absence — the effected#249 contract", () => {
 			// Assert helpers are not type predicates, so narrow with a real `if`.
 			if (readError.reason._tag === "BadArgument") {
 				assert.fail("expected a SystemError NotFound, got BadArgument");
-				return;
 			}
 			assert.strictEqual(readError.reason._tag, "NotFound");
 			assert.strictEqual(readError.reason.method, "readFile");

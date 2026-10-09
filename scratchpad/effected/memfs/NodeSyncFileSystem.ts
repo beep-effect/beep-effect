@@ -107,8 +107,8 @@ const make: FileSystem.FileSystem = FileSystem.make({
 	access: (path, options) =>
 		attempt("access", path, () => {
 			let mode = NFS.constants.F_OK;
-			if (options?.readable) mode |= NFS.constants.R_OK;
-			if (options?.writable) mode |= NFS.constants.W_OK;
+			if (options?.readable === true) mode |= NFS.constants.R_OK;
+			if (options?.writable === true) mode |= NFS.constants.W_OK;
 			NFS.accessSync(path, mode);
 		}),
 	stat: (path) =>

@@ -562,16 +562,16 @@ const resolve = Effect.fnUntraced(function* (state: State, path: string, options
 		}
 		if (component.length === 0) {
 			if (components.length === 0) {
-				yield* getDirectory(state, stack[stack.length - 1], method, originalPath);
+				yield* getDirectory(state, stack[stack.length - 1] ?? RootInode, method, originalPath);
 			}
 			continue;
 		}
 		if (component === ".") {
-			yield* getDirectory(state, stack[stack.length - 1], method, originalPath);
+			yield* getDirectory(state, stack[stack.length - 1] ?? RootInode, method, originalPath);
 			continue;
 		}
 		if (component === "..") {
-			yield* getDirectory(state, stack[stack.length - 1], method, originalPath);
+			yield* getDirectory(state, stack[stack.length - 1] ?? RootInode, method, originalPath);
 			if (stack.length > 1) {
 				stack.pop();
 				names.pop();
@@ -579,7 +579,7 @@ const resolve = Effect.fnUntraced(function* (state: State, path: string, options
 			continue;
 		}
 
-		const parent = yield* getDirectory(state, stack[stack.length - 1], method, originalPath);
+		const parent = yield* getDirectory(state, stack[stack.length - 1] ?? RootInode, method, originalPath);
 		// KIT EXTENSION (case folding): the lookup
 		// folds, but `names` keeps the queried component — node's realpath never
 		// canonicalizes case; only a link's target text supplies its own spelling.
@@ -610,7 +610,7 @@ const resolve = Effect.fnUntraced(function* (state: State, path: string, options
 		names.push(component);
 	}
 
-	const inode = stack[stack.length - 1];
+	const inode = stack[stack.length - 1] ?? RootInode;
 	const entry = yield* getInode(state, inode, method, originalPath);
 	return { inode, entry, path: names.length === 0 ? "/" : `/${names.join("/")}` } satisfies ResolvedInode;
 });
@@ -1035,7 +1035,7 @@ const remove = (volume: Volume) =>
 			Effect.gen(function* () {
 				const target = yield* Effect.result(resolveEntry(state, path, method));
 				if (target._tag === "Failure") {
-					if (options?.force && target.failure.reason._tag === "NotFound") {
+					if (options?.force === true && target.failure.reason._tag === "NotFound") {
 						return transitionResult(state, undefined);
 					}
 					return yield* target.failure;
@@ -1198,20 +1198,17 @@ const cloneInode: (
 			mtime: preserveTimestamps ? source.mtime : entry.mtime,
 		});
 	return yield* InodeEntry.$match(source, {
-		File: (source) =>
-			Effect.gen(function* () {
+		File: Effect.fn("File")(function* (source: FileInode) {
 				const [createdState, inode] = yield* createFile(state, source.data);
 				const nextState = applyMetadata(createdState, yield* getInode(createdState, inode, method, path));
 				return [nextState, inode] as const;
 			}),
-		SymbolicLink: (source) =>
-			Effect.gen(function* () {
+		SymbolicLink: Effect.fn("SymbolicLink")(function* (source: SymbolicLinkInode) {
 				const [createdState, inode] = yield* createSymbolicLink(state, source.target);
 				const nextState = applyMetadata(createdState, yield* getInode(createdState, inode, method, path));
 				return [nextState, inode] as const;
 			}),
-		Directory: (source) =>
-			Effect.gen(function* () {
+		Directory: Effect.fn("Directory")(function* (source: DirectoryInode) {
 				let [nextState, inode] = yield* createDirectory(state);
 				const children = [...source.entries].sort(([left], [right]) => left.localeCompare(right));
 				for (const [name, childInode] of children) {
@@ -2006,12 +2003,14 @@ const collectDirectoryEntries = (
 	const frames: Array<Frame> = [{ names: [...HashMap.keys(directory.entries)].sort(), directory, prefix, index: 0 }];
 	while (frames.length > 0) {
 		const frame = frames[frames.length - 1];
+		if (frame === undefined) break;
 		if (frame.index >= frame.names.length) {
 			frames.pop();
 			continue;
 		}
 		const name = frame.names[frame.index];
 		frame.index += 1;
+		if (name === undefined) continue;
 		const relativePath = frame.prefix.length === 0 ? name : `${frame.prefix}/${name}`;
 		output.push(relativePath);
 		if (!recursive) continue;
@@ -2184,9 +2183,7 @@ const dateTimeInput = (method: string, name: string, value: Date | number) => {
 		return Effect.fail(argumentError(method, `${name} must be a valid Date or epoch-seconds number`));
 	}
 	const parsed = DateTime.make(milliseconds);
-	return Option.isSome(parsed)
-		? Effect.succeed(parsed.value)
-		: Effect.fail(argumentError(method, `${name} is outside the supported date range`));
+	return Effect.fromOption(parsed, () => argumentError(method, `${name} is outside the supported date range`));
 };
 
 const utimes = (volume: Volume) =>
@@ -2478,6 +2475,7 @@ const expandBraces = (method: string, pattern: string) => {
 		const index = patterns.findIndex((pattern) => findBraceExpansion(pattern) !== undefined);
 		if (index === -1) return Effect.succeed(patterns);
 		const current = patterns[index];
+		if (current === undefined) return Effect.succeed(patterns);
 		const expansion = findBraceExpansion(current);
 		if (expansion === undefined) return Effect.succeed(patterns);
 		if (patterns.length - 1 + expansion.alternatives.length > MAX_BRACE_EXPANSIONS) {
@@ -2508,7 +2506,7 @@ const parseCharacterClass = (method: string, segment: string, start: number) => 
 				return argumentError(method, "character classes must not end with an escape");
 			}
 		}
-		characters.push({ value: segment[index], escaped });
+		characters.push({ value: segment.charAt(index), escaped });
 		index += 1;
 	}
 	if (index === segment.length || characters.length === 0) {
@@ -2518,13 +2516,17 @@ const parseCharacterClass = (method: string, segment: string, start: number) => 
 	const ranges: Array<readonly [string, string]> = [];
 	for (let characterIndex = 0; characterIndex < characters.length; characterIndex++) {
 		const character = characters[characterIndex];
+		if (character === undefined) continue;
+		const separator = characters[characterIndex + 1];
+		const rangeEnd = characters[characterIndex + 2];
 		if (
-			characterIndex + 2 < characters.length &&
-			characters[characterIndex + 1].value === "-" &&
-			!characters[characterIndex + 1].escaped &&
-			characters[characterIndex + 2].value !== "-"
+			separator !== undefined &&
+			rangeEnd !== undefined &&
+			separator.value === "-" &&
+			!separator.escaped &&
+			rangeEnd.value !== "-"
 		) {
-			const end = characters[characterIndex + 2].value;
+			const end = rangeEnd.value;
 			if (character.value > end) {
 				return argumentError(method, "character class ranges must be ascending");
 			}
@@ -2542,13 +2544,13 @@ const parseGlobSegment = Effect.fnUntraced(function* (method: string, segment: s
 	const tokens: Array<GlobToken> = [];
 	let index = 0;
 	while (index < segment.length) {
-		const character = segment[index];
+		const character = segment.charAt(index);
 		if (character === "\\") {
 			index += 1;
 			if (index === segment.length) {
 				return yield* argumentError(method, "patterns must not end with an escape");
 			}
-			const value = segment[index];
+			const value = segment.charAt(index);
 			if (globSyntaxCharacters.has(value)) {
 				tokens.push(GlobToken.Literal({ value }));
 			} else {
@@ -2625,7 +2627,7 @@ const matchesGlobSegment = (pattern: GlobSegment, value: string, fold = false): 
 	let starValueIndex = -1;
 	while (valueIndex < value.length) {
 		const token = pattern.tokens[patternIndex];
-		if (token !== undefined && token._tag !== "Star" && matchesGlobToken(token, value[valueIndex], fold)) {
+		if (token !== undefined && token._tag !== "Star" && matchesGlobToken(token, value.charAt(valueIndex), fold)) {
 			patternIndex += 1;
 			valueIndex += 1;
 		} else if (token?._tag === "Star") {
@@ -2658,19 +2660,21 @@ const matchesGlob = (
 	for (let patternIndex = pattern.segments.length - 1; patternIndex >= 0; patternIndex--) {
 		const current = Array.from({ length: path.length + 1 }, () => false);
 		const segment = pattern.segments[patternIndex];
+		if (segment === undefined) continue;
 		if (segment._tag === "Globstar") {
 			for (let pathIndex = path.length; pathIndex >= 0; pathIndex--) {
 				current[pathIndex] =
-					next[pathIndex] || (pathIndex < path.length && !path[pathIndex].startsWith(".") && current[pathIndex + 1]);
+					next[pathIndex] === true || (pathIndex < path.length && path[pathIndex]?.startsWith(".") === false && current[pathIndex + 1] === true);
 			}
 		} else {
 			for (let pathIndex = path.length - 1; pathIndex >= 0; pathIndex--) {
-				current[pathIndex] = matchesGlobSegment(segment, path[pathIndex], fold) && next[pathIndex + 1];
+				const part = path[pathIndex];
+				current[pathIndex] = part !== undefined && matchesGlobSegment(segment, part, fold) && next[pathIndex + 1] === true;
 			}
 		}
 		next = current;
 	}
-	return next[0];
+	return next[0] === true;
 };
 
 const glob = (volume: Volume) =>
@@ -2736,8 +2740,7 @@ export interface EngineOptions {
 }
 const defaultEngineOptions: EngineOptions = { caseSensitive: true };
 
-const makeVolume = (options: EngineOptions) =>
-	Effect.gen(function* () {
+const makeVolume = Effect.fn("makeVolume")(function* (options: EngineOptions) {
 		const now = yield* DateTime.now;
 		// NOTE: One permit covers a transition, its state assignment, and event publication;
 		// acquiring that permit remains interruptible.
@@ -2939,12 +2942,14 @@ const collectEntrySnapshots = (state: State): Array<VolumeEntrySnapshot> => {
 	];
 	while (frames.length > 0) {
 		const frame = frames[frames.length - 1];
+		if (frame === undefined) break;
 		if (frame.index >= frame.names.length) {
 			frames.pop();
 			continue;
 		}
 		const name = frame.names[frame.index];
 		frame.index += 1;
+		if (name === undefined) continue;
 		// KIT EXTENSION (case folding): `name` is a stored key; exact hit.
 		const inode = findEntry(state, frame.directory, name);
 		const entry = inode === undefined ? undefined : findInode(state, inode);

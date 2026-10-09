@@ -1,6 +1,7 @@
 // Kit-owned test helpers shared across suites. The upstream-ported
 // MemoryFileSystem.test.ts keeps its own watch collector.
 
+import { dual } from "effect/Function";
 import type { FileSystem } from "effect";
 import { Effect, Fiber, PlatformError, Stream } from "effect";
 
@@ -15,8 +16,11 @@ export const thrown = (f: () => unknown): { code?: string; syscall?: string; pat
 };
 
 /** A typed PermissionDenied failure for a fault handler. */
-export const denied = (method: string, path: string): PlatformError.PlatformError =>
-	PlatformError.systemError({ _tag: "PermissionDenied", module: "FileSystem", method, pathOrDescriptor: path });
+export const denied: {
+	(path: string): (method: string) => PlatformError.PlatformError;
+	(method: string, path: string): PlatformError.PlatformError;
+} = dual(2, (method: string, path: string): PlatformError.PlatformError =>
+	PlatformError.systemError({ _tag: "PermissionDenied", module: "FileSystem", method, pathOrDescriptor: path }));
 
 /**
  * Collects the first `count` watch events `mutation` causes. Subscription

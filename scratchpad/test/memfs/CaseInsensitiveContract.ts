@@ -5,17 +5,21 @@
 // assumed behaviour; the memory engine (CaseInsensitive.test.ts) must then
 // match it. Every case works under a scoped temp directory.
 
+import { dual } from "effect/Function";
 import { assert, describe, it } from "@effect/vitest";
 import type { Layer } from "effect";
 import { Effect, FileSystem } from "effect";
 
-export const caseInsensitiveSuite = (
+export const caseInsensitiveSuite: {
+	<E>(layer: Layer.Layer<FileSystem.FileSystem, E>, options?: { readonly skip?: boolean }): (name: string) => ReturnType<typeof describe>;
+	<E>(name: string, layer: Layer.Layer<FileSystem.FileSystem, E>, options?: { readonly skip?: boolean }): ReturnType<typeof describe>;
+} = dual((args) => typeof args[0] === "string", <E>(
 	name: string,
-	layer: Layer.Layer<FileSystem.FileSystem, unknown>,
+	layer: Layer.Layer<FileSystem.FileSystem, E>,
 	options?: { readonly skip?: boolean },
 ) =>
 	describe.skipIf(options?.skip === true)(`case-insensitive volume (${name})`, () => {
-		const run = <A>(body: (fs: FileSystem.FileSystem, d: string) => Effect.Effect<A, unknown>) =>
+		const run = <A, E2>(body: (fs: FileSystem.FileSystem, d: string) => Effect.Effect<A, E2>) =>
 			Effect.scoped(
 				Effect.gen(function* () {
 					const fs = yield* FileSystem.FileSystem;
@@ -277,4 +281,4 @@ export const caseInsensitiveSuite = (
 				}),
 			),
 		);
-	});
+	}));

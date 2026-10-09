@@ -320,7 +320,7 @@ describe("MemoryFileSystem.die", () => {
 		Effect.gen(function* () {
 			const fs = yield* FileSystem.FileSystem;
 			const exit = yield* Effect.exit(
-				fs.makeDirectory("/new", { recursive: true }).pipe(Effect.catch(() => Effect.void)),
+				fs.makeDirectory("/new", { recursive: true }).pipe(Effect.ignore),
 			);
 			assert.isTrue(Exit.isFailure(exit));
 			if (Exit.isFailure(exit)) {

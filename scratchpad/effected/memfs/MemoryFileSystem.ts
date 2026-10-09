@@ -717,9 +717,7 @@ const buildHandle = (
 				: raw
 						.makeDirectory(parent, { recursive: true })
 						.pipe(
-							Effect.catch((error) =>
-								error.reason.cause instanceof ErrnoException ? Effect.void : Effect.fail(error),
-							),
+							Effect.catchIf((error) => error.reason.cause instanceof ErrnoException, () => Effect.void),
 						);
 		};
 		// `mkdir` stands in for `mkdirSync(p, { recursive: true })`, whose walk

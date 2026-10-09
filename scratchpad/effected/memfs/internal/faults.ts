@@ -2,7 +2,8 @@
 // `makeFaulty`, `layerFaulty` and `options.faults`: handlers run first, and a
 // handler answering `undefined` delegates to the wrapped filesystem.
 
-import { Effect, FileSystem } from "effect";
+import { dual } from "effect/Function";
+import { Effect, FileSystem, PlatformError, Scope } from "effect";
 import type {
 	MemoryFileSystemFaultMethod,
 	MemoryFileSystemFaults,
@@ -34,7 +35,10 @@ const armFault = (fault: NonNullable<MemoryFileSystemFaults[MemoryFileSystemFaul
  * the test would pass without its fault ever firing — a wiring bug, surfaced at
  * construction like `failTimes`' invalid counts.
  */
-export const assertKnownFaultKeys = (faults: object, target: object, subject: string): void => {
+export const assertKnownFaultKeys: {
+	(target: object, subject: string): (faults: object) => void;
+	(faults: object, target: object, subject: string): void;
+} = dual(3, (faults: object, target: object, subject: string): void => {
 	const members = new Set(
 		Object.keys(target).filter((key) => typeof (target as Record<string, unknown>)[key] === "function"),
 	);
@@ -44,9 +48,12 @@ export const assertKnownFaultKeys = (faults: object, target: object, subject: st
 			`${subject}: unknown fault key(s) ${unknown.map((key) => `"${key}"`).join(", ")}; expected one of ${[...members].sort().join(", ")}`,
 		);
 	}
-};
+});
 
-export const wrapFaulty = (
+export const wrapFaulty: {
+	(registration: MemoryFileSystemFaults | MemoryFileSystemFaultsFactory): (base: FileSystem.FileSystem) => FileSystem.FileSystem;
+	(base: FileSystem.FileSystem, registration: MemoryFileSystemFaults | MemoryFileSystemFaultsFactory): FileSystem.FileSystem;
+} = dual(2, (
 	base: FileSystem.FileSystem,
 	registration: MemoryFileSystemFaults | MemoryFileSystemFaultsFactory,
 ): FileSystem.FileSystem => {
@@ -70,9 +77,9 @@ export const wrapFaulty = (
 		if (handler === undefined) {
 			return target;
 		}
-		const delegate = target as (...args: ReadonlyArray<unknown>) => Effect.Effect<unknown, unknown, unknown>;
+		const delegate = target as (...args: ReadonlyArray<unknown>) => Effect.Effect<unknown, PlatformError.PlatformError, Scope.Scope>;
 		const intercepted = (...args: ReadonlyArray<unknown>) =>
-			Effect.suspend(() => (handler(...args) ?? delegate(...args)) as Effect.Effect<unknown, unknown, unknown>);
+			Effect.suspend(() => (handler(...args) ?? delegate(...args)) as Effect.Effect<unknown, PlatformError.PlatformError, Scope.Scope>);
 		return intercepted as FileSystem.FileSystem[Method];
 	};
 	// `stream`, `sink` and `watch` return Streams/Sinks — lazy by construction
@@ -140,4 +147,4 @@ export const wrapFaulty = (
 		stream: interceptLazy("stream", core.stream),
 		writeFileString: intercept("writeFileString", core.writeFileString),
 	};
-};
+});

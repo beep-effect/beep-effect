@@ -179,7 +179,6 @@ describe("MemoryFileSystem.layerWith", () => {
 			);
 			if (!Exit.isFailure(exit)) {
 				assert.fail("expected the contradictory seed to die");
-				return;
 			}
 			assert.isTrue(Cause.hasDies(exit.cause));
 			assert.isFalse(Cause.hasFails(exit.cause));

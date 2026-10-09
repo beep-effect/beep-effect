@@ -1,14 +1,18 @@
 // KIT EXTENSION (seeding). The seed applier and the `root` option, kept out of
 // the facade so every seeded constructor shares one path.
+import { dual } from "effect/Function";
 import type { FileSystem } from "effect";
-import { Effect, Result } from "effect";
+import { DateTime, Effect, Result } from "effect";
 import type { PlatformError } from "effect/PlatformError";
 import { badArgument } from "effect/PlatformError";
 import type { MemoryFileSystemOptions, MemoryFileSystemSeed, MemoryFileSystemSeedEntry } from "../MemoryFileSystem.ts";
 
 const encoder = new TextEncoder();
 
-export const seedVolume = (fs: FileSystem.FileSystem, seed: MemoryFileSystemSeed): Effect.Effect<void, PlatformError> =>
+export const seedVolume: {
+	(seed: MemoryFileSystemSeed): (fs: FileSystem.FileSystem) => Effect.Effect<void, PlatformError>;
+	(fs: FileSystem.FileSystem, seed: MemoryFileSystemSeed): Effect.Effect<void, PlatformError>;
+} = dual(2, (fs: FileSystem.FileSystem, seed: MemoryFileSystemSeed): Effect.Effect<void, PlatformError> =>
 	Effect.gen(function* () {
 		for (const [path, entry] of Object.entries(seed)) {
 			const separator = path.lastIndexOf("/");
@@ -34,7 +38,8 @@ export const seedVolume = (fs: FileSystem.FileSystem, seed: MemoryFileSystemSeed
 					// option is epoch milliseconds — passing it through unconverted
 					// silently multiplies every seeded time by 1000.
 					if (entry.mtime !== undefined) {
-						const stamp = new Date(entry.mtime);
+						const stamp = DateTime.toDateUtc(DateTime.makeUnsafe(0));
+						stamp.setTime(entry.mtime);
 						yield* fs.utimes(path, stamp, stamp);
 					}
 					break;
@@ -55,7 +60,7 @@ export const seedVolume = (fs: FileSystem.FileSystem, seed: MemoryFileSystemSeed
 				}
 			}
 		}
-	});
+	}));
 
 // Lexical-only normalization shared by the seed root and the inspection view:
 // collapses "//" and ".", applies "..", resolves relative paths from the
@@ -87,7 +92,10 @@ export interface SeedRootError {
  * `/ws/extra/a.ts`. A relative root, or an absolute key alongside a root, is an
  * error naming the offending value.
  */
-export const applyRoot = (
+export const applyRoot: {
+	(root: string | undefined): (seed: MemoryFileSystemSeed) => Result.Result<{ readonly seed: MemoryFileSystemSeed; readonly root: string | undefined }, SeedRootError>;
+	(seed: MemoryFileSystemSeed, root: string | undefined): Result.Result<{ readonly seed: MemoryFileSystemSeed; readonly root: string | undefined }, SeedRootError>;
+} = dual(2, (
 	seed: MemoryFileSystemSeed,
 	root: string | undefined,
 ): Result.Result<{ readonly seed: MemoryFileSystemSeed; readonly root: string | undefined }, SeedRootError> => {
@@ -105,10 +113,13 @@ export const applyRoot = (
 		rooted[key === "" ? base : normalizeAbsolute(`${base}/${key}`)] = entry;
 	}
 	return Result.succeed({ seed: rooted, root: base });
-};
+});
 
 /** Applies the root, creates it, then seeds. A root error is a typed `BadArgument`. */
-export const seedWith = (
+export const seedWith: {
+	(seed: MemoryFileSystemSeed, options: MemoryFileSystemOptions | undefined): (fs: FileSystem.FileSystem) => Effect.Effect<void, PlatformError>;
+	(fs: FileSystem.FileSystem, seed: MemoryFileSystemSeed, options: MemoryFileSystemOptions | undefined): Effect.Effect<void, PlatformError>;
+} = dual(3, (
 	fs: FileSystem.FileSystem,
 	seed: MemoryFileSystemSeed,
 	options: MemoryFileSystemOptions | undefined,
@@ -122,4 +133,4 @@ export const seedWith = (
 			yield* fs.makeDirectory(applied.success.root, { recursive: true });
 		}
 		yield* seedVolume(fs, applied.success.seed);
-	});
+	}));

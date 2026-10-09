@@ -241,9 +241,7 @@ describe("seed options: root", () => {
 		Effect.gen(function* () {
 			const exit = yield* Effect.exit(
 				Effect.provide(
-					Effect.gen(function* () {
-						return yield* FileSystem.FileSystem;
-					}),
+					FileSystem.FileSystem,
 					MemoryFileSystem.layerWith({ "/a": "" }, { root: "/ws" }),
 				),
 			);

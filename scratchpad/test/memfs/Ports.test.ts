@@ -1,5 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { Effect, Predicate } from "effect";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
 import { thrown } from "./helpers.ts";
 
@@ -346,14 +346,20 @@ describe("promises port", () => {
 					},
 				},
 			});
-			let pending: Promise<unknown> | undefined;
-			try {
-				pending = fsp.stat("/r/dir");
-			} catch {
-				assert.fail("the call threw synchronously instead of returning a rejected promise");
-			}
+			const { pending } = yield* Effect.try({
+				try: () => ({ pending: fsp.stat("/r/dir") }),
+				catch: () => assert.fail("the call threw synchronously instead of returning a rejected promise"),
+			});
 			const error = yield* Effect.flip(
-				Effect.tryPromise({ try: () => pending as Promise<unknown>, catch: (e) => e as { code: string } }),
+				Effect.tryPromise({
+					try: () => pending,
+					catch: (e) => {
+						if (!Predicate.hasProperty(e, "code") || typeof e.code !== "string") {
+							return assert.fail("expected an errno with a string code");
+						}
+						return { code: e.code };
+					},
+				}),
 			);
 			assert.strictEqual(error.code, "EACCES");
 		}),
@@ -387,8 +393,7 @@ describe("MemoryFileSystem.syncFileSystem", () => {
 		Effect.map(MemoryFileSystem.makeHandle(seed), ({ volume }) => use(MemoryFileSystem.syncFileSystem(volume)));
 
 	it.effect("reads files and lists directories by name, sorted", () =>
-		Effect.gen(function* () {
-			yield* withSync((sync) => {
+		withSync((sync) => {
 				assert.strictEqual(sync.readFile("/repo/package.json"), `{ "name": "root" }`);
 				assert.deepStrictEqual(sync.readDirectory("/repo"), [
 					"latest",
@@ -399,41 +404,34 @@ describe("MemoryFileSystem.syncFileSystem", () => {
 				assert.isTrue(sync.exists("/repo/package.json"));
 				assert.isTrue(sync.isDirectory("/repo/packages"));
 				assert.isFalse(sync.isDirectory("/repo/package.json"));
-			});
-		}),
+			}),
 	);
 
 	it.effect("an empty directory lists [] — never confused with an absent one", () =>
-		Effect.gen(function* () {
-			yield* withSync((sync) => {
+		withSync((sync) => {
 				assert.deepStrictEqual(sync.readDirectory("/repo/packages"), []);
 				assert.throws(() => sync.readDirectory("/repo/absent"), /ENOENT/);
-			});
-		}),
+			}),
 	);
 
 	it.effect('HONEST ABSENCE: an unseeded path throws rather than answering ""', () =>
-		Effect.gen(function* () {
-			yield* withSync((sync) => {
+		withSync((sync) => {
 				assert.isFalse(sync.exists("/repo/absent"));
 				assert.throws(() => sync.readFile("/repo/absent"), /ENOENT/);
 				// Reading a directory as a file is EISDIR in readFileSync — verified
 				// against real node:fs — not ENOTDIR, and certainly not "".
 				assert.throws(() => sync.readFile("/repo/packages"), /EISDIR/);
-			});
-		}),
+			}),
 	);
 
 	it.effect("a symbolic link is listed by its own name and reads through to its target", () =>
-		Effect.gen(function* () {
-			yield* withSync((sync) => {
+		withSync((sync) => {
 				assert.isTrue(sync.exists("/repo/latest"));
 				// The PORT follows links even though the view under it is literal:
 				// this one points at a file, so it is not a directory but IS readable.
 				assert.isFalse(sync.isDirectory("/repo/latest"));
 				assert.strictEqual(sync.readFile("/repo/latest"), `{ "name": "root" }`);
-			});
-		}),
+			}),
 	);
 
 	// THE REGRESSION THIS PORT SHIPPED WITH (caught in review of #445): the view
@@ -500,18 +498,15 @@ describe("MemoryFileSystem.syncFileSystem", () => {
 	);
 
 	it.effect("the virtual root lists its top-level entries", () =>
-		Effect.gen(function* () {
-			yield* withSync((sync) => {
+		withSync((sync) => {
 				// "/" must not build the prefix "//", which would match nothing.
 				assert.include(sync.readDirectory("/"), "repo");
 				assert.isTrue(sync.isDirectory("/"));
-			});
-		}),
+			}),
 	);
 
 	it.effect("thrown absence carries the node:fs errno fields a port consumer may inspect", () =>
-		Effect.gen(function* () {
-			yield* withSync((sync) => {
+		withSync((sync) => {
 				try {
 					sync.readFile("/repo/absent");
 					assert.fail("readFile should have thrown on an unseeded path");
@@ -520,7 +515,6 @@ describe("MemoryFileSystem.syncFileSystem", () => {
 					assert.strictEqual((error as { syscall?: string }).syscall, "open");
 					assert.strictEqual((error as { path?: string }).path, "/repo/absent");
 				}
-			});
-		}),
+			}),
 	);
 });

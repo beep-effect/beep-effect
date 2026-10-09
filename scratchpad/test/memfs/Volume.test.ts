@@ -5,7 +5,7 @@
 // routing every assertion through an Effect read.
 
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Option } from "effect";
+import { DateTime, Effect, FileSystem, Layer, Option } from "effect";
 import { TestClock } from "effect/testing";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
 import * as internal from "../../effected/memfs/internal/volume.ts";
@@ -279,7 +279,7 @@ describe("MemoryFileSystemVolume.mtime", () => {
 			yield* fileSystem.utimes("/a.txt", 5_000, 5_000);
 			assert.strictEqual(volume.mtime("/a.txt"), 5_000_000);
 			// A Date is unambiguous and round-trips in milliseconds.
-			const stamp = new Date(1_234_567);
+			const stamp = DateTime.toDateUtc(DateTime.makeUnsafe(1_234_567));
 			yield* fileSystem.utimes("/a.txt", stamp, stamp);
 			assert.strictEqual(volume.mtime("/a.txt"), 1_234_567);
 		}),

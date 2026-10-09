@@ -4,6 +4,7 @@
 // a node-shaped error built by `nodeErrno` — the only channel a synchronous
 // signature has.
 
+import { dual } from "effect/Function";
 import type { PlatformError } from "effect";
 import { Cause, Effect, Exit, Option } from "effect";
 import type {
@@ -74,7 +75,10 @@ const walk = (volume: MemoryFileSystemVolume, path: string, followFinal: boolean
  * reporting WHY it is absent: `ENOENT`, `ENOTDIR` (a component under a
  * non-directory) or `ELOOP` (too many links).
  */
-export const resolvePath = (volume: MemoryFileSystemVolume, path: string, followFinal = true): Resolved => {
+export const resolvePath: {
+	(path: string, followFinal?: boolean): (volume: MemoryFileSystemVolume) => Resolved;
+	(volume: MemoryFileSystemVolume, path: string, followFinal?: boolean): Resolved;
+} = dual((args) => typeof args[0] !== "string", (volume: MemoryFileSystemVolume, path: string, followFinal = true): Resolved => {
 	// A trailing slash asserts "this is a directory", as on node: the final
 	// link is followed even for `lstat`, and a resolved non-directory is
 	// ENOTDIR — never the file itself (which `walk`, dropping the empty
@@ -83,7 +87,7 @@ export const resolvePath = (volume: MemoryFileSystemVolume, path: string, follow
 	const r = walk(volume, path, followFinal || trailingSlash, { hops: 0 });
 	if (trailingSlash && !("code" in r) && volume.lstat(r.path)?.kind !== "directory") return { code: "ENOTDIR" };
 	return r;
-};
+});
 
 const portStats = (s: MemoryFileSystemVolumeStat): MemoryFileSystemPortStats => ({
 	isFile: () => s.kind === "file",
@@ -122,7 +126,10 @@ const settle = <A>(f: () => A): Promise<Awaited<A>> => {
  * interception runs inside `settle`, so a handler that throws synchronously
  * REJECTS — as a real `fs/promises` call does — instead of throwing.
  */
-export const withFaults = <Port extends object>(
+export const withFaults: {
+	<Port extends object>(faults: Partial<Record<keyof Port, (...args: ReadonlyArray<unknown>) => unknown>> | undefined, subject: string, async?: boolean): (port: Port) => Port;
+	<Port extends object>(port: Port, faults: Partial<Record<keyof Port, (...args: ReadonlyArray<unknown>) => unknown>> | undefined, subject: string, async?: boolean): Port;
+} = dual((args) => typeof args[1] !== "string", <Port extends object>(
 	port: Port,
 	faults: Partial<Record<keyof Port, (...args: ReadonlyArray<unknown>) => unknown>> | undefined,
 	subject: string,
@@ -141,7 +148,7 @@ export const withFaults = <Port extends object>(
 		out[name] = async ? (...args: ReadonlyArray<unknown>) => settle(() => intercept(...args)) : intercept;
 	}
 	return out as Port;
-};
+});
 
 const decoder = new TextDecoder();
 
@@ -248,7 +255,10 @@ export const syscallForMethod = (method: string): string => methodSyscall[method
  * errno when it carries one, else derived from its tag (`BadArgument` is
  * `EINVAL`).
  */
-export const runNode = <A>(
+export const runNode: {
+	(describe: (error: PlatformError.PlatformError) => { readonly syscall: string; readonly path: string }): <A>(effect: Effect.Effect<A, PlatformError.PlatformError>) => A;
+	<A>(effect: Effect.Effect<A, PlatformError.PlatformError>, describe: (error: PlatformError.PlatformError) => { readonly syscall: string; readonly path: string }): A;
+} = dual(2, <A>(
 	effect: Effect.Effect<A, PlatformError.PlatformError>,
 	describe: (error: PlatformError.PlatformError) => { readonly syscall: string; readonly path: string },
 ): A => {
@@ -263,11 +273,14 @@ export const runNode = <A>(
 			: ((reason.cause as { code?: string } | undefined)?.code ?? fallbackErrnoForTag(reason._tag));
 	const { syscall, path } = describe(error.value);
 	throw nodeErrno(code, syscall, path);
-};
+});
 
 /** {@link runNode} for a handle mutator: node's syscall for the `FileSystem` method and the CALLER's path. */
-export const runMutation = (
+export const runMutation: {
+	(method: "writeFile" | "makeDirectory" | "remove" | "symlink", path: string): (effect: Effect.Effect<void, PlatformError.PlatformError>) => void;
+	(effect: Effect.Effect<void, PlatformError.PlatformError>, method: "writeFile" | "makeDirectory" | "remove" | "symlink", path: string): void;
+} = dual(3, (
 	effect: Effect.Effect<void, PlatformError.PlatformError>,
 	method: "writeFile" | "makeDirectory" | "remove" | "symlink",
 	path: string,
-): void => runNode(effect, () => ({ syscall: syscallForMethod(method), path }));
+): void => runNode(effect, () => ({ syscall: syscallForMethod(method), path })));

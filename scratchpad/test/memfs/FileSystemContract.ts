@@ -14,6 +14,7 @@
 // matches real semantics on the installed beta. Every path it touches lives
 // under a scoped temp directory, so the node run stays confined to os.tmpdir().
 
+import { dual } from "effect/Function";
 import { assert, describe, layer } from "@effect/vitest";
 import type { Layer } from "effect";
 import { ByteSize, DateTime, Effect, Option, Ref, Result, Stream } from "effect";
@@ -97,7 +98,10 @@ const assertSystemError = (
 	return error.reason;
 };
 
-export const suite = (name: string, fsLayer: Layer.Layer<FileSystem.FileSystem, unknown>) =>
+export const suite: {
+	<E>(fsLayer: Layer.Layer<FileSystem.FileSystem, E>): (name: string) => void;
+	<E>(name: string, fsLayer: Layer.Layer<FileSystem.FileSystem, E>): void;
+} = dual(2, <E>(name: string, fsLayer: Layer.Layer<FileSystem.FileSystem, E>) =>
 	layer(fsLayer, { timeout: { seconds: 30 } })(`FileSystem (${name})`, (it) => {
 		describe("path operations", () => {
 			it.effect("should preserve binary bytes when reading and writing files", () =>
@@ -1223,7 +1227,7 @@ export const suite = (name: string, fsLayer: Layer.Layer<FileSystem.FileSystem, 
 						.sort();
 
 					assert.strictEqual(matches.length, 1);
-					assert.isTrue(matches[0].endsWith("src/index.ts"));
+					assert.isTrue(matches[0]?.endsWith("src/index.ts") === true);
 				}),
 			);
 
@@ -1242,4 +1246,4 @@ export const suite = (name: string, fsLayer: Layer.Layer<FileSystem.FileSystem, 
 				}),
 			);
 		});
-	});
+	}));
