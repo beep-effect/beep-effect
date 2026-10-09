@@ -299,3 +299,12 @@ do not relitigate in implementation PRs. One-line outcomes:
   (harness telemetry + agent-effectiveness-loop prior art); prune empirically.
 - **Bitemporal roadmap**: `beep goals next --as-of <commit|date>` over an event ledger;
   link from Workstream D and from epistemic-bitemporal-edge-core.
+
+## Decision Log
+
+Agent-decided calls under the 2026-10-06 autonomy charter (`AGENTS.md` § Autonomy).
+Each entry names its record, which carries the reason and the reversal path.
+
+- 2026-10-09 — P4 projection mini-grill G1–G6 (`catalog` subcommand, top-level
+  `cycles`, unbounded closure unlock walk, relic collapse from the first Mermaid
+  render, slug-only `explain`, D8-consistent fog): `research/p4-goals-projection-decisions.md`.
