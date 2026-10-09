@@ -275,7 +275,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const projection = yield* fs.readFileString(
         path.join(root, "packages/tooling/tool/cli/src/commands/Ci/CiOperational.patterns.json")
       );
-      const decoded = yield* S.decodeUnknownEffect(S.fromJsonString(CiOperationalPatterns))(projection);
+      const decoded = yield* S.decodeEffect(S.fromJsonString(CiOperationalPatterns))(projection);
       assert.deepEqual(decoded, ciOperationalPatterns);
     })
   );

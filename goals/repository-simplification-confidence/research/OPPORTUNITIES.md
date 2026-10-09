@@ -378,3 +378,8 @@ are available. Cancellation is not a proof failure or a package pass.
   the fixture decodes the projection through its schema, and typed failures
   are yielded directly. Reusing the installed schema codec before writing the
   first projection would have avoided those introduced diagnostics.
+
+- C projection follow-up: test-tsgo requires decodeEffect for the filesystem
+  string, whose type already matches the JSON codec's encoded type. The
+  fixture now keeps compile-time input checking; the successful docgen result
+  is retained because this repair only touches a test decoder.
