@@ -318,6 +318,88 @@ export class AccountUsage extends S.Class<AccountUsage>($I`AccountUsage`)(
 ) {}
 
 /**
+ * The report panel an account belongs to.
+ *
+ * **Details**
+ *
+ * Accounts are ranked against the others in their panel only: a Claude login
+ * never competes with a Codex one. Grok Build, Cursor, and Grok Bot share the
+ * SuperGrok Heavy panel because one subscription pays for all three, though
+ * each keeps its own limit.
+ *
+ * **Example** (Narrow a section)
+ *
+ * ```ts
+ * import { AccountSection } from "@beep/repo-cli/test/Accounts"
+ *
+ * console.log(AccountSection.is.supergrok("supergrok")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const AccountSection = LiteralKit(["claude", "codex", "supergrok", "muse", "other"]).pipe(
+  $I.annoteSchema("AccountSection", {
+    description: "The provider panel an account is ranked in.",
+  })
+);
+
+/**
+ * The provider panel an account is ranked in.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AccountSection = typeof AccountSection.Type;
+
+const sectionOfProvider: Readonly<Record<string, AccountSection>> = {
+  claude: "claude",
+  codex: "codex",
+  grok: "supergrok",
+  cursor: "supergrok",
+  "grok-bot": "supergrok",
+  muse: "muse",
+};
+
+/**
+ * The panel a provider's accounts are ranked in.
+ *
+ * **Example** (Place Cursor)
+ *
+ * ```ts
+ * import { accountSection } from "@beep/repo-cli/test/Accounts"
+ *
+ * console.log(accountSection("cursor")) // "supergrok"
+ * console.log(accountSection("someone-else")) // "other"
+ * ```
+ *
+ * @param provider - A provider name from a login or a snapshot.
+ * @returns The panel for that provider.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const accountSection = (provider: string): AccountSection => sectionOfProvider[provider] ?? "other";
+
+/**
+ * An account a provider's own CLI is signed in to on this machine.
+ *
+ * **Example** (Make a signed-in login)
+ *
+ * ```ts
+ * import { SignedInLogin } from "@beep/repo-cli/test/Accounts"
+ *
+ * console.log(SignedInLogin.make({ provider: "codex", label: "me@example.com" }).provider) // "codex"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class SignedInLogin extends S.Class<SignedInLogin>($I`SignedInLogin`)(
+  { provider: AccountProviderName, label: AccountLabel },
+  $I.annote("SignedInLogin", { description: "The account a provider's CLI is signed in to." })
+) {}
+
+/**
  * Whether an account can take work right now.
  *
  * **Example** (Narrow an availability)
@@ -352,11 +434,16 @@ export type AccountAvailability = typeof AccountAvailability.Type;
  * **Details**
  *
  * The `weekly*` fields describe the account-wide window, which is the billing
- * cycle for a provider that meters by cycle. `snapshotAgeHours` is set when the
- * row comes from a snapshot file. `burnRate` is the percent that must be spent per hour to finish the
- * week at 100%: `weeklyRemainingPercent / hoursUntilReset`. The account with
- * the highest rate is the one most at risk of wasting quota, so it ranks
- * first.
+ * cycle for a provider that meters by cycle. `dataAgeHours` is set when the
+ * reading is not from this poll: a snapshot file, or the last good reading of
+ * an account whose poll just failed. `estimated` is set when a window of such
+ * a reading has reset since it was taken, so its figures assume an unused
+ * window. `signedIn` marks the account the provider's own CLI is signed in to.
+ * `burnRate` is the percent that must be spent per hour to finish the
+ * week at 100%: `weeklyRemainingPercent / hoursUntilReset`. Among ready
+ * accounts, one whose week is already running down ranks before an untouched
+ * one, whose quota cannot expire while it waits; then the highest rate ranks
+ * first, as the quota most at risk of being wasted.
  *
  * **Example** (Read a ranking)
  *
@@ -377,7 +464,9 @@ export class AccountRanking extends S.Class<AccountRanking>($I`AccountRanking`)(
     weeklyRemainingPercent: S.OptionFromNullOr(S.Finite),
     hoursUntilWeeklyReset: S.OptionFromNullOr(S.Finite),
     burnRate: S.OptionFromNullOr(S.Finite),
-    snapshotAgeHours: S.OptionFromNullOr(S.Finite),
+    dataAgeHours: S.OptionFromNullOr(S.Finite),
+    estimated: S.Boolean,
+    signedIn: S.Boolean,
   },
   $I.annote("AccountRanking", { description: "An account's availability and how urgently its weekly quota needs use." })
 ) {}
@@ -434,6 +523,25 @@ export class AccountSnapshot extends S.Class<AccountSnapshot>($I`AccountSnapshot
 export const AccountSnapshotJson = JsonStringCodec(AccountSnapshot);
 
 /**
+ * One provider's panel of the report: its accounts, most urgent to use first.
+ *
+ * **Example** (Make an empty panel)
+ *
+ * ```ts
+ * import { AccountGroup } from "@beep/repo-cli/test/Accounts"
+ *
+ * console.log(AccountGroup.make({ section: "claude", rows: [] }).section) // "claude"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class AccountGroup extends S.Class<AccountGroup>($I`AccountGroup`)(
+  { section: AccountSection, rows: S.Array(AccountRanking) },
+  $I.annote("AccountGroup", { description: "One provider's accounts, most urgent to use first." })
+) {}
+
+/**
  * The `accounts status --json` document.
  *
  * **Example** (Encode a report)
@@ -449,11 +557,13 @@ export const AccountSnapshotJson = JsonStringCodec(AccountSnapshot);
  */
 export class AccountsStatusReport extends S.Class<AccountsStatusReport>($I`AccountsStatusReport`)(
   {
-    schemaVersion: S.Literal("accounts-status/v1"),
+    schemaVersion: S.Literal("accounts-status/v2"),
     generatedAt: S.DateTimeUtcFromString,
-    rows: S.Array(AccountRanking),
+    groups: S.Array(AccountGroup),
   },
-  $I.annote("AccountsStatusReport", { description: "Every registered account, most urgent to use first." })
+  $I.annote("AccountsStatusReport", {
+    description: "Every registered account, one panel per provider, each ranked most urgent first.",
+  })
 ) {}
 
 /**
@@ -495,14 +605,42 @@ const unavailable = (usage: AccountUsage): AccountRanking =>
     weeklyRemainingPercent: O.none(),
     hoursUntilWeeklyReset: O.none(),
     burnRate: O.none(),
-    snapshotAgeHours: O.none(),
+    dataAgeHours: O.none(),
+    estimated: false,
+    signedIn: false,
   });
 
-const rankOk = (
+const hasResetBy =
+  (now: DateTime.Utc) =>
+  (window: UsageWindow): boolean =>
+    O.exists(window.resetsAt, (at) => DateTime.toEpochMillis(at) <= DateTime.toEpochMillis(now));
+
+// A window that reset after an older reading was taken starts over: its old
+// figure is gone and its next reset is unknown until the account is read again.
+const restarted = (window: UsageWindow): UsageWindow =>
+  UsageWindow.make({ kind: window.kind, scope: window.scope, usedPercent: 0, resetsAt: O.none() });
+
+type OkOutcome = (typeof AccountUsageOutcome.cases.Ok)["Type"];
+
+const rankOk = (now: DateTime.Utc, usage: AccountUsage, ok: OkOutcome): AccountRanking => {
+  const lapsed = hasResetBy(now);
+  const estimated = O.isSome(ok.asOf) && A.some(ok.windows, lapsed);
+  if (!estimated) return rankWindows(now, usage, ok.windows, ok.asOf, false);
+  // The row carries the restarted windows so every figure shown agrees.
+  const windows = A.map(ok.windows, (window) => (lapsed(window) ? restarted(window) : window));
+  const current = AccountUsage.make({
+    account: usage.account,
+    outcome: AccountUsageOutcome.cases.Ok.make({ ...ok, windows }),
+  });
+  return rankWindows(now, current, windows, ok.asOf, true);
+};
+
+const rankWindows = (
   now: DateTime.Utc,
   usage: AccountUsage,
   windows: ReadonlyArray<UsageWindow>,
-  asOf: O.Option<DateTime.Utc>
+  asOf: O.Option<DateTime.Utc>,
+  estimated: boolean
 ): AccountRanking => {
   // The account-wide window that decides urgency: weekly, or the billing cycle
   // for a provider that meters by cycle.
@@ -523,9 +661,11 @@ const rankOk = (
     weeklyRemainingPercent: remaining,
     hoursUntilWeeklyReset: hours,
     burnRate: O.zipWith(remaining, hours, (left, time) => left / time),
-    snapshotAgeHours: O.map(asOf, (at) =>
+    dataAgeHours: O.map(asOf, (at) =>
       Math.max((DateTime.toEpochMillis(now) - DateTime.toEpochMillis(at)) / MILLIS_PER_HOUR, 0)
     ),
+    estimated,
+    signedIn: false,
   });
 };
 
@@ -558,7 +698,7 @@ export const rankAccount: {
   2,
   (usage: AccountUsage, now: DateTime.Utc): AccountRanking =>
     AccountUsageOutcome.match(usage.outcome, {
-      Ok: ({ windows, asOf }) => rankOk(now, usage, windows, asOf),
+      Ok: (ok) => rankOk(now, usage, ok),
       NeedsLogin: () => unavailable(usage),
       Failed: () => unavailable(usage),
     })
@@ -571,10 +711,17 @@ const availabilityRank: Record<AccountAvailability, number> = {
   unavailable: 3,
 };
 
-// Ready accounts first, then the highest burn rate: the quota most at risk of
+// An untouched window has not started its clock, or restarts it on first use:
+// none of its quota can expire while it waits, so it ranks after every window
+// that is already running down.
+const isUntouched = (row: AccountRanking): boolean => O.exists(row.weeklyRemainingPercent, (left) => left >= 100);
+
+// Ready accounts first; among them, windows already running down before
+// untouched ones; then the highest burn rate: the quota most at risk of
 // expiring unused. Labels break ties so the order is stable between polls.
 const mostUrgentFirst = Order.combineAll<AccountRanking>([
   Order.mapInput(Order.Number, (row) => availabilityRank[row.availability]),
+  Order.mapInput(Order.Number, (row) => (isUntouched(row) ? 1 : 0)),
   Order.mapInput(Order.Number, (row) => -O.getOrElse(row.burnRate, () => -1)),
   Order.mapInput(Order.String, (row) => `${row.usage.account.provider}/${row.usage.account.label}`),
 ]);
@@ -604,4 +751,58 @@ export const rankAccounts: {
   2,
   (usages: ReadonlyArray<AccountUsage>, now: DateTime.Utc): ReadonlyArray<AccountRanking> =>
     A.sort(A.map(usages, rankAccount(now)), mostUrgentFirst)
+);
+
+const sectionOrder: ReadonlyArray<AccountSection> = ["claude", "codex", "supergrok", "muse", "other"];
+
+const isSignedIn =
+  (signedIn: ReadonlyArray<SignedInLogin>) =>
+  (row: AccountRanking): boolean =>
+    A.some(
+      signedIn,
+      (login) => login.provider === row.usage.account.provider && login.label === row.usage.account.label
+    );
+
+/**
+ * Split ranked accounts into provider panels and mark the signed-in ones.
+ *
+ * **Details**
+ *
+ * Panels come in a fixed order (Claude, Codex, SuperGrok Heavy, Muse, then
+ * anything else) and keep the input order inside each panel, so pass rows from
+ * {@link rankAccounts}. A panel with no accounts is left out.
+ *
+ * **Example** (Group nothing)
+ *
+ * ```ts
+ * import { groupAccounts } from "@beep/repo-cli/test/Accounts"
+ *
+ * console.log(groupAccounts([], [])) // []
+ * ```
+ *
+ * @param rows - Ranked accounts, most urgent first.
+ * @param signedIn - The accounts the providers' CLIs are signed in to.
+ * @returns One panel per provider that has accounts.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const groupAccounts: {
+  (signedIn: ReadonlyArray<SignedInLogin>): (rows: ReadonlyArray<AccountRanking>) => ReadonlyArray<AccountGroup>;
+  (rows: ReadonlyArray<AccountRanking>, signedIn: ReadonlyArray<SignedInLogin>): ReadonlyArray<AccountGroup>;
+} = dual(
+  2,
+  (rows: ReadonlyArray<AccountRanking>, signedIn: ReadonlyArray<SignedInLogin>): ReadonlyArray<AccountGroup> => {
+    const marked = A.map(rows, (row) =>
+      isSignedIn(signedIn)(row) ? AccountRanking.make({ ...row, signedIn: true }) : row
+    );
+    return A.filter(
+      A.map(sectionOrder, (section) =>
+        AccountGroup.make({
+          section,
+          rows: A.filter(marked, (row) => accountSection(row.usage.account.provider) === section),
+        })
+      ),
+      (group) => A.isReadonlyArrayNonEmpty(group.rows)
+    );
+  }
 );
