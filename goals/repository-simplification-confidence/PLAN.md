@@ -10,7 +10,7 @@ see the SPEC.md Decision Log). Packet lane: `rsc-packet`
 (branch recorded in the baseline receipts), cut from `e62411d63f`. Baseline receipts:
 [`research/baseline-2026-10-09.md`](./research/baseline-2026-10-09.md).
 
-E recovery state: workflow/source wave prepared; focused fixtures, test compiler, local docgen, JSDoc Ratchet, Fallow audit/health and desktop package gate pass. Both edited package gates pass; publication, inherited SPEC knowledge-reference failure and hosted/cross-lane acceptance remain open. Current evidence: [E handoff](./history/handoffs/rsc-e-github-2026-10-09.md).
+E recovery state: workflow/source wave published in ready PR #1568; focused fixtures, test compiler, local docgen, JSDoc Ratchet, Fallow audit/health and desktop package gate pass. Both edited package gates pass; the addressed review wave is pending publication; inherited SPEC knowledge-reference and shared coverage failures plus hosted/cross-lane acceptance remain open. Current evidence: [E handoff](./history/handoffs/rsc-e-github-2026-10-09.md).
 
 ## Phases
 

@@ -90,3 +90,23 @@ Scoped coverage suite: 11 files and 373 tests pass. Lines/statements/branches/fu
 Both full package handoff gates now pass. CLI audit took 738.8 seconds and docgen 29.8 seconds on the recovered source; desktop audit/docgen had already passed. The corrected publication attempt produced a terminal stale-base verdict before cheap gates, install or push: main advanced during the admission wait with #1562 and #1563 and overlapped four packet files. E merged `origin/main` (`36027982f2`), retained both E and H1 friction receipts in the only append conflict, and regenerated the ruleset capture. This is not an OOM or an introduced package failure. Post-integration parity and publication are re-submitted under the unchanged admission budget.
 
 The 32 GiB/concurrency-two publication reaches a terminal verdict: fifteen cheap gates pass; only Effect-Vitest fails with two introduced resource findings (EV010 platform import and EV014 layer timeout) in the governance fixture. Schema-first, import laws, changeset, cache policy, generated-index checks, JSDoc, Knip and all Fallow gates pass. Repair `30c233f88f` moves the live inventory test unchanged into the existing bounded runner-security resource suite. The independent review returns zero actionable findings and the P0 inbox row is acknowledged with that fix SHA. No baseline or exception is refreshed. The post-integration parity job was stopped after its test-compiler pass so the test repair could precede further proof; interrupted docgen/package output is not counted. Both publication and the final fixture/policy/parity/package sequence are re-submitted through admission.
+
+### Publication and review repair wave
+
+PR [#1568](https://github.com/beep-effect/beep-effect/pull/1568) was published by admitted Yeet after all sixteen cheap gates and the isolated head-install preflight passed. It is ready and labelled `ready-for-heavy`; E has not merged it. Check run [37974771441](https://github.com/beep-effect/beep-effect/actions/runs/37974771441) completed successfully. Security job [113970160712](https://github.com/beep-effect/beep-effect/actions/runs/37974771441/job/113970160712) executed Dependency review successfully, rather than skipping it behind an availability probe. The PR has exactly one size label, `size/L`.
+
+The sole initial review thread requested missing governance help entries. `e600ba1edd` adds all five usages, including `pr-size <number>`. Hosted Lint Policy then exposed four inline schema compilations and an unnamed Effect workflow callback; `f8ed92e672` repairs those five introduced errors with unchanged module-scope codecs and a named Effect function. The inherited SPEC path gate remains with the orchestrator's consolidated main repair. Hosted Coverage Regression exposed WatchMode's new fork branch at 99.13% against 100%; `67c754a163` adds a real three-poll fork transition that stays held with ordinary Heavy approval and admits only with separate fork approval. Four other failing metrics belong to inherited Accounts/EffectImports changes. No floor, baseline, inventory or exception was weakened.
+
+After merging main `09e1d81b3f`, the ruleset capture was regenerated through `ci ruleset --capture`. Final source review by the separate GPT-6.1-Sol medium session returns **zero actionable findings** on `67c754a163`, retaining the earlier codec/help reviews. Four focused fixture files/126 tests, the Effect-Vitest policy scan, test compiler and twelve-file/395-test coverage run pass. All seven touched baseline files are included in the read below. This scoped read proves the missing WatchMode branch restored to 100%; it does not establish full-suite regression acceptance for the other files.
+
+| Touched baseline file | Lines | Statements | Branches | Functions |
+| --- | ---: | ---: | ---: | ---: |
+| Ci/Ci.command.ts | 17.85 | 16.3 | 0 | 0 |
+| Ci/CiLane.ts | 89.74 | 89.74 | 89.82 | 87.97 |
+| Ci/index.ts | 0 | 0 | 0 | 0 |
+| Yeet/internal/MonitorLoop.ts | 92.51 | 90.52 | 81.08 | 87.34 |
+| Yeet/internal/Status.ts | 91.78 | 90.59 | 79.06 | 89.18 |
+| Yeet/internal/WatchMode.ts | 100 | 100 | 100 | 100 |
+| Yeet/internal/WatchStream.ts | 99.01 | 99.09 | 100 | 97.77 |
+
+Coverage artifacts and exact command logs are in ignored `.beep/rsc-e/final-coverage/`, `final-coverage.log`, `final-wave-fixtures.log` and `final-wave-results.log`. The additional policy-specific proof and remaining parity/full CLI package proof are admitted through `beep-heavy`; terminal outcomes will supersede this progress note. No queued, stopped or interrupted command is counted as passing.

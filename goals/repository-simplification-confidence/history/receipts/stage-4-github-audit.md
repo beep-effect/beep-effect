@@ -1,22 +1,22 @@
 # GitHub audit — workstream E
 
-Wave committed locally; publication blocked and hosted/package acceptance remains open. Local edits are not yet final-head proof. Every actionable row stays in scope, including P2/P3.
+Workflow wave published in [PR #1568](https://github.com/beep-effect/beep-effect/pull/1568), marked ready and labelled `ready-for-heavy`. Review repairs are local pending one complete publication wave; hosted/package acceptance remains open. Every actionable row stays in scope, including P2/P3.
 
 | Finding | Area | Disposition | Evidence |
 | --- | --- | --- | --- |
-| E-01 | Main Check concurrency | Orchestrator cancelled 37518935952; successor 37944257965 completed/failure with inherited Lint Policy red. Detector prepared. | Live run read; held-group clean; fixture not executed |
-| E-02 | Trusted writer boundary | Workflow lint prepared; repository writer token retained until R41 safety gate. | stage-3 snapshot; no deletion claim |
+| E-01 | Main Check concurrency | Orchestrator cancelled 37518935952; successor 37944257965 completed/failure with inherited Lint Policy red. Detector implemented in #1568. | Live run read; held-group clean; focused governance suite passes |
+| E-02 | Trusted writer boundary | Workflow lint implemented in #1568; repository writer token retained until R41 safety gate. | stage-3 snapshot; no deletion claim |
 | E-03 | Nightly/data-sync credentials | Job-level Turbo credentials removed; setup policy caller tuple prepared; C owns event matrix port. | workflow-lint clean; hosted nightly dispatch pending merge |
 | E-04 | Required declarations | Descriptors reconciled to live 16 contexts; read-only capture/check implemented. | ci ruleset --capture and --check pass; captured fixture regenerated |
-| E-05 | Dependency review | Availability probe removed; dependency review unconditional on PR. | Parsed workflow; hosted Security execution pending PR |
+| E-05 | Dependency review | Availability probe removed; dependency review unconditional on PR. | [Security job 113970160712](https://github.com/beep-effect/beep-effect/actions/runs/37974771441/job/113970160712), Dependency review step executed/success |
 | E-06 | Knip retirement window | Held for S3; ruleset/job/descriptor remain synchronized until stage-2 no-pending gate. | Current live snapshot retains Knip; orchestrator owns removal |
-| E-07 | Size labels | CLI diff removes contradictory size labels; same-repo-only job. | Threshold/diff fixtures not executed; hosted label proof pending PR |
+| E-07 | Size labels | CLI diff removes contradictory size labels; same-repo-only job. | Threshold/diff fixtures pass; PR #1568 has exactly `size/L` |
 | E-08 | Storybook concurrency/artifacts | PR-only cancellation; PR artifact lifetime 7 days, push 30 days; lint fixture prepared. | workflow-lint clean; hosted push pending |
 | E-09 | Desktop release | Enabled, dormant live path; environment/reviewer/tag policy created; signing key externally absent. Endpoint and action comment prepared. | stage-3 before-desktop-environment and before-desktop-tag-policy; ci settings --check pass |
 | E-10 | Data sync | Hosted workflow disabled; schedule/write grants/default-token fallback removed locally. | stage-3 before-disable-data-sync; disabled_manually readback |
 | E-11 | Cache Warm | Inherited cold-fleet docgen native compiler test timeout attributed; shared main repair required. Pins aligned locally. | Run 36867409067 job 110386255398: Test timed out in 15000ms |
-| E-12 | Docs-only classification | Schema-derived guard excludes apps/packages/infra Markdown; C consumes shared classifier. | Classification fixtures not executed; C parity pending |
-| E-13 | Fork Heavy admission | Distinct second approval label required; forks never docs-only skip; monitor/watch carry fork status. | Fork fixture not executed; hosted fork event pending |
+| E-12 | Docs-only classification | Schema-derived guard excludes apps/packages/infra Markdown; C consumes shared classifier. | Classification fixtures pass; C parity pending |
+| E-13 | Fork Heavy admission | Distinct second approval label required; forks never docs-only skip; monitor/watch carry fork status. | Admission fixtures pass; watch-stream fork transition added; hosted fork event pending |
 | E-14 | Writer environments | Verify and Heavy matrix environments/token inputs restricted to uses_turbo true. | workflow-lint clean; main-push attachment proof pending merge |
 | E-15 | Dead app secrets/Cachix | C owns app-input removal/blank-export parity; absent Cachix writer token path removed. | E/C ordering Decision Log; C package proof pending |
 | E-16 | Setup cache-write/Bun cache | Default false; Bun restore/save paths removed locally. Stale cache purge deferred to G recoverable cleanup. | workflow-lint clean; cache-usage before/after pending G |
@@ -33,14 +33,14 @@ Wave committed locally; publication blocked and hosted/package acceptance remain
 | E-27 | Ruleset hardening | Contexts pinned to Actions 15368; thread resolution required. Admin bypass/zero approvals retained intentionally for single operator. | stage-3 before-ruleset-hardening; 16 pinned contexts readback |
 | E-28 | Heavy Admit pending replacement | Admission-label and unrelated-label events separated by concurrency key; distinct fork label supported. | Local workflow diff; concurrency/hosted probe pending |
 | E-29 | PR-controlled workflows | Accepted single-operator posture with reconsideration for independent contributors. | SPEC Decision Log and docs/runbooks/ci-hosted-settings.md |
-| E-30 | Descriptor producing workflow | workflow field added; YAML job-name parser/inventory fixture prepared. | Inventory fixture not executed; generated declarations shared integration pending |
+| E-30 | Descriptor producing workflow | workflow field added; YAML job-name parser/inventory fixture prepared. | Inventory fixture passes over all workflow files; generated declarations shared integration pending |
 | E-31 | Post-merge Heavy proof | Mandatory exact-merge-SHA probe documented; PR exercises heavy.yml@main. | docs/runbooks/ci-hosted-settings.md; post-merge seven-lane proof pending |
 | E-32 | Caller secret boundary | Trusted caller retains secret expressions; C environment port acceptance explicitly forbids acquiring secrets. | E/C ordering Decision Log |
 | E-33 | Heavy Admit comment | Clarified GITHUB_TOKEN labels versus human/agent events. | Local workflow diff |
 
 ## Size-label correction
 
-The pure CLI diff retains one threshold label, deletes other `size/*` labels and preserves unrelated labels. The workflow skips forks explicitly. Hosted size-label readback is pending publication.
+The pure CLI diff retains one threshold label, deletes other `size/*` labels and preserves unrelated labels. The workflow skips forks explicitly. PR #1568 readback shows exactly `size/L`, preserving unrelated labels.
 
 ## Lane-declaration reconciliation
 
@@ -48,7 +48,7 @@ The dated capture is generated by `ci ruleset --capture`, compared with live Git
 
 ## Event/credential fixture results
 
-Fixtures cover missing environment, missing caller guard, non-Turbo matrix writers, main-push cancellation, absent artifact retention, cache-write default, old waiting/pending runs, desktop reviewer absence, threshold replacement and fork admission. Run 2 repaired stale required-context and Turbo-only credential expectations. The final focused run passes four files and 126 tests (governance, runner security, heavy admission and lane declarations). The separate read-only source review reports zero actionable findings at `2906e31827`. C owns the environment event/token matrix; hosted behavior is still pending publication.
+Fixtures cover missing environment, missing caller guard, non-Turbo matrix writers, main-push cancellation, absent artifact retention, cache-write default, old waiting/pending runs, desktop reviewer absence, threshold replacement and fork admission. Run 2 repaired stale required-context and Turbo-only credential expectations. The final focused run passes four files and 126 tests (governance, runner security, heavy admission and lane declarations). Separate read-only source review reports zero actionable findings at `67c754a163`, including unchanged module-scope codecs, named workflow command, complete help usage and the fork watch transition test. C owns the environment event/token matrix; trusted-main and fork hosted behavior remain pending.
 
 ## Writer-boundary preservation
 
@@ -56,7 +56,7 @@ No repository writer secret was deleted before the successful-main-writer safety
 
 ## Hosted verification
 
-Read-only `ci settings --check`, `ci ruleset --check` and `ci held-group` passed; the six hosted writes have preceding snapshots and readbacks. A program PR, main writer attachment/cache mode, nightly dispatch, runner-group probe, G remote hits and post-merge Heavy probe remain acceptance requirements.
+Read-only `ci settings --check`, `ci ruleset --check` and `ci held-group` passed; the six hosted writes have preceding snapshots and readbacks. PR #1568 Check run [37974771441](https://github.com/beep-effect/beep-effect/actions/runs/37974771441) completed successfully; the later Heavy run exercises the reusable workflow from main. Dependency review executed successfully and exactly one size label is present. Heavy Lint Policy exposed five E-owned source-policy errors, repaired without exceptions, plus the inherited SPEC path gate. Heavy Coverage Regression exposed the E-owned fork branch gap, now covered by a behavioral fixture, and four inherited Accounts/EffectImports metrics. Exact new-head hosted proof, main writer attachment/cache mode, nightly dispatch, runner-group probe, G remote hits and post-merge Heavy probe remain acceptance requirements.
 
 ## Recovery
 
