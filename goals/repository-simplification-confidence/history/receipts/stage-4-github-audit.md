@@ -73,3 +73,7 @@ Human P1 review exposed a contents-only verification token calling Actions APIs 
 ## Final integrated local proof
 
 Both full package gates (`@beep/repo-cli`, `@beep/professional-desktop`) and test-tsgo, local docgen, JSDoc Ratchet, knowledge references, Fallow audit and health exit 0. Focused fixtures pass 127 tests; the scoped coverage run passes 396 tests and reads all seven baseline paths in the handoff. WatchMode is 100% in every metric. This does not establish full-suite regression acceptance. Main `78b77b1084` was integrated; the two documentation-only deltas changes no E source. The ruleset capture was regenerated, then local docgen and knowledge references were rerun on the integrated tree. The final report wave carries these receipts; no baseline was relaxed.
+
+## Final publication and sequencing boundary
+
+Report head `877add07a9` is pushed after terminal Yeet publication success. The full proof/publisher and cancelled readiness monitor are terminal, with no E-owned job left running. A post-push GraphQL rate-limit failure leaves final thread-resolution state unknown despite unchanged REST comment history; the orchestrator re-reads the complete threads before merge. S3's 20:37 amendment permits C #1583 before E, so E's final integration/review of C on main follows that external merge. Neither this receipt nor the scoped local proof claims generic merge-ready or complete program acceptance.
