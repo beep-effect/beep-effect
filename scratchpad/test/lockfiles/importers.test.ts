@@ -10,8 +10,11 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import { Lockfile } from "../../effected/lockfiles/Lockfile.ts";
+import { peerDeclarations } from "../../effected/lockfiles/internal/shared.ts";
 import type { LockfileFormat } from "../../effected/lockfiles/LockfileFormat.ts";
 
 const fixture = (relative: string): string => readFileSync(join(import.meta.dirname, "fixtures", relative), "utf8");
@@ -175,4 +178,46 @@ describe("Lockfile.importers", () => {
 			assert.isTrue(O.isNone(lockfile.importer("packages/does-not-exist")));
 		}),
 	);
+});
+
+
+describe("peerDeclarations dual helper", () => {
+	it("three arguments return the normalized record, including explicit undefined metadata", () => {
+		assert.deepEqual(peerDeclarations({ react: "^18" }, undefined, undefined), {
+			peerDependencies: { react: "^18" }, peerDependenciesMeta: {},
+		});
+		assert.deepEqual(peerDeclarations(undefined, { react: { optional: true } }, undefined), {
+			peerDependencies: {}, peerDependenciesMeta: { react: { optional: true } },
+		});
+		assert.deepEqual(peerDeclarations(undefined, undefined, undefined), {
+			peerDependencies: {}, peerDependenciesMeta: {},
+		});
+	});
+
+	it("data-last calls normalize optional metadata and bun overrides", () => {
+		assert.deepEqual(pipe({ react: "^18" }, peerDeclarations(undefined)), {
+			peerDependencies: { react: "^18" }, peerDependenciesMeta: {},
+		});
+		assert.deepEqual(pipe(undefined, peerDeclarations(undefined, undefined)), {
+			peerDependencies: {}, peerDependenciesMeta: {},
+		});
+		assert.deepEqual(pipe({ react: "^18" }, peerDeclarations({ react: { optional: false } }, ["react"])), {
+			peerDependencies: { react: "^18" }, peerDependenciesMeta: { react: { optional: true } },
+		});
+	});
+
+	it("an explicit undefined optionalPeers argument preserves metadata and range records", () => {
+		assert.deepEqual(peerDeclarations({ react: "^18" }, { react: { optional: true }, vue: {} }, undefined), {
+			peerDependencies: { react: "^18" },
+			peerDependenciesMeta: { react: { optional: true }, vue: { optional: false } },
+		});
+	});
+
+	it("bun optional peer names override metadata flags while preserving first-seen key order", () => {
+		const result = peerDeclarations({ react: "^18" }, { react: { optional: false }, vue: {} }, ["vue", "react", "svelte", "vue"]);
+		assert.deepEqual(result.peerDependencies, { react: "^18" });
+		assert.deepEqual(R.toEntries(result.peerDependenciesMeta), [
+			["react", { optional: true }], ["vue", { optional: true }], ["svelte", { optional: true }],
+		]);
+	});
 });

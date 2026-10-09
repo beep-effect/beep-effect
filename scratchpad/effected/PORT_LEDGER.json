@@ -7995,9 +7995,156 @@
       "exportsAdded": [],
       "newDeps": [],
       "fixturesBytes": 259531,
-      "deviations": [],
-      "backlog": [],
-      "reviewRounds": [],
+      "deviations": [
+        {
+          "test": "scratchpad/test/lockfiles/PnpmEnvLockfile.test.ts:340,457; Lockfile.test.ts instance identity and resolved edges; hostile.test.ts hostile keys; LockfileIntegrity.test.ts",
+          "upstreamBehaviour": "Lockfile indexes, integrity comparison and format parsers use native Map/Set and Object entries/keys/hasOwn/fromEntries; edge lists use native sort. PnpmEnvLockfile.configDependencies returns ReadonlyMap with native get, size and insertion-order iteration.",
+          "labBehaviour": "Lockfile.ts, LockfileIntegrity.ts, internal/{bun,npm,pnpm,yarn,shared,pnpmEnv}.ts use MutableHashMap, MutableHashSet, HashSet, Record and Array.sort/Order. Workspace extraction consumes MutableHashMap directly. configDependencies returns HashMap with Option lookup and unspecified iteration order; keys and integrity values survive.",
+          "reason": "native-runtime: Effect collection/helper laws and the 2026-10-09 grilling ruling require removal of public native collections; fix-lockfiles-g1.md:4,10,28 and fix-lockfiles-g2.md:3,7-24 pin the collection migration and preserved edge ordering."
+        },
+        {
+          "test": "scratchpad/test/lockfiles/PnpmEnvLockfile.test.ts:213,230,237,409,416,420",
+          "upstreamBehaviour": "internal/pnpmEnv.ts unaccounted builds a native Error carrying the env-preamble failure message as the LockfileParseError validation cause.",
+          "labBehaviour": "internal/pnpmEnv.ts unaccounted constructs PnpmEnvPreambleError.make from an annotated Schema tagged error with message and _tag PnpmEnvPreambleError; the validation stage and cause-message text remain unchanged.",
+          "reason": "tagged-errors: Native-error law requires schema typed failures; round-1/INVENTORY.md grok-1-6 explicitly retains and records the replacement, citing the env cause-message tests."
+        },
+        {
+          "test": "scratchpad/test/lockfiles/LockfileFormat.test.ts; roundtrip.property.test.ts codec round-trips; documents.test.ts document framing; hostile.test.ts:556; PnpmEnvLockfile.test.ts:213,230,409",
+          "upstreamBehaviour": "PnpmCatalogs, SelectedDocument, PnpmStream, PeerDeclarations, ContentFailure, FramingFailure, ParseFailure, LockfileFields, WorkspaceEntry and ResolvedEdges have handwritten types; LockfileFormat uses Schema.Literals. Version/env error messages and test payloads use native JSON serialization.",
+          "labBehaviour": "PnpmExtension.ts, internal/documents.ts, shared.ts and pnpm.ts define schemas and derive payload types, including the stage-discriminated ParseFailure union. LockfileFormat, GatedFormat and FramingReason use LiteralKit. shared.ts/pnpmEnv.ts and tests use schema JSON codecs; UnsupportedLockfileVersion has a schema-derived guard.",
+          "reason": "schema-first: Schema owns pure data, named literal domains use LiteralKit, and EF-19 requires JSON codecs; fix-lockfiles-g1.md:5-7, fix-lockfiles-g2.md:1, fix-lockfiles-g3.md:1-2 and fix-lockfiles-g4.md:1 identify the surviving changes."
+        },
+        {
+          "test": "scratchpad/test/lockfiles/hostile.test.ts:505,518,531,543; documents.test.ts document framing; Lockfile.test.ts supported lockfile versions",
+          "upstreamBehaviour": "All four parser version boundaries accept unrestricted Schema.Number: npm/pnpm preserve non-finite versions in UnsupportedLockfileVersion causes, while bun/yarn accept and stringify them. Document payload types allow any number.",
+          "labBehaviour": "internal/{bun,npm,pnpm,yarn,shared}.ts and UnsupportedLockfileVersion.ts use S.Finite for version numbers, minimumSupported and the version-message codec; non-finite input fails boundary validation with SchemaError. internal/documents.ts models document counts as non-negative S.Int; shared FramingFailure.documents uses S.Finite.",
+          "reason": "numeric-domains: schemaNumber diagnostics require finite numeric domains; the operator requires one module entry for Number-to-Finite. repair-lockfiles.md:6-16,26-29,34-40 supersedes the temporary non-finite restoration in fix-lockfiles-g1.md."
+        },
+        {
+          "test": "scratchpad/test/lockfiles/Lockfile.test.ts instance identity and resolved edges; roundtrip.property.test.ts:64,141,223; hostile.test.ts:28; PnpmEnvLockfile.test.ts:303",
+          "upstreamBehaviour": "UnsupportedLockfileVersion narrows via repeated casts; pnpm resolution casts a Map result to string. Tests cast package lookups, dictionary arbitraries, branded integrity strings and empty records, and cast the format fixture list.",
+          "labBehaviour": "UnsupportedLockfileVersion.ts derives validation from S.is; pnpm.ts obtains publish-directory targets through Option lookup. Tests use assertDefined/assertTrue, integrity schema decoding, typed record variables and satisfies to establish the same values without unsafe assertions.",
+          "reason": "type-safety: D15 forbids unsafe casts and non-null assertions; the S0 diff shows their removal. round-1/INVENTORY.md sol-1-1 and fix-lockfiles-g1.md:3,23-25 identify the schema-based narrowing repair."
+        },
+        {
+          "test": "scratchpad/test/lockfiles/importers.test.ts:185,197,209; hostile.test.ts:579; documents.test.ts:357; roundtrip.property.test.ts:101,246; module suite scratchpad/test/lockfiles/**",
+          "upstreamBehaviour": "materializeFailure, importerDependencies, requireLockfileVersion, framingFailure, extractWorkspaceDeps and parsePnpm are data-first functions; peerDeclarations has an optional third data-first argument. npm parsing preserves the original JSON.parse throwable; failure classes use new and some tests use synchronous schema decoding or instanceof.",
+          "labBehaviour": "Lockfile.ts, shared.ts and pnpm.ts add dual overloads; peerDeclarations uses dual(3) and requires an explicit third data-first argument. npm.ts uses schema JSON decoding, yielding SchemaError as the syntax cause. Failure construction uses make, the framing near-miss uses S.is, and property tests use Result/Effect schema decoders.",
+          "reason": "tsgo-diagnostics: missingPipeableSignature, preferSchemaOverJson, newSchemaClass, instanceOfSchema and synchronous-decoding rules force these shapes; repair-lockfiles.md:11-13,24-25,30,41-42 records the syntax-cause and arity deviations. Numeric schemaNumber changes are consolidated in numeric-domains."
+        },
+        {
+          "test": "module suite scratchpad/test/lockfiles/**; scratchpad/test/lockfiles/importers.test.ts:218",
+          "upstreamBehaviour": "Format parsers, transforms, YAML document selectors, preamble readers and test helpers return Effect.gen from ordinary functions. Format dispatch uses switch, and optional output fields use conditional object spreads.",
+          "labBehaviour": "internal/{bun,npm,pnpm,yarn,documents,pnpmEnv}.ts and test helpers use Effect.fn or fnUntraced; pnpm parsePnpm and nested emit are untraced. Lockfile dispatch uses Match.exhaustive, and optional output fields use Option.getSomesStruct with fromUndefinedOr; passthrough test generators become direct helper calls.",
+          "reason": "effect-first: Effect function and terse-helper laws require Effect.fn/fnUntraced and direct equivalent helpers; EF-14 specifies the nested hot-path emitter. fix-lockfiles-g1.md:11 records emit, while the S0 diff shows parser, selector, reader, Match and Option changes."
+        },
+        {
+          "test": "module suite scratchpad/test/lockfiles/**",
+          "upstreamBehaviour": "Module source, tests and exported JSDoc examples import Effect APIs from the root effect barrel.",
+          "labBehaviour": "All 21 source files and affected tests import Effect APIs from dedicated effect/Module paths, with Function utilities imported from effect/Function; affected JSDoc examples also use dedicated imports.",
+          "reason": "effect-imports: Operator revision step 3 and the effect-imports law require per-module imports; the S0 diff establishes every import rewrite and the fix/repair reports record the module effect-imports checks."
+        },
+        {
+          "test": "module suite scratchpad/test/lockfiles/**",
+          "upstreamBehaviour": "Public schema classes use bare string identifiers and schemas/fields lack Scratchpad IdentityComposer metadata; internal parser schemas likewise lack identity and field annotations.",
+          "labBehaviour": "Public models/errors, LockfileFormat and internal parser/shared/document/catalog schemas use file-local $ScratchpadId composers, $I identities and descriptive schema/field annotations in the model files and internal/{bun,npm,pnpm,yarn,pnpmEnv,shared,documents}.ts.",
+          "reason": "identity-annotations: Operator revision step 4 requires @beep/identity identities and schema/field annotations; fix-lockfiles-g1.md:8, fix-lockfiles-g2.md:2, fix-lockfiles-g3.md:1-2 and fix-lockfiles-g4.md:1 cover the missing internal metadata."
+        },
+        {
+          "test": "scratchpad/test/lockfiles/Lockfile.test.ts:1600,1638,1656",
+          "upstreamBehaviour": "isUnsupportedLockfileVersion accepts an own matching tag, any string format and a numeric minimumSupported, without checking lockfileVersion or message; a partial record is considered valid.",
+          "labBehaviour": "UnsupportedLockfileVersion.ts validates every required field with S.is and an exact npm/pnpm LiteralKit domain while retaining the own-tag check. Missing fields, wrong field types and bun/yarn/unknown formats fail; complete structural and Error-instance causes still pass.",
+          "reason": "upstream-bug: round-1/INVENTORY.md sol-1-1 reports an oracle-and-port probe where a partial accepted record causes TypeError on cause.message.length. fix-lockfiles-g1.md:3,23-27 and the near-miss/missing-field/complete-cause tests ground this defect fix."
+        },
+        {
+          "test": "scratchpad/test/lockfiles/Lockfile.test.ts:272,286",
+          "upstreamBehaviour": "BunExtension.overrides and BunLockfileRaw.overrides accept only string-valued override records, so a valid nested or version-scoped npm-style Bun override causes validation failure.",
+          "labBehaviour": "BunExtension.ts defines recursive OverrideValue as a string or nested override record, and internal/bun.ts reuses BunExtension.fields.overrides. Parsing preserves parent-scoped, self-rule and recursively nested string overrides, while rejecting non-string leaves.",
+          "reason": "upstream-bug: repair-workspaces.md:12-13,26,30,38 reports the upstream rejection of the valid onnxruntime-node@1.30.0 parent rule in bun.lock:3533 and the repaired self.int.test.ts:123. The two added Lockfile tests pin recursive preservation and malformed-leaf rejection."
+        }
+      ],
+      "backlog": [
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "sol-1-8 — Convert carried JSDoc during S2. (scratchpad/effected/lockfiles/index.ts:21)",
+          "reason": "jsdoc: During S2 preserve upstream prose, convert to titled sections, add canonical categories and since 0.0.0, and supply compiling concrete examples."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "sol-1-9 — Adapt the README during S2. (scratchpad/effected/lockfiles/README.md:28)",
+          "reason": "docs: During S2 remove the specified release/install boilerplate, use lab and dedicated Effect imports, and preserve API explanations and attribution; Port-notes bookkeeping stays central."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "sol-1-10 — Complete property coverage and run floors in S3. (scratchpad/test/lockfiles/roundtrip.property.test.ts:181)",
+          "reason": "test: During S3 add the missing schemas and extension cases, retain upstream suites, add oracle parser-fidelity properties and use fcRuns(n)."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "sol-1-11 — Migrate Option assertions during S3. (scratchpad/test/lockfiles/Lockfile.test.ts:74)",
+          "reason": "test: During S3 use assertSome/assertNone and narrowed Some.value, keeping plain-value assertions."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "fable-1-9 — Simplify total string-message encoding. (scratchpad/effected/lockfiles/internal/pnpmEnv.ts:154)",
+          "reason": "effect-idiom: Use a pure non-throwing JsonString schema encoder helper for the two message fragments, preserving exact quoting. Do not adopt the report’s native JSON.stringify alternative, which conflicts with EF-19."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "fable-1-10 — Consider an Option-valued integrity helper. (scratchpad/effected/lockfiles/internal/shared.ts:52)",
+          "reason": "effect-idiom: Consider returning Effect<Option<IntegrityHashBrand>, ParseFailure> with succeedNone/some and consuming integrity through getSomesStruct; preserve missing-integrity output semantics."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "fable-1-11 — Profile or simplify workspace-name set construction. (scratchpad/effected/lockfiles/internal/bun.ts:177)",
+          "reason": "perf: Use MutableHashSet for build-then-query or build HashSet once from collected names if later profiling justifies it; HashSet.empty is the minimal empty-constructor cleanup."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "fable-1-12-export — Consider exposing the pnpm env error for consumer narrowing. (scratchpad/effected/lockfiles/internal/pnpmEnv.ts:16)",
+          "reason": "schema: Consider exporting the error where it materially clarifies the public cause contract; if accepted, added-export bookkeeping is handled centrally. Keep its existing typed representation."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "fable-1-13 — Correct shared diagnostic-exception records centrally. (scratchpad/effected/DIAGNOSTIC_EXCEPTIONS.md:27)",
+          "reason": "docs: Central maintainer corrects the row after the npm cause fix, or removes it if the exception is not retained; no required group edits this file."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "fable-1-14 — Consider a consistent internal tracing convention. (scratchpad/effected/lockfiles/internal/pnpm.ts:127)",
+          "reason": "effect-idiom: If useful later, use qualified span names or a documented internal-untraced convention, preserving behavior. The concrete emit change is owned by fable-1-6."
+        }
+      ],
+      "reviewRounds": [
+        {
+          "round": 1,
+          "commit": "3fa5876691901fccf3d1cd29e9324564df134b56",
+          "seats": {
+            "grok": {
+              "required": 5,
+              "backlog": 1
+            },
+            "sol": {
+              "required": 6,
+              "backlog": 5
+            },
+            "fable": {
+              "required": 8,
+              "backlog": 7
+            }
+          }
+        }
+      ],
       "commits": [
         {
           "stage": 0,

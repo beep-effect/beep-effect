@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as HashSet from "effect/HashSet";
 import * as MutableHashSet from "effect/MutableHashSet";
@@ -18,27 +19,29 @@ import {
 import * as R from "effect/Record";
 import * as O from "@beep/utils/Option";
 
+const $I = $ScratchpadId.create("effected/lockfiles/internal/npm");
+
 // ── Raw schema (permissive validation scaffolding, not API) ────────────────
 
-const DepRecord = S.optionalKey(S.Record(S.String, S.String));
+const DepRecord = S.optionalKey(S.Record(S.String, S.String)).annotate($I.annote("DepRecord", { description: "Optional dependency names and their declared specifier strings" }));
 
 const PeerMetaRecord = S.optionalKey(
-	S.Record(S.String, S.Struct({ optional: S.optionalKey(S.Boolean) })),
-);
+	S.Record(S.String, S.Struct({ optional: S.optionalKey(S.Boolean).annotateKey({ description: "Whether this peer dependency is optional" }) })),
+).annotate($I.annote("PeerMetaRecord", { description: "Optional per-peer metadata recording whether a peer is optional" }));
 
 const NpmPackageEntry = S.Struct({
-	name: S.optionalKey(S.String),
-	version: S.optionalKey(S.String),
-	resolved: S.optionalKey(S.String),
-	integrity: S.optionalKey(S.String),
-	link: S.optionalKey(S.Boolean),
-	dev: S.optionalKey(S.Boolean),
-	dependencies: DepRecord,
-	devDependencies: DepRecord,
-	peerDependencies: DepRecord,
-	peerDependenciesMeta: PeerMetaRecord,
-	optionalDependencies: DepRecord,
-});
+	name: S.optionalKey(S.String).annotateKey({ description: "Recorded package or workspace name" }),
+	version: S.optionalKey(S.String).annotateKey({ description: "Recorded package version or resolved dependency version" }),
+	resolved: S.optionalKey(S.String).annotateKey({ description: "Recorded resolution location or resolved instance ids keyed by dependency name" }),
+	integrity: S.optionalKey(S.String).annotateKey({ description: "Recorded subresource integrity hash" }),
+	link: S.optionalKey(S.Boolean).annotateKey({ description: "Whether this package entry links to a workspace" }),
+	dev: S.optionalKey(S.Boolean).annotateKey({ description: "Whether npm marks the package as development-only" }),
+	dependencies: DepRecord.annotateKey({ description: "Declared runtime dependencies keyed by package name" }),
+	devDependencies: DepRecord.annotateKey({ description: "Declared development dependencies keyed by package name" }),
+	peerDependencies: DepRecord.annotateKey({ description: "Declared peer dependencies keyed by package name" }),
+	peerDependenciesMeta: PeerMetaRecord.annotateKey({ description: "Optionality metadata keyed by peer dependency name" }),
+	optionalDependencies: DepRecord.annotateKey({ description: "Declared optional dependencies keyed by package name" }),
+}).annotate($I.annote("NpmPackageEntry", { description: "Permissive npm package entry with identity, resolution and dependency sections" }));
 
 /**
  * The version gate's own input: `lockfileVersion` and nothing else.
@@ -53,23 +56,24 @@ const NpmPackageEntry = S.Struct({
  * @internal
  */
 const NpmVersionProbe = S.Struct({
-	lockfileVersion: S.Union([S.Finite, S.String]),
-});
+	// The version gate owns non-finite rejection and preserves the recorded value in its typed cause.
+	lockfileVersion: S.Union([S.Finite, S.String]).annotateKey({ description: "Recorded format version, preserved verbatim before gating or string conversion" }),
+}).annotate($I.annote("NpmVersionProbe", { description: "Version-only npm boundary read before decoding the supported package-map shape" }));
 
 const NpmLockfileRaw = S.Struct({
-	name: S.optionalKey(S.String),
-	version: S.optionalKey(S.String),
-	lockfileVersion: S.Union([S.Finite, S.String]),
-	requires: S.optionalKey(S.Boolean),
-	packages: S.Record(S.String, NpmPackageEntry),
-});
+	name: S.optionalKey(S.String).annotateKey({ description: "Recorded package or workspace name" }),
+	version: S.optionalKey(S.String).annotateKey({ description: "Recorded package version or resolved dependency version" }),
+	// The version gate owns non-finite rejection and preserves the recorded value in its typed cause.
+	lockfileVersion: S.Union([S.Finite, S.String]).annotateKey({ description: "Recorded format version, preserved verbatim before gating or string conversion" }),
+	requires: S.optionalKey(S.Boolean).annotateKey({ description: "Whether npm records that this lockfile requires dependencies" }),
+	packages: S.Record(S.String, NpmPackageEntry).annotateKey({ description: "Resolved package entries in lockfile traversal order" }),
+}).annotate($I.annote("NpmLockfileRaw", { description: "Permissive package-lock document containing a version and installed package entries" }));
 
 type NpmLockfileRawType = typeof NpmLockfileRaw.Type;
 type NpmPackageEntryType = typeof NpmPackageEntry.Type;
 
 const NODE_MODULES_PREFIX = "node_modules/";
 const NESTED_NODE_MODULES = "/node_modules/";
-const decodeJson = S.decodeEffect(S.fromJsonString(S.Unknown));
 
 /**
  * Where a `packages` key's package name starts: after the **last**
@@ -141,16 +145,21 @@ const resolveNpmEdges = (
 const entrySections = (entry: NpmPackageEntryType | undefined) =>
 	[entry?.dependencies, entry?.devDependencies, entry?.optionalDependencies, entry?.peerDependencies] as const;
 
+/** The lockfile text decoded as JSON of any shape; the version gate and shape decode follow. */
+const decodeJsonText = S.decodeEffect(S.fromJsonString(S.Unknown));
+
 /**
  * Parse npm `package-lock.json` content into the unified field bundle —
  * `lockfileVersion` 3 and newer; v2 and older fail typed at validation.
- * JSON is decoded with `Schema.fromJsonString`; malformed input fails typed
- * as `stage: "syntax"`, carrying the `SchemaError` as its cause.
+ * Schema JSON decoding maps malformed input into the typed `stage: "syntax"`
+ * failure channel before version and shape validation.
  *
  * @internal
  */
 export const parseNpm = Effect.fn("parseNpm")(function* (content: string): Effect.fn.Return<LockfileFields, ParseFailure> {
-	const raw = yield* decodeJson(content).pipe(Effect.mapError(syntaxFailure));
+	const raw = yield* decodeJsonText(content).pipe(
+		Effect.mapError(syntaxFailure),
+	);
 	// Format-version gate: npm lockfileVersion 3 and newer. v1/v2 trees record
 	// resolution in a different shape this parser does not model.
 	//
@@ -219,7 +228,7 @@ const toFields = Effect.fn("toFields")(function* (raw: NpmLockfileRawType): Effe
 					...O.getSomesStruct({ relativePath: O.fromUndefinedOr(resolved) }),
 					// A workspace link entry is a stub; its manifest sections —
 					// peers included — live on the resolved path entry.
-					...peerDeclarations(wsEntry?.peerDependencies, wsEntry?.peerDependenciesMeta),
+					...peerDeclarations(wsEntry?.peerDependencies, wsEntry?.peerDependenciesMeta, undefined),
 					// Resolution starts from the workspace *directory*, which is where
 					// npm nests a workspace-local copy (`packages/lib/node_modules/x`).
 					resolved: resolveNpmEdges(
@@ -261,7 +270,7 @@ const toFields = Effect.fn("toFields")(function* (raw: NpmLockfileRawType): Effe
 						...O.getSomesStruct({ integrity: O.fromUndefinedOr(integrity) }),
 						isWorkspace: false,
 						dependencies: entry.dependencies ?? {},
-						...peerDeclarations(entry.peerDependencies, entry.peerDependenciesMeta),
+						...peerDeclarations(entry.peerDependencies, entry.peerDependenciesMeta, undefined),
 						resolved: resolveNpmEdges(key, entrySections(entry), raw.packages),
 					}),
 				);
@@ -269,8 +278,7 @@ const toFields = Effect.fn("toFields")(function* (raw: NpmLockfileRawType): Effe
 		}
 	}
 
-	// All keys are strings: the public backing preserves the sibling native-map contract.
-	const workspaceDependencies = extractWorkspaceDeps(workspaceEntries.backing, workspaceNames);
+	const workspaceDependencies = extractWorkspaceDeps(workspaceEntries, workspaceNames);
 
 	return {
 		lockfileVersion: String(raw.lockfileVersion),

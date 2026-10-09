@@ -1,6 +1,6 @@
 import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as O from "effect/Option";
-import * as S from "effect/Schema";
 
 const $I = $ScratchpadId.create("effected/lockfiles/LockfileFormat");
 
@@ -21,7 +21,7 @@ const $I = $ScratchpadId.create("effected/lockfiles/LockfileFormat");
  *
  * @public
  */
-export const LockfileFormat = S.Literals(["bun", "npm", "pnpm", "yarn"]).pipe($I.annoteSchema("LockfileFormat", { description: "The lockfile formats this package parses: bun's `bun.lock` (JSONC), npm's `package-lock.json` (JSON), pnpm's `pnpm-lock.yaml` and yarn Berry's `yarn.lock` (both YAML)." }));
+export const LockfileFormat = LiteralKit(["bun", "npm", "pnpm", "yarn"]).pipe($I.annoteSchema("LockfileFormat", { description: "The lockfile formats this package parses: bun's `bun.lock` (JSONC), npm's `package-lock.json` (JSON), pnpm's `pnpm-lock.yaml` and yarn Berry's `yarn.lock` (both YAML)." }));
 
 /**
  * The union of supported lockfile format names.

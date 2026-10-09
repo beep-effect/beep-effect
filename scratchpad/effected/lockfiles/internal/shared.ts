@@ -6,17 +6,22 @@ import * as HashSet from "effect/HashSet";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as S from "effect/Schema";
 import { dual } from "effect/Function";
-import type { BunExtension } from "../BunExtension.ts";
+import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as Result from "effect/Result";
+import { BunExtension } from "../BunExtension.ts";
 import { ImporterDependency } from "../ImporterDependency.ts";
-import type { LockfileImporter } from "../LockfileImporter.ts";
-import type { PnpmExtension } from "../PnpmExtension.ts";
-import type { ResolvedPackage } from "../ResolvedPackage.ts";
+import { LockfileImporter } from "../LockfileImporter.ts";
+import { PnpmExtension } from "../PnpmExtension.ts";
+import { ResolvedPackage } from "../ResolvedPackage.ts";
 import type { UnsupportedLockfileVersion } from "../UnsupportedLockfileVersion.ts";
 import { WorkspaceDependency } from "../WorkspaceDependency.ts";
 import * as A from "effect/Array";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as O from "@beep/utils/Option";
+
+const $I = $ScratchpadId.create("effected/lockfiles/internal/shared");
 
 /**
  * The four dependency sections of a manifest, in a stable order — the shared
@@ -192,10 +197,11 @@ export const importerDependencies: {
  *
  * @internal
  */
-export interface PeerDeclarations {
-	readonly peerDependencies: Readonly<Record<string, string>>;
-	readonly peerDependenciesMeta: Readonly<Record<string, { readonly optional: boolean }>>;
-}
+export const PeerDeclarations = S.Struct({
+	peerDependencies: S.Record(S.String, S.String).annotateKey({ description: "Declared peer dependencies keyed by package name" }),
+	peerDependenciesMeta: S.Record(S.String, S.Struct({ optional: S.Boolean.annotateKey({ description: "Whether this peer dependency is optional" }) })).annotateKey({ description: "Optionality metadata keyed by peer dependency name" }),
+}).annotate($I.annote("PeerDeclarations", { description: "Normalized peer ranges and optional flags shared by all lockfile formats" }));
+export type PeerDeclarations = typeof PeerDeclarations.Type;
 
 const EMPTY_PEERS: PeerDeclarations = { peerDependencies: {}, peerDependenciesMeta: {} };
 
@@ -213,15 +219,33 @@ const EMPTY_PEERS: PeerDeclarations = { peerDependencies: {}, peerDependenciesMe
  * `Object.fromEntries` (own-property semantics), so a `__proto__` peer name
  * neither pollutes nor drops.
  *
+ * **Gotchas**
+ *
+ * Data-first calls pass all three arguments, using `undefined` for absent
+ * optional peer names. Data-last calls pass metadata and optional peer names
+ * before receiving the peer ranges, so the call forms are unambiguous by arity.
+ *
+ * **Example** (Normalize peer declarations in a pipeline)
+ *
+ * ```ts
+ * import { pipe } from "effect/Function";
+ * import { peerDeclarations } from "./shared.ts";
+ *
+ * const peers = pipe({ react: "^18" }, peerDeclarations(undefined, ["react"]));
+ * peers.peerDependenciesMeta.react // => { optional: true }
+ * ```
+ *
+ * @category normalization
+ * @since 0.0.0
  * @internal
  */
 export const peerDeclarations: {
 	(meta: Readonly<Record<string, { readonly optional?: boolean }>> | undefined, optionalPeers?: ReadonlyArray<string> | undefined): (peers: Readonly<Record<string, string>> | undefined) => PeerDeclarations;
-	(peers: Readonly<Record<string, string>> | undefined, meta: Readonly<Record<string, { readonly optional?: boolean }>> | undefined, optionalPeers?: ReadonlyArray<string> | undefined): PeerDeclarations;
-} = dual((args) => args.length >= 2 && !A.isArray(args[1]), (
+	(peers: Readonly<Record<string, string>> | undefined, meta: Readonly<Record<string, { readonly optional?: boolean }>> | undefined, optionalPeers: ReadonlyArray<string> | undefined): PeerDeclarations;
+} = dual(3, (
 	peers: Readonly<Record<string, string>> | undefined,
 	meta: Readonly<Record<string, { readonly optional?: boolean }>> | undefined,
-	optionalPeers?: ReadonlyArray<string> | undefined,
+	optionalPeers: ReadonlyArray<string> | undefined,
 ): PeerDeclarations => {
 	if (peers === undefined && meta === undefined && optionalPeers === undefined) return EMPTY_PEERS;
 	const flags = MutableHashMap.empty<string, boolean>();
@@ -235,7 +259,7 @@ export const peerDeclarations: {
 	}
 	return {
 		peerDependencies: peers === undefined ? {} : R.fromEntries(R.toEntries(peers)),
-		peerDependenciesMeta: R.fromEntries([...flags].map(([name, optional]) => [name, { optional }])),
+		peerDependenciesMeta: R.fromEntries(A.map([...flags], ([name, optional]) => [name, { optional }] as const)),
 	};
 });
 
@@ -252,6 +276,12 @@ export const peerDeclarations: {
  * @internal
  */
 export const MINIMUM_LOCKFILE_VERSION = { pnpm: 9, npm: 3 } as const;
+
+// Render finite version scalars through the same JSON codec as string versions.
+const VersionMessage = S.fromJsonString(S.Union([S.String, S.Finite])).annotate($I.annote("VersionMessage", {
+	description: "JSON scalar rendering of a recorded string or finite number",
+}));
+const encodeVersionMessage = S.encodeResult(VersionMessage);
 
 /**
  * Fail typed when a lockfile predates the supported format version.
@@ -285,7 +315,7 @@ export const requireLockfileVersion: {
 		format,
 		lockfileVersion: raw,
 		minimumSupported: minimum,
-		message: `${format} lockfileVersion ${JSON.stringify(raw)} is not supported: @effected/lockfiles parses ${format} lockfileVersion ${minimum} and newer`,
+		message: `${format} lockfileVersion ${Result.getOrElse(encodeVersionMessage(raw), () => "null")} is not supported: @effected/lockfiles parses ${format} lockfileVersion ${minimum} and newer`,
 	};
 	return Effect.fail(validationFailure(cause));
 });
@@ -302,8 +332,9 @@ export const requireLockfileVersion: {
  * @internal
  */
 const PnpmVersionProbe = S.Struct({
-	lockfileVersion: S.Union([S.String, S.Finite]),
-});
+	// Reject non-finite numbers at the version boundary before gating supported versions.
+	lockfileVersion: S.Union([S.String, S.Finite]).annotateKey({ description: "Recorded format version, preserved verbatim before gating or string conversion" }),
+}).annotate($I.annote("PnpmVersionProbe", { description: "Version-only pnpm boundary read before decoding the supported importer-map shape" }));
 
 /**
  * Gate a located pnpm document (lockfile or env preamble) on its format
@@ -329,7 +360,9 @@ export const gatePnpmVersion = (document: unknown): Effect.Effect<string, ParseF
  *
  * @internal
  */
-export type FramingReason = "noLockfileDocument" | "noImporters" | "unexpectedDocuments";
+export const FramingReason = LiteralKit(["noLockfileDocument", "noImporters", "unexpectedDocuments"])
+	.annotate($I.annote("FramingReason", { description: "Reasons a parsed YAML stream has no unique lockfile document" }));
+export type FramingReason = typeof FramingReason.Type;
 
 /**
  * A text- or shape-level failure: the content is not well-formed, or it does
@@ -337,10 +370,11 @@ export type FramingReason = "noLockfileDocument" | "noImporters" | "unexpectedDo
  *
  * @internal
  */
-export interface ContentFailure {
-	readonly stage: "syntax" | "validation";
-	readonly cause: unknown;
-}
+export const ContentFailure = S.Union([
+	S.Struct({ stage: S.Literal("syntax").annotateKey({ description: "Parser stage at which this failure occurred" }), cause: S.Unknown.annotateKey({ description: "Original engine throwable or structural validation cause, retained without narrowing" }) }),
+	S.Struct({ stage: S.Literal("validation").annotateKey({ description: "Parser stage at which this failure occurred" }), cause: S.Unknown.annotateKey({ description: "Original engine throwable or structural validation cause, retained without narrowing" }) }),
+]).annotate($I.annote("ContentFailure", { description: "Syntax or validation failure preserving the original engine throwable without transformation" }));
+export type ContentFailure = typeof ContentFailure.Type;
 
 /**
  * A framing failure: the text parsed, but the stream does not carry exactly
@@ -349,11 +383,12 @@ export interface ContentFailure {
  *
  * @internal
  */
-export interface FramingFailure {
-	readonly stage: "framing";
-	readonly reason: FramingReason;
-	readonly documents: number;
-}
+export const FramingFailure = S.Struct({
+	stage: S.Literal("framing").annotateKey({ description: "Parser stage at which this failure occurred" }),
+	reason: FramingReason.annotateKey({ description: "Reason a lockfile document could not be uniquely located" }),
+	documents: S.Finite.annotateKey({ description: "Number of parsed documents in the YAML stream" }),
+}).annotate($I.annote("FramingFailure", { description: "Synthetic document-framing failure with a reason and the parsed document count" }));
+export type FramingFailure = typeof FramingFailure.Type;
 
 /**
  * The raw failure record a per-format transform fails with. `Lockfile.parse`
@@ -363,7 +398,9 @@ export interface FramingFailure {
  *
  * @internal
  */
-export type ParseFailure = ContentFailure | FramingFailure;
+export const ParseFailure = S.Union([...ContentFailure.members, FramingFailure]).pipe(S.toTaggedUnion("stage"))
+	.annotate($I.annote("ParseFailure", { description: "Parser failure discriminated by syntax, validation or framing stage" }));
+export type ParseFailure = typeof ParseFailure.Type;
 
 /** @internal */
 export const syntaxFailure = (cause: unknown): ParseFailure => ({ stage: "syntax", cause });
@@ -387,13 +424,14 @@ export const framingFailure: {
  *
  * @internal
  */
-export interface LockfileFields {
-	readonly lockfileVersion: string;
-	readonly packages: ReadonlyArray<ResolvedPackage>;
-	readonly workspaceDependencies: ReadonlyArray<WorkspaceDependency>;
-	readonly importers: ReadonlyArray<LockfileImporter>;
-	readonly extension?: PnpmExtension | BunExtension;
-}
+export const LockfileFields = S.Struct({
+	lockfileVersion: S.String.annotateKey({ description: "Recorded format version, preserved verbatim before gating or string conversion" }),
+	packages: S.Array(ResolvedPackage).annotateKey({ description: "Resolved package entries in lockfile traversal order" }),
+	workspaceDependencies: S.Array(WorkspaceDependency).annotateKey({ description: "Inter-workspace dependency edges in workspace and dependency-section traversal order" }),
+	importers: S.Array(LockfileImporter).annotateKey({ description: "Workspace importer entries recorded by the lockfile" }),
+	extension: S.optionalKey(S.Union([PnpmExtension, BunExtension])).annotateKey({ description: "Optional format-specific extension fields" }),
+}).annotate($I.annote("LockfileFields", { description: "Plain field bundle normalized by a format parser before constructing the public Lockfile" }));
+export type LockfileFields = typeof LockfileFields.Type;
 
 /**
  * Common dependency-map shape of a single workspace entry, shared across all
@@ -401,12 +439,13 @@ export interface LockfileFields {
  *
  * @internal
  */
-export interface WorkspaceEntry {
-	readonly dependencies?: Readonly<Record<string, string>>;
-	readonly devDependencies?: Readonly<Record<string, string>>;
-	readonly peerDependencies?: Readonly<Record<string, string>>;
-	readonly optionalDependencies?: Readonly<Record<string, string>>;
-}
+export const WorkspaceEntry = S.Struct({
+	dependencies: S.optionalKey(S.Record(S.String, S.String)).annotateKey({ description: "Declared runtime dependencies keyed by package name" }),
+	devDependencies: S.optionalKey(S.Record(S.String, S.String)).annotateKey({ description: "Declared development dependencies keyed by package name" }),
+	peerDependencies: S.optionalKey(S.Record(S.String, S.String)).annotateKey({ description: "Declared peer dependencies keyed by package name" }),
+	optionalDependencies: S.optionalKey(S.Record(S.String, S.String)).annotateKey({ description: "Declared optional dependencies keyed by package name" }),
+}).annotate($I.annote("WorkspaceEntry", { description: "Optional dependency sections of a workspace entry shared across the four formats" }));
+export type WorkspaceEntry = typeof WorkspaceEntry.Type;
 
 /**
  * Whether the specifier is a workspace, link or file reference
@@ -433,10 +472,10 @@ export const isWorkspaceSpecifier = (specifier: string): boolean =>
  * @internal
  */
 export const extractWorkspaceDeps: {
-	(workspaces: ReadonlyMap<string, WorkspaceEntry>, workspaceNames: HashSet.HashSet<string>): ReadonlyArray<WorkspaceDependency>;
-	(workspaceNames: HashSet.HashSet<string>): (workspaces: ReadonlyMap<string, WorkspaceEntry>) => ReadonlyArray<WorkspaceDependency>;
+	(workspaces: MutableHashMap.MutableHashMap<string, WorkspaceEntry>, workspaceNames: HashSet.HashSet<string>): ReadonlyArray<WorkspaceDependency>;
+	(workspaceNames: HashSet.HashSet<string>): (workspaces: MutableHashMap.MutableHashMap<string, WorkspaceEntry>) => ReadonlyArray<WorkspaceDependency>;
 } = dual(2, (
-	workspaces: ReadonlyMap<string, WorkspaceEntry>,
+	workspaces: MutableHashMap.MutableHashMap<string, WorkspaceEntry>,
 	workspaceNames: HashSet.HashSet<string>,
 ): ReadonlyArray<WorkspaceDependency> => {
 	const deps: Array<WorkspaceDependency> = [];

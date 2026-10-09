@@ -1,0 +1,180 @@
+{
+  "module": "lockfiles",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/lockfiles/internal/shared.ts",
+        "scratchpad/effected/lockfiles/internal/bun.ts",
+        "scratchpad/effected/lockfiles/internal/npm.ts",
+        "scratchpad/effected/lockfiles/internal/pnpm.ts",
+        "scratchpad/effected/lockfiles/internal/yarn.ts",
+        "scratchpad/effected/lockfiles/UnsupportedLockfileVersion.ts"
+      ],
+      "tests": [
+        "scratchpad/test/lockfiles/hostile.test.ts",
+        "scratchpad/test/lockfiles/importers.test.ts",
+        "scratchpad/test/lockfiles/Lockfile.test.ts"
+      ],
+      "findings": [
+        "grok-1-1",
+        "grok-1-2",
+        "sol-1-1",
+        "sol-1-2",
+        "sol-1-3a",
+        "sol-1-4b",
+        "sol-1-4d",
+        "sol-1-6a",
+        "fable-1-4",
+        "fable-1-5",
+        "fable-1-6"
+      ]
+    },
+    {
+      "id": "g2",
+      "files": [
+        "scratchpad/effected/lockfiles/internal/pnpmEnv.ts",
+        "scratchpad/effected/lockfiles/PnpmEnvLockfile.ts"
+      ],
+      "tests": [
+        "scratchpad/test/lockfiles/PnpmEnvLockfile.test.ts"
+      ],
+      "findings": [
+        "sol-1-3b",
+        "sol-1-6b",
+        "fable-1-15"
+      ]
+    },
+    {
+      "id": "g3",
+      "files": [
+        "scratchpad/effected/lockfiles/PnpmExtension.ts",
+        "scratchpad/effected/lockfiles/internal/documents.ts"
+      ],
+      "tests": [
+        "scratchpad/test/lockfiles/documents.test.ts",
+        "scratchpad/test/lockfiles/roundtrip.property.test.ts"
+      ],
+      "findings": [
+        "sol-1-4a",
+        "sol-1-4c"
+      ]
+    },
+    {
+      "id": "g4",
+      "files": [
+        "scratchpad/effected/lockfiles/LockfileFormat.ts"
+      ],
+      "tests": [
+        "scratchpad/test/lockfiles/LockfileFormat.test.ts"
+      ],
+      "findings": [
+        "sol-1-5"
+      ]
+    }
+  ],
+  "findings": {
+    "grok-1-1": {
+      "file": "scratchpad/effected/lockfiles/internal/npm.ts",
+      "class": "bug",
+      "summary": "Restore npm syntax-cause preservation and the rewritten upstream assertion.",
+      "fix": "Restore the oracle Effect.try shape with try: (): unknown => JSON.parse(content), catch: syntaxFailure, and the narrowly reasoned preferSchemaOverJson next-line exception for original throwable preservation. Remove decodeJson, restore the original parser comment and hostile.test.ts SyntaxError assertion; retain all hostile-input tests. The separate diagnostic-registry correction is Backlog, outside this group."
+    },
+    "grok-1-2": {
+      "file": "scratchpad/effected/lockfiles/internal/shared.ts",
+      "class": "bug",
+      "summary": "Restore upstream non-finite version handling across all four formats.",
+      "fix": "Restore intentional non-finite version acceptance at these boundary sites with S.Number and narrowly justified schemaNumber next-line exceptions, preserving the upstream version-gate and stringification behavior. Include pnpm.ts raw version schema. Add focused npm/pnpm unsupported-cause and bun/yarn accepted-version witnesses in hostile.test.ts without weakening any upstream assertions. Diagnostic-registry and deviation bookkeeping remain central/outside the lane."
+    },
+    "sol-1-1": {
+      "file": "scratchpad/effected/lockfiles/UnsupportedLockfileVersion.ts",
+      "class": "type-safety",
+      "summary": "Make UnsupportedLockfileVersion narrowing validate the complete record.",
+      "fix": "Define a complete structural schema, derive validation with S.is while retaining the own _tag check, and validate lockfileVersion, message, minimumSupported and exact format domain. Adjust the incomplete-record near-miss assertion in Lockfile.test.ts and add absent-field/wrong-format cases. Preserve legitimate class and structural causes; send the demonstrated upstream-bug deviation to central bookkeeping."
+    },
+    "sol-1-2": {
+      "file": "scratchpad/effected/lockfiles/internal/bun.ts",
+      "class": "law",
+      "summary": "Replace four native sorts while preserving resolution and output order.",
+      "fix": "Use A.sort and explicit Order: descending prefix length for bun, ascending UTF-16 string order for unresolved names in pnpm/yarn. Consume the returned array and retain stable equal-length ordering. Preserve existing ancestor-resolution and unresolved-edge expectations."
+    },
+    "sol-1-3a": {
+      "file": "scratchpad/effected/lockfiles/internal/shared.ts",
+      "class": "effect-idiom",
+      "summary": "Use a schema JSON codec in version-error formatting.",
+      "fix": "Encode the version-message scalar with an appropriate schema JSON codec using its non-throwing form; preserve exact quoted/string/number message bytes and the existing typed UnsupportedLockfileVersion failure. Do not add a native stringify wrapper to evade detection."
+    },
+    "sol-1-3b": {
+      "file": "scratchpad/effected/lockfiles/internal/pnpmEnv.ts",
+      "class": "effect-idiom",
+      "summary": "Use the existing JsonString codec in pnpm env key messages.",
+      "fix": "Reuse JsonString through an explicit non-throwing schema encoder for these keys, preserving exact JSON quoting and typed failure messages. Avoid native JSON calls and unnecessary new failure channels."
+    },
+    "sol-1-4a": {
+      "file": "scratchpad/effected/lockfiles/PnpmExtension.ts",
+      "class": "schema",
+      "summary": "Derive PnpmCatalogs from one shared catalog schema.",
+      "fix": "Name and reuse the existing catalog schema for PnpmExtension.catalogs; derive PnpmCatalogs from that schema, keeping public record shape, optionality and encoding unchanged."
+    },
+    "sol-1-4b": {
+      "file": "scratchpad/effected/lockfiles/internal/shared.ts",
+      "class": "schema",
+      "summary": "Derive shared payload and failure types from schemas.",
+      "fix": "Define annotated structural schemas preserving current plain-object shapes, with a stage-discriminated ParseFailure union; derive types from them. Model unknown causes without narrowing away engine throwables. Coordinate with the peerDeclarations and Effect-map fixes in the same group."
+    },
+    "sol-1-4c": {
+      "file": "scratchpad/effected/lockfiles/internal/documents.ts",
+      "class": "schema",
+      "summary": "Model document and pnpm stream payloads with schemas.",
+      "fix": "Introduce annotated structural schemas for SelectedDocument and PnpmStream and derive their types without changing runtime objects, document order, framing or selection behavior."
+    },
+    "sol-1-4d": {
+      "file": "scratchpad/effected/lockfiles/internal/pnpm.ts",
+      "class": "schema",
+      "summary": "Derive ResolvedEdges from a structural schema.",
+      "fix": "Define an annotated structural ResolvedEdges schema and derive its type, preserving edge records and unresolved-name arrays exactly."
+    },
+    "sol-1-5": {
+      "file": "scratchpad/effected/lockfiles/LockfileFormat.ts",
+      "class": "schema",
+      "summary": "Use LiteralKit for the named LockfileFormat domain.",
+      "fix": "Use LiteralKit([bun, npm, pnpm, yarn]) with string literals, no as const, retaining identity annotations, same-name type alias, literal order and filename behavior. Keep existing format tests unchanged unless an actual representation assertion needs retargeting."
+    },
+    "sol-1-6a": {
+      "file": "scratchpad/effected/lockfiles/internal/npm.ts",
+      "class": "schema",
+      "summary": "Annotate parser boundary schemas and fields in the four format parsers and shared helpers.",
+      "fix": "Add file-local Scratchpad IdentityComposer identities and meaningful schema and field annotations to the named raw schemas in these five files. Preserve permissive decoding and public shapes; coordinate the version and shared-schema findings in this group."
+    },
+    "sol-1-6b": {
+      "file": "scratchpad/effected/lockfiles/internal/pnpmEnv.ts",
+      "class": "schema",
+      "summary": "Annotate pnpm env parser boundary schemas and fields.",
+      "fix": "Add file-local Scratchpad IdentityComposer metadata and meaningful schema/field annotations to named raw schemas in pnpmEnv, preserving decoding. Coordinate with this group\u2019s public collection and JSON-codec fixes."
+    },
+    "fable-1-4": {
+      "file": "scratchpad/effected/lockfiles/internal/shared.ts",
+      "class": "bug",
+      "summary": "Restore the unambiguous upstream peerDeclarations call shape.",
+      "fix": "Remove the ambiguous dual/data-last overload and restore the oracle fixed-arity (peers, meta, optionalPeers?) shape with the narrowly justified missingPipeableSignature next-line exception. Add helper-call regression cases to importers.test.ts, preserving all upstream cases. Centralize the diagnostic registry update separately."
+    },
+    "fable-1-5": {
+      "file": "scratchpad/effected/lockfiles/internal/shared.ts",
+      "class": "law",
+      "summary": "Remove native Map backing access from workspace dependency extraction.",
+      "fix": "Type both helper overloads over MutableHashMap<string, WorkspaceEntry>; pass workspaceEntries directly from bun/npm/pnpm/yarn and remove the backing-contract comments. Keep iterable traversal order and all workspace-edge behavior unchanged."
+    },
+    "fable-1-6": {
+      "file": "scratchpad/effected/lockfiles/internal/pnpm.ts",
+      "class": "effect-idiom",
+      "summary": "Use fnUntraced for pnpm\u2019s nested per-row emitter.",
+      "fix": "Change only the nested emit wrapper to Effect.fnUntraced; preserve its generator body, arguments, output and outer parser tracing."
+    },
+    "fable-1-15": {
+      "file": "scratchpad/effected/lockfiles/internal/pnpmEnv.ts",
+      "class": "law",
+      "summary": "Expose Effect HashMap from configDependencies instead of a native backing Map.",
+      "fix": "Return HashMap.fromIterable(locks), update PnpmEnvLockfile\u2019s reader result type to HashMap<string, ConfigDependencyLock>, and retarget native .get assertions in PnpmEnvLockfile.test.ts to HashMap.get with Option assertions. Preserve keys, integrity values and any promised iteration order explicitly. No new allowlist entry; deviation bookkeeping is central."
+    }
+  }
+}

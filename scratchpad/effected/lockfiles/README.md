@@ -181,7 +181,19 @@ None.
 
 ### Deviations
 
-None.
+One entry per class of change (law- or ruling-forced) and one per behavioural divergence; the full test, upstream behaviour, lab behaviour and reason are on the module's ledger row.
+
+- **native-runtime** — Lab uses Effect collections and Record/Array helpers for parser indexes and edges, and returns HashMap with Option lookup and unspecified iteration order for config dependencies where upstream returns a native Map. (scratchpad/test/lockfiles/PnpmEnvLockfile.test.ts:340,457; Lockfile.test.ts instance identity and resolved edges; hostile.test.ts hostile keys; LockfileIntegrity.test.ts)
+- **tagged-errors** — Lab represents unaccounted pnpm preamble causes as PnpmEnvPreambleError with a schema tag where upstream uses native Error, preserving validation stage and message text. (scratchpad/test/lockfiles/PnpmEnvLockfile.test.ts:213,230,237,409,416,420)
+- **schema-first** — Lab derives shared, catalog, document and resolution payload types from schemas, uses LiteralKit for named domains and schema codecs for JSON formatting where upstream uses handwritten types, Schema.Literals and JSON serialization. (scratchpad/test/lockfiles/LockfileFormat.test.ts; roundtrip.property.test.ts codec round-trips; documents.test.ts document framing; hostile.test.ts:556; PnpmEnvLockfile.test.ts:213,230,409)
+- **numeric-domains** — Lab rejects non-finite numeric versions at finite-schema boundaries and refines document-count schemas where upstream permits unrestricted numbers and either reports an unsupported version or stringifies it. (scratchpad/test/lockfiles/hostile.test.ts:505,518,531,543; documents.test.ts document framing; Lockfile.test.ts supported lockfile versions)
+- **type-safety** — Lab proves lookup, record and integrity types with assertions, schema decoding and Option checks where upstream relies on unsafe type casts. (scratchpad/test/lockfiles/Lockfile.test.ts instance identity and resolved edges; roundtrip.property.test.ts:64,141,223; hostile.test.ts:28; PnpmEnvLockfile.test.ts:303)
+- **tsgo-diagnostics** — Lab adds pipeable dual overloads, requires three data-first peerDeclarations arguments and exposes SchemaError for malformed npm JSON where upstream uses fixed-arity helpers and preserves JSON.parse throwables, while adopting make and schema-safe checks. (scratchpad/test/lockfiles/importers.test.ts:185,197,209; hostile.test.ts:579; documents.test.ts:357; roundtrip.property.test.ts:101,246; module suite scratchpad/test/lockfiles/**)
+- **effect-first** — Lab uses Effect.fn/fnUntraced, exhaustive Match dispatch and Option helpers where upstream uses ordinary generator-returning functions, switch dispatch and conditional spreads. (module suite scratchpad/test/lockfiles/**; scratchpad/test/lockfiles/importers.test.ts:218)
+- **effect-imports** — Lab imports Effect APIs from dedicated effect/Module paths in source, tests and affected examples where upstream uses the root effect barrel. (module suite scratchpad/test/lockfiles/**)
+- **identity-annotations** — Lab gives public and internal schemas composer identities and descriptive field/schema annotations where upstream uses bare identifiers and unannotated fields. (module suite scratchpad/test/lockfiles/**)
+- **upstream-bug** — Lab rejects incomplete or wrongly formatted unsupported-version causes where the upstream guard accepts records whose promised fields cannot safely be accessed. (scratchpad/test/lockfiles/Lockfile.test.ts:1600,1638,1656)
+- **upstream-bug** — Lab preserves recursive and version-scoped Bun override records and rejects malformed leaves where upstream rejects every nested override. (scratchpad/test/lockfiles/Lockfile.test.ts:272,286)
 
 ### Dependency backlog
 

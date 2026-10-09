@@ -1,3 +1,6 @@
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as A from "effect/Array";
+import * as Order from "effect/Order";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as HashSet from "effect/HashSet";
 import * as MutableHashSet from "effect/MutableHashSet";
@@ -10,36 +13,39 @@ import { extractWorkspaceDeps, peerDeclarations, toIntegrityHash, validationFail
 import * as R from "effect/Record";
 import * as O from "@beep/utils/Option";
 
+const $I = $ScratchpadId.create("effected/lockfiles/internal/yarn");
+
 // ── Raw schemas (permissive validation scaffolding, not API) ───────────────
 
 // The top-level shape must be a string-keyed map. Classic (v1) yarn.lock
 // content that happens to YAML-parse produces scalar entry values, which
 // fail YarnEntry validation — Berry-only support exits typed either way.
-const YarnLockfileRaw = S.Record(S.String, S.Unknown);
+const YarnLockfileRaw = S.Record(S.String, S.Unknown).annotate($I.annote("YarnLockfileRaw", { description: "Yarn Berry entry map retaining unknown values for per-entry and metadata decoding" }));
 
-const DepRecord = S.optionalKey(S.Record(S.String, S.String));
+const DepRecord = S.optionalKey(S.Record(S.String, S.String)).annotate($I.annote("DepRecord", { description: "Optional dependency names and their declared specifier strings" }));
 
 const YarnEntry = S.Struct({
-	version: S.optionalKey(S.String),
-	resolution: S.optionalKey(S.String),
-	dependencies: DepRecord,
-	devDependencies: DepRecord,
-	peerDependencies: DepRecord,
+	version: S.optionalKey(S.String).annotateKey({ description: "Recorded package version or resolved dependency version" }),
+	resolution: S.optionalKey(S.String).annotateKey({ description: "Optional package resolution metadata" }),
+	dependencies: DepRecord.annotateKey({ description: "Declared runtime dependencies keyed by package name" }),
+	devDependencies: DepRecord.annotateKey({ description: "Declared development dependencies keyed by package name" }),
+	peerDependencies: DepRecord.annotateKey({ description: "Declared peer dependencies keyed by package name" }),
 	peerDependenciesMeta: S.optionalKey(
-		S.Record(S.String, S.Struct({ optional: S.optionalKey(S.Boolean) })),
-	),
-	optionalDependencies: DepRecord,
-	checksum: S.optionalKey(S.String),
-	languageName: S.optionalKey(S.String),
-	linkType: S.optionalKey(S.String),
-	bin: S.optionalKey(S.Unknown),
-});
+		S.Record(S.String, S.Struct({ optional: S.optionalKey(S.Boolean).annotateKey({ description: "Whether this peer dependency is optional" }) })),
+	).annotateKey({ description: "Optionality metadata keyed by peer dependency name" }),
+	optionalDependencies: DepRecord.annotateKey({ description: "Declared optional dependencies keyed by package name" }),
+	checksum: S.optionalKey(S.String).annotateKey({ description: "Recorded Yarn package cache checksum" }),
+	languageName: S.optionalKey(S.String).annotateKey({ description: "Recorded Yarn package language" }),
+	linkType: S.optionalKey(S.String).annotateKey({ description: "Recorded Yarn link type, including soft workspace links" }),
+	bin: S.optionalKey(S.Unknown).annotateKey({ description: "Raw Yarn executable metadata left permissive" }),
+}).annotate($I.annote("YarnEntry", { description: "Permissive Yarn Berry package entry with resolution, dependency and checksum data" }));
 
 type YarnEntryType = typeof YarnEntry.Type;
 
 const YarnMetadata = S.Struct({
-	version: S.optionalKey(S.Union([S.String, S.Finite])),
-});
+	// This ungated format preserves non-finite version numbers by stringifying them upstream.
+	version: S.optionalKey(S.Union([S.String, S.Finite])).annotateKey({ description: "Recorded package version or resolved dependency version" }),
+}).annotate($I.annote("YarnMetadata", { description: "Optional Yarn Berry lockfile version metadata preserved without a finite-number restriction" }));
 
 /**
  * Parse yarn Berry `yarn.lock` content into the unified field bundle.
@@ -125,7 +131,7 @@ const toFields = Effect.fn("toFields")(function* (lockfileVersion: string, decod
 				...O.getSomesStruct({ relativePath: O.fromUndefinedOr(relativePath) }),
 				// Peer ranges are recorded plainly (no `npm:` protocol prefix),
 				// so unlike the dependency sections they need no cleaning.
-				...peerDeclarations(entry.peerDependencies, entry.peerDependenciesMeta),
+				...peerDeclarations(entry.peerDependencies, entry.peerDependenciesMeta, undefined),
 				...resolveYarnEdges(entry, locators),
 			}),
 		);
@@ -144,8 +150,7 @@ const toFields = Effect.fn("toFields")(function* (lockfileVersion: string, decod
 		}
 	}
 
-	// All keys are strings: the public backing preserves the sibling native-map contract.
-	const workspaceDependencies = extractWorkspaceDeps(workspaceEntries.backing, workspaceNames);
+	const workspaceDependencies = extractWorkspaceDeps(workspaceEntries, workspaceNames);
 
 	// yarn does not record importers; the field is always empty.
 	return { lockfileVersion, packages, workspaceDependencies, importers: [] };
@@ -193,7 +198,7 @@ const resolveYarnEdges = (
 	}
 	// Map-backed until the last step: `Object.fromEntries` defines own data
 	// properties, so a "__proto__" dependency name neither pollutes nor drops.
-	return { resolved: R.fromEntries(edges), unresolvedEdges: [...unnameable].sort() };
+	return { resolved: R.fromEntries(edges), unresolvedEdges: A.sort(unnameable, Order.String) };
 };
 
 /**

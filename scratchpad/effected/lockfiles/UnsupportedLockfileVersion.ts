@@ -5,8 +5,14 @@
 // import `Lockfile.ts` (noImportCycles), so the shape lives here where both the
 // internals and the public entry point can reach it.
 
+import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as S from "effect/Schema";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+
+const $I = $ScratchpadId.create("effected/lockfiles/UnsupportedLockfileVersion");
+const GatedFormat = LiteralKit(["npm", "pnpm"]).annotate($I.annote("GatedFormat", { description: "Lockfile formats with a minimum supported version" }));
 
 /**
  * The cause a {@link LockfileParseError} carries when a lockfile predates the
@@ -28,18 +34,16 @@ import * as R from "effect/Record";
  *
  * @public
  */
-export interface UnsupportedLockfileVersion {
-	/** Discriminant. */
-	readonly _tag: "UnsupportedLockfileVersion";
-	/** The gated format that rejected the input. */
-	readonly format: "npm" | "pnpm";
-	/** The `lockfileVersion` found, verbatim — a number or a string like `"6.0"`. */
-	readonly lockfileVersion: number | string;
-	/** The lowest format version this package parses for that format. */
-	readonly minimumSupported: number;
-	/** A human-readable summary. Not contract — narrow on `_tag` instead. */
-	readonly message: string;
-}
+const UnsupportedLockfileVersion = S.TaggedStruct("UnsupportedLockfileVersion", {
+	format: GatedFormat.annotateKey({ description: "Gated npm or pnpm format that rejected the recorded version" }),
+	// Non-finite recorded versions fail boundary validation before the version gate.
+	lockfileVersion: S.Union([S.String, S.Finite]).annotateKey({ description: "Recorded format version, preserved verbatim before gating or string conversion" }),
+	// Supported minimum versions are finite domain numbers.
+	minimumSupported: S.Finite.annotateKey({ description: "Lowest format version supported by the rejecting parser" }),
+	message: S.String.annotateKey({ description: "Human-readable explanation of the unsupported version" }),
+}).annotate($I.annote("UnsupportedLockfileVersion", { description: "Complete structural cause for a rejected npm or pnpm lockfile version" }));
+export type UnsupportedLockfileVersion = typeof UnsupportedLockfileVersion.Type;
+const isVersionFailure = S.is(UnsupportedLockfileVersion);
 
 /**
  * Whether a `LockfileParseError.cause` is an {@link UnsupportedLockfileVersion}.
@@ -74,15 +78,8 @@ export interface UnsupportedLockfileVersion {
 export const isUnsupportedLockfileVersion = (cause: unknown): cause is UnsupportedLockfileVersion =>
 	P.isObjectKeyword(cause) &&
 	!P.isFunction(cause) &&
-	// The discriminant is read as an OWN property: a foreign throwable that
-	// inherits a `_tag` from its prototype is not this record, and treating one
-	// as if it were would tell a consumer to upgrade their package manager over
-	// what is actually a malformed file. The remaining checks are value checks
-	// — identity is already settled by this line.
+	// A foreign throwable inheriting the tag is not this record; all remaining
+	// required fields are validated structurally by the schema.
 	"_tag" in cause &&
 	R.has(cause, "_tag") &&
-	cause._tag === "UnsupportedLockfileVersion" &&
-	"format" in cause &&
-	P.isString(cause.format) &&
-	"minimumSupported" in cause &&
-	P.isNumber(cause.minimumSupported);
+	isVersionFailure(cause);

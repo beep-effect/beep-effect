@@ -1,28 +1,36 @@
-import * as MutableHashMap from "effect/MutableHashMap";
 import { $ScratchpadId } from "@beep/identity/packages";
-import { IntegrityHash } from "../../npm/index.ts";
 import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import { IntegrityHash } from "../../npm/index.ts";
 import { ConfigDependencyLock } from "../ConfigDependencyLock.ts";
 import { PackageManagerLock } from "../PackageManagerLock.ts";
 import { splitPnpmStream } from "./documents.ts";
 import type { ParseFailure } from "./shared.ts";
 import { gatePnpmVersion, validationFailure } from "./shared.ts";
-import * as R from "effect/Record";
 
 const $I = $ScratchpadId.create("effected/lockfiles/internal/pnpmEnv");
 
 /** A well-formed env preamble whose recorded dependency cannot be accounted for. */
 class PnpmEnvPreambleError extends S.TaggedError<PnpmEnvPreambleError>($I`PnpmEnvPreambleError`)(
 	"PnpmEnvPreambleError",
-	{ message: S.String },
+	{ message: S.String.annotateKey({ description: "The env preamble's unaccounted dependency or integrity claim." }) },
 	$I.annote("PnpmEnvPreambleError", { description: "An env preamble whose recorded dependency cannot be accounted for." }),
 ) {}
 
 // ── Raw schema (permissive validation scaffolding, not API) ────────────────
 
 const PnpmEnvImporterDeps = S.optionalKey(
-	S.Record(S.String, S.Struct({ specifier: S.String, version: S.String })),
+	S.Record(S.String, S.Struct({
+		specifier: S.String.annotateKey({ description: "The dependency specifier recorded verbatim by pnpm." }),
+		version: S.String.annotateKey({ description: "The resolved version used to locate the dependency's package entry." }),
+	}).annotate($I.annote("PnpmEnvImporterDependency", {
+		description: "A dependency declaration in an env preamble importer, before integrity lookup.",
+	}))).annotate($I.annote("PnpmEnvImporterDeps", {
+		description: "Optional env importer dependencies keyed by package name, preserving pnpm's raw declarations.",
+	})),
 );
 
 const PnpmEnvRaw = S.Struct({
@@ -30,28 +38,34 @@ const PnpmEnvRaw = S.Struct({
 		S.Record(
 			S.String,
 			S.Struct({
-				packageManagerDependencies: PnpmEnvImporterDeps,
-				configDependencies: PnpmEnvImporterDeps,
-			}),
+				packageManagerDependencies: PnpmEnvImporterDeps.annotateKey({ description: "Package managers pinned by this importer." }),
+				configDependencies: PnpmEnvImporterDeps.annotateKey({ description: "Configuration dependencies recorded by this importer." }),
+			}).annotate($I.annote("PnpmEnvImporter", { description: "An env preamble importer's package-manager and configuration declarations." })),
 		),
-	),
+	).annotateKey({ description: "Env importers keyed by workspace-relative path; the root importer is '.'." }),
 	packages: S.optionalKey(
 		S.Record(
 			S.String,
 			S.Struct({
-				resolution: S.optionalKey(S.Struct({ integrity: S.optionalKey(S.String) })),
-			}),
+				resolution: S.optionalKey(S.Struct({
+					integrity: S.optionalKey(S.String).annotateKey({ description: "The recorded integrity text, validated as SRI when the package is requested." }),
+				}).annotate($I.annote("PnpmEnvResolution", { description: "A permissive package resolution carrying its optional recorded integrity." })))
+					.annotateKey({ description: "The package resolution metadata recorded by pnpm." }),
+			}).annotate($I.annote("PnpmEnvPackage", { description: "An env package entry whose integrity can satisfy an importer or native dependency." })),
 		),
-	),
+	).annotateKey({ description: "Env package entries keyed by package name and resolved version." }),
 	snapshots: S.optionalKey(
 		S.Record(
 			S.String,
 			S.Struct({
-				optionalDependencies: S.optionalKey(S.Record(S.String, S.String)),
-			}),
+				optionalDependencies: S.optionalKey(S.Record(S.String, S.String))
+					.annotateKey({ description: "Optional dependency versions keyed by name, including pnpm's native platform packages." }),
+			}).annotate($I.annote("PnpmEnvSnapshot", { description: "An env dependency snapshot used to discover pnpm's optional native packages." })),
 		),
-	),
-});
+	).annotateKey({ description: "Env dependency snapshots keyed by package name and resolved version." }),
+}).annotate($I.annote("PnpmEnvRaw", {
+	description: "The permissive env preamble boundary shape shared by the pnpm package-manager and config-dependency readers.",
+}));
 
 type PnpmEnvRawType = typeof PnpmEnvRaw.Type;
 
@@ -61,7 +75,10 @@ const PNPM = "pnpm";
 /** The importer pnpm records `packageManagerDependencies` under. */
 const ROOT_IMPORTER = ".";
 
-const JsonString = S.fromJsonString(S.String);
+const JsonString = S.fromJsonString(S.String).annotate($I.annote("JsonString", {
+	description: "A JSON-quoted string used to name env preamble keys exactly in validation messages.",
+}));
+const encodeJsonString = S.encodeEffect(JsonString);
 
 /**
  * Own-property read of a decoded record. The records come from YAML, so a key
@@ -84,18 +101,20 @@ const unaccounted = (message: string): ParseFailure =>
  * integrity, or the SRI form of that integrity is missing. Never `undefined`:
  * the caller only asks for keys the lockfile's own graph names.
  */
-const integrityOf = (raw: PnpmEnvRawType, key: string): Effect.Effect<string, ParseFailure> => {
+const integrityOf = Effect.fnUntraced(function* (raw: PnpmEnvRawType, key: string): Effect.fn.Return<string, ParseFailure> {
 	const integrity = own(raw.packages, key)?.resolution?.integrity;
 	if (integrity === undefined) {
-		return Effect.fail(unaccounted(`packages[${JSON.stringify(key)}] records no resolution.integrity`));
+		const quotedKey = yield* encodeJsonString(key).pipe(Effect.mapError(validationFailure));
+		return yield* Effect.fail(unaccounted(`packages[${quotedKey}] records no resolution.integrity`));
 	}
 	if (!IntegrityHash.isSri(integrity)) {
-		return Effect.fail(
-			unaccounted(`packages[${JSON.stringify(key)}].resolution.integrity is not an SRI integrity string`),
+		const quotedKey = yield* encodeJsonString(key).pipe(Effect.mapError(validationFailure));
+		return yield* Effect.fail(
+			unaccounted(`packages[${quotedKey}].resolution.integrity is not an SRI integrity string`),
 		);
 	}
-	return Effect.succeed(integrity);
-};
+	return integrity;
+});
 
 /**
  * The SRI integrity of the `<name>@<version>` a preamble entry records,
@@ -151,7 +170,7 @@ export const readPnpmPackageManager = Effect.fn("readPnpmPackageManager")(functi
 	const key = `${PNPM}@${declared.version}`;
 	const snapshot = own(raw.snapshots, key);
 	if (snapshot === undefined) {
-		return yield* Effect.fail(unaccounted(`snapshots[${yield* S.encodeEffect(JsonString)(key).pipe(Effect.mapError(validationFailure))}] is missing`));
+		return yield* Effect.fail(unaccounted(`snapshots[${yield* encodeJsonString(key).pipe(Effect.mapError(validationFailure))}] is missing`));
 	}
 	const natives: Array<readonly [string, string]> = [];
 	for (const [name, version] of R.toEntries(snapshot.optionalDependencies ?? {})) {
@@ -181,15 +200,14 @@ export const readPnpmPackageManager = Effect.fn("readPnpmPackageManager")(functi
  *
  * @internal
  */
-export const readPnpmConfigDependencies = Effect.fn("readPnpmConfigDependencies")(function* (content: string): Effect.fn.Return<ReadonlyMap<string, ConfigDependencyLock>, ParseFailure> {
+export const readPnpmConfigDependencies = Effect.fn("readPnpmConfigDependencies")(function* (content: string): Effect.fn.Return<HashMap.HashMap<string, ConfigDependencyLock>, ParseFailure> {
 	const raw = yield* decodePreamble(content);
 	const declared = own(raw?.importers, ROOT_IMPORTER)?.configDependencies;
-	// String keys live in backing; return it to preserve the public ReadonlyMap contract.
 	const locks = MutableHashMap.empty<string, ConfigDependencyLock>();
-	if (raw === undefined || declared === undefined) return locks.backing;
+	if (raw === undefined || declared === undefined) return HashMap.fromIterable(locks);
 	for (const [name, entry] of R.toEntries(declared)) {
-		const integrity = yield* recordedIntegrity(raw, `config dependency ${yield* S.encodeEffect(JsonString)(name).pipe(Effect.mapError(validationFailure))}`, name, entry.version);
+		const integrity = yield* recordedIntegrity(raw, `config dependency ${yield* encodeJsonString(name).pipe(Effect.mapError(validationFailure))}`, name, entry.version);
 		MutableHashMap.set(locks, name, ConfigDependencyLock.make({ name, specifier: entry.specifier, version: entry.version, integrity }));
 	}
-	return locks.backing;
+	return HashMap.fromIterable(locks);
 });

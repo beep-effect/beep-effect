@@ -1,18 +1,42 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import { Yaml } from "../../yaml/index.ts";
 import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
 import type { ParseFailure } from "./shared.ts";
 import { framingFailure, syntaxFailure } from "./shared.ts";
+
+const $I = $ScratchpadId.create("effected/lockfiles/internal/documents");
 
 /**
  * A document selected out of a YAML stream, with the stream's document count
  * carried alongside so a framing failure can report it.
  *
+ * **Example** (Describe a selected document)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { SelectedDocument } from "./documents.ts";
+ *
+ * S.is(SelectedDocument)({ document: { lockfileVersion: "9.0" }, documents: 1 }); // true
+ * ```
+ *
  * @internal
+ * @category schemas
+ * @since 0.0.0
  */
-export interface SelectedDocument {
-	readonly document: unknown;
-	readonly documents: number;
-}
+export const SelectedDocument = S.Struct({
+	document: S.Unknown.annotateKey({ description: "Selected YAML value, preserved for the format-specific validator" }),
+	documents: S.Int.check(S.isGreaterThanOrEqualTo(0)).annotateKey({ description: "Number of documents composed from the YAML stream" }),
+}).annotate($I.annote("SelectedDocument", { description: "A selected YAML document together with its stream's document count" }));
+
+/**
+ * Plain document-selection payload described by {@link SelectedDocument}.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
+export type SelectedDocument = typeof SelectedDocument.Type;
 
 /**
  * An empty YAML document composes to `null` (`Yaml.parseAll("")` is `[null]`,
@@ -37,13 +61,33 @@ const MAX_PNPM_DOCUMENTS = 2;
  * the env document, `main` the lockfile proper; each is `undefined` when that
  * position is absent or holds an empty document.
  *
+ * **Example** (Describe a stream without a preamble)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { PnpmStream } from "./documents.ts";
+ *
+ * S.is(PnpmStream)({ preamble: undefined, main: { lockfileVersion: "9.0" }, documents: 1 }); // true
+ * ```
+ *
  * @internal
+ * @category schemas
+ * @since 0.0.0
  */
-export interface PnpmStream {
-	readonly preamble: unknown;
-	readonly main: unknown;
-	readonly documents: number;
-}
+export const PnpmStream = S.Struct({
+	preamble: S.Unknown.annotateKey({ description: "Env preamble value, or undefined when its stream position is empty or absent" }),
+	main: S.Unknown.annotateKey({ description: "Main lockfile value, or undefined when its stream position is empty or absent" }),
+	documents: S.Int.check(S.isGreaterThanOrEqualTo(0)).annotateKey({ description: "Number of documents composed from the YAML stream" }),
+}).annotate($I.annote("PnpmStream", { description: "Positional pnpm YAML stream payload preserving the preamble, main document and document count" }));
+
+/**
+ * Plain pnpm stream payload described by {@link PnpmStream}.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PnpmStream = typeof PnpmStream.Type;
 
 /**
  * Split a `pnpm-lock.yaml` YAML stream into its env preamble and its main

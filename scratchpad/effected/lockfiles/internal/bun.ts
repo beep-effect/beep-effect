@@ -1,3 +1,6 @@
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as A from "effect/Array";
+import * as Order from "effect/Order";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as HashSet from "effect/HashSet";
 import * as MutableHashSet from "effect/MutableHashSet";
@@ -22,23 +25,25 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as O from "@beep/utils/Option";
 
+const $I = $ScratchpadId.create("effected/lockfiles/internal/bun");
+
 // ── Raw schema (permissive validation scaffolding, not API) ────────────────
 
-const DepRecord = S.optionalKey(S.Record(S.String, S.String));
+const DepRecord = S.optionalKey(S.Record(S.String, S.String)).annotate($I.annote("DepRecord", { description: "Optional dependency names and their declared specifier strings" }));
 
-const OptionalPeers = S.String.pipe(S.Array, S.optionalKey);
+const OptionalPeers = S.String.pipe(S.Array, S.optionalKey).annotate($I.annote("OptionalPeers", { description: "Optional peer dependency names recorded in bun workspace entries and package tuples" }));
 
 const BunWorkspaceEntry = S.Struct({
-	name: S.optionalKey(S.String),
-	version: S.optionalKey(S.String),
-	dependencies: DepRecord,
-	devDependencies: DepRecord,
-	peerDependencies: DepRecord,
-	optionalDependencies: DepRecord,
+	name: S.optionalKey(S.String).annotateKey({ description: "Recorded package or workspace name" }),
+	version: S.optionalKey(S.String).annotateKey({ description: "Recorded package version or resolved dependency version" }),
+	dependencies: DepRecord.annotateKey({ description: "Declared runtime dependencies keyed by package name" }),
+	devDependencies: DepRecord.annotateKey({ description: "Declared development dependencies keyed by package name" }),
+	peerDependencies: DepRecord.annotateKey({ description: "Declared peer dependencies keyed by package name" }),
+	optionalDependencies: DepRecord.annotateKey({ description: "Declared optional dependencies keyed by package name" }),
 	// bun spells optional peers as an array of names rather than a meta object,
 	// on workspace entries and package tuples alike.
-	optionalPeers: OptionalPeers,
-});
+	optionalPeers: OptionalPeers.annotateKey({ description: "Peer dependency names bun marks optional" }),
+}).annotate($I.annote("BunWorkspaceEntry", { description: "Permissive bun workspace manifest entry with declared dependencies and optional peer names" }));
 
 /**
  * The info object at package-tuple index 2. bun's tuple shape is
@@ -49,12 +54,12 @@ const BunWorkspaceEntry = S.Struct({
  * @internal
  */
 const BunPackageInfo = S.Struct({
-	dependencies: DepRecord,
-	devDependencies: DepRecord,
-	optionalDependencies: DepRecord,
-	peerDependencies: DepRecord,
-	optionalPeers: OptionalPeers,
-});
+	dependencies: DepRecord.annotateKey({ description: "Declared runtime dependencies keyed by package name" }),
+	devDependencies: DepRecord.annotateKey({ description: "Declared development dependencies keyed by package name" }),
+	optionalDependencies: DepRecord.annotateKey({ description: "Declared optional dependencies keyed by package name" }),
+	peerDependencies: DepRecord.annotateKey({ description: "Declared peer dependencies keyed by package name" }),
+	optionalPeers: OptionalPeers.annotateKey({ description: "Peer dependency names bun marks optional" }),
+}).annotate($I.annote("BunPackageInfo", { description: "Optional tuple metadata decoded independently so malformed metadata does not discard its package" }));
 
 const decodeBunPackageInfo = S.decodeUnknownExit(BunPackageInfo);
 
@@ -64,14 +69,15 @@ const readBunPackageInfo = (value: unknown): typeof BunPackageInfo.Type | undefi
 };
 
 const BunLockfileRaw = S.Struct({
-	lockfileVersion: S.Finite,
-	workspaces: S.optionalKey(S.Record(S.String, BunWorkspaceEntry)),
-	packages: S.optionalKey(S.Record(S.String, S.Array(S.Unknown))),
-	catalog: S.optionalKey(S.Record(S.String, S.Unknown)),
-	catalogs: S.optionalKey(S.Record(S.String, S.Record(S.String, S.Unknown))),
-	overrides: S.optionalKey(S.Record(S.String, S.String)),
-	trustedDependencies: S.String.pipe(S.Array, S.optionalKey),
-});
+	// This ungated format preserves non-finite version numbers by stringifying them upstream.
+	lockfileVersion: S.Finite.annotateKey({ description: "Recorded format version, preserved verbatim before gating or string conversion" }),
+	workspaces: S.optionalKey(S.Record(S.String, BunWorkspaceEntry)).annotateKey({ description: "Workspace entries keyed by their recorded directory" }),
+	packages: S.optionalKey(S.Record(S.String, S.Array(S.Unknown))).annotateKey({ description: "Resolved package entries in lockfile traversal order" }),
+	catalog: S.optionalKey(S.Record(S.String, S.Unknown)).annotateKey({ description: "Default bun dependency catalog preserved as recorded" }),
+	catalogs: S.optionalKey(S.Record(S.String, S.Record(S.String, S.Unknown))).annotateKey({ description: "Named dependency catalogs preserved as recorded" }),
+	overrides: BunExtension.fields.overrides,
+	trustedDependencies: S.String.pipe(S.Array, S.optionalKey).annotateKey({ description: "Dependency names bun trusts to run install scripts" }),
+}).annotate($I.annote("BunLockfileRaw", { description: "Permissive bun JSONC lockfile with workspace entries, package tuples and extension fields" }));
 
 type BunLockfileRawType = typeof BunLockfileRaw.Type;
 
@@ -126,12 +132,11 @@ const resolveBunEdges = (
 		const candidate = key.slice(0, i);
 		if (MutableHashSet.has(keys, candidate)) prefixes.push(candidate);
 	}
-	prefixes.sort((a, b) => b.length - a.length);
-	prefixes.push("");
+	const orderedPrefixes = A.append(A.sort(prefixes, Order.mapInput(Order.flip(Order.Number), (prefix: string) => prefix.length)), "");
 
 	const edges = MutableHashMap.empty<string, string>();
 	for (const name of names) {
-		for (const prefix of prefixes) {
+		for (const prefix of orderedPrefixes) {
 			const candidate = prefix === "" ? name : `${prefix}/${name}`;
 			if (MutableHashSet.has(keys, candidate)) {
 				MutableHashMap.set(edges, name, candidate);
@@ -235,8 +240,7 @@ const toFields = Effect.fn("toFields")(function* (raw: BunLockfileRawType): Effe
 		}
 	}
 
-	// All keys are strings: the public backing preserves the sibling native-map contract.
-	const workspaceDependencies = extractWorkspaceDeps(workspaceEntries.backing, workspaceNames);
+	const workspaceDependencies = extractWorkspaceDeps(workspaceEntries, workspaceNames);
 
 	const extension = BunExtension.make({
 		...O.getSomesStruct({ catalog: O.fromUndefinedOr(raw.catalog) }),

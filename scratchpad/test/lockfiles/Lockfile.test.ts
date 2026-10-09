@@ -269,6 +269,28 @@ describe("Lockfile.parse", () => {
 	});
 
 	describe("bun", () => {
+		it.effect("preserves nested version-scoped npm-style overrides in Bun v3", () =>
+			Effect.gen(function* () {
+				const overrides = {
+					lodash: "4.17.21",
+					"onnxruntime-node@1.30.0": { "adm-zip": "npm:fflate@0.8.3" },
+					micromatch: { ".": "^4.0.5", picomatch: { ".": "^2.3.2", nested: "^1.0.0" } },
+				};
+				const text = yield* S.encodeEffect(JsonString)({ lockfileVersion: 3, overrides });
+				const lockfile = yield* Lockfile.parse(text, { format: "bun" });
+				assert.strictEqual(lockfile.extension?._tag, "bun");
+				if (lockfile.extension?._tag === "bun") assert.deepStrictEqual(lockfile.extension.overrides, overrides);
+			}),
+		);
+
+		it.effect("rejects a nested override whose leaf is not a dependency specifier", () =>
+			Effect.gen(function* () {
+				const text = yield* S.encodeEffect(JsonString)({ lockfileVersion: 3, overrides: { parent: { child: 42 } } });
+				const error = yield* Effect.flip(Lockfile.parse(text, { format: "bun" }));
+				assert.strictEqual(error._tag, "LockfileParseError");
+			}),
+		);
+
 		it.effect("v1: reads workspaces, package tuples and the bun extension", () =>
 			Effect.gen(function* () {
 				const lockfile = yield* parseFixture("bun/v1/bun.lock", "bun");
@@ -1597,12 +1619,9 @@ describe("supported lockfile versions", () => {
 				Object.create({ _tag: "UnsupportedLockfileVersion", format: "npm", minimumSupported: 3 }),
 			),
 		);
-		// What passes is identity plus the two checked value clauses. The
-		// predicate deliberately validates neither `lockfileVersion` nor
-		// `message`, so a record carrying only the checked fields passes too —
-		// stating that here keeps the next reader from "fixing" the predicate to
-		// match a stronger claim than it makes.
-		assert.isTrue(
+		// The full record is required: a matching tag, format and minimum do
+		// not justify narrowing to unchecked lockfileVersion and message fields.
+		assert.isFalse(
 			isUnsupportedLockfileVersion({ _tag: "UnsupportedLockfileVersion", format: "npm", minimumSupported: 3 }),
 		);
 		assert.isTrue(
@@ -1614,6 +1633,33 @@ describe("supported lockfile versions", () => {
 				message: "…",
 			}),
 		);
+	});
+
+	it("rejects missing fields, wrong field types and formats outside the gated domain", () => {
+		const valid = { _tag: "UnsupportedLockfileVersion", format: "npm", lockfileVersion: 2, minimumSupported: 3, message: "too old" };
+		for (const incomplete of [
+			{ format: "npm", lockfileVersion: 2, minimumSupported: 3, message: "too old" },
+			{ _tag: "UnsupportedLockfileVersion", lockfileVersion: 2, minimumSupported: 3, message: "too old" },
+			{ _tag: "UnsupportedLockfileVersion", format: "npm", minimumSupported: 3, message: "too old" },
+			{ _tag: "UnsupportedLockfileVersion", format: "npm", lockfileVersion: 2, message: "too old" },
+			{ _tag: "UnsupportedLockfileVersion", format: "npm", lockfileVersion: 2, minimumSupported: 3 },
+		]) assert.isFalse(isUnsupportedLockfileVersion(incomplete));
+		for (const malformed of [
+			{ ...valid, format: "yarn" }, { ...valid, format: "bun" }, { ...valid, format: "unknown" },
+			{ ...valid, format: 3 }, { ...valid, lockfileVersion: null }, { ...valid, lockfileVersion: {} },
+			{ ...valid, lockfileVersion: undefined }, { ...valid, minimumSupported: "3" },
+			{ ...valid, message: 3 }, { ...valid, message: undefined },
+		]) assert.isFalse(isUnsupportedLockfileVersion(malformed));
+		assert.isFalse(isUnsupportedLockfileVersion(Object.create(valid)));
+	});
+
+	it("accepts complete structural and class causes for both gated formats", () => {
+		const npm = { _tag: "UnsupportedLockfileVersion", format: "npm", lockfileVersion: 2, minimumSupported: 3, message: "too old" };
+		const pnpm = { ...npm, format: "pnpm", lockfileVersion: "6.0", minimumSupported: 9 };
+		assert.isTrue(isUnsupportedLockfileVersion(npm));
+		assert.isTrue(isUnsupportedLockfileVersion(pnpm));
+		assert.isTrue(isUnsupportedLockfileVersion(Object.assign(new Error("too old"), npm)));
+		assert.isTrue(isUnsupportedLockfileVersion(Object.assign(new Error("too old"), pnpm)));
 	});
 
 	it.effect("pnpm: a pre-v9 lockfile fails typed at validation", () =>

@@ -1,14 +1,16 @@
 // The hostility suite: malformed and adversarial input must exit through the
 // typed LockfileParseError — correct stage, never a defect, never prototype
 // pollution, never a stack overflow. The text-parsing engines are delegated
-// (@effected/yaml, @effected/jsonc, native JSON.parse), so these tests prove
+// (@effected/yaml, @effected/jsonc, Schema JSON decoding), so these tests prove
 // the delegated typed failures actually surface through Lockfile.parse.
 
 import { assert, describe, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Lockfile, LockfileParseError } from "../../effected/lockfiles/Lockfile.ts";
+import { isUnsupportedLockfileVersion } from "../../effected/lockfiles/UnsupportedLockfileVersion.ts";
 import type { LockfileFormat } from "../../effected/lockfiles/LockfileFormat.ts";
 
 const JsonString = S.fromJsonString(S.Unknown);
@@ -499,6 +501,71 @@ describe("hostile input", () => {
 		);
 	});
 
+	describe("non-finite recorded versions fail boundary validation", () => {
+		it.effect("npm: overflow is rejected before the version gate", () =>
+			Effect.gen(function* () {
+				for (const recorded of ["1e999", "-1e999"]) {
+					const error = yield* parseError(`{"lockfileVersion":${recorded},"packages":{}}`, "npm");
+					assert.strictEqual(error.stage, "validation");
+					assert.isFalse(isUnsupportedLockfileVersion(error.cause));
+					assertTrue(S.isSchemaError(error.cause));
+					assert.include(error.cause.message, "lockfileVersion");
+					assert.include(error.cause.message, "finite");
+				}
+			}),
+		);
+
+		it.effect("pnpm: infinities and NaN are rejected before the version gate", () =>
+			Effect.gen(function* () {
+				for (const recorded of [".inf", "-.inf", ".nan"]) {
+					const error = yield* parseError(`lockfileVersion: ${recorded}\nimporters: {}\n`, "pnpm");
+					assert.strictEqual(error.stage, "validation");
+					assert.isFalse(isUnsupportedLockfileVersion(error.cause));
+					assertTrue(S.isSchemaError(error.cause));
+					assert.include(error.cause.message, "lockfileVersion");
+					assert.include(error.cause.message, "finite");
+				}
+			}),
+		);
+
+		it.effect("bun: overflow fails finite version validation", () =>
+			Effect.gen(function* () {
+				for (const recorded of ["1e999", "-1e999"]) {
+					const error = yield* parseError(`{"lockfileVersion":${recorded},"packages":{}}`, "bun");
+					assert.strictEqual(error.stage, "validation");
+					assertTrue(S.isSchemaError(error.cause));
+					assert.include(error.cause.message, "lockfileVersion");
+					assert.include(error.cause.message, "finite");
+				}
+			}),
+		);
+
+		it.effect("yarn: infinities and NaN fail finite metadata validation", () =>
+			Effect.gen(function* () {
+				for (const recorded of [".inf", "-.inf", ".nan"]) {
+					const error = yield* parseError(`__metadata:\n  version: ${recorded}\n`, "yarn");
+					assert.strictEqual(error.stage, "validation");
+					assertTrue(S.isSchemaError(error.cause));
+					assert.include(error.cause.message, "version");
+					assert.include(error.cause.message, "finite");
+				}
+			}),
+		);
+	});
+
+	it.effect("unsupported version messages preserve JSON scalar quoting and escaping exactly", () =>
+		Effect.gen(function* () {
+			for (const [raw, rendered] of [[2, "2"], ["2", '"2"'], ['next"\\\n', '"next\\"\\\\\\n"']] as const) {
+				const error = yield* parseError(yield* S.encodeEffect(JsonString)({ lockfileVersion: raw }), "npm");
+				assert.strictEqual(error.stage, "validation");
+				const cause = error.cause;
+				assertTrue(isUnsupportedLockfileVersion(cause));
+				assert.strictEqual(cause.lockfileVersion, raw);
+				assert.strictEqual(cause.message, `npm lockfileVersion ${rendered} is not supported: @effected/lockfiles parses npm lockfileVersion 3 and newer`);
+			}
+		}),
+	);
+
 	describe("error surface", () => {
 		it.effect("LockfileParseError message names the format and stage", () =>
 			Effect.gen(function* () {
@@ -512,7 +579,11 @@ describe("hostile input", () => {
 		it.effect("the underlying cause is preserved structurally, not stringified", () =>
 			Effect.gen(function* () {
 				const error = yield* parseError("{ nope", "npm");
-				assert.instanceOf(error.cause, S.SchemaError);
+				assertTrue(S.isSchemaError(error.cause));
+				assert.strictEqual(error.stage, "syntax");
+				assert.strictEqual(error.cause.message, "Expected a valid JSON string");
+				assertTrue(error.cause.issue._tag === "Encoding");
+				assert.strictEqual(error.cause.issue.issue._tag, "InvalidValue");
 			}),
 		);
 	});

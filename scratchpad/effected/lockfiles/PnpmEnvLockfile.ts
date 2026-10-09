@@ -1,4 +1,5 @@
 import * as Effect from "effect/Effect";
+import type * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import type { ConfigDependencyLock } from "./ConfigDependencyLock.ts";
 import { readPnpmConfigDependencies, readPnpmPackageManager } from "./internal/pnpmEnv.ts";
@@ -68,9 +69,10 @@ export interface PnpmEnvLockfileReaders {
 	 * dependency it fetches at a version this checkout never installed.
 	 *
 	 * @param content - The `pnpm-lock.yaml` text.
-	 * @returns A map keyed by config-dependency name. Empty when the lockfile
+	 * @returns An Effect HashMap keyed by config-dependency name. Empty when the lockfile
 	 *   records none — a single-document lockfile (no preamble), or a preamble
 	 *   whose root importer declares no `configDependencies`.
+	 *   Iteration order is unspecified.
 	 *
 	 * Fails exactly as {@link PnpmEnvLockfileReaders.packageManager} does, with
 	 * {@link LockfileParseError} for broken YAML (`stage: "syntax"`) or a
@@ -83,27 +85,29 @@ export interface PnpmEnvLockfileReaders {
 	 */
 	readonly configDependencies: (
 		content: string,
-	) => Effect.Effect<ReadonlyMap<string, ConfigDependencyLock>, LockfileParseError | LockfileFramingError>;
+	) => Effect.Effect<HashMap.HashMap<string, ConfigDependencyLock>, LockfileParseError | LockfileFramingError>;
 }
 
 /**
  * Readers over the env ("preamble") document of a `pnpm-lock.yaml` — see
  * {@link PnpmEnvLockfileReaders}.
  *
- * @example
- * ```typescript
+ * **Example** (Read the env preamble)
+ *
+ * ```ts
  * import { PnpmEnvLockfile } from "./index.ts";
  * import * as Effect from "effect/Effect";
+ * import * as HashMap from "effect/HashMap";
  * import * as O from "effect/Option";
  *
- * declare const content: string; // the text of a pnpm-lock.yaml
+ * const content = "lockfileVersion: '9.0'"; // a lockfile without an env preamble
  *
  * const program = Effect.gen(function* () {
  *   const lock = yield* PnpmEnvLockfile.packageManager(content);
  *   const configDependencies = yield* PnpmEnvLockfile.configDependencies(content);
  *   return {
  *     pnpm: O.map(lock, (pm) => pm.integrity),
- *     plugin: configDependencies.get("@effected/pnpm-plugin-effect")?.integrity,
+ *     plugin: O.map(HashMap.get(configDependencies, "@effected/pnpm-plugin-effect"), (dep) => dep.integrity),
  *   };
  * });
  * ```

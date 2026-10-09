@@ -23,7 +23,9 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { assert, describe, it } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import { ConfigDependencyLock } from "../../effected/lockfiles/ConfigDependencyLock.ts";
 import { LockfileFramingError, LockfileParseError } from "../../effected/lockfiles/Lockfile.ts";
@@ -338,13 +340,15 @@ describe("PnpmEnvLockfile.configDependencies", () => {
 			it.effect(`${major}, a bare configDependency: the integrity lives only in the preamble`, () =>
 				Effect.gen(function* () {
 					const locks = yield* PnpmEnvLockfile.configDependencies(fixture(`env-configdeps-${major}`));
-					assert.deepStrictEqual([...locks.keys()], ["@effected/pnpm-plugin-effect"]);
-					const lock = locks.get("@effected/pnpm-plugin-effect");
+					assert.deepStrictEqual([...HashMap.keys(locks)], ["@effected/pnpm-plugin-effect"]);
+					const recorded = HashMap.get(locks, "@effected/pnpm-plugin-effect");
+					assert.isTrue(O.isSome(recorded), "expected the lockfile to record the config dependency");
+					const lock = O.getOrThrow(recorded);
 					assert.instanceOf(lock, ConfigDependencyLock);
-					assert.strictEqual(lock?.name, "@effected/pnpm-plugin-effect");
-					assert.strictEqual(lock?.specifier, "0.11.1");
-					assert.strictEqual(lock?.version, "0.11.1");
-					assert.strictEqual(lock?.integrity, PLUGIN_0_11_1_SRI);
+					assert.strictEqual(lock.name, "@effected/pnpm-plugin-effect");
+					assert.strictEqual(lock.specifier, "0.11.1");
+					assert.strictEqual(lock.version, "0.11.1");
+					assert.strictEqual(lock.integrity, PLUGIN_0_11_1_SRI);
 				}),
 			);
 		}
@@ -354,8 +358,8 @@ describe("PnpmEnvLockfile.configDependencies", () => {
 				Effect.gen(function* () {
 					const content = fixture(`env-configonly-${major}`);
 					const locks = yield* PnpmEnvLockfile.configDependencies(content);
-					assert.deepStrictEqual([...locks.keys()], ["@effected/pnpm-plugin-effect"]);
-					assert.strictEqual(locks.get("@effected/pnpm-plugin-effect")?.integrity, PLUGIN_0_11_1_SRI);
+					assert.deepStrictEqual([...HashMap.keys(locks)], ["@effected/pnpm-plugin-effect"]);
+					assertSome(O.map(HashMap.get(locks, "@effected/pnpm-plugin-effect"), (lock) => lock.integrity), PLUGIN_0_11_1_SRI);
 					// No devEngines, so the preamble records no package manager.
 					assert.isTrue(O.isNone(yield* PnpmEnvLockfile.packageManager(content)));
 				}),
@@ -365,8 +369,8 @@ describe("PnpmEnvLockfile.configDependencies", () => {
 		it.effect("beside packageManagerDependencies, the package manager is not a config dependency", () =>
 			Effect.gen(function* () {
 				const locks = yield* PnpmEnvLockfile.configDependencies(fixture("env-configdeps"));
-				assert.deepStrictEqual([...locks.keys()], ["@effected/pnpm-plugin-effect"]);
-				assert.strictEqual(locks.get("@effected/pnpm-plugin-effect")?.integrity, PLUGIN_0_11_1_SRI);
+				assert.deepStrictEqual([...HashMap.keys(locks)], ["@effected/pnpm-plugin-effect"]);
+				assertSome(O.map(HashMap.get(locks, "@effected/pnpm-plugin-effect"), (lock) => lock.integrity), PLUGIN_0_11_1_SRI);
 			}),
 		);
 	});
@@ -375,21 +379,21 @@ describe("PnpmEnvLockfile.configDependencies", () => {
 		it.effect("a single-document lockfile has no preamble", () =>
 			Effect.gen(function* () {
 				const locks = yield* PnpmEnvLockfile.configDependencies(fixture("v1"));
-				assert.strictEqual(locks.size, 0);
+				assert.strictEqual(HashMap.size(locks), 0);
 			}),
 		);
 
 		it.effect("a preamble holding only packageManagerDependencies", () =>
 			Effect.gen(function* () {
 				const locks = yield* PnpmEnvLockfile.configDependencies(fixture("env-pnpm12"));
-				assert.strictEqual(locks.size, 0);
+				assert.strictEqual(HashMap.size(locks), 0);
 			}),
 		);
 
 		it.effect("empty content", () =>
 			Effect.gen(function* () {
 				const locks = yield* PnpmEnvLockfile.configDependencies("");
-				assert.strictEqual(locks.size, 0);
+				assert.strictEqual(HashMap.size(locks), 0);
 			}),
 		);
 	});
@@ -398,7 +402,7 @@ describe("PnpmEnvLockfile.configDependencies", () => {
 		it.effect("control: the unmutated preamble resolves", () =>
 			Effect.gen(function* () {
 				const locks = yield* PnpmEnvLockfile.configDependencies(configPreamble());
-				assert.strictEqual(locks.get("cfg")?.integrity, sri("d"));
+				assertSome(O.map(HashMap.get(locks, "cfg"), (lock) => lock.integrity), sri("d"));
 			}),
 		);
 
@@ -463,8 +467,8 @@ describe("PnpmEnvLockfile.configDependencies", () => {
 						packages: `  '__proto__@1.0.0':\n    resolution: {integrity: ${sri("e")}}`,
 					}),
 				);
-				assert.strictEqual(locks.get("__proto__")?.integrity, sri("e"));
-				assert.strictEqual(locks.size, 1);
+				assertSome(O.map(HashMap.get(locks, "__proto__"), (lock) => lock.integrity), sri("e"));
+				assert.strictEqual(HashMap.size(locks), 1);
 			}),
 		);
 	});
