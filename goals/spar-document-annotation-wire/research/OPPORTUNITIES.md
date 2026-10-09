@@ -53,3 +53,7 @@ package audit remains the authoritative proof of the repair.
 - Fallow audit reported one introduced cognitive-complexity finding in `MdSections.ts` (`nest`, score 18). Replaced the nested boundary loop with `Array.findFirstIndex`; no suppression or baseline regeneration. Health's blocking complexity finding is the same new fold hotspot, so both lanes are rerun together.
 
 - A callback's outer `Effect.provide` still triggers test TSGo's application-entry rule. Use the existing `it.layer` test runner boundary for service layers, rather than guessing that an outer callback is an application entry point. Final parity rerun uses that pattern.
+
+- Full docgen failed in unchanged `@beep/infra` dependency `node_modules/@pulumi/gharunners`: TS1205 type re-exports, TS1294 parameter-property syntax and TS4114 missing overrides. `git diff origin/main...HEAD -- infra` is empty; the only lockfile hunk is RDF's workspace Md edge. This is an inherited upstream SDK/docgen compatibility red for S11 consolidation, not a SPAR package failure. Avoid a whole-repo snapshot regeneration or edits outside this lane.
+
+- Wave 1 publication preflight rejected the unstaged P2 packet updates before any push: `requires reviewed staged changes or a clean local commit ahead`. Commit the reviewed packet updates first, then retry the same wave. The heavy-slot queue delayed this precondition feedback by about 23 minutes; push budget remains unused.

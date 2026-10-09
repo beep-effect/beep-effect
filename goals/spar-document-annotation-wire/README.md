@@ -19,8 +19,8 @@ annotation wire shape, including the Md-to-DOCO section fold.
 
 ## Current Phase
 
-P2 Verify: the generated vocabularies, annotation codec and fold fixtures pass.
-Full hosted-parity checks are running; proof attribution is in the lane handoff.
+P3 Publish: package audits, fixtures, test TSGo, JSDoc, knowledge refs and Fallow pass.
+Full repository docgen retains an inherited infra SDK failure, tracked under S11.
 
 ## Read This First
 
