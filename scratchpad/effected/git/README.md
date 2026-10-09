@@ -1,23 +1,7 @@
 # git (lab port of @effected/git)
 
-[![npm](https://img.shields.io/npm/v/@effected%2Fgit?label=npm&color=cb3837)](https://www.npmjs.com/package/@effected/git)
-[![License: MIT](https://img.shields.io/badge/License-MIT-4caf50.svg)](https://opensource.org/licenses/MIT)
-[![Node.js %3E%3D24.11.0](https://img.shields.io/badge/Node.js-%3E%3D24.11.0-5fa04e.svg)](https://nodejs.org/)
-[![TypeScript 7.0](https://img.shields.io/badge/TypeScript-7.0-3178c6.svg)](https://www.typescriptlang.org/)
 
 Typed git introspection as an Effect service. A read tier answers the questions monorepo tooling actually asks — `Git.show` reads a file's content at any ref without checking it out, `Git.nameStatus` types each changed path as added, renamed, deleted and so on, `Git.workingChanges` gathers the full working-tree delta, `Git.commitInfo` returns a commit's sha, signature verdict and raw message — and a clearly-marked mutating tier (`checkout`, `fetch`, the submodule pair, `sparseCheckoutSet`, `configSet`, `add`) changes repository state on purpose. Subprocesses run through Effect core's `ChildProcessSpawner` contract, required in `R` and provided once at your application's edge, so this package has zero runtime dependencies and zero `node:` imports.
-
-> **Pre-`1.0.0`.** This package is part of the `@effected/*` kit, built on stable
-> Effect v4 (`effect` `^4.0.0`) and still in `0.x` development. Stable Effect
-> makes a kit `1.0.0` possible, not automatic. To keep your `effect` and
-> `@effect/*` versions on the line the kit is built and tested against, install
-> [`@effected/pnpm-plugin-effect`](https://www.npmjs.com/package/@effected/pnpm-plugin-effect).
->
-> **Stability: unstable.** This package's API surface is not yet considered
-> complete and may change across `0.x` releases. Pin an exact version — even a
-> package marked *stable* before `1.0.0` can introduce a breaking change by
-> accident, and an exact pin turns that into a type-check error rather than a
-> runtime surprise. Full policy: [release strategy](https://github.com/spencerbeggs/effected#release-strategy).
 
 ## Why @effected/git
 
@@ -31,20 +15,6 @@ The ssh pin is the one that adapts to you rather than overriding you. Before a m
 
 `GitCommand` is exported alongside the service: 24 pure constructors producing Effect core `Command` values you can inspect, log, or test against without spawning anything.
 
-## Install
-
-```bash
-npm install @effected/git effect
-```
-
-```bash
-pnpm add @effected/git effect
-```
-
-Requires Node.js >=24.11.0. `effect` v4 is a peer dependency, and it is the only one — git has no runtime dependencies of its own.
-
-All `@effected/*` packages are ESM-only: the exports maps publish only `import` conditions, so `require()` — including tools that resolve in CJS mode — fails with Node's `ERR_PACKAGE_PATH_NOT_EXPORTED` rather than loading a CJS build that does not exist. Import from an ES module.
-
 The subprocess spawner comes from Effect core's `ChildProcessSpawner` contract, not from a platform package. A consumer provides it once at the edge — `NodeServices.layer` from `@effect/platform-node` on Node — and a test provides a scripted spawner built with `ChildProcessSpawner.make`, no processes involved.
 
 ## Quick start
@@ -52,16 +22,18 @@ The subprocess spawner comes from Effect core's `ChildProcessSpawner` contract, 
 Read a file at a ref, list what changed, and probe a branch — all without touching the working tree:
 
 ```ts
-import { Git } from "@effected/git";
+import { Git } from "@beep/scratchpad/effected/git/Git";
 import { NodeServices } from "@effect/platform-node";
-import { Effect, Layer, Option } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 
 const program = Effect.gen(function* () {
   const git = yield* Git;
   const manifest = yield* git.show("/repo", "v1.2.0", "package.json");
   const changed = yield* git.changedFiles("/repo", { base: "main", head: "HEAD" });
   const released = yield* git.refExists("/repo", "refs/tags/v1.2.0");
-  return { manifest: Option.getOrNull(manifest), changed, released };
+  return { manifest: O.getOrNull(manifest), changed, released };
 });
 
 const GitLive = Git.layer.pipe(Layer.provide(NodeServices.layer));
@@ -73,18 +45,20 @@ Effect.runPromise(program.pipe(Effect.provide(GitLive))).then(console.log);
 The error channel tells you what can actually happen — and `show` on a path that did not exist at the ref is not one of those things:
 
 ```ts
-import { Git, NotARepositoryError, UnknownRefError } from "@effected/git";
-import { Effect, Option } from "effect";
+import { Git } from "@beep/scratchpad/effected/git/Git";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
 
 const contentAt = (cwd: string, ref: string, path: string) =>
   Effect.gen(function* () {
     const git = yield* Git;
     return yield* git.show(cwd, ref, path);
   }).pipe(
-    Effect.catchTag("UnknownRefError", () => Effect.succeed(Option.none<string>())),
+    Effect.catchTag("UnknownRefError", () => Effect.succeed(O.none<string>())),
     Effect.catchTag("NotARepositoryError", (e) => Effect.die(e)),
   );
 // Effect<Option<string>, GitCommandError, Git> — absent-at-ref was already Option.none, no catch needed
+console.log(Effect.isEffect(contentAt("/repo", "HEAD", "package.json"))); // true
 ```
 
 ## Features
@@ -112,9 +86,11 @@ maintained, bounded version of the same "spawn one command and collect
 stdout/stderr/exit-code concurrently under one scope" discipline:
 
 ```ts
-import { Run } from "@effected/commands";
+import { Run } from "@beep/scratchpad/effected/commands/Run";
+import * as Effect from "effect/Effect";
 import { ChildProcess } from "effect/process";
 
+const cwd = "/repo";
 const shortlog = ChildProcess.make("git", ["shortlog", "-sn", "HEAD"], {
   // The pins Git applies to its own spawns, which you make yourself here:
   // LC_ALL=C keeps stderr classifiable; the next two keep a credential-
@@ -138,7 +114,8 @@ const shortlog = ChildProcess.make("git", ["shortlog", "-sn", "HEAD"], {
   extendEnv: true,
 }).pipe((command) => ChildProcess.setCwd(command, cwd));
 
-const output = yield* Run.collect(shortlog);
+const program = Run.collect(shortlog);
+console.log(Effect.isEffect(program)); // true
 // output.stdout / output.stderr / output.exitCode — a non-zero exit is DATA
 // here, not an error, which is what lets you classify stderr the way Git does.
 ```

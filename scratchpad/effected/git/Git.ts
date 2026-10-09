@@ -236,7 +236,18 @@ const sshEnv = (resolved: string): Record<string, string> =>
  * with `kind: "failed"`), so routing on `detail !== undefined` rather than
  * assuming git never started is the correct consumer boundary.
  *
+ * **Example** (Inspect a failed invocation)
+ *
+ * ```ts
+ * import { GitCommandError } from "@beep/scratchpad/effected/git/Git";
+ *
+ * const error = GitCommandError.make({ kind: "failed", args: ["status"], cwd: "/repo", exitCode: 1, stderr: "failure" });
+ * console.log(error.message); // git status in /repo failed (exit 1): failure
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class GitCommandError extends S.TaggedError<GitCommandError>($I`GitCommandError`)("GitCommandError", {
   /**
@@ -249,6 +260,8 @@ export class GitCommandError extends S.TaggedError<GitCommandError>($I`GitComman
   kind: S.Literals(["refused", "failed"]).annotateKey({ description: "Discriminates a pre-spawn guard rejection from a genuine git failure. `\"refused\"` — a pre-spawn guard (an option-like ref) rejected the invocation and no process was ever spawned. `\"failed\"` — git actually ran and exited non-zero, or the spawn/IO itself failed. Composed retry/fallback logic routes on this instead of matching `detail` prose." }),
   /**
    * The REDACTED argument vector, without the leading `git`.
+   *
+   * **Details**
    *
    * Sensitive positionals — config values, a URL's embedded userinfo — are
    * already masked by the constructor's redaction mask before this error is
@@ -272,7 +285,20 @@ export class GitCommandError extends S.TaggedError<GitCommandError>($I`GitComman
    */
   detail: S.optionalKey(S.String).annotateKey({ description: "A human-readable reason, set whenever an exit code does not sum up the failure: an absorbed spawn failure, a timeout, a pre-spawn guard refusal, or output git produced that the member could not parse. `message` renders it verbatim when present." }),
 }, $I.annote("GitCommandError", { description: "git ran and failed in a way that is not one of the recognized domain cases (NotARepositoryError / UnknownRefError), or the spawn itself failed before git could run at all." })) {
-  /** Renders the invocation and its failure into a one-line message. */
+  /**
+   * Renders the invocation and its failure into a one-line message.
+   *
+   * **Example** (Render the failure message)
+   *
+   * ```ts
+   * import { GitCommandError } from "@beep/scratchpad/effected/git/Git";
+   *
+   * const error = GitCommandError.make({ kind: "failed", args: ["status"], cwd: "/repo", exitCode: 1, stderr: "failure" });
+   * console.log(error.message); // git status in /repo failed (exit 1): failure
+   * ```
+   *
+   * @since 0.0.0
+   */
   override get message(): string {
     return this.detail !== undefined
       ? `git ${this.args.join(" ")} in ${this.cwd}: ${this.detail}`
@@ -283,13 +309,37 @@ export class GitCommandError extends S.TaggedError<GitCommandError>($I`GitComman
 /**
  * `cwd` is not inside a git work tree.
  *
+ * **Example** (Identify a directory outside a repository)
+ *
+ * ```ts
+ * import { NotARepositoryError } from "@beep/scratchpad/effected/git/Git";
+ *
+ * const error = NotARepositoryError.make({ cwd: "/outside" });
+ * console.log(error.message); // not a git repository: /outside
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class NotARepositoryError extends S.TaggedError<NotARepositoryError>($I`NotARepositoryError`)("NotARepositoryError", {
   /** The working directory that is not a git repository. */
   cwd: S.String.annotateKey({ description: "The working directory that is not a git repository." }),
 }, $I.annote("NotARepositoryError", { description: "`cwd` is not inside a git work tree." })) {
-  /** Renders the failing directory into a one-line message. */
+  /**
+   * Renders the failing directory into a one-line message.
+   *
+   * **Example** (Render the failure message)
+   *
+   * ```ts
+   * import { NotARepositoryError } from "@beep/scratchpad/effected/git/Git";
+   *
+   * const error = NotARepositoryError.make({ cwd: "/outside" });
+   * console.log(error.message); // not a git repository: /outside
+   * ```
+   *
+   * @since 0.0.0
+   */
   override get message(): string {
     return `not a git repository: ${this.cwd}`;
   }
@@ -298,7 +348,18 @@ export class NotARepositoryError extends S.TaggedError<NotARepositoryError>($I`N
 /**
  * `ref` does not resolve to an object in the repository at `cwd`.
  *
+ * **Example** (Identify an unresolved ref)
+ *
+ * ```ts
+ * import { UnknownRefError } from "@beep/scratchpad/effected/git/Git";
+ *
+ * const error = UnknownRefError.make({ cwd: "/repo", ref: "missing" });
+ * console.log(error.message); // unknown ref 'missing' in /repo
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class UnknownRefError extends S.TaggedError<UnknownRefError>($I`UnknownRefError`)("UnknownRefError", {
   /** The ref (or ref range) that failed to resolve. */
@@ -306,7 +367,20 @@ export class UnknownRefError extends S.TaggedError<UnknownRefError>($I`UnknownRe
   /** The working directory the ref was resolved against. */
   cwd: S.String.annotateKey({ description: "The working directory the ref was resolved against." }),
 }, $I.annote("UnknownRefError", { description: "`ref` does not resolve to an object in the repository at `cwd`." })) {
-  /** Renders the unresolvable ref into a one-line message. */
+  /**
+   * Renders the unresolvable ref into a one-line message.
+   *
+   * **Example** (Render the failure message)
+   *
+   * ```ts
+   * import { UnknownRefError } from "@beep/scratchpad/effected/git/Git";
+   *
+   * const error = UnknownRefError.make({ cwd: "/repo", ref: "missing" });
+   * console.log(error.message); // unknown ref 'missing' in /repo
+   * ```
+   *
+   * @since 0.0.0
+   */
   override get message(): string {
     return `unknown ref '${this.ref}' in ${this.cwd}`;
   }
@@ -323,7 +397,18 @@ export class UnknownRefError extends S.TaggedError<UnknownRefError>($I`UnknownRe
  * branches on — every other push failure stays a {@link GitCommandError}.
  * Only `Git.push` can fail with this error.
  *
+ * **Example** (Inspect a rejected refspec)
+ *
+ * ```ts
+ * import { NonFastForwardError } from "@beep/scratchpad/effected/git/Git";
+ *
+ * const error = NonFastForwardError.make({ cwd: "/repo", refspec: "main" });
+ * console.log(error.message); // push of 'main' rejected as non-fast-forward in /repo
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class NonFastForwardError extends S.TaggedError<NonFastForwardError>($I`NonFastForwardError`)("NonFastForwardError", {
   /** The working directory the push ran in. */
@@ -331,7 +416,20 @@ export class NonFastForwardError extends S.TaggedError<NonFastForwardError>($I`N
   /** The refspec that was rejected, when the caller passed one. */
   refspec: S.optionalKey(S.String).annotateKey({ description: "The refspec that was rejected, when the caller passed one." }),
 }, $I.annote("NonFastForwardError", { description: "A `git push` was rejected because the remote ref has moved: the classic non-fast-forward rejection (`fetch first` / `non-fast-forward`), or a `--force-with-lease` lease failure (`stale info`)." })) {
-  /** Renders the rejected push into a one-line message. */
+  /**
+   * Renders the rejected push into a one-line message.
+   *
+   * **Example** (Render the failure message)
+   *
+   * ```ts
+   * import { NonFastForwardError } from "@beep/scratchpad/effected/git/Git";
+   *
+   * const error = NonFastForwardError.make({ cwd: "/repo", refspec: "main" });
+   * console.log(error.message); // push of 'main' rejected as non-fast-forward in /repo
+   * ```
+   *
+   * @since 0.0.0
+   */
   override get message(): string {
     return this.refspec !== undefined
       ? `push of '${this.refspec}' rejected as non-fast-forward in ${this.cwd}`
@@ -351,13 +449,37 @@ export class NonFastForwardError extends S.TaggedError<NonFastForwardError>($I`N
  * matches git's conflict report, which lands on STDOUT for a merge and on
  * stderr for a rebase-mode pull; both streams are inspected.
  *
+ * **Example** (Inspect a conflicted merge)
+ *
+ * ```ts
+ * import { MergeConflictError } from "@beep/scratchpad/effected/git/Git";
+ *
+ * const error = MergeConflictError.make({ cwd: "/repo" });
+ * console.log(error.message); // merge conflict in /repo: fix conflicts (or abort) before continuing
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class MergeConflictError extends S.TaggedError<MergeConflictError>($I`MergeConflictError`)("MergeConflictError", {
   /** The working directory the merge ran in. */
   cwd: S.String.annotateKey({ description: "The working directory the merge ran in." }),
 }, $I.annote("MergeConflictError", { description: "A merge-shaped operation (`pull`, `stash pop`, `stash apply`) stopped with conflict markers in the working tree." })) {
-  /** Renders the conflicted merge into a one-line message. */
+  /**
+   * Renders the conflicted merge into a one-line message.
+   *
+   * **Example** (Render the failure message)
+   *
+   * ```ts
+   * import { MergeConflictError } from "@beep/scratchpad/effected/git/Git";
+   *
+   * const error = MergeConflictError.make({ cwd: "/repo" });
+   * console.log(error.message); // merge conflict in /repo: fix conflicts (or abort) before continuing
+   * ```
+   *
+   * @since 0.0.0
+   */
   override get message(): string {
     return `merge conflict in ${this.cwd}: fix conflicts (or abort) before continuing`;
   }
@@ -375,13 +497,37 @@ export class MergeConflictError extends S.TaggedError<MergeConflictError>($I`Mer
  * Only the merge-shaped methods (`pull`, `stashPop`, `stashApply`) can fail
  * with this error.
  *
+ * **Example** (Inspect a blocked merge)
+ *
+ * ```ts
+ * import { DirtyWorktreeError } from "@beep/scratchpad/effected/git/Git";
+ *
+ * const error = DirtyWorktreeError.make({ cwd: "/repo" });
+ * console.log(error.message); // local changes would be overwritten in /repo: commit or stash them first
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class DirtyWorktreeError extends S.TaggedError<DirtyWorktreeError>($I`DirtyWorktreeError`)("DirtyWorktreeError", {
   /** The working directory whose local changes blocked the operation. */
   cwd: S.String.annotateKey({ description: "The working directory whose local changes blocked the operation." }),
 }, $I.annote("DirtyWorktreeError", { description: "A merge-shaped operation refused to start because local modifications would be overwritten — git's refusal reads `Your local changes ... would be overwritten by merge`." })) {
-  /** Renders the blocked operation into a one-line message. */
+  /**
+   * Renders the blocked operation into a one-line message.
+   *
+   * **Example** (Render the failure message)
+   *
+   * ```ts
+   * import { DirtyWorktreeError } from "@beep/scratchpad/effected/git/Git";
+   *
+   * const error = DirtyWorktreeError.make({ cwd: "/repo" });
+   * console.log(error.message); // local changes would be overwritten in /repo: commit or stash them first
+   * ```
+   *
+   * @since 0.0.0
+   */
   override get message(): string {
     return `local changes would be overwritten in ${this.cwd}: commit or stash them first`;
   }
@@ -390,7 +536,18 @@ export class DirtyWorktreeError extends S.TaggedError<DirtyWorktreeError>($I`Dir
 /**
  * One entry of a `git ls-tree` listing.
  *
+ * **Example** (Represent a tracked blob)
+ *
+ * ```ts
+ * import { LsTreeEntry } from "@beep/scratchpad/effected/git/Git";
+ *
+ * const entry = LsTreeEntry.make({ mode: "100644", type: "blob", oid: "abc", path: "src/index.ts" });
+ * console.log(entry.path); // src/index.ts
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class LsTreeEntry extends S.Class<LsTreeEntry>($I`LsTreeEntry`)({
   /** The entry's file mode, e.g. `100644`. */
@@ -429,7 +586,18 @@ type NameStatusCode = typeof NameStatusCode.Type;
  * `"typechange"` word. A consumer mapping these values onto an existing
  * enum that follows porcelain's spelling must translate.
  *
+ * **Example** (Represent a renamed path)
+ *
+ * ```ts
+ * import { NameStatusEntry } from "@beep/scratchpad/effected/git/Git";
+ *
+ * const entry = NameStatusEntry.make({ status: "renamed", oldPath: "old.ts", path: "new.ts" });
+ * console.log(entry.status, entry.oldPath, entry.path); // renamed old.ts new.ts
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class NameStatusEntry extends S.Class<NameStatusEntry>($I`NameStatusEntry`)({
   /**
@@ -523,6 +691,8 @@ const matchesAny = (stderr: string, patterns: ReadonlyArray<string>): boolean =>
  * git's stderr taxonomy. Written once — every `Git` method funnels through
  * this before deciding its own return value.
  *
+ * **Details**
+ *
  * `args` is the invocation's REDACTED argv: it is the only argv this
  * function may persist into a `GitCommandError`, per the redaction policy.
  */
@@ -609,6 +779,8 @@ const classify = (
  * fails: a spawn-level `PlatformError` and a per-run timeout are both
  * absorbed into the `"failure"` classification rather than escaping the
  * effect's error channel.
+ *
+ * **Details**
  *
  * The argv handed to `classify` — and therefore persisted into any
  * `GitCommandError` — is the invocation's REDACTED argv, never the raw one:
@@ -735,7 +907,18 @@ const parseNameStatus = (output: string): ReadonlyArray<NameStatusEntry> => {
  * The metadata of a single commit, read via `git log -1` with NUL-separated
  * `%H` / `%G?` / `%B` placeholders.
  *
+ * **Example** (Retain a raw commit message)
+ *
+ * ```ts
+ * import { CommitInfo } from "@beep/scratchpad/effected/git/Git";
+ *
+ * const entry = CommitInfo.make({ sha: "abc", signatureStatus: "N", message: "Initial commit\n" });
+ * console.log(entry.message.endsWith("\n")); // true
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class CommitInfo extends S.Class<CommitInfo>($I`CommitInfo`)({
   /** The commit's full object id (`%H`). */
@@ -767,7 +950,23 @@ export class CommitInfo extends S.Class<CommitInfo>($I`CommitInfo`)({
  * requested pathspec — most commonly a merge commit, whose diff git omits by
  * default (see `Git.log`'s `firstParentDiffMerges`).
  *
+ * **Example** (Decode a commit timestamp)
+ *
+ * ```ts
+ * import { CommitLogEntry } from "@beep/scratchpad/effected/git/Git";
+ * import * as S from "effect/Schema";
+ * import * as DateTime from "effect/DateTime";
+ *
+ * const entry = S.decodeUnknownSync(CommitLogEntry)({
+ *   sha: "abc", authoredAt: "2026-01-01T01:00:00+01:00", committedAt: "2026-01-01T00:00:00Z",
+ *   authorName: "Ada", authorEmail: "ada@example.com", paths: ["src/index.ts"],
+ * });
+ * console.log(DateTime.formatIso(entry.authoredAt)); // 2026-01-01T00:00:00.000Z
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class CommitLogEntry extends S.Class<CommitLogEntry>($I`CommitLogEntry`)({
   /** The commit's full object id (`%H`). */
@@ -792,6 +991,8 @@ const LOG_RECORD_SEPARATOR = "\0";
  * Parses `GitCommand.log`'s output. Unlike this package's other parsers this
  * one can FAIL: the two dates have to decode, and a header that does not carry
  * its five fields cannot be answered with a plausible-looking entry.
+ *
+ * **Details**
  *
  * Each record opens with NUL, followed by five NUL-terminated header fields.
  * Only when the commit touched something, git adds `\n` and one
@@ -861,6 +1062,8 @@ const porcelainCode = LiteralKit([" ", "M", "T", "A", "D", "R", "C", "U", "?", "
  * rename/copy entry's path field renders.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface StatusRenderOptions {
   /**
@@ -875,7 +1078,18 @@ export interface StatusRenderOptions {
 /**
  * One entry of a `git status --porcelain -z` listing.
  *
+ * **Example** (Render a renamed entry)
+ *
+ * ```ts
+ * import { StatusEntry } from "@beep/scratchpad/effected/git/Git";
+ *
+ * const entry = StatusEntry.make({ x: "R", y: " ", origPath: "old.ts", path: "new.ts" });
+ * console.log(entry.toLine()); // R  new.ts
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class StatusEntry extends S.Class<StatusEntry>($I`StatusEntry`)({
   /** The index-side status code (first porcelain column). */
@@ -906,6 +1120,18 @@ export class StatusEntry extends S.Class<StatusEntry>($I`StatusEntry`)({
    * for whitespace-insensitive text consumers — a machine parser should
    * consume the decoded {@link StatusEntry} values (or `-z` output)
    * directly, never re-parse this rendering.
+   *
+   * **Example** (Choose the arrow rename rendering)
+   *
+   * ```ts
+   * import { StatusEntry } from "@beep/scratchpad/effected/git/Git";
+   *
+   * const entry = StatusEntry.make({ x: "R", y: " ", origPath: "old.ts", path: "new.ts" });
+   * console.log(entry.toLine({ renames: "arrow" })); // R  old.ts -> new.ts
+   * ```
+   *
+   * @category formatting
+   * @since 0.0.0
    */
   toLine(options?: StatusRenderOptions): string {
     const rendered =
@@ -924,6 +1150,18 @@ export class StatusEntry extends S.Class<StatusEntry>($I`StatusEntry`)({
    * not hand-roll its own renderer (and re-decide the rename convention —
    * see {@link StatusEntry.toLine} for that decision). An empty array
    * renders as the empty string.
+   *
+   * **Example** (Join status entries without a trailing newline)
+   *
+   * ```ts
+   * import { StatusEntry } from "@beep/scratchpad/effected/git/Git";
+   *
+   * const entries = [StatusEntry.make({ x: "M", y: " ", path: "file.ts" })];
+   * console.log(StatusEntry.format(entries)); // M  file.ts
+   * ```
+   *
+   * @category formatting
+   * @since 0.0.0
    */
   static readonly format = (entries: ReadonlyArray<StatusEntry>, options?: StatusRenderOptions): string =>
     entries.map((entry) => entry.toLine(options)).join("\n");
@@ -1002,7 +1240,18 @@ const parseStatus = (output: string): ReadonlyArray<StatusEntry> => {
  * parenthesized `git describe` suffix git appends for initialized
  * submodules.
  *
+ * **Example** (Represent an uninitialized submodule)
+ *
+ * ```ts
+ * import { SubmoduleStatusEntry } from "@beep/scratchpad/effected/git/Git";
+ *
+ * const entry = SubmoduleStatusEntry.make({ state: "uninitialized", sha: "abc", path: "vendor/lib" });
+ * console.log(entry.state); // uninitialized
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class SubmoduleStatusEntry extends S.Class<SubmoduleStatusEntry>($I`SubmoduleStatusEntry`)({
   /** The decoded state prefix. */
@@ -1063,7 +1312,18 @@ const parseSubmoduleStatus = (output: string): ReadonlyArray<SubmoduleStatusEntr
  * entry — an annotated tag appears twice, once as the tag object and once
  * peeled to its commit.
  *
+ * **Example** (Read an advertised tag name)
+ *
+ * ```ts
+ * import { LsRemoteEntry } from "@beep/scratchpad/effected/git/Git";
+ *
+ * const entry = LsRemoteEntry.make({ sha: "abc", ref: "refs/tags/v1^{}" });
+ * console.log(LsRemoteEntry.shortName(entry.ref)); // v1
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class LsRemoteEntry extends S.Class<LsRemoteEntry>($I`LsRemoteEntry`)({
   /** The sha the advertised ref points at. */
@@ -1075,6 +1335,17 @@ export class LsRemoteEntry extends S.Class<LsRemoteEntry>($I`LsRemoteEntry`)({
    * The human-facing short name of an advertised refname: the
    * `refs/heads/` / `refs/tags/` / `refs/remotes/` prefix and any `^{}`
    * peel suffix stripped (`refs/tags/v1^{}` → `v1`).
+   *
+   * **Example** (Strip the peeled tag suffix)
+   *
+   * ```ts
+   * import { LsRemoteEntry } from "@beep/scratchpad/effected/git/Git";
+   *
+   * console.log(LsRemoteEntry.shortName("refs/tags/v1^{}")); // v1
+   * ```
+   *
+   * @category formatting
+   * @since 0.0.0
    */
   static readonly shortName = (ref: string): string => {
     const base = ref.endsWith("^{}") ? ref.slice(0, -3) : ref;
@@ -1101,6 +1372,18 @@ export class LsRemoteEntry extends S.Class<LsRemoteEntry>($I`LsRemoteEntry`)({
    * returns the full listing and the caller owns the matching policy. An
    * annotated tag's peeled `^{}` entry shares its base short name, so a
    * near miss on such a tag can surface both of its entries.
+   *
+   * **Example** (Suggest a package-prefixed tag)
+   *
+   * ```ts
+   * import { LsRemoteEntry } from "@beep/scratchpad/effected/git/Git";
+   *
+   * const entries = [LsRemoteEntry.make({ sha: "abc", ref: "refs/tags/effect@4.0.0" })];
+   * console.log(LsRemoteEntry.nearMatches(entries, "4.0.0")[0]?.ref); // refs/tags/effect@4.0.0
+   * ```
+   *
+   * @category filtering
+   * @since 0.0.0
    */
   static readonly nearMatches = (entries: ReadonlyArray<LsRemoteEntry>, ref: string): ReadonlyArray<LsRemoteEntry> => {
     const separators = ["@", "/", "-", "_"];
@@ -1135,7 +1418,18 @@ const parseLsRemote = (output: string): ReadonlyArray<LsRemoteEntry> =>
 /**
  * One stash entry, from `git stash list`.
  *
+ * **Example** (Represent a stash selector)
+ *
+ * ```ts
+ * import { StashEntry } from "@beep/scratchpad/effected/git/Git";
+ *
+ * const entry = StashEntry.make({ ref: "stash@{0}", sha: "abc", message: "On main: save work" });
+ * console.log(entry.ref); // stash@{0}
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class StashEntry extends S.Class<StashEntry>($I`StashEntry`)({
   /** The reflog selector (`stash@{0}`) — the index other stash methods take. */
@@ -1161,7 +1455,18 @@ const parseStashList = (output: string): ReadonlyArray<StashEntry> =>
 /**
  * One local (or remote-tracking) branch, from `git branch --list`.
  *
+ * **Example** (Represent the current branch)
+ *
+ * ```ts
+ * import { BranchEntry } from "@beep/scratchpad/effected/git/Git";
+ *
+ * const entry = BranchEntry.make({ name: "main", sha: "abc", current: true });
+ * console.log(entry.name, entry.current); // main true
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class BranchEntry extends S.Class<BranchEntry>($I`BranchEntry`)({
   /** The short branch name (`main`, or `origin/main` for a remote branch). */
@@ -1192,7 +1497,18 @@ const parseBranchList = (output: string): ReadonlyArray<BranchEntry> =>
 /**
  * One ref, from `git for-each-ref`.
  *
+ * **Example** (Represent an annotated tag object)
+ *
+ * ```ts
+ * import { RefEntry } from "@beep/scratchpad/effected/git/Git";
+ *
+ * const entry = RefEntry.make({ ref: "refs/tags/v1", sha: "abc", objectType: "tag" });
+ * console.log(entry.objectType); // tag
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class RefEntry extends S.Class<RefEntry>($I`RefEntry`)({
   /** The full refname (`refs/tags/v1`). */
@@ -1233,7 +1549,18 @@ const parseForEachRef = (output: string): ReadonlyArray<RefEntry> =>
 /**
  * One configuration entry, from `git config --list`.
  *
+ * **Example** (Represent a valueless config key)
+ *
+ * ```ts
+ * import { ConfigListEntry } from "@beep/scratchpad/effected/git/Git";
+ *
+ * const entry = ConfigListEntry.make({ key: "core.bare", value: "" });
+ * console.log(entry.value === ""); // true
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class ConfigListEntry extends S.Class<ConfigListEntry>($I`ConfigListEntry`)({
   /** The canonical dotted key (`section.subsection.key`). */
@@ -1267,7 +1594,18 @@ const parseConfigList = (output: string): ReadonlyArray<ConfigListEntry> =>
 /**
  * One working tree, from `git worktree list --porcelain`.
  *
+ * **Example** (Represent a detached worktree)
+ *
+ * ```ts
+ * import { WorktreeEntry } from "@beep/scratchpad/effected/git/Git";
+ *
+ * const entry = WorktreeEntry.make({ path: "/repo", head: "abc", detached: true, bare: false });
+ * console.log(entry.detached); // true
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class WorktreeEntry extends S.Class<WorktreeEntry>($I`WorktreeEntry`)({
   /** The working tree's absolute path. */
@@ -1356,7 +1694,18 @@ const parseWorktreeList = (output: string): ReadonlyArray<WorktreeEntry> => {
  * staged-but-uncommitted gitlink (`mode` `160000`) is visible — `lsTree`
  * reads the committed tree and misses exactly that window.
  *
+ * **Example** (Represent an unresolved index stage)
+ *
+ * ```ts
+ * import { LsFilesEntry } from "@beep/scratchpad/effected/git/Git";
+ *
+ * const entry = LsFilesEntry.make({ mode: "100644", oid: "abc", stage: 2, path: "file.ts" });
+ * console.log(entry.stage); // 2
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class LsFilesEntry extends S.Class<LsFilesEntry>($I`LsFilesEntry`)({
   /** The entry's file mode, e.g. `100644` — `160000` for a gitlink. */
@@ -1390,6 +1739,8 @@ const parseLsFiles = (output: string): ReadonlyArray<LsFilesEntry> =>
 
 /**
  * Refuse a caller-supplied ref or range that git would parse as an option.
+ *
+ * **Details**
  *
  * Refs are caller-controlled and land in git's argv as positional entries; a
  * value beginning with `-` is read as a flag instead — `checkout("-b")` would
@@ -1438,6 +1789,8 @@ const rejectOptionLikeRefs = (
 /**
  * Refuse a caller-supplied numeric index/limit that is not a non-negative
  * integer.
+ *
+ * **Details**
  *
  * Every relational comparison against `NaN` is `false`, so a bare
  * `value < 0` guard admits `NaN` (and a fractional value truncates nothing —
@@ -1494,6 +1847,8 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
    * following git's OWN precedence order rather than a simplification of it:
    * `GIT_SSH_COMMAND` > `core.sshCommand` > `GIT_SSH` > plain `ssh` (each
    * rung verified against git 2.55).
+   *
+   * **Details**
    *
    * The config reads are why this is per-call rather than per-service:
    * `core.sshCommand` and `ssh.variant` are both repository-local, while one
@@ -3600,6 +3955,8 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
  * accepts any `GitShape`.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface GitShape {
   /** `git show <ref>:<path>` — the contents of `path` at `ref`, or `Option.none` if absent there. */
@@ -3639,6 +3996,8 @@ export interface GitShape {
    * is still a real failure (`UnknownRefError`), and a noisy exit 1 stays a
    * loud `GitCommandError`. The sibling of `mergeBase`, which fails loudly
    * when the ancestor is absent.
+   *
+   * **Details**
    *
    * The value is a plain sha string — no decode or brand step. A caller
    * that only wants reachability ("do these histories connect?") reads the
@@ -3701,6 +4060,8 @@ export interface GitShape {
    * does not have surfaces as `UnknownRefError` — the typed signal a
    * tag-then-branch fetch fallback can branch on.
    *
+   * **Details**
+   *
    * `options.ref` also accepts a full refspec (`src:dst`, optionally
    * `+`-prefixed), passed through verbatim — never guessed at or
    * transformed. Under a single-branch clone (`actions/checkout`'s default
@@ -3733,6 +4094,8 @@ export interface GitShape {
    * signal) or any `GitCommandError`, the plain form
    * (`git fetch [--depth <n>] <remote> <ref>`) runs as the fallback.
    *
+   * **Details**
+   *
    * `NotARepositoryError` from the tag attempt propagates immediately —
    * the plain form would fail identically. When both attempts fail, the
    * PLAIN fetch's error surfaces; the tag attempt's failure is discarded.
@@ -3749,6 +4112,8 @@ export interface GitShape {
    * Mutating: `git fetch --unshallow <remote>` — converts a shallow clone
    * into a complete one by fetching all missing history from
    * `options.remote` (default `origin`).
+   *
+   * **Details**
    *
    * `--unshallow` is a distinct mode, not a depth value: **git rejects it in
    * a repository that is not shallow**, with
@@ -3767,6 +4132,8 @@ export interface GitShape {
    * `git rev-parse --is-shallow-repository` — whether the repository is a
    * shallow clone.
    *
+   * **Details**
+   *
    * A dedicated predicate, deliberately not folded into `revParse`: that
    * method's contract is "resolve this REF"; this one takes no ref and
    * answers a repository-shape question. The intended pairing is
@@ -3777,6 +4144,8 @@ export interface GitShape {
    * Mutating: `git reset --soft|--mixed|--hard [<ref>]` — moves `HEAD` (and,
    * per `options.mode`, the index and working tree) to `options.ref`
    * (default `HEAD`, i.e. unstage/discard against the current commit).
+   *
+   * **Details**
    *
    * The restore-before-retry primitive: **a failed reset fails loudly and
    * typed** (`GitCommandError` on any non-zero exit), never a silent no-op —
@@ -3802,6 +4171,8 @@ export interface GitShape {
    * with `options.ignored`, ignored files too), optionally scoped to
    * `options.paths`.
    *
+   * **Details**
+   *
    * `--force` is unconditional: this member exists so a consumer can restore
    * a tree to a known state before retrying a non-idempotent operation, and
    * without it git refuses to clean under the default `clean.requireForce`
@@ -3821,6 +4192,8 @@ export interface GitShape {
    * — restores `paths` from the index, or from `options.source`. The
    * `checkout -- .`-shaped operation: `restore(cwd, ["."])` discards all
    * unstaged working-tree changes.
+   *
+   * **Details**
    *
    * A separate member deliberately, because `checkout`'s option-injection
    * guard refuses `--` and option-like refs by design and stays that way.
@@ -3843,6 +4216,8 @@ export interface GitShape {
    * on creation (`git checkout -b <name> [<start-point>]`), and
    * `options.force` resets the branch if it already exists (`branch -f`,
    * or `checkout -B` with `checkout`).
+   *
+   * **Details**
    *
    * Branch creation is a branch-member concern, not a `checkout` option:
    * `checkout`'s contract stays "move to an existing ref" with its
@@ -3883,6 +4258,8 @@ export interface GitShape {
    * initializing them (`options.init`), with an optional depth limit and
    * scoped to `options.paths`.
    *
+   * **Details**
+   *
    * `options.checkout` is the documented override for a
    * `submodule.<name>.update = none` configuration — without it, updating
    * such a submodule silently no-ops (git reports success and checks out
@@ -3922,6 +4299,8 @@ export interface GitShape {
    * `git submodule status [--recursive] [-- <paths>...]` — one
    * {@link SubmoduleStatusEntry} per registered submodule, decoding git's
    * state prefix (`current` / `uninitialized` / `outOfSync` / `conflict`).
+   *
+   * **Details**
    *
    * The output is line-based (git offers no `-z` mode here), so a submodule
    * path containing a newline would corrupt the parse — a git-imposed
@@ -3975,6 +4354,8 @@ export interface GitShape {
   /**
    * Mutating: `git submodule set-url -- <path> <url>` — rewrites the
    * submodule's URL in `.gitmodules` and synchronizes it into `.git/config`.
+   *
+   * **Details**
    *
    * The url never surfaces raw in an error — an embedded `userinfo@`
    * credential is masked in `GitCommandError.args`/`.message` — and the
@@ -4220,6 +4601,8 @@ export interface GitShape {
    * `remote` advertises, as {@link LsRemoteEntry} values, optionally
    * filtered to branch heads and/or tags and/or shell-glob patterns.
    *
+   * **Details**
+   *
    * The one read that talks to the NETWORK. Auth failure and an unreachable
    * remote stay {@link GitCommandError} deliberately — no consumer branches
    * on them, so they carry no dedicated type. The validate-before-mutate
@@ -4283,6 +4666,8 @@ export interface GitShape {
   /**
    * Mutating: `git stash pop [stash@{n}]` — applies a stash entry
    * (`options.index`, default the latest) and drops it on success.
+   *
+   * **Details**
    *
    * The two branchable failures are typed: {@link DirtyWorktreeError} when
    * local changes would be overwritten (the tree is untouched), and
@@ -4405,6 +4790,8 @@ export interface GitShape {
    * Mutating: `git push [--force | --force-with-lease] [--tags] [--set-upstream] <remote> [<refspec>]`
    * — updates remote refs.
    *
+   * **Details**
+   *
    * A rejected push — the remote moved (`fetch first` /
    * `non-fast-forward`), or a `--force-with-lease` lease failure
    * (`stale info`) — fails typed as {@link NonFastForwardError}, the signal
@@ -4426,6 +4813,8 @@ export interface GitShape {
   /**
    * Mutating: `git pull [--rebase] [--ff-only] <remote> [<ref>]` — fetches
    * and integrates.
+   *
+   * **Details**
    *
    * The two branchable failures are typed: {@link DirtyWorktreeError} when
    * local modifications block the merge before it starts (the tree is
@@ -4592,6 +4981,8 @@ export interface GitShape {
    * {@link LsFilesEntry} (mode, oid, merge stage, path), optionally scoped
    * to `options.pathspec`.
    *
+   * **Details**
+   *
    * The index-side sibling of `lsTree`: the only read that sees a
    * staged-but-uncommitted gitlink (`160000 <oid> 0 <path>`) — the state a
    * stage-without-commit window (a submodule pin/add) deliberately
@@ -4609,10 +5000,10 @@ export interface GitShape {
  * **Example** (Identify an unstubbed method defect)
  *
  * ```ts
- * import { NotStubbedError } from "./Git.ts";
+ * import { NotStubbedError } from "@beep/scratchpad/effected/git/Git";
  *
  * const defect = NotStubbedError.make({ message: "A Git method needs a stub." });
- * console.log(defect._tag, defect.message);
+ * console.log(defect._tag, defect.message); // NotStubbedError A Git method needs a stub.
  * ```
  *
  * @category errors
@@ -4685,8 +5076,7 @@ const notStubbed = (method: string) => () =>
  * **Example** (Read the repository root, current branch, and changed files)
  *
  * ```ts
- * import { Git } from "./index.ts";
- * import { NodeServices } from "@effect/platform-node";
+ * import { Git } from "@beep/scratchpad/effected/git/Git";
  * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option";
  *
@@ -4698,13 +5088,33 @@ const notStubbed = (method: string) => () =>
  *   return { root, branch: O.getOrNull(branch), changed };
  * });
  *
- * Effect.runPromise(program.pipe(Effect.provide(Git.layer), Effect.provide(NodeServices.layer)));
+ * console.log(Effect.isEffect(program)); // true
  * ```
  *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class Git extends Context.Service<Git, GitShape>()($I`Git`) {
-  /** Resolves `ChildProcessSpawner` once, at construction — every method's `R` is `never`. */
+  /**
+   * Resolves `ChildProcessSpawner` once, at construction — every method's `R` is `never`.
+   *
+   * **Example** (Compose a live repository query)
+   *
+   * ```ts
+   * import { Git } from "@beep/scratchpad/effected/git/Git";
+   * import * as Effect from "effect/Effect";
+   *
+   * const program = Effect.gen(function* () {
+   *   const git = yield* Git;
+   *   return yield* git.repoRoot("/repo");
+   * }).pipe(Effect.provide(Git.layer));
+   * console.log(Effect.isEffect(program)); // true
+   * ```
+   *
+   * @category layers
+   * @since 0.0.0
+   */
   static readonly layer: Layer.Layer<Git, never, ChildProcessSpawner.ChildProcessSpawner> = Layer.effect(
     this,
     Effect.gen(function* () {
@@ -4765,7 +5175,7 @@ export class Git extends Context.Service<Git, GitShape>()($I`Git`) {
    * **Example** (Stub file contents with a Git test double)
    *
    * ```ts
-   * import { Git } from "./index.ts";
+   * import { Git } from "@beep/scratchpad/effected/git/Git";
    * import * as Effect from "effect/Effect";
    * import * as O from "effect/Option";
    *
@@ -4774,7 +5184,11 @@ export class Git extends Context.Service<Git, GitShape>()($I`Git`) {
    *     Effect.succeed(path === "./package.json" ? O.some("{}") : O.none()),
    * });
    * // `double.show(...)` answers; `double.status(...)` dies, named.
+   * console.log(O.getOrNull(Effect.runSync(double.show("/repo", "HEAD", "./package.json")))); // {}
    * ```
+   *
+   * @category constructors
+   * @since 0.0.0
    */
   static readonly makeTest = (overrides: Partial<GitShape> = {}): GitShape => ({
     show: notStubbed("show"),
@@ -4867,7 +5281,7 @@ export class Git extends Context.Service<Git, GitShape>()($I`Git`) {
    * **Example** (Provide a Git test layer with a stubbed tree listing)
    *
    * ```ts
-   * import { Git, LsTreeEntry } from "./index.ts";
+   * import { Git, LsTreeEntry } from "@beep/scratchpad/effected/git/Git";
    * import * as Effect from "effect/Effect";
    *
    * const TestGit = Git.layerTest({
@@ -4876,8 +5290,16 @@ export class Git extends Context.Service<Git, GitShape>()($I`Git`) {
    *       LsTreeEntry.make({ mode: "100644", type: "blob", oid: "0".repeat(40), path: "package.json" }),
    *     ]),
    * });
-   * // program.pipe(Effect.provide(TestGit))
+   * const program = Effect.gen(function* () {
+   *   const git = yield* Git;
+   *   const entries = yield* git.lsTree("/repo", "HEAD");
+   *   return entries[0]?.path;
+   * });
+   * console.log(Effect.runSync(program.pipe(Effect.provide(TestGit)))); // package.json
    * ```
+   *
+   * @category layers
+   * @since 0.0.0
    */
   static readonly layerTest = (overrides: Partial<GitShape> = {}): Layer.Layer<Git> =>
     Layer.succeed(Git, Git.makeTest(overrides));

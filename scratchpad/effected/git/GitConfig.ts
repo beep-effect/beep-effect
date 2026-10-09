@@ -36,7 +36,21 @@ const $I = $ScratchpadId.create("effected/git/GitConfig");
  * `offset`/`length` span, and the zero-based `line`/`character` position
  * derived from the offset.
  *
+ * **Example** (Recognize a structural diagnostic)
+ *
+ * ```ts
+ * import { GitConfig, GitConfigDiagnostic } from "@beep/scratchpad/effected/git/GitConfig";
+ * import * as Result from "effect/Result";
+ * import * as S from "effect/Schema";
+ * const parsed = GitConfig.parseResult("[broken");
+ * if (Result.isFailure(parsed)) {
+ *   console.log(S.is(GitConfigDiagnostic)(parsed.failure.diagnostics[0])); // true
+ * }
+ * ```
+ *
  * @public
+ * @category diagnostics
+ * @since 0.0.0
  */
 export class GitConfigDiagnostic extends S.Class<GitConfigDiagnostic>($I`GitConfigDiagnostic`)({
   /** What kind of malformation this is. */
@@ -63,7 +77,17 @@ export class GitConfigDiagnostic extends S.Class<GitConfigDiagnostic>($I`GitConf
  * `diagnostics` is an array even when only one is populated — the array is
  * the cross-package diagnostic contract.
  *
+ * **Example** (Inspect a parse failure)
+ *
+ * ```ts
+ * import { GitConfigParseError } from "@beep/scratchpad/effected/git/GitConfig";
+ * const error = GitConfigParseError.make({ input: "[broken", diagnostics: [] });
+ * console.log(error.message); // malformed git-config text
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class GitConfigParseError extends S.TaggedError<GitConfigParseError>($I`GitConfigParseError`)("GitConfigParseError", {
   /** The raw input that failed to parse. */
@@ -71,7 +95,20 @@ export class GitConfigParseError extends S.TaggedError<GitConfigParseError>($I`G
   /** Every structural problem found, in document order. */
   diagnostics: S.Array(GitConfigDiagnostic).annotateKey({ description: "Every structural problem found, in document order." }),
 }, $I.annote("GitConfigParseError", { description: "The document could not be parsed as git-config text." })) {
-  /** Renders the first diagnostic and the total count into a one-line message. */
+  /**
+   * Renders the first diagnostic and the total count into a one-line message.
+   *
+   * **Example** (Render the error message)
+   *
+   * ```ts
+   * import { GitConfigParseError } from "@beep/scratchpad/effected/git/GitConfig";
+   * const error = GitConfigParseError.make({ input: "[broken", diagnostics: [] });
+   * console.log(error.message); // malformed git-config text
+   * ```
+   *
+   * @category getters
+   * @since 0.0.0
+   */
   override get message(): string {
     const first = this.diagnostics[0];
     const head = first === undefined ? "malformed git-config text" : `${first.message} (line ${first.line + 1})`;
@@ -82,7 +119,19 @@ export class GitConfigParseError extends S.TaggedError<GitConfigParseError>($I`G
 /**
  * A surgical edit could not be applied to a {@link GitConfig} document.
  *
+ * **Example** (Describe a missing variable)
+ *
+ * ```ts
+ * import { GitConfigEditError } from "@beep/scratchpad/effected/git/GitConfig";
+ * const error = GitConfigEditError.make({
+ *   op: "unset", reason: "missingKey", section: "core", key: "editor",
+ * });
+ * console.log(error.message); // unset: [core] editor does not exist
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class GitConfigEditError extends S.TaggedError<GitConfigEditError>($I`GitConfigEditError`)("GitConfigEditError", {
   /** The edit operation that was refused. */
@@ -103,7 +152,20 @@ export class GitConfigEditError extends S.TaggedError<GitConfigEditError>($I`Git
   /** The variable name the edit addressed, when it had one. */
   key: S.optionalKey(S.String).annotateKey({ description: "The variable name the edit addressed, when it had one." }),
 }, $I.annote("GitConfigEditError", { description: "A surgical edit could not be applied to a GitConfig document." })) {
-  /** Renders the refused operation into a one-line message. */
+  /**
+   * Renders the refused operation into a one-line message.
+   *
+   * **Example** (Render the error message)
+   *
+   * ```ts
+   * import { GitConfigEditError } from "@beep/scratchpad/effected/git/GitConfig";
+   * const error = GitConfigEditError.make({ op: "unset", reason: "missingSection", section: "core" });
+   * console.log(error.message); // unset: section [core] does not exist
+   * ```
+   *
+   * @category getters
+   * @since 0.0.0
+   */
   override get message(): string {
     const address = this.subsection === undefined ? `[${this.section}]` : `[${this.section} "${this.subsection}"]`;
     const target = this.key === undefined ? address : `${address} ${this.key}`;
@@ -131,7 +193,17 @@ export class GitConfigEditError extends S.TaggedError<GitConfigEditError>($I`Git
  * boolean-true shorthand — the distinction is preserved here even though the
  * lookup methods on {@link GitConfig} decode it as `"true"`.
  *
+ * **Example** (Preserve the bare boolean shorthand)
+ *
+ * ```ts
+ * import { GitConfigEntry } from "@beep/scratchpad/effected/git/GitConfig";
+ * const entry = GitConfigEntry.make({ key: "bare", offset: 7, length: 6 });
+ * console.log(entry.value === undefined); // true
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class GitConfigEntry extends S.Class<GitConfigEntry>($I`GitConfigEntry`)({
   /** The variable name, raw spelling preserved (names compare case-insensitively). */
@@ -157,7 +229,19 @@ export class GitConfigEntry extends S.Class<GitConfigEntry>($I`GitConfigEntry`)(
  * header's line start to the next section header (or the end of the text),
  * so trailing comments and blank lines belong to the section above them.
  *
+ * **Example** (Preserve a quoted subsection name)
+ *
+ * ```ts
+ * import { GitConfigSection } from "@beep/scratchpad/effected/git/GitConfig";
+ * const section = GitConfigSection.make({
+ *   name: "remote", subsection: "Origin", offset: 0, length: 18, entries: [],
+ * });
+ * console.log(section.subsection); // Origin
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class GitConfigSection extends S.Class<GitConfigSection>($I`GitConfigSection`)({
   /** The section name, raw spelling preserved. */
@@ -183,7 +267,17 @@ export class GitConfigSection extends S.Class<GitConfigSection>($I`GitConfigSect
  * must not do. `condition` is the `includeIf` condition (e.g.
  * `gitdir:~/work/`); it is absent for a plain `include`.
  *
+ * **Example** (Keep an include path unresolved)
+ *
+ * ```ts
+ * import { GitConfigInclude } from "@beep/scratchpad/effected/git/GitConfig";
+ * const include = GitConfigInclude.make({ path: "~/work/config", condition: "gitdir:~/work/" });
+ * console.log(include.path); // ~/work/config
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class GitConfigInclude extends S.Class<GitConfigInclude>($I`GitConfigInclude`)({
   /** The include path exactly as written (not resolved, not expanded). */
@@ -301,7 +395,8 @@ const appendAtEof = (text: string, content: string): string =>
  * A lossless git-config document: the source text plus the structural index
  * scanned from it.
  *
- * @remarks
+ * **Details**
+ *
  * The model is text-first: `stringify` returns the stored text, so an
  * unmodified document round-trips **byte-for-byte** — comments, blank lines,
  * indentation, quoting and key spelling all survive untouched. Every edit
@@ -316,27 +411,34 @@ const appendAtEof = (text: string, content: string): string =>
  * `include`/`includeIf` directives are surfaced by {@link GitConfig.includes}
  * but never resolved.
  *
+ * **Gotchas**
+ *
  * Instances are immutable by discipline — every edit returns a NEW
  * `GitConfig`. Construct via `parse`/`parseResult`; a hand-built
  * `GitConfig.make` over text that does not scan cleanly dies as a defect at
  * the first operation (bad wiring, not bad input).
  *
- * @example
+ * **Example** (Read and edit a remote URL)
+ *
  * ```ts
- * import { GitConfig } from "./index.ts";
+ * import { GitConfig } from "@beep/scratchpad/effected/git/GitConfig";
  * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option";
  * import * as Result from "effect/Result";
- *
  * const program = Effect.gen(function* () {
  *   const config = yield* GitConfig.parse('[remote "origin"]\n\turl = git@example.com:o/r.git\n');
- *   const url = config.get("remote", "origin", "url"); // Option.some("git@example.com:o/r.git")
+ *   const url = config.get("remote", "origin", "url");
  *   const edited = config.set("remote", "origin", "pushurl", "git@example.com:o/fork.git");
  *   return { url: O.getOrNull(url), text: Result.isSuccess(edited) ? edited.success.stringify() : config.text };
  * });
+ * const output = Effect.runSync(program);
+ * console.log(output.url); // git@example.com:o/r.git
+ * console.log(output.text.includes("pushurl = git@example.com:o/fork.git")); // true
  * ```
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class GitConfig extends S.Class<GitConfig>($I`GitConfig`)({
   /** The document's source text — `stringify` returns exactly this. */
@@ -353,6 +455,17 @@ export class GitConfig extends S.Class<GitConfig>($I`GitConfig`)({
    * Malformed input fails typed with every diagnostic found, never as a
    * defect. Effect consumers want {@link GitConfig.parse}, which is defined
    * in terms of this behind its named span.
+   *
+   * **Example** (Detect malformed text)
+   *
+   * ```ts
+   * import { GitConfig } from "@beep/scratchpad/effected/git/GitConfig";
+   * import * as Result from "effect/Result";
+   * console.log(Result.isFailure(GitConfig.parseResult("[broken"))); // true
+   * ```
+   *
+   * @category parsing
+   * @since 0.0.0
    */
   static parseResult(text: string): Result.Result<GitConfig, GitConfigParseError> {
     const raw = scan(text);
@@ -375,12 +488,39 @@ export class GitConfig extends S.Class<GitConfig>($I`GitConfig`)({
    *
    * Defined in terms of {@link GitConfig.parseResult} — synchronous callers
    * can use that variant directly.
+   *
+   * **Example** (Parse a section in an Effect)
+   *
+   * ```ts
+   * import { GitConfig } from "@beep/scratchpad/effected/git/GitConfig";
+   * import * as Effect from "effect/Effect";
+   * const config = Effect.runSync(GitConfig.parse("[core]\n\tbare\n"));
+   * console.log(config.sections.length); // 1
+   * ```
+   *
+   * @category parsing
+   * @since 0.0.0
    */
   static readonly parse = Effect.fn("GitConfig.parse")((text: string) =>
     Effect.fromResult(GitConfig.parseResult(text)),
   );
 
-  /** The document's source text, byte-for-byte — identity for an unmodified document. */
+  /**
+   * The document's source text, byte-for-byte — identity for an unmodified document.
+   *
+   * **Example** (Round-trip comments and formatting)
+   *
+   * ```ts
+   * import { GitConfig } from "@beep/scratchpad/effected/git/GitConfig";
+   * import * as Effect from "effect/Effect";
+   * const text = "# preserved\n[core]\n\tbare\n";
+   * const config = Effect.runSync(GitConfig.parse(text));
+   * console.log(config.stringify() === text); // true
+   * ```
+   *
+   * @category serialization
+   * @since 0.0.0
+   */
   stringify(): string {
     return this.text;
   }
@@ -394,6 +534,20 @@ export class GitConfig extends S.Class<GitConfig>($I`GitConfig`)({
    * A bare `key` line decodes as `"true"` here, matching git's boolean
    * semantics for a value-less variable; the entry model
    * (`GitConfigEntry.value`) preserves the distinction.
+   *
+   * **Example** (Read the last value and a bare boolean)
+   *
+   * ```ts
+   * import { GitConfig } from "@beep/scratchpad/effected/git/GitConfig";
+   * import * as Effect from "effect/Effect";
+   * import * as O from "effect/Option";
+   * const config = Effect.runSync(GitConfig.parse("[core]\neditor = vim\neditor = nano\nbare\n"));
+   * console.log(O.getOrNull(config.get("CORE", undefined, "editor"))); // nano
+   * console.log(O.getOrNull(config.get("core", undefined, "bare"))); // true
+   * ```
+   *
+   * @category getters
+   * @since 0.0.0
    */
   get(section: string, subsection: string | undefined, key: string): O.Option<string> {
     const values = this.getAll(section, subsection, key);
@@ -401,7 +555,21 @@ export class GitConfig extends S.Class<GitConfig>($I`GitConfig`)({
     return last === undefined ? O.none() : O.some(last);
   }
 
-  /** Every value of `key` in matching sections, in document order (multi-valued keys). */
+  /**
+   * Every value of `key` in matching sections, in document order (multi-valued keys).
+   *
+   * **Example** (Read repeated values in order)
+   *
+   * ```ts
+   * import { GitConfig } from "@beep/scratchpad/effected/git/GitConfig";
+   * import * as Effect from "effect/Effect";
+   * const config = Effect.runSync(GitConfig.parse("[core]\neditor = vim\neditor = nano\n"));
+   * console.log(JSON.stringify(config.getAll("core", undefined, "editor"))); // ["vim","nano"]
+   * ```
+   *
+   * @category getters
+   * @since 0.0.0
+   */
   getAll(section: string, subsection: string | undefined, key: string): ReadonlyArray<string> {
     const raw = reparse(this.text);
     const values: Array<string> = [];
@@ -414,7 +582,21 @@ export class GitConfig extends S.Class<GitConfig>($I`GitConfig`)({
     return values;
   }
 
-  /** Every `include` / `includeIf` directive in the document — surfaced, never resolved. */
+  /**
+   * Every `include` / `includeIf` directive in the document — surfaced, never resolved.
+   *
+   * **Example** (Inspect a conditional include)
+   *
+   * ```ts
+   * import { GitConfig } from "@beep/scratchpad/effected/git/GitConfig";
+   * import * as Effect from "effect/Effect";
+   * const config = Effect.runSync(GitConfig.parse('[includeIf "gitdir:~/work/"]\npath = ~/work/config\n'));
+   * console.log(config.includes()[0]?.condition); // gitdir:~/work/
+   * ```
+   *
+   * @category getters
+   * @since 0.0.0
+   */
   includes(): ReadonlyArray<GitConfigInclude> {
     const raw = reparse(this.text);
     const directives: Array<GitConfigInclude> = [];
@@ -438,9 +620,26 @@ export class GitConfig extends S.Class<GitConfig>($I`GitConfig`)({
 
   /**
    * Sets `key` to `value`: replaces the LAST occurrence's value in place
-   * (preserving the line's formatting and any trailing comment), appends a
+   * (preserving the line's formatting and a trailing comment), appends a
    * new line to the last matching section when the key is absent, and
    * creates the section at the end of the document when none matches.
+   *
+   * **Example** (Replace the effective value)
+   *
+   * ```ts
+   * import { GitConfig } from "@beep/scratchpad/effected/git/GitConfig";
+   * import * as Effect from "effect/Effect";
+   * import * as Result from "effect/Result";
+   * import * as O from "effect/Option";
+   * const config = Effect.runSync(GitConfig.parse("[core]\neditor = vim\n"));
+   * const edited = config.set("core", undefined, "editor", "nano");
+   * if (Result.isSuccess(edited)) {
+   *   console.log(O.getOrNull(edited.success.get("core", undefined, "editor"))); // nano
+   * }
+   * ```
+   *
+   * @category setters
+   * @since 0.0.0
    */
   set(
     section: string,
@@ -464,6 +663,22 @@ export class GitConfig extends S.Class<GitConfig>($I`GitConfig`)({
    * Appends a NEW `key = value` line (multi-valued append) — after the last
    * occurrence of `key` when one exists, at the end of the last matching
    * section otherwise, creating the section when none matches.
+   *
+   * **Example** (Append a second value)
+   *
+   * ```ts
+   * import { GitConfig } from "@beep/scratchpad/effected/git/GitConfig";
+   * import * as Effect from "effect/Effect";
+   * import * as Result from "effect/Result";
+   * const config = Effect.runSync(GitConfig.parse("[core]\neditor = vim\n"));
+   * const edited = config.append("core", undefined, "editor", "nano");
+   * if (Result.isSuccess(edited)) {
+   *   console.log(JSON.stringify(edited.success.getAll("core", undefined, "editor"))); // ["vim","nano"]
+   * }
+   * ```
+   *
+   * @category setters
+   * @since 0.0.0
    */
   append(
     section: string,
@@ -490,7 +705,26 @@ export class GitConfig extends S.Class<GitConfig>($I`GitConfig`)({
     return Result.succeed(insertEntry(this.text, matches, section, subsection, key, value));
   }
 
-  /** Removes the LAST occurrence of `key` in matching sections; fails typed when it does not exist. */
+  /**
+   * Removes the LAST occurrence of `key` in matching sections; fails typed when it does not exist.
+   *
+   * **Example** (Remove only the last value)
+   *
+   * ```ts
+   * import { GitConfig } from "@beep/scratchpad/effected/git/GitConfig";
+   * import * as Effect from "effect/Effect";
+   * import * as Result from "effect/Result";
+   * import * as O from "effect/Option";
+   * const config = Effect.runSync(GitConfig.parse("[core]\neditor = vim\neditor = nano\n"));
+   * const edited = config.unset("core", undefined, "editor");
+   * if (Result.isSuccess(edited)) {
+   *   console.log(O.getOrNull(edited.success.get("core", undefined, "editor"))); // vim
+   * }
+   * ```
+   *
+   * @category setters
+   * @since 0.0.0
+   */
   unset(section: string, subsection: string | undefined, key: string): Result.Result<GitConfig, GitConfigEditError> {
     const raw = reparse(this.text);
     const matches = raw.sections.filter((candidate) => matchesSection(candidate, section, subsection));
@@ -506,7 +740,26 @@ export class GitConfig extends S.Class<GitConfig>($I`GitConfig`)({
     );
   }
 
-  /** Removes EVERY occurrence of `key` in matching sections; fails typed when none exists. */
+  /**
+   * Removes EVERY occurrence of `key` in matching sections; fails typed when none exists.
+   *
+   * **Example** (Remove every value of a variable)
+   *
+   * ```ts
+   * import { GitConfig } from "@beep/scratchpad/effected/git/GitConfig";
+   * import * as Effect from "effect/Effect";
+   * import * as Result from "effect/Result";
+   * import * as O from "effect/Option";
+   * const config = Effect.runSync(GitConfig.parse("[core]\neditor = vim\neditor = nano\n"));
+   * const edited = config.unsetAll("core", undefined, "editor");
+   * if (Result.isSuccess(edited)) {
+   *   console.log(O.isNone(edited.success.get("core", undefined, "editor"))); // true
+   * }
+   * ```
+   *
+   * @category setters
+   * @since 0.0.0
+   */
   unsetAll(section: string, subsection: string | undefined, key: string): Result.Result<GitConfig, GitConfigEditError> {
     const raw = reparse(this.text);
     const matches = raw.sections.filter((candidate) => matchesSection(candidate, section, subsection));
@@ -527,7 +780,25 @@ export class GitConfig extends S.Class<GitConfig>($I`GitConfig`)({
     return Result.succeed(rebuild(text));
   }
 
-  /** Appends a new empty `[section]` / `[section "subsection"]` at the end of the document. */
+  /**
+   * Appends a new empty `[section]` / `[section "subsection"]` at the end of the document.
+   *
+   * **Example** (Add an empty remote section)
+   *
+   * ```ts
+   * import { GitConfig } from "@beep/scratchpad/effected/git/GitConfig";
+   * import * as Effect from "effect/Effect";
+   * import * as Result from "effect/Result";
+   * const config = Effect.runSync(GitConfig.parse(""));
+   * const edited = config.addSection("remote", "origin");
+   * if (Result.isSuccess(edited)) {
+   *   console.log(edited.success.sections[0]?.subsection); // origin
+   * }
+   * ```
+   *
+   * @category setters
+   * @since 0.0.0
+   */
   addSection(section: string, subsection: string | undefined): Result.Result<GitConfig, GitConfigEditError> {
     const invalid = validateAddress("addSection", section, subsection, undefined, undefined);
     if (invalid !== undefined) return Result.fail(invalid);
@@ -538,6 +809,22 @@ export class GitConfig extends S.Class<GitConfig>($I`GitConfig`)({
    * Removes EVERY matching section — header, entries, and the comments and
    * blank lines inside its span (which runs to the next header). Fails typed
    * when none matches.
+   *
+   * **Example** (Remove duplicate sections)
+   *
+   * ```ts
+   * import { GitConfig } from "@beep/scratchpad/effected/git/GitConfig";
+   * import * as Effect from "effect/Effect";
+   * import * as Result from "effect/Result";
+   * const config = Effect.runSync(GitConfig.parse("[core]\neditor = vim\n[core]\neditor = nano\n"));
+   * const edited = config.removeSection("core", undefined);
+   * if (Result.isSuccess(edited)) {
+   *   console.log(edited.success.stringify() === ""); // true
+   * }
+   * ```
+   *
+   * @category setters
+   * @since 0.0.0
    */
   removeSection(section: string, subsection: string | undefined): Result.Result<GitConfig, GitConfigEditError> {
     const raw = reparse(this.text);
@@ -559,6 +846,23 @@ export class GitConfig extends S.Class<GitConfig>($I`GitConfig`)({
    * Rewrites the header of EVERY matching section to
    * `[newSection]` / `[newSection "newSubsection"]`, leaving the section
    * bodies untouched. Fails typed when none matches.
+   *
+   * **Example** (Rename a remote while keeping its body)
+   *
+   * ```ts
+   * import { GitConfig } from "@beep/scratchpad/effected/git/GitConfig";
+   * import * as Effect from "effect/Effect";
+   * import * as Result from "effect/Result";
+   * import * as O from "effect/Option";
+   * const config = Effect.runSync(GitConfig.parse('[remote "origin"]\nurl = https://example.com/repo.git\n'));
+   * const edited = config.renameSection("remote", "origin", "remote", "upstream");
+   * if (Result.isSuccess(edited)) {
+   *   console.log(O.getOrNull(edited.success.get("remote", "upstream", "url"))); // https://example.com/repo.git
+   * }
+   * ```
+   *
+   * @category setters
+   * @since 0.0.0
    */
   renameSection(
     section: string,

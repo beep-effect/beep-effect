@@ -8,6 +8,9 @@ import { ChildProcessSpawner } from "effect/process";
 /**
  * The stdout, stderr, and exit code of one completed run of a `Command`,
  * collected separately (never interleaved).
+ *
+ * @category models
+ * @since 0.0.0
  */
 export interface Collected {
 	readonly stdout: string;
@@ -27,6 +30,21 @@ export interface Collected {
  * upstream `git` blocks writing to a full pipe while nothing is draining it,
  * and the sequential reader that would drain it is still waiting on the
  * *other* stream to finish first.
+ *
+ * **Example** (Construct a command-output collection effect)
+ *
+ * ```ts
+ * import { runCollected } from "@beep/scratchpad/effected/git/internal/run"
+ * import * as Effect from "effect/Effect"
+ * import { ChildProcess } from "effect/process"
+ *
+ * const program = runCollected(ChildProcess.make("git", ["--version"]))
+ *
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @category processes
+ * @since 0.0.0
  */
 export const runCollected = Effect.fnUntraced(
 	function* (
@@ -62,6 +80,21 @@ export const runCollected = Effect.fnUntraced(
  * code, proves the command exists. Only a `PlatformError` (spawn itself
  * failing — e.g. the executable is not found) means `command` is
  * unavailable.
+ *
+ * **Example** (Construct an executable availability check)
+ *
+ * ```ts
+ * import { available } from "@beep/scratchpad/effected/git/internal/run"
+ * import * as Effect from "effect/Effect"
+ * import { ChildProcess } from "effect/process"
+ *
+ * const program = available(ChildProcess.make("git", ["--version"]))
+ *
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
  */
 export const available = (
 	command: ChildProcess.Command,

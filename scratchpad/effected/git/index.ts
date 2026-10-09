@@ -1,11 +1,14 @@
 /**
  * Typed git introspection over Effect's ChildProcessSpawner.
  *
+ * **Details**
+ *
  * Read a repository's state at any ref without checking it out, plus a
  * clearly-marked mutating tier — checkout, fetch, submodule management,
  * sparse-checkout, config writes and staging — that changes it.
  *
  * @packageDocumentation
+ * @since 0.0.0
  */
 
 export {

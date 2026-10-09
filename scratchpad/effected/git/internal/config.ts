@@ -28,18 +28,39 @@ import * as Str from "effect/String";
 
 const $I = $ScratchpadId.create("effected/git/internal/config");
 
-/** The shared diagnostic vocabulary emitted by the scanner.
- * @category Models
+/**
+ * The shared diagnostic vocabulary emitted by the scanner.
+ *
+ * **Example** (Recognize a scanner diagnostic code)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { GitConfigDiagnosticCode } from "@beep/scratchpad/effected/git/internal/config";
+ *
+ * console.log(S.is(GitConfigDiagnosticCode)("invalidEscape")) // true
+ * ```
+ *
+ * @category schemas
  * @since 0.0.0
  */
 export const GitConfigDiagnosticCode = LiteralKit([
 	"invalidSectionHeader", "invalidKey", "invalidLine", "unterminatedQuote", "invalidEscape", "unexpectedCharacter",
 ]).annotate($I.annote("GitConfigDiagnosticCode", { description: "The diagnostic codes emitted by the git-config scanner." }));
 
-/** The scanner's schema-derived diagnostic code type. */
+/**
+ * The scanner's schema-derived diagnostic code type.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type RawDiagnosticCode = typeof GitConfigDiagnosticCode.Type;
 
-/** One raw scanner diagnostic, positions in character offsets. */
+/**
+ * One raw scanner diagnostic, positions in character offsets.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export interface RawDiagnostic {
 	readonly code: RawDiagnosticCode;
 	readonly message: string;
@@ -47,7 +68,12 @@ export interface RawDiagnostic {
 	readonly length: number;
 }
 
-/** One raw variable line (possibly continued across lines). */
+/**
+ * One raw variable line (possibly continued across lines).
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export interface RawEntry {
 	/** The variable name, raw spelling preserved. */
 	readonly key: string;
@@ -65,7 +91,12 @@ export interface RawEntry {
 	readonly valueLength: number;
 }
 
-/** One raw section: header spans plus the entries scanned under it. */
+/**
+ * One raw section: header spans plus the entries scanned under it.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export interface RawSection {
 	/** The section name, raw spelling preserved (dotted form already split). */
 	readonly name: string;
@@ -86,7 +117,12 @@ export interface RawSection {
 	readonly entries: ReadonlyArray<RawEntry>;
 }
 
-/** The scanner's result: sections in order plus every diagnostic found. */
+/**
+ * The scanner's result: sections in order plus every diagnostic found.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export interface RawParse {
 	readonly sections: ReadonlyArray<RawSection>;
 	readonly diagnostics: ReadonlyArray<RawDiagnostic>;
@@ -112,14 +148,42 @@ const GitKey = S.String.check(S.isPattern(/^[A-Za-z][A-Za-z0-9-]*$/)).annotate(
 	$I.annote("GitKey", { description: "A Git variable name: a letter followed by letters, digits or hyphens." }),
 );
 
-/** git variable names: a letter, then letters/digits/`-`. */
+/**
+ * Checks git variable names: a letter, then letters/digits/`-`.
+ *
+ * **Example** (Validate a git variable name)
+ *
+ * ```ts
+ * import { isValidKey } from "@beep/scratchpad/effected/git/internal/config";
+ *
+ * console.log(isValidKey("file-mode")) // true
+ * console.log(isValidKey("1mode")) // false
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
+ */
 export const isValidKey = S.is(GitKey);
 
 const GitSectionName = S.String.check(S.isPattern(/^[A-Za-z0-9.-]+$/)).annotate(
 	$I.annote("GitSectionName", { description: "A Git section name containing letters, digits, hyphens or dots." }),
 );
 
-/** git section names: letters, digits, `-` and `.`. */
+/**
+ * Checks git section names: letters, digits, `-` and `.`.
+ *
+ * **Example** (Validate a git section name)
+ *
+ * ```ts
+ * import { isValidSectionName } from "@beep/scratchpad/effected/git/internal/config";
+ *
+ * console.log(isValidSectionName("remote.origin")) // true
+ * console.log(isValidSectionName("remote origin")) // false
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
+ */
 export const isValidSectionName = S.is(GitSectionName);
 
 /** A carriage return ends a line only before LF or at the end of the source. */
@@ -135,9 +199,26 @@ const skipToLineEnd = (text: string, from: number): number => {
 };
 
 /**
- * Scans a git-config document into raw sections/entries/diagnostics. Never
- * throws; every malformed shape lands in `diagnostics` (the facade turns a
+ * Scans a git-config document into raw sections, entries, and diagnostics.
+ *
+ * **Details**
+ *
+ * Never throws; every malformed shape lands in `diagnostics` (the facade turns a
  * non-empty array into the typed parse error).
+ *
+ * **Example** (Scan a section and report an invalid key)
+ *
+ * ```ts
+ * import { scan } from "@beep/scratchpad/effected/git/internal/config";
+ *
+ * const parsed = scan("[core]\n\tbare\n");
+ * console.log(parsed.sections[0]?.entries[0]?.value) // undefined
+ * console.log(parsed.diagnostics.length) // 0
+ * console.log(scan("[core]\n1bad = value\n").diagnostics[0]?.code) // invalidKey
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const scan = (text: string): RawParse => {
 	const diagnostics: Array<RawDiagnostic> = [];
@@ -436,7 +517,29 @@ const scanEntry = (text: string, lineStart: number, keyStart: number, diagnostic
 	};
 };
 
-/** Does `section` match the (name, subsection) address under git's case rules? */
+/**
+ * Checks whether `section` matches the (name, subsection) address under git's case rules.
+ *
+ * **Details**
+ *
+ * Section names compare case-insensitively; decoded subsection names compare
+ * case-sensitively. The scanner lowercases subsections from deprecated dotted headers.
+ *
+ * **Example** (Compare section and subsection casing)
+ *
+ * ```ts
+ * import { matchesSection, scan } from "@beep/scratchpad/effected/git/internal/config";
+ *
+ * const section = scan('[remote "Origin"]\n').sections[0];
+ * if (section !== undefined) {
+ *   console.log(matchesSection(section, "REMOTE", "Origin")) // true
+ *   console.log(matchesSection("remote", "origin")(section)) // false
+ * }
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
+ */
 export const matchesSection: {
 	(name: string, subsection: string | undefined): (section: RawSection) => boolean;
 	(section: RawSection, name: string, subsection: string | undefined): boolean;
@@ -447,7 +550,24 @@ export const matchesSection: {
 	return section.subsection === subsection;
 });
 
-/** Does `entry` carry `key` (variable names compare case-insensitively)? */
+/**
+ * Checks whether `entry` carries `key`; variable names compare case-insensitively.
+ *
+ * **Example** (Match a variable name with different casing)
+ *
+ * ```ts
+ * import { matchesKey, scan } from "@beep/scratchpad/effected/git/internal/config";
+ *
+ * const entry = scan("[core]\nFileMode = true\n").sections[0]?.entries[0];
+ * if (entry !== undefined) {
+ *   console.log(matchesKey(entry, "filemode")) // true
+ *   console.log(matchesKey("bare")(entry)) // false
+ * }
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
+ */
 export const matchesKey: {
 	(key: string): (entry: RawEntry) => boolean;
 	(entry: RawEntry, key: string): boolean;
@@ -456,6 +576,18 @@ export const matchesKey: {
 /**
  * Serializes a value for insertion into a config line: quoted and escaped
  * exactly when git's grammar demands it, verbatim otherwise.
+ *
+ * **Example** (Quote a value containing a comment marker)
+ *
+ * ```ts
+ * import { serializeValue } from "@beep/scratchpad/effected/git/internal/config";
+ *
+ * console.log(serializeValue("true")) // true
+ * console.log(serializeValue("value # comment")) // "value # comment"
+ * ```
+ *
+ * @category serialization
+ * @since 0.0.0
  */
 export const serializeValue = (value: string): string => {
 	const needsQuoting = value === "" || value !== value.trim() || /["\\\n\t\b#;]/.test(value);
@@ -469,28 +601,81 @@ export const serializeValue = (value: string): string => {
 	return `"${escaped}"`;
 };
 
-/** Serializes a section header. The subsection is quoted-and-escaped when present. */
+/**
+ * Serializes a section header. The subsection is quoted-and-escaped when present.
+ *
+ * **Example** (Serialize plain and subsection headers)
+ *
+ * ```ts
+ * import { serializeHeader } from "@beep/scratchpad/effected/git/internal/config";
+ *
+ * console.log(serializeHeader("core", undefined)) // [core]
+ * console.log(serializeHeader("origin")("remote")) // [remote "origin"]
+ * ```
+ *
+ * @category serialization
+ * @since 0.0.0
+ */
 export const serializeHeader: {
 	(subsection: string | undefined): (name: string) => string;
 	(name: string, subsection: string | undefined): string;
 } = dual(2, (name: string, subsection: string | undefined): string =>
 	subsection === undefined ? `[${name}]` : `[${name} "${subsection.replaceAll("\\", "\\\\").replaceAll('"', '\\"')}"]`);
 
-/** One text splice: replace `length` characters at `offset` with `content`. */
+/**
+ * One text splice: replace `length` characters at `offset` with `content`.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export interface Splice {
 	readonly offset: number;
 	readonly length: number;
 	readonly content: string;
 }
 
-/** Applies a single splice to the text. */
+/**
+ * Applies a single splice to replace a span of the text.
+ *
+ * **Example** (Replace a substring with a splice)
+ *
+ * ```ts
+ * import { applySplice } from "@beep/scratchpad/effected/git/internal/config";
+ *
+ * console.log(applySplice("abc", { offset: 1, length: 1, content: "XYZ" })) // aXYZc
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
 export const applySplice: {
 	(splice: Splice): (text: string) => string;
 	(text: string, splice: Splice): string;
 } = dual(2, (text: string, splice: Splice): string =>
 	text.slice(0, splice.offset) + splice.content + text.slice(splice.offset + splice.length));
 
-/** The indentation to use for a new entry in `section`: its first entry's, else a tab. */
+/**
+ * Finds the indentation to use for a new entry in `section`: its first entry's, else a tab.
+ *
+ * **Example** (Reuse the first entry indentation)
+ *
+ * ```ts
+ * import { scan, sectionIndent } from "@beep/scratchpad/effected/git/internal/config";
+ *
+ * const text = "[core]\n  bare\n";
+ * const section = scan(text).sections[0];
+ * if (section !== undefined) {
+ *   console.log(sectionIndent(text, section).length) // 2
+ * }
+ * const emptySection = scan("[core]\n").sections[0];
+ * if (emptySection !== undefined) {
+ *   console.log(sectionIndent("[core]\n", emptySection) === "\t") // true
+ * }
+ * ```
+ *
+ * @category formatting
+ * @since 0.0.0
+ */
 export const sectionIndent: {
 	(section: RawSection): (text: string) => string;
 	(text: string, section: RawSection): string;
@@ -502,7 +687,27 @@ export const sectionIndent: {
 	return text.slice(first.offset, end);
 });
 
-/** Where a new entry line inserts in `section`: after its last entry, else right after the header line. */
+/**
+ * Locates where a new entry line inserts in `section`: after its last entry, else right after the header line.
+ *
+ * **Example** (Locate insertion offsets in populated and empty sections)
+ *
+ * ```ts
+ * import { scan, sectionInsertOffset } from "@beep/scratchpad/effected/git/internal/config";
+ *
+ * const section = scan("[core]\n  bare\n").sections[0];
+ * if (section !== undefined) {
+ *   console.log(sectionInsertOffset(section)) // 14
+ * }
+ * const emptySection = scan("[core]\n").sections[0];
+ * if (emptySection !== undefined) {
+ *   console.log(sectionInsertOffset(emptySection)) // 7
+ * }
+ * ```
+ *
+ * @category getters
+ * @since 0.0.0
+ */
 export const sectionInsertOffset = (section: RawSection): number => {
 	const last = section.entries[section.entries.length - 1];
 	return last === undefined ? section.bodyStart : last.offset + last.length;

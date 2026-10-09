@@ -62,7 +62,18 @@ const decodeGitBoolean = S.decodeUnknownOption(GitBoolean);
  * One `[submodule "<name>"]` entry of a `.gitmodules` document, decoded into
  * typed fields.
  *
+ * **Example** (Construct a submodule entry)
+ *
+ * ```ts
+ * import { GitmodulesEntry } from "@beep/scratchpad/effected/git/Gitmodules"
+ *
+ * const entry = GitmodulesEntry.make({ name: "lib", path: "vendor/lib", url: "../lib.git" })
+ * console.log(entry.path) // vendor/lib
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class GitmodulesEntry extends S.Class<GitmodulesEntry>($I`GitmodulesEntry`)({
 	/**
@@ -103,7 +114,18 @@ export class GitmodulesEntry extends S.Class<GitmodulesEntry>($I`GitmodulesEntry
 /**
  * A `[submodule]` section could not be decoded into a {@link GitmodulesEntry}.
  *
+ * **Example** (Describe a missing submodule path)
+ *
+ * ```ts
+ * import { GitmodulesDecodeError } from "@beep/scratchpad/effected/git/Gitmodules"
+ *
+ * const error = GitmodulesDecodeError.make({ name: "lib", reason: "missingPath" })
+ * console.log(error.message) // submodule "lib" has no path
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class GitmodulesDecodeError extends S.TaggedError<GitmodulesDecodeError>($I`GitmodulesDecodeError`)("GitmodulesDecodeError", {
 	/** The submodule name (the section's subsection) that failed to decode. */
@@ -115,7 +137,21 @@ export class GitmodulesDecodeError extends S.TaggedError<GitmodulesDecodeError>(
 	/** What went wrong. */
 	reason: S.Literals(["missingPath", "missingUrl", "invalidValue"]).annotateKey({ description: "What went wrong." }),
 }, $I.annote("GitmodulesDecodeError", { description: "A `[submodule]` section could not be decoded into a GitmodulesEntry." })) {
-	/** Renders the failing submodule and field into a one-line message. */
+	/**
+	 *  Renders the failing submodule and field into a one-line message. 
+	 *
+	 * **Example** (Read a missing URL diagnostic)
+	 *
+	 * ```ts
+	 * import { GitmodulesDecodeError } from "@beep/scratchpad/effected/git/Gitmodules"
+	 *
+	 * const error = GitmodulesDecodeError.make({ name: "lib", reason: "missingUrl" })
+	 * console.log(error.message) // submodule "lib" has no url
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return this.reason === "missingPath"
 			? `submodule "${this.name}" has no path`
@@ -130,6 +166,8 @@ export class GitmodulesDecodeError extends S.TaggedError<GitmodulesDecodeError>(
  * parse as git-config at all, or a submodule section failed to decode.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type GitmodulesParseError = GitConfigParseError | GitmodulesDecodeError;
 
@@ -172,7 +210,20 @@ const render = (fields: (typeof Gitmodules)["Encoded"]): string => {
  * canonical, freshly-rendered document is wanted (there is no source
  * formatting to preserve).
  *
+ * **Example** (Inspect decoded entries)
+ *
+ * ```ts
+ * import { Gitmodules } from "@beep/scratchpad/effected/git/Gitmodules"
+ * import * as Result from "effect/Result"
+ *
+ * const text = '[submodule "lib"]\n\tpath = lib\n\turl = ../lib.git\n'
+ * const modules = Result.getOrThrow(Gitmodules.parseResult(text))
+ * console.log(modules.entries[0]?.name) // lib
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class Gitmodules extends S.Class<Gitmodules>($I`Gitmodules`)({
 	/** The decoded submodule entries, in first-appearance order. */
@@ -182,17 +233,33 @@ export class Gitmodules extends S.Class<Gitmodules>($I`Gitmodules`)({
 	)).annotateKey({ description: "The decoded submodule entries, in first-appearance order." }),
 }, $I.annote("Gitmodules", { description: "The typed view over a `.gitmodules` document: the decoded submodule entries, in first-appearance order." })) {
 	/**
-  * Decodes an already-parsed git-config document into submodule entries —
-  * the pure, synchronous primitive.
-  *
-  * **Details**
-  *
-  * Sections named `submodule` (case-insensitively) with a subsection are
-  * decoded; duplicate sections for one name merge with git's last-wins
-  * read semantics. An entry missing `path` or `url`, or carrying an
-  * undecodable `shallow`/`ignore`/`fetchRecurseSubmodules` value, fails
-  * typed.
-  */
+	 * Decodes an already-parsed git-config document into submodule entries —
+	 * the pure, synchronous primitive.
+	 *
+	 * **Details**
+	 *
+	 * Sections named `submodule` (case-insensitively) with a subsection are
+	 * decoded; duplicate sections for one name merge with git's last-wins
+	 * read semantics. An entry missing `path` or `url`, or carrying an
+	 * undecodable `shallow`/`ignore`/`fetchRecurseSubmodules` value, fails
+	 * typed.
+	 *
+	 * **Example** (Decode a parsed config)
+	 *
+	 * ```ts
+	 * import { Gitmodules } from "@beep/scratchpad/effected/git/Gitmodules"
+	 * import { GitConfig } from "@beep/scratchpad/effected/git/GitConfig"
+	 * import * as Result from "effect/Result"
+	 *
+	 * const text = '[submodule "lib"]\n\tpath = lib\n\turl = ../lib.git\n'
+	 * const config = Result.getOrThrow(GitConfig.parseResult(text))
+	 * const modules = Result.getOrThrow(Gitmodules.fromConfigResult(config))
+	 * console.log(modules.entries[0]?.url) // ../lib.git
+	 * ```
+	 *
+	 * @category decoding
+	 * @since 0.0.0
+	 */
 	static fromConfigResult(config: GitConfig): Result.Result<Gitmodules, GitmodulesDecodeError> {
 		interface Collected {
 			readonly name: string;
@@ -279,6 +346,20 @@ export class Gitmodules extends S.Class<Gitmodules>($I`Gitmodules`)({
 	 * Parses `.gitmodules` text into the typed view — the pure, synchronous
 	 * primitive over {@link GitConfig.parseResult} plus
 	 * {@link Gitmodules.fromConfigResult}.
+	 *
+	 * **Example** (Parse a submodule synchronously)
+	 *
+	 * ```ts
+	 * import { Gitmodules } from "@beep/scratchpad/effected/git/Gitmodules"
+	 * import * as Result from "effect/Result"
+	 *
+	 * const text = '[submodule "lib"]\n\tpath = lib\n\turl = ../lib.git\n'
+	 * const modules = Result.getOrThrow(Gitmodules.parseResult(text))
+	 * console.log(modules.entries[0]?.path) // lib
+	 * ```
+	 *
+	 * @category parsing
+	 * @since 0.0.0
 	 */
 	static parseResult(text: string): Result.Result<Gitmodules, GitmodulesParseError> {
 		const config = GitConfig.parseResult(text);
@@ -287,28 +368,56 @@ export class Gitmodules extends S.Class<Gitmodules>($I`Gitmodules`)({
 	}
 
 	/**
-  * Parses `.gitmodules` text into the typed view.
-  *
-  * **Details**
-  *
-  * Defined in terms of {@link Gitmodules.parseResult} — synchronous callers
-  * can use that variant directly.
-  */
+	 * Parses `.gitmodules` text into the typed view.
+	 *
+	 * **Details**
+	 *
+	 * Defined in terms of {@link Gitmodules.parseResult} — synchronous callers
+	 * can use that variant directly.
+	 *
+	 * **Example** (Run the submodule parser)
+	 *
+	 * ```ts
+	 * import { Gitmodules } from "@beep/scratchpad/effected/git/Gitmodules"
+	 * import * as Effect from "effect/Effect"
+	 *
+	 * const text = '[submodule "lib"]\n\tpath = lib\n\turl = ../lib.git\n'
+	 * const modules = Effect.runSync(Gitmodules.parse(text))
+	 * console.log(modules.entries[0]?.url) // ../lib.git
+	 * ```
+	 *
+	 * @category parsing
+	 * @since 0.0.0
+	 */
 	static readonly parse = Effect.fn("Gitmodules.parse")((text: string) =>
 		Effect.fromResult(Gitmodules.parseResult(text)),
 	);
 
 	/**
-  * Renders the entries as a canonical `.gitmodules` document.
-  *
-  * **Gotchas**
-  *
-  * This is a fresh, canonical rendering — one section per entry, tabs, a
-  * fixed field order — NOT a lossless round-trip of any source document.
-  * To mutate an existing `.gitmodules` while preserving its formatting,
-  * compile entry-level mutations into {@link GitConfig} edits instead
-  * ({@link Gitmodules.setUrl} and friends).
-  */
+	 * Renders the entries as a canonical `.gitmodules` document.
+	 *
+	 * **Gotchas**
+	 *
+	 * This is a fresh, canonical rendering — one section per entry, tabs, a
+	 * fixed field order — NOT a lossless round-trip of any source document.
+	 * To mutate an existing `.gitmodules` while preserving its formatting,
+	 * compile entry-level mutations into {@link GitConfig} edits instead
+	 * ({@link Gitmodules.setUrl} and friends).
+	 *
+	 * **Example** (Render canonical submodule text)
+	 *
+	 * ```ts
+	 * import { Gitmodules, GitmodulesEntry } from "@beep/scratchpad/effected/git/Gitmodules"
+	 *
+	 * const modules = Gitmodules.make({
+	 *   entries: [GitmodulesEntry.make({ name: "lib", path: "lib", url: "../lib.git" })]
+	 * })
+	 * console.log(JSON.stringify(modules.stringify())) // "[submodule \"lib\"]\n\tpath = lib\n\turl = ../lib.git\n"
+	 * ```
+	 *
+	 * @category formatting
+	 * @since 0.0.0
+	 */
 	stringify(): string {
 		return render(this);
 	}
@@ -317,6 +426,20 @@ export class Gitmodules extends S.Class<Gitmodules>($I`Gitmodules`)({
 	 * Schema transformation between `.gitmodules` text and the typed view:
 	 * decoding parses (and fails on the first undecodable entry), encoding
 	 * renders the canonical document per {@link Gitmodules.stringify}.
+	 *
+	 * **Example** (Decode submodule text with a codec)
+	 *
+	 * ```ts
+	 * import { Gitmodules } from "@beep/scratchpad/effected/git/Gitmodules"
+	 * import * as S from "effect/Schema"
+	 *
+	 * const text = '[submodule "lib"]\n\tpath = lib\n\turl = ../lib.git\n'
+	 * const modules = S.decodeUnknownSync(Gitmodules.FromString)(text)
+	 * console.log(modules.entries[0]?.name) // lib
+	 * ```
+	 *
+	 * @category codecs
+	 * @since 0.0.0
 	 */
 	static readonly FromString: S.Codec<Gitmodules, string> = S.String.pipe(
 		S.decodeTo(
@@ -340,12 +463,48 @@ export class Gitmodules extends S.Class<Gitmodules>($I`Gitmodules`)({
 	/**
 	 * Rewrites `submodule.<name>.url` in the document — a surgical
 	 * {@link GitConfig.set}, so git's own formatting survives.
+	 *
+	 * **Example** (Rewrite a submodule URL)
+	 *
+	 * ```ts
+	 * import * as O from "effect/Option"
+	 * import { Gitmodules } from "@beep/scratchpad/effected/git/Gitmodules"
+	 * import { GitConfig } from "@beep/scratchpad/effected/git/GitConfig"
+	 * import * as Result from "effect/Result"
+	 *
+	 * const text = '[submodule "lib"]\n\tpath = lib\n\turl = ../lib.git\n'
+	 * const config = Result.getOrThrow(GitConfig.parseResult(text))
+	 * const edited = Result.getOrThrow(Gitmodules.setUrl(config, "lib", "../new.git"))
+	 * console.log(O.getOrNull(edited.get("submodule", "lib", "url"))) // ../new.git
+	 * ```
+	 *
+	 * @category setters
+	 * @since 0.0.0
 	 */
 	static setUrl(config: GitConfig, name: string, url: string): Result.Result<GitConfig, GitConfigEditError> {
 		return config.set("submodule", name, "url", url);
 	}
 
-	/** Rewrites `submodule.<name>.path` in the document, surgically. */
+	/**
+	 *  Rewrites `submodule.<name>.path` in the document, surgically. 
+	 *
+	 * **Example** (Rewrite a submodule path)
+	 *
+	 * ```ts
+	 * import * as O from "effect/Option"
+	 * import { Gitmodules } from "@beep/scratchpad/effected/git/Gitmodules"
+	 * import { GitConfig } from "@beep/scratchpad/effected/git/GitConfig"
+	 * import * as Result from "effect/Result"
+	 *
+	 * const text = '[submodule "lib"]\n\tpath = lib\n\turl = ../lib.git\n'
+	 * const config = Result.getOrThrow(GitConfig.parseResult(text))
+	 * const edited = Result.getOrThrow(Gitmodules.setPath(config, "lib", "vendor/lib"))
+	 * console.log(O.getOrNull(edited.get("submodule", "lib", "path"))) // vendor/lib
+	 * ```
+	 *
+	 * @category setters
+	 * @since 0.0.0
+	 */
 	static setPath(config: GitConfig, name: string, path: string): Result.Result<GitConfig, GitConfigEditError> {
 		return config.set("submodule", name, "path", path);
 	}
@@ -353,6 +512,23 @@ export class Gitmodules extends S.Class<Gitmodules>($I`Gitmodules`)({
 	/**
 	 * Records (or, with `branch` omitted, removes) `submodule.<name>.branch`,
 	 * surgically.
+	 *
+	 * **Example** (Record a tracking branch)
+	 *
+	 * ```ts
+	 * import * as O from "effect/Option"
+	 * import { Gitmodules } from "@beep/scratchpad/effected/git/Gitmodules"
+	 * import { GitConfig } from "@beep/scratchpad/effected/git/GitConfig"
+	 * import * as Result from "effect/Result"
+	 *
+	 * const text = '[submodule "lib"]\n\tpath = lib\n\turl = ../lib.git\n'
+	 * const config = Result.getOrThrow(GitConfig.parseResult(text))
+	 * const edited = Result.getOrThrow(Gitmodules.setBranch(config, "lib", "main"))
+	 * console.log(O.getOrNull(edited.get("submodule", "lib", "branch"))) // main
+	 * ```
+	 *
+	 * @category setters
+	 * @since 0.0.0
 	 */
 	static setBranch(config: GitConfig, name: string, branch?: string): Result.Result<GitConfig, GitConfigEditError> {
 		return branch === undefined
@@ -363,6 +539,23 @@ export class Gitmodules extends S.Class<Gitmodules>($I`Gitmodules`)({
 	/**
 	 * Records (or, with `shallow` omitted, removes) `submodule.<name>.shallow`,
 	 * surgically.
+	 *
+	 * **Example** (Record shallow cloning)
+	 *
+	 * ```ts
+	 * import * as O from "effect/Option"
+	 * import { Gitmodules } from "@beep/scratchpad/effected/git/Gitmodules"
+	 * import { GitConfig } from "@beep/scratchpad/effected/git/GitConfig"
+	 * import * as Result from "effect/Result"
+	 *
+	 * const text = '[submodule "lib"]\n\tpath = lib\n\turl = ../lib.git\n'
+	 * const config = Result.getOrThrow(GitConfig.parseResult(text))
+	 * const edited = Result.getOrThrow(Gitmodules.setShallow(config, "lib", true))
+	 * console.log(O.getOrNull(edited.get("submodule", "lib", "shallow"))) // true
+	 * ```
+	 *
+	 * @category setters
+	 * @since 0.0.0
 	 */
 	static setShallow(config: GitConfig, name: string, shallow?: boolean): Result.Result<GitConfig, GitConfigEditError> {
 		return shallow === undefined
@@ -373,6 +566,23 @@ export class Gitmodules extends S.Class<Gitmodules>($I`Gitmodules`)({
 	/**
 	 * Adds a whole entry as a new `[submodule "<name>"]` section at the end of
 	 * the document, field by field through the surgical editor.
+	 *
+	 * **Example** (Append a submodule entry)
+	 *
+	 * ```ts
+	 * import { Gitmodules, GitmodulesEntry } from "@beep/scratchpad/effected/git/Gitmodules"
+	 * import { GitConfig } from "@beep/scratchpad/effected/git/GitConfig"
+	 * import * as Result from "effect/Result"
+	 * import * as O from "effect/Option"
+	 *
+	 * const config = Result.getOrThrow(GitConfig.parseResult(""))
+	 * const entry = GitmodulesEntry.make({ name: "lib", path: "lib", url: "../lib.git" })
+	 * const edited = Result.getOrThrow(Gitmodules.add(config, entry))
+	 * console.log(O.getOrNull(edited.get("submodule", "lib", "path"))) // lib
+	 * ```
+	 *
+	 * @category setters
+	 * @since 0.0.0
 	 */
 	static add(config: GitConfig, entry: GitmodulesEntry): Result.Result<GitConfig, GitConfigEditError> {
 		let result = config.addSection("submodule", entry.name);
@@ -401,21 +611,56 @@ export class Gitmodules extends S.Class<Gitmodules>($I`Gitmodules`)({
 		return result;
 	}
 
-	/** Removes every `[submodule "<name>"]` section from the document, surgically. */
+	/**
+	 *  Removes every `[submodule "<name>"]` section from the document, surgically. 
+	 *
+	 * **Example** (Remove all sections for a submodule)
+	 *
+	 * ```ts
+	 * import { Gitmodules } from "@beep/scratchpad/effected/git/Gitmodules"
+	 * import { GitConfig } from "@beep/scratchpad/effected/git/GitConfig"
+	 * import * as Result from "effect/Result"
+	 *
+	 * const text = '[submodule "lib"]\n\tpath = lib\n\turl = ../lib.git\n'
+	 * const config = Result.getOrThrow(GitConfig.parseResult(text))
+	 * const edited = Result.getOrThrow(Gitmodules.remove(config, "lib"))
+	 * console.log(edited.stringify() === "") // true
+	 * ```
+	 *
+	 * @category setters
+	 * @since 0.0.0
+	 */
 	static remove(config: GitConfig, name: string): Result.Result<GitConfig, GitConfigEditError> {
 		return config.removeSection("submodule", name);
 	}
 
 	/**
-  * Renames the submodule's section header(s) from `oldName` to `newName`,
-  * leaving every field line untouched.
-  *
-  * **Gotchas**
-  *
-  * This renames the `.gitmodules` section ONLY. A full submodule rename is
-  * a multi-step sequence (worktree move, `.git/modules` move, gitdir
-  * pointer, `core.worktree`, index restage) that belongs to the caller.
-  */
+	 * Renames the submodule's section header(s) from `oldName` to `newName`,
+	 * leaving every field line untouched.
+	 *
+	 * **Gotchas**
+	 *
+	 * This renames the `.gitmodules` section ONLY. A full submodule rename is
+	 * a multi-step sequence (worktree move, `.git/modules` move, gitdir
+	 * pointer, `core.worktree`, index restage) that belongs to the caller.
+	 *
+	 * **Example** (Rename a submodule section)
+	 *
+	 * ```ts
+	 * import * as O from "effect/Option"
+	 * import { Gitmodules } from "@beep/scratchpad/effected/git/Gitmodules"
+	 * import { GitConfig } from "@beep/scratchpad/effected/git/GitConfig"
+	 * import * as Result from "effect/Result"
+	 *
+	 * const text = '[submodule "lib"]\n\tpath = lib\n\turl = ../lib.git\n'
+	 * const config = Result.getOrThrow(GitConfig.parseResult(text))
+	 * const edited = Result.getOrThrow(Gitmodules.rename(config, "lib", "library"))
+	 * console.log(O.getOrNull(edited.get("submodule", "library", "path"))) // lib
+	 * ```
+	 *
+	 * @category setters
+	 * @since 0.0.0
+	 */
 	static rename(config: GitConfig, oldName: string, newName: string): Result.Result<GitConfig, GitConfigEditError> {
 		return config.renameSection("submodule", oldName, "submodule", newName);
 	}
