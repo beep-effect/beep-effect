@@ -40,7 +40,7 @@ const Scenario = S.Struct({
   red: S.optionalKey(S.Boolean),
 });
 const manifest = () =>
-  S.decodeUnknownEffect(GoalManifest)({
+  S.decodeEffect(GoalManifest)({
     initiative: { id: "demo", packetId: "packet-demo", status: "completed-retained" },
     completionGate: {
       operator: "yeet",
@@ -63,9 +63,10 @@ const check = (id: number, completed: string, conclusion: string) => ({
 });
 const fixtureIo = (acceptedText: string, scenario: typeof Scenario.Type = {}) =>
   GoalCompletionIo.of({
-    git: (_root, args) =>
-      Effect.succeed(A.head(args).pipe(O.contains("show")) ? acceptedText : "git@github.com:example/repo.git\n"),
-    github: (_root, args) => {
+    git: Effect.fn("GoalCompletionIo.git")((_root: string, args: ReadonlyArray<string>) =>
+      Effect.succeed(A.head(args).pipe(O.contains("show")) ? acceptedText : "git@github.com:example/repo.git\n")
+    ),
+    github: Effect.fn("GoalCompletionIo.github")((_root: string, args: ReadonlyArray<string>) => {
       if (scenario.failure === true)
         return Effect.fail(YeetCommandError.make({ message: "Synthetic network error or rate limit" }));
       const endpoint = O.getOrElse(A.get(args, 1), () => "");
@@ -150,7 +151,7 @@ const fixtureIo = (acceptedText: string, scenario: typeof Scenario.Type = {}) =>
           commit: { tree: { sha: "merge-tree" } },
         })
       );
-    },
+    }),
   });
 const observe = Effect.fn("CompletionTest.observe")(function* (scenario: typeof Scenario.Type = {}) {
   const value = yield* manifest();
@@ -173,7 +174,7 @@ it.layer(NodeServices.layer)("goal completion observations and storage", (it) =>
         const file = path.join(goals, slug, "ops", "manifest.json");
         if (!(yield* fs.exists(file))) continue;
         const text = yield* fs.readFileString(file);
-        yield* S.decodeUnknownEffect(GoalManifest)(O.getOrThrow(parseGoalManifestText(text)));
+        yield* S.decodeUnknownEffect(GoalManifest)(parseGoalManifestText(text).pipe(O.getOrThrow));
         decoded += 1;
       }
       expect(decoded).toBeGreaterThan(0);

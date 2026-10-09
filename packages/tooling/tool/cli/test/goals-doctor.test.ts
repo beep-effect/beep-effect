@@ -152,12 +152,12 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
           Effect.provideService(
             GoalCompletionIo,
             GoalCompletionIo.of({
-              git: () => Effect.succeed("git@github.com:example/repo.git"),
-              github: () =>
+              git: Effect.fn("GoalsDoctorTest.offlineGit")(() => Effect.succeed("git@github.com:example/repo.git")),
+              github: Effect.fn("GoalsDoctorTest.offlineGitHub")(() =>
                 Effect.sync(() => {
                   networkReads += 1;
-                  throw new Error("offline network read");
-                }),
+                }).pipe(Effect.andThen(Effect.die("offline network read")))
+              ),
             })
           )
         )
