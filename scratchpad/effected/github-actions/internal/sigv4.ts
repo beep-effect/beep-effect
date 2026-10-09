@@ -1,3 +1,4 @@
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as Function from "effect/Function";
 import { sha256Hex } from "./digest.ts";
 import * as R from "effect/Record";
@@ -121,10 +122,10 @@ export const canonicalize: {
 	// The sort is not cosmetic: the signature covers this exact string, so any
 	// other order produces a valid-looking signature the server will reject with
 	// nothing more informative than `SignatureDoesNotMatch`.
-	const lowered = new Map(R.toEntries(headers).map(([name, value]) => [name.toLowerCase(), value]));
-	const canonicalNames = [...lowered.keys()].sort();
+	const lowered = MutableHashMap.fromIterable(R.toEntries(headers).map(([name, value]) => [name.toLowerCase(), value] as const));
+	const canonicalNames = [...MutableHashMap.keys(lowered)].sort();
 	const canonicalHeaders = canonicalNames
-		.map((name) => `${name}:${(lowered.get(name) ?? "").trim().replace(/\s+/g, " ")}\n`)
+		.map((name) => `${name}:${(O.getOrElse(MutableHashMap.get(lowered, name), () => "")).trim().replace(/\s+/g, " ")}\n`)
 		.join("");
 	const signedHeaders = canonicalNames.join(";");
 

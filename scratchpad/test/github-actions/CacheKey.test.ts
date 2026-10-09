@@ -11,6 +11,7 @@ import * as S from "effect/Schema";
 import * as Result from "effect/Result";
 import { flow } from "effect/Function";
 import { systemError } from "effect/PlatformError";
+import { InvalidDigestLengthError } from "../../effected/github-actions/CacheKey.ts";
 import { CacheKey, CacheKeyBadPatternError, CacheKeyReadError } from "../../effected/github-actions/index.ts";
 
 /**
@@ -241,11 +242,11 @@ describe("CacheKey", () => {
 			}
 		});
 
-		it("throws a RangeError on a length outside 1..64 or a fractional one", () => {
+		it("throws an InvalidDigestLengthError on a length outside 1..64 or a fractional one", () => {
 			// A bad length is wiring, not data: 64 is all sha256 has, and answering
 			// fewer characters than asked would be a silent lie.
 			for (const bad of [0, -1, 1.5, 65, Number.NaN]) {
-				assert.throws(() => CacheKey.digest("main", bad), RangeError);
+				assert.throws(() => CacheKey.digest("main", bad), InvalidDigestLengthError);
 			}
 		});
 	});

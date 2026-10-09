@@ -4,6 +4,7 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as O from "@beep/utils/Option";
 import * as Path from "effect/Path";
 import * as Result from "effect/Result";
@@ -69,22 +70,16 @@ export class ArtifactError extends S.TaggedError<ArtifactError>($I`ArtifactError
 	override get message(): string {
 		const about = this.artifact === undefined ? "" : ` "${this.artifact}"`;
 		const detail = this.detail === undefined ? "" : `: ${this.detail}`;
-		switch (this.reason) {
-			case "misconfigured":
-				return `The artifact service is not reachable from here${detail}`;
-			case "unreachable":
-				return `The artifact service could not be reached${detail}`;
-			case "refused":
-				return `The artifact service refused${about}${this.status === undefined ? "" : ` with status ${this.status}`}${detail}`;
-			case "notFound":
-				return `No artifact${about} exists in this run`;
-			case "archiveFailed":
-				return `The artifact archive could not be built or extracted${about}${this.stderr === undefined ? "" : `: ${this.stderr}`}`;
-			case "transferFailed":
-				return `The artifact archive did not transfer${about}`;
-			default:
-				return `The artifact call cannot be made as asked${detail}`;
-		}
+		return Match.value(this.reason).pipe(
+			Match.when("misconfigured", () => `The artifact service is not reachable from here${detail}`),
+			Match.when("unreachable", () => `The artifact service could not be reached${detail}`),
+			Match.when("refused", () => `The artifact service refused${about}${this.status === undefined ? "" : ` with status ${this.status}`}${detail}`),
+			Match.when("notFound", () => `No artifact${about} exists in this run`),
+			Match.when("archiveFailed", () => `The artifact archive could not be built or extracted${about}${this.stderr === undefined ? "" : `: ${this.stderr}`}`),
+			Match.when("transferFailed", () => `The artifact archive did not transfer${about}`),
+			Match.when("invalidOptions", () => `The artifact call cannot be made as asked${detail}`),
+			Match.exhaustive,
+		);
 	}
 }
 
@@ -258,9 +253,9 @@ const toItem = (row: unknown): ArtifactItem => {
 	};
 };
 
-const make = (
+const make = Effect.fn("make")(function* (
 	transfer: FileBlobTransfer,
-): Effect.Effect<
+): Effect.fn.Return<
 	ArtifactShape,
 	never,
 	| ActionEnvironment
@@ -268,8 +263,7 @@ const make = (
 	| FileSystem.FileSystem
 	| Path.Path
 	| ChildProcessSpawner.ChildProcessSpawner
-> =>
-	Effect.gen(function* () {
+> {
 		const http = yield* HttpClient.HttpClient;
 		const fs = yield* FileSystem.FileSystem;
 		const path = yield* Path.Path;
@@ -422,8 +416,7 @@ const make = (
 							detail: "retentionDays must be positive — omit it to use the repository default",
 						});
 				}
-				return yield* scratch(name, (directory) =>
-					Effect.gen(function* () {
+				return yield* scratch(name, Effect.fnUntraced(function* (directory: string) {
 						const packed = path.join(directory, "artifact.zip");
 						yield* zip(files, rootDirectory, packed, options?.compressionLevel ?? 6, name);
 
@@ -463,9 +456,11 @@ const make = (
 								name,
 								size: String(size.size),
 								hash: `sha256:${digest}`,
-								...(options?.retentionDays === undefined
-									? {}
-									: { expiresAt: DateTime.formatIso(DateTime.makeUnsafe((now ?? 0) + options.retentionDays * 86_400_000)) }),
+								...O.getSomesStruct({
+									expiresAt: O.map(O.fromUndefinedOr(options?.retentionDays), (retentionDays) =>
+										DateTime.formatIso(DateTime.makeUnsafe((now ?? 0) + retentionDays * 86_400_000)),
+									),
+								}),
 							}),
 							name,
 						);
@@ -526,8 +521,7 @@ const make = (
 								Effect.as(destination),
 								Effect.mapError((cause) => ArtifactError.make({ reason: "archiveFailed", artifact: label, cause })),
 							);
-				yield* scratch(label, (directory) =>
-					Effect.gen(function* () {
+				yield* scratch(label, Effect.fnUntraced(function* (directory: string) {
 						const packed = path.join(directory, "artifact.zip");
 						yield* transfer.downloadToFile(url, packed).pipe(moved(label));
 						yield* unzip(packed, downloadPath, label);

@@ -92,7 +92,7 @@ export const backendIdsFrom = (token: string): Result.Result<BackendIds, string>
 		return Result.fail(`the runtime token is not a readable JWT: ${payload.failure.detail}`);
 	}
 	const claims = payload.success;
-	const scope = typeof claims === "object" && claims !== null && "scp" in claims ? claims.scp : undefined;
+	const scope = P.isObjectKeyword(claims) && !P.isFunction(claims) && "scp" in claims ? claims.scp : undefined;
 	if (!P.isString(scope)) {
 		return Result.fail("the runtime token carries no `scp` claim");
 	}
@@ -128,8 +128,7 @@ export const backendIdsFrom = (token: string): Result.Result<BackendIds, string>
  *
  * @internal
  */
-export const resultsBackend = (env: ActionEnvironmentShape): Effect.Effect<ResultsBackend, string> =>
-	Effect.gen(function* () {
+export const resultsBackend = Effect.fn("resultsBackend")(function* (env: ActionEnvironmentShape) {
 		const url = yield* env.getOptional(RESULTS_URL);
 		const token = yield* env.getOptional(RUNTIME_TOKEN);
 		if (O.isNone(url)) {

@@ -108,12 +108,7 @@ export interface ClientLayerOptions extends ReadOptions {
  * `GET /users/{slug}[bot]` rejects an app JWT, so without one the request runs
  * unauthenticated against GitHub's sixty-per-hour-per-IP limit.
  */
-const identified = (
-	app: GitHubAppShape,
-	options: ProvisionOptions,
-	minted: InstallationToken,
-): Effect.Effect<InstallationToken> =>
-	Effect.gen(function* () {
+const identified = Effect.fn("identified")(function* (app: GitHubAppShape, options: ProvisionOptions, minted: InstallationToken) {
 		const resolved = yield* Effect.result(
 			app.identity({
 				appId: options.appId,
@@ -222,8 +217,7 @@ export class GitHubToken {
 				...O.getSomesStruct({ installationId: O.fromUndefinedOr(options.installationId) }),
 				...O.getSomesStruct({ owner: O.fromUndefinedOr(options.owner) }),
 			}),
-			(minted) =>
-				Effect.gen(function* () {
+			Effect.fnUntraced(function* (minted: InstallationToken) {
 					if (options.required !== undefined) {
 						// Pure — no service, no request. The permissions GitHub granted
 						// came back with the token.

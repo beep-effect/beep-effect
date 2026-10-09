@@ -5,6 +5,8 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
+import * as R from "effect/Record";
 import * as O from "@beep/utils/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
@@ -78,30 +80,26 @@ export class PackageManagerInstallerError extends S.TaggedError<PackageManagerIn
 ) {
 	override get message(): string {
 		const pin = `${this.name}@${this.version}`;
-		switch (this.reason) {
-			case "downloadFailed":
-				return `Could not download ${pin}${this.subject === undefined ? "" : ` from ${this.subject}`}`;
-			case "extractFailed":
-				return `Could not extract ${pin}${this.subject === undefined ? "" : ` (${this.subject})`}`;
-			case "integrityMismatch":
-				// Both hashes are absent on the path where the digest itself could
-				// not be computed, which is a failure to VERIFY rather than a
-				// verified mismatch. Saying so beats "expected undefined, got
-				// undefined", which reads as a mismatch that was actually measured.
-				return this.expected === undefined || this.actual === undefined
-					? `Could not verify the integrity of ${pin}${this.subject === undefined ? "" : ` (${this.subject})`}`
-					: `Integrity mismatch for ${pin}: expected ${this.expected}, got ${this.actual}`;
-			case "integrityMissing":
-				return this.subject === undefined
-					? `Neither the pin for ${pin} nor the integrity option carries an integrity hash, and requireIntegrity is set`
-					: `No integrity was supplied for ${this.subject}, which ${pin} needs on this runner`;
-			case "unsupportedPlatform":
-				return `No ${pin} build is published for ${this.subject}`;
-			case "layoutUnexpected":
-				return `The ${pin} artifact does not have the expected layout${this.subject === undefined ? "" : `: ${this.subject}`}`;
-			default:
-				return `Could not cache ${pin} into the tool cache${this.subject === undefined ? "" : `: ${this.subject}`}`;
-		}
+		return Match.value(this.reason).pipe(
+			Match.when("downloadFailed", () => `Could not download ${pin}${this.subject === undefined ? "" : ` from ${this.subject}`}`),
+			Match.when("extractFailed", () => `Could not extract ${pin}${this.subject === undefined ? "" : ` (${this.subject})`}`),
+			Match.when("integrityMismatch", () =>
+			// Both hashes are absent on the path where the digest itself could
+			// not be computed, which is a failure to VERIFY rather than a
+			// verified mismatch. Saying so beats "expected undefined, got
+			// undefined", which reads as a mismatch that was actually measured.
+			this.expected === undefined || this.actual === undefined
+				? `Could not verify the integrity of ${pin}${this.subject === undefined ? "" : ` (${this.subject})`}`
+				: `Integrity mismatch for ${pin}: expected ${this.expected}, got ${this.actual}`,
+			),
+			Match.when("integrityMissing", () => this.subject === undefined
+				? `Neither the pin for ${pin} nor the integrity option carries an integrity hash, and requireIntegrity is set`
+				: `No integrity was supplied for ${this.subject}, which ${pin} needs on this runner`),
+			Match.when("unsupportedPlatform", () => `No ${pin} build is published for ${this.subject}`),
+			Match.when("layoutUnexpected", () => `The ${pin} artifact does not have the expected layout${this.subject === undefined ? "" : `: ${this.subject}`}`),
+			Match.when("cacheFailed", () => `Could not cache ${pin} into the tool cache${this.subject === undefined ? "" : `: ${this.subject}`}`),
+			Match.exhaustive,
+		);
 	}
 }
 
@@ -374,20 +372,21 @@ const registryTarballUrl = (name: string, version: string, major: number, regist
 
 /** Normalize a package.json `bin` value into name → relative path entries. */
 const normalizeBins = (bin: unknown, fallbackName: string): O.Option<Record<string, string>> => {
-	if (typeof bin === "string") {
+	if (P.isString(bin)) {
 		return O.some({ [fallbackName]: bin.replace(/^\.\//, "") });
 	}
-	if (typeof bin !== "object" || bin === null) {
+	if (!P.isObjectOrArray(bin)) {
 		return O.none();
 	}
 	const entries: Record<string, string> = {};
-	for (const [name, value] of Object.entries(bin)) {
-		if (typeof value !== "string") {
+	const properties: ReadonlyArray<[string, unknown]> = R.toEntries<never, unknown>(bin);
+	for (const [name, value] of properties) {
+		if (!P.isString(value)) {
 			return O.none();
 		}
 		entries[name] = value.replace(/^\.\//, "");
 	}
-	return Object.keys(entries).length === 0 ? O.none() : O.some(entries);
+	return R.keys(entries).length === 0 ? O.none() : O.some(entries);
 };
 
 /** Map a `RUNNER_ARCH` value (`X64`, `ARM64`) onto the Node arch spelling. */
@@ -463,28 +462,27 @@ const make = Effect.gen(function* () {
 	 * `devEngines` pins routinely carry none, and the opt-in strictness lives in
 	 * `requireIntegrity`, checked before anything is downloaded.
 	 */
-	const verifyIntegrity = (pin: PackageManagerPin, file: string): Effect.Effect<void, PackageManagerInstallerError> =>
-		Effect.gen(function* () {
-			const integrity = pin.integrity;
-			if (integrity === undefined) {
-				yield* Effect.logWarning(
-					`The pin ${pin.toString()} carries no integrity hash and none was supplied; the downloaded artifact was not verified.`,
-				);
-				return;
-			}
-			const dot = integrity.indexOf(".");
-			const algorithm = integrity.slice(0, dot);
-			const expectedHex = integrity.slice(dot + 1);
-			const actualHex = yield* hashFile(pin, file, algorithm);
-			if (actualHex !== expectedHex) {
-				return yield* errorFor(pin)({
-						reason: "integrityMismatch",
-						subject: file,
-						expected: integrity,
-						actual: `${algorithm}.${actualHex}`,
-					});
-			}
-		});
+	const verifyIntegrity = Effect.fnUntraced(function* (pin: PackageManagerPin, file: string): Effect.fn.Return<void, PackageManagerInstallerError> {
+		const integrity = pin.integrity;
+		if (integrity === undefined) {
+			yield* Effect.logWarning(
+				`The pin ${pin.toString()} carries no integrity hash and none was supplied; the downloaded artifact was not verified.`,
+			);
+			return;
+		}
+		const dot = integrity.indexOf(".");
+		const algorithm = integrity.slice(0, dot);
+		const expectedHex = integrity.slice(dot + 1);
+		const actualHex = yield* hashFile(pin, file, algorithm);
+		if (actualHex !== expectedHex) {
+			return yield* errorFor(pin)({
+					reason: "integrityMismatch",
+					subject: file,
+					expected: integrity,
+					actual: `${algorithm}.${actualHex}`,
+				});
+		}
+	});
 
 	/**
 	 * The ambient `npm --version`, or `None` when the probe cannot answer.
@@ -497,16 +495,15 @@ const make = Effect.gen(function* () {
 		(result) => (result._tag === "Success" ? O.some(result.success.trim()) : O.none()),
 	);
 
-	const assertFile = (
+	const assertFile = Effect.fnUntraced(function* (
 		pin: PackageManagerPin,
 		file: string,
 		subject: string,
-	): Effect.Effect<void, PackageManagerInstallerError> =>
-		Effect.gen(function* () {
-			if ((yield* typeAt(fs, file)) !== "File") {
-				return yield* errorFor(pin)({ reason: "layoutUnexpected", subject });
-			}
-		});
+	): Effect.fn.Return<void, PackageManagerInstallerError> {
+		if ((yield* typeAt(fs, file)) !== "File") {
+			return yield* errorFor(pin)({ reason: "layoutUnexpected", subject });
+		}
+	});
 
 	/**
 	 * What a package directory's own manifest says about its entry points: the
@@ -520,47 +517,46 @@ const make = Effect.gen(function* () {
 	 * package. Both maps are attacker-supplied bytes and are normalized to
 	 * string → string before anything downstream reads them.
 	 */
-	const readPackageManifest = (
+	const readPackageManifest = Effect.fnUntraced(function* (
 		pin: PackageManagerPin,
 		packageDir: string,
-	): Effect.Effect<PackageManifest, PackageManagerInstallerError> =>
-		Effect.gen(function* () {
-			const manifestPath = path.join(packageDir, "package.json");
-			const raw = yield* fs
-				.readFileString(manifestPath)
-				.pipe(
-					Effect.mapError((cause) => errorFor(pin)({ reason: "layoutUnexpected", subject: "no package.json", cause })),
-				);
-			const manifest = yield* Effect.try({
-				try: () => Result.getOrThrowWith(S.decodeResult(Json)(raw), (error) => error),
-				catch: (cause) => errorFor(pin)({ reason: "layoutUnexpected", subject: "unparseable package.json", cause }),
-			});
-			const bins = O.getOrUndefined(normalizeBins(P.hasProperty(manifest, "bin") ? manifest.bin : undefined, pin.name));
-			if (bins === undefined) {
-				return yield* errorFor(pin)({ reason: "layoutUnexpected", subject: "package.json names no bin" });
-			}
-			for (const [name, relative] of Object.entries(bins)) {
-				const target = path.join(packageDir, relative);
-				// The manifest is attacker-supplied bytes: a bin of "../../payload.js"
-				// resolves OUTSIDE the package directory, and everything downstream —
-				// the existence check, the shim target, the published `bins` paths —
-				// would then chmod and execute a file the tarball never legitimately
-				// owned. Containment is checked on the resolved path, so `..` smuggled
-				// through any spelling is caught.
-				const containment = path.relative(packageDir, target);
-				if (containment === ".." || containment.startsWith(`..${path.sep}`) || path.isAbsolute(containment)) {
-					return yield* errorFor(pin)({
-							reason: "layoutUnexpected",
-							subject: `bin ${name} (${relative}) escapes the package directory`,
-						});
-				}
-				yield* assertFile(pin, target, `bin ${name} (${relative}) is missing`);
-			}
-			return {
-				bins,
-				nativePackages: nativePackagesOf(P.hasProperty(manifest, "optionalDependencies") ? manifest.optionalDependencies : undefined),
-			};
+	): Effect.fn.Return<PackageManifest, PackageManagerInstallerError> {
+		const manifestPath = path.join(packageDir, "package.json");
+		const raw = yield* fs
+			.readFileString(manifestPath)
+			.pipe(
+				Effect.mapError((cause) => errorFor(pin)({ reason: "layoutUnexpected", subject: "no package.json", cause })),
+			);
+		const manifest = yield* Effect.try({
+			try: () => Result.getOrThrowWith(S.decodeResult(Json)(raw), (error) => error),
+			catch: (cause) => errorFor(pin)({ reason: "layoutUnexpected", subject: "unparseable package.json", cause }),
 		});
+		const bins = O.getOrUndefined(normalizeBins(P.hasProperty(manifest, "bin") ? manifest.bin : undefined, pin.name));
+		if (bins === undefined) {
+			return yield* errorFor(pin)({ reason: "layoutUnexpected", subject: "package.json names no bin" });
+		}
+		for (const [name, relative] of R.toEntries(bins)) {
+			const target = path.join(packageDir, relative);
+			// The manifest is attacker-supplied bytes: a bin of "../../payload.js"
+			// resolves OUTSIDE the package directory, and everything downstream —
+			// the existence check, the shim target, the published `bins` paths —
+			// would then chmod and execute a file the tarball never legitimately
+			// owned. Containment is checked on the resolved path, so `..` smuggled
+			// through any spelling is caught.
+			const containment = path.relative(packageDir, target);
+			if (containment === ".." || containment.startsWith(`..${path.sep}`) || path.isAbsolute(containment)) {
+				return yield* errorFor(pin)({
+						reason: "layoutUnexpected",
+						subject: `bin ${name} (${relative}) escapes the package directory`,
+					});
+			}
+			yield* assertFile(pin, target, `bin ${name} (${relative}) is missing`);
+		}
+		return {
+			bins,
+			nativePackages: nativePackagesOf(P.hasProperty(manifest, "optionalDependencies") ? manifest.optionalDependencies : undefined),
+		};
+	});
 
 	/**
 	 * The `@pnpm/exe.<target>` → version entries of an `optionalDependencies`
@@ -569,12 +565,13 @@ const make = Effect.gen(function* () {
 	 * into a registry url.
 	 */
 	const nativePackagesOf = (optionalDependencies: unknown): Record<string, string> => {
-		if (typeof optionalDependencies !== "object" || optionalDependencies === null) {
+		if (!P.isObjectOrArray(optionalDependencies)) {
 			return {};
 		}
 		const entries: Record<string, string> = {};
-		for (const [name, version] of Object.entries(optionalDependencies)) {
-			if (name.startsWith(PNPM_EXE_PREFIX) && typeof version === "string") {
+		const properties: ReadonlyArray<[string, unknown]> = R.toEntries<never, unknown>(optionalDependencies);
+		for (const [name, version] of properties) {
+			if (name.startsWith(PNPM_EXE_PREFIX) && P.isString(version)) {
 				entries[name] = version;
 			}
 		}
@@ -587,9 +584,9 @@ const make = Effect.gen(function* () {
 	 * the in-memory map (the shims and the record) rather than the manifest.
 	 */
 	const nativeWindowsBins = (bins: Record<string, string>): Record<string, string> =>
-		Object.fromEntries(
-			Object.entries(bins).map(([name, relative]) =>
-				PNPM_NATIVE_BIN_NAMES.includes(name) ? [name, `${relative}.exe`] : [name, relative],
+		R.fromEntries(
+			R.toEntries(bins).map(([name, relative]): [string, string] =>
+				[name, PNPM_NATIVE_BIN_NAMES.includes(name) ? `${relative}.exe` : relative],
 			),
 		);
 
@@ -612,7 +609,7 @@ const make = Effect.gen(function* () {
 		);
 
 	const rootBins = (bins: Record<string, string>, directory: string): Record<string, string> =>
-		Object.fromEntries(Object.entries(bins).map(([name, relative]) => [name, path.join(directory, relative)]));
+		R.fromEntries(R.toEntries(bins).map(([name, relative]): [string, string] => [name, path.join(directory, relative)]));
 
 	/**
 	 * Write one executable shim per bin into `<into>/.bin`, each invoking
@@ -627,33 +624,32 @@ const make = Effect.gen(function* () {
 	 * When `skipExisting` is set, a shim already present is left untouched — the
 	 * regeneration path must not rewrite a shared cache entry another writer owns.
 	 */
-	const writeShims = (
+	const writeShims = Effect.fnUntraced(function* (
 		pin: PackageManagerPin,
 		into: string,
 		finalDirectory: string,
 		bins: Record<string, string>,
 		options: { readonly skipExisting: boolean },
-	): Effect.Effect<void, PackageManagerInstallerError> =>
-		Effect.gen(function* () {
-			const shimDir = path.join(into, SHIM_DIR);
-			const cacheError = (subject: string) => (cause: unknown) =>
-				errorFor(pin)({ reason: "cacheFailed", subject, cause });
-			yield* fs.makeDirectory(shimDir, { recursive: true }).pipe(Effect.mapError(cacheError(shimDir)));
-			for (const [name, relative] of Object.entries(bins)) {
-				const shim = path.join(shimDir, shimFileName(name));
-				if (options.skipExisting) {
-					if ((yield* typeAt(fs, shim)) === "File") {
-						continue;
-					}
-				}
-				yield* fs
-					.writeFileString(shim, shimBody(path.join(finalDirectory, relative)))
-					.pipe(Effect.mapError(cacheError(shim)));
-				if (!windows) {
-					yield* fs.chmod(shim, 0o755).pipe(Effect.mapError(cacheError(shim)));
+	): Effect.fn.Return<void, PackageManagerInstallerError> {
+		const shimDir = path.join(into, SHIM_DIR);
+		const cacheError = (subject: string) => (cause: unknown) =>
+			errorFor(pin)({ reason: "cacheFailed", subject, cause });
+		yield* fs.makeDirectory(shimDir, { recursive: true }).pipe(Effect.mapError(cacheError(shimDir)));
+		for (const [name, relative] of R.toEntries(bins)) {
+			const shim = path.join(shimDir, shimFileName(name));
+			if (options.skipExisting) {
+				if ((yield* typeAt(fs, shim)) === "File") {
+					continue;
 				}
 			}
-		});
+			yield* fs
+				.writeFileString(shim, shimBody(path.join(finalDirectory, relative)))
+				.pipe(Effect.mapError(cacheError(shim)));
+			if (!windows) {
+				yield* fs.chmod(shim, 0o755).pipe(Effect.mapError(cacheError(shim)));
+			}
+		}
+	});
 
 	/**
 	 * The record for a directory already in the cache, regenerating absent
@@ -662,62 +658,61 @@ const make = Effect.gen(function* () {
 	 * reinstalls over it through the ordinary install path (ToolInstaller's
 	 * swap removes the old entry and renames the complete new one into place).
 	 */
-	const cachedRecord = (
+	const cachedRecord = Effect.fnUntraced(function* (
 		pin: PackageManagerPin,
 		directory: string,
-	): Effect.Effect<O.Option<InstalledPackageManager>, PackageManagerInstallerError> =>
-		Effect.gen(function* () {
-			if (pin.name === "bun") {
-				const binary = path.join(directory, bunBinaryName);
-				yield* assertFile(pin, binary, `cached bun binary (${bunBinaryName}) is missing`);
-				return O.some(
-					CachedPackageManager.make({
-						name: pin.name,
-						version: pin.version.toString(),
-						directory,
-						// The binary itself is executable; the entry directory IS the
-						// addPath target and no shim is written for bun anywhere.
-						binDir: directory,
-						bins: { bun: binary },
-					}),
-				);
-			}
-			const manifest = yield* readPackageManifest(pin, directory);
-			let bins = manifest.bins;
-			if (Object.keys(manifest.nativePackages).length > 0) {
-				// A native-binary wrapper cached by an older writer (which shimmed the
-				// placeholder as a Node script) or by a foreign writer that ran no
-				// lifecycle scripts still holds the placeholder.
-				// A stale `exec node` shim beside it would survive `skipExisting`,
-				// so the whole entry is reinstalled over rather than patched in
-				// place — the install path rewrites every shim.
-				const entry = bins[pin.name];
-				if (entry !== undefined && (yield* isPlaceholder(path.join(directory, entry)))) {
-					yield* Effect.logInfo(
-						`The cached ${pin.name}@${pin.version.toString()} still holds pnpm's placeholder bin; reinstalling it over.`,
-					);
-					return O.none();
-				}
-				if (windows) {
-					bins = nativeWindowsBins(bins);
-				}
-			}
-			// The tool cache is shared: this entry may have been written by the
-			// runner image, a setup-* action, or a previous version of this module,
-			// none of which write shims. Regenerate what is missing — best-effort,
-			// but a failure to write is a typed cacheFailed, not a silent hole in
-			// the PATH contract.
-			yield* writeShims(pin, directory, directory, bins, { skipExisting: true });
+	): Effect.fn.Return<O.Option<InstalledPackageManager>, PackageManagerInstallerError> {
+		if (pin.name === "bun") {
+			const binary = path.join(directory, bunBinaryName);
+			yield* assertFile(pin, binary, `cached bun binary (${bunBinaryName}) is missing`);
 			return O.some(
 				CachedPackageManager.make({
 					name: pin.name,
 					version: pin.version.toString(),
 					directory,
-					binDir: path.join(directory, SHIM_DIR),
-					bins: rootBins(bins, directory),
+					// The binary itself is executable; the entry directory IS the
+					// addPath target and no shim is written for bun anywhere.
+					binDir: directory,
+					bins: { bun: binary },
 				}),
 			);
-		});
+		}
+		const manifest = yield* readPackageManifest(pin, directory);
+		let bins = manifest.bins;
+		if (R.keys(manifest.nativePackages).length > 0) {
+			// A native-binary wrapper cached by an older writer (which shimmed the
+			// placeholder as a Node script) or by a foreign writer that ran no
+			// lifecycle scripts still holds the placeholder.
+			// A stale `exec node` shim beside it would survive `skipExisting`,
+			// so the whole entry is reinstalled over rather than patched in
+			// place — the install path rewrites every shim.
+			const entry = bins[pin.name];
+			if (entry !== undefined && (yield* isPlaceholder(path.join(directory, entry)))) {
+				yield* Effect.logInfo(
+					`The cached ${pin.name}@${pin.version.toString()} still holds pnpm's placeholder bin; reinstalling it over.`,
+				);
+				return O.none();
+			}
+			if (windows) {
+				bins = nativeWindowsBins(bins);
+			}
+		}
+		// The tool cache is shared: this entry may have been written by the
+		// runner image, a setup-* action, or a previous version of this module,
+		// none of which write shims. Regenerate what is missing — best-effort,
+		// but a failure to write is a typed cacheFailed, not a silent hole in
+		// the PATH contract.
+		yield* writeShims(pin, directory, directory, bins, { skipExisting: true });
+		return O.some(
+			CachedPackageManager.make({
+				name: pin.name,
+				version: pin.version.toString(),
+				directory,
+				binDir: path.join(directory, SHIM_DIR),
+				bins: rootBins(bins, directory),
+			}),
+		);
+	});
 
 	/**
 	 * The strongest digest an SRI value lists — or, when it is not a string or
@@ -729,7 +724,7 @@ const make = Effect.gen(function* () {
 		sri: unknown,
 		subject: string,
 	): Effect.Effect<ExpectedDigest, PackageManagerInstallerError> =>
-		Effect.fromOption(typeof sri === "string" ? strongestSri(sri) : O.none(), () => errorFor(pin)({ reason: "integrityMismatch", subject }));
+		Effect.fromOption(P.isString(sri) ? strongestSri(sri) : O.none(), () => errorFor(pin)({ reason: "integrityMismatch", subject }));
 
 	/**
 	 * The expected integrity of a native package as its registry packument
@@ -737,29 +732,28 @@ const make = Effect.gen(function* () {
 	 * be read, parsed, or that lists no usable SRI is the could-not-verify arm
 	 * of `integrityMismatch`, naming the packument url.
 	 */
-	const registryIntegrity = (
+	const registryIntegrity = Effect.fnUntraced(function* (
 		pin: PackageManagerPin,
 		packageName: string,
 		version: string,
 		registry: string,
-	): Effect.Effect<ExpectedDigest, PackageManagerInstallerError> =>
-		Effect.gen(function* () {
-			const packumentUrl = `${registry}/${packageName}/${version}`;
-			const packumentFile = yield* installer.download(packumentUrl).pipe(Effect.mapError(fromInstaller(pin)));
-			const unverifiable = (cause: unknown) =>
-				errorFor(pin)({ reason: "integrityMismatch", subject: packumentUrl, cause });
-			const packument = yield* fs.readFileString(packumentFile).pipe(
-				Effect.mapError(unverifiable),
-				Effect.flatMap((raw) =>
-					Effect.try({
-						try: () => Result.getOrThrowWith(S.decodeResult(Json)(raw), (error) => error),
-						catch: unverifiable,
-					}),
-				),
-			);
-			const dist = P.hasProperty(packument, "dist") ? packument.dist : undefined;
-			return yield* expectedFromSri(pin, P.hasProperty(dist, "integrity") ? dist.integrity : undefined, packumentUrl);
-		});
+	): Effect.fn.Return<ExpectedDigest, PackageManagerInstallerError> {
+		const packumentUrl = `${registry}/${packageName}/${version}`;
+		const packumentFile = yield* installer.download(packumentUrl).pipe(Effect.mapError(fromInstaller(pin)));
+		const unverifiable = (cause: unknown) =>
+			errorFor(pin)({ reason: "integrityMismatch", subject: packumentUrl, cause });
+		const packument = yield* fs.readFileString(packumentFile).pipe(
+			Effect.mapError(unverifiable),
+			Effect.flatMap((raw) =>
+				Effect.try({
+					try: () => Result.getOrThrowWith(S.decodeResult(Json)(raw), (error) => error),
+					catch: unverifiable,
+				}),
+			),
+		);
+		const dist = P.hasProperty(packument, "dist") ? packument.dist : undefined;
+		return yield* expectedFromSri(pin, P.hasProperty(dist, "integrity") ? dist.integrity : undefined, packumentUrl);
+	});
 
 	/**
 	 * The expected integrity of a native package as the caller's
@@ -775,8 +769,8 @@ const make = Effect.gen(function* () {
 	): Effect.Effect<ExpectedDigest, PackageManagerInstallerError> => {
 		// An own-property read: the map is caller data, and an inherited
 		// member must never stand in for a recorded checksum.
-		const supplied = Object.hasOwn(nativeIntegrity, packageName) ? nativeIntegrity[packageName] : undefined;
-		return typeof supplied === "string"
+		const supplied = R.has(nativeIntegrity, packageName) ? nativeIntegrity[packageName] : undefined;
+		return P.isString(supplied)
 			? expectedFromSri(pin, supplied, packageName)
 			: Effect.fail(errorFor(pin)({ reason: "integrityMissing", subject: packageName }));
 	};
@@ -793,184 +787,181 @@ const make = Effect.gen(function* () {
 	 * sits beside it as the binary expects. Answers the bins as they should be
 	 * shimmed and recorded — retargeted to `.exe` on Windows, as upstream does.
 	 */
-	const overlayNativeBinary = (
+	const overlayNativeBinary = Effect.fnUntraced(function* (
 		pin: PackageManagerPin,
 		packageDir: string,
 		{ bins, nativePackages }: PackageManifest,
 		{ registry, nativeIntegrity }: RegistrySource,
-	): Effect.Effect<Record<string, string>, PackageManagerInstallerError> =>
-		Effect.gen(function* () {
-			const target = O.getOrUndefined(pnpmExeTarget(runnerOs, arch, musl));
-			const packageName = target === undefined ? undefined : `${PNPM_EXE_PREFIX}${target}`;
-			const nativeVersion = packageName === undefined ? undefined : nativePackages[packageName];
-			if (target === undefined || packageName === undefined || nativeVersion === undefined) {
-				return yield* errorFor(pin)({ reason: "unsupportedPlatform", subject: `${runnerOs || "unknown"}/${arch}` });
-			}
-			// The wrapper's own release pins its native package to the wrapper's
-			// version, so anything else is a malformed manifest — and this string
-			// is about to be spliced into two registry urls, so it is the pin's
-			// version (already validated by the pin grammar) that goes there, never
-			// the manifest's bytes.
-			if (nativeVersion !== pin.version.toString()) {
-				return yield* errorFor(pin)({
-						reason: "layoutUnexpected",
-						subject: `${packageName} is pinned at ${nativeVersion}, not the wrapper's ${pin.version.toString()}`,
-					});
-			}
-			const placeholder = bins[pin.name];
-			if (placeholder === undefined) {
-				return yield* errorFor(pin)({ reason: "layoutUnexpected", subject: `package.json names no ${pin.name} bin to overlay` });
-			}
+	): Effect.fn.Return<Record<string, string>, PackageManagerInstallerError> {
+		const target = O.getOrUndefined(pnpmExeTarget(runnerOs, arch, musl));
+		const packageName = target === undefined ? undefined : `${PNPM_EXE_PREFIX}${target}`;
+		const nativeVersion = packageName === undefined ? undefined : nativePackages[packageName];
+		if (target === undefined || packageName === undefined || nativeVersion === undefined) {
+			return yield* errorFor(pin)({ reason: "unsupportedPlatform", subject: `${runnerOs || "unknown"}/${arch}` });
+		}
+		// The wrapper's own release pins its native package to the wrapper's
+		// version, so anything else is a malformed manifest — and this string
+		// is about to be spliced into two registry urls, so it is the pin's
+		// version (already validated by the pin grammar) that goes there, never
+		// the manifest's bytes.
+		if (nativeVersion !== pin.version.toString()) {
+			return yield* errorFor(pin)({
+					reason: "layoutUnexpected",
+					subject: `${packageName} is pinned at ${nativeVersion}, not the wrapper's ${pin.version.toString()}`,
+				});
+		}
+		const placeholder = bins[pin.name];
+		if (placeholder === undefined) {
+			return yield* errorFor(pin)({ reason: "layoutUnexpected", subject: `package.json names no ${pin.name} bin to overlay` });
+		}
 
-			// The expected integrity, settled before the 36 MB tarball is fetched.
-			// A caller-supplied map (the lockfile's record) is the authority when
-			// present and the packument is never asked; otherwise the registry's
-			// own packument vouches for the exact version. Either source that
-			// cannot vouch for the bytes ends the install before they are fetched.
-			const expected =
-				nativeIntegrity === undefined
-					? yield* registryIntegrity(pin, packageName, nativeVersion, registry)
-					: yield* suppliedIntegrity(pin, packageName, nativeIntegrity);
+		// The expected integrity, settled before the 36 MB tarball is fetched.
+		// A caller-supplied map (the lockfile's record) is the authority when
+		// present and the packument is never asked; otherwise the registry's
+		// own packument vouches for the exact version. Either source that
+		// cannot vouch for the bytes ends the install before they are fetched.
+		const expected =
+			nativeIntegrity === undefined
+				? yield* registryIntegrity(pin, packageName, nativeVersion, registry)
+				: yield* suppliedIntegrity(pin, packageName, nativeIntegrity);
 
-			const tarballUrl = `${registry}/${packageName}/-/exe.${target}-${nativeVersion}.tgz`;
-			const archive = yield* installer.download(tarballUrl).pipe(Effect.mapError(fromInstaller(pin)));
-			const actualHex = yield* hashFile(pin, archive, expected.algorithm);
-			if (actualHex !== expected.hex) {
-				return yield* errorFor(pin)({
-						reason: "integrityMismatch",
-						subject: tarballUrl,
-						expected: `${expected.algorithm}.${expected.hex}`,
-						actual: `${expected.algorithm}.${actualHex}`,
-					});
-			}
-			const extracted = yield* installer.extractTar(archive).pipe(Effect.mapError(fromInstaller(pin)));
-			const nativeName = windows ? "pnpm.exe" : "pnpm";
-			const native = path.join(extracted, "package", nativeName);
-			yield* assertFile(pin, native, `package/${nativeName} is missing from the ${packageName} tarball`);
+		const tarballUrl = `${registry}/${packageName}/-/exe.${target}-${nativeVersion}.tgz`;
+		const archive = yield* installer.download(tarballUrl).pipe(Effect.mapError(fromInstaller(pin)));
+		const actualHex = yield* hashFile(pin, archive, expected.algorithm);
+		if (actualHex !== expected.hex) {
+			return yield* errorFor(pin)({
+					reason: "integrityMismatch",
+					subject: tarballUrl,
+					expected: `${expected.algorithm}.${expected.hex}`,
+					actual: `${expected.algorithm}.${actualHex}`,
+				});
+		}
+		const extracted = yield* installer.extractTar(archive).pipe(Effect.mapError(fromInstaller(pin)));
+		const nativeName = windows ? "pnpm.exe" : "pnpm";
+		const native = path.join(extracted, "package", nativeName);
+		yield* assertFile(pin, native, `package/${nativeName} is missing from the ${packageName} tarball`);
 
-			const cacheError = (subject: string) => (cause: unknown) =>
-				errorFor(pin)({ reason: "cacheFailed", subject, cause });
-			if (windows) {
-				// Mirrors the wrapper's own install script: the binary lands as
-				// `<name>.exe` AND over the extensionless placeholder for each bin
-				// (a pre-existing shim may still name the latter), and `bin` is
-				// repointed at the `.exe` twins.
-				for (const name of PNPM_NATIVE_BIN_NAMES) {
-					const relative = bins[name];
-					if (relative === undefined) {
-						continue;
-					}
-					for (const destination of [path.join(packageDir, relative), path.join(packageDir, `${relative}.exe`)]) {
-						yield* fs.copyFile(native, destination).pipe(Effect.mapError(cacheError(destination)));
-					}
+		const cacheError = (subject: string) => (cause: unknown) =>
+			errorFor(pin)({ reason: "cacheFailed", subject, cause });
+		if (windows) {
+			// Mirrors the wrapper's own install script: the binary lands as
+			// `<name>.exe` AND over the extensionless placeholder for each bin
+			// (a pre-existing shim may still name the latter), and `bin` is
+			// repointed at the `.exe` twins.
+			for (const name of PNPM_NATIVE_BIN_NAMES) {
+				const relative = bins[name];
+				if (relative === undefined) {
+					continue;
 				}
-				return nativeWindowsBins(bins);
-			}
-			const destination = path.join(packageDir, placeholder);
-			yield* fs.copyFile(native, destination).pipe(Effect.mapError(cacheError(destination)));
-			// The overlaid binary and the `#!/bin/sh` alias bins are exec'd
-			// directly by their shims, so every non-Node bin needs the executable
-			// bit — which tar extraction does not reliably carry (the bun rule).
-			for (const relative of Object.values(bins)) {
-				if (!isNodeScript(relative)) {
-					const file = path.join(packageDir, relative);
-					yield* fs.chmod(file, 0o755).pipe(Effect.mapError(cacheError(file)));
+				for (const destination of [path.join(packageDir, relative), path.join(packageDir, `${relative}.exe`)]) {
+					yield* fs.copyFile(native, destination).pipe(Effect.mapError(cacheError(destination)));
 				}
 			}
-			return bins;
-		});
+			return nativeWindowsBins(bins);
+		}
+		const destination = path.join(packageDir, placeholder);
+		yield* fs.copyFile(native, destination).pipe(Effect.mapError(cacheError(destination)));
+		// The overlaid binary and the `#!/bin/sh` alias bins are exec'd
+		// directly by their shims, so every non-Node bin needs the executable
+		// bit — which tar extraction does not reliably carry (the bun rule).
+		for (const relative of R.values(bins)) {
+			if (!isNodeScript(relative)) {
+				const file = path.join(packageDir, relative);
+				yield* fs.chmod(file, 0o755).pipe(Effect.mapError(cacheError(file)));
+			}
+		}
+		return bins;
+	});
 
 	/** Download bun's per-platform zip from GitHub releases and cache the binary. */
-	const installBun = (pin: PackageManagerPin): Effect.Effect<InstalledPackageManager, PackageManagerInstallerError> =>
-		Effect.gen(function* () {
-			const version = pin.version.toString();
-			const target = O.getOrUndefined(bunTarget(runnerOs, arch));
-			if (target === undefined) {
-				return yield* errorFor(pin)({ reason: "unsupportedPlatform", subject: `${runnerOs || "unknown"}/${arch}` });
-			}
-			const url = `https://github.com/oven-sh/bun/releases/download/bun-v${version}/${target}.zip`;
-			const archive = yield* installer.download(url).pipe(Effect.mapError(fromInstaller(pin)));
-			// No corepack authority exists for bun (corepack does not manage it), so
-			// an integrity-carrying bun pin verifies against the downloaded zip —
-			// which makes such a pin inherently platform-specific.
-			yield* verifyIntegrity(pin, archive);
-			const extracted = yield* installer.extractZip(archive).pipe(Effect.mapError(fromInstaller(pin)));
-			const binary = path.join(extracted, target, bunBinaryName);
-			yield* assertFile(pin, binary, `${target}/${bunBinaryName} is missing from the zip`);
-			if (!windows) {
-				// The zip does not reliably carry the executable bit through every
-				// extractor; the cached binary must be invokable as-is.
-				yield* fs
-					.chmod(binary, 0o755)
-					.pipe(Effect.mapError((cause) => errorFor(pin)({ reason: "cacheFailed", subject: binary, cause })));
-			}
-			const directory = yield* installer
-				.cacheFile(binary, bunBinaryName, pin.name, version)
-				.pipe(Effect.mapError(fromInstaller(pin)));
-			return CachedPackageManager.make({
-				name: pin.name,
-				version,
-				directory,
-				binDir: directory,
-				bins: { bun: path.join(directory, bunBinaryName) },
-			});
+	const installBun = Effect.fnUntraced(function* (pin: PackageManagerPin): Effect.fn.Return<InstalledPackageManager, PackageManagerInstallerError> {
+		const version = pin.version.toString();
+		const target = O.getOrUndefined(bunTarget(runnerOs, arch));
+		if (target === undefined) {
+			return yield* errorFor(pin)({ reason: "unsupportedPlatform", subject: `${runnerOs || "unknown"}/${arch}` });
+		}
+		const url = `https://github.com/oven-sh/bun/releases/download/bun-v${version}/${target}.zip`;
+		const archive = yield* installer.download(url).pipe(Effect.mapError(fromInstaller(pin)));
+		// No corepack authority exists for bun (corepack does not manage it), so
+		// an integrity-carrying bun pin verifies against the downloaded zip —
+		// which makes such a pin inherently platform-specific.
+		yield* verifyIntegrity(pin, archive);
+		const extracted = yield* installer.extractZip(archive).pipe(Effect.mapError(fromInstaller(pin)));
+		const binary = path.join(extracted, target, bunBinaryName);
+		yield* assertFile(pin, binary, `${target}/${bunBinaryName} is missing from the zip`);
+		if (!windows) {
+			// The zip does not reliably carry the executable bit through every
+			// extractor; the cached binary must be invokable as-is.
+			yield* fs
+				.chmod(binary, 0o755)
+				.pipe(Effect.mapError((cause) => errorFor(pin)({ reason: "cacheFailed", subject: binary, cause })));
+		}
+		const directory = yield* installer
+			.cacheFile(binary, bunBinaryName, pin.name, version)
+			.pipe(Effect.mapError(fromInstaller(pin)));
+		return CachedPackageManager.make({
+			name: pin.name,
+			version,
+			directory,
+			binDir: directory,
+			bins: { bun: path.join(directory, bunBinaryName) },
 		});
+	});
 
 	/** Download a registry tarball, verify, extract, shim, and cache the package dir. */
-	const installFromRegistry = (
+	const installFromRegistry = Effect.fnUntraced(function* (
 		pin: PackageManagerPin,
 		source: RegistrySource,
-	): Effect.Effect<InstalledPackageManager, PackageManagerInstallerError> =>
-		Effect.gen(function* () {
-			const { name } = pin;
-			const version = pin.version.toString();
-			const url = registryTarballUrl(name, version, pin.version.major, source.registry);
-			const archive = yield* installer.download(url).pipe(Effect.mapError(fromInstaller(pin)));
-			// What a corepack pin's integrity hashes depends on the manager:
-			// npm, pnpm and yarn 1.x pins hash the registry tarball's bytes; a
-			// yarn>=2 pin hashes the standalone `yarn.js` corepack downloads from
-			// repo.yarnpkg.com — byte-identical to `bin/yarn.js` inside the
-			// @yarnpkg/cli-dist tarball, which is where it is verified below.
-			const berry = name === "yarn" && pin.version.major >= 2;
-			if (!berry) {
-				yield* verifyIntegrity(pin, archive);
-			}
-			const extracted = yield* installer.extractTar(archive).pipe(Effect.mapError(fromInstaller(pin)));
-			const packageDir = path.join(extracted, "package");
-			if ((yield* typeAt(fs, packageDir)) !== "Directory") {
-				return yield* errorFor(pin)({ reason: "layoutUnexpected", subject: "tarball has no package/ root" });
-			}
-			const manifest = yield* readPackageManifest(pin, packageDir);
-			// pnpm 12's layout, detected by what the manifest declares rather than
-			// by major: the `pnpm` bin is a placeholder for a native binary that
-			// ships as an `@pnpm/exe.*` optional dependency and is overlaid here.
-			const bins =
-				Object.keys(manifest.nativePackages).length > 0
-					? yield* overlayNativeBinary(pin, packageDir, manifest, source)
-					: manifest.bins;
-			if (berry) {
-				const cli = path.join(packageDir, "bin/yarn.js");
-				yield* assertFile(pin, cli, "bin/yarn.js is missing from the cli-dist tarball");
-				yield* verifyIntegrity(pin, cli);
-			}
-			// Shims are written into the STAGED tree, so they are part of what
-			// ToolInstaller renames into place — never a post-swap mutation — and
-			// their contents name the FINAL cache path, asked of the installer
-			// itself so it is the very answer `cacheDir` lands at (no second
-			// derivation of root or arch here, and nothing to guard against). The
-			// ordering is load-bearing twice over: `cacheDir` CONSUMES `packageDir`,
-			// so nothing may be written to or read from it after that call.
-			const destination = installer.cachePath(name, version);
-			yield* writeShims(pin, packageDir, destination, bins, { skipExisting: false });
-			const directory = yield* installer.cacheDir(packageDir, name, version).pipe(Effect.mapError(fromInstaller(pin)));
-			return CachedPackageManager.make({
-				name,
-				version,
-				directory,
-				binDir: path.join(directory, SHIM_DIR),
-				bins: rootBins(bins, directory),
-			});
+	): Effect.fn.Return<InstalledPackageManager, PackageManagerInstallerError> {
+		const { name } = pin;
+		const version = pin.version.toString();
+		const url = registryTarballUrl(name, version, pin.version.major, source.registry);
+		const archive = yield* installer.download(url).pipe(Effect.mapError(fromInstaller(pin)));
+		// What a corepack pin's integrity hashes depends on the manager:
+		// npm, pnpm and yarn 1.x pins hash the registry tarball's bytes; a
+		// yarn>=2 pin hashes the standalone `yarn.js` corepack downloads from
+		// repo.yarnpkg.com — byte-identical to `bin/yarn.js` inside the
+		// @yarnpkg/cli-dist tarball, which is where it is verified below.
+		const berry = name === "yarn" && pin.version.major >= 2;
+		if (!berry) {
+			yield* verifyIntegrity(pin, archive);
+		}
+		const extracted = yield* installer.extractTar(archive).pipe(Effect.mapError(fromInstaller(pin)));
+		const packageDir = path.join(extracted, "package");
+		if ((yield* typeAt(fs, packageDir)) !== "Directory") {
+			return yield* errorFor(pin)({ reason: "layoutUnexpected", subject: "tarball has no package/ root" });
+		}
+		const manifest = yield* readPackageManifest(pin, packageDir);
+		// pnpm 12's layout, detected by what the manifest declares rather than
+		// by major: the `pnpm` bin is a placeholder for a native binary that
+		// ships as an `@pnpm/exe.*` optional dependency and is overlaid here.
+		const bins =
+			R.keys(manifest.nativePackages).length > 0
+				? yield* overlayNativeBinary(pin, packageDir, manifest, source)
+				: manifest.bins;
+		if (berry) {
+			const cli = path.join(packageDir, "bin/yarn.js");
+			yield* assertFile(pin, cli, "bin/yarn.js is missing from the cli-dist tarball");
+			yield* verifyIntegrity(pin, cli);
+		}
+		// Shims are written into the STAGED tree, so they are part of what
+		// ToolInstaller renames into place — never a post-swap mutation — and
+		// their contents name the FINAL cache path, asked of the installer
+		// itself so it is the very answer `cacheDir` lands at (no second
+		// derivation of root or arch here, and nothing to guard against). The
+		// ordering is load-bearing twice over: `cacheDir` CONSUMES `packageDir`,
+		// so nothing may be written to or read from it after that call.
+		const destination = installer.cachePath(name, version);
+		yield* writeShims(pin, packageDir, destination, bins, { skipExisting: false });
+		const directory = yield* installer.cacheDir(packageDir, name, version).pipe(Effect.mapError(fromInstaller(pin)));
+		return CachedPackageManager.make({
+			name,
+			version,
+			directory,
+			binDir: path.join(directory, SHIM_DIR),
+			bins: rootBins(bins, directory),
 		});
+	});
 
 	/**
 	 * Fold the `integrity` option into the pin, answering the one pin every
@@ -985,32 +976,31 @@ const make = Effect.gen(function* () {
 	 * `integrityMissing` would misreport it, and a value that cannot be
 	 * compared is exactly what that arm means.
 	 */
-	const settlePin = (
+	const settlePin = Effect.fnUntraced(function* (
 		pin: PackageManagerPin,
 		integrity: IntegrityHashBrand | undefined,
-	): Effect.Effect<PackageManagerPin, PackageManagerInstallerError> =>
-		Effect.gen(function* () {
-			if (integrity === undefined) {
-				return pin;
-			}
-			const option = yield* S.decodeEffect(CorepackIntegrityHash)(integrity).pipe(
-				Effect.mapError((cause) =>
-					errorFor(pin)({
-						reason: "integrityMismatch",
-						subject: `the integrity option ${integrity} is not a corepack <algo>.<hex> hash`,
-						cause,
-					}),
-				),
-			);
-			if (pin.integrity !== undefined && pin.integrity !== option) {
-				return yield* errorFor(pin)({
-						reason: "integrityMismatch",
-						subject: `the pin declares ${pin.integrity}, which disagrees with the integrity option`,
-						expected: option,
-					});
-			}
-			return PackageManagerPin.make({ name: pin.name, version: pin.version, integrity: option });
-		});
+	): Effect.fn.Return<PackageManagerPin, PackageManagerInstallerError> {
+		if (integrity === undefined) {
+			return pin;
+		}
+		const option = yield* S.decodeEffect(CorepackIntegrityHash)(integrity).pipe(
+			Effect.mapError((cause) =>
+				errorFor(pin)({
+					reason: "integrityMismatch",
+					subject: `the integrity option ${integrity} is not a corepack <algo>.<hex> hash`,
+					cause,
+				}),
+			),
+		);
+		if (pin.integrity !== undefined && pin.integrity !== option) {
+			return yield* errorFor(pin)({
+					reason: "integrityMismatch",
+					subject: `the pin declares ${pin.integrity}, which disagrees with the integrity option`,
+					expected: option,
+				});
+		}
+		return PackageManagerPin.make({ name: pin.name, version: pin.version, integrity: option });
+	});
 
 	const install = Effect.fn("PackageManagerInstaller.install")(function* (
 		pin: PackageManagerPin,

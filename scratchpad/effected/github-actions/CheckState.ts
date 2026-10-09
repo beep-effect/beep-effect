@@ -1,7 +1,13 @@
+import * as Match from "effect/Match";
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
 
 const $I = $ScratchpadId.create("effected/github-actions/CheckState");
+
+/** A check state outside the vocabulary was projected. */
+export class UnhandledCheckStateError extends S.TaggedError<UnhandledCheckStateError>($I`UnhandledCheckStateError`)("UnhandledCheckStateError", {
+	message: S.String,
+}, $I.annote("UnhandledCheckStateError", { description: "A check state outside the vocabulary was projected." })) {}
 
 /**
  * The kit's check-state vocabulary.
@@ -79,27 +85,16 @@ export type CheckRunProjection =
  *
  * @public
  */
-export const projectCheckState = (state: CheckState): CheckRunProjection => {
-	switch (state) {
-		case "running":
-			return { status: "in_progress" };
-		case "pass":
-			return { status: "completed", conclusion: "success" };
-		case "fail":
-			return { status: "completed", conclusion: "failure" };
-		case "warn":
-			return { status: "completed", conclusion: "neutral" };
-		case "user_interaction_required":
-			return { status: "completed", conclusion: "action_required" };
-		case "skipped":
-			return { status: "completed", conclusion: "skipped" };
-		case "timeout":
-			return { status: "completed", conclusion: "timed_out" };
-		default: {
-			// Exhaustiveness at compile time: a literal added to the vocabulary
-			// without a row here fails the build, not just the runtime count test.
-			const unhandled: never = state;
-			throw new Error(`Unhandled CheckState: ${String(unhandled)}`);
-		}
-	}
-};
+export const projectCheckState = (state: CheckState): CheckRunProjection =>
+	Match.value(state).pipe(
+		Match.when("running", (): CheckRunProjection => ({ status: "in_progress" })),
+		Match.when("pass", (): CheckRunProjection => ({ status: "completed", conclusion: "success" })),
+		Match.when("fail", (): CheckRunProjection => ({ status: "completed", conclusion: "failure" })),
+		Match.when("warn", (): CheckRunProjection => ({ status: "completed", conclusion: "neutral" })),
+		Match.when("user_interaction_required", (): CheckRunProjection => ({ status: "completed", conclusion: "action_required" })),
+		Match.when("skipped", (): CheckRunProjection => ({ status: "completed", conclusion: "skipped" })),
+		Match.when("timeout", (): CheckRunProjection => ({ status: "completed", conclusion: "timed_out" })),
+		Match.orElse((unhandled: never) => {
+			throw UnhandledCheckStateError.make({ message: `Unhandled CheckState: ${String(unhandled)}` });
+		}),
+	);

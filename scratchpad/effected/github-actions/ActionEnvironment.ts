@@ -191,10 +191,7 @@ const numeric = (name: string, raw: string): Effect.Effect<number, ActionEnviron
 		: Effect.fail(ActionEnvironmentError.make({ reason: "malformed", name, detail: `expected a number, got "${raw}"` }));
 };
 
-const make = (
-	base: Readonly<Record<string, string | undefined>>,
-): Effect.Effect<ActionEnvironmentShape, never, FileSystem.FileSystem> =>
-	Effect.gen(function* () {
+const make = Effect.fn("make")(function* (base: Readonly<Record<string, string | undefined>>) {
 		const fs = yield* FileSystem.FileSystem;
 
 		const lookup = (name: string): Effect.Effect<O.Option<string>> =>

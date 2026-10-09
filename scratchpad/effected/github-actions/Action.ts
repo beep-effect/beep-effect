@@ -131,8 +131,7 @@ export interface ActionRunOptions<R> {
  * Lower the minimum log level to `Debug` for the program when the runner has
  * step debugging on — and never raise it.
  */
-const withStepDebugLogLevel = <A, E, R>(program: Effect.Effect<A, E, R>): Effect.Effect<A, E, R | ActionEnvironment> =>
-	Effect.gen(function* () {
+const withStepDebugLogLevel = Effect.fn("withStepDebugLogLevel")(function* <A, E, R>(program: Effect.Effect<A, E, R>) {
 		const env = yield* ActionEnvironment;
 		const stepDebug = yield* env.isDebug;
 		const minimum = yield* References.MinimumLogLevel;
@@ -169,7 +168,7 @@ export const describeCause = (cause: Cause.Cause<unknown>): string => {
 
 /** The `[Tag]: message` half, over anything a failure or a defect can be. */
 const describeError = (error: unknown): string => {
-	if (typeof error === "object" && error !== null && "_tag" in error) {
+	if (P.isObjectKeyword(error) && !P.isFunction(error) && "_tag" in error) {
 		const tagged = error;
 		const detail =
 			P.hasProperty(tagged, "message") && P.isString(tagged.message) && tagged.message !== ""

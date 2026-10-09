@@ -1,3 +1,5 @@
+import * as S from "effect/Schema";
+import { $ScratchpadId } from "@beep/identity/packages";
 // The one way an unstubbed test-double member dies, for every `makeTest` in
 // this package.
 //
@@ -7,6 +9,13 @@
 // here once so a wording change is one edit rather than ten.
 
 import * as Effect from "effect/Effect";
+
+const $I = $ScratchpadId.create("effected/github-actions/internal/unstubbed");
+
+/** A test-double member was called without an override. */
+export class UnstubbedMemberError extends S.TaggedError<UnstubbedMemberError>($I`UnstubbedMemberError`)("UnstubbedMemberError", {
+	message: S.String,
+}, $I.annote("UnstubbedMemberError", { description: "A test-double member was called without an override." })) {}
 
 /**
  * The die-on-call members of `<double>.makeTest`: `dies("save")` is an
@@ -19,5 +28,5 @@ export const unstubbed =
 	(double: string) =>
 	(member: string): Effect.Effect<never> =>
 		Effect.sync(() => {
-			throw new Error(`${double}: ${member}() was called but not stubbed — pass a \`${member}\` override.`);
+			throw UnstubbedMemberError.make({ message: `${double}: ${member}() was called but not stubbed — pass a \`${member}\` override.` });
 		});

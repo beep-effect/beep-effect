@@ -8,6 +8,11 @@ import * as S from "effect/Schema";
 
 const $I = $ScratchpadId.create("effected/github-actions/ManagedDocument");
 
+/** The region dialect rejected its own comment style. */
+export class RejectedRegionDialectError extends S.TaggedError<RejectedRegionDialectError>($I`RejectedRegionDialectError`)("RejectedRegionDialectError", {
+	message: S.String,
+}, $I.annote("RejectedRegionDialectError", { description: "The region dialect rejected its own comment style." })) {}
+
 /**
  * The grammar shared by a document's `namespace`, its `key` and every region
  * key.
@@ -283,7 +288,7 @@ export class ManagedDocument extends S.Class<ManagedDocument>($I`ManagedDocument
 			if (failure.reason === "unknownCommentStyle") {
 				// Structurally unreachable: every declared section above is built
 				// with the one style the module's own dialect recognizes.
-				throw new Error("ManagedDocument: the region dialect rejected its own comment style");
+				throw RejectedRegionDialectError.make({ message: "ManagedDocument: the region dialect rejected its own comment style" });
 			}
 			return Result.fail(
 				ManagedDocumentError.make({

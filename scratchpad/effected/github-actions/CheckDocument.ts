@@ -1,3 +1,4 @@
+import * as MutableHashMap from "effect/MutableHashMap";
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
@@ -384,7 +385,7 @@ export class CheckDocument extends Context.Service<CheckDocument, CheckDocumentS
 			Effect.gen(function* () {
 				const quietMillis = Duration.toMillis(options.debounce?.quiet ?? "500 millis");
 				const maxWaitMillis = Math.max(Duration.toMillis(options.debounce?.maxWait ?? "3 seconds"), quietMillis);
-				const checksRef = yield* Ref.make<ReadonlyMap<string, CheckReport>>(new Map());
+				const checksRef = yield* Ref.make(MutableHashMap.empty<string, CheckReport>());
 				const writtenRef = yield* Ref.make(options.initial ?? "");
 				const versionRef = yield* Ref.make(0);
 				const signal = yield* Latch.make(false);
@@ -442,7 +443,7 @@ export class CheckDocument extends Context.Service<CheckDocument, CheckDocumentS
 						}
 						yield* Ref.set(staleLoggedRef, false);
 					}
-					const entries = options.render(checks);
+					const entries = options.render(checks.backing);
 					const next = yield* document
 						.withRegions(
 							stampMeta === undefined ? entries : entries.map(([key, content]) => [key, content, stampMeta] as const),
@@ -506,15 +507,15 @@ export class CheckDocument extends Context.Service<CheckDocument, CheckDocumentS
 
 				const report = Effect.fn("CheckDocument.report")(function* (check: string, entry: CheckReport) {
 					yield* Ref.update(checksRef, (current) => {
-						const next = new Map(current);
-						next.set(check, entry);
+						const next = MutableHashMap.fromIterable(current);
+						MutableHashMap.set(next, check, entry);
 						return next;
 					});
 					yield* Ref.update(versionRef, (count) => count + 1);
 					yield* signal.open;
 				});
 
-				return { report, checks: Ref.get(checksRef), flush } satisfies CheckDocumentShape;
+				return { report, checks: Effect.map(Ref.get(checksRef), (checks) => checks.backing), flush } satisfies CheckDocumentShape;
 			}),
 		);
 	}

@@ -12,6 +12,11 @@ import * as O from "@beep/utils/Option";
 
 const $I = $ScratchpadId.create("effected/github-actions/DetachedProcess");
 
+/** A spawned detached child did not provide a process id. */
+export class MissingProcessIdError extends S.TaggedError<MissingProcessIdError>($I`MissingProcessIdError`)("MissingProcessIdError", {
+	message: S.String,
+}, $I.annote("MissingProcessIdError", { description: "A spawned detached child did not provide a process id." })) {}
+
 // Effect ChildProcess cannot route detached output to native file descriptors.
 const { spawn: spawnChild } = process.getBuiltinModule("node:child_process");
 const { closeSync, openSync } = process.getBuiltinModule("node:fs");
@@ -338,7 +343,7 @@ export class DetachedProcess {
 					child.on("error", () => {});
 					child.unref();
 					if (child.pid === undefined) {
-						throw new Error(`"${options.command}" produced no process id`);
+						throw MissingProcessIdError.make({ message: `"${options.command}" produced no process id` });
 					}
 					return child.pid;
 				} finally {

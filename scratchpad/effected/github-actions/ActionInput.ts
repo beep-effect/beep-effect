@@ -1,3 +1,6 @@
+import * as O from "effect/Option";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as HashSet from "effect/HashSet";
 import type * as Layer from "effect/Layer";
 import type * as Redacted from "effect/Redacted";
 import * as Config from "effect/Config";
@@ -46,8 +49,8 @@ const configError = (message: string, actual: unknown): Config.ConfigError =>
 	new Config.ConfigError(new S.SchemaError(new SchemaIssue.InvalidValue({ message }, actual)));
 
 /** YAML 1.2 core-schema booleans, which is what the runner documents. */
-const TRUE = new Set(["true", "True", "TRUE"]);
-const FALSE = new Set(["false", "False", "FALSE"]);
+const TRUE = HashSet.fromIterable<string>(["true", "True", "TRUE"]);
+const FALSE = HashSet.fromIterable<string>(["false", "False", "FALSE"]);
 
 /**
  * Options for {@link ActionInput.pairs}.
@@ -187,10 +190,10 @@ export class ActionInput {
 		return Config.String(inputVariable(name)).pipe(
 			Config.mapEffect((raw) => {
 				const value = raw.trim();
-				if (TRUE.has(value)) {
+				if (HashSet.has(TRUE, value)) {
 					return Effect.succeed(true);
 				}
-				if (FALSE.has(value)) {
+				if (HashSet.has(FALSE, value)) {
 					return Effect.succeed(false);
 				}
 				return Effect.fail(
@@ -496,16 +499,16 @@ export class ActionInput {
 		 * so an `INPUT_`-prefixed miss is a map read rather than a scan of the
 		 * whole environment per `Config` read.
 		 */
-		const byInputName = new Map<string, string>();
+		const byInputName = MutableHashMap.empty<string, string>();
 		for (const [key, value] of R.toEntries(env)) {
-			if (!key.startsWith("INPUT_") && present(value) && !byInputName.has(inputVariable(key))) {
-				byInputName.set(inputVariable(key), value);
+			if (!key.startsWith("INPUT_") && present(value) && !MutableHashMap.has(byInputName, inputVariable(key))) {
+				MutableHashMap.set(byInputName, inputVariable(key), value);
 			}
 		}
 		/** Resolve one runner-variable name: the verbatim entry wins, then the input-name entry. */
 		const lookup = (name: string): string | undefined => {
 			const direct = env[name];
-			return present(direct) ? direct : byInputName.get(name);
+			return present(direct) ? direct : O.getOrUndefined(MutableHashMap.get(byInputName, name));
 		};
 		return ConfigProvider.make((path) => {
 			const single = path.length === 1 && P.isString(path[0]) ? path[0] : undefined;

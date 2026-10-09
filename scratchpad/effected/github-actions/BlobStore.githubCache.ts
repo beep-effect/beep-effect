@@ -54,10 +54,7 @@ const azure: DataBlobTransfer = {
 		}).pipe(Effect.map((buffer) => new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength))),
 };
 
-const make = (
-	transfer: DataBlobTransfer,
-): Effect.Effect<BlobStoreShape, never, HttpClient.HttpClient | ActionEnvironment> =>
-	Effect.gen(function* () {
+const make = Effect.fn("make")(function* (transfer: DataBlobTransfer) {
 		const http = yield* HttpClient.HttpClient;
 		// Resolved once, at construction, so every member's `R` is `never`.
 		const env = yield* ActionEnvironment;

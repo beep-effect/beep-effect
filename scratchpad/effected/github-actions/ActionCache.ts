@@ -5,6 +5,8 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "@beep/utils/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
@@ -54,18 +56,14 @@ export class ActionCacheError extends S.TaggedError<ActionCacheError>($I`ActionC
 	override get message(): string {
 		const about = this.key === undefined ? "" : ` for "${this.key}"`;
 		const detail = this.detail === undefined ? "" : `: ${this.detail}`;
-		switch (this.reason) {
-			case "misconfigured":
-				return `The Actions cache is not reachable from here${detail}`;
-			case "unreachable":
-				return `The Actions cache could not be reached${about}${detail}`;
-			case "refused":
-				return `The Actions cache refused the request${about}${this.status === undefined ? "" : ` with status ${this.status}`}${detail}`;
-			case "archiveFailed":
-				return `The cache archive could not be built or extracted${about}${this.stderr === undefined ? "" : `: ${this.stderr}`}`;
-			default:
-				return `The cache archive did not transfer${about}`;
-		}
+		return Match.value(this.reason).pipe(
+			Match.when("misconfigured", () => `The Actions cache is not reachable from here${detail}`),
+			Match.when("unreachable", () => `The Actions cache could not be reached${about}${detail}`),
+			Match.when("refused", () => `The Actions cache refused the request${about}${this.status === undefined ? "" : ` with status ${this.status}`}${detail}`),
+			Match.when("archiveFailed", () => `The cache archive could not be built or extracted${about}${this.stderr === undefined ? "" : `: ${this.stderr}`}`),
+			Match.when("transferFailed", () => `The cache archive did not transfer${about}`),
+			Match.exhaustive,
+		);
 	}
 }
 
@@ -185,9 +183,9 @@ const ladder = (key: string | CacheKey, restoreKeys: ReadonlyArray<string> | und
 		? { primary: key, fallbacks: restoreKeys ?? [] }
 		: { primary: key.key, fallbacks: restoreKeys ?? key.restoreKeys };
 
-const make = (
+const make = Effect.fn("make")(function* (
 	transfer: FileBlobTransfer,
-): Effect.Effect<
+): Effect.fn.Return<
 	ActionCacheShape,
 	never,
 	| ActionEnvironment
@@ -195,8 +193,7 @@ const make = (
 	| FileSystem.FileSystem
 	| Path.Path
 	| ChildProcessSpawner.ChildProcessSpawner
-> =>
-	Effect.gen(function* () {
+> {
 		const http = yield* HttpClient.HttpClient;
 		const fs = yield* FileSystem.FileSystem;
 		const path = yield* Path.Path;
@@ -290,11 +287,10 @@ const make = (
 		 * difference), and the walk does not follow directory symlinks, where
 		 * the toolkit's globber does.
 		 */
-		const resolvePaths = (
+		const resolvePaths = Effect.fnUntraced(function* (
 			patterns: ReadonlyArray<string>,
 			key: string,
-		): Effect.Effect<ReadonlyArray<string>, ActionCacheError> =>
-			Effect.gen(function* () {
+		): Effect.fn.Return<ReadonlyArray<string>, ActionCacheError> {
 				const failed = (detail: string, cause?: unknown) =>
 					ActionCacheError.make({ reason: "archiveFailed", key, detail, ...O.getSomesStruct({ cause: O.fromUndefinedOr(cause) }) });
 				const cleaned = patterns.map((pattern) => pattern.trim()).filter((p) => p !== "" && !p.startsWith("#"));
@@ -370,10 +366,10 @@ const make = (
 				const needsWalk = (root: string) => wildcardRoots.some((w) => w === root || under(w, root));
 
 				const matched: Array<string> = [];
-				const seen = new Set<string>();
+				const seen = MutableHashSet.empty<string>();
 				const admit = (candidate: string) => {
-					if (!seen.has(candidate) && set.matches(candidate)) {
-						seen.add(candidate);
+					if (!MutableHashSet.has(seen, candidate) && set.matches(candidate)) {
+						MutableHashSet.add(seen, candidate);
 						matched.push(candidate);
 					}
 				};
@@ -416,8 +412,7 @@ const make = (
 				// The LITERAL list, before resolution — see `versionOf` for why.
 				const version = versionOf(paths);
 				const resolved = yield* resolvePaths(paths, primary);
-				yield* withArchive(primary, (archive, scratch) =>
-					Effect.gen(function* () {
+				yield* withArchive(primary, Effect.fnUntraced(function* (archive: string, scratch: string) {
 						// The resolved list reaches tar through a MANIFEST FILE, never
 						// argv: resolution admits every matched descendant, so a pattern
 						// like `${workspace}/**` resolves to tens of thousands of
@@ -467,8 +462,7 @@ const make = (
 				if (O.isNone(hit)) {
 					return O.none<string>();
 				}
-				yield* withArchive(primary, (archive) =>
-					Effect.gen(function* () {
+				yield* withArchive(primary, Effect.fnUntraced(function* (archive: string) {
 						yield* transfer.downloadToFile(hit.value.url, archive).pipe(moved(primary));
 						yield* tar([windows ? "xzPkf" : "xzPf", archive], primary, windows);
 					}),

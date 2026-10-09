@@ -1,3 +1,4 @@
+import * as Match from "effect/Match";
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -12,6 +13,11 @@ import { heredocBlock, isUsableName } from "./internal/runnerFile.ts";
 import { unstubbed } from "./internal/unstubbed.ts";
 
 const $I = $ScratchpadId.create("effected/github-actions/ActionState");
+
+/** An invalid name cannot head an action-state runner-file entry. */
+export class InvalidActionStateNameError extends S.TaggedError<InvalidActionStateNameError>($I`InvalidActionStateNameError`)("InvalidActionStateNameError", {
+	message: S.String,
+}, $I.annote("InvalidActionStateNameError", { description: "An invalid name cannot head an action-state runner-file entry." })) {}
 
 const Json = S.fromJsonString(S.Unknown);
 
@@ -38,16 +44,12 @@ export class ActionStateError extends S.TaggedError<ActionStateError>($I`ActionS
 	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying failure, preserved structurally." }),
 }, $I.annote("ActionStateError", { description: "Raised when action state cannot be saved, read or decoded across the phase boundary." })) {
 	override get message(): string {
-		switch (this.reason) {
-			case "missing":
-				return `No action state was saved under "${this.key}"`;
-			case "malformed":
-				return `Action state under "${this.key}" could not be decoded`;
-			case "notPlainJson":
-				return `The encoded form of action state under "${this.key}" is not plain JSON and would not survive the phase boundary — encode to a plain-JSON form (e.g. Schema.OptionFromNullOr rather than Schema.Option)`;
-			default:
-				return `Failed to persist action state under "${this.key}"`;
-		}
+		return Match.value(this.reason).pipe(
+			Match.when("missing", () => `No action state was saved under "${this.key}"`),
+			Match.when("malformed", () => `Action state under "${this.key}" could not be decoded`),
+			Match.when("notPlainJson", () => `The encoded form of action state under "${this.key}" is not plain JSON and would not survive the phase boundary — encode to a plain-JSON form (e.g. Schema.OptionFromNullOr rather than Schema.Option)`),
+			Match.orElse(() => `Failed to persist action state under "${this.key}"`),
+		);
 	}
 }
 
@@ -103,20 +105,18 @@ const make = Effect.gen(function* () {
 	const fs = yield* FileSystem.FileSystem;
 	const outputs = yield* ActionOutputs;
 
-	const write = (key: string, serialized: string): Effect.Effect<void, ActionStateError> =>
-		Effect.gen(function* () {
+	const write = Effect.fnUntraced(function* (key: string, serialized: string) {
 			const writeFailed = (cause: unknown) => ActionStateError.make({ reason: "writeFailed", key, cause });
 			// The same heredoc protocol as ActionOutputs (`internal/runnerFile.ts`):
 			// a key that cannot head a block would corrupt every entry after it.
 			if (!isUsableName(key)) {
-				return yield* writeFailed(new Error(`"${key}" cannot name a GITHUB_STATE entry`));
+				return yield* writeFailed(InvalidActionStateNameError.make({ message: `"${key}" cannot name a GITHUB_STATE entry` }));
 			}
 			const path = yield* env.get("GITHUB_STATE").pipe(Effect.mapError(writeFailed));
-			yield* fs.writeFileString(path, heredocBlock(key, serialized), { flag: "a" }).pipe(Effect.mapError(writeFailed));
+			yield* fs.writeFileString(path, heredocBlock({ name: key, value: serialized }), { flag: "a" }).pipe(Effect.mapError(writeFailed));
 		});
 
-	const read = <A, I>(key: string, schema: S.Codec<A, I>): Effect.Effect<O.Option<A>, ActionStateError> =>
-		Effect.gen(function* () {
+	const read = Effect.fnUntraced(function* <A, I>(key: string, schema: S.Codec<A, I>) {
 			const raw = yield* env.getOptional(stateVariable(key));
 			if (O.isNone(raw)) {
 				return O.none<A>();

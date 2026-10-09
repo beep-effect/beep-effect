@@ -1,3 +1,4 @@
+import * as Match from "effect/Match";
 import { $ScratchpadId } from "@beep/identity/packages";
 import type * as Duration from "effect/Duration";
 import type * as PlatformError from "effect/PlatformError";
@@ -46,14 +47,11 @@ export class ToolInstallerError extends S.TaggedError<ToolInstallerError>($I`Too
 	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying failure, preserved structurally." }),
 }, $I.annote("ToolInstallerError", { description: "Raised when a tool cannot be downloaded, extracted or cached." })) {
 	override get message(): string {
-		switch (this.reason) {
-			case "downloadFailed":
-				return `Could not download ${this.subject}${this.status === undefined ? "" : ` (HTTP ${this.status})`}`;
-			case "extractFailed":
-				return `Could not extract ${this.subject}${this.stderr === undefined ? "" : `: ${this.stderr}`}`;
-			default:
-				return `Could not cache ${this.subject} into the tool cache`;
-		}
+		return Match.value(this.reason).pipe(
+			Match.when("downloadFailed", () => `Could not download ${this.subject}${this.status === undefined ? "" : ` (HTTP ${this.status})`}`),
+			Match.when("extractFailed", () => `Could not extract ${this.subject}${this.stderr === undefined ? "" : `: ${this.stderr}`}`),
+			Match.orElse(() => `Could not cache ${this.subject} into the tool cache`),
+		);
 	}
 
 	/**
@@ -296,8 +294,7 @@ const make = Effect.gen(function* () {
 	 * `internal/spawn.ts`: a second run fails on Windows because .NET's
 	 * `ZipFile.ExtractToDirectory` refuses to overwrite.
 	 */
-	const extractWith = (command: ChildProcess.Command, archive: string): Effect.Effect<void, ToolInstallerError> =>
-		Effect.gen(function* () {
+	const extractWith = Effect.fnUntraced(function* (command: ChildProcess.Command, archive: string) {
 			const { output, code } = yield* spawnOnce(spawner, command).pipe(
 				Effect.mapError((cause) => ToolInstallerError.make({ reason: "extractFailed", subject: archive, cause })),
 			);

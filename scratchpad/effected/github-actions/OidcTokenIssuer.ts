@@ -1,3 +1,4 @@
+import * as Match from "effect/Match";
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -38,18 +39,13 @@ export class OidcTokenError extends S.TaggedError<OidcTokenError>($I`OidcTokenEr
 	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying failure, preserved structurally." }),
 }, $I.annote("OidcTokenError", { description: "Raised when an OIDC token cannot be issued or read." })) {
 	override get message(): string {
-		switch (this.reason) {
-			case "unavailable":
-				return "The runner published no OIDC token service; the workflow needs `permissions: id-token: write`";
-			case "requestFailed":
-				return `The OIDC token request failed${this.status === undefined ? "" : ` with status ${this.status}`}`;
-			case "malformedResponse":
-				return "The OIDC token service answered with an unexpected shape";
-			case "malformedToken":
-				return `The OIDC token is not a decodable JWT${this.detail === undefined ? "" : `: ${this.detail}`}`;
-			default:
-				return "The OIDC token is missing claims a provenance statement needs";
-		}
+		return Match.value(this.reason).pipe(
+			Match.when("unavailable", () => "The runner published no OIDC token service; the workflow needs `permissions: id-token: write`"),
+			Match.when("requestFailed", () => `The OIDC token request failed${this.status === undefined ? "" : ` with status ${this.status}`}`),
+			Match.when("malformedResponse", () => "The OIDC token service answered with an unexpected shape"),
+			Match.when("malformedToken", () => `The OIDC token is not a decodable JWT${this.detail === undefined ? "" : `: ${this.detail}`}`),
+			Match.orElse(() => "The OIDC token is missing claims a provenance statement needs"),
+		);
 	}
 }
 
@@ -108,8 +104,7 @@ const REQUEST_URL = "ACTIONS_ID_TOKEN_REQUEST_URL";
  * The absence of verification is deliberate and is documented on
  * {@link OidcTokenIssuerShape.claims}; do not "fix" it here.
  */
-const readClaims = (token: string): Effect.Effect<OidcClaims, OidcTokenError> =>
-	Effect.gen(function* () {
+const readClaims = Effect.fn("readClaims")(function* (token: string) {
 		const decoded = yield* Effect.fromResult(payloadOf(token)).pipe(
 			Effect.mapError((failure) =>
 				failure.kind === "segments"

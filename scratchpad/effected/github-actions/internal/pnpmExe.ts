@@ -1,3 +1,4 @@
+import * as HashSet from "effect/HashSet";
 // The pnpm native-binary layout: from pnpm 12 the `pnpm` registry package is a
 // thin wrapper whose `pnpm` bin is a shebang-less placeholder that the
 // package's own install script overwrites with the host's native executable,
@@ -25,7 +26,7 @@ export const PNPM_EXE_PREFIX = "@pnpm/exe.";
  * the wrapper's own `native-binary.mjs`, flattened to the spellings that
  * follow the prefix. Only linux x64/arm64 have a musl twin.
  */
-const PNPM_EXE_TARGETS: ReadonlySet<string> = new Set([
+const PNPM_EXE_TARGETS = HashSet.fromIterable<string>([
 	"linux-x64",
 	"linux-arm64",
 	"linux-x64-musl",
@@ -68,7 +69,7 @@ export const pnpmExeTarget: {
 		return O.none();
 	}
 	const target = `${platform}-${arch}${platform === "linux" && musl ? "-musl" : ""}`;
-	return PNPM_EXE_TARGETS.has(target) ? O.some(target) : O.none();
+	return HashSet.has(PNPM_EXE_TARGETS, target) ? O.some(target) : O.none();
 });
 
 /**

@@ -70,10 +70,7 @@ export class Secret {
 	 * compose `ActionOutputs.layerDetached`, whose `setSecret` is a documented
 	 * no-op, so the same code cannot re-leak what the parent already masked.
 	 */
-	static readonly forChildEnv = (
-		entries: Readonly<Record<string, Redacted.Redacted<string>>>,
-	): Effect.Effect<Record<string, string>, never, ActionOutputs> =>
-		Effect.gen(function* () {
+	static readonly forChildEnv = Effect.fn("forChildEnv")(function* (entries: Readonly<Record<string, Redacted.Redacted<string>>>) {
 			const outputs = yield* ActionOutputs;
 			const declassified: Record<string, string> = {};
 			for (const [name, secret] of R.toEntries(entries)) {
@@ -91,8 +88,7 @@ export class Secret {
 	 * Masks first. The runner file is plaintext regardless; the mask is what
 	 * keeps the value out of the visible log.
 	 */
-	static readonly forRunnerFile = (secret: Redacted.Redacted<string>): Effect.Effect<string, never, ActionOutputs> =>
-		Effect.gen(function* () {
+	static readonly forRunnerFile = Effect.fn("forRunnerFile")(function* (secret: Redacted.Redacted<string>) {
 			const outputs = yield* ActionOutputs;
 			const plaintext = Redacted.value(secret);
 			yield* outputs.setSecret(plaintext);

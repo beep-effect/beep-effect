@@ -1,3 +1,5 @@
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as Match from "effect/Match";
 import { $ScratchpadId } from "@beep/identity/packages";
 import type * as Redacted from "effect/Redacted";
 import * as Context from "effect/Context";
@@ -38,16 +40,13 @@ export class BlobStoreError extends S.TaggedError<BlobStoreError>($I`BlobStoreEr
 	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying failure, preserved structurally." }),
 }, $I.annote("BlobStoreError", { description: "Raised when a blob cannot be stored or retrieved." })) {
 	override get message(): string {
-		switch (this.reason) {
-			case "unreachable":
-				return `The blob store could not be reached${this.key === undefined ? "" : ` for "${this.key}"`}`;
-			case "refused":
-				return `The blob store refused "${this.key}"${this.status === undefined ? "" : ` with status ${this.status}`}${
+		return Match.value(this.reason).pipe(
+			Match.when("unreachable", () => `The blob store could not be reached${this.key === undefined ? "" : ` for "${this.key}"`}`),
+			Match.when("refused", () => `The blob store refused "${this.key}"${this.status === undefined ? "" : ` with status ${this.status}`}${
 					this.detail === undefined ? "" : `: ${this.detail}`
-				}`;
-			default:
-				return `The blob store is misconfigured${this.detail === undefined ? "" : `: ${this.detail}`}`;
-		}
+				}`),
+			Match.orElse(() => `The blob store is misconfigured${this.detail === undefined ? "" : `: ${this.detail}`}`),
+		);
 	}
 }
 
@@ -192,30 +191,29 @@ export class BlobStore extends Context.Service<BlobStore, BlobStoreShape>()($I`B
 	 * rather than a double whose `get` returns whatever its `put` was handed.
 	 */
 	static readonly layerMemory: Layer.Layer<BlobStore> = Layer.sync(BlobStore, () => {
-		const entries = new Map<string, Uint8Array>();
+		const entries = MutableHashMap.empty<string, Uint8Array>();
 		return {
 			get: Effect.fn("BlobStore.get")(<A, I>(key: string, schema: S.Codec<A, I>) =>
 				Effect.suspend(() => {
-					const stored = entries.get(key);
-					return stored === undefined
+					const stored = MutableHashMap.get(entries, key);
+					return O.isNone(stored)
 						? Effect.succeed(O.none<StoredBlob<A>>())
-						: BlobEnvelope.decodeResult(stored, schema).pipe(Effect.fromResult, Effect.asSome);
+						: BlobEnvelope.decodeResult(stored.value, schema).pipe(Effect.fromResult, Effect.asSome);
 				})),
 			put: Effect.fn("BlobStore.put")(<A, I>(key: string, blob: StoredBlob<A>, schema: S.Codec<A, I>) =>
 				Effect.suspend(() =>
 					Effect.map(Effect.fromResult(BlobEnvelope.encodeResult(blob.metadata, blob.body, schema)), (framed) => {
-						entries.set(key, framed);
+						MutableHashMap.set(entries, key, framed);
 					}),
 				)),
-			has: Effect.fn("BlobStore.has")((key: string) => Effect.sync(() => entries.has(key))),
+			has: Effect.fn("BlobStore.has")((key: string) => Effect.sync(() => MutableHashMap.has(entries, key))),
 		};
 	});
 }
 
 const dies = unstubbed("BlobStore.makeTest");
 
-const makeS3 = (config: S3Config): Effect.Effect<BlobStoreShape, never, HttpClient.HttpClient | ActionOutputs> =>
-	Effect.gen(function* () {
+const makeS3 = Effect.fn("makeS3")(function* (config: S3Config) {
 		const http = yield* HttpClient.HttpClient;
 		// Trailing slashes stripped without a regex: the anchored `/\/+$/` form
 		// backtracks quadratically on slash runs (CodeQL js/polynomial-redos).

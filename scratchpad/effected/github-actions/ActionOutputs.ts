@@ -242,8 +242,7 @@ const make = Effect.gen(function* () {
 	const env = yield* ActionEnvironment;
 	const fs = yield* FileSystem.FileSystem;
 
-	const append = (file: string, content: string): Effect.Effect<void, ActionOutputError> =>
-		Effect.gen(function* () {
+	const append = Effect.fnUntraced(function* (file: string, content: string) {
 			const path = yield* env.get(file).pipe(Effect.mapError(() => RunnerFileUnavailableError.make({ file })));
 			yield* fs
 				.writeFileString(path, content, { flag: "a" })
@@ -251,7 +250,7 @@ const make = Effect.gen(function* () {
 		});
 
 	const appendBlock = (file: string, name: string, value: string): Effect.Effect<void, ActionOutputError> =>
-		withUsableName(file, name, append(file, heredocBlock(name, value)));
+		withUsableName(file, name, append(file, heredocBlock({ name, value })));
 
 	const set = (name: string, value: string) => appendBlock(RUNNER_FILE.set, name, value);
 

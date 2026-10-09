@@ -1,3 +1,4 @@
+import * as A from "effect/Array";
 import {
 	Code,
 	Html,
@@ -245,7 +246,7 @@ export class GitHubMarkdown {
 		const inline = (value: string): string => value.replace(/\r?\n/g, "<br>");
 		const cells = (values: ReadonlyArray<string>): TableRow =>
 			TableRow.make({
-				children: Array.from({ length: headers.length }, (_, index) =>
+				children: A.map(headers, (_, index) =>
 					TableCell.make({ children: [passthrough(inline(values[index] ?? ""))] }),
 				),
 			});

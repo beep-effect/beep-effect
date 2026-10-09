@@ -270,6 +270,7 @@ describe("bundle reachability", () => {
 			"effect/Effect",
 			"effect/Function",
 			"effect/Option",
+			"effect/Predicate",
 			"effect/Redacted",
 			"effect/Result",
 			"effect/Schema",
@@ -278,8 +279,10 @@ describe("bundle reachability", () => {
 		assert.deepStrictEqual(
 			[...reachableBareImports("internal/twirp.ts")].sort(),
 			[
+			"@beep/utils/Option",
 			"effect/Effect",
 			"effect/Function",
+			"effect/Predicate",
 			"effect/Schedule",
 			"effect/http",
 		],
@@ -289,9 +292,11 @@ describe("bundle reachability", () => {
 		// `BlobStore.githubCache` owns the three RPCs and NOT the Azure transfer
 		// between them — that is the whole point of it being an internal.
 		assert.deepStrictEqual([...reachableBareImports("internal/cacheService.ts")].sort(), [
+			"@beep/utils/Option",
 			"effect/Effect",
 			"effect/Function",
 			"effect/Option",
+			"effect/Predicate",
 			"effect/Schedule",
 			"effect/http",
 		]);
@@ -313,7 +318,7 @@ describe("bundle reachability", () => {
 			"effect/Stream",
 			"effect/encoding/Hex",
 		]);
-		assert.deepStrictEqual([...reachableBareImports("internal/fsProbe.ts")].sort(), ["effect/Effect", "effect/Function"]);
+		assert.deepStrictEqual([...reachableBareImports("internal/fsProbe.ts")].sort(), ["effect/Effect", "effect/Function", "effect/Predicate"]);
 		assert.deepStrictEqual([...reachableBareImports("internal/jwt.ts")].sort(), [
 			"effect/Function",
 			"effect/Result",
@@ -326,7 +331,7 @@ describe("bundle reachability", () => {
 			"effect/Option",
 		]);
 		assert.deepStrictEqual([...reachableBareImports("internal/runnerFile.ts")], []);
-		assert.deepStrictEqual([...reachableBareImports("internal/unstubbed.ts")].sort(), ["effect/Effect"]);
+		assert.deepStrictEqual([...reachableBareImports("internal/unstubbed.ts")].sort(), ["@beep/identity/packages", "effect/Effect", "effect/Schema"]);
 	});
 
 	it("the entry point reaches Azure, and that is correct", () => {

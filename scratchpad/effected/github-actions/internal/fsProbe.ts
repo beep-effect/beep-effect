@@ -1,3 +1,4 @@
+import * as P from "effect/Predicate";
 // "Is there a file / a directory at this path?" — the probe the installers
 // ask before deciding whether to reinstall, skip or fail typed.
 
@@ -29,4 +30,4 @@ export const isErrno: {
 	(cause: unknown, code: string): boolean;
 	(code: string): (cause: unknown) => boolean;
 } = Function.dual(2, (cause: unknown, code: string): boolean =>
-	typeof cause === "object" && cause !== null && "code" in cause && cause.code === code);
+	P.isObjectKeyword(cause) && !P.isFunction(cause) && "code" in cause && cause.code === code);

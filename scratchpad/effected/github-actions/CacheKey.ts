@@ -1,3 +1,5 @@
+import * as MutableHashSet from "effect/MutableHashSet";
+import * as HashSet from "effect/HashSet";
 import { $ScratchpadId } from "@beep/identity/packages";
 import { GlobSet } from "../glob/index.ts";
 import { descend } from "../walker/index.ts";
@@ -9,6 +11,11 @@ import * as S from "effect/Schema";
 import { sha256, sha256Hex } from "./internal/digest.ts";
 
 const $I = $ScratchpadId.create("effected/github-actions/CacheKey");
+
+/** A digest length outside the sha256 output range was requested. */
+export class InvalidDigestLengthError extends S.TaggedError<InvalidDigestLengthError>($I`InvalidDigestLengthError`)("InvalidDigestLengthError", {
+	message: S.String,
+}, $I.annote("InvalidDigestLengthError", { description: "A digest length outside the sha256 output range was requested." })) {}
 
 /**
  * Raised when a file or directory that was going to be hashed could not be
@@ -339,7 +346,7 @@ export class CacheKey extends S.Class<CacheKey>($I`CacheKey`)(
 	 * and collision risk for cache segments.
 	 *
 	 * A `length` outside `1..64` (or a fractional one) is a wiring mistake, not
-	 * data, and **throws a `RangeError`** rather than failing typed: 64 is all
+	 * data, and **throws an `InvalidDigestLengthError`** rather than failing typed: 64 is all
 	 * SHA-256 has, and asking for more would silently answer fewer characters
 	 * than the caller believes it got.
 	 *
@@ -356,7 +363,7 @@ export class CacheKey extends S.Class<CacheKey>($I`CacheKey`)(
 	 */
 	static digest(input: string, length: number = 8): string {
 		if (!Number.isInteger(length) || length < 1 || length > 64) {
-			throw new RangeError(`A digest length must be an integer between 1 and 64, got ${length}`);
+			throw InvalidDigestLengthError.make({ message: `A digest length must be an integer between 1 and 64, got ${length}` });
 		}
 		return sha256Hex(input).slice(0, length);
 	}
@@ -382,7 +389,7 @@ export class CacheKey extends S.Class<CacheKey>($I`CacheKey`)(
 	 */
 	static readonly hashFiles = Effect.fn("CacheKey.hashFiles")(function* (files: ReadonlyArray<string>) {
 		const fs = yield* FileSystem.FileSystem;
-		const ordered = [...new Set(files)].sort();
+		const ordered = [...HashSet.fromIterable(files)].sort();
 		if (ordered.length === 0) {
 			return O.none<string>();
 		}
@@ -468,7 +475,7 @@ export class CacheKey extends S.Class<CacheKey>($I`CacheKey`)(
 		// traversal-chain cycle guard, so files reachable only through a
 		// symlinked directory contribute to the key — matching the runner's
 		// `hashFiles()` default of `followSymbolicLinks: true`.
-		const candidates = new Set<string>();
+		const candidates = MutableHashSet.empty<string>();
 		for (const literal of set.literals) {
 			const target = path.join(workspace, literal);
 			// A literal that climbs above the workspace is not this workspace's
@@ -490,7 +497,7 @@ export class CacheKey extends S.Class<CacheKey>($I`CacheKey`)(
 				Effect.mapError((cause) => CacheKeyReadError.make({ path: target, cause })),
 			);
 			if (O.isSome(info) && info.value.type === "File") {
-				candidates.add(literal);
+				MutableHashSet.add(candidates, literal);
 			}
 		}
 		for (const wildcard of set.wildcards) {
@@ -502,7 +509,7 @@ export class CacheKey extends S.Class<CacheKey>($I`CacheKey`)(
 				Effect.mapError((cause) => CacheKeyReadError.make({ path: path.join(workspace, cause.path), cause })),
 			);
 			for (const match of found) {
-				candidates.add(match);
+				MutableHashSet.add(candidates, match);
 			}
 		}
 		return [...candidates]
