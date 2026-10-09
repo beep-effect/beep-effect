@@ -28,12 +28,10 @@ const program = Effect.gen(function* () {
  * @since 0.0.0
  */
 export const runContacts = () =>
-  BunRuntime.runMain(
-    Effect.scoped(
-      BunServices.layer.pipe(
-        Layer.build,
-        Effect.flatMap((context) => program.pipe(Effect.provideContext(context)))
-      )
-    )
+  BunServices.layer.pipe(
+    Layer.build,
+    Effect.flatMap((context) => program.pipe(Effect.provideContext(context))),
+    Effect.scoped,
+    BunRuntime.runMain
   );
 if (import.meta.main) runContacts();
