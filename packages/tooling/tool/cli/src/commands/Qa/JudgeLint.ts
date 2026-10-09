@@ -12,7 +12,9 @@
 
 import { SessionStore } from "@beep/qa-capture";
 import { A } from "@beep/utils";
-import { Effect, FileSystem, Path } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Path from "effect/Path";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { printLines } from "../../internal/cli/Printer.ts";
 import {
@@ -41,8 +43,7 @@ import type { QaJudgeLintOptions } from "./Qa.schemas.ts";
  * ```ts
  * import { runQaJudgeLint } from "@beep/repo-cli/commands/Qa/JudgeLint"
  * import { QaJudgeLintOptions } from "@beep/repo-cli/commands/Qa/Qa.schemas"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = runQaJudgeLint("/repo", QaJudgeLintOptions.make({ round: 3 }))
  * console.log(Effect.isEffect(program)) // true
  * ```

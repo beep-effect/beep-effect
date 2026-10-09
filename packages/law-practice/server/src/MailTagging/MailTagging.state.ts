@@ -6,7 +6,7 @@
  */
 
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { Context } from "effect";
+import * as Context from "effect/Context";
 import * as S from "effect/Schema";
 
 const $I = $LawPracticeServerId.create("MailTagging/MailTagging.state");

@@ -58,8 +58,15 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { assertSome, assertTrue } from "@effect/vitest/utils";
-import { Effect, Equal, Exit, FileSystem, HashSet, Layer, Path, Result } from "effect";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
+import * as HashSet from "effect/HashSet";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { describe, expect } from "vitest";
@@ -128,7 +135,7 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("commands/Qa cited-artifact t
       const exit = yield* Effect.exit(evaluateCitedArtifactExists(input));
       const verdict = yield* evaluateCitedArtifactExists(input);
 
-      assertTrue(Exit.isSuccess(exit));
+      exit.pipe(Exit.isSuccess, assertTrue);
       expect(verdict.verdict).toBe("denied");
       expect(verdict.audit.detail.checkedPaths).toEqual(input.citedPaths);
       expect(missingPathsOf(verdict)).toEqual([
@@ -155,7 +162,7 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("commands/Qa cited-artifact t
       const exit = yield* Effect.exit(evaluateCitedArtifactExists(input));
       const verdict = yield* evaluateCitedArtifactExists(input);
 
-      assertTrue(Exit.isSuccess(exit));
+      exit.pipe(Exit.isSuccess, assertTrue);
       expect(verdict.verdict).toBe("denied");
       expect(missingPathsOf(verdict)).toEqual(["frames/ghost.png"]);
     })

@@ -9,12 +9,16 @@
 import { $CiopsId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { Sha256Hex } from "@beep/schema/Sha256";
-import { Console, DateTime, Effect, FileSystem, HashMap } from "effect";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
 import * as Crypto from "effect/Crypto";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
 import * as Hex from "effect/encoding/Hex";
+import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
+import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -203,7 +207,7 @@ const conflictingModes = (writeScript: EvidenceWriteScript) =>
  * **Example** (Default to check mode)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { decodeEvidenceMode } from "@/projection/Evidence"
  *
  * console.log(Effect.runSync(decodeEvidenceMode(["bun", "script.ts"], "evidence:s7:write"))) // "check"
@@ -295,7 +299,7 @@ export class EvidenceRun extends S.Class<EvidenceRun>($I`EvidenceRun`)(
  * **Example** (Validate without writing)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { EvidencePaths, generateReplayEvidence } from "@/projection/Evidence"
  *
  * const program = generateReplayEvidence("check", EvidencePaths.make({
@@ -759,7 +763,7 @@ const pinnedInputSection = (summary: LiveEvidenceSummary, paths: LiveEvidencePat
     `- Journal SHA-256: ${cell(window.journalSha256)} (typed constant, asserted against the bytes before replay)`,
     `- Manifest: ${cell(paths.manifest)}`,
     `- Manifest SHA-256: ${cell(window.manifestSha256)} (typed constant, asserted against the bytes)`,
-    `- Retained window (canonical root): ${cell(DateTime.formatIso(window.firstRetainedInstant))} to ${cell(DateTime.formatIso(window.lastRetainedInstant))}, asserted against \`admission_roots[0].window\` and against the journal's first and last row instants`,
+    `- Retained window (canonical root): ${window.firstRetainedInstant.pipe(DateTime.formatIso, cell)} to ${window.lastRetainedInstant.pipe(DateTime.formatIso, cell)}, asserted against \`admission_roots[0].window\` and against the journal's first and last row instants`,
     `- Pre-v3 chains: ${window.preV3Chains}, asserted against \`admission_roots[0].window.released_only_chains\` and \`loss_population.chain_counts.pre-v3\` (that member name counts the pre-v3 class, chains with no retained enqueue, not release-only chains)`,
     `- Policy A-Box: ${cell(paths.abox)} (SHA-256 ${cell(summary.policySha256)})`,
     `- Events: ${report.eventCount} (${report.admittedCount} admitted, ${report.releasedCount} released or lease-evicted, ${skipped} skipped terminal row(s), ${neutral} ledger-neutral)`,
@@ -887,7 +891,7 @@ const legacyDrainLines = (arm: Cq009LegacyDrainArm): ReadonlyArray<string> => [
 ];
 
 const censorshipLine = (censorship: Cq009Censorship): string =>
-  `What this evaluation cannot see: rows before ${cell(DateTime.formatIso(censorship.firstRetainedInstant))} or after ${cell(DateTime.formatIso(censorship.lastRetainedInstant))} (the retained window); the ${censorship.preV3Chains} pre-v3 chain(s), whose enqueue rows were trimmed; ${censorship.ledgerCensoredVerdicts} ledger-censored verdict(s), whose replayed ledger lacked a pre-window grant; ${censorship.withdrawnRows} withdrawn and ${censorship.ticketEvictedRows} ticket-evicted request row(s), which never became grants; ${A.length(censorship.grantsActiveAtFirstEdge)} grant(s) active at the first edge${nonceList(censorship.grantsActiveAtFirstEdge)}, outside the replayed set; and ${A.length(censorship.grantsActiveAtLastEdge)} grant(s) still active at the last edge${nonceList(censorship.grantsActiveAtLastEdge)}, whose later overlaps are unseen.`;
+  `What this evaluation cannot see: rows before ${censorship.firstRetainedInstant.pipe(DateTime.formatIso, cell)} or after ${censorship.lastRetainedInstant.pipe(DateTime.formatIso, cell)} (the retained window); the ${censorship.preV3Chains} pre-v3 chain(s), whose enqueue rows were trimmed; ${censorship.ledgerCensoredVerdicts} ledger-censored verdict(s), whose replayed ledger lacked a pre-window grant; ${censorship.withdrawnRows} withdrawn and ${censorship.ticketEvictedRows} ticket-evicted request row(s), which never became grants; ${A.length(censorship.grantsActiveAtFirstEdge)} grant(s) active at the first edge${nonceList(censorship.grantsActiveAtFirstEdge)}, outside the replayed set; and ${A.length(censorship.grantsActiveAtLastEdge)} grant(s) still active at the last edge${nonceList(censorship.grantsActiveAtLastEdge)}, whose later overlaps are unseen.`;
 
 const cq009Section = (live: LiveReplayReport): ReadonlyArray<string> => [
   "## CQ-009",
@@ -971,7 +975,7 @@ export const renderLiveReplayEvidence: {
  * **Example** (Build a check run)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { generateLiveReplayEvidence } from "@/projection/Evidence"
  * import type { LiveEvidencePaths } from "@/projection/Evidence"
  * import type { ReplayWindow } from "@/projection/Replay"

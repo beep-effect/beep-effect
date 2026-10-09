@@ -2,7 +2,7 @@ import { CacheProducerBundle } from "@beep/repo-cli/commands/Cache";
 import { validateCacheProducerBundle } from "@beep/repo-cli/test/Cache";
 import { describe, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { input, pilot, protocol } from "./helpers/cache-producer-bundle-fixture.ts";

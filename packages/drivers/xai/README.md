@@ -12,7 +12,7 @@ bun add @beep/xai
 ## Usage
 
 ```ts
-import { Effect } from "effect"
+import * as Effect from "effect/Effect";
 import { XAi, XAiRequestOptions } from "@beep/xai"
 
 const program = Effect.gen(function* () {

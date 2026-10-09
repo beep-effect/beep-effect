@@ -2,8 +2,9 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { it } from "@beep/test-runner";
 import { assert, beforeAll } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
-import { Config, Effect } from "effect";
 import * as A from "effect/Array";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 

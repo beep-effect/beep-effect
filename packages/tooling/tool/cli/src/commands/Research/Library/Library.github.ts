@@ -1,11 +1,18 @@
-/** GitHub clone and conversation evidence adapters.
+/**
+ * GitHub clone and conversation evidence adapters.
+ *
  * @internal
  * @packageDocumentation
  * @since 0.0.0
  */
-import { DateTime, Effect, FileSystem, Match, Path } from "effect";
+
 import * as A from "effect/Array";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import {
@@ -19,6 +26,8 @@ import { LibraryError } from "./Library.errors.ts";
 import { LibraryArtifact } from "./Library.schemas.ts";
 import { saveImmutable } from "./Library.store.ts";
 import type { LibrarySource } from "./Library.schemas.ts";
+
+const ProviderItems = S.Array(S.Unknown);
 
 const Commit = S.String.check(S.isPattern(/^[0-9a-f]{40}$/));
 const PullPins = S.Array(S.Struct({ base: S.Struct({ sha: Commit }), head: S.Struct({ sha: Commit }) }));
@@ -47,19 +56,21 @@ const renamedRepositoryEndpoint = (
 const repositoryParts = (url: string) =>
   Str.match(/^https:\/\/github\.com\/([A-Za-z0-9][A-Za-z0-9-]*)\/([A-Za-z0-9_.-]+)(?:\/|$)/)(url);
 
-/** Clone a referenced repository without executing its content.
+/**
+ * Clone a referenced repository without executing its content.
  * **Example** (Prepare a source-bound acquisition)
  * ```ts
  * import { acquireLibraryGithub } from "@beep/repo-cli/test/ResearchLibrary"
  * import { classifyLibraryReference } from "@beep/repo-cli/commands/Research"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * const acquisition = classifyLibraryReference("https://github.com/Effect-TS/effect", "report").pipe(Effect.flatMap((source) => acquireLibraryGithub("/library", source, "captures/example")))
  * console.log(Effect.isEffect(acquisition))
  * ```
  *
  * @internal
  * @category use-cases
- * @since 0.0.0 */
+ * @since 0.0.0
+ */
 export const acquireLibraryGithub = Effect.fn("Library.acquireGithub")(function* (
   root: string,
   source: LibrarySource,
@@ -278,7 +289,7 @@ export const acquireLibraryGithub = Effect.fn("Library.acquireGithub")(function*
     const observeResourceIdentities = Effect.fn("Library.github.observeResourceIdentities")(function* (
       decoded: unknown
     ) {
-      const resources = S.is(S.Array(S.Unknown))(decoded) ? decoded : [decoded];
+      const resources = S.is(ProviderItems)(decoded) ? decoded : [decoded];
       for (const resource of resources) {
         const identity = S.decodeUnknownOption(ResourceIdentity)(resource);
         if (O.isSome(identity)) yield* captureRenameIdentity(identity.value.html_url);
@@ -302,7 +313,7 @@ export const acquireLibraryGithub = Effect.fn("Library.acquireGithub")(function*
         );
         yield* observeResourceIdentities(decoded);
         const items = paginated
-          ? yield* S.decodeUnknownEffect(S.Array(S.Unknown))(decoded).pipe(
+          ? yield* S.decodeUnknownEffect(ProviderItems)(decoded).pipe(
               Effect.mapError((cause) =>
                 LibraryError.make({ cause, message: "GitHub pagination response was not an array." })
               )

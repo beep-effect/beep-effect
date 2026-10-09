@@ -10,8 +10,10 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, Str, thunkEmptyStr } from "@beep/utils";
-import { Effect, Number as N, Order } from "effect";
+import * as Effect from "effect/Effect";
+import * as N from "effect/Number";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import {
@@ -21,7 +23,8 @@ import {
   versionCategoryStatusFromDrift,
 } from "../../VersionSync.schemas.ts";
 import { readRootPackageJson } from "./RootCatalog.ts";
-import type { FileSystem, Path } from "effect";
+import type * as FileSystem from "effect/FileSystem";
+import type * as Path from "effect/Path";
 import type { VersionSyncError } from "../../VersionSync.schemas.ts";
 
 const $I = $RepoCliId.create("commands/VersionSync/internal/resolvers/EffectResolver");

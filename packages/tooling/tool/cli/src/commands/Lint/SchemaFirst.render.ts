@@ -6,7 +6,9 @@
  */
 
 import { A, Str } from "@beep/utils";
-import { Console, Effect, flow, identity } from "effect";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import { flow, identity } from "effect/Function";
 import * as O from "effect/Option";
 import { renderTruncatedLines } from "../../internal/artifacts/index.ts";
 import { CliReportedExit } from "../../internal/cli/ExitCodeError.ts";

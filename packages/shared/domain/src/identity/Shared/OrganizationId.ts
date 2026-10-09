@@ -36,7 +36,7 @@ export const OrganizationId = make("organization", {
  * **Example** (Decode OrganizationId with Schema)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { OrganizationId } from "@beep/shared-domain/identity/Shared"
  * import * as S from "effect/Schema"
  *

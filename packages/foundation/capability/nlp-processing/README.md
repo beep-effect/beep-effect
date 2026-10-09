@@ -19,7 +19,7 @@ models in `@beep/nlp`. It does not bind a concrete NLP engine; drivers such as
 ## Usage
 
 ```ts
-import { Effect } from "effect"
+import * as Effect from "effect/Effect";
 import { exportTools } from "@beep/nlp-processing/Tools"
 import { WinkNlpToolkitLive } from "@beep/wink"
 
@@ -31,7 +31,7 @@ console.log(tools.map((tool) => tool.name))
 ```
 
 ```ts
-import { Effect } from "effect"
+import * as Effect from "effect/Effect";
 import { tokenizeToDocument } from "@beep/nlp-processing/Core"
 import { WinkLayerLive } from "@beep/wink"
 

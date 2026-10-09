@@ -12,7 +12,7 @@
 
 import * as NodeRuntime from "@effect/platform-node/NodeRuntime";
 import * as NodeStdio from "@effect/platform-node/NodeStdio";
-import { Layer } from "effect";
+import * as Layer from "effect/Layer";
 import { makeServerLayer, UsptoMcpServerConfig } from "./Server.ts";
 
 /**

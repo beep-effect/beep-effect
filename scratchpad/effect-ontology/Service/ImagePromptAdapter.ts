@@ -12,7 +12,9 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { Context, Effect, Layer } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as Base64 from "effect/encoding/Base64";
 import * as A from "effect/Array";
 import { flow } from "effect/Function";
@@ -119,7 +121,7 @@ export interface ImagePromptAdapterService {
  * **Example** (Inspect image prompt adapter)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { ImagePromptAdapter } from "@effect-ontology/Service/ImagePromptAdapter"
  *
  * const program = Effect.gen(function* () {

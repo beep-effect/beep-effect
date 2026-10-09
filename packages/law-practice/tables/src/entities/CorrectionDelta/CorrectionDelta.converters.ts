@@ -6,7 +6,7 @@
  */
 
 import { CorrectionDelta } from "@beep/law-practice-domain/entities/CorrectionDelta";
-import { Result } from "effect";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import type { Table } from "./CorrectionDelta.table.ts";
 
@@ -67,8 +67,7 @@ const encodeCorrectionDelta = S.encodeResult(CorrectionDelta);
  *   fromCorrectionDeltaRow,
  *   toCorrectionDeltaInsert
  * } from "@beep/law-practice-tables/entities/CorrectionDelta"
- * import { Result } from "effect"
- *
+ * import * as Result from "effect/Result";
  * const insert = Result.flatMap(fromCorrectionDeltaRow({}), toCorrectionDeltaInsert)
  * console.log(Result.isFailure(insert)) // true
  * ```
@@ -101,8 +100,7 @@ export const toCorrectionDeltaInsert = (delta: CorrectionDelta): Result.Result<C
  *
  * ```ts
  * import { fromCorrectionDeltaRow } from "@beep/law-practice-tables/entities/CorrectionDelta"
- * import { Result } from "effect"
- *
+ * import * as Result from "effect/Result";
  * console.log(Result.isFailure(fromCorrectionDeltaRow({}))) // true
  * ```
  *

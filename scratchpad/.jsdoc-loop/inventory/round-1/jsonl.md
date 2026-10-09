@@ -177,7 +177,7 @@ Kit-port of `@effected/jsonl`. Same debt shape as jsonc: useful kit-era leads an
 - `affectedFiles`: jsonl/index.ts:1
 - `symbol`: jsonl (package entry)
 - `kind`: module
-- `evidence`: Fileoverview has useful lead and `@packageDocumentation` but no `@since`, uses retired `@example`, `declare const sourceText`, `import { Line } from "@effected/jsonl"`, named `import { Option } from "effect"`, and bare `@see {@link https://effect.website | Effect}` (link text is not a purpose phrase). Census `findings: []` on the module because `owningExportCount === 0`; it instead tagged the first re-export with `legacy-carrier` (rejected as an owning-export finding).
+- `evidence`: Fileoverview has useful lead and `@packageDocumentation` but no `@since`, uses retired `@example`, `declare const sourceText`, `import { Line } from "@effected/jsonl"`, named `import { Option } from "<legacy-effect-barrel>"`, and bare `@see {@link https://effect.website | Effect}` (link text is not a purpose phrase). Census `findings: []` on the module because `owningExportCount === 0`; it instead tagged the first re-export with `legacy-carrier` (rejected as an owning-export finding).
 - `impact`: Barrel is the published entry; legacy carrier + `declare` + `@effected/*` + named Option import fail Example law even though census hid the module row.
 - `suggestedFix`: Keep `@packageDocumentation`. Add `@since 0.0.0`. Convert the snapshot-read walk-through to `**Example** (Read last valid line without a runtime)` using `import * as O from "effect/Option"` and a concrete JSONL string (no `declare`, no `@effected/*`). Replace the bare `@see` with a described link to `Line` / `Journal`, or drop it.
 - `recommendedSkillOrAgent`: jsdoc-annotation-specialist
@@ -340,7 +340,7 @@ Kit-port of `@effected/jsonl`. Same debt shape as jsonc: useful kit-era leads an
 - `affectedFiles`: jsonl/Journal.ts:1149
 - `symbol`: Journal
 - `kind`: value
-- `evidence`: ```ts import { Journal, JsonlEvent } from "@effected/jsonl"; import { Schema } from "effect";``` then `class MailJournal extends Journal.Service<MailJournal>()(...) {}` and `export const layer = MailJournal.layer(...)`. Meaningful, not vacuous, but forbidden import path and named Schema import; retired `@example` carrier.
+- `evidence`: ```ts import { Journal, JsonlEvent } from "@effected/jsonl"; import { Schema } from "<legacy-effect-barrel>";``` then `class MailJournal extends Journal.Service<MailJournal>()(...) {}` and `export const layer = MailJournal.layer(...)`. Meaningful, not vacuous, but forbidden import path and named Schema import; retired `@example` carrier.
 - `impact`: Docgen Examples must compile under beep namespace-import law; `@effected/*` will not resolve in this workspace.
 - `suggestedFix`: Titled `**Example** (Define a journal service and bind its layer)`. Use `import * as S from "effect/Schema"` and relative or future `@beep/*` imports (not `@effected/*`). Keep `export const layer = MailJournal.layer({ path })` as the observable bind-once lesson from jsonl-R1-014. Do not add a second Example unless the title is unique and teaches append/query.
 - `recommendedSkillOrAgent`: jsdoc-annotation-specialist
@@ -432,7 +432,7 @@ Kit-port of `@effected/jsonl`. Same debt shape as jsonc: useful kit-era leads an
 - `affectedFiles`: jsonl/JsonlEvent.ts:138
 - `symbol`: JsonlEvent
 - `kind`: value
-- `evidence`: `@example` builds `MailReceived` / `Unlinked` / `Relinked` then `const registry = [...] as const` with no observation of `tag` literals or `terminal`/`reopen`. `import { JsonlEvent } from "@effected/jsonl"`; `import { Schema } from "effect"`.
+- `evidence`: `@example` builds `MailReceived` / `Unlinked` / `Relinked` then `const registry = [...] as const` with no observation of `tag` literals or `terminal`/`reopen`. `import { JsonlEvent } from "@effected/jsonl"`; `import { Schema } from "<legacy-effect-barrel>"`.
 - `impact`: Placeholder-adjacent Example (unused binding) plus forbidden imports; does not show why `const` type parameters are load-bearing.
 - `suggestedFix`: Titled `**Example** (Register terminal and reopen events)`. `import * as S from "effect/Schema"`. Observe `Unlinked.terminal` / `Relinked.reopen` / `MailReceived.tag` (and optionally `satisfies` a `JsonlEvent.Registry`). No `any`, assertions, or `declare`.
 - `recommendedSkillOrAgent`: jsdoc-annotation-specialist

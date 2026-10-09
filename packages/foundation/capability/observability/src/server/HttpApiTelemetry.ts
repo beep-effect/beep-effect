@@ -7,13 +7,21 @@
 import { $ObservabilityId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { A } from "@beep/utils";
-import { Cause, Clock, Duration, Effect, Exit, Layer, Metric, pipe, Result, SchemaAST } from "effect";
+import * as Cause from "effect/Cause";
+import * as Clock from "effect/Clock";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
-import { dual, identity } from "effect/Function";
+import * as Exit from "effect/Exit";
+import { dual, identity, pipe } from "effect/Function";
 import { HttpApiMiddleware, HttpApiSchema } from "effect/http-api";
+import * as Layer from "effect/Layer";
+import * as Metric from "effect/Metric";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as SchemaAST from "effect/SchemaAST";
 import { observeHttpRequest, statusClass } from "../Metric.ts";
 import type { HttpMethod } from "effect/http/HttpMethod";
 import type * as HttpServerResponse from "effect/http/HttpServerResponse";
@@ -394,7 +402,7 @@ export const httpApiFailureStatus: {
  * **Example** (Observe encoded response effect)
  *
  * ```typescript
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import {
  *   makeHttpApiMetrics,
@@ -493,7 +501,7 @@ const observeHttpApiEffectImpl = <E, R>(
  * **Example** (Observe effect with metrics)
  *
  * ```typescript
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import {
  *   HttpApiTelemetryDescriptor,
@@ -572,7 +580,7 @@ export const observeHttpApiEffect: {
  * **Example** (Build middleware service layer)
  *
  * ```typescript
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer";
  * import {
  *   HttpApiTelemetryMiddleware,
  *   layerHttpApiTelemetryMiddleware,
@@ -638,7 +646,7 @@ export const layerHttpApiTelemetryMiddleware = (
  * **Example** (Observe handler with annotations)
  *
  * ```ts import.meta.vitest name="Observe handler with annotations"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import {
  *   HttpApiTelemetryDescriptor,
@@ -708,7 +716,7 @@ const observeHttpApiHandlerImpl = Effect.fn("observeHttpApiHandlerImpl")(functio
  * **Example** (Observe handler request metrics)
  *
  * ```typescript
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import {
  *   HttpApiTelemetryDescriptor,

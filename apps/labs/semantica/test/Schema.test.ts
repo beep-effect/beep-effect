@@ -16,10 +16,16 @@ import { UnitInterval } from "@beep/schema/UnitInterval";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect } from "@effect/vitest";
 import { sha256 } from "@noble/hashes/sha2.js";
-import { Effect, Equal, HashMap, HashSet, Option, Order, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
 import * as Hex from "effect/encoding/Hex";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
+import * as Option from "effect/Option";
+import * as Order from "effect/Order";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { canonicalJson } from "@/corpus/Canonical";
@@ -152,7 +158,7 @@ const isSourceDocument = S.is(SourceDocument);
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
-import { pipe } from "effect";
+import { pipe } from "effect/Function";
 import type { CanonicalText, ChunkKind as ChunkKindValue, ParseOutcome as ParseOutcomeValue } from "@/schema/Text";
 
 const roundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, value: Schema["Type"]): void => {

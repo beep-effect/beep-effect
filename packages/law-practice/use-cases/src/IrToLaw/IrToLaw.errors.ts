@@ -9,7 +9,7 @@
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import { AlignmentStatus } from "@beep/langextract/Extraction";
 import { LiteralKit } from "@beep/schema";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -72,8 +72,7 @@ export type IrToLawExtractionErrorReason = typeof IrToLawExtractionErrorReason.T
  *
  * ```ts
  * import { IrToLawExtractionError } from "@beep/law-practice-use-cases/IrToLaw"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.fail(
  *   IrToLawExtractionError.fromReason("required-extraction-missing", {
  *     label: "distinction",

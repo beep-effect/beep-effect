@@ -28,8 +28,11 @@ import { SourceKind } from "@beep/shared-domain/entity/SourceKind";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import * as SharedEpistemic from "@beep/shared-domain/identity/Epistemic";
 import * as Shared from "@beep/shared-domain/identity/Shared";
-import { DateTime, Effect, identity, Order } from "effect";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import { PosInt } from "../internal/PosInt.ts";
 
@@ -222,8 +225,7 @@ export type ContradictionCandidatePageLimit = typeof ContradictionCandidatePageL
  *   ListContradictionCandidates,
  * } from "@beep/epistemic-use-cases/server"
  * import * as Shared from "@beep/shared-domain/identity/Shared"
- * import { DateTime } from "effect"
- *
+ * import * as DateTime from "effect/DateTime";
  * const at = DateTime.makeUnsafe(0)
  * const query = ListContradictionCandidates.make({
  *   disposition: "open",
@@ -274,8 +276,7 @@ export class ListContradictionCandidates extends S.Class<ListContradictionCandid
  * ```ts
  * import { GetContradictionCandidate } from "@beep/epistemic-use-cases/public"
  * import * as Epistemic from "@beep/shared-domain/identity/Epistemic"
- * import { DateTime } from "effect"
- *
+ * import * as DateTime from "effect/DateTime";
  * const at = DateTime.makeUnsafe(0)
  * const query = GetContradictionCandidate.make({
  *   candidateId: Epistemic.ContradictionCandidateId.make(7),
@@ -320,8 +321,7 @@ export class GetContradictionCandidate extends S.Class<GetContradictionCandidate
  * import { GetExpandedContradictionCandidate } from "@beep/epistemic-use-cases/server"
  * import * as Epistemic from "@beep/shared-domain/identity/Epistemic"
  * import * as Shared from "@beep/shared-domain/identity/Shared"
- * import { DateTime } from "effect"
- *
+ * import * as DateTime from "effect/DateTime";
  * const at = DateTime.makeUnsafe(0)
  * const query = GetExpandedContradictionCandidate.make({
  *   candidateId: Epistemic.ContradictionCandidateId.make(7),

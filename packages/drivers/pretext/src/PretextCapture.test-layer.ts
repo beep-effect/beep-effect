@@ -12,7 +12,9 @@
  */
 
 import { A, O, R } from "@beep/utils";
-import { Effect, Layer, Result } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Result from "effect/Result";
 import { PretextMeasurementError } from "./Pretext.errors.ts";
 import { FontMetrics, FontMetricsSnapshotV1 } from "./Pretext.models.ts";
 import { PretextCapture } from "./PretextCapture.service.ts";

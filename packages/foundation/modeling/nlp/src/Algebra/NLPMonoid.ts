@@ -22,11 +22,13 @@
  */
 
 import { $NlpId } from "@beep/identity";
-import { HashSet, MutableHashMap, SchemaTransformation } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
+import * as HashSet from "effect/HashSet";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Monoid from "./Monoid.ts";
 
 const $I = $NlpId.create("Algebra/NLPMonoid");

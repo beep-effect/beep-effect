@@ -6,7 +6,10 @@
  */
 
 import { $WinkId } from "@beep/identity";
-import { Context, Effect, Layer, Ref } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Ref from "effect/Ref";
 import {
   InstanceId as InstanceIdService,
   WinkEngine as WinkEngineService,
@@ -52,7 +55,9 @@ const makeWinkEngineRef = Effect.gen(function* () {
  * **Example** (Read shared runtime ref)
  *
  * ```ts
- * import { Effect, Layer, Ref } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
+ * import * as Ref from "effect/Ref";
  * import { WinkEngineLive } from "@beep/wink"
  * import { WinkEngineRef, WinkEngineRefLive } from "@beep/wink"
  *
@@ -79,7 +84,9 @@ export class WinkEngineRef extends Context.Service<WinkEngineRef, WinkEngineRefS
  * **Example** (Provide live compatibility layer)
  *
  * ```ts
- * import { Effect, Layer, Ref } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
+ * import * as Ref from "effect/Ref";
  * import { WinkEngineLive } from "@beep/wink"
  * import { WinkEngineRef, WinkEngineRefLive } from "@beep/wink"
  *
@@ -105,7 +112,9 @@ export const WinkEngineRefLive = Layer.effect(WinkEngineRef, makeWinkEngineRef);
  * **Example** (Read runtime state from ref)
  *
  * ```ts
- * import { Effect, Layer, Ref } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
+ * import * as Ref from "effect/Ref";
  * import type { WinkEngineRuntimeState } from "@beep/wink"
  * import { WinkEngineLive } from "@beep/wink"
  * import { WinkEngineRef, WinkEngineRefLive } from "@beep/wink"

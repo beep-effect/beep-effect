@@ -1,8 +1,14 @@
 import { $SemanticaId } from "@beep/identity/packages";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import { Equal, HashMap, HashSet, identity, Number as N, Option, Result } from "effect";
 import * as A from "effect/Array";
+import * as Equal from "effect/Equal";
+import { identity } from "effect/Function";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
+import * as N from "effect/Number";
+import * as Option from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { CorpusPaperId } from "@/corpus/Manifest";
@@ -479,8 +485,8 @@ const C0RequiredMetrics: ReadonlyArray<RequiredMetric> = [
  *
  * ```ts
  * import { RequiredMetrics } from "@/schema/Eval"
- * import { HashMap, Option } from "effect"
- *
+ * import * as HashMap from "effect/HashMap";
+ * import * as Option from "effect/Option";
  * console.log(Option.getOrThrow(HashMap.get(RequiredMetrics, "c0")).length) // 10
  * ```
  *

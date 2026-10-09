@@ -14,8 +14,10 @@ import {
   sessionOrchestrator,
 } from "@beep/repo-cli/test/Session";
 import { describe, expect, it } from "@effect/vitest";
-import { DateTime, Effect, Layer } from "effect";
 import * as A from "effect/Array";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
 

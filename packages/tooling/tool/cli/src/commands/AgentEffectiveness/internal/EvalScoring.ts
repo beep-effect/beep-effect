@@ -7,8 +7,10 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { A } from "@beep/utils";
-import { Effect, flow, Order, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import { flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import {
   AgentEffectivenessEvalLaneReport,

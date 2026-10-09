@@ -2,7 +2,8 @@ import { PacketDocument, writePacket } from "@beep/repo-cli/test/Codex";
 import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
-import { Effect, FileSystem } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { NodeTestLayer, temporaryWorkingDirectory } from "./support/CommandTest.ts";
 
 const SLUG = "codex-security-findings-2026-08-04";

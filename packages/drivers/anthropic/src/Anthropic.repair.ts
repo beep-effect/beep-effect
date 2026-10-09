@@ -6,19 +6,24 @@
  */
 
 import { $AnthropicId } from "@beep/identity";
-import { Duration, Effect, ExecutionPlan, pipe, Schedule, Stream } from "effect";
 import * as A from "effect/Array";
 import { AiError, LanguageModel, Response } from "effect/ai";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as ExecutionPlan from "effect/ExecutionPlan";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { AnthropicLanguageModelOptions } from "./Anthropic.config.ts";
 import { RepairError } from "./Anthropic.errors.ts";
 import { makeAnthropicLanguageModelLayer } from "./Anthropic.service.ts";
 import { PosInt } from "./internal/PosInt.ts";
-import type { Config } from "effect";
 import type { Tool, Toolkit } from "effect/ai";
 import type { GenerateTextOptions } from "effect/ai/LanguageModel";
+import type * as Config from "effect/Config";
 
 const $I = $AnthropicId.create("Anthropic.repair");
 
@@ -170,7 +175,8 @@ export const makeAnthropicRepairPlan = (
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { collectToolParamsJson } from "@beep/anthropic"
- * import { Effect, Stream } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Stream from "effect/Stream";
  * import { Response } from "effect/ai"
  *
  * const json = Effect.runSync(
@@ -255,7 +261,8 @@ const isToolParamsDeltaPart = <
  *
  * ```ts
  * import { collectToolParamsJsonWithUsage } from "@beep/anthropic"
- * import { Effect, Stream } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Stream from "effect/Stream";
  * import { Response } from "effect/ai"
  *
  * const parts: Stream.Stream<Response.StreamPart<{}>> = Stream.fromIterable([])
@@ -308,7 +315,7 @@ export const collectToolParamsJsonWithUsage = Effect.fn("collectToolParamsJsonWi
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { generateAnthropicToolJson } from "@beep/anthropic"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { Tool, Toolkit } from "effect/ai"
  *

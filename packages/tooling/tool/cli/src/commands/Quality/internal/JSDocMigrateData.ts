@@ -7,7 +7,11 @@
 
 import { findRepoRoot } from "@beep/repo-utils";
 import { A, Str, thunkFalse } from "@beep/utils";
-import { Console, Effect, FileSystem, MutableHashMap, Path } from "effect";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as Path from "effect/Path";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import { QualityScriptCommandError } from "../Quality.errors.ts";
 import {
@@ -24,8 +28,7 @@ import type * as S from "effect/Schema";
  *
  * ```ts
  * import { jsdocMigrateExtractCodec } from "@beep/repo-cli/test/Quality"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(jsdocMigrateExtractCodec.decode("{}"))) // true
  * ```
  *
@@ -41,8 +44,7 @@ export const jsdocMigrateExtractCodec = JsonStringCodec(JSDocMigrateExtractRecor
  *
  * ```ts
  * import { jsdocMigrateTitleCodec } from "@beep/repo-cli/test/Quality"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(jsdocMigrateTitleCodec.decode("{}"))) // true
  * ```
  *
@@ -58,8 +60,7 @@ export const jsdocMigrateTitleCodec = JsonStringCodec(JSDocMigrateTitleRecord);
  *
  * ```ts
  * import { jsdocMigrateOverrideCodec } from "@beep/repo-cli/test/Quality"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(jsdocMigrateOverrideCodec.decode("{}"))) // true
  * ```
  *
@@ -75,8 +76,7 @@ export const jsdocMigrateOverrideCodec = JsonStringCodec(JSDocMigrateOverrideRec
  *
  * ```ts
  * import { jsdocMigrateRunContext } from "@beep/repo-cli/test/Quality"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(jsdocMigrateRunContext())) // true
  * ```
  *
@@ -105,8 +105,7 @@ export const jsdocMigrateRunContext = Effect.fn("JSDocMigrateData.runContext")(f
  *
  * ```ts
  * import { jsdocMigrateTitleCodec, readJSDocMigrateJsonl } from "@beep/repo-cli/test/Quality"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = readJSDocMigrateJsonl("/tmp/none.jsonl", jsdocMigrateTitleCodec.decode, "titles.jsonl")
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -156,8 +155,7 @@ export const readJSDocMigrateJsonl = Effect.fn("JSDocMigrateData.readJsonl")(fun
  *
  * ```ts
  * import { readJSDocMigrateExtractRequired } from "@beep/repo-cli/test/Quality"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(readJSDocMigrateExtractRequired("/tmp/none.jsonl"))) // true
  * ```
  *
@@ -190,8 +188,7 @@ export const readJSDocMigrateExtractRequired = Effect.fn("JSDocMigrateData.readE
  *
  * ```ts
  * import { indexJSDocMigrateByAnchor } from "@beep/repo-cli/test/Quality"
- * import { MutableHashMap } from "effect"
- *
+ * import * as MutableHashMap from "effect/MutableHashMap";
  * const index = indexJSDocMigrateByAnchor([{ anchor: "a#x#0" }, { anchor: "b#y#0" }])
  * console.log(MutableHashMap.size(index)) // 2
  * ```

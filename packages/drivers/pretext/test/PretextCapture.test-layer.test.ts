@@ -2,7 +2,7 @@ import { chromeLinuxArial16, PretextCapture, PretextCaptureFixture, PretextCaptu
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Struct from "effect/Struct";

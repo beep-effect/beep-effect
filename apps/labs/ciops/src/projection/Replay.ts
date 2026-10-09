@@ -8,11 +8,16 @@
 import { $CiopsId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { Sha256Hex } from "@beep/schema/Sha256";
-import { DateTime, Effect, HashMap, HashSet, Match, Order, pipe } from "effect";
 import * as A from "effect/Array";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
-import { dual } from "effect/Function";
+import { dual, pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { projectSchedule } from "./Engine.ts";
@@ -299,7 +304,7 @@ const isOrderedWindow = (window: {
  *
  * ```ts
  * import { Sha256Hex } from "@beep/schema/Sha256"
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import * as S from "effect/Schema"
  * import { ReplayWindow } from "@/projection/Replay"
  *
@@ -413,8 +418,7 @@ const decodeJournalLine = Effect.fnUntraced(function* (
  *
  * ```ts
  * import { decodeAdmissionJournal } from "@/projection/Replay"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.runSync(decodeAdmissionJournal("")).length) // 0
  * ```
  *
@@ -571,8 +575,12 @@ const isPreV3Chain = (tags: ReadonlyArray<JournalTag>): boolean =>
   !A.some(tags, (tag) => HashSet.has(preV3ExcludedTags, tag)) &&
   (A.contains(tags, "admission-admitted") || A.contains(tags, "admission-released"));
 
-const preV3ChainNonces = (events: ReadonlyArray<AdmissionJournalEvent>): HashSet.HashSet<string> =>
-  HashSet.fromIterable(HashMap.keys(HashMap.filter(chainTagsByNonce(events), isPreV3Chain)));
+const preV3ChainNonces = (events: ReadonlyArray<AdmissionJournalEvent>): HashSet.HashSet<string> => {
+  const chains = chainTagsByNonce(events);
+  const retained = HashMap.filter(chains, isPreV3Chain);
+  const nonces = HashMap.keys(retained);
+  return HashSet.fromIterable(nonces);
+};
 
 // Pre-v3 chains that kept an admitted row, so they replay instead of skipping.
 const replayedPreV3Chains = (events: ReadonlyArray<AdmissionJournalEvent>): HashSet.HashSet<string> =>
@@ -707,8 +715,7 @@ const censorVerdicts = (
  * import * as S from "effect/Schema"
  * import { replayAdmissionJournal } from "@/projection/Replay"
  * import { AdmissionPolicyParams, AdmissionTokenWeights } from "@/projection/Schemas"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const policy = AdmissionPolicyParams.make({
@@ -912,8 +919,7 @@ export const replayAdmissionJournal = Effect.fn("Replay.replayAdmissionJournal")
  * ```ts
  * import * as S from "effect/Schema"
  * import { ReplayReport, requireReplayMatch } from "@/projection/Replay"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const report = ReplayReport.make({
  *   eventCount: S.Natural.make(0),
  *   admittedCount: S.Natural.make(0),
@@ -1407,7 +1413,7 @@ export class Cq009LegacyDrainArm extends S.Class<Cq009LegacyDrainArm>($I`Cq009Le
  * **Example** (Describe an uncensored window)
  *
  * ```ts
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import * as S from "effect/Schema"
  * import { Cq009Censorship } from "@/projection/Replay"
  *
@@ -1458,7 +1464,7 @@ export class Cq009Censorship extends S.Class<Cq009Censorship>($I`Cq009Censorship
  *
  * ```ts
  * import { Sha256Hex } from "@beep/schema/Sha256"
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import * as S from "effect/Schema"
  * import { buildLiveReplayReport, ReplayReport, ReplayWindow } from "@/projection/Replay"
  *
@@ -1512,7 +1518,7 @@ export class Cq009Verdict extends S.Class<Cq009Verdict>($I`Cq009Verdict`)(
  *
  * ```ts
  * import { Sha256Hex } from "@beep/schema/Sha256"
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import * as S from "effect/Schema"
  * import {
  *   buildLiveReplayReport,
@@ -1769,7 +1775,7 @@ const cq009Verdict = (
  *
  * ```ts
  * import { Sha256Hex } from "@beep/schema/Sha256"
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import * as S from "effect/Schema"
  * import { buildLiveReplayReport, ReplayReport, ReplayWindow } from "@/projection/Replay"
  *

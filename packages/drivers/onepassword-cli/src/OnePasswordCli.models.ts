@@ -8,7 +8,7 @@
 import { $OnepasswordCliId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { OnePasswordReference } from "@beep/shared-domain/values/OnePasswordReference";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 const $I = $OnepasswordCliId.create("OnePasswordCli.models");
@@ -104,7 +104,7 @@ export type OnePasswordCliExitCode = typeof OnePasswordCliExitCode.Type;
  * **Example** (Decode trimmed diagnostic text)
  *
  * ```ts
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { OnePasswordCliDiagnosticText } from "@beep/onepassword-cli/OnePasswordCli.models"
  *

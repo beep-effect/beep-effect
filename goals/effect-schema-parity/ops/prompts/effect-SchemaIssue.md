@@ -100,7 +100,7 @@ Graft skeleton of the reference working tree (HEAD `eee0eeb1e40e47cfa6a4dfb0f07b
  * **Example** (Type-guarding an unknown error)
  *
  * ```ts import.meta.vitest
- * import { SchemaIssue } from "effect"
+ * import * as SchemaIssue from "effect/SchemaIssue"
  *
  * const issue = new SchemaIssue.MissingKey(undefined)
  * SchemaIssue.isIssue(issue) // => true
@@ -140,7 +140,9 @@ export function isIssue(u: unknown): u is Issue {
  * **Example** (Reading a reported input)
  *
  * ```ts import.meta.vitest
- * import { Result, Schema, SchemaIssue } from "effect"
+ * import * as Result from "effect/Result"
+ * import * as Schema from "effect/Schema"
+ * import * as SchemaIssue from "effect/SchemaIssue"
  *
  * const result = Schema.decodeUnknownResult(Schema.String)(1, { reportInput: true })
  * if (Result.isFailure(result) && SchemaIssue.hasInput(result.failure.issue)) {
@@ -263,7 +265,8 @@ export type Issue =
  * **Example** (Matching a Filter issue)
  *
  * ```ts import.meta.vitest
- * import { SchemaAST, SchemaIssue } from "effect"
+ * import * as SchemaAST from "effect/SchemaAST"
+ * import * as SchemaIssue from "effect/SchemaIssue"
  *
  * const formatIssue = SchemaIssue.makeFormatterDefault()
  *
@@ -826,7 +829,8 @@ export const Composite: new(
  * **Example** (Formatting a type mismatch)
  *
  * ```ts import.meta.vitest
- * import { Schema, SchemaIssue } from "effect"
+ * import * as Schema from "effect/Schema"
+ * import * as SchemaIssue from "effect/SchemaIssue"
  *
  * const formatIssue = SchemaIssue.makeFormatterDefault()
  * const issue = new SchemaIssue.InvalidType(Schema.String.ast)
@@ -922,7 +926,7 @@ export const InvalidType: new(
  * **Example** (Returning InvalidValue from a custom filter)
  *
  * ```ts import.meta.vitest
- * import { SchemaIssue } from "effect"
+ * import * as SchemaIssue from "effect/SchemaIssue"
  *
  * const formatIssue = SchemaIssue.makeFormatterDefault()
  * const issue = new SchemaIssue.InvalidValue({ message: "must not be empty" })
@@ -1039,7 +1043,7 @@ export function makeCompositeAtKey(
  * **Example** (Creating a Forbidden issue)
  *
  * ```ts import.meta.vitest
- * import { SchemaIssue } from "effect"
+ * import * as SchemaIssue from "effect/SchemaIssue"
  *
  * const formatIssue = SchemaIssue.makeFormatterDefault()
  * const issue = new SchemaIssue.Forbidden(
@@ -1438,7 +1442,7 @@ export type LeafHook = (issue: Leaf) => string
  * **Example** (Formatting Standard Schema issues with defaultLeafHook)
  *
  * ```ts import.meta.vitest
- * import { SchemaIssue } from "effect"
+ * import * as SchemaIssue from "effect/SchemaIssue"
  *
  * const formatter = SchemaIssue.makeFormatterStandardSchemaV1({
  *   leafHook: SchemaIssue.defaultLeafHook
@@ -1578,7 +1582,7 @@ export const defaultCheckHook: CheckHook = (issue): string | undefined => findMe
  * **Example** (Creating a Standard Schema V1 formatter)
  *
  * ```ts import.meta.vitest
- * import { SchemaIssue } from "effect"
+ * import * as SchemaIssue from "effect/SchemaIssue"
  *
  * const formatter = SchemaIssue.makeFormatterStandardSchemaV1()
  * formatter(new SchemaIssue.MissingKey(undefined)).issues[0].message // => "Missing key"
@@ -1635,7 +1639,7 @@ export function makeFormatterStandardSchemaV1(options?: {
  * **Example** (Formatting an issue as a string)
  *
  * ```ts import.meta.vitest
- * import { SchemaIssue } from "effect"
+ * import * as SchemaIssue from "effect/SchemaIssue"
  *
  * const formatter = SchemaIssue.makeFormatterDefault()
  * formatter(new SchemaIssue.MissingKey(undefined)) // => "Missing key"

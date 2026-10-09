@@ -13,7 +13,7 @@ import {
 } from "@beep/repo-configs/cache";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
 import { GitObjectId } from "@beep/schema/Conformance";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { CacheLocalOrigin, CacheSyntheticCheck, CacheSyntheticRun } from "./Cache.experiment.schemas.ts";
 import { CacheDependencyTree, CacheExecutablePin, CacheRuntimeLinkerSnapshot } from "./Cache.schemas.ts";

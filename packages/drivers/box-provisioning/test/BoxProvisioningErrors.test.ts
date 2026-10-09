@@ -17,8 +17,10 @@ import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect } from "@effect/vitest";
 import { assertFalse } from "@effect/vitest/utils";
-import { Effect, Layer, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as Str from "effect/String";
 import { desiredFixture, observedFixture, postApplyAdoptionsFixture } from "./fixtures.ts";
 

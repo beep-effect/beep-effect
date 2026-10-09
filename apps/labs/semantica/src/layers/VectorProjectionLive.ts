@@ -1,7 +1,9 @@
 import { DuckDb } from "@beep/duckdb";
 import { $SemanticaId } from "@beep/identity/packages";
-import { Crypto, Effect, Layer } from "effect";
 import * as A from "effect/Array";
+import * as Crypto from "effect/Crypto";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { canonicalJson } from "@/corpus/Canonical";
@@ -123,8 +125,7 @@ const makeVectorProjection = Effect.fn("VectorProjection.make")(function* () {
  *
  * ```ts
  * import { VectorProjectionLive } from "@/layers/VectorProjectionLive"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(VectorProjectionLive)) // true
  * ```
  *

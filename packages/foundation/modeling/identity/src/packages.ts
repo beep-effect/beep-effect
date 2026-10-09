@@ -22,7 +22,8 @@
  * @since 0.0.0
  */
 import * as Identity from "./Id.ts";
-// import { Struct, pipe } from "effect";
+// import * as Struct from "effect/Struct";
+// import { pipe } from "effect/Function";
 // import * as A from "effect/Array";
 /**
  * Root identity composer for the `@beep` namespace.

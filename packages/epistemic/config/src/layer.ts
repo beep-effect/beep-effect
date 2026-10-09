@@ -5,8 +5,8 @@
  * @category layers
  * @since 0.0.0
  */
-
-import { Effect, Layer } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import {
   EpistemicConfig,
   EpistemicDestinationAllowlistConfig,
@@ -27,8 +27,7 @@ const readEpistemicConfig = Effect.fn("Epistemic.Config.read")(function* () {
  *
  * ```ts
  * import { EpistemicConfigLive } from "@beep/epistemic-config/layer"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(EpistemicConfigLive)) // true
  * ```
  *

@@ -7,7 +7,7 @@
  */
 
 import { ExecutionLedger } from "@beep/epistemic-use-cases/ExecutionLedger";
-import { Layer } from "effect";
+import * as Layer from "effect/Layer";
 import { makeDrizzleExecutionLedger } from "./ExecutionLedger.repo.ts";
 import type { PostgresDrizzle } from "@beep/postgres";
 

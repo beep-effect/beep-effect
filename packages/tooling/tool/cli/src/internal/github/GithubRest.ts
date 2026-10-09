@@ -23,8 +23,12 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { GitHubClient, GitHubError, Repo } from "@effected/github";
-import { Context, DateTime, Effect, Layer, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -38,7 +42,7 @@ const $I = $RepoCliId.create("internal/github/GithubRest");
  *
  * ```ts
  * import { GithubPullRequestRecord } from "@beep/repo-cli/test/SharedInternals"
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import * as O from "effect/Option"
  *
  * const pr = GithubPullRequestRecord.make({
@@ -315,8 +319,7 @@ export interface GithubRestShape {
  *
  * ```ts
  * import { GithubRest } from "@beep/repo-cli/test/SharedInternals"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const rest = yield* GithubRest
  *   return yield* rest.pullRequest(1)

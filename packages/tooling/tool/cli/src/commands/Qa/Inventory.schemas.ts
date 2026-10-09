@@ -586,8 +586,7 @@ export class QaInventory extends S.Class<QaInventory>($I`QaInventory`)(
  *
  * ```ts
  * import { decodeQaInventory } from "@beep/repo-cli/commands/Qa/Inventory.schemas"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(decodeQaInventory({}))) // true
  * ```
  *
@@ -606,8 +605,7 @@ export const decodeQaInventory: {
  *
  * ```ts
  * import { encodeQaInventory, QaInventory, QaJudgeRef } from "@beep/repo-cli/commands/Qa/Inventory.schemas"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const inventory = QaInventory.make({
  *   findings: [],
  *   judge: QaJudgeRef.make({ effort: "inherited", model: "claude-opus-5-5" }),

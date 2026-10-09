@@ -11,10 +11,15 @@ import { it } from "@beep/test-runner";
 import * as HostPath from "@beep/utils/Path";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
-import { Effect, Layer, Logger, Ref, References, Result } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Logger from "effect/Logger";
 import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
 import { ChildProcessSpawner } from "effect/process";
+import * as Ref from "effect/Ref";
+import * as References from "effect/References";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import type { AiProviderCliRunRequest } from "@beep/ai-provider-cli";
 

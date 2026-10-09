@@ -4,9 +4,13 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { Context, Effect, HashMap, Layer, pipe, Tuple } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
+import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
+import * as Tuple from "effect/Tuple";
 import { $IdentityId } from "./packages.ts";
 import type { IdentityComposer } from "./Id.ts";
 import type { VocabShape } from "./Vocab.ts";
@@ -232,8 +236,7 @@ export interface IdentityRegistryShape {
  *
  * ```ts
  * import { IdentityRegistry } from "@beep/identity"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = IdentityRegistry.use((registry) =>
  *   registry.resolve({ _tag: "identity", value: "@beep/missing" })
  * ).pipe(Effect.provide(IdentityRegistry.layerLocal([])))

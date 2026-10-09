@@ -2,7 +2,7 @@
 
 `beep research library` preserves research inputs, citation occurrences, acquired
 source evidence, and generated navigation outside the repository. Its default
-root is `~/YeeBois/research/beep-effect/`; it does not change the knowledge-vault
+root is `$HOME/YeeBois/research/beep-effect/`; it does not change the knowledge-vault
 root used by the other research commands. Use `--library <absolute-path>` on any
 operation to select another collection.
 

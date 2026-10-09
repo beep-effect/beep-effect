@@ -21,10 +21,11 @@ import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
-import { pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const EPOCH = LocalDate.make({ year: 2026, month: 1, day: 1 });
@@ -170,7 +171,7 @@ describe("@beep/law-practice-domain DocketDeadline", () => {
         })
       );
       const decoded = O.map(resolved, (due) =>
-        Result.getOrThrow(S.decodeResult(DocketDueDate)(Result.getOrThrow(S.encodeResult(DocketDueDate)(due))))
+        S.encodeResult(DocketDueDate)(due).pipe(Result.getOrThrow, S.decodeResult(DocketDueDate), Result.getOrThrow)
       );
 
       assertTrue(

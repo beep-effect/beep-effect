@@ -21,7 +21,12 @@ import * as Crypto from "effect/Crypto";
 
 import { $ScratchpadId } from "@beep/identity";
 import { Sha256Hex } from "@beep/schema";
-import { Context, DateTime, Effect, Layer, Result, flow } from "effect";
+import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Result from "effect/Result";
+import { flow } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
@@ -80,9 +85,7 @@ const generateDocumentId = Effect.fn("ExtractionRun.generateDocumentId")(functio
  *
  * ```ts
  * import { getRunIdFromText } from "@effect-ontology/Service/ExtractionRun"
- *
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const runId = yield* getRunIdFromText("Ada founded Acme")
  *   console.log(runId.startsWith("doc-")) // true
@@ -282,7 +285,7 @@ export interface ExtractionRunServiceMethods {
  * **Example** (List stored runs)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { ExtractionRunService, ExtractionRunServiceDefault } from "@effect-ontology/Service/ExtractionRun"
  * import { StorageServiceTest } from "@effect-ontology/Service/Storage"
  *
@@ -660,7 +663,7 @@ const makeExtractionRunService = Effect.gen(function* () {
  * **Example** (Provide the live run store)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { ExtractionRunService, ExtractionRunServiceLive } from "@effect-ontology/Service/ExtractionRun"
  * import { StorageServiceTest } from "@effect-ontology/Service/Storage"
  *
@@ -683,7 +686,7 @@ export const ExtractionRunServiceLive = Layer.effect(ExtractionRunService, makeE
  * **Example** (Use the default run-store alias)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { ExtractionRunService, ExtractionRunServiceDefault } from "@effect-ontology/Service/ExtractionRun"
  * import { StorageServiceTest } from "@effect-ontology/Service/Storage"
  *

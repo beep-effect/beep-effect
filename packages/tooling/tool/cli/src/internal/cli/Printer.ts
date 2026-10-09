@@ -4,8 +4,8 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { Console, Effect } from "effect";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as R from "effect/Record";
 import { printCommandJson } from "./Json.ts";
@@ -17,7 +17,7 @@ import type { CliJsonError } from "./Json.ts";
  * **Example** (Print sequential lines)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { printLines } from "@beep/repo-cli/internal/cli/Printer"
  * import * as TestConsole from "effect/testing/TestConsole"
  *
@@ -55,7 +55,7 @@ export const printLines = Effect.fn("RepoCli.Printer.printLines")(function* (
  * **Example** (Print human-readable lines)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { printJsonOrLines } from "@beep/repo-cli/internal/cli/Printer"
  * import * as TestConsole from "effect/testing/TestConsole"
  *
@@ -90,7 +90,7 @@ export const printJsonOrLines = Effect.fn("RepoCli.Printer.printJsonOrLines")(fu
  * **Example** (Create tagged logger)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { makeTaggedLogger } from "@beep/repo-cli/internal/cli/Printer"
  * import * as TestConsole from "effect/testing/TestConsole"
  *
@@ -125,7 +125,7 @@ export const makeTaggedLogger =
  * **Example** (Log summary key-values)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { logTaggedSummary } from "@beep/repo-cli/internal/cli/Printer"
  * import * as TestConsole from "effect/testing/TestConsole"
  *

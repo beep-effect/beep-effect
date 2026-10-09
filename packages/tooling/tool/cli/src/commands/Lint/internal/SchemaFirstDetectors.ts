@@ -9,8 +9,12 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { sha256Hex } from "@beep/repo-utils/Sha256Hex";
 import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
-import { Effect, flow, HashSet, MutableHashMap, Order, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import { flow, pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import { Node, SyntaxKind, ts } from "ts-morph";
 import { SchemaFirstInventoryReadError } from "../Lint.errors.ts";
@@ -1407,8 +1411,7 @@ const wrapperReferenceNames = (sourceFile: SourceFile): HashSet.HashSet<string> 
     ),
   ]);
 
-// Local names bound to the effect/Schema module: `import * as S from "effect/Schema"` or
-// `import { Schema } from "effect"`.
+// Local names bound to the Schema module through its subpath or the legacy root barrel.
 const schemaModuleNames = (sourceFile: SourceFile): HashSet.HashSet<string> =>
   HashSet.fromIterable(
     A.flatMap(sourceFile.getImportDeclarations(), (declaration) =>
@@ -2063,7 +2066,7 @@ const anchoredCandidate = Effect.fnUntraced(function* (candidate: ParityCandidat
  * ```ts
  * import { schemaFirstParityEntriesFromSourceFile } from "@beep/repo-cli/commands/Lint"
  * import { NodeServices } from "@effect/platform-node"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { Project } from "ts-morph"
  *
  * const project = new Project({ useInMemoryFileSystem: true })

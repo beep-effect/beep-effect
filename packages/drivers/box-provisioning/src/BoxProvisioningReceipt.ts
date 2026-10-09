@@ -7,9 +7,11 @@
 
 import { $BoxProvisioningId } from "@beep/identity";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
-import { Effect, Equal, HashMap } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
 import { dual } from "effect/Function";
+import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { BoxAdoption, BoxAdoptions, mergeBoxAdoptions } from "./BoxProvisioningIntent.ts";
@@ -435,8 +437,7 @@ export type BoxApplyOutcome = typeof BoxApplyOutcome.Type;
  * ```ts
  * import { BoxApplyReceipt } from "@beep/box-provisioning/BoxProvisioningReceipt"
  * import { Sha256Hex } from "@beep/schema"
- * import { DateTime } from "effect"
- *
+ * import * as DateTime from "effect/DateTime";
  * const receipt = BoxApplyReceipt.make({
  *   appliedAt: DateTime.makeUnsafe("2026-08-30T00:00:00.000Z"),
  *   outcomes: [],

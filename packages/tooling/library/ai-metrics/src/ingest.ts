@@ -8,8 +8,10 @@
 import { $RepoAiMetricsId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
 import { A } from "@beep/utils";
-import { Effect, flow, Order, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import { flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import { metricEventName, transcriptLines } from "./internal/transcript-utils.ts";
 import {
@@ -171,7 +173,7 @@ const timestampList: (events: ReadonlyArray<AgentTurn>) => ReadonlyArray<string>
  *
  * ```ts
  * import { summarizeTranscriptText } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * const result = Effect.runPromise(
  *   summarizeTranscriptText({
@@ -227,7 +229,7 @@ export const summarizeTranscriptText: (
  *
  * ```ts
  * import { TranscriptIngestSummary, summaryToJson } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * const json = Effect.runPromise(
  *   summaryToJson(
  *     TranscriptIngestSummary.make({

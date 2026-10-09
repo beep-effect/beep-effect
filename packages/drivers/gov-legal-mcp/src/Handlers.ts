@@ -12,7 +12,7 @@
 import { Ecfr } from "@beep/ecfr";
 import { Govinfo } from "@beep/govinfo";
 import { sanitizeTracerAttributes } from "@beep/mcp-kit";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import {
   EcfrGetStructureTool,
   EcfrListTitlesTool,
@@ -76,8 +76,7 @@ const makeEcfrToolkitHandlers = Effect.fn("GovLegalMcp.EcfrToolkitHandlersLive")
  *
  * ```ts
  * import { GovinfoToolkitHandlersLive } from "@beep/gov-legal-mcp/Handlers"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(GovinfoToolkitHandlersLive))
  * // true
  * ```
@@ -98,8 +97,7 @@ export const GovinfoToolkitHandlersLive: Layer.Layer<
  *
  * ```ts
  * import { EcfrToolkitHandlersLive } from "@beep/gov-legal-mcp/Handlers"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(EcfrToolkitHandlersLive))
  * // true
  * ```

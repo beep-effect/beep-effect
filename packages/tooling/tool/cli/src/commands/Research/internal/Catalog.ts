@@ -11,9 +11,10 @@
 
 import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
 import { $RepoCliId } from "@beep/identity/packages";
-import { Effect, Layer } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { ResearchCommandError } from "../Research.errors.ts";
@@ -86,17 +87,17 @@ export const runWithResearchDb: {
     work: Effect.Effect<A, E, DuckDb>,
     { databasePath, message }: RunWithResearchDbOptions
   ): Effect.Effect<A, ResearchCommandError> =>
-    Effect.scoped(
-      Layer.build(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath }))).pipe(
-        Effect.flatMap((context) =>
-          Effect.gen(function* () {
-            const db = yield* DuckDb;
-            yield* db.runMany(CREATE_TABLES);
-            return yield* work;
-          }).pipe(Effect.provide(context))
-        )
-      )
-    ).pipe(ResearchCommandError.mapError(message))
+    Layer.build(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath }))).pipe(
+      Effect.flatMap((context) =>
+        Effect.gen(function* () {
+          const db = yield* DuckDb;
+          yield* db.runMany(CREATE_TABLES);
+          return yield* work;
+        }).pipe(Effect.provide(context))
+      ),
+      Effect.scoped,
+      ResearchCommandError.mapError(message)
+    )
 );
 
 class CountRow extends S.Class<CountRow>($I`CountRow`)(

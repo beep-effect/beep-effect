@@ -11,8 +11,8 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { Graph, Result } from "effect";
+import * as Graph from "effect/Graph";
+import * as Result from "effect/Result";
 import { flow } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -35,7 +35,7 @@ import * as S from "effect/Schema";
  * **Example** (Use getCanonicalId)
  *
  * ```ts
- * import { Graph } from "effect"
+ * import * as Graph from "effect/Graph";
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  * import { EntityResolutionGraph } from "@effect-ontology/Model/EntityResolutionGraph"
@@ -76,7 +76,7 @@ export const getCanonicalId = dual2((erg: EntityResolutionGraph, entityId: Entit
  * **Example** (Use getMentionsForEntity)
  *
  * ```ts
- * import { Graph } from "effect"
+ * import * as Graph from "effect/Graph";
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  * import { EntityResolutionGraph } from "@effect-ontology/Model/EntityResolutionGraph"
@@ -142,7 +142,7 @@ export const getMentionsForEntity = dual2(
  * **Example** (Use toMermaid)
  *
  * ```ts
- * import { Graph } from "effect"
+ * import * as Graph from "effect/Graph";
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  * import { EntityResolutionGraph } from "@effect-ontology/Model/EntityResolutionGraph"

@@ -8,10 +8,12 @@
 import { $HubspotId } from "@beep/identity";
 import { URLStr } from "@beep/schema";
 import { Str } from "@beep/utils";
-import { Effect, identity, SchemaTransformation } from "effect";
+import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 
 const $I = $HubspotId.create("HubSpot.config");
 const normalizeHubSpotBaseUrl = Str.replace(/\/+$/, "");

@@ -37,10 +37,13 @@ import * as Str from "@beep/utils/Str";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
 import { describe, expect } from "@effect/vitest";
-import { Crypto, Effect, pipe, Result } from "effect";
+import * as Crypto from "effect/Crypto";
+import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
+import { pipe } from "effect/Function";
 import * as P from "effect/Predicate";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 
@@ -134,8 +137,12 @@ const runCrypto = <A, E>(effect: Effect.Effect<A, E, Crypto.Crypto>) =>
 
 const defaultArgs = OpenClawStackArgs.new(identity, deploymentConfig);
 const defaultGeneration = runCrypto(makeOpenClawGeneration(defaultArgs));
-const parseDocument = (json: string): { readonly [key: string]: unknown } =>
-  O.getOrThrow(pipe(Result.getOrThrow(decodeJsonResult(json)), O.liftPredicate(P.isObject)));
+const parseDocument = (json: string): { readonly [key: string]: unknown } => {
+  const parsed = decodeJsonResult(json);
+  const decoded = parsed.pipe(Result.getOrThrow);
+  const validated = O.liftPredicate(P.isObject)(decoded);
+  return validated.pipe(O.getOrThrow);
+};
 
 /**
  * Unwrap a rendered `/bin/bash --noprofile --norc -p -c '<body>'` command back into the body the

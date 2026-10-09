@@ -2,8 +2,10 @@
 import { OxigraphSparqlQueryServiceLive } from "@beep/oxigraph";
 import { LiteralKit } from "@beep/schema";
 import * as BunServices from "@effect/platform-bun/BunServices";
-import { Effect, Layer, Result } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { LedgerLive } from "@/layers/LedgerLive";
 import { RdfProjectionLive } from "@/layers/RdfProjectionLive";
@@ -34,7 +36,7 @@ const usageExit = (): never => {
 };
 
 const bundleProbe = Effect.gen(function* () {
-  yield* Effect.scoped(Layer.build(RuntimeLayer));
+  yield* RuntimeLayer.pipe(Layer.build, Effect.scoped);
   process.stdout.write("bundle-ready\n");
 });
 
@@ -43,7 +45,11 @@ const makeProvideServices = (ledgerRoot: string, runtimeMode: typeof RuntimeMode
   const rdfLayer = RdfProjectionLive.pipe(Layer.provide(OxigraphSparqlQueryServiceLive), Layer.provide(LabConfigLive));
   const services = Layer.merge(ledgerLayer, rdfLayer).pipe(Layer.provide(BunServices.layer));
   return <A2, E, R>(effect: Effect.Effect<A2, E, R>) =>
-    Effect.scoped(Layer.build(services).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
+    services.pipe(
+      Layer.build,
+      Effect.flatMap((context) => effect.pipe(Effect.provide(context))),
+      Effect.scoped
+    );
 };
 
 type ProvideServices = ReturnType<typeof makeProvideServices>;

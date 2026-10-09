@@ -8,11 +8,13 @@
 import { $SkillContractId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { SemanticVersion } from "@beep/schema/SemanticVersion";
-import { Effect, HashSet, Tuple } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Tuple from "effect/Tuple";
 import { Delivered, EvidenceLadderState, evidenceLadderFor, SemanticallyApplied } from "./EvidenceLadder.ts";
 import { EvidenceSubject, GateSummaryReceipt } from "./EvidenceReceipt.ts";
 import { EvidencePredicateType, GateApplicability, GateId, GateOutcome, GateSeverity } from "./Gate.ts";

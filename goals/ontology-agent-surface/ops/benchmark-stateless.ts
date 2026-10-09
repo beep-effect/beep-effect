@@ -8,10 +8,18 @@ import {
   SnapshotDescribeRequest,
 } from "@beep/ontology-use-cases/tools";
 import { NodeRuntime, NodeServices } from "@effect/platform-node";
-import { ConfigProvider, Console, Data, Duration, Effect, FileSystem, Layer, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Console from "effect/Console";
+import * as Data from "effect/Data";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 

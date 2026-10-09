@@ -8,8 +8,10 @@ import {
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
-import { Effect, FileSystem, Path } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import { expect } from "vitest";
 
 // A stale tree with a file, a nested file, and a link that points OUT of the tree

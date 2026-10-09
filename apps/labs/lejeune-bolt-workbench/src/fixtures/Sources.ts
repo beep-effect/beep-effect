@@ -17,8 +17,9 @@ import { ExtractFileOperation } from "@beep/file-processing/Operation";
 import { $LejeuneBoltWorkbenchId } from "@beep/identity/packages";
 import { PosixPath, Sha256HexFromBytes } from "@beep/schema";
 import { decodeXmlTextAs } from "@beep/schema/Xml";
-import { DateTime, Effect } from "effect";
 import * as A from "effect/Array";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -264,8 +265,7 @@ const hashBytes = (bytes: Uint8Array) =>
  *
  * ```ts
  * import { buildFixtureArtifacts } from "@/fixtures/Sources"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(buildFixtureArtifacts)) // true
  * ```
  *

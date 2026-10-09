@@ -7,7 +7,8 @@ import {
   summarizeExit,
 } from "@beep/observability";
 import { layerWebSdk, WebObservabilityConfig } from "@beep/observability/web";
-import { Cause, Exit } from "effect";
+import * as Cause from "effect/Cause";
+import * as Exit from "effect/Exit";
 import type { ObservabilityCoreConfig } from "@beep/observability";
 
 const coreConfig = {

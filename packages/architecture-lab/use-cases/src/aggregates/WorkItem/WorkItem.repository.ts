@@ -8,9 +8,9 @@
 
 import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem";
 import { $ArchitectureLabUseCasesId } from "@beep/identity/packages";
-import { Context } from "effect";
+import * as Context from "effect/Context";
 import * as S from "effect/Schema";
-import type { Effect } from "effect";
+import type * as Effect from "effect/Effect";
 
 const $I = $ArchitectureLabUseCasesId.create("aggregates/WorkItem/WorkItem.repository");
 
@@ -191,7 +191,7 @@ export type WorkItemRepositoryError = typeof WorkItemRepositoryError.Type;
  *   WorkItemRepositoryNotFound,
  *   type WorkItemRepositoryShape
  * } from "@beep/architecture-lab-use-cases/aggregates/WorkItem/server"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
@@ -244,8 +244,7 @@ export interface WorkItemRepositoryShape {
  *   WorkItemRepositoryNotFound,
  *   type WorkItemRepositoryShape
  * } from "@beep/architecture-lab-use-cases/aggregates/WorkItem/server"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const repository: WorkItemRepositoryShape = {
  *   create: (workItem) => Effect.succeed(workItem),
  *   get: (workItemId) => Effect.fail(WorkItemRepositoryNotFound.make({ workItemId })),

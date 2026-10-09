@@ -1,10 +1,13 @@
-/** Immutable correction receipts for invalidated reading claims.
+/**
+ * Immutable correction receipts for invalidated reading claims.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { DateTime, Effect } from "effect";
 import * as A from "effect/Array";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { encodeLibraryJson, saveLibraryText } from "./Library.adapter.ts";
@@ -22,6 +25,7 @@ const $I = $RepoCliId.create("commands/Research/Library/Library.corrections");
  * import * as S from "effect/Schema"
  * const decode = S.decodeEffect(S.fromJsonString(LibraryCaptureCorrection))
  * ```
+ *
  * @internal
  * @category models
  * @since 0.0.0
@@ -55,10 +59,11 @@ export class LibraryCaptureCorrection extends S.Class<LibraryCaptureCorrection>(
  * ```ts
  * import { correctLibraryCaptures } from "@beep/repo-cli/test/ResearchLibrary"
  * import { withCatalog } from "@beep/repo-cli/commands/Research"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * const correction = withCatalog("/library", (catalog) => correctLibraryCaptures("/library", catalog))
  * console.log(Effect.isEffect(correction))
  * ```
+ *
  * @internal
  * @category use-cases
  * @since 0.0.0

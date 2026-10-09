@@ -16,16 +16,20 @@ import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/
 import { sha1 } from "@noble/hashes/legacy.js";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
-import { Context, Effect, Layer, pipe, Ref } from "effect";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { makeFakeBox } from "./fixtures.ts";
 import type { BoxContentActionOutcome, BoxContentJournalEntry, BoxContentMigrationPlan } from "@beep/box-provisioning";
-import type { Scope } from "effect";
+import type * as Scope from "effect/Scope";
 import type { FakeBox, FakeBoxEntry, FakeBoxOptions } from "./fixtures.ts";
 
 const mebibyte = 1024 * 1024;

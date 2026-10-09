@@ -16,7 +16,9 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
-import { Context, Effect, Layer } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as Backend from "./Backend/NLPBackend.ts";
 import * as ATG from "./Graph/AnnotatedTextGraph.ts";
 import type { EntityNode, POSNode, RelationNode } from "@beep/nlp/Graph/Schema";
@@ -37,7 +39,7 @@ const $I = $NlpProcessingId.create("NLPService");
  * **Example** (Partial extractEntities stub)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import type { NLPServiceShape } from "@beep/nlp-processing/NLPService"
  *
  * const service: Pick<NLPServiceShape, "extractEntities"> = {
@@ -90,7 +92,7 @@ export class NLPService extends Context.Service<NLPService, NLPServiceShape>()($
  * **Example** (Facade around minimal backend)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { make } from "@beep/nlp-processing/NLPService"
  * import type { NLPBackendShape } from "@beep/nlp-processing/Backend/NLPBackend"
  *
@@ -144,7 +146,8 @@ export const make = (backend: NLPBackendShape): NLPServiceShape =>
  * **Example** (Provide backend via layer)
  *
  * ```ts
- * import { Effect, Layer } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * import { NLPService, layer } from "@beep/nlp-processing/NLPService"
  * import { NLPBackend, notSupported } from "@beep/nlp-processing/Backend/NLPBackend"
  *
@@ -185,7 +188,7 @@ export const layer = <E, R>(backendLayer: Layer.Layer<Backend.NLPBackend, E, R>)
  * **Example** (Process text with stub service)
  *
  * ```ts import.meta.vitest name="Process text with stub service"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { empty, nodeCount } from "@beep/nlp-processing/Graph/AnnotatedTextGraph"
  * import { NLPService, processText } from "@beep/nlp-processing/NLPService"
  * import type { NLPBackendShape } from "@beep/nlp-processing/Backend/NLPBackend"
@@ -239,7 +242,7 @@ export const processText = (text: string): Effect.Effect<AnnotatedTextGraph, NLP
  * **Example** (Extract entities from context)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { empty } from "@beep/nlp-processing/Graph/AnnotatedTextGraph"
  * import { NLPService, extractEntities } from "@beep/nlp-processing/NLPService"
  * import type { NLPBackendShape } from "@beep/nlp-processing/Backend/NLPBackend"
@@ -290,7 +293,7 @@ export const extractEntities = (text: string): Effect.Effect<ReadonlyArray<Entit
  * **Example** (Extract relations from context)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { empty } from "@beep/nlp-processing/Graph/AnnotatedTextGraph"
  * import { NLPService, extractRelations } from "@beep/nlp-processing/NLPService"
  * import type { NLPBackendShape } from "@beep/nlp-processing/Backend/NLPBackend"
@@ -343,7 +346,7 @@ export const extractRelations = (
  * **Example** (Tag POS from context)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { empty } from "@beep/nlp-processing/Graph/AnnotatedTextGraph"
  * import { NLPService, tagPartsOfSpeech } from "@beep/nlp-processing/NLPService"
  * import type { NLPBackendShape } from "@beep/nlp-processing/Backend/NLPBackend"

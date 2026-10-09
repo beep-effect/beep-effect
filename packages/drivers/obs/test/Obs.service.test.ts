@@ -11,7 +11,13 @@ import {
 import { it } from "@beep/test-runner";
 import { A, O, P, pipe } from "@beep/utils";
 import { assert, describe, expect } from "@effect/vitest";
-import { Context, Effect, flow, Layer, PubSub, Ref, Stream } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import { flow } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as PubSub from "effect/PubSub";
+import * as Ref from "effect/Ref";
+import * as Stream from "effect/Stream";
 import type { ObsEvent, ObsProtocolShape, ObsRequestType } from "@beep/obs";
 
 type PublishEvent = (event: ObsEvent) => Effect.Effect<void>;

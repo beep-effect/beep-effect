@@ -5,11 +5,14 @@
  * @since 0.0.0
  */
 import { thunkEffectVoid } from "@beep/utils";
-import { Effect, HashSet, Metric, Number as N, pipe } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
-import { constant } from "effect/Function";
+import { constant, pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
+import * as Metric from "effect/Metric";
+import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { DockCommand } from "../Dock.commands.ts";
@@ -164,8 +167,7 @@ const ensureUnique = (
  *
  * ```ts
  * import { DockWorkspace, GroupId, Panel, PanelId, PopulatedWorkspace, TabsNode, TextPanelView, validateWorkspace } from "@beep/dock"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const panel = Panel.make({ id: PanelId.make("panel-one"), title: "Panel One", view: TextPanelView.make({ text: "one" }) })
  * const workspace = PopulatedWorkspace.make({ root: TabsNode.make({ groupId: GroupId.make("group-one"), active: panel }) })
  * const validated = Effect.runSync(validateWorkspace(workspace))
@@ -1053,8 +1055,7 @@ const moveGroupForest = Effect.fn("DockReducer.moveGroupForest")(function* (
  *
  * ```ts
  * import { ApiCommandOrigin, ClearWorkspaceCommand, CommandId, DockCommandEnvelope, GroupId, Panel, PanelId, PopulatedWorkspace, TabsNode, TextPanelView, reduceDockCommand } from "@beep/dock"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const panel = Panel.make({ id: PanelId.make("panel-one"), title: "Panel One", view: TextPanelView.make({ text: "one" }) })
  * const workspace = PopulatedWorkspace.make({ root: TabsNode.make({ groupId: GroupId.make("group-one"), active: panel }) })
  * const envelope = DockCommandEnvelope.make({ commandId: CommandId.make("command-clear"), origin: ApiCommandOrigin.make({ requestId: "request-one" }), command: ClearWorkspaceCommand.make() })
@@ -1192,8 +1193,7 @@ export const reduceDockCommand = Effect.fn("DockReducer.reduceDockCommand")(func
  *
  * ```ts
  * import { ApiCommandOrigin, CommandId, DockWorkspace, GroupId, Panel, PanelId, PopulatedWorkspace, RestoreSnapshotRequest, TabsNode, TextPanelView, restoreDockWorkspace } from "@beep/dock"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const panel = Panel.make({ id: PanelId.make("panel-one"), title: "Panel One", view: TextPanelView.make({ text: "one" }) })
  * const restored = PopulatedWorkspace.make({ root: TabsNode.make({ groupId: GroupId.make("group-one"), active: panel }) })
  * const request = RestoreSnapshotRequest.make({ commandId: CommandId.make("command-restore"), origin: ApiCommandOrigin.make({ requestId: "request-one" }) })

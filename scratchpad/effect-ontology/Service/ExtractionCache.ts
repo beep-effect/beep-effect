@@ -10,8 +10,11 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import type { PlatformError } from "effect";
-import { Context, Effect, FileSystem, Layer } from "effect";
+import type * as PlatformError from "effect/PlatformError";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Entity, Relation } from "../Domain/Model/Entity.ts";
@@ -116,7 +119,7 @@ export interface ExtractionCacheService {
  * **Example** (Inspect make file system extraction cache)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { makeFileSystemExtractionCache } from "@effect-ontology/Service/ExtractionCache"
  *
  * const program = makeFileSystemExtractionCache("/tmp/extraction-cache")
@@ -164,7 +167,7 @@ export const makeFileSystemExtractionCache = Effect.fn("makeFileSystemExtraction
  * **Example** (Inspect extraction cache)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { ExtractionCache } from "@effect-ontology/Service/ExtractionCache"
  *
  * const program = Effect.gen(function* () {
@@ -190,7 +193,7 @@ export class ExtractionCache extends Context.Service<ExtractionCache, Extraction
  * **Example** (Inspect extraction cache live)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { ExtractionCache, ExtractionCacheLive } from "@effect-ontology/Service/ExtractionCache"
  *
  * const program = Effect.gen(function* () {
@@ -212,7 +215,7 @@ export const ExtractionCacheLive = ExtractionCache.Default;
  * **Example** (Inspect file system extraction cache live)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { ExtractionCache, FileSystemExtractionCacheLive } from "@effect-ontology/Service/ExtractionCache"
  *
  * const program = Effect.gen(function* () {

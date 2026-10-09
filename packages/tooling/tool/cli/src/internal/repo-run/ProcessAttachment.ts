@@ -7,10 +7,12 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Effect, FileSystem, Match } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { constant } from "effect/Function";
 import * as HashSet from "effect/HashSet";
+import * as Match from "effect/Match";
 import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -200,8 +202,7 @@ const parentPidOf = (status: string): O.Option<number> =>
  *
  * ```ts
  * import { ancestryChainOf } from "@beep/repo-cli/test/RepoRun"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(ancestryChainOf(process.pid))) // true
  * ```
  *
@@ -247,8 +248,7 @@ export const ancestryChainOf = Effect.fnUntraced(function* (
  *
  * ```ts
  * import { ancestryPidsOf } from "@beep/repo-cli/test/RepoRun"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(ancestryPidsOf(process.pid))) // true
  * ```
  *
@@ -279,8 +279,7 @@ export const ancestryPidsOf = (pid: number): Effect.Effect<HashSet.HashSet<numbe
  *
  * ```ts
  * import { invokerAncestryPids } from "@beep/repo-cli/test/RepoRun"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(invokerAncestryPids())) // true
  * ```
  *
@@ -310,8 +309,7 @@ export const invokerAncestryPids = Effect.fnUntraced(function* (): Effect.fn.Ret
  *
  * ```ts
  * import { processName } from "@beep/repo-cli/test/RepoRun"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(processName(process.pid))) // true
  * ```
  *
@@ -342,8 +340,7 @@ export const processName = Effect.fnUntraced(function* (
  *
  * ```ts
  * import { processEnvironmentValue } from "@beep/repo-cli/test/RepoRun"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(processEnvironmentValue(process.pid, "HOME"))) // true
  * ```
  *
@@ -383,8 +380,7 @@ export const processEnvironmentValue = Effect.fnUntraced(function* (
  *
  * ```ts
  * import { sessionRootOf } from "@beep/repo-cli/test/RepoRun"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(sessionRootOf(process.pid, { name: "CLAUDE_PID", pid: 1 }))) // true
  * ```
  *

@@ -14,6 +14,7 @@
 //     npx vitest run test/integration/EdgeAuthority.pg.test.ts
 //   docker rm -f beep-epistemic-pg
 //
+
 // The blocker observes both writer backend IDs waiting on database locks before
 // releasing its row. The bounded observer uses database-time polling and a live
 // watchdog; TestClock cannot establish native PostgreSQL contention.
@@ -33,8 +34,14 @@ import { A } from "@beep/utils";
 import * as PgClient from "@effect/sql-pg/PgClient";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import { Config, Deferred, Effect, Layer, pipe, Redacted, Result } from "effect";
+import * as Config from "effect/Config";
+import * as Deferred from "effect/Deferred";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Redacted from "effect/Redacted";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as SqlClient from "effect/sql/SqlClient";
 import { expectBothWritersWaiting } from "./PostgresLock.test-kit.ts";
@@ -43,10 +50,8 @@ import type { EdgeAuthorityError, EdgeAuthorityRepositoryShape } from "@beep/epi
 
 // Config boot snapshot of the lane selector, per the makePgliteIntegrationGate precedent:
 // Node-safe and law-clean, and the operator exports the variable before the process starts.
-const externalUrl = pipe(
-  Effect.runSync(Config.option(Config.String("BEEP_EPISTEMIC_PG_URL"))),
-  O.getOrElse(() => "")
-);
+const externalUrlConfig = Config.option(Config.String("BEEP_EPISTEMIC_PG_URL"));
+const externalUrl = Effect.runSync(externalUrlConfig).pipe(O.getOrElse(() => ""));
 
 const migrationsFolder = fileURLToPath(new URL("../../../../_internal/db-admin/drizzle", import.meta.url));
 const migrationsSchema = "epistemic_edge_journal";

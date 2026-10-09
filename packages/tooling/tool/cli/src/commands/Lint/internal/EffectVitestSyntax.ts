@@ -6,9 +6,9 @@
  */
 
 import { A, Str } from "@beep/utils";
-import { MutableHashMap } from "effect";
 import { dual } from "effect/Function";
 import * as HashSet from "effect/HashSet";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import { Node, SyntaxKind } from "ts-morph";
 import type {
@@ -306,7 +306,7 @@ const collectSyntaxRoles = (sourceFile: SourceFile) => {
  *
  * const source = new Project({ useInMemoryFileSystem: true }).createSourceFile(
  *   "alias.test.ts",
- *   'import { Effect as Fx } from "effect"'
+ *   'import * as Fx from "effect/Effect"'
  * )
  * console.log(collectEffectVitestImports(source).hasEffectImport) // true
  * ```
@@ -433,11 +433,11 @@ const importedBindingMatches = (
  *
  * const source = new Project({ useInMemoryFileSystem: true }).createSourceFile(
  *   "namespace.test.ts",
- *   'import * as E from "effect"; E.Effect.runSync(program)'
+ *   'import * as E from "effect/Effect"; E.runSync(program)'
  * )
  * const call = A.head(source.getDescendantsOfKind(SyntaxKind.CallExpression))
  * console.log(O.exists(call, (node) => isProvenanceExpression(
- *   node.getExpression(), collectEffectVitestImports(source), ["effect"], "Effect", ["runSync"]
+ *   node.getExpression(), collectEffectVitestImports(source), ["effect/Effect"], "Effect", ["runSync"]
  * ))) // true
  * ```
  *
@@ -810,7 +810,7 @@ export const enclosingLayerBlock: {
  * import { collectEffectVitestImports, effectVitestTestCallbacks } from "@beep/repo-cli/commands/Lint"
  * import { Project, SyntaxKind } from "ts-morph"
  * const source = new Project({ useInMemoryFileSystem: true }).createSourceFile("a.ts",
- *   'import { Effect } from "effect"; it.effect("x", Effect.fnUntraced(function* () { yield* Effect.void }))')
+ *   'import * as Effect from "effect/Effect"; it.effect("x", Effect.fnUntraced(function* () { yield* Effect.void }))')
  * const call = source.getDescendantsOfKind(SyntaxKind.CallExpression)[0]
  * if (call) console.log(effectVitestTestCallbacks(call, collectEffectVitestImports(source)).length) // 1
  * ```

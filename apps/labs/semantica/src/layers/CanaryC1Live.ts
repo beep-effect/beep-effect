@@ -1,8 +1,18 @@
 import { Sha256Hex } from "@beep/schema";
-import { Clock, Console, Crypto, Effect, Equal, FileSystem, HashSet, Layer, Number as N, Order, Path } from "effect";
 import * as A from "effect/Array";
+import * as Clock from "effect/Clock";
+import * as Console from "effect/Console";
+import * as Crypto from "effect/Crypto";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import * as FileSystem from "effect/FileSystem";
 import { flow } from "effect/Function";
+import * as HashSet from "effect/HashSet";
+import * as Layer from "effect/Layer";
+import * as N from "effect/Number";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { writeJsonArtifact } from "@/canary/Artifact";
@@ -250,16 +260,17 @@ const makeCanaryC1 = Effect.fn("CanaryC1.make")(function* <E>(
       Layer.provide(Layer.succeed(ProviderCache, providerCache))
     );
     const embeddingStartedAt = yield* Clock.currentTimeMillis;
-    const embedded = yield* Effect.scoped(
-      Layer.build(embeddingLayer).pipe(
-        Effect.flatMap((context) =>
-          Embedder.pipe(
-            Effect.flatMap((service) => service.embed(inputs)),
-            Effect.provide(context)
-          )
+    const embedded = yield* embeddingLayer.pipe(
+      Layer.build,
+      Effect.flatMap((context) =>
+        Embedder.pipe(
+          Effect.flatMap((service) => service.embed(inputs)),
+          Effect.provide(context)
         )
-      )
-    ).pipe(Effect.mapError(() => failed("embedding-degraded", "The live OpenAI embedding provider was unavailable.")));
+      ),
+      Effect.scoped,
+      Effect.mapError(() => failed("embedding-degraded", "The live OpenAI embedding provider was unavailable."))
+    );
     const embeddingEndedAt = yield* Clock.currentTimeMillis;
     if (A.isReadonlyArrayNonEmpty(embedded.degraded)) {
       return yield* failed(

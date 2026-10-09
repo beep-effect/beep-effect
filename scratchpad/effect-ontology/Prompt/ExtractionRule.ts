@@ -8,7 +8,9 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
-import { Inspectable, pipe, Effect } from "effect";
+import * as Inspectable from "effect/Inspectable";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 

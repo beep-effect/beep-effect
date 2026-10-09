@@ -1,6 +1,6 @@
 import { $SemanticaId } from "@beep/identity/packages";
-import { Context } from "effect";
-import type { Effect } from "effect";
+import * as Context from "effect/Context";
+import type * as Effect from "effect/Effect";
 import type { ModelIdentity } from "@/schema/Model";
 import type { EmbeddingBatch, EmbeddingInput } from "@/schema/Projection";
 
@@ -17,8 +17,7 @@ interface EmbedderShape {
  *
  * ```ts
  * import { ActiveEmbeddingIdentity } from "@/services/Embedder"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = ActiveEmbeddingIdentity.pipe(Effect.map((identity) => identity.name))
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -37,8 +36,7 @@ export class ActiveEmbeddingIdentity extends Context.Service<ActiveEmbeddingIden
  *
  * ```ts
  * import { Embedder } from "@/services/Embedder"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Embedder.pipe(Effect.map((service) => typeof service.embed))
  * console.log(Effect.isEffect(program)) // true
  * ```

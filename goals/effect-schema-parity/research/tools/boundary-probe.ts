@@ -11,6 +11,7 @@
 // Pinned evidence: this probe compares the retired @beep/schema group D and E concepts with
 // their upstream replacements, so it only resolves at commit 45d0490d22 (PR #1334), before
 // those concepts were deleted. Check that commit out in a scratch worktree to re-run it.
+
 import { Timezones } from "@beep/data";
 import { ArrayBuf } from "@beep/schema/ArrayBuffer";
 import * as ArrayOf from "@beep/schema/ArrayOf";
@@ -24,12 +25,18 @@ import { MutableHashSet as BeepMutableHashSet } from "@beep/schema/MutableHashSe
 import { RegExpFromStr } from "@beep/schema/RegExp";
 import { EpochMillis, ISOStr, Timestamp } from "@beep/schema/Timestamp";
 import { Timezone } from "@beep/schema/Timezone";
-import { DateTime, Effect, Graph, HashSet, MutableHashMap, MutableHashSet, SchemaTransformation } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Graph from "effect/Graph";
+import * as HashSet from "effect/HashSet";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 
 type Probe = {
   readonly concept: string;

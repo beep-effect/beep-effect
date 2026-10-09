@@ -10,9 +10,9 @@ import * as Conformance from "@beep/schema/Conformance";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as Sha256 from "@beep/schema/Sha256";
 import { URLStr } from "@beep/schema/URL";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import type { Result } from "effect";
+import type * as Result from "effect/Result";
 import type * as AST from "effect/SchemaAST";
 
 const $I = $RdfId.create("semantic-schema-metadata");

@@ -25,7 +25,10 @@ import { it } from "@beep/test-runner";
 import { A, O } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
-import { ConfigProvider, Effect, FileSystem, Layer } from "effect";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import type { Dataset } from "@beep/rdf/Rdf";
 

@@ -1,9 +1,10 @@
 import { Sha256Hex } from "@beep/schema";
-import { Effect, Order } from "effect";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
+import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import { dual } from "effect/Function";
+import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";

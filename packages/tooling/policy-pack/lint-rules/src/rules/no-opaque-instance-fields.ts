@@ -7,7 +7,8 @@
  */
 
 import { defineRule } from "@oxlint/plugins";
-import { HashSet, MutableHashSet } from "effect";
+import * as HashSet from "effect/HashSet";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import {
   classifyImportSpecifier,
@@ -51,12 +52,11 @@ export default defineRule({
     docs: { description: "Disallow instance members in Schema.Opaque classes" },
   },
   create(context) {
-    // Local names that refer to the Schema module: `import { Schema } from "effect"`,
-    // `import * as S from "effect/Schema"`, or `import Schema from "effect/Schema"`.
+    // Local names that refer to the Schema module through a subpath or the legacy root barrel.
     const schemaIdentifiers = MutableHashSet.empty<string>();
     // Local names that refer to `Opaque` imported directly from the Schema module.
     const opaqueIdentifiers = MutableHashSet.empty<string>();
-    // Local names that refer to the `effect` root namespace: `import * as Effect from "effect"`,
+    // Local names that refer to the legacy Effect root namespace,
     // reached as `<effectNs>.Schema.Opaque(...)`.
     const effectRootNamespaces = MutableHashSet.empty<string>();
 

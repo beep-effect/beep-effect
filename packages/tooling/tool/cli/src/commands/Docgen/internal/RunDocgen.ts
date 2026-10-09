@@ -7,9 +7,12 @@
 
 import { findRepoRoot } from "@beep/repo-utils";
 import { A, Str, thunk0, thunkFalse } from "@beep/utils";
-import { Effect, FileSystem, flow, Path, pipe, Result } from "effect";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { dual, flow, pipe } from "effect/Function";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import { runCaptured } from "../../../internal/process/StepExec.ts";
 import { DocgenGenerationResult, isDocgenWorkspacePackage } from "../Docgen.schemas.ts";
 import type { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
@@ -125,7 +128,7 @@ const runDocgenForPackageEffect = Effect.fn("DocgenOperations.runDocgenForPackag
  * **Example** (Run package docgen with includes)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { runDocgenForPackage } from "@beep/repo-cli/commands/Docgen/internal/RunDocgen"
  * import { DocgenWorkspacePackage } from "@beep/repo-cli/commands/Docgen/Docgen.schemas"
  *

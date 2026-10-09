@@ -14,11 +14,15 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { A, Str, thunkEmptyStr } from "@beep/utils";
-import { Effect, FileSystem, identity, Path, SchemaTransformation } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { identity } from "effect/Function";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import { VersionSyncError } from "../../VersionSync.schemas.ts";
 
 const $I = $RepoCliId.create("commands/VersionSync/internal/resolvers/RootCatalog");
@@ -101,8 +105,7 @@ export class RootPackageJsonDocument extends S.Class<RootPackageJsonDocument>($I
  *
  * ```ts
  * import { readRootPackageJson } from "@beep/repo-cli/commands/VersionSync/internal/resolvers/RootCatalog"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = readRootPackageJson("/repo")
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -153,8 +156,7 @@ class BunLockDocument extends S.Class<BunLockDocument>($I`BunLockDocument`)(
  *
  * ```ts
  * import { readLockfileResolvedVersion } from "@beep/repo-cli/commands/VersionSync/internal/resolvers/RootCatalog"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = readLockfileResolvedVersion("/repo", "turbo")
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -213,8 +215,7 @@ export const readLockfileResolvedVersion = Effect.fn("readLockfileResolvedVersio
  *
  * ```ts
  * import { resolveInstalledToolVersion } from "@beep/repo-cli/commands/VersionSync/internal/resolvers/RootCatalog"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = resolveInstalledToolVersion("/repo", "turbo")
  * console.log(Effect.isEffect(program)) // true
  * ```

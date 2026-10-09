@@ -6,7 +6,8 @@
  */
 
 import { sha256Hex } from "@beep/repo-utils/Sha256Hex";
-import { Effect, flow } from "effect";
+import * as Effect from "effect/Effect";
+import { flow } from "effect/Function";
 import * as Str from "effect/String";
 import { QualitySchedulerError } from "./QualityScheduler.schemas.ts";
 
@@ -45,9 +46,7 @@ const artifactNameHash = Effect.fnUntraced(function* (value: string) {
  *
  * ```ts
  * import { repoRunArtifactId } from "@beep/repo-cli/test/RepoRun"
- *
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = repoRunArtifactId("main").pipe(Effect.map((id) => id.startsWith("main-")))
  * console.log(Effect.isEffect(program)) // true
  * ```

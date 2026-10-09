@@ -8,7 +8,8 @@
 import { DmsProvider, RemoteItemId, SyncItemKind } from "@beep/documents-domain/values/Sync";
 import { $DocumentsUseCasesId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Context, Effect } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import type { DmsMirrorUnavailable } from "./Sync.errors.ts";
 
@@ -416,8 +417,7 @@ export class PollEventsInput extends S.Class<PollEventsInput>($I`PollEventsInput
  *   PollEventsInput,
  *   type DmsMirrorShape
  * } from "@beep/documents-use-cases/aggregates/Sync/server"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const unavailable = () =>
  *   Effect.fail(DmsMirrorUnavailable.make({ provider: "box", reason: "stub mirror", retryable: false }))
  * const mirror: DmsMirrorShape = {
@@ -459,8 +459,7 @@ export interface DmsMirrorShape {
  *   PollEventsInput,
  *   type DmsMirrorShape
  * } from "@beep/documents-use-cases/aggregates/Sync/server"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const unavailable = () =>
  *   Effect.fail(DmsMirrorUnavailable.make({ provider: "box", reason: "stub mirror", retryable: false }))
  * const mirror: DmsMirrorShape = {
@@ -617,7 +616,7 @@ export class DmsMirrorProbe extends S.Class<DmsMirrorProbe>($I`DmsMirrorProbe`)(
  *
  * ```ts
  * import { DmsMirrorProbe, type DmsMirrorAvailabilityShape } from "@beep/documents-use-cases/aggregates/Sync/server"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const probe = Effect.succeed(
@@ -646,8 +645,7 @@ export interface DmsMirrorAvailabilityShape {
  *   DmsMirrorProbe,
  *   type DmsMirrorAvailabilityShape
  * } from "@beep/documents-use-cases/aggregates/Sync/server"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const probe = Effect.succeed(DmsMirrorProbe.make({ connected: true, provider: "box" }))
  * const availability: DmsMirrorAvailabilityShape = { probe, refresh: probe }
  *

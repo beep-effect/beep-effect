@@ -27,12 +27,17 @@ import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { expect, it, layer } from "@effect/vitest";
 import { assertNone, assertSome, assertSuccess, strictEqual } from "@effect/vitest/utils";
-import { ConfigProvider, Console, Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Console from "effect/Console";
 import { Command } from "effect/cli";
 import * as Dur from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -479,16 +484,12 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
         // run must degrade rather than interrupt the clones still rebuilding.
         intercept: (step) =>
           step.phase === "rebuild" && step.cwd === stalled
-            ? O.some(
-                Effect.fail(
-                  GraftDeepStepError.make({
-                    step: "rebuild",
-                    exitCode: 1,
-                    log: "",
-                    message: `graft build timed out in ${stalled}.`,
-                  })
-                )
-              )
+            ? GraftDeepStepError.make({
+                step: "rebuild",
+                exitCode: 1,
+                log: "",
+                message: `graft build timed out in ${stalled}.`,
+              }).pipe(Effect.fail, O.some)
             : O.none(),
         replies: happyReplies(owner, FULL_COVERAGE),
       });
@@ -823,16 +824,12 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
             calls: [],
             intercept: (step) =>
               step.command === "mise"
-                ? O.some(
-                    Effect.fail(
-                      GraftDeepStepError.make({
-                        step: "preflight",
-                        exitCode: 1,
-                        log: "",
-                        message: "mise trust --show could not spawn.",
-                      })
-                    )
-                  )
+                ? GraftDeepStepError.make({
+                    step: "preflight",
+                    exitCode: 1,
+                    log: "",
+                    message: "mise trust --show could not spawn.",
+                  }).pipe(Effect.fail, O.some)
                 : O.none(),
             replies: happyReplies(owner, FULL_COVERAGE),
           })

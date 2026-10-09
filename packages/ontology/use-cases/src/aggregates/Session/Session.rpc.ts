@@ -7,7 +7,8 @@
 
 import { $OntologyUseCasesId } from "@beep/identity/packages";
 import { ChangeOperation, Session, SessionChangeDelta, SessionId } from "@beep/ontology-domain/aggregates/Session";
-import { Effect, flow } from "effect";
+import * as Effect from "effect/Effect";
+import { flow } from "effect/Function";
 import * as Rpc from "effect/rpc/Rpc";
 import * as RpcGroup from "effect/rpc/RpcGroup";
 import * as S from "effect/Schema";

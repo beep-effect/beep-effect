@@ -7,8 +7,9 @@ import {
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
-import { Effect, Redacted } from "effect";
+import * as Effect from "effect/Effect";
 import * as Base64 from "effect/encoding/Base64";
+import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 
 const encodeForwarderInput = S.encodeUnknownEffect(AiMetricsForwarderInput);

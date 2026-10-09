@@ -5,9 +5,10 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import { HashMap, Order } from "effect";
 import * as A from "effect/Array";
+import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import { PosInt } from "../../internal/PosInt.ts";
 import { Segment } from "../Segment/index.ts";

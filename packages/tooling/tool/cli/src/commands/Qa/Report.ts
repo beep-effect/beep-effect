@@ -11,7 +11,9 @@
  */
 
 import { SessionStore } from "@beep/qa-capture";
-import { Effect, FileSystem, Path } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Path from "effect/Path";
 import { printLines } from "../../internal/cli/Printer.ts";
 import { extractionPlanPath, readExtractionPlan, resolveRoundLayout } from "./Extract.ts";
 import { QaCommandError } from "./Qa.errors.ts";
@@ -27,7 +29,7 @@ import type { QaReportOptions } from "./Qa.schemas.ts";
  * ```ts
  * import { runQaReport } from "@beep/repo-cli/commands/Qa/Report"
  * import { QaReportOptions } from "@beep/repo-cli/commands/Qa/Qa.schemas"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const program = runQaReport("/repo", QaReportOptions.make({ session: O.none() }))

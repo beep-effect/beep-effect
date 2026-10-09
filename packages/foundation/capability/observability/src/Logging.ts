@@ -9,7 +9,8 @@
  * **Example** (Pretty console logger setup)
  *
  * ```typescript
- * import { Effect, Layer } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * import { LoggingConfig, layerConsoleLogger } from "@beep/observability"
  *
  * const config = LoggingConfig.make({ format: "pretty", minLogLevel: "Info" })
@@ -29,10 +30,16 @@ import bc from "@beep/colors";
 import { $ObservabilityId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
-import { Cause, Effect, Inspectable, Layer, Logger, Match, References } from "effect";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
+import * as Inspectable from "effect/Inspectable";
+import * as Layer from "effect/Layer";
+import * as Logger from "effect/Logger";
 import * as LogLevel from "effect/LogLevel";
+import * as Match from "effect/Match";
 import * as R from "effect/Record";
+import * as References from "effect/References";
 import * as S from "effect/Schema";
 
 const $I = $ObservabilityId.create("Logging");
@@ -222,8 +229,7 @@ export class LoggingConfig extends S.Class<LoggingConfig>($I`LoggingConfig`)(
  *
  * ```typescript
  * import { layerMinimumLogLevel } from "@beep/observability"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.logInfo("visible").pipe(
  *   Effect.provide(layerMinimumLogLevel("Info"))
  * )
@@ -436,7 +442,7 @@ const resolveLogger = (format: LogFormat, pretty = defaultPrettyLoggerConfig) =>
  * **Example** (JSON console logger layer)
  *
  * ```typescript
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { LoggingConfig, layerConsoleLogger } from "@beep/observability"
  *
  * const config = LoggingConfig.make({ format: "json", minLogLevel: "Info" })

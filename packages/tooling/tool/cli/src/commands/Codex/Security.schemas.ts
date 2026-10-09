@@ -6,9 +6,10 @@
  */
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, MappedLiteralKit } from "@beep/schema";
-import { Effect, SchemaGetter } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+import * as SchemaGetter from "effect/SchemaGetter";
 import * as Str from "effect/String";
 import { CodexFindingTitle, GitCommitSha, GitHubRepoSlug } from "./Findings.capture.schemas.ts";
 

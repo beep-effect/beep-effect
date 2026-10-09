@@ -9,7 +9,7 @@ import { FileProcessingFailureRecord, SourceProcessingRecord } from "@beep/file-
 import { SelectedStrategy } from "@beep/file-processing/Strategy";
 import { $RepoCliId } from "@beep/identity/packages";
 import { Sha256Hex } from "@beep/schema";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import { PosInt } from "../../../internal/schema/PosInt.ts";

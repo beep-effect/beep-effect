@@ -9,8 +9,8 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { Effect, Inspectable } from "effect";
+import * as Effect from "effect/Effect";
+import * as Inspectable from "effect/Inspectable";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import { HttpRouter, HttpServerResponse } from "effect/http";
@@ -36,7 +36,7 @@ const decodeJsonEffect = S.decodeEffect(S.fromJsonString(S.Unknown));
  * **Example** (Register the asset routes on an HTTP router)
  *
  * ```ts
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer";
  * import { HttpRouter } from "effect/http"
  * import { AssetRouter } from "@effect-ontology/Runtime/AssetRouter"
  *

@@ -7,8 +7,14 @@ import {
 import { normalizePath } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { A, Str, thunkFalse } from "@beep/utils";
-import { Effect, FileSystem, HashMap, HashSet, Order, Path, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { Node, Project, SyntaxKind } from "ts-morph";
@@ -530,8 +536,7 @@ const dedupedSortedHits = (hits: ReadonlyArray<DependentHit>): ReadonlyArray<Dep
  * ```ts
  * import { dependentsOfAtRoot, RegistrationTarget } from "@beep/repo-cli/test/DeletePackage"
  * import { PosixPath } from "@beep/schema/PosixPath"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const target = RegistrationTarget.make({
  *   packageName: "@beep/example",
  *   packagePath: PosixPath.make("packages/example"),

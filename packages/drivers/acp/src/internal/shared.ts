@@ -1,6 +1,9 @@
-import { Effect, HashMap, Ref, SchemaIssue } from "effect";
+import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
 import * as AcpSchema from "../_generated/schema.gen.ts";
 import * as AcpError from "../Acp.errors.ts";
 import type { RpcClientError } from "effect/rpc";

@@ -6,7 +6,7 @@
  */
 import { $SchemaId } from "@beep/identity";
 import { O } from "@beep/utils";
-import { Brand } from "effect";
+import * as Brand from "effect/Brand";
 import * as S from "effect/Schema";
 import * as SchemaUtils from "./SchemaUtils/index.ts";
 

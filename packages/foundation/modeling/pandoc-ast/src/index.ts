@@ -26,7 +26,7 @@ export * from "./Pandoc.codec.ts";
  * **Example** (Inspect an empty Pandoc document)
  *
  * ```ts import.meta.vitest name="Inspect an empty Pandoc document"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { inspectPandocConformance } from "@beep/pandoc-ast"
  *
  * const result = Effect.runSync(inspectPandocConformance({

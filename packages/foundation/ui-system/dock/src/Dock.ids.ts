@@ -6,7 +6,7 @@
  */
 import { $DockId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
-import { Number as N } from "effect";
+import * as N from "effect/Number";
 import * as S from "effect/Schema";
 
 const $I = $DockId.create("Dock.ids");

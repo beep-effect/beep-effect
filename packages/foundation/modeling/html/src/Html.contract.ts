@@ -8,7 +8,7 @@
  * @since 0.0.0
  */
 import { $HtmlId } from "@beep/identity";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { Fragment, HtmlChild, Html as HtmlElement } from "./Html.model.ts";
 import { Comment, Doctype } from "./Html.nodes.ts";
@@ -87,7 +87,7 @@ export const HtmlDocumentChild = DocumentChild.pipe(S.revealCodec);
  * ```ts import.meta.vitest name="Decode comment as document child"
  * import { HtmlDocumentChild } from "@beep/html/Html.contract"
  * import { Comment } from "@beep/html/Html.nodes"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  *
  * const decoded = S.decodeUnknownResult(HtmlDocumentChild)(Comment.make({ value: "note" }))

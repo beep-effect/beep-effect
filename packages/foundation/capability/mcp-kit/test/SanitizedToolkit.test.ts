@@ -13,12 +13,15 @@ import { connectHttp, layerConformanceHttp } from "@beep/mcp-kit/test/Conformanc
 import { it } from "@beep/test-runner";
 import { assert, describe } from "@effect/vitest";
 import { assertExitFailure } from "@effect/vitest/utils";
-import { Cause, Effect, Exit, Layer } from "effect";
 import * as A from "effect/Array";
 import { Tool, Toolkit } from "effect/ai";
 import { McpServerClient } from "effect/ai/McpSchema";
 import * as McpServer from "effect/ai/McpServer";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import { HttpServerRequest } from "effect/http";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -550,10 +553,12 @@ describe("sanitizedToolkit", () => {
   it.effect(
     "refuses to register a strict dynamic tool",
     Effect.fnUntraced(function* () {
-      const exit = yield* Effect.exit(
-        Effect.scoped(
-          Layer.build(sanitizedToolkit(StrictDynamicToolkit).pipe(Layer.provide(StrictDynamicHandlersLive)))
-        )
+      const exit = yield* StrictDynamicToolkit.pipe(
+        sanitizedToolkit,
+        Layer.provide(StrictDynamicHandlersLive),
+        Layer.build,
+        Effect.scoped,
+        Effect.exit
       );
 
       // Strictness is an Effect Schema decode option; there is nothing to

@@ -7,9 +7,10 @@
 
 import { $EpistemicClientId } from "@beep/identity/packages";
 import { O, pipe, Str } from "@beep/utils";
-import { Layer, Result } from "effect";
 import { FetchHttpClient } from "effect/http";
+import * as Layer from "effect/Layer";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import { Atom } from "effect/reactivity";
 import { RpcClient, RpcSerialization } from "effect/rpc";
 import * as S from "effect/Schema";
@@ -88,8 +89,7 @@ export const resolveEpistemicRpcHttpUrl = (runtime: BrowserHttpRuntime | undefin
  *
  * ```ts
  * import { HttpEpistemicProtocolLive } from "@beep/epistemic-client"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(HttpEpistemicProtocolLive)) // true
  * ```
  *

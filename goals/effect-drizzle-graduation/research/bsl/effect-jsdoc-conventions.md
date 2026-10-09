@@ -352,13 +352,13 @@ turns the example into executable source for Effect's own documentation tests.
 
 There are 3,603 JSDoc import statements. The import forms are:
 
-- 3,084 value imports like `import { Effect, Schema } from "effect"`;
-- 104 type-only root imports like `import type { Types } from "effect"`;
+- 3,084 value imports like `import { Effect, Schema } from "<legacy-effect-barrel>"`;
+- 104 type-only root imports like `import type { Types } from "<legacy-effect-barrel>"`;
 - 414 imports from public unstable/testing entrypoints such as
   `effect/unstable/sql` or `effect/testing`;
 - one namespace import from `fast-check`;
 - zero relative imports;
-- zero `import * as X from "effect"` examples.
+- zero `import * as X from "<legacy-effect-barrel>"` examples.
 
 Stable examples therefore present the consumer root namespace API, not the
 source file that owns the declaration. BSL's round-6.5 publishing law chooses a
@@ -460,7 +460,9 @@ Source: `.repos/effect/packages/effect/src/Data.ts:100-141`
  * **Example** (Defining a tagged enum)
  *
  * ```ts import.meta.vitest
- * import { Data } from "effect"
+*
+
+import * as Data from "effect/Data";
  *
  * type HttpError = Data.TaggedEnum<{
  *   BadRequest: { readonly status: 400; readonly message: string }
@@ -474,7 +476,8 @@ Source: `.repos/effect/packages/effect/src/Data.ts:100-141`
  * const { BadRequest, NotFound } = Data.taggedEnum<HttpError>()
  *
  * BadRequest({ status: 400, message: "missing id" })._tag // => "BadRequest"
- * ```
+ *
+```
  *
  * @see {@link taggedEnum} — constructors and matchers for a `TaggedEnum`
  * @see {@link TaggedEnum.WithGenerics} — generic tagged enums
@@ -518,7 +521,9 @@ Source: `.repos/effect/packages/effect/src/Data.ts:510-552`
  * **Example** (Creating and matching tagged enum values)
  *
  * ```ts import.meta.vitest
- * import { Data } from "effect"
+*
+
+import * as Data from "effect/Data";
  *
  * type HttpError = Data.TaggedEnum<{
  *   BadRequest: { readonly message: string }
@@ -535,7 +540,8 @@ Source: `.repos/effect/packages/effect/src/Data.ts:510-552`
  *   BadRequest: (e) => e.message,
  *   NotFound: (e) => `${e.url} not found`
  * }) // => "/missing not found"
- * ```
+ *
+```
 ````
 
 Why it is exemplary: it is the closest upstream analogue for BSL's descriptor
@@ -563,11 +569,14 @@ Source: `.repos/effect/packages/effect/src/Option.ts:1061-1089`
  * **Example** (Mapping over an Option)
  *
  * ```ts import.meta.vitest
- * import { Option } from "effect"
+*
+
+import * as Option from "effect/Option";
  *
  * Option.map(Option.some(2), (n) => n * 2) // => Option.some(4)
  * Option.map(Option.none(), (n: number) => n * 2) // => Option.none()
- * ```
+ *
+```
  *
  * @see {@link flatMap} when `f` returns an `Option`
  * @see {@link as} to replace the value with a constant
@@ -601,12 +610,15 @@ Source: `.repos/effect/packages/effect/src/Types.ts:264-291`
  * **Example** (Checking type equality)
  *
  * ```ts import.meta.vitest
- * import type { Types } from "effect"
+*
+
+import type * as Types from "effect/Types";
  *
  * type Yes = Types.Equals<{ a: number }, { a: number }> // true
  * type No = Types.Equals<{ a: number }, { a: string }> // false
  * type AnyCheck = Types.Equals<any, string> // false
- * ```
+ *
+```
  *
  * @see {@link EqualsWith}
  *
@@ -640,12 +652,15 @@ Source: `.repos/effect/packages/effect/src/Predicate.ts:365-392`
  * **Example** (Checking exact length)
  *
  * ```ts import.meta.vitest
- * import { Predicate } from "effect"
+*
+
+import * as Predicate from "effect/Predicate";
  *
  * const isPair = Predicate.isTupleOf(2)
  *
  * isPair([1, 2]) // => true
- * ```
+ *
+```
  *
  * @see {@link isTupleOfAtLeast}
  * @see {@link Tuple}
@@ -679,7 +694,9 @@ Source: `.repos/effect/packages/effect/src/SchemaError.ts:10-41`
  * **Example** (Catching a SchemaError)
  *
  * ```ts import.meta.vitest
- * import { Schema } from "effect"
+*
+
+import * as Schema from "effect/Schema";
  *
  * try {
  *   Schema.decodeUnknownSync(Schema.Number)("not a number")
@@ -688,7 +705,8 @@ Source: `.repos/effect/packages/effect/src/SchemaError.ts:10-41`
  *     err.message // => "Expected number"
  *   }
  * }
- * ```
+ *
+```
  *
  * @category errors
  * @since 4.0.0
@@ -715,7 +733,10 @@ Source: `.repos/effect/packages/effect/src/Schema.ts:14437-14465`
  * **Example** (Defining a tagged error class)
  *
  * ```ts import.meta.vitest
- * import { Effect, Schema } from "effect"
+*
+
+import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
  *
  * class NotFound extends Schema.TaggedError<NotFound>()("NotFound", {
  *   id: Schema.Number
@@ -727,7 +748,8 @@ Source: `.repos/effect/packages/effect/src/Schema.ts:14437-14465`
  * const error = await Effect.runPromise(Effect.flip(program))
  * error._tag // => "NotFound"
  * error.id // => 42
- * ```
+ *
+```
  *
  * @category constructors
  * @since 3.10.0

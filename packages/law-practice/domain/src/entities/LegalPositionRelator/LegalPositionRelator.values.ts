@@ -8,7 +8,7 @@
 
 import { $LawPracticeDomainId } from "@beep/identity/packages";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 const $I = $LawPracticeDomainId.create("entities/LegalPositionRelator/LegalPositionRelator.values");

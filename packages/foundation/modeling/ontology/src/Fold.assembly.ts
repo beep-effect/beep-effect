@@ -13,11 +13,15 @@
 import { CoreVocab, expand, expandOption, expandPredicate } from "@beep/identity";
 import { IRI } from "@beep/rdf/Iri";
 import { LanguageTag } from "@beep/rdf/Rdf";
-import { Effect, flow, MutableHashMap, MutableHashSet, pipe, SchemaAST } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import { flow, pipe } from "effect/Function";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as SchemaAST from "effect/SchemaAST";
 import * as Str from "effect/String";
 import {
   AssembledClass,
@@ -857,7 +861,7 @@ const composerPrefix = (composer: BoundComposer): string =>
  * ```ts
  * import { make } from "@beep/identity"
  * import { fold } from "@beep/ontology"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const $I = make("beep", { authority: "https://ns.beep.sh/", prefix: "beep" }).$BeepId.create("patent")

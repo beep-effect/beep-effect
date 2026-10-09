@@ -2,7 +2,7 @@ import * as NodeProcess from "node:process";
 import { privacySafeSystemTempRoot, privacySafeSystemTempRootForTesting } from "@beep/test-utils";
 import { HostProcessPlatform } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 
 describe("privacy-safe system temp root", () => {
   it("ignores a private ambient TMPDIR on POSIX hosts", () => {

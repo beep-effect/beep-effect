@@ -41,8 +41,12 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, normalizePath } from "@beep/schema";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { A, O, pipe, R, Str } from "@beep/utils";
-import { Console, Effect, FileSystem, Order, Path } from "effect";
+import * as Console from "effect/Console";
 import { Command, Flag } from "effect/cli";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { formatJsonc, readArtifact, renderTruncatedLines, writeArtifact } from "../../internal/artifacts/index.ts";
 import { CliReportedExit } from "../../internal/cli/ExitCodeError.ts";
@@ -375,8 +379,7 @@ const packageBlindSpot = Effect.fn("PackageTestTypecheck.packageBlindSpot")(func
  *
  * ```ts
  * import { collectTestTypecheckBlindSpots } from "@beep/repo-cli/commands/Lint/PackageTestTypecheck"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(collectTestTypecheckBlindSpots("/repo")))
  * ```
  *
@@ -483,8 +486,7 @@ export class PackageTestTypecheckOptions extends S.Class<PackageTestTypecheckOpt
  *
  * ```ts
  * import { runPackageTestTypecheckLint } from "@beep/repo-cli/commands/Lint/PackageTestTypecheck"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = runPackageTestTypecheckLint({
  *   baselinePath: "standards/test-typecheck.blindspot-baseline.jsonc",
  *   writeBaseline: false

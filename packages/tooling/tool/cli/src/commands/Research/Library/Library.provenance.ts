@@ -1,17 +1,22 @@
-/** Authentic provider event validation.
+/**
+ * Authentic provider event validation.
+ *
  * @internal
  * @packageDocumentation
  * @since 0.0.0
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { Effect, Match } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { decodeLibraryJson } from "./Library.adapter.ts";
 import { LibraryError } from "./Library.errors.ts";
+
+const ProviderItems = S.Array(S.Unknown);
 
 const $I = $RepoCliId.create("commands/Research/Library/Library.provenance");
 
@@ -26,9 +31,7 @@ const $I = $RepoCliId.create("commands/Research/Library/Library.provenance");
  * ```
  *
  * @internal
- *
  * @category schemas
- *
  * @since 0.0.0
  */
 export class AlphaFullText extends S.Class<AlphaFullText>($I`AlphaFullText`)(
@@ -100,21 +103,24 @@ const NamedCall = S.Struct({
 });
 const NamedResult = S.Struct({ type: S.Literal("tool_result"), tool_use_id: S.String, content: S.Unknown });
 
-/** Read JSON or NDJSON originals without inventing normalized tool envelopes.
+/**
+ * Read JSON or NDJSON originals without inventing normalized tool envelopes.
  * **Example** (Preserve native provider event envelopes)
  * ```ts
  * import { decodeProviderEvents } from "@beep/repo-cli/test/ResearchLibrary"
- * import { Effect, Match } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Match from "effect/Match";
  * console.log(Effect.runSync(decodeProviderEvents('{"type":"tool_use","id":"call-1"}')).length) // 1
  * ```
  *
  * @internal
  * @category utilities
- * @since 0.0.0 */
+ * @since 0.0.0
+ */
 export const decodeProviderEvents = Effect.fn("Library.decodeProviderEvents")(function* (text: string) {
   const whole = yield* decodeLibraryJson(S.Unknown)(text).pipe(Effect.option);
   if (O.isSome(whole)) {
-    const array = S.decodeUnknownOption(S.Array(S.Unknown))(whole.value);
+    const array = S.decodeUnknownOption(ProviderItems)(whole.value);
     return O.isSome(array) ? array.value : [whole.value];
   }
   return yield* Effect.forEach(A.filter(Str.split(text, "\n"), Str.isNonEmpty), decodeLibraryJson(S.Unknown), {
@@ -187,17 +193,20 @@ const grokXQualificationValid = (events: ReadonlyArray<unknown>) => {
   return false;
 };
 
-/** Check real workflow, X search, or alphaXiv events independently of installation status.
+/**
+ * Check real workflow, X search, or alphaXiv events independently of installation status.
  * **Example** (Reject installation-only evidence)
  * ```ts
  * import { validateProviderQualification } from "@beep/repo-cli/test/ResearchLibrary"
- * import { Effect, Match } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Match from "effect/Match";
  * console.log(Effect.runSync(validateProviderQualification("alphaxiv", []))) // false
  * ```
  *
  * @internal
  * @category utilities
- * @since 0.0.0 */
+ * @since 0.0.0
+ */
 export const validateProviderQualification = Effect.fn("Library.validateProviderQualification")(function* (
   adapter: string,
   events: ReadonlyArray<unknown>

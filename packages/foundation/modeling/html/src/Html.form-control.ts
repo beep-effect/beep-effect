@@ -8,8 +8,8 @@
 
 import { $HtmlId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import { Match, pipe } from "effect";
-import { dual } from "effect/Function";
+import { dual, pipe } from "effect/Function";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import { HTML_INPUT_ATTRIBUTE_APPLICABILITY, HtmlInputStateName, HtmlTag } from "./Html.meta.ts";
 import type { HtmlConditionalInputAttributeName } from "./Html.meta.ts";

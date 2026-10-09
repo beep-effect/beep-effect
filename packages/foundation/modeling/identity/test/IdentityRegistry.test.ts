@@ -8,7 +8,9 @@ import {
 import { $IdentityId } from "@beep/identity/packages";
 import { it } from "@beep/test-runner";
 import { describe, expect, expectTypeOf } from "@effect/vitest";
-import { Context, Effect, Layer } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 
 const composer = $IdentityId.create("RegistryTest");

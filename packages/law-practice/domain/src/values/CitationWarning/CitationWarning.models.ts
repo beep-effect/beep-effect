@@ -11,7 +11,7 @@
  */
 import { $LawPracticeDomainId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 const $I = $LawPracticeDomainId.create("values/CitationWarning/CitationWarning.models");

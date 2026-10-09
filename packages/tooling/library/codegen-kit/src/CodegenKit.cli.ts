@@ -7,10 +7,11 @@
 
 import * as NodeRuntime from "@effect/platform-node/NodeRuntime";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import { Effect, Layer } from "effect";
 import { Command, Flag } from "effect/cli";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import { FetchHttpClient } from "effect/http";
+import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import { CodegenGenerateError } from "./CodegenKit.errors.ts";
 import { GenerateConfig as GenerateConfigSchema } from "./CodegenKit.models.ts";
@@ -52,10 +53,10 @@ const runCli = (config: GenerateConfig, options: GenerateCliOptions = {}): void 
   const platform = Layer.merge(NodeServices.layer, FetchHttpClient.layer);
   const kit = CodegenKit.layer(options.extraRenderers).pipe(Layer.provide(platform));
   const runtime = Layer.merge(platform, kit);
-  const program = Effect.scoped(
-    Layer.build(runtime).pipe(
-      Effect.flatMap((context) => Command.run(command, { version: "0.0.0" }).pipe(Effect.provide(context)))
-    )
+  const program = runtime.pipe(
+    Layer.build,
+    Effect.flatMap((context) => Command.run(command, { version: "0.0.0" }).pipe(Effect.provide(context))),
+    Effect.scoped
   );
   NodeRuntime.runMain(program);
 };

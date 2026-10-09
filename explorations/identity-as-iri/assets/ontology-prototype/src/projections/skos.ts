@@ -1,6 +1,5 @@
-import { pipe } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import type {
   AssembledOntologyClass,

@@ -21,12 +21,18 @@ import {
 import { Uspto, UsptoConfigInput } from "@beep/uspto";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
-import { Context, Effect, FileSystem, Layer, Path, Redacted, Stream } from "effect";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { HttpClient, HttpClientResponse } from "effect/http";
+import * as Layer from "effect/Layer";
 import * as M from "effect/MutableHashMap";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 
 const encodeJson = S.encodeEffect(S.fromJsonString(S.Unknown));
 
@@ -239,6 +245,61 @@ describe("recorded public responses", () => {
       );
     })
   );
+  it.effect("walks nested entities, reads corporate names, ignores non-text values and ambiguous registrants", () =>
+    Effect.gen(function* () {
+      const nested = {
+        entities: [
+          {
+            roles: ["technical"],
+            entities: [
+              {
+                roles: ["registrant"],
+                vcardArray: [
+                  "vcard",
+                  [
+                    ["kind", {}, "text", "org"],
+                    ["fn", {}, "text", " Nested Org "],
+                    ["org", {}, "text", 42],
+                  ],
+                ],
+              },
+            ],
+          },
+        ],
+      };
+      assertSome(yield* registrantFromRdap(nested), "Nested Org");
+      assertNone(
+        yield* registrantFromRdap({
+          entities: [
+            { roles: ["registrant"], vcardArray: ["vcard", [["org", {}, "text", "One Org"]]] },
+            { roles: ["registrant"], vcardArray: ["vcard", [["org", {}, "text", "Other Org"]]] },
+          ],
+        })
+      );
+      assertNone(yield* registrantFromRdap({}));
+      const bad = yield* Effect.flip(registrantFromRdap({ entities: [{ roles: "registrant" }] }));
+      expect(bad.reason).toBe("invalid-input");
+    })
+  );
+  it.effect("rejects malformed domains before any request and maps 404 and other statuses", () =>
+    Effect.gen(function* () {
+      const probe = (status: number, domain: string, urls: Array<string>) =>
+        Effect.scoped(
+          Effect.gen(function* () {
+            const source = yield* withService(
+              DomainRegistrantLookup,
+              DomainRegistrantLookupLive.pipe(Layer.provide(response({}, status, urls)))
+            );
+            return yield* source.registrant(domain);
+          })
+        );
+      const untouched: Array<string> = [];
+      expect((yield* Effect.flip(probe(200, "not a domain", untouched))).reason).toBe("invalid-input");
+      expect(untouched).toHaveLength(0);
+      assertNone(yield* probe(404, "missing.example", []));
+      expect((yield* Effect.flip(probe(503, "down.example", []))).reason).toBe("unavailable");
+    })
+  );
 });
 const extraction = {
   docType: "agreement",
@@ -298,7 +359,7 @@ describe("extraction batch pairing", () => {
           "",
         ],
       ]) {
-        const error = yield* Effect.scoped(Effect.flip(Layer.build(batches(extract!, critic!))));
+        const error = yield* batches(extract!, critic!).pipe(Layer.build, Effect.flip, Effect.scoped);
         expect(["invalid-input", "conflicting-records"]).toContain(error.reason);
         expect(String(error)).not.toContain("bad-private-line");
       }

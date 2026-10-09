@@ -2,7 +2,8 @@ import { NlpToolkit } from "@beep/nlp-processing/Tools/NlpToolkit";
 import { it } from "@beep/test-runner";
 import { WinkNlpToolkitLive } from "@beep/wink";
 import { describe, expect } from "@effect/vitest";
-import { Effect, Stream } from "effect";
+import * as Effect from "effect/Effect";
+import * as Stream from "effect/Stream";
 
 describe("Adjunct-parity NLP tools", () => {
   it.layer(WinkNlpToolkitLive)("WordCount counts word-like tokens", (it) => {

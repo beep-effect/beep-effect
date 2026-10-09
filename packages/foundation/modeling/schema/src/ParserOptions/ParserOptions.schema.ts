@@ -6,11 +6,16 @@
  */
 
 import { $SchemaId } from "@beep/identity";
-import { Effect, Match, Number as Num, pipe, RegExp as Regex, Result, SchemaTransformation } from "effect";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
+import * as Match from "effect/Match";
+import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Regex from "effect/RegExp";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Struct from "effect/Struct";
 import { BuffEncoding } from "../BufferEncoding.ts";
 import * as SchemaUtils from "../SchemaUtils/index.ts";

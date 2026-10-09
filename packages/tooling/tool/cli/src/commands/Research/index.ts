@@ -6,7 +6,9 @@
  * @since 0.0.0
  */
 
-/** Research source library acquisition and provenance API.
+/**
+ * Research source library acquisition and provenance API.
+ *
  * @category tools
  * @since 0.0.0
  */

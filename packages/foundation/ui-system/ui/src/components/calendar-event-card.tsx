@@ -7,7 +7,7 @@
 "use client";
 
 import { CheckIcon, SpinnerGapIcon } from "@phosphor-icons/react";
-import { Match } from "effect";
+import * as Match from "effect/Match";
 import { cn } from "../lib/index.ts";
 import type { CSSProperties, ReactNode } from "react";
 

@@ -7,7 +7,7 @@
 
 import { Sha256HexFromBytes } from "@beep/schema";
 import { A } from "@beep/utils";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { ArtifactId } from "./Artifact.schema.ts";
 import type * as Crypto from "effect/Crypto";
@@ -24,8 +24,7 @@ const artifactIdTextEncoder = new TextEncoder();
  * ```ts
  * import * as BunCrypto from "@effect/platform-bun/BunCrypto"
  * import { deriveArtifactId } from "@beep/file-processing/Artifact"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const id = yield* deriveArtifactId(["artifact:parent", "children/message.txt"])
  *   return id.startsWith("artifact:")

@@ -42,26 +42,23 @@ import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertSome, assertTrue } from "@effect/vitest/utils";
-import {
-  Context,
-  Deferred,
-  Effect,
-  Equal,
-  FileSystem,
-  flow,
-  Layer,
-  Order,
-  Path,
-  pipe,
-  Result,
-  Sink,
-  Stream,
-} from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Context from "effect/Context";
+import * as Deferred from "effect/Deferred";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
 import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
+import { flow, pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Sink from "effect/Sink";
+import * as Stream from "effect/Stream";
 
 const decodeUnknownSafeMetadataKey = S.decodeUnknownEffect(SafeMetadataKey);
 const encoder = new TextEncoder();

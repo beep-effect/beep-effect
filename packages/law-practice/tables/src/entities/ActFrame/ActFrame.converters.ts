@@ -6,7 +6,7 @@
  */
 
 import { ActFrame } from "@beep/law-practice-domain/entities/ActFrame";
-import { Result } from "effect";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import type { Table } from "./ActFrame.table.ts";
 
@@ -68,8 +68,7 @@ const encodeActFrame = S.encodeResult(ActFrame);
  *   fromActFrameRow,
  *   toActFrameInsert
  * } from "@beep/law-practice-tables/entities/ActFrame"
- * import { Result } from "effect"
- *
+ * import * as Result from "effect/Result";
  * const insert = Result.flatMap(fromActFrameRow({}), toActFrameInsert)
  * console.log(Result.isFailure(insert)) // true
  * ```
@@ -104,8 +103,7 @@ export const toActFrameInsert = (frame: ActFrame): Result.Result<ActFrameInsert,
  *
  * ```ts
  * import { fromActFrameRow } from "@beep/law-practice-tables/entities/ActFrame"
- * import { Result } from "effect"
- *
+ * import * as Result from "effect/Result";
  * console.log(Result.isFailure(fromActFrameRow({}))) // true
  * ```
  *

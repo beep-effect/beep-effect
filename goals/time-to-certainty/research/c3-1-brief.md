@@ -260,7 +260,7 @@ the lane-written code; fix all of them without changing behaviour or any `packag
    so `bun run beep lint schema-first` passes; then run `bun run beep lint schema-first --write`.
 6. **JSDoc ratchet `no-root-package-import` (+1)**: every JSDoc example in the new and changed
    files must import per module (`import * as Effect from "effect/Effect"`, `effect/Schema`,
-   …), never `from "effect"`; fix `PackageScriptsPolicy.ts:171`, `PackageScripts.schemas.ts:283`
+   …), never `from "<legacy-effect-barrel>"`; fix `PackageScriptsPolicy.ts:171`, `PackageScripts.schemas.ts:283`
    and any other example in the touched files, then run `bun run beep quality jsdoc-inventory`
    and `bun run beep quality jsdoc-ratchet --inventory standards/jsdoc-documentation.inventory.jsonc`
    until it passes.

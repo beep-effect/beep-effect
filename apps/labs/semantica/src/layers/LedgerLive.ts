@@ -1,8 +1,12 @@
 import { $SemanticaId } from "@beep/identity/packages";
 import * as Pglite from "@beep/pglite";
-import { Clock, Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
+import * as Clock from "effect/Clock";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as SqlClient from "effect/sql/SqlClient";
@@ -240,7 +244,7 @@ const makeLedger = Effect.fn("Ledger.make")(function* (runId: RunId) {
  * ```ts
  * import { LedgerLive } from "@/layers/LedgerLive"
  * import { RunId } from "@/schema/Ids"
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer";
  * import * as Str from "effect/String"
  *
  * const layer = LedgerLive({

@@ -17,10 +17,13 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { Context, DateTime, Effect, Order } from "effect";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import { constFalse } from "effect/Function";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { appendContainedFileString, readContainedFileStringNoFollow } from "../../../internal/cli/FsGuards.ts";
@@ -36,7 +39,8 @@ import {
   ProofReuseHit,
   ProofReuseMiss,
 } from "./ProofFact.ts";
-import type { FileSystem, Path } from "effect";
+import type * as FileSystem from "effect/FileSystem";
+import type * as Path from "effect/Path";
 import type { ProofFact, ProofInputDigest, ProofReuseDecision } from "./ProofFact.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/ProofLedger");
@@ -305,8 +309,7 @@ export interface ProofLedgerShape {
  *
  * ```ts
  * import { ProofLedger } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(ProofLedger.make("/repo"))) // true
  * ```
  *

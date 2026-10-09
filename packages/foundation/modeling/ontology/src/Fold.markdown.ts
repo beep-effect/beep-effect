@@ -12,9 +12,8 @@
 import { CoreVocab, contractOption } from "@beep/identity";
 import { $OntologyId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import { flow, pipe } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import { dual, flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -274,7 +273,7 @@ const toMarkdownImpl = (ontology: AssembledOntology, options: MarkdownOptionsInp
  * ```ts
  * import { make } from "@beep/identity"
  * import { fold, toMarkdown } from "@beep/ontology"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const $I = make("beep", { authority: "https://ns.beep.sh/", prefix: "beep" }).$BeepId.create("patent")

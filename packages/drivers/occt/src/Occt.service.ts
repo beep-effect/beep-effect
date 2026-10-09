@@ -9,7 +9,12 @@
 import { createRequire } from "node:module";
 import { $OcctId } from "@beep/identity/packages";
 import { A } from "@beep/utils";
-import { Context, Effect, FileSystem, Layer, Path, pipe } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as replicad from "replicad";
 import opencascade from "replicad-opencascadejs";
@@ -33,8 +38,7 @@ const decodePackageVersion = S.decodeUnknownEffect(PackageVersion);
  *
  * ```ts
  * import type { OcctShape } from "@beep/occt"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const service: OcctShape = {
  *   kernel: Effect.die("not implemented"),
  *   project: () => Effect.die("not implemented"),

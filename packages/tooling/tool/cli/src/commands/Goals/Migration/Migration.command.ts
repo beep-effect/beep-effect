@@ -6,8 +6,14 @@
  */
 
 import { A, O, pipe, Str } from "@beep/utils";
-import { Console, DateTime, Effect, FileSystem, Layer, Path, Result } from "effect";
+import * as Console from "effect/Console";
 import { Argument, Command, Flag } from "effect/cli";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { failWithReportedExit } from "../../../internal/cli/ExitCodeError.ts";
 import { writeContainedFileString } from "../../../internal/cli/FsGuards.ts";

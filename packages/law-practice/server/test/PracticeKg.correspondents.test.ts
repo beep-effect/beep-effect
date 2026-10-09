@@ -1,6 +1,8 @@
+import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
 import {
   buildPracticeKgCorrespondentTables,
   isPracticeKgPracticeAddress,
+  normalizePracticeKgMessageId,
   PracticeKgContact,
   PracticeKgContactsError,
   PracticeKgCorrespondentTablesInput,
@@ -11,13 +13,19 @@ import {
   parsePracticeKgCorrespondentAddress,
   readPracticeKgContacts,
   readPracticeKgEmailMessages,
+  withDuckDb,
 } from "@beep/law-practice-server";
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
-import { assertFalse, assertTrue } from "@effect/vitest/utils";
-import { Effect, FileSystem, Layer, Path, pipe } from "effect";
+import { assertFalse, assertNone, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 
 const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
@@ -135,6 +143,47 @@ describe("practice KG correspondents", () => {
       ["shared@example.com", "c_aaaaaaaaaaaa", true],
       ["shared@example.com", "c_bbbbbbbbbbbb", false],
     ]);
+  });
+
+  it("counts a filed message and its archive copy once, by Message-ID", () => {
+    const filed = PracticeKgEmailMessage.make({
+      createdAt: "2026-02-01T10:00:00Z",
+      digest: "sha256:f1",
+      messageId: "1@example.com",
+      participants: [participant("pat@example.com", "from"), participant("sam@other.test", "to")],
+    });
+    // The archive copy of the same message, and one more message that has no Message-ID.
+    const archived = PracticeKgEmailMessage.make({
+      createdAt: "2026-02-01T10:00:00.000Z",
+      digest: "mail:1@example.com",
+      messageId: " <1@example.com> ",
+      participants: [participant("pat@example.com", "from"), participant("sam@other.test", "to")],
+    });
+    const other = PracticeKgEmailMessage.make({
+      createdAt: null,
+      digest: "sha256:f2",
+      participants: [participant("pat@example.com", "to")],
+    });
+    const tables = buildPracticeKgCorrespondentTables(
+      PracticeKgCorrespondentTablesInput.make({
+        attributions: [
+          attribution("sha256:f1", "11111.20001"),
+          attribution("mail:1@example.com", "11111.20001"),
+          attribution("sha256:f2", "11111.20001"),
+        ],
+        contacts: [],
+        messages: [filed, archived, other],
+        practiceDomains: [],
+      })
+    );
+    expect(
+      A.map(tables.correspondents, (row) => [row.address, row.messageCount, row.fromCount, row.toCount])
+    ).toStrictEqual([
+      ["pat@example.com", 2, 1, 1],
+      ["sam@other.test", 1, 0, 1],
+    ]);
+    expect(O.getOrNull(normalizePracticeKgMessageId(" <1@example.com> "))).toBe("1@example.com");
+    assertNone(normalizePracticeKgMessageId(" <> "));
   });
 
   it("treats one contact listing an address twice as one owner, a role mailbox if either listing says so", () => {
@@ -261,6 +310,60 @@ describe("practice KG correspondents", () => {
 
         const missing = yield* Effect.flip(readPracticeKgContacts(path.join(directory, "missing.jsonl")));
         expect(missing.lineNumber).toBeUndefined();
+      })
+    );
+
+    it.effect(
+      "reads the Message-ID of a filed email whatever case its header name is written in",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const directory = yield* fs.makeTempDirectoryScoped({ prefix: "practice-kg-mail-headers-" });
+        const databasePath = path.join(directory, "practice.duckdb");
+        const extractRoot = path.join(directory, "extract");
+        yield* fs.makeDirectory(path.join(extractRoot, "metadata"), { recursive: true });
+        // Six filed emails: three spellings of the header name, one unusable value, one message without the header,
+        // and one whose list of values opens with empty entries.
+        const metadata: ReadonlyArray<readonly [string, Record<string, unknown>]> = [
+          ["a", { "Message-From": "pat@example.com", "Message:Raw-Header:Message-Id": "<a@example.com>" }],
+          ["b", { "MESSAGE:RAW-HEADER:MESSAGE-ID": [" <b@example.com> "], "Message-From": "pat@example.com" }],
+          ["c", { "Message-From": "pat@example.com", "Message:Raw-Header:Message-ID": "<c@example.com>" }],
+          ["d", { "Message-From": "pat@example.com", "Message:Raw-Header:Message-ID": 7 }],
+          ["e", { "Message-From": "pat@example.com" }],
+          ["f", { "Message-From": "pat@example.com", "Message:Raw-Header:Message-ID": ["", " ", "<f@example.com>"] }],
+        ];
+        yield* Effect.forEach(metadata, ([name, fields]) =>
+          Effect.flatMap(encodeJson(fields), (json) =>
+            fs.writeFileString(path.join(extractRoot, "metadata", `operation:op-${name}.json`), json)
+          )
+        );
+        const sourceLines = yield* Effect.forEach(metadata, ([name]) =>
+          encodeJson({ digest: `sha256:${name}`, operationId: `operation:op-${name}` })
+        );
+        const sourcesPath = path.join(extractRoot, "sources.jsonl");
+        yield* fs.writeFileString(sourcesPath, `${A.join(sourceLines, "\n")}\n`);
+        yield* Effect.gen(function* () {
+          const db = yield* DuckDb;
+          yield* db.run("CREATE TABLE documents (digest VARCHAR PRIMARY KEY, effective_name VARCHAR NOT NULL)");
+          yield* Effect.forEach(metadata, ([name]) =>
+            db.run("INSERT INTO documents VALUES ($1, $2)", [`sha256:${name}`, `${name}.eml`])
+          );
+        }).pipe(withDuckDb(DuckDbConnectionOptions.make({ databasePath })));
+
+        const messages = yield* readPracticeKgEmailMessages(
+          PracticeKgEmailMessagesInput.make({
+            databasePath,
+            sourceSpecs: [{ sourcesPath, textGlob: path.join(extractRoot, "text", "*.txt") }],
+          })
+        );
+        expect(A.map(messages, (message) => [message.digest, message.messageId])).toStrictEqual([
+          ["sha256:a", "a@example.com"],
+          ["sha256:b", "b@example.com"],
+          ["sha256:c", "c@example.com"],
+          ["sha256:d", undefined],
+          ["sha256:e", undefined],
+          ["sha256:f", "f@example.com"],
+        ]);
       })
     );
 

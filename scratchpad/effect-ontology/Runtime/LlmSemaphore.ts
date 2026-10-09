@@ -11,7 +11,11 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { Context, Duration, Effect, Layer, Semaphore } from "effect";
+import * as Context from "effect/Context";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Semaphore from "effect/Semaphore";
 import * as S from "effect/Schema";
 import { ErrorMessage } from "../Domain/Error/Base.ts";
 import { ConfigService } from "../Service/Config.ts";
@@ -24,7 +28,7 @@ const $I = $ScratchpadId.create("effect-ontology/Runtime/LlmSemaphore");
  * **Example** (Construct a permit-timeout failure)
  *
  * ```ts
- * import { Duration } from "effect"
+ * import * as Duration from "effect/Duration";
  * import { SemaphoreTimeoutError } from "@effect-ontology/Runtime/LlmSemaphore"
  *
  * const error = SemaphoreTimeoutError.make({
@@ -63,7 +67,8 @@ export class SemaphoreTimeoutError extends S.TaggedError<SemaphoreTimeoutError>(
  * **Example** (Wrap a dummy LLM call with a permit)
  *
  * ```ts
- * import { Effect, Layer } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * import { LlmSemaphoreService } from "@effect-ontology/Runtime/LlmSemaphore"
  * import { ConfigService, DEFAULT_CONFIG } from "@effect-ontology/Service/Config"
  *

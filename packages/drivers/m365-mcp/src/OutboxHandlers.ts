@@ -36,10 +36,16 @@ import {
   M365SendDraftMessageRequest,
   M365UpdateEventRequest,
 } from "@beep/m365";
-import { Crypto, DateTime, Effect, Match, pipe, Result, Struct } from "effect";
 import * as A from "effect/Array";
+import * as Crypto from "effect/Crypto";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Struct from "effect/Struct";
 import {
   OUTBOX_DEFAULT_MAX_ATTACHMENT_BYTES,
   OUTBOX_DEFAULT_MAX_ATTACHMENTS,
@@ -202,8 +208,7 @@ export class OutboxHandlerSettings extends S.Class<OutboxHandlerSettings>($I`Out
  *
  * ```ts
  * import { makeOutboxToolkitHandlers, OutboxHandlerSettings } from "@beep/m365-mcp/OutboxHandlers"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * const layer = makeOutboxToolkitHandlers(OutboxHandlerSettings.make({ mailbox: "mailbox@example.test" }))
  * console.log(Layer.isLayer(layer))
  * // true

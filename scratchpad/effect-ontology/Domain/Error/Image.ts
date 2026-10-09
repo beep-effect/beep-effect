@@ -11,7 +11,8 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import { URLStr } from "@beep/schema";
-import { Duration, Effect } from "effect";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { ErrorMessage, Milliseconds, OptionalErrorCause, OptionalHttpStatusCode } from "./Base.ts";
 

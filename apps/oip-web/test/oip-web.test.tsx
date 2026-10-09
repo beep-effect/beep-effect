@@ -6,8 +6,12 @@ import { A } from "@beep/utils";
 import { beforeEach, describe, expect } from "@effect/vitest";
 import { assertFalse, assertTrue, strictEqual } from "@effect/vitest/utils";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { Clock, ConfigProvider, Effect, Exit, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Clock from "effect/Clock";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import { pipe } from "effect/Function";
 import { FetchHttpClient } from "effect/http";
 import * as Logger from "effect/Logger";
 import * as O from "effect/Option";
@@ -21,7 +25,7 @@ import { contactRequestResponseWithSubmit } from "@/app/api/contact/ContactRoute
 import { POST } from "@/app/api/contact/route";
 import { GET as llmsTextRoute } from "@/app/llms.txt/route";
 import oipManifest from "@/app/manifest";
-import Home from "@/app/page";
+import Home, { generateMetadata } from "@/app/page";
 import oipRobots from "@/app/robots";
 import oipSitemap from "@/app/sitemap";
 import { BackToTop } from "@/components/BackToTop";
@@ -210,6 +214,16 @@ describe("@beep/oip-web", { concurrent: false }, () => {
         return value;
       });
   });
+
+  it("generates home metadata from the published site content", () =>
+    generateMetadata().then((metadata) => {
+      expect(metadata).toMatchObject({
+        title: oipSiteContent.metadata.title,
+        description: oipSiteContent.metadata.description,
+        alternates: { canonical: "/" },
+        openGraph: { url: oipSiteContent.metadata.siteUrl },
+      });
+    }));
 
   it("publishes install and indexing metadata for the canonical OIP URL", () => {
     expect(oipManifest()).toMatchObject({ name: "OIP - Oppold IP Law", start_url: "/" });

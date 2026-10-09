@@ -17,7 +17,7 @@ import { DetectionResult, FileProcessingOperationError } from "@beep/file-proces
 import { classifyFormatFromExtension, FileProcessingEngineDescriptor } from "@beep/file-processing/Strategy";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { A } from "@beep/utils";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import type {
   DetectFileOperation,
@@ -64,8 +64,7 @@ const testIdentifierHex = "3a6eb0790f39ac87c94f3856b2dd2c5d110e6811602261a9a923d
  *
  * ```ts import.meta.vitest name="Decode synthetic identifiers"
  * import { decodeTestOperationIdentifiers } from "@beep/file-processing/test"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const identifiers = yield* decodeTestOperationIdentifiers()
  *   return identifiers.digest.startsWith("sha256:")

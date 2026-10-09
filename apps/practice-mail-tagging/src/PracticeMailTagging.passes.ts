@@ -15,9 +15,11 @@ import {
   UndoMailTaggingRequest,
 } from "@beep/law-practice-use-cases/MailTagging";
 import { Fn, LiteralKit } from "@beep/schema";
-import { Context, Effect, Layer } from "effect";
+import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { PracticeMailTaggingError } from "./PracticeMailTagging.errors.ts";
@@ -196,7 +198,8 @@ export const makeMailTaggingPasses: {
   const inFreshPass =
     (runId: TaggingRunId) =>
     <A>(use: Effect.Effect<A, MailTaggingPassFailure, MailTaggingJob | MailTaggingUndo>) =>
-      Layer.build(Layer.fresh(passLayer(runId))).pipe(
+      Layer.fresh(passLayer(runId)).pipe(
+        Layer.build,
         Effect.flatMap((services) => Effect.provide(use, services)),
         Effect.scoped,
         Effect.mapError(PracticeMailTaggingError.fromPass)

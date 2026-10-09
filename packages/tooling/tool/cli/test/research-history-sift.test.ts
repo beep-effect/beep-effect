@@ -4,9 +4,13 @@ import { discoverProfiles, historySiftImpl, VAULT_DIRS } from "@beep/repo-cli/te
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { ConfigProvider, Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { FetchHttpClient } from "effect/http";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -61,32 +65,31 @@ const seedHistory = Effect.fn("ResearchHistorySiftTest.seedHistory")(function* (
   historyPath: string,
   rows: ReadonlyArray<HistoryRow>
 ) {
-  yield* Effect.scoped(
-    Layer.build(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: ":memory:" }))).pipe(
-      Effect.flatMap((context) =>
-        Effect.gen(function* () {
-          const db = yield* DuckDb;
-          yield* db.runMany([
-            "INSTALL sqlite",
-            "LOAD sqlite",
-            `ATTACH '${historyPath}' AS history (TYPE sqlite)`,
-            "CREATE TABLE history.urls (url VARCHAR, title VARCHAR, visit_count BIGINT, last_visit_time BIGINT)",
-          ]);
-          yield* Effect.forEach(
-            rows,
-            (row) =>
-              db.run("INSERT INTO history.urls VALUES (?, ?, ?, ?)", [
-                row.url,
-                row.title,
-                row.visitCount,
-                row.lastVisitTime,
-              ]),
-            { discard: true }
-          );
-          yield* db.run("DETACH history");
-        }).pipe(Effect.provide(context))
-      )
-    )
+  yield* Layer.build(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: ":memory:" }))).pipe(
+    Effect.flatMap((context) =>
+      Effect.gen(function* () {
+        const db = yield* DuckDb;
+        yield* db.runMany([
+          "INSTALL sqlite",
+          "LOAD sqlite",
+          `ATTACH '${historyPath}' AS history (TYPE sqlite)`,
+          "CREATE TABLE history.urls (url VARCHAR, title VARCHAR, visit_count BIGINT, last_visit_time BIGINT)",
+        ]);
+        yield* Effect.forEach(
+          rows,
+          (row) =>
+            db.run("INSERT INTO history.urls VALUES (?, ?, ?, ?)", [
+              row.url,
+              row.title,
+              row.visitCount,
+              row.lastVisitTime,
+            ]),
+          { discard: true }
+        );
+        yield* db.run("DETACH history");
+      }).pipe(Effect.provide(context))
+    ),
+    Effect.scoped
   );
 });
 

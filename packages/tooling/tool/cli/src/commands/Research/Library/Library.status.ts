@@ -1,10 +1,14 @@
-/** Explicit research library accounting.
+/**
+ * Explicit research library accounting.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
 
-import { Console, Effect } from "effect";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as R from "effect/Record";
 import { libraryEffectiveCaptures, libraryEffectiveCategory } from "./Library.evidence.ts";
 import { loadCatalog } from "./Library.store.ts";
 
@@ -17,7 +21,6 @@ import { loadCatalog } from "./Library.store.ts";
  * ```
  *
  * @category use-cases
- *
  * @since 0.0.0
  */
 export const libraryStatus = Effect.fn("Research.Library.status")(function* (root: string) {
@@ -43,7 +46,7 @@ export const libraryStatus = Effect.fn("Research.Library.status")(function* (roo
   }
   const format = (counts: Record<string, number>) =>
     A.join(
-      A.map(Object.entries(counts), ([category, count]) => `${category}=${count}`),
+      A.map(R.toEntries(counts), ([category, count]) => `${category}=${count}`),
       " "
     );
   yield* Console.log(

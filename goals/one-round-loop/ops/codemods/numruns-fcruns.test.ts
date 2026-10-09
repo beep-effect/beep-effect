@@ -1,7 +1,10 @@
 import { TSMorphServiceLive } from "@beep/repo-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, layer } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Path } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
 import { runNumRunsFcRunsCodemod } from "./numruns-fcruns.codemod.ts";
 
 const TestLayer = TSMorphServiceLive.pipe(Layer.provideMerge(NodeServices.layer));

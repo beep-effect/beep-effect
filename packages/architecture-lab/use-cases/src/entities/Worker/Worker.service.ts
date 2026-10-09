@@ -8,7 +8,9 @@
 
 import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker";
 import { A } from "@beep/utils";
-import { Effect, Match, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import {
   WORKER_ACTION_UNAVAILABLE_REASON,
@@ -84,7 +86,7 @@ export const toWorkerActionError: (error: WorkerRepositoryError) => WorkerAction
  *   type WorkerRepositoryShape
  * } from "@beep/architecture-lab-use-cases/entities/Worker/server"
  * import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * import * as Result from "effect/Result"
  * import * as S from "effect/Schema"

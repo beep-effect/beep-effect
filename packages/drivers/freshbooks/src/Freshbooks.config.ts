@@ -14,10 +14,12 @@
 import { $FreshbooksId } from "@beep/identity";
 import { URLStr } from "@beep/schema";
 import { Str } from "@beep/utils";
-import { Effect, identity, SchemaTransformation } from "effect";
+import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 
 const $I = $FreshbooksId.create("Freshbooks.config");
 const normalizeFreshbooksBaseUrl = Str.replace(/\/+$/, "");
@@ -268,8 +270,7 @@ const freshbooksConfigInputHeadersDefault = R.empty();
  *
  * ```ts
  * import { FreshbooksConfigInput } from "@beep/freshbooks"
- * import { Redacted } from "effect"
- *
+ * import * as Redacted from "effect/Redacted";
  * const config = FreshbooksConfigInput.make({
  *   clientId: "dev-client-id",
  *   clientSecret: Redacted.make("dev-client-secret"),

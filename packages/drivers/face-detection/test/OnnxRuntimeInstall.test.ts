@@ -6,8 +6,13 @@ import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import * as NodeStream from "@effect/platform-node-shared/NodeStream";
 import { expect } from "@effect/vitest";
-import { Cause, Effect, FileSystem, Match, Order, Path } from "effect";
 import * as A from "effect/Array";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Match from "effect/Match";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { strToU8, zipSync } from "fflate";
@@ -155,7 +160,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("ONNX Runtime's patched 
     Effect.fnUntraced(function* () {
       const { fs, temp, destination, install } = yield* fixture;
       const error = yield* install(zipSync({ other: binary })).pipe(
-        Effect.catchCause((cause) => Effect.succeed(Cause.pretty(cause)))
+        Effect.catchCause((cause) => cause.pipe(Cause.pretty, Effect.succeed))
       );
       expect(error).toContain(`Failed to find ${entry}`);
       expect(yield* fs.exists(destination)).toBe(false);
@@ -168,7 +173,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("ONNX Runtime's patched 
     Effect.fnUntraced(function* () {
       const { fs, temp, destination, install } = yield* fixture;
       const error = yield* install(strToU8("not a ZIP archive")).pipe(
-        Effect.catchCause((cause) => Effect.succeed(Cause.pretty(cause)))
+        Effect.catchCause((cause) => cause.pipe(Cause.pretty, Effect.succeed))
       );
       expect(error).toContain("Failed to open NuGet package");
       expect(yield* fs.exists(destination)).toBe(false);

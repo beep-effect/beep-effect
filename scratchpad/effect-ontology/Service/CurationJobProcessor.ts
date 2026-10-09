@@ -13,8 +13,15 @@
 
 import type { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
-import type { Fiber, Scope } from "effect";
-import { Clock, Context, Duration, Effect, Layer, Match, Schedule } from "effect";
+import type * as Fiber from "effect/Fiber";
+import type * as Scope from "effect/Scope";
+import * as Clock from "effect/Clock";
+import * as Context from "effect/Context";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
+import * as Schedule from "effect/Schedule";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts";
@@ -85,7 +92,7 @@ type JobMeta = { readonly id: string; readonly attempts: number };
  * **Example** (Compose job processing against Default)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { CurationJobProcessor } from "@effect-ontology/Service/CurationJobProcessor"
  *
  * const program = Effect.gen(function* () {

@@ -89,8 +89,7 @@ export class CorpusEnrichmentRecord extends S.Class<CorpusEnrichmentRecord>($I`C
  * ```ts
  * import * as S from "effect/Schema"
  * import { CorpusEnrichmentRecord, encodeCorpusEnrichmentRecordJson } from "@beep/repo-cli/commands/Corpus"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const record = CorpusEnrichmentRecord.make({
  *   candidate: "10772255",
  *   candidateKind: "patent",
@@ -153,8 +152,7 @@ export class CorpusEnrichSummary extends S.Class<CorpusEnrichSummary>($I`CorpusE
  * ```ts
  * import * as S from "effect/Schema"
  * import { CorpusEnrichSummary, encodeCorpusEnrichSummaryJson } from "@beep/repo-cli/commands/Corpus"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const summary = CorpusEnrichSummary.make({
  *   applicationCandidates: S.Natural.make(0),
  *   failedLookups: S.Natural.make(0),

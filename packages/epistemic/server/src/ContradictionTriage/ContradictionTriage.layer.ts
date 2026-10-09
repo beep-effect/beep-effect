@@ -36,9 +36,14 @@ import {
 } from "@beep/file-processing/SourceText";
 import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability";
 import { VerifyTextAnchorInput, verifyTextAnchor } from "@beep/provenance/VerifiedTextAnchor";
-import { Cause, Crypto, Effect, Layer, Match, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Cause from "effect/Cause";
+import * as Crypto from "effect/Crypto";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { makeDrizzleContradictionTriageRepository } from "./ContradictionTriage.repo.ts";
@@ -377,8 +382,7 @@ const makeContradictionTriageService = Effect.fnUntraced(function* () {
  *
  * ```ts
  * import { ContradictionTriageRepositoryDrizzle } from "@beep/epistemic-server/layer"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(ContradictionTriageRepositoryDrizzle)) // true
  * ```
  *
@@ -397,8 +401,7 @@ export const ContradictionTriageRepositoryDrizzle = Layer.effect(
  *
  * ```ts
  * import { ContradictionTriageServiceLive } from "@beep/epistemic-server/layer"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(ContradictionTriageServiceLive)) // true
  * ```
  *
@@ -417,8 +420,7 @@ export const ContradictionTriageServiceLive = Layer.effect(
  *
  * ```ts
  * import { ContradictionTriageRepositoryFixture } from "@beep/epistemic-server/layer"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(ContradictionTriageRepositoryFixture)) // true
  * ```
  *

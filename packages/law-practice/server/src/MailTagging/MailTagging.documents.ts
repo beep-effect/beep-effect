@@ -18,8 +18,10 @@ import {
   MailTaggingPortError,
 } from "@beep/law-practice-use-cases/MailTagging";
 import * as O from "@beep/utils/Option";
-import { Effect, Layer, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ProviderCallMeter, ProviderCalls } from "./MailTagging.metering.ts";
@@ -119,7 +121,9 @@ const portFailure = (error: BoxError): MailTaggingPortError =>
 
 // A taken name is an answer; every other driver failure stays a failure.
 const refused = (error: BoxError): Effect.Effect<DocumentUploadResult, MailTaggingPortError> =>
-  isNameTaken(error) && !isThrottled(error) ? Effect.succeed(nameTaken(error)) : Effect.fail(portFailure(error));
+  isNameTaken(error) && !isThrottled(error)
+    ? error.pipe(nameTaken, Effect.succeed)
+    : error.pipe(portFailure, Effect.fail);
 
 const payloadOf = (request: UploadDocumentRequest): BoxUploadFilePayload => ({
   requestBody: {

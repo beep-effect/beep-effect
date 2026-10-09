@@ -11,10 +11,16 @@ import { findRepoRoot } from "@beep/repo-utils/Root";
 import { isExcludedTypeScriptSourcePath, toPosixPath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
 import { LiteralKit } from "@beep/schema";
 import { A, Str, thunkEmptyStr } from "@beep/utils";
-import { Console, Effect, FileSystem, Order, Path, pipe, SchemaGetter } from "effect";
+import * as Console from "effect/Console";
 import { Command, Flag } from "effect/cli";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
+import * as SchemaGetter from "effect/SchemaGetter";
 import { Node, Project, SyntaxKind } from "ts-morph";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { optionalProp } from "../../internal/cli/OptionRecord.ts";
@@ -608,8 +614,7 @@ const collectCatalogEntriesFromSourceFile = (
  *
  * ```ts
  * import { generateSchemaCatalogDocument } from "@beep/repo-cli/commands/Lint"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.succeed(generateSchemaCatalogDocument)
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -664,8 +669,7 @@ export const generateSchemaCatalogDocument = Effect.fn("SchemaCatalog.generateDo
  *
  * ```ts
  * import { renderSchemaCatalogDocument } from "@beep/repo-cli/commands/Lint"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.succeed(renderSchemaCatalogDocument)
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -689,8 +693,7 @@ export const renderSchemaCatalogDocument = Effect.fn("SchemaCatalog.renderDocume
  *
  * ```ts
  * import { generateSchemaCatalogText } from "@beep/repo-cli/commands/Lint"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.succeed(generateSchemaCatalogText)
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -745,8 +748,7 @@ const checkSchemaCatalog = Effect.fn("SchemaCatalog.check")(function* (content: 
  *
  * ```ts
  * import { runSchemaCatalog } from "@beep/repo-cli/commands/Lint"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.succeed(runSchemaCatalog)
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -784,8 +786,7 @@ export const runSchemaCatalog = Effect.fn("SchemaCatalog.run")(function* (option
  * ```ts
  * import { lintSchemaCatalogCommand } from "@beep/repo-cli/commands/Lint"
  * import { Command } from "effect/cli"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const run = Command.run(lintSchemaCatalogCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true
  * ```

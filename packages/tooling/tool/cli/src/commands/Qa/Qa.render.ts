@@ -10,8 +10,9 @@
  */
 
 import { A, O, Str, thunkEmptyReadonlyArray, thunkEmptyStr } from "@beep/utils";
-import { HashMap, Number as N, pipe } from "effect";
-import { dual } from "effect/Function";
+import { dual, pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
+import * as N from "effect/Number";
 import { isRequiredSeverity } from "./Inventory.schemas.ts";
 import type { ActionEvent, CaptureArtifact, ExtractionPlan, SessionManifest } from "@beep/qa-capture";
 import type { QaFinding, QaInventory } from "./Inventory.schemas.ts";

@@ -12,9 +12,11 @@ import { it } from "@beep/test-runner";
 import { afterEach, describe, expect } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { Effect, pipe, Result } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 
 afterEach(cleanup);
 const chord = (event: KeyboardEvent, platform: "apple" | "windows-linux") =>

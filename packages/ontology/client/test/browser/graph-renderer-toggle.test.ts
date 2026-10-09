@@ -24,7 +24,7 @@ import {
 } from "@beep/ontology-use-cases/aggregates/Session";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import { AtomRegistry } from "effect/reactivity";
 import { vi } from "vitest";

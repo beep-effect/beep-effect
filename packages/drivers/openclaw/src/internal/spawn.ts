@@ -6,9 +6,11 @@
  */
 
 import { O } from "@beep/utils";
-import { Duration, Effect, Stream } from "effect";
 import * as A from "effect/Array";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
 import { ChildProcess } from "effect/process";
+import * as Stream from "effect/Stream";
 import { OpenclawCommandSpawnError } from "../Openclaw.errors.ts";
 import { OpenclawProcessResult } from "../Openclaw.models.ts";
 import type { ChildProcessSpawner } from "effect/process";

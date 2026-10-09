@@ -2,10 +2,17 @@ import { Confidence } from "@beep/epistemic-domain";
 import { $SemanticaId } from "@beep/identity/packages";
 import { TextAnchor, TextAnchorFields, TextAnchorVerificationReceipt, TextAnchorWidthCheck } from "@beep/provenance";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
-import { Equal, HashMap, HashSet, identity, Option, Order, Result, Tuple } from "effect";
 import * as A from "effect/Array";
+import * as Equal from "effect/Equal";
+import { identity } from "effect/Function";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
+import * as Option from "effect/Option";
+import * as Order from "effect/Order";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as Tuple from "effect/Tuple";
 import { DegradedKind } from "@/schema/Degraded";
 import { sha256CanonicalSync } from "@/schema/Digest";
 import { BatchId, ChunkId, ClaimId, DocumentId } from "@/schema/Ids";
@@ -244,8 +251,9 @@ export type LossDeclaration = typeof LossDeclaration.Type;
  *
  * ```ts
  * import { declaredLosses } from "@/schema/Evidence"
- * import { HashMap, HashSet, Option } from "effect"
- *
+ * import * as HashMap from "effect/HashMap";
+ * import * as HashSet from "effect/HashSet";
+ * import * as Option from "effect/Option";
  * const losses = Option.getOrThrow(HashMap.get(declaredLosses, "pattern-wink"))
  * console.log(HashSet.size(losses)) // 2
  * ```

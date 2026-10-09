@@ -4,8 +4,9 @@ import * as SchemaUtils from "@beep/schema/SchemaUtils/index";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertInstanceOf, deepStrictEqual } from "@effect/vitest/utils";
-import { Effect, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const Status = LiteralKit([1, 20n, true, false, "hello"]);

@@ -5,9 +5,10 @@
  */
 
 import { $SchemaId } from "@beep/identity/packages";
-import { Effect, Tuple } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+import * as Tuple from "effect/Tuple";
 import { LiteralKit } from "../LiteralKit/index.ts";
 import { RequirementStrength } from "./Conformance.invariant.schema.ts";
 import { SpecificationReference } from "./Conformance.source.schema.ts";
@@ -63,7 +64,7 @@ class IndeterminateIssue extends S.Class<IndeterminateIssue>($I`IndeterminateIss
  * **Example** (Decode a violation)
  *
  * ```ts import.meta.vitest name="Decode a violation"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { Issue } from "@beep/schema/Conformance"
  *
@@ -214,7 +215,7 @@ class IndeterminateReport extends S.Class<IndeterminateReport>($I`IndeterminateR
  * **Example** (Decode a conforming report)
  *
  * ```ts import.meta.vitest name="Decode a conforming report"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { Report } from "@beep/schema/Conformance"
  *

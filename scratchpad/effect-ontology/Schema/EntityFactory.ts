@@ -5,8 +5,7 @@ import { EvidenceSpan } from "../Domain/Model/Entity.ts";
 import type { ClassDefinition, PropertyDefinition } from "../Domain/Model/Ontology.ts";
 import { dual2 } from "../Utils/Dual.ts";
 import { extractLocalNameFromIri, makeLocalNameSchema } from "../Utils/Iri.ts";
-import { Effect } from "effect";
-
+import * as Effect from "effect/Effect";
 /**
  * Creates Effect Schema for entity extraction (Stage 1)
  *

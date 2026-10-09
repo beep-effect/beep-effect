@@ -6,8 +6,9 @@
  */
 import { $DockId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Effect, Tuple } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+import * as Tuple from "effect/Tuple";
 import { AnchoredBox } from "./AnchoredBox.ts";
 import { CommandId, GroupId, PanelId, RendererKey, SplitId, SplitRatio } from "./Dock.ids.ts";
 import { GroupPatch, Panel, PanelPatch } from "./Dock.models.ts";

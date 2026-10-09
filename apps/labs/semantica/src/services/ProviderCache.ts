@@ -1,6 +1,6 @@
 import { $SemanticaId } from "@beep/identity/packages";
-import { Context } from "effect";
-import type { Effect } from "effect";
+import * as Context from "effect/Context";
+import type * as Effect from "effect/Effect";
 import type * as O from "effect/Option";
 import type { ProviderCacheCorrupt } from "@/schema/Errors";
 import type { ProviderCacheEntry, ProviderCacheKey } from "@/schema/ProviderCache";
@@ -25,8 +25,7 @@ interface ProviderCacheShape {
  *
  * ```ts
  * import { ProviderCache } from "@/services/ProviderCache"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(ProviderCache)) // true
  * ```
  *

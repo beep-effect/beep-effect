@@ -42,13 +42,19 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, O, Str } from "@beep/utils";
-import { Console, Context, DateTime, Duration, Effect, Order, pipe, Schedule } from "effect";
+import * as Console from "effect/Console";
+import * as Context from "effect/Context";
 import { Command, Flag } from "effect/cli";
-import { dual } from "effect/Function";
+import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
+import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as Random from "effect/Random";
+import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import { detectGithubJobShapeClass, GithubJobRecord, GithubJobStepRecord } from "../../internal/github/index.ts";
@@ -847,7 +853,9 @@ const ghApiTransientBaseDelay = (error: CiCommandError | CiGhApiTransientExit): 
 const ghApiTransientRetrySchedule: Schedule.Schedule<Duration.Duration, CiCommandError | CiGhApiTransientExit> =
   Schedule.fromStepWithMetadata(
     Effect.succeed((meta: Schedule.InputMetadata<CiCommandError | CiGhApiTransientExit>) => {
-      const delay = Duration.millis(Duration.toMillis(ghApiTransientBaseDelay(meta.input)) * 2 ** (meta.attempt - 1));
+      const delay = Duration.millis(
+        meta.input.pipe(ghApiTransientBaseDelay, Duration.toMillis) * 2 ** (meta.attempt - 1)
+      );
       return Effect.succeed<[Duration.Duration, Duration.Duration]>([delay, delay]);
     })
   ).pipe(
@@ -894,7 +902,7 @@ const ghApiJsonAttempt = Effect.fn("Ci.laneTimingsGhApiAttempt")(function* (
  *
  * ```ts
  * import { ghApiJson } from "@beep/repo-cli/commands/Ci"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const program = ghApiJson(".", "repos/{owner}/{repo}/actions/runs/1", O.some("{id}"))

@@ -16,7 +16,7 @@ import { LiteralKit } from "@beep/schema";
 import { GitObjectId } from "@beep/schema/Conformance";
 import { IsoDateTimeString } from "@beep/skill-contract";
 import { A, Str } from "@beep/utils";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { ProcessPid } from "../../internal/repo-run/ProcessTable.ts";
 import { PosInt } from "../../internal/schema/PosInt.ts";

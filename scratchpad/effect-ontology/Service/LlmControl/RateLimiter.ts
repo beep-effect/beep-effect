@@ -15,7 +15,14 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
-import { Clock, Context, Duration, Effect, Layer, Number as N, Ref, Semaphore } from "effect";
+import * as Clock from "effect/Clock";
+import * as Context from "effect/Context";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as N from "effect/Number";
+import * as Ref from "effect/Ref";
+import * as Semaphore from "effect/Semaphore";
 import * as S from "effect/Schema";
 import { CircuitOpenError, RateLimitError } from "../../Domain/Error/Circuit.ts";
 
@@ -103,7 +110,7 @@ export class RateLimiterState extends S.Class<RateLimiterState>($I`RateLimiterSt
  * **Example** (Use the RateLimiterConfig contract)
  *
  * ```ts
- * import { Duration } from "effect"
+ * import * as Duration from "effect/Duration";
  * import { RateLimiterConfig } from "@effect-ontology/Service/LlmControl/RateLimiter"
  *
  * const config = RateLimiterConfig.make({
@@ -165,8 +172,8 @@ const DEFAULT_CONFIG = RateLimiterConfig.make({
  * **Example** (Inspect the central rate-limiter layer)
  *
  * ```ts
- * import { Layer } from "effect"
- * import { Effect } from "effect"
+ * import * as Layer from "effect/Layer";
+ * import * as Effect from "effect/Effect";
  * import { CentralRateLimiterService, CentralRateLimiterServiceLive } from "@effect-ontology/Service/LlmControl/RateLimiter"
  *
  * const program = Effect.gen(function* () {
@@ -356,7 +363,7 @@ const make = Effect.fn("CentralRateLimiter.make")(function* (config: RateLimiter
  * **Example** (Inspect central rate limiter service live)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { CentralRateLimiterService, CentralRateLimiterServiceLive } from "@effect-ontology/Service/LlmControl/RateLimiter"
  *
  * const program = Effect.gen(function* () {
@@ -378,7 +385,7 @@ export const CentralRateLimiterServiceLive = Layer.effect(CentralRateLimiterServ
  * **Example** (Inspect central rate limiter service test)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { CentralRateLimiterService, CentralRateLimiterServiceTest } from "@effect-ontology/Service/LlmControl/RateLimiter"
  *
  * const program = Effect.gen(function* () {

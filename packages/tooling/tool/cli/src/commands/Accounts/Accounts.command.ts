@@ -4,9 +4,12 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { Console, DateTime, Effect } from "effect";
+
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
 import { Command, Flag } from "effect/cli";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
@@ -73,7 +76,7 @@ const renderCredit = (credit: CreditBalance): string =>
       `${credit.label} ${amount(credit.unit, credit.remaining)}`,
       ...O.toArray(O.map(credit.limit, (limit) => `of ${amount(credit.unit, limit)}`)),
       "left",
-      ...O.toArray(O.map(credit.expiresAt, (at) => `until ${Str.slice(0, 10)(DateTime.formatIso(at))}`)),
+      ...O.toArray(O.map(credit.expiresAt, (at) => `until ${at.pipe(DateTime.formatIso, Str.slice(0, 10))}`)),
     ],
     " "
   );

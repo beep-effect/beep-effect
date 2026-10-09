@@ -111,7 +111,7 @@ export * as Eq from "./Equal.ts";
  *
  * ```ts
  * import { Err } from "@beep/utils"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  *
  * class MyError {
  *   readonly message: string
@@ -139,7 +139,7 @@ export * as Err from "./Errors.ts";
  * **Example** (Check path exists sync)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { FileSystem } from "@beep/utils"
  *
  * console.log(Effect.runSync(FileSystem.existsSync(".")))

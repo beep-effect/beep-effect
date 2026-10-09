@@ -6,10 +6,11 @@
  */
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
-import { Config, Effect, Redacted } from "effect";
 import * as A from "effect/Array";
+import * as Config from "effect/Config";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { constFalse } from "effect/Function";
 import * as HashMap from "effect/HashMap";
@@ -20,6 +21,7 @@ import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
@@ -133,7 +135,7 @@ export interface ReferenceWorkspaceShape {
  * **Example** (Prepare a read-only plan)
  * ```ts
  * import { ReferenceWorkspace } from "@beep/repo-cli/commands/Refs"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * Effect.isEffect(ReferenceWorkspace.use((workspace) => workspace.plan("/home/op", "/refs"))) // => true
  * ```
  *

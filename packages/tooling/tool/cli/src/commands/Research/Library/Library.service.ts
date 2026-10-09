@@ -1,13 +1,17 @@
-/** Library configuration separate from the operational knowledge vault.
- * @packageDocumentation
+/**
+ * Library configuration separate from the operational knowledge vault.
  *
+ * @packageDocumentation
  * @since 0.0.0
  */
-import { Config, Effect, Path } from "effect";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import { LibraryError } from "./Library.errors.ts";
 
-/** Resolve a flag, BEEP_RESEARCH_LIBRARY, or ~/YeeBois/research/beep-effect.
+/**
+ * Resolve a flag, BEEP_RESEARCH_LIBRARY, or ~/YeeBois/research/beep-effect.
  * **Example** (Choose an explicit library)
  * ```ts
  * import { resolveLibraryRoot } from "@beep/repo-cli/commands/Research"
@@ -16,7 +20,6 @@ import { LibraryError } from "./Library.errors.ts";
  * ```
  *
  * @category configuration
- *
  * @since 0.0.0
  */
 export const resolveLibraryRoot = Effect.fn("ResearchLibrary.resolveRoot")(function* (flag: O.Option<string>) {

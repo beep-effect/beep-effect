@@ -11,7 +11,8 @@ import { DmsProvider, RemoteItemId, VaultRelPath } from "@beep/documents-domain/
 import { $DocumentsUseCasesId } from "@beep/identity/packages";
 import * as Documents from "@beep/shared-domain/identity/Documents";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
-import { Context, Effect } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 const $I = $DocumentsUseCasesId.create("entities/SyncConflict/SyncConflict.repository");
@@ -227,7 +228,7 @@ export class MarkSyncConflictReviewedInput extends S.Class<MarkSyncConflictRevie
  *   type SyncConflictRepositoryShape
  * } from "@beep/documents-use-cases/entities/SyncConflict/server"
  * import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const unavailable = () => Effect.fail(SyncConflictRepositoryUnavailable.make({ reason: "stub repository" }))
@@ -273,8 +274,7 @@ export interface SyncConflictRepositoryShape {
  *   SyncConflictRepositoryUnavailable,
  *   type SyncConflictRepositoryShape
  * } from "@beep/documents-use-cases/entities/SyncConflict/server"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const unavailable = () => Effect.fail(SyncConflictRepositoryUnavailable.make({ reason: "stub repository" }))
  * const repository: SyncConflictRepositoryShape = {
  *   listOpen: () => Effect.succeed([]),

@@ -5,8 +5,13 @@ import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import { ConfigProvider, Effect, Exit, FileSystem, Layer, Path } from "effect";
+import * as ConfigProvider from "effect/ConfigProvider";
 import { Command } from "effect/cli";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as Str from "effect/String";
 
@@ -56,7 +61,7 @@ describe("native-runtime prefix command", { concurrent: false }, () => {
         Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({})),
         Effect.exit
       );
-      assertTrue(Exit.isFailure(exit));
+      exit.pipe(Exit.isFailure, assertTrue);
     }, providePlatform)
   );
 

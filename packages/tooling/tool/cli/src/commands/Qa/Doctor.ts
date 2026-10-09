@@ -13,7 +13,10 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { A, O, Str } from "@beep/utils";
-import { Effect, FileSystem, Path, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { configStringOption } from "../../internal/cli/EnvConfig.ts";
 import { runCaptured } from "../../internal/process/index.ts";
@@ -282,8 +285,7 @@ const probePlaywrightChromium = Effect.fn("QaDoctor.probePlaywrightChromium")(fu
  *
  * ```ts
  * import { runQaDoctor } from "@beep/repo-cli/commands/Qa/Doctor"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(runQaDoctor())) // true
  * ```
  *

@@ -12,8 +12,8 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
-import type { Effect } from "effect";
-import { Context } from "effect";
+import type * as Effect from "effect/Effect";
+import * as Context from "effect/Context";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts";
@@ -220,7 +220,8 @@ export interface EmbeddingProviderMethods {
  * **Example** (Embed with a test provider)
  *
  * ```ts
- * import { Effect, Layer } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * import {
  *   EmbeddingProvider,
  *   EmbeddingRequest,

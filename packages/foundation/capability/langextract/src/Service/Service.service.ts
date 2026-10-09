@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $LangExtractId } from "@beep/identity";
-import { Context } from "effect";
+import * as Context from "effect/Context";
 import type { LangExtractError, LangExtractRequest, LangExtractResult } from "@beep/langextract/Extraction";
 import type * as Duration from "effect/Duration";
 import type * as Effect from "effect/Effect";
@@ -20,8 +20,7 @@ const $I = $LangExtractId.create("Service");
  * ```ts
  * import { LangExtractService } from "@beep/langextract/Service"
  * import type { LangExtractServiceShape } from "@beep/langextract/Service"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const shape: LangExtractServiceShape = {
  *   extract: (request) => Effect.die(`unimplemented: ${request.documentId}`),
  * }
@@ -43,8 +42,7 @@ export interface LangExtractServiceShape {
  * ```ts
  * import { LangExtractRemotePolicy } from "@beep/langextract/Service"
  * import type { LangExtractRemotePolicyShape } from "@beep/langextract/Service"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const shape: LangExtractRemotePolicyShape = {
  *   allowRemoteExtraction: () => Effect.succeed(false),
  * }
@@ -70,7 +68,8 @@ export interface LangExtractRemotePolicyShape {
  * import { ExtractionTarget } from "@beep/langextract/Target"
  * import { DocumentId } from "@beep/nlp/Core"
  * import { Contract } from "@beep/nlp/Handoff"
- * import { Effect, Layer } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * import * as Str from "effect/String"
  *
  * const documentId = DocumentId.make("doc-1")
@@ -136,8 +135,7 @@ export class LangExtractService extends Context.Service<LangExtractService, Lang
  *
  * ```ts
  * import { LangExtractRemotePolicy, allowRemoteExtractionPolicy } from "@beep/langextract/Service"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * const PolicyLayer = Layer.succeed(LangExtractRemotePolicy, allowRemoteExtractionPolicy)
  * console.log(PolicyLayer)
  * ```
@@ -164,8 +162,8 @@ export class LangExtractRemotePolicy extends Context.Service<LangExtractRemotePo
  *
  * ```ts
  * import { LangExtractGenerationTimeout } from "@beep/langextract/Service"
- * import { Duration, Layer } from "effect"
- *
+ * import * as Duration from "effect/Duration";
+ * import * as Layer from "effect/Layer";
  * const TimeoutLayer = Layer.succeed(LangExtractGenerationTimeout, Duration.minutes(15))
  * console.log(Layer.isLayer(TimeoutLayer)) // true
  * ```

@@ -14,11 +14,15 @@ import { SpanKind, SpanStatusCode, TraceFlags } from "@opentelemetry/api";
 import { ExportResultCode } from "@opentelemetry/core";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-proto";
 import { resourceFromAttributes } from "@opentelemetry/resources";
-import { Clock, Context, Effect, flow, Layer, pipe, Schedule } from "effect";
+import * as Clock from "effect/Clock";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
-import { dual } from "effect/Function";
+import { dual, flow, pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import { ensureAiMetricsDerivedStorage } from "./derived-storage.ts";
 import {
@@ -635,7 +639,7 @@ const spanProjectionsFor = Effect.fnUntraced(function* (rows: ReadonlyArray<AiMe
  * ```ts
  * import { readAiMetricsOtlpSpanProjections } from "@beep/repo-ai-metrics"
  * import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * const program = readAiMetricsOtlpSpanProjections.pipe(
  *   Effect.provide(
  *     DuckDb.makeNodeLayer(
@@ -864,8 +868,7 @@ const sendThroughOtlpProtoExporter = Effect.fnUntraced(function* (
  *
  * ```ts
  * import type { AiMetricsOtlpSpanSenderShape } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const sender: AiMetricsOtlpSpanSenderShape = { send: () => Effect.void }
  * console.log(sender)
  * ```
@@ -1003,7 +1006,7 @@ const runAiMetricsOtlpProjectionBatchExportUntraced: (
  *   AiMetricsOtlpSpanSender,
  *   runAiMetricsOtlpProjectionBatchExport
  * } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * const input = AiMetricsOtlpExportInput.make({
  *   duckDbPath: ".beep/ai-metrics/derived/ai-metrics.duckdb",
  *   endpoint: AiMetricsOtlpEndpointSpec.make({
@@ -1072,7 +1075,7 @@ export const runAiMetricsOtlpProjectionBatchExport: {
  *   runAiMetricsOtlpExport
  * } from "@beep/repo-ai-metrics"
  * import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * const input = AiMetricsOtlpExportInput.make({
  *   duckDbPath: ".beep/ai-metrics/derived/ai-metrics.duckdb",
  *   endpoint: AiMetricsOtlpEndpointSpec.make({
@@ -1124,8 +1127,7 @@ export const runAiMetricsOtlpExport: (
  *
  * ```ts
  * import { AiMetricsOtlpExportResult, otlpExportResultToJson } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const json = Effect.runPromise(
  *   otlpExportResultToJson(
  *     AiMetricsOtlpExportResult.make({

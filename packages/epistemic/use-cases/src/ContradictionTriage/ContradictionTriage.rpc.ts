@@ -16,7 +16,8 @@ import { TextAnchorVerificationReceipt } from "@beep/provenance/VerifiedTextAnch
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import * as SharedEpistemic from "@beep/shared-domain/identity/Epistemic";
-import { identity, Number as N } from "effect";
+import { identity } from "effect/Function";
+import * as N from "effect/Number";
 import * as Rpc from "effect/rpc/Rpc";
 import * as RpcGroup from "effect/rpc/RpcGroup";
 import * as S from "effect/Schema";

@@ -7,7 +7,8 @@
  */
 
 import { A, N, O } from "@beep/utils";
-import { Order, pipe } from "effect";
+import { pipe } from "effect/Function";
+import * as Order from "effect/Order";
 import * as replicad from "replicad";
 import { OcctError } from "../Occt.errors.ts";
 import { BoundingBox, EdgeSet, ModelSummary, Primitive } from "../Occt.models.ts";

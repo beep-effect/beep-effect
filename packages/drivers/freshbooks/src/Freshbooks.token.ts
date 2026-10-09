@@ -21,9 +21,16 @@
 
 import { $FreshbooksId } from "@beep/identity";
 import { O } from "@beep/utils";
-import { Clock, Context, Effect, Layer, pipe, Redacted, Ref, Semaphore } from "effect";
+import * as Clock from "effect/Clock";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
+import * as Layer from "effect/Layer";
+import * as Redacted from "effect/Redacted";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
+import * as Semaphore from "effect/Semaphore";
 import { FreshbooksError } from "./Freshbooks.errors.ts";
 import type * as HttpClient from "effect/http/HttpClient";
 import type { ResolvedFreshbooksConfig } from "./Freshbooks.service.ts";
@@ -54,7 +61,7 @@ export const FRESHBOOKS_TOKEN_SKEW_MILLIS = 60_000;
  *
  * ```ts
  * import { FreshbooksTokenResponse } from "@beep/freshbooks"
- * import { Redacted } from "effect"
+ * import * as Redacted from "effect/Redacted";
  * import * as S from "effect/Schema"
  *
  * const token = S.decodeUnknownSync(FreshbooksTokenResponse)({
@@ -107,8 +114,7 @@ const decodeTokenResponse = S.decodeUnknownEffect(FreshbooksTokenResponse);
  *
  * ```ts
  * import { FreshbooksStoredToken } from "@beep/freshbooks"
- * import { Redacted } from "effect"
- *
+ * import * as Redacted from "effect/Redacted";
  * const stored = FreshbooksStoredToken.make({
  *   accessToken: Redacted.make("access"),
  *   refreshToken: Redacted.make("refresh"),
@@ -152,8 +158,8 @@ export class FreshbooksStoredToken extends S.Class<FreshbooksStoredToken>($I`Fre
  *
  * ```ts
  * import { FreshbooksStoredToken, FreshbooksTokenStore } from "@beep/freshbooks"
- * import { Effect, Redacted } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Redacted from "effect/Redacted";
  * const program = Effect.gen(function* () {
  *   const store = yield* FreshbooksTokenStore
  *   return yield* store.read
@@ -215,7 +221,7 @@ export class FreshbooksTokenStore extends Context.Service<FreshbooksTokenStore, 
  *
  * ```ts
  * import { type FreshbooksTokenStoreShape } from "@beep/freshbooks"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const store = {
@@ -241,8 +247,7 @@ export type FreshbooksTokenStoreShape = {
  *
  * ```ts
  * import { FreshbooksAuth } from "@beep/freshbooks"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const auth = yield* FreshbooksAuth
  *   return yield* auth.accessToken

@@ -12,7 +12,12 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
-import { Chunk, Context, Effect, HashSet, Layer, Result } from "effect";
+import * as Chunk from "effect/Chunk";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as HashSet from "effect/HashSet";
+import * as Layer from "effect/Layer";
+import * as Result from "effect/Result";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -74,7 +79,7 @@ export class LinkedRelation extends S.Class<LinkedRelation>($I`LinkedRelation`)(
  * **Example** (Create an empty linking result)
  *
  * ```ts
- * import { Chunk } from "effect"
+ * import * as Chunk from "effect/Chunk";
  * import { LinkingResult } from "@effect-ontology/Service/RelationLinker"
  *
  * const result = LinkingResult.make({ linkedRelations: Chunk.empty(), remappedCount: 0, literalObjectCount: 0 })
@@ -107,7 +112,7 @@ export class LinkingResult extends S.Class<LinkingResult>($I`LinkingResult`)(
  * **Example** (Inspect relation linker)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { RelationLinker } from "@effect-ontology/Service/RelationLinker"
  *
  * const program = Effect.gen(function* () {

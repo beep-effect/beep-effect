@@ -59,7 +59,9 @@ Before: a manual native property runner sits inside an Effect test body.
 import { fcRuns } from "@beep/fc-runs"
 import { it } from "@effect/vitest"
 import { assertTrue } from "@effect/vitest/utils"
-import { Effect, Number, Schema } from "effect"
+import * as Effect from "effect/Effect";
+import * as Number from "effect/Number";
+import * as Schema from "effect/Schema";
 import { Arbitrary } from "effect/unstable/arbitrary"
 
 it.effect("integer", Effect.fnUntraced(function* () {
@@ -79,8 +81,8 @@ floor. Keep the real domain law when applying this shape.
 import { fcRuns } from "@beep/fc-runs"
 import { it } from "@effect/vitest"
 import { assertTrue } from "@effect/vitest/utils"
-import { Number, Schema } from "effect"
-
+import * as Number from "effect/Number";
+import * as Schema from "effect/Schema";
 it.prop("integer", { value: Schema.Int }, ({ value }) => {
   assertTrue(Number.round(value, 0) === value)
 }, { arbitrary: fcRuns(100) })

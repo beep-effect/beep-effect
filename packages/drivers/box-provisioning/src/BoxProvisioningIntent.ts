@@ -7,11 +7,14 @@
 
 import { $BoxProvisioningId } from "@beep/identity";
 import { HttpsUrl, LiteralKit } from "@beep/schema";
-import { Effect, HashMap, MutableHashSet, Order } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
 import { dual, flow, pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { BoxProviderId } from "./BoxProvisioningObserved.ts";

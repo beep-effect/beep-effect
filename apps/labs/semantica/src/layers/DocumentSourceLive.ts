@@ -1,8 +1,12 @@
 import { Sha256HexFromBytes } from "@beep/schema";
-import { Crypto, Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
+import * as Crypto from "effect/Crypto";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { canonicalJson } from "@/corpus/Canonical";
@@ -31,7 +35,7 @@ const unavailable = (message: string): DocumentUnavailable => DocumentUnavailabl
  *
  * ```ts
  * import { loadDocumentSelection } from "@/layers/DocumentSourceLive"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const selection = loadDocumentSelection("fixtures/w1.manifest.json", O.none(), false)
@@ -218,8 +222,7 @@ const makeDocumentSource = Effect.gen(function* () {
  *
  * ```ts
  * import { DocumentSourceLive } from "@/layers/DocumentSourceLive"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(DocumentSourceLive)) // true
  * ```
  *

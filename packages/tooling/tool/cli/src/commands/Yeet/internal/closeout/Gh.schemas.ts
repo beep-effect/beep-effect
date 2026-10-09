@@ -901,7 +901,7 @@ export class GhReviewsDocument extends S.Class<GhReviewsDocument>($I`GhReviewsDo
  * **Example** (Decode gh pr view JSON)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { decodeGhPrView } from "@beep/repo-cli/test/Yeet"
  *
  * const number = decodeGhPrView(JSON.stringify({ headRefName: "feature", number: 1, state: "OPEN" })).pipe(
@@ -923,7 +923,7 @@ export const decodeGhPrView: {
  * **Example** (Decode gh repo view JSON)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { decodeGhRepoView } from "@beep/repo-cli/test/Yeet"
  *
  * const owner = decodeGhRepoView(JSON.stringify({ name: "repo", owner: { login: "org" } })).pipe(
@@ -945,7 +945,7 @@ export const decodeGhRepoView: {
  * **Example** (Decode comments GraphQL document)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { decodeGhCommentsDocument } from "@beep/repo-cli/test/Yeet"
  *
  * const documentJson = JSON.stringify({
@@ -976,7 +976,7 @@ export const decodeGhCommentsDocument: {
  * **Example** (Decode threads GraphQL document)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { decodeGhReviewThreadsDocument } from "@beep/repo-cli/test/Yeet"
  *
  * const documentJson = JSON.stringify({
@@ -1007,7 +1007,7 @@ export const decodeGhReviewThreadsDocument: {
  * **Example** (Decode reviews GraphQL document)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { decodeGhReviewsDocument } from "@beep/repo-cli/test/Yeet"
  *
  * const documentJson = JSON.stringify({

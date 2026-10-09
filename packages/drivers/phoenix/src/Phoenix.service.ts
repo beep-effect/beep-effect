@@ -20,10 +20,15 @@ import { addTraceAnnotation } from "@arizeai/phoenix-client/traces";
 import { $PhoenixId } from "@beep/identity";
 import { URLStr } from "@beep/schema";
 import { P, thunkEmptyStr } from "@beep/utils";
-import { Config, Context, Effect, flow, Layer, pipe, Redacted } from "effect";
 import * as A from "effect/Array";
+import * as Config from "effect/Config";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import { flow, pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
+import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import { PHOENIX_API_URL, PhoenixConfigInput } from "./Phoenix.config.ts";
 import { PhoenixError } from "./Phoenix.errors.ts";
@@ -649,7 +654,7 @@ const makePhoenixFromEnvironment = Effect.fn("Phoenix.makePhoenixFromEnvironment
  * **Example** (Yield Phoenix doctor effect)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { Phoenix } from "@beep/phoenix"
  *
  * const program = Effect.gen(function* () {

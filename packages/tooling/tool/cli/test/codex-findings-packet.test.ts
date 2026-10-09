@@ -9,7 +9,7 @@ import {
 } from "@beep/repo-cli/test/Codex";
 import { A, Str } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import type { PacketDocument } from "@beep/repo-cli/test/Codex";
 

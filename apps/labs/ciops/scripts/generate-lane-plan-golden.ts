@@ -2,7 +2,10 @@ import { Sha256Hex } from "@beep/schema/Sha256";
 import { BunRuntime } from "@effect/platform-bun";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
-import { Console, Effect, FileSystem, Layer } from "effect";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import { CiOpsProjection, CiOpsProjectionLive } from "@/projection/CiOpsProjection";
 import { decodeEvidenceMode, EvidenceDriftError, EvidenceMode, EvidenceWriteScript } from "@/projection/Evidence";
 import { GateOrderHandoffRef, PlanEpisodeInput } from "@/projection/Schemas";
@@ -72,10 +75,10 @@ const generate = Effect.gen(function* () {
 // strictEffectProvide bans Layer-provide outside composed entry layers, so the
 // scoped context build below provides the platform and service as a Context.
 BunRuntime.runMain(
-  Effect.scoped(
-    Effect.flatMap(
-      Layer.build(CiOpsProjectionLive.pipe(Layer.provideMerge(Layer.merge(BunFileSystem.layer, BunCrypto.layer)))),
-      (context) => Effect.provide(generate, context)
-    )
+  CiOpsProjectionLive.pipe(
+    Layer.provideMerge(Layer.merge(BunFileSystem.layer, BunCrypto.layer)),
+    Layer.build,
+    Effect.flatMap((context) => Effect.provide(generate, context)),
+    Effect.scoped
   )
 );

@@ -1,7 +1,10 @@
-import { Match, Number as N, Result, Tuple } from "effect";
+import * as Match from "effect/Match";
+import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as Str from "effect/String";
+import * as Tuple from "effect/Tuple";
 
 /**
  * HTML5 named references decoded by the C0 extractor.

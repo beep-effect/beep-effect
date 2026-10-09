@@ -15,10 +15,13 @@ import {
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertInstanceOf, assertNone } from "@effect/vitest/utils";
-import { Effect, flow, Layer, Ref } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import { flow } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as N from "effect/Number";
 import * as O from "effect/Option";
+import * as Ref from "effect/Ref";
 import { boxFiles, boxRejection, makeBoxStub, serviceOf } from "./MailTagging.adapters.fixture.ts";
 import type { BoxUploadBody } from "./MailTagging.adapters.fixture.ts";
 

@@ -7,9 +7,10 @@
 
 import { $RepoUtilsId } from "@beep/identity";
 import { A, Str, Text, thunkEmptyStr } from "@beep/utils";
-import { flow, Match, Order, pipe } from "effect";
-import { dual } from "effect/Function";
+import { dual, flow, pipe } from "effect/Function";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { DiagnosticCategory, Node } from "ts-morph";

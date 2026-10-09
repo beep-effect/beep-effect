@@ -12,7 +12,8 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { URLStr } from "@beep/schema";
-import { Layer, Effect } from "effect";
+import * as Layer from "effect/Layer";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { OtlpTracer } from "effect/observability";
 

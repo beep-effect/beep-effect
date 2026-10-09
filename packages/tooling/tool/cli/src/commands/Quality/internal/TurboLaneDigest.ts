@@ -2,12 +2,16 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { A, P, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { DateTime, Effect, FileSystem, Order, Path, pipe } from "effect";
 import * as Crypto from "effect/Crypto";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
-import { dual } from "effect/Function";
+import * as FileSystem from "effect/FileSystem";
+import { dual, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import type * as PlatformError from "effect/PlatformError";
 
@@ -250,8 +254,7 @@ const selectTasks = (summary: TurboRunSummary, taskNames: ReadonlyArray<string>)
  *
  * ```ts
  * import { TurboRunSummary, turboLaneDigestFromSummary } from "@beep/repo-cli/test/Quality"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const summary = TurboRunSummary.make({
  *   id: "run",
  *   execution: { startTime: 1, endTime: 2, exitCode: 0 },
@@ -497,8 +500,7 @@ const appendLedgerRow = Effect.fn("QualityTasks.appendLedgerRow")(function* (
  *
  * ```ts
  * import { TurboLaneDigest, appendTurboLaneLedger } from "@beep/repo-cli/test/Quality"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const digest = TurboLaneDigest.make({ digest: "a", summaryIds: ["run-1"], tasks: [] })
  * console.log(Effect.isEffect(appendTurboLaneLedger("/tmp/lane-ledger.jsonl", digest))) // true
  * ```
@@ -523,8 +525,7 @@ export const appendTurboLaneLedger = Effect.fn("QualityTasks.appendTurboLaneLedg
  *
  * ```ts
  * import { closeTurboLaneLedger } from "@beep/repo-cli/test/Quality"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(closeTurboLaneLedger("/tmp/lane-ledger.jsonl", 1))) // true
  * ```
  *
@@ -547,8 +548,7 @@ export const closeTurboLaneLedger = Effect.fn("QualityTasks.closeTurboLaneLedger
  *
  * ```ts
  * import { readTurboLaneLedger } from "@beep/repo-cli/test/Quality"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(readTurboLaneLedger("/tmp/lane-ledger.jsonl"))) // true
  * ```
  *

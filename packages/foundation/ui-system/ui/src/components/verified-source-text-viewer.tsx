@@ -8,7 +8,7 @@
 
 import { ScrollArea } from "@beep/ui/components/scroll-area";
 import { cn } from "@beep/ui/lib/utils";
-import { Number as N } from "effect";
+import * as N from "effect/Number";
 import * as Str from "effect/String";
 import type * as React from "react";
 

@@ -14,14 +14,14 @@ import {
   SourceAuthRegistration,
   sanitizedToolkit,
 } from "@beep/mcp-kit";
-import { Layer } from "effect";
 import * as McpServer from "effect/ai/McpServer";
+import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import { PracticeKgToolkitHandlersLive } from "./PracticeKg.tool-handlers.ts";
 import type { DuckDb } from "@beep/duckdb";
-import type { Path } from "effect";
 import type * as Arr from "effect/Array";
 import type * as McpProtocol from "effect/ai/McpProtocol";
+import type * as Path from "effect/Path";
 import type { Stdio } from "effect/Stdio";
 import type { SqlClient } from "effect/sql/SqlClient";
 import type { PracticeKgBundle } from "./PracticeKg.host.ts";
@@ -99,8 +99,7 @@ export class PracticeKgMcpServerConfig extends S.Class<PracticeKgMcpServerConfig
  *
  * ```ts
  * import { PracticeKgToolkitLayer } from "@beep/law-practice-server"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(PracticeKgToolkitLayer))
  * ```
  *

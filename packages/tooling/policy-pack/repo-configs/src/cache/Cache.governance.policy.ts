@@ -717,7 +717,7 @@ export const recordCachePolicyBaseline = (
         !sameNodes(subjectNodes(previous.projection, subject), subjectNodes(sorted, subject)) ||
         (subject === cacheBaselineRootSubject && rootChanged),
     });
-  const named = O.getOrElse(request.subjects, () => A.empty<CacheBaselineSubject>());
+  const named = O.getOrElse(request.subjects, A.empty<CacheBaselineSubject>);
   const stamped = A.filter(subjects, (subject) => changed(subject) || A.contains(named, subject));
   const unreviewed = O.isSome(request.subjects) ? A.filter(stamped, (subject) => !A.contains(named, subject)) : [];
   const unknown = A.filter(named, (subject) => !A.contains(subjects, subject));
@@ -726,11 +726,11 @@ export const recordCachePolicyBaseline = (
   }
   const carried = A.filter(subjects, (subject) => !A.contains(stamped, subject));
   const dropped = O.match(prior, {
-    onNone: () => A.empty<CacheBaselineSubject>(),
+    onNone: A.empty<CacheBaselineSubject>,
     onSome: (previous) => A.filter(Rec.keys(previous.reviews), (subject) => !A.contains(subjects, subject)),
   });
   const carriedReviews = O.match(prior, {
-    onNone: () => A.empty<readonly [CacheBaselineSubject, CacheReviewDecision]>(),
+    onNone: A.empty<readonly [CacheBaselineSubject, CacheReviewDecision]>,
     onSome: (previous) => A.filter(Rec.toEntries(previous.reviews), ([subject]) => A.contains(carried, subject)),
   });
   const stampedReviews = A.map(stamped, (subject) => [subject, request.review] as const);

@@ -12,7 +12,8 @@ import { DmsProvider, VaultRelPath } from "@beep/documents-domain/values/Sync";
 import { $DocumentsUseCasesId } from "@beep/identity/packages";
 import * as Documents from "@beep/shared-domain/identity/Documents";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
-import { Context, Effect } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 const $I = $DocumentsUseCasesId.create("entities/SyncOperation/SyncOperation.repository");
@@ -369,7 +370,7 @@ export class ListSyncOperationsByStatusInput extends S.Class<ListSyncOperationsB
  *   type SyncOperationRepositoryShape
  * } from "@beep/documents-use-cases/entities/SyncOperation/server"
  * import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const repository: SyncOperationRepositoryShape = {
@@ -429,8 +430,7 @@ export interface SyncOperationRepositoryShape {
  *   SyncOperationRepositoryUnavailable,
  *   type SyncOperationRepositoryShape
  * } from "@beep/documents-use-cases/entities/SyncOperation/server"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const repository: SyncOperationRepositoryShape = {
  *   enqueue: () => Effect.fail(SyncOperationRepositoryUnavailable.make({ reason: "stub repository" })),
  *   listByStatus: () => Effect.succeed([]),

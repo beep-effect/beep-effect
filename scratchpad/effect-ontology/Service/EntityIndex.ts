@@ -9,8 +9,15 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { Clock, Context, Effect, HashMap, HashSet, Inspectable, Layer, Order, Ref } from "effect";
+import * as Clock from "effect/Clock";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
+import * as Inspectable from "effect/Inspectable";
+import * as Layer from "effect/Layer";
+import * as Order from "effect/Order";
+import * as Ref from "effect/Ref";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -339,7 +346,7 @@ const makeEntityIndexMethods = (
  * **Example** (Read index size)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { EntityIndex } from "@effect-ontology/Service/EntityIndex"
  *
  * const program = Effect.gen(function* () {
@@ -374,7 +381,7 @@ export class EntityIndex extends Context.Service<EntityIndex>()($I`EntityIndex`,
  * **Example** (Provide the default index)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { EntityIndex, EntityIndexDefault } from "@effect-ontology/Service/EntityIndex"
  *
  * const program = Effect.gen(function* () {
@@ -486,7 +493,7 @@ export interface PersistentEntityIndexService extends EntityIndexService {
  * **Example** (Read persistent index stats)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { PersistentEntityIndex, PersistentEntityIndexLayer } from "@effect-ontology/Service/EntityIndex"
  *
  * const program = Effect.gen(function* () {
@@ -510,7 +517,7 @@ export class PersistentEntityIndex extends Context.Service<PersistentEntityIndex
  * **Example** (Build a persistent index over test storage)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { makePersistentEntityIndex } from "@effect-ontology/Service/EntityIndex"
  * import { EmbeddingService } from "@effect-ontology/Service/Embedding"
  * import { StorageService, StorageServiceTest } from "@effect-ontology/Service/Storage"
@@ -653,7 +660,8 @@ export const makePersistentEntityIndex = dual3(
  * **Example** (Provide the persistent index layer)
  *
  * ```ts
- * import { Effect, Layer } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * import { ConfigService, DEFAULT_CONFIG } from "@effect-ontology/Service/Config"
  * import { EmbeddingServiceDefault } from "@effect-ontology/Service/Embedding"
  * import { PersistentEntityIndex, PersistentEntityIndexLayer } from "@effect-ontology/Service/EntityIndex"

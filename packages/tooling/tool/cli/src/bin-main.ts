@@ -26,7 +26,7 @@ const CHANGED_PATH_DIFF_FILTER = ["A", "C", "M", "R", "T", "U", "X", "B"].join("
 const rawArgv = Bun.argv.slice(2);
 
 const { A } = await import("@beep/utils");
-const { flow } = await import("effect");
+const { flow } = await import("effect/Function");
 const nonEmptyLines = (text: string): ReadonlyArray<string> =>
   text
     .split(/\r?\n/)
@@ -90,7 +90,15 @@ const canUseQualityTaskFastPath = (argv: ReadonlyArray<string>): boolean =>
 const canUseCiFastPath = (argv: ReadonlyArray<string>): boolean => argv[0] === "ci" && !hasRootCliGlobalFlag(argv);
 
 const { BunCrypto, BunHttpClient, BunRuntime, BunServices } = await import("@effect/platform-bun");
-const { Cause, Console, Effect, Exit, Layer, Option, Runtime } = await import("effect");
+const [Cause, Console, Effect, Exit, Layer, Option, Runtime] = await Promise.all([
+  import("effect/Cause"),
+  import("effect/Console"),
+  import("effect/Effect"),
+  import("effect/Exit"),
+  import("effect/Layer"),
+  import("effect/Option"),
+  import("effect/Runtime"),
+]);
 const { drainProcessStreams, ProcessStreamName, streamConsole, writeBestEffortLine } = await import(
   "./internal/cli/Stdout.ts"
 );
@@ -111,7 +119,7 @@ const BaseLayers = Layer.mergeAll(BunServices.layer, BunHttpClient.layer, BunCry
 
 const argv = A.slice(process.argv, { start: 2 });
 
-const renderCliFailure = (exit: import("effect").Exit.Exit<unknown, unknown>) => {
+const renderCliFailure = (exit: import("effect/Exit").Exit<unknown, unknown>) => {
   if (Exit.isSuccess(exit)) {
     return;
   }
@@ -172,7 +180,7 @@ const restoreSharedTerminal = (): void => {
   }
 };
 
-const runRepoCliMain = <E, A>(effect: import("effect").Effect.Effect<A, E>) =>
+const runRepoCliMain = <E, A>(effect: import("effect/Effect").Effect<A, E>) =>
   BunRuntime.runMain(Effect.provideService(effect, Console.Console, streamConsole), {
     disableErrorReporting: true,
     // The runner's onExit only hard-exits on a signal or nonzero code; a clean

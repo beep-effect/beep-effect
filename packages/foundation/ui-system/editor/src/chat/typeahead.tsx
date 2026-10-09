@@ -29,7 +29,7 @@ import {
   MenuOption,
   useBasicTypeaheadTriggerMatch,
 } from "@lexical/react/LexicalTypeaheadMenuPlugin";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { AsyncResult, Atom } from "effect/reactivity";
 import * as S from "effect/Schema";
 import { $createTextNode, $getSelection, $isRangeSelection } from "lexical";

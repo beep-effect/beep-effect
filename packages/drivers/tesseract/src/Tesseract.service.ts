@@ -8,8 +8,14 @@
 
 import { PageOcrEngineIdentity, PageOcrError, PageOcrResult, PageOcrTiming } from "@beep/file-processing/PageOcr";
 import { A, O, Str } from "@beep/utils";
-import { Clock, Effect, FileSystem, Match, Path, pipe, Stream } from "effect";
+import * as Clock from "effect/Clock";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as Match from "effect/Match";
+import * as Path from "effect/Path";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as Stream from "effect/Stream";
 import { parseTesseractLanguages, parseTesseractScript, parseTesseractTsv } from "./Tesseract.schema.ts";
 import type { PageImage, PageImageMediaType, PageOcrEngineShape, PageOcrRequest } from "@beep/file-processing/PageOcr";
 import type { TesseractConfig, TesseractScript } from "./Tesseract.schema.ts";
@@ -168,7 +174,7 @@ export const makeTesseractPageOcrEngine = Effect.fn("Tesseract.makePageOcrEngine
     detectScript: Effect.fn("Tesseract.detectScript")(function* (image) {
       return yield* withImageFile(image, (imagePath) => run([imagePath, "-", "--psm", "0", "-l", "osd"])).pipe(
         Effect.map(parseTesseractScript),
-        Effect.orElseSucceed(() => O.none<TesseractScript>())
+        Effect.orElseSucceed(O.none<TesseractScript>)
       );
     }),
     identity,

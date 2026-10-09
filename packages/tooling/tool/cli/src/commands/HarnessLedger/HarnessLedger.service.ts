@@ -20,9 +20,13 @@ import {
 } from "@beep/repo-ai-metrics";
 import { LiteralKit } from "@beep/schema";
 import { A, O, pipe, Str } from "@beep/utils";
-import { Context, DateTime, Effect, Layer, Result } from "effect";
 import * as Bool from "effect/Boolean";
+import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import * as HashSet from "effect/HashSet";
+import * as Layer from "effect/Layer";
+import * as Result from "effect/Result";
 import { HarnessLedgerChainError, HarnessLedgerInputError, HarnessLedgerIoError } from "./HarnessLedger.errors.ts";
 import {
   HarnessLedgerListEntry,
@@ -41,7 +45,8 @@ import {
 } from "./internal/LedgerFiles.ts";
 import { enumeratePruneCandidates, observeSessionWindow } from "./internal/PruneWindow.ts";
 import type { HarnessFingerprint, HarnessHash } from "@beep/repo-ai-metrics";
-import type { FileSystem, Path } from "effect";
+import type * as FileSystem from "effect/FileSystem";
+import type * as Path from "effect/Path";
 import type { HarnessLedgerCommandError } from "./HarnessLedger.errors.ts";
 import type {
   HarnessLedgerDispositionOptions,

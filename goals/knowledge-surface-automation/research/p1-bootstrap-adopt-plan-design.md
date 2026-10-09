@@ -121,7 +121,8 @@ field carries its own `title`/`description` annotation, and the flag surface is
 derived from those annotations rather than duplicating help text.
 
 ```ts
-import { Effect } from "effect"
+import * as Effect from "effect/Effect";
+
 export class BootstrapInput extends S.Class<BootstrapInput>($I`BootstrapInput`)({
   slug: GoalSlug, title: S.String, mission: S.String,
   status: GoalStatus.pipe(S.withConstructorDefault(Effect.succeed("active" as const))),

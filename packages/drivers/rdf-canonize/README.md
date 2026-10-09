@@ -15,7 +15,7 @@ adapter, resource limits, and canonicalization security tests.
 ## Usage
 
 ```ts
-import { Effect } from "effect"
+import * as Effect from "effect/Effect";
 import { CanonicalizationService } from "@beep/semantic-web/services/canonicalization"
 import { canonicalization } from "@beep/rdf-canonize"
 

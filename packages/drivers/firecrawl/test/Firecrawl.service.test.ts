@@ -4,11 +4,14 @@ import { fcRuns } from "@beep/test-utils";
 import { thunkTrue } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
 import { assertInstanceOf, assertNone, assertSome } from "@effect/vitest/utils";
-import { Cause, Effect, Exit, Stream } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 
 const decodeFFirecrawlApiFailure = S.decodeEffect(F.FirecrawlApiFailure);
 const decodeFFirecrawlConfigInput = S.decodeEffect(F.FirecrawlConfigInput);

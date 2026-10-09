@@ -7,8 +7,7 @@
  */
 
 import { A, Str, thunk0 } from "@beep/utils";
-import { pipe } from "effect";
-import { dual } from "effect/Function";
+import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import { ArchitectureSliceRolePlan, defaultArchitecturePlanTarget } from "../Architecture.schemas.ts";
 import type {

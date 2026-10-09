@@ -6,7 +6,10 @@
  */
 
 import { A } from "@beep/utils";
-import { Effect, HashMap, Inspectable, Path } from "effect";
+import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
+import * as Inspectable from "effect/Inspectable";
+import * as Path from "effect/Path";
 import { readArtifact } from "../../../internal/artifacts/index.ts";
 import { EffectVitestPrimitiveGraphError } from "../Lint.errors.ts";
 import { EffectVitestPrimitiveGraphDocument, EffectVitestPrimitiveGraphPath } from "../Lint.schemas.ts";
@@ -19,8 +22,7 @@ import type { EffectVitestPrimitive } from "../Lint.schemas.ts";
  *
  * ```ts
  * import { readEffectVitestPrimitiveGraph } from "@beep/repo-cli/commands/Lint"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(readEffectVitestPrimitiveGraph(process.cwd()))) // true
  * ```
  *
@@ -50,8 +52,7 @@ export const readEffectVitestPrimitiveGraph = Effect.fn("EffectVitestPrimitives.
  *
  * ```ts
  * import { indexEffectVitestPrimitives } from "@beep/repo-cli/commands/Lint"
- * import { HashMap } from "effect"
- *
+ * import * as HashMap from "effect/HashMap";
  * console.log(HashMap.size(indexEffectVitestPrimitives([]))) // 0
  * ```
  *

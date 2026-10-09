@@ -29,18 +29,26 @@ import {
   MatterDirectoryShape,
 } from "@beep/law-practice-use-cases/MailTagging";
 import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
-import { ConfigProvider, Context, Effect, FileSystem, Layer, Path, Ref, Stdio, Terminal } from "effect";
 import * as A from "effect/Array";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
 import { Command } from "effect/cli";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import * as HashMap from "effect/HashMap";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import { ChildProcessSpawner } from "effect/process";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
+import * as Stdio from "effect/Stdio";
 import * as Str from "effect/String";
+import * as Terminal from "effect/Terminal";
 import * as TestConsole from "effect/testing/TestConsole";
 import { makePracticeMailTaggingCommand } from "@/PracticeMailTagging.command";
 import { makeStateLock, ProcessProbe, StateLock, stateLockFileName } from "@/PracticeMailTagging.lock";

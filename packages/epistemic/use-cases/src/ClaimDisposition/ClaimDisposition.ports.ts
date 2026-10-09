@@ -9,7 +9,8 @@
 
 import { $EpistemicUseCasesId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { Context, Effect } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import type { ClaimDisposition } from "@beep/epistemic-domain/entities/ClaimDisposition";
@@ -145,8 +146,7 @@ export class ClaimDispositionRepositoryUnavailable extends S.TaggedError<ClaimDi
  *
  * ```ts
  * import type { ClaimDispositionRepositoryShape } from "@beep/epistemic-use-cases/ClaimDisposition"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const shape: ClaimDispositionRepositoryShape = {
  *   listByClaim: () => Effect.succeed([]),
  *   record: (disposition) => Effect.succeed(disposition)
@@ -174,8 +174,7 @@ export interface ClaimDispositionRepositoryShape {
  *
  * ```ts
  * import { ClaimDispositionRepository } from "@beep/epistemic-use-cases/ClaimDisposition"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const repository = yield* ClaimDispositionRepository
  *   return typeof repository.listByClaim === "function"

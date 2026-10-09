@@ -14,9 +14,9 @@
 
 import { $MdId } from "@beep/identity/packages";
 import * as Conformance from "@beep/schema/Conformance";
-import { Result } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import {
   BeepCheckedInvariantIds,
@@ -221,7 +221,7 @@ const BeepMarkdownDocumentCheck = S.makeFilter<Document>(
  *
  * ```ts import.meta.vitest name="Decode a CommonMark semantic document"
  * import { CommonMarkDocument } from "@beep/md/Md.conformance"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  *
  * Result.isSuccess(S.decodeUnknownResult(CommonMarkDocument)({ _tag: "document", children: [] })) // => true
@@ -270,7 +270,7 @@ export type CommonMarkDocument = typeof CommonMarkDocument.Type;
  *
  * ```ts import.meta.vitest name="Decode a GFM semantic document"
  * import { GfmDocument } from "@beep/md/Md.conformance"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  *
  * const value = { _tag: "document", children: [] }
@@ -314,7 +314,7 @@ export type GfmDocument = typeof GfmDocument.Type;
  *
  * ```ts import.meta.vitest name="Decode a Beep extension document"
  * import { BeepMarkdownDocument } from "@beep/md/Md.conformance"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  *
  * const value = { _tag: "document", children: [{ _tag: "mathBlock", value: "x" }] }
@@ -368,8 +368,7 @@ const makeStrictMarkdownDocument = (document: Document, profile: MarkdownConform
  * ```ts import.meta.vitest name="Reject a GFM table without a header"
  * import { MarkdownConformanceProfile, refineStrictMarkdownDocument } from "@beep/md/Md.conformance"
  * import { Md } from "@beep/md"
- * import { Result } from "effect"
- *
+ * import * as Result from "effect/Result";
  * const document = Md.make([Md.table([["cell"]])])
  * Result.isFailure(refineStrictMarkdownDocument(document, MarkdownConformanceProfile.Enum["gfm-0.29.0.gfm.13"])) // => true
  * ```

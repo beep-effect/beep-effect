@@ -7,9 +7,15 @@
 
 import { DuckDb } from "@beep/duckdb";
 import { $RepoCliId } from "@beep/identity/packages";
-import { Console, DateTime, Effect, FileSystem, MutableHashMap, Order, Path } from "effect";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { ResearchCommandError } from "../Research.errors.ts";
 import { ResearchCognifySummary } from "../Research.schemas.ts";
@@ -66,7 +72,7 @@ const requireCogneeSettings: Effect.Effect<O.Option<CogneeSettings>, ResearchCom
  * **Example** (Cognify vault dry-run)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { cognifyImpl } from "@beep/repo-cli/commands/Research/internal/Cognify"
  * import { ResearchCognifyOptions } from "@beep/repo-cli/commands/Research"
  *
@@ -118,7 +124,7 @@ export const cognifyImpl = Effect.fn("Research.cognifyImpl")(function* (
     MutableHashMap.set(byDataset, dataset, uploads);
   }
 
-  const datasets = A.sort(A.fromIterable(MutableHashMap.keys(byDataset)), Order.String);
+  const datasets = A.sort(byDataset.pipe(MutableHashMap.keys, A.fromIterable), Order.String);
   const cardsPushed = A.reduce(MutableHashMap.values(byDataset), 0, (total, uploads) => total + A.length(uploads));
 
   if (options.dryRun || cardsPushed === 0) {

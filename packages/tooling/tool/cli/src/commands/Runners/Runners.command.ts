@@ -6,9 +6,12 @@
  */
 
 import { A } from "@beep/utils";
-import { Clock, Console, Effect, Match, pipe } from "effect";
+import * as Clock from "effect/Clock";
+import * as Console from "effect/Console";
 import { Command, Flag } from "effect/cli";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { RunnersCommandError } from "./Runners.errors.ts";
@@ -27,8 +30,7 @@ const DEFAULT_REGION = "us-east-1";
  *
  * ```ts
  * import { resolveBakeMode } from "@beep/repo-cli/commands/Runners"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(resolveBakeMode(false, false))) // true
  * ```
  *

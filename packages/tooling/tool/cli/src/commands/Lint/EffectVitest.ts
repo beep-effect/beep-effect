@@ -5,8 +5,8 @@
  * @since 0.0.0
  */
 
-import { Effect } from "effect";
 import { Command, Flag } from "effect/cli";
+import * as Effect from "effect/Effect";
 import { runEffectVitestLint } from "./internal/EffectVitestScan.ts";
 import { EffectVitestLintOptions } from "./Lint.schemas.ts";
 

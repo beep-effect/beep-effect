@@ -136,8 +136,7 @@ export class CorpusProvenanceRecord extends S.Class<CorpusProvenanceRecord>($I`C
  *
  * ```ts
  * import { decodeCorpusProvenanceRecordJson } from "@beep/repo-cli/commands/Corpus"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const line = JSON.stringify({
  *   destPath: "/corpus/raw/source-a/a.txt",
  *   mtimeEpoch: 1718000000,
@@ -167,8 +166,7 @@ export const decodeCorpusProvenanceRecordJson = JsonStringCodec(CorpusProvenance
  * import * as S from "effect/Schema"
  * import { CorpusProvenanceRecord, encodeCorpusProvenanceRecordJson } from "@beep/repo-cli/commands/Corpus"
  * import { Sha256Hex } from "@beep/schema"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const record = CorpusProvenanceRecord.make({
  *   copyMode: "copied",
  *   destPath: "/corpus/raw/source-a/a.txt",
@@ -327,8 +325,7 @@ export class CorpusSalvageSummary extends S.Class<CorpusSalvageSummary>($I`Corpu
  * ```ts
  * import * as S from "effect/Schema"
  * import { CorpusSalvageSummary, encodeCorpusSalvageSummaryJson } from "@beep/repo-cli/commands/Corpus"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const summary = CorpusSalvageSummary.make({
  *   bytesChecked: S.Natural.make(0),
  *   matched: S.Natural.make(0),

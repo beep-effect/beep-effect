@@ -7,7 +7,8 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { Match, pipe } from "effect";
+import * as Match from "effect/Match";
+import { pipe } from "effect/Function";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";

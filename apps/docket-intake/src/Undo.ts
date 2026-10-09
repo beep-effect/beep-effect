@@ -17,8 +17,8 @@ import {
   readDocketStateFile,
   summarizeDocketRuns,
 } from "@beep/law-practice-server/DocketIntake";
-import { Effect } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { DocketIntakeCommandError } from "./Errors.ts";

@@ -8,11 +8,15 @@
 
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Context, Effect, Layer, Ref } from "effect";
+import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import { makeStateFileAt } from "../internal/MailTaggingStateFile.ts";
-import type { FileSystem, Path } from "effect";
+import type * as FileSystem from "effect/FileSystem";
+import type * as Path from "effect/Path";
 
 const $I = $LawPracticeServerId.create("MailTagging/MailTagging.metering");
 

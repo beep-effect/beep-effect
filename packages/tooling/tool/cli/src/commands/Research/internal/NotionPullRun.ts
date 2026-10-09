@@ -5,9 +5,13 @@
  * @since 0.0.0
  */
 
-import { Console, DateTime, Effect, MutableHashSet, Path } from "effect";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ResearchCommandError } from "../Research.errors.ts";
@@ -27,7 +31,7 @@ const decodeNotionPullSummary = S.decodeUnknownEffect(ResearchNotionPullSummary)
  * **Example** (Pull Notion database links)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { notionPullImpl } from "@beep/repo-cli/commands/Research/internal/NotionPullRun"
  * import { ResearchNotionPullOptions } from "@beep/repo-cli/commands/Research"
  *

@@ -11,9 +11,17 @@ import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect } from "@effect/vitest";
 import { assertExitFailure, assertTrue } from "@effect/vitest/utils";
-import { Cause, Effect, Exit, FileSystem, flow, Layer, Path, Ref, Result } from "effect";
 import * as A from "effect/Array";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
+import { flow } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
+import * as Ref from "effect/Ref";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as jsonc from "jsonc-parser";
@@ -207,9 +215,9 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })("quality a
           Effect.exit
         );
         if (interrupted) {
-          assertTrue(Exit.isFailure(exit));
-          assertTrue(Cause.hasInterrupts(exit.cause));
-          assertTrue(Cause.hasInterruptsOnly(exit.cause));
+          if (!Exit.isFailure(exit)) throw new Error("Expected a failure exit");
+          exit.cause.pipe(Cause.hasInterrupts, assertTrue);
+          exit.cause.pipe(Cause.hasInterruptsOnly, assertTrue);
         } else {
           assertExitFailure(exit, Cause.fail(failure));
         }

@@ -14,12 +14,14 @@ import {
 } from "@beep/openai-compat";
 import * as O from "@beep/utils/Option";
 import * as Str from "@beep/utils/Str";
-import { Effect, Layer, pipe, Stream } from "effect";
 import * as AiError from "effect/ai/AiError";
 import * as LanguageModel from "effect/ai/LanguageModel";
 import * as AiModel from "effect/ai/Model";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import { XAiRequestOptions, XAiResponse } from "./XAi.models.ts";
 import { XAi } from "./XAi.service.ts";
 import type {
@@ -221,7 +223,7 @@ const streamChatCompletion = (
  * **Example** (Build language model service)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { XAi, XAiLanguageModel } from "@beep/xai"
  *
  * const ready = Effect.runSync(

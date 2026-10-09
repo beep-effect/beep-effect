@@ -7,10 +7,14 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
-import { Context, Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { HttpClient, HttpClientResponse } from "effect/http";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { asArrayBufferView, concatBytes } from "../../internal/cli/Bytes.ts";
@@ -565,7 +569,8 @@ export interface SkillUpstreamContentSourceShape {
  * ```ts
  * import { SkillProvenanceResolution, SkillUpstreamContent } from "@beep/repo-cli/commands/Skills/Skills.schemas"
  * import { SkillUpstreamContentSource } from "@beep/repo-cli/commands/Skills/Skills.service"
- * import { Effect, Layer } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * import * as S from "effect/Schema"
  *
  * const revision = "91f21dfe1328585670275781b4525fff2507f917"
@@ -641,7 +646,7 @@ const makeSkillUpstreamContentSource = Effect.gen(function* () {
  *
  * ```ts
  * import { SkillUpstreamContentSourceLive } from "@beep/repo-cli/commands/Skills/Skills.service"
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer";
  * import { FetchHttpClient } from "effect/http"
  *
  * const ready = SkillUpstreamContentSourceLive.pipe(Layer.provide(FetchHttpClient.layer))
@@ -690,8 +695,10 @@ const resolveResolution = Effect.fn("SkillsProvenance.resolveResolution")(functi
  * import { SkillsCommandError } from "@beep/repo-cli/commands/Skills/Skills.errors"
  * import type { SkillProvenanceReport } from "@beep/repo-cli/commands/Skills/Skills.schemas"
  * import { resolveSkillProvenance, SkillUpstreamContentSource } from "@beep/repo-cli/commands/Skills/Skills.service"
- * import { Crypto, Effect, FileSystem, Path } from "effect"
- *
+ * import * as Crypto from "effect/Crypto";
+ * import * as Effect from "effect/Effect";
+ * import * as FileSystem from "effect/FileSystem";
+ * import * as Path from "effect/Path";
  * const resolved: Effect.Effect<
  *   SkillProvenanceReport,
  *   SkillsCommandError,
@@ -830,8 +837,9 @@ export interface SkillProvenanceServiceShape {
  * ```ts
  * import { SkillsCommandError } from "@beep/repo-cli/commands/Skills/Skills.errors"
  * import { SkillProvenanceService } from "@beep/repo-cli/commands/Skills/Skills.service"
- * import { Effect, Exit, Layer } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Exit from "effect/Exit";
+ * import * as Layer from "effect/Layer";
  * const unavailable = Layer.succeed(
  *   SkillProvenanceService,
  *   SkillProvenanceService.of({
@@ -886,8 +894,8 @@ const makeSkillProvenanceService = Effect.gen(function* () {
  * ```ts
  * import { SkillUpstreamContent } from "@beep/repo-cli/commands/Skills/Skills.schemas"
  * import { SkillProvenanceServiceLayer, SkillUpstreamContentSource } from "@beep/repo-cli/commands/Skills/Skills.service"
- * import { Effect, Layer } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * const offline = Layer.succeed(
  *   SkillUpstreamContentSource,
  *   SkillUpstreamContentSource.of({
@@ -919,7 +927,7 @@ export const SkillProvenanceServiceLayer = Layer.effect(SkillProvenanceService, 
  *
  * ```ts
  * import { SkillProvenanceServiceLive } from "@beep/repo-cli/commands/Skills/Skills.service"
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer";
  * import { FetchHttpClient } from "effect/http"
  *
  * const withHttp = SkillProvenanceServiceLive.pipe(Layer.provide(FetchHttpClient.layer))
@@ -949,8 +957,9 @@ export const SkillProvenanceServiceLive = SkillProvenanceServiceLayer.pipe(
  * ```ts
  * import { SkillsCommandError } from "@beep/repo-cli/commands/Skills/Skills.errors"
  * import { runSkillProvenance, SkillProvenanceService } from "@beep/repo-cli/commands/Skills/Skills.service"
- * import { Effect, Exit, Layer } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Exit from "effect/Exit";
+ * import * as Layer from "effect/Layer";
  * const unavailable = Layer.succeed(
  *   SkillProvenanceService,
  *   SkillProvenanceService.of({

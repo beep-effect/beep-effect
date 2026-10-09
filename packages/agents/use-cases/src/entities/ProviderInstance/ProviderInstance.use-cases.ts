@@ -6,9 +6,9 @@
  */
 
 import { $AgentsUseCasesId } from "@beep/identity/packages";
-import { Context } from "effect";
+import * as Context from "effect/Context";
 import type * as Domain from "@beep/agents-domain/entities/ProviderInstance";
-import type { Effect } from "effect";
+import type * as Effect from "effect/Effect";
 import type {
   AddProviderInstanceCommand,
   GetProviderInstanceQuery,
@@ -28,7 +28,7 @@ const $I = $AgentsUseCasesId.create("entities/ProviderInstance/ProviderInstance.
  *
  * ```ts
  * import type { ProviderInstanceUseCasesShape } from "@beep/agents-use-cases/public"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * const useCases = { add: () => Effect.die("example"), update: () => Effect.die("example"), remove: () => Effect.void, probe: () => Effect.die("example"), get: () => Effect.die("example"), list: () => Effect.succeed([]) } satisfies ProviderInstanceUseCasesShape
  * console.log(useCases.list)
  * ```
@@ -58,7 +58,7 @@ export interface ProviderInstanceUseCasesShape {
  *
  * ```ts
  * import { ProviderInstanceUseCases } from "@beep/agents-use-cases/public"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () { return yield* ProviderInstanceUseCases })
  * console.log(program)
  * ```

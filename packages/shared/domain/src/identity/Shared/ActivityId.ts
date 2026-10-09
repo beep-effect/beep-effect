@@ -36,7 +36,7 @@ export const ActivityId = make("activity", {
  * **Example** (Decode ActivityId with Schema)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { ActivityId } from "@beep/shared-domain/identity/Shared"
  * import * as S from "effect/Schema"
  *

@@ -35,8 +35,8 @@ import {
 } from "../../beep/MemoryApply.ts";
 import { MemoryOperation, OperationLogicalPayload, logicalPayloadDigest } from "../../beep/MemoryOperations.ts";
 import { MemoryItem } from "../../beep/ProductMemory.ts";
-import { Result, flow } from "effect";
-
+import * as Result from "effect/Result";
+import { flow } from "effect/Function";
 const isWriterAdmissionError = S.is(WriterAdmissionError);
 const isMemoryApplyError = S.is(MemoryApplyError);
 const isString = S.is(S.String);

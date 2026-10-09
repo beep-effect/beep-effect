@@ -9,11 +9,13 @@ import { $RepoAiMetricsId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Effect, flow, Order, pipe, SchemaTransformation } from "effect";
+import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
-import { dual } from "effect/Function";
+import { dual, flow, pipe } from "effect/Function";
+import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import { metricEventName, transcriptLines } from "./internal/transcript-utils.ts";
 import { AiMetricsSourceAttribution, AiMetricsSourceRole, AiMetricsTranscriptSource } from "./models.ts";
 import type { TranscriptIngestSummary } from "./models.ts";
@@ -443,8 +445,7 @@ export const resolveAiMetricsHashSaltStatus = (hashSalt: O.Option<string>): AiMe
  *
  * ```ts
  * import { hashPublicTextSha256 } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const digest = Effect.runPromise(hashPublicTextSha256("visible benchmark id"))
  * console.log(digest)
  * ```
@@ -482,7 +483,7 @@ export const hashPublicTextSha256: (value: string) => Effect.Effect<Sha256Hex, A
  *
  * ```ts
  * import { hashPrivateIdentifier } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const pathHash = Effect.runPromise(hashPrivateIdentifier("/home/me/.codex/session.jsonl", O.some("salt")))
@@ -599,7 +600,7 @@ const pathRoleFor = (relativePath: string): AiMetricsSourceRole => {
  *
  * ```ts
  * import { makeAiMetricsSourceAttribution } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * const attribution = Effect.runPromise(
  *   makeAiMetricsSourceAttribution({
@@ -773,7 +774,7 @@ const rawEventEnvelopes = Effect.fn("AiMetrics.rawEventEnvelopes")(function* ({
  *
  * ```ts
  * import { TranscriptIngestSummary, makeSanitizedTranscript } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * const sanitized = Effect.runPromise(
  *   makeSanitizedTranscript({
@@ -855,7 +856,7 @@ export const makeSanitizedTranscript = Effect.fn("AiMetrics.makeSanitizedTranscr
  *
  * ```ts
  * import { TranscriptIngestSummary, makeAiMetricsPrivacyCheckResult } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * const proof = Effect.runPromise(
  *   makeAiMetricsPrivacyCheckResult({
@@ -906,7 +907,7 @@ export const makeAiMetricsPrivacyCheckResult = Effect.fn("AiMetrics.makeAiMetric
  *   AiMetricsSanitizedTranscript,
  *   privacyCheckToJson
  * } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * const json = Effect.runPromise(
  *   privacyCheckToJson(
  *     AiMetricsPrivacyCheckResult.make({

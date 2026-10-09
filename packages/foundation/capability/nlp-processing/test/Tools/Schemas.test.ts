@@ -29,8 +29,8 @@ import { WordCount } from "@beep/nlp-processing/Tools/WordCount";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
-import { Effect } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 const assertSchemaRoundTrip = Effect.fn("assertSchemaRoundTrip")(function* <

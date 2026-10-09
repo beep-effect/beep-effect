@@ -7,7 +7,10 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, Str } from "@beep/utils";
-import { Console, Context, Effect, Layer } from "effect";
+import * as Console from "effect/Console";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import { VersionCategoryReport, VersionCategoryStatusMatch, VersionSyncModeMatch } from "./VersionSync.schemas.ts";
 import type {

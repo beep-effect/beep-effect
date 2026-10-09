@@ -2,7 +2,8 @@ import { runTerseEffectRules, TerseEffectRulesOptions } from "@beep/repo-cli/tes
 import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
-import { Console, Effect } from "effect";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
 import * as TestConsole from "effect/testing/TestConsole";
 import {
   NodeTestLayer,
@@ -56,7 +57,7 @@ const writeHelperWrapperFixture = writeDemoSource([
 ]);
 
 const writeFlowThunkFixture = writeDemoSource([
-  'import { pipe } from "effect";',
+  'import { pipe } from "effect/Function";',
   'import * as O from "effect/Option";',
   'import { thunkUndefined } from "@beep/utils";',
   "",
@@ -345,7 +346,7 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
             DemoSourcePath,
             A.join(
               [
-                'import { pipe } from "effect";',
+                'import { pipe } from "effect/Function";',
                 'import * as O from "effect/Option";',
                 "",
                 "declare const maybeParse: O.Option<(input: string) => unknown>;",

@@ -32,8 +32,8 @@ export * from "./AnthropicTurnCodec.ts";
  * ```ts
  * import { AgentTurnKernel } from "@beep/agents-use-cases/public"
  * import { AnthropicTurnKernel } from "@beep/agents-server/AssistantTurn"
- * import { Effect, Stream } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Stream from "effect/Stream";
  * const program = Effect.gen(function* () {
  *   const kernel = yield* AgentTurnKernel
  *   return yield* kernel.streamTurn([{ role: "user", text: "Summarize this" }]).pipe(
@@ -57,7 +57,7 @@ export * from "./AnthropicTurnKernel.ts";
  * ```ts
  * import { IssueReport, makeRepairInvalidBlocks } from "@beep/agents-server/AssistantTurn"
  * import { AnthropicToolJsonResponse } from "@beep/anthropic"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { Response } from "effect/ai"
  *
  * const repair = makeRepairInvalidBlocks(() =>

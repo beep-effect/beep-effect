@@ -10,10 +10,18 @@ import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import { Cause, Console, DateTime, Effect, Exit, flow, Layer, Result, Runtime } from "effect";
 import * as A from "effect/Array";
+import * as Cause from "effect/Cause";
+import * as Console from "effect/Console";
 import { Command } from "effect/cli";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import { flow } from "effect/Function";
+import * as Layer from "effect/Layer";
 import { ChildProcess } from "effect/process";
+import * as Result from "effect/Result";
+import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
 import { temporaryWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
 
@@ -29,7 +37,7 @@ const testLayer = Layer.mergeAll(
 );
 
 const expectReportedFailure = (exit: Exit.Exit<unknown, unknown>) => {
-  assertTrue(Exit.isFailure(exit));
+  exit.pipe(Exit.isFailure, assertTrue);
   if (Exit.isFailure(exit)) {
     const error = Cause.squash(exit.cause);
     expect(Runtime.getErrorExitCode(error)).toBe(1);
@@ -121,7 +129,7 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
         yield* writeProjectFile("goals/.idea/workspace.xml", "<project />\n");
         yield* writeBaseline([]);
         const exit = yield* Effect.exit(runGoalsCommand(["doctor"]));
-        assertTrue(Exit.isSuccess(exit));
+        exit.pipe(Exit.isSuccess, assertTrue);
       }),
     20_000
   );
@@ -147,7 +155,7 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
         yield* writeDriftedPacket("demo");
         yield* writeBaseline(["demo lifecycle-mismatch"]);
         const exit = yield* Effect.exit(runGoalsCommand(["doctor"]));
-        assertTrue(Exit.isSuccess(exit));
+        exit.pipe(Exit.isSuccess, assertTrue);
       }),
     20_000
   );

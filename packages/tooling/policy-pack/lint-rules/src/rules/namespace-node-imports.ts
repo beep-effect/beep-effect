@@ -8,9 +8,9 @@
 
 import { Str } from "@beep/utils";
 import { defineRule } from "@oxlint/plugins";
-import { HashMap } from "effect";
 import * as A from "effect/Array";
 import { pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import { identifierName, literalStringValue } from "./utils.ts";
 import type { ESTree } from "@oxlint/plugins";

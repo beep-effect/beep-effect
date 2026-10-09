@@ -15,7 +15,7 @@
  */
 
 import { A } from "@beep/utils";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import { generateNodeId, makeNode } from "../EffectGraph.ts";
 import * as Types from "./Types.ts";
@@ -40,7 +40,7 @@ import type { OperationCategory, OperationCost, ValidationResult } from "./Types
  * **Example** (Make filtering GraphOperation)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { make, type GraphOperation } from "@beep/nlp-processing/Graph/GraphOperations/Operation"
  *
  * const operation: GraphOperation<string, string> = make({
@@ -84,7 +84,7 @@ export interface GraphOperation<A, B, R = never, E = never> {
  * **Example** (Build emit-none operation)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { make } from "@beep/nlp-processing/Graph/GraphOperations/Operation"
  *
  * const operation = make<string, string>({

@@ -2,7 +2,7 @@ import { ParserOptions, ParserOptionsError } from "@beep/schema/ParserOptions";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 // A delimiter escape that yields an unbalanced group reaches the pattern

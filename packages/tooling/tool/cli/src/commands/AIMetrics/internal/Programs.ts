@@ -98,24 +98,21 @@ import {
 } from "@beep/repo-ai-metrics";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import {
-  Clock,
-  Config,
-  ConfigProvider,
-  Console,
-  DateTime,
-  Duration,
-  Effect,
-  Exit,
-  FileSystem,
-  flow,
-  Layer,
-  Match,
-  Order,
-  Path,
-  pipe,
-  Redacted,
-} from "effect";
+import * as Clock from "effect/Clock";
+import * as Config from "effect/Config";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Console from "effect/Console";
+import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
+import { flow, pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
+import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import { aiMetricsDataRootEnvVar } from "../../../internal/cli/Flags.ts";
 import { printLines } from "../../../internal/cli/Printer.ts";
@@ -283,8 +280,7 @@ const requireAbsoluteDataRoot = (path: string) =>
  * import { AiMetricsDeployTarget } from "@beep/repo-ai-metrics"
  * import { resolveDataRoot } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
  * import * as O from "@beep/utils/Option"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = resolveDataRoot(O.some("/srv/store"), AiMetricsDeployTarget.Enum.local)
  *
  * console.log(Effect.isEffect(program)) // true
@@ -1628,13 +1624,14 @@ const attachForwarderOtlpExport = Effect.fn("AIMetrics.attachForwarderOtlpExport
   if (!enabled) return forwarderResult;
   const endpoint = yield* defaultServiceEndpoint(spec, otlpBaseUrl);
   const duckDbLayer = DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: spec.storage.duckDbPath }));
-  const otlpExit = yield* Effect.scoped(
-    Layer.build(Layer.mergeAll(duckDbLayer, AiMetricsOtlpSpanSender.layer)).pipe(
-      Effect.flatMap((context) =>
-        exportForwarderDerivedOtlp({ endpoint, forwarderResult, target }).pipe(Effect.provide(context))
-      )
-    )
-  ).pipe(Effect.exit);
+  const otlpExit = yield* Layer.mergeAll(duckDbLayer, AiMetricsOtlpSpanSender.layer).pipe(
+    Layer.build,
+    Effect.flatMap((context) =>
+      exportForwarderDerivedOtlp({ endpoint, forwarderResult, target }).pipe(Effect.provide(context))
+    ),
+    Effect.scoped,
+    Effect.exit
+  );
   const otlpExport = Exit.isFailure(otlpExit)
     ? forwarderOtlpExportFailed({ endpoint, forwarderResult, message: forwarderOtlpExportFailureMessage, target })
     : otlpExit.value;
@@ -1807,10 +1804,10 @@ const makeForwarderRunProgram = Effect.fn("AIMetrics.makeForwarderRunProgram")(f
     target,
   });
   const duckDbLayer = DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: spec.storage.duckDbPath }));
-  const forwarderResult = yield* Effect.scoped(
-    Layer.build(duckDbLayer).pipe(
-      Effect.flatMap((context) => runAiMetricsForwarder(forwarderInput).pipe(Effect.provide(context)))
-    )
+  const forwarderResult = yield* duckDbLayer.pipe(
+    Layer.build,
+    Effect.flatMap((context) => runAiMetricsForwarder(forwarderInput).pipe(Effect.provide(context))),
+    Effect.scoped
   );
   const result = yield* attachForwarderOtlpExport(otlp, spec, otlpBaseUrl, forwarderResult, target);
   const retentionEnforcement = yield* enforceForwarderRetention(retentionEnforce, spec, retentionMaxSnapshotExports);
@@ -2031,13 +2028,13 @@ const makeOtlpExportProgram = Effect.fn("AIMetrics.makeOtlpExportProgram")(funct
   // The same entry point the forwarder uses. Reading, delivering, and marking used to be
   // spelled out separately here, which is how marking ended up wired into this command
   // only and never into the forwarder. One path now, and it cannot be half-used.
-  const result = yield* Effect.scoped(
-    Layer.build(
-      Layer.mergeAll(
-        DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: spec.storage.duckDbPath })),
-        AiMetricsOtlpSpanSender.layer
-      )
-    ).pipe(Effect.flatMap((context) => runAiMetricsOtlpExport(input).pipe(Effect.provide(context))))
+  const result = yield* Layer.mergeAll(
+    DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: spec.storage.duckDbPath })),
+    AiMetricsOtlpSpanSender.layer
+  ).pipe(
+    Layer.build,
+    Effect.flatMap((context) => runAiMetricsOtlpExport(input).pipe(Effect.provide(context))),
+    Effect.scoped
   );
 
   if (json) {

@@ -1,6 +1,6 @@
 import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
-import { Effect } from "effect";
 import * as Crypto from "effect/Crypto";
+import * as Effect from "effect/Effect";
 import { loadOpenClawStackArgs, makeOpenClawGeneration, OpenClawStack } from "../OpenClaw.ts";
 
 const args = loadOpenClawStackArgs();

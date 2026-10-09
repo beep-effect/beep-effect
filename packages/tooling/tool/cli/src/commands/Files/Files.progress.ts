@@ -8,8 +8,11 @@
 import defaultChalk from "@beep/chalk";
 import defaultColors from "@beep/colors";
 import { A } from "@beep/utils";
-import { Effect, Ref, Semaphore, Terminal } from "effect";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
+import * as Ref from "effect/Ref";
+import * as Semaphore from "effect/Semaphore";
+import * as Terminal from "effect/Terminal";
 import {
   clearLine,
   isProgressEnabled,

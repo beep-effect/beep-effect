@@ -16,7 +16,7 @@
 
 The repo wants two distinct capabilities:
 
-1. **Ongoing enforcement** — a lint (or equivalent) that fails `import { … } from "effect"` and `import { … } from "@beep/<foundation>"` barrel forms, and ideally rewrites them to per-module namespace imports.
+1. **Ongoing enforcement** — a lint (or equivalent) that fails `import { … } from "<legacy-effect-barrel>"` and `import { … } from "@beep/<foundation>"` barrel forms, and ideally rewrites them to per-module namespace imports.
 2. **One-shot migration** — mechanically rewrite ~1800+ files. A throwaway CLI / codemod / ast-grep / jscodeshift pass is acceptable even if it is not the permanent linter.
 
 Constraints that kill otherwise-attractive tools:
@@ -71,7 +71,7 @@ Incumbent **Biome 2.5.6 is past 2.2.0**, so `patterns` is already available. A c
 
 What it cannot do without a plugin or a different tool:
 
-- Map `import { pipe, Effect } from "effect"` onto the Effect-style **namespace-per-module** target (`import * as Effect from "effect/Effect"` plus a separate Function import, plus rewriting every `pipe(` / `Effect.` use-site).
+- Map `import { pipe, Effect } from "<legacy-effect-barrel>"` onto the Effect-style **namespace-per-module** target (`import * as Effect from "effect/Effect"` plus a separate Function import, plus rewriting every `pipe(` / `Effect.` use-site).
 - Accept a runtime lookup table of “this named export lives on this submodule.” Options are static JSON.
 
 Older enhancement PRs (e.g. [#2977](https://github.com/biomejs/biome/pull/2977) `allowedFrom` / `includeAllSubmodules`, May–June 2024) are **not** in the current option surface; do not plan around them.
@@ -99,7 +99,7 @@ That is a reversal of the 2.0-beta story. In June 2025 Herrington Darkholme docu
 
 1. **No plugin options.** A `.grit` file is a pattern, not a parameterized rule. `biome-plugin-drizzle` (npm, 2026-01-08) states this explicitly: “Unlike ESLint, Biome plugins cannot accept configuration.” One plugin per banned specifier (or a giant `or` of hardcoded packages) is the realistic shape. A 50-package `@beep/*` allow-list does not belong in GritQL.
 2. **No JS/TS plugin host.** The 2024 Plugin RFC ([discussion #1762](https://github.com/biomejs/biome/discussions/1762)) still lists JS/TS plugins as unfinished. Binding-to-module mapping (`pipe` → `effect/Function`, `Effect` → `effect/Effect`) cannot be looked up from `node_modules/effect/package.json` exports inside a `.grit` file.
-3. **Rewrite granularity is pattern substitution**, not a multi-statement import splitter with a symbol table. GritQL `=>` can rewrite `import { Effect } from "effect"` to `import * as Effect from "effect/Effect"` when the named list is a single known identifier. A mixed named import (`{ Effect, pipe, Schema, type Context }`) needs either many specialized patterns or a host that can explode one statement into N statements — GritQL is a poor fit for the latter.
+3. **Rewrite granularity is pattern substitution**, not a multi-statement import splitter with a symbol table. GritQL `=>` can rewrite `import { Effect } from "<legacy-effect-barrel>"` to `import * as Effect from "effect/Effect"` when the named list is a single known identifier. A mixed named import (`{ Effect, pipe, Schema, type Context }`) needs either many specialized patterns or a host that can explode one statement into N statements — GritQL is a poor fit for the latter.
 4. **Type-only / mixed type+value / `import()`** each need their own patterns. Official plugin docs do not advertise TypeScript-aware “this specifier is type-only” helpers.
 
 ### 1.3 Official statements on import-restructuring autofix
@@ -177,7 +177,7 @@ What is shipped:
 - `oxlint-plugin-eslint` bridge for core rules oxlint has not nativized (`no-restricted-syntax`, etc.)
 - **Not yet:** custom parsers (Svelte/Vue/Angular); **JS-plugin rules that need TypeScript type-awareness**
 
-A custom JS plugin that looks up `effect` / `@beep/*` export maps and rewrites `import { Effect, pipe } from "effect"` → `import * as Effect from "effect/Effect"` **could** run under oxlint. That is a real capability Biome GritQL does not have (no plugin options, no JS host, no `package.json` lookup).
+A custom JS plugin that looks up `effect` / `@beep/*` export maps and rewrites `import { Effect, pipe } from "<legacy-effect-barrel>"` → `import * as Effect from "effect/Effect"` **could** run under oxlint. That is a real capability Biome GritQL does not have (no plugin options, no JS host, no `package.json` lookup).
 
 Cost: a **new permanent linter** (or a parallel oxlint lane) for a rule the incumbent Biome already diagnoses, plus an alpha plugin host. The repo constraint is “new permanent tools only on decisive advantage.” JS-plugin-with-fixer is an advantage for **autofix**, not for the ban itself.
 
@@ -232,7 +232,7 @@ Names checked against live npm/GitHub (2026-08-23). Almost all optimize **named 
 | **`unicorn/no-barrel-files`** | current unicorn | bans *authoring* re-export-only files | “remove the barrel” | Producer-side. |
 | **`@typescript-eslint/consistent-type-imports`** | current | `import type` style | 🔧 | Orthogonal. |
 
-**There is no maintained ESLint plugin that autofixes `import { Effect, pipe } from "effect"` into `import * as Effect from "effect/Effect"` + `import * as Function from "effect/Function"`.** Closest consumer rewrite (`prefer-source-imports`) explicitly skips namespace imports and emits named imports from the resolved file.
+**There is no maintained ESLint plugin that autofixes `import { Effect, pipe } from "<legacy-effect-barrel>"` into `import * as Effect from "effect/Effect"` + `import * as Function from "effect/Function"`.** Closest consumer rewrite (`prefer-source-imports`) explicitly skips namespace imports and emits named imports from the resolved file.
 
 ### 3.3 Custom ESLint rule as the fixer (the Atlassian pattern)
 
@@ -297,7 +297,7 @@ TypeScript catalog (https://ast-grep.github.io/catalog/typescript/, crawled 2026
 | Does not rewrite use-sites | If you keep `pipe(` as a free function you must either leave a named `import { pipe } from "effect/Function"` (`topLevelNamedReexports: "follow"` style) or rewrite every call. YAML will not do that as part of the import rule. |
 | Hypermod comparison (2025-01-29, https://www.hypermod.io/blog/4-jscodeshift-vs-ast-grep) | ast-grep = speed + simple patterns; **jscodeshift when you need deep JS/TS transforms**. This job is the latter once `pipe`/`Function` and mixed type+value enter. |
 
-**Fit:** excellent *throwaway* vehicle for the subset `import { Effect } from "effect"` → `import * as Effect from "effect/Effect"`. Insufficient as the only 1800-file tool unless a generated rule set or JS API walk carries a real export map. Not a permanent linter (Biome/ESLint already cover the ban).
+**Fit:** excellent *throwaway* vehicle for the subset `import { Effect } from "<legacy-effect-barrel>"` → `import * as Effect from "effect/Effect"`. Insufficient as the only 1800-file tool unless a generated rule set or JS API walk carries a real export map. Not a permanent linter (Biome/ESLint already cover the ban).
 
 ---
 
@@ -309,8 +309,8 @@ Every purpose-built tool found emits **named imports from the resolved source fi
 | --- | --- | --- | --- |
 | **`@effect/eslint-plugin` `no-import-from-barrel-package`** v0.3.2 (npm ~1 year; source [no-import-from-barrel-package.ts](https://github.com/Effect-TS/eslint-plugin/blob/main/src/rules/no-import-from-barrel-package.ts); changelog 2025-04-24 “Add rule for disallowing direct barrel imports”, then “Fix import type * as …”) | **This is the rule shape.** `meta.fixable: "code"`. Message: ``Use import * as {{localName}} from "{{packageName}}/{{moduleName}}"``. **Fixer only when the declaration has exactly one specifier.** Skips `import type` statements and inline `type` specifiers. Naive map: imported name = submodule path (`Effect` → `effect/Effect`). `pipe` would become `effect/pipe` — **wrong**. README is a stub. 2 npm dependents. | **Yes, for 1:1 module-named specifiers.** |
 | **Effect-smol oxlint JS plugin** [`packages/tools/oxc/src/oxlint/rules/no-import-from-barrel-package.ts`](https://raw.githubusercontent.com/Effect-TS/effect-smol/main/packages/tools/oxc/src/oxlint/rules/no-import-from-barrel-package.ts) (types from `"oxlint"`, last rule-body commit Jan 8 2026) | Same diagnostic message for package imports. **No fixer.** Also flags `import * as X from "<barrel>"` and relative `index.ts` barrels via `fs.existsSync`. Wired in [`packages/tools/oxc/oxlintrc.json`](https://raw.githubusercontent.com/Effect-TS/effect-smol/main/packages/tools/oxc/oxlintrc.json) with regex `checkPatterns` for `^effect$`, `^@effect/[^/]+$`, plus camelCase subpath traps. | Diagnostic only. **Effect v4’s own CI enforcement.** |
-| **`@effect/language-service` `importFromBarrel`** (README + [schema.json](https://github.com/Effect-TS/language-service), plugin still current as of 2026-08-10) | Off-by-default style diagnostic, **🔧 quick fix**. Completions honor `namespaceImportPackages: ["effect", "@effect/*"]`. `topLevelNamedReexports`: `"ignore"` (leave `{pipe} from "effect"`) or `"follow"` (`{pipe} from "effect/Function"` — **named** from submodule). `barrelImportPackages` is the opposite preference. Editor/LSP, not a repo-wide `--fix`. | Closest *smart* mapping (knows re-export targets). Not a CI hammer unless you enable the diagnostic as error and click-fix. |
-| **`@effect/codemod`** 0.0.16, last publish **2024-07-23** (https://github.com/Effect-TS/codemod) | jscodeshift transformers: `effect-3.0`, `effect-3.0.4`, `minor-2.{1,3,4}`, `platform-0.49`, `schema-0.{65,69}`. API/version renames. **No barrel→namespace transformer.** Effect v4 `MIGRATION.md` examples still show `import { Effect, Scope } from "effect"`. | No. |
+| **`@effect/language-service` `importFromBarrel`** (README + [schema.json](https://github.com/Effect-TS/language-service), plugin still current as of 2026-08-10) | Off-by-default style diagnostic, **🔧 quick fix**. Completions honor `namespaceImportPackages: ["effect", "@effect/*"]`. `topLevelNamedReexports`: `"ignore"` (leave `{pipe} from "<legacy-effect-barrel>"`) or `"follow"` (`{pipe} from "effect/Function"` — **named** from submodule). `barrelImportPackages` is the opposite preference. Editor/LSP, not a repo-wide `--fix`. | Closest *smart* mapping (knows re-export targets). Not a CI hammer unless you enable the diagnostic as error and click-fix. |
+| **`@effect/codemod`** 0.0.16, last publish **2024-07-23** (https://github.com/Effect-TS/codemod) | jscodeshift transformers: `effect-3.0`, `effect-3.0.4`, `minor-2.{1,3,4}`, `platform-0.49`, `schema-0.{65,69}`. API/version renames. **No barrel→namespace transformer.** Effect v4 `MIGRATION.md` examples still show `import { Effect, Scope } from "<legacy-effect-barrel>"`. | No. |
 | **`eslint-plugin-no-barrel-files` `prefer-source-imports`** 2.2.0 | Resolves re-export graph; autofix named/default; **explicitly not namespace**. | No. |
 | **`unbarrelify`** (webpro-nl, knip author) | Rewire consumers to source, delete barrel, `--unsafe-namespace`, `--organize-imports`. After: `import { formatDate } from "./utils/date.ts"`. | No. |
 | **`barrel-breaker`** (peterjcaulfield) | CLI rewrite + purge. Named/default/alias/type/path-alias. | No. |
@@ -336,7 +336,7 @@ Every purpose-built tool found emits **named imports from the resolved source fi
 - Matcher is regex (`^effect$`, `^@effect/[^/]+$`, plus a camelCase-subpath pattern) and optional relative `index` detection.
 - They still skip whole `import type` statements.
 - Editor side: `@effect/language-service` `namespaceImportPackages` + `importFromBarrel` quick-fix (Mattia Manzati, Effect Discord 2026-01-12: “For proper type aware linting and suggestions we recommend the Effect LSP”; `@effect/eslint-plugin` is “mostly a dprint formatter used by the effect packages”).
-- Official docs still document **both** `import { Effect } from "effect"` and `import * as Effect from "effect/Effect"` ([effect.website importing-effect](https://effect.website/docs/getting-started/importing-effect/), 2026-07-03), citing tree-shaking.
+- Official docs still document **both** `import { Effect } from "<legacy-effect-barrel>"` and `import * as Effect from "effect/Effect"` ([effect.website importing-effect](https://effect.website/docs/getting-started/importing-effect/), 2026-07-03), citing tree-shaking.
 
 ### 6.2 `@effect/eslint-plugin` — the only published fixer for this exact AST shape
 
@@ -344,7 +344,7 @@ v0.3.1–0.3.2 (Apr 2025). Tiny, under-documented, single-specifier fixer, naive
 
 ### 6.3 t3code / pingdotgg (May 2026)
 
-[PR #2596](https://github.com/pingdotgg/t3code/pull/2596): “Migrates all Effect imports from barrel-style named imports (`import { Effect, Layer } from 'effect'`) to module-qualified namespace imports (`import * as Effect from 'effect/Effect'`)” so `@effect/language-service` `namespaceImportPackages` can be error-severity. Hundreds of files. Mechanism not published as a reusable codemod — it is a one-shot plus LSP going forward.
+[PR #2596](https://github.com/pingdotgg/t3code/pull/2596): “Migrates all Effect imports from barrel-style named imports (`import { Effect, Layer } from '<legacy-effect-barrel>'`) to module-qualified namespace imports (`import * as Effect from 'effect/Effect'`)” so `@effect/language-service` `namespaceImportPackages` can be error-severity. Hundreds of files. Mechanism not published as a reusable codemod — it is a one-shot plus LSP going forward.
 
 ### 6.4 Atlassian Jira frontend (2025-06-26)
 
@@ -393,7 +393,7 @@ Ranked against this repo’s constraints: Biome 2.5.6 + GritQL already in tree, 
 2. **Permanent autofix (optional, scoped ESLint):** a custom rule that is `@effect/eslint-plugin`’s fixer with (a) multi-specifier explode, (b) export map so `pipe` does not become `effect/pipe`, (c) merge with existing namespace imports, (d) `import type` policy made explicit. This is the Effect-smol rule’s *intent* plus the published ESLint rule’s *fixer*, without adopting oxlint.
 3. **One-shot:** run that ESLint rule with `--fix` (or the jscodeshift equivalent) in Atlassian waves. Do not run unbarrelify.
 4. **Editor:** keep/enable `@effect/language-service` `namespaceImportPackages` so new code is born correct; do not rely on it as CI.
-5. **GritQL:** skip unless you want a 1:1 `import { Effect } from "effect"` sugar on top of (1). It will not carry the catalog.
+5. **GritQL:** skip unless you want a 1:1 `import { Effect } from "<legacy-effect-barrel>"` sugar on top of (1). It will not carry the catalog.
 
 ### 7.4 Evidence trail (key URLs)
 

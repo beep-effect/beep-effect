@@ -11,7 +11,7 @@
  */
 
 import { $PretextId } from "@beep/identity/packages";
-import { Context } from "effect";
+import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import type {

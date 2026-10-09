@@ -9,8 +9,8 @@
     },
     "description": "Returns a schema that decodes a JSON string and then decodes the parsed value using the given schema; useful when the JSON's structure is described by an existing schema. Pair with S.decodeUnknownEffect (decode) / S.encodeUnknownEffect (stringify).",
     "examples": [
-      "import { Schema } from \"effect\"\n\nconst schema = Schema.Struct({ a: Schema.Number })\nconst schemaFromJsonString = Schema.fromJsonString(schema)\n\nSchema.decodeUnknownSync(schemaFromJsonString)(`{\"a\":1,\"b\":2}`)\n// => { a: 1 }",
-      "import { Schema } from \"effect\"\n\nconst original = Schema.Struct({ a: Schema.String })\nconst schema = Schema.fromJsonString(original)\n\nconst document = Schema.toJsonSchemaDocument(schema)\n\nconsole.log(JSON.stringify(document, null, 2))\n// {\n//   \"source\": \"draft-2020-12\",\n//   \"schema\": {\n//     \"type\": \"string\",\n//     \"contentMediaType\": \"application/json\",\n//     \"contentSchema\": {\n//       \"type\": \"object\",\n//       \"properties\": {\n//         \"a\": {\n//           \"type\": \"string\"\n//         }\n//       },\n//       \"required\": [\n//         \"a\"\n//       ],\n//       \"additionalProperties\": false\n//     }\n//   },\n//   \"definitions\": {}\n// }"
+      "import * as Schema from \"effect/Schema\"\n\nconst schema = Schema.Struct({ a: Schema.Number })\nconst schemaFromJsonString = Schema.fromJsonString(schema)\n\nSchema.decodeUnknownSync(schemaFromJsonString)(`{\"a\":1,\"b\":2}`)\n// => { a: 1 }",
+      "import * as Schema from \"effect/Schema\"\n\nconst original = Schema.Struct({ a: Schema.String })\nconst schema = Schema.fromJsonString(original)\n\nconst document = Schema.toJsonSchemaDocument(schema)\n\nconsole.log(JSON.stringify(document, null, 2))\n// {\n//   \"source\": \"draft-2020-12\",\n//   \"schema\": {\n//     \"type\": \"string\",\n//     \"contentMediaType\": \"application/json\",\n//     \"contentSchema\": {\n//       \"type\": \"object\",\n//       \"properties\": {\n//         \"a\": {\n//           \"type\": \"string\"\n//         }\n//       },\n//       \"required\": [\n//         \"a\"\n//       ],\n//       \"additionalProperties\": false\n//     }\n//   },\n//   \"definitions\": {}\n// }"
     ]
   },
   {
@@ -34,7 +34,7 @@
     },
     "description": "A transformation schema that decodes a JSON-encoded string into an unknown value (decoding fails on invalid JSON; encoding stringifies any valid JSON value). This is the no-schema fallback for JSON.parse/JSON.stringify when no target schema exists.",
     "examples": [
-      "import { Schema } from \"effect\"\n\nSchema.decodeUnknownSync(Schema.UnknownFromJsonString)(`{\"a\":1,\"b\":2}`)\n// => { a: 1, b: 2 }"
+      "import * as Schema from \"effect/Schema\"\n\nSchema.decodeUnknownSync(Schema.UnknownFromJsonString)(`{\"a\":1,\"b\":2}`)\n// => { a: 1, b: 2 }"
     ]
   },
   {
@@ -69,7 +69,7 @@
     },
     "description": "Encodes an unknown input against a schema, returning an Effect that succeeds with the encoded value or fails with a SchemaError. Use this when the input type is not statically known; prefer encodeEffect when the input is already typed as the schema's Type. Canonical runner for stringify via S.fromJsonString / S.UnknownFromJsonString.",
     "examples": [
-      "import { Effect, Schema } from \"effect\"\n\nconst NumberFromString = Schema.NumberFromString\n\nEffect.runPromise(Schema.encodeUnknownEffect(NumberFromString)(42)).then(console.log)\n// Output: \"42\""
+      "import * as Effect from \"effect/Effect\"\nimport * as Schema from \"effect/Schema\"\n\nconst NumberFromString = Schema.NumberFromString\n\nEffect.runPromise(Schema.encodeUnknownEffect(NumberFromString)(42)).then(console.log)\n// Output: \"42\""
     ]
   },
   {
@@ -82,7 +82,7 @@
     },
     "description": "Decodes an unknown input against a schema synchronously, returning the decoded value or throwing an Error whose cause contains the schema issue; only service-free schemas can be decoded synchronously. Synchronous sibling runner for JSON decode at boundaries.",
     "examples": [
-      "import { Schema } from \"effect\"\n\nconst NumberFromString = Schema.NumberFromString\n\nconsole.log(Schema.decodeUnknownSync(NumberFromString)(\"42\"))\n// Output: 42\n\nSchema.decodeUnknownSync(NumberFromString)(\"not a number\")\n// throws SchemaError: NumberFromString\n//   └─ Encoded side transformation failure\n//      └─ NumberFromString\n//         └─ Expected a numeric string, actual \"not a number\""
+      "import * as Schema from \"effect/Schema\"\n\nconst NumberFromString = Schema.NumberFromString\n\nconsole.log(Schema.decodeUnknownSync(NumberFromString)(\"42\"))\n// Output: 42\n\nSchema.decodeUnknownSync(NumberFromString)(\"not a number\")\n// throws SchemaError: NumberFromString\n//   └─ Encoded side transformation failure\n//      └─ NumberFromString\n//         └─ Expected a numeric string, actual \"not a number\""
     ]
   },
   {
@@ -128,7 +128,7 @@
     },
     "description": "Schema (Codec<Json>) that accepts and validates any immutable JSON-compatible value. Useful as the inner schema for a JSON value of unknown shape (e.g. S.fromJsonString(S.Json)).",
     "examples": [
-      "import { Schema } from \"effect\"\n\nconst result = Schema.decodeUnknownOption(Schema.Json)({ key: [1, true, null] })\nconsole.log(result._tag) // \"Some\""
+      "import * as Schema from \"effect/Schema\"\n\nconst result = Schema.decodeUnknownOption(Schema.Json)({ key: [1, true, null] })\nconsole.log(result._tag) // \"Some\""
     ]
   },
   {

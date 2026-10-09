@@ -8,7 +8,11 @@
 import { $N3Id } from "@beep/identity/packages";
 import * as Rdf from "@beep/rdf/Rdf";
 import { A, O, Str } from "@beep/utils";
-import { Context, Effect, Layer, Match, pipe } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as S from "effect/Schema";
 import { DataFactory, Parser, Writer } from "n3";
 import { N3TurtleCodecError } from "./N3.errors.ts";
@@ -328,8 +332,7 @@ const serializeTurtle = Effect.fn("N3.serializeTurtle")(function* (request: N3Se
  *
  * ```ts
  * import { N3TurtleCodec } from "@beep/n3"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const codec = yield* N3TurtleCodec
  *   return codec

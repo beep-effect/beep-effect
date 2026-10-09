@@ -6,8 +6,10 @@
  */
 
 import { A } from "@beep/utils";
-import { Console, Effect, Match } from "effect";
+import * as Console from "effect/Console";
 import { Command, Flag } from "effect/cli";
+import * as Effect from "effect/Effect";
+import * as Match from "effect/Match";
 import { printLines } from "../../internal/cli/Printer.ts";
 import { ImageCommandError } from "./Image.errors.ts";
 import {
@@ -128,8 +130,7 @@ const imageExtractFramesDirCommand = Command.make(
  * ```ts
  * import { imageCommand } from "@beep/repo-cli"
  * import { Command } from "effect/cli"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const run = Command.run(imageCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true
  * ```

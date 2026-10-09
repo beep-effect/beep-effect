@@ -16,7 +16,7 @@ import {
   TagLedgerRecord,
 } from "@beep/law-practice-domain/values/MailTagging";
 import { Fn } from "@beep/schema";
-import { Context } from "effect";
+import * as Context from "effect/Context";
 import * as S from "effect/Schema";
 import { EffectOutput } from "../internal/effectOutput.ts";
 import {

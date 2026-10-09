@@ -28,7 +28,7 @@ AI-facing tools declare `AiToolError` as their failure schema with `failureMode:
 ## Usage
 
 ```ts
-import { Effect } from "effect"
+import * as Effect from "effect/Effect";
 import { tokenizeToDocument } from "@beep/nlp/Core"
 import { WinkLayerLive } from "@beep/wink"
 
@@ -42,7 +42,7 @@ console.log(document.tokenCount)
 ```
 
 ```ts
-import { Effect } from "effect"
+import * as Effect from "effect/Effect";
 import { exportTools } from "@beep/nlp-processing/Tools"
 import { WinkNlpToolkitLive } from "@beep/wink"
 
@@ -54,7 +54,7 @@ console.log(tools.map((tool) => tool.name))
 ```
 
 ```ts
-import { Effect } from "effect"
+import * as Effect from "effect/Effect";
 import { observeWinkWorkflow } from "@beep/wink"
 
 const observed = Effect.succeed("ready").pipe(

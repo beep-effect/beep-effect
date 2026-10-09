@@ -24,7 +24,7 @@ import { NativeSelect, NativeSelectOption } from "@beep/ui/components/native-sel
 import { Textarea } from "@beep/ui/components/textarea";
 import { A, O, R, Str } from "@beep/utils";
 import { useAtomSet, useAtomValue } from "@effect/atom-react";
-import { pipe } from "effect";
+import { pipe } from "effect/Function";
 import * as S from "effect/Schema";
 import { valueFromEvent } from "./Session.workbench.shared.ts";
 import type { RunOntologySparqlResult } from "@beep/ontology-use-cases/aggregates/Session";

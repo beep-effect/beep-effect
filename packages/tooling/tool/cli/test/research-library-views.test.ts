@@ -31,9 +31,19 @@ import {
 } from "@beep/repo-cli/test/ResearchLibrary";
 import { NodeServices } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
-import { Cause, Config, Effect, Exit, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
+import * as Cause from "effect/Cause";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
+
+const LibraryProbeEvidenceJson = S.fromJsonString(LibraryProbeEvidence);
+const UnknownJson = S.fromJsonString(S.Unknown);
+const LibraryDispositionImportPayloadJson = S.fromJsonString(LibraryDispositionImportPayload);
+const LibraryIntakeJson = S.fromJsonString(LibraryIntake);
 
 const webSourceKinds: ReadonlyArray<LibrarySource["kind"]> = ["web", "docs", "endpoint"];
 const fixtureJson = S.Unknown.pipe(S.fromJsonString, S.encodeEffect);
@@ -188,6 +198,8 @@ const fixture = Effect.gen(function* () {
   );
   const evidence = LibraryArtifact.make({
     ...(yield* saveImmutable(
+      // Deliberate hostile fixture bytes are saved as data; the rendering test asserts HTML escaping.
+      // nosemgrep: javascript.lang.security.audit.unknown-value-with-script-tag.unknown-value-with-script-tag
       root,
       "evidence/source.txt",
       new TextEncoder().encode('<script>globalThis.pwned=true</script><img src=x onerror="alert(1)">')
@@ -202,9 +214,13 @@ const fixture = Effect.gen(function* () {
   });
   const response = LibraryArtifact.make({
     ...(yield* saveImmutable(
+      // Deliberate hostile provider receipt is persisted as data, never executed or embedded unescaped.
+      // nosemgrep: javascript.lang.security.audit.unknown-value-with-script-tag.unknown-value-with-script-tag
       root,
       "evidence/response.json",
       new TextEncoder().encode(
+        // The JSON encoder preserves hostile fixture text for the escaping assertion below.
+        // nosemgrep: javascript.lang.security.audit.unknown-value-with-script-tag.unknown-value-with-script-tag
         yield* fixtureJson({
           data: {
             markdown: '<script>globalThis.pwned=true</script><img src=x onerror="alert(1)">',
@@ -261,7 +277,7 @@ const fixture = Effect.gen(function* () {
         complete: true,
         artifacts: [evidence, rawHtml, response],
       });
-      const encoded = yield* S.encodeEffect(S.fromJsonString(LibraryProbeEvidence))(probe);
+      const encoded = yield* S.encodeEffect(LibraryProbeEvidenceJson)(probe);
       const providerEvents = [
         {
           direction: "sent",
@@ -286,10 +302,8 @@ const fixture = Effect.gen(function* () {
           },
         },
       ];
-      const providerEncoded = yield* S.encodeUnknownEffect(S.fromJsonString(S.Unknown))(A.getUnsafe(providerEvents, 0));
-      const completionEncoded = yield* S.encodeUnknownEffect(S.fromJsonString(S.Unknown))(
-        A.getUnsafe(providerEvents, 1)
-      );
+      const providerEncoded = yield* S.encodeUnknownEffect(UnknownJson)(A.getUnsafe(providerEvents, 0));
+      const completionEncoded = yield* S.encodeUnknownEffect(UnknownJson)(A.getUnsafe(providerEvents, 1));
       const providerArtifact = LibraryArtifact.make({
         ...(yield* saveImmutable(
           root,
@@ -342,6 +356,7 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
       const readable = yield* fs.readFileString(path.join(root, "sources/s", `artifact-c-${evidence.sha256}.html`));
       expect(readable).toContain("&lt;script&gt;globalThis.pwned=true&lt;/script&gt;");
       expect(html).not.toContain("globalThis.pwned=true");
+      expect(html).toContain("Example &lt;script&gt;bad()&lt;/script&gt;");
       expect(html).not.toContain('<img src=x onerror="alert(1)">');
       expect(readable).toContain('href="../../evidence/source.txt"');
       expect(html).toContain("revision abc");
@@ -667,7 +682,7 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
         reviewedAt: "2026-10-06",
         artifacts: [evidence],
       });
-      const encoded = yield* S.encodeEffect(S.fromJsonString(LibraryDispositionImportPayload))(payload);
+      const encoded = yield* S.encodeEffect(LibraryDispositionImportPayloadJson)(payload);
       const receipt = LibraryArtifact.make({
         ...(yield* saveImmutable(root, "unavailable/review.json", new TextEncoder().encode(encoded))),
         role: "reviewed-disposition",
@@ -775,7 +790,7 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
         ...(yield* saveImmutable(
           root,
           "reviewed/v1.json",
-          new TextEncoder().encode(yield* S.encodeEffect(S.fromJsonString(LibraryDispositionImportPayload))(payload))
+          new TextEncoder().encode(yield* S.encodeEffect(LibraryDispositionImportPayloadJson)(payload))
         )),
         role: "reviewed-disposition",
         mediaType: "application/json",
@@ -863,7 +878,7 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
         ...(yield* saveImmutable(
           root,
           intake.manifestPath,
-          new TextEncoder().encode(yield* S.encodeEffect(S.fromJsonString(LibraryIntake))(intake))
+          new TextEncoder().encode(yield* S.encodeEffect(LibraryIntakeJson)(intake))
         )),
         role: "intake-manifest",
         mediaType: "application/json",
@@ -945,7 +960,7 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
       });
       const proof = yield* artifact(
         "probe.json",
-        yield* S.encodeEffect(S.fromJsonString(LibraryProbeEvidence))(probe),
+        yield* S.encodeEffect(LibraryProbeEvidenceJson)(probe),
         "qualification-probe",
         "application/json"
       );

@@ -18,8 +18,7 @@
  * import { makeServerLayer, M365McpServerConfig } from "@beep/m365-mcp"
  * import { M365 } from "@beep/m365"
  * import { NodeRuntime, NodeStdio } from "@effect/platform-node"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * Layer.launch(
  *   makeServerLayer(
  *     M365McpServerConfig.make({ name: "beep-m365", version: "0.1.0" }),

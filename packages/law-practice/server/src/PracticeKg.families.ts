@@ -11,8 +11,12 @@ import { $LawPracticeServerId } from "@beep/identity/packages";
 import { KgAttributionSource } from "@beep/law-practice-domain/values";
 import { extractPracticeKgPathEvidence } from "@beep/law-practice-use-cases/server";
 import * as O from "@beep/utils/Option";
-import { Effect, flow, HashSet, MutableHashMap, Order, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import { flow, pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { PracticeKgDocketRegisterRow, practiceKgRegisterDocketClients } from "./PracticeKg.register.ts";
@@ -697,7 +701,7 @@ export const reconcileAnchors = (
     }
   );
   return A.sort(
-    A.fromIterable(MutableHashMap.values(anchors)),
+    anchors.pipe(MutableHashMap.values, A.fromIterable),
     Order.mapInput(
       Order.String,
       (anchor: PracticeKgAnchorRecord) => `${anchor.applicationNumber ?? ""}\u0000${anchor.patentNumber ?? ""}`

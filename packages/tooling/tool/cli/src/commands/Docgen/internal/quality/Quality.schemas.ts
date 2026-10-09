@@ -8,8 +8,8 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { Struct } from "@beep/utils";
-import { Order } from "effect";
 import { dual } from "effect/Function";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import type * as Ordering from "effect/Ordering";
 import type { DocgenWorkspacePackage } from "../../Docgen.schemas.ts";
@@ -608,8 +608,7 @@ export class DocgenQualitySubjectCandidate extends S.Class<DocgenQualitySubjectC
  *
  * ```ts
  * import { byPackagePathAscending } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.schemas"
- * import { Order } from "effect"
- *
+ * import * as Order from "effect/Order";
  * console.log(Order.lessThan(byPackagePathAscending)("a", "b")) // true
  * ```
  *
@@ -631,8 +630,7 @@ export const byPackagePathAscending: {
  *
  * ```ts
  * import { bySubjectIdentityAscending } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.schemas"
- * import { Order } from "effect"
- *
+ * import * as Order from "effect/Order";
  * console.log(Order.lessThan(bySubjectIdentityAscending)("a", "b")) // true
  * ```
  *

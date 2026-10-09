@@ -13,8 +13,7 @@
 import { $ScratchpadId } from "@beep/identity";
 import * as S from "effect/Schema";
 import { ErrorMessage, OptionalErrorCause, OptionalErrorMessage, OptionalNonNegativeInt } from "./Base.ts";
-import { Effect } from "effect";
-
+import * as Effect from "effect/Effect";
 const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Extraction");
 
 const OptionalExtractionJson = S.OptionFromNullishOr(S.Json).pipe(

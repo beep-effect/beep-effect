@@ -18,7 +18,7 @@ const allowedDevOriginPattern =
  * **Example** (Decode wildcard dev origin)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { AllowedDevOrigin } from "@beep/repo-configs/next"
  * const program = S.decodeUnknownEffect(AllowedDevOrigin)("*.local-origin.dev")

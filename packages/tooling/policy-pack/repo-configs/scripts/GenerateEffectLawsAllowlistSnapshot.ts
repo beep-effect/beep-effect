@@ -1,7 +1,13 @@
 import { fileURLToPath } from "node:url";
 import { Bool, Str } from "@beep/utils";
 import { NodeRuntime, NodeServices } from "@effect/platform-node";
-import { Console, Effect, FileSystem, Inspectable, Layer, Path, Result } from "effect";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Inspectable from "effect/Inspectable";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
+import * as Result from "effect/Result";
 import { normalizePath } from "../src/eslint/Shared.ts";
 import { ALLOWLIST_PATH, EffectLawsAllowlistSnapshot } from "../src/internal/eslint/EffectLawsAllowlistSchemas.ts";
 import {
@@ -63,8 +69,9 @@ const program = Effect.gen(function* () {
   yield* Console.log(`[allowlist-codegen] diagnostics=${snapshot.diagnostics.length}`);
 });
 
-const main = Effect.scoped(
-  Layer.build(NodeServices.layer).pipe(Effect.flatMap((context) => Effect.provide(program, context)))
+const main = Layer.build(NodeServices.layer).pipe(
+  Effect.flatMap((context) => Effect.provide(program, context)),
+  Effect.scoped
 );
 
 NodeRuntime.runMain(main);

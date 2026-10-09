@@ -6,8 +6,9 @@
  */
 import { $HtmlId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
-import { BigInt as BI, flow, MutableHashSet, pipe } from "effect";
-import { dual } from "effect/Function";
+import * as BI from "effect/BigInt";
+import { dual, flow, pipe } from "effect/Function";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
 

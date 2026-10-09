@@ -30,8 +30,11 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Console, Duration, Effect, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
 import type { RepoStepRunResult } from "../../../internal/repo-run/index.ts";
@@ -230,8 +233,7 @@ export const renderYeetCheckRegistrationExhausted = (delays: ReadonlyArray<Durat
  *
  * ```ts
  * import { awaitYeetCheckRegistration, YEET_CHECK_REGISTRATION_BACKOFF } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const watched = Effect.succeed([]).pipe(awaitYeetCheckRegistration(YEET_CHECK_REGISTRATION_BACKOFF))
  * console.log(Effect.isEffect(watched)) // true
  * ```

@@ -1,6 +1,6 @@
 import { DatePicker } from "@beep/ui/components/date-picker";
-import { DateTime } from "effect";
 import * as A from "effect/Array";
+import * as DateTime from "effect/DateTime";
 import * as O from "effect/Option";
 import { expect, fn, screen, userEvent, waitFor, within } from "storybook/test";
 import type { Meta, StoryObj } from "@storybook/react-vite";

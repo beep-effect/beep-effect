@@ -13,8 +13,10 @@ import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
-import { Cause, Effect, Exit } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -286,10 +288,10 @@ describe("TSConfig schema", () => {
         },
       });
 
-      assertTrue(Exit.isFailure(topLevel));
+      topLevel.pipe(Exit.isFailure, assertTrue);
       expect(renderSchemaFailure(topLevel)).toContain("Expected no excess property");
       expect(renderSchemaFailure(topLevel)).toContain('["unexpected"]');
-      assertTrue(Exit.isFailure(nested));
+      nested.pipe(Exit.isFailure, assertTrue);
       expect(renderSchemaFailure(nested)).toContain("Expected no excess property");
       expect(renderSchemaFailure(nested)).toContain('["compilerOptions"]["unexpected"]');
     });
@@ -298,7 +300,7 @@ describe("TSConfig schema", () => {
       Effect.gen(function* () {
         const parsed = yield* jsonParse('{"compilerOptions":{"paths":{"__proto__":["./src"],"@x":["./x"]}}}');
         const result = decodeTSConfigExit(parsed);
-        assertTrue(Exit.isFailure(result));
+        result.pipe(Exit.isFailure, assertTrue);
         expect(renderSchemaFailure(result)).toContain('["__proto__"]');
       })
     );
@@ -308,7 +310,7 @@ describe("TSConfig schema", () => {
         files: ["src/index.ts", "src/index.ts"],
       });
 
-      assertTrue(Exit.isFailure(exit));
+      exit.pipe(Exit.isFailure, assertTrue);
       expect(renderSchemaFailure(exit)).toContain("Array items must be unique");
     });
 
@@ -321,7 +323,7 @@ describe("TSConfig schema", () => {
         },
       });
 
-      assertTrue(Exit.isFailure(exit));
+      exit.pipe(Exit.isFailure, assertTrue);
       expect(renderSchemaFailure(exit)).toContain("allowImportingTsExtensions");
       expect(renderSchemaFailure(exit)).toContain("moduleResolution");
     });
@@ -334,7 +336,7 @@ describe("TSConfig schema", () => {
         },
       });
 
-      assertTrue(Exit.isFailure(exit));
+      exit.pipe(Exit.isFailure, assertTrue);
       expect(renderSchemaFailure(exit)).toContain("reactNamespace");
       expect(renderSchemaFailure(exit)).toContain("jsx");
     });
@@ -346,7 +348,7 @@ describe("TSConfig schema", () => {
         },
       });
 
-      assertTrue(Exit.isFailure(exit));
+      exit.pipe(Exit.isFailure, assertTrue);
       expect(renderSchemaFailure(exit)).toContain("maxNodeModuleJsDepth");
       expect(renderSchemaFailure(exit)).toContain("allowJs");
     });
@@ -365,9 +367,9 @@ describe("TSConfig schema", () => {
         },
       });
 
-      assertTrue(Exit.isFailure(negative));
+      negative.pipe(Exit.isFailure, assertTrue);
       expect(renderSchemaFailure(negative)).toContain("maxNodeModuleJsDepth");
-      assertTrue(Exit.isFailure(fractional));
+      fractional.pipe(Exit.isFailure, assertTrue);
       expect(renderSchemaFailure(fractional)).toContain("maxNodeModuleJsDepth");
     });
 
@@ -381,7 +383,7 @@ describe("TSConfig schema", () => {
         },
       });
 
-      assertTrue(Exit.isFailure(exit));
+      exit.pipe(Exit.isFailure, assertTrue);
       expect(renderSchemaFailure(exit)).toContain("experimentalReplAwait");
       expect(renderSchemaFailure(exit)).toContain("ES2018");
     });

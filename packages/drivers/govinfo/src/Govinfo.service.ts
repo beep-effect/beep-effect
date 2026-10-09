@@ -16,9 +16,13 @@ import { ApiAuth, makeApiTransport } from "@beep/api-transport";
 import { $GovinfoId } from "@beep/identity";
 import { URLStr } from "@beep/schema";
 import { O } from "@beep/utils";
-import { Cache, Config, Context, Effect, Layer } from "effect";
+import * as Cache from "effect/Cache";
+import * as Config from "effect/Config";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
 import { FetchHttpClient } from "effect/http";
 import * as HttpApiClient from "effect/http-api/HttpApiClient";
+import * as Layer from "effect/Layer";
 import * as RateLimiter from "effect/persistence/RateLimiter";
 import * as S from "effect/Schema";
 import { GovinfoApi } from "./domain/index.ts";
@@ -45,7 +49,7 @@ const $I = $GovinfoId.create("Govinfo.service");
  * **Example** (Construct shape with rate limit)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * import { RateLimitSnapshot } from "@beep/api-transport"
  * import type { GovinfoShape } from "@beep/govinfo"
@@ -148,7 +152,7 @@ const makeFromEnvironment = Effect.fnUntraced(function* () {
  * **Example** (Yield service rate limit)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { Govinfo } from "@beep/govinfo"
  *
  * const program = Effect.gen(function* () {

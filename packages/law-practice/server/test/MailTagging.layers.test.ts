@@ -50,10 +50,15 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
 import { describe, expect } from "@effect/vitest";
-import { Context, Effect, FileSystem, Layer, Path, Ref } from "effect";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as Ref from "effect/Ref";
 import * as Str from "effect/String";
 
 const $I = $LawPracticeServerId.create("test/MailTagging.layers.test");
@@ -94,7 +99,7 @@ const Providers = Layer.mergeAll(
       MailboxShape.make({
         listMessagesSince: () =>
           Effect.map(Ref.get(inbox.message), (message) => MailPage.make({ envelopes: [message] })),
-        getEnvelope: () => Effect.asSome(Ref.get(inbox.message)),
+        getEnvelope: () => inbox.message.pipe(Ref.get, Effect.asSome),
         setCategories: (request) =>
           Ref.update(inbox.message, (message) => MailEnvelope.make({ ...message, categories: request.categories })),
         ensureMasterCategories: (intents) => Effect.succeed(intents.length),

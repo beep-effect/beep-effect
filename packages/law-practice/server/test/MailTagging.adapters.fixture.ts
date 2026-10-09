@@ -10,12 +10,15 @@ import { GraphMailFolder, M365, M365Error } from "@beep/m365";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
-import { Context, Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
 import * as Str from "effect/String";
 import type { M365Shape } from "@beep/m365";
-import type { Scope } from "effect";
-
+import type * as Scope from "effect/Scope";
 /** Real filesystem, path, and digest services for a scoped temporary directory. */
 export const Platform = Layer.mergeAll(BunFileSystem.layer, BunPath.layer, BunCrypto.layer);
 

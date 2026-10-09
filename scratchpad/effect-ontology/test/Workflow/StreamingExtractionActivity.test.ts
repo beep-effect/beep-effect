@@ -1,6 +1,10 @@
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { assert, describe, expect, it } from "@effect/vitest";
-import { Duration, Effect, Fiber, Layer, Result } from "effect";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
+import * as Layer from "effect/Layer";
+import * as Result from "effect/Result";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as TestClock from "effect/testing/TestClock";

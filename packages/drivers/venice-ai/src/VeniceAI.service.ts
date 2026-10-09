@@ -9,18 +9,24 @@ import { $VeniceAiId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
 import { URLStr } from "@beep/schema/URL";
 import { A, O, Str } from "@beep/utils";
-import { Config, Context, Effect, flow, Layer, pipe, Result, SchemaGetter, Stream } from "effect";
-import { dual } from "effect/Function";
+import * as Config from "effect/Config";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import { dual, flow, pipe } from "effect/Function";
 import { FetchHttpClient } from "effect/http";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientError from "effect/http/HttpClientError";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as HttpStatus from "effect/http/HttpStatus";
+import * as Layer from "effect/Layer";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import type { Redacted } from "effect";
+import * as SchemaGetter from "effect/SchemaGetter";
+import * as Stream from "effect/Stream";
 import type * as HttpClientResponse from "effect/http/HttpClientResponse";
+import type * as Redacted from "effect/Redacted";
 
 const $I = $VeniceAiId.create("VeniceAI.service");
 
@@ -466,7 +472,7 @@ const veniceAIConfigInputHeadersDefault = R.empty();
  * **Example** (Make config with API key)
  *
  * ```ts
- * import { Redacted } from "effect"
+ * import * as Redacted from "effect/Redacted";
  * import * as O from "effect/Option"
  * import { URLStr } from "@beep/schema/URL"
  * import { VeniceAIConfigInput } from "@beep/venice-ai"
@@ -1438,8 +1444,7 @@ const webSearchOperation = VeniceAIOperationDescriptor.make({
  * ```ts
  * import { VENICE_AI_OPERATION_DESCRIPTORS } from "@beep/venice-ai"
  * import { A } from "@beep/utils"
- * import { pipe } from "effect"
- *
+ * import { pipe } from "effect/Function";
  * const operationIds = pipe(
  *   VENICE_AI_OPERATION_DESCRIPTORS,
  *   A.map((operation) => operation.operationId)
@@ -2093,7 +2098,7 @@ const makeService = (client: HttpClient.HttpClient, config: ResolvedVeniceAIConf
  * **Example** (Yield service listModels)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { VeniceAI } from "@beep/venice-ai"
  *
  * const program = Effect.gen(function* () {
@@ -2113,7 +2118,7 @@ export class VeniceAI extends Context.Service<VeniceAI, VeniceAIShape>()($I`Veni
    * **Example** (Build layer from config)
    *
    * ```ts
-   * import { Redacted } from "effect"
+   * import * as Redacted from "effect/Redacted";
    * import * as O from "effect/Option"
    * import { VeniceAI, VeniceAIConfigInput } from "@beep/venice-ai"
    *
@@ -2166,7 +2171,7 @@ export class VeniceAI extends Context.Service<VeniceAI, VeniceAIShape>()($I`Veni
  * **Example** (Chat with convenience service)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { VeniceAiChat } from "@beep/venice-ai"
  *
  * const program = Effect.gen(function* () {
@@ -2191,7 +2196,7 @@ export class VeniceAiChat extends Context.Service<
    * **Example** (Provide chat over VeniceAI)
    *
    * ```ts
-   * import { Layer } from "effect"
+   * import * as Layer from "effect/Layer";
    * import { VeniceAI, VeniceAiChat } from "@beep/venice-ai"
    *
    * const layer = VeniceAiChat.makeLayer.pipe(Layer.provide(VeniceAI.layer))

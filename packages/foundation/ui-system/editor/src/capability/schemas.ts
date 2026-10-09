@@ -8,8 +8,12 @@
 import { $EditorId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
-import { Effect, Equal, MutableHashSet, Result, SchemaTransformation } from "effect";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import * as MutableHashSet from "effect/MutableHashSet";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 
 const $I = $EditorId.create("capability/schemas");
 const dottedIdPattern = /^[a-z][a-z0-9-]*(\.[a-z0-9-]+)+$/u;
@@ -432,7 +436,7 @@ const encodeChord = (chord: KeyChord): string =>
  *
  * ```ts import.meta.vitest name="Decode an authored chord"
  * import { KeyChordFromString } from "@beep/editor/capability/schemas"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  *
  * const result = S.decodeUnknownResult(KeyChordFromString)("Ctrl+Alt+1")
@@ -916,7 +920,7 @@ const uniqueCatalogRegistrationKeys = S.makeFilter<ReadonlyArray<CapabilityDescr
  *
  * ```ts import.meta.vitest name="Decode an empty catalog"
  * import { CapabilityCatalog } from "@beep/editor/capability/schemas"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  *
  * Result.isSuccess(S.decodeUnknownResult(CapabilityCatalog)([])) // => true

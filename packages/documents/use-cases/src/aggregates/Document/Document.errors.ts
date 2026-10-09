@@ -6,7 +6,8 @@
  */
 
 import { $DocumentsUseCasesId } from "@beep/identity/packages";
-import { Effect, flow } from "effect";
+import * as Effect from "effect/Effect";
+import { flow } from "effect/Function";
 import * as S from "effect/Schema";
 
 const $I = $DocumentsUseCasesId.create("aggregates/Document/Document.errors");

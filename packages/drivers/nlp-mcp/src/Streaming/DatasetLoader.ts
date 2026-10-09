@@ -15,8 +15,11 @@
 
 import { $NlpMcpId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { Clock, Duration, Effect, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Clock from "effect/Clock";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as O from "effect/Option";

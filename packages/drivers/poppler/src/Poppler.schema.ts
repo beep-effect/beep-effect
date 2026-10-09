@@ -7,7 +7,7 @@
 
 import { $PopplerId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { PosInt } from "./internal/PosInt.ts";
 

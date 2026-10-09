@@ -5,13 +5,20 @@
  * @since 0.0.0
  */
 import { $DockId } from "@beep/identity/packages";
-import { Cause, Context, Effect, Exit, FiberSet, Layer, MutableRef, Semaphore } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
+import * as Cause from "effect/Cause";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
+import * as Exit from "effect/Exit";
+import * as FiberSet from "effect/FiberSet";
 import { dual } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as MutableRef from "effect/MutableRef";
 import * as O from "effect/Option";
 import { AsyncResult, AtomRegistry, Reactivity } from "effect/reactivity";
+import * as Semaphore from "effect/Semaphore";
 import {
   DockAtomFeedFailure,
   DockAtomFeedSuccess,

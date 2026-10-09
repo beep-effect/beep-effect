@@ -7,7 +7,7 @@
 
 import type { DrizzleOperation } from "@beep/drizzle";
 import { DrizzleError } from "@beep/drizzle";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as A from "effect/Array";
 
 /**
@@ -18,8 +18,7 @@ import * as A from "effect/Array";
  *
  * ```ts
  * import { normalizeDrizzleError } from "@effect-ontology/Utils/Sql"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const error = Effect.runSync(
  *   Effect.flip(Effect.fail("connection closed").pipe(normalizeDrizzleError("execute")))
  * )

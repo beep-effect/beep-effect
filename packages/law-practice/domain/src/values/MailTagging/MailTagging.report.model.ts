@@ -7,9 +7,8 @@
  */
 
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import { flow, pipe } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import { dual, flow, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";

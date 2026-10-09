@@ -29,12 +29,21 @@ import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
-import { Context, Effect, FileSystem, Layer, Match, Path, pipe, Ref, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
+import * as Sink from "effect/Sink";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 
@@ -190,7 +199,7 @@ const stubService = (fresh: boolean) => ({
   plan: Effect.succeed(makePlan()),
   check: () => Effect.succeed(checkReport(fresh)),
   checkManifest: () => Effect.succeed(checkReport(fresh)),
-  bake: () => Effect.succeed(report(O.none())),
+  bake: () => O.none().pipe(report, Effect.succeed),
 });
 
 const runWithStubService = (fresh: boolean, options: ReturnType<typeof bakeOptions>) =>
@@ -311,7 +320,7 @@ describe("runner image manifest checks", () => {
           }).pipe(
             Effect.provideServiceEffect(
               RunnersService,
-              Layer.build(Layer.fresh(testLayer)).pipe(Effect.map(Context.get(RunnersService)))
+              testLayer.pipe(Layer.fresh, Layer.build, Effect.map(Context.get(RunnersService)))
             ),
             Effect.scoped
           );
@@ -521,7 +530,7 @@ describe("runner bake planning and argv", () => {
       }).pipe(
         Effect.provideServiceEffect(
           RunnersService,
-          Layer.build(Layer.fresh(testLayer)).pipe(Effect.map(Context.get(RunnersService)))
+          testLayer.pipe(Layer.fresh, Layer.build, Effect.map(Context.get(RunnersService)))
         ),
         Effect.scoped
       );
@@ -570,7 +579,7 @@ describe("runner bake planning and argv", () => {
           }).pipe(
             Effect.provideServiceEffect(
               RunnersService,
-              Layer.build(Layer.fresh(testLayer)).pipe(Effect.map(Context.get(RunnersService)))
+              testLayer.pipe(Layer.fresh, Layer.build, Effect.map(Context.get(RunnersService)))
             ),
             Effect.scoped
           );
@@ -699,7 +708,7 @@ describe("runner bake planning and argv", () => {
           }).pipe(
             Effect.provideServiceEffect(
               RunnersService,
-              Layer.build(Layer.fresh(testLayer)).pipe(Effect.map(Context.get(RunnersService)))
+              testLayer.pipe(Layer.fresh, Layer.build, Effect.map(Context.get(RunnersService)))
             ),
             Effect.scoped
           );
@@ -734,7 +743,7 @@ describe("runner bake planning and argv", () => {
           }).pipe(
             Effect.provideServiceEffect(
               RunnersService,
-              Layer.build(Layer.fresh(testLayer)).pipe(Effect.map(Context.get(RunnersService)))
+              testLayer.pipe(Layer.fresh, Layer.build, Effect.map(Context.get(RunnersService)))
             ),
             Effect.scoped
           );
@@ -771,7 +780,7 @@ describe("runner bake planning and argv", () => {
           }).pipe(
             Effect.provideServiceEffect(
               RunnersService,
-              Layer.build(Layer.fresh(testLayer)).pipe(Effect.map(Context.get(RunnersService)))
+              testLayer.pipe(Layer.fresh, Layer.build, Effect.map(Context.get(RunnersService)))
             ),
             Effect.scoped
           );
@@ -809,7 +818,7 @@ describe("runner bake planning and argv", () => {
       }).pipe(
         Effect.provideServiceEffect(
           RunnersService,
-          Layer.build(Layer.fresh(testLayer)).pipe(Effect.map(Context.get(RunnersService)))
+          testLayer.pipe(Layer.fresh, Layer.build, Effect.map(Context.get(RunnersService)))
         ),
         Effect.scoped
       );

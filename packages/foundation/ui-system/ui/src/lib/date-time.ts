@@ -14,8 +14,8 @@
  * @category utilities
  * @since 0.0.0
  */
-
-import { DateTime, flow } from "effect";
+import * as DateTime from "effect/DateTime";
+import { flow } from "effect/Function";
 
 const shortDateFormatter = new Intl.DateTimeFormat("en-US", {
   month: "short",

@@ -1,11 +1,15 @@
 import { $SemanticaId } from "@beep/identity/packages";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
 import { sha256 } from "@noble/hashes/sha2.js";
-import { Equal, HashSet, Number as N, Order, Tuple } from "effect";
 import * as A from "effect/Array";
+import * as Equal from "effect/Equal";
 import * as Hex from "effect/encoding/Hex";
+import * as HashSet from "effect/HashSet";
+import * as N from "effect/Number";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as Tuple from "effect/Tuple";
 import { canonicalJson } from "@/corpus/Canonical";
 
 const $I = $SemanticaId.create("corpus/Manifest");

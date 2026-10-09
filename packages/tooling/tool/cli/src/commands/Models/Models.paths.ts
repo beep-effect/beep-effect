@@ -14,7 +14,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, O, pipe, Str } from "@beep/utils";
-import { Match } from "effect";
+import * as Match from "effect/Match";
 import * as S from "effect/Schema";
 import { TargetRoot } from "./Models.manifest.schemas.ts";
 

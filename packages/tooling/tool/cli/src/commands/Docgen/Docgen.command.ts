@@ -13,8 +13,15 @@ import { renderBiomeJson } from "@beep/repo-utils/schemas/BiomeJson";
 import { Runpod, RunpodConfigInput } from "@beep/runpod";
 import { A, Str, Text } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Config, Console, Effect, FileSystem, flow, Layer, Match, Path, pipe } from "effect";
+import * as Config from "effect/Config";
+import * as Console from "effect/Console";
 import { Command, Flag } from "effect/cli";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { flow, pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
+import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
@@ -1070,10 +1077,9 @@ const docgenQualityWorkerRunpodEvalCommand = Command.make(
         allowPublicTemplateSearch,
         ...(O.isSome(templateId) ? { templateId: templateId.value } : {}),
       }).pipe((effect) =>
-        Effect.scoped(
-          Layer.build(Runpod.makeLayer(RunpodConfigInput.make({ apiKey: runpodApiKey }))).pipe(
-            Effect.flatMap((context) => effect.pipe(Effect.provide(context)))
-          )
+        Layer.build(Runpod.makeLayer(RunpodConfigInput.make({ apiKey: runpodApiKey }))).pipe(
+          Effect.flatMap((context) => effect.pipe(Effect.provide(context))),
+          Effect.scoped
         )
       );
       const content = yield* generateQualityWorkerRunpodEvalJson(report);

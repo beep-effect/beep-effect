@@ -11,10 +11,14 @@ import {
 } from "@beep/repo-cli/test/Quality";
 import { FsUtilsLive } from "@beep/repo-utils";
 import { expect, it } from "@effect/vitest";
-import { assertSome, assertTrue } from "@effect/vitest/utils";
-import { Cause, Effect, Exit, FileSystem, Layer } from "effect";
+import { assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import * as Cause from "effect/Cause";
 import { Command } from "effect/cli";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
@@ -204,7 +208,7 @@ it.layer(TestLayer, { timeout: "60 seconds" })("check-census command", (it) => {
 
       const exit = yield* Effect.exit(runCheckCensusCommand(["--output-json", REPORT_PATH]));
 
-      assertTrue(Exit.isFailure(exit));
+      if (!Exit.isFailure(exit)) throw new Error("Expected a failure exit");
       const error = yield* exit.cause.pipe(Cause.findErrorOption, Effect.fromOption);
       expect(error._tag).toBe("QualityScriptCommandError");
       expect(error.message).toContain("Instantiations");
@@ -219,7 +223,7 @@ it.layer(TestLayer, { timeout: "60 seconds" })("check-census command", (it) => {
 
       const exit = yield* Effect.exit(runCheckCensusCommand(["--gate-only", "--output-json", REPORT_PATH]));
 
-      assertTrue(Exit.isFailure(exit));
+      if (!Exit.isFailure(exit)) throw new Error("Expected a failure exit");
       const error = yield* exit.cause.pipe(Cause.findErrorOption, Effect.fromOption);
       expect(error._tag).toBe("QualityScriptCommandError");
       expect(error.message).toContain("--version output: tsc development build");

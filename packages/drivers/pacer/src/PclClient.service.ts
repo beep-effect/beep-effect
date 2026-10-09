@@ -14,16 +14,24 @@
  */
 
 import { $PacerId } from "@beep/identity";
-import { Context, Duration, Effect, Layer, pipe, Redacted, Ref, Schedule, Stream, Tuple } from "effect";
-import { constant } from "effect/Function";
+import * as Context from "effect/Context";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import { constant, pipe } from "effect/Function";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientError from "effect/http/HttpClientError";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import { HttpApiClient } from "effect/http-api";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Redacted from "effect/Redacted";
+import * as Ref from "effect/Ref";
+import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
+import * as Tuple from "effect/Tuple";
 import { PacerPclError } from "./Pacer.errors.ts";
 import { pacerCauseMessage } from "./Pacer.http.ts";
 import { NextGenCsoToken, ReportStatus } from "./Pacer.tokens.ts";

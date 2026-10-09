@@ -29,9 +29,16 @@ import {
 import { LocalDate } from "@beep/schema/LocalDate";
 import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
-import { Context, Deferred, Effect, FileSystem, HashMap, Layer, Path, Ref } from "effect";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
+import * as Deferred from "effect/Deferred";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as HashMap from "effect/HashMap";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import { DocketDryRunPortsLive } from "@/DryRun";
 import type { DocketCalendarEntry } from "@beep/law-practice-use-cases/DocketIntake";

@@ -4,10 +4,10 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { Effect, Layer } from "effect";
+import * as Effect from "effect/Effect";
 import { HttpRouter, HttpServer } from "effect/http";
 import { HttpApiBuilder } from "effect/http-api";
+import * as Layer from "effect/Layer";
 import {
   ContactSubmissionAccepted,
   ContactSubmissionRejected,
@@ -58,7 +58,7 @@ const OipContactHttpApiAppLayer = makeOipContactHttpApiAppLayer(submitContact);
  * **Example** (Building handler with submit)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { makeOipContactHttpApiWebHandlerWithSubmit } from "@beep/oip-web/app/api/contact/ContactHttpApiRoute"
  *
  * const handler = makeOipContactHttpApiWebHandlerWithSubmit(() =>

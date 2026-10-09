@@ -7,7 +7,7 @@
  */
 
 import { ClaimDisposition } from "@beep/epistemic-domain/entities/ClaimDisposition";
-import { Result } from "effect";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { ClaimDispositionConverterError } from "./ClaimDisposition.errors.ts";
 import type { Table } from "./ClaimDisposition.table.ts";

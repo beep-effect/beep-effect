@@ -3,8 +3,11 @@ import { diffMembership, diffTotals, enforceRatchet, RatchetTotalsDiff } from "@
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import { Data, Effect, Exit, Order } from "effect";
+import * as Data from "effect/Data";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 
 const stringEquivalence = (left: string, right: string): boolean => left === right;
 
@@ -101,7 +104,7 @@ describe("internal/ratchet/RatchetLifecycle enforceRatchet", () => {
         })
       );
 
-      assertTrue(Exit.isFailure(exit));
+      exit.pipe(Exit.isFailure, assertTrue);
       if (Exit.isFailure(exit)) {
         expect(exit.cause.toString()).toContain("baseline grew");
       }
@@ -119,7 +122,7 @@ describe("internal/ratchet/RatchetLifecycle enforceRatchet", () => {
         })
       );
 
-      assertTrue(Exit.isSuccess(exit));
+      exit.pipe(Exit.isSuccess, assertTrue);
     })
   );
 });

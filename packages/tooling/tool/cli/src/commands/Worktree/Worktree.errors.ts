@@ -7,8 +7,8 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { O } from "@beep/utils";
-import { Runtime } from "effect";
 import { dual } from "effect/Function";
+import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
 import { OpaqueDefect } from "../../internal/schema/OpaqueDefect.ts";
 import { WorktreePreservationStep } from "./Worktree.schemas.ts";

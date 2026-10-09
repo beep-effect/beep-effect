@@ -19,7 +19,9 @@
 
 import { $McpKitId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Config, Data, Effect } from "effect";
+import * as Config from "effect/Config";
+import * as Data from "effect/Data";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import type * as Redacted from "effect/Redacted";
@@ -126,7 +128,7 @@ export class SourceAuthRegistration extends S.Class<SourceAuthRegistration>($I`S
  * **Example** (Missing credential resolves none)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * import { resolveSourceCredential, SourceAuthRegistration } from "@beep/mcp-kit"
  *
@@ -205,7 +207,7 @@ export const SourceAuthDecision = Data.taggedEnum<SourceAuthDecision>();
  * **Example** (Hard gate vanish decision)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * import { decideSourceAuthMount, SourceAuthRegistration } from "@beep/mcp-kit"
  *

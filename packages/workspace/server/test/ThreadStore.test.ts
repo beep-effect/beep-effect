@@ -9,11 +9,18 @@ import { SetThreadTitleIfEmptyInput } from "@beep/workspace-use-cases/aggregates
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import { Cause, Clock, DateTime, Effect, Exit, HashMap, Layer, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as Cause from "effect/Cause";
+import * as Clock from "effect/Clock";
 import * as Crypto from "effect/Crypto";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
+import * as Exit from "effect/Exit";
+import { pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
@@ -261,8 +268,11 @@ describe("ThreadStore in-memory", () => {
           randomBytes: (size) => new Uint8Array(size).fill(1),
         })
       );
-      const exit = yield* Effect.exit(
-        Effect.scoped(Layer.build(ThreadStoreInMemoryLayer.pipe(Layer.provide(FailingInitializationCryptoLayer))))
+      const exit = yield* ThreadStoreInMemoryLayer.pipe(
+        Layer.provide(FailingInitializationCryptoLayer),
+        Layer.build,
+        Effect.scoped,
+        Effect.exit
       );
 
       pipe(exit, Exit.isFailure, assertTrue);

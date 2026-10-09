@@ -2,12 +2,20 @@
 
 import { parseInternetHeaders, parseOutlookHeaders } from "@beep/libpff";
 import { O } from "@beep/utils";
-import { DateTime, Effect, FileSystem, HashSet, Layer, Match, MutableHashSet, Path, Stream } from "effect";
 import * as A from "effect/Array";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
+import * as HashSet from "effect/HashSet";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
+import * as MutableHashSet from "effect/MutableHashSet";
+import * as Path from "effect/Path";
 import { ChildProcess } from "effect/process";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { CorpusCommandError } from "../Corpus.errors.ts";
 import {

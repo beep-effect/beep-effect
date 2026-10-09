@@ -7,8 +7,8 @@
 
 import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { Effect } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { sqlStringLiteral } from "./internal/Sql.ts";
 import { PracticeKgProjectionError } from "./PracticeKg.errors.ts";
@@ -240,7 +240,7 @@ ORDER BY digest`;
  * **Example** (Build empty DuckDB tables)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as A from "effect/Array"
  * import { buildDuckDb } from "../../src/PracticeKg.fts.ts"
  *

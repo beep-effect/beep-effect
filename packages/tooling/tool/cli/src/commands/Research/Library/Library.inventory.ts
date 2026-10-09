@@ -1,13 +1,19 @@
-/** Exhaustive local citation inventory and immutable document snapshots.
- * @packageDocumentation
+/**
+ * Exhaustive local citation inventory and immutable document snapshots.
  *
+ * @packageDocumentation
  * @since 0.0.0
  */
-import { DateTime, Effect, FileSystem, Match, Path } from "effect";
+
 import * as A from "effect/Array";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -29,6 +35,9 @@ import {
 } from "./Library.schemas.ts";
 import { hashBytes, mergeLibraryVersions, saveImmutable, withCatalog } from "./Library.store.ts";
 import type { LibraryInventoryOptions, LibraryOwnership, LibrarySourceKind } from "./Library.schemas.ts";
+
+const LibraryManifestJson = S.fromJsonString(LibraryManifest);
+const LibraryIntakeJson = S.fromJsonString(LibraryIntake);
 
 const classifyTopics = (evidence: string): ReadonlyArray<string> =>
   A.filter(
@@ -61,7 +70,8 @@ const documentTopicEvidence = (text: string) =>
 const hashText = (text: string) => hashBytes(new TextEncoder().encode(text));
 const failure = (message: string) => Effect.mapError((cause: unknown) => LibraryError.make({ message, cause }));
 
-/** Extract citation locators at exact one-based UTF-16 line and column positions.
+/**
+ * Extract citation locators at exact one-based UTF-16 line and column positions.
  * **Details**
  * This text boundary recognizes HTTP locators, bare DOI/arXiv identifiers,
  * Markdown relative links, and unresolved repository shorthand. A locator inside
@@ -73,7 +83,6 @@ const failure = (message: string) => Effect.mapError((cause: unknown) => Library
  * ```
  *
  * @category parsing
- *
  * @since 0.0.0
  */
 export const extractLibraryReferences: {
@@ -352,7 +361,8 @@ const isInternalLocator = (locator: string) =>
   Str.startsWith("#")(locator) ||
   /^(?:effect|packages|goals|apps|research|standards|docs|explorations|tests|beep)\//.test(locator);
 
-/** Resolve explicit reference identities without title-based or speculative merges.
+/**
+ * Resolve explicit reference identities without title-based or speculative merges.
  * **Example** (Classify a paper)
  * ```ts
  * import { classifyLibraryReference } from "@beep/repo-cli/commands/Research"
@@ -360,7 +370,6 @@ const isInternalLocator = (locator: string) =>
  * ```
  *
  * @category normalization
- *
  * @since 0.0.0
  */
 export const classifyLibraryReference = Effect.fn("ResearchLibrary.classifyReference")(function* (
@@ -506,7 +515,8 @@ const listInputs = Effect.fn("ResearchLibrary.listInputs")(function* (root: stri
   return A.sort(files, Order.String);
 });
 
-/** Snapshot input documents and record every extracted citation without fetching sources.
+/**
+ * Snapshot input documents and record every extracted citation without fetching sources.
  * **Example** (Inventory two roots)
  * ```ts
  * import { inventoryLibrary, LibraryInventoryOptions } from "@beep/repo-cli/commands/Research"
@@ -514,14 +524,14 @@ const listInputs = Effect.fn("ResearchLibrary.listInputs")(function* (root: stri
  * ```
  *
  * @category use-cases
- *
  * @since 0.0.0
  */
 export const inventoryLibrary = Effect.fn("ResearchLibrary.inventory")(function* (options: LibraryInventoryOptions) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  return yield* withCatalog(options.libraryRoot, (catalog) =>
-    Effect.gen(function* () {
+  return yield* withCatalog(
+    options.libraryRoot,
+    Effect.fnUntraced(function* (catalog) {
       const createdAt = DateTime.formatIso(yield* DateTime.now);
       const date = Str.slice(0, 10)(createdAt);
       const canonicalManifestPath = path.join(options.libraryRoot, "library.json");
@@ -536,7 +546,7 @@ export const inventoryLibrary = Effect.fn("ResearchLibrary.inventory")(function*
             .readFileString(manifestPath)
             .pipe(
               failure("Cannot read library manifest."),
-              Effect.flatMap(S.decodeEffect(S.fromJsonString(LibraryManifest))),
+              Effect.flatMap(S.decodeEffect(LibraryManifestJson)),
               failure("Invalid library manifest.")
             )
         : LibraryManifest.make({
@@ -546,7 +556,7 @@ export const inventoryLibrary = Effect.fn("ResearchLibrary.inventory")(function*
             objectRoot: "objects/sha256",
             intakeRoot: "intakes",
           });
-      const manifestText = yield* S.encodeEffect(S.fromJsonString(LibraryManifest))(libraryManifest).pipe(
+      const manifestText = yield* S.encodeEffect(LibraryManifestJson)(libraryManifest).pipe(
         failure("Cannot encode library manifest.")
       );
       const rootArtifact = yield* saveImmutable(
@@ -835,9 +845,7 @@ export const inventoryLibrary = Effect.fn("ResearchLibrary.inventory")(function*
           files: intakeFiles,
         })
       );
-      const manifest = yield* S.encodeEffect(S.fromJsonString(LibraryIntake))(intake).pipe(
-        failure("Cannot encode intake manifest.")
-      );
+      const manifest = yield* S.encodeEffect(LibraryIntakeJson)(intake).pipe(failure("Cannot encode intake manifest."));
       const intakeArtifact = yield* saveImmutable(
         options.libraryRoot,
         intake.manifestPath,

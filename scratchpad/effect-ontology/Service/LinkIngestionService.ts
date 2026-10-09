@@ -16,7 +16,15 @@ import { $ScratchpadId } from "@beep/identity";
 import { PostgresDrizzle } from "@beep/postgres";
 import * as A from "@beep/utils/Array";
 import { and, eq, inArray, lt } from "drizzle-orm";
-import { Cache, Clock, Context, Crypto, DateTime, Duration, Effect, Inspectable, Layer } from "effect";
+import * as Cache from "effect/Cache";
+import * as Clock from "effect/Clock";
+import * as Context from "effect/Context";
+import * as Crypto from "effect/Crypto";
+import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Inspectable from "effect/Inspectable";
+import * as Layer from "effect/Layer";
 import * as Hex from "effect/encoding/Hex";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -246,7 +254,7 @@ class ContentHashCacheKey extends S.Class<ContentHashCacheKey>($I`ContentHashCac
  * **Example** (Inspect link ingestion service)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { LinkIngestionService } from "@effect-ontology/Service/LinkIngestionService"
  *
  * const program = Effect.gen(function* () {

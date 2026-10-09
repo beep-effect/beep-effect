@@ -11,11 +11,11 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { Effect, SchemaIssue } from "effect";
+import * as Effect from "effect/Effect";
 import * as Toml from "effect/encoding/Toml";
 import * as Yaml from "effect/encoding/Yaml";
 import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
 
 const parseText =
   (format: string, parse: (text: string) => unknown) =>
@@ -46,7 +46,7 @@ const parseTomlText = parseText("TOML", Toml.parse);
  *
  * ```ts
  * import { decodeYamlTextWith } from "@beep/repo-cli/test/SharedInternals"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const decode = decodeYamlTextWith(S.decodeUnknownEffect(S.Struct({ name: S.String })))
@@ -76,7 +76,7 @@ export const decodeYamlTextWith =
  *
  * ```ts
  * import { decodeTomlTextWith } from "@beep/repo-cli/test/SharedInternals"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const decode = decodeTomlTextWith(S.decodeUnknownEffect(S.Struct({ model: S.String })))

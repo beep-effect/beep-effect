@@ -68,7 +68,7 @@ export type SourceProcessingStatus = typeof SourceProcessingStatus.Type;
  *
  * ```ts
  * import { TextArtifactReference } from "@beep/file-processing/Extraction"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const program = S.decodeUnknownEffect(TextArtifactReference)({
@@ -146,7 +146,7 @@ export type TextSpan = InstanceType<typeof TextSpanBase>;
  *
  * ```ts
  * import { ExtractionResult } from "@beep/file-processing/Extraction"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const program = S.decodeUnknownEffect(ExtractionResult)({
@@ -189,7 +189,7 @@ export class ExtractionResult extends S.Class<ExtractionResult>($I`ExtractionRes
  *
  * ```ts
  * import { ArchiveExportResult } from "@beep/file-processing/Extraction"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const program = S.decodeUnknownEffect(ArchiveExportResult)({
@@ -227,7 +227,7 @@ export class ArchiveExportResult extends S.Class<ArchiveExportResult>($I`Archive
  * ```ts import.meta.vitest name="Make extracted process result"
  * import { ArtifactId, OperationId } from "@beep/file-processing/Artifact"
  * import { ExtractedProcessFileResult, ExtractionResult } from "@beep/file-processing/Extraction"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const program = Effect.gen(function* () {
@@ -283,7 +283,7 @@ export class ExtractedProcessFileResult extends S.Class<ExtractedProcessFileResu
  * ```ts import.meta.vitest name="Make archive export process result"
  * import { ArtifactId, OperationId } from "@beep/file-processing/Artifact"
  * import { ArchiveExportProcessFileResult, ArchiveExportResult } from "@beep/file-processing/Extraction"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const program = Effect.gen(function* () {
@@ -339,7 +339,7 @@ export class ArchiveExportProcessFileResult extends S.Class<ArchiveExportProcess
  * ```ts import.meta.vitest name="Make skipped process result"
  * import { ArtifactId, OperationId } from "@beep/file-processing/Artifact"
  * import { SkippedProcessFileResult } from "@beep/file-processing/Extraction"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const program = Effect.gen(function* () {
@@ -387,7 +387,7 @@ export class SkippedProcessFileResult extends S.Class<SkippedProcessFileResult>(
  * ```ts
  * import { ArtifactId, OperationId } from "@beep/file-processing/Artifact"
  * import { ProcessFileResult } from "@beep/file-processing/Extraction"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const program = Effect.gen(function* () {
@@ -429,7 +429,7 @@ export const ProcessFileResult = S.Union([
  *
  * ```ts import.meta.vitest name="Type process file result"
  * import { ProcessFileResult } from "@beep/file-processing/Extraction"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const program = Effect.gen(function* () {

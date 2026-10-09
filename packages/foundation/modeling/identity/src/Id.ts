@@ -28,12 +28,14 @@
  * @since 0.0.0
  */
 
-import { Function as Fn, flow, pipe, SchemaTransformation } from "effect";
 import * as A from "effect/Array";
+import * as Fn from "effect/Function";
+import { flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Str from "effect/String";
 import type { TString } from "@beep/types";
 import type { PayloadEncoding } from "effect/http-api/HttpApiSchema";

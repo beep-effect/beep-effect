@@ -13,12 +13,17 @@
  */
 
 import { $OpenclawId } from "@beep/identity";
-import { Context, Duration, Effect, flow, Layer, pipe, Result } from "effect";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import { flow, pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import { ChildProcessSpawner } from "effect/process";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { spawnProcessResult } from "./internal/spawn.ts";
@@ -430,8 +435,7 @@ const toChannelAccountStatus = (entry: unknown) =>
  * ```ts
  * import { OpenclawProcessResult } from "@beep/openclaw/Openclaw.models"
  * import type { OpenclawCliRunner } from "@beep/openclaw/OpenclawCli.service"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const runner: OpenclawCliRunner = (request) =>
  *   Effect.succeed(OpenclawProcessResult.make({ exitCode: 0, stderr: "", stdout: request.executable }))
  * ```
@@ -762,8 +766,7 @@ const makeService = (runner: OpenclawCliRunner): OpenclawCliShape => {
  * import { OpenclawInvocationContext, OpenclawProcessResult } from "@beep/openclaw/Openclaw.models"
  * import { OpenclawCli } from "@beep/openclaw/OpenclawCli.service"
  * import type { OpenclawCliRunner } from "@beep/openclaw/OpenclawCli.service"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const runner: OpenclawCliRunner = () =>
  *   Effect.succeed(OpenclawProcessResult.make({ exitCode: 0, stderr: "", stdout: "OpenClaw 2026.7.1-2 (0790d9f)" }))
  *
@@ -816,8 +819,7 @@ export class OpenclawCli extends Context.Service<OpenclawCli, OpenclawCliShape>(
    * import { OpenclawProcessResult } from "@beep/openclaw/Openclaw.models"
    * import { OpenclawCli } from "@beep/openclaw/OpenclawCli.service"
    * import type { OpenclawCliRunner } from "@beep/openclaw/OpenclawCli.service"
-   * import { Effect } from "effect"
-   *
+   * import * as Effect from "effect/Effect";
    * const runner: OpenclawCliRunner = () =>
    *   Effect.succeed(OpenclawProcessResult.make({ exitCode: 0, stderr: "", stdout: "" }))
    *

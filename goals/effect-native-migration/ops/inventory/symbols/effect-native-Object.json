@@ -10,7 +10,7 @@
     },
     "description": "Flattens intersection types into a single object type for readability.",
     "examples": [
-      "import type { Struct } from \"effect\"\n\ntype Original = { a: string } & { b: number }\n\n// Without Simplify, the type displays as `{ a: string } & { b: number }`\ntype Simplified = Struct.Simplify<Original>\n// { a: string; b: number }"
+      "import type * as Struct from \"effect/Struct\"\n\ntype Original = { a: string } & { b: number }\n\n// Without Simplify, the type displays as `{ a: string } & { b: number }`\ntype Simplified = Struct.Simplify<Original>\n// { a: string; b: number }"
     ]
   },
   {
@@ -24,7 +24,7 @@
     },
     "description": "Removes `readonly` modifiers from all properties of an object type.",
     "examples": [
-      "import type { Struct } from \"effect\"\n\ntype ReadOnly = { readonly a: string; readonly b: number }\ntype Writable = Struct.Mutable<ReadOnly>\n// { a: string; b: number }"
+      "import type * as Struct from \"effect/Struct\"\n\ntype ReadOnly = { readonly a: string; readonly b: number }\ntype Writable = Struct.Mutable<ReadOnly>\n// { a: string; b: number }"
     ]
   },
   {
@@ -38,7 +38,7 @@
     },
     "description": "Merges two object types with properties from `U` taking precedence over `T` on overlapping keys (like `Object.assign` at the type level).",
     "examples": [
-      "import type { Struct } from \"effect\"\n\ntype A = { a: string; b: number }\ntype B = { b: boolean; c: string }\ntype Merged = Struct.Assign<A, B>\n// { a: string; b: boolean; c: string }"
+      "import type * as Struct from \"effect/Struct\"\n\ntype A = { a: string; b: number }\ntype B = { b: boolean; c: string }\ntype Merged = Struct.Assign<A, B>\n// { a: string; b: boolean; c: string }"
     ]
   },
   {
@@ -52,7 +52,7 @@
     },
     "description": "Retrieves the value at `key` from a struct.",
     "examples": [
-      "import { pipe, Struct } from \"effect\"\n\nconst name = pipe({ name: \"Alice\", age: 30 }, Struct.get(\"name\"))\nconsole.log(name) // \"Alice\""
+      "import { pipe } from \"effect/Function\"\nimport * as Struct from \"effect/Struct\"\n\nconst name = pipe({ name: \"Alice\", age: 30 }, Struct.get(\"name\"))\nconsole.log(name) // \"Alice\""
     ]
   },
   {
@@ -66,7 +66,7 @@
     },
     "description": "Returns the string keys of a struct as a properly typed `Array<keyof S & string>`.",
     "examples": [
-      "import { Struct } from \"effect\"\n\nconst user = { name: \"Alice\", age: 30, [Symbol.for(\"id\")]: 1 }\n\nconst k: Array<\"name\" | \"age\"> = Struct.keys(user)\nconsole.log(k) // [\"name\", \"age\"]"
+      "import * as Struct from \"effect/Struct\"\n\nconst user = { name: \"Alice\", age: 30, [Symbol.for(\"id\")]: 1 }\n\nconst k: Array<\"name\" | \"age\"> = Struct.keys(user)\nconsole.log(k) // [\"name\", \"age\"]"
     ]
   },
   {
@@ -80,7 +80,7 @@
     },
     "description": "Creates a new struct containing only the specified keys.",
     "examples": [
-      "import { pipe, Struct } from \"effect\"\n\nconst user = { name: \"Alice\", age: 30, admin: true }\nconst nameAndAge = pipe(user, Struct.pick([\"name\", \"age\"]))\nconsole.log(nameAndAge) // { name: \"Alice\", age: 30 }"
+      "import { pipe } from \"effect/Function\"\nimport * as Struct from \"effect/Struct\"\n\nconst user = { name: \"Alice\", age: 30, admin: true }\nconst nameAndAge = pipe(user, Struct.pick([\"name\", \"age\"]))\nconsole.log(nameAndAge) // { name: \"Alice\", age: 30 }"
     ]
   },
   {
@@ -94,7 +94,7 @@
     },
     "description": "Creates a new struct with the specified keys removed.",
     "examples": [
-      "import { pipe, Struct } from \"effect\"\n\nconst user = { name: \"Alice\", age: 30, password: \"secret\" }\nconst safe = pipe(user, Struct.omit([\"password\"]))\nconsole.log(safe) // { name: \"Alice\", age: 30 }"
+      "import { pipe } from \"effect/Function\"\nimport * as Struct from \"effect/Struct\"\n\nconst user = { name: \"Alice\", age: 30, password: \"secret\" }\nconst safe = pipe(user, Struct.omit([\"password\"]))\nconsole.log(safe) // { name: \"Alice\", age: 30 }"
     ]
   },
   {
@@ -108,7 +108,7 @@
     },
     "description": "Merges two structs into a new struct. When both structs share a key, the value from `that` (the second struct) wins.",
     "examples": [
-      "import { pipe, Struct } from \"effect\"\n\nconst defaults = { theme: \"light\", lang: \"en\" }\nconst overrides = { theme: \"dark\", fontSize: 14 }\nconst config = pipe(defaults, Struct.assign(overrides))\nconsole.log(config) // { theme: \"dark\", lang: \"en\", fontSize: 14 }"
+      "import { pipe } from \"effect/Function\"\nimport * as Struct from \"effect/Struct\"\n\nconst defaults = { theme: \"light\", lang: \"en\" }\nconst overrides = { theme: \"dark\", fontSize: 14 }\nconst config = pipe(defaults, Struct.assign(overrides))\nconsole.log(config) // { theme: \"dark\", lang: \"en\", fontSize: 14 }"
     ]
   },
   {
@@ -122,7 +122,7 @@
     },
     "description": "Selectively transforms values of a struct using per-key functions. Keys without a corresponding function are copied unchanged.",
     "examples": [
-      "import { pipe, Struct } from \"effect\"\n\nconst result = pipe(\n  { name: \"alice\", age: 30, active: true },\n  Struct.evolve({\n    name: (s) => s.toUpperCase(),\n    age: (n) => n + 1\n  })\n)\nconsole.log(result) // { name: \"ALICE\", age: 31, active: true }"
+      "import { pipe } from \"effect/Function\"\nimport * as Struct from \"effect/Struct\"\n\nconst result = pipe(\n  { name: \"alice\", age: 30, active: true },\n  Struct.evolve({\n    name: (s) => s.toUpperCase(),\n    age: (n) => n + 1\n  })\n)\nconsole.log(result) // { name: \"ALICE\", age: 31, active: true }"
     ]
   },
   {
@@ -136,7 +136,7 @@
     },
     "description": "Selectively transforms keys of a struct using per-key functions. Keys without a corresponding function are copied unchanged.",
     "examples": [
-      "import { pipe, Struct } from \"effect\"\n\nconst result = pipe(\n  { name: \"Alice\", age: 30 },\n  Struct.evolveKeys({\n    name: (k) => k.toUpperCase()\n  })\n)\nconsole.log(result) // { NAME: \"Alice\", age: 30 }"
+      "import { pipe } from \"effect/Function\"\nimport * as Struct from \"effect/Struct\"\n\nconst result = pipe(\n  { name: \"Alice\", age: 30 },\n  Struct.evolveKeys({\n    name: (k) => k.toUpperCase()\n  })\n)\nconsole.log(result) // { NAME: \"Alice\", age: 30 }"
     ]
   },
   {
@@ -150,7 +150,7 @@
     },
     "description": "Selectively transforms both keys and values of a struct. Each per-key function receives `(key, value)` and must return a `[newKey, newValue]` tuple. Keys without a corresponding function are copied unchanged.",
     "examples": [
-      "import { pipe, Struct } from \"effect\"\n\nconst result = pipe(\n  { amount: 100, label: \"total\" },\n  Struct.evolveEntries({\n    amount: (k, v) => [`${k}Cents`, v * 100],\n    label: (k, v) => [k, v.toUpperCase()]\n  })\n)\nconsole.log(result) // { amountCents: 10000, label: \"TOTAL\" }"
+      "import { pipe } from \"effect/Function\"\nimport * as Struct from \"effect/Struct\"\n\nconst result = pipe(\n  { amount: 100, label: \"total\" },\n  Struct.evolveEntries({\n    amount: (k, v) => [`${k}Cents`, v * 100],\n    label: (k, v) => [k, v.toUpperCase()]\n  })\n)\nconsole.log(result) // { amountCents: 10000, label: \"TOTAL\" }"
     ]
   },
   {
@@ -164,7 +164,7 @@
     },
     "description": "Renames keys in a struct using a static `{ oldKey: newKey }` mapping. Keys not mentioned in the mapping are copied unchanged.",
     "examples": [
-      "import { pipe, Struct } from \"effect\"\n\nconst result = pipe(\n  { firstName: \"Alice\", lastName: \"Smith\", age: 30 },\n  Struct.renameKeys({ firstName: \"first\", lastName: \"last\" })\n)\nconsole.log(result) // { first: \"Alice\", last: \"Smith\", age: 30 }"
+      "import { pipe } from \"effect/Function\"\nimport * as Struct from \"effect/Struct\"\n\nconst result = pipe(\n  { firstName: \"Alice\", lastName: \"Smith\", age: 30 },\n  Struct.renameKeys({ firstName: \"first\", lastName: \"last\" })\n)\nconsole.log(result) // { first: \"Alice\", last: \"Smith\", age: 30 }"
     ]
   },
   {
@@ -178,7 +178,7 @@
     },
     "description": "Creates an `Equivalence` for a struct by providing an `Equivalence` for each property. Two structs are equivalent when all their corresponding properties are equivalent. Alias of `Equivalence.Struct`.",
     "examples": [
-      "import { Equivalence, Struct } from \"effect\"\n\nconst PersonEquivalence = Struct.makeEquivalence({\n  name: Equivalence.strictEqual<string>(),\n  age: Equivalence.strictEqual<number>()\n})\n\nconsole.log(PersonEquivalence({ name: \"Alice\", age: 30 }, { name: \"Alice\", age: 30 }))\n// true\nconsole.log(PersonEquivalence({ name: \"Alice\", age: 30 }, { name: \"Bob\", age: 30 }))\n// false"
+      "import * as Equivalence from \"effect/Equivalence\"\nimport * as Struct from \"effect/Struct\"\n\nconst PersonEquivalence = Struct.makeEquivalence({\n  name: Equivalence.strictEqual<string>(),\n  age: Equivalence.strictEqual<number>()\n})\n\nconsole.log(PersonEquivalence({ name: \"Alice\", age: 30 }, { name: \"Alice\", age: 30 }))\n// true\nconsole.log(PersonEquivalence({ name: \"Alice\", age: 30 }, { name: \"Bob\", age: 30 }))\n// false"
     ]
   },
   {
@@ -192,7 +192,7 @@
     },
     "description": "Creates an `Order` for a struct by providing an `Order` for each property. Properties are compared in the order they appear in the fields object; the first non-zero comparison determines the result. Alias of `Order.Struct`.",
     "examples": [
-      "import { Number, String, Struct } from \"effect\"\n\nconst PersonOrder = Struct.makeOrder({\n  name: String.Order,\n  age: Number.Order\n})\n\nconsole.log(PersonOrder({ name: \"Alice\", age: 30 }, { name: \"Bob\", age: 25 }))\n// -1 (Alice comes before Bob)"
+      "import * as Number from \"effect/Number\"\nimport * as String from \"effect/String\"\nimport * as Struct from \"effect/Struct\"\n\nconst PersonOrder = Struct.makeOrder({\n  name: String.Order,\n  age: Number.Order\n})\n\nconsole.log(PersonOrder({ name: \"Alice\", age: 30 }, { name: \"Bob\", age: 25 }))\n// -1 (Alice comes before Bob)"
     ]
   },
   {
@@ -206,7 +206,7 @@
     },
     "description": "Interface for type-level functions used by map, mapPick, and mapOmit.",
     "examples": [
-      "import type { Struct } from \"effect\"\n\ninterface ToString extends Struct.Lambda {\n  readonly \"~lambda.out\": string\n}"
+      "import type * as Struct from \"effect/Struct\"\n\ninterface ToString extends Struct.Lambda {\n  readonly \"~lambda.out\": string\n}"
     ]
   },
   {
@@ -220,7 +220,7 @@
     },
     "description": "Applies a Lambda type-level function to a value type `V`, producing the output type.",
     "examples": [
-      "import type { Struct } from \"effect\"\n\ninterface ToString extends Struct.Lambda {\n  readonly \"~lambda.out\": string\n}\n\n// Result is `string`\ntype Result = Struct.Apply<ToString, number>"
+      "import type * as Struct from \"effect/Struct\"\n\ninterface ToString extends Struct.Lambda {\n  readonly \"~lambda.out\": string\n}\n\n// Result is `string`\ntype Result = Struct.Apply<ToString, number>"
     ]
   },
   {
@@ -234,7 +234,7 @@
     },
     "description": "Wraps a plain function as a Lambda value so it can be used with map, mapPick, and mapOmit.",
     "examples": [
-      "import { pipe, Struct } from \"effect\"\n\ninterface AsArray extends Struct.Lambda {\n  <A>(self: A): Array<A>\n  readonly \"~lambda.out\": Array<this[\"~lambda.in\"]>\n}\n\nconst asArray = Struct.lambda<AsArray>((a) => [a])\nconst result = pipe({ x: 1, y: \"hello\" }, Struct.map(asArray))\nconsole.log(result) // { x: [1], y: [\"hello\"] }"
+      "import { pipe } from \"effect/Function\"\nimport * as Struct from \"effect/Struct\"\n\ninterface AsArray extends Struct.Lambda {\n  <A>(self: A): Array<A>\n  readonly \"~lambda.out\": Array<this[\"~lambda.in\"]>\n}\n\nconst asArray = Struct.lambda<AsArray>((a) => [a])\nconst result = pipe({ x: 1, y: \"hello\" }, Struct.map(asArray))\nconsole.log(result) // { x: [1], y: [\"hello\"] }"
     ]
   },
   {
@@ -248,7 +248,7 @@
     },
     "description": "Applies a Lambda transformation to every value in a struct.",
     "examples": [
-      "import { pipe, Struct } from \"effect\"\n\ninterface AsArray extends Struct.Lambda {\n  <A>(self: A): Array<A>\n  readonly \"~lambda.out\": Array<this[\"~lambda.in\"]>\n}\n\nconst asArray = Struct.lambda<AsArray>((a) => [a])\nconst result = pipe({ width: 10, height: 20 }, Struct.map(asArray))\nconsole.log(result) // { width: [10], height: [20] }"
+      "import { pipe } from \"effect/Function\"\nimport * as Struct from \"effect/Struct\"\n\ninterface AsArray extends Struct.Lambda {\n  <A>(self: A): Array<A>\n  readonly \"~lambda.out\": Array<this[\"~lambda.in\"]>\n}\n\nconst asArray = Struct.lambda<AsArray>((a) => [a])\nconst result = pipe({ width: 10, height: 20 }, Struct.map(asArray))\nconsole.log(result) // { width: [10], height: [20] }"
     ]
   },
   {
@@ -262,7 +262,7 @@
     },
     "description": "Applies a Lambda transformation only to the specified keys; all other keys are copied unchanged.",
     "examples": [
-      "import { pipe, Struct } from \"effect\"\n\ninterface AsArray extends Struct.Lambda {\n  <A>(self: A): Array<A>\n  readonly \"~lambda.out\": Array<this[\"~lambda.in\"]>\n}\n\nconst asArray = Struct.lambda<AsArray>((a) => [a])\nconst result = pipe(\n  { x: 1, y: 2, z: 3 },\n  Struct.mapPick([\"x\", \"z\"], asArray)\n)\nconsole.log(result) // { x: [1], y: 2, z: [3] }"
+      "import { pipe } from \"effect/Function\"\nimport * as Struct from \"effect/Struct\"\n\ninterface AsArray extends Struct.Lambda {\n  <A>(self: A): Array<A>\n  readonly \"~lambda.out\": Array<this[\"~lambda.in\"]>\n}\n\nconst asArray = Struct.lambda<AsArray>((a) => [a])\nconst result = pipe(\n  { x: 1, y: 2, z: 3 },\n  Struct.mapPick([\"x\", \"z\"], asArray)\n)\nconsole.log(result) // { x: [1], y: 2, z: [3] }"
     ]
   },
   {
@@ -276,7 +276,7 @@
     },
     "description": "Applies a Lambda transformation to all keys except the specified ones; the excluded keys are copied unchanged.",
     "examples": [
-      "import { pipe, Struct } from \"effect\"\n\ninterface AsArray extends Struct.Lambda {\n  <A>(self: A): Array<A>\n  readonly \"~lambda.out\": Array<this[\"~lambda.in\"]>\n}\n\nconst asArray = Struct.lambda<AsArray>((a) => [a])\nconst result = pipe(\n  { x: 1, y: 2, z: 3 },\n  Struct.mapOmit([\"y\"], asArray)\n)\nconsole.log(result) // { x: [1], y: 2, z: [3] }"
+      "import { pipe } from \"effect/Function\"\nimport * as Struct from \"effect/Struct\"\n\ninterface AsArray extends Struct.Lambda {\n  <A>(self: A): Array<A>\n  readonly \"~lambda.out\": Array<this[\"~lambda.in\"]>\n}\n\nconst asArray = Struct.lambda<AsArray>((a) => [a])\nconst result = pipe(\n  { x: 1, y: 2, z: 3 },\n  Struct.mapOmit([\"y\"], asArray)\n)\nconsole.log(result) // { x: [1], y: 2, z: [3] }"
     ]
   },
   {
@@ -290,7 +290,7 @@
     },
     "description": "Creates a `Combiner` for a struct shape by providing a `Combiner` for each property. When two structs are combined, each property is merged using its corresponding combiner.",
     "examples": [
-      "import { Number, String, Struct } from \"effect\"\n\nconst C = Struct.makeCombiner<{ readonly n: number; readonly s: string }>({\n  n: Number.ReducerSum,\n  s: String.ReducerConcat\n})\n\nconst result = C.combine({ n: 1, s: \"hello\" }, { n: 2, s: \" world\" })\nconsole.log(result) // { n: 3, s: \"hello world\" }"
+      "import * as Number from \"effect/Number\"\nimport * as String from \"effect/String\"\nimport * as Struct from \"effect/Struct\"\n\nconst C = Struct.makeCombiner<{ readonly n: number; readonly s: string }>({\n  n: Number.ReducerSum,\n  s: String.ReducerConcat\n})\n\nconst result = C.combine({ n: 1, s: \"hello\" }, { n: 2, s: \" world\" })\nconsole.log(result) // { n: 3, s: \"hello world\" }"
     ]
   },
   {
@@ -304,7 +304,7 @@
     },
     "description": "Creates a `Reducer` for a struct shape by providing a `Reducer` for each property. The initial value is derived from each property's `Reducer.initialValue`. When reducing a collection of structs, each property is combined independently.",
     "examples": [
-      "import { Number, String, Struct } from \"effect\"\n\nconst R = Struct.makeReducer<{ readonly n: number; readonly s: string }>({\n  n: Number.ReducerSum,\n  s: String.ReducerConcat\n})\n\nconst result = R.combineAll([\n  { n: 1, s: \"a\" },\n  { n: 2, s: \"b\" },\n  { n: 3, s: \"c\" }\n])\nconsole.log(result) // { n: 6, s: \"abc\" }"
+      "import * as Number from \"effect/Number\"\nimport * as String from \"effect/String\"\nimport * as Struct from \"effect/Struct\"\n\nconst R = Struct.makeReducer<{ readonly n: number; readonly s: string }>({\n  n: Number.ReducerSum,\n  s: String.ReducerConcat\n})\n\nconst result = R.combineAll([\n  { n: 1, s: \"a\" },\n  { n: 2, s: \"b\" },\n  { n: 3, s: \"c\" }\n])\nconsole.log(result) // { n: 6, s: \"abc\" }"
     ]
   },
   {
@@ -318,7 +318,7 @@
     },
     "description": "Creates a record with the given keys and value.",
     "examples": [
-      "import { Struct } from \"effect\"\n\nconst record = Struct.Record([\"a\", \"b\"], \"value\")\nconsole.log(record) // { a: \"value\", b: \"value\" }"
+      "import * as Struct from \"effect/Struct\"\n\nconst record = Struct.Record([\"a\", \"b\"], \"value\")\nconsole.log(record) // { a: \"value\", b: \"value\" }"
     ]
   },
   {
@@ -360,7 +360,7 @@
     },
     "description": "Wrapper-only addition (@beep/utils/Struct). Retrieves a value from a struct by a dot-delimited or tuple path.",
     "examples": [
-      "import { pipe } from \"effect\"\nimport { Struct } from \"@beep/utils\"\n\nconst user = { profile: { name: \"Alice\", age: 30 } }\n\n// Data-first\nconst name = Struct.dotGet(user, \"profile.name\")\n\n// Data-last (pipeable)\nconst age = pipe(user, Struct.dotGet(\"profile.age\"))\n\nconsole.log(name)\nconsole.log(age)"
+      "import { pipe } from \"effect/Function\"\nimport { Struct } from \"@beep/utils\"\n\nconst user = { profile: { name: \"Alice\", age: 30 } }\n\n// Data-first\nconst name = Struct.dotGet(user, \"profile.name\")\n\n// Data-last (pipeable)\nconst age = pipe(user, Struct.dotGet(\"profile.age\"))\n\nconsole.log(name)\nconsole.log(age)"
     ]
   },
   {
@@ -374,7 +374,7 @@
     },
     "description": "Wrapper-only addition (@beep/utils/Struct). Retrieves a value as an `Option` by a dot-delimited or tuple path. Missing paths return Option.none().",
     "examples": [
-      "import { pipe } from \"effect\"\nimport { Struct } from \"@beep/utils\"\n\nconst user = { profile: { name: \"Alice\" } }\n\n// Data-first\nconst name = Struct.dotGetOption(user, \"profile.name\")\n// Option.some(\"Alice\")\n\n// Missing path\nconst missing = Struct.dotGetOption(user, [\"profile\", \"age\"])\n// Option.none()\n\nconsole.log(name)\nconsole.log(missing)"
+      "import { pipe } from \"effect/Function\"\nimport { Struct } from \"@beep/utils\"\n\nconst user = { profile: { name: \"Alice\" } }\n\n// Data-first\nconst name = Struct.dotGetOption(user, \"profile.name\")\n// Option.some(\"Alice\")\n\n// Missing path\nconst missing = Struct.dotGetOption(user, [\"profile\", \"age\"])\n// Option.none()\n\nconsole.log(name)\nconsole.log(missing)"
     ]
   },
   {
@@ -388,7 +388,7 @@
     },
     "description": "Wrapper-only addition (@beep/utils/Struct). Applies a unary function to a value retrieved from a struct by path.",
     "examples": [
-      "import { pipe } from \"effect\"\nimport { Struct } from \"@beep/utils\"\n\nconst user = { profile: { name: \"alice\" } }\n\n// Data-first\nconst upper = Struct.mapPath(user, (s: string) => s.toUpperCase(), { path: \"profile.name\" })\n// \"ALICE\"\n\nconsole.log(upper)"
+      "import { pipe } from \"effect/Function\"\nimport { Struct } from \"@beep/utils\"\n\nconst user = { profile: { name: \"alice\" } }\n\n// Data-first\nconst upper = Struct.mapPath(user, (s: string) => s.toUpperCase(), { path: \"profile.name\" })\n// \"ALICE\"\n\nconsole.log(upper)"
     ]
   },
   {
@@ -416,7 +416,7 @@
     },
     "description": "Wrapper-only addition (@beep/utils/Struct). Returns a thunk that reads a value from a struct by key.",
     "examples": [
-      "import { pipe } from \"effect\"\nimport { Struct } from \"@beep/utils\"\n\nconst config = { host: \"localhost\", port: 3000 }\n\n// Data-first\nconst getHost = Struct.getLazy(config, \"host\")\nconst host = getHost()\n// \"localhost\"\n\n// Data-last (pipeable)\nconst getPort = pipe(config, Struct.getLazy(\"port\"))\nconst port = getPort()\n// 3000\n\nconsole.log(host)\nconsole.log(port)"
+      "import { pipe } from \"effect/Function\"\nimport { Struct } from \"@beep/utils\"\n\nconst config = { host: \"localhost\", port: 3000 }\n\n// Data-first\nconst getHost = Struct.getLazy(config, \"host\")\nconst host = getHost()\n// \"localhost\"\n\n// Data-last (pipeable)\nconst getPort = pipe(config, Struct.getLazy(\"port\"))\nconst port = getPort()\n// 3000\n\nconsole.log(host)\nconsole.log(port)"
     ]
   },
   {
@@ -569,7 +569,7 @@
     },
     "description": "Represents a readonly record with keys of type `K` and values of type `A`. This is the foundational type for immutable key-value mappings in Effect.",
     "examples": [
-      "import type { Record } from \"effect\"\n\n// Creating a readonly record type\ntype UserRecord = Record.ReadonlyRecord<\"name\" | \"age\", string | number>\n\nconst user: UserRecord = {\n  name: \"John\",\n  age: 30\n}"
+      "import type * as Record from \"effect/Record\"\n\n// Creating a readonly record type\ntype UserRecord = Record.ReadonlyRecord<\"name\" | \"age\", string | number>\n\nconst user: UserRecord = {\n  name: \"John\",\n  age: 30\n}"
     ]
   },
   {
@@ -582,7 +582,7 @@
     },
     "description": "Namespace containing utility types for working with readonly records (NonLiteralKey, IntersectKeys). These types help with type-level operations on record keys and values.",
     "examples": [
-      "import type { Record } from \"effect\"\n\n// Using NonLiteralKey to convert literal keys to generic types\ntype GenericKey = Record.ReadonlyRecord.NonLiteralKey<\"foo\" | \"bar\"> // string\n\n// Using IntersectKeys to find common keys between record types\ntype CommonKeys = Record.ReadonlyRecord.IntersectKeys<\"a\" | \"b\", \"b\" | \"c\"> // \"b\""
+      "import type * as Record from \"effect/Record\"\n\n// Using NonLiteralKey to convert literal keys to generic types\ntype GenericKey = Record.ReadonlyRecord.NonLiteralKey<\"foo\" | \"bar\"> // string\n\n// Using IntersectKeys to find common keys between record types\ntype CommonKeys = Record.ReadonlyRecord.IntersectKeys<\"a\" | \"b\", \"b\" | \"c\"> // \"b\""
     ]
   },
   {
@@ -595,7 +595,7 @@
     },
     "description": "Type lambda for readonly records, used in higher-kinded type operations. This enables records to work with generic type constructors and functors.",
     "examples": [
-      "import type { HKT, Record } from \"effect\"\n\ntype Settings = HKT.Kind<\n  Record.ReadonlyRecordTypeLambda<\"port\" | \"retries\">,\n  never,\n  never,\n  never,\n  number\n>\n\nconst defaults: Settings = {\n  port: 3000,\n  retries: 3\n}"
+      "import type * as HKT from \"effect/HKT\"\nimport type * as Record from \"effect/Record\"\n\ntype Settings = HKT.Kind<\n  Record.ReadonlyRecordTypeLambda<\"port\" | \"retries\">,\n  never,\n  never,\n  never,\n  number\n>\n\nconst defaults: Settings = {\n  port: 3000,\n  retries: 3\n}"
     ]
   },
   {
@@ -608,7 +608,7 @@
     },
     "description": "Creates a new, empty record.",
     "examples": [
-      "import { Record } from \"effect\"\n\n// Create an empty record\nconst emptyRecord = Record.empty<string, number>()\nconsole.log(emptyRecord) // {}\n\n// The type ensures type safety for future operations\nconst withValue = Record.set(emptyRecord, \"count\", 42)\nconsole.log(withValue) // { count: 42 }"
+      "import * as Record from \"effect/Record\"\n\n// Create an empty record\nconst emptyRecord = Record.empty<string, number>()\nconsole.log(emptyRecord) // {}\n\n// The type ensures type safety for future operations\nconst withValue = Record.set(emptyRecord, \"count\", 42)\nconsole.log(withValue) // { count: 42 }"
     ]
   },
   {
@@ -621,7 +621,7 @@
     },
     "description": "Determine if a record is empty.",
     "examples": [
-      "import { Record } from \"effect\"\nimport * as assert from \"node:assert\"\n\nassert.deepStrictEqual(Record.isEmptyRecord({}), true)\nassert.deepStrictEqual(Record.isEmptyRecord({ a: 3 }), false)"
+      "import * as Record from \"effect/Record\"\nimport * as assert from \"node:assert\"\n\nassert.deepStrictEqual(Record.isEmptyRecord({}), true)\nassert.deepStrictEqual(Record.isEmptyRecord({ a: 3 }), false)"
     ]
   },
   {
@@ -634,7 +634,7 @@
     },
     "description": "Determine if a record is empty.",
     "examples": [
-      "import { Record } from \"effect\"\nimport * as assert from \"node:assert\"\n\nassert.deepStrictEqual(Record.isEmptyReadonlyRecord({}), true)\nassert.deepStrictEqual(Record.isEmptyReadonlyRecord({ a: 3 }), false)"
+      "import * as Record from \"effect/Record\"\nimport * as assert from \"node:assert\"\n\nassert.deepStrictEqual(Record.isEmptyReadonlyRecord({}), true)\nassert.deepStrictEqual(Record.isEmptyReadonlyRecord({ a: 3 }), false)"
     ]
   },
   {
@@ -647,7 +647,7 @@
     },
     "description": "Takes an iterable and a projection function and returns a record. The projection function maps each value of the iterable to a tuple of a key and a value, which is then added to the resulting record.",
     "examples": [
-      "import { Record } from \"effect\"\nimport * as assert from \"node:assert\"\n\nconst input = [1, 2, 3, 4]\n\nassert.deepStrictEqual(\n  Record.fromIterableWith(input, (a) => [String(a), a * 2]),\n  { \"1\": 2, \"2\": 4, \"3\": 6, \"4\": 8 }\n)"
+      "import * as Record from \"effect/Record\"\nimport * as assert from \"node:assert\"\n\nconst input = [1, 2, 3, 4]\n\nassert.deepStrictEqual(\n  Record.fromIterableWith(input, (a) => [String(a), a * 2]),\n  { \"1\": 2, \"2\": 4, \"3\": 6, \"4\": 8 }\n)"
     ]
   },
   {
@@ -660,7 +660,7 @@
     },
     "description": "Creates a new record from an iterable, utilizing the provided function to determine the key for each element.",
     "examples": [
-      "import { Record } from \"effect\"\nimport * as assert from \"node:assert\"\n\nconst users = [\n  { id: \"2\", name: \"name2\" },\n  { id: \"1\", name: \"name1\" }\n]\n\nassert.deepStrictEqual(\n  Record.fromIterableBy(users, (user) => user.id),\n  {\n    \"2\": { id: \"2\", name: \"name2\" },\n    \"1\": { id: \"1\", name: \"name1\" }\n  }\n)"
+      "import * as Record from \"effect/Record\"\nimport * as assert from \"node:assert\"\n\nconst users = [\n  { id: \"2\", name: \"name2\" },\n  { id: \"1\", name: \"name1\" }\n]\n\nassert.deepStrictEqual(\n  Record.fromIterableBy(users, (user) => user.id),\n  {\n    \"2\": { id: \"2\", name: \"name2\" },\n    \"1\": { id: \"1\", name: \"name1\" }\n  }\n)"
     ]
   },
   {
@@ -673,7 +673,7 @@
     },
     "description": "Builds a record from an iterable of key-value pairs. If there are conflicting keys, the last occurrence of the key/value pair will overwrite the previous ones.",
     "examples": [
-      "import { Record } from \"effect\"\nimport * as assert from \"node:assert\"\n\nconst input: Array<[string, number]> = [[\"a\", 1], [\"b\", 2]]\n\nassert.deepStrictEqual(Record.fromEntries(input), { a: 1, b: 2 })"
+      "import * as Record from \"effect/Record\"\nimport * as assert from \"node:assert\"\n\nconst input: Array<[string, number]> = [[\"a\", 1], [\"b\", 2]]\n\nassert.deepStrictEqual(Record.fromEntries(input), { a: 1, b: 2 })"
     ]
   },
   {
@@ -686,7 +686,7 @@
     },
     "description": "Transforms the values of a record into an `Array` with a custom mapping function.",
     "examples": [
-      "import { Record } from \"effect\"\nimport * as assert from \"node:assert\"\n\nconst x = { a: 1, b: 2, c: 3 }\nassert.deepStrictEqual(Record.collect(x, (key, n) => [key, n]), [[\"a\", 1], [\n  \"b\",\n  2\n], [\"c\", 3]])"
+      "import * as Record from \"effect/Record\"\nimport * as assert from \"node:assert\"\n\nconst x = { a: 1, b: 2, c: 3 }\nassert.deepStrictEqual(Record.collect(x, (key, n) => [key, n]), [[\"a\", 1], [\n  \"b\",\n  2\n], [\"c\", 3]])"
     ]
   },
   {
@@ -699,7 +699,7 @@
     },
     "description": "Takes a record and returns an array of tuples containing its keys and values.",
     "examples": [
-      "import { Record } from \"effect\"\nimport * as assert from \"node:assert\"\n\nconst x = { a: 1, b: 2, c: 3 }\nassert.deepStrictEqual(Record.toEntries(x), [[\"a\", 1], [\"b\", 2], [\"c\", 3]])"
+      "import * as Record from \"effect/Record\"\nimport * as assert from \"node:assert\"\n\nconst x = { a: 1, b: 2, c: 3 }\nassert.deepStrictEqual(Record.toEntries(x), [[\"a\", 1], [\"b\", 2], [\"c\", 3]])"
     ]
   },
   {
@@ -712,7 +712,7 @@
     },
     "description": "Returns the number of key/value pairs in a record.",
     "examples": [
-      "import { Record } from \"effect\"\nimport * as assert from \"node:assert\"\n\nassert.deepStrictEqual(Record.size({ a: \"a\", b: 1, c: true }), 3)"
+      "import * as Record from \"effect/Record\"\nimport * as assert from \"node:assert\"\n\nassert.deepStrictEqual(Record.size({ a: \"a\", b: 1, c: true }), 3)"
     ]
   },
   {
@@ -725,7 +725,7 @@
     },
     "description": "Check if a given `key` exists in a record.",
     "examples": [
-      "import { Record } from \"effect\"\nimport * as assert from \"node:assert\"\n\nassert.deepStrictEqual(Record.has({ a: 1, b: 2 }, \"a\"), true)\nassert.deepStrictEqual(Record.has(Record.empty<string>(), \"c\"), false)"
+      "import * as Record from \"effect/Record\"\nimport * as assert from \"node:assert\"\n\nassert.deepStrictEqual(Record.has({ a: 1, b: 2 }, \"a\"), true)\nassert.deepStrictEqual(Record.has(Record.empty<string>(), \"c\"), false)"
     ]
   },
   {
@@ -738,7 +738,7 @@
     },
     "description": "Retrieve a value at a particular key from a record, returning it wrapped in an `Option`.",
     "examples": [
-      "import { Option, Record as R } from \"effect\"\nimport * as assert from \"node:assert\"\n\nconst person: Record<string, unknown> = { name: \"John Doe\", age: 35 }\n\nassert.deepStrictEqual(R.get(person, \"name\"), Option.some(\"John Doe\"))\nassert.deepStrictEqual(R.get(person, \"email\"), Option.none())"
+      "import * as Option from \"effect/Option\"\nimport * as R from \"effect/Record\"\nimport * as assert from \"node:assert\"\n\nconst person: Record<string, unknown> = { name: \"John Doe\", age: 35 }\n\nassert.deepStrictEqual(R.get(person, \"name\"), Option.some(\"John Doe\"))\nassert.deepStrictEqual(R.get(person, \"email\"), Option.none())"
     ]
   },
   {
@@ -751,7 +751,7 @@
     },
     "description": "Apply a function to the element at the specified key, creating a new record, or return Option.none() if the key doesn't exist.",
     "examples": [
-      "import { Record } from \"effect\"\n\nconst f = (x: number) => x * 2\n\nconst input: Record<string, number> = { a: 3 }\n\nRecord.modify(input, \"a\", f) // Option.some({ a: 6 })\nRecord.modify(input, \"b\", f) // Option.none()"
+      "import * as Record from \"effect/Record\"\n\nconst f = (x: number) => x * 2\n\nconst input: Record<string, number> = { a: 3 }\n\nRecord.modify(input, \"a\", f) // Option.some({ a: 6 })\nRecord.modify(input, \"b\", f) // Option.none()"
     ]
   },
   {
@@ -764,7 +764,7 @@
     },
     "description": "Replaces the value at an existing key and returns the updated record in Option.some. If the key is not present, returns Option.none() and leaves the record unchanged.",
     "examples": [
-      "import { Record } from \"effect\"\n\nRecord.replace({ a: 1, b: 2, c: 3 }, \"a\", 10) // Option.some({ a: 10, b: 2, c: 3 })\nRecord.replace(Record.empty<string>(), \"a\", 10) // Option.none()"
+      "import * as Record from \"effect/Record\"\n\nRecord.replace({ a: 1, b: 2, c: 3 }, \"a\", 10) // Option.some({ a: 10, b: 2, c: 3 })\nRecord.replace(Record.empty<string>(), \"a\", 10) // Option.none()"
     ]
   },
   {
@@ -777,7 +777,7 @@
     },
     "description": "If the given key exists in the record, returns a new record with the key removed. If the key does not exist, returns a shallow copy of the original record.",
     "examples": [
-      "import { Record } from \"effect\"\nimport * as assert from \"node:assert\"\n\nassert.deepStrictEqual(Record.remove({ a: 1, b: 2 }, \"a\"), { b: 2 })"
+      "import * as Record from \"effect/Record\"\nimport * as assert from \"node:assert\"\n\nassert.deepStrictEqual(Record.remove({ a: 1, b: 2 }, \"a\"), { b: 2 })"
     ]
   },
   {
@@ -790,7 +790,7 @@
     },
     "description": "Retrieves the value of the property with the given `key` from a record and returns an Option of a tuple with the value and the record with the removed property. If the key is not present, returns Option.none().",
     "examples": [
-      "import { Record } from \"effect\"\n\nconst input: Record<string, number> = { a: 1, b: 2 }\n\nRecord.pop(input, \"a\") // Option.some([1, { b: 2 }])\nRecord.pop(input, \"c\") // Option.none()"
+      "import * as Record from \"effect/Record\"\n\nconst input: Record<string, number> = { a: 1, b: 2 }\n\nRecord.pop(input, \"a\") // Option.some([1, { b: 2 }])\nRecord.pop(input, \"c\") // Option.none()"
     ]
   },
   {
@@ -803,7 +803,7 @@
     },
     "description": "Maps a record into another record by applying a transformation function to each of its values.",
     "examples": [
-      "import { Record } from \"effect\"\nimport * as assert from \"node:assert\"\n\nconst f = (n: number) => `-${n}`\n\nassert.deepStrictEqual(Record.map({ a: 3, b: 5 }, f), { a: \"-3\", b: \"-5\" })\n\nconst g = (n: number, key: string) => `${key.toUpperCase()}-${n}`\n\nassert.deepStrictEqual(Record.map({ a: 3, b: 5 }, g), { a: \"A-3\", b: \"B-5\" })"
+      "import * as Record from \"effect/Record\"\nimport * as assert from \"node:assert\"\n\nconst f = (n: number) => `-${n}`\n\nassert.deepStrictEqual(Record.map({ a: 3, b: 5 }, f), { a: \"-3\", b: \"-5\" })\n\nconst g = (n: number, key: string) => `${key.toUpperCase()}-${n}`\n\nassert.deepStrictEqual(Record.map({ a: 3, b: 5 }, g), { a: \"A-3\", b: \"B-5\" })"
     ]
   },
   {
@@ -816,7 +816,7 @@
     },
     "description": "Maps the keys of a `ReadonlyRecord` while preserving the corresponding values.",
     "examples": [
-      "import { Record } from \"effect\"\nimport * as assert from \"node:assert\"\n\nassert.deepStrictEqual(\n  Record.mapKeys({ a: 3, b: 5 }, (key) => key.toUpperCase()),\n  { A: 3, B: 5 }\n)"
+      "import * as Record from \"effect/Record\"\nimport * as assert from \"node:assert\"\n\nassert.deepStrictEqual(\n  Record.mapKeys({ a: 3, b: 5 }, (key) => key.toUpperCase()),\n  { A: 3, B: 5 }\n)"
     ]
   },
   {
@@ -829,7 +829,7 @@
     },
     "description": "Maps entries of a `ReadonlyRecord` using the provided function, allowing modification of both keys and corresponding values.",
     "examples": [
-      "import { Record } from \"effect\"\nimport * as assert from \"node:assert\"\n\nassert.deepStrictEqual(\n  Record.mapEntries({ a: 3, b: 5 }, (a, key) => [key.toUpperCase(), a + 1]),\n  { A: 4, B: 6 }\n)"
+      "import * as Record from \"effect/Record\"\nimport * as assert from \"node:assert\"\n\nassert.deepStrictEqual(\n  Record.mapEntries({ a: 3, b: 5 }, (a, key) => [key.toUpperCase(), a + 1]),\n  { A: 4, B: 6 }\n)"
     ]
   },
   {
@@ -842,7 +842,7 @@
     },
     "description": "Transforms a record by applying the function `f` to each key and value in the original record. If the function succeeds, the key-value pair is included in the output record.",
     "examples": [
-      "import { Record, Result } from \"effect\"\nimport * as assert from \"node:assert\"\n\nconst x = { a: 1, b: 2, c: 3 }\nconst f = (a: number, key: string) => a > 2 ? Result.succeed(a * 2) : Result.failVoid\nassert.deepStrictEqual(Record.filterMap(x, f), { c: 6 })"
+      "import * as Record from \"effect/Record\"\nimport * as Result from \"effect/Result\"\nimport * as assert from \"node:assert\"\n\nconst x = { a: 1, b: 2, c: 3 }\nconst f = (a: number, key: string) => a > 2 ? Result.succeed(a * 2) : Result.failVoid\nassert.deepStrictEqual(Record.filterMap(x, f), { c: 6 })"
     ]
   },
   {
@@ -855,7 +855,7 @@
     },
     "description": "Selects properties from a record whose values match the given predicate.",
     "examples": [
-      "import { Record } from \"effect\"\nimport * as assert from \"node:assert\"\n\nconst x = { a: 1, b: 2, c: 3, d: 4 }\nassert.deepStrictEqual(Record.filter(x, (n) => n > 2), { c: 3, d: 4 })"
+      "import * as Record from \"effect/Record\"\nimport * as assert from \"node:assert\"\n\nconst x = { a: 1, b: 2, c: 3, d: 4 }\nassert.deepStrictEqual(Record.filter(x, (n) => n > 2), { c: 3, d: 4 })"
     ]
   },
   {
@@ -868,7 +868,7 @@
     },
     "description": "Given a record with `Option` values, returns a new record containing only the `Some` values, preserving the original keys.",
     "examples": [
-      "import { Option, Record } from \"effect\"\nimport * as assert from \"node:assert\"\n\nassert.deepStrictEqual(\n  Record.getSomes({ a: Option.some(1), b: Option.none(), c: Option.some(2) }),\n  { a: 1, c: 2 }\n)"
+      "import * as Option from \"effect/Option\"\nimport * as Record from \"effect/Record\"\nimport * as assert from \"node:assert\"\n\nassert.deepStrictEqual(\n  Record.getSomes({ a: Option.some(1), b: Option.none(), c: Option.some(2) }),\n  { a: 1, c: 2 }\n)"
     ]
   },
   {
@@ -881,7 +881,7 @@
     },
     "description": "Given a record with `Result` values, returns a new record containing only the `Err` values, preserving the original keys.",
     "examples": [
-      "import { Record, Result } from \"effect\"\nimport * as assert from \"node:assert\"\n\nassert.deepStrictEqual(\n  Record.getFailures({\n    a: Result.succeed(1),\n    b: Result.fail(\"err\"),\n    c: Result.succeed(2)\n  }),\n  { b: \"err\" }\n)"
+      "import * as Record from \"effect/Record\"\nimport * as Result from \"effect/Result\"\nimport * as assert from \"node:assert\"\n\nassert.deepStrictEqual(\n  Record.getFailures({\n    a: Result.succeed(1),\n    b: Result.fail(\"err\"),\n    c: Result.succeed(2)\n  }),\n  { b: \"err\" }\n)"
     ]
   },
   {
@@ -894,7 +894,7 @@
     },
     "description": "Given a record with `Result` values, returns a new record containing only the `Ok` values, preserving the original keys.",
     "examples": [
-      "import { Record, Result } from \"effect\"\nimport * as assert from \"node:assert\"\n\nassert.deepStrictEqual(\n  Record.getSuccesses({\n    a: Result.succeed(1),\n    b: Result.fail(\"err\"),\n    c: Result.succeed(2)\n  }),\n  { a: 1, c: 2 }\n)"
+      "import * as Record from \"effect/Record\"\nimport * as Result from \"effect/Result\"\nimport * as assert from \"node:assert\"\n\nassert.deepStrictEqual(\n  Record.getSuccesses({\n    a: Result.succeed(1),\n    b: Result.fail(\"err\"),\n    c: Result.succeed(2)\n  }),\n  { a: 1, c: 2 }\n)"
     ]
   },
   {
@@ -907,7 +907,7 @@
     },
     "description": "Applies a function to each record entry and partitions the returned `Result` values into two records. Failure values are collected in the left record, and success values are collected in the right record, preserving the original keys.",
     "examples": [
-      "import { Record, Result } from \"effect\"\nimport * as assert from \"node:assert\"\n\nconst x = { a: 1, b: 2, c: 3 }\nconst f = (n: number) => (n % 2 === 0 ? Result.succeed(n) : Result.fail(n))\nassert.deepStrictEqual(Record.partition(x, f), [{ a: 1, c: 3 }, { b: 2 }])"
+      "import * as Record from \"effect/Record\"\nimport * as Result from \"effect/Result\"\nimport * as assert from \"node:assert\"\n\nconst x = { a: 1, b: 2, c: 3 }\nconst f = (n: number) => (n % 2 === 0 ? Result.succeed(n) : Result.fail(n))\nassert.deepStrictEqual(Record.partition(x, f), [{ a: 1, c: 3 }, { b: 2 }])"
     ]
   },
   {
@@ -920,7 +920,7 @@
     },
     "description": "Partitions a record of `Result` values into two separate records, one with the `Err` values and one with the `Ok` values.",
     "examples": [
-      "import { Record, Result } from \"effect\"\nimport * as assert from \"node:assert\"\n\nassert.deepStrictEqual(\n  Record.separate({ a: Result.fail(\"e\"), b: Result.succeed(1) }),\n  [{ a: \"e\" }, { b: 1 }]\n)"
+      "import * as Record from \"effect/Record\"\nimport * as Result from \"effect/Result\"\nimport * as assert from \"node:assert\"\n\nassert.deepStrictEqual(\n  Record.separate({ a: Result.fail(\"e\"), b: Result.succeed(1) }),\n  [{ a: \"e\" }, { b: 1 }]\n)"
     ]
   },
   {
@@ -933,7 +933,7 @@
     },
     "description": "Retrieve the keys of a given record as an array.",
     "examples": [
-      "import { Record } from \"effect\"\nimport * as assert from \"node:assert\"\n\nassert.deepStrictEqual(Record.keys({ a: 1, b: 2, c: 3 }), [\"a\", \"b\", \"c\"])"
+      "import * as Record from \"effect/Record\"\nimport * as assert from \"node:assert\"\n\nassert.deepStrictEqual(Record.keys({ a: 1, b: 2, c: 3 }), [\"a\", \"b\", \"c\"])"
     ]
   },
   {
@@ -946,7 +946,7 @@
     },
     "description": "Retrieve the values of a given record as an array.",
     "examples": [
-      "import { Record } from \"effect\"\nimport * as assert from \"node:assert\"\n\nassert.deepStrictEqual(Record.values({ a: 1, b: 2, c: 3 }), [1, 2, 3])"
+      "import * as Record from \"effect/Record\"\nimport * as assert from \"node:assert\"\n\nassert.deepStrictEqual(Record.values({ a: 1, b: 2, c: 3 }), [1, 2, 3])"
     ]
   },
   {
@@ -959,7 +959,7 @@
     },
     "description": "Add a new key-value pair or update an existing key's value in a record.",
     "examples": [
-      "import { Record } from \"effect\"\nimport * as assert from \"node:assert\"\n\nassert.deepStrictEqual(Record.set(\"a\", 5)({ a: 1, b: 2 }), { a: 5, b: 2 })\nassert.deepStrictEqual(Record.set(\"c\", 5)({ a: 1, b: 2 }), { a: 1, b: 2, c: 5 })"
+      "import * as Record from \"effect/Record\"\nimport * as assert from \"node:assert\"\n\nassert.deepStrictEqual(Record.set(\"a\", 5)({ a: 1, b: 2 }), { a: 5, b: 2 })\nassert.deepStrictEqual(Record.set(\"c\", 5)({ a: 1, b: 2 }), { a: 1, b: 2, c: 5 })"
     ]
   },
   {
@@ -972,7 +972,7 @@
     },
     "description": "Check if all the keys and values in one record are also found in another record. Uses the provided equivalence function to compare values.",
     "examples": [
-      "import { Equivalence, Record } from \"effect\"\n\nconst isSubrecord = Record.isSubrecordBy(\n  Equivalence.make<string>((self, that) => self.toLowerCase() === that.toLowerCase())\n)\n\nconst required: Record.ReadonlyRecord<string, string> = { role: \"Admin\" }\nconst available: Record.ReadonlyRecord<string, string> = {\n  role: \"admin\",\n  status: \"active\"\n}\n\nconsole.log(\n  isSubrecord(required, available)\n) // true\nconsole.log(\n  isSubrecord({ role: \"Admin\", status: \"inactive\" }, available)\n) // false\nconsole.log(\n  isSubrecord(required, { role: \"editor\", status: \"active\" })\n) // false"
+      "import * as Equivalence from \"effect/Equivalence\"\nimport * as Record from \"effect/Record\"\n\nconst isSubrecord = Record.isSubrecordBy(\n  Equivalence.make<string>((self, that) => self.toLowerCase() === that.toLowerCase())\n)\n\nconst required: Record.ReadonlyRecord<string, string> = { role: \"Admin\" }\nconst available: Record.ReadonlyRecord<string, string> = {\n  role: \"admin\",\n  status: \"active\"\n}\n\nconsole.log(\n  isSubrecord(required, available)\n) // true\nconsole.log(\n  isSubrecord({ role: \"Admin\", status: \"inactive\" }, available)\n) // false\nconsole.log(\n  isSubrecord(required, { role: \"editor\", status: \"active\" })\n) // false"
     ]
   },
   {
@@ -985,7 +985,7 @@
     },
     "description": "Checks whether the first record is a subrecord of the second record. Returns `true` when every key and value in `self` is also present in `that`. Values are compared with Effect equality via `Equal.asEquivalence()`.",
     "examples": [
-      "import { Record } from \"effect\"\nimport * as assert from \"node:assert\"\n\nassert.deepStrictEqual(\n  Record.isSubrecord({ a: 1 } as Record<string, number>, { a: 1, b: 2 }),\n  true\n)\nassert.deepStrictEqual(\n  Record.isSubrecord({ a: 1, b: 2 }, { a: 1 } as Record<string, number>),\n  false\n)"
+      "import * as Record from \"effect/Record\"\nimport * as assert from \"node:assert\"\n\nassert.deepStrictEqual(\n  Record.isSubrecord({ a: 1 } as Record<string, number>, { a: 1, b: 2 }),\n  true\n)\nassert.deepStrictEqual(\n  Record.isSubrecord({ a: 1, b: 2 }, { a: 1 } as Record<string, number>),\n  false\n)"
     ]
   },
   {
@@ -998,7 +998,7 @@
     },
     "description": "Reduce a record to a single value by combining its entries with a specified function.",
     "examples": [
-      "import { Record } from \"effect\"\nimport * as assert from \"node:assert\"\n\nassert.deepStrictEqual(\n  Record.reduce({ a: 1, b: 2, c: 3 }, 0, (acc, value, key) => acc + value),\n  6\n)"
+      "import * as Record from \"effect/Record\"\nimport * as assert from \"node:assert\"\n\nassert.deepStrictEqual(\n  Record.reduce({ a: 1, b: 2, c: 3 }, 0, (acc, value, key) => acc + value),\n  6\n)"
     ]
   },
   {
@@ -1011,7 +1011,7 @@
     },
     "description": "Check if all entries in a record meet a specific condition.",
     "examples": [
-      "import { Record } from \"effect\"\nimport * as assert from \"node:assert\"\n\nassert.deepStrictEqual(Record.every({ a: 1, b: 2 }, (n) => n > 0), true)\nassert.deepStrictEqual(Record.every({ a: 1, b: -1 }, (n) => n > 0), false)"
+      "import * as Record from \"effect/Record\"\nimport * as assert from \"node:assert\"\n\nassert.deepStrictEqual(Record.every({ a: 1, b: 2 }, (n) => n > 0), true)\nassert.deepStrictEqual(Record.every({ a: 1, b: -1 }, (n) => n > 0), false)"
     ]
   },
   {
@@ -1024,7 +1024,7 @@
     },
     "description": "Check if any entry in a record meets a specific condition.",
     "examples": [
-      "import { Record } from \"effect\"\nimport * as assert from \"node:assert\"\n\nassert.deepStrictEqual(Record.some({ a: 1, b: 2 }, (n) => n > 1), true)\nassert.deepStrictEqual(Record.some({ a: 1, b: 2 }, (n) => n > 2), false)"
+      "import * as Record from \"effect/Record\"\nimport * as assert from \"node:assert\"\n\nassert.deepStrictEqual(Record.some({ a: 1, b: 2 }, (n) => n > 1), true)\nassert.deepStrictEqual(Record.some({ a: 1, b: 2 }, (n) => n > 2), false)"
     ]
   },
   {
@@ -1037,7 +1037,7 @@
     },
     "description": "Merge two records, preserving entries that exist in either of the records. For keys that exist in both records, the provided combine function is used to merge the values.",
     "examples": [
-      "import { Record } from \"effect\"\nimport * as assert from \"node:assert\"\n\nassert.deepStrictEqual(\n  Record.union({ a: 1, b: 2 }, { b: 3, c: 4 }, (a, b) => a + b),\n  { a: 1, b: 5, c: 4 }\n)"
+      "import * as Record from \"effect/Record\"\nimport * as assert from \"node:assert\"\n\nassert.deepStrictEqual(\n  Record.union({ a: 1, b: 2 }, { b: 3, c: 4 }, (a, b) => a + b),\n  { a: 1, b: 5, c: 4 }\n)"
     ]
   },
   {
@@ -1050,7 +1050,7 @@
     },
     "description": "Merge two records, retaining only the entries that exist in both records. For intersecting keys, the provided combine function is used to merge the values.",
     "examples": [
-      "import { Record } from \"effect\"\nimport * as assert from \"node:assert\"\n\nassert.deepStrictEqual(\n  Record.intersection({ a: 1, b: 2 }, { b: 3, c: 4 }, (a, b) => a + b),\n  { b: 5 }\n)"
+      "import * as Record from \"effect/Record\"\nimport * as assert from \"node:assert\"\n\nassert.deepStrictEqual(\n  Record.intersection({ a: 1, b: 2 }, { b: 3, c: 4 }, (a, b) => a + b),\n  { b: 5 }\n)"
     ]
   },
   {
@@ -1063,7 +1063,7 @@
     },
     "description": "Merge two records, preserving only the entries that are unique to each record. Keys that exist in both records are excluded from the result.",
     "examples": [
-      "import { Record } from \"effect\"\nimport * as assert from \"node:assert\"\n\nassert.deepStrictEqual(\n  Record.difference({ a: 1, b: 2 }, { b: 3, c: 4 }),\n  { a: 1, c: 4 }\n)"
+      "import * as Record from \"effect/Record\"\nimport * as assert from \"node:assert\"\n\nassert.deepStrictEqual(\n  Record.difference({ a: 1, b: 2 }, { b: 3, c: 4 }),\n  { a: 1, c: 4 }\n)"
     ]
   },
   {
@@ -1076,7 +1076,7 @@
     },
     "description": "Create an `Equivalence` for records using the provided `Equivalence` for values. Two records are considered equivalent if they have the same keys and their corresponding values are equivalent.",
     "examples": [
-      "import { Equal, Record } from \"effect\"\nimport * as assert from \"node:assert\"\n\nconst recordEquivalence = Record.makeEquivalence(Equal.asEquivalence<number>())\n\nassert.deepStrictEqual(recordEquivalence({ a: 1, b: 2 }, { a: 1, b: 2 }), true)\nassert.deepStrictEqual(recordEquivalence({ a: 1, b: 2 }, { a: 1, b: 3 }), false)"
+      "import * as Equal from \"effect/Equal\"\nimport * as Record from \"effect/Record\"\nimport * as assert from \"node:assert\"\n\nconst recordEquivalence = Record.makeEquivalence(Equal.asEquivalence<number>())\n\nassert.deepStrictEqual(recordEquivalence({ a: 1, b: 2 }, { a: 1, b: 2 }), true)\nassert.deepStrictEqual(recordEquivalence({ a: 1, b: 2 }, { a: 1, b: 3 }), false)"
     ]
   },
   {
@@ -1089,7 +1089,7 @@
     },
     "description": "Create a non-empty record from a single element.",
     "examples": [
-      "import { Record } from \"effect\"\nimport * as assert from \"node:assert\"\n\nassert.deepStrictEqual(Record.singleton(\"a\", 1), { a: 1 })"
+      "import * as Record from \"effect/Record\"\nimport * as assert from \"node:assert\"\n\nassert.deepStrictEqual(Record.singleton(\"a\", 1), { a: 1 })"
     ]
   },
   {
@@ -1124,7 +1124,7 @@
     },
     "description": "Returns the first entry that satisfies the specified predicate, or `None` if no such entry exists.",
     "examples": [
-      "import { Record } from \"effect\"\n\nconst record = { a: 1, b: 2, c: 3 }\nconst result = Record.findFirst(\n  record,\n  (value, key) => value > 1 && key !== \"b\"\n)\nconsole.log(result) // Option.Some([\"c\", 3])"
+      "import * as Record from \"effect/Record\"\n\nconst record = { a: 1, b: 2, c: 3 }\nconst result = Record.findFirst(\n  record,\n  (value, key) => value > 1 && key !== \"b\"\n)\nconsole.log(result) // Option.Some([\"c\", 3])"
     ]
   }
 ]

@@ -1,5 +1,5 @@
 import { $SemanticaId } from "@beep/identity/packages";
-import { Context } from "effect";
+import * as Context from "effect/Context";
 import type { ModelIdentity } from "@/schema/Model";
 
 const $I = $SemanticaId.create("services/LanguageModel");
@@ -17,8 +17,7 @@ const $I = $SemanticaId.create("services/LanguageModel");
  *
  * ```ts
  * import { ActiveModelIdentity } from "@/services/LanguageModel"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(ActiveModelIdentity)) // true
  * ```
  *

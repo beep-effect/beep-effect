@@ -13,7 +13,12 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { URLStr } from "@beep/schema";
-import { Clock, Context, Duration, Effect, Layer, Redacted } from "effect";
+import * as Clock from "effect/Clock";
+import * as Context from "effect/Context";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Redacted from "effect/Redacted";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -169,7 +174,7 @@ const makeRateLimiter = (maxRequests: number, window: Duration.Duration = Durati
  * **Example** (Inspect jina reader client)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { JinaReaderClient } from "@effect-ontology/Service/JinaReaderClient"
  *
  * const program = Effect.gen(function* () {

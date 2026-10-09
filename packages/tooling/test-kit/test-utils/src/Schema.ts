@@ -23,7 +23,7 @@ import { fcRuns } from "./FastCheckRuns.ts";
  *
  * ```ts
  * import { assertSchemaArbitraryDecodesToSelf } from "@beep/test-utils"
- * import { pipe } from "effect"
+ * import { pipe } from "effect/Function";
  * import * as S from "effect/Schema"
  *
  * const Status = S.Literal("ready")

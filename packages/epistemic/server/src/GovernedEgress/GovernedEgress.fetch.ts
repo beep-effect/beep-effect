@@ -71,8 +71,12 @@ import { ExecutionLedger } from "@beep/epistemic-use-cases/ExecutionLedger";
 import { $EpistemicServerId } from "@beep/identity/packages";
 import { SystemPrincipal } from "@beep/shared-domain/entity/Principal";
 import { A, O } from "@beep/utils";
-import { DateTime, Duration, Effect, Ref, Semaphore } from "effect";
+import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
+import * as Semaphore from "effect/Semaphore";
 import * as Str from "effect/String";
 import type { DecisionRecordHash } from "@beep/epistemic-domain/values/ExecutionRecord";
 
@@ -100,8 +104,7 @@ const outcomeAppendTimeout = Duration.seconds(1);
  * ```ts
  * import { GovernedEgressOptions } from "@beep/epistemic-server/GovernedEgress"
  * import { GrantOperation, GrantPurpose, GrantResource } from "@beep/epistemic-domain/values/ExecutionGrant"
- * import { Duration } from "effect"
- *
+ * import * as Duration from "effect/Duration";
  * const options = GovernedEgressOptions.make({
  *   grantTtl: Duration.hours(12),
  *   operation: GrantOperation.make("http-egress"),
@@ -193,8 +196,8 @@ const coveredBy = (entry: string, requested: string): boolean =>
  * ```ts
  * import { GovernedEgressOptions, makeGovernedEgressFetch } from "@beep/epistemic-server/GovernedEgress"
  * import { GrantOperation, GrantPurpose, GrantResource } from "@beep/epistemic-domain/values/ExecutionGrant"
- * import { Duration, Effect } from "effect"
- *
+ * import * as Duration from "effect/Duration";
+ * import * as Effect from "effect/Effect";
  * const fetch = makeGovernedEgressFetch(GovernedEgressOptions.make({
  *   grantTtl: Duration.hours(12),
  *   operation: GrantOperation.make("http-egress"),

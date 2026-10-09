@@ -18,13 +18,15 @@ import {
   TaggingRunReport,
 } from "@beep/law-practice-domain/values/MailTagging";
 import { Sha256HexFromBytes } from "@beep/schema/Sha256";
-import { Effect, flow, Ref } from "effect";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
 import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
+import { flow } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { MailTaggingPortError } from "./MailTagging.errors.ts";

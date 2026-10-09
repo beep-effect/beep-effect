@@ -4,9 +4,10 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { Number as Num, Result, SchemaGetter } from "effect";
+import * as Num from "effect/Number";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as SchemaGetter from "effect/SchemaGetter";
 import { HexColor, hexToRgbValue, NormalizeHexColor } from "./Color.hex.ts";
 import { $I, schemaIssueToError } from "./Color.shared.ts";
 import { hexToOklchValue, oklchToHexValue } from "./Color.transforms.ts";

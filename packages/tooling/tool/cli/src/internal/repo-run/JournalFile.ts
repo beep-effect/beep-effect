@@ -5,8 +5,10 @@
  * @since 0.0.0
  */
 
-import { Effect, FileSystem, Path } from "effect";
 import * as Crypto from "effect/Crypto";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Path from "effect/Path";
 import { QualitySchedulerError } from "./QualityScheduler.schemas.ts";
 
 const textEncoder = new TextEncoder();
@@ -24,8 +26,7 @@ const textEncoder = new TextEncoder();
  *
  * ```ts
  * import { publishJournalTextAtomically } from "@beep/repo-cli/test/RepoRun"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(publishJournalTextAtomically("/tmp/journal.ndjson", "{}\n", "journal")))
  * // true
  * ```

@@ -90,8 +90,7 @@ export class CorpusArchiveMoveManifestRecord extends S.Class<CorpusArchiveMoveMa
  * ```ts
  * import * as S from "effect/Schema"
  * import { CorpusArchiveMoveManifestRecord, encodeCorpusArchiveMoveManifestRecordJson } from "@beep/repo-cli/commands/Corpus"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const record = CorpusArchiveMoveManifestRecord.make({
  *   archivePath: "/tmp/archive/source-a",
  *   copiedCount: S.Natural.make(1),

@@ -11,8 +11,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { Request } from "effect";
+import * as Request from "effect/Request";
 import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts";
 import type { Embedding, EmbeddingTaskType, ProviderMetadata } from "./EmbeddingProvider.ts";
 

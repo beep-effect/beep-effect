@@ -30,10 +30,13 @@
  */
 
 import { O, P, Str, thunkEmptyReadonlyRecord } from "@beep/utils";
-import { Effect, Layer, Metric, References } from "effect";
+import * as Effect from "effect/Effect";
 import { FetchHttpClient } from "effect/http";
+import * as Layer from "effect/Layer";
 import * as LogLevel from "effect/LogLevel";
+import * as Metric from "effect/Metric";
 import { Otlp, OtlpSerialization } from "effect/observability";
+import * as References from "effect/References";
 import * as S from "effect/Schema";
 import { resolveBrowserHttpUrl } from "./internal/BrowserHttpUrl.ts";
 import type { R } from "@beep/utils";
@@ -82,8 +85,7 @@ const resourceAttributes = (): R.ReadonlyRecord<string, string> => ({
  *
  * ```ts
  * import { ClientObservabilityLive } from "@beep/agents-client"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(ClientObservabilityLive)) // true
  * ```
  *

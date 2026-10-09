@@ -1,6 +1,6 @@
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { describe, expect, it } from "@effect/vitest";
-import { Redacted } from "effect";
+import * as Redacted from "effect/Redacted";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { TerminationCondition } from "../../../Domain/Model/Agent.ts";

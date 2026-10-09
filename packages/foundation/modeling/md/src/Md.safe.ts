@@ -19,13 +19,15 @@ import { $MdId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import * as A from "@beep/utils/Array";
-import { Number as N, Result, Struct } from "effect";
 import * as Effect from "effect/Effect";
 import { dual, flow, pipe } from "effect/Function";
+import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Struct from "effect/Struct";
 import {
   isUrlDestinationAllowedWithPolicy,
   UserContentImageUrlPolicySpec,
@@ -63,7 +65,7 @@ const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]): S.Sc
  *
  * ```ts import.meta.vitest name="Use DocumentSafetyPathSegment"
  * import { DocumentSafetyPathSegment } from "@beep/md/Md.safe"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  *
  * const decoded = S.decodeUnknownResult(DocumentSafetyPathSegment)(2)
@@ -797,7 +799,7 @@ const SafeDocumentCheck = S.makeFilter<Document>(
  *
  * ```ts import.meta.vitest name="Use SafeInline"
  * import { SafeInline } from "@beep/md/Md.safe"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  *
  * const result = S.decodeUnknownResult(SafeInline)({ _tag: "text", value: "Hello" })
@@ -822,7 +824,7 @@ export const SafeInline = Inline.pipe(
  *
  * ```ts import.meta.vitest name="Use SafeInline"
  * import { SafeInline } from "@beep/md/Md.safe"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  *
  * const value: SafeInline = Result.getOrThrow(
@@ -844,7 +846,7 @@ export type SafeInline = typeof SafeInline.Type;
  *
  * ```ts import.meta.vitest name="Use SafeDocument"
  * import { SafeDocument } from "@beep/md/Md.safe"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  *
  * const result = S.decodeUnknownResult(SafeDocument)({ _tag: "document", children: [] })
@@ -871,7 +873,7 @@ export const SafeDocument = Document.pipe(
  *
  * ```ts import.meta.vitest name="Use SafeDocument"
  * import { SafeDocument } from "@beep/md/Md.safe"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  *
  * const value: SafeDocument = Result.getOrThrow(
@@ -892,8 +894,7 @@ export type SafeDocument = typeof SafeDocument.Type;
  *
  * ```ts import.meta.vitest name="Use decodeSafeDocument"
  * import { decodeSafeDocument } from "@beep/md/Md.safe"
- * import { Result } from "effect"
- *
+ * import * as Result from "effect/Result";
  * const result = decodeSafeDocument({ _tag: "document", children: [] })
  * Result.isSuccess(result) // => true
  * ```
@@ -913,8 +914,7 @@ export const decodeSafeDocument: {
  *
  * ```ts import.meta.vitest name="Use decodeSafeDocumentEffect"
  * import { decodeSafeDocumentEffect } from "@beep/md/Md.safe"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const document = Effect.runSync(decodeSafeDocumentEffect({ _tag: "document", children: [] }))
  * document.children.length // => 0
  * ```
@@ -952,8 +952,7 @@ export const decodeSafeDocumentUnsafe = (input: unknown): SafeDocument =>
  * ```ts import.meta.vitest name="Use refineSafeDocument"
  * import { Md } from "@beep/md"
  * import { refineSafeDocument } from "@beep/md/Md.safe"
- * import { Result } from "effect"
- *
+ * import * as Result from "effect/Result";
  * Result.isSuccess(refineSafeDocument(Md.make([Md.p("Hello")]))) // => true
  * ```
  *

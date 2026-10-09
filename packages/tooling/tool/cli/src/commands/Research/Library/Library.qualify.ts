@@ -1,9 +1,13 @@
-/** Source-bound operational qualification.
+/**
+ * Source-bound operational qualification.
+ *
  * @packageDocumentation
- * @since 0.0.0 */
+ * @since 0.0.0
+ */
 import { $RepoCliId } from "@beep/identity/packages";
-import { DateTime, Effect } from "effect";
 import * as A from "effect/Array";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { acquireLibrarySource, libraryAdapterFor, requiredLibraryAdapters } from "./Library.acquire.ts";
@@ -14,7 +18,8 @@ import { hashBytes, loadCatalog, withCatalog } from "./Library.store.ts";
 import type { LibrarySource } from "./Library.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Research/Library/Library.qualify");
-/** Bound and select real adapter probes.
+/**
+ * Bound and select real adapter probes.
  * **Example** (Bound a targeted paper probe)
  * ```ts
  * import { LibraryQualifyOptions } from "@beep/repo-cli/commands/Research"
@@ -23,7 +28,8 @@ const $I = $RepoCliId.create("commands/Research/Library/Library.qualify");
  * ```
  *
  * @category models
- * @since 0.0.0 */
+ * @since 0.0.0
+ */
 export class LibraryQualifyOptions extends S.Class<LibraryQualifyOptions>($I`LibraryQualifyOptions`)(
   {
     adapters: S.Array(S.String),
@@ -35,7 +41,8 @@ export class LibraryQualifyOptions extends S.Class<LibraryQualifyOptions>($I`Lib
   })
 ) {}
 
-/** Probe the actual source adapters, recording route limitations without weakening sandbox policy.
+/**
+ * Probe the actual source adapters, recording route limitations without weakening sandbox policy.
  * **Example** (Build source qualification)
  * ```ts
  * import { qualifyLibrary } from "@beep/repo-cli/commands/Research"
@@ -43,7 +50,6 @@ export class LibraryQualifyOptions extends S.Class<LibraryQualifyOptions>($I`Lib
  * ```
  *
  * @category use-cases
- *
  * @since 0.0.0
  */
 export const qualifyLibrary = Effect.fn("Library.qualify")(function* (

@@ -7,7 +7,9 @@
  */
 
 import { defineRule } from "@oxlint/plugins";
-import { HashMap, HashSet, MutableHashSet } from "effect";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import {
   classifyImportSpecifier,

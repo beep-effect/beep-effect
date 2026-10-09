@@ -2,11 +2,14 @@
 // is async, so this config-time scan uses the synchronous Node builtins. This file is one of the
 // three declared directive exemptions in `beep quality tsgo-rules` (Quality.command.ts).
 // @effect-diagnostics nodeBuiltinImport:skip-file
+
 import { readdirSync, readFileSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 import { A, P, Str, Struct } from "@beep/utils";
 import * as Doctest from "@effect/doctest/Plugin";
-import { Config, Effect, pipe } from "effect";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import generatedAliasPaths from "./vitest.aliases.generated.json" with { type: "json" };
@@ -43,8 +46,9 @@ const resolveUniformTypeScriptSourceSpecifiers = (): Plugin => ({
 });
 
 const configStringEqualsSync = (name: string, expected: string): boolean =>
-  pipe(
-    Effect.runSync(Config.option(Config.String(name))),
+  Config.String(name).pipe(
+    Config.option,
+    Effect.runSync,
     O.exists((value) => value === expected)
   );
 /**
@@ -75,8 +79,9 @@ export const vitestCoverageRunActive =
 // property sweep (PR lane at 400, nightly at 1000+). Read via Config
 // like the coverage flags above (boot-snapshot semantics are exactly
 // what the lane wants — CI exports the floor before vitest starts).
-const parsedFcNumRuns = pipe(
-  Effect.runSync(Config.option(Config.String("BEEP_FC_NUM_RUNS"))),
+const parsedFcNumRuns = Config.String("BEEP_FC_NUM_RUNS").pipe(
+  Config.option,
+  Effect.runSync,
   O.map(Number),
   O.getOrElse(() => 0)
 );

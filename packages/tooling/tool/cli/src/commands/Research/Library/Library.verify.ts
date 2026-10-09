@@ -1,14 +1,18 @@
-/** Read-only integrity and coverage gate.
+/**
+ * Read-only integrity and coverage gate.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { Console, Effect } from "effect";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { requiredLibraryAdapters } from "./Library.acquire.ts";
@@ -32,6 +36,12 @@ import type {
   LibrarySource,
 } from "./Library.schemas.ts";
 
+const LibraryIntakeJson = S.fromJsonString(LibraryIntake);
+const LibraryCaptureCorrectionJson = S.fromJsonString(LibraryCaptureCorrection);
+const LibraryCaptureJson = S.fromJsonString(LibraryCapture);
+const LibraryDispositionImportPayloadJson = S.fromJsonString(LibraryDispositionImportPayload);
+const LibraryProbeEvidenceJson = S.fromJsonString(LibraryProbeEvidence);
+
 const $I = $RepoCliId.create("commands/Research/Library/Library.verify");
 class RepositoryPin extends S.Class<RepositoryPin>($I`RepositoryPin`)(
   { remote: S.String, revision: S.String, clone: S.String, requestedRevision: S.String },
@@ -39,6 +49,7 @@ class RepositoryPin extends S.Class<RepositoryPin>($I`RepositoryPin`)(
     description: "A requested reference resolved to an immutable Git commit and local object database.",
   })
 ) {}
+const RepositoryPinJson = S.fromJsonString(RepositoryPin);
 
 const citationSpanMatches = (item: LibraryOccurrence, reference: LibraryReference) =>
   item.locator === reference.locator &&
@@ -223,11 +234,10 @@ const verifyIntakeCensus = Effect.fn("Library.verifyIntakeCensus")(function* (co
     else {
       const decoded = yield* fs
         .readFileString(path.resolve(root, intake.manifestPath))
-        .pipe(Effect.flatMap(S.decodeEffect(S.fromJsonString(LibraryIntake))), Effect.option);
+        .pipe(Effect.flatMap(S.decodeEffect(LibraryIntakeJson)), Effect.option);
       if (
         O.isNone(decoded) ||
-        (yield* S.encodeEffect(S.fromJsonString(LibraryIntake))(decoded.value)) !==
-          (yield* S.encodeEffect(S.fromJsonString(LibraryIntake))(intake))
+        (yield* S.encodeEffect(LibraryIntakeJson)(decoded.value)) !== (yield* S.encodeEffect(LibraryIntakeJson)(intake))
       )
         issue(`${intake.id}: catalog census differs from immutable intake`);
     }
@@ -242,40 +252,39 @@ const verifyDocumentCitations = Effect.fn("Library.verifyDocumentCitations")(fun
   yield* Effect.forEach(catalog.artifacts, artifactValid, { concurrency: 1 });
   yield* Effect.forEach(
     catalog.documents,
-    (document) =>
-      Effect.gen(function* () {
-        const valid = yield* artifactValid({
-          path: document.snapshotPath,
-          sha256: document.sha256,
-          bytes: document.bytes,
-          mediaType: "text/markdown",
-          role: "report",
-        });
-        if (!valid) return;
-        const text = yield* fs
-          .readFileString(path.resolve(root, document.snapshotPath))
-          .pipe(Effect.mapError((cause) => LibraryError.make({ message: "Cannot read verified report", cause })));
-        const expected = extractLibraryReferences(
-          text,
-          A.flatMap(catalog.sources, (source) => [source.repository, source.identity])
-        );
-        const actual = A.filter(catalog.occurrences, (item) => item.documentId === document.id);
-        if (expected.length !== document.expectedOccurrences || actual.length !== expected.length)
-          issue(`${document.id}: citation census mismatch`);
-        yield* Effect.forEach(expected, (reference) =>
-          Effect.sync(() => {
-            const matches = A.filter(
-              actual,
-              (item) =>
-                citationSpanMatches(item, reference) &&
-                citationSyntaxMatches(item, reference) &&
-                citationDefinitionMatches(item, reference)
-            );
-            if (matches.length !== 1)
-              issue(`${document.id}:${reference.line}:${reference.column}: missing or ambiguous citation occurrence`);
-          })
-        );
-      }),
+    Effect.fnUntraced(function* (document) {
+      const valid = yield* artifactValid({
+        path: document.snapshotPath,
+        sha256: document.sha256,
+        bytes: document.bytes,
+        mediaType: "text/markdown",
+        role: "report",
+      });
+      if (!valid) return;
+      const text = yield* fs
+        .readFileString(path.resolve(root, document.snapshotPath))
+        .pipe(Effect.mapError((cause) => LibraryError.make({ message: "Cannot read verified report", cause })));
+      const expected = extractLibraryReferences(
+        text,
+        A.flatMap(catalog.sources, (source) => [source.repository, source.identity])
+      );
+      const actual = A.filter(catalog.occurrences, (item) => item.documentId === document.id);
+      if (expected.length !== document.expectedOccurrences || actual.length !== expected.length)
+        issue(`${document.id}: citation census mismatch`);
+      yield* Effect.forEach(expected, (reference) =>
+        Effect.sync(() => {
+          const matches = A.filter(
+            actual,
+            (item) =>
+              citationSpanMatches(item, reference) &&
+              citationSyntaxMatches(item, reference) &&
+              citationDefinitionMatches(item, reference)
+          );
+          if (matches.length !== 1)
+            issue(`${document.id}:${reference.line}:${reference.column}: missing or ambiguous citation occurrence`);
+        })
+      );
+    }),
     { concurrency: 1 }
   );
 });
@@ -334,7 +343,7 @@ const verifySourceCoverage = Effect.fn("Library.verifySourceCoverage")(function*
     const verifyCorrection = Effect.fn("Library.verifyCorrection")(function* (artifact: LibraryArtifact) {
       const correction = yield* fs
         .readFileString(path.resolve(root, artifact.path))
-        .pipe(Effect.flatMap(S.decodeEffect(S.fromJsonString(LibraryCaptureCorrection))), Effect.option);
+        .pipe(Effect.flatMap(S.decodeEffect(LibraryCaptureCorrectionJson)), Effect.option);
       if (O.isNone(correction)) {
         issue(`${capture.id}: correction receipt invalid`);
         return;
@@ -342,7 +351,7 @@ const verifySourceCoverage = Effect.fn("Library.verifySourceCoverage")(function*
       const receipt = correction.value;
       const before = yield* fs
         .readFileString(path.resolve(root, receipt.before.path))
-        .pipe(Effect.flatMap(S.decodeEffect(S.fromJsonString(LibraryCapture))), Effect.option);
+        .pipe(Effect.flatMap(S.decodeEffect(LibraryCaptureJson)), Effect.option);
       const current = LibraryCapture.make({
         ...capture,
         artifacts: A.filter(capture.artifacts, (item) => item.role !== "capture-correction"),
@@ -375,7 +384,7 @@ const verifySourceCoverage = Effect.fn("Library.verifySourceCoverage")(function*
       const disposition = O.isSome(receipt)
         ? yield* fs
             .readFileString(path.resolve(root, receipt.value.path))
-            .pipe(Effect.flatMap(S.decodeEffect(S.fromJsonString(LibraryDispositionImportPayload))), Effect.option)
+            .pipe(Effect.flatMap(S.decodeEffect(LibraryDispositionImportPayloadJson)), Effect.option)
         : O.none();
       const validReview = yield* libraryDispositionValid(root, catalog, source, capture).pipe(
         Effect.orElseSucceed(() => false)
@@ -434,7 +443,7 @@ const verifySourceCoverage = Effect.fn("Library.verifySourceCoverage")(function*
       const pin = O.isSome(pinArtifact)
         ? yield* fs
             .readFileString(path.resolve(root, pinArtifact.value.path))
-            .pipe(Effect.flatMap(S.decodeUnknownEffect(S.fromJsonString(RepositoryPin))), Effect.option)
+            .pipe(Effect.flatMap(S.decodeUnknownEffect(RepositoryPinJson)), Effect.option)
         : O.none();
       if (O.isNone(pin) || !pinIdentityMatches(pin.value, source, capture, knownRevisions)) {
         issue(`${capture.id}: repository pin does not bind requested revision and clone`);
@@ -572,7 +581,7 @@ const verifyRequiredQualifications = Effect.fn("Library.verifyRequiredQualificat
         return false;
       const probe = yield* fs
         .readFileString(path.resolve(root, artifact.path))
-        .pipe(Effect.flatMap(S.decodeUnknownEffect(S.fromJsonString(LibraryProbeEvidence))), Effect.option);
+        .pipe(Effect.flatMap(S.decodeUnknownEffect(LibraryProbeEvidenceJson)), Effect.option);
       if (O.isNone(probe)) return false;
       return yield* verifyBoundProbe(probe.value);
     });
@@ -609,7 +618,6 @@ const verifyRequiredQualifications = Effect.fn("Library.verifyRequiredQualificat
  * ```
  *
  * @category use-cases
- *
  * @since 0.0.0
  */
 export const verifyLibrary = Effect.fn("Research.Library.verify")(function* (root: string) {
@@ -637,7 +645,7 @@ export const verifyLibrary = Effect.fn("Research.Library.verify")(function* (roo
   );
   yield* Console.log(
     `source/version coverage: ${A.join(
-      A.map(Object.entries(versionCategories), ([category, count]) => `${category}=${count}`),
+      A.map(R.toEntries(versionCategories), ([category, count]) => `${category}=${count}`),
       " "
     )}; historical attempt failures are reported separately`
   );

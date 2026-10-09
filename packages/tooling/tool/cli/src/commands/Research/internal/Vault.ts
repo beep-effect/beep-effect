@@ -9,12 +9,14 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { Config, Effect, FileSystem, Path } from "effect";
+import * as Config from "effect/Config";
 import * as Crypto from "effect/Crypto";
+import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
+import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";

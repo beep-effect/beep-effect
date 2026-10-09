@@ -17,9 +17,13 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { A, thunkFalse } from "@beep/utils";
-import { Console, Effect, FileSystem, Path, pipe } from "effect";
+import * as Console from "effect/Console";
 import { Command } from "effect/cli";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -195,8 +199,7 @@ const frontmatterIsValid = (raw: string): Effect.Effect<boolean> =>
  *
  * ```ts
  * import { reflectionFrontmatterIsValid } from "@beep/repo-cli/commands/Lint/ReflectionArtifact"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(reflectionFrontmatterIsValid("---\n---\n")))
  * ```
  *

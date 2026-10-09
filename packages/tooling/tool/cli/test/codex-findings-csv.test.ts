@@ -7,7 +7,9 @@ import {
 } from "@beep/repo-cli/test/Codex";
 import { A, O } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, flow, Result } from "effect";
+import * as Effect from "effect/Effect";
+import { flow } from "effect/Function";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const id = (seed: string): string => seed.repeat(32).slice(0, 32);

@@ -7,7 +7,9 @@
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
-import { PrimaryKey, Tuple, Effect } from "effect";
+import * as PrimaryKey from "effect/PrimaryKey";
+import * as Tuple from "effect/Tuple";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { ChunkId, DocumentId, IdempotencyKey, OntologyVersion } from "../Identity.ts";
 import { PathLayout } from "../PathLayout.ts";
@@ -101,7 +103,7 @@ export type AuditEventType = typeof AuditEventType.Type;
  *
  * **Example** (Use OutputMetadata)
  * ```ts
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  * import { OutputMetadata } from "@effect-ontology/Model/ExtractionRun"
@@ -148,7 +150,7 @@ const auditEventDataDefault = {};
  *
  * **Example** (Use AuditEvent)
  * ```ts
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import { AuditEvent } from "@effect-ontology/Model/ExtractionRun"
  *
  * const event = AuditEvent.make({
@@ -178,7 +180,7 @@ const auditErrorContextDefault = {};
  *
  * **Example** (Use AuditError)
  * ```ts
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import { AuditError } from "@effect-ontology/Model/ExtractionRun"
  *
  * const error = AuditError.make({
@@ -661,41 +663,41 @@ export class ExtractionRun extends S.Class<ExtractionRun>($I`ExtractionRun`)(
   }
 
   /**
-   * Effect primary key used for aggregate identity and deduplication.
-   *
-   * **Example** (Read the primary key)
-   *
-   * ```ts
-   * import { PrimaryKey } from "effect"
-   * import * as O from "effect/Option"
-   * import * as S from "effect/Schema"
-   * import { ExtractionRun } from "@effect-ontology/Model/ExtractionRun"
-   *
-   * const run = S.decodeUnknownOption(ExtractionRun)({
-   *   id: "doc-abc123def456",
-   *   status: { _tag: "Pending" },
-   *   config: {
-   *     ontology: {
-   *       namespace: "football",
-   *       name: "premier-league",
-   *       contentHash: "a".repeat(64)
-   *     },
-   *     chunking: {},
-   *     llm: {
-   *       model: "gpt-5",
-   *       temperature: 0,
-   *       maxTokens: 4096,
-   *       timeout: 30_000
-   *     }
-   *   },
-   *   createdAt: "2026-07-25T10:00:00.000Z",
-   *   outputDir: "runs/doc-abc123def456/outputs"
-   * })
-   * console.log(O.map(run, (value) => value[PrimaryKey.symbol]())) // Some("doc-abc123def456")
-   * ```
-   *
-   * @returns This run's validated document identifier.
-   */
+     * Effect primary key used for aggregate identity and deduplication.
+     *
+     * **Example** (Read the primary key)
+     *
+     * ```ts
+     * import * as PrimaryKey from "effect/PrimaryKey";
+     * import * as O from "effect/Option"
+     * import * as S from "effect/Schema"
+     * import { ExtractionRun } from "@effect-ontology/Model/ExtractionRun"
+     *
+     * const run = S.decodeUnknownOption(ExtractionRun)({
+     *   id: "doc-abc123def456",
+     *   status: { _tag: "Pending" },
+     *   config: {
+     *     ontology: {
+     *       namespace: "football",
+     *       name: "premier-league",
+     *       contentHash: "a".repeat(64)
+     *     },
+     *     chunking: {},
+     *     llm: {
+     *       model: "gpt-5",
+     *       temperature: 0,
+     *       maxTokens: 4096,
+     *       timeout: 30_000
+     *     }
+     *   },
+     *   createdAt: "2026-07-25T10:00:00.000Z",
+     *   outputDir: "runs/doc-abc123def456/outputs"
+     * })
+     * console.log(O.map(run, (value) => value[PrimaryKey.symbol]())) // Some("doc-abc123def456")
+     * ```
+     *
+     * @returns This run's validated document identifier.
+     */
   [PrimaryKey.symbol](): DocumentId {
     return this.id;
   }

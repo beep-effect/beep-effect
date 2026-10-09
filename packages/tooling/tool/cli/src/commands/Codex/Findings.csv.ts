@@ -21,7 +21,7 @@ import { MappedLiteralKit } from "@beep/schema";
 import { parseCsvRows } from "@beep/schema/CsvParser";
 import { ParserOptions } from "@beep/schema/ParserOptions";
 import { A, O, Str } from "@beep/utils";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { SecurityCloudFindingId } from "./Findings.capture.schemas.ts";
@@ -422,8 +422,7 @@ const matchesCsvColumns = (actual: ReadonlyArray<string>, expected: ReadonlyArra
  *
  * ```ts
  * import { decodeCodexFindingsCsv } from "@beep/repo-cli/commands/Codex/Findings.csv"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = decodeCodexFindingsCsv("<!doctype html><title>Log in</title>").pipe(
  *   Effect.map(() => "accepted"),
  *   Effect.orElseSucceed(() => "refused")

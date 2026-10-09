@@ -12,7 +12,8 @@ bun add @beep/openai-compat
 ## Usage
 
 ```ts
-import { Effect, Redacted } from "effect"
+import * as Effect from "effect/Effect";
+import * as Redacted from "effect/Redacted";
 import {
   OpenAiCompatChatCompletionRequest,
   OpenAiCompatClient,
@@ -55,7 +56,8 @@ adapt `createChatCompletion` and `streamChatCompletion` callbacks into an
 Effect AI `LanguageModel` service:
 
 ```ts
-import { Effect, Stream } from "effect"
+import * as Effect from "effect/Effect";
+import * as Stream from "effect/Stream";
 import { makeFromProvider } from "@beep/openai-compat"
 
 const languageModel = makeFromProvider({

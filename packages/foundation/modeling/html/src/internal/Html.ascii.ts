@@ -4,8 +4,9 @@
  * @internal
  * @since 0.0.0
  */
-import { flow } from "effect";
+
 import * as A from "effect/Array";
+import { flow } from "effect/Function";
 import * as Str from "effect/String";
 
 const ASCII_UPPERCASE_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";

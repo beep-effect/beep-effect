@@ -13,7 +13,8 @@
 
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
-import { Duration, Effect } from "effect";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
 import * as A from "effect/Array";
 import type * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
@@ -931,7 +932,7 @@ export type AgentRegistry = HashMap.HashMap<AgentIdType, RegisteredAgent>;
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import { PipelineState, PipelineStatus } from "@effect-ontology/Model/Agent"
  * import { ExecutionContext } from "@effect-ontology/Service/Agent/types"
  *
@@ -1024,7 +1025,7 @@ export class AgentExecutionError extends S.TaggedError<AgentExecutionError>($I`A
  * **Example** (Construct a pipeline execution error)
  *
  * ```ts
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import { PipelineState, PipelineStatus } from "@effect-ontology/Model/Agent"
  * import { PipelineExecutionError } from "@effect-ontology/Service/Agent/types"
  *
@@ -1092,7 +1093,7 @@ export class AgentNotFoundError extends S.TaggedError<AgentNotFoundError>($I`Age
  * **Example** (Construct a checkpoint timeout)
  *
  * ```ts
- * import { Duration } from "effect"
+ * import * as Duration from "effect/Duration";
  * import { CheckpointTimeoutError } from "@effect-ontology/Service/Agent/types"
  *
  * const error = CheckpointTimeoutError.make({

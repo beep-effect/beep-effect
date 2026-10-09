@@ -12,11 +12,18 @@
  */
 import { $RepoCliId } from "@beep/identity/packages";
 import { shellQuote } from "@beep/repo-ai-metrics";
-import { Config, Console, Context, DateTime, Effect, FileSystem, Path, pipe, Result } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import * as Config from "effect/Config";
+import * as Console from "effect/Console";
+import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { renderPrettyCommandJson } from "../../../internal/cli/Json.ts";
@@ -98,8 +105,7 @@ const decodeCwd = S.decodeUnknownOption(S.fromJsonString(TranscriptCwd));
  *
  * ```ts
  * import { parsePrRef } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.runSync(parsePrRef("https://github.com/o/r/pull/42")).pr) // 42
  * ```
  *
@@ -128,7 +134,7 @@ const preferredRole = (record: PrSessionRecord): boolean => record.role === "cre
  *
  * ```ts
  * import { PrRepository, PrSessionRecord, selectResumeRecord } from "@beep/repo-cli/test/Yeet"
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import * as O from "effect/Option"
  *
  * const record = PrSessionRecord.make({
@@ -190,7 +196,8 @@ export const selectResumeRecord: {
  *
  * ```ts
  * import { isClaudeSessionLive, PrRepository, PrSessionRecord } from "@beep/repo-cli/test/Yeet"
- * import { DateTime, Effect } from "effect"
+ * import * as DateTime from "effect/DateTime";
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const record = PrSessionRecord.make({
@@ -375,7 +382,7 @@ const commandText = (command: string, args: ReadonlyArray<string>): string =>
  *
  * ```ts
  * import { ResumeOptions } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * import type { HarnessResumerShape } from "@beep/repo-cli/test/Yeet"
  *
@@ -410,7 +417,7 @@ export interface HarnessResumerShape {
  *
  * ```ts
  * import { HarnessResumer, ResumeOptions } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const service = HarnessResumer.of({ run: () => Effect.void })
@@ -554,8 +561,7 @@ const resumeSelectedSession = Effect.fn("HarnessResumer.resumeSelectedSession")(
  *
  * ```ts
  * import { makeHarnessResumerLive } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(makeHarnessResumerLive())) // true
  * ```
  *
@@ -588,7 +594,7 @@ export const makeHarnessResumerLive = Effect.fn("HarnessResumer.makeLive")(funct
  *
  * ```ts
  * import { ResumeOptions, runYeetResume } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const options = ResumeOptions.make({

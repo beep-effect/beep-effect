@@ -16,9 +16,10 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { Console, Effect, Inspectable } from "effect";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
+import * as Inspectable from "effect/Inspectable";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { OpaqueDefect } from "../schema/OpaqueDefect.ts";
@@ -128,7 +129,7 @@ export const resolveCommandExitCode = (exitCode: number | undefined): number => 
  * **Example** (Build prefixed catch handler)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { reportCommandError } from "@beep/repo-cli/internal/cli/CommandErrorFields"
  *
  * const handler = reportCommandError("version-sync")

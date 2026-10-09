@@ -7,18 +7,22 @@
  */
 
 import { createEffectActor, waitFor } from "@xstate/effect";
-import { Effect, Exit, ManagedRuntime, pipe, Scope } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import { dual, pipe } from "effect/Function";
+import * as ManagedRuntime from "effect/ManagedRuntime";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as Scope from "effect/Scope";
 import * as fc from "fast-check";
 import type { EffectActorOptions, RequirementsFrom } from "@xstate/effect";
 import type { TestSut, TestSutContext, TestSutSession } from "@xstate/test";
-import type { Duration, Layer } from "effect";
+import type * as Duration from "effect/Duration";
+import type * as Layer from "effect/Layer";
 import type { AnyActorLogic, EventFromLogic, Snapshot, SnapshotFrom } from "xstate";
 
 // Defaults keep sampling deterministic: 32 values from seed 0 unless the caller says otherwise.

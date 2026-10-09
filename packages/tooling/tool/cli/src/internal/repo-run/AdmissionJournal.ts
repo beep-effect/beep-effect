@@ -15,15 +15,22 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { Clock, Console, Context, Duration, Effect, FileSystem, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Clock from "effect/Clock";
+import * as Console from "effect/Console";
+import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
 import * as Base64Url from "effect/encoding/Base64Url";
 import * as Hex from "effect/encoding/Hex";
-import { constant, dual, flow } from "effect/Function";
+import * as FileSystem from "effect/FileSystem";
+import { constant, dual, flow, pipe } from "effect/Function";
 import * as N from "effect/Number";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -660,8 +667,7 @@ export interface AdmissionJournalReaderShape {
  *
  * ```ts
  * import { AdmissionJournalReader, decodeAdmissionJournalEvent } from "@beep/repo-cli/test/RepoRun"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * const reader = Layer.succeed(AdmissionJournalReader, { decode: decodeAdmissionJournalEvent })
  * console.log(Layer.isLayer(reader)) // true
  * ```
@@ -734,8 +740,7 @@ export const admissionProtocolPath = Effect.fn("AdmissionJournal.protocolPath")(
  *
  * ```ts
  * import { readAdmissionProtocol } from "@beep/repo-cli/test/RepoRun"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(readAdmissionProtocol("/tmp/admission"))) // true
  * ```
  *
@@ -1509,8 +1514,7 @@ export const withJournalFileLock = Effect.fnUntraced(function* <Success, Failure
  *
  * ```ts
  * import { writeAdmissionProtocol } from "@beep/repo-cli/test/RepoRun"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(writeAdmissionProtocol("/tmp/admission", "on"))) // true
  * ```
  *

@@ -10,7 +10,8 @@
  */
 
 import type { IRI } from "@beep/rdf";
-import { MutableHashMap, Order } from "effect";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as Order from "effect/Order";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";

@@ -1022,7 +1022,7 @@ export const NlpTools: typeof NlpToolsSource = NlpToolsSource;
  * **Example** (Export toolkit tool names)
  *
  * ```ts import.meta.vitest name="Export toolkit tool names"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { exportTools } from "@beep/nlp-processing/Tools"
  *
  * const exportedNames = exportTools.pipe(

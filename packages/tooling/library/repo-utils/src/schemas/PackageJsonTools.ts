@@ -8,11 +8,16 @@
 import { $RepoUtilsId } from "@beep/identity/packages";
 import { A } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Effect, flow, identity, JsonPointer, Order, pipe, Result, SchemaIssue, Tuple } from "effect";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { dual, flow, identity, pipe } from "effect/Function";
+import * as JsonPointer from "effect/JsonPointer";
+import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
+import * as Tuple from "effect/Tuple";
 import { DomainError } from "../errors/index.ts";
 import { jsonStringifyPretty } from "../JsonUtils.ts";
 import {
@@ -28,7 +33,7 @@ import {
   TypesVersions,
 } from "./PackageJson.ts";
 import type { StandardSchemaV1 } from "@standard-schema/spec";
-import type { JsonPatch } from "effect";
+import type * as JsonPatch from "effect/JsonPatch";
 
 const $I = $RepoUtilsId.create("schemas/PackageJsonTools");
 
@@ -323,7 +328,7 @@ export const npmPackageJsonJsonSchema = S.toJsonSchemaDocument(NpmPackageJson, {
  * **Example** (Normalize dependency key order)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { normalizePackageJsonEffect } from "@beep/repo-utils/schemas/PackageJsonTools"
  * const normalized = Effect.runSync(normalizePackageJsonEffect({
  *   name: "@beep/example",
@@ -437,7 +442,7 @@ export const applyPackageJsonPatchEffect: {
  * **Example** (Map schema error to issues)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { getPackageJsonSchemaIssues } from "@beep/repo-utils/schemas/PackageJsonTools"
  * const program = S.decodeUnknownEffect(S.String)(1).pipe(

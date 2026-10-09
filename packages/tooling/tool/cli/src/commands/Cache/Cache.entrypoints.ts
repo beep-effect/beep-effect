@@ -4,10 +4,13 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { Effect, Order, pipe } from "effect";
+
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import {
   CacheCensusEntrypointReview,

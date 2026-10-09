@@ -11,7 +11,7 @@
  */
 
 import { EdgeVersion } from "@beep/epistemic-domain/entities/EdgeVersion";
-import { Result } from "effect";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { EdgeVersionConverterError } from "./EdgeVersion.errors.ts";
 import type { Table } from "./EdgeVersion.table.ts";

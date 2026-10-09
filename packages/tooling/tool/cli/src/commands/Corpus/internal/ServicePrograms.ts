@@ -48,26 +48,24 @@ import { makeUsptoError, normalizeUsptoApplicationNumber, normalizeUsptoPatentNu
 import * as O from "@beep/utils/Option";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils.js";
-import {
-  Console,
-  Data,
-  DateTime,
-  Effect,
-  FileSystem,
-  HashSet,
-  Layer,
-  Match,
-  MutableHashMap,
-  MutableHashSet,
-  Order,
-  Path,
-  Ref,
-  Result,
-} from "effect";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
+import * as Data from "effect/Data";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { dual, pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as Num from "effect/Number";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
+import * as Ref from "effect/Ref";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { hashFileSha256 as sharedHashFileSha256 } from "../../../internal/cli/FsGuards.ts";
@@ -1125,7 +1123,7 @@ const ocrImageMediaType: (extension: string | undefined) => O.Option<PageImageMe
   Match.when("png", () => O.some("image/png" as const)),
   Match.whenOr("jpg", "jpeg", () => O.some("image/jpeg" as const)),
   Match.whenOr("tif", "tiff", () => O.some("image/tiff" as const)),
-  Match.orElse(() => O.none<PageImageMediaType>())
+  Match.orElse(O.none<PageImageMediaType>)
 );
 
 // A first reading with fewer bytes of text per page than this is not usable:
@@ -1991,20 +1989,20 @@ const extractCorpusLocked = Effect.fn("CorpusCommandService.extractCorpusLocked"
   });
 
   const fileProcessingLayer = makeFileProcessingServiceLayer(engines);
-  const outcomes = yield* Effect.scoped(
-    Layer.build(fileProcessingLayer).pipe(
-      Effect.flatMap((context) =>
-        Effect.forEach(
-          sourceStates,
-          ([record, completed]) =>
-            O.match(completed, {
-              onNone: () => processOneSource(record).pipe(Effect.provide(context)),
-              onSome: Effect.succeed,
-            }),
-          { concurrency }
-        )
+  const outcomes = yield* fileProcessingLayer.pipe(
+    Layer.build,
+    Effect.flatMap((context) =>
+      Effect.forEach(
+        sourceStates,
+        ([record, completed]) =>
+          O.match(completed, {
+            onNone: () => processOneSource(record).pipe(Effect.provide(context)),
+            onSome: Effect.succeed,
+          }),
+        { concurrency }
       )
-    )
+    ),
+    Effect.scoped
   );
 
   const { failureRecords, sourceRecords } = collectSourceOutcomeRecords(outcomes);
@@ -3550,9 +3548,13 @@ const enrichCorpusImpl = Effect.fn("CorpusCommandService.enrichCorpus")(function
     );
   });
 
-  const records = yield* Effect.scoped(
-    Layer.build(Uspto.layer).pipe(Effect.flatMap((context) => lookups.pipe(Effect.provide(context))))
-  ).pipe(CorpusCommandError.mapError("USPTO enrichment lookups failed."));
+  const records = yield* CorpusCommandError.mapError("USPTO enrichment lookups failed.")(
+    Uspto.layer.pipe(
+      Layer.build,
+      Effect.flatMap((context) => lookups.pipe(Effect.provide(context))),
+      Effect.scoped
+    )
+  );
 
   const manifestLines = yield* Effect.forEach(records, (record) =>
     encodeCorpusEnrichmentRecordJson(record).pipe(

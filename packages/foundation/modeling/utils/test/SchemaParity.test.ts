@@ -4,7 +4,7 @@ import { AppendFileSyncOptions, ReaddirSyncOptions, RmSyncOptions } from "@beep/
 import { GlobOptions, Pattern } from "@beep/utils/Glob";
 import { PathInput } from "@beep/utils/Struct";
 import { describe, expect } from "@effect/vitest";
-import { Result } from "effect";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const encode = <C extends S.Codec<unknown, unknown>>(schema: C, value: C["Type"]): C["Encoded"] =>

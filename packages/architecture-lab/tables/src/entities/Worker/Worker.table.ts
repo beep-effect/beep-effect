@@ -9,7 +9,7 @@
 import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker";
 import { toPgTable } from "@beep/effect-drizzle/pg";
 import { getTableName } from "drizzle-orm";
-import { Result } from "effect";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 /**

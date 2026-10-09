@@ -11,10 +11,12 @@ import { $MdId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import * as Arr from "@beep/utils/Array";
-import { Effect, SchemaGetter, Tuple } from "effect";
+import * as Effect from "effect/Effect";
 import { identity } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as SchemaGetter from "effect/SchemaGetter";
+import * as Tuple from "effect/Tuple";
 import type { HtmlChildNode } from "@beep/html";
 
 const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" })).annotate({
@@ -42,7 +44,7 @@ const MarkdownArbitraryArraySizeHint = S.makeFilter<ReadonlyArray<unknown>>(() =
  * **Example** (Decode language token)
  *
  * ```ts import.meta.vitest name="Decode language token"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { CodeFenceLanguage } from "@beep/md/Md.model"
  *
@@ -72,7 +74,7 @@ export const CodeFenceLanguage = S.NonEmptyString.check(
  * **Example** (Type decoded language)
  *
  * ```ts
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { CodeFenceLanguage } from "@beep/md/Md.model"
  *
@@ -99,7 +101,7 @@ const decodeCodeFenceLanguageOption = S.decodeUnknownOption(CodeFenceLanguage);
  * **Example** (Decode video id)
  *
  * ```ts import.meta.vitest name="Decode video id"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { YouTubeVideoId } from "@beep/md/Md.model"
  *
@@ -178,7 +180,7 @@ export type FootnoteIdentifier = typeof FootnoteIdentifier.Type;
  * **Example** (Decode center alignment)
  *
  * ```ts import.meta.vitest name="Decode center alignment"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { TableAlignment } from "@beep/md/Md.model"
  *
@@ -218,7 +220,7 @@ export type TableAlignment = typeof TableAlignment.Type;
  * **Example** (Decode warning kind)
  *
  * ```ts import.meta.vitest name="Decode warning kind"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { AdmonitionKind } from "@beep/md/Md.model"
  *
@@ -258,7 +260,7 @@ export type AdmonitionKind = typeof AdmonitionKind.Type;
  * **Example** (Decode video kind)
  *
  * ```ts import.meta.vitest name="Decode video kind"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { EmbedKind } from "@beep/md/Md.model"
  *
@@ -299,7 +301,7 @@ export type EmbedKind = typeof EmbedKind.Type;
  * **Example** (Decode text children)
  *
  * ```ts import.meta.vitest name="Decode text children"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { InlineChildren, Text } from "@beep/md/Md.model"
  *
@@ -1187,7 +1189,7 @@ export declare namespace FootnoteReference {
  * **Example** (Decode and project inline union)
  *
  * ```ts import.meta.vitest name="Decode and project inline union"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { Inline, Text } from "@beep/md/Md.model"
  *
@@ -1337,7 +1339,7 @@ export declare namespace Inline {
  * **Example** (Decode block children)
  *
  * ```ts import.meta.vitest name="Decode block children"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { BlockChildren, P, Text } from "@beep/md/Md.model"
  *
@@ -1412,7 +1414,7 @@ export declare namespace BlockChildren {
  * **Example** (Decode and project list item child)
  *
  * ```ts import.meta.vitest name="Decode and project list item child"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { ListItemChild, Text } from "@beep/md/Md.model"
  *
@@ -1511,7 +1513,7 @@ export declare namespace ListItemChild {
  * **Example** (Decode list item children)
  *
  * ```ts import.meta.vitest name="Decode list item children"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { ListItemChildren, Text } from "@beep/md/Md.model"
  *
@@ -1647,7 +1649,7 @@ export declare namespace P {
  * **Example** (Decode heading level)
  *
  * ```ts import.meta.vitest name="Decode heading level"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { HeadingLevel } from "@beep/md/Md.model"
  *
@@ -1670,7 +1672,7 @@ export const HeadingLevel = S.Literals([1, 2, 3, 4, 5, 6]).pipe(
  * **Example** (Type heading level)
  *
  * ```ts
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { HeadingLevel } from "@beep/md/Md.model"
  *
@@ -1926,7 +1928,7 @@ export declare namespace Li {
  * **Example** (Decode list children)
  *
  * ```ts import.meta.vitest name="Decode list children"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { Li, ListChildren, Text } from "@beep/md/Md.model"
  *
@@ -2073,7 +2075,7 @@ export declare namespace Ul {
  *
  * ```ts import.meta.vitest name="Decode a zero start"
  * import { OrderedListStart } from "@beep/md/Md.model"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  *
  * const result = S.decodeUnknownResult(OrderedListStart)(0)
@@ -2300,7 +2302,7 @@ export type TaskListItemSpec = typeof TaskListItemSpec.Type;
  * **Example** (Decode task item children)
  *
  * ```ts import.meta.vitest name="Decode task item children"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { TaskItem, TaskItemChildren, Text } from "@beep/md/Md.model"
  *
@@ -3314,7 +3316,7 @@ export declare namespace Hr {
  * **Example** (Decode and project block union)
  *
  * ```ts import.meta.vitest name="Decode and project block union"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { Block, P, Text } from "@beep/md/Md.model"
  *

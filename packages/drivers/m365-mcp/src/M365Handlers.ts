@@ -12,9 +12,10 @@
  */
 
 import { M365 } from "@beep/m365";
-import { Effect, Match } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import { M365ToolError, M365Toolkit } from "./M365Tools.ts";
 import type {
@@ -89,8 +90,7 @@ const annotateDownload = (download: M365DriveItemDownloadType): Effect.Effect<M3
  * ```ts
  * import { M365ToolkitHandlersLive } from "@beep/m365-mcp"
  * import { M365, M365ConfigInput } from "@beep/m365"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * const layer = M365ToolkitHandlersLive.pipe(
  *   Layer.provide(M365.makeLiveLayer(M365ConfigInput.make({ tenantId: "common", clientId: "client-id" })))
  * )

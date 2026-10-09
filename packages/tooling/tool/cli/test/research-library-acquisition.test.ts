@@ -30,10 +30,19 @@ import {
 } from "@beep/repo-cli/test/ResearchLibrary";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, it, vi } from "@effect/vitest";
-import { Config, Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { HttpClient, HttpClientRequest, HttpClientResponse } from "effect/http";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
+
+const LibraryImportPayloadJson = S.fromJsonString(LibraryImportPayload);
+const UnknownJson = S.fromJsonString(S.Unknown);
+const LibraryCaptureCorrectionJson = S.fromJsonString(LibraryCaptureCorrection);
+const LibraryDispositionImportPayloadJson = S.fromJsonString(LibraryDispositionImportPayload);
 
 const source = LibrarySource.make({
   id: "fixture-source",
@@ -77,7 +86,7 @@ const prepare = Effect.fn("test.prepare")(function* () {
 });
 const writePayload = Effect.fn("test.writePayload")(function* (resultPath: string, payload: LibraryImportPayload) {
   const fs = yield* FileSystem.FileSystem;
-  yield* fs.writeFileString(resultPath, yield* S.encodeEffect(S.fromJsonString(LibraryImportPayload))(payload));
+  yield* fs.writeFileString(resultPath, yield* S.encodeEffect(LibraryImportPayloadJson)(payload));
 });
 
 const headerlessPdf = (body: string) => {
@@ -156,7 +165,7 @@ it.layer(
             const proof = yield* saveLibraryText(
               f.root,
               "replacement/redirect.json",
-              yield* S.encodeEffect(S.fromJsonString(S.Unknown))({
+              yield* S.encodeEffect(UnknownJson)({
                 requestedUrl: scenario === "requested" ? "https://example.com/other" : source.canonicalUrl,
                 resolvedUrl: scenario === "resolved" ? "https://example.com/other" : resolved,
                 providerSourceUrl: scenario === "provider" ? "https://example.com/other" : resolved,
@@ -233,7 +242,7 @@ it.layer(
         const result = yield* acquireLibraryPaper(fixture.root, paper, `captures/attribute-${index}`).pipe(
           Effect.provideService(HttpClient.HttpClient, client)
         );
-        expect(result.complete).toBe(item.resolved);
+        expect(result.complete, result.reason).toBe(item.resolved);
         expect(calls).toHaveLength(item.resolved ? 2 : 1);
       }
     })
@@ -277,6 +286,7 @@ it.layer(
           fixture.path.join(bin, "gh"),
           `#!/usr/bin/python3
 import json,sys,pathlib
+
 endpoint=sys.argv[-1]
 if endpoint.startswith('https://api.github.com/repos/'):
  different=endpoint.endswith('/renamed') and pathlib.Path(__file__).with_name('mismatch').exists()
@@ -357,8 +367,8 @@ else: print(json.dumps({'html_url':'https://github.com/fixture/renamed/issues/1'
         revision,
       });
       const capture = yield* acquireLibraryGithub(fixture.root, code, "captures/large-patch");
-      expect(capture.status).toBe("readable");
-      expect(capture.complete).toBe(true);
+      expect(capture.status, capture.reason).toBe("readable");
+      expect(capture.complete, capture.reason).toBe(true);
       const patch = capture.artifacts.find((artifact) => artifact.role === "raw-diff");
       expect(patch?.bytes).toBeGreaterThan(8_000_000);
       expect(
@@ -395,7 +405,7 @@ else: print(json.dumps({'html_url':'https://github.com/fixture/renamed/issues/1'
       const capture = yield* acquireLibraryPaper(fixture.root, paper, "captures/headerless").pipe(
         Effect.provideService(HttpClient.HttpClient, client)
       );
-      expect(capture.status).toBe("readable");
+      expect(capture.status, capture.reason).toBe("readable");
       expect(capture.revision).toBe("v3");
       expect(requested).toContain("https://arxiv.org/pdf/2608.23992v3");
       expect(capture.artifacts.some((artifact) => artifact.role === "arxiv-version-proof")).toBe(true);
@@ -552,13 +562,13 @@ else: print(json.dumps({'html_url':'https://github.com/fixture/renamed/issues/1'
       const artifact = capture?.artifacts.find((entry) => entry.role === "capture-correction");
       expect(artifact).toBeDefined();
       if (artifact !== undefined) {
-        const receipt = yield* S.decodeEffect(S.fromJsonString(LibraryCaptureCorrection))(
+        const receipt = yield* S.decodeEffect(LibraryCaptureCorrectionJson)(
           yield* fixture.fs.readFileString(fixture.path.join(fixture.root, artifact.path))
         );
         const before = yield* fixture.fs.readFile(fixture.path.join(fixture.root, receipt.before.path));
         expect(yield* hashBytes(before)).toBe(receipt.before.sha256);
         expect(receipt.after.status).toBe("blocked");
-        const afterText = yield* S.encodeEffect(S.fromJsonString(S.Unknown))(receipt.after);
+        const afterText = yield* S.encodeEffect(UnknownJson)(receipt.after);
         expect(yield* hashBytes(new TextEncoder().encode(afterText))).toBe(receipt.afterSha256);
       }
       const repeated = yield* withCatalog(fixture.root, (catalog) => correctLibraryCaptures(fixture.root, catalog));
@@ -743,7 +753,7 @@ else: print(json.dumps({'html_url':'https://github.com/fixture/renamed/issues/1'
       });
       yield* fixture.fs.writeFileString(
         fixture.resultPath,
-        yield* S.encodeEffect(S.fromJsonString(LibraryDispositionImportPayload))(disposition)
+        yield* S.encodeEffect(LibraryDispositionImportPayloadJson)(disposition)
       );
       const catalog = yield* importLibraryResult(fixture.root, fixture.resultPath);
       expect(A.getUnsafe(catalog.captures, 0)?.requestedRevision).toBe("v2");

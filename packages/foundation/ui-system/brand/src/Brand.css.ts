@@ -6,7 +6,7 @@
  */
 import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
-import { flow, pipe } from "effect";
+import { flow, pipe } from "effect/Function";
 import * as S from "effect/Schema";
 import { ScaleStep, SurfaceStep } from "./Brand.schema.ts";
 import type { BrandIdentity, ColorScheme, FontStack, Glow, GlowLayer, GlowStop, Typography } from "./Brand.schema.ts";

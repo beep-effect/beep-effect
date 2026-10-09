@@ -13,7 +13,17 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { ObjectRef } from "@beep/rdf/Prov";
-import { Cause, Chunk, Duration, Effect, Exit, HashSet, Inspectable, Layer, Number as N, pipe, Stream } from "effect";
+import * as Cause from "effect/Cause";
+import * as Chunk from "effect/Chunk";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as HashSet from "effect/HashSet";
+import * as Inspectable from "effect/Inspectable";
+import * as Layer from "effect/Layer";
+import * as N from "effect/Number";
+import * as Stream from "effect/Stream";
+import { pipe } from "effect/Function";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -165,7 +175,7 @@ const decodeObjectRef = Effect.fn("StreamingExtraction.decodeObjectRef")(functio
  * **Example** (Construct the 6-phase workflow layer)
  *
  * ```ts
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer";
  * import { ExtractionWorkflow } from "@effect-ontology/Service/ExtractionWorkflow"
  * import { ExtractionWorkflowLive, makeExtractionWorkflow } from "@effect-ontology/Workflow/StreamingExtraction"
  *
@@ -811,7 +821,7 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
  * **Example** (Provide the live 6-phase workflow)
  *
  * ```ts
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer";
  * import { ExtractionWorkflow } from "@effect-ontology/Service/ExtractionWorkflow"
  * import { StorageServiceLive } from "@effect-ontology/Service/Storage"
  * import { ExtractionWorkflowLive, makeExtractionWorkflow } from "@effect-ontology/Workflow/StreamingExtraction"

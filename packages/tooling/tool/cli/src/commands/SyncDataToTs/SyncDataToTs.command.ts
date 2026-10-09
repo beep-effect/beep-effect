@@ -8,9 +8,16 @@
 import { Md } from "@beep/md";
 import { findRepoRoot } from "@beep/repo-utils";
 import { A, Str, Struct, thunkEffectVoid, thunkTrue } from "@beep/utils";
-import { Console, Effect, FileSystem, flow, JsonPointer, Match, Path, pipe, Result } from "effect";
+import * as Console from "effect/Console";
 import { Command, Flag } from "effect/cli";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { flow, pipe } from "effect/Function";
+import * as JsonPointer from "effect/JsonPointer";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { resolveRunMode as resolveSharedRunMode, runModeFlagsConflict } from "../../internal/cli/RunMode.ts";
@@ -22,9 +29,9 @@ import {
   SyncDataToTsError,
 } from "./SyncDataToTs.schemas.ts";
 import { syncDataTargets } from "./targets/index.ts";
-import type { JsonPatch } from "effect";
 import type * as Crypto from "effect/Crypto";
 import type { HttpClient } from "effect/http";
+import type * as JsonPatch from "effect/JsonPatch";
 import type { SyncDataFileResult, SyncDataTarget } from "./SyncDataToTs.schemas.ts";
 
 const targetFlag = Flag.String("target").pipe(
@@ -534,8 +541,7 @@ const renderSyncDataError = (error: SyncDataToTsError): string =>
  * ```ts
  * import { syncDataToTsCommand } from "@beep/repo-cli/commands/SyncDataToTs"
  * import { Command } from "effect/cli"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const run = Command.run(syncDataToTsCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true
  * ```

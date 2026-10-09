@@ -10,7 +10,7 @@ import {
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 
 const ATTEMPT_ID_TEXT = "550e8400-e29b-41d4-a716-446655440000";

@@ -9,8 +9,10 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { Effect, Layer, Queue, Stream } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Queue from "effect/Queue";
+import * as Stream from "effect/Stream";
 import { decodeLines, layerProtocolNdjson } from "./client.ts";
 import type { PlatformError } from "effect/PlatformError";
 import type * as ChildProcess from "effect/process/ChildProcess";
@@ -54,7 +56,7 @@ export const layerProtocolStdioCommand = (options: {
       yield* Stream.fromQueue(outbound).pipe(Stream.run(handle.stdin), Effect.orDie, Effect.forkScoped);
       return layerProtocolNdjson({
         write: (line) => Queue.offer(outbound, encoder.encode(`${line}\n`)),
-        lines: Stream.orDie(decodeLines(handle.stdout)),
+        lines: handle.stdout.pipe(decodeLines, Stream.orDie),
         client: options.client,
       });
     })

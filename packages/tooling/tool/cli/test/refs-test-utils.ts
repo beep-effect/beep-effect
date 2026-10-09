@@ -1,10 +1,16 @@
 import { ReferenceWorkspace, referenceWorkspaceLayer } from "@beep/repo-cli/commands/Refs";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
-import { Config, ConfigProvider, Context, Effect, FileSystem, Layer, Path } from "effect";
+import * as Config from "effect/Config";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientError from "effect/http/HttpClientError";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
 import type * as HttpClientRequest from "effect/http/HttpClientRequest";
 
 /**
@@ -124,7 +130,7 @@ export const workspace = ReferenceWorkspace;
  *
  * **Example** (Read the fixture)
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * Effect.isEffect(ReferenceFixture) // => true
  * ```
  * @category test-services
@@ -143,7 +149,7 @@ export class ReferenceFixture extends Context.Service<ReferenceFixture, Effect.S
  *
  * **Example** (Inspect the fixture layer)
  * ```ts
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer";
  * Layer.isLayer(referenceFixtureLayer) // => true
  * ```
  * @category test-layers

@@ -20,7 +20,12 @@ import * as Rdf from "@beep/rdf/Rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { ShaclValidationError } from "@beep/semantic-web/services/shacl-validation";
 import { BunServices } from "@effect/platform-bun";
-import { ConfigProvider, DateTime, Effect, Layer, ManagedRuntime, Stream } from "effect";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as ManagedRuntime from "effect/ManagedRuntime";
+import * as Stream from "effect/Stream";
 import * as A from "effect/Array";
 import * as P from "effect/Predicate";
 import { LanguageModel, Response } from "effect/ai";
@@ -97,7 +102,9 @@ const LlmControlTestLayers = Layer.mergeAll(
  * **Example** (Read a test LLM model from the provider)
  *
  * ```ts
- * import { Config, ConfigProvider, Effect } from "effect"
+ * import * as Config from "effect/Config";
+ * import * as ConfigProvider from "effect/ConfigProvider";
+ * import * as Effect from "effect/Effect";
  * import { TestConfigProvider } from "@effect-ontology/Runtime/TestRuntime"
  *
  * const model = Effect.runSync(
@@ -130,7 +137,7 @@ export const TestConfigProvider = ConfigProvider.fromUnknown({
  * **Example** (Fail SHACL validation in tests)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { MockShaclService } from "@effect-ontology/Runtime/TestRuntime"
  *
  * const mock = MockShaclService({
@@ -267,7 +274,7 @@ const NlpBundle = NlpService.Default.pipe(Layer.provide(EmbeddingInfraLayer));
  * **Example** (Provide TestLayers around a tiny effect)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { TestLayers } from "@effect-ontology/Runtime/TestRuntime"
  *
  * const ready = Effect.succeed("ready")
@@ -305,7 +312,7 @@ export const TestLayers = Layer.mergeAll(
  * **Example** (Run a tiny effect on the test runtime)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { TestRuntime } from "@effect-ontology/Runtime/TestRuntime"
  *
  * const ready = TestRuntime.runPromise(Effect.succeed("ready"))

@@ -20,9 +20,12 @@ import * as O from "@beep/utils/Option";
 import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as pulumi from "@pulumi/pulumi";
-import { Deferred, Effect, MutableHashMap, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as Deferred from "effect/Deferred";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as S from "effect/Schema";
 import { expectSchemaRoundTrip } from "./schemaParity.ts";
 
@@ -75,7 +78,7 @@ const provisionCiRunnersStack = Effect.fnUntraced(function* (
             }
             const result = { id: `${args.name}-id`, state: args.inputs };
             return args.name === heldAssociationName
-              ? runPromise(Deferred.await(associationGate).pipe(Effect.as(result)))
+              ? associationGate.pipe(Deferred.await, Effect.as(result), runPromise)
               : result;
           },
         },

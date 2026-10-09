@@ -4,8 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { flow } from "effect";
+import { flow } from "effect/Function";
 import * as Str from "effect/String";
 
 /**

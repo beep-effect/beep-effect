@@ -6,7 +6,7 @@
  */
 
 import * as O from "@beep/utils/Option";
-import { pipe } from "effect";
+import { pipe } from "effect/Function";
 import * as R from "effect/Record";
 import {
   AgentInstructionDocument,

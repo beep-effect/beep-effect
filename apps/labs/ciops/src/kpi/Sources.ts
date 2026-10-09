@@ -17,10 +17,14 @@
 import { $CiopsId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { Sha256Hex } from "@beep/schema/Sha256";
-import { DateTime, Effect, HashMap, Order, pipe } from "effect";
 import * as A from "effect/Array";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
+import { pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -136,7 +140,7 @@ export type AttemptOutcome = typeof AttemptOutcome.Type;
  * **Example** (Construct a green repair attempt)
  *
  * ```ts
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import * as O from "effect/Option"
  * import { FleetAttempt } from "@/kpi/Sources"
  *
@@ -260,7 +264,7 @@ export class AttemptJournalPin extends S.Class<AttemptJournalPin>($I`AttemptJour
  * **Example** (Construct manifest facts with no journals)
  *
  * ```ts
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import { FleetManifestFacts } from "@/kpi/Sources"
  *
  * const facts = FleetManifestFacts.make({
@@ -421,7 +425,7 @@ const compactionCutoff = (rows: ReadonlyArray<AttemptJournalRow>): O.Option<Date
  *
  * ```ts
  * import { Sha256Hex } from "@beep/schema/Sha256"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { AttemptJournalPin, decodeAttemptJournal } from "@/kpi/Sources"
  *
  * const pin = AttemptJournalPin.make({
@@ -514,7 +518,7 @@ const pinOf =
  * **Example** (Read an attempts-free manifest)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { readFleetManifestFacts } from "@/kpi/Sources"
  *
  * const facts = Effect.runSync(readFleetManifestFacts("MANIFEST.yaml", "capture_instant: '2026-10-06T03:19:28.440Z'\n"))
@@ -709,7 +713,7 @@ const groupOrder = Order.mapInput(
  * **Example** (Merge two empty sources)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { mergeAdmissionSources } from "@/kpi/Sources"
  *
  * const rows = Effect.runSync(mergeAdmissionSources({ path: "a.ndjson", text: "" }, { path: "b.ndjson", text: "" }))

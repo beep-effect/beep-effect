@@ -6,12 +6,12 @@
 
 import { keccak_256 } from "@noble/hashes/sha3.js";
 import { base58 } from "@scure/base";
-import { pipe, Result } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import * as Hex from "effect/encoding/Hex";
-import { dual } from "effect/Function";
+import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as Str from "effect/String";
 
 const evmAddressPattern = /^0x[0-9a-fA-F]{40}$/;

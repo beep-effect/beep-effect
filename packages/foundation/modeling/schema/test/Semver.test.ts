@@ -2,8 +2,11 @@ import { Semver, SemverFromString } from "@beep/schema/Semver";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
-import { Cause, Effect, Exit, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -16,7 +19,7 @@ const expectDecodeFailure = <A, E>(effect: Effect.Effect<A, E>, input: string): 
 
     assertTrue(Exit.isFailure(exit), `Expected schema failure for ${input}`);
     if (Exit.isFailure(exit)) {
-      assertTrue(O.isSome(Cause.findErrorOption(exit.cause)), `Expected typed failure for ${input}`);
+      assertTrue(exit.cause.pipe(Cause.findErrorOption, O.isSome), `Expected typed failure for ${input}`);
     }
   });
 

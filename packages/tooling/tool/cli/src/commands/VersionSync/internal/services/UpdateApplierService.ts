@@ -8,8 +8,15 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
-import { Context, Effect, Layer, Match, MutableHashMap, Number as Num, Path, pipe } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as Num from "effect/Number";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { updateBiomeSchema } from "../resolvers/BiomeResolver.ts";
 import { TURBO_SCHEMA_FIELD } from "../resolvers/TurboResolver.ts";
@@ -18,7 +25,7 @@ import { updateCatalogEntry, updatePackageManagerField } from "../updaters/Packa
 import { updatePlainTextFile } from "../updaters/PlainTextUpdater.ts";
 import { updateVercelBunVersion } from "../updaters/VercelJsonUpdater.ts";
 import { replaceNodeVersionWithFile, updateYamlValue } from "../updaters/YamlFileUpdater.ts";
-import type { FileSystem } from "effect";
+import type * as FileSystem from "effect/FileSystem";
 import type { VersionCategoryReport, VersionSyncError, VersionSyncResolution } from "../../VersionSync.schemas.ts";
 
 const $I = $RepoCliId.create("commands/VersionSync/internal/services/UpdateApplierService");

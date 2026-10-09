@@ -23,8 +23,8 @@
  * @since 0.0.0
  */
 
-import { Layer } from "effect";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
+import * as Layer from "effect/Layer";
 import { makeGovernedEgressFetch } from "./GovernedEgress.fetch.ts";
 import type { EpistemicConfig } from "@beep/epistemic-config/server";
 import type { ExecutionLedger } from "@beep/epistemic-use-cases/ExecutionLedger";
@@ -45,8 +45,7 @@ import type { GovernedEgressOptions } from "./GovernedEgress.fetch.ts";
  * import { GovernedEgressOptions } from "@beep/epistemic-server/GovernedEgress"
  * import type { GovernedEgressLiveOptions } from "@beep/epistemic-server/GovernedEgress"
  * import { GrantOperation, GrantPurpose, GrantResource } from "@beep/epistemic-domain/values/ExecutionGrant"
- * import { Duration } from "effect"
- *
+ * import * as Duration from "effect/Duration";
  * const live: GovernedEgressLiveOptions = {
  *   grant: GovernedEgressOptions.make({
  *     grantTtl: Duration.hours(12),
@@ -74,8 +73,8 @@ export interface GovernedEgressLiveOptions {
  * ```ts
  * import { GovernedEgressLive, GovernedEgressOptions } from "@beep/epistemic-server/GovernedEgress"
  * import { GrantOperation, GrantPurpose, GrantResource } from "@beep/epistemic-domain/values/ExecutionGrant"
- * import { Duration, Layer } from "effect"
- *
+ * import * as Duration from "effect/Duration";
+ * import * as Layer from "effect/Layer";
  * const egress = GovernedEgressLive({
  *   grant: GovernedEgressOptions.make({
  *     grantTtl: Duration.hours(12),

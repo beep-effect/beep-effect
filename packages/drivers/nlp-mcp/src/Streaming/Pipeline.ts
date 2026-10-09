@@ -13,8 +13,10 @@
 
 import { $NlpMcpId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { Clock, Effect, flow } from "effect";
 import * as A from "effect/Array";
+import * as Clock from "effect/Clock";
+import * as Effect from "effect/Effect";
+import { flow } from "effect/Function";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { readLines } from "./TextStream.ts";

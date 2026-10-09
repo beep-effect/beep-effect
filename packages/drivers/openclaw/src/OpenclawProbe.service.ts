@@ -8,11 +8,14 @@
  * @since 0.0.0
  */
 
-import { Effect, Number as N, pipe, Result } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import { HttpClient, HttpClientRequest, HttpClientResponse } from "effect/http";
+import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { OPENCLAW_HTTP_PROBE_TIMEOUT } from "./Openclaw.config.ts";
@@ -23,7 +26,7 @@ import {
   OpenclawLiveAcceptancePassed,
   OpenclawLocalModels,
 } from "./Openclaw.models.ts";
-import type { Duration } from "effect";
+import type * as Duration from "effect/Duration";
 import type {
   OpenclawLiveAcceptanceInput,
   OpenclawLiveAcceptanceResult,

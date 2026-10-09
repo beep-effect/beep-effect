@@ -9,18 +9,17 @@ import { DrizzleError } from "@beep/drizzle";
 import { IRI, makeLiteral, makeNamedNode } from "@beep/rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import {
-  Cause,
-  DateTime,
-  Effect,
-  Equal,
-  HashSet,
-  Inspectable,
-  Layer,
-  MutableHashMap,
-  MutableHashSet,
-  Random, Result,
-} from "effect";
+import * as Cause from "effect/Cause";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import * as HashSet from "effect/HashSet";
+import * as Inspectable from "effect/Inspectable";
+import * as Layer from "effect/Layer";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
+import * as Random from "effect/Random";
+import * as Result from "effect/Result";
 import * as A from "effect/Array";
 import { flow } from "effect/Function";
 import * as O from "effect/Option";
@@ -364,7 +363,7 @@ const conflictRecordToClaimConflict = Effect.fn("HttpServer.conflictRecordToClai
  * **Example** (Register the timeline routes on an HTTP router)
  *
  * ```ts
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer";
  * import { HttpRouter } from "effect/http"
  * import { TimelineRouter } from "@effect-ontology/Runtime/HttpServer"
  *
@@ -663,7 +662,7 @@ export const TimelineRouter = HttpRouter.addAll([
  * **Example** (Register the search routes on an HTTP router)
  *
  * ```ts
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer";
  * import { HttpRouter } from "effect/http"
  * import { SearchRouter } from "@effect-ontology/Runtime/HttpServer"
  *
@@ -1061,7 +1060,7 @@ const extractionRouteHandler = Effect.gen(function* () {
  * **Example** (Register the extraction routes on an HTTP router)
  *
  * ```ts
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer";
  * import { HttpRouter } from "effect/http"
  * import { ExtractionRouter } from "@effect-ontology/Runtime/HttpServer"
  *
@@ -1112,7 +1111,7 @@ export const ExtractionRouter = HttpRouter.addAll([
  * **Example** (Register the health probes on an HTTP router)
  *
  * ```ts
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer";
  * import { HttpRouter } from "effect/http"
  * import { HealthRouter } from "@effect-ontology/Runtime/HttpServer"
  *
@@ -1166,7 +1165,7 @@ export const HealthRouter = HttpRouter.addAll([
  * **Example** (Register the ontology routes on an HTTP router)
  *
  * ```ts
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer";
  * import { HttpRouter } from "effect/http"
  * import { OntologyRouter } from "@effect-ontology/Runtime/HttpServer"
  *

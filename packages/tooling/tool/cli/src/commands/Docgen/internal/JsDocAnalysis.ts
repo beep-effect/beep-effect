@@ -8,7 +8,11 @@
 import { normalizeJSDocCategory } from "@beep/repo-utils/schemas/JSDocCategories";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { DateTime, Effect, flow, HashMap, Path, pipe } from "effect";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import { flow, pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import { Node, Project, SyntaxKind } from "ts-morph";
 import { globPatternToRegExp } from "../../../internal/GlobPattern.ts";
@@ -21,7 +25,7 @@ import {
 } from "../Docgen.schemas.ts";
 import { loadDocgenConfigDocument } from "./Workspace.ts";
 import type { DomainError } from "@beep/repo-utils";
-import type { FileSystem } from "effect";
+import type * as FileSystem from "effect/FileSystem";
 import type { JSDoc, SourceFile } from "ts-morph";
 import type { DocgenExportKind, DocgenIssuePriority, DocgenWorkspacePackage } from "../Docgen.schemas.ts";
 
@@ -444,8 +448,7 @@ const computeAnalysisSummary = (analyses: ReadonlyArray<DocgenExportAnalysis>): 
  * ```ts
  * import { analyzePackageDocumentation } from "@beep/repo-cli/commands/Docgen/internal/JsDocAnalysis"
  * import { DocgenWorkspacePackage } from "@beep/repo-cli/commands/Docgen/Docgen.schemas"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const target = DocgenWorkspacePackage.make({
  *   name: "@beep/repo-cli",
  *   relativePath: "packages/tooling/tool/cli",

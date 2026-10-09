@@ -1,6 +1,6 @@
 import { $SemanticaId } from "@beep/identity/packages";
-import { Context } from "effect";
-import type { Effect } from "effect";
+import * as Context from "effect/Context";
+import type * as Effect from "effect/Effect";
 import type { CanaryOptions } from "@/canary/Command";
 import type {
   AnchorRejected,
@@ -41,8 +41,7 @@ interface CanaryC2Shape {
  *
  * ```ts
  * import { CanaryC2 } from "@/services/CanaryC2"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = CanaryC2.pipe(Effect.map((service) => typeof service.run))
  * console.log(Effect.isEffect(program)) // true
  * ```

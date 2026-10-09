@@ -9,9 +9,15 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot, readPackageJsonFile } from "@beep/repo-utils";
 import { normalizePath } from "@beep/schema";
 import { A, Str, Text, thunkFalse } from "@beep/utils";
-import { Console, Effect, FileSystem, HashSet, Order, Path, pipe } from "effect";
+import * as Console from "effect/Console";
 import { Command, Flag } from "effect/cli";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -372,8 +378,7 @@ const manifestViolations = Effect.fn("EcosystemPolarity.manifestViolations")(fun
  *
  * ```ts
  * import { EcosystemPolarityOptions, runEcosystemPolarityCheck } from "@beep/repo-cli/commands/Lint"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = runEcosystemPolarityCheck(EcosystemPolarityOptions.make({}))
  * console.log(Effect.isEffect(program)) // true
  * ```

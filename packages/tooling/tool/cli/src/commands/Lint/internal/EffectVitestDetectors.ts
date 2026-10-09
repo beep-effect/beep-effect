@@ -1,11 +1,13 @@
 /** Syntax-only EV001-EV015 detectors. @packageDocumentation @since 0.0.0 */
 
 import { A, Str } from "@beep/utils";
-import { Effect, HashMap, MutableHashMap } from "effect";
 import * as Crypto from "effect/Crypto";
+import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import { dual } from "effect/Function";
+import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import { Node, SyntaxKind } from "ts-morph";
 import { EffectVitestLintError } from "../Lint.errors.ts";
@@ -1632,7 +1634,7 @@ const detectRetryLoop = (loop: MorphNode, state: DetectorState): void => {
  *
  * const source = new Project({ useInMemoryFileSystem: true }).createSourceFile(
  *   "runtime.test.ts",
- *   'import { Effect } from "effect"; import { it } from "@effect/vitest"; it("runs", () => Effect.runSync(program))'
+ *   'import * as Effect from "effect/Effect"; import { it } from "@effect/vitest"; it("runs", () => Effect.runSync(program))'
  * )
  * const findings = detectEffectVitestFindings(source, "packages/example/test/runtime.test.ts", "@beep/example")
  * console.log(A.map(findings, ({ ruleId }) => ruleId)) // ["EV001"]

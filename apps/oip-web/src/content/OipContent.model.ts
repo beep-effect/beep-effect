@@ -7,7 +7,7 @@
 
 import { $OipWebId } from "@beep/identity/packages";
 import { EmailString, LiteralKit, SchemaUtils } from "@beep/schema";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";
@@ -669,7 +669,7 @@ export class OipSiteContent extends S.Class<OipSiteContent>($I`OipSiteContent`)(
  * **Example** (Decode content to Result)
  *
  * ```ts
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import { decodeOipSiteContentResult, oipSiteContent } from "@beep/oip-web/content"
  *
  * const result = decodeOipSiteContentResult(oipSiteContent)
@@ -690,7 +690,7 @@ export const decodeOipSiteContentResult: {
  * **Example** (Decode content in Effect)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { decodeOipSiteContent, oipSiteContent } from "@beep/oip-web/content"
  *
  * const program = decodeOipSiteContent(oipSiteContent)

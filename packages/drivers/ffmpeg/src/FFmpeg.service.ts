@@ -9,24 +9,22 @@ import { resolvePathWithinRoot } from "@beep/file-processing/PathSafety";
 import { $FfmpegId } from "@beep/identity/packages";
 import { Fn } from "@beep/schema";
 import { A, O, Str, thunkEmptyStr } from "@beep/utils";
-import {
-  Context,
-  Effect,
-  FileSystem,
-  HashSet,
-  Layer,
-  Number as N,
-  Order,
-  Path,
-  pipe,
-  Ref,
-  Result,
-  Stream,
-} from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
+import * as Layer from "effect/Layer";
+import * as N from "effect/Number";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as R from "effect/Record";
+import * as Ref from "effect/Ref";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import {
   ClipCodec,
   ExtractClipRequest,
@@ -141,8 +139,7 @@ class FfprobeOutput extends S.Class<FfprobeOutput>($I`FfprobeOutput`)(
  *
  * ```ts
  * import type { FFmpegEventSink } from "@beep/ffmpeg"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const sink: FFmpegEventSink = () => Effect.void
  * console.log(sink)
  * ```
@@ -159,8 +156,7 @@ export type FFmpegEventSink = (event: FFmpegEvent) => Effect.Effect<void>;
  *
  * ```ts
  * import type { FFmpegShape } from "@beep/ffmpeg"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const service: FFmpegShape = {
  *   extractClip: () => Effect.die("not implemented"),
  *   extractFrameAt: () => Effect.die("not implemented"),

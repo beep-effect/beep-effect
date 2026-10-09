@@ -10,7 +10,8 @@ import { $PandocAstId } from "@beep/identity";
 import * as Md from "@beep/md/Md.model";
 import { SchemaUtils } from "@beep/schema";
 import { A, O, R } from "@beep/utils";
-import { Effect, Match } from "effect";
+import * as Effect from "effect/Effect";
+import * as Match from "effect/Match";
 import * as S from "effect/Schema";
 import {
   BlockQuote,
@@ -58,7 +59,7 @@ const $I = $PandocAstId.create("Pandoc.mapping");
  * **Example** (Catch tagged mapping error)
  *
  * ```ts import.meta.vitest name="Catch tagged mapping error"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { PandocMappingError } from "@beep/pandoc-ast/Pandoc.mapping"
  *
  * const handled = Effect.fail("projection failed").pipe(

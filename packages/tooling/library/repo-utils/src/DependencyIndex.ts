@@ -9,7 +9,9 @@
  */
 
 import { thunkEffectSucceedNull } from "@beep/utils";
-import { Effect, HashMap, HashSet } from "effect";
+import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import { extractWorkspaceDependencies } from "./Dependencies.ts";
 import { DomainError } from "./errors/index.ts";
@@ -41,7 +43,7 @@ const ROOT_KEY = "@beep/root";
  * **Example** (Index monorepo dependencies)
  *
  * ```typescript
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { buildRepoDependencyIndex } from "@beep/repo-utils/DependencyIndex"
  *
  * const program = buildRepoDependencyIndex(".")

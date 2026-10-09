@@ -18,7 +18,11 @@ import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
 import { LiteralKit } from "@beep/schema";
 import { Str as BeepStr } from "@beep/utils";
-import { Context, Effect, HashMap, Layer, Stream } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
+import * as Layer from "effect/Layer";
+import * as Stream from "effect/Stream";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as O from "effect/Option";
@@ -733,7 +737,7 @@ const DEFAULT_BATCH_SIZE = 5;
  * **Example** (Compose relation verification)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { Grounder } from "@effect-ontology/Service/Grounder"
  *
  * const program = Effect.gen(function* () {

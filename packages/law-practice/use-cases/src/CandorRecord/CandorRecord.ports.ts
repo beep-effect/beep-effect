@@ -11,7 +11,8 @@
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import { CandorDisposition, IdsSubmissionFact, PatentCitationEvent } from "@beep/law-practice-domain";
 import { Fn, LiteralKit, SchemaUtils } from "@beep/schema";
-import { Context, Effect } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { CandorFilingScope } from "../CandorPolicy/CandorPolicy.values.ts";
@@ -177,8 +178,7 @@ export class CandorRecordRepositoryUnavailable extends S.TaggedError<CandorRecor
  * ```ts
  * import { CandorRecordSnapshot } from "@beep/law-practice-use-cases/CandorPolicy"
  * import { CandorRecordRepositoryShape } from "@beep/law-practice-use-cases/CandorRecord"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const repository = CandorRecordRepositoryShape.make({
  *   listDispositions: () => Effect.succeed([]),
  *   listEvents: () => Effect.succeed([]),
@@ -262,8 +262,7 @@ export class CandorRecordRepositoryShape extends S.Class<CandorRecordRepositoryS
  * import { CandorFilingScope, CandorRecordSnapshot } from "@beep/law-practice-use-cases/CandorPolicy"
  * import { CitingApplicationIdentity, UsptoNormalizedApplicationNumber } from "@beep/law-practice-domain"
  * import * as Shared from "@beep/shared-domain/identity/Shared"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const repository = yield* CandorRecordRepository
  *   return yield* repository.listEvents(

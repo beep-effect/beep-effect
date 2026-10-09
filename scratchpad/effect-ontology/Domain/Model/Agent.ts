@@ -8,8 +8,9 @@ import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
 import { Percentage } from "@beep/schema/Percentage";
-import { type Duration, Effect } from "effect";
-import { DateTime } from "effect";
+import type * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as DateTime from "effect/DateTime";
 import * as A from "effect/Array";
 import type * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -305,7 +306,7 @@ export class ValidationResult extends S.Class<ValidationResult>($I`ValidationRes
  *
  * **Example** (Use Agent)
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * import * as Str from "effect/String"
  * import { AgentId, AgentMetadata } from "@effect-ontology/Model/Agent"
@@ -433,7 +434,8 @@ export type PipelineStatus = typeof PipelineStatus.Type;
  *
  * **Example** (Use IntermediateResult)
  * ```ts
- * import { DateTime, Duration } from "effect"
+ * import * as DateTime from "effect/DateTime";
+ * import * as Duration from "effect/Duration";
  * import { AgentId, IntermediateResult } from "@effect-ontology/Model/Agent"
  *
  * const result = IntermediateResult.make({
@@ -476,7 +478,7 @@ const pipelineStateIterationCountDefault = S.Natural.make(0);
  *
  * **Example** (Use PipelineState)
  * ```ts
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import { PipelineState, PipelineStatus } from "@effect-ontology/Model/Agent"
  *
  * const state = PipelineState.make({
@@ -523,75 +525,76 @@ export class PipelineState extends S.Class<PipelineState>($I`PipelineState`)(
   })
 ) {
   /**
-   * Finds the retained result produced by an agent.
-   *
-   * **Example** (Use getResult)
-   *
-   * ```ts
-   * import { DateTime } from "effect"
-   * import * as O from "effect/Option"
-   * import { AgentId, PipelineState, PipelineStatus } from "@effect-ontology/Model/Agent"
-   *
-   * const state = PipelineState.make({
-   *   pipelineId: "pipeline-123",
-   *   startedAt: DateTime.nowUnsafe(),
-   *   status: PipelineStatus.cases.Running.make({})
-   * })
-   * console.log(O.isNone(state.getResult(AgentId.make("validator")))) // true
-   * ```
-   *
-   * @param agentId - Stable identifier of the producing agent.
-   * @returns The retained intermediate result, or `Option.none()` when absent.
-   */
+     * Finds the retained result produced by an agent.
+     *
+     * **Example** (Use getResult)
+     *
+     * ```ts
+     * import * as DateTime from "effect/DateTime";
+     * import * as O from "effect/Option"
+     * import { AgentId, PipelineState, PipelineStatus } from "@effect-ontology/Model/Agent"
+     *
+     * const state = PipelineState.make({
+     *   pipelineId: "pipeline-123",
+     *   startedAt: DateTime.nowUnsafe(),
+     *   status: PipelineStatus.cases.Running.make({})
+     * })
+     * console.log(O.isNone(state.getResult(AgentId.make("validator")))) // true
+     * ```
+     *
+     * @param agentId - Stable identifier of the producing agent.
+     * @returns The retained intermediate result, or `Option.none()` when absent.
+     */
   getResult(agentId: AgentId): O.Option<IntermediateResult> {
     return A.findFirst(this.intermediateResults, (result) => S.is(AgentId)(agentId) && result.agentId === agentId);
   }
 
   /**
-   * Whether the named agent appears in the completed-agent set.
-   *
-   * **Example** (Use hasCompleted)
-   *
-   * ```ts
-   * import { DateTime } from "effect"
-   * import { AgentId, PipelineState, PipelineStatus } from "@effect-ontology/Model/Agent"
-   *
-   * const state = PipelineState.make({
-   *   pipelineId: "pipeline-123",
-   *   startedAt: DateTime.nowUnsafe(),
-   *   status: PipelineStatus.cases.Running.make({})
-   * })
-   * console.log(state.hasCompleted(AgentId.make("validator"))) // false
-   * ```
-   *
-   * @param agentId - Stable identifier of the agent to inspect.
-   * @returns `true` when the agent has completed in this snapshot.
-   */
+     * Whether the named agent appears in the completed-agent set.
+     *
+     * **Example** (Use hasCompleted)
+     *
+     * ```ts
+     * import * as DateTime from "effect/DateTime";
+     * import { AgentId, PipelineState, PipelineStatus } from "@effect-ontology/Model/Agent"
+     *
+     * const state = PipelineState.make({
+     *   pipelineId: "pipeline-123",
+     *   startedAt: DateTime.nowUnsafe(),
+     *   status: PipelineStatus.cases.Running.make({})
+     * })
+     * console.log(state.hasCompleted(AgentId.make("validator"))) // false
+     * ```
+     *
+     * @param agentId - Stable identifier of the agent to inspect.
+     * @returns `true` when the agent has completed in this snapshot.
+     */
   hasCompleted(agentId: AgentId): boolean {
     return A.contains(this.completedAgents, agentId);
   }
 
   /**
-   * Elapsed execution duration at the supplied clock instant.
-   *
-   * **Example** (Use getElapsed)
-   *
-   * ```ts
-   * import { DateTime, Duration } from "effect"
-   * import { PipelineState, PipelineStatus } from "@effect-ontology/Model/Agent"
-   *
-   * const now = DateTime.nowUnsafe()
-   * const state = PipelineState.make({
-   *   pipelineId: "pipeline-123",
-   *   startedAt: now,
-   *   status: PipelineStatus.cases.Running.make({})
-   * })
-   * console.log(Duration.toMillis(state.getElapsed(now))) // 0
-   * ```
-   *
-   * @param now - Current UTC instant used for active or paused pipelines.
-   * @returns Duration from pipeline start to the terminal or supplied instant.
-   */
+     * Elapsed execution duration at the supplied clock instant.
+     *
+     * **Example** (Use getElapsed)
+     *
+     * ```ts
+     * import * as DateTime from "effect/DateTime";
+     * import * as Duration from "effect/Duration";
+     * import { PipelineState, PipelineStatus } from "@effect-ontology/Model/Agent"
+     *
+     * const now = DateTime.nowUnsafe()
+     * const state = PipelineState.make({
+     *   pipelineId: "pipeline-123",
+     *   startedAt: now,
+     *   status: PipelineStatus.cases.Running.make({})
+     * })
+     * console.log(Duration.toMillis(state.getElapsed(now))) // 0
+     * ```
+     *
+     * @param now - Current UTC instant used for active or paused pipelines.
+     * @returns Duration from pipeline start to the terminal or supplied instant.
+     */
   getElapsed(now: DateTime.Utc): Duration.Duration {
     const end = PipelineStatus.match(this.status, {
       Pending: () => now,
@@ -604,23 +607,23 @@ export class PipelineState extends S.Class<PipelineState>($I`PipelineState`)(
   }
 
   /**
-   * Whether the pipeline has completed or failed.
-   *
-   * **Example** (Inspect a running pipeline)
-   * ```ts
-   * import { DateTime } from "effect"
-   * import { PipelineState, PipelineStatus } from "@effect-ontology/Model/Agent"
-   *
-   * const state = PipelineState.make({
-   *   pipelineId: "pipeline-123",
-   *   startedAt: DateTime.nowUnsafe(),
-   *   status: PipelineStatus.cases.Running.make({})
-   * })
-   * console.log(state.isTerminal) // false
-   * ```
-   *
-   * @returns `true` for completed or failed status variants.
-   */
+     * Whether the pipeline has completed or failed.
+     *
+     * **Example** (Inspect a running pipeline)
+     * ```ts
+     * import * as DateTime from "effect/DateTime";
+     * import { PipelineState, PipelineStatus } from "@effect-ontology/Model/Agent"
+     *
+     * const state = PipelineState.make({
+     *   pipelineId: "pipeline-123",
+     *   startedAt: DateTime.nowUnsafe(),
+     *   status: PipelineStatus.cases.Running.make({})
+     * })
+     * console.log(state.isTerminal) // false
+     * ```
+     *
+     * @returns `true` for completed or failed status variants.
+     */
   get isTerminal(): boolean {
     return PipelineStatus.isAnyOf(["Completed", "Failed"])(this.status);
   }
@@ -745,7 +748,7 @@ export class CheckpointConfig extends S.Class<CheckpointConfig>($I`CheckpointCon
  *
  * **Example** (Use AgentStarted)
  * ```ts
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import { AgentId, AgentStarted } from "@effect-ontology/Model/Agent"
  *
  * const event = AgentStarted.make({
@@ -776,7 +779,7 @@ export class AgentStarted extends S.TaggedClass<AgentStarted>($I`AgentStarted`)(
  * **Example** (Use AgentProgress)
  * ```ts
  * import { Percentage } from "@beep/schema/Percentage"
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import { AgentId, AgentProgress } from "@effect-ontology/Model/Agent"
  *
  * const event = AgentProgress.make({
@@ -808,7 +811,8 @@ export class AgentProgress extends S.TaggedClass<AgentProgress>($I`AgentProgress
  *
  * **Example** (Use AgentCompleted)
  * ```ts
- * import { DateTime, Duration } from "effect"
+ * import * as DateTime from "effect/DateTime";
+ * import * as Duration from "effect/Duration";
  * import { AgentCompleted, AgentId } from "@effect-ontology/Model/Agent"
  *
  * const event = AgentCompleted.make({
@@ -840,7 +844,8 @@ export class AgentCompleted extends S.TaggedClass<AgentCompleted>($I`AgentComple
  *
  * **Example** (Use AgentFailed)
  * ```ts
- * import { DateTime, Duration } from "effect"
+ * import * as DateTime from "effect/DateTime";
+ * import * as Duration from "effect/Duration";
  * import { AgentFailed, AgentId } from "@effect-ontology/Model/Agent"
  *
  * const event = AgentFailed.make({
@@ -909,7 +914,7 @@ export type CheckpointReason = typeof CheckpointReason.Type;
  *
  * **Example** (Use PipelineCheckpoint)
  * ```ts
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import { PipelineCheckpoint, PipelineState, PipelineStatus } from "@effect-ontology/Model/Agent"
  *
  * const state = PipelineState.make({
@@ -953,7 +958,7 @@ const AgentEventDefinition = S.Union([
  *
  * **Example** (Use AgentEvent)
  * ```ts
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import { AgentEvent, AgentId } from "@effect-ontology/Model/Agent"
  *
  * const event = AgentEvent.cases.AgentStarted.make({

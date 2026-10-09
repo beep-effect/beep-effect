@@ -6,10 +6,13 @@
  */
 
 import { escapeHtml } from "@beep/utils/Html";
-import { Effect, FileSystem, Layer, Match } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { HttpRouter, HttpServerResponse } from "effect/http";
 import { HttpApiScalar, OpenApi } from "effect/http-api";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as S from "effect/Schema";
 import { ApiAudience } from "./Catalog.models.ts";
 import { Catalog, resolveCatalogSpecPath } from "./Catalog.ts";
@@ -196,8 +199,7 @@ const ScalarScriptRoute = HttpRouter.add("GET", SCALAR_SCRIPT_PATH, readScalarSc
  *
  * ```ts
  * import { CatalogRoutes } from "@beep/api-docs/src/Docs.routes"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(CatalogRoutes)) // true
  * ```
  *

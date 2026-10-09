@@ -6,7 +6,8 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { Effect, Ref } from "effect";
+import * as Effect from "effect/Effect";
+import * as Ref from "effect/Ref";
 import type * as Cause from "effect/Cause";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";

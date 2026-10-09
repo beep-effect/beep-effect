@@ -1,6 +1,10 @@
 import { PgliteTestLayer } from "@beep/pglite";
 import { assert, describe, it } from "@effect/vitest";
-import { DateTime, Effect, Layer, PubSub, Stream } from "effect";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as PubSub from "effect/PubSub";
+import * as Stream from "effect/Stream";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";

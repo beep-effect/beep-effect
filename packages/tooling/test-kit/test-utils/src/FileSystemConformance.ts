@@ -40,11 +40,11 @@
 
 import { $TestUtilsId } from "@beep/identity/packages";
 import { assert, expect, it } from "@effect/vitest";
-import { Effect, pipe } from "effect";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
 import * as Fs from "effect/FileSystem";
-import { constant, dual } from "effect/Function";
+import { constant, dual, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";

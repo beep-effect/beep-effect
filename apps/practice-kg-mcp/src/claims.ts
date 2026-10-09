@@ -17,9 +17,11 @@ import {
   writePracticeKgClaimsCarry,
 } from "@beep/law-practice-server";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
-import { Effect, Layer, Path } from "effect";
 import { Command, Flag } from "effect/cli";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import { runEntrypoint } from "./entrypoint.ts";
 import { makePracticeKgPgliteLayer } from "./runtime/index.ts";
 
@@ -36,19 +38,17 @@ const carryClaims = Effect.fnUntraced(function* (sourceBundle: string, destinati
   const path = yield* Path.Path;
   // The two stores are opened one after the other, each inside its own scope, so
   // the source is closed before the destination is written.
-  const carry = yield* Effect.scoped(
-    Layer.build(makePracticeKgPgliteLayer(path.join(sourceBundle, "kg.pglite"))).pipe(
-      Effect.flatMap((context) => readPracticeKgClaimsCarry.pipe(Effect.provide(context)))
-    )
+  const carry = yield* Layer.build(makePracticeKgPgliteLayer(path.join(sourceBundle, "kg.pglite"))).pipe(
+    Effect.flatMap((context) => readPracticeKgClaimsCarry.pipe(Effect.provide(context))),
+    Effect.scoped
   );
-  const summary = yield* Effect.scoped(
-    Layer.build(makePracticeKgPgliteLayer(path.join(destinationBundle, "kg.pglite"))).pipe(
-      Effect.flatMap((context) =>
-        writePracticeKgClaimsCarry(PracticeKgClaimsCarryWrite.make({ bundleOut: destinationBundle, carry })).pipe(
-          Effect.provide(context)
-        )
+  const summary = yield* Layer.build(makePracticeKgPgliteLayer(path.join(destinationBundle, "kg.pglite"))).pipe(
+    Effect.flatMap((context) =>
+      writePracticeKgClaimsCarry(PracticeKgClaimsCarryWrite.make({ bundleOut: destinationBundle, carry })).pipe(
+        Effect.provide(context)
       )
-    )
+    ),
+    Effect.scoped
   );
   yield* Effect.logInfo("PracticeKgClaims.carried", {
     claims: summary.claims,
@@ -63,13 +63,9 @@ const extractClaims = Effect.fnUntraced(function* (inputsDir: string, destinatio
     LawPracticeServerLive.pipe(Layer.provide(AnthropicLanguageModelLive), Layer.provide(BunCrypto.layer)),
     makePracticeKgPgliteLayer(path.join(destinationBundle, "kg.pglite"))
   );
-  yield* Effect.scoped(
-    Layer.build(
-      Layer.effectDiscard(
-        runPracticeKgClaimsBatch(PracticeKgClaimsOptions.make({ bundleOut: destinationBundle, inputs: inputsDir }))
-      ).pipe(Layer.provide(claimsLayer))
-    )
-  );
+  yield* runPracticeKgClaimsBatch(
+    PracticeKgClaimsOptions.make({ bundleOut: destinationBundle, inputs: inputsDir })
+  ).pipe(Layer.effectDiscard, Layer.provide(claimsLayer), Layer.build, Effect.scoped);
 });
 
 const claimsCommand = Command.make(

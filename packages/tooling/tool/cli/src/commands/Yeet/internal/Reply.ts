@@ -49,10 +49,17 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { Console, DateTime, Effect, FileSystem, flow, HashSet, Match, Path, pipe, Result } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import * as Console from "effect/Console";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { dual, flow, pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import {
@@ -839,8 +846,7 @@ const replyGhOutput = (
  *
  * ```ts
  * import { replyDraftsPathForContext } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(Effect.succeed(replyDraftsPathForContext))) // true
  * ```
  *
@@ -864,8 +870,7 @@ export const replyDraftsPathForContext = Effect.fn("Yeet.replyDraftsPathForConte
  *
  * ```ts
  * import { replyReportPathForContext } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(Effect.succeed(replyReportPathForContext))) // true
  * ```
  *
@@ -895,8 +900,7 @@ export const replyReportPathForContext = Effect.fn("Yeet.replyReportPathForConte
  *
  * ```ts
  * import { loadReplyDrafts, RepoRunContext } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const context = RepoRunContext.make({
  *   base: "origin/main",
  *   branch: "feat/merge-loop",
@@ -1147,8 +1151,7 @@ const preflightFailureOutcomes = (drafts: ReplyDrafts, failure: YeetCommandError
  *
  * ```ts
  * import { RepoRunContext, runYeetReply } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const context = RepoRunContext.make({
  *   base: "origin/main",
  *   branch: "feat/merge-loop",

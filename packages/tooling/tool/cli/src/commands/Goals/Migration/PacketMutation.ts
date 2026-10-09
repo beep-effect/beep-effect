@@ -7,8 +7,15 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, O } from "@beep/utils";
-import { Context, Effect, FileSystem, flow, Layer, Order, Path, Ref } from "effect";
+import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { flow } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { writeContainedFileString } from "../../../internal/cli/FsGuards.ts";
@@ -97,8 +104,7 @@ export interface PacketForkRepairApplierShape {
  *
  * ```ts
  * import { PacketForkRepairApplier } from "@beep/repo-cli/commands/Goals/Migration/PacketMutation"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(Effect.map(PacketForkRepairApplier, (service) => service.preview)))
  * ```
  *
@@ -507,8 +513,7 @@ const readGenesisTrace = Effect.fnUntraced(function* (seed: PacketGenesisSeed) {
  * ```ts
  * import { isRecoverableGenesisSeed } from "@beep/repo-cli/commands/Goals/Migration/PacketMutation"
  * import { PacketGenesisSeed } from "@beep/repo-cli/commands/Goals/Migration/Migration.schemas"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const seed = PacketGenesisSeed.make({
  *   slug: "demo",
  *   eventsDirectory: "goals/demo/ops/events",
@@ -627,8 +632,7 @@ const planExistingGenesisRecovery = Effect.fnUntraced(function* (
  * ```ts
  * import { planPacketGenesisRecovery } from "@beep/repo-cli/commands/Goals/Migration/PacketMutation"
  * import { GoalPacketRecord } from "@beep/repo-cli/commands/Goals/Inventory"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const record = GoalPacketRecord.make({
  *   slug: "demo",
  *   packetPath: "goals/demo",
@@ -677,8 +681,7 @@ export const planPacketGenesisRecovery = Effect.fn("Goals.planPacketGenesisRecov
  * ```ts
  * import { planPacketGenesisSeed } from "@beep/repo-cli/commands/Goals/Migration/PacketMutation"
  * import { GoalPacketRecord } from "@beep/repo-cli/commands/Goals/Inventory"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const record = GoalPacketRecord.make({
  *   slug: "demo",
  *   packetPath: "goals/demo",
@@ -768,8 +771,7 @@ const removeQuarantinedGenesisEvent = Effect.fnUntraced(function* (
  * ```ts
  * import { quarantineOwnedGenesisEvents } from "@beep/repo-cli/commands/Goals/Migration/PacketMutation"
  * import { PacketGenesisSeed } from "@beep/repo-cli/commands/Goals/Migration/Migration.schemas"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const seed = PacketGenesisSeed.make({
  *   slug: "demo",
  *   eventsDirectory: "goals/demo/ops/events",

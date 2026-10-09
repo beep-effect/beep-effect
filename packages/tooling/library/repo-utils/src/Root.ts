@@ -8,7 +8,9 @@
  * @since 0.0.0
  */
 import { A, Str, thunkFalse } from "@beep/utils";
-import { Effect, FileSystem, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import { NoSuchFileError } from "./errors/index.ts";
 
@@ -31,7 +33,7 @@ const ROOT_MARKERS: ReadonlyArray<string> = [".git", "bun.lock"];
  * **Example** (Find root from cwd)
  *
  * ```typescript
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { findRepoRoot } from "@beep/repo-utils/Root"
  *
  * const program = findRepoRoot()

@@ -12,7 +12,7 @@ import {
   makeAiMetricsConfigSnapshot,
   makeHarnessFingerprint,
 } from "@beep/repo-ai-metrics";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { HarnessLedgerIoError } from "../HarnessLedger.errors.ts";
 import type { O } from "@beep/utils";
 

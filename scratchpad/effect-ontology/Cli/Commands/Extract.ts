@@ -12,7 +12,13 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import * as BunServices from "@effect/platform-bun/BunServices";
-import { ConfigProvider, Console, Duration, Effect, FileSystem, Layer, Path } from "effect";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Console from "effect/Console";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
 import type { Scope } from "effect/Scope";
 import { PlatformError } from "effect/PlatformError";
 import * as A from "effect/Array";

@@ -12,10 +12,10 @@
  */
 
 import { $ArchitectureLabClientId } from "@beep/identity/packages";
-import { Context } from "effect";
+import * as Context from "effect/Context";
 import type * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem";
 import type { WorkItem as WorkItemUseCases } from "@beep/architecture-lab-use-cases/public";
-import type { Effect } from "effect";
+import type * as Effect from "effect/Effect";
 
 const $I = $ArchitectureLabClientId.create("aggregates/WorkItem/WorkItem.client");
 
@@ -37,7 +37,7 @@ const $I = $ArchitectureLabClientId.create("aggregates/WorkItem/WorkItem.client"
  *   type WorkItemActionError
  * } from "@beep/architecture-lab-use-cases/aggregates/WorkItem"
  * import type { WorkItemClientTransport } from "@beep/architecture-lab-client/aggregates/WorkItem"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const id = S.decodeUnknownSync(DomainWorkItem.WorkItemId)("work-item-1")
@@ -111,7 +111,7 @@ export interface WorkItemClientTransport {
  * import { ListWorkItemsQuery, type WorkItemActionError } from "@beep/architecture-lab-use-cases/aggregates/WorkItem"
  * import type { WorkItemClientShape } from "@beep/architecture-lab-client/aggregates/WorkItem"
  * import { makeWorkItemClient, type WorkItemClientTransport } from "@beep/architecture-lab-client/aggregates/WorkItem"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const workItem = DomainWorkItem.create(
@@ -160,7 +160,7 @@ export interface WorkItemClientShape extends WorkItemClientTransport {}
  * import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem"
  * import { ListWorkItemsQuery, type WorkItemActionError } from "@beep/architecture-lab-use-cases/aggregates/WorkItem"
  * import { WorkItemClient, makeWorkItemClient, type WorkItemClientTransport } from "@beep/architecture-lab-client/aggregates/WorkItem"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const workItem = DomainWorkItem.create(
@@ -211,7 +211,7 @@ export class WorkItemClient extends Context.Service<WorkItemClient, WorkItemClie
  * import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem"
  * import { CreateWorkItemCommand, type WorkItemActionError } from "@beep/architecture-lab-use-cases/aggregates/WorkItem"
  * import { makeWorkItemClient, type WorkItemClientTransport } from "@beep/architecture-lab-client/aggregates/WorkItem"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const id = S.decodeUnknownSync(DomainWorkItem.WorkItemId)("work-item-1")

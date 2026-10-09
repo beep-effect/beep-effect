@@ -5,7 +5,7 @@
  * @packageDocumentation
  */
 import { A, Str } from "@beep/utils";
-import { flow, pipe } from "effect";
+import { flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as QueryText from "./QueryText.ts";
 import * as VariantText from "./VariantText.ts";

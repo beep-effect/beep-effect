@@ -8,8 +8,9 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { P } from "@beep/utils";
-import { Effect, Runtime } from "effect";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
+import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
 
 const $I = $RepoCliId.create("internal/cli/ExitCodeError");
@@ -53,8 +54,7 @@ export class CliReportedExit extends S.TaggedError<CliReportedExit>($I`CliReport
  *
  * ```ts
  * import { failWithReportedExit } from "@beep/repo-cli/internal/cli/ExitCodeError"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(failWithReportedExit("check failed")))
  * ```
  *

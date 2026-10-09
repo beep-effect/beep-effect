@@ -8,7 +8,8 @@
  */
 
 import { $SchemaId } from "@beep/identity/packages";
-import { flow, Redacted } from "effect";
+import { flow } from "effect/Function";
+import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as SchemaUtils from "../SchemaUtils/index.ts";
 

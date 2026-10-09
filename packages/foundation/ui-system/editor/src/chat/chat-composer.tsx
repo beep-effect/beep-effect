@@ -40,7 +40,7 @@ import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
 import { PaperclipIcon } from "@phosphor-icons/react/Paperclip";
 import { PaperPlaneRightIcon } from "@phosphor-icons/react/PaperPlaneRight";
 import { StopIcon } from "@phosphor-icons/react/Stop";
-import { Result } from "effect";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { useRef } from "react";
 import { editorNodes } from "../nodes.ts";

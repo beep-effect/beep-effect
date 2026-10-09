@@ -6,7 +6,11 @@
  */
 import bc from "@beep/colors";
 import { $ObservabilityId } from "@beep/identity/packages";
-import { Effect, ErrorReporter, Inspectable, Match, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import * as ErrorReporter from "effect/ErrorReporter";
+import { pipe } from "effect/Function";
+import * as Inspectable from "effect/Inspectable";
+import * as Match from "effect/Match";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { renderObservedCause, summarizeCause } from "../CauseDiagnostics.ts";
@@ -133,7 +137,7 @@ export const makeConsoleErrorReporter = (options?: ConsoleErrorReporterOptions):
  * **Example** (Register console error reporter)
  *
  * ```typescript
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer";
  * import { ErrorReporterLayerOptions, layerErrorReporter } from "@beep/observability/server"
  *
  * const ErrorReporterLive = layerErrorReporter(ErrorReporterLayerOptions.make({ includeCause: true }))

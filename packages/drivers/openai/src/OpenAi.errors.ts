@@ -5,8 +5,8 @@
  * @since 0.0.0
  */
 
-import type { Config } from "effect";
 import type { AiError } from "effect/ai";
+import type * as Config from "effect/Config";
 
 /**
  * Typed failures callers may observe while acquiring or using OpenAI Layers.

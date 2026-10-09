@@ -8,7 +8,7 @@
 
 import { $ArchitectureLabConfigId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 const $I = $ArchitectureLabConfigId.create("WorkItemConfig");

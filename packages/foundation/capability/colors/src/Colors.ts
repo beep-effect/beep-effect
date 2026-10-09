@@ -35,8 +35,7 @@
 import { $ColorsId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
 import { A, Str, thunk } from "@beep/utils";
-import { pipe } from "effect";
-import { dual } from "effect/Function";
+import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { ColorsFields, Formatter as FormatterDefinition } from "./internal/ColorsSchema.ts";

@@ -7,9 +7,10 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { Text } from "@beep/utils";
-import { Console, Effect } from "effect";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
 import { Command, Flag } from "effect/cli";
+import * as Effect from "effect/Effect";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -256,8 +257,8 @@ const lawsEffectImportsCommand = Command.make(
       Flag.withDescription("Corpus representation to scan: executable code, JSDoc fences, or Markdown fences")
     ),
     enforceDocumentation: Flag.Boolean("enforce-documentation").pipe(
-      Flag.withDefault(false),
-      Flag.withDescription("Make JSDoc or Markdown findings blocking; reserved for the final documentation flip")
+      Flag.withDefault(true),
+      Flag.withDescription("Make JSDoc or Markdown root Effect imports blocking")
     ),
     json: Flag.Boolean("json").pipe(
       Flag.withDefault(false),
@@ -296,10 +297,25 @@ const lawsEffectImportsCommand = Command.make(
         write: options.write,
         strictCheck: options.check,
         candidate: options.candidate,
+        effectOnly: true,
         mode: options.mode,
         enforceDocumentation: options.enforceDocumentation,
         excludePaths: parseExcludePaths(options.exclude),
         includePrefixes: parseExcludePaths(options.includePrefix),
+        promotedFamilyPrefixes: [
+          "apps",
+          "packages",
+          "infra",
+          "scripts",
+          "goals",
+          "explorations",
+          "scratchpad",
+          "tools",
+          "plugins",
+          "research",
+          ".claude",
+          ".github",
+        ],
         ...includePathsOption(options.include),
       })
     );

@@ -8,13 +8,16 @@
 import { $NlpProcessingId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
 import { A, Struct } from "@beep/utils";
-import { Cause, Effect, Inspectable, pipe, Stream } from "effect";
 import { Tool } from "effect/ai";
-import { dual } from "effect/Function";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
+import * as Inspectable from "effect/Inspectable";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import * as Obs from "../internal/observability.ts";
 import { NlpToolkit, NlpTools } from "./NlpToolkit.ts";
 import type { AiError, Toolkit } from "effect/ai";
@@ -89,7 +92,7 @@ const parameterNamesForTool = (tool: NlpTool): ReadonlyArray<string> => {
  * **Example** (Recover from ExportedToolError)
  *
  * ```ts import.meta.vitest name="Recover from ExportedToolError"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { ExportedToolError } from "@beep/nlp-processing/Tools/ToolExport"
  *
  * const recovered = await Effect.runPromise(
@@ -176,7 +179,7 @@ export class ExportedToolError extends S.TaggedError<ExportedToolError>($I`Expor
  * **Example** (Define ExportedTool descriptor)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import type { ExportedTool } from "@beep/nlp-processing/Tools/ToolExport"
  *
  * const tokenizeDescriptor = {
@@ -406,7 +409,7 @@ const exportToolsEffect: Effect.Effect<
  * **Example** (List exported tool names)
  *
  * ```ts import.meta.vitest name="List exported tool names"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { exportTools } from "@beep/nlp-processing/Tools/ToolExport"
  * import { WinkNlpToolkitLive } from "@beep/wink"
  *

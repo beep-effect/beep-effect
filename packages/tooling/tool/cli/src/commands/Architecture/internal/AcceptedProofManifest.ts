@@ -8,7 +8,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { A } from "@beep/utils";
-import { pipe } from "effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { ArchitecturePlanStage, ArchitectureSliceRole, ArchitectureWriterKind } from "../Architecture.schemas.ts";

@@ -9,7 +9,8 @@
 import { WorkItem as WorkItemUseCases } from "@beep/architecture-lab-use-cases/public";
 import { $ArchitectureLabServerId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { Effect, Match } from "effect";
+import * as Effect from "effect/Effect";
+import * as Match from "effect/Match";
 import * as S from "effect/Schema";
 
 const $I = $ArchitectureLabServerId.create("aggregates/WorkItem/WorkItem.http");
@@ -151,7 +152,7 @@ const toSuccess =
  * import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem"
  * import { makeWorkItemHttpHandlers } from "@beep/architecture-lab-server/aggregates/WorkItem"
  * import { WorkItem as WorkItemUseCases } from "@beep/architecture-lab-use-cases/public"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *

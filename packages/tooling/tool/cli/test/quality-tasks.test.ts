@@ -118,6 +118,7 @@ import {
   renderCoverageRemediation,
   resolveLaneInputDigestForTesting,
   reviewFixDocgenLocalArgsForTesting,
+  rootEslintCacheKey,
   rootLintPolicyStepsForTesting,
   rootQualityStepsForTesting,
   runBunAudit,
@@ -164,35 +165,31 @@ import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { assert, describe, expect, vi } from "@effect/vitest";
 import { assertDefined, assertNone, assertSome, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
-import {
-  Cause,
-  ConfigProvider,
-  Console,
-  Crypto,
-  DateTime,
-  Effect,
-  Exit,
-  Fiber,
-  FileSystem,
-  Inspectable,
-  identity,
-  Layer,
-  Match,
-  Order,
-  Path,
-  PlatformError,
-  pipe,
-  Sink,
-  Stream,
-} from "effect";
 import * as Arbitrary from "effect/Arbitrary";
-import { flow } from "effect/Function";
+import * as Cause from "effect/Cause";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Console from "effect/Console";
+import * as Crypto from "effect/Crypto";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Fiber from "effect/Fiber";
+import * as FileSystem from "effect/FileSystem";
+import { flow, identity, pipe } from "effect/Function";
 import * as HM from "effect/HashMap";
+import * as Inspectable from "effect/Inspectable";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
+import * as PlatformError from "effect/PlatformError";
 import * as P from "effect/Predicate";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as Sink from "effect/Sink";
+import * as Stream from "effect/Stream";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
 import type { CiLaneId } from "@beep/repo-cli/commands/Ci";
@@ -592,7 +589,7 @@ const policyStepCommand = (step: QualityTaskStep) => {
 
 // A red policy run fails as one group whose failures name exactly the red planned label.
 const expectPolicyGroupFailure = (exit: Exit.Exit<unknown, unknown>, failedLabel: string): void => {
-  assertTrue(Exit.isFailure(exit));
+  exit.pipe(Exit.isFailure, assertTrue);
   if (Exit.isFailure(exit)) {
     const failure = Cause.squash(exit.cause);
     expect(failure).toBeInstanceOf(QualityTaskGroupFailed);
@@ -1072,6 +1069,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "explore:atlas-check",
         "repo-sanity:tsconfig-sync",
         "lint:effect-imports",
+        "lint:effect-imports-markdown",
         "lint:schema-first",
         "lint:effect-vitest",
         "lint:allowlist",
@@ -1089,6 +1087,9 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       );
       expect(qualityLaneArgs(lanes, "lint:effect-imports")).toEqual(
         expectedTurboArgs("lint:effect-imports", ["--summarize"])
+      );
+      expect(qualityLaneArgs(lanes, "lint:effect-imports-markdown")).toEqual(
+        expectedTurboArgs("lint:effect-imports-markdown", ["--summarize"])
       );
       expect(qualityLaneArgs(lanes, "lint:effect-vitest")).toEqual(["run", "beep", "lint", "effect-vitest"]);
       expect(qualityLaneArgs(lanes, "quality:jsdoc-ratchet:committed")).toEqual([
@@ -3832,10 +3833,16 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "--max-warnings=0",
         "--cache",
         "--cache-location",
-        "node_modules/.cache/eslint-root/.eslintcache",
+        "node_modules/.cache/eslint-root/unkeyed/.eslintcache",
         "--cache-strategy",
         "content",
       ]);
+      expect(rootLintPolicyStepsForTesting("/repo", undefined, undefined, undefined, true, "abc123")).toContainEqual(
+        expect.objectContaining({
+          label: "lint:jsdoc",
+          args: expect.arrayContaining(["node_modules/.cache/eslint-root/abc123/.eslintcache"]),
+        })
+      );
       expect(policyTurboStep("lint:deprecated-apis").args).toEqual(
         repoCliEntryArgs("lint", "deprecated-apis", "--full")
       );
@@ -3984,7 +3991,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             Effect.exit(runRootLintPolicyTask(true))
           );
 
-          assertTrue(Exit.isSuccess(exit));
+          exit.pipe(Exit.isSuccess, assertTrue);
 
           const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
           // Derived from the same plan the runtime executes: a lint policy step
@@ -6464,7 +6471,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
                 )
               )
             );
-            assertTrue(Exit.isSuccess(exit));
+            exit.pipe(Exit.isSuccess, assertTrue);
           })
         ).pipe(
           Effect.provideServiceEffect(Console.Console, TestConsole.make),
@@ -7811,7 +7818,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           );
 
           expect(released).toBe(true);
-          assertTrue(Exit.isFailure(exit));
+          exit.pipe(Exit.isFailure, assertTrue);
           if (Exit.isFailure(exit)) {
             const failure = Cause.squash(exit.cause);
             expect(failure).toBeInstanceOf(QualityTaskFailed);
@@ -7894,7 +7901,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             )
           );
 
-          assertTrue(Exit.isFailure(exit));
+          exit.pipe(Exit.isFailure, assertTrue);
           if (Exit.isFailure(exit)) {
             const failure = Cause.squash(exit.cause);
             expect(failure).toBeInstanceOf(QualityTaskGroupFailed);
@@ -7940,7 +7947,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           );
 
           expect(yield* fs.exists(markerPath)).toBe(true);
-          assertTrue(Exit.isFailure(exit));
+          exit.pipe(Exit.isFailure, assertTrue);
           if (Exit.isFailure(exit)) {
             const failure = Cause.squash(exit.cause);
             expect(failure).toBeInstanceOf(QualityTaskGroupFailed);
@@ -8069,7 +8076,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             Effect.exit(runQualityTaskStreamingStepGroupForTesting("test:stream", [step]))
           );
 
-          assertTrue(Exit.isFailure(exit));
+          exit.pipe(Exit.isFailure, assertTrue);
           expect(yield* fs.readFileString(statePath)).toBe("3");
           expect(yield* fs.exists(path.join(process.cwd(), FLAKE_QUARANTINE_ARTIFACT_RELATIVE_PATH))).toBe(false);
 
@@ -8129,7 +8136,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             Effect.exit(runQualityTask(getInvocation(["lint"])))
           );
 
-          assertTrue(Exit.isFailure(exit));
+          exit.pipe(Exit.isFailure, assertTrue);
           if (Exit.isFailure(exit)) {
             const failure = Cause.squash(exit.cause);
             expect(failure).toBeInstanceOf(QualityTaskGroupFailed);
@@ -8529,5 +8536,42 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         args: ["--concurrency=2"],
       });
     });
+  });
+});
+
+// The root ESLint cache directory is keyed by the ESLint configuration sources, so an edit to
+// an in-repo rule module (which ESLint's own config digest cannot see) starts an empty cache.
+describe("root ESLint cache key", () => {
+  it.layer(FileSystemLayer, { timeout: "30 seconds" })((it) => {
+    it.effect("digests the flat config, tsdoc tags and every policy-pack ESLint source", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped();
+        const rule = path.join(root, "packages/tooling/policy-pack/repo-configs/src/eslint/RequireCategoryTagRule.ts");
+        yield* fs.makeDirectory(path.dirname(rule), { recursive: true });
+        yield* fs.writeFileString(path.join(root, "eslint.config.mjs"), "export default []\n");
+        yield* fs.writeFileString(path.join(root, "tsdoc.json"), "{}\n");
+        yield* fs.writeFileString(rule, "const CATEGORY_PATTERN = /@category/\n");
+        const initial = yield* rootEslintCacheKey(root);
+        expect(initial).toMatch(/^[0-9a-f]{16}$/);
+        expect(yield* rootEslintCacheKey(root)).toBe(initial);
+        // A module-level helper edit, invisible to ESLint's serialized config, moves the key.
+        yield* fs.writeFileString(rule, "const CATEGORY_PATTERN = /@categoryX/\n");
+        const edited = yield* rootEslintCacheKey(root);
+        expect(edited).toMatch(/^[0-9a-f]{16}$/);
+        expect(edited).not.toBe(initial);
+        // So does an edit to a helper the rule imports from `src/internal/eslint`.
+        const helper = path.join(root, "packages/tooling/policy-pack/repo-configs/src/internal/eslint/RuleHelpers.ts");
+        yield* fs.makeDirectory(path.dirname(helper), { recursive: true });
+        yield* fs.writeFileString(helper, "export const optionToReadonlyArray = 1\n");
+        const withHelper = yield* rootEslintCacheKey(root);
+        expect(withHelper).not.toBe(edited);
+        yield* fs.writeFileString(helper, "export const optionToReadonlyArray = 2\n");
+        expect(yield* rootEslintCacheKey(root)).not.toBe(withHelper);
+        // A repository without the sources falls back to the shared unkeyed directory.
+        expect(yield* rootEslintCacheKey(yield* fs.makeTempDirectoryScoped())).toBe("unkeyed");
+      })
+    );
   });
 });

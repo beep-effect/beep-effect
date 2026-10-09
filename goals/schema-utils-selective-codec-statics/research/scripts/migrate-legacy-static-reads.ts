@@ -1,7 +1,8 @@
 import { resolve } from "node:path";
 import { Glob } from "bun";
-import { Equal, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Equal from "effect/Equal";
+import { pipe } from "effect/Function";
 import * as Str from "effect/String";
 
 const repoRoot = resolve(import.meta.dir, "../../../..");

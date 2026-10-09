@@ -9,12 +9,15 @@
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
 import * as O from "@beep/utils/Option";
-import { Effect, HashSet, MutableHashMap, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { readJsonlLines } from "./internal/Jsonl.ts";
-import type { FileSystem } from "effect";
+import type * as FileSystem from "effect/FileSystem";
 
 const $I = $LawPracticeServerId.create("PracticeKg.register");
 
@@ -121,7 +124,7 @@ const decodeRegisterLine = S.decodeUnknownEffect(S.fromJsonString(PracticeKgDock
  * **Example** (Read a register file)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { readPracticeKgDocketRegister } from "../../src/PracticeKg.register.ts"
  *
  * const rows = readPracticeKgDocketRegister("/corpus/incoming/docket-register.jsonl")

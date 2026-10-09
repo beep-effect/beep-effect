@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import * as Domain from "@beep/agents-domain/entities/ProviderInstance";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import { ProviderProbeUnavailable, ProviderUnauthenticated } from "./ProviderInstance.errors.ts";
@@ -28,7 +28,7 @@ import type { ProviderInstanceUseCasesShape } from "./ProviderInstance.use-cases
  * ```ts
  * import { makeProviderInstanceUseCases } from "@beep/agents-use-cases/server"
  * import type { ProviderInstance } from "@beep/agents-domain/entities/ProviderInstance"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * const repository = { add: () => Effect.die("example"), get: () => Effect.die("example"), list: Effect.succeed([]), remove: () => Effect.void, save: (instance: ProviderInstance) => Effect.succeed(instance) }
  * const useCases = makeProviderInstanceUseCases(repository, { probe: () => Effect.die("example") })
  * console.log(useCases.list)

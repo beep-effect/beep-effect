@@ -31,9 +31,13 @@
  */
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { DateTime, Duration, Effect, HashSet, Match, pipe } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -264,8 +268,7 @@ export type YeetMonitorLoopPolicy = typeof YeetMonitorLoopPolicy.Type;
  *
  * ```ts
  * import { yeetMonitorPolicyTerminals, YeetUntilMergedPolicy } from "@beep/repo-cli/test/Yeet"
- * import { HashSet } from "effect"
- *
+ * import * as HashSet from "effect/HashSet";
  * const terminals = yeetMonitorPolicyTerminals(YeetUntilMergedPolicy.make({}))
  * console.log(HashSet.has(terminals, "ready")) // false
  * console.log(HashSet.has(terminals, "merged")) // true

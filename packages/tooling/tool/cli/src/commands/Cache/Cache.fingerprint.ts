@@ -8,9 +8,13 @@
 import { CacheTaskConfiguration } from "@beep/repo-configs/cache";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
-import { Duration, Effect, FileSystem, Order, Path } from "effect";
 import * as A from "effect/Array";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -328,7 +332,7 @@ const decodeJsonObject = S.decodeUnknownEffect(S.JsonObject);
  * **Example** (Prepare a signed root)
  * ```ts
  * import { projectCacheSignedRoot } from "@beep/repo-cli/test/Cache"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * const projected = projectCacheSignedRoot('{"tasks":{}}')
  * console.assert(Effect.isEffect(projected))
  * ```

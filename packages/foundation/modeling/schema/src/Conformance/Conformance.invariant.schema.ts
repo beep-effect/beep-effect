@@ -5,9 +5,10 @@
  */
 
 import { $SchemaId } from "@beep/identity/packages";
-import { Effect, Tuple } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+import * as Tuple from "effect/Tuple";
 import { LiteralKit } from "../LiteralKit/index.ts";
 import * as SchemaUtils from "../SchemaUtils/index.ts";
 import { SpecificationReference } from "./Conformance.source.schema.ts";
@@ -213,7 +214,7 @@ class NotEnforced extends S.Class<NotEnforced>($I`NotEnforced`)(
  * **Example** (Decode runtime enforcement evidence)
  *
  * ```ts import.meta.vitest name="Decode runtime enforcement evidence"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { Enforcement } from "@beep/schema/Conformance"
  *
@@ -329,7 +330,7 @@ const InvariantDescriptorValue = InvariantDescriptorFields.check(InvariantDescri
  * **Example** (Decode a heading-content invariant)
  *
  * ```ts import.meta.vitest name="Decode a heading-content invariant"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { Invariant } from "@beep/schema/Conformance"
  *

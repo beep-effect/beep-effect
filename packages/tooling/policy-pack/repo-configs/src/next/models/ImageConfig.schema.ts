@@ -7,7 +7,7 @@
 import { $RepoConfigsId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Struct } from "@beep/utils";
-import { Result } from "effect";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const $I = $RepoConfigsId.create("next/models/ImageConfig.schema");

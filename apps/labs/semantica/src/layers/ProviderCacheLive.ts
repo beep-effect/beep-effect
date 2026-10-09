@@ -1,20 +1,18 @@
-import {
-  Clock,
-  Crypto,
-  DateTime,
-  Duration,
-  Effect,
-  FileSystem,
-  Layer,
-  Number as N,
-  Path,
-  Ref,
-  Result,
-  Schedule,
-} from "effect";
 import * as Bool from "effect/Boolean";
+import * as Clock from "effect/Clock";
+import * as Crypto from "effect/Crypto";
+import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as N from "effect/Number";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
+import * as Ref from "effect/Ref";
+import * as Result from "effect/Result";
+import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { LabConfig } from "@/runtime/Config";
@@ -319,8 +317,7 @@ const makeProviderCache = Effect.gen(function* () {
  *
  * ```ts
  * import { ProviderCacheLive } from "@/layers/ProviderCacheLive"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(ProviderCacheLive)) // true
  * ```
  *

@@ -7,8 +7,10 @@
  */
 
 import { defineRule } from "@oxlint/plugins";
-import { HashSet, MutableHashMap, MutableHashSet } from "effect";
 import * as A from "effect/Array";
+import * as HashSet from "effect/HashSet";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import {
   getPropertyName,

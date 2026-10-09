@@ -17,10 +17,10 @@ import {
   UserCommandOrigin,
 } from "@beep/dock";
 import { PretextCaptureLive } from "@beep/pretext/browser";
-import { MutableHashMap } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import { dual } from "effect/Function";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";

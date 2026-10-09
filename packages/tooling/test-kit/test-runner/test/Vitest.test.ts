@@ -3,21 +3,19 @@ import { it, TestContextUnavailable, TestHang } from "@beep/test-runner";
 import { makeIt } from "@beep/test-runner/test/Vitest";
 import { afterAll, beforeEach, expect, expectTypeOf, TestRunner, it as upstreamIt } from "@effect/vitest";
 import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
-import {
-  Clock,
-  Config,
-  ConfigProvider,
-  Context,
-  Deferred,
-  Duration,
-  Effect,
-  Layer,
-  Logger,
-  Option as O,
-  Ref,
-} from "effect";
 import * as A from "effect/Array";
+import * as Clock from "effect/Clock";
+import * as Config from "effect/Config";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Context from "effect/Context";
+import * as Deferred from "effect/Deferred";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Logger from "effect/Logger";
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import { TestClock } from "effect/testing";
 import type { TestContext, Vitest } from "@effect/vitest";

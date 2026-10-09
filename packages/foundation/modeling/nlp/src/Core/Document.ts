@@ -7,9 +7,12 @@
 
 import { $NlpId } from "@beep/identity";
 import { A, Str } from "@beep/utils";
-import { Brand, Chunk, Effect, pipe, Result } from "effect";
-import { dual } from "effect/Function";
+import * as Brand from "effect/Brand";
+import * as Chunk from "effect/Chunk";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { Sentence } from "./Sentence.ts";
 import { Token } from "./Token.ts";
@@ -179,7 +182,7 @@ const filterDocument = (document: Document, predicate: (token: Token) => boolean
  * **Example** (Construct empty Document)
  *
  * ```ts import.meta.vitest name="Construct empty Document"
- * import { Chunk } from "effect"
+ * import * as Chunk from "effect/Chunk";
  * import * as O from "effect/Option"
  * import { Document as NLPDocument, DocumentId } from "@beep/nlp/Core/Document"
  *

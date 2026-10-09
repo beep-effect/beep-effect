@@ -6,11 +6,14 @@
  */
 
 import { $BoxId } from "@beep/identity";
-import { Config, Context, Effect, Layer } from "effect";
+import * as Config from "effect/Config";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { BoxError } from "./Box.errors.ts";
-import type { Redacted } from "effect";
+import type * as Redacted from "effect/Redacted";
 
 const $I = $BoxId.create("Box.config");
 
@@ -35,8 +38,7 @@ const BoxCcgConfigShape = S.Struct({
  *
  * ```ts
  * import { BoxDeveloperTokenConfig } from "@beep/box"
- * import { Redacted } from "effect"
- *
+ * import * as Redacted from "effect/Redacted";
  * const config = BoxDeveloperTokenConfig.make({ token: Redacted.make("box-token") })
  * console.log(config)
  * ```
@@ -65,7 +67,7 @@ export class BoxDeveloperTokenConfig extends S.Class<BoxDeveloperTokenConfig>($I
  *
  * ```ts
  * import { BoxCcgConfig } from "@beep/box"
- * import { Redacted } from "effect"
+ * import * as Redacted from "effect/Redacted";
  * import * as O from "effect/Option"
  *
  * const config = BoxCcgConfig.make({
@@ -93,8 +95,9 @@ export class BoxCcgConfig extends S.Class<BoxCcgConfig>($I`BoxCcgConfig`)(
  *
  * ```ts
  * import { BoxConfig, BoxDeveloperTokenConfig } from "@beep/box"
- * import { Effect, Layer, Redacted } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
+ * import * as Redacted from "effect/Redacted";
  * const ConfigLive = Layer.succeed(
  *   BoxConfig,
  *   BoxDeveloperTokenConfig.make({ token: Redacted.make("box-token") })
@@ -121,8 +124,9 @@ export class BoxConfig extends Context.Service<BoxConfig, BoxDeveloperTokenConfi
  *
  * ```ts
  * import { BoxConfig, BoxConfigLayer } from "@beep/box"
- * import { ConfigProvider, Effect, Redacted } from "effect"
- *
+ * import * as ConfigProvider from "effect/ConfigProvider";
+ * import * as Effect from "effect/Effect";
+ * import * as Redacted from "effect/Redacted";
  * const ConfigLive = ConfigProvider.layer(
  *   ConfigProvider.fromUnknown({ CLOUD_BOX_TOKEN: "box-token" })
  * )
@@ -161,8 +165,9 @@ export const BoxConfigLayer = Layer.effect(
  *
  * ```ts
  * import { BoxConfig, layer } from "@beep/box"
- * import { ConfigProvider, Effect, Redacted } from "effect"
- *
+ * import * as ConfigProvider from "effect/ConfigProvider";
+ * import * as Effect from "effect/Effect";
+ * import * as Redacted from "effect/Redacted";
  * const ConfigLive = ConfigProvider.layer(
  *   ConfigProvider.fromUnknown({ CLOUD_BOX_TOKEN: "box-token" })
  * )
@@ -189,8 +194,8 @@ export const layer = BoxConfigLayer;
  *
  * ```ts
  * import { BoxConfig, layerConfig } from "@beep/box"
- * import { Effect, Redacted } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Redacted from "effect/Redacted";
  * const ConfigLive = layerConfig(Redacted.make("box-token"))
  * const token = Effect.runSync(
  *   BoxConfig.pipe(

@@ -23,9 +23,14 @@ import {
   withAiMetricsDuckDb,
 } from "@beep/repo-ai-metrics";
 import { findRepoRoot } from "@beep/repo-utils";
-import { Clock, Effect, FileSystem, flow, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Clock from "effect/Clock";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { AgentEffectivenessEvalScorerError } from "../AgentEffectiveness.errors.ts";

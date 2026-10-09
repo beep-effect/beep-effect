@@ -1,8 +1,8 @@
 import { expect, test } from "bun:test";
 import { $RepoCliId } from "@beep/identity/packages";
 import { PackageVerifyReport } from "@beep/repo-cli/test/Quality";
-import { Effect } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";

@@ -48,29 +48,27 @@ import { A, O, Str } from "@beep/utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import {
-  Cause,
-  ConfigProvider,
-  Console,
-  Duration,
-  Effect,
-  Exit,
-  FileSystem,
-  Layer,
-  Match,
-  Path,
-  pipe,
-  Ref,
-  Runtime,
-  Sink,
-  Stream,
-} from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Cause from "effect/Cause";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Console from "effect/Console";
 import { Command } from "effect/cli";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
 import { FetchHttpClient } from "effect/http";
 import * as HttpClient from "effect/http/HttpClient";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
+import * as Path from "effect/Path";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as Ref from "effect/Ref";
+import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
+import * as Sink from "effect/Sink";
+import * as Stream from "effect/Stream";
 import * as TestConsole from "effect/testing/TestConsole";
 import type {
   DocgenQualityPackageReport,
@@ -143,7 +141,7 @@ const rangeRejectingSpawner = (spawned: Array<string>) =>
   );
 
 const expectReportedExit = (exit: Exit.Exit<unknown, unknown>, exitCode = 1) => {
-  assertTrue(Exit.isFailure(exit));
+  exit.pipe(Exit.isFailure, assertTrue);
   if (Exit.isFailure(exit)) {
     const error = Cause.squash(exit.cause);
     expect(Runtime.getErrorExitCode(error)).toBe(exitCode);
@@ -924,7 +922,7 @@ export const ProofFixture = 1;
         }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, rangeRejectingSpawner(spawned)))
       );
 
-      assertTrue(Exit.isFailure(exit));
+      exit.pipe(Exit.isFailure, assertTrue);
       expect(A.some(spawned, Str.includes("git diff --no-renames --name-only origin/main...HEAD"))).toBe(true);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make));
   });
@@ -1079,7 +1077,7 @@ export const ProofFixture = 1;
         }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, recordingSpawner(spawned)))
       );
 
-      assertTrue(Exit.isFailure(exit));
+      exit.pipe(Exit.isFailure, assertTrue);
       if (Exit.isFailure(exit)) {
         expect(Cause.squash(exit.cause)).toMatchObject({
           _tag: "DomainError",
@@ -1611,7 +1609,7 @@ export const ProofFixture = 1;
       const aggregatedPath = path.join(tmpDir, "docs", "generated", "foundation", "modeling", "schema");
       const aggregatedExists = yield* fs.exists(aggregatedPath);
 
-      assertTrue(Exit.isFailure(exit));
+      exit.pipe(Exit.isFailure, assertTrue);
       expect(aggregatedExists).toBe(false);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
@@ -1863,7 +1861,7 @@ export const ProofFixture = 1;
  *
  * @example
  * \`\`\`ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const program = Effect.gen(function* () {
  *
@@ -2079,7 +2077,7 @@ export const ChatSchema = { fields: { id: "string" } };
  *
  * @example
  * \`\`\`ts
- * import { Equal } from "effect"
+ * import * as Equal from "effect/Equal"
  * import { parseValue } from "@beep/schema"
  * const result = parseValue(" hello ")
  * void result
@@ -3704,7 +3702,7 @@ export const parseValue = (value: string): string => value.trim();
         Effect.exit
       );
 
-      assertTrue(Exit.isFailure(exit));
+      exit.pipe(Exit.isFailure, assertTrue);
       expect(yield* Ref.get(stoppedPodIds)).toEqual(["pod-recovered"]);
       expect(yield* Ref.get(deletedPodIds)).toEqual(["pod-recovered"]);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
@@ -3851,7 +3849,7 @@ export const parseValue = (value: string): string => value.trim();
 
       const exit = yield* analyzePackageDocumentation(target!).pipe(Effect.exit);
 
-      assertTrue(Exit.isFailure(exit));
+      exit.pipe(Exit.isFailure, assertTrue);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 

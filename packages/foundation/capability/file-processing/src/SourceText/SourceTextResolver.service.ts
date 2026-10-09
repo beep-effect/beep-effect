@@ -6,8 +6,8 @@
  */
 
 import { $FileProcessingId } from "@beep/identity";
-import { Context } from "effect";
-import type { Effect } from "effect";
+import * as Context from "effect/Context";
+import type * as Effect from "effect/Effect";
 import type { SourceTextResolverError } from "./SourceText.errors.ts";
 import type { ResolvedSourceText, ResolveSourceTextRequest } from "./SourceText.schema.ts";
 

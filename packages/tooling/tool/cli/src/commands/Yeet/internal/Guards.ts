@@ -5,8 +5,8 @@
  * @since 0.0.0
  */
 
-import { Effect } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import { configStringOption } from "../../../internal/cli/EnvConfig.ts";
 import { resolveLocalRepoBinary, runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
@@ -14,8 +14,9 @@ import { YeetCommandError } from "../Yeet.errors.ts";
 import { optionFromNonEmpty } from "./GitExec.ts";
 import { commitMessagePathForContext, writeTextFile } from "./IssueArtifacts.ts";
 import { validateOpenPullRequest } from "./PullRequest.ts";
-import type { FileSystem, Path } from "effect";
 import type * as Crypto from "effect/Crypto";
+import type * as FileSystem from "effect/FileSystem";
+import type * as Path from "effect/Path";
 import type { ChildProcessSpawner } from "effect/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { YeetRunOptions } from "../Yeet.schemas.ts";
@@ -128,7 +129,7 @@ export const shouldMonitorChecks = (options: YeetRunOptions): boolean =>
  * **Example** (Validate a monitor branch)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { RepoRunContext, validateMonitorBranch } from "@beep/repo-cli/test/Yeet"
  *
  * const context = RepoRunContext.make({
@@ -170,7 +171,7 @@ export const validateMonitorBranch = (context: RepoRunContext): Effect.Effect<vo
  * **Example** (Validate monitor guards)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { defaultYeetRunOptions, RepoRunContext, validateMonitorGuards } from "@beep/repo-cli/test/Yeet"
  *
  * const context = RepoRunContext.make({
@@ -222,7 +223,7 @@ export const validateMonitorGuards = Effect.fn("Yeet.validateMonitorGuards")(fun
  * **Example** (Validate a required message)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * import { defaultYeetRunOptions, validateRequiredMessage } from "@beep/repo-cli/test/Yeet"
  *
@@ -248,7 +249,7 @@ export const validateRequiredMessage = (options: YeetRunOptions): Effect.Effect<
  * **Example** (Validate a commit message)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { RepoRunContext, validateCommitMessage } from "@beep/repo-cli/test/Yeet"
  *
  * const context = RepoRunContext.make({
@@ -303,7 +304,7 @@ export const validateCommitMessage = Effect.fn("Yeet.validateCommitMessage")(fun
  * **Example** (Reject a detached plan)
  * ```ts
  * import { validateProofJobDetach } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(validateProofJobDetach(true))) // true
  * ```
  *

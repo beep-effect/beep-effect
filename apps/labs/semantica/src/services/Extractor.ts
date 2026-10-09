@@ -1,7 +1,8 @@
 import { $SemanticaId } from "@beep/identity/packages";
-import { Context } from "effect";
-import type { Crypto, Effect } from "effect";
+import * as Context from "effect/Context";
 import type * as A from "effect/Array";
+import type * as Crypto from "effect/Crypto";
+import type * as Effect from "effect/Effect";
 import type { AnchorRejected } from "@/schema/Errors";
 import type { ExtractOutcome } from "@/schema/Evidence";
 import type { CanonicalText, Chunk } from "@/schema/Text";
@@ -28,8 +29,7 @@ interface ExtractorShape {
  *
  * ```ts
  * import { HostedExtractor } from "@/services/Extractor"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = HostedExtractor.pipe(Effect.map((service) => typeof service.extract))
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -46,8 +46,7 @@ export class HostedExtractor extends Context.Service<HostedExtractor, ExtractorS
  *
  * ```ts
  * import { PatternExtractor } from "@/services/Extractor"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = PatternExtractor.pipe(Effect.map((service) => typeof service.extract))
  * console.log(Effect.isEffect(program)) // true
  * ```

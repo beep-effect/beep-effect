@@ -27,13 +27,17 @@ import {
 import { OWL_NAMESPACE } from "@beep/rdf/Vocab/Owl";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_NAMESPACE } from "@beep/rdf/Vocab/Rdfs";
-// Deep imports, not the root barrel: this module runs inside the visualizer
-// worker, and the barrel pulls Markdown.ts → micromark, whose browser build
 // touches `document` at module top level (ReferenceError in workers).
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { A, O, Str } from "@beep/utils";
-import { Context, Effect, flow, Layer, MutableHashMap, Order, pipe } from "effect";
-import { dual } from "effect/Function";
+// Deep imports, not the root barrel: this module runs inside the visualizer
+// worker, and the barrel pulls Markdown.ts → micromark, whose browser build
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import { dual, flow, pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import type { NamedNode } from "@beep/rdf/Rdf";
 
@@ -919,8 +923,7 @@ export const inferredSessionGraphPartitions: {
  *
  * ```ts
  * import { OntologyReasoner } from "@beep/ontology-use-cases/aggregates/Session"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const reasoner = yield* OntologyReasoner
  *   return reasoner

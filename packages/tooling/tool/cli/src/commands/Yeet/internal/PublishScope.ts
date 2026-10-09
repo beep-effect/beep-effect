@@ -5,10 +5,15 @@
  * @since 0.0.0
  */
 
-import { Console, DateTime, Effect, FileSystem, flow, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import * as Console from "effect/Console";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { dual, flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as Str from "effect/String";
 import {
   gitPathListFromNulOutput,
@@ -35,7 +40,7 @@ import {
 import { writeIssueArtifacts } from "./IssueArtifacts.ts";
 import { buildQualityIssueIndex } from "./QualityIssueIndex.ts";
 import { YeetBaseFreshness, YeetStashState } from "./Verdict.ts";
-import type { Crypto } from "effect";
+import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { YeetPublishIntent, YeetRunOptions } from "../Yeet.schemas.ts";
@@ -50,7 +55,7 @@ const protectedPublishBranches: ReadonlyArray<string> = ["main", "master", "HEAD
  * **Example** (Validate a publish branch)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { defaultYeetRunOptions, RepoRunContext, validatePublishBranch } from "@beep/repo-cli/test/Yeet"
  *
  * const context = RepoRunContext.make({
@@ -257,7 +262,7 @@ const overlappingBasePaths = (
  * **Example** (Fail publish scope with a packet hint)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { failPublishScopeWithPacket, RepoRunContext } from "@beep/repo-cli/test/Yeet"
  *
  * const context = RepoRunContext.make({
@@ -506,7 +511,7 @@ export const overlappingBasePathsForTesting: {
  * **Example** (Stash an unstaged worktree)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { RepoRunContext, stashUnstagedWorktree } from "@beep/repo-cli/test/Yeet"
  *
  * const context = RepoRunContext.make({
@@ -576,7 +581,7 @@ const locateStashRef = Effect.fn("Yeet.locateStashRef")(function* (
  * **Example** (Restore a stashed worktree)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { RepoRunContext, restoreStashedWorktree, YeetStashState } from "@beep/repo-cli/test/Yeet"
  *
  * const context = RepoRunContext.make({
@@ -637,7 +642,7 @@ export const restoreStashedWorktree = Effect.fn("Yeet.restoreStashedWorktree")(f
  * **Example** (Stash a worktree through the test seam)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { RepoRunContext, stashUnstagedWorktreeForTesting } from "@beep/repo-cli/test/Yeet"
  *
  * const context = RepoRunContext.make({
@@ -666,7 +671,7 @@ export const stashUnstagedWorktreeForTesting = stashUnstagedWorktree;
  * **Example** (Restore a worktree through the test seam)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { RepoRunContext, restoreStashedWorktreeForTesting, YeetStashState } from "@beep/repo-cli/test/Yeet"
  *
  * const context = RepoRunContext.make({
@@ -716,7 +721,7 @@ export const restoreStashedWorktreeForTesting = restoreStashedWorktree;
  * **Example** (Restore residue when the guarded step fails)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * import { RepoRunContext, restorePublishStashOnFailure, YeetStashState } from "@beep/repo-cli/test/Yeet"
  *
@@ -764,7 +769,7 @@ export const restorePublishStashOnFailure =
  * **Example** (Assess base freshness for a context)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { assessBaseFreshness, RepoRunContext } from "@beep/repo-cli/test/Yeet"
  *
  * const context = RepoRunContext.make({
@@ -829,7 +834,7 @@ export const assessBaseFreshness = Effect.fn("Yeet.assessBaseFreshness")(functio
  * **Example** (Assess base freshness through the test seam)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { assessBaseFreshnessForTesting, RepoRunContext } from "@beep/repo-cli/test/Yeet"
  *
  * const context = RepoRunContext.make({
@@ -859,7 +864,7 @@ export const assessBaseFreshnessForTesting = assessBaseFreshness;
  * **Example** (Enforce base freshness)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { defaultYeetRunOptions, enforceBaseFreshness, RepoRunContext } from "@beep/repo-cli/test/Yeet"
  *
  * const context = RepoRunContext.make({
@@ -940,7 +945,7 @@ const collectCurrentUpstreamBranch = Effect.fn("Yeet.collectCurrentUpstreamBranc
  * **Example** (Warn on a mismatched publish upstream)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { RepoRunContext, warnOnMismatchedPublishUpstream } from "@beep/repo-cli/test/Yeet"
  *
  * const context = RepoRunContext.make({
@@ -1088,7 +1093,7 @@ const collectPublishWorktreePaths = Effect.fnUntraced(function* (repoRoot: strin
  * **Example** (Collect a publish intent)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { collectPublishIntent, RepoRunContext } from "@beep/repo-cli/test/Yeet"
  *
  * const context = RepoRunContext.make({
@@ -1138,7 +1143,7 @@ export const collectPublishIntent = Effect.fn("Yeet.collectPublishIntent")(funct
  * **Example** (Re-validate a publish intent)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { RepoRunContext, validatePublishIntentStillSafe, YeetStagedPublishIntent } from "@beep/repo-cli/test/Yeet"
  *
  * const context = RepoRunContext.make({
@@ -1229,7 +1234,7 @@ const collectExistingPublishIntentPaths = Effect.fn("Yeet.collectExistingPublish
  * **Example** (Stage a reviewed publish intent)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { RepoRunContext, stageReviewedPublishIntent, YeetStagedPublishIntent } from "@beep/repo-cli/test/Yeet"
  *
  * const context = RepoRunContext.make({
@@ -1324,7 +1329,7 @@ export const postCommitProofChangedBeforePushMessage =
  * **Example** (Confirm the proof left the worktree clean)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { RepoRunContext, validatePostCommitProofDidNotChangeWorktree } from "@beep/repo-cli/test/Yeet"
  *
  * const context = RepoRunContext.make({

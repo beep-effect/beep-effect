@@ -31,8 +31,10 @@
  */
 import { TSMorphService, TSMorphServiceLive } from "@beep/repo-utils";
 import { NodeRuntime, NodeServices } from "@effect/platform-node";
-import { Console, Effect, Layer } from "effect";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
 import { Node, SyntaxKind } from "ts-morph";

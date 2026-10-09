@@ -2,8 +2,9 @@ import { DevToolsRelayService, makeDevToolsRelayService } from "@beep/observabil
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
-import { Effect, Layer } from "effect";
 import * as DevToolsSchema from "effect/devtools/DevToolsSchema";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as NetAddress from "effect/net/NetAddress";
 import * as O from "effect/Option";
 import * as SocketServer from "effect/socket/SocketServer";

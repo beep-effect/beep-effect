@@ -16,8 +16,7 @@ import { HttpsUrl, LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
 import { OntologyName, UUID, withContentHashIdStatics } from "../Identity.ts";
 import { EntityId } from "../Model/shared.ts";
-import { Effect } from "effect";
-
+import * as Effect from "effect/Effect";
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/JobSchema");
 const backgroundJobIdPattern = /^job-[0-9a-f]{12}$/;
 

@@ -9,7 +9,7 @@
 
 import { ArtifactRefNode as ArtifactRefNodeSchema } from "@beep/lexical-schema";
 import { O } from "@beep/utils";
-import { Result } from "effect";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { DecoratorNode } from "lexical";
 import type { EditorConfig, LexicalNode, NodeKey } from "lexical";

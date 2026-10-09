@@ -5,8 +5,10 @@
  * @since 0.0.0
  */
 
-import { Effect, Number as Num, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
 import { conformanceLedgerEvidence } from "./ConformanceLedger.evidence.ts";

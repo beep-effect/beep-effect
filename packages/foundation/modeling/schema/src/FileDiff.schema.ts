@@ -6,10 +6,10 @@
  */
 
 import { $SchemaId } from "@beep/identity/packages";
-import { SchemaGetter } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as SchemaGetter from "effect/SchemaGetter";
 
 const $I = $SchemaId.create("FileDiff.schema");
 
@@ -45,7 +45,7 @@ class InfoBase extends S.Class<InfoBase>($I`InfoBase`)(
  * **Example** (Decode added file-diff)
  *
  * ```ts import.meta.vitest name="Decode added file-diff"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { FileDiff } from "@beep/schema"
  *
@@ -79,7 +79,7 @@ export class Added extends InfoBase.extend<Added>($I`Added`)(
  * **Example** (Decode deleted file-diff)
  *
  * ```ts import.meta.vitest name="Decode deleted file-diff"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { FileDiff } from "@beep/schema"
  *
@@ -113,7 +113,7 @@ export class Deleted extends InfoBase.extend<Deleted>($I`Deleted`)(
  * **Example** (Decode modified file-diff)
  *
  * ```ts import.meta.vitest name="Decode modified file-diff"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { FileDiff } from "@beep/schema"
  *
@@ -148,7 +148,7 @@ export class Modified extends InfoBase.extend<Modified>($I`Modified`)(
  * **Example** (Decode file-diff union)
  *
  * ```ts import.meta.vitest name="Decode file-diff union"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { FileDiff } from "@beep/schema"
  *

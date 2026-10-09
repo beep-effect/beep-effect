@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import * as WebSdk from "@effect/opentelemetry/WebSdk";
-import { Layer } from "effect";
+import * as Layer from "effect/Layer";
 import { layerMinimumLogLevel } from "../Logging.ts";
 import { toWebResource } from "./Config.ts";
 import type { WebObservabilityConfig } from "./Config.ts";

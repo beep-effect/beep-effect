@@ -10,7 +10,13 @@ import { FsUtils } from "@beep/repo-utils";
 import { sha256Hex as utf8Sha256Hex } from "@beep/repo-utils/Sha256Hex";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
 import { A, O, Str, thunkFalse } from "@beep/utils";
-import { DateTime, Effect, FileSystem, flow, Order, Path, Result } from "effect";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { flow } from "effect/Function";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Configuration from "./Configuration.ts";
 import * as Domain from "./Domain.ts";
@@ -460,7 +466,7 @@ const makeVerification = (options: {
  *
  * ```ts
  * import { writeDocgenProofManifest } from "@beep/repo-docgen/ProofManifest"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * const packageName = writeDocgenProofManifest().pipe(
  *   Effect.map((manifest) => manifest.packageName)
  * )
@@ -530,7 +536,7 @@ export const writeDocgenProofManifest = Effect.fn("DocgenProofManifest.writeDocg
  *
  * ```ts
  * import { verifyDocgenProofManifest } from "@beep/repo-docgen/ProofManifest"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * const verificationStatus = verifyDocgenProofManifest(
  *   "/repo/packages/tooling/tool/docgen",
  *   "@beep/repo-docgen"

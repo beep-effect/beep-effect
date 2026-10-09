@@ -11,8 +11,17 @@ import { KG_BUILD_TABLE_NAME } from "@beep/law-practice-tables/entities/KgBuild"
 import { KG_EDGE_TABLE_NAME } from "@beep/law-practice-tables/entities/KgEdge";
 import { KG_NODE_TABLE_NAME } from "@beep/law-practice-tables/entities/KgNode";
 import * as O from "@beep/utils/Option";
-import { Context, DateTime, Effect, FileSystem, HashSet, Layer, MutableHashMap, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
+import * as Layer from "effect/Layer";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as SqlClient from "effect/sql/SqlClient";
@@ -35,6 +44,7 @@ import {
   resolveAnchors,
 } from "./PracticeKg.families.ts";
 import { buildDuckDb, GraphTextSourceSpec } from "./PracticeKg.fts.ts";
+import { PracticeKgMailIndexInput, readPracticeKgMailIndex } from "./PracticeKg.mail-index.ts";
 import { buildMatterTables, PracticeKgMatterGraph, writeMatterTables } from "./PracticeKg.matters.ts";
 import { readReferenceScans } from "./PracticeKg.references.ts";
 import { practiceKgRegisterClientNames, readPracticeKgDocketRegister } from "./PracticeKg.register.ts";
@@ -67,7 +77,7 @@ import type {
 
 const $I = $LawPracticeServerId.create("PracticeKg.projections");
 const graphIdentity = $BeepId.create("practice-kg");
-const graphBundleVersion = "2026-10-07-01";
+const graphBundleVersion = "2026-10-07-04";
 const runListSeparator = " | ";
 const graphReadme = `Practice Knowledge Graph Bundle
 
@@ -712,13 +722,17 @@ const buildGraphRows = (
   projectArchiveLinks(
     sink,
     catalogRows,
-    A.filter(A.fromIterable(MutableHashMap.values(nodes)), (node) => node.kind === "email_archive")
+    nodes.pipe(
+      MutableHashMap.values,
+      A.fromIterable,
+      A.filter((node) => node.kind === "email_archive")
+    )
   );
 
   return {
-    edges: A.sort(A.fromIterable(MutableHashMap.values(edges)), Order.mapInput(Order.String, edgeKey)),
+    edges: A.sort(edges.pipe(MutableHashMap.values, A.fromIterable), Order.mapInput(Order.String, edgeKey)),
     nodes: A.sort(
-      A.fromIterable(MutableHashMap.values(nodes)),
+      nodes.pipe(MutableHashMap.values, A.fromIterable),
       Order.mapInput(Order.String, (node: PracticeKgNodeRow) => node.iri)
     ),
   };
@@ -876,7 +890,7 @@ const readContactRows = (
  *
  * ```ts
  * import { PracticeKgOptions } from "@beep/law-practice-server"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { buildPracticeKgBundleImpl } from "../../src/PracticeKg.projections.ts"
  *
  * const build = buildPracticeKgBundleImpl(
@@ -946,18 +960,27 @@ export const buildPracticeKgBundleImpl = Effect.fn("PracticeKg.build")(function*
   );
   const scans = yield* readReferenceScans(duckDbPath);
   const graph = projectGraph(catalogRows, enrichmentRows, scans, registerRows);
-  yield* writeMatterTables(duckDbPath)(
-    buildMatterTables(PracticeKgMatterGraph.make({ edges: graph.edges, nodes: graph.nodes, registerRows }))
+  const matterTables = buildMatterTables(
+    PracticeKgMatterGraph.make({ edges: graph.edges, nodes: graph.nodes, registerRows })
   );
+  yield* writeMatterTables(duckDbPath)(matterTables);
   const messages = yield* readPracticeKgEmailMessages(
     PracticeKgEmailMessagesInput.make({ databasePath: duckDbPath, sourceSpecs })
+  );
+  // Archive mail joins by the docket references in its subjects (D-26),
+  // resolved against the matter tables just written.
+  const mailIndex = yield* readPracticeKgMailIndex(
+    PracticeKgMailIndexInput.make({ paths: options.mailIndexPaths, tables: matterTables })
+  );
+  yield* Effect.logInfo(
+    `practice-kg build: mail index rows=${mailIndex.counts.rows} distinct=${mailIndex.counts.distinctMessages} attributed=${mailIndex.counts.attributedMessages} ambiguous=${mailIndex.counts.ambiguousMessages} unreferenced=${mailIndex.counts.unreferencedMessages} withoutAddress=${mailIndex.counts.attributedWithoutAddress} exchangeDropped=${mailIndex.counts.exchangeAddressesDropped}`
   );
   yield* writePracticeKgCorrespondentTables(duckDbPath)(
     buildPracticeKgCorrespondentTables(
       PracticeKgCorrespondentTablesInput.make({
-        attributions: graph.attributions,
+        attributions: A.appendAll(graph.attributions, mailIndex.attributions),
         contacts,
-        messages,
+        messages: A.appendAll(messages, mailIndex.messages),
         practiceDomains: options.practiceDomains,
       })
     )
@@ -1042,8 +1065,7 @@ export const buildPracticeKgBundleImpl = Effect.fn("PracticeKg.build")(function*
  *
  * ```ts
  * import { PracticeKgOptions, PracticeKgProjections } from "@beep/law-practice-server"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const edgeCount = Effect.gen(function* () {
  *   const projections = yield* PracticeKgProjections
  *   const summary = yield* projections.build(
@@ -1088,8 +1110,7 @@ export class PracticeKgProjections extends Context.Service<
  * import { PracticeKgProjectionsLive } from "@beep/law-practice-server"
  * import * as Pglite from "@beep/pglite"
  * import * as BunServices from "@effect/platform-bun/BunServices"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * const bundleProjections = PracticeKgProjectionsLive.pipe(
  *   Layer.provide(Pglite.makeLayer({ dataDir: "/corpus/staging/practice-kg-bundle/kg.pglite" })),
  *   Layer.provide(BunServices.layer)
@@ -1128,8 +1149,7 @@ export const PracticeKgProjectionsLive = Layer.effect(
  * import { buildPracticeKgBundle, PracticeKgOptions, PracticeKgProjectionsLive } from "@beep/law-practice-server"
  * import * as Pglite from "@beep/pglite"
  * import * as BunServices from "@effect/platform-bun/BunServices"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = buildPracticeKgBundle(
  *   PracticeKgOptions.make({
  *     bundleOut: "/corpus/staging/practice-kg-bundle",

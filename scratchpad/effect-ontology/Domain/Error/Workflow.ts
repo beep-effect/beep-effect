@@ -12,8 +12,7 @@
 import { $ScratchpadId } from "@beep/identity";
 import * as S from "effect/Schema";
 import { ErrorMessage, OptionalErrorCause, OptionalErrorMessage } from "./Base.ts";
-import { Effect } from "effect";
-
+import * as Effect from "effect/Effect";
 const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Workflow");
 
 /**

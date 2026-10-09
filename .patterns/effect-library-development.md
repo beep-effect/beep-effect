@@ -92,8 +92,8 @@ Effect.gen(function*() {
 Use `Effect.fn` for sequential operations with proper error propagation:
 
 ```typescript
-import { Console, Effect } from "effect"
-
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
 const processData = Effect.fn("processData")(function* (input: string) {
     // Validate input
     if (input.length === 0) {
@@ -130,8 +130,7 @@ Choose the right function constructor based on your use case:
 Use for one-off effect composition that doesn't need to be reused as a function:
 
 ```typescript
-import { Effect } from "effect"
-
+import * as Effect from "effect/Effect";
 // One-off effect, no function wrapper needed
 const program = Effect.gen(function*() {
   const user = yield* fetchUser(id)
@@ -145,8 +144,7 @@ const program = Effect.gen(function*() {
 Use for reusable effectful functions that benefit from tracing and stack traces:
 
 ```typescript
-import { Effect } from "effect"
-
+import * as Effect from "effect/Effect";
 // Creates a traced function with span + stack capture
 const fetchUserPosts = Effect.fn("fetchUserPosts")(function*(userId: string) {
   yield* Effect.annotateCurrentSpan("userId", userId)
@@ -176,8 +174,8 @@ const fetchWithTimeout = Effect.fn("fetchWithTimeout")(
 Use for internal implementations where tracing overhead is unacceptable:
 
 ```typescript
-import { Effect, Scope } from "effect"
-
+import * as Effect from "effect/Effect";
+import * as Scope from "effect/Scope";
 // No tracing overhead - used in Stream, Channel, Sink internals
 const internalTransform = Effect.fnUntraced(function*(pull, scope) {
   const reader = options.evaluate().getReader()
@@ -213,7 +211,7 @@ const internalTransform = Effect.fnUntraced(function*(pull, scope) {
 Create structured, typed errors using `TaggedErrorClass` from `@beep/schema`:
 
 ```typescript
-import {Effect} from "effect";
+import * as Effect from "effect/Effect";
 import { $SomePackageId } from "@beep/identity/packages";
 import * as Str from "effect/String";
 import * as S from "effect/Schema";
@@ -280,8 +278,8 @@ const validateAndFetch =
 Use `Effect.acquireUseRelease` for automatic resource cleanup:
 
 ```typescript
-import { Console, Effect } from "effect"
-
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
 // Resource acquisition pattern
 const withDatabase = <A, E>(
   operation: (db: Database) => Effect.Effect<A, E, never>
@@ -318,7 +316,9 @@ const queryUser = (id: string) =>
 Build applications using layered architecture:
 
 ```typescript
-import {Context, Effect, Layer} from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import {$SomePackageId} from "@beep/identity/packages";
 
 const $I = $SomePackageId.create("relative/path/to/file");
@@ -478,7 +478,7 @@ const internal = {
  *
  * @example
  * ```typescript
- * import { ModuleName } from "effect"
+ * import * as ModuleName from "effect/ModuleName"
  *
  * const instance = ModuleName.create({ value: 42 })
  * ```
@@ -494,7 +494,8 @@ export const create: <A>(config: Config<A>) => Effect.Effect<Instance<A>, never,
  *
  * @example
  * ```typescript
- * import { ModuleName, Effect } from "effect"
+ * import * as ModuleName from "effect/ModuleName"
+ * import * as Effect from "effect/Effect"
  *
  * const program = Effect.gen(function*() {
  * 
@@ -518,7 +519,9 @@ Structure tests to validate all aspects of functionality:
 
 ```typescript
 import { assert, describe, it } from "@effect/vitest"
-import { Duration, Effect, TestClock } from "effect"
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as TestClock from "effect/testing/TestClock";
 import * as ModuleName from "../src/ModuleName.js"
 
 describe("ModuleName", () => {

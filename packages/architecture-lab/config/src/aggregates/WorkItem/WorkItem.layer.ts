@@ -7,7 +7,10 @@
  */
 
 import { $ArchitectureLabConfigId } from "@beep/identity/packages";
-import { Config, Context, Effect, Layer } from "effect";
+import * as Config from "effect/Config";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import {
   defaultWorkItemPublicConfig,
@@ -92,8 +95,8 @@ export type WorkItemConfigShape = WorkItemConfigValue;
  *   testWorkItemConfig,
  *   WorkItemConfig
  * } from "@beep/architecture-lab-config/aggregates/WorkItem"
- * import { Effect, Layer } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * const repositoryName = Effect.runSync(
  *   WorkItemConfig.pipe(
  *     Effect.map((config) => config.serverConfig.repositoryName),
@@ -163,8 +166,8 @@ export const testWorkItemConfig = WorkItemConfigValue.make({
  *   ArchitectureLabConfigLive,
  *   WorkItemConfig
  * } from "@beep/architecture-lab-config/aggregates/WorkItem"
- * import { ConfigProvider, Effect } from "effect"
- *
+ * import * as ConfigProvider from "effect/ConfigProvider";
+ * import * as Effect from "effect/Effect";
  * const ConfigLive = ConfigProvider.layer(
  *   ConfigProvider.fromUnknown({
  *     ARCHITECTURE_LAB_WORK_ITEM_ASSIGNMENT_ENABLED: "true",
@@ -199,8 +202,7 @@ export const ArchitectureLabConfigLive = Layer.effect(WorkItemConfig, readWorkIt
  *   ArchitectureLabConfigTest,
  *   WorkItemConfig
  * } from "@beep/architecture-lab-config/aggregates/WorkItem"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const schemaName = Effect.runSync(
  *   WorkItemConfig.pipe(
  *     Effect.map((config) => config.serverConfig.migrationSchemaName),

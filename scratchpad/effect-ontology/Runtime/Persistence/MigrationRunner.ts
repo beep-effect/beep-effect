@@ -6,8 +6,7 @@
  */
 import { fileURLToPath } from "node:url";
 import { migrate, PostgresDrizzle } from "@beep/postgres";
-import { Effect } from "effect";
-
+import * as Effect from "effect/Effect";
 /**
  * Absolute folder containing every generated effect-ontology migration.
  *

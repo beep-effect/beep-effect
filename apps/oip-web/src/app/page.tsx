@@ -6,7 +6,10 @@
  */
 
 import { A, O, Str } from "@beep/utils";
-import { Clock, Effect, flow, Result } from "effect";
+import * as Clock from "effect/Clock";
+import * as Effect from "effect/Effect";
+import { flow } from "effect/Function";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { headers } from "next/headers";
 import { connection } from "next/server";

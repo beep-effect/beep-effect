@@ -8,8 +8,9 @@
 import { $TesseractId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
 import { A, O, Str } from "@beep/utils";
-import { Effect, Match, pipe } from "effect";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
+import * as Match from "effect/Match";
 import * as Num from "effect/Number";
 import * as S from "effect/Schema";
 

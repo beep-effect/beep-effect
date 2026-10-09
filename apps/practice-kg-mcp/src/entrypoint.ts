@@ -6,8 +6,8 @@
  */
 import { BunRuntime } from "@effect/platform-bun";
 import * as BunServices from "@effect/platform-bun/BunServices";
-import { Effect, Layer } from "effect";
-
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 /**
  * Run a practice KG executable through the shared Bun service boundary when its module is the process entrypoint.
  *
@@ -15,8 +15,7 @@ import { Effect, Layer } from "effect";
  *
  * ```ts
  * import { runEntrypoint } from "../../src/entrypoint.ts"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * runEntrypoint({ isMain: false, program: Effect.void })
  * ```
  *
@@ -29,7 +28,7 @@ export const runEntrypoint = <A, E>(input: {
   readonly program: Effect.Effect<A, E, BunServices.BunServices>;
 }): void => {
   if (input.isMain) {
-    const main = Effect.scoped(Layer.build(Layer.effectDiscard(input.program).pipe(Layer.provide(BunServices.layer))));
+    const main = input.program.pipe(Layer.effectDiscard, Layer.provide(BunServices.layer), Layer.build, Effect.scoped);
     BunRuntime.runMain(main);
   }
 };

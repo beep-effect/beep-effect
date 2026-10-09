@@ -8,11 +8,13 @@
 import { $RepoUtilsId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { A } from "@beep/utils";
-import { flow, Order, pipe, Result, SchemaAST } from "effect";
-import { dual } from "effect/Function";
+import { dual, flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as SchemaAST from "effect/SchemaAST";
 import { ArchitecturalLayer } from "./ArchitecturalLayer.model.ts";
 import { ASTSignal } from "./ASTSignal.model.ts";
 import { DependencyProfile } from "./DependencyProfile.model.ts";

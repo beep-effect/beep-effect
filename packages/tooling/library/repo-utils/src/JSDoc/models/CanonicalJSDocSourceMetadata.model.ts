@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $RepoUtilsId } from "@beep/identity/packages";
-import { DateTime } from "effect";
+import * as DateTime from "effect/DateTime";
 import * as S from "effect/Schema";
 
 const $I = $RepoUtilsId.create("JSDoc/models/CanonicalJSDocSourceMetadata.model");
@@ -16,7 +16,7 @@ const $I = $RepoUtilsId.create("JSDoc/models/CanonicalJSDocSourceMetadata.model"
  * **Example** (Build source metadata)
  *
  * ```ts
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import { CanonicalJSDocSourceMetadata } from "@beep/repo-utils/JSDoc/models/CanonicalJSDocSourceMetadata.model"
  *
  * const source = CanonicalJSDocSourceMetadata.make({

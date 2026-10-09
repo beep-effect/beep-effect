@@ -22,10 +22,17 @@ import {
   resolvePracticeKgCorrespondent,
 } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
-import { Effect, FileSystem, flow, HashSet, MutableHashMap, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { flow, pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { sqlStringLiteral } from "./internal/Sql.ts";
@@ -102,6 +109,13 @@ export class PracticeKgEmailParticipant extends S.Class<PracticeKgEmailParticipa
 /**
  * The headers of one email document the bundle holds.
  *
+ * **Details**
+ *
+ * `digest` ties the message to its attribution. `messageId` is the RFC 5322
+ * `Message-ID` when the source carried one: two copies of one message (a file
+ * the attorney saved and the same message in a mail archive) have different
+ * digests and the same `messageId`, and are counted once per matter.
+ *
  * **Example** (Make an email message)
  *
  * ```ts
@@ -118,10 +132,48 @@ export class PracticeKgEmailMessage extends S.Class<PracticeKgEmailMessage>($I`P
   {
     createdAt: S.NullOr(S.String),
     digest: S.NonEmptyString,
+    messageId: S.optionalKey(S.NonEmptyString),
     participants: S.Array(PracticeKgEmailParticipant),
   },
-  $I.annote("PracticeKgEmailMessage", { description: "Digest, creation time, and participants of one email." })
+  $I.annote("PracticeKgEmailMessage", {
+    description: "Digest, creation time, participants, and, when known, the Message-ID of one email.",
+  })
 ) {}
+
+const messageIdBracketsPattern = /^<|>$/gu;
+
+/**
+ * Normalises an RFC 5322 `Message-ID` so copies of one message compare equal.
+ *
+ * **Details**
+ *
+ * Surrounding whitespace and the angle brackets are removed; the rest is kept
+ * as written, because the left part of a `Message-ID` is case-sensitive. A
+ * value that is then empty is none.
+ *
+ * **Example** (Normalise a bracketed id)
+ *
+ * ```ts
+ * import { normalizePracticeKgMessageId } from "@beep/law-practice-server"
+ *
+ * console.log(normalizePracticeKgMessageId(" <1@example.com> ")) // Option.some("1@example.com")
+ * ```
+ *
+ * @param raw - The header value as a source wrote it.
+ * @returns The normalised id, when the value holds one.
+ * @category parsers
+ * @since 0.0.0
+ */
+export const normalizePracticeKgMessageId = (raw: string): O.Option<string> =>
+  pipe(Str.trim(raw), Str.replace(messageIdBracketsPattern, ""), Str.trim, O.liftPredicate(Str.isNonEmpty));
+
+// One message is its Message-ID when it has one, else the digest of the copy at hand.
+const identityOf = (message: PracticeKgEmailMessage): string =>
+  pipe(
+    O.fromUndefinedOr(message.messageId),
+    O.flatMap(normalizePracticeKgMessageId),
+    O.match({ onNone: () => message.digest, onSome: (messageId) => `mail:${messageId}` })
+  );
 
 /**
  * One row of the bundle's `matter_correspondents` table.
@@ -394,6 +446,35 @@ const participantsOf = (
     )
   );
 
+/**
+ * Reads the participants named by one address header value.
+ *
+ * **Details**
+ *
+ * Accepts the header forms the build meets: bare addresses, `Name <address>`
+ * entries, quoted display names, and comma-separated lists of them. Addresses
+ * come back lower-cased and trimmed, a surrounding single quote stripped, and
+ * every participant carries the given role.
+ *
+ * **Example** (Read a To header)
+ *
+ * ```ts
+ * import { parsePracticeKgHeaderParticipants } from "@beep/law-practice-server"
+ *
+ * const participants = parsePracticeKgHeaderParticipants("to")("Pat <Pat@Example.com>, sam@other.test")
+ * console.log(participants.map((participant) => participant.address)) // ["pat@example.com", "sam@other.test"]
+ * ```
+ *
+ * @param role - The role every participant gets.
+ * @returns A parser from one header value, possibly listing several entries, to its participants in order.
+ * @category parsers
+ * @since 0.0.0
+ */
+export const parsePracticeKgHeaderParticipants =
+  (role: PracticeKgEmailParticipantRole) =>
+  (header: string): ReadonlyArray<PracticeKgEmailParticipant> =>
+    participantsOf(header, role);
+
 const TikaValue = S.Union([S.String, S.Array(S.String)]);
 
 class TikaEmailFields extends S.Class<TikaEmailFields>($I`TikaEmailFields`)({
@@ -404,12 +485,15 @@ class TikaEmailFields extends S.Class<TikaEmailFields>($I`TikaEmailFields`)({
   "Message:From-Email": S.optionalKey(TikaValue),
 }) {}
 
-const isTikaEmailFieldList = S.is(S.NonEmptyArray(TikaEmailFields));
+const TikaRecord = S.Record(S.String, S.Unknown);
+type TikaRecord = typeof TikaRecord.Type;
+
+const isTikaRecordList = S.is(S.NonEmptyArray(TikaRecord));
+const isTikaValue = S.is(TikaValue);
 
 // Tika writes a single object, or with recursive parsing an array whose first object is the container.
-const decodeTikaFields = S.decodeUnknownEffect(
-  S.fromJsonString(S.Union([TikaEmailFields, S.NonEmptyArray(TikaEmailFields)]))
-);
+const decodeTikaRecords = S.decodeUnknownEffect(S.fromJsonString(S.Union([S.NonEmptyArray(TikaRecord), TikaRecord])));
+const decodeTikaEmailFields = S.decodeUnknownEffect(TikaEmailFields);
 
 const asList = (value: typeof TikaValue.Type): ReadonlyArray<string> => (P.isString(value) ? [value] : value);
 
@@ -430,10 +514,25 @@ const senderOf = (fields: TikaEmailFields): ReadonlyArray<PracticeKgEmailPartici
       );
 };
 
-const messageFrom = (digest: string, fields: TikaEmailFields): PracticeKgEmailMessage =>
+const messageIdMetadataKey = "message:raw-header:message-id";
+
+// Tika names a raw header as the message spelled it, and RFC 5322 field names are
+// case-insensitive (`Message-ID`, `Message-Id`, `Message-id`), so the key is matched without regard to case.
+const messageIdOf = (record: TikaRecord): O.Option<string> =>
+  pipe(
+    R.toEntries(record),
+    A.findFirst(([key]) => Str.toLowerCase(key) === messageIdMetadataKey),
+    O.map(([, value]) => value),
+    O.filter(isTikaValue),
+    // The first value that holds an id: a list may open with an empty entry.
+    O.flatMap((value) => A.head(A.getSomes(A.map(asList(value), normalizePracticeKgMessageId))))
+  );
+
+const messageFrom = (digest: string, fields: TikaEmailFields, messageId: O.Option<string>): PracticeKgEmailMessage =>
   PracticeKgEmailMessage.make({
     createdAt: firstValue(fields["dcterms:created"]),
     digest,
+    ...O.match(messageId, { onNone: () => ({}), onSome: (found) => ({ messageId: found }) }),
     participants: [
       ...senderOf(fields),
       ...participantsOf(joined(fields["Message-To"]), "to"),
@@ -470,16 +569,21 @@ WHERE lower(d.effective_name) LIKE '%.eml' OR lower(d.effective_name) LIKE '%.ms
 QUALIFY ROW_NUMBER() OVER (PARTITION BY d.digest ORDER BY s.ordinal, s.operationId) = 1
 ORDER BY d.digest`;
 
-const containerOf = (decoded: TikaEmailFields | A.NonEmptyReadonlyArray<TikaEmailFields>): TikaEmailFields =>
-  isTikaEmailFieldList(decoded) ? A.headNonEmpty(decoded) : decoded;
+const containerOf = (decoded: TikaRecord | A.NonEmptyReadonlyArray<TikaRecord>): TikaRecord =>
+  isTikaRecordList(decoded) ? A.headNonEmpty(decoded) : decoded;
 
 const readMessage = Effect.fn("PracticeKg.readEmailMessage")(function* (source: EmailSourceRow) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const metadataPath = path.join(source.metadataDir, `${source.operationId}.json`);
   return yield* fs.readFileString(metadataPath).pipe(
-    Effect.flatMap(decodeTikaFields),
-    Effect.map((decoded) => messageFrom(source.digest, containerOf(decoded))),
+    Effect.flatMap(decodeTikaRecords),
+    Effect.map(containerOf),
+    Effect.flatMap((container) =>
+      Effect.map(decodeTikaEmailFields(container), (fields) =>
+        messageFrom(source.digest, fields, messageIdOf(container))
+      )
+    ),
     Effect.option
   );
 });
@@ -494,14 +598,16 @@ const readMessage = Effect.fn("PracticeKg.readEmailMessage")(function* (source: 
  * Its headers come from the Tika metadata JSON beside the text it was
  * extracted to (`<extract root>/metadata/<operationId>.json`): `Message-From`
  * (with `Message:From-Email` when the name carries no address),
- * `Message-To`, `Message-Cc`, and `dcterms:created`. A document whose
+ * `Message-To`, `Message-Cc`, `dcterms:created`, and the message's
+ * `Message-ID` (`Message:Raw-Header:Message-ID`, the header name matched
+ * without regard to case), which becomes `messageId`. A document whose
  * metadata is missing or unreadable is skipped and counted in a warning.
  * Messages come back ordered by digest.
  *
  * **Example** (Read email headers)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { PracticeKgEmailMessagesInput, readPracticeKgEmailMessages } from "@beep/law-practice-server"
  *
  * const messages = readPracticeKgEmailMessages(
@@ -581,14 +687,14 @@ const latest = extremeOf((values) => A.max(values, Order.String));
 const tallied = (tally: Tally, message: PracticeKgEmailMessage, participant: PracticeKgEmailParticipant): Tally => ({
   ...tally,
   ...PracticeKgEmailParticipantRole.$match(participant.role, {
-    cc: () => ({ cc: HashSet.add(tally.cc, message.digest) }),
-    from: () => ({ from: HashSet.add(tally.from, message.digest) }),
-    to: () => ({ to: HashSet.add(tally.to, message.digest) }),
+    cc: () => ({ cc: HashSet.add(tally.cc, identityOf(message)) }),
+    from: () => ({ from: HashSet.add(tally.from, identityOf(message)) }),
+    to: () => ({ to: HashSet.add(tally.to, identityOf(message)) }),
   }),
   firstAt: earliest(tally.firstAt, message.createdAt),
   headerName: O.orElse(tally.headerName, () => O.fromNullishOr(participant.name)),
   lastAt: latest(tally.lastAt, message.createdAt),
-  messages: HashSet.add(tally.messages, message.digest),
+  messages: HashSet.add(tally.messages, identityOf(message)),
 });
 
 const tallyKey = (familyKey: string, address: string): string => `${familyKey}\u0000${address}`;
@@ -677,9 +783,13 @@ const soleContactOf = (contacts: ReadonlyArray<AddressContact>): O.Option<Addres
  *
  * **Details**
  *
- * `matter_correspondents` has one row per matter and address: every email
- * document attributed to a family (recycle stubs excluded) counts once per
- * address, and once per header the address appears in. The contact columns
+ * `matter_correspondents` has one row per matter and address: every message
+ * attributed to a family (recycle stubs excluded) counts once per address,
+ * and once per header the address appears in. A message is its `messageId`
+ * when it has one, else the digest of the copy at hand, so a filed email and
+ * its archive copy, or two filed copies of one message, count once; each
+ * copy is still attributed on its own digest, and copies attributed to
+ * different matters count on each. The contact columns
  * come from the contacts table when exactly one contact owns the address;
  * otherwise the display name is the first name the headers give, in digest
  * order. Every row is `mention-derived`: appearing on a matter's mail is
@@ -708,31 +818,31 @@ export const buildPracticeKgCorrespondentTables = (
 ): PracticeKgCorrespondentTables => {
   const isPractice = isPracticeKgPracticeAddress(input.practiceDomains);
   const byAddress = contactsByAddress(input.contacts);
-  const correspondents = A.map(
-    A.fromIterable(MutableHashMap.values(tallyMessages(input))),
-    ({ address, familyKey, tally }) => {
-      const contact = pipe(MutableHashMap.get(byAddress, address), O.flatMap(soleContactOf));
-      return PracticeKgCorrespondentRow.make({
-        address,
-        ccCount: HashSet.size(tally.cc),
-        contactId: O.getOrNull(O.map(contact, ({ contact: owner }) => owner.contactId)),
-        displayName: pipe(
-          O.map(contact, ({ contact: owner }) => owner.displayName),
-          O.orElse(() => tally.headerName),
-          O.getOrNull
-        ),
-        epistemicStatus: "mention-derived",
-        familyKey,
-        firstAt: O.getOrNull(tally.firstAt),
-        fromCount: HashSet.size(tally.from),
-        isPracticeAddress: isPractice(address),
-        lastAt: O.getOrNull(tally.lastAt),
-        messageCount: HashSet.size(tally.messages),
-        roleAddress: O.exists(contact, ({ role }) => role),
-        toCount: HashSet.size(tally.to),
-      });
-    }
-  );
+  const talliedMessages = tallyMessages(input);
+  const values = MutableHashMap.values(talliedMessages);
+  const tallies = A.fromIterable(values);
+  const correspondents = A.map(tallies, ({ address, familyKey, tally }) => {
+    const contact = pipe(MutableHashMap.get(byAddress, address), O.flatMap(soleContactOf));
+    return PracticeKgCorrespondentRow.make({
+      address,
+      ccCount: HashSet.size(tally.cc),
+      contactId: O.getOrNull(O.map(contact, ({ contact: owner }) => owner.contactId)),
+      displayName: pipe(
+        O.map(contact, ({ contact: owner }) => owner.displayName),
+        O.orElse(() => tally.headerName),
+        O.getOrNull
+      ),
+      epistemicStatus: "mention-derived",
+      familyKey,
+      firstAt: O.getOrNull(tally.firstAt),
+      fromCount: HashSet.size(tally.from),
+      isPracticeAddress: isPractice(address),
+      lastAt: O.getOrNull(tally.lastAt),
+      messageCount: HashSet.size(tally.messages),
+      roleAddress: O.exists(contact, ({ role }) => role),
+      toCount: HashSet.size(tally.to),
+    });
+  });
   const links = A.flatMap(input.contacts, (contact) =>
     A.map(contact.links, (link) => PracticeKgContactClientLinkRow.make({ ...link, contactId: contact.contactId }))
   );
@@ -819,7 +929,7 @@ const insertAddress = "INSERT INTO contact_addresses VALUES ($1, $2, $3, $4, $5,
  * **Example** (Write empty tables)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { PracticeKgCorrespondentTables, writePracticeKgCorrespondentTables } from "@beep/law-practice-server"
  *
  * const write = writePracticeKgCorrespondentTables("/bundle/practice.duckdb")(
@@ -933,7 +1043,7 @@ const decodePracticeAddress = S.decodeUnknownEffect(S.NonEmptyArray(S.Struct({ p
  * **Example** (Read a header entry)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { parsePracticeKgCorrespondentAddress } from "@beep/law-practice-server"
  *
  * Effect.runPromise(parsePracticeKgCorrespondentAddress("Pat Example <Pat@Example.com>")).then(console.log)
@@ -980,7 +1090,7 @@ export const parsePracticeKgCorrespondentAddress = (
  *
  * ```ts
  * import { PracticeKgCorrespondentLookupRequest } from "@beep/law-practice-use-cases/server"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { lookupPracticeKgCorrespondents } from "@beep/law-practice-server"
  *
  * const lookup = lookupPracticeKgCorrespondents(PracticeKgCorrespondentLookupRequest.make({ address: "pat@example.com" }))

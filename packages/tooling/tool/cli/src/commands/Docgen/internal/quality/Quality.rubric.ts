@@ -6,7 +6,8 @@
  */
 
 import { A, Str } from "@beep/utils";
-import { Match, pipe } from "effect";
+import { pipe } from "effect/Function";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";

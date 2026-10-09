@@ -1,0 +1,241 @@
+--- a/graph/bindings.js
++++ b/graph/bindings.js
+@@ -254,55 +254,65 @@
+ }
+ /** Import aliases (`... as F`) can be declared anywhere relative to their use
+  * textually, so this scans the whole tree once, ahead of the scope-aware walk. */
+-function collectAliases(node, lang, aliases) {
+-    if (lang === "python" && node.type === "aliased_import") {
+-        const nameNode = node.childForFieldName("name");
+-        const aliasNode = node.childForFieldName("alias");
+-        if (nameNode && aliasNode) {
+-            const orig = nameNode.type === "dotted_name" ? (nameNode.namedChildren.at(-1)?.text ?? nameNode.text) : nameNode.text;
+-            aliases.set(aliasNode.text, orig);
+-        }
+-    }
+-    else if ((lang === "typescript" || lang === "tsx") && node.type === "import_specifier") {
+-        const nameNode = node.childForFieldName("name");
+-        const aliasNode = node.childForFieldName("alias");
+-        if (nameNode && aliasNode)
+-            aliases.set(aliasNode.text, nameNode.text);
+-    }
+-    for (const child of node.namedChildren)
+-        collectAliases(child, lang, aliases);
++function collectAliases(root, lang, aliases) {
++    const stack = [root];
++    while (stack.length > 0) {
++        const node = stack.pop();
++        if (lang === "python" && node.type === "aliased_import") {
++            const nameNode = node.childForFieldName("name");
++            const aliasNode = node.childForFieldName("alias");
++            if (nameNode && aliasNode) {
++                const orig = nameNode.type === "dotted_name" ? (nameNode.namedChildren.at(-1)?.text ?? nameNode.text) : nameNode.text;
++                aliases.set(aliasNode.text, orig);
++            }
++        }
++        else if ((lang === "typescript" || lang === "tsx") && node.type === "import_specifier") {
++            const nameNode = node.childForFieldName("name");
++            const aliasNode = node.childForFieldName("alias");
++            if (nameNode && aliasNode)
++                aliases.set(aliasNode.text, nameNode.text);
++        }
++        const children = node.namedChildren;
++        for (let i = children.length - 1; i >= 0; i--)
++            stack.push(children[i]);
++    }
+ }
+ /** `scope`/`classScope` mirror extract.ts's walk: `scope` is the enclosing
+  * definition-name stack; `classScope` is the nearest enclosing class's scope
+  * path (distinct from `scope` once we're inside one of its methods) — that's
+  * where `self.attr`/`this.attr` bindings live. */
+-function visit(node, lang, scope, classScope, bindings, aliases) {
+-    if (lang === "python")
+-        handlePy(node, scope, classScope, bindings, aliases);
+-    else if (lang === "go")
+-        handleGo(node, scope, bindings);
+-    // R Phase 1 has no classes, so there's no member/receiver-type binding to
+-    // collect yet (see extract.ts's calleeName R branch) — no handleR needed.
+-    else if (lang === "r")
+-        void 0;
+-    else if (lang === "java")
+-        handleJava(node, scope, classScope, bindings);
+-    else if (lang === "swift")
+-        handleSwift(node, scope, classScope, bindings);
+-    else if (lang === "php")
+-        handlePhp(node, scope, bindings);
+-    else
+-        handleTs(node, scope, classScope, bindings, aliases);
+-    const name = defName(node, lang);
+-    let childScope = scope;
+-    let childClassScope = classScope;
+-    if (name !== null) {
+-        childScope = [...scope, name];
+-        if (isClassNode(node, lang))
+-            childClassScope = childScope.join(".");
+-    }
+-    for (const child of node.namedChildren)
+-        visit(child, lang, childScope, childClassScope, bindings, aliases);
++function visit(root, lang, initialScope, initialClassScope, bindings, aliases) {
++    const stack = [{ node: root, scope: initialScope, classScope: initialClassScope }];
++    while (stack.length > 0) {
++        const { node, scope, classScope } = stack.pop();
++        if (lang === "python")
++            handlePy(node, scope, classScope, bindings, aliases);
++        else if (lang === "go")
++            handleGo(node, scope, bindings);
++        // R Phase 1 has no classes, so there's no member/receiver-type binding to
++        // collect yet (see extract.ts's calleeName R branch) — no handleR needed.
++        else if (lang === "r")
++            void 0;
++        else if (lang === "java")
++            handleJava(node, scope, classScope, bindings);
++        else if (lang === "swift")
++            handleSwift(node, scope, classScope, bindings);
++        else if (lang === "php")
++            handlePhp(node, scope, bindings);
++        else
++            handleTs(node, scope, classScope, bindings, aliases);
++        const name = defName(node, lang);
++        let childScope = scope;
++        let childClassScope = classScope;
++        if (name !== null) {
++            childScope = [...scope, name];
++            if (isClassNode(node, lang))
++                childClassScope = childScope.join(".");
++        }
++        const children = node.namedChildren;
++        for (let i = children.length - 1; i >= 0; i--)
++            stack.push({ node: children[i], scope: childScope, classScope: childClassScope });
++    }
+ }
+ /** Resolves a bare type name through `aliases` — every annotation path must
+  * consult it, so an aliased import (`import Foo as Bar`) still binds to the
+--- a/graph/extract.js
++++ b/graph/extract.js
+@@ -358,10 +358,23 @@
+ function phpCollapsedEnumClose(node) {
+     return node.type === "ERROR" && node.text.trim() === "}";
+ }
++// Suspend each frame on the heap to retain DFS order without a JS call-stack limit.
+ function walkNamedChildren(children, ctx, out, edges, minted) {
++    const stack = [walkNamedChildrenSteps(children, ctx, out, edges, minted)];
++    while (stack.length > 0) {
++        const step = stack[stack.length - 1].next();
++        if (step.done) {
++            stack.pop();
++            continue;
++        }
++        const [node, childCtx] = step.value;
++        stack.push(walk(node, childCtx, out, edges, minted));
++    }
++}
++function* walkNamedChildrenSteps(children, ctx, out, edges, minted) {
+     if (ctx.lang !== "php") {
+         for (const child of children)
+-            walk(child, ctx, out, edges, minted);
++            yield [child, ctx];
+         return;
+     }
+     for (let i = 0; i < children.length;) {
+@@ -377,15 +390,15 @@
+                 if (phpCollapsedEnumClose(next))
+                     break;
+             }
+-            emitPhpCollapsedEnum(enumName, n, group, ctx, out, edges, minted);
++            yield* emitPhpCollapsedEnum(enumName, n, group, ctx, out, edges, minted);
+             i = j;
+             continue;
+         }
+-        walk(n, ctx, out, edges, minted);
++        yield [n, ctx];
+         i++;
+     }
+ }
+-function emitPhpCollapsedEnum(name, errorNode, group, ctx, out, edges, minted) {
++function* emitPhpCollapsedEnum(name, errorNode, group, ctx, out, edges, minted) {
+     const last = group[group.length - 1];
+     const id = mintId(`${ctx.rel}#${[...ctx.scope, name].join(".")}`, minted);
+     const body = ctx.source.slice(errorNode.startIndex, last.endIndex);
+@@ -415,13 +428,13 @@
+         if (phpCollapsedEnumClose(g))
+             continue;
+         if (phpCollapsedEnumName(g)) {
+-            walkNamedChildren(g.namedChildren, childCtx, out, edges, minted);
++            yield* walkNamedChildrenSteps(g.namedChildren, childCtx, out, edges, minted);
+             continue;
+         }
+-        walk(g, childCtx, out, edges, minted);
+-    }
+-}
+-function walk(node, ctx, out, edges, minted) {
++        yield [g, childCtx];
++    }
++}
++function* walk(node, ctx, out, edges, minted) {
+     const desc = describe(node, ctx);
+     if (desc) {
+         // `idName` scopes the id (e.g. a Go method under its receiver: `#DB.Count`) while
+@@ -519,7 +532,7 @@
+                         : null
+                 : ctx.rSuperClass,
+         };
+-        walkNamedChildren(node.namedChildren, childCtx, out, edges, minted);
++        yield* walkNamedChildrenSteps(node.namedChildren, childCtx, out, edges, minted);
+         return;
+     }
+     // R6 (Phase 2): `public =`/`private =`/`active =` inside an R6Class(...) call's
+@@ -544,7 +557,7 @@
+             rCalleeName(value) === "list") {
+             const access = argName.text;
+             for (const entry of rCallArgs(value)) {
+-                walk(entry, { ...ctx, rR6Access: access }, out, edges, minted);
++                yield [entry, { ...ctx, rR6Access: access }];
+             }
+             return;
+         }
+@@ -690,13 +703,13 @@
+                 enclosingClass: "{anonymous}",
+             };
+             for (const child of node.namedChildren) {
+-                walk(child, child.type === "class_body" ? anonCtx : ctx, out, edges, minted);
++                yield [child, child.type === "class_body" ? anonCtx : ctx];
+             }
+             return;
+         }
+     }
+     for (const child of node.namedChildren)
+-        walk(child, ctx, out, edges, minted);
++        yield [child, ctx];
+ }
+ /**
+  * Named imports whose local binding can be recognized later as a symbol use.
+@@ -706,16 +719,20 @@
+ function collectImportedSymbols(root, lang) {
+     if (lang === "typescript" || lang === "tsx") {
+         const out = new Map();
+-        const visit = (node) => {
+-            if (node.type === "import_statement") {
+-                const specifier = importSpecifier(node, lang);
+-                if (!specifier)
+-                    return;
+-                collectTsImportBindings(node, specifier, out);
+-                return;
++        const visit = (root) => {
++            const stack = [root];
++            while (stack.length > 0) {
++                const node = stack.pop();
++                if (node.type === "import_statement") {
++                    const specifier = importSpecifier(node, lang);
++                    if (specifier)
++                        collectTsImportBindings(node, specifier, out);
++                    continue;
++                }
++                const children = node.namedChildren;
++                for (let i = children.length - 1; i >= 0; i--)
++                    stack.push(children[i]);
+             }
+-            for (const child of node.namedChildren)
+-                visit(child);
+         };
+         visit(root);
+         return out;

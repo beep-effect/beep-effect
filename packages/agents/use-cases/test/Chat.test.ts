@@ -4,8 +4,8 @@ import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import { Result } from "effect";
 import { pipe } from "effect/Function";
+import * as Result from "effect/Result";
 import * as RpcSchema from "effect/rpc/RpcSchema";
 import * as S from "effect/Schema";
 

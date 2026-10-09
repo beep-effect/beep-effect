@@ -31,7 +31,8 @@ import { dual2 } from "./Dual.ts";
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { DateTime, Graph } from "effect"
+ * import * as DateTime from "effect/DateTime";
+ * import * as Graph from "effect/Graph";
  * import { KnowledgeGraph } from "@effect-ontology/Model/Entity"
  * import { EntityResolutionGraph, EntityResolutionStats } from "@effect-ontology/Model/EntityResolutionGraph"
  * import { refineKnowledgeGraph } from "@effect-ontology/Utils/RefineKG"

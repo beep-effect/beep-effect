@@ -1,7 +1,8 @@
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertFalse } from "@effect/vitest/utils";
-import { Effect, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 
 describe("@beep/ontology-use-cases worker import graph", () => {
   it.effect(

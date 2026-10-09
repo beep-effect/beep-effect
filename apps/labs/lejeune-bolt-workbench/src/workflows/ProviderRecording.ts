@@ -7,8 +7,8 @@
 
 import { $LejeuneBoltWorkbenchId } from "@beep/identity/packages";
 import { LiteralKit, Sha256HexFromBytes } from "@beep/schema";
-import { Effect } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { strToU8 } from "fflate";
@@ -87,7 +87,7 @@ const providerCandidateMatchesContract = (candidate: ProviderCandidate): boolean
  *
  * ```ts
  * import * as BunCrypto from "@effect/platform-bun/BunCrypto"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as A from "effect/Array"
  * import * as S from "effect/Schema"
  * import { PROVIDER_RECORDING_SOURCE_TEXT, ProviderRecording } from "@/domain/Bundle"
@@ -164,7 +164,7 @@ export const verifyProviderRecording = Effect.fn("lejeune.provider.verify_record
  *
  * ```ts
  * import * as BunCrypto from "@effect/platform-bun/BunCrypto"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { PROVIDER_RECORDING_SOURCE_TEXT, ProviderRecording } from "@/domain/Bundle"
  * import providerRecordingFixture from "@/fixtures/provider-recording.json"

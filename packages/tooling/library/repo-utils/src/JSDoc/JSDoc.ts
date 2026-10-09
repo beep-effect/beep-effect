@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $RepoUtilsId } from "@beep/identity/packages";
-import { Match } from "effect";
+import * as Match from "effect/Match";
 import * as S from "effect/Schema";
 import { JSDocTagDefinition } from "./models/index.ts";
 

@@ -8,7 +8,8 @@
 import { codeFrameColumns } from "@babel/code-frame";
 import { $RepoDocgenId } from "@beep/identity";
 import * as A from "@beep/utils/Array";
-import { Effect, Layer } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import * as Configuration from "./Configuration.ts";
 import * as Domain from "./Domain.ts";
@@ -282,7 +283,7 @@ export function checkExports(_models: ReadonlyArray<Domain.Export>) {
  * import { Configuration, ConfigurationShape, DEFAULT_THEME, defaultCompilerOptions } from "@beep/repo-docgen/Configuration"
  * import { checkModule } from "@beep/repo-docgen/Checker"
  * import { parseModule, Source, SourceShape } from "@beep/repo-docgen/Parser"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { Project } from "ts-morph"
  * const project = new Project({ useInMemoryFileSystem: true })
  * const sourceFile = project.createSourceFile("sample.ts", "export const undocumented = 1")

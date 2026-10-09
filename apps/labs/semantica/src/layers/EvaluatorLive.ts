@@ -1,8 +1,12 @@
 import { Sha256Hex } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import { Effect, HashMap, HashSet, Layer, Number as N } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
+import * as Layer from "effect/Layer";
+import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -544,8 +548,7 @@ const makeEvaluator = Effect.gen(function* () {
  *
  * ```ts
  * import { EvaluatorLive } from "@/layers/EvaluatorLive"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(EvaluatorLive)) // true
  * ```
  *

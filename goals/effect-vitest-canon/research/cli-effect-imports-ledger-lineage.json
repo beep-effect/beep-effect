@@ -38,7 +38,7 @@
       "beforeMatches": [
         {
           "line": 148,
-          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeTsconfig; yield* writeProjectFile( \"packages/demo/src/index.ts\", 'import { Effect } from \"effect\";\\nexport const prog"
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeTsconfig; yield* writeProjectFile( \"packages/demo/src/index.ts\", 'import { Effect } from \"<legacy-effect-barrel>\";\\nexport const prog"
         }
       ],
       "afterMatches": []
@@ -182,7 +182,7 @@
       "beforeMatches": [
         {
           "line": 465,
-          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeTsconfig; const source = A.join( [ \"#!/usr/bin/env bun\", \"\", 'import { FutureModule } from \"effect\";', \"export const"
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeTsconfig; const source = A.join( [ \"#!/usr/bin/env bun\", \"\", 'import { FutureModule } from \"<legacy-effect-barrel>\";', \"export const"
         }
       ],
       "afterMatches": []
@@ -198,7 +198,7 @@
       "beforeMatches": [
         {
           "line": 500,
-          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeTsconfig; const source = 'import { Effect, FutureModule } from \"effect\";\\nexport const value = Effect.void;\\n'; yield"
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeTsconfig; const source = 'import { Effect, FutureModule } from \"<legacy-effect-barrel>\";\\nexport const value = Effect.void;\\n'; yield"
         }
       ],
       "afterMatches": []
@@ -278,7 +278,7 @@
       "beforeMatches": [
         {
           "line": 648,
-          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeTsconfig; const source = A.join( [ \"/** Root import rationale. */\", 'import { Effect, pipe } from \"effect\"; // traili"
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeTsconfig; const source = A.join( [ \"/** Root import rationale. */\", 'import { Effect, pipe } from \"<legacy-effect-barrel>\"; // traili"
         }
       ],
       "afterMatches": []
@@ -310,7 +310,7 @@
       "beforeMatches": [
         {
           "line": 722,
-          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeTsconfig; const source = A.join( [ 'import { Option as Maybe } from \"effect\";', \"const O = { sentinel: true };\", \"exp"
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeTsconfig; const source = A.join( [ 'import { Option as Maybe } from \"<legacy-effect-barrel>\";', \"const O = { sentinel: true };\", \"exp"
         }
       ],
       "afterMatches": []
@@ -342,7 +342,7 @@
       "beforeMatches": [
         {
           "line": 794,
-          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeTsconfig; const source = A.join( [ 'const load = () => import(\"effect\");', 'type Program = import(\"effect\").Effect.Ef"
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeTsconfig; const source = A.join( [ 'const load = () => import(\"<legacy-effect-barrel>\");', 'type Program = import(\"<legacy-effect-barrel>\").Effect.Ef"
         }
       ],
       "afterMatches": []
@@ -374,7 +374,7 @@
       "beforeMatches": [
         {
           "line": 894,
-          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeTsconfig; const markdown = A.join( [ \"# Guide\", \"\", \"```ts\", 'import { Effect, flow } from \"effect\"', \"console.log(fl"
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeTsconfig; const markdown = A.join( [ \"# Guide\", \"\", \"```ts\", 'import { Effect, flow } from \"<legacy-effect-barrel>\"', \"console.log(fl"
         }
       ],
       "afterMatches": []

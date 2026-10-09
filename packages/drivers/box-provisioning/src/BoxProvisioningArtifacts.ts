@@ -4,8 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { BoxProvisioningSchemaError } from "./BoxProvisioningErrors.ts";
 import { BoxDesiredState } from "./BoxProvisioningIntent.ts";

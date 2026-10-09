@@ -6,11 +6,13 @@
  */
 import { $SchemaId } from "@beep/identity";
 import { A, Str, Struct } from "@beep/utils";
-import { Effect, pipe, SchemaIssue, SchemaTransformation } from "effect";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as internal from "../Http/Http.headers.shared.ts";
 import { wrapArray } from "../Http/Http.headers.shared.ts";
 import { LiteralKit } from "../LiteralKit/index.ts";
@@ -936,7 +938,7 @@ export const createContentSecurityPolicyOptionHeaderValue = (
  * **Example** (Create report-only response header)
  *
  * ```ts import.meta.vitest name="Create report-only response header"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * import { ContentSecurityPolicyHeader } from "@beep/schema/Csp"
  *
@@ -1049,7 +1051,7 @@ export { ContentSecurityPolicyResponseHeader as ResponseHeader };
  * **Example** (Create header via alias)
  *
  * ```ts import.meta.vitest name="Create header via alias"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * import { Header } from "@beep/schema/Csp"
  *

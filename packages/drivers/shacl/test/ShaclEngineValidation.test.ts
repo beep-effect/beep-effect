@@ -7,7 +7,8 @@ import { ShaclValidationServiceLive } from "@beep/shacl";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
-import { Effect, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 
 const SHACL_NAMESPACE = "http://www.w3.org/ns/shacl#" as const;

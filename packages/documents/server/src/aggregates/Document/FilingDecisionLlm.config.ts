@@ -8,7 +8,11 @@
 import { FILING_TEXT_EXCERPT_MAX_LENGTH } from "@beep/documents-use-cases/aggregates/Document/server";
 import { $DocumentsServerId } from "@beep/identity/packages";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import { Config, Context, Duration, Effect, Layer } from "effect";
+import * as Config from "effect/Config";
+import * as Context from "effect/Context";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 
 const $I = $DocumentsServerId.create("aggregates/Document/FilingDecisionLlm.config");
@@ -180,7 +184,7 @@ const ConfiguredMaxMaterializedBytes = S.Int.check(S.isGreaterThan(0)).pipe(
  *
  * ```ts
  * import { FilingDecisionLlmConfigValue } from "@beep/documents-server/aggregates/Document"
- * import { Duration } from "effect"
+ * import * as Duration from "effect/Duration";
  * import * as S from "effect/Schema"
  *
  * const config = S.decodeUnknownSync(FilingDecisionLlmConfigValue)({

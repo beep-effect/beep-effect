@@ -96,9 +96,13 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { shellQuote } from "@beep/repo-ai-metrics";
 import { guardLiteralArg } from "@beep/repo-utils";
 import * as O from "@beep/utils/Option";
-import { Cause, Clock, DateTime, Effect, flow, Path, pipe } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import * as Cause from "effect/Cause";
+import * as Clock from "effect/Clock";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import { dual, flow, pipe } from "effect/Function";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { GhPrView, ghOutput } from "../../../internal/github/index.ts";
@@ -126,8 +130,8 @@ import {
   SweepStepOutcome,
   SweepStepSkipped,
 } from "./Sweep.schemas.ts";
-import type { FileSystem } from "effect";
 import type * as Crypto from "effect/Crypto";
+import type * as FileSystem from "effect/FileSystem";
 import type { ChildProcessSpawner } from "effect/process";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Sweep");
@@ -772,8 +776,7 @@ const refuseUnsafeName = (value: string, role: string) =>
  *
  * ```ts
  * import { overrideSweepBranch } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.succeed(overrideSweepBranch)
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -820,8 +823,7 @@ export const overrideSweepBranch = Effect.fn("Yeet.overrideSweepBranch")(functio
  *
  * ```ts
  * import { observeSweepGitState } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.succeed(observeSweepGitState)
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -906,8 +908,7 @@ export const observeSweepGitState = Effect.fn("Yeet.observeSweepGitState")(funct
  *
  * ```ts
  * import { planSweep } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.succeed(planSweep)
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -998,8 +999,7 @@ const runRemoteDeletionStep = (
  *
  * ```ts
  * import { revalidateLocalDeletion } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.succeed(revalidateLocalDeletion)
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -1055,8 +1055,7 @@ export const revalidateLocalDeletion: {
  *
  * ```ts
  * import { revalidateRemoteDeletion } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.succeed(revalidateRemoteDeletion)
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -1296,8 +1295,7 @@ const runEndStateStep = (
  *
  * ```ts
  * import { runTmpfsWorktreesStep } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(runTmpfsWorktreesStep("/tmp/example-repo"))) // true
  * ```
  *
@@ -1330,7 +1328,7 @@ export const runTmpfsWorktreesStep = Effect.fn("Yeet.runTmpfsWorktreesStep")(fun
   }).pipe(
     Effect.matchCause({
       onFailure: (cause): SweepStepOutcome =>
-        SweepStepSkipped.make({ reason: `tmpfs worktree scan failed: ${firstLine(Cause.pretty(cause))}` }),
+        SweepStepSkipped.make({ reason: `tmpfs worktree scan failed: ${cause.pipe(Cause.pretty, firstLine)}` }),
       onSuccess: (report): SweepStepOutcome => {
         if (report.reapedCount > 0) {
           return SweepStepExecuted.make({
@@ -1429,8 +1427,7 @@ const runSweepStep = Effect.fn("Yeet.runSweepStep")(function* (
  *
  * ```ts
  * import { sweepReportPath } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.succeed(sweepReportPath)
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -1471,8 +1468,7 @@ export const sweepReportPath = Effect.fn("Yeet.sweepReportPath")(function* (
  *
  * ```ts
  * import { executeSweep } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.succeed(executeSweep)
  * console.log(Effect.isEffect(program)) // true
  * ```

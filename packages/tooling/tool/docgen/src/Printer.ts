@@ -8,9 +8,12 @@
 import { $RepoDocgenId } from "@beep/identity/packages";
 import { Md, renderMarkdownBlocks } from "@beep/md";
 import { A, Str, thunkEmptyStr } from "@beep/utils";
-import { Effect, Layer, Match, Order, pipe } from "effect";
-import { dual, flow } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { dual, flow, pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -362,7 +365,8 @@ const printBlocks = Match.type<Printable>().pipe(
  * **Example** (Render constant to markdown)
  *
  * ```ts
- * import { Effect, Layer } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * import { Project } from "ts-morph"
  * import {
  *   DEFAULT_THEME,
@@ -454,7 +458,7 @@ const sortByName: <
  * **Example** (Render module by category)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { Project } from "ts-morph"
  * import {
  *   DEFAULT_THEME,

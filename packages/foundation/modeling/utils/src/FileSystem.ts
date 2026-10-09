@@ -15,11 +15,17 @@
  */
 
 import { $UtilsId } from "@beep/identity/packages";
-import { ByteSize, Effect, FileSystem, Option, Path, PlatformError, pipe, Stream } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import * as ByteSize from "effect/ByteSize";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { dual, pipe } from "effect/Function";
+import * as Option from "effect/Option";
+import * as Path from "effect/Path";
+import * as PlatformError from "effect/PlatformError";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 
 const $I = $UtilsId.create("FileSystem");
 
@@ -299,7 +305,7 @@ export const appendFileSync: {
  * **Example** (Check path exists)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { existsSync } from "@beep/utils/FileSystem"
  *
  * const exists = Effect.runSync(existsSync("."))
@@ -423,7 +429,7 @@ type ReaddirSyncDataFirst = {
  * **Example** (List directory names)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { readdirSync } from "@beep/utils/FileSystem"
  *
  * const names = Effect.runSync(readdirSync("."))
@@ -453,7 +459,7 @@ export const readdirSync: ReaddirSyncDataLast & ReaddirSyncDataFirst = dual<Read
  * **Example** (Read path file info)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { statSync } from "@beep/utils/FileSystem"
  *
  * const info = Effect.runSync(statSync("."))
@@ -488,7 +494,7 @@ export const statSync = (path: string): Effect.Effect<FileSystem.File.Info, Plat
  * **Example** (Wait for ready file)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { makeWaitForFile } from "@beep/utils/FileSystem"
  *
  * const program = Effect.gen(function* () {

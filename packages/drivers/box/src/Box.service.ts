@@ -8,7 +8,10 @@
 import { $BoxId } from "@beep/identity";
 import * as O from "@beep/utils/Option";
 import { BoxCcgAuth, BoxClient, BoxDeveloperTokenAuth, CcgConfig } from "box-node-sdk";
-import { Context, Effect, Layer, Redacted } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Redacted from "effect/Redacted";
 import { makeGeneratedOperations } from "./_generated/Box.operations.gen.ts";
 import { BoxConfig, BoxConfigLayer } from "./Box.config.ts";
 import { BoxError } from "./Box.errors.ts";
@@ -106,8 +109,7 @@ const makeCcgClient = (config: BoxCcgConfig): BoxClient =>
  *
  * ```ts
  * import { Box, BoxDeveloperTokenConfig } from "@beep/box"
- * import { Redacted } from "effect"
- *
+ * import * as Redacted from "effect/Redacted";
  * const layer = Box.makeLayer(BoxDeveloperTokenConfig.make({ token: Redacted.make("box-token") }))
  * console.log(layer)
  * ```
@@ -123,8 +125,7 @@ export class Box extends Context.Service<Box, BoxShape>()($I`Box`) {
    *
    * ```ts
    * import { Box, BoxDeveloperTokenConfig } from "@beep/box"
-   * import { Redacted } from "effect"
-   *
+   * import * as Redacted from "effect/Redacted";
    * const layer = Box.makeLayer(BoxDeveloperTokenConfig.make({ token: Redacted.make("box-token") }))
    * console.log(layer)
    * ```
@@ -142,7 +143,7 @@ export class Box extends Context.Service<Box, BoxShape>()($I`Box`) {
    *
    * ```ts
    * import { Box, BoxCcgConfig } from "@beep/box"
-   * import { Redacted } from "effect"
+   * import * as Redacted from "effect/Redacted";
    * import * as O from "effect/Option"
    *
    * const layer = Box.makeCcgLayer(BoxCcgConfig.make({

@@ -4,8 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import type { Effect } from "effect";
+import type * as Effect from "effect/Effect";
 import type { ProposeCandidateOutputSet } from "./ProfessionalRuntime.commands.ts";
 import type { CandidateOutputSet, SdkContextPacket } from "./ProfessionalRuntime.contracts.ts";
 import type {
@@ -23,8 +22,7 @@ import type { GetContextPacket } from "./ProfessionalRuntime.queries.ts";
  * import { makeInMemoryProfessionalRuntimeSdk } from "@beep/agents-use-cases/proof"
  * import { PromotionGateVerdict } from "@beep/shared-use-cases/PromotionGate"
  * import type { ProfessionalRuntimeSdk } from "@beep/agents-use-cases/public"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const sdk: ProfessionalRuntimeSdk = makeInMemoryProfessionalRuntimeSdk({
  *   fixtures: [],
  *   promotionGate: { evaluate: () => Effect.succeed(PromotionGateVerdict.cases.clear.make({})) }

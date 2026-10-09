@@ -13,7 +13,7 @@
  */
 
 import { $PacerId } from "@beep/identity";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { CaseNumberFull, JurisdictionType, ReportStatus } from "./Pacer.tokens.ts";
 

@@ -2,9 +2,13 @@ import { CodegenKit, GenerateConfig, GeneratedModule } from "@beep/codegen-kit";
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Path, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
 import { FetchHttpClient, HttpClient, HttpClientResponse } from "effect/http";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
@@ -416,7 +420,7 @@ it.layer(CodegenKitTestLayer, { timeout: "10 seconds" })("@beep/codegen-kit", (i
         output: { path: "http.gen.ts" },
       });
       const raw = [
-        'import { Effect } from "effect";',
+        'import * as Effect from "effect/Effect";',
         'import * as Schema from "effect/Schema";',
         'import { HttpApi, HttpApiSchema } from "effect/http-api";',
         'import { unused } from "fixture";',
@@ -431,7 +435,7 @@ it.layer(CodegenKitTestLayer, { timeout: "10 seconds" })("@beep/codegen-kit", (i
       expect(output).toContain("@packageDocumentation");
       expect(output).toContain("Do not edit manually");
       expect(output).toContain("\\@beep/codegen-kit-fixture");
-      expect(output).toContain('import { Effect } from "effect";');
+      expect(output).toContain('import * as Effect from "effect/Effect";');
       expect(output).toContain('import { $CodegenKitId } from "@beep/identity";');
       expect(output).not.toContain('from "fixture"');
       expect(output).toContain('const $I = $CodegenKitId.create("fixture/http.gen");');

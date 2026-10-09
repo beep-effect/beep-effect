@@ -1,6 +1,6 @@
 import { expect } from "@effect/vitest";
-import { Effect } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import { TestClock } from "effect/testing";
 import type * as SqlClient from "effect/sql/SqlClient";
 

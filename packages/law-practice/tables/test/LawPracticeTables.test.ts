@@ -10,9 +10,11 @@ import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import { getColumns, getTableName } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
-import { Order, pipe, Result } from "effect";
 import * as A from "effect/Array";
+import { pipe } from "effect/Function";
+import * as Order from "effect/Order";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 
 const columnNames = (columns: Readonly<Record<string, { readonly name: string }>>): ReadonlyArray<string> =>
   A.sort(

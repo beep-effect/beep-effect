@@ -4,8 +4,12 @@
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
-import { ConfigProvider, DateTime, Effect, Exit, Redacted } from "effect";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
+import * as Redacted from "effect/Redacted";
 import { DocketIntakeAppConfigFromEnv } from "@/Config";
 
 const required = {
@@ -91,7 +95,7 @@ describe("@beep/docket-intake configuration", () => {
       ]);
 
       for (const result of results) {
-        assertTrue(Exit.isFailure(result));
+        result.pipe(Exit.isFailure, assertTrue);
       }
     })
   );

@@ -1,11 +1,16 @@
-/** Maintained research library CLI commands.
- * @packageDocumentation
+/**
+ * Maintained research library CLI commands.
  *
+ * @packageDocumentation
  * @since 0.0.0
  */
-import { Config, Console, Effect, Path } from "effect";
+
 import * as A from "effect/Array";
+import * as Config from "effect/Config";
+import * as Console from "effect/Console";
 import { Argument, Command, Flag } from "effect/cli";
+import * as Effect from "effect/Effect";
+import * as Path from "effect/Path";
 import { failWithReportedExit } from "../../../internal/cli/ExitCodeError.ts";
 import { acquireLibrary } from "./Library.acquire.ts";
 import { LibraryError } from "./Library.errors.ts";
@@ -94,11 +99,12 @@ const importResult = Command.make(
     yield* Console.log(`Imported source-bound result into ${root}.`);
   })
 ).pipe(Command.withDescription("Import validated Grok, alphaXiv, transcript, or explicit disposition results"));
-/** Render verification diagnostics and fail the process gate on incomplete coverage.
+/**
+ * Render verification diagnostics and fail the process gate on incomplete coverage.
  * **Example** (Prepare the process failure gate)
  * ```ts
  * import { runLibraryVerificationCommand } from "@beep/repo-cli/test/ResearchLibrary"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(runLibraryVerificationCommand("/library")))
  * ```
  *
@@ -142,7 +148,8 @@ const status = Command.make(
   })
 ).pipe(Command.withDescription("Report coverage and provider health separately"));
 
-/** Source library command group, independent of the knowledge vault.
+/**
+ * Source library command group, independent of the knowledge vault.
  * **Example** (Register library commands)
  * ```ts
  * import { libraryCommand } from "@beep/repo-cli/commands/Research"
@@ -150,7 +157,6 @@ const status = Command.make(
  * ```
  *
  * @category cli-commands
- *
  * @since 0.0.0
  */
 export const libraryCommand = Command.make("library").pipe(

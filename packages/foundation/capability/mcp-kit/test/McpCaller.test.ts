@@ -8,9 +8,11 @@
 import { CurrentMcpDispatchAnchor, McpCallerIdentity, McpDispatchAnchor } from "@beep/mcp-kit";
 import { it } from "@beep/test-runner";
 import { assert, describe } from "@effect/vitest";
-import { assertNone, assertTrue } from "@effect/vitest/utils";
-import { Effect, Exit, Layer } from "effect";
+import { assertNone } from "@effect/vitest/utils";
 import * as McpServer from "effect/ai/McpServer";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FixtureRegistrationsLive } from "./fixtures/FixtureHost.ts";
@@ -35,7 +37,7 @@ describe("dispatch anchor", () => {
   it.effect("brands a non-empty string and rejects an empty one", () =>
     Effect.gen(function* () {
       assert.strictEqual(yield* decodeAnchor("launch:abc"), "launch:abc");
-      assertTrue(Exit.isFailure(yield* Effect.exit(decodeAnchor(""))));
+      if (!Exit.isFailure(yield* Effect.exit(decodeAnchor("")))) throw new Error("Expected a failure exit");
     })
   );
 

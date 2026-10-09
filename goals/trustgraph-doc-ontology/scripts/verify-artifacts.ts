@@ -1,5 +1,5 @@
 import { fileURLToPath } from "node:url";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { BoundedShaclValidationServiceLive } from "../../../packages/epistemic/server/src/ShaclValidation/BoundedShaclValidator.layer.ts";
 import {

@@ -4,8 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { Number as N } from "effect";
-
+import * as N from "effect/Number";
 /**
  * Determines if the given input is a number and is positive (greater than or equal to 0).
  *

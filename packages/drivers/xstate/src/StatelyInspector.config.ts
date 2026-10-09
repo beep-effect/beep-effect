@@ -7,7 +7,9 @@
 
 import { $XstateId } from "@beep/identity/packages";
 import { LiteralKit, URLStr } from "@beep/schema";
-import { Config, Effect, pipe } from "effect";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as S from "effect/Schema";
 
 const $I = $XstateId.create("StatelyInspector.config");

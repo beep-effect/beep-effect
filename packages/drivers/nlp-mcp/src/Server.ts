@@ -22,9 +22,9 @@ import { $NlpMcpId } from "@beep/identity";
 import { sanitizedToolkit } from "@beep/mcp-kit";
 import { NlpToolkit } from "@beep/nlp-processing/Tools/NlpToolkit";
 import { WinkNlpToolkitLive } from "@beep/wink";
-import { Layer } from "effect";
 import * as McpProtocol from "effect/ai/McpProtocol";
 import * as McpServer from "effect/ai/McpServer";
+import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import { StreamingToolkitHandlersLive } from "./StreamingHandlers.ts";
 import { StreamingToolkit } from "./StreamingTools.ts";
@@ -84,7 +84,7 @@ export class NlpMcpServerConfig extends S.Class<NlpMcpServerConfig>($I`NlpMcpSer
  * **Example** (Providing Node platform layers)
  *
  * ```ts
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer";
  * import { makeServerLayer } from "@beep/nlp-mcp/Server"
  * import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem"
  * import * as NodePath from "@effect/platform-node/NodePath"

@@ -1,15 +1,18 @@
-/** Caption-first YouTube acquisition.
- * @internal
+/**
+ * Caption-first YouTube acquisition.
  *
+ * @internal
  * @packageDocumentation
  * @since 0.0.0
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { Effect, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import {
@@ -57,9 +60,7 @@ class CaptionProvenance extends S.Class<CaptionProvenance>($I`CaptionProvenance`
  * ```
  *
  * @internal
- *
  * @category utilities
- *
  * @since 0.0.0
  */
 export const libraryCaptionProvenance: {
@@ -89,21 +90,21 @@ export const libraryCaptionProvenance: {
   )
 );
 
-/** Capture captions and context without downloading video or audio.
+/**
+ * Capture captions and context without downloading video or audio.
  * **Example** (Prepare source-bound verification)
  * ```ts
  * import { acquireLibraryYoutube } from "@beep/repo-cli/test/ResearchLibrary"
  * import { classifyLibraryReference } from "@beep/repo-cli/commands/Research"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * const capture = classifyLibraryReference("https://youtube.com/watch?v=example", "report").pipe(Effect.flatMap((source) => acquireLibraryYoutube("/library", source, "captures/example")))
  * console.log(Effect.isEffect(capture))
  * ```
  *
  * @internal
- *
  * @category use-cases
- *
- * @since 0.0.0 */
+ * @since 0.0.0
+ */
 export const acquireLibraryYoutube = Effect.fn("Library.acquireYoutube")(function* (
   root: string,
   source: LibrarySource,

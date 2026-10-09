@@ -1,8 +1,15 @@
 import { $SemanticaId } from "@beep/identity/packages";
 import { Sha256HexFromBytes } from "@beep/schema";
-import { Context, Crypto, Effect, Equal, FileSystem, Layer, Order, Path } from "effect";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
+import * as Crypto from "effect/Crypto";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ByteDrift, ByteExpectation, verifyByteExpectations } from "@/corpus/ByteWitness";
@@ -45,8 +52,7 @@ interface CorpusManifestBuilderShape {
  *
  * ```ts
  * import { CorpusManifestBuilder } from "@/corpus/ManifestBuilder"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const build = CorpusManifestBuilder.pipe(Effect.flatMap((service) => service.build))
  * console.log(Effect.isEffect(build)) // true
  * ```
@@ -298,8 +304,7 @@ const makeCorpusManifestBuilder = Effect.gen(function* () {
  *
  * ```ts
  * import { CorpusManifestBuilderLive } from "@/corpus/ManifestBuilder"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(CorpusManifestBuilderLive)) // true
  * ```
  *

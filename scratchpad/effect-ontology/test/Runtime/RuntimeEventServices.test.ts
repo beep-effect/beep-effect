@@ -1,6 +1,14 @@
 import { $ScratchpadId } from "@beep/identity";
 import { assert, describe, it } from "@effect/vitest";
-import { Cause, Context, DateTime, Effect, Exit, Fiber, Layer, PubSub, Scope } from "effect";
+import * as Cause from "effect/Cause";
+import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Fiber from "effect/Fiber";
+import * as Layer from "effect/Layer";
+import * as PubSub from "effect/PubSub";
+import * as Scope from "effect/Scope";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import { OntologyName } from "../../Domain/Identity.ts";

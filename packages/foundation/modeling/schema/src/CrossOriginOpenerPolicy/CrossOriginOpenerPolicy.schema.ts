@@ -5,10 +5,11 @@
  * @packageDocumentation
  */
 import { $SchemaId } from "@beep/identity";
-import { Effect, SchemaTransformation } from "effect";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as internal from "../Http/Http.headers.shared.ts";
 import { LiteralKit } from "../LiteralKit/index.ts";
 import * as SchemaUtils from "../SchemaUtils/index.ts";
@@ -143,7 +144,7 @@ type CrossOriginOpenerPolicyResponseHeaderEncoded = typeof CrossOriginOpenerPoli
  * **Example** (Create header from option)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { CrossOriginOpenerPolicyHeader } from "@beep/schema/CrossOriginOpenerPolicy"
  *
  * const program = CrossOriginOpenerPolicyHeader.create("same-origin")
@@ -243,7 +244,7 @@ export { CrossOriginOpenerPolicyOption as Option, CrossOriginOpenerPolicyRespons
  * **Example** (Create header via alias)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { Header } from "@beep/schema/CrossOriginOpenerPolicy"
  *
  * const program = Header.create("same-origin")

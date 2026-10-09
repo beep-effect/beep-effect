@@ -11,11 +11,18 @@ import { BM25Config, BM25Norm, DefaultBM25Config, DocumentVector, PositiveNumber
 import { SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { A, thunk0, thunkEffectVoid } from "@beep/utils";
-import { Chunk, Clock, Context, Effect, HashMap, HashSet, Layer, pipe, Ref } from "effect";
 import * as Bool from "effect/Boolean";
-import { dual } from "effect/Function";
+import * as Chunk from "effect/Chunk";
+import * as Clock from "effect/Clock";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import { loadBM25Vectorizer, normalizeTokenText } from "./internal/bm25.ts";
 import { ascendingNumber, ascendingString, descendingNumber } from "./internal/order.ts";
@@ -840,7 +847,7 @@ const makeWinkCorpusManager = Effect.gen(function* () {
  * **Example** (Create corpus via service)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { WinkLayerAllLive } from "@beep/wink"
  * import { WinkCorpusManager } from "@beep/wink"
  *
@@ -867,7 +874,8 @@ export class WinkCorpusManager extends Context.Service<WinkCorpusManager, WinkCo
  * **Example** (Provide with dependency layers)
  *
  * ```ts
- * import { Effect, Layer } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * import { WinkEngineLive } from "@beep/wink"
  * import { WinkSimilarityLive } from "@beep/wink"
  * import { WinkCorpusManager, WinkCorpusManagerLive } from "@beep/wink"

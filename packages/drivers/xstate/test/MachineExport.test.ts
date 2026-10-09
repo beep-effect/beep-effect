@@ -1,7 +1,7 @@
 import { it } from "@beep/test-runner";
 import { MachineJsonText, toMachineJson, toMachineJsonText } from "@beep/xstate";
 import { describe, expect } from "@effect/vitest";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { releaseMachine } from "./fixtures/Release.machine.ts";
 

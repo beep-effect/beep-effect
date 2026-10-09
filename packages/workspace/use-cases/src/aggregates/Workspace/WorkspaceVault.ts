@@ -8,9 +8,11 @@
 import { $WorkspaceUseCasesId } from "@beep/identity/packages";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { WorkspaceVaultRootPath } from "@beep/workspace-domain/entities/Workspace";
-import { Context, Effect, flow } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import { flow } from "effect/Function";
 import * as S from "effect/Schema";
-import type { Effect as EffectType } from "effect";
+import type * as EffectType from "effect/Effect";
 
 const $I = $WorkspaceUseCasesId.create("aggregates/Workspace/WorkspaceVault");
 
@@ -214,7 +216,7 @@ export class WorkspaceVaultActionError extends S.TaggedError<WorkspaceVaultActio
  * ```ts
  * import { WorkspaceVaultConfig } from "@beep/workspace-use-cases/public"
  * import type { WorkspaceVaultStoreShape } from "@beep/workspace-use-cases/public"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const service: WorkspaceVaultStoreShape = {
@@ -250,7 +252,7 @@ export interface WorkspaceVaultStoreShape {
  * ```ts
  * import { WorkspaceVaultConfig, WorkspaceVaultStore } from "@beep/workspace-use-cases/public"
  * import type { WorkspaceVaultStoreShape } from "@beep/workspace-use-cases/public"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const service: WorkspaceVaultStoreShape = {

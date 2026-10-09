@@ -9,12 +9,19 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { DomainError } from "@beep/repo-utils";
 import { LiteralKit, normalizePath, SchemaUtils } from "@beep/schema";
 import { A, Str, thunkEffectVoid, thunkFalse, thunkTrue } from "@beep/utils";
-import { Context, Effect, FileSystem, flow, Number as Num, Order, Path, pipe, Ref, Struct } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
-import { dual } from "effect/Function";
+import * as FileSystem from "effect/FileSystem";
+import { dual, flow, pipe } from "effect/Function";
+import * as Num from "effect/Number";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
+import * as Struct from "effect/Struct";
 
 const $I = $RepoCliId.create("commands/CreatePackage/FileGenerationPlanService");
 const relativePlanPathSegments = flow(normalizePath, Str.split("/"), A.filter(Str.isNonEmpty));
@@ -400,8 +407,7 @@ export type FileGenerationPlanServiceShape = {
  *
  * ```ts
  * import { FileGenerationPlanService } from "@beep/repo-cli/commands/CreatePackage"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.service(FileGenerationPlanService)
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -784,7 +790,7 @@ export const createFileGenerationPlanService = (): FileGenerationPlanServiceShap
       const currentTarget = yield* Effect.option(fs.readLink(absolutePath));
       const exists = yield* pipe(
         pathExists(absolutePath),
-        Effect.when(Effect.succeed(O.isNone(currentTarget))),
+        Effect.when(currentTarget.pipe(O.isNone, Effect.succeed)),
         Effect.map(O.getOrElse(thunkTrue))
       );
 

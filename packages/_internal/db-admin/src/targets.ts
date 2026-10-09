@@ -5,8 +5,7 @@
  * @category configuration
  * @since 0.0.0
  */
-
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { ArchitectureLabMigrationTarget } from "./migrations/ArchitectureLab.ts";
 import { DocumentsSyncMigrationTarget } from "./migrations/DocumentsSync.ts";
 import { EpistemicContradictionTriageMigrationTarget } from "./migrations/EpistemicContradictionTriage.ts";
@@ -69,7 +68,7 @@ export const DbAdminMigrationTargets = [
  * **Example** (Run the registry query and read the target names)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { listDbAdminMigrationTargets } from "@beep/db-admin/targets"
  *
  * const targetNames = Effect.runSync(

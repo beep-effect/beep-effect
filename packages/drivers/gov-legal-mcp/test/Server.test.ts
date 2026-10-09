@@ -49,16 +49,18 @@ import { fcRuns } from "@beep/test-utils";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
 import { assert, describe } from "@effect/vitest";
-import { Effect, Layer, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as McpSchema from "effect/ai/McpSchema";
 import * as McpServer from "effect/ai/McpServer";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Crypto from "effect/Crypto";
+import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
+import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
@@ -517,14 +519,10 @@ describe("gov-legal MCP frozen contract", () => {
     "fails closed on cross-driver normalization collisions",
     Effect.fnUntraced(function* () {
       const error = assertCollision(
-        yield* Effect.result(
-          withToolNameCrypto(
-            buildToolNameCollisionReport([
-              ToolNameCandidate.make({ source: "agency.alpha", operationId: "search" }),
-              ToolNameCandidate.make({ source: "agency_alpha", operationId: "search" }),
-            ])
-          )
-        ),
+        yield* buildToolNameCollisionReport([
+          ToolNameCandidate.make({ source: "agency.alpha", operationId: "search" }),
+          ToolNameCandidate.make({ source: "agency_alpha", operationId: "search" }),
+        ]).pipe(withToolNameCrypto, Effect.result),
         "duplicate_normalized"
       );
       assert.deepEqual(error.collisionKeys, ["agency_alpha_search"]);
@@ -559,14 +557,10 @@ describe("gov-legal MCP frozen contract", () => {
     "marks punctuation normalization duplicates before failing",
     Effect.fnUntraced(function* () {
       const error = assertCollision(
-        yield* Effect.result(
-          withToolNameCrypto(
-            buildToolNameCollisionReport([
-              ToolNameCandidate.make({ source: "ecfr", operationId: "search.results" }),
-              ToolNameCandidate.make({ source: "ecfr", operationId: "search/results" }),
-            ])
-          )
-        ),
+        yield* buildToolNameCollisionReport([
+          ToolNameCandidate.make({ source: "ecfr", operationId: "search.results" }),
+          ToolNameCandidate.make({ source: "ecfr", operationId: "search/results" }),
+        ]).pipe(withToolNameCrypto, Effect.result),
         "duplicate_normalized"
       );
       assert.isTrue(A.every(error.report.candidates, (row) => row.duplicateVerdict === "duplicate_normalized"));
@@ -596,7 +590,7 @@ describe("gov-legal MCP frozen contract", () => {
       assert.strictEqual(firstRow.finalWireName.length, 64);
       assert.strictEqual(firstRow.finalWireName, secondRow.finalWireName);
       const error = assertCollision(
-        yield* Effect.result(withToolNameCrypto(buildToolNameCollisionReport([first, second]))),
+        yield* buildToolNameCollisionReport([first, second]).pipe(withToolNameCrypto, Effect.result),
         "duplicate_final"
       );
       assert.isTrue(A.every(error.report.candidates, (row) => row.duplicateVerdict === "duplicate_final"));

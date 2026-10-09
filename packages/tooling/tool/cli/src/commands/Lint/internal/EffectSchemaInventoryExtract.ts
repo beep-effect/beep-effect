@@ -13,9 +13,14 @@
  */
 
 import { A, Str } from "@beep/utils";
-import { Effect, HashSet, Match, MutableHashMap, Order, Path, pipe } from "effect";
-import { constant, dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { constant, dual, pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
+import * as Match from "effect/Match";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { ts } from "ts-morph";
@@ -473,8 +478,7 @@ const parseModule = Effect.fn("EffectSchemaInventoryExtract.parse")(function* (
  * ```ts
  * import { EffectSchemaInventoryModule, extractEffectSchemaInventory } from "@beep/repo-cli/commands/Lint"
  * import { NodeServices } from "@effect/platform-node"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const module = EffectSchemaInventoryModule.make({
  *   file: "packages/effect/src/Demo.ts", module: "effect/Demo", slug: "effect-Demo", importable: true
  * })

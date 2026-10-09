@@ -7,8 +7,10 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { renderSkillMarkdown } from "@beep/skill-contract";
-import { Effect, FileSystem, Path } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { QaJudgeContract } from "./JudgeContract.ts";
 
@@ -63,7 +65,7 @@ const writeArtifact = Effect.fn("QaJudgeSkill.write")(function* (outputPath: str
  *
  * ```ts
  * import { QaJudgeSkillOptions, runQaJudgeSkill } from "@beep/repo-cli/commands/Qa"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const program = runQaJudgeSkill(QaJudgeSkillOptions.make({ write: O.some("out/SKILL.md") }))

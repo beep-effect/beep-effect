@@ -6,7 +6,8 @@ import {
   ChartTooltipContent,
 } from "@beep/ui/components/chart";
 import { A, Str } from "@beep/utils";
-import { Effect, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import {
   AreaChart,

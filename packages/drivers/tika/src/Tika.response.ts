@@ -12,7 +12,7 @@
 
 import { $TikaId } from "@beep/identity";
 import { A, O } from "@beep/utils";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -85,8 +85,7 @@ const metadataValueToString = (value: unknown): O.Option<string> => {
  *
  * ```ts
  * import { decodeTikaResponseRecord } from "@beep/tika"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = decodeTikaResponseRecord('[{"Content-Type":"text/plain"}]')
  *
  * Effect.runPromise(program).then((record) => console.log(record["Content-Type"])) // "text/plain"

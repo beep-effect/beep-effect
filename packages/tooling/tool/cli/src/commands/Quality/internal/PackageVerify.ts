@@ -10,9 +10,15 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot, resolveWorkspaceDirs } from "@beep/repo-utils";
 import { LiteralKit, normalizePath } from "@beep/schema";
 import { A, Str } from "@beep/utils";
-import { Clock, Console, Effect, FileSystem, HashMap, Order, Path, pipe } from "effect";
-import { dual } from "effect/Function";
+import * as Clock from "effect/Clock";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { dual, pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { QualityTaskStep, runCaptured } from "../../../internal/process/index.ts";
@@ -518,8 +524,7 @@ const readPackageWorkspace = Effect.fn("PackageVerify.readPackageWorkspace")(fun
  *
  * ```ts
  * import { collectWorkspaces } from "@beep/repo-cli/test/Quality"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(collectWorkspaces("/repo"))) // true
  * ```
  *
@@ -743,8 +748,7 @@ export const runPackageVerify = Effect.fn("PackageVerify.runPackageVerify")(func
  *
  * ```ts
  * import { PackageVerifyReport, recordPackageVerifyInboxForTesting } from "@beep/repo-cli/test/Quality"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const update = recordPackageVerifyInboxForTesting(PackageVerifyReport.make({
  *   headSha: "abc123", packageDir: "/repo/packages/demo", packageName: "@beep/demo",
  *   quick: true, repoRoot: "/repo", results: []
@@ -951,8 +955,7 @@ export const packageVerifyStepPlanForTesting: {
  *
  * ```ts
  * import { runPackageVerifyStepPlanForTesting } from "@beep/repo-cli/test/Quality"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(runPackageVerifyStepPlanForTesting([]))) // true
  * ```
  *

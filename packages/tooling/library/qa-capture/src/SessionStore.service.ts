@@ -12,7 +12,13 @@
 
 import { $QaCaptureId } from "@beep/identity/packages";
 import { A, O, Str } from "@beep/utils";
-import { Context, Effect, FileSystem, flow, Layer, Number as N, Path, pipe } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { flow, pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as N from "effect/Number";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { QaCaptureError } from "./QaCapture.errors.ts";
 import {

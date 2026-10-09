@@ -13,7 +13,13 @@ import { flow } from "effect/Function";
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { Clock, Context, Effect, HashSet, Inspectable, Random, Redacted } from "effect";
+import * as Clock from "effect/Clock";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as HashSet from "effect/HashSet";
+import * as Inspectable from "effect/Inspectable";
+import * as Random from "effect/Random";
+import * as Redacted from "effect/Redacted";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -32,7 +38,7 @@ const $I = $ScratchpadId.create("effect-ontology/Runtime/HttpMiddleware");
  * **Example** (Provide an anonymous conflict actor)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * import { ConflictActor } from "@effect-ontology/Schema/Timeline"
  * import { CurrentConflictActor } from "@effect-ontology/Runtime/HttpMiddleware"
@@ -93,7 +99,8 @@ const parseApiKeys = (redacted: Redacted.Redacted<string>): HashSet.HashSet<stri
  * **Example** (Reject a versioned request without an API key)
  *
  * ```ts
- * import { Effect, Layer } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * import { HttpServerRequest, HttpServerResponse } from "effect/http"
  * import { makeAuthMiddleware } from "@effect-ontology/Runtime/HttpMiddleware"
  * import { ConfigService, DEFAULT_CONFIG } from "@effect-ontology/Service/Config"
@@ -186,7 +193,7 @@ export const makeAuthMiddleware = Effect.gen(function* () {
  * **Example** (Reject new work after drain starts)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { HttpServerResponse } from "effect/http"
  * import { makeShutdownMiddleware } from "@effect-ontology/Runtime/HttpMiddleware"
  * import { ShutdownService } from "@effect-ontology/Runtime/Shutdown"
@@ -224,7 +231,7 @@ export const makeShutdownMiddleware = Effect.gen(function* () {
  * **Example** (Time a request through logging middleware)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { HttpServerRequest, HttpServerResponse } from "effect/http"
  * import { makeLoggingMiddleware } from "@effect-ontology/Runtime/HttpMiddleware"
  *

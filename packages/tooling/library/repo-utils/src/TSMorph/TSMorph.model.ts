@@ -7,9 +7,13 @@
 import { $RepoUtilsId } from "@beep/identity/packages";
 import { FilePath, LiteralKit, SchemaUtils, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { Str } from "@beep/utils";
-import { Effect, Match, Result, SchemaGetter, Tuple } from "effect";
+import * as Effect from "effect/Effect";
 import * as F from "effect/Function";
+import * as Match from "effect/Match";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as SchemaGetter from "effect/SchemaGetter";
+import * as Tuple from "effect/Tuple";
 import { Project, SourceFile, Node as TsMorphNode } from "ts-morph";
 import { TSSyntaxKind } from "../TypeScript/index.ts";
 import type * as Crypto from "effect/Crypto";

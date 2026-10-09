@@ -10,11 +10,12 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Sha256Hex } from "@beep/schema/Sha256";
-import { Effect, SchemaTransformation } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Str from "effect/String";
 import { PosInt } from "../../../internal/schema/PosInt.ts";
 import type * as AST from "effect/SchemaAST";
@@ -1794,8 +1795,7 @@ export class PersonMatchReport extends S.Class<PersonMatchReport>($I`PersonMatch
  *
  * ```ts
  * import { decodePersonMatchWorkerReportJson } from "@beep/repo-cli/commands/Files"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const decoded = decodePersonMatchWorkerReportJson(
  *   '{"schemaVersion":"beep.files.match-person.worker.v3","ok":false,"limits":{"referenceImages":256,"candidateImages":10000,"facesPerImage":32,"reportedFaces":65536,"reportBytes":67108864,"diagnosticBytes":1048576},"error":{"code":"no-reference-images","message":"No reference images were found."},"elapsedSeconds":0}'
  * )

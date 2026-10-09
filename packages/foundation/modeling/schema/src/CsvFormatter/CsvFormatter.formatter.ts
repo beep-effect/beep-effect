@@ -6,8 +6,8 @@
  */
 
 import { A, Str } from "@beep/utils";
-import { Effect, pipe } from "effect";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import { csvError } from "../CsvError/index.ts";
@@ -98,7 +98,7 @@ const formatCsvHeaderRowEffect = Effect.fn("CsvFormatter.formatCsvHeaderRowEffec
  * **Example** (Format header row)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { CsvCodecOptions } from "@beep/schema/CsvCodecOptions"
  * import { formatCsvHeaderRow } from "@beep/schema/CsvFormatter"
  *
@@ -134,7 +134,7 @@ const formatCsvDataRowEffect = Effect.fn("CsvFormatter.formatCsvDataRowEffect")(
  * **Example** (Format data row)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { CsvCodecOptions } from "@beep/schema/CsvCodecOptions"
  * import { formatCsvDataRow } from "@beep/schema/CsvFormatter"
  *
@@ -172,7 +172,7 @@ const formatCsvDocumentEffect = Effect.fn("CsvFormatter.formatCsvDocumentEffect"
  * **Example** (Format full CSV document)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { CsvCodecOptions } from "@beep/schema/CsvCodecOptions"
  * import { formatCsvDocument } from "@beep/schema/CsvFormatter"
  *

@@ -5,8 +5,8 @@
 
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { Effect } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as R from "effect/Record";
 import { makeRunEntrypoint, runEntrypoint } from "@/entrypoint";
 import type { RunMain } from "@/entrypoint";

@@ -12,7 +12,14 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
-import { Clock, Context, Effect, HashMap, Inspectable, Layer, Random, Ref } from "effect";
+import * as Clock from "effect/Clock";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
+import * as Inspectable from "effect/Inspectable";
+import * as Layer from "effect/Layer";
+import * as Random from "effect/Random";
+import * as Ref from "effect/Ref";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -47,7 +54,7 @@ interface InferenceJobState {
  * **Example** (Put and get a processing job)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * import { InferenceRunResponse } from "@effect-ontology/Schema/Inference"
  * import { InferenceJobStore, InferenceJobStoreLive } from "@effect-ontology/Runtime/InferenceRouter"
@@ -80,7 +87,7 @@ export class InferenceJobStore extends Context.Service<
  * **Example** (Provide bounded in-memory job storage)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * import { InferenceRunResponse } from "@effect-ontology/Schema/Inference"
  * import { InferenceJobStore, InferenceJobStoreLive } from "@effect-ontology/Runtime/InferenceRouter"
@@ -383,7 +390,7 @@ const InferenceRouterDefinition = HttpRouter.addAll([
  * **Example** (Register the inference routes on an HTTP router)
  *
  * ```ts
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer";
  * import { HttpRouter } from "effect/http"
  * import { InferenceRouter } from "@effect-ontology/Runtime/InferenceRouter"
  *

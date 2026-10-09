@@ -6,10 +6,15 @@
  */
 import { CacheClientPin, CacheQualificationKey, CacheTaskContract } from "@beep/repo-configs/cache";
 import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
-import { Clock, Crypto, Duration, Effect, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
+import * as Clock from "effect/Clock";
+import * as Crypto from "effect/Crypto";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
+import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";

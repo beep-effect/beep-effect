@@ -12,8 +12,8 @@ import {
   AiMetricsTool,
   AiMetricsTranscriptSource,
 } from "@beep/repo-ai-metrics";
-import { pipe } from "effect";
 import { Command, Flag } from "effect/cli";
+import { pipe } from "effect/Function";
 import { aiMetricsDataRootEnvVar, aiMetricsDataRootFlag as dataRootFlag, jsonFlag } from "../../internal/cli/Flags.ts";
 import { printLines } from "../../internal/cli/Printer.ts";
 import { runAiMetricsProgram } from "./AIMetrics.errors.ts";
@@ -1200,7 +1200,7 @@ const archiveCommand = Command.make("archive", {}, () =>
  *
  * ```ts
  * import { aiMetricsCommand } from "@beep/repo-cli/commands/AIMetrics/index"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { Command } from "effect/cli"
  *
  * const run = Command.run(aiMetricsCommand, { version: "0.0.0" })

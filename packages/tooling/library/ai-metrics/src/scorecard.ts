@@ -9,8 +9,13 @@ import { DuckDb } from "@beep/duckdb";
 import { $RepoAiMetricsId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
 import { A, N, Str } from "@beep/utils";
-import { Clock, Effect, FileSystem, flow, Order, Path, pipe } from "effect";
+import * as Clock from "effect/Clock";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { ensureAiMetricsDerivedStorage } from "./derived-storage.ts";
 import {
@@ -930,7 +935,7 @@ const caseFromRow = (row: BenchmarkCaseRow): BenchmarkCase =>
  *
  * ```ts
  * import { listAiMetricsBenchmarkCases } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * const program = listAiMetricsBenchmarkCases.pipe(
  *   Effect.map((result) => result.cases.length)
  * )
@@ -1496,7 +1501,7 @@ export const generateAiMetricsWeeklyReport: (
  *
  * ```ts
  * import { AiMetricsLabelQueueResult, aiMetricsLabelQueueToJson } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * const json = Effect.runPromise(
  *   aiMetricsLabelQueueToJson(
  *     AiMetricsLabelQueueResult.make({
@@ -1531,7 +1536,7 @@ export const aiMetricsLabelQueueToJson: (
  *
  * ```ts
  * import { OutcomeLabel, aiMetricsOutcomeLabelToJson } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * const json = Effect.runPromise(
  *   aiMetricsOutcomeLabelToJson(
  *     OutcomeLabel.make({
@@ -1567,7 +1572,7 @@ export const aiMetricsOutcomeLabelToJson: (result: OutcomeLabel) => Effect.Effec
  *
  * ```ts
  * import { BenchmarkCase, aiMetricsBenchmarkCaseToJson } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * const json = Effect.runPromise(
  *   aiMetricsBenchmarkCaseToJson(
  *     BenchmarkCase.make({
@@ -1603,8 +1608,7 @@ export const aiMetricsBenchmarkCaseToJson: (result: BenchmarkCase) => Effect.Eff
  *   BenchmarkCase,
  *   aiMetricsBenchmarkCaseListToJson
  * } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const json = Effect.runPromise(
  *   aiMetricsBenchmarkCaseListToJson(
  *     AiMetricsBenchmarkCaseListResult.make({
@@ -1642,7 +1646,7 @@ export const aiMetricsBenchmarkCaseListToJson: (
  *
  * ```ts
  * import { BenchmarkRun, aiMetricsBenchmarkRunToJson } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * const json = Effect.runPromise(
  *   aiMetricsBenchmarkRunToJson(
  *     BenchmarkRun.make({
@@ -1681,8 +1685,7 @@ export const aiMetricsBenchmarkRunToJson: (result: BenchmarkRun) => Effect.Effec
  *   AiMetricsWeeklyReportResult,
  *   aiMetricsWeeklyReportToJson
  * } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const json = Effect.runPromise(
  *   aiMetricsWeeklyReportToJson(
  *     AiMetricsWeeklyReportResult.make({

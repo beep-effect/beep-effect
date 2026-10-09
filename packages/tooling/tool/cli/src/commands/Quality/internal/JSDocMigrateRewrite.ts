@@ -7,9 +7,10 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, Str } from "@beep/utils";
-import { MutableHashMap, Order, pipe } from "effect";
-import { dual } from "effect/Function";
+import { dual, pipe } from "effect/Function";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import { documentationShapeViolations } from "./JSDocDocumentationInventory.ts";
 import { JSDocMigrateRemarksRouting } from "./JSDocMigrate.schemas.ts";

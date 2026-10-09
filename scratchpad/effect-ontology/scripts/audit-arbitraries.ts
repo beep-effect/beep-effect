@@ -18,7 +18,8 @@ import * as Arbitrary from "effect/Arbitrary";
  * @packageDocumentation
  * @since 0.0.0
  */
-import { Effect, SchemaAST } from "effect";
+import * as Effect from "effect/Effect";
+import * as SchemaAST from "effect/SchemaAST";
 import * as A from "effect/Array";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";

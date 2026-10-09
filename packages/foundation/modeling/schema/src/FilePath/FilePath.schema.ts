@@ -5,8 +5,8 @@
  * @since 0.0.0
  */
 import { Str, thunkTrue } from "@beep/utils";
-import { Match } from "effect";
 import * as F from "effect/Function";
+import * as Match from "effect/Match";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { LiteralKit } from "../LiteralKit/index.ts";

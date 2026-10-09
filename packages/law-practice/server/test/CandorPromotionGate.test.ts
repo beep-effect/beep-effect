@@ -20,7 +20,8 @@ import { PromotionGate } from "@beep/shared-use-cases/server";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect } from "@effect/vitest";
-import { Effect, Layer } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 
 const subject = PromotionSubjectRef.make({ id: "application-16138242", kind: "patent-application" });
 const request = PromotionGateRequest.make({ subject, tenantRef: PromotionTenantRef.make("org-law-fixture") });

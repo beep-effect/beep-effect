@@ -41,8 +41,8 @@ import { TextBIcon } from "@phosphor-icons/react/TextB";
 import { TextItalicIcon } from "@phosphor-icons/react/TextItalic";
 import { TextStrikethroughIcon } from "@phosphor-icons/react/TextStrikethrough";
 import { TextUnderlineIcon } from "@phosphor-icons/react/TextUnderline";
-import { Match } from "effect";
 import * as F from "effect/Function";
+import * as Match from "effect/Match";
 import { Atom } from "effect/reactivity";
 import {
   $createParagraphNode,

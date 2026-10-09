@@ -14,7 +14,7 @@ import {
   makeMailTaggingJob,
   makeMailTaggingUndo,
 } from "@beep/law-practice-use-cases/MailTagging";
-import { Layer } from "effect";
+import * as Layer from "effect/Layer";
 import type {
   BackfillCheckpointStore,
   DocumentStore,

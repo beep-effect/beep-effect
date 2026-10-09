@@ -22,8 +22,11 @@ import {
   legalActContentEquivalence,
   oppositePosition,
 } from "@beep/law-practice-domain";
-import { Effect, Equal, HashSet, Layer } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import * as HashSet from "effect/HashSet";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { LegalPositionRelatorAdmissionError } from "./LegalPositionRelatorPolicy.errors.ts";
@@ -210,8 +213,7 @@ export const makeLegalPositionRelatorPolicy = (): LegalPositionRelatorPolicyShap
  *
  * ```ts
  * import { LegalPositionRelatorPolicyLive } from "@beep/law-practice-use-cases/LegalPositionRelatorPolicy"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(LegalPositionRelatorPolicyLive)) // true
  * ```
  *

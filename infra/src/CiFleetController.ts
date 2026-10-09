@@ -15,7 +15,8 @@ import { O, Str } from "@beep/utils";
 import * as aws from "@pulumi/aws";
 import * as ghaRunners from "@pulumi/gharunners";
 import * as pulumi from "@pulumi/pulumi";
-import { Effect, flow } from "effect";
+import * as Effect from "effect/Effect";
+import { flow } from "effect/Function";
 import * as S from "effect/Schema";
 
 const $I = $InfraId.create("CiFleetController");

@@ -12,8 +12,7 @@ bun add @beep/md
 
 ```ts
 import { Md } from "@beep/md"
-import { Result } from "effect"
-
+import * as Result from "effect/Result";
 const document = Md.make([Md.h1`Hello`, Md.p`World`])
 const markdown = Md.render(document)
 
@@ -44,8 +43,7 @@ typed HTML AST:
 
 ```ts
 import { Md, safeHtmlValue } from "@beep/md"
-import { Result } from "effect"
-
+import * as Result from "effect/Result";
 const document = Result.getOrThrow(
   Md.refineSafeDocument(Md.make([Md.p(Md.a("https://example.com", "Example"))]))
 )

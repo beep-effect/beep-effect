@@ -8,7 +8,8 @@
 
 import { jsonStringifyPretty } from "@beep/repo-utils";
 import { A, Str } from "@beep/utils";
-import { Effect, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as R from "effect/Record";
 import { scaffoldPackageScripts } from "../../internal/package-scripts/PackageScripts.schemas.ts";
 import type { ArchitecturePackageRole, WritePackageJsonOperation } from "./Architecture.schemas.ts";
@@ -67,8 +68,7 @@ const packageExportMapFor = (
  *
  * ```ts
  * import { renderPackageJsonOperation, WritePackageJsonOperation } from "@beep/repo-cli/commands/Architecture"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const operation = WritePackageJsonOperation.make({
  *   kind: "write-package-json",
  *   role: "domain",

@@ -15,7 +15,8 @@ import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { NamedNode } from "@beep/rdf";
 import { LiteralKit } from "@beep/schema";
-import { Tuple, Effect } from "effect";
+import * as Tuple from "effect/Tuple";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import type * as Event from "effect/eventlog/Event";
 import * as EventGroup from "effect/eventlog/EventGroup";
@@ -283,7 +284,7 @@ const OntologyEventEntryDefinition: S.toTaggedUnion<"event", OntologyEventEntryM
  *
  * **Example** (Inspect canonical ontology event cases)
  * ```ts
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  * import { OntologyEventEntry } from "@effect-ontology/Schema/EventSchema"

@@ -13,9 +13,13 @@ import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect } from "@effect/vitest";
 import { assertSome, assertTrue } from "@effect/vitest/utils";
-import { ConfigProvider, Effect, Layer, pipe, Stream } from "effect";
 import * as LanguageModel from "effect/ai/LanguageModel";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import {
   EXPECTED_DISTINCTION_LIMITATION,
   EXPECTED_DISTINCTION_QUOTE,

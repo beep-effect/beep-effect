@@ -7,7 +7,7 @@
 
 import { FaceDetectionImageRequest } from "@beep/face-detection";
 import { A } from "@beep/utils";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import { FilesCommandError } from "../Files.errors.ts";
 import { analyzeSolidBorders, classifyBorderSides, roundCandidateMetric } from "../Files.media.ts";

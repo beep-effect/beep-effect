@@ -56,17 +56,27 @@ import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import { getColumns } from "drizzle-orm";
-import { Config, ConfigProvider, Effect, Equal, Exit, FileSystem, Layer, Order, Path, pipe, Stream } from "effect";
 import * as A from "effect/Array";
 import * as LanguageModel from "effect/ai/LanguageModel";
 import { McpServerClient } from "effect/ai/McpSchema";
 import * as McpServer from "effect/ai/McpServer";
 import * as Response from "effect/ai/Response";
+import * as Config from "effect/Config";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as MutableRef from "effect/MutableRef";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as SqlClient from "effect/sql/SqlClient";
 import { OFFICE_ACTION_FIXTURE } from "./fixture.ts";
@@ -212,10 +222,8 @@ const normalizedPatentFixture = Md.make([
 ]);
 
 const testLayer = NodeServices.layer;
-const realCorpusEnabled = O.getOrElse(
-  Effect.runSync(Config.option(Config.Boolean("BEEP_TEST_OPPOLD_CORPUS"))),
-  () => false
-);
+const realCorpusConfig = Config.option(Config.Boolean("BEEP_TEST_OPPOLD_CORPUS"));
+const realCorpusEnabled = Effect.runSync(realCorpusConfig).pipe(O.getOrElse(() => false));
 
 const withDuckDb =
   (databasePath: string) =>
@@ -651,6 +659,7 @@ const addMailRun = Effect.fn("PracticeKgTest.addMailRun")(function* (corpusRoot:
       "Message-Cc": '"Docketing, Example" <Docketing@Example.com>',
       "Message-From": "Pat Example <Pat@Example.com>",
       "Message-To": [`Ann Attorney <ann@${practiceDomain}>`, "sam@other.test"],
+      "Message:Raw-Header:Message-ID": "<filing-1@example.com>",
       "dcterms:created": "2026-02-01T10:00:00Z",
     })
   );
@@ -1065,7 +1074,7 @@ describe("practice KG projections", () => {
             )
             .pipe(Effect.flatMap(decodeDumpLines));
           expect(A.map(buildLines, (row) => row.line)).toStrictEqual([
-            '{"bundle_version":"2026-10-07-01","built_from_runs":"base","corpus_snapshot_at":"2026-01-02T03:04:06.000Z"}',
+            '{"bundle_version":"2026-10-07-04","built_from_runs":"base","corpus_snapshot_at":"2026-01-02T03:04:06.000Z"}',
           ]);
         }).pipe(provideScopedLayer(Pglite.makeLayer({ dataDir: path.join(firstOut, "kg.pglite") })));
       }),
@@ -1351,7 +1360,7 @@ describe("practice KG projections", () => {
           .readFileString(path.join(bundleOut, "bundle.manifest.json"))
           .pipe(Effect.flatMap(decodeManifestJson));
         expect([manifest.bundleVersion, manifest.schemaVersion.duckdb, manifest.schemaVersion.pglite]).toStrictEqual([
-          "2026-10-07-01",
+          "2026-10-07-04",
           "4",
           "4",
         ]);

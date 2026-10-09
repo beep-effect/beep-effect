@@ -6,8 +6,8 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { Context } from "effect";
-import type { Effect } from "effect";
+import * as Context from "effect/Context";
+import type * as Effect from "effect/Effect";
 import type { DoctestAnalysisError, DoctestRewriteError } from "./Doctest.errors.ts";
 import type { DoctestCliConfig, DoctestReport, MarkPlan } from "./Doctest.schemas.ts";
 
@@ -31,8 +31,7 @@ export interface DoctestFenceAnalyzerShape {
  *
  * ```ts
  * import { DoctestFenceAnalyzer } from "@beep/repo-cli/commands/Docgen"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const access = Effect.gen(function* () {
  *   const analyzer = yield* DoctestFenceAnalyzer
  *   return analyzer.analyze
@@ -65,8 +64,7 @@ export interface DoctestFenceRewriterShape {
  *
  * ```ts
  * import { DoctestFenceRewriter } from "@beep/repo-cli/commands/Docgen"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const access = Effect.gen(function* () {
  *   const rewriter = yield* DoctestFenceRewriter
  *   return rewriter.preview

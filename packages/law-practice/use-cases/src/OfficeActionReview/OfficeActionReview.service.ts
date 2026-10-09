@@ -19,7 +19,7 @@ import { FileProcessingOperationError, ProcessFileOperation } from "@beep/file-p
 import { LangExtractRequest } from "@beep/langextract/Extraction";
 import { ExtractionTarget } from "@beep/langextract/Target";
 import { DocumentId } from "@beep/nlp/Core";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { spikeEntityInput } from "../internal/spikeEntity.ts";
@@ -182,7 +182,8 @@ export interface OfficeActionReviewDeps {
  * import { OfficeActionReviewInput } from "@beep/law-practice-use-cases/OfficeActionReview"
  * import type { OfficeActionReviewDeps } from "@beep/law-practice-use-cases/OfficeActionReview"
  * import { PosixPath } from "@beep/schema/PosixPath"
- * import { Effect, Exit } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Exit from "effect/Exit";
  * import * as S from "effect/Schema"
  *
  * const fileProcessing: FileProcessingServiceShape = {

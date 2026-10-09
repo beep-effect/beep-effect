@@ -7,7 +7,7 @@
  */
 
 import * as WorkspaceUseCases from "@beep/workspace-use-cases/server";
-import { Layer } from "effect";
+import * as Layer from "effect/Layer";
 import { makeDrizzleWorkspaceVaultStore, makeInMemoryWorkspaceVaultStore } from "./WorkspaceVault.repo.ts";
 
 const WorkspaceVaultStore = WorkspaceUseCases.Workspace.WorkspaceVaultStore;

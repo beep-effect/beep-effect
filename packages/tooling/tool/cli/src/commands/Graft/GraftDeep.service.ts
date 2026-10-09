@@ -5,15 +5,20 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { Cause, Config, Effect, Exit, flow, Match, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Cause from "effect/Cause";
+import * as Config from "effect/Config";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Dur from "effect/Duration";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
+import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
+import { flow, pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
@@ -879,7 +884,7 @@ const makeGraftDeepRefresh = Effect.fn("GraftDeepRefresh.make")(function* () {
   // here would interrupt the sibling rebuilds still running and throw away
   // every result the night already earned.
   const rebuildClone = Effect.fnUntraced(function* (ctx: RefreshContext, root: string) {
-    const [elapsed, attempted] = yield* Effect.timed(Effect.result(ctx.step(siblingBuildStep(root))));
+    const [elapsed, attempted] = yield* ctx.step(siblingBuildStep(root)).pipe(Effect.result, Effect.timed);
     return GraftDeepSiblingRebuild.make({
       root,
       exitCode: Result.isSuccess(attempted) ? exitCodeOf(attempted.success.exitCode) : REBUILD_UNFINISHED_EXIT,

@@ -5,10 +5,13 @@
  * @since 0.0.0
  */
 
-import { HashMap, pipe, Result, Struct } from "effect";
 import * as A from "effect/Array";
+import { pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Struct from "effect/Struct";
 
 declare module "effect/Schema" {
   namespace Annotations {

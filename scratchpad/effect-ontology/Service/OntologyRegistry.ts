@@ -17,7 +17,9 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
-import { Context, Effect, Layer } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -159,7 +161,7 @@ const DEFAULT_REGISTRY_PATH = "registry.json";
  * **Example** (Look up an ontology by id)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { OntologyRegistryService } from "@effect-ontology/Service/OntologyRegistry"
  *
  * const program = Effect.gen(function* () {

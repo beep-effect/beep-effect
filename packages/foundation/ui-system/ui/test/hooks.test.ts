@@ -3,7 +3,7 @@ import { resolveIsMobile } from "@beep/ui/hooks/useMobile";
 import { getStepFactor, NumberInputTestKit, numberToString, toNumber } from "@beep/ui/hooks/useNumberInput";
 import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
-import { pipe } from "effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 
 describe("@beep/ui hooks/useNumberInput", () => {

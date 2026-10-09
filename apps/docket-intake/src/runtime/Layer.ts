@@ -28,7 +28,7 @@ import {
 } from "@beep/law-practice-use-cases/DocketIntake";
 import { M365, M365AppOnlyConfigInput, M365CertificateCredential } from "@beep/m365";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
-import { Layer } from "effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import { DocketDryRunPortsLive } from "../DryRun.ts";
 import type { DocketIntakeAppConfig } from "../Config.ts";

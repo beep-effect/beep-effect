@@ -23,9 +23,10 @@
  */
 
 import { A } from "@beep/utils";
-import { Effect, Struct } from "effect";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
+import * as Struct from "effect/Struct";
 import * as Backend from "../../Backend/NLPBackend.ts";
 import { makeNode } from "../EffectGraph.ts";
 import * as Op from "./Operation.ts";

@@ -18,7 +18,8 @@
  */
 
 import { BunServices } from "@effect/platform-bun";
-import { ConfigProvider, Layer } from "effect";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Layer from "effect/Layer";
 import { EntityRegistryRepository } from "../Repository/EntityRegistry.ts";
 import { ConfigService, ConfigServiceDefault } from "../Service/Config.ts";
 import { CrossBatchEntityResolver } from "../Service/CrossBatchEntityResolver.ts";
@@ -442,7 +443,7 @@ export const WorkflowOrchestratorFullLayer = BatchExtractionWorkflowWithDepsLaye
  * **Example** (Use the self-contained CLI extraction stack)
  *
  * ```ts
- * import { ConfigProvider } from "effect"
+ * import * as ConfigProvider from "effect/ConfigProvider";
  * import { CliExtractionLayer, makeCliExtractionLayer } from "@effect-ontology/Runtime/WorkflowLayers"
  *
  * const withPath = makeCliExtractionLayer(
@@ -472,7 +473,7 @@ export const CliExtractionLayer = Layer.mergeAll(ExtractionWorkflowBundle, RdfBu
  * **Example** (Override ONTOLOGY_PATH before constructing CLI services)
  *
  * ```ts
- * import { ConfigProvider } from "effect"
+ * import * as ConfigProvider from "effect/ConfigProvider";
  * import { CliExtractionLayer, makeCliExtractionLayer } from "@effect-ontology/Runtime/WorkflowLayers"
  *
  * const ontologyPath = "ontologies/people.ttl"
@@ -512,7 +513,8 @@ export const makeCliExtractionLayer = (configProvider: ConfigProvider.ConfigProv
  * **Example** (Provide a test ConfigProvider into the open NLP bundle)
  *
  * ```ts
- * import { ConfigProvider, Layer } from "effect"
+ * import * as ConfigProvider from "effect/ConfigProvider";
+ * import * as Layer from "effect/Layer";
  * import { TestConfigProvider } from "@effect-ontology/Runtime/TestRuntime"
  * import { NlpBundleOpen } from "@effect-ontology/Runtime/WorkflowLayers"
  *
@@ -538,7 +540,7 @@ export const NlpBundleOpen = NlpService.Default.pipe(
  * **Example** (Leave ConfigService open for tests)
  *
  * ```ts
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer";
  * import { EmbeddingBundleOpen } from "@effect-ontology/Runtime/WorkflowLayers"
  * import { ConfigService, DEFAULT_CONFIG } from "@effect-ontology/Service/Config"
  *
@@ -587,7 +589,7 @@ export const RdfBuilderBundleOpen = RdfBuilder.Default;
  * **Example** (Leave storage ConfigService open for tests)
  *
  * ```ts
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer";
  * import { StorageBundleOpen } from "@effect-ontology/Runtime/WorkflowLayers"
  * import { ConfigService, DEFAULT_CONFIG } from "@effect-ontology/Service/Config"
  *

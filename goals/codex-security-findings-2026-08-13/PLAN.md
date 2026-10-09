@@ -120,7 +120,7 @@ supersedes their pending publication state.
 test "$(wc -m < goals/codex-security-findings-2026-08-13/GOAL.md)" -le 4000
 jq . goals/codex-security-findings-2026-08-13/ops/manifest.json
 jq . goals/codex-security-findings-2026-08-13/ops/triage.json
-bun -e 'import { decodeCodexTriageLedger } from "./packages/tooling/tool/cli/src/commands/Codex/Findings.triage.schemas.ts"; import { Effect } from "effect"; const input = await Bun.file("goals/codex-security-findings-2026-08-13/ops/triage.json").json(); await Effect.runPromise(decodeCodexTriageLedger(input))'
+bun -e 'import { decodeCodexTriageLedger } from "./packages/tooling/tool/cli/src/commands/Codex/Findings.triage.schemas.ts"; import * as Effect from "effect/Effect"; const input = await Bun.file("goals/codex-security-findings-2026-08-13/ops/triage.json").json(); await Effect.runPromise(decodeCodexTriageLedger(input))'
 test "$(find goals/codex-security-findings-2026-08-13/findings -maxdepth 1 -name 'CSF-*.md' | wc -l | tr -d ' ')" = 19
 bun run beep goals index --check
 bun run beep goals doctor

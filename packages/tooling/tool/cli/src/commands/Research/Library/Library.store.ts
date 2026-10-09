@@ -1,13 +1,17 @@
-/** Research library persistence with immutable artifacts and one catalog writer.
- * @packageDocumentation
+/**
+ * Research library persistence with immutable artifacts and one catalog writer.
  *
+ * @packageDocumentation
  * @since 0.0.0
  */
-import { Effect, FileSystem, Path } from "effect";
+
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
+import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
+import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { LibraryError } from "./Library.errors.ts";
@@ -23,7 +27,8 @@ import {
 const mapFailure = (message: string) => Effect.mapError((cause: unknown) => LibraryError.make({ message, cause }));
 const codec = S.fromJsonString(LibraryCatalog);
 
-/** Hash bytes without interpreting or normalizing their content.
+/**
+ * Hash bytes without interpreting or normalizing their content.
  * **Example** (Hash an empty artifact)
  * ```ts
  * import { hashBytes } from "@beep/repo-cli/commands/Research"
@@ -31,7 +36,6 @@ const codec = S.fromJsonString(LibraryCatalog);
  * ```
  *
  * @category utilities
- *
  * @since 0.0.0
  */
 export const hashBytes = Effect.fn("ResearchLibrary.hashBytes")(function* (bytes: Uint8Array) {
@@ -39,7 +43,8 @@ export const hashBytes = Effect.fn("ResearchLibrary.hashBytes")(function* (bytes
   return Hex.encode(yield* crypto.digest("SHA-256", bytes).pipe(mapFailure("Cannot hash library artifact.")));
 });
 
-/** Read a schema-validated catalog, or an empty catalog for a new library.
+/**
+ * Read a schema-validated catalog, or an empty catalog for a new library.
  * **Example** (Read a catalog)
  * ```ts
  * import { loadCatalog } from "@beep/repo-cli/commands/Research"
@@ -47,7 +52,6 @@ export const hashBytes = Effect.fn("ResearchLibrary.hashBytes")(function* (bytes
  * ```
  *
  * @category repositories
- *
  * @since 0.0.0
  */
 export const loadCatalog = Effect.fn("ResearchLibrary.loadCatalog")(function* (root: string) {
@@ -173,7 +177,8 @@ const stageImmutableObject = Effect.fn("ResearchLibrary.stageImmutableObject")(f
   );
 });
 
-/** Save bytes once; reject path escapes and replacement of existing content.
+/**
+ * Save bytes once; reject path escapes and replacement of existing content.
  * **Example** (Save a snapshot)
  * ```ts
  * import { saveImmutable } from "@beep/repo-cli/commands/Research"
@@ -181,7 +186,6 @@ const stageImmutableObject = Effect.fn("ResearchLibrary.stageImmutableObject")(f
  * ```
  *
  * @category repositories
- *
  * @since 0.0.0
  */
 export const saveImmutable = Effect.fn("ResearchLibrary.saveImmutable")(function* (
@@ -216,7 +220,8 @@ export const saveImmutable = Effect.fn("ResearchLibrary.saveImmutable")(function
   return artifact;
 });
 
-/** Union locators for the same explicit version without losing alias evidence.
+/**
+ * Union locators for the same explicit version without losing alias evidence.
  * **Example** (Preserve locator aliases for one revision)
  * ```ts
  * import { mergeLibraryVersions } from "@beep/repo-cli/test/ResearchLibrary"
@@ -226,9 +231,9 @@ export const saveImmutable = Effect.fn("ResearchLibrary.saveImmutable")(function
  * ```
  *
  * @internal
- *
+ * @param versions - Version records whose matching revision and canonical URL share locator evidence.
+ * @returns Versions in first-observed order with duplicate locator aliases removed.
  * @category normalization
- *
  * @since 0.0.0
  */
 export const mergeLibraryVersions = (versions: ReadonlyArray<LibraryVersion>): ReadonlyArray<LibraryVersion> =>
@@ -419,7 +424,8 @@ const migrateCatalogIdentities = Effect.fn("ResearchLibrary.migrateCatalogIdenti
   });
 });
 
-/** Serialize catalog mutations under an exclusive directory lock.
+/**
+ * Serialize catalog mutations under an exclusive directory lock.
  * **Details**
  * The callback runs while the writer owns `.writer-lock`; lock contention fails
  * visibly. A process killed before release leaves a lock requiring inspection.
@@ -427,12 +433,11 @@ const migrateCatalogIdentities = Effect.fn("ResearchLibrary.migrateCatalogIdenti
  * **Example** (Preserve the catalog)
  * ```ts
  * import { withCatalog } from "@beep/repo-cli/commands/Research"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * console.log(withCatalog("/library", Effect.succeed).pipe !== undefined)
  * ```
  *
  * @category repositories
- *
  * @since 0.0.0
  */
 export const withCatalog = Effect.fn("ResearchLibrary.withCatalog")(function* <E, R>(
@@ -451,42 +456,41 @@ export const withCatalog = Effect.fn("ResearchLibrary.withCatalog")(function* <E
           "Library writer already active, or an interrupted writer left .writer-lock; inspect before removing it."
         )
       ),
-    () =>
-      Effect.gen(function* () {
-        const migrated = yield* migrateCatalogIdentities(yield* loadCatalog(root));
-        const artifacts = [
-          ...migrated.artifacts,
-          ...A.flatMap(migrated.captures, (capture) => capture.artifacts),
-          ...A.flatMap(migrated.qualifications, (qualification) => qualification.evidence),
-        ];
-        // Legacy aliases predate the object store. Admit their bytes only against the recorded digest.
-        for (const artifact of artifacts) {
-          if (yield* fs.exists(path.join(root, "objects/sha256", artifact.sha256))) continue;
-          const bytes = yield* fs
-            .readFile(path.resolve(root, artifact.path))
-            .pipe(mapFailure("Cannot read legacy artifact for object migration."));
-          if (bytes.length !== artifact.bytes || (yield* hashBytes(bytes)) !== artifact.sha256)
-            return yield* LibraryError.make({
-              message: "Legacy artifact differs from its immutable receipt.",
-              cause: artifact.path,
-            });
-          yield* saveImmutable(root, artifact.path, bytes);
-        }
-        const catalog = yield* update(migrated);
-        const encoded = yield* S.encodeEffect(codec)(catalog).pipe(mapFailure("Cannot encode library catalog."));
-        const bytes = new TextEncoder().encode(encoded);
-        const hash = yield* hashBytes(bytes);
-        yield* saveImmutable(root, `catalog/history/${hash}.json`, bytes);
-        const temporary = path.join(lock, "catalog.next.json");
-        yield* fs.writeFile(temporary, bytes, { flag: "wx" }).pipe(mapFailure("Cannot stage library catalog."));
-        yield* fs
-          .makeDirectory(path.join(root, "catalog"), { recursive: true })
-          .pipe(mapFailure("Cannot create canonical catalog directory."));
-        yield* fs
-          .rename(temporary, path.join(root, "catalog/library.json"))
-          .pipe(mapFailure("Cannot replace library catalog atomically."));
-        return catalog;
-      }),
+    Effect.fnUntraced(function* () {
+      const migrated = yield* migrateCatalogIdentities(yield* loadCatalog(root));
+      const artifacts = [
+        ...migrated.artifacts,
+        ...A.flatMap(migrated.captures, (capture) => capture.artifacts),
+        ...A.flatMap(migrated.qualifications, (qualification) => qualification.evidence),
+      ];
+      // Legacy aliases predate the object store. Admit their bytes only against the recorded digest.
+      for (const artifact of artifacts) {
+        if (yield* fs.exists(path.join(root, "objects/sha256", artifact.sha256))) continue;
+        const bytes = yield* fs
+          .readFile(path.resolve(root, artifact.path))
+          .pipe(mapFailure("Cannot read legacy artifact for object migration."));
+        if (bytes.length !== artifact.bytes || (yield* hashBytes(bytes)) !== artifact.sha256)
+          return yield* LibraryError.make({
+            message: "Legacy artifact differs from its immutable receipt.",
+            cause: artifact.path,
+          });
+        yield* saveImmutable(root, artifact.path, bytes);
+      }
+      const catalog = yield* update(migrated);
+      const encoded = yield* S.encodeEffect(codec)(catalog).pipe(mapFailure("Cannot encode library catalog."));
+      const bytes = new TextEncoder().encode(encoded);
+      const hash = yield* hashBytes(bytes);
+      yield* saveImmutable(root, `catalog/history/${hash}.json`, bytes);
+      const temporary = path.join(lock, "catalog.next.json");
+      yield* fs.writeFile(temporary, bytes, { flag: "wx" }).pipe(mapFailure("Cannot stage library catalog."));
+      yield* fs
+        .makeDirectory(path.join(root, "catalog"), { recursive: true })
+        .pipe(mapFailure("Cannot create canonical catalog directory."));
+      yield* fs
+        .rename(temporary, path.join(root, "catalog/library.json"))
+        .pipe(mapFailure("Cannot replace library catalog atomically."));
+      return catalog;
+    }),
     () => fs.remove(lock, { recursive: true }).pipe(Effect.orDie)
   );
 });

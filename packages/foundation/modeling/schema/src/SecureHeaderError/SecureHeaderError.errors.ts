@@ -4,8 +4,9 @@
  * @packageDocumentation
  */
 import { $SchemaId } from "@beep/identity";
-import { Effect, Tuple } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+import * as Tuple from "effect/Tuple";
 import { alwaysEquivalent } from "../SchemaUtils/toEquivalence.ts";
 import { SecureHeader } from "../SecureHeader/index.ts";
 
@@ -392,7 +393,7 @@ export const SecureHeaderError = SecureHeader.mapMembers(
  * **Example** (Handle SecureHeaderError type)
  *
  * ```ts import.meta.vitest name="Handle SecureHeaderError type"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import type { SecureHeaderError } from "@beep/schema/SecureHeaderError"
  *
  * const handle = (error: SecureHeaderError) => Effect.logError(`secure header error: ${error._tag}`)

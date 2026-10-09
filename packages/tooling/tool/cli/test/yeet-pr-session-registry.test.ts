@@ -6,7 +6,10 @@ import {
 } from "@beep/repo-cli/test/Yeet";
 import { it } from "@beep/test-runner";
 import { assert, expect } from "@effect/vitest";
-import { ConfigProvider, Effect, FileSystem, Path } from "effect";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Path from "effect/Path";
 import { makeRecord, PlatformLayer, repository } from "./yeet-pr-fixtures.ts";
 
 it.layer(PlatformLayer, { timeout: "30 seconds" })("Yeet PR session registry", (it) => {

@@ -6,8 +6,11 @@ Every in-scope import of the `effect` package barrel and the live `@beep`
 foundation barrels is rewritten to per-module form and the convention is
 enforced by the incumbent toolchain:
 
+Historical root-barrel examples in this packet use `<legacy-effect-barrel>` as
+a non-runnable placeholder. The pilot measurements and conclusions are unchanged.
+
 ```text
-import { Effect, pipe } from "effect";      // before
+import { Effect, pipe } from "<legacy-effect-barrel>";      // before
 import * as Effect from "effect/Effect";    // after
 import { pipe } from "effect/Function";     // after
 

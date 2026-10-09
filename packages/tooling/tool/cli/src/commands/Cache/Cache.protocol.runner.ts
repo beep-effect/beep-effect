@@ -6,10 +6,14 @@
  */
 import { CacheClientPin } from "@beep/repo-configs/cache";
 import { Sha256HexFromBytes } from "@beep/schema";
-import { Crypto, Duration, Effect, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
+import * as Crypto from "effect/Crypto";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
+import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -447,7 +451,7 @@ export const runCacheProtocolExperiment = Effect.fn("CacheProtocol.experiment")(
         const module = yield* S.encodeEffect(CacheProtocolJson)(
           path.join(root, "packages/tooling/tool/cli/src/commands/Cache/Cache.protocol.runner.ts")
         );
-        const worker = `import { NodeCrypto, NodeServices } from "@effect/platform-node";\nimport { BunRuntime } from "@effect/platform-bun";\nimport { Effect, FileSystem, Layer } from "effect";\nimport * as S from "effect/Schema";\nimport { runCacheProtocolWorker } from ${module};\nimport { CacheProtocolRequest, CacheProtocolExecution } from ${yield* S.encodeEffect(CacheProtocolJson)(path.join(root, "packages/tooling/tool/cli/src/commands/Cache/Cache.protocol.runner.schemas.ts"))};\nconst RequestJson=S.fromJsonString(CacheProtocolRequest); const ExecutionJson=S.fromJsonString(CacheProtocolExecution);\nBunRuntime.runMain(Effect.gen(function*(){ const fs=yield*FileSystem.FileSystem; const request=yield*S.decodeUnknownEffect(RequestJson)(yield*fs.readFileString("request.json")); const report=yield*runCacheProtocolWorker(process.cwd(),request); yield*fs.writeFileString("report.json",yield*S.encodeEffect(ExecutionJson)(report)); }).pipe(Effect.provide(Layer.mergeAll(NodeServices.layer,NodeCrypto.layer))));\n`;
+        const worker = `import { NodeCrypto, NodeServices } from "@effect/platform-node";\nimport { BunRuntime } from "@effect/platform-bun";\nimport * as Effect from "effect/Effect";\nimport * as FileSystem from "effect/FileSystem";\nimport * as Layer from "effect/Layer";\nimport * as S from "effect/Schema";\nimport { runCacheProtocolWorker } from ${module};\nimport { CacheProtocolRequest, CacheProtocolExecution } from ${yield* S.encodeEffect(CacheProtocolJson)(path.join(root, "packages/tooling/tool/cli/src/commands/Cache/Cache.protocol.runner.schemas.ts"))};\nconst RequestJson=S.fromJsonString(CacheProtocolRequest); const ExecutionJson=S.fromJsonString(CacheProtocolExecution);\nBunRuntime.runMain(Effect.gen(function*(){ const fs=yield*FileSystem.FileSystem; const request=yield*S.decodeUnknownEffect(RequestJson)(yield*fs.readFileString("request.json")); const report=yield*runCacheProtocolWorker(process.cwd(),request); yield*fs.writeFileString("report.json",yield*S.encodeEffect(ExecutionJson)(report)); }).pipe(Effect.provide(Layer.mergeAll(NodeServices.layer,NodeCrypto.layer))));\n`;
         yield* writeContainedFileString(directory, "worker.ts", worker);
         const captured = yield* runCapturedStreams({
           command: "/usr/bin/bwrap",
@@ -500,7 +504,7 @@ export const runCacheProtocolExperiment = Effect.fn("CacheProtocol.experiment")(
  * **Example** (Reference the namespace guard)
  * ```ts
  * import { assertCachePrivateNetwork } from "@beep/repo-cli/commands/Cache"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * console.assert(Effect.isEffect(assertCachePrivateNetwork))
  * ```
  *

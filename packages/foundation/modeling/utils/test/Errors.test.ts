@@ -1,8 +1,8 @@
 import { it } from "@beep/test-runner";
 import { Err } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
-import { Effect, pipe } from "effect";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
 
 class CauseMappedError {
   readonly _tag = "CauseMappedError";

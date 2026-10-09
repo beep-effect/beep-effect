@@ -9,13 +9,23 @@ import { $AcpId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Deferred, Effect, HashMap, HashSet, Inspectable, Match, pipe, Queue, Ref, Stream, Tuple } from "effect";
+import * as Deferred from "effect/Deferred";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
+import * as Inspectable from "effect/Inspectable";
+import * as Match from "effect/Match";
 import * as P from "effect/Predicate";
+import * as Queue from "effect/Queue";
+import * as Ref from "effect/Ref";
 import * as RpcClient from "effect/rpc/RpcClient";
 import * as RpcClientError from "effect/rpc/RpcClientError";
 import * as RpcSerialization from "effect/rpc/RpcSerialization";
 import * as RpcServer from "effect/rpc/RpcServer";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
+import * as Tuple from "effect/Tuple";
 import { CLIENT_METHODS } from "./_generated/meta.gen.ts";
 import * as AcpSchema from "./_generated/schema.gen.ts";
 import * as AcpError from "./Acp.errors.ts";
@@ -40,8 +50,7 @@ const ACP_STDIO_CLIENT_ID = 0;
  *
  * ```ts
  * import type { AcpUnknownExtRequestHandler } from "@beep/acp/protocol"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const handler: AcpUnknownExtRequestHandler = (method, params) => Effect.succeed({ method, params })
  * console.log(handler)
  * ```
@@ -61,8 +70,7 @@ export type AcpUnknownExtRequestHandler = (
  *
  * ```ts
  * import type { AcpUnknownExtNotificationHandler } from "@beep/acp/protocol"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const handler: AcpUnknownExtNotificationHandler = (method) => Effect.sync(() => console.log(method))
  * console.log(handler)
  * ```
@@ -82,7 +90,7 @@ export type AcpUnknownExtNotificationHandler = (
  *
  * ```ts
  * import type { AcpExtensionRegistrars } from "@beep/acp/protocol"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const registerPing = (registrars: AcpExtensionRegistrars) =>
@@ -452,8 +460,8 @@ const fromWireMessage: (message: AcpWireMessage) => AcpWireMessage = Match.type<
  * **Example** (Build protocol over stdio)
  *
  * ```ts
- * import { Effect } from "effect"
- * import { Stdio } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Stdio from "effect/Stdio";
  * import * as HashSet from "effect/HashSet"
  * import { makeAcpPatchedProtocol } from "@beep/acp/protocol"
  *
@@ -812,7 +820,7 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
               cause: O.some(error),
               detail: Inspectable.toStringUnknown(error, 0),
             });
-        return handleTermination(Effect.succeed(normalized));
+        return normalized.pipe(Effect.succeed, handleTermination);
       },
       onSuccess: () =>
         handleTermination(

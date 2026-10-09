@@ -10,7 +10,9 @@
  * **Example** (Track duration with timer)
  *
  * ```typescript
- * import { Effect, Metric, Duration } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Metric from "effect/Metric";
+ * import * as Duration from "effect/Duration";
  * import { measureElapsedMillis, trackDuration } from "@beep/observability"
  *
  * const timer = Metric.timer("my_op_duration")
@@ -26,8 +28,13 @@
 
 import { $ObservabilityId } from "@beep/identity/packages";
 import { P } from "@beep/utils";
-import { Clock, Duration, Effect, Exit, Match, Metric, pipe } from "effect";
-import { constant, dual } from "effect/Function";
+import * as Clock from "effect/Clock";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import { constant, dual, pipe } from "effect/Function";
+import * as Match from "effect/Match";
+import * as Metric from "effect/Metric";
 import * as S from "effect/Schema";
 import { PhaseOutcome } from "./PhaseProfiler.ts";
 
@@ -169,7 +176,7 @@ export const statusClass = (status: number): string => {
  * **Example** (Measure effect elapsed time)
  *
  * ```typescript
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { measureElapsedMillis } from "@beep/observability"
  *
  * const program = measureElapsedMillis(
@@ -217,7 +224,8 @@ export const measureElapsedMillis = Effect.fn("measureElapsedMillis")(function* 
  * **Example** (Track timer with attributes)
  *
  * ```typescript
- * import { Effect, Metric } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Metric from "effect/Metric";
  * import { trackDuration } from "@beep/observability"
  *
  * const timer = Metric.timer("user_create_duration")
@@ -257,7 +265,8 @@ const trackDurationImpl = Effect.fn("trackDurationImpl")(function* <A, E, R>(
  * **Example** (Track effect with timer)
  *
  * ```typescript
- * import { Effect, Metric } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Metric from "effect/Metric";
  * import { trackDuration } from "@beep/observability"
  *
  * const timer = Metric.timer("task_duration")
@@ -317,7 +326,8 @@ export const trackDuration: {
  * **Example** (Observe workflow lifecycle metrics)
  *
  * ```typescript
- * import { Effect, Metric } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Metric from "effect/Metric";
  * import { observeWorkflow } from "@beep/observability"
  *
  * const started = Metric.counter("workflow_started_total")
@@ -381,7 +391,8 @@ const observeWorkflowImpl = Effect.fn("observeWorkflowImpl")(function* <A, E, R>
  * **Example** (Observe workflow with counters)
  *
  * ```typescript
- * import { Effect, Metric } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Metric from "effect/Metric";
  * import { observeWorkflow } from "@beep/observability"
  *
  * const program = observeWorkflow(Effect.succeed("ok"), {
@@ -430,7 +441,8 @@ export const observeWorkflow: {
  * **Example** (Observe HTTP request metrics)
  *
  * ```typescript
- * import { Effect, Metric } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Metric from "effect/Metric";
  * import { observeHttpRequest } from "@beep/observability"
  *
  * const requestsTotal = Metric.counter("http_requests_total")
@@ -529,7 +541,8 @@ const observeHttpRequestImpl = Effect.fn("observeHttpRequestImpl")(function* <
  * **Example** (Observe HTTP request duration)
  *
  * ```typescript
- * import { Effect, Metric } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Metric from "effect/Metric";
  * import { observeHttpRequest } from "@beep/observability"
  *
  * const program = observeHttpRequest(Effect.succeed("ok"), {

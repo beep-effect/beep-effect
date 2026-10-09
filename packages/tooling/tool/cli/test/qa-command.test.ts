@@ -34,7 +34,8 @@ import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
-import { Effect, Exit } from "effect";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
@@ -83,7 +84,7 @@ describe("commands/Qa Inventory.schemas", () => {
       const exit = yield* Effect.exit(
         decodeQaInventory(inventoryInput([finding("R4-01", "P0", "frames/a.png", [2])], 0))
       );
-      assertTrue(Exit.isFailure(exit));
+      exit.pipe(Exit.isFailure, assertTrue);
     })
   );
 
@@ -92,7 +93,7 @@ describe("commands/Qa Inventory.schemas", () => {
       const exit = yield* Effect.exit(
         decodeQaInventory(inventoryInput([finding("R4-1", "P0", "frames/a.png", [2])], 1))
       );
-      assertTrue(Exit.isFailure(exit));
+      exit.pipe(Exit.isFailure, assertTrue);
     })
   );
 

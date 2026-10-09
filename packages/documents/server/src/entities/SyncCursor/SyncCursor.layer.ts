@@ -7,7 +7,7 @@
  */
 
 import { SyncCursorRepository } from "@beep/documents-use-cases/entities/SyncCursor/server";
-import { Layer } from "effect";
+import * as Layer from "effect/Layer";
 import { makeDrizzleSyncCursorRepository, makeInMemorySyncCursorRepository } from "./SyncCursor.repo.ts";
 
 /**

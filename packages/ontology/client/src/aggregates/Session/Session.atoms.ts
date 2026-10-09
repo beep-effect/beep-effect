@@ -51,9 +51,16 @@ import { makeLiteral, makeNamedNode, makeQuad, serializeQuad } from "@beep/rdf/R
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { LiteralKit } from "@beep/schema";
 import { A, O, P, Str, thunkFalse, thunkTrue } from "@beep/utils";
-import { Cause, Duration, Effect, flow, Layer, Order, pipe, Result, Semaphore } from "effect";
+import * as Cause from "effect/Cause";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import { flow, pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Order from "effect/Order";
+import * as Result from "effect/Result";
 import { Atom, AtomRpc, Reactivity } from "effect/reactivity";
 import * as S from "effect/Schema";
+import * as Semaphore from "effect/Semaphore";
 import type { CosmosBackend, CosmosRenderHandle } from "@beep/cosmos";
 import type { Graph3DDriverError, Graph3DRenderHandle } from "@beep/graph-3d/browser";
 import type { SessionChangeDelta } from "@beep/ontology-domain/aggregates/Session";

@@ -1,9 +1,12 @@
 // cspell:words SKOS DCTERMS skos dcterms
-import { flow, pipe, Result } from "effect";
+
+// cspell:words SKOS DCTERMS skos dcterms
 import * as A from "effect/Array";
+import { flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import {
   AssembledDatatypePredicate,

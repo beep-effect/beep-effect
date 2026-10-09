@@ -14,7 +14,11 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import { Effect, Fiber, HashSet, Queue, Stream } from "effect";
+import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
+import * as HashSet from "effect/HashSet";
+import * as Queue from "effect/Queue";
+import * as Stream from "effect/Stream";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -158,7 +162,8 @@ const consumeQueue = Effect.fn("BackpressureHandler.consumeQueue")(function* <A,
  * **Example** (Deliver a critical start event)
  *
  * ```ts
- * import { Effect, Stream } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Stream from "effect/Stream";
  * import * as S from "effect/Schema"
  * import { BackpressureConfig, withBackpressure } from "@effect-ontology/Cluster/BackpressureHandler"
  * import { ExtractionStartedEvent } from "@effect-ontology/Contract/ProgressStreaming"
@@ -285,7 +290,9 @@ export interface BackpressureMetrics {
  * **Example** (Record dropped non-critical events)
  *
  * ```ts
- * import { Effect, Ref, Stream } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Ref from "effect/Ref";
+ * import * as Stream from "effect/Stream";
  * import * as S from "effect/Schema"
  * import { BackpressureConfig, withBackpressureMetered } from "@effect-ontology/Cluster/BackpressureHandler"
  * import { ChunkingProgressEvent } from "@effect-ontology/Contract/ProgressStreaming"

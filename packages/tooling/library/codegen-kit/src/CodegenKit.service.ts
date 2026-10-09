@@ -10,21 +10,19 @@ import { A, Str } from "@beep/utils";
 import { make as makeJsonSchemaGenerator } from "@effect/openapi-generator/JsonSchemaGenerator";
 import * as OpenApiGenerator from "@effect/openapi-generator/OpenApiGenerator";
 import * as OpenApiPatch from "@effect/openapi-generator/OpenApiPatch";
-import {
-  Console,
-  Context,
-  Effect,
-  FileSystem,
-  Layer,
-  Match,
-  MutableList,
-  Number as N,
-  Order,
-  Path,
-  pipe,
-} from "effect";
+import * as Console from "effect/Console";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
 import { HttpClient, HttpClientResponse } from "effect/http";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
+import * as MutableList from "effect/MutableList";
+import * as N from "effect/Number";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -478,8 +476,7 @@ const packageLabel = (packageName: string): string =>
  *
  * ```ts
  * import { CodegenKit } from "@beep/codegen-kit"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const kit = yield* CodegenKit
  *   return kit

@@ -18,9 +18,8 @@ import {
   TextAnchorWidthCheck,
 } from "@beep/provenance/TextAnchor";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import { identity } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
-import { dual } from "effect/Function";
+import { dual, identity } from "effect/Function";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -34,7 +33,7 @@ const textAnchorEquivalent = S.toEquivalence(TextAnchor);
  * **Example** (Decode confidence value)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { Confidence } from "@beep/epistemic-domain"
  * import * as S from "effect/Schema"
  *
@@ -56,7 +55,7 @@ export const Confidence = UnitInterval.pipe(
  * **Example** (Typed confidence decode)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { Confidence } from "@beep/epistemic-domain"
  * import type { Confidence as ConfidenceValue } from "@beep/epistemic-domain"
  * import * as S from "effect/Schema"
@@ -124,7 +123,7 @@ const EvidenceSpanSchema = EvidenceSpanStruct.mapFields(identity).check(TextAnch
  * **Example** (Decode evidence span)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { EvidenceSpan } from "@beep/epistemic-domain"
  * import * as S from "effect/Schema"
  *

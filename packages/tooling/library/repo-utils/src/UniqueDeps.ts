@@ -10,8 +10,12 @@
  */
 import { $RepoUtilsId } from "@beep/identity/packages";
 import { A } from "@beep/utils";
-import { Effect, flow, MutableHashSet, Order, Struct } from "effect";
+import * as Effect from "effect/Effect";
+import { flow } from "effect/Function";
+import * as MutableHashSet from "effect/MutableHashSet";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
+import * as Struct from "effect/Struct";
 import { buildRepoDependencyIndex } from "./DependencyIndex.ts";
 import { NpmPackageName } from "./schemas/PackageJson.ts";
 import type { DomainError, NoSuchFileError } from "./errors/index.ts";

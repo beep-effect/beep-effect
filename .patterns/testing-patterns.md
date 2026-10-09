@@ -12,8 +12,7 @@ Comprehensive testing strategies for the Effect library using @effect/vitest, wi
 
 ```typescript
 import { assert, describe, it } from "@effect/vitest"
-import { Effect } from "effect"
-
+import * as Effect from "effect/Effect";
 // MANDATORY: Use it.effect for Effect-based tests
 it.effect("should work with Effects", 
   Effect.fnUntraced(function*() {
@@ -69,7 +68,7 @@ variant and its payload in the assertion; see the complete examples below.
 ```typescript
 import { expect, it } from "@effect/vitest"
 import { assertSome } from "@effect/vitest/utils"
-import { Effect } from "effect"
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option"
 
 it.effect("asserts an Option payload and a plain value", Effect.fnUntraced(function*() {
@@ -88,7 +87,7 @@ Any code that involves timing must use TestClock to avoid flaky tests:
 ```typescript
 import { assert, describe, it } from "@effect/vitest"
 import { assertExitFailure } from "@effect/vitest/utils"
-import { Effect } from "effect"
+import * as Effect from "effect/Effect";
 import * as Cause from "effect/Cause"
 import * as TestClock from "effect/testing/TestClock"
 
@@ -159,7 +158,7 @@ describe("time-dependent operations", () => {
 
 ```typescript
 import { assert, describe, it } from "@effect/vitest"
-import { Effect } from "effect"
+import * as Effect from "effect/Effect";
 import * as MyModule from "../src/MyModule.js"
 
 describe("MyModule", () => {
@@ -198,7 +197,7 @@ describe("MyModule", () => {
 ```typescript
 import { assert, describe, it } from "@effect/vitest"
 import { assertExitFailure } from "@effect/vitest/utils"
-import { Effect } from "effect"
+import * as Effect from "effect/Effect";
 import * as Cause from "effect/Cause"
 import * as Exit from "effect/Exit"
 import * as Layer from "effect/Layer"
@@ -242,7 +241,7 @@ describe("error handling", () => {
 ```typescript
 import { assert, describe, it } from "@effect/vitest"
 import { assertExitFailure } from "@effect/vitest/utils"
-import { Effect } from "effect"
+import * as Effect from "effect/Effect";
 import * as Cause from "effect/Cause"
 import * as Ref from "effect/Ref"
 import * as ResourceModule from "../src/ResourceModule.js"
@@ -292,7 +291,7 @@ describe("resource management", () => {
 
 ```typescript
 import { assert, describe, it } from "@effect/vitest"
-import { Effect } from "effect"
+import * as Effect from "effect/Effect";
 import * as Duration from "effect/Duration"
 import * as Fiber from "effect/Fiber"
 import * as Ref from "effect/Ref"
@@ -350,7 +349,7 @@ Use `Context.Service` for defining services in the Effect codebase:
 ```typescript
 import { assert, describe, it } from "@effect/vitest"
 import { assertExitFailure } from "@effect/vitest/utils"
-import { Effect } from "effect"
+import * as Effect from "effect/Effect";
 import * as Cause from "effect/Cause"
 import * as Context from "effect/Context"
 import * as Layer from "effect/Layer"
@@ -477,7 +476,7 @@ Effect or convert an Effect to Result just to assert its outcome.
 ```typescript
 import { describe, expect, it } from "@effect/vitest"
 import { assertExitFailure, assertExitSuccess, assertFailure, assertNone, assertSome, assertSuccess } from "@effect/vitest/utils"
-import { Effect } from "effect"
+import * as Effect from "effect/Effect";
 import * as Cause from "effect/Cause"
 import * as O from "effect/Option"
 import * as Result from "effect/Result"

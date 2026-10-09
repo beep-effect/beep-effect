@@ -7,8 +7,10 @@
 
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { Str } from "@beep/utils";
-import { Effect, FileSystem, Match } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
+import * as Match from "effect/Match";
 import { applyJsoncModification } from "../../../../internal/cli/Jsonc.ts";
 import { VersionSyncError } from "../../VersionSync.schemas.ts";
 import { BunVercelDocument } from "../resolvers/BunResolver.ts";

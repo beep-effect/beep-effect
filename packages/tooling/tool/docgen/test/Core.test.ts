@@ -2,8 +2,11 @@ import * as Core from "@beep/repo-docgen/Core";
 import { it } from "@beep/test-runner";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { describe, expect } from "@effect/vitest";
-import { Effect, FileSystem, Path, Stream } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Path from "effect/Path";
 import * as ChildProcess from "effect/process/ChildProcess";
+import * as Stream from "effect/Stream";
 
 const fixturePath = new URL("./fixtures/section-example/", import.meta.url).pathname;
 const docgenBinPath = new URL("../src/bin.ts", import.meta.url).pathname;

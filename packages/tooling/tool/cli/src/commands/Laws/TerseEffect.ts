@@ -8,8 +8,13 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { toPosixPath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
 import { A, thunkEmptyStr } from "@beep/utils";
-import { Effect, HashMap, Inspectable, Order, Path, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
+import * as Inspectable from "effect/Inspectable";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { Node, Project, SyntaxKind } from "ts-morph";

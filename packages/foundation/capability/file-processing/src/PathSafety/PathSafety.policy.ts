@@ -5,10 +5,10 @@
  * @since 0.0.0
  */
 
-import { Result } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import { dual, flow } from "effect/Function";
+import * as Result from "effect/Result";
 import * as Str from "effect/String";
 import { PathSafetyError } from "./PathSafety.errors.ts";
 
@@ -97,8 +97,7 @@ export const isPathWithinRoot: {
  *
  * ```ts import.meta.vitest name="Validate contained resolved path"
  * import { validateResolvedPath } from "@beep/file-processing/PathSafety"
- * import { Result } from "effect"
- *
+ * import * as Result from "effect/Result";
  * const ok = validateResolvedPath({ root: "/srv/data", candidate: "/srv/data/a.txt" })
  * Result.isSuccess(ok) // => true
  *

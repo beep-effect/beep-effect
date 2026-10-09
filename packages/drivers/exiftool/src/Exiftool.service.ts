@@ -8,11 +8,18 @@
 import { $ExiftoolId } from "@beep/identity/packages";
 import { Fn } from "@beep/schema";
 import { A, O, Str, thunkEmptyStr } from "@beep/utils";
-import { Context, Effect, FileSystem, Layer, Number as N, Path, pipe, Stream } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as N from "effect/Number";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import { ExiftoolError, ProcessExitCode } from "./Exiftool.errors.ts";
 import {
   ExifMetadata,
@@ -47,8 +54,7 @@ type ExiftoolConfigInputOptions = (typeof ExiftoolConfigInput)["~type.make.in"];
  *
  * ```ts
  * import type { ExiftoolShape } from "@beep/exiftool"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const service: ExiftoolShape = {
  *   readTags: () => Effect.die("not implemented"),
  *   version: Effect.die("not implemented"),

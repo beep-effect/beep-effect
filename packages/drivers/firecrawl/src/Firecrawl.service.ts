@@ -7,11 +7,20 @@
 
 import { $FirecrawlId } from "@beep/identity/packages";
 import { O as OptionUtils } from "@beep/utils";
-import { Cause, Config, Context, Effect, Layer, pipe, Queue, Redacted, Result, Stream } from "effect";
 import * as A from "effect/Array";
+import * as Cause from "effect/Cause";
+import * as Config from "effect/Config";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Queue from "effect/Queue";
+import * as Redacted from "effect/Redacted";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import { FirecrawlClient } from "firecrawl";
 import { FIRECRAWL_API_URL, FirecrawlConfigInput } from "./Firecrawl.config.ts";
 import { FirecrawlCodecErrorReason, FirecrawlError } from "./Firecrawl.errors.ts";
@@ -739,8 +748,7 @@ const makeService = (client: FirecrawlSdkClient): FirecrawlShape => ({
  *
  * ```ts
  * import { Firecrawl, FirecrawlConfigInput } from "@beep/firecrawl"
- * import { Redacted } from "effect"
- *
+ * import * as Redacted from "effect/Redacted";
  * const layer = Firecrawl.makeLayer(
  *   FirecrawlConfigInput.make({
  *     apiKey: Redacted.make("fc-test-key")
@@ -761,8 +769,7 @@ export class Firecrawl extends Context.Service<Firecrawl, FirecrawlShape>()($I`F
    *
    * ```ts
    * import { Firecrawl, FirecrawlConfigInput } from "@beep/firecrawl"
-   * import { Redacted } from "effect"
-   *
+   * import * as Redacted from "effect/Redacted";
    * const layer = Firecrawl.makeLayer(
    *   FirecrawlConfigInput.make({
    *     apiKey: Redacted.make("fc-test-key")

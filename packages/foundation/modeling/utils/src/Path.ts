@@ -16,7 +16,7 @@
 import { $UtilsId } from "@beep/identity/packages";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
-import type { Path as PlatformPath } from "effect";
+import type * as PlatformPath from "effect/Path";
 
 const $I = $UtilsId.create("Path");
 
@@ -56,7 +56,7 @@ const NPath = (): typeof import("node:path") => {
  * **Example** (Round-trip file URL conversion)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { fromFileUrl, toFileUrl } from "@beep/utils/Path"
  *
  * const url = Effect.runSync(toFileUrl("/tmp/beep.txt"))

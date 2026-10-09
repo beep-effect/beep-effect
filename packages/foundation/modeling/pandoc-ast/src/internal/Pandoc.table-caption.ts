@@ -6,8 +6,8 @@
  */
 
 import { A, O, Str } from "@beep/utils";
-import { Match } from "effect";
 import { constant } from "effect/Function";
+import * as Match from "effect/Match";
 
 const emptyString = constant(Str.empty);
 

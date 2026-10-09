@@ -7,7 +7,8 @@
 
 import { $NlpId } from "@beep/identity";
 import { thunkFalse, thunkTrue } from "@beep/utils";
-import { Brand, Effect } from "effect";
+import * as Brand from "effect/Brand";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";

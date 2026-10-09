@@ -23,10 +23,15 @@
 import { $NlpId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
 import { A, O, thunkTrue } from "@beep/utils";
-import { Effect, Graph, HashMap, HashSet, MutableHashMap, Stream } from "effect";
+import * as Effect from "effect/Effect";
 import { dual, identity } from "effect/Function";
+import * as Graph from "effect/Graph";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 
 const $I = $NlpId.create("Graph/GraphOps");
 
@@ -773,7 +778,7 @@ export const queryIndexIntersection: {
  * **Example** (Traverse with void effects)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { getRoots, singleton, traverseNodes } from "@beep/nlp/Graph/GraphOps"
  *
  * const graph = singleton<string, string>("root")
@@ -817,7 +822,7 @@ export const traverseNodes: {
  * **Example** (Collect effectful node lengths)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { getRoots, singleton, traverseNodesCollect } from "@beep/nlp/Graph/GraphOps"
  *
  * const graph = singleton<string, string>("root")
@@ -864,7 +869,7 @@ export const traverseNodesCollect: {
  * **Example** (Effectful map node lengths)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { collectNodes, mapNodesEffect, singleton } from "@beep/nlp/Graph/GraphOps"
  *
  * const program = Effect.map(
@@ -926,7 +931,8 @@ export const mapNodesEffect: {
  * **Example** (Stream nodes in dfs order)
  *
  * ```ts
- * import { Effect, Stream } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Stream from "effect/Stream";
  * import { getRoots, singleton, streamNodes } from "@beep/nlp/Graph/GraphOps"
  *
  * const graph = singleton<string, string>("root")
@@ -953,7 +959,8 @@ export const streamNodes: {
  * **Example** (Stream indexed node pairs)
  *
  * ```ts
- * import { Effect, Stream } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Stream from "effect/Stream";
  * import { getRoots, singleton, streamNodesWithIndex } from "@beep/nlp/Graph/GraphOps"
  *
  * const graph = singleton<string, string>("root")
@@ -980,7 +987,8 @@ export const streamNodesWithIndex: {
  * **Example** (Batch stream node payloads)
  *
  * ```ts
- * import { Effect, Stream } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Stream from "effect/Stream";
  * import { batchNodes, getRoots, singleton } from "@beep/nlp/Graph/GraphOps"
  *
  * const graph = singleton<string, string>("root")

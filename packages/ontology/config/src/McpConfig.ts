@@ -16,7 +16,8 @@
  */
 
 import { $OntologyConfigId } from "@beep/identity/packages";
-import { Config, Context } from "effect";
+import * as Config from "effect/Config";
+import * as Context from "effect/Context";
 import * as S from "effect/Schema";
 
 const $I = $OntologyConfigId.create("McpConfig");
@@ -28,8 +29,8 @@ const $I = $OntologyConfigId.create("McpConfig");
  *
  * ```ts
  * import { OntologyMcpMutationsEnabledConfig } from "@beep/ontology-config/server"
- * import { ConfigProvider, Effect } from "effect"
- *
+ * import * as ConfigProvider from "effect/ConfigProvider";
+ * import * as Effect from "effect/Effect";
  * const program = OntologyMcpMutationsEnabledConfig.pipe(
  *   Effect.provide(
  *     ConfigProvider.layer(
@@ -102,8 +103,7 @@ export type OntologyMcpConfigShape = OntologyMcpServerConfig;
  *
  * ```ts
  * import { OntologyMcpConfig } from "@beep/ontology-config/server"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const enabled = OntologyMcpConfig.pipe(
  *   Effect.map((config) => config.mutationsEnabled)
  * )

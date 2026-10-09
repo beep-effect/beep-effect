@@ -25,7 +25,7 @@ import type * as TF from "type-fest";
  * **Example** (Call `equivalence`)
  *
  * ```ts
- * import { pipe } from "effect"
+ * import { pipe } from "effect/Function";
  * import { Str } from "@beep/utils"
  *
  * const same = Str.equivalence("docs", "docs")
@@ -55,7 +55,7 @@ export const equivalence: {
  * **Example** (Call `orderAsc`)
  *
  * ```ts
- * import { pipe } from "effect"
+ * import { pipe } from "effect/Function";
  * import { A, Str } from "@beep/utils"
  *
  * const sorted = A.sort(["b", "a"], Str.orderAsc)
@@ -97,7 +97,7 @@ export type Prefixed<Pre extends string, S extends string> = Pre extends string 
  * **Example** (Call `prefix`)
  *
  * ```ts
- * import { pipe } from "effect"
+ * import { pipe } from "effect/Function";
  * import { Str } from "@beep/utils"
  *
  * // Data-first
@@ -136,7 +136,7 @@ export const prefix: {
  * **Example** (Call `prefixThunk`)
  *
  * ```ts
- * import { pipe } from "effect"
+ * import { pipe } from "effect/Function";
  * import { Str } from "@beep/utils"
  *
  * // Data-first
@@ -191,7 +191,7 @@ export type Postfixed<S extends string, Post extends string> = Post extends stri
  * **Example** (Call `postfix`)
  *
  * ```ts
- * import { pipe } from "effect"
+ * import { pipe } from "effect/Function";
  * import { Str } from "@beep/utils"
  *
  * // Data-first
@@ -230,7 +230,7 @@ export const postfix: {
  * **Example** (Call `postfixThunk`)
  *
  * ```ts
- * import { pipe } from "effect"
+ * import { pipe } from "effect/Function";
  * import { Str } from "@beep/utils"
  *
  * // Data-first
@@ -272,7 +272,7 @@ export const postfixThunk: {
  * **Example** (Call `mapPrefix`)
  *
  * ```ts
- * import { pipe } from "effect"
+ * import { pipe } from "effect/Function";
  * import { Str } from "@beep/utils"
  * import * as A from "effect/Array"
  *
@@ -317,7 +317,7 @@ export function mapPrefix(
  * **Example** (Call `mapPostfix`)
  *
  * ```ts
- * import { pipe } from "effect"
+ * import { pipe } from "effect/Function";
  * import { Str } from "@beep/utils"
  * import * as A from "effect/Array"
  *
@@ -568,7 +568,7 @@ export const kebabToSnake = <const TStr extends string>(str: TF.KebabCase<TStr>)
  * **Example** (Call `startsWith`)
  *
  * ```ts
- * import { pipe } from "effect"
+ * import { pipe } from "effect/Function";
  * import { Str } from "@beep/utils"
  *
  * const direct = Str.startsWith("hello-world", "hello")
@@ -608,7 +608,7 @@ export const startsWith: {
  * **Example** (Call `endsWith`)
  *
  * ```ts
- * import { pipe } from "effect"
+ * import { pipe } from "effect/Function";
  * import { Str } from "@beep/utils"
  *
  * const direct = Str.endsWith("hello-world", "world")
@@ -648,7 +648,7 @@ export const endsWith: {
  * **Example** (Call `contains`)
  *
  * ```ts
- * import { pipe } from "effect"
+ * import { pipe } from "effect/Function";
  * import { Str } from "@beep/utils"
  *
  * // Data-first
@@ -692,7 +692,7 @@ export const contains: {
  * **Example** (Call `repeat`)
  *
  * ```ts
- * import { pipe } from "effect"
+ * import { pipe } from "effect/Function";
  * import { Str } from "@beep/utils"
  *
  * // Data-first
@@ -734,8 +734,7 @@ export const repeat: {
  *
  * ```ts
  * import { Str } from "@beep/utils"
- * import { pipe } from "effect"
- *
+ * import { pipe } from "effect/Function";
  * const replaced = Str.replaceWith("beep", (match) => Str.toUpperCase(match))("hello beep")
  * const piped = pipe("hello beep", Str.replaceWith("beep", (match) => Str.toUpperCase(match)))
  *
@@ -778,8 +777,7 @@ export const replaceWith: {
  *
  * ```ts
  * import { Str } from "@beep/utils"
- * import { pipe } from "effect"
- *
+ * import { pipe } from "effect/Function";
  * const replaced = Str.replaceAllWith(/beep/g, (match) => Str.toUpperCase(match))("beep beep")
  * const piped = pipe("beep beep", Str.replaceAllWith(/beep/g, (match) => Str.toUpperCase(match)))
  *
@@ -899,7 +897,7 @@ export const toSlug = flow(
  * **Example** (Call `truncate`)
  *
  * ```ts
- * import { pipe } from "effect"
+ * import { pipe } from "effect/Function";
  * import { Str } from "@beep/utils"
  *
  * const direct = Str.truncate("  hello world  ", 5)

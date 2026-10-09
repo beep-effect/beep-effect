@@ -11,7 +11,7 @@
  */
 
 import { conform, enforceSafeHtml, serializeSafe } from "@beep/html";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { Document } from "./Md.model.ts";
 import type { SafeHtml } from "@beep/html";
 import type { SafeDocument } from "./Md.safe.ts";
@@ -31,8 +31,7 @@ import type { SafeDocument } from "./Md.safe.ts";
  *
  * ```ts
  * import { Md, safeHtmlValue } from "@beep/md"
- * import { Result } from "effect"
- *
+ * import * as Result from "effect/Result";
  * const document = Result.getOrThrow(Md.refineSafeDocument(Md.make([Md.p("Hello")])))
  * console.log(safeHtmlValue(Md.renderSafeHtml(document))) // "<p>Hello</p>"
  * ```

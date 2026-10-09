@@ -3,7 +3,7 @@ import { makeDataset, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf/Rdf
 import { SparqlQueryRequest, SparqlQueryService } from "@beep/semantic-web/services/sparql-query";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { vi } from "vitest";
 
 const engine = vi.hoisted(() => ({ imports: 0, constructions: 0, loadedQuads: 0 }));

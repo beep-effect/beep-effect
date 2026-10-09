@@ -7,9 +7,11 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Effect, FileSystem, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import * as F from "effect/Function";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -145,8 +147,7 @@ export const parseAdmissionProcStatStartTime = (stat: string): O.Option<string> 
  *
  * ```ts
  * import { isProcessPidAlive } from "@beep/repo-cli/test/RepoRun"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.runSync(isProcessPidAlive(process.pid))) // true
  * ```
  *
@@ -172,7 +173,7 @@ export const isProcessPidAlive = (pid: number): Effect.Effect<boolean> =>
  *
  * ```ts
  * import { processStartTimeForPid } from "@beep/repo-cli/test/RepoRun"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const available = processStartTimeForPid(process.pid).pipe(Effect.map(O.isSome))
@@ -271,7 +272,7 @@ const probeRecordedProcessIdentity = (
  *
  * ```ts
  * import { processStartIdentityForPid } from "@beep/repo-cli/test/RepoRun"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const available = processStartIdentityForPid(process.pid).pipe(Effect.map(O.isSome))
@@ -334,8 +335,7 @@ const processIdentityStatusWithStart = Effect.fnUntraced(function* <Requirements
  *
  * ```ts
  * import { processIdentityStatus } from "@beep/repo-cli/test/RepoRun"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const status = processIdentityStatus({ pid: process.pid, procStart: "" })
  * console.log(Effect.isEffect(status)) // true
  * ```
@@ -361,8 +361,7 @@ export const processIdentityStatus = Effect.fnUntraced(function* (
  *
  * ```ts
  * import { isProcessIdentityAlive } from "@beep/repo-cli/test/RepoRun"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const alive = isProcessIdentityAlive({ pid: process.pid, procStart: "" })
  * console.log(Effect.isEffect(alive)) // true
  * ```
@@ -385,7 +384,7 @@ export const isProcessIdentityAlive = Effect.fnUntraced(function* (
  *
  * ```ts
  * import { processIdentityStatusWithStartForTesting } from "@beep/repo-cli/test/RepoRun"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const status = Effect.runSync(
@@ -417,7 +416,7 @@ export const processIdentityStatusWithStartForTesting = Effect.fnUntraced(functi
  *
  * ```ts
  * import { isProcessIdentityAliveWithStartForTesting } from "@beep/repo-cli/test/RepoRun"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const alive = Effect.runSync(

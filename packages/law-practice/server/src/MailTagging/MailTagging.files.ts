@@ -19,13 +19,15 @@ import {
   TagLedger,
   TagLedgerShape,
 } from "@beep/law-practice-use-cases/MailTagging";
-import { Effect, Layer, Path } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { decodeLines, makeStateFileAt } from "../internal/MailTaggingStateFile.ts";
 import { MailTaggingStateLocation } from "./MailTagging.state.ts";
 import type { MailTaggingStateStore } from "@beep/law-practice-use-cases/MailTagging";
-import type { FileSystem } from "effect";
+import type * as FileSystem from "effect/FileSystem";
 
 type StateRequirements = MailTaggingStateLocation | FileSystem.FileSystem | Path.Path;
 

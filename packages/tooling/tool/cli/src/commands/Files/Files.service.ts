@@ -15,7 +15,16 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { profilePhase } from "@beep/observability";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Console, Context, Effect, FileSystem, HashSet, Layer, Order, Path, pipe, Result } from "effect";
+import * as Console from "effect/Console";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
+import * as Layer from "effect/Layer";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
+import * as Result from "effect/Result";
 import { printLines } from "../../internal/cli/Printer.ts";
 import { FilesCommandError, failOnExtensionlessFile, formatPlatformError } from "./Files.errors.ts";
 import {
@@ -118,10 +127,10 @@ import {
   validateNormalizeMaxLongEdge,
   validatePrefix,
 } from "./internal/Validation.ts";
-import type { Terminal } from "effect";
 import type * as Crypto from "effect/Crypto";
 import type * as HttpClient from "effect/http/HttpClient";
 import type { ChildProcessSpawner } from "effect/process";
+import type * as Terminal from "effect/Terminal";
 import type {
   ArchivePoorCandidatesOptions,
   ArchivePoorCandidatesSkippedReason,
@@ -2708,8 +2717,7 @@ export const detectFacesFiles = Effect.fn("Files.detectFacesFiles")(function* (
  *
  * ```ts
  * import { FlattenMediaOptions, flattenMediaFiles } from "@beep/repo-cli/commands/Files"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = flattenMediaFiles(FlattenMediaOptions.make({
  *   dir: "./raw",
  *   dryRun: true,

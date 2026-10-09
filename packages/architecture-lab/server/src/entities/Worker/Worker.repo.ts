@@ -16,8 +16,11 @@ import * as WorkerUseCaseServer from "@beep/architecture-lab-use-cases/server";
 import { PostgresDrizzle } from "@beep/postgres";
 import { A } from "@beep/utils";
 import { eq } from "drizzle-orm";
-import { Effect, HashMap, pipe, Ref } from "effect";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
+import * as Ref from "effect/Ref";
 import type * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker";
 import type { PostgresDrizzleDatabase } from "@beep/postgres";
 import type * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab";
@@ -45,7 +48,7 @@ const getStoredWorker = Effect.fn("ArchitectureLab.WorkerRepository.getStored")(
  * import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker"
  * import { makeInMemoryWorkerRepository } from "@beep/architecture-lab-server/entities/Worker"
  * import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const program = Effect.gen(function* () {
@@ -146,8 +149,7 @@ const getDrizzleWorker = Effect.fn("ArchitectureLab.WorkerRepository.getDrizzle"
  *
  * ```ts
  * import { makeDrizzleWorkerRepository } from "@beep/architecture-lab-server/entities/Worker"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = makeDrizzleWorkerRepository().pipe(
  *   Effect.flatMap((repository) => repository.list),
  *   Effect.catchTag("WorkerRepositoryUnavailable", (error) => Effect.succeed([error.reason]))
@@ -206,8 +208,7 @@ export const makeDrizzleWorkerRepository = Effect.fn("ArchitectureLab.WorkerRepo
  *
  * ```ts
  * import { makeWorkerRepository } from "@beep/architecture-lab-server/entities/Worker"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = makeWorkerRepository().pipe(
  *   Effect.flatMap((repository) => repository.list),
  *   Effect.map((workers) => workers.length)

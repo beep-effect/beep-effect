@@ -6,8 +6,11 @@
  */
 
 import { A, Str } from "@beep/utils";
-import { flow, identity, Number as Num, pipe, Result, SchemaTransformation } from "effect";
+import { flow, identity, pipe } from "effect/Function";
+import * as Num from "effect/Number";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import { $I, schemaIssueToError } from "./Color.shared.ts";
 import type { RgbEncoded } from "./Color.shared.ts";
 

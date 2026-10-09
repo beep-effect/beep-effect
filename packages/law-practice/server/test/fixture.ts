@@ -22,7 +22,7 @@ import {
 } from "@beep/file-processing/Artifact";
 import { OfficeActionReviewInput } from "@beep/law-practice-use-cases/OfficeActionReview";
 import { PosixPath } from "@beep/schema/PosixPath";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 export const OFFICE_ACTION_FIXTURE =

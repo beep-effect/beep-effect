@@ -12,11 +12,13 @@
 
 import { $OpenclawId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { Effect, flow, identity, SchemaTransformation } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import { flow, identity } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Str from "effect/String";
 import { OpenclawAbsolutePath, OpenclawTargetVersion } from "./OpenclawIntent.models.ts";
 
@@ -442,7 +444,7 @@ export class OpenclawDoctorReport extends S.Class<OpenclawDoctorReport>($I`Openc
  * **Example** (Usage)
  * ```ts
  * import { OpenclawSecretsReloadOutput } from "@beep/openclaw/Openclaw.models"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  *
  * const output = Result.getOrThrow(

@@ -391,7 +391,8 @@ Canonical shape:
 
 ```ts
 import { assert, it } from "@effect/vitest"
-import { Effect, FileSystem } from "effect"
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem"
 
 it.layer(MemoryFileSystem.layer)("PackageGenerator", (it) => {

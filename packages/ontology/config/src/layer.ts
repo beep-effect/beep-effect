@@ -4,8 +4,8 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { Effect, Layer } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import { OntologyMcpConfig, OntologyMcpMutationsEnabledConfig, OntologyMcpServerConfig } from "./McpConfig.ts";
 import { OntologyConfig, OntologyServerConfig, OntologyWorkspaceRootConfig } from "./ServerConfig.ts";
 
@@ -32,8 +32,8 @@ const readOntologyMcpConfig = Effect.fn("Ontology.McpConfig.read")(function* () 
  * ```ts
  * import { OntologyConfigLive } from "@beep/ontology-config/layer"
  * import { OntologyConfig } from "@beep/ontology-config/server"
- * import { ConfigProvider, Effect } from "effect"
- *
+ * import * as ConfigProvider from "effect/ConfigProvider";
+ * import * as Effect from "effect/Effect";
  * const program = OntologyConfig.pipe(
  *   Effect.map((config) => config.workspaceRoot),
  *   Effect.provide(OntologyConfigLive),
@@ -63,8 +63,8 @@ export const OntologyConfigLive = Layer.effect(OntologyConfig, readOntologyConfi
  * ```ts
  * import { OntologyMcpConfigLive } from "@beep/ontology-config/layer"
  * import { OntologyMcpConfig } from "@beep/ontology-config/server"
- * import { ConfigProvider, Effect } from "effect"
- *
+ * import * as ConfigProvider from "effect/ConfigProvider";
+ * import * as Effect from "effect/Effect";
  * const program = OntologyMcpConfig.pipe(
  *   Effect.map((config) => config.mutationsEnabled),
  *   Effect.provide(OntologyMcpConfigLive),

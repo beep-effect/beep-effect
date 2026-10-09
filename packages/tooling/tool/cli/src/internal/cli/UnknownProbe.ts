@@ -14,8 +14,8 @@
  */
 
 import { A, flow, O, P, pipe, R } from "@beep/utils";
-import { Order } from "effect";
 import { dual } from "effect/Function";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 
 const decodeUnknownRecordOption = S.decodeUnknownOption(S.Record(S.String, S.Unknown));

@@ -6,7 +6,9 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { Number as Num, pipe, Effect } from "effect";
+import * as Num from "effect/Number";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as O from "effect/Option";
@@ -119,7 +121,7 @@ const BatchIdentityFields = {
  *
  * **Example** (Use BatchIdentity)
  * ```ts
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  * import { BatchIdentity } from "@effect-ontology/Model/BatchWorkflow"

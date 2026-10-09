@@ -3,11 +3,13 @@ import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
-import { Effect, pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const client = I.ClientNumber.make("90001");
@@ -110,6 +112,8 @@ describe("contacts and indexes", () => {
       card("", ["info@clientb.example"]),
     ];
     const contacts = I.normaliseContacts(cards);
+    // The count guards against role-address unions; the distinct-ids check alone would pass if cards wrongly merged.
+    expect(contacts).toHaveLength(5);
     expect(A.dedupe(A.map(contacts, (c) => c.contactId))).toHaveLength(contacts.length);
     const idOf = (address: string) =>
       A.findFirst(contacts, (c) => A.some(c.emails, (e) => e.address === address)).pipe(O.map((c) => c.contactId));
@@ -124,6 +128,60 @@ describe("contacts and indexes", () => {
     expect(
       I.normaliseContacts([card("Same Name", ["one@acme.example"]), card(" same name ", ["two@acme.example"], "vcard")])
     ).toHaveLength(1);
+  });
+  it("gives nameless cards an identity from their own phones or addresses and drops empty cards", () => {
+    const bare = (phones: ReadonlyArray<string>, addresses: ReadonlyArray<string> = []) =>
+      I.RawContactCard.make({
+        displayName: "",
+        organization: O.none(),
+        titles: [],
+        emails: [],
+        phones,
+        addresses,
+        source: "outlook-csv",
+      });
+    const contacts = I.normaliseContacts([
+      bare(["312-555-0101"]),
+      bare(["415-555-0199"]),
+      bare([], ["1 Test Street, Example City, NY 10001"]),
+      bare([]),
+    ]);
+    expect(contacts).toHaveLength(3);
+    expect(A.dedupe(A.map(contacts, (c) => c.contactId))).toHaveLength(3);
+  });
+  it("builds the client index from asserted and attributed clients, merging names by source", () => {
+    const index = I.buildClientIndex([
+      row(client, ["90001.10001US01"]),
+      I.IndexEvidence.make({
+        ...row(client, []),
+        names: ["Acme Widgets LLC", "Acme"],
+        source: "attorney-answer",
+        folders: ["b", "a"],
+      }),
+      I.IndexEvidence.make({ ...row(other, []), clientNumber: O.none(), references: ["90002.10001US01"], names: [] }),
+    ]);
+    expect(A.map(index, (c) => c.clientNumber)).toEqual([client, other]);
+    expect(index[0]?.names).toHaveLength(3);
+    expect(index[0]?.folders).toEqual(["a", "b"]);
+    expect(index[1]?.names).toHaveLength(0);
+  });
+  it("links by contact id without a family, skips register rows, and matches organisations by name", () => {
+    const [contact] = I.normaliseContacts([card("Alex Example", ["alex@acme.example"])]);
+    const byId = I.IndexEvidence.make({
+      ...row(client, []),
+      contactIds: [contact!.contactId],
+      source: "attorney-answer",
+    });
+    const register = I.IndexEvidence.make({
+      ...row(other, ["90002.10001US01"]),
+      contactIds: [contact!.contactId],
+      source: "kg-register",
+    });
+    const clients = I.buildClientIndex([I.IndexEvidence.make({ ...row(other, []), names: ["acme widgets llc"] })]);
+    const [linked] = I.linkContacts([contact!], [byId, register], clients);
+    expect(A.map(linked!.links, (l) => `${l.clientNumber}:${l.source}:${O.getOrElse(l.familyKey, () => "-")}`)).toEqual(
+      [`${client}:attorney-answer:-`, `${other}:org-name-match:-`]
+    );
   });
   it("aggregates exact pair source counts and keeps repeating dockets under both clients", () => {
     const pairs = I.buildClientDocketPairs([

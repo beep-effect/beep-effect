@@ -7,9 +7,15 @@
 import { DocketFileStoreOptions, makeDocketFileStoreLayer } from "@beep/law-practice-server/DocketIntake";
 import { GraphEvent, GraphMessage, M365Error } from "@beep/m365";
 import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
-import { Context, Effect, FileSystem, HashMap, Layer, Path, Ref } from "effect";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as HashMap from "effect/HashMap";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as Ref from "effect/Ref";
 import { makeM365Stub } from "./MailTagging.adapters.fixture.ts";
 
 export const DIRECTORY = "/fixture/state/docket-intake";

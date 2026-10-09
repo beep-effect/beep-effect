@@ -9,9 +9,16 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { Fn, LiteralKit } from "@beep/schema";
 import { O } from "@beep/utils";
-import { ConfigProvider, Console, DateTime, Duration, Effect, Match, Path, pipe } from "effect";
 import * as A from "effect/Array";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Console from "effect/Console";
 import { Argument, Command, Flag } from "effect/cli";
+import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as Match from "effect/Match";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { configStringOption } from "../../internal/cli/EnvConfig.ts";
@@ -511,8 +518,7 @@ const decodePositiveMillis = S.decodeEffect(S.Finite.pipe(S.check(S.isGreaterTha
  *
  * ```ts
  * import { yeetMonitorDurationMillis } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = yeetMonitorDurationMillis("30m")
  * console.log(Effect.isEffect(program)) // true
  * ```

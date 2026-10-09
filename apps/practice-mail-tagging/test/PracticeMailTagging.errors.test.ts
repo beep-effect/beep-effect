@@ -8,8 +8,11 @@ import { M365Error } from "@beep/m365";
 import { it } from "@beep/test-runner";
 import { assertSchemaArbitraryDecodesToSelf } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
-import { Config, ConfigProvider, Effect, Runtime } from "effect";
+import * as Config from "effect/Config";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import * as Runtime from "effect/Runtime";
 import {
   PracticeMailTaggingError,
   PracticeMailTaggingFailureKind,

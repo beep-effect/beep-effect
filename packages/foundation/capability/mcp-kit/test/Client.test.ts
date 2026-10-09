@@ -35,12 +35,17 @@ import {
 import { it } from "@beep/test-runner";
 import { assert, describe, expect } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
-import { Deferred, Effect, Fiber, Layer, Queue, Stream } from "effect";
 import * as A from "effect/Array";
+import * as Deferred from "effect/Deferred";
+import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
 import { HttpClient, HttpClientResponse } from "effect/http";
+import * as Layer from "effect/Layer";
 import * as P from "effect/Predicate";
+import * as Queue from "effect/Queue";
 import { RpcClient } from "effect/rpc";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import { fixtureHost } from "./fixtures/FixtureHost.ts";
 
 // One JSON-RPC frame is exactly one wire line, so the kit's own codec builds

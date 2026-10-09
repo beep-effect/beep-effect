@@ -6,7 +6,7 @@
  */
 import { $RepoCliId } from "@beep/identity/packages";
 import { Err } from "@beep/utils";
-import { Inspectable } from "effect";
+import * as Inspectable from "effect/Inspectable";
 import * as S from "effect/Schema";
 
 const $I = $RepoCliId.create("commands/Laws/Laws.errors");

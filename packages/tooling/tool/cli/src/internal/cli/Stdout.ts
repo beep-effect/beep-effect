@@ -406,8 +406,8 @@ const noop = (): void => undefined;
  *
  * ```ts
  * import { streamConsole } from "@beep/repo-cli/test/Cli"
- * import { Console, Effect } from "effect"
- *
+ * import * as Console from "effect/Console";
+ * import * as Effect from "effect/Effect";
  * const program = Console.log("hello").pipe(Effect.provideService(Console.Console, streamConsole))
  * console.log(Effect.isEffect(program)) // true
  * ```

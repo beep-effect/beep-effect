@@ -7,7 +7,10 @@
 
 import { A, P, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Effect, FileSystem, flow, Path, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { flow, pipe } from "effect/Function";
+import * as Path from "effect/Path";
 import { validateDirectory as validateDirectoryShared } from "../../../internal/cli/FsGuards.ts";
 import { FilesCommandError, formatPlatformError } from "../Files.errors.ts";
 import { normalizeBareExtension } from "../Files.media.ts";

@@ -14,8 +14,8 @@
  */
 
 import { A, O, pipe, Str } from "@beep/utils";
-import { Match } from "effect";
 import { dual, flow } from "effect/Function";
+import * as Match from "effect/Match";
 import type { EffortLevel } from "./Models.catalog.schemas.ts";
 import type { LocatorField, LocatorRender, ModelBinding, SupersededModel } from "./Models.manifest.schemas.ts";
 

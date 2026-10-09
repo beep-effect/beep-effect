@@ -5,13 +5,15 @@
  * @since 0.0.0
  */
 
-import { Effect, pipe, SchemaIssue, SchemaTransformation } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Str from "effect/String";
 import { $IdentityId } from "./packages.ts";
 import { CoreVocab } from "./Vocab.ts";
@@ -95,7 +97,7 @@ const expandOptionImpl = <const V extends VocabShape>(curie: string, vocab: V): 
  * **Example** (Optional CURIE expansion results)
  *
  * ```ts import.meta.vitest name="Optional CURIE expansion results"
- * import { pipe } from "effect"
+ * import { pipe } from "effect/Function";
  * import * as O from "effect/Option"
  * import { CoreVocab, expandOption } from "@beep/identity"
  *
@@ -147,7 +149,7 @@ const contractOptionImpl = <const V extends VocabShape>(iri: string, vocab: V): 
  * **Example** (Optional IRI contraction results)
  *
  * ```ts import.meta.vitest name="Optional IRI contraction results"
- * import { pipe } from "effect"
+ * import { pipe } from "effect/Function";
  * import * as O from "effect/Option"
  * import { CoreVocab, contractOption } from "@beep/identity"
  *

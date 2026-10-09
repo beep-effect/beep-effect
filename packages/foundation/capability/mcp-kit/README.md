@@ -102,7 +102,8 @@ bun add @beep/mcp-kit
 ## Usage
 
 ```ts
-import { Effect, Layer } from "effect"
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option"
 import * as S from "effect/Schema"
 import { Tool, Toolkit } from "effect/ai"
