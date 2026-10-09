@@ -372,3 +372,9 @@ are available. Cancellation is not a proof failure or a package pass.
   module owns patterns, and a checked JSON projection serves pre-runtime
   Node/Bun. Owner command: `beep ci patterns --write`; freshness fixture
   protects the root-input gap instead of changing generated compiler policy.
+
+- C projection type proof passes docgen but catches preferSchemaOverJson and
+  unnecessaryFailYieldableError. The writer now uses the schema JSON encoder,
+  the fixture decodes the projection through its schema, and typed failures
+  are yielded directly. Reusing the installed schema codec before writing the
+  first projection would have avoided those introduced diagnostics.

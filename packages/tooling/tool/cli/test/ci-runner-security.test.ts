@@ -1,4 +1,4 @@
-import { ciOperationalPatterns } from "@beep/repo-cli/commands/Ci";
+import { CiOperationalPatterns, ciOperationalPatterns } from "@beep/repo-cli/commands/Ci";
 import { findRepoRoot } from "@beep/repo-utils/Root";
 import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
@@ -275,7 +275,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const projection = yield* fs.readFileString(
         path.join(root, "packages/tooling/tool/cli/src/commands/Ci/CiOperational.patterns.json")
       );
-      assert.strictEqual(projection, `${JSON.stringify(ciOperationalPatterns, null, 2)}\n`);
+      const decoded = yield* S.decodeUnknownEffect(S.fromJsonString(CiOperationalPatterns))(projection);
+      assert.deepEqual(decoded, ciOperationalPatterns);
     })
   );
   it.effect(

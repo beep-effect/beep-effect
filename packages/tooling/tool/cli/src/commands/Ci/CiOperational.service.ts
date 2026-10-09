@@ -32,6 +32,7 @@ import {
   CiDesktopInput,
   CiEnvironmentSelection,
   CiGoalDocument,
+  CiOperationalPatterns,
   CiResourceSample,
   ciOperationalPatterns,
 } from "./CiOperational.schemas.ts";
@@ -55,6 +56,7 @@ const isDesktop = S.is(CiDesktopInput);
 const environmentEntry = S.Tuple([S.String, S.Redacted(S.String)]);
 const decodeNumber = S.decodeUnknownEffect(S.FiniteFromString);
 const decodeSample = S.decodeUnknownEffect(CiResourceSample);
+const encodePatterns = S.encodeEffect(S.fromJsonString(CiOperationalPatterns, { space: 2 }));
 const unavailable = Console.error("::warning::Runner resource measurement unavailable; lane exit status is preserved.");
 
 /**
@@ -113,10 +115,10 @@ export const CiOperationalLive = Layer.effect(
           Effect.provideService(Path.Path, path)
         );
         const target = path.join(root, "packages/tooling/tool/cli/src/commands/Ci/CiOperational.patterns.json");
-        const projection = `${JSON.stringify(ciOperationalPatterns, null, 2)}\n`;
+        const projection = `${yield* encodePatterns(ciOperationalPatterns)}\n`;
         if (write) yield* fs.writeFileString(target, projection);
         else if ((yield* fs.readFileString(target)) !== projection)
-          return yield* Effect.fail(CiCommandError.make({ message: "CI pattern projection is stale." }));
+          return yield* CiCommandError.make({ message: "CI pattern projection is stale." });
         yield* Console.log(write ? "CI pattern projection written." : "CI pattern projection is in sync.");
       },
       Effect.mapError(CiCommandError.new("Failed to synchronize CI patterns. Run bun run beep ci patterns --write."))
