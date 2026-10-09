@@ -3,7 +3,7 @@
 ## Status
 
 <!-- BEGIN GENERATED: EXPLORATION STATUS -->
-Stage: `capture`
+Stage: `shape`
 Status: `parked`
 <!-- END GENERATED: EXPLORATION STATUS -->
 
@@ -19,7 +19,9 @@ research-backed queued work for roadmap ordering and future model capability.
 
 ## Next Open Question
 
-Resume when an epistemic consumer needs calibrated multi-signal confidence (source trust vs extractor vs validator vs reviewer) rather than a single collapsed score.
+No blocking field-design questions remain. Reopen at decompose when
+`oppold-corpus-semantic-ingestion-v2` is scaffolded. Its SPEC seeds from the
+[ratified v1 field set](./DECISIONS.md#2026-10-09--ratified-evidence-signal-field-set-v1).
 
 ## Provenance
 
@@ -30,3 +32,6 @@ Resume when an epistemic consumer needs calibrated multi-signal confidence (sour
 ## Trail
 
 - 2026-08-17: packet created from the academia-corpus-mining wave-2 routing triage (operator-ratified); parked at capture with a named resume trigger.
+
+- 2026-10-09: resume trigger fired for G3; active at research under the autonomy charter.
+- 2026-10-09: researched independent signals and existing bricks, closed three agent-decided align rounds, ratified evidence-signals/v1, wrote BRIEF, and parked at shape for the G3 scaffold.
