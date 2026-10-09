@@ -309,7 +309,20 @@ None.
 
 ### Deviations
 
-None.
+One entry per class of change (law- or ruling-forced) and one per behavioural divergence; the full test, upstream behaviour, lab behaviour and reason are on the module's ledger row.
+
+- **native-runtime** — The lab replaces native membership, record and sorting operations with Effect helpers while preserving formatting and null-prototype storage. (scratchpad/test/package-json/Format.test.ts:167; scratchpad/test/package-json/LenientManifest.test.ts:127; scratchpad/test/package-json/Package.test.ts:174)
+- **identity-keys** — The lab stores wire provenance and Funding arity in private instance fields instead of upstream WeakMaps and WeakSet. (scratchpad/test/package-json/Funding.test.ts:92; scratchpad/test/package-json/Person.test.ts:77; scratchpad/test/package-json/Person.test.ts:109; scratchpad/test/package-json/Repository.test.ts:355,394)
+- **tagged-errors** — The lab propagates typed JsoncStringifyError failures through modify APIs whose upstream error channels lacked that member. (scratchpad/test/package-json/Modify.test.ts:127; module suite scratchpad/test/package-json/**)
+- **schema-first** — The lab uses schema-owned models, an S.Opaque PackageName and JSON codecs whose SchemaError failures and undefined-output rejection replace upstream native JSON behavior. (scratchpad/test/package-json/PackageName.test.ts:45,55; scratchpad/test/package-json/PackageJsonFormat.test.ts:220; scratchpad/test/package-json/LenientManifest.test.ts:228; scratchpad/test/package-json/EntryPoint.test.ts:51)
+- **numeric-domains** — The lab rejects non-finite numeric error-path segments through S.Finite where upstream Schema.Number accepted them. (scratchpad/test/package-json/Modify.test.ts:127; module suite scratchpad/test/package-json/**)
+- **type-safety** — The lab removes unsafe assertions with generic codecs, schema guards and typed tests, retaining only the approved deliberatelyInvalid helper cast. (scratchpad/test/package-json/Package.test.ts:107,118,227; scratchpad/test/package-json/PackageJsonFormat.test.ts:83; scratchpad/test/package-json/Funding.test.ts; scratchpad/test/package-json/deliberatelyInvalid.ts)
+- **tsgo-diagnostics** — The lab adds tsgo-required dual overloads and Effect.fn callbacks, with explicit options required for empty or extension-only direct entry-point manifests. (scratchpad/test/package-json/EntryPoint.test.ts:22,30,39; scratchpad/test/package-json/Format.test.ts:25,36; module suite scratchpad/test/package-json/**)
+- **effect-first** — The lab wraps generator helpers in Effect.fn and uses Effect helpers and Match where upstream used bare generators and native operations. (scratchpad/test/package-json/integration/PackageJsonFile.int.test.ts; scratchpad/test/package-json/PackageValidator.test.ts; scratchpad/test/package-json/Repository.test.ts; scratchpad/test/package-json/Resolve.test.ts)
+- **effect-imports** — The lab imports individual effect modules where upstream used the root effect barrel. (module suite scratchpad/test/package-json/**)
+- **identity-annotations** — The lab adds owning Beep identity keys and annotations where upstream used short or @effected identifiers without that metadata. (scratchpad/test/package-json/PackageName.test.ts:45,114; scratchpad/test/package-json/License.test.ts:24; scratchpad/test/package-json/PackageFields.test.ts:9; scratchpad/test/package-json/PackageManagerRange.test.ts:25)
+- **upstream-bug** — The lab preserves nested sorted-map __proto__ data that upstream sorting dropped. (scratchpad/test/package-json/Format.test.ts:185)
+- **upstream-bug** — The lab preserves top-level __proto__ data in default rendering that upstream sorting dropped. (scratchpad/test/package-json/Package.test.ts:174,199)
 
 ### Dependency backlog
 

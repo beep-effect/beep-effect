@@ -7,13 +7,15 @@
 // Wire-form fidelity is a hard requirement here: a formatter must not rewrite
 // legal input into a different-but-equivalent encoding. Two mechanisms carry
 // it. (1) A person decoded from the shorthand string re-encodes to that exact
-// string — the original text is remembered in `wireStrings` and replayed
+// string — the original text is remembered on the instance and replayed
 // verbatim, so unusual-but-legal spacing survives. (2) Unknown keys on the
 // object form land in `rest` and flatten back on encode, instead of being
 // silently dropped.
 
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
+import * as Result from "effect/Result";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -47,24 +49,18 @@ const serializePerson = (person: Person): string => {
 /** The verbatim wire value a person was decoded from: shorthand text or the raw object. */
 type PersonWire = string | { readonly [k: string]: unknown };
 
-// The wire value each person was decoded from, keyed by instance. A WeakMap
-// rather than a field: this is provenance, not data — it must not appear in the
-// encoded form, must not affect structural equality, and must not survive being
-// copied into a hand-built person.
-const wireForms = new WeakMap<Person, PersonWire>();
-
 const rememberWire = (person: Person, wire: PersonWire): Person => {
-	wireForms.set(person, wire);
+	Person.rememberWire(person, wire);
 	return person;
 };
 
 const KNOWN_KEYS = HashSet.make("name", "email", "url");
 
-// Structural comparison over arbitrary JSON `rest` values. `Equal.equals` is
-// reference equality on plain objects, so it cannot serve here; the stored rest
-// is derived from this very wire value, so a stringify comparison differs only
-// when the person was actually edited — the conservative direction.
-const sameRest = (a: unknown, b: unknown): boolean => JSON.stringify(a ?? {}) === JSON.stringify(b ?? {});
+// Compare the JSON spelling, including key order, rather than structural
+// equality: replay is permitted only while the rest still has the same wire form.
+const encodeRestJson = S.encodeResult(S.fromJsonString(S.Unknown));
+const restJsonOf = (value: unknown): string => Result.getOrThrowWith(encodeRestJson(value ?? {}), identity);
+const sameRest = (a: unknown, b: unknown): boolean => restJsonOf(a) === restJsonOf(b);
 
 // A remembered wire value is replayed only while it still describes the person
 // faithfully. A person whose fields were changed after decoding re-encodes
@@ -127,7 +123,7 @@ const restOf = (raw: { readonly [k: string]: unknown }): Record<string, unknown>
 // Replay the remembered object verbatim (key order included) while it still
 // matches the person; otherwise rebuild it, typed fields winning on collision.
 const encodePersonObject = (person: Person): { readonly [k: string]: unknown } => {
-	const wire = wireForms.get(person);
+	const wire = Person.wireOf(person);
 	if (wire !== undefined && !P.isString(wire) && isFaithful(wire, person)) return wire;
 	const known: Record<string, unknown> = { name: person.name };
 	if (person.email !== undefined) known.email = person.email;
@@ -162,6 +158,18 @@ export class Person extends S.Class<Person>($I`Person`)({
 	/** Any additional keys, preserved verbatim and flattened back on encode. */
 	rest: S.optionalKey(S.Record(S.String, S.Unknown)).annotateKey({ description: "Any additional keys, preserved verbatim and flattened back on encode." }),
 }, $I.annote("Person", { description: "A structured person object with `name`, optional `email` / `url`, and a `rest` catch-all preserving any additional keys across a read/write cycle." })) {
+	#wire: PersonWire | undefined = undefined;
+
+	/** Instance-owned wire provenance, excluded from schema data and object spreads. */
+	static wireOf(person: Person): PersonWire | undefined {
+		return person.#wire;
+	}
+
+	/** Remember the spelling read by a wire codec. */
+	static rememberWire(person: Person, wire: PersonWire): void {
+		person.#wire = wire;
+	}
+
 	/**
 	 * The object wire codec: an open JSON object ↔ a {@link Person}, partitioning
 	 * unknown keys into `rest` and flattening them back on encode so the on-disk
@@ -204,7 +212,7 @@ export class Person extends S.Class<Person>($I`Person`)({
 			SchemaTransformation.transform({
 				decode: (input: string) => rememberWire(parsePersonString(input), input),
 				encode: (person: Person) => {
-					const wire = wireForms.get(person);
+					const wire = Person.wireOf(person);
 					return P.isString(wire) && isFaithful(wire, person) ? wire : serializePerson(person);
 				},
 			}),
@@ -239,7 +247,7 @@ export class Person extends S.Class<Person>($I`Person`)({
 				// form encodes back through `Person.schema`, which replays its own
 				// remembered object verbatim.
 				encode: (person: Person): Person | string => {
-					const wire = wireForms.get(person);
+					const wire = Person.wireOf(person);
 					if (!P.isString(wire)) return person;
 					if (isFaithful(wire, person)) return wire;
 					// Edited since it was decoded. Re-emit the shorthand SHAPE rather
@@ -268,7 +276,7 @@ export class Person extends S.Class<Person>($I`Person`)({
 	 * @returns the original shorthand text, or `None`
 	 */
 	static wireStringOf(person: Person): O.Option<string> {
-		const wire = wireForms.get(person);
+		const wire = Person.wireOf(person);
 		return P.isString(wire) && isFaithful(wire, person) ? O.some(wire) : O.none();
 	}
 }

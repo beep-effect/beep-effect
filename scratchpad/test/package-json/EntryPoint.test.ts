@@ -2,7 +2,7 @@ import { assert, describe, it } from "@effect/vitest";
 import { assertSuccess } from "@effect/vitest/utils";
 import { pipe } from "effect/Function";
 import * as Result from "effect/Result";
-import { resolveEntryPoint } from "../../effected/package-json/EntryPoint.ts";
+import { resolveEntryPoint, UnresolvedEntryPointError } from "../../effected/package-json/EntryPoint.ts";
 
 const resolve = (manifest: { exports?: unknown; main?: unknown }, conditions?: ReadonlyArray<string>) =>
 	resolveEntryPoint(manifest, conditions === undefined ? undefined : { conditions });
@@ -20,12 +20,43 @@ const reason = (manifest: { exports?: unknown; main?: unknown }, conditions?: Re
 };
 
 describe("resolveEntryPoint", () => {
-	it("supports one-argument manifests and pipeable options", () => {
+	it("supports direct manifest calls with optional conditions", () => {
 		const manifest = { exports: { import: "./esm.js", require: "./cjs.js" } };
-		assertSuccess(pipe(manifest, resolveEntryPoint()), "./esm.js");
+		assertSuccess(resolveEntryPoint(manifest), "./esm.js");
 		assertSuccess(resolveEntryPoint({ exports: "./a.js" }), "./a.js");
 		assertSuccess(resolveEntryPoint({ main: "./m.js" }), "./m.js");
+		assertSuccess(resolveEntryPoint(manifest, { conditions: ["require"] }), "./cjs.js");
+	});
+
+	it("resolves a conditions-extension manifest with explicit options", () => {
+		const manifest: { readonly main?: unknown; readonly conditions: ReadonlyArray<string> } = {
+			conditions: ["require"],
+		};
+		assertSuccess(resolveEntryPoint(manifest, undefined), "index.js");
+		assertSuccess(resolveEntryPoint(manifest, { conditions: ["require"] }), "index.js");
+	});
+
+	it("supports pipeable default, empty and explicit condition options", () => {
+		const manifest = { exports: { import: "./esm.js", require: "./cjs.js" } };
+		assertSuccess(pipe(manifest, resolveEntryPoint()), "./esm.js");
+		assertSuccess(pipe(manifest, resolveEntryPoint(undefined)), "./esm.js");
+		assertSuccess(pipe(manifest, resolveEntryPoint({})), "./esm.js");
 		assertSuccess(pipe(manifest, resolveEntryPoint({ conditions: ["require"] })), "./cjs.js");
+		assertSuccess(pipe({}, resolveEntryPoint()), "index.js");
+		assertSuccess(resolveEntryPoint({}, undefined), "index.js");
+		const extendedManifest = { main: "./m.js", conditions: ["require"] };
+		assertSuccess(resolveEntryPoint(extendedManifest), "./m.js");
+	});
+
+	it("preserves the quoted condition order and empty-array message default", () => {
+		assert.strictEqual(
+			UnresolvedEntryPointError.make({ reason: "noConditionMatched", conditions: ['"node"', "import\n"] }).message,
+			`The manifest's "exports" matched none of the conditions ["\\\"node\\\"","import\\n"]`,
+		);
+		assert.strictEqual(
+			UnresolvedEntryPointError.make({ reason: "noConditionMatched" }).message,
+			`The manifest's "exports" matched none of the conditions []`,
+		);
 	});
 
 	describe("the three legal exports spellings", () => {

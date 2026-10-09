@@ -60,9 +60,15 @@ export const isValidSpdx = (value: string): boolean => {
  */
 export const SpdxLicense = S.String.pipe(
 	S.check(
-		S.makeFilter((value) => (isValidSpdx(value) ? undefined : "Expected a valid SPDX license expression")),
+		S.makeFilterGroup([S.makeFilter((value) => (isValidSpdx(value) ? undefined : "Expected a valid SPDX license expression"), {
+			identifier: $I`SpdxLicenseCheck`,
+			title: "Manifest SPDX License",
+			description: "A valid SPDX license identifier or expression, UNLICENSED, or SEE LICENSE IN followed by a filename.",
+		})]),
 	),
 	S.brand("SpdxLicense"),
+	// Identity annotates the group, retaining the SPDX filter's own metadata.
+	$I.annoteSchema("SpdxLicense", { description: "A valid SPDX license identifier, expression, UNLICENSED, or SEE LICENSE IN <file>." }),
 );
 
 /**

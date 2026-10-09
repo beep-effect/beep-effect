@@ -32,8 +32,8 @@ const Json = S.fromJsonString(S.Unknown);
 
 /**
  * Indicates that a text input could not be treated as a package.json document:
- * either it is not valid JSON (`"invalid-json"`, carrying the underlying
- * `SyntaxError` on `cause`) or it parsed to something other than a JSON object
+ * either it is not valid JSON (`"invalid-json"`, carrying the schema
+ * decoding error on `cause`) or it parsed to something other than a JSON object
  * (`"not-an-object"` — an array, a scalar or `null`).
  *
  * Raised by {@link PackageJsonFormat.formatToString}. This is a *syntactic*
@@ -45,9 +45,9 @@ const Json = S.fromJsonString(S.Unknown);
 export class PackageJsonSyntaxError extends S.TaggedError<PackageJsonSyntaxError>($I`PackageJsonSyntaxError`)("PackageJsonSyntaxError", {
 	/** Which syntactic precondition failed. */
 	reason: S.Literals(["invalid-json", "not-an-object"]).annotateKey({ description: "Which syntactic precondition failed." }),
-	/** The underlying `SyntaxError` for `"invalid-json"`, preserved structurally. */
-	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying `SyntaxError` for `\"invalid-json\"`, preserved structurally." }),
-}, $I.annote("PackageJsonSyntaxError", { description: "Indicates that a text input could not be treated as a package.json document: either it is not valid JSON (`\"invalid-json\"`, carrying the underlying `SyntaxError` on `cause`) or it parsed to something other than a JSON object (`\"not-an-object\"` — an array, a scalar or `null`)." })) {
+	/** The schema decoding error for `"invalid-json"`, preserved structurally. */
+	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The schema decoding error for `\"invalid-json\"`, preserved structurally." }),
+}, $I.annote("PackageJsonSyntaxError", { description: "Indicates that a text input could not be treated as a package.json document: either it is not valid JSON (`\"invalid-json\"`, carrying the schema decoding error on `cause`) or it parsed to something other than a JSON object (`\"not-an-object\"` — an array, a scalar or `null`)." })) {
 	override get message(): string {
 		return this.reason === "invalid-json"
 			? "package.json text is not valid JSON"
@@ -210,12 +210,11 @@ export class PackageJsonFormat {
 	): Result.Result<string, PackageJsonSyntaxError> {
 		// Shares `sortKeys` with `sortValue` via `renderJson`, so the two entry
 		// points cannot drift in ordering.
-		let parsed: unknown;
-		try {
-			parsed = JSON.parse(source);
-		} catch (cause) {
-			return Result.fail(PackageJsonSyntaxError.make({ reason: "invalid-json", cause }));
+		const decoded = S.decodeResult(Json)(source);
+		if (Result.isFailure(decoded)) {
+			return Result.fail(PackageJsonSyntaxError.make({ reason: "invalid-json", cause: decoded.failure }));
 		}
+		const parsed = decoded.success;
 		if (!isJsonObject(parsed)) {
 			return Result.fail(PackageJsonSyntaxError.make({ reason: "not-an-object" }));
 		}
@@ -263,12 +262,7 @@ export class PackageJsonFormat {
 		// package.json is strict JSON; a syntactic precondition keeps garbage
 		// input a typed failure instead of undefined scanner behavior.
 		const parsed = yield* S.decodeEffect(Json)(source).pipe(
-			Effect.mapError((cause) => {
-				const formatted = PackageJsonFormat.formatToString(source);
-				return Result.isFailure(formatted)
-					? formatted.failure
-					: PackageJsonSyntaxError.make({ reason: "invalid-json", cause });
-			}),
+			Effect.mapError((cause) => PackageJsonSyntaxError.make({ reason: "invalid-json", cause })),
 		);
 		if (!isJsonObject(parsed)) {
 			return yield* PackageJsonSyntaxError.make({ reason: "not-an-object" });

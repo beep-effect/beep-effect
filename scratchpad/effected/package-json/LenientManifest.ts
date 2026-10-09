@@ -41,22 +41,28 @@ const $I = $ScratchpadId.create("effected/package-json/LenientManifest");
  * A value, not an error — the decode still succeeds; issues exist so callers
  * can report what degraded.
  *
+ * **Example** (Constructing a field issue)
+ *
+ * ```ts
+ * import { LenientFieldIssue } from "./index.ts";
+ * import * as S from "effect/Schema";
+ *
+ * const issue: LenientFieldIssue = { field: "name", expected: "a string", value: 42 };
+ * S.is(LenientFieldIssue)(issue); // => true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  * @public
  */
-export interface LenientFieldIssue {
-	/** The top-level field name that degraded, e.g. `"name"`. */
-	readonly field: string;
-	/** A human-readable description of the permissive shape the field required. */
-	readonly expected: string;
-	/** The raw value found on the wire, preserved for reporting. */
-	readonly value: unknown;
-}
+export const LenientFieldIssue = S.Struct({
+	field: S.String.annotateKey({ description: "The top-level field name that degraded." }),
+	expected: S.String.annotateKey({ description: "The permissive shape the field required." }),
+	value: S.Unknown.annotateKey({ description: "The raw value found on the wire, preserved for reporting." }),
+}).annotate($I.annote("LenientFieldIssue", { description: "A field whose raw value did not match its permissive manifest shape." }));
 
-const LenientFieldIssueSchema = S.Struct({
-	field: S.String,
-	expected: S.String,
-	value: S.Unknown,
-});
+/** A plain-object field degradation described by {@link LenientFieldIssue}. */
+export type LenientFieldIssue = typeof LenientFieldIssue.Type;
 
 // ── Permissive field shapes ─────────────────────────────────────────────────
 
@@ -66,17 +72,17 @@ const StringOrRecord = S.Union([S.String, UnknownRecord]);
 
 // ── The permissive-shape guards backing the sift ────────────────────────────
 
-const isString = (value: unknown): value is string => P.isString(value);
-const isBoolean = (value: unknown): value is boolean => P.isBoolean(value);
+const isString = P.isString;
+const isBoolean = P.isBoolean;
 const isPlainRecord = (value: unknown): value is Record<string, unknown> =>
 	P.isObjectKeyword(value) && !P.isFunction(value) && !A.isArray(value);
 const isStringRecord = (value: unknown): value is Record<string, string> =>
-	isPlainRecord(value) && R.values(value).every(isString);
-const isStringArray = (value: unknown): value is ReadonlyArray<string> => A.isArray(value) && value.every(isString);
+	isPlainRecord(value) && A.every(R.values(value), isString);
+const isStringArray = (value: unknown): value is ReadonlyArray<string> => A.isArray(value) && A.every(value, isString);
 const isStringOrRecord = (value: unknown): value is string | Record<string, unknown> =>
 	isString(value) || isPlainRecord(value);
 const isStringOrRecordArray = (value: unknown): value is ReadonlyArray<string | Record<string, unknown>> =>
-	A.isArray(value) && value.every(isStringOrRecord);
+	A.isArray(value) && A.every(value, isStringOrRecord);
 
 interface FieldGuard {
 	readonly expected: string;
@@ -156,6 +162,7 @@ const sift = (raw: Record<string, unknown>): LenientManifest => {
 };
 
 const decodeRecord = S.decodeUnknownExit(UnknownRecord);
+const decodeJson = S.decodeUnknownResult(S.fromJsonString(S.Unknown));
 
 // ── Model ───────────────────────────────────────────────────────────────────
 
@@ -241,7 +248,7 @@ export class LenientManifest extends S.Class<LenientManifest>($I`LenientManifest
 	 */
 	rest: S.optionalKey(UnknownRecord).annotateKey({ description: "Unknown top-level keys, plus every degraded known field's raw value, verbatim. Always present after a lenient decode (possibly empty)." }),
 	/** The degradations collected by the decode — empty when nothing degraded. */
-	issues: S.Array(LenientFieldIssueSchema).annotateKey({ description: "The degradations collected by the decode — empty when nothing degraded." }),
+	issues: S.Array(LenientFieldIssue).annotateKey({ description: "The degradations collected by the decode — empty when nothing degraded." }),
 }, $I.annote("LenientManifest", { description: "The shape-lenient view of a package.json document, for discovery and sniffing — probing a fetched tarball's manifest, walking a `node_modules` tree, listing candidate packages — where the document is other people's data and one malformed field must not fail the read." })) {
 	/**
 	 * Decode an unknown JSON value leniently, degrading malformed fields instead
@@ -285,12 +292,11 @@ export class LenientManifest extends S.Class<LenientManifest>($I`LenientManifest
 	 * never per-syntax
 	 */
 	static parseResult(text: string): Result.Result<LenientManifest, PackageJsonSyntaxError> {
-		let raw: unknown;
-		try {
-			raw = JSON.parse(text);
-		} catch (cause) {
-			return Result.fail(PackageJsonSyntaxError.make({ reason: "invalid-json", cause }));
+		const decoded = decodeJson(text);
+		if (Result.isFailure(decoded)) {
+			return Result.fail(PackageJsonSyntaxError.make({ reason: "invalid-json", cause: decoded.failure }));
 		}
+		const raw = decoded.success;
 		if (!isPlainRecord(raw)) {
 			return Result.fail(PackageJsonSyntaxError.make({ reason: "not-an-object" }));
 		}

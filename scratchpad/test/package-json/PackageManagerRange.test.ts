@@ -22,6 +22,26 @@ const encode = S.encodeUnknownEffect(PackageManagerRange.FromString);
 const decodeStrict = S.decodeUnknownEffect(PackageManager.FromString);
 
 describe("PackageManagerRange.FromString", () => {
+	it("annotates the reusable range check without broadening component validation", () => {
+		const $I = $ScratchpadId.create("effected/package-json/PackageManagerRange");
+		const range = PackageManagerRange.fields.range;
+		assert.deepStrictEqual(range.ast.checks?.[0]?.annotations, {
+			identifier: $I`SemVerRangeStringCheck`,
+			title: "Non-empty SemVer Range",
+			description: "A non-empty string that parses as a semver range, including exact versions, caret or tilde ranges, and comparator sets.",
+		});
+		for (const value of ["11.2.0", "^11.20.0", ">=10 <12", "*"]) {
+			assert.isTrue(S.is(range)(value), value);
+		}
+		for (const value of ["", "garbage"]) {
+			assert.isFalse(S.is(range)(value), value);
+			const decoded = S.decodeResult(range)(value);
+			const failed = Result.isFailure(decoded);
+			assertTrue(failed);
+			assert.include(decoded.failure.toString(), "Expected a semver range (an exact version, a caret/tilde range, a comparator set, ...)");
+		}
+	});
+
 	it.effect("parses a caret range and reports it inexact", () =>
 		Effect.gen(function* () {
 			const pm = yield* decode("pnpm@^11.20.0");
@@ -270,3 +290,4 @@ describe("PackageManagerRange operator, baseVersion and withVersion", () => {
 		}),
 	);
 });
+import { $ScratchpadId } from "@beep/identity/packages";

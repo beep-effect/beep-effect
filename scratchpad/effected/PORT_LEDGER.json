@@ -9265,9 +9265,150 @@
       "exportsAdded": [],
       "newDeps": [],
       "fixturesBytes": 24438,
-      "deviations": [],
-      "backlog": [],
-      "reviewRounds": [],
+      "deviations": [
+        {
+          "test": "scratchpad/test/package-json/Format.test.ts:167; scratchpad/test/package-json/LenientManifest.test.ts:127; scratchpad/test/package-json/Package.test.ts:174",
+          "upstreamBehaviour": "Funding, Person, Repository and wire helpers use native known-key Sets; LenientManifest.FIELD_GUARDS and format.KEY_INDEX use native Maps. Formatting uses native sorts and Object keys/entries/fromEntries/create calls.",
+          "labBehaviour": "Known-key membership uses HashSet, FIELD_GUARDS and KEY_INDEX use HashMap, and records use effect/Record helpers. internal/format.ts uses Array.sort with explicit Orders; wire.ts and LenientManifest.ts preserve null prototypes with object literals.",
+          "reason": "native-runtime: Effect hash collections and helpers replace native Set/Map/Object methods and native sorts under Short Law 10 and EF-38; the 2026-10-09 grilling ruling empties the port allowlist. Identity provenance and schema JSON changes are grouped separately."
+        },
+        {
+          "test": "scratchpad/test/package-json/Funding.test.ts:92; scratchpad/test/package-json/Person.test.ts:77; scratchpad/test/package-json/Person.test.ts:109; scratchpad/test/package-json/Repository.test.ts:355,394",
+          "upstreamBehaviour": "Funding remembers spelling in an identity-keyed WeakMap and bare-field arity in a WeakSet; Person, Repository and Bugs remember wire forms in WeakMaps.",
+          "labBehaviour": "Funding owns private #wire/#bareField, and Person, Repository and Bugs own private #wire with static access methods. Independent instance provenance, shorthand spelling, arity, edited-value fallback and JSON exclusion are preserved.",
+          "reason": "identity-keys: the 2026-10-09 grilling ruling replaces each identity-keyed structure with owner fields; Funding.ts, Person.ts and Repository.ts move provenance onto their schema instances rather than structurally keyed global collections."
+        },
+        {
+          "test": "scratchpad/test/package-json/Modify.test.ts:127; module suite scratchpad/test/package-json/**",
+          "upstreamBehaviour": "PackageJsonFile.modify declares read/not-found/parse/modify/write failures; PackageJsonFormat.modify and modifyToString do not expose a JsoncStringifyError member from the upstream JSON serializer.",
+          "labBehaviour": "PackageJsonFile.modify and PackageJsonFormat.modify/modifyToString also expose the sibling jsonc typed JsoncStringifyError serialization failure. Existing package-json boundary error tags remain schema-tagged.",
+          "reason": "tagged-errors: typed serialization failures required by the native-runtime/error law propagate from lab jsonc into package-json; round-1 INVENTORY fable-1-4-bookkeeping records this downstream public error-channel widening. No dedicated serialization-failure test is cited."
+        },
+        {
+          "test": "scratchpad/test/package-json/PackageName.test.ts:45,55; scratchpad/test/package-json/PackageJsonFormat.test.ts:220; scratchpad/test/package-json/LenientManifest.test.ts:228; scratchpad/test/package-json/EntryPoint.test.ts:51",
+          "upstreamBehaviour": "LenientFieldIssue and RuleFailure are interface models; PackageName attaches statics with Object.assign. Parsing, rendering, conditions messages and Person/Repository/Bugs rest comparisons use native JSON operations with native exceptions or undefined output.",
+          "labBehaviour": "LenientFieldIssue and RuleFailure derive from exported Struct schemas; PackageName statics live on an S.Opaque class and setters use schema guards. JSON codecs produce SchemaError causes/failures, reject undefined serialization output and retain successful bytes and key-order-sensitive replay; SPDX/range checks gain metadata.",
+          "reason": "schema-first: schema-owned domain models, derived guards and EF-3/EF-19 JSON codecs are required; the 2026-10-09 confirmed ruling requires S.Opaque statics. Sites: LenientManifest, PackageValidator, PackageName, Package, License, PackageManagerRange, EntryPoint, PackageJsonFormat/File, internal/format, Person and Repository."
+        },
+        {
+          "test": "scratchpad/test/package-json/Modify.test.ts:127; module suite scratchpad/test/package-json/**",
+          "upstreamBehaviour": "PackageJsonModifyError.path uses Schema.Number alongside strings, accepting NaN and positive/negative Infinity as numeric path segments at construction.",
+          "labBehaviour": "PackageJsonFormat.ts:105 uses S.Finite for numeric PackageJsonModifyError.path segments, rejecting NaN and infinities while retaining finite numbers and strings.",
+          "reason": "numeric-domains: effecttsgo/schema-number requires S.Finite; the 2026-10-09 grilling ruling keeps and records this accepted-input narrowing. INVENTORY fable-1-3 and Grok evidence confirm rejection; no upstream non-finite-path test is cited."
+        },
+        {
+          "test": "scratchpad/test/package-json/Package.test.ts:107,118,227; scratchpad/test/package-json/PackageJsonFormat.test.ts:83; scratchpad/test/package-json/Funding.test.ts; scratchpad/test/package-json/deliberatelyInvalid.ts",
+          "upstreamBehaviour": "Package.wireFor and internal/makeWire use any and codec casts; setters assert branded strings. LenientManifest.sift, format sorting and regex captures use casts/non-null assertions; tests cast decoded records and intentionally invalid inputs.",
+          "labBehaviour": "wireFor/makeWire preserve RD/RE codec requirements through generics and staged transformations; setters narrow with S.is, sift constructs without casts and sorting carries known indices. Tests use schema decoding/guards and assertions, typed mutation and one deliberatelyInvalid helper for wrong-input cases.",
+          "reason": "type-safety: D15 removes unsafe assertions, any and non-null assertions without weakening tests; the 2026-10-09 operator ruling permits only the module deliberatelyInvalid helper cast for intentional wrong inputs. Main sites: Package.ts, LenientManifest.ts, PackageJsonFormat.ts, Funding.ts, internal/wire.ts and internal/format.ts."
+        },
+        {
+          "test": "scratchpad/test/package-json/EntryPoint.test.ts:22,30,39; scratchpad/test/package-json/Format.test.ts:25,36; module suite scratchpad/test/package-json/**",
+          "upstreamBehaviour": "resolveEntryPoint(manifest, options?) and internal resolveIndent/renderJson are plain functions; PackageValidator layer callbacks are plain forwarders. Schema errors are constructed with new and known-shaped test inputs use decodeUnknownEffect.",
+          "labBehaviour": "resolveEntryPoint uses predicate dual dispatch; empty or extension-only direct manifests require an explicit second argument, while exports/main select direct calls. resolveIndent/renderJson have dual(2) overloads, validator callbacks use named Effect.fn, errors use .make and known-shaped tests use decodeEffect.",
+          "reason": "tsgo-diagnostics: @effect/tsgo missingPipeableSignature, effectFnOpportunity and newSchemaClass diagnostics force these shapes; repair-package-json.md supersedes earlier restoration reports. schemaNumber changes are grouped in numeric-domains; unsafe assertions are grouped in type-safety."
+        },
+        {
+          "test": "scratchpad/test/package-json/integration/PackageJsonFile.int.test.ts; scratchpad/test/package-json/PackageValidator.test.ts; scratchpad/test/package-json/Repository.test.ts; scratchpad/test/package-json/Resolve.test.ts",
+          "upstreamBehaviour": "PackageJsonFile readJson/withPreservedSource/writeText return bare Effect.gen values. Domain paths use native Array/String/predicate helpers and switch-based error-message dispatch.",
+          "labBehaviour": "PackageJsonFile internal generators use named Effect.fn and writeText maps its failure through the wrapper; fallback uses Effect.orElseSucceed. Repository, LenientManifest, EntryPoint, Funding and PackageValidator use Effect helpers, with Match for entry-point messages; test resolver callbacks and roundtrip helpers use Effect.fn.",
+          "reason": "effect-first: Short Laws 11/21/22 and Code Laws require Match, direct helper references, Effect-native helpers and fn wrappers for generator-returning functions. Diagnostic-forced public dual shapes and validator forwarder wrappers are grouped in tsgo-diagnostics."
+        },
+        {
+          "test": "module suite scratchpad/test/package-json/**",
+          "upstreamBehaviour": "Source, tests and source JSDoc examples import Effect modules from the root effect barrel, including type imports and Function helpers.",
+          "labBehaviour": "All 19 package-json source files and their changed tests/examples import modules through effect/Module paths; Function helpers use effect/Function.",
+          "reason": "effect-imports: per-module effect/* imports replace the root effect barrel under Code Laws and the step-3 import wave; Dependency, DevEngines, EntryPoint, Funding, LenientManifest, License, Package*, Person, Repository and internal/format/wire are included."
+        },
+        {
+          "test": "scratchpad/test/package-json/PackageName.test.ts:45,114; scratchpad/test/package-json/License.test.ts:24; scratchpad/test/package-json/PackageFields.test.ts:9; scratchpad/test/package-json/PackageManagerRange.test.ts:25",
+          "upstreamBehaviour": "Schema classes/errors use short identifiers, services use @effected/package-json keys, and exported field/name/license schemas lack owning Beep identity and field annotations.",
+          "labBehaviour": "$ScratchpadId.create(effected/package-json/<file>) supplies $I class/error/service keys and schema/field annotations across the module. Name/license/field tests pin metadata, and PackageName JSON Schema assertions follow identity-addressed definitions and references.",
+          "reason": "identity-annotations: operator step 4 and D5 require @beep/identity $I annotations on schemas, services, errors and fields; includes Dependency, DevEngines, Funding, LenientManifest, Package/Manifest/Manager/Range/Name/Validator/JsonFormat/File, License, Person, Repository and Bugs."
+        },
+        {
+          "test": "scratchpad/test/package-json/Format.test.ts:185",
+          "upstreamBehaviour": "internal/format.ts sortMapEntries assigns sorted entries into {}, dropping an own __proto__ key in nested scripts and other sorted maps through the inherited prototype setter.",
+          "labBehaviour": "sortMapEntries builds sorted records with R.fromEntries, preserving __proto__ as an own data property and retaining the exact canonical scripts bytes.",
+          "reason": "upstream-bug: fix-package-json-g1.md:16 reports the pinned-oracle scripts probe with nestedSortedOwn=false; the new Format.test.ts:185 case verifies the retained key, order, own-property value and exact output bytes."
+        },
+        {
+          "test": "scratchpad/test/package-json/Package.test.ts:174,199",
+          "upstreamBehaviour": "internal/format.ts sortKeys assigns sorted entries into {}, so default Package.toJsonString drops a top-level own __proto__ key although unsorted rendering retains it.",
+          "labBehaviour": "sortKeys uses R.fromEntries; default Package.toJsonString preserves the top-level own __proto__ value and other custom fields without prototype pollution.",
+          "reason": "upstream-bug: fix-package-json-g1.md:17 reports the pinned-oracle top-level probe with topSortedOwn=false and preservation only without sorting; Package.test.ts:199 extends the existing wire regression through default rendering."
+        }
+      ],
+      "backlog": [
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "sol-1-7 — Legacy JSDoc awaiting S2 (scratchpad/effected/package-json/Repository.ts:169)",
+          "reason": "jsdoc: Convert legacy JSDoc carriers and add canonical metadata/examples during S2, preserving prose and validating docgen."
+        },
+        {
+          "seat": "grok",
+          "round": 1,
+          "finding": "sol-1-8 — README lab adaptation and attribution cleanup (scratchpad/effected/package-json/README.md:3,73-74,286-304)",
+          "reason": "docs: Adapt README examples/imports and badges during S2; remove pasted attribution excerpts while preserving provenance and license notices."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "sol-1-9 — S3 schema and formatter property floor (scratchpad/test/package-json/PackageName.test.ts:69,75)",
+          "reason": "test: Add Arbitrary.schema/fcRuns schema round trips and parser/formatter fidelity and idempotence properties during S3; retain upstream suites."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "sol-1-10 — S3 Effect test and Option assertion canon (scratchpad/test/package-json/Resolve.test.ts:31)",
+          "reason": "test: Migrate runSync tests to it.effect/yield* and Option assertions to assertSome/assertNone during S3; preserve expected values and deliberate whole-Option comparisons."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "fable-1-6 — Duplicate invalid-JSON parsing (scratchpad/effected/package-json/PackageJsonFormat.ts:265-271)",
+          "reason": "perf: Share a single Result-based schema JSON boundary and map failures once; coordinate with the required codec repair and record unavoidable cause changes."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "fable-1-9 — Unqualified internal helper spans (scratchpad/effected/package-json/PackageJsonFile.ts:238,254,264)",
+          "reason": "effect-idiom: Consider qualified internal span names or fnUntraced while preserving law-required generator wrappers."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "fable-1-10 — Non-exhaustive literal reason message (scratchpad/effected/package-json/EntryPoint.ts:61)",
+          "reason": "effect-idiom: Optionally match unsupportedExportsForm explicitly and finish with Match.exhaustive."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "fable-1-4-export — Optional JsoncStringifyError barrel export (scratchpad/effected/package-json/index.ts:30)",
+          "reason": "effect-idiom: Optionally re-export JsoncStringifyError from the existing jsonc barrel export and record exportsAdded if adopted."
+        }
+      ],
+      "reviewRounds": [
+        {
+          "round": 1,
+          "commit": "3fa5876691901fccf3d1cd29e9324564df134b56",
+          "seats": {
+            "grok": {
+              "required": 2,
+              "backlog": 1
+            },
+            "sol": {
+              "required": 6,
+              "backlog": 4
+            },
+            "fable": {
+              "required": 5,
+              "backlog": 9
+            }
+          }
+        }
+      ],
       "commits": [
         {
           "stage": 0,

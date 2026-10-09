@@ -51,6 +51,7 @@ const toHashMap = SchemaTransformation.transform({
 export const DependencyMapField = S.Record(S.String, S.String).pipe(
 	S.withDecodingDefaultKey(Effect.succeed<{ readonly [x: string]: string }>({})),
 	S.decodeTo(S.HashMap(S.String, S.String), toHashMap),
+	$I.annoteSchema("DependencyMapField", { description: "A string-to-string map decoded to a HashMap, defaulting to an empty map when absent." }),
 );
 
 /**
@@ -62,6 +63,7 @@ export const DependencyMapField = S.Record(S.String, S.String).pipe(
  */
 export const StringMapField = S.Record(S.String, S.String).pipe(
 	S.decodeTo(S.HashMap(S.String, S.String), toHashMap),
+	$I.annoteSchema("StringMapField", { description: "A string-to-string map decoded to a HashMap, with no default for an absent key." }),
 );
 
 /**
@@ -87,7 +89,9 @@ export const ExportsField = S.Union([S.String, S.Record(S.String, S.Unknown)]).p
  *
  * @public
  */
-export const PublishConfigField = S.Record(S.String, S.Unknown);
+export const PublishConfigField = S.Record(S.String, S.Unknown).pipe(
+	$I.annoteSchema("PublishConfigField", { description: "An open publishConfig record preserving npm keys and extensions." }),
+);
 
 /**
  * The `peerDependenciesMeta` field: a map of package name to `{ optional? }`.
@@ -98,6 +102,8 @@ export const PublishConfigField = S.Record(S.String, S.Unknown);
 export const PeerDependenciesMetaField = S.Record(
 	S.String,
 	S.Struct({ optional: S.optionalKey(S.Boolean) }),
+).pipe(
+	$I.annoteSchema("PeerDependenciesMetaField", { description: "A map of peer dependency names to metadata with an optional boolean flag." }),
 );
 
 /**

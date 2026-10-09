@@ -45,6 +45,7 @@ const MAX_LENGTH = 214;
 export const ScopedPackageName = S.String.pipe(
 	S.check(S.isPattern(SCOPED_RE), S.isMaxLength(MAX_LENGTH)),
 	S.brand("ScopedPackageName"),
+	$I.annoteSchema("ScopedPackageName", { description: "A valid npm scoped package name (`@scope/name`)." }),
 );
 
 /**
@@ -62,6 +63,7 @@ export type ScopedPackageName = string & Brand.Brand<"ScopedPackageName">;
 export const UnscopedPackageName = S.String.pipe(
 	S.check(S.isPattern(UNSCOPED_RE), S.isMaxLength(MAX_LENGTH)),
 	S.brand("UnscopedPackageName"),
+	$I.annoteSchema("UnscopedPackageName", { description: "A valid npm unscoped package name (no `@scope/` prefix)." }),
 );
 
 /**
@@ -77,18 +79,6 @@ export type UnscopedPackageName = string & Brand.Brand<"UnscopedPackageName">;
  * @public
  */
 export type PackageName = ScopedPackageName | UnscopedPackageName;
-
-/** Classification statics attached to the `PackageName` schema value. */
-interface PackageNameStatics {
-	/** Whether the string satisfies npm's package-name rules. */
-	readonly isValid: (name: string) => boolean;
-	/** The scope of a scoped name (`@scope/x` → `Some("scope")`), else `None`. */
-	readonly scope: (name: string) => O.Option<string>;
-	/** The unscoped portion of a name (`@scope/x` → `"x"`; `x` → `"x"`). */
-	readonly unscoped: (name: string) => string;
-	/** Whether the name is scoped (starts with `@`). */
-	readonly isScoped: (name: string) => boolean;
-}
 
 const isValid = (name: string): boolean =>
 	name.length > 0 && name.length <= MAX_LENGTH && (UNSCOPED_RE.test(name) || SCOPED_RE.test(name));
@@ -106,6 +96,14 @@ const unscoped = (name: string): string => {
 };
 
 const isScoped = (name: string): boolean => name.startsWith("@");
+
+const PackageNameUnion = S.Union([ScopedPackageName, UnscopedPackageName]).pipe(
+	$I.annoteSchema("PackageName", { description: "A valid npm package name, scoped or unscoped, with classification statics." }),
+);
+// TypeScript cannot extend a primitive union. Widen only the unused constructor
+// surface to its common string members, preserving every schema value/type role.
+const PackageNameBase: Omit<S.Opaque<PackageName, typeof PackageNameUnion, {}>, never> &
+	(new (_: never) => Pick<PackageName, keyof string>) = S.Opaque<PackageName>()(PackageNameUnion);
 
 /**
  * The union of `ScopedPackageName` and `UnscopedPackageName`,
@@ -125,9 +123,13 @@ const isScoped = (name: string): boolean => name.startsWith("@");
  *
  * @public
  */
-export const PackageName = Object.assign(S.Union([ScopedPackageName, UnscopedPackageName]), {
-	isValid,
-	scope,
-	unscoped,
-	isScoped,
-} satisfies PackageNameStatics);
+export const PackageName = class extends PackageNameBase {
+	/** Whether the string satisfies npm's package-name rules. */
+	static readonly isValid = isValid;
+	/** The scope of a scoped name (`@scope/x` → `Some("scope")`), else `None`. */
+	static readonly scope = scope;
+	/** The unscoped portion of a name (`@scope/x` → `"x"`; `x` → `"x"`). */
+	static readonly unscoped = unscoped;
+	/** Whether the name is scoped (starts with `@`). */
+	static readonly isScoped = isScoped;
+};

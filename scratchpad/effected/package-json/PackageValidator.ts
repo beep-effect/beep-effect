@@ -19,14 +19,28 @@ const $I = $ScratchpadId.create("effected/package-json/PackageValidator");
 /**
  * A single validation-rule failure.
  *
+ * **Example** (Constructing a rule failure)
+ *
+ * ```ts
+ * import { RuleFailure } from "./index.ts";
+ * import * as O from "effect/Option";
+ * import * as S from "effect/Schema";
+ *
+ * const failure: RuleFailure = { message: "Missing license field", path: O.some("license") };
+ * S.is(RuleFailure)(failure); // => true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  * @public
  */
-export interface RuleFailure {
-	/** A human-readable description of the failure. */
-	readonly message: string;
-	/** The JSON path where the failure occurred; `Option.none()` when not applicable. */
-	readonly path: O.Option<string>;
-}
+export const RuleFailure = S.Struct({
+	message: S.String.annotateKey({ description: "A human-readable description of the failure." }),
+	path: S.Option(S.String).annotateKey({ description: "The JSON path where the failure occurred, or None when not applicable." }),
+}).annotate($I.annote("RuleFailure", { description: "A validation-rule failure with its message and optional JSON path." }));
+
+/** A plain-object validation failure described by {@link RuleFailure}. */
+export type RuleFailure = typeof RuleFailure.Type;
 
 /**
  * A single validation rule: a name and a check that fails with a
@@ -60,11 +74,11 @@ export class PackageValidationError extends S.TaggedError<PackageValidationError
 	).annotateKey({ description: "The aggregated rule failures." }),
 }, $I.annote("PackageValidationError", { description: "Indicates that a Package failed one or more validation rules." })) {
 	override get message(): string {
-		const lines = this.failures.map((failure) => {
+		const lines = A.map(this.failures, (failure) => {
 			const path = O.match(failure.path, { onNone: () => "", onSome: (value) => ` (at ${value})` });
 			return `  - [${failure.rule}]${path}: ${failure.message}`;
 		});
-		return `package.json validation failed:\n${lines.join("\n")}`;
+		return `package.json validation failed:\n${A.join(lines, "\n")}`;
 	}
 }
 
@@ -102,7 +116,7 @@ const notPrivate: ValidationRule = {
 };
 
 const anyDependencyMatches = (pkg: Package, predicate: (specifier: string) => boolean): boolean =>
-	[pkg.dependencies, pkg.devDependencies, pkg.peerDependencies, pkg.optionalDependencies].some((map) =>
+	A.some([pkg.dependencies, pkg.devDependencies, pkg.peerDependencies, pkg.optionalDependencies], (map) =>
 		map.pipe(HashMap.values, A.fromIterable, A.some(predicate)),
 	);
 
@@ -196,6 +210,8 @@ export class PackageValidator extends Context.Service<
 	 * @returns a layer providing `PackageValidator` backed by `config.rules`
 	 */
 	static layerRules(config: { readonly rules: ReadonlyArray<ValidationRule> }): Layer.Layer<PackageValidator> {
-		return Layer.succeed(PackageValidator, { validate: Effect.fn("PackageValidator.validate")((pkg) => runRules(pkg, config.rules)) });
+		return Layer.succeed(PackageValidator, {
+			validate: Effect.fn("PackageValidator.validate")((pkg) => runRules(pkg, config.rules)),
+		});
 	}
 }

@@ -11,7 +11,6 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
-import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import type { PackageDecodeError, PackageFormatOptions } from "./Package.ts";
 import { Package } from "./Package.ts";
@@ -68,8 +67,8 @@ export class PackageJsonNotFoundError extends S.TaggedError<PackageJsonNotFoundE
 export class PackageJsonParseError extends S.TaggedError<PackageJsonParseError>($I`PackageJsonParseError`)("PackageJsonParseError", {
 	/** The path whose contents failed to parse as JSON. */
 	path: S.String.annotateKey({ description: "The path whose contents failed to parse as JSON." }),
-	/** The underlying `SyntaxError`, preserved structurally. */
-	cause: S.Defect().annotateKey({ description: "The underlying `SyntaxError`, preserved structurally." }),
+	/** The schema decoding error, preserved structurally. */
+	cause: S.Defect().annotateKey({ description: "The schema decoding error, preserved structurally." }),
 }, $I.annote("PackageJsonParseError", { description: "Indicates that a package.json file's contents are not valid JSON." })) {
 	override get message(): string {
 		return `Failed to parse package.json at "${this.path}"`;
@@ -238,13 +237,7 @@ export class PackageJsonFile extends Context.Service<PackageJsonFile, PackageJso
 			const readJson = Effect.fn("readJson")(function* (target: string) {
 				const content = yield* readText(target);
 				return yield* S.decodeEffect(Json)(content).pipe(
-					Effect.mapError((cause) => {
-						const parsed = PackageJsonFormat.formatToString(content);
-						return PackageJsonParseError.make({
-							path: target,
-							cause: Result.isFailure(parsed) ? parsed.failure.cause : cause,
-						});
-					}),
+					Effect.mapError((cause) => PackageJsonParseError.make({ path: target, cause })),
 				);
 			});
 

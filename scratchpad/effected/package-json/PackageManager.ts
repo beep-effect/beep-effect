@@ -124,7 +124,7 @@ export class PackageManager extends S.Class<PackageManager>($I`PackageManager`)(
 		S.decodeTo(
 			S.instanceOf(PackageManager),
 			SchemaTransformation.transformEffect({
-				decode: Effect.fn("decode")((input: string): Effect.Effect<PackageManager, SchemaIssue.Issue> => {
+				decode: (input: string): Effect.Effect<PackageManager, SchemaIssue.Issue> => {
 					const at = input.indexOf("@");
 					if (at === -1) {
 						return invalid(input, `Invalid packageManager format: "${input}"`);
@@ -160,7 +160,7 @@ export class PackageManager extends S.Class<PackageManager>($I`PackageManager`)(
 						return invalid(input, `Invalid packageManager integrity: "${rawIntegrity}"`);
 					}
 					return Effect.succeed(PackageManager.make({ name, version, integrity: O.some(decoded.value) }));
-				}),
+				},
 				encode: (pm: PackageManager) =>
 					Effect.succeed(
 						O.match(pm.integrity, {

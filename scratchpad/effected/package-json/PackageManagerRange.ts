@@ -78,6 +78,11 @@ const SemVerRangeString: S.String = S.String.pipe(
 			value.length > 0 && Result.isSuccess(Range.parseResult(value))
 				? undefined
 				: "Expected a semver range (an exact version, a caret/tilde range, a comparator set, ...)",
+			{
+				identifier: $I`SemVerRangeStringCheck`,
+				title: "Non-empty SemVer Range",
+				description: "A non-empty string that parses as a semver range, including exact versions, caret or tilde ranges, and comparator sets.",
+			},
 		),
 	),
 );

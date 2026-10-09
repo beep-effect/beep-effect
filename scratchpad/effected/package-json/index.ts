@@ -45,7 +45,7 @@ export {
 	resolveEntryPoint,
 } from "./EntryPoint.ts";
 export { Funding } from "./Funding.ts";
-export { type LenientFieldIssue, LenientManifest } from "./LenientManifest.ts";
+export { LenientFieldIssue, LenientManifest } from "./LenientManifest.ts";
 export { InvalidSpdxLicenseError, SpdxLicense, isValidSpdx, licenseExpressionOf } from "./License.ts";
 export {
 	BinField,
@@ -89,7 +89,7 @@ export {
 export {
 	PackageValidationError,
 	PackageValidator,
-	type RuleFailure,
+	RuleFailure,
 	type ValidationRule,
 	defaultRules,
 	noLocalDepsRule,

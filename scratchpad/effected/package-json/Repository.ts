@@ -5,7 +5,7 @@
 // hold the same wire-fidelity requirement the `Person` model does: a formatter
 // must not rewrite one legal encoding into another, so a value read from the
 // string form re-encodes to that exact string. The mechanism is `Person`'s: a
-// WeakMap of provenance, because the wire form is provenance rather than data —
+// private field of provenance, because the wire form is provenance rather than data —
 // it must not appear in the encoded output, must not affect structural
 // equality, and must not survive being copied into a hand-built value.
 //
@@ -14,7 +14,10 @@
 // caller that wants the bytes it read keeps them.
 
 import { $ScratchpadId } from "@beep/identity/packages";
+import * as A from "effect/Array";
+import { identity } from "effect/Function";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as S from "effect/Schema";
@@ -105,9 +108,6 @@ const browseUrlOf = (raw: string): O.Option<string> => {
 /** The wire value a repository or bugs entry was decoded from. */
 type FieldWire = string | { readonly [k: string]: unknown };
 
-const repositoryWires = new WeakMap<Repository, FieldWire>();
-const bugsWires = new WeakMap<Bugs, FieldWire>();
-
 const KNOWN_REPOSITORY_KEYS = HashSet.make("type", "url", "directory");
 const KNOWN_BUGS_KEYS = HashSet.make("url", "email");
 
@@ -116,7 +116,10 @@ const KNOWN_BUGS_KEYS = HashSet.make("url", "email");
 // reason. An unguarded replay hands back the bytes that were read, so a value
 // edited after decoding re-encodes as the stale original and the edit is
 // silently lost. `Person` guarded this; `Repository` and `Bugs` did not.
-const sameRest = (a: unknown, b: unknown): boolean => JSON.stringify(a ?? {}) === JSON.stringify(b ?? {});
+// The comparison remains sensitive to JSON key order and defaults nullish rest to {}.
+const encodeRestJson = S.encodeResult(S.fromJsonString(S.Unknown));
+const restJsonOf = (value: unknown): string => Result.getOrThrowWith(encodeRestJson(value ?? {}), identity);
+const sameRest = (a: unknown, b: unknown): boolean => restJsonOf(a) === restJsonOf(b);
 
 /** The keys of `wire` outside the documented set, which is what `rest` holds. */
 const restOf = (wire: { readonly [k: string]: unknown }, known: HashSet.HashSet<string>): Record<string, unknown> => {
@@ -195,6 +198,9 @@ export class Repository extends S.Class<Repository>($I`Repository`)({
 	/** Keys outside the documented set, preserved so encoding does not drop them. */
 	rest: S.optionalKey(S.Record(S.String, S.Unknown)).annotateKey({ description: "Keys outside the documented set, preserved so encoding does not drop them." }),
 }, $I.annote("Repository", { description: "Where a package's source lives." })) {
+	// Private instance provenance never enters schema data, equality or object spreads.
+	#wire: FieldWire | undefined = undefined;
+
 	/**
 	 * The browsable `https://` URL, or `Option.none()` when `url` is not a form
 	 * this model recognizes.
@@ -260,12 +266,12 @@ export class Repository extends S.Class<Repository>($I`Repository`)({
 		const directory = this.directory;
 		if (directory === undefined) return this.browseUrl;
 
-		const segments = directory
-			.split("/")
-			.map((segment) => segment.trim())
-			.filter((segment) => segment !== "" && segment !== ".");
+		const segments = A.filter(
+			A.map(directory.split("/"), (segment) => segment.trim()),
+			(segment) => segment !== "" && segment !== ".",
+		);
 		// `..` would climb out of the repository the manifest names.
-		if (segments.some((segment) => segment === "..")) return O.none();
+		if (A.some(segments, (segment) => segment === "..")) return O.none();
 		// `"."`, `"/"`, `""` — the member is the root after all.
 		if (segments.length === 0) return this.browseUrl;
 
@@ -273,7 +279,7 @@ export class Repository extends S.Class<Repository>($I`Repository`)({
 			const host = /^https:\/\/([^/]+)/.exec(url)?.[1];
 			const path = host === undefined ? undefined : O.getOrUndefined(HashMap.get(DIRECTORY_PATHS, host));
 			if (path === undefined) return O.none();
-			return O.some(`${url}/${path}/${segments.map((segment) => encodeURIComponent(segment)).join("/")}`);
+			return O.some(`${url}/${path}/${A.join(A.map(segments, (segment) => encodeURIComponent(segment)), "/")}`);
 		});
 	}
 
@@ -292,7 +298,7 @@ export class Repository extends S.Class<Repository>($I`Repository`)({
 				decode: (input: string | { readonly [k: string]: unknown }): Repository => {
 					if (P.isString(input)) {
 						const repository = Repository.make({ url: input });
-						repositoryWires.set(repository, input);
+						repository.#wire = input;
 						return repository;
 					}
 					const rest: Record<string, unknown> = {};
@@ -305,11 +311,11 @@ export class Repository extends S.Class<Repository>($I`Repository`)({
 						...(P.isString(input.directory) && { directory: input.directory }),
 						...(R.keys(rest).length > 0 && { rest }),
 					});
-					repositoryWires.set(repository, input);
+					repository.#wire = input;
 					return repository;
 				},
 				encode: (repository: Repository): string | { readonly [k: string]: unknown } => {
-					const wire = repositoryWires.get(repository);
+					const wire = repository.#wire;
 					// Replay the shorthand only while it still describes this value —
 					// an edited url must not re-encode as the stale original.
 					if (P.isString(wire) && wire === repository.url && isStringExpressibleRepository(repository))
@@ -344,6 +350,9 @@ export class Bugs extends S.Class<Bugs>($I`Bugs`)({
 	/** Keys outside the documented set, preserved so encoding does not drop them. */
 	rest: S.optionalKey(S.Record(S.String, S.Unknown)).annotateKey({ description: "Keys outside the documented set, preserved so encoding does not drop them." }),
 }, $I.annote("Bugs", { description: "Where to report problems with a package." })) {
+	// Private instance provenance never enters schema data, equality or object spreads.
+	#wire: FieldWire | undefined = undefined;
+
 	/** The `bugs` field: a URL string or the object form. */
 	static readonly FromValue: S.Codec<Bugs, string | { readonly [k: string]: unknown }> = S.Union([
 		S.Record(S.String, S.Unknown),
@@ -355,7 +364,7 @@ export class Bugs extends S.Class<Bugs>($I`Bugs`)({
 				decode: (input: string | { readonly [k: string]: unknown }): Bugs => {
 					if (P.isString(input)) {
 						const bugs = Bugs.make({ url: input });
-						bugsWires.set(bugs, input);
+						bugs.#wire = input;
 						return bugs;
 					}
 					const rest: Record<string, unknown> = {};
@@ -367,11 +376,11 @@ export class Bugs extends S.Class<Bugs>($I`Bugs`)({
 						...(P.isString(input.email) && { email: input.email }),
 						...(R.keys(rest).length > 0 && { rest }),
 					});
-					bugsWires.set(bugs, input);
+					bugs.#wire = input;
 					return bugs;
 				},
 				encode: (bugs: Bugs): string | { readonly [k: string]: unknown } => {
-					const wire = bugsWires.get(bugs);
+					const wire = bugs.#wire;
 					if (P.isString(wire) && wire === bugs.url && isStringExpressibleBugs(bugs)) return wire;
 					if (wire !== undefined && !P.isString(wire) && isFaithfulBugs(wire, bugs)) return wire;
 					return {

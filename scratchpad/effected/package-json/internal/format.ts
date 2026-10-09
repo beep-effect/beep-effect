@@ -1,10 +1,14 @@
-import { dual } from "effect/Function";
+import { dual, identity } from "effect/Function";
 import * as A from "effect/Array";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 // Pure package.json serialization helpers: canonical top-level key ordering
 // (the `sort-package-json` order), map-field alphabetization and
@@ -143,7 +147,9 @@ const KEY_INDEX = HashMap.fromIterable(A.map(KEY_ORDER, (k, i) => [k, i] as cons
  * `localeCompare` sorts differently across ICU builds/locales; package.json key
  * order must be stable everywhere.
  */
-const byCodePoint = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
+const byCodePoint = Order.make<string>((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+const byKnownIndex = Order.mapInput(Order.Number, (entry: [string, unknown, number]) => entry[2]);
+const byEntryKey = Order.mapInput(byCodePoint, (entry: [string, unknown]) => entry[0]);
 
 /**
  * Top-level map fields whose entries are alphabetized when sorting. The
@@ -166,13 +172,8 @@ const SORTED_MAP_KEYS = HashSet.make(
 );
 
 /** Alphabetize the entries of a plain-object map field. */
-const sortMapEntries = (value: Record<string, unknown>): Record<string, unknown> => {
-	const result: Record<string, unknown> = {};
-	for (const key of R.keys(value).sort(byCodePoint)) {
-		result[key] = value[key];
-	}
-	return result;
-};
+const sortMapEntries = (value: Record<string, unknown>): Record<string, unknown> =>
+	R.fromEntries(A.map(A.sort(R.keys(value), byCodePoint), (key) => [key, value[key]] as const));
 
 const isPlainObject = (value: unknown): value is Record<string, unknown> =>
 	P.isObjectKeyword(value) && !P.isFunction(value) && !A.isArray(value);
@@ -190,19 +191,15 @@ export const sortKeys = (obj: Record<string, unknown>): Record<string, unknown> 
 	for (const key of R.keys(obj)) {
 		const index = O.getOrUndefined(HashMap.get(KEY_INDEX, key));
 		if (index !== undefined) known.push([key, obj[key], index]);
-		else if (key.startsWith("_")) restPrivate.push([key, obj[key]]);
+		else if (Str.startsWith("_")(key)) restPrivate.push([key, obj[key]]);
 		else restPublic.push([key, obj[key]]);
 	}
 
-	known.sort((a, b) => a[2] - b[2]);
-	restPublic.sort((a, b) => byCodePoint(a[0], b[0]));
-	restPrivate.sort((a, b) => byCodePoint(a[0], b[0]));
-
-	const result: Record<string, unknown> = {};
-	for (const [key, value] of [...known, ...restPublic, ...restPrivate]) {
-		result[key] = HashSet.has(SORTED_MAP_KEYS, key) && isPlainObject(value) ? sortMapEntries(value) : value;
-	}
-	return result;
+	const entries = [...A.sort(known, byKnownIndex), ...A.sort(restPublic, byEntryKey), ...A.sort(restPrivate, byEntryKey)];
+	return R.fromEntries(A.map(entries, ([key, value]) => [
+		key,
+		HashSet.has(SORTED_MAP_KEYS, key) && isPlainObject(value) ? sortMapEntries(value) : value,
+	] as const));
 };
 
 // `scripts` joins the dependency maps here because the model decodes it with
@@ -236,11 +233,11 @@ const DEFAULT_INDENT = 2;
  * `undefined` when no line is indented.
  */
 export const detectIndent = (source: string): string | undefined => {
-	for (const line of source.split("\n")) {
+	for (const line of Str.split(source, "\n")) {
 		const match = /^(\t+| +)\S/.exec(line);
 		const indent = match?.[1];
 		if (indent !== undefined) {
-			return indent.startsWith("\t") ? "\t" : indent;
+			return Str.startsWith("\t")(indent) ? "\t" : indent;
 		}
 	}
 	return undefined;
@@ -296,18 +293,8 @@ export const resolveFormatOptions = (options?: {
  * corresponding options opt out.
  */
 export const renderJson: {
-	(options: {
-		readonly indent: string | number;
-		readonly sort: boolean;
-		readonly stripEmpty: boolean;
-		readonly newline: boolean;
-	}): (raw: Record<string, unknown>) => string;
-	(raw: Record<string, unknown>, options: {
-		readonly indent: string | number;
-		readonly sort: boolean;
-		readonly stripEmpty: boolean;
-		readonly newline: boolean;
-	}): string;
+	(options: ReturnType<typeof resolveFormatOptions>): (raw: Record<string, unknown>) => string;
+	(raw: Record<string, unknown>, options: ReturnType<typeof resolveFormatOptions>): string;
 } = dual(2, (
 	raw: Record<string, unknown>,
 	options: {
@@ -319,6 +306,9 @@ export const renderJson: {
 ): string => {
 	let record = options.stripEmpty ? stripEmptyDependencyMaps(raw) : raw;
 	if (options.sort) record = sortKeys(record);
-	const json = JSON.stringify(record, null, options.indent);
+	const json = Result.getOrThrowWith(
+		S.encodeResult(S.fromJsonString(S.Unknown, { space: options.indent }))(record),
+		identity,
+	);
 	return options.newline ? `${json}\n` : json;
 });

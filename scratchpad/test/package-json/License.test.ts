@@ -21,6 +21,30 @@ describe("isValidSpdx", () => {
 });
 
 describe("SpdxLicense schema", () => {
+	it("preserves schema identity and the reusable SPDX check annotations", () => {
+		const $I = $ScratchpadId.create("effected/package-json/License");
+		assert.include(S.resolveAnnotations(SpdxLicense), $I.annote("SpdxLicense"));
+		const group = SpdxLicense.ast.checks?.[0];
+		assertTrue(group?._tag === "FilterGroup");
+		assert.deepStrictEqual(group.checks[0].annotations, {
+			identifier: $I`SpdxLicenseCheck`,
+			title: "Manifest SPDX License",
+			description: "A valid SPDX license identifier or expression, UNLICENSED, or SEE LICENSE IN followed by a filename.",
+		});
+	});
+	it.effect("keeps accepted spellings, encoded bytes and the SPDX failure message", () =>
+		Effect.gen(function* () {
+			for (const value of ["MIT", "(MIT OR Apache-2.0)", "UNLICENSED", "SEE LICENSE IN LICENSE.txt"]) {
+				const decoded = yield* S.decodeEffect(SpdxLicense)(value);
+				assert.strictEqual(yield* S.encodeEffect(SpdxLicense)(decoded), value);
+			}
+			for (const value of ["NOT-A-LICENSE", "SEE LICENSE IN ", ""]) {
+				const error = yield* Effect.flip(S.decodeEffect(SpdxLicense)(value));
+				assert.include(error.message, "Expected a valid SPDX license expression");
+			}
+		}),
+	);
+
 	it.effect("decodes a valid license and rejects an invalid one", () =>
 		Effect.gen(function* () {
 			assert.strictEqual(yield* S.decodeEffect(SpdxLicense)("MIT"), "MIT");
@@ -102,3 +126,4 @@ describe("licenseExpressionOf — the brand/grammar seam", () => {
 		assert.isTrue(O.isNone(licenseExpressionOf(deliberatelyInvalid<SpdxLicense>("MIT AND"))));
 	});
 });
+import { $ScratchpadId } from "@beep/identity/packages";

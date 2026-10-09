@@ -1,13 +1,16 @@
 import { $ScratchpadId } from "@beep/identity/packages";
-import { dual } from "effect/Function";
+import { dual, identity } from "effect/Function";
+import * as A from "effect/Array";
 import * as Match from "effect/Match";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
-import * as S from "effect/Schema";
-import * as A from "effect/Array";
 import * as R from "effect/Record";
+import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 const $I = $ScratchpadId.create("effected/package-json/EntryPoint");
+
+const ConditionsJson = S.fromJsonString(S.Unknown);
 
 /**
  * Options for {@link resolveEntryPoint}.
@@ -15,6 +18,10 @@ const $I = $ScratchpadId.create("effected/package-json/EntryPoint");
  * @public
  */
 export interface ResolveEntryPointOptions {
+	/** Reserved for manifest arguments, so one-argument calls are unambiguous. */
+	readonly exports?: never;
+	/** Reserved for manifest arguments, so one-argument calls are unambiguous. */
+	readonly main?: never;
 	/**
 	 * The export conditions to honour, in priority order.
 	 *
@@ -57,7 +64,7 @@ export class UnresolvedEntryPointError extends S.TaggedError<UnresolvedEntryPoin
 	override get message(): string {
 		return Match.value(this.reason).pipe(
 			Match.when("noRootExport", () => 'The manifest\'s "exports" declares subpaths but no "." entry, so it has no root entry point'),
-			Match.when("noConditionMatched", () => `The manifest's "exports" matched none of the conditions ${JSON.stringify(this.conditions ?? [])}`),
+			Match.when("noConditionMatched", () => `The manifest's "exports" matched none of the conditions ${Result.getOrThrowWith(S.encodeResult(ConditionsJson)(this.conditions ?? []), identity)}`),
 			Match.orElse(() => 'The manifest\'s "exports" uses a form this resolver does not implement'),
 		);
 	}
@@ -98,7 +105,7 @@ const isPlainObject = (value: unknown): value is Record<string, unknown> =>
  */
 const isRootConditions = (exportsObject: Record<string, unknown>): boolean => {
 	const keys = R.keys(exportsObject);
-	return keys.length > 0 && !keys.some((key) => key.startsWith("."));
+	return keys.length > 0 && !A.some(keys, Str.startsWith("."));
 };
 
 /**
@@ -172,6 +179,13 @@ const resolveConditions = (
  * // Result.fail(UnresolvedEntryPointError { reason: "noConditionMatched" })
  * ```
  *
+ * **Details**
+ *
+ * A one-argument object with `exports` or `main` is a manifest. Other
+ * one-argument objects are options for the pipeable form. Pass `undefined`
+ * as the second argument to resolve an empty or extension-only manifest.
+ * `resolveEntryPoint()` selects the default conditions for piping.
+ *
  * @param manifest - A package manifest, or any object carrying `exports`/`main`.
  * @param options - Which conditions to honour, in priority order.
  * @returns The entry path as written in the manifest, relative to the package
@@ -181,13 +195,13 @@ const resolveConditions = (
  * @public
  */
 export const resolveEntryPoint: {
-	(manifest: EntryPointManifest, options?: ResolveEntryPointOptions): Result.Result<string, UnresolvedEntryPointError>;
-	(options?: ResolveEntryPointOptions): (manifest: EntryPointManifest) => Result.Result<string, UnresolvedEntryPointError>;
+	(manifest: EntryPointManifest & { readonly exports: unknown }): Result.Result<string, UnresolvedEntryPointError>;
+	(manifest: EntryPointManifest & { readonly main: unknown }): Result.Result<string, UnresolvedEntryPointError>;
+	(options: ResolveEntryPointOptions | undefined): (manifest: EntryPointManifest) => Result.Result<string, UnresolvedEntryPointError>;
+	(): (manifest: EntryPointManifest) => Result.Result<string, UnresolvedEntryPointError>;
+	(manifest: EntryPointManifest, options: ResolveEntryPointOptions | undefined): Result.Result<string, UnresolvedEntryPointError>;
 } = dual(
-	(args) =>
-		args.length >= 2 ||
-		(args[0] !== undefined &&
-			(P.hasProperty(args[0], "exports") || P.hasProperty(args[0], "main") || !P.hasProperty(args[0], "conditions"))),
+	(args) => args.length >= 2 || P.hasProperty(args[0], "exports") || P.hasProperty(args[0], "main"),
 	(manifest: EntryPointManifest, options?: ResolveEntryPointOptions): Result.Result<string, UnresolvedEntryPointError> => {
 		const conditions = options?.conditions ?? DEFAULT_CONDITIONS;
 		const exportsField = manifest.exports;

@@ -8,7 +8,9 @@ import { readFileSync } from "node:fs";
 import { assert, describe, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as S from "effect/Schema";
+import { renderJson, resolveFormatOptions, resolveIndent } from "../../effected/package-json/internal/format.ts";
 import { Package } from "../../effected/package-json/Package.ts";
 
 const Json = S.fromJsonString(S.Record(S.String, S.Unknown));
@@ -18,6 +20,29 @@ const minimal = { name: "my-pkg", version: "1.0.0" };
 
 const decodeAndRender = (raw: Record<string, unknown>, options?: Parameters<Package["toJsonString"]>[0]) =>
 	Effect.map(Package.decode(raw), (pkg) => pkg.toJsonString(options));
+
+describe("pipeable formatting helpers", () => {
+	it("resolves indent identically in direct and pipeable forms", () => {
+		const source = '{\n\t"name": "my-pkg"\n}';
+		assert.strictEqual(resolveIndent("preserve", source), "\t");
+		assert.strictEqual(pipe("preserve", resolveIndent(source)), "\t");
+		assert.strictEqual(pipe("preserve", resolveIndent(undefined)), 2);
+		assert.strictEqual(pipe("preserve", resolveIndent("{}")), 2);
+		assert.strictEqual(pipe("tab", resolveIndent(undefined)), "\t");
+		assert.strictEqual(pipe(4, resolveIndent(undefined)), 4);
+		assert.strictEqual(pipe(undefined, resolveIndent(undefined)), 2);
+	});
+
+	it("renders identical bytes in direct and pipeable forms", () => {
+		const raw = { version: "1.0.0", dependencies: {}, name: "my-pkg" };
+		const canonical = resolveFormatOptions();
+		const unsorted = resolveFormatOptions({ indent: 0, sort: false, stripEmpty: false, newline: false });
+		assert.strictEqual(renderJson(raw, canonical), '{\n  "name": "my-pkg",\n  "version": "1.0.0"\n}\n');
+		assert.strictEqual(pipe(raw, renderJson(canonical)), renderJson(raw, canonical));
+		assert.strictEqual(pipe(raw, renderJson(unsorted)), '{"version":"1.0.0","dependencies":{},"name":"my-pkg"}');
+		assert.strictEqual(pipe(raw, renderJson(unsorted)), renderJson(raw, unsorted));
+	});
+});
 
 describe("PackageFormatOptions.indent", () => {
 	it.effect("a number indents with that many spaces", () =>
@@ -154,6 +179,22 @@ describe("canonical top-level key order (sort-package-json@4.0.0)", () => {
 			assert.deepStrictEqual(Object.keys(parsed.scripts), ["build", "lint", "test"]);
 			assert.deepStrictEqual(Object.keys(parsed.engines), ["node", "pnpm"]);
 			assert.deepStrictEqual(Object.keys(parsed.bin), ["aaa", "zzz"]);
+		}),
+	);
+
+	it.effect("keeps an own __proto__ entry in a sorted nested map", () =>
+		Effect.gen(function* () {
+			const raw = yield* S.decodeEffect(Json)(
+				'{"name":"my-pkg","version":"1.0.0","scripts":{"z":"last","__proto__":"kept","a":"first"}}',
+			);
+			const json = yield* decodeAndRender(raw);
+			const parsed = yield* S.decodeEffect(Json)(json);
+			assertTrue(S.is(StringRecord)(parsed.scripts));
+			assert.deepStrictEqual(Object.keys(parsed.scripts), ["__proto__", "a", "z"]);
+			assert.strictEqual(Object.getOwnPropertyDescriptor(parsed.scripts, "__proto__")?.value, "kept");
+			assert.strictEqual(json,
+				'{\n  "name": "my-pkg",\n  "version": "1.0.0",\n  "scripts": {\n    "__proto__": "kept",\n    "a": "first",\n    "z": "last"\n  }\n}\n',
+			);
 		}),
 	);
 

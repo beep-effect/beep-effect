@@ -10,7 +10,7 @@
 // do: a formatter must not rewrite one legal encoding into another. A lone
 // entry read as a bare value therefore re-encodes as a bare value, never as a
 // one-element array, and an entry read from the string form re-encodes to that
-// exact string. Both are remembered as provenance beside the instance — its
+// exact string. Both are remembered as private provenance on the instance — its
 // wire value, and whether it was the whole field written bare — because
 // provenance must not appear in the encoded output, must not affect
 // structural equality, and must not survive being copied into a hand-built
@@ -38,19 +38,6 @@ const $I = $ScratchpadId.create("effected/package-json/Funding");
 
 /** The wire value a single funding entry was decoded from. */
 type EntryWire = string | { readonly [k: string]: unknown };
-
-const entryWires = new WeakMap<Funding, EntryWire>();
-
-/**
- * Entries that were the WHOLE field, written bare rather than inside an array.
- *
- * Keyed by the ENTRY, not by the decoded array: `Schema.Array` rebuilds the
- * array on the way out of the transform, so an array-keyed WeakMap is empty by
- * the time `encode` runs — verified by the arity round trip failing under it.
- * Arity provenance therefore rides the one instance that was the field, and
- * the replay is guarded on that instance still being alone.
- */
-const bareEntries = new WeakSet<Funding>();
 
 const KNOWN_FUNDING_KEYS = HashSet.make("type", "url");
 
@@ -94,7 +81,7 @@ const isStringExpressible = (funding: Funding): boolean =>
 	funding.type === undefined && R.keys(funding.rest ?? {}).length === 0;
 
 const encodeEntry = (funding: Funding): EntryWire => {
-	const wire = entryWires.get(funding);
+	const wire = Funding.wireOf(funding);
 	// Shape fidelity, `Person`'s rule: an edited string entry re-emits as a
 	// STRING (rebuilt from the new url), not upgraded to the object form — a
 	// manifest's `funding` must not change representation because the url was
@@ -113,7 +100,7 @@ const encodeEntry = (funding: Funding): EntryWire => {
 const decodeEntry = (input: EntryWire): Effect.Effect<Funding, SchemaIssue.Issue> => {
 	if (P.isString(input)) {
 		const funding = Funding.make({ url: input });
-		entryWires.set(funding, input);
+		Funding.rememberWire(funding, input);
 		return Effect.succeed(funding);
 	}
 	return decodeFundingFields(input).pipe(
@@ -121,7 +108,7 @@ const decodeEntry = (input: EntryWire): Effect.Effect<Funding, SchemaIssue.Issue
 		Effect.map((fields) => {
 			const rest = restOf(input);
 			const funding = Funding.make({ ...fields, ...(R.keys(rest).length > 0 ? { rest } : {}) });
-			entryWires.set(funding, input);
+			Funding.rememberWire(funding, input);
 			return funding;
 		}),
 	);
@@ -163,6 +150,29 @@ export class Funding extends S.Class<Funding>($I`Funding`)({
 	/** Keys outside the documented set, preserved so encoding does not drop them. */
 	rest: S.optionalKey(S.Record(S.String, S.Unknown)).annotateKey({ description: "Keys outside the documented set, preserved so encoding does not drop them." }),
 }, $I.annote("Funding", { description: "Where to send money for a package: one funding entry." })) {
+	#wire: EntryWire | undefined = undefined;
+	#bareField = false;
+
+	/** Instance-owned wire provenance, excluded from schema data and object spreads. */
+	static wireOf(funding: Funding): EntryWire | undefined {
+		return funding.#wire;
+	}
+
+	/** Remember the spelling read by a wire codec. */
+	static rememberWire(funding: Funding, wire: EntryWire): void {
+		funding.#wire = wire;
+	}
+
+	/** Whether this entry was decoded as the entire bare field. */
+	static isBareField(funding: Funding): boolean {
+		return funding.#bareField;
+	}
+
+	/** Arity belongs to the entry because Schema.Array rebuilds its containing array. */
+	static rememberBareField(funding: Funding): void {
+		funding.#bareField = true;
+	}
+
 	/**
 	 * A single `funding` entry: the bare URL string or the object form, always
 	 * decoded to a {@link Funding} and always re-encoded in the form it was read
@@ -213,7 +223,7 @@ export class Funding extends S.Class<Funding>($I`Funding`)({
 					const values = bare ? [input] : input;
 					return Effect.map(Effect.forEach(values, decodeEntry), (entries) => {
 						const only = entries[0];
-						if (bare && only !== undefined) bareEntries.add(only);
+						if (bare && only !== undefined) Funding.rememberBareField(only);
 						return entries;
 					});
 				},
@@ -222,8 +232,8 @@ export class Funding extends S.Class<Funding>($I`Funding`)({
 					// Guarded on the entry still being alone: pushing a second entry
 					// into the decoded field upgrades it to the array form rather
 					// than silently dropping the addition.
-					if (only !== undefined && bareEntries.has(only)) return Effect.succeed(encodeEntry(only));
-					return Effect.succeed(entries.map(encodeEntry));
+					if (only !== undefined && Funding.isBareField(only)) return Effect.succeed(encodeEntry(only));
+					return Effect.succeed(A.map(entries, encodeEntry));
 				},
 			}),
 		),
