@@ -51,3 +51,5 @@ package audit remains the authoritative proof of the repair.
 - Hosted-parity attribution: `quality test-tsgo` caught `strictEffectProvide` in the new pinned-acquisition test. The package audit had passed, but its check configuration does not cover this additional Effect test diagnostic. Moved the test layer to the outer test entry point; retain both proof lanes.
 - `docgen:local` reported `full-required` because `bun.lock` changed with the RDF-to-Md edge. Package docgen is green; the full docgen proof is now scheduled through the heavy wrapper.
 - Fallow audit reported one introduced cognitive-complexity finding in `MdSections.ts` (`nest`, score 18). Replaced the nested boundary loop with `Array.findFirstIndex`; no suppression or baseline regeneration. Health's blocking complexity finding is the same new fold hotspot, so both lanes are rerun together.
+
+- A callback's outer `Effect.provide` still triggers test TSGo's application-entry rule. Use the existing `it.layer` test runner boundary for service layers, rather than guessing that an outer callback is an application entry point. Final parity rerun uses that pattern.

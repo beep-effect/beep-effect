@@ -19,8 +19,8 @@ annotation wire shape, including the Md-to-DOCO section fold.
 
 ## Current Phase
 
-P1 Implement: acquisition pins, licenses and synthetic fixtures are frozen
-in SPEC D9–D15 and the Pinned acquisition ledger.
+P2 Verify: the generated vocabularies, annotation codec and fold fixtures pass.
+Full hosted-parity checks are running; proof attribution is in the lane handoff.
 
 ## Read This First
 

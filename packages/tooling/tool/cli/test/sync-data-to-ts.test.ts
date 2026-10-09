@@ -1009,7 +1009,7 @@ it.layer(CommandTestLayer, { timeout: "30 seconds" })((it) => {
   });
 });
 
-describe("pinned SPAR acquisition", () => {
+it.layer(CommandTestLayer, { timeout: "30 seconds" })("pinned SPAR acquisition", (it) => {
   it.effect("rejects byte drift before emitting generated files", () =>
     Effect.gen(function* () {
       const target = O.getOrThrow(A.findFirst(syncDataTargets, (entry) => entry.id === "spar-terms"));
@@ -1026,6 +1026,6 @@ describe("pinned SPAR acquisition", () => {
       );
       expect(error._tag).toBe("SyncDataToTsError");
       expect(error.message).toContain("SHA-256 does not match");
-    }).pipe(Effect.provide(CommandTestLayer))
+    })
   );
 });
