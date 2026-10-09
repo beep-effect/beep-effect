@@ -71,7 +71,18 @@ class WorkspaceDiscoveryCause extends S.TaggedError<WorkspaceDiscoveryCause>($I`
  * never wrote and which would resolve `workspace:^` to a bare `"^"` — is the
  * manifest's shape being wrong and reports `invalidShape`.
  *
+ * **Example** (Report an invalid workspace manifest)
+ *
+ * ```ts
+ * import { WorkspaceDiscoveryError } from "@beep/scratchpad/effected/workspaces/WorkspaceDiscovery";
+ *
+ * const error = WorkspaceDiscoveryError.make({ root: "/repo", path: "/repo/package.json", kind: "missingName", cause: undefined });
+ * console.log(error.message) // Workspace discovery failed at /repo/package.json (missingName)
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class WorkspaceDiscoveryError extends S.TaggedError<WorkspaceDiscoveryError>($I`WorkspaceDiscoveryError`)("WorkspaceDiscoveryError", {
 	/** The workspace root discovery was running against. */
@@ -83,7 +94,21 @@ export class WorkspaceDiscoveryError extends S.TaggedError<WorkspaceDiscoveryErr
 	/** The originating failure, if there was one. */
 	cause: S.Defect().annotateKey({ description: "The originating failure, if there was one." }),
 }, $I.annote("WorkspaceDiscoveryError", { description: "Raised when a workspace member's `package.json` cannot be read, parsed, or used — it is missing, malformed, or lacks a `name`." })) {
-	/** Renders the failing file and kind into a one-line message. */
+	/**
+	 * Renders the failing file and kind into a one-line message.
+	 *
+	 * **Example** (Render the failure message)
+	 *
+	 * ```ts
+	 * import { WorkspaceDiscoveryError } from "@beep/scratchpad/effected/workspaces/WorkspaceDiscovery";
+	 *
+	 * const error = WorkspaceDiscoveryError.make({ root: "/repo", path: "/repo/package.json", kind: "missingName", cause: undefined });
+	 * console.log(error.message) // Workspace discovery failed at /repo/package.json (missingName)
+	 * ```
+	 *
+	 * @category formatting
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return `Workspace discovery failed at ${this.path} (${this.kind})`;
 	}
@@ -94,7 +119,18 @@ export class WorkspaceDiscoveryError extends S.TaggedError<WorkspaceDiscoveryErr
  * absent (usually a typo), the descent exceeded its depth cap, or the visit
  * budget was exhausted.
  *
+ * **Example** (Report a missing pattern base)
+ *
+ * ```ts
+ * import { WorkspacePatternError } from "@beep/scratchpad/effected/workspaces/WorkspaceDiscovery";
+ *
+ * const error = WorkspacePatternError.make({ root: "/repo", pattern: "packages/*", kind: "missingBaseDir", detail: "packages" });
+ * console.log(error.message) // Workspace pattern "packages/*" could not be enumerated (missingBaseDir: packages)
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class WorkspacePatternError extends S.TaggedError<WorkspacePatternError>($I`WorkspacePatternError`)("WorkspacePatternError", {
 	/** The workspace root the patterns were expanded against. */
@@ -106,7 +142,21 @@ export class WorkspacePatternError extends S.TaggedError<WorkspacePatternError>(
 	/** A short, structured detail — the missing directory, or the bound exceeded. */
 	detail: S.String.annotateKey({ description: "A short, structured detail — the missing directory, or the bound exceeded." }),
 }, $I.annote("WorkspacePatternError", { description: "Raised when a `packages:` pattern cannot be enumerated: its base directory is absent (usually a typo), the descent exceeded its depth cap, or the visit budget was exhausted." })) {
-	/** Renders the pattern and failure kind into a one-line message. */
+	/**
+	 * Renders the pattern and failure kind into a one-line message.
+	 *
+	 * **Example** (Render the failure message)
+	 *
+	 * ```ts
+	 * import { WorkspacePatternError } from "@beep/scratchpad/effected/workspaces/WorkspaceDiscovery";
+	 *
+	 * const error = WorkspacePatternError.make({ root: "/repo", pattern: "packages/*", kind: "missingBaseDir", detail: "packages" });
+	 * console.log(error.message) // Workspace pattern "packages/*" could not be enumerated (missingBaseDir: packages)
+	 * ```
+	 *
+	 * @category formatting
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return `Workspace pattern "${this.pattern}" could not be enumerated (${this.kind}: ${this.detail})`;
 	}
@@ -120,7 +170,18 @@ export class WorkspacePatternError extends S.TaggedError<WorkspacePatternError>(
  * `available` lists every known member, which is what makes the error
  * actionable — a typo is obvious next to the list it missed.
  *
+ * **Example** (Report an unknown package name)
+ *
+ * ```ts
+ * import { PackageNotFoundError } from "@beep/scratchpad/effected/workspaces/WorkspaceDiscovery";
+ *
+ * const error = PackageNotFoundError.make({ name: "@app/missing", available: ["@app/core"] });
+ * console.log(error.message) // No workspace package named "@app/missing"
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class PackageNotFoundError extends S.TaggedError<PackageNotFoundError>($I`PackageNotFoundError`)("PackageNotFoundError", {
 	/** The name that was requested. */
@@ -128,7 +189,21 @@ export class PackageNotFoundError extends S.TaggedError<PackageNotFoundError>($I
 	/** Every workspace package name that does exist. */
 	available: S.Array(S.String).annotateKey({ description: "Every workspace package name that does exist." }),
 }, $I.annote("PackageNotFoundError", { description: "Raised when a workspace package is requested by a name no member carries." })) {
-	/** Renders the requested name into a one-line message. */
+	/**
+	 * Renders the requested name into a one-line message.
+	 *
+	 * **Example** (Render the failure message)
+	 *
+	 * ```ts
+	 * import { PackageNotFoundError } from "@beep/scratchpad/effected/workspaces/WorkspaceDiscovery";
+	 *
+	 * const error = PackageNotFoundError.make({ name: "@app/missing", available: ["@app/core"] });
+	 * console.log(error.message) // No workspace package named "@app/missing"
+	 * ```
+	 *
+	 * @category formatting
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return `No workspace package named "${this.name}"`;
 	}
@@ -138,7 +213,18 @@ export class PackageNotFoundError extends S.TaggedError<PackageNotFoundError>($I
  * Top-level facts about a workspace: where it is, what manages it, and the
  * patterns that define its membership.
  *
+ * **Example** (Inspect workspace membership patterns)
+ *
+ * ```ts
+ * import { WorkspaceInfo } from "@beep/scratchpad/effected/workspaces/WorkspaceDiscovery";
+ *
+ * const info = WorkspaceInfo.make({ root: "/repo", patterns: ["packages/*"] });
+ * console.log(info.patterns.join(", ")) // packages/*
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class WorkspaceInfo extends S.Class<WorkspaceInfo>($I`WorkspaceInfo`)({
 	/** Absolute path to the workspace root. */
@@ -152,6 +238,8 @@ export class WorkspaceInfo extends S.Class<WorkspaceInfo>($I`WorkspaceInfo`)({
  * failures plus a name that matches no member.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type WorkspaceLookupFailure =
 	| WorkspaceRootNotFoundError
@@ -164,6 +252,8 @@ export type WorkspaceLookupFailure =
  * name — everything except `getPackage`.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type WorkspaceDiscoveryFailure = Exclude<WorkspaceLookupFailure, PackageNotFoundError>;
 
@@ -171,6 +261,8 @@ export type WorkspaceDiscoveryFailure = Exclude<WorkspaceLookupFailure, PackageN
  * Options for the {@link WorkspaceDiscovery} layer.
  *
  * @public
+ * @category configuration
+ * @since 0.0.0
  */
 export interface WorkspaceDiscoveryOptions {
 	/**
@@ -216,6 +308,8 @@ export interface WorkspaceDiscoveryOptions {
  * The {@link WorkspaceDiscovery} service shape.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface WorkspaceDiscoveryShape {
 	/** Facts about the resolved workspace. */
@@ -318,7 +412,7 @@ export interface WorkspaceDiscoveryShape {
  * **Example** (List workspace package names)
  *
  * ```ts
- * import { WorkspaceDiscovery } from "./index.ts";
+ * import { WorkspaceDiscovery } from "@beep/scratchpad/effected/workspaces/WorkspaceDiscovery";
  * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
@@ -326,9 +420,12 @@ export interface WorkspaceDiscoveryShape {
  *   const packages = yield* discovery.listPackages;
  *   return packages.map((p) => p.name);
  * });
+ * console.log(Effect.isEffect(program)) // true
  * ```
  *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, WorkspaceDiscoveryShape>()(
 	$I`WorkspaceDiscovery`,
@@ -336,6 +433,19 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 	/**
 	 * Builds the service. Root resolution is one explicit concern: `cwd` is an
 	 * option here, never an ambient `process.cwd()` read inside a method.
+	 *
+	 * **Example** (Construct discovery with an explicit root)
+	 *
+	 * ```ts
+	 * import { WorkspaceDiscovery } from "@beep/scratchpad/effected/workspaces/WorkspaceDiscovery";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = WorkspaceDiscovery.make({ cwd: "/repo" });
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
 	 */
 	static readonly make = Effect.fn("make")(function* (
 		options?: WorkspaceDiscoveryOptions,
@@ -452,6 +562,8 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 			 * Discovery for ONE already-resolved root — the whole read, with the root
 			 * as a parameter rather than a closed-over constant.
 			 *
+			 * **Details**
+			 *
 			 * Everything derived here (patterns, member manifests, names, versions) is
 			 * read beneath `root`, which is what makes the per-call-root methods
 			 * honest: re-rooting an already-discovered package list onto a different
@@ -535,6 +647,8 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 			/**
 			 * Per-resolved-root memos for the `…In` methods, each success-only on the
 			 * same discipline as the layer-bound one above.
+			 *
+			 * **Details**
 			 *
 			 * Deliberately SEPARATE from that memo rather than replacing it: the
 			 * layer-bound path resolves its root once, at first use, and folding it
@@ -705,71 +819,87 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 		});
 
 	/**
-  * The live layer, discovering the workspace from `options.cwd`.
-  *
-  * **Gotchas**
-  *
-  * A parameterized layer factory mints a **fresh reference per call**, and
-  * layers memoize by reference — bind the result to a `const` and reuse it
-  * rather than calling `layer(...)` at each composition site.
-  *
-  * @param options - Root resolution and enumeration bounds.
-  */
+	 * The live layer, discovering the workspace from `options.cwd`.
+	 *
+	 * **Gotchas**
+	 *
+	 * A parameterized layer factory mints a **fresh reference per call**, and
+	 * layers memoize by reference — bind the result to a `const` and reuse it
+	 * rather than calling `layer(...)` at each composition site.
+	 *
+	 * **Example** (Build a reusable discovery layer)
+	 *
+	 * ```ts
+	 * import { WorkspaceDiscovery } from "@beep/scratchpad/effected/workspaces/WorkspaceDiscovery";
+	 * import * as Layer from "effect/Layer";
+	 *
+	 * const LiveDiscovery = WorkspaceDiscovery.layer({ cwd: "/repo" });
+	 * console.log(Layer.isLayer(LiveDiscovery)) // true
+	 * ```
+	 *
+	 * @param options - Root resolution and enumeration bounds.
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layer = (
 		options?: WorkspaceDiscoveryOptions,
 	): Layer.Layer<WorkspaceDiscovery, never, WorkspaceRoot | FileSystem.FileSystem | Path.Path> =>
 		Layer.effect(WorkspaceDiscovery, WorkspaceDiscovery.make(options));
 
 	/**
-  * An in-memory test double of the service shape, with every method
-  * defaulted so a test stubs only what it exercises.
-  *
-  * **Details**
-  *
-  * The defaults model an **empty workspace**, and the derived methods run
-  * over the *effective* `listPackages` — the override when one is supplied —
-  * so stubbing only `listPackages` yields a consistent double:
-  *
-  * - `listPackages` — succeeds with `[]`.
-  * - `importerMap` — derived: the packages keyed by `relativePath`.
-  * - `getPackage` — derived: a name lookup that fails with the service's own
-  *   typed {@link PackageNotFoundError} on a miss, exactly as the live
-  *   implementation does.
-  * - `resolveFile` / `resolveFiles` — derived: longest-prefix ownership over
-  *   `pkg.path`, POSIX-terminated (`"/"`); supply a win32 double explicitly
-  *   if your fixture paths are win32.
-  * - `refresh` — a no-op (`Effect.void`); there is nothing memoized to drop.
-  * - `info` — **dies** with an explanatory defect. No honest default exists
-  *   (a fabricated root path would leak into consumer path logic), so an
-  *   unstubbed `info()` call is a test-wiring mistake and fails loudly as a
-  *   defect rather than succeeding with a lie or failing with a dishonest
-  *   typed error. A defect is not absorbed by `Effect.catch` or any
-  *   typed-error handler — deliberately, so code under test with a
-  *   best-effort `catch` cannot make the mandatory stub look optional; the
-  *   unstubbed call still fails the test.
-  *
-  * **Example** (Stub discovery with a workspace package)
-  *
-  * ```ts
-  * import { WorkspaceDiscovery, WorkspacePackage } from "./index.ts";
-  * import * as Effect from "effect/Effect";
-  *
-  * const double = WorkspaceDiscovery.makeTest({
-  *   listPackages:
-  *     Effect.succeed([
-  *       WorkspacePackage.make({
-  *         name: "@my-org/utils",
-  *         version: "1.0.0",
-  *         path: "/repo/packages/utils",
-  *         packageJsonPath: "/repo/packages/utils/package.json",
-  *         relativePath: "packages/utils",
-  *         workspaceRoot: "/repo",
-  *       }),
-  *     ]),
-  * });
-  * // `getPackage`, `importerMap`, `resolveFile(s)` now answer consistently.
-  * ```
-  */
+	 * An in-memory test double of the service shape, with every method
+	 * defaulted so a test stubs only what it exercises.
+	 *
+	 * **Details**
+	 *
+	 * The defaults model an **empty workspace**, and the derived methods run
+	 * over the *effective* `listPackages` — the override when one is supplied —
+	 * so stubbing only `listPackages` yields a consistent double:
+	 *
+	 * - `listPackages` — succeeds with `[]`.
+	 * - `importerMap` — derived: the packages keyed by `relativePath`.
+	 * - `getPackage` — derived: a name lookup that fails with the service's own
+	 *   typed {@link PackageNotFoundError} on a miss, exactly as the live
+	 *   implementation does.
+	 * - `resolveFile` / `resolveFiles` — derived: longest-prefix ownership over
+	 *   `pkg.path`, POSIX-terminated (`"/"`); supply a win32 double explicitly
+	 *   if your fixture paths are win32.
+	 * - `refresh` — a no-op (`Effect.void`); there is nothing memoized to drop.
+	 * - `info` — **dies** with an explanatory defect. No honest default exists
+	 *   (a fabricated root path would leak into consumer path logic), so an
+	 *   unstubbed `info()` call is a test-wiring mistake and fails loudly as a
+	 *   defect rather than succeeding with a lie or failing with a dishonest
+	 *   typed error. A defect is not absorbed by `Effect.catch` or any
+	 *   typed-error handler — deliberately, so code under test with a
+	 *   best-effort `catch` cannot make the mandatory stub look optional; the
+	 *   unstubbed call still fails the test.
+	 *
+	 * **Example** (Stub discovery with a workspace package)
+	 *
+	 * ```ts
+	 * import { WorkspaceDiscovery } from "@beep/scratchpad/effected/workspaces/WorkspaceDiscovery";
+	 * import { WorkspacePackage } from "@beep/scratchpad/effected/workspaces/WorkspacePackage";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const double = WorkspaceDiscovery.makeTest({
+	 *   listPackages: Effect.succeed([
+	 *     WorkspacePackage.make({
+	 *       name: "@my-org/utils",
+	 *       version: "1.0.0",
+	 *       path: "/repo/packages/utils",
+	 *       packageJsonPath: "/repo/packages/utils/package.json",
+	 *       relativePath: "packages/utils",
+	 *       workspaceRoot: "/repo",
+	 *     }),
+	 *   ]),
+	 * });
+	 * // `getPackage`, `importerMap`, `resolveFile(s)` now answer consistently.
+	 * console.log(Effect.runSync(double.getPackage("@my-org/utils")).name) // @my-org/utils
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	static readonly makeTest = (overrides: Partial<WorkspaceDiscoveryShape> = {}): WorkspaceDiscoveryShape => {
 		const listPackages = overrides.listPackages ?? Effect.succeed([]);
 
@@ -835,60 +965,68 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 	};
 
 	/**
-  * The test layer: {@link WorkspaceDiscovery.makeTest} behind
-  * `Layer.succeed`, so a suite provides only the methods it exercises.
-  *
-  * **Gotchas**
-  *
-  * A parameterized layer factory mints a **fresh reference per call**, and
-  * layers memoize by reference — bind the result to a `const` and reuse it
-  * rather than calling `layerTest(...)` at each composition site.
-  *
-  * **Example** (Provide an empty workspace discovery test layer)
-  *
-  * ```ts
-  * import { WorkspaceDiscovery } from "./index.ts";
-  * import * as Effect from "effect/Effect";
-  *
-  * const TestDiscovery = WorkspaceDiscovery.layerTest({
-  *   listPackages: Effect.succeed([]),
-  * });
-  * // program.pipe(Effect.provide(TestDiscovery))
-  * ```
-  */
+	 * The test layer: {@link WorkspaceDiscovery.makeTest} behind
+	 * `Layer.succeed`, so a suite provides only the methods it exercises.
+	 *
+	 * **Gotchas**
+	 *
+	 * A parameterized layer factory mints a **fresh reference per call**, and
+	 * layers memoize by reference — bind the result to a `const` and reuse it
+	 * rather than calling `layerTest(...)` at each composition site.
+	 *
+	 * **Example** (Provide an empty workspace discovery test layer)
+	 *
+	 * ```ts
+	 * import { WorkspaceDiscovery } from "@beep/scratchpad/effected/workspaces/WorkspaceDiscovery";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const TestDiscovery = WorkspaceDiscovery.layerTest({
+	 *   listPackages: Effect.succeed([]),
+	 * });
+	 * const program = Effect.flatMap(WorkspaceDiscovery, (discovery) => discovery.listPackages)
+	 *   .pipe(Effect.provide(TestDiscovery));
+	 * console.log(Effect.runSync(program).length) // 0
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layerTest = (overrides: Partial<WorkspaceDiscoveryShape> = {}): Layer.Layer<WorkspaceDiscovery> =>
 		Layer.succeed(WorkspaceDiscovery, WorkspaceDiscovery.makeTest(overrides));
 
 	/**
-  * The real implementation of `@effected/npm`'s `WorkspaceResolver` contract
-  * — the one `@effected/package-json` declares but cannot fill.
-  *
-  * **Details**
-  *
-  * `versionOf` returns `Option.none()` for a name that is not a workspace
-  * member, per the contract's convention; the `DependencyResolutionError`
-  * channel is reserved for a failure of the resolution *mechanism* (an
-  * unfindable root, an unreadable manifest), never an ordinary miss.
-  *
-  * A member that declares **no `version`** is neither: it is a known member
-  * with nothing for `workspace:` to resolve to. Answering `none` would read
-  * as "not a member" downstream, so it fails typed instead, naming the
-  * specifier — the same channel a consumer already handles for an
-  * unresolvable workspace.
-  *
-  * **Example** (Provide a resolver for workspace dependencies)
-  *
-  * ```ts
-  * import { Package } from "../package-json/index.ts";
-  * import { WorkspaceDiscovery } from "./index.ts";
-  * import * as Layer from "effect/Layer";
-  *
-  * const resolvers = WorkspaceDiscovery.workspaceResolver.pipe(
-  *   Layer.provide(WorkspaceDiscovery.layer()),
-  * );
-  * // `Package.resolve` now resolves `workspace:*` for real.
-  * ```
-  */
+	 * The real implementation of `@effected/npm`'s `WorkspaceResolver` contract
+	 * — the one `@effected/package-json` declares but cannot fill.
+	 *
+	 * **Details**
+	 *
+	 * `versionOf` returns `Option.none()` for a name that is not a workspace
+	 * member, per the contract's convention; the `DependencyResolutionError`
+	 * channel is reserved for a failure of the resolution *mechanism* (an
+	 * unfindable root, an unreadable manifest), never an ordinary miss.
+	 *
+	 * A member that declares **no `version`** is neither: it is a known member
+	 * with nothing for `workspace:` to resolve to. Answering `none` would read
+	 * as "not a member" downstream, so it fails typed instead, naming the
+	 * specifier — the same channel a consumer already handles for an
+	 * unresolvable workspace.
+	 *
+	 * **Example** (Provide a resolver for workspace dependencies)
+	 *
+	 * ```ts
+	 * import { WorkspaceDiscovery } from "@beep/scratchpad/effected/workspaces/WorkspaceDiscovery";
+	 * import * as Layer from "effect/Layer";
+	 *
+	 * const resolvers = WorkspaceDiscovery.workspaceResolver.pipe(
+	 *   Layer.provide(WorkspaceDiscovery.layer()),
+	 * );
+	 * // `Package.resolve` now resolves `workspace:*` for real.
+	 * console.log(Layer.isLayer(resolvers)) // true
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly workspaceResolver: Layer.Layer<WorkspaceResolver, never, WorkspaceDiscovery> = Layer.effect(
 		WorkspaceResolver,
 		Effect.gen(function* () {

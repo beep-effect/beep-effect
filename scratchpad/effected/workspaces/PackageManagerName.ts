@@ -31,7 +31,18 @@ class PackageManagerDetectorDefect extends S.TaggedError<PackageManagerDetectorD
 /**
  * The four package managers this package understands.
  *
+ * **Example** (Validate supported manager names)
+ *
+ * ```ts
+ * import { PackageManagerName } from "@beep/scratchpad/effected/workspaces/PackageManagerName";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(PackageManagerName)("pnpm")) // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const PackageManagerName = LiteralKit(["npm", "pnpm", "yarn", "bun"]).pipe($I.annoteSchema("PackageManagerName", { description: "The four package managers this package understands." }));
 
@@ -39,6 +50,8 @@ export const PackageManagerName = LiteralKit(["npm", "pnpm", "yarn", "bun"]).pip
  * The decoded type of {@link (PackageManagerName:variable)}: `"npm" | "pnpm" | "yarn" | "bun"`.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type PackageManagerName = typeof PackageManagerName.Type;
 
@@ -59,7 +72,18 @@ export type PackageManagerName = typeof PackageManagerName.Type;
  * The `package.json#…` spellings name manifest *fields*; the rest are marker
  * files at the workspace root.
  *
+ * **Example** (Recognize a declaration marker)
+ *
+ * ```ts
+ * import { PackageManagerEvidence } from "@beep/scratchpad/effected/workspaces/PackageManagerName";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(PackageManagerEvidence)("package.json#packageManager")) // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const PackageManagerEvidence = LiteralKit([
 	// The workspace tier: which manager runs this WORKSPACE.
@@ -84,6 +108,8 @@ export const PackageManagerEvidence = LiteralKit([
  * that decided a detection.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type PackageManagerEvidence = typeof PackageManagerEvidence.Type;
 
@@ -108,7 +134,25 @@ export type PackageManagerEvidence = typeof PackageManagerEvidence.Type;
  * added. The version's provenance is deliberately not carried — it follows the
  * two-field precedence above, which is a rule, not a probe.
  *
+ * **Example** (Construct a detection with workspace evidence)
+ *
+ * ```ts
+ * import { DetectedPackageManager } from "@beep/scratchpad/effected/workspaces/PackageManagerName";
+ * import * as O from "effect/Option";
+ *
+ * const detected = DetectedPackageManager.make({
+ *   name: "pnpm",
+ *   version: O.none(),
+ *   runtime: "node",
+ *   evidence: "pnpm-workspace.yaml",
+ * });
+ *
+ * console.log(detected.evidence) // pnpm-workspace.yaml
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class DetectedPackageManager extends S.Class<DetectedPackageManager>($I`DetectedPackageManager`)({
 	/** The detected manager. */
@@ -132,20 +176,54 @@ const ManagerHint = S.Struct({
 
 type ManagerHint = typeof ManagerHint.Type;
 
-/** Whether `value` is a non-null, non-array object — corepack's own shape test. */
+/**
+ * Whether `value` is a non-null, non-array object — corepack's own shape test.
+ *
+ * **Example** (Validate a manifest object)
+ *
+ * ```ts
+ * import { JsonObject } from "@beep/scratchpad/effected/workspaces/PackageManagerName";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(JsonObject)({ packageManager: "pnpm@10.33.0" })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const JsonObject = S.Record(S.String, S.Unknown).pipe(
 	$I.annoteSchema("JsonObject", { description: "A string-keyed object accepted as a manifest or policy, excluding null, arrays and functions." }),
 );
 
-/** A manifest or policy object with arbitrary field values. */
+/**
+ * A manifest or policy object with arbitrary field values.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type JsonObject = typeof JsonObject.Type;
 
-/** Whether a value satisfies the manifest-object schema. */
+/**
+ * Whether a value satisfies the manifest-object schema.
+ *
+ * **Example** (Reject an array as a manifest object)
+ *
+ * ```ts
+ * import { isPlainObject } from "@beep/scratchpad/effected/workspaces/PackageManagerName";
+ *
+ * console.log(isPlainObject([])) // false
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
+ */
 export const isPlainObject = S.is(JsonObject);
 
 /**
  * The exact version a `name` + `version` pair denotes, or none when the version
  * is not an exact version.
+ *
+ * **Details**
  *
  * Reuses the corepack `name@version+integrity` grammar rather than a second
  * parser, so a `devEngines` version carrying a hash (`11.11.0+sha512.…`)
@@ -158,6 +236,8 @@ const exactVersionOf = (name: string, version: string): O.Option<string> =>
 
 /**
  * The `devEngines.packageManager` hint, or none.
+ *
+ * **Details**
  *
  * Every malformed shape corepack itself tolerates is tolerated here by *ignoring
  * the field*, never by failing detection: a non-object `devEngines`, a
@@ -196,7 +276,22 @@ const corepackHint = (manifest: Record<string, unknown>): O.Option<ManagerHint> 
  * Raised when a directory carries no lockfile and no workspace configuration,
  * so no package manager can be attributed to it.
  *
+ * **Example** (Report the root and checked marker)
+ *
+ * ```ts
+ * import { PackageManagerDetectionError } from "@beep/scratchpad/effected/workspaces/PackageManagerName";
+ *
+ * const error = PackageManagerDetectionError.make({
+ *   root: "/repo",
+ *   checked: ["pnpm-workspace.yaml"],
+ * });
+ *
+ * console.log(error.message) // No package manager detected at /repo (checked pnpm-workspace.yaml)
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class PackageManagerDetectionError extends S.TaggedError<PackageManagerDetectionError>($I`PackageManagerDetectionError`)(
 	"PackageManagerDetectionError",
@@ -207,7 +302,25 @@ export class PackageManagerDetectionError extends S.TaggedError<PackageManagerDe
 		checked: S.Array(S.String).annotateKey({ description: "The marker files probed, in the order they were probed." }),
 	}, $I.annote("PackageManagerDetectionError", { description: "Raised when a directory carries no lockfile and no workspace configuration, so no package manager can be attributed to it." }),
 ) {
-	/** Renders the root and probed markers into a one-line message. */
+	/**
+	 * Renders the root and probed markers into a one-line message.
+	 *
+	 * **Example** (Read the detection failure message)
+	 *
+	 * ```ts
+	 * import { PackageManagerDetectionError } from "@beep/scratchpad/effected/workspaces/PackageManagerName";
+	 *
+	 * const error = PackageManagerDetectionError.make({
+	 *   root: "/repo",
+	 *   checked: ["pnpm-workspace.yaml"],
+	 * });
+	 *
+	 * console.log(error.message) // No package manager detected at /repo (checked pnpm-workspace.yaml)
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return `No package manager detected at ${this.root} (checked ${this.checked.join(", ")})`;
 	}
@@ -225,6 +338,8 @@ const CHECKED = PackageManagerEvidence.literals;
  * or parsed.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type PackageManagerDetectionFailure = PackageManagerDetectionError | WorkspaceManifestError;
 
@@ -238,9 +353,32 @@ export type PackageManagerDetectionFailure = PackageManagerDetectionError | Work
  * `PublishabilityDetectorShape` convention.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface PackageManagerDetectorShape {
-	/** Detect the package manager at a workspace root. */
+	/**
+	 * Detect the package manager at a workspace root.
+	 *
+	 * **Example** (Compose a stubbed detection)
+	 *
+	 * ```ts
+	 * import { PackageManagerDetectionError, PackageManagerDetector } from "@beep/scratchpad/effected/workspaces/PackageManagerName";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const detector = PackageManagerDetector.makeTest({
+	 *   detect: () => Effect.fail(PackageManagerDetectionError.make({
+	 *     root: "/repo",
+	 *     checked: [],
+	 *   })),
+	 * });
+	 *
+	 * console.log(Effect.isEffect(detector.detect("/repo"))) // true
+	 * ```
+	 *
+	 * @category queries
+	 * @since 0.0.0
+	 */
 	readonly detect: (root: string) => Effect.Effect<DetectedPackageManager, PackageManagerDetectionFailure>;
 }
 
@@ -284,12 +422,39 @@ export interface PackageManagerDetectorShape {
  * different thing entirely and fails with a `WorkspaceManifestError` — a corrupt
  * root manifest is a real problem, not a missing hint.
  *
+ * **Example** (Compose detection through the service)
+ *
+ * ```ts
+ * import { PackageManagerDetector } from "@beep/scratchpad/effected/workspaces/PackageManagerName";
+ * import * as Effect from "effect/Effect";
+ *
+ * const program = Effect.flatMap(PackageManagerDetector, (detector) => detector.detect("/repo"));
+ *
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class PackageManagerDetector extends Context.Service<PackageManagerDetector, PackageManagerDetectorShape>()(
 	$I`PackageManagerDetector`,
 ) {
-	/** Builds the service over core `FileSystem` and `Path`. */
+	/**
+	 * Builds the service over core `FileSystem` and `Path`.
+	 *
+	 * **Example** (Construct the filesystem-backed service effect)
+	 *
+	 * ```ts
+	 * import { PackageManagerDetector } from "@beep/scratchpad/effected/workspaces/PackageManagerName";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * console.log(Effect.isEffect(PackageManagerDetector.make)) // true
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	static readonly make: Effect.Effect<
 		{ readonly detect: (root: string) => Effect.Effect<DetectedPackageManager, PackageManagerDetectionFailure> },
 		never,
@@ -303,6 +468,8 @@ export class PackageManagerDetector extends Context.Service<PackageManagerDetect
 
 		/**
 		 * The root manifest, read and parsed **once** per detection.
+		 *
+		 * **Details**
 		 *
 		 * An absent manifest is `Option.none()` — a bun or yarn repo with no root
 		 * `package.json` is unusual but not an error. A manifest that is present but
@@ -334,6 +501,8 @@ export class PackageManagerDetector extends Context.Service<PackageManagerDetect
 		/**
 		 * The manager name the manifest declares, if any.
 		 *
+		 * **Details**
+		 *
 		 * `devEngines` first — it is authoritative for the name, and corepack errors
 		 * when the top-level field contradicts it.
 		 */
@@ -355,6 +524,8 @@ export class PackageManagerDetector extends Context.Service<PackageManagerDetect
 		/**
 		 * The version to report for the manager that was detected — none unless a
 		 * field naming *that* manager carries one.
+		 *
+		 * **Details**
 		 *
 		 * The top-level `packageManager` wins when it names the manager, because it
 		 * is the field carrying the integrity hash; `devEngines` supplies the version
@@ -511,55 +682,73 @@ export class PackageManagerDetector extends Context.Service<PackageManagerDetect
 		};
 	});
 
-	/** The live layer. */
+	/**
+	 * Provides the live detector over core `FileSystem` and `Path`.
+	 *
+	 * **Example** (Inspect the live detector layer)
+	 *
+	 * ```ts
+	 * import { PackageManagerDetector } from "@beep/scratchpad/effected/workspaces/PackageManagerName";
+	 * import * as Layer from "effect/Layer";
+	 *
+	 * console.log(Layer.isLayer(PackageManagerDetector.layer)) // true
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layer: Layer.Layer<PackageManagerDetector, never, FileSystem.FileSystem | Path.Path> = Layer.effect(
 		PackageManagerDetector,
 		PackageManagerDetector.make,
 	);
 
 	/**
-  * The sanctioned in-memory double.
-  *
-  * **Gotchas**
-  *
-  * **`detect` has no honest default, so an unstubbed call dies** — the
-  * `WorkspaceDiscovery.info` posture, for the same reason. A stand-in that
-  * answered `"pnpm"` would hand a consumer a fact nothing established, and it
-  * would contradict the very service it stands in for: the live detector's
-  * defining property is that it refuses to guess when no evidence matches.
-  * A double that guesses is worse than no double.
-  *
-  * Failing typed would be the subtler mistake: `PackageManagerDetectionError`
-  * reads as a legitimate "no manager here" answer, so a consumer would branch
-  * on it and proceed, never learning that the test simply forgot to stub.
-  *
-  * The defect is also not absorbed by `Effect.catch` or any typed-error
-  * handler — deliberately, so code under test with a best-effort `catch`
-  * around detection cannot make the mandatory stub look optional; the
-  * unstubbed call still fails the test.
-  *
-  * **Example** (Stub pnpm detection with workspace evidence)
-  *
-  * ```ts
-  * import { DetectedPackageManager, PackageManagerDetector } from "./index.ts";
-  * import * as Effect from "effect/Effect";
-  * import * as O from "effect/Option";
-  *
-  * const TestDetector = PackageManagerDetector.layerTest({
-  *   detect: () =>
-  *     Effect.succeed(
-  *       DetectedPackageManager.make({
-  *         name: "pnpm",
-  *         version: O.none(),
-  *         runtime: "node",
-  *         evidence: "pnpm-workspace.yaml",
-  *       }),
-  *     ),
-  * });
-  * ```
-  *
-  * @param overrides - Members to supply; anything omitted dies on use.
-  */
+	 * The sanctioned in-memory double.
+	 *
+	 * **Gotchas**
+	 *
+	 * **`detect` has no honest default, so an unstubbed call dies** — the
+	 * `WorkspaceDiscovery.info` posture, for the same reason. A stand-in that
+	 * answered `"pnpm"` would hand a consumer a fact nothing established, and it
+	 * would contradict the very service it stands in for: the live detector's
+	 * defining property is that it refuses to guess when no evidence matches.
+	 * A double that guesses is worse than no double.
+	 *
+	 * Failing typed would be the subtler mistake: `PackageManagerDetectionError`
+	 * reads as a legitimate "no manager here" answer, so a consumer would branch
+	 * on it and proceed, never learning that the test simply forgot to stub.
+	 *
+	 * The defect is also not absorbed by `Effect.catch` or any typed-error
+	 * handler — deliberately, so code under test with a best-effort `catch`
+	 * around detection cannot make the mandatory stub look optional; the
+	 * unstubbed call still fails the test.
+	 *
+	 * **Example** (Stub pnpm detection with workspace evidence)
+	 *
+	 * ```ts
+	 * import { DetectedPackageManager, PackageManagerDetector } from "@beep/scratchpad/effected/workspaces/PackageManagerName";
+	 * import * as Effect from "effect/Effect";
+	 * import * as O from "effect/Option";
+	 *
+	 * const detector = PackageManagerDetector.makeTest({
+	 *   detect: () =>
+	 *     Effect.succeed(
+	 *       DetectedPackageManager.make({
+	 *         name: "pnpm",
+	 *         version: O.none(),
+	 *         runtime: "node",
+	 *         evidence: "pnpm-workspace.yaml",
+	 *       }),
+	 *     ),
+	 * });
+	 *
+	 * console.log(Effect.runSync(detector.detect("/repo")).name) // pnpm
+	 * ```
+	 *
+	 * @param overrides - Members to supply; anything omitted dies on use.
+	 * @category testing
+	 * @since 0.0.0
+	 */
 	static readonly makeTest = (overrides: Partial<PackageManagerDetectorShape> = {}): PackageManagerDetectorShape => ({
 		detect: () =>
 			Effect.die(
@@ -571,17 +760,41 @@ export class PackageManagerDetector extends Context.Service<PackageManagerDetect
 	});
 
 	/**
-  * {@link PackageManagerDetector.makeTest} behind `Layer.succeed`.
-  *
-  * **Gotchas**
-  *
-  * A parameterized layer factory mints a **fresh reference per call**, and
-  * layers memoize by reference — bind the result to a `const` and reuse it
-  * rather than calling `layerTest(...)` at each composition site.
-  *
-  * Pairs with `WorkspaceRoot.layerTest` and `WorkspaceDiscovery.layerTest` to
-  * stand up the whole discovery path with no filesystem at all.
-  */
+	 * {@link PackageManagerDetector.makeTest} behind `Layer.succeed`.
+	 *
+	 * **Gotchas**
+	 *
+	 * A parameterized layer factory mints a **fresh reference per call**, and
+	 * layers memoize by reference — bind the result to a `const` and reuse it
+	 * rather than calling `layerTest(...)` at each composition site.
+	 *
+	 * Pairs with `WorkspaceRoot.layerTest` and `WorkspaceDiscovery.layerTest` to
+	 * stand up the whole discovery path with no filesystem at all.
+	 *
+	 * **Example** (Provide a stubbed detector layer)
+	 *
+	 * ```ts
+	 * import { DetectedPackageManager, PackageManagerDetector } from "@beep/scratchpad/effected/workspaces/PackageManagerName";
+	 * import * as Effect from "effect/Effect";
+	 * import * as O from "effect/Option";
+	 *
+	 * const TestDetector = PackageManagerDetector.layerTest({
+	 *   detect: () => Effect.succeed(DetectedPackageManager.make({
+	 *     name: "bun",
+	 *     version: O.none(),
+	 *     runtime: "bun",
+	 *     evidence: "bun.lock",
+	 *   })),
+	 * });
+	 * const program = Effect.flatMap(PackageManagerDetector, (detector) => detector.detect("/repo"));
+	 * const detected = Effect.runSync(Effect.provide(program, TestDetector));
+	 *
+	 * console.log(detected.name) // bun
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layerTest = (
 		overrides: Partial<PackageManagerDetectorShape> = {},
 	): Layer.Layer<PackageManagerDetector> =>

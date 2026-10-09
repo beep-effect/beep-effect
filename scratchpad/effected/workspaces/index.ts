@@ -16,7 +16,7 @@
  *
  * ```ts
  * import { NodeServices } from "@effect/platform-node";
- * import { WorkspaceDiscovery, Workspaces } from "./index.ts";
+ * import { WorkspaceDiscovery, Workspaces } from "@beep/scratchpad/effected/workspaces/index";
  * import * as Effect from "effect/Effect";
  * import * as Layer from "effect/Layer";
  *

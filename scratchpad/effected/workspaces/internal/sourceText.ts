@@ -23,7 +23,12 @@ import * as MutableHashSet from "effect/MutableHashSet";
 // as keywords — right in module and strict code, where they are reserved,
 // wrong only for a sloppy-mode script that names a variable either word.
 
-/** A string literal, or a template literal with no substitutions, as written in the source. */
+/**
+ * Describes a string literal, or a template literal with no substitutions, as written in the source.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export interface SourceLiteral {
 	/** Offset of the opening quote. */
 	readonly start: number;
@@ -31,7 +36,16 @@ export interface SourceLiteral {
 	readonly value: string;
 }
 
-/** One source text, split three ways. Both strings have the input's exact length and line breaks. */
+/**
+ * Represents one source text split into a comment-free view, a code-only view and its literals.
+ *
+ * **Details**
+ *
+ * Both strings have the input's exact length and line breaks.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export interface LexedSource {
 	/** Comments blanked to spaces; every literal intact. */
 	readonly withoutComments: string;
@@ -72,10 +86,38 @@ const CONTROL = MutableHashSet.fromIterable(["if", "while", "for", "with"]);
 /** Objects a member access on which still reaches a global. */
 const GLOBAL_OBJECTS = MutableHashSet.fromIterable(["globalThis", "global", "window", "self"]);
 
-/** Whether `char` can continue an identifier. */
+/**
+ * Tests whether `char` can continue an identifier.
+ *
+ * **Example** (Recognize identifier continuations)
+ *
+ * ```ts
+ * import { isIdentifierChar } from "@beep/scratchpad/effected/workspaces/internal/sourceText";
+ *
+ * console.log(isIdentifierChar("$")) // true
+ * console.log(isIdentifierChar(undefined)) // false
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
+ */
 export const isIdentifierChar = (char: string | undefined): boolean => char !== undefined && IDENTIFIER.test(char);
 
-/** A complete code point starting at a UTF-16 offset, for string and lexer-buffer lookups. */
+/**
+ * Reads a complete code point starting at a UTF-16 offset, for string and lexer-buffer lookups.
+ *
+ * **Example** (Read a surrogate pair from text and a lexer buffer)
+ *
+ * ```ts
+ * import { codePointAt } from "@beep/scratchpad/effected/workspaces/internal/sourceText";
+ *
+ * console.log(codePointAt("a😀", 1)) // 😀
+ * console.log(codePointAt(1)(["a", "\uD83D", "\uDE00"])) // 😀
+ * ```
+ *
+ * @category getters
+ * @since 0.0.0
+ */
 export const codePointAt: {
 	(at: number): (text: string | ReadonlyArray<string>) => string | undefined;
 	(text: string | ReadonlyArray<string>, at: number): string | undefined;
@@ -87,7 +129,21 @@ export const codePointAt: {
 		: first;
 });
 
-/** A complete code point ending just before a UTF-16 offset. */
+/**
+ * Reads a complete code point ending just before a UTF-16 offset.
+ *
+ * **Example** (Read the code point before a boundary)
+ *
+ * ```ts
+ * import { codePointBefore } from "@beep/scratchpad/effected/workspaces/internal/sourceText";
+ *
+ * console.log(codePointBefore("a😀", 3)) // 😀
+ * console.log(codePointBefore(0)("a😀")) // undefined
+ * ```
+ *
+ * @category getters
+ * @since 0.0.0
+ */
 export const codePointBefore: {
 	(at: number): (text: string | ReadonlyArray<string>) => string | undefined;
 	(text: string | ReadonlyArray<string>, at: number): string | undefined;
@@ -103,7 +159,24 @@ export const codePointBefore: {
 const isLineTerminator = (char: string | undefined): boolean =>
 	char === "\n" || char === "\r" || char === "\u2028" || char === "\u2029";
 
-/** Lex `text` once into its comment-free view, its code-only view and its literals. */
+/**
+ * Lexes `text` once into its comment-free view, its code-only view and its literals.
+ *
+ * **Example** (Inspect aligned views and raw literals)
+ *
+ * ```ts
+ * import { lex } from "@beep/scratchpad/effected/workspaces/internal/sourceText";
+ *
+ * const text = 'const x = "hi"; // note';
+ * const lexed = lex(text);
+ * console.log(lexed.withoutComments === 'const x = "hi";        ') // true
+ * console.log(lexed.code === 'const x = "  ";        ') // true
+ * console.log(lexed.literals[0]?.value) // hi
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const lex = (text: string): LexedSource => {
 	const kept: Array<string> = [];
 	const code: Array<string> = [];
@@ -378,10 +451,27 @@ const isPropertyKey = (code: string, before: number, after: number): boolean => 
 };
 
 /**
- * Offsets where `name` is referenced in lexed `code` as a free identifier, a
- * member of a global object, or a spread operand. A member of any other object
+ * Finds offsets where `name` is referenced in lexed `code` as a free identifier, a
+ * member of a global object, or a spread operand.
+ *
+ * **Details**
+ *
+ * A member of another object
  * (`child.process`), a longer identifier, a private field and an object-literal
- * key or type member are not.
+ * key or type member are not counted.
+ *
+ * **Example** (Select free and global references)
+ *
+ * ```ts
+ * import { lex, references } from "@beep/scratchpad/effected/workspaces/internal/sourceText";
+ *
+ * const code = lex("process; child.process; globalThis.process").code;
+ * console.log(references(code, "process").join(",")) // 0,35
+ * console.log(references("process")(lex("({ process: 1 })").code).length) // 0
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const references: {
 	(name: string): (code: string) => ReadonlyArray<number>;
@@ -442,10 +532,28 @@ const cookSpecifier = (raw: string): string => raw.replace(/\r\n?/gu, "\n").repl
 );
 
 /**
- * Cooked literals that are module specifiers, retaining their opening-quote
- * offsets: after `from` or `import`, or the
+ * Extracts cooked literals that are module specifiers, retaining their opening-quote offsets.
+ *
+ * **Details**
+ *
+ * Matches literals after `from` or `import`, or the
  * whole first argument of `import(` or `require(` (followed by `)` or `,`, so
  * `import("./x" + name)` is not read as `"./x"`).
+ *
+ * **Example** (Extract a cooked module specifier)
+ *
+ * ```ts
+ * import { lex, specifierLiterals } from "@beep/scratchpad/effected/workspaces/internal/sourceText";
+ *
+ * const lexed = lex('import "node:\\u0066s"; import("./x" + name);');
+ * const specifiers = specifierLiterals(lexed);
+ * console.log(specifiers[0]?.value) // node:fs
+ * console.log(specifiers[0]?.start) // 7
+ * console.log(specifiers.length) // 1
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const specifierLiterals = (lexed: LexedSource): ReadonlyArray<SourceLiteral> =>
 	lexed.literals.filter((literal) => {
@@ -462,7 +570,22 @@ export const specifierLiterals = (lexed: LexedSource): ReadonlyArray<SourceLiter
 		return keyword === "from" || keyword === "import";
 	}).map((literal) => ({ start: literal.start, value: cookSpecifier(literal.value) }));
 
-/** A lookup from an offset in `text` to its 1-based line and UTF-16 column. */
+/**
+ * Builds a lookup from an offset in `text` to its 1-based line and UTF-16 column.
+ *
+ * **Example** (Locate text after a CRLF line break)
+ *
+ * ```ts
+ * import { locate } from "@beep/scratchpad/effected/workspaces/internal/sourceText";
+ *
+ * const position = locate("a\r\n😀x")(5);
+ * console.log(position.line) // 2
+ * console.log(position.column) // 3
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
 export const locate = (text: string): ((offset: number) => { readonly line: number; readonly column: number }) => {
 	const starts: Array<number> = [0];
 	for (let i = 0; i < text.length; i++) {

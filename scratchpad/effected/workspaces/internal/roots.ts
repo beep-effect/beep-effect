@@ -12,7 +12,12 @@ import * as A from "effect/Array";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 
-/** The two lookups every walk needs, built once per lockfile. */
+/**
+ * The two lookups every walk needs, built once per lockfile.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export interface InstanceIndex {
 	/** Every instance by its `instanceId`. */
 	readonly byId: MutableHashMap.MutableHashMap<string, ResolvedPackage>;
@@ -20,6 +25,32 @@ export interface InstanceIndex {
 	readonly workspaceByPath: MutableHashMap.MutableHashMap<string, ResolvedPackage>;
 }
 
+/**
+ * Builds the instance-id and workspace-importer lookups used by lockfile walks.
+ *
+ * **Details**
+ *
+ * Every package is indexed by its opaque `instanceId`. Only workspace packages
+ * with a `relativePath` enter the importer-path lookup.
+ *
+ * **Example** (Index an empty lockfile)
+ *
+ * ```ts
+ * import { indexInstances } from "@beep/scratchpad/effected/workspaces/internal/roots";
+ * import { Lockfile } from "@beep/scratchpad/effected/lockfiles/Lockfile";
+ * import * as MutableHashMap from "effect/MutableHashMap";
+ *
+ * const lockfile = Lockfile.make({
+ *   format: "npm", lockfileVersion: "3", packages: [], workspaceDependencies: []
+ * });
+ * const index = indexInstances(lockfile);
+ * console.log(MutableHashMap.size(index.byId)); // 0
+ * console.log(MutableHashMap.size(index.workspaceByPath)); // 0
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
 export const indexInstances = (lockfile: Lockfile): InstanceIndex => {
 	const byId = MutableHashMap.fromIterable(A.map(lockfile.packages, (pkg) => [pkg.instanceId, pkg] as const));
 	const workspaceByPath = MutableHashMap.empty<string, ResolvedPackage>();
@@ -32,12 +63,17 @@ export const indexInstances = (lockfile: Lockfile): InstanceIndex => {
 /**
  * Where an importer's walk starts.
  *
+ * **Details**
+ *
  * - `"own"` — the lockfile records a workspace row for the importer. The row
  *   carries both its declared peers (npm, bun) and its resolved edges, so it is
  *   the walk's first node and its edges ARE the importer's dependencies.
  * - `"dependencies"` — no row (the root under every format, and any importer
  *   whose row the lockfile omits); the instances are what the importer entry's
  *   own dependency records joined to.
+ *
+ * @category models
+ * @since 0.0.0
  */
 export type ImporterRoots =
 	| { readonly _tag: "own"; readonly instance: ResolvedPackage }
@@ -47,8 +83,29 @@ export type ImporterRoots =
  * The instances an importer's dependencies resolved to, or the importer's own
  * workspace row when the lockfile records one.
  *
+ * **Gotchas**
+ *
  * Returns `undefined` when the importer cannot be resolved at all, which every
  * caller reports rather than treating as "no problems here".
+ *
+ * **Example** (Distinguish a dependency-free importer from a missing importer)
+ *
+ * ```ts
+ * import { indexInstances, rootInstances } from "@beep/scratchpad/effected/workspaces/internal/roots";
+ * import { Lockfile } from "@beep/scratchpad/effected/lockfiles/Lockfile";
+ * import { LockfileImporter } from "@beep/scratchpad/effected/lockfiles/LockfileImporter";
+ *
+ * const lockfile = Lockfile.make({
+ *   format: "npm", lockfileVersion: "3", packages: [], workspaceDependencies: [],
+ *   importers: [LockfileImporter.make({ path: ".", dependencies: [] })]
+ * });
+ * const index = indexInstances(lockfile);
+ * console.log(rootInstances(lockfile, ".", index)?._tag); // dependencies
+ * console.log(rootInstances("missing", index)(lockfile)); // undefined
+ * ```
+ *
+ * @category getters
+ * @since 0.0.0
  */
 export const rootInstances: {
 	(importerPath: string, index: InstanceIndex): (lockfile: Lockfile) => ImporterRoots | undefined;

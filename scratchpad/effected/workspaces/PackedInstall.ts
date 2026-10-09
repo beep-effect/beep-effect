@@ -65,6 +65,8 @@ const JsonValue = S.fromJsonString(S.Unknown);
  * install.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type PackSource = "source" | { readonly directory: string };
 
@@ -79,6 +81,8 @@ export type PackSource = "source" | { readonly directory: string };
  * run those options describe.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface PackedInstallClosureOptions {
 	/**
@@ -126,9 +130,12 @@ export interface PackedInstallClosureOptions {
 }
 
 /**
- * Options for {@link PackedInstall.run}.
+ * Configures which artifacts, managers, bins and environment a packed-install
+ * proof uses through {@link PackedInstall.run}.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface PackedInstallOptions extends PackedInstallClosureOptions {
 	/** The carrier: a direct dependency of each scratch consumer, beside only `consumerDependencies`. */
@@ -231,7 +238,22 @@ export interface PackedInstallOptions extends PackedInstallClosureOptions {
 /**
  * Why a packed install could not be proven.
  *
+ * **Example** (Inspect a missing-bin failure)
+ *
+ * ```ts
+ * import { PackedInstallError } from "@beep/scratchpad/effected/workspaces/PackedInstall";
+ *
+ * const error = PackedInstallError.make({
+ *  reason: "MissingBin",
+ *   message: "npm: my-tool is missing",
+ *   manager: "npm",
+ * });
+ * console.log(error.reason) // MissingBin
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class PackedInstallError extends S.TaggedError<PackedInstallError>($I`PackedInstallError`)("PackedInstallError", {
 	/** What failed. */
@@ -269,6 +291,8 @@ export class PackedInstallError extends S.TaggedError<PackedInstallError>($I`Pac
  * and working directory are built.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface BinCommandOptions {
 	/**
@@ -284,9 +308,12 @@ export interface BinCommandOptions {
 }
 
 /**
- * Options for {@link InstalledConsumer.runBin}.
+ * Configures the execution ceiling and input supplied to
+ * {@link InstalledConsumer.runBin}.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface RunBinOptions extends BinCommandOptions {
 	/** Ceiling on the run. Defaults to one minute. Expiry fails `BinFailed` with a message naming the bin and this duration. */
@@ -328,6 +355,8 @@ const isNotALink = (error: PlatformError.PlatformError): boolean =>
  * Which installed package a `node_modules/.bin` symlink resolves into.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface BinProvenance {
 	/** The `name` from the nearest `package.json` above the link's target. */
@@ -339,7 +368,23 @@ export interface BinProvenance {
 /**
  * One scratch project, outside the workspace, with the carrier installed.
  *
+ * **Example** (Locate an installed consumer bin)
+ *
+ * ```ts
+ * import { InstalledConsumer } from "@beep/scratchpad/effected/workspaces/PackedInstall";
+ *
+ * const consumer = InstalledConsumer.make({
+ *  manager: "npm",
+ *   managerVersion: "11.0.0",
+ *   directory: "/scratch/consumer-npm",
+ *   carrier: "my-tool",
+ * });
+ * console.log(consumer.binPath("my-tool")) // /scratch/consumer-npm/node_modules/.bin/my-tool
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class InstalledConsumer extends S.Class<InstalledConsumer>($I`InstalledConsumer`)({
 	/** The package manager that installed it. */
@@ -361,39 +406,77 @@ export class InstalledConsumer extends S.Class<InstalledConsumer>($I`InstalledCo
 	 */
 	carrier: S.optionalKey(S.String).annotateKey({ description: "The carrier the consumer depends on, which InstalledConsumer.carrierCommand resolves bins through. `PackedInstall.run` always sets it." }),
 }, $I.annote("InstalledConsumer", { description: "One scratch project, outside the workspace, with the carrier installed." })) {
-	/** The installed bin `name`, in `node_modules/.bin`. POSIX: `PackedInstall` runs only there. */
+	/**
+	 * The installed bin `name`, in `node_modules/.bin`. POSIX: `PackedInstall` runs only there.
+	 *
+	 * **Example** (Resolve the POSIX bin path)
+	 *
+	 * ```ts
+	 * import { InstalledConsumer } from "@beep/scratchpad/effected/workspaces/PackedInstall";
+	 *
+	 * const consumer = InstalledConsumer.make({
+	 *   manager: "npm",
+	 *   managerVersion: "11.0.0",
+	 *   directory: "/scratch/consumer-npm",
+	 *   carrier: "my-tool",
+	 * });
+	 * console.log(consumer.binPath("my-tool")) // /scratch/consumer-npm/node_modules/.bin/my-tool
+	 * ```
+	 *
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	binPath(name: string): string {
 		return `${this.directory}/node_modules/.bin/${name}`;
 	}
 
 	/**
-  * Which installed package the `node_modules/.bin` entry `name` resolves into.
-  *
-  * **Details**
-  *
-  * Under a flat layout (npm, bun, and Yarn with the `node-modules` linker
-  * this run configures), a hoisted bin of the same name from another package
-  * can shadow the carrier's, and running it cannot tell you which one ran.
-  * Those managers write each `.bin` entry as a symlink, so this reads the
-  * link, realpaths its target, and walks up to the nearest `package.json`
-  * with a string `name`, staying inside the consumer directory (itself
-  * realpath'd first, so a `/var` alias of `/private/var` or a trailing
-  * slash does not move the bound). A manifest that is valid JSON but not an
-  * object, or has no string `name` (a `dist/package.json` carrying only
-  * `type`), is passed over. Assert `package` is your carrier.
-  *
-  * `undefined` means one thing: the entry exists and is not a symlink.
-  * pnpm writes `.bin` entries as shell shims, whose target this does not
-  * parse; its isolated layout links only the consumer's direct dependencies
-  * at the top level, so a shadowing bin needs a direct dependency there.
-  *
-  * An entry that does not exist, or a link whose target does not, fails
-  * `MissingBin`. A link into no named package inside the consumer fails
-  * `UnownedBin`, naming the target. Any other read failure, a
-  * `package.json` that is not JSON included, fails `Io`.
-  *
-  * @param name - The bin, as named in `node_modules/.bin`.
-  */
+	 * Which installed package the `node_modules/.bin` entry `name` resolves into.
+	 *
+	 * **Details**
+	 *
+	 * Under a flat layout (npm, bun, and Yarn with the `node-modules` linker
+	 * this run configures), a hoisted bin of the same name from another package
+	 * can shadow the carrier's, and running it cannot tell you which one ran.
+	 * Those managers write each `.bin` entry as a symlink, so this reads the
+	 * link, realpaths its target, and walks up to the nearest `package.json`
+	 * with a string `name`, staying inside the consumer directory (itself
+	 * realpath'd first, so a `/var` alias of `/private/var` or a trailing
+	 * slash does not move the bound). A manifest that is valid JSON but not an
+	 * object, or has no string `name` (a `dist/package.json` carrying only
+	 * `type`), is passed over. Assert `package` is your carrier.
+	 *
+	 * `undefined` means one thing: the entry exists and is not a symlink.
+	 * pnpm writes `.bin` entries as shell shims, whose target this does not
+	 * parse; its isolated layout links only the consumer's direct dependencies
+	 * at the top level, so a shadowing bin needs a direct dependency there.
+	 *
+	 * An entry that does not exist, or a link whose target does not, fails
+	 * `MissingBin`. A link into no named package inside the consumer fails
+	 * `UnownedBin`, naming the target. Any other read failure, a
+	 * `package.json` that is not JSON included, fails `Io`.
+	 *
+	 * **Example** (Construct a bin provenance check)
+	 *
+	 * ```ts
+	 * import { InstalledConsumer } from "@beep/scratchpad/effected/workspaces/PackedInstall";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const consumer = InstalledConsumer.make({
+	 *  manager: "npm",
+	 *   managerVersion: "11.0.0",
+	 *   directory: "/scratch/consumer-npm",
+	 *   carrier: "my-tool",
+	 * });
+	 *
+	 * const program = consumer.binProvenance("my-tool");
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @param name - The bin, as named in `node_modules/.bin`.
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	binProvenance(
 		name: string,
 	): Effect.Effect<BinProvenance | undefined, PackedInstallError, FileSystem.FileSystem | Path.Path> {
@@ -405,36 +488,44 @@ export class InstalledConsumer extends S.Class<InstalledConsumer>($I`InstalledCo
 	}
 
 	/**
-  * The command {@link InstalledConsumer.runBin} spawns for the bin `name`,
-  * for a caller that drives the child itself, such as `McpProbe.initialize`
-  * from `@effected/mcp/testing`.
-  *
-  * **Details**
-  *
-  * {@link InstalledConsumer.binPath}, from the consumer's directory, under
-  * the install's scrubbed environment with `options.env` layered over it
-  * after the scrub, and nothing inherited beyond that. `runBin` builds its
-  * command here and then ignores stdin; this one leaves stdin as the
-  * spawner's default pipe, so a probe can write to it. Spawn it inside the
-  * scope that ran `PackedInstall.run`: the scratch directory is removed
-  * when that scope closes.
-  *
-  * **Example** (Initialize an MCP probe from an installed bin)
-  *
-  * ```ts
-  * import { McpProbe } from "@effected/mcp/testing";
-  * import type { InstalledConsumer } from "./testing.ts";
-  *
-  * declare const consumer: InstalledConsumer;
-  * declare const xdg: string;
-  *
-  * const probe = McpProbe.initialize(consumer.command("my-tool-mcp", [], { env: { XDG_DATA_HOME: xdg } }));
-  * ```
-  *
-  * @param name - The bin, as named in `node_modules/.bin`.
-  * @param args - Its arguments.
-  * @param options - Extra environment and working directory.
-  */
+	 * The command {@link InstalledConsumer.runBin} spawns for the bin `name`,
+	 * for a caller that drives the child itself, such as `McpProbe.initialize`
+	 * from `@effected/mcp/testing`.
+	 *
+	 * **Details**
+	 *
+	 * {@link InstalledConsumer.binPath}, from the consumer's directory, under
+	 * the install's scrubbed environment with `options.env` layered over it
+	 * after the scrub, and nothing inherited beyond that. `runBin` builds its
+	 * command here and then ignores stdin; this one leaves stdin as the
+	 * spawner's default pipe, so a probe can write to it. Spawn it inside the
+	 * scope that ran `PackedInstall.run`: the scratch directory is removed
+	 * when that scope closes.
+	 *
+	 * **Example** (Build a command for a probe)
+	 *
+	 * ```ts
+	 * import { InstalledConsumer } from "@beep/scratchpad/effected/workspaces/PackedInstall";
+	 *
+	 * const consumer = InstalledConsumer.make({
+	 *  manager: "npm",
+	 *   managerVersion: "11.0.0",
+	 *   directory: "/scratch/consumer-npm",
+	 *   carrier: "my-tool",
+	 * });
+	 *
+	 * const command = consumer.command("my-tool-mcp", [], {
+	 *   env: { XDG_DATA_HOME: "/scratch/xdg" },
+	 * });
+	 * console.log(command.command) // /scratch/consumer-npm/node_modules/.bin/my-tool-mcp
+	 * ```
+	 *
+	 * @param name - The bin, as named in `node_modules/.bin`.
+	 * @param args - Its arguments.
+	 * @param options - Extra environment and working directory.
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	command(
 		name: string,
 		args: ReadonlyArray<string> = [],
@@ -448,26 +539,45 @@ export class InstalledConsumer extends S.Class<InstalledConsumer>($I`InstalledCo
 	}
 
 	/**
-  * Run the installed bin `name` to completion and collect what it wrote.
-  *
-  * **Details**
-  *
-  * Spawns {@link InstalledConsumer.command} with `options.stdin` as its
-  * input (the null device when omitted, so a bin never waits on an open
-  * pipe): the bin
-  * from the consumer's directory, under the install's scrubbed environment
-  * with `options.env` layered over it after the scrub, and nothing
-  * inherited beyond that. A
-  * non-zero exit is a result, read from `exitCode`, never a failure. A bin
-  * that cannot spawn, outlives `options.timeout` or floods its output fails
-  * `BinFailed` naming the manager and the bin. Run it inside the scope that
-  * ran `PackedInstall.run`: the scratch directory is removed when that
-  * scope closes.
-  *
-  * @param name - The bin, as named in `node_modules/.bin`.
-  * @param args - Its arguments.
-  * @param options - Extra environment, working directory, ceiling and stdin.
-  */
+	 * Run the installed bin `name` to completion and collect what it wrote.
+	 *
+	 * **Details**
+	 *
+	 * Spawns {@link InstalledConsumer.command} with `options.stdin` as its
+	 * input (the null device when omitted, so a bin never waits on an open
+	 * pipe): the bin
+	 * from the consumer's directory, under the install's scrubbed environment
+	 * with `options.env` layered over it after the scrub, and nothing
+	 * inherited beyond that. A
+	 * non-zero exit is a result, read from `exitCode`, never a failure. A bin
+	 * that cannot spawn, outlives `options.timeout` or floods its output fails
+	 * `BinFailed` naming the manager and the bin. Run it inside the scope that
+	 * ran `PackedInstall.run`: the scratch directory is removed when that
+	 * scope closes.
+	 *
+	 * **Example** (Construct a bin execution)
+	 *
+	 * ```ts
+	 * import { InstalledConsumer } from "@beep/scratchpad/effected/workspaces/PackedInstall";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const consumer = InstalledConsumer.make({
+	 *  manager: "npm",
+	 *   managerVersion: "11.0.0",
+	 *   directory: "/scratch/consumer-npm",
+	 *   carrier: "my-tool",
+	 * });
+	 *
+	 * const program = consumer.runBin("my-tool", ["--version"], { stdin: "" });
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @param name - The bin, as named in `node_modules/.bin`.
+	 * @param args - Its arguments.
+	 * @param options - Extra environment, working directory, ceiling and stdin.
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	runBin(
 		name: string,
 		args: ReadonlyArray<string> = [],
@@ -477,37 +587,56 @@ export class InstalledConsumer extends S.Class<InstalledConsumer>($I`InstalledCo
 	}
 
 	/**
-  * The command that runs the CARRIER's own bin `name`, whichever package
-  * won the `node_modules/.bin` slot.
-  *
-  * **Gotchas**
-  *
-  * With `allowSharedBins`, a flat layout (npm, bun, Yarn's `node-modules`
-  * linker) can link a front end's same-named bin into `.bin`, so
-  * {@link InstalledConsumer.runBin} proves only that SOME package's bin runs.
-  * This reads the carrier's installed `node_modules/<carrier>/package.json`,
-  * takes `name` from its `bin` map (a `bin` string answers to the unscoped
-  * package name), and returns `node <that file> ...args`: the carrier's shim
-  * itself, run by the `node` on the environment's `PATH`.
-  *
-  * Running it through `node` has three limits. It assumes a Node script, so
-  * a non-Node shim misruns. It drops any flags in the shim's shebang (a
-  * `#!/usr/bin/env -S node --enable-source-maps` runs without them). And it
-  * bypasses the file's executable bit, so under shared bins it does not
-  * prove the carrier's shim is executable, only that it runs: the manager
-  * that linked a front end's bin into the slot may never have made the
-  * carrier's target executable. Environment and working directory are built as
-  * {@link InstalledConsumer.command} builds them, stdin left open for a probe
-  * such as `McpProbe.initialize`.
-  *
-  * A consumer with no `carrier`, a carrier that is not installed or does not
-  * declare `name`, or a declared file that does not exist fails
-  * `MissingBin`; a manifest that cannot be read or is not JSON fails `Io`.
-  *
-  * @param name - The bin, as the carrier's `bin` map names it.
-  * @param args - Its arguments.
-  * @param options - Extra environment and working directory.
-  */
+	 * The command that runs the CARRIER's own bin `name`, whichever package
+	 * won the `node_modules/.bin` slot.
+	 *
+	 * **Gotchas**
+	 *
+	 * With `allowSharedBins`, a flat layout (npm, bun, Yarn's `node-modules`
+	 * linker) can link a front end's same-named bin into `.bin`, so
+	 * {@link InstalledConsumer.runBin} proves only that SOME package's bin runs.
+	 * This reads the carrier's installed `node_modules/<carrier>/package.json`,
+	 * takes `name` from its `bin` map (a `bin` string answers to the unscoped
+	 * package name), and returns `node <that file> ...args`: the carrier's shim
+	 * itself, run by the `node` on the environment's `PATH`.
+	 *
+	 * Running it through `node` has three limits. It assumes a Node script, so
+	 * a non-Node shim misruns. It drops any flags in the shim's shebang (a
+	 * `#!/usr/bin/env -S node --enable-source-maps` runs without them). And it
+	 * bypasses the file's executable bit, so under shared bins it does not
+	 * prove the carrier's shim is executable, only that it runs: the manager
+	 * that linked a front end's bin into the slot may never have made the
+	 * carrier's target executable. Environment and working directory are built as
+	 * {@link InstalledConsumer.command} builds them, stdin left open for a probe
+	 * such as `McpProbe.initialize`.
+	 *
+	 * A consumer with no `carrier`, a carrier that is not installed or does not
+	 * declare `name`, or a declared file that does not exist fails
+	 * `MissingBin`; a manifest that cannot be read or is not JSON fails `Io`.
+	 *
+	 * **Example** (Construct a carrier command)
+	 *
+	 * ```ts
+	 * import { InstalledConsumer } from "@beep/scratchpad/effected/workspaces/PackedInstall";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const consumer = InstalledConsumer.make({
+	 *  manager: "npm",
+	 *   managerVersion: "11.0.0",
+	 *   directory: "/scratch/consumer-npm",
+	 *   carrier: "my-tool",
+	 * });
+	 *
+	 * const program = consumer.carrierCommand("my-tool", ["--version"]);
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @param name - The bin, as the carrier's `bin` map names it.
+	 * @param args - Its arguments.
+	 * @param options - Extra environment and working directory.
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	carrierCommand(
 		name: string,
 		args: ReadonlyArray<string> = [],
@@ -519,25 +648,44 @@ export class InstalledConsumer extends S.Class<InstalledConsumer>($I`InstalledCo
 	}
 
 	/**
-  * Run the carrier's own bin `name` to completion, whichever package won
-  * the `node_modules/.bin` slot.
-  *
-  * **Details**
-  *
-  * Spawns {@link InstalledConsumer.carrierCommand} with `options.stdin` as
-  * its input (the null device when omitted), and
-  * reports as {@link InstalledConsumer.runBin} does: a non-zero exit is a
-  * result, and a bin that cannot spawn or outlives `options.timeout` (one
-  * minute by default) fails `BinFailed`. Use it beside `runBin` under
-  * `allowSharedBins`: `runBin` proves what a user typing the bin name gets,
-  * this proves the carrier's shim itself works, within `carrierCommand`'s
-  * limits (a Node script, shebang flags dropped, executable bit not
-  * checked).
-  *
-  * @param name - The bin, as the carrier's `bin` map names it.
-  * @param args - Its arguments.
-  * @param options - Extra environment, working directory, ceiling and stdin.
-  */
+	 * Run the carrier's own bin `name` to completion, whichever package won
+	 * the `node_modules/.bin` slot.
+	 *
+	 * **Details**
+	 *
+	 * Spawns {@link InstalledConsumer.carrierCommand} with `options.stdin` as
+	 * its input (the null device when omitted), and
+	 * reports as {@link InstalledConsumer.runBin} does: a non-zero exit is a
+	 * result, and a bin that cannot spawn or outlives `options.timeout` (one
+	 * minute by default) fails `BinFailed`. Use it beside `runBin` under
+	 * `allowSharedBins`: `runBin` proves what a user typing the bin name gets,
+	 * this proves the carrier's shim itself works, within `carrierCommand`'s
+	 * limits (a Node script, shebang flags dropped, executable bit not
+	 * checked).
+	 *
+	 * **Example** (Construct a carrier bin execution)
+	 *
+	 * ```ts
+	 * import { InstalledConsumer } from "@beep/scratchpad/effected/workspaces/PackedInstall";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const consumer = InstalledConsumer.make({
+	 *  manager: "npm",
+	 *   managerVersion: "11.0.0",
+	 *   directory: "/scratch/consumer-npm",
+	 *   carrier: "my-tool",
+	 * });
+	 *
+	 * const program = consumer.runCarrierBin("my-tool", ["--version"]);
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @param name - The bin, as the carrier's `bin` map names it.
+	 * @param args - Its arguments.
+	 * @param options - Extra environment, working directory, ceiling and stdin.
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	runCarrierBin(
 		name: string,
 		args: ReadonlyArray<string> = [],
@@ -599,7 +747,23 @@ const collectBin = (
 /**
  * What a packed install produced.
  *
+ * **Example** (Inspect packed tarball locations)
+ *
+ * ```ts
+ * import { PackedInstallResult } from "@beep/scratchpad/effected/workspaces/PackedInstall";
+ *
+ * const result = PackedInstallResult.make({
+ *  consumers: [],
+ *   unavailable: ["pnpm"],
+ *   tarballs: { "my-tool": "/scratch/my-tool.tgz" },
+ *   scratch: "/scratch",
+ * });
+ * console.log(result.tarballs["my-tool"]) // /scratch/my-tool.tgz
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class PackedInstallResult extends S.Class<PackedInstallResult>($I`PackedInstallResult`)({
 	/** One consumer per available manager, in the order requested. */
@@ -618,9 +782,12 @@ export class PackedInstallResult extends S.Class<PackedInstallResult>($I`PackedI
 }, $I.annote("PackedInstallResult", { description: "What a packed install produced." })) {}
 
 /**
- * What {@link PackedInstall.timeoutBudget} adds up.
+ * Describes the work and ceilings {@link PackedInstall.timeoutBudget} adds up
+ * when sizing a test's outer timeout.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface PackedInstallBudget {
 	/** The managers the run requests; one listed twice counts once. */
@@ -649,6 +816,8 @@ export interface PackedInstallBudget {
  * source, so the check answers for exactly the run those options describe.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface PackedInstallPreflightOptions extends PackedInstallClosureOptions {
 	/** The carrier, as the run's `carrier`. */
@@ -661,6 +830,8 @@ export interface PackedInstallPreflightOptions extends PackedInstallClosureOptio
  * Whether the pack source a run needs is on disk.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface PackedInstallPreflight {
 	/** `true` when every package the run packs has its pack source in place. */
@@ -673,6 +844,8 @@ export interface PackedInstallPreflight {
  * What a test suite should do about a {@link PackedInstallPreflight}.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface PackedInstallGate {
 	/**
@@ -851,13 +1024,8 @@ const planClosure = Effect.fn("planClosure")(function* (carrier: string, options
  * **Example** (Install packed packages and run each consumer bin)
  *
  * ```ts
- * import { NodeServices } from "@effect/platform-node";
- * import { Workspaces } from "./index.ts";
- * import { PackedInstall } from "./testing.ts";
+ * import { PackedInstall } from "@beep/scratchpad/effected/workspaces/PackedInstall";
  * import * as Effect from "effect/Effect";
- * import * as Layer from "effect/Layer";
- *
- * const Live = Workspaces.layer({ cwd: "/repo" }).pipe(Layer.provideMerge(NodeServices.layer));
  *
  * // Use the consumers INSIDE the scope: closing it removes the scratch
  * // directory, so a binPath returned out of Effect.scoped points at nothing.
@@ -875,53 +1043,79 @@ const planClosure = Effect.fn("planClosure")(function* (carrier: string, options
  *     const { stdout, exitCode } = yield* consumer.runBin("my-tool", ["--version"], { env });
  *     console.log(consumer.manager, exitCode, stdout.trim());
  *   }
- * }).pipe(Effect.scoped, Effect.provide(Live));
+ * }).pipe(Effect.scoped);
+ * console.log(Effect.isEffect(program)) // true
  * ```
  *
  * @public
+ * @category testing
+ * @since 0.0.0
  */
 export class PackedInstall {
 	private constructor() {}
 
-	/** `env` without undefined values or the parent manager's context: the environment the installs run under. Reuse it to run the installed bins. */
+	/**
+	 * Removes undefined values and the parent manager's context from `env` to
+	 * build the environment the installs run under. Reuse it to run the installed bins.
+	 *
+	 * **Example** (Remove inherited manager context)
+	 *
+	 * ```ts
+	 * import { PackedInstall } from "@beep/scratchpad/effected/workspaces/PackedInstall";
+	 *
+	 * const env = PackedInstall.scrubEnv({
+	 *   PATH: "/usr/bin",
+	 *   npm_config_registry: "https://registry.example",
+	 *   UNUSED: undefined,
+	 * });
+	 * console.log("npm_config_registry" in env) // false
+	 * console.log("UNUSED" in env) // false
+	 * console.log(env.PATH) // /usr/bin
+	 * ```
+	 *
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	static readonly scrubEnv: (env: Readonly<Record<string, string | undefined>>) => Record<string, string> = scrubEnv;
 
 	/**
-  * The ceiling a test's outer timeout should cover so that every one of the
-  * run's own ceilings fires first, as a named `PackedInstallError`, rather
-  * than the outer guard's `TimeoutError` that names nothing.
-  *
-  * **Details**
-  *
-  * The worst case of the run's own ceilings, taken in sequence as the run
-  * takes them: each manager's `--version` probe (30 seconds), install
-  * (`installTimeout`) and `perConsumer` (one minute by default, one `runBin`
-  * at its default ceiling), plus each package's pack
-  * (`packTimeout`, two minutes by default) and manifest read (30 seconds),
-  * plus 30 seconds for the untimed steps and one minute for cleanup:
-  * removing the scratch root when the scope closes, and killing a child
-  * whose ceiling interrupted it. It reads the same defaults the run does.
-  * Pass `packages` as the names {@link PackedInstall.closure} returns to
-  * size it before the run. A vitest test timeout must sit above it, since
-  * vitest's own guard should not pre-empt the Effect's.
-  *
-  * **Example** (Calculate a packed-install timeout budget)
-  *
-  * ```ts
-  * import { PackedInstall } from "./testing.ts";
-  * import * as Duration from "effect/Duration";
-  *
-  * const budget = PackedInstall.timeoutBudget({
-  *   managers: ["npm", "pnpm", "yarn", "bun"],
-  *   installTimeout: "3 minutes",
-  *   packTimeout: "30 seconds",
-  *   packages: ["my-tool", "my-tool-cli", "my-tool-core"],
-  *   perConsumer: "2 minutes",
-  * });
-  * console.log(Duration.format(budget));
-  * // => 26m 30s
-  * ```
-  */
+	 * Calculates the ceiling a test's outer timeout should cover so that every one of the
+	 * run's own ceilings fires first, as a named `PackedInstallError`, rather
+	 * than the outer guard's `TimeoutError` that names nothing.
+	 *
+	 * **Details**
+	 *
+	 * The worst case of the run's own ceilings, taken in sequence as the run
+	 * takes them: each manager's `--version` probe (30 seconds), install
+	 * (`installTimeout`) and `perConsumer` (one minute by default, one `runBin`
+	 * at its default ceiling), plus each package's pack
+	 * (`packTimeout`, two minutes by default) and manifest read (30 seconds),
+	 * plus 30 seconds for the untimed steps and one minute for cleanup:
+	 * removing the scratch root when the scope closes, and killing a child
+	 * whose ceiling interrupted it. It reads the same defaults the run does.
+	 * Pass `packages` as the names {@link PackedInstall.closure} returns to
+	 * size it before the run. A vitest test timeout must sit above it, since
+	 * vitest's own guard should not pre-empt the Effect's.
+	 *
+	 * **Example** (Calculate a packed-install timeout budget)
+	 *
+	 * ```ts
+	 * import { PackedInstall } from "@beep/scratchpad/effected/workspaces/PackedInstall";
+	 * import * as Duration from "effect/Duration";
+	 *
+	 * const budget = PackedInstall.timeoutBudget({
+	 *   managers: ["npm", "pnpm", "yarn", "bun"],
+	 *   installTimeout: "3 minutes",
+	 *   packTimeout: "30 seconds",
+	 *   packages: ["my-tool", "my-tool-cli", "my-tool-core"],
+	 *   perConsumer: "2 minutes",
+	 * });
+	 * console.log(Duration.format(budget)) // 26m 30s
+	 * ```
+	 *
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	static readonly timeoutBudget = (budget: PackedInstallBudget): Duration.Duration => {
 		const perManager = [
 			PROBE_TIMEOUT,
@@ -945,37 +1139,37 @@ export class PackedInstall {
 	};
 
 	/**
-  * The packages a run packs, in the order it packs them, without packing
-  * anything: the carrier, the rest of the closure, then the `overrides`
-  * packages by name.
-  *
-  * **Details**
-  *
-  * The same implementation {@link PackedInstall.run} plans with, so for the
-  * same workspace and options the result equals the keys of
-  * `PackedInstallResult.tarballs`, in order. `options.closure` defaults to
-  * `"auto"`, and the run's own options object is accepted as it is. It
-  * fails as the run would before packing: `UnknownPackage`, `Discovery`,
-  * `InvalidOverride` or `Io`. Use it to size
-  * {@link PackedInstall.timeoutBudget} before the test is declared.
-  *
-  * **Example** (Plan the package closure to size a timeout budget)
-  *
-  * ```ts
-  * import { NodeServices } from "@effect/platform-node";
-  * import { Workspaces } from "./index.ts";
-  * import { PackedInstall } from "./testing.ts";
-  * import * as Effect from "effect/Effect";
-  * import * as Layer from "effect/Layer";
-  *
-  * const Live = Workspaces.layer({ cwd: "/repo" }).pipe(Layer.provideMerge(NodeServices.layer));
-  * const packages = await Effect.runPromise(PackedInstall.closure("my-tool").pipe(Effect.provide(Live)));
-  * const budget = PackedInstall.timeoutBudget({ managers: ["npm", "pnpm"], packages });
-  * ```
-  *
-  * @param carrier - The carrier, as the run's `carrier`.
-  * @param options - The closure and override options, as the run takes them.
-  */
+	 * The packages a run packs, in the order it packs them, without packing
+	 * anything: the carrier, the rest of the closure, then the `overrides`
+	 * packages by name.
+	 *
+	 * **Details**
+	 *
+	 * The same implementation {@link PackedInstall.run} plans with, so for the
+	 * same workspace and options the result equals the keys of
+	 * `PackedInstallResult.tarballs`, in order. `options.closure` defaults to
+	 * `"auto"`, and the run's own options object is accepted as it is. It
+	 * fails as the run would before packing: `UnknownPackage`, `Discovery`,
+	 * `InvalidOverride` or `Io`. Use it to size
+	 * {@link PackedInstall.timeoutBudget} before the test is declared.
+	 *
+	 * **Example** (Plan the package closure to size a timeout budget)
+	 *
+	 * ```ts
+	 * import { PackedInstall } from "@beep/scratchpad/effected/workspaces/PackedInstall";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = PackedInstall.closure("my-tool").pipe(
+	 *  Effect.map((packages) => PackedInstall.timeoutBudget({ managers: ["npm", "pnpm"], packages })),
+	 * );
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @param carrier - The carrier, as the run's `carrier`.
+	 * @param options - The closure and override options, as the run takes them.
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	static readonly closure = (
 		carrier: string,
 		options: PackedInstallClosureOptions = {},
@@ -983,48 +1177,46 @@ export class PackedInstall {
 		planClosure(carrier, options).pipe(Effect.map(namesOf), Effect.withSpan("PackedInstall.closure"));
 
 	/**
-  * {@link PackedInstall.timeoutBudget} for exactly the run `options`
-  * describes, planned from the options themselves.
-  *
-  * **Details**
-  *
-  * Plans the closure with {@link PackedInstall.closure} (the run's own
-  * planner, `overrides` and `workspaceOverrides` included) and takes
-  * `managers`, `installTimeout` and `packTimeout` from the same object, so
-  * nothing is written twice. `perConsumer` is the one input a run's options
-  * do not carry. It is an Effect because planning reads the workspace; in a
-  * vitest file, await it at module evaluation, since a test's timeout is
-  * fixed when the test is declared. Fails as `closure` does.
-  *
-  * **Example** (Derive a test timeout from packed-install options)
-  *
-  * ```ts
-  * import { NodeServices } from "@effect/platform-node";
-  * import { Workspaces } from "./index.ts";
-  * import type { PackedInstallOptions } from "./testing.ts";
-  * import { PackedInstall } from "./testing.ts";
-  * import * as Duration from "effect/Duration";
-  * import * as Effect from "effect/Effect";
-  * import * as Layer from "effect/Layer";
-  *
-  * const Live = Workspaces.layer({ cwd: "/repo" }).pipe(Layer.provideMerge(NodeServices.layer));
-  * const RUN: PackedInstallOptions = {
-  *   carrier: "my-tool",
-  *   closure: "auto",
-  *   managers: ["npm", "pnpm"],
-  *   bins: ["my-tool"],
-  *   env: process.env,
-  *   packTimeout: "30 seconds",
-  * };
-  * const budget = await Effect.runPromise(
-  *   PackedInstall.timeoutBudgetFor(RUN, { perConsumer: "1 minute" }).pipe(Effect.provide(Live)),
-  * );
-  * const TEST_TIMEOUT_MS = Duration.toMillis(budget) + 60_000;
-  * ```
-  *
-  * @param options - The run's options, the same object passed to `run`.
-  * @param extra - What the test does with each consumer afterwards.
-  */
+	 * {@link PackedInstall.timeoutBudget} for exactly the run `options`
+	 * describes, planned from the options themselves.
+	 *
+	 * **Details**
+	 *
+	 * Plans the closure with {@link PackedInstall.closure} (the run's own
+	 * planner, `overrides` and `workspaceOverrides` included) and takes
+	 * `managers`, `installTimeout` and `packTimeout` from the same object, so
+	 * nothing is written twice. `perConsumer` is the one input a run's options
+	 * do not carry. It is an Effect because planning reads the workspace; in a
+	 * vitest file, await it at module evaluation, since a test's timeout is
+	 * fixed when the test is declared. Fails as `closure` does.
+	 *
+	 * **Example** (Derive a test timeout from packed-install options)
+	 *
+	 * ```ts
+	 * import type { PackedInstallOptions } from "@beep/scratchpad/effected/workspaces/PackedInstall";
+	 * import { PackedInstall } from "@beep/scratchpad/effected/workspaces/PackedInstall";
+	 * import * as Duration from "effect/Duration";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const RUN: PackedInstallOptions = {
+	 *  carrier: "my-tool",
+	 *   closure: "auto",
+	 *   managers: ["npm", "pnpm"],
+	 *   bins: ["my-tool"],
+	 *   env: process.env,
+	 *   packTimeout: "30 seconds",
+	 * };
+	 * const program = PackedInstall.timeoutBudgetFor(RUN, { perConsumer: "1 minute" }).pipe(
+	 *   Effect.map((budget) => Duration.toMillis(budget) + 60_000),
+	 * );
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @param options - The run's options, the same object passed to `run`.
+	 * @param extra - What the test does with each consumer afterwards.
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	static readonly timeoutBudgetFor = (
 		options: PackedInstallOptions,
 		extra: { readonly perConsumer?: Duration.Input | undefined } = {},
@@ -1042,41 +1234,37 @@ export class PackedInstall {
 		);
 
 	/**
-  * Whether the pack source {@link PackedInstall.run} would read is on disk,
-  * before any package manager is spawned.
-  *
-  * **Details**
-  *
-  * Plans the closure as the run does (`PackedInstall.closure`'s planner) and
-  * checks the `package.json` of each closure package under `packFrom`
-  * (default `{ directory: "dist/prod/npm/pkg" }`), the same file whose
-  * absence makes the run fail `PackSourceMissing`. Under `packFrom: "source"`
-  * the packer builds nothing of its own, so nothing is checked and the
-  * result is ready. A package a bundler's dev build produced is no
-  * substitute: the prod output exists only after the prod build, which a
-  * test job's usual `build:dev` pre-step does not run. Pair it with
-  * {@link PackedInstall.gate} to skip locally and fail under CI.
-  *
-  * Fails as `closure` does, plus `Io` when a path cannot be inspected.
-  *
-  * **Example** (Check whether production pack sources exist)
-  *
-  * ```ts
-  * import { NodeServices } from "@effect/platform-node";
-  * import { Workspaces } from "./index.ts";
-  * import { PackedInstall } from "./testing.ts";
-  * import * as Effect from "effect/Effect";
-  * import * as Layer from "effect/Layer";
-  *
-  * const Live = Workspaces.layer({ cwd: "/repo" }).pipe(Layer.provideMerge(NodeServices.layer));
-  * const preflight = await Effect.runPromise(
-  *   PackedInstall.preflight({ carrier: "my-tool", closure: "auto" }).pipe(Effect.provide(Live)),
-  * );
-  * console.log(preflight.ready, preflight.missing);
-  * ```
-  *
-  * @param options - The run's carrier, closure, overrides and pack source.
-  */
+	 * Whether the pack source {@link PackedInstall.run} would read is on disk,
+	 * before any package manager is spawned.
+	 *
+	 * **Details**
+	 *
+	 * Plans the closure as the run does (`PackedInstall.closure`'s planner) and
+	 * checks the `package.json` of each closure package under `packFrom`
+	 * (default `{ directory: "dist/prod/npm/pkg" }`), the same file whose
+	 * absence makes the run fail `PackSourceMissing`. Under `packFrom: "source"`
+	 * the packer builds nothing of its own, so nothing is checked and the
+	 * result is ready. A package a bundler's dev build produced is no
+	 * substitute: the prod output exists only after the prod build, which a
+	 * test job's usual `build:dev` pre-step does not run. Pair it with
+	 * {@link PackedInstall.gate} to skip locally and fail under CI.
+	 *
+	 * Fails as `closure` does, plus `Io` when a path cannot be inspected.
+	 *
+	 * **Example** (Check whether production pack sources exist)
+	 *
+	 * ```ts
+	 * import { PackedInstall } from "@beep/scratchpad/effected/workspaces/PackedInstall";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = PackedInstall.preflight({ carrier: "my-tool", closure: "auto" });
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @param options - The run's carrier, closure, overrides and pack source.
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	static readonly preflight: (
 		options: PackedInstallPreflightOptions,
 	) => Effect.Effect<
@@ -1101,42 +1289,45 @@ export class PackedInstall {
 	});
 
 	/**
-  * Turns a {@link PackedInstallPreflight} into the suite's decision: run,
-  * skip locally, or fail under CI.
-  *
-  * **Details**
-  *
-  * `CI` is read through `Config`, so the ambient `ConfigProvider` decides —
-  * the process environment at a test file's top level, and whatever a test
-  * provides in a test; nothing here reads `process`. `CI` counts as set when
-  * it is present and not `""`, `"0"` or `"false"` (case-insensitive), and an
-  * unreadable `CI` counts as unset. Ready is always `"run"`;
-  * missing is `"skip"` off CI and `"fail"` on it, so a CI job that never ran
-  * the prod build cannot pass by silently skipping the proof. The message
-  * names every missing path. The test job must run the prod build
-  * (`build:prod` for a `@savvy-web/bundler` package) before the packed-install
-  * tests: a dev build leaves `dist/prod` absent.
-  *
-  * **Example** (Gate packed-install tests on preflight readiness)
-  *
-  * ```ts
-  * import { assert, describe, it } from "@effect/vitest";
-  * import { PackedInstall } from "./testing.ts";
-  * import * as Effect from "effect/Effect";
-  *
-  * declare const preflight: { readonly ready: boolean; readonly missing: ReadonlyArray<string> };
-  * const gate = Effect.runSync(PackedInstall.gate(preflight));
-  *
-  * describe.runIf(gate.action === "run")("packed install", () => {
-  *   it("installs", () => {});
-  * });
-  * describe.runIf(gate.action === "fail")("packed install prod build", () => {
-  *   it("exists", () => assert.fail(gate.message));
-  * });
-  * ```
-  *
-  * @param preflight - What {@link PackedInstall.preflight} answered.
-  */
+	 * Turns a {@link PackedInstallPreflight} into the suite's decision: run,
+	 * skip locally, or fail under CI.
+	 *
+	 * **Details**
+	 *
+	 * `CI` is read through `Config`, so the ambient `ConfigProvider` decides —
+	 * the process environment at a test file's top level, and whatever a test
+	 * provides in a test; nothing here reads `process`. `CI` counts as set when
+	 * it is present and not `""`, `"0"` or `"false"` (case-insensitive), and an
+	 * unreadable `CI` counts as unset. Ready is always `"run"`;
+	 * missing is `"skip"` off CI and `"fail"` on it, so a CI job that never ran
+	 * the prod build cannot pass by silently skipping the proof. The message
+	 * names every missing path. The test job must run the prod build
+	 * (`build:prod` for a `@savvy-web/bundler` package) before the packed-install
+	 * tests: a dev build leaves `dist/prod` absent.
+	 *
+	 * **Example** (Gate packed-install tests on preflight readiness)
+	 *
+	 * ```ts
+	 * import { assert, describe, it } from "@effect/vitest";
+	 * import { PackedInstall } from "@beep/scratchpad/effected/workspaces/PackedInstall";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const preflight = { ready: true, missing: [] };
+	 * const gate = Effect.runSync(PackedInstall.gate(preflight));
+	 *
+	 * describe.runIf(gate.action === "run")("packed install", () => {
+	 *  it("is ready", () => assert.strictEqual(preflight.ready, true));
+	 * });
+	 * describe.runIf(gate.action === "fail")("packed install prod build", () => {
+	 *   it("exists", () => assert.fail(gate.message));
+	 * });
+	 * console.log(gate.action) // run
+	 * ```
+	 *
+	 * @param preflight - What {@link PackedInstall.preflight} answered.
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	static readonly gate = Effect.fn("gate")(function* (preflight: PackedInstallPreflight): Effect.fn.Return<PackedInstallGate> {
 			if (preflight.ready) return { action: "run", message: "" } satisfies PackedInstallGate;
 			const ci = yield* Config.option(Config.String("CI")).pipe(Effect.orElseSucceed(O.none<string>));
@@ -1149,7 +1340,28 @@ export class PackedInstall {
 			) satisfies PackedInstallGate;
 		});
 
-	/** Pack, then install under every available manager. */
+	/**
+	 * Pack, then install under every available manager.
+	 *
+	 * **Example** (Construct a scoped packed-install proof)
+	 *
+	 * ```ts
+	 * import { PackedInstall } from "@beep/scratchpad/effected/workspaces/PackedInstall";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = PackedInstall.run({
+	 *   carrier: "my-tool",
+	 *   closure: "auto",
+	 *   managers: ["npm", "pnpm"],
+	 *   bins: ["my-tool"],
+	 *   env: {},
+	 * }).pipe(Effect.scoped);
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	static readonly run = Effect.fn("PackedInstall.run")(function* (options: PackedInstallOptions) {
 		const fs = yield* FileSystem.FileSystem;
 		const path = yield* Path.Path;

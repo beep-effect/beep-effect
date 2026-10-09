@@ -1,23 +1,7 @@
 # workspaces (lab port of @effected/workspaces)
 
-[![npm](https://img.shields.io/npm/v/@effected%2Fworkspaces?label=npm&color=cb3837)](https://www.npmjs.com/package/@effected/workspaces)
-[![License: MIT](https://img.shields.io/badge/License-MIT-4caf50.svg)](https://opensource.org/licenses/MIT)
-[![Node.js %3E%3D24.11.0](https://img.shields.io/badge/Node.js-%3E%3D24.11.0-5fa04e.svg)](https://nodejs.org/)
-[![TypeScript 7.0](https://img.shields.io/badge/TypeScript-7.0-3178c6.svg)](https://www.typescriptlang.org/)
 
 Monorepo workspace tooling for [Effect](https://effect.website) v4: find the workspace root, enumerate its packages, walk the dependency graph, detect the package manager, resolve pnpm catalogs, read the lockfile, check it for unsatisfied peer dependencies and work out which packages a git range touches. Every capability is a service you provide at the edge and swap in tests. Works with npm, pnpm, yarn Berry and bun.
-
-> **Pre-`1.0.0`.** This package is part of the `@effected/*` kit, built on stable
-> Effect v4 (`effect` `^4.0.0`) and still in `0.x` development. Stable Effect
-> makes a kit `1.0.0` possible, not automatic. To keep your `effect` and
-> `@effect/*` versions on the line the kit is built and tested against, install
-> [`@effected/pnpm-plugin-effect`](https://www.npmjs.com/package/@effected/pnpm-plugin-effect).
->
-> **Stability: unstable.** This package's API surface is not yet considered
-> complete and may change across `0.x` releases. Pin an exact version — even a
-> package marked *stable* before `1.0.0` can introduce a breaking change by
-> accident, and an exact pin turns that into a type-check error rather than a
-> runtime surprise. Full policy: [release strategy](https://github.com/spencerbeggs/effected#release-strategy).
 
 ## Why @effected/workspaces
 
@@ -26,16 +10,6 @@ Monorepo tooling keeps re-deriving the same facts: where the root is, which dire
 Discovery is honest about what a glob means. A `packages/**` pattern finds packages nested more than one level deep, because the enumerator does a bounded descent rather than the one-level approximation that a trailing-`**` rewrite quietly turns it into — and a package that goes undiscovered with no diagnostic is the worst kind of wrong, because an empty result is indistinguishable from a legitimately empty workspace. The same discipline runs through the error model: a malformed `package.json`, an unenumerable pattern, a missing lockfile and a failed git command all fail through the typed channel with structured fields, while a developer wiring mistake (an uncompilable glob literal, a fractional `maxDepth`) stays a defect. The typed channel is exactly the set of things a caller can branch on.
 
 Git runs through `@effected/git`'s `Git` service rather than a hard-coded subprocess call, so change detection is testable with no repository on disk and portable to a runtime that spawns processes differently. And where `@effected/npm` declares the `CatalogResolver` and `WorkspaceResolver` seams — contracts that `@effected/package-json` consumes but no pure package can fill — this is the package that fills them.
-
-## Install
-
-```bash
-npm install @effected/workspaces effect
-```
-
-```bash
-pnpm add @effected/workspaces effect
-```
 
 Requires Node.js >=24.11.0. `effect` v4 is a peer dependency. You provide a `FileSystem` and `Path` implementation at the edge — `@effect/platform-node` or `@effect/platform-bun`.
 
@@ -47,8 +21,9 @@ pnpm's catalog semantics come from pnpm's own `@pnpm/catalogs.*` packages, which
 
 ```ts
 import { NodeFileSystem, NodePath } from "@effect/platform-node";
-import { DependencyGraph, WorkspaceDiscovery, Workspaces } from "@effected/workspaces";
-import { Effect, Layer } from "effect";
+import { DependencyGraph, WorkspaceDiscovery, Workspaces } from "@beep/scratchpad/effected/workspaces/index";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 
 // Bind the layer to a const: layers memoize by reference, so calling
 // Workspaces.layer() twice builds the whole stack twice.
@@ -75,7 +50,7 @@ Effect.runPromise(program.pipe(Effect.provide(WorkspacesLayer))).then(console.lo
 `toMermaid()` renders the same graph for a job summary, an issue or a design doc. It is total, deterministic (nodes and edges both in sorted order) and safe for scoped names, which appear only inside quoted labels:
 
 ```ts
-import { DependencyGraph, WorkspacePackage } from "@effected/workspaces";
+import { DependencyGraph, WorkspacePackage } from "@beep/scratchpad/effected/workspaces/index";
 
 const member = (name: string, dependencies: Record<string, string> = {}) =>
   WorkspacePackage.make({
@@ -104,8 +79,9 @@ console.log(graph.toMermaid());
 
 ```ts
 import { NodeServices } from "@effect/platform-node";
-import { ChangeDetectionOptions, ChangeDetector, Workspaces } from "@effected/workspaces";
-import { Effect, Layer } from "effect";
+import { ChangeDetectionOptions, ChangeDetector, Workspaces } from "@beep/scratchpad/effected/workspaces/index";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 
 // layerWithGit runs ChangeDetector over @effected/git's Git service; NodeServices
 // provides the ChildProcessSpawner it needs, alongside FileSystem and Path.
@@ -130,8 +106,8 @@ Git is a separate layer rather than a flag, because the extra requirement is a s
 It also supplies the real implementations of `@effected/npm`'s `CatalogResolver` and `WorkspaceResolver` contracts — the seams `@effected/package-json` reads through, which without a workspace under them can only answer `Option.none()`. Provide `Workspaces.resolvers` and `Package.resolve` rewrites `catalog:` and `workspace:` specifiers to concrete ranges:
 
 ```ts
-import { Workspaces } from "@effected/workspaces";
-import { Layer } from "effect";
+import { Workspaces } from "@beep/scratchpad/effected/workspaces/index";
+import * as Layer from "effect/Layer";
 
 const WorkspacesLayer = Workspaces.layer();
 const Resolvers = Workspaces.resolvers.pipe(Layer.provide(WorkspacesLayer));
@@ -143,9 +119,9 @@ const Resolvers = Workspaces.resolvers.pipe(Layer.provide(WorkspacesLayer));
 For whole manifests, `Workspaces.resolveManifest` is the one-shot path over `@effected/npm`'s tolerant `Manifest` model:
 
 ```ts
-import { Manifest } from "@effected/npm";
-import { Workspaces } from "@effected/workspaces";
-import { Effect } from "effect";
+import { Manifest } from "@beep/scratchpad/effected/npm/index";
+import { Workspaces } from "@beep/scratchpad/effected/workspaces/index";
+import * as Effect from "effect/Effect";
 
 const program = Effect.gen(function* () {
   const manifest = yield* Manifest.decode({ dependencies: { effect: "catalog:" } });
@@ -163,8 +139,8 @@ A specifier the workspace cannot answer fails typed as `UnresolvedDependencyErro
 `PeerCheck.run(lockfile, options?)` reports unsatisfied peer dependencies as a pure value: no IO, no error channel, nothing in `R`, and no per-manager traversal logic. It reads `lockfile.format` once, to reject a format whose lockfile does not record peer resolution; past that gate the walk is the same for every manager. The answer comes from the resolved graph `@effected/lockfiles` normalizes, not from shelling out to a package manager's own peer command — bun has none, so the subprocess route cannot answer for every manager the rest of this package supports.
 
 ```ts
-import { LockfileReader, PeerCheck, WorkspaceCatalogs, WorkspaceDiscovery } from "@effected/workspaces";
-import { Effect } from "effect";
+import { LockfileReader, PeerCheck, WorkspaceCatalogs, WorkspaceDiscovery } from "@beep/scratchpad/effected/workspaces/index";
+import * as Effect from "effect/Effect";
 
 const program = Effect.gen(function* () {
   const reader = yield* LockfileReader;
@@ -215,8 +191,8 @@ The `catalogs` option takes `WorkspaceCatalogs.set()`, which already includes ho
 Vitest's config-time project discovery cannot await. Two functions exist for exactly that case, and they run synchronously over file and path operations you supply. On Node you do not have to write them: the `@effected/workspaces/node-sync` subpath exports `nodeSyncOps`, the ready-made `node:fs` and `node:path` bindings, so adopting the sync path is one extra import.
 
 ```ts
-import { findWorkspaceRootSync, getWorkspacePackagesSync } from "@effected/workspaces";
-import { nodeSyncOps } from "@effected/workspaces/node-sync";
+import { findWorkspaceRootSync, getWorkspacePackagesSync } from "@beep/scratchpad/effected/workspaces/index";
+import { nodeSyncOps } from "@beep/scratchpad/effected/workspaces/node-sync";
 
 const root = findWorkspaceRootSync(process.cwd(), nodeSyncOps);
 const packages = root === null ? [] : getWorkspacePackagesSync(root, nodeSyncOps);
@@ -231,7 +207,7 @@ Write the operations yourself when Node's built-ins are not the platform you mea
 ```ts
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import * as path from "node:path";
-import { findWorkspaceRootSync, getWorkspacePackagesSync } from "@effected/workspaces";
+import { findWorkspaceRootSync, getWorkspacePackagesSync } from "@beep/scratchpad/effected/workspaces/index";
 
 const options = {
   fileSystem: {
@@ -255,7 +231,7 @@ Each entry reports `name`, `isDirectory` and `isSymbolicLink` as a `SyncDirector
 
 ```ts
 import { readdirSync } from "node:fs";
-import type { SyncDirectoryEntry } from "@effected/workspaces";
+import type { SyncDirectoryEntry } from "@beep/scratchpad/effected/workspaces/index";
 
 const readDirectoryWithTypes = (p: string): ReadonlyArray<SyncDirectoryEntry> =>
   readdirSync(p, { withFileTypes: true }).map((entry) => ({
@@ -296,9 +272,10 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, layer } from "@effect/vitest";
-import { Workspaces } from "@effected/workspaces";
-import { LayerPolicy, WorkspaceLayering } from "@effected/workspaces/testing";
-import { Effect, Layer } from "effect";
+import { Workspaces } from "@beep/scratchpad/effected/workspaces/index";
+import { LayerPolicy, WorkspaceLayering } from "@beep/scratchpad/effected/workspaces/testing";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const Live = Workspaces.layer({ cwd: ROOT }).pipe(Layer.provideMerge(NodeServices.layer));
@@ -329,8 +306,8 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, layer } from "@effect/vitest";
-import { SourceBoundary } from "@effected/workspaces/testing";
-import { Effect } from "effect";
+import { SourceBoundary } from "@beep/scratchpad/effected/workspaces/testing";
+import * as Effect from "effect/Effect";
 
 const SRC = join(dirname(fileURLToPath(import.meta.url)), "..", "src");
 
@@ -420,10 +397,12 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, layer } from "@effect/vitest";
-import { McpProbe } from "@effected/mcp/testing";
-import { Workspaces } from "@effected/workspaces";
-import { PackedInstall } from "@effected/workspaces/testing";
-import { Duration, Effect, Layer } from "effect";
+import { McpProbe } from "@beep/scratchpad/effected/mcp/testing";
+import { Workspaces } from "@beep/scratchpad/effected/workspaces/index";
+import { PackedInstall } from "@beep/scratchpad/effected/workspaces/testing";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const Live = Workspaces.layer({ cwd: ROOT }).pipe(Layer.provideMerge(NodeServices.layer));
@@ -501,8 +480,8 @@ The installs run one after another. `timeoutBudget` adds each manager's `--versi
 Every failure is a `Schema.TaggedError` with structured fields you can branch on, not a prose string:
 
 ```ts
-import { WorkspaceDiscovery, WorkspacePatternError } from "@effected/workspaces";
-import { Effect } from "effect";
+import { WorkspaceDiscovery, WorkspacePatternError } from "@beep/scratchpad/effected/workspaces/index";
+import * as Effect from "effect/Effect";
 
 const program = Effect.gen(function* () {
   const discovery = yield* WorkspaceDiscovery;
@@ -522,8 +501,8 @@ const program = Effect.gen(function* () {
 Every service here can be replaced with `Layer.succeed` and a hand-built value, and `WorkspaceDiscovery` ships that pattern ready-made: `WorkspaceDiscovery.layerTest(overrides)` provides an in-memory double where a test stubs only the methods it exercises. The defaults model an empty workspace, and the derived methods run over the effective `listPackages`, so stubbing that one method keeps `getPackage`, `importerMap` and `resolveFile` answering consistently:
 
 ```ts
-import { WorkspaceDiscovery, WorkspacePackage } from "@effected/workspaces";
-import { Effect } from "effect";
+import { WorkspaceDiscovery, WorkspacePackage } from "@beep/scratchpad/effected/workspaces/index";
+import * as Effect from "effect/Effect";
 
 // Bind to a const — layers memoize by reference.
 const TestDiscovery = WorkspaceDiscovery.layerTest({

@@ -22,7 +22,18 @@ const $I = $ScratchpadId.create("effected/workspaces/WorkspaceLayering");
 /**
  * One dependency edge between two workspace packages, in one field.
  *
+ * **Example** (Describe a workspace dependency edge)
+ *
+ * ```ts
+ * import { LayerEdge } from "@beep/scratchpad/effected/workspaces/WorkspaceLayering";
+ *
+ * const edge = LayerEdge.make({ from: "@app/web", to: "@app/core", field: "dependencies" });
+ * console.log(edge.label) // @app/web -> @app/core (dependencies)
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class LayerEdge extends S.Class<LayerEdge>($I`LayerEdge`)({
 	/** The dependent package. */
@@ -32,7 +43,21 @@ export class LayerEdge extends S.Class<LayerEdge>($I`LayerEdge`)({
 	/** The manifest map that declares it. */
 	field: DependencyField.annotateKey({ description: "The manifest map that declares it." }),
 }, $I.annote("LayerEdge", { description: "One dependency edge between two workspace packages, in one field." })) {
-	/** `from -> to (field)`. */
+	/**
+	 * Renders the dependent, dependency and declaring field as `from -> to (field)`.
+	 *
+	 * **Example** (Render the declaring field of an edge)
+	 *
+	 * ```ts
+	 * import { LayerEdge } from "@beep/scratchpad/effected/workspaces/WorkspaceLayering";
+	 *
+	 * const edge = LayerEdge.make({ from: "@app/web", to: "@app/core", field: "dependencies" });
+	 * console.log(edge.label) // @app/web -> @app/core (dependencies)
+	 * ```
+	 *
+	 * @category formatting
+	 * @since 0.0.0
+	 */
 	get label(): string {
 		return `${this.from} -> ${this.to} (${this.field})`;
 	}
@@ -42,6 +67,8 @@ export class LayerEdge extends S.Class<LayerEdge>($I`LayerEdge`)({
  * The input to {@link WorkspaceLayering.check}: package names, and per-field edges between them.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface LayeringGraph {
 	/** Every workspace package name, the root included. */
@@ -56,7 +83,22 @@ type OffenceReason = typeof OffenceReason.Type;
 /**
  * What a layering check found.
  *
+ * **Example** (Detect a vacuous layering check)
+ *
+ * ```ts
+ * import { LayeringReport } from "@beep/scratchpad/effected/workspaces/WorkspaceLayering";
+ * import * as O from "effect/Option";
+ *
+ * const report = LayeringReport.make({
+ *   duplicates: [], unclassified: [], offenders: [], cycle: O.none(),
+ *   missingDeclared: [], missingRequiredEdges: [], edgeCount: 0,
+ * });
+ * console.log(report.violations.join("\n")) // no workspace edges in the checked fields: the check is vacuous
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class LayeringReport extends S.Class<LayeringReport>($I`LayeringReport`)({
 	/** Packages the policy declares more than once, or declares and also matches with an unconstrained glob. */
@@ -79,7 +121,25 @@ export class LayeringReport extends S.Class<LayeringReport>($I`LayeringReport`)(
 	/** Edges in the checked fields; `0` is itself a violation. */
 	edgeCount: S.Finite.annotateKey({ description: "Edges in the checked fields; `0` is itself a violation." }),
 }, $I.annote("LayeringReport", { description: "What a layering check found." })) {
-	/** One line per violation: `[]` means the graph honours the policy and the check was not vacuous. */
+	/**
+	 * One line per violation: `[]` means the graph honours the policy and the check was not vacuous.
+	 *
+	 * **Example** (Render the vacuity violation)
+	 *
+	 * ```ts
+	 * import { LayeringReport } from "@beep/scratchpad/effected/workspaces/WorkspaceLayering";
+	 * import * as O from "effect/Option";
+	 *
+	 * const report = LayeringReport.make({
+	 *   duplicates: [], unclassified: [], offenders: [], cycle: O.none(),
+	 *   missingDeclared: [], missingRequiredEdges: [], edgeCount: 0,
+	 * });
+	 * console.log(report.violations.join("\n")) // no workspace edges in the checked fields: the check is vacuous
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	get violations(): ReadonlyArray<string> {
 		return [
 			...this.duplicates.map((name) => `classified more than once: ${name}`),
@@ -151,27 +211,47 @@ const cycleOf = (
  * **Example** (Check workspace dependencies against a layer policy)
  *
  * ```ts
- * import { NodeServices } from "@effect/platform-node";
- * import { Workspaces } from "./index.ts";
- * import { LayerPolicy, WorkspaceLayering } from "./testing.ts";
+ * import { WorkspaceLayering } from "@beep/scratchpad/effected/workspaces/WorkspaceLayering";
+ * import { LayerPolicy } from "@beep/scratchpad/effected/workspaces/LayerPolicy";
  * import * as Effect from "effect/Effect";
- * import * as Layer from "effect/Layer";
- *
- * const Live = Workspaces.layer({ cwd: "/repo" }).pipe(Layer.provideMerge(NodeServices.layer));
  *
  * const violations = Effect.gen(function* () {
  *   const policy = yield* LayerPolicy.load("/repo/layers.json");
  *   const report = yield* WorkspaceLayering.checkWorkspace(policy);
  *   return report.violations;
- * }).pipe(Effect.provide(Live));
+ * });
+ * console.log(Effect.isEffect(violations)) // true
  * ```
  *
  * @public
+ * @category utilities
+ * @since 0.0.0
  */
 export class WorkspaceLayering {
 	private constructor() {}
 
-	/** Check `graph` against `policy`, reading only the policy's fields. Pure. */
+	/**
+	 * Check `graph` against `policy`, reading only the policy's fields. Pure.
+	 *
+	 * **Example** (Check a downward dependency)
+	 *
+	 * ```ts
+	 * import { LayerEdge, WorkspaceLayering } from "@beep/scratchpad/effected/workspaces/WorkspaceLayering";
+	 * import { LayerPolicy } from "@beep/scratchpad/effected/workspaces/LayerPolicy";
+	 *
+	 * const policy = LayerPolicy.make({
+	 *   layers: [["@app/web"], ["@app/core"]], tooling: [], unconstrained: [],
+	 * });
+	 * const report = WorkspaceLayering.check({
+	 *   names: ["@app/web", "@app/core"],
+	 *   edges: [LayerEdge.make({ from: "@app/web", to: "@app/core", field: "dependencies" })],
+	 * }, policy);
+	 * console.log(report.violations.length) // 0
+	 * ```
+	 *
+	 * @category validation
+	 * @since 0.0.0
+	 */
 	static readonly check = (graph: LayeringGraph, policy: LayerPolicy): LayeringReport => {
 		const fields = MutableHashSet.fromIterable<DependencyField>(policy.effectiveFields);
 		const edges = graph.edges.filter((e) => MutableHashSet.has(fields, e.field));
@@ -223,7 +303,30 @@ export class WorkspaceLayering {
 		});
 	};
 
-	/** One edge per declaring field between workspace packages; self-edges dropped. */
+	/**
+	 * One edge per declaring field between workspace packages; self-edges dropped.
+	 *
+	 * **Example** (Enumerate a dependency between workspace members)
+	 *
+	 * ```ts
+	 * import { WorkspaceLayering } from "@beep/scratchpad/effected/workspaces/WorkspaceLayering";
+	 * import { WorkspacePackage } from "@beep/scratchpad/effected/workspaces/WorkspacePackage";
+	 *
+	 * const web = WorkspacePackage.make({
+	 *   name: "@app/web", path: "/repo/packages/web", relativePath: "packages/web",
+	 *   packageJsonPath: "/repo/packages/web/package.json", workspaceRoot: "/repo",
+	 *   dependencies: { "@app/core": "workspace:*" },
+	 * });
+	 * const core = WorkspacePackage.make({
+	 *   name: "@app/core", path: "/repo/packages/core", relativePath: "packages/core",
+	 *   packageJsonPath: "/repo/packages/core/package.json", workspaceRoot: "/repo",
+	 * });
+	 * console.log(WorkspaceLayering.edgesOf([web, core]).map((edge) => edge.label).join(", ")) // @app/web -> @app/core (dependencies)
+	 * ```
+	 *
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	static readonly edgesOf = (packages: ReadonlyArray<WorkspacePackage>): ReadonlyArray<LayerEdge> => {
 		const names = MutableHashSet.fromIterable(packages.map((pkg) => pkg.name));
 		return packages.flatMap((pkg) =>
@@ -236,7 +339,24 @@ export class WorkspaceLayering {
 		);
 	};
 
-	/** Discover the workspace and check it against `policy`. */
+	/**
+	 * Discover the workspace and check it against `policy`.
+	 *
+	 * **Example** (Construct a workspace policy check)
+	 *
+	 * ```ts
+	 * import { WorkspaceLayering } from "@beep/scratchpad/effected/workspaces/WorkspaceLayering";
+	 * import { LayerPolicy } from "@beep/scratchpad/effected/workspaces/LayerPolicy";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const policy = LayerPolicy.make({ layers: [], tooling: [], unconstrained: ["*"] });
+	 * const program = WorkspaceLayering.checkWorkspace(policy);
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @category validation
+	 * @since 0.0.0
+	 */
 	static readonly checkWorkspace = Effect.fn("WorkspaceLayering.checkWorkspace")(function* (policy: LayerPolicy) {
 		const discovery = yield* WorkspaceDiscovery;
 		const packages = yield* discovery.listPackages;

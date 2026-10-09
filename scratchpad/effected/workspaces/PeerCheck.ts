@@ -90,7 +90,17 @@ const $I = $ScratchpadId.create("effected/workspaces/PeerCheck");
  * All four mean **fail closed**: a gate should treat an unverified report as
  * "not proven clean" rather than as a pass.
  *
+ * **Example** (Recognize an incomplete report reason)
+ *
+ * ```ts
+ * import { UnverifiedReason } from "@beep/scratchpad/effected/workspaces/PeerCheck";
+ * import * as S from "effect/Schema";
+ * console.log(S.is(UnverifiedReason)("unresolvedEdge")) // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const UnverifiedReason = LiteralKit([
 	"peerRulesNotApplied",
@@ -98,6 +108,12 @@ export const UnverifiedReason = LiteralKit([
 	"peerRangeUnresolved",
 	"peerVersionUnresolved",
 ]).pipe($I.annoteSchema("UnverifiedReason", { description: "Why a peer report is not a complete answer." }));
+/**
+ * The decoded reason an incomplete peer report cannot prove cleanliness.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type UnverifiedReason = typeof UnverifiedReason.Type;
 
 /**
@@ -119,59 +135,63 @@ export type UnverifiedReason = typeof UnverifiedReason.Type;
  * range. The two list axes are name patterns, never `parent>peer` keys.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface PeerCheckOptions {
-	/** The workspace's effective rules, from `WorkspaceCatalogs.peerDependencyRules()`. */
+	/**
+	 * The workspace's effective rules, from `WorkspaceCatalogs.peerDependencyRules()`.
+	 */
 	readonly peerDependencyRules?: PeerDependencyRules;
 	/**
-  * The workspace's discovered packages, from `WorkspaceDiscovery` — the
-  * manifests a `link:`-resolved parent's peers have to be read from,
-  * because the lockfile does not record them.
-  *
-  * **Details**
-  *
-  * **Supplying this key is what turns a `link:` edge from a refusal into an
-  * answer.** pnpm records no peer declarations for workspace projects, so a
-  * parent reached through `link:` joins at best to a row whose peers are
-  * empty *by design*; with the manifests supplied, that parent's declared
-  * peers are joined and judged instead. A `link:` target absent from the
-  * supplied set — and every target, when the key is omitted — keeps the
-  * report's `"unresolvedEdge"` marker, on the same presence-is-the-
-  * assertion rule as `peerDependencyRules`.
-  *
-  * A `link:` target matches a package when it names the package's
-  * `relativePath` — the POSIX workspace-relative directory the lockfile's
-  * importer paths are spelled in — or its publish directory: pnpm links a
-  * workspace dependency INTO `publishConfig.directory` unless
-  * `publishConfig.linkDirectory` is `false` (it defaults to true), so the
-  * lockfile then records `link:../a/dist`. Both spellings are normalized,
-  * and the caller passes what discovery produced without re-spelling
-  * anything.
-  *
-  * For a publish-directory link, pnpm reads the peers from the manifest AT
-  * the link target — the built one — while this check reads the supplied
-  * source manifest and resolves its `catalog:` ranges through
-  * {@link PeerCheckOptions.catalogs}. The two agree when the build emits the
-  * peer ranges the source's specifiers resolve to, which is the contract a
-  * publish-directory build keeps.
-  */
+	 * The workspace's discovered packages, from `WorkspaceDiscovery` — the
+	 * manifests a `link:`-resolved parent's peers have to be read from,
+	 * because the lockfile does not record them.
+	 *
+	 * **Details**
+	 *
+	 * **Supplying this key is what turns a `link:` edge from a refusal into an
+	 * answer.** pnpm records no peer declarations for workspace projects, so a
+	 * parent reached through `link:` joins at best to a row whose peers are
+	 * empty *by design*; with the manifests supplied, that parent's declared
+	 * peers are joined and judged instead. A `link:` target absent from the
+	 * supplied set — and every target, when the key is omitted — keeps the
+	 * report's `"unresolvedEdge"` marker, on the same presence-is-the-
+	 * assertion rule as `peerDependencyRules`.
+	 *
+	 * A `link:` target matches a package when it names the package's
+	 * `relativePath` — the POSIX workspace-relative directory the lockfile's
+	 * importer paths are spelled in — or its publish directory: pnpm links a
+	 * workspace dependency INTO `publishConfig.directory` unless
+	 * `publishConfig.linkDirectory` is `false` (it defaults to true), so the
+	 * lockfile then records `link:../a/dist`. Both spellings are normalized,
+	 * and the caller passes what discovery produced without re-spelling
+	 * anything.
+	 *
+	 * For a publish-directory link, pnpm reads the peers from the manifest AT
+	 * the link target — the built one — while this check reads the supplied
+	 * source manifest and resolves its `catalog:` ranges through
+	 * {@link PeerCheckOptions.catalogs}. The two agree when the build emits the
+	 * peer ranges the source's specifiers resolve to, which is the contract a
+	 * publish-directory build keeps.
+	 */
 	readonly workspacePackages?: ReadonlyArray<WorkspacePackage>;
 	/**
-  * The workspace's catalogs, from `WorkspaceCatalogs.set()` — which already
-  * includes any catalogs a config-dependency hook injects.
-  *
-  * **Details**
-  *
-  * A joined manifest may declare a peer as `catalog:` or `catalog:<name>`
-  * rather than as a range. With this key supplied, such a specifier is
-  * resolved through the set and the RESOLVED range is judged and reported
-  * as `wanted`, which is what `pnpm peers check` reports as `wantedRange`.
-  * A specifier the set names nothing for — and every `catalog:` specifier,
-  * when the key is omitted — cannot be judged against a provider, and the
-  * report carries `"peerRangeUnresolved"` rather than calling the peer
-  * satisfied: the same presence-is-the-assertion rule as the other two
-  * keys.
-  */
+	 * The workspace's catalogs, from `WorkspaceCatalogs.set()` — which already
+	 * includes any catalogs a config-dependency hook injects.
+	 *
+	 * **Details**
+	 *
+	 * A joined manifest may declare a peer as `catalog:` or `catalog:<name>`
+	 * rather than as a range. With this key supplied, such a specifier is
+	 * resolved through the set and the RESOLVED range is judged and reported
+	 * as `wanted`, which is what `pnpm peers check` reports as `wantedRange`.
+	 * A specifier the set names nothing for — and every `catalog:` specifier,
+	 * when the key is omitted — cannot be judged against a provider, and the
+	 * report carries `"peerRangeUnresolved"` rather than calling the peer
+	 * satisfied: the same presence-is-the-assertion rule as the other two
+	 * keys.
+	 */
 	readonly catalogs?: CatalogSet;
 }
 
@@ -184,12 +204,26 @@ export interface PeerCheckOptions {
  * Mirrors the shape `pnpm peers check --json` reports, so the two can be
  * compared directly.
  *
+ * **Example** (Record the declaring package)
+ *
+ * ```ts
+ * import { PeerParent } from "@beep/scratchpad/effected/workspaces/PeerCheck";
+ * const parent = PeerParent.make({ name: "react-dom", version: "18.3.1" });
+ * console.log(parent.name) // react-dom
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class PeerParent extends S.Class<PeerParent>($I`PeerParent`)({
-	/** The package name. */
+	/**
+	 * The package name.
+	 */
 	name: S.NonEmptyString.annotateKey({ description: "The package name." }),
-	/** The resolved version of that package. */
+	/**
+	 * The resolved version of that package.
+	 */
 	version: S.String.annotateKey({ description: "The resolved version of that package." }),
 }, $I.annote("PeerParent", { description: "One link in the chain from an importer to the package that declared an unsatisfied peer." })) {}
 
@@ -218,25 +252,49 @@ export class PeerParent extends S.Class<PeerParent>($I`PeerParent`)({
  * `pnpm peers check` reports for the same graph. Read `parents` as *a* route to
  * the declaring package, never as the complete set of them.
  *
+ * **Example** (Record a missing required peer)
+ *
+ * ```ts
+ * import { UnsatisfiedPeer } from "@beep/scratchpad/effected/workspaces/PeerCheck";
+ * const peer = UnsatisfiedPeer.make({ importer: ".", dependency: "react", wanted: "^18.0.0", found: null, optional: false, parents: [] });
+ * console.log(peer.found) // null
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class UnsatisfiedPeer extends S.Class<UnsatisfiedPeer>($I`UnsatisfiedPeer`)({
-	/** The importer path the problem belongs to (`"."` for the root). */
+	/**
+	 * The importer path the problem belongs to (`"."` for the root).
+	 */
 	importer: S.NonEmptyString.annotateKey({ description: "The importer path the problem belongs to (`\".\"` for the root)." }),
-	/** The peer dependency's name. */
+	/**
+	 * The peer dependency's name.
+	 */
 	dependency: S.NonEmptyString.annotateKey({ description: "The peer dependency's name." }),
-	/** The range the declaring package asked for. */
+	/**
+	 * The range the declaring package asked for.
+	 */
 	wanted: S.String.annotateKey({ description: "The range the declaring package asked for." }),
-	/** The version that resolved, or `null` when nothing resolved. */
+	/**
+	 * The version that resolved, or `null` when nothing resolved.
+	 */
 	found: S.NullOr(S.String).annotateKey({ description: "The version that resolved, or `null` when nothing resolved." }),
-	/** Whether the declaring package marked the peer optional. */
+	/**
+	 * Whether the declaring package marked the peer optional.
+	 */
 	optional: S.Boolean.annotateKey({ description: "Whether the declaring package marked the peer optional." }),
-	/** The path from the importer to the declaring package. */
+	/**
+	 * The path from the importer to the declaring package.
+	 */
 	parents: S.Array(PeerParent).annotateKey({ description: "The path from the importer to the declaring package." }),
 }, $I.annote("UnsatisfiedPeer", { description: "One peer dependency that is declared but not satisfied." })) {}
 
 /**
  * The formats whose lockfiles record peer resolution.
+ *
+ * **Details**
  *
  * An allowlist rather than a `!== "yarn"` denylist, so a format added to
  * `Lockfile["format"]` is unsupported until someone says otherwise. A denylist
@@ -248,7 +306,9 @@ export class UnsatisfiedPeer extends S.Class<UnsatisfiedPeer>($I`UnsatisfiedPeer
  */
 const PEER_RESOLVING_FORMATS: MutableHashSet.MutableHashSet<Lockfile["format"]> = MutableHashSet.fromIterable<Lockfile["format"]>(["npm", "pnpm", "bun"]);
 
-/** @internal */
+/**
+ * @internal
+ */
 const supportsPeerResolution = (format: Lockfile["format"]): boolean => MutableHashSet.has(PEER_RESOLVING_FORMATS, format);
 
 /**
@@ -299,11 +359,17 @@ const linkTargetPath = (importerPath: string, target: string): string => {
  * @internal
  */
 interface LinkEdge {
-	/** The name the importer depends on the target under. */
+	/**
+	 * The name the importer depends on the target under.
+	 */
 	readonly name: string;
-	/** The workspace row the target directory stands for, when the lockfile records one. */
+	/**
+	 * The workspace row the target directory stands for, when the lockfile records one.
+	 */
 	readonly row: ResolvedPackage | undefined;
-	/** Whether the caller supplied a manifest for the target directory. */
+	/**
+	 * Whether the caller supplied a manifest for the target directory.
+	 */
 	readonly covered: boolean;
 }
 
@@ -378,13 +444,21 @@ const linkTargetsOf = (relativePath: string, pkg: WorkspacePackage): ReadonlyArr
  * @internal
  */
 interface Join {
-	/** Supplied manifests by `relativePath` — the spelling a `link:` target uses. */
+	/**
+	 * Supplied manifests by `relativePath` — the spelling a `link:` target uses.
+	 */
 	readonly manifests: MutableHashMap.MutableHashMap<string, WorkspacePackage>;
-	/** Instance ids of the rows a COVERED `link:` edge lands on: the nodes whose peers are joined. */
+	/**
+	 * Instance ids of the rows a COVERED `link:` edge lands on: the nodes whose peers are joined.
+	 */
 	readonly joinable: MutableHashSet.MutableHashSet<string>;
-	/** The importer's own dependency instances, by name. */
+	/**
+	 * The importer's own dependency instances, by name.
+	 */
 	readonly context: MutableHashMap.MutableHashMap<string, ResolvedPackage>;
-	/** The caller's catalogs, which a joined `catalog:` peer range resolves through. */
+	/**
+	 * The caller's catalogs, which a joined `catalog:` peer range resolves through.
+	 */
 	readonly catalogs: CatalogSet | undefined;
 }
 
@@ -520,7 +594,9 @@ const PROTOCOL_SPECIFIER = /^[A-Za-z][A-Za-z0-9+.-]*:/;
  */
 const isProtocolSpecifier = (value: string): boolean => PROTOCOL_SPECIFIER.test(value);
 
-/** @internal */
+/**
+ * @internal
+ */
 const CATALOG_PREFIX = "catalog:";
 
 /**
@@ -569,7 +645,9 @@ type JoinedVerdict =
 	| { readonly _tag: "unsatisfied"; readonly found: string | null; readonly wanted: string }
 	| Exclude<Verdict, { readonly _tag: "unsatisfied" }>;
 
-/** @internal */
+/**
+ * @internal
+ */
 const SATISFIED: Verdict = { _tag: "satisfied" };
 
 /**
@@ -655,7 +733,9 @@ const judgeJoined = (
 	return withWanted(compare(resolvedRange, provider.version), wanted);
 };
 
-/** The effective suppression policy, with both list axes compiled to predicates. */
+/**
+ * The effective suppression policy, with both list axes compiled to predicates.
+ */
 interface Policy {
 	readonly allowed: Readonly<Record<string, string>>;
 	readonly ignoreMissing: PeerNameMatcher;
@@ -678,24 +758,29 @@ interface Policy {
  * **Example** (Parse a pnpm lockfile and collect required peer failures)
  *
  * ```ts
- * import { Lockfile } from "../lockfiles/index.ts";
- * import { PeerCheck } from "./index.ts";
+ * import { Lockfile } from "@beep/scratchpad/effected/lockfiles/index";
+ * import { PeerCheck } from "@beep/scratchpad/effected/workspaces/PeerCheck";
  * import * as Effect from "effect/Effect";
  *
- * declare const text: string; // the text of a pnpm-lock.yaml
+ * const text = "lockfileVersion: '9.0'\nimporters: {}\n"; // pnpm-lock.yaml text
  *
  * const program = Effect.gen(function* () {
  *   const lockfile = yield* Lockfile.parse(text, { format: "pnpm" });
  *   const report = PeerCheck.run(lockfile);
  *   return report.supported ? report.required : [];
  * });
+ * console.log(Effect.isEffect(program)) // true
  * ```
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class PeerCheck extends S.Class<PeerCheck>($I`PeerCheck`)({
 	/**
 	 * Whether the lockfile's format records peer resolution at all.
+	 *
+	 * **Details**
 	 *
 	 * `false` for yarn: yarn resolves peers **virtually**, giving a
 	 * peer-bearing package one `@virtual:` locator per consumer, and the
@@ -704,128 +789,157 @@ export class PeerCheck extends S.Class<PeerCheck>($I`PeerCheck`)({
 	 * is empty and this flag says why.
 	 */
 	supported: S.Boolean.annotateKey({ description: "Whether the lockfile's format records peer resolution at all." }),
-	/** Every unsatisfied peer found, optional ones included. */
+	/**
+	 * Every unsatisfied peer found, optional ones included.
+	 */
 	unsatisfied: S.Array(UnsatisfiedPeer).annotateKey({ description: "Every unsatisfied peer found, optional ones included." }),
 	/**
-  * Importers whose dependencies could not be resolved to instances, so no
-  * verdict was reached for them.
-  *
-  * **Details**
-  *
-  * In practice this is the **root importer under npm and bun**: neither
-  * records a resolved version per importer dependency, and neither emits a
-  * package row for the root, so there is nothing to join on. pnpm records a
-  * version per importer dependency and is unaffected.
-  *
-  * Reported rather than silently skipped, for the same reason `supported`
-  * exists: a gate that sees no rows is entitled to know whether that means
-  * "clean" or "not looked at".
-  */
+	 * Importers whose dependencies could not be resolved to instances, so no
+	 * verdict was reached for them.
+	 *
+	 * **Details**
+	 *
+	 * In practice this is the **root importer under npm and bun**: neither
+	 * records a resolved version per importer dependency, and neither emits a
+	 * package row for the root, so there is nothing to join on. pnpm records a
+	 * version per importer dependency and is unaffected.
+	 *
+	 * Reported rather than silently skipped, for the same reason `supported`
+	 * exists: a gate that sees no rows is entitled to know whether that means
+	 * "clean" or "not looked at".
+	 */
 	unresolvedImporters: S.Array(S.String).annotateKey({ description: "Importers whose dependencies could not be resolved to instances, so no verdict was reached for them." }),
 	/**
-  * Why this report is not a complete answer, or empty when it is.
-  *
-  * **Gotchas**
-  *
-  * See {@link UnverifiedReason}. A gate must treat a non-empty `unverified`
-  * as **not proven clean** rather than as a pass: every reason means some
-  * finding may be missing or spurious, and failing closed is the requirement.
-  */
+	 * Why this report is not a complete answer, or empty when it is.
+	 *
+	 * **Gotchas**
+	 *
+	 * See {@link UnverifiedReason}. A gate must treat a non-empty `unverified`
+	 * as **not proven clean** rather than as a pass: every reason means some
+	 * finding may be missing or spurious, and failing closed is the requirement.
+	 */
 	unverified: S.Array(
 		UnverifiedReason,
 	).annotateKey({ description: "Why this report is not a complete answer, or empty when it is." }),
 }, $I.annote("PeerCheck", { description: "The result of checking a lockfile for unsatisfied peer dependencies." })) {
-	/** The unsatisfied peers a gate should act on — the non-optional ones. */
+	/**
+	 * The unsatisfied peers a gate should act on — the non-optional ones.
+	 *
+	 * **Example** (Read required findings)
+	 *
+	 * ```ts
+	 * import { PeerCheck } from "@beep/scratchpad/effected/workspaces/PeerCheck";
+	 * const report = PeerCheck.make({ supported: true, unsatisfied: [], unresolvedImporters: [], unverified: [] });
+	 * console.log(report.required.length) // 0
+	 * ```
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	get required(): ReadonlyArray<UnsatisfiedPeer> {
 		return this.unsatisfied.filter((row) => !row.optional);
 	}
 
 	/**
-  * Compute the unsatisfied peer dependencies of a parsed lockfile.
-  *
-  * **Details**
-  *
-  * Pure, total and format-free: no IO, no error channel, and no knowledge of
-  * which package manager wrote the file. Range satisfaction is
-  * `@effected/semver`'s, never hand-rolled.
-  *
-  * The walk starts at each importer's resolved dependencies and follows
-  * `resolved` edges, so a peer declared by a *transitive* dependency is
-  * attributed to the importer that pulls it in, with the chain in
-  * `parents` — matching how `pnpm peers check` attributes them.
-  * Attribution stops at a workspace package: a linked package's own
-  * dependencies — registry or linked — are judged by that package's own
-  * importer, and a linked package's manifest peers are judged only for the
-  * importer that links it DIRECTLY, against that importer's dependencies.
-  * pnpm never surfaces them on a consumer one link further out.
-  *
-  * Four judgements are deliberate:
-  *
-  * - **A required peer with nothing resolved is reported** (`found: null`),
-  *   whether or not the declared range is parseable — a peer with no
-  *   provider is a fact about the graph that needs no range arithmetic.
-  * - **An ABSENT optional peer is not reported at all**, because that is
-  *   what optional means. An optional peer resolved at the *wrong* version
-  *   still is, carrying `optional: true`. Both halves match
-  *   `pnpm peers check`, whose `missing` section contains only required
-  *   peers while its `bad` section carries optional ones.
-  * - **An unparseable range or version with something resolved is skipped.**
-  *   The check cannot judge it, and asserting "unsatisfied" on a comparison
-  *   that was never performed would be a wrong answer rather than a gap.
-  *   Two protocol-specifier cases are the exception and fail the report
-  *   closed instead: a joined manifest's range, and a provider whose version
-  *   is a protocol specifier (both below).
-  * - **A workspace-linked provider counts.** Resolution is followed through
-  *   whatever the edge names, including a workspace row.
-  *
-  * Known limits it does not paper over: yarn (see `supported`), the npm and
-  * bun root importer (see `unresolvedImporters`), and pnpm recording no peer
-  * declarations for workspace projects themselves — under pnpm a workspace
-  * package's *own* unsatisfied peers are not in the lockfile at all, and
-  * `pnpm peers check` does not report them either. A `link:`-resolved
-  * importer dependency is the same blind spot from the other side, and there
-  * `pnpm peers check` DOES report the linked parent's peers (it reads the
-  * manifest on disk): every `link:` edge whose target the caller did not
-  * supply therefore fails the report closed rather than letting the
-  * invisible parent pass as checked.
-  *
-  * Supplying {@link PeerCheckOptions.workspacePackages} closes that gap for
-  * every `link:` target the set covers — the root importer's included,
-  * whose linked targets the walk seeds itself because the root has no
-  * workspace row to reach them through: the claimed manifest's declared
-  * peers are walked, judged against the importer's own dependency set
-  * (never a sibling importer's), and reported with the manifest's name and
-  * version in `parents` — the two facts a workspace row cannot carry, since
-  * the lockfile names an importer by directory at the placeholder version
-  * `0.0.0`.
-  *
-  * A joined manifest's peer range may be a protocol specifier rather than a
-  * range. A `catalog:` specifier is resolved through
-  * {@link PeerCheckOptions.catalogs} and judged and reported by its
-  * resolved range, as `pnpm peers check` reports `wantedRange`. One that
-  * stays unresolvable — the catalogs key omitted, a catalog naming nothing
-  * for the peer, or another protocol such as `workspace:*` — is not judged
-  * against a provider that resolved for it, and the report carries
-  * `"peerRangeUnresolved"` rather than passing the peer as satisfied. With
-  * nothing resolved for it, the row is still reported, since "no provider"
-  * needs no range.
-  *
-  * The provider side has the same hole: a peer that resolved to a `file:`
-  * dependency, directly or through a `file:` override, carries the specifier
-  * (`file:vendor/react`) where a version belongs, and for a `file:` directory
-  * the lockfile records no version anywhere. `pnpm peers check` reports such a
-  * peer as a `bad` row with the specifier as its found version, even when the
-  * directory's manifest satisfies the range. Such a peer is neither reported
-  * nor passed: no row is fabricated, and the report carries
-  * `"peerVersionUnresolved"`, for a lockfile row's peer and a joined
-  * manifest's peer alike. A workspace-row provider is still accepted without a
-  * version check, and a plain unparseable version is still skipped.
-  *
-  * @param lockfile - a lockfile parsed by `@effected/lockfiles`
-  * @param options - the workspace's effective rules, manifests and catalogs; see
-  *   {@link PeerCheckOptions}
-  * @returns the report; never fails
-  */
+	 * Compute the unsatisfied peer dependencies of a parsed lockfile.
+	 *
+	 * **Details**
+	 *
+	 * Pure, total and format-free: no IO, no error channel, and no knowledge of
+	 * which package manager wrote the file. Range satisfaction is
+	 * `@effected/semver`'s, never hand-rolled.
+	 *
+	 * The walk starts at each importer's resolved dependencies and follows
+	 * `resolved` edges, so a peer declared by a *transitive* dependency is
+	 * attributed to the importer that pulls it in, with the chain in
+	 * `parents` — matching how `pnpm peers check` attributes them.
+	 * Attribution stops at a workspace package: a linked package's own
+	 * dependencies — registry or linked — are judged by that package's own
+	 * importer, and a linked package's manifest peers are judged only for the
+	 * importer that links it DIRECTLY, against that importer's dependencies.
+	 * pnpm never surfaces them on a consumer one link further out.
+	 *
+	 * Four judgements are deliberate:
+	 *
+	 * - **A required peer with nothing resolved is reported** (`found: null`),
+	 *   whether or not the declared range is parseable — a peer with no
+	 *   provider is a fact about the graph that needs no range arithmetic.
+	 * - **An ABSENT optional peer is not reported at all**, because that is
+	 *   what optional means. An optional peer resolved at the *wrong* version
+	 *   still is, carrying `optional: true`. Both halves match
+	 *   `pnpm peers check`, whose `missing` section contains only required
+	 *   peers while its `bad` section carries optional ones.
+	 * - **An unparseable range or version with something resolved is skipped.**
+	 *   The check cannot judge it, and asserting "unsatisfied" on a comparison
+	 *   that was never performed would be a wrong answer rather than a gap.
+	 *   Two protocol-specifier cases are the exception and fail the report
+	 *   closed instead: a joined manifest's range, and a provider whose version
+	 *   is a protocol specifier (both below).
+	 * - **A workspace-linked provider counts.** Resolution is followed through
+	 *   whatever the edge names, including a workspace row.
+	 *
+	 * Known limits it does not paper over: yarn (see `supported`), the npm and
+	 * bun root importer (see `unresolvedImporters`), and pnpm recording no peer
+	 * declarations for workspace projects themselves — under pnpm a workspace
+	 * package's *own* unsatisfied peers are not in the lockfile at all, and
+	 * `pnpm peers check` does not report them either. A `link:`-resolved
+	 * importer dependency is the same blind spot from the other side, and there
+	 * `pnpm peers check` DOES report the linked parent's peers (it reads the
+	 * manifest on disk): every `link:` edge whose target the caller did not
+	 * supply therefore fails the report closed rather than letting the
+	 * invisible parent pass as checked.
+	 *
+	 * Supplying {@link PeerCheckOptions.workspacePackages} closes that gap for
+	 * every `link:` target the set covers — the root importer's included,
+	 * whose linked targets the walk seeds itself because the root has no
+	 * workspace row to reach them through: the claimed manifest's declared
+	 * peers are walked, judged against the importer's own dependency set
+	 * (never a sibling importer's), and reported with the manifest's name and
+	 * version in `parents` — the two facts a workspace row cannot carry, since
+	 * the lockfile names an importer by directory at the placeholder version
+	 * `0.0.0`.
+	 *
+	 * A joined manifest's peer range may be a protocol specifier rather than a
+	 * range. A `catalog:` specifier is resolved through
+	 * {@link PeerCheckOptions.catalogs} and judged and reported by its
+	 * resolved range, as `pnpm peers check` reports `wantedRange`. One that
+	 * stays unresolvable — the catalogs key omitted, a catalog naming nothing
+	 * for the peer, or another protocol such as `workspace:*` — is not judged
+	 * against a provider that resolved for it, and the report carries
+	 * `"peerRangeUnresolved"` rather than passing the peer as satisfied. With
+	 * nothing resolved for it, the row is still reported, since "no provider"
+	 * needs no range.
+	 *
+	 * The provider side has the same hole: a peer that resolved to a `file:`
+	 * dependency, directly or through a `file:` override, carries the specifier
+	 * (`file:vendor/react`) where a version belongs, and for a `file:` directory
+	 * the lockfile records no version anywhere. `pnpm peers check` reports such a
+	 * peer as a `bad` row with the specifier as its found version, even when the
+	 * directory's manifest satisfies the range. Such a peer is neither reported
+	 * nor passed: no row is fabricated, and the report carries
+	 * `"peerVersionUnresolved"`, for a lockfile row's peer and a joined
+	 * manifest's peer alike. A workspace-row provider is still accepted without a
+	 * version check, and a plain unparseable version is still skipped.
+	 *
+	 * **Example** (Check a parsed pnpm lockfile)
+	 *
+	 * ```ts
+	 * import { PeerCheck } from "@beep/scratchpad/effected/workspaces/PeerCheck";
+	 * import { Lockfile } from "@beep/scratchpad/effected/lockfiles/index";
+	 * import * as Effect from "effect/Effect";
+	 * const program = Effect.gen(function* () {
+	 *   const lockfile = yield* Lockfile.parse("lockfileVersion: '9.0'\nimporters: {}\n", { format: "pnpm" });
+	 *   return PeerCheck.run(lockfile);
+	 * });
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @param lockfile - a lockfile parsed by `@effected/lockfiles`
+	 * @param options - the workspace's effective rules, manifests and catalogs; see
+	 *   {@link PeerCheckOptions}
+	 * @returns the report; never fails
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	static run(lockfile: Lockfile, options?: PeerCheckOptions): PeerCheck {
 		// PRESENCE of the key is the assertion, not its contents: supplying
 		// `NoPeerDependencyRules` asserts the workspace has none, while omitting
@@ -972,6 +1086,8 @@ export class PeerCheck extends S.Class<PeerCheck>($I`PeerCheck`)({
 /**
  * An importer's roots as walk nodes with their `parents` chain started.
  *
+ * **Details**
+ *
  * The importer's own row is the walk's first node with an empty chain — its
  * peers are the importer's own. A dependency instance joined from the importer
  * entry starts the chain with itself, as `pnpm peers check` reports it.
@@ -986,6 +1102,8 @@ const walksFrom = (roots: ImporterRoots, join: Join): ReadonlyArray<Walk> =>
 /**
  * Walk the resolution graph from an importer's roots, emitting a row for every
  * unsatisfied peer declared anywhere along the way.
+ *
+ * **Details**
  *
  * Adds to `unjudged` the reason each peer it could not judge was never
  * compared (see {@link judge} and {@link judgeJoined}); the caller surfaces
@@ -1180,6 +1298,8 @@ const suppressedByRule = (policy: Policy, parentName: string, peer: string, foun
 
 /**
  * Decide whether one declared peer is unsatisfied.
+ *
+ * **Details**
  *
  * Returns `"satisfied"` for "satisfied, or not judgeable and skipped" — the
  * two cases that produce no row and no marker. They are deliberately merged

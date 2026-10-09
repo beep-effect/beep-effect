@@ -25,7 +25,22 @@ const { join } = process.getBuiltinModule("node:path");
 
 const JsonValue = S.fromJsonString(S.Unknown);
 
-/** The typed `hooks`-source failure every rung of the ladder reports through. */
+/**
+ * Creates the typed `hooks`-source failure every rung of the ladder reports through.
+ *
+ * **Example** (Attribute a hook failure)
+ *
+ * ```ts
+ * import { hooksError } from "@beep/scratchpad/effected/workspaces/internal/configDependencyShared"
+ *
+ * const error = hooksError("plugin", new Error("read failed"), undefined)
+ * console.log(error.source) // hooks
+ * console.log(error.path) // plugin
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
 export const hooksError: {
 	(path: string, cause: unknown, reason: CatalogAssemblyError["reason"] | undefined): CatalogAssemblyError;
 	(cause: unknown, reason: CatalogAssemblyError["reason"] | undefined): (path: string) => CatalogAssemblyError;
@@ -35,10 +50,38 @@ export const hooksError: {
 		CatalogAssemblyError.make({ source: "hooks", path, cause, ...O.getSomesStruct({ reason: O.fromUndefinedOr(reason) }) }),
 );
 
-/** The message of a cause, for splicing into ours. */
+/**
+ * Extracts the message of a cause, for splicing into ours.
+ *
+ * **Example** (Format error and string causes)
+ *
+ * ```ts
+ * import { messageOf } from "@beep/scratchpad/effected/workspaces/internal/configDependencyShared"
+ *
+ * console.log(messageOf(new Error("read failed"))) // read failed
+ * console.log(messageOf("missing plugin")) // missing plugin
+ * ```
+ *
+ * @category formatting
+ * @since 0.0.0
+ */
 export const messageOf = (cause: unknown): string => (cause instanceof Error ? cause.message : String(cause));
 
-/** Where the declared spec came from, for messages: `the working tree` or `ref <ref>`. */
+/**
+ * Labels where the declared spec came from, for messages: `the working tree` or `ref <ref>`.
+ *
+ * **Example** (Label both declaring sides)
+ *
+ * ```ts
+ * import { sideLabel } from "@beep/scratchpad/effected/workspaces/internal/configDependencyShared"
+ *
+ * console.log(sideLabel({})) // the working tree
+ * console.log(sideLabel({ ref: "main" })) // ref main
+ * ```
+ *
+ * @category formatting
+ * @since 0.0.0
+ */
 export const sideLabel = (side: HookReplayContext): string =>
 	side.ref === undefined ? "the working tree" : `ref ${side.ref}`;
 
@@ -47,9 +90,30 @@ const isAbsent = (cause: unknown): boolean =>
 	P.isObject(cause) && (cause.code === "ENOENT" || cause.code === "ENOTDIR");
 
 /**
- * Run a `node:fs/promises` call, mapping an absent target to `Option.none()`
- * and ANY other rejection (`EACCES`, `EIO`, …) to a typed `hooks` error
+ * Runs a `node:fs/promises` call while distinguishing an absent target from an IO failure.
+ *
+ * **Details**
+ *
+ * An absent target maps to `Option.none()`.
+ *
+ * **Gotchas**
+ *
+ * Every other rejection (`EACCES`, `EIO`, …) maps to a typed `hooks` error
  * attributed to `path` — never a silent skip.
+ *
+ * **Example** (Observe a successful asynchronous read)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
+ * import { ioOrNone } from "@beep/scratchpad/effected/workspaces/internal/configDependencyShared"
+ *
+ * const result = await Effect.runPromise(ioOrNone("plugin", () => Promise.resolve("manifest")))
+ * console.log(O.getOrElse(result, () => "absent")) // manifest
+ * ```
+ *
+ * @category error-handling
+ * @since 0.0.0
  */
 export const ioOrNone: {
 	<A>(run: () => Promise<A>): (path: string) => Effect.Effect<O.Option<A>, CatalogAssemblyError>;
@@ -64,9 +128,26 @@ export const ioOrNone: {
 	));
 
 /**
- * What the `package.json` in a directory says about its version: there is no
- * manifest, there is one carrying no usable version, or it carries `version`.
- * Closed, so no caller has to know a sentinel for "no version".
+ * Represents what the `package.json` in a directory says about its version.
+ *
+ * **Details**
+ *
+ * There is no manifest, there is one carrying no usable version, or it carries
+ * `version`. Closed, so no caller has to know a sentinel for "no version".
+ *
+ * **Example** (Distinguish versioned and absent manifests)
+ *
+ * ```ts
+ * import { ManifestVersion } from "@beep/scratchpad/effected/workspaces/internal/configDependencyShared"
+ *
+ * const versioned = ManifestVersion.cases.version.make({ version: "1.2.3" })
+ * const absent = ManifestVersion.cases.absent.make({})
+ * console.log(ManifestVersion.guards.version(versioned)) // true
+ * console.log(ManifestVersion.guards.absent(absent)) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
 export const ManifestVersion = S.TaggedUnion({
 	absent: {},
@@ -78,12 +159,37 @@ export const ManifestVersion = S.TaggedUnion({
 	description: "Whether a package manifest is absent, lacks a usable version, or carries a non-empty version string.",
 }));
 
+/**
+ * The decoded manifest state: absent, unversioned, or carrying a non-empty version string.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ManifestVersion = typeof ManifestVersion.Type;
 
 const ABSENT: ManifestVersion = ManifestVersion.cases.absent.make({});
 const UNVERSIONED: ManifestVersion = ManifestVersion.cases.unversioned.make({});
 
-/** Whether a manifest carries exactly `declared`. Only a `version` state can. */
+/**
+ * Checks whether a manifest carries exactly `declared`.
+ *
+ * **Details**
+ *
+ * Only a `version` state can carry the declared version.
+ *
+ * **Example** (Compare a declared version)
+ *
+ * ```ts
+ * import { carries, ManifestVersion } from "@beep/scratchpad/effected/workspaces/internal/configDependencyShared"
+ *
+ * const manifest = ManifestVersion.cases.version.make({ version: "1.2.3" })
+ * console.log(carries(manifest, "1.2.3")) // true
+ * console.log(carries(ManifestVersion.cases.unversioned.make({}), "1.2.3")) // false
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
+ */
 export const carries: {
 	(declared: string): (manifest: ManifestVersion) => boolean;
 	(manifest: ManifestVersion, declared: string): boolean;
@@ -91,10 +197,30 @@ export const carries: {
 	ManifestVersion.guards.version(manifest) && manifest.version === declared);
 
 /**
- * The version state of the `package.json` in `dir`: `absent` when there is
- * no manifest, `unversioned` when it carries no non-empty string `version`,
- * typed on any other IO failure or on unparseable JSON — a manifest that
- * exists but cannot be read is not evidence of absence.
+ * Reads the version state of the `package.json` in `dir`.
+ *
+ * **Details**
+ *
+ * Returns `absent` when there is no manifest, or `unversioned` when it carries
+ * no non-empty string `version`.
+ *
+ * **Gotchas**
+ *
+ * Any other IO failure or unparseable JSON produces a typed error — a manifest
+ * that exists but cannot be read is not evidence of absence.
+ *
+ * **Example** (Construct a manifest version read)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import { manifestVersion } from "@beep/scratchpad/effected/workspaces/internal/configDependencyShared"
+ *
+ * const program = manifestVersion("plugin", "/workspace/node_modules/plugin")
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const manifestVersion: {
 	(dir: string): (name: string) => Effect.Effect<ManifestVersion, CatalogAssemblyError>;

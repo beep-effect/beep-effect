@@ -33,6 +33,10 @@ const TRAPS = MutableHashSet.make("CI", "INIT_CWD", "NODE_V8_COVERAGE", "PNPM_SC
 const TRAP_PREFIXES = /^(npm_|pnpm_config_|yarn_)/i;
 
 /**
+ * Removes undefined values and parent package-manager context from a child environment.
+ *
+ * **Details**
+ *
  * `env` without undefined values and without the parent's context: every
  * `npm_*` variable (a pnpm-run vitest leaks `npm_config_user_agent`), every
  * `pnpm_config_*` variable plus `PNPM_SCRIPT_SRC_DIR` and `PNPM_PACKAGE_NAME`
@@ -54,6 +58,18 @@ const TRAP_PREFIXES = /^(npm_|pnpm_config_|yarn_)/i;
  * manager still reads the user's `~/.npmrc`, `~/.yarnrc.yml` and friends, and
  * with them the registry, auth and proxy a real install on this machine
  * would use.
+ *
+ * **Example** (Keep user configuration while removing parent context)
+ *
+ * ```ts
+ * import { scrubEnv } from "@beep/scratchpad/effected/workspaces/internal/packedInstallPlan";
+ *
+ * const env = scrubEnv({ HOME: "/home/consumer", CI: "true", npm_config_user_agent: "pnpm", EMPTY: undefined });
+ * console.log(JSON.stringify(env)) // {"HOME":"/home/consumer"}
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
  */
 export const scrubEnv = (env: Readonly<Record<string, string | undefined>>): Record<string, string> => {
 	const out: Record<string, string> = {};
@@ -63,7 +79,20 @@ export const scrubEnv = (env: Readonly<Record<string, string | undefined>>): Rec
 	return out;
 };
 
-/** The last version-shaped line of `--version` output, without a leading `v`. */
+/**
+ * The last version-shaped line of `--version` output, without a leading `v`.
+ *
+ * **Example** (Read the final version line)
+ *
+ * ```ts
+ * import { versionOf } from "@beep/scratchpad/effected/workspaces/internal/packedInstallPlan";
+ *
+ * console.log(versionOf("startup notice\nv4.10.0\n")) // 4.10.0
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const versionOf = (stdout: string): string | undefined => {
 	for (const line of stdout.split(/\r?\n/).reverse()) {
 		const match = /^v?(\d+\.\d+\.\d+\S*)$/.exec(line.trim());
@@ -72,7 +101,23 @@ export const versionOf = (stdout: string): string | undefined => {
 	return undefined;
 };
 
-/** The carrier first, then the rest of the closure; the failure names the first package the workspace lacks. */
+/**
+ * The carrier first, then the rest of the closure; the failure names the first package the workspace lacks.
+ *
+ * **Example** (Report a missing carrier)
+ *
+ * ```ts
+ * import { closureOf } from "@beep/scratchpad/effected/workspaces/internal/packedInstallPlan";
+ *
+ * import * as Result from "effect/Result";
+ *
+ * const closure = closureOf([], "@demo/carrier", "auto");
+ * console.log(Result.isFailure(closure)) // true
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
 export const closureOf: {
 	(carrier: string, closure: ReadonlyArray<string> | "auto"): (packages: ReadonlyArray<WorkspacePackage>) => Result.Result<ReadonlyArray<WorkspacePackage>, string>;
 	(packages: ReadonlyArray<WorkspacePackage>, carrier: string, closure: ReadonlyArray<string> | "auto"): Result.Result<ReadonlyArray<WorkspacePackage>, string>;
@@ -108,7 +153,12 @@ export const closureOf: {
 	return Result.succeed(ordered);
 });
 
-/** What one consumer project needs. */
+/**
+ * What one consumer project needs.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export interface ConsumerInput {
 	readonly manager: PackageManagerName;
 	/** The version `--version` reported, pinned so the consumer runs the manager that was probed. */
@@ -150,7 +200,11 @@ const pnpmWorkspaceYaml = (specs: Readonly<Record<string, string>>): string => {
 };
 
 /**
- * The files of one scratch consumer. The carrier and the caller's extra
+ * Builds the files of one scratch consumer.
+ *
+ * **Details**
+ *
+ * The carrier and the caller's extra
  * dependencies are its only direct dependencies; every other packed package
  * is steered to its tarball through the field this manager reads:
  * `overrides` (npm, bun), `resolutions` (yarn), or a settings-only
@@ -163,6 +217,24 @@ const pnpmWorkspaceYaml = (specs: Readonly<Record<string, string>>): string => {
  * override differs from a direct spec for the same package (`EOVERRIDE`), and
  * accepts one that is identical; and a caller's range must never silently
  * replace the tarball the run exists to prove.
+ *
+ * **Example** (List the pnpm consumer files)
+ *
+ * ```ts
+ * import { consumerFiles } from "@beep/scratchpad/effected/workspaces/internal/packedInstallPlan";
+ *
+ * const files = consumerFiles({
+ *   manager: "pnpm",
+ *   version: "12.0.0",
+ *   carrier: { name: "@demo/carrier", tarball: "/tmp/carrier.tgz" },
+ *   overrides: {},
+ *   dependencies: {},
+ * });
+ * console.log(files.map((entry) => entry.file).join(", ")) // package.json, pnpm-workspace.yaml
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
  */
 export const consumerFiles = (
 	input: ConsumerInput,
@@ -197,7 +269,20 @@ export const consumerFiles = (
 	return files;
 };
 
-/** The install argv, lifecycle scripts skipped the way this manager spells it. */
+/**
+ * The install argv, lifecycle scripts skipped the way this manager spells it.
+ *
+ * **Example** (Skip lifecycle scripts with pnpm)
+ *
+ * ```ts
+ * import { installArgs } from "@beep/scratchpad/effected/workspaces/internal/packedInstallPlan";
+ *
+ * console.log(installArgs("pnpm", "12.0.0").join(" ")) // install --config.ignore-scripts=true
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
 export const installArgs: {
 	(version: string): (manager: PackageManagerName) => ReadonlyArray<string>;
 	(manager: PackageManagerName, version: string): ReadonlyArray<string>;
@@ -220,7 +305,12 @@ export const installArgs: {
  */
 const UNRESOLVABLE = /^(?:workspace:|catalog:|link:|file:(?!\/))/;
 
-/** What a packed `package.json` says that the run checks before any install. */
+/**
+ * What a packed `package.json` says that the run checks before any install.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export interface PackedManifest {
 	/** Its `name`, when that is a string. */
 	readonly name: string | undefined;
@@ -233,7 +323,23 @@ export interface PackedManifest {
 	readonly bins: ReadonlyArray<string>;
 }
 
-/** Parse a packed manifest into the facts the run checks; the failure is the parse error or a non-object. */
+/**
+ * Parse a packed manifest into the facts the run checks; the failure is the parse error or a non-object.
+ *
+ * **Example** (Distinguish a manifest from a scalar)
+ *
+ * ```ts
+ * import { readPackedManifest } from "@beep/scratchpad/effected/workspaces/internal/packedInstallPlan";
+ *
+ * import * as Result from "effect/Result";
+ *
+ * console.log(Result.isSuccess(readPackedManifest('{"name":"@demo/carrier","bin":"cli.js"}'))) // true
+ * console.log(Result.isFailure(readPackedManifest("42"))) // true
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const readPackedManifest = (manifestJson: string): Result.Result<PackedManifest, unknown> => {
 	let manifest: unknown;
 	try {
@@ -268,6 +374,17 @@ export const readPackedManifest = (manifestJson: string): Result.Result<PackedMa
  * The file a manifest's `bin` declares for `name`: a `bin` object's entry, or
  * a `bin` string when `name` is the unscoped package name. `undefined` when
  * the manifest is not a JSON object or declares no such bin.
+ *
+ * **Example** (Resolve a scoped package executable)
+ *
+ * ```ts
+ * import { binTargetOf } from "@beep/scratchpad/effected/workspaces/internal/packedInstallPlan";
+ *
+ * console.log(binTargetOf('{"name":"@demo/carrier","bin":"cli.js"}', "carrier")) // cli.js
+ * ```
+ *
+ * @category getters
+ * @since 0.0.0
  */
 export const binTargetOf: {
 	(name: string): (manifestJson: string) => string | undefined;
@@ -289,16 +406,51 @@ export const binTargetOf: {
 	return P.isString(target) && R.has(bin, name) ? target : undefined;
 });
 
-/** Every specifier in a packed manifest's runtime maps that only the workspace could resolve (see `UNRESOLVABLE`). */
+/**
+ * Every specifier in a packed manifest's runtime maps that only the workspace could resolve (see `UNRESOLVABLE`).
+ *
+ * **Example** (Check whether manifest inspection succeeds)
+ *
+ * ```ts
+ * import { unresolvedSpecifiers } from "@beep/scratchpad/effected/workspaces/internal/packedInstallPlan";
+ *
+ * import * as Result from "effect/Result";
+ *
+ * const specifiers = unresolvedSpecifiers('{"dependencies":{"@demo/core":"workspace:*"}}');
+ * console.log(Result.isSuccess(specifiers)) // true
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const unresolvedSpecifiers = (manifestJson: string): Result.Result<ReadonlyArray<string>, unknown> =>
 	Result.map(readPackedManifest(manifestJson), (manifest) => manifest.unresolved);
 
 /**
  * The first bin the carrier declares that another packed package declares
- * too. Under a flat layout (npm, bun, Yarn's `node-modules` linker) either
+ * too.
+ *
+ * **Gotchas**
+ *
+ * Under a flat layout (npm, bun, Yarn's `node-modules` linker) either
  * package can take `node_modules/.bin/<bin>`, so a bin check or a bin run
  * could pass on the wrong package. `PackedInstall.run` refuses it unless the
  * caller shares bin names deliberately (`allowSharedBins`).
+ *
+ * **Example** (Identify the package sharing an executable)
+ *
+ * ```ts
+ * import { binConflict } from "@beep/scratchpad/effected/workspaces/internal/packedInstallPlan";
+ *
+ * const conflict = binConflict(
+ *   { name: "@demo/carrier", bins: ["demo"] },
+ *   [{ name: "@demo/other", bins: ["demo"] }],
+ * );
+ * console.log(conflict?.package) // @demo/other
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
  */
 export const binConflict: {
 	(others: ReadonlyArray<{ readonly name: string; readonly bins: ReadonlyArray<string> }>): (carrier: { readonly name: string; readonly bins: ReadonlyArray<string> }) => { readonly bin: string; readonly package: string } | undefined;
@@ -320,11 +472,31 @@ const BARE_NAME = /^(?:@[^/@\s>]+\/)?[^/@\s>]+$/;
 /**
  * The `file:` entries of a parsed `pnpm-workspace.yaml`'s `overrides:` map,
  * name to the path after `file:` (relative paths are the caller's to resolve,
- * against the workspace root, as pnpm does). Entries that are not strings,
+ * against the workspace root, as pnpm does).
+ *
+ * **Details**
+ *
+ * Entries that are not strings,
  * not `file:`, or keyed by anything but a bare package name are skipped, and
  * so is `__proto__`, which no npm package can be named. A package named
  * `constructor` or `prototype` is an ordinary own entry; read the public
  * record with `R.get` so missing names never resolve to inherited members.
+ *
+ * **Example** (Extract tarball paths from plain override keys)
+ *
+ * ```ts
+ * import { fileOverridesOf } from "@beep/scratchpad/effected/workspaces/internal/packedInstallPlan";
+ *
+ * const overrides = fileOverridesOf({ overrides: {
+ *   "@demo/core": "file:./core.tgz",
+ *   "core@1": "file:./old-core.tgz",
+ *   external: "^1.0.0",
+ * } });
+ * console.log(JSON.stringify(overrides)) // {"@demo/core":"./core.tgz"}
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const fileOverridesOf = (document: unknown): Record<string, string> => {
 	let out = HashMap.empty<string, string>();
@@ -343,5 +515,18 @@ export const fileOverridesOf = (document: unknown): Record<string, string> => {
 	)));
 };
 
-/** An `overrides` value without the `file:` prefix a caller may copy from a workspace file. */
+/**
+ * An `overrides` value without the `file:` prefix a caller may copy from a workspace file.
+ *
+ * **Example** (Remove a tarball specifier prefix)
+ *
+ * ```ts
+ * import { overridePath } from "@beep/scratchpad/effected/workspaces/internal/packedInstallPlan";
+ *
+ * console.log(overridePath("file:./core.tgz")) // ./core.tgz
+ * ```
+ *
+ * @category normalization
+ * @since 0.0.0
+ */
 export const overridePath = (spec: string): string => (spec.startsWith("file:") ? spec.slice(5) : spec);

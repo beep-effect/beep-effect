@@ -32,13 +32,38 @@ const $I = $ScratchpadId.create("effected/workspaces/DependencyGraph");
  * of a cycle are excluded, so it is exactly the set to break, not necessarily
  * a single ordered loop.
  *
+ * **Example** (Inspect the cycle members)
+ *
+ * ```ts
+ * import { CyclicDependencyError } from "@beep/scratchpad/effected/workspaces/DependencyGraph";
+ *
+ * const error = CyclicDependencyError.make({ cycle: ["a", "b"] });
+ * console.log(error.cycle.join(", ")) // a, b
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class CyclicDependencyError extends S.TaggedError<CyclicDependencyError>($I`CyclicDependencyError`)("CyclicDependencyError", {
 	/** The packages participating in the cycle. */
 	cycle: S.Array(S.String).annotateKey({ description: "The packages participating in the cycle." }),
 }, $I.annote("CyclicDependencyError", { description: "Raised when the workspace dependency graph cannot be topologically ordered because it contains a cycle." })) {
-	/** Renders the cycle members into a one-line message. */
+	/**
+	 * Renders the cycle members into a one-line message.
+	 *
+	 * **Example** (Render a cycle diagnostic)
+	 *
+	 * ```ts
+	 * import { CyclicDependencyError } from "@beep/scratchpad/effected/workspaces/DependencyGraph";
+	 *
+	 * const error = CyclicDependencyError.make({ cycle: ["a", "b"] });
+	 * console.log(error.message) // Cyclic workspace dependencies among: a, b
+	 * ```
+	 *
+	 * @category formatting
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return `Cyclic workspace dependencies among: ${this.cycle.join(", ")}`;
 	}
@@ -96,7 +121,8 @@ interface Edges {
  * **Example** (Group workspace packages into build levels)
  *
  * ```ts
- * import { DependencyGraph, WorkspaceDiscovery } from "./index.ts";
+ * import { DependencyGraph } from "@beep/scratchpad/effected/workspaces/DependencyGraph";
+ * import { WorkspaceDiscovery } from "@beep/scratchpad/effected/workspaces/WorkspaceDiscovery";
  * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
@@ -104,16 +130,57 @@ interface Edges {
  *   const graph = DependencyGraph.make({ packages: yield* discovery.listPackages });
  *   return yield* graph.levels();
  * });
+ * console.log(Effect.isEffect(program)) // true
  * ```
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class DependencyGraph extends S.Class<DependencyGraph>($I`DependencyGraph`)({
 	/** The workspace packages the graph is drawn over. */
 	packages: S.Array(WorkspacePackage).annotateKey({ description: "The workspace packages the graph is drawn over." }),
 }, $I.annote("DependencyGraph", { description: "The directed graph of dependencies **between workspace packages**. External npm dependencies are not nodes." })) {
+	/**
+	 * Caches the lazily built forward and reverse edge indexes outside the encoded schema fields.
+	 *
+	 * **Details**
+	 *
+	 * Public accessors trigger index construction; schema encoding includes only the package list.
+	 *
+	 * **Example** (Reuse the cached adjacency map)
+	 *
+	 * ```ts
+	 * import { DependencyGraph } from "@beep/scratchpad/effected/workspaces/DependencyGraph";
+	 *
+	 * const graph = DependencyGraph.make({ packages: [] });
+	 * console.log(graph.adjacency === graph.adjacency) // true
+	 * ```
+	 *
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	#edges: Edges | undefined;
 
+	/**
+	 * Builds the edge indexes on first access and reuses them for subsequent graph operations.
+	 *
+	 * **Details**
+	 *
+	 * Public accessors trigger index construction; schema encoding includes only the package list.
+	 *
+	 * **Example** (Initialize indexes through a public accessor)
+	 *
+	 * ```ts
+	 * import { DependencyGraph } from "@beep/scratchpad/effected/workspaces/DependencyGraph";
+	 *
+	 * const graph = DependencyGraph.make({ packages: [] });
+	 * console.log(graph.adjacency === graph.adjacency) // true
+	 * ```
+	 *
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	#index(): Edges {
 		if (this.#edges !== undefined) return this.#edges;
 		const names = MutableHashSet.fromIterable(this.packages.map((pkg) => pkg.name));
@@ -134,24 +201,92 @@ export class DependencyGraph extends S.Class<DependencyGraph>($I`DependencyGraph
 		return this.#edges;
 	}
 
-	/** Every workspace package name, sorted. Total. */
+	/**
+	 * Every workspace package name, sorted. Total.
+	 *
+	 * **Example** (List workspace names lexicographically)
+	 *
+	 * ```ts
+	 * import { DependencyGraph } from "@beep/scratchpad/effected/workspaces/DependencyGraph";
+	 * import { WorkspacePackage } from "@beep/scratchpad/effected/workspaces/WorkspacePackage";
+	 *
+	 * const core = WorkspacePackage.make({
+	 *   name: "core", path: "/repo/core", packageJsonPath: "/repo/core/package.json",
+	 *   relativePath: "core", workspaceRoot: "/repo",
+	 * });
+	 * const app = WorkspacePackage.make({
+	 *   name: "app", path: "/repo/app", packageJsonPath: "/repo/app/package.json",
+	 *   relativePath: "app", workspaceRoot: "/repo", dependencies: { core: "workspace:*" },
+	 * });
+	 * const graph = DependencyGraph.make({ packages: [app, core] });
+	 * console.log(graph.names.join(", ")) // app, core
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	get names(): ReadonlyArray<string> {
 		return A.sort(this.#index().order, Str.Order);
 	}
 
-	/** The adjacency map: name → the names it depends on. Total. */
+	/**
+	 * The adjacency map: name → the names it depends on. Total.
+	 *
+	 * **Example** (Read the direct edge index)
+	 *
+	 * ```ts
+	 * import { DependencyGraph } from "@beep/scratchpad/effected/workspaces/DependencyGraph";
+	 * import { WorkspacePackage } from "@beep/scratchpad/effected/workspaces/WorkspacePackage";
+	 * import * as HashMap from "effect/HashMap";
+	 *
+	 * const core = WorkspacePackage.make({
+	 *   name: "core", path: "/repo/core", packageJsonPath: "/repo/core/package.json",
+	 *   relativePath: "core", workspaceRoot: "/repo",
+	 * });
+	 * const app = WorkspacePackage.make({
+	 *   name: "app", path: "/repo/app", packageJsonPath: "/repo/app/package.json",
+	 *   relativePath: "app", workspaceRoot: "/repo", dependencies: { core: "workspace:*" },
+	 * });
+	 * const graph = DependencyGraph.make({ packages: [app, core] });
+	 * console.log(HashMap.size(graph.adjacency)) // 2
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	get adjacency(): HashMap.HashMap<string, HashSet.HashSet<string>> {
 		return this.#index().forward;
 	}
 
 	/**
-  * Whether the graph contains a cycle. Total.
-  *
-  * **Details**
-  *
-  * An explicit-stack DFS with an on-stack set — never recursive, so a long
-  * dependency chain cannot overflow.
-  */
+	 * Whether the graph contains a cycle. Total.
+	 *
+	 * **Details**
+	 *
+	 * An explicit-stack DFS with an on-stack set — never recursive, so a long
+	 * dependency chain cannot overflow.
+	 *
+	 * **Example** (Check an acyclic workspace graph)
+	 *
+	 * ```ts
+	 * import { DependencyGraph } from "@beep/scratchpad/effected/workspaces/DependencyGraph";
+	 * import { WorkspacePackage } from "@beep/scratchpad/effected/workspaces/WorkspacePackage";
+	 *
+	 * const core = WorkspacePackage.make({
+	 *   name: "core", path: "/repo/core", packageJsonPath: "/repo/core/package.json",
+	 *   relativePath: "core", workspaceRoot: "/repo",
+	 * });
+	 * const app = WorkspacePackage.make({
+	 *   name: "app", path: "/repo/app", packageJsonPath: "/repo/app/package.json",
+	 *   relativePath: "app", workspaceRoot: "/repo", dependencies: { core: "workspace:*" },
+	 * });
+	 * const graph = DependencyGraph.make({ packages: [app, core] });
+	 * console.log(graph.hasCycle) // false
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
+	 */
 	get hasCycle(): boolean {
 		const { forward } = this.#index();
 		const visited = MutableHashSet.empty<string>();
@@ -187,7 +322,31 @@ export class DependencyGraph extends S.Class<DependencyGraph>($I`DependencyGraph
 		return false;
 	}
 
-	/** The workspace packages `name` depends on, sorted. */
+	/**
+	 * The workspace packages `name` depends on, sorted.
+	 *
+	 * **Example** (Look up direct workspace dependencies)
+	 *
+	 * ```ts
+	 * import { DependencyGraph } from "@beep/scratchpad/effected/workspaces/DependencyGraph";
+	 * import { WorkspacePackage } from "@beep/scratchpad/effected/workspaces/WorkspacePackage";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const core = WorkspacePackage.make({
+	 *   name: "core", path: "/repo/core", packageJsonPath: "/repo/core/package.json",
+	 *   relativePath: "core", workspaceRoot: "/repo",
+	 * });
+	 * const app = WorkspacePackage.make({
+	 *   name: "app", path: "/repo/app", packageJsonPath: "/repo/app/package.json",
+	 *   relativePath: "app", workspaceRoot: "/repo", dependencies: { core: "workspace:*" },
+	 * });
+	 * const graph = DependencyGraph.make({ packages: [app, core] });
+	 * console.log(Effect.runSync(graph.dependenciesOf("app")).join(", ")) // core
+	 * ```
+	 *
+	 * @category queries
+	 * @since 0.0.0
+	 */
 	readonly dependenciesOf = Effect.fn("DependencyGraph.dependenciesOf")(
 		(name: string): Effect.Effect<ReadonlyArray<string>, PackageNotFoundError> => {
 			const deps = HashMap.get(this.#index().forward, name);
@@ -197,7 +356,31 @@ export class DependencyGraph extends S.Class<DependencyGraph>($I`DependencyGraph
 		},
 	);
 
-	/** The workspace packages that depend on `name`, sorted. */
+	/**
+	 * The workspace packages that depend on `name`, sorted.
+	 *
+	 * **Example** (Look up direct workspace dependents)
+	 *
+	 * ```ts
+	 * import { DependencyGraph } from "@beep/scratchpad/effected/workspaces/DependencyGraph";
+	 * import { WorkspacePackage } from "@beep/scratchpad/effected/workspaces/WorkspacePackage";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const core = WorkspacePackage.make({
+	 *   name: "core", path: "/repo/core", packageJsonPath: "/repo/core/package.json",
+	 *   relativePath: "core", workspaceRoot: "/repo",
+	 * });
+	 * const app = WorkspacePackage.make({
+	 *   name: "app", path: "/repo/app", packageJsonPath: "/repo/app/package.json",
+	 *   relativePath: "app", workspaceRoot: "/repo", dependencies: { core: "workspace:*" },
+	 * });
+	 * const graph = DependencyGraph.make({ packages: [app, core] });
+	 * console.log(Effect.runSync(graph.dependentsOf("core")).join(", ")) // app
+	 * ```
+	 *
+	 * @category queries
+	 * @since 0.0.0
+	 */
 	readonly dependentsOf = Effect.fn("DependencyGraph.dependentsOf")(
 		(name: string): Effect.Effect<ReadonlyArray<string>, PackageNotFoundError> => {
 			const dependents = HashMap.get(this.#index().reverse, name);
@@ -212,7 +395,28 @@ export class DependencyGraph extends S.Class<DependencyGraph>($I`DependencyGraph
 	 * them — the blast radius of a change. Sorted and de-duplicated; the given
 	 * names are included, whether or not the graph knows them.
 	 *
+	 * **Example** (Include dependents and unknown changed names)
+	 *
+	 * ```ts
+	 * import { DependencyGraph } from "@beep/scratchpad/effected/workspaces/DependencyGraph";
+	 * import { WorkspacePackage } from "@beep/scratchpad/effected/workspaces/WorkspacePackage";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const core = WorkspacePackage.make({
+	 *   name: "core", path: "/repo/core", packageJsonPath: "/repo/core/package.json",
+	 *   relativePath: "core", workspaceRoot: "/repo",
+	 * });
+	 * const app = WorkspacePackage.make({
+	 *   name: "app", path: "/repo/app", packageJsonPath: "/repo/app/package.json",
+	 *   relativePath: "app", workspaceRoot: "/repo", dependencies: { core: "workspace:*" },
+	 * });
+	 * const graph = DependencyGraph.make({ packages: [app, core] });
+	 * console.log(Effect.runSync(graph.affectedBy(["core", "external"])).join(", ")) // app, core, external
+	 * ```
+	 *
 	 * @param names - The changed package names.
+	 * @category queries
+	 * @since 0.0.0
 	 */
 	readonly affectedBy = Effect.fn("DependencyGraph.affectedBy")(
 		(names: ReadonlyArray<string>): Effect.Effect<ReadonlyArray<string>, never> => {
@@ -233,14 +437,36 @@ export class DependencyGraph extends S.Class<DependencyGraph>($I`DependencyGraph
 	);
 
 	/**
-  * Packages grouped into parallel build levels: level 0 depends on nothing in
-  * the workspace, level *n* depends only on levels below it.
-  *
-  * **Details**
-  *
-  * Kahn's algorithm over the reverse-edge index, linear in the edge count.
-  * Each level is sorted lexicographically, so the output is deterministic.
-  */
+	 * Packages grouped into parallel build levels: level 0 depends on nothing in
+	 * the workspace, level *n* depends only on levels below it.
+	 *
+	 * **Details**
+	 *
+	 * Kahn's algorithm over the reverse-edge index, linear in the edge count.
+	 * Each level is sorted lexicographically, so the output is deterministic.
+	 *
+	 * **Example** (Partition dependency-first build levels)
+	 *
+	 * ```ts
+	 * import { DependencyGraph } from "@beep/scratchpad/effected/workspaces/DependencyGraph";
+	 * import { WorkspacePackage } from "@beep/scratchpad/effected/workspaces/WorkspacePackage";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const core = WorkspacePackage.make({
+	 *   name: "core", path: "/repo/core", packageJsonPath: "/repo/core/package.json",
+	 *   relativePath: "core", workspaceRoot: "/repo",
+	 * });
+	 * const app = WorkspacePackage.make({
+	 *   name: "app", path: "/repo/app", packageJsonPath: "/repo/app/package.json",
+	 *   relativePath: "app", workspaceRoot: "/repo", dependencies: { core: "workspace:*" },
+	 * });
+	 * const graph = DependencyGraph.make({ packages: [app, core] });
+	 * console.log(Effect.runSync(graph.levels()).map((level) => level.join(", ")).join(" -> ")) // core -> app
+	 * ```
+	 *
+	 * @category sequencing
+	 * @since 0.0.0
+	 */
 	readonly levels = Effect.fn("DependencyGraph.levels")(
 		(): Effect.Effect<ReadonlyArray<ReadonlyArray<string>>, CyclicDependencyError> =>
 			Effect.suspend(() => {
@@ -252,24 +478,69 @@ export class DependencyGraph extends S.Class<DependencyGraph>($I`DependencyGraph
 			}),
 	);
 
-	/** The flattened topological order — `levels()` concatenated. */
+	/**
+	 * The flattened topological order — `levels()` concatenated.
+	 *
+	 * **Example** (Flatten the dependency-first build order)
+	 *
+	 * ```ts
+	 * import { DependencyGraph } from "@beep/scratchpad/effected/workspaces/DependencyGraph";
+	 * import { WorkspacePackage } from "@beep/scratchpad/effected/workspaces/WorkspacePackage";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const core = WorkspacePackage.make({
+	 *   name: "core", path: "/repo/core", packageJsonPath: "/repo/core/package.json",
+	 *   relativePath: "core", workspaceRoot: "/repo",
+	 * });
+	 * const app = WorkspacePackage.make({
+	 *   name: "app", path: "/repo/app", packageJsonPath: "/repo/app/package.json",
+	 *   relativePath: "app", workspaceRoot: "/repo", dependencies: { core: "workspace:*" },
+	 * });
+	 * const graph = DependencyGraph.make({ packages: [app, core] });
+	 * console.log(Effect.runSync(graph.sort()).join(", ")) // core, app
+	 * ```
+	 *
+	 * @category sequencing
+	 * @since 0.0.0
+	 */
 	readonly sort = Effect.fn("DependencyGraph.sort")(
 		(): Effect.Effect<ReadonlyArray<string>, CyclicDependencyError> =>
 			this.levels().pipe(Effect.map((levels) => levels.flat())),
 	);
 
 	/**
-  * A topological order over `names` plus their transitive workspace
-  * dependencies — the build order for a subset.
-  *
-  * **Details**
-  *
-  * Fails with `PackageNotFoundError` for a name the graph does not contain,
-  * and with {@link CyclicDependencyError} when the subset's closure has a
-  * cycle.
-  *
-  * @param names - The packages to build; each must be a workspace package.
-  */
+	 * A topological order over `names` plus their transitive workspace
+	 * dependencies — the build order for a subset.
+	 *
+	 * **Details**
+	 *
+	 * Fails with `PackageNotFoundError` for a name the graph does not contain,
+	 * and with {@link CyclicDependencyError} when the subset's closure has a
+	 * cycle.
+	 *
+	 * **Example** (Include transitive dependencies in a subset build)
+	 *
+	 * ```ts
+	 * import { DependencyGraph } from "@beep/scratchpad/effected/workspaces/DependencyGraph";
+	 * import { WorkspacePackage } from "@beep/scratchpad/effected/workspaces/WorkspacePackage";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const core = WorkspacePackage.make({
+	 *   name: "core", path: "/repo/core", packageJsonPath: "/repo/core/package.json",
+	 *   relativePath: "core", workspaceRoot: "/repo",
+	 * });
+	 * const app = WorkspacePackage.make({
+	 *   name: "app", path: "/repo/app", packageJsonPath: "/repo/app/package.json",
+	 *   relativePath: "app", workspaceRoot: "/repo", dependencies: { core: "workspace:*" },
+	 * });
+	 * const graph = DependencyGraph.make({ packages: [app, core] });
+	 * console.log(Effect.runSync(graph.sortSubset(["app"])).join(", ")) // core, app
+	 * ```
+	 *
+	 * @param names - The packages to build; each must be a workspace package.
+	 * @category sequencing
+	 * @since 0.0.0
+	 */
 	readonly sortSubset = Effect.fn("DependencyGraph.sortSubset")(
 		(
 			names: ReadonlyArray<string>,
@@ -323,17 +594,38 @@ export class DependencyGraph extends S.Class<DependencyGraph>($I`DependencyGraph
 	);
 
 	/**
-  * The graph rendered as a Mermaid `flowchart TD`. Total.
-  *
-  * **Details**
-  *
-  * Renders through core's `Graph.toMermaid` over a transient graph built from
-  * the edge index. Node IDs are numeric indexes assigned in sorted-name order
-  * and package names appear only inside quoted labels, so scoped names
-  * (`@scope/a`) never break Mermaid syntax. Nodes and each node's edges are
-  * emitted in sorted order — the output is deterministic regardless of
-  * manifest key order.
-  */
+	 * The graph rendered as a Mermaid `flowchart TD`. Total.
+	 *
+	 * **Details**
+	 *
+	 * Renders through core's `Graph.toMermaid` over a transient graph built from
+	 * the edge index. Node IDs are numeric indexes assigned in sorted-name order
+	 * and package names appear only inside quoted labels, so scoped names
+	 * (`@scope/a`) never break Mermaid syntax. Nodes and each node's edges are
+	 * emitted in sorted order — the output is deterministic regardless of
+	 * manifest key order.
+	 *
+	 * **Example** (Render the Mermaid flowchart header)
+	 *
+	 * ```ts
+	 * import { DependencyGraph } from "@beep/scratchpad/effected/workspaces/DependencyGraph";
+	 * import { WorkspacePackage } from "@beep/scratchpad/effected/workspaces/WorkspacePackage";
+	 *
+	 * const core = WorkspacePackage.make({
+	 *   name: "core", path: "/repo/core", packageJsonPath: "/repo/core/package.json",
+	 *   relativePath: "core", workspaceRoot: "/repo",
+	 * });
+	 * const app = WorkspacePackage.make({
+	 *   name: "app", path: "/repo/app", packageJsonPath: "/repo/app/package.json",
+	 *   relativePath: "app", workspaceRoot: "/repo", dependencies: { core: "workspace:*" },
+	 * });
+	 * const graph = DependencyGraph.make({ packages: [app, core] });
+	 * console.log(graph.toMermaid().split("\n")[0]) // flowchart TD
+	 * ```
+	 *
+	 * @category formatting
+	 * @since 0.0.0
+	 */
 	toMermaid(): string {
 		return Graph.toMermaid(materialize(this.#index()).graph, { edgeLabel: () => "" });
 	}
@@ -387,6 +679,8 @@ const cycleMembers = (edges: Edges): ReadonlyArray<string> => {
  * Kahn's algorithm. `forward[A] = {B}` reads "A depends on B", so level 0 is
  * the set with an out-degree of zero and each completed level decrements its
  * dependents through the reverse index.
+ *
+ * **Details**
  *
  * A non-empty `stalled` only signals *that* a cycle exists — it holds every
  * unprocessed node, including ones merely downstream of a cycle. The error

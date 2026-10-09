@@ -17,16 +17,37 @@ import type { Catalogs } from "@pnpm/catalogs.types";
 
 export type { Catalogs };
 
-/** The normalized entries shape: catalog name → dependency → range. */
+/**
+ * The normalized entries shape: catalog name → dependency → range.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type CatalogEntries = Record<string, Record<string, string>>;
 
-/** Why a catalog specifier could not be resolved. Raw record; the facade types it. */
+/**
+ * Why a catalog specifier could not be resolved. Raw record; the facade types it.
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface CatalogMisconfiguration {
 	readonly catalogName: string;
 	readonly detail: string;
 }
 
-/** Project a pnpm-workspace manifest's `catalog` / `catalogs` fields into a `Catalogs` map. */
+/**
+ * Project a pnpm-workspace manifest's `catalog` / `catalogs` fields into a `Catalogs` map.
+ *
+ * **Example** (Read the default inline catalog)
+ *
+ * ```ts
+ * import { inlineCatalogs } from "@beep/scratchpad/effected/workspaces/internal/catalogs";
+ *
+ * const catalogs = inlineCatalogs({ catalog: { effect: "^4.0.0" } });
+ * console.log(catalogs.default?.effect) // ^4.0.0
+ * ```
+ * @category utilities
+ * @since 0.0.0
+ */
 export const inlineCatalogs = (manifest: {
 	readonly catalog?: Record<string, string> | undefined;
 	readonly catalogs?: Record<string, Record<string, string>> | undefined;
@@ -42,13 +63,53 @@ export const inlineCatalogs = (manifest: {
 	}
 };
 
-/** Merge catalog sources; later sources win per dependency within a catalog. */
+/**
+ * Merge catalog sources; later sources win per dependency within a catalog.
+ *
+ * **Example** (Override a dependency with a later catalog source)
+ *
+ * ```ts
+ * import { merge } from "@beep/scratchpad/effected/workspaces/internal/catalogs";
+ *
+ * const catalogs = merge({ default: { effect: "^3.0.0" } }, { default: { effect: "^4.0.0" } });
+ * console.log(catalogs.default?.effect) // ^4.0.0
+ * ```
+ * @category utilities
+ * @since 0.0.0
+ */
 export const merge = (...sources: ReadonlyArray<Catalogs | undefined>): Catalogs => mergeCatalogs(...sources);
 
-/** Whether `specifier` is a `catalog:` protocol reference, and which catalog it names. */
+/**
+ * Whether `specifier` is a `catalog:` protocol reference, and which catalog it names.
+ *
+ * **Example** (Distinguish named catalogs from other protocols)
+ *
+ * ```ts
+ * import { catalogNameOf } from "@beep/scratchpad/effected/workspaces/internal/catalogs";
+ *
+ * console.log(catalogNameOf("catalog:tools")) // tools
+ * console.log(catalogNameOf("workspace:*")) // null
+ * ```
+ * @category parsing
+ * @since 0.0.0
+ */
 export const catalogNameOf = (specifier: string): string | null => parseCatalogProtocol(specifier);
 
-/** Normalize the arbitrary shape of a catalog map into `CatalogEntries`, dropping anything unusable. */
+/**
+ * Normalize the arbitrary shape of a catalog map into `CatalogEntries`, dropping anything unusable.
+ *
+ * **Example** (Normalize string and lockfile catalog entries)
+ *
+ * ```ts
+ * import { normalize } from "@beep/scratchpad/effected/workspaces/internal/catalogs";
+ *
+ * const catalogs = normalize({ default: { effect: { specifier: "^4.0.0" }, invalid: 42 } });
+ * console.log(catalogs.default?.effect) // ^4.0.0
+ * console.log(catalogs.default?.invalid) // undefined
+ * ```
+ * @category normalization
+ * @since 0.0.0
+ */
 export const normalize = (raw: unknown): CatalogEntries => {
 	if (!P.isObjectOrArray(raw)) return {};
 	const entries: Array<readonly [string, Record<string, string>]> = [];
@@ -72,9 +133,23 @@ export const normalize = (raw: unknown): CatalogEntries => {
 /**
  * Resolve one `catalog:` specifier against an assembled catalog set.
  *
+ * **Details**
+ *
  * Returns the range on a hit, `undefined` on a miss (the specifier names no
  * catalog entry — an ordinary `Option.none()` to the caller), and a
  * `CatalogMisconfiguration` when pnpm reports the catalog itself is malformed.
+ *
+ * **Example** (Resolve a catalog entry and inspect a miss)
+ *
+ * ```ts
+ * import { rangeOf } from "@beep/scratchpad/effected/workspaces/internal/catalogs";
+ *
+ * const catalogs = { default: { effect: "^4.0.0" } };
+ * console.log(rangeOf(catalogs, "effect", "catalog:")) // ^4.0.0
+ * console.log(rangeOf(catalogs, "missing", "catalog:")) // undefined
+ * ```
+ * @category parsing
+ * @since 0.0.0
  */
 export const rangeOf: {
 	(dependency: string, specifier: string): (catalogs: Catalogs) => string | undefined | CatalogMisconfiguration;

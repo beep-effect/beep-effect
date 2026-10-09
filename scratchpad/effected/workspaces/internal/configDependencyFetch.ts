@@ -63,13 +63,21 @@ const { basename, dirname, join } = process.getBuiltinModule("node:path");
  * The config dependencies the declaring side's `pnpm-lock.yaml` env preamble
  * records, decoded at most once per replay and shared by every fetch in it:
  * `undefined` when that side has no lockfile.
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export type RecordedLocks = Effect.Effect<
 	HashMap.HashMap<string, ConfigDependencyLock> | undefined,
 	LockfileParseError | LockfileFramingError
 >;
 
-/** One config dependency the ladder could not find, handed to the fetch rung. */
+/**
+ * One config dependency the ladder could not find, handed to the fetch rung.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface FetchRequest {
 	/**
 	 * The current workspace root, whose `.npmrc` and registry keys the scratch
@@ -90,13 +98,21 @@ export interface FetchRequest {
 	readonly locks: RecordedLocks;
 }
 
-/** Why the fetch rung failed: the public `CatalogAssemblyError` reasons it can report. */
+/**
+ * Why the fetch rung failed: the public `CatalogAssemblyError` reasons it can report.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type FetchFailureReason = "fetchFailed" | "integrityMismatch" | "integrityUnavailable";
 
 /**
  * The fetch rung's internal failure record. The ladder, not the rung, builds
  * the one public `CatalogAssemblyError` from it, folding `message` into the
  * not-installed diagnosis and keeping `cause` on the chain.
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface FetchFailure {
 	readonly reason: FetchFailureReason;
@@ -113,6 +129,9 @@ const fetchFailure = (reason: FetchFailureReason, message: string, cause?: unkno
  * The fetch rung: put `<name>@<version>` into the store, verified, and answer
  * the store directory pnpm linked. Fails with a {@link FetchFailure} and never
  * returns an unverified copy.
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export type FetchConfigDependency = (request: FetchRequest) => Effect.Effect<string, FetchFailure>;
 
@@ -135,6 +154,26 @@ const FETCH_TIMEOUT = Duration.minutes(2);
  * An unreadable lockfile fails closed even when the spec carries an inline
  * integrity: the lockfile is the declaring side's own checksum store, and a
  * store that cannot be read cannot be confirmed to agree with the inline pin.
+ *
+ * **Example** (Reject a fetch without a recorded checksum)
+ *
+ * ```ts
+ * import { expectedIntegrity } from "@beep/scratchpad/effected/workspaces/internal/configDependencyFetch"
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = expectedIntegrity({
+ *   name: "workspace-config",
+ *   version: "1.0.0",
+ *   spec: "1.0.0",
+ *   side: {},
+ *   locks: Effect.succeed(undefined),
+ * })
+ *
+ * console.log(Effect.runSync(Effect.flip(program)).reason) // integrityUnavailable
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
  */
 export const expectedIntegrity = Effect.fn("expectedIntegrity")(function* (
 	request: Pick<FetchRequest, "name" | "version" | "spec" | "side" | "locks">,
@@ -191,13 +230,38 @@ export const expectedIntegrity = Effect.fn("expectedIntegrity")(function* (
  * The registry settings pnpm reads from a `pnpm-workspace.yaml`: the default
  * `registry` and the per-scope `registries` map. Anything that is not a string
  * is dropped, as pnpm would not use it.
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface RegistrySettings {
 	readonly registry?: string;
 	readonly registries: Readonly<Record<string, string>>;
 }
 
-/** The {@link RegistrySettings} of a parsed `pnpm-workspace.yaml` document. */
+/**
+ * Extracts the {@link RegistrySettings} from a parsed `pnpm-workspace.yaml` document.
+ *
+ * **Details**
+ *
+ * Only string-valued registry URLs are retained; other scope entries are dropped.
+ *
+ * **Example** (Keep valid scoped registry URLs)
+ *
+ * ```ts
+ * import { registrySettingsOf } from "@beep/scratchpad/effected/workspaces/internal/configDependencyFetch"
+ *
+ * const settings = registrySettingsOf({
+ *   registry: "https://registry.npmjs.org/",
+ *   registries: { "@team": "https://packages.example.com/", "@ignored": 42 },
+ * })
+ *
+ * console.log(settings.registries["@team"]) // https://packages.example.com/
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const registrySettingsOf = (document: unknown): RegistrySettings => {
 	if (!P.isObject(document)) return { registries: {} };
 	const registries: Record<string, string> = {};
@@ -214,6 +278,19 @@ export const registrySettingsOf = (document: unknown): RegistrySettings => {
  * plus the declaring workspace's registry settings. Every key and scalar is a
  * JSON-quoted string, which YAML reads verbatim, so no declared text can
  * change the document's structure.
+ *
+ * **Example** (Quote a config dependency in workspace YAML)
+ *
+ * ```ts
+ * import { scratchWorkspaceYaml } from "@beep/scratchpad/effected/workspaces/internal/configDependencyFetch"
+ *
+ * const yaml = scratchWorkspaceYaml("workspace-config", "1.0.0")
+ *
+ * console.log(yaml.split("\n")[1]) //   "workspace-config": "1.0.0"
+ * ```
+ *
+ * @category formatting
+ * @since 0.0.0
  */
 export const scratchWorkspaceYaml: {
 	(version: string, settings?: RegistrySettings): (name: string) => string;
@@ -275,6 +352,17 @@ const scratchLockfile = (name: string, version: string, integrity: string): stri
  * (`<root>/v11`), and pnpm appends that segment itself, so a versioned
  * directory is passed as its parent. `undefined` (pnpm's own default) when no
  * store was discovered.
+ *
+ * **Example** (Remove the pnpm store format suffix)
+ *
+ * ```ts
+ * import { storeDirArgument } from "@beep/scratchpad/effected/workspaces/internal/configDependencyFetch"
+ *
+ * console.log(storeDirArgument(["/pnpm/store/v11"])) // /pnpm/store
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
  */
 export const storeDirArgument = (stores: ReadonlyArray<string>): string | undefined => {
 	const first = stores[0];
@@ -282,7 +370,20 @@ export const storeDirArgument = (stores: ReadonlyArray<string>): string | undefi
 	return /^v\d+$/.test(basename(first)) ? dirname(first) : first;
 };
 
-/** The pnpm argv for the verified fetch. */
+/**
+ * Builds the pnpm argv for the verified fetch.
+ *
+ * **Example** (Construct a frozen install using the default store)
+ *
+ * ```ts
+ * import { fetchArgs } from "@beep/scratchpad/effected/workspaces/internal/configDependencyFetch"
+ *
+ * console.log(fetchArgs("/scratch", []).join(" ")) // install --frozen-lockfile --dir /scratch
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
 export const fetchArgs: {
 	(stores: ReadonlyArray<string>): (scratch: string) => ReadonlyArray<string>;
 	(scratch: string, stores: ReadonlyArray<string>): ReadonlyArray<string>;
@@ -304,6 +405,21 @@ const isStoreEntry = (resolved: string, name: string, version: string): boolean 
 /**
  * Build the fetch rung over a spawner. Wired only by
  * `ConfigDependencyHooks.layerSubprocess`.
+ *
+ * **Example** (Construct a fetcher from the subprocess service)
+ *
+ * ```ts
+ * import { makeFetchConfigDependency } from "@beep/scratchpad/effected/workspaces/internal/configDependencyFetch"
+ * import * as Effect from "effect/Effect"
+ * import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner"
+ *
+ * const program = Effect.map(ChildProcessSpawner.ChildProcessSpawner, makeFetchConfigDependency)
+ *
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const makeFetchConfigDependency =
 	(spawner: ChildProcessSpawner.ChildProcessSpawner["Service"]): FetchConfigDependency =>

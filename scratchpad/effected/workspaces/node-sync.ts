@@ -6,7 +6,7 @@
  *
  * **Details**
  *
- * Deliberately a **separate subpath** (`@effected/workspaces/node-sync`), not
+ * Deliberately a **separate subpath** (`@beep/scratchpad/effected/workspaces/node-sync`), not
  * part of the main entry: the main entry imports nothing platform-shaped, and
  * re-exporting these from it would drag `node:*` imports into every consumer —
  * including the ones supplying their own operations (a win32-explicit `path`,
@@ -17,11 +17,13 @@
  * **Example** (Enumerate workspace packages with the Node sync binding)
  *
  * ```ts
- * import { findWorkspaceRootSync, getWorkspacePackagesSync } from "./index.ts";
- * import { nodeSyncOps } from "./node-sync.ts";
+ * import { findWorkspaceRootSync, getWorkspacePackagesSync } from "@beep/scratchpad/effected/workspaces/WorkspacesSync";
+ * import { nodeSyncOps } from "@beep/scratchpad/effected/workspaces/node-sync";
+ * import * as A from "effect/Array";
  *
  * const root = findWorkspaceRootSync(process.cwd(), nodeSyncOps);
  * const packages = root === null ? [] : getWorkspacePackagesSync(root, nodeSyncOps);
+ * console.log(A.isArray(packages)) // true
  * ```
  *
  * @packageDocumentation
@@ -41,7 +43,7 @@ const path = process.getBuiltinModule("node:path");
 export type { SyncDirectoryEntry, SyncFileSystem, SyncPath, WorkspacesSyncOptions } from "./WorkspacesSync.ts";
 
 /**
- * `SyncFileSystem` over `node:fs`.
+ * Provides synchronous filesystem operations over `node:fs` for workspace discovery.
  *
  * **Details**
  *
@@ -49,7 +51,17 @@ export type { SyncDirectoryEntry, SyncFileSystem, SyncPath, WorkspacesSyncOption
  * the other three may throw and every throw lands in the sync entry points'
  * documented degraded-skip semantics.
  *
+ * **Example** (Check a missing workspace file without throwing)
+ *
+ * ```ts
+ * import { nodeFileSystem } from "@beep/scratchpad/effected/workspaces/node-sync";
+ *
+ * console.log(nodeFileSystem.exists("")) // false
+ * ```
+ *
  * @public
+ * @category adapters
+ * @since 0.0.0
  */
 export const nodeFileSystem: SyncFileSystem = {
 	exists: existsSync,
@@ -68,22 +80,51 @@ export const nodeFileSystem: SyncFileSystem = {
 };
 
 /**
- * `SyncPath` as the running platform's `node:path` — win32 semantics on
- * Windows, posix elsewhere. Pass `node:path/win32` or `node:path/posix`
- * yourself to pin a dialect.
+ * Provides synchronous path operations using the running platform's `node:path`.
+ *
+ * **Details**
+ *
+ * Uses win32 semantics on Windows, posix elsewhere. Pass `node:path/win32` or
+ * `node:path/posix` yourself to pin a dialect.
+ *
+ * **Example** (Find a workspace manifest directory across platforms)
+ *
+ * ```ts
+ * import { nodePath } from "@beep/scratchpad/effected/workspaces/node-sync";
+ *
+ * console.log(nodePath.dirname(nodePath.join("workspace", "package.json"))) // workspace
+ * ```
  *
  * @public
+ * @category adapters
+ * @since 0.0.0
  */
 export const nodePath: SyncPath = path;
 
 /**
  * The complete Node-bound options bag for `findWorkspaceRootSync` and
  * `getWorkspacePackagesSync` — {@link nodeFileSystem} plus {@link nodePath}.
+ *
+ * **Details**
+ *
  * Both helpers take their path positionally, so this bag usually passes
  * through verbatim; spread it only to add `getWorkspacePackagesSync`'s
  * traversal extras: `{ ...nodeSyncOps, maxDepth }`.
  *
+ * **Example** (Add a traversal depth to the Node options)
+ *
+ * ```ts
+ * import { nodeFileSystem, nodePath, nodeSyncOps } from "@beep/scratchpad/effected/workspaces/node-sync";
+ *
+ * const options = { ...nodeSyncOps, maxDepth: 2 };
+ * console.log(options.fileSystem === nodeFileSystem) // true
+ * console.log(options.path === nodePath) // true
+ * console.log(options.maxDepth) // 2
+ * ```
+ *
  * @public
+ * @category configuration
+ * @since 0.0.0
  */
 export const nodeSyncOps: WorkspacesSyncOptions = {
 	fileSystem: nodeFileSystem,

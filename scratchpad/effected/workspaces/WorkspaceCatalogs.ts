@@ -85,6 +85,8 @@ const isCatalogRecords = S.is(CatalogRecords);
  * versions; bun and npm yield an empty index.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type ImporterVersions = Readonly<Record<string, Readonly<Record<string, string>>>>;
 
@@ -100,18 +102,56 @@ export type ImporterVersions = Readonly<Record<string, Readonly<Record<string, s
  * normalized to their `specifier` — the declared range, which is what a catalog
  * resolves to.
  *
+ * **Example** (Normalize the default catalog)
+ *
+ * ```ts
+ * import { CatalogSet } from "@beep/scratchpad/effected/workspaces/WorkspaceCatalogs";
+ *
+ * const catalogs = CatalogSet.fromBunBlocks({ catalog: { effect: "^4.0.0" } });
+ * console.log(catalogs.entries.default?.effect) // ^4.0.0
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class CatalogSet extends S.Class<CatalogSet>($I`CatalogSet`)({
 	/** Catalog name → dependency name → version range. */
 	entries: CatalogRecords.annotateKey({ description: "Catalog name → dependency name → version range." }),
 }, $I.annote("CatalogSet", { description: "An immutable, fully-normalized catalog collection — the one catalog resolution semantic in the package." })) {
-	/** The empty set — a workspace with no catalogs. */
+	/**
+	 * The empty set — a workspace with no catalogs.
+	 *
+	 * **Example** (Create a workspace without catalogs)
+	 *
+	 * ```ts
+	 * import { CatalogSet } from "@beep/scratchpad/effected/workspaces/WorkspaceCatalogs";
+	 *
+	 * console.log(CatalogSet.empty().isEmpty) // true
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	static empty(): CatalogSet {
 		return CatalogSet.make({ entries: {} });
 	}
 
-	/** Wrap a pnpm `Catalogs` map, dropping unusable entries. */
+	/**
+	 * Wrap a pnpm `Catalogs` map, dropping unusable entries.
+	 *
+	 * **Example** (Normalize named catalog ranges)
+	 *
+	 * ```ts
+	 * import { CatalogSet } from "@beep/scratchpad/effected/workspaces/WorkspaceCatalogs";
+	 *
+	 * const catalogs = CatalogSet.fromCatalogs({ build: { typescript: "^6.0.0" } });
+	 * console.log(catalogs.entries.build?.typescript) // ^6.0.0
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	static fromCatalogs(catalogs: unknown): CatalogSet {
 		return CatalogSet.make({ entries: normalize(catalogs) });
 	}
@@ -119,7 +159,19 @@ export class CatalogSet extends S.Class<CatalogSet>($I`CatalogSet`)({
 	/**
 	 * The `catalog:` and `catalogs:` blocks of a `pnpm-workspace.yaml` document.
 	 *
+	 * **Example** (Read the default YAML catalog)
+	 *
+	 * ```ts
+	 * import { CatalogSet } from "@beep/scratchpad/effected/workspaces/WorkspaceCatalogs";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const catalogs = Effect.runSync(CatalogSet.fromWorkspaceYaml("catalog:\n  effect: ^4.0.0\n"));
+	 * console.log(catalogs.entries.default?.effect) // ^4.0.0
+	 * ```
+	 *
 	 * @param text - The raw YAML text.
+	 * @category constructors
+	 * @since 0.0.0
 	 */
 	static readonly fromWorkspaceYaml = Effect.fn("CatalogSet.fromWorkspaceYaml")(function* (text: string) {
 		const document = yield* Yaml.parse(text).pipe(
@@ -131,24 +183,49 @@ export class CatalogSet extends S.Class<CatalogSet>($I`CatalogSet`)({
 	/**
 	 * The `catalogs:` section of a pnpm lockfile, whose entries are either a bare
 	 * range or a `{ specifier, version }` pair.
+	 *
+	 * **Example** (Read a recorded catalog specifier)
+	 *
+	 * ```ts
+	 * import { CatalogSet } from "@beep/scratchpad/effected/workspaces/WorkspaceCatalogs";
+	 *
+	 * const catalogs = CatalogSet.fromLockfileCatalogs({ default: { effect: { specifier: "^4.0.0", version: "4.0.0" } } });
+	 * console.log(catalogs.entries.default?.effect) // ^4.0.0
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
 	 */
 	static fromLockfileCatalogs(raw: unknown): CatalogSet {
 		return CatalogSet.make({ entries: normalize(raw) });
 	}
 
 	/**
-  * The catalog set a parsed lockfile records, PM-aware.
-  *
-  * **Details**
-  *
-  * Both pnpm and bun record catalogs in the lockfile, in different shapes:
-  * pnpm under `extension.catalogs`, bun under `extension.catalog` /
-  * `extension.catalogs`. Assembly reads whichever the parsed lockfile carries
-  * rather than assuming the pnpm extension. A lockfile with no extension, or a
-  * pnpm one with no catalogs, yields the empty set.
-  *
-  * @param lockfile - A parsed lockfile from `@effected/lockfiles`.
-  */
+	 * The catalog set a parsed lockfile records, PM-aware.
+	 *
+	 * **Details**
+	 *
+	 * Both pnpm and bun record catalogs in the lockfile, in different shapes:
+	 * pnpm under `extension.catalogs`, bun under `extension.catalog` /
+	 * `extension.catalogs`. Assembly reads whichever the parsed lockfile carries
+	 * rather than assuming the pnpm extension. A lockfile with no extension, or a
+	 * pnpm one with no catalogs, yields the empty set.
+	 *
+	 * **Example** (Compose catalog extraction from a lockfile read)
+	 *
+	 * ```ts
+	 * import { CatalogSet } from "@beep/scratchpad/effected/workspaces/WorkspaceCatalogs";
+	 * import * as Effect from "effect/Effect";
+	 * import { LockfileReader } from "@beep/scratchpad/effected/workspaces/LockfileReader";
+	 *
+	 * const program = Effect.flatMap(LockfileReader, (reader) => Effect.map(reader.read, CatalogSet.fromLockfile));
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @param lockfile - A parsed lockfile from `@effected/lockfiles`.
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	static fromLockfile(lockfile: Lockfile): CatalogSet {
 		const ext = lockfile.extension;
 		if (ext === undefined) return CatalogSet.empty();
@@ -164,7 +241,18 @@ export class CatalogSet extends S.Class<CatalogSet>($I`CatalogSet`)({
 	 * unnamed default catalog normalizes under `"default"`. Tolerant: unusable
 	 * values are dropped, never fatal.
 	 *
+	 * **Example** (Normalize an unnamed Bun catalog)
+	 *
+	 * ```ts
+	 * import { CatalogSet } from "@beep/scratchpad/effected/workspaces/WorkspaceCatalogs";
+	 *
+	 * const catalogs = CatalogSet.fromBunBlocks({ catalog: { effect: "^4.0.0" } });
+	 * console.log(catalogs.entries.default?.effect) // ^4.0.0
+	 * ```
+	 *
 	 * @param blocks - The `catalog` (default) and `catalogs` (named) blocks.
+	 * @category constructors
+	 * @since 0.0.0
 	 */
 	static fromBunBlocks(blocks: { readonly catalog?: unknown; readonly catalogs?: unknown }): CatalogSet {
 		const raw: Record<string, unknown> = { ...(isObject(blocks.catalogs) ? blocks.catalogs : {}) };
@@ -192,10 +280,13 @@ export class CatalogSet extends S.Class<CatalogSet>($I`CatalogSet`)({
 	 * **Example** (Read a top-level Bun catalog)
 	 *
 	 * ```ts
-	 * import { CatalogSet } from "./WorkspaceCatalogs.ts";
+	 * import { CatalogSet } from "@beep/scratchpad/effected/workspaces/WorkspaceCatalogs";
+	 * import * as Effect from "effect/Effect";
 	 *
-	 * CatalogSet.fromManifestWorkspaces('{"workspaces":["packages/*"],"catalog":{"effect":"^4.0.0"}}');
-	 * // Effect yielding a CatalogSet with effect in the default catalog.
+	 * const catalogs = Effect.runSync(CatalogSet.fromManifestWorkspaces(
+	 *   '{"workspaces":["packages/*"],"catalog":{"effect":"^4.0.0"}}',
+	 * ));
+	 * console.log(catalogs.entries.default?.effect) // ^4.0.0
 	 * ```
 	 *
 	 * @param text - The raw root `package.json` text.
@@ -219,42 +310,95 @@ export class CatalogSet extends S.Class<CatalogSet>($I`CatalogSet`)({
 		return CatalogSet.merge(CatalogSet.fromBunBlocks(topLevel), CatalogSet.fromBunBlocks(blocks));
 	});
 
-	/** Merge sets. Later sets win per dependency within a catalog. */
+	/**
+	 * Merge sets. Later sets win per dependency within a catalog.
+	 *
+	 * **Example** (Let later catalog ranges win)
+	 *
+	 * ```ts
+	 * import { CatalogSet } from "@beep/scratchpad/effected/workspaces/WorkspaceCatalogs";
+	 *
+	 * const before = CatalogSet.fromCatalogs({ default: { effect: "^4.0.0" } });
+	 * const after = CatalogSet.fromCatalogs({ default: { effect: "^4.1.0" } });
+	 * console.log(CatalogSet.merge(before, after).entries.default?.effect) // ^4.1.0
+	 * ```
+	 *
+	 * @category combinators
+	 * @since 0.0.0
+	 */
 	static merge(...sets: ReadonlyArray<CatalogSet>): CatalogSet {
 		return CatalogSet.fromCatalogs(merge(...sets.map((set) => set.entries)));
 	}
 
-	/** Whether any catalog declares anything. */
+	/**
+	 * Reports whether the catalog collection is empty.
+	 *
+	 * **Example** (Check whether a catalog set is empty)
+	 *
+	 * ```ts
+	 * import { CatalogSet } from "@beep/scratchpad/effected/workspaces/WorkspaceCatalogs";
+	 *
+	 * console.log(CatalogSet.fromCatalogs({ default: { effect: "^4.0.0" } }).isEmpty) // false
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	get isEmpty(): boolean {
 		return R.keys(this.entries).length === 0;
 	}
 
 	/**
-  * The range a `catalog:` specifier resolves to.
-  *
-  * **Details**
-  *
-  * Total: an unmatched dependency, an unknown catalog name, or a non-catalog
-  * specifier all yield `Option.none()`. A *malformed* catalog — one pnpm
-  * itself rejects — also yields `Option.none()` here; the fallible surface is
-  * {@link WorkspaceCatalogs}, which fails typed on assembly instead.
-  *
-  * @param dependency - The package name being resolved.
-  * @param specifier - The declared specifier, e.g. `catalog:` or `catalog:build`.
-  */
+	 * The range a `catalog:` specifier resolves to.
+	 *
+	 * **Details**
+	 *
+	 * Total: an unmatched dependency, an unknown catalog name, or a non-catalog
+	 * specifier all yield `Option.none()`. A *malformed* catalog — one pnpm
+	 * itself rejects — also yields `Option.none()` here; the fallible surface is
+	 * {@link WorkspaceCatalogs}, which fails typed on assembly instead.
+	 *
+	 * **Example** (Resolve a default catalog specifier)
+	 *
+	 * ```ts
+	 * import { CatalogSet } from "@beep/scratchpad/effected/workspaces/WorkspaceCatalogs";
+	 * import * as O from "effect/Option";
+	 *
+	 * const catalogs = CatalogSet.fromCatalogs({ default: { effect: "^4.0.0" } });
+	 * console.log(O.getOrElse(catalogs.resolveSpecifier("effect", "catalog:"), () => "missing")) // ^4.0.0
+	 * ```
+	 *
+	 * @param dependency - The package name being resolved.
+	 * @param specifier - The declared specifier, e.g. `catalog:` or `catalog:build`.
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	resolveSpecifier(dependency: string, specifier: string): O.Option<string> {
 		const resolved = rangeOf(this.entries, dependency, specifier);
 		return P.isString(resolved) ? O.some(resolved) : O.none();
 	}
 
 	/**
-  * The range `dependency` carries in a named catalog, or in the default
-  * catalog when `catalog` is `Option.none()`.
-  *
-  * **Details**
-  *
-  * The shape `@effected/npm`'s `CatalogResolver` contract asks for.
-  */
+	 * The range `dependency` carries in a named catalog, or in the default
+	 * catalog when `catalog` is `Option.none()`.
+	 *
+	 * **Details**
+	 *
+	 * The shape `@effected/npm`'s `CatalogResolver` contract asks for.
+	 *
+	 * **Example** (Look up a named catalog range)
+	 *
+	 * ```ts
+	 * import { CatalogSet } from "@beep/scratchpad/effected/workspaces/WorkspaceCatalogs";
+	 * import * as O from "effect/Option";
+	 *
+	 * const catalogs = CatalogSet.fromCatalogs({ build: { typescript: "^6.0.0" } });
+	 * console.log(O.getOrElse(catalogs.rangeOf("typescript", O.some("build")), () => "missing")) // ^6.0.0
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	rangeOf(dependency: string, catalog: O.Option<string>): O.Option<string> {
 		const name = O.getOrElse(catalog, () => "default");
 		return O.flatMap(R.get(this.entries, name), R.get(dependency));
@@ -306,7 +450,7 @@ const catalogBlocksOf = (
  * silently-ignored gate is the "install refuses a too-young version the
  * resolver already picked" bug this vocabulary exists to prevent. An absent or
  * explicitly `null` key contributes nothing; the permissive
- * `PartialReleaseAgeGate` accepts any finite `ageMinutes` (negatives and
+ * `PartialReleaseAgeGate` accepts every finite `ageMinutes` (negatives and
  * fractions included) — `ReleaseAgeGate.combine` is the single clamping
  * authority, exactly as on the hook path.
  */
@@ -458,6 +602,8 @@ const validatePnpmWorkspaceCatalogs = (document: unknown): Effect.Effect<void, C
  * Every failure catalog assembly can surface.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type CatalogAssemblyFailure = CatalogAssemblyError | WorkspaceRootNotFoundError;
 
@@ -492,6 +638,22 @@ interface Assembled {
  * config dependency is verified against the record of the side that declared
  * it. Not part of the public surface; `WorkspaceSnapshots` imports it
  * directly.
+ *
+ * **Example** (Construct a seeded hook replay)
+ *
+ * ```ts
+ * import { CatalogSet, injectFromDocument } from "@beep/scratchpad/effected/workspaces/WorkspaceCatalogs";
+ * import * as Effect from "effect/Effect";
+ * import { ConfigDependencyHooks } from "@beep/scratchpad/effected/workspaces/ConfigDependencyHooks";
+ *
+ * const program = Effect.flatMap(ConfigDependencyHooks, (hooks) =>
+ *   injectFromDocument(hooks, "/workspace", {}, CatalogSet.empty(), {}),
+ * );
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
  */
 export const injectFromDocument: {
 	(root: string, document: unknown, inline: CatalogSet, context: HookReplayContext): (hooks: ConfigDependencyHooksShape) => Effect.Effect<{ readonly injected: CatalogSet; readonly injection: HookInjection }, CatalogAssemblyError>;
@@ -509,129 +671,155 @@ export const injectFromDocument: {
 	));
 
 /**
- * The {@link WorkspaceCatalogs} service shape.
+ * Provides catalog resolution and the related policy outputs from the workspace's shared, memoized assembly.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface WorkspaceCatalogsShape {
-	/** The assembled catalog set for the workspace. Memoized after the first call. */
+	/**
+	 * The assembled catalog set for the workspace. Memoized after the first call.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly set: Effect.Effect<CatalogSet, CatalogAssemblyFailure>;
-	/** Resolve one `catalog:` specifier; `Option.none()` when it names nothing. */
+	/**
+	 * Resolve one `catalog:` specifier; `Option.none()` when it names nothing.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly resolveSpecifier: (
 		dependency: string,
 		specifier: string,
 	) => Effect.Effect<O.Option<string>, CatalogAssemblyFailure>;
 	/**
-  * The effective pnpm release-age gate for the workspace, combined
-  * strictest-wins from the inline `pnpm-workspace.yaml` keys
-  * (`minimumReleaseAge` / `minimumReleaseAgeExclude`) and the replayed
-  * config-dependency hooks. Assembled from the same single read and hook
-  * replay as `set`, and memoized with it.
-  *
-  * **Details**
-  *
-  * Under the default layer (no-op hooks) only inline values contribute; under
-  * {@link WorkspaceCatalogs.layerWithConfigDependencies} the replayed hooks
-  * contribute too. A workspace with no pnpm-workspace.yaml (a bun/npm
-  * workspace) has no release-age keys, so the gate is the inert zero gate.
-  */
+	 * The effective pnpm release-age gate for the workspace, combined
+	 * strictest-wins from the inline `pnpm-workspace.yaml` keys
+	 * (`minimumReleaseAge` / `minimumReleaseAgeExclude`) and the replayed
+	 * config-dependency hooks. Assembled from the same single read and hook
+	 * replay as `set`, and memoized with it.
+	 *
+	 * **Details**
+	 *
+	 * Under the default layer (no-op hooks) only inline values contribute; under
+	 * {@link WorkspaceCatalogs.layerWithConfigDependencies} the replayed hooks
+	 * contribute too. A workspace with no pnpm-workspace.yaml (a bun/npm
+	 * workspace) has no release-age keys, so the gate is the inert zero gate.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly releaseAgeGate: Effect.Effect<ReleaseAgeGate, CatalogAssemblyFailure>;
 	/**
-  * The workspace's **effective** `peerDependencyRules` — pnpm's post-hoc
-  * suppression policy, which the lockfile does not record at all.
-  *
-  * **Details**
-  *
-  * Assembled from the same single read and hook replay as `set`, and memoized
-  * with it. The `pnpm-workspace.yaml` block (what `pnpm:export` materializes)
-  * is **seeded** into the replayed config and the config-dependency hooks
-  * merge onto it, so one object carries both sources — the kit never merges
-  * them itself, because that would be a second implementation of a rule the
-  * hook seam already enforces.
-  *
-  * A consumer needs these to avoid **reporting** what pnpm suppresses: pnpm
-  * computes the same peer violations and then hides the ones a rule allows,
-  * so a checker without them reports findings pnpm calls clean. `PeerCheck`
-  * applies all three axes.
-  */
+	 * The workspace's **effective** `peerDependencyRules` — pnpm's post-hoc
+	 * suppression policy, which the lockfile does not record at all.
+	 *
+	 * **Details**
+	 *
+	 * Assembled from the same single read and hook replay as `set`, and memoized
+	 * with it. The `pnpm-workspace.yaml` block (what `pnpm:export` materializes)
+	 * is **seeded** into the replayed config and the config-dependency hooks
+	 * merge onto it, so one object carries both sources — the kit never merges
+	 * them itself, because that would be a second implementation of a rule the
+	 * hook seam already enforces.
+	 *
+	 * A consumer needs these to avoid **reporting** what pnpm suppresses: pnpm
+	 * computes the same peer violations and then hides the ones a rule allows,
+	 * so a checker without them reports findings pnpm calls clean. `PeerCheck`
+	 * applies all three axes.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly peerDependencyRules: Effect.Effect<PeerDependencyRules, CatalogAssemblyFailure>;
 	/**
-  * Each importer's dependency-name → resolved-version map, as the manager's
-  * lockfile records it. Read from the same single lockfile read as `set`, and
-  * memoized with it.
-  *
-  * **Details**
-  *
-  * Feeds `WorkspaceStateSnapshot`'s fallback for a `catalog:` specifier no
-  * committed catalog source declares — the shape a config-dependency pnpmfile
-  * hook produces. Only pnpm records importer versions; a bun or npm workspace
-  * yields an empty index, and an absent or unreadable lockfile contributes
-  * nothing rather than failing.
-  */
+	 * Each importer's dependency-name → resolved-version map, as the manager's
+	 * lockfile records it. Read from the same single lockfile read as `set`, and
+	 * memoized with it.
+	 *
+	 * **Details**
+	 *
+	 * Feeds `WorkspaceStateSnapshot`'s fallback for a `catalog:` specifier no
+	 * committed catalog source declares — the shape a config-dependency pnpmfile
+	 * hook produces. Only pnpm records importer versions; a bun or npm workspace
+	 * yields an empty index, and an absent or unreadable lockfile contributes
+	 * nothing rather than failing.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly importerVersions: Effect.Effect<ImporterVersions, CatalogAssemblyFailure>;
 	/**
-  * Which version each declared config dependency was replayed from, keyed
-  * by name — off the same single memoized assemble pass as `set()`.
-  *
-  * **Details**
-  *
-  * Every dependency the hooks layer resolved when a `pnpm-workspace.yaml`
-  * was read — `{}` when it declares no config dependencies or under the
-  * no-op layer, which resolves nothing. Config dependencies are a pnpm
-  * feature, so the bun / `package.json` path yields `{}` too, exactly as
-  * `importerVersions` does.
-  */
+	 * Which version each declared config dependency was replayed from, keyed
+	 * by name — off the same single memoized assemble pass as `set()`.
+	 *
+	 * **Details**
+	 *
+	 * Every dependency the hooks layer resolved when a `pnpm-workspace.yaml`
+	 * was read — `{}` when it declares no config dependencies or under the
+	 * no-op layer, which resolves nothing. Config dependencies are a pnpm
+	 * feature, so the bun / `package.json` path yields `{}` too, exactly as
+	 * `importerVersions` does.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly hookReplays: Effect.Effect<Readonly<Record<string, HookReplay>>, CatalogAssemblyFailure>;
 	/**
-  * Discard the memoized assembly so the **next** read re-assembles — the same
-  * single read and hook replay as the first, over the workspace as it stands
-  * then.
-  *
-  * **Details**
-  *
-  * The explicit memoization boundary for a tool that **mutates the workspace
-  * mid-run** — installs, bumps a config dependency, regenerates the lockfile.
-  * Release-age gating wants the before-state, a post-install peer check the
-  * after-state, and one infinite memo cannot serve both without this call in
-  * between; without it, `peerDependencyRules` keeps answering from the
-  * pre-mutation hook replay and the checker reports findings the new rules
-  * suppress.
-  *
-  * Unconditional and infallible: the memo is already success-only (a failed
-  * or interrupted assembly retries by itself), so `refresh` exists solely to
-  * discard a *successful* assembly that mutation has made stale. Calling it
-  * before any read is harmless.
-  */
+	 * Discard the memoized assembly so the **next** read re-assembles — the same
+	 * single read and hook replay as the first, over the workspace as it stands
+	 * then.
+	 *
+	 * **Details**
+	 *
+	 * The explicit memoization boundary for a tool that **mutates the workspace
+	 * mid-run** — installs, bumps a config dependency, regenerates the lockfile.
+	 * Release-age gating wants the before-state, a post-install peer check the
+	 * after-state, and one infinite memo cannot serve both without this call in
+	 * between; without it, `peerDependencyRules` keeps answering from the
+	 * pre-mutation hook replay and the checker reports findings the new rules
+	 * suppress.
+	 *
+	 * Unconditional and infallible: the memo is already success-only (a failed
+	 * or interrupted assembly retries by itself), so `refresh` exists solely to
+	 * discard a *successful* assembly that mutation has made stale. Calling it
+	 * before the first read is harmless.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly refresh: Effect.Effect<void>;
 }
 
 /**
- * Options for the {@link WorkspaceCatalogs} layer.
+ * Controls where the {@link WorkspaceCatalogs} layer discovers the workspace root and where its ascent stops.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface WorkspaceCatalogsOptions {
 	/**
 	 * The directory the workspace root is resolved from.
 	 *
 	 * @defaultValue `process.cwd()`, read lazily on first use.
+	 *
+	 * @since 0.0.0
 	 */
 	readonly cwd?: string;
 	/**
-  * A ceiling for the root ascent from `cwd`, passed straight through to the
-  * `stopAt` of {@link WorkspaceRoot}'s `find`.
-  *
-  * **Details**
-  *
-  * Inclusive, and resolved to an absolute path exactly as `cwd` is. When no
-  * root is found at or below the ceiling, catalog assembly fails with
-  * {@link WorkspaceRootNotFoundError} carrying the resolved `stopAt` rather
-  * than adopting an enclosing directory's workspace. Pass the same value as
-  * {@link WorkspaceDiscoveryOptions.stopAt} so every service agrees on the
-  * root; the `Workspaces.*` composites forward one `stopAt` to all of them.
-  *
-  * @defaultValue no ceiling — the ascent runs to the filesystem root.
-  */
+	 * A ceiling for the root ascent from `cwd`, passed straight through to the
+	 * `stopAt` of {@link WorkspaceRoot}'s `find`.
+	 *
+	 * **Details**
+	 *
+	 * Inclusive, and resolved to an absolute path exactly as `cwd` is. When no
+	 * root is found at or below the ceiling, catalog assembly fails with
+	 * {@link WorkspaceRootNotFoundError} carrying the resolved `stopAt` rather
+	 * than adopting an enclosing directory's workspace. Pass the same value as
+	 * {@link WorkspaceDiscoveryOptions.stopAt} so every service agrees on the
+	 * root; the `Workspaces.*` composites forward one `stopAt` to all of them.
+	 *
+	 * @defaultValue no ceiling — the ascent runs to the filesystem root.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly stopAt?: string | undefined;
 }
 
@@ -659,12 +847,39 @@ export interface WorkspaceCatalogsOptions {
  * Assembly is deferred to the first call and memoized success-only, matching
  * {@link WorkspaceDiscovery}.
  *
+ * **Example** (Read catalogs through the service)
+ *
+ * ```ts
+ * import { WorkspaceCatalogs } from "@beep/scratchpad/effected/workspaces/WorkspaceCatalogs";
+ * import * as Effect from "effect/Effect";
+ *
+ * const program = Effect.flatMap(WorkspaceCatalogs, (catalogs) => catalogs.set);
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class WorkspaceCatalogs extends Context.Service<WorkspaceCatalogs, WorkspaceCatalogsShape>()(
 	$I`WorkspaceCatalogs`,
 ) {
-	/** Builds the service. */
+	/**
+	 * Builds a deferred, memoized catalog assembler from the workspace root, lockfile reader, hooks, filesystem and path services.
+	 *
+	 * **Example** (Construct deferred catalog assembly)
+	 *
+	 * ```ts
+	 * import { WorkspaceCatalogs } from "@beep/scratchpad/effected/workspaces/WorkspaceCatalogs";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = WorkspaceCatalogs.make({ cwd: "/workspace" });
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	static readonly make = Effect.fn("WorkspaceCatalogs.make")(function* (
 		options?: WorkspaceCatalogsOptions,
 	): Effect.fn.Return<
@@ -863,25 +1078,38 @@ export class WorkspaceCatalogs extends Context.Service<WorkspaceCatalogs, Worksp
 	});
 
 	/**
-  * The service over an explicit {@link ConfigDependencyHooks} layer — the
-  * one builder every `layer*` static and the `Workspaces` composites
-  * delegate to, so the hooks layer is provided to {@link WorkspaceCatalogs.make}
-  * in exactly one place.
-  *
-  * **Details**
-  *
-  * Reach for it when the hooks layer is chosen elsewhere — a composite that
-  * must hand ONE hooks reference to both this service and
-  * `WorkspaceSnapshots` (layers memoize by reference, so two references
-  * would replay twice and could run two policies), or a test wiring
-  * {@link ConfigDependencyHooks.layerFrom}. The three `layer*` statics are
-  * this with the hooks layer fixed. `R` is the hooks layer's own
-  * requirement (the subprocess variant's `ChildProcessSpawner`), threaded
-  * through. Parameterized, so bind it to a `const` and reuse it.
-  *
-  * @param hooks - The {@link ConfigDependencyHooks} layer to replay through.
-  * @param options - The same options the other layer statics take.
-  */
+	 * The service over an explicit {@link ConfigDependencyHooks} layer — the
+	 * one builder every `layer*` static and the `Workspaces` composites
+	 * delegate to, so the hooks layer is provided to {@link WorkspaceCatalogs.make}
+	 * in exactly one place.
+	 *
+	 * **Details**
+	 *
+	 * Reach for it when the hooks layer is chosen elsewhere — a composite that
+	 * must hand ONE hooks reference to both this service and
+	 * `WorkspaceSnapshots` (layers memoize by reference, so two references
+	 * would replay twice and could run two policies), or a test wiring
+	 * {@link ConfigDependencyHooks.layerFrom}. The three `layer*` statics are
+	 * this with the hooks layer fixed. `R` is the hooks layer's own
+	 * requirement (the subprocess variant's `ChildProcessSpawner`), threaded
+	 * through. Parameterized, so bind it to a `const` and reuse it.
+	 *
+	 * **Example** (Choose a shared hook layer)
+	 *
+	 * ```ts
+	 * import { WorkspaceCatalogs } from "@beep/scratchpad/effected/workspaces/WorkspaceCatalogs";
+	 * import * as Layer from "effect/Layer";
+	 * import { ConfigDependencyHooks } from "@beep/scratchpad/effected/workspaces/ConfigDependencyHooks";
+	 *
+	 * const Catalogs = WorkspaceCatalogs.layerWithHooks(ConfigDependencyHooks.layerNoop);
+	 * console.log(Layer.isLayer(Catalogs)) // true
+	 * ```
+	 *
+	 * @param hooks - The {@link ConfigDependencyHooks} layer to replay through.
+	 * @param options - The same options the other layer statics take.
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layerWithHooks = <R = never>(
 		hooks: Layer.Layer<ConfigDependencyHooks, never, R>,
 		options?: WorkspaceCatalogsOptions,
@@ -889,55 +1117,94 @@ export class WorkspaceCatalogs extends Context.Service<WorkspaceCatalogs, Worksp
 		Layer.effect(WorkspaceCatalogs, WorkspaceCatalogs.make(options)).pipe(Layer.provide(hooks));
 
 	/**
-  * The live layer — the default, which **never executes config-dependency
-  * code**: it wires {@link ConfigDependencyHooks.layerNoop}, whose hooks return
-  * the inline-catalog seed untouched.
-  *
-  * **Gotchas**
-  *
-  * Parameterized, so it mints a fresh reference per call — bind it to a
-  * `const` and reuse it, or layer memoization does not apply.
-  */
+	 * The live layer — the default, which **never executes config-dependency
+	 * code**: it wires {@link ConfigDependencyHooks.layerNoop}, whose hooks return
+	 * the inline-catalog seed untouched.
+	 *
+	 * **Gotchas**
+	 *
+	 * Parameterized, so it mints a fresh reference per call — bind it to a
+	 * `const` and reuse it, or layer memoization does not apply.
+	 *
+	 * **Example** (Construct the default catalog layer)
+	 *
+	 * ```ts
+	 * import { WorkspaceCatalogs } from "@beep/scratchpad/effected/workspaces/WorkspaceCatalogs";
+	 * import * as Layer from "effect/Layer";
+	 *
+	 * const Catalogs = WorkspaceCatalogs.layer({ cwd: "/workspace" });
+	 * console.log(Layer.isLayer(Catalogs)) // true
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layer = (
 		options?: WorkspaceCatalogsOptions,
 	): Layer.Layer<WorkspaceCatalogs, never, WorkspaceRoot | LockfileReader | FileSystem.FileSystem | Path.Path> =>
 		WorkspaceCatalogs.layerWithHooks(ConfigDependencyHooks.layerNoop, options);
 
 	/**
-  * The opt-in live layer that **does** replay config-dependency `pnpmfile.cjs`
-  * hooks: it wires {@link ConfigDependencyHooks.layerLive}, which dynamically
-  * imports and runs each config dependency's `updateConfig` in process.
-  *
-  * **Gotchas**
-  *
-  * Same output and requirement set as {@link WorkspaceCatalogs.layer} — the only
-  * difference is that config-dependency code is executed. Use it deliberately;
-  * the default catalog path stays free of any config-dependency execution.
-  * Parameterized, so bind it to a `const` and reuse it.
-  */
+	 * The opt-in live layer that **does** replay config-dependency `pnpmfile.cjs`
+	 * hooks: it wires {@link ConfigDependencyHooks.layerLive}, which dynamically
+	 * imports and runs each config dependency's `updateConfig` in process.
+	 *
+	 * **Gotchas**
+	 *
+	 * Same output and requirement set as {@link WorkspaceCatalogs.layer} — the only
+	 * difference is that config-dependency code is executed. Use it deliberately;
+	 * the default catalog path stays free of config-dependency execution.
+	 * Parameterized, so bind it to a `const` and reuse it.
+	 *
+	 * **Example** (Construct in-process hook replay)
+	 *
+	 * ```ts
+	 * import { WorkspaceCatalogs } from "@beep/scratchpad/effected/workspaces/WorkspaceCatalogs";
+	 * import * as Layer from "effect/Layer";
+	 *
+	 * const Catalogs = WorkspaceCatalogs.layerWithConfigDependencies({ cwd: "/workspace" });
+	 * console.log(Layer.isLayer(Catalogs)) // true
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layerWithConfigDependencies = (
 		options?: WorkspaceCatalogsOptions,
 	): Layer.Layer<WorkspaceCatalogs, never, WorkspaceRoot | LockfileReader | FileSystem.FileSystem | Path.Path> =>
 		WorkspaceCatalogs.layerWithHooks(ConfigDependencyHooks.layerLive, options);
 
 	/**
-  * The opt-in layer that replays config-dependency `pnpmfile` hooks in a
-  * `node` **child process**: it wires
-  * {@link ConfigDependencyHooks.layerSubprocess} in place of the in-process
-  * `layerLive`.
-  *
-  * **Details**
-  *
-  * Same typed semantics as {@link WorkspaceCatalogs.layerWithConfigDependencies}
-  * — the two hook layers are drop-in interchangeable — but the replay's
-  * computed dynamic `import()` runs in the subprocess, so it survives bundling
-  * (a bundler compiles a computed in-process `import()` into a context module
-  * that cannot resolve at runtime — every bundled GitHub Action hits this).
-  * The cost is one extra requirement: core's `ChildProcessSpawner`, provided
-  * once at the edge (`@effect/platform-node`'s `NodeServices.layer`) — the
-  * same sanctioned R-widening as `Workspaces.layerWithGit`. Parameterized, so
-  * bind it to a `const` and reuse it.
-  */
+	 * The opt-in layer that replays config-dependency `pnpmfile` hooks in a
+	 * `node` **child process**: it wires
+	 * {@link ConfigDependencyHooks.layerSubprocess} in place of the in-process
+	 * `layerLive`.
+	 *
+	 * **Details**
+	 *
+	 * Same typed semantics as {@link WorkspaceCatalogs.layerWithConfigDependencies}
+	 * — the two hook layers are drop-in interchangeable — but the replay's
+	 * computed dynamic `import()` runs in the subprocess, so it survives bundling
+	 * (a bundler compiles a computed in-process `import()` into a context module
+	 * that cannot resolve at runtime — every bundled GitHub Action hits this).
+	 * The cost is one extra requirement: core's `ChildProcessSpawner`, provided
+	 * once at the edge (`@effect/platform-node`'s `NodeServices.layer`) — the
+	 * same sanctioned R-widening as `Workspaces.layerWithGit`. Parameterized, so
+	 * bind it to a `const` and reuse it.
+	 *
+	 * **Example** (Construct subprocess hook replay)
+	 *
+	 * ```ts
+	 * import { WorkspaceCatalogs } from "@beep/scratchpad/effected/workspaces/WorkspaceCatalogs";
+	 * import * as Layer from "effect/Layer";
+	 *
+	 * const Catalogs = WorkspaceCatalogs.layerWithConfigDependenciesSubprocess({ cwd: "/workspace" });
+	 * console.log(Layer.isLayer(Catalogs)) // true
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layerWithConfigDependenciesSubprocess = (
 		options?: WorkspaceCatalogsOptions,
 	): Layer.Layer<
@@ -947,46 +1214,51 @@ export class WorkspaceCatalogs extends Context.Service<WorkspaceCatalogs, Worksp
 	> => WorkspaceCatalogs.layerWithHooks(ConfigDependencyHooks.layerSubprocess, options);
 
 	/**
-  * A test double satisfying the full {@link WorkspaceCatalogsShape} with no
-  * filesystem, lockfile read, or hook replay.
-  *
-  * **Gotchas**
-  *
-  * There is **no honest default catalog set**: an empty `CatalogSet` that
-  * looks like a legitimate answer is the "every dependency looks newly added"
-  * failure class the live assembler hard-fails to prevent, so every method
-  * **dies** with an instructive defect until stubbed — a test-wiring mistake
-  * fails loudly as a defect rather than succeeding with a lie or failing with
-  * a dishonest typed error.
-  *
-  * The one derivation mirrors `WorkspaceDiscovery.makeTest`'s
-  * derived-from-the-primary rule: when a `set` override is supplied,
-  * `resolveSpecifier` answers from that `CatalogSet`'s own
-  * {@link CatalogSet.resolveSpecifier} — exactly what the live service runs
-  * over its assembled set — so the two stay consistent by construction.
-  * `releaseAgeGate`, `importerVersions` and `hookReplays` are **not**
-  * derivable from a catalog set (the gate comes from release-age keys and
-  * hook contributions, the importer index from the lockfile's importer
-  * blocks, the replay record from the hooks layer — none is in a
-  * `CatalogSet`) and always die unless stubbed.
-  *
-  * `refresh` defaults to `Effect.void` honestly: the double holds no memo,
-  * so "drop the memoized assembly" is genuinely a no-op — the stubs answer
-  * fresh on every call already. This mirrors `WorkspaceDiscovery.makeTest`'s
-  * `refresh`.
-  *
-  * **Example** (Stub catalogs with consistent specifier resolution)
-  *
-  * ```ts
-  * import { CatalogSet, WorkspaceCatalogs } from "./index.ts";
-  * import * as Effect from "effect/Effect";
-  *
-  * const double = WorkspaceCatalogs.makeTest({
-  *   set: Effect.succeed(CatalogSet.fromCatalogs({ default: { effect: "4.0.0" } })),
-  * });
-  * // `resolveSpecifier` now answers consistently from that set.
-  * ```
-  */
+	 * A test double satisfying the full {@link WorkspaceCatalogsShape} with no
+	 * filesystem, lockfile read, or hook replay.
+	 *
+	 * **Gotchas**
+	 *
+	 * There is **no honest default catalog set**: an empty `CatalogSet` that
+	 * looks like a legitimate answer is the "every dependency looks newly added"
+	 * failure class the live assembler hard-fails to prevent, so every method
+	 * **dies** with an instructive defect until stubbed — a test-wiring mistake
+	 * fails loudly as a defect rather than succeeding with a lie or failing with
+	 * a dishonest typed error.
+	 *
+	 * The one derivation mirrors `WorkspaceDiscovery.makeTest`'s
+	 * derived-from-the-primary rule: when a `set` override is supplied,
+	 * `resolveSpecifier` answers from that `CatalogSet`'s own
+	 * {@link CatalogSet.resolveSpecifier} — exactly what the live service runs
+	 * over its assembled set — so the two stay consistent by construction.
+	 * `releaseAgeGate`, `importerVersions` and `hookReplays` are **not**
+	 * derivable from a catalog set (the gate comes from release-age keys and
+	 * hook contributions, the importer index from the lockfile's importer
+	 * blocks, the replay record from the hooks layer — none is in a
+	 * `CatalogSet`) and always die unless stubbed.
+	 *
+	 * `refresh` defaults to `Effect.void` honestly: the double holds no memo,
+	 * so "drop the memoized assembly" is genuinely a no-op — the stubs answer
+	 * fresh on every call already. This mirrors `WorkspaceDiscovery.makeTest`'s
+	 * `refresh`.
+	 *
+	 * **Example** (Stub catalogs with consistent specifier resolution)
+	 *
+	 * ```ts
+	 * import { CatalogSet, WorkspaceCatalogs } from "@beep/scratchpad/effected/workspaces/WorkspaceCatalogs";
+	 * import * as Effect from "effect/Effect";
+	 * import * as O from "effect/Option";
+	 *
+	 * const double = WorkspaceCatalogs.makeTest({
+	 *   set: Effect.succeed(CatalogSet.fromCatalogs({ default: { effect: "4.0.0" } })),
+	 * });
+	 * const range = Effect.runSync(double.resolveSpecifier("effect", "catalog:"));
+	 * console.log(O.getOrElse(range, () => "missing")) // 4.0.0
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	static readonly makeTest = (overrides: Partial<WorkspaceCatalogsShape> = {}): WorkspaceCatalogsShape => {
 		const set = overrides.set;
 		return {
@@ -1006,43 +1278,57 @@ export class WorkspaceCatalogs extends Context.Service<WorkspaceCatalogs, Worksp
 	};
 
 	/**
-  * The test layer: {@link WorkspaceCatalogs.makeTest} behind `Layer.succeed`,
-  * so a suite provides only the methods it exercises.
-  *
-  * **Gotchas**
-  *
-  * A parameterized layer factory mints a **fresh reference per call**, and
-  * layers memoize by reference — bind the result to a `const` and reuse it
-  * rather than calling `layerTest(...)` at each composition site.
-  *
-  * **Example** (Provide an empty catalog test layer)
-  *
-  * ```ts
-  * import { CatalogSet, WorkspaceCatalogs } from "./index.ts";
-  * import * as Effect from "effect/Effect";
-  *
-  * const TestCatalogs = WorkspaceCatalogs.layerTest({
-  *   set: Effect.succeed(CatalogSet.empty()),
-  * });
-  * // program.pipe(Effect.provide(TestCatalogs))
-  * ```
-  */
+	 * The test layer: {@link WorkspaceCatalogs.makeTest} behind `Layer.succeed`,
+	 * so a suite provides only the methods it exercises.
+	 *
+	 * **Gotchas**
+	 *
+	 * A parameterized layer factory mints a **fresh reference per call**, and
+	 * layers memoize by reference — bind the result to a `const` and reuse it
+	 * rather than calling `layerTest(...)` at each composition site.
+	 *
+	 * **Example** (Provide an empty catalog test layer)
+	 *
+	 * ```ts
+	 * import { CatalogSet, WorkspaceCatalogs } from "@beep/scratchpad/effected/workspaces/WorkspaceCatalogs";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const TestCatalogs = WorkspaceCatalogs.layerTest({ set: Effect.succeed(CatalogSet.empty()) });
+	 * const program = Effect.flatMap(WorkspaceCatalogs, (catalogs) => catalogs.set).pipe(Effect.provide(TestCatalogs));
+	 * console.log(Effect.runSync(program).isEmpty) // true
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layerTest = (overrides: Partial<WorkspaceCatalogsShape> = {}): Layer.Layer<WorkspaceCatalogs> =>
 		Layer.succeed(WorkspaceCatalogs, WorkspaceCatalogs.makeTest(overrides));
 
 	/**
-  * The real implementation of `@effected/npm`'s `CatalogResolver` contract —
-  * the one `@effected/package-json` declares but cannot fill.
-  *
-  * **Details**
-  *
-  * `rangeOf` returns `Option.none()` for a dependency no catalog declares, per
-  * the contract's convention. A failed catalog *assembly* — an unreadable or
-  * malformed `pnpm-workspace.yaml`, a broken config-dependency hook — passes
-  * through **typed** as the contract's `CatalogAssemblyError`; only the
-  * remaining mechanism failure, an unfindable workspace root, is wrapped as
-  * `DependencyResolutionError`.
-  */
+	 * The real implementation of `@effected/npm`'s `CatalogResolver` contract —
+	 * the one `@effected/package-json` declares but cannot fill.
+	 *
+	 * **Details**
+	 *
+	 * `rangeOf` returns `Option.none()` for a dependency no catalog declares, per
+	 * the contract's convention. A failed catalog *assembly* — an unreadable or
+	 * malformed `pnpm-workspace.yaml`, a broken config-dependency hook — passes
+	 * through **typed** as the contract's `CatalogAssemblyError`; only the
+	 * remaining mechanism failure, an unfindable workspace root, is wrapped as
+	 * `DependencyResolutionError`.
+	 *
+	 * **Example** (Compose the catalog resolver adapter)
+	 *
+	 * ```ts
+	 * import { WorkspaceCatalogs } from "@beep/scratchpad/effected/workspaces/WorkspaceCatalogs";
+	 * import * as Layer from "effect/Layer";
+	 *
+	 * console.log(Layer.isLayer(WorkspaceCatalogs.catalogResolver)) // true
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly catalogResolver: Layer.Layer<CatalogResolver, never, WorkspaceCatalogs> = Layer.effect(
 		CatalogResolver,
 		Effect.gen(function* () {

@@ -16,32 +16,103 @@ import * as A from "effect/Array";
 
 const $I = $ScratchpadId.create("effected/workspaces/internal/patterns");
 
-/** The caller-visible reasons reading workspace patterns can fail. */
+/**
+ * The caller-visible reasons reading workspace patterns can fail.
+ *
+ * **Example** (Recognize a workspace configuration failure kind)
+ *
+ * ```ts
+ * import { PatternReadFailureKind } from "@beep/scratchpad/effected/workspaces/internal/patterns";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(PatternReadFailureKind)("invalidYaml")); // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const PatternReadFailureKind = LiteralKit(["read", "invalidYaml", "invalidJson"]).annotate(
 	$I.annote("PatternReadFailureKind", { description: "The caller-visible reasons reading workspace patterns can fail." }),
 );
+/**
+ * The failure-kind literals accepted by the workspace pattern reader.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type PatternReadFailureKind = typeof PatternReadFailureKind.Type;
 
 const JsonValue = S.fromJsonString(S.Unknown);
 
-/** The reason a pattern read failed, with the file it failed on. */
+/**
+ * The reason a pattern read failed, with the file it failed on.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export interface PatternReadFailure {
 	readonly path: string;
 	readonly kind: PatternReadFailureKind;
 	readonly cause: unknown;
 }
 
-/** The string entries of `value` when it is an array, else `undefined`. */
+/**
+ * The string entries of `value` when it is an array, else `undefined`.
+ *
+ * **Example** (Filter a mixed pattern array)
+ *
+ * ```ts
+ * import { stringsOf } from "@beep/scratchpad/effected/workspaces/internal/patterns";
+ *
+ * console.log(stringsOf(["packages/*", 42])?.join(",")); // packages/*
+ * console.log(stringsOf({ packages: [] })); // undefined
+ * ```
+ *
+ * @category filtering
+ * @since 0.0.0
+ */
 export const stringsOf = (value: unknown): ReadonlyArray<string> | undefined =>
 	A.isArray(value) ? value.filter((entry): entry is string => P.isString(entry)) : undefined;
 
-/** The `packages:` list of a `pnpm-workspace.yaml` document. Total on a parsed document. */
+/**
+ * Extracts the `packages:` list of a `pnpm-workspace.yaml` document.
+ *
+ * **Details**
+ *
+ * Total on a parsed document.
+ *
+ * **Example** (Read patterns from a parsed pnpm document)
+ *
+ * ```ts
+ * import { pnpmPatternsOf } from "@beep/scratchpad/effected/workspaces/internal/patterns";
+ *
+ * console.log(pnpmPatternsOf({ packages: ["packages/*", 42] }).join(",")); // packages/*
+ * console.log(pnpmPatternsOf(null).length); // 0
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const pnpmPatternsOf = (document: unknown): ReadonlyArray<string> => {
 	if (!P.isObjectOrArray(document)) return [];
 	return stringsOf("packages" in document ? document.packages : undefined) ?? [];
 };
 
-/** The `workspaces` field of a root package.json, in either supported shape. */
+/**
+ * Extracts the `workspaces` field of a root package.json, in either supported shape.
+ *
+ * **Example** (Read both manifest workspace shapes)
+ *
+ * ```ts
+ * import { manifestPatternsOf } from "@beep/scratchpad/effected/workspaces/internal/patterns";
+ *
+ * console.log(manifestPatternsOf({ workspaces: ["packages/*"] }).join(",")); // packages/*
+ * console.log(manifestPatternsOf({ workspaces: { packages: ["apps/*"] } }).join(",")); // apps/*
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const manifestPatternsOf = (manifest: unknown): ReadonlyArray<string> => {
 	if (!P.isObjectOrArray(manifest)) return [];
 	const workspaces = "workspaces" in manifest ? manifest.workspaces : undefined;
@@ -54,9 +125,31 @@ export const manifestPatternsOf = (manifest: unknown): ReadonlyArray<string> => 
 };
 
 /**
- * The workspace `packages:` patterns for `root`: `pnpm-workspace.yaml` first,
- * then the root package.json `workspaces` field. An absent config is a
- * standalone package, not an error — it yields an empty list.
+ * Reads the workspace `packages:` patterns for `root`, preferring `pnpm-workspace.yaml` over the root package.json `workspaces` field.
+ *
+ * **Details**
+ *
+ * An absent config is a standalone package, not an error — it yields an empty list.
+ * When the pnpm document yields no patterns, the reader falls back to package.json.
+ *
+ * **Gotchas**
+ *
+ * An existing configuration that cannot be read or parsed fails with its path and
+ * failure kind rather than silently yielding an empty list. FileSystem and Path
+ * services are required to execute the reader.
+ *
+ * **Example** (Construct a workspace pattern read)
+ *
+ * ```ts
+ * import { readPatterns } from "@beep/scratchpad/effected/workspaces/internal/patterns";
+ * import * as Effect from "effect/Effect";
+ *
+ * const program = readPatterns("/repo");
+ * console.log(Effect.isEffect(program)); // true
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const readPatterns = Effect.fn("readPatterns")(function* (
 	root: string,

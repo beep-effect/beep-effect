@@ -69,7 +69,18 @@ const SnapshotVersion = S.optionalKey(S.String).pipe(
  * standard manifest field names, which are exactly `@effected/npm`'s
  * `DependencyField` values.
  *
+ * **Example** (Capture a versionless member)
+ *
+ * ```ts
+ * import { PackageStateSnapshot } from "@beep/scratchpad/effected/workspaces/WorkspaceStateSnapshot";
+ *
+ * const member = PackageStateSnapshot.make({ name: "app", relativePath: "." });
+ * console.log(member.name) // app
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class PackageStateSnapshot extends S.Class<PackageStateSnapshot>($I`PackageStateSnapshot`)({
 	/** The package name. */
@@ -105,14 +116,29 @@ export class PackageStateSnapshot extends S.Class<PackageStateSnapshot>($I`Packa
 	optionalDependencies: DependencyMap.annotateKey({ description: "Optional dependencies." }),
 }, $I.annote("PackageStateSnapshot", { description: "One workspace member as captured in a WorkspaceStateSnapshot — the serializable slice a snapshot diff reads: identity, version, location, and the four dependency records." })) {
 	/**
-  * Every dependency, merged across the four kinds.
-  *
-  * **Details**
-  *
-  * Precedence on a name declared in several kinds runs
-  * `dependencies` \> `devDependencies` \> `peerDependencies` \>
-  * `optionalDependencies`.
-  */
+ * Every dependency, merged across the four kinds.
+ *
+ * **Details**
+ *
+ * Precedence on a name declared in several kinds runs
+ * `dependencies` \> `devDependencies` \> `peerDependencies` \>
+ * `optionalDependencies`.
+ *
+ * **Example** (Read the merged dependency records)
+ *
+ * ```ts
+ * import { PackageStateSnapshot } from "@beep/scratchpad/effected/workspaces/WorkspaceStateSnapshot";
+ *
+ * const member = PackageStateSnapshot.make({
+ *   name: "app", relativePath: ".",
+ *   dependencies: { effect: "^4.0.0" },
+ *   devDependencies: { effect: "^3.0.0" },
+ * });
+ * console.log(member.allDependencies.effect) // ^4.0.0
+ * ```
+ *
+ * @since 0.0.0
+ */
 	get allDependencies(): Record<string, string> {
 		return R.fromEntries([
 			...R.toEntries(this.optionalDependencies),
@@ -143,7 +169,7 @@ export class PackageStateSnapshot extends S.Class<PackageStateSnapshot>($I`Packa
  * **Example** (Resolve a catalog specifier at a git ref)
  *
  * ```ts
- * import { WorkspaceSnapshots } from "./index.ts";
+ * import { WorkspaceSnapshots } from "@beep/scratchpad/effected/workspaces/index";
  * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
@@ -151,9 +177,12 @@ export class PackageStateSnapshot extends S.Class<PackageStateSnapshot>($I`Packa
  *   const before = yield* snapshots.at("origin/main");
  *   return before.resolve("effect", "catalog:");
  * });
+ * console.log(Effect.isEffect(program)) // true
  * ```
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class WorkspaceStateSnapshot extends S.Class<WorkspaceStateSnapshot>($I`WorkspaceStateSnapshot`)({
 	/** Every workspace package captured at this moment. */
@@ -215,13 +244,119 @@ export class WorkspaceStateSnapshot extends S.Class<WorkspaceStateSnapshot>($I`W
   */
 	seededCatalogs: S.optionalKey(CatalogSet).annotateKey({ description: "Catalogs supplied from OUTSIDE this moment, consulted only when `catalogs` cannot answer." }),
 }, $I.annote("WorkspaceStateSnapshot", { description: "The state of a whole workspace at one moment — its packages and its assembled catalog set — as a serializable value." })) {
+	/**
+ * Caches the name-to-version index outside the serializable schema.
+ *
+ * **Example** (Observe the cached version index)
+ *
+ * ```ts
+ * import { CatalogSet } from "@beep/scratchpad/effected/workspaces/WorkspaceCatalogs";
+ * import { WorkspaceStateSnapshot } from "@beep/scratchpad/effected/workspaces/WorkspaceStateSnapshot";
+ *
+ * const snapshot = WorkspaceStateSnapshot.make({ packages: [], catalogs: CatalogSet.empty() });
+ * console.log(snapshot.versions === snapshot.versions) // true
+ * ```
+ *
+ * @since 0.0.0
+ */
 	#versionIndex: HashMap.HashMap<string, string> | undefined;
+	/**
+ * Caches versioned names in first-insertion order outside the serializable schema.
+ *
+ * **Example** (Observe the cached version name order)
+ *
+ * ```ts
+ * import { CatalogSet } from "@beep/scratchpad/effected/workspaces/WorkspaceCatalogs";
+ * import { WorkspaceStateSnapshot } from "@beep/scratchpad/effected/workspaces/WorkspaceStateSnapshot";
+ *
+ * const snapshot = WorkspaceStateSnapshot.make({ packages: [], catalogs: CatalogSet.empty() });
+ * console.log(snapshot.versionNames === snapshot.versionNames) // true
+ * ```
+ *
+ * @since 0.0.0
+ */
 	#versionNames: ReadonlyArray<string> | undefined;
+	/**
+ * Caches captured members by name outside the serializable schema.
+ *
+ * **Example** (Query the member index)
+ *
+ * ```ts
+ * import * as O from "effect/Option";
+ * import { CatalogSet } from "@beep/scratchpad/effected/workspaces/WorkspaceCatalogs";
+ * import { WorkspaceStateSnapshot } from "@beep/scratchpad/effected/workspaces/WorkspaceStateSnapshot";
+ *
+ * const snapshot = WorkspaceStateSnapshot.make({ packages: [], catalogs: CatalogSet.empty() });
+ * console.log(O.isNone(snapshot.package("missing"))) // true
+ * ```
+ *
+ * @since 0.0.0
+ */
 	#packageIndex: HashMap.HashMap<string, PackageStateSnapshot> | undefined;
+	/**
+ * Caches the layer resolving catalogs against this snapshot.
+ *
+ * **Example** (Observe catalog layer memoization)
+ *
+ * ```ts
+ * import { CatalogSet } from "@beep/scratchpad/effected/workspaces/WorkspaceCatalogs";
+ * import { WorkspaceStateSnapshot } from "@beep/scratchpad/effected/workspaces/WorkspaceStateSnapshot";
+ *
+ * const snapshot = WorkspaceStateSnapshot.make({ packages: [], catalogs: CatalogSet.empty() });
+ * console.log(snapshot.catalogResolver === snapshot.catalogResolver) // true
+ * ```
+ *
+ * @since 0.0.0
+ */
 	#catalogResolver: Layer.Layer<CatalogResolver> | undefined;
+	/**
+ * Caches the layer resolving workspace members against this snapshot.
+ *
+ * **Example** (Observe workspace layer memoization)
+ *
+ * ```ts
+ * import { CatalogSet } from "@beep/scratchpad/effected/workspaces/WorkspaceCatalogs";
+ * import { WorkspaceStateSnapshot } from "@beep/scratchpad/effected/workspaces/WorkspaceStateSnapshot";
+ *
+ * const snapshot = WorkspaceStateSnapshot.make({ packages: [], catalogs: CatalogSet.empty() });
+ * console.log(snapshot.workspaceResolver === snapshot.workspaceResolver) // true
+ * ```
+ *
+ * @since 0.0.0
+ */
 	#workspaceResolver: Layer.Layer<WorkspaceResolver> | undefined;
+	/**
+ * Caches the merged catalog and workspace resolver layers.
+ *
+ * **Example** (Observe merged layer memoization)
+ *
+ * ```ts
+ * import { CatalogSet } from "@beep/scratchpad/effected/workspaces/WorkspaceCatalogs";
+ * import { WorkspaceStateSnapshot } from "@beep/scratchpad/effected/workspaces/WorkspaceStateSnapshot";
+ *
+ * const snapshot = WorkspaceStateSnapshot.make({ packages: [], catalogs: CatalogSet.empty() });
+ * console.log(snapshot.resolvers === snapshot.resolvers) // true
+ * ```
+ *
+ * @since 0.0.0
+ */
 	#resolvers: Layer.Layer<CatalogResolver | WorkspaceResolver> | undefined;
 
+	/**
+ * Builds the version index and insertion-order names lazily, then reuses the index.
+ *
+ * **Example** (Trigger lazy version indexing)
+ *
+ * ```ts
+ * import { CatalogSet } from "@beep/scratchpad/effected/workspaces/WorkspaceCatalogs";
+ * import { WorkspaceStateSnapshot } from "@beep/scratchpad/effected/workspaces/WorkspaceStateSnapshot";
+ *
+ * const snapshot = WorkspaceStateSnapshot.make({ packages: [], catalogs: CatalogSet.empty() });
+ * console.log(snapshot.versions === snapshot.versions) // true
+ * ```
+ *
+ * @since 0.0.0
+ */
 	#versions(): HashMap.HashMap<string, string> {
 		if (this.#versionIndex === undefined) {
 			let index = HashMap.empty<string, string>();
@@ -237,6 +372,22 @@ export class WorkspaceStateSnapshot extends S.Class<WorkspaceStateSnapshot>($I`W
 		return this.#versionIndex;
 	}
 
+	/**
+ * Builds and reuses the name-to-member index for captured packages.
+ *
+ * **Example** (Trigger lazy member indexing)
+ *
+ * ```ts
+ * import * as O from "effect/Option";
+ * import { CatalogSet } from "@beep/scratchpad/effected/workspaces/WorkspaceCatalogs";
+ * import { WorkspaceStateSnapshot } from "@beep/scratchpad/effected/workspaces/WorkspaceStateSnapshot";
+ *
+ * const snapshot = WorkspaceStateSnapshot.make({ packages: [], catalogs: CatalogSet.empty() });
+ * console.log(O.isNone(snapshot.package("missing"))) // true
+ * ```
+ *
+ * @since 0.0.0
+ */
 	#packages(): HashMap.HashMap<string, PackageStateSnapshot> {
 		if (this.#packageIndex === undefined) {
 			this.#packageIndex = HashMap.fromIterable(this.packages.map((pkg) => [pkg.name, pkg] as const));
@@ -245,76 +396,120 @@ export class WorkspaceStateSnapshot extends S.Class<WorkspaceStateSnapshot>($I`W
 	}
 
 	/**
-  * Every captured package's name → version, for the packages that declared
-  * one. Total; O(1) after the first call.
-  *
-  * **Gotchas**
-  *
-  * A member whose manifest declared no version is **absent** from this map,
-  * so every value is a real version and presence answers "has a version",
-  * not membership — ask {@link WorkspaceStateSnapshot.package} for that.
-  */
+ * Every captured package's name → version, for the packages that declared
+ * one. Total; O(1) after the first call.
+ *
+ * **Gotchas**
+ *
+ * A member whose manifest declared no version is **absent** from this map,
+ * so every value is a real version and presence answers "has a version",
+ * not membership — ask {@link WorkspaceStateSnapshot.package} for that.
+ *
+ * **Example** (Count captured versions)
+ *
+ * ```ts
+ * import * as HashMap from "effect/HashMap";
+ * import { CatalogSet } from "@beep/scratchpad/effected/workspaces/WorkspaceCatalogs";
+ * import { WorkspaceStateSnapshot } from "@beep/scratchpad/effected/workspaces/WorkspaceStateSnapshot";
+ *
+ * const snapshot = WorkspaceStateSnapshot.make({ packages: [], catalogs: CatalogSet.empty() });
+ * console.log(HashMap.size(snapshot.versions)) // 0
+ * ```
+ *
+ * @since 0.0.0
+ */
 	get versions(): HashMap.HashMap<string, string> {
 		return this.#versions();
 	}
 
 	/**
-	 * Versioned package names in first-insertion order, excluding unversioned members.
-	 *
-	 * **Example** (Reading versions in package order)
-	 * ```ts
-	 * import * as HashMap from "effect/HashMap";
-	 * import { CatalogSet, WorkspaceStateSnapshot } from "./index.ts";
-	 * const snapshot = WorkspaceStateSnapshot.make({ packages: [], catalogs: CatalogSet.empty() });
-	 * const ordered = snapshot.versionNames.map((name) => HashMap.get(snapshot.versions, name));
-	 * ```
-	 */
+ * Versioned package names in first-insertion order, excluding unversioned members.
+ *
+ * **Example** (Read versioned names in insertion order)
+ *
+ * ```ts
+ * import { CatalogSet } from "@beep/scratchpad/effected/workspaces/WorkspaceCatalogs";
+ * import { WorkspaceStateSnapshot } from "@beep/scratchpad/effected/workspaces/WorkspaceStateSnapshot";
+ *
+ * const snapshot = WorkspaceStateSnapshot.make({ packages: [], catalogs: CatalogSet.empty() });
+ * console.log(snapshot.versionNames.length) // 0
+ * ```
+ *
+ * @since 0.0.0
+ */
 	get versionNames(): ReadonlyArray<string> {
 		this.#versions();
 		return this.#versionNames ?? [];
 	}
 
-	/** A single captured package by name, or `Option.none()`. Total. */
+	/**
+ *  A single captured package by name, or `Option.none()`. Total. 
+ *
+ * **Example** (Look up an absent workspace member)
+ *
+ * ```ts
+ * import * as O from "effect/Option";
+ * import { CatalogSet } from "@beep/scratchpad/effected/workspaces/WorkspaceCatalogs";
+ * import { WorkspaceStateSnapshot } from "@beep/scratchpad/effected/workspaces/WorkspaceStateSnapshot";
+ *
+ * const snapshot = WorkspaceStateSnapshot.make({ packages: [], catalogs: CatalogSet.empty() });
+ * console.log(O.isNone(snapshot.package("missing"))) // true
+ * ```
+ *
+ * @since 0.0.0
+ */
 	package(name: string): O.Option<PackageStateSnapshot> {
 		return HashMap.get(this.#packages(), name);
 	}
 
 	/**
-  * The concrete range or version a specifier resolved to AS OF this snapshot.
-  *
-  * **Details**
-  *
-  * The specifier is classified through `@effected/npm`'s
-  * `DependencySpecifier.FromString` — never by prefix-sniffing.
-  * A `workspace:` specifier resolves to the captured version of `dependency`; a
-  * `catalog:` specifier resolves against the captured catalog set. Every other
-  * form — a plain range, a dist-tag, a `file:`/git/url specifier, or an
-  * unparseable string — is `Option.none()`, because there is no indirection to
-  * resolve. Total.
-  *
-  * A `catalog:` specifier resolves in three steps, and the order is the
-  * contract: this moment's own `catalogs` first,
-  * then `seededCatalogs` if one was supplied,
-  * then the `importerVersions` fallback below. The first two answer with a
-  * declared RANGE and the third with a concrete version, so a seeded snapshot
-  * reports a range change where an unseeded one could only report a version —
-  * which is the difference between a diff row and no row when both refs
-  * recorded the same installed version.
-  *
-  * A `catalog:` specifier neither catalog set can resolve falls back to this
-  * snapshot's `importerVersions` — but only to a version
-  * **every** importer recording that dependency agrees on. A catalog injected
-  * by a config-dependency pnpmfile hook appears in no committed catalog source,
-  * so without this fallback both sides of a before/after diff resolve it to the
-  * same raw string and a real version movement produces no row. When importers
-  * disagree there is no single correct answer, so this stays `Option.none()`
-  * rather than inventing one; {@link WorkspaceStateSnapshot.resolveIn} answers
-  * precisely for callers that know which importer is asking.
-  *
-  * @param dependency - The dependency's package name (what `workspace:` /
-  *   `catalog:` resolve for).
-  * @param specifier - The raw specifier string.
-  */
+ * The concrete range or version a specifier resolved to AS OF this snapshot.
+ *
+ * **Details**
+ *
+ * The specifier is classified through `@effected/npm`'s
+ * `DependencySpecifier.FromString` — never by prefix-sniffing.
+ * A `workspace:` specifier resolves to the captured version of `dependency`; a
+ * `catalog:` specifier resolves against the captured catalog set. Every other
+ * form — a plain range, a dist-tag, a `file:`/git/url specifier, or an
+ * unparseable string — is `Option.none()`, because there is no indirection to
+ * resolve. Total.
+ *
+ * A `catalog:` specifier resolves in three steps, and the order is the
+ * contract: this moment's own `catalogs` first,
+ * then `seededCatalogs` if one was supplied,
+ * then the `importerVersions` fallback below. The first two answer with a
+ * declared RANGE and the third with a concrete version, so a seeded snapshot
+ * reports a range change where an unseeded one could only report a version —
+ * which is the difference between a diff row and no row when both refs
+ * recorded the same installed version.
+ *
+ * A `catalog:` specifier neither catalog set can resolve falls back to this
+ * snapshot's `importerVersions` — but only to a version
+ * **every** importer recording that dependency agrees on. A catalog injected
+ * by a config-dependency pnpmfile hook appears in no committed catalog source,
+ * so without this fallback both sides of a before/after diff resolve it to the
+ * same raw string and a real version movement produces no row. When importers
+ * disagree there is no single correct answer, so this stays `Option.none()`
+ * rather than inventing one; {@link WorkspaceStateSnapshot.resolveIn} answers
+ * precisely for callers that know which importer is asking.
+ *
+ * **Example** (Leave a plain range unresolved)
+ *
+ * ```ts
+ * import * as O from "effect/Option";
+ * import { CatalogSet } from "@beep/scratchpad/effected/workspaces/WorkspaceCatalogs";
+ * import { WorkspaceStateSnapshot } from "@beep/scratchpad/effected/workspaces/WorkspaceStateSnapshot";
+ *
+ * const snapshot = WorkspaceStateSnapshot.make({ packages: [], catalogs: CatalogSet.empty() });
+ * console.log(O.isNone(snapshot.resolve("effect", "^4.0.0"))) // true
+ * ```
+ *
+ * @param dependency - The dependency's package name (what `workspace:` /
+ *   `catalog:` resolve for).
+ * @param specifier - The raw specifier string.
+ * @since 0.0.0
+ */
 	resolve(dependency: string, specifier: string): O.Option<string> {
 		return this.#resolveWith(dependency, specifier, () =>
 			O.fromUndefinedOr(unanimousVersionOf(this.importerVersions ?? {}, dependency)),
@@ -322,27 +517,42 @@ export class WorkspaceStateSnapshot extends S.Class<WorkspaceStateSnapshot>($I`W
 	}
 
 	/**
-  * The concrete range or version a specifier resolved to AS OF this snapshot,
-  * scoped to the importer that declared it.
-  *
-  * **Details**
-  *
-  * Identical to {@link WorkspaceStateSnapshot.resolve} except in how an
-  * unresolvable `catalog:` specifier falls back: this consults **only**
-  * `importerPath`'s own recorded versions, so a monorepo whose packages hold
-  * different versions of one dependency still gets an exact answer where
-  * `resolve` must abstain. Prefer this whenever the caller knows the importer —
-  * a consumer iterating `packages` has `relativePath` in hand, which is the
-  * importer key (`"."` for the root package).
-  *
-  * An unknown `importerPath`, or one recording nothing for `dependency`, is
-  * `Option.none()`. Total.
-  *
-  * @param importerPath - The importer's path relative to the workspace root,
-  *   `"."` for the root package — `PackageStateSnapshot.relativePath`.
-  * @param dependency - The dependency's package name.
-  * @param specifier - The raw specifier string.
-  */
+ * The concrete range or version a specifier resolved to AS OF this snapshot,
+ * scoped to the importer that declared it.
+ *
+ * **Details**
+ *
+ * Identical to {@link WorkspaceStateSnapshot.resolve} except in how an
+ * unresolvable `catalog:` specifier falls back: this consults **only**
+ * `importerPath`'s own recorded versions, so a monorepo whose packages hold
+ * different versions of one dependency still gets an exact answer where
+ * `resolve` must abstain. Prefer this whenever the caller knows the importer —
+ * a consumer iterating `packages` has `relativePath` in hand, which is the
+ * importer key (`"."` for the root package).
+ *
+ * An unknown `importerPath`, or one recording nothing for `dependency`, is
+ * `Option.none()`. Total.
+ *
+ * **Example** (Resolve the importers recorded catalog version)
+ *
+ * ```ts
+ * import * as O from "effect/Option";
+ * import { CatalogSet } from "@beep/scratchpad/effected/workspaces/WorkspaceCatalogs";
+ * import { WorkspaceStateSnapshot } from "@beep/scratchpad/effected/workspaces/WorkspaceStateSnapshot";
+ *
+ * const snapshot = WorkspaceStateSnapshot.make({
+ *   packages: [], catalogs: CatalogSet.empty(),
+ *   importerVersions: { ".": { effect: "4.0.0" } },
+ * });
+ * console.log(O.getOrUndefined(snapshot.resolveIn(".", "effect", "catalog:"))) // 4.0.0
+ * ```
+ *
+ * @param importerPath - The importer's path relative to the workspace root,
+ *   `"."` for the root package — `PackageStateSnapshot.relativePath`.
+ * @param dependency - The dependency's package name.
+ * @param specifier - The raw specifier string.
+ * @since 0.0.0
+ */
 	resolveIn(importerPath: string, dependency: string, specifier: string): O.Option<string> {
 		return this.#resolveWith(dependency, specifier, () =>
 			O.flatMap(R.get(this.importerVersions ?? {}, importerPath), R.get(dependency)),
@@ -354,7 +564,20 @@ export class WorkspaceStateSnapshot extends S.Class<WorkspaceStateSnapshot>($I`W
 	 * consult `onUnresolvedCatalog` only for a `catalog:` specifier the catalog set
 	 * could not answer. A plain range is already its own answer and must keep
 	 * resolving to `Option.none()` so the caller falls back to the raw string.
-	 */
+ *
+ * **Example** (Use the shared specifier resolution path)
+ *
+ * ```ts
+ * import * as O from "effect/Option";
+ * import { CatalogSet } from "@beep/scratchpad/effected/workspaces/WorkspaceCatalogs";
+ * import { WorkspaceStateSnapshot } from "@beep/scratchpad/effected/workspaces/WorkspaceStateSnapshot";
+ *
+ * const snapshot = WorkspaceStateSnapshot.make({ packages: [], catalogs: CatalogSet.empty() });
+ * console.log(O.isNone(snapshot.resolve("effect", "^4.0.0"))) // true
+ * ```
+ *
+ * @since 0.0.0
+ */
 	#resolveWith(
 		dependency: string,
 		specifier: string,
@@ -386,7 +609,20 @@ export class WorkspaceStateSnapshot extends S.Class<WorkspaceStateSnapshot>($I`W
   * be overridden by something handed in from outside, so a seed can only ever
   * ADD an answer where there was none — which is why seeding is safe to do
   * unconditionally and why an over-broad seed cannot corrupt a diff.
-  */
+ *
+ * **Example** (Consult catalog sources through resolution)
+ *
+ * ```ts
+ * import * as O from "effect/Option";
+ * import { CatalogSet } from "@beep/scratchpad/effected/workspaces/WorkspaceCatalogs";
+ * import { WorkspaceStateSnapshot } from "@beep/scratchpad/effected/workspaces/WorkspaceStateSnapshot";
+ *
+ * const snapshot = WorkspaceStateSnapshot.make({ packages: [], catalogs: CatalogSet.empty() });
+ * console.log(O.isNone(snapshot.resolve("effect", "catalog:"))) // true
+ * ```
+ *
+ * @since 0.0.0
+ */
 	#catalogRange(dependency: string, catalog: O.Option<string>): O.Option<string> {
 		const own = this.catalogs.rangeOf(dependency, catalog);
 		if (O.isSome(own)) return own;
@@ -415,7 +651,7 @@ export class WorkspaceStateSnapshot extends S.Class<WorkspaceStateSnapshot>($I`W
   * **Example** (Seed a historical snapshot with live catalogs)
   *
   * ```ts
-  * import { WorkspaceCatalogs, WorkspaceSnapshots } from "./index.ts";
+  * import { WorkspaceCatalogs, WorkspaceSnapshots } from "@beep/scratchpad/effected/workspaces/index";
   * import * as Effect from "effect/Effect";
   *
   * const program = Effect.gen(function* () {
@@ -427,10 +663,12 @@ export class WorkspaceStateSnapshot extends S.Class<WorkspaceStateSnapshot>($I`W
   *   const before = (yield* snapshots.at("origin/main")).withSeededCatalogs(live);
   *   return before.resolve("effect", "catalog:");
   * });
+ * console.log(Effect.isEffect(program)) // true
   * ```
   *
   * @param seed - The catalogs to consult as a fallback.
-  */
+ * @since 0.0.0
+ */
 	withSeededCatalogs(seed: CatalogSet): WorkspaceStateSnapshot {
 		return WorkspaceStateSnapshot.make({
 			packages: this.packages,
@@ -485,7 +723,7 @@ export class WorkspaceStateSnapshot extends S.Class<WorkspaceStateSnapshot>($I`W
   * **Example** (Cross-seed snapshots for catalog resolution)
   *
   * ```ts
-  * import { WorkspaceSnapshots, WorkspaceStateSnapshot } from "./index.ts";
+  * import { WorkspaceSnapshots, WorkspaceStateSnapshot } from "@beep/scratchpad/effected/workspaces/index";
   * import * as Effect from "effect/Effect";
   *
   * const program = Effect.gen(function* () {
@@ -496,13 +734,15 @@ export class WorkspaceStateSnapshot extends S.Class<WorkspaceStateSnapshot>($I`W
   *   );
   *   return { before: before.resolve("effect", "catalog:"), after: after.resolve("effect", "catalog:") };
   * });
+ * console.log(Effect.isEffect(program)) // true
   * ```
   *
   * @param before - One snapshot, conventionally the earlier one.
   * @param after - The other snapshot, conventionally the later one.
   * @returns Both snapshots in the order given, each carrying the other's
   *   catalogs as its seed.
-  */
+ * @since 0.0.0
+ */
 	static crossSeed(
 		before: WorkspaceStateSnapshot,
 		after: WorkspaceStateSnapshot,
@@ -524,18 +764,37 @@ export class WorkspaceStateSnapshot extends S.Class<WorkspaceStateSnapshot>($I`W
 	}
 
 	/**
-  * A `CatalogResolver` layer implementing `@effected/npm`'s contract against
-  * THIS snapshot's catalog set — so code written to the contract resolves
-  * `catalog:` specifiers as of this ref. Built once per instance and cached, so
-  * it memoizes by reference.
-  *
-  * **Details**
-  *
-  * The contract's error channel (`CatalogAssemblyError` /
-  * `DependencyResolutionError`) is satisfied vacuously: a snapshot's catalogs
-  * were already assembled when it was captured, so this resolver is total —
-  * `rangeOf` never fails.
-  */
+ * A `CatalogResolver` layer implementing `@effected/npm`'s contract against
+ * THIS snapshot's catalog set — so code written to the contract resolves
+ * `catalog:` specifiers as of this ref. Built once per instance and cached, so
+ * it memoizes by reference.
+ *
+ * **Details**
+ *
+ * The contract's error channel (`CatalogAssemblyError` /
+ * `DependencyResolutionError`) is satisfied vacuously: a snapshot's catalogs
+ * were already assembled when it was captured, so this resolver is total —
+ * `rangeOf` never fails.
+ *
+ * **Example** (Resolve an absent catalog through the snapshot layer)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect";
+ * import * as O from "effect/Option";
+ * import { CatalogResolver } from "@beep/scratchpad/effected/npm/CatalogResolver";
+ * import { CatalogSet } from "@beep/scratchpad/effected/workspaces/WorkspaceCatalogs";
+ * import { WorkspaceStateSnapshot } from "@beep/scratchpad/effected/workspaces/WorkspaceStateSnapshot";
+ *
+ * const snapshot = WorkspaceStateSnapshot.make({ packages: [], catalogs: CatalogSet.empty() });
+ * const program = Effect.gen(function* () {
+ *   const resolver = yield* CatalogResolver;
+ *   return yield* resolver.rangeOf("missing", O.none());
+ * }).pipe(Effect.provide(snapshot.catalogResolver));
+ * console.log(O.isNone(Effect.runSync(program))) // true
+ * ```
+ *
+ * @since 0.0.0
+ */
 	get catalogResolver(): Layer.Layer<CatalogResolver> {
 		if (this.#catalogResolver === undefined) {
 			this.#catalogResolver = Layer.succeed(CatalogResolver, {
@@ -549,10 +808,29 @@ export class WorkspaceStateSnapshot extends S.Class<WorkspaceStateSnapshot>($I`W
 	}
 
 	/**
-	 * A `WorkspaceResolver` layer implementing `@effected/npm`'s contract against
-	 * THIS snapshot's captured versions — so code written to the contract resolves
-	 * `workspace:` specifiers as of this ref. Built once per instance and cached.
-	 */
+ * A `WorkspaceResolver` layer implementing `@effected/npm`'s contract against
+ * THIS snapshot's captured versions — so code written to the contract resolves
+ * `workspace:` specifiers as of this ref. Built once per instance and cached.
+ *
+ * **Example** (Resolve a nonmember through the snapshot layer)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect";
+ * import * as O from "effect/Option";
+ * import { WorkspaceResolver } from "@beep/scratchpad/effected/npm/WorkspaceResolver";
+ * import { CatalogSet } from "@beep/scratchpad/effected/workspaces/WorkspaceCatalogs";
+ * import { WorkspaceStateSnapshot } from "@beep/scratchpad/effected/workspaces/WorkspaceStateSnapshot";
+ *
+ * const snapshot = WorkspaceStateSnapshot.make({ packages: [], catalogs: CatalogSet.empty() });
+ * const program = Effect.gen(function* () {
+ *   const resolver = yield* WorkspaceResolver;
+ *   return yield* resolver.versionOf("missing");
+ * }).pipe(Effect.provide(snapshot.workspaceResolver));
+ * console.log(O.isNone(Effect.runSync(program))) // true
+ * ```
+ *
+ * @since 0.0.0
+ */
 	get workspaceResolver(): Layer.Layer<WorkspaceResolver> {
 		if (this.#workspaceResolver === undefined) {
 			this.#workspaceResolver = Layer.succeed(WorkspaceResolver, {
@@ -579,7 +857,21 @@ export class WorkspaceStateSnapshot extends S.Class<WorkspaceStateSnapshot>($I`W
 		return this.#workspaceResolver;
 	}
 
-	/** Both snapshot-scoped resolver layers merged. Built once per instance and cached. */
+	/**
+ *  Both snapshot-scoped resolver layers merged. Built once per instance and cached. 
+ *
+ * **Example** (Reuse the merged snapshot layers)
+ *
+ * ```ts
+ * import { CatalogSet } from "@beep/scratchpad/effected/workspaces/WorkspaceCatalogs";
+ * import { WorkspaceStateSnapshot } from "@beep/scratchpad/effected/workspaces/WorkspaceStateSnapshot";
+ *
+ * const snapshot = WorkspaceStateSnapshot.make({ packages: [], catalogs: CatalogSet.empty() });
+ * console.log(snapshot.resolvers === snapshot.resolvers) // true
+ * ```
+ *
+ * @since 0.0.0
+ */
 	get resolvers(): Layer.Layer<CatalogResolver | WorkspaceResolver> {
 		if (this.#resolvers === undefined) {
 			this.#resolvers = Layer.mergeAll(this.catalogResolver, this.workspaceResolver);

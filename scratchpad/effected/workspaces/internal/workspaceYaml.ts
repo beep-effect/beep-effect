@@ -10,7 +10,27 @@ import { NoPeerDependencyRules } from "../ConfigDependencyHooks.ts";
 import { stringsOf } from "./patterns.ts";
 import * as R from "effect/Record";
 
-/** The `configDependencies` map (name → version+integrity) of a parsed pnpm-workspace document. */
+/**
+ * Reads the `configDependencies` map (name → version+integrity) of a parsed pnpm-workspace document.
+ *
+ * **Details**
+ *
+ * Non-object documents or maps yield an empty record; only string-valued entries are retained.
+ *
+ * **Example** (Keep string config dependency specifications)
+ *
+ * ```ts
+ * import { configDependenciesOf } from "@beep/scratchpad/effected/workspaces/internal/workspaceYaml";
+ *
+ * const dependencies = configDependenciesOf({
+ *   configDependencies: { hooks: "1.0.0+sha512-integrity", invalid: 42 },
+ * });
+ * console.log(dependencies.hooks) // 1.0.0+sha512-integrity
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const configDependenciesOf = (document: unknown): Record<string, string> => {
 	if (!P.isObject(document) || !P.isObject(document.configDependencies)) return {};
 	const out: Record<string, string> = {};
@@ -36,6 +56,21 @@ export const configDependenciesOf = (document: unknown): Record<string, string> 
  *
  * Every axis is read independently, so a malformed `ignoreMissing` does not
  * discard a well-formed `allowedVersions`.
+ *
+ * **Example** (Preserve allowed versions despite malformed ignore rules)
+ *
+ * ```ts
+ * import { inlinePeerDependencyRules } from "@beep/scratchpad/effected/workspaces/internal/workspaceYaml";
+ *
+ * const rules = inlinePeerDependencyRules({
+ *   peerDependencyRules: { allowedVersions: { react: "^19" }, ignoreMissing: 42 },
+ * });
+ * console.log(rules.allowedVersions.react) // ^19
+ * console.log(rules.ignoreMissing.length) // 0
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const inlinePeerDependencyRules = (document: unknown): PeerDependencyRules => {
 	if (!P.isObject(document) || !P.isObject(document.peerDependencyRules)) return NoPeerDependencyRules;

@@ -3,10 +3,10 @@
   "effectedCommit": "af7566a9da2eff169cb74955efcc5ede1e5de9f8",
   "startedAt": "2026-10-07T06:36:54.420Z",
   "lastCheckpoint": {
-    "module": "sbom",
+    "module": "workspaces",
     "stage": 2,
     "commit": null,
-    "at": "2026-10-09T16:20:10.151Z"
+    "at": "2026-10-09T16:20:16.965Z"
   },
   "rows": [
     {
@@ -10269,7 +10269,7 @@
       "module": "workspaces",
       "wave": 4,
       "position": 3,
-      "stage": 1,
+      "stage": 2,
       "status": "in-progress",
       "provisionalHome": "tooling/library",
       "upstreamPaths": {
@@ -11440,13 +11440,18 @@
       "commits": [
         {
           "stage": 0,
+          "sha": "34aaac30f4642cc30e8e211582cf076320734be7"
+        },
+        {
+          "stage": 1,
           "sha": null
         }
       ],
       "blocked": null,
       "notes": [
         "2026-10-09T11:34:09.401Z beep laws done (four laws clean, allowlisted sites listed); S1 held by the environment-bound tests in TESTS_NOT_PASSING.md",
-        "2026-10-09T15:21:24.529Z S1: green: env-bound tests resolved per the 2026-10-09 rulings; tsgo, oxlint and the four laws clean; audit green (parity strict)"
+        "2026-10-09T15:21:24.529Z S1: green: env-bound tests resolved per the 2026-10-09 rulings; tsgo, oxlint and the four laws clean; audit green (parity strict)",
+        "2026-10-09T16:20:16.965Z S2: S2 green: docgen with all enforcement flags and the JSDoc law; carriers converted; README adapted (section 10.3)"
       ],
       "closedAt": null
     },

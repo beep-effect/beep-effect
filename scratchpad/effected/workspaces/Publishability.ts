@@ -13,24 +13,46 @@ import type { WorkspacePackage } from "./WorkspacePackage.ts";
 
 const $I = $ScratchpadId.create("effected/workspaces/Publishability");
 
-/** The public npm registry, used when `publishConfig.registry` says nothing. */
+/**
+ * The public npm registry, used when `publishConfig.registry` says nothing.
+ */
 const DEFAULT_REGISTRY = "https://registry.npmjs.org/";
 
 /**
  * A resolved publish destination for a workspace package.
  *
+ * **Example** (Construct a public npm destination)
+ *
+ * ```ts
+ * import { PublishTarget } from "@beep/scratchpad/effected/workspaces/Publishability";
+ * const target = PublishTarget.make({ name: "@acme/cli", registry: "https://registry.npmjs.org/", directory: ".", access: "public" });
+ * console.log(target.provenance) // false
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class PublishTarget extends S.Class<PublishTarget>($I`PublishTarget`)({
-	/** The package name being published. */
+	/**
+	 * The package name being published.
+	 */
 	name: S.NonEmptyString.annotateKey({ description: "The package name being published." }),
-	/** The registry URL. */
+	/**
+	 * The registry URL.
+	 */
 	registry: S.NonEmptyString.annotateKey({ description: "The registry URL." }),
-	/** The directory to publish, relative to the package root; `"."` for the root itself. */
+	/**
+	 * The directory to publish, relative to the package root; `"."` for the root itself.
+	 */
 	directory: S.String.annotateKey({ description: "The directory to publish, relative to the package root; `\".\"` for the root itself." }),
-	/** Scoped-package visibility. */
+	/**
+	 * Scoped-package visibility.
+	 */
 	access: S.Literals(["public", "restricted"]).annotateKey({ description: "Scoped-package visibility." }),
-	/** Whether to publish with a provenance attestation. */
+	/**
+	 * Whether to publish with a provenance attestation.
+	 */
 	provenance: S.Boolean.pipe(
 		S.withDecodingDefaultKey(Effect.succeed(false)),
 		S.withConstructorDefault(Effect.succeed(false)),
@@ -52,19 +74,21 @@ export class PublishTarget extends S.Class<PublishTarget>($I`PublishTarget`)({
  * writes.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface PublishabilityDetectorShape {
 	/**
-  * The publish targets for a package; empty means it does not publish.
-  *
-  * **Gotchas**
-  *
-  * `VersioningStrategy.detect` probes a whole workspace by invoking this
-  * concurrently — up to ten packages in flight at once, in no guaranteed
-  * order. An overriding implementation backed by shared mutable state or a
-  * rate-limited client must tolerate that interleaving itself; the caller
-  * does not serialize on its behalf.
-  */
+	 * The publish targets for a package; empty means it does not publish.
+	 *
+	 * **Gotchas**
+	 *
+	 * `VersioningStrategy.detect` probes a whole workspace by invoking this
+	 * concurrently — up to ten packages in flight at once, in no guaranteed
+	 * order. An overriding implementation backed by shared mutable state or a
+	 * rate-limited client must tolerate that interleaving itself; the caller
+	 * does not serialize on its behalf.
+	 */
 	readonly detect: (pkg: WorkspacePackage) => Effect.Effect<ReadonlyArray<PublishTarget>>;
 }
 
@@ -80,10 +104,16 @@ export interface PublishabilityDetectorShape {
  *
  * Those are *npm's* semantics, not necessarily yours. Swap the layer:
  *
+ * A lookup failure that should *not* abort the run degrades instead —
+ * `Effect.catch(() => Effect.succeed([]))` reads as "unknown means
+ * unpublishable" — but pick one deliberately; silently swallowing the failure
+ * into a wrong "publishes to npm" answer is the one option the contract
+ * forbids.
+ *
  * **Example** (Restrict publishing to an internal registry)
  *
  * ```ts
- * import { PublishabilityDetector, PublishTarget } from "./index.ts";
+ * import { PublishabilityDetector, PublishTarget } from "@beep/scratchpad/effected/workspaces/Publishability";
  * import * as Effect from "effect/Effect";
  * import * as Layer from "effect/Layer";
  *
@@ -100,6 +130,7 @@ export interface PublishabilityDetectorShape {
  *         : [],
  *     ),
  * });
+ * console.log(Layer.isLayer(internalOnly)) // true
  * ```
  *
  * **Example** (Turn policy lookup failures into defects)
@@ -111,13 +142,14 @@ export interface PublishabilityDetectorShape {
  * message — and either degrades to a safe answer or dies:
  *
  * ```ts
- * import { PublishabilityDetector, PublishTarget } from "./index.ts";
+ * import { PublishabilityDetector, type PublishTarget } from "@beep/scratchpad/effected/workspaces/Publishability";
  * import * as Effect from "effect/Effect";
  * import * as Layer from "effect/Layer";
  *
- * declare const lookupPolicy: (
+ * const lookupPolicy = (
  *   name: string,
- * ) => Effect.Effect<ReadonlyArray<PublishTarget>, { readonly message: string }>;
+ * ): Effect.Effect<ReadonlyArray<PublishTarget>, { readonly message: string }> =>
+ *   Effect.fail({ message: `No policy found for ${name}` });
  *
  * const fromPolicyService = Layer.succeed(PublishabilityDetector, {
  *   detect: (pkg) =>
@@ -127,46 +159,47 @@ export interface PublishabilityDetectorShape {
  *       ),
  *     ),
  * });
+ * console.log(Layer.isLayer(fromPolicyService)) // true
  * ```
  *
- * A lookup failure that should *not* abort the run degrades instead —
- * `Effect.catch(() => Effect.succeed([]))` reads as "unknown means
- * unpublishable" — but pick one deliberately; silently swallowing the failure
- * into a wrong "publishes to npm" answer is the one option the contract
- * forbids.
  *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class PublishabilityDetector extends Context.Service<PublishabilityDetector, PublishabilityDetectorShape>()(
 	$I`PublishabilityDetector`,
 ) {
 	/**
-  * Standard npm publishing semantics, **as a value**. Pure — no filesystem,
-  * no platform services. Never publishes with provenance (`provenance: false`).
-  *
-  * **Details**
-  *
-  * Exposed as a shape and not only as a layer, because a consumer composing
-  * *around* these rules cannot reach them through a layer without
-  * re-entering the very tag it is replacing. A custom detector's pass-through
-  * branch calls `PublishabilityDetector.npm.detect(pkg)` directly.
-  *
-  * **Example** (Veto private packages and defer to npm semantics)
-  *
-  * ```ts
-  * import { PublishabilityDetector } from "./index.ts";
-  * import * as Effect from "effect/Effect";
-  * import * as Layer from "effect/Layer";
-  *
-  * // A policy that defers to npm semantics for everything it does not veto.
-  * const withVeto = Layer.succeed(PublishabilityDetector, {
-  *   detect: (pkg) =>
-  *     pkg.name.endsWith("-private")
-  *       ? Effect.succeed([])
-  *       : PublishabilityDetector.npm.detect(pkg),
-  * });
-  * ```
-  */
+	 * Standard npm publishing semantics, **as a value**. Pure — no filesystem,
+	 * no platform services. Never publishes with provenance (`provenance: false`).
+	 *
+	 * **Details**
+	 *
+	 * Exposed as a shape and not only as a layer, because a consumer composing
+	 * *around* these rules cannot reach them through a layer without
+	 * re-entering the very tag it is replacing. A custom detector's pass-through
+	 * branch calls `PublishabilityDetector.npm.detect(pkg)` directly.
+	 *
+	 * **Example** (Veto private packages and defer to npm semantics)
+	 *
+	 * ```ts
+	 * import { PublishabilityDetector } from "@beep/scratchpad/effected/workspaces/Publishability";
+	 * import * as Effect from "effect/Effect";
+	 * import * as Layer from "effect/Layer";
+	 *
+	 * // A policy that defers to npm semantics for everything it does not veto.
+	 * const withVeto = Layer.succeed(PublishabilityDetector, {
+	 *   detect: (pkg) =>
+	 *     pkg.name.endsWith("-private")
+	 *       ? Effect.succeed([])
+	 *       : PublishabilityDetector.npm.detect(pkg),
+	 * });
+	 * console.log(Layer.isLayer(withVeto)) // true
+	 * ```
+	 * @category constants
+	 * @since 0.0.0
+	 */
 	static readonly npm: PublishabilityDetectorShape = {
 		detect: (pkg: WorkspacePackage) =>
 			Effect.sync((): ReadonlyArray<PublishTarget> => {
@@ -188,42 +221,84 @@ export class PublishabilityDetector extends Context.Service<PublishabilityDetect
 			}),
 	};
 
-	/** Nothing publishes. */
+	/**
+	 * Nothing publishes.
+	 *
+	 * **Example** (Disable all publish targets)
+	 *
+	 * ```ts
+	 * import { PublishabilityDetector } from "@beep/scratchpad/effected/workspaces/Publishability";
+	 * import { WorkspacePackage } from "@beep/scratchpad/effected/workspaces/WorkspacePackage";
+	 * import * as Effect from "effect/Effect";
+	 * const pkg = WorkspacePackage.make({ name: "@acme/cli", version: "1.2.3", path: "/repo/cli", packageJsonPath: "/repo/cli/package.json", relativePath: "cli", workspaceRoot: "/repo" });
+	 * console.log(Effect.runSync(PublishabilityDetector.none.detect(pkg)).length) // 0
+	 * ```
+	 * @category constants
+	 * @since 0.0.0
+	 */
 	static readonly none: PublishabilityDetectorShape = {
 		detect: () => Effect.succeed([]),
 	};
 
 	/**
-  * {@link PublishabilityDetector.npm} as a layer.
-  *
-  * **Details**
-  *
-  * Named for its policy rather than called `layer`, deliberately. **No
-  * composite in this package provides a publishability detector**: one that
-  * quietly supplied npm semantics would hide the choice and, because
-  * `Layer.mergeAll` is last-wins, would let a naively-ordered override such
-  * as `Layer.mergeAll(myDetector, Workspaces.layer())` lose to the default in
-  * silence. For a service that decides whether a package publishes and to
-  * which registry, that silent revert is the worst available failure.
-  *
-  * The composites do not *require* a detector either — nothing inside them
-  * asks a publishability question, so their `R` stays `FileSystem | Path`.
-  * The requirement instead surfaces in the `R` of each operation that asks
-  * (`VersioningStrategy.detect`, e.g.): a program that asks and never wires
-  * a detector fails to compile where that operation's `R` must close — which
-  * can be far from the layer-wiring site — and a program that never asks
-  * never supplies a publish policy at all.
-  */
+	 * {@link PublishabilityDetector.npm} as a layer.
+	 *
+	 * **Details**
+	 *
+	 * Named for its policy rather than called `layer`, deliberately. **No
+	 * composite in this package provides a publishability detector**: one that
+	 * quietly supplied npm semantics would hide the choice and, because
+	 * `Layer.mergeAll` is last-wins, would let a naively-ordered override such
+	 * as `Layer.mergeAll(myDetector, Workspaces.layer())` lose to the default in
+	 * silence. For a service that decides whether a package publishes and to
+	 * which registry, that silent revert is the worst available failure.
+	 *
+	 * The composites do not *require* a detector either — nothing inside them
+	 * asks a publishability question, so their `R` stays `FileSystem | Path`.
+	 * The requirement instead surfaces in the `R` of each operation that asks
+	 * (`VersioningStrategy.detect`, e.g.): a program that asks and never wires
+	 * a detector fails to compile where that operation's `R` must close — which
+	 * can be far from the layer-wiring site — and a program that never asks
+	 * never supplies a publish policy at all.
+	 *
+	 * **Example** (Provide npm publishability policy)
+	 *
+	 * ```ts
+	 * import { PublishabilityDetector } from "@beep/scratchpad/effected/workspaces/Publishability";
+	 * import * as Effect from "effect/Effect";
+	 * const program = Effect.gen(function* () {
+	 *   const detector = yield* PublishabilityDetector;
+	 *   return typeof detector.detect;
+	 * }).pipe(Effect.provide(PublishabilityDetector.layerNpm));
+	 * console.log(Effect.runSync(program)) // function
+	 * ```
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layerNpm: Layer.Layer<PublishabilityDetector> = Layer.succeed(this, this.npm);
 
 	/**
-  * {@link PublishabilityDetector.none} as a layer: a workspace where nothing
-  * publishes.
-  *
-  * **Details**
-  *
-  * For dry runs, and for a release tool whose configuration disables
-  * publishing wholesale — silk's changeset `mode: "none"` is exactly this.
-  */
+	 * {@link PublishabilityDetector.none} as a layer: a workspace where nothing
+	 * publishes.
+	 *
+	 * **Details**
+	 *
+	 * For dry runs, and for a release tool whose configuration disables
+	 * publishing wholesale — silk's changeset `mode: "none"` is exactly this.
+	 *
+	 * **Example** (Provide disabled publishing policy)
+	 *
+	 * ```ts
+	 * import { PublishabilityDetector } from "@beep/scratchpad/effected/workspaces/Publishability";
+	 * import * as Effect from "effect/Effect";
+	 * const program = Effect.gen(function* () {
+	 *   const detector = yield* PublishabilityDetector;
+	 *   return typeof detector.detect;
+	 * }).pipe(Effect.provide(PublishabilityDetector.layerNone));
+	 * console.log(Effect.runSync(program)) // function
+	 * ```
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layerNone: Layer.Layer<PublishabilityDetector> = Layer.succeed(this, this.none);
 }

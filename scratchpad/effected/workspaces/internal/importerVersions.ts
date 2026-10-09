@@ -22,6 +22,8 @@ import * as MutableHashMap from "effect/MutableHashMap";
 /**
  * One importer's dependency-name → resolved-version map, keyed by importer path.
  *
+ * **Details**
+ *
  * Structural on purpose: the public alias of this shape is `ImporterVersions`,
  * declared beside the service member that returns it in `WorkspaceCatalogs.ts`.
  * Naming it there rather than here keeps a `@public` type out of `internal/`
@@ -33,6 +35,8 @@ type VersionIndex = Readonly<Record<string, Readonly<Record<string, string>>>>;
 
 /**
  * Strip pnpm's peer-disambiguation suffix from a recorded importer version.
+ *
+ * **Details**
  *
  * pnpm records an importer version as the resolved version followed by the peer
  * context it was resolved under — `4.0.0(effect@4.0.0)(ioredis@5.11.1(supports-color@8.1.1))`.
@@ -52,6 +56,8 @@ const stripPeerSuffix = (version: string): string => {
 /**
  * Whether a recorded importer version is a concrete version usable as a
  * resolution answer.
+ *
+ * **Details**
  *
  * A `link:` / `file:` entry records a filesystem edge rather than a version, and
  * an empty string is pnpm's "specifier only, nothing installed" marker. Both
@@ -79,6 +85,29 @@ const isConcreteVersion = (version: string): boolean =>
  * Only pnpm populates importer versions; bun and npm record resolved versions on
  * their package entries instead, so those formats yield an empty index and the
  * fallback is inert for them.
+ *
+ * **Example** (Index a pnpm development dependency)
+ *
+ * ```ts
+ * import { importerVersionsOf } from "@beep/scratchpad/effected/workspaces/internal/importerVersions";
+ * import { Lockfile } from "@beep/scratchpad/effected/lockfiles/Lockfile";
+ * import { LockfileImporter } from "@beep/scratchpad/effected/lockfiles/LockfileImporter";
+ * import { ImporterDependency } from "@beep/scratchpad/effected/lockfiles/ImporterDependency";
+ * import * as S from "effect/Schema";
+ *
+ * const dependency = S.decodeUnknownSync(ImporterDependency)({
+ *   name: "effect", specifier: "catalog:effect:peers",
+ *   version: "4.0.0(effect@4.0.0)", depType: "devDependencies",
+ * });
+ * const lockfile = Lockfile.make({
+ *   format: "pnpm", lockfileVersion: "9.0", packages: [], workspaceDependencies: [],
+ *   importers: [LockfileImporter.make({ path: "packages/core", dependencies: [dependency] })],
+ * });
+ * console.log(importerVersionsOf(lockfile)["packages/core"]?.effect); // 4.0.0
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
  */
 export const importerVersionsOf = (lockfile: Lockfile): VersionIndex => {
 	const index = MutableHashMap.empty<string, Record<string, string>>();
@@ -110,6 +139,21 @@ export const importerVersionsOf = (lockfile: Lockfile): VersionIndex => {
  * monorepo may legitimately hold different versions of the same dependency; in
  * that case there is no single correct answer, so this yields nothing and the
  * caller keeps today's behavior (no row) rather than inventing a wrong one.
+ *
+ * **Example** (Distinguish agreement from conflicting versions)
+ *
+ * ```ts
+ * import { unanimousVersionOf } from "@beep/scratchpad/effected/workspaces/internal/importerVersions";
+ *
+ * const agreed = { "packages/a": { effect: "4.0.0" }, "packages/b": { effect: "4.0.0" } };
+ * const conflicting = { "packages/a": { effect: "4.0.0" }, "packages/b": { effect: "4.0.1" } };
+ * console.log(unanimousVersionOf(agreed, "effect")); // 4.0.0
+ * console.log(unanimousVersionOf("effect")(conflicting)); // undefined
+ * console.log(unanimousVersionOf(agreed, "missing")); // undefined
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
  */
 export const unanimousVersionOf: {
 	(dependency: string): (index: VersionIndex) => string | undefined;

@@ -57,19 +57,38 @@ const $I = $ScratchpadId.create("effected/workspaces/SourceBoundary");
  * name (`events`, `buffer`, `punycode`). No built-in list ships here: it
  * would drift with Node releases.
  *
+ * **Example** (Validate a global boundary rule)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { BoundaryRule } from "@beep/scratchpad/effected/workspaces/SourceBoundary";
+ *
+ * console.log(S.is(BoundaryRule)("process")) // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const BoundaryRule = S.Union([
 	S.Literals(["process", "node:process", "stdout-write", "console", "console-stdout"]),
 	S.Struct({ forbidImports: S.Array(S.String).annotateKey({ description: "Forbidden module names or prefixes." }) }),
 	S.Struct({ forbidTokens: S.Array(S.String).annotateKey({ description: "Exact forbidden code tokens." }) }),
 ]).pipe($I.annoteSchema("BoundaryRule", { description: "One rule a source file must keep." }));
+/**
+ * Decoded representation accepted by {@link BoundaryRule}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type BoundaryRule = typeof BoundaryRule.Type;
 
 /**
- * Options for the `process` rule.
+ * Controls which exact tokens are exempt from the `process` rule.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface ReferenceOptions {
 	/**
@@ -85,7 +104,18 @@ export interface ReferenceOptions {
 /**
  * A snippet with the verdict one rule must reach on it.
  *
+ * **Example** (Validate a scanner control snippet)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { BoundaryFixture } from "@beep/scratchpad/effected/workspaces/SourceBoundary";
+ *
+ * console.log(S.is(BoundaryFixture)({ name: "read", source: "process.cwd()", rule: "process", flagged: true })) // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const BoundaryFixture = S.Struct({
 	name: S.String.annotateKey({ description: "What the snippet exercises." }),
@@ -93,6 +123,12 @@ export const BoundaryFixture = S.Struct({
 	rule: BoundaryRule.annotateKey({ description: "The rule it is checked against." }),
 	flagged: S.Boolean.annotateKey({ description: "Whether that rule must flag it." }),
 }).pipe($I.annoteSchema("BoundaryFixture", { description: "A snippet with the verdict one rule must reach on it." }));
+/**
+ * Decoded representation accepted by {@link BoundaryFixture}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type BoundaryFixture = typeof BoundaryFixture.Type;
 
 /**
@@ -101,17 +137,45 @@ export type BoundaryFixture = typeof BoundaryFixture.Type;
  * any `{ forbidTokens }` rule. These are the keys of
  * {@link ScanOptions.allowRules}.
  *
+ * **Example** (Validate a token offence key)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { OffenceRule } from "@beep/scratchpad/effected/workspaces/SourceBoundary";
+ *
+ * console.log(S.is(OffenceRule)("forbidTokens")) // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const OffenceRule = LiteralKit([
 	"process", "node:process", "stdout-write", "console", "console-stdout", "forbidImports", "forbidTokens",
 ]).pipe($I.annoteSchema("OffenceRule", { description: "The rule an offence names, including import and token rules." }));
+/**
+ * Decoded representation accepted by {@link OffenceRule}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type OffenceRule = typeof OffenceRule.Type;
 
 /**
  * One place a source file breaks a {@link BoundaryRule}.
  *
+ * **Example** (Format a boundary offence)
+ *
+ * ```ts
+ * import { Offence } from "@beep/scratchpad/effected/workspaces/SourceBoundary";
+ *
+ * const offence = Offence.make({ file: "a.ts", line: 1, column: 1, rule: "process", detail: "process" });
+ * console.log(offence.label) // a.ts:1:1 process process
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class Offence extends S.Class<Offence>($I`Offence`)({
 	/** The file, relative to the scanned root, with `/` separators. */
@@ -125,7 +189,21 @@ export class Offence extends S.Class<Offence>($I`Offence`)({
 	/** What matched: the identifier, the call, the import specifier, or the token. */
 	detail: S.String.annotateKey({ description: "What matched: the identifier, the call, the import specifier, or the token." }),
 }, $I.annote("Offence", { description: "One place a source file breaks a BoundaryRule." })) {
-	/** `file:line:column rule detail`, the form an assertion message reads best in. */
+	/**
+	 * `file:line:column rule detail`, the form an assertion message reads best in.
+	 *
+	 * **Example** (Read an assertion label)
+	 *
+	 * ```ts
+	 * import { Offence } from "@beep/scratchpad/effected/workspaces/SourceBoundary";
+	 *
+	 * const offence = Offence.make({ file: "a.ts", line: 2, column: 3, rule: "console", detail: "console" });
+	 * console.log(offence.label) // a.ts:2:3 console console
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	get label(): string {
 		return `${this.file}:${this.line}:${this.column} ${this.rule} ${this.detail}`;
 	}
@@ -134,7 +212,18 @@ export class Offence extends S.Class<Offence>($I`Offence`)({
 /**
  * What a scan read and found.
  *
+ * **Example** (Inspect a clean scan)
+ *
+ * ```ts
+ * import { SourceScan } from "@beep/scratchpad/effected/workspaces/SourceBoundary";
+ *
+ * const scan = SourceScan.make({ files: ["a.ts"], allowed: [], offences: [], waived: [] });
+ * console.log(scan.violations.length) // 0
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class SourceScan extends S.Class<SourceScan>($I`SourceScan`)({
 	/** Every source file visited, relative to the root with `/` separators, sorted. Assert it is non-empty. */
@@ -150,16 +239,33 @@ export class SourceScan extends S.Class<SourceScan>($I`SourceScan`)({
 	 */
 	waived: S.Array(Offence).annotateKey({ description: "Every offence an `allowRules` glob waived, sorted like `offences`. Assert it is exactly what you meant to waive: a waiver that no longer waives anything, or waives more than intended, shows up here." }),
 }, $I.annote("SourceScan", { description: "What a scan read and found." })) {
-	/** One `file:line:column rule detail` label per offence: `[]` means clean. */
+	/**
+	 * One `file:line:column rule detail` label per offence: `[]` means clean.
+	 *
+	 * **Example** (Read formatted violations)
+	 *
+	 * ```ts
+	 * import { SourceScan, Offence } from "@beep/scratchpad/effected/workspaces/SourceBoundary";
+	 *
+	 * const offence = Offence.make({ file: "a.ts", line: 1, column: 1, rule: "process", detail: "process" });
+	 * const scan = SourceScan.make({ files: ["a.ts"], allowed: [], offences: [offence], waived: [] });
+	 * console.log(scan.violations.join("\n")) // a.ts:1:1 process process
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	get violations(): ReadonlyArray<string> {
 		return this.offences.map((offence) => offence.label);
 	}
 }
 
 /**
- * Options for {@link SourceBoundary.scan}.
+ * Configures source selection and rule waivers for {@link SourceBoundary.scan}.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface ScanOptions extends ReferenceOptions {
 	/** The directory to scan. */
@@ -489,7 +595,7 @@ const FIXTURES: ReadonlyArray<BoundaryFixture> = [
  * Source-text boundary checks: which files read `process`, import a forbidden
  * module, or write to stdout or the console.
  *
- * **Gotchas**
+ * **Details**
  *
  * Every check runs over one lexer pass that separates code from comments,
  * strings, template text and regex bodies, so `process` in prose, in a string
@@ -499,6 +605,8 @@ const FIXTURES: ReadonlyArray<BoundaryFixture> = [
  * an operator, a keyword or the `)` of an `if`/`while`/`for`/`with` condition
  * opens a regex. An object-literal key or type member named `process`
  * (`{ process: 1 }`) is not a read.
+ *
+ * **Gotchas**
  *
  * It is a lexer, not a type checker, and these misses are known:
  *
@@ -533,51 +641,115 @@ const FIXTURES: ReadonlyArray<BoundaryFixture> = [
  * **Example** (Detect a process reference and verify scanner fixtures)
  *
  * ```ts
- * import { SourceBoundary } from "./testing.ts";
+ * import { SourceBoundary } from "@beep/scratchpad/effected/workspaces/SourceBoundary";
  *
  * const offences = SourceBoundary.check("src/a.ts", "const { env } = process;", ["process"]);
  * const clean = SourceBoundary.verifyFixtures().length === 0;
- * console.log(offences.map((offence) => offence.label), clean);
- * // => [ 'src/a.ts:1:17 process process' ] true
+ * console.log(offences.map((offence) => offence.label).join(","), clean); // src/a.ts:1:17 process process true
  * ```
  *
  * @public
+ * @category utilities
+ * @since 0.0.0
  */
 export class SourceBoundary {
 	private constructor() {}
 
-	/** `text` with every comment blanked to spaces; strings, templates and regexes untouched, length and line breaks kept. */
+	/**
+	 * `text` with every comment blanked to spaces; strings, templates and regexes untouched, length and line breaks kept.
+	 *
+	 * **Example** (Blank a trailing comment)
+	 *
+	 * ```ts
+	 * import { SourceBoundary } from "@beep/scratchpad/effected/workspaces/SourceBoundary";
+	 *
+	 * console.log(SourceBoundary.stripComments("x//hi") === "x    ") // true
+	 * ```
+	 *
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	static readonly stripComments = (text: string): string => lex(text).withoutComments;
 
-	/** Whether `text` reads the global `process` in code (see {@link BoundaryRule}). */
+	/**
+	 * Whether `text` reads the global `process` in code (see {@link BoundaryRule}).
+	 *
+	 * **Example** (Detect a global process read)
+	 *
+	 * ```ts
+	 * import { SourceBoundary } from "@beep/scratchpad/effected/workspaces/SourceBoundary";
+	 *
+	 * console.log(SourceBoundary.referencesProcess("process.cwd()")) // true
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
+	 */
 	static readonly referencesProcess = (text: string, options?: ReferenceOptions): boolean =>
 		processReads(lex(text).code, [...EXEMPT, ...(options?.ignoreTokens ?? [])]).length > 0;
 
-	/** Every module specifier `text` imports: static, side-effect, re-export, type-only, `import(...)` with a literal, and `require(...)`. */
+	/**
+	 * Every module specifier `text` imports: static, side-effect, re-export, type-only, `import(...)` with a literal, and `require(...)`.
+	 *
+	 * **Example** (Extract a Node import specifier)
+	 *
+	 * ```ts
+	 * import { SourceBoundary } from "@beep/scratchpad/effected/workspaces/SourceBoundary";
+	 *
+	 * console.log(SourceBoundary.importSpecifiers('import "node:fs";').join(",")) // node:fs
+	 * ```
+	 *
+	 * @category parsing
+	 * @since 0.0.0
+	 */
 	static readonly importSpecifiers = (text: string): ReadonlyArray<string> =>
 		specifierLiterals(lex(text)).map((literal) => literal.value);
 
-	/** Whether `text` imports the Node built-in `module`, in either its `node:` or bare form. */
+	/**
+	 * Whether `text` imports the Node built-in `module`, in either its `node:` or bare form.
+	 *
+	 * **Example** (Recognize a bare Node built-in import)
+	 *
+	 * ```ts
+	 * import { SourceBoundary } from "@beep/scratchpad/effected/workspaces/SourceBoundary";
+	 *
+	 * console.log(SourceBoundary.importsNode('import "fs";', "fs")) // true
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
+	 */
 	static readonly importsNode = (text: string, module: string): boolean =>
 		SourceBoundary.importSpecifiers(text).some((specifier) => isNodeModule(specifier, module));
 
 	/**
-  * Every place `text` breaks one of `rules`, in source order, attributed to `file`.
-  *
-  * **Details**
-  *
-  * A `{ forbidTokens }` entry matches its exact text in code only: comments,
-  * strings, template text and regex bodies are blanked first, so a token that
-  * itself contains a string literal never matches, and whitespace inside a
-  * token must match byte for byte. A token that starts with an identifier
-  * character does not match inside a longer identifier or after `#`, and one
-  * that ends with one does not match when an identifier character follows.
-  * A member access is still a match: `globalThis.process.env.X` contains the
-  * token `process.env.X`. A token listed twice is reported once. A token with
-  * no identifier character at either end (`"=>"`, `"?."`) has no edge guard,
-  * so it matches inside longer punctuation, and consecutive matches of it can
-  * overlap.
-  */
+	 * Every place `text` breaks one of `rules`, in source order, attributed to `file`.
+	 *
+	 * **Details**
+	 *
+	 * A `{ forbidTokens }` entry matches its exact text in code only: comments,
+	 * strings, template text and regex bodies are blanked first, so a token that
+	 * itself contains a string literal never matches, and whitespace inside a
+	 * token must match byte for byte. A token that starts with an identifier
+	 * character does not match inside a longer identifier or after `#`, and one
+	 * that ends with one does not match when an identifier character follows.
+	 * A member access is still a match: `globalThis.process.env.X` contains the
+	 * token `process.env.X`. A token listed twice is reported once. A token with
+	 * no identifier character at either end (`"=>"`, `"?."`) has no edge guard,
+	 * so it matches inside longer punctuation, and consecutive matches of it can
+	 * overlap.
+	 *
+	 * **Example** (Count a process offence)
+	 *
+	 * ```ts
+	 * import { SourceBoundary } from "@beep/scratchpad/effected/workspaces/SourceBoundary";
+	 *
+	 * console.log(SourceBoundary.check("a.ts", "process.cwd()", ["process"]).length) // 1
+	 * ```
+	 *
+	 * @category validation
+	 * @since 0.0.0
+	 */
 	static readonly check = (
 		file: string,
 		text: string,
@@ -627,31 +799,35 @@ export class SourceBoundary {
 	};
 
 	/**
-  * Check every source file under `root` against `rules`.
-  *
-  * **Details**
-  *
-  * Walks with an explicit stack and real-directory ancestry (via
-  * `realPath`), so ancestor symlink cycles terminate while distinct logical
-  * paths are each scanned with their own waiver policy. `node_modules` is never entered. Paths come back relative
-  * and `/`-separated whatever the platform's separator, and that is also
-  * what `allow` globs match against. A missing root fails; it never scans
-  * nothing. A dangling symlink under the root is skipped, having nothing to
-  * scan; any other entry that cannot be read fails the scan.
-  *
-  * **Example** (Scan source files for forbidden globals and imports)
-  *
-  * ```ts
-  * import { NodeServices } from "@effect/platform-node";
-  * import { SourceBoundary } from "./testing.ts";
-  * import * as Effect from "effect/Effect";
-  *
-  * const scan = SourceBoundary.scan({
-  *   root: "/repo/packages/engine/src",
-  *   rules: ["process", "node:process", { forbidImports: ["node:*", "@effect/platform*"] }],
-  * }).pipe(Effect.provide(NodeServices.layer));
-  * ```
-  */
+	 * Check every source file under `root` against `rules`.
+	 *
+	 * **Details**
+	 *
+	 * Walks with an explicit stack and real-directory ancestry (via
+	 * `realPath`), so ancestor symlink cycles terminate while distinct logical
+	 * paths are each scanned with their own waiver policy. `node_modules` is never entered. Paths come back relative
+	 * and `/`-separated whatever the platform's separator, and that is also
+	 * what `allow` globs match against. A missing root fails; it never scans
+	 * nothing. A dangling symlink under the root is skipped, having nothing to
+	 * scan; any other entry that cannot be read fails the scan.
+	 *
+	 * **Example** (Scan source files for forbidden globals and imports)
+	 *
+	 * ```ts
+	 * import { NodeServices } from "@effect/platform-node";
+	 * import { SourceBoundary } from "@beep/scratchpad/effected/workspaces/SourceBoundary";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const scan = SourceBoundary.scan({
+	 *   root: "/repo/packages/engine/src",
+	 *   rules: ["process", "node:process", { forbidImports: ["node:*", "@effect/platform*"] }],
+	 * }).pipe(Effect.provide(NodeServices.layer));
+	 * console.log(Effect.isEffect(scan)) // true
+	 * ```
+	 *
+	 * @category validation
+	 * @since 0.0.0
+	 */
 	static readonly scan = Effect.fn("SourceBoundary.scan")(function* (options: ScanOptions) {
 		const fs = yield* FileSystem.FileSystem;
 		const path = yield* Path.Path;
@@ -721,10 +897,36 @@ export class SourceBoundary {
 		});
 	});
 
-	/** The shipped positive- and negative-control snippets, at least one of each per rule kind. */
+	/**
+	 * The shipped positive- and negative-control snippets, at least one of each per rule kind.
+	 *
+	 * **Example** (Inspect the first control rule)
+	 *
+	 * ```ts
+	 * import { SourceBoundary } from "@beep/scratchpad/effected/workspaces/SourceBoundary";
+	 *
+	 * console.log(SourceBoundary.fixtures[0]?.rule) // node:process
+	 * ```
+	 *
+	 * @category fixtures
+	 * @since 0.0.0
+	 */
 	static readonly fixtures: ReadonlyArray<BoundaryFixture> = FIXTURES;
 
-	/** The names of shipped fixtures the scanner gets wrong; `[]` means it still flags and spares what it must. */
+	/**
+	 * The names of shipped fixtures the scanner gets wrong; `[]` means it still flags and spares what it must.
+	 *
+	 * **Example** (Verify all shipped scanner controls)
+	 *
+	 * ```ts
+	 * import { SourceBoundary } from "@beep/scratchpad/effected/workspaces/SourceBoundary";
+	 *
+	 * console.log(SourceBoundary.verifyFixtures().length) // 0
+	 * ```
+	 *
+	 * @category testing
+	 * @since 0.0.0
+	 */
 	static readonly verifyFixtures = (): ReadonlyArray<string> =>
 		FIXTURES.filter(
 			(fixture) => SourceBoundary.check("fixture.ts", fixture.source, [fixture.rule]).length > 0 !== fixture.flagged,

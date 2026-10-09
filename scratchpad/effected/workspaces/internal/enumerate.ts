@@ -28,26 +28,66 @@ class EnumerationOptionsError extends S.TaggedError<EnumerationOptionsError>($I`
 	message: S.String,
 }, $I.annote("EnumerationOptionsError", { description: "An invalid workspace enumeration depth bound." })) {}
 
-/** A directory the enumerator accepted: its root-relative POSIX path and its absolute path. */
+/**
+ * A directory the enumerator accepted: its root-relative POSIX path and its absolute path.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export interface EnumeratedDirectory {
 	readonly relativePath: string;
 	readonly path: string;
 }
 
-/** Why an enumeration failed. Every member is a caller-visible condition, never a defect. */
+/**
+ * Classifies why an enumeration failed.
+ *
+ * **Details**
+ *
+ * Every member is a caller-visible condition, never a defect.
+ *
+ * **Example** (Validate an enumeration failure kind)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { EnumerationFailureKind } from "@beep/scratchpad/effected/workspaces/internal/enumerate"
+ *
+ * console.log(S.is(EnumerationFailureKind)("missingBaseDir")) // true
+ * console.log(S.is(EnumerationFailureKind)("unknown")) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const EnumerationFailureKind = LiteralKit(["missingBaseDir", "depthExceeded", "budgetExceeded", "unreadableDirectory"]).annotate(
 	$I.annote("EnumerationFailureKind", { description: "The caller-visible reasons workspace enumeration can fail." }),
 );
+/**
+ * The caller-visible reason recorded when workspace enumeration fails.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type EnumerationFailureKind = typeof EnumerationFailureKind.Type;
 
-/** The enumerator's raw failure record; the facade materializes the typed error. */
+/**
+ * The enumerator's raw failure record; the facade materializes the typed error.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export interface EnumerationFailure {
 	readonly kind: EnumerationFailureKind;
 	readonly pattern: string;
 	readonly detail: string;
 }
 
-/** Options for {@link enumerate}. */
+/**
+ * Controls the descent bound for {@link enumerate}.
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
 export interface EnumerateOptions {
 	/** Descent cap below a wildcard's enumeration prefix. Defaults to 32. */
 	readonly maxDepth?: number;
@@ -57,11 +97,33 @@ export interface EnumerateOptions {
 const baseOf = (pattern: GlobPattern): string => pattern.enumerationPrefix.replace(/\/$/, "");
 
 /**
- * Enumerate the workspace directories a compiled `packages:` set selects.
+ * Enumerates the workspace directories a compiled `packages:` set selects.
+ *
+ * **Details**
  *
  * Every returned directory holds a `package.json`, matches at least one include
  * (literal or wildcard), and is rejected by no exclude. Results are sorted by
  * relative path.
+ *
+ * **Gotchas**
+ *
+ * Execution requires `FileSystem` and `Path` services. An invalid `maxDepth`
+ * is a programmer error reported as a defect, outside the typed failure channel.
+ *
+ * **Example** (Construct a workspace enumeration)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import { GlobSet } from "@beep/scratchpad/effected/glob/GlobSet"
+ * import { enumerate } from "@beep/scratchpad/effected/workspaces/internal/enumerate"
+ *
+ * const globs = Effect.runSync(GlobSet.compile(["packages/*"]))
+ * const program = enumerate("/workspace", globs, { maxDepth: 2 })
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
  */
 export const enumerate: {
 	(globs: GlobSet, options?: EnumerateOptions): (root: string) => Effect.Effect<ReadonlyArray<EnumeratedDirectory>, EnumerationFailure, FileSystem.FileSystem | Path.Path>;

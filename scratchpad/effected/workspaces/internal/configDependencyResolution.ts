@@ -64,6 +64,9 @@ const { basename, dirname, join } = process.getBuiltinModule("node:path");
  * One config dependency resolved at its declared version: where it was
  * found, and the pnpmfile to load — `undefined` when that version ships
  * none (resolved, but contributing nothing).
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface ResolvedPnpmfile {
 	/** The config dependency's name, as declared. */
@@ -82,6 +85,8 @@ const PNPMFILE_CANDIDATES = ["pnpmfile.mjs", "pnpmfile.cjs", "pnpmfile.js"] as c
 /**
  * The version part of a `configDependencies` spec: the text before the first
  * `+` (`0.9.0+sha512-…` → `0.9.0`); a bare `0.9.0` is returned whole.
+ *
+ * **Details**
  *
  * Deliberately lenient — it goes through the same split as the public
  * `ConfigDependencySpec` but validates neither half. See
@@ -442,7 +447,12 @@ const memoizeSuccess = <A, E>(effect: Effect.Effect<A, E>): Effect.Effect<Effect
 		Effect.onExit(once, (exit) => (Exit.isSuccess(exit) ? Effect.void : invalidate)),
 	);
 
-/** What a {@link resolvePnpmfiles} call may use beyond the declared map. */
+/**
+ * What a {@link resolvePnpmfiles} call may use beyond the declared map.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface ResolveOptions {
 	/** What the declaring side recorded: its lockfile (integrity for a bare spec) and its ref (for messages). */
 	readonly side?: HookReplayContext | undefined;
@@ -458,6 +468,20 @@ export interface ResolveOptions {
  * non-absent IO failure fails typed as a `hooks`-source
  * `CatalogAssemblyError`. `options.fetch`, when wired, is tried for a version
  * found nowhere before that fails.
+ *
+ * **Example** (Resolve an empty dependency declaration)
+ *
+ * ```ts
+ * import { resolvePnpmfiles } from "@beep/scratchpad/effected/workspaces/internal/configDependencyResolution"
+ * import * as Effect from "effect/Effect"
+ *
+ * const resolved = await Effect.runPromise(resolvePnpmfiles("/workspace", {}))
+ *
+ * console.log(resolved.length) // 0
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
  */
 export const resolvePnpmfiles: {
 	(configDependencies: Readonly<Record<string, string>>, options?: ResolveOptions): (root: string) => Effect.Effect<ReadonlyArray<ResolvedPnpmfile>, CatalogAssemblyError>;
@@ -495,6 +519,23 @@ export const resolvePnpmfiles: {
  * `(name, version)` up in a caller-supplied `"<name>@<version>" → path` map.
  * Same order, same `..` refusal, same fail-closed shape for a missing entry
  * — no filesystem is consulted, so it is safe under any `FileSystem` layer.
+ *
+ * **Example** (Resolve a hook from a supplied map)
+ *
+ * ```ts
+ * import { lookupPnpmfiles } from "@beep/scratchpad/effected/workspaces/internal/configDependencyResolution"
+ * import * as Effect from "effect/Effect"
+ *
+ * const resolved = Effect.runSync(lookupPnpmfiles(
+ *   { "workspace-config@1.0.0": "/hooks/pnpmfile.cjs" },
+ *   { "workspace-config": "1.0.0" },
+ * ))
+ *
+ * console.log(resolved[0]?.path) // /hooks/pnpmfile.cjs
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
  */
 export const lookupPnpmfiles: {
 	(configDependencies: Readonly<Record<string, string>>): (entries: Readonly<Record<string, string>>) => Effect.Effect<ReadonlyArray<ResolvedPnpmfile>, CatalogAssemblyError>;

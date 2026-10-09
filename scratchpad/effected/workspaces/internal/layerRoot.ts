@@ -10,15 +10,39 @@ import { dual } from "effect/Function";
 import * as Effect from "effect/Effect";
 import type { WorkspaceRootNotFoundError, WorkspaceRootShape } from "../WorkspaceRoot.ts";
 
-/** The layer-level options every root-consuming service reads its root from. */
+/**
+ * Shares the layer-level options every root-consuming service reads its root from.
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
 export interface LayerRootOptions {
 	readonly cwd?: string;
 	readonly stopAt?: string | undefined;
 }
 
 /**
- * Resolve the workspace root a layer's options name. `Effect.suspend` so the
- * ambient `process.cwd()` is read at first use, not at layer construction.
+ * Resolves the workspace root a layer's options name.
+ *
+ * **Details**
+ *
+ * Uses `Effect.suspend` so the ambient `process.cwd()` is read at first use,
+ * not at layer construction.
+ *
+ * **Example** (Resolve an explicit starting directory)
+ *
+ * ```ts
+ * import { findLayerRoot } from "@beep/scratchpad/effected/workspaces/internal/layerRoot";
+ * import type { WorkspaceRootShape } from "@beep/scratchpad/effected/workspaces/WorkspaceRoot";
+ * import * as Effect from "effect/Effect";
+ *
+ * const roots: WorkspaceRootShape = { find: (cwd) => Effect.succeed(cwd) };
+ * const program = findLayerRoot(roots, { cwd: "/repo" });
+ * console.log(Effect.runSync(program)); // /repo
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
  */
 export const findLayerRoot: {
 	(options: LayerRootOptions | undefined): (roots: WorkspaceRootShape) => Effect.Effect<string, WorkspaceRootNotFoundError>;

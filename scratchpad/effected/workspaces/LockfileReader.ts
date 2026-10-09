@@ -41,7 +41,20 @@ const JsonValue = S.fromJsonString(S.Unknown);
  * Parse failures are `@effected/lockfiles`' `LockfileParseError`, not this —
  * this is strictly the IO half.
  *
+ * **Example** (Describe an unreadable lockfile)
+ *
+ * ```ts
+ * import { LockfileReadError } from "@beep/scratchpad/effected/workspaces/LockfileReader";
+ *
+ * const error = LockfileReadError.make({
+ *   lockfilePath: "/repo/pnpm-lock.yaml", format: "pnpm", cause: new Error("Permission denied"),
+ * });
+ * console.log(error.message) // Cannot read pnpm lockfile at /repo/pnpm-lock.yaml
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class LockfileReadError extends S.TaggedError<LockfileReadError>($I`LockfileReadError`)("LockfileReadError", {
 	/** Absolute path to the lockfile that could not be read. */
@@ -54,7 +67,23 @@ export class LockfileReadError extends S.TaggedError<LockfileReadError>($I`Lockf
 	/** The originating failure. */
 	cause: S.Defect({ includeStack: true }).annotateKey({ description: "The originating failure." }),
 }, $I.annote("LockfileReadError", { description: "Raised when the workspace's lockfile cannot be read off disk." })) {
-	/** Renders the unreadable path into a one-line message. */
+	/**
+	 * Renders the unreadable path into a one-line message.
+	 *
+	 * **Example** (Render the unreadable lockfile path)
+	 *
+	 * ```ts
+	 * import { LockfileReadError } from "@beep/scratchpad/effected/workspaces/LockfileReader";
+	 *
+	 * const error = LockfileReadError.make({
+	 *   lockfilePath: "/repo/pnpm-lock.yaml", format: "pnpm", cause: new Error("Permission denied"),
+	 * });
+	 * console.log(error.message) // Cannot read pnpm lockfile at /repo/pnpm-lock.yaml
+	 * ```
+	 *
+	 * @category formatting
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return `Cannot read ${this.format} lockfile at ${this.lockfilePath}`;
 	}
@@ -72,6 +101,8 @@ export class LockfileReadError extends S.TaggedError<LockfileReadError>($I`Lockf
  * lockfile document.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type LockfileReadFailure =
 	| WorkspaceRootNotFoundError
@@ -81,9 +112,11 @@ export type LockfileReadFailure =
 	| LockfileFramingError;
 
 /**
- * The {@link LockfileReader} service shape.
+ * Defines parsed reads, version lookup, integrity checks and refresh for {@link LockfileReader}.
  *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export interface LockfileReaderShape {
 	/** The parsed lockfile, with pnpm importer paths already resolved to real names. */
@@ -112,7 +145,19 @@ export interface LockfileReaderShape {
 /**
  * Options for the {@link LockfileReader} layer.
  *
+ * **Example** (Decode bounded root-resolution options)
+ *
+ * ```ts
+ * import { LockfileReaderOptions } from "@beep/scratchpad/effected/workspaces/LockfileReader";
+ * import * as S from "effect/Schema";
+ *
+ * const options = S.decodeUnknownSync(LockfileReaderOptions)({ cwd: "/repo", stopAt: "/repo" });
+ * console.log(options.stopAt) // /repo
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const LockfileReaderOptions = S.Struct({
 	/**
@@ -139,7 +184,11 @@ export const LockfileReaderOptions = S.Struct({
 	stopAt: S.optional(S.String).annotateKey({ description: "An inclusive ceiling for the workspace-root ascent; absent or undefined means no ceiling." }),
 }).pipe($I.annoteSchema("LockfileReaderOptions", { description: "Root-resolution options for the lockfile reader, leaving current-directory resolution lazy." }));
 
-/** The root-resolution options accepted by the lockfile reader layer. */
+/**
+ * The root-resolution options accepted by the lockfile reader layer.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type LockfileReaderOptions = typeof LockfileReaderOptions.Type;
 
 class LockfileReaderTestDoubleError extends S.TaggedError<LockfileReaderTestDoubleError>($I`LockfileReaderTestDoubleError`)("LockfileReaderTestDoubleError", {
@@ -164,7 +213,7 @@ const unstubbed = (method: string): Effect.Effect<never> =>
  * **Example** (Count packages in the workspace lockfile)
  *
  * ```ts
- * import { LockfileReader } from "./index.ts";
+ * import { LockfileReader } from "@beep/scratchpad/effected/workspaces/LockfileReader";
  * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
@@ -172,14 +221,32 @@ const unstubbed = (method: string): Effect.Effect<never> =>
  *   const lockfile = yield* reader.read;
  *   return lockfile.packages.length;
  * });
+ * console.log(Effect.isEffect(program)) // true
  * ```
  *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class LockfileReader extends Context.Service<LockfileReader, LockfileReaderShape>()(
 	$I`LockfileReader`,
 ) {
-	/** Builds the service. */
+	/**
+	 * Builds the reader from workspace and filesystem services without reading the lockfile.
+	 *
+	 * **Example** (Construct a bounded lockfile reader)
+	 *
+	 * ```ts
+	 * import { LockfileReader } from "@beep/scratchpad/effected/workspaces/LockfileReader";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = LockfileReader.make({ cwd: "/repo", stopAt: "/repo" });
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	static readonly make = Effect.fn("make")(function* (
 		options?: LockfileReaderOptions,
 	): Effect.fn.Return<
@@ -297,16 +364,32 @@ export class LockfileReader extends Context.Service<LockfileReader, LockfileRead
 	});
 
 	/**
-  * The live layer: reads the lockfile of the detected package manager at the
-  * workspace root.
-  *
-  * **Gotchas**
-  *
-  * Parameterized, so it mints a fresh reference per call — bind it to a
-  * `const` and reuse it.
-  *
-  * @param options - Root resolution (`cwd`, `stopAt`).
-  */
+	 * The live layer: reads the lockfile of the detected package manager at the
+	 * workspace root.
+	 *
+	 * **Gotchas**
+	 *
+	 * Parameterized, so it mints a fresh reference per call — bind it to a
+	 * `const` and reuse it.
+	 *
+	 * **Example** (Compose a reusable live lockfile layer)
+	 *
+	 * ```ts
+	 * import { LockfileReader } from "@beep/scratchpad/effected/workspaces/LockfileReader";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const LiveLockfiles = LockfileReader.layer({ cwd: "/repo" });
+	 * const program = Effect.gen(function* () {
+	 *   const reader = yield* LockfileReader;
+	 *   return yield* reader.read;
+	 * }).pipe(Effect.provide(LiveLockfiles));
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @param options - Root resolution (`cwd`, `stopAt`).
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layer = (
 		options?: LockfileReaderOptions,
 	): Layer.Layer<
@@ -316,47 +399,50 @@ export class LockfileReader extends Context.Service<LockfileReader, LockfileRead
 	> => Layer.effect(LockfileReader, LockfileReader.make(options));
 
 	/**
-  * A test double satisfying the full {@link LockfileReaderShape} with no
-  * filesystem, root walk, or package-manager detection.
-  *
-  * **Gotchas**
-  *
-  * There is **no honest default lockfile**: an empty one that looks like a
-  * legitimate answer is indistinguishable from "this workspace resolves
-  * nothing" — the silent-empty failure class this package documents on the
-  * live paths — so `read` **dies** with an instructive defect until stubbed.
-  *
-  * The one derivation mirrors `WorkspaceDiscovery.makeTest`'s
-  * derived-from-the-primary rule: when a `read` override is supplied,
-  * `resolvedVersion` answers as the live service does — the **first** entry
-  * of `lockfile.packagesNamed(name)` in lockfile order, `Option.none()` on a
-  * miss — so the two stay consistent by construction. `integrity` is **not**
-  * derivable: the live method compares the lockfile against the workspace
-  * manifests discovery enumerates, and the double has no discovery to ask, so
-  * it dies unless stubbed.
-  *
-  * `refresh` defaults to `Effect.void` honestly: the live contract is "drop
-  * the memoized read so the next call re-reads", and this double memoizes
-  * nothing — every `read()` call re-invokes the override — so there is
-  * nothing to drop and the no-op is truthful, the same reasoning as
-  * `WorkspaceDiscovery.makeTest`'s `refresh`.
-  *
-  * **Example** (Stub a lockfile read with consistent version lookup)
-  *
-  * ```ts
-  * import { Lockfile } from "../lockfiles/index.ts";
-  * import { LockfileReader } from "./index.ts";
-  * import * as Effect from "effect/Effect";
-  *
-  * const double = LockfileReader.makeTest({
-  *   read:
-  *     Effect.succeed(
-  *       Lockfile.make({ format: "pnpm", lockfileVersion: "9.0", packages: [], workspaceDependencies: [] }),
-  *     ),
-  * });
-  * // `resolvedVersion` now answers consistently from that lockfile.
-  * ```
-  */
+	 * A test double satisfying the full {@link LockfileReaderShape} with no
+	 * filesystem, root walk, or package-manager detection.
+	 *
+	 * **Gotchas**
+	 *
+	 * There is **no honest default lockfile**: an empty one that looks like a
+	 * legitimate answer is indistinguishable from "this workspace resolves
+	 * nothing" — the silent-empty failure class this package documents on the
+	 * live paths — so `read` **dies** with an instructive defect until stubbed.
+	 *
+	 * The one derivation mirrors `WorkspaceDiscovery.makeTest`'s
+	 * derived-from-the-primary rule: when a `read` override is supplied,
+	 * `resolvedVersion` answers as the live service does — the **first** entry
+	 * of `lockfile.packagesNamed(name)` in lockfile order, `Option.none()` on a
+	 * miss — so the two stay consistent by construction. `integrity` is **not**
+	 * derivable: the live method compares the lockfile against the workspace
+	 * manifests discovery enumerates, and the double has no discovery to ask, so
+	 * it dies unless stubbed.
+	 *
+	 * `refresh` defaults to `Effect.void` honestly: the live contract is "drop
+	 * the memoized read so the next call re-reads", and this double memoizes
+	 * nothing — every `read()` call re-invokes the override — so there is
+	 * nothing to drop and the no-op is truthful, the same reasoning as
+	 * `WorkspaceDiscovery.makeTest`'s `refresh`.
+	 *
+	 * **Example** (Stub a lockfile read with consistent version lookup)
+	 *
+	 * ```ts
+	 * import { LockfileReader } from "@beep/scratchpad/effected/workspaces/LockfileReader";
+	 * import * as Effect from "effect/Effect";
+	 * import * as O from "effect/Option";
+	 * import { Lockfile } from "@beep/scratchpad/effected/lockfiles/Lockfile";
+	 * const lockfile = Lockfile.make({
+	 *   format: "pnpm", lockfileVersion: "9.0", packages: [], workspaceDependencies: [],
+	 * });
+	 *
+	 * const double = LockfileReader.makeTest({ read: Effect.succeed(lockfile) });
+	 * // `resolvedVersion` now answers consistently from that lockfile.
+	 * console.log(O.isNone(Effect.runSync(double.resolvedVersion("effect")))) // true
+	 * ```
+	 *
+	 * @category testing
+	 * @since 0.0.0
+	 */
 	static readonly makeTest = (overrides: Partial<LockfileReaderShape> = {}): LockfileReaderShape => {
 		const read = overrides.read;
 		return {
@@ -373,24 +459,33 @@ export class LockfileReader extends Context.Service<LockfileReader, LockfileRead
 	};
 
 	/**
-  * The test layer: {@link LockfileReader.makeTest} behind `Layer.succeed`, so
-  * a suite provides only the methods it exercises.
-  *
-  * **Gotchas**
-  *
-  * A parameterized layer factory mints a **fresh reference per call**, and
-  * layers memoize by reference — bind the result to a `const` and reuse it
-  * rather than calling `layerTest(...)` at each composition site.
-  *
-  * **Example** (Create a reusable unstubbed lockfile test layer)
-  *
-  * ```ts
-  * import { LockfileReader } from "./index.ts";
-  *
-  * const TestLockfiles = LockfileReader.layerTest();
-  * // program.pipe(Effect.provide(TestLockfiles)) — dies loudly if touched.
-  * ```
-  */
+	 * The test layer: {@link LockfileReader.makeTest} behind `Layer.succeed`, so
+	 * a suite provides only the methods it exercises.
+	 *
+	 * **Gotchas**
+	 *
+	 * A parameterized layer factory mints a **fresh reference per call**, and
+	 * layers memoize by reference — bind the result to a `const` and reuse it
+	 * rather than calling `layerTest(...)` at each composition site.
+	 *
+	 * **Example** (Create a reusable unstubbed lockfile test layer)
+	 *
+	 * ```ts
+	 * import { LockfileReader } from "@beep/scratchpad/effected/workspaces/LockfileReader";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const TestLockfiles = LockfileReader.layerTest();
+	 * // Providing this layer dies loudly if an unstubbed read is touched.
+	 * const program = Effect.gen(function* () {
+	 *   const reader = yield* LockfileReader;
+	 *   return yield* reader.refresh;
+	 * }).pipe(Effect.provide(TestLockfiles));
+	 * console.log(Effect.runSync(program)) // undefined
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layerTest = (overrides: Partial<LockfileReaderShape> = {}): Layer.Layer<LockfileReader> =>
 		Layer.succeed(LockfileReader, LockfileReader.makeTest(overrides));
 }

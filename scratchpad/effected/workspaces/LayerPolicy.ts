@@ -26,7 +26,18 @@ const withoutKeys = (input: unknown, keys: ReadonlyArray<string>): unknown => {
 /**
  * Raised when a layer policy cannot be read, parsed or decoded.
  *
+ * **Example** (Describe invalid policy JSON)
+ *
+ * ```ts
+ * import { LayerPolicyError } from "@beep/scratchpad/effected/workspaces/LayerPolicy";
+ *
+ * const error = LayerPolicyError.make({ reason: "json", path: "/repo/layers.json", cause: new Error("Unexpected token") });
+ * console.log(error.message) // The layer policy at /repo/layers.json is not valid JSON
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class LayerPolicyError extends S.TaggedError<LayerPolicyError>($I`LayerPolicyError`)("LayerPolicyError", {
 	/** `read`: the file could not be read. `json`: it is not JSON. `decode`: it is not a `LayerPolicy`. */
@@ -36,7 +47,21 @@ export class LayerPolicyError extends S.TaggedError<LayerPolicyError>($I`LayerPo
 	/** The originating failure. */
 	cause: S.Defect({ includeStack: true }).annotateKey({ description: "The originating failure." }),
 }, $I.annote("LayerPolicyError", { description: "Raised when a layer policy cannot be read, parsed or decoded." })) {
-	/** Renders the failure kind and the file into one line. */
+	/**
+	 * Renders the failure kind and the file into one line.
+	 *
+	 * **Example** (Render a policy failure with its path)
+	 *
+	 * ```ts
+	 * import { LayerPolicyError } from "@beep/scratchpad/effected/workspaces/LayerPolicy";
+	 *
+	 * const error = LayerPolicyError.make({ reason: "json", path: "/repo/layers.json", cause: new Error("Unexpected token") });
+	 * console.log(error.message) // The layer policy at /repo/layers.json is not valid JSON
+	 * ```
+	 *
+	 * @category formatting
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		const at = this.path === undefined ? "" : ` at ${this.path}`;
 		return Match.value(this.reason).pipe(
@@ -81,13 +106,16 @@ export class LayerPolicyError extends S.TaggedError<LayerPolicyError>($I`LayerPo
  *
  * ```ts
  * import { NodeServices } from "@effect/platform-node";
- * import { LayerPolicy } from "./testing.ts";
+ * import { LayerPolicy } from "@beep/scratchpad/effected/workspaces/LayerPolicy";
  * import * as Effect from "effect/Effect";
  *
  * const policy = LayerPolicy.load("/repo/layers.json").pipe(Effect.provide(NodeServices.layer));
+ * console.log(Effect.isEffect(policy)) // true
  * ```
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class LayerPolicy extends S.Class<LayerPolicy>($I`LayerPolicy`)({
 	/** Exact package names (never relative paths) per layer, top layer first. */
@@ -107,20 +135,49 @@ export class LayerPolicy extends S.Class<LayerPolicy>($I`LayerPolicy`)({
 	/** Edges that must exist, written `"a -> b"`. */
 	requiredEdges: S.String.check(S.isPattern(REQUIRED_EDGE)).pipe(S.Array, S.optionalKey).annotateKey({ description: "Edges that must exist, written `\"a -> b\"`." }),
 }, $I.annote("LayerPolicy", { description: "A committed dependency-layering policy (`layers.json`)." })) {
-	/** The dependency maps a check reads: `fields`, or all four. */
+	/**
+	 * The dependency maps a check reads: `fields`, or all four.
+	 *
+	 * **Example** (Read all dependency fields by default)
+	 *
+	 * ```ts
+	 * import { LayerPolicy } from "@beep/scratchpad/effected/workspaces/LayerPolicy";
+	 *
+	 * const policy = LayerPolicy.make({ layers: [], tooling: [], unconstrained: [] });
+	 * console.log(policy.effectiveFields.length) // 4
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	get effectiveFields(): ReadonlyArray<DependencyField> {
 		return this.fields ?? ALL_DEPENDENCY_FIELDS;
 	}
 
 	/**
-  * Decode a policy from a parsed JSON value.
-  *
-  * **Details**
-  *
-  * Every key the policy does not model fails, except `$schema` and the
-  * keys named in `options.allowKeys`, which are dropped before decoding.
-  * `options.path` names the file in the error.
-  */
+	 * Decode a policy from a parsed JSON value.
+	 *
+	 * **Details**
+	 *
+	 * Every key the policy does not model fails, except `$schema` and the
+	 * keys named in `options.allowKeys`, which are dropped before decoding.
+	 * `options.path` names the file in the error.
+	 *
+	 * **Example** (Decode a policy with schema metadata)
+	 *
+	 * ```ts
+	 * import { LayerPolicy } from "@beep/scratchpad/effected/workspaces/LayerPolicy";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const policy = Effect.runSync(LayerPolicy.decode({
+	 *   $schema: "./layers.schema.json", layers: [["app"], ["core"]], tooling: [], unconstrained: [],
+	 * }));
+	 * console.log(policy.layers.length) // 2
+	 * ```
+	 *
+	 * @category decoding
+	 * @since 0.0.0
+	 */
 	static readonly decode = Effect.fn("LayerPolicy.decode")(
 		(
 			input: unknown,
@@ -138,7 +195,22 @@ export class LayerPolicy extends S.Class<LayerPolicy>($I`LayerPolicy`)({
 		},
 	);
 
-	/** Read, parse and decode the policy file at `path`; `options.allowKeys` is passed to `decode`. */
+	/**
+	 * Read, parse and decode the policy file at `path`; `options.allowKeys` is passed to `decode`.
+	 *
+	 * **Example** (Construct a policy read allowing harness metadata)
+	 *
+	 * ```ts
+	 * import { LayerPolicy } from "@beep/scratchpad/effected/workspaces/LayerPolicy";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = LayerPolicy.load("/repo/layers.json", { allowKeys: ["harness"] });
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @category parsing
+	 * @since 0.0.0
+	 */
 	static readonly load = Effect.fn("LayerPolicy.load")(function* (
 		path: string,
 		options?: { readonly allowKeys?: ReadonlyArray<string> | undefined },

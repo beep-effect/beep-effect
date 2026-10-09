@@ -26,9 +26,11 @@ import * as R from "effect/Record";
 const $I = $ScratchpadId.create("effected/workspaces/DuplicateCheck");
 
 /**
- * Options for {@link DuplicateCheck.run}.
+ * Controls which package names appear in a {@link DuplicateCheck.run} report.
  *
  * @public
+ * @category configuration
+ * @since 0.0.0
  */
 export interface DuplicateCheckOptions {
 	/**
@@ -63,7 +65,19 @@ export interface DuplicateCheckOptions {
  * reporting it as a `"package"` would name a directory with a placeholder
  * version rather than the project that took the dependency.
  *
+ * **Example** (Decode an importer dependent)
+ *
+ * ```ts
+ * import { Dependent } from "@beep/scratchpad/effected/workspaces/DuplicateCheck";
+ * import * as S from "effect/Schema";
+ *
+ * const dependent = S.decodeUnknownSync(Dependent)({ _tag: "importer", path: "." });
+ * console.log(dependent._tag) // importer
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const Dependent = S.Union([
 	/** A workspace importer takes the instance directly. */
@@ -77,6 +91,8 @@ export const Dependent = S.Union([
  * instance, as a tagged union a renderer narrows with `switch (dependent._tag)`.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type Dependent = typeof Dependent.Type;
 
@@ -91,7 +107,20 @@ export type Dependent = typeof Dependent.Type;
  * each get their own row, so the dependents of each variant stay attributed to
  * the variant they actually took.
  *
+ * **Example** (Record who pulls a resolved instance)
+ *
+ * ```ts
+ * import { DuplicateInstance } from "@beep/scratchpad/effected/workspaces/DuplicateCheck";
+ *
+ * const instance = DuplicateInstance.make({
+ *   instanceId: "effect@4.0.0", dependents: [{ _tag: "importer", path: "." }],
+ * });
+ * console.log(instance.dependents.length) // 1
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class DuplicateInstance extends S.Class<DuplicateInstance>($I`DuplicateInstance`)({
 	/** The opaque instance id, as `@effected/lockfiles` records it. */
@@ -103,7 +132,20 @@ export class DuplicateInstance extends S.Class<DuplicateInstance>($I`DuplicateIn
 /**
  * One version a duplicated package resolved at.
  *
+ * **Example** (Group instances at one version)
+ *
+ * ```ts
+ * import { DuplicatedVersion, DuplicateInstance } from "@beep/scratchpad/effected/workspaces/DuplicateCheck";
+ *
+ * const version = DuplicatedVersion.make({
+ *   version: "4.0.0", instances: [DuplicateInstance.make({ instanceId: "effect@4.0.0", dependents: [] })],
+ * });
+ * console.log(version.version) // 4.0.0
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class DuplicatedVersion extends S.Class<DuplicatedVersion>($I`DuplicatedVersion`)({
 	/** The resolved version. */
@@ -123,7 +165,24 @@ export class DuplicatedVersion extends S.Class<DuplicatedVersion>($I`DuplicatedV
  * type-identity skew this check exists to catch, so counting them would report
  * a problem nobody has.
  *
+ * **Example** (Represent two resolved versions)
+ *
+ * ```ts
+ * import { DuplicatedPackage, DuplicatedVersion } from "@beep/scratchpad/effected/workspaces/DuplicateCheck";
+ *
+ * const pkg = DuplicatedPackage.make({
+ *   name: "effect",
+ *   versions: [
+ *     DuplicatedVersion.make({ version: "3.0.0", instances: [] }),
+ *     DuplicatedVersion.make({ version: "4.0.0", instances: [] }),
+ *   ],
+ * });
+ * console.log(pkg.versions.length) // 2
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class DuplicatedPackage extends S.Class<DuplicatedPackage>($I`DuplicatedPackage`)({
 	/** The package name. */
@@ -148,12 +207,11 @@ export class DuplicatedPackage extends S.Class<DuplicatedPackage>($I`DuplicatedP
  * **Example** (Report duplicate kit versions and their dependents)
  *
  * ```ts
- * import { Lockfile } from "../lockfiles/index.ts";
- * import { DuplicateCheck } from "./index.ts";
+ * import { Lockfile } from "@beep/scratchpad/effected/lockfiles/Lockfile";
+ * import { DuplicateCheck } from "@beep/scratchpad/effected/workspaces/DuplicateCheck";
  * import * as Effect from "effect/Effect";
  *
- * declare const text: string; // the text of a pnpm-lock.yaml
- *
+ * const text = "lockfileVersion: '9.0'\nimporters: { '.': {} }\npackages: {}\nsnapshots: {}\n";
  * const program = Effect.gen(function* () {
  *   const lockfile = yield* Lockfile.parse(text, { format: "pnpm" });
  *   const report = DuplicateCheck.run(lockfile, { names: DuplicateCheck.kit });
@@ -166,9 +224,12 @@ export class DuplicatedPackage extends S.Class<DuplicatedPackage>($I`DuplicatedP
  *   }
  *   return report.isClean;
  * });
+ * console.log(Effect.runSync(program)) // true
  * ```
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class DuplicateCheck extends S.Class<DuplicateCheck>($I`DuplicateCheck`)({
 	/**
@@ -194,66 +255,105 @@ export class DuplicateCheck extends S.Class<DuplicateCheck>($I`DuplicateCheck`)(
 	unresolvedImporters: S.Array(S.String).annotateKey({ description: "Importers whose dependencies could not be resolved to instances, so nothing reachable only through them was counted." }),
 }, $I.annote("DuplicateCheck", { description: "The result of checking a lockfile for packages resolved at more than one version." })) {
 	/**
-  * Whether no reported name is duplicated.
-  *
-  * **Gotchas**
-  *
-  * Answers for the names asked about, not for the whole graph: with a
-  * `names` filter, a duplicated name the filter rejects does not make the
-  * report unclean. It says nothing about `unresolvedImporters` — a gate
-  * wanting a proven-clean answer checks both.
-  */
+	 * Whether no reported name is duplicated.
+	 *
+	 * **Gotchas**
+	 *
+	 * Answers for the names asked about, not for the whole graph: with a
+	 * `names` filter, a duplicated name the filter rejects does not make the
+	 * report unclean. It says nothing about `unresolvedImporters` — a gate
+	 * wanting a proven-clean answer checks both.
+	 *
+	 * **Example** (Inspect a report with unresolved importers)
+	 *
+	 * ```ts
+	 * import { DuplicateCheck } from "@beep/scratchpad/effected/workspaces/DuplicateCheck";
+	 *
+	 * const report = DuplicateCheck.make({ duplicates: [], unresolvedImporters: ["."] });
+	 * console.log(report.isClean) // true
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
+	 */
 	get isClean(): boolean {
 		return this.duplicates.length === 0;
 	}
 
 	/**
-  * The names every consumer of this kit asks about: `effect` itself and every
-  * `@effected/*` package.
-  *
-  * **Details**
-  *
-  * Exactly those — not `@effect/*`, and not names merely starting with
-  * `effect`. A duplicated kit package presents as a `Layer` requirement that
-  * looks provided yet cannot be satisfied, at the entry point, naming neither
-  * the package nor the skew; this predicate is the check that names both.
-  *
-  * @param name - a package name
-  * @returns whether the name belongs to the kit
-  */
+	 * The names every consumer of this kit asks about: `effect` itself and every
+	 * `@effected/*` package.
+	 *
+	 * **Details**
+	 *
+	 * Exactly those — not `@effect/*`, and not names merely starting with
+	 * `effect`. A duplicated kit package presents as a `Layer` requirement that
+	 * looks provided yet cannot be satisfied, at the entry point, naming neither
+	 * the package nor the skew; this predicate is the check that names both.
+	 *
+	 * **Example** (Select only kit package names)
+	 *
+	 * ```ts
+	 * import { DuplicateCheck } from "@beep/scratchpad/effected/workspaces/DuplicateCheck";
+	 *
+	 * console.log(DuplicateCheck.kit("effect")) // true
+	 * console.log(DuplicateCheck.kit("@effected/workspaces")) // true
+	 * console.log(DuplicateCheck.kit("@effect/platform")) // false
+	 * ```
+	 *
+	 * @param name - a package name
+	 * @returns whether the name belongs to the kit
+	 * @category predicates
+	 * @since 0.0.0
+	 */
 	static kit(name: string): boolean {
 		return name === "effect" || name.startsWith("@effected/");
 	}
 
 	/**
-  * Compute which packages a parsed lockfile resolves at more than one
-  * version, and who pulls each copy.
-  *
-  * **Details**
-  *
-  * Pure, total and format-free: no IO, no error channel, and no knowledge of
-  * which package manager wrote the file.
-  *
-  * The walk starts at each importer's resolved dependencies and follows
-  * `resolved` edges, so only instances some importer actually reaches are
-  * counted — a stale row the lockfile still carries but nothing depends on is
-  * not a duplicate. A name is a duplicate when the walk reaches it at **two
-  * or more distinct versions**; peer-suffix instances of one version are
-  * listed under that version but never make a name a duplicate on their own.
-  *
-  * Each instance's `dependents` are every importer whose roots include it and
-  * every reached package whose `resolved` map points at it, deduplicated, in
-  * lockfile order. `options.names` narrows what is reported, never what is
-  * walked, so a filtered-out package still appears as a dependent where it
-  * pulls a reported copy.
-  *
-  * The one limit it does not paper over is the npm and bun root importer
-  * (see `unresolvedImporters`).
-  *
-  * @param lockfile - a lockfile parsed by `@effected/lockfiles`
-  * @param options - see {@link DuplicateCheckOptions}
-  * @returns the report; never fails
-  */
+	 * Compute which packages a parsed lockfile resolves at more than one
+	 * version, and who pulls each copy.
+	 *
+	 * **Details**
+	 *
+	 * Pure, total and format-free: no IO, no error channel, and no knowledge of
+	 * which package manager wrote the file.
+	 *
+	 * The walk starts at each importer's resolved dependencies and follows
+	 * `resolved` edges, so only instances some importer actually reaches are
+	 * counted — a stale row the lockfile still carries but nothing depends on is
+	 * not a duplicate. A name is a duplicate when the walk reaches it at **two
+	 * or more distinct versions**; peer-suffix instances of one version are
+	 * listed under that version but never make a name a duplicate on their own.
+	 *
+	 * Each instance's `dependents` are every importer whose roots include it and
+	 * every reached package whose `resolved` map points at it, deduplicated, in
+	 * lockfile order. `options.names` narrows what is reported, never what is
+	 * walked, so a filtered-out package still appears as a dependent where it
+	 * pulls a reported copy.
+	 *
+	 * The one limit it does not paper over is the npm and bun root importer
+	 * (see `unresolvedImporters`).
+	 *
+	 * **Example** (Check an empty normalized lockfile)
+	 *
+	 * ```ts
+	 * import { DuplicateCheck } from "@beep/scratchpad/effected/workspaces/DuplicateCheck";
+	 * import { Lockfile } from "@beep/scratchpad/effected/lockfiles/Lockfile";
+	 * const lockfile = Lockfile.make({
+	 *   format: "pnpm", lockfileVersion: "9.0", packages: [], workspaceDependencies: [],
+	 * });
+	 *
+	 * const report = DuplicateCheck.run(lockfile, { names: DuplicateCheck.kit });
+	 * console.log(report.duplicates.length) // 0
+	 * ```
+	 *
+	 * @param lockfile - a lockfile parsed by `@effected/lockfiles`
+	 * @param options - see {@link DuplicateCheckOptions}
+	 * @returns the report; never fails
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	static run(lockfile: Lockfile, options?: DuplicateCheckOptions): DuplicateCheck {
 		const names = options?.names ?? (() => true);
 		const index = indexInstances(lockfile);
@@ -368,6 +468,8 @@ export class DuplicateCheck extends S.Class<DuplicateCheck>($I`DuplicateCheck`)(
 /**
  * The dependent an edge leaving `from` is attributed to.
  *
+ * **Details**
+ *
  * A workspace row standing for an importer is that importer: its edges are the
  * project's own dependencies, so they are attributed by path. A workspace row
  * the lockfile records without a path (npm can) falls back to the package
@@ -380,6 +482,10 @@ const dependentOf = (from: ResolvedPackage): Dependent =>
 		? { _tag: "importer", path: from.relativePath }
 		: { _tag: "package", name: from.name, version: from.version };
 
-/** @internal */
+/**
+ * Builds a stable deduplication key for an importer or package dependent.
+ *
+ * @internal
+ */
 const renderKey = (dependent: Dependent): string =>
 	dependent._tag === "importer" ? `importer\0${dependent.path}` : `package\0${dependent.name}\0${dependent.version}`;

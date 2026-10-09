@@ -35,7 +35,9 @@ const isDependencyMap = S.is(WorkspacePackage.fields.dependencies);
 
 const $I = $ScratchpadId.create("effected/workspaces/WorkspacesSync");
 
-/** A malformed synchronous workspace manifest, preserving its diagnostic message. */
+/**
+ * A malformed synchronous workspace manifest, preserving its diagnostic message.
+ */
 class WorkspaceSyncManifestError extends S.TaggedError<WorkspaceSyncManifestError>($I`WorkspaceSyncManifestError`)(
 	"WorkspaceSyncManifestError",
 	{ message: S.String },
@@ -48,13 +50,13 @@ class WorkspaceSyncManifestError extends S.TaggedError<WorkspaceSyncManifestErro
  * **Example** (Inspect an invalid depth diagnostic)
  *
  * ```ts
- * import { WorkspaceEnumerationDepthError } from "./WorkspacesSync.ts";
+ * import { WorkspaceEnumerationDepthError } from "@beep/scratchpad/effected/workspaces/WorkspacesSync";
  *
  * const error = WorkspaceEnumerationDepthError.make({
  *   message: "getWorkspacePackagesSync: maxDepth must be a positive integer, got 0",
  * });
- * console.log(error._tag); // WorkspaceEnumerationDepthError
- * console.log(error.message);
+ * console.log(error._tag) // WorkspaceEnumerationDepthError
+ * console.log(error.message) // getWorkspacePackagesSync: maxDepth must be a positive integer, got 0
  * ```
  *
  * @category errors
@@ -68,18 +70,9 @@ export class WorkspaceEnumerationDepthError extends S.TaggedError<WorkspaceEnume
 
 /**
  * The synchronous file operations the sync entry points need, supplied by the
- * consumer. Node's built-ins satisfy it directly:
+ * consumer. Node's built-ins satisfy it directly.
  *
- * ```ts
- * import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
- *
- * const fileSystem: SyncFileSystem = {
- * 	exists: existsSync,
- * 	readFile: (p) => readFileSync(p, "utf8"),
- * 	readDirectory: (p) => readdirSync(p),
- * 	isDirectory: (p) => statSync(p).isDirectory(),
- * };
- * ```
+ * **Gotchas**
  *
  * `exists` must return a boolean and not throw (Node's `existsSync` never
  * does). The other three may throw — `statSync` on a missing path, a
@@ -88,33 +81,58 @@ export class WorkspaceEnumerationDepthError extends S.TaggedError<WorkspaceEnume
  * manifest, a throwing `readDirectory` as an unreadable directory, a throwing
  * `isDirectory` as "not a directory". Nothing propagates.
  *
+ * **Example** (Supply Node synchronous file operations)
+ *
+ * ```ts
+ * import type { SyncFileSystem } from "@beep/scratchpad/effected/workspaces/WorkspacesSync";
+ * import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
+ *
+ * const fileSystem: SyncFileSystem = {
+ * 	exists: existsSync,
+ * 	readFile: (p) => readFileSync(p, "utf8"),
+ * 	readDirectory: (p) => readdirSync(p),
+ * 	isDirectory: (p) => statSync(p).isDirectory(),
+ * };
+ * console.log(fileSystem.exists(import.meta.filename)) // true
+ * ```
+ *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface SyncFileSystem {
-	/** Whether a file or directory exists at `path`. Must not throw. */
+	/**
+	 * Whether a file or directory exists at `path`. Must not throw.
+	 */
 	readonly exists: (path: string) => boolean;
-	/** Read the file at `path` as text. May throw; a throw degrades to a skip. */
+	/**
+	 * Read the file at `path` as text. May throw; a throw degrades to a skip.
+	 */
 	readonly readFile: (path: string) => string;
-	/** The entry names inside the directory at `path`. May throw; a throw skips the directory. */
+	/**
+	 * The entry names inside the directory at `path`. May throw; a throw skips the directory.
+	 */
 	readonly readDirectory: (path: string) => ReadonlyArray<string>;
-	/** Whether `path` is a directory. May throw; a throw reads as `false`. */
+	/**
+	 * Whether `path` is a directory. May throw; a throw reads as `false`.
+	 */
 	readonly isDirectory: (path: string) => boolean;
 	/**
-  * Optional fast path: the entries inside `path` with their types already
-  * known, in ONE call.
-  *
-  * **Details**
-  *
-  * Package enumeration otherwise costs a `readDirectory` plus one
-  * `isDirectory` per entry — the readdir-then-stat-per-entry shape, which on
-  * a large workspace is a syscall per file. Supplying this collapses that to
-  * a single `readdirSync(path, { withFileTypes: true })`; `nodeFileSystem`
-  * does. Omit it and enumeration falls back to the four required operations
-  * with identical results, so this is purely a cost optimization and never a
-  * behavior switch.
-  *
-  * May throw; a throw skips the directory, exactly like `readDirectory`.
-  */
+	 * Optional fast path: the entries inside `path` with their types already
+	 * known, in ONE call.
+	 *
+	 * **Details**
+	 *
+	 * Package enumeration otherwise costs a `readDirectory` plus one
+	 * `isDirectory` per entry — the readdir-then-stat-per-entry shape, which on
+	 * a large workspace is a syscall per file. Supplying this collapses that to
+	 * a single `readdirSync(path, { withFileTypes: true })`; `nodeFileSystem`
+	 * does. Omit it and enumeration falls back to the four required operations
+	 * with identical results, so this is purely a cost optimization and never a
+	 * behavior switch.
+	 *
+	 * May throw; a throw skips the directory, exactly like `readDirectory`.
+	 */
 	readonly readDirectoryWithTypes?: ((path: string) => ReadonlyArray<SyncDirectoryEntry>) | undefined;
 }
 
@@ -141,13 +159,21 @@ export interface SyncFileSystem {
  * not following is the requirement, not the hazard.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface SyncDirectoryEntry {
-	/** The entry's own name, not a path. */
+	/**
+	 * The entry's own name, not a path.
+	 */
 	readonly name: string;
-	/** Whether the entry itself is a directory. `false` for a symbolic link, even one targeting a directory. */
+	/**
+	 * Whether the entry itself is a directory. `false` for a symbolic link, even one targeting a directory.
+	 */
 	readonly isDirectory: boolean;
-	/** Whether the entry itself is a symbolic link. */
+	/**
+	 * Whether the entry itself is a symbolic link.
+	 */
 	readonly isSymbolicLink: boolean;
 }
 
@@ -155,18 +181,9 @@ export interface SyncDirectoryEntry {
  * The synchronous path operations the sync entry points need, supplied by the
  * consumer. Deliberately a structural subset of `node:path`, so the built-in
  * module (and its `win32` / `posix` variants, or a Bun / Deno equivalent)
- * satisfies it verbatim:
+ * satisfies it verbatim.
  *
- * ```ts
- * import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
- * import * as path from "node:path";
- * import type { WorkspacesSyncOptions } from "./index.ts";
- *
- * const options: WorkspacesSyncOptions = {
- * 	fileSystem: { exists: existsSync, readFile: (p) => readFileSync(p, "utf8"), readDirectory: (p) => readdirSync(p), isDirectory: (p) => statSync(p).isDirectory() },
- * 	path, // node:path IS a SyncPath
- * };
- * ```
+ * **Details**
  *
  * These operations shape only the ABSOLUTE paths handed back to the consumer
  * (and to its own `fileSystem`); workspace-relative pattern matching is POSIX
@@ -174,14 +191,36 @@ export interface SyncDirectoryEntry {
  * correctness comes from supplying a win32-appropriate implementation, not
  * from anything in this module.
  *
+ * **Example** (Supply Node file and path operations)
+ *
+ * ```ts
+ * import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
+ * import * as path from "node:path";
+ * import type { WorkspacesSyncOptions } from "@beep/scratchpad/effected/workspaces/WorkspacesSync";
+ *
+ * const options: WorkspacesSyncOptions = {
+ * 	fileSystem: { exists: existsSync, readFile: (p) => readFileSync(p, "utf8"), readDirectory: (p) => readdirSync(p), isDirectory: (p) => statSync(p).isDirectory() },
+ * 	path, // node:path IS a SyncPath
+ * };
+ * console.log(options.path.join("workspace", "package.json") === path.join("workspace", "package.json")) // true
+ * ```
+ *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface SyncPath {
-	/** Join segments with the implementation's separator (like `path.join`). */
+	/**
+	 * Join segments with the implementation's separator (like `path.join`).
+	 */
 	readonly join: (...segments: ReadonlyArray<string>) => string;
-	/** The directory portion of `p` (like `path.dirname`). */
+	/**
+	 * The directory portion of `p` (like `path.dirname`).
+	 */
 	readonly dirname: (p: string) => string;
-	/** Resolve segments to an absolute path (rightmost-wins, like `path.resolve`). */
+	/**
+	 * Resolve segments to an absolute path (rightmost-wins, like `path.resolve`).
+	 */
 	readonly resolve: (...segments: ReadonlyArray<string>) => string;
 }
 
@@ -192,11 +231,17 @@ export interface SyncPath {
  * caller's.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface WorkspacesSyncOptions {
-	/** The synchronous file operations (Node: `existsSync` / `readFileSync` / `readdirSync` / `statSync`). */
+	/**
+	 * The synchronous file operations (Node: `existsSync` / `readFileSync` / `readdirSync` / `statSync`).
+	 */
 	readonly fileSystem: SyncFileSystem;
-	/** The synchronous path implementation (Node: the `node:path` module itself). */
+	/**
+	 * The synchronous path implementation (Node: the `node:path` module itself).
+	 */
 	readonly path: SyncPath;
 }
 
@@ -223,6 +268,8 @@ export interface WorkspacesSyncOptions {
  * manifest has to use the Effect surface.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type WorkspaceDiscoverySkipKind = Exclude<WorkspaceDiscoveryError["kind"], "invalidYaml">;
 
@@ -243,13 +290,21 @@ export type WorkspaceDiscoverySkipKind = Exclude<WorkspaceDiscoveryError["kind"]
  * has `cause: undefined` — the field is simply absent, and nothing threw.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface WorkspaceDiscoverySkip {
-	/** The workspace root the enumeration ran against. */
+	/**
+	 * The workspace root the enumeration ran against.
+	 */
 	readonly root: string;
-	/** Absolute path to the `package.json` that was skipped. */
+	/**
+	 * Absolute path to the `package.json` that was skipped.
+	 */
 	readonly path: string;
-	/** Why it was skipped. */
+	/**
+	 * Why it was skipped.
+	 */
 	readonly kind: WorkspaceDiscoverySkipKind;
 	/**
 	 * The thrown value for `read` and `invalidJson`, an `Error` whose message
@@ -259,13 +314,17 @@ export interface WorkspaceDiscoverySkip {
 	readonly cause: unknown;
 }
 
-/** A manifest read that either yields the parsed record or names why it cannot. */
+/**
+ * A manifest read that either yields the parsed record or names why it cannot.
+ */
 type ManifestRead =
 	| { readonly raw: Record<string, unknown> }
 	| { readonly kind: "read" | "invalidJson" | "invalidShape"; readonly cause: unknown };
 
 /**
  * Read one `package.json` into a plain record, or say why not. Never throws.
+ *
+ * **Details**
  *
  * The three failures are kept apart — a throwing consumer `readFile`, a JSON
  * syntax error, and valid JSON that is not an object — because the skip report
@@ -295,6 +354,8 @@ const readManifest = (fileSystem: SyncFileSystem, file: string): ManifestRead =>
 /**
  * Read and JSON-parse a file into a plain object, or `undefined`. Never throws.
  *
+ * **Details**
+ *
  * The non-object check is load-bearing, not defensive noise. `JSON.parse`
  * returns `undefined` for *nothing* — a `package.json` whose entire content is
  * `null`, `42` or `"x"` parses successfully to that value, so a caller guarding
@@ -314,7 +375,9 @@ const readJson = (fileSystem: SyncFileSystem, file: string): Record<string, unkn
 	return P.isObject(parsed) ? parsed : undefined;
 };
 
-/** Whether `dir` is a directory. Never throws — a throwing consumer op reads as `false`. */
+/**
+ * Whether `dir` is a directory. Never throws — a throwing consumer op reads as `false`.
+ */
 const isDirectory = (fileSystem: SyncFileSystem, dir: string): boolean => {
 	try {
 		return fileSystem.isDirectory(dir);
@@ -323,7 +386,9 @@ const isDirectory = (fileSystem: SyncFileSystem, dir: string): boolean => {
 	}
 };
 
-/** One enumerated child, with directory-ness resolved under `stat` semantics. */
+/**
+ * One enumerated child, with directory-ness resolved under `stat` semantics.
+ */
 interface ResolvedEntry {
 	readonly name: string;
 	readonly directory: boolean;
@@ -368,7 +433,9 @@ const readResolvedEntries = (
 	}));
 };
 
-/** Whether `dir` holds a `package.json`. */
+/**
+ * Whether `dir` holds a `package.json`.
+ */
 const isPackage = (options: WorkspacesSyncOptions, dir: string): boolean =>
 	options.fileSystem.exists(options.path.join(dir, "package.json"));
 
@@ -377,27 +444,29 @@ const isPackage = (options: WorkspacesSyncOptions, dir: string): boolean =>
  * plus the ascent's ceiling.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface FindWorkspaceRootSyncOptions extends WorkspacesSyncOptions {
 	/**
-  * A ceiling directory, with the semantics of `FindWorkspaceRootOptions.stopAt`
-  * on the Effect surface. The ascent stops after probing it, so an unmarked
-  * `stopAt` returns `null` rather than silently adopting an enclosing
-  * repository's workspace.
-  *
-  * **Details**
-  *
-  * Inclusive: a ceiling that is itself a workspace root is returned. The
-  * ceiling is resolved through the supplied {@link SyncPath.resolve} at
-  * lookup time, so a relative one is taken against the process working
-  * directory when the call runs (with `node:path`). A ceiling that names no
-  * ancestor of `cwd` never matches, and the ascent runs to the filesystem
-  * root. Omit it for the unbounded ascent.
-  *
-  * Pass `stopAt: cwd` for a checkout nested inside someone else's workspace
-  * (a self-hosted runner, `actions/checkout` with `path:`): a checkout that is
-  * itself a root still resolves, and one that is not returns `null`.
-  */
+	 * A ceiling directory, with the semantics of `FindWorkspaceRootOptions.stopAt`
+	 * on the Effect surface. The ascent stops after probing it, so an unmarked
+	 * `stopAt` returns `null` rather than silently adopting an enclosing
+	 * repository's workspace.
+	 *
+	 * **Details**
+	 *
+	 * Inclusive: a ceiling that is itself a workspace root is returned. The
+	 * ceiling is resolved through the supplied {@link SyncPath.resolve} at
+	 * lookup time, so a relative one is taken against the process working
+	 * directory when the call runs (with `node:path`). A ceiling that names no
+	 * ancestor of `cwd` never matches, and the ascent runs to the filesystem
+	 * root. Omit it for the unbounded ascent.
+	 *
+	 * Pass `stopAt: cwd` for a checkout nested inside someone else's workspace
+	 * (a self-hosted runner, `actions/checkout` with `path:`): a checkout that is
+	 * itself a root still resolves, and one that is not returns `null`.
+	 */
 	readonly stopAt?: string | undefined;
 }
 
@@ -432,7 +501,7 @@ export interface FindWorkspaceRootSyncOptions extends WorkspacesSyncOptions {
  * ```ts
  * import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
  * import * as path from "node:path";
- * import { findWorkspaceRootSync } from "./index.ts";
+ * import { findWorkspaceRootSync } from "@beep/scratchpad/effected/workspaces/WorkspacesSync";
  *
  * const root = findWorkspaceRootSync(process.cwd(), {
  * 	fileSystem: {
@@ -443,6 +512,7 @@ export interface FindWorkspaceRootSyncOptions extends WorkspacesSyncOptions {
  * 	},
  * 	path,
  * });
+ * console.log(root === null || path.isAbsolute(root)) // true
  * ```
  *
  * @param cwd - Where to start the ascent (typically `process.cwd()`),
@@ -450,6 +520,8 @@ export interface FindWorkspaceRootSyncOptions extends WorkspacesSyncOptions {
  * @param options - The consumer-supplied file and path operations, plus an
  *   optional `stopAt` ceiling.
  * @public
+ * @category utilities
+ * @since 0.0.0
  */
 export const findWorkspaceRootSync: {
 	(options: FindWorkspaceRootSyncOptions): (cwd: string) => string | null;
@@ -478,7 +550,9 @@ export const findWorkspaceRootSync: {
 	return null;
 });
 
-/** The workspace `packages:` patterns for `root`, matching `internal/patterns.ts`'s precedence. */
+/**
+ * The workspace `packages:` patterns for `root`, matching `internal/patterns.ts`'s precedence.
+ */
 const readPatternsSync = (options: WorkspacesSyncOptions, root: string): ReadonlyArray<string> => {
 	const { fileSystem, path } = options;
 	const workspaceYaml = path.join(root, "pnpm-workspace.yaml");
@@ -578,6 +652,8 @@ const readPackageSync = (
  * operations plus the traversal bound.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface GetWorkspacePackagesSyncOptions extends WorkspacesSyncOptions {
 	/**
@@ -588,18 +664,18 @@ export interface GetWorkspacePackagesSyncOptions extends WorkspacesSyncOptions {
 	 */
 	readonly maxDepth?: number;
 	/**
-  * Called once for every manifest the enumeration found and could not use,
-  * with the file and the reason — so a skipped member is observable even
-  * though this function is total and has no error channel to raise it on.
-  *
-  * **Gotchas**
-  *
-  * Omit it and skips are simply not reported; nothing is logged in its
-  * place. The callback is invoked synchronously, before the result is
-  * returned, in enumeration order — members first, then the root, which is
-  * read last even though it is returned first. Its result is discarded, and a throw from it propagates: the facade is total
-  * over *data*, not over caller mistakes, exactly as a bad `maxDepth` is.
-  */
+	 * Called once for every manifest the enumeration found and could not use,
+	 * with the file and the reason — so a skipped member is observable even
+	 * though this function is total and has no error channel to raise it on.
+	 *
+	 * **Gotchas**
+	 *
+	 * Omit it and skips are simply not reported; nothing is logged in its
+	 * place. The callback is invoked synchronously, before the result is
+	 * returned, in enumeration order — members first, then the root, which is
+	 * read last even though it is returned first. Its result is discarded, and a throw from it propagates: the facade is total
+	 * over *data*, not over caller mistakes, exactly as a bad `maxDepth` is.
+	 */
 	readonly onSkip?: ((skip: WorkspaceDiscoverySkip) => void) | undefined;
 }
 
@@ -637,9 +713,10 @@ export interface GetWorkspacePackagesSyncOptions extends WorkspacesSyncOptions {
  * **Example** (Enumerate workspace packages with Node filesystem operations)
  *
  * ```ts
+ * import * as A from "effect/Array";
  * import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
  * import * as path from "node:path";
- * import { findWorkspaceRootSync, getWorkspacePackagesSync } from "./index.ts";
+ * import { findWorkspaceRootSync, getWorkspacePackagesSync } from "@beep/scratchpad/effected/workspaces/WorkspacesSync";
  *
  * const ops = {
  * 	fileSystem: {
@@ -652,12 +729,15 @@ export interface GetWorkspacePackagesSyncOptions extends WorkspacesSyncOptions {
  * };
  * const root = findWorkspaceRootSync(process.cwd(), ops);
  * const packages = root === null ? [] : getWorkspacePackagesSync(root, ops);
+ * console.log(A.every(packages, (pkg) => path.isAbsolute(pkg.path))) // true
  * ```
  *
  * @param root - The workspace root, from {@link findWorkspaceRootSync}.
  * @param options - The consumer-supplied operations and traversal bounds; see
  *   {@link GetWorkspacePackagesSyncOptions}.
  * @public
+ * @category utilities
+ * @since 0.0.0
  */
 export const getWorkspacePackagesSync: {
 	(options: GetWorkspacePackagesSyncOptions): (root: string) => ReadonlyArray<WorkspacePackage>;

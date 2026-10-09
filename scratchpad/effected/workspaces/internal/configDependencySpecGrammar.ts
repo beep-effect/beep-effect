@@ -17,7 +17,12 @@
 // `<version>+<sri>`, and pnpm's SRI alphabet contains `+` itself, so only the
 // first `+` can be the separator.
 
-/** A `configDependencies` spec split into its two textual halves, neither validated. */
+/**
+ * A `configDependencies` spec split into its two textual halves, neither validated.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export interface ConfigDependencySpecParts {
 	/** The text before the first `+` (the whole spec when there is none). */
 	readonly version: string;
@@ -25,7 +30,29 @@ export interface ConfigDependencySpecParts {
 	readonly integrity: string | undefined;
 }
 
-/** Split a spec on its first `+`: `0.9.0+sha512-…` → `{ version: "0.9.0", integrity: "sha512-…" }`. */
+/**
+ * Splits a spec on its first `+`: `0.9.0+sha512-…` → `{ version: "0.9.0", integrity: "sha512-…" }`.
+ *
+ * **Details**
+ *
+ * Neither textual half is validated. The first `+` begins the integrity
+ * component, rather than SemVer build metadata; later `+` characters remain
+ * part of the integrity.
+ *
+ * **Example** (Preserve integrity plus signs)
+ *
+ * ```ts
+ * import { splitConfigDependencySpec } from "@beep/scratchpad/effected/workspaces/internal/configDependencySpecGrammar"
+ *
+ * const parts = splitConfigDependencySpec("0.9.0+sha512-a+b")
+ * console.log(parts.version) // 0.9.0
+ * console.log(parts.integrity) // sha512-a+b
+ * console.log(splitConfigDependencySpec("0.9.0").integrity) // undefined
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const splitConfigDependencySpec = (spec: string): ConfigDependencySpecParts => {
 	const plus = spec.indexOf("+");
 	return plus === -1

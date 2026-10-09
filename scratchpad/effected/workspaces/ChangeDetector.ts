@@ -28,16 +28,21 @@ const $I = $ScratchpadId.create("effected/workspaces/ChangeDetector");
 /**
  * Which git refs to compare, and whether to fold in the working tree.
  *
- * **Example** (Configure default and branch comparison refs)
+ * **Example** (Inspect default and branch comparison refs)
  *
  * ```ts
- * import { ChangeDetectionOptions } from "./index.ts";
+ * import { ChangeDetectionOptions } from "@beep/scratchpad/effected/workspaces/ChangeDetector";
  *
- * ChangeDetectionOptions.make({});                       // HEAD~1...HEAD
- * ChangeDetectionOptions.make({ base: "origin/main" });  // against a branch
+ * const defaults = ChangeDetectionOptions.make({});
+ * const branch = ChangeDetectionOptions.make({ base: "origin/main" });
+ * console.log(defaults.base) // HEAD~1
+ * console.log(defaults.head) // HEAD
+ * console.log(branch.base) // origin/main
  * ```
  *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export class ChangeDetectionOptions extends S.Class<ChangeDetectionOptions>($I`ChangeDetectionOptions`)({
 	/**
@@ -82,7 +87,18 @@ export class ChangeDetectionOptions extends S.Class<ChangeDetectionOptions>($I`C
  * `NotARepositoryError` and `UnknownRefError`) rather than being flattened into
  * this wrapper — a caller branches on git's taxonomy directly.
  *
+ * **Example** (Render a detection failure)
+ *
+ * ```ts
+ * import { ChangeDetectionError } from "@beep/scratchpad/effected/workspaces/ChangeDetector";
+ *
+ * const error = ChangeDetectionError.make({ operation: "compare", cause: new Error("unavailable") });
+ * console.log(error.message) // Change detection failed during compare
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class ChangeDetectionError extends S.TaggedError<ChangeDetectionError>($I`ChangeDetectionError`)("ChangeDetectionError", {
 	/** The operation that could not run. */
@@ -90,7 +106,21 @@ export class ChangeDetectionError extends S.TaggedError<ChangeDetectionError>($I
 	/** The originating failure. */
 	cause: S.Defect({ includeStack: true }).annotateKey({ description: "The originating failure." }),
 }, $I.annote("ChangeDetectionError", { description: "Raised when change detection cannot proceed for a reason that is not one of git's own typed failures — the wrapper for \"detection has no ground to stand on\"." })) {
-	/** Renders the failed operation into a one-line message. */
+	/**
+	 * Renders the failed operation into a one-line message.
+	 *
+	 * **Example** (Read the failed operation message)
+	 *
+	 * ```ts
+	 * import { ChangeDetectionError } from "@beep/scratchpad/effected/workspaces/ChangeDetector";
+	 *
+	 * const error = ChangeDetectionError.make({ operation: "compare", cause: new Error("unavailable") });
+	 * console.log(error.message) // Change detection failed during compare
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return `Change detection failed during ${this.operation}`;
 	}
@@ -108,6 +138,8 @@ export class ChangeDetectionError extends S.TaggedError<ChangeDetectionError>($I
  * otherwise), not re-wrapped.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type ChangeDetectionFailure =
 	| ChangeDetectionError
@@ -120,6 +152,8 @@ export type ChangeDetectionFailure =
  * The {@link ChangeDetector} service shape.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface ChangeDetectorShape {
 	/** The file paths (workspace-root-relative, as git reports them) changed in the range. */
@@ -147,7 +181,7 @@ export interface ChangeDetectorShape {
  * **Example** (Find packages affected since origin/main)
  *
  * ```ts
- * import { ChangeDetectionOptions, ChangeDetector } from "./index.ts";
+ * import { ChangeDetectionOptions, ChangeDetector } from "@beep/scratchpad/effected/workspaces/ChangeDetector";
  * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
@@ -157,20 +191,39 @@ export interface ChangeDetectorShape {
  *   );
  *   return affected.map((pkg) => pkg.name);
  * });
+ * console.log(Effect.isEffect(program)) // true
  * ```
  *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class ChangeDetector extends Context.Service<ChangeDetector, ChangeDetectorShape>()(
 	$I`ChangeDetector`,
 ) {
-	/** Builds the service over `Git` and {@link WorkspaceDiscovery}. */
+	/**
+	 * Builds the service over `Git` and {@link WorkspaceDiscovery}.
+	 *
+	 * **Example** (Construct the change detector service)
+	 *
+	 * ```ts
+	 * import { ChangeDetector } from "@beep/scratchpad/effected/workspaces/ChangeDetector";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * console.log(Effect.isEffect(ChangeDetector.make)) // true
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	static readonly make: Effect.Effect<ChangeDetectorShape, never, Git | WorkspaceDiscovery> = Effect.gen(function* () {
 		const git = yield* Git;
 		const discovery = yield* WorkspaceDiscovery;
 
 		/**
 		 * The changed files of the range, plus the working tree when asked.
+		 *
+		 * **Details**
 		 *
 		 * Every query runs with `relative: true`, so `Git` reports paths relative
 		 * to `cwd` — the workspace root — and excludes changes outside it. That is
@@ -248,7 +301,21 @@ export class ChangeDetector extends Context.Service<ChangeDetector, ChangeDetect
 		};
 	});
 
-	/** The live layer. */
+	/**
+	 * The live layer.
+	 *
+	 * **Example** (Inspect the live change detector layer)
+	 *
+	 * ```ts
+	 * import { ChangeDetector } from "@beep/scratchpad/effected/workspaces/ChangeDetector";
+	 * import * as Layer from "effect/Layer";
+	 *
+	 * console.log(Layer.isLayer(ChangeDetector.layer)) // true
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layer: Layer.Layer<ChangeDetector, never, Git | WorkspaceDiscovery> = Layer.effect(
 		ChangeDetector,
 		ChangeDetector.make,

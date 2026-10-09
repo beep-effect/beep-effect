@@ -25,7 +25,17 @@ const $I = $ScratchpadId.create("effected/workspaces/ReleaseTag");
  * publishable packages all version in lockstep; `scoped` is the shape of
  * independent versioning, where a shared tag would be ambiguous.
  *
+ * **Example** (Recognize scoped release tagging)
+ *
+ * ```ts
+ * import { TagStyle } from "@beep/scratchpad/effected/workspaces/ReleaseTag";
+ * import * as S from "effect/Schema";
+ * console.log(S.is(TagStyle)("scoped")) // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const TagStyle = LiteralKit(["single", "scoped"]).pipe($I.annoteSchema("TagStyle", { description: "Whether one shared tag names a whole release, or one tag names each package." }));
 
@@ -33,6 +43,8 @@ export const TagStyle = LiteralKit(["single", "scoped"]).pipe($I.annoteSchema("T
  * The decoded type of {@link (TagStyle:variable)}: `"single" | "scoped"`.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type TagStyle = typeof TagStyle.Type;
 
@@ -40,19 +52,21 @@ export type TagStyle = typeof TagStyle.Type;
  * Formatting knobs for {@link ReleaseTag.single} and {@link ReleaseTag.scoped}.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface TagFormatOptions {
 	/**
-  * The prefix on the version segment.
-  *
-  * **Details**
-  *
-  * Defaults to `""` uniformly, for both {@link ReleaseTag.single} and
-  * {@link ReleaseTag.scoped} — strict SemVer, deliberately chosen. Pass
-  * `"v"` for the GitHub release-tag convention (`v1.2.3`), which tools such
-  * as `actions/checkout`'s ref resolution and third-party changelog
-  * generators expect.
-  */
+	 * The prefix on the version segment.
+	 *
+	 * **Details**
+	 *
+	 * Defaults to `""` uniformly, for both {@link ReleaseTag.single} and
+	 * {@link ReleaseTag.scoped} — strict SemVer, deliberately chosen. Pass
+	 * `"v"` for the GitHub release-tag convention (`v1.2.3`), which tools such
+	 * as `actions/checkout`'s ref resolution and third-party changelog
+	 * generators expect.
+	 */
 	readonly versionPrefix?: string;
 }
 
@@ -69,10 +83,14 @@ interface VersionCore {
 	readonly prerelease: boolean;
 }
 
-/** Digits only, and no leading zeros beyond `0` itself — SemVer's numeric identifier. */
+/**
+ * Digits only, and no leading zeros beyond `0` itself — SemVer's numeric identifier.
+ */
 const NUMERIC_IDENTIFIER = /^(?:0|[1-9]\d*)$/;
 
-/** Complete SemVer grammar, including non-empty prerelease and build identifiers. */
+/**
+ * Complete SemVer grammar, including non-empty prerelease and build identifiers.
+ */
 const VersionText = S.String.check(
 	S.isPattern(/^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-(?:0|[1-9]\d*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9]\d*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$(?![\s\S])/),
 ).pipe($I.annoteSchema("VersionText", { description: "A complete SemVer version with valid prerelease and build identifiers." }));
@@ -80,6 +98,8 @@ const isVersionText = S.is(VersionText);
 
 /**
  * Read a version's numeric core, or nothing when it is not `X.Y.Z[-pre][+build]`.
+ *
+ * **Details**
  *
  * Build metadata is stripped **before** the prerelease test: `+build` carries
  * no precedence meaning in SemVer, so `1.2.3+sha.abc` is the stable `1.2.3`,
@@ -104,6 +124,8 @@ const versionCore = (version: string): VersionCore | undefined => {
  * Options for {@link TrackingTag.forVersion}.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface TrackingTagOptions {
 	/**
@@ -145,55 +167,86 @@ export interface TrackingTagOptions {
  * **Example** (Derive stable tracking aliases with optional package prefixes)
  *
  * ```ts
- * import { TrackingTag } from "./index.ts";
+ * import { TrackingTag } from "@beep/scratchpad/effected/workspaces/ReleaseTag";
  *
- * TrackingTag.forVersion("1.2.3").map((t) => t.value);        // ["v1", "v1.2"]
- * TrackingTag.forVersion("1.0.0-beta.3");                     // [] — never float onto a beta
- * TrackingTag.forVersion("1.2.3", { packageName: "@acme/cli" });
- * // ["@acme/cli@v1", "@acme/cli@v1.2"]
+ * console.log(TrackingTag.forVersion("1.2.3").map((t) => t.value).join(", ")) // v1, v1.2
+ * console.log(TrackingTag.forVersion("1.0.0-beta.3").length) // 0 — never float onto a beta
+ * console.log(TrackingTag.forVersion("1.2.3", { packageName: "@acme/cli" }).map((tag) => tag.value).join(", ")) // @acme/cli@v1, @acme/cli@v1.2
  * ```
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class TrackingTag extends S.Class<TrackingTag>($I`TrackingTag`)({
-	/** The tag string exactly as it appears in git. */
+	/**
+	 * The tag string exactly as it appears in git.
+	 */
 	value: S.NonEmptyString.annotateKey({ description: "The tag string exactly as it appears in git." }),
-	/** The package the alias namespaces; absent on a bare `v1`. */
+	/**
+	 * The package the alias namespaces; absent on a bare `v1`.
+	 */
 	packageName: S.optionalKey(S.NonEmptyString).annotateKey({ description: "The package the alias namespaces; absent on a bare `v1`." }),
-	/** The major version the alias tracks. */
+	/**
+	 * The major version the alias tracks.
+	 */
 	major: S.Int.annotateKey({ description: "The major version the alias tracks." }),
-	/** The minor version, on a `v1.2`-precision alias; absent on `v1`. */
+	/**
+	 * The minor version, on a `v1.2`-precision alias; absent on `v1`.
+	 */
 	minor: S.optionalKey(S.Int).annotateKey({ description: "The minor version, on a `v1.2`-precision alias; absent on `v1`." }),
 }, $I.annote("TrackingTag", { description: "A floating alias tag — `v1`, `v1.2` — that a repo re-points at its newest matching release." })) {
-	/** Whether this alias tracks a whole major line, or one minor line inside it. */
+	/**
+	 * Whether this alias tracks a whole major line, or one minor line inside it.
+	 *
+	 * **Example** (Inspect alias precision)
+	 *
+	 * ```ts
+	 * import { TrackingTag } from "@beep/scratchpad/effected/workspaces/ReleaseTag";
+	 * const tag = TrackingTag.make({ value: "v1.2", major: 1, minor: 2 });
+	 * console.log(tag.precision) // minor
+	 * ```
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	get precision(): "major" | "minor" {
 		return this.minor === undefined ? "major" : "minor";
 	}
 
 	/**
-  * The tracking tags a release of `version` should be pointed at.
-  *
-  * **Gotchas**
-  *
-  * **A prerelease derives nothing.** Anyone depending on `owner/repo@v1` is
-  * asking for the newest *stable* 1.x, so re-pointing that alias at
-  * `1.0.0-beta.3` would ship a prerelease to every such consumer with no
-  * signal at all. `includePrerelease` exists for callers who genuinely mean
-  * it — a prerelease-only distribution channel — and should be rare.
-  *
-  * **Total, never throwing.** A version that is not `X.Y.Z` derives nothing
-  * rather than failing: this is a query about a version, not a validation of
-  * one, and `WorkspacePackage.version` is deliberately tolerant, so odd
-  * versions reach here routinely.
-  *
-  * 0.x versions DO derive aliases. Floating `v0` across 0.x minors is a real
-  * hazard, but which aliases to publish is the caller's policy, decided where
-  * the tags are moved — not something a derivation should quietly withhold.
-  *
-  * @param version - The version being released.
-  * @param options - Package prefix, precision and the prerelease override.
-  * @returns The aliases, broadest first; empty when none apply.
-  */
+	 * The tracking tags a release of `version` should be pointed at.
+	 *
+	 * **Gotchas**
+	 *
+	 * **A prerelease derives nothing.** Anyone depending on `owner/repo@v1` is
+	 * asking for the newest *stable* 1.x, so re-pointing that alias at
+	 * `1.0.0-beta.3` would ship a prerelease to every such consumer with no
+	 * signal at all. `includePrerelease` exists for callers who genuinely mean
+	 * it — a prerelease-only distribution channel — and should be rare.
+	 *
+	 * **Total, never throwing.** A version that is not `X.Y.Z` derives nothing
+	 * rather than failing: this is a query about a version, not a validation of
+	 * one, and `WorkspacePackage.version` is deliberately tolerant, so odd
+	 * versions reach here routinely.
+	 *
+	 * 0.x versions DO derive aliases. Floating `v0` across 0.x minors is a real
+	 * hazard, but which aliases to publish is the caller's policy, decided where
+	 * the tags are moved — not something a derivation should quietly withhold.
+	 *
+	 * **Example** (Derive stable aliases and skip prereleases)
+	 *
+	 * ```ts
+	 * import { TrackingTag } from "@beep/scratchpad/effected/workspaces/ReleaseTag";
+	 * console.log(TrackingTag.forVersion("1.2.3").length) // 2
+	 * console.log(TrackingTag.forVersion("1.0.0-beta.3").length) // 0
+	 * ```
+	 *
+	 * @param version - The version being released.
+	 * @param options - Package prefix, precision and the prerelease override.
+	 * @returns The aliases, broadest first; empty when none apply.
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	static forVersion(version: string, options?: TrackingTagOptions): ReadonlyArray<TrackingTag> {
 		const core = versionCore(version);
 		if (core === undefined) return [];
@@ -216,7 +269,9 @@ export class TrackingTag extends S.Class<TrackingTag>($I`TrackingTag`)({
 	}
 }
 
-/** A tag string split into an optional package prefix and the version part. */
+/**
+ * A tag string split into an optional package prefix and the version part.
+ */
 const splitTag = (tag: string): { readonly packageName?: string; readonly rest: string } | undefined => {
 	const at = tag.lastIndexOf("@");
 	// No `@` at all: the whole string is the version part (a single-style tag).
@@ -246,9 +301,20 @@ const splitTag = (tag: string): { readonly packageName?: string; readonly rest: 
  * {@link TrackingTag} format classifies back to the family that produced it,
  * with its fields intact.
  *
+ * **Example** (Distinguish release tags from tracking aliases)
+ *
+ * ```ts
+ * import { classifyTag } from "@beep/scratchpad/effected/workspaces/ReleaseTag";
+ * console.log(classifyTag("@scope/pkg@1.0.0").kind) // release
+ * console.log(classifyTag("v1").kind) // tracking
+ * console.log(classifyTag("latest").kind) // unrecognized
+ * ```
+ *
  * @param tag - Any tag string.
  * @returns The classification.
  * @public
+ * @category parsing
+ * @since 0.0.0
  */
 export const classifyTag = (tag: string): TagClassification => {
 	const split = splitTag(tag);
@@ -313,32 +379,51 @@ export const classifyTag = (tag: string): TagClassification => {
  * **Example** (Format shared and package-scoped release tags)
  *
  * ```ts
- * import { ReleaseTag } from "./index.ts";
+ * import { ReleaseTag } from "@beep/scratchpad/effected/workspaces/ReleaseTag";
  *
- * ReleaseTag.single("1.2.3").value;               // "1.2.3"
- * ReleaseTag.scoped("@acme/cli", "1.2.3").value;  // "@acme/cli@1.2.3"
- * ReleaseTag.scoped("cli", "1.2.3").value;        // "cli@1.2.3"
- * ReleaseTag.scoped("cli", "1.2.3", { versionPrefix: "v" }).value; // "cli@v1.2.3"
+ * console.log(ReleaseTag.single("1.2.3").value) // 1.2.3
+ * console.log(ReleaseTag.scoped("@acme/cli", "1.2.3").value) // @acme/cli@1.2.3
+ * console.log(ReleaseTag.scoped("cli", "1.2.3").value) // cli@1.2.3
+ * console.log(ReleaseTag.scoped("cli", "1.2.3", { versionPrefix: "v" }).value) // cli@v1.2.3
  * ```
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class ReleaseTag extends S.Class<ReleaseTag>($I`ReleaseTag`)({
-	/** The tag string exactly as it appears in git. */
+	/**
+	 * The tag string exactly as it appears in git.
+	 */
 	value: S.NonEmptyString.annotateKey({ description: "The tag string exactly as it appears in git." }),
-	/** The package the tag names; absent on a workspace-wide single tag. */
+	/**
+	 * The package the tag names; absent on a workspace-wide single tag.
+	 */
 	packageName: S.optionalKey(S.NonEmptyString).annotateKey({ description: "The package the tag names; absent on a workspace-wide single tag." }),
-	/** The version the tag names, without any prefix. */
+	/**
+	 * The version the tag names, without any prefix.
+	 */
 	version: S.NonEmptyString.annotateKey({ description: "The version the tag names, without any prefix." }),
-	/** Which style produced it. */
+	/**
+	 * Which style produced it.
+	 */
 	style: TagStyle.annotateKey({ description: "Which style produced it." }),
 }, $I.annote("ReleaseTag", { description: "A git tag naming a release, and the parts it was built from." })) {
 	/**
 	 * One shared tag for a whole release: `1.2.3`.
 	 *
+	 * **Example** (Prefix a shared release tag)
+	 *
+	 * ```ts
+	 * import { ReleaseTag } from "@beep/scratchpad/effected/workspaces/ReleaseTag";
+	 * console.log(ReleaseTag.single("1.2.3", { versionPrefix: "v" }).value) // v1.2.3
+	 * ```
+	 *
 	 * @param version - The version being released. Must not be empty.
 	 * @param options - Formatting overrides.
 	 * @returns the single-style {@link ReleaseTag}.
+	 * @category constructors
+	 * @since 0.0.0
 	 */
 	static single(version: string, options?: TagFormatOptions): ReleaseTag {
 		const prefix = options?.versionPrefix ?? "";
@@ -354,9 +439,18 @@ export class ReleaseTag extends S.Class<ReleaseTag>($I`ReleaseTag`)({
 	 * scoped name, `pkg@1.2.3` for an unscoped one, uniformly, unless
 	 * `options.versionPrefix` says otherwise.
 	 *
+	 * **Example** (Name a package release)
+	 *
+	 * ```ts
+	 * import { ReleaseTag } from "@beep/scratchpad/effected/workspaces/ReleaseTag";
+	 * console.log(ReleaseTag.scoped("@scope/pkg", "1.2.3").value) // @scope/pkg@1.2.3
+	 * ```
+	 *
 	 * @param packageName - The package being released. Must not be empty.
 	 * @param version - The version being released. Must not be empty.
 	 * @param options - Formatting overrides.
+	 * @category constructors
+	 * @since 0.0.0
 	 */
 	static scoped(packageName: string, version: string, options?: TagFormatOptions): ReleaseTag {
 		const prefix = options?.versionPrefix ?? "";
@@ -382,9 +476,9 @@ export class ReleaseTag extends S.Class<ReleaseTag>($I`ReleaseTag`)({
  *
  * ```ts
  * import * as S from "effect/Schema";
- * import { TagClassification, classifyTag } from "./ReleaseTag.ts";
+ * import { TagClassification, classifyTag } from "@beep/scratchpad/effected/workspaces/ReleaseTag";
  *
- * S.is(TagClassification)(classifyTag("v1")); // true
+ * console.log(S.is(TagClassification)(classifyTag("v1"))) // true
  * ```
  *
  * @public

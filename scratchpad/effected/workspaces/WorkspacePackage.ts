@@ -31,7 +31,8 @@ const EMPTY: Readonly<Record<string, string>> = R.fromEntries([]);
 const EMPTY_MANIFEST: Readonly<Record<string, unknown>> = R.fromEntries([]);
 
 /**
- * The `publishConfig` fields workspace tooling reads.
+ * Projects the publication settings workspace tooling uses to choose a registry,
+ * visibility, directory, and dist-tag.
  *
  * **Details**
  *
@@ -41,7 +42,18 @@ const EMPTY_MANIFEST: Readonly<Record<string, unknown>> = R.fromEntries([]);
  * decide *where, whether and as what* a package publishes. Unknown keys are
  * ignored, not rejected.
  *
+ * **Example** (Choose scoped package visibility)
+ *
+ * ```ts
+ * import { PublishConfig } from "@beep/scratchpad/effected/workspaces/WorkspacePackage";
+ *
+ * const config = PublishConfig.make({ access: "public", tag: "next" });
+ * console.log(config.access, config.tag); // public next
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export class PublishConfig extends S.Class<PublishConfig>($I`PublishConfig`)({
 	/** Scoped-package visibility. Its presence overrides `private`. */
@@ -75,6 +87,8 @@ const DependencyMap = S.Record(S.String, S.String).pipe(
  * that moves between kinds at the same version does not appear in the diff.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface DependencyDiff {
 	/** Present in the receiver, absent from the other. */
@@ -95,7 +109,22 @@ export interface DependencyDiff {
  * `WorkspacePackage.manifest` does, so opting into the strict model is an
  * explicit, individually recoverable step.
  *
+ * **Example** (Identify a manifest read failure)
+ *
+ * ```ts
+ * import { WorkspaceManifestError } from "@beep/scratchpad/effected/workspaces/WorkspacePackage";
+ *
+ * const error = WorkspaceManifestError.make({
+ *   packageJsonPath: "/repo/packages/utils/package.json",
+ *   kind: "read",
+ *   cause: new Error("File unavailable"),
+ * });
+ * console.log(error.kind); // read
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class WorkspaceManifestError extends S.TaggedError<WorkspaceManifestError>($I`WorkspaceManifestError`)("WorkspaceManifestError", {
 	/** Absolute path to the `package.json` that failed. */
@@ -105,7 +134,25 @@ export class WorkspaceManifestError extends S.TaggedError<WorkspaceManifestError
 	/** The originating failure, preserved rather than flattened to a string. */
 	cause: S.Defect().annotateKey({ description: "The originating failure, preserved rather than flattened to a string." }),
 }, $I.annote("WorkspaceManifestError", { description: "Raised when a workspace member's `package.json` cannot be read or decoded into the strict `@effected/package-json` `Package` model." })) {
-	/** Renders the path and failure kind into a one-line message. */
+	/**
+	 * Renders the path and failure kind into a one-line message.
+	 *
+	 * **Example** (Render the failing manifest path)
+	 *
+	 * ```ts
+	 * import { WorkspaceManifestError } from "@beep/scratchpad/effected/workspaces/WorkspacePackage";
+	 *
+	 * const error = WorkspaceManifestError.make({
+	 *   packageJsonPath: "/repo/packages/utils/package.json",
+	 *   kind: "read",
+	 *   cause: new Error("File unavailable"),
+	 * });
+	 * console.log(error.message); // Failed to read package.json at /repo/packages/utils/package.json
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return `Failed to ${this.kind} package.json at ${this.packageJsonPath}`;
 	}
@@ -123,23 +170,23 @@ export class WorkspaceManifestError extends S.TaggedError<WorkspaceManifestError
  * **Example** (Construct and inspect a workspace package)
  *
  * ```ts
- * import { WorkspacePackage } from "./index.ts";
+ * import { WorkspacePackage } from "@beep/scratchpad/effected/workspaces/WorkspacePackage";
  *
  * const pkg = WorkspacePackage.make({
  *   name: "@my-org/utils",
- *   version: "1.0.0",
  *   path: "/repo/packages/utils",
  *   packageJsonPath: "/repo/packages/utils/package.json",
  *   relativePath: "packages/utils",
  *   workspaceRoot: "/repo",
+ *   version: "1.0.0",
  * });
  *
- * pkg.isRootWorkspace; // false
- * pkg.unscopedName;    // "utils"
- * pkg.workspaceRoot;   // "/repo"
+ * console.log(pkg.isRootWorkspace, pkg.unscopedName, pkg.workspaceRoot); // false utils /repo
  * ```
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class WorkspacePackage extends S.Class<WorkspacePackage>($I`WorkspacePackage`)({
 	/** The package name. */
@@ -214,37 +261,139 @@ export class WorkspacePackage extends S.Class<WorkspacePackage>($I`WorkspacePack
 		S.withConstructorDefault(Effect.succeed(EMPTY_MANIFEST)),
 	).annotateKey({ description: "The package's `package.json` as read — tolerant access to every field outside the typed discovery slice (`scripts`, `exports`, …) without a second file read." }),
 }, $I.annote("WorkspacePackage", { description: "A single package inside a workspace: the discovery-relevant slice of its `package.json` plus its filesystem location." })) {
-	/** Whether this is the workspace root package. */
+	/**
+	 * Whether this is the workspace root package.
+	 *
+	 * **Example** (Recognize the workspace root)
+	 *
+	 * ```ts
+	 * import { WorkspacePackage } from "@beep/scratchpad/effected/workspaces/WorkspacePackage";
+	 *
+	 * const pkg = WorkspacePackage.make({
+	 *   name: "@my-org/utils",
+	 *   path: "/repo/packages/utils",
+	 *   packageJsonPath: "/repo/packages/utils/package.json",
+	 *   relativePath: ".",
+	 *   workspaceRoot: "/repo",
+	 * });
+	 * console.log(pkg.isRootWorkspace); // true
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
+	 */
 	get isRootWorkspace(): boolean {
 		return this.relativePath === ".";
 	}
 
-	/** Whether the package is publishable in principle (not marked private). */
+	/**
+	 * Whether the package is publishable in principle (not marked private).
+	 *
+	 * **Example** (Inspect a private package)
+	 *
+	 * ```ts
+	 * import { WorkspacePackage } from "@beep/scratchpad/effected/workspaces/WorkspacePackage";
+	 *
+	 * const pkg = WorkspacePackage.make({
+	 *   name: "@my-org/utils",
+	 *   path: "/repo/packages/utils",
+	 *   packageJsonPath: "/repo/packages/utils/package.json",
+	 *   relativePath: "packages/utils",
+	 *   workspaceRoot: "/repo",
+	 *   private: true,
+	 * });
+	 * console.log(pkg.isPublic); // false
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
+	 */
 	get isPublic(): boolean {
 		return !this.private;
 	}
 
-	/** The npm scope (`@org`), or `Option.none()` for an unscoped name. */
+	/**
+	 * The npm scope (`@org`), or `Option.none()` for an unscoped name.
+	 *
+	 * **Example** (Read a scoped package name)
+	 *
+	 * ```ts
+	 * import { WorkspacePackage } from "@beep/scratchpad/effected/workspaces/WorkspacePackage";
+	 * import * as O from "effect/Option";
+	 *
+	 * const pkg = WorkspacePackage.make({
+	 *   name: "@my-org/utils",
+	 *   path: "/repo/packages/utils",
+	 *   packageJsonPath: "/repo/packages/utils/package.json",
+	 *   relativePath: "packages/utils",
+	 *   workspaceRoot: "/repo",
+	 * });
+	 * console.log(O.getOrElse(pkg.scope, () => "unscoped")); // @my-org
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	get scope(): O.Option<string> {
 		const match = /^(@[^/]+)\//.exec(this.name);
 		return O.fromUndefinedOr(match?.[1]);
 	}
 
-	/** The name with any scope stripped. */
+	/**
+	 * The name with any scope stripped.
+	 *
+	 * **Example** (Strip a package scope)
+	 *
+	 * ```ts
+	 * import { WorkspacePackage } from "@beep/scratchpad/effected/workspaces/WorkspacePackage";
+	 *
+	 * const pkg = WorkspacePackage.make({
+	 *   name: "@my-org/utils",
+	 *   path: "/repo/packages/utils",
+	 *   packageJsonPath: "/repo/packages/utils/package.json",
+	 *   relativePath: "packages/utils",
+	 *   workspaceRoot: "/repo",
+	 * });
+	 * console.log(pkg.unscopedName); // utils
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	get unscopedName(): string {
 		const slash = this.name.indexOf("/");
 		return this.name.startsWith("@") && slash !== -1 ? this.name.slice(slash + 1) : this.name;
 	}
 
 	/**
-  * Every dependency, merged across the four kinds.
-  *
-  * **Details**
-  *
-  * Precedence on a name declared in several kinds runs
-  * `dependencies` \> `devDependencies` \> `peerDependencies` \>
-  * `optionalDependencies`.
-  */
+	 * Every dependency, merged across the four kinds.
+	 *
+	 * **Details**
+	 *
+	 * Precedence on a name declared in several kinds runs
+	 * `dependencies` \> `devDependencies` \> `peerDependencies` \>
+	 * `optionalDependencies`.
+	 *
+	 * **Example** (Observe dependency kind precedence)
+	 *
+	 * ```ts
+	 * import { WorkspacePackage } from "@beep/scratchpad/effected/workspaces/WorkspacePackage";
+	 *
+	 * const pkg = WorkspacePackage.make({
+	 *   name: "@my-org/utils",
+	 *   path: "/repo/packages/utils",
+	 *   packageJsonPath: "/repo/packages/utils/package.json",
+	 *   relativePath: "packages/utils",
+	 *   workspaceRoot: "/repo",
+	 *   dependencies: { shared: "^2.0.0" },
+	 *   devDependencies: { shared: "^1.0.0" },
+	 * });
+	 * console.log(pkg.allDependencies.shared); // ^2.0.0
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	get allDependencies(): Record<string, string> {
 		return R.fromEntries([
 			...R.toEntries(this.optionalDependencies),
@@ -254,27 +403,132 @@ export class WorkspacePackage extends S.Class<WorkspacePackage>($I`WorkspacePack
 		]);
 	}
 
-	/** Whether `name` is a production dependency. */
+	/**
+	 * Whether `name` is a production dependency.
+	 *
+	 * **Example** (Check dependencies membership)
+	 *
+	 * ```ts
+	 * import { WorkspacePackage } from "@beep/scratchpad/effected/workspaces/WorkspacePackage";
+	 *
+	 * const pkg = WorkspacePackage.make({
+	 *   name: "@my-org/utils",
+	 *   path: "/repo/packages/utils",
+	 *   packageJsonPath: "/repo/packages/utils/package.json",
+	 *   relativePath: "packages/utils",
+	 *   workspaceRoot: "/repo",
+	 *   dependencies: { shared: "^1.0.0" },
+	 * });
+	 * console.log(pkg.hasDependency("shared"), pkg.hasDependency("missing")); // true false
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
+	 */
 	hasDependency(name: string): boolean {
 		return R.has(this.dependencies, name);
 	}
 
-	/** Whether `name` is a development dependency. */
+	/**
+	 * Whether `name` is a development dependency.
+	 *
+	 * **Example** (Check devDependencies membership)
+	 *
+	 * ```ts
+	 * import { WorkspacePackage } from "@beep/scratchpad/effected/workspaces/WorkspacePackage";
+	 *
+	 * const pkg = WorkspacePackage.make({
+	 *   name: "@my-org/utils",
+	 *   path: "/repo/packages/utils",
+	 *   packageJsonPath: "/repo/packages/utils/package.json",
+	 *   relativePath: "packages/utils",
+	 *   workspaceRoot: "/repo",
+	 *   devDependencies: { shared: "^1.0.0" },
+	 * });
+	 * console.log(pkg.hasDevDependency("shared"), pkg.hasDevDependency("missing")); // true false
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
+	 */
 	hasDevDependency(name: string): boolean {
 		return R.has(this.devDependencies, name);
 	}
 
-	/** Whether `name` is a peer dependency. */
+	/**
+	 * Whether `name` is a peer dependency.
+	 *
+	 * **Example** (Check peerDependencies membership)
+	 *
+	 * ```ts
+	 * import { WorkspacePackage } from "@beep/scratchpad/effected/workspaces/WorkspacePackage";
+	 *
+	 * const pkg = WorkspacePackage.make({
+	 *   name: "@my-org/utils",
+	 *   path: "/repo/packages/utils",
+	 *   packageJsonPath: "/repo/packages/utils/package.json",
+	 *   relativePath: "packages/utils",
+	 *   workspaceRoot: "/repo",
+	 *   peerDependencies: { shared: "^1.0.0" },
+	 * });
+	 * console.log(pkg.hasPeerDependency("shared"), pkg.hasPeerDependency("missing")); // true false
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
+	 */
 	hasPeerDependency(name: string): boolean {
 		return R.has(this.peerDependencies, name);
 	}
 
-	/** Whether `name` is an optional dependency. */
+	/**
+	 * Whether `name` is an optional dependency.
+	 *
+	 * **Example** (Check optionalDependencies membership)
+	 *
+	 * ```ts
+	 * import { WorkspacePackage } from "@beep/scratchpad/effected/workspaces/WorkspacePackage";
+	 *
+	 * const pkg = WorkspacePackage.make({
+	 *   name: "@my-org/utils",
+	 *   path: "/repo/packages/utils",
+	 *   packageJsonPath: "/repo/packages/utils/package.json",
+	 *   relativePath: "packages/utils",
+	 *   workspaceRoot: "/repo",
+	 *   optionalDependencies: { shared: "^1.0.0" },
+	 * });
+	 * console.log(pkg.hasOptionalDependency("shared"), pkg.hasOptionalDependency("missing")); // true false
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
+	 */
 	hasOptionalDependency(name: string): boolean {
 		return R.has(this.optionalDependencies, name);
 	}
 
-	/** Whether `name` appears in any of the four dependency kinds. */
+	/**
+	 * Whether `name` appears in any of the four dependency kinds.
+	 *
+	 * **Example** (Check peerDependencies membership)
+	 *
+	 * ```ts
+	 * import { WorkspacePackage } from "@beep/scratchpad/effected/workspaces/WorkspacePackage";
+	 *
+	 * const pkg = WorkspacePackage.make({
+	 *   name: "@my-org/utils",
+	 *   path: "/repo/packages/utils",
+	 *   packageJsonPath: "/repo/packages/utils/package.json",
+	 *   relativePath: "packages/utils",
+	 *   workspaceRoot: "/repo",
+	 *   peerDependencies: { shared: "^1.0.0" },
+	 * });
+	 * console.log(pkg.hasAnyDependencyOn("shared"), pkg.hasAnyDependencyOn("missing")); // true false
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
+	 */
 	hasAnyDependencyOn(name: string): boolean {
 		return (
 			this.hasDependency(name) ||
@@ -284,7 +538,29 @@ export class WorkspacePackage extends S.Class<WorkspacePackage>($I`WorkspacePack
 		);
 	}
 
-	/** The declared specifier for `name`, searched across all four kinds. */
+	/**
+	 * The declared specifier for `name`, searched across all four kinds.
+	 *
+	 * **Example** (Find an optional dependency specifier)
+	 *
+	 * ```ts
+	 * import { WorkspacePackage } from "@beep/scratchpad/effected/workspaces/WorkspacePackage";
+	 * import * as O from "effect/Option";
+	 *
+	 * const pkg = WorkspacePackage.make({
+	 *   name: "@my-org/utils",
+	 *   path: "/repo/packages/utils",
+	 *   packageJsonPath: "/repo/packages/utils/package.json",
+	 *   relativePath: "packages/utils",
+	 *   workspaceRoot: "/repo",
+	 *   optionalDependencies: { native: "^1.0.0" },
+	 * });
+	 * console.log(O.getOrElse(pkg.dependencyVersion("native"), () => "missing")); // ^1.0.0
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	dependencyVersion(name: string): O.Option<string> {
 		return R.get(this.dependencies, name).pipe(
 			O.orElse(() => R.get(this.devDependencies, name)),
@@ -294,20 +570,38 @@ export class WorkspacePackage extends S.Class<WorkspacePackage>($I`WorkspacePack
 	}
 
 	/**
-  * Whether any dependency name (across all four kinds) matches the glob
-  * `pattern`, using `@effected/glob`.
-  *
-  * **Gotchas**
-  *
-  * A `GlobPattern` is total and free to test. A `string` is compiled on every
-  * call and an **uncompilable** literal throws: a glob written into a call
-  * site is developer wiring, not untrusted input, so it belongs in the defect
-  * channel rather than widening the typed channel every caller must branch
-  * on. Compile once with `GlobPattern.compile` and pass the result when
-  * testing many packages.
-  *
-  * @param pattern - A compiled pattern, or a source string to compile.
-  */
+	 * Whether any dependency name (across all four kinds) matches the glob
+	 * `pattern`, using `@effected/glob`.
+	 *
+	 * **Gotchas**
+	 *
+	 * A `GlobPattern` is total and free to test. A `string` is compiled on every
+	 * call and an **uncompilable** literal throws: a glob written into a call
+	 * site is developer wiring, not untrusted input, so it belongs in the defect
+	 * channel rather than widening the typed channel every caller must branch
+	 * on. Compile once with `GlobPattern.compile` and pass the result when
+	 * testing many packages.
+	 *
+	 * **Example** (Match a dependency name with a glob)
+	 *
+	 * ```ts
+	 * import { WorkspacePackage } from "@beep/scratchpad/effected/workspaces/WorkspacePackage";
+	 *
+	 * const pkg = WorkspacePackage.make({
+	 *   name: "@my-org/utils",
+	 *   path: "/repo/packages/utils",
+	 *   packageJsonPath: "/repo/packages/utils/package.json",
+	 *   relativePath: "packages/utils",
+	 *   workspaceRoot: "/repo",
+	 *   dependencies: { "@my-org/core": "workspace:*" },
+	 * });
+	 * console.log(pkg.matchesDependency("@my-org/*")); // true
+	 * ```
+	 *
+	 * @param pattern - A compiled pattern, or a source string to compile.
+	 * @category predicates
+	 * @since 0.0.0
+	 */
 	matchesDependency(pattern: GlobPattern | string): boolean {
 		const compiled = P.isString(pattern) ? GlobPattern.make({ source: pattern }) : pattern;
 		return R.keys(this.allDependencies).some((dependency) => compiled.matches(dependency));
@@ -317,7 +611,34 @@ export class WorkspacePackage extends S.Class<WorkspacePackage>($I`WorkspacePack
 	 * Compare this package's dependencies against `other`'s, treating `other` as
 	 * the baseline: what this package added, removed or re-specified.
 	 *
+	 * **Example** (Compare changed dependency specifiers)
+	 *
+	 * ```ts
+	 * import { WorkspacePackage } from "@beep/scratchpad/effected/workspaces/WorkspacePackage";
+	 *
+	 * const pkg = WorkspacePackage.make({
+	 *   name: "@my-org/utils",
+	 *   path: "/repo/packages/utils",
+	 *   packageJsonPath: "/repo/packages/utils/package.json",
+	 *   relativePath: "packages/utils",
+	 *   workspaceRoot: "/repo",
+	 *   dependencies: { shared: "^2.0.0" },
+	 * });
+	 * const baseline = WorkspacePackage.make({
+	 *   name: pkg.name,
+	 *   path: pkg.path,
+	 *   packageJsonPath: pkg.packageJsonPath,
+	 *   relativePath: pkg.relativePath,
+	 *   workspaceRoot: pkg.workspaceRoot,
+	 *   dependencies: { shared: "^1.0.0" },
+	 * });
+	 * const diff = pkg.dependencyDiff(baseline);
+	 * console.log(diff.changed.shared?.from, diff.changed.shared?.to); // ^1.0.0 ^2.0.0
+	 * ```
+	 *
 	 * @param other - The package to compare against.
+	 * @category utilities
+	 * @since 0.0.0
 	 */
 	dependencyDiff(other: WorkspacePackage): DependencyDiff {
 		const mine = this.allDependencies;
@@ -342,6 +663,26 @@ export class WorkspacePackage extends S.Class<WorkspacePackage>($I`WorkspacePack
 	/**
 	 * Project to `@effected/lockfiles`' `WorkspaceManifest` — the input shape of
 	 * `LockfileIntegrity.compare`. Total.
+	 *
+	 * **Example** (Project dependencies for lockfile comparison)
+	 *
+	 * ```ts
+	 * import { WorkspacePackage } from "@beep/scratchpad/effected/workspaces/WorkspacePackage";
+	 *
+	 * const pkg = WorkspacePackage.make({
+	 *   name: "@my-org/utils",
+	 *   path: "/repo/packages/utils",
+	 *   packageJsonPath: "/repo/packages/utils/package.json",
+	 *   relativePath: "packages/utils",
+	 *   workspaceRoot: "/repo",
+	 *   dependencies: { shared: "^2.0.0" },
+	 * });
+	 * const manifest = pkg.toWorkspaceManifest();
+	 * console.log(manifest.name, manifest.dependencies?.shared); // @my-org/utils ^2.0.0
+	 * ```
+	 *
+	 * @category mapping
+	 * @since 0.0.0
 	 */
 	toWorkspaceManifest(): WorkspaceManifest {
 		return WorkspaceManifest.make({
@@ -354,15 +695,35 @@ export class WorkspacePackage extends S.Class<WorkspacePackage>($I`WorkspacePack
 	}
 
 	/**
-  * Read and decode this package's `package.json` into the strict
-  * `@effected/package-json` `Package` model — the bridge from the
-  * tolerant discovery projection to the fully typed manifest.
-  *
-  * **Details**
-  *
-  * Fails with {@link WorkspaceManifestError} (`kind: "read"` or `"decode"`) and
-  * requires core `FileSystem`.
-  */
+	 * Read and decode this package's `package.json` into the strict
+	 * `@effected/package-json` `Package` model — the bridge from the
+	 * tolerant discovery projection to the fully typed manifest.
+	 *
+	 * **Details**
+	 *
+	 * Fails with {@link WorkspaceManifestError} (`kind: "read"` or `"decode"`) and
+	 * requires core `FileSystem`.
+	 *
+	 * **Example** (Construct a strict manifest read)
+	 *
+	 * ```ts
+	 * import { WorkspacePackage } from "@beep/scratchpad/effected/workspaces/WorkspacePackage";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const pkg = WorkspacePackage.make({
+	 *   name: "@my-org/utils",
+	 *   path: "/repo/packages/utils",
+	 *   packageJsonPath: "/repo/packages/utils/package.json",
+	 *   relativePath: "packages/utils",
+	 *   workspaceRoot: "/repo",
+	 * });
+	 * const program = WorkspacePackage.manifest(pkg);
+	 * console.log(Effect.isEffect(program)); // true
+	 * ```
+	 *
+	 * @category parsing
+	 * @since 0.0.0
+	 */
 	static readonly manifest = Effect.fn("WorkspacePackage.manifest")(function* (self: WorkspacePackage) {
 		const fs = yield* FileSystem.FileSystem;
 		const content = yield* fs
@@ -381,7 +742,30 @@ export class WorkspacePackage extends S.Class<WorkspacePackage>($I`WorkspacePack
 		);
 	});
 
-	/** Instance form of `WorkspacePackage.manifest`. */
+	/**
+	 * Constructs a strict manifest read for this package; the instance form of
+	 * `WorkspacePackage.manifest`.
+	 *
+	 * **Example** (Construct an instance manifest read)
+	 *
+	 * ```ts
+	 * import { WorkspacePackage } from "@beep/scratchpad/effected/workspaces/WorkspacePackage";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const pkg = WorkspacePackage.make({
+	 *   name: "@my-org/utils",
+	 *   path: "/repo/packages/utils",
+	 *   packageJsonPath: "/repo/packages/utils/package.json",
+	 *   relativePath: "packages/utils",
+	 *   workspaceRoot: "/repo",
+	 * });
+	 * const program = pkg.manifest();
+	 * console.log(Effect.isEffect(program)); // true
+	 * ```
+	 *
+	 * @category parsing
+	 * @since 0.0.0
+	 */
 	manifest(): Effect.Effect<Package, WorkspaceManifestError, FileSystem.FileSystem> {
 		return WorkspacePackage.manifest(this);
 	}

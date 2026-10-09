@@ -33,7 +33,18 @@ const $I = $ScratchpadId.create("effected/workspaces/VersioningStrategy");
  * - `independent` — publishable packages version separately, so a shared tag
  *   would be ambiguous and each package needs its own.
  *
+ * **Example** (Validate independent versioning)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { VersioningStrategyType } from "@beep/scratchpad/effected/workspaces/VersioningStrategy";
+ *
+ * console.log(S.is(VersioningStrategyType)("independent")) // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const VersioningStrategyType = LiteralKit(["single", "fixed-group", "independent"]).pipe($I.annoteSchema("VersioningStrategyType", { description: "How a workspace assigns versions across its publishable packages." }));
 
@@ -41,6 +52,8 @@ export const VersioningStrategyType = LiteralKit(["single", "fixed-group", "inde
  * The decoded type of {@link (VersioningStrategyType:variable)}.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type VersioningStrategyType = typeof VersioningStrategyType.Type;
 
@@ -51,9 +64,9 @@ export type VersioningStrategyType = typeof VersioningStrategyType.Type;
  *
  * ```ts
  * import * as S from "effect/Schema";
- * import { ClassifyOptions } from "./VersioningStrategy.ts";
+ * import { ClassifyOptions } from "@beep/scratchpad/effected/workspaces/VersioningStrategy";
  *
- * S.is(ClassifyOptions)({ packages: ["a", "b"], fixedGroups: [["a", "b"]] }); // true
+ * console.log(S.is(ClassifyOptions)({ packages: ["a", "b"], fixedGroups: [["a", "b"]] })) // true
  * ```
  *
  * @public
@@ -88,9 +101,11 @@ export const ClassifyOptions = S.Struct({
 export type ClassifyOptions = typeof ClassifyOptions.Type;
 
 /**
- * Arguments to {@link VersioningStrategy.detect}.
+ * Supplies caller-defined lockstep groups to {@link VersioningStrategy.detect}.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface VersioningDetectOptions {
 	/** See {@link ClassifyOptions.fixedGroups}. Defaults to none. */
@@ -109,9 +124,9 @@ export interface VersioningDetectOptions {
  *
  * ```ts
  * import * as S from "effect/Schema";
- * import { PackageRelease } from "./VersioningStrategy.ts";
+ * import { PackageRelease } from "@beep/scratchpad/effected/workspaces/VersioningStrategy";
  *
- * S.is(PackageRelease)({ name: "@acme/cli", version: "1.2.3" }); // true
+ * console.log(S.is(PackageRelease)({ name: "@acme/cli", version: "1.2.3" })) // true
  * ```
  *
  * @public
@@ -144,16 +159,20 @@ export type PackageRelease = typeof PackageRelease.Type;
  * **Example** (Detect the versioning strategy and generate release tags)
  *
  * ```ts
- * import { PublishabilityDetector, VersioningStrategy } from "./index.ts";
+ * import { PublishabilityDetector } from "@beep/scratchpad/effected/workspaces/Publishability";
+ * import { VersioningStrategy } from "@beep/scratchpad/effected/workspaces/VersioningStrategy";
  * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   const strategy = yield* VersioningStrategy.detect({ fixedGroups: [["@acme/a", "@acme/b"]] });
  *   return strategy.tagsFor([{ name: "@acme/a", version: "1.2.3" }]).map((tag) => tag.value);
  * }).pipe(Effect.provide(PublishabilityDetector.layerNpm));
+ * console.log(Effect.isEffect(program)) // true
  * ```
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class VersioningStrategy extends S.Class<VersioningStrategy>($I`VersioningStrategy`)({
 	/** The classification. */
@@ -165,28 +184,63 @@ export class VersioningStrategy extends S.Class<VersioningStrategy>($I`Versionin
 }, $I.annote("VersioningStrategy", { description: "How a workspace versions, and the tagging that follows from it." })) {
 	/**
 	 * Whether a release needs one tag per package rather than one shared tag.
+	 *
+	 * **Example** (Inspect independent tag requirements)
+	 *
+	 * ```ts
+	 * import { VersioningStrategy } from "@beep/scratchpad/effected/workspaces/VersioningStrategy";
+	 *
+	 * console.log(VersioningStrategy.classify({ packages: ["a", "b"] }).perPackageTags) // true
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
 	 */
 	get perPackageTags(): boolean {
 		return this.type === "independent";
 	}
 
-	/** The tag style this strategy implies. */
+	/**
+	 * The tag style this strategy implies.
+	 *
+	 * **Example** (Inspect a single-package tag style)
+	 *
+	 * ```ts
+	 * import { VersioningStrategy } from "@beep/scratchpad/effected/workspaces/VersioningStrategy";
+	 *
+	 * console.log(VersioningStrategy.classify({ packages: ["a"] }).tagStyle) // single
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	get tagStyle(): TagStyle {
 		return this.perPackageTags ? "scoped" : "single";
 	}
 
 	/**
-  * Classify a workspace from its publishable package names and fixed groups.
-  *
-  * **Details**
-  *
-  * Pure and total — no IO, no error channel. `packages` is sorted and
-  * de-duplicated first, so a name listed twice cannot inflate a one-package
-  * repo into an independent one.
-  *
-  * @param options - The publishable package names and any fixed groups.
-  * @returns the classified {@link VersioningStrategy}.
-  */
+	 * Classify a workspace from its publishable package names and fixed groups.
+	 *
+	 * **Details**
+	 *
+	 * Pure and total — no IO, no error channel. `packages` is sorted and
+	 * de-duplicated first, so a name listed twice cannot inflate a one-package
+	 * repo into an independent one.
+	 *
+	 * **Example** (Classify a lockstep release group)
+	 *
+	 * ```ts
+	 * import { VersioningStrategy } from "@beep/scratchpad/effected/workspaces/VersioningStrategy";
+	 *
+	 * const strategy = VersioningStrategy.classify({ packages: ["b", "a", "a"], fixedGroups: [["a", "b"]] });
+	 * console.log(strategy.type) // fixed-group
+	 * ```
+	 *
+	 * @param options - The publishable package names and any fixed groups.
+	 * @returns the classified {@link VersioningStrategy}.
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	static classify(options: ClassifyOptions): VersioningStrategy {
 		const fixedGroups = options.fixedGroups ?? [];
 		const packages = A.sort(A.fromIterable(MutableHashSet.fromIterable(options.packages)), Str.Order);
@@ -204,19 +258,32 @@ export class VersioningStrategy extends S.Class<VersioningStrategy>($I`Versionin
 	}
 
 	/**
-  * Classify the ambient workspace: enumerate its packages, keep the ones the
-  * {@link PublishabilityDetector} says publish somewhere, and classify those.
-  *
-  * **Details**
-  *
-  * The publishability question is asked through the service precisely so a
-  * consumer with its own rules — honouring a release tool's ignore list, say —
-  * swaps the layer instead of filtering afterwards.
-  *
-  * Requires `WorkspaceDiscovery` and `PublishabilityDetector` (for example
-  * `PublishabilityDetector.layerNpm`) in `R`, and fails with
-  * `WorkspaceDiscoveryFailure` when discovery does.
-  */
+	 * Classify the ambient workspace: enumerate its packages, keep the ones the
+	 * {@link PublishabilityDetector} says publish somewhere, and classify those.
+	 *
+	 * **Details**
+	 *
+	 * The publishability question is asked through the service precisely so a
+	 * consumer with its own rules — honouring a release tool's ignore list, say —
+	 * swaps the layer instead of filtering afterwards.
+	 *
+	 * Requires `WorkspaceDiscovery` and `PublishabilityDetector` (for example
+	 * `PublishabilityDetector.layerNpm`) in `R`, and fails with
+	 * `WorkspaceDiscoveryFailure` when discovery does.
+	 *
+	 * **Example** (Construct ambient workspace detection)
+	 *
+	 * ```ts
+	 * import * as Effect from "effect/Effect";
+	 * import { VersioningStrategy } from "@beep/scratchpad/effected/workspaces/VersioningStrategy";
+	 *
+	 * const program = VersioningStrategy.detect({ fixedGroups: [["a", "b"]] });
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	static readonly detect = Effect.fn("VersioningStrategy.detect")(function* (options?: VersioningDetectOptions) {
 		const discovery = yield* WorkspaceDiscovery;
 		const publishability = yield* PublishabilityDetector;
@@ -249,23 +316,34 @@ export class VersioningStrategy extends S.Class<VersioningStrategy>($I`Versionin
 	});
 
 	/**
-  * The tags a release of `releases` produces under this strategy.
-  *
-  * **Details**
-  *
-  * Under `independent` this is one {@link ReleaseTag} per release, in the
-  * order given. Under `single` and `fixed-group` it is exactly one shared tag
-  * carrying the **first** release's version — every release in a lockstep
-  * batch shares a version by construction, so the choice is only visible on a
-  * batch that should not exist. Whether a batch actually agreed is a property
-  * of that batch rather than of the workspace, so it stays the caller's
-  * one-line check rather than a field here.
-  *
-  * An empty batch produces no tags under either style.
-  *
-  * @param releases - The packages released and their versions.
-  * @param options - Tag formatting overrides, such as `versionPrefix`.
-  */
+	 * The tags a release of `releases` produces under this strategy.
+	 *
+	 * **Details**
+	 *
+	 * Under `independent` this is one {@link ReleaseTag} per release, in the
+	 * order given. Under `single` and `fixed-group` it is exactly one shared tag
+	 * carrying the **first** release's version — every release in a lockstep
+	 * batch shares a version by construction, so the choice is only visible on a
+	 * batch that should not exist. Whether a batch actually agreed is a property
+	 * of that batch rather than of the workspace, so it stays the caller's
+	 * one-line check rather than a field here.
+	 *
+	 * An empty batch produces no tags under either style.
+	 *
+	 * **Example** (Format a shared release tag)
+	 *
+	 * ```ts
+	 * import { VersioningStrategy } from "@beep/scratchpad/effected/workspaces/VersioningStrategy";
+	 *
+	 * const strategy = VersioningStrategy.classify({ packages: ["a"] });
+	 * console.log(strategy.tagsFor([{ name: "a", version: "1.2.3" }])[0]?.value) // 1.2.3
+	 * ```
+	 *
+	 * @param releases - The packages released and their versions.
+	 * @param options - Tag formatting overrides, such as `versionPrefix`.
+	 * @category formatting
+	 * @since 0.0.0
+	 */
 	tagsFor(releases: ReadonlyArray<PackageRelease>, options?: TagFormatOptions): ReadonlyArray<ReleaseTag> {
 		if (releases.length === 0) return [];
 		if (this.perPackageTags) {
