@@ -15,7 +15,19 @@ const $I = $ScratchpadId.create("effected/config-file/ConfigEvent");
  * Carries the resolver's name alongside the path so a subscriber can tell
  * `/etc/app/.apprc` found by `systemEtc` from the same path passed explicitly.
  *
+ * **Example** (Decode a discovered source reference)
+ *
+ * ```ts
+ * import { ConfigSourceRef } from "@beep/scratchpad/effected/config-file/ConfigEvent"
+ * import * as S from "effect/Schema"
+ *
+ * const source = S.decodeUnknownSync(ConfigSourceRef)({ path: "/etc/app/.apprc", resolver: "systemEtc" });
+ * console.log(source.resolver) // systemEtc
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const ConfigSourceRef = S.Struct({
 	/** The filesystem path the value was read from. */
@@ -39,7 +51,19 @@ export const ConfigSourceRef = S.Struct({
  * `reason` string, so every field a subscriber might branch on survives; a
  * subscriber that wants prose can read `error.message`.
  *
+ * **Example** (Decode a parsed event payload)
+ *
+ * ```ts
+ * import { ConfigEventPayload } from "@beep/scratchpad/effected/config-file/ConfigEvent"
+ * import * as S from "effect/Schema"
+ *
+ * const payload = S.decodeUnknownSync(ConfigEventPayload)({ _tag: "Parsed", path: "/app/config.json", codec: "json" });
+ * console.log(payload._tag) // Parsed
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const ConfigEventPayload = S.Union([
 	/** A resolver matched a path. Emitted before the file is read. */
@@ -57,7 +81,8 @@ export const ConfigEventPayload = S.Union([
 	/**
 	 * The merge strategy combined the discovered sources into one value.
 	 *
-	 * @remarks
+	 * **Details**
+	 *
 	 * Carries EVERY contributing source — under `layeredMerge` all of them
 	 * contributed, not just the first.
 	 */
@@ -79,13 +104,27 @@ export const ConfigEventPayload = S.Union([
  * narrows with `switch (payload._tag)`.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type ConfigEventPayload = typeof ConfigEventPayload.Type;
 
 /**
  * A published event: the payload plus the instant it occurred.
  *
+ * **Example** (Timestamp a missing configuration event)
+ *
+ * ```ts
+ * import { ConfigEvent } from "@beep/scratchpad/effected/config-file/ConfigEvent"
+ * import * as DateTime from "effect/DateTime"
+ *
+ * const event = ConfigEvent.make({ timestamp: DateTime.makeUnsafe(0), event: { _tag: "NotFound" } });
+ * console.log(event.event._tag) // NotFound
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class ConfigEvent extends S.Class<ConfigEvent>($I`ConfigEvent`)({
 	/** When the event occurred. */
@@ -98,9 +137,15 @@ export class ConfigEvent extends S.Class<ConfigEvent>($I`ConfigEvent`)({
  * The service shape {@link ConfigEvents} provides.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface ConfigEventsShape {
-	/** The hub every {@link ConfigEvent} is published to. */
+	/**
+ * The hub every {@link ConfigEvent} is published to.
+ *
+ * @since 0.0.0
+ */
 	readonly events: PubSub.PubSub<ConfigEvent>;
 }
 
@@ -120,14 +165,29 @@ export interface ConfigEventsShape {
  * **Example** (Wire a shared config event hub)
  *
  * ```ts
+ * import { ConfigEvents } from "@beep/scratchpad/effected/config-file/ConfigEvent"
+ * import { ConfigFile } from "@beep/scratchpad/effected/config-file/ConfigFile"
+ * import { JsonCodec } from "@beep/scratchpad/effected/config-file/JsonCodec"
+ * import { MergeStrategy } from "@beep/scratchpad/effected/config-file/MergeStrategy"
+ * import * as Layer from "effect/Layer"
+ * import * as S from "effect/Schema"
+ *
+ * class AppShape extends S.Class<AppShape>("AppShape")({ port: S.Finite }) {}
+ * class AppConfig extends ConfigFile.Service<AppConfig, AppShape>()("app/Config") {}
  * const events = ConfigEvents.layer;
  * const AppLayer = Layer.mergeAll(
- * 	events,
- * 	ConfigFile.layer(AppConfig, { schema, codec, resolvers, strategy, events: ConfigEvents }),
+ *   events,
+ *   ConfigFile.layer(AppConfig, {
+ *     schema: AppShape, codec: JsonCodec, resolvers: [],
+ *     strategy: MergeStrategy.firstMatch<AppShape>(), events: ConfigEvents,
+ *   }),
  * );
+ * console.log(Layer.isLayer(AppLayer)) // true
  * ```
  *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class ConfigEvents extends Context.Service<ConfigEvents, ConfigEventsShape>()(
 	$I`ConfigEvents`,
@@ -141,6 +201,23 @@ export class ConfigEvents extends Context.Service<ConfigEvents, ConfigEventsShap
   * config load. Bind this to a const and provide that const — building it
   * twice mints two hubs, and the subscriber would watch the one `emit` does
   * not publish to.
+  *
+  * **Example** (Build a subscriber with the shared hub)
+  *
+  * ```ts
+  * import { ConfigEvents } from "@beep/scratchpad/effected/config-file/ConfigEvent"
+  * import * as Effect from "effect/Effect"
+  * import * as PubSub from "effect/PubSub"
+  *
+  * const events = ConfigEvents.layer;
+  * const subscriber = Effect.gen(function* () {
+  *   const hub = yield* ConfigEvents;
+  *   return yield* PubSub.subscribe(hub.events);
+  * }).pipe(Effect.provide(events));
+  * console.log(Effect.isEffect(subscriber)) // true
+  * ```
+  *
+  * @since 0.0.0
   */
 	static readonly layer: Layer.Layer<ConfigEvents> = Layer.effect(
 		ConfigEvents,

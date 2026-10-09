@@ -1,58 +1,28 @@
 # config-file (lab port of @effected/config-file)
 
-[![npm](https://img.shields.io/npm/v/@effected%2Fconfig-file?label=npm&color=cb3837)](https://www.npmjs.com/package/@effected/config-file)
-[![License: MIT](https://img.shields.io/badge/License-MIT-4caf50.svg)](https://opensource.org/licenses/MIT)
-[![Node.js %3E%3D24.11.0](https://img.shields.io/badge/Node.js-%3E%3D24.11.0-5fa04e.svg)](https://nodejs.org/)
-[![TypeScript 7.0](https://img.shields.io/badge/TypeScript-7.0-3178c6.svg)](https://www.typescriptlang.org/)
-
 Composable config file loading for Effect. Declare a resolver chain — an explicit path, an upward walk from the cwd, the workspace or git root, `/etc` — decode every discovered file through an Effect `Schema`, and combine the results with a merge strategy. JSON, JSONC, YAML and TOML all decode with no extra install. Codecs, resolvers and merge strategies are pluggable seams, and failures arrive as tagged errors carrying structured payloads rather than prose, so "no config anywhere" is routable separately from "the config I found is broken".
-
-> **Pre-`1.0.0`.** This package is part of the `@effected/*` kit, built on stable
-> Effect v4 (`effect` `^4.0.0`) and still in `0.x` development. Stable Effect
-> makes a kit `1.0.0` possible, not automatic. To keep your `effect` and
-> `@effect/*` versions on the line the kit is built and tested against, install
-> [`@effected/pnpm-plugin-effect`](https://www.npmjs.com/package/@effected/pnpm-plugin-effect).
->
-> **Stability: unstable.** This package's API surface is not yet considered
-> complete and may change across `0.x` releases. Pin an exact version — even a
-> package marked *stable* before `1.0.0` can introduce a breaking change by
-> accident, and an exact pin turns that into a type-check error rather than a
-> runtime surprise. Full policy: [release strategy](https://github.com/spencerbeggs/effected#release-strategy).
 
 ## Why @effected/config-file
 
 Config loading is where a well-typed application usually gives up: a library finds a file, parses it, validates it, and reports every one of those distinct failures as the same opaque error with a `reason` string. This package refuses that. Discovery, reading, parsing, validation and persistence each fail with their own tagged error, and each carries its cause structurally — a `ConfigValidationError` hands you the schema issue tree, not `String(ParseError)`. Resolver requirements flow into the layer's type rather than being cast away, the merge step reports every source that contributed rather than only the first, and a loaded document can be handed to `Config` accessors as a v4 `ConfigProvider` layered beneath the environment.
-
-## Install
-
-```bash
-npm install @effected/config-file effect @effect/platform-node
-```
-
-```bash
-pnpm add @effected/config-file effect @effect/platform-node
-```
-
-Requires Node.js >=24.11.0. Every format is covered by that one install; there is no separate package to add for YAML or TOML.
-
-All `@effected/*` packages are ESM-only: the exports maps publish only `import` conditions, so `require()` — including tools that resolve in CJS mode — fails with Node's `ERR_PACKAGE_PATH_NOT_EXPORTED` rather than loading a CJS build that does not exist. Import from an ES module.
-
-`effect` v4 is a peer dependency, and so are `@effected/jsonc`, `@effected/toml`, `@effected/walker` and `@effected/yaml` — the first-party engines behind the JSONC, YAML and TOML codecs, plus the traversal primitive the `upwardWalk`, `workspaceRoot` and `gitRoot` resolvers are built on. Package managers that install peers automatically will pull them in; add them to your manifest explicitly if yours does not. The package declares no runtime dependencies of its own, so nothing it drags into your tree comes from outside `effect` and `@effected/*`.
-
-Reading and writing files needs a `FileSystem` and a `Path` implementation, provided once at the edge — from `@effect/platform-node` on Node.
 
 ## Quick start
 
 Declare a schema, mint a service class for it with `ConfigFile.Service`, and build its live layer with `ConfigFile.layer`. The platform layers are provided once, at the edge:
 
 ```ts
-import { ConfigFile, ConfigResolver, JsonCodec, MergeStrategy } from "@effected/config-file";
+import { ConfigFile } from "@beep/scratchpad/effected/config-file/ConfigFile";
+import { ConfigResolver } from "@beep/scratchpad/effected/config-file/ConfigResolver";
+import { JsonCodec } from "@beep/scratchpad/effected/config-file/JsonCodec";
+import { MergeStrategy } from "@beep/scratchpad/effected/config-file/MergeStrategy";
 import { NodeFileSystem, NodePath } from "@effect/platform-node";
-import { Effect, Layer, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as S from "effect/Schema";
 
-class AppShape extends Schema.Class<AppShape>("AppShape")({
-  port: Schema.Number,
-  host: Schema.String,
+class AppShape extends S.Class<AppShape>("AppShape")({
+  port: S.Finite,
+  host: S.String,
 }) {}
 
 class AppConfig extends ConfigFile.Service<AppConfig, AppShape>()("app/Config") {}
@@ -71,8 +41,10 @@ const program = Effect.gen(function* () {
 
 const PlatformLive = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 
-Effect.runPromise(program.pipe(Effect.provide(AppConfigLive), Effect.provide(PlatformLive))).then(console.log);
-// AppShape { port: 3000, host: "localhost" }
+// With `.apprc` containing { "port": 3000, "host": "localhost" }:
+Effect.runPromise(program.pipe(Effect.provide(AppConfigLive), Effect.provide(PlatformLive))).then((config) => {
+  console.log(`${config.port} ${config.host}`) // 3000 localhost
+});
 ```
 
 `ConfigFile.layer` is a layer-returning *function*, not a layer: calling it twice builds two independent service instances. Bind its result to a const, as above, and provide that const.
@@ -80,10 +52,14 @@ Effect.runPromise(program.pipe(Effect.provide(AppConfigLive), Effect.provide(Pla
 Resolvers are consulted in priority order, highest first. `MergeStrategy.firstMatch` takes the winner; `MergeStrategy.layeredMerge` deep-merges every source that matched, with higher-priority keys overwriting lower ones:
 
 ```ts
-import { ConfigFile, ConfigResolver, MergeStrategy, YamlCodec } from "@effected/config-file";
-import { Schema } from "effect";
+import { ConfigFile } from "@beep/scratchpad/effected/config-file/ConfigFile";
+import { ConfigResolver } from "@beep/scratchpad/effected/config-file/ConfigResolver";
+import { MergeStrategy } from "@beep/scratchpad/effected/config-file/MergeStrategy";
+import { YamlCodec } from "@beep/scratchpad/effected/config-file/YamlCodec";
+import * as Layer from "effect/Layer";
+import * as S from "effect/Schema";
 
-class Settings extends Schema.Class<Settings>("Settings")({ port: Schema.Number }) {}
+class Settings extends S.Class<Settings>("Settings")({ port: S.Finite }) {}
 class SettingsConfig extends ConfigFile.Service<SettingsConfig, Settings>()("app/Settings") {}
 
 export const SettingsLive = ConfigFile.layer(SettingsConfig, {
@@ -96,6 +72,7 @@ export const SettingsLive = ConfigFile.layer(SettingsConfig, {
   ],
   strategy: MergeStrategy.layeredMerge<Settings>(),
 });
+console.log(Layer.isLayer(SettingsLive)) // true
 ```
 
 ## Reading one known path
@@ -103,16 +80,20 @@ export const SettingsLive = ConfigFile.layer(SettingsConfig, {
 Not every caller has a config file — some just have one path a caller already vouched for, such as a CLI's `--config` flag. `ConfigFile.read` is the one-shot escape from the service, the layer and the resolver chain: read, decode and validate a single path, with the schema and codec named per call rather than bound to a service class:
 
 ```ts
-import { ConfigFile, JsonCodec } from "@effected/config-file";
+import { ConfigFile } from "@beep/scratchpad/effected/config-file/ConfigFile";
+import { JsonCodec } from "@beep/scratchpad/effected/config-file/JsonCodec";
 import { NodeFileSystem } from "@effect/platform-node";
-import { Effect, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
 
-class MyConfig extends Schema.Class<MyConfig>("MyConfig")({ port: Schema.Number }) {}
+class MyConfig extends S.Class<MyConfig>("MyConfig")({ port: S.Finite }) {}
 
 const program = ConfigFile.read("./app.config.json", { schema: MyConfig, codec: JsonCodec });
 
-Effect.runPromise(program.pipe(Effect.provide(NodeFileSystem.layer))).then(console.log);
-// MyConfig { port: 3000 }
+// With `app.config.json` containing { "port": 3000 }:
+Effect.runPromise(program.pipe(Effect.provide(NodeFileSystem.layer))).then((config) => {
+  console.log(config.port) // 3000
+});
 ```
 
 It is deliberately read-only and discovery-free — no resolver chain, no `save`/`update`. Reach for `ConfigFile.layer` the moment either is wanted.
@@ -122,10 +103,14 @@ It is deliberately read-only and discovery-free — no resolver chain, no `save`
 Effect's decoder ignores unknown keys by default, which for a config loader means a typo'd section is dropped in silence. The user gets no error, the setting they wrote has no effect, and nothing in the run says why. `parseOptions` threads decode options into every decode the loader performs, on `ConfigFile.layer` and `ConfigFile.read` alike:
 
 ```ts
-import { ConfigFile, ConfigResolver, JsonCodec, MergeStrategy } from "@effected/config-file";
-import { Schema } from "effect";
+import { ConfigFile } from "@beep/scratchpad/effected/config-file/ConfigFile";
+import { ConfigResolver } from "@beep/scratchpad/effected/config-file/ConfigResolver";
+import { JsonCodec } from "@beep/scratchpad/effected/config-file/JsonCodec";
+import { MergeStrategy } from "@beep/scratchpad/effected/config-file/MergeStrategy";
+import * as Layer from "effect/Layer";
+import * as S from "effect/Schema";
 
-class Settings extends Schema.Class<Settings>("Settings")({ port: Schema.Number }) {}
+class Settings extends S.Class<Settings>("Settings")({ port: S.Finite }) {}
 class SettingsConfig extends ConfigFile.Service<SettingsConfig, Settings>()("app/Settings") {}
 
 export const SettingsLive = ConfigFile.layer(SettingsConfig, {
@@ -137,6 +122,7 @@ export const SettingsLive = ConfigFile.layer(SettingsConfig, {
 });
 // A file carrying `{ "port": 3000, "prot": 3001 }` now fails with a
 // ConfigValidationError whose issue tree names the offending path.
+console.log(Layer.isLayer(SettingsLive)) // true
 ```
 
 The `validate` option cannot stand in for this: it runs on the decoded value, by which point the excess keys are already gone. Pair `onExcessProperty: "error"` with `errors: "all"` — the decoder reports only the first problem otherwise, so a file with three typos costs the user three fix-and-rerun cycles. The extra work happens only on a document that is already failing.
@@ -161,17 +147,25 @@ Every failure is a tagged error you route on with `Effect.catchTag`. The tags ex
 `ConfigLoadError`, `ConfigReadError`, `ConfigEncodeError`, `ConfigWriteError`, `ConfigSaveError` and `ConfigUpdateError` are exported unions naming exactly the failures each method can produce — `ConfigEncodeError` is `ConfigWriteError` minus `ConfigFileWriteError`, because `encode` never touches the disk. Catching one tag narrows the union, leaving the rest to propagate:
 
 ```ts
-import type { ConfigFileShape } from "@effected/config-file";
-import { Effect, Schema } from "effect";
+import { ConfigFile, type ConfigFileShape } from "@beep/scratchpad/effected/config-file/ConfigFile";
+import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
 
-class AppShape extends Schema.Class<AppShape>("AppShape")({ port: Schema.Number }) {}
+class AppShape extends S.Class<AppShape>("AppShape")({ port: S.Finite }) {}
 
-const fallback = new AppShape({ port: 3000 });
+const fallback = AppShape.make({ port: 3000 });
 
 // `load` fails with ConfigLoadError. Handling the not-found tag leaves
 // ConfigReadError — the file-is-broken failures, which we let propagate.
 export const loadOrFallback = (config: ConfigFileShape<AppShape>) =>
   config.load.pipe(Effect.catchTag("ConfigFileNotFoundError", () => Effect.succeed(fallback)));
+
+class AppConfig extends ConfigFile.Service<AppConfig, AppShape>()("app/Config") {}
+const program = Effect.gen(function* () {
+  const config = yield* AppConfig;
+  return yield* loadOrFallback(config);
+});
+console.log(Effect.isEffect(program)) // true
 ```
 
 ## Codecs
@@ -190,7 +184,9 @@ One install covers every format, and you still pay only for the parser you name.
 Codecs compose. `EncryptedCodec` wraps any codec with AES-GCM, and `ConfigMigration.make` wraps any codec so parsed content is brought up to the latest version. Each *widens* the error channel rather than flattening its failures into the inner codec's error:
 
 ```ts
-import { ConfigMigration, EncryptedCodec, EncryptedCodecKey, JsonCodec } from "@effected/config-file";
+import { ConfigMigration } from "@beep/scratchpad/effected/config-file/ConfigMigration";
+import { EncryptedCodec, EncryptedCodecKey } from "@beep/scratchpad/effected/config-file/EncryptedCodec";
+import { JsonCodec } from "@beep/scratchpad/effected/config-file/JsonCodec";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
@@ -210,6 +206,7 @@ const migrating = ConfigMigration.make({
 
 // `parse` now fails with ConfigCodecError | ConfigMigrationError | ConfigEncryptionError.
 export const secret = EncryptedCodec(migrating, EncryptedCodecKey.fromPassphrase("hunter2", new Uint8Array(16)));
+console.log(Effect.isEffect(secret.parse("encrypted-config"))) // true
 ```
 
 ## Features
@@ -228,7 +225,6 @@ export const secret = EncryptedCodec(migrating, EncryptedCodecKey.fromPassphrase
 ## License
 
 [MIT](LICENSE)
-
 
 ## Port notes
 

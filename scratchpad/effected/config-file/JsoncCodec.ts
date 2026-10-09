@@ -15,7 +15,19 @@ import { ConfigCodecError } from "./ConfigCodec.ts";
  * Both directions preserve the underlying failure structurally in `cause` —
  * never stringified.
  *
+ * **Example** (Parse comments and a trailing comma)
+ *
+ * ```ts
+ * import { JsoncCodec } from "@beep/scratchpad/effected/config-file/JsoncCodec";
+ * import * as Effect from "effect/Effect";
+ *
+ * const value = Effect.runSync(JsoncCodec.parse('{ // HTTP port\n"port": 3000, }'));
+ * console.log(JSON.stringify(value)) // {"port":3000}
+ * ```
+ *
  * @public
+ * @category codecs
+ * @since 0.0.0
  */
 export const JsoncCodec: ConfigCodec = {
 	name: "jsonc",

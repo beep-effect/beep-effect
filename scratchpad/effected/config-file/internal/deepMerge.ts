@@ -13,6 +13,17 @@ import * as R from "effect/Record";
  * instance loses its prototype, so `instanceof` fails and its getters vanish.
  * Recursion is gated on this predicate so nested values of those kinds stay
  * atomic — the higher-priority source wins them whole.
+
+ * **Example** (Distinguish mergeable nested objects from dates)
+ *
+ * ```ts
+ * import { isPlainObject } from "@beep/scratchpad/effected/config-file/internal/deepMerge";
+ *
+ * console.log(isPlainObject({ port: 8080 }), isPlainObject(new Date(0))); // true false
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
  */
 export const isPlainObject = (value: unknown): value is Record<string, unknown> => {
 	if (!P.isObjectKeyword(value) || P.isFunction(value) || A.isArray(value)) return false;
@@ -38,6 +49,19 @@ const isRecordLike = (value: unknown): value is Record<string, unknown> =>
  * Requiring an identical prototype is what keeps the merge honest: a document
  * decoded through `Schema.Class` merges with another of the same class and
  * keeps its identity, and nothing else is ever silently reshaped.
+
+ * **Example** (Check top-level prototype compatibility)
+ *
+ * ```ts
+ * import { canMerge } from "@beep/scratchpad/effected/config-file/internal/deepMerge";
+ *
+ * class Settings { port = 8080; }
+ * console.log(canMerge(new Settings(), new Settings())); // true
+ * console.log(canMerge(new Settings(), { port: 3000 })); // false
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
  */
 export const canMerge: {
 	(b: unknown): (a: unknown) => boolean;
@@ -59,6 +83,21 @@ export const canMerge: {
  *
  * Only own enumerable keys are consulted (`Object.hasOwn`), so a prototype
  * getter on `target` never shadows a real key on `source`.
+
+ * **Example** (Keep higher priority keys and merge nested sections)
+ *
+ * ```ts
+ * import { deepMerge } from "@beep/scratchpad/effected/config-file/internal/deepMerge";
+ *
+ * const merged = deepMerge(
+ *   { server: { port: 8080 }, mode: "local" },
+ *   { server: { port: 3000, host: "localhost" }, mode: "base" },
+ * );
+ * console.log(JSON.stringify(merged)); // {"server":{"port":8080,"host":"localhost"},"mode":"local"}
+ * ```
+ *
+ * @category combinators
+ * @since 0.0.0
  */
 export const deepMerge: {
 	(source: Record<string, unknown>): <T extends Record<string, unknown>>(target: T) => T;

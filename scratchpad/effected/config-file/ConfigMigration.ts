@@ -18,18 +18,64 @@ const $I = $ScratchpadId.create("effected/config-file/ConfigMigration");
  * the new version back. `cause` preserves the underlying failure by identity
  * when the failing step signals recoverable failure with `Effect.fail`.
  *
+ * **Example** (Inspect the failed migration phase)
+ *
+ * ```ts
+ * import { ConfigMigrationError } from "@beep/scratchpad/effected/config-file/ConfigMigration";
+ *
+ * const error = ConfigMigrationError.make({
+ *   version: 2, name: "rename-host", phase: "apply", cause: new Error("Invalid config"),
+ * });
+ * console.log(error.message) // Migration "rename-host" (v2) failed during apply
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class ConfigMigrationError extends S.TaggedError<ConfigMigrationError>($I`ConfigMigrationError`)("ConfigMigrationError", {
-	/** The target version of the step that failed. `0` when reading the version failed. */
+	/**
+	 * The target version of the step that failed. `0` when reading the version failed.
+	 *
+	 * @since 0.0.0
+	 */
 	version: S.declare(P.isNumber).annotateKey({ description: "The target version of the step that failed. `0` when reading the version failed." }),
-	/** The name of the step that failed; empty when reading the version failed. */
+	/**
+	 * The name of the step that failed; empty when reading the version failed.
+	 *
+	 * @since 0.0.0
+	 */
 	name: S.String.annotateKey({ description: "The name of the step that failed; empty when reading the version failed." }),
-	/** Which stage of a migration step failed. */
+	/**
+	 * Which stage of a migration step failed.
+	 *
+	 * @since 0.0.0
+	 */
 	phase: S.Literals(["read-version", "apply", "write-version"]).annotateKey({ description: "Which stage of a migration step failed." }),
-	/** The underlying failure, preserved structurally. */
+	/**
+	 * The underlying failure, preserved structurally.
+	 *
+	 * @since 0.0.0
+	 */
 	cause: S.Defect().annotateKey({ description: "The underlying failure, preserved structurally." }),
 }, $I.annote("ConfigMigrationError", { description: "Indicates that a versioned config migration failed." })) {
+	/**
+	 * Describes a version-read failure or identifies the step and phase that failed.
+	 *
+	 * **Example** (Read a migration failure message)
+	 *
+	 * ```ts
+	 * import { ConfigMigrationError } from "@beep/scratchpad/effected/config-file/ConfigMigration";
+	 *
+	 * const error = ConfigMigrationError.make({
+	 *   version: 2, name: "rename-host", phase: "apply", cause: new Error("Invalid config"),
+	 * });
+	 * console.log(error.message) // Migration "rename-host" (v2) failed during apply
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return this.phase === "read-version"
 			? "Failed to read the config version"
@@ -45,24 +91,50 @@ export class ConfigMigrationError extends S.TaggedError<ConfigMigrationError>($I
  * Steps are forward-only: there is no reverse (`down`) migration.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface ConfigFileMigration<E = unknown> {
-	/** The version this step migrates the config to. Steps run in ascending order. */
+	/**
+	 * The version this step migrates the config to. Steps run in ascending order.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly version: number;
-	/** A label for the step, carried on {@link ConfigMigrationError} when it fails. */
+	/**
+	 * A label for the step, carried on {@link ConfigMigrationError} when it fails.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly name: string;
 	/**
 	 * Transforms the parsed config. Signal recoverable failure with `Effect.fail`;
 	 * a synchronous `throw` is treated as a defect, not a `ConfigMigrationError`.
+	 *
+	 * @since 0.0.0
 	 */
 	readonly up: (raw: unknown) => Effect.Effect<unknown, E>;
 }
 
-/** How the version number is read from and written to the parsed config. @public */
+/**
+ * How the version number is read from and written to the parsed config.
+ *
+ * @public
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface VersionAccess<E = unknown> {
-	/** Read the current version from the parsed config. */
+	/**
+	 * Read the current version from the parsed config.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly get: (raw: unknown) => Effect.Effect<number, E>;
-	/** Return the config with `version` written back. */
+	/**
+	 * Return the config with `version` written back.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly set: (raw: unknown, version: number) => Effect.Effect<unknown, E>;
 }
 
@@ -81,16 +153,49 @@ const defaultVersionAccess = {
 	set: (raw: unknown, version: number) => Effect.succeed({ ...(P.isObjectKeyword(raw) ? raw : P.isString(raw) && Str.isNonEmpty(raw) ? Str.split(raw, "") : {}), version }),
 };
 
-/** Reads and writes a top-level `version` field. @public */
+/**
+ * Reads and writes a top-level `version` field.
+ *
+ * **Example** (Read the default top-level version)
+ *
+ * ```ts
+ * import { VersionAccess } from "@beep/scratchpad/effected/config-file/ConfigMigration";
+ * import * as Effect from "effect/Effect";
+ *
+ * console.log(Effect.runSync(VersionAccess.default.get({ version: 2 }))) // 2
+ * ```
+ *
+ * @public
+ * @category utilities
+ * @since 0.0.0
+ */
 export const VersionAccess = { default: defaultVersionAccess } as const;
 
-/** Options for {@link ConfigMigration.make}. @public */
+/**
+ * Options for {@link ConfigMigration.make}.
+ *
+ * @public
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface ConfigMigrationOptions<EM = unknown, EV = unknown> {
-	/** The codec being wrapped. */
+	/**
+	 * The codec being wrapped.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly codec: ConfigCodec;
-	/** The migration steps; they run in ascending `version` order. */
+	/**
+	 * The migration steps; they run in ascending `version` order.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly migrations: ReadonlyArray<ConfigFileMigration<EM>>;
-	/** How the version is read and written; defaults to {@link (VersionAccess:variable).default}, a top-level `version` field. */
+	/**
+	 * How the version is read and written; defaults to {@link (VersionAccess:variable).default}, a top-level `version` field.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly versionAccess?: VersionAccess<EV>;
 }
 
@@ -140,7 +245,35 @@ const make: (options: ConfigMigrationOptions) => ConfigCodec<ConfigCodecError | 
 	};
 };
 
-/** Versioned migration support for config codecs. @public */
+/**
+ * Versioned migration support for config codecs.
+ *
+ * **Example** (Migrate a parsed configuration document)
+ *
+ * ```ts
+ * import { ConfigMigration } from "@beep/scratchpad/effected/config-file/ConfigMigration";
+ * import { JsonCodec } from "@beep/scratchpad/effected/config-file/JsonCodec";
+ * import * as Effect from "effect/Effect";
+ * import * as S from "effect/Schema";
+ *
+ * const codec = ConfigMigration.make({
+ *   codec: JsonCodec,
+ *   migrations: [{
+ *     version: 2,
+ *     name: "rename-host",
+ *     up: (raw) => S.decodeUnknownEffect(S.Record(S.String, S.Unknown))(raw).pipe(
+ *       Effect.map((doc) => ({ ...doc, host: doc.hostname })),
+ *     ),
+ *   }],
+ * });
+ * const migrated = Effect.runSync(codec.parse('{"version":1,"hostname":"localhost"}'));
+ * console.log(JSON.stringify(migrated)) // {"version":2,"hostname":"localhost","host":"localhost"}
+ * ```
+ *
+ * @public
+ * @category utilities
+ * @since 0.0.0
+ */
 export class ConfigMigration {
 	private constructor() {}
 
@@ -154,25 +287,29 @@ export class ConfigMigration {
 	 * in its error type.
 	 *
 	 * **Example** (Migrate a hostname field)
+	 *
 	 * ```ts
-	 * import { ConfigMigration, JsonCodec } from "./index.ts";
+	 * import { ConfigMigration } from "@beep/scratchpad/effected/config-file/ConfigMigration";
+	 * import { JsonCodec } from "@beep/scratchpad/effected/config-file/JsonCodec";
 	 * import * as Effect from "effect/Effect";
 	 * import * as S from "effect/Schema";
 	 *
 	 * const codec = ConfigMigration.make({
-	 * 	codec: JsonCodec,
-	 * 	migrations: [
-	 * 		{
-	 * 			version: 2,
-	 * 			name: "rename-host",
-	 * 			up: (raw) =>
-	 * 				S.decodeUnknownEffect(S.Record(S.String, S.Unknown))(raw).pipe(
-	 * 					Effect.map((doc) => ({ ...doc, host: doc.hostname })),
-	 * 				),
-	 * 		},
-	 * 	],
+	 *   codec: JsonCodec,
+	 *   migrations: [{
+	 *     version: 2,
+	 *     name: "rename-host",
+	 *     up: (raw) => S.decodeUnknownEffect(S.Record(S.String, S.Unknown))(raw).pipe(
+	 *       Effect.map((doc) => ({ ...doc, host: doc.hostname })),
+	 *     ),
+	 *   }],
 	 * });
+	 * const migrated = Effect.runSync(codec.parse('{"version":1,"hostname":"localhost"}'));
+	 * console.log(JSON.stringify(migrated)) // {"version":2,"hostname":"localhost","host":"localhost"}
 	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
 	 */
 	static readonly make = make;
 }

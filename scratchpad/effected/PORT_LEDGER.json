@@ -3,10 +3,10 @@
   "effectedCommit": "af7566a9da2eff169cb74955efcc5ede1e5de9f8",
   "startedAt": "2026-10-07T06:36:54.420Z",
   "lastCheckpoint": {
-    "module": "tsconfig-json",
+    "module": "config-file",
     "stage": 2,
     "commit": null,
-    "at": "2026-10-09T16:19:43.484Z"
+    "at": "2026-10-09T16:19:50.090Z"
   },
   "rows": [
     {
@@ -8598,7 +8598,7 @@
       "module": "config-file",
       "wave": 3,
       "position": 3,
-      "stage": 1,
+      "stage": 2,
       "status": "in-progress",
       "provisionalHome": "tooling/library",
       "upstreamPaths": {
@@ -9005,12 +9005,17 @@
       "commits": [
         {
           "stage": 0,
+          "sha": "560324282987f6f0fe59832a8130a4e1c806cfeb"
+        },
+        {
+          "stage": 1,
           "sha": null
         }
       ],
       "blocked": null,
       "notes": [
-        "2026-10-09T11:19:54.417Z S1: green under tsgo, oxlint and the four beep laws; upstream tests pass; audit green (parity strict)"
+        "2026-10-09T11:19:54.417Z S1: green under tsgo, oxlint and the four beep laws; upstream tests pass; audit green (parity strict)",
+        "2026-10-09T16:19:50.090Z S2: S2 green: docgen with all enforcement flags and the JSDoc law; carriers converted; README adapted (section 10.3)"
       ],
       "closedAt": null
     },

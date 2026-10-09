@@ -26,55 +26,69 @@ const JsonValue = S.fromJsonString(S.Unknown);
  * platform layer at the edge.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface ConfigResolver<R = never> {
-	/** The resolver's name, reported in `searched` lists, events and `ConfigSource.resolver`. */
+	/**
+	 * The resolver's name, reported in `searched` lists, events and `ConfigSource.resolver`.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly name: string;
-	/** Look up the config file's path: `Option.some(path)` when found, `Option.none()` otherwise. */
+	/**
+	 * Look up the config file's path: `Option.some(path)` when found, `Option.none()` otherwise.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly resolve: Effect.Effect<O.Option<string>, never, R>;
 	/**
-  * The same lookup, reporting **how** the file was found rather than only
-  * where.
-  *
-  * **Details**
-  *
-  * Optional, and optional forever: a hand-rolled resolver that omits it is a
-  * complete `ConfigResolver`, and the pipeline falls back to `resolve`,
-  * reporting a bare `{ path }` match. Every built-in implements it, and
-  * derives `resolve` from it, so the two can never disagree.
-  *
-  * It exists because a resolver's `name` cannot identify *which* candidate
-  * matched once one resolver probes several — `upwardWalk` with a
-  * `filenames` list, or with `subpaths`, is one resolver with many
-  * candidates. A consumer that needs the anchor directory (a CLI computing
-  * its project root from the discovered config) reads
-  * {@link ConfigMatch.dir} instead of string-matching the discovered path's
-  * tail.
-  */
+	 * The same lookup, reporting **how** the file was found rather than only
+	 * where.
+	 *
+	 * **Details**
+	 *
+	 * Optional, and optional forever: a hand-rolled resolver that omits it is a
+	 * complete `ConfigResolver`, and the pipeline falls back to `resolve`,
+	 * reporting a bare `{ path }` match. Every built-in implements it, and
+	 * derives `resolve` from it, so the two can never disagree.
+	 *
+	 * It exists because a resolver's `name` cannot identify *which* candidate
+	 * matched once one resolver probes several — `upwardWalk` with a
+	 * `filenames` list, or with `subpaths`, is one resolver with many
+	 * candidates. A consumer that needs the anchor directory (a CLI computing
+	 * its project root from the discovered config) reads
+	 * {@link ConfigMatch.dir} instead of string-matching the discovered path's
+	 * tail.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly resolveMatch?: Effect.Effect<O.Option<ConfigMatch>, never, R>;
 	/**
-  * The same lookup, additionally reporting every candidate path actually
-  * checked on disk, in probe order.
-  *
-  * **Details**
-  *
-  * Optional, and optional forever: a hand-rolled resolver that omits it is a
-  * complete `ConfigResolver`, and the pipeline falls back to `resolveMatch`
-  * (then `resolve`), contributing nothing to
-  * `ConfigFileNotFoundError.candidates` — the failure-path mirror of
-  * `ConfigSource.match` degrading to a bare path. Every built-in implements
-  * it, and derives the other two from it, so the three can never disagree.
-  *
-  * It exists because a resolver's `name` under-reports a search once one
-  * resolver probes several candidates: after the `filenames`/`subpaths`
-  * forms of `upwardWalk`, one `searched` entry can hide dozens of probed
-  * paths, and "nothing found, here is what I looked for" becomes less
-  * informative than the chain actually is.
-  *
-  * `probed` reports what the lookup CHECKED, not everything it could have:
-  * a short-circuiting walk lists the prefix ending at the match, and an
-  * absorbed filesystem failure lists nothing.
-  */
+	 * The same lookup, additionally reporting every candidate path actually
+	 * checked on disk, in probe order.
+	 *
+	 * **Details**
+	 *
+	 * Optional, and optional forever: a hand-rolled resolver that omits it is a
+	 * complete `ConfigResolver`, and the pipeline falls back to `resolveMatch`
+	 * (then `resolve`), contributing nothing to
+	 * `ConfigFileNotFoundError.candidates` — the failure-path mirror of
+	 * `ConfigSource.match` degrading to a bare path. Every built-in implements
+	 * it, and derives the other two from it, so the three can never disagree.
+	 *
+	 * It exists because a resolver's `name` under-reports a search once one
+	 * resolver probes several candidates: after the `filenames`/`subpaths`
+	 * forms of `upwardWalk`, one `searched` entry can hide dozens of probed
+	 * paths, and "nothing found, here is what I looked for" becomes less
+	 * informative than the chain actually is.
+	 *
+	 * `probed` reports what the lookup CHECKED, not everything it could have:
+	 * a short-circuiting walk lists the prefix ending at the match, and an
+	 * absorbed filesystem failure lists nothing.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly resolveProbe?: Effect.Effect<ConfigProbe, never, R>;
 }
 
@@ -91,15 +105,33 @@ export interface ConfigResolver<R = never> {
  * exactly as the caller spelled them.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface ConfigMatch {
-	/** The filesystem path that matched. */
+	/**
+	 * The filesystem path that matched.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly path: string;
-	/** The directory the matching candidate was resolved against, when the resolver has one. */
+	/**
+	 * The directory the matching candidate was resolved against, when the resolver has one.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly dir?: string;
-	/** The `subpaths` entry that matched, when the resolver takes `subpaths`. */
+	/**
+	 * The `subpaths` entry that matched, when the resolver takes `subpaths`.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly subpath?: string;
-	/** The `filenames`/`filename` entry that matched, when the resolver takes one. */
+	/**
+	 * The `filenames`/`filename` entry that matched, when the resolver takes one.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly filename?: string;
 }
 
@@ -116,14 +148,22 @@ export interface ConfigMatch {
  * where; `probed` says what lost, and where the search looked.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface ConfigProbe {
-	/** The match, when a candidate existed on disk. */
+	/**
+	 * The match, when a candidate existed on disk.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly match: O.Option<ConfigMatch>;
 	/**
 	 * Candidate paths checked on disk, in probe order. Empty when the lookup
 	 * produced no candidate to report — no root found, a platform short-circuit,
 	 * or a filesystem failure absorbed across the whole probe.
+	 *
+	 * @since 0.0.0
 	 */
 	readonly probed: ReadonlyArray<string>;
 }
@@ -208,44 +248,82 @@ const staticDir = (options: {
  * `subpaths` cross product.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type UpwardWalkOptions =
 	| {
-			/** The single file name probed at each ancestor directory. */
+			/**
+			 * The single file name probed at each ancestor directory.
+			 *
+			 * @since 0.0.0
+			 */
 			readonly filename: string;
 			readonly filenames?: undefined;
-			/** Where the walk starts. Defaults to the process cwd. */
+			/**
+			 * Where the walk starts. Defaults to the process cwd.
+			 *
+			 * @since 0.0.0
+			 */
 			readonly cwd?: string;
-			/** An absolute ceiling the walk stops at, inclusive. */
+			/**
+			 * An absolute ceiling the walk stops at, inclusive.
+			 *
+			 * @since 0.0.0
+			 */
 			readonly stopAt?: string;
-			/** Directories probed under each ancestor, in order. Defaults to `["."]`. */
+			/**
+			 * Directories probed under each ancestor, in order. Defaults to `["."]`.
+			 *
+			 * @since 0.0.0
+			 */
 			readonly subpaths?: ReadonlyArray<string>;
 			/**
-    * The resolver's reported name. Defaults to `"walk"`.
-    *
-    * **Gotchas**
-    *
-    * Two `upwardWalk` entries in one chain otherwise report the same
-    * `"walk"`, so `ConfigSource.resolver` cannot tell them apart. Pass a
-    * distinct name per call — or read `ConfigSource.match` instead, which
-    * identifies the matching candidate rather than the resolver.
-    */
+			 * The resolver's reported name. Defaults to `"walk"`.
+			 *
+			 * **Gotchas**
+			 *
+			 * Two `upwardWalk` entries in one chain otherwise report the same
+			 * `"walk"`, so `ConfigSource.resolver` cannot tell them apart. Pass a
+			 * distinct name per call — or read `ConfigSource.match` instead, which
+			 * identifies the matching candidate rather than the resolver.
+			 *
+			 * @since 0.0.0
+			 */
 			readonly name?: string;
 	  }
 	| {
 			/**
 			 * The candidate file names probed at each ancestor directory, in order,
 			 * before the walk ascends.
+			 *
+			 * @since 0.0.0
 			 */
 			readonly filenames: ReadonlyArray<string>;
 			readonly filename?: undefined;
-			/** Where the walk starts. Defaults to the process cwd. */
+			/**
+			 * Where the walk starts. Defaults to the process cwd.
+			 *
+			 * @since 0.0.0
+			 */
 			readonly cwd?: string;
-			/** An absolute ceiling the walk stops at, inclusive. */
+			/**
+			 * An absolute ceiling the walk stops at, inclusive.
+			 *
+			 * @since 0.0.0
+			 */
 			readonly stopAt?: string;
-			/** Directories probed under each ancestor, in order. Defaults to `["."]`. */
+			/**
+			 * Directories probed under each ancestor, in order. Defaults to `["."]`.
+			 *
+			 * @since 0.0.0
+			 */
 			readonly subpaths?: ReadonlyArray<string>;
-			/** The resolver's reported name. Defaults to `"walk"`. */
+			/**
+			 * The resolver's reported name. Defaults to `"walk"`.
+			 *
+			 * @since 0.0.0
+			 */
 			readonly name?: string;
 	  };
 
@@ -393,6 +471,8 @@ const systemEtc = (options: {
 	 * System config root. Defaults to `/etc`. Overridable primarily so tests
 	 * can point at a writable temp directory — the real `/etc` is not writable
 	 * in test environments — and as an escape hatch for non-standard layouts.
+	 *
+	 * @since 0.0.0
 	 */
 	readonly dir?: string;
 }): ConfigResolver<FileSystem.FileSystem | Path.Path> =>
@@ -421,39 +501,110 @@ const systemEtc = (options: {
 /**
  * Built-in resolvers, in the order a typical chain uses them.
  *
+ * **Example** (Choose an explicit-path resolver)
+ *
+ * ```ts
+ * import { ConfigResolver } from "@beep/scratchpad/effected/config-file/ConfigResolver";
+ *
+ * const resolver = ConfigResolver.explicitPath("/app/config.json");
+ * console.log(resolver.name) // explicit
+ * ```
+ *
  * @public
+ * @category utilities
+ * @since 0.0.0
  */
 export class ConfigResolver {
 	private constructor() {}
 
-	/** Resolves to `target` when it exists on disk, or `Option.none()` when it does not — no walking, no filename convention. */
+	/**
+	 * Resolves to `target` when it exists on disk, or `Option.none()` when it does not — no walking, no filename convention.
+	 *
+	 * **Example** (Construct an exact-path lookup)
+	 *
+	 * ```ts
+	 * import { ConfigResolver } from "@beep/scratchpad/effected/config-file/ConfigResolver";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const resolver = ConfigResolver.explicitPath("/app/config.json");
+	 * console.log(resolver.name) // explicit
+	 * console.log(Effect.isEffect(resolver.resolve)) // true
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	static readonly explicitPath = explicitPath;
 
-	/** Resolves `path.join(dir, filename)` when it exists on disk, or `Option.none()` when it does not. */
+	/**
+	 * Resolves `path.join(dir, filename)` when it exists on disk, or `Option.none()` when it does not.
+	 *
+	 * **Example** (Construct a fixed-directory lookup)
+	 *
+	 * ```ts
+	 * import { ConfigResolver } from "@beep/scratchpad/effected/config-file/ConfigResolver";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const resolver = ConfigResolver.staticDir({ dir: "/app", filename: "config.json" });
+	 * console.log(resolver.name) // static
+	 * console.log(Effect.isEffect(resolver.resolve)) // true
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	static readonly staticDir = staticDir;
 
 	/**
-  * Ascends from `cwd` (or the process cwd) toward `stopAt`, resolving the
-  * first `subpaths/filename` combination found at each level.
-  *
-  * **Details**
-  *
-  * `filenames` replaces `filename` with a per-directory candidate list: every
-  * name is probed at one ancestor before the walk ascends, so a child's
-  * second candidate still beats a parent's first. Registering one resolver
-  * per filename cannot do this — the chain runs a resolver to the filesystem
-  * root before starting the next.
-  *
-  * `name` overrides the reported `"walk"` so two walks in one chain are
-  * distinguishable; `ConfigSource.match` identifies the matching candidate
-  * more precisely still.
-  */
+	 * Ascends from `cwd` (or the process cwd) toward `stopAt`, resolving the
+	 * first `subpaths/filename` combination found at each level.
+	 *
+	 * **Details**
+	 *
+	 * `filenames` replaces `filename` with a per-directory candidate list: every
+	 * name is probed at one ancestor before the walk ascends, so a child's
+	 * second candidate still beats a parent's first. Registering one resolver
+	 * per filename cannot do this — the chain runs a resolver to the filesystem
+	 * root before starting the next.
+	 *
+	 * `name` overrides the reported `"walk"` so two walks in one chain are
+	 * distinguishable; `ConfigSource.match` identifies the matching candidate
+	 * more precisely still.
+	 *
+	 * **Example** (Probe multiple filenames at each ancestor)
+	 *
+	 * ```ts
+	 * import { ConfigResolver } from "@beep/scratchpad/effected/config-file/ConfigResolver";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const resolver = ConfigResolver.upwardWalk({ cwd: "/app/src", filenames: [".app.json", "app.json"], name: "project" });
+	 * console.log(resolver.name) // project
+	 * console.log(Effect.isEffect(resolver.resolve)) // true
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	static readonly upwardWalk = upwardWalk;
 
 	/**
 	 * Ascends from `cwd` to the nearest workspace root — a directory with a
 	 * `pnpm-workspace.yaml`, or a `package.json` carrying a `workspaces` field —
 	 * then resolves the first `subpaths/filename` combination found under it.
+	 *
+	 * **Example** (Anchor a lookup at the workspace root)
+	 *
+	 * ```ts
+	 * import { ConfigResolver } from "@beep/scratchpad/effected/config-file/ConfigResolver";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const resolver = ConfigResolver.workspaceRoot({ cwd: "/app/src", filename: "config.json", subpaths: [".", ".config"] });
+	 * console.log(resolver.name) // workspace
+	 * console.log(Effect.isEffect(resolver.resolve)) // true
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
 	 */
 	static readonly workspaceRoot = workspaceRoot;
 
@@ -461,12 +612,40 @@ export class ConfigResolver {
 	 * Ascends from `cwd` to the nearest git root — a directory containing a
 	 * `.git` entry, directory or file (the latter for a worktree) — then
 	 * resolves the first `subpaths/filename` combination found under it.
+	 *
+	 * **Example** (Anchor a lookup at the Git root)
+	 *
+	 * ```ts
+	 * import { ConfigResolver } from "@beep/scratchpad/effected/config-file/ConfigResolver";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const resolver = ConfigResolver.gitRoot({ cwd: "/app/src", filename: "config.json" });
+	 * console.log(resolver.name) // git
+	 * console.log(Effect.isEffect(resolver.resolve)) // true
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
 	 */
 	static readonly gitRoot = gitRoot;
 
 	/**
 	 * Resolves `<dir>/<app>/<filename>` under the system config root (`/etc` by
 	 * default). Always `Option.none()` on Windows, where `/etc` has no meaning.
+	 *
+	 * **Example** (Construct a system configuration lookup)
+	 *
+	 * ```ts
+	 * import { ConfigResolver } from "@beep/scratchpad/effected/config-file/ConfigResolver";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const resolver = ConfigResolver.systemEtc({ app: "my-app", filename: "config.json" });
+	 * console.log(resolver.name) // system
+	 * console.log(Effect.isEffect(resolver.resolve)) // true
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
 	 */
 	static readonly systemEtc = systemEtc;
 }

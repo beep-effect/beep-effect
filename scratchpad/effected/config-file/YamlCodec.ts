@@ -15,7 +15,21 @@ import { ConfigCodecError } from "./ConfigCodec.ts";
  * preserve the underlying failure structurally in `cause` — never
  * stringified.
  *
+ * **Example** (Parse and stringify a port setting)
+ *
+ * ```ts
+ * import { YamlCodec } from "@beep/scratchpad/effected/config-file/YamlCodec";
+ * import * as Effect from "effect/Effect";
+ *
+ * const parsed = Effect.runSync(YamlCodec.parse("port: 8080"));
+ * console.log(JSON.stringify(parsed)); // {"port":8080}
+ * const encoded = Effect.runSync(YamlCodec.stringify({ port: 8080 }));
+ * console.log(encoded.trim()); // port: 8080
+ * ```
+ *
  * @public
+ * @category codecs
+ * @since 0.0.0
  */
 export const YamlCodec: ConfigCodec = {
 	name: "yaml",

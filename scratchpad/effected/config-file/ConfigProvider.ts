@@ -50,18 +50,23 @@ import type { ConfigFileShape, ConfigLoadError } from "./ConfigFile.ts";
  * **Example** (Use file configuration as an environment fallback)
  *
  * ```ts
- * import { asConfigProvider } from "./index.ts";
+ * import { ConfigFile } from "@beep/scratchpad/effected/config-file/ConfigFile";
+ * import { asConfigProvider } from "@beep/scratchpad/effected/config-file/ConfigProvider";
  * import * as ConfigProvider from "effect/ConfigProvider";
  * import * as Effect from "effect/Effect";
  *
+ * class AppConfig extends ConfigFile.Service<AppConfig, { readonly port: string }>()("app/Config") {}
  * const program = Effect.gen(function* () {
- * 	const cfg = yield* AppConfig; // a ConfigFile.Service class
- * 	const fileProvider = yield* asConfigProvider(cfg);
- * 	return ConfigProvider.orElse(ConfigProvider.fromEnv(), fileProvider);
+ *   const cfg = yield* AppConfig;
+ *   const fileProvider = yield* asConfigProvider(cfg);
+ *   return ConfigProvider.orElse(ConfigProvider.fromEnv(), fileProvider);
  * });
+ * console.log(Effect.isEffect(program)) // true
  * ```
  *
  * @public
+ * @category adapters
+ * @since 0.0.0
  */
 export const asConfigProvider = <A>(
 	service: ConfigFileShape<A>,
@@ -72,17 +77,21 @@ export const asConfigProvider = <A>(
  * Options for {@link layerConfigProvider}.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface LayerConfigProviderOptions {
 	/**
-  * Make the config file the primary source, consulted before the ambient
-  * provider rather than after it.
-  *
-  * **Details**
-  *
-  * Defaults to `false`, which is the precedence almost every application
-  * wants: an environment variable overrides the file it was deployed with.
-  */
+	 * Make the config file the primary source, consulted before the ambient
+	 * provider rather than after it.
+	 *
+	 * **Details**
+	 *
+	 * Defaults to `false`, which is the precedence almost every application
+	 * wants: an environment variable overrides the file it was deployed with.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly asPrimary?: boolean;
 }
 
@@ -108,10 +117,23 @@ export interface LayerConfigProviderOptions {
  * **Example** (Provide a config service to the fallback provider layer)
  *
  * ```ts
+ * import { ConfigFile } from "@beep/scratchpad/effected/config-file/ConfigFile";
+ * import { layerConfigProvider } from "@beep/scratchpad/effected/config-file/ConfigProvider";
+ * import { JsonCodec } from "@beep/scratchpad/effected/config-file/JsonCodec";
+ * import { MergeStrategy } from "@beep/scratchpad/effected/config-file/MergeStrategy";
+ * import * as Layer from "effect/Layer";
+ * import * as S from "effect/Schema";
+ *
+ * const AppShape = S.Struct({ port: S.String });
+ * class AppConfig extends ConfigFile.Service<AppConfig, typeof AppShape.Type>()("app/Config") {}
+ * const AppConfigLive = ConfigFile.layer(AppConfig, { schema: AppShape, codec: JsonCodec, resolvers: [], strategy: MergeStrategy.firstMatch() });
  * const stack = layerConfigProvider(AppConfig).pipe(Layer.provide(AppConfigLive));
+ * console.log(Layer.isLayer(stack)) // true
  * ```
  *
  * @public
+ * @category layers
+ * @since 0.0.0
  */
 export const layerConfigProvider: {
 	(options?: LayerConfigProviderOptions): <Self, A>(tag: Context.Key<Self, ConfigFileShape<A>>) => Layer.Layer<never, ConfigLoadError, Self>;

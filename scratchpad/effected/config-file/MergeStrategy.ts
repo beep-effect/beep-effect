@@ -8,6 +8,8 @@ import { canMerge, deepMerge } from "./internal/deepMerge.ts";
  * A single configuration source discovered during a resolver-chain pass.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface ConfigSource<A> {
 	/** The filesystem path the value was read from. */
@@ -31,7 +33,13 @@ export interface ConfigSource<A> {
 	readonly value: A;
 }
 
-/** A source list guaranteed non-empty by the caller. @public */
+/**
+ * A source list guaranteed non-empty by the caller.
+ *
+ * @public
+ * @category type-level
+ * @since 0.0.0
+ */
 export type NonEmptySources<A> = readonly [ConfigSource<A>, ...ConfigSource<A>[]];
 
 /**
@@ -45,6 +53,8 @@ export type NonEmptySources<A> = readonly [ConfigSource<A>, ...ConfigSource<A>[]
  * cannot fail.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface MergeStrategy<A> {
 	/** The strategy's name, reported on the `Resolved` event. */
@@ -105,11 +115,22 @@ const layeredMerge = <A>(): MergeStrategy<A> => ({
  * **Example** (Create a layered merge strategy)
  *
  * ```ts
- * import { MergeStrategy } from "./index.ts";
+ * import { MergeStrategy } from "@beep/scratchpad/effected/config-file/MergeStrategy";
+ * import type { NonEmptySources } from "@beep/scratchpad/effected/config-file/MergeStrategy";
+ * import * as Effect from "effect/Effect";
  *
- * const strategy = MergeStrategy.layeredMerge<{ port: number }>();
+ * const strategy = MergeStrategy.layeredMerge<{ port: number; host?: string }>();
+ * const sources: NonEmptySources<{ port: number; host?: string }> = [
+ *   { path: "local.json", resolver: "local", value: { port: 8080 } },
+ *   { path: "base.json", resolver: "base", value: { port: 3000, host: "localhost" } },
+ * ];
+ * const layered = Effect.runSync(strategy.resolve(sources));
+ * console.log(layered.port, layered.host); // 8080 localhost
+ * console.log(Effect.runSync(MergeStrategy.firstMatch<{ port: number }>().resolve(sources)).port); // 8080
  * ```
  *
  * @public
+ * @category constructors
+ * @since 0.0.0
  */
 export const MergeStrategy = { firstMatch, layeredMerge } as const;

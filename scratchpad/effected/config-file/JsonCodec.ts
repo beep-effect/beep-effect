@@ -17,7 +17,19 @@ const encodeJson = S.encodeEffect(S.fromJsonString(S.Unknown, { space: 2 }));
  * into the bundle. Both directions preserve the underlying failure
  * structurally as a `SchemaError` in `cause` — never stringified.
  *
+ * **Example** (Parse a plain JSON configuration)
+ *
+ * ```ts
+ * import { JsonCodec } from "@beep/scratchpad/effected/config-file/JsonCodec";
+ * import * as Effect from "effect/Effect";
+ *
+ * const value = Effect.runSync(JsonCodec.parse('{ "port": 3000 }'));
+ * console.log(JSON.stringify(value)) // {"port":3000}
+ * ```
+ *
  * @public
+ * @category codecs
+ * @since 0.0.0
  */
 export const JsonCodec: ConfigCodec = {
 	name: "json",

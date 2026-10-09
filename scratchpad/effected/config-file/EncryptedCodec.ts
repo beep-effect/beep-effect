@@ -25,14 +25,48 @@ class CiphertextTooShortError extends S.TaggedError<CiphertextTooShortError>($I`
  * union, so an encryption-only concern does not leak into every codec's error
  * type. `cause` preserves the underlying host failure structurally.
  *
+ * **Example** (Identify a decryption failure)
+ *
+ * ```ts
+ * import { ConfigEncryptionError } from "@beep/scratchpad/effected/config-file/EncryptedCodec";
+ *
+ * const error = ConfigEncryptionError.make({ phase: "decrypt", cause: new Error("Invalid ciphertext") });
+ * console.log(error.message) // Config encryption failed during decrypt
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class ConfigEncryptionError extends S.TaggedError<ConfigEncryptionError>($I`ConfigEncryptionError`)("ConfigEncryptionError", {
-	/** Which cryptographic stage failed. */
+	/**
+	 * Which cryptographic stage failed.
+	 *
+	 * @since 0.0.0
+	 */
 	phase: S.Literals(["key-derivation", "encrypt", "decrypt", "encoding"]).annotateKey({ description: "Which cryptographic stage failed." }),
-	/** The underlying failure, preserved structurally. */
+	/**
+	 * The underlying failure, preserved structurally.
+	 *
+	 * @since 0.0.0
+	 */
 	cause: S.Defect().annotateKey({ description: "The underlying failure, preserved structurally." }),
 }, $I.annote("ConfigEncryptionError", { description: "Indicates that an encryption, decryption, key-derivation or base64 step failed." })) {
+	/**
+	 * Identifies the cryptographic stage that failed in a readable error message.
+	 *
+	 * **Example** (Read the cryptographic failure stage)
+	 *
+	 * ```ts
+	 * import { ConfigEncryptionError } from "@beep/scratchpad/effected/config-file/EncryptedCodec";
+	 *
+	 * const error = ConfigEncryptionError.make({ phase: "decrypt", cause: new Error("Invalid ciphertext") });
+	 * console.log(error.message) // Config encryption failed during decrypt
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return `Config encryption failed during ${this.phase}`;
 	}
@@ -52,6 +86,8 @@ const toPublic = (failure: CryptoFailure): ConfigEncryptionError =>
  * one via PBKDF2 at first use.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type EncryptedCodecKey =
 	| { readonly _tag: "CryptoKey"; readonly key: Effect.Effect<CryptoKey, ConfigEncryptionError> }
@@ -60,38 +96,75 @@ export type EncryptedCodecKey =
 /**
  * Convenience constructors for {@link (EncryptedCodecKey:type)}.
  *
+ * **Example** (Describe a lazily derived passphrase key)
+ *
+ * ```ts
+ * import { EncryptedCodecKey } from "@beep/scratchpad/effected/config-file/EncryptedCodec";
+ *
+ * const keySource = EncryptedCodecKey.fromPassphrase("correct horse", new Uint8Array(16));
+ * console.log(keySource._tag) // Passphrase
+ * ```
+ *
  * @public
+ * @category constructors
+ * @since 0.0.0
  */
 export const EncryptedCodecKey = {
 	/**
-  * Use a pre-derived `CryptoKey` effect directly.
-  *
-  * **Details**
-  *
-  * The effect is resolved once per codec instance and its **success** is
-  * reused for every encrypt/decrypt operation. A failure or an interruption
-  * is not cached — the next operation resolves it again. Supply your own
-  * `Effect.retry` inside this effect to bound retries; wrap it in
-  * `Effect.cached` yourself if you want a failure to be terminal.
-  *
-  * A `throw` from it is a programmer bug and stays a defect; signal
-  * recoverable failure with `Effect.fail`.
-  */
+	 * Use a pre-derived `CryptoKey` effect directly.
+	 *
+	 * **Details**
+	 *
+	 * The effect is resolved once per codec instance and its **success** is
+	 * reused for every encrypt/decrypt operation. A failure or an interruption
+	 * is not cached — the next operation resolves it again. Supply your own
+	 * `Effect.retry` inside this effect to bound retries; wrap it in
+	 * `Effect.cached` yourself if you want a failure to be terminal.
+	 *
+	 * A `throw` from it is a programmer bug and stays a defect; signal
+	 * recoverable failure with `Effect.fail`.
+	 *
+	 * **Example** (Supply a retryable key effect)
+	 *
+	 * ```ts
+	 * import { ConfigEncryptionError, EncryptedCodecKey } from "@beep/scratchpad/effected/config-file/EncryptedCodec";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const key = Effect.fail(ConfigEncryptionError.make({ phase: "key-derivation", cause: new Error("Key unavailable") }));
+	 * const keySource = EncryptedCodecKey.fromCryptoKey(key);
+	 * console.log(keySource._tag) // CryptoKey
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	fromCryptoKey: (key: Effect.Effect<CryptoKey, ConfigEncryptionError>): EncryptedCodecKey => ({
 		_tag: "CryptoKey",
 		key,
 	}),
 
 	/**
-  * Derive a `CryptoKey` from a passphrase and salt via PBKDF2.
-  *
-  * **Details**
-  *
-  * Derivation runs lazily on the first encrypt/decrypt call. It is resolved
-  * once per codec instance and its **success** is reused for subsequent
-  * operations on that instance. A failure or an interruption is not cached —
-  * the next operation derives again.
-  */
+	 * Derive a `CryptoKey` from a passphrase and salt via PBKDF2.
+	 *
+	 * **Details**
+	 *
+	 * Derivation runs lazily on the first encrypt/decrypt call. It is resolved
+	 * once per codec instance and its **success** is reused for subsequent
+	 * operations on that instance. A failure or an interruption is not cached —
+	 * the next operation derives again.
+	 *
+	 * **Example** (Construct a passphrase key source)
+	 *
+	 * ```ts
+	 * import { EncryptedCodecKey } from "@beep/scratchpad/effected/config-file/EncryptedCodec";
+	 *
+	 * const keySource = EncryptedCodecKey.fromPassphrase("correct horse", new Uint8Array(16));
+	 * console.log(keySource._tag) // Passphrase
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	fromPassphrase: (passphrase: string, salt: Uint8Array): EncryptedCodecKey => ({
 		_tag: "Passphrase",
 		passphrase,
@@ -123,13 +196,17 @@ const keyEffect = (keySource: EncryptedCodecKey): Effect.Effect<CryptoKey, Confi
  * **Example** (Encrypt JSON configuration with a passphrase)
  *
  * ```ts
- * import { EncryptedCodec, EncryptedCodecKey, JsonCodec } from "./index.ts";
+ * import { EncryptedCodec, EncryptedCodecKey } from "@beep/scratchpad/effected/config-file/EncryptedCodec";
+ * import { JsonCodec } from "@beep/scratchpad/effected/config-file/JsonCodec";
  *
  * const salt = new Uint8Array(16); // use a stored, random per-deployment salt
  * const codec = EncryptedCodec(JsonCodec, EncryptedCodecKey.fromPassphrase("correct horse", salt));
+ * console.log(codec.name) // encrypted(json)
  * ```
  *
  * @public
+ * @category codecs
+ * @since 0.0.0
  */
 export const EncryptedCodec: {
 	<E>(inner: ConfigCodec<E>, keySource: EncryptedCodecKey): ConfigCodec<E | ConfigEncryptionError>;
