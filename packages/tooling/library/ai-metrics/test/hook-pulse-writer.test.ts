@@ -612,7 +612,7 @@ const makeHarnessFixtureRoot = Effect.fnUntraced(function* () {
   const write = (relative: string, content: string) => writeBytes(relative, new TextEncoder().encode(content));
   yield* write("AGENTS.md", "# Fixture guide\n");
   yield* fs.symlink("AGENTS.md", path.join(root, "CLAUDE.md"));
-  yield* write(".git/HEAD", "ref: refs/heads/main\n");
+
   yield* write("packages/foo/AGENTS.md", "# foo guide\n");
   yield* write("packages/foo/README.md", "# not an agent doc\n");
   yield* write("packages/bar/.git", "gitdir: /elsewhere/bar\n");
@@ -634,6 +634,17 @@ const makeHarnessFixtureRoot = Effect.fnUntraced(function* () {
   yield* write(".claude/node_modules/pkg/index.js", "module.exports = 1\n");
   yield* write(".claude/logs/session.log", "log line\n");
   yield* write(".codex/config.toml", 'model = "fixture"\n');
+  yield* fs.remove(path.join(root, "packages/bar/.git"));
+  yield* fs.remove(path.join(root, ".claude/worktrees/wt1/.git"));
+  for (const args of [
+    ["init", "-q"],
+    ["add", "--all"],
+  ]) {
+    const child = yield* ChildProcess.make("git", args, { cwd: root, stdout: "ignore", stderr: "ignore" });
+    expect(yield* child.exitCode).toBe(0);
+  }
+  yield* write("packages/bar/.git", "gitdir: /elsewhere/bar\n");
+  yield* write(".claude/worktrees/wt1/.git", "gitdir: /elsewhere/wt1\n");
   return root;
 });
 

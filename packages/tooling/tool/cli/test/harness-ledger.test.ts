@@ -419,7 +419,7 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
     })
   );
 
-  it.effect("prune-proposals proposes zero-touch skills and MCP servers from in-regime sessions only", () =>
+  it.effect("prune-proposals retains capabilities with positive touches across all regimes", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -441,13 +441,13 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
         yield* sessionStart(sessionB, "2026-09-24T07:59:00.000Z", current),
         yield* pulse(sessionB, "2026-09-24T08:00:00.000Z", O.none()),
       ]);
-      // C: restarted across a harness edit (mixed stamps); its beta touch must not protect beta.
+      // C: mixed-regime rows still prove positive beta use.
       yield* writeShard(stateDir, "2026-09-26", sessionC, [
         yield* sessionStart(sessionC, "2026-09-26T08:00:00.000Z", otherHarness),
         yield* sessionStart(sessionC, "2026-09-26T09:00:00.000Z", current),
         yield* pulse(sessionC, "2026-09-26T09:05:00.000Z", O.some(betaId)),
       ]);
-      // D: never stamped; its notion touch must not protect notion.
+      // D: unstamped rows still prove positive notion use.
       yield* writeShard(stateDir, "2026-09-27", sessionD, [
         yield* pulse(sessionD, "2026-09-27T09:05:00.000Z", O.some(notionId)),
       ]);
@@ -462,29 +462,14 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       expect(dryRun.shardsRead).toBe(4);
       expect(dryRun.undecodableLines).toBe(1);
       expect(dryRun.candidates).toBe(3);
-      expect(dryRun.touchedCandidates).toBe(1);
+      expect(dryRun.touchedCandidates).toBe(3);
       expect(dryRun.written).toBe(false);
       expect(dryRun.windowFull).toBe(false);
       expect(dryRun.decidedUnderHarness).toBe(0);
-      const proposed = A.map(dryRun.proposals, (proposal) => `${proposal.candidate.kind}:${proposal.candidate.name}`);
-      expect(proposed).toStrictEqual(["skill:beta", "mcp-server:notion"]);
-      expect(A.map(dryRun.proposals, (proposal) => proposal.row.mechanismClass)).toStrictEqual([
-        "skill",
-        "client_tool",
-      ]);
-      const [first] = dryRun.proposals;
-      expect(first?.row.dispositionEvidence).toStrictEqual(
-        O.some(
-          `zero touches across 2 sessions under harness hash ${Str.slice(0, 12)(current)} ending 2026-09-25T10:05:00.000Z`
-        )
-      );
-      expect(first?.row.edit.kind).toBe("pending");
-      // The row records the observed count, not the requested window.
-      expect(first?.row.windowSessions).toStrictEqual(O.some(2));
-      expect(A.last(harnessLedgerPruneReportLines(dryRun, false))).toStrictEqual(
-        O.some(
-          "dry run: nothing written; partial window (2 of 5 sessions under the current harness hash), so --write would append nothing."
-        )
+      expect(dryRun.proposals).toHaveLength(0);
+      assertSome(
+        A.last(harnessLedgerPruneReportLines(dryRun, false)),
+        "dry run: nothing written; partial window (2 of 5 sessions under the current harness hash), so --write would append nothing."
       );
       expect(harnessLedgerPruneReportLines(dryRun, false)[0]).toContain("observed 2 (partial window) ending");
       // Dry run: nothing written, not even the ledger directory or its lock.
@@ -493,7 +478,7 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       // An open chain head without a target surface is read but never dedupes a candidate.
       yield* proposePending(root);
       const again = yield* ledger.pruneProposals(options);
-      expect(again.proposals).toHaveLength(2);
+      expect(again.proposals).toHaveLength(0);
       expect(again.alreadyProposed).toBe(0);
       expect(yield* readLedgerLines(root)).toHaveLength(1);
 
@@ -851,12 +836,12 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       yield* writeShard(stateDir, "2026-10-09", sessionA, [
-        yield* sessionStart(sessionA, "2026-10-09T10:00:00Z", current),
+        yield* sessionStart(sessionA, "2026-10-09T10:00:00.500Z", current),
         yield* pulse(sessionA, "2026-10-09T10:01:00Z", O.none()),
       ]);
       yield* fs.writeFileString(
         path.join(path.dirname(stateDir), "hook-pulse-refusals-fixture.ndjson"),
-        '{"ts":"2026-10-09T10:00:30Z","agentKind":"claude-code","reason":"timeout"}\n'
+        '{"ts":"2026-10-09T10:00:00Z","agentKind":"claude-code","reason":"timeout"}\n'
       );
       const ledger = yield* HarnessLedgerService;
       const report = yield* ledger.pruneProposals(
@@ -1132,10 +1117,18 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       yield* fs.writeFileString(path.join(transcriptDir, `${parent}.jsonl`), toolRow);
       yield* fs.writeFileString(path.join(nested, "child.jsonl"), toolRow);
       const identity = Sha256Hex.make(yield* hashPrivateIdentifier(parent, yield* hookPulseHashSalt));
-      yield* writeShard(stateDir, "2026-10-09", identity, [
-        yield* pulse(identity, "2026-10-09T10:00:00Z", O.none()),
-        yield* pulse(identity, "2026-10-09T10:01:00Z", O.none()),
-      ]);
+      const fixturePaths = [path.join(transcriptDir, `${parent}.jsonl`), path.join(nested, "child.jsonl")];
+      const hookRows = yield* Effect.forEach(
+        fixturePaths,
+        Effect.fnUntraced(function* (file) {
+          const row = yield* HookPulseV1.decodeJsonEffect(yield* pulse(identity, "2026-10-09T10:00:00Z", O.none()));
+          const transcriptPath = Sha256Hex.make(yield* hashPrivateIdentifier(file, yield* hookPulseHashSalt));
+          return yield* HookPulseV1.encodeJsonEffect(
+            HookPulseV1.make({ ...row, transcriptPath: O.some(transcriptPath) })
+          );
+        })
+      );
+      yield* writeShard(stateDir, "2026-10-09", identity, hookRows);
       const ledger = yield* HarnessLedgerService;
       yield* fs.symlink(transcriptDir, path.join(nested, "loop"));
       yield* fs.symlink(nested, path.join(transcriptDir, "a-alias"));

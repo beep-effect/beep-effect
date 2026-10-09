@@ -152,9 +152,14 @@ const readStampGaps = Effect.fnUntraced(function* (evidenceRoot: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const gaps = A.empty<SessionStampGap>();
-  const sentinelText = yield* readOptionalEvidence(hookPulseDisarmSentinelPath(evidenceRoot));
-  if (Str.isNonEmpty(sentinelText)) {
-    const sentinel = yield* HookPulseDisarmSentinel.decodeJsonEffect(sentinelText);
+  const defaultSentinel = hookPulseDisarmSentinelPath(evidenceRoot);
+  const sentinelPath = yield* Config.String("BEEP_HOOK_PULSE_DISARM_SENTINEL").pipe(
+    Config.withDefault(defaultSentinel),
+    Effect.map((value) => (value === "" ? defaultSentinel : value))
+  );
+  const sentinelExists = yield* fs.exists(sentinelPath);
+  if (sentinelExists) {
+    const sentinel = yield* HookPulseDisarmSentinel.decodeJsonEffect(yield* fs.readFileString(sentinelPath));
     gaps.push(SessionStampGap.make({ start: timestampEpoch(sentinel.disarmedAt), end: O.none(), client: O.none() }));
   }
   const windows = yield* readOptionalEvidence(hookPulseDisarmWindowsPath(evidenceRoot));
@@ -177,12 +182,12 @@ const readStampGaps = Effect.fnUntraced(function* (evidenceRoot: string) {
   for (const name of A.filter(files, Str.startsWith("hook-pulse-refusals-"))) {
     const text = yield* fs.readFileString(path.join(evidenceRoot, name));
     for (const line of A.filter(Str.split(text, "\n"), Str.isNonEmpty)) {
-      const refusal = yield* S.decodeUnknownEffect(S.fromJsonString(HookPulseRefusal))(line);
-      const at = O.some(DateTime.toEpochMillis(refusal.ts));
+      const refusal = yield* S.decodeEffect(S.fromJsonString(HookPulseRefusal))(line);
+      const at = O.some(refusal.ts.pipe(DateTime.toEpochMillis));
       gaps.push(
         SessionStampGap.make({
           start: at,
-          end: at,
+          end: O.map(at, (value) => value + 999),
           client: refusal.agentKind === "unknown" ? O.none() : O.some(refusal.agentKind),
         })
       );
@@ -1327,8 +1332,11 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
           return pipe(
             MutableHashMap.get(sessions, key),
             O.filter(() =>
-              O.exists(MutableHashMap.get(firstObserved, key), (first) =>
-                O.exists(MutableHashMap.get(freshStarts, key), (starts) => HashSet.has(starts, first))
+              O.exists(
+                MutableHashMap.get(firstObserved, key),
+                (first) =>
+                  O.exists(O.flatMap(sanitized.firstTimestamp, timestampEpoch), (beginning) => first <= beginning) &&
+                  O.exists(MutableHashMap.get(freshStarts, key), (starts) => HashSet.has(starts, first))
               )
             ),
             O.filter(

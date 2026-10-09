@@ -23,7 +23,6 @@ import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import { isNestedGitRoot } from "./identity-registry.ts";
 import { fileSizeBytes } from "./internal/file-info.ts";
-import { statOption } from "./internal/jsonl-discovery.ts";
 import { ConfigSnapshot } from "./models.ts";
 import { hashPublicTextSha256 } from "./privacy.ts";
 
@@ -655,6 +654,13 @@ const enumerateSnapshotPaths = Effect.fn("AiMetrics.enumerateConfigSnapshotPaths
       })
     )
     .pipe(Effect.mapError((cause) => configSnapshotFailure("Cannot detect Git snapshot enumeration.", cause)));
+  if (
+    gitCode !== 0 &&
+    (yield* fs
+      .exists(pathApi.join(repoRoot, ".git"))
+      .pipe(Effect.mapError((cause) => configSnapshotFailure("Cannot inspect Git snapshot metadata.", cause))))
+  )
+    return yield* configSnapshotFailure("Git metadata exists but cannot be resolved.", gitCode);
   const tracked = yield* gitCode === 0
     ? Effect.scoped(readTrackedSnapshotPaths(repoRoot))
     : Effect.succeed(O.none<ReadonlyArray<string>>());
@@ -737,12 +743,20 @@ const enumerateSnapshotPaths = Effect.fn("AiMetrics.enumerateConfigSnapshotPaths
     currentPath: string,
     depth: number,
     includeFile: (basename: string) => boolean
-  ): Effect.fn.Return<void, never, FileSystem.FileSystem | Path.Path> {
+  ): Effect.fn.Return<void, AiMetricsConfigSnapshotError, FileSystem.FileSystem | Path.Path> {
+    if (A.contains(yield* Ref.get(pathsRef), currentPath)) return;
     if (A.length(yield* Ref.get(pathsRef)) >= budget.maxFiles) {
       return yield* markTruncated(AiMetricsConfigSnapshotTruncationReason.Enum["max-files"]);
     }
 
-    const info = yield* statOption(currentPath);
+    const info = yield* fs.stat(currentPath).pipe(
+      Effect.asSome,
+      Effect.catchIf(
+        (cause) => cause.reason._tag === "NotFound",
+        () => Effect.succeed(O.none())
+      ),
+      Effect.mapError((cause) => configSnapshotFailure("Cannot inspect fallback snapshot path.", cause))
+    );
     if (O.isNone(info)) {
       return;
     }
@@ -750,7 +764,9 @@ const enumerateSnapshotPaths = Effect.fn("AiMetrics.enumerateConfigSnapshotPaths
     // A `File` the filter rejects falls through to the directory guard below, which
     // returns for any non-`Directory` type — the same early exit the collected branch takes.
     if (info.value.type === "File" && includeFile(pathApi.basename(currentPath))) {
-      return yield* Ref.update(pathsRef, (paths) => A.append(paths, currentPath));
+      return yield* Ref.update(pathsRef, (paths) =>
+        A.contains(paths, currentPath) ? paths : A.append(paths, currentPath)
+      );
     }
 
     if (info.value.type !== "Directory") {
@@ -762,7 +778,9 @@ const enumerateSnapshotPaths = Effect.fn("AiMetrics.enumerateConfigSnapshotPaths
     }
 
     const entries = pipe(
-      yield* fs.readDirectory(currentPath).pipe(Effect.orElseSucceed(A.empty<string>)),
+      yield* fs
+        .readDirectory(currentPath)
+        .pipe(Effect.mapError((cause) => configSnapshotFailure("Cannot read fallback snapshot directory.", cause))),
       A.sort(Order.String)
     );
     yield* Effect.forEach(entries, (entry) => walkEntry(currentPath, entry, depth, includeFile), { discard: true });
@@ -775,7 +793,7 @@ const enumerateSnapshotPaths = Effect.fn("AiMetrics.enumerateConfigSnapshotPaths
     entry: string,
     depth: number,
     includeFile: (basename: string) => boolean
-  ): Effect.fn.Return<void, never, FileSystem.FileSystem | Path.Path> {
+  ): Effect.fn.Return<void, AiMetricsConfigSnapshotError, FileSystem.FileSystem | Path.Path> {
     if (isExcludedDirectoryName(entry)) {
       return;
     }

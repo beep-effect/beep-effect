@@ -515,6 +515,8 @@ END {
     mapfile -d '' -t indexed_paths < <(git ls-files -z -- ':(glob)**/AGENTS.md' ':(glob)**/CLAUDE.md' .mcp.json .claude .codex .ai .aiassistant .cursor .agents .junie .grok)
     wait "$!" || exit 1
     [ ! -f .claude/settings.local.json ] || indexed_paths+=(.claude/settings.local.json)
+  elif [ -e .git ] || [ -L .git ]; then
+    exit 1
   fi
 
   # Fallback walks prune nested checkouts before descending. Metadata is
@@ -548,7 +550,9 @@ END {
           if [ "${part}" -lt "$((${#segments[@]}-1))" ] && [ -e "${parent}/.git" ]; then skip=1; break; fi
         done
         [ "${skip}" = "0" ] || continue
-        [ -e "${candidate}" ] || [ -L "${candidate}" ] || continue
+        inspection="$(LC_ALL=C stat --format=%F -- "${candidate}" 2>&1)" || {
+          case "${inspection}" in *": No such file or directory") continue ;; *) exit 1 ;; esac
+        }
         case "${candidate}" in *[!\ -~]*|*\\*) exit 1 ;; esac
         # Inspect only an indexed candidate, never its surrounding untracked tree.
         find -L "${candidate}" -maxdepth 0 -type f -printf '%p\t%s\n' 2>/dev/null || exit 1

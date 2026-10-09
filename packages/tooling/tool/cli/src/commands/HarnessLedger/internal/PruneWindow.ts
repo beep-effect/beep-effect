@@ -279,7 +279,7 @@ const windowReport = (
       scan.refusalRows,
       (row) =>
         (row.agentKind === "unknown" || row.agentKind === tally.agentKind) &&
-        DateTime.toEpochMillis(row.ts) >= tally.minTs &&
+        DateTime.toEpochMillis(row.ts) + 999 >= tally.minTs &&
         DateTime.toEpochMillis(row.ts) <= tally.maxTs
     );
   // Group once: summaries and root selection never scan the complete history
@@ -609,15 +609,26 @@ const transcriptRepresentativePriority = (
   return canonical === file ? 1 : 0;
 };
 
+class ReconciliationTranscriptFile extends S.Class<ReconciliationTranscriptFile>($I`ReconciliationTranscriptFile`)({
+  file: S.String,
+  identity: S.String,
+  canonical: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+}) {}
+
 const reconciliationTranscriptFiles = Effect.fn("HarnessLedger.reconciliationTranscriptFiles")(function* (
   dir: string,
   failures: Ref.Ref<HashSet.HashSet<string>>,
-  ancestors = HashSet.empty<string>()
-): Effect.fn.Return<ReadonlyArray<string>, HarnessLedgerIoError, FileSystem.FileSystem | Path.Path> {
+  ancestors = HashSet.empty<string>(),
+  failureIdentity = dir
+): Effect.fn.Return<
+  ReadonlyArray<ReconciliationTranscriptFile>,
+  HarnessLedgerIoError,
+  FileSystem.FileSystem | Path.Path
+> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const resolved = yield* reconciliationRead(fs.realPath(dir), failures, dir);
-  if (O.isNone(resolved) || HashSet.has(ancestors, resolved.value)) return A.empty<string>();
+  const resolved = yield* reconciliationRead(fs.realPath(dir), failures, failureIdentity);
+  if (O.isNone(resolved) || HashSet.has(ancestors, resolved.value)) return A.empty<ReconciliationTranscriptFile>();
   const nestedAncestors = HashSet.add(ancestors, resolved.value);
   const entries = yield* reconciliationRead(listDirectorySorted(dir), failures, resolved.value).pipe(
     Effect.map(O.getOrElse(A.empty<string>))
@@ -628,11 +639,17 @@ const reconciliationTranscriptFiles = Effect.fn("HarnessLedger.reconciliationTra
       Effect.fnUntraced(function* (entry) {
         const file = path.join(dir, entry);
         const info = yield* reconciliationRead(fs.stat(file), failures, path.join(resolved.value, entry));
-        if (O.isNone(info)) return A.empty<string>();
+        if (O.isNone(info)) return A.empty<ReconciliationTranscriptFile>();
         if (info.value.type === "Directory")
-          return yield* reconciliationTranscriptFiles(file, failures, nestedAncestors);
-        if (info.value.type !== "File" || !Str.endsWith(".jsonl")(entry)) return A.empty<string>();
-        return A.of(file);
+          return yield* reconciliationTranscriptFiles(
+            file,
+            failures,
+            nestedAncestors,
+            path.join(resolved.value, entry)
+          );
+        if (info.value.type !== "File" || !Str.endsWith(".jsonl")(entry))
+          return A.empty<ReconciliationTranscriptFile>();
+        return A.of(ReconciliationTranscriptFile.make({ file, identity: path.join(resolved.value, entry) }));
       }),
       { concurrency: 1 }
     )
@@ -640,38 +657,46 @@ const reconciliationTranscriptFiles = Effect.fn("HarnessLedger.reconciliationTra
 });
 
 const selectTranscriptRepresentatives = Effect.fnUntraced(function* (
-  files: ReadonlyArray<string>,
+  files: ReadonlyArray<ReconciliationTranscriptFile>,
   hooks: MutableHashMap.MutableHashMap<string, number>,
   hashSalt: O.Option<string>,
   failures: Ref.Ref<HashSet.HashSet<string>>
 ) {
   const fs = yield* FileSystem.FileSystem;
-  const selected = MutableHashMap.empty<string, { readonly file: string; readonly priority: number }>();
-  for (const file of files) {
-    const canonical = yield* reconciliationRead(fs.realPath(file), failures, file);
+  const selected = MutableHashMap.empty<
+    string,
+    { readonly candidate: ReconciliationTranscriptFile; readonly priority: number }
+  >();
+  for (const candidate of files) {
+    const file = candidate.file;
+    const canonical = yield* reconciliationRead(fs.realPath(file), failures, candidate.identity);
     if (O.isNone(canonical)) continue;
     const pathHash = yield* hashPrivateIdentifier(file, hashSalt).pipe(
       Effect.mapError(HarnessLedgerIoError.wrap("Cannot hash transcript alias identity."))
     );
     const priority = transcriptRepresentativePriority(file, canonical.value, pathHash, hooks);
     if (O.exists(MutableHashMap.get(selected, canonical.value), (prior) => prior.priority >= priority)) continue;
-    MutableHashMap.set(selected, canonical.value, { file, priority });
+    MutableHashMap.set(selected, canonical.value, {
+      candidate: ReconciliationTranscriptFile.make({ ...candidate, canonical }),
+      priority,
+    });
   }
-  return A.map(A.fromIterable(MutableHashMap.values(selected)), (entry) => entry.file);
+  return A.map(A.fromIterable(MutableHashMap.values(selected)), (entry) => entry.candidate);
 });
 
 const ParentSessionSegment = S.String.check(S.isPattern(/^[0-9a-f-]{36}$/));
 const isParentSessionSegment = S.is(ParentSessionSegment);
 const readTranscriptCounts = Effect.fn("HarnessLedger.readTranscriptCounts")(function* (
-  file: string,
+  candidate: ReconciliationTranscriptFile,
   transcriptDir: string,
   agentKind: HookPulseAgentKind,
   hashSalt: O.Option<string>,
   failures: Ref.Ref<HashSet.HashSet<string>>
 ) {
+  const file = candidate.file;
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const text = yield* reconciliationRead(fs.readFileString(file), failures, file).pipe(
+  const text = yield* reconciliationRead(fs.readFileString(file), failures, candidate.identity).pipe(
     Effect.map(O.getOrElse(() => ""))
   );
   const tally = A.reduce(
@@ -679,12 +704,10 @@ const readTranscriptCounts = Effect.fn("HarnessLedger.readTranscriptCounts")(fun
     TranscriptTally.make({ session: O.none(), calls: 0, undecodableLines: 0 }),
     foldTranscriptLine
   );
-  const physicalFile = yield* reconciliationRead(fs.realPath(file), failures, file);
-  const physicalRoot = yield* reconciliationRead(fs.realPath(transcriptDir), failures, transcriptDir);
-  const relative =
-    O.isSome(physicalFile) && O.isSome(physicalRoot)
-      ? Str.split(path.relative(physicalRoot.value, physicalFile.value), path.sep)
-      : A.empty<string>();
+  const physicalFile = candidate.canonical;
+  const relative = O.isSome(physicalFile)
+    ? Str.split(path.relative(transcriptDir, physicalFile.value), path.sep)
+    : A.empty<string>();
   const parent =
     agentKind === "claude-code" && A.length(relative) > 1
       ? A.findFirst(relative, isParentSessionSegment)
@@ -737,7 +760,9 @@ export const reconcileTranscripts = Effect.fn("HarnessLedger.reconcileTranscript
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const canonical = path.resolve(transcriptDir);
-  yield* fs.realPath(canonical).pipe(Effect.mapError(HarnessLedgerIoError.wrap("Cannot resolve transcript root.")));
+  const physicalRoot = yield* fs
+    .realPath(canonical)
+    .pipe(Effect.mapError(HarnessLedgerIoError.wrap("Cannot resolve transcript root.")));
   const failures = yield* Ref.make(HashSet.empty<string>());
   const files = yield* selectTranscriptRepresentatives(
     yield* reconciliationTranscriptFiles(canonical, failures),
@@ -749,7 +774,7 @@ export const reconcileTranscripts = Effect.fn("HarnessLedger.reconcileTranscript
   const selectedSessionHooks = MutableHashMap.empty<string, number>();
   const transcriptPaths = MutableHashMap.empty<string, number>();
   for (const file of files) {
-    const counts = yield* readTranscriptCounts(file, canonical, agentKind, hashSalt, failures);
+    const counts = yield* readTranscriptCounts(file, physicalRoot, agentKind, hashSalt, failures);
     undecodableLines += counts.undecodableLines;
     if (counts.calls === 0) continue;
     MutableHashMap.set(
