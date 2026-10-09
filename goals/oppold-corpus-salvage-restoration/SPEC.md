@@ -486,3 +486,13 @@ P1 stays pending, lifecycle active, P2/P3 pending. Resume by merging the main re
 PR1 under R2, then complete its published-head proof and final-file gate before writing the run
 manifest or launching. Reversal: revert the bounded local fixes and packet decisions; there is no
 live output to reverse, and the append-only handoff remains evidence.
+
+### 2026-10-09: PR1 inherited-fence publication fallback
+
+The orchestrator run-2 ruling authorizes direct push and PR creation after the
+canonical publisher refused only five inherited schema inventory entries. Their
+source surfaces match main; introduced findings were repaired and scoped proof
+passes. PR1 retains the heavy label, readiness monitor, review handling, and exact
+head final-file gate. The orchestrator owns inherited hosted reds and the merge.
+The frozen manifest and live slice wait for its merged report. Reversal: close the
+unmerged PR and revert the bounded changes before any live run.

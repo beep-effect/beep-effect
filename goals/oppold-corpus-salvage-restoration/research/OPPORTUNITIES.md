@@ -332,3 +332,15 @@ exact locations, while the census recognizes explicit inventory tables as path d
 Converted the location and invocation records into labeled inventories, preserving
 all values and write authorities. No classifier, convention set, or gate was changed.
 Use a location inventory for machine-bound run contracts before the first check.
+
+### 2026-10-09: inherited inventory refusal required an explicit fallback ruling
+
+The fully addressed P1 pre-run wave passed fifteen of sixteen cheap gates, but
+publication stopped on five inventory entries in source surfaces identical to main.
+The exact refusal was `github-checks:cheap-gates: failed 1 step(s)` and
+`lint:schema-first: exit 1`, followed by `yeet publish cheap-gates failed after
+creating the local commit; nothing was pushed. Fix the gate, then amend or reset
+the unpushed commit before retrying.` The run-2 ruling authorizes direct push and
+PR creation with the heavy label, Yeet ready, and a bounded readiness monitor.
+No inventory baseline or unrelated source is changed. Attribution-aware publication
+that accepts an explicit inherited-fence receipt would prevent repeated worker stops.

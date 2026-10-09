@@ -248,3 +248,38 @@ hosted-parity: test-tsgo: pass | docgen local: pass | jsdoc-ratchet: pass | know
 handoff: goals/oppold-corpus-salvage-restoration/history/handoffs/corpus-restore-2026-10-09.md
 open items: Orchestrator must repair five inherited schema-first inventory entries on main (two Accounts candidates, three unrelated test advisories). Then merge main, publish PR1, run published-head checks, ready and write the R2 final file; wait for orchestrator merge before the frozen live slice. Decisions: budget-bound Tika capture, libpff on-disk name escape, ratio 4, attempt 7,200,000 ms, total 43,200,000 ms, total output 2,147,483,648 bytes, 100 GB free floor, R6 manifest and R7 output authority; reverse by reverting local fixes/docs before launch. Private workspaces carry release notes without changesets under #1566. P1 remains pending; no live ledger or corpus output was written. All own units ended.
 blocked: PR1 publication needs the inherited schema-first inventory repair on main; live slice unlaunched.
+
+## Run 2 — authorized inherited-fence fallback
+
+The 2026-10-09T23:42Z orchestrator ruling supersedes the preceding run-1 blocker.
+Fetch and merge completed at `1d854a1e8ec46fd48b9e20d68477363f98250cc0`;
+main was already incorporated. No owned file or lockfile changed, so full package
+verification and hosted-parity results above are retained under that ruling.
+
+| Prerequisite | State | Re-measurement |
+| --- | --- | --- |
+| 3a P0 | met | P0 complete; expected seal matched; directory-pass 755, file-pass 10,696, inherited-loss 4, preflight 1, seal 1 |
+| 3b selection | met | PST 53; eligible 23; input 56,140,800 bytes; selected object and source digest unchanged |
+| 3c state | met | Slice ledger absent; frozen manifest absent; no live invocation |
+| 3d engines | met | pffexport 20260917; bubblewrap 0.13.0; OpenJDK 27 (2026-09-15); real Java resolution and Tika digest unchanged; both nested sandbox smokes exit 0 |
+| 3e capacity | met | 443,510,554,624 free bytes; above 100 GB floor |
+| 3f synthetic exceptions | met | Fresh focused suite: 4 passed, 71 skipped; 4.48 seconds |
+| 3g main source | not met for live launch | Only bounded owned fixes differ from main; PR1 must land first |
+| 3h capture | met for PR1 | Retained probe: 59 runs, 43 above former capture bound, 0 nonzero and 0 empty; budget-bound fix proven |
+| 3i names | met for PR1 | Retained probe: 1 backslash file, 0 directories, 0 collisions, 0 existing escape names; escape fix proven |
+
+Adoption plan has no conflicts. Goals doctor retains zero new/inherited blocking
+findings and three unrelated advisories. Private probe stderr remains one line.
+The probe is not rerun: its completed aggregate evidence is retained on relaunch.
+Both forbidden reference links remain absent. P1 stays pending.
+
+Exact previous publication refusal: `github-checks:cheap-gates: failed 1 step(s)`;
+`lint:schema-first: exit 1`; `yeet publish cheap-gates failed after creating the local
+commit; nothing was pushed. Fix the gate, then amend or reset the unpushed commit
+before retrying.` Fifteen of sixteen gates passed. The five finding surfaces are
+unchanged against main: two Accounts schema candidates and three test advisories.
+Run 2 explicitly authorizes direct push plus PR creation with `ready-for-heavy`,
+followed by Yeet ready and a bounded readiness monitor. No baseline is edited.
+Reversal: close the unmerged PR and revert the bounded fixes and packet decisions;
+no immutable live state exists. The frozen manifest and live slice remain deferred
+until the orchestrator reports PR1 merged.
