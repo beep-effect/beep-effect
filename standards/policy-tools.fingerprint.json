@@ -6,7 +6,6 @@
     "_typos.toml",
     "biome.jsonc",
     "eslint.config.mjs",
-    "knip.jsonc",
     "package.json",
     "packages/drivers/duckdb/package.json",
     "packages/drivers/duckdb/src/**",

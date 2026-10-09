@@ -170,7 +170,7 @@ const readmeExcerptOf = Effect.fn("RepoCards.readmeExcerptOf")(function* (
  * @returns Browsable HTTPS URL, with a trailing `.git` suffix removed.
  * @category utilities
  */
-export const remoteToHttpsUrl = (remote: string): string => {
+const remoteToHttpsUrl = (remote: string): string => {
   const sshMatch = remote.match(/^git@([^:]+):(.+?)(\.git)?$/);
   if (!P.isNull(sshMatch)) {
     return `https://${sshMatch[1]}/${sshMatch[2]}`;

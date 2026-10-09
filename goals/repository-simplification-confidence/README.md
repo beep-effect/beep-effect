@@ -59,6 +59,8 @@ nothing was adopted or discarded. P0 Research is complete.
 
 ## Latest Evidence
 
+[A lane handoff](./history/handoffs/rsc-a-retire-2026-10-09.md): run 5 clears the generated bin ordering under S5 and merges current main. Forty findings are fixed, one Govinfo oracle is documented, and the saved final Knip scan reports that oracle alone. Independent source/scope review is zero findings; the admitted integrated-tree owner/package/parity sequence is active. Publication and final proof remain pending (2026-10-09).
+
 H1 OSV wave [PR #1562](https://github.com/beep-effect/beep-effect/pull/1562) ready for review;
 Run 4 integrates main repairs #1564/#1565, corrects the stored-response cache proof
 and repairs the census table; saved terminal parity remains attributed to its proof heads;
@@ -86,6 +88,11 @@ and [lane handoff](./history/handoffs/rsc-h1-catalog-2026-10-09.md).
 - Program review exception: every in-scope actionable finding is resolved,
   including P2 and below; the round-2 review cap does not apply (SPEC.md
   Exception Ledger).
+
+A run 3: recovered terminal transfer gates; all eleven pass. The final patched
+Knip cross-check reports the sole documented Govinfo drift oracle, and every
+transferred finding has a disposition. Knip retirement wave 1 is in local
+verification; see the lane handoff and `history/receipts/knip-cache-policy-review.md`.
 
 D latest evidence: [release policy and census](history/receipts/stage-2-policy.md)
 and [Run 2 lane handoff](history/handoffs/rsc-d-release-2026-10-09.md).

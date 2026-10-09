@@ -36,7 +36,7 @@ type BrowserProfileKind = Exclude<BrowserKind, "all">;
  * @internal
  * @category utilities
  */
-export const CHROME_EPOCH_OFFSET_SECONDS = 11_644_473_600;
+const CHROME_EPOCH_OFFSET_SECONDS = 11_644_473_600;
 
 /**
  * One discovered browser profile history database.

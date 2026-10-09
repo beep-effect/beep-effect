@@ -55,7 +55,6 @@ const TURBO_CONFIG_PROOF_TASK_VALUES = [
   "//#lint:roadmap-refs",
   "//#lint:judge-rubric",
   "//#lint:typos",
-  "//#knip:check",
   "//#fallow:audit:check",
   "//#fallow:health:check",
   "//#fallow:health:advisory",

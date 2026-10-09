@@ -5,7 +5,7 @@ import type { BM25Norm } from "@beep/nlp/Core/Vectorization";
 
 const require = createRequire(import.meta.url);
 
-export type BM25Accessor<T> = (...args: ReadonlyArray<never>) => T;
+type BM25Accessor<T> = (...args: ReadonlyArray<never>) => T;
 
 export interface BM25VectorizerInstance {
   readonly doc: (index: number) => {

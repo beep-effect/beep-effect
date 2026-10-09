@@ -871,7 +871,6 @@ const rootConfigs = [
   "tsdoc.json",
   ".oxlintrc.json",
   "_typos.toml",
-  "knip.jsonc",
   ".fallowrc.jsonc",
   "biome.jsonc",
   "tsconfig.base.json",

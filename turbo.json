@@ -191,7 +191,6 @@
         "_typos.toml",
         "biome.jsonc",
         "eslint.config.mjs",
-        "knip.jsonc",
         "package.json",
         "packages/drivers/duckdb/package.json",
         "packages/drivers/duckdb/src/**",
@@ -888,36 +887,6 @@
         "!packages/foundation/modeling/html/data/**",
         "!packages/foundation/modeling/html/src/internal/Html.language-tag-registry.generated.ts",
         "!patches/**"
-      ]
-    },
-    "//#knip:check": {
-      "cache": false,
-      "outputs": [],
-      "dependsOn": ["//#lint:policy-fingerprint"],
-      "inputs": [
-        "knip.jsonc",
-        "**/package.json",
-        "bun.lock",
-        "**/tsconfig*.json",
-        ".gitignore",
-        "**/.gitignore",
-        "apps/**",
-        "packages/**",
-        "infra/**",
-        "scripts/**",
-        "*.config.{ts,js,mjs,cjs}",
-        "vitest*.ts",
-        "vitest.aliases.generated.json",
-        "bunfig.toml",
-        "biome.jsonc",
-        ".oxlintrc.json",
-        ".fallowrc.jsonc",
-        "tsdoc.json",
-        "syncpack.config.ts",
-        "standards/knip.regression-baseline.jsonc",
-        "!**/node_modules/**",
-        "!**/dist/**",
-        "!**/.turbo/**"
       ]
     },
     "//#fallow:audit:check": {

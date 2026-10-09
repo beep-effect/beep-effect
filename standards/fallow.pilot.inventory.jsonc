@@ -8,13 +8,23 @@
   },
   "decision": {
     "addToRepo": true,
-    "mode": "advisory-pilot",
-    "replaceKnipNow": false,
-    "keepKnipAsBlockingGate": false,
-    "knipRole": "reference-analyzer-parity-gate",
-    "summary": "Fallow is valuable enough to add as an advisory quality signal, especially for PR attribution, duplication, complexity, SARIF/PR output, and architecture-boundary experiments. It is not ready to replace Knip as the reference analyzer and parity gate in this repo until its dead-code noise, catalog behavior, workspace ignore parity, and boundary-model parity are tuned."
+    "mode": "accepted-narrower-detection",
+    "retiredAnalyzer": "Knip retired 2026-10-09 after transferring 41 findings",
+    "summary": "Current Fallow detection is retained; global entry-export reporting stays off. No analyzer parity project."
   },
-  "localProbeSnapshot": {
+  "implementationPolicy": {
+    "rootConfig": ".fallowrc.jsonc",
+    "advisoryCiJob": "fallow-advisory",
+    "generatedBoundaryConfig": "standards/fallow.boundaries.generated.jsonc",
+    "deadCodeRegressionBaseline": "standards/fallow.dead-code.regression-baseline.jsonc",
+    "blockingQualityGate": "none-proven-in-live-pre-push",
+    "nextPromotionCriteria": [
+      "Fallow advisory audit produces stable low-noise PR summaries over multiple branches.",
+      "Dead-code baselines are tuned enough that new-only reports are actionable.",
+      "Generated boundaries catch real package-graph violations without false positives from scaffold or test-only workspaces."
+    ]
+  },
+  "historicalLocalProbeSnapshot": {
     "knip": {
       "command": "bun run knip --reporter json",
       "exitStatus": 1,
@@ -102,38 +112,5 @@
         "moderate": 122
       }
     }
-  },
-  "featureComparison": {
-    "fallowStrengths": [
-      "Single tool spans dead code, dependency hygiene, duplication, complexity, feature flags, security candidates, and architecture boundaries.",
-      "Audit mode attributes findings to introduced versus inherited changes and is a strong fit for AI-assisted PR review.",
-      "Supports JSON, SARIF, CodeClimate, markdown, and PR-comment/review output formats.",
-      "Boundary zones and rules can be generated from repo metadata as an advisory architecture proof."
-    ],
-    "knipStrengths": [
-      "Existing Knip configuration is tuned to this repo and has much lower current noise.",
-      "Config supports repo-specific ignoreWorkspaces, ignoreBinaries, and catalog behavior already documented in knip.jsonc.",
-      "Known package/plugin behavior is already integrated into current audit and contributor expectations."
-    ],
-    "replacementRisks": [
-      "Fallow migration reports no direct equivalent for Knip's ignoreBinaries and ignoreWorkspaces controls.",
-      "Current Fallow dead-code output is much noisier than Knip for this repo.",
-      "Per-workspace plugin override parity is limited.",
-      "Architecture boundary rules need calibration before they can represent the full standards/ARCHITECTURE.md slice law."
-    ]
-  },
-  "implementationPolicy": {
-    "rootConfig": ".fallowrc.jsonc",
-    "advisoryCiJob": "fallow-advisory",
-    "generatedBoundaryConfig": "standards/fallow.boundaries.generated.jsonc",
-    "deadCodeRegressionBaseline": "standards/fallow.dead-code.regression-baseline.jsonc",
-    "blockingQualityGate": "none-proven-in-live-pre-push",
-    "knipRole": "reference-analyzer-parity-gate",
-    "nextPromotionCriteria": [
-      "Fallow advisory audit produces stable low-noise PR summaries over multiple branches.",
-      "Dead-code baselines are tuned enough that new-only reports are actionable.",
-      "Generated boundaries catch real package-graph violations without false positives from scaffold or test-only workspaces.",
-      "Knip-only findings have clear Fallow equivalents or documented waivers."
-    ]
   }
 }

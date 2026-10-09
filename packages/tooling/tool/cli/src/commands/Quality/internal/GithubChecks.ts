@@ -107,7 +107,7 @@ const rootTaskLane = (repoRoot: string, label: string, task: string, base?: stri
  * ```ts
  * import { repoCliLane } from "@beep/repo-cli/test/Quality"
  *
- * console.log(repoCliLane("/repo", "quality:knip", ["knip"]).args)
+ * console.log(repoCliLane("/repo", "quality:jsdoc-ratchet", ["jsdoc-ratchet"]).args)
  * ```
  *
  * @param repoRoot - Repository root used as the subprocess working directory.
@@ -319,15 +319,6 @@ const tsconfigSyncLane = (repoRoot: string, tier: GithubCheckLaneTier): GithubCh
     rootTaskLane(repoRoot, "repo-sanity:tsconfig-sync", "config-sync:check")
   );
 
-const knipLane = (repoRoot: string, tier: GithubCheckLaneTier): GithubCheckLaneSpec =>
-  githubCheckLane(
-    "quality:knip",
-    tier,
-    "repo-quality",
-    "preflight",
-    rootTaskLane(repoRoot, "quality:knip", "knip:check")
-  );
-
 /**
  * Build the repo-quality diagnostic lanes used by GitHub check collectors.
  *
@@ -374,7 +365,6 @@ export const githubCheckQualityLanes = (repoRoot: string): ReadonlyArray<GithubC
     "heavy",
     ts2589QuarantineLane(ciLaneStep(repoRoot, "quality:check", "check"))
   ),
-  knipLane(repoRoot, "pre-push"),
   // Replays the hosted "Shadcn Lint" context (strict @shadcn/lint over apps and packages).
   githubCheckLane(
     "quality:shadcn-lint",
@@ -825,7 +815,6 @@ export const githubCheckCheapGateLanes = (repoRoot: string): ReadonlyArray<Githu
     "preflight",
     repoCliLane(repoRoot, "quality:jsdoc-ratchet:committed", ["jsdoc-ratchet"])
   ),
-  knipLane(repoRoot, "cheap-gates"),
   ...A.map(githubCheckFallowLanes(repoRoot), githubCheckLaneInTier("cheap-gates")),
 ];
 

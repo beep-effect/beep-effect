@@ -5,9 +5,9 @@
  *
  * Two shapes cover every committed ratchet baseline in the repo CLI:
  *
- * - Set-membership ratchets (Knip) key each finding and fail when the current
+ * - Set-membership ratchets key each finding and fail when the current
  *   set introduces a finding absent from the committed baseline.
- *   {@link diffMembership} reproduces `KnipRatchet.compareFindings`
+ *   {@link diffMembership} classifies differences
  *   (introduced / resolved) generically over any keyed finding.
  * - Numeric-totals ratchets (JSDoc inventory) track one non-negative count per
  *   metric and fail when any tracked total grows or a baseline metric is
@@ -38,8 +38,8 @@ const $I = $RepoCliId.create("internal/ratchet/RatchetDiff");
  *
  * **Details**
  *
- * Reproduces `KnipRatchet.compareFindings`: a finding is introduced when no
- * baseline finding is equivalent to it, and resolved when no current finding is
+ * A finding is introduced when no baseline finding is equivalent to it,
+ * and resolved when no current finding is
  * equivalent to a baseline finding. Both directions are filtered with the same
  * `equivalence` and re-sorted with `order` so output is deterministic
  * regardless of input ordering. `introduced` (current findings missing from the

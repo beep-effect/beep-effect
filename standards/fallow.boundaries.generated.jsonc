@@ -2158,7 +2158,6 @@
           "@beep/identity",
           "@beep/schema",
           "@beep/test-runner",
-          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -2166,7 +2165,6 @@
           "@beep/identity",
           "@beep/schema",
           "@beep/test-runner",
-          "@beep/test-utils",
           "@beep/utils"
         ]
       },

@@ -1521,7 +1521,7 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
     );
 
     // Regression for the hosted reds a freshly created package used to hit:
-    // partition placement, generated-config drift, the JSDoc ratchet, Knip,
+    // partition placement, generated-config drift, the JSDoc ratchet, Fallow,
     // the effect-vitest inventory, and a service template that no longer
     // compiled against the installed Effect.
     it.effect(
@@ -1601,7 +1601,7 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
               expect(A.some(lines, Str.startsWith(" * @packageDocumentation"))).toBe(true);
             }
 
-            // Knip: declared dependencies are used and referenced types are declared.
+            // Dependency hygiene: declared dependencies are used and referenced types are declared.
             const libraryManifest = yield* decodeGeneratedPackageManifest(
               yield* readJsonFile(path.join(libraryDir, "package.json"))
             );

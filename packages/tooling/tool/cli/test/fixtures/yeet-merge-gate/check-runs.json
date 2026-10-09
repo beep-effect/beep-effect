@@ -252,16 +252,6 @@
       }
     },
     {
-      "id": 112226573264,
-      "name": "Knip",
-      "status": "completed",
-      "conclusion": "success",
-      "completed_at": "2026-10-06T10:37:51Z",
-      "output": {
-        "title": null
-      }
-    },
-    {
       "id": 112226573262,
       "name": "Nix Shell",
       "status": "completed",

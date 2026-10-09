@@ -107,7 +107,7 @@
     "packages/ontology/ui/src/aggregates/Session/Session.validation.tsx",
     "packages/ontology/ui/src/aggregates/Session/Session.workbench.tsx"
   ],
-  // Approximates dead-code path suppression; Knip remains authoritative for unmigrated workspace/binary policy.
+  // Approximates dead-code path suppression; Knip retired in October 2026; narrower detection is accepted.
   "ignorePatterns": [
     // The GitHub Copilot Impeccable tree mirrors the analyzed Claude Code source.
     ".github/skills/impeccable/**",

@@ -200,7 +200,7 @@ Use the freshness protocol from the time-to-certainty task table §7.1.5:
    provide provenance, while the ledger input source remains `undeclared` because
    file hashes do not cover their Git, index, clock, event, or network state.
 
-Oxlint, typos, and knip also remain `cache: false`; no binary walk certification
+Oxlint and typos also remain `cache: false`; no binary walk certification
 is claimed by the root-task hash fixtures. Oxlint's ambient import-target existence
 reads keep it non-reusable under D14. Fallow summaries do not replace the hosted
 post-run envelope checks, and JSDoc inventory must succeed freshly before comparison.

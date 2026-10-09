@@ -44,7 +44,6 @@ export const RegistrationWriter = LiteralKit([
   "schema-catalog",
   "coverage-baseline-replacement",
   "test-typecheck-baseline",
-  "knip-baseline",
   "docs-aggregate-clean",
   "operator-authored",
   "preserve-only",

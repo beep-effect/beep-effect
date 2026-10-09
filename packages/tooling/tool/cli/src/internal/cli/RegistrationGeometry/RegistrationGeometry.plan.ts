@@ -138,12 +138,6 @@ export const surfacesForTarget = (target: RegistrationTarget): ReadonlyArray<Reg
       outputs: [PosixPath.make("standards/test-typecheck.blindspot-baseline.jsonc")],
       membershipKey: target.packageName,
     }),
-    GeneratedInventorySurface.make({
-      id: "knip-baseline",
-      writer: "knip-baseline",
-      outputs: [PosixPath.make("standards/knip.regression-baseline.jsonc")],
-      membershipKey: target.packagePath,
-    }),
     AuthoredReferenceSurface.make({
       id: "authored-references",
       files: A.map(
@@ -151,7 +145,6 @@ export const surfacesForTarget = (target: RegistrationTarget): ReadonlyArray<Reg
           "package.json",
           "turbo.json",
           "lefthook.yml",
-          "knip.jsonc",
           "biome.jsonc",
           ".github/**/*.yml",
           "apps/storybook/**/*",

@@ -1,3 +1,4 @@
+// Historical pre-retirement GitHub snapshots retain the former Knip context.
 import {
   assessCiLaneTimingWindowBounds,
   assessCiLaneTimingWindowPopulation,

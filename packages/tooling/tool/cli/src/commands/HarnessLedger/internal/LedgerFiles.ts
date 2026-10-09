@@ -39,7 +39,7 @@ export const ledgerMonthOf = (createdAt: DateTime.Utc): string =>
  * @category utilities
  * @since 0.0.0
  */
-export const ledgerRowsDir = Effect.fn("HarnessLedger.ledgerRowsDir")(function* (repoRoot: string) {
+const ledgerRowsDir = Effect.fn("HarnessLedger.ledgerRowsDir")(function* (repoRoot: string) {
   const path = yield* Path.Path;
   return path.join(repoRoot, "harness-ledger", "rows");
 });

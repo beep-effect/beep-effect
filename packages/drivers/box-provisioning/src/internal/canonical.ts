@@ -134,7 +134,7 @@ export const canonicalBoxObservedState = (observed: BoxObservedState): BoxObserv
 export const boxDesiredStateDigest = (desired: BoxDesiredState) =>
   encodedDigest(BoxDesiredState, canonicalBoxDesiredState(desired));
 
-export const boxProvisioningPlanDigest = (plan: BoxProvisioningPlan) =>
+const boxProvisioningPlanDigest = (plan: BoxProvisioningPlan) =>
   encodedDigest(
     BoxProvisioningPlan,
     BoxProvisioningPlan.make({
@@ -157,7 +157,7 @@ export const hasValidBoxProvisioningPlanDigest = Effect.fnUntraced(function* (pl
 const joinPath = A.join("/");
 
 /** Entry-order-independent form of a migration map: folders by path, files by destination (unique in a valid map). */
-export const canonicalBoxContentMigrationMap = (map: BoxContentMigrationMap): BoxContentMigrationMap =>
+const canonicalBoxContentMigrationMap = (map: BoxContentMigrationMap): BoxContentMigrationMap =>
   BoxContentMigrationMap.make({
     ...map,
     folders: A.sortWith(map.folders, (folder) => joinPath(folder.path), Order.String),
@@ -173,7 +173,7 @@ export const canonicalBoxContentMigrationMap = (map: BoxContentMigrationMap): Bo
 export const boxContentMigrationMapDigest = (map: BoxContentMigrationMap) =>
   encodedDigest(BoxContentMigrationMap, canonicalBoxContentMigrationMap(map));
 
-export const boxContentMigrationPlanDigest = (plan: BoxContentMigrationPlan) =>
+const boxContentMigrationPlanDigest = (plan: BoxContentMigrationPlan) =>
   encodedDigest(
     BoxContentMigrationPlan,
     BoxContentMigrationPlan.make({

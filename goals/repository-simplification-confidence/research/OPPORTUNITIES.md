@@ -111,6 +111,73 @@
   defects from wording findings up front, and a mechanical verbatim-section
   checker against the brief so copy drift is caught by a validator.
 
+### A admission environment (2026-10-09)
+
+- Task: regenerate the schema catalog and refresh the FreshBooks dependency lock through `beep-heavy`.
+- Evidence: wrapper exited 1 before executing either command: `Failed to connect to user scope bus`; runtime directory and session bus variables were absent in the worker shell.
+- Prevention: worker launcher exports the existing user-manager environment. Retry uses `/run/user/1000` and its bus, preserving admission rather than bypassing it.
+
+### A admission capacity receipt (2026-10-09)
+
+- Task: post-transfer dependency refresh and catalog/JSDoc regeneration.
+- Evidence: `beep-heavy: all 3 slots busy, waiting`; `lslocks` identified two finite proof commands and an orchestrator `gate.sh` polling loop holding a heavy slot for over two hours. Slot receipt files were empty while waiters were active.
+- Prevention: finite proofs own heavy slots; a persistent polling daemon should release admission between heavy operations. The lane leaves the existing owner's daemon untouched and keeps its commands queued.
+
+### A orphaned gate runner recovery (2026-10-09, run 2)
+
+- Task: read the resumed lane's package results before launching any duplicate gate.
+- Evidence: the package loop parent had exited; only the completed Box provisioning row remained in `package-results.tsv`. Its Box admission child and the schema writer were still queued. A background shell launched through the worker tool also exited while its user-manager child survived.
+- Recovery: terminated only A's confirmed queued children, then placed the sequential runner in `rsc-a-run2-gates.service`. It logs each command and appends terminal exit codes to `.beep/rsc-a/run2-results.tsv`. No other lane's process was stopped.
+- Prevention: launch the coordinator itself as a user service, not merely each admitted child. A polling coordinator takes no heavy slot; each finite command still uses `beep-heavy`.
+
+## 2026-10-09: inventory writer spelling selected the broad lint pipeline
+
+- Doing: regenerating the JSDoc inventory after narrowing private exports.
+- Evidence: `beep lint jsdoc-documentation --write` ran `lint:policy` and
+  failed with `Census subprocess failed or exceeded its 512 MiB capture bound`;
+  the actual owner is `beep quality jsdoc-inventory`.
+- Would have prevented it: rejecting unknown lint subcommands instead of
+  forwarding them into the root lint battery. Run 3 uses the owner command.
+
+## 2026-10-09: Knip retirement relocates shared lock hoisting
+
+- Doing: owner-generated `bun install` after removing only Knip declarations.
+- Evidence: 27 added / 128 removed lock lines; surviving `oxc-resolver` moves
+  from 11.24.2 to 11.21.2, `strip-json-comments` from 5.0.3 to 2.0.1, and
+  `@emnapi` package keys relocate. No other manifest version was changed.
+  The lane handoff records every changed/added/removed package key.
+- Would have prevented it: a lock regeneration receipt that separates
+  deleted dependency closure from shared-hoisting relocation, allowing the
+  orchestrator to approve the exact generated graph under S5 before push.
+  Publication is held as resume ruling 2 requires.
+
+## 2026-10-09: cache-baseline review request rejected its subject selection
+
+- Doing: re-recording cache posture after Knip retirement and FreshBooks transfer.
+- Evidence: `beep cache baseline --request` returned `Unreviewed: @beep/freshbooks. Unknown: .` for the request naming `//`.
+- Resolution: use the owner's documented changed-subject mode and include FreshBooks in the review basis; inspect the stamped subjects and resulting diff before publication.
+- Prevention: validate review subject selection against the current census when constructing the request, and keep its basis content-addressed.
+
+## 2026-10-09: retirement cheap gates exposed dependent artifacts
+
+- Doing: wave-1 Yeet draft publication.
+- Evidence: `config-sync:check` found two FreshBooks project-reference changes and Fallow boundary drift; `lint:effect-vitest` found three callback occurrences after fixture edits; Fallow audit/dead-code found only the Knip-only `smol-toml` override. Nothing was pushed.
+- Resolution: owner `tsconfig-sync`; shared `it.layer` for touched gate-order tests and removal of a redundant per-test layer in the already layered publish-gate test; retire the orphan override under the cleared Knip lock notice. Preserve the Effect Vitest inventory for V.
+- Prevention: include project-reference regeneration, override-consumer review and callback-fingerprint ratchets in dependency-removal preparation.
+
+## 2026-10-09: focused retirement repair waits behind shared heavy work
+
+- Doing: FreshBooks generated-reference check and current gate-order snapshot owner regeneration after the full CLI audit exposed stale retirement assertions.
+- Evidence: lane logs repeatedly contain `beep-heavy: all 3 slots busy, waiting`; FreshBooks has waited more than ten minutes without executing. The completed full audit ran 711.31 seconds and reported five precise fixture/assertion failures.
+- Prevention: an admission receipt with queue age and FIFO position would make focused repair scheduling observable. Keep the three-slot limit and other owners' proofs intact. This lane records the delay and waits; it does not bypass admission.
+
+## 2026-10-09: reference check missed before a String helper call
+
+- Doing: preserving the historical status byte fixture while projecting out its retired Knip gate.
+- Evidence: the focused assertion received a function as its expected value. `effect/String.replace` in the Effect v4 reference is curried-only: `replace(search, replacement)(self)`.
+- Resolution: corrected the call against `.repos/effect/packages/effect/src/String.ts` and reran the failed fixture group. The normalized historical placeholders are comparison text and are not decoded as a live DTO.
+- Prevention: inspect the current reference signature before writing each newly used Effect helper call; the data-first form cannot be assumed.
+
 ## 2026-10-09 — D release census and admission
 
 - Census consumer scan encountered a non-object `package.json` in the broader
@@ -285,3 +352,57 @@
   rather than keeping an ordered ticket queue, so closeout admission has
   unpredictable wait time. A fair queue with observable position would prevent
   this delay; this lane does not alter the workstation wrapper or other jobs.
+
+## 2026-10-09: run-5 owner regeneration waits for shared admission
+
+- Doing: integrated-tree regeneration before the Knip retirement publication.
+- Evidence: the first command still has no terminal result after several
+  minutes; its log contains `beep-heavy: all 3 slots busy, waiting`. Slot
+  holders change while this waiter remains queued.
+- Prevention: a visible FIFO admission position and queue-age receipt would
+  distinguish normal capacity delay from starvation. The lane preserves the
+  shared three-slot limit and leaves other owners' processes intact.
+
+## 2026-10-09: local docgen requires a full proof for retirement inputs
+
+- Doing: run the brief's `beep docgen local --base origin/main` parity gate.
+- Evidence: exit 1 with `full docgen proof required; re-run with "--full"`.
+  Root manifest, lockfile, Turbo and Docgen tooling changes trigger this
+  planner refusal before execution. All eleven package docgen gates pass.
+- Resolution: run the required full proof under a second admitted command;
+  preserve the original refusal and report the full execution separately.
+- Prevention: lane plans with global input changes select the full mode
+  explicitly rather than treating local mode's planning refusal as a source red.
+
+## 2026-10-09: full docgen has no authenticated remote cache
+
+- Doing: required full docgen proof after global retirement inputs changed.
+- Evidence: Turbo warns `Remote caching unavailable (Authentication failed)`
+  and continues with local compilation.
+- Prevention: G's approved read-only cache credential route would avoid
+  repeated package compilation. This lane continues locally and leaves
+  cache credentials with their owner; no secret value or new endpoint used.
+
+## 2026-10-09: final-main advancement requires another CLI proof
+
+- Doing: final merge and artifact regeneration before A publication.
+- Evidence: D #1566 lands while the initial integrated package/parity/coverage
+  sequence runs. The merge is blocked first by dirty packet documents, then
+  has four documentation conflicts; source merges without conflict.
+- Recovery: retained recovery stash; preserve both lanes' documents; refresh
+  CLI source proofs and generated artifacts on merge `c65a49116c`. The ten
+  other package sources stay unchanged and their completed gates are retained.
+- Prevention: a serialized final-source integration window would avoid
+  repeating the 740-second CLI audit and 748-second coverage run. This lane
+  follows S4 and does not claim old source proof on the new integrated tree.
+
+## 2026-10-09: cache review CAS input became stale after D merge
+
+- Doing: regenerate the shared qualification baseline after final main merge.
+- Evidence: `Reviewed baseline changed; refresh its digest before replacing it.`
+- Resolution: read the owner's byte-hash CAS contract and refresh only the
+  request's previous digest from the actual merged baseline. Preserve scope,
+  profile, epoch, review basis and existing D evidence references. The failed
+  log remains; only this failed step and unrun steps are resumed.
+- Prevention: calculate the review CAS digest after the main merge, just before
+  the owner command. Saved pre-merge requests are evidence, not current inputs.

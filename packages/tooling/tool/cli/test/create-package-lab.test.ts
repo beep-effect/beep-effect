@@ -436,7 +436,7 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "30 seconds" })((it) =>
             expectNoPackageCeremony(manifest);
             // Exactly what the emitted templates import: @beep/repo-configs in
             // next.config.ts, @beep/ui via postcss.config.mjs + globals.css.
-            // Anything further fails the required Knip context on a real lab.
+            // Anything further fails the dependency hygiene contract on a real lab.
             expect(manifest.dependencies).toMatchObject({
               next: "catalog:",
               react: "catalog:",

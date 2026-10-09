@@ -1,3 +1,4 @@
+// Historical pre-retirement GitHub snapshots retain the former Knip context.
 import { collectYeetStatus, RepoRunContext, YeetStatusSnapshotJson } from "@beep/repo-cli/test/Yeet";
 import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -292,7 +293,7 @@ const PRE_CHANGE_SNAPSHOT_JSON = [
 ].join("");
 
 it.layer(PlatformLayer, { timeout: "30 seconds" })("yeet status chain (W10)", (it) => {
-  it.effect("decodes the same snapshot, byte for byte, as the sequential chain did", () =>
+  it.effect("preserves the sequential snapshot after projecting out the retired Knip gate", () =>
     Effect.gen(function* () {
       const root = yield* tempRoot();
       const recorder = yield* makeRecorder;
@@ -302,7 +303,13 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("yeet status chain (W10)", (i
         Str.replaceAll(root, "<root>"),
         Str.replaceAll(/feature_chain-[0-9a-f]{12}/gu, "feature_chain-<run>")
       );
-      expect(json).toBe(PRE_CHANGE_SNAPSHOT_JSON);
+      // The historical byte fixture contains normalized <root>/<run> placeholders,
+      // so it is comparison text rather than a decodable live status DTO.
+      const expected = Str.replace(
+        '{"status":"unproven","gateId":"knip-ratchet","detail":"standards/knip.regression-baseline.jsonc does not exist"},',
+        ""
+      )(PRE_CHANGE_SNAPSHOT_JSON);
+      expect(json).toBe(expected);
       // The fixture's rows: one required red, one optional red, one thread.
       expect(snapshot.remote.failingRequiredCheckCount).toBe(1);
       expect(snapshot.remote.failingOptionalCheckCount).toBe(1);

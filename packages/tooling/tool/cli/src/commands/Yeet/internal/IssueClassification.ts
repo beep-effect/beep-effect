@@ -263,12 +263,6 @@ const knownSubLaneHints: ReadonlyArray<KnownSubLaneHint> = [
     remediation:
       "Repair the JSDoc inventory regression (the cheap tier reads the committed inventory, pre-push regenerates it), then rerun the failing tier.",
   },
-  {
-    needle: "quality:knip",
-    subCategory: "knip",
-    category: "lint-tool",
-    remediation: "Run `bun run beep quality knip`, fix every finding, then rerun the cheap-gates tier.",
-  },
   // The pre-push lane id, then the root task the lint-policy battery runs.
   ...A.map(
     ["quality:shadcn-lint", "lint:shadcn"],

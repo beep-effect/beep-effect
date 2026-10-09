@@ -886,26 +886,10 @@ export const finalizeSubject = Effect.fn("DocgenQuality.finalizeSubject")(functi
 /**
  * Result of collecting package subject candidates for docgen quality analysis.
  *
- * **Example** (Collect docgen quality subjects)
- *
- * ```ts
- * import { PackageSubjectCandidateResult } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.subjects"
- *
- * const result = PackageSubjectCandidateResult.make({
- *   candidates: [],
- *   error: null,
- *   status: "completed",
- *   timedOut: false
- * })
- * console.log(result.status)
- * ```
- *
  * @category models
  * @since 0.0.0
  */
-export class PackageSubjectCandidateResult extends S.Class<PackageSubjectCandidateResult>(
-  $I`PackageSubjectCandidateResult`
-)(
+class PackageSubjectCandidateResult extends S.Class<PackageSubjectCandidateResult>($I`PackageSubjectCandidateResult`)(
   {
     candidates: S.Array(DocgenQualitySubjectCandidate),
     error: S.NullOr(S.String),

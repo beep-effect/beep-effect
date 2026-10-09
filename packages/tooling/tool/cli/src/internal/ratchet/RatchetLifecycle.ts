@@ -3,7 +3,7 @@
  *
  * **Details**
  *
- * Every complete repo-cli ratchet (Knip, JSDoc inventory totals, coverage
+ * Every complete repo-cli ratchet (JSDoc inventory totals, coverage
  * regression) enforces its committed baseline with the same control flow: run
  * an ordered list of regression checks, short-circuit into a tagged failure on
  * the first present one after printing its `[tag] regression:` stderr block,
@@ -50,9 +50,9 @@ import * as Effect from "effect/Effect";
  *
  * const program = enforceRatchet({
  *   regressions: [
- *     { present: false, lines: ["[knip] regression: ..."], error: new Error("grew") }
+ *     { present: false, lines: ["[ratchet] regression: ..."], error: new Error("grew") }
  *   ],
- *   okLine: "[knip] ok: current=0 baseline=0 introduced=0",
+ *   okLine: "[ratchet] ok: current=0 baseline=0 introduced=0",
  *   tighten: O.none()
  * })
  * console.log(Effect.isEffect(program))

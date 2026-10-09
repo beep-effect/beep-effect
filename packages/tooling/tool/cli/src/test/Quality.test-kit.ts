@@ -77,7 +77,6 @@ export * from "../commands/Quality/internal/JSDocMigrateExtract.ts";
 export * from "../commands/Quality/internal/JSDocMigrateRewrite.ts";
 export * from "../commands/Quality/internal/JSDocMigrateTitles.ts";
 export * from "../commands/Quality/internal/JSDocRatchet.ts";
-export * from "../commands/Quality/internal/KnipRatchet.ts";
 export * from "../commands/Quality/internal/LaneProofReuse.ts";
 export * from "../commands/Quality/internal/PackageVerify.ts";
 export {

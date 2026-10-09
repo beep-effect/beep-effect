@@ -54,7 +54,6 @@ consumer releases against that API, it needs the 6.x package under the
 | tstyche 7.x | yes | loads the classic API; its `>=5.4` peer range is open but no TS7 backend exists |
 | commitlint (`cosmiconfig-typescript-loader`) | yes | peer `>=5` on the JS API |
 | ts-morph 28 | no | `@ts-morph/common` vendors its own TypeScript 6.0.2 |
-| knip 6 | no | parses with oxc-parser, no `typescript` dependency |
 
 The hold lives in `syncpack.config.ts` (the "Held back" update group) so
 `deps:update` cannot collapse the split. It ends when typescript-eslint and

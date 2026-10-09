@@ -14,20 +14,10 @@ const $I = $ColorsId.create("Domain");
 /**
  * Input accepted by a color formatter.
  *
- * **Example** (Decode ready string input)
- *
- * ```typescript
- * import { FormatterInput } from "./ColorsSchema.ts"
- * import * as S from "effect/Schema"
- *
- * const decode = S.decodeUnknownSync(FormatterInput)
- * console.log(decode("ready"))
- * ```
- *
  * @category models
  * @since 0.0.0
  */
-export const FormatterInput = S.Union([S.String, S.Finite]).pipe(
+const FormatterInput = S.Union([S.String, S.Finite]).pipe(
   S.UndefinedOr,
   $I.annoteSchema("FormatterInput", {
     description: "Input accepted by a color formatter.",
@@ -37,19 +27,10 @@ export const FormatterInput = S.Union([S.String, S.Finite]).pipe(
 /**
  * Runtime type for {@link FormatterInput}.
  *
- * **Example** (Annotate numeric formatter input)
- *
- * ```typescript
- * import type { FormatterInput } from "./ColorsSchema.ts"
- *
- * const input: FormatterInput = 42
- * console.log(input)
- * ```
- *
  * @category models
  * @since 0.0.0
  */
-export type FormatterInput = typeof FormatterInput.Type;
+type FormatterInput = typeof FormatterInput.Type;
 
 /**
  * Schema for a formatter that renders one value to a string.

@@ -28,9 +28,9 @@ import {
 import { CacheEvidenceReference } from "@beep/repo-configs/cache";
 import { findRepoRoot } from "@beep/repo-utils/Root";
 import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema/Sha256";
-import { assertSchemaArbitraryDecodesToSelf, provideScopedLayer } from "@beep/test-utils";
+import { assertSchemaArbitraryDecodesToSelf } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
+import { expect, it } from "@effect/vitest";
 import { assertInstanceOf, assertNone } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -50,7 +50,8 @@ import type {
 } from "@beep/repo-cli/commands/Quality";
 
 const ECONOMICS_PATH = "goals/time-to-certainty/research/economics.json";
-const HANDOFF_PATH = "goals/time-to-certainty/research/gate-order-handoff.json";
+// Current generated snapshot; the TTC packet and ciops v1 fixtures retain their pinned historical bytes.
+const HANDOFF_PATH = "packages/tooling/tool/cli/test/fixtures/gate-order-handoff-knip-retired.json";
 const EMPTY_INPUT_SHA256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 const COVERAGE_KINDS: ReadonlyArray<GateOrderSeedFindingKind> = [
   "unseeded-lane",
@@ -194,7 +195,7 @@ const expectDecidingKeySeparates = (
   expect(order(previous, current), `${laneId}: ${key} must separate`).toBe(-1);
 };
 
-describe("gate-order handoff (TTC D1, rulings 76-78)", () => {
+it.layer(NodeServices.layer, { timeout: "30 seconds" })("gate-order handoff (TTC D1, rulings 76-78)", (it) => {
   it.effect(
     "fixture 1: the seed covers exactly the declared pre-push plan",
     Effect.fnUntraced(function* () {
@@ -209,7 +210,7 @@ describe("gate-order handoff (TTC D1, rulings 76-78)", () => {
 
       expect(
         findingSummary(coverage),
-        `gate-order seed does not cover the pre-push plan (unseeded: ${idsOfKind(findings, "unseeded-lane")}; orphan: ${idsOfKind(findings, "orphan-seed-row")}). Add a DEFAULT_GATE_ORDER_SEED row and a DEFAULT_GATE_ORDER_COST_SOURCES entry in packages/tooling/tool/cli/src/commands/Yeet/internal/WaveOrder.ts under the ruling 76 seeding rule (goals/time-to-certainty/research/decisions.md, round 24), then rerun this file once with vitest -u, which writes goals/time-to-certainty/research/gate-order-handoff.json when the run ends, and once without -u, which must pass; review the handoff diff.`
+        `gate-order seed does not cover the pre-push plan (unseeded: ${idsOfKind(findings, "unseeded-lane")}; orphan: ${idsOfKind(findings, "orphan-seed-row")}). Add a DEFAULT_GATE_ORDER_SEED row and a DEFAULT_GATE_ORDER_COST_SOURCES entry in packages/tooling/tool/cli/src/commands/Yeet/internal/WaveOrder.ts under the ruling 76 seeding rule (goals/time-to-certainty/research/decisions.md, round 24), then rerun this file once with vitest -u, which writes packages/tooling/tool/cli/test/fixtures/gate-order-handoff-knip-retired.json when the run ends, and once without -u, which must pass; review the handoff diff.`
       ).toEqual([]);
 
       // Must-fail: the pre-D1 seed leaves quality:cache-policy unseeded.
@@ -239,7 +240,7 @@ describe("gate-order handoff (TTC D1, rulings 76-78)", () => {
       expect(
         findingSummary(gateOrderSeedFindings(orphanSeed, DEFAULT_GATE_ORDER_COST_SOURCES, declaredLanes, view))
       ).toEqual([{ kind: "orphan-seed-row", laneId: "quality:retired" }]);
-    }, provideScopedLayer(NodeServices.layer))
+    })
   );
 
   it.effect(
@@ -307,8 +308,8 @@ describe("gate-order handoff (TTC D1, rulings 76-78)", () => {
           withFirstFailure(view, { redAttempts: 1611 })
         )
       ).toEqual(one("red-attempts-mismatch", ""));
-      expect(findingsFor(withSeedRow(DEFAULT_GATE_ORDER_SEED, "quality:knip", { laneClass: "heavy" }))).toEqual(
-        one("lane-class-wave-mismatch", "quality:knip")
+      expect(findingsFor(withSeedRow(DEFAULT_GATE_ORDER_SEED, "fallow:audit", { laneClass: "heavy" }))).toEqual(
+        one("lane-class-wave-mismatch", "fallow:audit")
       );
       expect(
         findingsFor(
@@ -394,7 +395,7 @@ describe("gate-order handoff (TTC D1, rulings 76-78)", () => {
           EconomicsSeedSourceView.make({ ...view, measurementAsOf: "2026-09-04T00:00:00.000Z" })
         )
       ).toEqual(one("measurement-mismatch", ""));
-    }, provideScopedLayer(NodeServices.layer))
+    })
   );
 
   it.effect(
@@ -408,11 +409,11 @@ describe("gate-order handoff (TTC D1, rulings 76-78)", () => {
 
       expect(yield* hashBytes(bytes)).toBe(GATE_ORDER_SOURCE.sha256);
       expect(yield* hashBytes(changed)).not.toBe(GATE_ORDER_SOURCE.sha256);
-    }, provideScopedLayer(NodeServices.layer))
+    })
   );
 
   it.effect(
-    "fixture 4: the committed handoff document equals the bytes the checkout computes",
+    "fixture 4: the current handoff snapshot equals the bytes the checkout computes",
     Effect.fnUntraced(function* () {
       const { view, handoffPath } = yield* loadEconomics();
       // (a) Compute the handoff and its canonical bytes.
@@ -469,7 +470,7 @@ describe("gate-order handoff (TTC D1, rulings 76-78)", () => {
         );
       expect(yield* encodeHandoffBytes(withoutCost("quality:storybook"))).toBe(bytes);
       expect(() => withoutCost("quality:lint")).toThrow();
-    }, provideScopedLayer(NodeServices.layer))
+    })
   );
 
   it.effect(
@@ -495,7 +496,7 @@ describe("gate-order handoff (TTC D1, rulings 76-78)", () => {
           O.getOrThrow(A.get(indexed, previousRank + 1))
         );
       }
-    }, provideScopedLayer(NodeServices.layer))
+    })
   );
 
   it.effect(
@@ -506,7 +507,7 @@ describe("gate-order handoff (TTC D1, rulings 76-78)", () => {
       const decided = A.getSomes(A.map(handoff.lanes, (lane) => lane.decidedBy));
 
       expect(countBy(decided, (key) => key)).toEqual({
-        "cost-p50": 20,
+        "cost-p50": 19,
         "first-red-share": 6,
         "declaration-index": 5,
         "lane-class": 1,
@@ -520,7 +521,7 @@ describe("gate-order handoff (TTC D1, rulings 76-78)", () => {
           Order.String
         )
       ).toEqual(["quality:coverage", "quality:nix", "quality:sast", "quality:security"]);
-      expect(A.filter(handoff.lanes, (lane) => lane.redScheduling === "stop-after-red").length).toBe(29);
+      expect(A.filter(handoff.lanes, (lane) => lane.redScheduling === "stop-after-red").length).toBe(28);
       expect(
         A.every(handoff.lanes, (lane) =>
           O.exists(
@@ -529,9 +530,9 @@ describe("gate-order handoff (TTC D1, rulings 76-78)", () => {
           )
         )
       ).toBe(true);
-      // One cost source per seed row: 33 unique lane ids, exactly the seed's.
+      // One cost source per seed row: 32 unique lane ids, exactly the seed's.
       const costIds = A.map(DEFAULT_GATE_ORDER_COST_SOURCES, (entry) => entry.laneId);
-      expect(HashSet.size(HashSet.fromIterable(costIds))).toBe(33);
+      expect(HashSet.size(HashSet.fromIterable(costIds))).toBe(32);
       expect(A.sort(costIds, Order.String)).toEqual(
         A.sort(
           A.map(DEFAULT_GATE_ORDER_SEED.lanes, (row) => row.laneId),
@@ -539,7 +540,7 @@ describe("gate-order handoff (TTC D1, rulings 76-78)", () => {
         )
       );
       expect(countBy(handoff.lanes, (lane) => lane.costBasis)).toEqual({
-        "a1-lane-row": 16,
+        "a1-lane-row": 15,
         "a1-proxy-row": 15,
         "external-run": 2,
       });
@@ -559,7 +560,7 @@ describe("gate-order handoff (TTC D1, rulings 76-78)", () => {
         "quality:storybook",
         "repo-sanity:config-typecheck",
       ]);
-    }, provideScopedLayer(NodeServices.layer))
+    })
   );
 
   // The helper decodes generated Type values as Encoded input, so it covers the Option-free
@@ -683,6 +684,6 @@ describe("gate-order handoff (TTC D1, rulings 76-78)", () => {
         ...encoded,
         source: { ...encoded.source, reference: { ...encoded.source.reference, path: "research/economics.json" } },
       });
-    }, provideScopedLayer(NodeServices.layer))
+    })
   );
 });

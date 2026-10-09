@@ -24,7 +24,7 @@ const vec = (v: replicad.Vector): V3 => [v.x, v.y, v.z];
  *
  * @internal
  */
-export const lightFor = (camera: Camera): { readonly eye: V3; readonly light: V3 } => {
+const lightFor = (camera: Camera): { readonly eye: V3; readonly light: V3 } => {
   const eye = unit(camera.eye);
   const right = unit(cross(unit(camera.up), eye));
   const up = cross(eye, right);
@@ -37,7 +37,7 @@ export const lightFor = (camera: Camera): { readonly eye: V3; readonly light: V3
  *
  * @internal
  */
-export const pitchFor = (input: { readonly exposure: number; readonly plan: ShadingPlan }): O.Option<number> => {
+const pitchFor = (input: { readonly exposure: number; readonly plan: ShadingPlan }): O.Option<number> => {
   const { exposure, plan } = input;
   if (exposure > plan.litThreshold) {
     return O.none();
