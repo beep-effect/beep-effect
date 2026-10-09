@@ -33,7 +33,7 @@ jobs:
     # creates no `Heavy / *` check runs at all (that is the `hold` verdict).
     runs-on: ${{ inputs.admitted && 'beep-ec2-heavy' || 'ubuntu-24.04' }}
     timeout-minutes: ${{ matrix.timeout_minutes }}
-    environment: ${{ github.event_name == 'push' && 'turbo-cache-write' || null }}
+    environment: ${{ github.event_name == 'push' && inputs.admitted && matrix.uses_turbo == 'true' && 'turbo-cache-write' || null }}
     permissions:
       contents: read
     strategy:
@@ -142,11 +142,11 @@ jobs:
           turbo-cache-key-suffix: -${{ matrix.id }}
           native-pdf-tools: ${{ matrix.id == 'coverage' }}
           free-disk: "true"
-          turbo-remote-cache: "true"
+          turbo-remote-cache: ${{ matrix.uses_turbo }}
           app-secrets: "true"
           turbo-api: ${{ vars.TURBO_API }}
           turbo-team: ${{ vars.TURBO_TEAM }}
-          turbo-token: ${{ github.event_name == 'push' && secrets.TURBO_TOKEN || '' }}
+          turbo-token: ${{ github.event_name == 'push' && matrix.uses_turbo == 'true' && secrets.TURBO_TOKEN || '' }}
           turbo-read-token: ${{ secrets.TURBO_READ_TOKEN }}
           database-url: ${{ github.event_name == 'push' && secrets.DATABASE_URL || '' }}
           database-url-unpooled: ${{ github.event_name == 'push' && secrets.DATABASE_URL_UNPOOLED || '' }}
@@ -186,7 +186,7 @@ jobs:
         if: steps.lane-gate.outputs.should_run == 'true' && matrix.install_typos == 'true'
         uses: taiki-e/install-action@91ddec75689c4c78665b598d188dc821c5a43e5c # v2.85.9
         with:
-          tool: typos-cli@1.44.0
+          tool: typos-cli@1.50.3
 
       - name: Run verification lane
         if: steps.lane-gate.outputs.should_run == 'true'
@@ -270,10 +270,19 @@ jobs:
             bun run beep ci append-turbo-summary
           fi
 
+      - name: Upload trusted Turbo summaries
+        if: github.event_name == 'push' && hashFiles('.turbo/runs/*.json') != ''
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: turbo-summary-${{ github.job }}-${{ matrix.id || matrix.partition || 'single' }}
+          path: .turbo/runs/*.json
+          retention-days: 7
+          if-no-files-found: warn
+
       - name: Save post-lane Turbo fallback
         if: github.event_name == 'push' && matrix.uses_turbo == 'true' && steps.lane-gate.outputs.should_run == 'true' && success()
         continue-on-error: true
-        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .turbo/cache
           key: turbo-${{ runner.os }}-${{ startsWith(runner.name, 'beep-ci-') && 'fleet' || 'shared' }}-${{ github.job }}-${{ matrix.id }}-${{ hashFiles('turbo.json', 'package.json', 'bun.lock') }}-${{ github.sha }}
