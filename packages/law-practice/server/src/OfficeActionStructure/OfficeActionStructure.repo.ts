@@ -108,9 +108,8 @@ export const officeActionStructureFileStore = (filename: string) =>
         const expected = O.map(preceding, (row) => row.attemptId);
         if (!O.makeEquivalence(Str.Equivalence)(expected, attempt.previousAttemptId))
           return yield* storageError("Attempt predecessor must name the latest document attempt.");
-        const encoded = yield* S.encodeEffect(JsonAttempt)(attempt).pipe(
-          Effect.mapError(() => storageError("Cannot encode attempt receipt."))
-        );
+        // Schema-valid receipts contain only JSON-safe fields; an encoder failure is an invariant defect.
+        const encoded = yield* S.encodeEffect(JsonAttempt)(attempt).pipe(Effect.orDie);
         yield* fs
           .writeFileString(filename, `${encoded}\n`, { flag: "a" })
           .pipe(Effect.mapError(() => storageError("Cannot append attempt receipt.")));

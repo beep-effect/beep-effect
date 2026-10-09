@@ -237,6 +237,12 @@ it.layer(TestCrypto, { timeout: "10 seconds" })("office-action exact paired extr
         OfficeActionStructureInput.make({ document, verifiedSource, ocrPages: [page] })
       );
       expect(ocr).toMatchObject({ status: "abstained", code: "low-quality-source" });
+      expect(
+        yield* structure.fromExtractions(
+          OfficeActionStructureInput.make({ document, verifiedSource, ocrPages: [page] }),
+          []
+        )
+      ).toMatchObject({ status: "abstained", code: "low-quality-source" });
       const unknown = yield* structure.extract(
         OfficeActionStructureInput.make({
           document,
