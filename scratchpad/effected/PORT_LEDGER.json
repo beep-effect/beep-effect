@@ -919,16 +919,317 @@
       "wave": 1,
       "position": 2,
       "stage": 0,
-      "status": "pending",
+      "status": "in-progress",
       "provisionalHome": "foundation/modeling",
       "upstreamPaths": {
         "src": "packages/yaml/src",
         "test": "packages/yaml/__test__"
       },
-      "exportsExpected": [],
+      "exportsExpected": [
+        {
+          "name": "CollectionStyle",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "LintContext",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "LintLine",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "QuoteCompat",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "QuoteStyle",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ScalarChomp",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ScalarStyle",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "StyleConflict",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "StyleEvidence",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "StyleFloor",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "StyleFloorTally",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "StyleObservation",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "StyleVote",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "StyleVoteTally",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "Yaml",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "YamlAlias",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "YamlAliasEncoded",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "YamlBoundCodec",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "YamlComposerErrorCode",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "YamlDiagnostic",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "YamlDirective",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "YamlDocument",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "YamlEdit",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "YamlErrorCode",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "YamlFormat",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "YamlFormattingOptions",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "YamlLexErrorCode",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "YamlLint",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "YamlLintConfig",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "YamlLintDiagnostic",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "YamlLintInference",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "YamlLintRuleSetting",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "YamlLintSeverity",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "YamlMap",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "YamlMapEncoded",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "YamlModificationError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "YamlModifyErrorCode",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "YamlNode",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "YamlPair",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "YamlParseError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "YamlParseErrorCode",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "YamlParseOptions",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "YamlPath",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "YamlRange",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "YamlRangeLike",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "YamlRule",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "YamlScalar",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "YamlScalarEncoded",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "YamlSegment",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "YamlSeq",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "YamlSeqEncoded",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "YamlStringifyError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "YamlStringifyErrorCode",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "YamlStringifyOptions",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "YamlStyleConflictError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "YamlToken",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "YamlTokenKind",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "YamlTokens",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "YamlVisitor",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "YamlVisitorEvent",
+          "kind": "both",
+          "entry": "."
+        }
+      ],
       "exportsAdded": [],
       "newDeps": [],
-      "fixturesBytes": 0,
+      "fixturesBytes": 510945,
       "deviations": [],
       "backlog": [],
       "reviewRounds": [],
