@@ -40,16 +40,18 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P2 complete — all 24 open decisions ratified in
-[`research/p2-grill-decisions.md`](./research/p2-grill-decisions.md) (2026-08-01 grill
-session); do not relitigate them in implementation PRs. P1 Phase-0 report commands
-remain in progress and are now unblocked with full doctrine: `KnowledgeFinding` golden
-tests, `beep skills provenance` (pilot: shadcn), `beep knowledge refs --tree HEAD`,
-manifest capability decode-retention tests, and Workstream E's pure bootstrap/adoption
-plans. P1 execution shape (tranches, orchestration, publish cadence, evidence path,
-per-workstream P3 unlock) is ratified in
-[`research/p1-execution-decisions.md`](./research/p1-execution-decisions.md)
-(2026-08-04 session).
+P4 in progress — Workstream D's projection slice. The design
+([`research/p4-goals-projection-design.md`](./research/p4-goals-projection-design.md))
+and its mini-grill outcomes
+([`research/p4-goals-projection-decisions.md`](./research/p4-goals-projection-decisions.md),
+2026-10-09) are settled; next is PR 1: `beep goals next|explain|catalog` over a
+`bun:sqlite` projection, differential-tested against a pure-TS evaluator, plus the
+committed catalog FP-eyeball report. P1-P3 outcomes stay as recorded: all 24 P2
+decisions in [`research/p2-grill-decisions.md`](./research/p2-grill-decisions.md),
+A/B/C/D Phase-0 verdicts in
+[`research/p1-fp-eyeball-verdicts.md`](./research/p1-fp-eyeball-verdicts.md).
+Workstream E's pure-plan report still awaits its eyeball verdict before any
+materializer exists.
 
 ## Latest Evidence
 

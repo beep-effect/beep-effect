@@ -5,7 +5,7 @@
     "title": "Knowledge-Surface Audit & Automation",
     "status": "active",
     "created": "2026-07-31",
-    "updated": "2026-08-17",
+    "updated": "2026-10-09",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/knowledge-surface-automation",
@@ -60,7 +60,8 @@
     "research/p3-hermetic-lane-decisions.md",
     "research/p3-report-roadmap-refs-fold-in.md",
     "research/p1-report-bootstrap-adopt-plan.md",
-    "research/p4-goals-projection-design.md"
+    "research/p4-goals-projection-design.md",
+    "research/p4-goals-projection-decisions.md"
   ],
   "agentLaunchers": [
     {
@@ -95,7 +96,7 @@
     {
       "id": "P4",
       "name": "Workstreams B, D, E behind gates; C Stage 2",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P5",
