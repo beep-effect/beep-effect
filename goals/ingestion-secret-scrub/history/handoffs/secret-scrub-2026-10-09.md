@@ -272,3 +272,12 @@ the complete implemented bank, scrub transform and prompt gate to draft #1570.
 The release note and its reversal are retained above; no new dependency or
 shared-policy change is made. Exact-canary scan before this update: 147 surfaces,
 each 0; rescan and commit-range gitleaks run before the implementation push.
+
+### 2026-10-09 — P1 publication export repair
+
+All six package proofs and scoped coverage passed, including schema 483 tests and
+file-processing 71 tests. Yeet then blocked the implementation push on introduced
+root alias drift from the new bank subpath; nothing was pushed. The bank remains
+one pure module, consumed through the existing schema namespace barrel instead.
+Reason and reversal are recorded in SPEC; shared root alias files are untouched.
+Affected package proofs are rerun before retrying the single P1 publication wave.

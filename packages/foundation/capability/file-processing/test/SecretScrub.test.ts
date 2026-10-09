@@ -1,5 +1,5 @@
 import { SecretScrub } from "@beep/file-processing";
-import { credentialPatternBankVersion } from "@beep/schema/CredentialPatternBank";
+import { CredentialPatternBank as Bank } from "@beep/schema";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, deepStrictEqual } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
@@ -15,6 +15,8 @@ import * as Tracer from "effect/Tracer";
 import * as TestClock from "effect/testing/TestClock";
 import { canaryBuilders, secretScrubFixtures } from "./fixtures/SecretScrub.fixtures.ts";
 import { countCanaries } from "./support/CanaryScan.ts";
+
+const { credentialPatternBankVersion } = Bank;
 
 const encode = S.encodeEffect(S.fromJsonString(S.Unknown));
 const encodeResult = S.encodeEffect(S.fromJsonString(SecretScrub.SecretScrubResult));

@@ -121,3 +121,14 @@ exact-canary count is 0 as well. No credentials or approval were required.
   an older submission. Reversal: stop the replacement and restore the original
   submission; never claim a canceled job as passing.
 - Prevention: FIFO admission with durable queue position and source-bound receipts.
+
+## 2026-10-09 — new export requires generated root aliases
+
+- Work: P1 Yeet publication after green package proofs.
+- Evidence: `repo-sanity:tsconfig-sync` reports two root generated alias files
+  drifting by one added bank export; no push occurred.
+- Attribution: introduced by the new schema subpath export, not matching behavior.
+- Repair: consume `CredentialPatternBank` through the existing schema namespace
+  barrel and remove the new subpath export. This stays inside owned files and
+  avoids editing shared root alias projections. Affected package proofs rerun.
+- Prevention: include export-projection consequences in the P0 module-layout audit.

@@ -33,8 +33,7 @@
  * @since 0.0.0
  */
 import { $ObservabilityId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
-import { maskCredentialCategory, replaceCredentialCategory } from "@beep/schema/CredentialPatternBank";
+import { CredentialPatternBank as Bank, LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
@@ -47,6 +46,8 @@ import { CauseClassification, summarizeCause } from "./CauseDiagnostics.ts";
 import type { CauseSummary } from "./CauseDiagnostics.ts";
 
 const decodeNonNegativeIntResult = S.decodeResult(S.Natural);
+
+const { maskCredentialCategory, replaceCredentialCategory } = Bank;
 
 const $I = $ObservabilityId.create("CauseRedaction");
 

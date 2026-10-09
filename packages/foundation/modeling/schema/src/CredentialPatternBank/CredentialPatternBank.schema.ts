@@ -17,8 +17,8 @@ const $I = $SchemaId.create("CredentialPatternBank");
  *
  * **Example** (Identify the bank)
  * ```ts import.meta.vitest name="Identify the bank"
- * import { credentialPatternBankVersion } from "@beep/schema/CredentialPatternBank"
- * console.log(credentialPatternBankVersion)
+ * import { CredentialPatternBank } from "@beep/schema"
+ * console.log(CredentialPatternBank.credentialPatternBankVersion)
  * ```
  * @category constants
  * @since 0.0.0
@@ -30,8 +30,8 @@ export const credentialPatternBankVersion = "credential-pattern-bank/v1";
  *
  * **Example** (Inspect a category)
  * ```ts import.meta.vitest name="Inspect a category"
- * import { CredentialCategory } from "@beep/schema/CredentialPatternBank"
- * console.log(CredentialCategory.is.jwt("jwt"))
+ * import { CredentialPatternBank } from "@beep/schema"
+ * console.log(CredentialPatternBank.CredentialCategory.is.jwt("jwt"))
  * ```
  * @category models
  * @since 0.0.0
@@ -53,8 +53,8 @@ export const CredentialCategory = LiteralKit([
  * Runtime category type.
  * **Example** (Type a category)
  * ```ts import.meta.vitest name="Type a category"
- * import type { CredentialCategory } from "@beep/schema/CredentialPatternBank"
- * const category: CredentialCategory = "jwt"
+ * import type { CredentialPatternBank } from "@beep/schema"
+ * const category: CredentialPatternBank.CredentialCategory = "jwt"
  * console.log(category)
  * ```
  * @category models
@@ -66,8 +66,8 @@ export type CredentialCategory = typeof CredentialCategory.Type;
  * A rule's grammar and partial-form residue grammar; never a matched value.
  * **Example** (Read a rule field)
  * ```ts import.meta.vitest name="Read a rule field"
- * import { credentialRules } from "@beep/schema/CredentialPatternBank"
- * console.log(credentialRules[0]?.version)
+ * import { CredentialPatternBank } from "@beep/schema"
+ * console.log(CredentialPatternBank.credentialRules[0]?.version)
  * ```
  * @category models
  * @since 0.0.0
@@ -90,8 +90,8 @@ export class CredentialRule extends S.Class<CredentialRule>($I`CredentialRule`)(
  * A non-secret original UTF-16 span, with an explicit resolution state.
  * **Example** (Find original offsets)
  * ```ts import.meta.vitest name="Find original offsets"
- * import { detectCredentials } from "@beep/schema/CredentialPatternBank"
- * console.log(detectCredentials("public text").length)
+ * import { CredentialPatternBank } from "@beep/schema"
+ * console.log(CredentialPatternBank.detectCredentials("public text").length)
  * ```
  * @category models
  * @since 0.0.0

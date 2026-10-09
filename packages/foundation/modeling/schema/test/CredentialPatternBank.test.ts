@@ -1,4 +1,4 @@
-import * as Bank from "@beep/schema/CredentialPatternBank";
+import { CredentialPatternBank as Bank } from "@beep/schema";
 import { describe, expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";

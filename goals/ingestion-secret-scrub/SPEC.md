@@ -271,3 +271,11 @@ first command. Replace the unstarted submission once with identical commands and
 unchanged 32 GiB budget. Reason: mitigate independent-polling starvation without
 bypassing machine-wide admission. Reversal: stop the replacement and restore the
 original submission. Canceled commands provide no proof.
+
+### Canonical bank public entry point
+
+Use the existing `@beep/schema` namespace barrel (`CredentialPatternBank`) rather
+than a new subpath export. Reason: the subpath requires two generated root alias
+updates outside the lane's owned surfaces; the existing barrel needs no new edge
+or alias. Runtime rules, version and output remain unchanged. Reversal: restore
+the subpath and synchronize its generated aliases in a packet owning those files.

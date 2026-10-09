@@ -4,10 +4,12 @@
  * @since 0.0.0
  */
 import { $FileProcessingId } from "@beep/identity";
-import { CredentialCategory, credentialPatternBankVersion } from "@beep/schema/CredentialPatternBank";
+import { CredentialPatternBank as Bank } from "@beep/schema";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+
+const { CredentialCategory, credentialPatternBankVersion } = Bank;
 
 const $I = $FileProcessingId.create("SecretScrub");
 

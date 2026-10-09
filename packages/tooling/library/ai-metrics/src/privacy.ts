@@ -6,13 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
-import {
-  countCredentialCategory,
-  maskCredentialCategory,
-  replaceCredentialAssignmentsOutsideHeaders,
-  replaceCredentialCategory,
-} from "@beep/schema/CredentialPatternBank";
+import { CredentialPatternBank as Bank, LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import * as Effect from "effect/Effect";
@@ -25,6 +19,13 @@ import * as SchemaTransformation from "effect/SchemaTransformation";
 import { metricEventName, transcriptLines } from "./internal/transcript-utils.ts";
 import { AiMetricsSourceAttribution, AiMetricsSourceRole, AiMetricsTranscriptSource } from "./models.ts";
 import type { TranscriptIngestSummary } from "./models.ts";
+
+const {
+  countCredentialCategory,
+  maskCredentialCategory,
+  replaceCredentialAssignmentsOutsideHeaders,
+  replaceCredentialCategory,
+} = Bank;
 
 const $I = $RepoAiMetricsId.create("privacy");
 const TrimmedNonEmptyString = S.Trim.check(S.isNonEmpty({ message: "String must not be empty" }));

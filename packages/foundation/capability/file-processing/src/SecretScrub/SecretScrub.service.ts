@@ -4,7 +4,7 @@
  * @since 0.0.0
  */
 import { $FileProcessingId } from "@beep/identity";
-import * as Bank from "@beep/schema/CredentialPatternBank";
+import { CredentialPatternBank as Bank } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
