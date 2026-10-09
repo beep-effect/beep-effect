@@ -133,6 +133,7 @@ export const ResidueReapSkipReason = LiteralKit([
   "evidence-referenced",
   "worktree-remove-failed",
   "owner-ruling-required",
+  "foreign-owner",
   "terminal-state-unverified",
   "lock-held",
   "draft-unresolved",
@@ -442,10 +443,12 @@ export class ResidueReapReport extends S.Class<ResidueReapReport>($I`ResidueReap
  * Owner-issued retention ruling bound to one checkout-relative residue path.
  *
  * **Details**
+ *
  * Place the ruling in `.beep/retention/<class>.json` as an array. Missing,
  * malformed, active, paused, or retained rulings never authorize archival.
- * `evidence` names an existing tracked receipt; `regeneration` documents how
- * to reproduce redundant derivatives. Durable proof itself remains protected
+ * `evidence` names a tracked JSON ruling with exactly the same decoded fields.
+ * The tracked ruling binds the owner, path, state and regeneration policy;
+ * its address is bookkeeping rather than a replay dependency. Durable proof remains protected
  * by the citation index.
  *
  * **Example** (Record redundant generated output)
@@ -454,7 +457,7 @@ export class ResidueReapReport extends S.Class<ResidueReapReport>($I`ResidueReap
  * import { ResidueRetentionRuling } from "@beep/repo-cli/test/RepoRun"
  * const ruling = ResidueRetentionRuling.make({
  *   path: ".beep/ci/old-report", owner: "quality", state: "completed",
- *   disposition: "regenerable", evidence: "standards/turbo-remote-cache.md",
+ *   disposition: "regenerable", evidence: "standards/retention/old-report.json",
  *   regeneration: "bun run beep quality audit", reason: "obsolete scanner derivative",
  * })
  * console.log(ruling.state) // "completed"

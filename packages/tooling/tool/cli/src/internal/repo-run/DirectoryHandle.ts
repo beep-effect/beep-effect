@@ -445,6 +445,14 @@ export const unlinkBoundFile = Effect.fnUntraced(function* (
   return yield* finishBoundEntry(path, expected, unlinkFinish);
 });
 
+const BoundMoveOutcome = LiteralKit([
+  "moved",
+  "moved-unsynced",
+  "destination-occupied",
+  "identity-changed",
+  "move-failed",
+]);
+
 /**
  * Fence an assessed inode into a same-filesystem archive and sync both parents.
  *
@@ -476,13 +484,13 @@ export const renameBoundEntry = Effect.fnUntraced(function* (
   source: string,
   destination: string,
   expected: DirectoryIdentity
-): Effect.fn.Return<BoundRemovalOutcome | "renamed-unsynced", never, Path.Path | Scope.Scope> {
+): Effect.fn.Return<typeof BoundMoveOutcome.Type, never, Path.Path | Scope.Scope> {
   const path = yield* Path.Path;
   const fs = nodeFs();
   const sourceParent = yield* openDirectoryHandle(path.dirname(source));
   const destinationParent = yield* openDirectoryHandle(path.dirname(destination));
-  if (O.isNone(sourceParent) || O.isNone(destinationParent)) return "identity-changed";
-  if (!N.Equivalence(sourceParent.value.identity.dev, destinationParent.value.identity.dev)) return "identity-changed";
+  if (O.isNone(sourceParent) || O.isNone(destinationParent)) return "move-failed";
+  if (!N.Equivalence(sourceParent.value.identity.dev, destinationParent.value.identity.dev)) return "move-failed";
   const from = heldEntry(sourceParent.value.fd, path.basename(source));
   const to = heldEntry(destinationParent.value.fd, path.basename(destination));
   const stats = yield* attempt("stat", from, () => fs.lstatSync(from)).pipe(Effect.option);
@@ -498,15 +506,15 @@ export const renameBoundEntry = Effect.fnUntraced(function* (
   const destinationStatus = yield* attempt("stat", to, () => fs.lstatSync(to, { throwIfNoEntry: false })).pipe(
     Effect.result
   );
-  if (Result.isFailure(destinationStatus) || O.isSome(O.fromUndefinedOr(destinationStatus.success)))
-    return "identity-changed";
+  if (Result.isFailure(destinationStatus)) return "move-failed";
+  if (O.isSome(O.fromUndefinedOr(destinationStatus.success))) return "destination-occupied";
   const renamed = yield* attempt("rename", from, () => fs.renameSync(from, to)).pipe(Effect.result);
-  if (Result.isFailure(renamed)) return "removal-failed";
+  if (Result.isFailure(renamed)) return "move-failed";
   const synced = yield* attempt("sync", to, () => {
     fs.fsyncSync(sourceParent.value.fd);
     fs.fsyncSync(destinationParent.value.fd);
   }).pipe(Effect.result);
-  return Result.isFailure(synced) ? "renamed-unsynced" : "removed";
+  return Result.isFailure(synced) ? "moved-unsynced" : "moved";
 });
 
 /**
