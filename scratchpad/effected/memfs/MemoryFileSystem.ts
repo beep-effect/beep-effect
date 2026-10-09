@@ -4,6 +4,7 @@
 // node-shaped ports (ports.ts), fault injection (faults.ts) and errno
 // (errno.ts) — all extensions beyond the vendored port.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import type * as PlatformError from "effect/PlatformError";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -24,6 +25,8 @@ import {
 import { applyRoot, normalizeAbsolute, seedWith } from "./internal/seed.ts";
 import { makeVolumeService } from "./internal/view.ts";
 import * as internal from "./internal/volume.ts";
+
+const $I = $ScratchpadId.create("effected/memfs/MemoryFileSystem");
 
 /**
  * Synchronous, read-only inspection of one memory volume — the write-path
@@ -1229,7 +1232,7 @@ export class MemoryFileSystem {
 	 * `yield* MemoryFileSystem.Volume`.
 	 */
 	static readonly Volume: Context.Service<MemoryFileSystemVolume, MemoryFileSystemVolume> = Context.Service(
-		"@effected/memfs/MemoryFileSystemVolume",
+		$I`MemoryFileSystemVolume`,
 	);
 
 	/**
