@@ -32,6 +32,10 @@ sentinel="${BEEP_HOOK_PULSE_DISARM_SENTINEL:-${BEEP_AGENT_EVIDENCE_ROOT}/hook-pu
 windows="${BEEP_AGENT_EVIDENCE_ROOT}/hook-pulse-disarm-windows.ndjson"
 
 now() { date -u +%Y-%m-%dT%H:%M:%SZ; }
+transition() {
+  mkdir -p "${BEEP_AGENT_EVIDENCE_ROOT}"
+  printf '{"ts":"%s","action":"%s"}\n' "$(now)" "$1" >>"${BEEP_AGENT_EVIDENCE_ROOT}/hook-pulse-transitions.ndjson"
+}
 
 case "${1:-status}" in
   disarm)
@@ -63,6 +67,7 @@ case "${1:-status}" in
     jq -n -c --arg disarmedAt "$(now)" --arg reason "${2:-unspecified}" \
       '{ disarmedAt: $disarmedAt, reason: $reason, evidenceTier: "unknown" }' >"${staged}"
     if ln "${staged}" "${sentinel}" 2>/dev/null; then
+      transition disarm
       rm -f "${staged}"
       echo "hook-pulse disarmed: ${sentinel}"
       exit 0
@@ -146,6 +151,7 @@ case "${1:-status}" in
            reason: null,
            evidenceTier: "unknown"
          }' >>"${windows}"
+    transition arm
     # The window is durable; the claim can now be dropped rather than restored.
     trap - EXIT
     rm -f "${claimed}"

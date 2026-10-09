@@ -230,6 +230,140 @@ export const HookPulseAgentKind = LiteralKit(["claude-code", "codex-cli", "curso
 export type HookPulseAgentKind = typeof HookPulseAgentKind.Type;
 
 /**
+ * Collection capability of one client; absence never establishes non-use.
+ *
+ * **Example** (Inspect the domain)
+ *
+ * ```ts
+ * import { HookPulseClientCoverage } from "@beep/repo-ai-metrics"
+ * console.log(HookPulseClientCoverage.literals)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const HookPulseClientCoverage = LiteralKit([
+  "stamped",
+  "unstamped-by-design",
+  "unsupported",
+  "not-configured",
+  "disabled",
+]).pipe(
+  $I.annoteSchema("HookPulseClientCoverage", {
+    description: "Collection capability of one client; absence never establishes non-use.",
+  })
+);
+/**
+ * Decoded HookPulseClientCoverage value.
+ * @category models
+ * @since 0.0.0
+ */
+export type HookPulseClientCoverage = typeof HookPulseClientCoverage.Type;
+
+/**
+ * Payload-free reason why the writer could not collect evidence.
+ *
+ * **Example** (Inspect the domain)
+ *
+ * ```ts
+ * import { HookPulseRefusalReason } from "@beep/repo-ai-metrics"
+ * console.log(HookPulseRefusalReason.literals)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const HookPulseRefusalReason = LiteralKit([
+  "disabled",
+  "no-jq",
+  "unknown-agent-kind",
+  "no-hash",
+  "digest-failed",
+  "encode-failed",
+  "empty-output",
+  "invalid-output",
+  "mkdir-failed",
+  "append-failed",
+  "stamp-failed",
+  "timeout",
+]).pipe(
+  $I.annoteSchema("HookPulseRefusalReason", {
+    description: "Payload-free reason why the writer could not collect evidence.",
+  })
+);
+/**
+ * Decoded HookPulseRefusalReason value.
+ * @category models
+ * @since 0.0.0
+ */
+export type HookPulseRefusalReason = typeof HookPulseRefusalReason.Type;
+
+/**
+ * Durable collection-switch transition.
+ *
+ * **Example** (Inspect the domain)
+ *
+ * ```ts
+ * import { HookPulseSwitchAction } from "@beep/repo-ai-metrics"
+ * console.log(HookPulseSwitchAction.literals)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const HookPulseSwitchAction = LiteralKit(["arm", "disarm"]).pipe(
+  $I.annoteSchema("HookPulseSwitchAction", { description: "Durable collection-switch transition." })
+);
+/**
+ * Decoded HookPulseSwitchAction value.
+ * @category models
+ * @since 0.0.0
+ */
+export type HookPulseSwitchAction = typeof HookPulseSwitchAction.Type;
+
+/**
+ * Payload-free writer refusal; unknown client names are normalized to unknown.
+ *
+ * **Example** (Inspect the row constructor)
+ *
+ * ```ts
+ * import { HookPulseRefusal } from "@beep/repo-ai-metrics"
+ * console.log(typeof HookPulseRefusal.make) // "function"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class HookPulseRefusal extends S.Class<HookPulseRefusal>($I`HookPulseRefusal`)(
+  { ts: S.DateTimeUtcFromString, agentKind: S.String, reason: HookPulseRefusalReason },
+  $I.annote("HookPulseRefusal", {
+    description: "Payload-free writer refusal; unknown client names are normalized to unknown.",
+  })
+) {
+  static readonly decodeJsonResult = S.decodeUnknownResult(S.fromJsonString(HookPulseRefusal));
+}
+
+/**
+ * Payload-free durable arm or disarm transition.
+ *
+ * **Example** (Inspect the row constructor)
+ *
+ * ```ts
+ * import { HookPulseSwitchTransition } from "@beep/repo-ai-metrics"
+ * console.log(typeof HookPulseSwitchTransition.make) // "function"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class HookPulseSwitchTransition extends S.Class<HookPulseSwitchTransition>($I`HookPulseSwitchTransition`)(
+  { ts: S.DateTimeUtcFromString, action: HookPulseSwitchAction },
+  $I.annote("HookPulseSwitchTransition", { description: "Payload-free durable arm or disarm transition." })
+) {
+  static readonly decodeJsonResult = S.decodeUnknownResult(S.fromJsonString(HookPulseSwitchTransition));
+}
+
+/**
  * Hook lifecycle events the sequence-break instrument records, one ledger row per event.
  *
  * **Details**

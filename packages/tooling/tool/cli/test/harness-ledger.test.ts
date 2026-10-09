@@ -4,7 +4,10 @@ import {
   deriveHarnessHash,
   HarnessFingerprintInput,
   HarnessLedgerRow,
+  HookPulseDisarmWindow,
   HookPulseV1,
+  hashPrivateIdentifier,
+  hookPulseHashSalt,
   makeAiMetricsConfigSnapshot,
   makeHarnessFingerprint,
   makeHarnessLedgerRowId,
@@ -32,6 +35,7 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import type { HarnessLedgerPruneReport } from "@beep/repo-cli/commands/HarnessLedger";
 
 const TestLayer = HarnessLedgerServiceLive.pipe(Layer.provideMerge(NodeServices.layer));
@@ -73,7 +77,7 @@ const readLedgerLines = Effect.fn("test.readLedgerLines")(function* (root: strin
 const pulseRow = (
   sessionId: Sha256Hex,
   ts: string,
-  hookEvent: "PostToolUse" | "SessionStart",
+  hookEvent: "PostToolUse" | "SessionStart" | "UserPromptSubmit",
   surface: O.Option<Sha256Hex>,
   harnessHash: O.Option<Sha256Hex>
 ) =>
@@ -106,8 +110,11 @@ const pulseRow = (
 const pulse = (sessionId: Sha256Hex, ts: string, surface: O.Option<Sha256Hex>) =>
   pulseRow(sessionId, ts, "PostToolUse", surface, O.none());
 
-const sessionStart = (sessionId: Sha256Hex, ts: string, harnessHash: Sha256Hex) =>
-  pulseRow(sessionId, ts, "SessionStart", O.none(), O.some(harnessHash));
+const sessionStart = Effect.fnUntraced(function* (sessionId: Sha256Hex, ts: string, harnessHash: Sha256Hex) {
+  const stamp = yield* pulseRow(sessionId, ts, "SessionStart", O.none(), O.some(harnessHash));
+  const turn = yield* pulseRow(sessionId, ts, "UserPromptSubmit", O.none(), O.none());
+  return `${stamp}\n${turn}`;
+});
 
 // The harness hash `prune-proposals` computes for a fixture repo: the same
 // snapshot the fingerprint is built from, reduced by `deriveHarnessHash`.
@@ -780,9 +787,115 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       expect(report.windowEnd).toStrictEqual(O.some(DateTime.makeUnsafe("2026-09-20T08:05:00.000Z")));
       expect(report.sessionsSkippedOutOfRegime).toBe(1);
       expect(report.sessionsSkippedUnstamped).toBe(2);
-      expect(report.shardsRead).toBe(7);
+      expect(report.shardsRead).toBe(8);
       expect(report.undecodableLines).toBe(1);
       expect(A.map(report.proposals, (proposal) => proposal.candidate.name)).toStrictEqual(["alpha", "notion"]);
+    }).pipe(Effect.scoped)
+  );
+
+  it.effect("stamp-only sessions stay below the activity floor", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* makeRepo();
+      const current = yield* repoHarnessHash(root);
+      const stateDir = yield* fs.makeTempDirectoryScoped({ prefix: "harness-activity-" });
+      yield* writeShard(stateDir, "2026-10-09", sessionA, [
+        yield* sessionStart(sessionA, "2026-10-09T10:00:00Z", current),
+      ]);
+      const ledger = yield* HarnessLedgerService;
+      const report = yield* ledger.pruneProposals(
+        HarnessLedgerPruneOptions.make({ repoRoot: root, stateDir, windowSessions: 1 })
+      );
+      expect(report.sessionsObserved).toBe(0);
+      expect(report.sessionsBelowActivityFloor).toBe(1);
+      expect(report.proposals).toHaveLength(0);
+    }).pipe(Effect.scoped)
+  );
+
+  it.effect("shared skills require complete windows for every loading client", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* makeRepo();
+      yield* fs.makeDirectory(path.join(root, ".agents"));
+      yield* fs.symlink("../.claude/skills", path.join(root, ".agents/skills"));
+      const current = yield* repoHarnessHash(root);
+      const stateDir = yield* fs.makeTempDirectoryScoped({ prefix: "harness-clients-" });
+      yield* writeShard(stateDir, "2026-10-09", sessionA, [
+        yield* sessionStart(sessionA, "2026-10-09T10:00:00Z", current),
+        yield* pulse(sessionA, "2026-10-09T10:01:00Z", O.none()),
+      ]);
+      const ledger = yield* HarnessLedgerService;
+      const report = yield* ledger.pruneProposals(
+        HarnessLedgerPruneOptions.make({ repoRoot: root, stateDir, windowSessions: 1, write: true })
+      );
+      expect(report.sessionsByAgentKind).toStrictEqual({ "claude-code": 1, "codex-cli": 0, "cursor-cli": 0 });
+      expect(report.windowFull).toBe(true);
+      expect(report.sharedHarnessWindowFull).toBe(false);
+      expect(report.nonUseQualified).toBe(false);
+      expect(report.written).toBe(false);
+    }).pipe(Effect.scoped)
+  );
+
+  it.effect("a session overlapping a disarm window cannot qualify", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* makeRepo();
+      const current = yield* repoHarnessHash(root);
+      const evidenceRoot = yield* fs.makeTempDirectoryScoped({ prefix: "harness-disarmed-" });
+      const stateDir = path.join(evidenceRoot, "hook-events");
+      yield* fs.makeDirectory(stateDir);
+      yield* writeShard(stateDir, "2026-10-09", sessionA, [
+        yield* sessionStart(sessionA, "2026-10-09T10:00:00Z", current),
+        yield* pulse(sessionA, "2026-10-09T10:01:00Z", O.none()),
+      ]);
+      const gap = HookPulseDisarmWindow.make({
+        schemaVersion: "hook-pulse-disarm-window/v1",
+        disarmedAt: O.some("2026-10-09T10:00:30Z"),
+        rearmedAt: "2026-10-09T10:00:40Z",
+        reason: O.none(),
+        evidenceTier: "unknown",
+      });
+      yield* fs.writeFileString(
+        path.join(evidenceRoot, "hook-pulse-disarm-windows.ndjson"),
+        yield* HookPulseDisarmWindow.encodeJsonEffect(gap)
+      );
+      const ledger = yield* HarnessLedgerService;
+      const report = yield* ledger.pruneProposals(
+        HarnessLedgerPruneOptions.make({ repoRoot: root, stateDir, windowSessions: 1 })
+      );
+      expect(report.sessionsObserved).toBe(0);
+      expect(report.sessionsSkippedDisarmed).toBe(1);
+    }).pipe(Effect.scoped)
+  );
+
+  it.effect("reconciliation includes all nested child transcripts", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "harness-reconcile-" });
+      const transcriptDir = path.join(root, "transcripts");
+      const stateDir = path.join(root, "hook-events");
+      const parent = "00000000-0000-4000-8000-000000000001";
+      const nested = path.join(transcriptDir, parent, "workflow");
+      yield* fs.makeDirectory(nested, { recursive: true });
+      yield* fs.makeDirectory(stateDir);
+      const encode = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
+      const toolRow = yield* encode({ sessionId: parent, message: { content: [{ type: "tool_use", id: "one" }] } });
+      yield* fs.writeFileString(path.join(transcriptDir, `${parent}.jsonl`), toolRow);
+      yield* fs.writeFileString(path.join(nested, "child.jsonl"), toolRow);
+      const identity = Sha256Hex.make(yield* hashPrivateIdentifier(parent, yield* hookPulseHashSalt));
+      yield* writeShard(stateDir, "2026-10-09", identity, [
+        yield* pulse(identity, "2026-10-09T10:00:00Z", O.none()),
+        yield* pulse(identity, "2026-10-09T10:01:00Z", O.none()),
+      ]);
+      const ledger = yield* HarnessLedgerService;
+      const report = yield* ledger.reconcile(stateDir, transcriptDir, "claude-code");
+      expect(report.transcriptToolEvents).toBe(2);
+      expect(report.hookedToolEvents).toBe(2);
+      expect(report.ratio).toStrictEqual(O.some(1));
+      expect(report.qualifiedForNonUse).toBe(true);
     }).pipe(Effect.scoped)
   );
 

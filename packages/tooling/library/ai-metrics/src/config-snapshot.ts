@@ -15,6 +15,7 @@ import * as FileSystem from "effect/FileSystem";
 import { flow, pipe } from "effect/Function";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as Random from "effect/Random";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
@@ -26,12 +27,13 @@ import { hashPublicTextSha256 } from "./privacy.ts";
 
 const $I = $RepoAiMetricsId.create("config-snapshot");
 
-const CONFIG_ROOTS = [".codex", ".claude", ".ai", ".aiassistant"] as const;
+const CONFIG_ROOTS = [".codex", ".claude", ".ai", ".aiassistant", ".cursor", ".agents", ".junie", ".grok"] as const;
 const AgentDocName = LiteralKit(["AGENTS.md", "CLAUDE.md"]);
 const SessionScopePath = LiteralKit([
   ".claude/settings.json",
   ".claude/settings.local.json",
   ".codex/config.toml",
+  ".mcp.json",
   "AGENTS.md",
   "CLAUDE.md",
 ]);
@@ -614,9 +616,69 @@ const scopeFor = (relativePath: string): AiMetricsConfigScope =>
 const enumerateSnapshotPaths = Effect.fn("AiMetrics.enumerateConfigSnapshotPaths")(function* (
   repoRoot: string,
   budget: AiMetricsConfigSnapshotBudget
-): Effect.fn.Return<ConfigSnapshotEnumeration, never, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  ConfigSnapshotEnumeration,
+  never,
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
   const fs = yield* FileSystem.FileSystem;
   const pathApi = yield* Path.Path;
+  const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+  // Non-git fixtures retain the bounded filesystem walk. A real checkout uses
+  // the index, so ignored hook-state/log noise cannot split identical heads.
+  const gitCommand = ChildProcess.make("git", ["ls-files", "-z"], { cwd: repoRoot });
+  const tracked = yield* spawner
+    .exitCode(
+      ChildProcess.make("git", ["rev-parse", "--git-dir"], { cwd: repoRoot, stdout: "ignore", stderr: "ignore" })
+    )
+    .pipe(
+      Effect.flatMap((code) =>
+        code === 0
+          ? spawner
+              .string(gitCommand)
+              .pipe(
+                Effect.map((text) =>
+                  O.some<ReadonlyArray<string>>(pipe(text, Str.split("\0"), A.filter(Str.isNonEmpty)))
+                )
+              )
+          : Effect.succeed(O.none<ReadonlyArray<string>>())
+      ),
+      Effect.orElseSucceed(O.none<ReadonlyArray<string>>)
+    );
+  if (O.isSome(tracked)) {
+    const selected = A.filter(tracked.value, (relative) => {
+      const parts = Str.split(relative, "/");
+      return (
+        A.length(parts) <= budget.maxDepth &&
+        !A.some(parts, isExcludedDirectoryName) &&
+        (relative === ".mcp.json" ||
+          isAgentDocName(pathApi.basename(relative)) ||
+          A.some(CONFIG_ROOTS, (root) => Str.startsWith(`${root}/`)(relative)))
+      );
+    });
+    const local = pathApi.join(repoRoot, ".claude/settings.local.json");
+    const existing = yield* Effect.filter(
+      A.map(selected, (relative) => pathApi.join(repoRoot, relative)),
+      (file) =>
+        fs.stat(file).pipe(
+          Effect.map((info) => info.type === "File"),
+          Effect.orElseSucceed(() => false)
+        )
+    );
+    const paths = pipe(
+      (yield* fs.exists(local).pipe(Effect.orElseSucceed(() => false))) ? A.append(existing, local) : existing,
+      A.dedupe,
+      A.sort(Order.String)
+    );
+    return {
+      excludedNestedRootPaths: A.empty<string>(),
+      paths: A.take(paths, budget.maxFiles),
+      truncationReason:
+        A.length(paths) >= budget.maxFiles
+          ? O.some(AiMetricsConfigSnapshotTruncationReason.Enum["max-files"])
+          : O.none(),
+    };
+  }
   const pathsRef = yield* Ref.make(A.empty<string>());
   const excludedRef = yield* Ref.make(A.empty<string>());
   const truncationRef = yield* Ref.make(O.none<AiMetricsConfigSnapshotTruncationReason>());
@@ -695,9 +757,19 @@ const enumerateSnapshotPaths = Effect.fn("AiMetrics.enumerateConfigSnapshotPaths
     discard: true,
   });
 
+  yield* walk(pathApi.join(repoRoot, ".mcp.json"), 0, () => true);
+  const walked = yield* Ref.get(pathsRef);
+  const selected = O.match(tracked, {
+    onNone: () => walked,
+    onSome: (names) =>
+      A.filter(walked, (file) => {
+        const relative = normalizeRepoPath(pathApi, repoRoot, file);
+        return relative === ".claude/settings.local.json" || A.contains(names, relative);
+      }),
+  });
   return {
     excludedNestedRootPaths: pipe(yield* Ref.get(excludedRef), A.dedupe, A.sort(Order.String)),
-    paths: pipe(yield* Ref.get(pathsRef), A.dedupe, A.sort(Order.String)),
+    paths: pipe(selected, A.dedupe, A.sort(Order.String)),
     truncationReason: yield* Ref.get(truncationRef),
   };
 });

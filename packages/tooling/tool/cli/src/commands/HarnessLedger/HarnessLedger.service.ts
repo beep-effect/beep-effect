@@ -24,8 +24,11 @@ import * as Bool from "effect/Boolean";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
+import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import { HarnessLedgerChainError, HarnessLedgerInputError, HarnessLedgerIoError } from "./HarnessLedger.errors.ts";
 import {
@@ -43,16 +46,16 @@ import {
   readLedgerRows,
   withLedgerWriteFence,
 } from "./internal/LedgerFiles.ts";
-import { enumeratePruneCandidates, observeSessionWindow } from "./internal/PruneWindow.ts";
-import type { HarnessFingerprint, HarnessHash } from "@beep/repo-ai-metrics";
-import type * as FileSystem from "effect/FileSystem";
-import type * as Path from "effect/Path";
+import { enumeratePruneCandidates, observeSessionWindow, reconcileTranscripts } from "./internal/PruneWindow.ts";
+import type { HarnessFingerprint, HarnessHash, HookPulseAgentKind } from "@beep/repo-ai-metrics";
+import type { ChildProcessSpawner } from "effect/process";
 import type { HarnessLedgerCommandError } from "./HarnessLedger.errors.ts";
 import type {
   HarnessLedgerDispositionOptions,
   HarnessLedgerListOptions,
   HarnessLedgerProposeOptions,
   HarnessLedgerPruneOptions,
+  HarnessTelemetryReconciliation,
   ObservedSessionWindow,
   PruneSurfaceCandidate,
 } from "./HarnessLedger.schemas.ts";
@@ -112,6 +115,12 @@ export interface HarnessLedgerServiceShape {
   readonly pruneProposals: (
     options: HarnessLedgerPruneOptions
   ) => Effect.Effect<HarnessLedgerPruneReport, HarnessLedgerCommandError>;
+  /** Read payload-free transcript/hook reconciliation, including nested children. @since 0.0.0 */
+  readonly reconcile: (
+    stateDir: string,
+    transcriptDir: string,
+    agentKind: HookPulseAgentKind
+  ) => Effect.Effect<HarnessTelemetryReconciliation, HarnessLedgerCommandError>;
 }
 
 /**
@@ -368,13 +377,27 @@ const planPruneProposals = Effect.fn("HarnessLedger.planPruneProposals")(functio
     onNone: () => Effect.succeed(A.empty<PruneProposal>()),
     onSome: (windowEnd) => buildPruneProposals(fingerprint, fresh, observed, windowEnd),
   });
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const shared = yield* fs
+    .exists(path.join(options.repoRoot, ".agents/skills"))
+    .pipe(Effect.mapError(HarnessLedgerIoError.wrap("Cannot inspect shared harness surfaces.")));
+  const sharedHarnessWindowFull =
+    !shared || A.every(R.values(observed.sessionsByAgentKind), (count) => count >= options.windowSessions);
   return HarnessLedgerPruneReport.make({
+    sharedHarnessWindowFull,
+    // Transcript reconciliation is independently reported. Missing reconciliation
+    // never labels a zero-touch candidate genuinely unused.
+    nonUseQualified: false,
     windowSessions: options.windowSessions,
     harnessHash: observed.harnessHash,
     sessionsObserved: observed.sessionsObserved,
     windowFull: observed.sessionsObserved >= options.windowSessions,
     sessionsSkippedOutOfRegime: observed.sessionsSkippedOutOfRegime,
     sessionsSkippedUnstamped: observed.sessionsSkippedUnstamped,
+    sessionsByAgentKind: observed.sessionsByAgentKind,
+    sessionsSkippedDisarmed: observed.sessionsSkippedDisarmed,
+    sessionsBelowActivityFloor: observed.sessionsBelowActivityFloor,
     windowEnd: observed.windowEnd,
     shardsRead: observed.shardsRead,
     undecodableLines: observed.undecodableLines,
@@ -412,11 +435,23 @@ const pruneProposalsImpl = Effect.fn("HarnessLedger.pruneProposals")(function* (
   const harnessHash = yield* deriveHarnessHash(fingerprint).pipe(
     Effect.mapError(HarnessLedgerIoError.wrap("Failed to derive the current harness hash."))
   );
-  const observed = yield* observeSessionWindow(options.stateDir, options.windowSessions, harnessHash);
+  const observed = yield* observeSessionWindow(
+    options.stateDir,
+    options.windowSessions,
+    harnessHash,
+    options.agentKind
+  );
   // A partial window is shown but never written: a stored row must carry a
   // full window of evidence, so a written row's `windowSessions` (the observed
   // count) always equals the requested window.
-  return yield* Bool.match(options.write && observed.sessionsObserved >= options.windowSessions, {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const shared = yield* fs
+    .exists(path.join(options.repoRoot, ".agents/skills"))
+    .pipe(Effect.mapError(HarnessLedgerIoError.wrap("Cannot inspect shared harness surfaces.")));
+  const allWindowsFull =
+    !shared || A.every(R.values(observed.sessionsByAgentKind), (count) => count >= options.windowSessions);
+  return yield* Bool.match(options.write && observed.sessionsObserved >= options.windowSessions && allWindowsFull, {
     onFalse: () => planPruneProposals(options, fingerprint, candidates, observed),
     onTrue: () =>
       withLedgerWriteFence(options.repoRoot, appendPruneProposals(options, fingerprint, candidates, observed)),
@@ -429,11 +464,16 @@ const pruneProposalsImpl = Effect.fn("HarnessLedger.pruneProposals")(function* (
  * @category services
  * @since 0.0.0
  */
-export type HarnessLedgerServiceRequirements = FileSystem.FileSystem | Path.Path;
+export type HarnessLedgerServiceRequirements =
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner;
 
 const makeHarnessLedgerService = Effect.fn("HarnessLedgerService.make")(function* () {
   const context = yield* Effect.context<HarnessLedgerServiceRequirements>();
   return HarnessLedgerService.of({
+    reconcile: (stateDir, transcriptDir, agentKind) =>
+      reconcileTranscripts(stateDir, transcriptDir, agentKind).pipe(Effect.provide(context)),
     propose: Effect.fn("HarnessLedgerService.propose")((options) => proposeImpl(options).pipe(Effect.provide(context))),
     disposition: Effect.fn("HarnessLedgerService.disposition")((options) =>
       dispositionImpl(options).pipe(Effect.provide(context))

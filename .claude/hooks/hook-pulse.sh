@@ -54,7 +54,21 @@
 # location from those exports so the two halves cannot drift apart.
 BEEP_AGENT_EVIDENCE_ROOT="${BEEP_AGENT_EVIDENCE_ROOT:-${XDG_STATE_HOME:-${HOME:-/tmp}/.local/state}/beep/agent-evidence}"
 BEEP_HOOK_PULSE_DISARM_SENTINEL="${BEEP_HOOK_PULSE_DISARM_SENTINEL:-${BEEP_AGENT_EVIDENCE_ROOT}/hook-pulse.disarmed}"
+agent_kind="${BEEP_HOOK_PULSE_AGENT_KIND:-claude-code}"
+case "${agent_kind}" in claude-code|codex-cli|cursor-cli) ;; *) agent_kind=unknown ;; esac
+refuse() {
+  local reason="$1" day ts
+  day="$(date -u +%Y-%m-%d)"; ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  mkdir -p "${BEEP_AGENT_EVIDENCE_ROOT}" 2>/dev/null || return 0
+  printf '{"ts":"%s","agentKind":"%s","reason":"%s"}\n' "${ts}" "${agent_kind}" "${reason}" \
+    >>"${BEEP_AGENT_EVIDENCE_ROOT}/hook-pulse-refusals-${day}.ndjson" 2>/dev/null || true
+}
+if [ "${1:-}" = "--refuse" ]; then
+  case "${2:-}" in timeout|no-jq|encode-failed|unknown-agent-kind) refuse "$2" ;; esac
+  exit 0
+fi
 if [ -e "${BEEP_HOOK_PULSE_DISARM_SENTINEL}" ]; then
+  refuse disabled
   exit 0
 fi
 
@@ -75,16 +89,16 @@ exec 1>/dev/null
 set -euo pipefail
 
 # Without jq the instrument degrades to silence rather than to noise or a block.
-command -v jq >/dev/null 2>&1 || exit 0
+command -v jq >/dev/null 2>&1 || { refuse no-jq; exit 0; }
 
 # `BEEP_HOOK_PULSE_AGENT_KIND` lets an adapter that reuses this body (the Cursor
 # adapter at `.cursor/hooks/hook-pulse.sh`) tag its rows. Only `HookPulseAgentKind`
 # literals may reach the ledger: an inherited stray value would append a row that
 # `HookPulseV1` cannot decode, so an unknown kind writes nothing and notifies no one.
-agent_kind="${BEEP_HOOK_PULSE_AGENT_KIND:-claude-code}"
+# agent_kind was normalized before the refusal logger was defined.
 case "${agent_kind}" in
   claude-code|codex-cli|cursor-cli) ;;
-  *) exit 0 ;;
+  *) refuse unknown-agent-kind; exit 0 ;;
 esac
 
 # Same degradation rule for the digest tool, and for a stronger reason: without
@@ -103,6 +117,7 @@ elif command -v shasum >/dev/null 2>&1; then
 elif command -v openssl >/dev/null 2>&1; then
   hash_stdin() { openssl dgst -sha256 -r; }
 else
+  refuse no-hash
   exit 0
 fi
 
@@ -251,9 +266,9 @@ raw_hook_event=""
   IFS= read -r -d '' raw_hook_event || raw_hook_event=""
 } < <(jq -j --arg fallbackCwd "${PWD}" "${identifier_program}" <<<"${payload}" 2>/dev/null)
 
-session_id_hash="$(sha256_private_identifier "${raw_session_id}")" || exit 0
-cwd_hash="$(sha256_private_identifier "${raw_cwd}")" || exit 0
-transcript_path_hash="$(sha256_private_identifier "${raw_transcript_path}")" || exit 0
+session_id_hash="$(sha256_private_identifier "${raw_session_id}")" || { refuse digest-failed; exit 0; }
+cwd_hash="$(sha256_private_identifier "${raw_cwd}")" || { refuse digest-failed; exit 0; }
+transcript_path_hash="$(sha256_private_identifier "${raw_transcript_path}")" || { refuse digest-failed; exit 0; }
 
 # Context surface (goals/harness-evidence-ledger, D8): which repo surface a
 # successful tool call touched, as an unsalted digest of `${kind}:${name}`. The
@@ -476,7 +491,7 @@ END {
     -o -name statsig -o -name target -o -name todos
   )
   config_roots=()
-  for config_root in .codex .claude .ai .aiassistant; do
+  for config_root in .codex .claude .ai .aiassistant .cursor .agents .junie .grok; do
     [ -e "${config_root}" ] && config_roots+=("${config_root}")
   done
 
@@ -524,6 +539,19 @@ END {
     } 2>/dev/null | tr '\n\000' '\001\n' | awk -F "${tab}" "${collect_program}"
   )" || exit 1
 
+  # Keep indexed configuration plus settings.local.json. Non-git fixtures
+  # use the same bounded fallback as the TypeScript snapshot.
+  if tracked="$(git ls-files 2>/dev/null)"; then
+    collected="$(awk -F "${tab}" 'NR == FNR { tracked[$0] = 1; next }
+      ($1 in tracked) || $1 == ".claude/settings.local.json" { print }' \
+      <(printf '%s\n' "${tracked}") <(printf '%s\n' "${collected}"))" || exit 1
+  fi
+  if [ -f .mcp.json ]; then
+    if ! git rev-parse --git-dir >/dev/null 2>&1 || git ls-files --error-unmatch .mcp.json >/dev/null 2>&1; then
+      collected+=$'\n'".mcp.json${tab}$(wc -c < .mcp.json)"
+    fi
+  fi
+
   # Sorted and deduplicated by path (the two walks overlap under `.claude`),
   # oversize files skipped, and the byte budget enforced over what remains.
   included="$(
@@ -557,7 +585,7 @@ NR == FNR { if (length($0) > 66) override[substr($0, 67)] = substr($0, 1, 64); n
   if (hash !~ /^[0-9a-f]+$/ || length(hash) != 64 || substr($0, 65, 2) != "  ") exit 1
   rel = name
   sub(/^\.\//, "", rel)
-  session = (rel == ".claude/settings.json" || rel == ".claude/settings.local.json" || rel == ".codex/config.toml" || rel == "AGENTS.md" || rel == "CLAUDE.md")
+  session = (rel == ".claude/settings.json" || rel == ".claude/settings.local.json" || rel == ".codex/config.toml" || rel == ".mcp.json" || rel == "AGENTS.md" || rel == "CLAUDE.md")
   if (session == want) print rel "\001" hash
 }
 '
@@ -567,7 +595,7 @@ NR == FNR { if (length($0) > 66) override[substr($0, 67)] = substr($0, 1, 64); n
   baseline_hash="$(printf 'ai-metrics-config-baseline-v1\n%s' "${baseline_body}" | tr '\001' '\000' | sha256sum)" || exit 1
   session_hash="${session_hash%% *}"
   baseline_hash="${baseline_hash%% *}"
-  harness_hash="$(printf 'harness-hash-v1\n%s\n%s' "${session_hash}" "${baseline_hash}" | sha256sum)" || exit 1
+  harness_hash="$(printf 'harness-hash-v2\n%s\n%s' "${session_hash}" "${baseline_hash}" | sha256sum)" || exit 1
   harness_hash="${harness_hash%% *}"
   for digest in "${session_hash}" "${baseline_hash}" "${harness_hash}"; do
     case "${digest}" in
@@ -584,7 +612,7 @@ if [ "${raw_hook_event}" = "SessionStart" ]; then
   # a wrong stamp, and no stamp is the safe failure.
   find_repo_root "${raw_cwd}"
   if [ -n "${found_repo_root}" ]; then
-    harness_hash="$(harness_config_hash "${found_repo_root}")" || harness_hash=""
+    harness_hash="$(harness_config_hash "${found_repo_root}")" || { harness_hash=""; refuse stamp-failed; }
   fi
 fi
 
@@ -707,9 +735,10 @@ output="$(
     --arg surfaceHash "${surface_hash}" \
     --arg harnessHash "${harness_hash}" \
     "${jq_program}" <<<"${payload}" 2>/dev/null
-)" || exit 0
+)" || { refuse encode-failed; exit 0; }
 
 if [ -z "${output}" ]; then
+  refuse empty-output
   exit 0
 fi
 
@@ -718,17 +747,18 @@ row="${output#*$'\n'}"
 # A single-line or multi-document result means the projection did not produce
 # exactly one row; write nothing rather than a partial or interleaved line.
 if [ -z "${shard}" ] || [ -z "${row}" ] || [ "${shard}" = "${row}" ]; then
+  refuse invalid-output
   exit 0
 fi
 case "${row}" in
-  *$'\n'*) exit 0 ;;
+  *$'\n'*) refuse invalid-output; exit 0 ;;
 esac
 
 store="${BEEP_AGENT_EVIDENCE_ROOT}/hook-events"
 if [ ! -d "${store}" ]; then
-  mkdir -p "${store}" 2>/dev/null || exit 0
+  mkdir -p "${store}" 2>/dev/null || { refuse mkdir-failed; exit 0; }
 fi
-printf '%s\n' "${row}" >>"${store}/hook-pulse-${shard}.ndjson" 2>/dev/null || exit 0
+printf '%s\n' "${row}" >>"${store}/hook-pulse-${shard}.ndjson" 2>/dev/null || { refuse append-failed; exit 0; }
 
 # A sharp notifier revision turns a durable PermissionRequest row into a
 # content-free sequence-break worker. The worker is detached only after this

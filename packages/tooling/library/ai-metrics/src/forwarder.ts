@@ -10,11 +10,15 @@ import { SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import * as Clock from "effect/Clock";
+import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { flow, pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { AiMetricsRawArchiveKey, writeEncryptedRawArchiveObject } from "./archive.ts";
 import {
@@ -28,6 +32,7 @@ import {
   AiMetricsParquetExportMode,
   writeAiMetricsDerivedStorage,
 } from "./derived-storage.ts";
+import { HookPulseV1 } from "./hook-pulse.ts";
 import { AiMetricsIdentityRegistryUpsertInput, upsertAiMetricsIdentityRegistry } from "./identity-registry.ts";
 import { summarizeTranscriptText } from "./ingest.ts";
 import { AiMetricsInstallInput, makeAiMetricsInstallSpec } from "./install.ts";
@@ -1069,13 +1074,59 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
       (sourceFile) => processSourceFile(input, installSpec.storage.rawArchiveDir, sourceFile),
       { concurrency: 4 }
     );
+    // Session-time stamps stay separate from the ingest-time snapshot. Unknown
+    // or mixed stamps remain absent; backfill never receives today's regime.
+    const fs = yield* FileSystem.FileSystem;
+    const evidenceRoot = yield* Config.String("BEEP_AGENT_EVIDENCE_ROOT").pipe(
+      Config.withDefault(pathApi.join(input.homeDir, ".local/state/beep/agent-evidence")),
+      Effect.mapError((cause) => forwarderFailure("Cannot resolve hook evidence root.", cause))
+    );
+    const hookDir = pathApi.join(evidenceRoot, "hook-events");
+    const shards = yield* fs.readDirectory(hookDir).pipe(Effect.orElseSucceed(A.empty<string>));
+    const stamps = MutableHashMap.empty<string, HashSet.HashSet<string>>();
+    yield* Effect.forEach(
+      A.filter(shards, Str.endsWith(".ndjson")),
+      Effect.fnUntraced(function* (name) {
+        const text = yield* fs.readFileString(pathApi.join(hookDir, name)).pipe(Effect.orElseSucceed(() => ""));
+        for (const line of Str.split(text, "\n")) {
+          const row = HookPulseV1.decodeJsonResult(line);
+          if (
+            Result.isSuccess(row) &&
+            row.success.hookEvent === "SessionStart" &&
+            O.isSome(row.success.harnessHash) &&
+            O.isSome(row.success.transcriptPath)
+          ) {
+            const key = `${row.success.agentKind}:${row.success.transcriptPath.value}`;
+            MutableHashMap.set(
+              stamps,
+              key,
+              HashSet.add(
+                O.getOrElse(MutableHashMap.get(stamps, key), HashSet.empty<string>),
+                row.success.harnessHash.value
+              )
+            );
+          }
+        }
+      }),
+      { discard: true }
+    );
+    const stampedRecords = A.map(records, (record) => {
+      const sanitized = record.privacy.sanitized;
+      const kind = sanitized.sourceKind === "claude" ? "claude-code" : "codex-cli";
+      const sessionHarnessHash = pipe(
+        MutableHashMap.get(stamps, `${kind}:${sanitized.sourcePathHash}`),
+        O.filter((values) => HashSet.size(values) === 1),
+        O.flatMap((values) => A.head(A.fromIterable(values)))
+      );
+      return AiMetricsDerivedTranscriptRecord.make({ ...record, sessionHarnessHash });
+    });
     const ingestRunId = `forwarder-${startedAtEpochMillis}`;
     const derived = yield* writeAiMetricsDerivedStorage(
       AiMetricsDerivedStorageWriteInput.make({
         configSnapshot: configSnapshot.snapshot,
         ingestRunId,
         parquetExportMode: input.parquetExportMode,
-        records,
+        records: stampedRecords,
         repoRootHash,
         startedAtEpochMillis,
         storage: installSpec.storage,

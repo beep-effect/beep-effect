@@ -929,6 +929,24 @@ it.layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
     })
   );
 
+  it.effect("Codex and Cursor SessionStart adapters preserve the shared stamp", () =>
+    Effect.gen(function* () {
+      const root = yield* makeHarnessFixtureRoot();
+      const oracle = yield* typescriptHarnessHash(root);
+      for (const writer of [codexWriterPath, cursorWriterPath]) {
+        const hook_event_name = writer === cursorWriterPath ? "sessionStart" : "SessionStart";
+        const run = yield* runWriter(yield* encodeJson({ ...sessionStartPayload(root), hook_event_name }), {
+          writerPath: writer,
+        });
+        expect(run.stdout).toBe(writer === cursorWriterPath ? "{}\n" : "");
+        expect(run.rows).toHaveLength(1);
+        const decoded = yield* decodeHookPulseRow(O.getOrThrow(A.head(run.rows)));
+        assertSome(decoded.harnessHash, oracle.harnessHash);
+        expect(decoded.agentKind).toBe(writer === cursorWriterPath ? "cursor-cli" : "codex-cli");
+      }
+    }).pipe(Effect.scoped, Effect.provide(NodeServices.layer))
+  );
+
   it.effect("stamps SessionStart with the harness hash the TypeScript snapshot derives", () =>
     Effect.gen(function* () {
       const root = yield* makeHarnessFixtureRoot();

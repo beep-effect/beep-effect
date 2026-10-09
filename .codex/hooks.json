@@ -16,6 +16,11 @@
             "timeout": 2,
             "additionalContextLimit": 1200,
             "statusMessage": "Reading Yeet inbox"
+          },
+          {
+            "type": "command",
+            "command": "\"$(git rev-parse --show-toplevel)/.codex/hooks/hook-pulse.sh\"",
+            "timeout": 5
           }
         ]
       }

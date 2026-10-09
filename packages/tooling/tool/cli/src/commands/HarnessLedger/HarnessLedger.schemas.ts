@@ -17,6 +17,7 @@ import {
   HarnessLedgerDelta,
   HarnessLedgerRow,
   HarnessLedgerRowId,
+  HookPulseAgentKind,
   LedgerDisposition,
   MechanismClass,
 } from "@beep/repo-ai-metrics";
@@ -395,6 +396,10 @@ export class HarnessLedgerPruneOptions extends S.Class<HarnessLedgerPruneOptions
     repoRoot: S.String,
     stateDir: S.String,
     windowSessions: WindowSessions,
+    agentKind: HookPulseAgentKind.pipe(
+      S.withConstructorDefault(Effect.succeed(HookPulseAgentKind.Enum["claude-code"])),
+      S.withDecodingDefaultTypeKey(Effect.succeed(HookPulseAgentKind.Enum["claude-code"]))
+    ),
     write: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(false)),
       S.withDecodingDefaultTypeKey(Effect.succeed(false))
@@ -504,6 +509,12 @@ export class ObservedSessionWindow extends S.Class<ObservedSessionWindow>($I`Obs
     sessionsObserved: S.Finite,
     sessionsSkippedOutOfRegime: S.Finite,
     sessionsSkippedUnstamped: S.Finite,
+    sessionsSkippedDisarmed: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(0))),
+    sessionsBelowActivityFloor: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(0))),
+    sessionsByAgentKind: S.Record(HookPulseAgentKind, S.Natural).pipe(
+      S.withConstructorDefault(Effect.succeed({ "claude-code": 0, "codex-cli": 0, "cursor-cli": 0 }))
+    ),
+
     windowEnd: S.OptionFromOptionalKey(S.DateTimeUtcFromString),
     touched: S.HashSet(S.String),
     shardsRead: S.Finite,
@@ -551,8 +562,16 @@ export class HarnessLedgerPruneReport extends S.Class<HarnessLedgerPruneReport>(
     harnessHash: HarnessHash,
     sessionsObserved: S.Finite,
     windowFull: S.Boolean,
+    sharedHarnessWindowFull: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
+    nonUseQualified: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
     sessionsSkippedOutOfRegime: S.Finite,
     sessionsSkippedUnstamped: S.Finite,
+    sessionsSkippedDisarmed: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(0))),
+    sessionsBelowActivityFloor: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(0))),
+    sessionsByAgentKind: S.Record(HookPulseAgentKind, S.Natural).pipe(
+      S.withConstructorDefault(Effect.succeed({ "claude-code": 0, "codex-cli": 0, "cursor-cli": 0 }))
+    ),
+
     windowEnd: S.OptionFromOptionalKey(S.DateTimeUtcFromString),
     shardsRead: S.Finite,
     undecodableLines: S.Finite,
@@ -566,5 +585,38 @@ export class HarnessLedgerPruneReport extends S.Class<HarnessLedgerPruneReport>(
   $I.annote("HarnessLedgerPruneReport", {
     description:
       "Current-harness session window, skip and decode tallies, the zero-touch proposals of one pruning scan, and whether they were appended.",
+  })
+) {}
+
+/**
+ * Payload-free transcript reconciliation counts for one harness.
+ *
+ * **Example** (Inspect the report constructor)
+ *
+ * ```ts
+ * import { HarnessTelemetryReconciliation } from "@beep/repo-cli/commands/HarnessLedger"
+ * console.log(typeof HarnessTelemetryReconciliation.make) // "function"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class HarnessTelemetryReconciliation extends S.Class<HarnessTelemetryReconciliation>(
+  $I`HarnessTelemetryReconciliation`
+)(
+  {
+    agentKind: HookPulseAgentKind,
+    transcriptFiles: S.Natural,
+    transcriptToolEvents: S.Natural,
+    hookedToolEvents: S.Natural,
+    sessionsWithoutHooks: S.Natural,
+    undecodableLines: S.Natural,
+    ratio: S.OptionFromOptionalKey(S.Finite),
+    qualifiedForNonUse: S.Boolean,
+    basis: S.NonEmptyString,
+  },
+  $I.annote("HarnessTelemetryReconciliation", {
+    description:
+      "Read-only transcript versus hook counts, including nested child transcripts; no payload or digest is returned.",
   })
 ) {}

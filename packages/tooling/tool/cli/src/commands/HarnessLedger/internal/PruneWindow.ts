@@ -7,7 +7,13 @@
  * @since 0.0.0
  */
 
-import { contextSurfaceId, HookPulseV1 } from "@beep/repo-ai-metrics";
+import {
+  contextSurfaceId,
+  HookPulseDisarmWindow,
+  HookPulseV1,
+  hashPrivateIdentifier,
+  hookPulseHashSalt,
+} from "@beep/repo-ai-metrics";
 import { LiteralKit } from "@beep/schema";
 import { A, O, pipe, Str } from "@beep/utils";
 import * as DateTime from "effect/DateTime";
@@ -18,13 +24,17 @@ import * as HashSet from "effect/HashSet";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
-import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { HarnessLedgerIoError } from "../HarnessLedger.errors.ts";
-import { ObservedSessionWindow, PrunableSurfaceKind, PruneSurfaceCandidate } from "../HarnessLedger.schemas.ts";
+import {
+  HarnessTelemetryReconciliation,
+  ObservedSessionWindow,
+  PrunableSurfaceKind,
+  PruneSurfaceCandidate,
+} from "../HarnessLedger.schemas.ts";
 import { listDirectorySorted } from "./Fs.ts";
-import type { HarnessHash } from "@beep/repo-ai-metrics";
+import type { HarnessHash, HookPulseAgentKind } from "@beep/repo-ai-metrics";
 
 const McpConfig = S.fromJsonString(
   S.Struct({
@@ -84,42 +94,7 @@ export const enumeratePruneCandidates = Effect.fn("HarnessLedger.enumeratePruneC
   );
 });
 
-const INDEXED_SHARD = /^hook-pulse-(\d{4}-\d{2}-\d{2})-([0-9a-f]{64})\.ndjson$/;
 const ANY_SHARD = /^hook-pulse-.*\.ndjson$/;
-
-type IndexedShard = {
-  readonly name: string;
-  readonly date: string;
-  readonly session: string;
-};
-
-// A calendar day the name spells exactly: `2026-99-99` does not parse and
-// `2026-02-30` would roll over to another day, so both are refused.
-const calendarDay = (date: string): O.Option<string> =>
-  pipe(
-    DateTime.make(`${date}T00:00:00.000Z`),
-    O.map(DateTime.formatIsoDateUtc),
-    O.filter((day) => day === date)
-  );
-
-// A name whose date is not a real calendar day is not indexed; the shard is
-// then read like any other shard outside the naming scheme.
-const indexShard = (name: string): O.Option<IndexedShard> =>
-  pipe(
-    O.fromNullishOr(INDEXED_SHARD.exec(name)),
-    O.flatMap((match) =>
-      pipe(
-        O.all([O.flatMap(O.fromUndefinedOr(match[1]), calendarDay), O.fromUndefinedOr(match[2])]),
-        O.map(([date, session]) => ({ name, date, session }))
-      )
-    )
-  );
-
-const previousDay = (date: string): string =>
-  pipe(DateTime.makeUnsafe(`${date}T00:00:00.000Z`), DateTime.subtract({ days: 1 }), DateTime.formatIsoDateUtc);
-
-const latestDate = (current: O.Option<string>, date: string): string =>
-  O.match(current, { onNone: () => date, onSome: (previous) => (previous < date ? date : previous) });
 
 // Which side of the current harness a session falls on. `in-regime`: at least
 // one SessionStart stamp, every stamp equal to the current harness hash.
@@ -130,7 +105,14 @@ const SessionRegime = LiteralKit(["in-regime", "out-of-regime", "unstamped"]);
 type SessionRegime = typeof SessionRegime.Type;
 
 type SessionTally = {
+  readonly minTs: number;
   readonly maxTs: number;
+  readonly agentKind: HookPulseAgentKind;
+  readonly parent: string;
+  readonly key: string;
+  readonly userTurns: number;
+  readonly toolEvents: number;
+  readonly disarmed: boolean;
   readonly surfaces: HashSet.HashSet<string>;
   readonly stamps: HashSet.HashSet<string>;
 };
@@ -161,23 +143,37 @@ type ShardScan = {
   readonly tallies: MutableHashMap.MutableHashMap<string, SessionTally>;
   undecodableLines: number;
   shardsRead: number;
+  readonly disarmWindows: ReadonlyArray<HookPulseDisarmWindow>;
+  readonly openDisarm: boolean;
 };
 
 // Split shard names into those indexed by session and date and those read
 // eagerly because their name does not follow the naming scheme.
-const partitionShards = (names: ReadonlyArray<string>) => ({
-  indexed: A.getSomes(A.map(names, indexShard)),
-  unindexed: A.filter(names, (name) => O.isNone(indexShard(name))),
-});
-
 const foldPulse = (tallies: ShardScan["tallies"], pulse: HookPulseV1): void => {
   const ts = DateTime.toEpochMillis(pulse.ts);
-  const tally = O.getOrElse(MutableHashMap.get(tallies, pulse.sessionId), () => ({
+  const parent = `${pulse.agentKind}:${pulse.sessionId}`;
+  const key = `${parent}:${O.getOrElse(pulse.transcriptPath, () => "no-transcript")}`;
+  const tally = O.getOrElse(MutableHashMap.get(tallies, key), () => ({
+    minTs: ts,
     maxTs: ts,
+    agentKind: pulse.agentKind,
+    parent,
+    key,
+    userTurns: 0,
+    toolEvents: 0,
+    disarmed: false,
     surfaces: HashSet.empty<string>(),
     stamps: HashSet.empty<string>(),
   }));
-  MutableHashMap.set(tallies, pulse.sessionId, {
+  MutableHashMap.set(tallies, key, {
+    ...tally,
+    minTs: Math.min(tally.minTs, ts),
+    userTurns: tally.userTurns + (pulse.hookEvent === "UserPromptSubmit" ? 1 : 0),
+    toolEvents:
+      tally.toolEvents +
+      (pulse.hookEvent === "PreToolUse" || pulse.hookEvent === "PostToolUse" || pulse.hookEvent === "PostToolUseFailure"
+        ? 1
+        : 0),
     maxTs: Math.max(tally.maxTs, ts),
     surfaces: O.match(pulse.surface, {
       onNone: () => tally.surfaces,
@@ -211,71 +207,6 @@ const readShard = Effect.fnUntraced(function* (scan: ShardScan, name: string) {
   foldShardText(scan, text);
 });
 
-// Each session's visiting key: its newest row date from the shards already
-// read, raised to its newest indexed shard date.
-const visitDates = (
-  tallies: ShardScan["tallies"],
-  indexed: ReadonlyArray<IndexedShard>
-): MutableHashMap.MutableHashMap<string, string> => {
-  const visitDate = MutableHashMap.empty<string, string>();
-  for (const [session, tally] of tallies) {
-    MutableHashMap.set(visitDate, session, DateTime.formatIsoDateUtc(DateTime.makeUnsafe(tally.maxTs)));
-  }
-  for (const shard of indexed) {
-    MutableHashMap.set(visitDate, shard.session, latestDate(MutableHashMap.get(visitDate, shard.session), shard.date));
-  }
-  return visitDate;
-};
-
-type VisitPlan = {
-  readonly indexed: ReadonlyArray<IndexedShard>;
-  readonly visitDate: MutableHashMap.MutableHashMap<string, string>;
-  readonly visited: MutableHashMap.MutableHashMap<string, SessionTally>;
-};
-
-// Read every indexed shard of the sessions keyed to `day`, then mark those
-// sessions visited.
-const visitDay = Effect.fnUntraced(function* (scan: ShardScan, plan: VisitPlan, day: string) {
-  const sessions = A.filterMap(A.fromIterable(plan.visitDate), ([session, date]) =>
-    date === day ? Result.succeed(session) : Result.failVoid
-  );
-  yield* Effect.forEach(
-    A.filter(plan.indexed, (shard) => A.contains(sessions, shard.session)),
-    (shard) => readShard(scan, shard.name),
-    { discard: true }
-  );
-  for (const session of sessions) {
-    const tally = MutableHashMap.get(scan.tallies, session);
-    if (O.isSome(tally)) {
-      MutableHashMap.set(plan.visited, session, tally.value);
-    }
-  }
-});
-
-const countInRegime = (visited: VisitPlan["visited"], harnessHash: HarnessHash): number =>
-  A.length(A.filter(A.fromIterable(MutableHashMap.values(visited)), isInRegime(harnessHash)));
-
-// Visit days newest first until `window` in-regime sessions are known and the
-// day before that point has also been read.
-const visitNewestDays = Effect.fnUntraced(function* (
-  scan: ShardScan,
-  plan: VisitPlan,
-  window: number,
-  harnessHash: HarnessHash
-) {
-  const days = pipe(A.fromIterable(MutableHashMap.values(plan.visitDate)), A.dedupe, A.sort(Order.flip(Order.String)));
-  let floor = O.none<string>();
-  for (const day of days) {
-    if (O.exists(floor, (min) => day < min)) {
-      break;
-    }
-    yield* visitDay(scan, plan, day);
-    if (O.isNone(floor) && countInRegime(plan.visited, harnessHash) >= window) {
-      floor = O.some(previousDay(day));
-    }
-  }
-});
-
 // Skipped sessions of `regime` newer than the window's oldest session; every
 // visited skipped session when the window is not full (then every session
 // was read).
@@ -294,23 +225,65 @@ const countSkipped = (
 
 const windowReport = (
   scan: ShardScan,
-  visited: VisitPlan["visited"],
+  visited: ShardScan["tallies"],
   window: number,
-  harnessHash: HarnessHash
+  harnessHash: HarnessHash,
+  agentKind: HookPulseAgentKind
 ): ObservedSessionWindow => {
   const ranked = pipe(A.fromIterable(MutableHashMap.values(visited)), A.sort(byNewestFirst));
-  const inRegime = A.take(A.filter(ranked, isInRegime(harnessHash)), window);
+  const overlapsDisarm = (tally: SessionTally) =>
+    scan.openDisarm ||
+    A.some(
+      scan.disarmWindows,
+      (gap) =>
+        O.isNone(gap.disarmedAt) ||
+        (tally.maxTs >= DateTime.toEpochMillis(DateTime.makeUnsafe(gap.disarmedAt.value)) &&
+          tally.minTs <= DateTime.toEpochMillis(DateTime.makeUnsafe(gap.rearmedAt)))
+    );
+  // A parent's first transcript is the root; nested transcripts contribute
+  // touches to that root but never create extra qualifying sessions.
+  const isChild = (tally: SessionTally) =>
+    A.some(
+      ranked,
+      (other) =>
+        other.parent === tally.parent &&
+        (other.minTs < tally.minTs || (other.minTs === tally.minTs && other.key < tally.key))
+    );
+  const active = (tally: SessionTally) => tally.userTurns >= 1 && tally.toolEvents >= 1 && !isChild(tally);
+  const qualifying = A.filter(
+    ranked,
+    (tally) => isInRegime(harnessHash)(tally) && active(tally) && !overlapsDisarm(tally)
+  );
+  const countFor = (kind: HookPulseAgentKind) =>
+    Math.min(window, A.length(A.filter(qualifying, (tally) => tally.agentKind === kind)));
+  const counts = {
+    "claude-code": countFor("claude-code"),
+    "codex-cli": countFor("codex-cli"),
+    "cursor-cli": countFor("cursor-cli"),
+  };
+  const inRegime = A.take(
+    A.filter(qualifying, (tally) => tally.agentKind === agentKind),
+    window
+  );
+  const selectedRanked = A.filter(ranked, (tally) => tally.agentKind === agentKind);
   const oldest = A.length(inRegime) < window ? O.none<SessionTally>() : A.last(inRegime);
   return ObservedSessionWindow.make({
     harnessHash,
     sessionsObserved: A.length(inRegime),
-    sessionsSkippedOutOfRegime: countSkipped(ranked, oldest, harnessHash, SessionRegime.Enum["out-of-regime"]),
-    sessionsSkippedUnstamped: countSkipped(ranked, oldest, harnessHash, SessionRegime.Enum.unstamped),
+    sessionsByAgentKind: counts,
+    sessionsSkippedDisarmed: A.length(A.filter(selectedRanked, overlapsDisarm)),
+    sessionsBelowActivityFloor: A.length(A.filter(selectedRanked, (tally) => !active(tally))),
+    sessionsSkippedOutOfRegime: countSkipped(selectedRanked, oldest, harnessHash, SessionRegime.Enum["out-of-regime"]),
+    sessionsSkippedUnstamped: countSkipped(selectedRanked, oldest, harnessHash, SessionRegime.Enum.unstamped),
     windowEnd: pipe(
       A.head(inRegime),
       O.map((tally) => DateTime.makeUnsafe(tally.maxTs))
     ),
-    touched: A.reduce(inRegime, HashSet.empty<string>(), (acc, tally) => HashSet.union(acc, tally.surfaces)),
+    touched: A.reduce(
+      A.filter(ranked, (tally) => A.some(inRegime, (root) => root.parent === tally.parent)),
+      HashSet.empty<string>(),
+      (acc, tally) => HashSet.union(acc, tally.surfaces)
+    ),
     shardsRead: scan.shardsRead,
     undecodableLines: scan.undecodableLines,
   });
@@ -322,17 +295,10 @@ const windowReport = (
  *
  * **Details**
  *
- * Shards named `hook-pulse-<YYYY-MM-DD>-<sessionId>.ndjson`, whose date is a
- * real calendar day, are indexed by session and date without being read. Sessions are visited newest day first
- * (by their newest shard date, or by the newest row date for rows found in
- * shards that do not follow the naming scheme, which are always read), and
- * every shard of a visited session is read, so its regime is decided from all
- * of its rows. Visiting stops once `window` in-regime sessions are known and
- * the day before that point has also been read, so a one-day gap between a
- * shard's name and its rows cannot drop a session; older sessions are never
- * read. The newest `window` in-regime sessions by newest event form the
- * window. Lines that do not decode as `HookPulseV1` are counted and skipped.
- * A missing state directory observes zero sessions.
+ * Reads complete shards so restarted, mixed, child, and disarmed sessions
+ * cannot be hidden by a date-bound shortcut. Windows are per client. A root
+ * needs a user turn and a tool event; children add touches without adding
+ * sessions. Invalid lines are counted. A missing state directory observes zero.
  *
  * @internal
  * @category use-cases
@@ -341,15 +307,186 @@ const windowReport = (
 export const observeSessionWindow = Effect.fn("HarnessLedger.observeSessionWindow")(function* (
   stateDir: string,
   window: number,
-  harnessHash: HarnessHash
+  harnessHash: HarnessHash,
+  agentKind: HookPulseAgentKind = "claude-code"
 ) {
   const names = A.filter(yield* listDirectorySorted(stateDir), (name) => ANY_SHARD.test(name));
-  const { indexed, unindexed } = partitionShards(names);
-  const scan: ShardScan = { stateDir, tallies: MutableHashMap.empty(), undecodableLines: 0, shardsRead: 0 };
-  // Unindexed shards can hold rows of any session, so they are read first and
-  // their rows' dates join the session's visiting key.
-  yield* Effect.forEach(unindexed, (name) => readShard(scan, name), { discard: true });
-  const plan: VisitPlan = { indexed, visitDate: visitDates(scan.tallies, indexed), visited: MutableHashMap.empty() };
-  yield* visitNewestDays(scan, plan, window, harnessHash);
-  return windowReport(scan, plan.visited, window, harnessHash);
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const root = path.dirname(stateDir);
+  const windowsText = yield* fs
+    .readFileString(path.join(root, "hook-pulse-disarm-windows.ndjson"))
+    .pipe(Effect.orElseSucceed(() => ""));
+  const windows = A.filterMap(Str.split(windowsText, "\n"), (line) => HookPulseDisarmWindow.decodeJsonResult(line));
+  const openDisarm = yield* fs.exists(path.join(root, "hook-pulse.disarmed")).pipe(Effect.orElseSucceed(() => true));
+  const scan: ShardScan = {
+    stateDir,
+    tallies: MutableHashMap.empty(),
+    undecodableLines: 0,
+    shardsRead: 0,
+    disarmWindows: windows,
+    openDisarm,
+  };
+  yield* Effect.forEach(names, (name) => readShard(scan, name), { discard: true });
+  return windowReport(scan, scan.tallies, window, harnessHash, agentKind);
+});
+
+// Only structural metadata is decoded. Content strings never leave this reader.
+const TranscriptTool = S.Struct({ type: S.optionalKey(S.String), id: S.optionalKey(S.String) });
+const TranscriptRow = S.fromJsonString(
+  S.Struct({
+    type: S.optionalKey(S.String),
+    sessionId: S.optionalKey(S.String),
+    message: S.optionalKey(S.Struct({ content: S.optionalKey(S.Union([S.String, S.Array(S.Unknown)])) })),
+    payload: S.optionalKey(S.Struct({ id: S.optionalKey(S.String), type: S.optionalKey(S.String) })),
+  })
+);
+const decodeTranscript = S.decodeUnknownResult(TranscriptRow);
+const decodeTool = S.decodeUnknownOption(TranscriptTool);
+
+/**
+ * Reconcile every transcript file beneath a caller-selected root, including
+ * nested Workflow and subagent files, against complete hook shards.
+ *
+ * @internal
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const reconcileTranscripts = Effect.fn("HarnessLedger.reconcileTranscripts")(function* (
+  stateDir: string,
+  transcriptDir: string,
+  agentKind: HookPulseAgentKind
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const hashSalt = yield* hookPulseHashSalt.pipe(
+    Effect.mapError(HarnessLedgerIoError.wrap("Cannot resolve reconciliation hash namespace."))
+  );
+  const hooks = MutableHashMap.empty<string, number>();
+  const sessionHooks = MutableHashMap.empty<string, number>();
+  let undecodableLines = 0;
+  for (const shard of A.filter(yield* listDirectorySorted(stateDir), (name) => ANY_SHARD.test(name))) {
+    const text = yield* fs
+      .readFileString(path.join(stateDir, shard))
+      .pipe(Effect.mapError(HarnessLedgerIoError.wrap("Cannot read reconciliation shard.")));
+    for (const line of A.filter(Str.split(text, "\n"), Str.isNonEmpty)) {
+      const decoded = HookPulseV1.decodeJsonResult(line);
+      if (Result.isFailure(decoded)) {
+        undecodableLines += 1;
+        continue;
+      }
+      const row = decoded.success;
+      if (row.agentKind !== agentKind || (row.hookEvent !== "PostToolUse" && row.hookEvent !== "PostToolUseFailure"))
+        continue;
+      MutableHashMap.set(
+        sessionHooks,
+        row.sessionId,
+        O.getOrElse(MutableHashMap.get(sessionHooks, row.sessionId), () => 0) + 1
+      );
+      if (O.isSome(row.transcriptPath))
+        MutableHashMap.set(
+          hooks,
+          row.transcriptPath.value,
+          O.getOrElse(MutableHashMap.get(hooks, row.transcriptPath.value), () => 0) + 1
+        );
+    }
+  }
+  const walk = Effect.fnUntraced(function* (
+    dir: string
+  ): Effect.fn.Return<ReadonlyArray<string>, HarnessLedgerIoError, FileSystem.FileSystem | Path.Path> {
+    const entries = yield* listDirectorySorted(dir);
+    return A.flatten(
+      yield* Effect.forEach(
+        entries,
+        Effect.fnUntraced(function* (entry) {
+          const file = path.join(dir, entry);
+          const info = yield* fs
+            .stat(file)
+            .pipe(Effect.mapError(HarnessLedgerIoError.wrap("Cannot inspect transcript file.")));
+          if (info.type === "Directory") return yield* walk(file);
+          return Str.endsWith(".jsonl")(entry) ? A.of(file) : A.empty<string>();
+        }),
+        { concurrency: 1 }
+      )
+    );
+  });
+  const files = yield* walk(transcriptDir);
+  const sessions = MutableHashMap.empty<string, number>();
+  const transcriptPaths = MutableHashMap.empty<string, number>();
+  for (const file of files) {
+    const text = yield* fs
+      .readFileString(file)
+      .pipe(Effect.mapError(HarnessLedgerIoError.wrap("Cannot read transcript reconciliation file.")));
+    const relative = Str.split(path.relative(transcriptDir, file), path.sep);
+    // Claude's nested paths are <session>/subagents or <session>/workflow.
+    let session = O.none<string>();
+    let calls = 0;
+    for (const line of A.filter(Str.split(text, "\n"), Str.isNonEmpty)) {
+      const decoded = decodeTranscript(line);
+      if (Result.isFailure(decoded)) {
+        undecodableLines += 1;
+        continue;
+      }
+      const row = decoded.success;
+      if (row.type === "session_meta") session = O.fromUndefinedOr(row.payload?.id);
+      if (row.sessionId !== undefined) session = O.some(row.sessionId);
+      const content = row.message?.content;
+      if (S.is(S.Array(S.Unknown))(content)) {
+        calls += A.length(
+          A.filter(content, (block) => O.exists(decodeTool(block), (tool) => tool.type === "tool_use"))
+        );
+      }
+      if (
+        row.type === "response_item" &&
+        (row.payload?.type === "function_call" || row.payload?.type === "custom_tool_call")
+      )
+        calls += 1;
+    }
+    if (calls === 0) continue;
+    if (agentKind === "claude-code" && A.length(relative) > 1) {
+      const parent = A.findFirst(relative, (part) => /^[0-9a-f-]{36}$/.test(part));
+      session = O.orElse(parent, () => session);
+    }
+    const identity = yield* hashPrivateIdentifier(
+      O.getOrElse(session, () => file),
+      hashSalt
+    ).pipe(Effect.mapError(HarnessLedgerIoError.wrap("Cannot hash transcript identity.")));
+    MutableHashMap.set(sessions, identity, O.getOrElse(MutableHashMap.get(sessions, identity), () => 0) + calls);
+    const pathHash = yield* hashPrivateIdentifier(file, hashSalt).pipe(
+      Effect.mapError(HarnessLedgerIoError.wrap("Cannot hash transcript path."))
+    );
+    MutableHashMap.set(transcriptPaths, pathHash, calls);
+  }
+  const counts = agentKind === "claude-code" ? sessions : transcriptPaths;
+  const matchedHooks = agentKind === "claude-code" ? sessionHooks : hooks;
+  const transcriptToolEvents = A.reduce(A.fromIterable(MutableHashMap.values(counts)), 0, (sum, count) => sum + count);
+  const hookedToolEvents = A.reduce(
+    A.fromIterable(counts),
+    0,
+    (sum, [key]) => sum + O.getOrElse(MutableHashMap.get(matchedHooks, key), () => 0)
+  );
+  const sessionsWithoutHooks = A.length(
+    A.filter(A.fromIterable(counts), ([key]) => !MutableHashMap.has(matchedHooks, key))
+  );
+  const ratio = transcriptToolEvents > 0 ? O.some(hookedToolEvents / transcriptToolEvents) : O.none<number>();
+  return HarnessTelemetryReconciliation.make({
+    agentKind,
+    transcriptFiles: A.length(files),
+    transcriptToolEvents,
+    hookedToolEvents,
+    sessionsWithoutHooks,
+    undecodableLines,
+    ratio,
+    qualifiedForNonUse:
+      agentKind === "claude-code" &&
+      undecodableLines === 0 &&
+      sessionsWithoutHooks === 0 &&
+      O.exists(ratio, (value) => value >= 0.98 && value <= 1.02),
+    basis:
+      agentKind === "codex-cli"
+        ? "failed-or-interrupted: exec wrappers are not one-to-one with inner hook calls; non-use unqualified"
+        : agentKind === "cursor-cli"
+          ? "unsupported transcript format; non-use unqualified"
+          : "main plus all nested child transcripts; current-window qualification is also required",
+  });
 });

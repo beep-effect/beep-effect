@@ -582,7 +582,7 @@ export const makeHarnessFingerprint = Effect.fn("AiMetrics.makeHarnessFingerprin
  * import * as S from "effect/Schema"
  *
  * console.log(S.is(HarnessHash)("a".repeat(64))) // true
- * console.log(S.is(HarnessHash)("harness-hash-v1")) // false
+ * console.log(S.is(HarnessHash)("harness-hash-v2")) // false
  * ```
  *
  * @category models
@@ -609,7 +609,7 @@ export type HarnessHash = typeof HarnessHash.Type;
  * **Details**
  *
  * The preimage is exactly the UTF-8 text
- * `harness-hash-v1\n<harnessSessionHash>\n<harnessBaselineHash>`, hashed
+ * `harness-hash-v2\n<harnessSessionHash>\n<harnessBaselineHash>`, hashed
  * unsalted: both inputs are digests of public repo config, the same argument
  * that keeps context surface ids unsalted. The input is structural, so a
  * {@link HarnessFingerprint} or {@link HarnessFingerprintParts} is passed as-is.
@@ -648,7 +648,7 @@ export const deriveHarnessHash = Effect.fn("AiMetrics.deriveHarnessHash")(functi
   source: Pick<HarnessFingerprintParts, "harnessSessionHash" | "harnessBaselineHash">
 ) {
   return yield* hashPublicTextSha256(
-    `harness-hash-v1\n${source.harnessSessionHash}\n${source.harnessBaselineHash}`
+    `harness-hash-v2\n${source.harnessSessionHash}\n${source.harnessBaselineHash}`
   ).pipe(Effect.mapError(harnessLedgerError("Failed to hash the harness hash preimage.")));
 });
 

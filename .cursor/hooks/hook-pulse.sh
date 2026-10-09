@@ -8,11 +8,7 @@
 # permission event an EMPTY stdout is treated as malformed JSON and BLOCKS the tool, and the
 # hook has a 5 s budget in `.cursor/hooks.json`. `allow` is the lowest priority, so a deny
 # from another hook (deny-shell.sh, yeet-inbox P0) still wins.
-# Only events with a `HookPulseEvent` literal are registered for this adapter. `SessionStart`
-# is one now (the shared body stamps the harness hash on it), but Cursor's `sessionStart` is
-# deliberately left unmapped below: its payload shape is unmeasured, and the stamp walks the
-# repo, which could outlast the 3 s cap. An unmapped name matches no literal, so the shared
-# writer drops it and Cursor sessions stay unstamped (outside the prune-proposals window).
+# SessionStart uses the same payload projection and bounded stamp as tool events.
 # Without `timeout` the writer would run uncapped against the 5 s hook budget, so the row is
 # skipped instead.
 # `BEEP_CURSOR_HOOK_PULSE_WRITER_CAP` overrides the 3 s cap for conformance tests on a loaded
@@ -31,9 +27,11 @@ case "${event}" in
     printf '{}\n' ;;
 esac
 if [ -x "${shared}" ] && command -v jq >/dev/null 2>&1 && command -v timeout >/dev/null 2>&1; then
+  result=0
   printf '%s' "${input}" | jq -c '
     .hook_event_name as $e
     | .hook_event_name = ({
+        "sessionStart": "SessionStart",
         "preToolUse": "PreToolUse",
         "postToolUse": "PostToolUse",
         "postToolUseFailure": "PostToolUseFailure",
@@ -41,6 +39,13 @@ if [ -x "${shared}" ] && command -v jq >/dev/null 2>&1 && command -v timeout >/d
         "stop": "Stop",
         "beforeSubmitPrompt": "UserPromptSubmit"
       }[$e] // $e)' 2>/dev/null \
-    | BEEP_HOOK_PULSE_AGENT_KIND=cursor-cli timeout "${BEEP_CURSOR_HOOK_PULSE_WRITER_CAP:-3s}" "${shared}" >/dev/null 2>&1 || true
+    | BEEP_HOOK_PULSE_AGENT_KIND=cursor-cli timeout "${BEEP_CURSOR_HOOK_PULSE_WRITER_CAP:-3s}" "${shared}" >/dev/null 2>&1 || result=$?
+  if [ "${result}" -eq 124 ]; then
+    BEEP_HOOK_PULSE_AGENT_KIND=cursor-cli "${shared}" --refuse timeout >/dev/null 2>&1
+  elif [ "${result}" -ne 0 ]; then
+    BEEP_HOOK_PULSE_AGENT_KIND=cursor-cli "${shared}" --refuse encode-failed >/dev/null 2>&1
+  fi
+elif [ -x "${shared}" ]; then
+  BEEP_HOOK_PULSE_AGENT_KIND=cursor-cli "${shared}" --refuse no-jq >/dev/null 2>&1
 fi
 exit 0

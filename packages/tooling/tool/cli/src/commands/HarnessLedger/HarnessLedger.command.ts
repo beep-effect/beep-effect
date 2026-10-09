@@ -12,6 +12,7 @@ import {
   BehavioralClaim,
   ContextSurfaceKind,
   HarnessLedgerDelta,
+  HookPulseAgentKind,
   hookPulseLedgerDir,
   LedgerDisposition,
   MechanismClass,
@@ -40,6 +41,7 @@ import {
   HarnessLedgerProposeOptions,
   HarnessLedgerPruneOptions,
   HarnessLedgerPruneReport,
+  HarnessTelemetryReconciliation,
   parseHarnessEditSpec,
   parseHarnessSurfaceSpec,
 } from "./HarnessLedger.schemas.ts";
@@ -514,6 +516,7 @@ export const harnessLedgerPruneReportLines: {
 export const harnessLedgerPruneProposalsCommand = Command.make(
   "prune-proposals",
   {
+    agentKind: Flag.String("agent-kind").pipe(Flag.withDefault("claude-code")),
     window: Flag.Int("window").pipe(
       Flag.withDefault(30),
       Flag.withDescription("Number of most recent hook-pulse sessions under the current harness hash to observe")
@@ -548,6 +551,9 @@ export const harnessLedgerPruneProposalsCommand = Command.make(
           repoRoot,
           stateDir,
           windowSessions: input.window,
+          agentKind: yield* S.decodeUnknownEffect(HookPulseAgentKind)(input.agentKind).pipe(
+            Effect.mapError(HarnessLedgerIoError.wrap("Unknown --agent-kind."))
+          ),
           write: input.write,
           modelId: optionalNonEmpty(input.model),
           reasoningEffort: optionalNonEmpty(input.reasoningEffort),
@@ -573,6 +579,42 @@ export const harnessLedgerPruneProposalsCommand = Command.make(
   Command.withDescription(
     "Propose retiring zero-touch skills and MCP servers over the last N sessions under the current harness hash"
   ),
+  Command.provide(HarnessLedgerServiceLive)
+);
+
+/**
+ * Read-only payload-free transcript and hook reconciliation.
+ *
+ * **Example** (Inspect the command)
+ *
+ * ```ts
+ * import { harnessLedgerReconcileCommand } from "@beep/repo-cli/commands/HarnessLedger"
+ * console.log(typeof harnessLedgerReconcileCommand)
+ * ```
+ *
+ * @category commands
+ * @since 0.0.0
+ */
+export const harnessLedgerReconcileCommand = Command.make(
+  "reconcile",
+  {
+    stateDir: Flag.String("state-dir"),
+    transcriptDir: Flag.String("transcript-dir"),
+    agentKind: Flag.String("agent-kind").pipe(Flag.withDefault("claude-code")),
+  },
+  Effect.fn("HarnessLedger.reconcileCommand")(function* (input) {
+    const kind = yield* S.decodeUnknownEffect(HookPulseAgentKind)(input.agentKind).pipe(
+      Effect.mapError(HarnessLedgerIoError.wrap("Unknown --agent-kind."))
+    );
+    const ledger = yield* HarnessLedgerService;
+    const report = yield* ledger.reconcile(input.stateDir, input.transcriptDir, kind);
+    const encoded = yield* S.encodeUnknownEffect(S.fromJsonString(HarnessTelemetryReconciliation))(report).pipe(
+      Effect.mapError(HarnessLedgerIoError.wrap("Cannot encode reconciliation."))
+    );
+    yield* printCommandJson(encoded);
+  })
+).pipe(
+  Command.withDescription("Read-only transcript versus hook counts, including all nested children"),
   Command.provide(HarnessLedgerServiceLive)
 );
 
@@ -605,5 +647,6 @@ export const harnessLedgerCommand = Command.make("harness-ledger", {}, () =>
     harnessLedgerDispositionCommand,
     harnessLedgerListCommand,
     harnessLedgerPruneProposalsCommand,
+    harnessLedgerReconcileCommand,
   ])
 );
