@@ -2560,13 +2560,79 @@
       "wave": 1,
       "position": 13,
       "stage": 0,
-      "status": "pending",
+      "status": "in-progress",
       "provisionalHome": "tooling/library",
       "upstreamPaths": {
         "src": "packages/engine/src",
         "test": "packages/engine/__test__"
       },
-      "exportsExpected": [],
+      "exportsExpected": [
+        {
+          "name": "CurrentDistribution",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "Distribution",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "DistributionField",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "LaunchContext",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ProjectDirInput",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "Remediation",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "distributionSuffix",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "ProcessGuard",
+          "kind": "both",
+          "entry": "./guard"
+        },
+        {
+          "name": "ProcessGuardControl",
+          "kind": "type",
+          "entry": "./guard"
+        },
+        {
+          "name": "ProcessGuardHost",
+          "kind": "type",
+          "entry": "./guard"
+        },
+        {
+          "name": "ProcessGuardInjection",
+          "kind": "type",
+          "entry": "./guard"
+        },
+        {
+          "name": "ProcessGuardOptions",
+          "kind": "type",
+          "entry": "./guard"
+        },
+        {
+          "name": "ProcessGuardPolicy",
+          "kind": "type",
+          "entry": "./guard"
+        }
+      ],
       "exportsAdded": [],
       "newDeps": [],
       "fixturesBytes": 0,

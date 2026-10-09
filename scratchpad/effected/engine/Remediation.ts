@@ -1,0 +1,37 @@
+import { Schema } from "effect";
+
+/**
+ * What a caller — usually an agent — should do after a failure.
+ *
+ * @remarks
+ * `hint` is the human-readable instruction. `suggestedTool` and `suggestedArgs`
+ * optionally name the tool to call next and the arguments to call it with, so
+ * an agent can act without parsing the hint. The optional keys are
+ * `optionalKey`: omit them rather than passing an explicit `undefined`, which
+ * is rejected instead of silently encoded.
+ *
+ * @example
+ * ```ts
+ * import { Remediation } from "./index.ts"
+ *
+ * const remediation: Remediation = {
+ * 	hint: "Run the validator on the whole bundle first.",
+ * 	suggestedTool: "validate_bundle",
+ * 	suggestedArgs: { strict: true },
+ * }
+ * ```
+ *
+ * @public
+ */
+export const Remediation = Schema.Struct({
+	hint: Schema.String,
+	suggestedTool: Schema.optionalKey(Schema.String),
+	suggestedArgs: Schema.optionalKey(Schema.Record(Schema.String, Schema.Unknown)),
+});
+
+/**
+ * A decoded {@link (Remediation:variable)}.
+ *
+ * @public
+ */
+export type Remediation = typeof Remediation.Type;
