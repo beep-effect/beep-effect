@@ -1,0 +1,135 @@
+{
+  "cohort": "10 test files, 316 tests passed; final main-refresh serial V8 coverage read",
+  "scopeNote": "Scoped cohort, not full package/repository floor proof. Seven measured files meet every baseline metric. IssueClassification lines/statements/functions are below the broader baseline in this narrow cohort; the D hunk changes only remediation text and its assertions, not executable branches.",
+  "executionSourceSnapshot": "2cf3724e93f8d482049f6d75e1d102ff724f98cb",
+  "rows": [
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts",
+      "measured": {
+        "lines": 92.37,
+        "statements": 92.78,
+        "branches": 80.13,
+        "functions": 99.06
+      },
+      "baseline": {
+        "lines": 92.3,
+        "statements": 92.71,
+        "branches": 80,
+        "functions": 99.05
+      },
+      "belowBaseline": []
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/internal/RetiredNameRegistry.ts",
+      "measured": {
+        "lines": 100,
+        "statements": 100,
+        "branches": 100,
+        "functions": 100
+      },
+      "baseline": {
+        "lines": 100,
+        "statements": 100,
+        "branches": 100,
+        "functions": 100
+      },
+      "belowBaseline": []
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.command.ts",
+      "measured": {
+        "lines": 86.28,
+        "statements": 83.79,
+        "branches": 67.25,
+        "functions": 75
+      },
+      "baseline": {
+        "lines": 86.19,
+        "statements": 83.69,
+        "branches": 67.25,
+        "functions": 74.66
+      },
+      "belowBaseline": []
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/ChangesetGraph.ts",
+      "measured": {
+        "lines": 91.91,
+        "statements": 92.02,
+        "branches": 63.33,
+        "functions": 87.8
+      },
+      "baseline": {
+        "lines": 91.2,
+        "statements": 91.26,
+        "branches": 60.71,
+        "functions": 86.48
+      },
+      "belowBaseline": []
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/ChangesetStatus.ts",
+      "measured": {
+        "lines": 95.14,
+        "statements": 95.37,
+        "branches": 81.81,
+        "functions": 93.54
+      },
+      "baseline": {
+        "lines": 95.04,
+        "statements": 95.28,
+        "branches": 80,
+        "functions": 93.33
+      },
+      "belowBaseline": []
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/IssueClassification.ts",
+      "measured": {
+        "lines": 92.24,
+        "statements": 89.43,
+        "branches": 93.75,
+        "functions": 81.69
+      },
+      "baseline": {
+        "lines": 93.91,
+        "statements": 94.26,
+        "branches": 93.75,
+        "functions": 90
+      },
+      "belowBaseline": ["lines", "statements", "functions"]
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.plan.ts",
+      "measured": {
+        "lines": 92.45,
+        "statements": 92.59,
+        "branches": 100,
+        "functions": 90.69
+      },
+      "baseline": {
+        "lines": 70.58,
+        "statements": 71.15,
+        "branches": 100,
+        "functions": 63.41
+      },
+      "belowBaseline": []
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts",
+      "measured": {
+        "lines": 100,
+        "statements": 100,
+        "branches": 100,
+        "functions": 100
+      },
+      "baseline": {
+        "lines": 100,
+        "statements": 100,
+        "branches": 100,
+        "functions": 100
+      },
+      "belowBaseline": []
+    }
+  ]
+}

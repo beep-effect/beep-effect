@@ -65,12 +65,12 @@ const writeStreamPacket = Effect.fnUntraced(function* (slug: string) {
 
 const listEventFiles = Effect.fnUntraced(function* (slug: string) {
   const fs = yield* FileSystem.FileSystem;
-  const entries = yield* fs.readDirectory(`goals/${slug}/ops/events`).pipe(Effect.orElseSucceed(A.empty<string>));
+  const entries = yield* fs.readDirectory(`goals/${slug}/ops/events`);
   return A.filter(entries, (name) => name !== ".gitkeep");
 });
 
 const expectReportedFailure = (exit: Exit.Exit<unknown, unknown>) => {
-  exit.pipe(Exit.isFailure, assertTrue);
+  assertTrue(exit._tag === "Failure");
   if (Exit.isFailure(exit)) {
     const error = Cause.squash(exit.cause);
     expect(Runtime.getErrorExitCode(error)).toBe(1);

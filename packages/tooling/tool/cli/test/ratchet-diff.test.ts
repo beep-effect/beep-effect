@@ -1,6 +1,7 @@
 import { renderTruncatedLines } from "@beep/repo-cli/test/Artifacts";
 import { diffMembership, diffTotals, enforceRatchet, RatchetTotalsDiff } from "@beep/repo-cli/test/Ratchet";
 import { it } from "@beep/test-runner";
+import { A } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as Data from "effect/Data";
@@ -8,6 +9,7 @@ import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
+import * as TestConsole from "effect/testing/TestConsole";
 
 const stringEquivalence = (left: string, right: string): boolean => left === right;
 
@@ -69,7 +71,7 @@ describe("internal/ratchet/RatchetDiff diffTotals", () => {
     expect(diff.baselineTotalCount).toBe(4);
   });
 
-  it("treats an absent baseline metric as zero when the current metric exists", () => {
+  it("treats an explicit zero baseline metric as growth when the current metric increases", () => {
     const diff = diffTotals({
       current: { fresh: 4 },
       baseline: { fresh: 0 },
@@ -78,6 +80,36 @@ describe("internal/ratchet/RatchetDiff diffTotals", () => {
     expect(diff.increased.map((delta) => [delta.metric, delta.baseline, delta.current, delta.delta])).toEqual([
       ["fresh", 0, 4, 4],
     ]);
+  });
+
+  it("counts an untracked current metric without producing tracked deltas or missing metrics", () => {
+    const diff = diffTotals({
+      current: { fresh: 4 },
+      baseline: {},
+    });
+
+    expect(diff.currentTotalCount).toBe(1);
+    expect(diff.baselineTotalCount).toBe(0);
+    expect(diff.increased).toEqual([]);
+    expect(diff.decreased).toEqual([]);
+    expect(diff.missing).toEqual([]);
+  });
+
+  it("enforces tracked growth, decreases, and missing metrics alongside untracked current totals", () => {
+    const diff = diffTotals({
+      current: { grew: 5, shrank: 1, untracked: 1000 },
+      baseline: { grew: 2, shrank: 4, gone: 7 },
+    });
+
+    expect(diff.increased.map((delta) => [delta.metric, delta.baseline, delta.current, delta.delta])).toEqual([
+      ["grew", 2, 5, 3],
+    ]);
+    expect(diff.decreased.map((delta) => [delta.metric, delta.baseline, delta.current, delta.delta])).toEqual([
+      ["shrank", 4, 1, -3],
+    ]);
+    expect(diff.missing).toEqual(["gone"]);
+    expect(diff.currentTotalCount).toBe(3);
+    expect(diff.baselineTotalCount).toBe(3);
   });
 
   it("is a decodable schema value", () => {
@@ -104,7 +136,7 @@ describe("internal/ratchet/RatchetLifecycle enforceRatchet", () => {
         })
       );
 
-      exit.pipe(Exit.isFailure, assertTrue);
+      assertTrue(exit._tag === "Failure");
       if (Exit.isFailure(exit)) {
         expect(exit.cause.toString()).toContain("baseline grew");
       }
@@ -114,6 +146,7 @@ describe("internal/ratchet/RatchetLifecycle enforceRatchet", () => {
   it.effect(
     "succeeds and emits the ok line when no regression is present",
     Effect.fnUntraced(function* () {
+      const logged = A.length(yield* TestConsole.logLines);
       const exit = yield* Effect.exit(
         enforceRatchet({
           regressions: [{ present: false, lines: ["skipped"], error: new RatchetTestError({ message: "unused" }) }],
@@ -123,6 +156,10 @@ describe("internal/ratchet/RatchetLifecycle enforceRatchet", () => {
       );
 
       exit.pipe(Exit.isSuccess, assertTrue);
+      expect(A.drop(yield* TestConsole.logLines, logged)).toEqual([
+        "[demo] ok: current=0 baseline=0 introduced=0",
+        "[demo] tighten-baseline: 1 finding(s) are no longer present",
+      ]);
     })
   );
 });

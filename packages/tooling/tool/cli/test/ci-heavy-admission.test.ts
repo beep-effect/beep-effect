@@ -42,7 +42,12 @@ const payload = (labels: ReadonlyArray<string>, draft = false, base = "main") =>
   JSON.stringify({
     action: "synchronize",
     number: 1,
-    pull_request: { draft, labels: A.map(labels, (name) => ({ name, color: "ededed" })), base: { ref: base } },
+    pull_request: {
+      draft,
+      labels: A.map(labels, (name) => ({ name, color: "ededed" })),
+      head: { repo: { full_name: "beep-effect/beep-effect" } },
+      base: { ref: base, repo: { full_name: "beep-effect/beep-effect" } },
+    },
   });
 const handle = (exitCode: number, output: string) =>
   ChildProcessSpawner.makeHandle({
@@ -192,7 +197,7 @@ describe("B8 heavy admission contracts", () => {
       ["research/ledger/claims.jsonl", true],
       [".changeset/brave-owls-sing.md", true],
       [".changeset/config.json", false],
-      ["packages/a/README.md", true],
+      ["packages/a/README.md", false],
       ["packages/a/src/index.ts", false],
       ["packages/a/src/index.md.ts", false],
       ["README.md", true],

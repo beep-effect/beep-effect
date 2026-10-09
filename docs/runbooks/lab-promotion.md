@@ -36,8 +36,9 @@ Standard" routing table in
 - New package: `bun run beep create-package` (never `mkdir` — see the
   Touch table in the repo agent guide). Existing home: add role files per the
   `bun run beep architecture` grammar.
-- Full registration applies at the destination: changeset, docgen surface,
-  JSDoc and coverage ratchets, Storybook if UI, tsconfig-sync — everything the
+- Full registration applies at the destination: changeset for publish-enabled
+  packages, docgen surface, JSDoc and coverage ratchets, Storybook if UI,
+  tsconfig-sync — everything the
   lab was path-exempted from.
 
 ## 3. Move code and migrate consumers in the same change
@@ -53,7 +54,8 @@ Standard" routing table in
   registration; the labs segment writer regenerates without it.
 - Changed ownership: record an explicit identity transition — a retired-name
   entry in `standards/changesets.retired-packages.json`. `create-package`
-  refuses to reuse a retired name without `--reuse-retired-name`.
+  refuses to reuse a retired name without `--reuse-retired-name`. These entries
+  guard name reuse independently of pending release notes.
 
 ## 5. Delete the lab and prove clean
 
@@ -73,7 +75,8 @@ bun run beep delete-package <lab> --check     # doctor: zero residue
 ## 6. Gates (every promotion)
 
 - `bun run docgen:local` when the destination gained exported surface.
-- Changeset for the new or changed destination package.
+- Changeset for a versioned, publish-enabled destination package; private
+  destinations are exempt and must not accumulate pending notes.
 - Shared-kernel promotion record when the home is `shared/*`.
 - DECISIONS entry when the promotion creates or changes a shared export
   ([DECISIONS.md](../../standards/architecture/DECISIONS.md)).

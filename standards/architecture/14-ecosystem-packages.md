@@ -118,16 +118,25 @@ Members publish a deliberately strict artifact:
 
 ## Release Lane
 
-Members are wired into changesets and the release lane at creation but stay
-dormant: `private: true` until every upstream peer is stable enough that the
-published artifact needs no compatibility shims (for the first member: effect
-v4 stable AND drizzle 1.0 final). The member manifest declares
-`publishConfig.access: "public"` (and the repo's provenance setting) at
-creation — the repo-level changesets config is `restricted`, and a scoped
-package inherits that unless overridden, which would break the family's
-public-consumption promise on the day of release. Pre-npm feedback flows through the public
-repository meanwhile. Flipping `private` is an operator decision, never a side
-effect of other work.
+Members remain `private: true` until their upstream peers are stable enough
+that the published artifact needs no compatibility shims (for the first member:
+Effect v4 stable AND drizzle 1.0 final). Private workspaces require no changesets
+and cannot be named in pending notes. `publishConfig.access: "public"` and
+provenance are dormant template settings, not a publication promise.
+
+Activation is a deliberate release-policy change: establish versioning,
+compatibility and external-consumer obligations, reconcile public access and
+provenance, flip `private: false`, remove
+any inappropriate changeset-ignore exemption, and add the publication workflow.
+The status gate then requires in-branch changesets for changed versioned members.
+The repo-level Changesets access is `restricted`; retain the member override
+`publishConfig.access: "public"` and provenance when activating public packages.
+If E-19 has removed the `changesets/action` allowlist entry, restore it when
+the activated workflow uses that action.
+The retained Changesets config and changelog adapter support that future lane;
+private package versioning and tagging remain disabled. Pre-npm feedback flows
+through the public repository. Activation never happens as a side effect of
+unrelated work.
 
 ## Gate Profile
 

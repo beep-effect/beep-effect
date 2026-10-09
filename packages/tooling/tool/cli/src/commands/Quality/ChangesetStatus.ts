@@ -3,10 +3,10 @@
  *
  * **Details**
  *
- * Lab apps under `apps/labs/**` are changeset-ceremony exempt. Every other
- * change set is enforced in-process: each changed, versioned, non-ignored
- * product workspace must be named by a changeset added in the merge-base
- * range. The wrapper never delegates to the stock changesets CLI.
+ * Lab apps under `apps/labs/**` and private workspaces are changeset-ceremony
+ * exempt. Each changed, versioned, publish-enabled, non-ignored product
+ * workspace must be named by a changeset added in the merge-base range.
+ * The wrapper never delegates to the stock changesets CLI.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -206,7 +206,8 @@ export type ChangesetStatusVerdict = typeof ChangesetStatusVerdict.Type;
  * const workspace = ChangesetStatusWorkspacePackage.make({
  *   dir: "packages/demo",
  *   name: "@beep/demo",
- *   version: O.some("0.0.0")
+ *   version: O.some("0.0.0"),
+ *   publishEnabled: true
  * })
  * console.log(workspace.name)
  * ```
@@ -221,6 +222,7 @@ export class ChangesetStatusWorkspacePackage extends S.Class<ChangesetStatusWork
     dir: S.String,
     name: S.String,
     version: S.OptionFromOptionalKey(S.String),
+    publishEnabled: S.Boolean,
   },
   $I.annote("ChangesetStatusWorkspacePackage", {
     description: "A changed product workspace considered by the in-process changeset check.",
@@ -231,6 +233,7 @@ class ChangesetStatusPackageJson extends S.Class<ChangesetStatusPackageJson>($I`
   {
     name: S.optionalKey(S.String),
     version: S.optionalKey(S.String),
+    private: S.optionalKey(S.Boolean),
   },
   $I.annote("ChangesetStatusPackageJson", {
     description: "Minimal package.json shape read by the path-aware changeset status wrapper.",
@@ -363,7 +366,7 @@ const uncoveredImpl = (
 ): ReadonlyArray<string> =>
   pipe(
     workspaces,
-    A.filter((workspace) => O.isSome(workspace.version)),
+    A.filter((workspace) => workspace.publishEnabled && O.isSome(workspace.version)),
     A.filter((workspace) => !A.contains(ignoredPackageNames, workspace.name)),
     A.filter((workspace) => !A.some(references, (reference) => reference.packageName === workspace.name)),
     A.map((workspace) => workspace.name),
@@ -391,7 +394,8 @@ const uncoveredImpl = (
  * const demo = ChangesetStatusWorkspacePackage.make({
  *   dir: "packages/demo",
  *   name: "@beep/demo",
- *   version: O.some("0.0.0")
+ *   version: O.some("0.0.0"),
+ *   publishEnabled: true
  * })
  * console.log(uncoveredWorkspacePackageNames([demo], [], []))
  * ```
@@ -544,6 +548,7 @@ const collectChangedWorkspacePackages = Effect.fn("ChangesetStatus.collectChange
         dir,
         name: document.name,
         version: O.fromUndefinedOr(document.version),
+        publishEnabled: document.private !== true,
       });
     }),
     { concurrency: 8 }
@@ -560,13 +565,16 @@ const runEnforcedCheck = Effect.fn("ChangesetStatus.runEnforcedCheck")(function*
   FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const workspaces = yield* collectChangedWorkspacePackages(repoRoot, partition.productWorkspaceDirs);
+  yield* Console.log(
+    `[changeset-status] private_skipped=${A.length(A.filter(workspaces, (workspace) => !workspace.publishEnabled))}`
+  );
   const ignoredPackageNames = yield* readChangesetIgnoredPackageNames(repoRoot);
   const references = yield* collectAddedChangesetReferences(repoRoot, since);
   const uncovered = uncoveredWorkspacePackageNames(workspaces, ignoredPackageNames, references);
 
   if (A.isReadonlyArrayEmpty(uncovered)) {
     return yield* Console.log(
-      "[changeset-status] every changed product workspace is named by a changeset added in the since-range."
+      "[changeset-status] every changed publish-enabled product workspace is named by a changeset added in the since-range."
     );
   }
 
@@ -587,7 +595,7 @@ const runEnforcedCheck = Effect.fn("ChangesetStatus.runEnforcedCheck")(function*
  *
  * The base defaults to `origin/main` when `--since` is absent. The wrapper
  * partitions the merge-base diff, exempts lab-only changes, and otherwise
- * verifies in-process that each changed product workspace is named by a
+ * verifies in-process that each changed publish-enabled product workspace is named by a
  * changeset added in the same since-range. It never spawns the stock CLI.
  *
  * **Example** (Run the wrapper)

@@ -7,6 +7,7 @@ import {
   ResearchStatusOptions,
   researchStatus,
 } from "@beep/repo-cli/commands/Research";
+import { parseCard } from "@beep/repo-cli/test/Research";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
@@ -17,6 +18,7 @@ import { FetchHttpClient } from "effect/http";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
 const FAKE_MARKDOWN = "Effect schemas keep invariants on the data.\n\n## Why\n\nBecause decode walls rot.";
@@ -142,6 +144,21 @@ describe("research capture", () => {
         expect(frontmatter).not.toBeNull();
         expect(KnowledgeCardFrontmatter.make !== undefined).toBe(true);
         expect(content).toContain(`id: ${summary.id}`);
+        const parsed = yield* parseCard(summary.cardPath, content);
+        expect(parsed.frontmatter).toBeInstanceOf(KnowledgeCardFrontmatter);
+        expect(parsed.frontmatter).toMatchObject({
+          id: summary.id,
+          title: FAKE_TITLE,
+          sourceType: "article",
+          status: "inbox",
+          tags: ["effect"],
+          related: [],
+          url: "https://example.com/a",
+          via: "capture",
+        });
+        yield* S.decodeEffect(S.DateTimeUtcFromString)(parsed.frontmatter.capturedAt);
+        expect(parsed.frontmatter.contentHash).toBe("0e8230f942f810dc1a85244c077d2a26e97c4f027f5922bcd0fda44c886d3a49");
+        expect(parsed.body).toBe(`# ${FAKE_TITLE}\n\n${FAKE_MARKDOWN}\n`);
       })
     )
   );

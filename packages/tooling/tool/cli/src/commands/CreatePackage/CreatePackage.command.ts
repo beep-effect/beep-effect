@@ -1028,7 +1028,7 @@ const ensureRetiredNameAllowed = Effect.fn(function* (repoRoot: string, name: st
 
   if (retired && !reuseRetiredName) {
     return yield* DomainError.make({
-      message: `"${scopedName}" is a retired package name (${RETIRED_REGISTRY_PATH}). Retired names keep historical changesets; pass --reuse-retired-name only after confirming the recreation is intentional (see the registry rationale).`,
+      message: `"${scopedName}" is a retired package name (${RETIRED_REGISTRY_PATH}). Retired names are reserved against accidental reuse; pass --reuse-retired-name only after confirming the recreation is intentional (see the registry rationale).`,
     });
   }
 

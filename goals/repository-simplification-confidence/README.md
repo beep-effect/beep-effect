@@ -4,6 +4,8 @@
 
 Lifecycle: `active`
 
+Latest E evidence: [GitHub audit](./history/receipts/stage-4-github-audit.md), [settings snapshots](./history/receipts/stage-3-github-settings.md), and [lane handoff](./history/handoffs/rsc-e-github-2026-10-09.md). E source repairs are final in ready PR #1568. Both integrated full package gates and all local hosted-parity lanes pass; focused fixtures pass 127 tests and scoped coverage passes 396 tests across all seven touched baseline files. The actual GITHUB_TOKEN hosted governance step passes. Cross-lane, trusted-main writer and post-merge acceptance remain open; inherited hosted coverage reds remain attributed for the consolidated repair.
+
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
 ## Mission
@@ -59,6 +61,8 @@ nothing was adopted or discarded. P0 Research is complete.
 
 ## Latest Evidence
 
+Lane V [PR #1575](https://github.com/beep-effect/beep-effect/pull/1575) is published and ready. [Stage 4 reconciliation](./history/receipts/stage-4-vitest-reconciliation.md) preserves all 46 source worktrees, records every disposition, and ties the generated 1,853 / 716 open / 1,137 exceptions inventory to final code. Full repo-cli verification and every local parity stage pass; independent source review is terminal zero and both actionable hosted threads are resolved. The R105 repair preview, 716-row R102 frontier, hosted merge gate and retirement remain separate open work.
+
 H1 OSV wave [PR #1562](https://github.com/beep-effect/beep-effect/pull/1562) ready for review;
 Run 4 integrates main repairs #1564/#1565, corrects the stored-response cache proof
 and repairs the census table; saved terminal parity remains attributed to its proof heads;
@@ -86,3 +90,11 @@ and [lane handoff](./history/handoffs/rsc-h1-catalog-2026-10-09.md).
 - Program review exception: every in-scope actionable finding is resolved,
   including P2 and below; the round-2 review cap does not apply (SPEC.md
   Exception Ledger).
+
+D latest evidence: [release policy and census](history/receipts/stage-2-policy.md)
+and [Run 2 lane handoff](history/handoffs/rsc-d-release-2026-10-09.md).
+The census preceded the committed 939-note reset. Crash resumption merged the
+owner's inherited repairs; independent source/scope review has zero actionable
+findings. Local package/parity proof passes; PR #1566 is ready for the orchestrator gate.
+Hosted success is pending. E owns desktop
+verification; GitHub Packages census remains externally blocked on token scope.

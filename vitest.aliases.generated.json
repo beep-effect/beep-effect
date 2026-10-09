@@ -1897,5 +1897,8 @@
   ],
   "@beep/law-practice-use-cases/DocumentIdentification": [
     "./packages/law-practice/use-cases/src/DocumentIdentification/index.ts"
+  ],
+  "@beep/epistemic-domain/values/ContradictionDetection": [
+    "./packages/epistemic/domain/src/values/ContradictionDetection/index.ts"
   ]
 }
