@@ -15,7 +15,7 @@ import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { pipe } from "effect/Function";
+import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
@@ -29,7 +29,7 @@ import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/process";
 
 const $I = $RepoCliId.create("commands/Ci/CiGovernance");
-const emptyRecord = {};
+const emptyRecord: Readonly<Record<string, unknown>> = {};
 const SizeLabel = LiteralKit(["size/S", "size/M", "size/L", "size/XL"]).pipe(
   $I.annoteSchema("SizeLabel", { description: "The mutually exclusive pull request size labels." })
 );
@@ -47,7 +47,7 @@ class WorkflowJob extends S.Class<WorkflowJob>($I`WorkflowJob`)(
     name: S.optionalKey(S.String),
     environment: S.optionalKey(S.Union([S.String, S.Struct({ name: S.String })])),
     env: S.optionalKey(textRecord),
-    steps: S.optionalKey(S.Array(WorkflowStep)),
+    steps: WorkflowStep.pipe(S.Array, S.optionalKey),
     strategy: S.optionalKey(S.Struct({ matrix: S.Record(S.String, S.Unknown) })),
   },
   $I.annote("WorkflowJob", { description: "Projected YAML job for workflow policy and producing-context checks." })
@@ -57,7 +57,7 @@ class WorkflowDocument extends S.Class<WorkflowDocument>($I`WorkflowDocument`)(
   $I.annote("WorkflowDocument", { description: "GitHub workflow document with job projections." })
 ) {}
 class RequiredContext extends S.Class<RequiredContext>($I`RequiredContext`)(
-  { context: S.String, integration_id: S.optionalKey(S.NullOr(S.Finite)) },
+  { context: S.String, integration_id: S.Finite.pipe(S.NullOr, S.optionalKey) },
   $I.annote("RequiredContext", { description: "A required status context and its producing integration." })
 ) {}
 class RulesetRule extends S.Class<RulesetRule>($I`RulesetRule`)(
@@ -66,7 +66,7 @@ class RulesetRule extends S.Class<RulesetRule>($I`RulesetRule`)(
     parameters: S.optionalKey(
       S.Struct({
         strict_required_status_checks_policy: S.optionalKey(S.Boolean),
-        required_status_checks: S.optionalKey(S.Array(RequiredContext)),
+        required_status_checks: RequiredContext.pipe(S.Array, S.optionalKey),
       })
     ),
   },
@@ -77,7 +77,7 @@ class Ruleset extends S.Class<Ruleset>($I`Ruleset`)(
   $I.annote("Ruleset", { description: "Live ruleset state used for capture and drift checking." })
 ) {}
 class SettingsEnvironment extends S.Class<SettingsEnvironment>($I`SettingsEnvironment`)(
-  { protection_rules: S.Array(S.Struct({ type: S.String, reviewers: S.optionalKey(S.Array(S.Unknown)) })) },
+  { protection_rules: S.Array(S.Struct({ type: S.String, reviewers: S.Unknown.pipe(S.Array, S.optionalKey) })) },
   $I.annote("SettingsEnvironment", { description: "Desktop environment reviewer rules without secret values." })
 ) {}
 class HeldRun extends S.Class<HeldRun>($I`HeldRun`)(
@@ -111,9 +111,10 @@ const makeClient = Effect.fn("CiGovernance.makeClient")(function* (root: string)
     return result.output;
   });
   return GithubPolicyClient.of({
-    read: (endpoint, projection) =>
-      execute([endpoint, ...A.flatMap(O.toArray(O.fromUndefinedOr(projection)), (jq) => ["--jq", jq])]),
-    write: (args) => execute(args).pipe(Effect.asVoid),
+    read: Effect.fn("GithubPolicyClient.read")((endpoint: string, projection?: string) =>
+      execute([endpoint, ...A.flatMap(O.toArray(O.fromUndefinedOr(projection)), (jq) => ["--jq", jq])])
+    ),
+    write: Effect.fn("GithubPolicyClient.write")((args: ReadonlyArray<string>) => execute(args).pipe(Effect.asVoid)),
   });
 });
 const decodeJson = <T extends S.Constraint>(schema: T) => S.decodeUnknownEffect(S.fromJsonString(schema));
@@ -279,14 +280,17 @@ export const workflowJobContexts = Effect.fn("CiGovernance.workflowJobContexts")
  * @category utilities
  * @since 0.0.0
  */
-export const prSizeLabelDiff = (count: number, labels: ReadonlyArray<string>) => {
+export const prSizeLabelDiff: {
+  (labels: ReadonlyArray<string>): (count: number) => PrSizeLabelDiff;
+  (count: number, labels: ReadonlyArray<string>): PrSizeLabelDiff;
+} = dual(2, (count: number, labels: ReadonlyArray<string>): PrSizeLabelDiff => {
   const label = count > 50 ? "size/XL" : count > 20 ? "size/L" : count > 10 ? "size/M" : "size/S";
   return PrSizeLabelDiff.make({
     label,
     remove: A.filter(labels, (current) => Str.startsWith("size/")(current) && current !== label),
     add: !A.contains(labels, label),
   });
-};
+});
 
 /**
  * Identify a waiting main Check run older than an hour with a pending successor.
@@ -304,27 +308,33 @@ export const prSizeLabelDiff = (count: number, labels: ReadonlyArray<string>) =>
  * @category diagnostics
  * @since 0.0.0
  */
-export const heldGroupRunIds = (runs: ReadonlyArray<typeof HeldRun.Type>, nowMillis: number): ReadonlyArray<number> =>
-  pipe(
-    runs,
-    A.filter((run) => {
-      const created = DateTime.make(run.created_at);
-      return (
-        run.head_branch === "main" &&
-        run.status === "waiting" &&
-        O.exists(created, (at) => nowMillis - DateTime.toEpochMillis(at) > Duration.toMillis(Duration.hours(1))) &&
-        A.some(
-          runs,
-          (next) =>
-            next.id !== run.id &&
-            next.head_branch === "main" &&
-            next.status === "pending" &&
-            next.created_at >= run.created_at
-        )
-      );
-    }),
-    A.map((run) => run.id)
-  );
+export const heldGroupRunIds: {
+  (nowMillis: number): (runs: ReadonlyArray<HeldRun>) => ReadonlyArray<number>;
+  (runs: ReadonlyArray<HeldRun>, nowMillis: number): ReadonlyArray<number>;
+} = dual(
+  2,
+  (runs: ReadonlyArray<HeldRun>, nowMillis: number): ReadonlyArray<number> =>
+    pipe(
+      runs,
+      A.filter((run) => {
+        const created = DateTime.make(run.created_at);
+        return (
+          run.head_branch === "main" &&
+          run.status === "waiting" &&
+          O.exists(created, (at) => nowMillis - DateTime.toEpochMillis(at) > Duration.toMillis(Duration.hours(1))) &&
+          A.some(
+            runs,
+            (next) =>
+              next.id !== run.id &&
+              next.head_branch === "main" &&
+              next.status === "pending" &&
+              next.created_at >= run.created_at
+          )
+        );
+      }),
+      A.map((run) => run.id)
+    )
+);
 
 /**
  * Require a configured desktop reviewer rather than GitHub's implicit empty environment.
@@ -341,7 +351,7 @@ export const heldGroupRunIds = (runs: ReadonlyArray<typeof HeldRun.Type>, nowMil
  * @category predicates
  * @since 0.0.0
  */
-export const desktopEnvironmentApproved = (environment: typeof SettingsEnvironment.Type): boolean =>
+export const desktopEnvironmentApproved = (environment: SettingsEnvironment): boolean =>
   A.some(
     environment.protection_rules,
     (rule) => rule.type === "required_reviewers" && A.isReadonlyArrayNonEmpty(rule.reviewers ?? [])
@@ -373,12 +383,13 @@ const checkEqual = Effect.fn("CiGovernance.checkEqual")(function* (
       message: `Ruleset drift: live=[${A.join(actual, ", ")}], declared=[${A.join(expected, ", ")}].`,
     });
 });
-const withClient = <V, E, R>(effect: Effect.Effect<V, E, R | GithubPolicyClient>) =>
-  Effect.gen(function* () {
-    const root = yield* findRepoRoot();
-    const client = yield* makeClient(root);
-    return yield* effect.pipe(Effect.provideService(GithubPolicyClient, client));
-  });
+const withClient = Effect.fn("CiGovernance.withClient")(function* <V, E, R>(
+  effect: Effect.Effect<V, E, R | GithubPolicyClient>
+) {
+  const root = yield* findRepoRoot();
+  const client = yield* makeClient(root);
+  return yield* effect.pipe(Effect.provideService(GithubPolicyClient, client));
+});
 const snapshotPath = "goals/ship-velocity/research/branch-protection-contexts.json";
 const ciRulesetCommand = Command.make(
   "ruleset",
@@ -458,7 +469,12 @@ const ciHeldGroupCommand = Command.make("held-group", {}, () =>
         { concurrency: 4 }
       );
       if (A.isReadonlyArrayNonEmpty(held))
-        return yield* CiCommandError.make({ message: `held-group: ${A.join(held, ", ")}` });
+        return yield* CiCommandError.make({
+          message: `held-group: ${A.join(
+            A.map(held, (id) => `${id}`),
+            ", "
+          )}`,
+        });
       yield* Console.log("held-group: clean");
     })
   )
