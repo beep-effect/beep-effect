@@ -1180,7 +1180,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("hook-pulse writer confo
       // shell refuses even though TypeScript can hash it.
       yield* fs.makeDirectory(path.join(root, ".claude", "skills", "caf\u00e9"), { recursive: true });
       yield* fs.writeFileString(path.join(root, ".claude", "skills", "caf\u00e9", "SKILL.md"), "# cafe\n");
-      const indexed1 = yield* ChildProcess.make("git", ["add", "--all"], {
+      const indexed1 = yield* ChildProcess.make("git", ["add", "--", ".claude/skills/café/SKILL.md"], {
         cwd: root,
         stdout: "ignore",
         stderr: "ignore",
@@ -1198,7 +1198,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("hook-pulse writer confo
         (index) => fs.writeFileString(path.join(root, ".claude", "bulk", `f${index}.md`), "x\n"),
         { concurrency: 32, discard: true }
       );
-      const indexed2 = yield* ChildProcess.make("git", ["add", "--all"], {
+      const indexed2 = yield* ChildProcess.make("git", ["add", "--", ".claude/bulk"], {
         cwd: root,
         stdout: "ignore",
         stderr: "ignore",
