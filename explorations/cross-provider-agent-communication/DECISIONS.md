@@ -182,3 +182,15 @@ The operator also requested skill updates so both Codex and Claude can orchestra
 and discover the cross-provider tools. Shared skill routing can be updated once
 the managed implementation is qualified, while explicitly preserving the separate
 native-app gate and provider-specific fallback rules.
+
+## 2026-10-09: qualify the installed T3 host
+
+The operator selected T3-owned Claude/Codex conversations first. Reused the
+installed AppImage with separate T3 state and exact owned scratch threads; the
+[executed qualification](research/T3CODE-QUALIFICATION.md) records autonomous exchanges, busy routing and
+permission continuity. Prefer T3 native MCP for this host rather than duplicating
+its control plane. Environment OAuth does not inherit Beep recipient grants, and
+T3 ownership does not establish attachment to another desktop application.
+Reversal: revoke disposable external credentials and detach owned runtime
+bindings, preserving the user-interacted profile and private evidence. No
+registered orchestrator role or provider fallback policy changed.

@@ -128,3 +128,15 @@ The standalone Claude synthetic NDJSON peer has one reviewed
 settings and scripted transport events; it is not a schema-law test suite.
 Revisit if reusable domain schemas or schema-law assertions move into that
 fixture. This grants no production-schema or provider-policy exception.
+
+## 2026-10-09: qualify the installed T3 host
+
+The operator selected T3-owned Claude/Codex conversations first. Reused the
+installed AppImage with separate T3 state and exact owned scratch threads; the
+[executed qualification](../../explorations/cross-provider-agent-communication/research/T3CODE-QUALIFICATION.md) records autonomous exchanges, busy routing and
+permission continuity. Prefer T3 native MCP for this host rather than duplicating
+its control plane. Environment OAuth does not inherit Beep recipient grants, and
+T3 ownership does not establish attachment to another desktop application.
+Reversal: revoke disposable external credentials and detach owned runtime
+bindings, preserving the user-interacted profile and private evidence. No
+registered orchestrator role or provider fallback policy changed.

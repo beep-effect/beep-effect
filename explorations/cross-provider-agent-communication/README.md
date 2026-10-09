@@ -35,6 +35,12 @@ new CLI worker, resumed history or socket write cannot qualify another app. The 
 fleet packet left push/pull delivery unimplemented; later PR-event probes cut
 idle wake after every detached sender failed.
 
+The later [T3-owned desktop-host qualification](research/T3CODE-QUALIFICATION.md)
+proved autonomous Claude/Codex exchanges in both directions, active steering,
+consumed queued replies and permission continuity through supported T3 detach and
+reattach. This is a qualified alternative host; external native-app attachment
+and a production Beep-to-T3 adapter remain separate gates.
+
 ## Implementation handoff
 
 Graduated to [Agent Message Router](../../goals/agent-message-router/README.md)
@@ -67,9 +73,10 @@ Research inspected checkout `d1e8350670f87c7fa2d744f87c8cdbf99ad1852f`, installe
 CLI help and current primary documentation on 2026-10-09. The accepted brief
 led to disposable managed-provider experiments and synthetic recovery fixtures.
 Claude web idle delivery and reload passed through a controller-mediated UI
-bridge. Other app surfaces, autonomous reply tools and production integration
-remain unverified. The packet graduated on 2026-10-09; old packet states are preserved.
-Files are local and uncommitted; no PR is open.
+bridge. Later managed implementation and T3 receipts qualify their named autonomous
+reply modes. Other native app attachment remains unverified. The packet graduated
+on 2026-10-09; old packet states are preserved. PR #1571 contains the implementation;
+the latest local correction and T3 qualification await publication.
 
 ## Trail
 

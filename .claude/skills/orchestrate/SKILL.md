@@ -22,6 +22,7 @@ Messaging a peer does not select a fallback, grant authority or transfer ownersh
 | --- | --- | --- |
 | Claude native agent | `SendMessage` and `ListAgents`, when exposed | Use the assigned native agent address and the user-authorized coordination scope. |
 | Codex native agent | `collaboration.send_message`, `followup_task`, `list_agents`, when exposed | Preserve model pins and ownership. Follow-up triggers work; send_message alone does not start an idle agent. |
+| T3-owned Claude/Codex conversation | T3 native MCP `t3_thread_send`, `t3_thread_read`, `t3_thread_wait`, `t3_thread_interrupt` | Use the qualified installed host, exact owned thread/run and recorded policy. T3 environment OAuth is broader than Beep recipient grants. |
 | Enrolled managed provider | Scoped `agent_message_*` MCP tools below; host CLI for operator actions | Verify current endpoint generation, repository/task scope, policy and capability evidence. A registered session row alone is not enrollment. |
 | Existing app task or external person | An explicitly authorized, available connector or manual handoff | Do not create a task, post PR comments, contact a person or continue a Desktop task merely to broadcast role changes. |
 
@@ -31,6 +32,30 @@ Full-access/Never-ask task until that build preserves permissions. Prefer live
 native steering; otherwise the operator opens and reselects the target's access,
 or explicitly authorizes a fresh task from a verified parent. A managed permission
 mismatch stops that route. This skill does not prove Desktop attachment.
+
+### T3-owned visible conversations
+
+Read [the executed T3 qualification](../../../explorations/cross-provider-agent-communication/research/T3CODE-QUALIFICATION.md)
+for the installed artifact, proof and remaining limits. Claude and Codex both
+initiated autonomous exchanges; busy steering, consumed queued delivery and
+supported detach/reattach preserved the owned identities and execution policy.
+This uses T3's native MCP, not an implemented Beep-to-T3 bridge.
+
+Before use, inspect `orchestrator_capabilities` and `t3_thread_configuration`,
+verify the approved model/effort and effective target policy, and record the exact
+owned address privately. An outside OAuth client needs an appropriate runtime
+ceiling; read-only cannot mutate Full-access threads. `auto` may start, steer or
+queue, so correlate send receipts with read/wait and an actual reply. Retry an
+identical send with its original `clientRequestId` in the same client namespace.
+Launch has no retry key; reconcile uncertain launches before creating another.
+Interrupt only the intended thread/run, then verify terminal status. Cold native
+unload, app restart, provider switching and restart delivery remain unqualified.
+
+Keep environment-wide authorization distinct from Beep's recipient grants.
+Separate T3 state does not isolate native history homes. Do not inspect or target
+unrelated histories, adopt another app's active session, or infer first-party
+Desktop attachment from a T3 continuation ID. Register/hand-off and Yeet authority
+stay with this skill's existing procedures; a messaging peer cannot grant them.
 
 ### Managed cross-provider messages
 

@@ -1,6 +1,6 @@
 # T3 Code as a visible agent host
 
-Research date: 2026-10-09. Read-only source and official documentation inspection; no installation, provider inference, authentication change, or live-session attachment.
+Research date: 2026-10-09. The original assessment below was read-only. A subsequent authorized [installed-build qualification](T3CODE-QUALIFICATION.md) proved T3-owned Claude/Codex autonomous messaging, busy delivery and detach/reattach permission continuity. Its installed source differs from this research reference.
 
 ## Recommendation
 
@@ -46,7 +46,13 @@ Implemented fences include read-only refusal in `apps/server/src/mcp/McpToolAcce
 
 An outside-client grant may cover every project in an environment. That is broader than the router's recipient/conversation-scoped grant. Before adopting this as a host, decide whether dedicated environment isolation or a narrower T3 authorization extension is needed. Do not silently equate environment-wide OAuth permission with the router's scoped launch grant, or T3 task orchestration with this repository's registered orchestrator/merge authority.
 
-## Required proof before adoption
+## Adoption checklist and current evidence
+
+The [executed qualification](T3CODE-QUALIFICATION.md) now supplies the bounded
+T3-owned messaging result. Cold native unload, app restart, provider switching,
+restart delivery and a production Beep adapter remain open. The following was the
+original acceptance checklist; do not infer that every item has passed.
+
 
 1. Observe two owned visible T3 threads with the exact approved Claude/Codex model pins and recorded runtime policy, without inspecting unrelated conversations.
 2. Exchange one bounded autonomous request/reply/ACK through the actual T3 tools; correlate T3 thread/run and native session identity privately, and verify both visible histories persist after reconnect.

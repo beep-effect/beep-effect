@@ -84,3 +84,22 @@ only, and validate the bounded envelope. A busy Send click timed out despite an
 enabled button; the draft remained unsent. The probe inspected state instead of
 retrying. Prevention: use recipient-message-bound extraction, explicit send
 intents and post-timeout reconciliation. See `spike/APP-PROOF.md`.
+
+## 2026-10-09: installed T3 qualification needs explicit boundaries
+
+Separate `T3CODE_HOME` did not isolate native history discovery. The profile had
+382 other metadata records; the controllers did not inspect their transcripts.
+Discovery/import internals were not independently audited. An external
+read-only MCP client correctly refused Full-access launch; supported OAuth
+enrollment supplied the required ceiling. T3 detach effect success lacked a
+physical native-unload receipt. The first busy test sent an underspecified reply
+prompt; separate receiver instructions fixed the bounded exchange. Claude's
+foreground `sleep 25` was blocked, so generation cancellation was tested
+separately without bypassing that restriction. Prevention: distinguish state
+roots, grants, model consumption, host detach and physical runtime teardown in
+the qualification runner. See `T3CODE-QUALIFICATION.md`.
+
+The commit secret scan initially classified two SHA-256 evidence digests as
+generic API keys because their JSON map keys contained authentication terms.
+The values were recomputed file digests, not credentials. Changed the evidence
+index to explicit `file`/`sha256` records instead of suppressing the scanner.
