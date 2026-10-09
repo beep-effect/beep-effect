@@ -48,7 +48,7 @@ import {
   readmeLifecycleToken,
 } from "./Inventory.ts";
 import type { GitCommandErrorAdapter } from "../../internal/repo-run/index.ts";
-import type { GoalManifest, GoalPullRequestRef } from "./Goals.schemas.ts";
+import type { GoalCompletionReceipt, GoalManifest, GoalPullRequestRef } from "./Goals.schemas.ts";
 import type { GoalPacketRecord } from "./Inventory.ts";
 
 const $I = $RepoCliId.create("commands/Goals/Doctor");
