@@ -1,37 +1,12 @@
 # env (lab port of @effected/env)
 
-[![npm](https://img.shields.io/npm/v/@effected%2Fenv?label=npm&color=cb3837)](https://www.npmjs.com/package/@effected/env)
-[![License: MIT](https://img.shields.io/badge/License-MIT-4caf50.svg)](https://opensource.org/licenses/MIT)
-[![Node.js %3E%3D24.11.0](https://img.shields.io/badge/Node.js-%3E%3D24.11.0-5fa04e.svg)](https://nodejs.org/)
-[![TypeScript 7.0](https://img.shields.io/badge/TypeScript-7.0-3178c6.svg)](https://www.typescriptlang.org/)
-
 Effect-native environment detection for any front end of a tool: **who is running it** (an AI agent, a CI job, or neither), **what the terminal can do** (colour level, OSC 8 hyperlinks and width, per stream), and **who the output is for** (a human, an agent or CI). Every answer is read once through `Config`, never from `process`, and every service has a `layerTest`, so a test sets the environment it wants without touching a global.
-
-> **Pre-`1.0.0`.** This package is part of the `@effected/*` kit, built on stable
-> Effect v4 (`effect` `^4.0.0`) and still in `0.x` development. Stable Effect
-> makes a kit `1.0.0` possible, not automatic. To keep your `effect` and
-> `@effect/*` versions on the line the kit is built and tested against, install
-> [`@effected/pnpm-plugin-effect`](https://www.npmjs.com/package/@effected/pnpm-plugin-effect).
->
-> **Stability: unstable.** This package's API surface is not yet considered
-> complete and may change across `0.x` releases. Pin an exact version. Full
-> policy: [release strategy](https://github.com/spencerbeggs/effected#release-strategy).
 
 ## Why @effected/env
 
 Every tool that prints ends up asking these questions, usually by reading `process.env` and `process.stdout.isTTY` wherever the answer is needed. The answers then drift (the help text and the report disagree about colour), they cannot be tested without mutating globals, and the rules are subtle: `FORCE_COLOR` beats `NO_COLOR`, an empty `NO_COLOR` means unset, `TERM=dumb` is a terminal that cannot move the cursor, a Windows console sets no `TERM` at all yet draws truecolor, and an agent running inside CI should get agent output.
 
 This package makes each decision once, as a service, from rules taken from established sources: colour depth from Node's own `getColorDepth` (with `OS=Windows_NT` standing in for its platform check, which gives a Windows terminal truecolor as Node does from Windows 10 build 14931), hyperlink support from std-osc8's terminal table, and agent detection from std-env's table.
-
-## Install
-
-```bash
-npm install @effected/env effect
-```
-
-```bash
-pnpm add @effected/env effect
-```
 
 Requires Node.js >=24.11.0. `effect` v4 is the only peer. There are no runtime dependencies, no platform import and no `@effected/*` edge, so it runs unchanged on Node, Bun and Deno.
 
@@ -42,8 +17,10 @@ All `@effected/*` packages are ESM-only: the exports maps publish only `import` 
 Decide the audience once, as a service, and let anything that prints ask it:
 
 ```ts
-import { Audience, CurrentRuntimeEnv } from "@effected/env";
-import { Effect, Layer } from "effect";
+import { Audience } from "@beep/scratchpad/effected/env/Audience";
+import { CurrentRuntimeEnv } from "@beep/scratchpad/effected/env/RuntimeEnv";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 
 // A valid MYTOOL_AUDIENCE beats detection; then an agent, then CI, then a human.
 const AudienceLive = Audience.layer({ envVar: "MYTOOL_AUDIENCE" }).pipe(Layer.provide(CurrentRuntimeEnv.layer));
@@ -61,9 +38,9 @@ Effect.runPromise(program.pipe(Effect.provide(AudienceLive)));
 What the terminal can do comes from `TerminalEnv`, which reads core's `Stdio` and `Terminal` from your platform layer:
 
 ```ts
-import { TerminalEnv } from "@effected/env";
+import { TerminalEnv } from "@beep/scratchpad/effected/env/TerminalEnv";
 import { NodeServices } from "@effect/platform-node";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 
 const describe = Effect.gen(function* () {
   const terminal = yield* TerminalEnv;
@@ -76,12 +53,14 @@ Effect.runPromise(describe.pipe(Effect.provide(TerminalEnv.layer()), Effect.prov
 In a test, fix the answers instead:
 
 ```ts
-import { Audience, TerminalEnv } from "@effected/env";
-import { Layer, Option } from "effect";
+import { Audience } from "@beep/scratchpad/effected/env/Audience";
+import { TerminalEnv } from "@beep/scratchpad/effected/env/TerminalEnv";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 
 const Environment = Layer.mergeAll(
   Audience.layerTest("agent"),
-  TerminalEnv.layerTest({ stdout: { isTerminal: true, color: "256", columns: Option.some(120) } }),
+  TerminalEnv.layerTest({ stdout: { isTerminal: true, color: "256", columns: O.some(120) } }),
 );
 ```
 

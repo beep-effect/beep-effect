@@ -3,11 +3,29 @@ import { dual } from "effect/Function";
 const SEMVER_RE = /^(\d+)(?:\.(\d+))?(?:\.(\d+))?/;
 
 /**
- * Compare two semver-like strings (`MAJOR[.MINOR[.PATCH]]`). Prerelease tags
- * (e.g. `-beta`, `-rc.1`) are stripped and ignored. Malformed inputs are
- * treated as equal — this is a permissive helper, not a strict parser.
+ * Compare semver-like strings (`MAJOR[.MINOR[.PATCH]]`) by their numeric components.
  *
- * @returns negative if `a` is less than `b`, positive if `a` is greater than `b`, 0 if equal or malformed.
+ * **Details**
+ *
+ * Prerelease tags (e.g. `-beta`, `-rc.1`) are stripped and ignored.
+ *
+ * **Gotchas**
+ *
+ * Malformed inputs are treated as equal — this is a permissive helper, not a strict parser.
+ *
+ * **Example** (Compare releases and malformed input)
+ *
+ * ```ts
+ * import { compareSemver } from "@beep/scratchpad/effected/env/internal/osc8/semver"
+ *
+ * console.log(compareSemver("3.1.0", "3.0.0")) // 1
+ * console.log(compareSemver("3.1.0-beta", "3.1.0")) // 0
+ * console.log(compareSemver("unknown", "3.1.0")) // 0
+ * ```
+ *
+ * @returns Negative if `a` is less than `b`, positive if `a` is greater than `b`, 0 if equal or malformed.
+ * @category utilities
+ * @since 0.0.0
  */
 export const compareSemver: {
 	(b: string): (a: string) => number;
@@ -29,8 +47,24 @@ export const compareSemver: {
 });
 
 /**
- * Parse a VTE_VERSION env value. VTE encodes versions as
- * `MAJOR * 10000 + MINOR * 100 + PATCH`. So `5202` means `0.52.2`.
+ * Decode a packed `VTE_VERSION` environment value into a dotted version.
+ *
+ * **Details**
+ *
+ * VTE encodes versions as `MAJOR * 10000 + MINOR * 100 + PATCH`. So `5202` means `0.52.2`.
+ * Missing, empty, non-numeric or negative values return `null`; a numeric prefix is accepted.
+ *
+ * **Example** (Decode a VTE version)
+ *
+ * ```ts
+ * import { parseVteVersion } from "@beep/scratchpad/effected/env/internal/osc8/semver"
+ *
+ * console.log(parseVteVersion("5202")) // 0.52.2
+ * console.log(parseVteVersion(undefined)) // null
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const parseVteVersion = (raw: string | undefined): string | null => {
 	if (raw === undefined || raw === "") return null;
@@ -43,7 +77,22 @@ export const parseVteVersion = (raw: string | undefined): string | null => {
 };
 
 /**
- * Parse a KONSOLE_VERSION env value. Konsole uses calendar versioning
- * packed identically to VTE: `YY * 10000 + MM * 100 + PATCH`.
+ * Decode a packed `KONSOLE_VERSION` environment value into a dotted calendar version.
+ *
+ * **Details**
+ *
+ * Konsole uses calendar versioning packed identically to VTE: `YY * 10000 + MM * 100 + PATCH`.
+ *
+ * **Example** (Decode a Konsole calendar version)
+ *
+ * ```ts
+ * import { parseKonsoleVersion } from "@beep/scratchpad/effected/env/internal/osc8/semver"
+ *
+ * console.log(parseKonsoleVersion("220400")) // 22.4.0
+ * ```
+ *
+ * @see {@link parseVteVersion} for the shared parser and its permissive input handling.
+ * @category parsing
+ * @since 0.0.0
  */
 export const parseKonsoleVersion = parseVteVersion;

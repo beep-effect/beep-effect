@@ -8,7 +8,19 @@ import type { Env } from "./types.ts";
  * Drop an absent or empty value from a plain record, so it carries non-empty values only: the normalisation
  * {@link readEnv} applies to what it reads, for a record a caller already holds.
  *
+ * **Example** (Remove empty and absent environment values)
+ *
+ * ```ts
+ * import { normalizeEnv } from "@beep/scratchpad/effected/env/internal/envRecord";
+ * import * as R from "effect/Record";
+ *
+ * const env = normalizeEnv({ KEEP: "yes", EMPTY: "", MISSING: undefined });
+ * console.log(R.size(env)) // 1
+ * ```
+ *
  * @internal
+ * @category normalization
+ * @since 0.0.0
  */
 export const normalizeEnv = (record: Env): Env =>
 	R.fromEntries(R.toEntries(record).filter(([, value]) => value !== undefined && value !== ""));
@@ -18,11 +30,23 @@ export const normalizeEnv = (record: Env): Env =>
  *
  * **Details**
  *
- * A key that is absent, or whose read fails for any reason, is left out of the record, so the record carries
+ * A key that is absent, or whose read fails for whatever reason, is left out of the record, so the record carries
  * non-empty values only. An empty string is normalized to absent here, under every provider, including one built
  * with `preserveEmptyStrings: true`, so `FORCE_COLOR=""` reads as unset whichever provider is ambient.
  *
+ * **Example** (Construct a fixed-key environment read)
+ *
+ * ```ts
+ * import { readEnv } from "@beep/scratchpad/effected/env/internal/envRecord";
+ * import * as Effect from "effect/Effect";
+ *
+ * const program = readEnv(["CI", "FORCE_COLOR"]);
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
  * @internal
+ * @category parsing
+ * @since 0.0.0
  */
 export const readEnv = (keys: ReadonlyArray<string>): Effect.Effect<Env> =>
 	Effect.forEach(keys, (key) =>

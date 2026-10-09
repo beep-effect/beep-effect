@@ -20,7 +20,20 @@ const $I = $ScratchpadId.create("effected/env/TerminalEnv");
 /**
  * What one output stream can do.
  *
+ * **Example** (Validate a quiet output stream)
+ *
+ * ```ts
+ * import { StreamEnv } from "@beep/scratchpad/effected/env/TerminalEnv";
+ * import * as S from "effect/Schema";
+ * import * as O from "effect/Option";
+ * console.log(S.is(StreamEnv)({
+ *   isTerminal: false, color: "none", hyperlinks: false, columns: O.none(),
+ * })) // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const StreamEnv = S.Struct({
 	/** Whether the stream is attached to a terminal. */
@@ -52,12 +65,20 @@ export const StreamEnv = S.Struct({
 	}))).pipe($I.annoteKey("StreamEnv.columns", { description: "The terminal width in columns, or None when it is unknown." })),
 }).annotate($I.annote("StreamEnv", { description: "What one output stream can do: terminal attachment, colour, hyperlinks and optional columns." }));
 
+/**
+ * Describes a stream's terminal attachment, colour, hyperlink support, and optional width.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type StreamEnv = typeof StreamEnv.Type;
 
 /**
  * The options {@link TerminalEnv.layer} takes.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface TerminalEnvOptions {
 	/** Overrides the stderr TTY check; `Stdio` reports only stdout, so stderr mirrors stdout when this is omitted. */
@@ -68,6 +89,8 @@ export interface TerminalEnvOptions {
  * The options {@link TerminalEnv.layerTest} takes: fields to set over the quiet terminal.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface TerminalEnvTestOptions {
 	/** Whether standard input is a terminal. */
@@ -82,6 +105,8 @@ export interface TerminalEnvTestOptions {
  * The shape of the {@link TerminalEnv} service: a snapshot taken when the layer is built, not a live view.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface TerminalEnvShape {
 	/** Whether standard input is attached to a terminal. */
@@ -142,29 +167,42 @@ const quiet: StreamEnv = { isTerminal: false, color: "none", hyperlinks: false, 
  * **Example** (Read colour and width from a fixed terminal)
  *
  * ```ts
- * import { TerminalEnv } from "./index.ts"
+ * import { TerminalEnv } from "@beep/scratchpad/effected/env/TerminalEnv";
  * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option";
- *
- * const program = Effect.gen(function* () {
- * 	const terminal = yield* TerminalEnv
- * 	return { color: terminal.stdout.color, width: terminal.width() }
- * }).pipe(Effect.provide(TerminalEnv.layerTest({ stdout: { color: "256", columns: O.some(100) } })))
+ * const program = Effect.map(TerminalEnv, (value) => `${value.stdout.color}, ${value.width()}`).pipe(
+ *   Effect.provide(TerminalEnv.layerTest({ stdout: { color: "256", columns: O.some(100) } })),
+ * );
+ * console.log(Effect.runSync(program)) // 256, 100
  * ```
  *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class TerminalEnv extends Context.Service<TerminalEnv, TerminalEnvShape>()($I`TerminalEnv`) {
 	/**
-  * Build the snapshot from `Stdio`, `Terminal` and the ambient `ConfigProvider`.
-  *
-  * **Details**
-  *
-  * `Stdio` reports only stdout, so stderr mirrors it unless `options.stderrIsTerminal` supplies its own answer.
-  * A layer-returning function mints a fresh layer per call: call it once and bind the result to a constant.
-  *
-  * @param options - `stderrIsTerminal` overrides the stderr TTY check
-  */
+	 * Build the snapshot from `Stdio`, `Terminal` and the ambient `ConfigProvider`.
+	 *
+	 * **Details**
+	 *
+	 * `Stdio` reports only stdout, so stderr mirrors it unless `options.stderrIsTerminal` supplies its own answer.
+	 * A layer-returning function mints a fresh layer per call: call it once and bind the result to a constant.
+	 *
+	 * **Example** (Construct a platform-backed terminal read)
+	 *
+	 * ```ts
+	 * import { TerminalEnv } from "@beep/scratchpad/effected/env/TerminalEnv";
+	 * import * as Effect from "effect/Effect";
+	 * const TerminalLive = TerminalEnv.layer();
+	 * const program = Effect.map(TerminalEnv, (value) => value.width()).pipe(Effect.provide(TerminalLive));
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @param options - `stderrIsTerminal` overrides the stderr TTY check
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static layer(
 		options?: TerminalEnvOptions,
 	): Layer.Layer<TerminalEnv, never, StdioModule.Stdio | TerminalModule.Terminal> {
@@ -179,19 +217,31 @@ export class TerminalEnv extends Context.Service<TerminalEnv, TerminalEnvShape>(
 	}
 
 	/**
-  * The snapshot from `Stdio` and the ambient `ConfigProvider` alone: it never requires or builds `Terminal`, and
-  * reports no columns.
-  *
-  * **Details**
-  *
-  * Everything else is what {@link TerminalEnv.layer} reports: the TTY facts come from `Stdio`, the colour and
-  * hyperlink decisions from the environment, and `width()` falls back to `COLUMNS`, then the fallback, since no
-  * terminal width is known. Use it where building the platform `Terminal` has a cost, for example a long-lived
-  * host, where `NodeTerminal` listens on `process.stdin`. A layer-returning function mints a fresh layer per
-  * call: call it once and bind the result to a constant.
-  *
-  * @param options - `stderrIsTerminal` overrides the stderr TTY check
-  */
+	 * The snapshot from `Stdio` and the ambient `ConfigProvider` alone: it never requires or builds `Terminal`, and
+	 * reports no columns.
+	 *
+	 * **Details**
+	 *
+	 * Everything else is what {@link TerminalEnv.layer} reports: the TTY facts come from `Stdio`, the colour and
+	 * hyperlink decisions from the environment, and `width()` falls back to `COLUMNS`, then the fallback, since no
+	 * terminal width is known. Use it where building the platform `Terminal` has a cost, for example a long-lived
+	 * host, where `NodeTerminal` listens on `process.stdin`. A layer-returning function mints a fresh layer per
+	 * call: call it once and bind the result to a constant.
+	 *
+	 * **Example** (Construct a snapshot without Terminal)
+	 *
+	 * ```ts
+	 * import { TerminalEnv } from "@beep/scratchpad/effected/env/TerminalEnv";
+	 * import * as Effect from "effect/Effect";
+	 * const TerminalLive = TerminalEnv.layerStdio();
+	 * const program = Effect.map(TerminalEnv, (value) => value.width()).pipe(Effect.provide(TerminalLive));
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @param options - `stderrIsTerminal` overrides the stderr TTY check
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static layerStdio(options?: TerminalEnvOptions): Layer.Layer<TerminalEnv, never, StdioModule.Stdio> {
 		return Layer.effect(TerminalEnv, snapshot(options, O.none()));
 	}
@@ -200,7 +250,20 @@ export class TerminalEnv extends Context.Service<TerminalEnv, TerminalEnvShape>(
 	 * A fixed snapshot that touches neither `Stdio`, `Terminal` nor `Config`. Everything is quiet unless a field of
 	 * `partial` sets it.
 	 *
+	 * **Example** (Use the quiet terminal fallback width)
+	 *
+	 * ```ts
+	 * import { TerminalEnv } from "@beep/scratchpad/effected/env/TerminalEnv";
+	 * import * as Effect from "effect/Effect";
+	 * const program = Effect.map(TerminalEnv, (value) => value.width()).pipe(
+	 *   Effect.provide(TerminalEnv.layerTest()),
+	 * );
+	 * console.log(Effect.runSync(program)) // 80
+	 * ```
+	 *
 	 * @param partial - the fields to set; `stdout` and `stderr` are merged over the quiet stream
+	 * @category layers
+	 * @since 0.0.0
 	 */
 	static readonly layerTest = (partial?: TerminalEnvTestOptions): Layer.Layer<TerminalEnv> => {
 		const stdout: StreamEnv = { ...quiet, ...partial?.stdout };
@@ -213,17 +276,28 @@ export class TerminalEnv extends Context.Service<TerminalEnv, TerminalEnvShape>(
 	};
 
 	/**
-  * The colour level of a stream.
-  *
-  * **Details**
-  *
-  * An ambient `TerminalEnv`, when one is provided, answers with its stdout colour, so a test that fixes the
-  * terminal with `layerTest` also fixes this. Without one it is decided from `Config` and `Stdio` alone. It
-  * requires only `Stdio`, never `Terminal` or `TerminalEnv`, so a caller that only decides colour (a CLI's
-  * output formatter) keeps a `Stdio`-only requirement.
-  *
-  * @param _stream - the stream to decide for; only `stdout` is available, since `Stdio` reports no other
-  */
+	 * The colour level of a stream.
+	 *
+	 * **Details**
+	 *
+	 * An ambient `TerminalEnv`, when one is provided, answers with its stdout colour, so a test that fixes the
+	 * terminal with `layerTest` also fixes this. Without one it is decided from `Config` and `Stdio` alone. It
+	 * requires only `Stdio`, never `Terminal` or `TerminalEnv`, so a caller that only decides colour (a CLI's
+	 * output formatter) keeps a `Stdio`-only requirement.
+	 *
+	 * **Example** (Construct a stdout colour decision)
+	 *
+	 * ```ts
+	 * import { TerminalEnv } from "@beep/scratchpad/effected/env/TerminalEnv";
+	 * import * as Effect from "effect/Effect";
+	 * const program = TerminalEnv.colorLevel("stdout");
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @param _stream - the stream to decide for; only `stdout` is available, since `Stdio` reports no other
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	static readonly colorLevel = Effect.fn("colorLevel")(function* (_stream: "stdout"): Effect.fn.Return<ColorLevel, never, StdioModule.Stdio> {
 		const ambient = yield* Effect.serviceOption(TerminalEnv);
 		if (O.isSome(ambient)) return ambient.value.stdout.color;

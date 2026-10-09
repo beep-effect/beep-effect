@@ -11,12 +11,32 @@ const $I = $ScratchpadId.create("effected/env/internal/agentCi");
 
 const CiNameBase = LiteralKit(["github-actions", "generic"]);
 
-/** The CI providers the environment detector names. */
+/**
+ * Names the CI providers recognized by the environment detector.
+ *
+ * **Example** (Validate a CI provider name)
+ *
+ * ```ts
+ * import { CiName } from "@beep/scratchpad/effected/env/internal/agentCi";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(CiName)("github-actions")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const CiName = CiNameBase.annotate({
 	...$I.annote("CiName", { description: "GitHub Actions for its explicit provider signal, or generic for any other CI signal." }),
 	message: `Expected ${A.join(A.map(CiNameBase.literals, (name) => `"${name}"`), " | ")}`,
 });
 
+/**
+ * CI provider name accepted by the {@link CiName} schema.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type CiName = typeof CiName.Type;
 
 type AgentRule =
@@ -63,9 +83,20 @@ const familyOf = (value: string): string =>
  *
  * `AI_AGENT` wins over every table row. It is lower-cased, the two `github_copilot_*` names collapse to
  * `copilot`, and a value that is a known family or starts with one followed by `-` or `_` becomes that family.
- * Any other value is returned as it was lower-cased.
+ * An unrecognized value is returned as it was lower-cased.
+ *
+ * **Example** (Normalize an explicit agent family)
+ *
+ * ```ts
+ * import { detectAgent } from "@beep/scratchpad/effected/env/internal/agentCi";
+ * import * as O from "effect/Option";
+ *
+ * console.log(O.getOrNull(detectAgent({ AI_AGENT: "CLAUDE-code_2-1-285_agent" }))) // claude
+ * ```
  *
  * @internal
+ * @category parsing
+ * @since 0.0.0
  */
 export const detectAgent = (env: Env): O.Option<string> => {
 	if (env.AI_AGENT !== undefined && env.AI_AGENT !== "") {
@@ -91,7 +122,18 @@ const isFalsy = (value: string | undefined): boolean =>
  * The CI this process runs in: `github-actions` when `GITHUB_ACTIONS` is truthy (even under `CI=false`, since the
  * provider signal is explicit), else `generic` when `CI` or `CONTINUOUS_INTEGRATION` is truthy.
  *
+ * **Example** (Prefer an explicit CI provider signal)
+ *
+ * ```ts
+ * import { detectCi } from "@beep/scratchpad/effected/env/internal/agentCi";
+ * import * as O from "effect/Option";
+ *
+ * console.log(O.getOrNull(detectCi({ GITHUB_ACTIONS: "true", CI: "false" }))) // github-actions
+ * ```
+ *
  * @internal
+ * @category parsing
+ * @since 0.0.0
  */
 export const detectCi = (env: Env): O.Option<CiName> => {
 	if (!isFalsy(env.GITHUB_ACTIONS)) return O.some("github-actions");
@@ -102,7 +144,18 @@ export const detectCi = (env: Env): O.Option<CiName> => {
 /**
  * Every environment variable name the detectors read.
  *
+ * **Example** (Locate the explicit agent override key)
+ *
+ * ```ts
+ * import { agentCiKeys } from "@beep/scratchpad/effected/env/internal/agentCi";
+ * import * as A from "effect/Array";
+ *
+ * console.log(A.contains(agentCiKeys, "AI_AGENT")) // true
+ * ```
+ *
  * @internal
+ * @category constants
+ * @since 0.0.0
  */
 export const agentCiKeys: ReadonlyArray<string> = [
 	"AI_AGENT",

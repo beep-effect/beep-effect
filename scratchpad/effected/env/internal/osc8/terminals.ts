@@ -7,7 +7,21 @@ import { parseKonsoleVersion, parseVteVersion } from "./semver.ts";
 
 const $I = $ScratchpadId.create("effected/env/internal/osc8/terminals");
 
-/** The detected terminal program: one literal per allowlist entry. */
+/**
+ * The detected terminal program: one literal per allowlist entry.
+ *
+ * **Example** (Validate a known terminal name)
+ *
+ * ```ts
+ * import { KnownTerminal } from "@beep/scratchpad/effected/env/internal/osc8/terminals"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(KnownTerminal)("kitty")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const KnownTerminal = LiteralKit([
 	"iTerm.app",
 	"WezTerm",
@@ -31,11 +45,35 @@ export const KnownTerminal = LiteralKit([
 	"WaveTerminal",
 	"Terminology",
 ]).annotate($I.annote("KnownTerminal", { description: "The detected terminal program: one literal per allowlist entry." }));
+/**
+ * A terminal program name accepted by the allowlist schema.
+ *
+ * @see {@link KnownTerminal} for the runtime literal schema.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type KnownTerminal = typeof KnownTerminal.Type;
 
 /**
- * Sub-feature capabilities of the detected terminal. When the terminal is
- * unknown or unsupported, all fields are `false`.
+ * Describe sub-feature capabilities of the detected terminal.
+ *
+ * **Details**
+ *
+ * When the terminal is unknown or unsupported, all fields are `false`.
+ *
+ * **Example** (Validate terminal capabilities)
+ *
+ * ```ts
+ * import { Osc8Capabilities } from "@beep/scratchpad/effected/env/internal/osc8/terminals"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(Osc8Capabilities)({
+ *   params: true, fileUrls: true, fileUrlsRemoteUnsafe: false
+ * })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
 export const Osc8Capabilities = S.Struct({
 	/** Terminal supports `id=` / `key=value` params. */
@@ -45,10 +83,29 @@ export const Osc8Capabilities = S.Struct({
 	/** When true, `file://` URLs misbehave over SSH/remote sessions. */
 	fileUrlsRemoteUnsafe: S.Boolean.pipe($I.annoteKey("Osc8Capabilities.fileUrlsRemoteUnsafe", { description: "When true, `file://` URLs misbehave over SSH/remote sessions." })),
 }).annotate($I.annote("Osc8Capabilities", { description: "Sub-feature capabilities of the detected terminal. When the terminal is unknown or unsupported, all fields are false." }));
+/**
+ * The decoded sub-feature capability record for a detected terminal.
+ *
+ * @see {@link Osc8Capabilities} for the runtime capability schema.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type Osc8Capabilities = typeof Osc8Capabilities.Type;
 
 /**
- * Result of identifying a terminal from an env snapshot.
+ * Capture the result of identifying a terminal from an environment snapshot.
+ *
+ * **Example** (Validate an identified terminal version)
+ *
+ * ```ts
+ * import { IdentifyResult } from "@beep/scratchpad/effected/env/internal/osc8/terminals"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(IdentifyResult)({ version: "3.1.0", rawIdentifier: "iTerm.app" })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
 export const IdentifyResult = S.Struct({
 	/** Detected version, if available. */
@@ -56,10 +113,20 @@ export const IdentifyResult = S.Struct({
 	/** The raw env value used to identify the terminal. */
 	rawIdentifier: S.String.pipe($I.annoteKey("IdentifyResult.rawIdentifier", { description: "The raw env value used to identify the terminal." })),
 }).annotate($I.annote("IdentifyResult", { description: "Result of identifying a terminal from an env snapshot." }));
+/**
+ * The decoded version and raw identifier produced by terminal identification.
+ *
+ * @see {@link IdentifyResult} for the runtime identification schema.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type IdentifyResult = typeof IdentifyResult.Type;
 
 /**
- * One row in the allowlist.
+ * Describe one row in the terminal allowlist.
+ *
+ * @category models
+ * @since 0.0.0
  */
 export interface TerminalEntry {
 	/** Canonical terminal name. */
@@ -68,20 +135,39 @@ export interface TerminalEntry {
 	readonly identify: (env: Env) => IdentifyResult | null;
 	/** Whether this terminal supports OSC8 at all. */
 	readonly supported: boolean;
-	/** Min version supporting OSC8. null = any, or n/a if !supported. */
+	/** Minimum version supporting OSC8. `null` means no minimum, or not applicable when unsupported. */
 	readonly minVersion: string | null;
 	/** Sub-feature capabilities (only consulted when supported && version OK). */
 	readonly capabilities: Osc8Capabilities;
 }
 
 /**
- * Result of looking up a terminal in the allowlist.
+ * Pair an allowlist entry with the result of identifying that terminal.
+ *
+ * @category models
+ * @since 0.0.0
  */
 export interface TerminalMatch {
 	readonly entry: TerminalEntry;
 	readonly identify: IdentifyResult;
 }
 
+/**
+ * The shared all-false capability set for unsupported or unidentified terminals.
+ *
+ * **Example** (Inspect unsupported terminal capabilities)
+ *
+ * ```ts
+ * import { NO_CAPS } from "@beep/scratchpad/effected/env/internal/osc8/terminals"
+ *
+ * console.log(NO_CAPS.params) // false
+ * console.log(NO_CAPS.fileUrls) // false
+ * console.log(NO_CAPS.fileUrlsRemoteUnsafe) // false
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
 const NO_CAPS: Osc8Capabilities = {
 	params: false,
 	fileUrls: false,
@@ -354,6 +440,23 @@ const TERMINALS: readonly TerminalEntry[] = [
 
 /**
  * Find the first allowlist entry whose `identify()` returns non-null.
+ *
+ * **Details**
+ *
+ * Identification uses only the supplied environment snapshot. A match can describe an unsupported terminal;
+ * callers must inspect the entry's support flag and minimum version before enabling OSC8.
+ *
+ * **Example** (Look up a terminal from a snapshot)
+ *
+ * ```ts
+ * import { lookupTerminal } from "@beep/scratchpad/effected/env/internal/osc8/terminals"
+ *
+ * console.log(lookupTerminal({ TERM: "xterm-kitty" })?.entry.name) // kitty
+ * console.log(lookupTerminal({})) // null
+ * ```
+ *
+ * @category queries
+ * @since 0.0.0
  */
 export const lookupTerminal = (env: Env): TerminalMatch | null => {
 	for (const entry of TERMINALS) {

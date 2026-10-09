@@ -123,7 +123,17 @@ const fromTable = (env: Env): ColorLevel => {
  * Node); otherwise a stream that is not a TTY has none; otherwise the terminal table decides, which gives a Windows
  * terminal (`OS=Windows_NT`) truecolor unless colour is disabled.
  *
+ * **Example** (Force truecolor on a non-TTY stream)
+ *
+ * ```ts
+ * import { colorDepth } from "@beep/scratchpad/effected/env/internal/colorDepth";
+ *
+ * console.log(colorDepth({ FORCE_COLOR: "3", NO_COLOR: "1" }, false)) // truecolor
+ * ```
+ *
  * @internal
+ * @category parsing
+ * @since 0.0.0
  */
 export const colorDepth: {
 	(isTTY: boolean): (env: Env) => ColorLevel;
@@ -144,7 +154,18 @@ export const colorDepth: {
 /**
  * Every environment variable name {@link colorDepth} reads, including the CI provider table.
  *
+ * **Example** (Include the Windows platform signal)
+ *
+ * ```ts
+ * import { colorKeys } from "@beep/scratchpad/effected/env/internal/colorDepth";
+ * import * as A from "effect/Array";
+ *
+ * console.log(A.contains(colorKeys, "OS")) // true
+ * ```
+ *
  * @internal
+ * @category constants
+ * @since 0.0.0
  */
 export const colorKeys: ReadonlyArray<string> = [
 	"FORCE_COLOR",

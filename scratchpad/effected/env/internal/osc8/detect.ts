@@ -14,7 +14,21 @@ import { detectWrapper } from "./wrappers.ts";
 
 const $I = $ScratchpadId.create("effected/env/internal/osc8/detect");
 
-/** Why detection produced its verdict. The discriminator on {@link Osc8Info}. */
+/**
+ * Explains why detection produced its verdict; the discriminator on {@link Osc8Info}.
+ *
+ * **Example** (Validate a detection reason)
+ *
+ * ```ts
+ * import { Osc8Reason } from "@beep/scratchpad/effected/env/internal/osc8/detect";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(Osc8Reason)("not-a-tty")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const Osc8Reason = LiteralKit([
 	"force-env",
 	"no-hyperlink-env",
@@ -26,45 +40,122 @@ export const Osc8Reason = LiteralKit([
 	"terminal-known-too-old",
 	"terminal-unknown",
 ]).annotate($I.annote("Osc8Reason", { description: "Why detection produced its verdict. The discriminator on Osc8Info." }));
+/**
+ * Reason literal accepted by the {@link Osc8Reason} schema.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type Osc8Reason = typeof Osc8Reason.Type;
 
-/** The full diagnostic record {@link detect} produces. */
+/**
+ * Carries the full diagnostic record {@link detect} produces.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export interface Osc8Info {
-	/** Final boolean verdict for stdout. */
+	/**
+	 * Final boolean verdict for stdout.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly supported: boolean;
-	/** Final boolean verdict for stderr. */
+	/**
+	 * Final boolean verdict for stderr.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly supportedForStderr: boolean;
-	/** Discriminated reason for the stdout verdict. */
+	/**
+	 * Discriminated reason for the stdout verdict.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly reason: Osc8Reason;
-	/** Human-readable summary, useful for logging. */
+	/**
+	 * Human-readable summary, useful for logging.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly explanation: string;
-	/** Detected terminal program, if matched against the allowlist. */
+	/**
+	 * Detected terminal program, if matched against the allowlist.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly terminal: KnownTerminal | null;
-	/** Raw env value used to identify the terminal. */
+	/**
+	 * Raw env value used to identify the terminal.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly terminalRaw: string | null;
-	/** Detected terminal version, if available. */
+	/**
+	 * Detected terminal version, if available.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly terminalVersion: string | null;
-	/** Multiplexer info, if inside one. */
+	/**
+	 * Multiplexer info, if inside one.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly wrapper: WrapperInfo | null;
-	/** Whether stdout is a TTY at detection time. */
+	/**
+	 * Whether stdout is a TTY at detection time.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly isStdoutTTY: boolean;
-	/** Whether stderr is a TTY at detection time. */
+	/**
+	 * Whether stderr is a TTY at detection time.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly isStderrTTY: boolean;
-	/** Which override produced the verdict, if any. */
+	/**
+	 * Which override produced the verdict, if any.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly override: "force-hyperlink" | "no-hyperlink" | "no-color" | null;
-	/** Sub-feature capabilities of the detected terminal. */
+	/**
+	 * Sub-feature capabilities of the detected terminal.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly capabilities: Osc8Capabilities;
 }
 
 /**
  * Input to the pure {@link detect} function. Snapshot of the relevant slice of
  * `process` at one moment.
+ *
+ * **Example** (Construct a snapshot with piped streams)
+ *
+ * ```ts
+ * import { ProcessSnapshot } from "@beep/scratchpad/effected/env/internal/osc8/detect";
+ *
+ * const snapshot = ProcessSnapshot.make({ env: {}, isStdoutTTY: false, isStderrTTY: false });
+ * console.log(snapshot.isStdoutTTY) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
 export const ProcessSnapshot = S.Struct({
 	env: S.Record(S.String, S.UndefinedOr(S.String)).pipe($I.annoteKey("ProcessSnapshot.env", { description: "Environment variable names mapped to strings or undefined." })),
 	isStdoutTTY: S.Boolean.pipe($I.annoteKey("ProcessSnapshot.isStdoutTTY", { description: "Whether stdout is a TTY at detection time." })),
 	isStderrTTY: S.Boolean.pipe($I.annoteKey("ProcessSnapshot.isStderrTTY", { description: "Whether stderr is a TTY at detection time." })),
 }).annotate($I.annote("ProcessSnapshot", { description: "Input to the pure detect function: a snapshot of the relevant process state." }));
+/**
+ * Process state accepted by the {@link ProcessSnapshot} schema.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ProcessSnapshot = typeof ProcessSnapshot.Type;
 
 const explanationFor = (
@@ -122,6 +213,18 @@ const evaluateGate = (
 /**
  * Determine OSC8 support from a process snapshot. Pure: same input ⇒ same
  * output.
+ *
+ * **Example** (Explain a non-TTY verdict)
+ *
+ * ```ts
+ * import { detect } from "@beep/scratchpad/effected/env/internal/osc8/detect";
+ *
+ * const info = detect({ env: {}, isStdoutTTY: false, isStderrTTY: false });
+ * console.log(info.reason) // not-a-tty
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const detect = (snap: ProcessSnapshot): Osc8Info => {
 	const { env, isStdoutTTY, isStderrTTY } = snap;
@@ -162,7 +265,22 @@ export const detect = (snap: ProcessSnapshot): Osc8Info => {
 	};
 };
 
-/** The projection of {@link Osc8Info} the package surfaces: per-stream verdicts plus the identified terminal. */
+/**
+ * Projects {@link Osc8Info} into the package surface: per-stream verdicts plus the identified terminal.
+ *
+ * **Example** (Validate per-stream verdicts without a terminal)
+ *
+ * ```ts
+ * import { Osc8Detection } from "@beep/scratchpad/effected/env/internal/osc8/detect";
+ * import * as O from "effect/Option";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(Osc8Detection)({ stdout: false, stderr: false, terminal: O.none() })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const Osc8Detection = S.Struct({
 	stdout: S.Boolean.pipe($I.annoteKey("Osc8Detection.stdout", { description: "Final OSC8 verdict for stdout." })),
 	stderr: S.Boolean.pipe($I.annoteKey("Osc8Detection.stderr", { description: "Final OSC8 verdict for stderr." })),
@@ -171,12 +289,30 @@ export const Osc8Detection = S.Struct({
 		version: S.Option(S.String).pipe($I.annoteKey("Osc8Detection.terminal.version", { description: "The terminal version, when available." })),
 	}).annotate($I.annote("Osc8Detection.terminal", { description: "The identified terminal program and optional version." }))).pipe($I.annoteKey("Osc8Detection.terminal", { description: "The identified terminal, when available." })),
 }).annotate($I.annote("Osc8Detection", { description: "Per-stream OSC8 verdicts plus the identified terminal." }));
+/**
+ * Per-stream verdicts and optional terminal represented by {@link Osc8Detection}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type Osc8Detection = typeof Osc8Detection.Type;
 
 /**
  * Project {@link detect} onto {@link Osc8Detection}: `supported` becomes
  * `stdout`, `supportedForStderr` becomes `stderr`, and the terminal name and
  * version become an `Option`.
+ *
+ * **Example** (Force hyperlinks for both piped streams)
+ *
+ * ```ts
+ * import { detectOsc8 } from "@beep/scratchpad/effected/env/internal/osc8/detect";
+ *
+ * const detection = detectOsc8({ FORCE_HYPERLINK: "1" }, false, false);
+ * console.log(detection.stdout && detection.stderr) // true
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const detectOsc8: {
 	(isStdoutTTY: boolean, isStderrTTY: boolean): (env: Env) => Osc8Detection;
@@ -196,6 +332,18 @@ export const detectOsc8: {
 /**
  * Every environment variable name the ported detectors read. A caller that
  * builds an {@link Env} from `Config` reads exactly these keys.
+ *
+ * **Example** (Include the hyperlink override signal)
+ *
+ * ```ts
+ * import { terminalKeys } from "@beep/scratchpad/effected/env/internal/osc8/detect";
+ * import * as A from "effect/Array";
+ *
+ * console.log(A.contains(terminalKeys, "FORCE_HYPERLINK")) // true
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
  */
 export const terminalKeys: ReadonlyArray<string> = [
 	"FORCE_HYPERLINK",

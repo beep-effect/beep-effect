@@ -29,6 +29,8 @@ const optionField = <Field extends S.Constraint>(schema: Field) =>
  * CI signal (`CI`, `CONTINUOUS_INTEGRATION`).
  *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export { CiName };
 
@@ -49,7 +51,18 @@ const DetectedTerminal = S.Struct({
  * keeps decoding after a field is added. Built from `Config` only (no stream is consulted), so it is safe inside a
  * stdio MCP server.
  *
+ * **Example** (Build a runtime snapshot without services)
+ *
+ * ```ts
+ * import { RuntimeEnv } from "@beep/scratchpad/effected/env/RuntimeEnv";
+ * import * as O from "effect/Option";
+ * const env = RuntimeEnv.fromRecord({ AI_AGENT: "claude" });
+ * console.log(O.getOrElse(env.agent, () => "no agent")) // claude
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export class RuntimeEnv extends S.Class<RuntimeEnv>($I`RuntimeEnv`)({
 	/**
@@ -69,16 +82,26 @@ export class RuntimeEnv extends S.Class<RuntimeEnv>($I`RuntimeEnv`)({
 	})),
 }, $I.annote("RuntimeEnv", { description: "A snapshot of who is running the program: the agent, the CI, and the terminal." })) {
 	/**
-  * The snapshot of an environment record, as a pure function: no `Config`, no `process`, no service.
-  *
-  * **Details**
-  *
-  * It is what {@link CurrentRuntimeEnv.layer} computes from the variables it reads, so the two agree on the same
-  * record. An `undefined` or empty value reads as unset, under every caller. Use it where a service is in the
-  * way: a long-lived host that holds its own environment record, or a renderer with no Effect context.
-  *
-  * @param env - variable name to value
-  */
+	 * The snapshot of an environment record, as a pure function: no `Config`, no `process`, no service.
+	 *
+	 * **Details**
+	 *
+	 * It is what {@link CurrentRuntimeEnv.layer} computes from the variables it reads, so the two agree on the same
+	 * record. An `undefined` or empty value reads as unset, under every caller. Use it where a service is in the
+	 * way: a long-lived host that holds its own environment record, or a renderer with no Effect context.
+	 *
+	 * **Example** (Treat an empty agent variable as unset)
+	 *
+	 * ```ts
+	 * import { RuntimeEnv } from "@beep/scratchpad/effected/env/RuntimeEnv";
+	 * import * as O from "effect/Option";
+	 * console.log(O.isNone(RuntimeEnv.fromRecord({ AI_AGENT: "" }).agent)) // true
+	 * ```
+	 *
+	 * @param env - variable name to value
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	static fromRecord(env: Readonly<Record<string, string | undefined>>): RuntimeEnv {
 		const clean = normalizeEnv(env);
 		return RuntimeEnv.make({
@@ -93,6 +116,8 @@ export class RuntimeEnv extends S.Class<RuntimeEnv>($I`RuntimeEnv`)({
  * The fields {@link CurrentRuntimeEnv.layerTest} can override.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface RuntimeEnvOverrides {
 	/** Replaces the detected agent. */
@@ -115,51 +140,80 @@ export interface RuntimeEnvOverrides {
  * **Example** (Read an agent from a fixed runtime environment)
  *
  * ```ts
- * import { CurrentRuntimeEnv } from "./index.ts"
+ * import { CurrentRuntimeEnv } from "@beep/scratchpad/effected/env/RuntimeEnv";
  * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option";
- *
- * const program = Effect.gen(function* () {
- * 	const env = yield* CurrentRuntimeEnv
- * 	return O.getOrElse(env.agent, () => "no agent")
- * }).pipe(Effect.provide(CurrentRuntimeEnv.layerTest({ agent: O.some("claude") })))
+ * const program = Effect.map(CurrentRuntimeEnv, (value) => O.getOrElse(value.agent, () => "no agent")).pipe(
+ *   Effect.provide(CurrentRuntimeEnv.layerTest({ agent: O.some("claude") })),
+ * );
+ * console.log(Effect.runSync(program)) // claude
  * ```
  *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class CurrentRuntimeEnv extends Context.Service<CurrentRuntimeEnv, RuntimeEnv>()(
 	$I`CurrentRuntimeEnv`,
 ) {
 	/**
-  * Reads the environment through `Config` once, when the layer is built. Requires nothing: the provider is read
-  * from the ambient `ConfigProvider`.
-  *
-  * **Gotchas**
-  *
-  * Two things make this a frozen read, and a long-lived host (an MCP server, a watch-mode runner) trips on both.
-  * Core's default `ConfigProvider.fromEnv()` snapshots `process.env` once per process, so a change after the
-  * first read is never seen; and this is one static layer, memoized by reference, so two consumers that provide
-  * different providers in one graph share the first snapshot. Use {@link CurrentRuntimeEnv.layerFrom}, which is
-  * a fresh layer per call and per use, or provide a fresh `ConfigProvider` for every read.
-  */
+	 * Reads the environment through `Config` once, when the layer is built. Requires nothing: the provider is read
+	 * from the ambient `ConfigProvider`.
+	 *
+	 * **Gotchas**
+	 *
+	 * Two things make this a frozen read, and a long-lived host (an MCP server, a watch-mode runner) trips on both.
+	 * Core's default `ConfigProvider.fromEnv()` snapshots `process.env` once per process, so a change after the
+	 * first read is never seen; and this is one static layer, memoized by reference, so two consumers that provide
+	 * different providers in one graph share the first snapshot. Use {@link CurrentRuntimeEnv.layerFrom}, which is
+	 * a fresh layer per call and per use, or provide a fresh `ConfigProvider` for every read.
+	 *
+	 * **Example** (Read the ambient runtime snapshot)
+	 *
+	 * ```ts
+	 * import { CurrentRuntimeEnv } from "@beep/scratchpad/effected/env/RuntimeEnv";
+	 * import * as Effect from "effect/Effect";
+	 * const program = Effect.map(CurrentRuntimeEnv, (env) => env.agent).pipe(
+	 *   Effect.provide(CurrentRuntimeEnv.layer),
+	 * );
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layer: Layer.Layer<CurrentRuntimeEnv> = Layer.effect(
 		this,
 		Effect.map(readEnv(allKeys), (env) => RuntimeEnv.fromRecord(env)),
 	);
 
 	/**
-  * A snapshot of an explicit source: an environment record, or a `ConfigProvider` read instead of the ambient
-  * one.
-  *
-  * **Details**
-  *
-  * Each call returns a new layer, and the layer is `Layer.fresh`, so it is built again for every use rather
-  * than shared through the build's memo: two calls with different sources in one graph see different values,
-  * and a provider is read again each time the layer is used. A record is read when the layer is built, never
-  * at the call.
-  *
-  * @param source - a variable-name-to-value record, or a `ConfigProvider`
-  */
+	 * A snapshot of an explicit source: an environment record, or a `ConfigProvider` read instead of the ambient
+	 * one.
+	 *
+	 * **Details**
+	 *
+	 * Each call returns a new layer, and the layer is `Layer.fresh`, so it is built again for every use rather
+	 * than shared through the build's memo: two calls with different sources in one graph see different values,
+	 * and a provider is read again each time the layer is used. A record is read when the layer is built, never
+	 * at the call.
+	 *
+	 * **Example** (Read an explicit agent record)
+	 *
+	 * ```ts
+	 * import { CurrentRuntimeEnv } from "@beep/scratchpad/effected/env/RuntimeEnv";
+	 * import * as Effect from "effect/Effect";
+	 * import * as O from "effect/Option";
+	 * const program = Effect.map(CurrentRuntimeEnv, (value) => O.getOrElse(value.agent, () => "no agent")).pipe(
+	 *   Effect.provide(CurrentRuntimeEnv.layerFrom({ AI_AGENT: "claude" })),
+	 * );
+	 * console.log(Effect.runSync(program)) // claude
+	 * ```
+	 *
+	 * @param source - a variable-name-to-value record, or a `ConfigProvider`
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layerFrom = (
 		source: Readonly<Record<string, string | undefined>> | ConfigProvider.ConfigProvider,
 	): Layer.Layer<CurrentRuntimeEnv> =>
@@ -181,7 +235,21 @@ export class CurrentRuntimeEnv extends Context.Service<CurrentRuntimeEnv, Runtim
 	/**
 	 * A fixed snapshot that never touches `Config`: every field is `None` unless `overrides` sets it.
 	 *
+	 * **Example** (Default to an absent agent)
+	 *
+	 * ```ts
+	 * import { CurrentRuntimeEnv } from "@beep/scratchpad/effected/env/RuntimeEnv";
+	 * import * as Effect from "effect/Effect";
+	 * import * as O from "effect/Option";
+	 * const program = Effect.map(CurrentRuntimeEnv, (value) => O.isNone(value.agent)).pipe(
+	 *   Effect.provide(CurrentRuntimeEnv.layerTest()),
+	 * );
+	 * console.log(Effect.runSync(program)) // true
+	 * ```
+	 *
 	 * @param overrides - the fields to set
+	 * @category layers
+	 * @since 0.0.0
 	 */
 	static readonly layerTest = (overrides: RuntimeEnvOverrides = {}): Layer.Layer<CurrentRuntimeEnv> =>
 		Layer.succeed(
