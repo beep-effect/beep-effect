@@ -87,7 +87,7 @@ const fieldOrder = Order.mapInput(
  *
  * **Example** (Prepare an identity digest)
  * ```ts
- * import { secretsLayoutIdentity } from "@beep/repo-cli/commands/Accounts"
+ * import { secretsLayoutIdentity } from "@beep/repo-cli/test/Accounts"
  * import * as Effect from "effect/Effect"
  * Effect.isEffect(secretsLayoutIdentity([])) // => true
  * ```
@@ -104,7 +104,7 @@ export const secretsLayoutIdentity = Effect.fn("Accounts.secretsLayoutIdentity")
     ),
     (field) => ({ ...field, section: O.none() })
   );
-  const text = yield* S.encodeEffect(S.fromJsonString(S.Array(AccountsSecretField)))(stable);
+  const text = yield* S.encodeEffect(AccountsSecretField.pipe(S.Array, S.fromJsonString))(stable);
   return yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(text));
 });
 
@@ -113,7 +113,7 @@ export const secretsLayoutIdentity = Effect.fn("Accounts.secretsLayoutIdentity")
  *
  * **Example** (Prepare a lossless transform)
  * ```ts
- * import { layoutSecretsItem } from "@beep/repo-cli/commands/Accounts"
+ * import { layoutSecretsItem } from "@beep/repo-cli/test/Accounts"
  * import * as Effect from "effect/Effect"
  * import * as O from "effect/Option"
  * Effect.isEffect(layoutSecretsItem({ fields: [], sections: [], version: O.none() })) // => true
@@ -136,10 +136,11 @@ export const layoutSecretsItem = Effect.fn("Accounts.layoutSecretsItem")(
       }
     );
     const fields = [...A.filter(item.fields, isNote), ...A.sort(rest, fieldOrder)];
-    const sections = A.filterMap(Prefix.literals, (label) =>
-      A.some(rest, (field) => O.exists(field.section, (section) => section.label === label))
-        ? O.some({ id: Str.toLowerCase(label), label })
-        : O.none()
+    const sections = A.map(
+      A.filter(Prefix.literals, (label) =>
+        A.some(rest, (field) => O.exists(field.section, (section) => section.label === label))
+      ),
+      (label) => ({ id: Str.toLowerCase(label), label })
     );
     const laid = { ...item, fields, sections };
     if ((yield* secretsLayoutIdentity(item.fields)) !== (yield* secretsLayoutIdentity(laid.fields)))
@@ -165,7 +166,7 @@ export interface AccountsSecretsLayoutShape {
  *
  * **Example** (Prepare a dry run)
  * ```ts
- * import { AccountsSecretsLayout } from "@beep/repo-cli/commands/Accounts"
+ * import { AccountsSecretsLayout } from "@beep/repo-cli/test/Accounts"
  * import * as Effect from "effect/Effect"
  * Effect.isEffect(AccountsSecretsLayout.use((service) => service.run(false))) // => true
  * ```
@@ -209,7 +210,7 @@ const make = Effect.fn("AccountsSecretsLayout.make")(function* () {
             message: "op item get failed; op-doctor ran once. Secret operation stopped.",
           });
         }
-        const item = yield* S.decodeUnknownEffect(S.fromJsonString(AccountsSecretsItem))(read.value.stdout).pipe(
+        const item = yield* S.decodeEffect(S.fromJsonString(AccountsSecretsItem))(read.value.stdout).pipe(
           Effect.mapError(() => error("Cannot decode item metadata; no values were rendered."))
         );
         const laid = yield* layoutSecretsItem(item);
@@ -238,7 +239,7 @@ const make = Effect.fn("AccountsSecretsLayout.make")(function* () {
               { stdin: Stream.make(new TextEncoder().encode(text)), stdout: "pipe", stderr: "ignore" }
             );
             const [code, output] = yield* Effect.all(
-              [handle.exitCode, Stream.mkString(Stream.decodeText(handle.stdout))],
+              [handle.exitCode, handle.stdout.pipe(Stream.decodeText, Stream.mkString)],
               { concurrency: "unbounded" }
             );
             return { code, output };
@@ -255,7 +256,7 @@ const make = Effect.fn("AccountsSecretsLayout.make")(function* () {
             message: "op item edit failed; op-doctor ran once. Secret operation stopped.",
           });
         }
-        const confirmed = yield* S.decodeUnknownEffect(S.fromJsonString(AccountsSecretsItem))(edited.value.output).pipe(
+        const confirmed = yield* S.decodeEffect(S.fromJsonString(AccountsSecretsItem))(edited.value.output).pipe(
           Effect.mapError(() => error("Cannot decode item-edit confirmation; no values were rendered."))
         );
         return [`written version ${O.getOrElse(confirmed.version, () => 0)}: ${summary}`];
@@ -275,7 +276,7 @@ const make = Effect.fn("AccountsSecretsLayout.make")(function* () {
  *
  * **Example** (Inspect the administrative layer)
  * ```ts
- * import { AccountsSecretsLayoutLive } from "@beep/repo-cli/commands/Accounts"
+ * import { AccountsSecretsLayoutLive } from "@beep/repo-cli/test/Accounts"
  * import * as Layer from "effect/Layer"
  * Layer.isLayer(AccountsSecretsLayoutLive) // => true
  * ```

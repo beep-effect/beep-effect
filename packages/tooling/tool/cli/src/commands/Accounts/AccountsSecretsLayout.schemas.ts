@@ -18,7 +18,7 @@ const Section = S.Struct({ id: S.NonEmptyString, label: S.NonEmptyString });
  *
  * **Example** (Validate a synthetic field)
  * ```ts
- * import { AccountsSecretField } from "@beep/repo-cli/commands/Accounts"
+ * import { AccountsSecretField } from "@beep/repo-cli/test/Accounts"
  * import * as Effect from "effect/Effect"
  * import * as S from "effect/Schema"
  * Effect.isEffect(S.decodeUnknownEffect(AccountsSecretField)({ id: "f1", label: "AI_KEY", type: "CONCEALED", value: "synthetic" })) // => true
@@ -31,7 +31,7 @@ export const AccountsSecretField = S.StructWithRest(
     id: S.NonEmptyString,
     label: S.String,
     type: S.String,
-    value: S.OptionFromOptionalKey(S.RedactedFromValue(S.Unknown)),
+    value: S.Unknown.pipe(S.RedactedFromValue, S.OptionFromOptionalKey),
     purpose: S.OptionFromOptionalKey(S.String),
     section: S.OptionFromOptionalKey(Section),
   }),
@@ -53,7 +53,7 @@ export type AccountsSecretField = typeof AccountsSecretField.Type;
  *
  * **Example** (Decode an empty synthetic item)
  * ```ts
- * import { AccountsSecretsItem } from "@beep/repo-cli/commands/Accounts"
+ * import { AccountsSecretsItem } from "@beep/repo-cli/test/Accounts"
  * import * as Effect from "effect/Effect"
  * import * as S from "effect/Schema"
  * Effect.isEffect(S.decodeUnknownEffect(AccountsSecretsItem)({ fields: [], sections: [] })) // => true

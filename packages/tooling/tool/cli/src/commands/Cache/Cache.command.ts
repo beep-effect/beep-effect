@@ -909,7 +909,7 @@ const cacheRemoteReadsCommand = Command.make(
     );
     if (config.replace !== "0" && config.replace !== "1")
       return yield* CacheCommandError.new("TURBO_TOKEN_REPLACE must be 0 or 1");
-    const input = yield* S.decodeUnknownEffect(CacheRemoteReadsRequest)({
+    const input = yield* S.decodeEffect(CacheRemoteReadsRequest)({
       ...config,
       replaceToken: config.replace === "1",
     }).pipe(

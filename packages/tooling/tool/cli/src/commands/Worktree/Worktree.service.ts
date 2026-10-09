@@ -1508,7 +1508,10 @@ export const installRegenerateMergeDriver = Effect.fn("Worktree.installRegenerat
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     if (!(yield* fs.exists(path.join(checkout, "scripts", "regenerate-merge-driver.sh"))))
-      return yield* WorktreeCommandError.new("Projection merge-driver adapter is missing.");
+      return yield* WorktreeCommandError.make({
+        message: "Projection merge-driver adapter is missing.",
+        cause: undefined,
+      });
     for (const [key, value] of R.toEntries({
       name: "Regenerate pure repository projections",
       driver: "bash scripts/regenerate-merge-driver.sh %O %A %B %P",
@@ -1521,7 +1524,7 @@ export const installRegenerateMergeDriver = Effect.fn("Worktree.installRegenerat
       );
     }
   },
-  Effect.mapError((cause) => WorktreeCommandError.new("Cannot install projection merge driver.", cause))
+  Effect.mapError(WorktreeCommandError.new("Cannot install projection merge driver."))
 );
 
 /**

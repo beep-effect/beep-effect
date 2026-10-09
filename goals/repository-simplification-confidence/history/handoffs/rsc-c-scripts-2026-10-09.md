@@ -137,3 +137,40 @@ fallow audit+health pending; coverage read complete (existing floors only)
 · open: final Ci group / E ordering and workflow review; R24 cloud owner audit/name;
 terminal heavy proofs; introduced-helper fixture rerun; pinned independent review;
 committed-head parity; publication and orchestrator merge gate.
+
+
+## Run 2 (after crash)
+
+Recovered implementation commit `17105ac97b` with a clean worktree. Required
+fetch and merge of origin/main reported already up to date. All lane-local
+`.beep` result files and the Yeet attempt journal were inspected. The interrupted
+publish has a started attempt and no terminal verdict; no push or PR exists.
+
+Terminal recovered evidence: JSDoc ratchet passed (tracked 21, increased 0,
+zero legacy findings); relocated Graft suites passed all 17 cases. Lint-policy
+log has no final verdict. Package audit and docgen failed with introduced port
+errors; test-tsgo failed for the same errors. Fallow audit/health failed with
+Cache/Knowledge complexity findings and the root ONNX dependency becoming
+unused. Automatic docgen-local correctly refused global root-input changes.
+These failures are not crash-only and are not waived.
+
+Repairs: use typed schema decoders, the Option-compatible section selection,
+Accounts' existing test facade for compilable documentation, correct curried
+Worktree error construction, and map repo-discovery errors at the Knowledge
+service boundary. Cache backup output now includes the parent directory created
+by the Effect temporary-file API. Accounts fixture order now matches the original
+jq lexical sort (`DEV_Z` precedes `GITHUB_TOKEN` within DEV). Cache key processing
+and Knowledge per-file rewriting have smaller independent control-flow scopes.
+No secret operation or host install ran.
+
+Repaired focused suite passed 13 tests across Accounts, Cache, Knowledge. Commands
+and terminal output: `.beep/rsc-c-run2-parity.log`. Package verification and
+test-tsgo are running through beep-heavy with a 12 GB cap; terminal results
+remain required. Package-script regeneration reports 152 manifests, zero drift
+and zero writes. Existing coverage-floor read is retained without claiming new
+coverage.
+
+Coordination blockers remain R24 cloud packet owner audit, E's workflow review
+and Ci ordering agreement, plus the orchestrator's inherited knowledge-census
+repair on main. The Ci group remains intact for a coordinated follow-up wave.
+This is a recovery progress report, not final content or merge readiness.

@@ -1704,6 +1704,49 @@ type KnowledgeServiceRequirements =
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner;
 
+const rewriteKnowledgeReferenceFile = Effect.fn("Knowledge.rewriteReferenceFile")(function* (
+  root: string,
+  relative: string,
+  rules: ReadonlyArray<KnowledgeRewriteRule>,
+  dryRun: boolean
+) {
+  const path = yield* Path.Path;
+  let applied = 0;
+  let skipped = 0;
+  let failures: ReadonlyArray<string> = A.empty();
+  const target = path.join(root, relative);
+  const original = yield* readContainedFileBytesNoFollow(root, target, S.Natural.make(8 * 1024 * 1024)).pipe(
+    Effect.flatMap((read) =>
+      O.match(read.contents, {
+        onNone: () => Effect.fail(KnowledgeOperationalError.make({ message: "unreadable" })),
+        onSome: (bytes) => decodeKnowledgeUtf8(bytes, "unreadable"),
+      })
+    ),
+    Effect.option
+  );
+  if (O.isNone(original)) {
+    return KnowledgeRewriteReport.make({ applied, skipped, failures: [`${relative}: unreadable`], dryRun });
+  }
+  let next = original.value;
+  let failed = false;
+  for (const rule of rules) {
+    const occurrences = A.length(Str.split(next, rule.find)) - 1;
+    if (occurrences === 0) {
+      skipped += 1;
+      continue;
+    }
+    if (occurrences !== rule.count) {
+      failures = A.append(failures, `${relative}: expected ${rule.count} occurrence(s), found ${occurrences}`);
+      failed = true;
+      continue;
+    }
+    next = A.join(Str.split(next, rule.find), rule.replace);
+    applied += 1;
+  }
+  if (!failed && next !== original.value && !dryRun) yield* writeContainedFileString(root, target, next);
+  return KnowledgeRewriteReport.make({ applied, skipped, failures, dryRun });
+});
+
 /**
  * Applies reviewed literal rules to one working tree, refusing each drifted file.
  *
@@ -1725,7 +1768,7 @@ export const rewriteKnowledgeReferences = Effect.fn("Knowledge.rewriteReferences
     const path = yield* Path.Path;
     const fs = yield* FileSystem.FileSystem;
     const rulesText = yield* fs.readFileString(path.join(root, "scripts", "knowledge-refs-rewrite.rules.json"));
-    const input = yield* S.decodeUnknownEffect(S.fromJsonString(KnowledgeRewriteRules))(rulesText);
+    const input = yield* S.decodeEffect(S.fromJsonString(KnowledgeRewriteRules))(rulesText);
     const grouped = A.reduce(
       input.rules,
       HashMap.empty<string, ReadonlyArray<KnowledgeRewriteRule>>(),
@@ -1735,43 +1778,15 @@ export const rewriteKnowledgeReferences = Effect.fn("Knowledge.rewriteReferences
           rule,
         ])
     );
-    let applied = 0;
-    let skipped = 0;
-    let failures: ReadonlyArray<string> = A.empty();
-    for (const [relative, rules] of grouped) {
-      const target = path.join(root, relative);
-      const original = yield* readContainedFileBytesNoFollow(root, target, S.Natural.make(8 * 1024 * 1024)).pipe(
-        Effect.flatMap((read) =>
-          O.match(read.contents, {
-            onNone: () => Effect.fail(KnowledgeOperationalError.make({ message: "unreadable" })),
-            onSome: (bytes) => decodeKnowledgeUtf8(bytes, "unreadable"),
-          })
-        ),
-        Effect.option
-      );
-      if (O.isNone(original)) {
-        failures = A.append(failures, `${relative}: unreadable`);
-        continue;
-      }
-      let next = original.value;
-      let failed = false;
-      for (const rule of rules) {
-        const occurrences = A.length(Str.split(next, rule.find)) - 1;
-        if (occurrences === 0) {
-          skipped += 1;
-          continue;
-        }
-        if (occurrences !== rule.count) {
-          failures = A.append(failures, `${relative}: expected ${rule.count} occurrence(s), found ${occurrences}`);
-          failed = true;
-          continue;
-        }
-        next = A.join(Str.split(next, rule.find), rule.replace);
-        applied += 1;
-      }
-      if (!failed && next !== original.value && !dryRun) yield* writeContainedFileString(root, target, next);
-    }
-    return KnowledgeRewriteReport.make({ applied, skipped, failures, dryRun });
+    const reports = yield* Effect.forEach(grouped, ([relative, rules]) =>
+      rewriteKnowledgeReferenceFile(root, relative, rules, dryRun)
+    );
+    return KnowledgeRewriteReport.make({
+      applied: A.reduce(reports, 0, (total, report) => total + report.applied),
+      skipped: A.reduce(reports, 0, (total, report) => total + report.skipped),
+      failures: A.flatMap(reports, (report) => report.failures),
+      dryRun,
+    });
   },
   Effect.mapError(KnowledgeOperationalError.new("Cannot execute reviewed knowledge reference rewrites."))
 );
@@ -1780,7 +1795,10 @@ const makeKnowledgeService = Effect.fn("KnowledgeService.make")(function* () {
   const runtime = yield* Effect.context<KnowledgeServiceRequirements>();
   return KnowledgeService.of({
     rewriteRefs: Effect.fn("KnowledgeService.rewriteRefs")((dryRun) =>
-      Effect.flatMap(findRepoRoot(), (root) => rewriteKnowledgeReferences(root, dryRun)).pipe(Effect.provide(runtime))
+      Effect.flatMap(findRepoRoot(), (root) => rewriteKnowledgeReferences(root, dryRun)).pipe(
+        Effect.mapError(KnowledgeOperationalError.new("Cannot locate knowledge rewrite checkout.")),
+        Effect.provide(runtime)
+      )
     ),
     scanPair: Effect.fn("KnowledgeService.scanPair")((input) => scanKnowledgePair(input).pipe(Effect.provide(runtime))),
     semanticDelta: Effect.fn("KnowledgeService.semanticDelta")((baseRef) =>

@@ -21,7 +21,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("accounts secrets layout
     Effect.fnUntraced(function* () {
       const decoded = yield* S.decodeUnknownEffect(S.fromJsonString(AccountsSecretsItem))(item);
       const transformed = yield* layoutSecretsItem(decoded);
-      expect(A.map(transformed.fields, (field) => field.id)).toEqual(["notesPlain", "c", "b", "a"]);
+      expect(A.map(transformed.fields, (field) => field.id)).toEqual(["notesPlain", "c", "a", "b"]);
       expect(transformed.sections).toEqual([
         { id: "ai", label: "AI" },
         { id: "dev", label: "DEV" },

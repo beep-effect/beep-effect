@@ -131,3 +131,15 @@
   document remains with its owner and is reported to the orchestrator.
 - Would have prevented it: stage-1 packet census validation and owner-qualified
   prose that names the admission wrapper without a workstation location.
+
+
+## 2026-10-09: C crash recovery found terminal reds behind pending handoff
+
+- Doing: recovering C's operational-script wave after the workstation crash.
+- Evidence: committed handoff still said queued; local package audit/docgen had
+  terminal introduced schema and curried-error failures. Focused fixtures also
+  exposed Effect temporary-file parent-path reporting and a lexical-order mismatch.
+- Repair: inspect every lane result before trusting pending prose; fix source
+  contracts and preserve terminal passes rather than rerunning everything.
+- Would have prevented it: a gate runner that writes each exit/result immediately
+  into a compact lane index and updates the handoff before launching another gate.

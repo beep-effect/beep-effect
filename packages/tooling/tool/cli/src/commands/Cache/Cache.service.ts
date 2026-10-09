@@ -687,7 +687,7 @@ const makeService = Effect.fn("CacheQualificationService.make")(function* () {
         const path = yield* Path.Path;
         const fs = yield* FileSystem.FileSystem;
         // Decode before creating even a missing .env; diagnostics never contain input values.
-        const input = yield* S.decodeUnknownEffect(CacheRemoteReadsRequest)(request).pipe(
+        const input = yield* S.decodeEffect(CacheRemoteReadsRequest)(request).pipe(
           Effect.mapError(() =>
             CacheCommandError.new(
               "Expected https TURBO_API, a single-line TURBO_TEAM, and an op://vault/item/[section/]field reference."
@@ -707,44 +707,49 @@ const makeService = Effect.fn("CacheQualificationService.make")(function* () {
           TURBO_CACHE: "local:rw,remote:r",
         };
         // Inspect every owned key before any write. Accept normal dotenv whitespace/export syntax.
-        for (const name of TurboCacheEnvName.literals) {
-          const pattern = new RegExp(`^[ \t]*(?:export[ \t]+)?${name}[ \t]*=[ \t]*(.*)$`, "u");
-          if (A.length(A.filter(lines, (line) => Str.match(pattern)(line).pipe(O.isSome))) > 1)
-            return yield* CacheCommandError.new(`duplicate ${name} assignments in .env; refusing to modify it`);
-        }
-        for (const name of TurboCacheEnvName.literals) {
-          const pattern = new RegExp(`^[ \t]*(?:export[ \t]+)?${name}[ \t]*=[ \t]*(.*)$`, "u");
-          const index = A.findFirstIndex(lines, (line) => Str.match(pattern)(line).pipe(O.isSome));
-          const current = O.flatMap(index, (i) => A.get(lines, i)).pipe(
-            O.flatMap(Str.match(pattern)),
-            O.flatMap((match) => A.get(match, 1)),
-            O.map(Str.trim),
-            O.map(Str.replace(/^(["'])(.*)\1$/u, "$2")),
-            O.map(Str.trim),
-            O.getOrElse(() => "")
-          );
-          const replace = name === "TURBO_TOKEN" && input.replaceToken && current !== input.tokenRef;
-          if (Str.isNonEmpty(current) && !replace) {
-            reports = A.append(reports, `${name} already present in .env — leaving it unchanged`);
-            continue;
-          }
-          const assignment = `${name}=${values[name]}`;
-          lines = O.match(index, {
-            onNone: () => [...lines, assignment],
-            onSome: (i) => A.map(lines, (line, at) => (at === i ? assignment : line)),
-          });
-          reports = A.append(
-            reports,
-            `${replace ? "replaced" : O.isSome(index) ? "repaired blank" : "wrote"} ${name}${name === "TURBO_TEAM" ? `=${input.team}` : ""}`
-          );
-        }
+        yield* Effect.forEach(
+          TurboCacheEnvName.literals,
+          Effect.fnUntraced(function* (name) {
+            const pattern = new RegExp(`^[ \t]*(?:export[ \t]+)?${name}[ \t]*=[ \t]*(.*)$`, "u");
+            if (A.length(A.filter(lines, (line) => Str.match(pattern)(line).pipe(O.isSome))) > 1)
+              return yield* CacheCommandError.new(`duplicate ${name} assignments in .env; refusing to modify it`);
+          })
+        );
+        yield* Effect.forEach(TurboCacheEnvName.literals, (name) =>
+          Effect.sync(() => {
+            const pattern = new RegExp(`^[ \t]*(?:export[ \t]+)?${name}[ \t]*=[ \t]*(.*)$`, "u");
+            const index = A.findFirstIndex(lines, (line) => Str.match(pattern)(line).pipe(O.isSome));
+            const current = O.flatMap(index, (i) => A.get(lines, i)).pipe(
+              O.flatMap(Str.match(pattern)),
+              O.flatMap((match) => A.get(match, 1)),
+              O.map(Str.trim),
+              O.map(Str.replace(/^(["'])(.*)\1$/u, "$2")),
+              O.map(Str.trim),
+              O.getOrElse(() => "")
+            );
+            const replace = name === "TURBO_TOKEN" && input.replaceToken && current !== input.tokenRef;
+            if (Str.isNonEmpty(current) && !replace) {
+              reports = A.append(reports, `${name} already present in .env — leaving it unchanged`);
+              return;
+            }
+            const assignment = `${name}=${values[name]}`;
+            lines = O.match(index, {
+              onNone: () => [...lines, assignment],
+              onSome: (i) => A.map(lines, (line, at) => (at === i ? assignment : line)),
+            });
+            reports = A.append(
+              reports,
+              `${replace ? "replaced" : O.isSome(index) ? "repaired blank" : "wrote"} ${name}${name === "TURBO_TEAM" ? `=${input.team}` : ""}`
+            );
+          })
+        );
         const next = `${Str.replace(/\n*$/u, "")(A.join(lines, "\n"))}\n`;
         if (next !== original) {
           if (yield* fs.exists(envFile)) {
             const backup = yield* fs.makeTempFile({ directory: root, prefix: ".env.backup-" });
             yield* fs.chmod(backup, 0o600);
             yield* fs.writeFileString(backup, original);
-            reports = A.append(reports, `backup: ${path.basename(backup)}`);
+            reports = A.append(reports, `backup: ${path.relative(root, backup)}`);
           }
           // The guarded writer refuses symlinks and paths outside this checkout.
           yield* writeContainedFileString(root, envFile, next);
