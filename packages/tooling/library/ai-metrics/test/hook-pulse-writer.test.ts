@@ -1239,9 +1239,11 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("hook-pulse writer confo
       const parent = yield* fs.makeTempDirectoryScoped();
       const renamed = path.join(parent, "checkout\r");
       yield* fs.rename(root, renamed);
-      const oracle = yield* typescriptHarnessHash(renamed);
-      const run = yield* runWriter(yield* encodeJson(sessionStartPayload(renamed)));
-      assertSome((yield* decodeHookPulseRow(expectSingleRow(run))).harnessHash, oracle.harnessHash);
+      yield* Effect.gen(function* () {
+        const oracle = yield* typescriptHarnessHash(renamed);
+        const run = yield* runWriter(yield* encodeJson(sessionStartPayload(renamed)));
+        assertSome((yield* decodeHookPulseRow(expectSingleRow(run))).harnessHash, oracle.harnessHash);
+      }).pipe(Effect.ensuring(fs.rename(renamed, root)));
     })
   );
 

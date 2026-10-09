@@ -328,7 +328,7 @@ const HookPulseUtcTimestamp = S.String.check(
   S.makeFilter((input) =>
     O.exists(
       S.decodeOption(S.DateTimeUtcFromString)(input),
-      (date) => Str.endsWith("Z")(input) && Str.slice(0, 19)(DateTime.formatIso(date)) === Str.slice(0, 19)(input)
+      (date) => Str.endsWith("Z")(input) && date.pipe(DateTime.formatIso, Str.slice(0, 19)) === Str.slice(0, 19)(input)
     )
   )
 ).pipe($I.annoteSchema("HookPulseUtcTimestamp", { description: "Canonical UTC timestamp without calendar rollover." }));
