@@ -522,11 +522,11 @@
       }
     },
     "@beep/infra": {
-      "reviewer": "Claude Fable 5.1 (cache baseline merge-friendly lane, fix/cache-baseline-merge-friendly)",
-      "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
+      "reviewer": "Codex dependency-update branch review",
+      "reason": "Re-record @beep/infra after its coverage task moved to generated indirection and its implementation builds the local Pulumi SDK before Node Vitest. The eight flagged build, check, docgen, lint, and test nodes carry a package scripts digest change; their commands and cache qualification state remain unchanged.",
       "basis": {
-        "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
+        "path": "infra/package.json",
+        "sha256": "a860bbc3e121836c696e3223956474cd8716dd4693b5975f11fdfb18296b73e2"
       }
     },
     "@beep/langextract": {
@@ -45502,7 +45502,7 @@
       {
         "computation": "@beep/infra#audit",
         "command": "bun run --if-present beep:audit",
-        "commandDigest": "040d8605bb8dff5649c21d537ecb5eca29f263508d4d28ff21804122097b4061",
+        "commandDigest": "267a476def11305d5f6d14f99573c41ee85b05833f8769445e5664946c5977ff",
         "dependencies": [
           "@beep/identity#audit",
           "@beep/openclaw#audit",
@@ -45569,7 +45569,7 @@
       {
         "computation": "@beep/infra#build",
         "command": "bun run beep:build",
-        "commandDigest": "040d8605bb8dff5649c21d537ecb5eca29f263508d4d28ff21804122097b4061",
+        "commandDigest": "267a476def11305d5f6d14f99573c41ee85b05833f8769445e5664946c5977ff",
         "dependencies": [
           "@beep/identity#build",
           "@beep/openclaw#build",
@@ -45610,7 +45610,7 @@
       {
         "computation": "@beep/infra#check",
         "command": "bun run beep:check",
-        "commandDigest": "040d8605bb8dff5649c21d537ecb5eca29f263508d4d28ff21804122097b4061",
+        "commandDigest": "267a476def11305d5f6d14f99573c41ee85b05833f8769445e5664946c5977ff",
         "dependencies": [
           "@beep/identity#build",
           "@beep/openclaw#build",
@@ -45650,8 +45650,8 @@
       },
       {
         "computation": "@beep/infra#coverage",
-        "command": "bunx vitest run --coverage --exclude=test/integration/**",
-        "commandDigest": "040d8605bb8dff5649c21d537ecb5eca29f263508d4d28ff21804122097b4061",
+        "command": "bun run beep:coverage",
+        "commandDigest": "267a476def11305d5f6d14f99573c41ee85b05833f8769445e5664946c5977ff",
         "dependencies": [
           "@beep/identity#build",
           "@beep/openclaw#build",
@@ -45704,7 +45704,7 @@
       {
         "computation": "@beep/infra#docgen",
         "command": "bun run beep:docgen",
-        "commandDigest": "040d8605bb8dff5649c21d537ecb5eca29f263508d4d28ff21804122097b4061",
+        "commandDigest": "267a476def11305d5f6d14f99573c41ee85b05833f8769445e5664946c5977ff",
         "dependencies": [
           "@beep/infra#transit",
           "@beep/repo-docgen#transit"
@@ -45743,7 +45743,7 @@
       {
         "computation": "@beep/infra#lint",
         "command": "bun run beep:lint",
-        "commandDigest": "040d8605bb8dff5649c21d537ecb5eca29f263508d4d28ff21804122097b4061",
+        "commandDigest": "267a476def11305d5f6d14f99573c41ee85b05833f8769445e5664946c5977ff",
         "dependencies": [],
         "configuration": {
           "cache": true,
@@ -45778,7 +45778,7 @@
       {
         "computation": "@beep/infra#lint:deprecated-apis",
         "command": "beep-cli lint deprecated-apis --package .",
-        "commandDigest": "040d8605bb8dff5649c21d537ecb5eca29f263508d4d28ff21804122097b4061",
+        "commandDigest": "267a476def11305d5f6d14f99573c41ee85b05833f8769445e5664946c5977ff",
         "dependencies": [
           "//#lint:policy-fingerprint",
           "@beep/identity#transit",
@@ -45853,7 +45853,7 @@
       {
         "computation": "@beep/infra#lint:fix",
         "command": "bun run beep:lint:fix",
-        "commandDigest": "040d8605bb8dff5649c21d537ecb5eca29f263508d4d28ff21804122097b4061",
+        "commandDigest": "267a476def11305d5f6d14f99573c41ee85b05833f8769445e5664946c5977ff",
         "dependencies": [],
         "configuration": {
           "cache": false,
@@ -45882,7 +45882,7 @@
       {
         "computation": "@beep/infra#lint:jsdoc",
         "command": "beep-cli lint jsdoc --package .",
-        "commandDigest": "040d8605bb8dff5649c21d537ecb5eca29f263508d4d28ff21804122097b4061",
+        "commandDigest": "267a476def11305d5f6d14f99573c41ee85b05833f8769445e5664946c5977ff",
         "dependencies": [
           "//#lint:policy-fingerprint"
         ],
@@ -45937,7 +45937,7 @@
       {
         "computation": "@beep/infra#lint:laws",
         "command": "beep-cli lint laws --package .",
-        "commandDigest": "040d8605bb8dff5649c21d537ecb5eca29f263508d4d28ff21804122097b4061",
+        "commandDigest": "267a476def11305d5f6d14f99573c41ee85b05833f8769445e5664946c5977ff",
         "dependencies": [
           "//#lint:policy-fingerprint"
         ],
@@ -45991,7 +45991,7 @@
       {
         "computation": "@beep/infra#package-test-typecheck",
         "command": "beep-cli quality test-tsgo-package",
-        "commandDigest": "040d8605bb8dff5649c21d537ecb5eca29f263508d4d28ff21804122097b4061",
+        "commandDigest": "267a476def11305d5f6d14f99573c41ee85b05833f8769445e5664946c5977ff",
         "dependencies": [
           "@beep/identity#transit",
           "@beep/openclaw#transit",
@@ -46038,7 +46038,7 @@
       {
         "computation": "@beep/infra#test",
         "command": "bun run beep:test",
-        "commandDigest": "040d8605bb8dff5649c21d537ecb5eca29f263508d4d28ff21804122097b4061",
+        "commandDigest": "267a476def11305d5f6d14f99573c41ee85b05833f8769445e5664946c5977ff",
         "dependencies": [
           "@beep/identity#transit",
           "@beep/openclaw#transit",
