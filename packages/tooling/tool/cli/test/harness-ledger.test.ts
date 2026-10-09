@@ -854,6 +854,50 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
     })
   );
 
+  it.effect("stamp diagnostics and durable endings distinguish trailing collection gaps", () =>
+    Effect.gen(function* () {
+      const root = yield* makeRepo();
+      const current = yield* repoHarnessHash(root);
+      const stateDir = yield* makeHookStateDir("harness-trailing-refusal-");
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const opening = yield* sessionStart(sessionA, "2026-10-09T10:00:00Z", current);
+      const tool = yield* pulse(sessionA, "2026-10-09T10:01:00Z", O.none());
+      const refusalFile = path.join(path.dirname(stateDir), "hook-pulse-refusals-fixture.ndjson");
+      yield* writeShard(stateDir, "2026-10-09", sessionA, [opening, tool]);
+      yield* fs.writeFileString(
+        refusalFile,
+        '{"ts":"2026-10-09T10:02:00Z","agentKind":"claude-code","reason":"stamp-failed"}\n'
+      );
+      const ledger = yield* HarnessLedgerService;
+      const options = HarnessLedgerPruneOptions.make({ repoRoot: root, stateDir, windowSessions: 1 });
+      const diagnostic = yield* ledger.pruneProposals(options);
+      expect(diagnostic.sessionsObserved).toBe(1);
+      expect(diagnostic.sessionsSkippedRefused).toBe(0);
+      yield* fs.writeFileString(
+        refusalFile,
+        '{"ts":"2026-10-09T10:02:00Z","agentKind":"claude-code","reason":"timeout"}\n'
+      );
+      const open = yield* ledger.pruneProposals(options);
+      expect(open.sessionsObserved).toBe(0);
+      expect(open.sessionsSkippedRefused).toBe(1);
+      const terminal = HookPulseV1.make({
+        ...(yield* HookPulseV1.decodeJsonEffect(tool)),
+        hookEvent: "SessionEnd",
+        ts: DateTime.makeUnsafe("2026-10-09T10:01:30Z"),
+        waitReason: "none",
+      });
+      yield* writeShard(stateDir, "2026-10-09", sessionA, [
+        opening,
+        tool,
+        yield* HookPulseV1.encodeJsonEffect(terminal),
+      ]);
+      const closed = yield* ledger.pruneProposals(options);
+      expect(closed.sessionsObserved).toBe(1);
+      expect(closed.sessionsSkippedRefused).toBe(0);
+    })
+  );
+
   it.effect("unknown-role rows on the root transcript cannot supply activity", () =>
     Effect.gen(function* () {
       const root = yield* makeRepo();
